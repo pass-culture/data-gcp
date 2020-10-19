@@ -5,7 +5,7 @@ Repo pour Cloud Composer
 
 Les dags sont dans `dags/`.
 
-Les scripts sont a mettre dans `dags/dependencies/`.
+Les scripts sont à mettre dans `dags/dependencies/`.
 
 ## Envoyer des fichiers sur Cloud Composer:
 

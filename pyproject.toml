@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "data-gcp"
+version = "0.1.0"
+description = "GCP services applicative implementation"
+authors = [
+    "Team Data"
+]
+readme = 'README.md'  # Markdown files are supported
+
+repository = "https://github.com/pass-culture/data-gcp"
+
+keywords = ['packaging', 'poetry']
+
+[tool.poetry.dependencies]
+python = "^3.7"
+google-cloud-bigquery = "^2.2.0"

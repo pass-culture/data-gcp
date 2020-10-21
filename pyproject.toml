@@ -14,3 +14,6 @@ keywords = ['packaging', 'poetry']
 [tool.poetry.dependencies]
 python = "^3.7"
 google-cloud-bigquery = "^2.2.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.1.1"

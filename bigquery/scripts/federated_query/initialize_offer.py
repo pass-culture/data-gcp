@@ -7,6 +7,7 @@ from bigquery.utils import run_query
 from set_env import set_env_vars
 
 import logging
+
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 logger = logging.getLogger()

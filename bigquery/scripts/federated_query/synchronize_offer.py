@@ -3,12 +3,13 @@ import sys
 from google.cloud import bigquery
 
 from bigquery.config import (
-    GCP_REGION, BIGQUERY_POC_DATASET, CLOUDSQL_DATABASE, OFFER_TABLE_NAME, OFFER_COLUMNS, OFFER_ID
+    GCP_REGION, BIGQUERY_POC_DATASET, CLOUDSQL_DATABASE, OFFER_TABLE_NAME, OFFER_COLUMNS, OFFER_ID,
 )
 from bigquery.utils import run_query
 from set_env import set_env_vars
 
 import logging
+
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 logger = logging.getLogger()

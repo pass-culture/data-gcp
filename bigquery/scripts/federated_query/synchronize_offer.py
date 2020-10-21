@@ -5,6 +5,7 @@ from google.cloud import bigquery
 from bigquery.config import (
     GCP_REGION, BIGQUERY_POC_DATASET, CLOUDSQL_DATABASE, OFFER_TABLE_NAME, OFFER_COLUMNS, OFFER_ID
 )
+from bigquery.utils import run_query
 from set_env import set_env_vars
 
 import logging
@@ -73,19 +74,8 @@ def main():
     )
 
     # Run queries
-    upsert_query_job = client.query(query=upsert_query)
-    logger.info(f"Query running: < {upsert_query_job.query} >")
-    results = upsert_query_job.result()
-    elapsed_time = round((upsert_query_job.ended - upsert_query_job.created).total_seconds(), 2)
-    Mb_processed = round(upsert_query_job.total_bytes_processed / 1000000, 2)
-    logger.info(f"Upserted {results.total_rows} lines ({Mb_processed} Mb processed) in {elapsed_time} sec")
-
-    delete_query_job = client.query(query=delete_query)
-    logger.info(f"Query running: < {delete_query_job.query} >")
-    results = delete_query_job.result()
-    elapsed_time = round((delete_query_job.ended - delete_query_job.created).total_seconds(), 2)
-    Mb_processed = round(delete_query_job.total_bytes_processed / 1000000, 2)
-    logger.info(f"Deleted {results.total_rows} lines ({Mb_processed} Mb processed) in {elapsed_time} sec")
+    run_query(bq_client=client, query=upsert_query)
+    run_query(bq_client=client, query=delete_query)
 
 
 if __name__ == "__main__":

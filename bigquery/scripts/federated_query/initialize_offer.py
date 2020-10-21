@@ -8,6 +8,8 @@ from set_env import set_env_vars
 import logging
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
+logger = logging.getLogger()
+
 
 def main():
     client = bigquery.Client()
@@ -22,7 +24,11 @@ def main():
 
     # define and launch job
     query_job = client.query(query=query, job_config=job_config)
+    logger.info(f"Query running: < {query_job.query} >")
     results = query_job.result()
+    elapsed_time = round((query_job.ended - query_job.created).total_seconds(), 2)
+    Mb_processed = round(query_job.total_bytes_processed / 1000000, 2)
+    logger.info(f"Inserted {results.total_rows} lines ({Mb_processed} Mb) in {elapsed_time} sec")
 
 
 if __name__ == "__main__":

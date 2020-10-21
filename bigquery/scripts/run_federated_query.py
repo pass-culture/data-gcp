@@ -2,7 +2,7 @@ import sys
 
 from google.cloud import bigquery
 
-from bigquery.config import GCP_PROJECT
+from bigquery.config import GCP_PROJECT_ID, GCP_REGION, BIGQUERY_POC_DATASET, CLOUDSQL_DATABASE
 from set_env import set_env_vars
 
 import logging
@@ -14,11 +14,11 @@ def main():
 
     # define destination table
     job_config = bigquery.QueryJobConfig()
-    job_config.destination = f"{GCP_PROJECT}.poc_data_federated_query.offer"
+    job_config.destination = f"{GCP_PROJECT_ID}.{BIGQUERY_POC_DATASET}.offer"
     job_config.write_disposition = "WRITE_TRUNCATE"
 
     # define query
-    query = "SELECT * FROM EXTERNAL_QUERY('europe-west1.cloud_SQL_dump-prod-8-10-2020', 'SELECT * FROM offer');"
+    query = f"SELECT * FROM EXTERNAL_QUERY('{GCP_REGION}.{CLOUDSQL_DATABASE}', 'SELECT * FROM offer');"
 
     # define and launch job
     query_job = client.query(query=query, job_config=job_config)

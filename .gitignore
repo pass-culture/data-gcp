@@ -2,3 +2,6 @@
 __pycache__
 
 .env.local
+
+.pytest_cache
+.coverage

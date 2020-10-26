@@ -1,0 +1,11 @@
+[run]
+source = .
+branch = True
+
+[report]
+omit = tests/*
+# Regexes for lines to exclude from consideration
+exclude_lines =
+    if __name__ == .__main__.:
+show_missing = True
+skip_empty = True

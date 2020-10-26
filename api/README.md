@@ -1,10 +1,17 @@
-# API Recommendation
+# API Recommandation
 
-Code source de l'api de recommendation
-
+Code source de l'api de recommandation.
 API Flask avec gunicorn déployée dans Cloud Run.
 
-Creation de l'api faite en suivant : https://cloud.google.com/run/docs/quickstarts/build-and-deploy?hl=fr#python
+Api crée en suivant : https://cloud.google.com/run/docs/quickstarts/build-and-deploy?hl=fr#python
+
+
+## Routes
+- Adresse API : https://apireco-4di2kltlja-ew.a.run.app/
+
+- Route de check : https://apireco-4di2kltlja-ew.a.run.app/check
+
+
 
 ## Utils
 

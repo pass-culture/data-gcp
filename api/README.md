@@ -17,7 +17,7 @@ Api crée en suivant : https://cloud.google.com/run/docs/quickstarts/build-and-d
 
 ### Tests
 
-Pour lancer les test : 
+Pour lancer les tests :
 ```
 pytest
 ```

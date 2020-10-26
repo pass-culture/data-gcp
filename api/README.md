@@ -15,6 +15,20 @@ Api crée en suivant : https://cloud.google.com/run/docs/quickstarts/build-and-d
 
 ## Utils
 
+### Tests
+
+Pour lancer les tests :
+```
+pytest
+```
+
+Pour le test coverage :
+```
+pytest --cov
+```
+(les paramètres sont réglés dans le `.coveragerc`)
+
+
 ### Pour conteneuriser l'image
 
 ```
@@ -26,7 +40,11 @@ gcloud builds submit --tag gcr.io/<PROJECT-ID>/<IMAGE-NAME>
 
 ### Pour déployer sur Cloud Run
 
-**Premier déployement**
+Si demandé toujours choisir les options:
+- target platform: "Cloud Run (fully managed)"
+- region : "europe-west1"
+
+**Premier déploiement**
 ```
 cd api
 gcloud run deploy <SERVICE> --image <IMAGE> --platform managed
@@ -37,7 +55,7 @@ gcloud run deploy <SERVICE> --image <IMAGE> --platform managed
 **Pour déployer une nouvelle version**
 ```
 cd api
-gcloud run deploy <SERVICE> --image <IMAGE>:latest
+gcloud run deploy <SERVICE> --image <IMAGE>:latest --platform managed
 ```
 - SERVICE : nom du service Cloud Run a redéployer (apireco)
 - IMAGE : L'url de l'image à déployer (gcr.io/pass-culture-app-projet-test/api_reco)

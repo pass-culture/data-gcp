@@ -1,14 +1,7 @@
 version: 2.1
 
-workflows:
-  version: 2
-  run-tests:
-    jobs:
-      - tests
-
-
 jobs:
-  tests:
+  build:
     docker:
       - image: circleci/python:3.7
         auth:

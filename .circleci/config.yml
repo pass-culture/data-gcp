@@ -4,36 +4,10 @@ workflows:
   version: 2
   run-tests:
     jobs:
-      - build
-      - api-tests:
-          requires:
-            - build
+      - api-tests
 
 
 jobs:
-  build:
-    docker:
-      - image: circleci/python:3.7
-        auth:
-          username: $DOCKERHUB_USER
-          password: $DOCKERHUB_PASSWORD
-    working_directory: ~/data-gcp
-    steps:
-      - checkout
-      - restore_cache:
-          key: dependencies-{{ checksum "api/requirements.txt" }}
-      - run:
-          name: Install Python deps in a venv
-          command: |
-            cd api
-            python3 -m venv venv
-            . venv/bin/activate
-            pip install -r requirements.txt
-      - save_cache:
-          key: dependencies-{{ checksum "api/requirements.txt" }}
-          paths:
-            - "venv"
-
   api-tests:
     docker:
       - image: circleci/python:3.7
@@ -42,13 +16,20 @@ jobs:
           password: $DOCKERHUB_PASSWORD
     working_directory: ~/data-gcp/api
     steps:
-      - checkout
+      - checkout:
+          path: ~/data-gcp
       - restore_cache:
           key: dependencies-{{ checksum "requirements.txt" }}
       - run:
-          name: Activate venv
+          name: Install Python deps in a venv
           command: |
+            python3 -m venv venv
             . venv/bin/activate
+            pip install -r requirements.txt
+      - save_cache:
+          key: dependencies-{{ checksum "requirements.txt" }}
+          paths:
+            - "venv"
       - run:
           name: Run tests
           command: |

@@ -1,5 +1,15 @@
 version: 2.1
 
+workflows:
+  version: 2
+  run-tests:
+    jobs:
+      - build
+      - api-tests:
+          requires:
+            - build
+
+
 jobs:
   build:
     docker:
@@ -7,8 +17,18 @@ jobs:
         auth:
           username: $DOCKERHUB_USER
           password: $DOCKERHUB_PASSWORD
+    working_directory: ~/data-gcp
     steps:
       - checkout
+
+  api-tests:
+    docker:
+      - image: circleci/python:3.7
+        auth:
+          username: $DOCKERHUB_USER
+          password: $DOCKERHUB_PASSWORD
+    working_directory: ~/data-gcp/api
+    steps:
       - restore_cache:
           key: dependencies-{{ checksum "requirements.txt" }}
       - run:

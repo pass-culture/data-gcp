@@ -31,4 +31,4 @@ jobs:
       - run:
           name: Run tests
           command: |
-            pytest --cov 
+            pytest --cov

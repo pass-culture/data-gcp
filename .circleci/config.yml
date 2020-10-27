@@ -10,7 +10,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-        key: dependencies-{{ checksum "requirements.txt" }}
+          key: dependencies-{{ checksum "requirements.txt" }}
       - run:
           name: Install Python deps in a venv
           command: |

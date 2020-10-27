@@ -20,6 +20,19 @@ jobs:
     working_directory: ~/data-gcp
     steps:
       - checkout
+      - restore_cache:
+          key: dependencies-{{ checksum "api/requirements.txt" }}
+      - run:
+          name: Install Python deps in a venv
+          command: |
+            cd api
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install -r requirements.txt
+      - save_cache:
+          key: dependencies-{{ checksum "api/requirements.txt" }}
+          paths:
+            - "venv"
 
   api-tests:
     docker:
@@ -29,18 +42,13 @@ jobs:
           password: $DOCKERHUB_PASSWORD
     working_directory: ~/data-gcp/api
     steps:
+      - checkout
       - restore_cache:
           key: dependencies-{{ checksum "requirements.txt" }}
       - run:
-          name: Install Python deps in a venv
+          name: Activate venv
           command: |
-            python3 -m venv venv
             . venv/bin/activate
-            pip install -r requirements.txt
-      - save_cache:
-          key: dependencies-{{ checksum "requirements.txt" }}
-          paths:
-            - "venv"
       - run:
           name: Run tests
           command: |

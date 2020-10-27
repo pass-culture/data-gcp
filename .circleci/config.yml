@@ -19,15 +19,15 @@ jobs:
       - checkout:
           path: ~/data-gcp
       - restore_cache:
-          key: dependencies-{{ checksum "requirements.txt" }}
+          key: dependencies-{{ checksum "dev-requirements.txt" }}
       - run:
           name: Install Python deps in a venv
           command: |
             python3 -m venv venv
             . venv/bin/activate
-            pip install -r requirements.txt
+            pip install -r dev-requirements.txt
       - save_cache:
-          key: dependencies-{{ checksum "requirements.txt" }}
+          key: dependencies-{{ checksum "dev-requirements.txt" }}
           paths:
             - "venv"
       - run:

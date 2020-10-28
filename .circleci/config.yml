@@ -4,11 +4,17 @@ workflows:
   version: 2
   run-checks:
     jobs:
-      - api-checks
+      - api-build
+      - api-tests:
+          requires:
+            - api-build
+      - api-linter:
+          requires:
+            - api-build
 
 
 jobs:
-  api-checks:
+  api-build:
     docker:
       - image: circleci/python:3.7
         auth:
@@ -30,11 +36,37 @@ jobs:
           key: dependencies-{{ checksum "dev-requirements.txt" }}
           paths:
             - "venv"
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+
+  api-tests:
+    docker:
+      - image: circleci/python:3.7
+        auth:
+          username: $DOCKERHUB_USER
+          password: $DOCKERHUB_PASSWORD
+    working_directory: ~/data-gcp/api
+    steps:
+      - attach_workspace:
+          at: .
       - run:
           name: Run tests
           command: |
             . venv/bin/activate
             pytest --cov
+
+  api-linter:
+    docker:
+      - image: circleci/python:3.7
+        auth:
+          username: $DOCKERHUB_USER
+          password: $DOCKERHUB_PASSWORD
+    working_directory: ~/data-gcp/api
+    steps:
+      - attach_workspace:
+          at: .
       - run:
           name: Run linter
           command: |

@@ -1,0 +1,74 @@
+version: 2.1
+
+workflows:
+  version: 2
+  run-checks:
+    jobs:
+      - api-build
+      - api-tests:
+          requires:
+            - api-build
+      - api-linter:
+          requires:
+            - api-build
+
+
+jobs:
+  api-build:
+    docker:
+      - image: circleci/python:3.7
+        auth:
+          username: $DOCKERHUB_USER
+          password: $DOCKERHUB_PASSWORD
+    working_directory: ~/data-gcp/api
+    steps:
+      - checkout:
+          path: ~/data-gcp
+      - restore_cache:
+          key: dependencies-{{ checksum "dev-requirements.txt" }}
+      - run:
+          name: Install Python deps in a venv
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install -r dev-requirements.txt
+      - save_cache:
+          key: dependencies-{{ checksum "dev-requirements.txt" }}
+          paths:
+            - "venv"
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+
+  api-tests:
+    docker:
+      - image: circleci/python:3.7
+        auth:
+          username: $DOCKERHUB_USER
+          password: $DOCKERHUB_PASSWORD
+    working_directory: ~/data-gcp/api
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Run tests
+          command: |
+            . venv/bin/activate
+            pytest --cov
+
+  api-linter:
+    docker:
+      - image: circleci/python:3.7
+        auth:
+          username: $DOCKERHUB_USER
+          password: $DOCKERHUB_PASSWORD
+    working_directory: ~/data-gcp/api
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Run linter
+          command: |
+            . venv/bin/activate
+            black --check --exclude="venv" .

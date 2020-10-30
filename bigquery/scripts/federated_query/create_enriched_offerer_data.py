@@ -70,54 +70,18 @@ def define_number_of_bookings_not_cancelled_query(dataset):
         """
 
 
-# def define_offerer_departement_code_query():
-#     MAINLAND_DEPARTEMENT_CODE_LENGTH = 2
-#     OVERSEAS_DEPARTEMENT_CODE_LENGTH = 3
-#     OVERSEAS_DEPARTEMENT_IDENTIFIER = "97"
-#
-#     def _is_overseas_departement(postalCode: str) -> bool:
-#         return postalCode.startswith(OVERSEAS_DEPARTEMENT_IDENTIFIER)
-#
-#     def get_departement_code(postalCode: str) -> str:
-#         return (
-#             postalCode[:OVERSEAS_DEPARTEMENT_CODE_LENGTH]
-#             if _is_overseas_departement(postalCode)
-#             else postalCode[:MAINLAND_DEPARTEMENT_CODE_LENGTH]
-#         )
-#
-#     def get_offerer_with_departement_code_dataframe(postal_code_dataframe: pandas.DataFrame) -> pandas.DataFrame:
-#         department_code_dataframe = postal_code_dataframe.copy()
-#         department_code_dataframe["department_code"] = department_code_dataframe[
-#             "postalCode"
-#         ].apply(get_departement_code)
-#         return department_code_dataframe.drop("postalCode", axis=1)
-#
-#     def create_table_offerer_departement_code(department_code_dataframe: pandas.DataFrame, ENGINE) -> None:
-#         with ENGINE.connect() as connection:
-#             department_code_dataframe.to_sql(
-#                 name="offerer_departement_code",
-#                 con=connection,
-#                 if_exists="replace",
-#                 dtype={
-#                     "id": sqlalchemy.types.BIGINT(),
-#                     "APE_label": sqlalchemy.types.VARCHAR(length=250),
-#                 },
-#             )
-#
-#     query = """
-#     SELECT
-#         id
-#         ,"postalCode"
-#     FROM offerer
-#     WHERE "postalCode" is not NULL
-#     """
-#     postal_code_dataframe = to_pandas(query)
-#
-#     department_code_dataframe = get_offerer_with_departement_code_dataframe(
-#         postal_code_dataframe
-#     )
-#     create_table_offerer_departement_code(department_code_dataframe, ENGINE)
-#     return ""
+def define_offerer_departement_code_query(dataset):
+    return f"""
+        CREATE TEMP TABLE offerer_departement_code AS
+            SELECT 
+                id, 
+                CASE SUBSTRING(postalCode, 0, 2) 
+                    WHEN '97' THEN SUBSTRING(postalCode, 0, 3) 
+                    ELSE SUBSTRING(postalCode, 0, 2) 
+                END AS department_code
+            FROM {dataset}.offerer
+            WHERE "postalCode" is not NULL;
+    """
 
 
 def define_number_of_venues_query(dataset):
@@ -210,7 +174,7 @@ def define_enriched_offerer_query(dataset):
                 related_bookings.date_de_premiere_reservation,
                 related_offers.nombre_offres,
                 related_non_cancelled_bookings.nombre_de_reservations_non_annulees,
-                -- offerer_departement_code.department_code AS departement,
+                offerer_departement_code.department_code AS departement,
                 related_venues.nombre_lieux,
                 related_venues_with_offer.nombre_de_lieux_avec_offres,
                 -- offerer_humanized_id.humanized_id AS offerer_humanized_id
@@ -220,7 +184,7 @@ def define_enriched_offerer_query(dataset):
             LEFT JOIN related_offers ON related_offers.offerer_id = offerer.id
             LEFT JOIN related_non_cancelled_bookings 
                 ON related_non_cancelled_bookings.offerer_id = offerer.id
-            -- LEFT JOIN offerer_departement_code ON offerer_departement_code.id = offerer.id
+            LEFT JOIN offerer_departement_code ON offerer_departement_code.id = offerer.id
             LEFT JOIN related_venues ON related_venues.offerer_id = offerer.id
             LEFT JOIN related_venues_with_offer 
                 ON related_venues_with_offer.offerer_id = offerer.id
@@ -237,7 +201,7 @@ def main(dataset):
     first_booking_creation_dates_query = define_first_booking_creation_dates_query(dataset=dataset)
     number_of_offers_query = define_number_of_offers_query(dataset=dataset)
     number_of_bookings_not_cancelled_query = define_number_of_bookings_not_cancelled_query(dataset=dataset)
-    # offerer_departement_code_query = define_offerer_departement_code_query()
+    offerer_departement_code_query = define_offerer_departement_code_query(dataset=dataset)
     number_of_venues_query = define_number_of_venues_query(dataset=dataset)
     number_of_venues_without_offer_query = define_number_of_venues_without_offer_query(dataset=dataset)
     # humanized_id_query = define_humanized_id_query()
@@ -248,6 +212,7 @@ def main(dataset):
         {first_booking_creation_dates_query}
         {number_of_offers_query}
         {number_of_bookings_not_cancelled_query}
+        {offerer_departement_code_query}
         {number_of_venues_query}
         {number_of_venues_without_offer_query}
         {materialized_enriched_offerer_query}

@@ -120,7 +120,8 @@ def define_number_of_venues_without_offer_query(dataset):
 
 
 def define_humanized_id_query(dataset):
-    humanize_id_function_query = f"""
+    # 1. Define function humanize_id(int) -> str
+    humanize_id_definition_query = f"""
         CREATE TEMPORARY FUNCTION humanize_id(id INT64)
         RETURNS STRING
         LANGUAGE js
@@ -128,23 +129,18 @@ def define_humanized_id_query(dataset):
             library="{BASE32_JS_LIB_PATH}"
           )
         AS \"\"\"
-          // turn int into bytes array
-          var byteArray = [];
-          var updated_id = id;
-          while (updated_id != 0) {{
-            var byte = updated_id & 0xff;
-            byteArray.push(byte);
-            updated_id = (updated_id - byte) / 256 ;
-          }}
-          var reversedByteArray = byteArray.reverse();
+    """
 
-          // apply base32 encoding
-          var raw_b32 = base32Encode(new Uint8Array(reversedByteArray), 'RFC4648', {{ padding: false }});
+    # open js file and copy code
+    with open("humanize_id.js") as js_file:
+        js_code = "\t\t\t".join(js_file.readlines())
+    humanize_id_definition_query += "\t\t" + js_code
 
-          // replace "O" with "8" and "I" with "9"
-          return raw_b32.replace('O', '8').replace('I', '9');
+    humanize_id_definition_query += """
         \"\"\";
     """
+
+    # 2. Use humanize_id function to create (temp) table
     tmp_table_query = f"""
         CREATE TEMP TABLE offerer_humanized_id AS
             SELECT
@@ -155,7 +151,7 @@ def define_humanized_id_query(dataset):
     """
 
     return f"""
-        {humanize_id_function_query}
+        {humanize_id_definition_query}
         {tmp_table_query}
     """
 

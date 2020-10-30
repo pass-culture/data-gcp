@@ -3,6 +3,7 @@ import sys
 from google.cloud import bigquery
 
 from bigquery.utils import run_query
+from bigquery.config import BASE32_JS_LIB_PATH
 from set_env import set_env_vars
 
 import logging
@@ -118,49 +119,45 @@ def define_number_of_venues_without_offer_query(dataset):
         """
 
 
-# def define_humanized_id_query():
-#     def int_to_bytes(x):
-#         return x.to_bytes((x.bit_length() + 7) // 8, "big")
-#
-#     def humanize(integer):
-#         """ Create a human-compatible ID from and integer """
-#         if integer is None:
-#             return None
-#         b32 = b32encode(int_to_bytes(integer))
-#         return b32.decode("ascii").replace("O", "8").replace("I", "9").rstrip("=")
-#
-#     def get_humanized_id_dataframe(id_dataframe: pandas.DataFrame) -> pandas.DataFrame:
-#         humanized_id_dataframe = id_dataframe.copy()
-#         humanized_id_dataframe["humanized_id"] = humanized_id_dataframe["id"].apply(
-#             humanize
-#         )
-#         return humanized_id_dataframe
-#
-#     def create_table_humanized_id(ENGINE, table_name: str, humanized_id_dataframe: pandas.DataFrame) -> None:
-#         with ENGINE.connect() as connection:
-#             humanized_id_dataframe.to_sql(
-#                 name="user_humanized_id"
-#                 if table_name == '"user"'
-#                 else "{}_humanized_id".format(table_name),
-#                 con=connection,
-#                 if_exists="replace",
-#                 method="multi",
-#                 chunksize=500,
-#                 dtype={
-#                     "id": sqlalchemy.types.BIGINT(),
-#                     "humanized_id": sqlalchemy.types.VARCHAR(length=250),
-#                 },
-#             )
-#
-#     query = """
-#             SELECT id
-#             FROM offerer
-#             WHERE id is not NULL
-#         """
-#     id_dataframe = to_pandas(query)
-#     humanized_id_dataframe = get_humanized_id_dataframe(id_dataframe)
-#     create_table_humanized_id(ENGINE, "offerer", humanized_id_dataframe)
-#     return ""
+def define_humanized_id_query(dataset):
+    humanize_id_function_query = f"""
+        CREATE TEMPORARY FUNCTION humanize_id(id INT64)
+        RETURNS STRING
+        LANGUAGE js
+        OPTIONS (
+            library="{BASE32_JS_LIB_PATH}"
+          )
+        AS \"\"\"
+          // turn int into bytes array
+          var byteArray = [];
+          var updated_id = id;
+          while (updated_id != 0) {{
+            var byte = updated_id & 0xff;
+            byteArray.push(byte);
+            updated_id = (updated_id - byte) / 256 ;
+          }}
+          var reversedByteArray = byteArray.reverse();
+
+          // apply base32 encoding
+          var raw_b32 = base32Encode(new Uint8Array(reversedByteArray), 'RFC4648', {{ padding: false }});
+
+          // replace "O" with "8" and "I" with "9"
+          return raw_b32.replace('O', '8').replace('I', '9');
+        \"\"\";
+    """
+    tmp_table_query = f"""
+        CREATE TEMP TABLE offerer_humanized_id AS
+            SELECT
+                id,
+                humanize_id(id) AS humanized_id
+            FROM {dataset}.offerer
+            WHERE id is not NULL;
+    """
+
+    return f"""
+        {humanize_id_function_query}
+        {tmp_table_query}
+    """
 
 
 def define_enriched_offerer_query(dataset):
@@ -177,7 +174,7 @@ def define_enriched_offerer_query(dataset):
                 offerer_departement_code.department_code AS departement,
                 related_venues.nombre_lieux,
                 related_venues_with_offer.nombre_de_lieux_avec_offres,
-                -- offerer_humanized_id.humanized_id AS offerer_humanized_id
+                offerer_humanized_id.humanized_id AS offerer_humanized_id
             FROM {dataset}.offerer
             LEFT JOIN related_stocks ON related_stocks.offerer_id = offerer.id
             LEFT JOIN related_bookings ON related_bookings.offerer_id = offerer.id
@@ -188,7 +185,7 @@ def define_enriched_offerer_query(dataset):
             LEFT JOIN related_venues ON related_venues.offerer_id = offerer.id
             LEFT JOIN related_venues_with_offer
                 ON related_venues_with_offer.offerer_id = offerer.id
-            -- LEFT JOIN offerer_humanized_id ON offerer_humanized_id.id = offerer.id
+            LEFT JOIN offerer_humanized_id ON offerer_humanized_id.id = offerer.id
         );
     """
 
@@ -204,7 +201,7 @@ def main(dataset):
     offerer_departement_code_query = define_offerer_departement_code_query(dataset=dataset)
     number_of_venues_query = define_number_of_venues_query(dataset=dataset)
     number_of_venues_without_offer_query = define_number_of_venues_without_offer_query(dataset=dataset)
-    # humanized_id_query = define_humanized_id_query()
+    humanized_id_query = define_humanized_id_query(dataset=dataset)
     materialized_enriched_offerer_query = define_enriched_offerer_query(dataset=dataset)
 
     overall_query = f"""
@@ -215,6 +212,7 @@ def main(dataset):
         {offerer_departement_code_query}
         {number_of_venues_query}
         {number_of_venues_without_offer_query}
+        {humanized_id_query}
         {materialized_enriched_offerer_query}
     """
 

@@ -56,7 +56,7 @@ def define_number_of_offers_query(dataset):
 
 def define_number_of_bookings_not_cancelled_query(dataset):
     return f"""
-        CREATE  TEMP TABLE related_non_cancelled_bookings AS
+        CREATE TEMP TABLE related_non_cancelled_bookings AS
             SELECT
                 offerer.id AS offerer_id,
                 COUNT(booking.id) AS nombre_de_reservations_non_annulees
@@ -64,7 +64,7 @@ def define_number_of_bookings_not_cancelled_query(dataset):
             LEFT JOIN {dataset}.venue ON venue.managingOffererId = offerer.id
             LEFT JOIN {dataset}.offer ON offer.venueId = venue.id
             LEFT JOIN {dataset}.stock ON stock.offerId = offer.id
-            LEFT JOIN {dataset}.booking 
+            LEFT JOIN {dataset}.booking
                 ON booking.stockId = stock.id AND booking.isCancelled IS FALSE
             GROUP BY offerer_id;
         """
@@ -73,11 +73,11 @@ def define_number_of_bookings_not_cancelled_query(dataset):
 def define_offerer_departement_code_query(dataset):
     return f"""
         CREATE TEMP TABLE offerer_departement_code AS
-            SELECT 
-                id, 
-                CASE SUBSTRING(postalCode, 0, 2) 
-                    WHEN '97' THEN SUBSTRING(postalCode, 0, 3) 
-                    ELSE SUBSTRING(postalCode, 0, 2) 
+            SELECT
+                id,
+                CASE SUBSTRING(postalCode, 0, 2)
+                    WHEN '97' THEN SUBSTRING(postalCode, 0, 3)
+                    ELSE SUBSTRING(postalCode, 0, 2)
                 END AS department_code
             FROM {dataset}.offerer
             WHERE "postalCode" is not NULL;
@@ -182,11 +182,11 @@ def define_enriched_offerer_query(dataset):
             LEFT JOIN related_stocks ON related_stocks.offerer_id = offerer.id
             LEFT JOIN related_bookings ON related_bookings.offerer_id = offerer.id
             LEFT JOIN related_offers ON related_offers.offerer_id = offerer.id
-            LEFT JOIN related_non_cancelled_bookings 
+            LEFT JOIN related_non_cancelled_bookings
                 ON related_non_cancelled_bookings.offerer_id = offerer.id
             LEFT JOIN offerer_departement_code ON offerer_departement_code.id = offerer.id
             LEFT JOIN related_venues ON related_venues.offerer_id = offerer.id
-            LEFT JOIN related_venues_with_offer 
+            LEFT JOIN related_venues_with_offer
                 ON related_venues_with_offer.offerer_id = offerer.id
             -- LEFT JOIN offerer_humanized_id ON offerer_humanized_id.id = offerer.id
         );

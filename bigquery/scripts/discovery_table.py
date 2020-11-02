@@ -1,9 +1,6 @@
-#%%
 from google.cloud import bigquery
 
-client = bigquery.Client(project="pass-culture-app-projet-test")
 
-# %%
 def _create_function_offer_has_at_least_one_bookable_stock(client) -> str:
     function_name = "public.offer_has_at_least_one_bookable_stock"
     query_job = client.query(
@@ -101,5 +98,6 @@ def create_discovery_table(client, name: str) -> None:
     query_job.result()
 
 
-#%%
-create_discovery_table(client, "public.discovery_table")
+if __name__ == "__main__":
+    client = bigquery.Client(project="pass-culture-app-projet-test")
+    create_discovery_table(client, "public.discovery_table")

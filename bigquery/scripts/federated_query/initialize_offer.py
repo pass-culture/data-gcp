@@ -2,7 +2,12 @@ import sys
 
 from google.cloud import bigquery
 
-from bigquery.config import GCP_PROJECT_ID, GCP_REGION, BIGQUERY_POC_DATASET, CLOUDSQL_DATABASE
+from bigquery.config import (
+    GCP_PROJECT_ID,
+    GCP_REGION,
+    BIGQUERY_POC_DATASET,
+    CLOUDSQL_DATABASE,
+)
 from bigquery.utils import run_query
 from set_env import set_env_vars
 

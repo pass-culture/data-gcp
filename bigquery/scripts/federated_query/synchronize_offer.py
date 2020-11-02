@@ -3,7 +3,12 @@ import sys
 from google.cloud import bigquery
 
 from bigquery.config import (
-    GCP_REGION, BIGQUERY_POC_DATASET, CLOUDSQL_DATABASE, OFFER_TABLE_NAME, OFFER_COLUMNS, OFFER_ID,
+    GCP_REGION,
+    BIGQUERY_POC_DATASET,
+    CLOUDSQL_DATABASE,
+    OFFER_TABLE_NAME,
+    OFFER_COLUMNS,
+    OFFER_ID,
 )
 from bigquery.utils import run_query
 from set_env import set_env_vars
@@ -27,7 +32,9 @@ def retrieve_last_check(bq_client, table_name):
 
 
 def define_upsert_query(last_check, table_name, columns, id_column):
-    formatted_set = ", ".join([f"{col} = csql_table.{col}" for col in columns if col != id_column])
+    formatted_set = ", ".join(
+        [f"{col} = csql_table.{col}" for col in columns if col != id_column]
+    )
     formatted_insert = ", ".join(columns)
     query = f"""
         MERGE {BIGQUERY_POC_DATASET}.{table_name} bq_table
@@ -68,11 +75,12 @@ def main():
 
     # Generate queries for offer table
     upsert_query = define_upsert_query(
-        last_check=last_check, table_name=OFFER_TABLE_NAME, columns=OFFER_COLUMNS, id_column=OFFER_ID
+        last_check=last_check,
+        table_name=OFFER_TABLE_NAME,
+        columns=OFFER_COLUMNS,
+        id_column=OFFER_ID,
     )
-    delete_query = define_delete_query(
-        table_name=OFFER_TABLE_NAME, id_column=OFFER_ID
-    )
+    delete_query = define_delete_query(table_name=OFFER_TABLE_NAME, id_column=OFFER_ID)
 
     # Run queries
     run_query(bq_client=client, query=upsert_query)

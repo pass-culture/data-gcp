@@ -30,4 +30,4 @@ Dans `.env.local`, renseigne le chemin vers ta clé (.JSON) dans la variable `GO
 
 /api : l'api de recommandation déployée sur Cloud Run
 
-/bigquery : @florian ?
+/bigquery : l'ensemble du code (utilitaires, configuration, scripts) pour interagir avec BigQuery.

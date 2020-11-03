@@ -1,6 +1,30 @@
 # data-gcp
 Repo pour la team data sur GCP
 
+## INSTALL
+### BigQuery
+**Prérequis** :
+- pyenv
+- poetry
+- accès aux comptes de services GCP
+
+**1.Configure le projet**
+
+```
+git clone git@github.com:pass-culture/data-gcp.git
+cd data-gcp
+pyenv install 3.7  # si nécessaire
+pyenv local 3.7
+poetry install
+```
+
+**2.Configure le compte de service GCP**
+
+Crée une clé sur un compte de service existant (ou nouveau) et télécharge la en JSON.
+
+Copie le fichier `.env` en `.env.local`.
+
+Dans `.env.local`, renseigne le chemin vers ta clé (.JSON) dans la variable `GOOGLE_APPLICATION_CREDENTIALS`.
 
 ## Organisation
 

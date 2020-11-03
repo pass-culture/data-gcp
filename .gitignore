@@ -5,3 +5,8 @@ __pycache__
 
 .pytest_cache
 .coverage
+.python-version
+.venv/
+
+# ignore .json credential files
+*.json

@@ -13,8 +13,8 @@ Repo pour la team data sur GCP
 ```
 git clone git@github.com:pass-culture/data-gcp.git
 cd data-gcp
-pyenv install 3.7  # si nécessaire
-pyenv local 3.7
+pyenv install 3.7.7  # si nécessaire
+pyenv local 3.7.7
 poetry install
 ```
 

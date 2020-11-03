@@ -1,4 +1,4 @@
-CREATE TABLE public.big_offer (
+CREATE TABLE public.target_offer (
 	"idAtProviders" varchar(70) NULL,
 	"dateModifiedAtLastProvider" timestamp NULL,
 	id bigserial NOT NULL,
@@ -23,12 +23,12 @@ CREATE TABLE public.big_offer (
 	"fieldsUpdated" _varchar NOT NULL DEFAULT '{}'::character varying[],
 	"withdrawalDetails" text NULL,
 	lastupdate timestamp NULL DEFAULT now(),
-	CONSTRAINT "big_offer_idAtProviders_key" UNIQUE ("idAtProviders"),
-	CONSTRAINT big_offer_pkey PRIMARY KEY (id),
-	CONSTRAINT big_offer_type_check CHECK (((type)::text <> 'None'::text))
+	CONSTRAINT "target_offer_idAtProviders_key" UNIQUE ("idAtProviders"),
+	CONSTRAINT target_offer_pkey PRIMARY KEY (id),
+	CONSTRAINT target_offer_type_check CHECK (((type)::text <> 'None'::text))
 );
 
-CREATE INDEX idx_big_offer_fts_name ON public.big_offer USING gin (to_tsvector('french_unaccent'::regconfig, (name)::text));
-CREATE INDEX "ix_big_offer_productId" ON public.big_offer USING btree ("productId");
-CREATE INDEX ix_big_offer_type ON public.big_offer USING btree (type);
-CREATE INDEX "ix_big_offer_venueId" ON public.big_offer USING btree ("venueId");
+CREATE INDEX idx_target_offer_fts_name ON public.target_offer USING gin (to_tsvector('french_unaccent'::regconfig, (name)::text));
+CREATE INDEX "ix_target_offer_productId" ON public.target_offer USING btree ("productId");
+CREATE INDEX ix_target_offer_type ON public.target_offer USING btree (type);
+CREATE INDEX "ix_target_offer_venueId" ON public.target_offer USING btree ("venueId");

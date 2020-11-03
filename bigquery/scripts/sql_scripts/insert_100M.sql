@@ -11,8 +11,12 @@ CREATE VIEW multiplicator_256
 AS SELECT ( ( hi.n * 16 ) + lo.n ) AS n
      FROM multiplicator_16 lo, multiplicator_16 hi;
 
+CREATE VIEW multiplicator_65536
+AS SELECT ( ( hi.n * 256 ) + lo.n ) AS n
+     FROM multiplicator_256 lo, multiplicator_256 hi;
 
-INSERT INTO big_offer ( "idAtProviders", "dateModifiedAtLastProvider", "dateCreated", "productId", "venueId", "lastProviderId", "bookingEmail", "isActive", "type", "name", description, conditions, "ageMin", "ageMax", url, "mediaUrls", "durationMinutes", "isNational", "extraData", "isDuo", "fieldsUpdated", "withdrawalDetails", lastupdate )
+
+INSERT INTO target_offer ( "idAtProviders", "dateModifiedAtLastProvider", "dateCreated", "productId", "venueId", "lastProviderId", "bookingEmail", "isActive", "type", "name", description, conditions, "ageMin", "ageMax", url, "mediaUrls", "durationMinutes", "isNational", "extraData", "isDuo", "fieldsUpdated", "withdrawalDetails", lastupdate )
 SELECT NULL, "dateModifiedAtLastProvider", "dateCreated", "productId", "venueId", "lastProviderId", "bookingEmail", "isActive", "type", "name", description, conditions, "ageMin", "ageMax", url, "mediaUrls", "durationMinutes", "isNational", "extraData", "isDuo", "fieldsUpdated", "withdrawalDetails", lastupdate
 FROM offer o
-JOIN multiplicator_256 m on m.n between 0 and 255;
+JOIN multiplicator_65536 m on m.n between 0 and 6666;

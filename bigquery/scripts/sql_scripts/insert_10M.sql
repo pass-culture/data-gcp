@@ -1,0 +1,4 @@
+INSERT INTO target_offer ( "idAtProviders", "dateModifiedAtLastProvider", "dateCreated", "productId", "venueId", "lastProviderId", "bookingEmail", "isActive", "type", "name", description, conditions, "ageMin", "ageMax", url, "mediaUrls", "durationMinutes", "isNational", "extraData", "isDuo", "fieldsUpdated", "withdrawalDetails", lastupdate )
+SELECT NULL, "dateModifiedAtLastProvider", "dateCreated", "productId", "venueId", "lastProviderId", "bookingEmail", "isActive", "type", "name", description, conditions, "ageMin", "ageMax", url, "mediaUrls", "durationMinutes", "isNational", "extraData", "isDuo", "fieldsUpdated", "withdrawalDetails", lastupdate
+FROM offer o
+JOIN multiplicator_65536 m on m.n between 0 and 666;

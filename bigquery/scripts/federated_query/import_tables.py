@@ -2,7 +2,13 @@ import sys
 
 from google.cloud import bigquery
 
-from bigquery.config import GCP_PROJECT_ID, GCP_REGION, CLOUDSQL_DATABASE
+from bigquery.config import (
+    GCP_PROJECT_ID,
+    GCP_REGION,
+    CLOUDSQL_DATABASE,
+    MIGRATION_ENRICHED_VENUE_DATA,
+    MIGRATION_ENRICHED_OFFERER_DATA,
+)
 from bigquery.utils import run_query
 from set_env import set_env_vars
 
@@ -42,6 +48,17 @@ if __name__ == "__main__":
     enriched_offerer_data_tables = ["offerer", "venue", "offer", "stock", "booking"]
     enriched_offer_data_tables = ["offer", "stock", "booking", "favorite", "venue", "offerer"]
     enriched_user_data_tables = ["booking", "stock", "offer", "user"]
+    enriched_venue_data_tables = [
+        "offerer",
+        "venue",
+        "offer",
+        "stock",
+        "booking",
+        "venue_type",
+        "venue_label",
+    ]
     anonymization_tables = ["user", "provider", "offerer", "bank_information", "booking", "payment", "venue", "user_offerer"]
 
     main(tables=enriched_user_data_tables, dataset="migration_enriched_user_data")
+    main(tables=enriched_offerer_data_tables, dataset=MIGRATION_ENRICHED_OFFERER_DATA)
+    main(tables=enriched_venue_data_tables, dataset=MIGRATION_ENRICHED_VENUE_DATA)

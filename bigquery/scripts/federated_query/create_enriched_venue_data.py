@@ -229,6 +229,7 @@ def main(dataset):
         dataset=dataset
     )
     real_revenue_per_venue_query = define_real_revenue_per_venue_query(dataset=dataset)
+    humanized_id_query = define_humanized_id_query(dataset=dataset, table="venue")
     materialized_enriched_venue_query = define_enriched_venue_query(dataset=dataset)
 
     overall_query = f"""
@@ -240,6 +241,7 @@ def main(dataset):
         {offers_created_per_venue_query}
         {theoretic_revenue_per_venue_query}
         {real_revenue_per_venue_query}
+        {humanized_id_query}
         {materialized_enriched_venue_query}
     """
 
@@ -249,4 +251,4 @@ def main(dataset):
 
 if __name__ == "__main__":
     set_env_vars()
-    main(dataset="migration_enriched_venue_data")
+    main(dataset=MIGRATION_ENRICHED_VENUE_DATA)

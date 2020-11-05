@@ -3,6 +3,8 @@ import sys
 from google.cloud import bigquery
 
 from bigquery.utils import run_query
+from bigquery.config import MIGRATION_ENRICHED_VENUE_DATA
+from utils import define_humanized_id_query
 from set_env import set_env_vars
 
 import logging
@@ -23,9 +25,9 @@ def define_total_bookings_per_venue_query(dataset):
             ON venue.id = offer.venueId
             AND (offer.bookingEmail != 'jeux-concours@passculture.app' or offer.bookingEmail is NULL)
             AND offer.type NOT IN ('EventType.ACTIVATION','ThingType.ACTIVATION')
-            LEFT JOIN stock
+            LEFT JOIN {dataset}.stock
             ON stock.offerId = offer.id
-            LEFT JOIN booking
+            LEFT JOIN {dataset}.booking
             ON stock.id = booking.stockId
             GROUP BY venue.id;
     """
@@ -43,7 +45,7 @@ def define_non_cancelled_bookings_per_venue_query(dataset):
             AND (offer.bookingEmail != 'jeux-concours@passculture.app' or offer.bookingEmail is NULL)
             AND offer.type NOT IN ('EventType.ACTIVATION','ThingType.ACTIVATION')
             LEFT JOIN {dataset}.stock
-            ON stock."offerId" = offer.id
+            ON stock.offerId = offer.id
             LEFT JOIN {dataset}.booking
             ON stock.id = booking.stockId
             AND NOT booking.isCancelled
@@ -60,7 +62,7 @@ def define_used_bookings_per_venue_query(dataset):
             FROM {dataset}.venue
             LEFT JOIN {dataset}.offer
             ON venue.id = offer.venueId
-            AND (offer.bookingEmail != 'jeux-concours@passculture.app' or offer."bookingEmail" is NULL)
+            AND (offer.bookingEmail != 'jeux-concours@passculture.app' or offer.bookingEmail is NULL)
             AND offer.type NOT IN ('EventType.ACTIVATION','ThingType.ACTIVATION')
             LEFT JOIN {dataset}.stock
             ON stock.offerId = offer.id
@@ -90,14 +92,14 @@ def define_last_offer_creation_date_query(dataset):
     return f"""
         CREATE TEMP TABLE last_offer_creation_date AS
             SELECT
-            venue.id AS venue_id
-            ,MAX(offer.dateCreated) AS last_offer_creation_date
-        FROM {dataset}.venue
-        LEFT JOIN {dataset}.offer
-        ON venue.id = offer.venueId
-        AND (offer.bookingEmail != 'jeux-concours@passculture.app' or offer.bookingEmail is NULL)
-        AND offer.type NOT IN ('EventType.ACTIVATION','ThingType.ACTIVATION')
-        GROUP BY venue.id;
+                venue.id AS venue_id
+                ,MAX(offer.dateCreated) AS last_offer_creation_date
+            FROM {dataset}.venue
+            LEFT JOIN {dataset}.offer
+            ON venue.id = offer.venueId
+            AND (offer.bookingEmail != 'jeux-concours@passculture.app' or offer.bookingEmail is NULL)
+            AND offer.type NOT IN ('EventType.ACTIVATION','ThingType.ACTIVATION')
+            GROUP BY venue.id;
     """
 
 
@@ -105,14 +107,14 @@ def define_offers_created_per_venue_query(dataset):
     return f"""
         CREATE TEMP TABLE offers_created_per_venue AS
             SELECT
-            venue.id AS venue_id
-            ,count(offer.id) AS offers_created
-        FROM {dataset}.venue
-        LEFT JOIN {dataset}.offer
-        ON venue.id = offer.venueId
-        AND (offer.bookingEmail != 'jeux-concours@passculture.app' or offer.bookingEmail is NULL)
-        AND offer.type NOT IN ('EventType.ACTIVATION','ThingType.ACTIVATION')
-        GROUP BY venue.id;
+                venue.id AS venue_id
+                ,count(offer.id) AS offers_created
+            FROM {dataset}.venue
+            LEFT JOIN {dataset}.offer
+            ON venue.id = offer.venueId
+            AND (offer.bookingEmail != 'jeux-concours@passculture.app' or offer.bookingEmail is NULL)
+            AND offer.type NOT IN ('EventType.ACTIVATION','ThingType.ACTIVATION')
+            GROUP BY venue.id;
     """
 
 
@@ -140,20 +142,20 @@ def define_real_revenue_per_venue_query(dataset):
     return f"""
         CREATE TEMP TABLE real_revenue_per_venue AS
         SELECT
-            venue.id AS venue_id
-            ,COALESCE(SUM(booking.amount * booking.quantity), 0) AS real_revenue
-        FROM {dataset}.venue
-        LEFT JOIN {dataset}.offer
-        ON venue.id = offer.venueId
-        AND (offer.bookingEmail != 'jeux-concours@passculture.app' or offer.bookingEmail is NULL)
-        AND offer.type NOT IN ('EventType.ACTIVATION','ThingType.ACTIVATION')
-        LEFT JOIN {dataset}.stock
-        ON offer.id = stock.offerId
-        LEFT JOIN {dataset}.booking
-        ON booking.stockId = stock.id
-        AND NOT booking.isCancelled
-        AND booking.isUsed
-        GROUP BY venue.id;
+                venue.id AS venue_id
+                ,COALESCE(SUM(booking.amount * booking.quantity), 0) AS real_revenue
+            FROM {dataset}.venue
+            LEFT JOIN {dataset}.offer
+            ON venue.id = offer.venueId
+            AND (offer.bookingEmail != 'jeux-concours@passculture.app' or offer.bookingEmail is NULL)
+            AND offer.type NOT IN ('EventType.ACTIVATION','ThingType.ACTIVATION')
+            LEFT JOIN {dataset}.stock
+            ON offer.id = stock.offerId
+            LEFT JOIN {dataset}.booking
+            ON booking.stockId = stock.id
+            AND NOT booking.isCancelled
+            AND booking.isUsed
+            GROUP BY venue.id;
     """
 
 
@@ -185,30 +187,18 @@ def define_enriched_venue_query(dataset):
                 ,real_revenue_per_venue.real_revenue AS chiffre_affaires_reel_realise
                 ,venue_humanized_id.humanized_id AS venue_humanized_id
             FROM {dataset}.venue
-            LEFT JOIN offerer
-            ON venue.managingOffererId = offerer.id
-            LEFT JOIN {dataset}.venue_type
-            ON venue.venueTypeId = venue_type.id
-            LEFT JOIN {dataset}.venue_label
-            ON venue_label.id = venue.venueLabelId
-            LEFT JOIN total_bookings_per_venue
-            ON venue.id = total_bookings_per_venue.venue_id
-            LEFT JOIN non_cancelled_bookings_per_venue
-            ON venue.id = non_cancelled_bookings_per_venue.venue_id
-            LEFT JOIN used_bookings_per_venue
-            ON venue.id = used_bookings_per_venue.venue_id
-            LEFT JOIN first_offer_creation_date
-            ON venue.id = first_offer_creation_date.venue_id
-            LEFT JOIN last_offer_creation_date
-            ON venue.id = last_offer_creation_date.venue_id
-            LEFT JOIN offers_created_per_venue
-            ON venue.id = offers_created_per_venue.venue_id
-            LEFT JOIN theoretic_revenue_per_venue
-            ON venue.id = theoretic_revenue_per_venue.venue_id
-            LEFT JOIN real_revenue_per_venue
-            ON venue.id = real_revenue_per_venue.venue_id
-            LEFT JOIN venue_humanized_id
-            ON venue_humanized_id.id = venue.id
+            LEFT JOIN {dataset}.offerer ON venue.managingOffererId = offerer.id
+            LEFT JOIN {dataset}.venue_type ON venue.venueTypeId = venue_type.id
+            LEFT JOIN {dataset}.venue_label ON venue_label.id = venue.venueLabelId
+            LEFT JOIN total_bookings_per_venue ON venue.id = total_bookings_per_venue.venue_id
+            LEFT JOIN non_cancelled_bookings_per_venue ON venue.id = non_cancelled_bookings_per_venue.venue_id
+            LEFT JOIN used_bookings_per_venue ON venue.id = used_bookings_per_venue.venue_id
+            LEFT JOIN first_offer_creation_date ON venue.id = first_offer_creation_date.venue_id
+            LEFT JOIN last_offer_creation_date ON venue.id = last_offer_creation_date.venue_id
+            LEFT JOIN offers_created_per_venue ON venue.id = offers_created_per_venue.venue_id
+            LEFT JOIN theoretic_revenue_per_venue ON venue.id = theoretic_revenue_per_venue.venue_id
+            LEFT JOIN real_revenue_per_venue ON venue.id = real_revenue_per_venue.venue_id
+            LEFT JOIN venue_humanized_id ON venue_humanized_id.id = venue.id
         );
     """
 

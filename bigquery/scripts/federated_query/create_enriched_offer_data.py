@@ -2,8 +2,8 @@ import sys
 
 from google.cloud import bigquery
 
+from bigquery.scripts.federated_query.enriched_data_utils import define_humanized_id_query
 from bigquery.utils import run_query
-from bigquery.config import BASE32_JS_LIB_PATH
 from set_env import set_env_vars
 
 import logging
@@ -92,43 +92,6 @@ def define_sum_stock_view_query(dataset):
     """
 
 
-def define_humanized_id_query(dataset):
-    # 1. Define function humanize_id(int) -> str
-    humanize_id_definition_query = f"""
-        CREATE TEMPORARY FUNCTION humanize_id(id INT64)
-        RETURNS STRING
-        LANGUAGE js
-        OPTIONS (
-            library="{BASE32_JS_LIB_PATH}"
-          )
-        AS \"\"\"
-    """
-
-    # open js file and copy code
-    with open("humanize_id.js") as js_file:
-        js_code = "\t\t\t".join(js_file.readlines())
-    humanize_id_definition_query += "\t\t" + js_code
-
-    humanize_id_definition_query += """
-        \"\"\";
-    """
-
-    # 2. Use humanize_id function to create (temp) table
-    tmp_table_query = f"""
-        CREATE TEMP TABLE offer_humanized_id AS
-            SELECT
-                id,
-                humanize_id(id) AS humanized_id
-            FROM {dataset}.offer
-            WHERE id is not NULL;
-    """
-
-    return f"""
-        {humanize_id_definition_query}
-        {tmp_table_query}
-    """
-
-
 def define_enriched_offer_data_query(dataset):
     return f"""
         CREATE OR REPLACE TABLE {dataset}.enriched_offer_data AS (
@@ -181,7 +144,7 @@ def main(dataset):
     offer_booking_information_view = define_offer_booking_information_view_query(dataset=dataset)
     count_favorites_view = define_count_favorites_view_query(dataset=dataset)
     sum_stock_view = define_sum_stock_view_query(dataset=dataset)
-    humanized_id = define_humanized_id_query(dataset=dataset)
+    humanized_id = define_humanized_id_query(table="offer", dataset=dataset)
     enriched_offer_data = define_enriched_offer_data_query(dataset=dataset)
 
     overall_query = f"""

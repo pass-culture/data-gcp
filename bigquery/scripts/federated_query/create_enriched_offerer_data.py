@@ -2,6 +2,7 @@ import sys
 
 from google.cloud import bigquery
 
+from bigquery.scripts.federated_query.enriched_data_utils import define_humanized_id_query
 from bigquery.utils import run_query
 from bigquery.config import BASE32_JS_LIB_PATH
 from set_env import set_env_vars
@@ -119,43 +120,6 @@ def define_number_of_venues_without_offer_query(dataset):
         """
 
 
-def define_humanized_id_query(dataset):
-    # 1. Define function humanize_id(int) -> str
-    humanize_id_definition_query = f"""
-        CREATE TEMPORARY FUNCTION humanize_id(id INT64)
-        RETURNS STRING
-        LANGUAGE js
-        OPTIONS (
-            library="{BASE32_JS_LIB_PATH}"
-          )
-        AS \"\"\"
-    """
-
-    # open js file and copy code
-    with open("humanize_id.js") as js_file:
-        js_code = "\t\t\t".join(js_file.readlines())
-    humanize_id_definition_query += "\t\t" + js_code
-
-    humanize_id_definition_query += """
-        \"\"\";
-    """
-
-    # 2. Use humanize_id function to create (temp) table
-    tmp_table_query = f"""
-        CREATE TEMP TABLE offerer_humanized_id AS
-            SELECT
-                id,
-                humanize_id(id) AS humanized_id
-            FROM {dataset}.offerer
-            WHERE id is not NULL;
-    """
-
-    return f"""
-        {humanize_id_definition_query}
-        {tmp_table_query}
-    """
-
-
 def define_enriched_offerer_query(dataset):
     return f"""
         CREATE OR REPLACE TABLE {dataset}.enriched_offerer_data AS (
@@ -197,7 +161,7 @@ def main(dataset):
     offerer_departement_code_query = define_offerer_departement_code_query(dataset=dataset)
     number_of_venues_query = define_number_of_venues_query(dataset=dataset)
     number_of_venues_without_offer_query = define_number_of_venues_without_offer_query(dataset=dataset)
-    humanized_id_query = define_humanized_id_query(dataset=dataset)
+    humanized_id_query = define_humanized_id_query(table="offerer", dataset=dataset)
     materialized_enriched_offerer_query = define_enriched_offerer_query(dataset=dataset)
 
     overall_query = f"""

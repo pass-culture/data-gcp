@@ -16,7 +16,7 @@ def anonymize_validation_token_offerer():
     """
     Table offerer : Génération d'un token de validation aléatoire pour les utilisateurs en ayant un
     """
-    update_validation_token = f"""UPDATE poc_scalingo.public_offerer 
+    update_validation_token = f"""UPDATE poc_data_federated_query.offerer 
     SET validationToken = (SUBSTR(TO_HEX(MD5(CAST(RAND() AS STRING))), 1, 27)) 
     WHERE validationToken is not null;"""
 
@@ -143,9 +143,9 @@ def anonymize_iban_bic():
     AS ''' 
     return Math.floor(Math.random() * (upper_limit-lower_limit+1) + lower_limit) 
     '''; 
-    UPDATE poc_scalingo.public_bank_information SET iban = generate_random_between(999999999,100000000) 
+    UPDATE poc_data_federated_query.bank_information SET iban = generate_random_between(999999999,100000000) 
     WHERE iban is not null; 
-    UPDATE poc_scalingo.public_bank_information SET bic = generate_random_between(999999999, 100000000) 
+    UPDATE poc_data_federated_query.bank_information SET bic = generate_random_between(999999999, 100000000) 
     WHERE bic is not null;"""
 
     return update_iban_bic
@@ -155,7 +155,7 @@ def anonymize_iban_payment():
     """
     Table payment : Remplacement iban par une séquence de même longueur générée aléatoirement
     """
-    update_iban_payment = f"""UPDATE poc_scalingo.public_payment  
+    update_iban_payment = f"""UPDATE poc_data_federated_query.payment  
     SET iban = 'FR7630001007941234567890185' 
     WHERE iban is not null;"""
 
@@ -166,7 +166,7 @@ def anonymize_bic_payment():
     """
     Table payment : Remplacement du BIC par une séquence de même longueur générée aléatoirement
     """
-    update_bic_payment = f"""UPDATE poc_scalingo.public_payment 
+    update_bic_payment = f"""UPDATE poc_data_federated_query.payment 
      SET bic = 'BDFEFR2L' WHERE bic is not null;"""
 
     return update_bic_payment

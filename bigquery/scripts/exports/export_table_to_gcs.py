@@ -34,8 +34,8 @@ def main():
     schema = client.get_table(table_ref).schema
     columns = ', '.join([f"{col.name} {col.field_type}" for col in schema])
 
-    logger.info(f"gcloud sql databases create {SQL_BASE} --instance={SQL_INSTANCE}[--charset=CHARSET] [--collation=COLLATION]")
     logger.info(f"\tTable {BIGQUERY_POC_DATASET}.{TABLE_NAME} exported to {BUCKET_PATH}/{TABLE_NAME}.csv\n")
+
     logger.info(f"\tRun these commands in cloudshell to create the table in CloudSQL:\n\n"
                 f"\tgcloud config set project pass-culture-app-projet-test\n"
                 f"\tgcloud sql connect {SQL_INSTANCE}\n"

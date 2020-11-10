@@ -37,6 +37,11 @@ def define_import_query(table, region=GCP_REGION, cloudsql_database=CLOUDSQL_DAT
             "reimbursementRate", "transactionLabel", "paymentMessageId"
         FROM public.payment
     """
+    cloudsql_queries["payment_status"] = """
+        SELECT
+            "id", "paymentId", "date", CAST("status" AS varchar(255)), "detail"
+        FROM public.payment_status
+    """
 
     # Build specific federated queries
     queries = {}

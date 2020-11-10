@@ -39,7 +39,7 @@ dag = DAG(
     'restore_cloud_sql_from_gcs',
     default_args=default_args,
     description='Restore postgres dumps to Cloud SQL',
-    schedule_interval='@once',
+    schedule_interval='@daily',
     dagrun_timeout=timedelta(minutes=90)
 )
 

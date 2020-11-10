@@ -2,10 +2,10 @@ import sys
 
 from google.cloud import bigquery
 
+from bigquery.scripts.federated_query.enriched_data_utils import define_humanized_id_query
 from bigquery.utils import run_query
-from bigquery.config import BASE32_JS_LIB_PATH, MIGRATION_ENRICHED_OFFERER_DATA
+from bigquery.config import MIGRATION_ENRICHED_OFFERER_DATA
 from set_env import set_env_vars
-from utils import define_humanized_id_query
 
 import logging
 

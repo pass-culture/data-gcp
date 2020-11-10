@@ -8,6 +8,9 @@ from bigquery.config import (
     CLOUDSQL_DATABASE,
     MIGRATION_ENRICHED_VENUE_DATA,
     MIGRATION_ENRICHED_OFFERER_DATA,
+    MIGRATION_ENRICHED_USER_DATA,
+    MIGRATION_ENRICHED_OFFER_DATA,
+    BIGQUERY_POC_DATASET,
 )
 from bigquery.utils import run_query
 from set_env import set_env_vars
@@ -45,6 +48,7 @@ def main(tables, dataset):
 
 if __name__ == "__main__":
     set_env_vars()
+    anonymization_tables = ["user", "provider", "offerer", "bank_information", "booking", "payment", "venue", "user_offerer"]
     enriched_offerer_data_tables = ["offerer", "venue", "offer", "stock", "booking"]
     enriched_offer_data_tables = ["offer", "stock", "booking", "favorite", "venue", "offerer"]
     enriched_user_data_tables = ["booking", "stock", "offer", "user"]
@@ -57,8 +61,9 @@ if __name__ == "__main__":
         "venue_type",
         "venue_label",
     ]
-    anonymization_tables = ["user", "provider", "offerer", "bank_information", "booking", "payment", "venue", "user_offerer"]
 
-    main(tables=enriched_user_data_tables, dataset="migration_enriched_user_data")
+    main(tables=anonymization_tables, dataset=BIGQUERY_POC_DATASET)
+    main(tables=enriched_user_data_tables, dataset=MIGRATION_ENRICHED_USER_DATA)
     main(tables=enriched_offerer_data_tables, dataset=MIGRATION_ENRICHED_OFFERER_DATA)
     main(tables=enriched_venue_data_tables, dataset=MIGRATION_ENRICHED_VENUE_DATA)
+    main(tables=enriched_offer_data_tables, dataset=MIGRATION_ENRICHED_OFFER_DATA)

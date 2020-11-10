@@ -33,3 +33,9 @@ OFFER_COLUMNS = [
     "fieldsUpdated",
     "withdrawalDetails",
 ]
+
+# Enriched Data
+MIGRATION_ENRICHED_VENUE_DATA = "migration_enriched_venue_data"
+MIGRATION_ENRICHED_OFFERER_DATA = "migration_enriched_offerer_data"
+MIGRATION_ENRICHED_USER_DATA = "migration_enriched_user_data"
+MIGRATION_ENRICHED_OFFER_DATA = "migration_enriched_offer_data"

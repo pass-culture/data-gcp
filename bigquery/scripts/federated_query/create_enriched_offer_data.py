@@ -4,6 +4,7 @@ from google.cloud import bigquery
 
 from bigquery.scripts.federated_query.enriched_data_utils import define_humanized_id_query
 from bigquery.utils import run_query
+from bigquery.config import MIGRATION_ENRICHED_OFFER_DATA
 from set_env import set_env_vars
 
 import logging
@@ -163,4 +164,4 @@ def main(dataset):
 
 if __name__ == "__main__":
     set_env_vars()
-    main(dataset="migration_enriched_offer_data")
+    main(dataset=MIGRATION_ENRICHED_OFFER_DATA)

@@ -4,7 +4,7 @@ from google.cloud import bigquery
 
 from bigquery.scripts.federated_query.enriched_data_utils import define_humanized_id_query
 from bigquery.utils import run_query
-from bigquery.config import BASE32_JS_LIB_PATH
+from bigquery.config import MIGRATION_ENRICHED_OFFERER_DATA
 from set_env import set_env_vars
 
 import logging
@@ -161,7 +161,7 @@ def main(dataset):
     offerer_departement_code_query = define_offerer_departement_code_query(dataset=dataset)
     number_of_venues_query = define_number_of_venues_query(dataset=dataset)
     number_of_venues_without_offer_query = define_number_of_venues_without_offer_query(dataset=dataset)
-    humanized_id_query = define_humanized_id_query(table="offerer", dataset=dataset)
+    humanized_id_query = define_humanized_id_query(dataset=dataset, table="offerer")
     materialized_enriched_offerer_query = define_enriched_offerer_query(dataset=dataset)
 
     overall_query = f"""
@@ -182,4 +182,4 @@ def main(dataset):
 
 if __name__ == "__main__":
     set_env_vars()
-    main(dataset="migration_enriched_offerer_data")
+    main(dataset=MIGRATION_ENRICHED_OFFERER_DATA)

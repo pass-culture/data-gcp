@@ -41,6 +41,7 @@ if __name__ == "__main__":
     set_env_vars()
     enriched_offerer_data_tables = ["offerer", "venue", "offer", "stock", "booking"]
     enriched_offer_data_tables = ["offer", "stock", "booking", "favorite", "venue", "offerer"]
+    enriched_user_data_tables = ["booking", "stock", "offer", "user"]
     anonymization_tables = ["user", "provider", "offerer", "bank_information", "booking", "payment", "venue", "user_offerer"]
 
-    main(tables=anonymization_tables, dataset="poc_data_federated_query")
+    main(tables=enriched_user_data_tables, dataset="migration_enriched_user_data")

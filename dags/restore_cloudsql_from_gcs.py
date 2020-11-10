@@ -8,23 +8,23 @@ from airflow.contrib.operators.gcp_sql_operator import CloudSqlQueryOperator, Cl
 
 GCP_PROJECT_ID = "pass-culture-app-projet-test"
 BUCKET_PATH = 'gs://pass-culture-data'
-SQL_DUMP = 'dump_staging_for_recommendations_09_11_20.gz'
-SQL_INSTANCE = 'pcdata-poc-csql-recommendation'
-SQL_BASE = 'pcdata-poc-csql-recommendation'
+RECOMMENDATION_SQL_DUMP = 'dump_staging_for_recommendations_09_11_20.gz'
+RECOMMENDATION_SQL_INSTANCE = 'pcdata-poc-csql-recommendation'
+RECOMMENDATION_SQL_BASE = 'pcdata-poc-csql-recommendation'
 TYPE = 'postgres'
 LOCATION = "europe-west1-d"
 
-SQL_USER = os.getenv('SQL_USER')
-SQL_PASSWORD = os.getenv('SQL_PASSWORD')
-SQL_PUBLIC_IP = os.getenv('SQL_PUBLIC_IP')
-SQL_PUBLIC_PORT = os.getenv('SQL_PUBLIC_PORT')
+RECOMMENDATION_SQL_USER = os.getenv('SQL_USER')
+RECOMMENDATION_SQL_PASSWORD = os.getenv('SQL_PASSWORD')
+RECOMMENDATION_SQL_PUBLIC_IP = os.getenv('SQL_PUBLIC_IP')
+RECOMMENDATION_SQL_PUBLIC_PORT = os.getenv('SQL_PUBLIC_PORT')
 
 os.environ['AIRFLOW_CONN_PROXY_POSTGRES_TCP'] = \
-    f"gcpcloudsql://{SQL_USER}:{SQL_PASSWORD}@{SQL_PUBLIC_IP}:{SQL_PUBLIC_PORT}/{SQL_BASE}?" \
+    f"gcpcloudsql://{RECOMMENDATION_SQL_USER}:{RECOMMENDATION_SQL_PASSWORD}@{RECOMMENDATION_SQL_PUBLIC_IP}:{RECOMMENDATION_SQL_PUBLIC_PORT}/{RECOMMENDATION_SQL_BASE}?" \
     f"database_type={TYPE}&" \
     f"project_id={GCP_PROJECT_ID}&" \
     f"location={LOCATION}&" \
-    f"instance={SQL_INSTANCE}&" \
+    f"instance={RECOMMENDATION_SQL_INSTANCE}&" \
     f"use_proxy=True&" \
     f"sql_proxy_use_tcp=True"
 
@@ -60,15 +60,15 @@ for table in ['booking', 'offer', 'iris_venues', 'stock', 'mediation', 'venue', 
 import_body = {
     "importContext": {
         "fileType": "sql",
-        "uri": f"{BUCKET_PATH}/{SQL_DUMP}",
-        "database": SQL_BASE
+        "uri": f"{BUCKET_PATH}/{RECOMMENDATION_SQL_DUMP}",
+        "database": RECOMMENDATION_SQL_BASE
     }
 }
 
 sql_restore_task = CloudSqlInstanceImportOperator(
     project_id=GCP_PROJECT_ID,
     body=import_body,
-    instance=SQL_INSTANCE,
+    instance=RECOMMENDATION_SQL_INSTANCE,
     task_id='sql_restore_task',
     dag=dag
 )

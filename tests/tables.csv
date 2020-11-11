@@ -1,0 +1,68 @@
+table_name,column_name,data_type
+booking,isActive,boolean
+booking,id,bigint
+booking,dateCreated,timestamp without time zone
+booking,recommendationId,bigint
+booking,stockId,bigint
+booking,quantity,integer
+booking,token,character varying
+booking,userId,bigint
+booking,amount,numeric
+booking,isCancelled,boolean
+booking,isUsed,boolean
+booking,dateUsed,timestamp without time zone
+booking,cancellationDate,timestamp without time zone
+booking,confirmationDate,timestamp without time zone
+iris_venues,irisId,bigint
+iris_venues,venueId,bigint
+iris_venues,id,bigint
+mediation,isActive,boolean
+mediation,offerId,bigint
+mediation,lastProviderId,bigint
+mediation,authorId,bigint
+mediation,dateCreated,timestamp without time zone
+mediation,id,bigint
+mediation,fieldsUpdated,text[]
+mediation,idAtProviders,character varying
+mediation,credit,character varying
+mediation,dateModifiedAtLastProvider,timestamp without time zone
+mediation,thumbCount,integer
+offer,idAtProviders,character varying
+offer,ageMax,integer
+offer,durationMinutes,integer
+offer,isNational,boolean
+offer,extraData,json
+offer,isDuo,boolean
+offer,dateModifiedAtLastProvider,timestamp without time zone
+offer,id,bigint
+offer,dateCreated,timestamp without time zone
+offer,productId,bigint
+offer,venueId,bigint
+offer,lastProviderId,bigint
+offer,isActive,boolean
+offer,ageMin,integer
+offer,url,character varying
+offer,mediaUrls,text[]
+offer,fieldsUpdated,text[]
+offer,withdrawalDetails,text
+offer,bookingEmail,character varying
+offer,type,character varying
+offer,name,character varying
+offer,description,text
+offer,conditions,character varying
+offerer,dateCreated,timestamp without time zone
+offerer,validationToken,character varying
+offerer,lastProviderId,bigint
+offerer,name,character varying
+offerer,dateModifiedAtLastProvider,timestamp without time zone
+venue,venueLabelId,integer
+venue,dateCreated,timestamp without time zone
+venue,id,bigint
+venue,dateModifiedAtLastProvider,timestamp without time zone
+venue,firstThumbDominantColor,bytea
+venue,bookingEmail,character varying
+venue,name,character varying
+venue,city,character varying
+venue,publicName,character varying
+venue,thumbCount,integer
+venue,address,character varying

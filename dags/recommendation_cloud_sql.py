@@ -18,6 +18,9 @@ RECOMMENDATION_SQL_PASSWORD = os.getenv('RECOMMENDATION_SQL_PASSWORD')
 RECOMMENDATION_SQL_PUBLIC_IP = os.getenv('RECOMMENDATION_SQL_PUBLIC_IP')
 RECOMMENDATION_SQL_PUBLIC_PORT = os.getenv('RECOMMENDATION_SQL_PUBLIC_PORT')
 
+TABLES = ['booking', 'offer', 'iris_venues', 'stock', 'mediation', 'venue', 'offerer']
+VIEWS = ['recommendable_offers']
+
 os.environ['AIRFLOW_CONN_PROXY_POSTGRES_TCP'] = \
     f"gcpcloudsql://{RECOMMENDATION_SQL_USER}:{RECOMMENDATION_SQL_PASSWORD}@{RECOMMENDATION_SQL_PUBLIC_IP}:{RECOMMENDATION_SQL_PUBLIC_PORT}/{RECOMMENDATION_SQL_BASE}?" \
     f"database_type={TYPE}&" \
@@ -35,7 +38,7 @@ default_args = {
 }
 
 with DAG(
-    'recommendation_cloud_sql_v4',
+    'recommendation_cloud_sql_v5',
     default_args=default_args,
     description='Restore postgres dumps to Cloud SQL',
     schedule_interval='@daily',
@@ -46,7 +49,7 @@ with DAG(
 
     drop_table_tasks = []
 
-    for table in ['booking', 'offer', 'iris_venues', 'stock', 'mediation', 'venue', 'offerer']:
+    for table in TABLES:
         task = CloudSqlQueryOperator(
             gcp_cloudsql_conn_id="proxy_postgres_tcp",
             task_id=f"drop_table_public_{table}",
@@ -71,17 +74,17 @@ with DAG(
     )
 
     recreate_indexes_query = """
-        CREATE INDEX idx_stock_id ON public.stock USING btree (id);
-        CREATE INDEX idx_stock_offerid ON public.stock USING btree ("offerId");
-        CREATE INDEX idx_booking_stockid ON public.booking USING btree ("stockId");
-        CREATE INDEX idx_mediation_offerid ON public.mediation USING btree ("offerId");
-        CREATE INDEX idx_offer_id ON public.offer USING btree (id);
-        CREATE INDEX idx_offer_type ON public.offer USING btree (type);
-        CREATE INDEX idx_offer_venueid ON public.offer USING btree ("venueId");
-        CREATE INDEX idx_venue_id ON public.venue USING btree (id);
-        CREATE INDEX idx_venue_managingoffererid ON public.venue USING btree ("managingOffererId");
-        CREATE INDEX idx_offerer_id ON public.offerer USING btree (id);
-        CREATE UNIQUE INDEX idx_offer_recommendable_id ON recommendable_offers USING btree (id);
+        CREATE INDEX IF NOT EXISTS idx_stock_id ON public.stock USING btree (id);
+        CREATE INDEX IF NOT EXISTS idx_stock_offerid ON public.stock USING btree ("offerId");
+        CREATE INDEX IF NOT EXISTS idx_booking_stockid ON public.booking USING btree ("stockId");
+        CREATE INDEX IF NOT EXISTS idx_mediation_offerid ON public.mediation USING btree ("offerId");
+        CREATE INDEX IF NOT EXISTS idx_offer_id ON public.offer USING btree (id);
+        CREATE INDEX IF NOT EXISTS idx_offer_type ON public.offer USING btree (type);
+        CREATE INDEX IF NOT EXISTS idx_offer_venueid ON public.offer USING btree ("venueId");
+        CREATE INDEX IF NOT EXISTS idx_venue_id ON public.venue USING btree (id);
+        CREATE INDEX IF NOT EXISTS idx_venue_managingoffererid ON public.venue USING btree ("managingOffererId");
+        CREATE INDEX IF NOT EXISTS idx_offerer_id ON public.offerer USING btree (id);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_id ON recommendable_offers USING btree (id);
     """
 
     recreate_indexes_task = CloudSqlQueryOperator(
@@ -93,7 +96,7 @@ with DAG(
 
     refresh_materialized_view_tasks = []
 
-    for view in ['recommendable_offers']:
+    for view in VIEWS:
         task = CloudSqlQueryOperator(
             gcp_cloudsql_conn_id="proxy_postgres_tcp",
             task_id=f"refresh_materialized_view_{view}",

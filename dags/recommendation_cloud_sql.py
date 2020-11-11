@@ -28,7 +28,7 @@ os.environ['AIRFLOW_CONN_PROXY_POSTGRES_TCP'] = \
     f"sql_proxy_use_tcp=True"
 
 default_args = {
-    'start_date': datetime(2020, 11, 11),
+    'start_date': datetime(2020, 11, 10),
     'retries': 1,
     'retry_delay': timedelta(minutes=5),
     'catchup': False,

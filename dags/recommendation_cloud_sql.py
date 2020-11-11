@@ -28,14 +28,14 @@ os.environ['AIRFLOW_CONN_PROXY_POSTGRES_TCP'] = \
     f"sql_proxy_use_tcp=True"
 
 default_args = {
-    'start_date': datetime(2020, 11, 10),
+    'start_date': datetime(2020, 11, 11),
     'retries': 1,
     'retry_delay': timedelta(minutes=5),
     'catchup': False,
 }
 
 with DAG(
-    'recommendation_cloud_sql_v2',
+    'recommendation_cloud_sql_v4',
     default_args=default_args,
     description='Restore postgres dumps to Cloud SQL',
     schedule_interval='@daily',
@@ -70,17 +70,38 @@ with DAG(
         task_id='sql_restore_task'
     )
 
+    recreate_indexes_query = """
+        CREATE INDEX idx_stock_id ON public.stock USING btree (id);
+        CREATE INDEX idx_stock_offerid ON public.stock USING btree ("offerId");
+        CREATE INDEX idx_booking_stockid ON public.booking USING btree ("stockId");
+        CREATE INDEX idx_mediation_offerid ON public.mediation USING btree ("offerId");
+        CREATE INDEX idx_offer_id ON public.offer USING btree (id);
+        CREATE INDEX idx_offer_type ON public.offer USING btree (type);
+        CREATE INDEX idx_offer_venueid ON public.offer USING btree ("venueId");
+        CREATE INDEX idx_venue_id ON public.venue USING btree (id);
+        CREATE INDEX idx_venue_managingoffererid ON public.venue USING btree ("managingOffererId");
+        CREATE INDEX idx_offerer_id ON public.offerer USING btree (id);
+        CREATE UNIQUE INDEX idx_offer_recommendable_id ON recommendable_offers USING btree (id);
+    """
+
+    recreate_indexes_task = CloudSqlQueryOperator(
+        gcp_cloudsql_conn_id="proxy_postgres_tcp",
+        task_id="recreate_indexes",
+        sql=recreate_indexes_query,
+        autocommit=True
+    )
+
     refresh_materialized_view_tasks = []
 
     for view in ['recommendable_offers']:
         task = CloudSqlQueryOperator(
             gcp_cloudsql_conn_id="proxy_postgres_tcp",
             task_id=f"refresh_materialized_view_{view}",
-            sql=f"REFRESH MATERIALIZED VIEW {view}",
+            sql=f"REFRESH MATERIALIZED VIEW CONCURRENTLY {view}",
             autocommit=True
         )
         refresh_materialized_view_tasks.append(task)
 
     end = DummyOperator(task_id='end')
 
-    start >> drop_table_tasks >> sql_restore_task >> refresh_materialized_view_tasks >> end
+    start >> drop_table_tasks >> sql_restore_task >> recreate_indexes_task >> refresh_materialized_view_tasks >> end

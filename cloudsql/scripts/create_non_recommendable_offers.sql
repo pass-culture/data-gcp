@@ -16,7 +16,6 @@ $body$
 LANGUAGE plpgsql;
 
 
-/* Creating the materialized view. */
 CREATE MATERIALIZED VIEW IF NOT EXISTS non_recommendable_offers
 AS
     SELECT * from get_non_recommendable_offers()
@@ -24,6 +23,7 @@ WITH NO DATA;
 
 
 REFRESH MATERIALIZED VIEW non_recommendable_offers;
+
 
 /* Creating an index for faster queries. */
 CREATE INDEX idx_non_recommendable_userid ON public.non_recommendable_offers USING btree ("user_id");

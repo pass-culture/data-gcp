@@ -7,7 +7,7 @@ Les dags sont dans `dags/`.
 
 Les autres scripts sont à mettre dans `dags/dependencies/`.
 
-## Envoyer des fichiers sur Cloud Composer
+## Uploader les fichiers sur Cloud Composer
 
 ```
 gcloud composer environments storage dags import \
@@ -21,6 +21,12 @@ Le chemin de référence est dags, donc pour envoyer les dependencies il faut en
 
 - ENVIRONMENT_NAME : data-composer
 - LOCATION: europe-west1
+
+## Lancement des DAGs
+
+1. Aller sur l'instance de GCP Composer
+2. Dans l'onglet `ENVIRONMENT CONFIGURATION`, cliquer sur le lien Google storage de la section `Airflow web UI`
+3. Sélectionner le DAG et le lancer
 
 ## Variables d'environnement
 https://cloud.google.com/composer/docs/how-to/managing/environment-variables?hl=fr#adding_and_updating_environment_variables

@@ -37,10 +37,8 @@ dag = DAG(
     dagrun_timeout=datetime.timedelta(minutes=90)
 )
 
-# DAG start task
 start = DummyOperator(task_id="start", dag=dag)
 
-# Create BigQuery output dataset (if not exists)
 make_bq_dataset_task = BashOperator(
     task_id='make_bq_dataset',
     # Executing 'bq' command requires Google Cloud SDK which comes preinstalled in Cloud Composer.
@@ -48,7 +46,6 @@ make_bq_dataset_task = BashOperator(
     dag=dag
 )
 
-# Import useful tables from CloudSQL
 import_tables_tasks = []
 for table in data_analytics_tables:
     task = BigQueryOperator(
@@ -61,7 +58,6 @@ for table in data_analytics_tables:
     )
     import_tables_tasks.append(task)
 
-# Anonymize data
 anonymization_task = BigQueryOperator(
     task_id="anonymization",
     sql=define_anonymization_query(dataset=BIGQUERY_AIRFLOW_DATASET),
@@ -69,7 +65,6 @@ anonymization_task = BigQueryOperator(
     dag=dag
 )
 
-# Create enriched data tables
 create_enriched_offer_data_task = BigQueryOperator(
     task_id="create_enriched_offer_data",
     sql=define_enriched_offer_data_full_query(dataset=BIGQUERY_AIRFLOW_DATASET),
@@ -101,8 +96,6 @@ create_enriched_data_tasks = [
     create_enriched_venue_data_task,
 ]
 
-# DAG end task
 end = DummyOperator(task_id='end', dag=dag)
 
-# Define DAG dependencies
 start >> make_bq_dataset_task >> import_tables_tasks >> anonymization_task >> create_enriched_data_tasks >> end

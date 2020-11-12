@@ -22,7 +22,6 @@ RECOMMENDATION_SQL_PUBLIC_IP = os.getenv("RECOMMENDATION_SQL_PUBLIC_IP")
 RECOMMENDATION_SQL_PUBLIC_PORT = os.getenv("RECOMMENDATION_SQL_PUBLIC_PORT")
 
 TABLES = ["booking", "offer", "iris_venues", "stock", "mediation", "venue", "offerer"]
-VIEWS = ["recommendable_offers"]
 
 os.environ["AIRFLOW_CONN_PROXY_POSTGRES_TCP"] = (
     f"gcpcloudsql://{RECOMMENDATION_SQL_USER}:{RECOMMENDATION_SQL_PASSWORD}@{RECOMMENDATION_SQL_PUBLIC_IP}:{RECOMMENDATION_SQL_PUBLIC_PORT}/{RECOMMENDATION_SQL_BASE}?"
@@ -42,7 +41,7 @@ default_args = {
 }
 
 with DAG(
-    "recommendation_cloud_sql_v5",
+    "recommendation_cloud_sql_v6",
     default_args=default_args,
     description="Restore postgres dumps to Cloud SQL",
     schedule_interval="@daily",
@@ -57,7 +56,7 @@ with DAG(
         task = CloudSqlQueryOperator(
             gcp_cloudsql_conn_id="proxy_postgres_tcp",
             task_id=f"drop_table_public_{table}",
-            sql=f"DROP TABLE IF EXISTS public.{table}",
+            sql=f"DROP TABLE IF EXISTS public.{table};",
             autocommit=True,
         )
         drop_table_tasks.append(task)
@@ -98,17 +97,25 @@ with DAG(
         autocommit=True,
     )
 
-    refresh_materialized_view_tasks = []
+    refresh_recommendable_offers = CloudSqlQueryOperator(
+        gcp_cloudsql_conn_id="proxy_postgres_tcp",
+        task_id="refresh_recommendable_offers",
+        sql="REFRESH MATERIALIZED VIEW CONCURRENTLY recommendable_offers;",
+        autocommit=True,
+    )
 
-    for view in VIEWS:
-        task = CloudSqlQueryOperator(
-            gcp_cloudsql_conn_id="proxy_postgres_tcp",
-            task_id=f"refresh_materialized_view_{view}",
-            sql=f"REFRESH MATERIALIZED VIEW CONCURRENTLY {view}",
-            autocommit=True,
-        )
-        refresh_materialized_view_tasks.append(task)
+    refresh_non_recommendable_offers = CloudSqlQueryOperator(
+        gcp_cloudsql_conn_id="proxy_postgres_tcp",
+        task_id="refresh_non_recommendable_offers",
+        sql="REFRESH MATERIALIZED VIEW non_recommendable_offers;",
+        autocommit=True,
+    )
+
+    refresh_materialized_views_tasks = [
+        refresh_recommendable_offers,
+        refresh_non_recommendable_offers,
+    ]
 
     end = DummyOperator(task_id="end")
 
-    start >> drop_table_tasks >> sql_restore_task >> recreate_indexes_task >> refresh_materialized_view_tasks >> end
+    start >> drop_table_tasks >> sql_restore_task >> recreate_indexes_task >> refresh_materialized_views_tasks >> end

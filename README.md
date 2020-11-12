@@ -2,6 +2,17 @@
 
 Repo pour la team data sur GCP
 
+## Organisation
+
+/api : l'api de recommandation déployée sur Cloud Run
+
+/bigquery : l'ensemble du code (utilitaires, configuration, scripts) pour interagir avec BigQuery.
+
+/cloudsql : les scripts sql/python qui concernent le cloudsql de recommandation
+
+/dags : les dags du Cloud Composer
+
+
 ## INSTALL
 ### BigQuery
 **Prérequis** :
@@ -35,10 +46,3 @@ export PYTHONPATH=$PYTHONPATH:"path/to/bigquery"
 ```
 
 Vous pouvez maintenant lancer les différents scripts !
-
-
-## Organisation
-
-/api : l'api de recommandation déployée sur Cloud Run
-
-/bigquery : l'ensemble du code (utilitaires, configuration, scripts) pour interagir avec BigQuery.

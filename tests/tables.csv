@@ -89,4 +89,17 @@ venue,fieldsUpdated,text[]
 venue,venueTypeId,integer
 venue,venueLabelId,integer
 venue,dateCreated,timestamp without time zone
-
+stock,idAtProviders,character varying
+stock,dateModifiedAtLastProvider,timestamp without time zone
+stock,id,bigint
+stock,dateModified,timestamp without time zone
+stock,price,numeric
+stock,quantity,integer
+stock,bookingLimitDatetime,timestamp without time zone
+stock,lastProviderId,bigint
+stock,offerId,bigint
+stock,isSoftDeleted,boolean
+stock,beginningDatetime,timestamp without time zone
+stock,dateCreated,timestamp without time zone
+stock,fieldsUpdated,text[]
+stock,hasBeenMigrated,boolean

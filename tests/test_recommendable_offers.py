@@ -16,42 +16,70 @@ TEST_DATA = {
         (14552686, 57, 7079)
     ],
     "mediation": [
-        (1, 64, "2018-05-15 12:00:00", 37, "2018-05-15 17:35:48", None, 4, 565, None, True, "{}"),
-        (1, 234, "2018-05-16 12:00:00", 165, "2018-05-16 16:02:37", None, 4, 143, None, True, "{}")
+        (
+            1, 64, "2018-05-15 12:00:00", 37, "2018-05-15 17:35:48", None, 4,
+            1017696,  # offerId
+            None,
+            True,  # isActive
+            "{}"
+        )
     ],
     "offer": [
-        (None, "2020-02-16 09:32:08", 1017696, "2020-02-16 09:32:08", 2818251, 2833, None, "foliesdencre@hotmail.fr",
-         True, 	"ThingType.LIVRE_EDITION", "sociologie", "Livre sociologie", None, None, None, None, "{}", None, False,
-         '{"author": "Pierre-Andr\u00e9 Corpron ", "isbn": "9782749539010"}', False, "{}", None)
+        (
+            None, "2020-02-16 09:32:08",
+            1017696,  # offerId
+            "2020-02-16 09:32:08", 2818251,
+            2833,  # venueId
+            None, "foliesdencre@hotmail.fr",
+            True,  # isActive
+            "ThingType.LIVRE_EDITION",  # type not in [ThingType.ACTIVATION, EventType.ACTIVATION]
+            "sociologie", "Livre sociologie", None, None, None, None, "{}", None, False,
+            '{"author": "Pierre-Andr\u00e9 Corpron ", "isbn": "9782749539010"}', False, "{}", None
+        )
     ],
     "offerer": [
-        (0, None, None, "2018-07-10 16:50:33", 192,	"BIBLIOTHEQUE NATIONALE DE FRANCE",
-         "11 Quai François Mauriac 75013 Paris", None, 75013, "PARIS 13", 180046252, True,
-         None, "2018-07-10 16:50:33", "{}")
+        (
+            0, None, None, "2018-07-10 16:50:33",
+            2861,  # offererId
+            "BIBLIOTHEQUE NATIONALE DE FRANCE",
+            "11 Quai François Mauriac 75013 Paris", None, 75013, "PARIS 13", 180046252,
+            True,  # isActive
+            None,  # validationToken
+            "2018-07-10 16:50:33", "{}"
+        )
     ],
     "venue": [
-        (0, None, None, "2019-09-23 09:43:39", 5252, "YOUSCRIBE", "13 RUE DU MAIL", 48.86673, 2.34225,
-         None, 75, 75002, "PARIS 2E ARRONDISSEMENT", 52205665400026, 2861, "juanpc@youscribe.com",
-         False, None, None, "Société YouScribe", "{}", 13, None, "2019-09-23 09:43:39")
+        (
+            0, None, None, "2019-09-23 09:43:39",
+            2833,  # venueId
+            "YOUSCRIBE", "13 RUE DU MAIL", 48.86673, 2.34225,
+            None, 75, 75002, "PARIS 2E ARRONDISSEMENT", 52205665400026,
+            2861,  # managingOffererId
+            "juanpc@youscribe.com",
+            False, None,
+            None,  # validationToken
+            "Société YouScribe", "{}", 13, None, "2019-09-23 09:43:39"
+        )
+    ],
+    "stock": [
+        (
+            None, "2021-07-21 10:01:34", 2486130, "2021-07-21 10:01:34", 19.95,
+            1000,  # quantity (+ no booking)
+            None,  # bookingLimitDatetime
+            None,
+            1017696,  # offerId
+            False,  # isSoftDeleted
+            None,  # beginningDatetime
+            "2021-07-21 10:01:34", "{}", None
+        )
     ]
 }
 
 
-@pytest.fixture
-def setup_database():
-    """ Fixture to set up the in-memory database with test data """
-    connection = psycopg2.connect(
-        user="postgres",
-        password="postgres",
-        host="127.0.0.1",
-        port="5432",
-        database="postgres"
-    )
-    cursor = connection.cursor()
-
+def create_and_fill_tables(cursor, data):
     tables = pd.read_csv('tests/tables.csv')
 
-    for table in TEST_DATA:
+    for table in data:
         table_data = tables.loc[lambda df: df.table_name == table]
         columns = ', '.join(
             [
@@ -70,19 +98,62 @@ def setup_database():
         cursor.execute(f"DROP TABLE IF EXISTS public.{table}")
         cursor.execute(f"CREATE TABLE IF NOT EXISTS public.{table} ({typed_columns})")
 
-        for data in TEST_DATA[table]:
+        for row in data[table]:
             cursor.execute(
                 f'INSERT INTO public.{table} '
                 f'({columns}) '
-                f'VALUES ({values})', data
+                f'VALUES ({values})', row
             )
+
+
+def create_recommendable_offers(cursor):
+    with open('cloudsql/scripts/create_recommendable_offers.sql', 'r') as f:
+        sql = f.read().replace('"', '')
+        sql = ' '.join(sql.split())
+
+    cursor.execute(sql)
+
+
+@pytest.fixture
+def setup_database():
+    """ Fixture to set up the in-memory database with test data """
+    connection = psycopg2.connect(
+        user="postgres",
+        password="postgres",
+        host="127.0.0.1",
+        port="5432",
+        database="postgres"
+    )
+    cursor = connection.cursor()
+
+    create_and_fill_tables(cursor, TEST_DATA)
+    create_recommendable_offers(cursor)
+
+    connection.commit()
 
     yield cursor
 
 
-def test_with_sample_data(setup_database):
-    # Test to make sure that there are 3 items in the database
+def test_data_ingestion(setup_database):
+    # Test that test data is properly stored in database
     cursor = setup_database
     for table in TEST_DATA:
         cursor.execute(f'SELECT * FROM public.{table}')
         assert len(cursor.fetchall()) == len(TEST_DATA[table])
+    cursor.close()
+
+
+def test_recommendable_offer(setup_database):
+    cursor = setup_database
+    cursor.execute('SELECT * FROM recommendable_offers where id = 1017696')
+    assert len(cursor.fetchall()) == 1
+    cursor.close()
+
+
+def test_non_active_offer_filtered(setup_database):
+    cursor = setup_database
+    cursor.execute("UPDATE public.offer SET isActive = False where id = 1017696")
+    cursor.execute('REFRESH MATERIALIZED VIEW recommendable_offers')
+    cursor.execute('SELECT * FROM recommendable_offers where id = 1017696')
+    assert len(cursor.fetchall()) == 0
+    cursor.close()

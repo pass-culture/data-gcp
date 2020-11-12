@@ -6,7 +6,7 @@ from airflow.operators import bash_operator
 from airflow.operators.dummy_operator import DummyOperator
 
 from dependencies.data_analytics.config import (
-    GCP_PROJECT_ID, GCP_REGION, BIGQUERY_AIRFLOW_DATASET, DATA_ANALYTICS_TABLES
+    GCP_PROJECT_ID, GCP_REGION, BIGQUERY_AIRFLOW_DATASET
 )
 from dependencies.data_analytics.import_tables import define_import_query
 from dependencies.data_analytics.anonymization import define_anonymization_query
@@ -15,6 +15,11 @@ from dependencies.data_analytics.enriched_data.offerer import define_enriched_of
 from dependencies.data_analytics.enriched_data.user import define_enriched_user_data_full_query
 from dependencies.data_analytics.enriched_data.venue import define_enriched_venue_data_full_query
 
+
+data_analytics_tables = [
+    "user", "provider", "offerer", "bank_information", "booking", "payment", "venue", "user_offerer", "offer", "stock",
+    "favorite", "venue_type", "venue_label"
+]
 
 yesterday = datetime.datetime.combine(
     datetime.datetime.today() - datetime.timedelta(1),
@@ -49,7 +54,7 @@ make_bq_dataset_task = bash_operator.BashOperator(
 
 # Import useful tables from CloudSQL
 import_tables_tasks = []
-for table in DATA_ANALYTICS_TABLES:
+for table in data_analytics_tables:
     task = bigquery_operator.BigQueryOperator(
         task_id=f"import_{table}",
         sql=define_import_query(table=table),

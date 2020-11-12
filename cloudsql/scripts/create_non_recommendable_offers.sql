@@ -1,11 +1,25 @@
-/* Creating the materialized view. */
-CREATE MATERIALIZED VIEW IF NOT EXISTS non_recommendable_offers
-AS
+/* Create the function to fetch the non recommendable offers.
+We use a function otherwise the materialized view is a dependency of the tables and blocks the drop operation. */
+CREATE OR REPLACE FUNCTION get_non_recommendable_offers()
+RETURNS TABLE (user_id BIGINT,
+               offer_id BIGINT) AS
+$body$
+BEGIN
+    RETURN QUERY
     SELECT DISTINCT b."userId" AS user_id, s."offerId" AS offer_id
       FROM public.booking b
 INNER JOIN public.stock s ON b."stockId" = s.id
      WHERE b."isActive" = true
        AND b."isCancelled" = false;
+END;
+$body$
+LANGUAGE plpgsql;
+
+
+/* Creating the materialized view. */
+CREATE MATERIALIZED VIEW IF NOT EXISTS non_recommendable_offers
+AS
+    SELECT * from get_non_recommendable_offers()
 WITH NO DATA;
 
 

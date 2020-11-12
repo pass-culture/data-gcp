@@ -21,13 +21,8 @@ data_analytics_tables = [
     "favorite", "venue_type", "venue_label"
 ]
 
-yesterday = datetime.datetime.combine(
-    datetime.datetime.today() - datetime.timedelta(1),
-    datetime.datetime.min.time()
-)
-
 default_dag_args = {
-    "start_date": yesterday,
+    "start_date": datetime.datetime(2020, 11, 11),
     "retries": 1,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT_ID
@@ -38,6 +33,7 @@ dag = DAG(
     default_args=default_dag_args,
     description="Import tables from CloudSQL and enrich data for Data Analytics",
     schedule_interval="@daily",
+    catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=90)
 )
 

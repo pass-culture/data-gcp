@@ -1,8 +1,8 @@
 import datetime
 
 from airflow import DAG
-from airflow.contrib.operators import bigquery_operator
-from airflow.operators import bash_operator
+from airflow.contrib.operators.bigquery_operator import BigQueryOperator
+from airflow.operators.bash_operator import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
 
 from dependencies.data_analytics.config import (
@@ -41,7 +41,7 @@ dag = DAG(
 start = DummyOperator(task_id="start", dag=dag)
 
 # Create BigQuery output dataset (if not exists)
-make_bq_dataset_task = bash_operator.BashOperator(
+make_bq_dataset_task = BashOperator(
     task_id='make_bq_dataset',
     # Executing 'bq' command requires Google Cloud SDK which comes preinstalled in Cloud Composer.
     bash_command=f'bq ls {BIGQUERY_AIRFLOW_DATASET} || bq mk --dataset --location {GCP_REGION} {BIGQUERY_AIRFLOW_DATASET}',
@@ -51,7 +51,7 @@ make_bq_dataset_task = bash_operator.BashOperator(
 # Import useful tables from CloudSQL
 import_tables_tasks = []
 for table in data_analytics_tables:
-    task = bigquery_operator.BigQueryOperator(
+    task = BigQueryOperator(
         task_id=f"import_{table}",
         sql=define_import_query(table=table),
         write_disposition="WRITE_TRUNCATE",
@@ -62,7 +62,7 @@ for table in data_analytics_tables:
     import_tables_tasks.append(task)
 
 # Anonymize data
-anonymization_task = bigquery_operator.BigQueryOperator(
+anonymization_task = BigQueryOperator(
     task_id="anonymization",
     sql=define_anonymization_query(dataset=BIGQUERY_AIRFLOW_DATASET),
     use_legacy_sql=False,
@@ -70,25 +70,25 @@ anonymization_task = bigquery_operator.BigQueryOperator(
 )
 
 # Create enriched data tables
-create_enriched_offer_data_task = bigquery_operator.BigQueryOperator(
+create_enriched_offer_data_task = BigQueryOperator(
     task_id="create_enriched_offer_data",
     sql=define_enriched_offer_data_full_query(dataset=BIGQUERY_AIRFLOW_DATASET),
     use_legacy_sql=False,
     dag=dag
 )
-create_enriched_offerer_data_task = bigquery_operator.BigQueryOperator(
+create_enriched_offerer_data_task = BigQueryOperator(
     task_id="create_enriched_offerer_data",
     sql=define_enriched_offerer_data_full_query(dataset=BIGQUERY_AIRFLOW_DATASET),
     use_legacy_sql=False,
     dag=dag
 )
-create_enriched_user_data_task = bigquery_operator.BigQueryOperator(
+create_enriched_user_data_task = BigQueryOperator(
     task_id="create_enriched_user_data",
     sql=define_enriched_user_data_full_query(dataset=BIGQUERY_AIRFLOW_DATASET),
     use_legacy_sql=False,
     dag=dag
 )
-create_enriched_venue_data_task = bigquery_operator.BigQueryOperator(
+create_enriched_venue_data_task = BigQueryOperator(
     task_id="create_enriched_venue_data",
     sql=define_enriched_venue_data_full_query(dataset=BIGQUERY_AIRFLOW_DATASET),
     use_legacy_sql=False,

@@ -1,7 +1,5 @@
 def anonymize_validation_token_offerer(dataset):
-    """
-    Table offerer : Génération d'un token de validation aléatoire pour les utilisateurs en ayant un
-    """
+    """offerer table: replace validation token with a random token"""
     update_validation_token = f"""UPDATE {dataset}.offerer 
     SET validationToken = (SUBSTR(TO_HEX(MD5(CAST(RAND() AS STRING))), 1, 27)) 
     WHERE validationToken is not null;"""
@@ -10,9 +8,7 @@ def anonymize_validation_token_offerer(dataset):
 
 
 def anonymize_apikey(dataset):
-    """
-    Table provider : Génération aléatoire d'une apiKey anonymisée (si la valeur est non nulle)
-    """
+    """provider table: replace API key with a random key"""
     update_apikey = f"""UPDATE {dataset}.provider 
     SET apiKey = (SUBSTR(TO_HEX(MD5(CAST(RAND() AS STRING))), 1,32)) 
     WHERE apiKey is not null;"""
@@ -21,9 +17,7 @@ def anonymize_apikey(dataset):
 
 
 def anonymize_firstname(dataset):
-    """
-    Table user : Remplacement du prénom par firstName || id
-    """
+    """user table : replace first name with 'firstName<id>'"""
     update_firstname = f"""UPDATE {dataset}.user 
     SET  firstName = 'firstName' || id 
     WHERE firstName IS NOT NULL;"""
@@ -32,9 +26,7 @@ def anonymize_firstname(dataset):
 
 
 def anonymize_lastname(dataset):
-    """
-    Table user : Remplacement du nom de famille par lastName || id
-    """
+    """user table: replace last name with 'lastName<id>'"""
     update_lastname = f"""UPDATE {dataset}.user 
     SET  lastName = 'lastName' || id 
     WHERE lastName IS NOT NULL;"""
@@ -43,9 +35,7 @@ def anonymize_lastname(dataset):
 
 
 def anonymize_dateofbirth(dataset):
-    """
-    Table user : Attribution arbitraire de la date de naissance 01/01/2001 pour tous les utilisateurs
-    """
+    """user table: replace birthdate with 01/01/2001"""
     update_dateofbirth = f"""UPDATE {dataset}.user 
     SET  dateOfBirth = '2001-01-01T00:00:00' 
     WHERE dateOfBirth IS NOT NULL;"""
@@ -54,9 +44,7 @@ def anonymize_dateofbirth(dataset):
 
 
 def anonymize_phonenumber(dataset):
-    """
-    Table user : Attribution arbitraire du numéro de téléphone 0606060606 pour tous les utilisateurs
-    """
+    """user table: replace birthdate with 0606060606"""
     update_phonenumber = f"""UPDATE {dataset}.user 
     SET  phoneNumber = '0606060606' 
     WHERE phoneNumber IS NOT NULL;"""
@@ -65,9 +53,7 @@ def anonymize_phonenumber(dataset):
 
 
 def anonymize_email(dataset):
-    """
-    Table user : Remplacement de l'email par la concaténation de user@ et de son identifiant
-    """
+    """user table: replace email with 'user@<id>'"""
     update_email = f"""UPDATE {dataset}.user 
     SET  email = 'user@' || id 
     WHERE email IS NOT NULL;"""
@@ -77,7 +63,7 @@ def anonymize_email(dataset):
 
 def anonymize_publicname(dataset):
     """
-    Table user : Remplacement du nom d'utilisateur (publicName) par User || id
+    user table: replace public name with "User<id>"
     """
     update_publicname = f"""UPDATE {dataset}.user 
     SET  publicName = 'User' || id 
@@ -87,9 +73,7 @@ def anonymize_publicname(dataset):
 
 
 def anonymize_password(dataset):
-    """
-    Table user : Remplacement du mot de passe par $PASSWORD || id
-    """
+    """user table: replace password with byte representation of 'Password<id>'"""
     update_password = f"""UPDATE {dataset}.user 
     SET  password = CAST('Password' || id AS BYTES) 
     WHERE password IS NOT NULL;"""
@@ -98,9 +82,7 @@ def anonymize_password(dataset):
 
 
 def anonymize_validation_token_user(dataset):
-    """
-    Table user : Génération d'un token de validation aléatoire pour les rattachements en ayant un
-    """
+    """user table: replace validation token with a random token"""
     update_validation_token_user = f"""UPDATE {dataset}.user 
     SET validationToken = (SUBSTR(TO_HEX(MD5(CAST(RAND() AS STRING))), 1,27)) 
     WHERE validationToken is not null;"""
@@ -109,9 +91,7 @@ def anonymize_validation_token_user(dataset):
 
 
 def anonymize_reset_password_token(dataset):
-    """
-    Génération d'un token de réinitialisation de mot de passe aléatoire pour les utilisateurs en ayant un
-    """
+    """user table: replace reset password token with a random token"""
     update_reset_password_token = f"""UPDATE {dataset}.user 
     SET resetPasswordToken = (SUBSTR(TO_HEX(MD5(CAST(RAND() AS STRING))), 1,10)) 
     WHERE resetPasswordToken is not null;"""
@@ -120,9 +100,7 @@ def anonymize_reset_password_token(dataset):
 
 
 def anonymize_iban_bic(dataset):
-    """
-    Table bank_information : Remplacement du BIC et IBAN par une séquence de même longueur générée aléatoirement
-    """
+    """bank_information table: replace BIC & IBAN with random sequences"""
     update_iban_bic = f"""CREATE TEMPORARY FUNCTION generate_random_between(upper_limit FLOAT64, lower_limit FLOAT64) \
     RETURNS STRING 
     LANGUAGE js 
@@ -138,9 +116,7 @@ def anonymize_iban_bic(dataset):
 
 
 def anonymize_iban_payment(dataset):
-    """
-    Table payment : Remplacement iban par une séquence de même longueur générée aléatoirement
-    """
+    """payment table: replace IBAN with a FR7630001007941234567890185"""
     update_iban_payment = f"""UPDATE {dataset}.payment  
     SET iban = 'FR7630001007941234567890185' 
     WHERE iban is not null;"""
@@ -149,9 +125,7 @@ def anonymize_iban_payment(dataset):
 
 
 def anonymize_bic_payment(dataset):
-    """
-    Table payment : Remplacement du BIC par une séquence de même longueur générée aléatoirement
-    """
+    """payment table: replace BIC with BDFEFR2L"""
     update_bic_payment = f"""UPDATE {dataset}.payment 
      SET bic = 'BDFEFR2L' WHERE bic is not null;"""
 
@@ -159,9 +133,7 @@ def anonymize_bic_payment(dataset):
 
 
 def anonymize_validation_token_user_offerer(dataset):
-    """
-    Table user_offerer : Remplacement du BIC par une séquence de même longueur générée aléatoirement
-    """
+    """user_offerer table: replace BIC with a random sequence"""
     update_validation_token_user_offerer = f"""UPDATE {dataset}.user_offerer 
     SET validationToken = (SUBSTR(TO_HEX(MD5(CAST(RAND() AS STRING))), 1,10)) 
     WHERE validationToken is not null;"""
@@ -170,9 +142,7 @@ def anonymize_validation_token_user_offerer(dataset):
 
 
 def anonymize_token(dataset):
-    """
-    Table booking : Génération d'une fausse contremarque à partir de l'identifiant du booking
-    """
+    """booking table: replace token ("contremarque") with a sequence deduced from id"""
     update_token = f"""UPDATE {dataset}.booking 
     SET token = UPPER(RIGHT(CAST(id AS STRING), 6)) 
     WHERE token is not null;"""
@@ -181,9 +151,7 @@ def anonymize_token(dataset):
 
 
 def anonymize_validation_token_venue(dataset):
-    """
-    Table venue : Génération aléatoire d'un token de validation
-    """
+    """venue table: replace validation token with random token"""
     update_validation_token_venue = f"""UPDATE {dataset}.venue 
     SET validationToken = (SUBSTR(TO_HEX(MD5(CAST(RAND() AS STRING))), 1,27)) 
     WHERE validationToken is not null;"""

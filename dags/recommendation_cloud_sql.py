@@ -73,7 +73,7 @@ with DAG(
         project_id=GCP_PROJECT_ID,
         body=import_body,
         instance=RECOMMENDATION_SQL_INSTANCE,
-        task_id="sql_restore_task",
+        task_id="cloud_sql_restore_tables",
     )
 
     recreate_indexes_query = """

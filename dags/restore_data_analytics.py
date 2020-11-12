@@ -36,7 +36,7 @@ default_dag_args = {
 dag = DAG(
     "restore_data_analytics_v1",
     default_args=default_dag_args,
-    description="Restore postgres dumps to Cloud SQL",
+    description="Import tables from CloudSQL and enrich data for Data Analytics",
     schedule_interval="@daily",
     dagrun_timeout=datetime.timedelta(minutes=90)
 )

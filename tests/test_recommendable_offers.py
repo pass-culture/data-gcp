@@ -272,6 +272,9 @@ def test_updated_offer_data_recommendable_status(setup_database, query, name, re
     cursor.execute(query)
     cursor.execute('REFRESH MATERIALIZED VIEW recommendable_offers')
     cursor.execute('SELECT * FROM recommendable_offers where id = 1017696')
-    assert len(cursor.fetchall()) == (1 if recommendable else 0)
+    result = len(cursor.fetchall())
+
     cursor.close()
     connection.close()
+
+    assert result == (1 if recommendable else 0)

@@ -113,3 +113,4 @@ def main(dataset):
 if __name__ == "__main__":
     set_env_vars()
     main(dataset=MIGRATION_ENRICHED_STOCK_DATA)
+

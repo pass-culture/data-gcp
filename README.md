@@ -60,3 +60,20 @@ Vous pouvez maintenant lancer les différents scripts !
 1. Aller sur l'instance de GCP Composer
 2. Dans l'onglet `ENVIRONMENT CONFIGURATION`, cliquer sur le lien Google storage de la section `Airflow web UI`
 3. Sélectionner le DAG et le lancer
+
+
+## Tests CloudSQL
+
+Afin de pouvoir effectuer les tests, il faut démarrer le docker postgres:
+`docker-compose up --build`
+
+Auquel on peut se connecter avec la commande suivante:
+`psql -h localhost -p 5432 -d postgres -U postgres`
+
+Le mot de passe est 'postgres'.
+
+Pour lancer les tests:
+`poetry run pytest`
+
+Pour lancer les tests avec plus de détails:
+`poetry run pytest -s`

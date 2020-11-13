@@ -4,8 +4,13 @@ import pandas as pd
 import psycopg2
 import pytest
 
-yesterday = (datetime.now() + timedelta(days=-1)).strftime("%Y-%m-%d %H:%M:%S.%f")
-tomorrow = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S.%f")
+TEST_DATABASE_CONFIG = {
+    "user": "postgres",
+    "password": "postgres",
+    "host": "127.0.0.1",
+    "port": "5433",
+    "database": "postgres"
+}
 
 TEST_DATA = {
     "booking": [
@@ -89,6 +94,9 @@ TEST_DATA = {
     ]
 }
 
+yesterday = (datetime.now() + timedelta(days=-1)).strftime("%Y-%m-%d %H:%M:%S.%f")
+tomorrow = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S.%f")
+
 
 def create_and_fill_tables(cursor, data):
     tables = pd.read_csv('tests/tables.csv')
@@ -108,7 +116,7 @@ def create_and_fill_tables(cursor, data):
                 )
             ]
         )
-        values = ', '.join(['%s'] * table_data.shape[0])
+        value_placeholders = ', '.join(['%s'] * table_data.shape[0])
         cursor.execute(f"DROP TABLE IF EXISTS public.{table}")
         cursor.execute(f"CREATE TABLE IF NOT EXISTS public.{table} ({typed_columns})")
 
@@ -116,7 +124,7 @@ def create_and_fill_tables(cursor, data):
             cursor.execute(
                 f'INSERT INTO public.{table} '
                 f'({columns}) '
-                f'VALUES ({values})', row
+                f'VALUES ({value_placeholders})', row
             )
 
 
@@ -134,11 +142,7 @@ def setup_database():
     Fixture to set up the test postgres database with test data.
     """
     connection = psycopg2.connect(
-        user="postgres",
-        password="postgres",
-        host="127.0.0.1",
-        port="5432",
-        database="postgres"
+        **TEST_DATABASE_CONFIG
     )
     cursor = connection.cursor()
 

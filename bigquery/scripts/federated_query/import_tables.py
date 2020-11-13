@@ -19,6 +19,7 @@ from bigquery.config import (
     ENRICHED_OFFER_DATA_TABLES,
     ENRICHED_STOCK_DATA_TABLES
 )
+
 from bigquery.utils import run_query
 from dependencies.data_analytics.import_tables import define_import_query
 from set_env import set_env_vars

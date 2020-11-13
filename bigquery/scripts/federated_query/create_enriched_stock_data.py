@@ -4,6 +4,7 @@ from google.cloud import bigquery
 
 from bigquery.utils import run_query
 from set_env import set_env_vars
+from bigquery.config import MIGRATION_ENRICHED_STOCK_DATA
 
 import logging
 
@@ -64,7 +65,7 @@ def create_available_stocks_view(dataset):
             CASE 
                 WHEN stock.quantity IS NULL THEN NULL
                 ELSE GREATEST(stock.quantity - COALESCE(bookings_grouped_by_stock.number_of_booking, 0), 0)
-            END AS Stock_disponible_reel
+            END AS stock_disponible_reel
             FROM {dataset}.stock
             LEFT JOIN bookings_grouped_by_stock 
             ON bookings_grouped_by_stock.stockId = stock.id );
@@ -111,4 +112,4 @@ def main(dataset):
 
 if __name__ == "__main__":
     set_env_vars()
-    main(dataset="migration_enriched_stock_data")
+    main(dataset=MIGRATION_ENRICHED_STOCK_DATA)

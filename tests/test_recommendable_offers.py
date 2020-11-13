@@ -1,14 +1,26 @@
-import pandas as pd
-import pytest
-import psycopg2
+from datetime import datetime, timedelta
 
+import pandas as pd
+import psycopg2
+import pytest
+
+yesterday = (datetime.now() + timedelta(days=-1)).strftime("%Y-%m-%d %H:%M:%S.%f")
+tomorrow = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S.%f")
 
 TEST_DATA = {
     "booking": [
-        (True, 69434, '2019-09-28 15:05:37.920197', 42001473, 36326, 1, "SEU4ZU", 25173, 38.00, False, True,
-         "2019-09-28 15:06:11.961879", None, None),
-        (True, 69435, '2019-09-28 15:05:37.920197', 42001473, 36326, 1, "SEU4ZU", 25173, 38.00, False, True,
-         "2019-09-28 15:06:11.961879", None, None)
+        (
+            True,  # isActive
+            69434, '2019-09-28 15:05:37.920197', 42001473,
+            2486130,  # stockId
+            0,  # quantity
+            "SEU4ZU",
+            25173,  # userId
+            38.00,  # amount
+            False,  # isCancelled
+            True,  # isUsed
+            "2019-09-28 15:06:11.961879", None, None
+        )
     ],
     "iris_venues": [
         (14552684, 31, 7079),
@@ -63,8 +75,10 @@ TEST_DATA = {
     ],
     "stock": [
         (
-            None, "2021-07-21 10:01:34", 2486130, "2021-07-21 10:01:34", 19.95,
-            1000,  # quantity (+ no booking)
+            None, "2021-07-21 10:01:34",
+            2486130,  # stockId
+            "2021-07-21 10:01:34", 19.95,
+            1,  # quantity (+ no booking)
             None,  # bookingLimitDatetime
             None,
             1017696,  # offerId
@@ -106,7 +120,7 @@ def create_and_fill_tables(cursor, data):
             )
 
 
-def create_recommendable_offers(cursor):
+def create_recommendable_offers_materialized_view(cursor):
     with open('cloudsql/scripts/create_recommendable_offers.sql', 'r') as f:
         sql = f.read().replace('"', '')
         sql = ' '.join(sql.split())
@@ -116,7 +130,9 @@ def create_recommendable_offers(cursor):
 
 @pytest.fixture
 def setup_database():
-    """ Fixture to set up the in-memory database with test data """
+    """
+    Fixture to set up the test postgres database with test data.
+    """
     connection = psycopg2.connect(
         user="postgres",
         password="postgres",
@@ -127,33 +143,135 @@ def setup_database():
     cursor = connection.cursor()
 
     create_and_fill_tables(cursor, TEST_DATA)
-    create_recommendable_offers(cursor)
+    create_recommendable_offers_materialized_view(cursor)
 
     connection.commit()
 
-    yield cursor
+    return connection, cursor
 
 
 def test_data_ingestion(setup_database):
-    # Test that test data is properly stored in database
-    cursor = setup_database
+    """
+    Test that test data is loaded in test postgres.
+    """
+    connection, cursor = setup_database
     for table in TEST_DATA:
         cursor.execute(f'SELECT * FROM public.{table}')
         assert len(cursor.fetchall()) == len(TEST_DATA[table])
     cursor.close()
+    connection.close()
 
 
-def test_recommendable_offer(setup_database):
-    cursor = setup_database
+def test_recommendable_offer_non_filtered(setup_database):
+    """
+    Test that an offer respecting the criteria is not filtered.
+    """
+    connection, cursor = setup_database
     cursor.execute('SELECT * FROM recommendable_offers where id = 1017696')
     assert len(cursor.fetchall()) == 1
     cursor.close()
+    connection.close()
 
 
-def test_non_active_offer_filtered(setup_database):
-    cursor = setup_database
-    cursor.execute("UPDATE public.offer SET isActive = False where id = 1017696")
+@pytest.mark.parametrize(
+    ["name", "query", "recommendable"],
+    [
+        (
+            "non_active_offer",
+            "UPDATE public.offer SET isActive = False where id = 1017696",
+            False
+         ),
+        (
+            "offer_with_thing_type_activation_type",
+            "UPDATE public.offer SET type = 'ThingType.ACTIVATION' where id = 1017696",
+            False
+         ),
+        (
+            "offer_with_event_type_activation_type",
+            "UPDATE public.offer SET type = 'EventType.ACTIVATION' where id = 1017696",
+            False
+         ),
+        (
+            "offer_without_mediation",
+            "DELETE FROM public.mediation where offerId = 1017696",
+            False
+         ),
+        (
+            "offer_with_inactive_mediation",
+            "UPDATE public.mediation SET isActive = false where offerId = 1017696",
+            False
+         ),
+        (
+            "offer_without_stock",
+            "DELETE FROM public.stock where offerId = 1017696",
+            False
+         ),
+        (
+            "offer_with_stock_at_0",
+            "UPDATE public.stock SET quantity = 0 where offerId = 1017696",
+            False
+         ),
+        (
+            "offer_with_more_bookings_than_stock",
+            "UPDATE public.booking SET quantity = 1 where stockId = 2486130",
+            False
+         ),
+        (
+            "offer_with_soft_deleted_stock",
+            "UPDATE public.stock SET isSoftDeleted = true where offerId = 1017696",
+            False
+         ),
+        (
+            "offer_with_passed_beginning_date_time",
+            f"UPDATE public.stock SET beginningDatetime = '{yesterday}' where offerId = 1017696",
+            False
+        ),
+        (
+            "offer_with_passed_limit_booking_date_time",
+            f"UPDATE public.stock SET bookingLimitDatetime = '{yesterday}' where offerId = 1017696",
+            False
+        ),
+        (
+            "offer_with_venue_validation_token_not_null",
+            "UPDATE public.venue SET validationToken='' where managingOffererId = 2861",
+            False
+        ),
+        (
+            "offer_with_offerer_validation_token_not_null",
+            "UPDATE public.offerer SET validationToken='' where id = 2861",
+            False
+        ),
+        (
+            "offer_with_inactive_offerer",
+            "UPDATE public.offerer SET isActive = false where id = 2861",
+            False
+        ),
+        (
+            "offer_with_more_canceled_bookings_than_stocked",
+            "UPDATE public.booking SET quantity = 1, isCancelled = true where stockId = 2486130",
+            True
+        ),
+        (
+            "offer_with_future_beginning_date_time",
+            f"UPDATE public.stock SET beginningDatetime = '{tomorrow}' where offerId = 1017696",
+            True
+        ),
+        (
+            "offer_with_future_limit_booking_date_time",
+            f"UPDATE public.stock SET bookingLimitDatetime = '{tomorrow}' where offerId = 1017696",
+            True
+        )
+    ],
+)
+def test_updated_offer_data_recommendable_status(setup_database, query, name, recommendable):
+    """
+    Test that an update on the (initially recommendable) offer data
+    has the expected impact on its recommendable status.
+    """
+    connection, cursor = setup_database
+    cursor.execute(query)
     cursor.execute('REFRESH MATERIALIZED VIEW recommendable_offers')
     cursor.execute('SELECT * FROM recommendable_offers where id = 1017696')
-    assert len(cursor.fetchall()) == 0
+    assert len(cursor.fetchall()) == (1 if recommendable else 0)
     cursor.close()
+    connection.close()

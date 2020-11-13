@@ -34,8 +34,17 @@ OFFER_COLUMNS = [
     "withdrawalDetails",
 ]
 
+# Anonymization
+ANONYMIZATION_TABLES = [
+    "user", "provider", "offerer", "bank_information", "booking", "payment", "venue", "user_offerer"
+]
+
 # Enriched Data
 MIGRATION_ENRICHED_VENUE_DATA = "migration_enriched_venue_data"
 MIGRATION_ENRICHED_OFFERER_DATA = "migration_enriched_offerer_data"
 MIGRATION_ENRICHED_USER_DATA = "migration_enriched_user_data"
 MIGRATION_ENRICHED_OFFER_DATA = "migration_enriched_offer_data"
+ENRICHED_OFFERER_DATA_TABLES = ["offerer", "venue", "offer", "stock", "booking"]
+ENRICHED_OFFER_DATA_TABLES = ["offer", "stock", "booking", "favorite", "venue", "offerer"]
+ENRICHED_USER_DATA_TABLES = ["booking", "stock", "offer", "user"]
+ENRICHED_VENUE_DATA_TABLES = ["offerer", "venue", "offer", "stock", "booking", "venue_type", "venue_label"]

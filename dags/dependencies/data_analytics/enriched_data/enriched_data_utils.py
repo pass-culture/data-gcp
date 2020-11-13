@@ -1,4 +1,8 @@
-from bigquery.config import BASE32_JS_LIB_PATH
+import os
+
+from dependencies.data_analytics.config import BASE32_JS_LIB_PATH
+
+PATH_TO_DIR = os.path.dirname(os.path.realpath(__file__))
 
 
 def define_humanized_id_query(table, dataset):
@@ -14,7 +18,7 @@ def define_humanized_id_query(table, dataset):
     """
 
     # open js file and copy code
-    with open("humanize_id.js") as js_file:
+    with open(os.path.join(PATH_TO_DIR, "humanize_id.js")) as js_file:
         js_code = "\t\t\t".join(js_file.readlines())
     humanize_id_definition_query += "\t\t" + js_code
 

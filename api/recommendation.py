@@ -1,13 +1,12 @@
+import os
 from typing import List
 
 import psycopg2
 
-SQL_CONNECTION_NAME = (
-    "pass-culture-app-projet-test:europe-west1:pcdata-poc-csql-recommendation"
-)
-SQL_BASE = "pcdata-poc-csql-recommendation"
-SQL_BASE_USER = "postgres"
-SQL_BASE_PASSWORD = "postgres"
+SQL_CONNECTION_NAME = os.environ.get("SQL_CONNECTION_NAME")
+SQL_BASE = os.environ.get("SQL_BASE")
+SQL_BASE_USER = os.environ.get("SQL_BASE_USER")
+SQL_BASE_PASSWORD = os.environ.get("SQL_BASE_PASSWORD")
 
 
 def get_recommendations_for_user(

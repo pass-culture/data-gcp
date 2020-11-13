@@ -10,13 +10,16 @@ from bigquery.config import (
     MIGRATION_ENRICHED_OFFERER_DATA,
     MIGRATION_ENRICHED_USER_DATA,
     MIGRATION_ENRICHED_OFFER_DATA,
+    MIGRATION_ENRICHED_STOCK_DATA,
     BIGQUERY_POC_DATASET,
     ANONYMIZATION_TABLES,
     ENRICHED_USER_DATA_TABLES,
     ENRICHED_OFFERER_DATA_TABLES,
     ENRICHED_VENUE_DATA_TABLES,
     ENRICHED_OFFER_DATA_TABLES,
+    ENRICHED_STOCK_DATA_TABLES
 )
+
 from bigquery.utils import run_query
 from dependencies.data_analytics.import_tables import define_import_query
 from set_env import set_env_vars
@@ -50,3 +53,5 @@ if __name__ == "__main__":
     main(tables=ENRICHED_OFFERER_DATA_TABLES, dataset=MIGRATION_ENRICHED_OFFERER_DATA)
     main(tables=ENRICHED_VENUE_DATA_TABLES, dataset=MIGRATION_ENRICHED_VENUE_DATA)
     main(tables=ENRICHED_OFFER_DATA_TABLES, dataset=MIGRATION_ENRICHED_OFFER_DATA)
+    main(tables=ENRICHED_STOCK_DATA_TABLES, dataset=MIGRATION_ENRICHED_STOCK_DATA)
+

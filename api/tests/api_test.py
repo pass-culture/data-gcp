@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from api.app import app
+from app import app
 
 
 def test_check():
@@ -13,7 +13,7 @@ def test_check():
     assert response.data == b"OK"
 
 
-@patch("api.app.API_TOKEN", "good_token")
+@patch("app.API_TOKEN", "good_token")
 def test_recommendation_return_403_when_there_is_wrong_token():
     # Given
     api_token = "wrong_token"
@@ -27,9 +27,11 @@ def test_recommendation_return_403_when_there_is_wrong_token():
     assert response.data == b"Forbidden"
 
 
-@patch("api.app.API_TOKEN", "good_token")
-@patch("api.app.get_recommendations_for_user")
-def test_recommendation_return_recommended_offeres_when_there_is_right_token(get_recommendations_for_user_mock):
+@patch("app.API_TOKEN", "good_token")
+@patch("app.get_recommendations_for_user")
+def test_recommendation_return_recommended_offeres_when_there_is_right_token(
+    get_recommendations_for_user_mock,
+):
     # Given
     api_token = "good_token"
     user_id = 1

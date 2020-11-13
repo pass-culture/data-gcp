@@ -54,6 +54,7 @@ jobs:
       - run:
           name: Run tests
           command: |
+            export PYTHONPATH=$PYTHONPATH:~/data-gcp/api
             . venv/bin/activate
             pytest --cov
 

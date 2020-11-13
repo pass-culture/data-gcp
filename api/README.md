@@ -7,7 +7,7 @@ Api crée en suivant : https://cloud.google.com/run/docs/quickstarts/build-and-d
 
 
 ## Routes
-- Adresse API : https://apireco-4di2kltlja-ew.a.run.app/
+- Adresse API : https://apireco-4di2kltlja-ew.a.run.app/recommendation/<user_id>
 
 - Route de check : https://apireco-4di2kltlja-ew.a.run.app/check
 

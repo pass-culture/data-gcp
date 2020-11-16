@@ -148,7 +148,6 @@ def setup_database():
 
     create_and_fill_tables(cursor, TEST_DATA)
     run_sql_script(cursor, 'cloudsql/scripts/create_recommendable_offers.sql')
-    connection.commit()
     run_sql_script(cursor, 'cloudsql/scripts/create_non_recommendable_offers.sql')
     connection.commit()
 

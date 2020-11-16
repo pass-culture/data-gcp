@@ -125,9 +125,15 @@ jobs:
             gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
             gcloud --quiet config set compute/zone ${GOOGLE_COMPUTE_ZONE}
       - run:
-          name: Deploy to composer
+          name: test
           command: |
-            gcloud composer environments storage dags import \
-            --environment data-composer \
-            --location europe-west1 \
-            --source .
+            ls -lah
+            gsutil version -l
+            gsutil -m rsync -c -n -r . gs://europe-west1-data-composer-0f2400f5-bucket/dags
+      # - run:
+      #     name: Deploy to composer
+      #     command: |
+      #       gcloud composer environments storage dags import \
+      #       --environment data-composer \
+      #       --location europe-west1 \
+      #       --source .

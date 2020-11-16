@@ -1,7 +1,7 @@
 version: "3.7"
 
 services:
-  db:
+  testdb:
     image: postgres:12
     ports:
       - 5433:5432

@@ -64,7 +64,9 @@ Vous pouvez maintenant lancer les différents scripts !
 
 ## Tests CloudSQL
 
-Afin de pouvoir effectuer les tests, il faut démarrer le docker postgres:
+On run les tests de CloudSQL avec la commande suivante : `./run_tests.sh`
+
+Commande pour démarrer le docker postgres de test :
 `docker-compose up --build`
 
 Auquel on peut se connecter avec la commande suivante:
@@ -72,8 +74,8 @@ Auquel on peut se connecter avec la commande suivante:
 
 Le mot de passe est 'postgres'.
 
-Pour lancer les tests:
+Pour lancer les tests une fois le container démarré :
 `poetry run pytest`
 
-Pour lancer les tests avec plus de détails:
+Pour lancer les tests avec plus de détails :
 `poetry run pytest -s`

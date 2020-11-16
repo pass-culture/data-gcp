@@ -100,5 +100,8 @@ jobs:
           name: Install psql
           command: sudo apt install postgresql-client
       - run:
+          name: Export python path
+          command: export PYTHONPATH=$PYTHONPATH:$(pwd)
+      - run:
           name: Run tests
           command: ./run_tests.sh

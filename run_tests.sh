@@ -1,22 +1,24 @@
 #!/bin/bash
 
-if [ "$CI" '!=' true ]
+export PYTHONPATH=$PYTHONPATH:$(pwd)
+if [ "$CI" '=' true ]
 then
-  export PORT=5433
+  export DATA_GCP_TEST_POSTGRES_PORT=5432
 else
-  export PORT=5432
+  set +a; source .env.local; set -a;
 fi
 
 [ "$CI" '!=' true ] && docker-compose up -d testdb
-function run () {(
-    set -e
-    export ENVIRONMENT=test
-    until PGPASSWORD=postgres psql -h localhost -p $PORT -U "postgres" -c '\q'; do
+function wait_for_container () {(
+    until PGPASSWORD=postgres psql -h localhost -p $DATA_GCP_TEST_POSTGRES_PORT -U "postgres" -c '\q'; do
       >&2 echo "Postgres is unavailable - sleeping"
       sleep 1
     done
-    poetry run pytest tests/test_recommendable_offers.py
 )}
+function run () {(
+    DATA_GCP_TEST_POSTGRES_PORT=$DATA_GCP_TEST_POSTGRES_PORT poetry run pytest tests
+)}
+wait_for_container
 run
 status=$?
 

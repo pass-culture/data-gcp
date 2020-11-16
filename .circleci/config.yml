@@ -4,7 +4,10 @@ workflows:
   version: 2
   run-checks:
     jobs:
-      - api-build
+      - cloudsql-tests
+      - api-build:
+          requires:
+            - cloudsql-tests
       - api-tests:
           requires:
             - api-build
@@ -73,3 +76,32 @@ jobs:
           command: |
             . venv/bin/activate
             black --check --exclude="venv" .
+
+  cloudsql-tests:
+    docker:
+      - image: circleci/python:3.7
+      - image: circleci/postgres:12
+        environment:
+          POSTGRES_PASSWORD: postgres
+    steps:
+      - checkout
+      - run: sudo chown -R circleci:circleci /usr/local/bin
+      - run: sudo chown -R circleci:circleci /usr/local/lib/python3.7/site-packages
+      - restore_cache:
+          key: deps9-{{ .Branch }}-{{ checksum "poetry.lock" }}
+      - run:
+          name: Install dependencies
+          command: poetry install
+      - save_cache:
+          key: deps9-{{ .Branch }}-{{ checksum "poetry.lock" }}
+          paths:
+            - "/home/circleci/.cache/pypoetry/virtualenvs"
+      - run:
+          name: Install psql
+          command: sudo apt install postgresql-client
+      - run:
+          name: Export python path
+          command: export PYTHONPATH=$PYTHONPATH:$(pwd)
+      - run:
+          name: Run tests
+          command: ./run_tests.sh

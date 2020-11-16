@@ -1,9 +1,9 @@
 version: "3.7"
 
 services:
-  db:
+  testdb:
     image: postgres:12
     ports:
-      - 5433:5432
+      - "${DATA_GCP_TEST_POSTGRES_PORT}:5432"
     environment:
       - POSTGRES_PASSWORD=postgres

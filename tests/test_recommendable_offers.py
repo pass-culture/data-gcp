@@ -1,3 +1,4 @@
+import os
 from datetime import datetime, timedelta
 
 import pandas as pd
@@ -8,7 +9,7 @@ TEST_DATABASE_CONFIG = {
     "user": "postgres",
     "password": "postgres",
     "host": "127.0.0.1",
-    "port": "5433",
+    "port": os.getenv("DATA_GCP_TEST_POSTGRES_PORT"),
     "database": "postgres"
 }
 

@@ -114,6 +114,12 @@ jobs:
         auth:
           username: $DOCKERHUB_USER
           password: $DOCKERHUB_PASSWORD
+    environment:
+      COMPOSER_BUCKET: gs://europe-west1-data-composer-0f2400f5-bucket/dags
+      COMPOSER_ENV_NAME: data-composer
+      COMPOSER_REGION: europe-west1
+      DAG_RESTORE_DATA_ANALYTICS: restore_data_analytics_v1
+      DAG_RECOMMMENDATION_CLOUDSQL: recommendation_cloud_sql_v6
     working_directory: ~/data-gcp/dags
     steps:
       - checkout:
@@ -125,15 +131,11 @@ jobs:
             gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
             gcloud --quiet config set compute/zone ${GOOGLE_COMPUTE_ZONE}
       - run:
-          name: test
+          name: Deploy to composer
           command: |
-            ls -lah
-            gsutil version -l
-            gsutil -m rsync -c -n -r . gs://europe-west1-data-composer-0f2400f5-bucket/dags
-      # - run:
-      #     name: Deploy to composer
-      #     command: |
-      #       gcloud composer environments storage dags import \
-      #       --environment data-composer \
-      #       --location europe-west1 \
-      #       --source .
+            gsutil -m rsync -c -r . ${COMPOSER_BUCKET}
+      - run:
+          name: Wait for dags to be deployed
+          command: |
+            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${COMPOSER_REGION} ${DAG_RECOMMMENDATION_CLOUDSQL} 6 20
+            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${COMPOSER_REGION} ${DAG_RESTORE_DATA_ANALYTICS} 6 20

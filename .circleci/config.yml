@@ -13,9 +13,7 @@ workflows:
   run-checks:
     jobs:
       - cloudsql-tests
-      - api-build:
-          requires:
-            - cloudsql-tests
+      - api-build
       - api-tests:
           requires:
             - api-build
@@ -113,6 +111,7 @@ jobs:
       - run:
           name: Run tests
           command: ./run_tests.sh
+
   composer-deploy:
     docker:
       - image: google/cloud-sdk

@@ -22,4 +22,5 @@ pandas = "^1.1.4"
 [tool.poetry.dev-dependencies]
 pytest = "^6.1.1"
 pytest-cov = "^2.10.1"
-apache-airflow = "^1.10.10"
+mysqlclient = "^2.0.1"
+apache-airflow = {version = "^1.10.10", extras = ["gcp_api"]}

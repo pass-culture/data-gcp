@@ -4,7 +4,12 @@ workflows:
   version: 2
   deploy:
     jobs:
-      - composer-deploy
+      - composer-deploy:
+          filters:
+            branches:
+              only:
+                - master
+                - pc-5212-autodeploy-dags
   run-checks:
     jobs:
       - cloudsql-tests

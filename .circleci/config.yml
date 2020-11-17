@@ -9,7 +9,6 @@ workflows:
             branches:
               only:
                 - master
-                - pc-5212-autodeploy-dags
   run-checks:
     jobs:
       - cloudsql-tests
@@ -143,4 +142,3 @@ jobs:
           command: |
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${COMPOSER_REGION} ${DAG_RECOMMMENDATION_CLOUDSQL} 6 20
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${COMPOSER_REGION} ${DAG_RESTORE_DATA_ANALYTICS} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${COMPOSER_REGION} airflow_deploy_test 6 20

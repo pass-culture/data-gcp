@@ -334,3 +334,7 @@ def test_updated_offer_in_non_recommendable_offers(setup_database, name, query, 
     connection.close()
 
     assert result == (0 if recommendable else 1)
+
+
+def test_fake():
+    assert 1 == 1

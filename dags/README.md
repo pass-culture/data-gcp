@@ -7,7 +7,15 @@ Les dags sont dans `dags/`.
 
 Les autres scripts sont à mettre dans `dags/dependencies/`.
 
-## Uploader les fichiers sur Cloud Composer
+## Déploiement automatique des dags
+
+Lorsque l'on merge sur master les dags sont automatiquement déployés sur le cloud composer grâce à un job circle-ci.
+
+Le job met à jour les fichiers modifiés dans le bucket du cloud composer puis vérifie qu'airflow charge bien les dags. Pour voir quels fichiers ont été modifiés, il faut regarder l'output de l'étape `Deploy to composer` du job `composer-deploy`.
+
+Lors de l'ajout d'un nouveau dag : ajouter un appel au script `./wait_for_dag_deployed.sh` correspondant à ce dag dans le job `composer-deploy`.
+
+## Uploader manuellement les fichiers sur Cloud Composer
 
 ```
 gcloud composer environments storage dags import \

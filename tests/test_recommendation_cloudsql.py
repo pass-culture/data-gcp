@@ -129,11 +129,9 @@ def create_and_fill_tables(cursor, data):
             )
 
 
-def create_recommendable_offers_materialized_view(cursor):
-    with open('cloudsql/scripts/create_recommendable_offers.sql', 'r') as f:
+def run_sql_script(cursor, script_path):
+    with open(script_path, 'r') as f:
         sql = f.read().replace('"', '')
-        sql = ' '.join(sql.split())
-
     cursor.execute(sql)
 
 
@@ -148,8 +146,8 @@ def setup_database():
     cursor = connection.cursor()
 
     create_and_fill_tables(cursor, TEST_DATA)
-    create_recommendable_offers_materialized_view(cursor)
-
+    run_sql_script(cursor, "cloudsql/scripts/create_recommendable_offers.sql")
+    run_sql_script(cursor, "cloudsql/scripts/create_non_recommendable_offers.sql")
     connection.commit()
 
     return connection, cursor
@@ -268,10 +266,11 @@ def test_recommendable_offer_non_filtered(setup_database):
         )
     ],
 )
-def test_updated_offer_data_recommendable_status(setup_database, query, name, recommendable):
+def test_updated_offer_in_recommendable_offers(setup_database, name, query, recommendable):
     """
     Test that an update on the (initially recommendable) offer data
-    has the expected impact on its recommendable status.
+    has the expected impact on its recommendable status and its presence in
+    the recommendable_offers materialized view.
     """
     connection, cursor = setup_database
     cursor.execute(query)
@@ -283,3 +282,55 @@ def test_updated_offer_data_recommendable_status(setup_database, query, name, re
     connection.close()
 
     assert result == (1 if recommendable else 0)
+
+
+@pytest.mark.parametrize(
+    ["name", "query", "recommendable"],
+    [
+        (
+            "recommendable_offer",
+            "SELECT * from non_recommendable_offers limit 1;",
+            True
+        ),
+        (
+            "offer_already_booked_by_user",
+            """
+                UPDATE public.booking SET userId = 1017696, quantity = 1, isActive = true, isCancelled = false
+                where stockId = 2486130
+            """,
+            False
+         ),
+        (
+            "offer_already_booked_by_user_but_canceled",
+            """
+                UPDATE public.booking SET userId = 1017696, quantity = 1, isActive = true, isCancelled = true
+                where stockId = 2486130
+            """,
+            True
+        ),
+(
+            "offer_already_booked_by_user_but_inactive",
+            """
+                UPDATE public.booking SET userId = 1017696, quantity = 1, isActive = false, isCancelled = false
+                where stockId = 2486130
+            """,
+            True
+        ),
+    ],
+)
+def test_updated_offer_in_non_recommendable_offers(setup_database, name, query, recommendable):
+    """
+    Test that an update on the (initially recommendable) offer data
+    has the expected impact on its recommendable status and its presence in
+    the non_recommendable_offers materialized view.
+    """
+    connection, cursor = setup_database
+    cursor.execute(query)
+    cursor.execute('REFRESH MATERIALIZED VIEW non_recommendable_offers')
+    cursor.execute('SELECT * FROM non_recommendable_offers where user_id = 1017696')
+    result = len(cursor.fetchall())
+
+    cursor.close()
+    connection.close()
+
+    assert result == (0 if recommendable else 1)

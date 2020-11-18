@@ -2,16 +2,12 @@ version: 2.1
 
 workflows:
   version: 2
-  deploy:
-    jobs:
-      - composer-deploy:
-          filters:
-            branches:
-              only:
-                - master
   run-checks:
     jobs:
-      - cloudsql-tests
+      - install
+      - cloudsql-tests:
+          requires:
+            - install
       - api-build
       - api-tests:
           requires:
@@ -19,10 +15,16 @@ workflows:
       - api-linter:
           requires:
             - api-build
-      - install
       - dag-tests:
           requires:
             - install
+      - composer-deploy:
+          requires:
+            - dag-tests
+          filters:
+            branches:
+              only:
+                - master
 
 
 jobs:
@@ -136,25 +138,14 @@ jobs:
       - image: circleci/postgres:12
         environment:
           POSTGRES_PASSWORD: postgres
+    working_directory: ~/data-gcp
     steps:
       - checkout
-      - run: sudo chown -R circleci:circleci /usr/local/bin
-      - run: sudo chown -R circleci:circleci /usr/local/lib/python3.7/site-packages
       - restore_cache:
-          key: deps9-{{ .Branch }}-{{ checksum "poetry.lock" }}
-      - run:
-          name: Install dependencies
-          command: poetry install
-      - save_cache:
-          key: deps9-{{ .Branch }}-{{ checksum "poetry.lock" }}
-          paths:
-            - "/home/circleci/.cache/pypoetry/virtualenvs"
+          key: data-gcp-{{ checksum "poetry.lock" }}
       - run:
           name: Install psql
           command: sudo apt install postgresql-client
-      - run:
-          name: Export python path
-          command: export PYTHONPATH=$PYTHONPATH:$(pwd)
       - run:
           name: Run tests
           command: ./run_tests.sh

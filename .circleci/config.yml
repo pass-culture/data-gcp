@@ -19,6 +19,10 @@ workflows:
       - api-linter:
           requires:
             - api-build
+      - install
+      - dag-tests:
+          requires:
+            - install
 
 
 jobs:
@@ -81,6 +85,50 @@ jobs:
           command: |
             . venv/bin/activate
             black --check --exclude="venv" .
+  install:
+    working_directory: ~/data-gcp
+    docker:
+      - image: circleci/python:3.7
+        auth:
+          username: $DOCKERHUB_USER
+          password: $DOCKERHUB_PASSWORD
+    steps:
+      - checkout
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+            - data-gcp-{{ checksum "poetry.lock" }}
+      - run:
+          name: Install dependencies
+          command: |
+            poetry run pip install --upgrade pip
+            poetry install
+      - save_cache:
+          key: data-gcp-{{ checksum "poetry.lock" }}
+          paths:
+            - /home/circleci/.cache/pypoetry/virtualenvs
+  dag-tests:
+    docker:
+      - image: circleci/python:3.7
+        auth:
+          username: $DOCKERHUB_USER
+          password: $DOCKERHUB_PASSWORD
+    working_directory: ~/data-gcp
+    environment:
+      - AIRFLOW_HOME=~/data-gcp
+      - RECOMMENDATION_SQL_USER=test_user
+      - RECOMMENDATION_SQL_PASSWORD=test_password
+      - RECOMMENDATION_SQL_PUBLIC_PORT=1234
+      - RECOMMENDATION_SQL_PUBLIC_IP=11.111.111.111
+    steps:
+      - checkout
+      - restore_cache:
+          key: data-gcp-{{ checksum "poetry.lock" }}
+      - run:
+          name: Run tests
+          command: |
+            poetry run airflow initdb
+            poetry run pytest dags/tests
 
   cloudsql-tests:
     docker:

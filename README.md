@@ -47,6 +47,7 @@ export PYTHONPATH=$PYTHONPATH:"path/to/bigquery"
 
 Vous pouvez maintenant lancer les différents scripts !
 
+<<<<<<< Updated upstream
 ## Cloud Composer
 
 [plus de détails dans dags/README.md](/dags/README.md)
@@ -54,6 +55,21 @@ Vous pouvez maintenant lancer les différents scripts !
 UI Airflow disponible ici : https://q775b71be829eada6p-tp.appspot.com/admin/
 
 Les dags sont déployés automatiquement lors d'un merge sur master.
+=======
+## Airflow
+### Synchronisation des DAG
+
+1. Aller sur l'instance de GCP Composer
+2. Dans l'onglet `ENVIRONMENT CONFIGURATION`, cliquer sur le lien Google storage de la section `Dossier des graphes orientés acycliques`
+3. Importer le dag (dossier local `dags/...` vers la racine du dossier Google Storage)
+4. Importer les dépendences si nécessaire (dossier local `dags/dependencies/...` vers le dossier `dependencies` dans Google Storage)
+
+### Lancement DAG
+
+1. Aller sur l'instance de GCP Composer
+2. Dans l'onglet `ENVIRONMENT CONFIGURATION`, cliquer sur le lien Google storage de la section `Airflow web UI`
+3. Sélectionner le DAG et le lancer
+>>>>>>> Stashed changes
 
 
 ## Tests CloudSQL

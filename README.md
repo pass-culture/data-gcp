@@ -6,6 +6,8 @@ Repo pour la team data sur GCP
 
 /api : l'api de recommandation déployée sur Cloud Run
 
+/ai_platform : modèle de l'algorithme de recommandation
+
 /bigquery : l'ensemble du code (utilitaires, configuration, scripts) pour interagir avec BigQuery.
 
 /cloudsql : les scripts sql/python qui concernent le cloudsql de recommandation

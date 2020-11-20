@@ -2,7 +2,10 @@ import os
 
 from flask import Flask, jsonify, request
 
-from recommendation import get_recommendations_for_user
+from recommendation import (
+    get_recommendations_for_user,
+    order_offers_by_score_and_diversify_types,
+)
 
 API_TOKEN = os.environ.get("API_TOKEN")
 NUMBER_OF_RECOMMENDATIONS = 10
@@ -25,7 +28,16 @@ def recommendation(user_id: int):
     recommendations_for_user = get_recommendations_for_user(
         user_id, NUMBER_OF_RECOMMENDATIONS
     )
-    return jsonify({"recommended offers ": recommendations_for_user})
+    # the score will later be computed by AI platform
+    scored_recommendation_for_user = [
+        {**reco, "score": 1} for reco in recommendations_for_user
+    ]
+
+    sorted_and_diversified_recommendations = order_offers_by_score_and_diversify_types(
+        scored_recommendation_for_user
+    )
+
+    return jsonify({"recommended offers ": sorted_and_diversified_recommendations})
 
 
 if __name__ == "__main__":

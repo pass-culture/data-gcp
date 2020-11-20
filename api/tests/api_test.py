@@ -35,11 +35,15 @@ def test_recommendation_return_recommended_offeres_when_there_is_right_token(
     # Given
     api_token = "good_token"
     user_id = 1
-    get_recommendations_for_user_mock.return_value = [1, 2, 3]
+    get_recommendations_for_user_mock.return_value = [
+        {"id": 1, "url": "toto", "type": "tata"},
+        {"id": 2, "url": "toto", "type": "tata"},
+        {"id": 3, "url": "toto", "type": "tata"},
+    ]
 
     # When
     response = app.test_client().get(f"/recommendation/{user_id}?token={api_token}")
 
     # Then
     assert response.status_code == 200
-    assert response.data == b'{"recommended offers ":[1,2,3]}\n'
+    assert response.data == b'{"recommended offers ":[3,2,1]}\n'

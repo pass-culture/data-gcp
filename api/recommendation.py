@@ -1,5 +1,6 @@
 import os
-from typing import List
+import collections
+from typing import Any, Dict, List, Tuple
 
 import psycopg2
 
@@ -10,30 +11,97 @@ SQL_BASE_PASSWORD = os.environ.get("SQL_BASE_PASSWORD")
 
 
 def get_recommendations_for_user(
-    user_id: int, number_of_recommendations: int
-) -> List[int]:
+    user_id: int, number_of_recommendations: int, connection=None
+) -> List[Dict[str, Any]]:
 
-    connection = psycopg2.connect(
-        user=SQL_BASE_USER,
-        password=SQL_BASE_PASSWORD,
-        database=SQL_BASE,
-        host=f"/cloudsql/{SQL_CONNECTION_NAME}",
-    )
+    if connection is None:
+        connection = psycopg2.connect(
+            user=SQL_BASE_USER,
+            password=SQL_BASE_PASSWORD,
+            database=SQL_BASE,
+            host=f"/cloudsql/{SQL_CONNECTION_NAME}",
+        )
 
     cursor = connection.cursor()
     cursor.execute(
         f"""
-        SELECT id FROM recommendable_offers WHERE id NOT IN 
+        SELECT id, type, url FROM recommendable_offers WHERE id NOT IN 
         (SELECT offer_id FROM non_recommendable_offers WHERE user_id = {user_id}) 
         ORDER BY id;
         """
     )
 
     user_recommendation = [
-        row[0] for row in cursor.fetchmany(number_of_recommendations)
+        {"id": row[0], "type": row[1], "url": row[2]}
+        for row in cursor.fetchmany(number_of_recommendations)
     ]
 
     cursor.close()
     connection.close()
 
     return user_recommendation
+
+
+def order_offers_by_score_and_diversify_types(
+    offers: List[Dict[str, Any]]
+) -> List[Dict[str, Any]]:
+    """
+    Group offers by type.
+    Order offer groups by decreasing number of offers in each group and decreasing maximal score.
+    Order each offers within a group by increasing score.
+    Sort offers by taking the last offer of each group (maximum score), by decreasing size of group.
+    Return only the ids of these sorted offers.
+    """
+    offers_by_type = _get_offers_grouped_by_type_and_onlineless(offers)
+
+    offers_by_type_ordered_by_frequency = collections.OrderedDict(
+        sorted(
+            offers_by_type.items(),
+            key=_get_number_of_offers_and_max_score_by_type,
+            reverse=True,
+        )
+    )
+
+    for offer_type in offers_by_type_ordered_by_frequency:
+        offers_by_type_ordered_by_frequency[offer_type] = sorted(
+            offers_by_type_ordered_by_frequency[offer_type],
+            key=lambda k: (k["score"], k["id"]),
+            reverse=False,
+        )
+
+    diversified_offers = []
+
+    while len(diversified_offers) != len(offers):
+        for offer_type in offers_by_type_ordered_by_frequency.keys():
+            if offers_by_type_ordered_by_frequency[offer_type]:
+                diversified_offers.append(
+                    offers_by_type_ordered_by_frequency[offer_type].pop()
+                )
+
+    return [offer["id"] for offer in diversified_offers]
+
+
+def _get_offers_grouped_by_type_and_onlineless(offers: List[Dict[str, Any]]) -> Dict:
+    offers_by_type = dict()
+    for offer in offers:
+        offer_type_and_onlineness = _get_offer_type_and_onlineness(offer)
+        if offer_type_and_onlineness in offers_by_type.keys():
+            offers_by_type[offer_type_and_onlineness].append(offer)
+        else:
+            offers_by_type[offer_type_and_onlineness] = [offer]
+    return offers_by_type
+
+
+def _get_number_of_offers_and_max_score_by_type(type_and_offers: Tuple) -> Tuple:
+    return (
+        len(type_and_offers[1]),
+        max([offer["score"] for offer in type_and_offers[1]]),
+    )
+
+
+def _get_offer_type_and_onlineness(offer: Dict[str, Any]) -> str:
+    return (
+        str(offer["type"]) + "_DIGITAL"
+        if offer["url"]
+        else str(offer["type"]) + "_PHYSICAL"
+    )

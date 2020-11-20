@@ -17,7 +17,7 @@ from bigquery.config import (
     ENRICHED_OFFERER_DATA_TABLES,
     ENRICHED_VENUE_DATA_TABLES,
     ENRICHED_OFFER_DATA_TABLES,
-    ENRICHED_STOCK_DATA_TABLES
+    ENRICHED_STOCK_DATA_TABLES,
 )
 
 from bigquery.utils import run_query
@@ -40,7 +40,9 @@ def main(tables, dataset):
 
     # define and launch jobs
     for table in tables:
-        query = define_import_query(table, region=GCP_REGION, cloudsql_database=CLOUDSQL_DATABASE)
+        query = define_import_query(
+            table, region=GCP_REGION, cloudsql_database=CLOUDSQL_DATABASE
+        )
         job_config.destination = f"{GCP_PROJECT_ID}.{dataset}.{table}"
         run_query(bq_client=client, query=query, job_config=job_config)
 
@@ -54,4 +56,3 @@ if __name__ == "__main__":
     main(tables=ENRICHED_VENUE_DATA_TABLES, dataset=MIGRATION_ENRICHED_VENUE_DATA)
     main(tables=ENRICHED_OFFER_DATA_TABLES, dataset=MIGRATION_ENRICHED_OFFER_DATA)
     main(tables=ENRICHED_STOCK_DATA_TABLES, dataset=MIGRATION_ENRICHED_STOCK_DATA)
-

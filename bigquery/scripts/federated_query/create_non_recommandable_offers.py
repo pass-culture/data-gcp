@@ -2,11 +2,9 @@ import sys
 
 from google.cloud import bigquery
 
-from bigquery.config import (
-    GCP_PROJECT_ID,
-)
+from bigquery.config import GCP_PROJECT_ID
 
-BIGQUERY_POC_DATASET = 'public'
+BIGQUERY_POC_DATASET = "public"
 
 from bigquery.utils import run_query
 from set_env import set_env_vars
@@ -23,7 +21,9 @@ def main():
 
     # define destination table
     job_config = bigquery.QueryJobConfig()
-    job_config.destination = f"{GCP_PROJECT_ID}.{BIGQUERY_POC_DATASET}.non_recommandable_offers"
+    job_config.destination = (
+        f"{GCP_PROJECT_ID}.{BIGQUERY_POC_DATASET}.non_recommandable_offers"
+    )
     job_config.write_disposition = "WRITE_TRUNCATE"
 
     # define query

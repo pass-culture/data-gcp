@@ -6,26 +6,47 @@ from airflow.operators.bash_operator import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
 
 from dependencies.data_analytics.config import (
-    GCP_PROJECT_ID, GCP_REGION, BIGQUERY_AIRFLOW_DATASET
+    GCP_PROJECT_ID,
+    GCP_REGION,
+    BIGQUERY_AIRFLOW_DATASET,
 )
 from dependencies.data_analytics.import_tables import define_import_query
 from dependencies.data_analytics.anonymization import define_anonymization_query
-from dependencies.data_analytics.enriched_data.offer import define_enriched_offer_data_full_query
-from dependencies.data_analytics.enriched_data.offerer import define_enriched_offerer_data_full_query
-from dependencies.data_analytics.enriched_data.user import define_enriched_user_data_full_query
-from dependencies.data_analytics.enriched_data.venue import define_enriched_venue_data_full_query
+from dependencies.data_analytics.enriched_data.offer import (
+    define_enriched_offer_data_full_query,
+)
+from dependencies.data_analytics.enriched_data.offerer import (
+    define_enriched_offerer_data_full_query,
+)
+from dependencies.data_analytics.enriched_data.user import (
+    define_enriched_user_data_full_query,
+)
+from dependencies.data_analytics.enriched_data.venue import (
+    define_enriched_venue_data_full_query,
+)
 
 
 data_analytics_tables = [
-    "user", "provider", "offerer", "bank_information", "booking", "payment", "venue", "user_offerer", "offer", "stock",
-    "favorite", "venue_type", "venue_label"
+    "user",
+    "provider",
+    "offerer",
+    "bank_information",
+    "booking",
+    "payment",
+    "venue",
+    "user_offerer",
+    "offer",
+    "stock",
+    "favorite",
+    "venue_type",
+    "venue_label",
 ]
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 11, 11),
     "retries": 1,
     "retry_delay": datetime.timedelta(minutes=5),
-    "project_id": GCP_PROJECT_ID
+    "project_id": GCP_PROJECT_ID,
 }
 
 dag = DAG(
@@ -34,16 +55,16 @@ dag = DAG(
     description="Import tables from CloudSQL and enrich data for Data Analytics",
     schedule_interval="@daily",
     catchup=False,
-    dagrun_timeout=datetime.timedelta(minutes=90)
+    dagrun_timeout=datetime.timedelta(minutes=90),
 )
 
 start = DummyOperator(task_id="start", dag=dag)
 
 make_bq_dataset_task = BashOperator(
-    task_id='make_bq_dataset',
+    task_id="make_bq_dataset",
     # Executing 'bq' command requires Google Cloud SDK which comes preinstalled in Cloud Composer.
-    bash_command=f'bq ls {BIGQUERY_AIRFLOW_DATASET} || bq mk --dataset --location {GCP_REGION} {BIGQUERY_AIRFLOW_DATASET}',
-    dag=dag
+    bash_command=f"bq ls {BIGQUERY_AIRFLOW_DATASET} || bq mk --dataset --location {GCP_REGION} {BIGQUERY_AIRFLOW_DATASET}",
+    dag=dag,
 )
 
 import_tables_tasks = []
@@ -54,7 +75,7 @@ for table in data_analytics_tables:
         write_disposition="WRITE_TRUNCATE",
         use_legacy_sql=False,
         destination_dataset_table=f"{BIGQUERY_AIRFLOW_DATASET}.{table}",
-        dag=dag
+        dag=dag,
     )
     import_tables_tasks.append(task)
 
@@ -62,32 +83,32 @@ anonymization_task = BigQueryOperator(
     task_id="anonymization",
     sql=define_anonymization_query(dataset=BIGQUERY_AIRFLOW_DATASET),
     use_legacy_sql=False,
-    dag=dag
+    dag=dag,
 )
 
 create_enriched_offer_data_task = BigQueryOperator(
     task_id="create_enriched_offer_data",
     sql=define_enriched_offer_data_full_query(dataset=BIGQUERY_AIRFLOW_DATASET),
     use_legacy_sql=False,
-    dag=dag
+    dag=dag,
 )
 create_enriched_offerer_data_task = BigQueryOperator(
     task_id="create_enriched_offerer_data",
     sql=define_enriched_offerer_data_full_query(dataset=BIGQUERY_AIRFLOW_DATASET),
     use_legacy_sql=False,
-    dag=dag
+    dag=dag,
 )
 create_enriched_user_data_task = BigQueryOperator(
     task_id="create_enriched_user_data",
     sql=define_enriched_user_data_full_query(dataset=BIGQUERY_AIRFLOW_DATASET),
     use_legacy_sql=False,
-    dag=dag
+    dag=dag,
 )
 create_enriched_venue_data_task = BigQueryOperator(
     task_id="create_enriched_venue_data",
     sql=define_enriched_venue_data_full_query(dataset=BIGQUERY_AIRFLOW_DATASET),
     use_legacy_sql=False,
-    dag=dag
+    dag=dag,
 )
 create_enriched_data_tasks = [
     create_enriched_offer_data_task,
@@ -96,6 +117,6 @@ create_enriched_data_tasks = [
     create_enriched_venue_data_task,
 ]
 
-end = DummyOperator(task_id='end', dag=dag)
+end = DummyOperator(task_id="end", dag=dag)
 
 start >> make_bq_dataset_task >> import_tables_tasks >> anonymization_task >> create_enriched_data_tasks >> end

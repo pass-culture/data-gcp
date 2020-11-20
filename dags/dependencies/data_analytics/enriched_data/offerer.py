@@ -1,4 +1,6 @@
-from dependencies.data_analytics.enriched_data.enriched_data_utils import define_humanized_id_query
+from dependencies.data_analytics.enriched_data.enriched_data_utils import (
+    define_humanized_id_query,
+)
 
 
 def define_first_stock_creation_dates_query(dataset):

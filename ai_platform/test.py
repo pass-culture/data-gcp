@@ -1,12 +1,16 @@
-
 import numpy as np
 from sklearn.externals import joblib
 
 
-X = np.array([1.0])
+def test_model():
+    # Given
+    offer_ids = np.array([1, 2, 3, 4])
 
-model = joblib.load('ai_platform/model.joblib')
+    # When
+    model = joblib.load('ai_platform/model.joblib')
+    predicted_score = model.predict(offer_ids)
 
-print(
-    model.predict(X)
-)
+    # Then
+    assert len(predicted_score) == 4
+    assert sorted(predicted_score) == sorted([1, 1, 1, 1])
+

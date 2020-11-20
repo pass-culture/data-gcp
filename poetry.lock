@@ -1,9 +1,5 @@
 [[package]]
-name = "alembic"
-version = "1.4.3"
-description = "A database migration tool for SQLAlchemy."
 category = "dev"
-<<<<<<< Updated upstream
 description = "A database migration tool for SQLAlchemy."
 name = "alembic"
 optional = false
@@ -265,194 +261,17 @@ category = "dev"
 description = "Atomic file writes."
 marker = "sys_platform == \"win32\""
 name = "atomicwrites"
-=======
->>>>>>> Stashed changes
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
-
-[package.dependencies]
-Mako = "*"
-python-dateutil = "*"
-python-editor = ">=0.3"
-SQLAlchemy = ">=1.1.0"
-
-[[package]]
-name = "apache-airflow"
-version = "1.10.12"
-description = "Programmatically author, schedule and monitor data pipelines"
-category = "dev"
-optional = false
-python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*"
-
-[package.dependencies]
-alembic = ">=1.0,<2.0"
-argcomplete = ">=1.10,<2.0"
-attrs = ">=19.3,<20.0"
-cached-property = ">=1.5,<2.0"
-cattrs = ">=1.0,<2.0"
-colorlog = "4.0.2"
-configparser = ">=3.5.0,<3.6.0"
-croniter = ">=0.3.17,<0.4"
-dill = ">=0.2.2,<0.4"
-email-validator = "*"
-flask = ">=1.1.0,<2.0"
-flask-admin = "1.5.4"
-flask-appbuilder = {version = ">=2.2,<3.0", markers = "python_version >= \"3.6\""}
-flask-caching = ">=1.3.3,<1.4.0"
-flask-login = ">=0.3,<0.5"
-flask-swagger = ">=0.2.13,<0.3"
-flask-wtf = ">=0.14.2,<0.15"
-funcsigs = ">=1.0.0,<2.0.0"
-future = ">=0.16.0,<0.19"
-graphviz = ">=0.12"
-gunicorn = ">=19.5.0,<21.0"
-iso8601 = ">=0.1.12"
-jinja2 = ">=2.10.1,<2.12.0"
-json-merge-patch = "0.2"
-jsonschema = ">=3.0,<4.0"
-lazy-object-proxy = ">=1.3,<2.0"
-markdown = ">=2.5.2,<3.0"
-pandas = ">=0.17.1,<2.0"
-pendulum = "1.4.4"
-psutil = ">=4.2.0,<6.0.0"
-pygments = ">=2.0.1,<3.0"
-python-daemon = ">=2.1.1"
-python-dateutil = ">=2.3,<3"
-python-nvd3 = ">=0.15.0,<0.16.0"
-python-slugify = ">=3.0.0,<5.0"
-requests = ">=2.20.0,<3"
-setproctitle = ">=1.1.8,<2"
-sqlalchemy = ">=1.3,<2.0"
-sqlalchemy-jsonfield = {version = ">=0.9,<1.0", markers = "python_version >= \"3.5\""}
-tabulate = ">=0.7.5,<0.9"
-tenacity = "4.12.0"
-thrift = ">=0.9.2"
-typing-extensions = {version = ">=3.7.4", markers = "python_version < \"3.8\""}
-tzlocal = ">=1.4,<2.0.0"
-unicodecsv = ">=0.14.1"
-werkzeug = "<1.0.0"
-"zope.deprecation" = ">=4.0,<5.0"
-
-[package.extras]
-gcp = ["google-auth-httplib2 (>=0.0.1)", "google-cloud-bigtable (>=1.0.0,<2.0.0)", "google-cloud-container (>=0.1.1,<2.0.0)", "google-cloud-dlp (>=0.11.0,<2.0.0)", "google-cloud-language (>=1.1.1,<2.0.0)", "google-cloud-secret-manager (>=0.2.0,<2.0.0)", "google-cloud-spanner (>=1.10.0,<2.0.0)", "google-cloud-speech (>=0.36.3,<2.0.0)", "google-cloud-storage (>=1.16,<2.0.0)", "google-cloud-texttospeech (>=0.4.0,<2)", "google-cloud-translate (>=1.3.3,<2.0.0)", "google-cloud-videointelligence (>=1.7.0,<2.0.0)", "google-cloud-vision (>=0.35.2,<2.0.0)", "grpcio-gcp (>=0.2.2)", "pandas-gbq", "pyopenssl", "google-api-python-client (>=1.6.0,<2.0.0)", "google-auth (>=1.0.0,<2.0.0)"]
-gcp_api = ["pyopenssl", "google-api-python-client (>=1.6.0,<2.0.0)", "google-auth (>=1.0.0,<2.0.0)", "google-auth-httplib2 (>=0.0.1)", "google-cloud-bigtable (>=1.0.0,<2.0.0)", "google-cloud-container (>=0.1.1,<2.0.0)", "google-cloud-dlp (>=0.11.0,<2.0.0)", "google-cloud-language (>=1.1.1,<2.0.0)", "google-cloud-secret-manager (>=0.2.0,<2.0.0)", "google-cloud-spanner (>=1.10.0,<2.0.0)", "google-cloud-speech (>=0.36.3,<2.0.0)", "google-cloud-storage (>=1.16,<2.0.0)", "google-cloud-texttospeech (>=0.4.0,<2)", "google-cloud-translate (>=1.3.3,<2.0.0)", "google-cloud-videointelligence (>=1.7.0,<2.0.0)", "google-cloud-vision (>=0.35.2,<2.0.0)", "grpcio-gcp (>=0.2.2)", "pandas-gbq"]
-github_enterprise = ["Flask-OAuthlib (>=0.9.1)", "oauthlib (>=1.1.2,<2.0.3 || >2.0.3,<2.0.4 || >2.0.4,<2.0.5 || >2.0.5,<3.0.0)", "requests-oauthlib (1.1.0)"]
-google_auth = ["Flask-OAuthlib (>=0.9.1)", "oauthlib (>=1.1.2,<2.0.3 || >2.0.3,<2.0.4 || >2.0.4,<2.0.5 || >2.0.5,<3.0.0)", "requests-oauthlib (1.1.0)"]
-grpc = ["grpcio (>=1.15.0)"]
-hashicorp = ["hvac (>=0.10,<1.0)"]
-hdfs = ["snakebite (>=2.7.8)"]
-hive = ["hmsclient (>=0.1.0)", "pyhive[hive] (>=0.6.0)"]
-jdbc = ["JPype1 (0.7.1)", "jaydebeapi (>=1.1.1)"]
-jira = ["JIRA (>1.0.7)"]
-kerberos = ["pykerberos (>=1.1.13)", "requests-kerberos (>=0.10.0)", "snakebite[kerberos] (>=2.7.8)", "thrift-sasl (>=0.2.0)"]
-kubernetes = ["cryptography (>=2.0.0)", "kubernetes (>=3.0.0)"]
-ldap = ["ldap3 (>=2.5.1)"]
-mongo = ["dnspython (>=1.13.0,<2.0.0)", "pymongo (>=3.6.0,<3.11.0)"]
-mssql = ["pymssql (>=2.1.1,<2.2.0)"]
-mysql = ["mysqlclient (>=1.3.6,<1.4)"]
-oracle = ["cx-Oracle (>=5.1.2,<8.0)", "cx-Oracle (>=5.1.2)"]
-papermill = ["papermill[all] (>=1.0.0)", "nteract-scrapbook[all] (>=0.2.1)", "pyarrow (<1.0.0)", "fsspec (<0.8.0)"]
-password = ["bcrypt (>=2.0.0)", "flask-bcrypt (>=0.7.1)"]
-pinot = ["pinotdb (0.1.1)"]
-postgres = ["psycopg2-binary (>=2.7.4)"]
-presto = ["presto-python-client (>=0.7.0,<0.8)"]
-qds = ["qds-sdk (>=1.10.4)"]
-rabbitmq = ["amqp"]
-redis = ["redis (>=3.2,<4.0)"]
-s3 = ["boto3 (>=1.10,<2.0)"]
-salesforce = ["simple-salesforce (>=0.72,<1.0.0)"]
-samba = ["pysmbclient (>=0.1.3)"]
-segment = ["analytics-python (>=1.2.9)"]
-sendgrid = ["sendgrid (>=5.2.0,<6)"]
-sentry = ["blinker (>=1.1)", "sentry-sdk (>=0.8.0)"]
-slack = ["slackclient (>=1.0.0,<2.0.0)"]
-snowflake = ["snowflake-connector-python (>=1.5.2)", "snowflake-sqlalchemy (>=1.1.0)"]
-ssh = ["paramiko (>=2.1.1)", "pysftp (>=0.2.9)", "sshtunnel (>=0.1.4,<0.2)"]
-statsd = ["statsd (>=3.3.0,<4.0)"]
-vertica = ["vertica-python (>=0.5.1)"]
-virtualenv = ["virtualenv"]
-webhdfs = ["hdfs[avro,dataframe,kerberos] (>=2.0.4)"]
-winrm = ["pywinrm (>=0.4,<1.0)"]
-all = ["cassandra-driver (>=3.13.0,<3.21.0)", "cloudant (>=0.5.9,<2.0)", "pydruid (>=0.4.1,<=0.5.8)", "hmsclient (>=0.1.0)", "pyhive[hive] (>=0.6.0)", "dnspython (>=1.13.0,<2.0.0)", "pymongo (>=3.6.0,<3.11.0)", "pymssql (>=2.1.1,<2.2.0)", "mysqlclient (>=1.3.6,<1.4)", "pinotdb (0.1.1)", "psycopg2-binary (>=2.7.4)", "presto-python-client (>=0.7.0,<0.8)", "vertica-python (>=0.5.1)", "atlasclient (>=0.1.2)", "boto3 (>=1.10,<2.0)", "azure-storage (>=0.34.0,<0.37.0)", "azure-storage-blob (<12.0)", "azure-mgmt-containerinstance (>=1.5.0,<2)", "azure-cosmos (>=3.0.1,<4)", "azure-datalake-store (>=0.0.45azure-mgmt-datalake-store)", "azure-mgmt-resource (>=2.2.0)", "celery (>=4.3,<5.0)", "flower (>=0.7.3,<1.0)", "tornado (>=4.2.0,<6.0)", "cgroupspy (>=0.1.4)", "cryptography (>=0.9.3)", "datadog (>=0.14.0)", "beautifulsoup4 (>=4.7.1,<4.8.0)", "click (6.7)", "coverage", "flake8 (>=3.6.0)", "flake8-colors", "flaky", "freezegun", "ipdb", "jira", "mongomock", "moto (>=1.3.14,<2.0.0)", "parameterized", "paramiko", "pre-commit", "pysftp", "pytest (<6.0.0)", "pytest-cov", "pytest-instafail", "pytest-rerunfailures", "pytest-timeout", "pytest-xdist", "pywinrm", "qds-sdk (>=1.9.6)", "requests-mock", "yamllint", "mypy (0.720)", "sphinx-argparse (>=0.1.13)", "sphinx-autoapi (1.0.0)", "sphinx-jinja (>=1.1,<2.0)", "sphinx-rtd-theme (>=0.1.6)", "sphinxcontrib-httpdomain (>=1.7.0)", "docker (>=3.0,<4.0)", "elasticsearch (>=5.0.0,<6.0.0)", "elasticsearch-dsl (>=5.0.0,<6.0.0)", "pyopenssl", "google-api-python-client (>=1.6.0,<2.0.0)", "google-auth (>=1.0.0,<2.0.0)", "google-auth-httplib2 (>=0.0.1)", "google-cloud-bigtable (>=1.0.0,<2.0.0)", "google-cloud-container (>=0.1.1,<2.0.0)", "google-cloud-dlp (>=0.11.0,<2.0.0)", "google-cloud-language (>=1.1.1,<2.0.0)", "google-cloud-secret-manager (>=0.2.0,<2.0.0)", "google-cloud-spanner (>=1.10.0,<2.0.0)", "google-cloud-speech (>=0.36.3,<2.0.0)", "google-cloud-storage (>=1.16,<2.0.0)", "google-cloud-texttospeech (>=0.4.0,<2)", "google-cloud-translate (>=1.3.3,<2.0.0)", "google-cloud-videointelligence (>=1.7.0,<2.0.0)", "google-cloud-vision (>=0.35.2,<2.0.0)", "grpcio-gcp (>=0.2.2)", "pandas-gbq", "grpcio (>=1.15.0)", "hvac (>=0.10,<1.0)", "JPype1 (0.7.1)", "jaydebeapi (>=1.1.1)", "python-jenkins (>=1.0.0)", "pykerberos (>=1.1.13)", "requests-kerberos (>=0.10.0)", "thrift-sasl (>=0.2.0)", "cryptography (>=2.0.0)", "kubernetes (>=3.0.0)", "ldap3 (>=2.5.1)", "papermill[all] (>=1.0.0)", "nteract-scrapbook[all] (>=0.2.1)", "pyarrow (<1.0.0)", "bcrypt (>=2.0.0)", "flask-bcrypt (>=0.7.1)", "amqp", "redis (>=3.2,<4.0)", "pysmbclient (>=0.1.3)", "analytics-python (>=1.2.9)", "sendgrid (>=5.2.0,<6)", "blinker (>=1.1)", "sentry-sdk (>=0.8.0)", "slackclient (>=1.0.0,<2.0.0)", "snowflake-connector-python (>=1.5.2)", "snowflake-sqlalchemy (>=1.1.0)", "paramiko (>=2.1.1)", "pysftp (>=0.2.9)", "sshtunnel (>=0.1.4,<0.2)", "virtualenv", "hdfs[avro,dataframe,kerberos] (>=2.0.4)", "zdesk", "kombu (4.6.3)", "sphinx (1.8.5)", "cx-Oracle (>=5.1.2,<8.0)", "mock", "contextdecorator", "fsspec (<0.8.0)", "sphinx (>=2.1.2)", "cx-Oracle (>=5.1.2)", "sphinx-copybutton"]
-all_dbs = ["cassandra-driver (>=3.13.0,<3.21.0)", "cloudant (>=0.5.9,<2.0)", "pydruid (>=0.4.1,<=0.5.8)", "snakebite (>=2.7.8)", "hmsclient (>=0.1.0)", "pyhive[hive] (>=0.6.0)", "dnspython (>=1.13.0,<2.0.0)", "pymongo (>=3.6.0,<3.11.0)", "pymssql (>=2.1.1,<2.2.0)", "mysqlclient (>=1.3.6,<1.4)", "pinotdb (0.1.1)", "psycopg2-binary (>=2.7.4)", "presto-python-client (>=0.7.0,<0.8)", "vertica-python (>=0.5.1)"]
-async = ["eventlet (>=0.9.7)", "gevent (>=0.13)", "greenlet (>=0.4.9)"]
-atlas = ["atlasclient (>=0.1.2)"]
-aws = ["boto3 (>=1.10,<2.0)"]
-azure = ["azure-storage (>=0.34.0,<0.37.0)", "azure-storage-blob (<12.0)", "azure-mgmt-containerinstance (>=1.5.0,<2)", "azure-cosmos (>=3.0.1,<4)", "azure-datalake-store (>=0.0.45azure-mgmt-datalake-store)", "azure-mgmt-resource (>=2.2.0)"]
-azure_blob_storage = ["azure-storage (>=0.34.0,<0.37.0)", "azure-storage-blob (<12.0)"]
-azure_container_instances = ["azure-mgmt-containerinstance (>=1.5.0,<2)"]
-azure_cosmos = ["azure-cosmos (>=3.0.1,<4)"]
-azure_data_lake = ["azure-datalake-store (>=0.0.45azure-mgmt-datalake-store)", "azure-mgmt-resource (>=2.2.0)"]
-cassandra = ["cassandra-driver (>=3.13.0,<3.21.0)"]
-celery = ["celery (>=4.3,<5.0)", "flower (>=0.7.3,<1.0)", "tornado (>=4.2.0,<6.0)", "kombu (4.6.3)"]
-cgroups = ["cgroupspy (>=0.1.4)"]
-cloudant = ["cloudant (>=0.5.9,<2.0)"]
-crypto = ["cryptography (>=0.9.3)"]
-dask = ["distributed (>=1.17.1,<2)"]
-databricks = ["requests (>=2.20.0,<3)"]
-datadog = ["datadog (>=0.14.0)"]
-devel = ["boto3 (>=1.10,<2.0)", "cgroupspy (>=0.1.4)", "beautifulsoup4 (>=4.7.1,<4.8.0)", "click (6.7)", "coverage", "flake8 (>=3.6.0)", "flake8-colors", "flaky", "freezegun", "ipdb", "jira", "mongomock", "moto (>=1.3.14,<2.0.0)", "parameterized", "paramiko", "pre-commit", "pysftp", "pytest (<6.0.0)", "pytest-cov", "pytest-instafail", "pytest-rerunfailures", "pytest-timeout", "pytest-xdist", "pywinrm", "qds-sdk (>=1.9.6)", "requests-mock", "yamllint", "mypy (0.720)", "sphinx-argparse (>=0.1.13)", "sphinx-autoapi (1.0.0)", "sphinx-jinja (>=1.1,<2.0)", "sphinx-rtd-theme (>=0.1.6)", "sphinxcontrib-httpdomain (>=1.7.0)", "cryptography (>=2.0.0)", "kubernetes (>=3.0.0)", "mysqlclient (>=1.3.6,<1.4)", "bcrypt (>=2.0.0)", "flask-bcrypt (>=0.7.1)", "sphinx (1.8.5)", "mock", "contextdecorator", "sphinx (>=2.1.2)", "sphinx-copybutton"]
-devel_azure = ["azure-cosmos (>=3.0.1,<4)", "azure-datalake-store (>=0.0.45azure-mgmt-datalake-store)", "azure-mgmt-resource (>=2.2.0)", "boto3 (>=1.10,<2.0)", "cgroupspy (>=0.1.4)", "beautifulsoup4 (>=4.7.1,<4.8.0)", "click (6.7)", "coverage", "flake8 (>=3.6.0)", "flake8-colors", "flaky", "freezegun", "ipdb", "jira", "mongomock", "moto (>=1.3.14,<2.0.0)", "parameterized", "paramiko", "pre-commit", "pysftp", "pytest (<6.0.0)", "pytest-cov", "pytest-instafail", "pytest-rerunfailures", "pytest-timeout", "pytest-xdist", "pywinrm", "qds-sdk (>=1.9.6)", "requests-mock", "yamllint", "mypy (0.720)", "sphinx-argparse (>=0.1.13)", "sphinx-autoapi (1.0.0)", "sphinx-jinja (>=1.1,<2.0)", "sphinx-rtd-theme (>=0.1.6)", "sphinxcontrib-httpdomain (>=1.7.0)", "cryptography (>=2.0.0)", "kubernetes (>=3.0.0)", "mysqlclient (>=1.3.6,<1.4)", "bcrypt (>=2.0.0)", "flask-bcrypt (>=0.7.1)", "sphinx (1.8.5)", "mock", "contextdecorator", "sphinx (>=2.1.2)", "sphinx-copybutton"]
-devel_ci = ["cassandra-driver (>=3.13.0,<3.21.0)", "cloudant (>=0.5.9,<2.0)", "pydruid (>=0.4.1,<=0.5.8)", "hmsclient (>=0.1.0)", "pyhive[hive] (>=0.6.0)", "dnspython (>=1.13.0,<2.0.0)", "pymongo (>=3.6.0,<3.11.0)", "pymssql (>=2.1.1,<2.2.0)", "mysqlclient (>=1.3.6,<1.4)", "pinotdb (0.1.1)", "psycopg2-binary (>=2.7.4)", "presto-python-client (>=0.7.0,<0.8)", "vertica-python (>=0.5.1)", "atlasclient (>=0.1.2)", "boto3 (>=1.10,<2.0)", "azure-storage (>=0.34.0,<0.37.0)", "azure-storage-blob (<12.0)", "azure-mgmt-containerinstance (>=1.5.0,<2)", "azure-cosmos (>=3.0.1,<4)", "azure-datalake-store (>=0.0.45azure-mgmt-datalake-store)", "azure-mgmt-resource (>=2.2.0)", "celery (>=4.3,<5.0)", "flower (>=0.7.3,<1.0)", "tornado (>=4.2.0,<6.0)", "cgroupspy (>=0.1.4)", "cryptography (>=0.9.3)", "datadog (>=0.14.0)", "beautifulsoup4 (>=4.7.1,<4.8.0)", "click (6.7)", "coverage", "flake8 (>=3.6.0)", "flake8-colors", "flaky", "freezegun", "ipdb", "jira", "mongomock", "moto (>=1.3.14,<2.0.0)", "parameterized", "paramiko", "pre-commit", "pysftp", "pytest (<6.0.0)", "pytest-cov", "pytest-instafail", "pytest-rerunfailures", "pytest-timeout", "pytest-xdist", "pywinrm", "qds-sdk (>=1.9.6)", "requests-mock", "yamllint", "mypy (0.720)", "sphinx-argparse (>=0.1.13)", "sphinx-autoapi (1.0.0)", "sphinx-jinja (>=1.1,<2.0)", "sphinx-rtd-theme (>=0.1.6)", "sphinxcontrib-httpdomain (>=1.7.0)", "docker (>=3.0,<4.0)", "elasticsearch (>=5.0.0,<6.0.0)", "elasticsearch-dsl (>=5.0.0,<6.0.0)", "pyopenssl", "google-api-python-client (>=1.6.0,<2.0.0)", "google-auth (>=1.0.0,<2.0.0)", "google-auth-httplib2 (>=0.0.1)", "google-cloud-bigtable (>=1.0.0,<2.0.0)", "google-cloud-container (>=0.1.1,<2.0.0)", "google-cloud-dlp (>=0.11.0,<2.0.0)", "google-cloud-language (>=1.1.1,<2.0.0)", "google-cloud-secret-manager (>=0.2.0,<2.0.0)", "google-cloud-spanner (>=1.10.0,<2.0.0)", "google-cloud-speech (>=0.36.3,<2.0.0)", "google-cloud-storage (>=1.16,<2.0.0)", "google-cloud-texttospeech (>=0.4.0,<2)", "google-cloud-translate (>=1.3.3,<2.0.0)", "google-cloud-videointelligence (>=1.7.0,<2.0.0)", "google-cloud-vision (>=0.35.2,<2.0.0)", "grpcio-gcp (>=0.2.2)", "pandas-gbq", "grpcio (>=1.15.0)", "hvac (>=0.10,<1.0)", "JPype1 (0.7.1)", "jaydebeapi (>=1.1.1)", "python-jenkins (>=1.0.0)", "pykerberos (>=1.1.13)", "requests-kerberos (>=0.10.0)", "thrift-sasl (>=0.2.0)", "cryptography (>=2.0.0)", "kubernetes (>=3.0.0)", "ldap3 (>=2.5.1)", "papermill[all] (>=1.0.0)", "nteract-scrapbook[all] (>=0.2.1)", "pyarrow (<1.0.0)", "bcrypt (>=2.0.0)", "flask-bcrypt (>=0.7.1)", "amqp", "redis (>=3.2,<4.0)", "pysmbclient (>=0.1.3)", "analytics-python (>=1.2.9)", "sendgrid (>=5.2.0,<6)", "blinker (>=1.1)", "sentry-sdk (>=0.8.0)", "slackclient (>=1.0.0,<2.0.0)", "snowflake-connector-python (>=1.5.2)", "snowflake-sqlalchemy (>=1.1.0)", "paramiko (>=2.1.1)", "pysftp (>=0.2.9)", "sshtunnel (>=0.1.4,<0.2)", "virtualenv", "hdfs[avro,dataframe,kerberos] (>=2.0.4)", "zdesk", "kombu (4.6.3)", "sphinx (1.8.5)", "cx-Oracle (>=5.1.2,<8.0)", "mock", "contextdecorator", "fsspec (<0.8.0)", "sphinx (>=2.1.2)", "cx-Oracle (>=5.1.2)", "sphinx-copybutton"]
-devel_hadoop = ["boto3 (>=1.10,<2.0)", "cgroupspy (>=0.1.4)", "beautifulsoup4 (>=4.7.1,<4.8.0)", "click (6.7)", "coverage", "flake8 (>=3.6.0)", "flake8-colors", "flaky", "freezegun", "ipdb", "jira", "mongomock", "moto (>=1.3.14,<2.0.0)", "parameterized", "paramiko", "pre-commit", "pysftp", "pytest (<6.0.0)", "pytest-cov", "pytest-instafail", "pytest-rerunfailures", "pytest-timeout", "pytest-xdist", "pywinrm", "qds-sdk (>=1.9.6)", "requests-mock", "yamllint", "mypy (0.720)", "sphinx-argparse (>=0.1.13)", "sphinx-autoapi (1.0.0)", "sphinx-jinja (>=1.1,<2.0)", "sphinx-rtd-theme (>=0.1.6)", "sphinxcontrib-httpdomain (>=1.7.0)", "cryptography (>=2.0.0)", "kubernetes (>=3.0.0)", "mysqlclient (>=1.3.6,<1.4)", "bcrypt (>=2.0.0)", "flask-bcrypt (>=0.7.1)", "snakebite (>=2.7.8)", "hmsclient (>=0.1.0)", "pyhive[hive] (>=0.6.0)", "pykerberos (>=1.1.13)", "requests-kerberos (>=0.10.0)", "snakebite[kerberos] (>=2.7.8)", "thrift-sasl (>=0.2.0)", "presto-python-client (>=0.7.0,<0.8)", "hdfs[avro,dataframe,kerberos] (>=2.0.4)", "sphinx (1.8.5)", "mock", "contextdecorator", "sphinx (>=2.1.2)", "sphinx-copybutton"]
-doc = ["sphinx-argparse (>=0.1.13)", "sphinx-autoapi (1.0.0)", "sphinx-jinja (>=1.1,<2.0)", "sphinx-rtd-theme (>=0.1.6)", "sphinxcontrib-httpdomain (>=1.7.0)", "sphinx (1.8.5)", "sphinx (>=2.1.2)", "sphinx-copybutton"]
-docker = ["docker (>=3.0,<4.0)"]
-druid = ["pydruid (>=0.4.1,<=0.5.8)"]
-elasticsearch = ["elasticsearch (>=5.0.0,<6.0.0)", "elasticsearch-dsl (>=5.0.0,<6.0.0)"]
-emr = ["boto3 (>=1.10,<2.0)"]
-
-[[package]]
-name = "apispec"
-version = "1.3.3"
-description = "A pluggable API specification generator. Currently supports the OpenAPI Specification (f.k.a. the Swagger specification)."
-category = "dev"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-PyYAML = {version = ">=3.10", optional = true, markers = "extra == \"yaml\""}
-
-[package.extras]
-dev = ["PyYAML (>=3.10)", "prance[osv] (>=0.11)", "marshmallow (>=2.19.2)", "pytest", "mock", "flake8 (3.7.7)", "pre-commit (1.15.2)", "tox", "flake8-bugbear (19.3.0)"]
-lint = ["flake8 (3.7.7)", "pre-commit (1.15.2)", "flake8-bugbear (19.3.0)"]
-tests = ["PyYAML (>=3.10)", "prance[osv] (>=0.11)", "marshmallow (>=2.19.2)", "pytest", "mock"]
-validation = ["prance[osv] (>=0.11)"]
-webframeworks-tests = ["apispec-webframeworks[tests] (>=0.3.0)"]
-yaml = ["PyYAML (>=3.10)"]
-
-[[package]]
-name = "argcomplete"
-version = "1.12.1"
-description = "Bash tab completion for argparse"
-category = "dev"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-importlib-metadata = {version = ">=0.23,<3", markers = "python_version == \"3.7\""}
-
-[package.extras]
-test = ["coverage", "flake8", "pexpect", "wheel"]
-
-[[package]]
-name = "atomicwrites"
 version = "1.4.0"
-description = "Atomic file writes."
-category = "dev"
-optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
 [[package]]
-name = "attrs"
-version = "19.3.0"
-description = "Classes Without Boilerplate"
 category = "dev"
+description = "Classes Without Boilerplate"
+name = "attrs"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
-<<<<<<< Updated upstream
 version = "19.3.0"
-=======
->>>>>>> Stashed changes
 
 [package.extras]
 azure-pipelines = ["coverage", "hypothesis", "pympler", "pytest (>=4.3.0)", "six", "zope.interface", "pytest-azurepipelines"]
@@ -461,7 +280,6 @@ docs = ["sphinx", "zope.interface"]
 tests = ["coverage", "hypothesis", "pympler", "pytest (>=4.3.0)", "six", "zope.interface"]
 
 [[package]]
-<<<<<<< Updated upstream
 category = "dev"
 description = "Internationalization utilities"
 marker = "python_version >= \"3.6\""
@@ -469,45 +287,27 @@ name = "babel"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 version = "2.9.0"
-=======
-name = "babel"
-version = "2.9.0"
-description = "Internationalization utilities"
-category = "dev"
-optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
->>>>>>> Stashed changes
 
 [package.dependencies]
 pytz = ">=2015.7"
 
 [[package]]
-<<<<<<< Updated upstream
 category = "dev"
 description = "A decorator for caching properties in classes."
 name = "cached-property"
 optional = false
 python-versions = "*"
 version = "1.5.2"
-=======
-name = "cached-property"
-version = "1.5.2"
-description = "A decorator for caching properties in classes."
-category = "dev"
-optional = false
-python-versions = "*"
->>>>>>> Stashed changes
 
 [[package]]
-name = "cachetools"
-version = "4.1.1"
-description = "Extensible memoizing collections and decorators"
 category = "main"
+description = "Extensible memoizing collections and decorators"
+name = "cachetools"
 optional = false
 python-versions = "~=3.5"
+version = "4.1.1"
 
 [[package]]
-<<<<<<< Updated upstream
 category = "dev"
 description = "Composable complex class support for attrs."
 name = "cattrs"
@@ -528,81 +328,45 @@ name = "certifi"
 optional = false
 python-versions = "*"
 version = "2020.11.8"
-=======
-name = "cattrs"
-version = "1.0.0"
-description = "Composable complex class support for attrs."
-category = "dev"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-attrs = ">=17.3"
-
-[package.extras]
-dev = ["bumpversion", "wheel", "watchdog", "flake8", "tox", "coverage", "sphinx", "pytest", "hypothesis", "pendulum"]
->>>>>>> Stashed changes
 
 [[package]]
-name = "certifi"
-version = "2020.11.8"
-description = "Python package for providing Mozilla's CA Bundle."
 category = "main"
-<<<<<<< Updated upstream
 description = "Foreign Function Interface for Python calling C code."
 name = "cffi"
-=======
->>>>>>> Stashed changes
 optional = false
 python-versions = "*"
-
-[[package]]
-name = "cffi"
 version = "1.14.3"
-description = "Foreign Function Interface for Python calling C code."
-category = "main"
-optional = false
-python-versions = "*"
 
 [package.dependencies]
 pycparser = "*"
 
 [[package]]
-name = "chardet"
-version = "3.0.4"
-description = "Universal encoding detector for Python 2 and 3"
 category = "main"
+description = "Universal encoding detector for Python 2 and 3"
+name = "chardet"
 optional = false
 python-versions = "*"
+version = "3.0.4"
 
 [[package]]
-name = "click"
-version = "7.1.2"
-description = "Composable command line interface toolkit"
 category = "main"
+description = "Composable command line interface toolkit"
+name = "click"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
+version = "7.1.2"
 
 [[package]]
-<<<<<<< Updated upstream
 category = "dev"
 description = "Cross-platform colored terminal text."
 marker = "sys_platform == \"win32\" or python_version >= \"3.6\""
-=======
->>>>>>> Stashed changes
 name = "colorama"
-version = "0.4.4"
-description = "Cross-platform colored terminal text."
-category = "dev"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
+version = "0.4.4"
 
 [[package]]
-name = "colorlog"
-version = "4.0.2"
-description = "Log formatting with colors!"
 category = "dev"
-<<<<<<< Updated upstream
 description = "Log formatting with colors!"
 name = "colorlog"
 optional = false
@@ -623,35 +387,15 @@ version = "3.5.3"
 [[package]]
 category = "dev"
 description = "Code coverage measurement for Python"
-=======
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-colorama = {version = "*", markers = "sys_platform == \"win32\""}
-
-[[package]]
-name = "configparser"
-version = "3.5.3"
-description = "This library brings the updated configparser from Python 3.5 to Python 2.6-3.5."
-category = "dev"
-optional = false
-python-versions = ">=2.6"
-
-[[package]]
->>>>>>> Stashed changes
 name = "coverage"
-version = "5.3"
-description = "Code coverage measurement for Python"
-category = "dev"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, <4"
+version = "5.3"
 
 [package.extras]
 toml = ["toml"]
 
 [[package]]
-<<<<<<< Updated upstream
 category = "main"
 description = "CRC Generator"
 name = "crcmod"
@@ -740,21 +484,22 @@ idna = ">=2.0.0"
 category = "main"
 description = "A simple framework for building complex web applications."
 name = "flask"
-=======
-name = "croniter"
-version = "0.3.36"
-description = "croniter provides iteration for datetime object with cron like format"
-category = "dev"
->>>>>>> Stashed changes
 optional = false
-python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
+version = "1.1.2"
 
 [package.dependencies]
-natsort = "*"
-python-dateutil = "*"
+Jinja2 = ">=2.10.1"
+Werkzeug = ">=0.15"
+click = ">=5.1"
+itsdangerous = ">=0.24"
+
+[package.extras]
+dev = ["pytest", "coverage", "tox", "sphinx", "pallets-sphinx-themes", "sphinxcontrib-log-cabinet", "sphinx-issues"]
+docs = ["sphinx", "pallets-sphinx-themes", "sphinxcontrib-log-cabinet", "sphinx-issues"]
+dotenv = ["python-dotenv"]
 
 [[package]]
-<<<<<<< Updated upstream
 category = "dev"
 description = "Simple and extensible admin interface framework for Flask"
 name = "flask-admin"
@@ -958,7 +703,7 @@ description = "Google API Client Library for Python"
 name = "google-api-python-client"
 optional = false
 python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*"
-version = "1.12.5"
+version = "1.12.8"
 
 [package.dependencies]
 google-api-core = ">=1.21.0,<2dev"
@@ -1209,7 +954,7 @@ description = "Google Cloud Video Intelligence API client library"
 name = "google-cloud-videointelligence"
 optional = false
 python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*"
-version = "1.16.0"
+version = "1.16.1"
 
 [package.dependencies]
 [package.dependencies.google-api-core]
@@ -1228,166 +973,60 @@ version = "1.0.0"
 [package.dependencies.google-api-core]
 extras = ["grpc"]
 version = ">=1.14.0,<2.0.0dev"
-=======
-name = "dill"
-version = "0.3.3"
-description = "serialize all of python"
-category = "dev"
-optional = false
-python-versions = ">=2.6, !=3.0.*"
-
-[package.extras]
-graph = ["objgraph (>=1.7.2)"]
 
 [[package]]
-name = "dnspython"
-version = "2.0.0"
-description = "DNS toolkit"
-category = "dev"
-optional = false
-python-versions = ">=3.6"
-
-[package.extras]
-dnssec = ["cryptography (>=2.6)"]
-doh = ["requests", "requests-toolbelt"]
-idna = ["idna (>=2.1)"]
-curio = ["curio (>=1.2)", "sniffio (>=1.1)"]
-trio = ["trio (>=0.14.0)", "sniffio (>=1.1)"]
-
-[[package]]
-name = "docutils"
-version = "0.16"
-description = "Docutils -- Python Documentation Utilities"
-category = "dev"
-optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
-
-[[package]]
-name = "email-validator"
-version = "1.1.2"
-description = "A robust email syntax and deliverability validation library for Python 2.x/3.x."
-category = "dev"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-dnspython = ">=1.15.0"
-idna = ">=2.0.0"
-
-[[package]]
-name = "flask"
-version = "1.1.2"
-description = "A simple framework for building complex web applications."
 category = "main"
+description = "A python wrapper of the C library 'Google CRC32C'"
+marker = "python_version >= \"3.5\""
+name = "google-crc32c"
 optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
-
-[package.dependencies]
-click = ">=5.1"
-itsdangerous = ">=0.24"
-Jinja2 = ">=2.10.1"
-Werkzeug = ">=0.15"
-
-[package.extras]
-dev = ["pytest", "coverage", "tox", "sphinx", "pallets-sphinx-themes", "sphinxcontrib-log-cabinet", "sphinx-issues"]
-docs = ["sphinx", "pallets-sphinx-themes", "sphinxcontrib-log-cabinet", "sphinx-issues"]
-dotenv = ["python-dotenv"]
-
-[[package]]
-name = "flask-admin"
-version = "1.5.4"
-description = "Simple and extensible admin interface framework for Flask"
-category = "dev"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-Flask = ">=0.7"
-wtforms = "*"
-
-[package.extras]
-aws = ["boto"]
-azure = ["azure-storage-blob"]
->>>>>>> Stashed changes
-
-[[package]]
-name = "flask-appbuilder"
-version = "2.3.4"
-description = "Simple and rapid application development framework, built on top of Flask. includes detailed security, auto CRUD generation for your models, google charts and much more."
-category = "dev"
-optional = false
-python-versions = "~=3.6"
-
-[package.dependencies]
-apispec = {version = ">=1.1.1,<2", extras = ["yaml"]}
-click = ">=6.7,<8"
-colorama = ">=0.3.9,<1"
-email-validator = ">=1.0.5,<2"
-Flask = ">=0.12,<2"
-Flask-Babel = ">=1,<2"
-Flask-JWT-Extended = ">=3.18,<4"
-Flask-Login = ">=0.3,<0.5"
-Flask-OpenID = ">=1.2.5,<2"
-Flask-SQLAlchemy = ">=2.4,<3"
-Flask-WTF = ">=0.14.2,<1"
-jsonschema = ">=3.0.1,<4"
-marshmallow = ">=2.18.0,<3.0.0"
-marshmallow-enum = ">=1.4.1,<2"
-marshmallow-sqlalchemy = ">=0.16.1,<1"
-prison = ">=0.1.3,<1.0.0"
-PyJWT = ">=1.7.1"
-python-dateutil = ">=2.3,<3"
-sqlalchemy-utils = ">=0.32.21,<1"
-
-[[package]]
-name = "flask-babel"
+python-versions = ">=3.5"
 version = "1.0.0"
-description = "Adds i18n/l10n support to Flask applications"
-category = "dev"
-optional = false
-python-versions = "*"
 
 [package.dependencies]
-Babel = ">=2.3"
-Flask = "*"
-Jinja2 = ">=2.5"
-pytz = "*"
+cffi = ">=1.0.0"
+
+[package.extras]
+testing = ["pytest"]
 
 [[package]]
-name = "flask-caching"
-version = "1.3.3"
-description = "Adds caching support to your Flask application"
-category = "dev"
+category = "main"
+description = "Utilities for Google Media Downloads and Resumable Uploads"
+name = "google-resumable-media"
 optional = false
-python-versions = "*"
+python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*"
+version = "1.1.0"
 
 [package.dependencies]
-Flask = "*"
-Werkzeug = ">=0.12"
-
-[[package]]
-name = "flask-jwt-extended"
-version = "3.25.0"
-description = "Extended JWT integration with Flask"
-category = "dev"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-Flask = ">=1.0,<2.0"
-PyJWT = ">=1.6.4,<2.0"
 six = "*"
-Werkzeug = ">=0.14"
+
+[package.dependencies.google-crc32c]
+python = ">=3.5"
+version = ">=1.0,<2.0dev"
+
+[package.extras]
+aiohttp = ["aiohttp (>=3.6.2,<4.0.0dev)"]
+requests = ["requests (>=2.18.0,<3.0.0dev)"]
+
+[[package]]
+category = "main"
+description = "Common protobufs used in Google APIs"
+name = "googleapis-common-protos"
+optional = false
+python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*"
+version = "1.52.0"
+
+[package.dependencies]
+protobuf = ">=3.6.0"
 
 [package.dependencies.grpcio]
 optional = true
 version = ">=1.0.0"
 
 [package.extras]
-asymmetric_crypto = ["cryptography (>=2.3)"]
+grpc = ["grpcio (>=1.0.0)"]
 
 [[package]]
-<<<<<<< Updated upstream
 category = "dev"
 description = "Simple Python interface for Graphviz"
 name = "graphviz"
@@ -1439,237 +1078,17 @@ version = "0.2.2"
 
 [package.dependencies]
 grpcio = ">=1.12.0"
-=======
-name = "flask-login"
-version = "0.4.1"
-description = "User session management for Flask"
-category = "dev"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-Flask = "*"
->>>>>>> Stashed changes
 
 [[package]]
-name = "flask-openid"
-version = "1.2.5"
-description = "OpenID support for Flask"
-category = "dev"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-Flask = ">=0.3"
-python-openid = ">=2.0"
-
-[[package]]
-name = "flask-sqlalchemy"
-version = "2.4.4"
-description = "Adds SQLAlchemy support to your Flask application."
-category = "dev"
-optional = false
-python-versions = ">= 2.7, != 3.0.*, != 3.1.*, != 3.2.*, != 3.3.*"
-
-[package.dependencies]
-Flask = ">=0.10"
-SQLAlchemy = ">=0.8.0"
-
-[[package]]
-name = "flask-swagger"
-version = "0.2.14"
-description = "Extract swagger specs from your flask project"
-category = "dev"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-Flask = ">=0.10"
-PyYAML = ">=5.1"
-
-[[package]]
-name = "flask-wtf"
-version = "0.14.3"
-description = "Simple integration of Flask and WTForms."
-category = "dev"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-Flask = "*"
-itsdangerous = "*"
-WTForms = "*"
-
-[[package]]
-name = "funcsigs"
-version = "1.0.2"
-description = "Python function signatures from PEP362 for Python 2.6, 2.7 and 3.2+"
-category = "dev"
-optional = false
-python-versions = "*"
-
-[[package]]
-name = "future"
-version = "0.18.2"
-description = "Clean single-source support for Python 3 and 2"
-category = "dev"
-optional = false
-python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
-
-[[package]]
-name = "google-api-core"
-version = "1.23.0"
-description = "Google API client core library"
 category = "main"
-optional = false
-python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*"
-
-[package.dependencies]
-google-auth = ">=1.21.1,<2.0dev"
-googleapis-common-protos = ">=1.6.0,<2.0dev"
-grpcio = {version = ">=1.29.0,<2.0dev", optional = true, markers = "extra == \"grpc\""}
-protobuf = ">=3.12.0"
-pytz = "*"
-requests = ">=2.18.0,<3.0.0dev"
-six = ">=1.13.0"
-
-[package.extras]
-grpc = ["grpcio (>=1.29.0,<2.0dev)"]
-grpcgcp = ["grpcio-gcp (>=0.2.2)"]
-grpcio-gcp = ["grpcio-gcp (>=0.2.2)"]
-
-[[package]]
-name = "google-auth"
-version = "1.23.0"
-description = "Google Authentication Library"
-category = "main"
-optional = false
-python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*"
-
-[package.dependencies]
-cachetools = ">=2.0.0,<5.0"
-pyasn1-modules = ">=0.2.1"
-rsa = {version = ">=3.1.4,<5", markers = "python_version >= \"3.5\""}
-six = ">=1.9.0"
-
-[package.extras]
-aiohttp = ["aiohttp (>=3.6.2,<4.0.0dev)"]
-
-[[package]]
-name = "google-cloud-bigquery"
-version = "2.3.1"
-description = "Google BigQuery API client library"
-category = "main"
-optional = false
-python-versions = ">=3.6"
-
-[package.dependencies]
-google-api-core = {version = ">=1.23.0,<2.0.0dev", extras = ["grpc"]}
-google-cloud-core = ">=1.4.1,<2.0dev"
-google-resumable-media = ">=0.6.0,<2.0dev"
-proto-plus = ">=1.10.0"
-protobuf = ">=3.12.0"
-six = ">=1.13.0,<2.0.0dev"
-
-[package.extras]
-all = ["google-cloud-bigquery-storage (>=2.0.0,<3.0.0dev)", "grpcio (>=1.32.0,<2.0dev)", "pyarrow (>=1.0.0,<2.0dev)", "pandas (>=0.23.0)", "tqdm (>=4.7.4,<5.0.0dev)", "opentelemetry-api (0.9b0)", "opentelemetry-sdk (0.9b0)", "opentelemetry-instrumentation (0.9b0)"]
-bqstorage = ["google-cloud-bigquery-storage (>=2.0.0,<3.0.0dev)", "grpcio (>=1.32.0,<2.0dev)", "pyarrow (>=1.0.0,<2.0dev)"]
-opentelemetry = ["opentelemetry-api (0.9b0)", "opentelemetry-sdk (0.9b0)", "opentelemetry-instrumentation (0.9b0)"]
-pandas = ["pandas (>=0.23.0)", "pyarrow (>=1.0.0,<2.0dev)"]
-tqdm = ["tqdm (>=4.7.4,<5.0.0dev)"]
-
-[[package]]
-name = "google-cloud-core"
-version = "1.4.3"
-description = "Google Cloud API client core library"
-category = "main"
-optional = false
-python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*"
-
-[package.dependencies]
-google-api-core = ">=1.19.0,<2.0.0dev"
-
-[package.extras]
-grpc = ["grpcio (>=1.8.2,<2.0dev)"]
-
-[[package]]
-name = "google-crc32c"
-version = "1.0.0"
-description = "A python wrapper of the C library 'Google CRC32C'"
-category = "main"
-optional = false
-python-versions = ">=3.5"
-
-[package.dependencies]
-cffi = ">=1.0.0"
-
-[package.extras]
-testing = ["pytest"]
-
-[[package]]
-name = "google-resumable-media"
-version = "1.1.0"
-description = "Utilities for Google Media Downloads and Resumable Uploads"
-category = "main"
-optional = false
-python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*"
-
-[package.dependencies]
-google-crc32c = {version = ">=1.0,<2.0dev", markers = "python_version >= \"3.5\""}
-six = "*"
-
-[package.extras]
-aiohttp = ["aiohttp (>=3.6.2,<4.0.0dev)"]
-requests = ["requests (>=2.18.0,<3.0.0dev)"]
-
-[[package]]
-name = "googleapis-common-protos"
-version = "1.52.0"
-description = "Common protobufs used in Google APIs"
-category = "main"
-optional = false
-python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*"
-
-[package.dependencies]
-protobuf = ">=3.6.0"
-
-[package.extras]
-grpc = ["grpcio (>=1.0.0)"]
-
-[[package]]
-name = "graphviz"
-version = "0.14.2"
-description = "Simple Python interface for Graphviz"
-category = "dev"
-optional = false
-python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*"
-
-[package.extras]
-dev = ["tox (>=3)", "flake8", "pep8-naming", "wheel", "twine"]
-docs = ["sphinx (>=1.8)", "sphinx-rtd-theme"]
-test = ["mock (>=3)", "pytest (>=4)", "pytest-mock (>=2)", "pytest-cov"]
-
-[[package]]
-name = "grpcio"
-version = "1.33.2"
-description = "HTTP/2-based RPC framework"
-category = "main"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-six = ">=1.5.2"
-
-[package.extras]
-protobuf = ["grpcio-tools (>=1.33.2)"]
-
-[[package]]
-name = "gunicorn"
-version = "20.0.4"
 description = "WSGI HTTP Server for UNIX"
-category = "main"
+name = "gunicorn"
 optional = false
 python-versions = ">=3.4"
+version = "20.0.4"
+
+[package.dependencies]
+setuptools = ">=3.0"
 
 [package.extras]
 eventlet = ["eventlet (>=0.9.7)"]
@@ -1678,7 +1097,6 @@ setproctitle = ["setproctitle"]
 tornado = ["tornado (>=0.2)"]
 
 [[package]]
-<<<<<<< Updated upstream
 category = "dev"
 description = "A comprehensive HTTP client library."
 name = "httplib2"
@@ -1689,28 +1107,19 @@ version = "0.18.1"
 [[package]]
 category = "main"
 description = "Internationalized Domain Names in Applications (IDNA)"
-=======
->>>>>>> Stashed changes
 name = "idna"
-version = "2.10"
-description = "Internationalized Domain Names in Applications (IDNA)"
-category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+version = "2.10"
 
 [[package]]
-<<<<<<< Updated upstream
 category = "dev"
 description = "Read metadata from Python packages"
 marker = "python_version < \"3.8\" or python_version >= \"3.6\" and python_version < \"3.8\""
-=======
->>>>>>> Stashed changes
 name = "importlib-metadata"
-version = "2.0.0"
-description = "Read metadata from Python packages"
-category = "dev"
 optional = false
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
+version = "2.0.0"
 
 [package.dependencies]
 zipp = ">=0.5"
@@ -1720,23 +1129,14 @@ docs = ["sphinx", "rst.linker"]
 testing = ["packaging", "pep517", "importlib-resources (>=1.3)"]
 
 [[package]]
-name = "iniconfig"
-version = "1.1.1"
+category = "dev"
 description = "iniconfig: brain-dead simple config-ini parsing"
-category = "dev"
+name = "iniconfig"
 optional = false
 python-versions = "*"
+version = "1.1.1"
 
 [[package]]
-name = "iso8601"
-version = "0.1.13"
-description = "Simple module to parse ISO 8601 dates"
-category = "dev"
-optional = false
-python-versions = "*"
-
-[[package]]
-<<<<<<< Updated upstream
 category = "dev"
 description = "Simple module to parse ISO 8601 dates"
 name = "iso8601"
@@ -1747,22 +1147,18 @@ version = "0.1.13"
 [[package]]
 category = "main"
 description = "Various helpers to pass data to untrusted environments and back."
-=======
->>>>>>> Stashed changes
 name = "itsdangerous"
-version = "1.1.0"
-description = "Various helpers to pass data to untrusted environments and back."
-category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+version = "1.1.0"
 
 [[package]]
-name = "jinja2"
-version = "2.11.2"
-description = "A very fast and expressive template engine."
 category = "main"
+description = "A very fast and expressive template engine."
+name = "jinja2"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
+version = "2.11.2"
 
 [package.dependencies]
 MarkupSafe = ">=0.23"
@@ -1771,7 +1167,6 @@ MarkupSafe = ">=0.23"
 i18n = ["Babel (>=0.8)"]
 
 [[package]]
-<<<<<<< Updated upstream
 category = "dev"
 description = "JSON Merge Patch library (https://tools.ietf.org/html/rfc7386)"
 name = "json-merge-patch"
@@ -1797,35 +1192,11 @@ six = ">=1.11.0"
 python = "<3.8"
 version = "*"
 
-=======
-name = "json-merge-patch"
-version = "0.2"
-description = "JSON Merge Patch library (https://tools.ietf.org/html/rfc7386)"
-category = "dev"
-optional = false
-python-versions = "*"
-
-[[package]]
-name = "jsonschema"
-version = "3.2.0"
-description = "An implementation of JSON Schema validation for Python"
-category = "dev"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-attrs = ">=17.4.0"
-importlib-metadata = {version = "*", markers = "python_version < \"3.8\""}
-pyrsistent = ">=0.14.0"
-six = ">=1.11.0"
-
->>>>>>> Stashed changes
 [package.extras]
 format = ["idna", "jsonpointer (>1.13)", "rfc3987", "strict-rfc3339", "webcolors"]
 format_nongpl = ["idna", "jsonpointer (>1.13)", "webcolors", "rfc3986-validator (>0.1.0)", "rfc3339-validator"]
 
 [[package]]
-<<<<<<< Updated upstream
 category = "dev"
 description = "A fast and thorough lazy object proxy."
 name = "lazy-object-proxy"
@@ -1848,30 +1219,6 @@ name = "mako"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 version = "1.1.3"
-=======
-name = "lazy-object-proxy"
-version = "1.5.1"
-description = "A fast and thorough lazy object proxy."
-category = "dev"
-optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
-
-[[package]]
-name = "lockfile"
-version = "0.12.2"
-description = "Platform-independent file locking module"
-category = "dev"
-optional = false
-python-versions = "*"
-
-[[package]]
-name = "mako"
-version = "1.1.3"
-description = "A super-fast templating language that borrows the  best ideas from the existing templating languages."
-category = "dev"
-optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
->>>>>>> Stashed changes
 
 [package.dependencies]
 MarkupSafe = ">=0.9.2"
@@ -1881,7 +1228,6 @@ babel = ["babel"]
 lingua = ["lingua"]
 
 [[package]]
-<<<<<<< Updated upstream
 category = "dev"
 description = "Python implementation of Markdown."
 name = "markdown"
@@ -1892,25 +1238,12 @@ version = "2.6.11"
 [[package]]
 category = "main"
 description = "Safely add untrusted strings to HTML/XML markup."
-=======
-name = "markdown"
-version = "2.6.11"
-description = "Python implementation of Markdown."
-category = "dev"
-optional = false
-python-versions = "*"
-
-[[package]]
->>>>>>> Stashed changes
 name = "markupsafe"
-version = "1.1.1"
-description = "Safely add untrusted strings to HTML/XML markup."
-category = "main"
 optional = false
 python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*"
+version = "1.1.1"
 
 [[package]]
-<<<<<<< Updated upstream
 category = "dev"
 description = "A lightweight library for converting complex datatypes to and from native Python datatypes."
 marker = "python_version >= \"3.6\""
@@ -1918,14 +1251,6 @@ name = "marshmallow"
 optional = false
 python-versions = "*"
 version = "2.21.0"
-=======
-name = "marshmallow"
-version = "2.21.0"
-description = "A lightweight library for converting complex datatypes to and from native Python datatypes."
-category = "dev"
-optional = false
-python-versions = "*"
->>>>>>> Stashed changes
 
 [package.extras]
 dev = ["python-dateutil", "simplejson", "pytest", "pytz", "flake8 (3.7.4)", "tox"]
@@ -1935,7 +1260,6 @@ reco = ["python-dateutil", "simplejson"]
 tests = ["pytest", "pytz"]
 
 [[package]]
-<<<<<<< Updated upstream
 category = "dev"
 description = "Enum field for Marshmallow"
 marker = "python_version >= \"3.6\""
@@ -1943,20 +1267,11 @@ name = "marshmallow-enum"
 optional = false
 python-versions = "*"
 version = "1.5.1"
-=======
-name = "marshmallow-enum"
-version = "1.5.1"
-description = "Enum field for Marshmallow"
-category = "dev"
-optional = false
-python-versions = "*"
->>>>>>> Stashed changes
 
 [package.dependencies]
 marshmallow = ">=2.0.0"
 
 [[package]]
-<<<<<<< Updated upstream
 category = "dev"
 description = "SQLAlchemy integration with the marshmallow (de)serialization library"
 marker = "python_version >= \"3.6\""
@@ -1999,31 +1314,12 @@ icu = ["PyICU (>=1.0.0)"]
 category = "main"
 description = "NumPy is the fundamental package for array computing with Python."
 name = "numpy"
-=======
-name = "marshmallow-sqlalchemy"
-version = "0.23.1"
-description = "SQLAlchemy integration with the marshmallow (de)serialization library"
-category = "dev"
->>>>>>> Stashed changes
 optional = false
 python-versions = ">=3.6"
-
-[package.dependencies]
-marshmallow = ">=2.15.2"
-SQLAlchemy = ">=1.2.0"
-
-[package.extras]
-dev = ["pytest", "pytest-lazy-fixture", "flake8 (3.8.2)", "flake8-bugbear (20.1.4)", "pre-commit (>=2.0,<3.0)", "tox"]
-docs = ["sphinx (3.0.4)", "alabaster (0.7.12)", "sphinx-issues (1.2.0)"]
-lint = ["flake8 (3.8.2)", "flake8-bugbear (20.1.4)", "pre-commit (>=2.0,<3.0)"]
-tests = ["pytest", "pytest-lazy-fixture"]
+version = "1.19.4"
 
 [[package]]
-name = "natsort"
-version = "7.0.1"
-description = "Simple yet flexible natural sorting in Python."
 category = "dev"
-<<<<<<< Updated upstream
 description = "A generic, spec-compliant, thorough implementation of the OAuth request-signing logic"
 name = "oauthlib"
 optional = false
@@ -2038,42 +1334,22 @@ signedtoken = ["cryptography", "pyjwt (>=1.0.0)"]
 [[package]]
 category = "dev"
 description = "Core utilities for Python packages"
-=======
-optional = false
-python-versions = ">=3.4"
-
-[package.extras]
-fast = ["fastnumbers (>=2.0.0)"]
-icu = ["PyICU (>=1.0.0)"]
-
-[[package]]
-name = "numpy"
-version = "1.19.4"
-description = "NumPy is the fundamental package for array computing with Python."
-category = "dev"
-optional = false
-python-versions = ">=3.6"
-
-[[package]]
->>>>>>> Stashed changes
 name = "packaging"
-version = "20.4"
-description = "Core utilities for Python packages"
-category = "dev"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+version = "20.4"
 
 [package.dependencies]
 pyparsing = ">=2.0.2"
 six = "*"
 
 [[package]]
-name = "pandas"
-version = "1.1.4"
+category = "main"
 description = "Powerful data structures for data analysis, time series, and statistics"
-category = "dev"
+name = "pandas"
 optional = false
 python-versions = ">=3.6.1"
+version = "1.1.4"
 
 [package.dependencies]
 numpy = ">=1.15.4"
@@ -2084,232 +1360,7 @@ pytz = ">=2017.2"
 test = ["pytest (>=4.0.2)", "pytest-xdist", "hypothesis (>=3.58)"]
 
 [[package]]
-name = "pendulum"
-version = "1.4.4"
-description = "Python datetimes made easy."
 category = "dev"
-optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
-
-[package.dependencies]
-python-dateutil = ">=2.6.0.0,<3.0.0.0"
-pytzdata = ">=2018.3.0.0"
-tzlocal = ">=1.5.0.0,<2.0.0.0"
-
-[[package]]
-name = "pluggy"
-version = "0.13.1"
-description = "plugin and hook calling mechanisms for python"
-category = "dev"
-optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
-
-[package.dependencies]
-importlib-metadata = {version = ">=0.12", markers = "python_version < \"3.8\""}
-
-[package.extras]
-dev = ["pre-commit", "tox"]
-
-[[package]]
-name = "prison"
-version = "0.1.3"
-description = "Rison encoder/decoder"
-category = "dev"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-six = "*"
-
-[package.extras]
-dev = ["nose", "pipreqs", "twine"]
-
-[[package]]
-name = "proto-plus"
-version = "1.11.0"
-description = "Beautiful, Pythonic protocol buffers."
-category = "main"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-protobuf = ">=3.12.0"
-
-[package.extras]
-testing = ["google-api-core[grpc] (>=1.22.2)"]
-
-[[package]]
-name = "protobuf"
-version = "3.13.0"
-description = "Protocol Buffers"
-category = "main"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-six = ">=1.9"
-
-[[package]]
-name = "psutil"
-version = "5.7.3"
-description = "Cross-platform lib for process and system monitoring in Python."
-category = "dev"
-optional = false
-python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
-
-[package.extras]
-test = ["ipaddress", "mock", "unittest2", "enum34", "pywin32", "wmi"]
-
-[[package]]
-name = "py"
-version = "1.9.0"
-description = "library with cross-python path, ini-parsing, io, code, log facilities"
-category = "dev"
-optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
-
-[[package]]
-name = "pyasn1"
-version = "0.4.8"
-description = "ASN.1 types and codecs"
-category = "main"
-optional = false
-python-versions = "*"
-
-[[package]]
-name = "pyasn1-modules"
-version = "0.2.8"
-description = "A collection of ASN.1-based protocols modules."
-category = "main"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-pyasn1 = ">=0.4.6,<0.5.0"
-
-[[package]]
-name = "pycparser"
-version = "2.20"
-description = "C parser in Python"
-category = "main"
-optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
-
-[[package]]
-name = "pygments"
-version = "2.7.2"
-description = "Pygments is a syntax highlighting package written in Python."
-category = "dev"
-optional = false
-python-versions = ">=3.5"
-
-[[package]]
-name = "pyjwt"
-version = "1.7.1"
-description = "JSON Web Token implementation in Python"
-category = "dev"
-optional = false
-python-versions = "*"
-
-[package.extras]
-crypto = ["cryptography (>=1.4)"]
-flake8 = ["flake8", "flake8-import-order", "pep8-naming"]
-test = ["pytest (>=4.0.1,<5.0.0)", "pytest-cov (>=2.6.0,<3.0.0)", "pytest-runner (>=4.2,<5.0.0)"]
-
-[[package]]
-name = "pyparsing"
-version = "2.4.7"
-description = "Python parsing module"
-category = "dev"
-optional = false
-python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
-
-[[package]]
-name = "pyrsistent"
-version = "0.17.3"
-description = "Persistent/Functional/Immutable data structures"
-category = "dev"
-optional = false
-python-versions = ">=3.5"
-
-[[package]]
-name = "pytest"
-version = "6.1.2"
-description = "pytest: simple powerful testing with Python"
-category = "dev"
-optional = false
-python-versions = ">=3.5"
-
-[package.dependencies]
-atomicwrites = {version = ">=1.0", markers = "sys_platform == \"win32\""}
-attrs = ">=17.4.0"
-colorama = {version = "*", markers = "sys_platform == \"win32\""}
-importlib-metadata = {version = ">=0.12", markers = "python_version < \"3.8\""}
-iniconfig = "*"
-packaging = "*"
-pluggy = ">=0.12,<1.0"
-py = ">=1.8.2"
-toml = "*"
-
-[package.extras]
-checkqa_mypy = ["mypy (0.780)"]
-testing = ["argcomplete", "hypothesis (>=3.56)", "mock", "nose", "requests", "xmlschema"]
-
-[[package]]
-name = "pytest-cov"
-version = "2.10.1"
-description = "Pytest plugin for measuring coverage."
-category = "dev"
-optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
-
-[package.dependencies]
-coverage = ">=4.4"
-pytest = ">=4.6"
-
-[package.extras]
-testing = ["fields", "hunter", "process-tests (2.0.2)", "six", "pytest-xdist", "virtualenv"]
-
-[[package]]
-name = "python-daemon"
-version = "2.2.4"
-description = "Library to implement a well-behaved Unix daemon process."
-category = "dev"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-docutils = "*"
-lockfile = ">=0.10"
-
-[package.extras]
-test = ["coverage", "docutils", "mock (>=1.3)", "testscenarios (>=0.4)", "testtools", "unittest2 (>=0.5.1)"]
-
-[[package]]
-name = "python-dateutil"
-version = "2.8.1"
-description = "Extensions to the standard Python datetime module"
-category = "dev"
-optional = false
-python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,>=2.7"
-
-[package.dependencies]
-six = ">=1.5"
-
-[[package]]
-name = "python-editor"
-version = "1.0.4"
-description = "Programmatically open an editor, capture the result."
-category = "dev"
-optional = false
-python-versions = "*"
-
-[[package]]
-name = "python-nvd3"
-version = "0.15.0"
-description = "Python NVD3 - Chart Library for d3.js"
-category = "dev"
-<<<<<<< Updated upstream
 description = "Pandas interface to Google BigQuery"
 name = "pandas-gbq"
 optional = false
@@ -2324,7 +1375,7 @@ pydata-google-auth = "*"
 setuptools = "*"
 
 [package.dependencies.google-cloud-bigquery]
-extras = ["pandas", "bqstorage"]
+extras = ["bqstorage", "pandas"]
 version = ">=1.11.1,<3.0.0dev"
 
 [package.extras]
@@ -2347,17 +1398,19 @@ tzlocal = ">=1.5.0.0,<2.0.0.0"
 category = "dev"
 description = "plugin and hook calling mechanisms for python"
 name = "pluggy"
-=======
->>>>>>> Stashed changes
 optional = false
-python-versions = "*"
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+version = "0.13.1"
 
 [package.dependencies]
-Jinja2 = ">=2.8"
-python-slugify = ">=1.2.5"
+[package.dependencies.importlib-metadata]
+python = "<3.8"
+version = ">=0.12"
+
+[package.extras]
+dev = ["pre-commit", "tox"]
 
 [[package]]
-<<<<<<< Updated upstream
 category = "dev"
 description = "Rison encoder/decoder"
 marker = "python_version >= \"3.6\""
@@ -2376,37 +1429,22 @@ dev = ["nose", "pipreqs", "twine"]
 category = "main"
 description = "Beautiful, Pythonic protocol buffers."
 name = "proto-plus"
-=======
-name = "python-openid"
-version = "2.2.5"
-description = "OpenID support for servers and consumers."
-category = "dev"
->>>>>>> Stashed changes
 optional = false
 python-versions = "*"
-
-[[package]]
-name = "python-slugify"
-version = "4.0.1"
-description = "A Python Slugify application that handles Unicode"
-category = "dev"
-optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
+version = "1.11.0"
 
 [package.dependencies]
-text-unidecode = ">=1.3"
+protobuf = ">=3.12.0"
 
 [package.extras]
-unidecode = ["Unidecode (>=1.1.1)"]
+testing = ["google-api-core (>=1.22.2)"]
 
 [[package]]
-name = "pytz"
-version = "2020.4"
-description = "World timezone definitions, modern and historical"
 category = "main"
+description = "Protocol Buffers"
+name = "protobuf"
 optional = false
 python-versions = "*"
-<<<<<<< Updated upstream
 version = "3.14.0"
 
 [package.dependencies]
@@ -2427,81 +1465,47 @@ test = ["ipaddress", "mock", "unittest2", "enum34", "pywin32", "wmi"]
 category = "main"
 description = "psycopg2 - Python-PostgreSQL Database Adapter"
 name = "psycopg2-binary"
-=======
+optional = false
+python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*"
+version = "2.8.6"
 
 [[package]]
-name = "pytzdata"
-version = "2020.1"
-description = "The Olson timezone database for Python."
 category = "dev"
->>>>>>> Stashed changes
+description = "library with cross-python path, ini-parsing, io, code, log facilities"
+name = "py"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+version = "1.9.0"
 
 [[package]]
-name = "pyyaml"
-version = "5.3.1"
-description = "YAML parser and emitter for Python"
-category = "dev"
-optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
-
-[[package]]
-name = "requests"
-version = "2.25.0"
-description = "Python HTTP for Humans."
 category = "main"
-optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
-
-[package.dependencies]
-certifi = ">=2017.4.17"
-chardet = ">=3.0.2,<4"
-idna = ">=2.5,<3"
-urllib3 = ">=1.21.1,<1.27"
-
-[package.extras]
-security = ["pyOpenSSL (>=0.14)", "cryptography (>=1.3.4)"]
-socks = ["PySocks (>=1.5.6,<1.5.7 || >1.5.7)", "win-inet-pton"]
-
-[[package]]
-name = "rsa"
-version = "4.6"
-description = "Pure-Python RSA implementation"
-category = "main"
-optional = false
-python-versions = ">=3.5, <4"
-
-[package.dependencies]
-pyasn1 = ">=0.1.3"
-
-[[package]]
-name = "setproctitle"
-version = "1.1.10"
-description = "A Python module to customize the process title"
-category = "dev"
+description = "ASN.1 types and codecs"
+name = "pyasn1"
 optional = false
 python-versions = "*"
+version = "0.4.8"
 
 [[package]]
-name = "six"
-version = "1.15.0"
-description = "Python 2 and 3 compatibility utilities"
 category = "main"
-<<<<<<< Updated upstream
+description = "A collection of ASN.1-based protocols modules."
+name = "pyasn1-modules"
+optional = false
+python-versions = "*"
+version = "0.2.8"
+
+[package.dependencies]
+pyasn1 = ">=0.4.6,<0.5.0"
+
+[[package]]
+category = "main"
 description = "C parser in Python"
 name = "pycparser"
-=======
->>>>>>> Stashed changes
 optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+version = "2.20"
 
 [[package]]
-name = "sqlalchemy"
-version = "1.3.20"
-description = "Database Abstraction Library"
 category = "dev"
-<<<<<<< Updated upstream
 description = "PyData helpers for authenticating to Google APIs"
 name = "pydata-google-auth"
 optional = false
@@ -2555,29 +1559,12 @@ test = ["flaky", "pretend", "pytest (>=3.0.1)"]
 category = "dev"
 description = "Python parsing module"
 name = "pyparsing"
-=======
->>>>>>> Stashed changes
 optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
-
-[package.extras]
-mssql = ["pyodbc"]
-mssql_pymssql = ["pymssql"]
-mssql_pyodbc = ["pyodbc"]
-mysql = ["mysqlclient"]
-oracle = ["cx-oracle"]
-postgresql = ["psycopg2"]
-postgresql_pg8000 = ["pg8000"]
-postgresql_psycopg2binary = ["psycopg2-binary"]
-postgresql_psycopg2cffi = ["psycopg2cffi"]
-pymysql = ["pymysql"]
+python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
+version = "2.4.7"
 
 [[package]]
-name = "sqlalchemy-jsonfield"
-version = "0.9.0"
-description = "SQLALchemy JSONField implementation for storing dicts at SQL"
 category = "dev"
-<<<<<<< Updated upstream
 description = "Persistent/Functional/Immutable data structures"
 name = "pyrsistent"
 optional = false
@@ -2591,54 +1578,41 @@ name = "pytest"
 optional = false
 python-versions = ">=3.5"
 version = "6.1.2"
-=======
-optional = false
-python-versions = ">=3.5.0"
->>>>>>> Stashed changes
 
 [package.dependencies]
-sqlalchemy = "*"
+atomicwrites = ">=1.0"
+attrs = ">=17.4.0"
+colorama = "*"
+iniconfig = "*"
+packaging = "*"
+pluggy = ">=0.12,<1.0"
+py = ">=1.8.2"
+toml = "*"
+
+[package.dependencies.importlib-metadata]
+python = "<3.8"
+version = ">=0.12"
+
+[package.extras]
+checkqa_mypy = ["mypy (0.780)"]
+testing = ["argcomplete", "hypothesis (>=3.56)", "mock", "nose", "requests", "xmlschema"]
 
 [[package]]
-name = "sqlalchemy-utils"
-version = "0.36.8"
-description = "Various utility functions for SQLAlchemy."
 category = "dev"
+description = "Pytest plugin for measuring coverage."
+name = "pytest-cov"
 optional = false
-python-versions = "*"
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
+version = "2.10.1"
 
 [package.dependencies]
-six = "*"
-SQLAlchemy = ">=1.0"
+coverage = ">=4.4"
+pytest = ">=4.6"
 
 [package.extras]
-anyjson = ["anyjson (>=0.3.3)"]
-arrow = ["arrow (>=0.3.4)"]
-babel = ["Babel (>=1.3)"]
-color = ["colour (>=0.0.4)"]
-encrypted = ["cryptography (>=0.6)"]
-intervals = ["intervals (>=0.7.1)"]
-password = ["passlib (>=1.6,<2.0)"]
-pendulum = ["pendulum (>=2.0.5)"]
-phone = ["phonenumbers (>=5.9.2)"]
-test = ["pytest (>=2.7.1)", "Pygments (>=1.2)", "Jinja2 (>=2.3)", "docutils (>=0.10)", "flexmock (>=0.9.7)", "mock (2.0.0)", "psycopg2 (>=2.5.1)", "psycopg2cffi (>=2.8.1)", "pg8000 (>=1.12.4)", "pytz (>=2014.2)", "python-dateutil (>=2.6)", "pymysql", "flake8 (>=2.4.0)", "isort (>=4.2.2)", "pyodbc"]
-test_all = ["anyjson (>=0.3.3)", "arrow (>=0.3.4)", "Babel (>=1.3)", "colour (>=0.0.4)", "cryptography (>=0.6)", "intervals (>=0.7.1)", "passlib (>=1.6,<2.0)", "pendulum (>=2.0.5)", "phonenumbers (>=5.9.2)", "pytest (>=2.7.1)", "Pygments (>=1.2)", "Jinja2 (>=2.3)", "docutils (>=0.10)", "flexmock (>=0.9.7)", "mock (2.0.0)", "psycopg2 (>=2.5.1)", "psycopg2cffi (>=2.8.1)", "pg8000 (>=1.12.4)", "pytz (>=2014.2)", "python-dateutil (>=2.6)", "pymysql", "flake8 (>=2.4.0)", "isort (>=4.2.2)", "pyodbc", "python-dateutil", "furl (>=0.4.1)"]
-timezone = ["python-dateutil"]
-url = ["furl (>=0.4.1)"]
+testing = ["fields", "hunter", "process-tests (2.0.2)", "six", "pytest-xdist", "virtualenv"]
 
 [[package]]
-name = "tabulate"
-version = "0.8.7"
-description = "Pretty-print tabular data"
-category = "dev"
-optional = false
-python-versions = "*"
-
-[package.extras]
-widechars = ["wcwidth"]
-
-[[package]]
-<<<<<<< Updated upstream
 category = "dev"
 description = "Library to implement a well-behaved Unix daemon process."
 name = "python-daemon"
@@ -2658,20 +1632,14 @@ test = ["coverage", "docutils", "mock (>=1.3)", "testscenarios (>=0.4)", "testto
 category = "main"
 description = "Extensions to the standard Python datetime module"
 name = "python-dateutil"
-=======
-name = "tenacity"
-version = "4.12.0"
-description = "Retry code until it succeeeds"
-category = "dev"
->>>>>>> Stashed changes
 optional = false
-python-versions = "*"
+python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,>=2.7"
+version = "2.8.1"
 
 [package.dependencies]
-six = ">=1.9.0"
+six = ">=1.5"
 
 [[package]]
-<<<<<<< Updated upstream
 category = "dev"
 description = "Programmatically open an editor, capture the result."
 name = "python-editor"
@@ -2751,33 +1719,12 @@ certifi = ">=2017.4.17"
 chardet = ">=3.0.2,<4"
 idna = ">=2.5,<3"
 urllib3 = ">=1.21.1,<1.27"
-=======
-name = "text-unidecode"
-version = "1.3"
-description = "The most basic Text::Unidecode port"
-category = "dev"
-optional = false
-python-versions = "*"
-
-[[package]]
-name = "thrift"
-version = "0.13.0"
-description = "Python bindings for the Apache Thrift RPC system"
-category = "dev"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-six = ">=1.7.2"
->>>>>>> Stashed changes
 
 [package.extras]
-all = ["tornado (>=4.0)", "twisted"]
-tornado = ["tornado (>=4.0)"]
-twisted = ["twisted"]
+security = ["pyOpenSSL (>=0.14)", "cryptography (>=1.3.4)"]
+socks = ["PySocks (>=1.5.6,<1.5.7 || >1.5.7)", "win-inet-pton"]
 
 [[package]]
-<<<<<<< Updated upstream
 category = "dev"
 description = "OAuthlib authentication support for Requests."
 name = "requests-oauthlib"
@@ -2797,25 +1744,14 @@ category = "main"
 description = "Pure-Python RSA implementation"
 marker = "python_version >= \"3.5\""
 name = "rsa"
-=======
-name = "toml"
-version = "0.10.2"
-description = "Python Library for Tom's Obvious, Minimal Language"
-category = "dev"
->>>>>>> Stashed changes
 optional = false
-python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
+python-versions = ">=3.5, <4"
+version = "4.6"
+
+[package.dependencies]
+pyasn1 = ">=0.1.3"
 
 [[package]]
-name = "typing-extensions"
-version = "3.7.4.3"
-description = "Backported and Experimental Type Hints for Python 3.5+"
-category = "dev"
-optional = false
-python-versions = "*"
-
-[[package]]
-<<<<<<< Updated upstream
 category = "dev"
 description = "A Python module to customize the process title"
 name = "setproctitle"
@@ -2827,24 +1763,12 @@ version = "1.1.10"
 category = "main"
 description = "Python 2 and 3 compatibility utilities"
 name = "six"
-=======
-name = "tzlocal"
-version = "1.5.1"
-description = "tzinfo object for the local timezone"
-category = "dev"
->>>>>>> Stashed changes
 optional = false
-python-versions = "*"
-
-[package.dependencies]
-pytz = "*"
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
+version = "1.15.0"
 
 [[package]]
-name = "unicodecsv"
-version = "0.14.1"
-description = "Python2's stdlib csv module is nice, but it doesn't support unicode. This module is a drop-in replacement which *does*."
 category = "dev"
-<<<<<<< Updated upstream
 description = "Database Abstraction Library"
 name = "sqlalchemy"
 optional = false
@@ -2953,8 +1877,6 @@ twisted = ["twisted"]
 category = "dev"
 description = "Python Library for Tom's Obvious, Minimal Language"
 name = "toml"
-=======
->>>>>>> Stashed changes
 optional = false
 python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
 version = "0.10.2"
@@ -2985,7 +1907,6 @@ description = "Python2's stdlib csv module is nice, but it doesn't support unico
 name = "unicodecsv"
 optional = false
 python-versions = "*"
-<<<<<<< Updated upstream
 version = "0.14.1"
 
 [[package]]
@@ -2995,20 +1916,14 @@ name = "uritemplate"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 version = "3.0.1"
-=======
->>>>>>> Stashed changes
 
 [[package]]
-name = "urllib3"
-version = "1.26.1"
-description = "HTTP library with thread-safe connection pooling, file post, and more."
 category = "main"
+description = "HTTP library with thread-safe connection pooling, file post, and more."
+name = "urllib3"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, <4"
-<<<<<<< Updated upstream
 version = "1.26.2"
-=======
->>>>>>> Stashed changes
 
 [package.extras]
 brotli = ["brotlipy (>=0.6.0)"]
@@ -3016,16 +1931,12 @@ secure = ["pyOpenSSL (>=0.14)", "cryptography (>=1.3.4)", "idna (>=2.0.0)", "cer
 socks = ["PySocks (>=1.5.6,<1.5.7 || >1.5.7,<2.0)"]
 
 [[package]]
-name = "werkzeug"
-version = "0.16.1"
-description = "The comprehensive WSGI web application library."
 category = "main"
+description = "The comprehensive WSGI web application library."
+name = "werkzeug"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
-<<<<<<< Updated upstream
 version = "0.16.1"
-=======
->>>>>>> Stashed changes
 
 [package.extras]
 dev = ["pytest", "coverage", "tox", "sphinx", "pallets-sphinx-themes", "sphinx-issues"]
@@ -3033,20 +1944,12 @@ termcolor = ["termcolor"]
 watchdog = ["watchdog"]
 
 [[package]]
-name = "wtforms"
-version = "2.3.3"
-description = "A flexible forms validation and rendering library for Python web development."
 category = "dev"
-<<<<<<< Updated upstream
 description = "A flexible forms validation and rendering library for Python web development."
 name = "wtforms"
 optional = false
 python-versions = "*"
 version = "2.3.3"
-=======
-optional = false
-python-versions = "*"
->>>>>>> Stashed changes
 
 [package.dependencies]
 MarkupSafe = "*"
@@ -3057,25 +1960,19 @@ ipaddress = ["ipaddress"]
 locale = ["Babel (>=1.3)"]
 
 [[package]]
-<<<<<<< Updated upstream
 category = "dev"
 description = "Backport of pathlib-compatible object wrapper for zip files"
 marker = "python_version < \"3.8\" or python_version >= \"3.6\" and python_version < \"3.8\""
-=======
->>>>>>> Stashed changes
 name = "zipp"
-version = "3.4.0"
-description = "Backport of pathlib-compatible object wrapper for zip files"
-category = "dev"
 optional = false
 python-versions = ">=3.6"
+version = "3.4.0"
 
 [package.extras]
 docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["pytest (>=3.5,<3.7.3 || >3.7.3)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pytest-cov", "jaraco.test (>=3.2.0)", "jaraco.itertools", "func-timeout", "pytest-black (>=0.3.7)", "pytest-mypy"]
 
 [[package]]
-<<<<<<< Updated upstream
 category = "dev"
 description = "Zope Deprecation Infrastructure"
 name = "zope.deprecation"
@@ -3085,28 +1982,15 @@ version = "4.4.0"
 
 [package.dependencies]
 setuptools = "*"
-=======
-name = "zope.deprecation"
-version = "4.4.0"
-description = "Zope Deprecation Infrastructure"
-category = "dev"
-optional = false
-python-versions = "*"
->>>>>>> Stashed changes
 
 [package.extras]
 docs = ["sphinx"]
 test = ["zope.testrunner"]
 
 [metadata]
-<<<<<<< Updated upstream
 content-hash = "86ce0f4b089d99088c69d93b544460ea2f25c706da96b43720815d404c74459f"
 lock-version = "1.0"
-=======
-lock-version = "1.1"
->>>>>>> Stashed changes
 python-versions = "^3.7"
-content-hash = "56fa8db2e33d78a78ec39b59da42622cea8dc6842b7429c967a66d78cf65a521"
 
 [metadata.files]
 alembic = [
@@ -3248,20 +2132,16 @@ coverage = [
     {file = "coverage-5.3-cp39-cp39-win_amd64.whl", hash = "sha256:47a11bdbd8ada9b7ee628596f9d97fbd3851bd9999d398e9436bd67376dbece7"},
     {file = "coverage-5.3.tar.gz", hash = "sha256:280baa8ec489c4f542f8940f9c4c2181f0306a8ee1a54eceba071a449fb870a0"},
 ]
-<<<<<<< Updated upstream
 crcmod = [
     {file = "crcmod-1.7.tar.gz", hash = "sha256:dc7051a0db5f2bd48665a990d3ec1cc305a466a77358ca4492826f41f283601e"},
     {file = "crcmod-1.7.win32-py2.6.msi", hash = "sha256:69a2e5c6c36d0f096a7beb4cd34e5f882ec5fd232efb710cdb85d4ff196bd52e"},
     {file = "crcmod-1.7.win32-py2.7.msi", hash = "sha256:737fb308fa2ce9aed2e29075f0d5980d4a89bfbec48a368c607c5c63b3efb90e"},
     {file = "crcmod-1.7.win32-py3.1.msi", hash = "sha256:50586ab48981f11e5b117523d97bb70864a2a1af246cf6e4f5c4a21ef4611cd1"},
 ]
-=======
->>>>>>> Stashed changes
 croniter = [
     {file = "croniter-0.3.36-py2.py3-none-any.whl", hash = "sha256:8ffe25deff39a2255bfbce32dc3f28f636d521686e12b00f5f0d229bef7da3e6"},
     {file = "croniter-0.3.36.tar.gz", hash = "sha256:9d3098e50f7edc7480470455d42f09c501fa1bb7e2fc113526ec6e90b068f32c"},
 ]
-<<<<<<< Updated upstream
 cryptography = [
     {file = "cryptography-3.2.1-cp27-cp27m-macosx_10_10_x86_64.whl", hash = "sha256:6dc59630ecce8c1f558277ceb212c751d6730bd12c80ea96b4ac65637c4f55e7"},
     {file = "cryptography-3.2.1-cp27-cp27m-manylinux1_x86_64.whl", hash = "sha256:75e8e6684cf0034f6bf2a97095cb95f81537b12b36a8fedf06e73050bb171c2d"},
@@ -3286,8 +2166,6 @@ cryptography = [
     {file = "cryptography-3.2.1-cp38-cp38-win_amd64.whl", hash = "sha256:d25cecbac20713a7c3bc544372d42d8eafa89799f492a43b79e1dfd650484851"},
     {file = "cryptography-3.2.1.tar.gz", hash = "sha256:d3d5e10be0cf2a12214ddee45c6bd203dab435e3d83b4560c03066eda600bfe3"},
 ]
-=======
->>>>>>> Stashed changes
 dill = [
     {file = "dill-0.3.3-py2.py3-none-any.whl", hash = "sha256:78370261be6ea49037ace8c17e0b7dd06d0393af6513cc23f9b222d9367ce389"},
     {file = "dill-0.3.3.zip", hash = "sha256:efb7f6cb65dba7087c1e111bb5390291ba3616741f96840bfc75792a1a9b5ded"},
@@ -3356,13 +2234,12 @@ google-api-core = [
     {file = "google_api_core-1.23.0-py2.py3-none-any.whl", hash = "sha256:94d8c707d358d8d9e8b0045c42be20efb58433d308bd92cf748511c7825569c8"},
 ]
 google-api-python-client = [
-    {file = "google-api-python-client-1.12.5.tar.gz", hash = "sha256:1892cd490d164e5ec2f2168dc3b4fa0af68f36ca15a88b91bca1826b3d4f2829"},
-    {file = "google_api_python_client-1.12.5-py2.py3-none-any.whl", hash = "sha256:203d5453660867136aae61922c5d849163fb9be478985fad84e09dee6f605c06"},
+    {file = "google-api-python-client-1.12.8.tar.gz", hash = "sha256:f3b9684442eec2cfe9f9bb48e796ef919456b82142c7528c5fd527e5224f08bb"},
+    {file = "google_api_python_client-1.12.8-py2.py3-none-any.whl", hash = "sha256:3c4c4ca46b5c21196bec7ee93453443e477d82cbfa79234d1ce0645f81170eaf"},
 ]
 google-auth = [
     {file = "google-auth-1.23.0.tar.gz", hash = "sha256:5176db85f1e7e837a646cd9cede72c3c404ccf2e3373d9ee14b2db88febad440"},
     {file = "google_auth-1.23.0-py2.py3-none-any.whl", hash = "sha256:b728625ff5dfce8f9e56a499c8a4eb51443a67f20f6d28b67d5774c310ec4b6b"},
-<<<<<<< Updated upstream
 ]
 google-auth-httplib2 = [
     {file = "google-auth-httplib2-0.0.4.tar.gz", hash = "sha256:8d092cc60fb16517b12057ec0bba9185a96e3b7169d86ae12eae98e645b7bc39"},
@@ -3383,12 +2260,6 @@ google-cloud-bigtable = [
 google-cloud-container = [
     {file = "google-cloud-container-1.0.1.tar.gz", hash = "sha256:3dda5050084101c2e74248ada8f0fdf470376ec9333a3b2d1024eaee3a84205e"},
     {file = "google_cloud_container-1.0.1-py2.py3-none-any.whl", hash = "sha256:c8fe8fecb003dfb5fd67b8e6b55b25be4fe794e296d107492cab429f0b999d5a"},
-=======
-]
-google-cloud-bigquery = [
-    {file = "google-cloud-bigquery-2.3.1.tar.gz", hash = "sha256:5abc63a9371ae3c333b6e9070e4d6c2b30e9f95f353f9d0be5a5ce290a6741ac"},
-    {file = "google_cloud_bigquery-2.3.1-py2.py3-none-any.whl", hash = "sha256:62e8df5a845d5e31ea9f7bd2e11bc04dc8019d36d5a6b71499ed9046a981200c"},
->>>>>>> Stashed changes
 ]
 google-cloud-core = [
     {file = "google-cloud-core-1.4.3.tar.gz", hash = "sha256:21afb70c1b0bce8eeb8abb5dca63c5fd37fc8aea18f4b6d60e803bd3d27e6b80"},
@@ -3427,8 +2298,8 @@ google-cloud-translate = [
     {file = "google_cloud_translate-1.7.0-py2.py3-none-any.whl", hash = "sha256:302af77bc18fc56fe4a83aad835cf54609d4e188dd6bd7b35ffcb3f303459705"},
 ]
 google-cloud-videointelligence = [
-    {file = "google-cloud-videointelligence-1.16.0.tar.gz", hash = "sha256:de6fe53bdaf66aa8e2c1f34b26af24c479a876619b5c667d009fbd9700dd89f7"},
-    {file = "google_cloud_videointelligence-1.16.0-py2.py3-none-any.whl", hash = "sha256:35bcbf28bdddad478f4019d72f9b26f0c963c89dcb5bb14e56c387aa16bfb615"},
+    {file = "google-cloud-videointelligence-1.16.1.tar.gz", hash = "sha256:bbde4a5bb479f60466dabad67d5debb30448bb2451b67bba3bfd9b67281a230a"},
+    {file = "google_cloud_videointelligence-1.16.1-py2.py3-none-any.whl", hash = "sha256:98a5d043d4824ad0529f8c2a3108bc4e1ed530e76314ea2c0e39f3d81cdf378e"},
 ]
 google-cloud-vision = [
     {file = "google-cloud-vision-1.0.0.tar.gz", hash = "sha256:18e78b190c81d200ae4f6a46d4af57422d68b3b05b0540d5cd1806e3874142bf"},
@@ -3463,16 +2334,11 @@ googleapis-common-protos = [
     {file = "googleapis_common_protos-1.52.0-py2.py3-none-any.whl", hash = "sha256:c8961760f5aad9a711d37b675be103e0cc4e9a39327e0d6d857872f698403e24"},
 ]
 graphviz = [
-<<<<<<< Updated upstream
     {file = "graphviz-0.15-py2.py3-none-any.whl", hash = "sha256:403b55553b235875fa521023a06d9c29b46f3a956f960d4e0a5b956bca9eb9ce"},
     {file = "graphviz-0.15.zip", hash = "sha256:2b85f105024e229ec330fe5067abbe9aa0d7708921a585ecc2bf56000bf5e027"},
 ]
 grpc-google-iam-v1 = [
     {file = "grpc-google-iam-v1-0.12.3.tar.gz", hash = "sha256:0bfb5b56f648f457021a91c0df0db4934b6e0c300bd0f2de2333383fe958aa72"},
-=======
-    {file = "graphviz-0.14.2-py2.py3-none-any.whl", hash = "sha256:78b28ee9f777da6c5e0b9e1bb1adba3975ec74c6ce85f001cbe964eb0b24d43e"},
-    {file = "graphviz-0.14.2.zip", hash = "sha256:92b7637ece63c77e3d39221ae1f4df98e9256cb449e9860c598335b34496d195"},
->>>>>>> Stashed changes
 ]
 grpcio = [
     {file = "grpcio-1.33.2-cp27-cp27m-macosx_10_9_x86_64.whl", hash = "sha256:c5030be8a60fb18de1fc8d93d130d57e4296c02f229200df814f6578da00429e"},
@@ -3521,13 +2387,10 @@ grpcio = [
     {file = "grpcio-1.33.2-cp39-cp39-win32.whl", hash = "sha256:dd47fac2878f6102efa211461eb6fa0a6dd7b4899cd1ade6cdcb9fa9748363eb"},
     {file = "grpcio-1.33.2-cp39-cp39-win_amd64.whl", hash = "sha256:89add4f4cda9546f61cb8a6988bc5b22101dd8ca4af610dff6f28105d1f78695"},
     {file = "grpcio-1.33.2.tar.gz", hash = "sha256:21265511880056d19ce4f809ce3fbe2a3fa98ec1fc7167dbdf30a80d3276202e"},
-<<<<<<< Updated upstream
 ]
 grpcio-gcp = [
     {file = "grpcio-gcp-0.2.2.tar.gz", hash = "sha256:e292605effc7da39b7a8734c719afb12ec4b5362add3528d8afad3aa3aa9057c"},
     {file = "grpcio_gcp-0.2.2-py2.py3-none-any.whl", hash = "sha256:1ef8e8531eab11356a3eb4c5b84e79e0d923d6782d19e1b1a45e1cabe4e783d7"},
-=======
->>>>>>> Stashed changes
 ]
 gunicorn = [
     {file = "gunicorn-20.0.4-py2.py3-none-any.whl", hash = "sha256:cd4a810dd51bf497552cf3f863b575dabd73d6ad6a91075b65936b151cbf4f9c"},
@@ -3652,15 +2515,12 @@ marshmallow-sqlalchemy = [
     {file = "marshmallow-sqlalchemy-0.23.1.tar.gz", hash = "sha256:0ef59c8da8da2e18e808e3880158049e9d72f3031c84cc804b6c533a0eb668a9"},
     {file = "marshmallow_sqlalchemy-0.23.1-py2.py3-none-any.whl", hash = "sha256:03a555b610bb307689b821b64e2416593ec21a85925c8c436c2cd08ebc6bb85e"},
 ]
-<<<<<<< Updated upstream
 mysqlclient = [
     {file = "mysqlclient-2.0.1-cp36-cp36m-win_amd64.whl", hash = "sha256:edd42ccaa444b00702d5374b2f5f7585c9d0ce201917f15339f1c3cf91c1b1ed"},
     {file = "mysqlclient-2.0.1-cp37-cp37m-win_amd64.whl", hash = "sha256:3f39855a4ad22805361e782cc4d1010ac74796225fa2d1c03cc16673ccdc983a"},
     {file = "mysqlclient-2.0.1-cp38-cp38-win_amd64.whl", hash = "sha256:a6b5648f648b16335e3b1aaec93dc3fcc81a9a661180e306936437cc522c810b"},
     {file = "mysqlclient-2.0.1.tar.gz", hash = "sha256:fb2f75aea14722390d2d8ddf384ad99da708c707a96656210a7be8af20a2c5e5"},
 ]
-=======
->>>>>>> Stashed changes
 natsort = [
     {file = "natsort-7.0.1-py3-none-any.whl", hash = "sha256:d3fd728a3ceb7c78a59aa8539692a75e37cbfd9b261d4d702e8016639820f90a"},
     {file = "natsort-7.0.1.tar.gz", hash = "sha256:a633464dc3a22b305df0f27abcb3e83515898aa1fd0ed2f9726c3571a27258cf"},
@@ -3735,13 +2595,10 @@ pandas = [
     {file = "pandas-1.1.4-cp39-cp39-win_amd64.whl", hash = "sha256:0a11a6290ef3667575cbd4785a1b62d658c25a2fd70a5adedba32e156a8f1773"},
     {file = "pandas-1.1.4.tar.gz", hash = "sha256:a979d0404b135c63954dea79e6246c45dd45371a88631cdbb4877d844e6de3b6"},
 ]
-<<<<<<< Updated upstream
 pandas-gbq = [
     {file = "pandas-gbq-0.14.1.tar.gz", hash = "sha256:41b90794f0a6fff98180ee812d359a676ab06209d83471a2352bbd106b7e121f"},
     {file = "pandas_gbq-0.14.1-py3-none-any.whl", hash = "sha256:d3a6ca5c704eb6aaeeb8bbe99855a050462ff5118e0d8ab22c9495ec9324a0df"},
 ]
-=======
->>>>>>> Stashed changes
 pendulum = [
     {file = "pendulum-1.4.4-cp27-cp27m-manylinux1_i686.whl", hash = "sha256:501670f3b1d581395ec4094aff7c13dca6b699d1810cf15c446433b9e736eb4a"},
     {file = "pendulum-1.4.4-cp27-cp27m-manylinux1_x86_64.whl", hash = "sha256:b9a7ef02ad6255292f35218c595f8be35e0ca3c7ac19e633ff2de96480f26ab3"},
@@ -3796,18 +2653,39 @@ psutil = [
     {file = "psutil-5.7.3-cp38-cp38-win_amd64.whl", hash = "sha256:2cb55ef9591b03ef0104bedf67cc4edb38a3edf015cf8cf24007b99cb8497542"},
     {file = "psutil-5.7.3.tar.gz", hash = "sha256:af73f7bcebdc538eda9cc81d19db1db7bf26f103f91081d780bbacfcb620dee2"},
 ]
-psutil = [
-    {file = "psutil-5.7.3-cp27-none-win32.whl", hash = "sha256:1cd6a0c9fb35ece2ccf2d1dd733c1e165b342604c67454fd56a4c12e0a106787"},
-    {file = "psutil-5.7.3-cp27-none-win_amd64.whl", hash = "sha256:e02c31b2990dcd2431f4524b93491941df39f99619b0d312dfe1d4d530b08b4b"},
-    {file = "psutil-5.7.3-cp35-cp35m-win32.whl", hash = "sha256:56c85120fa173a5d2ad1d15a0c6e0ae62b388bfb956bb036ac231fbdaf9e4c22"},
-    {file = "psutil-5.7.3-cp35-cp35m-win_amd64.whl", hash = "sha256:fa38ac15dbf161ab1e941ff4ce39abd64b53fec5ddf60c23290daed2bc7d1157"},
-    {file = "psutil-5.7.3-cp36-cp36m-win32.whl", hash = "sha256:01bc82813fbc3ea304914581954979e637bcc7084e59ac904d870d6eb8bb2bc7"},
-    {file = "psutil-5.7.3-cp36-cp36m-win_amd64.whl", hash = "sha256:6a3e1fd2800ca45083d976b5478a2402dd62afdfb719b30ca46cd28bb25a2eb4"},
-    {file = "psutil-5.7.3-cp37-cp37m-win32.whl", hash = "sha256:fbcac492cb082fa38d88587d75feb90785d05d7e12d4565cbf1ecc727aff71b7"},
-    {file = "psutil-5.7.3-cp37-cp37m-win_amd64.whl", hash = "sha256:5d9106ff5ec2712e2f659ebbd112967f44e7d33f40ba40530c485cc5904360b8"},
-    {file = "psutil-5.7.3-cp38-cp38-win32.whl", hash = "sha256:ade6af32eb80a536eff162d799e31b7ef92ddcda707c27bbd077238065018df4"},
-    {file = "psutil-5.7.3-cp38-cp38-win_amd64.whl", hash = "sha256:2cb55ef9591b03ef0104bedf67cc4edb38a3edf015cf8cf24007b99cb8497542"},
-    {file = "psutil-5.7.3.tar.gz", hash = "sha256:af73f7bcebdc538eda9cc81d19db1db7bf26f103f91081d780bbacfcb620dee2"},
+psycopg2-binary = [
+    {file = "psycopg2-binary-2.8.6.tar.gz", hash = "sha256:11b9c0ebce097180129e422379b824ae21c8f2a6596b159c7659e2e5a00e1aa0"},
+    {file = "psycopg2_binary-2.8.6-cp27-cp27m-macosx_10_6_intel.macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.whl", hash = "sha256:d14b140a4439d816e3b1229a4a525df917d6ea22a0771a2a78332273fd9528a4"},
+    {file = "psycopg2_binary-2.8.6-cp27-cp27m-manylinux1_i686.whl", hash = "sha256:1fabed9ea2acc4efe4671b92c669a213db744d2af8a9fc5d69a8e9bc14b7a9db"},
+    {file = "psycopg2_binary-2.8.6-cp27-cp27m-manylinux1_x86_64.whl", hash = "sha256:f5ab93a2cb2d8338b1674be43b442a7f544a0971da062a5da774ed40587f18f5"},
+    {file = "psycopg2_binary-2.8.6-cp27-cp27m-win32.whl", hash = "sha256:b4afc542c0ac0db720cf516dd20c0846f71c248d2b3d21013aa0d4ef9c71ca25"},
+    {file = "psycopg2_binary-2.8.6-cp27-cp27m-win_amd64.whl", hash = "sha256:e74a55f6bad0e7d3968399deb50f61f4db1926acf4a6d83beaaa7df986f48b1c"},
+    {file = "psycopg2_binary-2.8.6-cp27-cp27mu-manylinux1_i686.whl", hash = "sha256:0deac2af1a587ae12836aa07970f5cb91964f05a7c6cdb69d8425ff4c15d4e2c"},
+    {file = "psycopg2_binary-2.8.6-cp27-cp27mu-manylinux1_x86_64.whl", hash = "sha256:ad20d2eb875aaa1ea6d0f2916949f5c08a19c74d05b16ce6ebf6d24f2c9f75d1"},
+    {file = "psycopg2_binary-2.8.6-cp34-cp34m-win32.whl", hash = "sha256:950bc22bb56ee6ff142a2cb9ee980b571dd0912b0334aa3fe0fe3788d860bea2"},
+    {file = "psycopg2_binary-2.8.6-cp34-cp34m-win_amd64.whl", hash = "sha256:b8a3715b3c4e604bcc94c90a825cd7f5635417453b253499664f784fc4da0152"},
+    {file = "psycopg2_binary-2.8.6-cp35-cp35m-macosx_10_6_intel.macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.whl", hash = "sha256:d1b4ab59e02d9008efe10ceabd0b31e79519da6fb67f7d8e8977118832d0f449"},
+    {file = "psycopg2_binary-2.8.6-cp35-cp35m-manylinux1_i686.whl", hash = "sha256:ac0c682111fbf404525dfc0f18a8b5f11be52657d4f96e9fcb75daf4f3984859"},
+    {file = "psycopg2_binary-2.8.6-cp35-cp35m-manylinux1_x86_64.whl", hash = "sha256:7d92a09b788cbb1aec325af5fcba9fed7203897bbd9269d5691bb1e3bce29550"},
+    {file = "psycopg2_binary-2.8.6-cp35-cp35m-win32.whl", hash = "sha256:aaa4213c862f0ef00022751161df35804127b78adf4a2755b9f991a507e425fd"},
+    {file = "psycopg2_binary-2.8.6-cp35-cp35m-win_amd64.whl", hash = "sha256:c2507d796fca339c8fb03216364cca68d87e037c1f774977c8fc377627d01c71"},
+    {file = "psycopg2_binary-2.8.6-cp36-cp36m-macosx_10_6_intel.macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.whl", hash = "sha256:ee69dad2c7155756ad114c02db06002f4cded41132cc51378e57aad79cc8e4f4"},
+    {file = "psycopg2_binary-2.8.6-cp36-cp36m-manylinux1_i686.whl", hash = "sha256:e82aba2188b9ba309fd8e271702bd0d0fc9148ae3150532bbb474f4590039ffb"},
+    {file = "psycopg2_binary-2.8.6-cp36-cp36m-manylinux1_x86_64.whl", hash = "sha256:d5227b229005a696cc67676e24c214740efd90b148de5733419ac9aaba3773da"},
+    {file = "psycopg2_binary-2.8.6-cp36-cp36m-win32.whl", hash = "sha256:a0eb43a07386c3f1f1ebb4dc7aafb13f67188eab896e7397aa1ee95a9c884eb2"},
+    {file = "psycopg2_binary-2.8.6-cp36-cp36m-win_amd64.whl", hash = "sha256:e1f57aa70d3f7cc6947fd88636a481638263ba04a742b4a37dd25c373e41491a"},
+    {file = "psycopg2_binary-2.8.6-cp37-cp37m-macosx_10_6_intel.macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.whl", hash = "sha256:833709a5c66ca52f1d21d41865a637223b368c0ee76ea54ca5bad6f2526c7679"},
+    {file = "psycopg2_binary-2.8.6-cp37-cp37m-manylinux1_i686.whl", hash = "sha256:ba28584e6bca48c59eecbf7efb1576ca214b47f05194646b081717fa628dfddf"},
+    {file = "psycopg2_binary-2.8.6-cp37-cp37m-manylinux1_x86_64.whl", hash = "sha256:6a32f3a4cb2f6e1a0b15215f448e8ce2da192fd4ff35084d80d5e39da683e79b"},
+    {file = "psycopg2_binary-2.8.6-cp37-cp37m-win32.whl", hash = "sha256:0e4dc3d5996760104746e6cfcdb519d9d2cd27c738296525d5867ea695774e67"},
+    {file = "psycopg2_binary-2.8.6-cp37-cp37m-win_amd64.whl", hash = "sha256:cec7e622ebc545dbb4564e483dd20e4e404da17ae07e06f3e780b2dacd5cee66"},
+    {file = "psycopg2_binary-2.8.6-cp38-cp38-macosx_10_9_x86_64.macosx_10_9_intel.macosx_10_10_intel.macosx_10_10_x86_64.whl", hash = "sha256:ba381aec3a5dc29634f20692349d73f2d21f17653bda1decf0b52b11d694541f"},
+    {file = "psycopg2_binary-2.8.6-cp38-cp38-manylinux1_i686.whl", hash = "sha256:a0c50db33c32594305b0ef9abc0cb7db13de7621d2cadf8392a1d9b3c437ef77"},
+    {file = "psycopg2_binary-2.8.6-cp38-cp38-manylinux1_x86_64.whl", hash = "sha256:2dac98e85565d5688e8ab7bdea5446674a83a3945a8f416ad0110018d1501b94"},
+    {file = "psycopg2_binary-2.8.6-cp38-cp38-win32.whl", hash = "sha256:bd1be66dde2b82f80afb9459fc618216753f67109b859a361cf7def5c7968729"},
+    {file = "psycopg2_binary-2.8.6-cp38-cp38-win_amd64.whl", hash = "sha256:8cd0fb36c7412996859cb4606a35969dd01f4ea34d9812a141cd920c3b18be77"},
+    {file = "psycopg2_binary-2.8.6-cp39-cp39-manylinux1_i686.whl", hash = "sha256:42ec1035841b389e8cc3692277a0bd81cdfe0b65d575a2c8862cec7a80e62e52"},
+    {file = "psycopg2_binary-2.8.6-cp39-cp39-manylinux1_x86_64.whl", hash = "sha256:7312e931b90fe14f925729cde58022f5d034241918a5c4f9797cac62f6b3a9dd"},
 ]
 py = [
     {file = "py-1.9.0-py2.py3-none-any.whl", hash = "sha256:366389d1db726cd2fcfc79732e75410e5fe4d31db13692115529d34069a043c2"},
@@ -3847,13 +2725,10 @@ pycparser = [
     {file = "pycparser-2.20-py2.py3-none-any.whl", hash = "sha256:7582ad22678f0fcd81102833f60ef8d0e57288b6b5fb00323d101be910e35705"},
     {file = "pycparser-2.20.tar.gz", hash = "sha256:2d475327684562c3a96cc71adf7dc8c4f0565175cf86b6d7a404ff4c771f15f0"},
 ]
-<<<<<<< Updated upstream
 pydata-google-auth = [
     {file = "pydata-google-auth-1.1.0.tar.gz", hash = "sha256:27adc45f281ade0065b56a065413918c5c0546614f0868418cf6ea49b501805e"},
     {file = "pydata_google_auth-1.1.0-py2.py3-none-any.whl", hash = "sha256:051e5370fb83bb113fcbba0d1e5b389ebc6790c675fabdab959f10694f9562b6"},
 ]
-=======
->>>>>>> Stashed changes
 pygments = [
     {file = "Pygments-2.7.2-py3-none-any.whl", hash = "sha256:88a0bbcd659fcb9573703957c6b9cff9fab7295e6e76db54c9d00ae42df32773"},
     {file = "Pygments-2.7.2.tar.gz", hash = "sha256:381985fcc551eb9d37c52088a32914e00517e57f4a21609f48141ba08e193fa0"},
@@ -3862,13 +2737,10 @@ pyjwt = [
     {file = "PyJWT-1.7.1-py2.py3-none-any.whl", hash = "sha256:5c6eca3c2940464d106b99ba83b00c6add741c9becaec087fb7ccdefea71350e"},
     {file = "PyJWT-1.7.1.tar.gz", hash = "sha256:8d59a976fb773f3e6a39c85636357c4f0e242707394cadadd9814f5cbaa20e96"},
 ]
-<<<<<<< Updated upstream
 pyopenssl = [
     {file = "pyOpenSSL-19.1.0-py2.py3-none-any.whl", hash = "sha256:621880965a720b8ece2f1b2f54ea2071966ab00e2970ad2ce11d596102063504"},
     {file = "pyOpenSSL-19.1.0.tar.gz", hash = "sha256:9a24494b2602aaf402be5c9e30a0b82d4a5c67528fe8fb475e3f3bc00dd69507"},
 ]
-=======
->>>>>>> Stashed changes
 pyparsing = [
     {file = "pyparsing-2.4.7-py2.py3-none-any.whl", hash = "sha256:ef9d7589ef3c200abe66653d3f1ab1033c3c419ae9b9bdb1240a85b024efc88b"},
     {file = "pyparsing-2.4.7.tar.gz", hash = "sha256:c203ec8783bf771a155b207279b9bccb8dea02d8f0c9e5f8ead507bc3246ecc1"},
@@ -3933,14 +2805,11 @@ pyyaml = [
 requests = [
     {file = "requests-2.25.0-py2.py3-none-any.whl", hash = "sha256:e786fa28d8c9154e6a4de5d46a1d921b8749f8b74e28bde23768e5e16eece998"},
     {file = "requests-2.25.0.tar.gz", hash = "sha256:7f1a0b932f4a60a1a65caa4263921bb7d9ee911957e0ae4a23a6dd08185ad5f8"},
-<<<<<<< Updated upstream
 ]
 requests-oauthlib = [
     {file = "requests-oauthlib-1.3.0.tar.gz", hash = "sha256:b4261601a71fd721a8bd6d7aa1cc1d6a8a93b4a9f5e96626f8e4d91e8beeaa6a"},
     {file = "requests_oauthlib-1.3.0-py2.py3-none-any.whl", hash = "sha256:7f71572defaecd16372f9006f33c2ec8c077c3cfa6f5911a9a90202beb513f3d"},
     {file = "requests_oauthlib-1.3.0-py3.7.egg", hash = "sha256:fa6c47b933f01060936d87ae9327fead68768b69c6c9ea2109c48be30f2d4dbc"},
-=======
->>>>>>> Stashed changes
 ]
 rsa = [
     {file = "rsa-4.6-py3-none-any.whl", hash = "sha256:6166864e23d6b5195a5cfed6cd9fed0fe774e226d8f854fcb23b7bbef0350233"},
@@ -4030,7 +2899,6 @@ tzlocal = [
 ]
 unicodecsv = [
     {file = "unicodecsv-0.14.1.tar.gz", hash = "sha256:018c08037d48649a0412063ff4eda26eaa81eff1546dbffa51fa5293276ff7fc"},
-<<<<<<< Updated upstream
 ]
 uritemplate = [
     {file = "uritemplate-3.0.1-py2.py3-none-any.whl", hash = "sha256:07620c3f3f8eed1f12600845892b0e036a2420acf513c53f7de0abd911a5894f"},
@@ -4039,12 +2907,6 @@ uritemplate = [
 urllib3 = [
     {file = "urllib3-1.26.2-py2.py3-none-any.whl", hash = "sha256:d8ff90d979214d7b4f8ce956e80f4028fc6860e4431f731ea4a8c08f23f99473"},
     {file = "urllib3-1.26.2.tar.gz", hash = "sha256:19188f96923873c92ccb987120ec4acaa12f0461fa9ce5d3d0772bc965a39e08"},
-=======
-]
-urllib3 = [
-    {file = "urllib3-1.26.1-py2.py3-none-any.whl", hash = "sha256:61ad24434555a42c0439770462df38b47d05d9e8e353d93ec3742900975e3e65"},
-    {file = "urllib3-1.26.1.tar.gz", hash = "sha256:097116a6f16f13482d2a2e56792088b9b2920f4eb6b4f84a2c90555fb673db74"},
->>>>>>> Stashed changes
 ]
 werkzeug = [
     {file = "Werkzeug-0.16.1-py2.py3-none-any.whl", hash = "sha256:1e0dedc2acb1f46827daa2e399c1485c8fa17c0d8e70b6b875b4e7f54bf408d2"},

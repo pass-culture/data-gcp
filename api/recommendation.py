@@ -84,11 +84,11 @@ def order_offers_by_score_and_diversify_types(
 def _get_offers_grouped_by_type_and_onlineless(offers: List[Dict[str, Any]]) -> Dict:
     offers_by_type = dict()
     for offer in offers:
-        offer_type_and_oneliness = _get_offer_type_and_oneliness(offer)
-        if offer_type_and_oneliness in offers_by_type.keys():
-            offers_by_type[offer_type_and_oneliness].append(offer)
+        offer_type_and_onlineness = _get_offer_type_and_onlineness(offer)
+        if offer_type_and_onlineness in offers_by_type.keys():
+            offers_by_type[offer_type_and_onlineness].append(offer)
         else:
-            offers_by_type[offer_type_and_oneliness] = [offer]
+            offers_by_type[offer_type_and_onlineness] = [offer]
     return offers_by_type
 
 
@@ -99,7 +99,7 @@ def _get_number_of_offers_and_max_score_by_type(type_and_offers: Tuple) -> Tuple
     )
 
 
-def _get_offer_type_and_oneliness(offer: Dict[str, Any]) -> str:
+def _get_offer_type_and_onlineness(offer: Dict[str, Any]) -> str:
     return (
         str(offer["type"]) + "_DIGITAL"
         if offer["url"]

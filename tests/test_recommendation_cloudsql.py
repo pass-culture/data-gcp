@@ -395,7 +395,7 @@ def test_user_recommendation_query(setup_database):
     connection, cursor = setup_database
     cursor.close()
 
-    user_recommendation = get_recommendations_for_user(1017696, 10, connection)
+    user_recommendation = get_recommendations_for_user(5, 10, connection)
     assert_array_equal(
         user_recommendation,
         [{"id": 1017696, "type": "ThingType.LIVRE_EDITION", "url": None}],

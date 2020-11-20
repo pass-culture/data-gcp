@@ -33,13 +33,11 @@ def recommendation(user_id: int):
         {**reco, "score": 1} for reco in recommendations_for_user
     ]
 
-    return jsonify(
-        {
-            "recommended offers ": order_offers_by_score_and_diversify_types(
-                scored_recommendation_for_user
-            )
-        }
+    sorted_and_diversified_recommendations = order_offers_by_score_and_diversify_types(
+        scored_recommendation_for_user
     )
+
+    return jsonify({"recommended offers ": sorted_and_diversified_recommendations})
 
 
 if __name__ == "__main__":

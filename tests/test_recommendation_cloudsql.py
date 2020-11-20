@@ -1,12 +1,9 @@
 import os
 from datetime import datetime, timedelta
 
-from numpy.testing import assert_array_equal
 import pandas as pd
 import psycopg2
 import pytest
-
-from api.recommendation import get_recommendations_for_user
 
 TEST_DATABASE_CONFIG = {
     "user": "postgres",
@@ -386,19 +383,3 @@ def test_updated_offer_in_non_recommendable_offers(
     connection.close()
 
     assert result == (0 if recommendable else 1)
-
-
-def test_user_recommendation_query(setup_database):
-    """
-    Test that the query used in api.recommendation is functionning
-    """
-    connection, cursor = setup_database
-    cursor.close()
-
-    user_recommendation = get_recommendations_for_user(5, 10, connection)
-    assert_array_equal(
-        user_recommendation,
-        [{"id": 1017696, "type": "ThingType.LIVRE_EDITION", "url": None}],
-    )
-
-    connection.close()

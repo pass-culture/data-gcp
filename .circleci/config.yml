@@ -61,16 +61,22 @@ jobs:
         auth:
           username: $DOCKERHUB_USER
           password: $DOCKERHUB_PASSWORD
+      - image: circleci/postgres:12
+        environment:
+          POSTGRES_PASSWORD: postgres
     working_directory: ~/data-gcp/api
     steps:
       - attach_workspace:
           at: .
       - run:
+          name: Install psql
+          command: sudo apt install postgresql-client
+      - run:
           name: Run tests
           command: |
             export PYTHONPATH=$PYTHONPATH:~/data-gcp/api
             . venv/bin/activate
-            pytest --cov
+            ./run_tests.sh
 
   api-linter:
     docker:

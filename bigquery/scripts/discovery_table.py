@@ -48,11 +48,11 @@ def _create_function_offer_has_at_least_one_active_mediation(client) -> str:
 
 def _create_function_get_active_offers_ids(client) -> str:
     function_name = "public.get_active_offers_ids"
-    offer_has_at_least_one_active_mediation = _create_function_offer_has_at_least_one_active_mediation(
-        client
+    offer_has_at_least_one_active_mediation = (
+        _create_function_offer_has_at_least_one_active_mediation(client)
     )
-    offer_has_at_least_one_bookable_stock = _create_function_offer_has_at_least_one_bookable_stock(
-        client
+    offer_has_at_least_one_bookable_stock = (
+        _create_function_offer_has_at_least_one_bookable_stock(client)
     )
 
     query_job = client.query(

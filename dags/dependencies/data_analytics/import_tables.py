@@ -3,10 +3,10 @@ from dependencies.data_analytics.config import GCP_REGION, CLOUDSQL_DATABASE
 
 def define_import_query(table, region=GCP_REGION, cloudsql_database=CLOUDSQL_DATABASE):
     """
-        Given a table (from "cloudsql_database" located in "region"), we build and return the federated query that
-        selects table content (for import purpose).
-        In order to handle type incompatibility between postgresql and BigQuery (eg. UUID and custom types),
-        we sometimes have to explicitly select and cast columns.
+    Given a table (from "cloudsql_database" located in "region"), we build and return the federated query that
+    selects table content (for import purpose).
+    In order to handle type incompatibility between postgresql and BigQuery (eg. UUID and custom types),
+    we sometimes have to explicitly select and cast columns.
     """
     # Define select-queries for tables that need a specific CAST
     cloudsql_queries = {}

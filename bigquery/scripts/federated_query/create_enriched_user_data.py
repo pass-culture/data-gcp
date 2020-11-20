@@ -4,7 +4,9 @@ from google.cloud import bigquery
 
 from bigquery.utils import run_query
 from bigquery.config import MIGRATION_ENRICHED_USER_DATA
-from dependencies.data_analytics.enriched_data.user import define_enriched_user_data_full_query
+from dependencies.data_analytics.enriched_data.user import (
+    define_enriched_user_data_full_query,
+)
 from set_env import set_env_vars
 
 import logging

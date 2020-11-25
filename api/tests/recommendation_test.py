@@ -1,17 +1,17 @@
 import os
 from typing import Any, Dict, List, Tuple
+from unittest.mock import patch
 
 import pandas as pd
 import psycopg2
 import pytest
-from mock import patch
 from numpy.testing import assert_array_equal
 from sqlalchemy import create_engine
 
 from recommendation import (
     get_recommendations_for_user,
-    order_offers_by_score_and_diversify_types,
     get_scored_recommendation_for_user,
+    order_offers_by_score_and_diversify_types,
 )
 
 TEST_DATABASE_CONFIG = {

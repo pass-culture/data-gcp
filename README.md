@@ -4,16 +4,19 @@ Repo pour la team data sur GCP
 
 ## Organisation
 
-/api : l'api de recommandation déployée sur Cloud Run
-
-/ai_platform : modèle de l'algorithme de recommandation
-
-/analytics : l'ensemble du code (utilitaires, configuration, scripts) pour interagir avec BigQuery
-
-/cloudsql : les scripts sql/python qui concernent le cloudsql de recommandation
-
-/orchestration : les dags pour Cloud Composer
-
+```
++-- recommendation:   
+|
+|   +-- api : l'api de recommandation déployée sur Cloud Run   
+|
+|   +-- model : modèle de l'algorithme de recommandation
+|
+|   +-- db : les scripts sql/python qui concernent le cloudsql de recommandation
+|
++-- analytics : l'ensemble du code (utilitaires, configuration, scripts) pour interagir avec BigQuery
+|
++-- orchestration : les dags pour Cloud Composer
+```
 
 ## INSTALL
 ### Analytics (BigQuery)

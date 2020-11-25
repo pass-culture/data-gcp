@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from ai_platform.generate_model import generate_and_save_constant_model
+from generate_model import generate_and_save_constant_model
 
 
 def test_model(tmp_path):

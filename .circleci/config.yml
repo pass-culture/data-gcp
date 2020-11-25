@@ -8,13 +8,13 @@ workflows:
       - linter:
           requires:
             - install
-      - cloudsql-tests:
+      - recommendation-db-tests:
           requires:
             - install
-      - api-build
-      - api-tests:
+      - recommendation-api-build
+      - recommendation-api-tests:
           requires:
-            - api-build
+            - recommendation-api-build
       - orchestration-install
       - orchestration-tests:
           requires:
@@ -35,9 +35,9 @@ defaults: &defaults
         password: $DOCKERHUB_PASSWORD
 
 jobs:
-  api-build:
+  recommendation-api-build:
     <<: *defaults
-    working_directory: ~/data-gcp/api
+    working_directory: ~/data-gcp/recommendation/api
     steps:
       - checkout:
           path: ~/data-gcp
@@ -58,7 +58,7 @@ jobs:
           paths:
             - .
 
-  api-tests:
+  recommendation-api-tests:
     docker:
       - image: circleci/python:3.7
         auth:
@@ -67,7 +67,7 @@ jobs:
       - image: circleci/postgres:12
         environment:
           POSTGRES_PASSWORD: postgres
-    working_directory: ~/data-gcp/api
+    working_directory: ~/data-gcp/recommendation/api
     steps:
       - attach_workspace:
           at: .
@@ -77,8 +77,8 @@ jobs:
       - run:
           name: Run tests
           command: |
-            export PYTHONPATH=$PYTHONPATH:~/data-gcp/api
-            . venv/bin/activate
+            export PYTHONPATH=$PYTHONPATH:~/data-gcp/recommendation/api
+            . venv-api/bin/activate
             ./run_tests.sh
 
   install:
@@ -157,7 +157,7 @@ jobs:
             airflow initdb
             pytest tests
 
-  cloudsql-tests:
+  recommendation-db-tests:
     docker:
       - image: circleci/python:3.7
       - image: circleci/postgres:12

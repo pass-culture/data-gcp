@@ -10,7 +10,7 @@ from recommendation import (
 
 API_TOKEN = os.environ.get("API_TOKEN")
 NUMBER_OF_RECOMMENDATIONS = 10
-MODEL_NAME = "pocmodel"
+MODEL_NAME = "poc_model"
 MODEL_VERSION = "v0"
 
 app = Flask(__name__)

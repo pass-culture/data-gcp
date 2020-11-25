@@ -8,15 +8,15 @@ Repo pour la team data sur GCP
 
 /ai_platform : modèle de l'algorithme de recommandation
 
-/bigquery : l'ensemble du code (utilitaires, configuration, scripts) pour interagir avec BigQuery.
+/analytics : l'ensemble du code (utilitaires, configuration, scripts) pour interagir avec BigQuery
 
 /cloudsql : les scripts sql/python qui concernent le cloudsql de recommandation
 
-/dags : les dags du Cloud Composer
+/orchestration : les dags pour Cloud Composer
 
 
 ## INSTALL
-### BigQuery
+### Analytics (BigQuery)
 **Prérequis** :
 - pyenv
 - poetry
@@ -42,9 +42,9 @@ Copie le fichier `.env` en `.env.local`.
 
 Dans `.env.local`, renseigne le chemin vers ta clé (.JSON) dans la variable `GOOGLE_APPLICATION_CREDENTIALS`.
 
-**3. Ajoute bigquery au PYTHONPATH**
+**3. Ajoute analytics au PYTHONPATH**
 ```
-export PYTHONPATH=$PYTHONPATH:"path/to/bigquery"
+export PYTHONPATH=$PYTHONPATH:"path/to/analytics"
 ```
 
 Vous pouvez maintenant lancer les différents scripts !

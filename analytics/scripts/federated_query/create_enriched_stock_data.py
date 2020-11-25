@@ -2,9 +2,9 @@ import sys
 
 from google.cloud import bigquery
 
-from bigquery.utils import run_query
+from analytics.utils import run_query
 from set_env import set_env_vars
-from bigquery.config import MIGRATION_ENRICHED_STOCK_DATA
+from analytics.config import MIGRATION_ENRICHED_STOCK_DATA
 
 import logging
 

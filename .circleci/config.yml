@@ -15,25 +15,28 @@ workflows:
       - api-tests:
           requires:
             - api-build
-      - dag-tests:
+      - orchestration-install
+      - orchestration-tests:
           requires:
-            - install
+            - orchestration-install
       - composer-deploy:
           requires:
-            - dag-tests
+            - orchestration-tests
           filters:
             branches:
               only:
                 - master
 
+defaults: &defaults
+  docker:
+    - image: circleci/python:3.7
+      auth:
+        username: $DOCKERHUB_USER
+        password: $DOCKERHUB_PASSWORD
 
 jobs:
   api-build:
-    docker:
-      - image: circleci/python:3.7
-        auth:
-          username: $DOCKERHUB_USER
-          password: $DOCKERHUB_PASSWORD
+    <<: *defaults
     working_directory: ~/data-gcp/api
     steps:
       - checkout:
@@ -43,13 +46,13 @@ jobs:
       - run:
           name: Install Python deps in a venv
           command: |
-            python3 -m venv venv
-            . venv/bin/activate
+            python3 -m venv venv-api
+            . venv-api/bin/activate
             pip install -r dev-requirements.txt
       - save_cache:
           key: dependencies-{{ checksum "dev-requirements.txt" }}
           paths:
-            - "venv"
+            - "venv-api"
       - persist_to_workspace:
           root: .
           paths:
@@ -79,12 +82,8 @@ jobs:
             ./run_tests.sh
 
   install:
+    <<: *defaults
     working_directory: ~/data-gcp
-    docker:
-      - image: circleci/python:3.7
-        auth:
-          username: $DOCKERHUB_USER
-          password: $DOCKERHUB_PASSWORD
     steps:
       - checkout
       # Download and cache dependencies
@@ -102,12 +101,8 @@ jobs:
             - /home/circleci/.cache/pypoetry/virtualenvs
 
   linter:
+    <<: *defaults
     working_directory: ~/data-gcp
-    docker:
-      - image: circleci/python:3.7
-        auth:
-          username: $DOCKERHUB_USER
-          password: $DOCKERHUB_PASSWORD
     steps:
       - checkout
       # Download and cache dependencies
@@ -118,28 +113,49 @@ jobs:
           name: Run linter
           command: poetry run black --check .
 
-  dag-tests:
-    docker:
-      - image: circleci/python:3.7
-        auth:
-          username: $DOCKERHUB_USER
-          password: $DOCKERHUB_PASSWORD
-    working_directory: ~/data-gcp
+
+
+  orchestration-install:
+    <<: *defaults
+    working_directory: ~/data-gcp/orchestration
+    steps:
+      - checkout:
+          path: ~/data-gcp
+      - restore_cache:
+          key: orchestration-{{ checksum "orchestration-requirements.txt" }}
+      - run:
+          name: Install Python requirements
+          command: |
+            python3 -m venv venv-orchestration
+            . venv-orchestration/bin/activate
+            pip install -r orchestration-requirements.txt
+      - save_cache:
+          key: orchestration-{{ checksum "orchestration-requirements.txt" }}
+          paths:
+            - "venv-orchestration"
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+
+  orchestration-tests:
+    <<: *defaults
+    working_directory: ~/data-gcp/orchestration
     environment:
-      - AIRFLOW_HOME=~/data-gcp
+      - AIRFLOW_HOME=~/data-gcp/orchestration
       - RECOMMENDATION_SQL_USER=test_user
       - RECOMMENDATION_SQL_PASSWORD=test_password
       - RECOMMENDATION_SQL_PUBLIC_PORT=1234
       - RECOMMENDATION_SQL_PUBLIC_IP=11.111.111.111
     steps:
-      - checkout
-      - restore_cache:
-          key: data-gcp-{{ checksum "poetry.lock" }}
+      - attach_workspace:
+          at: .
       - run:
           name: Run tests
           command: |
-            poetry run airflow initdb
-            poetry run pytest dags/tests
+            . venv-orchestration/bin/activate
+            airflow initdb
+            pytest tests
 
   cloudsql-tests:
     docker:

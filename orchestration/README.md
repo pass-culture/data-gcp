@@ -1,11 +1,13 @@
-# DAGS
-Repo des DAGS pour Cloud Composer
+# Orchestration
+Repo pour l'orchestration sur Cloud Composer.
 
 ## Structure du dossier
 
-Les dags sont dans `dags/`.
+Les dags sont dans `orchestration/dags/`.
 
-Les autres scripts sont à mettre dans `dags/dependencies/`.
+Les scripts appelés dasn les dags sont à mettre dans `orchestration/dags/dependencies/`.
+
+Les tests sont dans le dossier `orchestration/tests/`.
 
 ## Déploiement automatique des dags
 

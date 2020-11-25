@@ -22,7 +22,7 @@ def get_recommendations_for_user(
             user=SQL_BASE_USER,
             password=SQL_BASE_PASSWORD,
             database=SQL_BASE,
-            host="35.195.152.202",
+            host=f"/cloudsql/{SQL_CONNECTION_NAME}",
         )
 
     cursor = connection.cursor()
@@ -141,18 +141,4 @@ def _get_offer_type_and_onlineness(offer: Dict[str, Any]) -> str:
         str(offer["type"]) + "_DIGITAL"
         if offer["url"]
         else str(offer["type"]) + "_PHYSICAL"
-    )
-
-
-if __name__ == "__main__":
-    print(
-        get_scored_recommendation_for_user(
-            [
-                {"id": 1, "url": "toto1", "type": "tata1"},
-                {"id": 2, "url": "toto2", "type": "tata2"},
-                {"id": 3, "url": "toto3", "type": "tata3"},
-            ],
-            "pocmodel",
-            "v0",
-        )
     )

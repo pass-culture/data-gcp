@@ -49,12 +49,13 @@ def get_scored_recommendation_for_user(
     user_recommendations: List[Dict[str, Any]], model_name: str, version: str
 ) -> List[Dict[str, int]]:
     offers_ids = [recommendation["id"] for recommendation in user_recommendations]
+    predicted_scores = predict_score(
+        GCP_MODEL_REGION, GCP_PROJECT_ID, model_name, offers_ids, version
+    )
     return [
         {
             **recommendation,
-            "score": predict_score(
-                GCP_MODEL_REGION, GCP_PROJECT_ID, model_name, offers_ids, version
-            )[i],
+            "score": predicted_scores[i],
         }
         for i, recommendation in enumerate(user_recommendations)
     ]

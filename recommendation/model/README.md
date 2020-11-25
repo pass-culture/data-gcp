@@ -1,4 +1,4 @@
-# AI PLATFORM
+# Model - AI Platform
 Repo des modèles de l'algorithme de recommendation
 
 ## Uploader manuellement le modèle sur Cloud Storage

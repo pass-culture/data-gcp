@@ -6,7 +6,6 @@ Repo contenant le code source pour la partie analytics du projet. Notamment les 
 
 **Prérequis** :
 - pyenv
-- poetry
 - accès aux comptes de services GCP
 
 **1. Configure le projet**
@@ -14,9 +13,8 @@ Repo contenant le code source pour la partie analytics du projet. Notamment les 
 ```
 git clone git@github.com:pass-culture/data-gcp.git
 cd data-gcp
-pyenv install 3.7.7  # si nécessaire
-pyenv local 3.7.7
-poetry install
+pyenv install 3.7  # si nécessaire
+pyenv local 3.7
 ```
 
 **2. Configure le compte de service GCP**

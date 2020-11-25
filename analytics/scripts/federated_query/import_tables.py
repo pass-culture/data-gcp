@@ -2,7 +2,7 @@ import sys
 
 from google.cloud import bigquery
 
-from bigquery.config import (
+from analytics.config import (
     GCP_PROJECT_ID,
     GCP_REGION,
     CLOUDSQL_DATABASE,
@@ -20,7 +20,7 @@ from bigquery.config import (
     ENRICHED_STOCK_DATA_TABLES,
 )
 
-from bigquery.utils import run_query
+from analytics.utils import run_query
 from dependencies.data_analytics.import_tables import define_import_query
 from set_env import set_env_vars
 

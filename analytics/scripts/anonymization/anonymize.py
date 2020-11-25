@@ -2,8 +2,8 @@ import sys
 
 from google.cloud import bigquery
 
-from bigquery.config import BIGQUERY_POC_DATASET
-from bigquery.utils import run_query
+from analytics.config import BIGQUERY_POC_DATASET
+from analytics.utils import run_query
 from dependencies.data_analytics.anonymization import (
     anonymize_validation_token_offerer,
     anonymize_apikey,

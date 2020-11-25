@@ -3,7 +3,7 @@ import sys
 
 from google.cloud import bigquery
 
-from bigquery.config import GCP_PROJECT_ID
+from analytics.config import GCP_PROJECT_ID
 from set_env import set_env_vars
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)

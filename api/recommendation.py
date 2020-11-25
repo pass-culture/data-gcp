@@ -2,24 +2,27 @@ import os
 import collections
 from typing import Any, Dict, List, Tuple
 
+from google.api_core.client_options import ClientOptions
+from googleapiclient import discovery
 import psycopg2
 
+GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID")
 SQL_CONNECTION_NAME = os.environ.get("SQL_CONNECTION_NAME")
 SQL_BASE = os.environ.get("SQL_BASE")
 SQL_BASE_USER = os.environ.get("SQL_BASE_USER")
 SQL_BASE_PASSWORD = os.environ.get("SQL_BASE_PASSWORD")
+GCP_MODEL_REGION = os.environ.get("GCP_MODEL_REGION")
 
 
 def get_recommendations_for_user(
     user_id: int, number_of_recommendations: int, connection=None
 ) -> List[Dict[str, Any]]:
-
     if connection is None:
         connection = psycopg2.connect(
             user=SQL_BASE_USER,
             password=SQL_BASE_PASSWORD,
             database=SQL_BASE,
-            host=f"/cloudsql/{SQL_CONNECTION_NAME}",
+            host="35.195.152.202",
         )
 
     cursor = connection.cursor()
@@ -40,6 +43,40 @@ def get_recommendations_for_user(
     connection.close()
 
     return user_recommendation
+
+
+def get_scored_recommendation_for_user(
+    user_recommendations: List[Dict[str, Any]], model_name: str, version: str
+) -> List[Dict[str, int]]:
+    offers_ids = [recommendation["id"] for recommendation in user_recommendations]
+    return [
+        {
+            **recommendation,
+            "score": predict_score(
+                GCP_MODEL_REGION, GCP_PROJECT_ID, model_name, offers_ids, version
+            )[i],
+        }
+        for i, recommendation in enumerate(user_recommendations)
+    ]
+
+
+def predict_score(region, project, model, instances, version):
+    endpoint = f"https://{region}-ml.googleapis.com"
+    client_options = ClientOptions(api_endpoint=endpoint)
+    service = discovery.build("ml", "v1", client_options=client_options)
+    name = "projects/{}/models/{}".format(project, model)
+
+    if version is not None:
+        name += "/versions/{}".format(version)
+
+    response = (
+        service.projects().predict(name=name, body={"instances": instances}).execute()
+    )
+
+    if "error" in response:
+        raise RuntimeError(response["error"])
+
+    return response["predictions"]
 
 
 def order_offers_by_score_and_diversify_types(
@@ -104,4 +141,18 @@ def _get_offer_type_and_onlineness(offer: Dict[str, Any]) -> str:
         str(offer["type"]) + "_DIGITAL"
         if offer["url"]
         else str(offer["type"]) + "_PHYSICAL"
+    )
+
+
+if __name__ == "__main__":
+    print(
+        get_scored_recommendation_for_user(
+            [
+                {"id": 1, "url": "toto1", "type": "tata1"},
+                {"id": 2, "url": "toto2", "type": "tata2"},
+                {"id": 3, "url": "toto3", "type": "tata3"},
+            ],
+            "pocmodel",
+            "v0",
+        )
     )

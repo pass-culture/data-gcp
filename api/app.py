@@ -5,10 +5,13 @@ from flask import Flask, jsonify, request
 from recommendation import (
     get_recommendations_for_user,
     order_offers_by_score_and_diversify_types,
+    get_scored_recommendation_for_user,
 )
 
 API_TOKEN = os.environ.get("API_TOKEN")
 NUMBER_OF_RECOMMENDATIONS = 10
+MODEL_NAME = "pocmodel"
+MODEL_VERSION = "v0"
 
 app = Flask(__name__)
 
@@ -28,10 +31,9 @@ def recommendation(user_id: int):
     recommendations_for_user = get_recommendations_for_user(
         user_id, NUMBER_OF_RECOMMENDATIONS
     )
-    # the score will later be computed by AI platform
-    scored_recommendation_for_user = [
-        {**reco, "score": 1} for reco in recommendations_for_user
-    ]
+    scored_recommendation_for_user = get_scored_recommendation_for_user(
+        recommendations_for_user, MODEL_NAME, MODEL_VERSION
+    )
 
     sorted_and_diversified_recommendations = order_offers_by_score_and_diversify_types(
         scored_recommendation_for_user

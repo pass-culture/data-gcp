@@ -51,7 +51,7 @@ Vous pouvez maintenant lancer les différents scripts !
 
 ## Cloud Composer
 
-[plus de détails dans dags/README.md](/dags/README.md)
+[plus de détails dans dags/README.md](/orchestration/dags/README.md)
 
 UI Airflow disponible ici : https://q775b71be829eada6p-tp.appspot.com/admin/
 

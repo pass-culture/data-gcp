@@ -5,9 +5,7 @@ workflows:
   run-checks:
     jobs:
       - install
-      - linter:
-          requires:
-            - install
+      - linter
       - recommendation-db-tests:
           requires:
             - install
@@ -105,13 +103,12 @@ jobs:
     working_directory: ~/data-gcp
     steps:
       - checkout
-      # Download and cache dependencies
-      - restore_cache:
-          keys:
-            - data-gcp-{{ checksum "poetry.lock" }}
+      - run:
+          name: Install black
+          command: pip install black
       - run:
           name: Run linter
-          command: poetry run black --check .
+          command: black --check .
 
 
 

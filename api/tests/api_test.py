@@ -29,16 +29,22 @@ def test_recommendation_return_403_when_there_is_wrong_token():
 
 @patch("app.API_TOKEN", "good_token")
 @patch("app.get_recommendations_for_user")
+@patch("app.get_scored_recommendation_for_user")
 def test_recommendation_return_recommended_offeres_when_there_is_right_token(
-    get_recommendations_for_user_mock,
+    get_scored_recommendation_for_user_mock, get_recommendations_for_user_mock
 ):
     # Given
     api_token = "good_token"
     user_id = 1
     get_recommendations_for_user_mock.return_value = [
-        {"id": 1, "url": "toto", "type": "tata"},
-        {"id": 2, "url": "toto", "type": "tata"},
-        {"id": 3, "url": "toto", "type": "tata"},
+        {"id": 1, "url": "url1", "type": "type1"},
+        {"id": 2, "url": "url2", "type": "type2"},
+        {"id": 3, "url": "url3", "type": "type3"},
+    ]
+    get_scored_recommendation_for_user_mock.return_value = [
+        {"id": 1, "url": "url1", "type": "type1", "score": 1},
+        {"id": 2, "url": "url2", "type": "type2", "score": 2},
+        {"id": 3, "url": "url3", "type": "type3", "score": 3},
     ]
 
     # When

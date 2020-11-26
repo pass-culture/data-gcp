@@ -5,7 +5,7 @@ if [ "$CI" '=' true ]
 then
   export DATA_GCP_TEST_POSTGRES_PORT=5432
 else
-  set +a; source .env.local; set -a;
+  set +a; source ../../.env.local; set -a;
 fi
 
 [ "$CI" '!=' true ] && docker-compose up -d testdb
@@ -16,7 +16,7 @@ function wait_for_container () {(
     done
 )}
 function run () {(
-    DATA_GCP_TEST_POSTGRES_PORT=$DATA_GCP_TEST_POSTGRES_PORT poetry run pytest tests
+  pytest tests -s
 )}
 wait_for_container
 run

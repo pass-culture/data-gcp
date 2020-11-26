@@ -16,7 +16,7 @@ function wait_for_container () {(
     done
 )}
 function run () {(
-    DATA_GCP_TEST_POSTGRES_PORT=$DATA_GCP_TEST_POSTGRES_PORT poetry run pytest tests
+    DATA_GCP_TEST_POSTGRES_PORT=$DATA_GCP_TEST_POSTGRES_PORT poetry run pytest tests -x
 )}
 wait_for_container
 run

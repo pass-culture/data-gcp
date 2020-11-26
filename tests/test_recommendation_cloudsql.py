@@ -45,7 +45,6 @@ TEST_DATA = {
             1017696,  # offerId
             None,
             True,  # isActive
-            "{}",
         )
     ],
     "offer": [
@@ -66,12 +65,10 @@ TEST_DATA = {
             None,
             None,
             None,
-            "{}",
             None,
             False,
             '{"author": "Pierre-Andr\u00e9 Corpron ", "isbn": "9782749539010"}',
             False,
-            "{}",
             None,
         )
     ],
@@ -91,7 +88,6 @@ TEST_DATA = {
             True,  # isActive
             None,  # validationToken
             "2018-07-10 16:50:33",
-            "{}",
         )
     ],
     "venue": [
@@ -116,7 +112,6 @@ TEST_DATA = {
             None,
             None,  # validationToken
             "Société YouScribe",
-            "{}",
             13,
             None,
             "2019-09-23 09:43:39",
@@ -136,7 +131,6 @@ TEST_DATA = {
             False,  # isSoftDeleted
             None,  # beginningDatetime
             "2021-07-21 10:01:34",
-            "{}",
             None,
         )
     ],
@@ -147,23 +141,23 @@ tomorrow = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S.%f")
 
 
 def create_and_fill_tables(cursor, data):
-    tables = pd.read_csv("tests/tables.csv")
+    tables = pd.read_csv("dags/tables.csv")
 
     for table in data:
         table_data = tables.loc[lambda df: df.table_name == table]
-        columns = ", ".join(
-            [column_name for column_name in list(table_data.column_name.values)]
-        )
+        schema = {
+            column_name: data_type
+            for column_name, data_type in zip(
+                list(table_data.column_name.values),
+                list(table_data.data_type.values),
+            )
+            if "[]" not in data_type
+        }
+        columns = ", ".join([f'"{column_name}"' for column_name in schema])
         typed_columns = ", ".join(
-            [
-                f"{column_name} {data_type}"
-                for column_name, data_type in zip(
-                    list(table_data.column_name.values),
-                    list(table_data.data_type.values),
-                )
-            ]
+            [f'"{column_name}" {schema[column_name]}' for column_name in schema]
         )
-        value_placeholders = ", ".join(["%s"] * table_data.shape[0])
+        value_placeholders = ", ".join(["%s"] * len(schema))
         cursor.execute(f"DROP TABLE IF EXISTS public.{table}")
         cursor.execute(f"CREATE TABLE IF NOT EXISTS public.{table} ({typed_columns})")
 
@@ -178,7 +172,7 @@ def create_and_fill_tables(cursor, data):
 
 def run_sql_script(cursor, script_path):
     with open(script_path, "r") as f:
-        sql = f.read().replace('"', "")
+        sql = f.read()
     cursor.execute(sql)
 
 
@@ -226,87 +220,87 @@ def test_recommendable_offer_non_filtered(setup_database):
     [
         (
             "non_active_offer",
-            "UPDATE public.offer SET isActive = False where id = 1017696",
+            'UPDATE public.offer SET "isActive" = False where id = 1017696',
             False,
         ),
         (
             "offer_with_thing_type_activation_type",
-            "UPDATE public.offer SET type = 'ThingType.ACTIVATION' where id = 1017696",
+            """UPDATE public.offer SET type = 'ThingType.ACTIVATION' where id = 1017696""",
             False,
         ),
         (
             "offer_with_event_type_activation_type",
-            "UPDATE public.offer SET type = 'EventType.ACTIVATION' where id = 1017696",
+            """UPDATE public.offer SET type = 'EventType.ACTIVATION' where id = 1017696""",
             False,
         ),
         (
             "offer_without_mediation",
-            "DELETE FROM public.mediation where offerId = 1017696",
+            """DELETE FROM public.mediation where "offerId" = 1017696""",
             False,
         ),
         (
             "offer_with_inactive_mediation",
-            "UPDATE public.mediation SET isActive = false where offerId = 1017696",
+            """UPDATE public.mediation SET "isActive" = false where "offerId" = 1017696""",
             False,
         ),
         (
             "offer_without_stock",
-            "DELETE FROM public.stock where offerId = 1017696",
+            """DELETE FROM public.stock where "offerId" = 1017696""",
             False,
         ),
         (
             "offer_with_stock_at_0",
-            "UPDATE public.stock SET quantity = 0 where offerId = 1017696",
+            """UPDATE public.stock SET quantity = 0 where "offerId" = 1017696""",
             False,
         ),
         (
             "offer_with_more_bookings_than_stock",
-            "UPDATE public.booking SET quantity = 1 where stockId = 2486130",
+            """UPDATE public.booking SET quantity = 1 where "stockId" = 2486130""",
             False,
         ),
         (
             "offer_with_soft_deleted_stock",
-            "UPDATE public.stock SET isSoftDeleted = true where offerId = 1017696",
+            """UPDATE public.stock SET "isSoftDeleted" = true where "offerId" = 1017696""",
             False,
         ),
         (
             "offer_with_passed_beginning_date_time",
-            f"UPDATE public.stock SET beginningDatetime = '{yesterday}' where offerId = 1017696",
+            f"""UPDATE public.stock SET "beginningDatetime" = '{yesterday}' where "offerId" = 1017696""",
             False,
         ),
         (
             "offer_with_passed_limit_booking_date_time",
-            f"UPDATE public.stock SET bookingLimitDatetime = '{yesterday}' where offerId = 1017696",
+            f"""UPDATE public.stock SET "bookingLimitDatetime" = '{yesterday}' where "offerId" = 1017696""",
             False,
         ),
         (
             "offer_with_venue_validation_token_not_null",
-            "UPDATE public.venue SET validationToken='' where managingOffererId = 2861",
+            """UPDATE public.venue SET "validationToken"='' where "managingOffererId" = 2861""",
             False,
         ),
         (
             "offer_with_offerer_validation_token_not_null",
-            "UPDATE public.offerer SET validationToken='' where id = 2861",
+            """UPDATE public.offerer SET "validationToken"='' where id = 2861""",
             False,
         ),
         (
             "offer_with_inactive_offerer",
-            "UPDATE public.offerer SET isActive = false where id = 2861",
+            """UPDATE public.offerer SET "isActive" = false where id = 2861""",
             False,
         ),
         (
             "offer_with_more_canceled_bookings_than_stocked",
-            "UPDATE public.booking SET quantity = 1, isCancelled = true where stockId = 2486130",
+            """UPDATE public.booking SET quantity = 1, "isCancelled" = true where "stockId" = 2486130""",
             True,
         ),
         (
             "offer_with_future_beginning_date_time",
-            f"UPDATE public.stock SET beginningDatetime = '{tomorrow}' where offerId = 1017696",
+            f"""UPDATE public.stock SET "beginningDatetime" = '{tomorrow}' where "offerId" = 1017696""",
             True,
         ),
         (
             "offer_with_future_limit_booking_date_time",
-            f"UPDATE public.stock SET bookingLimitDatetime = '{tomorrow}' where offerId = 1017696",
+            f"""UPDATE public.stock SET "bookingLimitDatetime" = '{tomorrow}' where "offerId" = 1017696""",
             True,
         ),
     ],
@@ -342,24 +336,24 @@ def test_updated_offer_in_recommendable_offers(
         (
             "offer_already_booked_by_user",
             """
-                UPDATE public.booking SET userId = 1017696, quantity = 1, isActive = true, isCancelled = false
-                where stockId = 2486130
+                UPDATE public.booking SET "userId" = 1017696, quantity = 1, "isActive" = true, "isCancelled" = false
+                where "stockId" = 2486130
             """,
             False,
         ),
         (
             "offer_already_booked_by_user_but_canceled",
             """
-                UPDATE public.booking SET userId = 1017696, quantity = 1, isActive = true, isCancelled = true
-                where stockId = 2486130
+                UPDATE public.booking SET "userId" = 1017696, quantity = 1, "isActive" = true, "isCancelled" = true
+                where "stockId" = 2486130
             """,
             True,
         ),
         (
             "offer_already_booked_by_user_but_inactive",
             """
-                UPDATE public.booking SET userId = 1017696, quantity = 1, isActive = false, isCancelled = false
-                where stockId = 2486130
+                UPDATE public.booking SET "userId" = 1017696, quantity = 1, "isActive" = false, "isCancelled" = false
+                where "stockId" = 2486130
             """,
             True,
         ),

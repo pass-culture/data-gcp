@@ -9,6 +9,7 @@ pytest-cov==2.10.1
 -r orchestration/orchestration-requirements.txt
 -r recommendation/api/api-requirements.txt
 -r recommendation/model/model-requirements.txt
+-r recommendation/db/db-requirements.txt
 
 
 

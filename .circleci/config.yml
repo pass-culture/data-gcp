@@ -4,11 +4,11 @@ workflows:
   version: 2
   run-checks:
     jobs:
-      - install
       - linter
+      - recommendation-db-install
       - recommendation-db-tests:
           requires:
-            - install
+            - recommendation-db-install
       - recommendation-api-build
       - recommendation-api-tests:
           requires:
@@ -79,24 +79,24 @@ jobs:
             . venv-api/bin/activate
             ./run_tests.sh
 
-  install:
-    <<: *defaults
-    working_directory: ~/data-gcp
-    steps:
-      - checkout
-      # Download and cache dependencies
-      - restore_cache:
-          keys:
-            - data-gcp-{{ checksum "poetry.lock" }}
-      - run:
-          name: Install dependencies
-          command: |
-            poetry run pip install --upgrade pip
-            poetry install
-      - save_cache:
-          key: data-gcp-{{ checksum "poetry.lock" }}
-          paths:
-            - /home/circleci/.cache/pypoetry/virtualenvs
+  # install:
+  #   <<: *defaults
+  #   working_directory: ~/data-gcp
+  #   steps:
+  #     - checkout
+  #     # Download and cache dependencies
+  #     - restore_cache:
+  #         keys:
+  #           - data-gcp-{{ checksum "poetry.lock" }}
+  #     - run:
+  #         name: Install dependencies
+  #         command: |
+  #           poetry run pip install --upgrade pip
+  #           poetry install
+  #     - save_cache:
+  #         key: data-gcp-{{ checksum "poetry.lock" }}
+  #         paths:
+  #           - /home/circleci/.cache/pypoetry/virtualenvs
 
   linter:
     <<: *defaults
@@ -109,8 +109,6 @@ jobs:
       - run:
           name: Run linter
           command: black --check .
-
-
 
   orchestration-install:
     <<: *defaults
@@ -155,23 +153,51 @@ jobs:
             airflow initdb
             pytest tests
 
+  recommendation-db-install:
+    <<: *defaults
+    working_directory: ~/data-gcp/recommendation/db
+    steps:
+      - checkout:
+          path: ~/data-gcp
+      - restore_cache:
+          key: dependencies-{{ checksum "db-requirements.txt" }}
+      - run:
+          name: Install Python deps in a venv
+          command: |
+            python3 -m venv venv-db
+            . venv-db/bin/activate
+            pip install -r db-requirements.txt
+      - save_cache:
+          key: dependencies-{{ checksum "dev-requirements.txt" }}
+          paths:
+            - "venv-db"
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+
   recommendation-db-tests:
     docker:
       - image: circleci/python:3.7
+        auth:
+          username: $DOCKERHUB_USER
+          password: $DOCKERHUB_PASSWORD
       - image: circleci/postgres:12
         environment:
           POSTGRES_PASSWORD: postgres
-    working_directory: ~/data-gcp
+    working_directory: ~/data-gcp/recommendation/db
     steps:
-      - checkout
-      - restore_cache:
-          key: data-gcp-{{ checksum "poetry.lock" }}
+      - attach_workspace:
+          at: .
       - run:
           name: Install psql
           command: sudo apt install postgresql-client
       - run:
           name: Run tests
-          command: ./run_tests.sh
+          command: |
+            export PYTHONPATH=$PYTHONPATH:~/data-gcp/recommendation/db
+            . venv-db/bin/activate
+            ./run_tests.sh
 
   composer-deploy:
     docker:

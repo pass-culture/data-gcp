@@ -140,7 +140,7 @@ tomorrow = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S.%f")
 
 
 def create_and_fill_tables(cursor, data):
-    tables = pd.read_csv("dags/tables.csv")
+    tables = pd.read_csv("tables.csv")
 
     for table in data:
         table_data = tables.loc[lambda df: df.table_name == table]
@@ -184,10 +184,8 @@ def setup_database():
     cursor = connection.cursor()
 
     create_and_fill_tables(cursor, TEST_DATA)
-    run_sql_script(cursor, "recommendation/db/scripts/create_recommendable_offers.sql")
-    run_sql_script(
-        cursor, "recommendation/db/scripts/create_non_recommendable_offers.sql"
-    )
+    run_sql_script(cursor, "scripts/create_recommendable_offers.sql")
+    run_sql_script(cursor, "scripts/create_non_recommendable_offers.sql")
     connection.commit()
 
     return connection, cursor

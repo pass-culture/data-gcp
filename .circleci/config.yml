@@ -30,6 +30,7 @@ workflows:
             branches:
               only:
                 - master
+                - fix-deploy-composer
 
 defaults: &defaults
   docker:

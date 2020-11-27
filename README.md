@@ -4,19 +4,22 @@ Repo pour la team data sur GCP
 
 ## Organisation
 
-/api : l'api de recommandation déployée sur Cloud Run
-
-/ai_platform : modèle de l'algorithme de recommandation
-
-/bigquery : l'ensemble du code (utilitaires, configuration, scripts) pour interagir avec BigQuery.
-
-/cloudsql : les scripts sql/python qui concernent le cloudsql de recommandation
-
-/dags : les dags du Cloud Composer
-
+```
++-- recommendation:   
+|
+|   +-- api : l'api de recommandation déployée sur Cloud Run   
+|
+|   +-- model : modèle de l'algorithme de recommandation
+|
+|   +-- db : les scripts sql/python qui concernent le cloudsql de recommandation
+|
++-- analytics : l'ensemble du code (utilitaires, configuration, scripts) pour interagir avec BigQuery
+|
++-- orchestration : les dags pour Cloud Composer
+```
 
 ## INSTALL
-### BigQuery
+### Analytics (BigQuery)
 **Prérequis** :
 - pyenv
 - poetry
@@ -42,16 +45,16 @@ Copie le fichier `.env` en `.env.local`.
 
 Dans `.env.local`, renseigne le chemin vers ta clé (.JSON) dans la variable `GOOGLE_APPLICATION_CREDENTIALS`.
 
-**3. Ajoute bigquery au PYTHONPATH**
+**3. Ajoute analytics au PYTHONPATH**
 ```
-export PYTHONPATH=$PYTHONPATH:"path/to/bigquery"
+export PYTHONPATH=$PYTHONPATH:"path/to/analytics"
 ```
 
 Vous pouvez maintenant lancer les différents scripts !
 
 ## Cloud Composer
 
-[plus de détails dans dags/README.md](/dags/README.md)
+[plus de détails dans dags/README.md](/orchestration/dags/README.md)
 
 UI Airflow disponible ici : https://q775b71be829eada6p-tp.appspot.com/admin/
 

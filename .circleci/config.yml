@@ -45,7 +45,7 @@ jobs:
       - checkout:
           path: ~/data-gcp
       - restore_cache:
-          key: dependencies-{{ checksum "api-dev-requirements.txt" }}
+          key: deps-{{ checksum "api-dev-requirements.txt" }}
       - run:
           name: Install Python deps in a venv
           command: |
@@ -53,7 +53,7 @@ jobs:
             . venv-api/bin/activate
             pip install -r api-dev-requirements.txt
       - save_cache:
-          key: dependencies-{{ checksum "api-dev-requirements.txt" }}
+          key: deps-{{ checksum "api-dev-requirements.txt" }}
           paths:
             - "venv-api"
       - persist_to_workspace:
@@ -90,7 +90,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: dependencies-{{ checksum "linter-requirements.txt" }}
+          key: deps-{{ checksum "linter-requirements.txt" }}
       - run:
           name: Install black
           command: |
@@ -98,14 +98,14 @@ jobs:
             . venv-lint/bin/activate
             pip install -r linter-requirements.txt
       - save_cache:
-          key: dependencies-{{ checksum "linter-requirements.txt" }}
+          key: deps-{{ checksum "linter-requirements.txt" }}
           paths:
             - "venv-lint"
       - run:
           name: Run linter
           command: |
             . venv-lint/bin/activate
-            black --check .
+            black --exclude="venv-lint" --check .
 
   orchestration-install:
     <<: *defaults
@@ -114,7 +114,7 @@ jobs:
       - checkout:
           path: ~/data-gcp
       - restore_cache:
-          key: orchestration-{{ checksum "orchestration-requirements.txt" }}
+          key: deps-{{ checksum "orchestration-requirements.txt" }}
       - run:
           name: Install Python requirements
           command: |
@@ -122,7 +122,7 @@ jobs:
             . venv-orchestration/bin/activate
             pip install -r orchestration-requirements.txt
       - save_cache:
-          key: orchestration-{{ checksum "orchestration-requirements.txt" }}
+          key: deps-{{ checksum "orchestration-requirements.txt" }}
           paths:
             - "venv-orchestration"
       - persist_to_workspace:
@@ -135,6 +135,7 @@ jobs:
     working_directory: ~/data-gcp/orchestration
     environment:
       - AIRFLOW_HOME=~/data-gcp/orchestration
+      - DAG_FOLDER=~/data-gcp/orchestration/dags
       - RECOMMENDATION_SQL_USER=test_user
       - RECOMMENDATION_SQL_PASSWORD=test_password
       - RECOMMENDATION_SQL_PUBLIC_PORT=1234

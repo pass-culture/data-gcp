@@ -10,12 +10,8 @@ from airflow.contrib.operators.gcp_sql_operator import (
     CloudSqlQueryOperator,
     CloudSqlInstanceImportOperator,
 )
-from google.cloud import bigquery
-from google.oauth2 import service_account
 
-CREDENTIALS_PATH = "/home/airflow/gcs/dags/credentials.json"
-TABLES_DATA_PATH = "/home/airflow/gcs/dags/tables.csv"
-
+TABLES_DATA_PATH = f"{os.environ.get('DAG_FOLDER')}/tables.csv"
 GCP_PROJECT_ID = "pass-culture-app-projet-test"
 BIGQUERY_DATASET = "poc_data_federated_query"
 BIGQUERY_TEMPORARY_DATASET = "temporary"
@@ -31,16 +27,6 @@ RECOMMENDATION_SQL_PASSWORD = os.environ.get("RECOMMENDATION_SQL_PASSWORD")
 RECOMMENDATION_SQL_PUBLIC_IP = os.environ.get("RECOMMENDATION_SQL_PUBLIC_IP")
 RECOMMENDATION_SQL_PUBLIC_PORT = os.environ.get("RECOMMENDATION_SQL_PUBLIC_PORT")
 
-
-TYPE_MAPPING = {
-    "DATETIME": "timestamp without time zone",
-    "STRING": "text",
-    "BOOL": "boolean",
-    "INT64": "bigint",
-    "NUMERIC": "numeric",
-    "BYTES": "bytea",
-}
-
 os.environ["AIRFLOW_CONN_PROXY_POSTGRES_TCP"] = (
     f"gcpcloudsql://{RECOMMENDATION_SQL_USER}:{RECOMMENDATION_SQL_PASSWORD}@{RECOMMENDATION_SQL_PUBLIC_IP}:{RECOMMENDATION_SQL_PUBLIC_PORT}/{RECOMMENDATION_SQL_BASE}?"
     f"database_type={TYPE}&"
@@ -52,45 +38,35 @@ os.environ["AIRFLOW_CONN_PROXY_POSTGRES_TCP"] = (
 )
 
 default_args = {
-    "start_date": datetime(2020, 11, 25),
+    "start_date": datetime(2020, 11, 26),
     "retries": 1,
     "retry_delay": timedelta(minutes=5),
     "catchup": False,
 }
 
-credentials = service_account.Credentials.from_service_account_file(
-    CREDENTIALS_PATH,
-    scopes=["https://www.googleapis.com/auth/cloud-platform"],
-)
-client = bigquery.Client(
-    credentials=credentials,
-    project=credentials.project_id,
-)
 
-TABLES = {}
-tables = pd.read_csv(TABLES_DATA_PATH)
-for table in set(tables["table_name"].values):
+def get_table_data():
+    data = {}
+    tables = pd.read_csv(TABLES_DATA_PATH)
+    for table_name in set(tables["table_name"].values):
 
-    table_data = tables.loc[lambda df: df.table_name == table]
-    TABLES[table] = {
-        column_name: data_type
-        for column_name, data_type in zip(
-            list(table_data.column_name.values),
-            list(table_data.data_type.values),
-        )
-    }
+        table_data = tables.loc[lambda df: df.table_name == table_name]
+        data[table_name] = {
+            column_name: data_type
+            for column_name, data_type in zip(
+                list(table_data.column_name.values),
+                list(table_data.data_type.values),
+            )
+        }
+    return data
 
 
-def map_bigquery_to_postgres_types(col_type):
-    if col_type in TYPE_MAPPING:
-        return TYPE_MAPPING[col_type]
-    return col_type.lower()
-
+TABLES = get_table_data()
 
 with DAG(
-    "recommendation_cloud_sql_v32",
+    "recommendation_cloud_sql_v35",
     default_args=default_args,
-    description="Restore postgres dumps to Cloud SQL",
+    description="Export bigQuery tables to GCS to dump and restore Cloud SQL tables",
     schedule_interval="@daily",
     dagrun_timeout=timedelta(minutes=90),
 ) as dag:
@@ -109,17 +85,18 @@ with DAG(
             autocommit=True,
         )
 
-        table_ref = bigquery.DatasetReference(GCP_PROJECT_ID, BIGQUERY_DATASET).table(
-            table
+        select_columns = ", ".join(
+            [
+                column_name
+                for column_name in TABLES[table]
+                if "[]" not in TABLES[table][column_name]
+            ]
         )
-        schema = client.get_table(table_ref).schema
-        drop_columns = ", ".join([col.name for col in schema if col.mode == "REPEATED"])
-        drop_columns_query = f"except ({drop_columns})" if len(drop_columns) > 0 else ""
 
-        drop_column_task = BigQueryOperator(
-            task_id=f"drop_column_{table}",
+        filter_column_task = BigQueryOperator(
+            task_id=f"filter_column_{table}",
             bql=f"""
-                SELECT * {drop_columns_query}
+                SELECT {select_columns}
                 FROM `{GCP_PROJECT_ID}.{BIGQUERY_DATASET}.{table}` 
             """,
             use_legacy_sql=False,
@@ -127,15 +104,12 @@ with DAG(
             write_disposition="WRITE_TRUNCATE",
         )
 
-        typed_columns = {
-            col.name: TABLES[table].get(
-                col.name, map_bigquery_to_postgres_types(col.field_type)
-            )
-            for col in schema
-            if col.mode != "REPEATED"
-        }
-        typed_columns_string = ", ".join(
-            [f'"{col}" {typed_columns[col]}' for col in typed_columns]
+        typed_columns = ", ".join(
+            [
+                f'"{col}" {TABLES[table][col]}'
+                for col in TABLES[table]
+                if "[]" not in TABLES[table][col]
+            ]
         )
 
         export_task = BigQueryToCloudStorageOperator(
@@ -147,9 +121,9 @@ with DAG(
         )
 
         create_table_task = CloudSqlQueryOperator(
-            gcp_cloudsql_conn_id="proxy_postgres_tcp",
             task_id=f"create_table_public_{table}",
-            sql=f"CREATE TABLE IF NOT EXISTS public.{table} ({typed_columns_string});",
+            gcp_cloudsql_conn_id="proxy_postgres_tcp",
+            sql=f"CREATE TABLE IF NOT EXISTS public.{table} ({typed_columns});",
             autocommit=True,
         )
 
@@ -165,13 +139,13 @@ with DAG(
         }
 
         sql_restore_task = CloudSqlInstanceImportOperator(
+            task_id=f"cloud_sql_restore_table_{table}",
             project_id=GCP_PROJECT_ID,
             body=import_body,
             instance=RECOMMENDATION_SQL_INSTANCE,
-            task_id=f"cloud_sql_restore_table_{table}",
         )
 
-        start_drop_restore >> drop_table_task >> drop_column_task >> export_task >> create_table_task >> sql_restore_task >> end_drop_restore
+        start_drop_restore >> drop_table_task >> filter_column_task >> export_task >> create_table_task >> sql_restore_task >> end_drop_restore
 
     recreate_indexes_query = """
         CREATE INDEX IF NOT EXISTS idx_stock_id ON public.stock USING btree (id);
@@ -188,22 +162,22 @@ with DAG(
     """
 
     recreate_indexes_task = CloudSqlQueryOperator(
-        gcp_cloudsql_conn_id="proxy_postgres_tcp",
         task_id="recreate_indexes",
+        gcp_cloudsql_conn_id="proxy_postgres_tcp",
         sql=recreate_indexes_query,
         autocommit=True,
     )
 
     refresh_recommendable_offers = CloudSqlQueryOperator(
-        gcp_cloudsql_conn_id="proxy_postgres_tcp",
         task_id="refresh_recommendable_offers",
+        gcp_cloudsql_conn_id="proxy_postgres_tcp",
         sql="REFRESH MATERIALIZED VIEW CONCURRENTLY recommendable_offers;",
         autocommit=True,
     )
 
     refresh_non_recommendable_offers = CloudSqlQueryOperator(
-        gcp_cloudsql_conn_id="proxy_postgres_tcp",
         task_id="refresh_non_recommendable_offers",
+        gcp_cloudsql_conn_id="proxy_postgres_tcp",
         sql="REFRESH MATERIALIZED VIEW non_recommendable_offers;",
         autocommit=True,
     )

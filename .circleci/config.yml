@@ -127,6 +127,7 @@ jobs:
     working_directory: ~/data-gcp
     environment:
       - AIRFLOW_HOME=~/data-gcp
+      - DAG_FOLDER=~/data-gcp/dags
       - RECOMMENDATION_SQL_USER=test_user
       - RECOMMENDATION_SQL_PASSWORD=test_password
       - RECOMMENDATION_SQL_PUBLIC_PORT=1234

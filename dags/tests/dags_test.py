@@ -45,9 +45,9 @@ class TestDags(unittest.TestCase):
 
     def test_recommendation_cloud_sql_dag_is_loaded(self):
         # When
-        dag = self.dagbag.get_dag(dag_id="recommendation_cloud_sql_v6")
+        dag = self.dagbag.get_dag(dag_id="recommendation_cloud_sql_v35")
 
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 13)
+        self.assertEqual(len(dag.tasks), 42)

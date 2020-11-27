@@ -25,6 +25,7 @@ workflows:
       - composer-deploy:
           requires:
             - orchestration-tests
+            - ai-platform-deploy
           filters:
             branches:
               only:
@@ -254,10 +255,11 @@ jobs:
       - run:
           name: Deploy to Cloud Storage
           command: |
-            gsutil cp ai_platform/model.joblib $MODEL_DIR/model_test.joblib
+            gsutil cp recommendation/model/model.joblib $MODEL_DIR/model_test.joblib
       - run:
           name: Deploy to AI Platform
           command: |
+            gcloud ai-platform versions delete $VERSION_NAME --model=$MODEL_NAME --region=$REGION
             gcloud ai-platform versions create $VERSION_NAME \
               --model=$MODEL_NAME \
               --origin=$MODEL_DIR \

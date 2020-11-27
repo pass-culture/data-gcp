@@ -208,8 +208,8 @@ jobs:
       COMPOSER_ENV_NAME: data-composer
       COMPOSER_REGION: europe-west1
       DAG_RESTORE_DATA_ANALYTICS: restore_data_analytics_v1
-      DAG_RECOMMMENDATION_CLOUDSQL: recommendation_cloud_sql_v6
-    working_directory: ~/data-gcp/dags
+      DAG_RECOMMMENDATION_CLOUDSQL: recommendation_cloud_sql_v35
+    working_directory: ~/data-gcp/orchestration
     steps:
       - checkout:
           path: ~/data-gcp
@@ -222,7 +222,7 @@ jobs:
       - run:
           name: Deploy to composer
           command: |
-            gsutil -m rsync -c -r . ${COMPOSER_BUCKET}
+            gsutil -m rsync -c -r dags ${COMPOSER_BUCKET}
       - run:
           name: Wait for dags to be deployed
           command: |

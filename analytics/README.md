@@ -15,6 +15,7 @@ git clone git@github.com:pass-culture/data-gcp.git
 cd data-gcp
 pyenv install 3.7  # si nécessaire
 pyenv local 3.7
+pip install -r requirements.txt
 ```
 
 **2. Configure le compte de service GCP**

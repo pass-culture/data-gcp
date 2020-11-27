@@ -5,7 +5,7 @@ Repo pour l'orchestration sur Cloud Composer.
 
 Les dags sont dans `orchestration/dags/`.
 
-Les scripts appelés dasn les dags sont à mettre dans `orchestration/dags/dependencies/`.
+Les scripts appelés dans les dags sont à mettre dans `orchestration/dags/dependencies/`.
 
 Les tests sont dans le dossier `orchestration/tests/`.
 

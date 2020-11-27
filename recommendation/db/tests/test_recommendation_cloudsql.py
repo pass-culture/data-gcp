@@ -140,7 +140,7 @@ tomorrow = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S.%f")
 
 
 def create_and_fill_tables(cursor, data):
-    tables = pd.read_csv("tables.csv")
+    tables = pd.read_csv("tests/tables.csv")
 
     for table in data:
         table_data = tables.loc[lambda df: df.table_name == table]

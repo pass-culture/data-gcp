@@ -12,7 +12,6 @@ booking,isCancelled,boolean
 booking,isUsed,boolean
 booking,dateUsed,timestamp without time zone
 booking,cancellationDate,timestamp without time zone
-booking,confirmationDate,timestamp without time zone
 iris_venues,id,bigint
 iris_venues,irisId,bigint
 iris_venues,venueId,bigint

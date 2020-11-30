@@ -55,7 +55,7 @@ def task_fail_slack_alert(context):
         http_conn_id=SLACK_CONN_ID,
         webhook_token=SLACK_CONN_PASSWORD,
         message=slack_msg,
-        username="airflow",
+        username="Cloud Composer",
     )
 
     return failed_alert.execute(context=context)

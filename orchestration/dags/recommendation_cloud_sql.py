@@ -11,6 +11,8 @@ from airflow.contrib.operators.gcp_sql_operator import (
     CloudSqlInstanceImportOperator,
 )
 
+from dependencies.slack_alert import task_fail_slack_alert
+
 TABLES_DATA_PATH = f"{os.environ.get('DAG_FOLDER')}/tables.csv"
 GCP_PROJECT_ID = "pass-culture-app-projet-test"
 BIGQUERY_DATASET = "poc_data_federated_query"
@@ -38,6 +40,7 @@ os.environ["AIRFLOW_CONN_PROXY_POSTGRES_TCP"] = (
 )
 
 default_args = {
+    "on_failure_callback": task_fail_slack_alert,
     "start_date": datetime(2020, 11, 26),
     "retries": 1,
     "retry_delay": timedelta(minutes=5),

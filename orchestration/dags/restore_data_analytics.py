@@ -24,7 +24,7 @@ from dependencies.data_analytics.enriched_data.user import (
 from dependencies.data_analytics.enriched_data.venue import (
     define_enriched_venue_data_full_query,
 )
-
+from dependencies.slack_alert import task_fail_slack_alert
 
 data_analytics_tables = [
     "user",
@@ -43,6 +43,7 @@ data_analytics_tables = [
 ]
 
 default_dag_args = {
+    "on_failure_callback": task_fail_slack_alert,
     "start_date": datetime.datetime(2020, 11, 11),
     "retries": 1,
     "retry_delay": datetime.timedelta(minutes=5),

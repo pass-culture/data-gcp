@@ -19,6 +19,10 @@ def get_iris_from_coordinates(
             host=f"/cloudsql/{SQL_CONNECTION_NAME}",
         )
 
+    if not longitude or not latitude:
+        connection.close()
+        return None
+
     iris_query = f"""SELECT id FROM iris_france
         WHERE ST_CONTAINS(shape, ST_SetSRID(ST_MakePoint({longitude}, {latitude}), 4326))
         ORDER BY id;"""

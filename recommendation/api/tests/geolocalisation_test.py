@@ -54,3 +54,17 @@ def test_get_iris_from_coordinates(setup_database: Tuple[Any, Any]):
 
     cursor.close()
     connection.close()
+
+
+def test_get_iris_from_coordinates_without_coordinates(setup_database: Tuple[Any, Any]):
+    # Given
+    connection, cursor = setup_database
+
+    # When
+    iris_id = get_iris_from_coordinates(None, None, connection)
+
+    # Then
+    assert iris_id is None
+
+    cursor.close()
+    connection.close()

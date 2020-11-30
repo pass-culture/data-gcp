@@ -68,9 +68,11 @@ jobs:
         auth:
           username: $DOCKERHUB_USER
           password: $DOCKERHUB_PASSWORD
-      - image: circleci/postgres:12
+      - image: kartoza/postgis:12.4
         environment:
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_PASS: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DBNAME: db
     working_directory: ~/data-gcp/recommendation/api
     steps:
       - attach_workspace:

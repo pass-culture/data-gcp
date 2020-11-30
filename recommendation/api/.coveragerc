@@ -2,7 +2,7 @@
 source = .
 omit =
     tests/*
-    venv/*
+    venv-api/*
 branch = True
 
 [report]

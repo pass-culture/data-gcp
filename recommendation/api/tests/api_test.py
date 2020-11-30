@@ -31,7 +31,7 @@ def test_recommendation_return_403_when_there_is_wrong_token():
 @patch("app.get_recommendations_for_user")
 @patch("app.get_scored_recommendation_for_user")
 @patch("app.get_iris_from_coordinates")
-def test_recommendation_return_recommended_offeres_when_there_is_right_token(
+def test_recommendation_return_recommended_offers_when_there_is_right_token(
     get_iris_from_coordinates_mock,
     get_scored_recommendation_for_user_mock,
     get_recommendations_for_user_mock,

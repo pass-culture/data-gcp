@@ -7,6 +7,7 @@ from recommendation import (
     order_offers_by_score_and_diversify_types,
     get_scored_recommendation_for_user,
 )
+from geolocalisation import get_iris_from_coordinates
 
 API_TOKEN = os.environ.get("API_TOKEN")
 NUMBER_OF_RECOMMENDATIONS = 10
@@ -24,6 +25,8 @@ def check():
 @app.route("/recommendation/<user_id>")
 def recommendation(user_id: int):
     token = request.args.get("token", None)
+    longitude = request.args.get("longitude", None)
+    latitude = request.args.get("latitude", None)
 
     if token != API_TOKEN:
         return "Forbidden", 403
@@ -39,7 +42,14 @@ def recommendation(user_id: int):
         scored_recommendation_for_user
     )
 
-    return jsonify({"recommended offers ": sorted_and_diversified_recommendations})
+    iris_id = get_iris_from_coordinates(longitude, latitude)
+
+    return jsonify(
+        {
+            "recommended offers ": sorted_and_diversified_recommendations,
+            "iris_id": iris_id,
+        }
+    )
 
 
 if __name__ == "__main__":

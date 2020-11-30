@@ -29,7 +29,7 @@ def setup_database() -> Tuple[Any, Any]:
     )
 
     iris_france = pd.read_csv("tests/iris_france_tests.csv")
-    iris_france.to_sql("iris_france", con=engine, if_exists="replace")
+    iris_france.to_sql("iris_france", con=engine, if_exists="replace", index=False)
 
     sql = """ALTER TABLE public.iris_france
             ALTER COLUMN shape TYPE Geometry(GEOMETRY, 4326)

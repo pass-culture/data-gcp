@@ -2,12 +2,12 @@ import os
 
 from flask import Flask, jsonify, request
 
+from geolocalisation import get_iris_from_coordinates
 from recommendation import (
     get_recommendations_for_user,
     order_offers_by_score_and_diversify_types,
     get_scored_recommendation_for_user,
 )
-from geolocalisation import get_iris_from_coordinates
 
 API_TOKEN = os.environ.get("API_TOKEN")
 NUMBER_OF_RECOMMENDATIONS = 10
@@ -31,8 +31,10 @@ def recommendation(user_id: int):
     if token != API_TOKEN:
         return "Forbidden", 403
 
+    user_iris_id = get_iris_from_coordinates(longitude, latitude)
+
     recommendations_for_user = get_recommendations_for_user(
-        user_id, NUMBER_OF_RECOMMENDATIONS
+        user_id, user_iris_id, NUMBER_OF_RECOMMENDATIONS
     )
     scored_recommendation_for_user = get_scored_recommendation_for_user(
         recommendations_for_user, MODEL_NAME, MODEL_VERSION
@@ -42,12 +44,10 @@ def recommendation(user_id: int):
         scored_recommendation_for_user
     )
 
-    iris_id = get_iris_from_coordinates(longitude, latitude)
-
     return jsonify(
         {
             "recommended_offers": sorted_and_diversified_recommendations,
-            "iris_id": iris_id,
+            "user_iris_id": user_iris_id,
         }
     )
 

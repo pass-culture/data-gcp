@@ -15,7 +15,7 @@ GCP_MODEL_REGION = os.environ.get("GCP_MODEL_REGION")
 
 
 def get_recommendations_for_user(
-    user_id: int, number_of_recommendations: int, connection=None
+    user_id: int, user_iris_id: int, number_of_recommendations: int, connection=None
 ) -> List[Dict[str, Any]]:
     if connection is None:
         connection = psycopg2.connect(
@@ -25,14 +25,10 @@ def get_recommendations_for_user(
             host=f"/cloudsql/{SQL_CONNECTION_NAME}",
         )
 
+    recommendations_query = get_recommendations_query(user_id, user_iris_id)
+
     cursor = connection.cursor()
-    cursor.execute(
-        f"""
-        SELECT id, type, url FROM recommendable_offers WHERE id NOT IN 
-        (SELECT offer_id FROM non_recommendable_offers WHERE user_id = {user_id}) 
-        ORDER BY id;
-        """
-    )
+    cursor.execute(recommendations_query)
 
     user_recommendation = [
         {"id": row[0], "type": row[1], "url": row[2]}
@@ -43,6 +39,45 @@ def get_recommendations_for_user(
     connection.close()
 
     return user_recommendation
+
+
+def get_recommendations_query(user_id: int, user_iris_id: int) -> str:
+    if not user_iris_id:
+        query = f"""
+            SELECT id, type, url
+            FROM recommendable_offers
+            WHERE is_national = True
+            AND id NOT IN
+                (
+                SELECT offer_id
+                FROM non_recommendable_offers
+                WHERE user_id = {user_id}
+                )
+            ORDER BY id;
+        """
+    else:
+        query = f"""
+            SELECT id, type, url
+            FROM recommendable_offers
+            WHERE
+                (
+                venue_id IN
+                    (
+                    SELECT "venueId"
+                    FROM iris_venues
+                    WHERE "irisId" = {user_iris_id}
+                    )
+                OR is_national = True
+                )
+            AND id NOT IN
+                (
+                SELECT offer_id
+                FROM non_recommendable_offers
+                WHERE user_id = {user_id}
+                )
+            ORDER BY id;
+        """
+    return query
 
 
 def get_scored_recommendation_for_user(

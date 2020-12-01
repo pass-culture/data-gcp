@@ -30,7 +30,11 @@ def get_iris_from_coordinates(
     cursor = connection.cursor()
     cursor.execute(iris_query)
 
-    iris_id = cursor.fetchone()[0]
+    result = cursor.fetchone()
+    if result:
+        iris_id = result[0]
+    else:
+        iris_id = None
 
     cursor.close()
     connection.close()

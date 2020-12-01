@@ -39,32 +39,49 @@ def setup_database() -> Tuple[Any, Any]:
     cursor.execute(sql)
     cursor.close()
 
-    return connection, cursor
+    return connection
 
 
-def test_get_iris_from_coordinates(setup_database: Tuple[Any, Any]):
+def test_get_iris_from_coordinates(setup_database: Any):
     # Given
-    connection, cursor = setup_database
+    connection = setup_database
 
     # When
-    iris_id = get_iris_from_coordinates(2.331289, 48.830719, connection)
+    longitude = 2.331289
+    latitude = 48.830719
+    iris_id = get_iris_from_coordinates(longitude, latitude, connection)
 
     # Then
     assert iris_id == 45327
 
-    cursor.close()
     connection.close()
 
 
-def test_get_iris_from_coordinates_without_coordinates(setup_database: Tuple[Any, Any]):
+def test_get_iris_from_coordinates_without_coordinates(setup_database: Any):
     # Given
-    connection, cursor = setup_database
+    connection = setup_database
 
     # When
-    iris_id = get_iris_from_coordinates(None, None, connection)
+    longitude = None
+    latitude = None
+    iris_id = get_iris_from_coordinates(longitude, latitude, connection)
 
     # Then
     assert iris_id is None
 
-    cursor.close()
+    connection.close()
+
+
+def test_get_iris_from_coordinates_not_in_france(setup_database: Any):
+    # Given
+    connection = setup_database
+
+    # When
+    longitude = -122.1639346
+    latitude = 37.4449422
+    iris_id = get_iris_from_coordinates(longitude, latitude, connection)
+
+    # Then
+    assert iris_id is None
+
     connection.close()

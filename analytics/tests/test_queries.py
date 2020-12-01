@@ -1,13 +1,13 @@
 import pytest
 from google.cloud import bigquery
 
-from bigquery.tests.queries_to_be_tested import define_simple_query_1, define_simple_query_2
-from bigquery.tests.config import TEST_DATASET, GCP_PROJECT
-from bigquery.tests.data import (
+from analytics.tests.queries_to_be_tested import define_simple_query_1, define_simple_query_2
+from analytics.tests.config import TEST_DATASET, GCP_PROJECT
+from analytics.tests.data import (
     SIMPLE_TABLE_1_INPUT, SIMPLE_TABLE_1_EXPECTED, SIMPLE_TABLE_2_EXPECTED,
     SIMPLE_TABLE_2_INPUT,
 )
-from bigquery.tests.utils import drop_dataset, create_dataset, drop_table, create_data, run_query, retrieve_data
+from analytics.tests.utils import drop_dataset, create_dataset, drop_table, create_data, run_query, retrieve_data
 from set_env import set_env_vars
 
 

@@ -22,7 +22,10 @@ def drop_table(client, dataset, table):
 
 def create_table(client, dataset, table):
     table_id = f"{GCP_PROJECT}.{dataset}.{table}"
-    schema = [bigquery.SchemaField(col_name, col_type) for col_name, col_type in BIGQUERY_SCHEMAS[table].items()]
+    schema = [
+        bigquery.SchemaField(col_name, col_type)
+        for col_name, col_type in BIGQUERY_SCHEMAS[table].items()
+    ]
     table = bigquery.Table(table_id, schema=schema)
     client.create_table(table)
 
@@ -34,9 +37,14 @@ def insert_rows(client, dataset, table, rows):
     job_config.destination = f"{GCP_PROJECT}.{dataset}.{table}"
     job_config.write_disposition = "WRITE_APPEND"
     for row in rows:
-        fields = ", ".join([f"CAST('{val}' AS {BIGQUERY_SCHEMAS[table][col]}) AS {col}" for col, val in row.items()])
+        fields = ", ".join(
+            [
+                f"CAST('{val}' AS {BIGQUERY_SCHEMAS[table][col]}) AS {col}"
+                for col, val in row.items()
+            ]
+        )
         query = f"SELECT {fields};"
-        query_job = client.query(query=query,  job_config=job_config)
+        query_job = client.query(query=query, job_config=job_config)
         query_job.result()
 
 

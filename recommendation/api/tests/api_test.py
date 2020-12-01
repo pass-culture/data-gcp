@@ -30,8 +30,11 @@ def test_recommendation_return_403_when_there_is_wrong_token():
 @patch("app.API_TOKEN", "good_token")
 @patch("app.get_recommendations_for_user")
 @patch("app.get_scored_recommendation_for_user")
-def test_recommendation_return_recommended_offeres_when_there_is_right_token(
-    get_scored_recommendation_for_user_mock, get_recommendations_for_user_mock
+@patch("app.get_iris_from_coordinates")
+def test_recommendation_return_recommended_offers_when_there_is_right_token(
+    get_iris_from_coordinates_mock,
+    get_scored_recommendation_for_user_mock,
+    get_recommendations_for_user_mock,
 ):
     # Given
     api_token = "good_token"
@@ -46,10 +49,13 @@ def test_recommendation_return_recommended_offeres_when_there_is_right_token(
         {"id": 2, "url": "url2", "type": "type2", "score": 2},
         {"id": 3, "url": "url3", "type": "type3", "score": 3},
     ]
+    get_iris_from_coordinates_mock.return_value = 1
 
     # When
-    response = app.test_client().get(f"/recommendation/{user_id}?token={api_token}")
+    response = app.test_client().get(
+        f"/recommendation/{user_id}?token={api_token}&latitude=2.331289&longitude=48.830719"
+    )
 
     # Then
     assert response.status_code == 200
-    assert response.data == b'{"recommended offers ":[3,2,1]}\n'
+    assert response.data == b'{"iris_id":1,"recommended_offers":[3,2,1]}\n'

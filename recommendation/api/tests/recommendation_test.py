@@ -14,12 +14,15 @@ from recommendation import (
     order_offers_by_score_and_diversify_types,
 )
 
+DATA_GCP_TEST_POSTGRES_PORT = os.getenv("DATA_GCP_TEST_POSTGRES_PORT")
+DB_NAME = os.getenv("DB_NAME")
+
 TEST_DATABASE_CONFIG = {
     "user": "postgres",
     "password": "postgres",
     "host": "127.0.0.1",
-    "port": os.getenv("DATA_GCP_TEST_POSTGRES_PORT"),
-    "database": "postgres",
+    "port": DATA_GCP_TEST_POSTGRES_PORT,
+    "database": DB_NAME,
 }
 
 
@@ -29,7 +32,7 @@ def setup_database() -> Tuple[Any, Any]:
     cursor = connection.cursor()
 
     engine = create_engine(
-        f'postgresql+psycopg2://postgres:postgres@127.0.0.1:{os.getenv("DATA_GCP_TEST_POSTGRES_PORT")}/postgres'
+        f"postgresql+psycopg2://postgres:postgres@127.0.0.1:{DATA_GCP_TEST_POSTGRES_PORT}/{DB_NAME}"
     )
 
     recommendable_offers = pd.DataFrame(

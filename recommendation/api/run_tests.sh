@@ -4,6 +4,7 @@ export PYTHONPATH=$PYTHONPATH:$(pwd)
 if [ "$CI" '=' true ]
 then
   export DATA_GCP_TEST_POSTGRES_PORT=5432
+  export DB_NAME="db"
 else
   set +a; source ../../.env.local; set -a;
 fi

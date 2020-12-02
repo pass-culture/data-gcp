@@ -99,7 +99,7 @@ with DAG(
 
         filter_column_task = BigQueryOperator(
             task_id=f"filter_column_{table}",
-            bql=f"""
+            sql=f"""
                 SELECT {select_columns}
                 FROM `{GCP_PROJECT_ID}.{BIGQUERY_DATASET}.{table}` 
             """,

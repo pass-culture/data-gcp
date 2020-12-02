@@ -15,7 +15,7 @@ from dependencies.slack_alert import task_fail_slack_alert
 
 TABLES_DATA_PATH = f"{os.environ.get('DAG_FOLDER')}/tables.csv"
 GCP_PROJECT_ID = "pass-culture-app-projet-test"
-BIGQUERY_DATASET = "poc_data_federated_query"
+BIGQUERY_DATASET = "dump_staging_for_reco"
 BIGQUERY_TEMPORARY_DATASET = "temporary"
 
 BUCKET_PATH = "gs://pass-culture-data/bigquery_exports"
@@ -41,7 +41,7 @@ os.environ["AIRFLOW_CONN_PROXY_POSTGRES_TCP"] = (
 
 default_args = {
     "on_failure_callback": task_fail_slack_alert,
-    "start_date": datetime(2020, 11, 26),
+    "start_date": datetime(2020, 12, 1),
     "retries": 1,
     "retry_delay": timedelta(minutes=5),
     "catchup": False,
@@ -67,10 +67,11 @@ def get_table_data():
 TABLES = get_table_data()
 
 with DAG(
-    "recommendation_cloud_sql_v35",
+    "recommendation_cloud_sql_v36",
     default_args=default_args,
     description="Export bigQuery tables to GCS to dump and restore Cloud SQL tables",
     schedule_interval="@daily",
+    catchup=False,
     dagrun_timeout=timedelta(minutes=90),
 ) as dag:
 

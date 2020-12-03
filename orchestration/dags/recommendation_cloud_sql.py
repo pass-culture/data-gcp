@@ -3,21 +3,24 @@ from datetime import datetime, timedelta
 
 import pandas as pd
 from airflow import DAG
+from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.python_operator import PythonOperator
 from airflow.contrib.operators.bigquery_operator import BigQueryOperator
 from airflow.contrib.operators.bigquery_to_gcs import BigQueryToCloudStorageOperator
-from airflow.operators.dummy_operator import DummyOperator
 from airflow.contrib.operators.gcp_sql_operator import (
     CloudSqlQueryOperator,
     CloudSqlInstanceImportOperator,
 )
 
 from dependencies.slack_alert import task_fail_slack_alert
+from dependencies.compose_gcs_files import compose_gcs_files
 
 TABLES_DATA_PATH = f"{os.environ.get('DAG_FOLDER')}/tables.csv"
 GCP_PROJECT_ID = "pass-culture-app-projet-test"
 BIGQUERY_DATASET = "dump_staging_for_reco"
 BIGQUERY_TEMPORARY_DATASET = "temporary"
 
+BUCKET_NAME = "pass-culture-data"
 BUCKET_PATH = "gs://pass-culture-data/bigquery_exports"
 RECOMMENDATION_SQL_INSTANCE = "pcdata-poc-csql-recommendation"
 RECOMMENDATION_SQL_BASE = "pcdata-poc-csql-recommendation"
@@ -43,7 +46,7 @@ default_args = {
     "on_failure_callback": task_fail_slack_alert,
     "start_date": datetime(2020, 12, 1),
     "retries": 1,
-    "retry_delay": timedelta(minutes=5),
+    "retry_delay": timedelta(minutes=2),
 }
 
 
@@ -66,18 +69,18 @@ def get_table_data():
 TABLES = get_table_data()
 
 with DAG(
-    "recommendation_cloud_sql_v36",
+    "recommendation_cloud_sql_v38",
     default_args=default_args,
     description="Export bigQuery tables to GCS to dump and restore Cloud SQL tables",
     schedule_interval="@daily",
     catchup=False,
-    dagrun_timeout=timedelta(minutes=90),
+    dagrun_timeout=timedelta(minutes=180),
 ) as dag:
 
     start = DummyOperator(task_id="start")
 
     start_drop_restore = DummyOperator(task_id="start_drop_restore")
-    end_drop_restore = DummyOperator(task_id="end_drop_restore")
+    end_data_prep = DummyOperator(task_id="end_data_prep")
 
     for table in TABLES:
 
@@ -118,9 +121,20 @@ with DAG(
         export_task = BigQueryToCloudStorageOperator(
             task_id=f"export_{table}_to_gcs",
             source_project_dataset_table=f"{GCP_PROJECT_ID}:{BIGQUERY_TEMPORARY_DATASET}.{table}",
-            destination_cloud_storage_uris=[f"{BUCKET_PATH}/{table}"],
+            destination_cloud_storage_uris=[f"{BUCKET_PATH}/{table}-*.csv"],
             export_format="CSV",
             print_header=False,
+        )
+
+        compose_files_task = PythonOperator(
+            task_id=f"compose_files_{table}",
+            python_callable=compose_gcs_files,
+            op_kwargs={
+                "bucket_name": BUCKET_NAME,
+                "source_prefix": f"bigquery_exports/{table}-",
+                "destination_blob_name": f"bigquery_exports/{table}.csv",
+            },
+            dag=dag,
         )
 
         create_table_task = CloudSqlQueryOperator(
@@ -130,13 +144,19 @@ with DAG(
             autocommit=True,
         )
 
+        start_drop_restore >> drop_table_task >> filter_column_task
+        filter_column_task >> export_task >> compose_files_task
+        compose_files_task >> create_table_task >> end_data_prep
+
+    previous_task = end_data_prep
+    for table in TABLES:
         import_body = {
             "importContext": {
                 "fileType": "CSV",
                 "csvImportOptions": {
                     "table": f"public.{table}",
                 },
-                "uri": f"{BUCKET_PATH}/{table}",
+                "uri": f"{BUCKET_PATH}/{table}.csv",
                 "database": RECOMMENDATION_SQL_BASE,
             }
         }
@@ -148,7 +168,12 @@ with DAG(
             instance=RECOMMENDATION_SQL_INSTANCE,
         )
 
-        start_drop_restore >> drop_table_task >> filter_column_task >> export_task >> create_table_task >> sql_restore_task >> end_drop_restore
+        previous_task >> sql_restore_task
+        previous_task = sql_restore_task
+
+    end_drop_restore = DummyOperator(task_id="end_drop_restore")
+
+    sql_restore_task >> end_drop_restore
 
     recreate_indexes_query = """
         CREATE INDEX IF NOT EXISTS idx_stock_id ON public.stock USING btree (id);

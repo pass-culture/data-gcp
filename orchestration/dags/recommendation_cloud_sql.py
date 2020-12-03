@@ -176,17 +176,20 @@ with DAG(
     sql_restore_task >> end_drop_restore
 
     recreate_indexes_query = """
-        CREATE INDEX IF NOT EXISTS idx_stock_id ON public.stock USING btree (id);
-        CREATE INDEX IF NOT EXISTS idx_stock_offerid ON public.stock USING btree ("offerId");
-        CREATE INDEX IF NOT EXISTS idx_booking_stockid ON public.booking USING btree ("stockId");
-        CREATE INDEX IF NOT EXISTS idx_mediation_offerid ON public.mediation USING btree ("offerId");
-        CREATE INDEX IF NOT EXISTS idx_offer_id ON public.offer USING btree (id);
-        CREATE INDEX IF NOT EXISTS idx_offer_type ON public.offer USING btree (type);
-        CREATE INDEX IF NOT EXISTS idx_offer_venueid ON public.offer USING btree ("venueId");
-        CREATE INDEX IF NOT EXISTS idx_venue_id ON public.venue USING btree (id);
-        CREATE INDEX IF NOT EXISTS idx_venue_managingoffererid ON public.venue USING btree ("managingOffererId");
-        CREATE INDEX IF NOT EXISTS idx_offerer_id ON public.offerer USING btree (id);
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_id ON recommendable_offers USING btree (id);
+        CREATE INDEX IF NOT EXISTS idx_stock_id                      ON public.stock                    USING btree (id);
+        CREATE INDEX IF NOT EXISTS idx_stock_offerid                 ON public.stock                    USING btree ("offerId");
+        CREATE INDEX IF NOT EXISTS idx_booking_stockid               ON public.booking                  USING btree ("stockId");
+        CREATE INDEX IF NOT EXISTS idx_mediation_offerid             ON public.mediation                USING btree ("offerId");
+        CREATE INDEX IF NOT EXISTS idx_offer_id                      ON public.offer                    USING btree (id);
+        CREATE INDEX IF NOT EXISTS idx_offer_type                    ON public.offer                    USING btree (type);
+        CREATE INDEX IF NOT EXISTS idx_offer_venueid                 ON public.offer                    USING btree ("venueId");
+        CREATE INDEX IF NOT EXISTS idx_venue_id                      ON public.venue                    USING btree (id);
+        CREATE INDEX IF NOT EXISTS idx_venue_managingoffererid       ON public.venue                    USING btree ("managingOffererId");
+        CREATE INDEX IF NOT EXISTS idx_offerer_id                    ON public.offerer                  USING btree (id);
+        CREATE INDEX IF NOT EXISTS idx_iris_venues_irisid            ON public.iris_venues              USING btree ("irisId");
+        CREATE INDEX IF NOT EXISTS idx_non_recommendable_userid      ON public.non_recommendable_offers USING btree (user_id)
+        CREATE INDEX IF NOT EXISTS idx_offer_recommendable_venue_id  ON public.recommendable_offers     USING btree (venue_id);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_id ON public.recommendable_offers     USING btree (id);
     """
 
     recreate_indexes_task = CloudSqlQueryOperator(

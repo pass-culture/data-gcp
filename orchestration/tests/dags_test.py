@@ -50,7 +50,7 @@ class TestDags(unittest.TestCase):
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 42)
+        self.assertEqual(len(dag.tasks), 50)
 
     def test_dump_scalingo_dag_is_loaded(self):
         # When

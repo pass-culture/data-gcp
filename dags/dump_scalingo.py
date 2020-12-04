@@ -85,7 +85,7 @@ for table in tables:
 
     # File path and name.
     now = datetime.now()
-    file_name = f"{now.year}_{now.month}_{now.day}_{table}.csv"
+    file_name = f"{table}/{now.year}_{now.month}_{now.day}_{table}.csv"
 
     export_table = PostgresToGoogleCloudStorageOperator(
         task_id=f"dump_{table}",

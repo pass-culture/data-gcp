@@ -6,10 +6,11 @@ from airflow.contrib.hooks.ssh_hook import SSHHook
 from airflow.contrib.operators.postgres_to_gcs_operator import (
     PostgresToGoogleCloudStorageOperator,
 )
+from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python_operator import PythonOperator
 
-gcs_bucket = "dump_scalingo"
-tables = [
+GCS_BUCKET = "dump_scalingo"
+TABLES = [
     "user",
     "provider",
     "offerer",
@@ -27,18 +28,18 @@ tables = [
 
 
 default_args = {
-    "start_date": airflow.utils.dates.days_ago(0),
+    "start_date": datetime(2020, 12, 3),
     "retries": 1,
     "retry_delay": timedelta(minutes=5),
     "catchup": False,
 }
 
 dag = DAG(
-    "dump_scalingo",
+    "dump_scalingo_v1",
     default_args=default_args,
     description="Dump scalingo db to csv",
-    schedule_interval="@once",
-    dagrun_timeout=timedelta(minutes=20),
+    schedule_interval="@daily",
+    dagrun_timeout=timedelta(minutes=180),
 )
 
 # ENV TESTING to transfer in env var with PC-5263
@@ -52,9 +53,7 @@ TESTING = {
 LOCAL_HOST = "localhost"
 LOCAL_PORT = 10025
 
-ssh_port = 22
-ssh_username = "git"
-ssh_hostname = "ssh.osc-fr1.scalingo.com"
+start = DummyOperator(task_id="start")
 
 
 def open_tunnel():
@@ -66,7 +65,7 @@ def open_tunnel():
     tunnel = ssh_hook.get_tunnel(
         remote_port=TESTING["port"],
         remote_host=TESTING["host"],
-        local_port=10025,
+        local_port=LOCAL_PORT,
     )
     tunnel.start()
 
@@ -76,9 +75,10 @@ def open_tunnel():
 open_tunnel = PythonOperator(
     task_id="test_tunnel_conn", python_callable=open_tunnel, dag=dag
 )
-
+start >> open_tunnel
 last_task = open_tunnel
-for table in tables:
+
+for table in TABLES:
     sql_query = f"select * from {table};"
 
     # File path and name.
@@ -88,7 +88,7 @@ for table in tables:
     export_table = PostgresToGoogleCloudStorageOperator(
         task_id=f"dump_{table}",
         sql=sql_query,
-        bucket=gcs_bucket,
+        bucket=GCS_BUCKET,
         filename=file_name,
         postgres_conn_id="postgres_scalingo",
         google_cloud_storage_conn_id="google_cloud_default",
@@ -101,3 +101,6 @@ for table in tables:
 
     last_task >> export_table
     last_task = export_table
+
+end = DummyOperator(task_id="end")
+last_task >> end

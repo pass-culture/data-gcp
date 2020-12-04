@@ -31,15 +31,15 @@ default_args = {
     "start_date": datetime(2020, 12, 3),
     "retries": 1,
     "retry_delay": timedelta(minutes=5),
-    "catchup": False,
 }
 
 dag = DAG(
     "dump_scalingo_v1",
     default_args=default_args,
-    description="Dump scalingo db to csv",
+    description="Dump scalingo db to cloud storage in csv format",
     schedule_interval="@daily",
     dagrun_timeout=timedelta(minutes=180),
+    catchup=False,
 )
 
 # ENV TESTING to transfer in env var with PC-5263

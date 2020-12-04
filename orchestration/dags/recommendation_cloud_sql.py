@@ -69,7 +69,7 @@ def get_table_data():
 TABLES = get_table_data()
 
 with DAG(
-    "recommendation_cloud_sql_v38",
+    "recommendation_cloud_sql_v39",
     default_args=default_args,
     description="Export bigQuery tables to GCS to dump and restore Cloud SQL tables",
     schedule_interval="@daily",
@@ -148,8 +148,8 @@ with DAG(
         filter_column_task >> export_task >> compose_files_task
         compose_files_task >> create_table_task >> end_data_prep
 
-    previous_task = end_data_prep
-    for table in TABLES:
+    restore_tasks = []
+    for index, table in enumerate(TABLES):
         import_body = {
             "importContext": {
                 "fileType": "CSV",
@@ -167,13 +167,15 @@ with DAG(
             body=import_body,
             instance=RECOMMENDATION_SQL_INSTANCE,
         )
+        restore_tasks.append(sql_restore_task)
 
-        previous_task >> sql_restore_task
-        previous_task = sql_restore_task
+        if index:
+            restore_tasks[index - 1] >> restore_tasks[index]
 
     end_drop_restore = DummyOperator(task_id="end_drop_restore")
 
-    sql_restore_task >> end_drop_restore
+    end_data_prep >> restore_tasks[0]
+    restore_tasks[index] >> end_drop_restore
 
     recreate_indexes_query = """
         CREATE INDEX IF NOT EXISTS idx_stock_id                      ON public.stock                    USING btree (id);

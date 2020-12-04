@@ -10,8 +10,7 @@ from airflow.contrib.operators.ssh_operator import SSHOperator
 from airflow.contrib.hooks.ssh_hook import SSHHook
 
 
-GCS_BUCKET = "dump_scalingo"
-FILENAME = "table_{}.csv"
+gcs_bucket = "dump_scalingo"
 tables = [
     "user",
     "provider",
@@ -82,17 +81,17 @@ open_tunnel = PythonOperator(
 
 last_task = open_tunnel
 for table in tables:
-    SQL_QUERY = f"select * from {table};"
+    sql_query = f"select * from {table};"
 
     # File path and name.
     now = datetime.now()
     file_name = f"{now.year}_{now.month}_{now.day}_{table}.csv"
 
     export_table = PostgresToGoogleCloudStorageOperator(
-        task_id="dump_data",
-        sql=SQL_QUERY,
-        bucket=GCS_BUCKET,
-        filename=FILENAME,
+        task_id=f"dump_{table}",
+        sql=sql_query,
+        bucket=gcs_bucket,
+        filename=file_name,
         postgres_conn_id="postgres_scalingo",
         google_cloud_storage_conn_id="google_cloud_default",
         gzip=False,

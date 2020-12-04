@@ -104,5 +104,3 @@ for table in tables:
 
     last_task >> export_table
     last_task = export_table
-
-open_tunnel >> t1

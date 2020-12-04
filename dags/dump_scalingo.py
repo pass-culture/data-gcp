@@ -1,14 +1,12 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
+
 import airflow
-from datetime import datetime
 from airflow import DAG
-from airflow.operators.python_operator import PythonOperator
+from airflow.contrib.hooks.ssh_hook import SSHHook
 from airflow.contrib.operators.postgres_to_gcs_operator import (
     PostgresToGoogleCloudStorageOperator,
 )
-from airflow.contrib.operators.ssh_operator import SSHOperator
-from airflow.contrib.hooks.ssh_hook import SSHHook
-
+from airflow.operators.python_operator import PythonOperator
 
 gcs_bucket = "dump_scalingo"
 tables = [

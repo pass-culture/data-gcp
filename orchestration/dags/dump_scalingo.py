@@ -53,7 +53,7 @@ TESTING = {
 LOCAL_HOST = "localhost"
 LOCAL_PORT = 10025
 
-start = DummyOperator(task_id="start")
+start = DummyOperator(task_id="start", dag=dag)
 
 
 def open_tunnel():
@@ -102,5 +102,5 @@ for table in TABLES:
     last_task >> export_table
     last_task = export_table
 
-end = DummyOperator(task_id="end")
+end = DummyOperator(task_id="end", dag=dag)
 last_task >> end

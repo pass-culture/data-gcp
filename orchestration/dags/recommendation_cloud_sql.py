@@ -69,7 +69,7 @@ def get_table_data():
 TABLES = get_table_data()
 
 with DAG(
-    "recommendation_cloud_sql_v39",
+    "recommendation_cloud_sql_v40",
     default_args=default_args,
     description="Export bigQuery tables to GCS to dump and restore Cloud SQL tables",
     schedule_interval="@daily",
@@ -148,8 +148,8 @@ with DAG(
         filter_column_task >> export_task >> compose_files_task
         compose_files_task >> create_table_task >> end_data_prep
 
-    restore_tasks = []
-    for index, table in enumerate(TABLES):
+    def create_restore_task(table: str):
+
         import_body = {
             "importContext": {
                 "fileType": "CSV",
@@ -167,15 +167,21 @@ with DAG(
             body=import_body,
             instance=RECOMMENDATION_SQL_INSTANCE,
         )
-        restore_tasks.append(sql_restore_task)
+        return sql_restore_task
 
-        if index:
-            restore_tasks[index - 1] >> restore_tasks[index]
+    restore_booking = create_restore_task("booking")
+    restore_stock = create_restore_task("stock")
+    restore_venue = create_restore_task("venue")
+    restore_offer = create_restore_task("offer")
+    restore_offerer = create_restore_task("offerer")
+    restore_mediation = create_restore_task("mediation")
+    restore_iris_venues = create_restore_task("iris_venues")
 
     end_drop_restore = DummyOperator(task_id="end_drop_restore")
 
-    end_data_prep >> restore_tasks[0]
-    restore_tasks[index] >> end_drop_restore
+    end_data_prep >> restore_booking >> restore_stock >> restore_venue
+    restore_venue >> restore_offer >> restore_offerer >> restore_mediation
+    restore_mediation >> restore_iris_venues >> end_drop_restore
 
     recreate_indexes_query = """
         CREATE INDEX IF NOT EXISTS idx_stock_id                      ON public.stock                    USING btree (id);
@@ -189,7 +195,7 @@ with DAG(
         CREATE INDEX IF NOT EXISTS idx_venue_managingoffererid       ON public.venue                    USING btree ("managingOffererId");
         CREATE INDEX IF NOT EXISTS idx_offerer_id                    ON public.offerer                  USING btree (id);
         CREATE INDEX IF NOT EXISTS idx_iris_venues_irisid            ON public.iris_venues              USING btree ("irisId");
-        CREATE INDEX IF NOT EXISTS idx_non_recommendable_userid      ON public.non_recommendable_offers USING btree (user_id)
+        CREATE INDEX IF NOT EXISTS idx_non_recommendable_userid      ON public.non_recommendable_offers USING btree (user_id);
         CREATE INDEX IF NOT EXISTS idx_offer_recommendable_venue_id  ON public.recommendable_offers     USING btree (venue_id);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_id ON public.recommendable_offers     USING btree (id);
     """

@@ -52,7 +52,7 @@ def setup_database() -> Tuple[Any, Any]:
         "non_recommendable_offers", con=engine, if_exists="replace"
     )
 
-    iris_venues = pd.DataFrame({"irisId": [1, 1, 1], "venueId": [11, 22, 33]})
+    iris_venues = pd.DataFrame({"irisId": [1, 1, 1, 2], "venueId": [11, 22, 33, 44]})
     iris_venues.to_sql("iris_venues", con=engine, if_exists="replace")
 
     return connection, cursor

@@ -60,3 +60,12 @@ class TestDags(unittest.TestCase):
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
         self.assertEqual(len(dag.tasks), 16)
+
+    def test_create_ab_testing_table_dag_is_loaded(self):
+        # When
+        dag = self.dagbag.get_dag(dag_id="export_ab_testing_tables_v4")
+
+        # Then
+        self.assertDictEqual(self.dagbag.import_errors, {})
+        self.assertIsNotNone(dag)
+        self.assertEqual(len(dag.tasks), 3)

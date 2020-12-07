@@ -68,8 +68,15 @@ def get_table_data():
 
 TABLES = get_table_data()
 
+
+def get_table_names():
+    tables = pd.read_csv(TABLES_DATA_PATH)
+    table_names = tables.table_name.unique()
+    return table_names
+
+
 with DAG(
-    "recommendation_cloud_sql_v40",
+    "recommendation_cloud_sql_v41",
     default_args=default_args,
     description="Export bigQuery tables to GCS to dump and restore Cloud SQL tables",
     schedule_interval="@daily",
@@ -148,40 +155,40 @@ with DAG(
         filter_column_task >> export_task >> compose_files_task
         compose_files_task >> create_table_task >> end_data_prep
 
-    def create_restore_task(table: str):
-
+    def create_restore_task(table_name: str):
         import_body = {
             "importContext": {
                 "fileType": "CSV",
                 "csvImportOptions": {
-                    "table": f"public.{table}",
+                    "table": f"public.{table_name}",
                 },
-                "uri": f"{BUCKET_PATH}/{table}.csv",
+                "uri": f"{BUCKET_PATH}/{table_name}.csv",
                 "database": RECOMMENDATION_SQL_BASE,
             }
         }
 
         sql_restore_task = CloudSqlInstanceImportOperator(
-            task_id=f"cloud_sql_restore_table_{table}",
+            task_id=f"cloud_sql_restore_table_{table_name}",
             project_id=GCP_PROJECT_ID,
             body=import_body,
             instance=RECOMMENDATION_SQL_INSTANCE,
         )
         return sql_restore_task
 
-    restore_booking = create_restore_task("booking")
-    restore_stock = create_restore_task("stock")
-    restore_venue = create_restore_task("venue")
-    restore_offer = create_restore_task("offer")
-    restore_offerer = create_restore_task("offerer")
-    restore_mediation = create_restore_task("mediation")
-    restore_iris_venues = create_restore_task("iris_venues")
+    table_names = get_table_names()
+    restore_tasks = []
+
+    for index, table_name in enumerate(table_names):
+        task = create_restore_task(table_name)
+        restore_tasks.append(task)
+
+        if index:
+            restore_tasks[index - 1] >> restore_tasks[index]
 
     end_drop_restore = DummyOperator(task_id="end_drop_restore")
 
-    end_data_prep >> restore_booking >> restore_stock >> restore_venue
-    restore_venue >> restore_offer >> restore_offerer >> restore_mediation
-    restore_mediation >> restore_iris_venues >> end_drop_restore
+    end_data_prep >> restore_tasks[0]
+    restore_tasks[-1] >> end_drop_restore
 
     recreate_indexes_query = """
         CREATE INDEX IF NOT EXISTS idx_stock_id                      ON public.stock                    USING btree (id);

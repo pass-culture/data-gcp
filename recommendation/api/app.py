@@ -44,12 +44,7 @@ def recommendation(user_id: int):
         scored_recommendation_for_user
     )
 
-    return jsonify(
-        {
-            "recommended_offers": sorted_and_diversified_recommendations,
-            "user_iris_id": user_iris_id,
-        }
-    )
+    return jsonify({"recommended_offers": sorted_and_diversified_recommendations})
 
 
 if __name__ == "__main__":

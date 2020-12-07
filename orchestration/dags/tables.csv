@@ -12,6 +12,8 @@ booking,isCancelled,boolean
 booking,isUsed,boolean
 booking,dateUsed,timestamp without time zone
 booking,cancellationDate,timestamp without time zone
+booking,cancellationReason,character varying
+booking,confirmationDate,timestamp without time zone
 iris_venues,id,bigint
 iris_venues,irisId,bigint
 iris_venues,venueId,bigint
@@ -101,4 +103,3 @@ stock,isSoftDeleted,boolean
 stock,beginningDatetime,timestamp without time zone
 stock,dateCreated,timestamp without time zone
 stock,fieldsUpdated,text[]
-stock,hasBeenMigrated,boolean

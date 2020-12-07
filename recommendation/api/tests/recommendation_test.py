@@ -37,22 +37,23 @@ def setup_database() -> Tuple[Any, Any]:
 
     recommendable_offers = pd.DataFrame(
         {
-            "id": [1, 2, 3],  # BIGINT,
-            "venue_id": [11, 22, 33],
-            "type": ["A", "B", "C"],
-            "name": ["a", "b", "c"],
-            "url": [None, None, "url"],
-            "is_national": [True, True, True],
+            "id": [1, 2, 3, 4, 5],  # BIGINT,
+            "venue_id": [11, 22, 33, 44, 55],
+            "type": ["A", "B", "C", "D", "E"],
+            "name": ["a", "b", "c", "d", "e"],
+            "url": [None, None, "url", "url", None],
+            "is_national": [True, False, True, False, True],
         }
     )
     recommendable_offers.to_sql("recommendable_offers", con=engine, if_exists="replace")
 
-    non_recommendable_offers = pd.DataFrame(
-        {"user_id": [111, 222, 333], "offer_id": [1, 2, 3]}
-    )
+    non_recommendable_offers = pd.DataFrame({"user_id": [111], "offer_id": [1]})
     non_recommendable_offers.to_sql(
         "non_recommendable_offers", con=engine, if_exists="replace"
     )
+
+    iris_venues = pd.DataFrame({"irisId": [1, 1, 1, 2], "venueId": [11, 22, 33, 44]})
+    iris_venues.to_sql("iris_venues", con=engine, if_exists="replace")
 
     return connection, cursor
 
@@ -62,12 +63,43 @@ def test_get_recommendation_for_user(setup_database: Tuple[Any, Any]):
     connection, cursor = setup_database
 
     # When
-    user_recommendation = get_recommendations_for_user(111, 10, connection)
+    user_id = 111
+    user_iris_id = 1
+    number_of_recommendations = 10
+    user_recommendation = get_recommendations_for_user(
+        user_id, user_iris_id, number_of_recommendations, connection
+    )
 
     # Then
     assert_array_equal(
         user_recommendation,
-        [{"id": 2, "type": "B", "url": None}, {"id": 3, "type": "C", "url": "url"}],
+        [
+            {"id": 2, "type": "B", "url": None},
+            {"id": 3, "type": "C", "url": "url"},
+            {"id": 5, "type": "E", "url": None},
+        ],
+    )
+
+    cursor.close()
+    connection.close()
+
+
+def test_get_recommendation_for_user_with_no_iris(setup_database: Tuple[Any, Any]):
+    # Given
+    connection, cursor = setup_database
+
+    # When
+    user_id = 111
+    user_iris_id = None
+    number_of_recommendations = 10
+    user_recommendation = get_recommendations_for_user(
+        user_id, user_iris_id, number_of_recommendations, connection
+    )
+
+    # Then
+    assert_array_equal(
+        user_recommendation,
+        [{"id": 3, "type": "C", "url": "url"}, {"id": 5, "type": "E", "url": None}],
     )
 
     cursor.close()

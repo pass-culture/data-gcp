@@ -210,7 +210,7 @@ jobs:
       COMPOSER_ENV_NAME: data-composer
       COMPOSER_REGION: europe-west1
       DAG_RESTORE_DATA_ANALYTICS: restore_data_analytics_v1
-      DAG_RECOMMMENDATION_CLOUDSQL: recommendation_cloud_sql_v35
+      DAG_RECOMMMENDATION_CLOUDSQL: recommendation_cloud_sql_v41
       DAG_DUMP_SCALINGO: dump_scalingo_v1
     working_directory: ~/data-gcp/orchestration
     steps:

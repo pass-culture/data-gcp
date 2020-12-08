@@ -46,8 +46,7 @@ def recommendation(user_id: int):
         {
             "recommended_offers": sorted_and_diversified_recommendations[
                 :NUMBER_OF_RECOMMENDATIONS
-            ],
-            "user_iris_id": user_iris_id,
+            ]
         }
     )
 

@@ -137,7 +137,7 @@ def order_offers_by_score_and_diversify_types(
     for offer_type in offers_by_type_ordered_by_frequency:
         offers_by_type_ordered_by_frequency[offer_type] = sorted(
             offers_by_type_ordered_by_frequency[offer_type],
-            key=lambda k: (k["score"], k["id"]),
+            key=lambda k: (k["score"]),
             reverse=False,
         )
 

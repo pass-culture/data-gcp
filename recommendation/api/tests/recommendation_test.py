@@ -67,7 +67,7 @@ def test_get_recommendation_for_user(setup_database: Tuple[Any, Any]):
     user_iris_id = 1
     number_of_recommendations = 10
     user_recommendation = get_recommendations_for_user(
-        user_id, user_iris_id, number_of_recommendations, connection
+        user_id, user_iris_id, connection
     )
 
     # Then
@@ -93,7 +93,7 @@ def test_get_recommendation_for_user_with_no_iris(setup_database: Tuple[Any, Any
     user_iris_id = None
     number_of_recommendations = 10
     user_recommendation = get_recommendations_for_user(
-        user_id, user_iris_id, number_of_recommendations, connection
+        user_id, user_iris_id, connection
     )
 
     # Then

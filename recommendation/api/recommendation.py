@@ -53,7 +53,7 @@ def get_recommendations_query(user_id: int, user_iris_id: int) -> str:
                 FROM non_recommendable_offers
                 WHERE user_id = {user_id}
                 )
-            ORDER BY id;
+            ORDER BY RANDOM();
         """
     else:
         query = f"""
@@ -75,7 +75,7 @@ def get_recommendations_query(user_id: int, user_iris_id: int) -> str:
                 FROM non_recommendable_offers
                 WHERE user_id = {user_id}
                 )
-            ORDER BY id;
+            ORDER BY RANDOM();
         """
     return query
 

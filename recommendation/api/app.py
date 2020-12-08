@@ -33,9 +33,7 @@ def recommendation(user_id: int):
 
     user_iris_id = get_iris_from_coordinates(longitude, latitude)
 
-    recommendations_for_user = get_recommendations_for_user(
-        user_id, user_iris_id, NUMBER_OF_RECOMMENDATIONS
-    )
+    recommendations_for_user = get_recommendations_for_user(user_id, user_iris_id)
     scored_recommendation_for_user = get_scored_recommendation_for_user(
         recommendations_for_user, MODEL_NAME, MODEL_VERSION
     )
@@ -44,7 +42,9 @@ def recommendation(user_id: int):
         scored_recommendation_for_user
     )
 
-    return jsonify({"recommended_offers": sorted_and_diversified_recommendations})
+    return jsonify({"recommended_offers": sorted_and_diversified_recommendations[
+                :NUMBER_OF_RECOMMENDATIONS
+            ]})
 
 
 if __name__ == "__main__":

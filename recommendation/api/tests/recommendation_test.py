@@ -65,14 +65,13 @@ def test_get_recommendation_for_user(setup_database: Tuple[Any, Any]):
     # When
     user_id = 111
     user_iris_id = 1
-    number_of_recommendations = 10
     user_recommendation = get_recommendations_for_user(
-        user_id, user_iris_id, number_of_recommendations, connection
+        user_id, user_iris_id, connection
     )
 
     # Then
     assert_array_equal(
-        user_recommendation,
+        sorted(user_recommendation, key=lambda k: k["id"]),
         [
             {"id": 2, "type": "B", "url": None},
             {"id": 3, "type": "C", "url": "url"},
@@ -91,14 +90,13 @@ def test_get_recommendation_for_user_with_no_iris(setup_database: Tuple[Any, Any
     # When
     user_id = 111
     user_iris_id = None
-    number_of_recommendations = 10
     user_recommendation = get_recommendations_for_user(
-        user_id, user_iris_id, number_of_recommendations, connection
+        user_id, user_iris_id, connection
     )
 
     # Then
     assert_array_equal(
-        user_recommendation,
+        sorted(user_recommendation, key=lambda k: k["id"]),
         [{"id": 3, "type": "C", "url": "url"}, {"id": 5, "type": "E", "url": None}],
     )
 

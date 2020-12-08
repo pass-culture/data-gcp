@@ -88,7 +88,7 @@ def test_get_recommendation_for_user_with_no_iris(setup_database: Tuple[Any, Any
     connection, cursor = setup_database
 
     # When
-    user_id = 111
+    user_id = 222
     user_iris_id = None
     user_recommendation = get_recommendations_for_user(
         user_id, user_iris_id, connection
@@ -97,7 +97,12 @@ def test_get_recommendation_for_user_with_no_iris(setup_database: Tuple[Any, Any
     # Then
     assert_array_equal(
         sorted(user_recommendation, key=lambda k: k["id"]),
-        [{"id": 3, "type": "C", "url": "url"}, {"id": 5, "type": "E", "url": None}],
+        [
+            {"id": 1, "type": "A", "url": None},
+            {"id": 3, "type": "C", "url": "url"},
+            {"id": 4, "type": "D", "url": "url"},
+            {"id": 5, "type": "E", "url": None},
+        ],
     )
 
     cursor.close()

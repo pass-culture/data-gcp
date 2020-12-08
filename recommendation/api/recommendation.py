@@ -45,7 +45,7 @@ def get_recommendations_query(user_id: int, user_iris_id: int) -> str:
         query = f"""
             SELECT id, type, url
             FROM recommendable_offers
-            WHERE is_national = True
+            WHERE is_national = True or url IS NOT NULL
             AND id NOT IN
                 (
                 SELECT offer_id
@@ -137,7 +137,7 @@ def order_offers_by_score_and_diversify_types(
     for offer_type in offers_by_type_ordered_by_frequency:
         offers_by_type_ordered_by_frequency[offer_type] = sorted(
             offers_by_type_ordered_by_frequency[offer_type],
-            key=lambda k: (k["score"], k["id"]),
+            key=lambda k: (k["score"]),
             reverse=False,
         )
 

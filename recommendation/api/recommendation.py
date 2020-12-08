@@ -15,7 +15,7 @@ GCP_MODEL_REGION = os.environ.get("GCP_MODEL_REGION")
 
 
 def get_recommendations_for_user(
-    user_id: int, user_iris_id: int, number_of_recommendations: int, connection=None
+    user_id: int, user_iris_id: int, connection=None
 ) -> List[Dict[str, Any]]:
     if connection is None:
         connection = psycopg2.connect(
@@ -31,8 +31,7 @@ def get_recommendations_for_user(
     cursor.execute(recommendations_query)
 
     user_recommendation = [
-        {"id": row[0], "type": row[1], "url": row[2]}
-        for row in cursor.fetchmany(number_of_recommendations)
+        {"id": row[0], "type": row[1], "url": row[2]} for row in cursor.fetchall()
     ]
 
     cursor.close()

@@ -45,7 +45,7 @@ def get_recommendations_query(user_id: int, user_iris_id: int) -> str:
         query = f"""
             SELECT id, type, url
             FROM recommendable_offers
-            WHERE is_national = True
+            WHERE is_national = True or url IS NOT NULL
             AND id NOT IN
                 (
                 SELECT offer_id

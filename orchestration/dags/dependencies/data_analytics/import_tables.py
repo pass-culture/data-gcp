@@ -14,7 +14,7 @@ def define_import_query(table, region=GCP_REGION, cloudsql_database=CLOUDSQL_DAT
         "user"
     ] = """
         SELECT
-            "id", "validationToken", "email", "password", "publicName", "dateCreated", "departementCode",
+            CAST("id" AS varchar(255)), "validationToken", "email", "password", "publicName", "dateCreated", "departementCode",
             "canBookFreeOffers", "isAdmin", "resetPasswordToken", "resetPasswordTokenValidityLimit",
             "firstName", "lastName", "postalCode", "phoneNumber", "dateOfBirth", "needsToFillCulturalSurvey",
             CAST("culturalSurveyId" AS varchar(255)), "civility", "activity", "culturalSurveyFilledDate",
@@ -25,14 +25,14 @@ def define_import_query(table, region=GCP_REGION, cloudsql_database=CLOUDSQL_DAT
         "user_offerer"
     ] = """
         SELECT
-            "id", "userId", "offererId", CAST("rights" AS varchar(255)), "validationToken"
+            CAST("id" AS varchar(255)), "userId", "offererId", CAST("rights" AS varchar(255)), "validationToken"
         FROM public.user_offerer
     """
     cloudsql_queries[
         "bank_information"
     ] = """
         SELECT
-            "id", "offererId", "venueId", "iban", "bic", "applicationId", "dateModified",
+            CAST("id" AS varchar(255)), "offererId", "venueId", "iban", "bic", "applicationId", "dateModified",
             CAST("status" AS varchar(255))
         FROM public.bank_information
     """
@@ -40,7 +40,7 @@ def define_import_query(table, region=GCP_REGION, cloudsql_database=CLOUDSQL_DAT
         "payment"
     ] = """
         SELECT
-            "id", "author", "comment", "recipientName", "iban", "bic", "bookingId", "amount",
+            CAST("id" AS varchar(255)), "author", "comment", "recipientName", "iban", "bic", "bookingId", "amount",
             "reimbursementRule", CAST("transactionEndToEndId" AS varchar(255)), "recipientSiren",
             "reimbursementRate", "transactionLabel", "paymentMessageId"
         FROM public.payment
@@ -49,7 +49,7 @@ def define_import_query(table, region=GCP_REGION, cloudsql_database=CLOUDSQL_DAT
         "payment_status"
     ] = """
         SELECT
-            "id", "paymentId", "date", CAST("status" AS varchar(255)), "detail"
+            CAST("id" AS varchar(255)), "paymentId", "date", CAST("status" AS varchar(255)), "detail"
         FROM public.payment_status
     """
 

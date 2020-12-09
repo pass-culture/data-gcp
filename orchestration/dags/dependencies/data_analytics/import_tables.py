@@ -8,7 +8,7 @@ def define_import_query(table, region=GCP_REGION, cloudsql_database=CLOUDSQL_DAT
     In order to handle type incompatibility between postgresql and BigQuery (eg. UUID and custom types),
     we sometimes have to explicitly select and cast columns.
     """
-    # Define select-queries for tables that need a specific CAST
+    # Define select-queries for tables that need a specific CAST and ID for metabase
     cloudsql_queries = {}
     cloudsql_queries[
         "user"

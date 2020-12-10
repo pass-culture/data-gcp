@@ -1,10 +1,13 @@
 import os
 import collections
+from random import random
 from typing import Any, Dict, List, Tuple
 
 from google.api_core.client_options import ClientOptions
 from googleapiclient import discovery
 import psycopg2
+
+from geolocalisation import get_iris_from_coordinates
 
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID")
 SQL_CONNECTION_NAME = os.environ.get("SQL_CONNECTION_NAME")
@@ -14,9 +17,15 @@ SQL_BASE_PASSWORD = os.environ.get("SQL_BASE_PASSWORD")
 GCP_MODEL_REGION = os.environ.get("GCP_MODEL_REGION")
 
 
-def get_recommendations_for_user(
-    user_id: int, user_iris_id: int, connection=None
-) -> List[Dict[str, Any]]:
+def get_final_recommendations(
+    user_id: int,
+    longitude: int,
+    latitude: int,
+    app_config: Dict[str, Any],
+    connection=None,
+) -> List[int]:
+    close_connection = False
+
     if connection is None:
         connection = psycopg2.connect(
             user=SQL_BASE_USER,
@@ -24,18 +33,60 @@ def get_recommendations_for_user(
             database=SQL_BASE,
             host=f"/cloudsql/{SQL_CONNECTION_NAME}",
         )
+        close_connection = True
+
+    cursor = connection.cursor()
+    ab_testing_table = app_config["AB_TESTING_TABLE"]
+    cursor.execute(
+        f"""SELECT "groupId" FROM {ab_testing_table} WHERE "userId"={user_id}"""
+    )
+    request_response = cursor.fetchone()
+
+    if not request_response:
+        group_id = "A" if random() > 0.5 else "B"
+        cursor.execute(
+            f"""INSERT INTO {ab_testing_table}("userId", "groupId") VALUES ({user_id}, '{group_id}')"""
+        )
+
+    else:
+        group_id = request_response[0]
+
+    if group_id == "A":
+        user_iris_id = get_iris_from_coordinates(longitude, latitude, connection)
+
+        recommendations_for_user = get_intermediate_recommendations_for_user(
+            user_id, user_iris_id, cursor
+        )
+        scored_recommendation_for_user = get_scored_recommendation_for_user(
+            recommendations_for_user,
+            app_config["MODEL_NAME"],
+            app_config["MODEL_VERSION"],
+        )
+
+        final_recommendations = order_offers_by_score_and_diversify_types(
+            scored_recommendation_for_user
+        )
+    else:
+        final_recommendations = []
+
+    if close_connection:
+        cursor.close()
+        connection.close()
+
+    return final_recommendations
+
+
+def get_intermediate_recommendations_for_user(
+    user_id: int, user_iris_id: int, cursor
+) -> List[Dict[str, Any]]:
 
     recommendations_query = get_recommendations_query(user_id, user_iris_id)
 
-    cursor = connection.cursor()
     cursor.execute(recommendations_query)
 
     user_recommendation = [
         {"id": row[0], "type": row[1], "url": row[2]} for row in cursor.fetchall()
     ]
-
-    cursor.close()
-    connection.close()
 
     return user_recommendation
 
@@ -116,7 +167,7 @@ def predict_score(region, project, model, instances, version):
 
 def order_offers_by_score_and_diversify_types(
     offers: List[Dict[str, Any]]
-) -> List[Dict[str, Any]]:
+) -> List[int]:
     """
     Group offers by type.
     Order offer groups by decreasing number of offers in each group and decreasing maximal score.

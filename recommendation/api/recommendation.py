@@ -37,15 +37,13 @@ def get_final_recommendations(
 
     cursor = connection.cursor()
     ab_testing_table = app_config["AB_TESTING_TABLE"]
-    cursor.execute(
-        f"""SELECT "groupId" FROM {ab_testing_table} WHERE "userId"={user_id}"""
-    )
+    cursor.execute(f"""SELECT groupid FROM {ab_testing_table} WHERE userid={user_id}""")
     request_response = cursor.fetchone()
 
     if not request_response:
         group_id = "A" if random() > 0.5 else "B"
         cursor.execute(
-            f"""INSERT INTO {ab_testing_table}("userId", "groupId") VALUES ({user_id}, '{group_id}')"""
+            f"""INSERT INTO {ab_testing_table}(userid, groupid) VALUES ({user_id}, '{group_id}')"""
         )
 
     else:

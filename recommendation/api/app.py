@@ -4,9 +4,10 @@ from flask import Flask, jsonify, request
 
 from recommendation import get_final_recommendations
 
+API_TOKEN = os.environ.get("API_TOKEN")
+
 APP_CONFIG = {
-    "AB_TESTING_TABLE": os.environ.get("AB_TESTING_TABLE"),
-    "API_TOKEN": os.environ.get("API_TOKEN"),
+    "AB_TESTING_TABLE": "ab_testing_20201207",
     "NUMBER_OF_RECOMMENDATIONS": 10,
     "MODEL_NAME": "poc_model",
     "MODEL_VERSION": "latest",
@@ -26,7 +27,7 @@ def recommendation(user_id: int):
     longitude = request.args.get("longitude", None)
     latitude = request.args.get("latitude", None)
 
-    if token != APP_CONFIG["API_TOKEN"]:
+    if token != API_TOKEN:
         return "Forbidden", 403
 
     recommendations = get_final_recommendations(

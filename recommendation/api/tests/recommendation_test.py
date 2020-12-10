@@ -9,7 +9,8 @@ from numpy.testing import assert_array_equal
 from sqlalchemy import create_engine
 
 from recommendation import (
-    get_recommendations_for_user,
+    get_intermediate_recommendations_for_user,
+    get_final_recommendations,
     get_scored_recommendation_for_user,
     order_offers_by_score_and_diversify_types,
 )
@@ -27,7 +28,17 @@ TEST_DATABASE_CONFIG = {
 
 
 @pytest.fixture
-def setup_database() -> Tuple[Any, Any]:
+def app_config() -> Dict[str, Any]:
+    return {
+        "AB_TESTING_TABLE": "ab_testing_20201207",
+        "NUMBER_OF_RECOMMENDATIONS": 10,
+        "MODEL_NAME": "model_name",
+        "MODEL_VERSION": "model_version",
+    }
+
+
+@pytest.fixture
+def setup_database(app_config: Dict[str, Any]) -> Tuple[Any, Any]:
     connection = psycopg2.connect(**TEST_DATABASE_CONFIG)
     cursor = connection.cursor()
 
@@ -47,7 +58,7 @@ def setup_database() -> Tuple[Any, Any]:
     )
     recommendable_offers.to_sql("recommendable_offers", con=engine, if_exists="replace")
 
-    non_recommendable_offers = pd.DataFrame({"user_id": [111], "offer_id": [1]})
+    non_recommendable_offers = pd.DataFrame({"user_id": [111, 112], "offer_id": [1, 3]})
     non_recommendable_offers.to_sql(
         "non_recommendable_offers", con=engine, if_exists="replace"
     )
@@ -55,18 +66,105 @@ def setup_database() -> Tuple[Any, Any]:
     iris_venues = pd.DataFrame({"irisId": [1, 1, 1, 2], "venueId": [11, 22, 33, 44]})
     iris_venues.to_sql("iris_venues", con=engine, if_exists="replace")
 
+    ab_testing = pd.DataFrame({"userId": [111, 112], "groupId": ["A", "B"]})
+    ab_testing.to_sql(app_config["AB_TESTING_TABLE"], con=engine, if_exists="replace")
+
     return connection, cursor
 
 
-def test_get_recommendation_for_user(setup_database: Tuple[Any, Any]):
+@patch("recommendation.get_intermediate_recommendations_for_user")
+@patch("recommendation.get_scored_recommendation_for_user")
+@patch("recommendation.get_iris_from_coordinates")
+def test_get_final_recommendation_for_group_a(
+    get_iris_from_coordinates_mock,
+    get_scored_recommendation_for_user_mock,
+    get_intermediate_recommendations_for_user_mock,
+    setup_database: Tuple[Any, Any],
+    app_config: Dict[str, Any],
+):
+    # Given
+    connection, cursor = setup_database
+    user_id = 111
+    get_intermediate_recommendations_for_user_mock.return_value = [
+        {"id": 2, "url": "url2", "type": "type2"},
+        {"id": 3, "url": "url3", "type": "type3"},
+    ]
+    get_scored_recommendation_for_user_mock.return_value = [
+        {"id": 2, "url": "url2", "type": "type2", "score": 2},
+        {"id": 3, "url": "url3", "type": "type3", "score": 3},
+    ]
+    get_iris_from_coordinates_mock.return_value = 1
+
+    # When
+    recommendations = get_final_recommendations(
+        user_id, 2.331289, 48.830719, app_config, connection
+    )
+
+    # Then
+    assert recommendations == [3, 2]
+
+    cursor.close()
+    connection.close()
+
+
+def test_get_final_recommendation_for_group_b(
+    setup_database: Tuple[Any, Any],
+    app_config: Dict[str, Any],
+):
+    # Given
+    connection, cursor = setup_database
+    user_id = 112
+
+    # When
+    recommendations = get_final_recommendations(
+        user_id, None, None, app_config, connection
+    )
+
+    # Then
+    assert recommendations == []
+
+    cursor.close()
+    connection.close()
+
+
+@patch("recommendation.get_intermediate_recommendations_for_user")
+@patch("recommendation.get_scored_recommendation_for_user")
+@patch("recommendation.get_iris_from_coordinates")
+def test_get_final_recommendation_for_new_user(
+    get_iris_from_coordinates_mock,
+    get_scored_recommendation_for_user_mock,
+    get_intermediate_recommendations_for_user_mock,
+    setup_database: Tuple[Any, Any],
+    app_config: Dict[str, Any],
+):
+    # Given
+    connection, cursor = setup_database
+    user_id = 113
+    get_intermediate_recommendations_for_user_mock.return_value = []
+    get_scored_recommendation_for_user_mock.return_value = []
+    get_iris_from_coordinates_mock.return_value = 1
+
+    # When
+    recommendations = get_final_recommendations(
+        user_id, 2.331289, 48.830719, app_config, connection
+    )
+
+    # Then
+    assert recommendations == []
+
+    cursor.close()
+    connection.close()
+
+
+def test_get_intermediate_recommendation_for_user(setup_database: Tuple[Any, Any]):
     # Given
     connection, cursor = setup_database
 
     # When
     user_id = 111
     user_iris_id = 1
-    user_recommendation = get_recommendations_for_user(
-        user_id, user_iris_id, connection
+    user_recommendation = get_intermediate_recommendations_for_user(
+        user_id, user_iris_id, cursor
     )
 
     # Then
@@ -83,15 +181,17 @@ def test_get_recommendation_for_user(setup_database: Tuple[Any, Any]):
     connection.close()
 
 
-def test_get_recommendation_for_user_with_no_iris(setup_database: Tuple[Any, Any]):
+def test_get_intermediate_recommendation_for_user_with_no_iris(
+    setup_database: Tuple[Any, Any]
+):
     # Given
     connection, cursor = setup_database
 
     # When
     user_id = 222
     user_iris_id = None
-    user_recommendation = get_recommendations_for_user(
-        user_id, user_iris_id, connection
+    user_recommendation = get_intermediate_recommendations_for_user(
+        user_id, user_iris_id, cursor
     )
 
     # Then
@@ -157,7 +257,10 @@ def test_order_offers_by_score_and_diversify_types(
 
 
 @patch("recommendation.predict_score")
-def test_get_scored_recommendation_for_user(predict_score_mock):
+def test_get_scored_recommendation_for_user(
+    predict_score_mock,
+    app_config: Dict[str, Any],
+):
     # Given
     predict_score_mock.return_value = [1, 2, 3]
     user_recommendation = [
@@ -165,12 +268,10 @@ def test_get_scored_recommendation_for_user(predict_score_mock):
         {"id": 2, "url": "url2", "type": "type2"},
         {"id": 3, "url": "url3", "type": "type3"},
     ]
-    model_name = "model"
-    version = "v"
 
     # When
     scored_recommendation_for_user = get_scored_recommendation_for_user(
-        user_recommendation, model_name, version
+        user_recommendation, app_config["MODEL_NAME"], app_config["MODEL_VERSION"]
     )
 
     # Then

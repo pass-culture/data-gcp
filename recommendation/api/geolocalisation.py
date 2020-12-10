@@ -11,6 +11,7 @@ SQL_BASE_PASSWORD = os.environ.get("SQL_BASE_PASSWORD")
 def get_iris_from_coordinates(
     longitude: float, latitude: float, connection=None
 ) -> int:
+    close_connection = False
     if connection is None:
         connection = psycopg2.connect(
             user=SQL_BASE_USER,
@@ -18,9 +19,11 @@ def get_iris_from_coordinates(
             database=SQL_BASE,
             host=f"/cloudsql/{SQL_CONNECTION_NAME}",
         )
+        close_connection = True
 
-    if not longitude or not latitude:
-        connection.close()
+    if not (longitude and latitude):
+        if close_connection:
+            connection.close()
         return None
 
     iris_query = f"""SELECT id FROM iris_france
@@ -36,7 +39,8 @@ def get_iris_from_coordinates(
     else:
         iris_id = None
 
-    cursor.close()
-    connection.close()
+    if close_connection:
+        cursor.close()
+        connection.close()
 
     return iris_id

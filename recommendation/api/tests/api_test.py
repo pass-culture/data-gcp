@@ -28,28 +28,14 @@ def test_recommendation_return_403_when_there_is_wrong_token():
 
 
 @patch("app.API_TOKEN", "good_token")
-@patch("app.get_recommendations_for_user")
-@patch("app.get_scored_recommendation_for_user")
-@patch("app.get_iris_from_coordinates")
+@patch("app.get_final_recommendations")
 def test_recommendation_return_recommended_offers_when_there_is_right_token(
-    get_iris_from_coordinates_mock,
-    get_scored_recommendation_for_user_mock,
-    get_recommendations_for_user_mock,
+    get_final_recommendations_mock,
 ):
     # Given
     api_token = "good_token"
     user_id = 1
-    get_recommendations_for_user_mock.return_value = [
-        {"id": 1, "url": "url1", "type": "type1"},
-        {"id": 2, "url": "url2", "type": "type2"},
-        {"id": 3, "url": "url3", "type": "type3"},
-    ]
-    get_scored_recommendation_for_user_mock.return_value = [
-        {"id": 1, "url": "url1", "type": "type1", "score": 1},
-        {"id": 2, "url": "url2", "type": "type2", "score": 2},
-        {"id": 3, "url": "url3", "type": "type3", "score": 3},
-    ]
-    get_iris_from_coordinates_mock.return_value = 1
+    get_final_recommendations_mock.return_value = [3, 2, 1]
 
     # When
     response = app.test_client().get(

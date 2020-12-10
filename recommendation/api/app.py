@@ -2,17 +2,16 @@ import os
 
 from flask import Flask, jsonify, request
 
-from geolocalisation import get_iris_from_coordinates
-from recommendation import (
-    get_recommendations_for_user,
-    order_offers_by_score_and_diversify_types,
-    get_scored_recommendation_for_user,
-)
+from recommendation import get_final_recommendations
 
 API_TOKEN = os.environ.get("API_TOKEN")
-NUMBER_OF_RECOMMENDATIONS = 10
-MODEL_NAME = "poc_model"
-MODEL_VERSION = "latest"
+
+APP_CONFIG = {
+    "AB_TESTING_TABLE": "ab_testing_20201207",
+    "NUMBER_OF_RECOMMENDATIONS": 10,
+    "MODEL_NAME": "poc_model",
+    "MODEL_VERSION": "latest",
+}
 
 app = Flask(__name__)
 
@@ -31,24 +30,11 @@ def recommendation(user_id: int):
     if token != API_TOKEN:
         return "Forbidden", 403
 
-    user_iris_id = get_iris_from_coordinates(longitude, latitude)
+    recommendations = get_final_recommendations(
+        user_id, longitude, latitude, APP_CONFIG
+    )[: APP_CONFIG["NUMBER_OF_RECOMMENDATIONS"]]
 
-    recommendations_for_user = get_recommendations_for_user(user_id, user_iris_id)
-    scored_recommendation_for_user = get_scored_recommendation_for_user(
-        recommendations_for_user, MODEL_NAME, MODEL_VERSION
-    )
-
-    sorted_and_diversified_recommendations = order_offers_by_score_and_diversify_types(
-        scored_recommendation_for_user
-    )
-
-    return jsonify(
-        {
-            "recommended_offers": sorted_and_diversified_recommendations[
-                :NUMBER_OF_RECOMMENDATIONS
-            ]
-        }
-    )
+    return jsonify({"recommended_offers": recommendations})
 
 
 if __name__ == "__main__":

@@ -45,6 +45,7 @@ def get_final_recommendations(
         cursor.execute(
             f"""INSERT INTO {ab_testing_table}(userid, groupid) VALUES ({user_id}, '{group_id}')"""
         )
+        connection.commit()
 
     else:
         group_id = request_response[0]

@@ -8,7 +8,7 @@ PATH_TO_DIR = os.path.dirname(os.path.realpath(__file__))
 def define_humanized_id_query(table, dataset):
     # 1. Define function humanize_id(int) -> str
     humanize_id_definition_query = f"""
-        CREATE TEMPORARY FUNCTION humanize_id(id INT64)
+        CREATE TEMPORARY FUNCTION humanize_id(id STRING)
         RETURNS STRING
         LANGUAGE js
         OPTIONS (

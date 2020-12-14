@@ -41,7 +41,11 @@ defaults: &defaults
 
 jobs:
   analytics-tests:
-    <<: *defaults
+    docker:
+      - image: google/cloud-sdk
+        auth:
+          username: $DOCKERHUB_USER
+          password: $DOCKERHUB_PASSWORD
     working_directory: ~/data-gcp/analytics
     steps:
       - checkout:
@@ -51,13 +55,21 @@ jobs:
       - run:
           name: Install python dependencies
           command: |
+            apt-get install -y python3-venv
             python3 -m venv venv-analytics
             . venv-analytics/bin/activate
+            pip install wheel
             pip install -r analytics-requirements.txt
       - save_cache:
           key: deps-{{ checksum "analytics-requirements.txt" }}
           paths:
             - "venv-analytics"
+      - run:
+          name: GCP service account authentication
+          command: |
+            echo $GCLOUD_SERVICE_KEY | gcloud auth activate-service-account --key-file=-
+            gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
+            gcloud --quiet config set compute/zone ${GOOGLE_COMPUTE_ZONE}
       - run:
           name: Run tests
           command: |

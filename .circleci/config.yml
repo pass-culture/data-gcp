@@ -4,32 +4,33 @@ workflows:
   version: 2
   run-checks:
     jobs:
-      - linter
-      - recommendation-db-install
-      - recommendation-db-tests:
-          requires:
-            - recommendation-db-install
-      - recommendation-api-build
-      - recommendation-api-tests:
-          requires:
-            - recommendation-api-build
-      - orchestration-install
-      - orchestration-tests:
-          requires:
-            - orchestration-install
-      - ai-platform-deploy:
-          filters:
-            branches:
-              only:
-                - master
-      - composer-deploy:
-          requires:
-            - orchestration-tests
-            - ai-platform-deploy
-          filters:
-            branches:
-              only:
-                - master
+      - analytics-tests
+#      - linter
+#      - recommendation-db-install
+#      - recommendation-db-tests:
+#          requires:
+#            - recommendation-db-install
+#      - recommendation-api-build
+#      - recommendation-api-tests:
+#          requires:
+#            - recommendation-api-build
+#      - orchestration-install
+#      - orchestration-tests:
+#          requires:
+#            - orchestration-install
+#      - ai-platform-deploy:
+#          filters:
+#            branches:
+#              only:
+#                - master
+#      - composer-deploy:
+#          requires:
+#            - orchestration-tests
+#            - ai-platform-deploy
+#          filters:
+#            branches:
+#              only:
+#                - master
 
 defaults: &defaults
   docker:
@@ -39,6 +40,31 @@ defaults: &defaults
         password: $DOCKERHUB_PASSWORD
 
 jobs:
+  analytics-tests:
+    <<: *defaults
+    working_directory: ~/data-gcp/analytics
+    steps:
+      - checkout:
+          path: ~/data-gcp
+      - restore_cache:
+          key: deps-{{ checksum "analytics-requirements.txt" }}
+      - run:
+          name: Install python dependencies
+          command: |
+            python3 -m venv venv-analytics
+            . venv-analytics/bin/activate
+            pip install -r analytics-requirements.txt
+      - save_cache:
+          key: deps-{{ checksum "analytics-requirements.txt" }}
+          paths:
+            - "venv-analytics"
+      - run:
+          name: Run tests
+          command: |
+            . venv-analytics/bin/activate
+            export PYTHONPATH=$PYTHONPATH:~/data-gcp
+            pytest tests
+
   recommendation-api-build:
     <<: *defaults
     working_directory: ~/data-gcp/recommendation/api

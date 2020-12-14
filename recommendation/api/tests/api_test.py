@@ -1,6 +1,29 @@
 from unittest.mock import patch
 
+import pytest
 from app import app
+
+
+@pytest.mark.parametrize(
+    "materialized_view_name",
+    ["recommendable_offers", "non_recommendable_offers", "iris_venues_mv"],
+)
+@patch("app.get_materialized_view_status")
+def test_health_checks(get_materialized_view_status_mock, materialized_view_name):
+    # Given
+    get_materialized_view_status_mock.return_value = {
+        f"is_{materialized_view_name}_datasource_exists": False,
+        f"is_{materialized_view_name}_ok": False,
+    }
+    # When
+    response = app.test_client().get(f"/health/{materialized_view_name}")
+
+    # Then
+    assert response.status_code == 200
+    assert response.json == {
+        f"is_{materialized_view_name}_datasource_exists": False,
+        f"is_{materialized_view_name}_ok": False,
+    }
 
 
 def test_check():

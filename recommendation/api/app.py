@@ -2,7 +2,9 @@ import os
 
 from flask import Flask, jsonify, request
 
+from health_check_queries import get_materialized_view_status
 from recommendation import get_final_recommendations
+
 
 API_TOKEN = os.environ.get("API_TOKEN")
 
@@ -19,6 +21,27 @@ app = Flask(__name__)
 @app.route("/check")
 def check():
     return "OK"
+
+
+@app.route("/health/recommendable_offers")
+def health_check_recommendable_offers_status():
+    table_status = get_materialized_view_status("recommendable_offers")
+
+    return jsonify(table_status), 200
+
+
+@app.route("/health/non_recommendable_offers")
+def health_check_non_recommendable_offers_status():
+    table_status = get_materialized_view_status("non_recommendable_offers")
+
+    return jsonify(table_status), 200
+
+
+@app.route("/health/iris_venues_mv")
+def health_check_iris_venues_mv_status():
+    table_status = get_materialized_view_status("iris_venues_mv")
+
+    return jsonify(table_status), 200
 
 
 @app.route("/recommendation/<user_id>")

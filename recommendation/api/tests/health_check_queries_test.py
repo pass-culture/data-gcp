@@ -63,27 +63,21 @@ def setup_database() -> Any:
 
 
 class DoesViewExistTest:
-    def test_should_return_false_if_materialized_view_does_not_exist(
-        self, setup_database
+    @pytest.mark.parametrize(
+        "materialized_view_name,expected_result",
+        [("recommendable_offers", True), ("iris_venues_mv", False)],
+    )
+    def test_does_view_exist(
+        self, setup_database, materialized_view_name, expected_result
     ):
         # Given
         session = setup_database
 
         # When
-        result = does_materialize_view_exist(session, "iris_venues_mv")
+        result = does_materialize_view_exist(session, materialized_view_name)
 
         # Then
-        assert result is False
-
-    def test_should_return_true_if_materialized_view_exist(self, setup_database):
-        # Given
-        session = setup_database
-
-        # When
-        result = does_materialize_view_exist(session, "recommendable_offers")
-
-        # Then
-        assert result is True
+        assert result is expected_result
 
 
 class IsMaterializedViewQueryableTest:
@@ -155,27 +149,22 @@ class IsMaterializedViewQueryableTest:
 
 
 class DoesViewHaveDataTest:
-    def test_should_return_false_if_view_exists_but_is_empty(self, setup_database):
+    @pytest.mark.parametrize(
+        "materialized_view_name,expected_result",
+        [("recommendable_offers", True), ("non_recommendable_offers", False)],
+    )
+    def test_does_view_have_data(
+        self, setup_database, materialized_view_name, expected_result
+    ):
         # Given
         session = setup_database
 
         # When
-        result = does_view_have_data(session, "non_recommendable_offers")
+        result = does_view_have_data(session, materialized_view_name)
 
         session.close()
         # Then
-        assert result is False
-
-    def test_should_return_true_if_view_has_entries(self, setup_database):
-        # Given
-        session = setup_database
-
-        # When
-        result = does_view_have_data(session, "recommendable_offers")
-        session.close()
-
-        # Then
-        assert result is True
+        assert result is expected_result
 
 
 class DoesMaterializedViewContainDataTest:
@@ -200,42 +189,27 @@ class DoesMaterializedViewContainDataTest:
 
     @patch("health_check_queries.is_materialized_view_queryable")
     @patch("health_check_queries.does_view_have_data")
-    def test_should_return_false_if_view_is_empty(
-        self, does_view_have_data_mock, is_materialized_view_queryable_mock
+    @pytest.mark.parametrize(
+        "mock_return_value,expected_result",
+        [(True, True), (False, False)],
+    )
+    def test_does_materialized_view_contain_data_result(
+        self,
+        does_view_have_data_mock,
+        is_materialized_view_queryable_mock,
+        mock_return_value,
+        expected_result,
     ):
         # Given
         is_materialized_view_queryable_mock.return_value = True
-        does_view_have_data_mock.return_value = False
+        does_view_have_data_mock.return_value = mock_return_value
         session = MagicMock()
 
         # When
         result = does_materialized_view_contain_data(session, "materialized_view_name")
 
         # Then
-        assert result is False
-        session.close.assert_called_once()
-        is_materialized_view_queryable_mock.assert_called_once_with(
-            session, "materialized_view_name"
-        )
-        does_view_have_data_mock.assert_called_once_with(
-            session, "materialized_view_name"
-        )
-
-    @patch("health_check_queries.is_materialized_view_queryable")
-    @patch("health_check_queries.does_view_have_data")
-    def test_should_return_true_if_view_has_data(
-        self, does_view_have_data_mock, is_materialized_view_queryable_mock
-    ):
-        # Given
-        is_materialized_view_queryable_mock.return_value = True
-        does_view_have_data_mock.return_value = True
-        session = MagicMock()
-
-        # When
-        result = does_materialized_view_contain_data(session, "materialized_view_name")
-
-        # Then
-        assert result is True
+        assert result is expected_result
         session.close.assert_called_once()
         is_materialized_view_queryable_mock.assert_called_once_with(
             session, "materialized_view_name"

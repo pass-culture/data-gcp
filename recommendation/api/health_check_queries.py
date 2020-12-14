@@ -41,8 +41,6 @@ def does_materialized_view_contain_data(
             )
         except SQLAlchemyError as error:
             logger.error(f"[HEALTH CHECK] Query ended unexpectedly : {str(error)}")
-        except Exception:
-            raise Exception
         health_check_session.close()
         return is_materialized_view_with_data
 
@@ -68,8 +66,6 @@ def is_materialized_view_queryable(
         logger.error(
             f"[HEALTH CHECK] There was an error while handling the query : {str(error)}"
         )
-    except Exception as error:
-        raise error
     health_check_session.close()
     return is_data_present
 

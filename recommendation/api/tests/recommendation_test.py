@@ -71,7 +71,12 @@ def setup_database(app_config: Dict[str, Any]) -> Tuple[Any, Any]:
     ab_testing = pd.DataFrame({"userid": [111, 112], "groupid": ["A", "B"]})
     ab_testing.to_sql(app_config["AB_TESTING_TABLE"], con=engine, if_exists="replace")
 
-    return connection, cursor
+    yield connection, cursor
+
+    engine.execute("DROP TABLE IF EXISTS recommendable_offers;")
+    engine.execute("DROP TABLE IF EXISTS non_recommendable_offers;")
+    engine.execute("DROP TABLE IF EXISTS iris_venues;")
+    engine.execute(f"DROP TABLE IF EXISTS {app_config['AB_TESTING_TABLE']} ;")
 
 
 @patch("recommendation.get_intermediate_recommendations_for_user")

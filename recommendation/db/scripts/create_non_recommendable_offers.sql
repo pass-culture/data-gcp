@@ -27,11 +27,12 @@ REFRESH MATERIALIZED VIEW non_recommendable_offers;
 
 /* Creating an index for faster queries.
 CREATE INDEX idx_non_recommendable_userid ON public.non_recommendable_offers USING btree ("user_id");
+*/
 
 /* -------- */
 /* The concurrently refresh is slower than the original refresh (7 seconds vs 5 seconds) */
 /* -------- */
-
+/*
 CREATE UNIQUE INDEX idx_non_recommendable_userid_offerid ON public.non_recommendable_offers (user_id, offer_id);
 
 

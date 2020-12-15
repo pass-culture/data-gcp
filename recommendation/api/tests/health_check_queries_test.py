@@ -5,15 +5,12 @@ from unittest.mock import MagicMock, patch
 import pandas as pd
 import pytest
 from sqlalchemy import create_engine
-from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm import sessionmaker
 
 from health_check_queries import (
-    does_materialize_view_exist,
-    does_materialized_view_contain_data,
-    does_view_have_data,
+    does_materialized_view_exist,
+    does_materialized_view_have_data,
     get_materialized_view_status,
-    is_materialized_view_queryable,
 )
 
 
@@ -62,218 +59,57 @@ def setup_database() -> Any:
     session.close()
 
 
-class DoesViewExistTest:
-    @pytest.mark.parametrize(
-        "materialized_view_name,expected_result",
-        [("recommendable_offers", True), ("iris_venues_mv", False)],
-    )
-    def test_does_view_exist(
-        self, setup_database, materialized_view_name, expected_result
-    ):
-        # Given
-        session = setup_database
+@pytest.mark.parametrize(
+    "materialized_view_name,expected_result",
+    [("recommendable_offers", True), ("iris_venues_mv", False)],
+)
+def test_does_view_exist(setup_database, materialized_view_name, expected_result):
+    # Given
+    session = setup_database
 
-        # When
-        result = does_materialize_view_exist(session, materialized_view_name)
+    # When
+    result = does_materialized_view_exist(session, materialized_view_name)
+    session.close()
 
-        # Then
-        assert result is expected_result
+    # Then
+    assert result is expected_result
 
 
-class IsMaterializedViewQueryableTest:
-    @patch("health_check_queries.does_materialize_view_exist")
-    def test_should_close_session_if_query_did_not_end_on_an_exception(
-        self, does_materialize_view_exist_mock, setup_database
-    ):
-        # Given
-        does_materialize_view_exist_mock.return_value = True
-        session = MagicMock()
+@pytest.mark.parametrize(
+    "materialized_view_name,expected_result",
+    [
+        ("recommendable_offers", True),
+        ("non_recommendable_offers", False),
+        ("iris_venues_mv", False),
+    ],
+)
+def test_does_view_have_data(setup_database, materialized_view_name, expected_result):
+    # Given
+    session = setup_database
 
-        # When
-        result = is_materialized_view_queryable(session, "materialized_view_name")
+    # When
+    result = does_materialized_view_have_data(session, materialized_view_name)
 
-        # Then
-        assert result is True
-        session.close.assert_called_once()
-
-    @patch("health_check_queries.does_materialize_view_exist")
-    @patch("health_check_queries.logger")
-    def test_should_log_error_and_close_session_when_operational_error_is_raised(
-        self, logger_mock, does_materialize_view_exist_mock
-    ):
-        # Given
-        does_materialize_view_exist_mock.side_effect = OperationalError("", "", "")
-        session = MagicMock()
-
-        # When
-        result = is_materialized_view_queryable(session, "materialized_view_name")
-
-        # Then
-        assert result is False
-        session.close.assert_called_once()
-        logger_mock.error.assert_called_once()
-
-    @patch("health_check_queries.does_materialize_view_exist")
-    @patch("health_check_queries.logger")
-    def test_should_log_error_and_close_session_when_an_sql_alchemy_error_is_raised(
-        self, logger_mock, does_materialize_view_exist_mock
-    ):
-        # Given
-        does_materialize_view_exist_mock.side_effect = SQLAlchemyError("", "", "")
-        session = MagicMock()
-
-        # When
-        result = is_materialized_view_queryable(session, "materialized_view_name")
-
-        # Then
-        assert result is False
-        session.close.assert_called_once()
-        logger_mock.error.assert_called_once()
-
-    @patch("health_check_queries.does_materialize_view_exist")
-    @patch("health_check_queries.logger")
-    def test_should_raise_exception_when_it_does_not_come_from_sql_alchemy(
-        self, logger_mock, does_materialize_view_exist_mock
-    ):
-        # Given
-        does_materialize_view_exist_mock.side_effect = Exception
-        session = MagicMock()
-
-        # When
-        with pytest.raises(Exception):
-            is_materialized_view_queryable(session, "materialized_view_name")
-
-        # Then
-        session.close.assert_not_called()
-        logger_mock.error.assert_not_called()
+    session.close()
+    # Then
+    assert result is expected_result
 
 
-class DoesViewHaveDataTest:
-    @pytest.mark.parametrize(
-        "materialized_view_name,expected_result",
-        [("recommendable_offers", True), ("non_recommendable_offers", False)],
-    )
-    def test_does_view_have_data(
-        self, setup_database, materialized_view_name, expected_result
-    ):
-        # Given
-        session = setup_database
+@patch("health_check_queries.does_materialized_view_have_data")
+@patch("health_check_queries.does_materialized_view_exist")
+def test_should_raise_exception_when_it_does_not_come_from_sql_alchemy(
+    does_materialized_view_exist_mock,
+    does_materialized_view_have_data_mock,
+):
+    # Given
+    does_materialized_view_exist_mock.return_value = True
+    does_materialized_view_have_data_mock.return_value = False
+    materialized_view_name = "materialized_view_name"
+    session = MagicMock()
 
-        # When
-        result = does_view_have_data(session, materialized_view_name)
+    # When
+    result = get_materialized_view_status(materialized_view_name)
 
-        session.close()
-        # Then
-        assert result is expected_result
-
-
-class DoesMaterializedViewContainDataTest:
-    @patch("health_check_queries.is_materialized_view_queryable")
-    @patch("health_check_queries.does_view_have_data")
-    def test_should_return_false_when_the_view_is_not_found(
-        self, does_view_have_data_mock, is_materialized_view_queryable_mock
-    ):
-        # Given
-        is_materialized_view_queryable_mock.return_value = False
-        session = MagicMock()
-
-        # When
-        result = does_materialized_view_contain_data(session, "materialized_view_name")
-
-        # Then
-        assert result is False
-        is_materialized_view_queryable_mock.assert_called_once_with(
-            session, "materialized_view_name"
-        )
-        does_view_have_data_mock.assert_not_called()
-
-    @patch("health_check_queries.is_materialized_view_queryable")
-    @patch("health_check_queries.does_view_have_data")
-    @pytest.mark.parametrize(
-        "mock_return_value,expected_result",
-        [(True, True), (False, False)],
-    )
-    def test_does_materialized_view_contain_data_result(
-        self,
-        does_view_have_data_mock,
-        is_materialized_view_queryable_mock,
-        mock_return_value,
-        expected_result,
-    ):
-        # Given
-        is_materialized_view_queryable_mock.return_value = True
-        does_view_have_data_mock.return_value = mock_return_value
-        session = MagicMock()
-
-        # When
-        result = does_materialized_view_contain_data(session, "materialized_view_name")
-
-        # Then
-        assert result is expected_result
-        session.close.assert_called_once()
-        is_materialized_view_queryable_mock.assert_called_once_with(
-            session, "materialized_view_name"
-        )
-        does_view_have_data_mock.assert_called_once_with(
-            session, "materialized_view_name"
-        )
-
-    @patch("health_check_queries.is_materialized_view_queryable")
-    @patch("health_check_queries.does_view_have_data")
-    def test_should_return_false_when_there_is_an_sql_alchemy_error_on_query(
-        self, does_view_have_data_mock, is_materialized_view_queryable_mock
-    ):
-        # Given
-        is_materialized_view_queryable_mock.return_value = True
-        does_view_have_data_mock.side_effect = SQLAlchemyError
-        session = MagicMock()
-
-        # When
-        result = does_materialized_view_contain_data(session, "materialized_view_name")
-
-        # Then
-        assert result is False
-        session.close.assert_called_once()
-
-    @patch("health_check_queries.is_materialized_view_queryable")
-    @patch("health_check_queries.does_view_have_data")
-    def test_should_raise_exception_when_it_does_not_come_from_sql_alchemy(
-        self, does_view_have_data_mock, is_materialized_view_queryable_mock
-    ):
-        # Given
-        is_materialized_view_queryable_mock.return_value = True
-        does_view_have_data_mock.side_effect = Exception
-        session = MagicMock()
-
-        # When
-        with pytest.raises(Exception):
-            result = does_materialized_view_contain_data(
-                session, "materialized_view_name"
-            )
-            # Then
-            assert result is None
-
-        session.close.assert_not_called()
-
-
-class GetMaterializedViewStatusTest:
-    @patch("health_check_queries.is_materialized_view_queryable")
-    @patch("health_check_queries.does_materialized_view_contain_data")
-    def test_should_raise_exception_when_it_does_not_come_from_sql_alchemy(
-        self,
-        does_materialized_view_contain_data_mock,
-        is_materialized_view_queryable_mock,
-    ):
-        # Given
-        is_materialized_view_queryable_mock.return_value = True
-        does_materialized_view_contain_data_mock.return_value = False
-        materialized_view_name = "materialized_view_name"
-
-        # When
-        result = get_materialized_view_status(materialized_view_name)
-
-        # Then
-        result == {
-            f"is_materialized_view_name_datasource_exists": True,
-            f"is_materialized_view_name_ok": False,
-        }
+    # Then
+    assert result["is_materialized_view_name_datasource_exists"] is True
+    assert result["is_materialized_view_name_ok"] is False

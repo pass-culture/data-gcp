@@ -41,27 +41,21 @@ defaults: &defaults
 
 jobs:
   analytics-tests:
-    docker:
-      - image: google/cloud-sdk
-        auth:
-          username: $DOCKERHUB_USER
-          password: $DOCKERHUB_PASSWORD
+    <<: *defaults
     working_directory: ~/data-gcp/analytics
     steps:
       - checkout:
           path: ~/data-gcp
       - restore_cache:
-          key: deps-v1-{{ checksum "analytics-requirements.txt" }}
+          key: deps-v2-{{ checksum "analytics-requirements.txt" }}
       - run:
           name: Install python dependencies
           command: |
-            apt-get install -y python3-venv
             python3 -m venv venv-analytics
             . venv-analytics/bin/activate
-            pip install wheel
             pip install -r analytics-requirements.txt
       - save_cache:
-          key: deps-v1-{{ checksum "analytics-requirements.txt" }}
+          key: deps-v2-{{ checksum "analytics-requirements.txt" }}
           paths:
             - "venv-analytics"
       - run:

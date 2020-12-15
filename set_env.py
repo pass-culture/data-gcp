@@ -22,4 +22,5 @@ def set_env_vars():
         return
     with open(path_to_env_file) as env_file:
         for var in env_file.readlines():
-            set_single_env_var(var)
+            if not var.startswith("#"):
+                set_single_env_var(var)

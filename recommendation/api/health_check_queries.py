@@ -2,7 +2,7 @@ import logging
 import os
 import sys
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, engine
 from sqlalchemy.orm import sessionmaker, session
 
 
@@ -15,9 +15,21 @@ SQL_BASE_PASSWORD = os.environ.get("SQL_BASE_PASSWORD")
 SQL_CONNECTION_NAME = os.environ.get("SQL_CONNECTION_NAME")
 SQL_BASE = os.environ.get("SQL_BASE")
 
-DATABASE_URL = f"postgresql+psycopg2://{SQL_BASE_USER}:{SQL_BASE_PASSWORD}@{SQL_CONNECTION_NAME}/{SQL_BASE}"
+query_string = dict(
+    {"unix_sock": "/cloudsql/{}/.s.PGSQL.5432".format(SQL_CONNECTION_NAME)}
+)
 health_check_engine = create_engine(
-    DATABASE_URL, connect_args={"options": "-c statement_timeout=30000"}
+    engine.url.URL(
+        drivername="postgres+pg8000",
+        username=SQL_BASE_USER,
+        password=SQL_BASE_PASSWORD,
+        database=SQL_BASE,
+        query=query_string,
+    ),
+    pool_size=5,
+    max_overflow=2,
+    pool_timeout=30,
+    pool_recycle=1800,
 )
 health_check_session = sessionmaker(bind=health_check_engine)()
 

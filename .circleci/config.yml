@@ -4,33 +4,33 @@ workflows:
   version: 2
   run-checks:
     jobs:
+      - linter
       - analytics-tests
-#      - linter
-#      - recommendation-db-install
-#      - recommendation-db-tests:
-#          requires:
-#            - recommendation-db-install
-#      - recommendation-api-build
-#      - recommendation-api-tests:
-#          requires:
-#            - recommendation-api-build
-#      - orchestration-install
-#      - orchestration-tests:
-#          requires:
-#            - orchestration-install
-#      - ai-platform-deploy:
-#          filters:
-#            branches:
-#              only:
-#                - master
-#      - composer-deploy:
-#          requires:
-#            - orchestration-tests
-#            - ai-platform-deploy
-#          filters:
-#            branches:
-#              only:
-#                - master
+      - recommendation-db-install
+      - recommendation-db-tests:
+          requires:
+            - recommendation-db-install
+      - recommendation-api-build
+      - recommendation-api-tests:
+          requires:
+            - recommendation-api-build
+      - orchestration-install
+      - orchestration-tests:
+          requires:
+            - orchestration-install
+      - ai-platform-deploy:
+          filters:
+            branches:
+              only:
+                - master
+      - composer-deploy:
+          requires:
+            - orchestration-tests
+            - ai-platform-deploy
+          filters:
+            branches:
+              only:
+                - master
 
 defaults: &defaults
   docker:

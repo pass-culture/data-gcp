@@ -51,7 +51,7 @@ jobs:
       - checkout:
           path: ~/data-gcp
       - restore_cache:
-          key: deps-{{ checksum "analytics-requirements.txt" }}
+          key: deps-v1-{{ checksum "analytics-requirements.txt" }}
       - run:
           name: Install python dependencies
           command: |
@@ -61,7 +61,7 @@ jobs:
             pip install wheel
             pip install -r analytics-requirements.txt
       - save_cache:
-          key: deps-{{ checksum "analytics-requirements.txt" }}
+          key: deps-v1-{{ checksum "analytics-requirements.txt" }}
           paths:
             - "venv-analytics"
       - run:

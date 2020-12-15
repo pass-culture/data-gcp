@@ -46,7 +46,7 @@ TABLE_DATA = {
         ],
     },
 }
-BIGQUERY_DATASET = "algo_reco_matomo"
+BIGQUERY_DATASET = "algo_reco_kpi_matomo"
 
 default_args = {
     "start_date": datetime(2020, 12, 10),

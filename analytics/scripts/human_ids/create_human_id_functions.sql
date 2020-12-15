@@ -22,7 +22,7 @@ CREATE OR REPLACE FUNCTION
         var raw_b32 = base32Encode(new Uint8Array(reversedByteArray), 'RFC4648', { padding: false });
 
         // replace "O" with "8" and "I" with "9"
-        return raw_b32.replace('O', '8').replace('I', '9');
+        return raw_b32.replace(/O/g, '8').replace(/I/g, '9');
     """;
 
 
@@ -30,7 +30,7 @@ CREATE OR REPLACE FUNCTION
     algo_reco_kpi_data.dehumanize_id(id STRING)
     RETURNS STRING
     LANGUAGE js OPTIONS (library=["gs://pass-culture-data/base32-encode/base32.js"]) AS """
-        var public_id = id.replace('8', 'O').replace('9', 'I');
+        var public_id = id.replace(/8/g, 'O').replace(/9/g, 'I');
 
         var byteArray = new Uint8Array(base32Decode(public_id, 'RFC4648')).reverse();
 

@@ -4,7 +4,7 @@ var updated_id = id;
 while (updated_id != 0) {
     var byte = updated_id & 0xff;
     byteArray.push(byte);
-    updated_id = (updated_id - byte) / 256 ;
+    updated_id = (updated_id - byte) / 256;
 }
 var reversedByteArray = byteArray.reverse();
 
@@ -12,4 +12,4 @@ var reversedByteArray = byteArray.reverse();
 var raw_b32 = base32Encode(new Uint8Array(reversedByteArray), 'RFC4648', { padding: false });
 
 // replace "O" with "8" and "I" with "9"
-return raw_b32.replace('O', '8').replace('I', '9');
+return raw_b32.replace(/O/g, '8').replace(/I/g, '9');

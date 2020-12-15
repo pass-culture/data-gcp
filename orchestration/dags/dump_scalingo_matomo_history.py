@@ -17,6 +17,7 @@ from airflow.operators.python_operator import PythonOperator
 
 GCP_PROJECT_ID = "pass-culture-app-projet-test"
 GCS_BUCKET = "dump_scalingo"
+ROW_NUMBER_QUERIED = 1000000
 TABLE_DATA = {
     "log_link_visit_action": {
         "id": "idlink_va",
@@ -118,20 +119,15 @@ last_task = start
 
 for table in TABLE_DATA:
     max_id = TABLE_DATA[table]["max_id"]
-    min_id = 0
-    query_number = (max_id // 1000000) + 1
-    for query_index in range(query_number):
-        query_max_id = (max_id * (query_index + 1) / query_number) + 1
+    for query_index in range(0, max_id, ROW_NUMBER_QUERIED):
         sql_query = (
             f"select {', '.join([column['name'] for column in TABLE_DATA[table]['columns']])} from {table} "
-            f"where {TABLE_DATA[table]['id']} >= {min_id} and {TABLE_DATA[table]['id']} < {query_max_id};"
+            f"where {TABLE_DATA[table]['id']} >= {query_index} "
+            f"and {TABLE_DATA[table]['id']} < {query_index + ROW_NUMBER_QUERIED};"
         )
-        min_id = query_max_id
 
         now = datetime.now()
-        file_name = (
-            f"{table}/{now.year}_{now.month}_{now.day}_{table}_{query_index}_{'{}'}.csv"
-        )
+        file_name = f"{table}/{now.year}_{now.month}_{now.day}_{table}_{query_index // ROW_NUMBER_QUERIED}_{'{}'}.csv"
 
         export_table = PythonOperator(
             task_id=f"query_{table}_{query_index}",

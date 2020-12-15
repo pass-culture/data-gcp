@@ -63,8 +63,10 @@ def setup_database(app_config: Dict[str, Any]) -> Tuple[Any, Any]:
         "non_recommendable_offers", con=engine, if_exists="replace"
     )
 
-    iris_venues = pd.DataFrame({"irisId": [1, 1, 1, 2], "venueId": [11, 22, 33, 44]})
-    iris_venues.to_sql("iris_venues", con=engine, if_exists="replace")
+    iris_venues_mv = pd.DataFrame(
+        {"iris_id": [1, 1, 1, 2], "venue_id": [11, 22, 33, 44]}
+    )
+    iris_venues_mv.to_sql("iris_venues_mv", con=engine, if_exists="replace")
 
     ab_testing = pd.DataFrame({"userid": [111, 112], "groupid": ["A", "B"]})
     ab_testing.to_sql(app_config["AB_TESTING_TABLE"], con=engine, if_exists="replace")

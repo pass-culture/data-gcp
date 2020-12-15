@@ -112,9 +112,9 @@ def get_recommendations_query(user_id: int, user_iris_id: int) -> str:
                 (
                 venue_id IN
                     (
-                    SELECT "venueId"
-                    FROM iris_venues
-                    WHERE "irisId" = {user_iris_id}
+                    SELECT "venue_id"
+                    FROM iris_venues_mv
+                    WHERE "iris_id" = {user_iris_id}
                     )
                 OR is_national = True
                 )

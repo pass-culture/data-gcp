@@ -76,7 +76,7 @@ def get_table_names():
 
 
 with DAG(
-    "recommendation_cloud_sql_v41",
+    "recommendation_cloud_sql_v42",
     default_args=default_args,
     description="Export bigQuery tables to GCS to dump and restore Cloud SQL tables",
     schedule_interval="@daily",
@@ -201,7 +201,7 @@ with DAG(
         CREATE INDEX IF NOT EXISTS idx_venue_id                      ON public.venue                    USING btree (id);
         CREATE INDEX IF NOT EXISTS idx_venue_managingoffererid       ON public.venue                    USING btree ("managingOffererId");
         CREATE INDEX IF NOT EXISTS idx_offerer_id                    ON public.offerer                  USING btree (id);
-        CREATE INDEX IF NOT EXISTS idx_iris_venues_irisid            ON public.iris_venues              USING btree ("irisId");
+        CREATE INDEX IF NOT EXISTS idx_iris_venues_mv_irisid         ON public.iris_venues_mv           USING btree (iris_id);
         CREATE INDEX IF NOT EXISTS idx_non_recommendable_userid      ON public.non_recommendable_offers USING btree (user_id);
         CREATE INDEX IF NOT EXISTS idx_offer_recommendable_venue_id  ON public.recommendable_offers     USING btree (venue_id);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_id ON public.recommendable_offers     USING btree (id);
@@ -228,9 +228,17 @@ with DAG(
         autocommit=True,
     )
 
+    refresh_iris_venues_mv = CloudSqlQueryOperator(
+        task_id="refresh_iris_venues_mv",
+        gcp_cloudsql_conn_id="proxy_postgres_tcp",
+        sql="REFRESH MATERIALIZED VIEW iris_venues_mv;",
+        autocommit=True,
+    )
+
     refresh_materialized_views_tasks = [
         refresh_recommendable_offers,
         refresh_non_recommendable_offers,
+        refresh_iris_venues_mv,
     ]
 
     end = DummyOperator(task_id="end")

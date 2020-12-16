@@ -186,3 +186,28 @@ ENRICHED_VENUE_DATA_EXPECTED = [
     "chiffre_affaires_reel_realise",
     "venue_humanized_id",
 ]
+
+# enriched_offerer_data => NO DATA (only structure can be tested)
+ENRICHED_OFFERER_DATA_INPUT = {
+    "booking": [],
+    "offer": [],
+    "offerer": [],
+    "stock": [],
+    "venue": [],
+    "venue_label": [],
+    "venue_type": [],
+}
+
+ENRICHED_OFFERER_DATA_EXPECTED = [
+    "offerer_id",
+    "nom",
+    "date_de_creation",
+    "date_de_creation_du_premier_stock",
+    "date_de_premiere_reservation",
+    "nombre_offres",
+    "nombre_de_reservations_non_annulees",
+    "departement",
+    "nombre_lieux",
+    "nombre_de_lieux_avec_offres",
+    "offerer_humanized_id",
+]

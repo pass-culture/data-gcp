@@ -5,6 +5,7 @@ from analytics.tests.config import TEST_DATASET, GCP_PROJECT
 from analytics.tests.data import (
     ENRICHED_OFFER_DATA_INPUT, ENRICHED_OFFER_DATA_EXPECTED, ENRICHED_USER_DATA_INPUT,
     ENRICHED_USER_DATA_EXPECTED, ENRICHED_VENUE_DATA_INPUT, ENRICHED_VENUE_DATA_EXPECTED,
+    ENRICHED_OFFERER_DATA_INPUT, ENRICHED_OFFERER_DATA_EXPECTED,
 )
 from analytics.tests.utils import (
     drop_dataset,
@@ -16,6 +17,7 @@ from analytics.tests.utils import (
     get_table_columns,
 )
 from dependencies.data_analytics.enriched_data.offer import define_enriched_offer_data_full_query
+from dependencies.data_analytics.enriched_data.offerer import define_enriched_offerer_data_full_query
 from dependencies.data_analytics.enriched_data.user import define_enriched_user_data_full_query
 from dependencies.data_analytics.enriched_data.venue import define_enriched_venue_data_full_query
 from set_env import set_env_vars
@@ -77,6 +79,12 @@ def test_create_queries(flush_dataset, table_name, query, input_data, expected, 
             define_enriched_venue_data_full_query(dataset=TEST_DATASET),
             ENRICHED_VENUE_DATA_INPUT,
             ENRICHED_VENUE_DATA_EXPECTED,
+        ),
+        (
+            "enriched_offerer_data",
+            define_enriched_offerer_data_full_query(dataset=TEST_DATASET),
+            ENRICHED_OFFERER_DATA_INPUT,
+            ENRICHED_OFFERER_DATA_EXPECTED,
         ),
     ],
 )

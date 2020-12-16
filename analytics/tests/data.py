@@ -114,3 +114,34 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "lien_webapp": "https://app.passculture.beta.gouv.fr/offre/details/AQ",
     },
 ]
+
+# enriched_user_data => NO DATA (only structure can be tested)
+ENRICHED_USER_DATA_INPUT = {
+    "booking": [],
+    "offer": [],
+    "stock": [],
+    "user": [],
+}
+
+ENRICHED_USER_DATA_EXPECTED = [
+    "user_id",
+    "vague_experimentation",
+    "departement",
+    "code_postal",
+    "statut",
+    "date_activation",
+    "date_premiere_connexion",
+    "date_premiere_reservation",
+    "date_deuxieme_reservation",
+    "date_premiere_reservation_dans_3_categories_differentes",
+    "nombre_reservations_totales",
+    "nombre_reservations_non_annulees",
+    "anciennete_en_jours",
+    "montant_reel_depense",
+    "montant_theorique_depense",
+    "depenses_numeriques",
+    "depenses_physiques",
+    "depenses_sorties",
+    "user_humanized_id",
+    "date_derniere_reservation",
+]

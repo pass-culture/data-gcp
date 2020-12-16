@@ -64,3 +64,9 @@ def retrieve_data(client, dataset, table):
     table_id = f"{GCP_PROJECT}.{dataset}.{table}"
     rows_iter = client.list_rows(table_id)
     return [dict(row.items()) for row in rows_iter]
+
+
+def get_table_columns(client, dataset, table):
+    table_id = f"{GCP_PROJECT}.{dataset}.{table}"
+    table = client.get_table(table_id)
+    return [field.name for field in table.schema]

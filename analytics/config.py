@@ -52,6 +52,7 @@ MIGRATION_ENRICHED_OFFERER_DATA = "migration_enriched_offerer_data"
 MIGRATION_ENRICHED_USER_DATA = "migration_enriched_user_data"
 MIGRATION_ENRICHED_OFFER_DATA = "migration_enriched_offer_data"
 MIGRATION_ENRICHED_STOCK_DATA = "migration_enriched_stock_data"
+MIGRATION_ENRICHED_BOOKING_DATA = "migration_enriched_booking_data"
 ENRICHED_OFFERER_DATA_TABLES = ["offerer", "venue", "offer", "stock", "booking"]
 ENRICHED_OFFER_DATA_TABLES = [
     "offer",
@@ -79,3 +80,6 @@ ENRICHED_STOCK_DATA_TABLES = [
     "offer",
     "venue",
 ]
+ENRICHED_BOOKING_DATA_TABLES = ["booking", "payment", "payment_status", "stock", "offer", "offerer",
+                                "venue", "user", "venue_type","venue_label"]
+

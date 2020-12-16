@@ -1,4 +1,6 @@
 import os
+import datetime
+import pytz
 from typing import Any, Dict, List, Tuple
 from unittest.mock import patch
 
@@ -13,6 +15,7 @@ from recommendation import (
     get_final_recommendations,
     get_scored_recommendation_for_user,
     order_offers_by_score_and_diversify_types,
+    save_recommendation,
 )
 
 DATA_GCP_TEST_POSTGRES_PORT = os.getenv("DATA_GCP_TEST_POSTGRES_PORT")
@@ -71,6 +74,13 @@ def setup_database(app_config: Dict[str, Any]) -> Tuple[Any, Any]:
     ab_testing = pd.DataFrame({"userid": [111, 112], "groupid": ["A", "B"]})
     ab_testing.to_sql(app_config["AB_TESTING_TABLE"], con=engine, if_exists="replace")
 
+    past_recommended_offers = pd.DataFrame(
+        {"userid": [1], "offerid": [1], "date": [datetime.datetime.now(pytz.utc)]}
+    )
+    past_recommended_offers.to_sql(
+        "past_recommended_offers", con=engine, if_exists="replace"
+    )
+
     yield connection, cursor
 
     engine.execute("DROP TABLE IF EXISTS recommendable_offers;")
@@ -82,7 +92,9 @@ def setup_database(app_config: Dict[str, Any]) -> Tuple[Any, Any]:
 @patch("recommendation.get_intermediate_recommendations_for_user")
 @patch("recommendation.get_scored_recommendation_for_user")
 @patch("recommendation.get_iris_from_coordinates")
+@patch("recommendation.save_recommendation")
 def test_get_final_recommendation_for_group_a(
+    save_recommendation_mock,
     get_iris_from_coordinates_mock,
     get_scored_recommendation_for_user_mock,
     get_intermediate_recommendations_for_user_mock,
@@ -109,12 +121,15 @@ def test_get_final_recommendation_for_group_a(
 
     # Then
     assert recommendations == [3, 2]
+    save_recommendation_mock.assert_called_once()
 
     cursor.close()
     connection.close()
 
 
+@patch("recommendation.save_recommendation")
 def test_get_final_recommendation_for_group_b(
+    save_recommendation_mock,
     setup_database: Tuple[Any, Any],
     app_config: Dict[str, Any],
 ):
@@ -129,6 +144,7 @@ def test_get_final_recommendation_for_group_b(
 
     # Then
     assert recommendations == []
+    save_recommendation_mock.assert_called_once()
 
     cursor.close()
     connection.close()
@@ -137,7 +153,9 @@ def test_get_final_recommendation_for_group_b(
 @patch("recommendation.get_intermediate_recommendations_for_user")
 @patch("recommendation.get_scored_recommendation_for_user")
 @patch("recommendation.get_iris_from_coordinates")
+@patch("recommendation.save_recommendation")
 def test_get_final_recommendation_for_new_user(
+    save_recommendation_mock,
     get_iris_from_coordinates_mock,
     get_scored_recommendation_for_user_mock,
     get_intermediate_recommendations_for_user_mock,
@@ -155,6 +173,7 @@ def test_get_final_recommendation_for_new_user(
     recommendations = get_final_recommendations(
         user_id, 2.331289, 48.830719, app_config, connection
     )
+    save_recommendation_mock.assert_called_once()
 
     # Then
     assert recommendations == []
@@ -287,3 +306,23 @@ def test_get_scored_recommendation_for_user(
         {"id": 2, "url": "url2", "type": "type2", "score": 2},
         {"id": 3, "url": "url3", "type": "type3", "score": 3},
     ]
+
+
+def test_save_recommendation(setup_database: Tuple[Any, Any]):
+    # Given
+    user_id = 1
+    recommendations = [2, 3, 4]
+    connection, cursor = setup_database
+
+    # When
+    save_recommendation(user_id, recommendations, cursor)
+
+    # Then
+    for offer_id in recommendations:
+        cursor.execute(
+            f"SELECT * FROM public.past_recommended_offers where userid = {user_id} and offerId = {offer_id}"
+        )
+        assert len(cursor.fetchall()) == 1
+
+    cursor.close()
+    connection.close()

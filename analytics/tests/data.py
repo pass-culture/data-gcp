@@ -1,21 +1,116 @@
-SIMPLE_TABLE_1_INPUT = {
-    "raw_table": [
-        {"id": "0", "float_col": 1.0, "string_col": "some text", "unused_col": "xx"},
-        {"id": "1", "float_col": 2.0, "string_col": "other text", "unused_col": None},
-    ]
-}
-SIMPLE_TABLE_1_EXPECTED = [
-    {"id": "0", "new_float_col": 2.0, "new_string_col": "om"},
-    {"id": "1", "new_float_col": 4.0, "new_string_col": "th"},
-]
+from datetime import datetime
 
-SIMPLE_TABLE_2_INPUT = {
-    "raw_table": [
-        {"id": "0", "float_col": 1.0, "string_col": "some text", "unused_col": "xx"},
-        {"id": "1", "float_col": 2.0, "string_col": "other text", "unused_col": None},
-    ]
+# enriched_offer_data
+ENRICHED_OFFER_DATA_INPUT = {
+    "booking": [
+        {"userId": "1", "stockId": "1", "id": "4", "quantity": "2", "dateCreated": "2019-11-20",
+         "token": "ABC123", "amount": "0", "isCancelled": False, "isUsed": False, "dateUsed": "2019-11-22"},
+    ],
+    "favorite": [
+        {"id": "1", "offerId": "3", "userId": "1"},
+        {"id": "2", "offerId": "4", "userId": "2"},
+        {"id": "3", "offerId": "3", "userId": "3"},
+    ],
+    "offer": [
+        {"venueId": "1", "productId": "1", "id": "3", "type": "CINEMA", "name": "Test",
+         "isActive": True, "mediaUrls": '["https://url.test", "https://someurl.test"]', "url": None,
+         "isNational": False, "dateCreated": "2019-11-20", "isDuo": False, "fieldsUpdated": "{}"},
+        {"venueId": "2", "productId": "2", "id": "4", "type": "LIVRE_EDITION", "name": "RIP Dylan Rieder",
+         "isActive": True, "mediaUrls": '["https://url.test", "https://someurl.test"]', "url": None,
+         "isNational": False, "dateCreated": "2019-11-20", "isDuo": False, "fieldsUpdated": "{}"},
+    ],
+    "offerer": [
+        {"id": "3", "thumbCount": "0", "isActive": True, "postalCode": "93100", "city": "Montreuil",
+         "dateCreated": "2019-11-20", "name": "Test Offerer", "siren": "123456789", "fieldsUpdated": "{}"},
+        {"id": "4", "siren": "234567890", "thumbCount": "0", "isActive": True, "postalCode": "93100",
+         "city": "Montreuil", "dateCreated": "2019-11-20", "name": "Test Offerer", "fieldsUpdated": "{}"},
+    ],
+    "payment": [
+        {"bookingId": "4", "id": "1", "amount": "10", "reimbursementRule": "test", "reimbursementRate": "1",
+         "recipientName": "Toto", "recipientSiren": "123456789", "author": "test"},
+    ],
+    "payment_status": [
+        {"paymentId": "1", "id": "1", "date": "2019-01-01", "status": "PENDING"},
+    ],
+    "product": [
+        {"id": "1", "type": "CINEMA", "thumbCount": "0", "name": "Livre",
+         "mediaUrls": '["https://url.test", "https://someurl.test"]', "fieldsUpdated": "{}", "url": None,
+         "isNational": False},
+        {"id": "2", "type": "LIVRE_EDITION", "thumbCount": "0", "name": "Livre",
+         "mediaUrls": '["https://url.test", "https://someurl.test"]', "fieldsUpdated": "{}", "url": None,
+         "isNational": False},
+    ],
+    "stock": [
+        {"offerId": "3", "id": "1", "dateCreated": "2019-11-01", "quantity": "10", "bookingLimitDatetime": "2019-11-23",
+         "beginningDatetime": "2019-11-24", "isSoftDeleted": False, "dateModified": "2019-11-20", "price": "0",
+         "fieldsUpdated": "{}"},
+        {"offerId": "4", "id": "2", "dateCreated": "2019-10-01", "quantity": "12", "isSoftDeleted": False,
+         "dateModified": "2019-11-20", "price": "0", "bookingLimitDatetime": None, "beginningDatetime": None,
+         "fieldsUpdated": "{}"},
+    ],
+    "user": [
+        {"id": "1", "email": "test@email.com", "canBookFreeOffers": True, "isAdmin": False, "postalCode": "93100",
+         "departementCode": "93", "publicName": "Test", "dateCreated": "2018-11-20", "needsToFillCulturalSurvey": True,
+         "culturalSurveyFilledDate": None},
+        {"id": "2", "email": "other@test.com", "canBookFreeOffers": True, "isAdmin": False, "postalCode": "93100",
+         "departementCode": "93", "publicName": "Test", "dateCreated": "2018-11-20", "needsToFillCulturalSurvey": True,
+         "culturalSurveyFilledDate": None},
+        {"id": "3", "email": "louie.lopez@test.com", "canBookFreeOffers": True, "isAdmin": False, "postalCode": "93100",
+         "departementCode": "93", "publicName": "Test", "dateCreated": "2018-11-20", "needsToFillCulturalSurvey": True,
+         "culturalSurveyFilledDate": None},
+    ],
+    "venue": [
+        {"managingOffererId": "3", "id": "1", "siret": "12345678900026", "thumbCount": "0", "name": "Test Venue",
+         "postalCode": "93", "city": "Montreuil", "departementCode": "93", "isVirtual": False, "fieldsUpdated": "{}"},
+        {"managingOffererId": "4", "id": "2", "siret": "23456789000067", "thumbCount": "0", "name": "Test Venue",
+         "postalCode": "93", "city": "Montreuil", "departementCode": "93", "isVirtual": False, "fieldsUpdated": "{}"},
+    ],
 }
-SIMPLE_TABLE_2_EXPECTED = [
-    {"id": "0", "new_float_col": 3.0, "new_string_col": "me "},
-    {"id": "1", "new_float_col": 6.0, "new_string_col": "her"},
+ENRICHED_OFFER_DATA_EXPECTED = [
+    {
+        "offer_id": "3",
+        "identifiant_structure": "3",
+        "nom_structure": "Test Offerer",
+        "identifiant_lieu": "1",
+        "nom_lieu": "Test Venue",
+        "departement_lieu": "93",
+        "nom_offre": "Test",
+        "categorie_offre": "CINEMA",
+        "date_creation_offre": datetime(2019, 11, 20, 0, 0),
+        "duo": False,
+        "offre_numerique": False,
+        "bien_physique": False,
+        "sortie": True,
+        "nombre_reservations": 2.0,
+        "nombre_reservations_annulees": 0.0,
+        "nombre_reservations_validees": 0.0,
+        "nombre_fois_ou_l_offre_a_ete_mise_en_favoris": 2.0,
+        "stock": 10.0,
+        "offer_humanized_id": "AM",
+        "lien_portail_pro": "https://pro.passculture.beta.gouv.fr/offres/AM",
+        "lien_webapp": "https://app.passculture.beta.gouv.fr/offre/details/AM",
+    },
+    {
+        "offer_id": "4",
+        "identifiant_structure": "4",
+        "nom_structure": "Test Offerer",
+        "identifiant_lieu": "2",
+        "nom_lieu": "Test Venue",
+        "departement_lieu": "93",
+        "nom_offre": "RIP Dylan Rieder",
+        "categorie_offre": "LIVRE_EDITION",
+        "date_creation_offre": datetime(2019, 11, 20, 0, 0),
+        "duo": False,
+        "offre_numerique": False,
+        "bien_physique": True,
+        "sortie": False,
+        "nombre_reservations": 0.0,
+        "nombre_reservations_annulees": 0.0,
+        "nombre_reservations_validees": 0.0,
+        "nombre_fois_ou_l_offre_a_ete_mise_en_favoris": 1.0,
+        "stock": 12.0,
+        "offer_humanized_id": "AQ",
+        "lien_portail_pro": "https://pro.passculture.beta.gouv.fr/offres/AQ",
+        "lien_webapp": "https://app.passculture.beta.gouv.fr/offre/details/AQ",
+    },
 ]

@@ -1,17 +1,8 @@
 import pytest
 from google.cloud import bigquery
 
-from analytics.tests.queries_to_be_tested import (
-    define_simple_query_1,
-    define_simple_query_2,
-)
 from analytics.tests.config import TEST_DATASET, GCP_PROJECT
-from analytics.tests.data import (
-    SIMPLE_TABLE_1_INPUT,
-    SIMPLE_TABLE_1_EXPECTED,
-    SIMPLE_TABLE_2_EXPECTED,
-    SIMPLE_TABLE_2_INPUT,
-)
+from analytics.tests.data import ENRICHED_OFFER_DATA_INPUT, ENRICHED_OFFER_DATA_EXPECTED
 from analytics.tests.utils import (
     drop_dataset,
     create_dataset,
@@ -20,6 +11,7 @@ from analytics.tests.utils import (
     run_query,
     retrieve_data,
 )
+from dependencies.data_analytics.enriched_data.offer import define_enriched_offer_data_full_query
 from set_env import set_env_vars
 
 
@@ -43,28 +35,23 @@ def flush_dataset():
 
 
 @pytest.mark.parametrize(
-    ["table_name", "query", "input_data", "expected"],
+    ["table_name", "query", "input_data", "expected", "sorting_key"],
     [
         (
-            "simple_table_1",
-            define_simple_query_1(dataset=TEST_DATASET),
-            SIMPLE_TABLE_1_INPUT,
-            SIMPLE_TABLE_1_EXPECTED,
-        ),
-        (
-            "simple_table_2",
-            define_simple_query_2(dataset=TEST_DATASET),
-            SIMPLE_TABLE_2_INPUT,
-            SIMPLE_TABLE_2_EXPECTED,
-        ),
+            "enriched_offer_data",
+            define_enriched_offer_data_full_query(dataset=TEST_DATASET),
+            ENRICHED_OFFER_DATA_INPUT,
+            ENRICHED_OFFER_DATA_EXPECTED,
+            "offer_id",
+        )
     ],
 )
-def test_create_queries(flush_dataset, table_name, query, input_data, expected):
+def test_create_queries(flush_dataset, table_name, query, input_data, expected, sorting_key):
     create_data(client=pytest.bq_client, dataset=TEST_DATASET, data=input_data)
     run_query(client=pytest.bq_client, query=query)
     output = retrieve_data(
         client=pytest.bq_client, dataset=TEST_DATASET, table=table_name
     )
-    assert sorted(output, key=lambda d: d["id"]) == sorted(
-        expected, key=lambda d: d["id"]
+    assert sorted(output, key=lambda d: d[sorting_key]) == sorted(
+        expected, key=lambda d: d[sorting_key]
     )

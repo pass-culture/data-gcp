@@ -186,4 +186,14 @@ BIGQUERY_SCHEMAS = {
         "dateCreated": "DATETIME",
         "lastupdate": "DATETIME",
     },
+    "venue_label": {
+        "id": "STRING",
+        "label": "STRING",
+        "lastupdate": "DATETIME",
+    },
+    "venue_type": {
+        "id": "STRING",
+        "label": "STRING",
+        "lastupdate": "DATETIME",
+    },
 }

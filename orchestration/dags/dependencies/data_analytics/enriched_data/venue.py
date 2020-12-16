@@ -158,6 +158,7 @@ def define_enriched_venue_query(dataset):
                 ,venue.address AS adresse
                 ,venue.latitude
                 ,venue.longitude
+                ,venue.departementCode AS departement
                 ,venue.postalCode AS code_postal
                 ,venue.city AS ville
                 ,venue.siret

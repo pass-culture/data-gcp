@@ -145,3 +145,44 @@ ENRICHED_USER_DATA_EXPECTED = [
     "user_humanized_id",
     "date_derniere_reservation",
 ]
+
+# enriched_venue_data => NO DATA (only structure can be tested)
+ENRICHED_VENUE_DATA_INPUT = {
+    "booking": [],
+    "favorite": [],
+    "offer": [],
+    "offerer": [],
+    "payment": [],
+    "payment_status": [],
+    "stock": [],
+    "venue": [],
+    "venue_label": [],
+    "venue_type": [],
+}
+
+ENRICHED_VENUE_DATA_EXPECTED = [
+    "venue_id",
+    "nom_du_lieu",
+    "email",
+    "adresse",
+    "latitude",
+    "longitude",
+    "departement",
+    "code_postal",
+    "ville",
+    "siret",
+    "lieu_numerique",
+    "identifiant_de_la_structure",
+    "nom_de_la_structure",
+    "type_de_lieu",
+    "label_du_lieu",
+    "nombre_total_de_reservations",
+    "nombre_de_reservations_non_annulees",
+    "nombre_de_reservations_validees",
+    "date_de_creation_de_la_premiere_offre",
+    "date_de_creation_de_la_derniere_offre",
+    "nombre_offres_creees",
+    "chiffre_affaires_theorique_realise",
+    "chiffre_affaires_reel_realise",
+    "venue_humanized_id",
+]

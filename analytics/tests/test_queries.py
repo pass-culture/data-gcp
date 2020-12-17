@@ -3,11 +3,16 @@ from google.cloud import bigquery
 
 from analytics.tests.config import TEST_DATASET, GCP_PROJECT
 from analytics.tests.data import (
-    ENRICHED_OFFER_DATA_INPUT, ENRICHED_OFFER_DATA_EXPECTED,
-    ENRICHED_STOCK_DATA_INPUT, ENRICHED_STOCK_DATA_EXPECTED,
-    ENRICHED_USER_DATA_INPUT, ENRICHED_USER_DATA_EXPECTED,
-    ENRICHED_VENUE_DATA_INPUT, ENRICHED_VENUE_DATA_EXPECTED,
-    ENRICHED_OFFERER_DATA_INPUT, ENRICHED_OFFERER_DATA_EXPECTED,
+    ENRICHED_OFFER_DATA_INPUT,
+    ENRICHED_OFFER_DATA_EXPECTED,
+    ENRICHED_STOCK_DATA_INPUT,
+    ENRICHED_STOCK_DATA_EXPECTED,
+    ENRICHED_USER_DATA_INPUT,
+    ENRICHED_USER_DATA_EXPECTED,
+    ENRICHED_VENUE_DATA_INPUT,
+    ENRICHED_VENUE_DATA_EXPECTED,
+    ENRICHED_OFFERER_DATA_INPUT,
+    ENRICHED_OFFERER_DATA_EXPECTED,
 )
 from analytics.tests.utils import (
     drop_dataset,
@@ -18,11 +23,21 @@ from analytics.tests.utils import (
     retrieve_data,
     get_table_columns,
 )
-from dependencies.data_analytics.enriched_data.offer import define_enriched_offer_data_full_query
-from dependencies.data_analytics.enriched_data.offerer import define_enriched_offerer_data_full_query
-from dependencies.data_analytics.enriched_data.stock import define_enriched_stock_data_full_query
-from dependencies.data_analytics.enriched_data.user import define_enriched_user_data_full_query
-from dependencies.data_analytics.enriched_data.venue import define_enriched_venue_data_full_query
+from dependencies.data_analytics.enriched_data.offer import (
+    define_enriched_offer_data_full_query,
+)
+from dependencies.data_analytics.enriched_data.offerer import (
+    define_enriched_offerer_data_full_query,
+)
+from dependencies.data_analytics.enriched_data.stock import (
+    define_enriched_stock_data_full_query,
+)
+from dependencies.data_analytics.enriched_data.user import (
+    define_enriched_user_data_full_query,
+)
+from dependencies.data_analytics.enriched_data.venue import (
+    define_enriched_venue_data_full_query,
+)
 from set_env import set_env_vars
 
 
@@ -61,10 +76,12 @@ def flush_dataset():
             ENRICHED_STOCK_DATA_INPUT,
             ENRICHED_STOCK_DATA_EXPECTED,
             "stock_id",
-        )
+        ),
     ],
 )
-def test_create_queries(flush_dataset, table_name, query, input_data, expected, sorting_key):
+def test_create_queries(
+    flush_dataset, table_name, query, input_data, expected, sorting_key
+):
     create_data(client=pytest.bq_client, dataset=TEST_DATASET, data=input_data)
     run_query(client=pytest.bq_client, query=query)
     output = retrieve_data(
@@ -101,5 +118,7 @@ def test_create_queries(flush_dataset, table_name, query, input_data, expected, 
 def test_create_queries_empty(flush_dataset, table_name, query, input_data, expected):
     create_data(client=pytest.bq_client, dataset=TEST_DATASET, data=input_data)
     run_query(client=pytest.bq_client, query=query)
-    output = get_table_columns(client=pytest.bq_client, dataset=TEST_DATASET, table=table_name)
+    output = get_table_columns(
+        client=pytest.bq_client, dataset=TEST_DATASET, table=table_name
+    )
     assert output == expected

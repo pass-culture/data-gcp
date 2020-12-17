@@ -3,7 +3,9 @@ import sys
 from google.cloud import bigquery
 
 from analytics.utils import run_query
-from dependencies.data_analytics.enriched_data.stock import define_enriched_stock_data_full_query
+from dependencies.data_analytics.enriched_data.stock import (
+    define_enriched_stock_data_full_query,
+)
 from set_env import set_env_vars
 from analytics.config import MIGRATION_ENRICHED_STOCK_DATA
 

@@ -41,7 +41,8 @@ def insert_rows(client, dataset, table, rows):
         fields = ", ".join(
             [
                 f"CAST('{val}' AS {BIGQUERY_SCHEMAS[table][col]}) AS {col}"
-                for col, val in row.items() if val is not None
+                for col, val in row.items()
+                if val is not None
             ]
         )
         query = f"SELECT {fields};"

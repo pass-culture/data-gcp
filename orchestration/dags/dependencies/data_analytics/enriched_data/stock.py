@@ -68,18 +68,18 @@ def define_enriched_stock_data_query(dataset):
             SELECT
                 stock.id AS stock_id,
                 stock.offerId AS offer_id,
-                offer.name AS offer_name,
+                offer.name AS nom_offre,
                 venue.managingOffererId AS offerer_id,
-                offer.type AS offer_type,
-                venue.departementCode AS venue_departement_code,
-                stock.dateCreated AS stock_issued_at,
-                stock.bookingLimitDatetime AS booking_limit_datetime,
-                stock.beginningDatetime AS beginning_datetime,
+                offer.type AS type_d_offre,
+                venue.departementCode AS departement,
+                stock.dateCreated AS date_creation_du_stock,
+                stock.bookingLimitDatetime AS date_limite_de_reservation,
+                stock.beginningDatetime AS date_debut_de_l_evenement,
                 available_stock_information.stock_disponible_reel,
-                stock.quantity AS quantity,
-                stock_booking_information.booking_quantity,
-                stock_booking_information.bookings_cancelled,
-                stock_booking_information.bookings_paid
+                stock.quantity AS stock_disponible_brut_de_reservations,
+                stock_booking_information.booking_quantity AS nombre_total_de_reservations,
+                stock_booking_information.bookings_cancelled AS nombre_de_reservations_annulees,
+                stock_booking_information.bookings_paid AS nombre_de_reservations_ayant_un_paiement
              FROM {dataset}.stock
              LEFT JOIN {dataset}.offer ON stock.offerId = offer.id
              LEFT JOIN {dataset}.venue ON venue.id = offer.venueId

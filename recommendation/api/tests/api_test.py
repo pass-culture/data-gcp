@@ -26,6 +26,24 @@ def test_health_checks(get_materialized_view_status_mock, materialized_view_name
     }
 
 
+def test_home():
+    # Given
+    # When
+    response = app.test_client().get("/")
+
+    # Then
+    assert response.status_code == 200
+    assert (
+        response.data
+        == b"""
+         __   __   __ __   __  o  __  
+        |  ' (__) |  )  ) (__( | |  ) 
+        Welcome to the recommendation API! 
+        Check this route '/recommendation/<user_id>?token=<token>' for recommended offers.
+    """
+    )
+
+
 def test_check():
     # Given
     # When

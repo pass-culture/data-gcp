@@ -18,6 +18,17 @@ APP_CONFIG = {
 app = Flask(__name__)
 
 
+@app.route("/")
+def home():
+    home_message = """
+         __   __   __ __   __  o  __  
+        |  ' (__) |  )  ) (__( | |  ) 
+        Welcome to the recommendation API! 
+        Check this route '/recommendation/<user_id>?token=<token>' for recommended offers.
+    """
+    return home_message
+
+
 @app.route("/check")
 def check():
     return "OK"

@@ -116,7 +116,7 @@ def test_get_final_recommendation_for_group_a(
 
     # When
     recommendations = get_final_recommendations(
-        user_id, 2.331289, 48.830719, app_config, connection
+        user_id, 2.331289, 48.830719, 10, app_config, connection
     )
 
     # Then
@@ -139,7 +139,7 @@ def test_get_final_recommendation_for_group_b(
 
     # When
     recommendations = get_final_recommendations(
-        user_id, None, None, app_config, connection
+        user_id, None, None, 10, app_config, connection
     )
 
     # Then
@@ -171,7 +171,7 @@ def test_get_final_recommendation_for_new_user(
 
     # When
     recommendations = get_final_recommendations(
-        user_id, 2.331289, 48.830719, app_config, connection
+        user_id, 2.331289, 48.830719, 10, app_config, connection
     )
     save_recommendation_mock.assert_called_once()
 

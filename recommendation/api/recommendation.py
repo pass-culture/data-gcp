@@ -23,6 +23,7 @@ def get_final_recommendations(
     user_id: int,
     longitude: int,
     latitude: int,
+    recommendation_number: int,
     app_config: Dict[str, Any],
     connection=None,
 ) -> List[int]:
@@ -66,7 +67,7 @@ def get_final_recommendations(
 
         final_recommendations = order_offers_by_score_and_diversify_types(
             scored_recommendation_for_user
-        )
+        )[:recommendation_number]
     else:
         final_recommendations = []
 

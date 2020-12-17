@@ -20,7 +20,7 @@ TABLES = {
         "write_disposition": "WRITE_APPEND",
     },
 }
-BIGQUERY_AB_TESTING_DATASET = "algo_reco_kpi_data"
+RECO_KPI_DATASET = "algo_reco_kpi_data"
 
 default_dag_args = {
     "on_failure_callback": task_fail_slack_alert,
@@ -31,7 +31,7 @@ default_dag_args = {
 }
 
 dag = DAG(
-    "export_cloudsql_tables_to_bigquery_v1",
+    "export_cloudsql_tables_to_bigquery_v2",
     default_args=default_dag_args,
     description="Export tables from CloudSQL to BigQuery",
     schedule_interval="@daily",
@@ -51,7 +51,7 @@ for table in TABLES:
         sql=f'SELECT * FROM EXTERNAL_QUERY("{CONNECTION_ID}", "{query}");',
         write_disposition=TABLES[table]["write_disposition"],
         use_legacy_sql=False,
-        destination_dataset_table=f"{BIGQUERY_AB_TESTING_DATASET}.{table}",
+        destination_dataset_table=f"{RECO_KPI_DATASET}.{table}",
         dag=dag,
     )
     export_table_tasks.append(task)

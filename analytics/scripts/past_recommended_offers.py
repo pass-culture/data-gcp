@@ -8,6 +8,7 @@ client = bigquery.Client()
 table_id = f"{GCP_PROJECT_ID}.{GCP_BIGQUERY_DATASET}.past_recommended_offers"
 
 schema = [
+    bigquery.SchemaField("id", "INTEGER", mode="REQUIRED"),
     bigquery.SchemaField("userid", "INTEGER", mode="REQUIRED"),
     bigquery.SchemaField("offerid", "INTEGER", mode="REQUIRED"),
     bigquery.SchemaField("date", "TIMESTAMP", mode="REQUIRED"),

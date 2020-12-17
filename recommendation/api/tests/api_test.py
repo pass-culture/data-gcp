@@ -39,7 +39,9 @@ def test_home():
          __   __   __ __   __  o  __  
         |  ' (__) |  )  ) (__( | |  ) 
         Welcome to the recommendation API! 
-        Check this route '/recommendation/<user_id>?token=<token>' for recommended offers.
+        Check this route '/recommendation/<user_id>?token=<token>' for recommended offers. 
+        ()_() 
+        ( oo) 
     """
     )
 

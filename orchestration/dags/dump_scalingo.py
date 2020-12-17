@@ -3,6 +3,7 @@ import ast
 from datetime import datetime, timedelta
 
 import airflow
+import gcsfs
 from airflow import DAG
 from airflow.contrib.hooks.ssh_hook import SSHHook
 from airflow.contrib.operators.postgres_to_gcs_operator import (
@@ -20,19 +21,19 @@ GCS_BUCKET = "dump_scalingo"
 GCP_PROJECT_ID = "pass-culture-app-projet-test"
 
 TABLES = [
-    # "user",
-    # "provider",
+    "user",
+    "provider",
     "offerer",
-    # "bank_information",
-    # "booking",
-    # "payment",
-    # "venue",
-    # "user_offerer",
-    # "offer",
-    # "stock",
-    # "favorite",
-    # "venue_type",
-    # "venue_label",
+    "bank_information",
+    "booking",
+    "payment",
+    "venue",
+    "user_offerer",
+    "offer",
+    "stock",
+    "favorite",
+    "venue_type",
+    "venue_label",
 ]
 
 TESTING = ast.literal_eval(os.environ.get("TESTING"))
@@ -100,6 +101,19 @@ def query_postgresql_from_tunnel(**kwargs):
     return
 
 
+def clean_csv(file_name):
+    fs = gcsfs.GCSFileSystem(project=GCP_PROJECT_ID)
+    with fs.open(f"gs://{GCS_BUCKET}/{file_name}") as file_in:
+        with fs.open(f"gs://{GCS_BUCKET}/{file_name}", "w") as file_out:
+            for line in file_in.readlines()[1:]:
+                file_out.write(
+                    line.decode("utf-8")
+                    .replace("[", "{")
+                    .replace("]", "}")
+                    .replace("null", "")
+                )
+
+
 last_task = start
 
 for table in TABLES:
@@ -125,6 +139,13 @@ for table in TABLES:
     now = datetime.now()
     file_name = f"{table}/{now.year}_{now.month}_{now.day}_{table}.csv"
 
+    clean_table = PythonOperator(
+        task_id=f"clean_csv_{table}",
+        python_callable=clean_csv,
+        op_kwargs={"file_name": file_name},
+        dag=dag,
+    )
+
     drop_table_task = CloudSqlQueryOperator(
         gcp_cloudsql_conn_id="test_cloudsql",
         task_id=f"drop_table_public_{table}",
@@ -148,8 +169,7 @@ for table in TABLES:
         instance=INSTANCE_DATABASE,
     )
 
-    last_task >> drop_table_task >> sql_restore_task
-    # last_task >> sql_restore_task
+    last_task >> clean_table >> drop_table_task >> sql_restore_task
     last_task = sql_restore_task
 
 

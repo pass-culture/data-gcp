@@ -1,5 +1,7 @@
 import os
 import collections
+import datetime
+import pytz
 from random import random
 from typing import Any, Dict, List, Tuple
 
@@ -21,6 +23,7 @@ def get_final_recommendations(
     user_id: int,
     longitude: int,
     latitude: int,
+    recommendation_number: int,
     app_config: Dict[str, Any],
     connection=None,
 ) -> List[int]:
@@ -64,15 +67,31 @@ def get_final_recommendations(
 
         final_recommendations = order_offers_by_score_and_diversify_types(
             scored_recommendation_for_user
-        )
+        )[:recommendation_number]
     else:
         final_recommendations = []
+
+    save_recommendation(user_id, final_recommendations, cursor)
+    if final_recommendations:
+        connection.commit()
 
     if close_connection:
         cursor.close()
         connection.close()
 
     return final_recommendations
+
+
+def save_recommendation(user_id: int, recommendations: List[int], cursor):
+    date = datetime.datetime.now(pytz.utc)
+    for offer_id in recommendations:
+        row = (user_id, offer_id, date)
+        cursor.execute(
+            f"INSERT INTO public.past_recommended_offers "
+            f"(userid, offerid, date) "
+            f"VALUES (%s, %s, %s)",
+            row,
+        )
 
 
 def get_intermediate_recommendations_for_user(

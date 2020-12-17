@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, make_response
 
 from health_check_queries import get_materialized_view_status
 from recommendation import get_final_recommendations
@@ -20,14 +20,20 @@ app = Flask(__name__)
 
 @app.route("/")
 def home():
-    return """
-         __   __   __ __   __  o  __  
-        |  ' (__) |  )  ) (__( | |  ) 
-        Welcome to the recommendation API! 
-        Check this route '/recommendation/<user_id>?token=<token>' for recommended offers. 
+    response = make_response(
+        """
+         __   __   __ __   __  o  __
+        |  ' (__) |  )  ) (__( | |  )
+        
+        Welcome to the recommendation API!
+        Check this route '/recommendation/<user_id>?token=<token>' for recommended offers.
+        
         ()_() 
-        ( oo) 
+        ( oo)
     """
+    )
+    response.headers["content-type"] = "text/plain"
+    return response
 
 
 @app.route("/check")

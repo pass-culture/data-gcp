@@ -33,17 +33,6 @@ def test_home():
 
     # Then
     assert response.status_code == 200
-    assert (
-        response.data
-        == b"""
-         __   __   __ __   __  o  __  
-        |  ' (__) |  )  ) (__( | |  ) 
-        Welcome to the recommendation API! 
-        Check this route '/recommendation/<user_id>?token=<token>' for recommended offers. 
-        ()_() 
-        ( oo) 
-    """
-    )
 
 
 def test_check():

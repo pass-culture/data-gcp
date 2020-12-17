@@ -1,19 +1,15 @@
 import logging
-import os
 import sys
 
 from sqlalchemy import create_engine, engine
-from sqlalchemy.orm import sessionmaker, session
+from sqlalchemy.orm import session, sessionmaker
 
+from api import SQL_BASE, SQL_BASE_PASSWORD, SQL_BASE_USER, SQL_CONNECTION_NAME
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 logger = logging.getLogger()
 
-SQL_BASE_USER = os.environ.get("SQL_BASE_USER")
-SQL_BASE_PASSWORD = os.environ.get("SQL_BASE_PASSWORD")
-SQL_CONNECTION_NAME = os.environ.get("SQL_CONNECTION_NAME")
-SQL_BASE = os.environ.get("SQL_BASE")
 
 query_string = dict(
     {"unix_sock": "/cloudsql/{}/.s.PGSQL.5432".format(SQL_CONNECTION_NAME)}

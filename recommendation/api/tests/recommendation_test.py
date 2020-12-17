@@ -1,9 +1,8 @@
 import os
-from typing import Any, Dict, List, Tuple
-from unittest.mock import patch
+from typing import Any, Dict, List
+from unittest.mock import patch, Mock
 
 import pandas as pd
-import psycopg2
 import pytest
 from numpy.testing import assert_array_equal
 from sqlalchemy import create_engine
@@ -38,14 +37,11 @@ def app_config() -> Dict[str, Any]:
 
 
 @pytest.fixture
-def setup_database(app_config: Dict[str, Any]) -> Tuple[Any, Any]:
-    connection = psycopg2.connect(**TEST_DATABASE_CONFIG)
-    cursor = connection.cursor()
-
+def setup_database(app_config: Dict[str, Any]) -> Any:
     engine = create_engine(
         f"postgresql+psycopg2://postgres:postgres@127.0.0.1:{DATA_GCP_TEST_POSTGRES_PORT}/{DB_NAME}"
     )
-
+    connection = engine.connect().execution_options(autocommit=True)
     recommendable_offers = pd.DataFrame(
         {
             "id": [1, 2, 3, 4, 5],  # BIGINT,
@@ -71,7 +67,7 @@ def setup_database(app_config: Dict[str, Any]) -> Tuple[Any, Any]:
     ab_testing = pd.DataFrame({"userid": [111, 112], "groupid": ["A", "B"]})
     ab_testing.to_sql(app_config["AB_TESTING_TABLE"], con=engine, if_exists="replace")
 
-    yield connection, cursor
+    yield connection
 
     engine.execute("DROP TABLE IF EXISTS recommendable_offers;")
     engine.execute("DROP TABLE IF EXISTS non_recommendable_offers;")
@@ -82,15 +78,17 @@ def setup_database(app_config: Dict[str, Any]) -> Tuple[Any, Any]:
 @patch("recommendation.get_intermediate_recommendations_for_user")
 @patch("recommendation.get_scored_recommendation_for_user")
 @patch("recommendation.get_iris_from_coordinates")
+@patch("recommendation.create_db_connection")
 def test_get_final_recommendation_for_group_a(
-    get_iris_from_coordinates_mock,
-    get_scored_recommendation_for_user_mock,
-    get_intermediate_recommendations_for_user_mock,
-    setup_database: Tuple[Any, Any],
+    connection_mock: Mock,
+    get_iris_from_coordinates_mock: Mock,
+    get_scored_recommendation_for_user_mock: Mock,
+    get_intermediate_recommendations_for_user_mock: Mock,
+    setup_database: Any,
     app_config: Dict[str, Any],
 ):
     # Given
-    connection, cursor = setup_database
+    connection_mock.return_value = setup_database
     user_id = 111
     get_intermediate_recommendations_for_user_mock.return_value = [
         {"id": 2, "url": "url2", "type": "type2"},
@@ -104,48 +102,44 @@ def test_get_final_recommendation_for_group_a(
 
     # When
     recommendations = get_final_recommendations(
-        user_id, 2.331289, 48.830719, app_config, connection
+        user_id, 2.331289, 48.830719, app_config
     )
 
     # Then
     assert recommendations == [3, 2]
 
-    cursor.close()
-    connection.close()
 
-
+@patch("recommendation.create_db_connection")
 def test_get_final_recommendation_for_group_b(
-    setup_database: Tuple[Any, Any],
+    connection_mock: Mock,
+    setup_database: Any,
     app_config: Dict[str, Any],
 ):
     # Given
-    connection, cursor = setup_database
+    connection_mock.return_value = setup_database
     user_id = 112
 
     # When
-    recommendations = get_final_recommendations(
-        user_id, None, None, app_config, connection
-    )
+    recommendations = get_final_recommendations(user_id, None, None, app_config)
 
     # Then
     assert recommendations == []
-
-    cursor.close()
-    connection.close()
 
 
 @patch("recommendation.get_intermediate_recommendations_for_user")
 @patch("recommendation.get_scored_recommendation_for_user")
 @patch("recommendation.get_iris_from_coordinates")
+@patch("recommendation.create_db_connection")
 def test_get_final_recommendation_for_new_user(
-    get_iris_from_coordinates_mock,
-    get_scored_recommendation_for_user_mock,
-    get_intermediate_recommendations_for_user_mock,
-    setup_database: Tuple[Any, Any],
+    connection_mock: Mock,
+    get_iris_from_coordinates_mock: Mock,
+    get_scored_recommendation_for_user_mock: Mock,
+    get_intermediate_recommendations_for_user_mock: Mock,
+    setup_database: Any,
     app_config: Dict[str, Any],
 ):
     # Given
-    connection, cursor = setup_database
+    connection_mock.return_value = setup_database
     user_id = 113
     get_intermediate_recommendations_for_user_mock.return_value = []
     get_scored_recommendation_for_user_mock.return_value = []
@@ -153,25 +147,22 @@ def test_get_final_recommendation_for_new_user(
 
     # When
     recommendations = get_final_recommendations(
-        user_id, 2.331289, 48.830719, app_config, connection
+        user_id, 2.331289, 48.830719, app_config
     )
 
     # Then
     assert recommendations == []
 
-    cursor.close()
-    connection.close()
 
-
-def test_get_intermediate_recommendation_for_user(setup_database: Tuple[Any, Any]):
+def test_get_intermediate_recommendation_for_user(setup_database: Any):
     # Given
-    connection, cursor = setup_database
+    connection = setup_database
 
     # When
     user_id = 111
     user_iris_id = 1
     user_recommendation = get_intermediate_recommendations_for_user(
-        user_id, user_iris_id, cursor
+        user_id, user_iris_id, connection
     )
 
     # Then
@@ -183,22 +174,18 @@ def test_get_intermediate_recommendation_for_user(setup_database: Tuple[Any, Any
             {"id": 5, "type": "E", "url": None},
         ],
     )
-
-    cursor.close()
     connection.close()
 
 
-def test_get_intermediate_recommendation_for_user_with_no_iris(
-    setup_database: Tuple[Any, Any]
-):
+def test_get_intermediate_recommendation_for_user_with_no_iris(setup_database: Any):
     # Given
-    connection, cursor = setup_database
+    connection = setup_database
 
     # When
     user_id = 222
     user_iris_id = None
     user_recommendation = get_intermediate_recommendations_for_user(
-        user_id, user_iris_id, cursor
+        user_id, user_iris_id, connection
     )
 
     # Then
@@ -211,8 +198,6 @@ def test_get_intermediate_recommendation_for_user_with_no_iris(
             {"id": 5, "type": "E", "url": None},
         ],
     )
-
-    cursor.close()
     connection.close()
 
 
@@ -265,7 +250,7 @@ def test_order_offers_by_score_and_diversify_types(
 
 @patch("recommendation.predict_score")
 def test_get_scored_recommendation_for_user(
-    predict_score_mock,
+    predict_score_mock: Mock,
     app_config: Dict[str, Any],
 ):
     # Given

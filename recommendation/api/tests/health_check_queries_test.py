@@ -1,11 +1,10 @@
 import os
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch, Mock
 
 import pandas as pd
 import pytest
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 
 from health_check_queries import (
     does_materialized_view_exist,
@@ -24,6 +23,7 @@ def setup_database() -> Any:
     engine = create_engine(
         f"postgresql+psycopg2://postgres:postgres@127.0.0.1:{DATA_GCP_TEST_POSTGRES_PORT}/{DB_NAME}"
     )
+    connection = engine.connect().execution_options(autocommit=True)
     engine.execute("DROP MATERIALIZED VIEW IF EXISTS recommendable_offers CASCADE;")
     engine.execute("DROP MATERIALIZED VIEW IF EXISTS non_recommendable_offers CASCADE;")
     engine.execute("DROP TABLE IF EXISTS temporary_table CASCADE;")
@@ -48,28 +48,28 @@ def setup_database() -> Any:
     engine.execute(
         "CREATE MATERIALIZED VIEW non_recommendable_offers AS SELECT * FROM empty_temporary_table;"
     )
-    session = sessionmaker(bind=engine)()
 
-    yield session
+    yield connection
 
     engine.execute("DROP MATERIALIZED VIEW IF EXISTS recommendable_offers CASCADE;")
     engine.execute("DROP MATERIALIZED VIEW IF EXISTS non_recommendable_offers CASCADE;")
     engine.execute("DROP TABLE IF EXISTS temporary_table CASCADE;")
     engine.execute("DROP TABLE IF EXISTS empty_temporary_table CASCADE;")
-    session.close()
 
 
 @pytest.mark.parametrize(
     "materialized_view_name,expected_result",
     [("recommendable_offers", True), ("iris_venues_mv", False)],
 )
-def test_does_view_exist(setup_database, materialized_view_name, expected_result):
+def test_does_view_exist(
+    setup_database: Any, materialized_view_name: str, expected_result: bool
+):
     # Given
-    session = setup_database
+    connection = setup_database
 
     # When
-    result = does_materialized_view_exist(session, materialized_view_name)
-    session.close()
+    result = does_materialized_view_exist(connection, materialized_view_name)
+    connection.close()
 
     # Then
     assert result is expected_result
@@ -83,29 +83,32 @@ def test_does_view_exist(setup_database, materialized_view_name, expected_result
         ("iris_venues_mv", False),
     ],
 )
-def test_does_view_have_data(setup_database, materialized_view_name, expected_result):
+def test_does_view_have_data(
+    setup_database: Any, materialized_view_name: str, expected_result: bool
+):
     # Given
-    session = setup_database
+    connection = setup_database
 
     # When
-    result = does_materialized_view_have_data(session, materialized_view_name)
+    result = does_materialized_view_have_data(connection, materialized_view_name)
 
-    session.close()
+    connection.close()
     # Then
     assert result is expected_result
 
 
 @patch("health_check_queries.does_materialized_view_have_data")
 @patch("health_check_queries.does_materialized_view_exist")
+@patch("health_check_queries.create_db_connection")
 def test_should_raise_exception_when_it_does_not_come_from_sql_alchemy(
-    does_materialized_view_exist_mock,
-    does_materialized_view_have_data_mock,
+    connection_mock: Mock,
+    does_materialized_view_exist_mock: Mock,
+    does_materialized_view_have_data_mock: Mock,
 ):
     # Given
     does_materialized_view_exist_mock.return_value = True
     does_materialized_view_have_data_mock.return_value = False
     materialized_view_name = "materialized_view_name"
-    session = MagicMock()
 
     # When
     result = get_materialized_view_status(materialized_view_name)

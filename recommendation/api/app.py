@@ -54,9 +54,11 @@ def recommendation(user_id: int):
         return "Forbidden", 403
 
     recommendations = get_final_recommendations(
-        user_id, longitude, latitude, APP_CONFIG
+        user_id,
+        longitude,
+        latitude,
+        APP_CONFIG,
     )[: APP_CONFIG["NUMBER_OF_RECOMMENDATIONS"]]
-
     return jsonify({"recommended_offers": recommendations})
 
 

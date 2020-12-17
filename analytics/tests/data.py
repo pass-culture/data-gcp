@@ -115,6 +115,96 @@ ENRICHED_OFFER_DATA_EXPECTED = [
     },
 ]
 
+# enriched_stock_data
+ENRICHED_STOCK_DATA_INPUT = {
+    "booking": [
+        {"userId": "1", "stockId": "1", "id": "4", "quantity": "2", "dateCreated": "2019-11-20",
+         "token": "ABC123", "amount": "0", "isCancelled": False, "isUsed": False, "dateUsed": "2019-11-22"}
+    ],
+    "offer": [
+        {"venueId": "1", "productId": "1", "id": "3", "type": "EventType.CINEMA", "name": "Test",
+         "isActive": True, "mediaUrls": '["https://url.test", "https://someurl.test"]', "url": None,
+         "isNational": False, "dateCreated": "2019-11-20", "isDuo": False, "fieldsUpdated": "{}"},
+        {"venueId": "1", "productId": "2", "id": "2", "type": "ThingType.LIVRE_EDITION", "name": "Test bis",
+         "isActive": True, "mediaUrls": '["https://url.test", "https://someurl.test"]', "url": None,
+         "isNational": False, "dateCreated": "2019-11-20", "isDuo": False, "fieldsUpdated": "{}"}
+    ],
+    "offerer": [
+        {"id": "3", "thumbCount": "0", "isActive": True, "postalCode": "93100", "city": "Montreuil",
+         "dateCreated": "2019-11-20", "name": "Test Offerer", "siren": "123456789", "fieldsUpdated": "{}"}
+    ],
+    "payment": [
+        {"bookingId": "4", "id": "1", "amount": "10", "reimbursementRule": "test", "reimbursementRate": "1",
+         "recipientName": "Toto", "recipientSiren": "123456789", "author": "test"}
+    ],
+    "payment_status": [
+        {"paymentId": "1", "id": "1", "date": "2019-01-01", "status": "PENDING"}
+    ],
+    "product": [
+        {"id": "1", "type": "EventType.CINEMA", "thumbCount": "0", "name": "Livre",
+         "mediaUrls": '["https://url.test", "https://someurl.test"]', "fieldsUpdated": "{}", "url": None,
+         "isNational": False},
+        {"id": "1", "type": "ThingType.LIVRE_EDITION", "thumbCount": "0", "name": "Livre",
+         "mediaUrls": '["https://url.test", "https://someurl.test"]', "fieldsUpdated": "{}", "url": None,
+         "isNational": False},
+    ],
+    "stock": [
+        {"offerId": "3", "id": "1", "dateCreated": "2019-11-01", "quantity": "10", "bookingLimitDatetime": "2019-11-23",
+         "beginningDatetime": "2019-11-24", "isSoftDeleted": False, "dateModified": "2019-11-20", "price": "0",
+         "fieldsUpdated": "{}"},
+        {"offerId": "2", "id": "2", "dateCreated": "2019-10-01", "quantity": "12", "bookingLimitDatetime": None,
+         "beginningDatetime": None, "isSoftDeleted": False, "dateModified": "2019-11-20", "price": "0",
+         "fieldsUpdated": "{}"}
+             ],
+    "user": [
+        {"id": "1", "email": "test@email.com", "canBookFreeOffers": True, "isAdmin": False, "postalCode": "93100",
+         "departementCode": "93", "publicName": "Test", "dateCreated": "2018-11-20", "needsToFillCulturalSurvey": True,
+         "culturalSurveyFilledDate": None},
+        {"id": "2", "email": "other@test.com", "canBookFreeOffers": True, "isAdmin": False, "postalCode": "93100",
+         "departementCode": "93", "publicName": "Test", "dateCreated": "2018-11-20", "needsToFillCulturalSurvey": True,
+         "culturalSurveyFilledDate": None}
+    ],
+    "venue": [
+        {"managingOffererId": "3", "id": "1", "siret": None, "thumbCount": "0", "name": "Test Venue",
+         "postalCode": None, "city": None, "departementCode": None, "isVirtual": True, "fieldsUpdated": "{}"}
+    ],
+}
+
+ENRICHED_STOCK_DATA_EXPECTED = [
+    {
+        "stock_id": "1",
+        "offer_id": "3",
+        "nom_offre": "Test",
+        "offerer_id": "3",
+        "type_d_offre": "EventType.CINEMA",
+        "departement": None,
+        "date_creation_du_stock": datetime(2019, 11, 1),
+        "date_limite_de_reservation": datetime(2019, 11, 23),
+        "date_debut_de_l_evenement": datetime(2019, 11, 24),
+        "stock_disponible_reel": 8.0,
+        "stock_disponible_brut_de_reservations": 10.0,
+        "nombre_total_de_reservations": 2.0,
+        "nombre_de_reservations_annulees": 0.0,
+        "nombre_de_reservations_ayant_un_paiement": 2.0
+    },
+    {
+        "stock_id": "2",
+        "offer_id": "2",
+        "nom_offre": "Test bis",
+        "offerer_id": "3",
+        "type_d_offre": "ThingType.LIVRE_EDITION",
+        "departement": None,
+        "date_creation_du_stock": datetime(2019, 10, 1),
+        "date_limite_de_reservation": None,
+        "date_debut_de_l_evenement": None,
+        "stock_disponible_reel": 12.0,
+        "stock_disponible_brut_de_reservations": 12.0,
+        "nombre_total_de_reservations": 0.0,
+        "nombre_de_reservations_annulees": 0.0,
+        "nombre_de_reservations_ayant_un_paiement": 0.0
+    },
+]
+
 # enriched_user_data => NO DATA (only structure can be tested)
 ENRICHED_USER_DATA_INPUT = {
     "booking": [],

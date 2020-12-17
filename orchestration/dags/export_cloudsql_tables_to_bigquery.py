@@ -1,8 +1,10 @@
 import datetime
+import os
 
 from airflow import DAG
 from airflow.contrib.operators.bigquery_operator import BigQueryOperator
 from airflow.operators.dummy_operator import DummyOperator
+from airflow.contrib.operators.gcp_sql_operator import CloudSqlQueryOperator
 
 from dependencies.data_analytics.config import (
     GCP_PROJECT_ID,
@@ -21,17 +23,35 @@ TABLES = {
     },
 }
 RECO_KPI_DATASET = "algo_reco_kpi_data"
+RECOMMENDATION_SQL_USER = os.environ.get("RECOMMENDATION_SQL_USER")
+RECOMMENDATION_SQL_PASSWORD = os.environ.get("RECOMMENDATION_SQL_PASSWORD")
+RECOMMENDATION_SQL_PUBLIC_IP = os.environ.get("RECOMMENDATION_SQL_PUBLIC_IP")
+RECOMMENDATION_SQL_PUBLIC_PORT = os.environ.get("RECOMMENDATION_SQL_PUBLIC_PORT")
+RECOMMENDATION_SQL_INSTANCE = "pcdata-poc-csql-recommendation"
+RECOMMENDATION_SQL_BASE = "pcdata-poc-csql-recommendation"
+TYPE = "postgres"
+LOCATION = "europe-west1"
+
+os.environ["AIRFLOW_CONN_PROXY_POSTGRES_TCP"] = (
+    f"gcpcloudsql://{RECOMMENDATION_SQL_USER}:{RECOMMENDATION_SQL_PASSWORD}@{RECOMMENDATION_SQL_PUBLIC_IP}:{RECOMMENDATION_SQL_PUBLIC_PORT}/{RECOMMENDATION_SQL_BASE}?"
+    f"database_type={TYPE}&"
+    f"project_id={GCP_PROJECT_ID}&"
+    f"location={LOCATION}&"
+    f"instance={RECOMMENDATION_SQL_INSTANCE}&"
+    f"use_proxy=True&"
+    f"sql_proxy_use_tcp=True"
+)
 
 default_dag_args = {
     "on_failure_callback": task_fail_slack_alert,
-    "start_date": datetime.datetime(2020, 12, 15),
+    "start_date": datetime.datetime(2020, 12, 16),
     "retries": 1,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT_ID,
 }
 
 dag = DAG(
-    "export_cloudsql_tables_to_bigquery_v2",
+    "export_cloudsql_tables_to_bigquery_v3",
     default_args=default_dag_args,
     description="Export tables from CloudSQL to BigQuery",
     schedule_interval="@daily",
@@ -56,6 +76,15 @@ for table in TABLES:
     )
     export_table_tasks.append(task)
 
+delete_rows_task = drop_table_task = CloudSqlQueryOperator(
+    task_id=f"drop_yesterday_rows_past_recommended_offers",
+    gcp_cloudsql_conn_id="proxy_postgres_tcp",
+    sql=f"DELETE FROM public.past_recommended_offers where date <= '{yesterday}'",
+    autocommit=True,
+    dag=dag,
+)
+
+
 end = DummyOperator(task_id="end", dag=dag)
 
-start >> export_table_tasks >> end
+start >> export_table_tasks >> delete_rows_task >> end

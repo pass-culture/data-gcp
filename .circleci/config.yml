@@ -243,7 +243,7 @@ jobs:
       DAG_RESTORE_DATA_ANALYTICS: restore_data_analytics_v1
       DAG_RECOMMMENDATION_CLOUDSQL: recommendation_cloud_sql_v42
       DAG_DUMP_SCALINGO: dump_scalingo_v1
-      DAG_EXPORT_CLOUDSQL_BIGQUERY: export_cloudsql_tables_to_bigquery_v2
+      DAG_EXPORT_CLOUDSQL_BIGQUERY: export_cloudsql_tables_to_bigquery_v3
     working_directory: ~/data-gcp/orchestration
     steps:
       - checkout:

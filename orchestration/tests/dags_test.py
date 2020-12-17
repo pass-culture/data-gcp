@@ -63,12 +63,12 @@ class TestDags(unittest.TestCase):
 
     def test_create_ab_testing_table_dag_is_loaded(self):
         # When
-        dag = self.dagbag.get_dag(dag_id="export_cloudsql_tables_to_bigquery_v2")
+        dag = self.dagbag.get_dag(dag_id="export_cloudsql_tables_to_bigquery_v3")
 
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 4)
+        self.assertEqual(len(dag.tasks), 5)
 
     def test_create_ab_testing_table_dag_is_loaded(self):
         # When

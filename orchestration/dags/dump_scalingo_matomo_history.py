@@ -7,13 +7,19 @@ from airflow.contrib.hooks.ssh_hook import SSHHook
 from airflow.contrib.operators.bigquery_table_delete_operator import (
     BigQueryTableDeleteOperator,
 )
-from airflow.contrib.operators.bigquery_operator import BigQueryCreateEmptyTableOperator
+
+from airflow.contrib.operators.bigquery_operator import (
+    BigQueryOperator,
+    BigQueryCreateEmptyTableOperator,
+)
 from airflow.contrib.operators.gcs_to_bq import GoogleCloudStorageToBigQueryOperator
 from airflow.contrib.operators.mysql_to_gcs import (
     MySqlToGoogleCloudStorageOperator,
 )
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python_operator import PythonOperator
+
+from dependencies.slack_alert import task_fail_slack_alert
 
 GCP_PROJECT_ID = "pass-culture-app-projet-test"
 GCS_BUCKET = "dump_scalingo"
@@ -46,16 +52,17 @@ TABLE_DATA = {
         ],
     },
 }
-BIGQUERY_DATASET = "algo_reco_matomo"
+BIGQUERY_DATASET = "algo_reco_kpi_matomo"
 
 default_args = {
+    "on_failure_callback": task_fail_slack_alert,
     "start_date": datetime(2020, 12, 10),
     "retries": 1,
     "retry_delay": timedelta(minutes=5),
 }
 
 dag = DAG(
-    "dump_scalingo_matomo_history_v1",
+    "dump_scalingo_matomo_history_v2",
     default_args=default_args,
     description="Dump scalingo matomo history to cloud storage in csv format and import it in bigquery",
     schedule_interval="@once",
@@ -76,7 +83,7 @@ os.environ[
 
 start = DummyOperator(task_id="start", dag=dag)
 end_export = DummyOperator(task_id="end_export", dag=dag)
-end = DummyOperator(task_id="end", dag=dag)
+end_import = DummyOperator(task_id="end_import", dag=dag)
 
 
 def create_tunnel():
@@ -165,4 +172,32 @@ for table in TABLE_DATA:
         skip_leading_rows=1,
         dag=dag,
     )
-    end_export >> delete_task >> create_empty_table_task >> import_task >> end
+    end_export >> delete_task >> create_empty_table_task >> import_task >> end_import
+
+
+dehumanize_query = f"""
+    SELECT
+        idvisit,
+        user_id,
+        IF(
+            REGEXP_CONTAINS(user_id, r"^[A-Z0-9]{2,}") = True,
+            algo_reco_kpi_data.dehumanize_id(REGEXP_EXTRACT(user_id, r"^[A-Z0-9]{2,}")),
+            ''
+        )
+        AS user_id_dehumanized,
+    FROM
+        {BIGQUERY_DATASET}.log_visit;
+"""
+
+dehumanize_user_id_task = BigQueryOperator(
+    task_id="dehumanize_user_id",
+    sql=dehumanize_query,
+    destination_dataset_table=f"{BIGQUERY_DATASET}.log_visit",
+    write_disposition="WRITE_TRUNCATE",
+    use_legacy_sql=False,
+    dag=dag,
+)
+
+end_dag = DummyOperator(task_id="end_dag", dag=dag)
+
+end_import >> dehumanize_user_id_task >> end_dag

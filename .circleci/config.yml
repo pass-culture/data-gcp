@@ -67,7 +67,7 @@ jobs:
           name: Run tests
           command: |
             . venv-analytics/bin/activate
-            export PYTHONPATH=$PYTHONPATH:~/data-gcp
+            export PYTHONPATH=$PYTHONPATH:~/data-gcp:~/data-gcp/orchestration/dags
             pytest tests
 
   recommendation-api-build:

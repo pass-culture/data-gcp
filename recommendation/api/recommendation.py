@@ -72,6 +72,8 @@ def get_final_recommendations(
         final_recommendations = []
 
     save_recommendation(user_id, final_recommendations, cursor)
+    if final_recommendations:
+        connection.commit()
 
     if close_connection:
         cursor.close()

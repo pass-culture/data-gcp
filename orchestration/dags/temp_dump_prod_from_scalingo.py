@@ -21,20 +21,27 @@ GCS_BUCKET = "dump_scalingo"
 GCP_PROJECT_ID = "pass-culture-app-projet-test"
 
 TABLES = [
-    "user",
-    "provider",
-    "offerer",
-    "bank_information",
-    "booking",
-    "payment",
-    "venue",
-    "user_offerer",
+    # "user",
+    # "provider",
+    # "offerer",
+    # "bank_information",
+    # "booking",
+    # "payment",
+    # "venue",
+    # "user_offerer",
     "offer",
-    "stock",
-    "favorite",
-    "venue_type",
-    "venue_label",
+    # "stock",
+    # "favorite",
+    # "venue_type",
+    # "venue_label",
 ]
+
+SPLIT_TABLES = [
+    "offer",
+    # "stock",
+]
+
+ROW_NUMBER_QUERIED = 1000000
 
 TESTING = ast.literal_eval(os.environ.get("TESTING"))
 LOCAL_HOST = "localhost"
@@ -87,6 +94,7 @@ def query_postgresql_from_tunnel(**kwargs):
         bucket=GCS_BUCKET,
         schema_filename=None,
         filename=kwargs["file_name"],
+        approx_max_file_size_bytes=1900000000,
         postgres_conn_id="postgres_scalingo",
         google_cloud_storage_conn_id="google_cloud_default",
         gzip=False,
@@ -101,37 +109,72 @@ def query_postgresql_from_tunnel(**kwargs):
     return
 
 
-def clean_csv(file_name):
+def clean_csv(file_name, table):
     fs = gcsfs.GCSFileSystem(project=GCP_PROJECT_ID)
-    with fs.open(f"gs://{GCS_BUCKET}/{file_name}") as file_in:
+
+    if table in SPLIT_TABLES:
         with fs.open(f"gs://{GCS_BUCKET}/{file_name}", "w") as file_out:
-            for line in file_in.readlines()[1:]:
-                file_out.write(
-                    line.decode("utf-8")
-                    .replace("[", "{")
-                    .replace("]", "}")
-                    .replace("null", "")
-                )
+            for page in range(10):
+                core_filename = file_name.split(".")[0]
+                with fs.open(
+                    f"gs://{GCS_BUCKET}/{core_filename}_{page}.csv"
+                ) as file_in:
+                    for line in file_in.readlines()[1:]:
+                        file_out.write(
+                            line.decode("utf-8")
+                            .replace("[", "{")
+                            .replace("]", "}")
+                            .replace("null", "")
+                        )
+
+    else:
+        with fs.open(f"gs://{GCS_BUCKET}/{file_name}") as file_in:
+            with fs.open(f"gs://{GCS_BUCKET}/{file_name}", "w") as file_out:
+                for line in file_in.readlines()[1:]:
+                    file_out.write(
+                        line.decode("utf-8")
+                        .replace("[", "{")
+                        .replace("]", "}")
+                        .replace("null", "")
+                    )
 
 
 last_task = start
 
 for table in TABLES:
-    sql_query = f"select * from {table};"
 
     # File path and name.
     now = datetime.now()
-    file_name = f"{table}/{now.year}_{now.month}_{now.day}_{table}.csv"
 
-    export_table = PythonOperator(
-        task_id=f"query_{table}",
-        python_callable=query_postgresql_from_tunnel,
-        op_kwargs={"table": table, "sql_query": sql_query, "file_name": file_name},
-        dag=dag,
-    )
+    if table in SPLIT_TABLES:
+        for page in range(10):
+            sql_query = f"""select * from {table} where id >= {page*ROW_NUMBER_QUERIED} and id < {(page+1)*ROW_NUMBER_QUERIED};"""
+            file_name = f"{table}/{now.year}_{now.month}_{now.day}_{table}_{page}.csv"
+            export_table = PythonOperator(
+                task_id=f"query_{table}_{page}",
+                python_callable=query_postgresql_from_tunnel,
+                op_kwargs={
+                    "table": table,
+                    "sql_query": sql_query,
+                    "file_name": file_name,
+                },
+                dag=dag,
+            )
+            last_task >> export_table
+            last_task = export_table
 
-    last_task >> export_table
-    last_task = export_table
+    else:
+        sql_query = f"select * from {table};"
+        file_name = f"{table}/{now.year}_{now.month}_{now.day}_{table}.csv"
+        export_table = PythonOperator(
+            task_id=f"query_{table}",
+            python_callable=query_postgresql_from_tunnel,
+            op_kwargs={"table": table, "sql_query": sql_query, "file_name": file_name},
+            dag=dag,
+        )
+
+        last_task >> export_table
+        last_task = export_table
 
 
 for table in TABLES:
@@ -142,7 +185,7 @@ for table in TABLES:
     clean_table = PythonOperator(
         task_id=f"clean_csv_{table}",
         python_callable=clean_csv,
-        op_kwargs={"file_name": file_name},
+        op_kwargs={"file_name": file_name, "table": table},
         dag=dag,
     )
 

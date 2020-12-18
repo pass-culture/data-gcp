@@ -19,7 +19,7 @@ from analytics.config import (
     ENRICHED_VENUE_DATA_TABLES,
     ENRICHED_OFFER_DATA_TABLES,
     ENRICHED_STOCK_DATA_TABLES,
-    ENRICHED_BOOKING_DATA_TABLES
+    ENRICHED_BOOKING_DATA_TABLES,
 )
 
 from analytics.utils import run_query

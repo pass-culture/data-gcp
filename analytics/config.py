@@ -80,5 +80,15 @@ ENRICHED_STOCK_DATA_TABLES = [
     "offer",
     "venue",
 ]
-ENRICHED_BOOKING_DATA_TABLES = ["booking", "payment", "payment_status", "stock", "offer", "offerer", "venue", "user",
-                                "venue_type", "venue_label"]
+ENRICHED_BOOKING_DATA_TABLES = [
+    "booking",
+    "payment",
+    "payment_status",
+    "stock",
+    "offer",
+    "offerer",
+    "venue",
+    "user",
+    "venue_type",
+    "venue_label",
+]

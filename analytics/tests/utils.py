@@ -33,6 +33,7 @@ def create_table(client, dataset, table):
 def insert_rows(client, dataset, table, rows):
     # table_id = f"{GCP_PROJECT}.{dataset}.{table}"
     # client.insert_rows_json(table_id, rows)  # does not work... (something to do with the async creation operation)
+
     job_config = bigquery.QueryJobConfig()
     job_config.destination = f"{GCP_PROJECT}.{dataset}.{table}"
     job_config.write_disposition = "WRITE_APPEND"
@@ -41,6 +42,7 @@ def insert_rows(client, dataset, table, rows):
             [
                 f"CAST('{val}' AS {BIGQUERY_SCHEMAS[table][col]}) AS {col}"
                 for col, val in row.items()
+                if val is not None
             ]
         )
         query = f"SELECT {fields};"
@@ -63,3 +65,9 @@ def retrieve_data(client, dataset, table):
     table_id = f"{GCP_PROJECT}.{dataset}.{table}"
     rows_iter = client.list_rows(table_id)
     return [dict(row.items()) for row in rows_iter]
+
+
+def get_table_columns(client, dataset, table):
+    table_id = f"{GCP_PROJECT}.{dataset}.{table}"
+    table = client.get_table(table_id)
+    return [field.name for field in table.schema]

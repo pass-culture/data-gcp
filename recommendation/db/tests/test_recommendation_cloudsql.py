@@ -186,7 +186,9 @@ def setup_database():
     run_sql_script(connection, "scripts/create_recommendable_offers.sql")
     run_sql_script(connection, "scripts/create_non_recommendable_offers.sql")
 
-    return connection
+    yield connection
+
+    connection.close()
 
 
 def test_data_ingestion(setup_database):
@@ -197,7 +199,6 @@ def test_data_ingestion(setup_database):
     for table in TEST_DATA:
         query_result = connection.execute(f"SELECT * FROM public.{table}").fetchall()
         assert len(query_result) == len(TEST_DATA[table])
-    connection.close()
 
 
 def test_recommendable_offer_non_filtered(setup_database):
@@ -209,7 +210,6 @@ def test_recommendable_offer_non_filtered(setup_database):
         "SELECT * FROM recommendable_offers where id = 1017696"
     ).fetchall()
     assert len(query_result) == 1
-    connection.close()
 
 
 @pytest.mark.parametrize(
@@ -317,8 +317,6 @@ def test_updated_offer_in_recommendable_offers(
         "SELECT * FROM recommendable_offers where id = 1017696"
     ).fetchall()
 
-    connection.close()
-
     assert len(query_result) == (1 if recommendable else 0)
 
 
@@ -370,7 +368,5 @@ def test_updated_offer_in_non_recommendable_offers(
     query_result = connection.execute(
         "SELECT * FROM non_recommendable_offers where user_id = 1017696"
     ).fetchall()
-
-    connection.close()
 
     assert len(query_result) == (0 if recommendable else 1)

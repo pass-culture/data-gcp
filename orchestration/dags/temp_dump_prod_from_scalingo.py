@@ -16,15 +16,17 @@ from airflow.contrib.operators.gcp_sql_operator import (
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python_operator import PythonOperator
 
+from dependencies.compose_gcs_files import compose_gcs_files
+
 #  Global variables
 GCS_BUCKET = "dump_scalingo"
 GCP_PROJECT_ID = "pass-culture-app-projet-test"
 
 TABLES = [
     # "user",
-    # "provider",
-    # "offerer",
-    # "bank_information",
+    "provider",
+    "offerer",
+    "bank_information",
     # "booking",
     # "payment",
     # "venue",
@@ -37,11 +39,13 @@ TABLES = [
 ]
 
 SPLIT_TABLES = [
+    # "user_offerer",
     "offer",
-    # "stock",
+    "stock",
 ]
 
-ROW_NUMBER_QUERIED = 1000000
+ROW_NUMBER_QUERIED = 350000
+QUERY_NUMBER = 2
 
 TESTING = ast.literal_eval(os.environ.get("TESTING"))
 LOCAL_HOST = "localhost"
@@ -66,8 +70,9 @@ dag = DAG(
     catchup=False,
 )
 
-
 start = DummyOperator(task_id="start", dag=dag)
+start_export = DummyOperator(task_id="start_export", dag=dag)
+start >> start_export
 
 
 def create_tunnel():
@@ -92,15 +97,12 @@ def query_postgresql_from_tunnel(**kwargs):
         task_id=f"dump_{kwargs['table']}",
         sql=kwargs["sql_query"],
         bucket=GCS_BUCKET,
-        schema_filename=None,
         filename=kwargs["file_name"],
-        approx_max_file_size_bytes=1900000000,
         postgres_conn_id="postgres_scalingo",
         google_cloud_storage_conn_id="google_cloud_default",
         gzip=False,
         export_format="csv",
         field_delimiter=",",
-        schema=None,
         dag=dag,
     )
 
@@ -113,17 +115,19 @@ def clean_csv(file_name, table):
     fs = gcsfs.GCSFileSystem(project=GCP_PROJECT_ID)
 
     if table in SPLIT_TABLES:
-        with fs.open(f"gs://{GCS_BUCKET}/{file_name}", "w") as file_out:
-            for page in range(10):
-                core_filename = file_name.split(".")[0]
+        for page in range(QUERY_NUMBER):
+            core_filename = file_name.split(".")[0]
+            with fs.open(
+                f"gs://{GCS_BUCKET}/{core_filename}_{page}.csv", "w"
+            ) as file_out:
                 with fs.open(
                     f"gs://{GCS_BUCKET}/{core_filename}_{page}.csv"
                 ) as file_in:
                     for line in file_in.readlines()[1:]:
                         file_out.write(
                             line.decode("utf-8")
-                            .replace("[", "{")
-                            .replace("]", "}")
+                            # .replace("[", "{")
+                            # .replace("]", "}")
                             .replace("null", "")
                         )
 
@@ -133,13 +137,13 @@ def clean_csv(file_name, table):
                 for line in file_in.readlines()[1:]:
                     file_out.write(
                         line.decode("utf-8")
-                        .replace("[", "{")
-                        .replace("]", "}")
+                        # .replace("[", "{")
+                        # .replace("]", "}")
                         .replace("null", "")
                     )
 
 
-last_task = start
+last_task = start_export
 
 for table in TABLES:
 
@@ -147,8 +151,8 @@ for table in TABLES:
     now = datetime.now()
 
     if table in SPLIT_TABLES:
-        for page in range(10):
-            sql_query = f"""select * from {table} where id >= {page*ROW_NUMBER_QUERIED} and id < {(page+1)*ROW_NUMBER_QUERIED};"""
+        for page in range(QUERY_NUMBER):
+            sql_query = f"select * from {table} where id >= {page*ROW_NUMBER_QUERIED} and id < {(page+1)*ROW_NUMBER_QUERIED};"
             file_name = f"{table}/{now.year}_{now.month}_{now.day}_{table}_{page}.csv"
             export_table = PythonOperator(
                 task_id=f"query_{table}_{page}",
@@ -176,6 +180,13 @@ for table in TABLES:
         last_task >> export_table
         last_task = export_table
 
+end_export = DummyOperator(task_id="end_export", dag=dag)
+start_clean = DummyOperator(task_id="start_clean", dag=dag)
+end_clean = DummyOperator(task_id="end_clean", dag=dag)
+start_import = DummyOperator(task_id="start_import", dag=dag)
+last_task >> end_export >> start_clean
+end_clean >> start_import
+last_task = start_import
 
 for table in TABLES:
     # File path and name.
@@ -188,6 +199,18 @@ for table in TABLES:
         op_kwargs={"file_name": file_name, "table": table},
         dag=dag,
     )
+
+    if table in SPLIT_TABLES:
+        compose_files_task = PythonOperator(
+            task_id=f"compose_files_{table}",
+            python_callable=compose_gcs_files,
+            op_kwargs={
+                "bucket_name": GCS_BUCKET,
+                "source_prefix": f"{table}/{now.year}_{now.month}_{now.day}_{table}_",
+                "destination_blob_name": file_name,
+            },
+            dag=dag,
+        )
 
     drop_table_task = CloudSqlQueryOperator(
         gcp_cloudsql_conn_id="test_cloudsql",
@@ -212,9 +235,13 @@ for table in TABLES:
         instance=INSTANCE_DATABASE,
     )
 
-    last_task >> clean_table >> drop_table_task >> sql_restore_task
+    if table in SPLIT_TABLES:
+        start_clean >> clean_table >> compose_files_task >> drop_table_task >> end_clean
+    else:
+        start_clean >> clean_table >> drop_table_task >> end_clean
+    last_task >> sql_restore_task
     last_task = sql_restore_task
 
-
+end_import = DummyOperator(task_id="end_import", dag=dag)
 end = DummyOperator(task_id="end", dag=dag)
-last_task >> end
+last_task >> end_import >> end

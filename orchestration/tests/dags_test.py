@@ -54,12 +54,12 @@ class TestDags(unittest.TestCase):
 
     def test_dump_scalingo_dag_is_loaded(self):
         # When
-        dag = self.dagbag.get_dag(dag_id="dump_scalingo_v1")
+        dag = self.dagbag.get_dag(dag_id="temp_dump_prod_from_scalingo_v2")
 
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 16)
+        self.assertEqual(len(dag.tasks), 94)
 
     def test_create_ab_testing_table_dag_is_loaded(self):
         # When

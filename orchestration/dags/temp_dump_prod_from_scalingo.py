@@ -41,7 +41,6 @@ TABLES = [
 ]
 
 SPLIT_TABLES = [
-    "user_offerer",
     "offer",
     "stock",
 ]

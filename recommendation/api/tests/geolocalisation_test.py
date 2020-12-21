@@ -40,6 +40,7 @@ def setup_database() -> Any:
     yield connection
 
     engine.execute("DROP TABLE IF EXISTS iris_france;")
+    connection.close()
 
 
 def test_get_iris_from_coordinates(setup_database: Any):
@@ -54,8 +55,6 @@ def test_get_iris_from_coordinates(setup_database: Any):
     # Then
     assert iris_id == 45327
 
-    connection.close()
-
 
 def test_get_iris_from_coordinates_without_coordinates(setup_database: Any):
     # Given
@@ -69,8 +68,6 @@ def test_get_iris_from_coordinates_without_coordinates(setup_database: Any):
     # Then
     assert iris_id is None
 
-    connection.close()
-
 
 def test_get_iris_from_coordinates_not_in_france(setup_database: Any):
     # Given
@@ -83,5 +80,3 @@ def test_get_iris_from_coordinates_not_in_france(setup_database: Any):
 
     # Then
     assert iris_id is None
-
-    connection.close()

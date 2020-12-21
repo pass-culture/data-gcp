@@ -55,6 +55,7 @@ def setup_database() -> Any:
     engine.execute("DROP MATERIALIZED VIEW IF EXISTS non_recommendable_offers CASCADE;")
     engine.execute("DROP TABLE IF EXISTS temporary_table CASCADE;")
     engine.execute("DROP TABLE IF EXISTS empty_temporary_table CASCADE;")
+    connection.close()
 
 
 @pytest.mark.parametrize(
@@ -69,7 +70,6 @@ def test_does_view_exist(
 
     # When
     result = does_materialized_view_exist(connection, materialized_view_name)
-    connection.close()
 
     # Then
     assert result is expected_result
@@ -92,7 +92,6 @@ def test_does_view_have_data(
     # When
     result = does_materialized_view_have_data(connection, materialized_view_name)
 
-    connection.close()
     # Then
     assert result is expected_result
 

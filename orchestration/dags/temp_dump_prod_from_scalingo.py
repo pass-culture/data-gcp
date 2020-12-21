@@ -15,6 +15,7 @@ from airflow.contrib.operators.gcp_sql_operator import (
     CloudSqlInstanceImportOperator,
 )
 from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.bash_operator import BashOperator
 from airflow.operators.python_operator import PythonOperator
 
 from dependencies.compose_gcs_files import compose_gcs_files
@@ -203,6 +204,14 @@ for table in TABLES:
             dag=dag,
         )
 
+        template_part_files_name = f"gs://{GCS_BUCKET}/{file_name.split('.')[0]}_*"
+
+        remove_part_files_task = BashOperator(
+            task_id=f"remove_part_files_{table}",
+            bash_command=f"gsutil -m rm {template_part_files_name}",
+            dag=dag,
+        )
+
     drop_table_task = CloudSqlQueryOperator(
         gcp_cloudsql_conn_id="test_cloudsql",
         task_id=f"drop_table_public_{table}",
@@ -227,7 +236,7 @@ for table in TABLES:
     )
 
     if table in SPLIT_TABLES:
-        start_clean >> clean_table >> compose_files_task >> drop_table_task >> end_clean
+        start_clean >> clean_table >> compose_files_task >> remove_part_files_task >> drop_table_task >> end_clean
     else:
         start_clean >> clean_table >> drop_table_task >> end_clean
     last_task >> sql_restore_task

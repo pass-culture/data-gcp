@@ -1,5 +1,6 @@
 import os
 import ast
+import shutil
 from datetime import datetime, timedelta
 
 import airflow
@@ -23,29 +24,29 @@ GCS_BUCKET = "dump_scalingo"
 GCP_PROJECT_ID = "pass-culture-app-projet-test"
 
 TABLES = [
-    # "user",
+    "user",
     "provider",
     "offerer",
     "bank_information",
-    # "booking",
-    # "payment",
-    # "venue",
-    # "user_offerer",
+    "booking",
+    "payment",
+    "venue",
+    "user_offerer",
     "offer",
-    # "stock",
-    # "favorite",
-    # "venue_type",
-    # "venue_label",
+    "stock",
+    "favorite",
+    "venue_type",
+    "venue_label",
 ]
 
 SPLIT_TABLES = [
-    # "user_offerer",
+    "user_offerer",
     "offer",
     "stock",
 ]
 
 ROW_NUMBER_QUERIED = 350000
-QUERY_NUMBER = 2
+QUERY_NUMBER = 20
 
 TESTING = ast.literal_eval(os.environ.get("TESTING"))
 LOCAL_HOST = "localhost"
@@ -118,29 +119,19 @@ def clean_csv(file_name, table):
         for page in range(QUERY_NUMBER):
             core_filename = file_name.split(".")[0]
             with fs.open(
-                f"gs://{GCS_BUCKET}/{core_filename}_{page}.csv", "w"
+                f"gs://{GCS_BUCKET}/{core_filename}_{page}.csv", "wb"
             ) as file_out:
                 with fs.open(
                     f"gs://{GCS_BUCKET}/{core_filename}_{page}.csv"
                 ) as file_in:
-                    for line in file_in.readlines()[1:]:
-                        file_out.write(
-                            line.decode("utf-8")
-                            # .replace("[", "{")
-                            # .replace("]", "}")
-                            .replace("null", "")
-                        )
+                    file_in.readline()
+                    shutil.copyfileobj(file_in, file_out)
 
     else:
         with fs.open(f"gs://{GCS_BUCKET}/{file_name}") as file_in:
-            with fs.open(f"gs://{GCS_BUCKET}/{file_name}", "w") as file_out:
-                for line in file_in.readlines()[1:]:
-                    file_out.write(
-                        line.decode("utf-8")
-                        # .replace("[", "{")
-                        # .replace("]", "}")
-                        .replace("null", "")
-                    )
+            with fs.open(f"gs://{GCS_BUCKET}/{file_name}", "wb") as file_out:
+                file_in.readline()
+                shutil.copyfileobj(file_in, file_out)
 
 
 last_task = start_export

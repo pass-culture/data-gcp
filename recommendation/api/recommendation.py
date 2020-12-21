@@ -2,7 +2,7 @@ import collections
 import datetime
 import pytz
 from random import random
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 from google.api_core.client_options import ClientOptions
 from googleapiclient import discovery

@@ -87,3 +87,12 @@ class TestDags(unittest.TestCase):
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
         self.assertEqual(len(dag.tasks), 23)
+
+    def test_archive_database_dag_is_loaded(self):
+        # When
+        dag = self.dagbag.get_dag(dag_id="archive_database_v1")
+
+        # Then
+        self.assertDictEqual(self.dagbag.import_errors, {})
+        self.assertIsNotNone(dag)
+        self.assertEqual(len(dag.tasks), 3)

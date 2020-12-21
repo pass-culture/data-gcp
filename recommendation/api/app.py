@@ -18,6 +18,18 @@ APP_CONFIG = {
 app = Flask(__name__)
 
 
+@app.route("/")
+def home():
+    return """
+         __   __   __ __   __  o  __  
+        |  ' (__) |  )  ) (__( | |  ) 
+        Welcome to the recommendation API! 
+        Check this route '/recommendation/<user_id>?token=<token>' for recommended offers. 
+        ()_() 
+        ( oo) 
+    """
+
+
 @app.route("/check")
 def check():
     return "OK"
@@ -58,7 +70,8 @@ def recommendation(user_id: int):
         longitude,
         latitude,
         APP_CONFIG,
-    )[: APP_CONFIG["NUMBER_OF_RECOMMENDATIONS"]]
+    )
+
     return jsonify({"recommended_offers": recommendations})
 
 

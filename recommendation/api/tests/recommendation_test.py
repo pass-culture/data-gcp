@@ -1,17 +1,20 @@
+import datetime
 import os
-from typing import Any, Dict, List
-from unittest.mock import patch, Mock
+from typing import Any, Dict, List, Tuple
+from unittest.mock import Mock, patch
 
 import pandas as pd
 import pytest
+import pytz
 from numpy.testing import assert_array_equal
 from sqlalchemy import create_engine
 
 from recommendation import (
-    get_intermediate_recommendations_for_user,
     get_final_recommendations,
+    get_intermediate_recommendations_for_user,
     get_scored_recommendation_for_user,
     order_offers_by_score_and_diversify_types,
+    save_recommendation,
 )
 
 DATA_GCP_TEST_POSTGRES_PORT = os.getenv("DATA_GCP_TEST_POSTGRES_PORT")
@@ -67,21 +70,31 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
     ab_testing = pd.DataFrame({"userid": [111, 112], "groupid": ["A", "B"]})
     ab_testing.to_sql(app_config["AB_TESTING_TABLE"], con=engine, if_exists="replace")
 
+    past_recommended_offers = pd.DataFrame(
+        {"userid": [1], "offerid": [1], "date": [datetime.datetime.now(pytz.utc)]}
+    )
+    past_recommended_offers.to_sql(
+        "past_recommended_offers", con=engine, if_exists="replace"
+    )
+
     yield connection
 
     engine.execute("DROP TABLE IF EXISTS recommendable_offers;")
     engine.execute("DROP TABLE IF EXISTS non_recommendable_offers;")
     engine.execute("DROP TABLE IF EXISTS iris_venues;")
     engine.execute(f"DROP TABLE IF EXISTS {app_config['AB_TESTING_TABLE']} ;")
+    engine.execute(f"DROP TABLE IF EXISTS past_recommended_offers ;")
     connection.close()
 
 
 @patch("recommendation.get_intermediate_recommendations_for_user")
 @patch("recommendation.get_scored_recommendation_for_user")
 @patch("recommendation.get_iris_from_coordinates")
+@patch("recommendation.save_recommendation")
 @patch("recommendation.create_db_connection")
 def test_get_final_recommendation_for_group_a(
     connection_mock: Mock,
+    save_recommendation_mock: Mock,
     get_iris_from_coordinates_mock: Mock,
     get_scored_recommendation_for_user_mock: Mock,
     get_intermediate_recommendations_for_user_mock: Mock,
@@ -108,11 +121,14 @@ def test_get_final_recommendation_for_group_a(
 
     # Then
     assert recommendations == [3, 2]
+    save_recommendation_mock.assert_called_once()
 
 
+@patch("recommendation.save_recommendation")
 @patch("recommendation.create_db_connection")
 def test_get_final_recommendation_for_group_b(
     connection_mock: Mock,
+    save_recommendation_mock: Mock,
     setup_database: Any,
     app_config: Dict[str, Any],
 ):
@@ -125,14 +141,17 @@ def test_get_final_recommendation_for_group_b(
 
     # Then
     assert recommendations == []
+    save_recommendation_mock.assert_called_once()
 
 
 @patch("recommendation.get_intermediate_recommendations_for_user")
 @patch("recommendation.get_scored_recommendation_for_user")
 @patch("recommendation.get_iris_from_coordinates")
+@patch("recommendation.save_recommendation")
 @patch("recommendation.create_db_connection")
 def test_get_final_recommendation_for_new_user(
     connection_mock: Mock,
+    save_recommendation_mock: Mock,
     get_iris_from_coordinates_mock: Mock,
     get_scored_recommendation_for_user_mock: Mock,
     get_intermediate_recommendations_for_user_mock: Mock,
@@ -150,6 +169,7 @@ def test_get_final_recommendation_for_new_user(
     recommendations = get_final_recommendations(
         user_id, 2.331289, 48.830719, app_config
     )
+    save_recommendation_mock.assert_called_once()
 
     # Then
     assert recommendations == []
@@ -271,3 +291,20 @@ def test_get_scored_recommendation_for_user(
         {"id": 2, "url": "url2", "type": "type2", "score": 2},
         {"id": 3, "url": "url3", "type": "type3", "score": 3},
     ]
+
+
+def test_save_recommendation(setup_database: Tuple[Any, Any]):
+    # Given
+    user_id = 1
+    recommendations = [2, 3, 4]
+    connection = setup_database
+
+    # When
+    save_recommendation(user_id, recommendations, connection)
+
+    # Then
+    for offer_id in recommendations:
+        query_result = connection.execute(
+            f"SELECT * FROM public.past_recommended_offers where userid = {user_id} and offerId = {offer_id}"
+        ).fetchall()
+        assert len(query_result) == 1

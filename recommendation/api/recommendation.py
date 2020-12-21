@@ -1,6 +1,8 @@
 import collections
+import datetime
+import pytz
 from random import random
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List
 
 from google.api_core.client_options import ClientOptions
 from googleapiclient import discovery
@@ -76,12 +78,27 @@ def get_final_recommendations(
 
         final_recommendations = order_offers_by_score_and_diversify_types(
             scored_recommendation_for_user
-        )
+        )[: app_config["NUMBER_OF_RECOMMENDATIONS"]]
     else:
         final_recommendations = []
 
+    if final_recommendations:
+        save_recommendation(user_id, final_recommendations, connection)
+
     connection.close()
     return final_recommendations
+
+
+def save_recommendation(user_id: int, recommendations: List[int], cursor):
+    date = datetime.datetime.now(pytz.utc)
+    for offer_id in recommendations:
+        row = (user_id, offer_id, date)
+        cursor.execute(
+            f"INSERT INTO public.past_recommended_offers "
+            f"(userid, offerid, date) "
+            f"VALUES (%s, %s, %s)",
+            row,
+        )
 
 
 def get_intermediate_recommendations_for_user(

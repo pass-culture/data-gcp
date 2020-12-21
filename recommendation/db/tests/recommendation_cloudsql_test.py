@@ -6,7 +6,6 @@ import pytest
 from sqlalchemy import create_engine
 
 DATA_GCP_TEST_POSTGRES_PORT = os.getenv("DATA_GCP_TEST_POSTGRES_PORT")
-DB_NAME = os.getenv("DB_NAME")
 
 TEST_DATA = {
     "booking": [
@@ -178,7 +177,7 @@ def setup_database():
     Fixture to set up the test postgres database with test data.
     """
     engine = create_engine(
-        f"postgresql+psycopg2://postgres:postgres@127.0.0.1:{DATA_GCP_TEST_POSTGRES_PORT}/{DB_NAME}"
+        f"postgresql+psycopg2://postgres:postgres@127.0.0.1:{DATA_GCP_TEST_POSTGRES_PORT}/postgres"
     )
     connection = engine.connect().execution_options(autocommit=True)
 

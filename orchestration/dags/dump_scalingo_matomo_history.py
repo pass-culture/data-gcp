@@ -207,12 +207,12 @@ FROM (
     SELECT
         *,
         IF(
-            REGEXP_CONTAINS(name, r"app.*\/([A-Z0-9]{4,5})[^A-Za-z]"),
-            REGEXP_EXTRACT(name, r"\/([A-Z0-9]{4,5})"),
+            REGEXP_CONTAINS(name, r"app.*\/([A-Z0-9]{{4,5}})[^A-Za-z]"),
+            REGEXP_EXTRACT(name, r"\/([A-Z0-9]{{4,5}})"),
             ""
             ) AS offer_id,
         IF(
-            REGEXP_CONTAINS(name, r"app.*\/([A-Z0-9]{4,5})[^A-Za-z]"),
+            REGEXP_CONTAINS(name, r"app.*\/([A-Z0-9]{{4,5}})[^A-Za-z]"),
             REGEXP_EXTRACT(name, r"\/([a-z]*)"),
             ""
             ) AS base_page

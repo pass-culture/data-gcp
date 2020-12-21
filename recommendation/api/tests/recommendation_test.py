@@ -141,7 +141,7 @@ def test_get_final_recommendation_for_group_b(
 
     # Then
     assert recommendations == []
-    save_recommendation_mock.assert_called_once()
+    save_recommendation_mock.assert_not_called()
 
 
 @patch("recommendation.get_intermediate_recommendations_for_user")
@@ -169,7 +169,7 @@ def test_get_final_recommendation_for_new_user(
     recommendations = get_final_recommendations(
         user_id, 2.331289, 48.830719, app_config
     )
-    save_recommendation_mock.assert_called_once()
+    save_recommendation_mock.assert_not_called()
 
     # Then
     assert recommendations == []

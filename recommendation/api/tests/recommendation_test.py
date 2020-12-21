@@ -73,6 +73,7 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
     engine.execute("DROP TABLE IF EXISTS non_recommendable_offers;")
     engine.execute("DROP TABLE IF EXISTS iris_venues;")
     engine.execute(f"DROP TABLE IF EXISTS {app_config['AB_TESTING_TABLE']} ;")
+    connection.close()
 
 
 @patch("recommendation.get_intermediate_recommendations_for_user")
@@ -174,7 +175,6 @@ def test_get_intermediate_recommendation_for_user(setup_database: Any):
             {"id": 5, "type": "E", "url": None},
         ],
     )
-    connection.close()
 
 
 def test_get_intermediate_recommendation_for_user_with_no_iris(setup_database: Any):
@@ -198,7 +198,6 @@ def test_get_intermediate_recommendation_for_user_with_no_iris(setup_database: A
             {"id": 5, "type": "E", "url": None},
         ],
     )
-    connection.close()
 
 
 @pytest.mark.parametrize(

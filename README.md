@@ -88,3 +88,15 @@ Les tests sont lancés sur toutes les branches git et sont réparties entre les 
 - *recommendation-db-tests* : tester l'ingestion des données dans le CloudSQL pour l'algorithme de recommendation
 - *recommendation-api-tests* : tester l'API de recommendation
 - *orchestration-tests* : tester les différents DAGs d'orchestration
+
+### CD
+Pour la CD, on utilise deux outils : CircleCI et Cloud Build.
+#### CircleCI
+Voici les jobs crées pour le déploiement :
+- *ai-platform-deploy* : déployer le modèle `model.joblib` dans Cloud Storage puis l'utiliser pour mettre à jour la version du modèle sur AI Platform
+- *composer-deploy* : déployer le dossier `dags` dans le bucket du Cloud Composer sur Cloud Storage
+Ces déploiements sont déclanchés seulement sur la branche `master`.
+
+#### Cloud build
+Cloud build est utilisé pour le déploiement de l'API sur Cloud Run.
+Il est déclanché à chaque merge sur la branche master. Cloud Build build l'image docker à partir du Dockerfile de l'API, la stock sur le Container Registry et puis la déploie sur le Cloud Run qui se met à jour.

@@ -47,7 +47,7 @@ SPLIT_TABLES = [
 ROW_NUMBER_QUERIED = 350000
 QUERY_NUMBER = 20
 
-TESTING = ast.literal_eval(os.environ.get("TESTING"))
+SCALINGO_DATABASE = ast.literal_eval(os.environ.get("SCALINGO_DATABASE"))
 LOCAL_HOST = "localhost"
 LOCAL_PORT = 10025
 
@@ -82,8 +82,8 @@ def create_tunnel():
         keepalive_interval=1200,
     )
     tunnel = ssh_hook.get_tunnel(
-        remote_port=TESTING["port"],
-        remote_host=TESTING["host"],
+        remote_port=SCALINGO_DATABASE["port"],
+        remote_host=SCALINGO_DATABASE["host"],
         local_port=LOCAL_PORT,
     )
     return tunnel

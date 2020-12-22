@@ -62,7 +62,7 @@ default_args = {
 }
 
 dag = DAG(
-    "temp_dump_prod_from_scalingo_v2",
+    "dump_prod_from_scalingo_v2",
     default_args=default_args,
     start_date=datetime(2020, 12, 8),
     description="Dump scalingo db to cloud storage in csv format",

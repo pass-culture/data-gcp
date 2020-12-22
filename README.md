@@ -82,7 +82,7 @@ Pour lancer les tests avec plus de détails :
 ## CI/CD
 ### CI
 On utilise CircleCI pour lancer des tests sur les différentes parties du repo.
-Les tests sont lancés sur toutes les branches git et sont réparties entre les jobs suivants :
+Les tests sont lancés sur toutes les branches git et sont répartis entre les jobs suivants :
 - *linter* : tester le bon formattage du code de tout le repo en utilisant `Black`
 - *analytics-tests* : tester les requêtes de création des tables enrichies
 - *recommendation-db-tests* : tester l'ingestion des données dans le CloudSQL pour l'algorithme de recommendation

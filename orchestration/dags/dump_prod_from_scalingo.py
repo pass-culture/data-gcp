@@ -137,7 +137,6 @@ last_task = start_export
 
 for table in TABLES:
 
-    # File path and name.
     now = datetime.now()
 
     if table in SPLIT_TABLES:
@@ -179,7 +178,6 @@ end_clean >> start_import
 last_task = start_import
 
 for table in TABLES:
-    # File path and name.
     now = datetime.now()
     file_name = f"{table}/{now.year}_{now.month}_{now.day}_{table}.csv"
 

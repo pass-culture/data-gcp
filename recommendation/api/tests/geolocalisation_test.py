@@ -1,8 +1,8 @@
 import os
-from typing import Any, Tuple
-import pytest
-import psycopg2
+from typing import Any
+
 import pandas as pd
+import pytest
 from sqlalchemy import create_engine
 
 from geolocalisation import get_iris_from_coordinates
@@ -20,13 +20,12 @@ TEST_DATABASE_CONFIG = {
 
 
 @pytest.fixture
-def setup_database() -> Tuple[Any, Any]:
-    connection = psycopg2.connect(**TEST_DATABASE_CONFIG)
-    cursor = connection.cursor()
+def setup_database() -> Any:
 
     engine = create_engine(
         f"postgresql+psycopg2://postgres:postgres@localhost:{DATA_GCP_TEST_POSTGRES_PORT}/{DB_NAME}"
     )
+    connection = engine.connect().execution_options(autocommit=True)
 
     iris_france = pd.read_csv("tests/iris_france_tests.csv")
     iris_france.to_sql("iris_france", con=engine, if_exists="replace", index=False)
@@ -36,10 +35,12 @@ def setup_database() -> Tuple[Any, Any]:
             USING ST_SetSRID(shape::Geometry, 4326);
         """
 
-    cursor.execute(sql)
-    cursor.close()
+    connection.execute(sql)
 
-    return connection
+    yield connection
+
+    engine.execute("DROP TABLE IF EXISTS iris_france;")
+    connection.close()
 
 
 def test_get_iris_from_coordinates(setup_database: Any):
@@ -54,8 +55,6 @@ def test_get_iris_from_coordinates(setup_database: Any):
     # Then
     assert iris_id == 45327
 
-    connection.close()
-
 
 def test_get_iris_from_coordinates_without_coordinates(setup_database: Any):
     # Given
@@ -69,8 +68,6 @@ def test_get_iris_from_coordinates_without_coordinates(setup_database: Any):
     # Then
     assert iris_id is None
 
-    connection.close()
-
 
 def test_get_iris_from_coordinates_not_in_france(setup_database: Any):
     # Given
@@ -83,5 +80,3 @@ def test_get_iris_from_coordinates_not_in_france(setup_database: Any):
 
     # Then
     assert iris_id is None
-
-    connection.close()

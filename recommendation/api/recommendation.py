@@ -1,4 +1,3 @@
-import os
 import collections
 import datetime
 import pytz
@@ -7,48 +6,60 @@ from typing import Any, Dict, List, Tuple
 
 from google.api_core.client_options import ClientOptions
 from googleapiclient import discovery
-import psycopg2
+from sqlalchemy import create_engine, engine
 
+from api import (
+    GCP_PROJECT_ID,
+    GCP_MODEL_REGION,
+    SQL_BASE,
+    SQL_BASE_USER,
+    SQL_BASE_PASSWORD,
+    SQL_CONNECTION_NAME,
+)
 from geolocalisation import get_iris_from_coordinates
 
-GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID")
-SQL_CONNECTION_NAME = os.environ.get("SQL_CONNECTION_NAME")
-SQL_BASE = os.environ.get("SQL_BASE")
-SQL_BASE_USER = os.environ.get("SQL_BASE_USER")
-SQL_BASE_PASSWORD = os.environ.get("SQL_BASE_PASSWORD")
-GCP_MODEL_REGION = os.environ.get("GCP_MODEL_REGION")
+query_string = dict(
+    {"unix_sock": "/cloudsql/{}/.s.PGSQL.5432".format(SQL_CONNECTION_NAME)}
+)
+
+engine = create_engine(
+    engine.url.URL(
+        drivername="postgres+pg8000",
+        username=SQL_BASE_USER,
+        password=SQL_BASE_PASSWORD,
+        database=SQL_BASE,
+        query=query_string,
+    ),
+    pool_size=5,
+    max_overflow=2,
+    pool_timeout=30,
+    pool_recycle=1800,
+)
+
+
+def create_db_connection() -> Any:
+    return engine.connect().execution_options(autocommit=True)
 
 
 def get_final_recommendations(
     user_id: int,
     longitude: int,
     latitude: int,
-    recommendation_number: int,
     app_config: Dict[str, Any],
-    connection=None,
 ) -> List[int]:
-    close_connection = False
 
-    if connection is None:
-        connection = psycopg2.connect(
-            user=SQL_BASE_USER,
-            password=SQL_BASE_PASSWORD,
-            database=SQL_BASE,
-            host=f"/cloudsql/{SQL_CONNECTION_NAME}",
-        )
-        close_connection = True
-
-    cursor = connection.cursor()
     ab_testing_table = app_config["AB_TESTING_TABLE"]
-    cursor.execute(f"""SELECT groupid FROM {ab_testing_table} WHERE userid={user_id}""")
-    request_response = cursor.fetchone()
+    connection = create_db_connection()
+
+    request_response = connection.execute(
+        f"""SELECT groupid FROM {ab_testing_table} WHERE userid={user_id}"""
+    ).scalar()
 
     if not request_response:
         group_id = "A" if random() > 0.5 else "B"
-        cursor.execute(
+        connection.execute(
             f"""INSERT INTO {ab_testing_table}(userid, groupid) VALUES ({user_id}, '{group_id}')"""
         )
-        connection.commit()
 
     else:
         group_id = request_response[0]
@@ -57,7 +68,7 @@ def get_final_recommendations(
         user_iris_id = get_iris_from_coordinates(longitude, latitude, connection)
 
         recommendations_for_user = get_intermediate_recommendations_for_user(
-            user_id, user_iris_id, cursor
+            user_id, user_iris_id, connection
         )
         scored_recommendation_for_user = get_scored_recommendation_for_user(
             recommendations_for_user,
@@ -67,18 +78,14 @@ def get_final_recommendations(
 
         final_recommendations = order_offers_by_score_and_diversify_types(
             scored_recommendation_for_user
-        )[:recommendation_number]
+        )[: app_config["NUMBER_OF_RECOMMENDATIONS"]]
     else:
         final_recommendations = []
 
-    save_recommendation(user_id, final_recommendations, cursor)
     if final_recommendations:
-        connection.commit()
+        save_recommendation(user_id, final_recommendations, connection)
 
-    if close_connection:
-        cursor.close()
-        connection.close()
-
+    connection.close()
     return final_recommendations
 
 
@@ -95,15 +102,14 @@ def save_recommendation(user_id: int, recommendations: List[int], cursor):
 
 
 def get_intermediate_recommendations_for_user(
-    user_id: int, user_iris_id: int, cursor
+    user_id: int, user_iris_id: int, connection
 ) -> List[Dict[str, Any]]:
 
     recommendations_query = get_recommendations_query(user_id, user_iris_id)
-
-    cursor.execute(recommendations_query)
+    query_result = connection.execute(recommendations_query).fetchall()
 
     user_recommendation = [
-        {"id": row[0], "type": row[1], "url": row[2]} for row in cursor.fetchall()
+        {"id": row[0], "type": row[1], "url": row[2]} for row in query_result
     ]
 
     return user_recommendation

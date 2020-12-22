@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 import pytest
 from app import app
@@ -9,7 +9,7 @@ from app import app
     ["recommendable_offers", "non_recommendable_offers", "iris_venues_mv"],
 )
 @patch("app.get_materialized_view_status")
-def test_health_checks(get_materialized_view_status_mock, materialized_view_name):
+def test_health_checks(get_materialized_view_status_mock: Mock, materialized_view_name):
     # Given
     get_materialized_view_status_mock.return_value = {
         f"is_{materialized_view_name}_datasource_exists": False,
@@ -62,7 +62,7 @@ def test_recommendation_return_403_when_there_is_wrong_token():
 @patch("app.API_TOKEN", "good_token")
 @patch("app.get_final_recommendations")
 def test_recommendation_return_recommended_offers_when_there_is_right_token(
-    get_final_recommendations_mock,
+    get_final_recommendations_mock: Mock,
 ):
     # Given
     api_token = "good_token"

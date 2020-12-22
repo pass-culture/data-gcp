@@ -75,7 +75,6 @@ def recommendation(user_id: int):
         user_id,
         longitude,
         latitude,
-        APP_CONFIG["NUMBER_OF_RECOMMENDATIONS"],
         APP_CONFIG,
     )
 

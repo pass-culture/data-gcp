@@ -2,16 +2,10 @@ import os
 from datetime import datetime, timedelta
 
 import pandas as pd
-import psycopg2
 import pytest
+from sqlalchemy import create_engine
 
-TEST_DATABASE_CONFIG = {
-    "user": "postgres",
-    "password": "postgres",
-    "host": "127.0.0.1",
-    "port": os.getenv("DATA_GCP_TEST_POSTGRES_PORT"),
-    "database": "postgres",
-}
+DATA_GCP_TEST_POSTGRES_PORT = os.getenv("DATA_GCP_TEST_POSTGRES_PORT")
 
 TEST_DATA = {
     "booking": [
@@ -139,7 +133,7 @@ yesterday = (datetime.now() + timedelta(days=-1)).strftime("%Y-%m-%d %H:%M:%S.%f
 tomorrow = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S.%f")
 
 
-def create_and_fill_tables(cursor, data):
+def create_and_fill_tables(connection, data):
     tables = pd.read_csv("tests/tables.csv")
 
     for table in data:
@@ -157,11 +151,13 @@ def create_and_fill_tables(cursor, data):
             [f'"{column_name}" {schema[column_name]}' for column_name in schema]
         )
         value_placeholders = ", ".join(["%s"] * len(schema))
-        cursor.execute(f"DROP TABLE IF EXISTS public.{table}")
-        cursor.execute(f"CREATE TABLE IF NOT EXISTS public.{table} ({typed_columns})")
+        connection.execute(f"DROP TABLE IF EXISTS public.{table}")
+        connection.execute(
+            f"CREATE TABLE IF NOT EXISTS public.{table} ({typed_columns})"
+        )
 
         for row in data[table]:
-            cursor.execute(
+            connection.execute(
                 f"INSERT INTO public.{table} "
                 f"({columns}) "
                 f"VALUES ({value_placeholders})",
@@ -169,10 +165,10 @@ def create_and_fill_tables(cursor, data):
             )
 
 
-def run_sql_script(cursor, script_path):
+def run_sql_script(connection, script_path):
     with open(script_path, "r") as f:
         sql = f.read()
-    cursor.execute(sql)
+    connection.execute(sql)
 
 
 @pytest.fixture
@@ -180,38 +176,39 @@ def setup_database():
     """
     Fixture to set up the test postgres database with test data.
     """
-    connection = psycopg2.connect(**TEST_DATABASE_CONFIG)
-    cursor = connection.cursor()
+    engine = create_engine(
+        f"postgresql+psycopg2://postgres:postgres@127.0.0.1:{DATA_GCP_TEST_POSTGRES_PORT}/postgres"
+    )
+    connection = engine.connect().execution_options(autocommit=True)
 
-    create_and_fill_tables(cursor, TEST_DATA)
-    run_sql_script(cursor, "scripts/create_recommendable_offers.sql")
-    run_sql_script(cursor, "scripts/create_non_recommendable_offers.sql")
-    connection.commit()
+    create_and_fill_tables(connection, TEST_DATA)
+    run_sql_script(connection, "scripts/create_recommendable_offers.sql")
+    run_sql_script(connection, "scripts/create_non_recommendable_offers.sql")
 
-    return connection, cursor
+    yield connection
+
+    connection.close()
 
 
 def test_data_ingestion(setup_database):
     """
     Test that test data is loaded in test postgres.
     """
-    connection, cursor = setup_database
+    connection = setup_database
     for table in TEST_DATA:
-        cursor.execute(f"SELECT * FROM public.{table}")
-        assert len(cursor.fetchall()) == len(TEST_DATA[table])
-    cursor.close()
-    connection.close()
+        query_result = connection.execute(f"SELECT * FROM public.{table}").fetchall()
+        assert len(query_result) == len(TEST_DATA[table])
 
 
 def test_recommendable_offer_non_filtered(setup_database):
     """
     Test that an offer respecting the criteria is not filtered.
     """
-    connection, cursor = setup_database
-    cursor.execute("SELECT * FROM recommendable_offers where id = 1017696")
-    assert len(cursor.fetchall()) == 1
-    cursor.close()
-    connection.close()
+    connection = setup_database
+    query_result = connection.execute(
+        "SELECT * FROM recommendable_offers where id = 1017696"
+    ).fetchall()
+    assert len(query_result) == 1
 
 
 @pytest.mark.parametrize(
@@ -312,16 +309,14 @@ def test_updated_offer_in_recommendable_offers(
     has the expected impact on its recommendable status and its presence in
     the recommendable_offers materialized view.
     """
-    connection, cursor = setup_database
-    cursor.execute(query)
-    cursor.execute("REFRESH MATERIALIZED VIEW recommendable_offers")
-    cursor.execute("SELECT * FROM recommendable_offers where id = 1017696")
-    result = len(cursor.fetchall())
+    connection = setup_database
+    connection.execute(query)
+    connection.execute("REFRESH MATERIALIZED VIEW recommendable_offers")
+    query_result = connection.execute(
+        "SELECT * FROM recommendable_offers where id = 1017696"
+    ).fetchall()
 
-    cursor.close()
-    connection.close()
-
-    assert result == (1 if recommendable else 0)
+    assert len(query_result) == (1 if recommendable else 0)
 
 
 @pytest.mark.parametrize(
@@ -366,13 +361,11 @@ def test_updated_offer_in_non_recommendable_offers(
     has the expected impact on its recommendable status and its presence in
     the non_recommendable_offers materialized view.
     """
-    connection, cursor = setup_database
-    cursor.execute(query)
-    cursor.execute("REFRESH MATERIALIZED VIEW non_recommendable_offers")
-    cursor.execute("SELECT * FROM non_recommendable_offers where user_id = 1017696")
-    result = len(cursor.fetchall())
+    connection = setup_database
+    connection.execute(query)
+    connection.execute("REFRESH MATERIALIZED VIEW non_recommendable_offers")
+    query_result = connection.execute(
+        "SELECT * FROM non_recommendable_offers where user_id = 1017696"
+    ).fetchall()
 
-    cursor.close()
-    connection.close()
-
-    assert result == (0 if recommendable else 1)
+    assert len(query_result) == (0 if recommendable else 1)

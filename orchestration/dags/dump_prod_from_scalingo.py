@@ -89,7 +89,7 @@ def create_tunnel():
     return tunnel
 
 
-def query_postgresql_from_tunnel(**kwargs):
+def query_postgresql_from_tunnel_and_dump_on_gcs(**kwargs):
     tunnel = create_tunnel()
     tunnel.start()
 
@@ -145,7 +145,7 @@ for table in TABLES:
             file_name = f"{table}/{now.year}_{now.month}_{now.day}_{table}_{page}.csv"
             export_table = PythonOperator(
                 task_id=f"query_{table}_{page}",
-                python_callable=query_postgresql_from_tunnel,
+                python_callable=query_postgresql_from_tunnel_and_dump_on_gcs,
                 op_kwargs={
                     "table": table,
                     "sql_query": sql_query,
@@ -161,7 +161,7 @@ for table in TABLES:
         file_name = f"{table}/{now.year}_{now.month}_{now.day}_{table}.csv"
         export_table = PythonOperator(
             task_id=f"query_{table}",
-            python_callable=query_postgresql_from_tunnel,
+            python_callable=query_postgresql_from_tunnel_and_dump_on_gcs,
             op_kwargs={"table": table, "sql_query": sql_query, "file_name": file_name},
             dag=dag,
         )

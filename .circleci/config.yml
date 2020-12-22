@@ -244,6 +244,7 @@ jobs:
       DAG_RECOMMMENDATION_CLOUDSQL: recommendation_cloud_sql_v42
       DAG_DUMP_SCALINGO: dump_scalingo_v1
       DAG_EXPORT_CLOUDSQL_BIGQUERY: export_cloudsql_tables_to_bigquery_v3
+      DAG_IMPORT_APPLICATIVE_DATABASE: import_applicative_database_v1
     working_directory: ~/data-gcp/orchestration
     steps:
       - checkout:
@@ -265,6 +266,7 @@ jobs:
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${COMPOSER_REGION} ${DAG_RESTORE_DATA_ANALYTICS} 6 20
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${COMPOSER_REGION} ${DAG_DUMP_SCALINGO} 6 20
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${COMPOSER_REGION} ${DAG_EXPORT_CLOUDSQL_BIGQUERY} 6 20
+            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${COMPOSER_REGION} ${DAG_IMPORT_APPLICATIVE_DATABASE} 6 20
 
   ai-platform-deploy:
     docker:

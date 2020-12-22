@@ -95,7 +95,7 @@ Pour la CD, on utilise deux outils : CircleCI et Cloud Build.
 Voici les jobs créés pour le déploiement :
 - *ai-platform-deploy* : déployer le modèle `model.joblib` dans Cloud Storage puis l'utiliser pour mettre à jour la version du modèle sur AI Platform
 - *composer-deploy* : déployer le dossier `dags` dans le bucket du Cloud Composer sur Cloud Storage
-Ces déploiements sont déclanchés seulement sur la branche `master`.
+Ces déploiements sont déclenchés seulement sur la branche `master`.
 
 #### Cloud build
 Cloud build est utilisé pour le déploiement de l'API sur Cloud Run.

@@ -5,3 +5,4 @@ pytest==6.1.1
 pytest-cov==2.10.1
 psycopg2-binary==2.8.6
 crcmod==1.7
+gcsfs==0.7.0

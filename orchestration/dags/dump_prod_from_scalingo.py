@@ -54,6 +54,24 @@ LOCAL_PORT = 10025
 DATABASE = "test-restore"
 INSTANCE_DATABASE = "dump-prod-8-10-2020"
 
+LOCATION = "europe-west1"
+
+DESTINATION_DB_IP = "35.205.151.11"
+DESTINATION_DB_SCHEMA = DATABASE
+DESTINATION_DB_USER = "postgres"
+DESTINATION_DB_PASSWORD = "postgres"
+DESTINATION_DB_PORT = 5432
+
+os.environ["AIRFLOW_CONN_POSTGRESQL_PROD"] = (
+    f"gcpcloudsql://{DESTINATION_DB_USER}:{DESTINATION_DB_PASSWORD}@{DESTINATION_DB_IP}:{DESTINATION_DB_PORT}/{DESTINATION_DB_SCHEMA}?"
+    f"database_type={TYPE}&"
+    f"project_id={GCP_PROJECT_ID}&"
+    f"location={LOCATION}&"
+    f"instance={INSTANCE_DATABASE}&"
+    f"use_proxy=True&"
+    f"sql_proxy_use_tcp=True"
+)
+
 # Starting DAG
 default_args = {
     "retries": 1,
@@ -209,7 +227,7 @@ for table in TABLES:
         )
 
     drop_table_task = CloudSqlQueryOperator(
-        gcp_cloudsql_conn_id="test_cloudsql",
+        gcp_cloudsql_conn_id="postgresql_prod",
         task_id=f"drop_table_public_{table}",
         sql=f"DELETE FROM public.{table};",
         autocommit=True,

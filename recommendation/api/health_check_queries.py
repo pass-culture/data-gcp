@@ -1,17 +1,15 @@
 import logging
+import os
 import sys
 from typing import Any
 
 from sqlalchemy import create_engine, engine
 
-from api import (
-    GCP_PROJECT_ID,
-    GCP_MODEL_REGION,
-    SQL_BASE,
-    SQL_BASE_USER,
-    SQL_BASE_PASSWORD,
-    SQL_CONNECTION_NAME,
-)
+
+SQL_BASE_USER = os.environ.get("SQL_BASE_USER")
+SQL_BASE_PASSWORD = os.environ.get("SQL_BASE_PASSWORD")
+SQL_CONNECTION_NAME = os.environ.get("SQL_CONNECTION_NAME")
+SQL_BASE = os.environ.get("SQL_BASE")
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 

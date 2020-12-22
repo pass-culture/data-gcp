@@ -99,4 +99,4 @@ Ces déploiements sont déclenchés seulement sur la branche `master`.
 
 #### Cloud build
 Cloud build est utilisé pour le déploiement de l'API sur Cloud Run.
-Il est déclanché à chaque merge sur la branche master. Cloud Build build l'image docker à partir du Dockerfile de l'API, la stock sur le Container Registry et puis la déploie sur le Cloud Run qui se met à jour.
+Il est déclenché à chaque merge sur la branche master. Cloud Build build l'image docker à partir du Dockerfile de l'API, la stock sur le Container Registry puis la déploie sur le Cloud Run qui se met à jour.

@@ -55,7 +55,7 @@ DATABASE = "test-restore"
 INSTANCE_DATABASE = "dump-prod-8-10-2020"
 
 LOCATION = "europe-west1"
-
+TYPE = "postgres"
 DESTINATION_DB_IP = "35.205.151.11"
 DESTINATION_DB_SCHEMA = DATABASE
 DESTINATION_DB_USER = "postgres"

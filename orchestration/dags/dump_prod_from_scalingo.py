@@ -3,7 +3,6 @@ import ast
 import shutil
 from datetime import datetime, timedelta
 
-import airflow
 import gcsfs
 from airflow import DAG
 from airflow.contrib.hooks.ssh_hook import SSHHook

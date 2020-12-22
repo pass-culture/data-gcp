@@ -47,7 +47,7 @@ SPLIT_TABLES = [
 ROW_NUMBER_QUERIED = 350000
 QUERY_NUMBER = 20
 
-SCALINGO_DATABASE = ast.literal_eval(os.environ.get("SCALINGO_DATABASE"))
+SCALINGO_DATABASE = ast.literal_eval(os.environ.get("SCALINGO_DATABASE", "{}"))
 LOCAL_HOST = "localhost"
 LOCAL_PORT = 10025
 

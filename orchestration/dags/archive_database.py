@@ -34,7 +34,6 @@ dag = DAG(
 
 start = DummyOperator(task_id="start", dag=dag)
 
-# File path and name.
 now = datetime.now()
 file_name = f"{DB_NAME}/{now.year}_{now.month}_{now.day}_{DB_NAME}.sql"
 export_uri = f"gs://{GCS_BUCKET}/{ARCHIVE_FOLDER}/{file_name}"

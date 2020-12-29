@@ -61,7 +61,7 @@ dag = DAG(
     "import_applicative_database_v1",
     default_args=default_dag_args,
     description="Import tables from CloudSQL and enrich data for create dashboards with Data Studio",
-    schedule_interval="@daily",
+    schedule_interval="0 1 * * *",
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=90),
 )

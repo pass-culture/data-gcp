@@ -113,6 +113,12 @@ def test_create_queries(
             ENRICHED_OFFERER_DATA_INPUT,
             ENRICHED_OFFERER_DATA_EXPECTED,
         ),
+        (
+            "enriched_booking_data",
+            define_enriched_booking_data_full_query(dataset=TEST_DATASET),
+            ENRICHED_BOOKING_DATA_INPUT,
+            ENRICHED_BOOKING_DATA_EXPECTED,
+        ),
     ],
 )
 def test_create_queries_empty(flush_dataset, table_name, query, input_data, expected):

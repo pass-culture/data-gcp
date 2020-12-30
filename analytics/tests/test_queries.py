@@ -3,12 +3,18 @@ from google.cloud import bigquery
 
 from analytics.tests.config import TEST_DATASET, GCP_PROJECT
 from analytics.tests.data import (
-    ENRICHED_OFFER_DATA_INPUT, ENRICHED_OFFER_DATA_EXPECTED,
-    ENRICHED_STOCK_DATA_INPUT, ENRICHED_STOCK_DATA_EXPECTED,
-    ENRICHED_USER_DATA_INPUT, ENRICHED_USER_DATA_EXPECTED,
-    ENRICHED_VENUE_DATA_INPUT, ENRICHED_VENUE_DATA_EXPECTED,
-    ENRICHED_OFFERER_DATA_INPUT, ENRICHED_OFFERER_DATA_EXPECTED,
-    ENRICHED_BOOKING_DATA_INPUT, ENRICHED_BOOKING_DATA_EXPECTED,
+    ENRICHED_OFFER_DATA_INPUT,
+    ENRICHED_OFFER_DATA_EXPECTED,
+    ENRICHED_STOCK_DATA_INPUT,
+    ENRICHED_STOCK_DATA_EXPECTED,
+    ENRICHED_USER_DATA_INPUT,
+    ENRICHED_USER_DATA_EXPECTED,
+    ENRICHED_VENUE_DATA_INPUT,
+    ENRICHED_VENUE_DATA_EXPECTED,
+    ENRICHED_OFFERER_DATA_INPUT,
+    ENRICHED_OFFERER_DATA_EXPECTED,
+    ENRICHED_BOOKING_DATA_INPUT,
+    ENRICHED_BOOKING_DATA_EXPECTED,
 )
 from analytics.tests.utils import (
     drop_dataset,
@@ -19,12 +25,24 @@ from analytics.tests.utils import (
     retrieve_data,
     get_table_columns,
 )
-from dependencies.data_analytics.enriched_data.booking import define_enriched_booking_data_full_query
-from dependencies.data_analytics.enriched_data.offer import define_enriched_offer_data_full_query
-from dependencies.data_analytics.enriched_data.offerer import define_enriched_offerer_data_full_query
-from dependencies.data_analytics.enriched_data.stock import define_enriched_stock_data_full_query
-from dependencies.data_analytics.enriched_data.user import define_enriched_user_data_full_query
-from dependencies.data_analytics.enriched_data.venue import define_enriched_venue_data_full_query
+from dependencies.data_analytics.enriched_data.booking import (
+    define_enriched_booking_data_full_query,
+)
+from dependencies.data_analytics.enriched_data.offer import (
+    define_enriched_offer_data_full_query,
+)
+from dependencies.data_analytics.enriched_data.offerer import (
+    define_enriched_offerer_data_full_query,
+)
+from dependencies.data_analytics.enriched_data.stock import (
+    define_enriched_stock_data_full_query,
+)
+from dependencies.data_analytics.enriched_data.user import (
+    define_enriched_user_data_full_query,
+)
+from dependencies.data_analytics.enriched_data.venue import (
+    define_enriched_venue_data_full_query,
+)
 from set_env import set_env_vars
 
 

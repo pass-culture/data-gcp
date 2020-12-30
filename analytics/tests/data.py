@@ -586,5 +586,5 @@ ENRICHED_BOOKING_DATA_EXPECTED = [
     "reservation_de_bien_numerique",
     "reservation_de_sortie",
     "classement_de_la_reservation",
-    "classement_de_la_reservation_dans_la_meme_categorie"
+    "classement_de_la_reservation_dans_la_meme_categorie",
 ]

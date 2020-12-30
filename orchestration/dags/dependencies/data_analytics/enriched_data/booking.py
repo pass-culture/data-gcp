@@ -1,8 +1,3 @@
-from dependencies.data_analytics.enriched_data.enriched_data_utils import (
-    define_humanized_id_query,
-)
-
-
 def create_booking_amount_view(dataset):
     return f"""
         CREATE OR REPLACE TABLE {dataset}.booking_amount_view AS (

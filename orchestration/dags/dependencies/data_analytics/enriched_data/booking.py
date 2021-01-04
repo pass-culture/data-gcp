@@ -1,11 +1,6 @@
-from dependencies.data_analytics.enriched_data.enriched_data_utils import (
-    define_humanized_id_query,
-)
-
-
 def create_booking_amount_view(dataset):
     return f"""
-        CREATE OR REPLACE TABLE {dataset}.booking_amount_view AS (
+        CREATE TEMP TABLE booking_amount_view AS (
             SELECT 
                 booking.id AS booking_id, coalesce(booking.amount, 0) * coalesce(booking.quantity, 0) AS montant_de_la_reservation
             FROM {dataset}.booking);
@@ -14,7 +9,7 @@ def create_booking_amount_view(dataset):
 
 def create_booking_payment_status_view(dataset):
     return f"""
-        CREATE OR REPLACE TABLE {dataset}.booking_payment_status_view AS (
+        CREATE TEMP TABLE booking_payment_status_view AS (
             SELECT
                 booking.id AS booking_id,'Remboursé' AS rembourse
             FROM {dataset}.booking
@@ -29,7 +24,7 @@ def create_booking_payment_status_view(dataset):
 
 def create_booking_ranking_view(dataset):
     return f"""
-        CREATE OR REPLACE TABLE {dataset}.booking_ranking_view AS (
+        CREATE TEMP TABLE booking_ranking_view AS (
             SELECT 
                 booking.id AS booking_id, rank() OVER (PARTITION BY booking.userId ORDER BY booking.dateCreated) AS classement_de_la_reservation
             FROM {dataset}.booking);
@@ -38,7 +33,7 @@ def create_booking_ranking_view(dataset):
 
 def create_booking_ranking_in_category_view(dataset):
     return f"""
-        CREATE OR REPLACE TABLE {dataset}.booking_ranking_in_category_view AS (
+        CREATE TEMP TABLE booking_ranking_in_category_view AS (
             SELECT 
                 booking.id AS booking_id, rank() OVER (PARTITION BY booking.userId, offer.type ORDER BY booking.dateCreated) 
                 AS classement_de_la_reservation_dans_la_meme_categorie
@@ -51,17 +46,17 @@ def create_booking_ranking_in_category_view(dataset):
 
 def create_materialized_booking_intermediary_view(dataset):
     return f"""
-        CREATE OR REPLACE TABLE {dataset}.booking_intermediary_view AS (
+        CREATE TEMP TABLE booking_intermediary_view AS (
                SELECT booking.id,
                       booking_amount_view.montant_de_la_reservation,
                       booking_payment_status_view.rembourse,
                       booking_ranking_view.classement_de_la_reservation,
                       booking_ranking_in_category_view.classement_de_la_reservation_dans_la_meme_categorie
                  FROM {dataset}.booking
-            LEFT JOIN {dataset}.booking_amount_view ON booking_amount_view.booking_id = booking.id
-            LEFT JOIN {dataset}.booking_payment_status_view ON booking_payment_status_view.booking_id = booking.id
-            LEFT JOIN {dataset}.booking_ranking_view ON booking_ranking_view.booking_id = booking.id
-            LEFT JOIN {dataset}.booking_ranking_in_category_view ON booking_ranking_in_category_view.booking_id = booking.id
+            LEFT JOIN booking_amount_view ON booking_amount_view.booking_id = booking.id
+            LEFT JOIN booking_payment_status_view ON booking_payment_status_view.booking_id = booking.id
+            LEFT JOIN booking_ranking_view ON booking_ranking_view.booking_id = booking.id
+            LEFT JOIN booking_ranking_in_category_view ON booking_ranking_in_category_view.booking_id = booking.id
         );
     """
 
@@ -118,7 +113,7 @@ def create_materialized_enriched_booking_view(dataset):
                 ON venue.venueTypeId = venue_type.id
             LEFT JOIN {dataset}.venue_label
                 ON venue.venueLabelId = venue_label.id
-            LEFT JOIN {dataset}.booking_intermediary_view ON booking_intermediary_view.id = booking.id
+            LEFT JOIN booking_intermediary_view ON booking_intermediary_view.id = booking.id
         );
         """
 

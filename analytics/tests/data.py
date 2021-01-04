@@ -547,3 +547,44 @@ ENRICHED_OFFERER_DATA_EXPECTED = [
     "nombre_de_lieux_avec_offres",
     "offerer_humanized_id",
 ]
+
+# enriched_booking_data => NO DATA (only structure can be tested)
+ENRICHED_BOOKING_DATA_INPUT = {
+    "booking": [],
+    "payment": [],
+    "payment_status": [],
+    "stock": [],
+    "offer": [],
+    "venue": [],
+    "offerer": [],
+    "user": [],
+    "venue_type": [],
+    "venue_label": [],
+}
+
+ENRICHED_BOOKING_DATA_EXPECTED = [
+    "id",
+    "date_de_reservation",
+    "quantity",
+    "amount",
+    "isCancelled",
+    "isUsed",
+    "date_annulation",
+    "date_de_debut_evenement",
+    "type_offre",
+    "nom_offre",
+    "nom_du_lieu",
+    "label_du_lieu",
+    "type_de_lieu",
+    "departement_du_lieu",
+    "nom_de_la_structure",
+    "departement_utilisateur",
+    "date_de_creation_utilisateur",
+    "montant_de_la_reservation",
+    "rembourse",
+    "reservation_de_bien_physique",
+    "reservation_de_bien_numerique",
+    "reservation_de_sortie",
+    "classement_de_la_reservation",
+    "classement_de_la_reservation_dans_la_meme_categorie",
+]

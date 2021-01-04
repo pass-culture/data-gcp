@@ -13,6 +13,8 @@ from analytics.tests.data import (
     ENRICHED_VENUE_DATA_EXPECTED,
     ENRICHED_OFFERER_DATA_INPUT,
     ENRICHED_OFFERER_DATA_EXPECTED,
+    ENRICHED_BOOKING_DATA_INPUT,
+    ENRICHED_BOOKING_DATA_EXPECTED,
 )
 from analytics.tests.utils import (
     drop_dataset,
@@ -22,6 +24,9 @@ from analytics.tests.utils import (
     run_query,
     retrieve_data,
     get_table_columns,
+)
+from dependencies.data_analytics.enriched_data.booking import (
+    define_enriched_booking_data_full_query,
 )
 from dependencies.data_analytics.enriched_data.offer import (
     define_enriched_offer_data_full_query,
@@ -112,6 +117,12 @@ def test_create_queries(
             define_enriched_offerer_data_full_query(dataset=TEST_DATASET),
             ENRICHED_OFFERER_DATA_INPUT,
             ENRICHED_OFFERER_DATA_EXPECTED,
+        ),
+        (
+            "enriched_booking_data",
+            define_enriched_booking_data_full_query(dataset=TEST_DATASET),
+            ENRICHED_BOOKING_DATA_INPUT,
+            ENRICHED_BOOKING_DATA_EXPECTED,
         ),
     ],
 )

@@ -83,7 +83,7 @@ dag = DAG(
     default_args=default_args,
     start_date=datetime(2020, 12, 8),
     description="Dump scalingo db to cloud storage in csv format",
-    schedule_interval="@daily",
+    schedule_interval="0 2 * * *",
     dagrun_timeout=timedelta(minutes=180),
     catchup=False,
 )

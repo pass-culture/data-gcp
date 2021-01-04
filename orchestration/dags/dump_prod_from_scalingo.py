@@ -19,7 +19,7 @@ from airflow.operators.python_operator import PythonOperator
 
 from dependencies.compose_gcs_files import compose_gcs_files
 
-#  Global variables
+# Global variables
 GCS_BUCKET = "dump_scalingo"
 GCP_PROJECT_ID = "pass-culture-app-projet-test"
 

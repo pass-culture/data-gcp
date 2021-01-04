@@ -70,14 +70,14 @@ class TestDags(unittest.TestCase):
         self.assertIsNotNone(dag)
         self.assertEqual(len(dag.tasks), 5)
 
-    def test_create_ab_testing_table_dag_is_loaded(self):
+    def test_dump_matomo_history_dag_is_loaded(self):
         # When
         dag = self.dagbag.get_dag(dag_id="dump_scalingo_matomo_history_v2")
 
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 190)
+        self.assertEqual(len(dag.tasks), 191)
 
     def test_import_applicative_database_dag_is_loaded(self):
         # When

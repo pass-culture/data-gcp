@@ -198,6 +198,38 @@ dehumanize_user_id_task = BigQueryOperator(
     dag=dag,
 )
 
+
+dehumanize_log_action_query = f"""
+SELECT
+    *,
+    algo_reco_kpi_data.dehumanize_id(offer_id) AS dehumanize_offer_id
+FROM (
+    SELECT
+        *,
+        IF(
+            REGEXP_CONTAINS(name, r"app.*\/([A-Z0-9]{{4,5}})[^A-Za-z0-9]"),
+            REGEXP_EXTRACT(name, r"\/([A-Z0-9]{{4,5}})"),
+            ""
+            ) AS offer_id,
+        IF(
+            REGEXP_CONTAINS(name, r"app.*"),
+            REGEXP_EXTRACT(name, r"\/([a-z]*)"),
+            ""
+            ) AS base_page
+    FROM
+        {BIGQUERY_DATASET}.log_action
+);
+"""
+
+dehumanize_log_action_task = BigQueryOperator(
+    task_id="dehumanize_log_action",
+    sql=dehumanize_log_action_query,
+    destination_dataset_table=f"{BIGQUERY_DATASET}.log_action_processed",
+    write_disposition="WRITE_TRUNCATE",
+    use_legacy_sql=False,
+    dag=dag,
+)
+
 end_dag = DummyOperator(task_id="end_dag", dag=dag)
 
-end_import >> dehumanize_user_id_task >> end_dag
+end_import >> [dehumanize_user_id_task, dehumanize_log_action_task] >> end_dag

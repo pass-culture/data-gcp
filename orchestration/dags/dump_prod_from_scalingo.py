@@ -88,10 +88,6 @@ dag = DAG(
     catchup=False,
 )
 
-start = DummyOperator(task_id="start", dag=dag)
-start_export = DummyOperator(task_id="start_export", dag=dag)
-start >> start_export
-
 
 def create_tunnel():
     # Open SSH tunnel
@@ -151,12 +147,13 @@ def clean_csv(file_name, table):
                 shutil.copyfileobj(file_in, file_out)
 
 
+start = DummyOperator(task_id="start", dag=dag)
+start_export = DummyOperator(task_id="start_export", dag=dag)
+start >> start_export
 last_task = start_export
 
 for table in TABLES:
-
     now = datetime.now()
-
     if table in SPLIT_TABLES:
         for page in range(QUERY_NUMBER):
             sql_query = f"select * from {table} where id >= {page*ROW_NUMBER_QUERIED} and id < {(page+1)*ROW_NUMBER_QUERIED};"

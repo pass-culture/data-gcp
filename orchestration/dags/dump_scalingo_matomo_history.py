@@ -16,6 +16,7 @@ from airflow.contrib.operators.gcs_to_bq import GoogleCloudStorageToBigQueryOper
 from airflow.contrib.operators.mysql_to_gcs import (
     MySqlToGoogleCloudStorageOperator,
 )
+from airflow.models import Variable
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python_operator import PythonOperator
 
@@ -23,33 +24,140 @@ from dependencies.slack_alert import task_fail_slack_alert
 
 GCP_PROJECT_ID = "pass-culture-app-projet-test"
 GCS_BUCKET = "dump_scalingo"
-ROW_NUMBER_QUERIED = 1000000
 TABLE_DATA = {
     "log_link_visit_action": {
         "id": "idlink_va",
-        "max_id": 160466902,
+        "max_id": 172466902,
         "columns": [
+            {"name": "idlink_va", "type": "INT64", "mode": "REQUIRED"},
+            {"name": "idsite", "type": "INT64", "mode": "REQUIRED"},
+            {"name": "idvisitor", "type": "STRING", "mode": "REQUIRED"},  # BYTES
+            {"name": "idvisit", "type": "INT64", "mode": "REQUIRED"},
             {"name": "idaction_url_ref", "type": "INT64", "mode": "NULLABLE"},
-            {"name": "idvisit", "type": "INT64", "mode": "NULLABLE"},
-            {"name": "server_time", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "idaction_name_ref", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "custom_float", "type": "STRING", "mode": "NULLABLE"},  # INT64
+            {"name": "server_time", "type": "TIMESTAMP", "mode": "REQUIRED"},
+            {"name": "idpageview", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "interaction_position", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "idaction_name", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "idaction_url", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "time_spent_ref_action", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "idaction_event_action", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "idaction_event_category", "type": "INT64", "mode": "NULLABLE"},
+            {
+                "name": "idaction_content_interaction",
+                "type": "INT64",
+                "mode": "NULLABLE",
+            },
+            {"name": "idaction_content_name", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "idaction_content_piece", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "idaction_content_target", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "custom_var_k1", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "custom_var_v1", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "custom_var_k2", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "custom_var_v2", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "custom_var_k3", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "custom_var_v3", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "custom_var_k4", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "custom_var_v4", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "custom_var_k5", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "custom_var_v5", "type": "STRING", "mode": "NULLABLE"},
         ],
+        "row_number_queried": 300000,
     },
     "log_visit": {
         "id": "idvisit",
-        "max_id": 7273322,
+        "max_id": 8150940,
         "columns": [
-            {"name": "idvisit", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "idvisit", "type": "INT64", "mode": "REQUIRED"},
+            {"name": "idsite", "type": "INT64", "mode": "REQUIRED"},
+            {"name": "idvisitor", "type": "STRING", "mode": "REQUIRED"},  # BYTES
+            {"name": "visit_last_action_time", "type": "TIMESTAMP", "mode": "REQUIRED"},
+            {"name": "config_id", "type": "STRING", "mode": "REQUIRED"},  # BYTES
+            {"name": "location_ip", "type": "STRING", "mode": "REQUIRED"},  # BYTES
             {"name": "user_id", "type": "STRING", "mode": "NULLABLE"},
+            {
+                "name": "visit_first_action_time",
+                "type": "TIMESTAMP",
+                "mode": "REQUIRED",
+            },
+            {"name": "visit_goal_buyer", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "visit_goal_converted", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "visitor_days_since_first", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "visitor_days_since_order", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "visitor_returning", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "visitor_count_visits", "type": "INT64", "mode": "REQUIRED"},
+            {"name": "visit_entry_idaction_name", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "visit_entry_idaction_url", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "visit_exit_idaction_name", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "visit_exit_idaction_url", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "visit_total_actions", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "visit_total_interactions", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "visit_total_searches", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "referer_keyword", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "referer_name", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "referer_type", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "referer_url", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "location_browser_lang", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "config_browser_engine", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "config_browser_name", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "config_browser_version", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "config_device_brand", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "config_device_model", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "config_device_type", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "config_os", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "config_os_version", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "visit_total_events", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "visitor_localtime", "type": "STRING", "mode": "NULLABLE"},  # TIME
+            {"name": "visitor_days_since_last", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "config_resolution", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "config_cookie", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "config_director", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "config_flash", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "config_gears", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "config_java", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "config_pdf", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "config_quicktime", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "config_realplayer", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "config_silverlight", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "config_windowsmedia", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "visit_total_time", "type": "INT64", "mode": "REQUIRED"},
+            {"name": "location_city", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "location_country", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "location_latitude", "type": "FLOAT64", "mode": "NULLABLE"},
+            {"name": "location_longitude", "type": "FLOAT64", "mode": "NULLABLE"},
+            {"name": "location_region", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "custom_var_k1", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "custom_var_v1", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "custom_var_k2", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "custom_var_v2", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "custom_var_k3", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "custom_var_v3", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "custom_var_k4", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "custom_var_v4", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "custom_var_k5", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "custom_var_v5", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "campaign_content", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "campaign_id", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "campaign_keyword", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "campaign_medium", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "campaign_name", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "campaign_source", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "location_provider", "type": "STRING", "mode": "NULLABLE"},
         ],
+        "row_number_queried": 100000,
     },
     "log_action": {
         "id": "idaction",
-        "max_id": 6030096,
+        "max_id": 6596133,
         "columns": [
-            {"name": "idaction", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "idaction", "type": "INT64", "mode": "REQUIRED"},
             {"name": "name", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "hash", "type": "INT64", "mode": "REQUIRED"},
             {"name": "type", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "url_prefix", "type": "INT64", "mode": "NULLABLE"},
         ],
+        "row_number_queried": 1000000,
     },
 }
 BIGQUERY_DATASET = "algo_reco_kpi_matomo"
@@ -62,7 +170,7 @@ default_args = {
 }
 
 dag = DAG(
-    "dump_scalingo_matomo_history_v2",
+    "dump_scalingo_matomo_history_v1",
     default_args=default_args,
     description="Dump scalingo matomo history to cloud storage in csv format and import it in bigquery",
     schedule_interval="@once",
@@ -124,17 +232,20 @@ def query_mysql_from_tunnel(**kwargs):
 
 last_task = start
 
+now = datetime.now()
+
 for table in TABLE_DATA:
+    Variable.set(f"{table}_max_id", TABLE_DATA[table]["max_id"])
     max_id = TABLE_DATA[table]["max_id"]
-    for query_index in range(0, max_id, ROW_NUMBER_QUERIED):
+    row_number_queried = TABLE_DATA[table]["row_number_queried"]
+    for query_index in range(0, max_id, row_number_queried):
         sql_query = (
             f"select {', '.join([column['name'] for column in TABLE_DATA[table]['columns']])} from {table} "
             f"where {TABLE_DATA[table]['id']} >= {query_index} "
-            f"and {TABLE_DATA[table]['id']} < {query_index + ROW_NUMBER_QUERIED};"
+            f"and {TABLE_DATA[table]['id']} < {query_index + row_number_queried};"
         )
 
-        now = datetime.now()
-        file_name = f"{table}/{now.year}_{now.month}_{now.day}_{table}_{query_index // ROW_NUMBER_QUERIED}_{'{}'}.csv"
+        file_name = f"{table}/{now.year}_{now.month}_{now.day}_{table}_{query_index // row_number_queried}_{'{}'}.csv"
 
         export_table = PythonOperator(
             task_id=f"query_{table}_{query_index}",
@@ -170,6 +281,8 @@ for table in TABLE_DATA:
         destination_project_dataset_table=f"{BIGQUERY_DATASET}.{table}",
         write_disposition="WRITE_EMPTY",
         skip_leading_rows=1,
+        schema_fields=TABLE_DATA[table]["columns"],
+        autodetect=False,
         dag=dag,
     )
     end_export >> delete_task >> create_empty_table_task >> import_task >> end_import

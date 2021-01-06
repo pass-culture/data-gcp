@@ -165,7 +165,7 @@ BIGQUERY_DATASET = "algo_reco_kpi_matomo"
 default_args = {
     "on_failure_callback": task_fail_slack_alert,
     "start_date": datetime(2020, 12, 10),
-    "retries": 1,
+    "retries": 5,
     "retry_delay": timedelta(minutes=5),
 }
 

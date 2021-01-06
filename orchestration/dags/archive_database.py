@@ -27,7 +27,7 @@ dag = DAG(
     default_args=default_args,
     start_date=datetime(2020, 12, 18),
     description="Export database to create archive every day",
-    schedule_interval="@daily",
+    schedule_interval="0 22 * * *",
     dagrun_timeout=timedelta(minutes=180),
     catchup=False,
 )

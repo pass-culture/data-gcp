@@ -25,10 +25,15 @@ from dependencies.slack_alert import task_fail_slack_alert
 GCP_PROJECT_ID = "pass-culture-app-projet-test"
 GCS_BUCKET = "dump_scalingo"
 BIGQUERY_DATASET = "algo_reco_kpi_matomo"
+EXPORT_START_DATE = "2021-01-01 00:00:00.0"
+
+# min_id and max_id are the minimum and maximal id of the table on the exported time period
+# They are used to split the query in batch of <row_number_queried> rows.
 TABLE_DATA = {
     "log_link_visit_action": {
         "id": "idlink_va",
-        "max_id": 172466902,
+        "min_id": 169419493,
+        "max_id": 170902366,
         "columns": [
             {"name": "idlink_va", "type": "INT64", "mode": "REQUIRED"},
             {"name": "idsite", "type": "INT64", "mode": "REQUIRED"},
@@ -65,10 +70,12 @@ TABLE_DATA = {
             {"name": "custom_var_v5", "type": "STRING", "mode": "NULLABLE"},
         ],
         "row_number_queried": 300000,
+        "query_filter": f"and server_time >= TIMESTAMP '{EXPORT_START_DATE}'",
     },
     "log_visit": {
         "id": "idvisit",
-        "max_id": 8150940,
+        "min_id": 8009709,
+        "max_id": 8176313,
         "columns": [
             {"name": "idvisit", "type": "INT64", "mode": "REQUIRED"},
             {"name": "idsite", "type": "INT64", "mode": "REQUIRED"},
@@ -147,9 +154,11 @@ TABLE_DATA = {
             {"name": "location_provider", "type": "STRING", "mode": "NULLABLE"},
         ],
         "row_number_queried": 100000,
+        "query_filter": f"and visit_first_action_time >= TIMESTAMP '{EXPORT_START_DATE}'",
     },
     "log_action": {
         "id": "idaction",
+        "min_id": 0,
         "max_id": 6596133,
         "columns": [
             {"name": "idaction", "type": "INT64", "mode": "REQUIRED"},
@@ -159,6 +168,7 @@ TABLE_DATA = {
             {"name": "url_prefix", "type": "INT64", "mode": "NULLABLE"},
         ],
         "row_number_queried": 1000000,
+        "query_filter": "",
     },
 }
 
@@ -170,9 +180,10 @@ default_args = {
 }
 
 dag = DAG(
-    "dump_scalingo_matomo_history_v1",
+    "dump_scalingo_matomo_history_v3",
     default_args=default_args,
-    description="Dump scalingo matomo history to cloud storage in csv format and import it in bigquery",
+    description=f"Dump scalingo matomo history from {EXPORT_START_DATE} to cloud storage "
+    f"in csv format and import it in bigquery",
     schedule_interval="@once",
     dagrun_timeout=timedelta(minutes=180),
     catchup=False,
@@ -237,24 +248,27 @@ now = datetime.now()
 for table in TABLE_DATA:
     Variable.set(f"{table}_max_id", TABLE_DATA[table]["max_id"])
     max_id = TABLE_DATA[table]["max_id"]
+    min_id = TABLE_DATA[table]["min_id"]
     row_number_queried = TABLE_DATA[table]["row_number_queried"]
-    for query_index in range(0, max_id, row_number_queried):
+    query_count = 0
+    for query_index in range(min_id, max_id, row_number_queried):
         sql_query = (
             f"select {', '.join([column['name'] for column in TABLE_DATA[table]['columns']])} from {table} "
             f"where {TABLE_DATA[table]['id']} >= {query_index} "
-            f"and {TABLE_DATA[table]['id']} < {query_index + row_number_queried};"
+            f"and {TABLE_DATA[table]['id']} < {query_index + row_number_queried} {TABLE_DATA[table]['query_filter']};"
         )
 
-        file_name = f"{table}/{now.year}_{now.month}_{now.day}_{table}_{query_index // row_number_queried}_{'{}'}.csv"
+        file_name = f"{table}/partial/{now.year}_{now.month}_{now.day}_{table}_{query_count}_{'{}'}.csv"
 
         export_table = PythonOperator(
-            task_id=f"query_{table}_{query_index}",
+            task_id=f"query_{table}_{query_count}",
             python_callable=query_mysql_from_tunnel,
             op_kwargs={"table": table, "sql_query": sql_query, "file_name": file_name},
             dag=dag,
         )
         last_task >> export_table
         last_task = export_table
+        query_count += 1
 
 last_task >> end_export
 
@@ -277,7 +291,9 @@ for table in TABLE_DATA:
     import_task = GoogleCloudStorageToBigQueryOperator(
         task_id=f"import_{table}_in_bigquery",
         bucket=GCS_BUCKET,
-        source_objects=[f"{table}/{now.year}_{now.month}_{now.day}_{table}_*.csv"],
+        source_objects=[
+            f"{table}/partial/{now.year}_{now.month}_{now.day}_{table}_*.csv"
+        ],
         destination_project_dataset_table=f"{BIGQUERY_DATASET}.{table}",
         write_disposition="WRITE_EMPTY",
         skip_leading_rows=1,

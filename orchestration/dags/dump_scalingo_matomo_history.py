@@ -24,6 +24,7 @@ from dependencies.slack_alert import task_fail_slack_alert
 
 GCP_PROJECT_ID = "pass-culture-app-projet-test"
 GCS_BUCKET = "dump_scalingo"
+BIGQUERY_DATASET = "algo_reco_kpi_matomo"
 TABLE_DATA = {
     "log_link_visit_action": {
         "id": "idlink_va",
@@ -160,7 +161,6 @@ TABLE_DATA = {
         "row_number_queried": 1000000,
     },
 }
-BIGQUERY_DATASET = "algo_reco_kpi_matomo"
 
 default_args = {
     "on_failure_callback": task_fail_slack_alert,

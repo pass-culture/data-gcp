@@ -14,8 +14,8 @@ from dependencies.data_analytics.anonymization import define_anonymization_query
 from dependencies.data_analytics.enriched_data.offer import (
     define_enriched_offer_data_full_query,
 )
-from dependencies.data_analytics.enriched_data.offerer import (
-    define_enriched_offerer_data_full_query,
+from dependencies.data_analytics.enriched_data.stock import (
+    define_enriched_stock_data_full_query,
 )
 from dependencies.data_analytics.enriched_data.user import (
     define_enriched_user_data_full_query,
@@ -100,9 +100,9 @@ create_enriched_offer_data_task = BigQueryOperator(
     use_legacy_sql=False,
     dag=dag,
 )
-create_enriched_offerer_data_task = BigQueryOperator(
-    task_id="create_enriched_offerer_data",
-    sql=define_enriched_offerer_data_full_query(dataset=BIGQUERY_DATASET_NAME),
+create_enriched_stock_data_task = BigQueryOperator(
+    task_id="create_enriched_stock_data",
+    sql=define_enriched_stock_data_full_query(dataset=BIGQUERY_DATASET_NAME),
     use_legacy_sql=False,
     dag=dag,
 )
@@ -126,7 +126,7 @@ create_enriched_booking_data_task = BigQueryOperator(
 )
 create_enriched_data_tasks = [
     create_enriched_offer_data_task,
-    create_enriched_offerer_data_task,
+    create_enriched_stock_data_task,
     create_enriched_user_data_task,
     create_enriched_venue_data_task,
     create_enriched_booking_data_task,

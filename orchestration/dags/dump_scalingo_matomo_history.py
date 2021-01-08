@@ -16,7 +16,6 @@ from airflow.contrib.operators.gcs_to_bq import GoogleCloudStorageToBigQueryOper
 from airflow.contrib.operators.mysql_to_gcs import (
     MySqlToGoogleCloudStorageOperator,
 )
-from airflow.models import Variable
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python_operator import PythonOperator
 
@@ -246,7 +245,6 @@ last_task = start
 now = datetime.now()
 
 for table in TABLE_DATA:
-    Variable.set(f"{table}_max_id", TABLE_DATA[table]["max_id"])
     max_id = TABLE_DATA[table]["max_id"]
     min_id = TABLE_DATA[table]["min_id"]
     row_number_queried = TABLE_DATA[table]["row_number_queried"]
@@ -274,6 +272,17 @@ last_task >> end_export
 
 
 for table in TABLE_DATA:
+    # Rename columns using bigQuery protected name
+    protected_names = ["hash"]
+    TABLE_DATA[table]["columns"] = [
+        (
+            column
+            if column["name"] not in protected_names
+            else {**column, "name": f"_{column['name']}"}
+        )
+        for column in TABLE_DATA[table]["columns"]
+    ]
+
     delete_task = BigQueryTableDeleteOperator(
         task_id=f"delete_{table}_in_bigquery",
         deletion_dataset_table=f"{GCP_PROJECT_ID}:{BIGQUERY_DATASET}.{table}",
@@ -306,8 +315,7 @@ for table in TABLE_DATA:
 
 dehumanize_query = f"""
     SELECT
-        idvisit,
-        user_id,
+        *,
         IF(
             REGEXP_CONTAINS(user_id, r"^[A-Z0-9]{2,}") = True,
             algo_reco_kpi_data.dehumanize_id(REGEXP_EXTRACT(user_id, r"^[A-Z0-9]{2,}")),

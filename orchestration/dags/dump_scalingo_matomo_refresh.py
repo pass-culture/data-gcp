@@ -175,7 +175,7 @@ default_args = {
 dag = DAG(
     "dump_scalingo_matomo_refresh_v1",
     default_args=default_args,
-    description="Dump scalingo matomo db to cloud storage in csv format and import it in bigquery",
+    description="Dump scalingo matomo new data to cloud storage in csv format and use it to refresh data in bigquery",
     schedule_interval="0 4 * * *",
     dagrun_timeout=timedelta(minutes=180),
     catchup=False,

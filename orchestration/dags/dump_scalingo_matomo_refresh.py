@@ -26,7 +26,6 @@ credentials = service_account.Credentials.from_service_account_file(
     "/home/airflow/gcs/dags/pass-culture-app-projet-test-19edd3c79717.json",
     scopes=["https://www.googleapis.com/auth/cloud-platform"],
 )
-
 client = bigquery.Client(credentials=credentials, project=credentials.project_id)
 
 GCP_PROJECT_ID = "pass-culture-app-projet-test"

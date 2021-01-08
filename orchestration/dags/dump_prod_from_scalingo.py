@@ -163,7 +163,7 @@ last_task = start_export
 for table in TABLES:
     if table in SPLIT_TABLES:
         for page in range(QUERY_NUMBER):
-            sql_query = f"select * from {table} where id >= {page*ROW_NUMBER_QUERIED} and id < {(page+1)*ROW_NUMBER_QUERIED};"
+            sql_query = f"select * from public.{table} where id >= {page*ROW_NUMBER_QUERIED} and id < {(page+1)*ROW_NUMBER_QUERIED};"
             file_name = f"{table}/{now.year}_{now.month}_{now.day}_{table}_{page}.csv"
             export_table = PythonOperator(
                 task_id=f"query_{table}_{page}",
@@ -179,7 +179,7 @@ for table in TABLES:
             last_task = export_table
 
     else:
-        sql_query = f"select * from {table};"
+        sql_query = f"select * from public.{table};"
         file_name = f"{table}/{now.year}_{now.month}_{now.day}_{table}.csv"
         export_table = PythonOperator(
             task_id=f"query_{table}",

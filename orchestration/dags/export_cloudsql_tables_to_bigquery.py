@@ -54,7 +54,7 @@ dag = DAG(
     "export_cloudsql_tables_to_bigquery_v3",
     default_args=default_dag_args,
     description="Export tables from CloudSQL to BigQuery",
-    schedule_interval="@daily",
+    schedule_interval="0 3 * * *",
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=90),
 )

@@ -226,7 +226,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "offer_humanized_id": "AM",
         "lien_portail_pro": "https://pro.passculture.beta.gouv.fr/offres/AM",
         "lien_webapp": "https://app.passculture.beta.gouv.fr/offre/details/AM",
-        "nombre_de_premieres_reservations":1,
+        "nombre_de_premieres_reservations": 1,
     },
     {
         "offer_id": "4",
@@ -250,7 +250,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "offer_humanized_id": "AQ",
         "lien_portail_pro": "https://pro.passculture.beta.gouv.fr/offres/AQ",
         "lien_webapp": "https://app.passculture.beta.gouv.fr/offre/details/AQ",
-        "nombre_de_premieres_reservations":None,
+        "nombre_de_premieres_reservations": None,
     },
 ]
 

@@ -51,28 +51,18 @@ day = "{0:0=2d}".format(now.day)
 object_name = f"dump_{now.year}_{month}_{day}.sql"
 
 default_args = {
-    "depends_on_past": False,
-    "email": [""],
-    "email_on_failure": False,
-    "email_on_retry": False,
     "retries": 1,
     "retry_delay": datetime.timedelta(minutes=5),
-    "start_date": datetime.datetime(2020, 1, 10),
 }
 
 with airflow.DAG(
     "restore_prod_from_vm_export_v1",
     default_args=default_args,
-    # Not scheduled, trigger only
+    start_date=datetime.datetime(2020, 1, 10),
+    description="Restore scalingo db after compute drop a dump on cloud storage",
     schedule_interval=None,
+    catchup=False,
 ) as dag:
-
-    # Print the dag_run's configuration, which includes information about the
-    # Cloud Storage object change.
-    print_gcs_info = bash_operator.BashOperator(
-        task_id="print_gcs_info", bash_command="echo {{ dag_run.conf }}"
-    )
-
     sql_gcp_add_object_permission_task = GoogleCloudStorageObjectCreateAclEntryOperator(
         entity="user-p590556861198-y90rr9@gcp-sa-cloud-sql.iam.gserviceaccount.com",
         role="READER",

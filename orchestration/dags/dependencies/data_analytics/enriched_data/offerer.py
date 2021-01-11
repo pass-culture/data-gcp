@@ -108,6 +108,20 @@ def define_number_of_venues_without_offer_query(dataset):
         GROUP BY offerer_id;
         """
 
+def define_current_year_revenue(dataset):
+    return f"""
+    CREATE TEMP TABLE current_year_revenue AS
+        SELECT
+            venue.managingOffererId AS offerer_id,
+            sum(coalesce(booking.quantity,0)*coalesce(booking.amount,0)) AS chiffre_affaire_reel_annee_civile_en_cours
+        FROM {dataset}.booking
+        JOIN {dataset}.stock ON booking.stockId = stock.id
+        JOIN {dataset}.offer ON stock.offerId = offer.id
+        JOIN {dataset}.venue ON offer.venueId = venue.id
+        AND EXTRACT(YEAR FROM booking.dateCreated) = EXTRACT(YEAR FROM current_date)
+        AND booking.isUsed
+        GROUP BY venue.managingOffererId;
+    """
 
 def define_enriched_offerer_query(dataset):
     return f"""
@@ -123,8 +137,10 @@ def define_enriched_offerer_query(dataset):
                 offerer_departement_code.department_code AS departement,
                 related_venues.nombre_lieux,
                 related_venues_with_offer.nombre_de_lieux_avec_offres,
-                offerer_humanized_id.humanized_id AS offerer_humanized_id
-            FROM {dataset}.offerer
+                offerer_humanized_id.humanized_id AS offerer_humanized_id,
+                CASE WHEN offerer.validationToken IS NOT NULL THEN CONCAT('https://backend.passculture.beta.gouv.fr/validate/offerer/',offerer.validationToken) ELSE NULL END AS lien_de_validation_de_la_structure,
+                current_year_revenue.chiffre_affaire_reel_annee_civile_en_cours
+                FROM {dataset}.offerer
             LEFT JOIN related_stocks ON related_stocks.offerer_id = offerer.id
             LEFT JOIN related_bookings ON related_bookings.offerer_id = offerer.id
             LEFT JOIN related_offers ON related_offers.offerer_id = offerer.id
@@ -135,6 +151,7 @@ def define_enriched_offerer_query(dataset):
             LEFT JOIN related_venues_with_offer
                 ON related_venues_with_offer.offerer_id = offerer.id
             LEFT JOIN offerer_humanized_id ON offerer_humanized_id.id = offerer.id
+            LEFT JOIN current_year_revenue ON current_year_revenue.offerer_id = offerer.id
         );
     """
 
@@ -149,5 +166,6 @@ def define_enriched_offerer_data_full_query(dataset):
         {define_number_of_venues_query(dataset=dataset)}
         {define_number_of_venues_without_offer_query(dataset=dataset)}
         {define_humanized_id_query(table="offerer", dataset=dataset)}
+        {define_current_year_revenue(dataset=dataset)}
         {define_enriched_offerer_query(dataset=dataset)}
     """

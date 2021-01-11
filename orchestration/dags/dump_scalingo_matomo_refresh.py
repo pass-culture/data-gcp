@@ -18,16 +18,11 @@ from airflow.contrib.operators.gcs_to_bq import GoogleCloudStorageToBigQueryOper
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python_operator import PythonOperator
 
-from google.cloud import bigquery
-from google.oauth2 import service_account
+from dependencies.bigquery_client import BigQueryClient
 
-
-credentials = service_account.Credentials.from_service_account_file(
-    "/home/airflow/gcs/dags/pass-culture-app-projet-test-19edd3c79717.json",
-    scopes=["https://www.googleapis.com/auth/cloud-platform"],
+client = BigQueryClient(
+    "/home/airflow/gcs/dags/pass-culture-app-projet-test-19edd3c79717.json"
 )
-client = bigquery.Client(credentials=credentials, project=credentials.project_id)
-
 GCP_PROJECT_ID = "pass-culture-app-projet-test"
 GCS_BUCKET = "dump_scalingo"
 BIGQUERY_DATASET = "algo_reco_kpi_matomo"
@@ -188,7 +183,7 @@ LOCAL_PORT = 10026
 
 os.environ[
     "AIRFLOW_CONN_MYSQL_SCALINGO"
-] = f"mysql://{MATOMO_CONNECTION_DATA['user']}:{MATOMO_CONNECTION_DATA['password']}@{LOCAL_HOST}:{LOCAL_PORT}/{MATOMO_CONNECTION_DATA['dbname']}"
+] = f"mysql://{MATOMO_CONNECTION_DATA.get('user')}:{MATOMO_CONNECTION_DATA.get('password')}@{LOCAL_HOST}:{LOCAL_PORT}/{MATOMO_CONNECTION_DATA.get('dbname')}"
 
 start = DummyOperator(task_id="start", dag=dag)
 end_export = DummyOperator(task_id="end_export", dag=dag)
@@ -246,7 +241,7 @@ for table in TABLE_DATA:
     else:
         df = client.query(
             f"SELECT max({TABLE_DATA[table]['id']}) FROM `pass-culture-app-projet-test.{BIGQUERY_DATASET}.{table}`"
-        ).to_dataframe()
+        )
         max_id = df.values[0][0]
         sql_query = (
             f"select {', '.join([column['name'] for column in TABLE_DATA[table]['columns']])} "

@@ -1,6 +1,8 @@
 import unittest
+from unittest import mock
 
 from airflow.models import DagBag
+import pandas as pd
 
 
 class TestDags(unittest.TestCase):
@@ -8,7 +10,9 @@ class TestDags(unittest.TestCase):
     LOAD_SECOND_THRESHOLD = 2
 
     def setUp(self):
-        self.dagbag = DagBag(include_examples=False)
+        with mock.patch("dependencies.bigquery_client.BigQueryClient.query") as mocker:
+            mocker.return_value = pd.DataFrame({0: [0]})
+            self.dagbag = DagBag(include_examples=False)
 
     def test_dag_import_no_error(self):
         # Then
@@ -78,6 +82,16 @@ class TestDags(unittest.TestCase):
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
         self.assertEqual(len(dag.tasks), 39)
+
+    @mock.patch("dependencies.bigquery_client.BigQueryClient.query")
+    def test_dump_matomo_refresh_dag_is_loaded(self, mocker):
+        # When
+        dag = self.dagbag.get_dag(dag_id="dump_scalingo_matomo_refresh_v1")
+
+        # Then
+        self.assertDictEqual(self.dagbag.import_errors, {})
+        self.assertIsNotNone(dag)
+        self.assertEqual(len(dag.tasks), 16)
 
     def test_import_applicative_database_dag_is_loaded(self):
         # When

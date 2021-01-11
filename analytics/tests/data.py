@@ -546,6 +546,8 @@ ENRICHED_OFFERER_DATA_EXPECTED = [
     "nombre_lieux",
     "nombre_de_lieux_avec_offres",
     "offerer_humanized_id",
+    "lien_de_validation_de_la_structure",
+    "chiffre_affaire_reel_annee_civile_en_cours",
 ]
 
 # enriched_booking_data => NO DATA (only structure can be tested)

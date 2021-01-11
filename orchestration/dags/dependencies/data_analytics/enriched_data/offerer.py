@@ -108,6 +108,7 @@ def define_number_of_venues_without_offer_query(dataset):
         GROUP BY offerer_id;
         """
 
+
 def define_current_year_revenue(dataset):
     return f"""
     CREATE TEMP TABLE current_year_revenue AS
@@ -122,6 +123,7 @@ def define_current_year_revenue(dataset):
         AND booking.isUsed
         GROUP BY venue.managingOffererId;
     """
+
 
 def define_enriched_offerer_query(dataset):
     return f"""

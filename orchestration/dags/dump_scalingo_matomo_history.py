@@ -169,6 +169,26 @@ TABLE_DATA = {
         "row_number_queried": 1000000,
         "query_filter": "",
     },
+    "goal": {
+        "id": "idgoal",
+        "min_id": 1,
+        "max_id": 50,
+        "columns": [
+            {"name": "idsite", "type": "INT64", "mode": "REQUIRED"},
+            {"name": "idgoal", "type": "INT64", "mode": "REQUIRED"},
+            {"name": "name", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "description", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "match_attribute", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "pattern", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "pattern_type", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "case_sensitive", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "allow_multiple", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "revenue", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "deleted", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "event_value_as_revenue", "type": "INT64", "mode": "NULLABLE"},
+        ],
+        "row_number_queried": 50,
+    },
 }
 
 default_args = {

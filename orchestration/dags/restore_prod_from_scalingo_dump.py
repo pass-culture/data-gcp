@@ -13,7 +13,7 @@ from airflow.contrib.operators.gcs_acl_operator import (
 )
 
 # Global variables
-GCS_BUCKET = "dump_scalingo_vm-2"
+GCS_BUCKET = "dump_scalingo_vm"
 GCP_PROJECT_ID = "pass-culture-app-projet-test"
 INSTANCE_NAME = os.environ.get("INSTANCE_APPLICATIVE_DATABASE", "dump-prod-8-10-2020")
 DB_NAME = "test-restore-vm"

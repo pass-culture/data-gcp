@@ -124,3 +124,12 @@ class TestDags(unittest.TestCase):
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
         self.assertEqual(len(dag.tasks), 3)
+
+    def test_restore_scalingo_from_vm_dag_is_loaded(self):
+        # When
+        dag = self.dagbag.get_dag(dag_id="restore_prod_from_vm_export_v1")
+
+        # Then
+        self.assertDictEqual(self.dagbag.import_errors, {})
+        self.assertIsNotNone(dag)
+        self.assertEqual(len(dag.tasks), 4)

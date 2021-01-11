@@ -140,7 +140,6 @@ def define_enriched_offerer_query(dataset):
                 related_venues.nombre_lieux,
                 related_venues_with_offer.nombre_de_lieux_avec_offres,
                 offerer_humanized_id.humanized_id AS offerer_humanized_id,
-                CASE WHEN offerer.validationToken IS NOT NULL THEN CONCAT('https://backend.passculture.beta.gouv.fr/validate/offerer/',offerer.validationToken) ELSE NULL END AS lien_de_validation_de_la_structure,
                 current_year_revenue.chiffre_affaire_reel_annee_civile_en_cours
                 FROM {dataset}.offerer
             LEFT JOIN related_stocks ON related_stocks.offerer_id = offerer.id

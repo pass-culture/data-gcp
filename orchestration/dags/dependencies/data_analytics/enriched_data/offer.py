@@ -82,6 +82,22 @@ def define_sum_stock_view_query(dataset):
     """
 
 
+def define_count_first_booking_query(dataset):
+    return f"""
+        CREATE TEMP TABLE count_first_booking_view AS
+            SELECT 
+                offer_id, count(*) as nombre_de_premieres_reservations 
+            FROM (
+                SELECT 
+                    stock.offerId as offer_id,
+                    rank() OVER (PARTITION BY booking.userId ORDER BY booking.dateCreated, booking.id) AS classement_de_la_reservation
+                FROM {dataset}.booking 
+                LEFT JOIN {dataset}.stock on stock.id = booking.stockId) c 
+            WHERE c.classement_de_la_reservation = 1
+            GROUP BY offer_id ORDER BY nombre_de_premieres_reservations DESC;
+    """
+
+
 def define_enriched_offer_data_query(dataset):
     return f"""
         CREATE OR REPLACE TABLE {dataset}.enriched_offer_data AS (
@@ -111,7 +127,8 @@ def define_enriched_offer_data_query(dataset):
                 CONCAT('https://pro.passculture.beta.gouv.fr/offres/', offer_humanized_id.humanized_id) 
                     AS lien_portail_pro,
                 CONCAT('https://app.passculture.beta.gouv.fr/offre/details/',offer_humanized_id.humanized_id) 
-                    AS lien_webapp
+                    AS lien_webapp, 
+                count_first_booking_view.nombre_de_premieres_reservations
             FROM {dataset}.offer
             LEFT JOIN {dataset}.venue ON offer.venueId = venue.id
             LEFT JOIN {dataset}.offerer ON venue.managingOffererId = offerer.id
@@ -121,6 +138,7 @@ def define_enriched_offer_data_query(dataset):
             LEFT JOIN count_favorites_view ON count_favorites_view.offer_id = offer.id
             LEFT JOIN sum_stock_view ON sum_stock_view.offer_id = offer.id
             LEFT JOIN offer_humanized_id ON offer_humanized_id.id = offer.id
+            LEFT JOIN count_first_booking_view ON count_first_booking_view.offer_id = offer.id
         );
     """
 
@@ -133,5 +151,6 @@ def define_enriched_offer_data_full_query(dataset):
         {define_count_favorites_view_query(dataset=dataset)}
         {define_sum_stock_view_query(dataset=dataset)}
         {define_humanized_id_query(table="offer", dataset=dataset)}
+        {define_count_first_booking_query(dataset=dataset)}
         {define_enriched_offer_data_query(dataset=dataset)}
     """

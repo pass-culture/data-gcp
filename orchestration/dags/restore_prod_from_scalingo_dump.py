@@ -84,19 +84,11 @@ with airflow.DAG(
         gcp_cloudsql_conn_id="postgresql_prod_vm",
         task_id=f"drop_tables",
         sql=f"""
-            DROP TABLE IF EXISTS public.user;
-            DROP TABLE IF EXISTS public.provider;
-            DROP TABLE IF EXISTS public.offerer;
-            DROP TABLE IF EXISTS public.bank_information;
-            DROP TABLE IF EXISTS public.booking;
-            DROP TABLE IF EXISTS public.payment;
-            DROP TABLE IF EXISTS public.venue;
-            DROP TABLE IF EXISTS public.user_offerer;
-            DROP TABLE IF EXISTS public.offer;
-            DROP TABLE IF EXISTS public.stock;
-            DROP TABLE IF EXISTS public.favorite;
-            DROP TABLE IF EXISTS public.venue_type;
-            DROP TABLE IF EXISTS public.venue_label;
+            DROP SCHEMA public CASCADE;
+            CREATE SCHEMA public;
+            CREATE EXTENSION postgis;
+            CREATE EXTENSION unaccent;
+            CREATE EXTENSION btree_gist;
         """,
         autocommit=True,
     )
@@ -106,6 +98,7 @@ with airflow.DAG(
             "fileType": "sql",
             "uri": f"gs://{GCS_BUCKET}/{object_name}",
             "database": DB_NAME,
+            "importUser": "postgres",
         }
     }
 

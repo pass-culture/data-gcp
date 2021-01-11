@@ -183,7 +183,7 @@ TABLE_DATA = {
             {"name": "pattern_type", "type": "STRING", "mode": "NULLABLE"},
             {"name": "case_sensitive", "type": "INT64", "mode": "NULLABLE"},
             {"name": "allow_multiple", "type": "INT64", "mode": "NULLABLE"},
-            {"name": "revenue", "type": "INT64", "mode": "NULLABLE"},
+            {"name": "revenue", "type": "FLOAT64", "mode": "NULLABLE"},
             {"name": "deleted", "type": "INT64", "mode": "NULLABLE"},
             {"name": "event_value_as_revenue", "type": "INT64", "mode": "NULLABLE"},
         ],
@@ -243,7 +243,7 @@ TABLE_DATA = {
             {"name": "idgoal", "type": "INT64", "mode": "REQUIRED"},
             {"name": "idvisit", "type": "INT64", "mode": "REQUIRED"},
         ],
-        "row_number_queried": 1000000,
+        "row_number_queried": 100000,
         "query_filter": f"and server_time >= TIMESTAMP '{EXPORT_START_DATE}'",
     },
 }

@@ -7,7 +7,7 @@ sudo apt update
 sudo apt install -y postgresql-client-12
 
 #Import ssh private key
-gsutil cp gs://pass-culture-data/private_rsa_key_vm.pem .
+gsutil cp gs://pass-culture-data/compute_engine_dump_scalingo/private_rsa_key_vm.pem .
 chmod 600 private_rsa_key_vm.pem 
 
 #Add scalingo to known hosts

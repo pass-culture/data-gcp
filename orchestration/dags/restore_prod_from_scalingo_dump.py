@@ -116,4 +116,4 @@ with airflow.DAG(
         task_id="sql_import_task",
     )
 
-    print_gcs_info >> sql_gcp_add_object_permission_task >> sql_gcp_add_bucket_permission_2_task >> clean_database_task >> sql_import_task
+    sql_gcp_add_object_permission_task >> sql_gcp_add_bucket_permission_2_task >> clean_database_task >> sql_import_task

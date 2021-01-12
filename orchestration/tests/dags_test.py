@@ -1,3 +1,4 @@
+from datetime import datetime
 import unittest
 from unittest import mock
 
@@ -15,8 +16,15 @@ class TestDags(unittest.TestCase):
         ) as bigquery_mocker, mock.patch(
             "dependencies.matomo_client.MatomoClient.query"
         ) as matomo_mocker:
+
+            def matomo_query(query):
+                if query == "SELECT max(visit_last_action_time) FROM log_visit":
+                    return [[datetime.now()]]
+                else:
+                    return [[0]]
+
             bigquery_mocker.return_value = pd.DataFrame({0: [0]})
-            matomo_mocker.return_value = [[0]]
+            matomo_mocker.side_effect = matomo_query
             self.dagbag = DagBag(include_examples=False)
 
     def test_dag_import_no_error(self):

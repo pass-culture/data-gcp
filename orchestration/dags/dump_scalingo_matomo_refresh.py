@@ -4,17 +4,17 @@ from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.contrib.hooks.ssh_hook import SSHHook
-from airflow.contrib.operators.bigquery_table_delete_operator import (
-    BigQueryTableDeleteOperator,
-)
 from airflow.contrib.operators.bigquery_operator import (
     BigQueryOperator,
     BigQueryCreateEmptyTableOperator,
 )
+from airflow.contrib.operators.bigquery_table_delete_operator import (
+    BigQueryTableDeleteOperator,
+)
+from airflow.contrib.operators.gcs_to_bq import GoogleCloudStorageToBigQueryOperator
 from airflow.contrib.operators.mysql_to_gcs import (
     MySqlToGoogleCloudStorageOperator,
 )
-from airflow.contrib.operators.gcs_to_bq import GoogleCloudStorageToBigQueryOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python_operator import PythonOperator
 
@@ -230,51 +230,69 @@ def query_mysql_from_tunnel(**kwargs):
 
 
 last_task = start
+
 now = datetime.now().strftime("%Y-%m-%d")
-yesterday = (datetime.now() + timedelta(days=-1)).strftime("%Y-%m-%d")
+matomo_query = f"SELECT max(visit_last_action_time) FROM log_visit"
+matomo_result = matomo_client.query(matomo_query)
+# we define a margin of 3 hours
+yesterday = (matomo_result[0][0] + timedelta(hours=-3)).strftime("%Y-%m-%d %H:%M:%S.%f")
 
 for table in TABLE_DATA:
+    query_filter = (
+        f"visit_last_action_time > TIMESTAMP '{yesterday}'"
+        if table == "log_visit"
+        else None
+    )
+
     if table == "log_visit":
+        matomo_query = (
+            f"SELECT max({TABLE_DATA[table]['id']}) FROM {table} "
+            f"where {query_filter.replace('>', '<=')}"
+        )
+        matomo_result = matomo_client.query(matomo_query)
+        min_id = int(matomo_result[0][0])
+    else:
+        bigquery_query = (
+            f"SELECT max({TABLE_DATA[table]['id']}) "
+            f"FROM `pass-culture-app-projet-test.{BIGQUERY_DATASET}.{table}`"
+        )
+        bigquery_result = bigquery_client.query(bigquery_query)
+        min_id = int(bigquery_result.values[0][0])
+
+    matomo_query = f"SELECT max({TABLE_DATA[table]['id']}) FROM {table}"
+    matomo_result = matomo_client.query(matomo_query)
+    max_id = int(matomo_result[0][0])
+
+    row_number_queried = TABLE_DATA[table]["row_number_queried"]
+    query_count = 0
+    for query_index in range(min_id, max_id, row_number_queried):
         sql_query = (
             f"select {', '.join([column['name'] for column in TABLE_DATA[table]['columns']])} "
             f"from {table} "
-            f"where visit_last_action_time > TIMESTAMP '{yesterday} 02:00:00.0';"
+            f"where {TABLE_DATA[table]['id']} > {query_index} "
+            f"and {TABLE_DATA[table]['id']} <= {query_index + row_number_queried}"
         )
-    else:
-        bigquery_result = bigquery_client.query(
-            f"SELECT max({TABLE_DATA[table]['id']}) FROM `pass-culture-app-projet-test.{BIGQUERY_DATASET}.{table}`"
-        )
-        min_id = bigquery_result.values[0][0]
-        matomo_result = matomo_client.query(
-            f"SELECT max({TABLE_DATA[table]['id']}) FROM {table}"
-        )
-        max_id = matomo_result[0][0]
-        row_number_queried = TABLE_DATA[table]["row_number_queried"]
-        query_count = 0
-        for query_index in range(min_id, max_id, row_number_queried):
-            sql_query = (
-                f"select {', '.join([column['name'] for column in TABLE_DATA[table]['columns']])} "
-                f"from {table} "
-                f"where {TABLE_DATA[table]['id']} >= {query_index} "
-                f"and {TABLE_DATA[table]['id']} < {query_index + row_number_queried};"
-            )
+        if query_filter is not None:
+            sql_query += f" and {query_filter};"
+        else:
+            sql_query += ";"
 
-            # File path and name.
-            file_name = f"refresh/{table}/{now}_{query_count}_{'{}'}.csv"
+        # File path and name.
+        file_name = f"refresh/{table}/{now}_{query_count}_{'{}'}.csv"
 
-            export_table = PythonOperator(
-                task_id=f"query_{table}_{query_count}",
-                python_callable=query_mysql_from_tunnel,
-                op_kwargs={
-                    "table": table,
-                    "sql_query": sql_query,
-                    "file_name": file_name,
-                },
-                dag=dag,
-            )
-            last_task >> export_table
-            last_task = export_table
-            query_count += 1
+        export_table = PythonOperator(
+            task_id=f"query_{table}_{query_count}",
+            python_callable=query_mysql_from_tunnel,
+            op_kwargs={
+                "table": table,
+                "sql_query": sql_query,
+                "file_name": file_name,
+            },
+            dag=dag,
+        )
+        last_task >> export_table
+        last_task = export_table
+        query_count += 1
 
 last_task >> end_export
 

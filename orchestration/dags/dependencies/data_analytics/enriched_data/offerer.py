@@ -29,7 +29,7 @@ def define_first_booking_creation_dates_query(dataset):
             LEFT JOIN {dataset}.stock ON stock.offerId = offer.id
             LEFT JOIN {dataset}.booking ON booking.stockId = stock.id
             GROUP BY offerer_id;
-        """
+    """
 
 
 def define_number_of_offers_query(dataset):
@@ -42,7 +42,7 @@ def define_number_of_offers_query(dataset):
             LEFT JOIN {dataset}.venue ON venue.managingOffererId = offerer.id
             LEFT JOIN {dataset}.offer ON offer.venueId = venue.id
             GROUP BY offerer_id;
-        """
+    """
 
 
 def define_number_of_bookings_not_cancelled_query(dataset):
@@ -58,7 +58,7 @@ def define_number_of_bookings_not_cancelled_query(dataset):
             LEFT JOIN {dataset}.booking
                 ON booking.stockId = stock.id AND booking.isCancelled IS FALSE
             GROUP BY offerer_id;
-        """
+    """
 
 
 def define_offerer_departement_code_query(dataset):
@@ -85,43 +85,43 @@ def define_number_of_venues_query(dataset):
             LEFT JOIN {dataset}.venue
             ON offerer.id = venue.managingOffererId
             GROUP BY 1;
-        """
+    """
 
 
 def define_number_of_venues_without_offer_query(dataset):
     return f"""
-    CREATE TEMP TABLE related_venues_with_offer AS
-        WITH venues_with_offers AS (
+        CREATE TEMP TABLE related_venues_with_offer AS
+            WITH venues_with_offers AS (
+                SELECT
+                    offerer.id AS offerer_id,
+                    venue.id AS venue_id,
+                    count(offer.id) AS count_offers
+                FROM {dataset}.offerer
+                LEFT JOIN {dataset}.venue ON offerer.id = venue.managingOffererId
+                LEFT JOIN {dataset}.offer ON venue.id = offer.venueId
+                GROUP BY offerer_id, venue_id
+            )
             SELECT
-                offerer.id AS offerer_id,
-                venue.id AS venue_id,
-                count(offer.id) AS count_offers
-            FROM {dataset}.offerer
-            LEFT JOIN {dataset}.venue ON offerer.id = venue.managingOffererId
-            LEFT JOIN {dataset}.offer ON venue.id = offer.venueId
-            GROUP BY offerer_id, venue_id
-        )
-        SELECT
-            offerer_id,
-            COUNT(CASE WHEN count_offers > 0 THEN venue_id ELSE NULL END) AS nombre_de_lieux_avec_offres
-        FROM venues_with_offers
-        GROUP BY offerer_id;
-        """
+                offerer_id,
+                COUNT(CASE WHEN count_offers > 0 THEN venue_id ELSE NULL END) AS nombre_de_lieux_avec_offres
+            FROM venues_with_offers
+            GROUP BY offerer_id;
+    """
 
 
 def define_current_year_revenue(dataset):
     return f"""
-    CREATE TEMP TABLE current_year_revenue AS
-        SELECT
-            venue.managingOffererId AS offerer_id,
-            sum(coalesce(booking.quantity,0)*coalesce(booking.amount,0)) AS chiffre_affaire_reel_annee_civile_en_cours
-        FROM {dataset}.booking
-        JOIN {dataset}.stock ON booking.stockId = stock.id
-        JOIN {dataset}.offer ON stock.offerId = offer.id
-        JOIN {dataset}.venue ON offer.venueId = venue.id
-        AND EXTRACT(YEAR FROM booking.dateCreated) = EXTRACT(YEAR FROM current_date)
-        AND booking.isUsed
-        GROUP BY venue.managingOffererId;
+        CREATE TEMP TABLE current_year_revenue AS
+            SELECT
+                venue.managingOffererId AS offerer_id,
+                sum(coalesce(booking.quantity,0)*coalesce(booking.amount,0)) AS chiffre_affaire_reel_annee_civile_en_cours
+            FROM {dataset}.booking
+            JOIN {dataset}.stock ON booking.stockId = stock.id
+            JOIN {dataset}.offer ON stock.offerId = offer.id
+            JOIN {dataset}.venue ON offer.venueId = venue.id
+            AND EXTRACT(YEAR FROM booking.dateCreated) = EXTRACT(YEAR FROM current_date)
+            AND booking.isUsed
+            GROUP BY venue.managingOffererId;
     """
 
 
@@ -141,7 +141,7 @@ def define_enriched_offerer_query(dataset):
                 related_venues_with_offer.nombre_de_lieux_avec_offres,
                 offerer_humanized_id.humanized_id AS offerer_humanized_id,
                 current_year_revenue.chiffre_affaire_reel_annee_civile_en_cours
-                FROM {dataset}.offerer
+            FROM {dataset}.offerer
             LEFT JOIN related_stocks ON related_stocks.offerer_id = offerer.id
             LEFT JOIN related_bookings ON related_bookings.offerer_id = offerer.id
             LEFT JOIN related_offers ON related_offers.offerer_id = offerer.id

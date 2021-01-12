@@ -10,8 +10,13 @@ class TestDags(unittest.TestCase):
     LOAD_SECOND_THRESHOLD = 2
 
     def setUp(self):
-        with mock.patch("dependencies.bigquery_client.BigQueryClient.query") as mocker:
-            mocker.return_value = pd.DataFrame({0: [0]})
+        with mock.patch(
+            "dependencies.bigquery_client.BigQueryClient.query"
+        ) as bigquery_mocker, mock.patch(
+            "dependencies.matomo_client.MatomoClient.query"
+        ) as matomo_mocker:
+            bigquery_mocker.return_value = pd.DataFrame({0: [0]})
+            matomo_mocker.return_value = [[0]]
             self.dagbag = DagBag(include_examples=False)
 
     def test_dag_import_no_error(self):
@@ -83,15 +88,14 @@ class TestDags(unittest.TestCase):
         self.assertIsNotNone(dag)
         self.assertEqual(len(dag.tasks), 39)
 
-    @mock.patch("dependencies.bigquery_client.BigQueryClient.query")
-    def test_dump_matomo_refresh_dag_is_loaded(self, mocker):
+    def test_dump_matomo_refresh_dag_is_loaded(self):
         # When
         dag = self.dagbag.get_dag(dag_id="dump_scalingo_matomo_refresh_v1")
 
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 16)
+        self.assertEqual(len(dag.tasks), 13)
 
     def test_import_applicative_database_dag_is_loaded(self):
         # When

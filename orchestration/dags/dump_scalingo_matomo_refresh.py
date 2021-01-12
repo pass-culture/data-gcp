@@ -19,10 +19,8 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python_operator import PythonOperator
 
 from dependencies.bigquery_client import BigQueryClient
+from dependencies.matomo_client import MatomoClient
 
-client = BigQueryClient(
-    "/home/airflow/gcs/dags/pass-culture-app-projet-test-19edd3c79717.json"
-)
 GCP_PROJECT_ID = "pass-culture-app-projet-test"
 GCS_BUCKET = "dump_scalingo"
 BIGQUERY_DATASET = "algo_reco_kpi_matomo"
@@ -64,7 +62,7 @@ TABLE_DATA = {
             {"name": "custom_var_k5", "type": "STRING", "mode": "NULLABLE"},
             {"name": "custom_var_v5", "type": "STRING", "mode": "NULLABLE"},
         ],
-        "row_number_queried": 300000,
+        "row_number_queried": 150000,
     },
     "log_visit": {
         "id": "idvisit",
@@ -145,7 +143,7 @@ TABLE_DATA = {
             {"name": "campaign_source", "type": "STRING", "mode": "NULLABLE"},
             {"name": "location_provider", "type": "STRING", "mode": "NULLABLE"},
         ],
-        "row_number_queried": 100000,
+        "row_number_queried": 50000,
     },
     "log_action": {
         "id": "idaction",
@@ -156,13 +154,13 @@ TABLE_DATA = {
             {"name": "type", "type": "INT64", "mode": "NULLABLE"},
             {"name": "url_prefix", "type": "INT64", "mode": "NULLABLE"},
         ],
-        "row_number_queried": 1000000,
+        "row_number_queried": 500000,
     },
 }
 
 
 default_args = {
-    "start_date": datetime(2021, 1, 7),
+    "start_date": datetime(2021, 1, 9),
     "retries": 5,
     "retry_delay": timedelta(minutes=5),
 }
@@ -185,6 +183,11 @@ os.environ[
     "AIRFLOW_CONN_MYSQL_SCALINGO"
 ] = f"mysql://{MATOMO_CONNECTION_DATA.get('user')}:{MATOMO_CONNECTION_DATA.get('password')}@{LOCAL_HOST}:{LOCAL_PORT}/{MATOMO_CONNECTION_DATA.get('dbname')}"
 
+bigquery_client = BigQueryClient(
+    "/home/airflow/gcs/dags/pass-culture-app-projet-test-19edd3c79717.json"
+)
+matomo_client = MatomoClient(MATOMO_CONNECTION_DATA, LOCAL_PORT)
+
 start = DummyOperator(task_id="start", dag=dag)
 end_export = DummyOperator(task_id="end_export", dag=dag)
 end_import = DummyOperator(task_id="end_import", dag=dag)
@@ -192,7 +195,6 @@ end = DummyOperator(task_id="end", dag=dag)
 
 
 def create_tunnel():
-    # Open SSH tunnel
     ssh_hook = SSHHook(
         ssh_conn_id="ssh_scalingo",
         keepalive_interval=120,
@@ -239,27 +241,40 @@ for table in TABLE_DATA:
             f"where visit_last_action_time > TIMESTAMP '{yesterday} 02:00:00.0';"
         )
     else:
-        df = client.query(
+        bigquery_result = bigquery_client.query(
             f"SELECT max({TABLE_DATA[table]['id']}) FROM `pass-culture-app-projet-test.{BIGQUERY_DATASET}.{table}`"
         )
-        max_id = df.values[0][0]
-        sql_query = (
-            f"select {', '.join([column['name'] for column in TABLE_DATA[table]['columns']])} "
-            f"from {table} "
-            f"where {TABLE_DATA[table]['id']} > {max_id};"
+        min_id = bigquery_result.values[0][0]
+        matomo_result = matomo_client.query(
+            f"SELECT max({TABLE_DATA[table]['id']}) FROM {table}"
         )
+        max_id = matomo_result[0][0]
+        row_number_queried = TABLE_DATA[table]["row_number_queried"]
+        query_count = 0
+        for query_index in range(min_id, max_id, row_number_queried):
+            sql_query = (
+                f"select {', '.join([column['name'] for column in TABLE_DATA[table]['columns']])} "
+                f"from {table} "
+                f"where {TABLE_DATA[table]['id']} >= {query_index} "
+                f"and {TABLE_DATA[table]['id']} < {query_index + row_number_queried};"
+            )
 
-    # File path and name.
-    file_name = f"refresh/{table}/{now}_{'{}'}.csv"
+            # File path and name.
+            file_name = f"refresh/{table}/{now}_{query_count}_{'{}'}.csv"
 
-    export_table = PythonOperator(
-        task_id=f"query_{table}",
-        python_callable=query_mysql_from_tunnel,
-        op_kwargs={"table": table, "sql_query": sql_query, "file_name": file_name},
-        dag=dag,
-    )
-    last_task >> export_table
-    last_task = export_table
+            export_table = PythonOperator(
+                task_id=f"query_{table}_{query_count}",
+                python_callable=query_mysql_from_tunnel,
+                op_kwargs={
+                    "table": table,
+                    "sql_query": sql_query,
+                    "file_name": file_name,
+                },
+                dag=dag,
+            )
+            last_task >> export_table
+            last_task = export_table
+            query_count += 1
 
 last_task >> end_export
 

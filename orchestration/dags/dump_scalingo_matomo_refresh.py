@@ -86,10 +86,20 @@ def query_mysql_from_tunnel(**kwargs):
 last_task = start
 
 now = datetime.now().strftime("%Y-%m-%d")
-matomo_query = f"SELECT max(visit_last_action_time) FROM log_visit"
-matomo_result = matomo_client.query(matomo_query)
-# we define a margin of 3 hours
-yesterday = (matomo_result[0][0] + timedelta(hours=-3)).strftime("%Y-%m-%d %H:%M:%S.%f")
+
+# we determine the date of the last visit action stored in bigquery
+bigquery_query = f"SELECT max(visit_last_action_time) FROM `pass-culture-app-projet-test.{BIGQUERY_DATASET}.log_visit`"
+timestamp = bigquery_client.query(bigquery_query).values[0][0]
+# we add a margin of 3 hours
+yesterday = (timestamp.to_pydatetime() + timedelta(hours=-3)).strftime(
+    "%Y-%m-%d %H:%M:%S.%f"
+)
+# we will extract all visits those visit_last_action_time is older than this date
+
+TABLE_DATA = {
+    table: TABLE_DATA[table]
+    for table in ["log_visit", "log_link_visit_action", "log_action"]
+}
 
 for table in TABLE_DATA:
     query_filter = (
@@ -99,12 +109,13 @@ for table in TABLE_DATA:
     )
 
     if table == "log_visit":
-        matomo_query = (
-            f"SELECT max({TABLE_DATA[table]['id']}) FROM {table} "
+        bigquery_query = (
+            f"SELECT max({TABLE_DATA[table]['id']}) "
+            f"FROM `pass-culture-app-projet-test.{BIGQUERY_DATASET}.{table}` "
             f"where visit_last_action_time <= TIMESTAMP '{yesterday}'"
         )
-        matomo_result = matomo_client.query(matomo_query)
-        min_id = int(matomo_result[0][0])
+        bigquery_result = bigquery_client.query(bigquery_query)
+        min_id = int(bigquery_result.values[0][0])
     else:
         bigquery_query = (
             f"SELECT max({TABLE_DATA[table]['id']}) "
@@ -272,7 +283,3 @@ dehumanize_log_action_task = BigQueryOperator(
 )
 
 end_import >> dehumanize_log_action_task >> end
-
-# log_visit: bigquery = 325889, matomo = 336156
-# log_link_visit_action: bigquery = 2908457, matomo = 2996147
-# log_action: bigquery = 6725754, matomo =

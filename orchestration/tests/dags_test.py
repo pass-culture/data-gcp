@@ -1,4 +1,3 @@
-from datetime import datetime
 import unittest
 from unittest import mock
 
@@ -17,15 +16,17 @@ class TestDags(unittest.TestCase):
             "dependencies.matomo_client.MatomoClient.query"
         ) as matomo_mocker:
 
-            def matomo_query(query):
+            def bigquery_client(query):
                 return (
-                    [[datetime.now()]]
-                    if query == "SELECT max(visit_last_action_time) FROM log_visit"
-                    else [[0]]
+                    pd.DataFrame(
+                        {"f0_": [pd.to_datetime(1490195805, unit="s", utc=True)]}
+                    )
+                    if "SELECT max(visit_last_action_time) FROM" in query
+                    else pd.DataFrame({0: [0]})
                 )
 
-            bigquery_mocker.return_value = pd.DataFrame({0: [0]})
-            matomo_mocker.side_effect = matomo_query
+            matomo_mocker.return_value = [[0]]
+            bigquery_mocker.side_effect = bigquery_client
             self.dagbag = DagBag(include_examples=False)
 
     def test_dag_import_no_error(self):
@@ -95,7 +96,7 @@ class TestDags(unittest.TestCase):
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 39)
+        self.assertEqual(len(dag.tasks), 46)
 
     def test_dump_matomo_refresh_dag_is_loaded(self):
         # When

@@ -5,7 +5,7 @@ TABLE_DATA = {
     "log_link_visit_action": {
         "id": "idlink_va",
         "min_id": 169419493,
-        "max_id": 170902366,
+        "max_id": 172310659,
         "columns": [
             {"name": "idlink_va", "type": "INT64", "mode": "REQUIRED"},
             {"name": "idsite", "type": "INT64", "mode": "REQUIRED"},
@@ -47,7 +47,7 @@ TABLE_DATA = {
     "log_visit": {
         "id": "idvisit",
         "min_id": 8009709,
-        "max_id": 8176313,
+        "max_id": 8333833,
         "columns": [
             {"name": "idvisit", "type": "INT64", "mode": "REQUIRED"},
             {"name": "idsite", "type": "INT64", "mode": "REQUIRED"},
@@ -131,7 +131,7 @@ TABLE_DATA = {
     "log_action": {
         "id": "idaction",
         "min_id": 0,
-        "max_id": 6596133,
+        "max_id": 6837134,
         "columns": [
             {"name": "idaction", "type": "INT64", "mode": "REQUIRED"},
             {"name": "name", "type": "STRING", "mode": "NULLABLE"},

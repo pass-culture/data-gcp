@@ -1,6 +1,8 @@
 import unittest
+from unittest import mock
 
 from airflow.models import DagBag
+import pandas as pd
 
 
 class TestDags(unittest.TestCase):
@@ -8,7 +10,24 @@ class TestDags(unittest.TestCase):
     LOAD_SECOND_THRESHOLD = 2
 
     def setUp(self):
-        self.dagbag = DagBag(include_examples=False)
+        with mock.patch(
+            "dependencies.bigquery_client.BigQueryClient.query"
+        ) as bigquery_mocker, mock.patch(
+            "dependencies.matomo_client.MatomoClient.query"
+        ) as matomo_mocker:
+
+            def bigquery_client(query):
+                return (
+                    pd.DataFrame(
+                        {"f0_": [pd.to_datetime(1490195805, unit="s", utc=True)]}
+                    )
+                    if "SELECT max(visit_last_action_time) FROM" in query
+                    else pd.DataFrame({0: [0]})
+                )
+
+            matomo_mocker.return_value = [[0]]
+            bigquery_mocker.side_effect = bigquery_client
+            self.dagbag = DagBag(include_examples=False)
 
     def test_dag_import_no_error(self):
         # Then
@@ -77,7 +96,16 @@ class TestDags(unittest.TestCase):
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 39)
+        self.assertEqual(len(dag.tasks), 46)
+
+    def test_dump_matomo_refresh_dag_is_loaded(self):
+        # When
+        dag = self.dagbag.get_dag(dag_id="dump_scalingo_matomo_refresh_v1")
+
+        # Then
+        self.assertDictEqual(self.dagbag.import_errors, {})
+        self.assertIsNotNone(dag)
+        self.assertEqual(len(dag.tasks), 13)
 
     def test_import_applicative_database_dag_is_loaded(self):
         # When

@@ -3,7 +3,6 @@ import os
 from datetime import datetime, timedelta
 
 from airflow import DAG
-from airflow.contrib.hooks.ssh_hook import SSHHook
 from airflow.contrib.operators.bigquery_table_delete_operator import (
     BigQueryTableDeleteOperator,
 )
@@ -21,6 +20,7 @@ from airflow.operators.python_operator import PythonOperator
 
 from dependencies.slack_alert import task_fail_slack_alert
 from dependencies.big_query_data_schema import EXPORT_START_DATE, TABLE_DATA
+from dependencies.matomo_client import MatomoClient
 
 GCP_PROJECT_ID = "pass-culture-app-projet-test"
 GCS_BUCKET = "dump_scalingo"
@@ -55,27 +55,15 @@ os.environ[
     "AIRFLOW_CONN_MYSQL_SCALINGO"
 ] = f"mysql://{MATOMO_CONNECTION_DATA.get('user', '')}:{MATOMO_CONNECTION_DATA.get('password', '')}@{LOCAL_HOST}:{LOCAL_PORT}/{MATOMO_CONNECTION_DATA.get('dbname', '')}"
 
+matomo_client = MatomoClient(MATOMO_CONNECTION_DATA, LOCAL_PORT)
+
 start = DummyOperator(task_id="start", dag=dag)
 end_export = DummyOperator(task_id="end_export", dag=dag)
 end_import = DummyOperator(task_id="end_import", dag=dag)
 
 
-def create_tunnel():
-    # Open SSH tunnel
-    ssh_hook = SSHHook(
-        ssh_conn_id="ssh_scalingo",
-        keepalive_interval=120,
-    )
-    tunnel = ssh_hook.get_tunnel(
-        remote_port=MATOMO_CONNECTION_DATA.get("port", 0),
-        remote_host=MATOMO_CONNECTION_DATA.get("host", 0),
-        local_port=LOCAL_PORT,
-    )
-    return tunnel
-
-
 def query_mysql_from_tunnel(**kwargs):
-    tunnel = create_tunnel()
+    tunnel = matomo_client.create_tunnel()
     tunnel.start()
 
     extraction_task = MySqlToGoogleCloudStorageOperator(

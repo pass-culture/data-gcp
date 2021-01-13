@@ -18,10 +18,11 @@ class TestDags(unittest.TestCase):
         ) as matomo_mocker:
 
             def matomo_query(query):
-                if query == "SELECT max(visit_last_action_time) FROM log_visit":
-                    return [[datetime.now()]]
-                else:
-                    return [[0]]
+                return (
+                    [[datetime.now()]]
+                    if query == "SELECT max(visit_last_action_time) FROM log_visit"
+                    else [[0]]
+                )
 
             bigquery_mocker.return_value = pd.DataFrame({0: [0]})
             matomo_mocker.side_effect = matomo_query

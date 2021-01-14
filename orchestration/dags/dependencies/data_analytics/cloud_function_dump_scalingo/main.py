@@ -7,16 +7,19 @@ from pprint import pprint
 from googleapiclient import discovery
 from oauth2client.client import GoogleCredentials
 
-IAM_SCOPE = "https://www.googleapis.com/auth/iam"
-OAUTH_TOKEN_URI = "https://www.googleapis.com/oauth2/v4/token"
+# Declare variables
+# Airflow
+client_id = "837036835383-uo5mps16sfk4s2pf1h1v7papnsk351al.apps.googleusercontent.com"
+webserver_id = "q775b71be829eada6p-tp"
+dag_name = "restore_prod_from_vm_export_v1"
+
+# Compute Engine Instance
+project = "pass-culture-app-projet-test"
+zone = "europe-west1-b"
+instance = "data-dump-scalingo"
 
 
 def trigger_dag(data, context=None):
-    client_id = (
-        "837036835383-uo5mps16sfk4s2pf1h1v7papnsk351al.apps.googleusercontent.com"
-    )
-    webserver_id = "q775b71be829eada6p-tp"
-    dag_name = "restore_prod_from_vm_export_v1"
     webserver_url = (
         f"https://{webserver_id}.appspot.com/api/experimental/dags/{dag_name}/dag_runs"
     )
@@ -54,9 +57,6 @@ def make_iap_request(url, client_id, method="GET", **kwargs):
 def stop_compute_engine():
     credentials = GoogleCredentials.get_application_default()
     service = discovery.build("compute", "v1", credentials=credentials)
-    project = "pass-culture-app-projet-test"
-    zone = "europe-west1-b"
-    instance = "data-dump-scalingo"
     request = service.instances().stop(project=project, zone=zone, instance=instance)
     response = request.execute()
     pprint(response)

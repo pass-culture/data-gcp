@@ -180,32 +180,37 @@ dehumanize_user_id_task = BigQueryOperator(
 )
 
 
-dehumanize_log_action_query = f"""
-SELECT
-    *,
-    algo_reco_kpi_data.dehumanize_id(offer_id) AS dehumanize_offer_id
-FROM (
+preprocess_log_action_query = f"""
+WITH filtered AS (
+    SELECT *,
+    REGEXP_EXTRACT(name, r"Module name: (.*) -") as module_name,
+    REGEXP_EXTRACT(name, r"Number of tiles: ([0-9]*)") as number_tiles,
+    REGEXP_EXTRACT(name, r"Offer id: ([A-Z0-9]*)") as offer_id,
+    REGEXP_EXTRACT(name, r"details\/([A-Z0-9]{{4,5}})[^a-zA-Z0-9]") as offer_id_from_url,
+    FROM {BIGQUERY_DATASET}.log_action
+    WHERE type not in (1, 2, 3, 8)
+    OR (type = 1 AND name LIKE "%.passculture.beta.gouv.fr/%")
+),
+dehumanized AS (
     SELECT
         *,
-        IF(
-            REGEXP_CONTAINS(name, r"app.*\/([A-Z0-9]{{4,5}})[^A-Za-z0-9]"),
-            REGEXP_EXTRACT(name, r"\/([A-Z0-9]{{4,5}})"),
-            ""
-            ) AS offer_id,
-        IF(
-            REGEXP_CONTAINS(name, r"app.*"),
-            REGEXP_EXTRACT(name, r"\/([a-z]*)"),
-            ""
-            ) AS base_page
-    FROM
-        {BIGQUERY_DATASET}.log_action
-);
+        IF( offer_id is not null,
+            algo_reco_kpi_data.dehumanize_id(offer_id), null) AS dehumanize_offer_id,
+        IF( offer_id_from_url is not null,
+            algo_reco_kpi_data.dehumanize_id(offer_id_from_url), null) AS dehumanize_offer_id_from_url
+    FROM filtered
+)
+SELECT
+    STRUCT (idaction, name, _hash, type, url_prefix) as raw_data,
+    STRUCT (module_name, number_tiles, offer_id, dehumanize_offer_id) AS tracker_data,
+    STRUCT (offer_id_from_url as offer_id, dehumanize_offer_id_from_url as dehumanize_offer_id) AS url_data
+FROM dehumanized;
 """
 
-dehumanize_log_action_task = BigQueryOperator(
-    task_id="dehumanize_log_action",
-    sql=dehumanize_log_action_query,
-    destination_dataset_table=f"{BIGQUERY_DATASET}.log_action_processed",
+preprocess_log_action_task = BigQueryOperator(
+    task_id="preprocess_log_action",
+    sql=preprocess_log_action_query,
+    destination_dataset_table=f"{BIGQUERY_DATASET}.log_action_preprocessed",
     write_disposition="WRITE_TRUNCATE",
     use_legacy_sql=False,
     dag=dag,
@@ -213,4 +218,4 @@ dehumanize_log_action_task = BigQueryOperator(
 
 end_dag = DummyOperator(task_id="end_dag", dag=dag)
 
-end_import >> [dehumanize_user_id_task, dehumanize_log_action_task] >> end_dag
+end_import >> [dehumanize_user_id_task, preprocess_log_action_task] >> end_dag

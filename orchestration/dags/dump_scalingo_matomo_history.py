@@ -35,7 +35,7 @@ default_args = {
 }
 
 dag = DAG(
-    "dump_scalingo_matomo_history_v4",
+    "dump_scalingo_matomo_history_v5",
     default_args=default_args,
     description=f"Dump scalingo matomo history from {EXPORT_START_DATE} to cloud storage "
     f"in csv format and import it in bigquery",

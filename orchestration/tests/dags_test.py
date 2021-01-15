@@ -91,7 +91,7 @@ class TestDags(unittest.TestCase):
 
     def test_dump_matomo_history_dag_is_loaded(self):
         # When
-        dag = self.dagbag.get_dag(dag_id="dump_scalingo_matomo_history_v4")
+        dag = self.dagbag.get_dag(dag_id="dump_scalingo_matomo_history_v5")
 
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
@@ -100,7 +100,7 @@ class TestDags(unittest.TestCase):
 
     def test_dump_matomo_refresh_dag_is_loaded(self):
         # When
-        dag = self.dagbag.get_dag(dag_id="dump_scalingo_matomo_refresh_v1")
+        dag = self.dagbag.get_dag(dag_id="dump_scalingo_matomo_refresh_v2")
 
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})

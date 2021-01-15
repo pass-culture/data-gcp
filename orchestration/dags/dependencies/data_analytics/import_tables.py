@@ -1,9 +1,11 @@
-from dependencies.data_analytics.config import GCP_REGION, CLOUDSQL_DATABASE
+from dependencies.data_analytics.config import GCP_REGION, EXTERNAL_CONNECTION_ID
 
 
-def define_import_query(table, region=GCP_REGION, cloudsql_database=CLOUDSQL_DATABASE):
+def define_import_query(
+    table, region=GCP_REGION, external_connection_id=EXTERNAL_CONNECTION_ID
+):
     """
-    Given a table (from "cloudsql_database" located in "region"), we build and return the federated query that
+    Given a table (from "external_connection_id" located in "region"), we build and return the federated query that
     selects table content (for import purpose).
     In order to handle type incompatibility between postgresql and BigQuery (eg. UUID and custom types),
     we sometimes have to explicitly select and cast columns.
@@ -136,12 +138,12 @@ def define_import_query(table, region=GCP_REGION, cloudsql_database=CLOUDSQL_DAT
             external_table
         ] = f"""
             SELECT * FROM EXTERNAL_QUERY(
-                '{region}.{cloudsql_database}',
+                '{region}.{external_connection_id}',
                 '{one_line_external_query}'
             );
         """
 
     # Define default federated query (for tables that do not need specific CAST)
-    default_query = f"SELECT * FROM EXTERNAL_QUERY('{region}.{cloudsql_database}', 'SELECT * FROM {table}');"
+    default_query = f"SELECT * FROM EXTERNAL_QUERY('{region}.{external_connection_id}', 'SELECT * FROM {table}');"
 
     return queries.get(table, default_query)

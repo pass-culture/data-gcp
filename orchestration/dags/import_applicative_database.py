@@ -30,7 +30,7 @@ from dependencies.slack_alert import task_fail_slack_alert
 
 
 # Variables
-BIGQUERY_DATASET_NAME = "applicative_database"
+BIGQUERY_DATASET_NAME = "data_analytics"
 
 data_applicative_tables = [
     "user",
@@ -58,7 +58,7 @@ default_dag_args = {
 }
 
 dag = DAG(
-    "import_applicative_database_v1",
+    "import_data_analytics_v1",
     default_args=default_dag_args,
     description="Import tables from CloudSQL and enrich data for create dashboards with Data Studio",
     schedule_interval="0 1 * * *",

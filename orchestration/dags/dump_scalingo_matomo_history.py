@@ -216,6 +216,88 @@ preprocess_log_action_task = BigQueryOperator(
     dag=dag,
 )
 
+preprocess_log_link_visit_action_query = f"""
+SELECT
+    idlink_va,
+    idvisitor,
+    idvisit,
+    server_time,
+    idaction_name,
+    idaction_url,
+    idaction_event_action,
+    idaction_event_category
+FROM {BIGQUERY_DATASET}.log_link_visit_action
+"""
+
+preprocess_log_link_visit_action_task = BigQueryOperator(
+    task_id="preprocess_log_link_visit_action",
+    sql=preprocess_log_link_visit_action_query,
+    destination_dataset_table=f"{BIGQUERY_DATASET}.log_link_visit_action_preprocessed",
+    write_disposition="WRITE_TRUNCATE",
+    use_legacy_sql=False,
+    dag=dag,
+)
+
+filter_log_link_visit_action_query = f"""
+DELETE
+FROM {BIGQUERY_DATASET}.log_link_visit_action_preprocessed as llvap
+WHERE llvap.idlink_va NOT IN
+(
+    SELECT idlink_va
+    FROM {BIGQUERY_DATASET}.log_link_visit_action_preprocessed as llvap
+    LEFT OUTER JOIN {BIGQUERY_DATASET}.log_action_preprocessed as lap1
+        ON lap1.raw_data.idaction = llvap.idaction_url
+    LEFT OUTER JOIN {BIGQUERY_DATASET}.log_action_preprocessed as lap2
+        ON lap2.raw_data.idaction = llvap.idaction_name
+    WHERE
+    ((lap1.raw_data.idaction IS NULL AND llvap.idaction_url is not null) OR llvap.idaction_url IS NULL)
+    AND ((lap2.raw_data.idaction IS NULL AND llvap.idaction_name is not null) OR llvap.idaction_name IS NULL)
+    AND llvap.idaction_event_action is null AND llvap.idaction_event_category is null
+)
+"""
+
+filter_log_link_visit_action_task = BigQueryOperator(
+    task_id="filter_log_link_visit_action",
+    sql=filter_log_link_visit_action_query,
+    use_legacy_sql=False,
+    dag=dag,
+)
+
+filter_log_action_query = f"""
+DELETE FROM {BIGQUERY_DATASET}.log_action_preprocessed as lap
+WHERE lap.raw_data.idaction IN (
+    SELECT lap.raw_data.idaction
+    FROM {BIGQUERY_DATASET}.log_action_preprocessed as lap
+    LEFT OUTER JOIN {BIGQUERY_DATASET}.log_link_visit_action_preprocessed as llvap1
+        ON lap.raw_data.idaction = llvap1.idaction_url
+    LEFT OUTER JOIN {BIGQUERY_DATASET}.log_link_visit_action_preprocessed as llvap2
+        ON lap.raw_data.idaction = llvap2.idaction_name
+    LEFT OUTER JOIN {BIGQUERY_DATASET}.log_link_visit_action_preprocessed as llvap3
+        ON lap.raw_data.idaction = llvap3.idaction_event_action
+    LEFT OUTER JOIN {BIGQUERY_DATASET}.log_link_visit_action_preprocessed as llvap4
+        ON lap.raw_data.idaction = llvap4.idaction_event_category
+    WHERE
+        llvap1.idaction_url is null
+    AND
+        llvap2.idaction_url is null
+    AND
+        llvap3.idaction_url is null
+    AND
+        llvap4.idaction_url is null
+)
+"""
+
+filter_log_action_task = BigQueryOperator(
+    task_id="filter_log_action",
+    sql=filter_log_action_query,
+    use_legacy_sql=False,
+    dag=dag,
+)
+
 end_dag = DummyOperator(task_id="end_dag", dag=dag)
 
-end_import >> [dehumanize_user_id_task, preprocess_log_action_task] >> end_dag
+end_import >> [
+    dehumanize_user_id_task,
+    preprocess_log_action_task,
+    preprocess_log_link_visit_action_task,
+] >> [filter_log_link_visit_action_task, filter_log_action_task] >> end_dag

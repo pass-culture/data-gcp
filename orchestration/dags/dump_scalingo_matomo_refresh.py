@@ -312,7 +312,7 @@ preprocess_log_link_visit_action_task = BigQueryOperator(
 filter_log_link_visit_action_query = f"""
 DELETE
 FROM {BIGQUERY_DATASET}.log_link_visit_action_preprocessed as llvap
-WHERE llvap.idlink_va NOT IN
+WHERE llvap.idlink_va IN
 (
     SELECT idlink_va
     FROM {BIGQUERY_DATASET}.log_link_visit_action_preprocessed as llvap
@@ -350,11 +350,11 @@ WHERE lap.raw_data.idaction IN (
     WHERE
         llvap1.idaction_url is null
     AND
-        llvap2.idaction_url is null
+        llvap2.idaction_name is null
     AND
-        llvap3.idaction_url is null
+        llvap3.idaction_event_action is null
     AND
-        llvap4.idaction_url is null
+        llvap4.idaction_event_category is null
 )
 """
 

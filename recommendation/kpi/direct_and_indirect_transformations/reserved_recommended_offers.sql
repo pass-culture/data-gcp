@@ -10,7 +10,7 @@ WITH scrolls AS (SELECT server_time, user_id,
 	AND (idaction_url=4394835 OR idaction_url=150307)
 ),
 bookings AS (
-	SELECT userId, id AS offerId, CAST(dateCreated AS TIMESTAMP) AS booking_date
+	SELECT userId, id AS offerId, CAST(dateCreated AS TIMESTAMP) AS bookingDate
 	FROM `pass-culture-app-projet-test.applicative_database.booking`
 ),
 recommended_offers AS (
@@ -22,18 +22,18 @@ offers AS (
 ),
 viewed_recos AS (
 	SELECT * FROM (
-	        SELECT CAST(userId AS STRING) AS userId, CAST(offerId AS STRING) AS offerId, date AS reco_date, server_time AS scroll_time,
-	        RANK() OVER (PARTITION BY userId, date ORDER BY TIMESTAMP_DIFF(date, server_time, SECOND)) AS time_rank
+	        SELECT CAST(userId AS STRING) AS userId, CAST(offerId AS STRING) AS offerId, date AS recoDate, server_time AS scrollTime,
+	        RANK() OVER (PARTITION BY userId, date ORDER BY TIMESTAMP_DIFF(date, server_time, SECOND)) AS timeRank
 	        FROM recommended_offers
 		    LEFT JOIN scrolls
 	        ON CAST(recommended_offers.userId AS STRING) = scrolls.user_id_dehumanized
 	        WHERE server_time >= date
-    ) WHERE time_rank = 1
+    ) WHERE timeRank = 1
 )
-SELECT TIMESTAMP_DIFF(bookings.booking_date, viewed_recos.reco_date, SECOND) AS time_between_reco_and_booking, viewed_recos.userId, viewed_recos.offerId, offerType, url
+SELECT TIMESTAMP_DIFF(bookings.bookingDate, viewed_recos.recoDate, SECOND) AS time_between_reco_and_booking, viewed_recos.userId, viewed_recos.offerId, offerType, url
 FROM viewed_recos
 LEFT JOIN bookings
 ON viewed_recos.userId = bookings.userId AND viewed_recos.offerId = bookings.offerId
 LEFT JOIN offers
 ON viewed_recos.offerId = offers.offerId
-WHERE TIMESTAMP_DIFF(bookings.booking_date, viewed_recos.reco_date, SECOND) >= 0;
+WHERE TIMESTAMP_DIFF(bookings.bookingDate, viewed_recos.recoDate, SECOND) >= 0;

@@ -1,9 +1,9 @@
 #Declare variables
-host=pc-data-san-3937.postgresql.dbs.scalingo.com
-port=31112
-schema=pc_data_san_3937
-user=pc_data_san_3937
-password=ku3g26m81EMUmYl4AYf_
+host=pass-culture-2892.postgresql.dbs.scalingo.com
+port=30295
+schema=pass_culture_2892
+user=pass_culture_2892
+password=Y1kW7O7fwnrfF8d6o_Kg
 
 cd /home/data
 

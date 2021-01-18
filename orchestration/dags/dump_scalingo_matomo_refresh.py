@@ -198,7 +198,7 @@ for table in TABLE_DATA:
         )
         delete_old_rows = BigQueryOperator(
             task_id=f"delete_old_{table}_rows",
-            bql=f"SELECT * from {GCP_PROJECT_ID}.{BIGQUERY_DATASET}.{table} "
+            sql=f"SELECT * from {GCP_PROJECT_ID}.{BIGQUERY_DATASET}.{table} "
             f"where idvisit NOT IN (SELECT idvisit from {GCP_PROJECT_ID}.{BIGQUERY_DATASET}.temp_{table})",
             destination_dataset_table=f"{BIGQUERY_DATASET}.{table}",
             write_disposition="WRITE_TRUNCATE",
@@ -228,7 +228,7 @@ for table in TABLE_DATA:
         )
         add_new_rows = BigQueryOperator(
             task_id=f"add_new_{table}_rows",
-            bql=f"SELECT * from {GCP_PROJECT_ID}.{BIGQUERY_DATASET}.{table} "
+            sql=f"SELECT * from {GCP_PROJECT_ID}.{BIGQUERY_DATASET}.{table} "
             f"UNION ALL (SELECT * from {GCP_PROJECT_ID}.{BIGQUERY_DATASET}.temp_{table})",
             destination_dataset_table=f"{BIGQUERY_DATASET}.{table}",
             write_disposition="WRITE_TRUNCATE",

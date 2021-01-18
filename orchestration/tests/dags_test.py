@@ -107,9 +107,9 @@ class TestDags(unittest.TestCase):
         self.assertIsNotNone(dag)
         self.assertEqual(len(dag.tasks), 17)
 
-    def test_import_applicative_database_dag_is_loaded(self):
+    def test_import_data_analytics_dag_is_loaded(self):
         # When
-        dag = self.dagbag.get_dag(dag_id="import_applicative_database_v1")
+        dag = self.dagbag.get_dag(dag_id="import_data_analytics_v1")
 
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})

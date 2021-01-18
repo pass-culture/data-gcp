@@ -1,4 +1,5 @@
-#Declare variables
+# Declare variables
+### Currently env api-staging ###
 host=pass-culture-2892.postgresql.dbs.scalingo.com
 port=30295
 schema=pass_culture_2892

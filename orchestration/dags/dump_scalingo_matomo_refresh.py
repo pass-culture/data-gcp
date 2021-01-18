@@ -58,7 +58,6 @@ matomo_client = MatomoClient(MATOMO_CONNECTION_DATA, LOCAL_PORT)
 start = DummyOperator(task_id="start", dag=dag)
 end_export = DummyOperator(task_id="end_export", dag=dag)
 end_import = DummyOperator(task_id="end_import", dag=dag)
-end = DummyOperator(task_id="end", dag=dag)
 
 
 def query_mysql_from_tunnel(**kwargs):
@@ -366,7 +365,13 @@ filter_log_action_task = BigQueryOperator(
     dag=dag,
 )
 
+end_preprocess = DummyOperator(task_id="end_preprocess", dag=dag)
+end_dag = DummyOperator(task_id="end_dag", dag=dag)
+
 end_import >> [
     preprocess_log_action_task,
     preprocess_log_link_visit_action_task,
-] >> [filter_log_link_visit_action_task, filter_log_action_task] >> end
+] >> end_preprocess >> [
+    filter_log_link_visit_action_task,
+    filter_log_action_task,
+] >> end_dag

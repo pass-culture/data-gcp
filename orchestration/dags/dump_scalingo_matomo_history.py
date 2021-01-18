@@ -294,10 +294,14 @@ filter_log_action_task = BigQueryOperator(
     dag=dag,
 )
 
+end_preprocess = DummyOperator(task_id="end_preprocess", dag=dag)
 end_dag = DummyOperator(task_id="end_dag", dag=dag)
 
 end_import >> [
     dehumanize_user_id_task,
     preprocess_log_action_task,
     preprocess_log_link_visit_action_task,
-] >> [filter_log_link_visit_action_task, filter_log_action_task] >> end_dag
+] >> end_preprocess >> [
+    filter_log_link_visit_action_task,
+    filter_log_action_task,
+] >> end_dag

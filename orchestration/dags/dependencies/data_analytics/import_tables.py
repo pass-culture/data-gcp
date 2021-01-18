@@ -58,8 +58,8 @@ def define_import_query(
         "booking"
     ] = """
         SELECT
-            "isActive", CAST("id" AS varchar(255)), "dateCreated", CAST("recommendationId" AS varchar(255)), CAST("stockId" AS varchar(255)), "quantity", 
-            "token", CAST("userId" AS varchar(255)), "amount", "isCancelled", "isUsed", "dateUsed", "cancellationDate" ,"lastupdate"
+            CAST("id" AS varchar(255)), "dateCreated", CAST("stockId" AS varchar(255)), "quantity", 
+            "token", CAST("userId" AS varchar(255)), "amount", "isCancelled", "isUsed", "dateUsed", "cancellationDate"
         FROM public.booking
     """
     cloudsql_queries[
@@ -69,7 +69,7 @@ def define_import_query(
             CAST("idAtProviders" AS varchar(255)), "dateModifiedAtLastProvider", CAST("id" AS varchar(255)), "dateCreated", CAST("productId" AS varchar(255)),
             CAST("venueId" AS varchar(255)), CAST("lastProviderId" AS varchar(255)), "bookingEmail", "isActive", "type", "name", "description",
             "conditions", "ageMin", "ageMax", "url", "mediaUrls", "durationMinutes", "isNational" ,
-            "extraData", "isDuo", "fieldsUpdated", "withdrawalDetails", "lastupdate"
+            "extraData", "isDuo", "fieldsUpdated", "withdrawalDetails"
         FROM public.offer
     """
     cloudsql_queries[
@@ -78,53 +78,53 @@ def define_import_query(
         SELECT
             CAST("idAtProviders" AS varchar(255)), "dateModifiedAtLastProvider", CAST("id" AS varchar(255)), "dateModified", "price", "quantity",
             "bookingLimitDatetime", CAST("lastProviderId" AS varchar(255)), CAST("offerId" AS varchar(255)), "isSoftDeleted", "beginningDatetime",
-            "dateCreated", "fieldsUpdated", "hasBeenMigrated", "lastupdate" 
+            "dateCreated", "fieldsUpdated" 
         FROM public.stock
     """
     cloudsql_queries[
         "venue"
     ] = """
         SELECT
-            "thumbCount", "firstThumbDominantColor", "idAtProviders", "dateModifiedAtLastProvider", "address", "postalCode",
+            "thumbCount", "idAtProviders", "dateModifiedAtLastProvider", "address", "postalCode",
             "city", CAST("id" AS varchar(255)) , "name", "siret", "departementCode", "latitude", "longitude", CAST("managingOffererId" AS varchar(255)), "bookingEmail",
             CAST("lastProviderId" AS varchar(255)), "isVirtual", "comment", "validationToken", "publicName", "fieldsUpdated", CAST("venueTypeId" AS varchar(255)),
-            CAST("venueLabelId" AS varchar(255)), "dateCreated", "lastupdate"  
+            CAST("venueLabelId" AS varchar(255)), "dateCreated"  
         FROM public.venue
     """
     cloudsql_queries[
         "offerer"
     ] = """
         SELECT
-            "isActive", "thumbCount", "firstThumbDominantColor", CAST("idAtProviders" AS varchar(255)), "dateModifiedAtLastProvider", "address",
-            "postalCode", "city", "validationToken", CAST("id" AS varchar(255)), "dateCreated", "name", "siren", CAST("lastProviderId" AS varchar(255)), "fieldsUpdated","lastupdate"  
+            "isActive", "thumbCount", CAST("idAtProviders" AS varchar(255)), "dateModifiedAtLastProvider", "address",
+            "postalCode", "city", "validationToken", CAST("id" AS varchar(255)), "dateCreated", "name", "siren", CAST("lastProviderId" AS varchar(255)), "fieldsUpdated"  
         FROM public.offerer
     """
     cloudsql_queries[
         "provider"
     ] = """
         SELECT
-            "isActive", CAST("id" AS varchar(255)), "name", "localClass", "apiKey", "apiKeyGenerationDate", "enabledForPro", "requireProviderIdentifier","lastupdate"
+            "isActive", CAST("id" AS varchar(255)), "name", "localClass", "apiKey", "apiKeyGenerationDate", "enabledForPro", "requireProviderIdentifier"
         FROM public.provider
     """
     cloudsql_queries[
         "venue_type"
     ] = """
         SELECT
-            CAST("id" AS varchar(255)), "label", "lastupdate" 
+            CAST("id" AS varchar(255)), "label" 
         FROM public.venue_type
     """
     cloudsql_queries[
         "venue_label"
     ] = """
         SELECT
-            CAST("id" AS varchar(255)), "label", "lastupdate" 
+            CAST("id" AS varchar(255)), "label" 
         FROM public.venue_label
     """
     cloudsql_queries[
         "favorite"
     ] = """
             SELECT
-                CAST("id" AS varchar(255)), CAST("userId" AS varchar(255)), CAST("offerId" AS varchar(255)), CAST("mediationId" AS varchar(255)), "lastupdate"
+                CAST("id" AS varchar(255)), CAST("userId" AS varchar(255)), CAST("offerId" AS varchar(255)), CAST("mediationId" AS varchar(255))
             FROM public.favorite
         """
 

@@ -23,14 +23,14 @@ workflows:
             branches:
               only:
                 - master
-      - composer-deploy:
-          requires:
-            - orchestration-tests
-            - ai-platform-deploy
-          filters:
-            branches:
-              only:
-                - master
+      # - composer-deploy:
+      #     requires:
+      #       - orchestration-tests
+      #       - ai-platform-deploy
+      #     filters:
+      #       branches:
+      #         only:
+      #           - master
 
 defaults: &defaults
   docker:
@@ -231,51 +231,51 @@ jobs:
             . venv-db/bin/activate
             ./run_tests.sh
 
-  composer-deploy:
-    docker:
-      - image: google/cloud-sdk
-        auth:
-          username: $DOCKERHUB_USER
-          password: $DOCKERHUB_PASSWORD
-    environment:
-      COMPOSER_BUCKET: gs://europe-west1-data-composer-0f2400f5-bucket/dags
-      COMPOSER_ENV_NAME: data-composer
-      COMPOSER_REGION: europe-west1
-      DAG_RESTORE_DATA_ANALYTICS: restore_data_analytics_v1
-      DAG_RECOMMMENDATION_CLOUDSQL: recommendation_cloud_sql_v42
-      DAG_DUMP_SCALINGO: dump_scalingo_v1
-      DAG_EXPORT_CLOUDSQL_BIGQUERY: export_cloudsql_tables_to_bigquery_v3
-      DAG_IMPORT_APPLICATIVE_DATABASE: import_applicative_database_v1
-      DAG_ARCHIVE_DATABASE: archive_database_v1
-      DAG_EXPORT_SCALINGO_TO_CLOUDSQL: dump_prod_from_scalingo_v2
-      DAG_REFRESH_MATOMO_DATA: dump_scalingo_matomo_refresh_v1
-      DAG_RESTORE_SCALINGO_FROM_VM: restore_prod_from_vm_export_v1
-    working_directory: ~/data-gcp/orchestration
-    steps:
-      - checkout:
-          path: ~/data-gcp
-      - run:
-          name: Connect to GCP
-          command: |
-            echo $GCLOUD_SERVICE_KEY | gcloud auth activate-service-account --key-file=-
-            gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
-            gcloud --quiet config set compute/zone ${GOOGLE_COMPUTE_ZONE}
-      - run:
-          name: Deploy to composer
-          command: |
-            gsutil -m rsync -c -r dags ${COMPOSER_BUCKET}
-      - run:
-          name: Wait for dags to be deployed
-          command: |
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${COMPOSER_REGION} ${DAG_RECOMMMENDATION_CLOUDSQL} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${COMPOSER_REGION} ${DAG_RESTORE_DATA_ANALYTICS} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${COMPOSER_REGION} ${DAG_DUMP_SCALINGO} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${COMPOSER_REGION} ${DAG_EXPORT_CLOUDSQL_BIGQUERY} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${COMPOSER_REGION} ${DAG_IMPORT_APPLICATIVE_DATABASE} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${COMPOSER_REGION} ${DAG_ARCHIVE_DATABASE} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${COMPOSER_REGION} ${DAG_EXPORT_SCALINGO_TO_CLOUDSQL} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${COMPOSER_REGION} ${DAG_REFRESH_MATOMO_DATA} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${COMPOSER_REGION} ${DAG_RESTORE_SCALINGO_FROM_VM} 6 20
+  # composer-deploy:
+  #   docker:
+  #     - image: google/cloud-sdk
+  #       auth:
+  #         username: $DOCKERHUB_USER
+  #         password: $DOCKERHUB_PASSWORD
+  #   environment:
+  #     COMPOSER_BUCKET: gs://europe-west1-data-composer-0f2400f5-bucket/dags
+  #     COMPOSER_ENV_NAME: data-composer
+  #     COMPOSER_REGION: europe-west1
+  #     DAG_RESTORE_DATA_ANALYTICS: restore_data_analytics_v1
+  #     DAG_RECOMMMENDATION_CLOUDSQL: recommendation_cloud_sql_v42
+  #     DAG_DUMP_SCALINGO: dump_scalingo_v1
+  #     DAG_EXPORT_CLOUDSQL_BIGQUERY: export_cloudsql_tables_to_bigquery_v3
+  #     DAG_IMPORT_APPLICATIVE_DATABASE: import_applicative_database_v1
+  #     DAG_ARCHIVE_DATABASE: archive_database_v1
+  #     DAG_EXPORT_SCALINGO_TO_CLOUDSQL: dump_prod_from_scalingo_v2
+  #     DAG_REFRESH_MATOMO_DATA: dump_scalingo_matomo_refresh_v1
+  #     DAG_RESTORE_SCALINGO_FROM_VM: restore_prod_from_vm_export_v1
+  #   working_directory: ~/data-gcp/orchestration
+  #   steps:
+  #     - checkout:
+  #         path: ~/data-gcp
+  #     - run:
+  #         name: Connect to GCP
+  #         command: |
+  #           echo $GCLOUD_SERVICE_KEY | gcloud auth activate-service-account --key-file=-
+  #           gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
+  #           gcloud --quiet config set compute/zone ${GOOGLE_COMPUTE_ZONE}
+  #     - run:
+  #         name: Deploy to composer
+  #         command: |
+  #           gsutil -m rsync -c -r dags ${COMPOSER_BUCKET}
+  #     - run:
+  #         name: Wait for dags to be deployed
+  #         command: |
+  #           ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${COMPOSER_REGION} ${DAG_RECOMMMENDATION_CLOUDSQL} 6 20
+  #           ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${COMPOSER_REGION} ${DAG_RESTORE_DATA_ANALYTICS} 6 20
+  #           ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${COMPOSER_REGION} ${DAG_DUMP_SCALINGO} 6 20
+  #           ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${COMPOSER_REGION} ${DAG_EXPORT_CLOUDSQL_BIGQUERY} 6 20
+  #           ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${COMPOSER_REGION} ${DAG_IMPORT_APPLICATIVE_DATABASE} 6 20
+  #           ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${COMPOSER_REGION} ${DAG_ARCHIVE_DATABASE} 6 20
+  #           ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${COMPOSER_REGION} ${DAG_EXPORT_SCALINGO_TO_CLOUDSQL} 6 20
+  #           ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${COMPOSER_REGION} ${DAG_REFRESH_MATOMO_DATA} 6 20
+  #           ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${COMPOSER_REGION} ${DAG_RESTORE_SCALINGO_FROM_VM} 6 20
 
   ai-platform-deploy:
     docker:

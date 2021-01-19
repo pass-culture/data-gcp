@@ -33,7 +33,7 @@ default_args = {
 }
 
 dag = DAG(
-    "dump_scalingo_matomo_refresh_v1",
+    "dump_scalingo_matomo_refresh_v2",
     default_args=default_args,
     description="Dump scalingo matomo new data to cloud storage in csv format and use it to refresh data in bigquery",
     schedule_interval="0 4 * * *",
@@ -58,7 +58,6 @@ matomo_client = MatomoClient(MATOMO_CONNECTION_DATA, LOCAL_PORT)
 start = DummyOperator(task_id="start", dag=dag)
 end_export = DummyOperator(task_id="end_export", dag=dag)
 end_import = DummyOperator(task_id="end_import", dag=dag)
-end = DummyOperator(task_id="end", dag=dag)
 
 
 def query_mysql_from_tunnel(**kwargs):
@@ -199,7 +198,7 @@ for table in TABLE_DATA:
         )
         delete_old_rows = BigQueryOperator(
             task_id=f"delete_old_{table}_rows",
-            bql=f"SELECT * from {GCP_PROJECT_ID}.{BIGQUERY_DATASET}.{table} "
+            sql=f"SELECT * from {GCP_PROJECT_ID}.{BIGQUERY_DATASET}.{table} "
             f"where idvisit NOT IN (SELECT idvisit from {GCP_PROJECT_ID}.{BIGQUERY_DATASET}.temp_{table})",
             destination_dataset_table=f"{BIGQUERY_DATASET}.{table}",
             write_disposition="WRITE_TRUNCATE",
@@ -229,7 +228,7 @@ for table in TABLE_DATA:
         )
         add_new_rows = BigQueryOperator(
             task_id=f"add_new_{table}_rows",
-            bql=f"SELECT * from {GCP_PROJECT_ID}.{BIGQUERY_DATASET}.{table} "
+            sql=f"SELECT * from {GCP_PROJECT_ID}.{BIGQUERY_DATASET}.{table} "
             f"UNION ALL (SELECT * from {GCP_PROJECT_ID}.{BIGQUERY_DATASET}.temp_{table})",
             destination_dataset_table=f"{BIGQUERY_DATASET}.{table}",
             write_disposition="WRITE_TRUNCATE",
@@ -251,35 +250,125 @@ for table in TABLE_DATA:
         )
         end_export >> import_task >> end_import
 
-dehumanize_log_action_query = f"""
-SELECT
-    *,
-    algo_reco_kpi_data.dehumanize_id(offer_id) AS dehumanize_offer_id
-FROM (
+preprocess_log_action_query = f"""
+WITH filtered AS (
+    SELECT *,
+    REGEXP_EXTRACT(name, r"Module name: (.*) -") as module_name,
+    REGEXP_EXTRACT(name, r"Number of tiles: ([0-9]*)") as number_tiles,
+    REGEXP_EXTRACT(name, r"Offer id: ([A-Z0-9]*)") as offer_id,
+    REGEXP_EXTRACT(name, r"details\/([A-Z0-9]{{4,5}})[^a-zA-Z0-9]") as offer_id_from_url,
+    FROM {BIGQUERY_DATASET}.log_action
+    WHERE type not in (1, 2, 3, 8)
+    OR (type = 1 AND name LIKE "%.passculture.beta.gouv.fr/%")
+),
+dehumanized AS (
     SELECT
         *,
-        IF(
-            REGEXP_CONTAINS(name, r"app.*\/([A-Z0-9]{{4,5}})[^A-Za-z0-9]"),
-            REGEXP_EXTRACT(name, r"\/([A-Z0-9]{{4,5}})"),
-            ""
-            ) AS offer_id,
-        IF(
-            REGEXP_CONTAINS(name, r"app.*"),
-            REGEXP_EXTRACT(name, r"\/([a-z]*)"),
-            ""
-            ) AS base_page
-    FROM
-        {BIGQUERY_DATASET}.log_action
-);
+        IF( offer_id is not null,
+            algo_reco_kpi_data.dehumanize_id(offer_id), null) AS dehumanize_offer_id,
+        IF( offer_id_from_url is not null,
+            algo_reco_kpi_data.dehumanize_id(offer_id_from_url), null) AS dehumanize_offer_id_from_url
+    FROM filtered
+)
+SELECT
+    STRUCT (idaction, name, _hash, type, url_prefix) as raw_data,
+    STRUCT (module_name, number_tiles, offer_id, dehumanize_offer_id) AS tracker_data,
+    STRUCT (offer_id_from_url as offer_id, dehumanize_offer_id_from_url as dehumanize_offer_id) AS url_data
+FROM dehumanized;
 """
 
-dehumanize_log_action_task = BigQueryOperator(
-    task_id="dehumanize_log_action",
-    sql=dehumanize_log_action_query,
-    destination_dataset_table=f"{BIGQUERY_DATASET}.log_action_processed",
+preprocess_log_action_task = BigQueryOperator(
+    task_id="preprocess_log_action",
+    sql=preprocess_log_action_query,
+    destination_dataset_table=f"{BIGQUERY_DATASET}.log_action_preprocessed",
     write_disposition="WRITE_TRUNCATE",
     use_legacy_sql=False,
     dag=dag,
 )
 
-end_import >> dehumanize_log_action_task >> end
+preprocess_log_link_visit_action_query = f"""
+SELECT
+    idlink_va,
+    idvisitor,
+    idvisit,
+    server_time,
+    idaction_name,
+    idaction_url,
+    idaction_event_action,
+    idaction_event_category
+FROM {BIGQUERY_DATASET}.log_link_visit_action
+"""
+
+preprocess_log_link_visit_action_task = BigQueryOperator(
+    task_id="preprocess_log_link_visit_action",
+    sql=preprocess_log_link_visit_action_query,
+    destination_dataset_table=f"{BIGQUERY_DATASET}.log_link_visit_action_preprocessed",
+    write_disposition="WRITE_TRUNCATE",
+    use_legacy_sql=False,
+    dag=dag,
+)
+
+
+filter_log_link_visit_action_query = f"""
+DELETE
+FROM {BIGQUERY_DATASET}.log_link_visit_action_preprocessed as llvap
+WHERE llvap.idlink_va IN
+(
+    SELECT idlink_va
+    FROM {BIGQUERY_DATASET}.log_link_visit_action_preprocessed as llvap
+    LEFT OUTER JOIN {BIGQUERY_DATASET}.log_action_preprocessed as lap1
+        ON lap1.raw_data.idaction = llvap.idaction_url
+    LEFT OUTER JOIN {BIGQUERY_DATASET}.log_action_preprocessed as lap2
+        ON lap2.raw_data.idaction = llvap.idaction_name
+    WHERE
+    ((lap1.raw_data.idaction IS NULL AND llvap.idaction_url is not null) OR llvap.idaction_url IS NULL)
+    AND ((lap2.raw_data.idaction IS NULL AND llvap.idaction_name is not null) OR llvap.idaction_name IS NULL)
+    AND llvap.idaction_event_action is null AND llvap.idaction_event_category is null
+)
+"""
+
+filter_log_link_visit_action_task = BigQueryOperator(
+    task_id="filter_log_link_visit_action",
+    sql=filter_log_link_visit_action_query,
+    use_legacy_sql=False,
+    dag=dag,
+)
+
+filter_log_action_query = f"""
+DELETE FROM {BIGQUERY_DATASET}.log_action_preprocessed as lap
+WHERE lap.raw_data.idaction IN (
+    SELECT lap.raw_data.idaction
+    FROM {BIGQUERY_DATASET}.log_action_preprocessed as lap
+    LEFT OUTER JOIN {BIGQUERY_DATASET}.log_link_visit_action_preprocessed as llvap1
+        ON lap.raw_data.idaction = llvap1.idaction_url
+    LEFT OUTER JOIN {BIGQUERY_DATASET}.log_link_visit_action_preprocessed as llvap2
+        ON lap.raw_data.idaction = llvap2.idaction_name
+    LEFT OUTER JOIN {BIGQUERY_DATASET}.log_link_visit_action_preprocessed as llvap3
+        ON lap.raw_data.idaction = llvap3.idaction_event_action
+    LEFT OUTER JOIN {BIGQUERY_DATASET}.log_link_visit_action_preprocessed as llvap4
+        ON lap.raw_data.idaction = llvap4.idaction_event_category
+    WHERE
+        llvap1.idaction_url is null
+    AND
+        llvap2.idaction_name is null
+    AND
+        llvap3.idaction_event_action is null
+    AND
+        llvap4.idaction_event_category is null
+)
+"""
+
+filter_log_action_task = BigQueryOperator(
+    task_id="filter_log_action",
+    sql=filter_log_action_query,
+    use_legacy_sql=False,
+    dag=dag,
+)
+
+end_preprocess = DummyOperator(task_id="end_preprocess", dag=dag)
+end_dag = DummyOperator(task_id="end_dag", dag=dag)
+
+end_import >> [
+    preprocess_log_action_task,
+    preprocess_log_link_visit_action_task,
+] >> end_preprocess >> filter_log_action_task >> filter_log_link_visit_action_task >> end_dag

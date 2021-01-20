@@ -35,7 +35,7 @@ default_args = {
 }
 
 dag = DAG(
-    "dump_scalingo_matomo_history_v5",
+    "dump_scalingo_matomo_history_v6",
     default_args=default_args,
     description=f"Dump scalingo matomo history from {EXPORT_START_DATE} to cloud storage "
     f"in csv format and import it in bigquery",
@@ -157,23 +157,36 @@ for table in TABLE_DATA:
     end_export >> delete_task >> create_empty_table_task >> import_task >> end_import
 
 
-dehumanize_query = f"""
-    SELECT
-        *,
-        IF(
-            REGEXP_CONTAINS(user_id, r"^[A-Z0-9]{2,}") = True,
-            algo_reco_kpi_data.dehumanize_id(REGEXP_EXTRACT(user_id, r"^[A-Z0-9]{2,}")),
-            ''
-        )
-        AS user_id_dehumanized,
-    FROM
-        {BIGQUERY_DATASET}.log_visit;
+preprocess_log_visit_query = f"""
+SELECT
+    idvisit,
+    visit_last_action_time,
+    user_id,
+    visit_first_action_time,
+    visitor_days_since_first,
+    visitor_returning,
+    visitor_count_visits,
+    visit_entry_idaction_name,
+    visit_entry_idaction_url,
+    visit_exit_idaction_name,
+    visit_exit_idaction_url,
+    CASE
+        WHEN REGEXP_CONTAINS(user_id, r"^ANONYMOUS ")
+            THEN NULL
+        WHEN REGEXP_CONTAINS(user_id, r"^[0-9]{{2,}} ")
+            THEN REGEXP_EXTRACT(user_id, r"^[0-9]{{2,}}")
+        WHEN REGEXP_CONTAINS(user_id, r"^[A-Z0-9]{{2,}} ")
+            THEN algo_reco_kpi_data.dehumanize_id(REGEXP_EXTRACT(user_id, r"^[A-Z0-9]{{2,}}"))
+        ELSE NULL
+    END AS user_id_dehumanized
+FROM
+    {BIGQUERY_DATASET}.log_visit
 """
 
-dehumanize_user_id_task = BigQueryOperator(
-    task_id="dehumanize_user_id",
-    sql=dehumanize_query,
-    destination_dataset_table=f"{BIGQUERY_DATASET}.log_visit",
+preprocess_log_visit_task = BigQueryOperator(
+    task_id="preprocess_log_visit",
+    sql=preprocess_log_visit_query,
+    destination_dataset_table=f"{BIGQUERY_DATASET}.log_visit_preprocessed",
     write_disposition="WRITE_TRUNCATE",
     use_legacy_sql=False,
     dag=dag,
@@ -298,7 +311,7 @@ end_preprocess = DummyOperator(task_id="end_preprocess", dag=dag)
 end_dag = DummyOperator(task_id="end_dag", dag=dag)
 
 end_import >> [
-    dehumanize_user_id_task,
+    preprocess_log_visit_task,
     preprocess_log_action_task,
     preprocess_log_link_visit_action_task,
 ] >> end_preprocess >> filter_log_action_task >> filter_log_link_visit_action_task >> end_dag

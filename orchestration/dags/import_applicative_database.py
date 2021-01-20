@@ -8,6 +8,7 @@ from airflow.operators.dummy_operator import DummyOperator
 from dependencies.data_analytics.config import (
     GCP_PROJECT_ID,
     GCP_REGION,
+    EXTERNAL_CONNECTION_ID_VM,
 )
 from dependencies.data_analytics.import_tables import define_import_query
 from dependencies.data_analytics.anonymization import define_anonymization_query
@@ -30,7 +31,7 @@ from dependencies.slack_alert import task_fail_slack_alert
 
 
 # Variables
-BIGQUERY_DATASET_NAME = "applicative_database"
+BIGQUERY_DATASET_NAME = "data_analytics"
 
 data_applicative_tables = [
     "user",
@@ -58,10 +59,10 @@ default_dag_args = {
 }
 
 dag = DAG(
-    "import_applicative_database_v1",
+    "import_data_analytics_v1",
     default_args=default_dag_args,
     description="Import tables from CloudSQL and enrich data for create dashboards with Data Studio",
-    schedule_interval="0 1 * * *",
+    schedule_interval="0 5 * * *",
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=90),
 )
@@ -79,7 +80,9 @@ import_tables_tasks = []
 for table in data_applicative_tables:
     task = BigQueryOperator(
         task_id=f"import_{table}",
-        sql=define_import_query(table=table),
+        sql=define_import_query(
+            table=table, external_connection_id=EXTERNAL_CONNECTION_ID_VM
+        ),
         write_disposition="WRITE_TRUNCATE",
         use_legacy_sql=False,
         destination_dataset_table=f"{BIGQUERY_DATASET_NAME}.{table}",

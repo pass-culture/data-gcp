@@ -133,7 +133,7 @@ def anonymize_bic_payment(dataset):
 
 
 def anonymize_validation_token_user_offerer(dataset):
-    """user_offerer table: replace BIC with a random sequence"""
+    """user_offerer table: replace validation token with a random sequence"""
     update_validation_token_user_offerer = f"""UPDATE {dataset}.user_offerer 
     SET validationToken = (SUBSTR(TO_HEX(MD5(CAST(RAND() AS STRING))), 1,10)) 
     WHERE validationToken is not null;"""

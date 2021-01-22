@@ -14,6 +14,7 @@ from airflow.contrib.operators.gcs_to_bq import GoogleCloudStorageToBigQueryOper
 from airflow.contrib.operators.mysql_to_gcs import (
     MySqlToGoogleCloudStorageOperator,
 )
+from airflow.models import Variable
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python_operator import PythonOperator
 
@@ -24,40 +25,22 @@ from dependencies.matomo_client import MatomoClient
 GCP_PROJECT_ID = "pass-culture-app-projet-test"
 GCS_BUCKET = "dump_scalingo"
 BIGQUERY_DATASET = "algo_reco_kpi_matomo"
-
-
-default_args = {
-    "start_date": datetime(2021, 1, 9),
-    "retries": 5,
-    "retry_delay": timedelta(minutes=5),
-}
-
-dag = DAG(
-    "dump_scalingo_matomo_refresh_v3",
-    default_args=default_args,
-    description="Dump scalingo matomo new data to cloud storage in csv format and use it to refresh data in bigquery",
-    schedule_interval="0 4 * * *",
-    dagrun_timeout=timedelta(minutes=180),
-    catchup=False,
-)
-
 MATOMO_CONNECTION_DATA = ast.literal_eval(os.environ.get("MATOMO_CONNECTION_DATA"))
-
 LOCAL_HOST = "127.0.0.1"
 LOCAL_PORT = 10026
-
 os.environ[
     "AIRFLOW_CONN_MYSQL_SCALINGO"
 ] = f"mysql://{MATOMO_CONNECTION_DATA.get('user')}:{MATOMO_CONNECTION_DATA.get('password')}@{LOCAL_HOST}:{LOCAL_PORT}/{MATOMO_CONNECTION_DATA.get('dbname')}"
-
 bigquery_client = BigQueryClient(
     "/home/airflow/gcs/dags/pass-culture-app-projet-test-19edd3c79717.json"
 )
 matomo_client = MatomoClient(MATOMO_CONNECTION_DATA, LOCAL_PORT)
 
-start = DummyOperator(task_id="start", dag=dag)
-end_export = DummyOperator(task_id="end_export", dag=dag)
-end_import = DummyOperator(task_id="end_import", dag=dag)
+
+TABLE_DATA = {
+    table: TABLE_DATA[table]
+    for table in ["log_visit", "log_link_visit_action", "log_action"]
+}
 
 
 def query_mysql_from_tunnel(**kwargs):
@@ -82,93 +65,142 @@ def query_mysql_from_tunnel(**kwargs):
     return
 
 
-last_task = start
-
-now = datetime.now().strftime("%Y-%m-%d")
-
-# we determine the date of the last visit action stored in bigquery
-bigquery_query = f"SELECT max(visit_last_action_time) FROM `pass-culture-app-projet-test.{BIGQUERY_DATASET}.log_visit`"
-timestamp = bigquery_client.query(bigquery_query).values[0][0]
-# we add a margin of 3 hours
-yesterday = (timestamp.to_pydatetime() + timedelta(hours=-3)).strftime(
-    "%Y-%m-%d %H:%M:%S.%f"
-)
-# we will extract all visits those visit_last_action_time is older than this date
-
-TABLE_DATA = {
-    table: TABLE_DATA[table]
-    for table in ["log_visit", "log_link_visit_action", "log_action"]
-}
-
-for table in TABLE_DATA:
-    query_filter = (
-        f"visit_last_action_time > TIMESTAMP '{yesterday}'"
-        if table == "log_visit"
-        else None
+def query_table_new_data(**kwargs):
+    task_parameters = ast.literal_eval(
+        Variable.get("task_parameters", default_var="{}", deserialize_json=False)
     )
 
-    if table == "log_visit":
-        bigquery_query = (
-            f"SELECT max({TABLE_DATA[table]['id']}) "
-            f"FROM `pass-culture-app-projet-test.{BIGQUERY_DATASET}.{table}` "
-            f"where visit_last_action_time <= TIMESTAMP '{yesterday}'"
-        )
-        bigquery_result = bigquery_client.query(bigquery_query)
-        min_id = int(bigquery_result.values[0][0])
-    else:
-        bigquery_query = (
-            f"SELECT max({TABLE_DATA[table]['id']}) "
-            f"FROM `pass-culture-app-projet-test.{BIGQUERY_DATASET}.{table}`"
-        )
-        bigquery_result = bigquery_client.query(bigquery_query)
-        min_id = int(bigquery_result.values[0][0])
+    table_name = kwargs["table_name"]
 
-    matomo_query = f"SELECT max({TABLE_DATA[table]['id']}) FROM {table}"
-    matomo_result = matomo_client.query(matomo_query)
-    max_id = int(matomo_result[0][0])
+    min_id = task_parameters[table_name]["min_id"]
+    max_id = task_parameters[table_name]["max_id"]
+    query_filter = task_parameters[table_name]["query_filter"]
 
-    row_number_queried = TABLE_DATA[table]["row_number_queried"]
+    row_number_queried = TABLE_DATA[table_name]["row_number_queried"]
     query_count = 0
     for query_index in range(min_id, max_id, row_number_queried):
         sql_query = (
-            f"select {', '.join([column['name'] for column in TABLE_DATA[table]['columns']])} "
-            f"from {table} "
-            f"where {TABLE_DATA[table]['id']} > {query_index} "
-            f"and {TABLE_DATA[table]['id']} <= {query_index + row_number_queried}"
+            f"select {', '.join([column['name'] for column in TABLE_DATA[table_name]['columns']])} "
+            f"from {table_name} "
+            f"where {TABLE_DATA[table_name]['id']} > {query_index} "
+            f"and {TABLE_DATA[table_name]['id']} <= {query_index + row_number_queried}"
         )
 
         sql_query += f" and {query_filter};" if query_filter else ";"
 
         # File path and name.
-        file_name = f"refresh/{table}/{now}_{query_count}_{'{}'}.csv"
+        file_name = f"refresh/{table_name}/{now}_{query_count}_{'{}'}.csv"
 
-        export_table = PythonOperator(
-            task_id=f"query_{table}_{query_count}",
+        export_table_query = PythonOperator(
+            task_id=f"query_{table_name}_{query_count}",
             python_callable=query_mysql_from_tunnel,
             op_kwargs={
-                "table": table,
+                "table": table_name,
                 "sql_query": sql_query,
                 "file_name": file_name,
             },
             dag=dag,
         )
-        last_task >> export_table
-        last_task = export_table
+        export_table_query.execute(
+            context={
+                "table_name": table_name,
+                "sql_query": sql_query,
+                "file_name": file_name,
+            }
+        )
         query_count += 1
+
+
+def define_tasks_parameters(table_data):
+    table_computed_data = {}
+    # we determine the date of the last visit action stored in bigquery
+    bigquery_query = f"SELECT max(visit_last_action_time) FROM `{GCP_PROJECT_ID}.{BIGQUERY_DATASET}.log_visit`"
+    timestamp = bigquery_client.query(bigquery_query).values[0][0]
+    # we add a margin of 3 hours
+    yesterday = (timestamp.to_pydatetime() + timedelta(hours=-3)).strftime(
+        "%Y-%m-%d %H:%M:%S.%f"
+    )
+    # we will extract all visits those visit_last_action_time is older than this date
+
+    for table in table_data:
+        query_filter = (
+            f"visit_last_action_time > TIMESTAMP '{yesterday}'"
+            if table == "log_visit"
+            else None
+        )
+        table_computed_data[table] = {}
+        table_computed_data[table]["query_filter"] = query_filter
+
+        if table == "log_visit":
+            bigquery_query = (
+                f"SELECT max({table_data[table]['id']}) "
+                f"FROM `{GCP_PROJECT_ID}.{BIGQUERY_DATASET}.{table}` "
+                f"where visit_last_action_time <= TIMESTAMP '{yesterday}'"
+            )
+            bigquery_result = bigquery_client.query(bigquery_query)
+            table_computed_data[table]["min_id"] = int(bigquery_result.values[0][0])
+        else:
+            bigquery_query = (
+                f"SELECT max({table_data[table]['id']}) "
+                f"FROM `{GCP_PROJECT_ID}.{BIGQUERY_DATASET}.{table}`"
+            )
+            bigquery_result = bigquery_client.query(bigquery_query)
+            table_computed_data[table]["min_id"] = int(bigquery_result.values[0][0])
+
+        matomo_query = f"SELECT max({table_data[table]['id']}) FROM {table}"
+        matomo_result = matomo_client.query(matomo_query)
+        table_computed_data[table]["max_id"] = int(matomo_result[0][0])
+
+    Variable.set("task_parameters", str(table_computed_data))
+    return table_computed_data
+
+
+default_args = {
+    "start_date": datetime(2021, 1, 21),
+    "retries": 5,
+    "retry_delay": timedelta(minutes=5),
+}
+
+dag = DAG(
+    "dump_scalingo_matomo_refresh_v4",
+    default_args=default_args,
+    description="Dump scalingo matomo new data to cloud storage in csv format and use it to refresh data in bigquery",
+    schedule_interval="0 4 * * *",
+    dagrun_timeout=timedelta(minutes=180),
+    catchup=False,
+)
+
+start = DummyOperator(task_id="start", dag=dag)
+end_export = DummyOperator(task_id="end_export", dag=dag)
+end_import = DummyOperator(task_id="end_import", dag=dag)
+
+define_tasks = PythonOperator(
+    task_id="define_tasks_parameters",
+    python_callable=define_tasks_parameters,
+    op_kwargs={"table_data": TABLE_DATA},
+    dag=dag,
+)
+
+start >> define_tasks
+
+last_task = define_tasks
+now = datetime.now().strftime("%Y-%m-%d")
+
+for table in TABLE_DATA:
+    export_table = PythonOperator(
+        task_id=f"query_{table}",
+        python_callable=query_table_new_data,
+        op_kwargs={
+            "table_name": table,
+        },
+        dag=dag,
+    )
+    last_task >> export_table
+    last_task = export_table
 
 last_task >> end_export
 
 for table in TABLE_DATA:
-    # Rename columns using bigQuery protected name
-    protected_names = ["hash"]
-    TABLE_DATA[table]["columns"] = [
-        (
-            column
-            if column["name"] not in protected_names
-            else {**column, "name": f"_{column['name']}"}
-        )
-        for column in TABLE_DATA[table]["columns"]
-    ]
 
     if table == "log_visit":
         delete_task = BigQueryTableDeleteOperator(
@@ -221,7 +253,14 @@ for table in TABLE_DATA:
             destination_project_dataset_table=f"{BIGQUERY_DATASET}.{table}",
             write_disposition="WRITE_APPEND",
             skip_leading_rows=1,
-            schema_fields=TABLE_DATA[table]["columns"],
+            schema_fields=[
+                (
+                    column
+                    if column["name"] not in ["hash"]
+                    else {**column, "name": f"_{column['name']}"}
+                )
+                for column in TABLE_DATA[table]["columns"]
+            ],
             autodetect=False,
             dag=dag,
         )
@@ -378,10 +417,18 @@ filter_log_action_task = BigQueryOperator(
 )
 
 end_preprocess = DummyOperator(task_id="end_preprocess", dag=dag)
+
+define_tasks_end = PythonOperator(
+    task_id="define_tasks_parameters_end",
+    python_callable=define_tasks_parameters,
+    op_kwargs={"table_data": TABLE_DATA},
+    dag=dag,
+)
+
 end_dag = DummyOperator(task_id="end_dag", dag=dag)
 
 end_import >> [
     preprocess_log_visit_task,
     preprocess_log_action_task,
     preprocess_log_link_visit_action_task,
-] >> end_preprocess >> filter_log_action_task >> filter_log_link_visit_action_task >> end_dag
+] >> end_preprocess >> filter_log_action_task >> filter_log_link_visit_action_task >> define_tasks_end >> end_dag

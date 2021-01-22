@@ -114,7 +114,7 @@ def query_table_new_data(**kwargs):
 def define_tasks_parameters(table_data):
     table_computed_data = {}
     # we determine the date of the last visit action stored in bigquery
-    bigquery_query = f"SELECT max(visit_last_action_time) FROM `pass-culture-app-projet-test.{BIGQUERY_DATASET}.log_visit`"
+    bigquery_query = f"SELECT max(visit_last_action_time) FROM `{GCP_PROJECT_ID}.{BIGQUERY_DATASET}.log_visit`"
     timestamp = bigquery_client.query(bigquery_query).values[0][0]
     # we add a margin of 3 hours
     yesterday = (timestamp.to_pydatetime() + timedelta(hours=-3)).strftime(
@@ -134,7 +134,7 @@ def define_tasks_parameters(table_data):
         if table == "log_visit":
             bigquery_query = (
                 f"SELECT max({table_data[table]['id']}) "
-                f"FROM `pass-culture-app-projet-test.{BIGQUERY_DATASET}.{table}` "
+                f"FROM `{GCP_PROJECT_ID}.{BIGQUERY_DATASET}.{table}` "
                 f"where visit_last_action_time <= TIMESTAMP '{yesterday}'"
             )
             bigquery_result = bigquery_client.query(bigquery_query)
@@ -142,7 +142,7 @@ def define_tasks_parameters(table_data):
         else:
             bigquery_query = (
                 f"SELECT max({table_data[table]['id']}) "
-                f"FROM `pass-culture-app-projet-test.{BIGQUERY_DATASET}.{table}`"
+                f"FROM `{GCP_PROJECT_ID}.{BIGQUERY_DATASET}.{table}`"
             )
             bigquery_result = bigquery_client.query(bigquery_query)
             table_computed_data[table]["min_id"] = int(bigquery_result.values[0][0])
@@ -153,15 +153,6 @@ def define_tasks_parameters(table_data):
 
     Variable.set("task_parameters", str(table_computed_data))
     return table_computed_data
-
-
-TASK_PARAMETERS = ast.literal_eval(
-    Variable.get("task_parameters", default_var="{}", deserialize_json=False)
-)
-# Initialize task parameters if not set
-if not TASK_PARAMETERS:
-    TASK_PARAMETERS = define_tasks_parameters(TABLE_DATA)
-    Variable.set("task_parameters", str(TASK_PARAMETERS))
 
 
 default_args = {
@@ -426,10 +417,18 @@ filter_log_action_task = BigQueryOperator(
 )
 
 end_preprocess = DummyOperator(task_id="end_preprocess", dag=dag)
+
+define_tasks_end = PythonOperator(
+    task_id="define_tasks_parameters_end",
+    python_callable=define_tasks_parameters,
+    op_kwargs={"table_data": TABLE_DATA},
+    dag=dag,
+)
+
 end_dag = DummyOperator(task_id="end_dag", dag=dag)
 
 end_import >> [
     preprocess_log_visit_task,
     preprocess_log_action_task,
     preprocess_log_link_visit_action_task,
-] >> end_preprocess >> filter_log_action_task >> filter_log_link_visit_action_task >> end_dag
+] >> end_preprocess >> filter_log_action_task >> filter_log_link_visit_action_task >> define_tasks_end >> end_dag

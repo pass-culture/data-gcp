@@ -17,7 +17,7 @@ WITH booked_offers AS (
         bo.user_id_dehumanized AS user_id,
         lap.tracker_data.dehumanize_offer_id AS offer_id
     FROM booked_offers AS bo
-    LEFT JOIN `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_action_preprocessed` AS lap
+    JOIN `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_action_preprocessed` AS lap
         ON bo.idaction_name = lap.raw_data.idaction
     WHERE lap.tracker_data.module_name = 'undefined'         -- A MODIFIER
 ), offers_with_types AS (

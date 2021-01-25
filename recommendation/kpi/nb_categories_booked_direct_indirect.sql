@@ -5,7 +5,7 @@ WITH scrolls AS (
         server_time,
 	    user_id_dehumanized
 	FROM `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_link_visit_action_preprocessed` llvap
-	LEFT JOIN `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_visit_preprocessed` lvp
+	JOIN `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_visit_preprocessed` lvp
 	ON lvp.idvisit = llvap.idvisit
 	WHERE llvap.idaction_event_action = 4394836                 --4394836 = AllModulesSeen
 	AND (idaction_url=4394835 OR idaction_url=150307)           --4394835 & 150307 = page d'accueil
@@ -39,7 +39,7 @@ WITH scrolls AS (
             s.server_time AS scroll_time,
             RANK() OVER (PARTITION BY ro.userId, ro.date ORDER BY TIMESTAMP_DIFF(ro.date, s.server_time, SECOND)) AS time_rank
 	    FROM recommended_offers ro
-		LEFT JOIN scrolls s
+		INNER JOIN scrolls s
 	    ON CAST(ro.userId AS STRING) = s.user_id_dehumanized
 	    WHERE s.server_time >= ro.date
     )

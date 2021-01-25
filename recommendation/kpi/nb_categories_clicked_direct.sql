@@ -17,7 +17,7 @@ WITH consulted_offers AS (
         co.user_id_dehumanized AS user_id,
         lap.tracker_data.dehumanize_offer_id AS offer_id
     FROM consulted_offers AS co
-    LEFT JOIN `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_action_preprocessed` AS lap
+    JOIN `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_action_preprocessed` AS lap
         ON co.idaction_name = lap.raw_data.idaction
     WHERE lap.tracker_data.module_name = 'King Kendrick'            -- A MODIFIER
     AND (co.idaction_url=4394835 OR co.idaction_url=150307)         -- 4394835 & 150307 = page d'accueil

@@ -2,7 +2,7 @@ from dependencies.data_analytics.config import GCP_REGION, EXTERNAL_CONNECTION_I
 
 
 def define_import_query(
-        table, region=GCP_REGION, external_connection_id=EXTERNAL_CONNECTION_ID
+    table, region=GCP_REGION, external_connection_id=EXTERNAL_CONNECTION_ID
 ):
     """
     Given a table (from "external_connection_id" located in "region"), we build and return the federated query that

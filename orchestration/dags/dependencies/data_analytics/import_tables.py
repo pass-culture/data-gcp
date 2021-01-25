@@ -2,7 +2,7 @@ from dependencies.data_analytics.config import GCP_REGION, EXTERNAL_CONNECTION_I
 
 
 def define_import_query(
-    table, region=GCP_REGION, external_connection_id=EXTERNAL_CONNECTION_ID
+        table, region=GCP_REGION, external_connection_id=EXTERNAL_CONNECTION_ID
 ):
     """
     Given a table (from "external_connection_id" located in "region"), we build and return the federated query that
@@ -127,6 +127,126 @@ def define_import_query(
                 CAST("id" AS varchar(255)), CAST("userId" AS varchar(255)), CAST("offerId" AS varchar(255)), CAST("mediationId" AS varchar(255))
             FROM public.favorite
         """
+    cloudsql_queries[
+        "iris_venues"
+    ] = """
+                SELECT
+                    CAST("id" AS varchar(255)), CAST("irisId" AS varchar(255)), CAST("venueId" AS varchar(255)), "lastupdate"
+                FROM public.iris_venues
+            """
+    cloudsql_queries[
+        "transaction"
+    ] = """
+                SELECT
+                    CAST("id" AS varchar(255)), CAST("native_transaction_id" AS varchar(255)),"issued_at",CAST("client_addr" AS varchar(255)), CAST("actor_id" AS varchar(255)), "lastupdate"
+                FROM public.transaction
+            """
+    cloudsql_queries[
+        "local_provider_event"
+    ] = """
+                SELECT
+                    CAST("id" AS varchar(255)), CAST("providerId" AS varchar(255)),"date", CAST("type" AS varchar(255)), "payload", "lastupdate"
+                FROM public.local_provider_event
+            """
+    cloudsql_queries[
+        "beneficiary_import_status"
+    ] = """
+                SELECT
+                    CAST("id" AS varchar(255)), CAST("status" AS varchar(255)), "detail", CAST("beneficiaryImportId" AS varchar(255)),  CAST("authorId" AS varchar(255)), "lastupdate"
+                FROM public.beneficiary_import_status
+            """
+    cloudsql_queries[
+        "deposit"
+    ] = """
+                SELECT
+                    CAST("id" AS varchar(255)), "amount", CAST("userId" AS varchar(255)), "source", "dateCreated", "lastupdate"
+                FROM public.deposit
+            """
+    cloudsql_queries[
+        "beneficiary_import"
+    ] = """
+                SELECT
+                    CAST("id" AS varchar(255)), CAST("beneficiaryId" AS varchar(255)), CAST("applicationId" AS varchar(255)),
+                    CAST("sourceId" AS varchar(255)), "source", "lastupdate"
+                FROM public.beneficiary_import
+            """
+    cloudsql_queries[
+        "mediation"
+    ] = """
+                SELECT
+                    "thumbCount",CAST("idAtProviders" AS varchar(255)), "dateModifiedAtLastProvider",CAST("id" AS varchar(255)), "dateCreated",CAST("authorId" AS varchar(255)), CAST("lastProviderId" AS varchar(255)), CAST("offerId" AS varchar(255)),"credit", "isActive", "fieldsUpdated", "lastupdate"
+                FROM public.mediation
+            """
+    cloudsql_queries[
+        "iris_france"
+    ] = """
+                SELECT
+                    CAST("id" AS varchar(255)), "irisCode",CAST("centroid" AS varchar(255)), CAST("shape" AS varchar(255)), "lastupdate"
+                FROM public.iris_france
+            """
+    cloudsql_queries[
+        "offer_criterion"
+    ] = """
+                SELECT
+                    CAST("id" AS varchar(255)),CAST("offerId" AS varchar(255)), CAST("criterionId" AS varchar(255)), "lastupdate"
+                FROM public.offer_criterion
+            """
+    cloudsql_queries[
+        "allocine_pivot"
+    ] = """
+                SELECT
+                    CAST("id" AS varchar(255)),"siret",CAST("theaterId" AS varchar(255)), "lastupdate"
+                FROM public.allocine_pivot
+            """
+    cloudsql_queries[
+        "venue_provider"
+    ] = """
+                SELECT
+                    "isActive", CAST("id" AS varchar(255)), CAST("idAtProviders" AS varchar(255)),"dateModifiedAtLastProvider", CAST("venueId" AS varchar(255)), CAST("providerId" AS varchar(255)), CAST("venueIdAtOfferProvider" AS varchar(255)), "lastSyncDate",  CAST("lastProviderId" AS varchar(255)), CAST("syncWorkerId" AS varchar(255)), "fieldsUpdated", "lastupdate"
+                FROM public.venue_provider
+            """
+    cloudsql_queries[
+        "allocine_venue_provider_price_rule"
+    ] = """
+                SELECT
+                    CAST("id" AS varchar(255)), CAST("allocineVenueProviderId" AS varchar(255)), CAST("priceRule" AS varchar(255)), "price", "lastupdate"
+                FROM public.allocine_venue_provider_price_rule
+            """
+    cloudsql_queries[
+        "allocine_venue_provider"
+    ] = """
+                SELECT
+                    CAST("id" AS varchar(255)),"isDuo", "quantity", "lastupdate"
+                FROM public.allocine_venue_provider
+            """
+    cloudsql_queries[
+        "payment_message"
+    ] = """
+                SELECT
+                    CAST("id" AS varchar(255)),"name", "checksum", "lastupdate"
+                FROM public.payment_message
+            """
+    cloudsql_queries[
+        "provider"
+    ] = """
+                SELECT
+                    "isActive",CAST("id" AS varchar(255)),"name", "localClass", "apiKey", "apiKeyGenerationDate", "enabledForPro", "requireProviderIdentifier", "lastupdate"
+                FROM public.provider
+            """
+    cloudsql_queries[
+        "feature"
+    ] = """
+                SELECT
+                    CAST("id" AS varchar(255)),CAST("name" AS varchar(255)), "description", "isActive", "lastupdate"
+                FROM public.feature
+            """
+    cloudsql_queries[
+        "criterion"
+    ] = """
+                SELECT
+                    CAST("id" AS varchar(255)),"name", "description", "scoreDelta", "lastupdate"
+                FROM public.criterion
+            """
 
     # Build specific federated queries
     queries = {}

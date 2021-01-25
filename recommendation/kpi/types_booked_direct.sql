@@ -9,7 +9,9 @@ WITH booked_offers AS (
     FROM `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_link_visit_action_preprocessed` AS llvap
     INNER JOIN `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_visit_preprocessed` AS lvp
         ON lvp.idvisit = llvap.idvisit
-    WHERE idaction_event_action = 6957147                      -- 6957147: BookOfferClick_FromHomepage
+    WHERE idaction_event_action = 6957147                   -- 6957147: BookOfferClick_FromHomepage
+    AND llvap.server_time >= "2021-01-01"                   -- Dates provisoires pour gérer
+    AND llvap.server_time < "2022-01-01"                    -- la période d'AB testing
 ), booked_offers_from_reco_module AS (
     SELECT 
         bo.user_id_dehumanized AS user_id,
@@ -30,12 +32,12 @@ WITH booked_offers AS (
 ), number_types_booked_by_user AS (
     SELECT 
         user_id,
-        COUNT(DISTINCT(type)) AS number_type_booked
+        COUNT(DISTINCT(type)) AS number_of_booked_types
     FROM offers_with_types
     GROUP BY user_id
 )
 SELECT 
-    AVG(number_type_booked) as average,
-    MAX(number_type_booked) as max,
-    MIN(number_type_booked) as min
+    AVG(number_of_booked_types) as average,
+    MAX(number_of_booked_types) as max,
+    MIN(number_of_booked_types) as min
 FROM number_types_booked_by_user

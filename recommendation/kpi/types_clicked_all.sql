@@ -21,8 +21,8 @@ WITH scrolls AS (
         ON lvp.idvisit = llvap.idvisit
     WHERE
         lap.url_data.dehumanize_offer_id is not null
-        AND llvap.server_time >= "2021-01-01"
-        AND llvap.server_time < "2022-01-01"
+        AND llvap.server_time >= "2021-01-01"                   -- Dates provisoires pour gérer
+        AND llvap.server_time < "2022-01-01"                    -- la période d'AB testing
 ), recommended_offers AS (
 	SELECT
         userId,

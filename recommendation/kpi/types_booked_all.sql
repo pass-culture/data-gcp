@@ -20,8 +20,8 @@ WITH scrolls AS (
         ON b.stockId = s.id
     INNER JOIN `pass-culture-app-projet-test.applicative_database.offer` o
         ON o.id = s.offerId
-    WHERE b.dateCreated >= "2020-01-01"
-    AND b.dateCreated < "2022-01-01"
+    WHERE b.dateCreated >= "2020-01-01"                         -- Dates provisoires pour gérer
+    AND b.dateCreated < "2022-01-01"                            -- la période d'AB testing
 ), recommended_offers AS (
 	SELECT
         userId,

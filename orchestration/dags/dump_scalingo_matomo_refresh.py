@@ -37,12 +37,6 @@ bigquery_client = BigQueryClient(
 matomo_client = MatomoClient(MATOMO_CONNECTION_DATA, LOCAL_PORT)
 
 
-TABLE_DATA = {
-    table: TABLE_DATA[table]
-    for table in ["log_visit", "log_link_visit_action", "log_action"]
-}
-
-
 def query_mysql_from_tunnel(**kwargs):
     tunnel = matomo_client.create_tunnel()
     tunnel.start()
@@ -123,12 +117,13 @@ def define_tasks_parameters(table_data):
     # we will extract all visits those visit_last_action_time is older than this date
 
     for table in table_data:
-        query_filter = (
-            f"visit_last_action_time > TIMESTAMP '{yesterday}'"
-            if table == "log_visit"
-            else None
-        )
         table_computed_data[table] = {}
+        if table == "log_visit":
+            query_filter = f"visit_last_action_time > TIMESTAMP '{yesterday}'"
+        elif table == "log_conversion":
+            query_filter = f"server_time > TIMESTAMP '{yesterday}'"
+        else:
+            query_filter = None
         table_computed_data[table]["query_filter"] = query_filter
 
         if table == "log_visit":
@@ -139,6 +134,8 @@ def define_tasks_parameters(table_data):
             )
             bigquery_result = bigquery_client.query(bigquery_query)
             table_computed_data[table]["min_id"] = int(bigquery_result.values[0][0])
+        elif table == "goal":
+            table_computed_data[table]["min_id"] = 0
         else:
             bigquery_query = (
                 f"SELECT max({table_data[table]['id']}) "
@@ -156,13 +153,13 @@ def define_tasks_parameters(table_data):
 
 
 default_args = {
-    "start_date": datetime(2021, 1, 21),
+    "start_date": datetime(2021, 1, 24),
     "retries": 5,
     "retry_delay": timedelta(minutes=5),
 }
 
 dag = DAG(
-    "dump_scalingo_matomo_refresh_v4",
+    "dump_scalingo_matomo_refresh_v5",
     default_args=default_args,
     description="Dump scalingo matomo new data to cloud storage in csv format and use it to refresh data in bigquery",
     schedule_interval="0 4 * * *",
@@ -251,7 +248,7 @@ for table in TABLE_DATA:
             bucket=GCS_BUCKET,
             source_objects=[f"refresh/{table}/{now}_*.csv"],
             destination_project_dataset_table=f"{BIGQUERY_DATASET}.{table}",
-            write_disposition="WRITE_APPEND",
+            write_disposition="WRITE_TRUNCATE" if table == "goal" else "WRITE_APPEND",
             skip_leading_rows=1,
             schema_fields=[
                 (

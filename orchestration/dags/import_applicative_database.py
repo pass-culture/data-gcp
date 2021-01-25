@@ -29,7 +29,6 @@ from dependencies.data_analytics.enriched_data.booking import (
 )
 from dependencies.slack_alert import task_fail_slack_alert
 
-
 # Variables
 BIGQUERY_DATASET_NAME = "data_analytics"
 
@@ -48,6 +47,25 @@ data_applicative_tables = [
     "venue_type",
     "venue_label",
     "payment_status",
+    "iris_venues",
+    "transaction",
+    "local_provider_event",
+    "beneficiary_import_status",
+    "deposit",
+    "beneficiary_import",
+    "mediation",
+    "iris_france",
+    "user_offerer",
+    "offer_criterion",
+    "bank_information",
+    "allocine_pivot",
+    "venue_provider",
+    "allocine_venue_provider_price_rule",
+    "allocine_venue_provider",
+    "payment_message",
+    "provider",
+    "feature",
+    "criterion",
 ]
 
 default_dag_args = {

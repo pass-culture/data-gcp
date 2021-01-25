@@ -5,7 +5,6 @@ from google.cloud import bigquery
 from analytics.config import (
     GCP_PROJECT_ID,
     GCP_REGION,
-    CLOUDSQL_DATABASE,
     MIGRATION_ENRICHED_VENUE_DATA,
     MIGRATION_ENRICHED_OFFERER_DATA,
     MIGRATION_ENRICHED_USER_DATA,
@@ -43,7 +42,7 @@ def main(tables, dataset):
     # define and launch jobs
     for table in tables:
         query = define_import_query(
-            table, region=GCP_REGION, cloudsql_database=CLOUDSQL_DATABASE
+            table, region=GCP_REGION
         )
         job_config.destination = f"{GCP_PROJECT_ID}.{dataset}.{table}"
         run_query(bq_client=client, query=query, job_config=job_config)

@@ -41,9 +41,7 @@ def main(tables, dataset):
 
     # define and launch jobs
     for table in tables:
-        query = define_import_query(
-            table, region=GCP_REGION
-        )
+        query = define_import_query(table, region=GCP_REGION)
         job_config.destination = f"{GCP_PROJECT_ID}.{dataset}.{table}"
         run_query(bq_client=client, query=query, job_config=job_config)
 

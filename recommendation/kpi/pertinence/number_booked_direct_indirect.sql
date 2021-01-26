@@ -11,14 +11,14 @@ WITH scrolls AS (SELECT server_time, user_id,
 ),
 bookings AS (
 	SELECT userId, id AS offerId, CAST(dateCreated AS TIMESTAMP) AS bookingDate
-	FROM `pass-culture-app-projet-test.applicative_database.booking`
+	FROM `pass-culture-app-projet-test.data_analytics.booking`
 ),
 recommended_offers AS (
 	SELECT userId, offerId, date
 	FROM `pass-culture-app-projet-test.algo_reco_kpi_data.past_recommended_offers`
 ),
 offers AS (
-    SELECT id as offerId, type as offerType, url FROM `pass-culture-app-projet-test.applicative_database.offer`
+    SELECT id as offerId, type as offerType, url FROM `pass-culture-app-projet-test.data_analytics.offer`
 ),
 viewed_recos AS (
 	SELECT * FROM (

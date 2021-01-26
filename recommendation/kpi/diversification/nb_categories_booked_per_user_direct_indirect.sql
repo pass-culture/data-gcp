@@ -15,10 +15,10 @@ WITH scrolls AS (
         o.id AS offer_id,
         o.type,
         b.dateCreated
-    FROM `pass-culture-app-projet-test.applicative_database.booking` b
-    INNER JOIN `pass-culture-app-projet-test.applicative_database.stock` s
+    FROM `pass-culture-app-projet-test.data_analytics.booking` b
+    INNER JOIN `pass-culture-app-projet-test.data_analytics.stock` s
         ON b.stockId = s.id
-    INNER JOIN `pass-culture-app-projet-test.applicative_database.offer` o
+    INNER JOIN `pass-culture-app-projet-test.data_analytics.offer` o
         ON o.id = s.offerId
     WHERE b.dateCreated >= "2020-01-01"                         -- Dates provisoires pour gérer
     AND b.dateCreated < "2022-01-01"                            -- la période d'AB testing

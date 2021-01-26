@@ -26,7 +26,7 @@ WITH booked_offers AS (
     bofrm.offer_id,
     o.type
     FROM booked_offers_from_reco_module AS bofrm
-    INNER JOIN `pass-culture-app-projet-test.applicative_database.offer` o
+    INNER JOIN `pass-culture-app-projet-test.data_analytics.offer` o
         ON o.id = bofrm.offer_id
     GROUP BY bofrm.user_id, bofrm.offer_id, o.type
 ), number_types_booked_by_user AS (

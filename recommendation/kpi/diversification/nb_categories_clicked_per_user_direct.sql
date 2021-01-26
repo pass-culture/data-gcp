@@ -27,7 +27,7 @@ WITH consulted_offers AS (
     cofrm.offer_id,
     o.type
     FROM consulted_offers_from_reco_module AS cofrm
-    INNER JOIN `pass-culture-app-projet-test.applicative_database.offer` o
+    INNER JOIN `pass-culture-app-projet-test.data_analytics.offer` o
         ON o.id = cofrm.offer_id
     GROUP BY cofrm.user_id, cofrm.offer_id, o.type
 ), number_types_clicked_by_user AS (

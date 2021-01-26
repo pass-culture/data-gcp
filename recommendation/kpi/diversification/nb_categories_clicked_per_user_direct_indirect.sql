@@ -53,7 +53,7 @@ WITH scrolls AS (
     FROM clicked_offers co
     INNER JOIN viewed_recommended_offers vro
         ON vro.user_id = co.user_id_dehumanized AND vro.offer_id = co.offer_id
-    INNER JOIN `pass-culture-app-projet-test.applicative_database.offer` o
+    INNER JOIN `pass-culture-app-projet-test.data_analytics.offer` o
         ON o.id = co.offer_id
     WHERE co.server_time > vro.reco_date
     GROUP BY vro.user_id, vro.offer_id, o.type

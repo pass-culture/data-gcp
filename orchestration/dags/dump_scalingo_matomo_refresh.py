@@ -107,33 +107,39 @@ def query_table_new_data(**kwargs):
 
 def define_tasks_parameters(table_data):
     table_computed_data = {}
-    # we determine the date of the last visit action stored in bigquery
-    bigquery_query = f"SELECT max(visit_last_action_time) FROM `{GCP_PROJECT_ID}.{BIGQUERY_DATASET}.log_visit`"
-    timestamp = bigquery_client.query(bigquery_query).values[0][0]
-    # we add a margin of 3 hours
-    yesterday = (timestamp.to_pydatetime() + timedelta(hours=-3)).strftime(
-        "%Y-%m-%d %H:%M:%S.%f"
-    )
-    # we will extract all visits those visit_last_action_time is older than this date
 
     for table in table_data:
         table_computed_data[table] = {}
-        if table == "log_visit":
-            query_filter = f"visit_last_action_time > TIMESTAMP '{yesterday}'"
-        elif table == "log_conversion":
-            query_filter = f"server_time > TIMESTAMP '{yesterday}'"
+
+        if table in ["log_visit", "log_conversion"]:
+            if table == "log_visit":
+                time_column = "visit_last_action_time"
+            if table == "log_conversion":
+                time_column = "server_time"
+            # we determine the date of the last visit action stored in bigquery
+            bigquery_query = f"SELECT max({time_column}) FROM `{GCP_PROJECT_ID}.{BIGQUERY_DATASET}.{table}`"
+            timestamp = bigquery_client.query(bigquery_query).values[0][0]
+            # we add a margin of 3 hours
+            yesterday = (timestamp.to_pydatetime() + timedelta(hours=-3)).strftime(
+                "%Y-%m-%d %H:%M:%S.%f"
+            )
+            # we will extract all visits those visit_last_action_time is older than this date
+            query_filter = f"{time_column} > TIMESTAMP '{yesterday}'"
         else:
             query_filter = None
         table_computed_data[table]["query_filter"] = query_filter
 
-        if table == "log_visit":
+        if table in ["log_visit", "log_conversion"]:
             bigquery_query = (
                 f"SELECT max({table_data[table]['id']}) "
                 f"FROM `{GCP_PROJECT_ID}.{BIGQUERY_DATASET}.{table}` "
-                f"where visit_last_action_time <= TIMESTAMP '{yesterday}'"
+                f"where {time_column} <= TIMESTAMP '{yesterday}'"
             )
             bigquery_result = bigquery_client.query(bigquery_query)
-            table_computed_data[table]["min_id"] = int(bigquery_result.values[0][0])
+            bigquery_value = bigquery_result.values[0][0]
+            table_computed_data[table]["min_id"] = (
+                int(bigquery_value) if str(bigquery_value).isdigit() else 0
+            )
         elif table == "goal":
             table_computed_data[table]["min_id"] = 0
         else:
@@ -153,13 +159,13 @@ def define_tasks_parameters(table_data):
 
 
 default_args = {
-    "start_date": datetime(2021, 1, 24),
+    "start_date": datetime(2021, 1, 25),
     "retries": 5,
     "retry_delay": timedelta(minutes=5),
 }
 
 dag = DAG(
-    "dump_scalingo_matomo_refresh_v5",
+    "dump_scalingo_matomo_refresh_v6",
     default_args=default_args,
     description="Dump scalingo matomo new data to cloud storage in csv format and use it to refresh data in bigquery",
     schedule_interval="0 4 * * *",
@@ -199,7 +205,7 @@ last_task >> end_export
 
 for table in TABLE_DATA:
 
-    if table == "log_visit":
+    if table in ["log_visit", "log_conversion"]:
         delete_task = BigQueryTableDeleteOperator(
             task_id=f"delete_{table}_in_bigquery",
             deletion_dataset_table=f"{GCP_PROJECT_ID}:{BIGQUERY_DATASET}.temp_{table}",
@@ -225,13 +231,18 @@ for table in TABLE_DATA:
             autodetect=False,
             dag=dag,
         )
+        if table == "log_visit":
+            delete_filter = f"WHERE idvisit IN (SELECT idvisit from {GCP_PROJECT_ID}.{BIGQUERY_DATASET}.temp_{table})"
+        if table == "log_conversion":
+            delete_filter = f"WHERE CONCAT(idvisit, idgoal, buster) IN (SELECT CONCAT(idvisit, idgoal, buster) from {GCP_PROJECT_ID}.{BIGQUERY_DATASET}.temp_{table})"
         delete_old_rows = BigQueryOperator(
             task_id=f"delete_old_{table}_rows",
             sql=f"DELETE FROM {GCP_PROJECT_ID}.{BIGQUERY_DATASET}.{table} "
-            f"WHERE idvisit IN (SELECT idvisit from {GCP_PROJECT_ID}.{BIGQUERY_DATASET}.temp_{table})",
+            + delete_filter,
             use_legacy_sql=False,
             dag=dag,
         )
+
         add_new_rows = BigQueryOperator(
             task_id=f"add_new_{table}_rows",
             sql=f"SELECT * from {GCP_PROJECT_ID}.{BIGQUERY_DATASET}.{table} "
@@ -241,7 +252,13 @@ for table in TABLE_DATA:
             use_legacy_sql=False,
             dag=dag,
         )
-        end_export >> delete_task >> create_empty_table_task >> import_task >> delete_old_rows >> add_new_rows >> end_import
+        end_delete_task = BigQueryTableDeleteOperator(
+            task_id=f"end_delete_{table}_in_bigquery",
+            deletion_dataset_table=f"{GCP_PROJECT_ID}:{BIGQUERY_DATASET}.temp_{table}",
+            ignore_if_missing=True,
+            dag=dag,
+        )
+        end_export >> delete_task >> create_empty_table_task >> import_task >> delete_old_rows >> add_new_rows >> end_delete_task >> end_import
     else:
         import_task = GoogleCloudStorageToBigQueryOperator(
             task_id=f"import_{table}_in_bigquery",

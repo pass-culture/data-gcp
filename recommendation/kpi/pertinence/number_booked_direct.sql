@@ -10,10 +10,10 @@ WITH booked_offers AS (
     SELECT
         bo.idaction_name
     FROM booked_offers AS bo
-    LEFT JOIN `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_action_preprocessed` AS lap
+    INNER JOIN `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_action_preprocessed` AS lap
     ON bo.idaction_name = lap.raw_data.idaction
     WHERE lap.tracker_data.module_name = 'Module de reco'           -- A MODIFIER
 )
-SELECT 
+SELECT
     count(*) as count
 FROM booked_offers_from_reco_module;

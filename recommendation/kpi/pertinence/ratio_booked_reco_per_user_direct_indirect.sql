@@ -45,7 +45,7 @@ WITH scrolls AS (
         ON vro.user_id = bo.userId AND vro.offer_id = bo.offerId
     WHERE bo.booking_date  > vro.reco_date
     GROUP BY vro.user_id, vro.offer_id
-), number_clicked_by_user AS (
+), number_booked_by_user AS (
   SELECT
       user_id,
       COUNT(*) AS number_clicked
@@ -59,11 +59,11 @@ WITH scrolls AS (
     GROUP BY user_id
 ), ratio_clicked_reco_by_user AS (
   SELECT
-      ncbu.user_id,
-      ncbu.number_clicked / nrbu.number_reco AS ratio_clicked_reco
+      nbbu.user_id,
+      nbbu.number_clicked / nrbu.number_reco AS ratio_clicked_reco
   FROM number_recommendations_by_user nrbu
-  INNER JOIN number_clicked_by_user ncbu
-  ON ncbu.user_id = nrbu.user_id
+  INNER JOIN number_booked_by_user nbbu
+  ON nbbu.user_id = nrbu.user_id
 )
 SELECT
     AVG(ratio_clicked_reco) as average,

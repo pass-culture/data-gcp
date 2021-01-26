@@ -206,8 +206,8 @@ last_task >> end_export
 for table in TABLE_DATA:
 
     if table in ["log_visit", "log_conversion"]:
-        delete_task = BigQueryTableDeleteOperator(
-            task_id=f"delete_{table}_in_bigquery",
+        delete_temp_table_task = BigQueryTableDeleteOperator(
+            task_id=f"delete_temp_{table}_in_bigquery",
             deletion_dataset_table=f"{GCP_PROJECT_ID}:{BIGQUERY_DATASET}.temp_{table}",
             ignore_if_missing=True,
             dag=dag,
@@ -252,13 +252,13 @@ for table in TABLE_DATA:
             use_legacy_sql=False,
             dag=dag,
         )
-        end_delete_task = BigQueryTableDeleteOperator(
-            task_id=f"end_delete_{table}_in_bigquery",
+        end_delete_temp_table_task = BigQueryTableDeleteOperator(
+            task_id=f"end_delete_temp_{table}_in_bigquery",
             deletion_dataset_table=f"{GCP_PROJECT_ID}:{BIGQUERY_DATASET}.temp_{table}",
             ignore_if_missing=True,
             dag=dag,
         )
-        end_export >> delete_task >> create_empty_table_task >> import_task >> delete_old_rows >> add_new_rows >> end_delete_task >> end_import
+        end_export >> delete_temp_table_task >> create_empty_table_task >> import_task >> delete_old_rows >> add_new_rows >> end_delete_temp_table_task >> end_import
     else:
         import_task = GoogleCloudStorageToBigQueryOperator(
             task_id=f"import_{table}_in_bigquery",

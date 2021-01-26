@@ -3,7 +3,7 @@
 WITH scrolls AS (
     SELECT
         server_time,
-	    user_id_dehumanized
+        user_id_dehumanized
 	FROM `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_link_visit_action_preprocessed` llvap
 	INNER JOIN `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_visit_preprocessed` lvp
 	ON lvp.idvisit = llvap.idvisit
@@ -39,10 +39,10 @@ WITH scrolls AS (
             ro.date AS reco_date,
             s.server_time AS scroll_time,
             RANK() OVER (PARTITION BY ro.userId, ro.date ORDER BY TIMESTAMP_DIFF(ro.date, s.server_time, SECOND)) AS time_rank
-	    FROM recommended_offers ro
+        FROM recommended_offers ro
 		LEFT JOIN scrolls s
-	    ON CAST(ro.userId AS STRING) = s.user_id_dehumanized
-	    WHERE s.server_time >= ro.date
+        ON CAST(ro.userId AS STRING) = s.user_id_dehumanized
+        WHERE s.server_time >= ro.date
     )
     WHERE time_rank = 1
 ), viewed_recommended_and_booked AS (
@@ -60,9 +60,22 @@ WITH scrolls AS (
     count(*) AS number_booked
     FROM viewed_recommended_and_booked
     GROUP BY user_id
+), number_recommendations_by_user AS (
+    SELECT
+        vro.user_id,
+        COUNT(*) AS number_reco
+    FROM viewed_recommended_offers vro
+    GROUP BY user_id
+), ratio_booked_reco_by_user AS (
+    SELECT
+        nbbu.user_id,
+        nbbu.number_booked / nrbu.number_reco AS ratio_booked_reco
+    FROM number_recommendations_by_user nrbu
+    INNER JOIN number_booked_by_user nbbu
+    ON nbbu.user_id = nrbu.user_id
 )
 SELECT
-    AVG(number_booked) as average,
-    MAX(number_booked) as max,
-    MIN(number_booked) as min
-FROM number_booked_by_user
+    AVG(ratio_booked_reco) as average,
+    MAX(ratio_booked_reco) as max,
+    MIN(ratio_booked_reco) as min
+FROM ratio_booked_reco_by_user

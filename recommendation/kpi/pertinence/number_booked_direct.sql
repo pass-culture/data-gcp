@@ -14,6 +14,6 @@ WITH booked_offers AS (
     ON bo.idaction_name = lap.raw_data.idaction
     WHERE lap.tracker_data.module_name = 'Module de reco'           -- A MODIFIER
 )
-SELECT 
+SELECT
     count(*) as count
 FROM booked_offers_from_reco_module;

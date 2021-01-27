@@ -1,8 +1,4 @@
-WITH scrolls AS (SELECT server_time, user_id,
-	IF(
-	    REGEXP_CONTAINS(user_id, r"^[A-Z0-9]{2,}") = True,
-	    algo_reco_kpi_data.dehumanize_id(REGEXP_EXTRACT(user_id, r"^[A-Z0-9]{2,}")),
-	    '') AS user_id_dehumanized
+WITH scrolls AS (SELECT server_time, user_id_dehumanized
 	FROM `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_link_visit_action` a
 	INNER JOIN `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_visit` b
 	ON a.idvisit = b.idvisit

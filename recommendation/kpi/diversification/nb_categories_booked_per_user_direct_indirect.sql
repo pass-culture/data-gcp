@@ -22,8 +22,8 @@ WITH scrolls AS (
         ON b.stockId = s.id
     INNER JOIN `pass-culture-app-projet-test.data_analytics.offer` o
         ON o.id = s.offerId
-    WHERE b.dateCreated >= PARSE_TIMESTAMP('%Y%m%d',@DS_START_DATE)     -- Dates à définir sur la dashboard
-    AND b.dateCreated < PARSE_TIMESTAMP('%Y%m%d',@DS_END_DATE)          -- pour gérer la période d'AB testing
+    WHERE b.dateCreated >= PARSE_DATETIME('%Y%m%d',@DS_START_DATE)     -- Dates à définir sur la dashboard
+    AND b.dateCreated < PARSE_DATETIME('%Y%m%d',@DS_END_DATE)          -- pour gérer la période d'AB testing
 ), recommended_offers AS (
 	SELECT
         userId,

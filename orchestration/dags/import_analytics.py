@@ -92,7 +92,7 @@ for table in data_applicative_tables:
 
 anonymization_task = BigQueryOperator(
     task_id="anonymization",
-    sql=define_anonymization_query(dataset=BIGQUERY_DATASET_NAME),
+    sql=define_anonymization_query(dataset=BIGQUERY_DATASET_NAME, table_prefix=""),
     use_legacy_sql=False,
     dag=dag,
 )

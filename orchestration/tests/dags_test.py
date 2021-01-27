@@ -6,16 +6,14 @@ import pandas as pd
 
 
 class TestDags(unittest.TestCase):
-
     LOAD_SECOND_THRESHOLD = 2
 
     def setUp(self):
         with mock.patch(
-            "dependencies.bigquery_client.BigQueryClient.query"
+                "dependencies.bigquery_client.BigQueryClient.query"
         ) as bigquery_mocker, mock.patch(
             "dependencies.matomo_client.MatomoClient.query"
         ) as matomo_mocker:
-
             def bigquery_client(query):
                 return (
                     pd.DataFrame(
@@ -109,11 +107,10 @@ class TestDags(unittest.TestCase):
 
     def test_import_data_analytics_dag_is_loaded(self):
         # When
-        dag = self.dagbag.get_dag(dag_id="import_data_analytics_v1")
+        dag = self.dagbag.get_dag(dag_id="import_data_analytics_v2")
 
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
-        self.assertIsNotNone(dag)
         self.assertEqual(len(dag.tasks), 39)
 
     def test_archive_database_dag_is_loaded(self):

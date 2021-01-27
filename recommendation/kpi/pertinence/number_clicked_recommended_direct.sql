@@ -15,4 +15,4 @@ WITH consulted_offers AS (
     WHERE lap.tracker_data.module_name = 'Module de reco'           -- A MODIFIER
     AND (co.idaction_url=4394835 OR co.idaction_url=150307)
 )
-SELECT count(*) FROM consulted_offers_from_reco_module;
+SELECT count(*) AS count FROM consulted_offers_from_reco_module;

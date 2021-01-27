@@ -3,12 +3,10 @@
 
 
 WITH scrolls AS (
-    SELECT
-        server_time,
-	    user_id_dehumanized
+    SELECT server_time, user_id_dehumanized
 	FROM `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_link_visit_action_preprocessed` llvap
-	JOIN `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_visit_preprocessed` lvp
-	    ON lvp.idvisit = llvap.idvisit
+	INNER JOIN `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_visit_preprocessed` lvp
+	ON lvp.idvisit = llvap.idvisit
 	WHERE llvap.idaction_event_action = 4394836                 --4394836 = AllModulesSeen
 	AND (idaction_url=4394835 OR idaction_url=150307)           --4394835 & 150307 = page d'accueil
     AND llvap.server_time >= PARSE_TIMESTAMP('%Y%m%d',@DS_START_DATE)     -- Dates à définir sur la dashboard
@@ -20,9 +18,9 @@ WITH scrolls AS (
         llvap.server_time
     FROM `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_action_preprocessed` lap
     JOIN `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_link_visit_action_preprocessed` llvap
-        ON lap.raw_data.idaction = llvap.idaction_url
+    ON lap.raw_data.idaction = llvap.idaction_url
     JOIN `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_visit_preprocessed` lvp
-        ON lvp.idvisit = llvap.idvisit
+    ON lvp.idvisit = llvap.idvisit
     WHERE lap.url_data.dehumanize_offer_id is not null
     AND llvap.server_time >= PARSE_TIMESTAMP('%Y%m%d',@DS_START_DATE)     -- Dates à définir sur la dashboard
     AND llvap.server_time < PARSE_TIMESTAMP('%Y%m%d',@DS_END_DATE)        -- pour gérer la période d'AB testing
@@ -54,7 +52,7 @@ WITH scrolls AS (
     vro.offer_id
     FROM clicked_offers co
     INNER JOIN viewed_recommended_offers vro
-        ON vro.user_id = co.user_id_dehumanized AND vro.offer_id = co.offer_id
+    ON vro.user_id = co.user_id_dehumanized AND vro.offer_id = co.offer_id
     WHERE co.server_time > vro.reco_date
     GROUP BY vro.user_id, vro.offer_id
 ), number_clicked_by_user AS (

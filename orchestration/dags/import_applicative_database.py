@@ -87,7 +87,7 @@ for table in data_analytics_tables:
 anonymization_task = BigQueryOperator(
     task_id="anonymization",
     sql=define_anonymization_query(
-        dataset=BIGQUERY_CLEAN_DATASET, table_prefix={TABLE_PREFIX}
+        dataset=BIGQUERY_CLEAN_DATASET, table_prefix=TABLE_PREFIX
     ),
     use_legacy_sql=False,
     dag=dag,

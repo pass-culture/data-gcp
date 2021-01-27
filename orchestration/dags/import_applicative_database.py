@@ -7,6 +7,7 @@ from airflow.operators.dummy_operator import DummyOperator
 from dependencies.data_analytics.config import (
     GCP_PROJECT_ID,
     BIGQUERY_CLEAN_DATASET,
+    TABLE_PREFIX,
 )
 from dependencies.data_analytics.import_tables import define_import_query
 from dependencies.data_analytics.anonymization import define_anonymization_query
@@ -78,14 +79,16 @@ for table in data_analytics_tables:
         sql=define_import_query(table=table),
         write_disposition="WRITE_TRUNCATE",
         use_legacy_sql=False,
-        destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.applicative_database_{table}",
+        destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.{TABLE_PREFIX}{table}",
         dag=dag,
     )
     import_tables_tasks.append(task)
 
 anonymization_task = BigQueryOperator(
     task_id="anonymization",
-    sql=define_anonymization_query(dataset=BIGQUERY_CLEAN_DATASET),
+    sql=define_anonymization_query(
+        dataset=BIGQUERY_CLEAN_DATASET, table_prefix={TABLE_PREFIX}
+    ),
     use_legacy_sql=False,
     dag=dag,
 )

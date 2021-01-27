@@ -185,7 +185,7 @@ def define_import_query(
             SELECT
                 "thumbCount",CAST("idAtProviders" AS varchar(255)), "dateModifiedAtLastProvider",CAST("id" AS varchar(255)),
                 "dateCreated",CAST("authorId" AS varchar(255)), CAST("lastProviderId" AS varchar(255)), 
-                CAST("offerId" AS varchar(255)), "credit", "isActive", "fieldsUpdated", "lastupdate"
+                CAST("offerId" AS varchar(255)), "credit", "isActive", "fieldsUpdated"
             FROM public.mediation
         """
     cloudsql_queries[

@@ -3,12 +3,14 @@
 WITH scrolls AS (
     SELECT
         server_time,
-        user_id_dehumanized
+	    user_id_dehumanized
 	FROM `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_link_visit_action_preprocessed` llvap
 	INNER JOIN `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_visit_preprocessed` lvp
-	ON lvp.idvisit = llvap.idvisit
+	    ON lvp.idvisit = llvap.idvisit
 	WHERE llvap.idaction_event_action = 4394836                 --4394836 = AllModulesSeen
 	AND (idaction_url=4394835 OR idaction_url=150307)           --4394835 & 150307 = page d'accueil
+    AND llvap.server_time >= PARSE_TIMESTAMP('%Y%m%d',@DS_START_DATE)     -- Dates à définir sur la dashboard
+    AND llvap.server_time < PARSE_TIMESTAMP('%Y%m%d',@DS_END_DATE)        -- pour gérer la période d'AB testing
 ), booked_offers_from_reco AS (
     SELECT
         lvp.user_id_dehumanized AS user_id,
@@ -21,8 +23,8 @@ WITH scrolls AS (
         ON llvap.idaction_name = lap.raw_data.idaction
     WHERE idaction_event_action = 6957147                   -- 6957147: BookOfferClick_FromHomepage
     AND lap.tracker_data.module_name = 'undefined'          -- A MODIFIER
-    AND llvap.server_time >= "2021-01-01"                   -- Dates provisoires pour gérer
-    AND llvap.server_time < "2022-01-01"                    -- la période d'AB testing
+    AND llvap.server_time >= PARSE_TIMESTAMP('%Y%m%d',@DS_START_DATE)     -- Dates à définir sur la dashboard
+    AND llvap.server_time < PARSE_TIMESTAMP('%Y%m%d',@DS_END_DATE)        -- pour gérer la période d'AB testing
 ), recommended_offers AS (
 	SELECT
         userId,

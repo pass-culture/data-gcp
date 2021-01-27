@@ -6,6 +6,8 @@ WITH booked_offers AS (
         llvap.idaction_name
     FROM `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_link_visit_action_preprocessed` AS llvap
     WHERE  llvap.idaction_event_action = 6957147                   -- 6957147: BookOfferClick_FromHomepage
+    AND llvap.server_time >= PARSE_TIMESTAMP('%Y%m%d',@DS_START_DATE)     -- Dates à définir sur la dashboard
+    AND llvap.server_time < PARSE_TIMESTAMP('%Y%m%d',@DS_END_DATE)        -- pour gérer la période d'AB testing
 ), booked_offers_from_reco_module AS (
     SELECT
         bo.idaction_name

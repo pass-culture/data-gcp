@@ -10,8 +10,8 @@ WITH consulted_offers AS (
     INNER JOIN `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_visit_preprocessed` AS lvp
         ON lvp.idvisit = llvap.idvisit
     WHERE idaction_event_action = 6956932                           -- 6956932 : ConsultOffer_FromHomepage
-    AND llvap.server_time >= "2021-01-01"                           -- Dates provisoires pour gérer
-    AND llvap.server_time < "2022-01-01"                            -- la période d'AB testing
+    AND llvap.server_time >= PARSE_TIMESTAMP('%Y%m%d',@DS_START_DATE)     -- Dates à définir sur la dashboard
+    AND llvap.server_time < PARSE_TIMESTAMP('%Y%m%d',@DS_END_DATE)        -- pour gérer la période d'AB testing
 ), consulted_offers_from_reco_module AS (
     SELECT
         co.user_id_dehumanized AS user_id,
@@ -31,13 +31,13 @@ WITH consulted_offers AS (
         ON o.id = cofrm.offer_id
     GROUP BY cofrm.user_id, cofrm.offer_id, o.type
 ), number_types_clicked_by_user AS (
-    SELECT 
+    SELECT
         user_id,
         COUNT(DISTINCT(type)) AS number_type_clicked
     FROM offers_with_types
     GROUP BY user_id
 )
-SELECT 
+SELECT
     AVG(number_type_clicked) as average,
     MAX(number_type_clicked) as max,
     MIN(number_type_clicked) as min

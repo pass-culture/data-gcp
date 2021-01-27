@@ -9,8 +9,10 @@ WITH scrolls AS (
 	ON lvp.idvisit = llvap.idvisit
 	WHERE llvap.idaction_event_action = 4394836                 --4394836 = AllModulesSeen
 	AND (idaction_url=4394835 OR idaction_url=150307)           --4394835 & 150307 = page d'accueil
+	AND llvap.server_time >= PARSE_TIMESTAMP('%Y%m%d',@DS_START_DATE)     -- Dates à définir sur la dashboard
+    AND llvap.server_time < PARSE_TIMESTAMP('%Y%m%d',@DS_END_DATE)        -- pour gérer la période d'AB testing
 ), booked_offers AS (
-    SELECT 
+    SELECT
         b.userId AS user_id,
         o.id AS offer_id,
         o.type,
@@ -20,13 +22,13 @@ WITH scrolls AS (
         ON b.stockId = s.id
     INNER JOIN `pass-culture-app-projet-test.data_analytics.offer` o
         ON o.id = s.offerId
-    WHERE b.dateCreated >= "2020-01-01"                         -- Dates provisoires pour gérer
-    AND b.dateCreated < "2022-01-01"                            -- la période d'AB testing
+    WHERE b.dateCreated >= PARSE_TIMESTAMP('%Y%m%d',@DS_START_DATE)     -- Dates à définir sur la dashboard
+    AND b.dateCreated < PARSE_TIMESTAMP('%Y%m%d',@DS_END_DATE)          -- pour gérer la période d'AB testing
 ), recommended_offers AS (
 	SELECT
         userId,
         offerId,
-        date 
+        date
 	FROM `pass-culture-app-projet-test.algo_reco_kpi_data.past_recommended_offers`
 ), viewed_recommended_offers AS (
 	SELECT
@@ -45,7 +47,7 @@ WITH scrolls AS (
     )
     WHERE time_rank = 1
 ), viewed_recommended_and_booked AS (
-    SELECT 
+    SELECT
         vro.user_id,
         vro.offer_id,
         bo.type
@@ -55,13 +57,13 @@ WITH scrolls AS (
     WHERE bo.dateCreated > CAST(vro.reco_date AS DATETIME)
     GROUP BY vro.user_id, vro.offer_id, bo.type
 ), number_types_booked_by_user AS (
-  SELECT 
+  SELECT
       user_id,
       COUNT(DISTINCT(type)) AS number_type_booked
   FROM viewed_recommended_and_booked
   GROUP BY user_id
 )
-SELECT 
+SELECT
     AVG(number_type_booked) as average,
     MAX(number_type_booked) as max,
     MIN(number_type_booked) as min

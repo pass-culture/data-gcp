@@ -1,16 +1,16 @@
 -- Number of viewed offers from recommendation module
 
 WITH scrolls AS (
-SELECT server_time, user_id,
-	IF(
-	    REGEXP_CONTAINS(user_id, r"^[A-Z0-9]{2,}") = True,
-	    algo_reco_kpi_data.dehumanize_id(REGEXP_EXTRACT(user_id, r"^[A-Z0-9]{2,}")),
-	    '') AS user_id_dehumanized
-	FROM `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_link_visit_action_preprocessed` llva
-	INNER JOIN `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_visit` lv
-	ON llva.idvisit = lv.idvisit
-	WHERE idaction_event_action = 4394836
-	AND (idaction_url=4394835 OR idaction_url=150307)
+    SELECT
+        server_time,
+	    user_id_dehumanized
+	FROM `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_link_visit_action_preprocessed` llvap
+	JOIN `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_visit_preprocessed` lvp
+	    ON lvp.idvisit = llvap.idvisit
+	WHERE llvap.idaction_event_action = 4394836                 --4394836 = AllModulesSeen
+	AND (idaction_url=4394835 OR idaction_url=150307)           --4394835 & 150307 = page d'accueil
+    AND llvap.server_time >= PARSE_TIMESTAMP('%Y%m%d',@DS_START_DATE)     -- Dates à définir sur la dashboard
+    AND llvap.server_time < PARSE_TIMESTAMP('%Y%m%d',@DS_END_DATE)        -- pour gérer la période d'AB testing
 ),
 recommended_offers AS (
 	SELECT userId, offerId, date

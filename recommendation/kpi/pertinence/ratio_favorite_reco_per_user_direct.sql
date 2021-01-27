@@ -5,10 +5,12 @@ WITH scrolls AS (
         server_time,
 	    user_id_dehumanized
 	FROM `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_link_visit_action_preprocessed` llvap
-	INNER JOIN `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_visit_preprocessed` lvp
-	ON lvp.idvisit = llvap.idvisit
+	JOIN `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_visit_preprocessed` lvp
+	    ON lvp.idvisit = llvap.idvisit
 	WHERE llvap.idaction_event_action = 4394836                 --4394836 = AllModulesSeen
 	AND (idaction_url=4394835 OR idaction_url=150307)           --4394835 & 150307 = page d'accueil
+    AND llvap.server_time >= PARSE_TIMESTAMP('%Y%m%d',@DS_START_DATE)     -- Dates à définir sur la dashboard
+    AND llvap.server_time < PARSE_TIMESTAMP('%Y%m%d',@DS_END_DATE)        -- pour gérer la période d'AB testing
 ), favorite_offers AS (
     SELECT
         distinct(lap.tracker_data.dehumanize_offer_id) as offer_id,
@@ -19,11 +21,10 @@ WITH scrolls AS (
         ON lap.raw_data.idaction = llvap.idaction_name
     JOIN `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_visit_preprocessed` lvp
         ON lvp.idvisit = llvap.idvisit
-    WHERE
-        idaction_event_action = 6957092                              -- 6957092: AddFavorite_FromHomepage
-        AND llvap.server_time >= "2021-01-01"                        -- Dates provisoires pour gérer
-    AND llvap.server_time < "2022-01-01"                             -- la période d'AB testing
-        AND lap.tracker_data.module_name = 'King Kendrick'           -- A MODIFIER
+    WHERE idaction_event_action = 6957092                              -- 6957092: AddFavorite_FromHomepage
+    AND llvap.server_time >= PARSE_TIMESTAMP('%Y%m%d',@DS_START_DATE)     -- Dates à définir sur la dashboard
+    AND llvap.server_time < PARSE_TIMESTAMP('%Y%m%d',@DS_END_DATE)        -- pour gérer la période d'AB testing
+    AND lap.tracker_data.module_name = 'King Kendrick'           -- A MODIFIER
 ), recommended_offers AS (
 	SELECT
         userId,

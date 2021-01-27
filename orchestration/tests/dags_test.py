@@ -113,7 +113,7 @@ class TestDags(unittest.TestCase):
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 39)
+        self.assertEqual(len(dag.tasks), 16)
 
     def test_archive_database_dag_is_loaded(self):
         # When

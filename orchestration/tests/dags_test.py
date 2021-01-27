@@ -10,10 +10,11 @@ class TestDags(unittest.TestCase):
 
     def setUp(self):
         with mock.patch(
-                "dependencies.bigquery_client.BigQueryClient.query"
+            "dependencies.bigquery_client.BigQueryClient.query"
         ) as bigquery_mocker, mock.patch(
             "dependencies.matomo_client.MatomoClient.query"
         ) as matomo_mocker:
+
             def bigquery_client(query):
                 return (
                     pd.DataFrame(

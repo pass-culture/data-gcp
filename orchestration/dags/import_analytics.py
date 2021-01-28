@@ -59,7 +59,7 @@ default_dag_args = {
 }
 
 dag = DAG(
-    "import_data_analytics_v1",
+    "import_data_analytics_v2",
     default_args=default_dag_args,
     description="Import tables from CloudSQL and enrich data for create dashboards with Data Studio",
     schedule_interval="0 5 * * *",

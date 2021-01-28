@@ -78,7 +78,7 @@ def flush_dataset():
         ),
         (
             "enriched_stock_data",
-            define_enriched_stock_data_full_query(dataset=TEST_DATASET),
+            define_enriched_stock_data_full_query(dataset=TEST_DATASET, table_prefix="test_"),
             ENRICHED_STOCK_DATA_INPUT,
             ENRICHED_STOCK_DATA_EXPECTED,
             "stock_id",

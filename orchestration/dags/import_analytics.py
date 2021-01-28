@@ -122,7 +122,7 @@ create_enriched_stock_data_task = BigQueryOperator(
 )
 create_enriched_user_data_task = BigQueryOperator(
     task_id="create_enriched_user_data",
-    sql=define_enriched_user_data_full_query(dataset=BIGQUERY_DATASET_NAME),
+    sql=define_enriched_user_data_full_query(dataset=BIGQUERY_DATASET_NAME, table_prefix=TABLE_PREFIX),
     use_legacy_sql=False,
     dag=dag,
 )

@@ -67,7 +67,7 @@ def retrieve_data(client, dataset, table, table_prefix=""):
     return [dict(row.items()) for row in rows_iter]
 
 
-def get_table_columns(client, dataset, table):
-    table_id = f"{GCP_PROJECT}.{dataset}.{table}"
+def get_table_columns(client, dataset, table, table_prefix=""):
+    table_id = f"{GCP_PROJECT}.{dataset}.{table_prefix}{table}"
     table = client.get_table(table_id)
     return [field.name for field in table.schema]

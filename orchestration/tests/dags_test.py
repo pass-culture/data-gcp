@@ -54,12 +54,12 @@ class TestDags(unittest.TestCase):
 
     def test_restore_data_analytics_dag_is_loaded(self):
         # When
-        dag = self.dagbag.get_dag(dag_id="restore_data_analytics_v1")
+        dag = self.dagbag.get_dag(dag_id="import_applicative_data_v1")
 
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 21)
+        self.assertEqual(len(dag.tasks), 33)
 
     def test_recommendation_cloud_sql_dag_is_loaded(self):
         # When
@@ -113,7 +113,7 @@ class TestDags(unittest.TestCase):
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 39)
+        self.assertEqual(len(dag.tasks), 23)
 
     def test_archive_database_dag_is_loaded(self):
         # When

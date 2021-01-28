@@ -4,4 +4,10 @@ EXTERNAL_CONNECTION_ID = "cloud_SQL_dump-prod-8-10-2020"
 EXTERNAL_CONNECTION_ID_VM = "dump_scalingo_vm"
 BASE32_JS_LIB_PATH = "gs://pass-culture-data/base32-encode/base32.js"
 
-BIGQUERY_AIRFLOW_DATASET = "pcdata_poc_bqds_airflow"
+ENV_SHORT_NAME = "sbx"
+
+BIGQUERY_RAW_DATASET = f"raw_{ENV_SHORT_NAME}"
+BIGQUERY_CLEAN_DATASET = f"clean_{ENV_SHORT_NAME}"
+BIGQUERY_ANALYTICS_DATASET = f"analytics_{ENV_SHORT_NAME}"
+
+TABLE_PREFIX = "applicative_database_"

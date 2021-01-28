@@ -29,7 +29,7 @@ from dependencies.slack_alert import task_fail_slack_alert
 
 
 # Variables
-BIGQUERY_DATASET_NAME = "data_analytics"
+BIGQUERY_DATASET_NAME = "analytics_sbx"
 
 data_applicative_tables = [
     "user",

@@ -2,12 +2,10 @@ import datetime
 
 from airflow import DAG
 from airflow.contrib.operators.bigquery_operator import BigQueryOperator
-from airflow.operators.bash_operator import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
 
 from dependencies.data_analytics.config import (
     GCP_PROJECT_ID,
-    GCP_REGION,
     EXTERNAL_CONNECTION_ID_VM,
 )
 from dependencies.data_analytics.import_tables import define_import_query
@@ -68,13 +66,6 @@ dag = DAG(
 )
 
 start = DummyOperator(task_id="start", dag=dag)
-
-make_bq_dataset_task = BashOperator(
-    task_id="make_bq_dataset",
-    # Executing 'bq' command requires Google Cloud SDK which comes preinstalled in Cloud Composer.
-    bash_command=f"bq ls {BIGQUERY_DATASET_NAME} || bq mk --dataset --location {GCP_REGION} {BIGQUERY_DATASET_NAME}",
-    dag=dag,
-)
 
 import_tables_tasks = []
 for table in data_applicative_tables:
@@ -137,4 +128,4 @@ create_enriched_data_tasks = [
 
 end = DummyOperator(task_id="end", dag=dag)
 
-start >> make_bq_dataset_task >> import_tables_tasks >> anonymization_task >> create_enriched_data_tasks >> end
+start >> import_tables_tasks >> anonymization_task >> create_enriched_data_tasks >> end

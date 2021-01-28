@@ -109,7 +109,7 @@ def test_create_queries(
         ),
         (
             "enriched_venue_data",
-            define_enriched_venue_data_full_query(dataset=TEST_DATASET),
+            define_enriched_venue_data_full_query(dataset=TEST_DATASET, table_prefix="test_"),
             ENRICHED_VENUE_DATA_INPUT,
             ENRICHED_VENUE_DATA_EXPECTED,
         ),

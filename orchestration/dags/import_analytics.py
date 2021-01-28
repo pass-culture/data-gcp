@@ -26,6 +26,9 @@ from dependencies.data_analytics.enriched_data.venue import (
 from dependencies.data_analytics.enriched_data.booking import (
     define_enriched_booking_data_full_query,
 )
+from dependencies.data_analytics.enriched_data.offerer import (
+    define_enriched_offerer_data_full_query,
+)
 from dependencies.slack_alert import task_fail_slack_alert
 
 
@@ -138,12 +141,20 @@ create_enriched_booking_data_task = BigQueryOperator(
     use_legacy_sql=False,
     dag=dag,
 )
+create_enriched_offerer_data_task = BigQueryOperator(
+    task_id="create_enriched_offerer_data",
+    sql=define_enriched_offerer_data_full_query(dataset=BIGQUERY_DATASET_NAME, table_prefix=TABLE_PREFIX),
+    use_legacy_sql=False,
+    dag=dag,
+)
+
 create_enriched_data_tasks = [
     create_enriched_offer_data_task,
     create_enriched_stock_data_task,
     create_enriched_user_data_task,
     create_enriched_venue_data_task,
     create_enriched_booking_data_task,
+    create_enriched_offerer_data_task,
 ]
 
 end = DummyOperator(task_id="end", dag=dag)

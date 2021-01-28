@@ -115,7 +115,7 @@ def test_create_queries(
         ),
         (
             "enriched_offerer_data",
-            define_enriched_offerer_data_full_query(dataset=TEST_DATASET),
+            define_enriched_offerer_data_full_query(dataset=TEST_DATASET, table_prefix="test_"),
             ENRICHED_OFFERER_DATA_INPUT,
             ENRICHED_OFFERER_DATA_EXPECTED,
         ),

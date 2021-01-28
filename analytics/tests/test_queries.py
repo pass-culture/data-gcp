@@ -15,6 +15,7 @@ from analytics.tests.data import (
     ENRICHED_OFFERER_DATA_EXPECTED,
     ENRICHED_BOOKING_DATA_INPUT,
     ENRICHED_BOOKING_DATA_EXPECTED,
+    TEST_TABLE_PREFIX,
 )
 from analytics.tests.utils import (
     drop_dataset,
@@ -70,7 +71,7 @@ def flush_dataset():
     [
         (
             "enriched_offer_data",
-            define_enriched_offer_data_full_query(dataset=TEST_DATASET),
+            define_enriched_offer_data_full_query(dataset=TEST_DATASET, table_prefix="test_"),
             ENRICHED_OFFER_DATA_INPUT,
             ENRICHED_OFFER_DATA_EXPECTED,
             "offer_id",
@@ -87,10 +88,10 @@ def flush_dataset():
 def test_create_queries(
     flush_dataset, table_name, query, input_data, expected, sorting_key
 ):
-    create_data(client=pytest.bq_client, dataset=TEST_DATASET, data=input_data)
+    create_data(client=pytest.bq_client, dataset=TEST_DATASET, data=input_data, table_prefix=TEST_TABLE_PREFIX)
     run_query(client=pytest.bq_client, query=query)
     output = retrieve_data(
-        client=pytest.bq_client, dataset=TEST_DATASET, table=table_name
+        client=pytest.bq_client, dataset=TEST_DATASET, table=table_name, table_prefix=""
     )
     assert sorted(output, key=lambda d: d[sorting_key]) == sorted(
         expected, key=lambda d: d[sorting_key]

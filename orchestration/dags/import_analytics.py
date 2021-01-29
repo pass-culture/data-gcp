@@ -106,44 +106,58 @@ for table in data_applicative_tables:
 
 anonymization_task = BigQueryOperator(
     task_id="anonymization",
-    sql=define_anonymization_query(dataset=BIGQUERY_DATASET_NAME, table_prefix=TABLE_PREFIX),
+    sql=define_anonymization_query(
+        dataset=BIGQUERY_DATASET_NAME, table_prefix=TABLE_PREFIX
+    ),
     use_legacy_sql=False,
     dag=dag,
 )
 
 create_enriched_offer_data_task = BigQueryOperator(
     task_id="create_enriched_offer_data",
-    sql=define_enriched_offer_data_full_query(dataset=BIGQUERY_DATASET_NAME, table_prefix=TABLE_PREFIX),
+    sql=define_enriched_offer_data_full_query(
+        dataset=BIGQUERY_DATASET_NAME, table_prefix=TABLE_PREFIX
+    ),
     use_legacy_sql=False,
     dag=dag,
 )
 create_enriched_stock_data_task = BigQueryOperator(
     task_id="create_enriched_stock_data",
-    sql=define_enriched_stock_data_full_query(dataset=BIGQUERY_DATASET_NAME, table_prefix=TABLE_PREFIX),
+    sql=define_enriched_stock_data_full_query(
+        dataset=BIGQUERY_DATASET_NAME, table_prefix=TABLE_PREFIX
+    ),
     use_legacy_sql=False,
     dag=dag,
 )
 create_enriched_user_data_task = BigQueryOperator(
     task_id="create_enriched_user_data",
-    sql=define_enriched_user_data_full_query(dataset=BIGQUERY_DATASET_NAME, table_prefix=TABLE_PREFIX),
+    sql=define_enriched_user_data_full_query(
+        dataset=BIGQUERY_DATASET_NAME, table_prefix=TABLE_PREFIX
+    ),
     use_legacy_sql=False,
     dag=dag,
 )
 create_enriched_venue_data_task = BigQueryOperator(
     task_id="create_enriched_venue_data",
-    sql=define_enriched_venue_data_full_query(dataset=BIGQUERY_DATASET_NAME, table_prefix=TABLE_PREFIX),
+    sql=define_enriched_venue_data_full_query(
+        dataset=BIGQUERY_DATASET_NAME, table_prefix=TABLE_PREFIX
+    ),
     use_legacy_sql=False,
     dag=dag,
 )
 create_enriched_booking_data_task = BigQueryOperator(
     task_id="create_enriched_booking_data",
-    sql=define_enriched_booking_data_full_query(dataset=BIGQUERY_DATASET_NAME, table_prefix=TABLE_PREFIX),
+    sql=define_enriched_booking_data_full_query(
+        dataset=BIGQUERY_DATASET_NAME, table_prefix=TABLE_PREFIX
+    ),
     use_legacy_sql=False,
     dag=dag,
 )
 create_enriched_offerer_data_task = BigQueryOperator(
     task_id="create_enriched_offerer_data",
-    sql=define_enriched_offerer_data_full_query(dataset=BIGQUERY_DATASET_NAME, table_prefix=TABLE_PREFIX),
+    sql=define_enriched_offerer_data_full_query(
+        dataset=BIGQUERY_DATASET_NAME, table_prefix=TABLE_PREFIX
+    ),
     use_legacy_sql=False,
     dag=dag,
 )

@@ -52,8 +52,16 @@ def insert_rows(client, dataset, table, rows, table_prefix=""):
 
 def create_data(client, dataset, data, table_prefix):
     for table_name, table_rows in data.items():
-        create_table(client=client, dataset=dataset, table=table_name, table_prefix=table_prefix)
-        insert_rows(client=client, dataset=dataset, table=table_name, rows=table_rows, table_prefix=table_prefix)
+        create_table(
+            client=client, dataset=dataset, table=table_name, table_prefix=table_prefix
+        )
+        insert_rows(
+            client=client,
+            dataset=dataset,
+            table=table_name,
+            rows=table_rows,
+            table_prefix=table_prefix,
+        )
 
 
 def run_query(client, query):

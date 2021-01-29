@@ -5,14 +5,18 @@ from airflow.contrib.operators.bigquery_operator import BigQueryOperator
 from airflow.operators.dummy_operator import DummyOperator
 
 from dependencies.data_analytics.config import (
-    GCP_PROJECT_ID,
     EXTERNAL_CONNECTION_ID_VM,
+    GCP_PROJECT_ID,
     TABLE_PREFIX,
 )
-from dependencies.data_analytics.import_tables import define_import_query
-from dependencies.data_analytics.anonymization import define_anonymization_query
+from dependencies.data_analytics.enriched_data.booking import (
+    define_enriched_booking_data_full_query,
+)
 from dependencies.data_analytics.enriched_data.offer import (
     define_enriched_offer_data_full_query,
+)
+from dependencies.data_analytics.enriched_data.offerer import (
+    define_enriched_offerer_data_full_query,
 )
 from dependencies.data_analytics.enriched_data.stock import (
     define_enriched_stock_data_full_query,
@@ -23,14 +27,8 @@ from dependencies.data_analytics.enriched_data.user import (
 from dependencies.data_analytics.enriched_data.venue import (
     define_enriched_venue_data_full_query,
 )
-from dependencies.data_analytics.enriched_data.booking import (
-    define_enriched_booking_data_full_query,
-)
-from dependencies.data_analytics.enriched_data.offerer import (
-    define_enriched_offerer_data_full_query,
-)
+from dependencies.data_analytics.import_tables import define_import_query
 from dependencies.slack_alert import task_fail_slack_alert
-
 
 # Variables
 BIGQUERY_DATASET_NAME = "analytics_sbx"
@@ -80,7 +78,7 @@ default_dag_args = {
 }
 
 dag = DAG(
-    "import_data_analytics_v3",
+    "import_data_analytics_v4",
     default_args=default_dag_args,
     description="Import tables from CloudSQL and enrich data for create dashboards with Data Studio",
     schedule_interval="0 5 * * *",
@@ -104,14 +102,7 @@ for table in data_applicative_tables:
     )
     import_tables_tasks.append(task)
 
-anonymization_task = BigQueryOperator(
-    task_id="anonymization",
-    sql=define_anonymization_query(
-        dataset=BIGQUERY_DATASET_NAME, table_prefix=TABLE_PREFIX
-    ),
-    use_legacy_sql=False,
-    dag=dag,
-)
+end_import = DummyOperator(task_id="end_import", dag=dag)
 
 create_enriched_offer_data_task = BigQueryOperator(
     task_id="create_enriched_offer_data",
@@ -173,4 +164,4 @@ create_enriched_data_tasks = [
 
 end = DummyOperator(task_id="end", dag=dag)
 
-start >> import_tables_tasks >> anonymization_task >> create_enriched_data_tasks >> end
+start >> import_tables_tasks >> end_import >> create_enriched_data_tasks >> end

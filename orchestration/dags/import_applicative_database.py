@@ -5,12 +5,11 @@ from airflow.contrib.operators.bigquery_operator import BigQueryOperator
 from airflow.operators.dummy_operator import DummyOperator
 
 from dependencies.data_analytics.config import (
-    GCP_PROJECT_ID,
     BIGQUERY_CLEAN_DATASET,
+    GCP_PROJECT_ID,
     TABLE_PREFIX,
 )
 from dependencies.data_analytics.import_tables import define_import_query
-from dependencies.data_analytics.anonymization import define_anonymization_query
 
 # Variables
 BIGQUERY_DATASET_NAME = "data_analytics"
@@ -62,7 +61,7 @@ default_dag_args = {
 }
 
 dag = DAG(
-    "import_applicative_data_v1",
+    "import_applicative_data_v2",
     default_args=default_dag_args,
     description="Import tables from CloudSQL and populate the clean dataset for the data team",
     schedule_interval="0 6 * * *",
@@ -84,14 +83,6 @@ for table in data_analytics_tables:
     )
     import_tables_tasks.append(task)
 
-anonymization_task = BigQueryOperator(
-    task_id="anonymization",
-    sql=define_anonymization_query(
-        dataset=BIGQUERY_CLEAN_DATASET, table_prefix=TABLE_PREFIX
-    ),
-    use_legacy_sql=False,
-    dag=dag,
-)
 end = DummyOperator(task_id="end", dag=dag)
 
-start >> import_tables_tasks >> anonymization_task >> end
+start >> import_tables_tasks >> end

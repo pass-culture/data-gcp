@@ -1,7 +1,7 @@
 import pytest
 from google.cloud import bigquery
 
-from analytics.tests.config import TEST_DATASET, GCP_PROJECT
+from analytics.tests.config import TEST_DATASET, GCP_PROJECT, TEST_TABLE_PREFIX
 from analytics.tests.data import (
     ENRICHED_OFFER_DATA_INPUT,
     ENRICHED_OFFER_DATA_EXPECTED,
@@ -72,7 +72,7 @@ def flush_dataset():
         (
             "enriched_offer_data",
             define_enriched_offer_data_full_query(
-                dataset=TEST_DATASET, table_prefix="test_"
+                dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX
             ),
             ENRICHED_OFFER_DATA_INPUT,
             ENRICHED_OFFER_DATA_EXPECTED,
@@ -81,7 +81,7 @@ def flush_dataset():
         (
             "enriched_stock_data",
             define_enriched_stock_data_full_query(
-                dataset=TEST_DATASET, table_prefix="test_"
+                dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX
             ),
             ENRICHED_STOCK_DATA_INPUT,
             ENRICHED_STOCK_DATA_EXPECTED,
@@ -113,7 +113,7 @@ def test_create_queries(
         (
             "enriched_user_data",
             define_enriched_user_data_full_query(
-                dataset=TEST_DATASET, table_prefix="test_"
+                dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX
             ),
             ENRICHED_USER_DATA_INPUT,
             ENRICHED_USER_DATA_EXPECTED,
@@ -121,7 +121,7 @@ def test_create_queries(
         (
             "enriched_venue_data",
             define_enriched_venue_data_full_query(
-                dataset=TEST_DATASET, table_prefix="test_"
+                dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX
             ),
             ENRICHED_VENUE_DATA_INPUT,
             ENRICHED_VENUE_DATA_EXPECTED,
@@ -129,7 +129,7 @@ def test_create_queries(
         (
             "enriched_offerer_data",
             define_enriched_offerer_data_full_query(
-                dataset=TEST_DATASET, table_prefix="test_"
+                dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX
             ),
             ENRICHED_OFFERER_DATA_INPUT,
             ENRICHED_OFFERER_DATA_EXPECTED,
@@ -137,7 +137,7 @@ def test_create_queries(
         (
             "enriched_booking_data",
             define_enriched_booking_data_full_query(
-                dataset=TEST_DATASET, table_prefix="test_"
+                dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX
             ),
             ENRICHED_BOOKING_DATA_INPUT,
             ENRICHED_BOOKING_DATA_EXPECTED,

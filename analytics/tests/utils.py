@@ -20,8 +20,8 @@ def drop_table(client, dataset, table):
     client.delete_table(table_id, not_found_ok=True)
 
 
-def create_table(client, dataset, table):
-    table_id = f"{GCP_PROJECT}.{dataset}.{table}"
+def create_table(client, dataset, table, table_prefix=""):
+    table_id = f"{GCP_PROJECT}.{dataset}.{table_prefix}{table}"
     schema = [
         bigquery.SchemaField(col_name, col_type)
         for col_name, col_type in BIGQUERY_SCHEMAS[table].items()
@@ -30,12 +30,12 @@ def create_table(client, dataset, table):
     client.create_table(table)
 
 
-def insert_rows(client, dataset, table, rows):
+def insert_rows(client, dataset, table, rows, table_prefix=""):
     # table_id = f"{GCP_PROJECT}.{dataset}.{table}"
     # client.insert_rows_json(table_id, rows)  # does not work... (something to do with the async creation operation)
 
     job_config = bigquery.QueryJobConfig()
-    job_config.destination = f"{GCP_PROJECT}.{dataset}.{table}"
+    job_config.destination = f"{GCP_PROJECT}.{dataset}.{table_prefix}{table}"
     job_config.write_disposition = "WRITE_APPEND"
     for row in rows:
         fields = ", ".join(
@@ -50,10 +50,18 @@ def insert_rows(client, dataset, table, rows):
         query_job.result()
 
 
-def create_data(client, dataset, data):
+def create_data(client, dataset, data, table_prefix):
     for table_name, table_rows in data.items():
-        create_table(client=client, dataset=dataset, table=table_name)
-        insert_rows(client=client, dataset=dataset, table=table_name, rows=table_rows)
+        create_table(
+            client=client, dataset=dataset, table=table_name, table_prefix=table_prefix
+        )
+        insert_rows(
+            client=client,
+            dataset=dataset,
+            table=table_name,
+            rows=table_rows,
+            table_prefix=table_prefix,
+        )
 
 
 def run_query(client, query):
@@ -61,13 +69,13 @@ def run_query(client, query):
     query_job.result()
 
 
-def retrieve_data(client, dataset, table):
-    table_id = f"{GCP_PROJECT}.{dataset}.{table}"
+def retrieve_data(client, dataset, table, table_prefix=""):
+    table_id = f"{GCP_PROJECT}.{dataset}.{table_prefix}{table}"
     rows_iter = client.list_rows(table_id)
     return [dict(row.items()) for row in rows_iter]
 
 
-def get_table_columns(client, dataset, table):
-    table_id = f"{GCP_PROJECT}.{dataset}.{table}"
+def get_table_columns(client, dataset, table, table_prefix=""):
+    table_id = f"{GCP_PROJECT}.{dataset}.{table_prefix}{table}"
     table = client.get_table(table_id)
     return [field.name for field in table.schema]

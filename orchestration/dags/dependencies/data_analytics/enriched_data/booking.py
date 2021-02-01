@@ -1,58 +1,58 @@
-def create_booking_amount_view(dataset):
+def create_booking_amount_view(dataset, table_prefix=""):
     return f"""
         CREATE TEMP TABLE booking_amount_view AS (
             SELECT 
                 booking.id AS booking_id, coalesce(booking.amount, 0) * coalesce(booking.quantity, 0) AS montant_de_la_reservation
-            FROM {dataset}.booking);
+            FROM {dataset}.{table_prefix}booking AS booking);
         """
 
 
-def create_booking_payment_status_view(dataset):
+def create_booking_payment_status_view(dataset, table_prefix=""):
     return f"""
         CREATE TEMP TABLE booking_payment_status_view AS (
             SELECT
                 booking.id AS booking_id,'Remboursé' AS rembourse
-            FROM {dataset}.booking
-            INNER JOIN {dataset}.payment 
+            FROM {dataset}.{table_prefix}booking AS booking
+            INNER JOIN {dataset}.{table_prefix}payment AS payment
                 ON payment.bookingId = booking.id 
                 AND payment.author IS NOT NULL
-            INNER JOIN {dataset}.payment_status 
+            INNER JOIN {dataset}.{table_prefix}payment_status AS payment_status
                 ON payment.id = payment_status.paymentId 
                 AND payment_status.status = 'SENT');
         """
 
 
-def create_booking_ranking_view(dataset):
+def create_booking_ranking_view(dataset, table_prefix=""):
     return f"""
         CREATE TEMP TABLE booking_ranking_view AS (
             SELECT 
                 booking.id AS booking_id, rank() OVER (PARTITION BY booking.userId ORDER BY booking.dateCreated) AS classement_de_la_reservation
-            FROM {dataset}.booking);
+            FROM {dataset}.{table_prefix}booking AS booking);
         """
 
 
-def create_booking_ranking_in_category_view(dataset):
+def create_booking_ranking_in_category_view(dataset, table_prefix=""):
     return f"""
         CREATE TEMP TABLE booking_ranking_in_category_view AS (
             SELECT 
                 booking.id AS booking_id, rank() OVER (PARTITION BY booking.userId, offer.type ORDER BY booking.dateCreated) 
                 AS classement_de_la_reservation_dans_la_meme_categorie
-            FROM {dataset}.booking
-            INNER JOIN {dataset}.stock ON booking.stockId = stock.id
-            INNER JOIN {dataset}.offer ON stock.offerId = offer.id
+            FROM {dataset}.{table_prefix}booking AS booking
+            INNER JOIN {dataset}.{table_prefix}stock AS stock ON booking.stockId = stock.id
+            INNER JOIN {dataset}.{table_prefix}offer AS offer ON stock.offerId = offer.id
             ORDER BY booking.id);
         """
 
 
-def create_materialized_booking_intermediary_view(dataset):
+def create_materialized_booking_intermediary_view(dataset, table_prefix=""):
     return f"""
         CREATE TEMP TABLE booking_intermediary_view AS (
-               SELECT booking.id,
+            SELECT booking.id,
                       booking_amount_view.montant_de_la_reservation,
                       booking_payment_status_view.rembourse,
                       booking_ranking_view.classement_de_la_reservation,
                       booking_ranking_in_category_view.classement_de_la_reservation_dans_la_meme_categorie
-                 FROM {dataset}.booking
+            FROM {dataset}.{table_prefix}booking AS booking
             LEFT JOIN booking_amount_view ON booking_amount_view.booking_id = booking.id
             LEFT JOIN booking_payment_status_view ON booking_payment_status_view.booking_id = booking.id
             LEFT JOIN booking_ranking_view ON booking_ranking_view.booking_id = booking.id
@@ -61,7 +61,7 @@ def create_materialized_booking_intermediary_view(dataset):
     """
 
 
-def create_materialized_enriched_booking_view(dataset):
+def create_materialized_enriched_booking_view(dataset, table_prefix=""):
     return f"""
         CREATE OR REPLACE TABLE {dataset}.enriched_booking_data AS (
              SELECT
@@ -97,33 +97,33 @@ def create_materialized_enriched_booking_view(dataset):
                         THEN true else false end as reservation_de_sortie,
                 booking_intermediary_view.classement_de_la_reservation,
                 booking_intermediary_view.classement_de_la_reservation_dans_la_meme_categorie
-            FROM {dataset}.booking
-            INNER JOIN {dataset}.stock
+            FROM {dataset}.{table_prefix}booking AS booking
+            INNER JOIN {dataset}.{table_prefix}stock AS stock
                 ON booking.stockId = stock.id
-            INNER JOIN {dataset}.offer
+            INNER JOIN {dataset}.{table_prefix}offer AS offer
                 ON offer.id = stock.offerId
                 AND offer.type NOT IN ('ThingType.ACTIVATION','EventType.ACTIVATION')
-            INNER JOIN {dataset}.venue
+            INNER JOIN {dataset}.{table_prefix}venue AS venue
                 ON venue.id = offer.venueId
-            INNER JOIN {dataset}.offerer
+            INNER JOIN {dataset}.{table_prefix}offerer AS offerer
                 ON venue.managingOffererId = offerer.id
-            INNER JOIN {dataset}.user
+            INNER JOIN {dataset}.{table_prefix}user AS user
                 ON user.id = booking.userId
-            LEFT JOIN {dataset}.venue_type
+            LEFT JOIN {dataset}.{table_prefix}venue_type AS venue_type
                 ON venue.venueTypeId = venue_type.id
-            LEFT JOIN {dataset}.venue_label
+            LEFT JOIN {dataset}.{table_prefix}venue_label AS venue_label
                 ON venue.venueLabelId = venue_label.id
             LEFT JOIN booking_intermediary_view ON booking_intermediary_view.id = booking.id
         );
         """
 
 
-def define_enriched_booking_data_full_query(dataset):
+def define_enriched_booking_data_full_query(dataset, table_prefix=""):
     return f"""
-         {create_booking_amount_view(dataset=dataset)}
-         {create_booking_payment_status_view(dataset=dataset)}
-         {create_booking_ranking_view(dataset=dataset)}
-         {create_booking_ranking_in_category_view(dataset=dataset)}
-         {create_materialized_booking_intermediary_view(dataset=dataset)}
-         {create_materialized_enriched_booking_view(dataset=dataset)}
+         {create_booking_amount_view(dataset=dataset, table_prefix=table_prefix)}
+         {create_booking_payment_status_view(dataset=dataset, table_prefix=table_prefix)}
+         {create_booking_ranking_view(dataset=dataset, table_prefix=table_prefix)}
+         {create_booking_ranking_in_category_view(dataset=dataset, table_prefix=table_prefix)}
+         {create_materialized_booking_intermediary_view(dataset=dataset, table_prefix=table_prefix)}
+         {create_materialized_enriched_booking_view(dataset=dataset, table_prefix=table_prefix)}
     """

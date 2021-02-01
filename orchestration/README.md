@@ -20,6 +20,8 @@ Lors de l'ajout d'un nouveau dag : ajouter un appel au script `./wait_for_dag_de
 ## Uploader manuellement les fichiers sur Cloud Composer
 
 ```
+cd orchestration/dags
+
 gcloud composer environments storage dags import \
     --environment ENVIRONMENT_NAME \
     --location LOCATION \

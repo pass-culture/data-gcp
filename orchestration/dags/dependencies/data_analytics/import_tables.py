@@ -1,4 +1,4 @@
-from dependencies.data_analytics.config import GCP_REGION, EXTERNAL_CONNECTION_ID
+from dependencies.data_analytics.config import EXTERNAL_CONNECTION_ID, GCP_REGION
 
 
 def define_import_query(
@@ -16,9 +16,9 @@ def define_import_query(
         "user"
     ] = """
         SELECT
-            CAST("id" AS varchar(255)), "validationToken", "email", "password", "publicName", "dateCreated", "departementCode",
-            "canBookFreeOffers", "isAdmin", "resetPasswordToken", "resetPasswordTokenValidityLimit",
-            "firstName", "lastName", "postalCode", "phoneNumber", "dateOfBirth", "needsToFillCulturalSurvey",
+            CAST("id" AS varchar(255)), "dateCreated", "departementCode",
+            "canBookFreeOffers", "isAdmin", "resetPasswordTokenValidityLimit",
+            "postalCode", "needsToFillCulturalSurvey",
             CAST("culturalSurveyId" AS varchar(255)), "civility", "activity", "culturalSurveyFilledDate",
             "hasSeenTutorials", "address", "city", "lastConnectionDate"
         FROM public.user
@@ -27,16 +27,16 @@ def define_import_query(
         "user_offerer"
     ] = """
         SELECT
-            CAST("id" AS varchar(255)), CAST("userId" AS varchar(255)), CAST("offererId" AS varchar(255)), 
-            CAST("rights" AS varchar(255)), "validationToken"
+            CAST("id" AS varchar(255)), CAST("userId" AS varchar(255)), CAST("offererId" AS varchar(255)),
+            CAST("rights" AS varchar(255))
         FROM public.user_offerer
     """
     cloudsql_queries[
         "bank_information"
     ] = """
         SELECT
-            CAST("id" AS varchar(255)), CAST("offererId" AS varchar(255)), CAST("venueId" AS varchar(255)), "iban", 
-            "bic", CAST("applicationId" AS varchar(255)), "dateModified",
+            CAST("id" AS varchar(255)), CAST("offererId" AS varchar(255)), CAST("venueId" AS varchar(255)),
+            CAST("applicationId" AS varchar(255)), "dateModified",
             CAST("status" AS varchar(255))
         FROM public.bank_information
     """
@@ -44,7 +44,7 @@ def define_import_query(
         "payment"
     ] = """
         SELECT
-            CAST("id" AS varchar(255)), "author", "comment", "recipientName", "iban", "bic", CAST("bookingId" AS varchar(255)),
+            CAST("id" AS varchar(255)), "author", "comment", "recipientName", CAST("bookingId" AS varchar(255)),
             "amount", "reimbursementRule", CAST("transactionEndToEndId" AS varchar(255)), "recipientSiren",
             "reimbursementRate", "transactionLabel", "paymentMessageId"
         FROM public.payment
@@ -60,8 +60,8 @@ def define_import_query(
         "booking"
     ] = """
         SELECT
-            CAST("id" AS varchar(255)), "dateCreated", CAST("stockId" AS varchar(255)), "quantity", 
-            "token", CAST("userId" AS varchar(255)), "amount", "isCancelled", "isUsed", "dateUsed", "cancellationDate"
+            CAST("id" AS varchar(255)), "dateCreated", CAST("stockId" AS varchar(255)), "quantity",
+            CAST("userId" AS varchar(255)), "amount", "isCancelled", "isUsed", "dateUsed", "cancellationDate"
         FROM public.booking
     """
     cloudsql_queries[
@@ -80,7 +80,7 @@ def define_import_query(
         SELECT
             CAST("idAtProviders" AS varchar(255)), "dateModifiedAtLastProvider", CAST("id" AS varchar(255)), "dateModified",
             "price", "quantity", "bookingLimitDatetime", CAST("lastProviderId" AS varchar(255)), CAST("offerId" AS varchar(255)),
-            "isSoftDeleted", "beginningDatetime", "dateCreated", "fieldsUpdated" 
+            "isSoftDeleted", "beginningDatetime", "dateCreated", "fieldsUpdated"
         FROM public.stock
     """
     cloudsql_queries[
@@ -88,10 +88,10 @@ def define_import_query(
     ] = """
         SELECT
             "thumbCount", "idAtProviders", "dateModifiedAtLastProvider", "address", "postalCode",
-            "city", CAST("id" AS varchar(255)) , "name", "siret", "departementCode", "latitude", "longitude", 
+            "city", CAST("id" AS varchar(255)) , "name", "siret", "departementCode", "latitude", "longitude",
             CAST("managingOffererId" AS varchar(255)), "bookingEmail", CAST("lastProviderId" AS varchar(255)), "isVirtual",
-            "comment", "validationToken", "publicName", "fieldsUpdated", CAST("venueTypeId" AS varchar(255)),
-            CAST("venueLabelId" AS varchar(255)), "dateCreated"  
+            "comment", "publicName", "fieldsUpdated", CAST("venueTypeId" AS varchar(255)),
+            CAST("venueLabelId" AS varchar(255)), "dateCreated"
         FROM public.venue
     """
     cloudsql_queries[
@@ -99,15 +99,15 @@ def define_import_query(
     ] = """
         SELECT
             "isActive", "thumbCount", CAST("idAtProviders" AS varchar(255)), "dateModifiedAtLastProvider", "address",
-            "postalCode", "city", "validationToken", CAST("id" AS varchar(255)), "dateCreated", "name", "siren", 
-            CAST("lastProviderId" AS varchar(255)), "fieldsUpdated"  
+            "postalCode", "city", CAST("id" AS varchar(255)), "dateCreated", "name", "siren",
+            CAST("lastProviderId" AS varchar(255)), "fieldsUpdated"
         FROM public.offerer
     """
     cloudsql_queries[
         "provider"
     ] = """
         SELECT
-            "isActive", CAST("id" AS varchar(255)), "name", "localClass", "apiKey", "apiKeyGenerationDate", 
+            "isActive", CAST("id" AS varchar(255)), "name", "localClass", "apiKeyGenerationDate",
             "enabledForPro", "requireProviderIdentifier"
         FROM public.provider
     """
@@ -115,21 +115,21 @@ def define_import_query(
         "venue_type"
     ] = """
         SELECT
-            CAST("id" AS varchar(255)), "label" 
+            CAST("id" AS varchar(255)), "label"
         FROM public.venue_type
     """
     cloudsql_queries[
         "venue_label"
     ] = """
         SELECT
-            CAST("id" AS varchar(255)), "label" 
+            CAST("id" AS varchar(255)), "label"
         FROM public.venue_label
     """
     cloudsql_queries[
         "favorite"
     ] = """
             SELECT
-                CAST("id" AS varchar(255)), CAST("userId" AS varchar(255)), CAST("offerId" AS varchar(255)), 
+                CAST("id" AS varchar(255)), CAST("userId" AS varchar(255)), CAST("offerId" AS varchar(255)),
                 CAST("mediationId" AS varchar(255))
             FROM public.favorite
         """
@@ -152,7 +152,7 @@ def define_import_query(
         "local_provider_event"
     ] = """
             SELECT
-                CAST("id" AS varchar(255)), CAST("providerId" AS varchar(255)),"date", 
+                CAST("id" AS varchar(255)), CAST("providerId" AS varchar(255)),"date",
                 CAST("type" AS varchar(255)), "payload"
             FROM public.local_provider_event
         """
@@ -160,7 +160,7 @@ def define_import_query(
         "beneficiary_import_status"
     ] = """
             SELECT
-                CAST("id" AS varchar(255)), CAST("status" AS varchar(255)), "date", "detail", 
+                CAST("id" AS varchar(255)), CAST("status" AS varchar(255)), "date", "detail",
                 CAST("beneficiaryImportId" AS varchar(255)),  CAST("authorId" AS varchar(255))
             FROM public.beneficiary_import_status
         """
@@ -184,7 +184,7 @@ def define_import_query(
     ] = """
             SELECT
                 "thumbCount",CAST("idAtProviders" AS varchar(255)), "dateModifiedAtLastProvider",CAST("id" AS varchar(255)),
-                "dateCreated",CAST("authorId" AS varchar(255)), CAST("lastProviderId" AS varchar(255)), 
+                "dateCreated",CAST("authorId" AS varchar(255)), CAST("lastProviderId" AS varchar(255)),
                 CAST("offerId" AS varchar(255)), "credit", "isActive", "fieldsUpdated"
             FROM public.mediation
         """

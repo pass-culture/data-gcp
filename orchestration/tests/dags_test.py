@@ -1,8 +1,8 @@
 import unittest
 from unittest import mock
 
-from airflow.models import DagBag
 import pandas as pd
+from airflow.models import DagBag
 
 
 class TestDags(unittest.TestCase):
@@ -54,12 +54,12 @@ class TestDags(unittest.TestCase):
 
     def test_restore_data_analytics_dag_is_loaded(self):
         # When
-        dag = self.dagbag.get_dag(dag_id="import_applicative_data_v1")
+        dag = self.dagbag.get_dag(dag_id="import_applicative_data_v2")
 
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 33)
+        self.assertEqual(len(dag.tasks), 32)
 
     def test_recommendation_cloud_sql_dag_is_loaded(self):
         # When
@@ -108,7 +108,7 @@ class TestDags(unittest.TestCase):
 
     def test_import_data_analytics_dag_is_loaded(self):
         # When
-        dag = self.dagbag.get_dag(dag_id="import_data_analytics_v3")
+        dag = self.dagbag.get_dag(dag_id="import_data_analytics_v4")
 
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})

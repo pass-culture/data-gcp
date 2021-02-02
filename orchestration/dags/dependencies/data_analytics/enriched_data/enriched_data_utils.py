@@ -28,12 +28,12 @@ def define_humanized_id_query(table, dataset):
 
     # 2. Use humanize_id function to create (temp) table
     tmp_table_query = f"""
-        CREATE TEMP TABLE {table}_humanized_id AS
-            SELECT
-                id,
-                humanize_id(id) AS humanized_id
-            FROM {dataset}.{table}
-            WHERE id is not NULL;
+                CREATE TEMP TABLE {table}_humanized_id AS
+                    SELECT
+                        {table}_id,
+                        humanize_id({table}_id) AS humanized_id
+                    FROM {dataset}.{table}
+                    WHERE {table}_id is not NULL;
     """
 
     return f"""

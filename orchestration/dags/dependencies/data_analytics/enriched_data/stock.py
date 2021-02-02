@@ -16,20 +16,20 @@ def define_stocks_booking_view_query(dataset, table_prefix=""):
             WHERE last_status.status != 'BANNED'
             ), booking_with_payment AS (
             SELECT
-                booking.id AS booking_id, 
-                booking.quantity AS booking_quantity
+                booking.booking_id, 
+                booking.booking_quantity
             FROM {dataset}.{table_prefix}booking AS booking
-            WHERE booking.id IN(SELECT bookingId FROM valid_payment)
+            WHERE booking.booking_id IN(SELECT bookingId FROM valid_payment)
             )
             SELECT 
-                stock.id AS stock_id,
-                COALESCE(SUM(booking.quantity), 0) AS booking_quantity,
-                COALESCE(SUM(booking.quantity * CAST(booking.isCancelled AS INT64)), 0) AS bookings_cancelled,
+                stock.stock_id,
+                COALESCE(SUM(booking.booking_quantity), 0) AS booking_quantity,
+                COALESCE(SUM(booking.booking_quantity * CAST(booking.booking_is_cancelled AS INT64)), 0) AS bookings_cancelled,
                 COALESCE(SUM(booking_with_payment.booking_quantity), 0) AS bookings_paid
             FROM {dataset}.{table_prefix}stock AS stock
-            LEFT JOIN {dataset}.{table_prefix}booking AS booking ON booking.stockId = stock.id
-            LEFT JOIN booking_with_payment ON booking_with_payment.booking_id = booking.id
-            GROUP BY stock.id ); 
+            LEFT JOIN {dataset}.{table_prefix}booking AS booking ON booking.stock_id = stock.stock_id
+            LEFT JOIN booking_with_payment ON booking_with_payment.booking_id = booking.booking_id
+            GROUP BY stock.stock_id ); 
         """
 
 
@@ -38,22 +38,22 @@ def define_available_stocks_view_query(dataset, table_prefix=""):
         CREATE OR REPLACE TABLE {dataset}.available_stock_information AS (
             WITH bookings_grouped_by_stock AS (
             SELECT 
-                booking.stockId,
-                SUM(booking.quantity) as number_of_booking
+                booking.stock_id,
+                SUM(booking.booking_quantity) as number_of_booking
             FROM {dataset}.{table_prefix}booking AS booking
-            LEFT JOIN {dataset}.{table_prefix}stock AS stock ON booking.stockId = stock.id
-            WHERE booking.isCancelled = False 
-            GROUP BY booking.stockId
+            LEFT JOIN {dataset}.{table_prefix}stock AS stock ON booking.stock_id = stock.stock_id
+            WHERE booking.booking_is_cancelled = False 
+            GROUP BY booking.stock_id
             )
             SELECT
-                stock.id AS stock_id,
+                stock.stock_id,
             CASE 
-                WHEN stock.quantity IS NULL THEN NULL
-                ELSE GREATEST(stock.quantity - COALESCE(bookings_grouped_by_stock.number_of_booking, 0), 0)
-            END AS stock_disponible_reel
+                WHEN stock.stock_quantity IS NULL THEN NULL
+                ELSE GREATEST(stock.stock_quantity - COALESCE(bookings_grouped_by_stock.number_of_booking, 0), 0)
+            END AS available_stock_information
             FROM {dataset}.{table_prefix}stock AS stock
             LEFT JOIN bookings_grouped_by_stock 
-            ON bookings_grouped_by_stock.stockId = stock.id );
+            ON bookings_grouped_by_stock.stock_id = stock.stock_id );
         """
 
 
@@ -61,25 +61,26 @@ def define_enriched_stock_data_query(dataset, table_prefix=""):
     return f"""
         CREATE OR REPLACE TABLE {dataset}.enriched_stock_data AS (
             SELECT
-                stock.id AS stock_id,
-                stock.offerId AS offer_id,
-                offer.name AS nom_offre,
-                venue.managingOffererId AS offerer_id,
-                offer.type AS type_d_offre,
-                venue.departementCode AS departement,
-                stock.dateCreated AS date_creation_du_stock,
-                stock.bookingLimitDatetime AS date_limite_de_reservation,
-                stock.beginningDatetime AS date_debut_de_l_evenement,
-                available_stock_information.stock_disponible_reel,
-                stock.quantity AS stock_disponible_brut_de_reservations,
-                stock_booking_information.booking_quantity AS nombre_total_de_reservations,
-                stock_booking_information.bookings_cancelled AS nombre_de_reservations_annulees,
-                stock_booking_information.bookings_paid AS nombre_de_reservations_ayant_un_paiement
+                stock.stock_id,
+                stock.offer_id,
+                offer.offer_name,
+                venue.venue_managing_offerer_id,
+                offer.offer_type,
+                venue.venue_department_code,
+                stock.stock_creation_date,
+                stock.stock_booking_limit_date,
+                stock.stock_beginning_date,
+                available_stock_information.available_stock_information,
+                stock.stock_quantity,
+                stock_booking_information.booking_quantity,
+                stock_booking_information.bookings_cancelled AS booking_cancelled,
+                stock_booking_information.bookings_paid AS booking_paid
              FROM {dataset}.{table_prefix}stock AS stock
-             LEFT JOIN {dataset}.{table_prefix}offer AS offer ON stock.offerId = offer.id
-             LEFT JOIN {dataset}.{table_prefix}venue AS venue ON venue.id = offer.venueId
-             LEFT JOIN {dataset}.stock_booking_information ON stock.id = stock_booking_information.stock_id
-             LEFT JOIN {dataset}.available_stock_information ON stock_booking_information.stock_id = available_stock_information.stock_id);
+             LEFT JOIN {dataset}.{table_prefix}offer AS offer ON stock.offer_id = offer.offer_id
+             LEFT JOIN {dataset}.{table_prefix}venue AS venue ON venue.venue_id = offer.venue_id
+             LEFT JOIN {dataset}.stock_booking_information ON stock.stock_id = stock_booking_information.stock_id
+             LEFT JOIN {dataset}.available_stock_information 
+             ON stock_booking_information.stock_id = available_stock_information.stock_id);
     """
 
 

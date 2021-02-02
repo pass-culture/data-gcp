@@ -16,11 +16,14 @@ def define_import_query(
         "user"
     ] = """
         SELECT
-            CAST("id" AS varchar(255)), "dateCreated", "departementCode",
-            "canBookFreeOffers", "isAdmin", "resetPasswordTokenValidityLimit",
-            "postalCode", "needsToFillCulturalSurvey",
-            CAST("culturalSurveyId" AS varchar(255)), "civility", "activity", "culturalSurveyFilledDate",
-            "hasSeenTutorials", "address", "city", "lastConnectionDate"
+            CAST("id" AS varchar(255)) AS user_id, "dateCreated" as user_creation_date, 
+            "departementCode" as user_departement_code, "canBookFreeOffers" as user_can_book_free_offers, 
+            "isAdmin" as user_is_admin, "resetPasswordTokenValidityLimit" as user_reset_password_token_validity_limit, 
+            "postalCode" as user_postal_code, "needsToFillCulturalSurvey" as user_needs_to_fill_cultural_survey,
+            CAST("culturalSurveyId" AS varchar(255)) as user_cultural_survey_id, "civility" as user_civility,
+            "activity" as user_activity, "culturalSurveyFilledDate" as user_cultural_survey_filled_date,
+            "hasSeenTutorials" as user_has_seen_tutorials, "address" as user_address, "city" as user_city, 
+            "lastConnectionDate" as user_last_connection_date
         FROM public.user
     """
     cloudsql_queries[
@@ -60,47 +63,71 @@ def define_import_query(
         "booking"
     ] = """
         SELECT
-            CAST("id" AS varchar(255)), "dateCreated", CAST("stockId" AS varchar(255)), "quantity",
-            CAST("userId" AS varchar(255)), "amount", "isCancelled", "isUsed", "dateUsed", "cancellationDate"
+            CAST("id" AS varchar(255)) as booking_id, "dateCreated" as booking_creation_date, 
+            CAST("stockId" AS varchar(255)) as stock_id, "quantity" as booking_quantity, 
+            CAST("userId" AS varchar(255)) as user_id, "amount" as booking_amount, 
+            "isCancelled" as booking_is_cancelled, "isUsed" as booking_is_used, "dateUsed" as booking_used_date,
+            "cancellationDate" as booking_cancellation_date
         FROM public.booking
     """
     cloudsql_queries[
         "offer"
     ] = """
         SELECT
-            CAST("idAtProviders" AS varchar(255)), "dateModifiedAtLastProvider", CAST("id" AS varchar(255)), "dateCreated",
-            CAST("productId" AS varchar(255)), CAST("venueId" AS varchar(255)), CAST("lastProviderId" AS varchar(255)),
-            "bookingEmail", "isActive", "type", "name", "description", "conditions", "ageMin", "ageMax", "url", "mediaUrls",
-            "durationMinutes", "isNational" , "extraData", "isDuo", "fieldsUpdated", "withdrawalDetails"
+            CAST("idAtProviders" AS varchar(255)) as offer_id_at_providers, 
+            "dateModifiedAtLastProvider" as offer_modified_at_last_provider_date, 
+            CAST("id" AS varchar(255)) as offer_id, "dateCreated" as offer_creation_date,
+            CAST("productId" AS varchar(255)) as offer_product_id, CAST("venueId" AS varchar(255)) as venue_id, 
+            CAST("lastProviderId" AS varchar(255)) as offer_last_provider_id, "bookingEmail" as booking_email,
+            "isActive" as offer_is_active, "type" as offer_type, "name" as offer_name, 
+            "description" as offer_description, "conditions" as offer_conditions, "ageMin" as offer_age_min, 
+            "ageMax" as offer_age_max, "url" as offer_url, "mediaUrls" as offer_media_urls, 
+            "durationMinutes" as offer_duration_minutes, "isNational" as offer_is_national, 
+            "extraData" as offer_extra_data, "isDuo" as offer_is_duo, "fieldsUpdated" as offer_fields_updated,
+            "withdrawalDetails" as offer_withdrawal_details
         FROM public.offer
     """
     cloudsql_queries[
         "stock"
     ] = """
         SELECT
-            CAST("idAtProviders" AS varchar(255)), "dateModifiedAtLastProvider", CAST("id" AS varchar(255)), "dateModified",
-            "price", "quantity", "bookingLimitDatetime", CAST("lastProviderId" AS varchar(255)), CAST("offerId" AS varchar(255)),
-            "isSoftDeleted", "beginningDatetime", "dateCreated", "fieldsUpdated"
+            CAST("idAtProviders" AS varchar(255)) AS stock_id_at_providers , 
+            "dateModifiedAtLastProvider" AS stock_modified_at_last_provider_date, 
+            CAST("id" AS varchar(255)) AS stock_id, "dateModified" AS stock_modified_date, "price" AS stock_price, 
+            "quantity" AS stock_quantity, "bookingLimitDatetime" AS stock_booking_limit_date, 
+            CAST("lastProviderId" AS varchar(255)) AS stock_last_provider_id, 
+            CAST("offerId" AS varchar(255)) AS offer_id, "isSoftDeleted" AS stock_is_soft_deleted,
+            "beginningDatetime" AS stock_beginning_date, "dateCreated" AS stock_creation_date, 
+            "fieldsUpdated" AS stock_fields_updated
         FROM public.stock
     """
     cloudsql_queries[
         "venue"
     ] = """
         SELECT
-            "thumbCount", "idAtProviders", "dateModifiedAtLastProvider", "address", "postalCode",
-            "city", CAST("id" AS varchar(255)) , "name", "siret", "departementCode", "latitude", "longitude",
-            CAST("managingOffererId" AS varchar(255)), "bookingEmail", CAST("lastProviderId" AS varchar(255)), "isVirtual",
-            "comment", "publicName", "fieldsUpdated", CAST("venueTypeId" AS varchar(255)),
-            CAST("venueLabelId" AS varchar(255)), "dateCreated"
+            "thumbCount" AS venue_thumb_count, "idAtProviders" AS venue_id_at_providers, 
+            "dateModifiedAtLastProvider" AS venue_modified_at_last_provider, "address" as venue_address, 
+            "postalCode" as venue_postal_code, "city" as venue_city, CAST("id" AS varchar(255)) AS venue_id, 
+            "name" AS venue_name, "siret" AS venue_siret, "departementCode" AS venue_department_code, 
+            "latitude" AS venue_latitude, "longitude" AS venue_longitude, 
+            CAST("managingOffererId" AS varchar(255)) AS venue_managing_offerer_id, "bookingEmail" AS venue_booking_email,
+            CAST("lastProviderId" AS varchar(255)) AS venue_last_provider_id, "isVirtual" AS venue_is_virtual,
+            "comment" AS venue_comment, "publicName" AS venue_public_name,
+            "fieldsUpdated" AS venue_fields_updated, CAST("venueTypeId" AS varchar(255)) AS venue_type_id,
+            CAST("venueLabelId" AS varchar(255)) AS venue_label_id, "dateCreated" AS venue_creation_date
         FROM public.venue
     """
     cloudsql_queries[
         "offerer"
     ] = """
         SELECT
-            "isActive", "thumbCount", CAST("idAtProviders" AS varchar(255)), "dateModifiedAtLastProvider", "address",
-            "postalCode", "city", CAST("id" AS varchar(255)), "dateCreated", "name", "siren",
-            CAST("lastProviderId" AS varchar(255)), "fieldsUpdated"
+            "isActive" AS offerer_is_active, "thumbCount" AS offerer_thumb_count, 
+            CAST("idAtProviders" AS varchar(255)) AS offerer_id_at_providers, 
+            "dateModifiedAtLastProvider" AS offerer_modified_at_last_provider_date, "address" AS offerer_address,
+            "postalCode" AS offerer_postal_code, "city" AS offerer_city, CAST("id" AS varchar(255)) AS offerer_id,
+            "dateCreated" AS offerer_creation_date, "name" AS offerer_name,
+            "siren" AS offerer_siren, CAST("lastProviderId" AS varchar(255)) AS offerer_last_provider_id, 
+            "fieldsUpdated" AS offerer_fields_updated
         FROM public.offerer
     """
     cloudsql_queries[

@@ -9,7 +9,11 @@ ENV PYTHONUNBUFFERED True
 # Copy local code to the container image.
 ENV APP_HOME /app
 WORKDIR $APP_HOME
-COPY . ./
+COPY app.py ./
+COPY geolocalisation.py ./
+COPY health_check_queries.py ./
+COPY recommendation.py ./
+COPY api-requirements.txt ./
 
 # Install production dependencies.
 RUN pip install -r api-requirements.txt

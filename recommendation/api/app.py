@@ -5,14 +5,31 @@ from flask import Flask, jsonify, request, make_response
 from health_check_queries import get_materialized_view_status
 from recommendation import get_final_recommendations
 
+from google.cloud import secretmanager
 
-API_TOKEN = os.environ.get("API_TOKEN")
+
+def access_secret_version(project_id, secret_id, version_id):
+    client = secretmanager.SecretManagerServiceClient()
+    name = f"projects/{project_id}/secrets/{secret_id}/versions/{version_id}"
+    response = client.access_secret_version(request={"name": name})
+    return response.payload.data.decode("UTF-8")
+
+
+GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID")
+
+API_TOKEN_SECRET_ID = os.environ.get("API_TOKEN_SECRET_ID")
+API_TOKEN_SECRET_VERSION = os.environ.get("API_TOKEN_SECRET_VERSION")
+
+API_TOKEN = access_secret_version(
+    GCP_PROJECT_ID, API_TOKEN_SECRET_ID, API_TOKEN_SECRET_VERSION
+)
+
 
 APP_CONFIG = {
-    "AB_TESTING_TABLE": "ab_testing_20201207",
-    "NUMBER_OF_RECOMMENDATIONS": 10,
-    "MODEL_NAME": "poc_model",
-    "MODEL_VERSION": "latest",
+    "AB_TESTING_TABLE": os.environ.get("AB_TESTING_TABLE"),
+    "NUMBER_OF_RECOMMENDATIONS": os.environ.get("NUMBER_OF_RECOMMENDATIONS"),
+    "MODEL_NAME": os.environ.get("MODEL_NAME"),
+    "MODEL_VERSION": os.environ.get("MODEL_VERSION"),
 }
 
 app = Flask(__name__)

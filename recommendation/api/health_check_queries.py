@@ -4,12 +4,28 @@ import sys
 from typing import Any
 
 from sqlalchemy import create_engine, engine
+from google.cloud import secretmanager
 
 
-SQL_BASE_USER = os.environ.get("SQL_BASE_USER")
-SQL_BASE_PASSWORD = os.environ.get("SQL_BASE_PASSWORD")
-SQL_CONNECTION_NAME = os.environ.get("SQL_CONNECTION_NAME")
+def access_secret_version(project_id, secret_id, version_id):
+    client = secretmanager.SecretManagerServiceClient()
+    name = f"projects/{project_id}/secrets/{secret_id}/versions/{version_id}"
+    response = client.access_secret_version(request={"name": name})
+    return response.payload.data.decode("UTF-8")
+
+
+GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID")
+
 SQL_BASE = os.environ.get("SQL_BASE")
+SQL_BASE_USER = os.environ.get("SQL_BASE_USER")
+SQL_BASE_SECRET_ID = os.environ.get("SQL_BASE_SECRET_ID")
+SQL_BASE_SECRET_VERSION = os.environ.get("SQL_BASE_SECRET_VERSION")
+SQL_CONNECTION_NAME = os.environ.get("SQL_CONNECTION_NAME")
+
+SQL_BASE_PASSWORD = access_secret_version(
+    GCP_PROJECT_ID, SQL_BASE_SECRET_ID, SQL_BASE_SECRET_VERSION
+)
+
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 

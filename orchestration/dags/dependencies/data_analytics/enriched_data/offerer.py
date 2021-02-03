@@ -167,7 +167,7 @@ def define_enriched_offerer_data_full_query(dataset, table_prefix=""):
         {define_offerer_departement_code_query(dataset=dataset, table_prefix=table_prefix)}
         {define_number_of_venues_query(dataset=dataset, table_prefix=table_prefix)}
         {define_number_of_venues_without_offer_query(dataset=dataset, table_prefix=table_prefix)}
-        {define_humanized_id_query(table=f"{table_prefix}offerer", dataset=dataset)}
+        {define_humanized_id_query(table=f"offerer", dataset=dataset)}
         {define_current_year_revenue(dataset=dataset, table_prefix=table_prefix)}
         {define_enriched_offerer_query(dataset=dataset, table_prefix=table_prefix)}
     """

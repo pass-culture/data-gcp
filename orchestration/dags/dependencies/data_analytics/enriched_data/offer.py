@@ -139,7 +139,7 @@ def define_enriched_offer_data_query(dataset, table_prefix=""):
             LEFT JOIN offer_booking_information_view ON offer_booking_information_view.offer_id = offer.offer_id
             LEFT JOIN count_favorites_view ON count_favorites_view.offerId = offer.offer_id
             LEFT JOIN sum_stock_view ON sum_stock_view.offer_id = offer.offer_id
-            LEFT JOIN {table_prefix}offer_humanized_id AS offer_humanized_id ON offer_humanized_id.offer_id = offer.offer_id
+            LEFT JOIN offer_humanized_id AS offer_humanized_id ON offer_humanized_id.offer_id = offer.offer_id
             LEFT JOIN count_first_booking_view ON count_first_booking_view.offer_id = offer.offer_id
         );
     """
@@ -152,7 +152,7 @@ def define_enriched_offer_data_full_query(dataset, table_prefix=""):
         {define_offer_booking_information_view_query(dataset=dataset, table_prefix=table_prefix)}
         {define_count_favorites_view_query(dataset=dataset, table_prefix=table_prefix)}
         {define_sum_stock_view_query(dataset=dataset, table_prefix=table_prefix)}
-        {define_humanized_id_query(table=f"{table_prefix}offer", dataset=dataset)}
+        {define_humanized_id_query(table=f"offer", dataset=dataset)}
         {define_count_first_booking_query(dataset=dataset, table_prefix=table_prefix)}
         {define_enriched_offer_data_query(dataset=dataset, table_prefix=table_prefix)}
     """

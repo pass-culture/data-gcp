@@ -1,3 +1,8 @@
+from dependencies.data_analytics.enriched_data.enriched_data_utils import (
+    define_humanized_id_query,
+)
+
+
 def create_booking_amount_view(dataset, table_prefix=""):
     return f"""
         CREATE TEMP TABLE booking_amount_view AS (
@@ -117,6 +122,7 @@ def create_materialized_enriched_booking_view(dataset, table_prefix=""):
                 ON venue.venue_type_id = venue_type.id
             LEFT JOIN {dataset}.{table_prefix}venue_label AS venue_label
                 ON venue.venue_label_id = venue_label.id
+            LEFT JOIN booking_humanized_id AS booking_humanized_id ON booking_humanized_id.booking_id = booking.booking_id
             LEFT JOIN booking_intermediary_view ON booking_intermediary_view.booking_id = booking.booking_id
         );
         """
@@ -129,5 +135,6 @@ def define_enriched_booking_data_full_query(dataset, table_prefix=""):
          {create_booking_ranking_view(dataset=dataset, table_prefix=table_prefix)}
          {create_booking_ranking_in_category_view(dataset=dataset, table_prefix=table_prefix)}
          {create_materialized_booking_intermediary_view(dataset=dataset, table_prefix=table_prefix)}
+         {define_humanized_id_query(table=f"booking", dataset=dataset)}
          {create_materialized_enriched_booking_view(dataset=dataset, table_prefix=table_prefix)}
     """

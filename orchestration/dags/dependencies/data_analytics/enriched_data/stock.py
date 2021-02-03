@@ -1,3 +1,8 @@
+from dependencies.data_analytics.enriched_data.enriched_data_utils import (
+    define_humanized_id_query,
+)
+
+
 def define_stocks_booking_view_query(dataset, table_prefix=""):
     return f"""
         CREATE OR REPLACE TABLE {dataset}.stock_booking_information AS (
@@ -64,7 +69,7 @@ def define_enriched_stock_data_query(dataset, table_prefix=""):
                 stock.stock_id,
                 stock.offer_id,
                 offer.offer_name,
-                venue.venue_managing_offerer_id,
+                venue.venue_managing_offerer_id AS offerer_id,
                 offer.offer_type,
                 venue.venue_department_code,
                 stock.stock_creation_date,
@@ -79,6 +84,7 @@ def define_enriched_stock_data_query(dataset, table_prefix=""):
              LEFT JOIN {dataset}.{table_prefix}offer AS offer ON stock.offer_id = offer.offer_id
              LEFT JOIN {dataset}.{table_prefix}venue AS venue ON venue.venue_id = offer.venue_id
              LEFT JOIN {dataset}.stock_booking_information ON stock.stock_id = stock_booking_information.stock_id
+             LEFT JOIN stock_humanized_id AS stock_humanized_id ON stock_humanized_id.stock_id = stock.stock_id
              LEFT JOIN {dataset}.available_stock_information 
              ON stock_booking_information.stock_id = available_stock_information.stock_id);
     """
@@ -88,5 +94,6 @@ def define_enriched_stock_data_full_query(dataset, table_prefix=""):
     return f"""
         {define_stocks_booking_view_query(dataset, table_prefix=table_prefix)}
         {define_available_stocks_view_query(dataset, table_prefix=table_prefix)}
+        {define_humanized_id_query(table=f"stock", dataset=dataset)}
         {define_enriched_stock_data_query(dataset, table_prefix=table_prefix)}
     """

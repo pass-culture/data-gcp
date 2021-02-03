@@ -379,7 +379,7 @@ def define_enriched_user_data_query(dataset, table_prefix=""):
                 ON user.user_id = theoretical_amount_spent_in_physical_goods.user_id
             LEFT JOIN theoretical_amount_spent_in_outings ON user.user_id = theoretical_amount_spent_in_outings.user_id
             LEFT JOIN last_booking_date ON last_booking_date.user_id = user.user_id
-            LEFT JOIN {table_prefix}user_humanized_id AS user_humanized_id ON user_humanized_id.user_id = user.user_id
+            LEFT JOIN user_humanized_id AS user_humanized_id ON user_humanized_id.user_id = user.user_id
             WHERE user.user_can_book_free_offers
         );
     """
@@ -401,6 +401,6 @@ def define_enriched_user_data_full_query(dataset, table_prefix=""):
         {define_theoretical_amount_spent_in_physical_goods_query(dataset=dataset, table_prefix=table_prefix)}
         {define_theoretical_amount_spent_in_outings_query(dataset=dataset, table_prefix=table_prefix)}
         {define_last_booking_date_query(dataset=dataset, table_prefix=table_prefix)}
-        {define_humanized_id_query(table=f"{table_prefix}user", dataset=dataset)}
+        {define_humanized_id_query(table=f"user", dataset=dataset)}
         {define_enriched_user_data_query(dataset=dataset, table_prefix=table_prefix)}
     """

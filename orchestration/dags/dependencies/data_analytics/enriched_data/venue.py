@@ -188,7 +188,7 @@ def define_enriched_venue_query(dataset, table_prefix=""):
             LEFT JOIN offers_created_per_venue ON venue.venue_id = offers_created_per_venue.venue_id
             LEFT JOIN theoretic_revenue_per_venue ON venue.venue_id = theoretic_revenue_per_venue.venue_id
             LEFT JOIN real_revenue_per_venue ON venue.venue_id = real_revenue_per_venue.venue_id
-            LEFT JOIN {table_prefix}venue_humanized_id AS venue_humanized_id ON venue_humanized_id.venue_id = venue.venue_id
+            LEFT JOIN venue_humanized_id AS venue_humanized_id ON venue_humanized_id.venue_id = venue.venue_id
         );
     """
 
@@ -203,6 +203,6 @@ def define_enriched_venue_data_full_query(dataset, table_prefix=""):
         {define_offers_created_per_venue_query(dataset=dataset, table_prefix=table_prefix)}
         {define_theoretic_revenue_per_venue_query(dataset=dataset, table_prefix=table_prefix)}
         {define_real_revenue_per_venue_query(dataset=dataset, table_prefix=table_prefix)}
-        {define_humanized_id_query(table=f"{table_prefix}venue", dataset=dataset)}
+        {define_humanized_id_query(table=f"venue", dataset=dataset)}
         {define_enriched_venue_query(dataset=dataset, table_prefix=table_prefix)}
     """

@@ -1,5 +1,7 @@
 from datetime import datetime
 
+TEST_TABLE_PREFIX = "test_"
+
 # enriched_offer_data
 ENRICHED_OFFER_DATA_INPUT = {
     "booking": [
@@ -302,15 +304,15 @@ ENRICHED_STOCK_DATA_INPUT = {
     ],
     "offerer": [
         {
-            "offer_id": "3",
-            "offer_thumb_count": "0",
-            "offer_is_active": True,
-            "offer_postal_code": "93100",
-            "offer_city": "Montreuil",
-            "offer_creation_date": "2019-11-20",
-            "offer_name": "Test Offerer",
-            "offer_siren": "123456789",
-            "offer_fields_updated": "{}",
+            "offerer_id": "3",
+            "offerer_thumb_count": "0",
+            "offerer_is_active": True,
+            "offerer_postal_code": "93100",
+            "offerer_city": "Montreuil",
+            "offerer_creation_date": "2019-11-20",
+            "offerer_name": "Test Offerer",
+            "offerer_siren": "123456789",
+            "offerer_fields_updated": "{}",
         }
     ],
     "payment": [
@@ -359,9 +361,9 @@ ENRICHED_STOCK_DATA_INPUT = {
             "stock_booking_limit_date": "2019-11-23",
             "stock_beginning_date": "2019-11-24",
             "stock_is_soft_deleted": False,
-            "stock_date_modified": "2019-11-20",
+            "stock_modified_date": "2019-11-20",
             "stock_price": "0",
-            "stock_fieldsUpdated": "{}",
+            "stock_fields_updated": "{}",
         },
         {
             "stock_id": "2",
@@ -429,11 +431,11 @@ ENRICHED_STOCK_DATA_EXPECTED = [
         "stock_creation_date": datetime(2019, 11, 1),
         "stock_booking_limit_date": datetime(2019, 11, 23),
         "stock_beginning_date": datetime(2019, 11, 24),
-        "available_stock_information": 8.0,
-        "stock_quantity": 10.0,
-        "booking_quantity": 2.0,
-        "booking_cancelled": 0.0,
-        "booking_paid": 2.0,
+        "available_stock_information": 8,
+        "stock_quantity": 10,
+        "booking_quantity": 2,
+        "booking_cancelled": 0,
+        "booking_paid": 2,
     },
     {
         "stock_id": "2",
@@ -445,11 +447,11 @@ ENRICHED_STOCK_DATA_EXPECTED = [
         "stock_creation_date": datetime(2019, 10, 1),
         "stock_booking_limit_date": None,
         "stock_beginning_date": None,
-        "available_stock_information": 12.0,
-        "stock_quantity": 12.0,
-        "booking_quantity": 0.0,
-        "booking_cancelled": 0.0,
-        "booking_paid": 0.0,
+        "available_stock_information": 12,
+        "stock_quantity": 12,
+        "booking_quantity": 0,
+        "booking_cancelled": 0,
+        "booking_paid": 0,
     },
 ]
 

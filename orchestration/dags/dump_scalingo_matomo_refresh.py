@@ -19,7 +19,7 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python_operator import PythonOperator
 
 from dependencies.bigquery_client import BigQueryClient
-from dependencies.big_query_data_schema import TABLE_DATA
+from dependencies.big_query_data_schema import PROD_TABLE_DATA, STAGING_TABLE_DATA
 from dependencies.matomo_client import MatomoClient
 
 ENV = os.environ.get("ENV")
@@ -28,6 +28,7 @@ DATA_GCS_BUCKET_NAME = os.environ.get("DATA_GCS_BUCKET_NAME")
 BIGQUERY_RAW_DATASET = os.environ.get(f"BIGQUERY_RAW_DATASET")
 BIGQUERY_CLEAN_DATASET = os.environ.get(f"BIGQUERY_CLEAN_DATASET")
 MATOMO_CONNECTION_DATA = ast.literal_eval(Variable.get("MATOMO_CONNECTION_DATA"))
+TABLE_DATA = STAGING_TABLE_DATA if ENV == "dev" else PROD_TABLE_DATA
 LOCAL_HOST = "127.0.0.1"
 LOCAL_PORT = 10026
 

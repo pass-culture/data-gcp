@@ -378,6 +378,22 @@ preprocess_log_link_visit_action_task = BigQueryOperator(
     dag=dag,
 )
 
+copy_log_conversion_task = BigQueryOperator(
+    task_id="copy_log_conversion",
+    sql=f"SELECT * from {GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.log_conversion",
+    destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.log_conversion",
+    write_disposition="WRITE_TRUNCATE",
+    use_legacy_sql=False,
+    dag=dag,
+)
+copy_goal_task = BigQueryOperator(
+    task_id="copy_goal",
+    sql=f"SELECT * from {GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.goal",
+    destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.goal",
+    write_disposition="WRITE_TRUNCATE",
+    use_legacy_sql=False,
+    dag=dag,
+)
 
 filter_log_link_visit_action_query = f"""
 DELETE
@@ -435,6 +451,7 @@ filter_log_action_task = BigQueryOperator(
     dag=dag,
 )
 
+
 end_preprocess = DummyOperator(task_id="end_preprocess", dag=dag)
 
 define_tasks_end = PythonOperator(
@@ -450,4 +467,6 @@ end_import >> [
     preprocess_log_visit_task,
     preprocess_log_action_task,
     preprocess_log_link_visit_action_task,
+    copy_log_conversion_task,
+    copy_goal_task,
 ] >> end_preprocess >> filter_log_action_task >> filter_log_link_visit_action_task >> define_tasks_end >> end_dag

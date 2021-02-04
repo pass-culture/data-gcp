@@ -19,7 +19,7 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python_operator import PythonOperator
 
 from dependencies.bigquery_client import BigQueryClient
-from dependencies.big_query_data_schema import PROD_TABLE_DATA, STAGING_TABLE_DATA
+from dependencies.matomo_data_schema import PROD_TABLE_DATA, STAGING_TABLE_DATA
 from dependencies.matomo_client import MatomoClient
 
 ENV = os.environ.get("ENV")

@@ -21,25 +21,40 @@ from airflow.operators.python_operator import PythonOperator
 from dependencies.bigquery_client import BigQueryClient
 from dependencies.matomo_data_schema import PROD_TABLE_DATA, STAGING_TABLE_DATA
 from dependencies.matomo_client import MatomoClient
+from google.cloud import secretmanager
 
 ENV = os.environ.get("ENV")
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
 DATA_GCS_BUCKET_NAME = os.environ.get("DATA_GCS_BUCKET_NAME")
 BIGQUERY_RAW_DATASET = os.environ.get(f"BIGQUERY_RAW_DATASET")
 BIGQUERY_CLEAN_DATASET = os.environ.get(f"BIGQUERY_CLEAN_DATASET")
-MATOMO_CONNECTION_DATA = ast.literal_eval(os.environ.get("MATOMO_CONNECTION_DATA"))
 TABLE_DATA = STAGING_TABLE_DATA if ENV == "dev" else PROD_TABLE_DATA
 LOCAL_HOST = "127.0.0.1"
 LOCAL_PORT = 10026
+
+
+def access_secret_version(project_id, secret_id, version_id=1):
+    client = secretmanager.SecretManagerServiceClient()
+    name = f"projects/{project_id}/secrets/{secret_id}/versions/{version_id}"
+    response = client.access_secret_version(name)
+    return response.payload.data.decode("UTF-8")
+
+
+secret_id = (
+    "matomo-connection-data-stg" if ENV == "dev" else "matomo-connection-data-prod"
+)
+
+MATOMO_CONNECTION_DATA = ast.literal_eval(access_secret_version(GCP_PROJECT, secret_id))
 
 os.environ[
     "AIRFLOW_CONN_MYSQL_SCALINGO"
 ] = f"mysql://{MATOMO_CONNECTION_DATA.get('user')}:{MATOMO_CONNECTION_DATA.get('password')}@{LOCAL_HOST}:{LOCAL_PORT}/{MATOMO_CONNECTION_DATA.get('dbname')}"
 
+matomo_client = MatomoClient(MATOMO_CONNECTION_DATA, LOCAL_PORT)
+
 bigquery_client = BigQueryClient(
     "/home/airflow/gcs/dags/pass-culture-app-projet-test-19edd3c79717.json"
 )
-matomo_client = MatomoClient(MATOMO_CONNECTION_DATA, LOCAL_PORT)
 
 
 def query_mysql_from_tunnel(**kwargs):

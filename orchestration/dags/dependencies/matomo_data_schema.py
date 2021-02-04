@@ -4,6 +4,8 @@ EXPORT_START_DATE = "2021-01-01 00:00:00.0"
 PROD_TABLE_DATA = {
     "log_link_visit_action": {
         "id": "idlink_va",
+        "min_id": 169419493,
+        "max_id": 178167087,
         "columns": [
             {"name": "idlink_va", "type": "INT64", "mode": "REQUIRED"},
             {"name": "idsite", "type": "INT64", "mode": "REQUIRED"},
@@ -44,6 +46,8 @@ PROD_TABLE_DATA = {
     },
     "log_visit": {
         "id": "idvisit",
+        "min_id": 8009709,
+        "max_id": 8993487,
         "columns": [
             {"name": "idvisit", "type": "INT64", "mode": "REQUIRED"},
             {"name": "idsite", "type": "INT64", "mode": "REQUIRED"},
@@ -126,6 +130,8 @@ PROD_TABLE_DATA = {
     },
     "log_action": {
         "id": "idaction",
+        "min_id": 1,
+        "max_id": 7231362,
         "columns": [
             {"name": "idaction", "type": "INT64", "mode": "REQUIRED"},
             {"name": "name", "type": "STRING", "mode": "NULLABLE"},
@@ -138,6 +144,8 @@ PROD_TABLE_DATA = {
     },
     "goal": {
         "id": "idgoal",
+        "min_id": 1,
+        "max_id": 50,
         "columns": [
             {"name": "idsite", "type": "INT64", "mode": "REQUIRED"},
             {"name": "idgoal", "type": "INT64", "mode": "REQUIRED"},
@@ -157,6 +165,8 @@ PROD_TABLE_DATA = {
     },
     "log_conversion": {
         "id": "idvisit",
+        "min_id": 8009709,
+        "max_id": 8993485,
         "columns": [
             {"name": "idvisit", "type": "INT64", "mode": "REQUIRED"},
             {"name": "idgoal", "type": "INT64", "mode": "REQUIRED"},
@@ -214,6 +224,8 @@ PROD_TABLE_DATA = {
 STAGING_TABLE_DATA = {
     "log_link_visit_action": {
         "id": "idlink_va",
+        "min_id": 5958157,
+        "max_id": 6127979,
         "columns": [
             {"name": "idlink_va", "type": "INT64", "mode": "REQUIRED"},
             {"name": "idsite", "type": "INT64", "mode": "REQUIRED"},
@@ -254,6 +266,8 @@ STAGING_TABLE_DATA = {
     },
     "log_visit": {
         "id": "idvisit",
+        "min_id": 395630,
+        "max_id": 418038,
         "columns": [
             {"name": "idvisit", "type": "INT64", "mode": "REQUIRED"},
             {"name": "idsite", "type": "INT64", "mode": "REQUIRED"},
@@ -335,6 +349,8 @@ STAGING_TABLE_DATA = {
     },
     "log_action": {
         "id": "idaction",
+        "min_id": 1,
+        "max_id": 691393,
         "columns": [
             {"name": "idaction", "type": "INT64", "mode": "REQUIRED"},
             {"name": "name", "type": "STRING", "mode": "NULLABLE"},
@@ -347,6 +363,8 @@ STAGING_TABLE_DATA = {
     },
     "goal": {
         "id": "idgoal",
+        "min_id": 1,
+        "max_id": 5,
         "columns": [
             {"name": "idsite", "type": "INT64", "mode": "REQUIRED"},
             {"name": "idgoal", "type": "INT64", "mode": "REQUIRED"},
@@ -366,6 +384,8 @@ STAGING_TABLE_DATA = {
     },
     "log_conversion": {
         "id": "idvisit",
+        "min_id": 14475,
+        "max_id": 399028,
         "columns": [
             {"name": "idvisit", "type": "INT64", "mode": "REQUIRED"},
             {"name": "idgoal", "type": "INT64", "mode": "REQUIRED"},

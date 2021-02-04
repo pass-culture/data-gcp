@@ -32,7 +32,7 @@ def define_humanized_id_query(table, dataset):
                     SELECT
                         {table}_id,
                         humanize_id({table}_id) AS humanized_id
-                    FROM {dataset}.test_{table}
+                    FROM {dataset}.{table}
                     WHERE {table}_id is not NULL;
     """
 

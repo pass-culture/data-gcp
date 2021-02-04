@@ -1,6 +1,6 @@
 from datetime import datetime
 
-TEST_TABLE_PREFIX = "test_"
+TEST_TABLE_PREFIX = ""
 
 # enriched_offer_data
 ENRICHED_OFFER_DATA_INPUT = {

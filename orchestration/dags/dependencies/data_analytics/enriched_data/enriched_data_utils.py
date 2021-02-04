@@ -1,6 +1,6 @@
 import os
 
-from dependencies.data_analytics.config import BASE32_JS_LIB_PATH
+from dependencies.config import BASE32_JS_LIB_PATH
 
 PATH_TO_DIR = os.path.dirname(os.path.realpath(__file__))
 

@@ -73,15 +73,6 @@ class TestDags(unittest.TestCase):
         self.assertIsNotNone(dag)
         self.assertEqual(len(dag.tasks), 58)
 
-    def test_dump_prod_from_scalingo_dag_is_loaded(self):
-        # When
-        dag = self.dagbag.get_dag(dag_id="dump_prod_from_scalingo_v2")
-
-        # Then
-        self.assertDictEqual(self.dagbag.import_errors, {})
-        self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 162)
-
     def test_create_ab_testing_table_dag_is_loaded(self):
         # When
         dag = self.dagbag.get_dag(dag_id="export_cloudsql_tables_to_bigquery_v1")
@@ -126,12 +117,3 @@ class TestDags(unittest.TestCase):
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
         self.assertEqual(len(dag.tasks), 3)
-
-    def test_restore_scalingo_from_vm_dag_is_loaded(self):
-        # When
-        dag = self.dagbag.get_dag(dag_id="restore_prod_from_vm_export_v1")
-
-        # Then
-        self.assertDictEqual(self.dagbag.import_errors, {})
-        self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 4)

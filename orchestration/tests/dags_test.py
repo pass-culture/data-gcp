@@ -13,7 +13,9 @@ class TestDags(unittest.TestCase):
             "dependencies.bigquery_client.BigQueryClient.query"
         ) as bigquery_mocker, mock.patch(
             "dependencies.matomo_client.MatomoClient.query"
-        ) as matomo_mocker:
+        ) as matomo_mocker, mock.patch(
+            "dependencies.access_gcp_secrets.access_secret_data"
+        ) as access_secret_mocker:
 
             def bigquery_client(query):
                 return (
@@ -24,6 +26,7 @@ class TestDags(unittest.TestCase):
                     else pd.DataFrame({0: [0]})
                 )
 
+            access_secret_mocker.return_value = "{}"
             matomo_mocker.return_value = [[0]]
             bigquery_mocker.side_effect = bigquery_client
             self.dagbag = DagBag(include_examples=False)

@@ -21,7 +21,7 @@ from airflow.operators.python_operator import PythonOperator
 from dependencies.bigquery_client import BigQueryClient
 from dependencies.matomo_data_schema import PROD_TABLE_DATA, STAGING_TABLE_DATA
 from dependencies.matomo_client import MatomoClient
-from google.cloud import secretmanager
+from dependencies.access_gcp_secrets import access_secret_data
 
 ENV = os.environ.get("ENV")
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
@@ -33,18 +33,12 @@ LOCAL_HOST = "127.0.0.1"
 LOCAL_PORT = 10026
 
 
-def access_secret_version(project_id, secret_id, version_id=1):
-    client = secretmanager.SecretManagerServiceClient()
-    name = f"projects/{project_id}/secrets/{secret_id}/versions/{version_id}"
-    response = client.access_secret_version(name)
-    return response.payload.data.decode("UTF-8")
-
-
 secret_id = (
     "matomo-connection-data-stg" if ENV == "dev" else "matomo-connection-data-prod"
 )
 
-MATOMO_CONNECTION_DATA = ast.literal_eval(access_secret_version(GCP_PROJECT, secret_id))
+print("-----------------", access_secret_data(GCP_PROJECT, secret_id), flush=True)
+MATOMO_CONNECTION_DATA = ast.literal_eval(access_secret_data(GCP_PROJECT, secret_id))
 
 os.environ[
     "AIRFLOW_CONN_MYSQL_SCALINGO"

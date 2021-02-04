@@ -35,9 +35,6 @@ SQL_BASE_PASSWORD = access_secret_version(
 )
 
 
-GCP_MODEL_REGION = os.environ.get("GCP_MODEL_REGION")
-
-
 query_string = dict(
     {"unix_sock": "/cloudsql/{}/.s.PGSQL.5432".format(SQL_CONNECTION_NAME)}
 )
@@ -92,6 +89,7 @@ def get_final_recommendations(
         )
         scored_recommendation_for_user = get_scored_recommendation_for_user(
             recommendations_for_user,
+            app_config["MODEL_REGION"],
             app_config["MODEL_NAME"],
             app_config["MODEL_VERSION"],
         )
@@ -175,11 +173,14 @@ def get_recommendations_query(user_id: int, user_iris_id: int) -> str:
 
 
 def get_scored_recommendation_for_user(
-    user_recommendations: List[Dict[str, Any]], model_name: str, version: str
+    user_recommendations: List[Dict[str, Any]],
+    model_region: str,
+    model_name: str,
+    version: str,
 ) -> List[Dict[str, int]]:
     offers_ids = [recommendation["id"] for recommendation in user_recommendations]
     predicted_scores = predict_score(
-        GCP_MODEL_REGION, GCP_PROJECT_ID, model_name, offers_ids, version
+        model_region, GCP_PROJECT_ID, model_name, offers_ids, version
     )
     return [
         {

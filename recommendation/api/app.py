@@ -24,10 +24,10 @@ API_TOKEN = access_secret_version(
     GCP_PROJECT_ID, API_TOKEN_SECRET_ID, API_TOKEN_SECRET_VERSION
 )
 
-
 APP_CONFIG = {
     "AB_TESTING_TABLE": os.environ.get("AB_TESTING_TABLE"),
     "NUMBER_OF_RECOMMENDATIONS": os.environ.get("NUMBER_OF_RECOMMENDATIONS"),
+    "MODEL_REGION": os.environ.get("MODEL_REGION"),
     "MODEL_NAME": os.environ.get("MODEL_NAME"),
     "MODEL_VERSION": os.environ.get("MODEL_VERSION"),
 }

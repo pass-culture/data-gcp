@@ -22,6 +22,7 @@ ARCHIVE_FOLDER = "archive_cloudsql"
 default_args = {
     "retries": 1,
     "retry_delay": timedelta(minutes=5),
+    "project_id": GCP_PROJECT,
 }
 
 dag = DAG(

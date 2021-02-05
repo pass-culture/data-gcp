@@ -5,6 +5,7 @@ from typing import Any
 
 from sqlalchemy import create_engine, engine
 from google.cloud import secretmanager
+from google.auth.exceptions import DefaultCredentialsError
 
 
 def access_secret_version(project_id, secret_id, version_id):
@@ -22,10 +23,12 @@ SQL_BASE_SECRET_ID = os.environ.get("SQL_BASE_SECRET_ID")
 SQL_BASE_SECRET_VERSION = os.environ.get("SQL_BASE_SECRET_VERSION")
 SQL_CONNECTION_NAME = os.environ.get("SQL_CONNECTION_NAME")
 
-SQL_BASE_PASSWORD = access_secret_version(
-    GCP_PROJECT_ID, SQL_BASE_SECRET_ID, SQL_BASE_SECRET_VERSION
-)
-
+try:
+    SQL_BASE_PASSWORD = access_secret_version(
+        GCP_PROJECT_ID, SQL_BASE_SECRET_ID, SQL_BASE_SECRET_VERSION
+    )
+except DefaultCredentialsError:
+    SQL_BASE_PASSWORD = "postgres"
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 

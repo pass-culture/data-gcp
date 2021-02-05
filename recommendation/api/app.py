@@ -6,6 +6,7 @@ from health_check_queries import get_materialized_view_status
 from recommendation import get_final_recommendations
 
 from google.cloud import secretmanager
+from google.auth.exceptions import DefaultCredentialsError
 
 
 def access_secret_version(project_id, secret_id, version_id):
@@ -20,9 +21,12 @@ GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID")
 API_TOKEN_SECRET_ID = os.environ.get("API_TOKEN_SECRET_ID")
 API_TOKEN_SECRET_VERSION = os.environ.get("API_TOKEN_SECRET_VERSION")
 
-API_TOKEN = access_secret_version(
-    GCP_PROJECT_ID, API_TOKEN_SECRET_ID, API_TOKEN_SECRET_VERSION
-)
+try:
+    API_TOKEN = access_secret_version(
+        GCP_PROJECT_ID, API_TOKEN_SECRET_ID, API_TOKEN_SECRET_VERSION
+    )
+except DefaultCredentialsError:
+    API_TOKEN = "default_token"
 
 APP_CONFIG = {
     "AB_TESTING_TABLE": os.environ.get("AB_TESTING_TABLE"),

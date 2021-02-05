@@ -9,6 +9,7 @@ import pytz
 
 from google.api_core.client_options import ClientOptions
 from google.cloud import secretmanager
+from google.auth.exceptions import DefaultCredentialsError
 from googleapiclient import discovery
 from sqlalchemy import create_engine, engine
 
@@ -30,9 +31,12 @@ SQL_BASE_SECRET_ID = os.environ.get("SQL_BASE_SECRET_ID")
 SQL_BASE_SECRET_VERSION = os.environ.get("SQL_BASE_SECRET_VERSION")
 SQL_CONNECTION_NAME = os.environ.get("SQL_CONNECTION_NAME")
 
-SQL_BASE_PASSWORD = access_secret_version(
-    GCP_PROJECT_ID, SQL_BASE_SECRET_ID, SQL_BASE_SECRET_VERSION
-)
+try:
+    SQL_BASE_PASSWORD = access_secret_version(
+        GCP_PROJECT_ID, SQL_BASE_SECRET_ID, SQL_BASE_SECRET_VERSION
+    )
+except DefaultCredentialsError:
+    SQL_BASE_PASSWORD = "postgres"
 
 
 query_string = dict(

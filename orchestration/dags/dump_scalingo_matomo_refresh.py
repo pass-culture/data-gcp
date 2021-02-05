@@ -37,7 +37,6 @@ secret_id = (
     "matomo-connection-data-stg" if ENV == "dev" else "matomo-connection-data-prod"
 )
 
-print("-----------------", access_secret_data(GCP_PROJECT, secret_id), flush=True)
 MATOMO_CONNECTION_DATA = ast.literal_eval(access_secret_data(GCP_PROJECT, secret_id))
 
 os.environ[
@@ -46,9 +45,7 @@ os.environ[
 
 matomo_client = MatomoClient(MATOMO_CONNECTION_DATA, LOCAL_PORT)
 
-bigquery_client = BigQueryClient(
-    "/home/airflow/gcs/dags/pass-culture-app-projet-test-19edd3c79717.json"
-)
+bigquery_client = BigQueryClient(os.environ.get("GOOGLE_APPLICATION_CREDENTIALS"))
 
 
 def query_mysql_from_tunnel(**kwargs):

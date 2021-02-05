@@ -102,7 +102,7 @@ class TestDags(unittest.TestCase):
 
     def test_dump_matomo_refresh_dag_is_loaded(self):
         # When
-        dag = self.dagbag.get_dag(dag_id="dump_scalingo_matomo_refresh_v7")
+        dag = self.dagbag.get_dag(dag_id="dump_scalingo_matomo_refresh_v1")
 
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})

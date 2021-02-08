@@ -2,24 +2,19 @@ import os
 
 from flask import Flask, jsonify, request, make_response
 
-from google.auth.exceptions import DefaultCredentialsError
 
 from health_check_queries import get_materialized_view_status
 from access_gcp_secrets import access_secret
 from recommendation import get_final_recommendations
 
 
-GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID")
+GCP_PROJECT = os.environ.get("GCP_PROJECT")
 
 API_TOKEN_SECRET_ID = os.environ.get("API_TOKEN_SECRET_ID")
 API_TOKEN_SECRET_VERSION = os.environ.get("API_TOKEN_SECRET_VERSION")
 
-try:
-    API_TOKEN = access_secret(
-        GCP_PROJECT_ID, API_TOKEN_SECRET_ID, API_TOKEN_SECRET_VERSION
-    )
-except DefaultCredentialsError:
-    API_TOKEN = "default_token"
+
+API_TOKEN = access_secret(GCP_PROJECT, API_TOKEN_SECRET_ID, API_TOKEN_SECRET_VERSION)
 
 APP_CONFIG = {
     "AB_TESTING_TABLE": os.environ.get("AB_TESTING_TABLE"),

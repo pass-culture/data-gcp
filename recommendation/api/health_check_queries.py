@@ -4,11 +4,10 @@ import sys
 from typing import Any
 
 from sqlalchemy import create_engine, engine
-from google.auth.exceptions import DefaultCredentialsError
 from access_gcp_secrets import access_secret
 
 
-GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID")
+GCP_PROJECT = os.environ.get("GCP_PROJECT")
 
 SQL_BASE = os.environ.get("SQL_BASE")
 SQL_BASE_USER = os.environ.get("SQL_BASE_USER")
@@ -16,12 +15,10 @@ SQL_BASE_SECRET_ID = os.environ.get("SQL_BASE_SECRET_ID")
 SQL_BASE_SECRET_VERSION = os.environ.get("SQL_BASE_SECRET_VERSION")
 SQL_CONNECTION_NAME = os.environ.get("SQL_CONNECTION_NAME")
 
-try:
-    SQL_BASE_PASSWORD = access_secret(
-        GCP_PROJECT_ID, SQL_BASE_SECRET_ID, SQL_BASE_SECRET_VERSION
-    )
-except DefaultCredentialsError:
-    SQL_BASE_PASSWORD = "postgres"
+
+SQL_BASE_PASSWORD = access_secret(
+    GCP_PROJECT, SQL_BASE_SECRET_ID, SQL_BASE_SECRET_VERSION
+)
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 

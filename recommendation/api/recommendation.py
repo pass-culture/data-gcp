@@ -8,7 +8,6 @@ from typing import Any, Dict, List, Tuple
 import pytz
 
 from google.api_core.client_options import ClientOptions
-from google.auth.exceptions import DefaultCredentialsError
 from googleapiclient import discovery
 from sqlalchemy import create_engine, engine
 
@@ -16,7 +15,7 @@ from geolocalisation import get_iris_from_coordinates
 from access_gcp_secrets import access_secret
 
 
-GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID")
+GCP_PROJECT = os.environ.get("GCP_PROJECT")
 
 SQL_BASE = os.environ.get("SQL_BASE")
 SQL_BASE_USER = os.environ.get("SQL_BASE_USER")
@@ -24,12 +23,9 @@ SQL_BASE_SECRET_ID = os.environ.get("SQL_BASE_SECRET_ID")
 SQL_BASE_SECRET_VERSION = os.environ.get("SQL_BASE_SECRET_VERSION")
 SQL_CONNECTION_NAME = os.environ.get("SQL_CONNECTION_NAME")
 
-try:
-    SQL_BASE_PASSWORD = access_secret(
-        GCP_PROJECT_ID, SQL_BASE_SECRET_ID, SQL_BASE_SECRET_VERSION
-    )
-except DefaultCredentialsError:
-    SQL_BASE_PASSWORD = "postgres"
+SQL_BASE_PASSWORD = access_secret(
+    GCP_PROJECT, SQL_BASE_SECRET_ID, SQL_BASE_SECRET_VERSION
+)
 
 
 query_string = dict(
@@ -177,7 +173,7 @@ def get_scored_recommendation_for_user(
 ) -> List[Dict[str, int]]:
     offers_ids = [recommendation["id"] for recommendation in user_recommendations]
     predicted_scores = predict_score(
-        model_region, GCP_PROJECT_ID, model_name, offers_ids, version
+        model_region, GCP_PROJECT, model_name, offers_ids, version
     )
     return [
         {

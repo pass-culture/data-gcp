@@ -170,11 +170,22 @@ jobs:
     environment:
       - AIRFLOW_HOME=~/data-gcp/orchestration
       - DAG_FOLDER=~/data-gcp/orchestration/dags
-      - RECOMMENDATION_SQL_USER=test_user
-      - RECOMMENDATION_SQL_PASSWORD=test_password
-      - RECOMMENDATION_SQL_PUBLIC_PORT=1234
-      - RECOMMENDATION_SQL_PUBLIC_IP=11.111.111.111
       - MATOMO_CONNECTION_DATA={}
+      - GCP_PROJECT=passculture-data-ehp
+      - ENV=test
+      - ENV_SHORT_NAME=test
+      - REGION=europe-west1
+      - DATA_GCS_BUCKET_NAME=data-bucket-test
+      - GCS_BUCKET_SCALINGO_DUMP=dump_scalingo
+      - BIGQUERY_RAW_DATASET=raw_test
+      - BIGQUERY_CLEAN_DATASET=clean_test
+      - BIGQUERY_ANALYTICS_DATASET=analytics_test
+      - BIGQUERY_CONNECTION_RECOMMENDATION=test.europe-west1.cloudsql-recommendation-test-bq-connection
+      - APPLICATIVE_EXTERNAL_CONNECTION_ID=metier-pcapi-testing-connection
+      - APPLICATIVE_SQL_INSTANCE=test
+      - APPLICATIVE_SQL_DATABASE=test
+      - RECOMMENDATION_SQL_INSTANCE=cloudsql-recommendation-test
+      - RECOMMENDATION_SQL_BASE=cloudsql-recommendation-test
     steps:
       - attach_workspace:
           at: .

@@ -6,41 +6,41 @@ from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python_operator import PythonOperator
 from airflow.contrib.operators.bigquery_operator import BigQueryOperator
+from airflow.contrib.operators.bigquery_table_delete_operator import (
+    BigQueryTableDeleteOperator,
+)
 from airflow.contrib.operators.bigquery_to_gcs import BigQueryToCloudStorageOperator
 from airflow.contrib.operators.gcp_sql_operator import (
     CloudSqlQueryOperator,
     CloudSqlInstanceImportOperator,
 )
 
+from dependencies.access_gcp_secrets import access_secret_data
 from dependencies.slack_alert import task_fail_slack_alert
 from dependencies.compose_gcs_files import compose_gcs_files
 
-TABLES_DATA_PATH = f"{os.environ.get('DAG_FOLDER')}/tables.csv"
-GCP_PROJECT_ID = "pass-culture-app-projet-test"
-BIGQUERY_DATASET = "dump_staging_for_reco"
-BIGQUERY_TEMPORARY_DATASET = "temporary"
+ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
+GCP_PROJECT = os.environ.get("GCP_PROJECT")
+PROJECT_ID = os.environ.get("PROJECT_ID")
+LOCATION = os.environ.get("REGION")
 
-BUCKET_NAME = "pass-culture-data"
-BUCKET_PATH = "gs://pass-culture-data/bigquery_exports"
-RECOMMENDATION_SQL_INSTANCE = "pcdata-poc-csql-recommendation"
-RECOMMENDATION_SQL_BASE = "pcdata-poc-csql-recommendation"
-TYPE = "postgres"
-LOCATION = "europe-west1"
+RECOMMENDATION_SQL_INSTANCE = os.environ.get("RECOMMENDATION_SQL_INSTANCE")
+RECOMMENDATION_SQL_BASE = os.environ.get("RECOMMENDATION_SQL_BASE")
+BIGQUERY_RAW_DATASET = os.environ.get("BIGQUERY_RAW_DATASET")
+CONNECTION_ID = os.environ.get("BIGQUERY_CONNECTION_RECOMMENDATION")
 
-RECOMMENDATION_SQL_USER = os.environ.get("RECOMMENDATION_SQL_USER")
-RECOMMENDATION_SQL_PASSWORD = os.environ.get("RECOMMENDATION_SQL_PASSWORD")
-RECOMMENDATION_SQL_PUBLIC_IP = os.environ.get("RECOMMENDATION_SQL_PUBLIC_IP")
-RECOMMENDATION_SQL_PUBLIC_PORT = os.environ.get("RECOMMENDATION_SQL_PUBLIC_PORT")
-
-os.environ["AIRFLOW_CONN_PROXY_POSTGRES_TCP"] = (
-    f"gcpcloudsql://{RECOMMENDATION_SQL_USER}:{RECOMMENDATION_SQL_PASSWORD}@{RECOMMENDATION_SQL_PUBLIC_IP}:{RECOMMENDATION_SQL_PUBLIC_PORT}/{RECOMMENDATION_SQL_BASE}?"
-    f"database_type={TYPE}&"
-    f"project_id={GCP_PROJECT_ID}&"
-    f"location={LOCATION}&"
-    f"instance={RECOMMENDATION_SQL_INSTANCE}&"
-    f"use_proxy=True&"
-    f"sql_proxy_use_tcp=True"
+database_url = access_secret_data(
+    PROJECT_ID, f"{RECOMMENDATION_SQL_INSTANCE}-database-url"
 )
+os.environ["AIRFLOW_CONN_PROXY_POSTGRES_TCP"] = (
+    database_url.replace("postgresql://", "gcpcloudsql://")
+    + f"?database_type=postgres&project_id={GCP_PROJECT}&location={LOCATION}&instance={RECOMMENDATION_SQL_INSTANCE}&use_proxy=True&sql_proxy_use_tcp=True"
+)
+
+
+TABLES_DATA_PATH = f"{os.environ.get('DAG_FOLDER')}/tables.csv"
+DATA_GCS_BUCKET_NAME = os.environ.get("DATA_GCS_BUCKET_NAME")
+BUCKET_PATH = f"gs://{DATA_GCS_BUCKET_NAME}/bigquery_exports"
 
 default_args = {
     "on_failure_callback": task_fail_slack_alert,
@@ -76,7 +76,7 @@ def get_table_names():
 
 
 with DAG(
-    "recommendation_cloud_sql_v42",
+    "recommendation_cloud_sql_v1",
     default_args=default_args,
     description="Export bigQuery tables to GCS to dump and restore Cloud SQL tables",
     schedule_interval="@daily",
@@ -110,10 +110,10 @@ with DAG(
             task_id=f"filter_column_{table}",
             sql=f"""
                 SELECT {select_columns}
-                FROM `{GCP_PROJECT_ID}.{BIGQUERY_DATASET}.{table}` 
+                FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.{table}` 
             """,
             use_legacy_sql=False,
-            destination_dataset_table=f"{GCP_PROJECT_ID}:{BIGQUERY_TEMPORARY_DATASET}.{table}",
+            destination_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_RAW_DATASET}.temp_export_{table}",
             write_disposition="WRITE_TRUNCATE",
         )
 
@@ -127,17 +127,23 @@ with DAG(
 
         export_task = BigQueryToCloudStorageOperator(
             task_id=f"export_{table}_to_gcs",
-            source_project_dataset_table=f"{GCP_PROJECT_ID}:{BIGQUERY_TEMPORARY_DATASET}.{table}",
+            source_project_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_RAW_DATASET}.temp_export_{table}",
             destination_cloud_storage_uris=[f"{BUCKET_PATH}/{table}-*.csv"],
             export_format="CSV",
             print_header=False,
+        )
+
+        delete_temp_table_task = BigQueryTableDeleteOperator(
+            task_id=f"delete_temp_export_{table}_in_bigquery",
+            deletion_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_RAW_DATASET}.temp_export_{table}",
+            ignore_if_missing=True,
         )
 
         compose_files_task = PythonOperator(
             task_id=f"compose_files_{table}",
             python_callable=compose_gcs_files,
             op_kwargs={
-                "bucket_name": BUCKET_NAME,
+                "bucket_name": DATA_GCS_BUCKET_NAME,
                 "source_prefix": f"bigquery_exports/{table}-",
                 "destination_blob_name": f"bigquery_exports/{table}.csv",
             },
@@ -152,7 +158,7 @@ with DAG(
         )
 
         start_drop_restore >> drop_table_task >> filter_column_task
-        filter_column_task >> export_task >> compose_files_task
+        filter_column_task >> export_task >> delete_temp_table_task >> compose_files_task
         compose_files_task >> create_table_task >> end_data_prep
 
     def create_restore_task(table_name: str):
@@ -169,7 +175,7 @@ with DAG(
 
         sql_restore_task = CloudSqlInstanceImportOperator(
             task_id=f"cloud_sql_restore_table_{table_name}",
-            project_id=GCP_PROJECT_ID,
+            project_id=GCP_PROJECT,
             body=import_body,
             instance=RECOMMENDATION_SQL_INSTANCE,
         )

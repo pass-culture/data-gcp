@@ -13,7 +13,9 @@ class TestDags(unittest.TestCase):
             "dependencies.bigquery_client.BigQueryClient.query"
         ) as bigquery_mocker, mock.patch(
             "dependencies.matomo_client.MatomoClient.query"
-        ) as matomo_mocker:
+        ) as matomo_mocker, mock.patch(
+            "dependencies.access_gcp_secrets.access_secret_data"
+        ) as secret_mocker:
 
             def bigquery_client(query):
                 return (
@@ -24,8 +26,14 @@ class TestDags(unittest.TestCase):
                     else pd.DataFrame({0: [0]})
                 )
 
+            def access_secret_data(project_id, secret_id, version_id=1):
+                if secret_id == "cloudsql-recommendation-test-database-url":
+                    return "postgresql://test-user:test-password@11.111.111.111:1234/test-database"
+                return "test"
+
             matomo_mocker.return_value = [[0]]
             bigquery_mocker.side_effect = bigquery_client
+            secret_mocker.side_effect = access_secret_data
             self.dagbag = DagBag(include_examples=False)
 
     def test_dag_import_no_error(self):
@@ -63,12 +71,12 @@ class TestDags(unittest.TestCase):
 
     def test_recommendation_cloud_sql_dag_is_loaded(self):
         # When
-        dag = self.dagbag.get_dag(dag_id="recommendation_cloud_sql_v42")
+        dag = self.dagbag.get_dag(dag_id="recommendation_cloud_sql_v1")
 
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 51)
+        self.assertEqual(len(dag.tasks), 58)
 
     def test_dump_prod_from_scalingo_dag_is_loaded(self):
         # When
@@ -81,7 +89,7 @@ class TestDags(unittest.TestCase):
 
     def test_create_ab_testing_table_dag_is_loaded(self):
         # When
-        dag = self.dagbag.get_dag(dag_id="export_cloudsql_tables_to_bigquery_v3")
+        dag = self.dagbag.get_dag(dag_id="export_cloudsql_tables_to_bigquery_v1")
 
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})

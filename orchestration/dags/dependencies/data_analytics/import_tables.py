@@ -17,7 +17,7 @@ def define_import_query(
     ] = """
         SELECT
             CAST("id" AS varchar(255)) AS user_id, "dateCreated" as user_creation_date,
-            "departementCode" as user_departement_code, "isBeneficiary" as user_is_beneficiary,
+            "departementCode" as user_department_code, "isBeneficiary" as user_is_beneficiary,
             "isAdmin" as user_is_admin, "resetPasswordTokenValidityLimit" as user_reset_password_token_validity_limit,
             "postalCode" as user_postal_code, "needsToFillCulturalSurvey" as user_needs_to_fill_cultural_survey,
             CAST("culturalSurveyId" AS varchar(255)) as user_cultural_survey_id, "civility" as user_civility,

@@ -2,18 +2,11 @@ import os
 
 from flask import Flask, jsonify, request, make_response
 
-from health_check_queries import get_materialized_view_status
-from recommendation import get_final_recommendations
-
-from google.cloud import secretmanager
 from google.auth.exceptions import DefaultCredentialsError
 
-
-def access_secret_version(project_id, secret_id, version_id):
-    client = secretmanager.SecretManagerServiceClient()
-    name = f"projects/{project_id}/secrets/{secret_id}/versions/{version_id}"
-    response = client.access_secret_version(request={"name": name})
-    return response.payload.data.decode("UTF-8")
+from health_check_queries import get_materialized_view_status
+from access_gcp_secrets import access_secret
+from recommendation import get_final_recommendations
 
 
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID")
@@ -22,7 +15,7 @@ API_TOKEN_SECRET_ID = os.environ.get("API_TOKEN_SECRET_ID")
 API_TOKEN_SECRET_VERSION = os.environ.get("API_TOKEN_SECRET_VERSION")
 
 try:
-    API_TOKEN = access_secret_version(
+    API_TOKEN = access_secret(
         GCP_PROJECT_ID, API_TOKEN_SECRET_ID, API_TOKEN_SECRET_VERSION
     )
 except DefaultCredentialsError:

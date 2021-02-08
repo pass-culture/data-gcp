@@ -13,6 +13,7 @@ COPY app.py ./
 COPY geolocalisation.py ./
 COPY health_check_queries.py ./
 COPY recommendation.py ./
+COPY access_gcp_secrets.py ./
 COPY api-requirements.txt ./
 
 # Install production dependencies.

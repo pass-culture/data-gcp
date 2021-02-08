@@ -137,7 +137,7 @@ BIGQUERY_SCHEMAS = {
         "user_public_name": "STRING",
         "user_creation_date": "DATETIME",
         "user_department_code": "STRING",
-        "user_can_book_free_offers": "BOOLEAN",
+        "user_is_beneficiary": "BOOLEAN",
         "user_is_admin": "BOOLEAN",
         "user_reset_password_token": "STRING",
         "user_reset_password_token_validity_limit": "DATETIME",

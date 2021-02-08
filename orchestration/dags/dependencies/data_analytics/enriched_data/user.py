@@ -236,7 +236,7 @@ def define_theoretical_amount_spent_in_digital_goods_query(dataset, table_prefix
                                      'ThingType.JEUX_VIDEO_ABO',
                                      'ThingType.LIVRE_AUDIO',
                                      'ThingType.LIVRE_EDITION',
-                                     'ThingType.MUSIQUE',
+                                     'Thi{table_prefix}ngType.MUSIQUE',
                                      'ThingType.PRESSE_ABO')
                     AND offer.offer_url IS NOT NULL
                     AND booking.booking_is_cancelled IS FALSE
@@ -401,6 +401,6 @@ def define_enriched_user_data_full_query(dataset, table_prefix=""):
         {define_theoretical_amount_spent_in_physical_goods_query(dataset=dataset, table_prefix=table_prefix)}
         {define_theoretical_amount_spent_in_outings_query(dataset=dataset, table_prefix=table_prefix)}
         {define_last_booking_date_query(dataset=dataset, table_prefix=table_prefix)}
-        {define_humanized_id_query(table=f"user", dataset=dataset)}
+        {define_humanized_id_query(table=f"user", dataset=dataset, table_prefix=table_prefix)}
         {define_enriched_user_data_query(dataset=dataset, table_prefix=table_prefix)}
     """

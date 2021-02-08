@@ -114,7 +114,7 @@ def define_current_year_revenue(dataset, table_prefix=""):
         CREATE TEMP TABLE current_year_revenue AS
             SELECT
                 venue.venue_managing_offerer_id AS offerer_id,
-                sum(coalesce(booking.booking_quantity,0)*coalesce(booking.booking_amount,0)) 
+                sum(coalesce(booking.booking_quantity,0)*coalesce(booking.booking_amount,0))
                 AS current_year_revenue
             FROM {dataset}.{table_prefix}booking AS booking
             JOIN {dataset}.{table_prefix}stock AS stock ON booking.stock_id = stock.stock_id
@@ -167,7 +167,7 @@ def define_enriched_offerer_data_full_query(dataset, table_prefix=""):
         {define_offerer_departement_code_query(dataset=dataset, table_prefix=table_prefix)}
         {define_number_of_venues_query(dataset=dataset, table_prefix=table_prefix)}
         {define_number_of_venues_without_offer_query(dataset=dataset, table_prefix=table_prefix)}
-        {define_humanized_id_query(table=f"offerer", dataset=dataset)}
+        {define_humanized_id_query(table=f"offerer", dataset=dataset, table_prefix=table_prefix)}
         {define_current_year_revenue(dataset=dataset, table_prefix=table_prefix)}
         {define_enriched_offerer_query(dataset=dataset, table_prefix=table_prefix)}
     """

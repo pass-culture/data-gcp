@@ -167,12 +167,12 @@ def define_enriched_venue_query(dataset, table_prefix=""):
                 ,offerer.offerer_name
                 ,venue_type.label AS venue_type_label
                 ,venue_label.label AS venue_label
-                ,total_bookings_per_venue.total_bookings 
+                ,total_bookings_per_venue.total_bookings
                 ,non_cancelled_bookings_per_venue.non_cancelled_bookings
                 ,used_bookings_per_venue.used_bookings
-                ,first_offer_creation_date.first_offer_creation_date 
-                ,last_offer_creation_date.last_offer_creation_date 
-                ,offers_created_per_venue.offers_created 
+                ,first_offer_creation_date.first_offer_creation_date
+                ,last_offer_creation_date.last_offer_creation_date
+                ,offers_created_per_venue.offers_created
                 ,theoretic_revenue_per_venue.theoretic_revenue
                 ,real_revenue_per_venue.real_revenue
                 ,venue_humanized_id.humanized_id AS venue_humanized_id
@@ -203,6 +203,6 @@ def define_enriched_venue_data_full_query(dataset, table_prefix=""):
         {define_offers_created_per_venue_query(dataset=dataset, table_prefix=table_prefix)}
         {define_theoretic_revenue_per_venue_query(dataset=dataset, table_prefix=table_prefix)}
         {define_real_revenue_per_venue_query(dataset=dataset, table_prefix=table_prefix)}
-        {define_humanized_id_query(table=f"venue", dataset=dataset)}
+        {define_humanized_id_query(table=f"venue", dataset=dataset, table_prefix=table_prefix)}
         {define_enriched_venue_query(dataset=dataset, table_prefix=table_prefix)}
     """

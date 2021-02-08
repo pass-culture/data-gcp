@@ -11,8 +11,8 @@ from airflow.contrib.operators.gcp_sql_operator import (
 from dependencies.config import (
     GCP_PROJECT,
     DATA_GCS_BUCKET_NAME,
-    APPLICATIVE_INSTANCE_NAME,
-    APPLICATIVE_DATABASE_NAME,
+    APPLICATIVE_SQL_INSTANCE,
+    APPLICATIVE_SQL_DATABASE,
 )
 
 # Variables
@@ -38,7 +38,7 @@ dag = DAG(
 start = DummyOperator(task_id="start", dag=dag)
 
 now = datetime.now()
-file_name = f"{APPLICATIVE_DATABASE_NAME}/{now.year}_{now.month}_{now.day}_{APPLICATIVE_DATABASE_NAME}.sql"
+file_name = f"{APPLICATIVE_SQL_DATABASE}/{now.year}_{now.month}_{now.day}_{APPLICATIVE_SQL_DATABASE}.sql"
 export_uri = f"gs://{DATA_GCS_BUCKET_NAME}/{ARCHIVE_FOLDER}/{file_name}"
 
 export_body = {
@@ -46,14 +46,14 @@ export_body = {
         "fileType": "sql",
         "uri": export_uri,
         "sqlExportOptions": {"schemaOnly": False},
-        "databases": [APPLICATIVE_DATABASE_NAME],
+        "databases": [APPLICATIVE_SQL_DATABASE],
     }
 }
 
 sql_export_task = CloudSqlInstanceExportOperator(
     project_id=GCP_PROJECT,
     body=export_body,
-    instance=APPLICATIVE_INSTANCE_NAME,
+    instance=APPLICATIVE_SQL_INSTANCE,
     task_id="export_database",
     dag=dag,
 )

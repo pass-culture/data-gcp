@@ -94,7 +94,7 @@ def create_materialized_enriched_booking_view(dataset, table_prefix=""):
                 offerer.offerer_id,
                 offerer.offerer_name,
                 user.user_id,
-                user.user_departement_code,
+                user.user_department_code,
                 user.user_creation_date,
                 booking_intermediary_view.booking_intermediary_amount,
                 CASE WHEN booking_intermediary_view.booking_reimburse = 'Remboursé'

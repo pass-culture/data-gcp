@@ -6,9 +6,9 @@ from dependencies.data_analytics.enriched_data.enriched_data_utils import (
 def create_booking_amount_view(dataset, table_prefix=""):
     return f"""
         CREATE TEMP TABLE booking_amount_view AS (
-            SELECT 
-                booking.booking_id, 
-                coalesce(booking.booking_amount, 0) * coalesce(booking.booking_quantity, 0) 
+            SELECT
+                booking.booking_id,
+                coalesce(booking.booking_amount, 0) * coalesce(booking.booking_quantity, 0)
                 AS booking_intermediary_amount
             FROM {dataset}.{table_prefix}booking AS booking);
         """
@@ -21,10 +21,10 @@ def create_booking_payment_status_view(dataset, table_prefix=""):
                 booking.booking_id,'Remboursé' AS booking_reimburse
             FROM {dataset}.{table_prefix}booking AS booking
             INNER JOIN {dataset}.{table_prefix}payment AS payment
-                ON payment.bookingId = booking.booking_id 
+                ON payment.bookingId = booking.booking_id
                 AND payment.author IS NOT NULL
             INNER JOIN {dataset}.{table_prefix}payment_status AS payment_status
-                ON payment.id = payment_status.paymentId 
+                ON payment.id = payment_status.paymentId
                 AND payment_status.status = 'SENT');
         """
 
@@ -32,8 +32,8 @@ def create_booking_payment_status_view(dataset, table_prefix=""):
 def create_booking_ranking_view(dataset, table_prefix=""):
     return f"""
         CREATE TEMP TABLE booking_ranking_view AS (
-            SELECT 
-                booking.booking_id, 
+            SELECT
+                booking.booking_id,
                 rank() OVER (PARTITION BY booking.user_id ORDER BY booking.booking_creation_date) AS booking_rank
             FROM {dataset}.{table_prefix}booking AS booking);
         """
@@ -42,9 +42,9 @@ def create_booking_ranking_view(dataset, table_prefix=""):
 def create_booking_ranking_in_category_view(dataset, table_prefix=""):
     return f"""
         CREATE TEMP TABLE booking_ranking_in_category_view AS (
-            SELECT 
-                booking.booking_id, 
-                rank() OVER (PARTITION BY booking.user_id, offer.offer_type ORDER BY booking.booking_creation_date) 
+            SELECT
+                booking.booking_id,
+                rank() OVER (PARTITION BY booking.user_id, offer.offer_type ORDER BY booking.booking_creation_date)
                 AS same_category_booking_rank
             FROM {dataset}.{table_prefix}booking AS booking
             INNER JOIN {dataset}.{table_prefix}stock AS stock ON booking.stock_id = stock.stock_id
@@ -135,6 +135,6 @@ def define_enriched_booking_data_full_query(dataset, table_prefix=""):
          {create_booking_ranking_view(dataset=dataset, table_prefix=table_prefix)}
          {create_booking_ranking_in_category_view(dataset=dataset, table_prefix=table_prefix)}
          {create_materialized_booking_intermediary_view(dataset=dataset, table_prefix=table_prefix)}
-         {define_humanized_id_query(table=f"booking", dataset=dataset)}
+         {define_humanized_id_query(table=f"booking", dataset=dataset, table_prefix=table_prefix)}
          {create_materialized_enriched_booking_view(dataset=dataset, table_prefix=table_prefix)}
     """

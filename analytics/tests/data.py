@@ -144,7 +144,7 @@ ENRICHED_OFFER_DATA_INPUT = {
         {
             "user_id": "1",
             "user_email": "test@email.com",
-            "user_can_book_free_offers": True,
+            "user_is_beneficiary": True,
             "user_is_admin": False,
             "user_postal_code": "93100",
             "user_department_code": "93",
@@ -156,7 +156,7 @@ ENRICHED_OFFER_DATA_INPUT = {
         {
             "user_id": "2",
             "user_email": "other@test.com",
-            "user_can_book_free_offers": True,
+            "user_is_beneficiary": True,
             "user_is_admin": False,
             "user_postal_code": "93100",
             "user_department_code": "93",
@@ -168,7 +168,7 @@ ENRICHED_OFFER_DATA_INPUT = {
         {
             "user_id": "3",
             "user_email": "louie.lopez@test.com",
-            "user_can_book_free_offers": True,
+            "user_is_beneficiary": True,
             "user_is_admin": False,
             "user_postal_code": "93100",
             "user_department_code": "93",
@@ -382,7 +382,7 @@ ENRICHED_STOCK_DATA_INPUT = {
         {
             "user_id": "1",
             "user_email": "test@email.com",
-            "user_can_book_free_offers": True,
+            "user_is_beneficiary": True,
             "user_is_admin": False,
             "user_postal_code": "93100",
             "user_department_code": "93",
@@ -394,7 +394,7 @@ ENRICHED_STOCK_DATA_INPUT = {
         {
             "user_id": "2",
             "user_email": "other@test.com",
-            "user_can_book_free_offers": True,
+            "user_is_beneficiary": True,
             "user_is_admin": False,
             "user_postal_code": "93100",
             "user_department_code": "93",

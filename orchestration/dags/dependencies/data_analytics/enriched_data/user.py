@@ -21,7 +21,7 @@ def define_experimentation_sessions_query(dataset, table_prefix=""):
                 user.user_id
             FROM {dataset}.{table_prefix}user AS user
             LEFT JOIN experimentation_session ON experimentation_session.user_id = user.user_id
-            WHERE user.user_can_book_free_offers AND (rank = 1 OR rank is NULL)
+            WHERE user.user_is_beneficiary AND (rank = 1 OR rank is NULL)
         );
         """
 
@@ -46,7 +46,7 @@ def define_activation_dates_query(dataset, table_prefix=""):
                 user.user_id
             FROM {dataset}.{table_prefix}user AS user
             LEFT JOIN validated_activation_booking ON validated_activation_booking.user_id = user.user_id
-                WHERE user.user_can_book_free_offers
+                WHERE user.user_is_beneficiary
         );
         """
 
@@ -59,7 +59,7 @@ def define_date_of_first_bookings_query(dataset, table_prefix=""):
                 MIN(booking.booking_creation_date) AS date_premiere_reservation
             FROM {dataset}.{table_prefix}booking AS booking
             JOIN {dataset}.{table_prefix}stock AS stock ON stock.stock_id = booking.stock_id
-            JOIN {dataset}.{table_prefix}offer AS offer ON offer.offer_id = stock.offer_id 
+            JOIN {dataset}.{table_prefix}offer AS offer ON offer.offer_id = stock.offer_id
                 AND offer.offer_type != 'ThingType.ACTIVATION'
                 AND (offer.booking_email != 'jeux-concours@passculture.app' OR offer.booking_email IS NULL)
             GROUP BY user_id
@@ -99,7 +99,7 @@ def define_date_of_bookings_on_third_product_query(dataset, table_prefix=""):
                     offer.offer_type,
                     offer.offer_name,
                     offer.offer_id,
-                    rank() OVER (PARTITION BY booking.user_id, offer.offer_type ORDER BY booking.booking_creation_date) 
+                    rank() OVER (PARTITION BY booking.user_id, offer.offer_type ORDER BY booking.booking_creation_date)
                     AS rank_booking_in_cat
                 FROM {dataset}.{table_prefix}booking AS booking
                 JOIN {dataset}.{table_prefix}stock AS stock ON booking.stock_id = stock.stock_id
@@ -131,7 +131,7 @@ def define_number_of_bookings_query(dataset, table_prefix=""):
                 COUNT(booking.booking_id) AS number_of_bookings
             FROM {dataset}.{table_prefix}booking AS booking
             JOIN {dataset}.{table_prefix}stock AS stock ON stock.stock_id = booking.stock_id
-            JOIN {dataset}.{table_prefix}offer AS offer ON offer.offer_id = stock.offer_id 
+            JOIN {dataset}.{table_prefix}offer AS offer ON offer.offer_id = stock.offer_id
                 AND offer.offer_type != 'ThingType.ACTIVATION'
                 AND (offer.booking_email != 'jeux-concours@passculture.app' OR offer.booking_email IS NULL)
             GROUP BY user_id
@@ -162,7 +162,7 @@ def define_users_seniority_query(dataset, table_prefix=""):
     return f"""
         CREATE TEMP TABLE users_seniority AS (
             WITH validated_activation_booking AS (
-                SELECT 
+                SELECT
                     booking.booking_used_date,
                     booking.user_id,
                     booking.booking_is_used
@@ -179,7 +179,7 @@ def define_users_seniority_query(dataset, table_prefix=""):
                     user.user_id
                 FROM {dataset}.{table_prefix}user AS user
                 LEFT JOIN validated_activation_booking ON validated_activation_booking.user_id = user.user_id
-                WHERE user.user_can_book_free_offers
+                WHERE user.user_is_beneficiary
             )
             SELECT
                 DATE_DIFF(CURRENT_DATE(), CAST(activation_date.activation_date AS DATE), DAY) AS user_seniority,
@@ -197,10 +197,10 @@ def define_actual_amount_spent_query(dataset, table_prefix=""):
                 user.user_id,
                 COALESCE(SUM(booking.booking_amount * booking.booking_quantity), 0) AS actual_amount_spent
             FROM {dataset}.{table_prefix}user AS user
-            LEFT JOIN {dataset}.{table_prefix}booking AS booking ON user.user_id = booking.user_id 
-                AND booking.booking_is_used IS TRUE 
+            LEFT JOIN {dataset}.{table_prefix}booking AS booking ON user.user_id = booking.user_id
+                AND booking.booking_is_used IS TRUE
                 AND booking.booking_is_cancelled IS FALSE
-            WHERE user.user_can_book_free_offers
+            WHERE user.user_is_beneficiary
             GROUP BY user.user_id
         );
         """
@@ -214,7 +214,7 @@ def define_theoretical_amount_spent_query(dataset, table_prefix=""):
                 COALESCE(SUM(booking.booking_amount * booking.booking_quantity), 0) AS theoretical_amount_spent
             FROM {dataset}.{table_prefix}user AS user
             LEFT JOIN {dataset}.{table_prefix}booking AS booking ON user.user_id = booking.user_id AND booking.booking_is_cancelled IS FALSE
-            WHERE user.user_can_book_free_offers
+            WHERE user.user_is_beneficiary
             GROUP BY user.user_id
         );
         """
@@ -236,7 +236,7 @@ def define_theoretical_amount_spent_in_digital_goods_query(dataset, table_prefix
                                      'ThingType.JEUX_VIDEO_ABO',
                                      'ThingType.LIVRE_AUDIO',
                                      'ThingType.LIVRE_EDITION',
-                                     'ThingType.MUSIQUE',
+                                     'Thi{table_prefix}ngType.MUSIQUE',
                                      'ThingType.PRESSE_ABO')
                     AND offer.offer_url IS NOT NULL
                     AND booking.booking_is_cancelled IS FALSE
@@ -246,7 +246,7 @@ def define_theoretical_amount_spent_in_digital_goods_query(dataset, table_prefix
                 COALESCE(SUM(eligible_booking.booking_amount * eligible_booking.booking_quantity), 0.) AS amount_spent_in_digital_goods
             FROM {dataset}.{table_prefix}user AS user
             LEFT JOIN eligible_booking ON user.user_id = eligible_booking.user_id
-            WHERE user.user_can_book_free_offers IS TRUE
+            WHERE user.user_is_beneficiary IS TRUE
             GROUP BY user.user_id
         );
         """
@@ -256,7 +256,7 @@ def define_theoretical_amount_spent_in_physical_goods_query(dataset, table_prefi
     return f"""
         CREATE TEMP TABLE theoretical_amount_spent_in_physical_goods AS (
             WITH eligible_booking AS (
-                SELECT 
+                SELECT
                     booking.user_id,
                     booking.booking_amount,
                     booking.booking_quantity
@@ -272,12 +272,12 @@ def define_theoretical_amount_spent_in_physical_goods_query(dataset, table_prefi
                     AND offer.offer_url IS NULL
                     AND booking.booking_is_cancelled IS FALSE
             )
-            SELECT 
+            SELECT
                 user.user_id,
                 COALESCE(SUM(eligible_booking.booking_amount * eligible_booking.booking_quantity), 0.) AS amount_spent_in_physical_goods
             FROM {dataset}.{table_prefix}user AS user
             LEFT JOIN eligible_booking ON user.user_id = eligible_booking.user_id
-            WHERE user.user_can_book_free_offers IS TRUE
+            WHERE user.user_is_beneficiary IS TRUE
             GROUP BY user.user_id
         );
         """
@@ -287,7 +287,7 @@ def define_theoretical_amount_spent_in_outings_query(dataset, table_prefix=""):
     return f"""
         CREATE TEMP TABLE theoretical_amount_spent_in_outings AS (
             WITH eligible_booking AS (
-                SELECT 
+                SELECT
                     booking.user_id,
                     booking.booking_amount,
                     booking.booking_quantity
@@ -308,13 +308,13 @@ def define_theoretical_amount_spent_in_outings_query(dataset, table_prefix=""):
                                      'EventType.CONFERENCE_DEBAT_DEDICACE')
                     AND booking.booking_is_cancelled IS FALSE
             )
-            SELECT 
+            SELECT
                 user.user_id,
-                COALESCE(SUM(eligible_booking.booking_amount * eligible_booking.booking_quantity), 0.) 
+                COALESCE(SUM(eligible_booking.booking_amount * eligible_booking.booking_quantity), 0.)
                 AS amount_spent_in_outings
             FROM {dataset}.{table_prefix}user AS user
             LEFT JOIN eligible_booking ON user.user_id = eligible_booking.user_id
-            WHERE user.user_can_book_free_offers IS TRUE
+            WHERE user.user_is_beneficiary IS TRUE
             GROUP BY user.user_id
         );
         """
@@ -346,8 +346,8 @@ def define_enriched_user_data_query(dataset, table_prefix=""):
                 user.user_postal_code,
                 user.user_activity,
                 activation_dates.activation_date,
-                CASE WHEN user.user_has_seen_tutorials THEN user.user_cultural_survey_filled_date 
-                    ELSE NULL 
+                CASE WHEN user.user_has_seen_tutorials THEN user.user_cultural_survey_filled_date
+                    ELSE NULL
                 END AS first_connection_date,
                 date_of_first_bookings.date_premiere_reservation as first_booking_date,
                 date_of_second_bookings.date_deuxieme_reservation as second_booking_date,
@@ -356,7 +356,7 @@ def define_enriched_user_data_query(dataset, table_prefix=""):
                 COALESCE(number_of_non_cancelled_bookings.number_of_bookings, 0) AS no_cancelled_booking,
                 users_seniority.user_seniority,
                 actual_amount_spent.actual_amount_spent,
-                theoretical_amount_spent.theoretical_amount_spent, 
+                theoretical_amount_spent.theoretical_amount_spent,
                 theoretical_amount_spent_in_digital_goods.amount_spent_in_digital_goods,
                 theoretical_amount_spent_in_physical_goods.amount_spent_in_physical_goods,
                 theoretical_amount_spent_in_outings.amount_spent_in_outings,
@@ -373,14 +373,14 @@ def define_enriched_user_data_query(dataset, table_prefix=""):
             LEFT JOIN users_seniority ON user.user_id = users_seniority.user_id
             LEFT JOIN actual_amount_spent ON user.user_id = actual_amount_spent.user_id
             LEFT JOIN theoretical_amount_spent ON user.user_id = theoretical_amount_spent.user_id
-            LEFT JOIN theoretical_amount_spent_in_digital_goods 
+            LEFT JOIN theoretical_amount_spent_in_digital_goods
                 ON user.user_id  = theoretical_amount_spent_in_digital_goods.user_id
-            LEFT JOIN theoretical_amount_spent_in_physical_goods 
+            LEFT JOIN theoretical_amount_spent_in_physical_goods
                 ON user.user_id = theoretical_amount_spent_in_physical_goods.user_id
             LEFT JOIN theoretical_amount_spent_in_outings ON user.user_id = theoretical_amount_spent_in_outings.user_id
             LEFT JOIN last_booking_date ON last_booking_date.user_id = user.user_id
             LEFT JOIN user_humanized_id AS user_humanized_id ON user_humanized_id.user_id = user.user_id
-            WHERE user.user_can_book_free_offers
+            WHERE user.user_is_beneficiary
         );
     """
 
@@ -401,6 +401,6 @@ def define_enriched_user_data_full_query(dataset, table_prefix=""):
         {define_theoretical_amount_spent_in_physical_goods_query(dataset=dataset, table_prefix=table_prefix)}
         {define_theoretical_amount_spent_in_outings_query(dataset=dataset, table_prefix=table_prefix)}
         {define_last_booking_date_query(dataset=dataset, table_prefix=table_prefix)}
-        {define_humanized_id_query(table=f"user", dataset=dataset)}
+        {define_humanized_id_query(table=f"user", dataset=dataset, table_prefix=table_prefix)}
         {define_enriched_user_data_query(dataset=dataset, table_prefix=table_prefix)}
     """

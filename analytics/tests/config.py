@@ -26,6 +26,7 @@ BIGQUERY_SCHEMAS = {
         "offerId": "STRING",
         "mediationId": "STRING",
         "lastupdate": "DATETIME",
+        "dateCreated": "DATETIME",
     },
     "offer": {
         "offer_id_at_providers": "STRING",

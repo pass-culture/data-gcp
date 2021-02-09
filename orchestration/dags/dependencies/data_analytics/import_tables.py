@@ -1,8 +1,8 @@
-from dependencies.data_analytics.config import EXTERNAL_CONNECTION_ID, GCP_REGION
+from dependencies.data_analytics.config import EXTERNAL_CONNECTION_ID_VM, GCP_REGION
 
 
 def define_import_query(
-    table, region=GCP_REGION, external_connection_id=EXTERNAL_CONNECTION_ID
+    table, region=GCP_REGION, external_connection_id=EXTERNAL_CONNECTION_ID_VM
 ):
     """
     Given a table (from "external_connection_id" located in "region"), we build and return the federated query that
@@ -23,7 +23,9 @@ def define_import_query(
             CAST("culturalSurveyId" AS varchar(255)) as user_cultural_survey_id, "civility" as user_civility,
             "activity" as user_activity, "culturalSurveyFilledDate" as user_cultural_survey_filled_date,
             "hasSeenTutorials" as user_has_seen_tutorials, "address" as user_address, "city" as user_city,
-            "lastConnectionDate" as user_last_connection_date
+            "lastConnectionDate" as user_last_connection_date, "isEmailValidated" as user_is_email_validated, 
+            "hasAllowedRecommendations" as user_has_allowed_recommendations, 
+            "suspensionReason" as user_suspension_reason, "isActive" as user_is_active
         FROM public.user
     """
     cloudsql_queries[

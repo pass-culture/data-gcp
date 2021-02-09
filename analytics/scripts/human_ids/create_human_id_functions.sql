@@ -5,7 +5,7 @@
 */
 
 CREATE OR REPLACE FUNCTION
-    algo_reco_kpi_data.humanize_id(id INT64)
+    raw_dev.humanize_id(id INT64)
     RETURNS STRING
     LANGUAGE js OPTIONS ( library="gs://pass-culture-data/base32-encode/base32.js" ) AS """
         // turn int into bytes array
@@ -27,7 +27,7 @@ CREATE OR REPLACE FUNCTION
 
 
 CREATE OR REPLACE FUNCTION
-    algo_reco_kpi_data.dehumanize_id(id STRING)
+    raw_dev.dehumanize_id(id STRING)
     RETURNS STRING
     LANGUAGE js OPTIONS (library=["gs://pass-culture-data/base32-encode/base32.js"]) AS """
         var public_id = id.replace(/8/g, 'O').replace(/9/g, 'I');

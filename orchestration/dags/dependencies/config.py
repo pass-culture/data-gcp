@@ -1,5 +1,6 @@
 import os
 
+GCP_PROJECT_ID = os.environ.get("GCP_PROJECT", "")
 GCP_PROJECT = os.environ.get("GCP_PROJECT", "")
 GCP_REGION = "europe-west1"
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")

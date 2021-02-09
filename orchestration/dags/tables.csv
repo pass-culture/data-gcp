@@ -18,7 +18,7 @@ iris_venues,id,bigint
 iris_venues,irisId,bigint
 iris_venues,venueId,bigint
 mediation,thumbCount,integer
-mediation,idAtProviders,character varying
+mediation,mediation_id_at_providers,character varying
 mediation,dateModifiedAtLastProvider,timestamp without time zone
 mediation,id,bigint
 mediation,dateCreated,timestamp without time zone
@@ -28,7 +28,7 @@ mediation,offerId,bigint
 mediation,credit,character varying
 mediation,isActive,boolean
 mediation,fieldsUpdated,text[]
-offer,idAtProviders,character varying
+offer,offer_id_at_providers,character varying
 offer,dateModifiedAtLastProvider,timestamp without time zone
 offer,id,bigint
 offer,dateCreated,timestamp without time zone
@@ -53,7 +53,7 @@ offer,fieldsUpdated,text[]
 offer,withdrawalDetails,text
 offerer,thumbCount,integer
 offerer,firstThumbDominantColor,bytea
-offerer,idAtProviders,character varying
+offerer,offerer_id_at_providers,character varying
 offerer,dateModifiedAtLastProvider,timestamp without time zone
 offerer,id,bigint
 offerer,name,character varying
@@ -68,7 +68,7 @@ offerer,dateCreated,timestamp without time zone
 offerer,fieldsUpdated,text[]
 venue,thumbCount,integer
 venue,firstThumbDominantColor,bytea
-venue,idAtProviders,character varying
+venue,venue_id_at_providers,character varying
 venue,dateModifiedAtLastProvider,timestamp without time zone
 venue,id,bigint
 venue,name,character varying
@@ -90,7 +90,7 @@ venue,fieldsUpdated,text[]
 venue,venueTypeId,integer
 venue,venueLabelId,integer
 venue,dateCreated,timestamp without time zone
-stock,idAtProviders,character varying
+stock,stock_id_at_providers,character varying
 stock,dateModifiedAtLastProvider,timestamp without time zone
 stock,id,bigint
 stock,dateModified,timestamp without time zone

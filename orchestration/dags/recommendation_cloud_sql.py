@@ -143,8 +143,8 @@ with DAG(
             python_callable=compose_gcs_files,
             op_kwargs={
                 "bucket_name": DATA_GCS_BUCKET_NAME,
-                "source_prefix": f"bigquery_exports/{table}-",
-                "destination_blob_name": f"bigquery_exports/{table}.csv",
+                "source_prefix": f"{ENV_SHORT_NAME}/bigquery_exports/{table}-",
+                "destination_blob_name": f"{ENV_SHORT_NAME}/bigquery_exports/{table}.csv",
             },
             dag=dag,
         )

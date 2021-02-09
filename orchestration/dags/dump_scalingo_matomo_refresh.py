@@ -332,7 +332,7 @@ SELECT
         WHEN REGEXP_CONTAINS(user_id, r"^[0-9]{{2,}} ")
             THEN REGEXP_EXTRACT(user_id, r"^[0-9]{{2,}}")
         WHEN REGEXP_CONTAINS(user_id, r"^[A-Z0-9]{{2,}} ")
-            THEN algo_reco_kpi_data.dehumanize_id(REGEXP_EXTRACT(user_id, r"^[A-Z0-9]{{2,}}"))
+            THEN {BIGQUERY_RAW_DATASET}.dehumanize_id(REGEXP_EXTRACT(user_id, r"^[A-Z0-9]{{2,}}"))
         ELSE NULL
     END AS user_id_dehumanized
 FROM
@@ -363,9 +363,9 @@ dehumanized AS (
     SELECT
         *,
         IF( offer_id is not null,
-            algo_reco_kpi_data.dehumanize_id(offer_id), null) AS dehumanize_offer_id,
+            {BIGQUERY_RAW_DATASET}.dehumanize_id(offer_id), null) AS dehumanize_offer_id,
         IF( offer_id_from_url is not null,
-            algo_reco_kpi_data.dehumanize_id(offer_id_from_url), null) AS dehumanize_offer_id_from_url
+            {BIGQUERY_RAW_DATASET}.dehumanize_id(offer_id_from_url), null) AS dehumanize_offer_id_from_url
     FROM filtered
 )
 SELECT

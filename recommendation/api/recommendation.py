@@ -2,22 +2,31 @@ import collections
 import datetime
 import os
 
-import pytz
 from random import random
 from typing import Any, Dict, List, Tuple
+
+import pytz
 
 from google.api_core.client_options import ClientOptions
 from googleapiclient import discovery
 from sqlalchemy import create_engine, engine
 
 from geolocalisation import get_iris_from_coordinates
+from access_gcp_secrets import access_secret
 
-SQL_BASE_USER = os.environ.get("SQL_BASE_USER")
-SQL_BASE_PASSWORD = os.environ.get("SQL_BASE_PASSWORD")
-SQL_CONNECTION_NAME = os.environ.get("SQL_CONNECTION_NAME")
+
+GCP_PROJECT = os.environ.get("GCP_PROJECT")
+
 SQL_BASE = os.environ.get("SQL_BASE")
-GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID")
-GCP_MODEL_REGION = os.environ.get("GCP_MODEL_REGION")
+SQL_BASE_USER = os.environ.get("SQL_BASE_USER")
+SQL_BASE_SECRET_ID = os.environ.get("SQL_BASE_SECRET_ID")
+SQL_BASE_SECRET_VERSION = os.environ.get("SQL_BASE_SECRET_VERSION")
+SQL_CONNECTION_NAME = os.environ.get("SQL_CONNECTION_NAME")
+
+SQL_BASE_PASSWORD = access_secret(
+    GCP_PROJECT, SQL_BASE_SECRET_ID, SQL_BASE_SECRET_VERSION
+)
+
 
 query_string = dict(
     {"unix_sock": "/cloudsql/{}/.s.PGSQL.5432".format(SQL_CONNECTION_NAME)}
@@ -73,6 +82,7 @@ def get_final_recommendations(
         )
         scored_recommendation_for_user = get_scored_recommendation_for_user(
             recommendations_for_user,
+            app_config["MODEL_REGION"],
             app_config["MODEL_NAME"],
             app_config["MODEL_VERSION"],
         )
@@ -156,11 +166,14 @@ def get_recommendations_query(user_id: int, user_iris_id: int) -> str:
 
 
 def get_scored_recommendation_for_user(
-    user_recommendations: List[Dict[str, Any]], model_name: str, version: str
+    user_recommendations: List[Dict[str, Any]],
+    model_region: str,
+    model_name: str,
+    version: str,
 ) -> List[Dict[str, int]]:
     offers_ids = [recommendation["id"] for recommendation in user_recommendations]
     predicted_scores = predict_score(
-        GCP_MODEL_REGION, GCP_PROJECT_ID, model_name, offers_ids, version
+        model_region, GCP_PROJECT, model_name, offers_ids, version
     )
     return [
         {

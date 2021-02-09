@@ -4,12 +4,21 @@ import sys
 from typing import Any
 
 from sqlalchemy import create_engine, engine
+from access_gcp_secrets import access_secret
 
 
-SQL_BASE_USER = os.environ.get("SQL_BASE_USER")
-SQL_BASE_PASSWORD = os.environ.get("SQL_BASE_PASSWORD")
-SQL_CONNECTION_NAME = os.environ.get("SQL_CONNECTION_NAME")
+GCP_PROJECT = os.environ.get("GCP_PROJECT")
+
 SQL_BASE = os.environ.get("SQL_BASE")
+SQL_BASE_USER = os.environ.get("SQL_BASE_USER")
+SQL_BASE_SECRET_ID = os.environ.get("SQL_BASE_SECRET_ID")
+SQL_BASE_SECRET_VERSION = os.environ.get("SQL_BASE_SECRET_VERSION")
+SQL_CONNECTION_NAME = os.environ.get("SQL_CONNECTION_NAME")
+
+
+SQL_BASE_PASSWORD = access_secret(
+    GCP_PROJECT, SQL_BASE_SECRET_ID, SQL_BASE_SECRET_VERSION
+)
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 

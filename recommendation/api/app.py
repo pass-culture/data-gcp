@@ -2,17 +2,26 @@ import os
 
 from flask import Flask, jsonify, request, make_response
 
+
 from health_check_queries import get_materialized_view_status
+from access_gcp_secrets import access_secret
 from recommendation import get_final_recommendations
 
 
-API_TOKEN = os.environ.get("API_TOKEN")
+GCP_PROJECT = os.environ.get("GCP_PROJECT")
+
+API_TOKEN_SECRET_ID = os.environ.get("API_TOKEN_SECRET_ID")
+API_TOKEN_SECRET_VERSION = os.environ.get("API_TOKEN_SECRET_VERSION")
+
+
+API_TOKEN = access_secret(GCP_PROJECT, API_TOKEN_SECRET_ID, API_TOKEN_SECRET_VERSION)
 
 APP_CONFIG = {
-    "AB_TESTING_TABLE": "ab_testing_20201207",
-    "NUMBER_OF_RECOMMENDATIONS": 10,
-    "MODEL_NAME": "poc_model",
-    "MODEL_VERSION": "latest",
+    "AB_TESTING_TABLE": os.environ.get("AB_TESTING_TABLE"),
+    "NUMBER_OF_RECOMMENDATIONS": os.environ.get("NUMBER_OF_RECOMMENDATIONS"),
+    "MODEL_REGION": os.environ.get("MODEL_REGION"),
+    "MODEL_NAME": os.environ.get("MODEL_NAME"),
+    "MODEL_VERSION": os.environ.get("MODEL_VERSION"),
 }
 
 app = Flask(__name__)

@@ -19,13 +19,12 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python_operator import PythonOperator
 
 from dependencies.slack_alert import task_fail_slack_alert
-from dependencies.big_query_data_schema import EXPORT_START_DATE, TABLE_DATA
+from dependencies.matomo_data_schema import EXPORT_START_DATE, PROD_TABLE_DATA
 from dependencies.matomo_client import MatomoClient
 
 GCP_PROJECT_ID = "pass-culture-app-projet-test"
 GCS_BUCKET = "dump_scalingo"
 BIGQUERY_DATASET = "algo_reco_kpi_matomo"
-
 
 default_args = {
     "on_failure_callback": task_fail_slack_alert,
@@ -88,16 +87,16 @@ last_task = start
 
 now = datetime.now()
 
-for table in TABLE_DATA:
-    max_id = TABLE_DATA[table]["max_id"]
-    min_id = TABLE_DATA[table]["min_id"]
-    row_number_queried = TABLE_DATA[table]["row_number_queried"]
+for table in PROD_TABLE_DATA:
+    max_id = PROD_TABLE_DATA[table]["max_id"]
+    min_id = PROD_TABLE_DATA[table]["min_id"]
+    row_number_queried = PROD_TABLE_DATA[table]["row_number_queried"]
     query_count = 0
     for query_index in range(min_id, max_id, row_number_queried):
         sql_query = (
-            f"select {', '.join([column['name'] for column in TABLE_DATA[table]['columns']])} from {table} "
-            f"where {TABLE_DATA[table]['id']} >= {query_index} "
-            f"and {TABLE_DATA[table]['id']} < {query_index + row_number_queried} {TABLE_DATA[table]['query_filter']};"
+            f"select {', '.join([column['name'] for column in PROD_TABLE_DATA[table]['columns']])} from {table} "
+            f"where {PROD_TABLE_DATA[table]['id']} >= {query_index} "
+            f"and {PROD_TABLE_DATA[table]['id']} < {query_index + row_number_queried} {PROD_TABLE_DATA[table]['query_filter']};"
         )
 
         file_name = f"{table}/partial/{now.year}_{now.month}_{now.day}_{table}_{query_count}_{'{}'}.csv"
@@ -115,16 +114,16 @@ for table in TABLE_DATA:
 last_task >> end_export
 
 
-for table in TABLE_DATA:
+for table in PROD_TABLE_DATA:
     # Rename columns using bigQuery protected name
     protected_names = ["hash"]
-    TABLE_DATA[table]["columns"] = [
+    PROD_TABLE_DATA[table]["columns"] = [
         (
             column
             if column["name"] not in protected_names
             else {**column, "name": f"_{column['name']}"}
         )
-        for column in TABLE_DATA[table]["columns"]
+        for column in PROD_TABLE_DATA[table]["columns"]
     ]
 
     delete_task = BigQueryTableDeleteOperator(
@@ -138,7 +137,7 @@ for table in TABLE_DATA:
         project_id=GCP_PROJECT_ID,
         dataset_id=BIGQUERY_DATASET,
         table_id=table,
-        schema_fields=TABLE_DATA[table]["columns"],
+        schema_fields=PROD_TABLE_DATA[table]["columns"],
         dag=dag,
     )
     import_task = GoogleCloudStorageToBigQueryOperator(
@@ -150,7 +149,7 @@ for table in TABLE_DATA:
         destination_project_dataset_table=f"{BIGQUERY_DATASET}.{table}",
         write_disposition="WRITE_EMPTY",
         skip_leading_rows=1,
-        schema_fields=TABLE_DATA[table]["columns"],
+        schema_fields=PROD_TABLE_DATA[table]["columns"],
         autodetect=False,
         dag=dag,
     )

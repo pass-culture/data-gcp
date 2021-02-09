@@ -13,7 +13,9 @@ class TestDags(unittest.TestCase):
             "dependencies.bigquery_client.BigQueryClient.query"
         ) as bigquery_mocker, mock.patch(
             "dependencies.matomo_client.MatomoClient.query"
-        ) as matomo_mocker:
+        ) as matomo_mocker, mock.patch(
+            "dependencies.access_gcp_secrets.access_secret_data"
+        ) as access_secret_mocker:
 
             def bigquery_client(query):
                 return (
@@ -24,6 +26,7 @@ class TestDags(unittest.TestCase):
                     else pd.DataFrame({0: [0]})
                 )
 
+            access_secret_mocker.return_value = "{}"
             matomo_mocker.return_value = [[0]]
             bigquery_mocker.side_effect = bigquery_client
             self.dagbag = DagBag(include_examples=False)
@@ -95,16 +98,16 @@ class TestDags(unittest.TestCase):
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 50)
+        self.assertEqual(len(dag.tasks), 84)
 
     def test_dump_matomo_refresh_dag_is_loaded(self):
         # When
-        dag = self.dagbag.get_dag(dag_id="dump_scalingo_matomo_refresh_v6")
+        dag = self.dagbag.get_dag(dag_id="dump_scalingo_matomo_refresh_v1")
 
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 32)
+        self.assertEqual(len(dag.tasks), 34)
 
     def test_import_data_analytics_dag_is_loaded(self):
         # When

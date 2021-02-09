@@ -2,7 +2,7 @@ import ast
 import os
 from datetime import datetime, timedelta
 
-from airflow import DAG
+from airflow import DAG, AirflowException, settings
 from airflow.contrib.operators.bigquery_operator import (
     BigQueryOperator,
     BigQueryCreateEmptyTableOperator,
@@ -14,27 +14,60 @@ from airflow.contrib.operators.gcs_to_bq import GoogleCloudStorageToBigQueryOper
 from airflow.contrib.operators.mysql_to_gcs import (
     MySqlToGoogleCloudStorageOperator,
 )
+from airflow.hooks.base_hook import BaseHook
 from airflow.models import Variable
+from airflow.models.connection import Connection
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python_operator import PythonOperator
 
 from dependencies.bigquery_client import BigQueryClient
-from dependencies.big_query_data_schema import TABLE_DATA
+from dependencies.matomo_data_schema import PROD_TABLE_DATA, STAGING_TABLE_DATA
 from dependencies.matomo_client import MatomoClient
+from dependencies.access_gcp_secrets import access_secret_data
 
-GCP_PROJECT_ID = "pass-culture-app-projet-test"
-GCS_BUCKET = "dump_scalingo"
-BIGQUERY_DATASET = "algo_reco_kpi_matomo"
-MATOMO_CONNECTION_DATA = ast.literal_eval(os.environ.get("MATOMO_CONNECTION_DATA"))
+ENV = os.environ.get("ENV")
+GCP_PROJECT = os.environ.get("GCP_PROJECT")
+DATA_GCS_BUCKET_NAME = os.environ.get("DATA_GCS_BUCKET_NAME")
+BIGQUERY_RAW_DATASET = os.environ.get(f"BIGQUERY_RAW_DATASET")
+BIGQUERY_CLEAN_DATASET = os.environ.get(f"BIGQUERY_CLEAN_DATASET")
+TABLE_DATA = STAGING_TABLE_DATA if ENV == "dev" else PROD_TABLE_DATA
 LOCAL_HOST = "127.0.0.1"
 LOCAL_PORT = 10026
+
+
+matomo_secret_id = (
+    "matomo-connection-data-stg" if ENV == "dev" else "matomo-connection-data-prod"
+)
+
+MATOMO_CONNECTION_DATA = ast.literal_eval(
+    access_secret_data(GCP_PROJECT, matomo_secret_id)
+)
+SSH_CONN_ID = "ssh_scalingo"
+
 os.environ[
     "AIRFLOW_CONN_MYSQL_SCALINGO"
 ] = f"mysql://{MATOMO_CONNECTION_DATA.get('user')}:{MATOMO_CONNECTION_DATA.get('password')}@{LOCAL_HOST}:{LOCAL_PORT}/{MATOMO_CONNECTION_DATA.get('dbname')}"
-bigquery_client = BigQueryClient(
-    "/home/airflow/gcs/dags/pass-culture-app-projet-test-19edd3c79717.json"
-)
+
 matomo_client = MatomoClient(MATOMO_CONNECTION_DATA, LOCAL_PORT)
+
+bigquery_client = BigQueryClient()
+
+
+try:
+    conn = BaseHook.get_connection(SSH_CONN_ID)
+except AirflowException:
+    conn = Connection(
+        conn_id=SSH_CONN_ID,
+        conn_type="ssh",
+        host="ssh.osc-fr1.scalingo.com",
+        login="git",
+        port=22,
+        extra=access_secret_data(GCP_PROJECT, "scalingo-private-key"),
+    )
+
+    session = settings.Session()
+    session.add(conn)
+    session.commit()
 
 
 def query_mysql_from_tunnel(**kwargs):
@@ -44,7 +77,7 @@ def query_mysql_from_tunnel(**kwargs):
     extraction_task = MySqlToGoogleCloudStorageOperator(
         task_id=f"dump_{kwargs['table']}",
         sql=kwargs["sql_query"],
-        bucket=GCS_BUCKET,
+        bucket=DATA_GCS_BUCKET_NAME,
         filename=kwargs["file_name"],
         mysql_conn_id="mysql_scalingo",
         google_cloud_storage_conn_id="google_cloud_default",
@@ -83,7 +116,7 @@ def query_table_new_data(**kwargs):
         sql_query += f" and {query_filter};" if query_filter else ";"
 
         # File path and name.
-        file_name = f"refresh/{table_name}/{now}_{query_count}_{'{}'}.csv"
+        file_name = f"dump_scalingo/refresh/{table_name}/{now}_{query_count}_{'{}'}.csv"
 
         export_table_query = PythonOperator(
             task_id=f"query_{table_name}_{query_count}",
@@ -117,7 +150,7 @@ def define_tasks_parameters(table_data):
             if table == "log_conversion":
                 time_column = "server_time"
             # we determine the date of the last visit action stored in bigquery
-            bigquery_query = f"SELECT max({time_column}) FROM `{GCP_PROJECT_ID}.{BIGQUERY_DATASET}.{table}`"
+            bigquery_query = f"SELECT max({time_column}) FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.{table}`"
             timestamp = bigquery_client.query(bigquery_query).values[0][0]
             # we add a margin of 3 hours
             yesterday = (timestamp.to_pydatetime() + timedelta(hours=-3)).strftime(
@@ -132,7 +165,7 @@ def define_tasks_parameters(table_data):
         if table in ["log_visit", "log_conversion"]:
             bigquery_query = (
                 f"SELECT max({table_data[table]['id']}) "
-                f"FROM `{GCP_PROJECT_ID}.{BIGQUERY_DATASET}.{table}` "
+                f"FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.{table}` "
                 f"where {time_column} <= TIMESTAMP '{yesterday}'"
             )
             bigquery_result = bigquery_client.query(bigquery_query)
@@ -145,7 +178,7 @@ def define_tasks_parameters(table_data):
         else:
             bigquery_query = (
                 f"SELECT max({table_data[table]['id']}) "
-                f"FROM `{GCP_PROJECT_ID}.{BIGQUERY_DATASET}.{table}`"
+                f"FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.{table}`"
             )
             bigquery_result = bigquery_client.query(bigquery_query)
             table_computed_data[table]["min_id"] = int(bigquery_result.values[0][0])
@@ -165,7 +198,7 @@ default_args = {
 }
 
 dag = DAG(
-    "dump_scalingo_matomo_refresh_v6",
+    "dump_scalingo_matomo_refresh_v1",
     default_args=default_args,
     description="Dump scalingo matomo new data to cloud storage in csv format and use it to refresh data in bigquery",
     schedule_interval="0 4 * * *",
@@ -208,23 +241,23 @@ for table in TABLE_DATA:
     if table in ["log_visit", "log_conversion"]:
         delete_temp_table_task = BigQueryTableDeleteOperator(
             task_id=f"delete_temp_{table}_in_bigquery",
-            deletion_dataset_table=f"{GCP_PROJECT_ID}:{BIGQUERY_DATASET}.temp_{table}",
+            deletion_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_RAW_DATASET}.temp_{table}",
             ignore_if_missing=True,
             dag=dag,
         )
         create_empty_table_task = BigQueryCreateEmptyTableOperator(
             task_id=f"create_empty_{table}_in_bigquery",
-            project_id=GCP_PROJECT_ID,
-            dataset_id=BIGQUERY_DATASET,
+            project_id=GCP_PROJECT,
+            dataset_id=BIGQUERY_RAW_DATASET,
             table_id=f"temp_{table}",
             schema_fields=TABLE_DATA[table]["columns"],
             dag=dag,
         )
         import_task = GoogleCloudStorageToBigQueryOperator(
             task_id=f"import_temp_{table}_in_bigquery",
-            bucket=GCS_BUCKET,
-            source_objects=[f"refresh/{table}/{now}_*.csv"],
-            destination_project_dataset_table=f"{BIGQUERY_DATASET}.temp_{table}",
+            bucket=DATA_GCS_BUCKET_NAME,
+            source_objects=[f"dump_scalingo/refresh/{table}/{now}_*.csv"],
+            destination_project_dataset_table=f"{BIGQUERY_RAW_DATASET}.temp_{table}",
             write_disposition="WRITE_EMPTY",
             skip_leading_rows=1,
             schema_fields=TABLE_DATA[table]["columns"],
@@ -232,12 +265,12 @@ for table in TABLE_DATA:
             dag=dag,
         )
         if table == "log_visit":
-            delete_filter = f"WHERE idvisit IN (SELECT idvisit from {GCP_PROJECT_ID}.{BIGQUERY_DATASET}.temp_{table})"
+            delete_filter = f"WHERE idvisit IN (SELECT idvisit from {GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.temp_{table})"
         if table == "log_conversion":
-            delete_filter = f"WHERE CONCAT(idvisit, idgoal, buster) IN (SELECT CONCAT(idvisit, idgoal, buster) from {GCP_PROJECT_ID}.{BIGQUERY_DATASET}.temp_{table})"
+            delete_filter = f"WHERE CONCAT(idvisit, idgoal, buster) IN (SELECT CONCAT(idvisit, idgoal, buster) from {GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.temp_{table})"
         delete_old_rows = BigQueryOperator(
             task_id=f"delete_old_{table}_rows",
-            sql=f"DELETE FROM {GCP_PROJECT_ID}.{BIGQUERY_DATASET}.{table} "
+            sql=f"DELETE FROM {GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.{table} "
             + delete_filter,
             use_legacy_sql=False,
             dag=dag,
@@ -245,16 +278,16 @@ for table in TABLE_DATA:
 
         add_new_rows = BigQueryOperator(
             task_id=f"add_new_{table}_rows",
-            sql=f"SELECT * from {GCP_PROJECT_ID}.{BIGQUERY_DATASET}.{table} "
-            f"UNION ALL (SELECT * from {GCP_PROJECT_ID}.{BIGQUERY_DATASET}.temp_{table})",
-            destination_dataset_table=f"{BIGQUERY_DATASET}.{table}",
+            sql=f"SELECT * from {GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.{table} "
+            f"UNION ALL (SELECT * from {GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.temp_{table})",
+            destination_dataset_table=f"{BIGQUERY_RAW_DATASET}.{table}",
             write_disposition="WRITE_TRUNCATE",
             use_legacy_sql=False,
             dag=dag,
         )
         end_delete_temp_table_task = BigQueryTableDeleteOperator(
             task_id=f"end_delete_temp_{table}_in_bigquery",
-            deletion_dataset_table=f"{GCP_PROJECT_ID}:{BIGQUERY_DATASET}.temp_{table}",
+            deletion_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_RAW_DATASET}.temp_{table}",
             ignore_if_missing=True,
             dag=dag,
         )
@@ -262,9 +295,9 @@ for table in TABLE_DATA:
     else:
         import_task = GoogleCloudStorageToBigQueryOperator(
             task_id=f"import_{table}_in_bigquery",
-            bucket=GCS_BUCKET,
-            source_objects=[f"refresh/{table}/{now}_*.csv"],
-            destination_project_dataset_table=f"{BIGQUERY_DATASET}.{table}",
+            bucket=DATA_GCS_BUCKET_NAME,
+            source_objects=[f"dump_scalingo/refresh/{table}/{now}_*.csv"],
+            destination_project_dataset_table=f"{BIGQUERY_RAW_DATASET}.{table}",
             write_disposition="WRITE_TRUNCATE" if table == "goal" else "WRITE_APPEND",
             skip_leading_rows=1,
             schema_fields=[
@@ -299,17 +332,17 @@ SELECT
         WHEN REGEXP_CONTAINS(user_id, r"^[0-9]{{2,}} ")
             THEN REGEXP_EXTRACT(user_id, r"^[0-9]{{2,}}")
         WHEN REGEXP_CONTAINS(user_id, r"^[A-Z0-9]{{2,}} ")
-            THEN algo_reco_kpi_data.dehumanize_id(REGEXP_EXTRACT(user_id, r"^[A-Z0-9]{{2,}}"))
+            THEN {BIGQUERY_RAW_DATASET}.dehumanize_id(REGEXP_EXTRACT(user_id, r"^[A-Z0-9]{{2,}}"))
         ELSE NULL
     END AS user_id_dehumanized
 FROM
-    {BIGQUERY_DATASET}.log_visit
+    {BIGQUERY_RAW_DATASET}.log_visit
 """
 
 preprocess_log_visit_task = BigQueryOperator(
     task_id="preprocess_log_visit",
     sql=preprocess_log_visit_query,
-    destination_dataset_table=f"{BIGQUERY_DATASET}.log_visit_preprocessed",
+    destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.log_visit_preprocessed",
     write_disposition="WRITE_TRUNCATE",
     use_legacy_sql=False,
     dag=dag,
@@ -322,7 +355,7 @@ WITH filtered AS (
     REGEXP_EXTRACT(name, r"Number of tiles: ([0-9]*)") as number_tiles,
     REGEXP_EXTRACT(name, r"Offer id: ([A-Z0-9]*)") as offer_id,
     REGEXP_EXTRACT(name, r"details\/([A-Z0-9]{{4,5}})[^a-zA-Z0-9]") as offer_id_from_url,
-    FROM {BIGQUERY_DATASET}.log_action
+    FROM {BIGQUERY_RAW_DATASET}.log_action
     WHERE type not in (1, 2, 3, 8)
     OR (type = 1 AND name LIKE "%.passculture.beta.gouv.fr/%")
 ),
@@ -330,9 +363,9 @@ dehumanized AS (
     SELECT
         *,
         IF( offer_id is not null,
-            algo_reco_kpi_data.dehumanize_id(offer_id), null) AS dehumanize_offer_id,
+            {BIGQUERY_RAW_DATASET}.dehumanize_id(offer_id), null) AS dehumanize_offer_id,
         IF( offer_id_from_url is not null,
-            algo_reco_kpi_data.dehumanize_id(offer_id_from_url), null) AS dehumanize_offer_id_from_url
+            {BIGQUERY_RAW_DATASET}.dehumanize_id(offer_id_from_url), null) AS dehumanize_offer_id_from_url
     FROM filtered
 )
 SELECT
@@ -345,7 +378,7 @@ FROM dehumanized;
 preprocess_log_action_task = BigQueryOperator(
     task_id="preprocess_log_action",
     sql=preprocess_log_action_query,
-    destination_dataset_table=f"{BIGQUERY_DATASET}.log_action_preprocessed",
+    destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.log_action_preprocessed",
     write_disposition="WRITE_TRUNCATE",
     use_legacy_sql=False,
     dag=dag,
@@ -361,29 +394,45 @@ SELECT
     idaction_url,
     idaction_event_action,
     idaction_event_category
-FROM {BIGQUERY_DATASET}.log_link_visit_action
+FROM {BIGQUERY_RAW_DATASET}.log_link_visit_action
 """
 
 preprocess_log_link_visit_action_task = BigQueryOperator(
     task_id="preprocess_log_link_visit_action",
     sql=preprocess_log_link_visit_action_query,
-    destination_dataset_table=f"{BIGQUERY_DATASET}.log_link_visit_action_preprocessed",
+    destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.log_link_visit_action_preprocessed",
     write_disposition="WRITE_TRUNCATE",
     use_legacy_sql=False,
     dag=dag,
 )
 
+copy_log_conversion_task = BigQueryOperator(
+    task_id="copy_log_conversion",
+    sql=f"SELECT * from {GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.log_conversion",
+    destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.log_conversion",
+    write_disposition="WRITE_TRUNCATE",
+    use_legacy_sql=False,
+    dag=dag,
+)
+copy_goal_task = BigQueryOperator(
+    task_id="copy_goal",
+    sql=f"SELECT * from {GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.goal",
+    destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.goal",
+    write_disposition="WRITE_TRUNCATE",
+    use_legacy_sql=False,
+    dag=dag,
+)
 
 filter_log_link_visit_action_query = f"""
 DELETE
-FROM {BIGQUERY_DATASET}.log_link_visit_action_preprocessed as llvap
+FROM {BIGQUERY_CLEAN_DATASET}.log_link_visit_action_preprocessed as llvap
 WHERE llvap.idlink_va IN
 (
     SELECT idlink_va
-    FROM {BIGQUERY_DATASET}.log_link_visit_action_preprocessed as llvap
-    LEFT OUTER JOIN {BIGQUERY_DATASET}.log_action_preprocessed as lap1
+    FROM {BIGQUERY_CLEAN_DATASET}.log_link_visit_action_preprocessed as llvap
+    LEFT OUTER JOIN {BIGQUERY_CLEAN_DATASET}.log_action_preprocessed as lap1
         ON lap1.raw_data.idaction = llvap.idaction_url
-    LEFT OUTER JOIN {BIGQUERY_DATASET}.log_action_preprocessed as lap2
+    LEFT OUTER JOIN {BIGQUERY_CLEAN_DATASET}.log_action_preprocessed as lap2
         ON lap2.raw_data.idaction = llvap.idaction_name
     WHERE
     ((lap1.raw_data.idaction IS NULL AND llvap.idaction_url is not null) OR llvap.idaction_url IS NULL)
@@ -400,17 +449,17 @@ filter_log_link_visit_action_task = BigQueryOperator(
 )
 
 filter_log_action_query = f"""
-DELETE FROM {BIGQUERY_DATASET}.log_action_preprocessed as lap
+DELETE FROM {BIGQUERY_CLEAN_DATASET}.log_action_preprocessed as lap
 WHERE lap.raw_data.idaction IN (
     SELECT lap.raw_data.idaction
-    FROM {BIGQUERY_DATASET}.log_action_preprocessed as lap
-    LEFT OUTER JOIN {BIGQUERY_DATASET}.log_link_visit_action_preprocessed as llvap1
+    FROM {BIGQUERY_CLEAN_DATASET}.log_action_preprocessed as lap
+    LEFT OUTER JOIN {BIGQUERY_CLEAN_DATASET}.log_link_visit_action_preprocessed as llvap1
         ON lap.raw_data.idaction = llvap1.idaction_url
-    LEFT OUTER JOIN {BIGQUERY_DATASET}.log_link_visit_action_preprocessed as llvap2
+    LEFT OUTER JOIN {BIGQUERY_CLEAN_DATASET}.log_link_visit_action_preprocessed as llvap2
         ON lap.raw_data.idaction = llvap2.idaction_name
-    LEFT OUTER JOIN {BIGQUERY_DATASET}.log_link_visit_action_preprocessed as llvap3
+    LEFT OUTER JOIN {BIGQUERY_CLEAN_DATASET}.log_link_visit_action_preprocessed as llvap3
         ON lap.raw_data.idaction = llvap3.idaction_event_action
-    LEFT OUTER JOIN {BIGQUERY_DATASET}.log_link_visit_action_preprocessed as llvap4
+    LEFT OUTER JOIN {BIGQUERY_CLEAN_DATASET}.log_link_visit_action_preprocessed as llvap4
         ON lap.raw_data.idaction = llvap4.idaction_event_category
     WHERE
         llvap1.idaction_url is null
@@ -430,6 +479,7 @@ filter_log_action_task = BigQueryOperator(
     dag=dag,
 )
 
+
 end_preprocess = DummyOperator(task_id="end_preprocess", dag=dag)
 
 define_tasks_end = PythonOperator(
@@ -445,4 +495,6 @@ end_import >> [
     preprocess_log_visit_task,
     preprocess_log_action_task,
     preprocess_log_link_visit_action_task,
+    copy_log_conversion_task,
+    copy_goal_task,
 ] >> end_preprocess >> filter_log_action_task >> filter_log_link_visit_action_task >> define_tasks_end >> end_dag

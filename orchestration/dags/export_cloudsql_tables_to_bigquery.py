@@ -21,7 +21,6 @@ TABLES = {
 }
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
-PROJECT_ID = os.environ.get("PROJECT_ID")
 LOCATION = os.environ.get("REGION")
 
 RECOMMENDATION_SQL_INSTANCE = os.environ.get("RECOMMENDATION_SQL_INSTANCE")
@@ -30,7 +29,7 @@ BIGQUERY_RAW_DATASET = os.environ.get("BIGQUERY_RAW_DATASET")
 
 # Recreate proprely the connection url
 database_url = access_secret_data(
-    PROJECT_ID, f"{RECOMMENDATION_SQL_INSTANCE}-database-url"
+    GCP_PROJECT, f"{RECOMMENDATION_SQL_INSTANCE}-database-url"
 )
 os.environ["AIRFLOW_CONN_PROXY_POSTGRES_TCP"] = (
     database_url.replace("postgresql://", "gcpcloudsql://")

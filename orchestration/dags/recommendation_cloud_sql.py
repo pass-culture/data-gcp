@@ -21,16 +21,15 @@ from dependencies.compose_gcs_files import compose_gcs_files
 
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
-PROJECT_ID = os.environ.get("PROJECT_ID")
 LOCATION = os.environ.get("REGION")
 
 RECOMMENDATION_SQL_INSTANCE = os.environ.get("RECOMMENDATION_SQL_INSTANCE")
 RECOMMENDATION_SQL_BASE = os.environ.get("RECOMMENDATION_SQL_BASE")
-BIGQUERY_RAW_DATASET = os.environ.get("BIGQUERY_RAW_DATASET")
+BIGQUERY_CLEAN_DATASET = os.environ.get("BIGQUERY_CLEAN_DATASET")
 CONNECTION_ID = os.environ.get("BIGQUERY_CONNECTION_RECOMMENDATION")
 
 database_url = access_secret_data(
-    PROJECT_ID, f"{RECOMMENDATION_SQL_INSTANCE}-database-url"
+    GCP_PROJECT, f"{RECOMMENDATION_SQL_INSTANCE}-database-url"
 )
 os.environ["AIRFLOW_CONN_PROXY_POSTGRES_TCP"] = (
     database_url.replace("postgresql://", "gcpcloudsql://")
@@ -110,10 +109,10 @@ with DAG(
             task_id=f"filter_column_{table}",
             sql=f"""
                 SELECT {select_columns}
-                FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.{table}` 
+                FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_{table}` 
             """,
             use_legacy_sql=False,
-            destination_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_RAW_DATASET}.temp_export_{table}",
+            destination_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_CLEAN_DATASET}.temp_export_{table}",
             write_disposition="WRITE_TRUNCATE",
         )
 
@@ -127,7 +126,7 @@ with DAG(
 
         export_task = BigQueryToCloudStorageOperator(
             task_id=f"export_{table}_to_gcs",
-            source_project_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_RAW_DATASET}.temp_export_{table}",
+            source_project_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_CLEAN_DATASET}.temp_export_{table}",
             destination_cloud_storage_uris=[f"{BUCKET_PATH}/{table}-*.csv"],
             export_format="CSV",
             print_header=False,
@@ -135,7 +134,7 @@ with DAG(
 
         delete_temp_table_task = BigQueryTableDeleteOperator(
             task_id=f"delete_temp_export_{table}_in_bigquery",
-            deletion_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_RAW_DATASET}.temp_export_{table}",
+            deletion_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_CLEAN_DATASET}.temp_export_{table}",
             ignore_if_missing=True,
         )
 

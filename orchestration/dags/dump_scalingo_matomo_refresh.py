@@ -2,7 +2,7 @@ import ast
 import os
 from datetime import datetime, timedelta
 
-from airflow import DAG
+from airflow import DAG, AirflowException, settings
 from airflow.contrib.operators.bigquery_operator import (
     BigQueryOperator,
     BigQueryCreateEmptyTableOperator,
@@ -14,7 +14,9 @@ from airflow.contrib.operators.gcs_to_bq import GoogleCloudStorageToBigQueryOper
 from airflow.contrib.operators.mysql_to_gcs import (
     MySqlToGoogleCloudStorageOperator,
 )
+from airflow.hooks.base_hook import BaseHook
 from airflow.models import Variable
+from airflow.models.connection import Connection
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python_operator import PythonOperator
 
@@ -33,11 +35,14 @@ LOCAL_HOST = "127.0.0.1"
 LOCAL_PORT = 10026
 
 
-secret_id = (
+matomo_secret_id = (
     "matomo-connection-data-stg" if ENV == "dev" else "matomo-connection-data-prod"
 )
 
-MATOMO_CONNECTION_DATA = ast.literal_eval(access_secret_data(GCP_PROJECT, secret_id))
+MATOMO_CONNECTION_DATA = ast.literal_eval(
+    access_secret_data(GCP_PROJECT, matomo_secret_id)
+)
+SSH_CONN_ID = "ssh_scalingo"
 
 os.environ[
     "AIRFLOW_CONN_MYSQL_SCALINGO"
@@ -46,6 +51,23 @@ os.environ[
 matomo_client = MatomoClient(MATOMO_CONNECTION_DATA, LOCAL_PORT)
 
 bigquery_client = BigQueryClient()
+
+
+try:
+    conn = BaseHook.get_connection(SSH_CONN_ID)
+except AirflowException:
+    conn = Connection(
+        conn_id=SSH_CONN_ID,
+        conn_type="ssh",
+        host="ssh.osc-fr1.scalingo.com",
+        login="git",
+        port=22,
+        extra=access_secret_data(GCP_PROJECT, "scalingo-private-key"),
+    )
+
+    session = settings.Session()
+    session.add(conn)
+    session.commit()
 
 
 def query_mysql_from_tunnel(**kwargs):

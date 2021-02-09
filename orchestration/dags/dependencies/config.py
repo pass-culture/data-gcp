@@ -2,7 +2,7 @@ import os
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT", "")
 GCP_REGION = "europe-west1"
-ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "")
+ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 
 BASE32_JS_LIB_PATH = f"gs://data-bucket-{ENV_SHORT_NAME}/base32-encode/base32.js"
 

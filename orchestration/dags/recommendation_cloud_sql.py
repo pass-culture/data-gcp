@@ -40,7 +40,7 @@ os.environ["AIRFLOW_CONN_PROXY_POSTGRES_TCP"] = (
 
 TABLES_DATA_PATH = f"{os.environ.get('DAG_FOLDER')}/tables.csv"
 DATA_GCS_BUCKET_NAME = os.environ.get("DATA_GCS_BUCKET_NAME")
-BUCKET_PATH = f"gs://{DATA_GCS_BUCKET_NAME}/bigquery_exports"
+BUCKET_PATH = f"gs://{DATA_GCS_BUCKET_NAME}/{ENV_SHORT_NAME}/bigquery_exports"
 
 default_args = {
     "on_failure_callback": task_fail_slack_alert,

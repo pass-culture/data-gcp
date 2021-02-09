@@ -1,21 +1,21 @@
 /* Create the function to fetch the non recommendable offers.
 We use a function otherwise the materialized view is a dependency of the tables and blocks the drop operation. */
+DROP FUNCTION IF EXISTS get_non_recommendable_offers;
 CREATE OR REPLACE FUNCTION get_non_recommendable_offers()
-RETURNS TABLE (user_id BIGINT,
-               offer_id BIGINT) AS
+RETURNS TABLE (user_id varchar,
+               offer_id varchar) AS
 $body$
 BEGIN
     RETURN QUERY
-    SELECT DISTINCT b."userId" AS user_id, s."offerId" AS offer_id
+    SELECT DISTINCT b."user_id" AS user_id, s."offer_id" AS offer_id
       FROM public.booking b
-INNER JOIN public.stock s ON b."stockId" = s.id
-     WHERE b."isActive" = true
-       AND b."isCancelled" = false;
+INNER JOIN public.stock s ON b."stock_id" = s.stock_id
+     WHERE b."booking_is_cancelled" = false;
 END;
 $body$
 LANGUAGE plpgsql;
 
-
+DROP MATERIALIZED VIEW IF EXISTS non_recommendable_offers;
 CREATE MATERIALIZED VIEW IF NOT EXISTS non_recommendable_offers
 AS
     SELECT * from get_non_recommendable_offers()

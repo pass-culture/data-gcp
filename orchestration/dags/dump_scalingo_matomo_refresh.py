@@ -45,7 +45,7 @@ os.environ[
 
 matomo_client = MatomoClient(MATOMO_CONNECTION_DATA, LOCAL_PORT)
 
-bigquery_client = BigQueryClient(os.environ.get("GOOGLE_APPLICATION_CREDENTIALS"))
+bigquery_client = BigQueryClient()
 
 
 def query_mysql_from_tunnel(**kwargs):

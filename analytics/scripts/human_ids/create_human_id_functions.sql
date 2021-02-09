@@ -7,7 +7,7 @@
 CREATE OR REPLACE FUNCTION
     raw_dev.humanize_id(id INT64)
     RETURNS STRING
-    LANGUAGE js OPTIONS ( library="gs://pass-culture-data/base32-encode/base32.js" ) AS """
+    LANGUAGE js OPTIONS ( library="gs://data-bucket-dev/base32-encode/base32.js" ) AS """
         // turn int into bytes array
         var byteArray = [];
         var updated_id = id;
@@ -29,7 +29,7 @@ CREATE OR REPLACE FUNCTION
 CREATE OR REPLACE FUNCTION
     raw_dev.dehumanize_id(id STRING)
     RETURNS STRING
-    LANGUAGE js OPTIONS (library=["gs://pass-culture-data/base32-encode/base32.js"]) AS """
+    LANGUAGE js OPTIONS (library=["gs://data-bucket-dev/base32-encode/base32.js"]) AS """
         var public_id = id.replace(/8/g, 'O').replace(/9/g, 'I');
 
         var byteArray = new Uint8Array(base32Decode(public_id, 'RFC4648')).reverse();

@@ -1,7 +1,7 @@
 WITH scrolls AS (
     SELECT server_time, user_id_dehumanized
-	FROM `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_link_visit_action_preprocessed` llvap
-	JOIN `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_visit_preprocessed` lvp
+	FROM `passculture-data-prod.clean_prod.log_link_visit_action_preprocessed` llvap
+	JOIN `passculture-data-prod.clean_prod.log_visit_preprocessed` lvp
 	ON lvp.idvisit = llvap.idvisit
 	WHERE llvap.idaction_event_action = 4394836                 --4394836 = AllModulesSeen
 	AND (idaction_url=4394835 OR idaction_url=150307)           --4394835 & 150307 = page d'accueil
@@ -10,16 +10,16 @@ WITH scrolls AS (
 ),
 bookings AS (
 	SELECT userId, id AS offerId, CAST(dateCreated AS TIMESTAMP) AS bookingDate
-	FROM `pass-culture-app-projet-test.data_analytics.booking`
+	FROM `passculture-data-prod.analytics_prod.applicative_database_booking`
 	WHERE bookingDate >= PARSE_TIMESTAMP('%Y%m%d',@DS_START_DATE)     -- Dates à définir sur la dashboard
 	AND bookingDate < PARSE_TIMESTAMP('%Y%m%d',@DS_END_DATE)          -- pour gérer la période d'AB testing
 ),
 recommended_offers AS (
 	SELECT userId, offerId, date
-	FROM `pass-culture-app-projet-test.algo_reco_kpi_data.past_recommended_offers`
+	FROM `passculture-data-prod.analytics_prod.past_recommended_offers`
 ),
 offers AS (
-    SELECT id as offerId, type as offerType, url FROM `pass-culture-app-projet-test.data_analytics.offer`
+    SELECT id as offerId, type as offerType, url FROM `passculture-data-prod.analytics_prod.applicative_database_offer`
 ),
 viewed_recos AS (
 	SELECT * FROM (

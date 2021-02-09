@@ -4,8 +4,8 @@ WITH scrolls AS (
     SELECT
         server_time,
 	    user_id_dehumanized
-	FROM `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_link_visit_action_preprocessed` llvap
-	JOIN `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_visit_preprocessed` lvp
+	FROM `passculture-data-prod.clean_prod.log_link_visit_action_preprocessed` llvap
+	JOIN `passculture-data-prod.clean_prod.log_visit_preprocessed` lvp
 	ON lvp.idvisit = llvap.idvisit
 	WHERE llvap.idaction_event_action = 4394836                 --4394836 = AllModulesSeen
 	AND (idaction_url=4394835 OR idaction_url=150307)           --4394835 & 150307 = page d'accueil
@@ -17,10 +17,10 @@ WITH scrolls AS (
         o.id AS offer_id,
         o.type,
         b.dateCreated
-    FROM `pass-culture-app-projet-test.data_analytics.booking` b
-    INNER JOIN `pass-culture-app-projet-test.data_analytics.stock` s
+    FROM `passculture-data-prod.analytics_prod.applicative_database_booking` b
+    INNER JOIN `passculture-data-prod.analytics_prod.applicative_database_stock` s
         ON b.stockId = s.id
-    INNER JOIN `pass-culture-app-projet-test.data_analytics.offer` o
+    INNER JOIN `passculture-data-prod.analytics_prod.applicative_database_offer` o
         ON o.id = s.offerId
     WHERE b.dateCreated >= PARSE_DATETIME('%Y%m%d',@DS_START_DATE)     -- Dates à définir sur la dashboard
     AND b.dateCreated < PARSE_DATETIME('%Y%m%d',@DS_END_DATE)          -- pour gérer la période d'AB testing
@@ -29,7 +29,7 @@ WITH scrolls AS (
         userId,
         offerId,
         date
-	FROM `pass-culture-app-projet-test.algo_reco_kpi_data.past_recommended_offers`
+	FROM `passculture-data-prod.analytics_prod.past_recommended_offers`
 ), viewed_recommended_offers AS (
 	SELECT
         *

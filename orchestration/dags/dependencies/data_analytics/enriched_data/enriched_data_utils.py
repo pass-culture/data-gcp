@@ -5,7 +5,7 @@ from dependencies.data_analytics.config import BASE32_JS_LIB_PATH
 PATH_TO_DIR = os.path.dirname(os.path.realpath(__file__))
 
 
-def define_humanized_id_query(table, dataset):
+def define_humanized_id_query(table, dataset, table_prefix=""):
     # 1. Define function humanize_id(int) -> str
     humanize_id_definition_query = f"""
         CREATE TEMPORARY FUNCTION humanize_id(id STRING)
@@ -28,12 +28,12 @@ def define_humanized_id_query(table, dataset):
 
     # 2. Use humanize_id function to create (temp) table
     tmp_table_query = f"""
-        CREATE TEMP TABLE {table}_humanized_id AS
-            SELECT
-                id,
-                humanize_id(id) AS humanized_id
-            FROM {dataset}.{table}
-            WHERE id is not NULL;
+                CREATE TEMP TABLE {table}_humanized_id AS
+                    SELECT
+                        {table}_id,
+                        humanize_id({table}_id) AS humanized_id
+                    FROM {dataset}.{table_prefix}{table}
+                    WHERE {table}_id is not NULL;
     """
 
     return f"""

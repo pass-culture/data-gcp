@@ -15,7 +15,7 @@ class TestDags(unittest.TestCase):
             "dependencies.matomo_client.MatomoClient.query"
         ) as matomo_mocker, mock.patch(
             "dependencies.access_gcp_secrets.access_secret_data"
-        ) as secret_mocker:
+        ) as access_secret_mocker:
 
             def bigquery_client(query):
                 return (
@@ -26,14 +26,9 @@ class TestDags(unittest.TestCase):
                     else pd.DataFrame({0: [0]})
                 )
 
-            def access_secret_data(project_id, secret_id, version_id=1):
-                if secret_id == "cloudsql-recommendation-test-database-url":
-                    return "postgresql://test-user:test-password@11.111.111.111:1234/test-database"
-                return "test"
-
+            access_secret_mocker.return_value = "{}"
             matomo_mocker.return_value = [[0]]
             bigquery_mocker.side_effect = bigquery_client
-            secret_mocker.side_effect = access_secret_data
             self.dagbag = DagBag(include_examples=False)
 
     def test_dag_import_no_error(self):
@@ -103,16 +98,16 @@ class TestDags(unittest.TestCase):
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 50)
+        self.assertEqual(len(dag.tasks), 84)
 
     def test_dump_matomo_refresh_dag_is_loaded(self):
         # When
-        dag = self.dagbag.get_dag(dag_id="dump_scalingo_matomo_refresh_v6")
+        dag = self.dagbag.get_dag(dag_id="dump_scalingo_matomo_refresh_v1")
 
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 32)
+        self.assertEqual(len(dag.tasks), 34)
 
     def test_import_data_analytics_dag_is_loaded(self):
         # When

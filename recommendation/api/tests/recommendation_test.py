@@ -34,6 +34,7 @@ def app_config() -> Dict[str, Any]:
     return {
         "AB_TESTING_TABLE": "ab_testing_20201207",
         "NUMBER_OF_RECOMMENDATIONS": 10,
+        "MODEL_REGION": "model_region",
         "MODEL_NAME": "model_name",
         "MODEL_VERSION": "model_version",
     }
@@ -282,7 +283,10 @@ def test_get_scored_recommendation_for_user(
 
     # When
     scored_recommendation_for_user = get_scored_recommendation_for_user(
-        user_recommendation, app_config["MODEL_NAME"], app_config["MODEL_VERSION"]
+        user_recommendation,
+        app_config["MODEL_REGION"],
+        app_config["MODEL_NAME"],
+        app_config["MODEL_VERSION"],
     )
 
     # Then

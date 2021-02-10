@@ -10,7 +10,9 @@ WITH scrolls AS (
 ),
 bookings AS (
 	SELECT user_id, offer_id AS offerId, CAST(booking_creation_date AS TIMESTAMP) AS bookingDate
-	FROM `passculture-data-prod.analytics_prod.applicative_database_booking`
+	FROM `passculture-data-prod.analytics_prod.applicative_database_booking`b
+	JOIN `passculture-data-prod.analytics_prod.applicative_database_stock` s
+	ON s.stock_id = b.stock_id
 	WHERE bookingDate >= PARSE_TIMESTAMP('%Y%m%d',@DS_START_DATE)     -- Dates à définir sur la dashboard
 	AND bookingDate < PARSE_TIMESTAMP('%Y%m%d',@DS_END_DATE)          -- pour gérer la période d'AB testing
 ),
@@ -34,7 +36,7 @@ viewed_recos AS (
 SELECT TIMESTAMP_DIFF(bookings.bookingDate, viewed_recos.recoDate, SECOND) AS time_between_reco_and_booking, viewed_recos.userId, viewed_recos.offerId, offerType, offer_url
 FROM viewed_recos
 INNER JOIN bookings
-ON viewed_recos.userId = bookings.user_dd AND viewed_recos.offerId = bookings.offerId
+ON viewed_recos.userId = bookings.user_id AND viewed_recos.offerId = bookings.offerId
 INNER JOIN offers
 ON viewed_recos.offerId = offers.offerId
 WHERE TIMESTAMP_DIFF(bookings.bookingDate, viewed_recos.recoDate, SECOND) >= 0;

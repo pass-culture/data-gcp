@@ -13,7 +13,9 @@ WITH scrolls AS (
     AND llvap.server_time < PARSE_TIMESTAMP('%Y%m%d',@DS_END_DATE)        -- pour gérer la période d'AB testing
 ), booked_offers AS (
     SELECT user_id, offer_id AS offerId, CAST(booking_creation_date AS TIMESTAMP) AS booking_date
-	FROM `passculture-data-prod.analytics_prod.applicative_database_booking`
+    FROM `passculture-data-prod.analytics_prod.applicative_database_booking` b
+	JOIN `passculture-data-prod.analytics_prod.applicative_database_stock` s
+	ON b.stock_id = s.stock_id
 --    WHERE booking_date >= "2021-01-01"
 --    AND booking_date < "2022-01-01"
 ), recommended_offers AS (

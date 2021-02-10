@@ -4,8 +4,8 @@ WITH scrolls AS (
     SELECT
         server_time,
 	    user_id_dehumanized
-	FROM `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_link_visit_action_preprocessed` llvap
-	JOIN `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_visit_preprocessed` lvp
+	FROM `passculture-data-prod.clean_prod.log_link_visit_action_preprocessed` llvap
+	JOIN `passculture-data-prod.clean_prod.log_visit_preprocessed` lvp
 	    ON lvp.idvisit = llvap.idvisit
 	WHERE llvap.idaction_event_action = 4394836                 --4394836 = AllModulesSeen
 	AND (idaction_url=4394835 OR idaction_url=150307)           --4394835 & 150307 = page d'accueil
@@ -14,7 +14,7 @@ WITH scrolls AS (
 ),
 recommended_offers AS (
 	SELECT userId, offerId, date
-	FROM `pass-culture-app-projet-test.algo_reco_kpi_data.past_recommended_offers`
+	FROM `passculture-data-prod.raw_prod.past_recommended_offers`
 )
 SELECT count(*)
 FROM (

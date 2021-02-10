@@ -2,8 +2,8 @@
 
 WITH scrolls AS (
     SELECT server_time, user_id_dehumanized
-	FROM `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_link_visit_action_preprocessed` llvap
-	JOIN `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_visit_preprocessed` lvp
+	FROM `passculture-data-prod.clean_prod.log_link_visit_action_preprocessed` llvap
+	JOIN `passculture-data-prod.clean_prod.log_visit_preprocessed` lvp
 	ON lvp.idvisit = llvap.idvisit
 	WHERE llvap.idaction_event_action = 4394836                 --4394836 = AllModulesSeen
 	AND (idaction_url=4394835 OR idaction_url=150307)           --4394835 & 150307 = page d'accueil
@@ -14,10 +14,10 @@ WITH scrolls AS (
         distinct(lap.tracker_data.dehumanize_offer_id) as offer_id,
         lvp.user_id_dehumanized,
         llvap.server_time
-    FROM `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_action_preprocessed` lap
-    JOIN `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_link_visit_action_preprocessed` llvap
+    FROM `passculture-data-prod.clean_prod.log_action_preprocessed` lap
+    JOIN `passculture-data-prod.clean_prod.log_link_visit_action_preprocessed` llvap
         ON lap.raw_data.idaction = llvap.idaction_name
-    JOIN `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_visit_preprocessed` lvp
+    JOIN `passculture-data-prod.clean_prod.log_visit_preprocessed` lvp
         ON lvp.idvisit = llvap.idvisit
     WHERE idaction_event_action = 6957092                              -- 6957092: AddFavorite_FromHomepage
     AND llvap.server_time >= PARSE_TIMESTAMP('%Y%m%d',@DS_START_DATE)     -- Dates à définir sur la dashboard
@@ -28,7 +28,7 @@ WITH scrolls AS (
         userId,
         offerId,
         date
-	FROM `pass-culture-app-projet-test.algo_reco_kpi_data.past_recommended_offers`
+	FROM `passculture-data-prod.raw_prod.past_recommended_offers`
 ), viewed_recommended_offers AS (
 	SELECT
         *

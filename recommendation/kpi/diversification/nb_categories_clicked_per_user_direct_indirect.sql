@@ -4,8 +4,8 @@ WITH scrolls AS (
     SELECT
         server_time,
 	    user_id_dehumanized
-	FROM `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_link_visit_action_preprocessed` llvap
-	JOIN `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_visit_preprocessed` lvp
+	FROM `passculture-data-prod.clean_prod.log_link_visit_action_preprocessed` llvap
+	JOIN `passculture-data-prod.clean_prod.log_visit_preprocessed` lvp
 	    ON lvp.idvisit = llvap.idvisit
 	WHERE llvap.idaction_event_action = 4394836                 --4394836 = AllModulesSeen
 	AND (idaction_url=4394835 OR idaction_url=150307)           --4394835 & 150307 = page d'accueil
@@ -16,10 +16,10 @@ WITH scrolls AS (
         distinct(lap.url_data.dehumanize_offer_id) as offer_id,
         lvp.user_id_dehumanized,
         llvap.server_time
-    FROM `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_action_preprocessed` lap
-    JOIN `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_link_visit_action_preprocessed` llvap
+    FROM `passculture-data-prod.clean_prod.log_action_preprocessed` lap
+    JOIN `passculture-data-prod.clean_prod.log_link_visit_action_preprocessed` llvap
         ON lap.raw_data.idaction = llvap.idaction_url
-    JOIN `pass-culture-app-projet-test.algo_reco_kpi_matomo.log_visit_preprocessed` lvp
+    JOIN `passculture-data-prod.clean_prod.log_visit_preprocessed` lvp
         ON lvp.idvisit = llvap.idvisit
     WHERE
         lap.url_data.dehumanize_offer_id is not null
@@ -30,7 +30,7 @@ WITH scrolls AS (
         userId,
         offerId,
         date
-	FROM `pass-culture-app-projet-test.algo_reco_kpi_data.past_recommended_offers`
+	FROM `passculture-data-prod.raw_prod.past_recommended_offers`
 ), viewed_recommended_offers AS (
 	SELECT
         *
@@ -51,18 +51,18 @@ WITH scrolls AS (
     SELECT
     vro.user_id,
     vro.offer_id,
-    o.type
+    o.offer_type
     FROM clicked_offers co
     INNER JOIN viewed_recommended_offers vro
         ON vro.user_id = co.user_id_dehumanized AND vro.offer_id = co.offer_id
-    INNER JOIN `pass-culture-app-projet-test.data_analytics.offer` o
-        ON o.id = co.offer_id
+    INNER JOIN `passculture-data-prod.analytics_prod.applicative_database_offer` o
+        ON o.offer_id = co.offer_id
     WHERE co.server_time > vro.reco_date
-    GROUP BY vro.user_id, vro.offer_id, o.type
+    GROUP BY vro.user_id, vro.offer_id, o.offer_type
 ), number_types_clicked_by_user AS (
   SELECT
       user_id,
-      COUNT(DISTINCT(type)) AS number_type_clicked
+      COUNT(DISTINCT(offer_type)) AS number_type_clicked
   FROM viewed_recommended_and_clicked
   GROUP BY user_id
 )

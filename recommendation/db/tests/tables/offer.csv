@@ -1,0 +1,6 @@
+offer_id_at_providers|offer_modified_at_last_provider_date|offer_id|offer_creation_date|offer_product_id|venue_id|offer_last_provider_id|booking_email|offer_is_active|offer_type|offer_name|offer_description|offer_conditions|offer_age_min|offer_age_max|offer_url|offer_duration_minutes|offer_is_national|offer_extra_data|offer_is_duo|offer_withdrawal_details
+|2021-02-0309:26:06.560193|138717|2021-02-0309:25:48.443348|1515827|1814||booking@example.net|f|EventType.JEUX|Autantenemportemongilet||||||60|f||f|
+|2021-02-0309:26:06.16541|138689|2021-02-0309:25:48.443348|1515799|1799||booking@example.net|t|EventType.JEUX|ThisisSpartaaaaa||||||60|f||t|
+|2021-02-0309:26:06.638511|138724|2021-02-0309:25:48.443348|1515834|1816||booking@example.net|t|EventType.JEUX|Unlitsousunerivière||||||60|f||t|
+|2021-02-0309:26:06.442703|138710|2021-02-0309:25:48.443348|1515820|1809||booking@example.net|t|EventType.JEUX|Avez-vousdéjàvu?||||||60|f||t|
+|2021-02-0309:26:06.361817|138703|2021-02-0309:25:48.443348|1515813|1806||booking@example.net|t|EventType.JEUX|Lacommunesansguillemin||||||60|f||t|

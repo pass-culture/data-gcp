@@ -64,17 +64,6 @@ SELECT (
     SELECT count(*) FROM `pass-culture-app-projet-test.analytics_sbx.applicative_database_venue`
   ) as count_venue_from_big_query
 
--- compare past_recommended_offers volumetry
-SELECT(
-  SELECT count(*) as count_past_recommended_offers FROM EXTERNAL_QUERY(
-                  'europe-west1.cloud_SQL_pcdata-poc-csql-recommendation',
-                  ' SELECT CAST("id" AS varchar(255)) FROM public.past_recommended_offers'
-              )
-  ) as count_past_recommended_offers_csql,
-  (
-    SELECT count(*) as count_past_recommended_offers FROM `pass-culture-app-projet-test.algo_reco_kpi_data.past_recommended_offers`
-  ) as count_past_recommended_offers_csql_bigquery
-
 -- compare last date created booking
 WITH last_booking_date_csql as (
   SELECT MAX(dateCreated) FROM EXTERNAL_QUERY(

@@ -19,7 +19,6 @@ TABLES = {
         "write_disposition": "WRITE_APPEND",
     },
 }
-ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
 LOCATION = os.environ.get("REGION")
 

@@ -19,14 +19,12 @@ from dependencies.access_gcp_secrets import access_secret_data
 from dependencies.slack_alert import task_fail_slack_alert
 from dependencies.compose_gcs_files import compose_gcs_files
 
-ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
 LOCATION = os.environ.get("REGION")
 
 RECOMMENDATION_SQL_INSTANCE = os.environ.get("RECOMMENDATION_SQL_INSTANCE")
 RECOMMENDATION_SQL_BASE = os.environ.get("RECOMMENDATION_SQL_BASE")
 BIGQUERY_CLEAN_DATASET = os.environ.get("BIGQUERY_CLEAN_DATASET")
-CONNECTION_ID = os.environ.get("BIGQUERY_CONNECTION_RECOMMENDATION")
 
 database_url = access_secret_data(
     GCP_PROJECT, f"{RECOMMENDATION_SQL_INSTANCE}-database-url"
@@ -39,7 +37,7 @@ os.environ["AIRFLOW_CONN_PROXY_POSTGRES_TCP"] = (
 
 TABLES_DATA_PATH = f"{os.environ.get('DAG_FOLDER')}/tables.csv"
 DATA_GCS_BUCKET_NAME = os.environ.get("DATA_GCS_BUCKET_NAME")
-BUCKET_PATH = f"gs://{DATA_GCS_BUCKET_NAME}/{ENV_SHORT_NAME}/bigquery_exports"
+BUCKET_PATH = f"gs://{DATA_GCS_BUCKET_NAME}/bigquery_exports"
 
 default_args = {
     "on_failure_callback": task_fail_slack_alert,
@@ -143,8 +141,8 @@ with DAG(
             python_callable=compose_gcs_files,
             op_kwargs={
                 "bucket_name": DATA_GCS_BUCKET_NAME,
-                "source_prefix": f"{ENV_SHORT_NAME}/bigquery_exports/{table}-",
-                "destination_blob_name": f"{ENV_SHORT_NAME}/bigquery_exports/{table}.csv",
+                "source_prefix": f"bigquery_exports/{table}-",
+                "destination_blob_name": f"bigquery_exports/{table}.csv",
             },
             dag=dag,
         )

@@ -30,7 +30,7 @@ WITH scrolls AS (
         userId,
         offerId,
         date
-	FROM `passculture-data-prod.analytics_prod.past_recommended_offers`
+	FROM `passculture-data-prod.raw_prod.past_recommended_offers`
 ), viewed_recommended_offers AS (
 	SELECT
         *
@@ -51,18 +51,18 @@ WITH scrolls AS (
     SELECT
     vro.user_id,
     vro.offer_id,
-    o.type
+    o.offer_type
     FROM clicked_offers co
     INNER JOIN viewed_recommended_offers vro
         ON vro.user_id = co.user_id_dehumanized AND vro.offer_id = co.offer_id
     INNER JOIN `passculture-data-prod.analytics_prod.applicative_database_offer` o
-        ON o.id = co.offer_id
+        ON o.offer_id = co.offer_id
     WHERE co.server_time > vro.reco_date
-    GROUP BY vro.user_id, vro.offer_id, o.type
+    GROUP BY vro.user_id, vro.offer_id, o.offer_type
 ), number_types_clicked_by_user AS (
   SELECT
       user_id,
-      COUNT(DISTINCT(type)) AS number_type_clicked
+      COUNT(DISTINCT(offer_type)) AS number_type_clicked
   FROM viewed_recommended_and_clicked
   GROUP BY user_id
 )

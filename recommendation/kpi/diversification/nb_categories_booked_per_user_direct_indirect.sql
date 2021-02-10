@@ -13,23 +13,23 @@ WITH scrolls AS (
     AND llvap.server_time < PARSE_TIMESTAMP('%Y%m%d',@DS_END_DATE)        -- pour gérer la période d'AB testing
 ), booked_offers AS (
     SELECT
-        b.userId AS user_id,
-        o.id AS offer_id,
-        o.type,
-        b.dateCreated
+        b.user_id AS user_id,
+        o.offer_id AS offer_id,
+        o.offer_type,
+        b.booking_creation_date
     FROM `passculture-data-prod.analytics_prod.applicative_database_booking` b
     INNER JOIN `passculture-data-prod.analytics_prod.applicative_database_stock` s
-        ON b.stockId = s.id
+        ON b.stock_id = s.stock_id
     INNER JOIN `passculture-data-prod.analytics_prod.applicative_database_offer` o
-        ON o.id = s.offerId
-    WHERE b.dateCreated >= PARSE_DATETIME('%Y%m%d',@DS_START_DATE)     -- Dates à définir sur la dashboard
-    AND b.dateCreated < PARSE_DATETIME('%Y%m%d',@DS_END_DATE)          -- pour gérer la période d'AB testing
+        ON o.offer_id = s.offer_id
+    WHERE b.booking_creation_date >= PARSE_DATETIME('%Y%m%d',@DS_START_DATE)     -- Dates à définir sur la dashboard
+    AND b.booking_creation_date < PARSE_DATETIME('%Y%m%d',@DS_END_DATE)          -- pour gérer la période d'AB testing
 ), recommended_offers AS (
 	SELECT
         userId,
         offerId,
         date
-	FROM `passculture-data-prod.analytics_prod.past_recommended_offers`
+	FROM `passculture-data-prod.raw_prod.past_recommended_offers`
 ), viewed_recommended_offers AS (
 	SELECT
         *
@@ -50,16 +50,16 @@ WITH scrolls AS (
     SELECT
         vro.user_id,
         vro.offer_id,
-        bo.type
+        bo.offer_type
     FROM booked_offers bo
     INNER JOIN viewed_recommended_offers vro
         ON vro.user_id = bo.user_id AND vro.offer_id = bo.offer_id
-    WHERE bo.dateCreated > CAST(vro.reco_date AS DATETIME)
-    GROUP BY vro.user_id, vro.offer_id, bo.type
+    WHERE bo.booking_creation_date > CAST(vro.reco_date AS DATETIME)
+    GROUP BY vro.user_id, vro.offer_id, bo.offer_type
 ), number_types_booked_by_user AS (
   SELECT
       user_id,
-      COUNT(DISTINCT(type)) AS number_type_booked
+      COUNT(DISTINCT(offer_type)) AS number_type_booked
   FROM viewed_recommended_and_booked
   GROUP BY user_id
 )

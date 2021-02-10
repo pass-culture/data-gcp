@@ -12,16 +12,16 @@ WITH scrolls AS (
     AND llvap.server_time >= PARSE_TIMESTAMP('%Y%m%d',@DS_START_DATE)     -- Dates à définir sur la dashboard
     AND llvap.server_time < PARSE_TIMESTAMP('%Y%m%d',@DS_END_DATE)        -- pour gérer la période d'AB testing
 ), booked_offers AS (
-    SELECT userId, id AS offerId, CAST(dateCreated AS TIMESTAMP) AS booking_date
+    SELECT user_id, offer_id AS offerId, CAST(booking_creation_date AS TIMESTAMP) AS booking_date
 	FROM `passculture-data-prod.analytics_prod.applicative_database_booking`
---    WHERE dateCreated >= "2021-01-01"
---    AND dateCreated < "2022-01-01"
+--    WHERE booking_date >= "2021-01-01"
+--    AND booking_date < "2022-01-01"
 ), recommended_offers AS (
 	SELECT
         userId,
         offerId,
         date
-	FROM `passculture-data-prod.analytics_prod.past_recommended_offers`
+	FROM `passculture-data-prod.raw_prod.past_recommended_offers`
 ), viewed_recommended_offers AS (
 	SELECT
         *
@@ -44,7 +44,7 @@ WITH scrolls AS (
     vro.offer_id
     FROM booked_offers bo
     INNER JOIN viewed_recommended_offers vro
-        ON vro.user_id = bo.userId AND vro.offer_id = bo.offerId
+        ON vro.user_id = bo.user_id AND vro.offer_id = bo.offerId
     WHERE bo.booking_date  > vro.reco_date
     GROUP BY vro.user_id, vro.offer_id
 ), number_booked_by_user AS (

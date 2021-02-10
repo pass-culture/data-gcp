@@ -14,7 +14,7 @@ WITH scrolls AS (
 ),
 recommended_offers AS (
 	SELECT userId, offerId, date
-	FROM `passculture-data-prod.analytics_prod.past_recommended_offers`
+	FROM `passculture-data-prod.raw_prod.past_recommended_offers`
 )
 SELECT count(*)
 FROM (

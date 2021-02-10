@@ -25,15 +25,15 @@ WITH consulted_offers AS (
     SELECT
     cofrm.user_id,
     cofrm.offer_id,
-    o.type
+    o.offer_type
     FROM consulted_offers_from_reco_module AS cofrm
     INNER JOIN `passculture-data-prod.analytics_prod.applicative_database_offer` o
-        ON o.id = cofrm.offer_id
-    GROUP BY cofrm.user_id, cofrm.offer_id, o.type
+        ON o.offer_id = cofrm.offer_id
+    GROUP BY cofrm.user_id, cofrm.offer_id, o.offer_type
 ), number_types_clicked_by_user AS (
     SELECT
         user_id,
-        COUNT(DISTINCT(type)) AS number_type_clicked
+        COUNT(DISTINCT(offer_type)) AS number_type_clicked
     FROM offers_with_types
     GROUP BY user_id
 )

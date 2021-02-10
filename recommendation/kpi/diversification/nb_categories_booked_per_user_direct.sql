@@ -24,15 +24,15 @@ WITH booked_offers AS (
     SELECT
     bofrm.user_id,
     bofrm.offer_id,
-    o.type
+    o.offer_type
     FROM booked_offers_from_reco_module AS bofrm
     INNER JOIN `passculture-data-prod.analytics_prod.applicative_database_offer` o
-        ON o.id = bofrm.offer_id
-    GROUP BY bofrm.user_id, bofrm.offer_id, o.type
+        ON o.offer_id = bofrm.offer_id
+    GROUP BY bofrm.user_id, bofrm.offer_id, o.offer_type
 ), number_types_booked_by_user AS (
     SELECT
         user_id,
-        COUNT(DISTINCT(type)) AS number_of_booked_types
+        COUNT(DISTINCT(offer_type)) AS number_of_booked_types
     FROM offers_with_types
     GROUP BY user_id
 )

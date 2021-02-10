@@ -9,17 +9,17 @@ WITH scrolls AS (
     AND llvap.server_time < PARSE_TIMESTAMP('%Y%m%d',@DS_END_DATE)        -- pour gérer la période d'AB testing
 ),
 bookings AS (
-	SELECT userId, id AS offerId, CAST(dateCreated AS TIMESTAMP) AS bookingDate
+	SELECT user_id, offer_id AS offerId, CAST(booking_creation_date AS TIMESTAMP) AS bookingDate
 	FROM `passculture-data-prod.analytics_prod.applicative_database_booking`
 	WHERE bookingDate >= PARSE_TIMESTAMP('%Y%m%d',@DS_START_DATE)     -- Dates à définir sur la dashboard
 	AND bookingDate < PARSE_TIMESTAMP('%Y%m%d',@DS_END_DATE)          -- pour gérer la période d'AB testing
 ),
 recommended_offers AS (
 	SELECT userId, offerId, date
-	FROM `passculture-data-prod.analytics_prod.past_recommended_offers`
+	FROM `passculture-data-prod.raw_prod.past_recommended_offers`
 ),
 offers AS (
-    SELECT id as offerId, type as offerType, url FROM `passculture-data-prod.analytics_prod.applicative_database_offer`
+    SELECT offer_id as offerId, offer_type as offerType, offer_url FROM `passculture-data-prod.analytics_prod.applicative_database_offer`
 ),
 viewed_recos AS (
 	SELECT * FROM (
@@ -31,10 +31,10 @@ viewed_recos AS (
 	        WHERE server_time >= date
     ) WHERE timeRank = 1
 )
-SELECT TIMESTAMP_DIFF(bookings.bookingDate, viewed_recos.recoDate, SECOND) AS time_between_reco_and_booking, viewed_recos.userId, viewed_recos.offerId, offerType, url
+SELECT TIMESTAMP_DIFF(bookings.bookingDate, viewed_recos.recoDate, SECOND) AS time_between_reco_and_booking, viewed_recos.userId, viewed_recos.offerId, offerType, offer_url
 FROM viewed_recos
 INNER JOIN bookings
-ON viewed_recos.userId = bookings.userId AND viewed_recos.offerId = bookings.offerId
+ON viewed_recos.userId = bookings.user_dd AND viewed_recos.offerId = bookings.offerId
 INNER JOIN offers
 ON viewed_recos.offerId = offers.offerId
 WHERE TIMESTAMP_DIFF(bookings.bookingDate, viewed_recos.recoDate, SECOND) >= 0;

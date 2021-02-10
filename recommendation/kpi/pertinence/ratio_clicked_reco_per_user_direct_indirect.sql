@@ -29,7 +29,7 @@ WITH scrolls AS (
         userId,
         offerId,
         date
-	FROM `passculture-data-prod.analytics_prod.past_recommended_offers`
+	FROM `passculture-data-prod.raw_prod.past_recommended_offers`
 ), viewed_recommended_offers AS (
 	SELECT
         *

@@ -23,8 +23,8 @@ def define_import_query(
             CAST("culturalSurveyId" AS varchar(255)) as user_cultural_survey_id, "civility" as user_civility,
             "activity" as user_activity, "culturalSurveyFilledDate" as user_cultural_survey_filled_date,
             "hasSeenTutorials" as user_has_seen_tutorials, "address" as user_address, "city" as user_city,
-            "lastConnectionDate" as user_last_connection_date, "isEmailValidated" as user_is_email_validated, 
-            "hasAllowedRecommendations" as user_has_allowed_recommendations, 
+            "lastConnectionDate" as user_last_connection_date, "isEmailValidated" as user_is_email_validated,
+            "hasAllowedRecommendations" as user_has_allowed_recommendations,
             "suspensionReason" as user_suspension_reason, "isActive" as user_is_active
         FROM public.user
     """
@@ -159,7 +159,7 @@ def define_import_query(
     ] = """
             SELECT
                 CAST("id" AS varchar(255)), CAST("userId" AS varchar(255)), CAST("offerId" AS varchar(255)),
-                CAST("mediationId" AS varchar(255)), dateCreated
+                CAST("mediationId" AS varchar(255)), "dateCreated"
             FROM public.favorite
         """
     cloudsql_queries[

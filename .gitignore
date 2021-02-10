@@ -11,6 +11,7 @@ venv/
 
 # ignore .json credential files
 *.json
+!recommendation/db/tests/tables/data.json
 airflow.cfg
 unittests.cfg
 logs/

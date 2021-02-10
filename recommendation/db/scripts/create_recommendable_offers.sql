@@ -70,7 +70,7 @@ LANGUAGE plpgsql;
 
 
 /* Function to get all recommendable offers ids. */
-DROP FUNCTION IF EXISTS get_recommendable_offers;
+DROP FUNCTION IF EXISTS get_recommendable_offers CASCADE;
 CREATE OR REPLACE FUNCTION get_recommendable_offers()
 RETURNS TABLE (offer_id varchar,
                venue_id varchar,

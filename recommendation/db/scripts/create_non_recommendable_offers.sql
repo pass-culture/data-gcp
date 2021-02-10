@@ -1,6 +1,6 @@
 /* Create the function to fetch the non recommendable offers.
 We use a function otherwise the materialized view is a dependency of the tables and blocks the drop operation. */
-DROP FUNCTION IF EXISTS get_non_recommendable_offers;
+DROP FUNCTION IF EXISTS get_non_recommendable_offers CASCADE;
 CREATE OR REPLACE FUNCTION get_non_recommendable_offers()
 RETURNS TABLE (user_id varchar,
                offer_id varchar) AS

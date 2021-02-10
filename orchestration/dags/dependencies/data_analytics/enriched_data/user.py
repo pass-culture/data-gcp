@@ -42,12 +42,13 @@ def define_activation_dates_query(dataset, table_prefix=""):
             )
             SELECT
                 user.user_id
-                ,CASE WHEN "offer_type" = 'ThingType.ACTIVATION' AND booking_used_date IS NOT NULL THEN booking_used_date
-                 ELSE applicative_database_user.user_creation_date END AS user_activation_date
+                ,CASE WHEN "offer_type" = 'ThingType.ACTIVATION' AND booking_is_used THEN booking_used_date 
+                ELSE user.user_creation_date END AS user_activation_date
             FROM {dataset}.{table_prefix}user
             LEFT JOIN ranked_bookings ON user.user_id = ranked_bookings.user_id
-            AND rank_ = 1
-            WHERE applicative_database_user.user_is_beneficiary
+            WHERE rank_ = 1
+            AND user.user_is_beneficiary
+>>>>>>> (PC-6638) update enriched_user_data
         );
         """
 
@@ -57,7 +58,11 @@ def define_date_of_first_bookings_query(dataset, table_prefix=""):
         CREATE TEMP TABLE date_of_first_bookings AS (
             SELECT
                 booking.user_id,
+<<<<<<< HEAD
                 MIN(booking.booking_creation_date) AS first_booking_date
+=======
+                MIN(booking.booking_creation_date) AS bookings_creation_date
+>>>>>>> (PC-6638) update enriched_user_data
             FROM {dataset}.{table_prefix}booking AS booking
             JOIN {dataset}.{table_prefix}stock AS stock ON stock.stock_id = booking.stock_id
             JOIN {dataset}.{table_prefix}offer AS offer ON offer.offer_id = stock.offer_id
@@ -453,11 +458,19 @@ def define_enriched_user_data_query(dataset, table_prefix=""):
                 theoretical_amount_spent_in_outings.amount_spent_in_outings,
                 user_humanized_id.humanized_id AS user_humanized_id,
                 last_booking_date.last_booking_date,
+<<<<<<< HEAD
                 region_department.region_name AS user_region_name,
                 first_paid_booking_date.booking_creation_date_first,
                 (EXTRACT(DAY FROM date_of_first_bookings.first_booking_date) - EXTRACT(DAY FROM activation_dates.user_activation_date)) 
                 AS days_between_activation_date_and_first_booking_date,
                 (EXTRACT(DAY FROM first_paid_booking_date.booking_creation_date_first) - EXTRACT(DAY FROM activation_dates.user_activation_date))
+=======
+                regions_departments.region_name AS user_region_name,
+                first_paid_booking_date.booking_creation_date_first,
+                DATE_PART('day', date_of_first_bookings.bookings_creation_date - activation_dates.user_activation_date) 
+                AS days_between_activation_date_and_first_booking_date,
+                DATE_PART('day', first_paid_booking_date.booking_creation_date_first - activation_dates.user_activation_date)
+>>>>>>> (PC-6638) update enriched_user_data
                 AS days_between_activation_date_and_first_booking_paid,
                 first_booking_type.first_booking_type,
                 first_paid_booking_type.first_paid_booking_type,
@@ -480,7 +493,11 @@ def define_enriched_user_data_query(dataset, table_prefix=""):
             LEFT JOIN theoretical_amount_spent_in_outings ON user.user_id = theoretical_amount_spent_in_outings.user_id
             LEFT JOIN last_booking_date ON last_booking_date.user_id = user.user_id
             LEFT JOIN user_humanized_id AS user_humanized_id ON user_humanized_id.user_id = user.user_id
+<<<<<<< HEAD
             LEFT JOIN {dataset}.{table_prefix}region_department ON user.user_department_code = region_department.num_dep
+=======
+            LEFT JOIN regions_departments ON user.user_department_code = regions_departments.num_dep
+>>>>>>> (PC-6638) update enriched_user_data
             LEFT JOIN first_paid_booking_date ON user.user_id = first_paid_booking_date.user_id
             LEFT JOIN first_booking_type ON user.user_id = first_booking_type.user_id
             LEFT JOIN first_paid_booking_type ON user.user_id = first_paid_booking_type.user_id

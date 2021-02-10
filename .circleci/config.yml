@@ -170,7 +170,6 @@ jobs:
     environment:
       - AIRFLOW_HOME=~/data-gcp/orchestration
       - DAG_FOLDER=~/data-gcp/orchestration/dags
-      - MATOMO_CONNECTION_DATA={}
       - RECOMMENDATION_SQL_INSTANCE=cloudsql-recommendation-test
       - RECOMMENDATION_SQL_BASE=cloudsql-recommendation-test
     steps:

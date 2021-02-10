@@ -1,12 +1,12 @@
 /* Create the function to fetch the iris_venues from the source table.
 We use a function otherwise the materialized view is a dependency of the tables and blocks the drop operation. */
 CREATE OR REPLACE FUNCTION get_iris_venues()
-RETURNS TABLE (user_id BIGINT,
-               offer_id BIGINT) AS
+RETURNS TABLE (iris_id varchar,
+               venue_id varchar) AS
 $body$
 BEGIN
     RETURN QUERY
-    SELECT DISTINCT *
+    SELECT DISTINCT "irisId", "venueId"
       FROM public.iris_venues;
 END;
 $body$
@@ -21,7 +21,7 @@ WITH NO DATA;
 
 REFRESH MATERIALIZED VIEW iris_venues_mv;
 
-CREATE INDEX idx_iris_venues_mv_irisid ON public.iris_venues_mv USING btree ("iris_id");
+CREATE INDEX idx_iris_venues_mv_irisid ON public.iris_venues_mv USING btree (iris_id);
 
 /*
 NB: REFRESH CONCURRENTLY is slower than a normal refresh : 1 minute vs 2 minutes

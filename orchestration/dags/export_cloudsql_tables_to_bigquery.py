@@ -6,15 +6,12 @@ from airflow.contrib.operators.bigquery_operator import BigQueryOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.contrib.operators.gcp_sql_operator import CloudSqlQueryOperator
 
-from dependencies.data_analytics.config import (
-    GCP_PROJECT_ID,
-)
+from dependencies.access_gcp_secrets import access_secret_data
 from dependencies.slack_alert import task_fail_slack_alert
 
 yesterday = (datetime.datetime.now() + datetime.timedelta(days=-1)).strftime(
     "%Y-%m-%d"
 ) + " 00:00:00"
-CONNECTION_ID = "europe-west1.cloud_SQL_pcdata-poc-csql-recommendation"
 TABLES = {
     "ab_testing_20201207": {"query": None, "write_disposition": "WRITE_TRUNCATE"},
     "past_recommended_offers": {
@@ -22,38 +19,34 @@ TABLES = {
         "write_disposition": "WRITE_APPEND",
     },
 }
-RECO_KPI_DATASET = "algo_reco_kpi_data"
-RECOMMENDATION_SQL_USER = os.environ.get("RECOMMENDATION_SQL_USER")
-RECOMMENDATION_SQL_PASSWORD = os.environ.get("RECOMMENDATION_SQL_PASSWORD")
-RECOMMENDATION_SQL_PUBLIC_IP = os.environ.get("RECOMMENDATION_SQL_PUBLIC_IP")
-RECOMMENDATION_SQL_PUBLIC_PORT = os.environ.get("RECOMMENDATION_SQL_PUBLIC_PORT")
-RECOMMENDATION_SQL_INSTANCE = "pcdata-poc-csql-recommendation"
-RECOMMENDATION_SQL_BASE = "pcdata-poc-csql-recommendation"
-TYPE = "postgres"
-LOCATION = "europe-west1"
+GCP_PROJECT = os.environ.get("GCP_PROJECT")
+LOCATION = os.environ.get("REGION")
 
+RECOMMENDATION_SQL_INSTANCE = os.environ.get("RECOMMENDATION_SQL_INSTANCE")
+CONNECTION_ID = os.environ.get("BIGQUERY_CONNECTION_RECOMMENDATION")
+BIGQUERY_RAW_DATASET = os.environ.get("BIGQUERY_RAW_DATASET")
+
+# Recreate proprely the connection url
+database_url = access_secret_data(
+    GCP_PROJECT, f"{RECOMMENDATION_SQL_INSTANCE}-database-url"
+)
 os.environ["AIRFLOW_CONN_PROXY_POSTGRES_TCP"] = (
-    f"gcpcloudsql://{RECOMMENDATION_SQL_USER}:{RECOMMENDATION_SQL_PASSWORD}@{RECOMMENDATION_SQL_PUBLIC_IP}:{RECOMMENDATION_SQL_PUBLIC_PORT}/{RECOMMENDATION_SQL_BASE}?"
-    f"database_type={TYPE}&"
-    f"project_id={GCP_PROJECT_ID}&"
-    f"location={LOCATION}&"
-    f"instance={RECOMMENDATION_SQL_INSTANCE}&"
-    f"use_proxy=True&"
-    f"sql_proxy_use_tcp=True"
+    database_url.replace("postgresql://", "gcpcloudsql://")
+    + f"?database_type=postgres&project_id={GCP_PROJECT}&location={LOCATION}&instance={RECOMMENDATION_SQL_INSTANCE}&use_proxy=True&sql_proxy_use_tcp=True"
 )
 
 default_dag_args = {
     "on_failure_callback": task_fail_slack_alert,
-    "start_date": datetime.datetime(2020, 12, 16),
+    "start_date": datetime.datetime(2021, 2, 2),
     "retries": 1,
     "retry_delay": datetime.timedelta(minutes=5),
-    "project_id": GCP_PROJECT_ID,
+    "project_id": GCP_PROJECT,
 }
 
 dag = DAG(
-    "export_cloudsql_tables_to_bigquery_v3",
+    "export_cloudsql_tables_to_bigquery_v1",
     default_args=default_dag_args,
-    description="Export tables from CloudSQL to BigQuery",
+    description="Export tables from recommendation CloudSQL to BigQuery",
     schedule_interval="0 3 * * *",
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=90),
@@ -71,7 +64,7 @@ for table in TABLES:
         sql=f'SELECT * FROM EXTERNAL_QUERY("{CONNECTION_ID}", "{query}");',
         write_disposition=TABLES[table]["write_disposition"],
         use_legacy_sql=False,
-        destination_dataset_table=f"{RECO_KPI_DATASET}.{table}",
+        destination_dataset_table=f"{BIGQUERY_RAW_DATASET}.{table}",
         dag=dag,
     )
     export_table_tasks.append(task)

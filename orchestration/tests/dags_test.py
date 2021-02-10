@@ -66,12 +66,12 @@ class TestDags(unittest.TestCase):
 
     def test_recommendation_cloud_sql_dag_is_loaded(self):
         # When
-        dag = self.dagbag.get_dag(dag_id="recommendation_cloud_sql_v42")
+        dag = self.dagbag.get_dag(dag_id="recommendation_cloud_sql_v1")
 
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 51)
+        self.assertEqual(len(dag.tasks), 58)
 
     def test_dump_prod_from_scalingo_dag_is_loaded(self):
         # When
@@ -84,7 +84,7 @@ class TestDags(unittest.TestCase):
 
     def test_create_ab_testing_table_dag_is_loaded(self):
         # When
-        dag = self.dagbag.get_dag(dag_id="export_cloudsql_tables_to_bigquery_v3")
+        dag = self.dagbag.get_dag(dag_id="export_cloudsql_tables_to_bigquery_v1")
 
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})

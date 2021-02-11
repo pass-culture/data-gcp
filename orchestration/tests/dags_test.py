@@ -57,7 +57,7 @@ class TestDags(unittest.TestCase):
 
     def test_restore_data_analytics_dag_is_loaded(self):
         # When
-        dag = self.dagbag.get_dag(dag_id="import_applicative_data_v2")
+        dag = self.dagbag.get_dag(dag_id="import_applicative_data_v3")
 
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
@@ -111,7 +111,7 @@ class TestDags(unittest.TestCase):
 
     def test_archive_database_dag_is_loaded(self):
         # When
-        dag = self.dagbag.get_dag(dag_id="archive_database_v1")
+        dag = self.dagbag.get_dag(dag_id="archive_database_v2")
 
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})

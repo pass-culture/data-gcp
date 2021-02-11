@@ -13,8 +13,12 @@ APPLICATIVE_EXTERNAL_CONNECTION_ID = os.environ.get(
 DATA_GCS_BUCKET_NAME = os.environ.get(
     "DATA_GCS_BUCKET_NAME", f"data-bucket-{ENV_SHORT_NAME}"
 )
-APPLICATIVE_SQL_INSTANCE = os.environ.get("APPLICATIVE_SQL_INSTANCE", "")
-APPLICATIVE_SQL_DATABASE = os.environ.get("APPLICATIVE_SQL_DATABASE", "")
+APPLICATIVE_SQL_INSTANCE = os.environ.get(
+    "APPLICATIVE_SQL_INSTANCE", "instance-test-ci"
+)
+APPLICATIVE_SQL_DATABASE = os.environ.get(
+    "APPLICATIVE_SQL_DATABASE", "database-test-ci"
+)
 
 BIGQUERY_RAW_DATASET = os.environ.get("BIGQUERY_RAW_DATASET", f"raw_{ENV_SHORT_NAME}")
 BIGQUERY_CLEAN_DATASET = os.environ.get(

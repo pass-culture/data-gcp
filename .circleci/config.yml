@@ -16,9 +16,7 @@ workflows:
       - recommendation-api-tests:
           requires:
             - recommendation-api-build
-      - recommendation-integration-tests:
-          requires:
-            - recommendation-api-tests
+      - recommendation-integration-tests
       - orchestration-install
       - orchestration-tests:
           requires:
@@ -189,7 +187,7 @@ jobs:
 
   recommendation-integration-tests:
     docker:
-      - image: postman/newman:latest
+      - image: postman/newman
         auth:
           username: $DOCKERHUB_USER
           password: $DOCKERHUB_PASSWORD

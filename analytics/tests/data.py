@@ -461,6 +461,7 @@ ENRICHED_USER_DATA_INPUT = {
     "offer": [],
     "stock": [],
     "user": [],
+    "region_department":[],
 }
 
 ENRICHED_USER_DATA_EXPECTED = [
@@ -469,7 +470,7 @@ ENRICHED_USER_DATA_EXPECTED = [
     "user_department_code",
     "user_postal_code",
     "user_activity",
-    "activation_date",
+    "user_activation_date",
     "first_connection_date",
     "first_booking_date",
     "second_booking_date",

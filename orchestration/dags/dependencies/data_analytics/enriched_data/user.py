@@ -57,7 +57,7 @@ def define_date_of_first_bookings_query(dataset, table_prefix=""):
         CREATE TEMP TABLE date_of_first_bookings AS (
             SELECT
                 booking.user_id,
-                MIN(booking.booking_creation_date) AS bookings_creation_date
+                MIN(booking.booking_creation_date) AS first_booking_date
             FROM {dataset}.{table_prefix}booking AS booking
             JOIN {dataset}.{table_prefix}stock AS stock ON stock.stock_id = booking.stock_id
             JOIN {dataset}.{table_prefix}offer AS offer ON offer.offer_id = stock.offer_id
@@ -84,7 +84,7 @@ def define_date_of_second_bookings_query(dataset, table_prefix=""):
             )
             SELECT
                 user_id,
-                booking_creation_date AS date_deuxieme_reservation
+                booking_creation_date AS second_booking_date
             FROM ranked_booking_data
             WHERE rank_booking = 2
         );
@@ -117,7 +117,7 @@ def define_date_of_bookings_on_third_product_query(dataset, table_prefix=""):
             )
             SELECT
                 user_id,
-                booking_creation_date AS date_premiere_reservation_dans_3_categories_differentes
+                booking_creation_date AS booking_on_third_product_date
             FROM ranked_data
             WHERE rank_cat = 3
         );
@@ -436,13 +436,13 @@ def define_enriched_user_data_query(dataset, table_prefix=""):
                 user.user_department_code,
                 user.user_postal_code,
                 user.user_activity,
-                activation_dates.activation_date,
+                activation_dates.user_activation_date,
                 CASE WHEN user.user_has_seen_tutorials THEN user.user_cultural_survey_filled_date
                     ELSE NULL
                 END AS first_connection_date,
-                date_of_first_bookings.date_premiere_reservation as first_booking_date,
-                date_of_second_bookings.date_deuxieme_reservation as second_booking_date,
-                date_of_bookings_on_third_product.date_premiere_reservation_dans_3_categories_differentes as booking_on_third_product_date,
+                date_of_first_bookings.first_booking_date,
+                date_of_second_bookings.second_booking_date,
+                date_of_bookings_on_third_product.booking_on_third_product_date,
                 COALESCE(number_of_bookings.number_of_bookings, 0) AS booking_cnt,
                 COALESCE(number_of_non_cancelled_bookings.number_of_bookings, 0) AS no_cancelled_booking,
                 users_seniority.user_seniority,
@@ -453,11 +453,11 @@ def define_enriched_user_data_query(dataset, table_prefix=""):
                 theoretical_amount_spent_in_outings.amount_spent_in_outings,
                 user_humanized_id.humanized_id AS user_humanized_id,
                 last_booking_date.last_booking_date,
-                regions_departments.region_name AS user_region_name,
+                region_department.region_name AS user_region_name,
                 first_paid_booking_date.booking_creation_date_first,
-                DATE_PART('day', date_of_first_bookings.bookings_creation_date - activation_dates.user_activation_date) 
+                (EXTRACT(DAY FROM date_of_first_bookings.first_booking_date) - EXTRACT(DAY FROM activation_dates.user_activation_date)) 
                 AS days_between_activation_date_and_first_booking_date,
-                DATE_PART('day', first_paid_booking_date.booking_creation_date_first - activation_dates.user_activation_date)
+                (EXTRACT(DAY FROM first_paid_booking_date.booking_creation_date_first) - EXTRACT(DAY FROM activation_dates.user_activation_date))
                 AS days_between_activation_date_and_first_booking_paid,
                 first_booking_type.first_booking_type,
                 first_paid_booking_type.first_paid_booking_type,
@@ -480,7 +480,7 @@ def define_enriched_user_data_query(dataset, table_prefix=""):
             LEFT JOIN theoretical_amount_spent_in_outings ON user.user_id = theoretical_amount_spent_in_outings.user_id
             LEFT JOIN last_booking_date ON last_booking_date.user_id = user.user_id
             LEFT JOIN user_humanized_id AS user_humanized_id ON user_humanized_id.user_id = user.user_id
-            LEFT JOIN regions_departments ON user.user_department_code = regions_departments.num_dep
+            LEFT JOIN {dataset}.{table_prefix}region_department ON user.user_department_code = region_department.num_dep
             LEFT JOIN first_paid_booking_date ON user.user_id = first_paid_booking_date.user_id
             LEFT JOIN first_booking_type ON user.user_id = first_booking_type.user_id
             LEFT JOIN first_paid_booking_type ON user.user_id = first_paid_booking_type.user_id

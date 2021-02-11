@@ -1,0 +1,456 @@
+{
+	"info": {
+		"_postman_id": "92ce8985-63f4-4005-aab0-5059805b77a7",
+		"name": "API Integration Tests",
+		"description": "Collection of integration tests for the reco api.\nMade with Postman",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "/check",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Request is successful with a status code of 200\", function () {",
+							"  pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Body matches string OK\", function () {",
+							"    pm.expect(pm.response.text()).to.include(\"OK\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{api_url}}/check",
+					"host": [
+						"{{api_url}}"
+					],
+					"path": [
+						"check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "root",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Request is successful with a status code of 200\", function () {",
+							"  pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Body matches string OK\", function () {",
+							"    pm.expect(pm.response.text()).to.include(\"Welcome to the recommendation API!\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{api_url}}/",
+					"host": [
+						"{{api_url}}"
+					],
+					"path": [
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/recommendation/user_id no token",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Request is successful with a status code of 200\", function () {",
+							"  pm.response.to.have.status(403);",
+							"});",
+							"",
+							"pm.test(\"Body matches string OK\", function () {",
+							"    pm.expect(pm.response.text()).to.include(\"Forbidden\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{api_url}}/recommendation/{{user_id}}",
+					"host": [
+						"{{api_url}}"
+					],
+					"path": [
+						"recommendation",
+						"{{user_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/recommendation/user_id Groupe A",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Request is successful with a status code of 200\", function () {",
+							"  pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response must be a JSON and have a body\", function () {",
+							"     pm.response.to.be.ok;",
+							"     pm.response.to.be.withBody;",
+							"     pm.response.to.be.json;",
+							"});",
+							"",
+							"const jsonResponse = pm.response.json();",
+							"pm.test(\"Response must contain an array recommended_offers\", function () {",
+							"  pm.expect(jsonResponse).to.be.an(\"object\");",
+							"  pm.expect(jsonResponse).to.have.property('recommended_offers')",
+							"  pm.expect(jsonResponse.recommended_offers).to.be.an(\"array\");",
+							"});",
+							"",
+							"",
+							"pm.test(\"Response for Group A must contain 10 offers\", function () {",
+							"  pm.expect(jsonResponse.recommended_offers).to.have.lengthOf(10);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{api_url}}/recommendation/{{user_id_A}}?token={{api_token}}",
+					"host": [
+						"{{api_url}}"
+					],
+					"path": [
+						"recommendation",
+						"{{user_id_A}}"
+					],
+					"query": [
+						{
+							"key": "token",
+							"value": "{{api_token}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/recommendation/user_id Groupe B",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Request is successful with a status code of 200\", function () {",
+							"  pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response must be a JSON and have a body\", function () {",
+							"     pm.response.to.be.ok;",
+							"     pm.response.to.be.withBody;",
+							"     pm.response.to.be.json;",
+							"});",
+							"",
+							"const jsonResponse = pm.response.json();",
+							"pm.test(\"Response must contain an array recommended_offers\", function () {",
+							"  pm.expect(jsonResponse).to.be.an(\"object\");",
+							"  pm.expect(jsonResponse).to.have.property('recommended_offers')",
+							"  pm.expect(jsonResponse.recommended_offers).to.be.an(\"array\");",
+							"});",
+							"",
+							"",
+							"pm.test(\"Response for Group B must contain an empty array recommended_offers\", function () {",
+							"  pm.expect(jsonResponse.recommended_offers).to.be.empty;",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{api_url}}/recommendation/{{user_id_B}}?token={{api_token}}",
+					"host": [
+						"{{api_url}}"
+					],
+					"path": [
+						"recommendation",
+						"{{user_id_B}}"
+					],
+					"query": [
+						{
+							"key": "token",
+							"value": "{{api_token}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/recommendation/user_id Group A Geoloc",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Request is successful with a status code of 200\", function () {",
+							"  pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response must be a JSON and have a body\", function () {",
+							"     pm.response.to.be.ok;",
+							"     pm.response.to.be.withBody;",
+							"     pm.response.to.be.json;",
+							"});",
+							"",
+							"const jsonResponse = pm.response.json();",
+							"pm.test(\"Response must contain an array recommended_offers\", function () {",
+							"  pm.expect(jsonResponse).to.be.an(\"object\");",
+							"  pm.expect(jsonResponse).to.have.property('recommended_offers')",
+							"  pm.expect(jsonResponse.recommended_offers).to.be.an(\"array\");",
+							"});",
+							"",
+							"",
+							"pm.test(\"Response for Group A with geoloc must contain 10 offers\", function () {",
+							"  pm.expect(jsonResponse.recommended_offers).to.have.lengthOf(10);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{api_url}}/recommendation/{{user_id_A}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
+					"host": [
+						"{{api_url}}"
+					],
+					"path": [
+						"recommendation",
+						"{{user_id_A}}"
+					],
+					"query": [
+						{
+							"key": "token",
+							"value": "{{api_token}}"
+						},
+						{
+							"key": "longitude",
+							"value": "2.3688874"
+						},
+						{
+							"key": "latitude",
+							"value": "48.8632553"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/health/recommendable_offers",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Request is successful with a status code of 200\", function () {",
+							"  pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response must be a JSON and have a body\", function () {",
+							"     pm.response.to.be.ok;",
+							"     pm.response.to.be.withBody;",
+							"     pm.response.to.be.json;",
+							"});",
+							"",
+							"const jsonResponse = pm.response.json();",
+							"pm.test(\"Response must be a JSON with the right keys\", function () {",
+							"  pm.expect(jsonResponse).to.be.an(\"object\");",
+							"  pm.expect(jsonResponse).to.have.property('is_recommendable_offers_ok')",
+							"  pm.expect(jsonResponse).to.have.property('is_recommendable_offers_datasource_exists')",
+							"});",
+							"",
+							"",
+							"pm.test(\"Response must be healthy\", function () {",
+							"  pm.expect(jsonResponse.is_recommendable_offers_datasource_exists).to.be.true;",
+							"  pm.expect(jsonResponse.is_recommendable_offers_ok).to.be.true;",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{api_url}}/health/recommendable_offers",
+					"host": [
+						"{{api_url}}"
+					],
+					"path": [
+						"health",
+						"recommendable_offers"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/health/non_recommendable_offers",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Request is successful with a status code of 200\", function () {",
+							"  pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response must be a JSON and have a body\", function () {",
+							"     pm.response.to.be.ok;",
+							"     pm.response.to.be.withBody;",
+							"     pm.response.to.be.json;",
+							"});",
+							"",
+							"const jsonResponse = pm.response.json();",
+							"pm.test(\"Response must be a JSON with the right keys\", function () {",
+							"  pm.expect(jsonResponse).to.be.an(\"object\");",
+							"  pm.expect(jsonResponse).to.have.property('is_non_recommendable_offers_ok')",
+							"  pm.expect(jsonResponse).to.have.property('is_non_recommendable_offers_datasource_exists')",
+							"});",
+							"",
+							"",
+							"pm.test(\"Response must be healthy\", function () {",
+							"  pm.expect(jsonResponse.is_non_recommendable_offers_datasource_exists).to.be.true;",
+							"  pm.expect(jsonResponse.is_non_recommendable_offers_ok).to.be.true;",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{api_url}}/health/non_recommendable_offers",
+					"host": [
+						"{{api_url}}"
+					],
+					"path": [
+						"health",
+						"non_recommendable_offers"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/health/iris_venues_mv",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Request is successful with a status code of 200\", function () {",
+							"  pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response must be a JSON and have a body\", function () {",
+							"     pm.response.to.be.ok;",
+							"     pm.response.to.be.withBody;",
+							"     pm.response.to.be.json;",
+							"});",
+							"",
+							"const jsonResponse = pm.response.json();",
+							"pm.test(\"Response must be a JSON with the right keys\", function () {",
+							"  pm.expect(jsonResponse).to.be.an(\"object\");",
+							"  pm.expect(jsonResponse).to.have.property('is_iris_venues_mv_ok')",
+							"  pm.expect(jsonResponse).to.have.property('is_iris_venues_mv_datasource_exists')",
+							"});",
+							"",
+							"",
+							"pm.test(\"Response must be healthy\", function () {",
+							"  pm.expect(jsonResponse.is_iris_venues_mv_datasource_exists).to.be.true;",
+							"  pm.expect(jsonResponse.is_iris_venues_mv_ok).to.be.true;",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{api_url}}/health/iris_venues_mv",
+					"host": [
+						"{{api_url}}"
+					],
+					"path": [
+						"health",
+						"iris_venues_mv"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}

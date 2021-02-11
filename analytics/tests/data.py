@@ -461,7 +461,7 @@ ENRICHED_USER_DATA_INPUT = {
     "offer": [],
     "stock": [],
     "user": [],
-    "region_department":[],
+    "region_department": [],
 }
 
 ENRICHED_USER_DATA_EXPECTED = [

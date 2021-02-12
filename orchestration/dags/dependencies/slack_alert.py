@@ -1,15 +1,16 @@
 import os
-from urllib.parse import quote
 
 from airflow import settings, AirflowException
 from airflow.hooks.base_hook import BaseHook
 from airflow.contrib.operators.slack_webhook_operator import SlackWebhookOperator
 from airflow.models.connection import Connection
 
+from dependencies.access_gcp_secrets import access_secret_data
+
 
 SLACK_CONN_ID = "slack"
-SLACK_CONN_PASSWORD = os.environ.get("SLACK_CONN_PASSWORD")
-AIRFLOW_BASE_URL = os.environ.get("AIRFLOW_BASE_URL")
+GCP_PROJECT = os.environ.get("GCP_PROJECT")
+SLACK_CONN_PASSWORD = access_secret_data(GCP_PROJECT, "slack-conn-password")
 
 try:
     conn = BaseHook.get_connection(SLACK_CONN_ID)
@@ -27,14 +28,6 @@ except AirflowException:
 
 
 def task_fail_slack_alert(context):
-    def log_url():
-        iso = quote(context.get("execution_date").isoformat())
-        return "{airflow_base_url}/admin/airflow/log?execution_date={iso}&task_id={task_id}&dag_id={dag_id}".format(
-            airflow_base_url=AIRFLOW_BASE_URL,
-            iso=iso,
-            task_id=context.get("task_instance").task_id,
-            dag_id=context.get("task_instance").dag_id,
-        )
 
     slack_msg = """
             :red_circle: Task Failed.
@@ -47,7 +40,7 @@ def task_fail_slack_alert(context):
         dag=context.get("task_instance").dag_id,
         ti=context.get("task_instance"),
         exec_date=context.get("execution_date"),
-        log_url=log_url(),
+        log_url=context.get("task_instance").log_url,
     )
 
     failed_alert = SlackWebhookOperator(

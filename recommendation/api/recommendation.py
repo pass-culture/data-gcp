@@ -184,7 +184,9 @@ def get_scored_recommendation_for_user(
 def predict_score(region, project, model, instances, version):
     endpoint = f"https://{region}-ml.googleapis.com"
     client_options = ClientOptions(api_endpoint=endpoint)
-    service = discovery.build("ml", "v1", client_options=client_options)
+    service = discovery.build(
+        "ml", "v1", client_options=client_options, cache_discovery=False
+    )
     name = "projects/{}/models/{}".format(project, model)
 
     if version is not None:

@@ -4,6 +4,22 @@ version: 2.1
 
 workflows:
   version: 2
+
+  nightly:
+    triggers:
+      - schedule:
+          cron: "52 12 * * *"
+          filters:
+            branches:
+              only: pc-6830-add-integration-tests-for-api
+    jobs:
+      - recommendation-integration-tests:
+          name: recommendation-integration-tests-sandbox
+          env: sandbox
+      - recommendation-integration-tests:
+          name: recommendation-integration-tests-dev
+          env: dev
+
   run-checks:
     jobs:
       - linter

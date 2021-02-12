@@ -16,7 +16,9 @@ workflows:
       - recommendation-api-tests:
           requires:
             - recommendation-api-build
-      - recommendation-integration-tests
+      - recommendation-integration-tests:
+          name: recommendation-integration-tests-sandbox
+          env: sandbox
       - orchestration-install
       - orchestration-tests:
           requires:
@@ -186,6 +188,11 @@ jobs:
             ./run_tests.sh
 
   recommendation-integration-tests:
+    parameters:
+      env:
+        description: "Which environement to target"
+        default: "sandbox"
+        type: string
     docker:
       - image: postman/newman
         auth:
@@ -204,7 +211,7 @@ jobs:
           name: Run tests collection
           command: |
             cd recommendation/api/postman
-            newman run api_integration_tests.postman_collection.json --environment sandbox.postman_environment.json
+            newman run api_integration_tests.postman_collection.json --environment <<parameters.env>>.postman_environment.json
 
   linter:
     <<: *defaults

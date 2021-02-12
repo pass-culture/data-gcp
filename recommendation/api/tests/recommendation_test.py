@@ -7,8 +7,6 @@ import pandas as pd
 import pytest
 import pytz
 from numpy.testing import assert_array_equal
-from sqlalchemy import create_engine
-
 from recommendation import (
     get_final_recommendations,
     get_intermediate_recommendations_for_user,
@@ -16,6 +14,7 @@ from recommendation import (
     order_offers_by_score_and_diversify_types,
     save_recommendation,
 )
+from sqlalchemy import create_engine
 
 DATA_GCP_TEST_POSTGRES_PORT = os.getenv("DATA_GCP_TEST_POSTGRES_PORT")
 DB_NAME = os.getenv("DB_NAME")
@@ -48,8 +47,8 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
     connection = engine.connect().execution_options(autocommit=True)
     recommendable_offers = pd.DataFrame(
         {
-            "id": [1, 2, 3, 4, 5],  # BIGINT,
-            "venue_id": [11, 22, 33, 44, 55],
+            "offer_id": ["1", "2", "3", "4", "5"],
+            "venue_id": ["11", "22", "33", "44", "55"],
             "type": ["A", "B", "C", "D", "E"],
             "name": ["a", "b", "c", "d", "e"],
             "url": [None, None, "url", "url", None],
@@ -58,17 +57,19 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
     )
     recommendable_offers.to_sql("recommendable_offers", con=engine, if_exists="replace")
 
-    non_recommendable_offers = pd.DataFrame({"user_id": [111, 112], "offer_id": [1, 3]})
+    non_recommendable_offers = pd.DataFrame(
+        {"user_id": ["111", "112"], "offer_id": ["1", "3"]}
+    )
     non_recommendable_offers.to_sql(
         "non_recommendable_offers", con=engine, if_exists="replace"
     )
 
     iris_venues_mv = pd.DataFrame(
-        {"iris_id": [1, 1, 1, 2], "venue_id": [11, 22, 33, 44]}
+        {"iris_id": ["1", "1", "1", "2"], "venue_id": ["11", "22", "33", "44"]}
     )
     iris_venues_mv.to_sql("iris_venues_mv", con=engine, if_exists="replace")
 
-    ab_testing = pd.DataFrame({"userid": [111, 112], "groupid": ["A", "B"]})
+    ab_testing = pd.DataFrame({"userid": ["111", "112"], "groupid": ["A", "B"]})
     ab_testing.to_sql(app_config["AB_TESTING_TABLE"], con=engine, if_exists="replace")
 
     past_recommended_offers = pd.DataFrame(
@@ -191,9 +192,9 @@ def test_get_intermediate_recommendation_for_user(setup_database: Any):
     assert_array_equal(
         sorted(user_recommendation, key=lambda k: k["id"]),
         [
-            {"id": 2, "type": "B", "url": None},
-            {"id": 3, "type": "C", "url": "url"},
-            {"id": 5, "type": "E", "url": None},
+            {"id": "2", "type": "B", "url": None},
+            {"id": "3", "type": "C", "url": "url"},
+            {"id": "5", "type": "E", "url": None},
         ],
     )
 
@@ -213,10 +214,10 @@ def test_get_intermediate_recommendation_for_user_with_no_iris(setup_database: A
     assert_array_equal(
         sorted(user_recommendation, key=lambda k: k["id"]),
         [
-            {"id": 1, "type": "A", "url": None},
-            {"id": 3, "type": "C", "url": "url"},
-            {"id": 4, "type": "D", "url": "url"},
-            {"id": 5, "type": "E", "url": None},
+            {"id": "1", "type": "A", "url": None},
+            {"id": "3", "type": "C", "url": "url"},
+            {"id": "4", "type": "D", "url": "url"},
+            {"id": "5", "type": "E", "url": None},
         ],
     )
 

@@ -1,12 +1,10 @@
 import os
 
-from flask import Flask, jsonify, request, make_response
+from flask import Flask, jsonify, make_response, request
 
-
-from health_check_queries import get_materialized_view_status
 from access_gcp_secrets import access_secret
+from health_check_queries import get_materialized_view_status
 from recommendation import get_final_recommendations
-
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
 
@@ -33,11 +31,11 @@ def home():
         """
          __   __   __ __   __  o  __
         |  ' (__) |  )  ) (__( | |  )
-        
+
         Welcome to the recommendation API!
         Check this route '/recommendation/<user_id>?token=<token>' for recommended offers.
-        
-        ()_() 
+
+        ()_()
         ( oo)
     """
     )

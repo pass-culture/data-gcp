@@ -1,19 +1,16 @@
 import collections
 import datetime
 import os
-
 from random import random
 from typing import Any, Dict, List, Tuple
 
 import pytz
-
 from google.api_core.client_options import ClientOptions
 from googleapiclient import discovery
 from sqlalchemy import create_engine, engine
 
-from geolocalisation import get_iris_from_coordinates
 from access_gcp_secrets import access_secret
-
+from geolocalisation import get_iris_from_coordinates
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
 
@@ -62,7 +59,7 @@ def get_final_recommendations(
     connection = create_db_connection()
 
     request_response = connection.execute(
-        f"""SELECT groupid FROM {ab_testing_table} WHERE userid={user_id}"""
+        f"""SELECT groupid FROM {ab_testing_table} WHERE CAST(userid AS BIGINT)={user_id}"""
     ).scalar()
 
     if not request_response:
@@ -129,20 +126,20 @@ def get_intermediate_recommendations_for_user(
 def get_recommendations_query(user_id: int, user_iris_id: int) -> str:
     if not user_iris_id:
         query = f"""
-            SELECT id, type, url
+            SELECT offer_id, type, url
             FROM recommendable_offers
             WHERE is_national = True or url IS NOT NULL
-            AND id NOT IN
+            AND offer_id NOT IN
                 (
                 SELECT offer_id
                 FROM non_recommendable_offers
-                WHERE user_id = {user_id}
+                WHERE CAST(user_id AS BIGINT) = {user_id}
                 )
             ORDER BY RANDOM();
         """
     else:
         query = f"""
-            SELECT id, type, url
+            SELECT offer_id, type, url
             FROM recommendable_offers
             WHERE
                 (
@@ -150,15 +147,15 @@ def get_recommendations_query(user_id: int, user_iris_id: int) -> str:
                     (
                     SELECT "venue_id"
                     FROM iris_venues_mv
-                    WHERE "iris_id" = {user_iris_id}
+                    WHERE CAST("iris_id" AS BIGINT) = {user_iris_id}
                     )
                 OR is_national = True
                 )
-            AND id NOT IN
+            AND offer_id NOT IN
                 (
                 SELECT offer_id
                 FROM non_recommendable_offers
-                WHERE user_id = {user_id}
+                WHERE CAST(user_id AS BIGINT) = {user_id}
                 )
             ORDER BY RANDOM();
         """

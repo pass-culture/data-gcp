@@ -191,16 +191,20 @@ jobs:
         auth:
           username: $DOCKERHUB_USER
           password: $DOCKERHUB_PASSWORD
-    working_directory: ~/data-gcp/recommendation/api
+    working_directory: ~/data-gcp
     steps:
-      - checkout:
-          path: ~/data-gcp
+      - run:
+          name: Install Git
+          command: |
+            apk update
+            apk upgrade
+            apk add --no-cache bash git openssh
+      - checkout
       - run:
           name: Run tests collection
           command: |
-            cd tests/postman
-            newman run ./api_integration_tests.postman_collection.json --environment ./sandbox.postman_environment.json
-
+            cd recommendation/api/postman
+            newman run api_integration_tests.postman_collection.json --environment sandbox.postman_environment.json
 
   linter:
     <<: *defaults

@@ -10,9 +10,9 @@ __pycache__
 venv/
 
 # ignore .json credential files
-*.json
-!recommendation/db/tests/tables/data.json
-!recommendation/api/tests/postman/*.json
+# *.json
+# !recommendation/db/tests/tables/data.json
+# !recommendation/api/*.json
 airflow.cfg
 unittests.cfg
 logs/

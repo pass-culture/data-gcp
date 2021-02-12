@@ -8,10 +8,12 @@ workflows:
   nightly:
     triggers:
       - schedule:
-          cron: "52 12 * * *"
+          cron: "14 13 * * *"
           filters:
             branches:
-              only: pc-6830-add-integration-tests-for-api
+              only:
+                - pc-6830-add-integration-tests-for-api
+                - master
     jobs:
       - recommendation-integration-tests:
           name: recommendation-integration-tests-sandbox
@@ -19,22 +21,52 @@ workflows:
       - recommendation-integration-tests:
           name: recommendation-integration-tests-dev
           env: dev
+      - recommendation-integration-tests:
+          name: recommendation-integration-tests-staging
+          env: staging
+      - recommendation-integration-tests:
+          name: recommendation-integration-tests-prod
+          env: production
 
   run-checks:
     jobs:
       - linter
+
       - analytics-tests
+
       - recommendation-db-install
       - recommendation-db-tests:
           requires:
             - recommendation-db-install
+
       - recommendation-api-build
       - recommendation-api-tests:
           requires:
             - recommendation-api-build
       - recommendation-integration-tests:
-          name: recommendation-integration-tests-sandbox
-          env: sandbox
+          requires:
+            - recommendation-api-tests  # SHOULD BE API DEPLOY
+          name: recommendation-integration-tests-dev
+          env: dev
+      - recommendation-integration-tests:
+          requires:
+            - recommendation-integration-tests-dev
+          name: recommendation-integration-tests-staging
+          env: staging
+          filters:
+            branches:
+              only:
+                - master
+      - recommendation-integration-tests:
+          requires:
+            - recommendation-integration-tests-staging
+          name: recommendation-integration-tests-production
+          env: production
+          filters:
+            branches:
+              only:
+                - production
+
       - orchestration-install
       - orchestration-tests:
           requires:

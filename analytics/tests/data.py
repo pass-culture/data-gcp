@@ -461,6 +461,7 @@ ENRICHED_USER_DATA_INPUT = {
     "offer": [],
     "stock": [],
     "user": [],
+    "region_department": [],
 }
 
 ENRICHED_USER_DATA_EXPECTED = [
@@ -469,7 +470,7 @@ ENRICHED_USER_DATA_EXPECTED = [
     "user_department_code",
     "user_postal_code",
     "user_activity",
-    "activation_date",
+    "user_activation_date",
     "first_connection_date",
     "first_booking_date",
     "second_booking_date",
@@ -484,6 +485,13 @@ ENRICHED_USER_DATA_EXPECTED = [
     "amount_spent_in_outings",
     "user_humanized_id",
     "last_booking_date",
+    "user_region_name",
+    "booking_creation_date_first",
+    "days_between_activation_date_and_first_booking_date",
+    "days_between_activation_date_and_first_booking_paid",
+    "first_booking_type",
+    "first_paid_booking_type",
+    "cnt_distinct_type_booking",
 ]
 
 # enriched_venue_data => NO DATA (only structure can be tested)

@@ -193,4 +193,9 @@ BIGQUERY_SCHEMAS = {
         "label": "STRING",
         "lastupdate": "DATETIME",
     },
+    "region_department": {
+        "num_dep": "STRING",
+        "dep_name": "STRING",
+        "region_name": "STRING",
+    },
 }

@@ -377,9 +377,9 @@ jobs:
           google-compute-zone: GOOGLE_COMPUTE_ZONE
           google-project-id: GOOGLE_PROJECT_ID
       - cloudrun/build:
-          tag: 'eu.gcr.io/${GOOGLE_PROJECT_ID}/${REPO_NAME}/<< parameters.api-instance-name >>:${CIRCLE_SHA1}'
+          tag: 'eu.gcr.io/${GOOGLE_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}/<< parameters.api-instance-name >>:${CIRCLE_SHA1}'
       - cloudrun/deploy:
-          image: 'eu.gcr.io/${GOOGLE_PROJECT_ID}/${REPO_NAME}/<< parameters.api-instance-name >>:${CIRCLE_SHA1}'
+          image: 'eu.gcr.io/${GOOGLE_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}/<< parameters.api-instance-name >>:${CIRCLE_SHA1}'
           platform: managed
           region: europe-west1
           service-name: << parameters.api-instance-name >>

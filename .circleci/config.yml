@@ -71,7 +71,6 @@ workflows:
             branches:
               only:
                 - master
-                - pc-6813-add-cloud-build-trigger
           api-instance-name : apireco-stg
           context:
             - DATA_GCP

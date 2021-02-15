@@ -159,7 +159,6 @@ SELECT (
 ) as timestamp_diff_analytics
 
 
-
 -- compare enriched_offerer_data max date
 WITH last_offerer_date_csql as (
   SELECT MAX(dateCreated) FROM EXTERNAL_QUERY(

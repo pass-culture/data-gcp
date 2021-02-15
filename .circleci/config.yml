@@ -370,8 +370,10 @@ jobs:
       api-instance-name:
         description: "API instance name"
         type: string
+    working_directory: ~/data-gcp/recommendation/api
     steps:
-      - checkout
+      - checkout:
+          path: ~/data-gcp
       - cloudrun/init:
           gcloud-service-key: GCLOUD_SERVICE_KEY
           google-compute-zone: GOOGLE_COMPUTE_ZONE

@@ -42,12 +42,12 @@ def define_activation_dates_query(dataset, table_prefix=""):
             )
             SELECT
                 user.user_id
-                ,CASE WHEN "offer_type" = 'ThingType.ACTIVATION' AND booking_is_used THEN booking_used_date 
-                ELSE user.user_creation_date END AS user_activation_date
+                ,CASE WHEN "offer_type" = 'ThingType.ACTIVATION' AND booking_used_date IS NOT NULL THEN booking_used_date
+                 ELSE applicative_database_user.user_creation_date END AS user_activation_date
             FROM {dataset}.{table_prefix}user
             LEFT JOIN ranked_bookings ON user.user_id = ranked_bookings.user_id
-            WHERE rank_ = 1
-            AND user.user_is_beneficiary
+            AND rank_ = 1
+            WHERE applicative_database_user.user_is_beneficiary
         );
         """
 

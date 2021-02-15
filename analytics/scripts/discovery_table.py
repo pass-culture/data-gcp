@@ -99,5 +99,5 @@ def create_discovery_table(client, name: str) -> None:
 
 
 if __name__ == "__main__":
-    client = bigquery.Client(project="pass-culture-app-projet-test")
+    client = bigquery.Client(project="passculture-data-ehp")
     create_discovery_table(client, "public.discovery_table")

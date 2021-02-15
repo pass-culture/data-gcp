@@ -1,3 +1,5 @@
+orbs:
+  cloudrun: circleci/gcp-cloud-run@1.0.2
 version: 2.1
 
 workflows:
@@ -57,6 +59,34 @@ workflows:
             branches:
               only:
                 - production
+          context:
+            - DATA_GCP
+            - DATA_GCP_PROD
+      - build_and_deploy_api:
+          name: build_and_deploy_api_staging
+          requires:
+            - linter
+            - recommendation-api-tests
+          filters:
+            branches:
+              only:
+                - master
+                - pc-6813-add-cloud-build-trigger
+          api-instance-name : apireco-stg
+          context:
+            - DATA_GCP
+            - DATA_GCP_EHP
+
+      - build_and_deploy_api:
+          name: build_and_deploy_api_production
+          requires:
+            - linter
+            - recommendation-api-tests
+          filters:
+            branches:
+              only:
+                - production
+          api-instance-name : apireco-prod
           context:
             - DATA_GCP
             - DATA_GCP_PROD
@@ -332,3 +362,22 @@ jobs:
               --python-version=3.7 \
               --region=$REGION \
               --machine-type=<< parameters.machine_type >>
+
+  build_and_deploy_api:
+    docker:
+      - image: 'cimg/base:stable'
+    parameters:
+      api-instance-name:
+        description: "API instance name"
+        type: string
+    steps:
+      - checkout
+      - cloudrun/init
+      - cloudrun/build:
+          tag: 'eu.gcr.io/${GOOGLE_PROJECT_ID}/${REPO_NAME}/<< parameters.api-instance-name >>:${CIRCLE_SHA1}'
+      - cloudrun/deploy:
+          image: 'eu.gcr.io/${GOOGLE_PROJECT_ID}/${REPO_NAME}/<< parameters.api-instance-name >>:${CIRCLE_SHA1}'
+          platform: managed
+          region: europe-west1
+          service-name: << parameters.api-instance-name >>
+          unauthenticated: true

@@ -42,12 +42,12 @@ def define_activation_dates_query(dataset, table_prefix=""):
             )
             SELECT
                 user.user_id
-                ,CASE WHEN "offer_type" = 'ThingType.ACTIVATION' AND booking_is_used THEN booking_used_date 
-                ELSE user.user_creation_date END AS user_activation_date
+                ,CASE WHEN "offer_type" = 'ThingType.ACTIVATION' AND booking_used_date IS NOT NULL THEN booking_used_date
+                 ELSE user_creation_date END AS user_activation_date
             FROM {dataset}.{table_prefix}user
             LEFT JOIN ranked_bookings ON user.user_id = ranked_bookings.user_id
-            WHERE rank_ = 1
-            AND user.user_is_beneficiary
+            AND rank_ = 1
+            WHERE user.user_is_beneficiary
         );
         """
 
@@ -458,6 +458,7 @@ def define_enriched_user_data_query(dataset, table_prefix=""):
                 (EXTRACT(DAY FROM date_of_first_bookings.first_booking_date) - EXTRACT(DAY FROM activation_dates.user_activation_date)) 
                 AS days_between_activation_date_and_first_booking_date,
                 (EXTRACT(DAY FROM first_paid_booking_date.booking_creation_date_first) - EXTRACT(DAY FROM activation_dates.user_activation_date))
+                AS days_between_activation_date_and_first_booking_paid,
                 first_booking_type.first_booking_type,
                 first_paid_booking_type.first_paid_booking_type,
                 count_distinct_types.cnt_distinct_types AS cnt_distinct_type_booking

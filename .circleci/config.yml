@@ -160,14 +160,17 @@ workflows:
             - DATA_GCP
             - DATA_GCP_PROD
 
-defaults: &defaults
-  docker:
-    - image: circleci/python:3.7
-      auth:
-        username: $DOCKERHUB_USER
-        password: $DOCKERHUB_PASSWORD
+###################
+#  EXECUTORS
+###################
 
 executors:
+  python:
+    docker:
+      - image: circleci/python:3.7
+        auth:
+          username: $DOCKERHUB_USER
+          password: $DOCKERHUB_PASSWORD
   gcp-sdk:
     docker:
       - image: google/cloud-sdk:316.0.0
@@ -175,9 +178,13 @@ executors:
           username: $DOCKERHUB_USER
           password: $DOCKERHUB_PASSWORD
 
+###################
+#  JOBS
+###################
+
 jobs:
   analytics_tests:
-    <<: *defaults
+    executor: python
     working_directory: ~/data-gcp/analytics
     steps:
       - checkout:
@@ -207,7 +214,7 @@ jobs:
             pytest tests
 
   recommendation-api-build:
-    <<: *defaults
+    executor: python
     working_directory: ~/data-gcp/recommendation/api
     steps:
       - checkout:
@@ -281,7 +288,7 @@ jobs:
             newman run api_integration_tests.postman_collection.json --environment <<parameters.env>>.postman_environment.json
 
   linter:
-    <<: *defaults
+    executor: python
     working_directory: ~/data-gcp
     steps:
       - checkout
@@ -304,7 +311,7 @@ jobs:
             black --exclude="venv-lint" --check .
 
   orchestration-install:
-    <<: *defaults
+    executor: python
     working_directory: ~/data-gcp/orchestration
     steps:
       - checkout:
@@ -327,7 +334,7 @@ jobs:
             - .
 
   orchestration-tests:
-    <<: *defaults
+    executor: python
     working_directory: ~/data-gcp/orchestration
     environment:
       - AIRFLOW_HOME=~/data-gcp/orchestration
@@ -345,7 +352,7 @@ jobs:
             pytest tests
 
   recommendation-db-install:
-    <<: *defaults
+    executor: python
     working_directory: ~/data-gcp/recommendation/db
     steps:
       - checkout:

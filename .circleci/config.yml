@@ -8,59 +8,78 @@ workflows:
   nightly:
     triggers:
       - schedule:
-          cron: "14 13 * * *"
+          cron: "0 0 * * *"
           filters:
             branches:
               only:
                 - pc-6830-add-integration-tests-for-api
+                - production
                 - master
     jobs:
-      - recommendation-integration-tests:
-          name: recommendation-integration-tests-sandbox
-          env: sandbox
-      - recommendation-integration-tests:
-          name: recommendation-integration-tests-dev
+      - api_integration_tests:
+          name: api_integration_tests_dev
           env: dev
-      - recommendation-integration-tests:
-          name: recommendation-integration-tests-staging
+          filters:
+            branches:
+              only:
+                - master
+      - api_integration_tests:
+          name: api_integration_tests_staging
           env: staging
-      - recommendation-integration-tests:
-          name: recommendation-integration-tests-prod
+          filters:
+            branches:
+              only:
+                - master
+      - api_integration_tests:
+          name: rapi_integration_tests_prod
           env: production
+          filters:
+            branches:
+              only:
+                - production
 
   run-checks:
     jobs:
       - linter
 
-      - analytics-tests
+      - analytics_tests
 
       - recommendation-db-install
+          requires:
+            - linter
+
       - recommendation-db-tests:
           requires:
             - recommendation-db-install
 
-      - recommendation-api-build
+      - recommendation-api-build:
+          requires:
+            - linter
+
       - recommendation-api-tests:
           requires:
             - recommendation-api-build
-      - recommendation-integration-tests:
+
+      - api_integration_tests:
           requires:
-            - recommendation-api-tests  # SHOULD BE API DEPLOY
+            - recommendation-api-tests
           name: recommendation-integration-tests-dev
           env: dev
-      - recommendation-integration-tests:
+
+      - api_integration_tests:
+          name: api_integration_tests_staging
           requires:
-            - recommendation-integration-tests-dev
-          name: recommendation-integration-tests-staging
+            - build_and_deploy_api_staging
           env: staging
           filters:
             branches:
               only:
                 - master
-      - recommendation-integration-tests:
+
+      - api_integration_tests:
+          name: api_integration_tests_production
           requires:
-            - recommendation-integration-tests-staging
-          name: recommendation-integration-tests-production
+            - build_and_deploy_api_production
           env: production
           filters:
             branches:
@@ -157,7 +176,7 @@ executors:
           password: $DOCKERHUB_PASSWORD
 
 jobs:
-  analytics-tests:
+  analytics_tests:
     <<: *defaults
     working_directory: ~/data-gcp/analytics
     steps:
@@ -235,11 +254,11 @@ jobs:
             . venv-api/bin/activate
             ./run_tests.sh
 
-  recommendation-integration-tests:
+  api_integration_tests:
     parameters:
       env:
         description: "Which environement to target"
-        default: "sandbox"
+        default: "dev"
         type: string
     docker:
       - image: postman/newman

@@ -1,18 +1,18 @@
-import os
 import datetime
+import os
 
 from airflow import DAG
 from airflow.contrib.operators.bigquery_operator import BigQueryOperator
 from airflow.operators.dummy_operator import DummyOperator
 
 from dependencies.config import (
-    GCP_PROJECT,
-    ENV_SHORT_NAME,
-    APPLICATIVE_PREFIX,
     APPLICATIVE_EXTERNAL_CONNECTION_ID,
+    APPLICATIVE_PREFIX,
     BIGQUERY_ANALYTICS_DATASET,
+    BIGQUERY_CLEAN_DATASET,
+    ENV_SHORT_NAME,
+    GCP_PROJECT,
 )
-
 from dependencies.data_analytics.enriched_data.booking import (
     define_enriched_booking_data_full_query,
 )
@@ -80,7 +80,7 @@ default_dag_args = {
 }
 
 dag = DAG(
-    "import_data_analytics_v4",
+    "import_data_analytics_v5",
     default_args=default_dag_args,
     description="Import tables from CloudSQL and enrich data for create dashboards with Data Studio",
     schedule_interval="0 5 * * *",
@@ -90,19 +90,33 @@ dag = DAG(
 
 start = DummyOperator(task_id="start", dag=dag)
 
-import_tables_tasks = []
+import_tables_to_clean_tasks = []
 for table in data_applicative_tables:
     task = BigQueryOperator(
-        task_id=f"import_{table}",
+        task_id=f"import_to_clean_{table}",
         sql=define_import_query(
-            table=table, external_connection_id=APPLICATIVE_EXTERNAL_CONNECTION_ID
+            external_connection_id=APPLICATIVE_EXTERNAL_CONNECTION_ID, table=table
         ),
+        write_disposition="WRITE_TRUNCATE",
+        use_legacy_sql=False,
+        destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.{APPLICATIVE_PREFIX}{table}",
+        dag=dag,
+    )
+    import_tables_to_clean_tasks.append(task)
+
+end_import_table_to_clean = DummyOperator(task_id="end_import_table_to_clean", dag=dag)
+
+import_tables_to_analytics_tasks = []
+for table in data_applicative_tables:
+    task = BigQueryOperator(
+        task_id=f"import_to_analytics_{table}",
+        sql=f"SELECT * FROM {BIGQUERY_CLEAN_DATASET}.{APPLICATIVE_PREFIX}{table}",
         write_disposition="WRITE_TRUNCATE",
         use_legacy_sql=False,
         destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.{APPLICATIVE_PREFIX}{table}",
         dag=dag,
     )
-    import_tables_tasks.append(task)
+    import_tables_to_analytics_tasks.append(task)
 
 end_import = DummyOperator(task_id="end_import", dag=dag)
 
@@ -166,4 +180,4 @@ create_enriched_data_tasks = [
 
 end = DummyOperator(task_id="end", dag=dag)
 
-start >> import_tables_tasks >> end_import >> create_enriched_data_tasks >> end
+start >> import_tables_to_clean_tasks >> end_import_table_to_clean >> import_tables_to_analytics_tasks >> end_import >> create_enriched_data_tasks >> end

@@ -21,8 +21,6 @@ workflows:
       - ai-platform-deploy:
           name: staging-ai-platform-deploy
           machine_type: n1-standard-2
-          requires:
-            - orchestration-tests
           filters:
             branches:
               only:
@@ -32,6 +30,8 @@ workflows:
             - DATA_GCP_EHP
       - composer-deploy:
           name: staging-composer-deploy
+          requires:
+            - orchestration-tests
           filters:
             branches:
               only:
@@ -42,8 +42,6 @@ workflows:
       - ai-platform-deploy:
           name: production-ai-platform-deploy
           machine_type: n1-standard-2
-          requires:
-            - orchestration-tests
           filters:
             branches:
               only:
@@ -272,9 +270,8 @@ jobs:
     environment:
       DAG_RECOMMMENDATION_CLOUDSQL: recommendation_cloud_sql_v1
       DAG_EXPORT_CLOUDSQL_BIGQUERY: export_cloudsql_tables_to_bigquery_v1
-      DAG_IMPORT_APPLICATIVE_DATA: import_applicative_data_v2
-      DAG_ARCHIVE_DATABASE: archive_database_v1
-      DAG_EXPORT_SCALINGO_TO_CLOUDSQL: dump_prod_from_scalingo_v2
+      DAG_IMPORT_APPLICATIVE_DATA: import_applicative_data_v3
+      DAG_ARCHIVE_DATABASE: archive_database_v2
       DAG_REFRESH_MATOMO_DATA: dump_scalingo_matomo_refresh_v1
       DAG_RESTORE_SCALINGO_FROM_VM: restore_prod_from_vm_export_v1
     working_directory: ~/data-gcp/orchestration
@@ -296,12 +293,9 @@ jobs:
           name: Wait for dags to be deployed
           command: |
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_RECOMMMENDATION_CLOUDSQL} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_RESTORE_DATA_ANALYTICS} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_DUMP_SCALINGO} 6 20
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_EXPORT_CLOUDSQL_BIGQUERY} 6 20
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_APPLICATIVE_DATA} 6 20
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_ARCHIVE_DATABASE} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_EXPORT_SCALINGO_TO_CLOUDSQL} 6 20
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_REFRESH_MATOMO_DATA} 6 20
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_RESTORE_SCALINGO_FROM_VM} 6 20
 

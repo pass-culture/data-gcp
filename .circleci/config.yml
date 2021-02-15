@@ -372,7 +372,10 @@ jobs:
         type: string
     steps:
       - checkout
-      - cloudrun/init
+      - cloudrun/init:
+          gcloud-service-key: GCLOUD_SERVICE_KEY
+          google-compute-zone: GOOGLE_COMPUTE_ZONE
+          google-project-id: GOOGLE_PROJECT_ID
       - cloudrun/build:
           tag: 'eu.gcr.io/${GOOGLE_PROJECT_ID}/${REPO_NAME}/<< parameters.api-instance-name >>:${CIRCLE_SHA1}'
       - cloudrun/deploy:

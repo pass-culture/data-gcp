@@ -57,7 +57,7 @@ class TestDags(unittest.TestCase):
 
     def test_restore_data_analytics_dag_is_loaded(self):
         # When
-        dag = self.dagbag.get_dag(dag_id="import_applicative_data_v2")
+        dag = self.dagbag.get_dag(dag_id="import_applicative_data_v3")
 
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
@@ -72,15 +72,6 @@ class TestDags(unittest.TestCase):
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
         self.assertEqual(len(dag.tasks), 58)
-
-    def test_dump_prod_from_scalingo_dag_is_loaded(self):
-        # When
-        dag = self.dagbag.get_dag(dag_id="dump_prod_from_scalingo_v2")
-
-        # Then
-        self.assertDictEqual(self.dagbag.import_errors, {})
-        self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 162)
 
     def test_create_ab_testing_table_dag_is_loaded(self):
         # When
@@ -120,18 +111,9 @@ class TestDags(unittest.TestCase):
 
     def test_archive_database_dag_is_loaded(self):
         # When
-        dag = self.dagbag.get_dag(dag_id="archive_database_v1")
+        dag = self.dagbag.get_dag(dag_id="archive_database_v2")
 
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
         self.assertEqual(len(dag.tasks), 3)
-
-    def test_restore_scalingo_from_vm_dag_is_loaded(self):
-        # When
-        dag = self.dagbag.get_dag(dag_id="restore_prod_from_vm_export_v1")
-
-        # Then
-        self.assertDictEqual(self.dagbag.import_errors, {})
-        self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 4)

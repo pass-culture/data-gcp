@@ -1,14 +1,18 @@
+import os
 import datetime
 
 from airflow import DAG
 from airflow.contrib.operators.bigquery_operator import BigQueryOperator
 from airflow.operators.dummy_operator import DummyOperator
 
-from dependencies.data_analytics.config import (
-    EXTERNAL_CONNECTION_ID_VM,
-    GCP_PROJECT_ID,
-    TABLE_PREFIX,
+from dependencies.config import (
+    GCP_PROJECT,
+    ENV_SHORT_NAME,
+    APPLICATIVE_PREFIX,
+    APPLICATIVE_EXTERNAL_CONNECTION_ID,
+    BIGQUERY_ANALYTICS_DATASET,
 )
+
 from dependencies.data_analytics.enriched_data.booking import (
     define_enriched_booking_data_full_query,
 )
@@ -31,8 +35,6 @@ from dependencies.data_analytics.import_tables import define_import_query
 from dependencies.slack_alert import task_fail_slack_alert
 
 # Variables
-BIGQUERY_DATASET_NAME = "analytics_sbx"
-
 data_applicative_tables = [
     "user",
     "provider",
@@ -74,7 +76,7 @@ default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),
     "retries": 1,
     "retry_delay": datetime.timedelta(minutes=5),
-    "project_id": GCP_PROJECT_ID,
+    "project_id": GCP_PROJECT,
 }
 
 dag = DAG(
@@ -93,11 +95,11 @@ for table in data_applicative_tables:
     task = BigQueryOperator(
         task_id=f"import_{table}",
         sql=define_import_query(
-            table=table, external_connection_id=EXTERNAL_CONNECTION_ID_VM
+            table=table, external_connection_id=APPLICATIVE_EXTERNAL_CONNECTION_ID
         ),
         write_disposition="WRITE_TRUNCATE",
         use_legacy_sql=False,
-        destination_dataset_table=f"{BIGQUERY_DATASET_NAME}.{TABLE_PREFIX}{table}",
+        destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.{APPLICATIVE_PREFIX}{table}",
         dag=dag,
     )
     import_tables_tasks.append(task)
@@ -107,7 +109,7 @@ end_import = DummyOperator(task_id="end_import", dag=dag)
 create_enriched_offer_data_task = BigQueryOperator(
     task_id="create_enriched_offer_data",
     sql=define_enriched_offer_data_full_query(
-        dataset=BIGQUERY_DATASET_NAME, table_prefix=TABLE_PREFIX
+        dataset=BIGQUERY_ANALYTICS_DATASET, table_prefix=APPLICATIVE_PREFIX
     ),
     use_legacy_sql=False,
     dag=dag,
@@ -115,7 +117,7 @@ create_enriched_offer_data_task = BigQueryOperator(
 create_enriched_stock_data_task = BigQueryOperator(
     task_id="create_enriched_stock_data",
     sql=define_enriched_stock_data_full_query(
-        dataset=BIGQUERY_DATASET_NAME, table_prefix=TABLE_PREFIX
+        dataset=BIGQUERY_ANALYTICS_DATASET, table_prefix=APPLICATIVE_PREFIX
     ),
     use_legacy_sql=False,
     dag=dag,
@@ -123,7 +125,7 @@ create_enriched_stock_data_task = BigQueryOperator(
 create_enriched_user_data_task = BigQueryOperator(
     task_id="create_enriched_user_data",
     sql=define_enriched_user_data_full_query(
-        dataset=BIGQUERY_DATASET_NAME, table_prefix=TABLE_PREFIX
+        dataset=BIGQUERY_ANALYTICS_DATASET, table_prefix=APPLICATIVE_PREFIX
     ),
     use_legacy_sql=False,
     dag=dag,
@@ -131,7 +133,7 @@ create_enriched_user_data_task = BigQueryOperator(
 create_enriched_venue_data_task = BigQueryOperator(
     task_id="create_enriched_venue_data",
     sql=define_enriched_venue_data_full_query(
-        dataset=BIGQUERY_DATASET_NAME, table_prefix=TABLE_PREFIX
+        dataset=BIGQUERY_ANALYTICS_DATASET, table_prefix=APPLICATIVE_PREFIX
     ),
     use_legacy_sql=False,
     dag=dag,
@@ -139,7 +141,7 @@ create_enriched_venue_data_task = BigQueryOperator(
 create_enriched_booking_data_task = BigQueryOperator(
     task_id="create_enriched_booking_data",
     sql=define_enriched_booking_data_full_query(
-        dataset=BIGQUERY_DATASET_NAME, table_prefix=TABLE_PREFIX
+        dataset=BIGQUERY_ANALYTICS_DATASET, table_prefix=APPLICATIVE_PREFIX
     ),
     use_legacy_sql=False,
     dag=dag,
@@ -147,7 +149,7 @@ create_enriched_booking_data_task = BigQueryOperator(
 create_enriched_offerer_data_task = BigQueryOperator(
     task_id="create_enriched_offerer_data",
     sql=define_enriched_offerer_data_full_query(
-        dataset=BIGQUERY_DATASET_NAME, table_prefix=TABLE_PREFIX
+        dataset=BIGQUERY_ANALYTICS_DATASET, table_prefix=APPLICATIVE_PREFIX
     ),
     use_legacy_sql=False,
     dag=dag,

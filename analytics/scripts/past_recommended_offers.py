@@ -1,6 +1,6 @@
 from google.cloud import bigquery
 
-GCP_PROJECT_ID = "pass-culture-app-projet-test"
+GCP_PROJECT_ID = "passculture-data-ehp"
 GCP_BIGQUERY_DATASET = "algo_reco_kpi_data"
 
 client = bigquery.Client()

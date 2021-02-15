@@ -1,8 +1,8 @@
-from dependencies.data_analytics.config import EXTERNAL_CONNECTION_ID_VM, GCP_REGION
+from dependencies.config import APPLICATIVE_EXTERNAL_CONNECTION_ID, GCP_REGION
 
 
 def define_import_query(
-    table, region=GCP_REGION, external_connection_id=EXTERNAL_CONNECTION_ID_VM
+    table, region=GCP_REGION, external_connection_id=APPLICATIVE_EXTERNAL_CONNECTION_ID
 ):
     """
     Given a table (from "external_connection_id" located in "region"), we build and return the federated query that
@@ -294,12 +294,12 @@ def define_import_query(
             external_table
         ] = f"""
             SELECT * FROM EXTERNAL_QUERY(
-                '{region}.{external_connection_id}',
+                '{external_connection_id}',
                 '{one_line_external_query}'
             );
         """
 
     # Define default federated query (for tables that do not need specific CAST)
-    default_query = f"SELECT * FROM EXTERNAL_QUERY('{region}.{external_connection_id}', 'SELECT * FROM {table}');"
+    default_query = f"SELECT * FROM EXTERNAL_QUERY('{external_connection_id}', 'SELECT * FROM {table}');"
 
     return queries.get(table, default_query)

@@ -4,16 +4,14 @@ from airflow import DAG
 from airflow.contrib.operators.bigquery_operator import BigQueryOperator
 from airflow.operators.dummy_operator import DummyOperator
 
-from dependencies.data_analytics.config import (
+from dependencies.config import (
+    GCP_PROJECT,
+    ENV_SHORT_NAME,
+    APPLICATIVE_PREFIX,
     BIGQUERY_CLEAN_DATASET,
-    GCP_PROJECT_ID,
-    TABLE_PREFIX,
+    APPLICATIVE_EXTERNAL_CONNECTION_ID,
 )
 from dependencies.data_analytics.import_tables import define_import_query
-
-# Variables
-BIGQUERY_DATASET_NAME = "data_analytics"
-
 from dependencies.slack_alert import task_fail_slack_alert
 
 data_analytics_tables = [
@@ -57,11 +55,11 @@ default_dag_args = {
     "start_date": datetime.datetime(2020, 11, 11),
     "retries": 1,
     "retry_delay": datetime.timedelta(minutes=5),
-    "project_id": GCP_PROJECT_ID,
+    "project_id": GCP_PROJECT,
 }
 
 dag = DAG(
-    "import_applicative_data_v2",
+    "import_applicative_data_v3",
     default_args=default_dag_args,
     description="Import tables from CloudSQL and populate the clean dataset for the data team",
     schedule_interval="0 6 * * *",
@@ -75,10 +73,12 @@ import_tables_tasks = []
 for table in data_analytics_tables:
     task = BigQueryOperator(
         task_id=f"import_{table}",
-        sql=define_import_query(table=table),
+        sql=define_import_query(
+            external_connection_id=APPLICATIVE_EXTERNAL_CONNECTION_ID, table=table
+        ),
         write_disposition="WRITE_TRUNCATE",
         use_legacy_sql=False,
-        destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.{TABLE_PREFIX}{table}",
+        destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.{APPLICATIVE_PREFIX}{table}",
         dag=dag,
     )
     import_tables_tasks.append(task)

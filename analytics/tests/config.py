@@ -2,7 +2,7 @@ import os
 
 TEST_DATASET = f"test_{os.uname().nodename.replace('-', '_').replace('.', '_')}"  # Temporary => find a better way to make dataset unique
 GCP_REGION = "europe-west1"
-GCP_PROJECT = "pass-culture-app-projet-test"
+GCP_PROJECT = "passculture-data-ehp"
 TEST_TABLE_PREFIX = ""
 BIGQUERY_SCHEMAS = {
     "booking": {

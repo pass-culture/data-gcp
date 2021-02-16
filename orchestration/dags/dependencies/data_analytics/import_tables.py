@@ -197,7 +197,7 @@ def define_import_query(
         "deposit"
     ] = """
             SELECT
-                CAST("id" AS varchar(255)), "amount", CAST("userId" AS varchar(255)), "source", "dateCreated"
+                CAST("id" AS varchar(255)), "amount", CAST("userId" AS varchar(255)), "source", "dateCreated", "expirationDate"
             FROM public.deposit
         """
     cloudsql_queries[

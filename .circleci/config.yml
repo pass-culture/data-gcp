@@ -27,7 +27,6 @@ workflows:
             branches:
               only:
                 - master
-                - PC-6812-debug-deployments
           context:
             - DATA_GCP
             - DATA_GCP_EHP

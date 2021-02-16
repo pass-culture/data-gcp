@@ -68,6 +68,7 @@ workflows:
             branches:
               only:
                 - master
+                - PC-4812-debug-deployments
           context:
             - DATA_GCP_EHP
 
@@ -422,8 +423,8 @@ jobs:
       - run:
           name: Deploy to composer
           command: |
-            gsutil -m rm -r ${COMPOSER_BUCKET}
-            gsutil cp -r dags ${COMPOSER_BUCKET}
+            gsutil -m rm -r gs://${COMPOSER_BUCKET}/dags
+            gsutil cp -r dags gs://${COMPOSER_BUCKET}
       - run:
           name: Wait for dags to be deployed
           command: |

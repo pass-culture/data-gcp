@@ -1,28 +1,10 @@
--- compare offer volumetry projet passculture-metier-ehp
-SELECT count(id) FROM EXTERNAL_QUERY(
-              'europe-west1.metier-pcapi-testing-connection',
-              ' SELECT CAST("id" AS varchar(255)) FROM public.offer'
-          );
-
--- compare offer volumetry projet passculture-data-ehp
-SELECT
-  (
-    SELECT count(offer_id) FROM `passculture-data-ehp.analytics_dev.enriched_offer_data`
-  ) as count_enriched_offer_from_big_query,
-  (
-    SELECT count(id) FROM `passculture-data-ehp.clean_dev.applicative_database_booking`
-  ) as count_offer_from_big_query_clean;
-
-
-
--- compare booking volumetry passculture-metier-ehp
-SELECT count(id) FROM EXTERNAL_QUERY(
-              'europe-west1.metier-pcapi-testing-connection',
+-- compare booking volumetry
+SELECT (
+  SELECT count(id) FROM EXTERNAL_QUERY(
+              'passculture-metier-ehp.europe-west1.metier-pcapi-testing-connection',
               ' SELECT CAST("id" AS varchar(255)) FROM public.booking'
-          );
-
--- compare booking volumetry passculture-data-ehp
-SELECT
+          )
+  ) as count_booking_from_csql,
   (
     SELECT count(booking_id) FROM `passculture-data-ehp.analytics_dev.enriched_booking_data`
   ) as count_enriched_booking_from_big_query_analytics,
@@ -32,14 +14,28 @@ SELECT
 
 
 
--- compare venue volumetry passculture-metier-ehp
-SELECT count(id) FROM EXTERNAL_QUERY(
-          'europe-west1.metier-pcapi-testing-connection',
-          ' SELECT CAST("id" AS varchar(255)) FROM public.venue'
-      );
+-- compare offer volumetry
+SELECT (
+  SELECT count(id) FROM EXTERNAL_QUERY(
+              'passculture-metier-ehp.europe-west1.metier-pcapi-testing-connection',
+              ' SELECT CAST("id" AS varchar(255)) FROM public.offer'
+          )
+  ) as count_offer_from_csql,
+  (
+    SELECT count(offer_id) FROM `passculture-data-ehp.analytics_dev.enriched_offer_data`
+  ) as count_enriched_offer_from_big_query,
+  (
+    SELECT count(offer_id) FROM `passculture-data-ehp.clean_dev.applicative_database_offer`
+  ) as count_offer_from_big_query_clean;
 
--- compare venue volumetry passculture-data-ehp
-SELECT
+
+  -- compare venue volumetry
+SELECT (
+  SELECT count(id) FROM EXTERNAL_QUERY(
+              'passculture-metier-ehp.europe-west1.metier-pcapi-testing-connection',
+              ' SELECT CAST("id" AS varchar(255)) FROM public.venue'
+          )
+  ) as count_venue_from_csql,
   (
     SELECT count(venue_id) FROM `passculture-data-ehp.analytics_dev.enriched_venue_data`
   ) as count_enriched_venue_from_big_query,
@@ -49,15 +45,13 @@ SELECT
 
 
 
--- compare offerer volumetry passculture-metier-ehp
-SELECT count(id) FROM EXTERNAL_QUERY(
-              'europe-west1.metier-pcapi-testing-connection',
+-- compare offerer volumetry
+SELECT (
+  SELECT count(id) FROM EXTERNAL_QUERY(
+              'passculture-metier-ehp.europe-west1.metier-pcapi-testing-connection',
               ' SELECT CAST("id" AS varchar(255)) FROM public.offerer'
-          );
-
-
--- compare offerer volumetry passculture-data-ehp
-SELECT
+          )
+  ) as count_offerer_from_csql,
   (
     SELECT count(offerer_id) FROM `passculture-data-ehp.analytics_dev.enriched_offerer_data`
   ) as count_enriched_offerer_from_big_query,
@@ -66,14 +60,13 @@ SELECT
   ) as count_offerer_from_big_query_clean;
 
 
--- compare stock volumetry passculture-metier-ehp
-SELECT count(id) FROM EXTERNAL_QUERY(
-              'europe-west1.metier-pcapi-testing-connection',
+-- compare stock volumetry
+SELECT (
+  SELECT count(id) FROM EXTERNAL_QUERY(
+              'passculture-metier-ehp.europe-west1.metier-pcapi-testing-connection',
               ' SELECT CAST("id" AS varchar(255)) FROM public.stock'
-          );
-
--- compare stock volumetry passculture-data-ehp
-SELECT
+          )
+  ) as count_stock_from_csql,
   (
     SELECT count(stock_id) FROM `passculture-data-ehp.analytics_dev.enriched_stock_data`
   ) as count_enriched_stock_from_big_query,
@@ -82,21 +75,20 @@ SELECT
   ) as count_stock_from_big_query_clean;
 
 
--- compare user volumetry passculture-metier-ehp
- SELECT count(id) FROM EXTERNAL_QUERY(
-              'europe-west1.metier-pcapi-testing-connection',
+-- compare user volumetry
+SELECT (
+  SELECT count(id) FROM EXTERNAL_QUERY(
+              'passculture-metier-ehp.europe-west1.metier-pcapi-testing-connection',
               ' SELECT CAST("id" AS varchar(255)) FROM public.user'
-          );
-
-
--- compare user volumetry passculture-data-ehp
-SELECT
+          )
+  ) as count_user_from_csql,
   (
     SELECT count(user_id) FROM `passculture-data-ehp.analytics_dev.enriched_user_data`
   ) as count_enriched_user_from_big_query,
   (
     SELECT count(user_id) FROM `passculture-data-ehp.clean_dev.applicative_database_user`
   ) as count_user_from_big_query_clean;
+
 
 
 -- compare enriched_offer_data max date passculture-metier-ehp

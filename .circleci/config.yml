@@ -8,55 +8,6 @@ orbs:
 
 workflows:
   version: 2
-
-#  Nightly
-
-  nightly:
-    triggers:
-      - schedule:
-          cron: "0 0 * * *"
-          filters:
-            branches:
-              only:
-                - pc-6830-add-integration-tests-for-api
-                - production
-                - master
-    jobs:
-      - api_integration_tests:
-          name: api_integration_tests_dev
-          env: dev
-          api_token: $API_TOKEN_DEV
-          filters:
-            branches:
-              only:
-                - master
-          context:
-            - DATA_GCP_EHP
-
-      - api_integration_tests:
-          name: api_integration_tests_staging
-          env: staging
-          api_token: $API_TOKEN_STG
-          filters:
-            branches:
-              only:
-                - master
-          context:
-            - DATA_GCP_EHP
-
-      - api_integration_tests:
-          name: rapi_integration_tests_prod
-          env: production
-          api_token: $API_TOKEN_PROD
-          filters:
-            branches:
-              only:
-                - production
-          context:
-            - DATA_GCP_PROD
-
-# Main workflow
-
   run-checks:
     jobs:
       - linter

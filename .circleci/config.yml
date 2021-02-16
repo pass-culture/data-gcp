@@ -25,24 +25,35 @@ workflows:
       - api_integration_tests:
           name: api_integration_tests_dev
           env: dev
+          api_token: $API_TOKEN_DEV
           filters:
             branches:
               only:
                 - master
+          context:
+            - DATA_GCP_EHP
+
       - api_integration_tests:
           name: api_integration_tests_staging
           env: staging
+          api_token: $API_TOKEN_STG
           filters:
             branches:
               only:
                 - master
+          context:
+            - DATA_GCP_EHP
+
       - api_integration_tests:
           name: rapi_integration_tests_prod
           env: production
+          api_token: $API_TOKEN_PROD
           filters:
             branches:
               only:
                 - production
+          context:
+            - DATA_GCP_PROD
 
 # Main workflow
 
@@ -75,9 +86,12 @@ workflows:
 
       - api_integration_tests:
           env: dev
+          api_token: $API_TOKEN_DEV
           name: recommendation-integration-tests-dev
           requires:
             - recommendation-api-tests
+          context:
+            - DATA_GCP_EHP
 
       - build_and_deploy_api:
           name: build_and_deploy_api_staging
@@ -96,12 +110,15 @@ workflows:
       - api_integration_tests:
           name: api_integration_tests_staging
           env: staging
+          api_token: $API_TOKEN_STG
           requires:
             - build_and_deploy_api_staging
           filters:
             branches:
               only:
                 - master
+          context:
+            - DATA_GCP_EHP
 
       - build_and_deploy_api:
           name: build_and_deploy_api_production
@@ -120,12 +137,15 @@ workflows:
       - api_integration_tests:
           name: api_integration_tests_production
           env: production
+          api_token: $API_TOKEN_PROD
           requires:
             - build_and_deploy_api_production
           filters:
             branches:
               only:
                 - production
+          context:
+            - DATA_GCP_PROD
 
 # Composer jobs
 # -------------
@@ -319,6 +339,10 @@ jobs:
         description: "Which environement to target"
         default: "dev"
         type: string
+      api_token:
+        description: "The api token (given with env var)"
+        default: ""
+        type: string
     docker:
       - image: postman/newman
         auth:
@@ -337,7 +361,7 @@ jobs:
           name: Run tests collection
           command: |
             cd recommendation/api/postman
-            newman run api_integration_tests.postman_collection.json --environment <<parameters.env>>.postman_environment.json
+            newman run api_integration_tests.postman_collection.json --environment <<parameters.env>>.postman_environment.json --env-var "api_token=<<parameters.api_token>>"
 
   orchestration-install:
     executor: python

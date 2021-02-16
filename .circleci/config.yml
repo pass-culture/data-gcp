@@ -1,28 +1,55 @@
+version: 2.1
 orbs:
   cloudrun: circleci/gcp-cloud-run@1.0.2
-version: 2.1
+
+###################
+#  WORKFLOWS
+###################
 
 workflows:
   version: 2
   run-checks:
     jobs:
       - linter
-      - analytics-tests
-      - recommendation-db-install
+
+      - analytics_tests:
+          requires:
+            - linter
+
+# Recommendation jobs
+# -------------------
+
+      - recommendation-db-install:
+          requires:
+            - linter
+
       - recommendation-db-tests:
           requires:
             - recommendation-db-install
-      - recommendation-api-build
+
+      - recommendation-api-build:
+          requires:
+            - linter
+
       - recommendation-api-tests:
           requires:
             - recommendation-api-build
-      - orchestration-install
-      - orchestration-tests:
+
+      - api_integration_tests:
+          env: dev
+          api_token: $API_TOKEN_DEV
+          name: recommendation-integration-tests-dev
           requires:
-            - orchestration-install
-      - ai-platform-deploy:
-          name: staging-ai-platform-deploy
-          machine_type: n1-standard-2
+            - recommendation-api-tests
+          context:
+            - DATA_GCP_EHP
+
+      - build_and_deploy_api:
+          name: build_and_deploy_api_staging
+          api-instance-name : apireco-stg
+          requires:
+            - recommendation-api-tests
+            - recommendation-db-tests
           filters:
             branches:
               only:
@@ -30,6 +57,57 @@ workflows:
           context:
             - DATA_GCP
             - DATA_GCP_EHP
+
+      - api_integration_tests:
+          name: api_integration_tests_staging
+          env: staging
+          api_token: $API_TOKEN_STG
+          requires:
+            - build_and_deploy_api_staging
+          filters:
+            branches:
+              only:
+                - master
+          context:
+            - DATA_GCP_EHP
+
+      - build_and_deploy_api:
+          name: build_and_deploy_api_production
+          api-instance-name : apireco-prod
+          requires:
+            - recommendation-api-tests
+            - recommendation-db-tests
+          filters:
+            branches:
+              only:
+                - production
+          context:
+            - DATA_GCP
+            - DATA_GCP_PROD
+
+      - api_integration_tests:
+          name: api_integration_tests_production
+          env: production
+          api_token: $API_TOKEN_PROD
+          requires:
+            - build_and_deploy_api_production
+          filters:
+            branches:
+              only:
+                - production
+          context:
+            - DATA_GCP_PROD
+
+# Composer jobs
+# -------------
+      - orchestration-install:
+          requires:
+            - linter
+
+      - orchestration-tests:
+          requires:
+            - orchestration-install
+
       - composer-deploy:
           name: staging-composer-deploy
           requires:
@@ -41,16 +119,7 @@ workflows:
           context:
             - DATA_GCP
             - DATA_GCP_EHP
-      - ai-platform-deploy:
-          name: production-ai-platform-deploy
-          machine_type: n1-standard-2
-          filters:
-            branches:
-              only:
-                - production
-          context:
-            - DATA_GCP
-            - DATA_GCP_PROD
+
       - composer-deploy:
           name: production-composer-deploy
           requires:
@@ -62,42 +131,46 @@ workflows:
           context:
             - DATA_GCP
             - DATA_GCP_PROD
-      - build_and_deploy_api:
-          name: build_and_deploy_api_staging
+
+# AI Platform jobs
+# ----------------
+      - ai-platform-deploy:
+          name: staging-ai-platform-deploy
+          machine_type: n1-standard-2
           requires:
             - linter
-            - recommendation-api-tests
           filters:
             branches:
               only:
                 - master
-          api-instance-name : apireco-stg
           context:
             - DATA_GCP
             - DATA_GCP_EHP
 
-      - build_and_deploy_api:
-          name: build_and_deploy_api_production
+      - ai-platform-deploy:
+          name: production-ai-platform-deploy
+          machine_type: n1-standard-2
           requires:
             - linter
-            - recommendation-api-tests
           filters:
             branches:
               only:
                 - production
-          api-instance-name : apireco-prod
           context:
             - DATA_GCP
             - DATA_GCP_PROD
 
-defaults: &defaults
-  docker:
-    - image: circleci/python:3.7
-      auth:
-        username: $DOCKERHUB_USER
-        password: $DOCKERHUB_PASSWORD
+###################
+#  EXECUTORS
+###################
 
 executors:
+  python:
+    docker:
+      - image: circleci/python:3.7
+        auth:
+          username: $DOCKERHUB_USER
+          password: $DOCKERHUB_PASSWORD
   gcp-sdk:
     docker:
       - image: google/cloud-sdk:316.0.0
@@ -105,9 +178,36 @@ executors:
           username: $DOCKERHUB_USER
           password: $DOCKERHUB_PASSWORD
 
+###################
+#  JOBS
+###################
+
 jobs:
-  analytics-tests:
-    <<: *defaults
+  linter:
+    executor: python
+    working_directory: ~/data-gcp
+    steps:
+      - checkout
+      - restore_cache:
+          key: deps-{{ checksum "linter-requirements.txt" }}
+      - run:
+          name: Install black
+          command: |
+            python3 -m venv venv-lint
+            . venv-lint/bin/activate
+            pip install -r linter-requirements.txt
+      - save_cache:
+          key: deps-{{ checksum "linter-requirements.txt" }}
+          paths:
+            - "venv-lint"
+      - run:
+          name: Run linter
+          command: |
+            . venv-lint/bin/activate
+            black --exclude="venv-lint" --check .
+
+  analytics_tests:
+    executor: python
     working_directory: ~/data-gcp/analytics
     steps:
       - checkout:
@@ -137,7 +237,7 @@ jobs:
             pytest tests
 
   recommendation-api-build:
-    <<: *defaults
+    executor: python
     working_directory: ~/data-gcp/recommendation/api
     steps:
       - checkout:
@@ -184,31 +284,38 @@ jobs:
             . venv-api/bin/activate
             ./run_tests.sh
 
-  linter:
-    <<: *defaults
+  api_integration_tests:
+    parameters:
+      env:
+        description: "Which environement to target"
+        default: "dev"
+        type: string
+      api_token:
+        description: "The api token (given with env var)"
+        default: ""
+        type: string
+    docker:
+      - image: postman/newman
+        auth:
+          username: $DOCKERHUB_USER
+          password: $DOCKERHUB_PASSWORD
     working_directory: ~/data-gcp
     steps:
+      - run:
+          name: Install Git
+          command: |
+            apk update
+            apk upgrade
+            apk add --no-cache bash git openssh
       - checkout
-      - restore_cache:
-          key: deps-{{ checksum "linter-requirements.txt" }}
       - run:
-          name: Install black
+          name: Run tests collection
           command: |
-            python3 -m venv venv-lint
-            . venv-lint/bin/activate
-            pip install -r linter-requirements.txt
-      - save_cache:
-          key: deps-{{ checksum "linter-requirements.txt" }}
-          paths:
-            - "venv-lint"
-      - run:
-          name: Run linter
-          command: |
-            . venv-lint/bin/activate
-            black --exclude="venv-lint" --check .
+            cd recommendation/api/postman
+            newman run api_integration_tests.postman_collection.json --environment <<parameters.env>>.postman_environment.json --env-var "api_token=<<parameters.api_token>>"
 
   orchestration-install:
-    <<: *defaults
+    executor: python
     working_directory: ~/data-gcp/orchestration
     steps:
       - checkout:
@@ -231,7 +338,7 @@ jobs:
             - .
 
   orchestration-tests:
-    <<: *defaults
+    executor: python
     working_directory: ~/data-gcp/orchestration
     environment:
       - AIRFLOW_HOME=~/data-gcp/orchestration
@@ -249,7 +356,7 @@ jobs:
             pytest tests
 
   recommendation-db-install:
-    <<: *defaults
+    executor: python
     working_directory: ~/data-gcp/recommendation/db
     steps:
       - checkout:
@@ -328,13 +435,13 @@ jobs:
 
   ai-platform-deploy:
     executor: gcp-sdk
+    parameters:
+      machine_type:
+        type: string
     environment:
       VERSION_NAME: latest
       FRAMEWORK: SCIKIT_LEARN
     working_directory: ~/data-gcp
-    parameters:
-      machine_type:
-        type: string
     steps:
       - checkout:
           path: ~/data-gcp

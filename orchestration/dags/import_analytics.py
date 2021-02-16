@@ -72,7 +72,6 @@ data_applicative_tables = [
 ]
 
 default_dag_args = {
-    "on_failure_callback": task_fail_slack_alert,
     "start_date": datetime.datetime(2020, 12, 21),
     "retries": 1,
     "retry_delay": datetime.timedelta(minutes=5),
@@ -83,6 +82,7 @@ dag = DAG(
     "import_data_analytics_v5",
     default_args=default_dag_args,
     description="Import tables from CloudSQL and enrich data for create dashboards with Data Studio",
+    on_failure_callback=task_fail_slack_alert,
     schedule_interval="0 5 * * *",
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=90),

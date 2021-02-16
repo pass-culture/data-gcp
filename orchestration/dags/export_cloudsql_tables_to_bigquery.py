@@ -3,8 +3,8 @@ import os
 
 from airflow import DAG
 from airflow.contrib.operators.bigquery_operator import BigQueryOperator
-from airflow.operators.dummy_operator import DummyOperator
 from airflow.contrib.operators.gcp_sql_operator import CloudSqlQueryOperator
+from airflow.operators.dummy_operator import DummyOperator
 
 from dependencies.access_gcp_secrets import access_secret_data
 from dependencies.slack_alert import task_fail_slack_alert
@@ -36,7 +36,6 @@ os.environ["AIRFLOW_CONN_PROXY_POSTGRES_TCP"] = (
 )
 
 default_dag_args = {
-    "on_failure_callback": task_fail_slack_alert,
     "start_date": datetime.datetime(2021, 2, 2),
     "retries": 1,
     "retry_delay": datetime.timedelta(minutes=5),
@@ -48,6 +47,7 @@ dag = DAG(
     default_args=default_dag_args,
     description="Export tables from recommendation CloudSQL to BigQuery",
     schedule_interval="0 3 * * *",
+    on_failure_callback=task_fail_slack_alert,
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=90),
 )

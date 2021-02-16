@@ -3,31 +3,27 @@ import os
 from datetime import datetime, timedelta
 
 from airflow import DAG
+from airflow.contrib.operators.bigquery_operator import (
+    BigQueryCreateEmptyTableOperator,
+    BigQueryOperator,
+)
 from airflow.contrib.operators.bigquery_table_delete_operator import (
     BigQueryTableDeleteOperator,
 )
-
-from airflow.contrib.operators.bigquery_operator import (
-    BigQueryOperator,
-    BigQueryCreateEmptyTableOperator,
-)
 from airflow.contrib.operators.gcs_to_bq import GoogleCloudStorageToBigQueryOperator
-from airflow.contrib.operators.mysql_to_gcs import (
-    MySqlToGoogleCloudStorageOperator,
-)
+from airflow.contrib.operators.mysql_to_gcs import MySqlToGoogleCloudStorageOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python_operator import PythonOperator
 
-from dependencies.slack_alert import task_fail_slack_alert
-from dependencies.matomo_data_schema import EXPORT_START_DATE, PROD_TABLE_DATA
 from dependencies.matomo_client import MatomoClient
+from dependencies.matomo_data_schema import EXPORT_START_DATE, PROD_TABLE_DATA
+from dependencies.slack_alert import task_fail_slack_alert
 
 GCP_PROJECT_ID = "pass-culture-app-projet-test"
 GCS_BUCKET = "dump_scalingo"
 BIGQUERY_DATASET = "algo_reco_kpi_matomo"
 
 default_args = {
-    "on_failure_callback": task_fail_slack_alert,
     "start_date": datetime(2020, 12, 10),
     "retries": 5,
     "retry_delay": timedelta(minutes=5),
@@ -38,6 +34,7 @@ dag = DAG(
     default_args=default_args,
     description=f"Dump scalingo matomo history from {EXPORT_START_DATE} to cloud storage "
     f"in csv format and import it in bigquery",
+    on_failure_callback=task_fail_slack_alert,
     schedule_interval="@once",
     dagrun_timeout=timedelta(minutes=180),
     catchup=False,

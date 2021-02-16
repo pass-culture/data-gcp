@@ -84,6 +84,7 @@ workflows:
           api-instance-name : apireco-stg
           requires:
             - recommendation-api-tests
+            - recommendation-db-tests
           filters:
             branches:
               only:
@@ -107,6 +108,7 @@ workflows:
           api-instance-name : apireco-prod
           requires:
             - recommendation-api-tests
+            - recommendation-db-tests
           filters:
             branches:
               only:

@@ -26,4 +26,5 @@ do
   n=$(($n+1))
   sleep "${5}"
 done
+echo "${3}" - $status
 exit $status

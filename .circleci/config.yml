@@ -68,7 +68,6 @@ workflows:
             branches:
               only:
                 - master
-                - PC-4812-debug-deployments
           context:
             - DATA_GCP_EHP
 
@@ -117,6 +116,7 @@ workflows:
             branches:
               only:
                 - master
+                - PC-6812-remove-test
           context:
             - DATA_GCP
             - DATA_GCP_EHP
@@ -407,9 +407,9 @@ jobs:
     environment:
       DAG_RECOMMMENDATION_CLOUDSQL: recommendation_cloud_sql_v1
       DAG_EXPORT_CLOUDSQL_BIGQUERY: export_cloudsql_tables_to_bigquery_v1
-      DAG_IMPORT_APPLICATIVE_DATA: import_applicative_data_v3
       DAG_REFRESH_MATOMO_DATA: dump_scalingo_matomo_refresh_v1
-      DAG_RESTORE_SCALINGO_FROM_VM: restore_prod_from_vm_export_v1
+      DAG_IMPORT_DATA_ANALYTICS: import_data_analytics_v5
+      DAG_DUMP_SCALINGO_MATOMO_HISTORY: dump_scalingo_matomo_history_v6
     working_directory: ~/data-gcp/orchestration
     steps:
       - checkout:
@@ -430,9 +430,9 @@ jobs:
           command: |
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_RECOMMMENDATION_CLOUDSQL} 6 20
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_EXPORT_CLOUDSQL_BIGQUERY} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_APPLICATIVE_DATA} 6 20
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_REFRESH_MATOMO_DATA} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_RESTORE_SCALINGO_FROM_VM} 6 20
+            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_DATA_ANALYTICS} 6 20
+            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_DUMP_SCALINGO_MATOMO_HISTORY} 6 20
 
   ai-platform-deploy:
     executor: gcp-sdk

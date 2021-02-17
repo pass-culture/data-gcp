@@ -116,7 +116,6 @@ workflows:
             branches:
               only:
                 - master
-                - PC-6812-remove-test
           context:
             - DATA_GCP
             - DATA_GCP_EHP

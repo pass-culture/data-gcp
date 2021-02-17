@@ -36,15 +36,15 @@ def define_activation_dates_query(dataset, table_prefix=""):
                     ,booking_used_date
                     ,booking_is_used
                     ,RANK() OVER (PARTITION BY booking.user_id ORDER BY booking.booking_creation_date ASC) AS rank_
-                FROM {dataset}.{table_prefix}booking
-                JOIN {dataset}.{table_prefix}stock ON booking.stock_id = stock.stock_id
-                JOIN {dataset}.{table_prefix}offer ON stock.offer_id = offer.offer_id
+                FROM {dataset}.{table_prefix}booking AS booking
+                JOIN {dataset}.{table_prefix}stock AS stock ON booking.stock_id = stock.stock_id
+                JOIN {dataset}.{table_prefix}offer AS offer ON stock.offer_id = offer.offer_id
             )
             SELECT
                 user.user_id
                 ,CASE WHEN "offer_type" = 'ThingType.ACTIVATION' AND booking_used_date IS NOT NULL THEN booking_used_date
                  ELSE user_creation_date END AS user_activation_date
-            FROM {dataset}.{table_prefix}user
+            FROM {dataset}.{table_prefix}user AS user
             LEFT JOIN ranked_bookings ON user.user_id = ranked_bookings.user_id
             AND rank_ = 1
             WHERE user.user_is_beneficiary
@@ -343,9 +343,9 @@ def define_first_paid_booking_date_query(dataset, table_prefix=""):
             SELECT
             booking.user_id
             ,min(booking.booking_creation_date) AS booking_creation_date_first
-        FROM {dataset}.{table_prefix}booking
-        JOIN {dataset}.{table_prefix}stock ON stock.stock_id = booking.stock_id
-        JOIN {dataset}.{table_prefix}offer ON offer.offer_id = stock.offer_id
+        FROM {dataset}.{table_prefix}booking AS booking
+        JOIN {dataset}.{table_prefix}stock AS stock ON stock.stock_id = booking.stock_id
+        JOIN {dataset}.{table_prefix}offer AS offer ON offer.offer_id = stock.offer_id
         AND offer.offer_type != 'ThingType.ACTIVATION'
         AND (offer.booking_email != 'jeux-concours@passculture.app' OR offer.booking_email IS NULL)
         AND COALESCE(booking.booking_amount,0) > 0
@@ -363,20 +363,20 @@ def define_first_booking_type_query(dataset, table_prefix=""):
                     ,booking.user_id
                     ,offer.offer_type
                     ,rank() over (partition by booking.user_id order by booking.booking_creation_date) AS rank_booking
-                FROM {dataset}.{table_prefix}booking
-                JOIN {dataset}.{table_prefix}stock
+                FROM {dataset}.{table_prefix}booking AS booking
+                JOIN {dataset}.{table_prefix}stock AS stock
                 ON booking.stock_id = stock.stock_id
-                JOIN {dataset}.{table_prefix}offer
+                JOIN {dataset}.{table_prefix}offer AS offer
                 ON offer.offer_id = stock.offer_id
                 AND offer.offer_type NOT IN ('ThingType.ACTIVATION','EventType.ACTIVATION')
                 AND (offer.booking_email != 'jeux-concours@passculture.app' OR offer.booking_email IS NULL)
-                )    
+                )
             SELECT
                 user_id
                 ,offer_type AS first_booking_type
             FROM bookings_ranked
             WHERE rank_booking = 1
-    
+
         );
         """
 
@@ -387,13 +387,13 @@ def define_first_paid_booking_type_query(dataset, table_prefix=""):
             WITH paid_bookings_ranked AS (
                 SELECT
                     booking.booking_id
-                    ,booking.user_id 
+                    ,booking.user_id
                     ,offer.offer_type
                     ,rank() over (partition by booking.user_id order by booking.booking_creation_date) AS rank_booking
-                FROM {dataset}.{table_prefix}booking
-                JOIN {dataset}.{table_prefix}stock
+                FROM {dataset}.{table_prefix}booking AS booking
+                JOIN {dataset}.{table_prefix}stock AS stock
                 ON booking.stock_id = stock.stock_id
-                JOIN {dataset}.{table_prefix}offer
+                JOIN {dataset}.{table_prefix}offer AS offer
                 ON offer.offer_id = stock.offer_id
                 AND offer.offer_type NOT IN ('ThingType.ACTIVATION','EventType.ACTIVATION')
                 AND (offer.booking_email != 'jeux-concours@passculture.app' OR offer.booking_email IS NULL)
@@ -404,7 +404,7 @@ def define_first_paid_booking_type_query(dataset, table_prefix=""):
                 ,offer_type AS first_paid_booking_type
             FROM paid_bookings_ranked
             WHERE rank_booking = 1
-            
+
         );
         """
 
@@ -415,10 +415,10 @@ def define_count_distinct_types_query(dataset, table_prefix=""):
             SELECT
                booking.user_id
                ,COUNT(DISTINCT offer.offer_type) AS cnt_distinct_types
-            FROM {dataset}.{table_prefix}booking
-            JOIN {dataset}.{table_prefix}stock
+            FROM {dataset}.{table_prefix}booking AS booking
+            JOIN {dataset}.{table_prefix}stock AS stock
             ON booking.stock_id = stock.stock_id
-            JOIN {dataset}.{table_prefix}offer
+            JOIN {dataset}.{table_prefix}offer AS offer
             ON offer.offer_id = stock.offer_id
             AND offer.offer_type NOT IN ('ThingType.ACTIVATION','EventType.ACTIVATION')
             AND (offer.booking_email != 'jeux-concours@passculture.app' OR offer.booking_email IS NULL)
@@ -432,7 +432,7 @@ def define_enriched_user_data_query(dataset, table_prefix=""):
         CREATE OR REPLACE TABLE {dataset}.enriched_user_data AS (
             SELECT
                 user.user_id,
-                experimentation_sessions.vague_experimentation as experimentation_session,
+                experimentation_sessions.vague_experimentation AS experimentation_session,
                 user.user_department_code,
                 user.user_postal_code,
                 user.user_activity,
@@ -455,7 +455,7 @@ def define_enriched_user_data_query(dataset, table_prefix=""):
                 last_booking_date.last_booking_date,
                 region_department.region_name AS user_region_name,
                 first_paid_booking_date.booking_creation_date_first,
-                (EXTRACT(DAY FROM date_of_first_bookings.first_booking_date) - EXTRACT(DAY FROM activation_dates.user_activation_date)) 
+                (EXTRACT(DAY FROM date_of_first_bookings.first_booking_date) - EXTRACT(DAY FROM activation_dates.user_activation_date))
                 AS days_between_activation_date_and_first_booking_date,
                 (EXTRACT(DAY FROM first_paid_booking_date.booking_creation_date_first) - EXTRACT(DAY FROM activation_dates.user_activation_date))
                 AS days_between_activation_date_and_first_booking_paid,
@@ -480,7 +480,7 @@ def define_enriched_user_data_query(dataset, table_prefix=""):
             LEFT JOIN theoretical_amount_spent_in_outings ON user.user_id = theoretical_amount_spent_in_outings.user_id
             LEFT JOIN last_booking_date ON last_booking_date.user_id = user.user_id
             LEFT JOIN user_humanized_id AS user_humanized_id ON user_humanized_id.user_id = user.user_id
-            LEFT JOIN {dataset}.{table_prefix}region_department ON user.user_department_code = region_department.num_dep
+            LEFT JOIN {dataset}.region_department ON user.user_department_code = region_department.num_dep
             LEFT JOIN first_paid_booking_date ON user.user_id = first_paid_booking_date.user_id
             LEFT JOIN first_booking_type ON user.user_id = first_booking_type.user_id
             LEFT JOIN first_paid_booking_type ON user.user_id = first_paid_booking_type.user_id

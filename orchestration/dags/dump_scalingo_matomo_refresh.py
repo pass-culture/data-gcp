@@ -4,26 +4,25 @@ from datetime import datetime, timedelta
 
 from airflow import DAG, AirflowException, settings
 from airflow.contrib.operators.bigquery_operator import (
-    BigQueryOperator,
     BigQueryCreateEmptyTableOperator,
+    BigQueryOperator,
 )
 from airflow.contrib.operators.bigquery_table_delete_operator import (
     BigQueryTableDeleteOperator,
 )
 from airflow.contrib.operators.gcs_to_bq import GoogleCloudStorageToBigQueryOperator
-from airflow.contrib.operators.mysql_to_gcs import (
-    MySqlToGoogleCloudStorageOperator,
-)
+from airflow.contrib.operators.mysql_to_gcs import MySqlToGoogleCloudStorageOperator
 from airflow.hooks.base_hook import BaseHook
 from airflow.models import Variable
 from airflow.models.connection import Connection
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python_operator import PythonOperator
 
-from dependencies.bigquery_client import BigQueryClient
-from dependencies.matomo_data_schema import PROD_TABLE_DATA, STAGING_TABLE_DATA
-from dependencies.matomo_client import MatomoClient
 from dependencies.access_gcp_secrets import access_secret_data
+from dependencies.bigquery_client import BigQueryClient
+from dependencies.matomo_client import MatomoClient
+from dependencies.matomo_data_schema import PROD_TABLE_DATA, STAGING_TABLE_DATA
+from dependencies.slack_alert import task_fail_slack_alert
 
 ENV = os.environ.get("ENV")
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
@@ -202,6 +201,7 @@ dag = DAG(
     default_args=default_args,
     description="Dump scalingo matomo new data to cloud storage in csv format and use it to refresh data in bigquery",
     schedule_interval="0 4 * * *",
+    on_failure_callback=task_fail_slack_alert,
     dagrun_timeout=timedelta(minutes=180),
     catchup=False,
 )

@@ -3,21 +3,21 @@ from datetime import datetime, timedelta
 
 import pandas as pd
 from airflow import DAG
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.python_operator import PythonOperator
 from airflow.contrib.operators.bigquery_operator import BigQueryOperator
 from airflow.contrib.operators.bigquery_table_delete_operator import (
     BigQueryTableDeleteOperator,
 )
 from airflow.contrib.operators.bigquery_to_gcs import BigQueryToCloudStorageOperator
 from airflow.contrib.operators.gcp_sql_operator import (
-    CloudSqlQueryOperator,
     CloudSqlInstanceImportOperator,
+    CloudSqlQueryOperator,
 )
+from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.python_operator import PythonOperator
 
 from dependencies.access_gcp_secrets import access_secret_data
-from dependencies.slack_alert import task_fail_slack_alert
 from dependencies.compose_gcs_files import compose_gcs_files
+from dependencies.slack_alert import task_fail_slack_alert
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
 LOCATION = os.environ.get("REGION")
@@ -40,7 +40,6 @@ DATA_GCS_BUCKET_NAME = os.environ.get("DATA_GCS_BUCKET_NAME")
 BUCKET_PATH = f"gs://{DATA_GCS_BUCKET_NAME}/bigquery_exports"
 
 default_args = {
-    "on_failure_callback": task_fail_slack_alert,
     "start_date": datetime(2020, 12, 1),
     "retries": 1,
     "retry_delay": timedelta(minutes=2),
@@ -77,6 +76,7 @@ with DAG(
     default_args=default_args,
     description="Export bigQuery tables to GCS to dump and restore Cloud SQL tables",
     schedule_interval="@daily",
+    on_failure_callback=task_fail_slack_alert,
     catchup=False,
     dagrun_timeout=timedelta(minutes=180),
 ) as dag:
@@ -107,7 +107,7 @@ with DAG(
             task_id=f"filter_column_{table}",
             sql=f"""
                 SELECT {select_columns}
-                FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_{table}` 
+                FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_{table}`
             """,
             use_legacy_sql=False,
             destination_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_CLEAN_DATASET}.temp_export_{table}",

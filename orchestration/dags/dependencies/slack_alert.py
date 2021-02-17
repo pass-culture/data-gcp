@@ -40,9 +40,7 @@ def task_fail_slack_alert(context):
             *Execution Time*: {exec_date}
             *DAG Url*: {dag_url}
             """.format(
-        task=context.get("task_instance").task_id,
-        dag=context.get("task_instance").dag_id,
-        ti=context.get("task_instance"),
+        dag=context.get("dag").dag_id,
         exec_date=context.get("execution_date"),
         dag_url=link,
     )

@@ -31,7 +31,7 @@ gcloud composer environments storage dags import \
 Le chemin de référence est dags, donc pour envoyer les dependencies il faut envoyer `--source dags/dependencies`.
 
 
-- ENVIRONMENT_NAME : data-composer
+- ENVIRONMENT_NAME : data-composer-\<env>
 - LOCATION: europe-west1
 
 ## Lancement des DAGs

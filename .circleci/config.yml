@@ -15,6 +15,8 @@ workflows:
       - analytics_tests:
           requires:
             - linter
+          context:
+            - DATA_GCP_EHP
 
 # Recommendation jobs
 # -------------------

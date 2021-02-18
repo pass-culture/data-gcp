@@ -32,8 +32,7 @@ def define_import_query(
         "user_offerer"
     ] = """
         SELECT
-            CAST("id" AS varchar(255)), CAST("userId" AS varchar(255)), CAST("offererId" AS varchar(255)),
-            CAST("rights" AS varchar(255))
+            CAST("id" AS varchar(255)), CAST("userId" AS varchar(255)), CAST("offererId" AS varchar(255))
         FROM public.user_offerer
     """
     cloudsql_queries[

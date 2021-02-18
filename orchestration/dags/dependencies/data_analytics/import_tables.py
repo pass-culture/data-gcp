@@ -116,7 +116,8 @@ def define_import_query(
             CAST("lastProviderId" AS varchar(255)) AS venue_last_provider_id, "isVirtual" AS venue_is_virtual,
             "comment" AS venue_comment, "publicName" AS venue_public_name,
             "fieldsUpdated" AS venue_fields_updated, CAST("venueTypeId" AS varchar(255)) AS venue_type_id,
-            CAST("venueLabelId" AS varchar(255)) AS venue_label_id, "dateCreated" AS venue_creation_date
+            CAST("venueLabelId" AS varchar(255)) AS venue_label_id, "dateCreated" AS venue_creation_date,
+            "isPermanent" AS venue_is_permanent
         FROM public.venue
     """
     cloudsql_queries[

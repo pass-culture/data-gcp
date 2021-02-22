@@ -200,7 +200,7 @@ dag = DAG(
     "dump_scalingo_matomo_refresh_v1",
     default_args=default_args,
     description="Dump scalingo matomo new data to cloud storage in csv format and use it to refresh data in bigquery",
-    schedule_interval="0 4 * * *",
+    schedule_interval="0 4 * * *" if ENV != "dev" else "0 4 * * 1",
     on_failure_callback=task_fail_slack_alert,
     dagrun_timeout=timedelta(minutes=180),
     catchup=False,

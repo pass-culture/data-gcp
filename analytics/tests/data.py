@@ -460,13 +460,14 @@ ENRICHED_USER_DATA_INPUT = {
     "user": [
         {
             "user_id": "1",
-            "user_department_code": "93",
-            "user_postal_code": "93000",
-            "user_activity": "",
-            "activation_date": "2020-03-02",
         }
     ],
-    "deposit": [{"user_id": "1"}],
+    "deposit": [
+        {
+            "user_id": "1"
+        }
+    ],
+
     "offerer": [
         {
             "offerer_id": "1",
@@ -481,21 +482,14 @@ ENRICHED_USER_DATA_INPUT = {
         }
     ],
     "venue": [
-        {
-            "venue_id": "1",
-            "offerer_id": "1",
-        }
     ],
     "booking": [
         {
             "booking_id": "1",
             "user_id": "1",
-            "booking_quantity": "2",
-            "booking_amount": "10",
+            "booking_quantity": "1",
             "stock_id": "2",
             "booking_is_used": True,
-            "booking_used_date": "2021-03-02",
-            "booking_is_cancelled": False,
         },
         {
             "booking_id": "2",
@@ -504,7 +498,6 @@ ENRICHED_USER_DATA_INPUT = {
             "booking_amount": "10",
             "stock_id": "2",
             "booking_is_used": True,
-            "booking_is_cancelled": False,
         },
         {
             "booking_id": "3",
@@ -512,9 +505,8 @@ ENRICHED_USER_DATA_INPUT = {
             "booking_quantity": "3",
             "booking_amount": "5",
             "stock_id": "2",
-            "booking_is_used": True,
             "booking_is_cancelled": True,
-        },
+        }
     ],
     "offer": [
         {
@@ -527,8 +519,8 @@ ENRICHED_USER_DATA_INPUT = {
             "venue_id": "1",
             "product_id": "2",
             "offer_id": "2",
-            "offer_type": "ThingType.CINEMA",
-        },
+            "offer_type": "ThingType.MUSIQUE",
+        }
     ],
     "stock": [
         {

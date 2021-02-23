@@ -463,7 +463,7 @@ ENRICHED_USER_DATA_INPUT = {
             "user_department_code": "93",
             "user_postal_code": "93000",
             "user_activity": "",
-            "user_activation_date": "2020-03-02",
+            "activation_date": "2020-03-02",
         }
     ],
     "deposit": [{"user_id": "1"}],

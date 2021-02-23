@@ -196,6 +196,8 @@ default_args = {
     "retry_delay": timedelta(minutes=5),
 }
 
+# DAG is launched once a week on dev env to have enough data to import
+# on other env it is launched once a day
 dag = DAG(
     "dump_scalingo_matomo_refresh_v1",
     default_args=default_args,

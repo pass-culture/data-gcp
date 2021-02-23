@@ -457,10 +457,83 @@ ENRICHED_STOCK_DATA_EXPECTED = [
 
 # enriched_user_data => NO DATA (only structure can be tested)
 ENRICHED_USER_DATA_INPUT = {
-    "booking": [],
-    "offer": [],
-    "stock": [],
-    "user": [],
+    "user": [
+        {
+            "user_id": "1",
+        }
+    ],
+    "deposit": [
+        {
+            "user_id": "1"
+        }
+    ],
+    "offerer": [
+        {
+            "offerer_id": "1",
+            "offerer_thumb_count": "0",
+            "offerer_is_active": True,
+            "offerer_postal_code": "93100",
+            "offerer_city": "Montreuil",
+            "offerer_creation_date": "2019-11-20",
+            "offerer_name": "Test Offerer",
+            "offerer_siren": "123456789",
+            "offerer_fields_updated": "{}",
+        }
+    ],
+    "venue": [
+
+    ],
+    "booking": [
+        {
+            "booking_id": "1",
+            "user_id": "1",
+            "booking_quantity": "1",
+            "stock_id": "2",
+            "booking_is_used": True,
+        },
+        {
+            "booking_id": "2",
+            "user_id": "1",
+            "booking_quantity": "1",
+            "booking_amount": "10",
+            "stock_id": "2",
+            "booking_token": "ABC321",
+            "booking_is_used": True,
+        },
+        {
+            "booking_id": "3",
+            "user_id": "1",
+            "booking_quantity": "3",
+            "booking_amount": "5",
+            "stock_id": "2",
+            "booking_token": "FAM321",
+            "booking_is_cancelled": True,
+        }
+    ],
+    "offer": [
+        {
+            "venue_id": "1",
+            "product_id": "1",
+            "offer_id": "1",
+            "offer_type": "ThingType.ACTIVATION",
+        },
+        {
+            "venue_id": "1",
+            "product_id": "2",
+            "offer_id": "2",
+            "offer_type": "ThingType.MUSIQUE",
+        }
+    ],
+    "stock": [
+        {
+            "stock_id": "1",
+            "offer_id": "1",
+        },
+        {
+            "stock_id": "2",
+            "offer_id": "2",
+        },
+    ],
     "region_department": [],
 }
 

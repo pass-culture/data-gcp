@@ -18,7 +18,7 @@ def create_booking_payment_status_view(dataset, table_prefix=""):
     return f"""
         CREATE TEMP TABLE booking_payment_status_view AS (
             SELECT
-                booking.booking_id,'Remboursé' AS booking_reimburse
+                distinct(booking.booking_id),'Remboursé' AS booking_reimburse
             FROM {dataset}.{table_prefix}booking AS booking
             INNER JOIN {dataset}.{table_prefix}payment AS payment
                 ON payment.bookingId = booking.booking_id

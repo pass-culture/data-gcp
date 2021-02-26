@@ -16,3 +16,4 @@ venv/
 airflow.cfg
 unittests.cfg
 logs/
+credentials/

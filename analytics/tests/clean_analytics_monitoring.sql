@@ -2,14 +2,16 @@
 SELECT (
   SELECT count(id) FROM EXTERNAL_QUERY(
               'passculture-metier-prod.europe-west1.metier-pcapi-production-connection',
-              ' SELECT CAST("id" AS varchar(255)) FROM public.booking'
-          )
+              ' SELECT CAST("id" AS varchar(255)), "dateCreated" as date_created FROM public.booking'
+          ) WHERE date_created <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00") AS DATETIME)
   ) as count_booking_from_csql,
   (
     SELECT count(booking_id) FROM `passculture-data-prod.analytics_prod.enriched_booking_data`
+    WHERE booking_creation_date <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00") AS DATETIME)
   ) as count_enriched_booking_from_big_query_analytics,
   (
     SELECT count(booking_id) FROM `passculture-data-prod.clean_prod.applicative_database_booking`
+    WHERE booking_creation_date <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00") AS DATETIME)
   ) as count_booking_from_big_query_clean;
 
 
@@ -18,29 +20,33 @@ SELECT (
 SELECT (
   SELECT count(id) FROM EXTERNAL_QUERY(
               'passculture-metier-prod.europe-west1.metier-pcapi-production-connection',
-              ' SELECT CAST("id" AS varchar(255)) FROM public.offer'
-          )
+              ' SELECT CAST("id" AS varchar(255)), "dateCreated" as date_created FROM public.offer'
+          ) WHERE date_created <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00") AS DATETIME)
   ) as count_offer_from_csql,
   (
     SELECT count(offer_id) FROM `passculture-data-prod.analytics_prod.enriched_offer_data`
+    WHERE offer_creation_date <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00") AS DATETIME)
   ) as count_enriched_offer_from_big_query,
   (
     SELECT count(offer_id) FROM `passculture-data-prod.clean_prod.applicative_database_offer`
+    WHERE offer_creation_date <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00") AS DATETIME)
   ) as count_offer_from_big_query_clean;
 
 
-  -- compare venue volumetry
+-- compare venue volumetry
 SELECT (
   SELECT count(id) FROM EXTERNAL_QUERY(
               'passculture-metier-prod.europe-west1.metier-pcapi-production-connection',
-              ' SELECT CAST("id" AS varchar(255)) FROM public.venue'
-          )
+              ' SELECT CAST("id" AS varchar(255)), "dateCreated" as date_created FROM public.venue'
+          ) WHERE date_created <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00") AS DATETIME)
   ) as count_venue_from_csql,
   (
     SELECT count(venue_id) FROM `passculture-data-prod.analytics_prod.enriched_venue_data`
+    WHERE first_offer_creation_date <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00") AS DATETIME)
   ) as count_enriched_venue_from_big_query,
   (
     SELECT count(venue_id) FROM `passculture-data-prod.clean_prod.applicative_database_venue`
+    WHERE venue_creation_date <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00") AS DATETIME)
   ) as count_venue_from_big_query_clean;
 
 
@@ -49,14 +55,16 @@ SELECT (
 SELECT (
   SELECT count(id) FROM EXTERNAL_QUERY(
               'passculture-metier-prod.europe-west1.metier-pcapi-production-connection',
-              ' SELECT CAST("id" AS varchar(255)) FROM public.offerer'
-          )
+              ' SELECT CAST("id" AS varchar(255)), "dateCreated" as date_created FROM public.offerer'
+          ) WHERE date_created <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00") AS DATETIME)
   ) as count_offerer_from_csql,
   (
     SELECT count(offerer_id) FROM `passculture-data-prod.analytics_prod.enriched_offerer_data`
+    WHERE offerer_creation_date <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00") AS DATETIME)
   ) as count_enriched_offerer_from_big_query,
   (
     SELECT count(offerer_id) FROM `passculture-data-prod.clean_prod.applicative_database_offerer`
+    WHERE offerer_creation_date <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00") AS DATETIME)
   ) as count_offerer_from_big_query_clean;
 
 
@@ -64,14 +72,16 @@ SELECT (
 SELECT (
   SELECT count(id) FROM EXTERNAL_QUERY(
               'passculture-metier-prod.europe-west1.metier-pcapi-production-connection',
-              ' SELECT CAST("id" AS varchar(255)) FROM public.stock'
-          )
+              ' SELECT CAST("id" AS varchar(255)), "dateCreated" as date_created FROM public.stock'
+          ) WHERE date_created <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00") AS DATETIME)
   ) as count_stock_from_csql,
   (
     SELECT count(stock_id) FROM `passculture-data-prod.analytics_prod.enriched_stock_data`
+    WHERE stock_creation_date <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00") AS DATETIME)
   ) as count_enriched_stock_from_big_query,
   (
     SELECT count(stock_id) FROM `passculture-data-prod.clean_prod.applicative_database_stock`
+    WHERE stock_creation_date <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00") AS DATETIME)
   ) as count_stock_from_big_query_clean;
 
 
@@ -79,14 +89,16 @@ SELECT (
 SELECT (
   SELECT count(id) FROM EXTERNAL_QUERY(
               'passculture-metier-prod.europe-west1.metier-pcapi-production-connection',
-              ' SELECT CAST("id" AS varchar(255)) FROM public.user'
-          )
+              ' SELECT CAST("id" AS varchar(255)), "dateCreated" as date_created FROM public.user'
+          ) WHERE date_created <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00") AS DATETIME)
   ) as count_user_from_csql,
   (
     SELECT count(user_id) FROM `passculture-data-prod.analytics_prod.enriched_user_data`
+    WHERE activation_date <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00") AS DATETIME)
   ) as count_enriched_user_from_big_query,
   (
     SELECT count(user_id) FROM `passculture-data-prod.clean_prod.applicative_database_user`
+    WHERE user_creation_date <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00") AS DATETIME)
   ) as count_user_from_big_query_clean;
 
 

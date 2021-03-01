@@ -25,9 +25,12 @@ APP_CONFIG = {
 }
 
 app = Flask(__name__)
-
-origins = re.compile(os.environ.get("CORS_ALLOWED_ORIGIN", ".*"))
-CORS(app, resources={r"/*": {"origins": origins}})
+CORS(
+    app,
+    resources={
+        r"/*": {"origins": re.compile(os.environ.get("CORS_ALLOWED_ORIGIN", ".*"))}
+    },
+)
 
 
 @app.route("/")

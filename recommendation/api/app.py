@@ -1,6 +1,8 @@
 import os
+import re
 
 from flask import Flask, jsonify, make_response, request
+from flask_cors import CORS
 
 from access_gcp_secrets import access_secret
 from health_check_queries import get_materialized_view_status
@@ -23,6 +25,12 @@ APP_CONFIG = {
 }
 
 app = Flask(__name__)
+CORS(
+    app,
+    resources={
+        r"/*": {"origins": re.compile(os.environ.get("CORS_ALLOWED_ORIGIN", ".*"))}
+    },
+)
 
 
 @app.route("/")

@@ -27,7 +27,7 @@ RECOMMENDATION_SQL_BASE = os.environ.get("RECOMMENDATION_SQL_BASE")
 BIGQUERY_CLEAN_DATASET = os.environ.get("BIGQUERY_CLEAN_DATASET")
 
 database_url = access_secret_data(
-    GCP_PROJECT, f"{RECOMMENDATION_SQL_INSTANCE}-database-url"
+    GCP_PROJECT, f"{RECOMMENDATION_SQL_BASE}-database-url"
 )
 os.environ["AIRFLOW_CONN_PROXY_POSTGRES_TCP"] = (
     database_url.replace("postgresql://", "gcpcloudsql://")

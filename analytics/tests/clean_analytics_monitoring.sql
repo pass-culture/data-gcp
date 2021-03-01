@@ -62,7 +62,6 @@ SELECT (
   ) as count_all_venue_from_big_query_clean;
 
 
-
 -- compare offerer volumetry
 SELECT (
   SELECT count(id) FROM EXTERNAL_QUERY(

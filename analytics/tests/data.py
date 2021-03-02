@@ -463,10 +463,8 @@ ENRICHED_USER_DATA_INPUT = {
             "user_department_code": "93",
             "user_postal_code": "93000",
             "user_activity": "",
-            "user_activation_date": "2020-03-02",
         }
     ],
-    "deposit": [{"user_id": "1"}],
     "offerer": [
         {
             "offerer_id": "1",
@@ -481,8 +479,11 @@ ENRICHED_USER_DATA_INPUT = {
         }
     ],
     "venue": [
+        {
+            "venue_id": "1",
+            "venue_managing_offerer_id": "1",
+        }
     ],
-
     "booking": [
         {
             "booking_id": "1",
@@ -509,6 +510,7 @@ ENRICHED_USER_DATA_INPUT = {
             "booking_quantity": "3",
             "booking_amount": "5",
             "stock_id": "2",
+            "booking_is_used": True,
             "booking_is_cancelled": True,
         },
     ],

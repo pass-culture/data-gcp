@@ -1,8 +1,6 @@
 import pytest
 from analytics.tests.config import GCP_PROJECT, TEST_DATASET, TEST_TABLE_PREFIX
 from analytics.tests.data import (
-    ENRICHED_BOOKED_CATEGORIES_DATA_EXPECTED,
-    ENRICHED_BOOKED_CATEGORIES_DATA_INPUT,
     ENRICHED_BOOKING_DATA_EXPECTED,
     ENRICHED_BOOKING_DATA_INPUT,
     ENRICHED_OFFER_DATA_EXPECTED,
@@ -16,6 +14,34 @@ from analytics.tests.data import (
     ENRICHED_VENUE_DATA_EXPECTED,
     ENRICHED_VENUE_DATA_INPUT,
     TEST_TABLE_PREFIX,
+)
+from analytics.tests.enriched_booked_categories_data import (
+    ENRICHED_BOOKED_CATEGORIES_DATA_AUDIOVISUEL_EXPECTED,
+    ENRICHED_BOOKED_CATEGORIES_DATA_AUDIOVISUEL_INPUT,
+    ENRICHED_BOOKED_CATEGORIES_DATA_CINEMA_EXPECTED,
+    ENRICHED_BOOKED_CATEGORIES_DATA_CINEMA_INPUT,
+    ENRICHED_BOOKED_CATEGORIES_DATA_EXPECTED,
+    ENRICHED_BOOKED_CATEGORIES_DATA_INPUT,
+    ENRICHED_BOOKED_CATEGORIES_DATA_INTRUMENT_EXPECTED,
+    ENRICHED_BOOKED_CATEGORIES_DATA_INTRUMENT_INPUT,
+    ENRICHED_BOOKED_CATEGORIES_DATA_JEUX_VIDEO_EXPECTED,
+    ENRICHED_BOOKED_CATEGORIES_DATA_JEUX_VIDEO_INPUT,
+    ENRICHED_BOOKED_CATEGORIES_DATA_LIVRE_NUM_EXPECTED,
+    ENRICHED_BOOKED_CATEGORIES_DATA_LIVRE_NUM_INPUT,
+    ENRICHED_BOOKED_CATEGORIES_DATA_LIVRE_PAPIER_EXPECTED,
+    ENRICHED_BOOKED_CATEGORIES_DATA_LIVRE_PAPIER_INPUT,
+    ENRICHED_BOOKED_CATEGORIES_DATA_MUSEE_PATRIMOINE_EXPECTED,
+    ENRICHED_BOOKED_CATEGORIES_DATA_MUSEE_PATRIMOINE_INPUT,
+    ENRICHED_BOOKED_CATEGORIES_DATA_MUSIQUE_CD_VYNILS_EXPECTED,
+    ENRICHED_BOOKED_CATEGORIES_DATA_MUSIQUE_CD_VYNILS_INPUT,
+    ENRICHED_BOOKED_CATEGORIES_DATA_MUSIQUE_LIVE_EXPECTED,
+    ENRICHED_BOOKED_CATEGORIES_DATA_MUSIQUE_LIVE_INPUT,
+    ENRICHED_BOOKED_CATEGORIES_DATA_MUSIQUE_NUMERIQUE_EXPECTED,
+    ENRICHED_BOOKED_CATEGORIES_DATA_MUSIQUE_NUMERIQUE_INPUT,
+    ENRICHED_BOOKED_CATEGORIES_DATA_PRATIQUE_ARTISTIQUE_EXPECTED,
+    ENRICHED_BOOKED_CATEGORIES_DATA_PRATIQUE_ARTISTIQUE_INPUT,
+    ENRICHED_BOOKED_CATEGORIES_DATA_SPECTACLE_VIVANT_EXPECTED,
+    ENRICHED_BOOKED_CATEGORIES_DATA_SPECTACLE_VIVANT_INPUT,
 )
 from analytics.tests.utils import (
     create_data,
@@ -207,35 +233,8 @@ def test_enriched_booked_categories_data_returns_expected_columns(
             define_enriched_booked_categories_data_full_query(
                 dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX
             ),
-            {
-                "booking": [
-                    {
-                        "user_id": "1",
-                        "stock_id": "1",
-                        "booking_id": "4",
-                    }
-                ],
-                "stock": [{"stock_id": "1", "offer_id": "1"}],
-                "offer": [{"offer_id": "1", "offer_type": "ThingType.AUDIOVISUEL"}],
-                "venue": [],
-            },
-            [
-                {
-                    "audiovisuel": True,
-                    "cinema": False,
-                    "instrument": False,
-                    "jeux_video": False,
-                    "livre_numerique": False,
-                    "livre_papier": False,
-                    "musee_patrimoine": False,
-                    "musique_cd_vynils": False,
-                    "musique_live": False,
-                    "musique_numerique": False,
-                    "pratique_artistique": False,
-                    "spectacle_vivant": False,
-                    "user_id": "1",
-                },
-            ],
+            ENRICHED_BOOKED_CATEGORIES_DATA_AUDIOVISUEL_INPUT,
+            ENRICHED_BOOKED_CATEGORIES_DATA_AUDIOVISUEL_EXPECTED,
         )
     ],
 )
@@ -268,71 +267,8 @@ def test_enriched_booked_categories_data_returns_expected_audiovisuel(
             define_enriched_booked_categories_data_full_query(
                 dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX
             ),
-            {
-                "booking": [
-                    {"user_id": "1", "stock_id": "1", "booking_id": "1"},
-                    {"user_id": "3", "stock_id": "2", "booking_id": "2"},
-                    {"user_id": "6", "stock_id": "3", "booking_id": "3"},
-                ],
-                "stock": [
-                    {"stock_id": "1", "offer_id": "1"},
-                    {"stock_id": "2", "offer_id": "2"},
-                    {"stock_id": "3", "offer_id": "3"},
-                ],
-                "offer": [
-                    {"offer_id": "1", "offer_type": "EventType.CINEMA"},
-                    {"offer_id": "2", "offer_type": "ThingType.CINEMA_ABO"},
-                    {"offer_id": "3", "offer_type": "ThingType.CINEMA_CARD"},
-                ],
-                "venue": [],
-            },
-            [
-                {
-                    "audiovisuel": False,
-                    "cinema": True,
-                    "instrument": False,
-                    "jeux_video": False,
-                    "livre_numerique": False,
-                    "livre_papier": False,
-                    "musee_patrimoine": False,
-                    "musique_cd_vynils": False,
-                    "musique_live": False,
-                    "musique_numerique": False,
-                    "pratique_artistique": False,
-                    "spectacle_vivant": False,
-                    "user_id": "1",
-                },
-                {
-                    "audiovisuel": False,
-                    "cinema": True,
-                    "instrument": False,
-                    "jeux_video": False,
-                    "livre_numerique": False,
-                    "livre_papier": False,
-                    "musee_patrimoine": False,
-                    "musique_cd_vynils": False,
-                    "musique_live": False,
-                    "musique_numerique": False,
-                    "pratique_artistique": False,
-                    "spectacle_vivant": False,
-                    "user_id": "3",
-                },
-                {
-                    "audiovisuel": False,
-                    "cinema": True,
-                    "instrument": False,
-                    "jeux_video": False,
-                    "livre_numerique": False,
-                    "livre_papier": False,
-                    "musee_patrimoine": False,
-                    "musique_cd_vynils": False,
-                    "musique_live": False,
-                    "musique_numerique": False,
-                    "pratique_artistique": False,
-                    "spectacle_vivant": False,
-                    "user_id": "6",
-                },
-            ],
+            ENRICHED_BOOKED_CATEGORIES_DATA_CINEMA_INPUT,
+            ENRICHED_BOOKED_CATEGORIES_DATA_CINEMA_EXPECTED,
         )
     ],
 )
@@ -365,35 +301,8 @@ def test_enriched_booked_categories_data_returns_expected_cinema(
             define_enriched_booked_categories_data_full_query(
                 dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX
             ),
-            {
-                "booking": [
-                    {
-                        "user_id": "1",
-                        "stock_id": "1",
-                        "booking_id": "4",
-                    }
-                ],
-                "stock": [{"stock_id": "1", "offer_id": "1"}],
-                "offer": [{"offer_id": "1", "offer_type": "ThingType.INSTRUMENT"}],
-                "venue": [],
-            },
-            [
-                {
-                    "audiovisuel": False,
-                    "cinema": False,
-                    "instrument": True,
-                    "jeux_video": False,
-                    "livre_numerique": False,
-                    "livre_papier": False,
-                    "musee_patrimoine": False,
-                    "musique_cd_vynils": False,
-                    "musique_live": False,
-                    "musique_numerique": False,
-                    "pratique_artistique": False,
-                    "spectacle_vivant": False,
-                    "user_id": "1",
-                },
-            ],
+            ENRICHED_BOOKED_CATEGORIES_DATA_INTRUMENT_INPUT,
+            ENRICHED_BOOKED_CATEGORIES_DATA_INTRUMENT_EXPECTED,
         )
     ],
 )
@@ -426,53 +335,8 @@ def test_enriched_booked_categories_data_returns_expected_instrument(
             define_enriched_booked_categories_data_full_query(
                 dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX
             ),
-            {
-                "booking": [
-                    {"user_id": "1", "stock_id": "1", "booking_id": "4"},
-                    {"user_id": "10", "stock_id": "2", "booking_id": "5"},
-                ],
-                "stock": [
-                    {"stock_id": "1", "offer_id": "1"},
-                    {"stock_id": "2", "offer_id": "2"},
-                ],
-                "offer": [
-                    {"offer_id": "1", "offer_type": "ThingType.JEUX_VIDEO"},
-                    {"offer_id": "2", "offer_type": "ThingType.JEUX_VIDEO_ABO"},
-                ],
-                "venue": [],
-            },
-            [
-                {
-                    "audiovisuel": False,
-                    "cinema": False,
-                    "instrument": False,
-                    "jeux_video": True,
-                    "livre_numerique": False,
-                    "livre_papier": False,
-                    "musee_patrimoine": False,
-                    "musique_cd_vynils": False,
-                    "musique_live": False,
-                    "musique_numerique": False,
-                    "pratique_artistique": False,
-                    "spectacle_vivant": False,
-                    "user_id": "1",
-                },
-                {
-                    "audiovisuel": False,
-                    "cinema": False,
-                    "instrument": False,
-                    "jeux_video": True,
-                    "livre_numerique": False,
-                    "livre_papier": False,
-                    "musee_patrimoine": False,
-                    "musique_cd_vynils": False,
-                    "musique_live": False,
-                    "musique_numerique": False,
-                    "pratique_artistique": False,
-                    "spectacle_vivant": False,
-                    "user_id": "10",
-                },
-            ],
+            ENRICHED_BOOKED_CATEGORIES_DATA_JEUX_VIDEO_INPUT,
+            ENRICHED_BOOKED_CATEGORIES_DATA_JEUX_VIDEO_EXPECTED,
         )
     ],
 )
@@ -505,41 +369,8 @@ def test_enriched_booked_categories_data_returns_expected_jeux_video(
             define_enriched_booked_categories_data_full_query(
                 dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX
             ),
-            {
-                "booking": [
-                    {
-                        "user_id": "1",
-                        "stock_id": "1",
-                        "booking_id": "4",
-                    }
-                ],
-                "stock": [{"stock_id": "1", "offer_id": "1"}],
-                "offer": [
-                    {
-                        "offer_id": "1",
-                        "offer_type": "ThingType.LIVRE_EDITION",
-                        "venue_id": "1",
-                    }
-                ],
-                "venue": [{"venue_id": "1", "venue_is_virtual": True}],
-            },
-            [
-                {
-                    "audiovisuel": False,
-                    "cinema": False,
-                    "instrument": False,
-                    "jeux_video": False,
-                    "livre_numerique": True,
-                    "livre_papier": False,
-                    "musee_patrimoine": False,
-                    "musique_cd_vynils": False,
-                    "musique_live": False,
-                    "musique_numerique": False,
-                    "pratique_artistique": False,
-                    "spectacle_vivant": False,
-                    "user_id": "1",
-                },
-            ],
+            ENRICHED_BOOKED_CATEGORIES_DATA_LIVRE_NUM_INPUT,
+            ENRICHED_BOOKED_CATEGORIES_DATA_LIVRE_NUM_EXPECTED,
         )
     ],
 )
@@ -572,41 +403,8 @@ def test_enriched_booked_categories_data_returns_expected_livre_num(
             define_enriched_booked_categories_data_full_query(
                 dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX
             ),
-            {
-                "booking": [
-                    {
-                        "user_id": "1",
-                        "stock_id": "1",
-                        "booking_id": "4",
-                    }
-                ],
-                "stock": [{"stock_id": "1", "offer_id": "1"}],
-                "offer": [
-                    {
-                        "offer_id": "1",
-                        "offer_type": "ThingType.LIVRE_EDITION",
-                        "venue_id": "1",
-                    }
-                ],
-                "venue": [{"venue_id": "1", "venue_is_virtual": False}],
-            },
-            [
-                {
-                    "audiovisuel": False,
-                    "cinema": False,
-                    "instrument": False,
-                    "jeux_video": False,
-                    "livre_numerique": False,
-                    "livre_papier": True,
-                    "musee_patrimoine": False,
-                    "musique_cd_vynils": False,
-                    "musique_live": False,
-                    "musique_numerique": False,
-                    "pratique_artistique": False,
-                    "spectacle_vivant": False,
-                    "user_id": "1",
-                },
-            ],
+            ENRICHED_BOOKED_CATEGORIES_DATA_LIVRE_PAPIER_INPUT,
+            ENRICHED_BOOKED_CATEGORIES_DATA_LIVRE_PAPIER_EXPECTED,
         )
     ],
 )
@@ -639,61 +437,8 @@ def test_enriched_booked_categories_data_returns_expected_livre_papier(
             define_enriched_booked_categories_data_full_query(
                 dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX
             ),
-            {
-                "booking": [
-                    {
-                        "user_id": "1",
-                        "stock_id": "1",
-                        "booking_id": "4",
-                    },
-                    {
-                        "user_id": "2",
-                        "stock_id": "2",
-                        "booking_id": "5",
-                    },
-                ],
-                "stock": [
-                    {"stock_id": "1", "offer_id": "1"},
-                    {"stock_id": "2", "offer_id": "2"},
-                ],
-                "offer": [
-                    {"offer_id": "1", "offer_type": "EventType.MUSEES_PATRIMOINE"},
-                    {"offer_id": "2", "offer_type": "ThingType.MUSEES_PATRIMOINE_ABO"},
-                ],
-                "venue": [],
-            },
-            [
-                {
-                    "audiovisuel": False,
-                    "cinema": False,
-                    "instrument": False,
-                    "jeux_video": False,
-                    "livre_numerique": False,
-                    "livre_papier": False,
-                    "musee_patrimoine": True,
-                    "musique_cd_vynils": False,
-                    "musique_live": False,
-                    "musique_numerique": False,
-                    "pratique_artistique": False,
-                    "spectacle_vivant": False,
-                    "user_id": "1",
-                },
-                {
-                    "audiovisuel": False,
-                    "cinema": False,
-                    "instrument": False,
-                    "jeux_video": False,
-                    "livre_numerique": False,
-                    "livre_papier": False,
-                    "musee_patrimoine": True,
-                    "musique_cd_vynils": False,
-                    "musique_live": False,
-                    "musique_numerique": False,
-                    "pratique_artistique": False,
-                    "spectacle_vivant": False,
-                    "user_id": "2",
-                },
-            ],
+            ENRICHED_BOOKED_CATEGORIES_DATA_MUSEE_PATRIMOINE_INPUT,
+            ENRICHED_BOOKED_CATEGORIES_DATA_MUSEE_PATRIMOINE_EXPECTED,
         )
     ],
 )
@@ -726,61 +471,8 @@ def test_enriched_booked_categories_data_returns_expected_musee_patrimoine(
             define_enriched_booked_categories_data_full_query(
                 dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX
             ),
-            {
-                "booking": [
-                    {
-                        "user_id": "1",
-                        "stock_id": "1",
-                        "booking_id": "4",
-                    },
-                    {
-                        "user_id": "2",
-                        "stock_id": "2",
-                        "booking_id": "4",
-                    },
-                ],
-                "stock": [
-                    {"stock_id": "1", "offer_id": "1"},
-                    {"stock_id": "2", "offer_id": "2"},
-                ],
-                "offer": [
-                    {"offer_id": "1", "offer_type": "EventType.MUSIQUE"},
-                    {"offer_id": "2", "offer_type": "ThingType.MUSIQUE_ABO"},
-                ],
-                "venue": [],
-            },
-            [
-                {
-                    "audiovisuel": False,
-                    "cinema": False,
-                    "instrument": False,
-                    "jeux_video": False,
-                    "livre_numerique": False,
-                    "livre_papier": False,
-                    "musee_patrimoine": False,
-                    "musique_cd_vynils": False,
-                    "musique_live": True,
-                    "musique_numerique": False,
-                    "pratique_artistique": False,
-                    "spectacle_vivant": False,
-                    "user_id": "1",
-                },
-                {
-                    "audiovisuel": False,
-                    "cinema": False,
-                    "instrument": False,
-                    "jeux_video": False,
-                    "livre_numerique": False,
-                    "livre_papier": False,
-                    "musee_patrimoine": False,
-                    "musique_cd_vynils": False,
-                    "musique_live": True,
-                    "musique_numerique": False,
-                    "pratique_artistique": False,
-                    "spectacle_vivant": False,
-                    "user_id": "2",
-                },
-            ],
+            ENRICHED_BOOKED_CATEGORIES_DATA_MUSIQUE_LIVE_INPUT,
+            ENRICHED_BOOKED_CATEGORIES_DATA_MUSIQUE_LIVE_EXPECTED,
         )
     ],
 )
@@ -813,41 +505,8 @@ def test_enriched_booked_categories_data_returns_expected_musique_live(
             define_enriched_booked_categories_data_full_query(
                 dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX
             ),
-            {
-                "booking": [
-                    {
-                        "user_id": "1",
-                        "stock_id": "1",
-                        "booking_id": "4",
-                    }
-                ],
-                "stock": [{"stock_id": "1", "offer_id": "1"}],
-                "offer": [
-                    {
-                        "offer_id": "1",
-                        "offer_type": "ThingType.MUSIQUE",
-                        "venue_id": "1",
-                    }
-                ],
-                "venue": [{"venue_id": "1", "venue_is_virtual": False}],
-            },
-            [
-                {
-                    "audiovisuel": False,
-                    "cinema": False,
-                    "instrument": False,
-                    "jeux_video": False,
-                    "livre_numerique": False,
-                    "livre_papier": False,
-                    "musee_patrimoine": False,
-                    "musique_cd_vynils": True,
-                    "musique_live": False,
-                    "musique_numerique": False,
-                    "pratique_artistique": False,
-                    "spectacle_vivant": False,
-                    "user_id": "1",
-                },
-            ],
+            ENRICHED_BOOKED_CATEGORIES_DATA_MUSIQUE_CD_VYNILS_INPUT,
+            ENRICHED_BOOKED_CATEGORIES_DATA_MUSIQUE_CD_VYNILS_EXPECTED,
         )
     ],
 )
@@ -880,41 +539,8 @@ def test_enriched_booked_categories_data_returns_expected_musique_cd_vynils(
             define_enriched_booked_categories_data_full_query(
                 dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX
             ),
-            {
-                "booking": [
-                    {
-                        "user_id": "1",
-                        "stock_id": "1",
-                        "booking_id": "4",
-                    }
-                ],
-                "stock": [{"stock_id": "1", "offer_id": "1"}],
-                "offer": [
-                    {
-                        "offer_id": "1",
-                        "offer_type": "ThingType.MUSIQUE",
-                        "venue_id": "1",
-                    }
-                ],
-                "venue": [{"venue_id": "1", "venue_is_virtual": True}],
-            },
-            [
-                {
-                    "audiovisuel": False,
-                    "cinema": False,
-                    "instrument": False,
-                    "jeux_video": False,
-                    "livre_numerique": False,
-                    "livre_papier": False,
-                    "musee_patrimoine": False,
-                    "musique_cd_vynils": False,
-                    "musique_live": False,
-                    "musique_numerique": True,
-                    "pratique_artistique": False,
-                    "spectacle_vivant": False,
-                    "user_id": "1",
-                },
-            ],
+            ENRICHED_BOOKED_CATEGORIES_DATA_MUSIQUE_NUMERIQUE_INPUT,
+            ENRICHED_BOOKED_CATEGORIES_DATA_MUSIQUE_NUMERIQUE_EXPECTED,
         )
     ],
 )
@@ -947,61 +573,8 @@ def test_enriched_booked_categories_data_returns_expected_musique_numerique(
             define_enriched_booked_categories_data_full_query(
                 dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX
             ),
-            {
-                "booking": [
-                    {
-                        "user_id": "1",
-                        "stock_id": "1",
-                        "booking_id": "4",
-                    },
-                    {
-                        "user_id": "2",
-                        "stock_id": "2",
-                        "booking_id": "5",
-                    },
-                ],
-                "stock": [
-                    {"stock_id": "1", "offer_id": "1"},
-                    {"stock_id": "2", "offer_id": "2"},
-                ],
-                "offer": [
-                    {"offer_id": "1", "offer_type": "EventType.PRATIQUE_ARTISTIQUE"},
-                    {"offer_id": "2", "offer_type": "ThingType.PRATIQUE_ARTISTIQUE"},
-                ],
-                "venue": [],
-            },
-            [
-                {
-                    "audiovisuel": False,
-                    "cinema": False,
-                    "instrument": False,
-                    "jeux_video": False,
-                    "livre_numerique": False,
-                    "livre_papier": False,
-                    "musee_patrimoine": False,
-                    "musique_cd_vynils": False,
-                    "musique_live": False,
-                    "musique_numerique": False,
-                    "pratique_artistique": True,
-                    "spectacle_vivant": False,
-                    "user_id": "1",
-                },
-                {
-                    "audiovisuel": False,
-                    "cinema": False,
-                    "instrument": False,
-                    "jeux_video": False,
-                    "livre_numerique": False,
-                    "livre_papier": False,
-                    "musee_patrimoine": False,
-                    "musique_cd_vynils": False,
-                    "musique_live": False,
-                    "musique_numerique": False,
-                    "pratique_artistique": True,
-                    "spectacle_vivant": False,
-                    "user_id": "2",
-                },
-            ],
+            ENRICHED_BOOKED_CATEGORIES_DATA_PRATIQUE_ARTISTIQUE_INPUT,
+            ENRICHED_BOOKED_CATEGORIES_DATA_PRATIQUE_ARTISTIQUE_EXPECTED,
         )
     ],
 )
@@ -1034,61 +607,8 @@ def test_enriched_booked_categories_data_returns_expected_pratique_artistique(
             define_enriched_booked_categories_data_full_query(
                 dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX
             ),
-            {
-                "booking": [
-                    {
-                        "user_id": "1",
-                        "stock_id": "1",
-                        "booking_id": "4",
-                    },
-                    {
-                        "user_id": "2",
-                        "stock_id": "2",
-                        "booking_id": "5",
-                    },
-                ],
-                "stock": [
-                    {"stock_id": "1", "offer_id": "1"},
-                    {"stock_id": "2", "offer_id": "2"},
-                ],
-                "offer": [
-                    {"offer_id": "1", "offer_type": "EventType.SPECTACLE_VIVANT"},
-                    {"offer_id": "2", "offer_type": "ThingType.SPECTACLE_VIVANT_ABO"},
-                ],
-                "venue": [],
-            },
-            [
-                {
-                    "audiovisuel": False,
-                    "cinema": False,
-                    "instrument": False,
-                    "jeux_video": False,
-                    "livre_numerique": False,
-                    "livre_papier": False,
-                    "musee_patrimoine": False,
-                    "musique_cd_vynils": False,
-                    "musique_live": False,
-                    "musique_numerique": False,
-                    "pratique_artistique": False,
-                    "spectacle_vivant": True,
-                    "user_id": "1",
-                },
-                {
-                    "audiovisuel": False,
-                    "cinema": False,
-                    "instrument": False,
-                    "jeux_video": False,
-                    "livre_numerique": False,
-                    "livre_papier": False,
-                    "musee_patrimoine": False,
-                    "musique_cd_vynils": False,
-                    "musique_live": False,
-                    "musique_numerique": False,
-                    "pratique_artistique": False,
-                    "spectacle_vivant": True,
-                    "user_id": "2",
-                },
-            ],
+            ENRICHED_BOOKED_CATEGORIES_DATA_SPECTACLE_VIVANT_INPUT,
+            ENRICHED_BOOKED_CATEGORIES_DATA_SPECTACLE_VIVANT_EXPECTED,
         )
     ],
 )

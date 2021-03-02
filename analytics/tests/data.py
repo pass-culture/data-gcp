@@ -606,27 +606,3 @@ ENRICHED_BOOKING_DATA_EXPECTED = [
     "booking_rank",
     "same_category_booking_rank",
 ]
-
-# enriched_booked_categories
-ENRICHED_BOOKED_CATEGORIES_DATA_INPUT = {
-    "booking": [],
-    "stock": [],
-    "offer": [],
-    "venue": [],
-}
-
-ENRICHED_BOOKED_CATEGORIES_DATA_EXPECTED = [
-    "user_id",
-    "audiovisuel",
-    "cinema",
-    "instrument",
-    "jeux_video",
-    "livre_numerique",
-    "livre_papier",
-    "musee_patrimoine",
-    "musique_live",
-    "musique_cd_vynils",
-    "musique_numerique",
-    "pratique_artistique",
-    "spectacle_vivant",
-]

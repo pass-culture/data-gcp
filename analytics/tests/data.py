@@ -460,13 +460,13 @@ ENRICHED_USER_DATA_INPUT = {
     "user": [
         {
             "user_id": "1",
+            "user_department_code": "93",
+            "user_postal_code": "93000",
+            "user_activity": "",
+            "user_activation_date": "2020-03-02",
         }
     ],
-    "deposit": [
-        {
-            "user_id": "1"
-        }
-    ],
+    "deposit": [{"user_id": "1"}],
     "offerer": [
         {
             "offerer_id": "1",
@@ -481,15 +481,21 @@ ENRICHED_USER_DATA_INPUT = {
         }
     ],
     "venue": [
-
+        {
+            "venue_id": "1",
+            "offerer_id": "1",
+        }
     ],
     "booking": [
         {
             "booking_id": "1",
             "user_id": "1",
-            "booking_quantity": "1",
+            "booking_quantity": "2",
+            "booking_amount": "10",
             "stock_id": "2",
             "booking_is_used": True,
+            "booking_used_date": "2021-03-02",
+            "booking_is_cancelled": False,
         },
         {
             "booking_id": "2",
@@ -497,8 +503,8 @@ ENRICHED_USER_DATA_INPUT = {
             "booking_quantity": "1",
             "booking_amount": "10",
             "stock_id": "2",
-            "booking_token": "ABC321",
             "booking_is_used": True,
+            "booking_is_cancelled": False,
         },
         {
             "booking_id": "3",
@@ -506,9 +512,9 @@ ENRICHED_USER_DATA_INPUT = {
             "booking_quantity": "3",
             "booking_amount": "5",
             "stock_id": "2",
-            "booking_token": "FAM321",
+            "booking_is_used": True,
             "booking_is_cancelled": True,
-        }
+        },
     ],
     "offer": [
         {
@@ -521,8 +527,8 @@ ENRICHED_USER_DATA_INPUT = {
             "venue_id": "1",
             "product_id": "2",
             "offer_id": "2",
-            "offer_type": "ThingType.MUSIQUE",
-        }
+            "offer_type": "ThingType.CINEMA",
+        },
     ],
     "stock": [
         {
@@ -538,33 +544,35 @@ ENRICHED_USER_DATA_INPUT = {
 }
 
 ENRICHED_USER_DATA_EXPECTED = [
-    "user_id",
-    "experimentation_session",
-    "user_department_code",
-    "user_postal_code",
-    "user_activity",
-    "user_activation_date",
-    "first_connection_date",
-    "first_booking_date",
-    "second_booking_date",
-    "booking_on_third_product_date",
-    "booking_cnt",
-    "no_cancelled_booking",
-    "user_seniority",
-    "actual_amount_spent",
-    "theoretical_amount_spent",
-    "amount_spent_in_digital_goods",
-    "amount_spent_in_physical_goods",
-    "amount_spent_in_outings",
-    "user_humanized_id",
-    "last_booking_date",
-    "user_region_name",
-    "booking_creation_date_first",
-    "days_between_activation_date_and_first_booking_date",
-    "days_between_activation_date_and_first_booking_paid",
-    "first_booking_type",
-    "first_paid_booking_type",
-    "cnt_distinct_type_booking",
+    {
+        "user_id": "1",
+        "experimentation_session": 1,
+        "user_department_code": "93",
+        "user_postal_code": "93120",
+        "user_activity": "",
+        "user_activation_date": "2020-02-03",
+        "first_connection_date": "",
+        "first_booking_date": "",
+        "second_booking_date": "",
+        "booking_on_third_product_date": "",
+        "booking_cnt": "3",
+        "no_cancelled_booking": "2",
+        "user_seniority": "0",
+        "actual_amount_spent": "",
+        "theoretical_amount_spent": "",
+        "amount_spent_in_digital_goods": "20",
+        "amount_spent_in_physical_goods": "0",
+        "amount_spent_in_outings": "20",
+        "user_humanized_id": "",
+        "last_booking_date": "",
+        "user_region_name": "",
+        "booking_creation_date_first": "",
+        "days_between_activation_date_and_first_booking_date": "",
+        "days_between_activation_date_and_first_booking_paid": "",
+        "first_booking_type": "",
+        "first_paid_booking_type": "",
+        "cnt_distinct_type_booking": "",
+    }
 ]
 
 # enriched_venue_data => NO DATA (only structure can be tested)

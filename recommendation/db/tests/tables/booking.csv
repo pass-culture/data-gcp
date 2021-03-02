@@ -1,0 +1,2 @@
+booking_id|booking_creation_date|stock_id|booking_quantity|user_id|booking_amount|booking_is_cancelled|booking_is_used|booking_used_date|booking_cancellation_date
+44053|2021-02-03 09:25:48.770646|141098|0|3777|38.00|f|t||

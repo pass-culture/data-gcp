@@ -1,0 +1,498 @@
+version: 2.1
+orbs:
+  cloudrun: circleci/gcp-cloud-run@1.0.2
+
+###################
+#  WORKFLOWS
+###################
+
+workflows:
+  version: 2
+  run-checks:
+    jobs:
+
+      - linter
+
+      - analytics_tests:
+          requires:
+            - linter
+          context:
+            - DATA_GCP_EHP
+
+# Recommendation jobs
+# -------------------
+
+      - recommendation-db-install:
+          requires:
+            - linter
+
+      - recommendation-db-tests:
+          requires:
+            - recommendation-db-install
+
+      - recommendation-api-build:
+          requires:
+            - linter
+
+      - recommendation-api-tests:
+          requires:
+            - recommendation-api-build
+
+      - api_integration_tests:
+          env: dev
+          api_token: $API_TOKEN_DEV
+          name: recommendation-integration-tests-dev
+          requires:
+            - recommendation-api-tests
+          context:
+            - DATA_GCP_EHP
+
+      - build_and_deploy_api:
+          name: build_and_deploy_api_staging
+          api-instance-name : apireco-stg
+          requires:
+            - recommendation-api-tests
+            - recommendation-db-tests
+          filters:
+            branches:
+              only:
+                - master
+          context:
+            - DATA_GCP
+            - DATA_GCP_EHP
+
+      - api_integration_tests:
+          name: api_integration_tests_staging
+          env: staging
+          api_token: $API_TOKEN_STG
+          requires:
+            - build_and_deploy_api_staging
+          filters:
+            branches:
+              only:
+                - master
+          context:
+            - DATA_GCP_EHP
+
+      - build_and_deploy_api:
+          name: build_and_deploy_api_production
+          api-instance-name : apireco-prod
+          requires:
+            - recommendation-api-tests
+            - recommendation-db-tests
+          filters:
+            branches:
+              only:
+                - production
+          context:
+            - DATA_GCP
+            - DATA_GCP_PROD
+
+      - api_integration_tests:
+          name: api_integration_tests_production
+          env: production
+          api_token: $API_TOKEN_PROD
+          requires:
+            - build_and_deploy_api_production
+          filters:
+            branches:
+              only:
+                - production
+          context:
+            - DATA_GCP_PROD
+
+# Composer jobs
+# -------------
+      - orchestration-install:
+          requires:
+            - linter
+
+      - orchestration-tests:
+          requires:
+            - orchestration-install
+
+      - composer-deploy:
+          name: staging-composer-deploy
+          requires:
+            - orchestration-tests
+          filters:
+            branches:
+              only:
+                - master
+          context:
+            - DATA_GCP
+            - DATA_GCP_EHP
+
+      - composer-deploy:
+          name: production-composer-deploy
+          requires:
+            - orchestration-tests
+          filters:
+            branches:
+              only:
+                - production
+          context:
+            - DATA_GCP
+            - DATA_GCP_PROD
+
+# AI Platform jobs
+# ----------------
+      - ai-platform-deploy:
+          name: staging-ai-platform-deploy
+          machine_type: n1-standard-2
+          requires:
+            - linter
+          filters:
+            branches:
+              only:
+                - master
+          context:
+            - DATA_GCP
+            - DATA_GCP_EHP
+
+      - ai-platform-deploy:
+          name: production-ai-platform-deploy
+          machine_type: n1-standard-2
+          requires:
+            - linter
+          filters:
+            branches:
+              only:
+                - production
+          context:
+            - DATA_GCP
+            - DATA_GCP_PROD
+
+###################
+#  EXECUTORS
+###################
+
+executors:
+  python:
+    docker:
+      - image: circleci/python:3.7
+        auth:
+          username: $DOCKERHUB_USER
+          password: $DOCKERHUB_PASSWORD
+  gcp-sdk:
+    docker:
+      - image: google/cloud-sdk:316.0.0
+        auth:
+          username: $DOCKERHUB_USER
+          password: $DOCKERHUB_PASSWORD
+
+###################
+#  JOBS
+###################
+
+jobs:
+  linter:
+    executor: python
+    working_directory: ~/data-gcp
+    steps:
+      - checkout
+      - restore_cache:
+          key: deps-{{ checksum "linter-requirements.txt" }}
+      - run:
+          name: Install black
+          command: |
+            python3 -m venv venv-lint
+            . venv-lint/bin/activate
+            pip install -r linter-requirements.txt
+      - save_cache:
+          key: deps-{{ checksum "linter-requirements.txt" }}
+          paths:
+            - "venv-lint"
+      - run:
+          name: Run linter
+          command: |
+            . venv-lint/bin/activate
+            black --exclude="venv-lint" --check .
+
+  analytics_tests:
+    executor: python
+    working_directory: ~/data-gcp/analytics
+    steps:
+      - checkout:
+          path: ~/data-gcp
+      - restore_cache:
+          key: deps-v2-{{ checksum "analytics-requirements.txt" }}
+      - run:
+          name: Install python dependencies
+          command: |
+            python3 -m venv venv-analytics
+            . venv-analytics/bin/activate
+            pip install -r analytics-requirements.txt
+      - save_cache:
+          key: deps-v2-{{ checksum "analytics-requirements.txt" }}
+          paths:
+            - "venv-analytics"
+      - run:
+          name: GCP service account authentication
+          command: |
+            echo $GCLOUD_SERVICE_KEY >> ~/data-gcp/analytics/gcloud_credentials.json
+            echo GOOGLE_APPLICATION_CREDENTIALS=~/data-gcp/analytics/gcloud_credentials.json >> ~/data-gcp/.env
+      - run:
+          name: Run tests
+          command: |
+            . venv-analytics/bin/activate
+            export PYTHONPATH=$PYTHONPATH:~/data-gcp:~/data-gcp/orchestration/dags
+            pytest tests
+
+  recommendation-api-build:
+    executor: python
+    working_directory: ~/data-gcp/recommendation/api
+    steps:
+      - checkout:
+          path: ~/data-gcp
+      - restore_cache:
+          key: deps-{{ checksum "api-dev-requirements.txt" }}
+      - run:
+          name: Install Python deps in a venv
+          command: |
+            python3 -m venv venv-api
+            . venv-api/bin/activate
+            pip install -r api-dev-requirements.txt
+      - save_cache:
+          key: deps-{{ checksum "api-dev-requirements.txt" }}
+          paths:
+            - "venv-api"
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+
+  recommendation-api-tests:
+    docker:
+      - image: circleci/python:3.7
+        auth:
+          username: $DOCKERHUB_USER
+          password: $DOCKERHUB_PASSWORD
+      - image: kartoza/postgis:12.4
+        environment:
+          POSTGRES_PASS: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DBNAME: db
+    working_directory: ~/data-gcp/recommendation/api
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Install psql
+          command: sudo apt install postgresql-client
+      - run:
+          name: Run tests
+          command: |
+            export PYTHONPATH=$PYTHONPATH:~/data-gcp/recommendation/api
+            . venv-api/bin/activate
+            ./run_tests.sh
+
+  api_integration_tests:
+    parameters:
+      env:
+        description: "Which environement to target"
+        default: "dev"
+        type: string
+      api_token:
+        description: "The api token (given with env var)"
+        default: ""
+        type: string
+    docker:
+      - image: postman/newman
+        auth:
+          username: $DOCKERHUB_USER
+          password: $DOCKERHUB_PASSWORD
+    working_directory: ~/data-gcp
+    steps:
+      - run:
+          name: Install Git
+          command: |
+            apk update
+            apk upgrade
+            apk add --no-cache bash git openssh
+      - checkout
+      - run:
+          name: Run tests collection
+          command: |
+            cd recommendation/api/postman
+            newman run api_integration_tests.postman_collection.json --environment <<parameters.env>>.postman_environment.json --env-var "api_token=<<parameters.api_token>>"
+
+  orchestration-install:
+    executor: python
+    working_directory: ~/data-gcp/orchestration
+    steps:
+      - checkout:
+          path: ~/data-gcp
+      - restore_cache:
+          key: deps-{{ checksum "orchestration-requirements.txt" }}
+      - run:
+          name: Install Python requirements
+          command: |
+            python3 -m venv venv-orchestration
+            . venv-orchestration/bin/activate
+            pip install -r orchestration-requirements.txt
+      - save_cache:
+          key: deps-{{ checksum "orchestration-requirements.txt" }}
+          paths:
+            - "venv-orchestration"
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+
+  orchestration-tests:
+    executor: python
+    working_directory: ~/data-gcp/orchestration
+    environment:
+        AIRFLOW_HOME: ~/data-gcp/orchestration
+        DAG_FOLDER: ~/data-gcp/orchestration/dags
+        RECOMMENDATION_SQL_INSTANCE: cloudsql-recommendation-circleci
+        RECOMMENDATION_SQL_BASE: cloudsql-recommendation-circleci
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Run tests
+          command: |
+            . venv-orchestration/bin/activate
+            airflow initdb
+            pytest tests
+
+  recommendation-db-install:
+    executor: python
+    working_directory: ~/data-gcp/recommendation/db
+    steps:
+      - checkout:
+          path: ~/data-gcp
+      - restore_cache:
+          key: dependencies-{{ checksum "db-requirements.txt" }}
+      - run:
+          name: Install Python deps in a venv
+          command: |
+            python3 -m venv venv-db
+            . venv-db/bin/activate
+            pip install -r db-requirements.txt
+      - save_cache:
+          key: dependencies-{{ checksum "db-requirements.txt" }}
+          paths:
+            - "venv-db"
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+
+  recommendation-db-tests:
+    docker:
+      - image: circleci/python:3.7
+        auth:
+          username: $DOCKERHUB_USER
+          password: $DOCKERHUB_PASSWORD
+      - image: circleci/postgres:12
+        environment:
+          POSTGRES_PASSWORD: postgres
+    working_directory: ~/data-gcp/recommendation/db
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Install psql
+          command: sudo apt install postgresql-client
+      - run:
+          name: Run tests
+          command: |
+            export PYTHONPATH=$PYTHONPATH:~/data-gcp/recommendation/db
+            . venv-db/bin/activate
+            ./run_tests.sh
+
+  composer-deploy:
+    executor: gcp-sdk
+    environment:
+      DAG_RECOMMMENDATION_CLOUDSQL: recommendation_cloud_sql_v1
+      DAG_EXPORT_CLOUDSQL_BIGQUERY: export_cloudsql_tables_to_bigquery_v1
+      DAG_REFRESH_MATOMO_DATA: dump_scalingo_matomo_refresh_v1
+      DAG_IMPORT_DATA_ANALYTICS: import_data_analytics_v5
+      DAG_DUMP_SCALINGO_MATOMO_HISTORY: dump_scalingo_matomo_history_v6
+    working_directory: ~/data-gcp/orchestration
+    steps:
+      - checkout:
+          path: ~/data-gcp
+      - run:
+          name: Connect to GCP
+          command: |
+            echo $GCLOUD_SERVICE_KEY | gcloud auth activate-service-account --key-file=-
+            gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
+            gcloud --quiet config set compute/zone ${GOOGLE_COMPUTE_ZONE}
+      - run:
+          name: Deploy to composer
+          command: |
+            gsutil -m rm -r gs://${COMPOSER_BUCKET}/dags
+            gsutil cp -r dags gs://${COMPOSER_BUCKET}
+      - run:
+          name: Wait for dags to be deployed
+          command: |
+            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_RECOMMMENDATION_CLOUDSQL} 6 20
+            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_EXPORT_CLOUDSQL_BIGQUERY} 6 20
+            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_REFRESH_MATOMO_DATA} 6 20
+            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_DATA_ANALYTICS} 6 20
+            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_DUMP_SCALINGO_MATOMO_HISTORY} 6 20
+
+  ai-platform-deploy:
+    executor: gcp-sdk
+    parameters:
+      machine_type:
+        type: string
+    environment:
+      VERSION_NAME: latest
+      FRAMEWORK: SCIKIT_LEARN
+    working_directory: ~/data-gcp
+    steps:
+      - checkout:
+          path: ~/data-gcp
+      - run:
+          name: Connect to GCP
+          command: |
+            echo $GCLOUD_SERVICE_KEY | gcloud auth activate-service-account --key-file=-
+            gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
+      - run:
+          name: Deploy to Cloud Storage
+          command: |
+            gsutil cp recommendation/model/model.joblib $RECOMMENDATION_MODEL_DIR/model.joblib
+      - run:
+          name: Deploy to AI Platform
+          command: |
+            gcloud ai-platform versions delete $VERSION_NAME --model=$MODEL_NAME --region=$REGION
+            gcloud ai-platform versions create $VERSION_NAME \
+              --model=$MODEL_NAME \
+              --origin=$RECOMMENDATION_MODEL_DIR \
+              --runtime-version=2.3 \
+              --framework=$FRAMEWORK \
+              --python-version=3.7 \
+              --region=$REGION \
+              --machine-type=<< parameters.machine_type >>
+
+  build_and_deploy_api:
+    docker:
+      - image: 'cimg/base:stable'
+    parameters:
+      api-instance-name:
+        description: "API instance name"
+        type: string
+    working_directory: ~/data-gcp/recommendation/api
+    steps:
+      - checkout:
+          path: ~/data-gcp
+      - cloudrun/init
+      - cloudrun/build:
+          tag: 'eu.gcr.io/${GOOGLE_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}/<< parameters.api-instance-name >>:${CIRCLE_SHA1}'
+      - run:
+          name: Apply latest tag
+          command: |
+            gcloud container images add-tag \
+            eu.gcr.io/${GOOGLE_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}/<< parameters.api-instance-name >>:${CIRCLE_SHA1} \
+            eu.gcr.io/${GOOGLE_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}/<< parameters.api-instance-name >>:latest
+      - cloudrun/deploy:
+          image: 'eu.gcr.io/${GOOGLE_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}/<< parameters.api-instance-name >>:${CIRCLE_SHA1}'
+          platform: managed
+          region: europe-west1
+          service-name: << parameters.api-instance-name >>
+          unauthenticated: true

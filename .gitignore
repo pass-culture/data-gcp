@@ -1,0 +1,19 @@
+.idea
+__pycache__
+
+.env.local
+
+.pytest_cache
+.coverage
+.python-version
+.venv/
+venv/
+
+# ignore .json credential files
+# *.json
+# !recommendation/db/tests/tables/data.json
+# !recommendation/api/*.json
+airflow.cfg
+unittests.cfg
+logs/
+credentials/

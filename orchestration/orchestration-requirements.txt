@@ -1,0 +1,10 @@
+apache-airflow[gcp]==1.10.10
+sshtunnel==0.3.1
+mysqlclient==2.0.1
+pytest==6.1.1
+pytest-cov==2.10.1
+psycopg2-binary==2.8.6
+crcmod==1.7
+gcsfs==0.7.0
+google-cloud-secret-manager==1.0.0
+mock==4.0.2

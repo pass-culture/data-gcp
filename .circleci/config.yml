@@ -10,6 +10,7 @@ workflows:
   version: 2
   run-checks:
     jobs:
+
       - linter
 
       - analytics_tests:
@@ -483,6 +484,12 @@ jobs:
       - cloudrun/init
       - cloudrun/build:
           tag: 'eu.gcr.io/${GOOGLE_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}/<< parameters.api-instance-name >>:${CIRCLE_SHA1}'
+      - run:
+          name: Apply latest tag
+          command: |
+            gcloud container images add-tag \
+            eu.gcr.io/${GOOGLE_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}/<< parameters.api-instance-name >>:${CIRCLE_SHA1} \
+            eu.gcr.io/${GOOGLE_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}/<< parameters.api-instance-name >>:latest
       - cloudrun/deploy:
           image: 'eu.gcr.io/${GOOGLE_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}/<< parameters.api-instance-name >>:${CIRCLE_SHA1}'
           platform: managed

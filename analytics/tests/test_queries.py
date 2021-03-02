@@ -70,96 +70,96 @@ def flush_dataset():
         drop_table(client=pytest.bq_client, dataset=TEST_DATASET, table=table.table_id)
 
 
-# @pytest.mark.parametrize(
-#     ["table_name", "query", "input_data", "expected", "sorting_key"],
-#     [
-#         (
-#             "enriched_offer_data",
-#             define_enriched_offer_data_full_query(
-#                 dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX
-#             ),
-#             ENRICHED_OFFER_DATA_INPUT,
-#             ENRICHED_OFFER_DATA_EXPECTED,
-#             "offer_id",
-#         ),
-#         (
-#             "enriched_stock_data",
-#             define_enriched_stock_data_full_query(
-#                 dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX
-#             ),
-#             ENRICHED_STOCK_DATA_INPUT,
-#             ENRICHED_STOCK_DATA_EXPECTED,
-#             "stock_id",
-#         ),
-#     ],
-# )
-# def test_create_queries(
-#     flush_dataset, table_name, query, input_data, expected, sorting_key
-# ):
-#     create_data(
-#         client=pytest.bq_client,
-#         dataset=TEST_DATASET,
-#         data=input_data,
-#         table_prefix=TEST_TABLE_PREFIX,
-#     )
-#     run_query(client=pytest.bq_client, query=query)
-#     output = retrieve_data(
-#         client=pytest.bq_client, dataset=TEST_DATASET, table=table_name, table_prefix=""
-#     )
-#     assert sorted(output, key=lambda d: d[sorting_key]) == sorted(
-#         expected, key=lambda d: d[sorting_key]
-#     )
+@pytest.mark.parametrize(
+    ["table_name", "query", "input_data", "expected", "sorting_key"],
+    [
+        (
+            "enriched_offer_data",
+            define_enriched_offer_data_full_query(
+                dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX
+            ),
+            ENRICHED_OFFER_DATA_INPUT,
+            ENRICHED_OFFER_DATA_EXPECTED,
+            "offer_id",
+        ),
+        (
+            "enriched_stock_data",
+            define_enriched_stock_data_full_query(
+                dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX
+            ),
+            ENRICHED_STOCK_DATA_INPUT,
+            ENRICHED_STOCK_DATA_EXPECTED,
+            "stock_id",
+        ),
+    ],
+)
+def test_create_queries(
+    flush_dataset, table_name, query, input_data, expected, sorting_key
+):
+    create_data(
+        client=pytest.bq_client,
+        dataset=TEST_DATASET,
+        data=input_data,
+        table_prefix=TEST_TABLE_PREFIX,
+    )
+    run_query(client=pytest.bq_client, query=query)
+    output = retrieve_data(
+        client=pytest.bq_client, dataset=TEST_DATASET, table=table_name, table_prefix=""
+    )
+    assert sorted(output, key=lambda d: d[sorting_key]) == sorted(
+        expected, key=lambda d: d[sorting_key]
+    )
 
 
-# @pytest.mark.parametrize(
-#     ["table_name", "query", "input_data", "expected"],
-#     [
-#         (
-#             "enriched_user_data",
-#             define_enriched_user_data_full_query(
-#                 dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX
-#             ),
-#             ENRICHED_USER_DATA_INPUT,
-#             ENRICHED_USER_DATA_EXPECTED,
-#         ),
-#         (
-#             "enriched_venue_data",
-#             define_enriched_venue_data_full_query(
-#                 dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX
-#             ),
-#             ENRICHED_VENUE_DATA_INPUT,
-#             ENRICHED_VENUE_DATA_EXPECTED,
-#         ),
-#         (
-#             "enriched_offerer_data",
-#             define_enriched_offerer_data_full_query(
-#                 dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX
-#             ),
-#             ENRICHED_OFFERER_DATA_INPUT,
-#             ENRICHED_OFFERER_DATA_EXPECTED,
-#         ),
-#         (
-#             "enriched_booking_data",
-#             define_enriched_booking_data_full_query(
-#                 dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX
-#             ),
-#             ENRICHED_BOOKING_DATA_INPUT,
-#             ENRICHED_BOOKING_DATA_EXPECTED,
-#         ),
-#     ],
-# )
-# def test_create_queries_empty(flush_dataset, table_name, query, input_data, expected):
-#     create_data(
-#         client=pytest.bq_client,
-#         dataset=TEST_DATASET,
-#         data=input_data,
-#         table_prefix=TEST_TABLE_PREFIX,
-#     )
-#     run_query(client=pytest.bq_client, query=query)
-#     output = get_table_columns(
-#         client=pytest.bq_client, dataset=TEST_DATASET, table=table_name, table_prefix=""
-#     )
-#     assert output == expected
+@pytest.mark.parametrize(
+    ["table_name", "query", "input_data", "expected"],
+    [
+        (
+            "enriched_user_data",
+            define_enriched_user_data_full_query(
+                dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX
+            ),
+            ENRICHED_USER_DATA_INPUT,
+            ENRICHED_USER_DATA_EXPECTED,
+        ),
+        (
+            "enriched_venue_data",
+            define_enriched_venue_data_full_query(
+                dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX
+            ),
+            ENRICHED_VENUE_DATA_INPUT,
+            ENRICHED_VENUE_DATA_EXPECTED,
+        ),
+        (
+            "enriched_offerer_data",
+            define_enriched_offerer_data_full_query(
+                dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX
+            ),
+            ENRICHED_OFFERER_DATA_INPUT,
+            ENRICHED_OFFERER_DATA_EXPECTED,
+        ),
+        (
+            "enriched_booking_data",
+            define_enriched_booking_data_full_query(
+                dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX
+            ),
+            ENRICHED_BOOKING_DATA_INPUT,
+            ENRICHED_BOOKING_DATA_EXPECTED,
+        ),
+    ],
+)
+def test_create_queries_empty(flush_dataset, table_name, query, input_data, expected):
+    create_data(
+        client=pytest.bq_client,
+        dataset=TEST_DATASET,
+        data=input_data,
+        table_prefix=TEST_TABLE_PREFIX,
+    )
+    run_query(client=pytest.bq_client, query=query)
+    output = get_table_columns(
+        client=pytest.bq_client, dataset=TEST_DATASET, table=table_name, table_prefix=""
+    )
+    assert output == expected
 
 
 @pytest.mark.parametrize(

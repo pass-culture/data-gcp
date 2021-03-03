@@ -63,7 +63,10 @@ WITH scrolls AS (
   SELECT
       user_id,
       COUNT(DISTINCT(offer_type)) AS number_type_clicked
-  FROM viewed_recommended_and_clicked
+  FROM viewed_recommended_and_clicked vrc
+  INNER JOIN `passculture-data-prod.raw_prod.ab_testing_20201207` ab
+        ON vrc.user_id = ab.userid
+  WHERE ab.groupid = "A"
   GROUP BY user_id
 )
 SELECT

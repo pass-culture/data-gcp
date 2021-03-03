@@ -60,7 +60,10 @@ WITH scrolls AS (
   SELECT
       user_id,
       COUNT(DISTINCT(offer_type)) AS number_type_booked
-  FROM viewed_recommended_and_booked
+  FROM viewed_recommended_and_booked vrb
+  INNER JOIN `passculture-data-prod.raw_prod.ab_testing_20201207` ab
+      ON vrb.user_id = ab.userid
+  WHERE ab.groupid = "A"
   GROUP BY user_id
 )
 SELECT

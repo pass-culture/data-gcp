@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 
 TEST_TABLE_PREFIX = ""
 
@@ -455,121 +456,95 @@ ENRICHED_STOCK_DATA_EXPECTED = [
     },
 ]
 
-# enriched_user_data => NO DATA (only structure can be tested)
+# enriched_user_data => user has one used booking on digital goods
 ENRICHED_USER_DATA_INPUT = {
     "user": [
         {
             "user_id": "1",
-            "user_department_code": "93",
+            "user_is_beneficiary": True,
+            "user_department_code": 93,
             "user_postal_code": "93000",
-            "user_activity": "",
+            "user_activity": "Etudiant",
+            "user_creation_date": datetime.now().replace(microsecond=0),
+            "user_has_seen_tutorials": True,
+            "user_cultural_survey_filled_date": datetime.now().replace(microsecond=0),
         }
     ],
     "offerer": [
         {
             "offerer_id": "1",
-            "offerer_thumb_count": "0",
-            "offerer_is_active": True,
-            "offerer_postal_code": "93100",
-            "offerer_city": "Montreuil",
-            "offerer_creation_date": "2019-11-20",
-            "offerer_name": "Test Offerer",
-            "offerer_siren": "123456789",
-            "offerer_fields_updated": "{}",
-        }
-    ],
-    "venue": [
+        },
         {
-            "venue_id": "1",
-            "venue_managing_offerer_id": "1",
-        }
+            "offerer_id": "1",
+        },
     ],
+    "venue": [{"venue_id": "1", "venue_managing_offerer_id": "1"}],
     "booking": [
         {
+            "user_id": "1",
+            "stock_id": "1",
             "booking_id": "1",
-            "user_id": "1",
-            "booking_quantity": "2",
-            "booking_amount": "10",
-            "stock_id": "2",
-            "booking_is_used": True,
-            "booking_used_date": "2021-03-02",
-            "booking_is_cancelled": False,
-        },
-        {
-            "booking_id": "2",
-            "user_id": "1",
-            "booking_quantity": "1",
-            "booking_amount": "10",
-            "stock_id": "2",
             "booking_is_used": True,
             "booking_is_cancelled": False,
-        },
-        {
-            "booking_id": "3",
-            "user_id": "1",
-            "booking_quantity": "3",
-            "booking_amount": "5",
-            "stock_id": "2",
-            "booking_is_used": True,
-            "booking_is_cancelled": True,
+            "booking_amount": 10,
+            "booking_quantity": 2,
+            "booking_creation_date": datetime.now().replace(microsecond=0),
         },
     ],
     "offer": [
         {
+            "offer_id": "1",
+            "offer_type": "ThingType.MUSIQUE",
             "venue_id": "1",
             "product_id": "1",
-            "offer_id": "1",
-            "offer_type": "ThingType.ACTIVATION",
-        },
-        {
-            "venue_id": "1",
-            "product_id": "2",
-            "offer_id": "2",
-            "offer_type": "ThingType.CINEMA",
+            "offer_url": "url",
         },
     ],
     "stock": [
-        {
-            "stock_id": "1",
-            "offer_id": "1",
-        },
-        {
-            "stock_id": "2",
-            "offer_id": "2",
-        },
+        {"stock_id": "1", "offer_id": "1"},
     ],
-    "region_department": [],
+    "region_department": [
+        {
+            "num_dep": 93,
+            "dep_name": "Seine-Saint-Denis",
+            "region_name": "Île-de-France",
+        }
+    ],
 }
 
+# test experimentation session should return 2 when user has unused activation booking
+# all date should return current date and seniority should return 0
+# booking_cnt and no_cancelled_booking should return 1 when user have only one booking and None or 0 for second or third booking
+# amount_spent_in_digital_goods should return the amount of the booking when the offer type is MUSIQUE
 ENRICHED_USER_DATA_EXPECTED = [
     {
         "user_id": "1",
-        "experimentation_session": 1,
+        "experimentation_session": 2,
         "user_department_code": "93",
-        "user_postal_code": "93120",
-        "user_activity": "",
-        "user_activation_date": "2020-02-03",
-        "first_connection_date": "",
-        "first_booking_date": "",
-        "second_booking_date": "",
-        "booking_on_third_product_date": "",
-        "booking_cnt": "3",
-        "no_cancelled_booking": "2",
-        "user_seniority": "0",
-        "actual_amount_spent": "",
-        "theoretical_amount_spent": "",
-        "amount_spent_in_digital_goods": "20",
-        "amount_spent_in_physical_goods": "0",
-        "amount_spent_in_outings": "20",
-        "user_humanized_id": "",
-        "last_booking_date": "",
-        "user_region_name": "",
-        "booking_creation_date_first": "",
-        "days_between_activation_date_and_first_booking_date": "",
-        "days_between_activation_date_and_first_booking_paid": "",
-        "first_booking_type": "",
-        "first_paid_booking_type": "",
-        "cnt_distinct_type_booking": "",
+        "user_postal_code": "93000",
+        "user_activity": "Etudiant",
+        "user_activation_date": datetime.now().replace(microsecond=0),
+        "first_connection_date": datetime.now().replace(microsecond=0),
+        "first_booking_date": datetime.now().replace(microsecond=0),
+        "second_booking_date": None,
+        "booking_on_third_product_date": None,
+        "booking_cnt": 1,
+        "no_cancelled_booking": 1,
+        "user_seniority": 0,
+        "actual_amount_spent": Decimal("20"),
+        "theoretical_amount_spent": Decimal("20"),
+        "amount_spent_in_digital_goods": 20.0,
+        "amount_spent_in_physical_goods": 0.0,
+        "amount_spent_in_outings": 0.0,
+        "user_humanized_id": "AE",
+        "last_booking_date": datetime.now().replace(microsecond=0),
+        "user_region_name": "Île-de-France",
+        "booking_creation_date_first": datetime.now().replace(microsecond=0),
+        "days_between_activation_date_and_first_booking_date": 0,
+        "days_between_activation_date_and_first_booking_paid": 0,
+        "first_booking_type": "ThingType.MUSIQUE",
+        "first_paid_booking_type": "ThingType.MUSIQUE",
+        "cnt_distinct_type_booking": 1,
     }
 ]
 

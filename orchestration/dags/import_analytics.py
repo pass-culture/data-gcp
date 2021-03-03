@@ -13,6 +13,9 @@ from dependencies.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT,
 )
+from dependencies.data_analytics.enriched_data.booked_categories import (
+    define_enriched_booked_categories_data_full_query,
+)
 from dependencies.data_analytics.enriched_data.booking import (
     define_enriched_booking_data_full_query,
 )
@@ -79,7 +82,7 @@ default_dag_args = {
 }
 
 dag = DAG(
-    "import_data_analytics_v5",
+    "import_data_analytics_v6",
     default_args=default_dag_args,
     description="Import tables from CloudSQL and enrich data for create dashboards with Data Studio",
     on_failure_callback=task_fail_slack_alert,
@@ -168,6 +171,14 @@ create_enriched_offerer_data_task = BigQueryOperator(
     use_legacy_sql=False,
     dag=dag,
 )
+create_enriched_booked_categories_data_task = BigQueryOperator(
+    task_id="create_enriched_booked_categories_data",
+    sql=define_enriched_booked_categories_data_full_query(
+        dataset=BIGQUERY_ANALYTICS_DATASET, table_prefix=APPLICATIVE_PREFIX
+    ),
+    use_legacy_sql=False,
+    dag=dag,
+)
 
 create_enriched_data_tasks = [
     create_enriched_offer_data_task,
@@ -175,6 +186,7 @@ create_enriched_data_tasks = [
     create_enriched_user_data_task,
     create_enriched_venue_data_task,
     create_enriched_booking_data_task,
+    create_enriched_booked_categories_data_task,
     create_enriched_offerer_data_task,
 ]
 

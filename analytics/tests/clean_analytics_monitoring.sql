@@ -142,16 +142,18 @@ SELECT (
 
 -- compare enriched_offerer_data max date
 WITH last_offerer_date_csql as (
-  SELECT MAX(dateCreated) FROM EXTERNAL_QUERY(
+  SELECT MAX(date_created) FROM EXTERNAL_QUERY(
       'passculture-metier-prod.europe-west1.metier-pcapi-production-connection',
-      'SELECT "dateCreated" FROM public.offerer'
-    )
+      'SELECT "dateCreated" as date_created FROM public.offerer'
+    ) WHERE date_created <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00") AS DATETIME)
 ),
   last_enriched_offerer_date_bq_analytics as (
   SELECT MAX(offerer_creation_date) FROM `passculture-data-prod.analytics_prod.enriched_offerer_data`
+  WHERE offerer_creation_date <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00") AS DATETIME)
 ),
   last_offerer_date_bq_clean as (
   SELECT MAX(offerer_creation_date) FROM `passculture-data-prod.clean_prod.applicative_database_offerer`
+  WHERE offerer_creation_date <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00") AS DATETIME)
 )
 
 SELECT (
@@ -173,16 +175,18 @@ SELECT (
 
 -- compare enriched_stock_data max date
 WITH last_stock_date_csql as (
-  SELECT MAX(dateCreated) FROM EXTERNAL_QUERY(
+  SELECT MAX(date_created) FROM EXTERNAL_QUERY(
       'passculture-metier-prod.europe-west1.metier-pcapi-production-connection',
-      'SELECT "dateCreated" FROM public.stock'
-    )
+      'SELECT "dateCreated" as date_created FROM public.stock'
+    ) WHERE date_created <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00") AS DATETIME)
 ),
   last_enriched_stock_date_bq_analytics as (
   SELECT MAX(stock_creation_date) FROM `passculture-data-prod.analytics_prod.enriched_stock_data`
+  WHERE stock_creation_date <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00") AS DATETIME)
 ),
   last_stock_date_bq_clean as (
   SELECT MAX(stock_creation_date) FROM `passculture-data-prod.clean_prod.applicative_database_stock`
+  WHERE stock_creation_date <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00") AS DATETIME)
 )
 
 SELECT (
@@ -233,50 +237,43 @@ SELECT (
 ) as timestamp_diff_analytics
 
 
--- compare enriched_user_data max date
+-- compare user data max date
 WITH last_user_date_csql as (
-  SELECT MAX(dateCreated) FROM EXTERNAL_QUERY(
+  SELECT MAX(date_created) FROM EXTERNAL_QUERY(
       'passculture-metier-prod.europe-west1.metier-pcapi-production-connection',
-      'SELECT "dateCreated" FROM public.user'
-    )
-),
-  last_enriched_user_date_bq_analytics as (
-  SELECT MAX(activation_date) FROM `passculture-data-prod.analytics_prod.enriched_user_data`
+      'SELECT "dateCreated" as date_created FROM public.user'
+    ) WHERE date_created <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00") AS DATETIME)
 ),
   last_user_date_bq_clean as (
   SELECT MAX(user_creation_date) FROM `passculture-data-prod.clean_prod.applicative_database_user`
+  WHERE user_creation_date <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00") AS DATETIME)
 )
 
 SELECT (
     SELECT * FROM last_user_date_csql
-) as csql_date,
-(
-    SELECT * FROM last_enriched_user_date_bq_analytics
-) as bq_date_analytics,
+) as last_user_date_csql,
 (
     SELECT * FROM last_user_date_bq_clean
-) as bq_date_clean,
+) as last_user_date_bq_clean,
 (
     SELECT TIMESTAMP_DIFF(CAST((SELECT * FROM last_user_date_csql) as TIMESTAMP), CAST((SELECT * FROM last_user_date_bq_clean) as TIMESTAMP), SECOND)
-) as timestamp_diff_clean,
-(
-    SELECT TIMESTAMP_DIFF(CAST((SELECT * FROM last_user_date_csql) as TIMESTAMP), CAST((SELECT * FROM last_enriched_user_date_bq_analytics) as TIMESTAMP), SECOND)
-) as timestamp_diff_analytics
-
+) as timestamp_diff_clean
 
 
 -- compare enriched_booking_data max date
 WITH last_booking_date_csql as (
-  SELECT MAX(dateCreated) FROM EXTERNAL_QUERY(
+  SELECT MAX(date_created) FROM EXTERNAL_QUERY(
       'passculture-metier-prod.europe-west1.metier-pcapi-production-connection',
-      'SELECT "dateCreated" FROM public.booking'
-    )
+      'SELECT "dateCreated" as date_created FROM public.booking'
+    ) WHERE date_created <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00") AS DATETIME)
 ),
   last_enriched_booking_date_bq_analytics as (
   SELECT MAX(booking_creation_date) FROM `passculture-data-prod.analytics_prod.enriched_booking_data`
+  WHERE booking_creation_date <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00") AS DATETIME)
 ),
   last_booking_date_bq_clean as (
   SELECT MAX(booking_creation_date) FROM `passculture-data-prod.clean_prod.applicative_database_booking`
+  WHERE booking_creation_date <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00") AS DATETIME)
 )
 
 SELECT (

@@ -7,7 +7,7 @@ from airflow.operators.python_operator import BranchPythonOperator
 from airflow.operators.python_operator import PythonOperator
 from google.cloud import bigquery
 
-from dependencies.config import ENV_SHORT_NAME, GCP_PROJECT
+from dependencies.config import BIGQUERY_RAW_DATASET, ENV_SHORT_NAME, GCP_PROJECT
 from dependencies.env_switcher import env_switcher
 from dependencies.slack_alert import task_fail_slack_alert
 
@@ -29,9 +29,9 @@ dag = DAG(
     default_args=default_dag_args,
     description="Import firebase data and dispatch it to each env",
     on_failure_callback=task_fail_slack_alert,
-    schedule_interval="0 5 * * *",
-    catchup=False,
-    dagrun_timeout=datetime.timedelta(minutes=90),
+    schedule_interval="0 6 * * *" if ENV_SHORT_NAME == "prod" else "30 6 * * *",
+    catchup=True,
+    dagrun_timeout=datetime.timedelta(minutes=90)
 )
 
 start = DummyOperator(task_id="start", dag=dag)
@@ -75,7 +75,7 @@ def copy_env_data(**kwargs):
     )
     env_raw_data_table_id = [
         table.table_id
-        for table in client.list_tables(f"passculture-data-prod.raw_{ENV_SHORT_NAME}")
+        for table in client.list_tables(f"{GCP_PROJECT}.raw_{ENV_SHORT_NAME}")
         if "events_" in table.table_id
     ]
     missing_tables = [
@@ -88,7 +88,7 @@ def copy_env_data(**kwargs):
             task_id=f"copy_and_filter_{table.table_id}",
             sql=f"SELECT * FROM passculture-data-prod.firebase_raw_data.{table.table_id} WHERE app_info.id IN ({', '.join(app_info_id_list)})",
             use_legacy_sql=False,
-            destination_dataset_table=f"passculture-data-prod:raw_{ENV_SHORT_NAME}.{table.table_id}",
+            destination_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_RAW_DATASET}.{table.table_id}",
             write_disposition="WRITE_EMPTY",
             dag=dag,
         )
@@ -105,7 +105,13 @@ copy_firebase_data = PythonOperator(
 
 dummy_task = DummyOperator(task_id="dummy_task", dag=dag)
 
-copy_to_env = DummyOperator(task_id=f"copy_to_{ENV_SHORT_NAME}", dag=dag)
+copy_to_env = PythonOperator(
+    task_id="copy_to_env_firebase_data",
+    python_callable=copy_env_data,
+    op_kwargs={},
+    dag=dag,
+    trigger_rule="none_failed"
+)
 
 end = DummyOperator(task_id="end", dag=dag)
 

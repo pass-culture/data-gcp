@@ -1,6 +1,72 @@
 version: 2.1
 orbs:
   cloudrun: circleci/gcp-cloud-run@1.0.2
+  slack: circleci/slack@4.2
+
+###################
+#  SLACK 
+###################
+
+slack-send-deployment-notification: &slack-send-deployment-notification
+  - slack/notify:
+      event: pass
+      channel: alertes_data
+      branch_pattern: master
+      custom: |
+        {
+          "blocks": [
+            {
+              "type": "section",
+              "text": {
+                "type": "mrkdwn",
+                "text": "${CIRCLE_SHA1} Test en cours par @Ferdinand :muscle:"
+              }
+            },
+            {
+              "type": "actions",
+              "elements": [
+                {
+                  "type": "button",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "View job",
+                    "emoji": true
+                  },
+                  "url": "$CIRCLE_BUILD_URL"
+                }
+              ]
+            }
+          ]
+        }
+  - slack/notify:
+      event: fail
+      channel: alertes_data
+      custom: |
+        {
+          "blocks": [
+            {
+              "type": "section",
+              "text": {
+                "type": "mrkdwn",
+                "text": "${CIRCLE_SHA1} Test en cours par @Ferdinand :pleurs:"
+              }
+            },
+            {
+              "type": "actions",
+              "elements": [
+                {
+                  "type": "button",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "View job",
+                    "emoji": true
+                  },
+                  "url": "$CIRCLE_BUILD_URL"
+                }
+              ]
+            }
+          ]
+        }
 
 ###################
 #  WORKFLOWS
@@ -162,6 +228,10 @@ workflows:
           context:
             - DATA_GCP
             - DATA_GCP_PROD
+
+      - slack-test:
+          context: Slack
+          <<: *slack-send-deployment-notification
 
 ###################
 #  EXECUTORS

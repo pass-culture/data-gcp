@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 
 TEST_TABLE_PREFIX = ""
 
@@ -455,43 +456,97 @@ ENRICHED_STOCK_DATA_EXPECTED = [
     },
 ]
 
-# enriched_user_data => NO DATA (only structure can be tested)
+# enriched_user_data => user 1 is beneficiary and its department has to exist in region_department, has one used booking on digital goods.
+# This booking is corresponding to an offer, with an offered, stock and venue
 ENRICHED_USER_DATA_INPUT = {
-    "booking": [],
-    "offer": [],
-    "stock": [],
-    "user": [],
-    "region_department": [],
+    "user": [
+        {
+            "user_id": "1",
+            "user_is_beneficiary": True,
+            "user_department_code": 93,
+            "user_postal_code": "93000",
+            "user_activity": "Etudiant",
+            "user_creation_date": datetime.now().replace(microsecond=0),
+            "user_has_seen_tutorials": True,
+            "user_cultural_survey_filled_date": datetime.now().replace(microsecond=0),
+        }
+    ],
+    "offerer": [
+        {
+            "offerer_id": "1",
+        },
+        {
+            "offerer_id": "1",
+        },
+    ],
+    "venue": [{"venue_id": "1", "venue_managing_offerer_id": "1"}],
+    "booking": [
+        {
+            "user_id": "1",
+            "stock_id": "1",
+            "booking_id": "1",
+            "booking_is_used": True,
+            "booking_is_cancelled": False,
+            "booking_amount": 10,
+            "booking_quantity": 2,
+            "booking_creation_date": datetime.now().replace(microsecond=0),
+        },
+    ],
+    "offer": [
+        {
+            "offer_id": "1",
+            "offer_type": "ThingType.MUSIQUE",
+            "venue_id": "1",
+            "product_id": "1",
+            "offer_url": "url",
+        },
+    ],
+    "stock": [
+        {"stock_id": "1", "offer_id": "1"},
+    ],
+    "region_department": [
+        {
+            "num_dep": 93,
+            "dep_name": "Seine-Saint-Denis",
+            "region_name": "Île-de-France",
+        }
+    ],
 }
 
+# test experimentation session should return 2 when user has unused activation booking
+# all date should return current date and seniority should return 0
+# booking_cnt and no_cancelled_booking should return 1 when user have only one booking and None or 0 for second or third booking
+# amount_spent_in_digital_goods should return the amount of the booking when the offer type is MUSIQUE
 ENRICHED_USER_DATA_EXPECTED = [
-    "user_id",
-    "experimentation_session",
-    "user_department_code",
-    "user_postal_code",
-    "user_activity",
-    "user_activation_date",
-    "first_connection_date",
-    "first_booking_date",
-    "second_booking_date",
-    "booking_on_third_product_date",
-    "booking_cnt",
-    "no_cancelled_booking",
-    "user_seniority",
-    "actual_amount_spent",
-    "theoretical_amount_spent",
-    "amount_spent_in_digital_goods",
-    "amount_spent_in_physical_goods",
-    "amount_spent_in_outings",
-    "user_humanized_id",
-    "last_booking_date",
-    "user_region_name",
-    "booking_creation_date_first",
-    "days_between_activation_date_and_first_booking_date",
-    "days_between_activation_date_and_first_booking_paid",
-    "first_booking_type",
-    "first_paid_booking_type",
-    "cnt_distinct_type_booking",
+    {
+        "user_id": "1",
+        "experimentation_session": 2,
+        "user_department_code": "93",
+        "user_postal_code": "93000",
+        "user_activity": "Etudiant",
+        "user_activation_date": datetime.now().replace(microsecond=0),
+        "first_connection_date": datetime.now().replace(microsecond=0),
+        "first_booking_date": datetime.now().replace(microsecond=0),
+        "second_booking_date": None,
+        "booking_on_third_product_date": None,
+        "booking_cnt": 1,
+        "no_cancelled_booking": 1,
+        "user_seniority": 0,
+        "actual_amount_spent": Decimal("20"),
+        "theoretical_amount_spent": Decimal("20"),
+        "amount_spent_in_digital_goods": 20.0,
+        "amount_spent_in_physical_goods": 0.0,
+        "amount_spent_in_outings": 0.0,
+        "user_humanized_id": "AE",
+        "last_booking_date": datetime.now().replace(microsecond=0),
+        "user_region_name": "Île-de-France",
+        "booking_creation_date_first": datetime.now().replace(microsecond=0),
+        "days_between_activation_date_and_first_booking_date": 0,
+        "days_between_activation_date_and_first_booking_paid": 0,
+        "first_booking_type": "ThingType.MUSIQUE",
+        "first_paid_booking_type": "ThingType.MUSIQUE",
+        "cnt_distinct_type_booking": 1,
+    }
 ]
 
 # enriched_venue_data => NO DATA (only structure can be tested)

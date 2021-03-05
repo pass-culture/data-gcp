@@ -100,6 +100,15 @@ def flush_dataset():
     ["table_name", "query", "input_data", "expected", "sorting_key"],
     [
         (
+            "enriched_user_data",
+            define_enriched_user_data_full_query(
+                dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX
+            ),
+            ENRICHED_USER_DATA_INPUT,
+            ENRICHED_USER_DATA_EXPECTED,
+            "user_id",
+        ),
+        (
             "enriched_offer_data",
             define_enriched_offer_data_full_query(
                 dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX
@@ -141,12 +150,12 @@ def test_create_queries(
     ["table_name", "query", "input_data", "expected"],
     [
         (
-            "enriched_user_data",
-            define_enriched_user_data_full_query(
+            "enriched_offerer_data",
+            define_enriched_offerer_data_full_query(
                 dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX
             ),
-            ENRICHED_USER_DATA_INPUT,
-            ENRICHED_USER_DATA_EXPECTED,
+            ENRICHED_OFFERER_DATA_INPUT,
+            ENRICHED_OFFERER_DATA_EXPECTED,
         ),
         (
             "enriched_venue_data",
@@ -155,14 +164,6 @@ def test_create_queries(
             ),
             ENRICHED_VENUE_DATA_INPUT,
             ENRICHED_VENUE_DATA_EXPECTED,
-        ),
-        (
-            "enriched_offerer_data",
-            define_enriched_offerer_data_full_query(
-                dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX
-            ),
-            ENRICHED_OFFERER_DATA_INPUT,
-            ENRICHED_OFFERER_DATA_EXPECTED,
         ),
         (
             "enriched_booking_data",

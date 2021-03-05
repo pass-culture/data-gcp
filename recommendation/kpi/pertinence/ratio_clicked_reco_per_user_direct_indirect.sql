@@ -73,7 +73,10 @@ WITH scrolls AS (
       ncbu.number_clicked / nrbu.number_reco AS ratio_clicked_reco
   FROM number_recommendations_by_user nrbu
   INNER JOIN number_clicked_by_user ncbu
-  ON ncbu.user_id = nrbu.user_id
+        ON ncbu.user_id = nrbu.user_id
+  INNER JOIN `passculture-data-prod.raw_prod.ab_testing_20201207` ab
+        ON ncbu.user_id = ab.userid
+  WHERE ab.groupid = "A"
 )
 SELECT
     AVG(ratio_clicked_reco) as average,

@@ -435,7 +435,11 @@ def define_enriched_user_data_query(dataset, table_prefix=""):
                 experimentation_sessions.vague_experimentation AS experimentation_session,
                 user.user_department_code,
                 user.user_postal_code,
-                user.user_activity,
+                CASE WHEN user.user_activity in ("Alternant","Apprenti","Volontaire") THEN "Apprenti, Alternant, Volontaire en service civique rémunéré"
+                    WHEN user.user_activity in ("Inactif") THEN "Inactif (ni en emploi ni au chômage), En incapacité de travailler"
+                        WHEN user.user_activity in ("Étudiant") THEN "Etudiant" 
+                            WHEN user.user_activity in ("Chômeur") THEN "Chômeur, En recherche d'emploi"
+                                ELSE user.user_activity END AS user_activity,
                 activation_dates.user_activation_date,
                 CASE WHEN user.user_has_seen_tutorials THEN user.user_cultural_survey_filled_date
                     ELSE NULL

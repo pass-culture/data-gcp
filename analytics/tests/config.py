@@ -19,6 +19,7 @@ BIGQUERY_SCHEMAS = {
         "booking_is_used": "BOOLEAN",
         "booking_used_date": "DATETIME",
         "booking_cancellation_date": "DATETIME",
+        "booking_cancellation_reason": "STRING",
     },
     "favorite": {
         "id": "STRING",

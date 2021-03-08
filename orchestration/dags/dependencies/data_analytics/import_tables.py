@@ -69,7 +69,8 @@ def define_import_query(
             CAST("stockId" AS varchar(255)) as stock_id, "quantity" as booking_quantity,
             CAST("userId" AS varchar(255)) as user_id, "amount" as booking_amount,
             "isCancelled" as booking_is_cancelled, "isUsed" as booking_is_used, "dateUsed" as booking_used_date,
-            "cancellationDate" as booking_cancellation_date
+            "cancellationDate" as booking_cancellation_date,
+            CAST("cancellationReason" AS VARCHAR) AS booking_cancellation_reason
         FROM public.booking
     """
     cloudsql_queries[

@@ -561,6 +561,7 @@ ENRICHED_VENUE_DATA_INPUT = {
     "venue": [],
     "venue_label": [],
     "venue_type": [],
+    "region_department": [],
 }
 
 ENRICHED_VENUE_DATA_EXPECTED = [
@@ -576,6 +577,7 @@ ENRICHED_VENUE_DATA_EXPECTED = [
     "venue_siret",
     "venue_is_virtual",
     "venue_managing_offerer_id",
+    "venue_creation_date",
     "offerer_name",
     "venue_type_label",
     "venue_label",
@@ -588,6 +590,8 @@ ENRICHED_VENUE_DATA_EXPECTED = [
     "theoretic_revenue",
     "real_revenue",
     "venue_humanized_id",
+    "venue_flaskadmin_link",
+    "venue_region_name",
 ]
 
 # enriched_offerer_data => NO DATA (only structure can be tested)

@@ -164,6 +164,7 @@ def define_enriched_venue_query(dataset, table_prefix=""):
                 ,venue.venue_siret
                 ,venue.venue_is_virtual
                 ,venue.venue_managing_offerer_id
+                ,venue.venue_creation_date
                 ,offerer.offerer_name
                 ,venue_type.label AS venue_type_label
                 ,venue_label.label AS venue_label
@@ -176,6 +177,8 @@ def define_enriched_venue_query(dataset, table_prefix=""):
                 ,theoretic_revenue_per_venue.theoretic_revenue
                 ,real_revenue_per_venue.real_revenue
                 ,venue_humanized_id.humanized_id AS venue_humanized_id
+                ,CONCAT("https://backend.passculture.beta.gouv.fr/pc/back-office/venue/edit/?id=",venue.venue_id,"&url=%2Fpc%2Fback-office%2Fvenue%2F") AS venue_flaskadmin_link
+                ,venue_region_departement.region_name AS venue_region_name
             FROM {dataset}.{table_prefix}venue AS venue
             LEFT JOIN {dataset}.{table_prefix}offerer AS offerer ON venue.venue_managing_offerer_id = offerer.offerer_id
             LEFT JOIN {dataset}.{table_prefix}venue_type AS venue_type ON venue.venue_type_id = venue_type.id
@@ -189,6 +192,7 @@ def define_enriched_venue_query(dataset, table_prefix=""):
             LEFT JOIN theoretic_revenue_per_venue ON venue.venue_id = theoretic_revenue_per_venue.venue_id
             LEFT JOIN real_revenue_per_venue ON venue.venue_id = real_revenue_per_venue.venue_id
             LEFT JOIN venue_humanized_id AS venue_humanized_id ON venue_humanized_id.venue_id = venue.venue_id
+            LEFT JOIN {dataset}.region_department AS venue_region_departement ON venue.venue_department_code = venue_region_departement.num_dep
         );
     """
 

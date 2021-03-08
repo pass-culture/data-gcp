@@ -238,7 +238,9 @@ class QPIDownloader:
         questions = pd.DataFrame(form.get("fields")).rename(
             columns={"id": "question_id"}
         )
-
+        questions.title = questions.title.apply(
+            lambda x: x.replace("\n", " ").replace("  ", " ")
+        )
         questions["choices"] = questions.apply(
             lambda row: [c["label"] for c in row["properties"]["choices"]], axis=1
         )

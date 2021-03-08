@@ -11,7 +11,7 @@ slack-send-deployment-notification: &slack-send-deployment-notification
   - slack/notify:
       event: pass
       channel: alertes_data
-      branch_pattern: master
+      # branch_pattern: master
       custom: |
         {
           "blocks": [
@@ -38,7 +38,7 @@ slack-send-deployment-notification: &slack-send-deployment-notification
             }
           ]
         }
-  - slack/notify:
+  - slack/notify: &slack-fail-post-step
       event: fail
       channel: alertes_data
       custom: |
@@ -112,6 +112,9 @@ workflows:
             - recommendation-api-tests
           context:
             - DATA_GCP_EHP
+            - Slack
+          <<: *slack-fail-post-step
+          <<: *slack-send-deployment-notification
 
       - build_and_deploy_api:
           name: build_and_deploy_api_staging
@@ -229,9 +232,9 @@ workflows:
             - DATA_GCP
             - DATA_GCP_PROD
 
-      - slack-test:
-          context: Slack
-          <<: *slack-send-deployment-notification
+      # - slack-test:
+      #     context: Slack
+      #     <<: *slack-send-deployment-notification
 
 ###################
 #  EXECUTORS

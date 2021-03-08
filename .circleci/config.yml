@@ -112,9 +112,6 @@ workflows:
             - recommendation-api-tests
           context:
             - DATA_GCP_EHP
-            - Slack
-          <<: *slack-fail-post-step
-          <<: *slack-send-deployment-notification
 
       - build_and_deploy_api:
           name: build_and_deploy_api_staging
@@ -311,6 +308,9 @@ jobs:
             . venv-analytics/bin/activate
             export PYTHONPATH=$PYTHONPATH:~/data-gcp:~/data-gcp/orchestration/dags
             pytest tests
+    context: Slack
+    <<: *slack-fail-post-step
+    <<: *slack-send-deployment-notification
 
   recommendation-api-build:
     executor: python

@@ -38,7 +38,7 @@ slack-send-deployment-notification: &slack-send-deployment-notification
             }
           ]
         }
-  - slack/notify: &slack-fail-post-step
+  - slack/notify:
       event: fail
       channel: alertes_data
       custom: |
@@ -308,9 +308,7 @@ jobs:
             . venv-analytics/bin/activate
             export PYTHONPATH=$PYTHONPATH:~/data-gcp:~/data-gcp/orchestration/dags
             pytest tests
-    context: Slack
-    <<: *slack-fail-post-step
-    <<: *slack-send-deployment-notification
+      - <<: *slack-send-deployment-notification
 
   recommendation-api-build:
     executor: python

@@ -622,47 +622,94 @@ ENRICHED_OFFERER_DATA_EXPECTED = [
 
 # enriched_booking_data => NO DATA (only structure can be tested)
 ENRICHED_BOOKING_DATA_INPUT = {
-    "booking": [],
-    "payment": [],
-    "payment_status": [],
-    "stock": [],
-    "offer": [],
-    "venue": [],
-    "offerer": [],
-    "user": [],
-    "venue_type": [],
-    "venue_label": [],
+    "booking": [
+        {
+            "booking_id": "1",
+            "booking_amount": 3,
+            "booking_quantity": 1,
+            "user_id": "13",
+            "booking_creation_date": datetime.now().replace(microsecond=0),
+            "stock_id": "4",
+            "booking_is_cancelled": False,
+            "booking_is_used": True,
+            "booking_cancellation_date": None,
+        }
+    ],
+    "payment": [
+        {
+            "id": "1",
+            "bookingId": "1",
+            "author": "michel",
+        }
+    ],
+    "payment_status": [{"id": "1", "paymentId": "1", "status": "SENT"}],
+    "stock": [
+        {
+            "stock_id": "4",
+            "offer_id": "2",
+            "stock_beginning_date": datetime.now().replace(microsecond=0),
+        }
+    ],
+    "offer": [
+        {
+            "offer_id": "2",
+            "offer_type": "ThingType.AUDIOVISUEL",
+            "offer_name": "An Awesome Offer",
+            "venue_id": "8",
+        }
+    ],
+    "venue": [
+        {
+            "venue_id": "8",
+            "venue_public_name": "My Wonderful Venue",
+            "venue_label_id": "15",
+            "venue_department_code": 78,
+            "venue_managing_offerer_id": "2",
+            "venue_type_id": "1",
+        }
+    ],
+    "offerer": [{"offerer_id": "2", "offerer_name": "Offerer"}],
+    "user": [
+        {
+            "user_id": "13",
+            "user_department_code": 68,
+            "user_creation_date": datetime.now().replace(microsecond=0),
+        }
+    ],
+    "venue_type": [{"id": "1", "label": "label"}],
+    "venue_label": [{"id": "15", "label": "label"}],
 }
 
 ENRICHED_BOOKING_DATA_EXPECTED = [
-    "booking_id",
-    "booking_creation_date",
-    "booking_quantity",
-    "booking_amount",
-    "booking_is_cancelled",
-    "booking_is_used",
-    "booking_cancellation_date",
-    "booking_cancellation_reason",
-    "stock_beginning_date",
-    "stock_id",
-    "offer_id",
-    "offer_type",
-    "offer_name",
-    "venue_name",
-    "venue_label_name",
-    "venue_type_name",
-    "venue_id",
-    "venue_department_code",
-    "offerer_id",
-    "offerer_name",
-    "user_id",
-    "user_department_code",
-    "user_creation_date",
-    "booking_intermediary_amount",
-    "reimbursed",
-    "physical_goods",
-    "digital_goods",
-    "event",
-    "booking_rank",
-    "same_category_booking_rank",
+    {
+        "booking_amount": 3,
+        "booking_cancellation_date": None,
+        "booking_creation_date": datetime.now().replace(microsecond=0),
+        "booking_id": "1",
+        "booking_intermediary_amount": 3,
+        "booking_is_cancelled": False,
+        "booking_is_used": True,
+        "booking_quantity": 1,
+        "booking_rank": 1,
+        "digital_goods": False,
+        "event": False,
+        "offer_id": "2",
+        "offer_name": "An Awesome Offer",
+        "offer_type": "ThingType.AUDIOVISUEL",
+        "offerer_id": "2",
+        "offerer_name": "Offerer",
+        "physical_goods": False,
+        "reimbursed": True,
+        "same_category_booking_rank": 1,
+        "stock_beginning_date": datetime.now().replace(microsecond=0),
+        "stock_id": "4",
+        "user_creation_date": datetime.now().replace(microsecond=0),
+        "user_department_code": "68",
+        "user_id": "13",
+        "venue_department_code": "78",
+        "venue_id": "8",
+        "venue_label_name": "label",
+        "venue_name": "My Wonderful Venue",
+        "venue_type_name": "label",
+    }
 ]

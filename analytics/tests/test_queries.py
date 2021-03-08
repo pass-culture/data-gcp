@@ -100,6 +100,15 @@ def flush_dataset():
     ["table_name", "query", "input_data", "expected", "sorting_key"],
     [
         (
+            "enriched_booking_data",
+            define_enriched_booking_data_full_query(
+                dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX
+            ),
+            ENRICHED_BOOKING_DATA_INPUT,
+            ENRICHED_BOOKING_DATA_EXPECTED,
+            "booking_id",
+        ),
+        (
             "enriched_user_data",
             define_enriched_user_data_full_query(
                 dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX
@@ -164,14 +173,6 @@ def test_create_queries(
             ),
             ENRICHED_VENUE_DATA_INPUT,
             ENRICHED_VENUE_DATA_EXPECTED,
-        ),
-        (
-            "enriched_booking_data",
-            define_enriched_booking_data_full_query(
-                dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX
-            ),
-            ENRICHED_BOOKING_DATA_INPUT,
-            ENRICHED_BOOKING_DATA_EXPECTED,
         ),
     ],
 )

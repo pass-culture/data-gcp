@@ -192,7 +192,7 @@ def define_enriched_venue_query(dataset, table_prefix=""):
             LEFT JOIN theoretic_revenue_per_venue ON venue.venue_id = theoretic_revenue_per_venue.venue_id
             LEFT JOIN real_revenue_per_venue ON venue.venue_id = real_revenue_per_venue.venue_id
             LEFT JOIN venue_humanized_id AS venue_humanized_id ON venue_humanized_id.venue_id = venue.venue_id
-            LEFT JOIN region_departement AS venue_region_departement ON venue.venue_department_code = venue_region_departement.num_dep
+            LEFT JOIN {dataset}.region_department AS venue_region_departement ON venue.venue_department_code = venue_region_departement.num_dep
         );
     """
 

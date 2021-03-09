@@ -12,6 +12,7 @@ slack-fail-post-step: &slack-fail-post-step
     - slack/notify:
         event: fail
         channel: alertes_data
+        branch_pattern: "^(master|production|PC_7333_add_slack_notification)"
         custom: |
           {
             "text": "",

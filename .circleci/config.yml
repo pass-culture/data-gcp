@@ -7,6 +7,42 @@ orbs:
 #  SLACK 
 ###################
 
+slack-fail-post-step: &slack-fail-post-step
+  post-steps:
+    - slack/status:
+        fail_only: true
+
+# slack-fail-post-step: &slack-fail-post-step
+#   post-steps:
+#     - slack/notify:
+#         custom: |
+#           {
+#             "text": "",
+#             "blocks": [
+#               {
+#                 "type": "section",
+#                 "text": {
+#                   "type": "mrkdwn",
+#                   "text": "❌ *Echec* #${CIRCLE_BUILD_NUM} `${CIRCLE_PROJECT_REPONAME}` sur `${CIRCLE_BRANCH}`"
+#                 }
+#               },
+#               {
+#                 "type": "actions",
+#                 "elements": [
+#                   {
+#                     "type": "button",
+#                     "text": {
+#                       "type": "plain_text",
+#                       "text": "View Job"
+#                     },
+#                     "url": "${CIRCLE_BUILD_URL}"
+#                   }
+#                 ]
+#               }
+#             ]
+#           }
+#         event: fail
+
 slack-send-deployment-notification: &slack-send-deployment-notification
   - slack/notify:
       event: pass
@@ -83,6 +119,8 @@ workflows:
             - linter
           context:
             - DATA_GCP_EHP
+            - Slack
+          <<: *slack-fail-post-step
 
 # Recommendation jobs
 # -------------------
@@ -90,18 +128,30 @@ workflows:
       - recommendation-db-install:
           requires:
             - linter
+          context: 
+            - Slack
+          <<: *slack-fail-post-step
 
       - recommendation-db-tests:
           requires:
             - recommendation-db-install
+          context: 
+            - Slack
+          <<: *slack-fail-post-step
 
       - recommendation-api-build:
           requires:
             - linter
+          context: 
+            - Slack
+          <<: *slack-fail-post-step
 
       - recommendation-api-tests:
           requires:
             - recommendation-api-build
+          context: 
+            - Slack
+          <<: *slack-fail-post-step
 
       - api_integration_tests:
           env: dev
@@ -111,6 +161,8 @@ workflows:
             - recommendation-api-tests
           context:
             - DATA_GCP_EHP
+            - Slack
+          <<: *slack-fail-post-step
 
       - build_and_deploy_api:
           name: build_and_deploy_api_staging
@@ -125,6 +177,8 @@ workflows:
           context:
             - DATA_GCP
             - DATA_GCP_EHP
+            - Slack
+          <<: *slack-fail-post-step
 
       - api_integration_tests:
           name: api_integration_tests_staging
@@ -138,6 +192,8 @@ workflows:
                 - master
           context:
             - DATA_GCP_EHP
+            - Slack
+          <<: *slack-fail-post-step
 
       - build_and_deploy_api:
           name: build_and_deploy_api_production
@@ -152,6 +208,8 @@ workflows:
           context:
             - DATA_GCP
             - DATA_GCP_PROD
+            - Slack
+          <<: *slack-fail-post-step
 
       - api_integration_tests:
           name: api_integration_tests_production
@@ -165,16 +223,24 @@ workflows:
                 - production
           context:
             - DATA_GCP_PROD
+            - Slack
+          <<: *slack-fail-post-step
 
 # Composer jobs
 # -------------
       - orchestration-install:
           requires:
             - linter
+          context: 
+            - Slack
+          <<: *slack-fail-post-step
 
       - orchestration-tests:
           requires:
             - orchestration-install
+          context: 
+            - Slack
+          <<: *slack-fail-post-step
 
       - composer-deploy:
           name: staging-composer-deploy
@@ -187,6 +253,8 @@ workflows:
           context:
             - DATA_GCP
             - DATA_GCP_EHP
+            - Slack
+          <<: *slack-fail-post-step
 
       - composer-deploy:
           name: production-composer-deploy
@@ -199,6 +267,8 @@ workflows:
           context:
             - DATA_GCP
             - DATA_GCP_PROD
+            - Slack
+          <<: *slack-fail-post-step
 
 # AI Platform jobs
 # ----------------
@@ -214,6 +284,8 @@ workflows:
           context:
             - DATA_GCP
             - DATA_GCP_EHP
+            - Slack
+          <<: *slack-fail-post-step
 
       - ai-platform-deploy:
           name: production-ai-platform-deploy
@@ -227,6 +299,8 @@ workflows:
           context:
             - DATA_GCP
             - DATA_GCP_PROD
+            - Slack
+          <<: *slack-fail-post-step
 
 # Slack alerts jobs
 # ----------------      

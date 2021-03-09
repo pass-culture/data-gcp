@@ -120,7 +120,6 @@ workflows:
           context:
             - DATA_GCP_EHP
             - Slack
-          <<: *slack-fail-post-step
 
 # Recommendation jobs
 # -------------------
@@ -130,28 +129,24 @@ workflows:
             - linter
           context: 
             - Slack
-          <<: *slack-fail-post-step
 
       - recommendation-db-tests:
           requires:
             - recommendation-db-install
           context: 
             - Slack
-          <<: *slack-fail-post-step
 
       - recommendation-api-build:
           requires:
             - linter
           context: 
             - Slack
-          <<: *slack-fail-post-step
 
       - recommendation-api-tests:
           requires:
             - recommendation-api-build
           context: 
             - Slack
-          <<: *slack-fail-post-step
 
       - api_integration_tests:
           env: dev
@@ -162,7 +157,6 @@ workflows:
           context:
             - DATA_GCP_EHP
             - Slack
-          <<: *slack-fail-post-step
 
       - build_and_deploy_api:
           name: build_and_deploy_api_staging
@@ -178,7 +172,6 @@ workflows:
             - DATA_GCP
             - DATA_GCP_EHP
             - Slack
-          <<: *slack-fail-post-step
 
       - api_integration_tests:
           name: api_integration_tests_staging
@@ -193,7 +186,6 @@ workflows:
           context:
             - DATA_GCP_EHP
             - Slack
-          <<: *slack-fail-post-step
 
       - build_and_deploy_api:
           name: build_and_deploy_api_production
@@ -209,7 +201,6 @@ workflows:
             - DATA_GCP
             - DATA_GCP_PROD
             - Slack
-          <<: *slack-fail-post-step
 
       - api_integration_tests:
           name: api_integration_tests_production
@@ -224,7 +215,6 @@ workflows:
           context:
             - DATA_GCP_PROD
             - Slack
-          <<: *slack-fail-post-step
 
 # Composer jobs
 # -------------
@@ -233,14 +223,12 @@ workflows:
             - linter
           context: 
             - Slack
-          <<: *slack-fail-post-step
 
       - orchestration-tests:
           requires:
             - orchestration-install
           context: 
             - Slack
-          <<: *slack-fail-post-step
 
       - composer-deploy:
           name: staging-composer-deploy
@@ -254,7 +242,6 @@ workflows:
             - DATA_GCP
             - DATA_GCP_EHP
             - Slack
-          <<: *slack-fail-post-step
 
       - composer-deploy:
           name: production-composer-deploy
@@ -268,7 +255,6 @@ workflows:
             - DATA_GCP
             - DATA_GCP_PROD
             - Slack
-          <<: *slack-fail-post-step
 
 # AI Platform jobs
 # ----------------
@@ -285,7 +271,6 @@ workflows:
             - DATA_GCP
             - DATA_GCP_EHP
             - Slack
-          <<: *slack-fail-post-step
 
       - ai-platform-deploy:
           name: production-ai-platform-deploy
@@ -300,7 +285,6 @@ workflows:
             - DATA_GCP
             - DATA_GCP_PROD
             - Slack
-          <<: *slack-fail-post-step
 
 # Slack alerts jobs
 # ----------------      
@@ -387,6 +371,7 @@ jobs:
           command: |
             . venv-lint/bin/activate
             black --exclude="venv-lint" --check .
+    <<: *slack-fail-post-step
 
   analytics_tests:
     executor: python
@@ -417,6 +402,7 @@ jobs:
             . venv-analytics/bin/activate
             export PYTHONPATH=$PYTHONPATH:~/data-gcp:~/data-gcp/orchestration/dags
             pytest tests
+    <<: *slack-fail-post-step
 
   recommendation-api-build:
     executor: python
@@ -440,6 +426,7 @@ jobs:
           root: .
           paths:
             - .
+    <<: *slack-fail-post-step
 
   recommendation-api-tests:
     docker:
@@ -465,6 +452,7 @@ jobs:
             export PYTHONPATH=$PYTHONPATH:~/data-gcp/recommendation/api
             . venv-api/bin/activate
             ./run_tests.sh
+    <<: *slack-fail-post-step
 
   api_integration_tests:
     parameters:
@@ -495,6 +483,7 @@ jobs:
           command: |
             cd recommendation/api/postman
             newman run api_integration_tests.postman_collection.json --environment <<parameters.env>>.postman_environment.json --env-var "api_token=<<parameters.api_token>>"
+    <<: *slack-fail-post-step
 
   orchestration-install:
     executor: python
@@ -518,6 +507,7 @@ jobs:
           root: .
           paths:
             - .
+    <<: *slack-fail-post-step
 
   orchestration-tests:
     executor: python
@@ -536,6 +526,7 @@ jobs:
             . venv-orchestration/bin/activate
             airflow initdb
             pytest tests
+    <<: *slack-fail-post-step
 
   recommendation-db-install:
     executor: python
@@ -560,6 +551,7 @@ jobs:
           paths:
             - .
       - <<: *slack-send-deployment-notification
+    <<: *slack-fail-post-step
 
   recommendation-db-tests:
     docker:
@@ -583,6 +575,7 @@ jobs:
             export PYTHONPATH=$PYTHONPATH:~/data-gcp/recommendation/db
             . venv-db/bin/activate
             ./run_tests.sh
+    <<: *slack-fail-post-step
 
   composer-deploy:
     executor: gcp-sdk
@@ -615,6 +608,7 @@ jobs:
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_REFRESH_MATOMO_DATA} 6 20
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_DATA_ANALYTICS} 6 20
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_DUMP_SCALINGO_MATOMO_HISTORY} 6 20
+    <<: *slack-fail-post-step
 
   ai-platform-deploy:
     executor: gcp-sdk
@@ -649,6 +643,7 @@ jobs:
               --python-version=3.7 \
               --region=$REGION \
               --machine-type=<< parameters.machine_type >>
+    <<: *slack-fail-post-step
 
   build_and_deploy_api:
     docker:
@@ -676,6 +671,7 @@ jobs:
           region: europe-west1
           service-name: << parameters.api-instance-name >>
           unauthenticated: true
+    <<: *slack-fail-post-step
   
   slack-alert:
     docker:

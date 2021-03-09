@@ -7,6 +7,38 @@ orbs:
 #  SLACK 
 ###################
 
+slack-fail-post-step: &slack-fail-post-step
+  post-steps:
+    - slack/notify:
+        event: fail
+        channel: alertes_data
+        custom: |
+          {
+            "blocks": [
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "Test en cours"
+                },
+              },
+              {
+                "type": "actions",
+                "elements": [
+                  {
+                    "type": "button",
+                    "text": {
+                      "type": "plain_text",
+                      "text": "View job",
+                      "emoji": true
+                    },
+                    "url": "$CIRCLE_BUILD_URL"
+                  }
+                ]
+              }
+            ]
+          }
+
 slack-send-deployment-notification: &slack-send-deployment-notification
   - slack/notify:
       event: pass
@@ -228,6 +260,41 @@ workflows:
           context:
             - DATA_GCP
             - DATA_GCP_PROD
+      
+      - last-job:
+          name: last-job-production
+          context: [slack]
+          filters:
+            branches:
+              only:
+                - production
+          requires:
+            - production-ai-platform-deploy
+            - production-composer-deploy
+            - api_integration_tests_production
+
+      - last-job:
+          name: last-job-staging
+          context: [slack]
+          filters:
+            branches:
+              only:
+                - master
+          requires:
+            - staging-ai-platform-deploy
+            - staging-composer-deploy
+            - api_integration_tests_staging
+
+      - last-job:
+          name: last-job-test
+          context: [slack]
+          filters:
+            branches:
+              only:
+                - PC_7333_add_slack_notification
+          requires:
+            - recommendation-integration-tests-dev
+            - analytics_tests
 
       # - slack-test:
       #     context: Slack
@@ -567,3 +634,15 @@ jobs:
           region: europe-west1
           service-name: << parameters.api-instance-name >>
           unauthenticated: true
+  
+  last-job:
+    docker:
+      - image: cimg/base:stable
+      
+    steps:
+      - run:
+          name: Success
+          command: |
+            exit 0
+      
+      - <<: *slack-send-deployment-notification

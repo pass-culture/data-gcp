@@ -10,7 +10,9 @@ orbs:
 slack-fail-post-step: &slack-fail-post-step
   post-steps:
     - slack/notify:
-        custom: |
+      event: fail
+      channel: alertes_data
+      custom: |
           {
             "text": "",
             "blocks": [
@@ -36,7 +38,6 @@ slack-fail-post-step: &slack-fail-post-step
               }
             ]
           }
-        event: fail
 
 slack-send-deployment-notification: &slack-send-deployment-notification
   - slack/notify:
@@ -68,35 +69,7 @@ slack-send-deployment-notification: &slack-send-deployment-notification
             }
           ]
         }
-  - slack/notify:
-      event: fail
-      channel: alertes_data
-      custom: |
-        {
-          "blocks": [
-            {
-              "type": "section",
-              "text": {
-                "type": "mrkdwn",
-                "text": ":warning: Le déploiement du commit ${CIRCLE_SHA1} depuis la branche ${CIRCLE_BRANCH} a échoué :sanglot:""
-              }
-            },
-            {
-              "type": "actions",
-              "elements": [
-                {
-                  "type": "button",
-                  "text": {
-                    "type": "plain_text",
-                    "text": "View job",
-                    "emoji": true
-                  },
-                  "url": "$CIRCLE_BUILD_URL"
-                }
-              ]
-            }
-          ]
-        }
+
 
 ###################
 #  WORKFLOWS
@@ -434,7 +407,6 @@ jobs:
           root: .
           paths:
             - .
-      - <<: *slack-send-deployment-notification
     
 
   recommendation-api-tests:
@@ -559,7 +531,6 @@ jobs:
           root: .
           paths:
             - .
-      - <<: *slack-send-deployment-notification
     
 
   recommendation-db-tests:

@@ -297,15 +297,6 @@ workflows:
             - api_integration_tests_staging
             - recommendation-integration-tests-dev
 
-      - slack-alert:
-          name: slack-alert-test
-          context: Slack
-          filters:
-            branches:
-              only:
-                - PC_7333_add_slack_notification
-          requires:
-            - recommendation-db-install
 
 ###################
 #  EXECUTORS

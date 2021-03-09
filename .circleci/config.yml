@@ -610,6 +610,7 @@ jobs:
     steps:
       - run:
           name: Success
+          when: always
           command: |
             exit 0
       - <<: *slack-send-deployment-notification

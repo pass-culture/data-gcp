@@ -12,7 +12,7 @@ slack-fail-post-step: &slack-fail-post-step
     - slack/notify:
         event: fail
         channel: alertes_data
-        branch_pattern: "^(master|production|PC_7333_add_slack_notification)"
+        branch_pattern: "^(master|production)"
         custom: |
           {
             "text": "",
@@ -87,7 +87,7 @@ workflows:
           requires:
             - linter
           context:
-            # - DATA_GCP_EHP
+            - DATA_GCP_EHP
             - Slack
           <<: *slack-fail-post-step
 

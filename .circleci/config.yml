@@ -10,9 +10,9 @@ orbs:
 slack-fail-post-step: &slack-fail-post-step
   post-steps:
     - slack/notify:
-      event: fail
-      channel: alertes_data
-      custom: |
+        event: fail
+        channel: alertes_data
+        custom: |
           {
             "text": "",
             "blocks": [

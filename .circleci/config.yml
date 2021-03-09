@@ -294,7 +294,6 @@ workflows:
                 - PC_7333_add_slack_notification
           requires:
             - recommendation-integration-tests-dev
-            - analytics_tests
 
       # - slack-test:
       #     context: Slack

@@ -263,7 +263,7 @@ workflows:
       
       - last-job:
           name: last-job-production
-          context: [slack]
+          context: Slack
           filters:
             branches:
               only:
@@ -275,7 +275,7 @@ workflows:
 
       - last-job:
           name: last-job-staging
-          context: [slack]
+          context: Slack
           filters:
             branches:
               only:
@@ -287,7 +287,7 @@ workflows:
 
       - last-job:
           name: last-job-test
-          context: [slack]
+          context: Slack
           filters:
             branches:
               only:

@@ -81,6 +81,7 @@ def create_materialized_enriched_booking_view(dataset, table_prefix=""):
                 booking.booking_is_cancelled,
                 booking.booking_is_used,
                 booking.booking_cancellation_date,
+                booking.booking_cancellation_reason,
                 stock.stock_beginning_date,
                 stock.stock_id,
                 offer.offer_id,

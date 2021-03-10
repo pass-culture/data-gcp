@@ -4,7 +4,7 @@ orbs:
   slack: circleci/slack@4.2
 
 ###################
-#  SLACK 
+#  SLACK
 ###################
 
 slack-fail-post-step: &slack-fail-post-step
@@ -97,28 +97,28 @@ workflows:
       - recommendation-db-install:
           requires:
             - linter
-          context: 
+          context:
             - Slack
           <<: *slack-fail-post-step
 
       - recommendation-db-tests:
           requires:
             - recommendation-db-install
-          context: 
+          context:
             - Slack
           <<: *slack-fail-post-step
 
       - recommendation-api-build:
           requires:
             - linter
-          context: 
+          context:
             - Slack
           <<: *slack-fail-post-step
 
       - recommendation-api-tests:
           requires:
             - recommendation-api-build
-          context: 
+          context:
             - Slack
           <<: *slack-fail-post-step
 
@@ -200,14 +200,14 @@ workflows:
       - orchestration-install:
           requires:
             - linter
-          context: 
+          context:
             - Slack
           <<: *slack-fail-post-step
 
       - orchestration-tests:
           requires:
             - orchestration-install
-          context: 
+          context:
             - Slack
           <<: *slack-fail-post-step
 
@@ -272,7 +272,7 @@ workflows:
           <<: *slack-fail-post-step
 
 # Slack alerts jobs
-# ----------------      
+# ----------------
       - slack-alert:
           name: slack-alert-production
           context: Slack
@@ -347,7 +347,7 @@ jobs:
           command: |
             . venv-lint/bin/activate
             black --exclude="venv-lint" --check .
-    
+
 
   analytics_tests:
     executor: python
@@ -378,7 +378,7 @@ jobs:
             . venv-analytics/bin/activate
             export PYTHONPATH=$PYTHONPATH:~/data-gcp:~/data-gcp/orchestration/dags
             pytest tests
-    
+
 
   recommendation-api-build:
     executor: python
@@ -402,7 +402,7 @@ jobs:
           root: .
           paths:
             - .
-    
+
 
   recommendation-api-tests:
     docker:
@@ -428,7 +428,7 @@ jobs:
             export PYTHONPATH=$PYTHONPATH:~/data-gcp/recommendation/api
             . venv-api/bin/activate
             ./run_tests.sh
-    
+
 
   api_integration_tests:
     parameters:
@@ -459,7 +459,7 @@ jobs:
           command: |
             cd recommendation/api/postman
             newman run api_integration_tests.postman_collection.json --environment <<parameters.env>>.postman_environment.json --env-var "api_token=<<parameters.api_token>>"
-    
+
 
   orchestration-install:
     executor: python
@@ -483,7 +483,7 @@ jobs:
           root: .
           paths:
             - .
-    
+
 
   orchestration-tests:
     executor: python
@@ -502,7 +502,7 @@ jobs:
             . venv-orchestration/bin/activate
             airflow initdb
             pytest tests
-    
+
 
   recommendation-db-install:
     executor: python
@@ -526,7 +526,7 @@ jobs:
           root: .
           paths:
             - .
-    
+
 
   recommendation-db-tests:
     docker:
@@ -550,7 +550,7 @@ jobs:
             export PYTHONPATH=$PYTHONPATH:~/data-gcp/recommendation/db
             . venv-db/bin/activate
             ./run_tests.sh
-    
+
 
   composer-deploy:
     executor: gcp-sdk
@@ -560,6 +560,7 @@ jobs:
       DAG_REFRESH_MATOMO_DATA: dump_scalingo_matomo_refresh_v1
       DAG_IMPORT_DATA_ANALYTICS: import_data_analytics_v6
       DAG_DUMP_SCALINGO_MATOMO_HISTORY: dump_scalingo_matomo_history_v6
+      DAG_IMPORT_FIREBASE_DATA: import_firebase_data_v1
     working_directory: ~/data-gcp/orchestration
     steps:
       - checkout:
@@ -583,7 +584,7 @@ jobs:
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_REFRESH_MATOMO_DATA} 6 20
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_DATA_ANALYTICS} 6 20
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_DUMP_SCALINGO_MATOMO_HISTORY} 6 20
-    
+            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_FIREBASE_DATA} 6 20
 
   ai-platform-deploy:
     executor: gcp-sdk
@@ -618,7 +619,7 @@ jobs:
               --python-version=3.7 \
               --region=$REGION \
               --machine-type=<< parameters.machine_type >>
-    
+
 
   build_and_deploy_api:
     docker:
@@ -646,12 +647,12 @@ jobs:
           region: europe-west1
           service-name: << parameters.api-instance-name >>
           unauthenticated: true
-    
-  
+
+
   slack-alert:
     docker:
       - image: cimg/base:stable
-      
+
     steps:
       - run:
           name: Success

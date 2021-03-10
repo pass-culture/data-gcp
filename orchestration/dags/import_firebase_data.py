@@ -48,15 +48,18 @@ env_switcher = BranchPythonOperator(
 
 copy_table = BigQueryOperator(
     task_id=f"copy_table",
-    sql=f"SELECT * FROM passculture-android-natif.analytics_249283927.events_" + EXECUTION_DATE,
+    sql=f"SELECT * FROM passculture-android-natif.analytics_249283927.events_"
+    + EXECUTION_DATE,
     use_legacy_sql=False,
-    destination_dataset_table=f"passculture-data-prod:firebase_raw_data.events_" + EXECUTION_DATE,
+    destination_dataset_table=f"passculture-data-prod:firebase_raw_data.events_"
+    + EXECUTION_DATE,
     write_disposition="WRITE_EMPTY",
     dag=dag,
 )
 delete_table = BigQueryTableDeleteOperator(
     task_id=f"delete_table",
-    deletion_dataset_table=f"passculture-android-natif:analytics_249283927.events_" + EXECUTION_DATE,
+    deletion_dataset_table=f"passculture-android-natif:analytics_249283927.events_"
+    + EXECUTION_DATE,
     ignore_if_missing=True,
     dag=dag,
 )
@@ -69,8 +72,10 @@ copy_table_to_env = BigQueryOperator(
         SELECT * FROM passculture-data-prod.firebase_raw_data.events_{EXECUTION_DATE} WHERE app_info.id IN ({", ".join([f"'{app_info_id}'" for app_info_id in app_info_id_list])})
         """,
     use_legacy_sql=False,
-    destination_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_RAW_DATASET}.events_" + EXECUTION_DATE,
+    destination_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_RAW_DATASET}.events_"
+    + EXECUTION_DATE,
     write_disposition="WRITE_EMPTY",
+    trigger_rule="none_failed",
     dag=dag,
 )
 

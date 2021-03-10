@@ -620,7 +620,9 @@ ENRICHED_OFFERER_DATA_EXPECTED = [
     "current_year_revenue",
 ]
 
-# enriched_booking_data => NO DATA (only structure can be tested)
+# enriched_booking_data => information for one booking not cancelled and used,
+# booking is linked with user, venue, offerer and paiement
+# venue is linked with venue label and type
 ENRICHED_BOOKING_DATA_INPUT = {
     "booking": [
         {
@@ -653,7 +655,7 @@ ENRICHED_BOOKING_DATA_INPUT = {
     "offer": [
         {
             "offer_id": "2",
-            "offer_type": "ThingType.AUDIOVISUEL",
+            "offer_type": "ThingType.INSTRUMENT",
             "offer_name": "An Awesome Offer",
             "venue_id": "8",
         }
@@ -662,6 +664,7 @@ ENRICHED_BOOKING_DATA_INPUT = {
         {
             "venue_id": "8",
             "venue_public_name": "My Wonderful Venue",
+            "venue_name": "My Wonderful Venue",
             "venue_label_id": "15",
             "venue_department_code": 78,
             "venue_managing_offerer_id": "2",
@@ -680,13 +683,18 @@ ENRICHED_BOOKING_DATA_INPUT = {
     "venue_label": [{"id": "15", "label": "label"}],
 }
 
+# Enriched booking data return data linked to the booking like booking data, offer data, offerer and venue data
+# booking has a payment so it is reimbursed
+# booking is not cancelled so cancel informations are none
+# Offer type is ThingType.Instrument and venue name is not Offre numérique so event is false, digital_good is false and physical good is true
 ENRICHED_BOOKING_DATA_EXPECTED = [
     {
-        "booking_amount": 3,
+        "booking_amount": Decimal("3"),
         "booking_cancellation_date": None,
+        "booking_cancellation_reason": None,
         "booking_creation_date": datetime.now().replace(microsecond=0),
         "booking_id": "1",
-        "booking_intermediary_amount": 3,
+        "booking_intermediary_amount": Decimal("3"),
         "booking_is_cancelled": False,
         "booking_is_used": True,
         "booking_quantity": 1,
@@ -695,10 +703,10 @@ ENRICHED_BOOKING_DATA_EXPECTED = [
         "event": False,
         "offer_id": "2",
         "offer_name": "An Awesome Offer",
-        "offer_type": "ThingType.AUDIOVISUEL",
+        "offer_type": "ThingType.INSTRUMENT",
         "offerer_id": "2",
         "offerer_name": "Offerer",
-        "physical_goods": False,
+        "physical_goods": True,
         "reimbursed": True,
         "same_category_booking_rank": 1,
         "stock_beginning_date": datetime.now().replace(microsecond=0),

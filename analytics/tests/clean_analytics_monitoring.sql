@@ -454,6 +454,22 @@ SELECT
   WHERE booking_cancellation_date IS NULL
   AND booking_creation_date <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00") AS DATETIME)
 ) as count_null_in_cancellationDate_big_query
+UNION ALL
+SELECT
+(
+  SELECT "booking_cancellation_reason"
+),
+(
+  SELECT count(id) FROM EXTERNAL_QUERY('passculture-metier-prod.europe-west1.metier-pcapi-production-connection',
+  'SELECT id, "dateCreated" as date_created FROM public.booking WHERE "cancellationReason" IS NULL')
+  WHERE date_created <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00")
+  AS DATETIME)
+) as count_null_in_cancellation_reason_csql,
+(
+  SELECT count(booking_id) FROM `passculture-data-prod.analytics_prod.applicative_database_booking`
+  WHERE booking_cancellation_reason IS NULL
+  AND booking_creation_date <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00") AS DATETIME)
+) as count_null_in_cancellation_reason_big_query
 
 
 

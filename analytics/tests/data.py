@@ -642,6 +642,7 @@ ENRICHED_BOOKING_DATA_EXPECTED = [
     "booking_is_cancelled",
     "booking_is_used",
     "booking_cancellation_date",
+    "booking_cancellation_reason",
     "stock_beginning_date",
     "stock_id",
     "offer_id",

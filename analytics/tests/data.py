@@ -620,49 +620,104 @@ ENRICHED_OFFERER_DATA_EXPECTED = [
     "current_year_revenue",
 ]
 
-# enriched_booking_data => NO DATA (only structure can be tested)
+# enriched_booking_data => information for one booking not cancelled and used,
+# booking is linked with user, venue, offerer and paiement
+# venue is linked with venue label and type
 ENRICHED_BOOKING_DATA_INPUT = {
-    "booking": [],
-    "payment": [],
-    "payment_status": [],
-    "stock": [],
-    "offer": [],
-    "venue": [],
-    "offerer": [],
-    "user": [],
-    "venue_type": [],
-    "venue_label": [],
+    "booking": [
+        {
+            "booking_id": "1",
+            "booking_amount": 3,
+            "booking_quantity": 1,
+            "user_id": "13",
+            "booking_creation_date": datetime.now().replace(microsecond=0),
+            "stock_id": "4",
+            "booking_is_cancelled": False,
+            "booking_is_used": True,
+            "booking_cancellation_date": None,
+        }
+    ],
+    "payment": [
+        {
+            "id": "1",
+            "bookingId": "1",
+            "author": "michel",
+        }
+    ],
+    "payment_status": [{"id": "1", "paymentId": "1", "status": "SENT"}],
+    "stock": [
+        {
+            "stock_id": "4",
+            "offer_id": "2",
+            "stock_beginning_date": datetime.now().replace(microsecond=0),
+        }
+    ],
+    "offer": [
+        {
+            "offer_id": "2",
+            "offer_type": "ThingType.INSTRUMENT",
+            "offer_name": "An Awesome Offer",
+            "venue_id": "8",
+        }
+    ],
+    "venue": [
+        {
+            "venue_id": "8",
+            "venue_public_name": "My Wonderful Venue",
+            "venue_name": "My Wonderful Venue",
+            "venue_label_id": "15",
+            "venue_department_code": 78,
+            "venue_managing_offerer_id": "2",
+            "venue_type_id": "1",
+        }
+    ],
+    "offerer": [{"offerer_id": "2", "offerer_name": "Offerer"}],
+    "user": [
+        {
+            "user_id": "13",
+            "user_department_code": 68,
+            "user_creation_date": datetime.now().replace(microsecond=0),
+        }
+    ],
+    "venue_type": [{"id": "1", "label": "label"}],
+    "venue_label": [{"id": "15", "label": "label"}],
 }
 
+# Enriched booking data return data linked to the booking like booking data, offer data, offerer and venue data
+# booking has a payment so it is reimbursed
+# booking is not cancelled so cancel informations are none
+# Offer type is ThingType.Instrument and venue name is not Offre numérique so event is false, digital_good is false and physical good is true
 ENRICHED_BOOKING_DATA_EXPECTED = [
-    "booking_id",
-    "booking_creation_date",
-    "booking_quantity",
-    "booking_amount",
-    "booking_is_cancelled",
-    "booking_is_used",
-    "booking_cancellation_date",
-    "booking_cancellation_reason",
-    "stock_beginning_date",
-    "stock_id",
-    "offer_id",
-    "offer_type",
-    "offer_name",
-    "venue_name",
-    "venue_label_name",
-    "venue_type_name",
-    "venue_id",
-    "venue_department_code",
-    "offerer_id",
-    "offerer_name",
-    "user_id",
-    "user_department_code",
-    "user_creation_date",
-    "booking_intermediary_amount",
-    "reimbursed",
-    "physical_goods",
-    "digital_goods",
-    "event",
-    "booking_rank",
-    "same_category_booking_rank",
+    {
+        "booking_amount": Decimal("3"),
+        "booking_cancellation_date": None,
+        "booking_cancellation_reason": None,
+        "booking_creation_date": datetime.now().replace(microsecond=0),
+        "booking_id": "1",
+        "booking_intermediary_amount": Decimal("3"),
+        "booking_is_cancelled": False,
+        "booking_is_used": True,
+        "booking_quantity": 1,
+        "booking_rank": 1,
+        "digital_goods": False,
+        "event": False,
+        "offer_id": "2",
+        "offer_name": "An Awesome Offer",
+        "offer_type": "ThingType.INSTRUMENT",
+        "offerer_id": "2",
+        "offerer_name": "Offerer",
+        "physical_goods": True,
+        "reimbursed": True,
+        "same_category_booking_rank": 1,
+        "stock_beginning_date": datetime.now().replace(microsecond=0),
+        "stock_id": "4",
+        "user_creation_date": datetime.now().replace(microsecond=0),
+        "user_department_code": "68",
+        "user_id": "13",
+        "venue_department_code": "78",
+        "venue_id": "8",
+        "venue_label_name": "label",
+        "venue_name": "My Wonderful Venue",
+        "venue_type_name": "label",
+    }
 ]

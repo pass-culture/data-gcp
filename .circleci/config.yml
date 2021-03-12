@@ -561,6 +561,7 @@ jobs:
       DAG_IMPORT_DATA_ANALYTICS: import_data_analytics_v6
       DAG_DUMP_SCALINGO_MATOMO_HISTORY: dump_scalingo_matomo_history_v6
       DAG_IMPORT_FIREBASE_DATA: import_firebase_data_v1
+      DAG_IMPORT_TYPEFORM: import_typeform_v1
     working_directory: ~/data-gcp/orchestration
     steps:
       - checkout:
@@ -585,6 +586,7 @@ jobs:
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_DATA_ANALYTICS} 6 20
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_DUMP_SCALINGO_MATOMO_HISTORY} 6 20
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_FIREBASE_DATA} 6 20
+            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_TYPEFORM} 6 20
 
   ai-platform-deploy:
     executor: gcp-sdk

@@ -1,0 +1,6 @@
+pandas==1.1.4
+tqdm==4.58.0
+urllib3==1.26.2
+requests==2.25.0
+gcsfs==0.7.2
+google-cloud-secret-manager==2.2.0

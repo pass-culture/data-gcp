@@ -3,6 +3,7 @@ from urllib.parse import urlparse, parse_qs
 import requests
 import pandas as pd
 from tqdm import tqdm
+import gcsfs
 
 
 class ApiQueryError(Exception):
@@ -45,17 +46,18 @@ class QPIDownloader:
 
     """
 
-    def __init__(self, api_key, form_id, answers_file_name, questions_file_name):
+    def __init__(self, api_key, form_id, answers_file_name, questions_file_name, after):
         self.api_key = api_key
         self.form_id = form_id
         self.answers_file_name = answers_file_name
         self.questions_file_name = questions_file_name
+        self.after = after
 
     def run(self):
         """ Main method : used to launch the download. """
 
         print("Fetching the answers...")
-        responses = self.query_all()
+        responses = self.query_all(after=self.after)
         print(f"Got {len(responses)} answers !")
 
         print("Cleaning the answers...")
@@ -63,13 +65,16 @@ class QPIDownloader:
         print(f"Cleaned {len(clean_responses)} responses !")
 
         print(f"Saving the answers to {self.answers_file_name}...")
-        with open(self.answers_file_name, "w") as json_file:
+        fs = gcsfs.GCSFileSystem(project="passculture-data-ehp")
+        with fs.open(self.answers_file_name, "w") as json_file:
             for item in clean_responses:
                 json_file.write(json.dumps(item, ensure_ascii=False) + "\n")
 
         print(f"Now getting and saving the questions to {self.questions_file_name}")
         questions = self.get_form_questions()
-        questions.to_csv(self.questions_file_name, index=False)
+        questions_csv = questions.to_csv(
+            "gcs://" + self.questions_file_name, index=False
+        )
 
         print("Done !")
 
@@ -84,8 +89,8 @@ class QPIDownloader:
         nb_items_per_page : int, default=1000
             Number of items in each page
 
-        after : string, default=None
-            Limit request to responses submitted after the specified token.
+        before : string, default=None
+            Limit request to responses submitted before a request token.
 
         Returns
         -------
@@ -101,7 +106,7 @@ class QPIDownloader:
         )
         if result.status_code != 200:
             raise ApiQueryError(
-                f"Error {result.status_code} when querying typeform API on {self.form_id} form."
+                f"Error {result.status_code} when querying typeform API on {self.form_id} form. Request was: {request_url}"
             )
         return result
 
@@ -114,8 +119,6 @@ class QPIDownloader:
         nb_items_per_page : int, default=1000
             The number of items per page chosen to query typeform responses.
 
-        after : string, default=None
-            Limit request to responses submitted after the specified token.
         Returns
         -------
         items : List[dict]
@@ -155,11 +158,14 @@ class QPIDownloader:
         for result in results:
             user_data = {}
             try:
-                user_id = parse_qs(urlparse(result["metadata"]["referer"]).query)[
-                    "userId"
-                ][0]
+                user_id = result["hidden"]["userid"]
             except:
-                user_id = None
+                try:
+                    user_id = parse_qs(urlparse(result["metadata"]["referer"]).query)[
+                        "userId"
+                    ][0]
+                except:
+                    user_id = None
 
             user_data.update(
                 {
@@ -241,9 +247,7 @@ class QPIDownloader:
         questions = pd.DataFrame(form.get("fields")).rename(
             columns={"id": "question_id"}
         )
-        questions.title = questions.title.apply(
-            lambda x: x.replace("\n", " ").replace("  ", " ")
-        )
+
         questions["choices"] = questions.apply(
             lambda row: [c["label"] for c in row["properties"]["choices"]], axis=1
         )

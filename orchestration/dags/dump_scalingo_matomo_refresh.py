@@ -320,8 +320,6 @@ SELECT
     idvisit,
     idsite,
     idvisitor,
-    config_id,
-    location_ip,
     user_id,
     visit_first_action_time,
     visit_last_action_time,
@@ -369,6 +367,7 @@ FROM
 preprocess_log_visit_config_query = f"""
 SELECT
     idvisit,
+    config_id,
     config_browser_engine as browser_engine,
     config_browser_name as browser_name,
     config_browser_version as browser_version,
@@ -392,16 +391,18 @@ FROM
     {BIGQUERY_RAW_DATASET}.log_visit
 """
 
+additional_column = ", location_provider as provider" if ENV != "dev" else ""
+
 preprocess_log_visit_location_query = f"""
 SELECT 
     idvisit,
+    location_ip as ip,
     location_city as city,
     location_country as country,
     location_latitude as latitude,
     location_longitude as longitude,
     location_region as region,
-    location_browser_lang as browser_lang,
-    location_provider as provider
+    location_browser_lang as browser_lang{additional_column}
 FROM
     {BIGQUERY_RAW_DATASET}.log_visit
 """
@@ -593,8 +594,8 @@ define_tasks_end = PythonOperator(
 
 end_dag = DummyOperator(task_id="end_dag", dag=dag)
 
+end_import >> preprocess_log_visit_tasks >> end_preprocess
 end_import >> [
-    preprocess_log_visit_tasks,
     preprocess_log_action_task,
     preprocess_log_link_visit_action_task,
     copy_log_conversion_task,

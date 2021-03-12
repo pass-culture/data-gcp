@@ -16,6 +16,8 @@ Repo pour la team data sur GCP
 +-- analytics : l'ensemble du code (utilitaires, configuration, scripts) pour interagir avec BigQuery
 |
 +-- orchestration : les dags pour Cloud Composer
+|
++-- additional_data_sources : Les scripts pour importer des sources de données externes (Typeform ...)
 ```
 
 ## INSTALL

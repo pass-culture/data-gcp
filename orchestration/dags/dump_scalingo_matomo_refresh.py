@@ -318,16 +318,30 @@ for table in TABLE_DATA:
 preprocess_log_visit_query = f"""
 SELECT
     idvisit,
-    visit_last_action_time,
+    idsite,
+    idvisitor,
+    config_id,
+    location_ip,
     user_id,
     visit_first_action_time,
-    visitor_days_since_first,
-    visitor_returning,
-    visitor_count_visits,
+    visit_last_action_time,
+    visit_goal_buyer,
+    visit_goal_converted,
     visit_entry_idaction_name,
     visit_entry_idaction_url,
     visit_exit_idaction_name,
     visit_exit_idaction_url,
+    visit_total_actions,
+    visit_total_interactions,
+    visit_total_searches,
+    visit_total_events,
+    visit_total_time,
+    visitor_days_since_first,
+    visitor_days_since_last,
+    visitor_days_since_order,
+    visitor_returning,
+    visitor_count_visits,
+    visitor_localtime,
     CASE
         WHEN REGEXP_CONTAINS(user_id, r"^ANONYMOUS ")
             THEN NULL
@@ -341,14 +355,100 @@ FROM
     {BIGQUERY_RAW_DATASET}.log_visit
 """
 
-preprocess_log_visit_task = BigQueryOperator(
-    task_id="preprocess_log_visit",
-    sql=preprocess_log_visit_query,
-    destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.log_visit_preprocessed",
-    write_disposition="WRITE_TRUNCATE",
-    use_legacy_sql=False,
-    dag=dag,
-)
+preprocess_log_visit_referer_query = f"""
+SELECT 
+    idvisit,
+    referer_keyword as keyword,
+    referer_name as name,
+    referer_type as type,
+    referer_url as url 
+FROM
+    {BIGQUERY_RAW_DATASET}.log_visit
+"""
+
+preprocess_log_visit_config_query = f"""
+SELECT
+    idvisit,
+    config_browser_engine as browser_engine,
+    config_browser_name as browser_name,
+    config_browser_version as browser_version,
+    config_device_brand as device_brand,
+    config_device_model as device_model,
+    config_device_type as device_type,
+    config_os as os,
+    config_os_version as os_version,
+    config_resolution as resolution,
+    config_cookie as cookie,
+    config_director as director,
+    config_flash as flash,
+    config_gears as gears,
+    config_java as java,
+    config_pdf as pdf,
+    config_quicktime as quicktime,
+    config_realplayer as realplayer,
+    config_silverlight as silverlight,
+    config_windowsmedia as windowsmedia
+FROM
+    {BIGQUERY_RAW_DATASET}.log_visit
+"""
+
+preprocess_log_visit_location_query = f"""
+SELECT 
+    idvisit,
+    location_city as city,
+    location_country as country,
+    location_latitude as latitude,
+    location_longitude as longitude,
+    location_region as region,
+    location_browser_lang as browser_lang,
+    location_provider as provider
+FROM
+    {BIGQUERY_RAW_DATASET}.log_visit
+"""
+
+preprocess_log_visit_campaign_query = f"""
+SELECT
+    idvisit,
+    campaign_content as content,
+    campaign_id as id,
+    campaign_keyword as keyword,
+    campaign_medium as medium,
+    campaign_name as name,
+    campaign_source as source
+FROM
+    {BIGQUERY_RAW_DATASET}.log_visit
+"""
+
+preprocess_log_visit_custom_var_query = f"""
+SELECT
+idvisit,
+custom_var_k1,
+custom_var_v1,
+FROM
+    {BIGQUERY_RAW_DATASET}.log_visit
+"""
+
+preprocess_log_visit_tasks = []
+
+column_group_queries = {
+    "": preprocess_log_visit_query,
+    "_referer": preprocess_log_visit_referer_query,
+    "_config": preprocess_log_visit_config_query,
+    "_location": preprocess_log_visit_location_query,
+    "_campaign": preprocess_log_visit_campaign_query,
+    "_custom_var": preprocess_log_visit_custom_var_query,
+}
+
+for column_group in column_group_queries:
+    preprocess_log_visit_column_group_task = BigQueryOperator(
+        task_id=f"preprocess_log_visit{column_group}",
+        sql=column_group_queries[column_group],
+        destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.matomo_visits{column_group}",
+        write_disposition="WRITE_TRUNCATE",
+        use_legacy_sql=False,
+        dag=dag,
+    )
+    preprocess_log_visit_tasks.append(preprocess_log_visit_column_group_task)
 
 preprocess_log_action_query = f"""
 WITH filtered AS (
@@ -494,7 +594,7 @@ define_tasks_end = PythonOperator(
 end_dag = DummyOperator(task_id="end_dag", dag=dag)
 
 end_import >> [
-    preprocess_log_visit_task,
+    preprocess_log_visit_tasks,
     preprocess_log_action_task,
     preprocess_log_link_visit_action_task,
     copy_log_conversion_task,

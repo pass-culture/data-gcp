@@ -13,7 +13,7 @@ Pour modifier ces paramètres il faut **apply** le nouveau code terraform, puis 
 ### Pour déployer une nouvelle version du code:
 
 ```
-cd additional-data-source/function-source
+cd additional-data-sources/function-source
 
 gcloud functions deploy FUNCTION_NAME --region "europe-west1"  --entry-point run --source .
 ```

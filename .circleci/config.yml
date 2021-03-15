@@ -271,6 +271,53 @@ workflows:
             - Slack
           <<: *slack-fail-post-step
 
+# Cloud Function jobs
+# -------------------
+      - cloud-function-deploy:
+          name: cloud-function-deploy-dev
+          cloud-function-name: qpi_import_dev
+          requires:
+            - linter
+          filters:
+            branches:
+              only:
+                - pc-7084-import-typeform
+          context:
+            - DATA_GCP
+            - DATA_GCP_EHP
+            - Slack
+          <<: *slack-fail-post-step
+
+      - cloud-function-deploy:
+          name: cloud-function-deploy-stg
+          cloud-function-name: qpi_import_stg
+          requires:
+            - linter
+          filters:
+            branches:
+              only:
+                - master
+          context:
+            - DATA_GCP
+            - DATA_GCP_EHP
+            - Slack
+          <<: *slack-fail-post-step
+
+      - cloud-function-deploy:
+          name: cloud-function-deploy-prod
+          cloud-function-name: qpi_import_prod
+          requires:
+            - linter
+          filters:
+            branches:
+              only:
+                - production
+          context:
+            - DATA_GCP
+            - DATA_GCP_PROD
+            - Slack
+          <<: *slack-fail-post-step
+
 # Slack alerts jobs
 # ----------------
       - slack-alert:
@@ -654,7 +701,6 @@ jobs:
   slack-alert:
     docker:
       - image: cimg/base:stable
-
     steps:
       - run:
           name: Success
@@ -662,3 +708,24 @@ jobs:
           command: |
             exit 0
       - <<: *slack-send-deployment-notification
+
+  cloud-function-deploy:
+    executor: gcp-sdk
+    parameters:
+      cloud-function-name:
+        description: "The cloud function name"
+        type: string
+    working_directory: ~/data-gcp
+    steps:
+      - checkout:
+          path: ~/data-gcp
+      - run:
+          name: Connect to GCP
+          command: |
+            echo $GCLOUD_SERVICE_KEY | gcloud auth activate-service-account --key-file=-
+            gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
+      - run:
+          name: Deploy the function
+          command: |
+            cd additional_data_sources/function-source
+            gcloud functions deploy << parameters.cloud-function-name >> --region "europe-west1"  --entry-point run --source .

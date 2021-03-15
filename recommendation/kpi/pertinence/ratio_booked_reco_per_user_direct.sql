@@ -5,7 +5,7 @@ WITH scrolls AS (
         server_time,
 	    user_id_dehumanized
 	FROM `passculture-data-prod.clean_prod.log_link_visit_action_preprocessed` llvap
-	INNER JOIN `passculture-data-prod.clean_prod.log_visit_preprocessed` lvp
+	INNER JOIN `passculture-data-prod.clean_prod.matomo_visits` lvp
 	    ON lvp.idvisit = llvap.idvisit
 	WHERE llvap.idaction_event_action = 4394836                 --4394836 = AllModulesSeen
 	AND (idaction_url=4394835 OR idaction_url=150307)           --4394835 & 150307 = page d'accueil
@@ -17,7 +17,7 @@ WITH scrolls AS (
         lap.tracker_data.dehumanize_offer_id AS offer_id,
         llvap.server_time
     FROM `passculture-data-prod.clean_prod.log_link_visit_action_preprocessed` AS llvap
-    INNER JOIN `passculture-data-prod.clean_prod.log_visit_preprocessed` AS lvp
+    INNER JOIN `passculture-data-prod.clean_prod.matomo_visits` AS lvp
         ON lvp.idvisit = llvap.idvisit
     INNER JOIN `passculture-data-prod.clean_prod.log_action_preprocessed` AS lap
         ON llvap.idaction_name = lap.raw_data.idaction

@@ -7,7 +7,7 @@ WITH booked_offers AS (
         llvap.idaction_url,
         lvp.user_id_dehumanized
     FROM `passculture-data-prod.clean_prod.log_link_visit_action_preprocessed` AS llvap
-    INNER JOIN `passculture-data-prod.clean_prod.log_visit_preprocessed` AS lvp
+    INNER JOIN `passculture-data-prod.clean_prod.matomo_visits` AS lvp
         ON lvp.idvisit = llvap.idvisit
     WHERE idaction_event_action = 6957147                                 -- 6957147: BookOfferClick_FromHomepage
     AND llvap.server_time >= PARSE_TIMESTAMP('%Y%m%d',@DS_START_DATE)     -- Dates à définir sur la dashboard

@@ -6,13 +6,23 @@ SELECT (
           ) WHERE date_created <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00") AS DATETIME)
   ) as count_booking_from_csql,
   (
-    SELECT count(booking_id) FROM `passculture-data-prod.analytics_prod.enriched_booking_data`
-    WHERE booking_creation_date <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00") AS DATETIME)
-  ) as count_enriched_booking_from_big_query_analytics,
-  (
     SELECT count(booking_id) FROM `passculture-data-prod.clean_prod.applicative_database_booking`
     WHERE booking_creation_date <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00") AS DATETIME)
-  ) as count_booking_from_big_query_clean;
+  ) as count_booking_from_big_query_clean,
+  (
+    SELECT count(booking_id) FROM `passculture-data-prod.analytics_prod.enriched_booking_data`
+  ) as count_enriched_booking_from_big_query_analytics,
+  (
+    SELECT count(booking_id) FROM
+    (
+      SELECT booking_id, offer_id,
+      FROM `passculture-data-prod.clean_prod.applicative_database_booking` booking
+      LEFT JOIN `passculture-data-prod.clean_prod.applicative_database_stock` stock
+      ON booking.stock_id = stock.stock_id
+    ) a LEFT JOIN  `passculture-data-prod.clean_prod.applicative_database_offer` b
+    ON a.offer_id = b.offer_id
+    WHERE offer_type NOT IN ('ThingType.ACTIVATION','EventType.ACTIVATION')
+  ) as count_filtered_booking_from_big_query_clean;
 
 
 
@@ -41,14 +51,15 @@ SELECT (
           ) WHERE date_created <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00") AS DATETIME)
   ) as count_venue_from_csql,
   (
+    SELECT count(venue_id) FROM `passculture-data-prod.clean_prod.applicative_database_venue`
+    WHERE venue_creation_date <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00") AS DATETIME)
+  ) as count_venue_from_big_query_clean,
+  (
     SELECT count(venue_id) FROM `passculture-data-prod.analytics_prod.enriched_venue_data`
-    WHERE first_offer_creation_date <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00") AS DATETIME)
   ) as count_enriched_venue_from_big_query,
   (
     SELECT count(venue_id) FROM `passculture-data-prod.clean_prod.applicative_database_venue`
-    WHERE venue_creation_date <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00") AS DATETIME)
-  ) as count_venue_from_big_query_clean;
-
+  ) as count_all_venue_from_big_query_clean;
 
 
 -- compare offerer volumetry
@@ -93,13 +104,16 @@ SELECT (
           ) WHERE date_created <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00") AS DATETIME)
   ) as count_user_from_csql,
   (
-    SELECT count(user_id) FROM `passculture-data-prod.analytics_prod.enriched_user_data`
-    WHERE activation_date <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00") AS DATETIME)
-  ) as count_enriched_user_from_big_query,
-  (
     SELECT count(user_id) FROM `passculture-data-prod.clean_prod.applicative_database_user`
     WHERE user_creation_date <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00") AS DATETIME)
-  ) as count_user_from_big_query_clean;
+  ) as count_user_from_big_query_clean,
+  (
+    SELECT count(distinct user_id) FROM `passculture-data-prod.analytics_prod.enriched_user_data`
+  ) as count_distinct_enriched_user_from_big_query,
+  (
+    SELECT count(distinct user_id) FROM `passculture-data-prod.clean_prod.applicative_database_user`
+    WHERE  user_is_beneficiary
+  ) as count_distinct_beneficiary_user_from_big_query_clean;
 
 
 

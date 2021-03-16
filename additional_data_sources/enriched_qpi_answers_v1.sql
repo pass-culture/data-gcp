@@ -1,3 +1,12 @@
+-- clean_stg.qpi_answers_v1
+
+select (CASE culturalsurvey_id WHEN null THEN null else user_id END) as user_id,
+landed_at, submitted_at, form_id, platform, answers
+FROM `passculture-data-ehp.raw_stg.qpi_answers_v1` raw_answers
+LEFT JOIN `passculture-data-ehp.clean_stg.applicative_database_user` users
+ON raw_answers.culturalsurvey_id = users.user_cultural_survey_id
+
+-- enriched_qpi_answers_v1
 WITH unrolled_answers as (
     SELECT * FROM `passculture-data-ehp.raw_stg.qpi_answers_v1` as qpi, qpi.answers as answers
 ),
@@ -46,7 +55,7 @@ pratique_musique as (
 )
 
 
-select distinct(culturalsurvey_id) as id,
+select (CASE culturalsurvey_id WHEN null THEN null else user_id END) as user_id,
 IFNULL(culturalsurvey_id IN (select id from pratiques where film is true) and culturalsurvey_id in (select id from vod), false) as audiovisuel,
 IFNULL(culturalsurvey_id IN (select id from pratiques where film is true) and culturalsurvey_id in (select id from cinema), false) as cinema,
 IFNULL(culturalsurvey_id IN (select id from pratiques where jeux_video is true), false) as jeux_videos,
@@ -62,4 +71,6 @@ IFNULL(culturalsurvey_id IN (select id from pratiques where musique is true) and
 IFNULL(culturalsurvey_id IN (select id from pratiques where pratique_artistique is true), false) as pratique_artistique,
 IFNULL(culturalsurvey_id IN (select id from pratiques where spectacle is true), false) as spectacle_vivant,
 IFNULL(culturalsurvey_id IN (select id from pratiques where pratique_artistique is true) and culturalsurvey_id IN (select id from pratique_musique), false) as instrument
-FROM `passculture-data-ehp.raw_stg.qpi_answers_v1`
+FROM `passculture-data-ehp.raw_stg.qpi_answers_v1` answers
+LEFT JOIN `passculture-data-ehp.clean_stg.applicative_database_user` users
+on answers.culturalsurvey_id = users.user_cultural_survey_id

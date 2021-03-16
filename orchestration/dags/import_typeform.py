@@ -5,6 +5,7 @@ from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.http_operator import SimpleHttpOperator
 from airflow.operators.python_operator import PythonOperator
+from airflow.contrib.operators.bigquery_operator import BigQueryOperator
 from airflow.contrib.operators.gcs_to_bq import GoogleCloudStorageToBigQueryOperator
 
 from google.auth.transport.requests import Request
@@ -16,6 +17,7 @@ from dependencies.config import (
     GCP_PROJECT,
     DATA_GCS_BUCKET_NAME,
     BIGQUERY_RAW_DATASET,
+    BIGQUERY_CLEAN_DATASET,
     ENV_SHORT_NAME,
 )
 
@@ -102,7 +104,21 @@ with DAG(
         source_format="NEWLINE_DELIMITED_JSON",
     )
 
+    clean_answers = BigQueryOperator(
+        task_id="clean_answers_v2",
+        sql=f"""
+            select (CASE culturalsurvey_id WHEN null THEN null else user_id END) as user_id,
+            landed_at, submitted_at, form_id, platform, answers
+            FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.qpi_answers_v2` raw_answers
+            LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_user` users
+            ON raw_answers.culturalsurvey_id = users.user_cultural_survey_id
+        """,
+        use_legacy_sql=False,
+        destination_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_CLEAN_DATASET}.qpi_answers_v2",
+        write_disposition="WRITE_TRUNCATE",
+    )
+
     end = DummyOperator(task_id="end")
 
     start >> getting_last_token >> getting_service_account_token >> typeform_to_gcs
-    typeform_to_gcs >> import_answers_to_bigquery >> end
+    typeform_to_gcs >> import_answers_to_bigquery >> clean_answers >> end

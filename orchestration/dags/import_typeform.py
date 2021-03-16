@@ -20,7 +20,7 @@ from dependencies.config import (
 )
 
 TYPEFORM_FUNCTION_NAME = "qpi_import_" + ENV_SHORT_NAME
-QPI_ANSWERS_TABLE = "qpi_answers_test"  # TO CHANGE
+QPI_ANSWERS_TABLE = "qpi_answers_v2"
 
 default_args = {
     "start_date": datetime(2021, 3, 10),

@@ -103,14 +103,14 @@ with DAG(
         write_disposition="WRITE_APPEND",
         source_format="NEWLINE_DELIMITED_JSON",
     )
-
+    # we use staging user in dev to avoid empty table
     clean_answers = BigQueryOperator(
         task_id="clean_answers_v2",
         sql=f"""
             select (CASE culturalsurvey_id WHEN null THEN null else user_id END) as user_id,
             landed_at, submitted_at, form_id, platform, answers
             FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.qpi_answers_v2` raw_answers
-            LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_user` users
+            LEFT JOIN `{GCP_PROJECT}.{'clean_stg' if ENV_SHORT_NAME == 'dev' else BIGQUERY_CLEAN_DATASET}.applicative_database_user` users
             ON raw_answers.culturalsurvey_id = users.user_cultural_survey_id
         """,
         use_legacy_sql=False,

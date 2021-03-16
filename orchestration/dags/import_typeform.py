@@ -52,7 +52,7 @@ with DAG(
     "import_typeform_v1",
     default_args=default_args,
     description="Importing new data from typeform every day.",
-    schedule_interval="@daily",
+    schedule_interval="0 2 * * *",
     catchup=False,
     dagrun_timeout=timedelta(minutes=180),
 ) as dag:

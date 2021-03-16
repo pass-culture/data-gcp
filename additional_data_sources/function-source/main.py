@@ -24,18 +24,9 @@ STORAGE_PATH = BUCKET_NAME + "/QPI_exports/"
 
 
 def run(request):
-    """HTTP Cloud Function.
+    """The Cloud Function entrypoint.
     Args:
         request (flask.Request): The request object.
-        <https://flask.palletsprojects.com/en/1.1.x/api/#incoming-request-data>
-    Returns:
-        The response text, or any set of values that can be turned into a
-        Response object using `make_response`
-        <https://flask.palletsprojects.com/en/1.1.x/api/#flask.make_response>.
-    Note:
-        For more information on how Flask integrates with Cloud
-        Functions, see the `Writing HTTP functions` page.
-        <https://cloud.google.com/functions/docs/writing/http#http_frameworks>
     """
     today = date.today().strftime("%Y%m%d")
     answers_file_name = STORAGE_PATH + f"qpi_answers_{today}.jsonl"
@@ -49,7 +40,7 @@ def run(request):
     elif request_args and "after" in request_args:
         after = request_args["after"]
     else:
-        return "Provide after arg"
+        raise RuntimeError("You need to provide an after argument.")
 
     downloader = qpi_downloader.QPIDownloader(
         TYPEFORM_API_KEY,

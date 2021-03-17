@@ -116,4 +116,4 @@ class TestDags(unittest.TestCase):
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 6)
+        self.assertEqual(len(dag.tasks), 7)

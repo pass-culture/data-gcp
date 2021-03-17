@@ -105,7 +105,7 @@ with DAG(
     )
     # we use staging user in dev to avoid empty table
     clean_answers = BigQueryOperator(
-        task_id="clean_answers_v2",
+        task_id="clean_answers",
         sql=f"""
             select (CASE culturalsurvey_id WHEN null THEN null else user_id END) as user_id,
             landed_at, submitted_at, form_id, platform, answers

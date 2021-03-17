@@ -85,7 +85,7 @@ IFNULL(users.user_id IN (select user_id from bookings where (offer_type = 'Thing
 IFNULL(users.user_id IN (select user_id from bookings where offer_type = 'ThingType.LIVRE_EDITION' and venue_is_virtual is false), False) as pass_livre_physique,
 IFNULL(users.user_id IN (select user_id from bookings where offer_type in ('EventType.MUSEES_PATRIMOINE', 'ThingType.MUSEES_PATRIMOINE_ABO')), False) as pass_musees_patrimoine,
 IFNULL(users.user_id IN (select user_id from bookings where offer_type in ('EventType.MUSIQUE', 'ThingType.MUSIQUE_ABO')), False) as pass_musique_live,
-IFNULL(users.user_id IN (select user_id from bookings where offer_type = 'EventType.MUSIQUE' and venue_is_virtual is true), False) as pass_initial_musique_numerique,
+IFNULL(users.user_id IN (select user_id from bookings where offer_type = 'EventType.MUSIQUE' and venue_is_virtual is true), False) as pass_musique_numerique,
 IFNULL(users.user_id IN (select user_id from bookings where offer_type = 'EventType.MUSIQUE' and venue_is_virtual is false), False) as pass_musique_cd_vinyls,
 IFNULL(users.user_id IN (select user_id from bookings where offer_type in ('EventType.PRATIQUE_ARTISTIQUE', 'ThingType.PRATIQUE_ARTISTIQUE_ABO')), False) as pass_pratique_artistique,
 IFNULL(users.user_id IN (select user_id from bookings where offer_type in ('EventType.SPECTACLE_VIVANT', 'ThingType.SPECTACLE_VIVANT_ABO')), False) as pass_spectacle_vivant,
@@ -95,3 +95,69 @@ IFNULL(users.user_id IN (select user_id from bookings where offer_type in ('Even
 FROM `passculture-data-ehp.raw_stg.qpi_answers_v1` answers
 INNER JOIN users
 on answers.culturalsurvey_id = users.user_cultural_survey_id
+
+
+-- enriched_qpi_answers_v2
+WITH unrolled_answers as (
+    SELECT * FROM `passculture-data-ehp.raw_stg.qpi_answers_v2` as qpi, qpi.answers as answers
+),
+question1 as (
+    SELECT culturalsurvey_id as id,
+    "pris un cours de pratique artistique (danse, théâtre, musique, dessin...) 🎨" IN UNNEST(choices) as initial_pratique_artistique,
+    "participé à une conférence, une rencontre ou une découverte de métiers de la Culture 🎤" IN UNNEST(choices) as initial_autre,
+    "allé à un musée, une visite ou une exposition  🏛" IN UNNEST(choices) as initial_musees_patrimoine,
+    "assisté à une pièce de théâtre, à un spectacle de cirque, de danse... 💃" IN UNNEST(choices) as initial_spectacle_vivant,
+    "allé à un concert ou un festival 🤘" IN UNNEST(choices) as initial_musique,
+    "allé au cinéma 🎞" IN UNNEST(choices) as initial_cinema
+    FROM  unrolled_answers
+    WHERE question_id = "ge0Egr2m8V1T"
+),
+question2 as (
+    SELECT culturalsurvey_id as id,
+    "joué de ton instrument de musique 🎸" IN UNNEST(choices) as initial_instrument,
+    "lu un article de presse 📰" IN UNNEST(choices) as initial_presse,
+    "regardé un film chez toi 🍿" IN UNNEST(choices) as initial_audiovisuel,
+    "joué à un jeu vidéo 🎮" IN UNNEST(choices) as initial_jeux_videos,
+    "écouté de la musique ♫" IN UNNEST(choices) as initial_musique,
+    "lu un livre 📚" IN UNNEST(choices) as initial_livre
+    FROM  unrolled_answers
+    WHERE question_id = "NeyLJOqShoHw"
+),
+bookings as (
+    SELECT user_id, offer_type FROM `passculture-data-ehp.analytics_stg.applicative_database_booking` booking
+    LEFT JOIN `passculture-data-ehp.analytics_stg.applicative_database_stock` stock
+    ON booking.stock_id = stock.stock_id
+    LEFT JOIN `passculture-data-ehp.analytics_stg.applicative_database_offer` offer
+    ON stock.offer_id = offer.offer_id
+),
+users AS (
+    SELECT user_id, user_cultural_survey_id, user_civility, user_activity, FROM `passculture-data-ehp.clean_stg.applicative_database_user`
+),
+enriched_users as (
+    SELECT user_id, booking_cnt as booking_count, first_connection_date FROM `passculture-data-ehp.analytics_stg.enriched_user_data`
+)
+
+select users.user_id, user_civility, users.user_activity,
+booking_count, TIMESTAMP_DIFF(CURRENT_TIMESTAMP(),  CAST(first_connection_date AS TIMESTAMP), DAY) as days_since_first_connection,
+initial_pratique_artistique, initial_autre, initial_musees_patrimoine, initial_spectacle_vivant, initial_cinema, initial_instrument, initial_presse, initial_audiovisuel, initial_jeux_videos, initial_livre,
+IFNULL(culturalsurvey_id IN (select id from question1 where initial_musique is true) or culturalsurvey_id in (select id from question2 where initial_musique is true), false) as initial_musique,
+IFNULL(users.user_id IN (select user_id from bookings where offer_type in ('EventType.PRATIQUE_ARTISTIQUE', 'ThingType.PRATIQUE_ARTISTIQUE_ABO')), False) as pass_pratique_artistique,
+IFNULL(users.user_id IN (select user_id from bookings where offer_type = 'EventType.CONFERENCE_DEBAT_DEDICACE'), False) as pass_autre,
+IFNULL(users.user_id IN (select user_id from bookings where offer_type in ('EventType.MUSEES_PATRIMOINE', 'ThingType.MUSEES_PATRIMOINE_ABO')), False) as pass_musees_patrimoine,
+IFNULL(users.user_id IN (select user_id from bookings where offer_type in ('EventType.SPECTACLE_VIVANT', 'ThingType.SPECTACLE_VIVANT_ABO')), False) as pass_spectacle_vivant,
+IFNULL(users.user_id IN (select user_id from bookings where offer_type in ('EventType.CINEMA', 'ThingType.CINEMA_CARD')), False) as pass_cinema,
+IFNULL(users.user_id IN (select user_id from bookings where offer_type = 'ThingType.INSTRUMENT'), False) as pass_instrument,
+IFNULL(users.user_id IN (select user_id from bookings where offer_type = 'ThingType.PRESSE_ABO'), False) as pass_presse,
+IFNULL(users.user_id IN (select user_id from bookings where offer_type = 'ThingType.AUDIOVISUEL'), False) as pass_audiovisuel,
+IFNULL(users.user_id IN (select user_id from bookings where offer_type in ('ThingType.JEUX_VIDEO_ABO', 'ThingType.JEUX_VIDEO')), False) as pass_jeux_videos,
+IFNULL(users.user_id IN (select user_id from bookings where offer_type in ('ThingType.LIVRE_AUDIO', 'ThingType.LIVRE_EDITION')), False) as pass_livre,
+IFNULL(users.user_id IN (select user_id from bookings where offer_type in ('EventType.MUSIQUE', 'ThingType.MUSIQUE', 'ThingType.MUSIQUE_ABO')), False) as pass_musique,
+FROM (SELECT culturalsurvey_id FROM `passculture-data-ehp.raw_stg.qpi_answers_v2`) answers
+INNER JOIN users
+on answers.culturalsurvey_id = users.user_cultural_survey_id
+INNER JOIN question1
+on answers.culturalsurvey_id = question1.id
+INNER JOIN question2
+on answers.culturalsurvey_id = question2.id
+INNER JOIN enriched_users
+on users.user_id = enriched_users.user_id

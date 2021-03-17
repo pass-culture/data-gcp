@@ -1,12 +1,4 @@
 -- clean_stg.qpi_answers_v1
-
-select (CASE culturalsurvey_id WHEN null THEN null else user_id END) as user_id,
-landed_at, submitted_at, form_id, platform, answers
-FROM `passculture-data-ehp.raw_stg.qpi_answers_v1` raw_answers
-LEFT JOIN `passculture-data-ehp.clean_stg.applicative_database_user` users
-ON raw_answers.culturalsurvey_id = users.user_cultural_survey_id
-
--- enriched_qpi_answers_v1
 WITH unrolled_answers as (
     SELECT * FROM `passculture-data-ehp.raw_stg.qpi_answers_v1` as qpi, qpi.answers as answers
 ),
@@ -52,25 +44,54 @@ supports_musique as (
 pratique_musique as (
     SELECT culturalsurvey_id as id
     FROM unrolled_answers where question_id = "MxgbTe4j5Iee" and 'Faire de la musique ou du chant' in UNNEST(choices)
+),
+bookings as (
+    SELECT user_id, offer.offer_type,  venue_is_virtual FROM `passculture-data-ehp.analytics_stg.applicative_database_booking` booking
+    LEFT JOIN `passculture-data-ehp.analytics_stg.applicative_database_stock` stock
+    ON booking.stock_id = stock.stock_id
+    LEFT JOIN `passculture-data-ehp.analytics_stg.applicative_database_offer` offer
+    ON stock.offer_id = offer.offer_id
+    LEFT JOIN `passculture-data-ehp.analytics_stg.applicative_database_venue` venue
+    ON venue.venue_id = offer.venue_id
+),
+users AS (
+    SELECT user_id, user_cultural_survey_id, user_civility, user_activity, FROM `passculture-data-ehp.clean_stg.applicative_database_user`
+),
+enriched_users as (
+    SELECT user_id, booking_cnt as booking_count, first_connection_date FROM `passculture-data-ehp.analytics_stg.enriched_user_data`
 )
 
-
-select (CASE culturalsurvey_id WHEN null THEN null else user_id END) as user_id,
-IFNULL(culturalsurvey_id IN (select id from pratiques where film is true) and culturalsurvey_id in (select id from vod), false) as audiovisuel,
-IFNULL(culturalsurvey_id IN (select id from pratiques where film is true) and culturalsurvey_id in (select id from cinema), false) as cinema,
-IFNULL(culturalsurvey_id IN (select id from pratiques where jeux_video is true), false) as jeux_videos,
-IFNULL(culturalsurvey_id IN (select id from pratiques where lecture is true) and culturalsurvey_id in (select id from livres where livre_numerique is true), false) as livre_numerique,
-IFNULL(culturalsurvey_id IN (select id from pratiques where lecture is true) and culturalsurvey_id in (select id from livres where livre_papier  is true), false) as livre_physique,
-IFNULL(culturalsurvey_id IN (select id from pratiques where visite is true), false) as musees_patrimoine,
+select user_id,
+IFNULL(culturalsurvey_id IN (select id from pratiques where film is true) and culturalsurvey_id in (select id from vod), false) as initial_audiovisuel,
+IFNULL(culturalsurvey_id IN (select id from pratiques where film is true) and culturalsurvey_id in (select id from cinema), false) as initial_cinema,
+IFNULL(culturalsurvey_id IN (select id from pratiques where jeux_video is true), false) as initial_jeux_videos,
+IFNULL(culturalsurvey_id IN (select id from pratiques where lecture is true) and culturalsurvey_id in (select id from livres where livre_numerique is true), false) as initial_livre_numerique,
+IFNULL(culturalsurvey_id IN (select id from pratiques where lecture is true) and culturalsurvey_id in (select id from livres where livre_papier  is true), false) as initial_livre_physique,
+IFNULL(culturalsurvey_id IN (select id from pratiques where visite is true), false) as initial_musees_patrimoine,
 IFNULL(
     culturalsurvey_id IN (select id from pratiques where festival is true)
     or (culturalsurvey_id IN (select id from pratiques where musique is true) and culturalsurvey_id in (select id from concerts)
-), false) as musique_live,
-IFNULL(culturalsurvey_id IN (select id from pratiques where musique is true) and culturalsurvey_id in (select id from supports_musique where numerique is true), false) as musique_numerique,
-IFNULL(culturalsurvey_id IN (select id from pratiques where musique is true) and culturalsurvey_id in (select id from supports_musique where physique is true), false) as musique_cd_vinyls,
-IFNULL(culturalsurvey_id IN (select id from pratiques where pratique_artistique is true), false) as pratique_artistique,
-IFNULL(culturalsurvey_id IN (select id from pratiques where spectacle is true), false) as spectacle_vivant,
-IFNULL(culturalsurvey_id IN (select id from pratiques where pratique_artistique is true) and culturalsurvey_id IN (select id from pratique_musique), false) as instrument
+), false) as initial_musique_live,
+IFNULL(culturalsurvey_id IN (select id from pratiques where musique is true) and culturalsurvey_id in (select id from supports_musique where numerique is true), false) as initial_musique_numerique,
+IFNULL(culturalsurvey_id IN (select id from pratiques where musique is true) and culturalsurvey_id in (select id from supports_musique where physique is true), false) as initial_musique_cd_vinyls,
+IFNULL(culturalsurvey_id IN (select id from pratiques where pratique_artistique is true), false) as initial_pratique_artistique,
+IFNULL(culturalsurvey_id IN (select id from pratiques where spectacle is true), false) as initial_spectacle_vivant,
+IFNULL(culturalsurvey_id IN (select id from pratiques where pratique_artistique is true) and culturalsurvey_id IN (select id from pratique_musique), false) as initial_instrument,
+
+IFNULL(users.user_id IN (select user_id from bookings where offer_type = 'ThingType.AUDIOVISUEL'), False) as pass_audiovisuel,
+IFNULL(users.user_id IN (select user_id from bookings where offer_type in ('EventType.CINEMA', 'ThingType.CINEMA_ABO', 'ThingType.CINEMA_CARD')), False) as pass_cinema,
+IFNULL(users.user_id IN (select user_id from bookings where offer_type in ('ThingType.JEUX_VIDEO_ABO', 'ThingType.JEUX_VIDEO')), False) as pass_jeux_videos,
+IFNULL(users.user_id IN (select user_id from bookings where (offer_type = 'ThingType.LIVRE_EDITION' and venue_is_virtual is true) or offer_type = 'ThingType.LIVRE_AUDIO'), False) as pass_livre_numerique,
+IFNULL(users.user_id IN (select user_id from bookings where offer_type = 'ThingType.LIVRE_EDITION' and venue_is_virtual is false), False) as pass_livre_physique,
+IFNULL(users.user_id IN (select user_id from bookings where offer_type in ('EventType.MUSEES_PATRIMOINE', 'ThingType.MUSEES_PATRIMOINE_ABO')), False) as pass_musees_patrimoine,
+IFNULL(users.user_id IN (select user_id from bookings where offer_type in ('EventType.MUSIQUE', 'ThingType.MUSIQUE_ABO')), False) as pass_musique_live,
+IFNULL(users.user_id IN (select user_id from bookings where offer_type = 'EventType.MUSIQUE' and venue_is_virtual is true), False) as pass_initial_musique_numerique,
+IFNULL(users.user_id IN (select user_id from bookings where offer_type = 'EventType.MUSIQUE' and venue_is_virtual is false), False) as pass_musique_cd_vinyls,
+IFNULL(users.user_id IN (select user_id from bookings where offer_type in ('EventType.PRATIQUE_ARTISTIQUE', 'ThingType.PRATIQUE_ARTISTIQUE_ABO')), False) as pass_pratique_artistique,
+IFNULL(users.user_id IN (select user_id from bookings where offer_type in ('EventType.SPECTACLE_VIVANT', 'ThingType.SPECTACLE_VIVANT_ABO')), False) as pass_spectacle_vivant,
+IFNULL(users.user_id IN (select user_id from bookings where offer_type = 'ThingType.INSTRUMENT'), False) as pass_instrument,
+IFNULL(users.user_id IN (select user_id from bookings where offer_type = 'ThingType.PRESSE_ABO'), False) as pass_presse,
+IFNULL(users.user_id IN (select user_id from bookings where offer_type in ('EventType.CONFERENCE_DEBAT_DEDICACE', 'ThingType.OEUVRE_ART', 'EventType.JEUX')), False) as pass_autre
 FROM `passculture-data-ehp.raw_stg.qpi_answers_v1` answers
-LEFT JOIN `passculture-data-ehp.clean_stg.applicative_database_user` users
+INNER JOIN users
 on answers.culturalsurvey_id = users.user_cultural_survey_id

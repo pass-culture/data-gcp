@@ -35,7 +35,7 @@ def define_activation_dates_query(dataset, table_prefix=""):
                     ,offer.offer_type
                     ,booking_used_date
                     ,booking_is_used
-                    ,RANK() OVER (PARTITION BY booking.user_id ORDER BY booking.booking_creation_date ASC) AS rank_
+                    ,RANK() OVER (PARTITION BY booking.user_id ORDER BY booking.booking_creation_date ASC, booking.booking_id ASC) AS rank_
                 FROM {dataset}.{table_prefix}booking AS booking
                 JOIN {dataset}.{table_prefix}stock AS stock ON booking.stock_id = stock.stock_id
                 JOIN {dataset}.{table_prefix}offer AS offer ON stock.offer_id = offer.offer_id
@@ -362,7 +362,7 @@ def define_first_booking_type_query(dataset, table_prefix=""):
                     booking.booking_id
                     ,booking.user_id
                     ,offer.offer_type
-                    ,rank() over (partition by booking.user_id order by booking.booking_creation_date) AS rank_booking
+                    ,rank() over (partition by booking.user_id order by booking.booking_creation_date, booking.booking_id ASC) AS rank_booking
                 FROM {dataset}.{table_prefix}booking AS booking
                 JOIN {dataset}.{table_prefix}stock AS stock
                 ON booking.stock_id = stock.stock_id
@@ -437,7 +437,7 @@ def define_enriched_user_data_query(dataset, table_prefix=""):
                 user.user_postal_code,
                 CASE WHEN user.user_activity in ("Alternant","Apprenti","Volontaire") THEN "Apprenti, Alternant, Volontaire en service civique rémunéré"
                     WHEN user.user_activity in ("Inactif") THEN "Inactif (ni en emploi ni au chômage), En incapacité de travailler"
-                        WHEN user.user_activity in ("Étudiant") THEN "Etudiant" 
+                        WHEN user.user_activity in ("Étudiant") THEN "Etudiant"
                             WHEN user.user_activity in ("Chômeur") THEN "Chômeur, En recherche d'emploi"
                                 ELSE user.user_activity END AS user_activity,
                 activation_dates.user_activation_date,

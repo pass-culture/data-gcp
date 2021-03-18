@@ -167,9 +167,15 @@ class QPIDownloader:
                 except:
                     user_id = None
 
+            try:
+                user_pk = result["hidden"]["userpk"]
+            except:
+                user_pk = None
+
             user_data.update(
                 {
-                    "culturalsurvey_id": user_id,
+                    "culturalsurvey_id": user_id,  # The userId in Typeform is the culturalsurvey_id in the backend
+                    "user_id": user_pk,  # The userPk in Typeform is the user_id in the backend (pk = primary key)
                     "form_id": result["landing_id"],
                     "landed_at": result["landed_at"],
                     "submitted_at": result["submitted_at"],

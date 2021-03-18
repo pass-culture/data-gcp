@@ -318,6 +318,7 @@ workflows:
             - production-composer-deploy
             - api_integration_tests_production
             - recommendation-integration-tests-dev
+            - cloud-function-deploy-prod
 
       - slack-alert:
           name: slack-alert-staging
@@ -332,6 +333,7 @@ workflows:
             - staging-composer-deploy
             - api_integration_tests_staging
             - recommendation-integration-tests-dev
+            - cloud-function-deploy-stg
 
 
 ###################

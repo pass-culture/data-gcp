@@ -5,6 +5,11 @@
         "mode": "NULLABLE"
     },
     {
+        "name": "user_id",
+        "type": "STRING",
+        "mode": "NULLABLE"
+    },
+    {
         "name": "landed_at",
         "type": "TIMESTAMP",
         "mode": "NULLABLE"

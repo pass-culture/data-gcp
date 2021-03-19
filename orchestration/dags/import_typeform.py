@@ -107,7 +107,7 @@ with DAG(
     clean_answers = BigQueryOperator(
         task_id="clean_answers",
         sql=f"""
-            select (CASE culturalsurvey_id WHEN null THEN null else user_id END) as user_id,
+            select (CASE raw_answers.user_id WHEN null THEN users.user_id else raw_answers.user_id END) as user_id,
             landed_at, submitted_at, form_id, platform, answers
             FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.qpi_answers_v2` raw_answers
             LEFT JOIN `{GCP_PROJECT}.{'clean_stg' if ENV_SHORT_NAME == 'dev' else BIGQUERY_CLEAN_DATASET}.applicative_database_user` users

@@ -138,7 +138,7 @@ def define_import_query(
         "provider"
     ] = """
         SELECT
-            "isActive", CAST("id" AS varchar(255)), "name", "localClass", "apiKeyGenerationDate",
+            "isActive", CAST("id" AS varchar(255)), "name", "localClass",
             "enabledForPro", "requireProviderIdentifier"
         FROM public.provider
     """

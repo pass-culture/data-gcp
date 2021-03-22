@@ -47,7 +47,9 @@ def fetch_coordinates(parsed_address):
 
 def add_coordinates(user_adress_dataframe):
     user_adress_dataframe[["longitude", "latitude"]] = user_adress_dataframe.apply(
-        lambda row: pd.Series(fetch_coordinates(row["parsed_address"])), axis=1
+        lambda row: fetch_coordinates(row["parsed_address"]),
+        axis=1,
+        result_type="expand",
     )
 
 

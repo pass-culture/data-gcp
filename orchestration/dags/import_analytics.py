@@ -86,7 +86,7 @@ dag = DAG(
     default_args=default_dag_args,
     description="Import tables from CloudSQL and enrich data for create dashboards with Data Studio",
     on_failure_callback=task_fail_slack_alert,
-    schedule_interval="0 5 * * *",
+    schedule_interval="0 23 * * *",
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=90),
 )

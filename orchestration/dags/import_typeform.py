@@ -13,6 +13,7 @@ from google.oauth2 import id_token
 
 from dependencies.bigquery_client import BigQueryClient
 from dependencies.slack_alert import task_fail_slack_alert
+from dependencies.qpi_answers_schema import QPI_ANSWERS_SCHEMA
 from dependencies.config import (
     GCP_PROJECT,
     DATA_GCS_BUCKET_NAME,
@@ -93,16 +94,19 @@ with DAG(
         log_response=True,
     )
 
-    today = date.today().strftime("%Y%m%d")
-
+    # the tomorrow_ds_nodash enables catchup :
+    # it fetches the file corresponding to the initial execution date of the dag and not the day the task is run.
     import_answers_to_bigquery = GoogleCloudStorageToBigQueryOperator(
         task_id="import_answers_to_bigquery",
         bucket=DATA_GCS_BUCKET_NAME,
-        source_objects=[f"QPI_exports/qpi_answers_{today}.jsonl"],
+        source_objects=["QPI_exports/qpi_answers_{{ tomorrow_ds_nodash }}.jsonl"],
         destination_project_dataset_table=f"{BIGQUERY_RAW_DATASET}.{QPI_ANSWERS_TABLE}",
         write_disposition="WRITE_APPEND",
         source_format="NEWLINE_DELIMITED_JSON",
+        autodetect=False,
+        schema_fields=QPI_ANSWERS_SCHEMA,
     )
+
     # we use staging user in dev to avoid empty table
     clean_answers = BigQueryOperator(
         task_id="clean_answers",

@@ -80,7 +80,7 @@ class TestDags(unittest.TestCase):
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 26)
+        self.assertEqual(len(dag.tasks), 19)
 
     def test_dump_matomo_refresh_dag_is_loaded(self):
         # When

@@ -312,5 +312,5 @@ STAGING_TABLE_DATA = {
         ],
         "row_number_queried": 100000,
         "query_filter": f"visit_first_action_time >= TIMESTAMP '{EXPORT_START_DATE}' and visit_first_action_time < TIMESTAMP '{EXPORT_END_DATE}'",
-    }
+    },
 }

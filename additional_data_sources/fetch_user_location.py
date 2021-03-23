@@ -1,6 +1,7 @@
-from urllib.parse import quote
+import csv
 import json
 import time
+from urllib.parse import quote
 
 import requests
 from shapely.geometry import Point, Polygon
@@ -34,49 +35,52 @@ def fetch_coordinates(parsed_address):
     url = "https://api-adresse.data.gouv.fr/search/?q=" + parsed_address
     response = requests.get(url)
     time.sleep(0.1)
+    api_address_informations = []
     if response.status_code == 200:
         data = response.json()
         try:
             longitude = data["features"][0]["geometry"]["coordinates"][0]
             latitude = data["features"][0]["geometry"]["coordinates"][1]
-            return longitude, latitude
+            city_code = data["features"][0]["properties"]["citycode"]
+            city = data["features"][0]["properties"]["city"]
+            api_address_informations.append(longitude)
+            api_address_informations.append(latitude)
+            api_address_informations.append(city_code)
+            api_address_informations.append(city)
+            return api_address_informations
         except:
-            return None, None
-    return None, None
+            return [None, None, None, None]
+    return [None, None, None, None]
 
 
 def add_coordinates(user_adress_dataframe):
-    user_adress_dataframe[["longitude", "latitude"]] = user_adress_dataframe.apply(
+    user_adress_dataframe[
+        ["longitude", "latitude", "city_code", "api_adresse_city"]
+    ] = user_adress_dataframe.apply(
         lambda row: fetch_coordinates(row["parsed_address"]),
         axis=1,
         result_type="expand",
     )
 
 
-def find_commune_informations(user_coordinates, user_department_code, communes):
+def find_commune_informations(user_city_code, communes):
     commune_data = {
-        "nom_commune": None,
         "code_epci": None,
         "epci_name": None,
     }
-    if user_coordinates["longitude"] is None or user_coordinates["latitude"] is None:
+    if not user_city_code:
         return commune_data
-    point = Point(user_coordinates["longitude"], user_coordinates["latitude"])
     for i in range(len(communes)):
-        commune_department = communes[i]["fields"]["dep_code"]
-        if user_department_code == commune_department:
-            commune_coordinate = communes[i]["fields"]["geo_shape"]["coordinates"][0]
+        commune_code = communes[i]["fields"]["com_code"]
+        if user_city_code == commune_code:
             try:
-                polygon = Polygon(commune_coordinate)
-                if point.within(polygon):
-                    commune_data = {
-                        "nom_commune": communes[i]["fields"]["com_name_upper"],
-                        "code_epci": communes[i]["fields"]["epci_code"],
-                        "epci_name": communes[i]["fields"]["epci_name"],
-                    }
-                    return commune_data
+                commune_data = {
+                    "code_epci": communes[i]["fields"]["epci_code"],
+                    "epci_name": communes[i]["fields"]["epci_name"],
+                }
+                return commune_data
             except:
-                pass
+                return commune_data
     return commune_data
 
 
@@ -109,30 +113,41 @@ def find_qpv_informations(user_coordinates, user_department_code, qpv):
     return qpv_informations
 
 
+def find_zrr_informations(user_city_code, zrr):
+    if user_city_code:
+        for city in zrr:
+            commune_code = city["CODGEO"]
+            if user_city_code == commune_code:
+                return city["ZRR_SIMP"]
+    return None
+
+
 def add_commune_epci_qpv(user_adress_dataframe):
     with open(r"./georef-france-commune.json") as file:
         communes = json.load(file)
     with open(r"./liste_quartiers_prioritairesville.json") as file:
         qpv = json.load(file)
-    user_adress_dataframe["nom_commune"] = None
+    with open(r"./diffusion-zonages-zrr-2020.csv") as file:
+        reader = csv.DictReader(file)
+        zrr = []
+        for row in reader:
+            zrr.append(row)
+
     user_adress_dataframe["code_epci"] = None
     user_adress_dataframe["epci_name"] = None
     user_adress_dataframe["qpv_communes"] = None
     user_adress_dataframe["qpv_name"] = None
     user_adress_dataframe["code_qpv"] = None
-
+    user_adress_dataframe["zrr"] = None
     for i in range(user_adress_dataframe.shape[0]):
         user_coordinates = {
             "longitude": user_adress_dataframe["longitude"].loc[i],
             "latitude": user_adress_dataframe["latitude"].loc[i],
         }
         user_department_code = user_adress_dataframe["user_department_code"].loc[i]
-        commune_informations = find_commune_informations(
-            user_coordinates, user_department_code, communes
-        )
-        user_adress_dataframe["nom_commune"].loc[i] = commune_informations[
-            "nom_commune"
-        ]
+        user_city_code = user_adress_dataframe["city_code"].loc[i]
+
+        commune_informations = find_commune_informations(user_city_code, communes)
         user_adress_dataframe["code_epci"].loc[i] = commune_informations["code_epci"]
         user_adress_dataframe["epci_name"].loc[i] = commune_informations["epci_name"]
 
@@ -142,6 +157,8 @@ def add_commune_epci_qpv(user_adress_dataframe):
         user_adress_dataframe["qpv_communes"].loc[i] = qpv_informations["qpv_communes"]
         user_adress_dataframe["qpv_name"].loc[i] = qpv_informations["qpv_name"]
         user_adress_dataframe["code_qpv"].loc[i] = qpv_informations["code_qpv"]
+
+        user_adress_dataframe["zrr"].loc[i] = find_zrr_informations(user_city_code, zrr)
 
 
 def main():
@@ -164,13 +181,18 @@ def main():
             "user_id",
             "user_address",
             "user_city",
+            "user_postal_code",
+            "user_department_code",
             "longitude",
             "latitude",
+            "city_code",
+            "api_adresse_city",
             "code_epci",
             "epci_name",
             "qpv_communes",
             "qpv_name",
             "code_qpv",
+            "zrr",
         ]
     ].to_csv("./user_locations.csv", index=False, sep="|")
     print("csv created")

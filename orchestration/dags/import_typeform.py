@@ -126,10 +126,11 @@ with DAG(
         write_disposition="WRITE_TRUNCATE",
     )
 
-    analytics_answers = BigQueryOperator(
-        task_id="analytics_answers",
+    enrich_qpi_answers = BigQueryOperator(
+        task_id="enrich_qpi_answers",
         sql=enrich_answers(
             gcp_project=GCP_PROJECT,
+            # we use staging in dev otherwise we do not have any user in the resulting table
             bigquery_clean_dataset="clean_stg"
             if ENV_SHORT_NAME == "dev"
             else BIGQUERY_CLEAN_DATASET,
@@ -142,4 +143,4 @@ with DAG(
     end = DummyOperator(task_id="end")
 
     start >> getting_last_token >> getting_service_account_token >> typeform_to_gcs
-    typeform_to_gcs >> import_answers_to_bigquery >> clean_answers >> analytics_answers >> end
+    typeform_to_gcs >> import_answers_to_bigquery >> clean_answers >> enrich_qpi_answers >> end

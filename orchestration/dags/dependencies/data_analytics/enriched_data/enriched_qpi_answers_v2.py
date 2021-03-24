@@ -18,14 +18,11 @@ FORM = {
 }
 
 
-def create_condition(question_id, category, create_variable=True):
-    condition = (
+def create_condition(question_id, category):
+    return (
         f"SUM(CAST(question_id = '{question_id}' "
         f"and '{FORM[question_id][category]}' IN UNNEST(choices) AS INT64))"
     )
-    if not create_variable:
-        return condition
-    return condition + f" > 0 as {category}"
 
 
 def enrich_answers(
@@ -44,9 +41,9 @@ def enrich_answers(
             {
     f'{new_line}'.join(
         [
-            create_condition(question_id, category)
+            f"{create_condition(question_id, category)} > 0 as {category}"
             for question_id in FORM for category in FORM[question_id] if category != "musique"
-        ] + [f"{create_condition('ge0Egr2m8V1T', 'musique', False)} + {create_condition('NeyLJOqShoHw', 'musique')}"]
+        ] + [f"{create_condition('ge0Egr2m8V1T', 'musique')} + {create_condition('NeyLJOqShoHw', 'musique')} > 0 as musique"]
     )
     }
         FROM  unrolled_answers

@@ -194,6 +194,7 @@ create_enriched_booked_categories_data_v1_task = BigQueryOperator(
         group by user_id
     """,
     destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.enriched_booked_categories_v1",
+    write_disposition="WRITE_TRUNCATE",
     use_legacy_sql=False,
     dag=dag,
 )
@@ -225,6 +226,7 @@ create_enriched_booked_categories_data_v2_task = BigQueryOperator(
         group by user_id
     """,
     destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.enriched_booked_categories_v2",
+    write_disposition="WRITE_TRUNCATE",
     use_legacy_sql=False,
     dag=dag,
 )

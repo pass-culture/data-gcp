@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
@@ -19,7 +19,11 @@ from dependencies.config import (
     DATA_GCS_BUCKET_NAME,
     BIGQUERY_RAW_DATASET,
     BIGQUERY_CLEAN_DATASET,
+    BIGQUERY_ANALYTICS_DATASET,
     ENV_SHORT_NAME,
+)
+from dependencies.data_analytics.enriched_data.enriched_qpi_answers_v2 import (
+    enrich_answers,
 )
 
 TYPEFORM_FUNCTION_NAME = "qpi_import_" + ENV_SHORT_NAME
@@ -122,7 +126,21 @@ with DAG(
         write_disposition="WRITE_TRUNCATE",
     )
 
+    enrich_qpi_answers = BigQueryOperator(
+        task_id="enrich_qpi_answers",
+        sql=enrich_answers(
+            gcp_project=GCP_PROJECT,
+            # we use staging in dev otherwise we do not have any user in the resulting table
+            bigquery_clean_dataset="clean_stg"
+            if ENV_SHORT_NAME == "dev"
+            else BIGQUERY_CLEAN_DATASET,
+        ),
+        use_legacy_sql=False,
+        destination_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_ANALYTICS_DATASET}.enriched_qpi_answers_v2",
+        write_disposition="WRITE_TRUNCATE",
+    )
+
     end = DummyOperator(task_id="end")
 
     start >> getting_last_token >> getting_service_account_token >> typeform_to_gcs
-    typeform_to_gcs >> import_answers_to_bigquery >> clean_answers >> end
+    typeform_to_gcs >> import_answers_to_bigquery >> clean_answers >> enrich_qpi_answers >> end

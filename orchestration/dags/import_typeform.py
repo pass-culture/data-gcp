@@ -23,7 +23,7 @@ from dependencies.config import (
     ENV_SHORT_NAME,
 )
 from dependencies.data_analytics.enriched_data.enriched_qpi_answers_v2 import (
-    return_query,
+    enrich_answers,
 )
 
 TYPEFORM_FUNCTION_NAME = "qpi_import_" + ENV_SHORT_NAME
@@ -128,15 +128,11 @@ with DAG(
 
     analytics_answers = BigQueryOperator(
         task_id="analytics_answers",
-        sql=return_query(
+        sql=enrich_answers(
             gcp_project=GCP_PROJECT,
-            bigquery_raw_dataset=BIGQUERY_RAW_DATASET,
             bigquery_clean_dataset="clean_stg"
             if ENV_SHORT_NAME == "dev"
             else BIGQUERY_CLEAN_DATASET,
-            bigquery_analytics_dataset="analytics_stg"
-            if ENV_SHORT_NAME == "dev"
-            else BIGQUERY_ANALYTICS_DATASET,
         ),
         use_legacy_sql=False,
         destination_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_ANALYTICS_DATASET}.enriched_qpi_answers_v2",

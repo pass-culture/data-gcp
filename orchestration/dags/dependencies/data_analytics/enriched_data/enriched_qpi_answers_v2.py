@@ -1,52 +1,55 @@
-def return_query(
+FORM = {
+    "ge0Egr2m8V1T": {
+        "pratique_artistique": "pris un cours de pratique artistique (danse, théâtre, musique, dessin...) 🎨",
+        "autre": "participé à une conférence, une rencontre ou une découverte de métiers de la Culture 🎤",
+        "musees_patrimoine": "allé à un musée, une visite ou une exposition  🏛",
+        "spectacle_vivant": "assisté à une pièce de théâtre, à un spectacle de cirque, de danse... 💃",
+        "musique": "allé à un concert ou un festival 🤘",
+        "cinema": "allé au cinéma 🎞",
+    },
+    "NeyLJOqShoHw": {
+        "musique": "écouté de la musique ♫",
+        "instrument": "joué de ton instrument de musique 🎸",
+        "presse": "lu un article de presse 📰",
+        "audiovisuel": "regardé un film chez toi 🍿",
+        "jeux_videos": "joué à un jeu vidéo 🎮",
+        "livre": "lu un livre 📚",
+    },
+}
+
+
+def create_condition(question_id, category, create_variable=True):
+    condition = (
+        f"SUM(CAST(question_id = '{question_id}' "
+        f"and '{FORM[question_id][category]}' IN UNNEST(choices) AS INT64))"
+    )
+    if not create_variable:
+        return condition
+    return condition + f" > 0 as {category}"
+
+
+def enrich_answers(
     gcp_project,
-    bigquery_raw_dataset,
     bigquery_clean_dataset,
-    bigquery_analytics_dataset,
 ):
+    new_line = ", \n\t     "
     return f"""
         WITH unrolled_answers as (
-            SELECT * FROM `{gcp_project}.{bigquery_raw_dataset}.qpi_answers_v2` as qpi, qpi.answers as answers
-        ),
-        question1 as (
-            SELECT culturalsurvey_id as id, user_id,
-            "pris un cours de pratique artistique (danse, théâtre, musique, dessin...) 🎨" IN UNNEST(choices) as pratique_artistique,
-            "participé à une conférence, une rencontre ou une découverte de métiers de la Culture 🎤" IN UNNEST(choices) as autre,
-            "allé à un musée, une visite ou une exposition  🏛" IN UNNEST(choices) as musees_patrimoine,
-            "assisté à une pièce de théâtre, à un spectacle de cirque, de danse... 💃" IN UNNEST(choices) as spectacle_vivant,
-            "allé à un concert ou un festival 🤘" IN UNNEST(choices) as musique,
-            "allé au cinéma 🎞" IN UNNEST(choices) as cinema
-            FROM  unrolled_answers
-            WHERE question_id = "ge0Egr2m8V1T"
-        ),
-        question2 as (
-            SELECT culturalsurvey_id as id, user_id,
-            "joué de ton instrument de musique 🎸" IN UNNEST(choices) as instrument,
-            "lu un article de presse 📰" IN UNNEST(choices) as presse,
-            "regardé un film chez toi 🍿" IN UNNEST(choices) as audiovisuel,
-            "joué à un jeu vidéo 🎮" IN UNNEST(choices) as jeux_videos,
-            "écouté de la musique ♫" IN UNNEST(choices) as musique,
-            "lu un livre 📚" IN UNNEST(choices) as livre
-            FROM  unrolled_answers
-            WHERE question_id = "NeyLJOqShoHw"
-        ),
-        users AS (
-            SELECT user_id, user_cultural_survey_id, user_civility, user_activity, FROM `{gcp_project}.{bigquery_clean_dataset}.applicative_database_user`
-        ),
-        enriched_users as (
-            SELECT user_id, booking_cnt as booking_count, first_connection_date FROM `{gcp_project}.{bigquery_analytics_dataset}.enriched_user_data`
+            SELECT * FROM (
+                select *, ROW_NUMBER() OVER() as row_id from `{gcp_project}.{bigquery_clean_dataset}.qpi_answers_v2`
+            ) as qpi, qpi.answers as answers
         )
 
-        select (CASE question1.user_id WHEN null THEN users.user_id else question1.user_id END) as user_id, 
-        user_civility, users.user_activity,
-        booking_count, TIMESTAMP_DIFF(CURRENT_TIMESTAMP(),  CAST(first_connection_date AS TIMESTAMP), DAY) as days_since_first_connection,
-        pratique_artistique, autre, musees_patrimoine, spectacle_vivant, cinema, instrument, presse, audiovisuel, jeux_videos, livre,
-        IFNULL(question1.musique is true or question2.musique is true, false) as musique,
-        FROM question1
-        INNER JOIN question2
-        on question1.id = question2.id
-        LEFT JOIN users
-        on question1.id = users.user_cultural_survey_id
-        LEFT JOIN enriched_users
-        on users.user_id = enriched_users.user_id
+        SELECT max(user_id) as user_id,
+            {
+    f'{new_line}'.join(
+        [
+            create_condition(question_id, category)
+            for question_id in FORM for category in FORM[question_id] if category != "musique"
+        ] + [f"{create_condition('ge0Egr2m8V1T', 'musique', False)} + {create_condition('NeyLJOqShoHw', 'musique')}"]
+    )
+    }
+        FROM  unrolled_answers
+        group by row_id
+
     """

@@ -16,8 +16,8 @@ def access_secret(project_id, secret_id, version_id=1, default=None):
         return default
 
 
-project_id = os.environ["PROJECT_NAME"]
-TYPEFORM_API_KEY = access_secret(project_id, "typeform_api_key")
+project_name = os.environ["PROJECT_NAME"]
+TYPEFORM_API_KEY = access_secret(project_name, "typeform_api_key")
 NEW_PROD_FORM_ID = "HGBAFB"
 BUCKET_NAME = os.environ["BUCKET_NAME"]
 STORAGE_PATH = BUCKET_NAME + "/QPI_exports/"
@@ -47,6 +47,7 @@ def run(request):
         NEW_PROD_FORM_ID,
         answers_file_name,
         questions_file_name,
+        project_name,
         after,
     )
 

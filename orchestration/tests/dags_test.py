@@ -84,12 +84,12 @@ class TestDags(unittest.TestCase):
 
     def test_dump_matomo_refresh_dag_is_loaded(self):
         # When
-        dag = self.dagbag.get_dag(dag_id="dump_scalingo_matomo_refresh_v1")
+        dag = self.dagbag.get_dag(dag_id="dump_scalingo_matomo_refresh_v2")
 
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 39)
+        self.assertEqual(len(dag.tasks), 41)
 
     def test_import_data_analytics_dag_is_loaded(self):
         # When

@@ -22,13 +22,23 @@ from dependencies.access_gcp_secrets import access_secret_data
 from dependencies.bigquery_client import BigQueryClient
 from dependencies.matomo_client import MatomoClient
 from dependencies.matomo_data_schema import PROD_TABLE_DATA, STAGING_TABLE_DATA
+from dependencies.matomo_sql_queries import (
+    preprocess_log_visit_query,
+    preprocess_log_visit_referer_query,
+    preprocess_log_visit_config_query,
+    preprocess_log_visit_location_query,
+    preprocess_log_visit_campaign_query,
+    preprocess_log_visit_custom_var_query,
+    transform_matomo_events_query,
+    add_screen_view_matomo_events_query,
+)
 from dependencies.slack_alert import task_fail_slack_alert
 
 ENV = os.environ.get("ENV")
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
 DATA_GCS_BUCKET_NAME = os.environ.get("DATA_GCS_BUCKET_NAME")
-BIGQUERY_RAW_DATASET = os.environ.get(f"BIGQUERY_RAW_DATASET")
-BIGQUERY_CLEAN_DATASET = os.environ.get(f"BIGQUERY_CLEAN_DATASET")
+BIGQUERY_RAW_DATASET = os.environ.get("BIGQUERY_RAW_DATASET")
+BIGQUERY_CLEAN_DATASET = os.environ.get("BIGQUERY_CLEAN_DATASET")
 TABLE_DATA = STAGING_TABLE_DATA if ENV == "dev" else PROD_TABLE_DATA
 LOCAL_HOST = "127.0.0.1"
 LOCAL_PORT = 10026
@@ -199,7 +209,7 @@ default_args = {
 # DAG is launched once a week on dev env to have enough data to import
 # on other env it is launched once a day
 dag = DAG(
-    "dump_scalingo_matomo_refresh_v1",
+    "dump_scalingo_matomo_refresh_v2",
     default_args=default_args,
     description="Dump scalingo matomo new data to cloud storage in csv format and use it to refresh data in bigquery",
     schedule_interval="0 4 * * *" if ENV != "dev" else "0 4 * * 1",
@@ -315,129 +325,20 @@ for table in TABLE_DATA:
         )
         end_export >> import_task >> end_import
 
-preprocess_log_visit_query = f"""
-SELECT
-    idvisit,
-    idsite,
-    idvisitor,
-    user_id,
-    visit_first_action_time,
-    visit_last_action_time,
-    visit_goal_buyer,
-    visit_goal_converted,
-    visit_entry_idaction_name,
-    visit_entry_idaction_url,
-    visit_exit_idaction_name,
-    visit_exit_idaction_url,
-    visit_total_actions,
-    visit_total_interactions,
-    visit_total_searches,
-    visit_total_events,
-    visit_total_time,
-    visitor_days_since_first,
-    visitor_days_since_last,
-    visitor_days_since_order,
-    visitor_returning,
-    visitor_count_visits,
-    visitor_localtime,
-    CASE
-        WHEN REGEXP_CONTAINS(user_id, r"^ANONYMOUS ")
-            THEN NULL
-        WHEN REGEXP_CONTAINS(user_id, r"^[0-9]{{2,}} ")
-            THEN REGEXP_EXTRACT(user_id, r"^[0-9]{{2,}}")
-        WHEN REGEXP_CONTAINS(user_id, r"^[A-Z0-9]{{2,}} ")
-            THEN {BIGQUERY_RAW_DATASET}.dehumanize_id(REGEXP_EXTRACT(user_id, r"^[A-Z0-9]{{2,}}"))
-        ELSE NULL
-    END AS user_id_dehumanized
-FROM
-    {BIGQUERY_RAW_DATASET}.log_visit
-"""
-
-preprocess_log_visit_referer_query = f"""
-SELECT 
-    idvisit,
-    referer_keyword as keyword,
-    referer_name as name,
-    referer_type as type,
-    referer_url as url 
-FROM
-    {BIGQUERY_RAW_DATASET}.log_visit
-"""
-
-preprocess_log_visit_config_query = f"""
-SELECT
-    idvisit,
-    config_id,
-    config_browser_engine as browser_engine,
-    config_browser_name as browser_name,
-    config_browser_version as browser_version,
-    config_device_brand as device_brand,
-    config_device_model as device_model,
-    config_device_type as device_type,
-    config_os as os,
-    config_os_version as os_version,
-    config_resolution as resolution,
-    config_cookie as cookie,
-    config_director as director,
-    config_flash as flash,
-    config_gears as gears,
-    config_java as java,
-    config_pdf as pdf,
-    config_quicktime as quicktime,
-    config_realplayer as realplayer,
-    config_silverlight as silverlight,
-    config_windowsmedia as windowsmedia
-FROM
-    {BIGQUERY_RAW_DATASET}.log_visit
-"""
-
-additional_column = ", location_provider as provider" if ENV != "dev" else ""
-
-preprocess_log_visit_location_query = f"""
-SELECT 
-    idvisit,
-    location_ip as ip,
-    location_city as city,
-    location_country as country,
-    location_latitude as latitude,
-    location_longitude as longitude,
-    location_region as region,
-    location_browser_lang as browser_lang{additional_column}
-FROM
-    {BIGQUERY_RAW_DATASET}.log_visit
-"""
-
-preprocess_log_visit_campaign_query = f"""
-SELECT
-    idvisit,
-    campaign_content as content,
-    campaign_id as id,
-    campaign_keyword as keyword,
-    campaign_medium as medium,
-    campaign_name as name,
-    campaign_source as source
-FROM
-    {BIGQUERY_RAW_DATASET}.log_visit
-"""
-
-preprocess_log_visit_custom_var_query = f"""
-SELECT
-idvisit,
-custom_var_k1,
-custom_var_v1,
-FROM
-    {BIGQUERY_RAW_DATASET}.log_visit
-"""
 
 preprocess_log_visit_tasks = []
 
 column_group_queries = {
-    "": preprocess_log_visit_query,
-    "_referer": preprocess_log_visit_referer_query,
-    "_config": preprocess_log_visit_config_query,
-    "_location": preprocess_log_visit_location_query,
-    "_campaign": preprocess_log_visit_campaign_query,
-    "_custom_var": preprocess_log_visit_custom_var_query,
+    "": preprocess_log_visit_query(GCP_PROJECT, BIGQUERY_RAW_DATASET),
+    "_referer": preprocess_log_visit_referer_query(GCP_PROJECT, BIGQUERY_RAW_DATASET),
+    "_config": preprocess_log_visit_config_query(GCP_PROJECT, BIGQUERY_RAW_DATASET),
+    "_location": preprocess_log_visit_location_query(
+        GCP_PROJECT, BIGQUERY_RAW_DATASET, ENV
+    ),
+    "_campaign": preprocess_log_visit_campaign_query(GCP_PROJECT, BIGQUERY_RAW_DATASET),
+    "_custom_var": preprocess_log_visit_custom_var_query(
+        GCP_PROJECT, BIGQUERY_RAW_DATASET
+    ),
 }
 
 for column_group in column_group_queries:
@@ -517,6 +418,7 @@ copy_log_conversion_task = BigQueryOperator(
     use_legacy_sql=False,
     dag=dag,
 )
+
 copy_goal_task = BigQueryOperator(
     task_id="copy_goal",
     sql=f"SELECT * from {GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.goal",
@@ -582,6 +484,25 @@ filter_log_action_task = BigQueryOperator(
     dag=dag,
 )
 
+# TASKS FOR TRANSFORMING MATOMO
+transform_matomo_events = BigQueryOperator(
+    task_id="transform_matomo_events",
+    sql=transform_matomo_events_query(GCP_PROJECT, BIGQUERY_RAW_DATASET),
+    destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.matomo_events",
+    write_disposition="WRITE_TRUNCATE",
+    use_legacy_sql=False,
+    dag=dag,
+)
+
+add_screen_view_matomo_events = BigQueryOperator(
+    task_id="add_screen_view_matomo_events",
+    sql=add_screen_view_matomo_events_query(GCP_PROJECT, BIGQUERY_RAW_DATASET),
+    destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.matomo_events",
+    write_disposition="WRITE_APPEND",
+    use_legacy_sql=False,
+    dag=dag,
+)
+
 
 end_preprocess = DummyOperator(task_id="end_preprocess", dag=dag)
 
@@ -592,7 +513,6 @@ define_tasks_end = PythonOperator(
     dag=dag,
 )
 
-end_dag = DummyOperator(task_id="end_dag", dag=dag)
 
 end_import >> preprocess_log_visit_tasks >> end_preprocess
 end_import >> [
@@ -600,4 +520,10 @@ end_import >> [
     preprocess_log_link_visit_action_task,
     copy_log_conversion_task,
     copy_goal_task,
-] >> end_preprocess >> filter_log_action_task >> filter_log_link_visit_action_task >> define_tasks_end >> end_dag
+] >> end_preprocess
+
+end_import >> transform_matomo_events >> add_screen_view_matomo_events >> end_preprocess
+
+end_dag = DummyOperator(task_id="end_dag", dag=dag)
+
+end_preprocess >> filter_log_action_task >> filter_log_link_visit_action_task >> define_tasks_end >> end_dag

@@ -11,6 +11,9 @@ from dependencies.config import (
     BIGQUERY_CLEAN_DATASET,
     GCP_PROJECT,
 )
+from dependencies.data_analytics.enriched_data.booked_categories import (
+    enrich_booked_categories,
+)
 from dependencies.data_analytics.enriched_data.booking import (
     define_enriched_booking_data_full_query,
 )
@@ -168,31 +171,11 @@ create_enriched_offerer_data_task = BigQueryOperator(
 )
 create_enriched_booked_categories_data_v1_task = BigQueryOperator(
     task_id="create_enriched_booked_categories_data_v1",
-    sql=f"""
-        WITH bookings as (
-            SELECT user_id, offer.offer_type,  venue_is_virtual FROM `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.applicative_database_booking` booking
-            LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.applicative_database_stock` stock
-            ON booking.stock_id = stock.stock_id
-            LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.applicative_database_offer` offer
-            ON stock.offer_id = offer.offer_id
-            LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.applicative_database_venue` venue
-            ON venue.venue_id = offer.venue_id
-        )
-        select user_id,
-        SUM(CAST(offer_type = 'ThingType.AUDIOVISUEL' AS INT64)) > 0 AS audiovisuel,
-        SUM(CAST(offer_type in ('EventType.CINEMA', 'ThingType.CINEMA_ABO', 'ThingType.CINEMA_CARD') AS INT64)) > 0 AS cinema,
-        SUM(CAST(offer_type in ('ThingType.JEUX_VIDEO_ABO', 'ThingType.JEUX_VIDEO') AS INT64)) > 0 AS jeux_videos,
-        SUM(CAST(offer_type = 'ThingType.LIVRE_EDITION' or offer_type = 'ThingType.LIVRE_AUDIO' AS INT64)) > 0 AS livre,
-        SUM(CAST(offer_type in ('EventType.MUSEES_PATRIMOINE', 'ThingType.MUSEES_PATRIMOINE_ABO') AS INT64)) > 0 AS musees_patrimoine,
-        SUM(CAST(offer_type in ('EventType.MUSIQUE', 'ThingType.MUSIQUE_ABO') AS INT64)) > 0 AS musique,
-        SUM(CAST(offer_type in ('EventType.PRATIQUE_ARTISTIQUE', 'ThingType.PRATIQUE_ARTISTIQUE_ABO') AS INT64)) > 0 AS pratique_artistique,
-        SUM(CAST(offer_type in ('EventType.SPECTACLE_VIVANT', 'ThingType.SPECTACLE_VIVANT_ABO') AS INT64)) > 0 AS spectacle_vivant,
-        SUM(CAST(offer_type = 'ThingType.INSTRUMENT' AS INT64)) > 0 AS instrument,
-        SUM(CAST(offer_type = 'ThingType.PRESSE_ABO' AS INT64)) > 0 AS presse,
-        SUM(CAST(offer_type in ('EventType.CONFERENCE_DEBAT_DEDICACE', 'ThingType.OEUVRE_ART', 'EventType.JEUX') AS INT64)) > 0 AS autre,
-        FROM bookings
-        group by user_id
-    """,
+    sql=enrich_booked_categories(
+        gco_project=GCP_PROJECT,
+        bigquery_analytics_dataset=BIGQUERY_ANALYTICS_DATASET,
+        version=1,
+    ),
     destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.enriched_booked_categories_v1",
     write_disposition="WRITE_TRUNCATE",
     use_legacy_sql=False,
@@ -200,31 +183,11 @@ create_enriched_booked_categories_data_v1_task = BigQueryOperator(
 )
 create_enriched_booked_categories_data_v2_task = BigQueryOperator(
     task_id="create_enriched_booked_categories_data_v2",
-    sql=f"""
-        WITH bookings as (
-            SELECT user_id, offer.offer_type,  venue_is_virtual FROM `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.applicative_database_booking` booking
-            LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.applicative_database_stock` stock
-            ON booking.stock_id = stock.stock_id
-            LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.applicative_database_offer` offer
-            ON stock.offer_id = offer.offer_id
-            LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.applicative_database_venue` venue
-            ON venue.venue_id = offer.venue_id
-        )
-        select user_id,
-        SUM(CAST(offer_type in ('EventType.PRATIQUE_ARTISTIQUE', 'ThingType.PRATIQUE_ARTISTIQUE_ABO') AS INT64)) > 0 AS pratique_artistique,
-        SUM(CAST(offer_type = 'EventType.CONFERENCE_DEBAT_DEDICACE' AS INT64)) > 0 AS autre,
-        SUM(CAST(offer_type in ('EventType.MUSEES_PATRIMOINE', 'ThingType.MUSEES_PATRIMOINE_ABO') AS INT64)) > 0 AS musees_patrimoine,
-        SUM(CAST(offer_type in ('EventType.SPECTACLE_VIVANT', 'ThingType.SPECTACLE_VIVANT_ABO') AS INT64)) > 0 AS spectacle_vivant,
-        SUM(CAST(offer_type in ('EventType.MUSIQUE', 'ThingType.MUSIQUE_ABO', 'ThingType.MUSIQUE') AS INT64)) > 0 AS musique,
-        SUM(CAST(offer_type in ('EventType.CINEMA', 'ThingType.CINEMA_CARD') AS INT64)) > 0 AS cinema,
-        SUM(CAST(offer_type = 'ThingType.INSTRUMENT' AS INT64)) > 0 AS instrument,
-        SUM(CAST(offer_type = 'ThingType.PRESSE_ABO' AS INT64)) > 0 AS presse,
-        SUM(CAST(offer_type = 'ThingType.AUDIOVISUEL' AS INT64)) > 0 AS audiovisuel,
-        SUM(CAST(offer_type in ('ThingType.JEUX_VIDEO_ABO', 'ThingType.JEUX_VIDEO') AS INT64)) > 0 AS jeux_videos,
-        SUM(CAST(offer_type in ('ThingType.LIVRE_EDITION', 'ThingType.LIVRE_AUDIO') AS INT64)) > 0 AS livre,
-        FROM bookings
-        group by user_id
-    """,
+    sql=enrich_booked_categories(
+        gco_project=GCP_PROJECT,
+        bigquery_analytics_dataset=BIGQUERY_ANALYTICS_DATASET,
+        version=2,
+    ),
     destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.enriched_booked_categories_v2",
     write_disposition="WRITE_TRUNCATE",
     use_legacy_sql=False,

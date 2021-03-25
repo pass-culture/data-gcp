@@ -1,22 +1,23 @@
-def temporary_booking_table(gco_project, bigquery_analytics_dataset):
+def temporary_booking_table(gcp_project, bigquery_analytics_dataset):
     return f"""
-        WITH bookings as (
-            SELECT user_id, offer.offer_type,  venue_is_virtual FROM `{gco_project}.{bigquery_analytics_dataset}.applicative_database_booking` booking
-            LEFT JOIN `{gco_project}.{bigquery_analytics_dataset}.applicative_database_stock` stock
+        WITH bookings AS (
+            SELECT user_id, offer.offer_type,  venue_is_virtual 
+            FROM `{gcp_project}.{bigquery_analytics_dataset}.applicative_database_booking` booking
+            LEFT JOIN `{gcp_project}.{bigquery_analytics_dataset}.applicative_database_stock` stock
             ON booking.stock_id = stock.stock_id
-            LEFT JOIN `{gco_project}.{bigquery_analytics_dataset}.applicative_database_offer` offer
+            LEFT JOIN `{gcp_project}.{bigquery_analytics_dataset}.applicative_database_offer` offer
             ON stock.offer_id = offer.offer_id
-            LEFT JOIN `{gco_project}.{bigquery_analytics_dataset}.applicative_database_venue` venue
+            LEFT JOIN `{gcp_project}.{bigquery_analytics_dataset}.applicative_database_venue` venue
             ON venue.venue_id = offer.venue_id
-            where booking.booking_is_cancelled is false
+            WHERE booking.booking_is_cancelled IS false
         )
     """
 
 
-def enrich_booked_categories(gco_project, bigquery_analytics_dataset, version):
-    booking_query = temporary_booking_table(gco_project, bigquery_analytics_dataset)
+def enrich_booked_categories(gcp_project, bigquery_analytics_dataset, version):
+    booking_query = temporary_booking_table(gcp_project, bigquery_analytics_dataset)
     query = """
-        select user_id,
+        SELECT user_id,
         SUM(CAST(offer_type = 'ThingType.AUDIOVISUEL' AS INT64)) > 0 AS audiovisuel,
         SUM(CAST(offer_type = 'ThingType.INSTRUMENT' AS INT64)) > 0 AS instrument,
         SUM(CAST(offer_type in ('ThingType.JEUX_VIDEO_ABO', 'ThingType.JEUX_VIDEO') AS INT64)) > 0 AS jeux_videos,
@@ -31,14 +32,14 @@ def enrich_booked_categories(gco_project, bigquery_analytics_dataset, version):
         SUM(CAST(offer_type in ('EventType.CINEMA', 'ThingType.CINEMA_ABO', 'ThingType.CINEMA_CARD') AS INT64)) > 0 AS cinema,
         SUM(CAST(offer_type in ('EventType.MUSIQUE', 'ThingType.MUSIQUE_ABO') AS INT64)) > 0 AS musique
         FROM bookings
-        group by user_id
+        GROUP BY user_id
         """
     if version == 2:
         query += """    SUM(CAST(offer_type = 'EventType.CONFERENCE_DEBAT_DEDICACE' AS INT64)) > 0 AS autre,
         SUM(CAST(offer_type in ('EventType.CINEMA', 'ThingType.CINEMA_CARD') AS INT64)) > 0 AS cinema,
         SUM(CAST(offer_type in ('EventType.MUSIQUE', 'ThingType.MUSIQUE_ABO', 'ThingType.MUSIQUE') AS INT64)) > 0 AS musique
         FROM bookings
-        group by user_id
+        GROUP BY user_id
         """
     return f"{booking_query}{query}"
 

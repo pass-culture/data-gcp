@@ -129,6 +129,7 @@ create_enriched_offer_data_task = BigQueryOperator(
     use_legacy_sql=False,
     dag=dag,
 )
+
 create_enriched_stock_data_task = BigQueryOperator(
     task_id="create_enriched_stock_data",
     sql=define_enriched_stock_data_full_query(
@@ -137,6 +138,7 @@ create_enriched_stock_data_task = BigQueryOperator(
     use_legacy_sql=False,
     dag=dag,
 )
+
 create_enriched_user_data_task = BigQueryOperator(
     task_id="create_enriched_user_data",
     sql=define_enriched_user_data_full_query(
@@ -145,6 +147,7 @@ create_enriched_user_data_task = BigQueryOperator(
     use_legacy_sql=False,
     dag=dag,
 )
+
 create_enriched_venue_data_task = BigQueryOperator(
     task_id="create_enriched_venue_data",
     sql=define_enriched_venue_data_full_query(
@@ -153,6 +156,7 @@ create_enriched_venue_data_task = BigQueryOperator(
     use_legacy_sql=False,
     dag=dag,
 )
+
 create_enriched_booking_data_task = BigQueryOperator(
     task_id="create_enriched_booking_data",
     sql=define_enriched_booking_data_full_query(
@@ -161,6 +165,7 @@ create_enriched_booking_data_task = BigQueryOperator(
     use_legacy_sql=False,
     dag=dag,
 )
+
 create_enriched_offerer_data_task = BigQueryOperator(
     task_id="create_enriched_offerer_data",
     sql=define_enriched_offerer_data_full_query(
@@ -169,10 +174,11 @@ create_enriched_offerer_data_task = BigQueryOperator(
     use_legacy_sql=False,
     dag=dag,
 )
+
 create_enriched_booked_categories_data_v1_task = BigQueryOperator(
     task_id="create_enriched_booked_categories_data_v1",
     sql=enrich_booked_categories(
-        gco_project=GCP_PROJECT,
+        gcp_project=GCP_PROJECT,
         bigquery_analytics_dataset=BIGQUERY_ANALYTICS_DATASET,
         version=1,
     ),
@@ -181,10 +187,11 @@ create_enriched_booked_categories_data_v1_task = BigQueryOperator(
     use_legacy_sql=False,
     dag=dag,
 )
+
 create_enriched_booked_categories_data_v2_task = BigQueryOperator(
     task_id="create_enriched_booked_categories_data_v2",
     sql=enrich_booked_categories(
-        gco_project=GCP_PROJECT,
+        gcp_project=GCP_PROJECT,
         bigquery_analytics_dataset=BIGQUERY_ANALYTICS_DATASET,
         version=2,
     ),

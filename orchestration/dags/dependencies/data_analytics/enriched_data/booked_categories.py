@@ -9,7 +9,7 @@ def temporary_booking_table(gcp_project, bigquery_analytics_dataset):
             ON stock.offer_id = offer.offer_id
             LEFT JOIN `{gcp_project}.{bigquery_analytics_dataset}.applicative_database_venue` venue
             ON venue.venue_id = offer.venue_id
-            WHERE booking.booking_is_cancelled IS false
+            WHERE NOT (booking.booking_is_cancelled AND (booking.booking_cancellation_reason = 'BENEFICIARY' OR booking.booking_cancellation_reason IS NULL))
         )
     """
 

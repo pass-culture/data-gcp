@@ -1,3 +1,49 @@
+def temporary_booking_table(gcp_project, bigquery_analytics_dataset):
+    return f"""
+        WITH bookings AS (
+            SELECT user_id, offer.offer_type,  venue_is_virtual 
+            FROM `{gcp_project}.{bigquery_analytics_dataset}.applicative_database_booking` booking
+            LEFT JOIN `{gcp_project}.{bigquery_analytics_dataset}.applicative_database_stock` stock
+            ON booking.stock_id = stock.stock_id
+            LEFT JOIN `{gcp_project}.{bigquery_analytics_dataset}.applicative_database_offer` offer
+            ON stock.offer_id = offer.offer_id
+            LEFT JOIN `{gcp_project}.{bigquery_analytics_dataset}.applicative_database_venue` venue
+            ON venue.venue_id = offer.venue_id
+            WHERE NOT (booking.booking_is_cancelled AND (booking.booking_cancellation_reason = 'BENEFICIARY' OR booking.booking_cancellation_reason IS NULL))
+        )
+    """
+
+
+def enrich_booked_categories(gcp_project, bigquery_analytics_dataset, version):
+    booking_query = temporary_booking_table(gcp_project, bigquery_analytics_dataset)
+    query = """
+        SELECT user_id,
+        SUM(CAST(offer_type = 'ThingType.AUDIOVISUEL' AS INT64)) > 0 AS audiovisuel,
+        SUM(CAST(offer_type = 'ThingType.INSTRUMENT' AS INT64)) > 0 AS instrument,
+        SUM(CAST(offer_type in ('ThingType.JEUX_VIDEO_ABO', 'ThingType.JEUX_VIDEO') AS INT64)) > 0 AS jeux_videos,
+        SUM(CAST(offer_type = 'ThingType.LIVRE_EDITION' or offer_type = 'ThingType.LIVRE_AUDIO' AS INT64)) > 0 AS livre,
+        SUM(CAST(offer_type in ('EventType.MUSEES_PATRIMOINE', 'ThingType.MUSEES_PATRIMOINE_ABO') AS INT64)) > 0 AS musees_patrimoine,
+        SUM(CAST(offer_type in ('EventType.PRATIQUE_ARTISTIQUE', 'ThingType.PRATIQUE_ARTISTIQUE_ABO') AS INT64)) > 0 AS pratique_artistique,
+        SUM(CAST(offer_type = 'ThingType.PRESSE_ABO' AS INT64)) > 0 AS presse,
+        SUM(CAST(offer_type in ('EventType.SPECTACLE_VIVANT', 'ThingType.SPECTACLE_VIVANT_ABO') AS INT64)) > 0 AS spectacle_vivant,
+    """
+    if version == 1:
+        query += """    SUM(CAST(offer_type in ('EventType.CONFERENCE_DEBAT_DEDICACE', 'ThingType.OEUVRE_ART', 'EventType.JEUX') AS INT64)) > 0 AS autre,
+        SUM(CAST(offer_type in ('EventType.CINEMA', 'ThingType.CINEMA_ABO', 'ThingType.CINEMA_CARD') AS INT64)) > 0 AS cinema,
+        SUM(CAST(offer_type in ('EventType.MUSIQUE', 'ThingType.MUSIQUE_ABO') AS INT64)) > 0 AS musique
+        FROM bookings
+        GROUP BY user_id
+        """
+    if version == 2:
+        query += """    SUM(CAST(offer_type = 'EventType.CONFERENCE_DEBAT_DEDICACE' AS INT64)) > 0 AS autre,
+        SUM(CAST(offer_type in ('EventType.CINEMA', 'ThingType.CINEMA_CARD') AS INT64)) > 0 AS cinema,
+        SUM(CAST(offer_type in ('EventType.MUSIQUE', 'ThingType.MUSIQUE_ABO', 'ThingType.MUSIQUE') AS INT64)) > 0 AS musique
+        FROM bookings
+        GROUP BY user_id
+        """
+    return f"{booking_query}{query}"
+
+
 def define_user_booked_audiovisuel_query(dataset, table_prefix=""):
     return f"""
         CREATE TEMP TABLE user_booked_audiovisuel AS (

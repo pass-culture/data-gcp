@@ -30,11 +30,11 @@ def preprocess_log_visit_query(gcp_project, bigquery_raw_dataset):
             WHEN REGEXP_CONTAINS(user_id, r"^[0-9]{{2,}} ")
                 THEN REGEXP_EXTRACT(user_id, r"^[0-9]{{2,}}")
             WHEN REGEXP_CONTAINS(user_id, r"^[A-Z0-9]{{2,}} ")
-                THEN {gcp_project}.{bigquery_raw_dataset}.dehumanize_id(REGEXP_EXTRACT(user_id, r"^[A-Z0-9]{{2,}}"))
+                THEN `{gcp_project}`.{bigquery_raw_dataset}.dehumanize_id(REGEXP_EXTRACT(user_id, r"^[A-Z0-9]{{2,}}"))
             ELSE NULL
         END AS user_id_dehumanized
     FROM
-        {gcp_project}.{bigquery_raw_dataset}.log_visit
+        `{gcp_project}.{bigquery_raw_dataset}.log_visit`
 """
 
 
@@ -215,7 +215,6 @@ def transform_matomo_events_query(gcp_project, bigquery_raw_dataset):
         aggregate.event_params
     FROM aggregate
     RIGHT OUTER JOIN base on base.idlink_va = aggregate.idlink_va
-    ORDER BY base.server_time
     """
 
 
@@ -259,5 +258,4 @@ def add_screen_view_matomo_events_query(gcp_project, bigquery_raw_dataset):
     LEFT JOIN `{gcp_project}.{bigquery_raw_dataset}.log_action` previous_idaction_name
     ON pages.idaction_name = previous_idaction_name.idaction
     WHERE idaction_url != previous_idaction_url OR previous_idaction_url IS NULL
-    ORDER BY idvisit, server_time
     """

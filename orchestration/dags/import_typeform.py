@@ -130,10 +130,7 @@ with DAG(
         task_id="enrich_qpi_answers",
         sql=enrich_answers(
             gcp_project=GCP_PROJECT,
-            # we use staging in dev otherwise we do not have any user in the resulting table
-            bigquery_clean_dataset="clean_stg"
-            if ENV_SHORT_NAME == "dev"
-            else BIGQUERY_CLEAN_DATASET,
+            bigquery_clean_dataset=BIGQUERY_CLEAN_DATASET,
         ),
         use_legacy_sql=False,
         destination_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_ANALYTICS_DATASET}.enriched_qpi_answers_v2",

@@ -37,8 +37,8 @@ from dependencies.slack_alert import task_fail_slack_alert
 ENV = os.environ.get("ENV")
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
 DATA_GCS_BUCKET_NAME = os.environ.get("DATA_GCS_BUCKET_NAME")
-BIGQUERY_RAW_DATASET = os.environ.get(f"BIGQUERY_RAW_DATASET")
-BIGQUERY_CLEAN_DATASET = os.environ.get(f"BIGQUERY_CLEAN_DATASET")
+BIGQUERY_RAW_DATASET = os.environ.get("BIGQUERY_RAW_DATASET")
+BIGQUERY_CLEAN_DATASET = os.environ.get("BIGQUERY_CLEAN_DATASET")
 TABLE_DATA = STAGING_TABLE_DATA if ENV == "dev" else PROD_TABLE_DATA
 LOCAL_HOST = "127.0.0.1"
 LOCAL_PORT = 10026
@@ -209,7 +209,7 @@ default_args = {
 # DAG is launched once a week on dev env to have enough data to import
 # on other env it is launched once a day
 dag = DAG(
-    "dump_scalingo_matomo_refresh_v1",
+    "dump_scalingo_matomo_refresh_v2",
     default_args=default_args,
     description="Dump scalingo matomo new data to cloud storage in csv format and use it to refresh data in bigquery",
     schedule_interval="0 4 * * *" if ENV != "dev" else "0 4 * * 1",

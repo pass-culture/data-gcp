@@ -46,11 +46,20 @@ class QPIDownloader:
 
     """
 
-    def __init__(self, api_key, form_id, answers_file_name, questions_file_name, after):
+    def __init__(
+        self,
+        api_key,
+        form_id,
+        answers_file_name,
+        questions_file_name,
+        project_name,
+        after,
+    ):
         self.api_key = api_key
         self.form_id = form_id
         self.answers_file_name = answers_file_name
         self.questions_file_name = questions_file_name
+        self.project_name = project_name
         self.after = after
 
     def run(self):
@@ -65,16 +74,14 @@ class QPIDownloader:
         print(f"Cleaned {len(clean_responses)} responses !")
 
         print(f"Saving the answers to {self.answers_file_name}...")
-        fs = gcsfs.GCSFileSystem(project="passculture-data-ehp")
+        fs = gcsfs.GCSFileSystem(project=self.project_name)
         with fs.open(self.answers_file_name, "w") as json_file:
             for item in clean_responses:
                 json_file.write(json.dumps(item, ensure_ascii=False) + "\n")
 
         print(f"Now getting and saving the questions to {self.questions_file_name}")
         questions = self.get_form_questions()
-        questions_csv = questions.to_csv(
-            "gcs://" + self.questions_file_name, index=False
-        )
+        questions.to_csv("gcs://" + self.questions_file_name, index=False)
 
         print("Done !")
 

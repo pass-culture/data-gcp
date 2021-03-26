@@ -173,11 +173,13 @@ class QPIDownloader:
                     ][0]
                 except:
                     user_id = None
+            user_id = user_id if user_id != "" else None
 
             try:
                 user_pk = result["hidden"]["userpk"]
             except:
                 user_pk = None
+            user_pk = user_pk if user_pk != "" else None
 
             user_data.update(
                 {

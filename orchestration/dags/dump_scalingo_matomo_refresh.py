@@ -34,6 +34,7 @@ from dependencies.matomo_sql_queries import (
     preprocess_log_visit_custom_var_query,
     transform_matomo_events_query,
     add_screen_view_matomo_events_query,
+    copy_events_to_analytics,
 )
 from dependencies.slack_alert import task_fail_slack_alert
 from dependencies.config import (
@@ -207,7 +208,7 @@ def define_tasks_parameters(table_data):
 
 
 default_args = {
-    "start_date": datetime(2021, 1, 25),
+    "start_date": datetime(2021, 3, 28),
     "retries": 5,
     "retry_delay": timedelta(minutes=5),
 }
@@ -215,7 +216,7 @@ default_args = {
 # DAG is launched once a week on dev env to have enough data to import
 # on other env it is launched once a day
 dag = DAG(
-    "dump_scalingo_matomo_refresh_v2",
+    "dump_scalingo_matomo_refresh_v3",
     default_args=default_args,
     description="Dump scalingo matomo new data to cloud storage in csv format and use it to refresh data in bigquery",
     schedule_interval="0 4 * * *" if ENV != "dev" else "0 4 * * 1",
@@ -509,6 +510,15 @@ add_screen_view_matomo_events = BigQueryOperator(
     dag=dag,
 )
 
+copy_events_to_analytics = BigQueryOperator(
+    task_id="copy_events_to_analytics",
+    sql=copy_events_to_analytics(GCP_PROJECT, BIGQUERY_CLEAN_DATASET),
+    destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.matomo_events",
+    write_disposition="WRITE_TRUNCATE",
+    use_legacy_sql=False,
+    dag=dag,
+)
+
 aggregate_matomo_offer_events = BigQueryOperator(
     task_id="aggregate_matomo_offer_events",
     sql=aggregate_matomo_offer_events(
@@ -540,7 +550,8 @@ end_import >> [
     copy_goal_task,
 ] >> end_preprocess
 
-end_import >> transform_matomo_events >> add_screen_view_matomo_events >> aggregate_matomo_offer_events >> end_preprocess
+
+end_import >> transform_matomo_events >> add_screen_view_matomo_events >> copy_events_to_analytics >> aggregate_matomo_offer_events >> end_preprocess
 
 end_dag = DummyOperator(task_id="end_dag", dag=dag)
 

@@ -16,3 +16,22 @@ def aggregate_matomo_offer_events(
         FROM offer_events
         GROUP BY offer_id  
     """
+
+
+def aggregate_matomo_user_events(gcp_project, bigquery_clean_dataset):
+    return f"""
+        WITH user_events AS (SELECT event_name, user_id_dehumanized
+            FROM `{gcp_project}.{bigquery_clean_dataset}.matomo_events` AS matomo, matomo.event_params AS events
+            LEFT JOIN `{gcp_project}.{bigquery_clean_dataset}.matomo_visits` visits
+            ON matomo.idvisit = visits.idvisit
+            WHERE events.key = 'offer_id'
+        )
+        select user_id_dehumanized AS user_id,
+        SUM(CAST(event_name = 'ConsultOffer_FromHomepage' AS INT64)) AS consult_offer_from_homepage,
+        SUM(CAST(event_name = 'ConsultOffer' AS INT64)) AS consult_offer,
+        SUM(CAST(event_name = 'AddFavorite_FromHomepage' AS INT64)) AS add_favorite_from_homepage,
+        SUM(CAST(event_name = 'BookOfferClick_FromHomepage' AS INT64)) AS book_offer_click_from_homepage,
+        SUM(CAST(event_name = 'BookOfferSuccess_FromHomepage' AS INT64)) AS book_offer_success_from_homepage,
+        FROM user_events
+        GROUP BY user_id
+    """

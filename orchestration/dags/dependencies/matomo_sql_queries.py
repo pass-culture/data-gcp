@@ -47,7 +47,7 @@ def preprocess_log_visit_referer_query(gcp_project, bigquery_raw_dataset):
         referer_type as type,
         referer_url as url
     FROM
-        {gcp_project}.{bigquery_raw_dataset}.log_visit
+        `{gcp_project}.{bigquery_raw_dataset}.log_visit`
     """
 
 
@@ -76,7 +76,7 @@ def preprocess_log_visit_config_query(gcp_project, bigquery_raw_dataset):
         config_silverlight as silverlight,
         config_windowsmedia as windowsmedia
     FROM
-        {gcp_project}.{bigquery_raw_dataset}.log_visit
+        `{gcp_project}.{bigquery_raw_dataset}.log_visit`
 """
 
 
@@ -94,7 +94,7 @@ def preprocess_log_visit_location_query(gcp_project, bigquery_raw_dataset, env):
         location_region as region,
         location_browser_lang as browser_lang{additional_column}
     FROM
-        {gcp_project}.{bigquery_raw_dataset}.log_visit
+        `{gcp_project}.{bigquery_raw_dataset}.log_visit`
     """
 
 
@@ -109,7 +109,7 @@ def preprocess_log_visit_campaign_query(gcp_project, bigquery_raw_dataset):
         campaign_name as name,
         campaign_source as source
     FROM
-        {gcp_project}.{bigquery_raw_dataset}.log_visit
+        `{gcp_project}.{bigquery_raw_dataset}.log_visit`
     """
 
 
@@ -120,7 +120,7 @@ def preprocess_log_visit_custom_var_query(gcp_project, bigquery_raw_dataset):
         custom_var_k1,
         custom_var_v1,
     FROM
-        {gcp_project}.{bigquery_raw_dataset}.log_visit
+        `{gcp_project}.{bigquery_raw_dataset}.log_visit`
     """
 
 
@@ -258,4 +258,11 @@ def add_screen_view_matomo_events_query(gcp_project, bigquery_raw_dataset):
     LEFT JOIN `{gcp_project}.{bigquery_raw_dataset}.log_action` previous_idaction_name
     ON pages.idaction_name = previous_idaction_name.idaction
     WHERE idaction_url != previous_idaction_url OR previous_idaction_url IS NULL
+    """
+
+
+def copy_events_to_analytics(gcp_project, bigquery_clean_dataset):
+    return f"""
+    SELECT *
+    FROM `{gcp_project}.{bigquery_clean_dataset}.matomo_events`;
     """

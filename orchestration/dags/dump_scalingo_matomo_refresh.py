@@ -31,6 +31,7 @@ from dependencies.matomo_sql_queries import (
     preprocess_log_visit_custom_var_query,
     transform_matomo_events_query,
     add_screen_view_matomo_events_query,
+    copy_events_to_analytics,
 )
 from dependencies.slack_alert import task_fail_slack_alert
 
@@ -39,6 +40,7 @@ GCP_PROJECT = os.environ.get("GCP_PROJECT")
 DATA_GCS_BUCKET_NAME = os.environ.get("DATA_GCS_BUCKET_NAME")
 BIGQUERY_RAW_DATASET = os.environ.get("BIGQUERY_RAW_DATASET")
 BIGQUERY_CLEAN_DATASET = os.environ.get("BIGQUERY_CLEAN_DATASET")
+BIGQUERY_ANALYTICS_DATASET = os.environ.get("BIGQUERY_ANALYTICS_DATASET")
 TABLE_DATA = STAGING_TABLE_DATA if ENV == "dev" else PROD_TABLE_DATA
 LOCAL_HOST = "127.0.0.1"
 LOCAL_PORT = 10026
@@ -201,7 +203,7 @@ def define_tasks_parameters(table_data):
 
 
 default_args = {
-    "start_date": datetime(2021, 1, 25),
+    "start_date": datetime(2021, 3, 29),
     "retries": 5,
     "retry_delay": timedelta(minutes=5),
 }
@@ -209,7 +211,7 @@ default_args = {
 # DAG is launched once a week on dev env to have enough data to import
 # on other env it is launched once a day
 dag = DAG(
-    "dump_scalingo_matomo_refresh_v2",
+    "dump_scalingo_matomo_refresh_v3",
     default_args=default_args,
     description="Dump scalingo matomo new data to cloud storage in csv format and use it to refresh data in bigquery",
     schedule_interval="0 4 * * *" if ENV != "dev" else "0 4 * * 1",
@@ -503,6 +505,14 @@ add_screen_view_matomo_events = BigQueryOperator(
     dag=dag,
 )
 
+copy_events_to_analytics = BigQueryOperator(
+    task_id="copy_events_to_analytics",
+    sql=copy_events_to_analytics(GCP_PROJECT, BIGQUERY_CLEAN_DATASET),
+    destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.matomo_events",
+    write_disposition="WRITE_TRUNCATE",
+    use_legacy_sql=False,
+    dag=dag,
+)
 
 end_preprocess = DummyOperator(task_id="end_preprocess", dag=dag)
 
@@ -522,7 +532,7 @@ end_import >> [
     copy_goal_task,
 ] >> end_preprocess
 
-end_import >> transform_matomo_events >> add_screen_view_matomo_events >> end_preprocess
+end_import >> transform_matomo_events >> add_screen_view_matomo_events >> copy_events_to_analytics >> end_preprocess
 
 end_dag = DummyOperator(task_id="end_dag", dag=dag)
 

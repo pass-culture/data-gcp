@@ -1,3 +1,4 @@
+--constraint "https://raw.githubusercontent.com/apache/airflow/constraints-1.10.14/constraints-3.7.txt"
 apache-airflow[gcp]==1.10.14
 sshtunnel==0.3.1
 mysqlclient==2.0.1

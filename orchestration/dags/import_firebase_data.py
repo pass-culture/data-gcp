@@ -8,7 +8,15 @@ from airflow.contrib.operators.bigquery_table_delete_operator import (
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python_operator import BranchPythonOperator
 
-from dependencies.config import BIGQUERY_RAW_DATASET, ENV_SHORT_NAME, GCP_PROJECT
+from dependencies.config import (
+    BIGQUERY_RAW_DATASET,
+    BIGQUERY_ANALYTICS_DATASET,
+    ENV_SHORT_NAME,
+    GCP_PROJECT,
+)
+from dependencies.data_analytics.enriched_data.enriched_matomo import (
+    aggregate_firebase_user_events,
+)
 from dependencies.slack_alert import task_fail_slack_alert
 
 ENV_SHORT_NAME_APP_INFO_ID_MAPPING = {
@@ -88,8 +96,21 @@ copy_table_to_env = BigQueryOperator(
     dag=dag,
 )
 
+aggregate_firebase_user_events = BigQueryOperator(
+    task_id="aggregate_firebase_user_events",
+    sql=aggregate_firebase_user_events(
+        gcp_project=GCP_PROJECT,
+        bigquery_raw_dataset=BIGQUERY_RAW_DATASET,
+    ),
+    destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.firebase_aggregated_users",
+    write_disposition="WRITE_TRUNCATE",
+    use_legacy_sql=False,
+    dag=dag,
+)
+
+
 end = DummyOperator(task_id="end", dag=dag)
 
 start >> env_switcher
 env_switcher >> dummy_task_for_branch >> copy_table_to_env
-env_switcher >> copy_table >> delete_table >> copy_table_to_env >> end
+env_switcher >> copy_table >> delete_table >> copy_table_to_env >> aggregate_firebase_user_events >> end

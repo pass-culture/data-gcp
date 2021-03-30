@@ -107,7 +107,7 @@ class TestDags(unittest.TestCase):
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 7)
+        self.assertEqual(len(dag.tasks), 8)
 
     def test_import_typeform_is_loaded(self):
         # When

@@ -62,7 +62,8 @@ BEGIN
     SELECT 1
       FROM public.mediation
      WHERE mediation."offerId" = var_offer_id
-	   AND mediation."isActive";
+	   AND mediation."isActive"
+	   AND mediation."thumbCount" > 0;
 END
 $body$
 LANGUAGE plpgsql;

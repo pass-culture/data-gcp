@@ -14,8 +14,9 @@ from dependencies.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT,
 )
-from dependencies.data_analytics.enriched_data.enriched_matomo import (
+from dependencies.data_analytics.enriched_data.enriched_firebase import (
     aggregate_firebase_user_events,
+    aggregate_firebase_offer_events,
 )
 from dependencies.slack_alert import task_fail_slack_alert
 
@@ -96,6 +97,18 @@ copy_table_to_env = BigQueryOperator(
     dag=dag,
 )
 
+aggregate_firebase_offer_events = BigQueryOperator(
+    task_id="aggregate_firebase_offer_events",
+    sql=aggregate_firebase_offer_events(
+        gcp_project=GCP_PROJECT,
+        bigquery_raw_dataset=BIGQUERY_RAW_DATASET,
+    ),
+    destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.firebase_aggregated_offers",
+    write_disposition="WRITE_TRUNCATE",
+    use_legacy_sql=False,
+    dag=dag,
+)
+
 aggregate_firebase_user_events = BigQueryOperator(
     task_id="aggregate_firebase_user_events",
     sql=aggregate_firebase_user_events(
@@ -113,4 +126,4 @@ end = DummyOperator(task_id="end", dag=dag)
 
 start >> env_switcher
 env_switcher >> dummy_task_for_branch >> copy_table_to_env
-env_switcher >> copy_table >> delete_table >> copy_table_to_env >> aggregate_firebase_user_events >> end
+env_switcher >> copy_table >> delete_table >> copy_table_to_env >> aggregate_firebase_offer_events >> aggregate_firebase_user_events >> end

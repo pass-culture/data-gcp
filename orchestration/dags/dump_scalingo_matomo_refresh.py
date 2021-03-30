@@ -22,6 +22,7 @@ from dependencies.access_gcp_secrets import access_secret_data
 from dependencies.bigquery_client import BigQueryClient
 from dependencies.data_analytics.enriched_data.enriched_matomo import (
     aggregate_matomo_offer_events,
+    aggregate_matomo_user_events,
 )
 from dependencies.matomo_client import MatomoClient
 from dependencies.matomo_data_schema import PROD_TABLE_DATA, STAGING_TABLE_DATA
@@ -532,6 +533,18 @@ aggregate_matomo_offer_events = BigQueryOperator(
     dag=dag,
 )
 
+aggregate_matomo_user_events = BigQueryOperator(
+    task_id="aggregate_matomo_user_events",
+    sql=aggregate_matomo_user_events(
+        gcp_project=GCP_PROJECT,
+        bigquery_clean_dataset=BIGQUERY_CLEAN_DATASET,
+    ),
+    destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.matomo_aggregated_users",
+    write_disposition="WRITE_TRUNCATE",
+    use_legacy_sql=False,
+    dag=dag,
+)
+
 end_preprocess = DummyOperator(task_id="end_preprocess", dag=dag)
 
 define_tasks_end = PythonOperator(
@@ -550,7 +563,7 @@ end_import >> [
     copy_goal_task,
 ] >> end_preprocess
 
-end_import >> transform_matomo_events >> add_screen_view_matomo_events >> copy_events_to_analytics >> aggregate_matomo_offer_events >> end_preprocess
+end_import >> transform_matomo_events >> add_screen_view_matomo_events >> copy_events_to_analytics >> aggregate_matomo_offer_events >> aggregate_matomo_user_events >> end_preprocess
 
 end_dag = DummyOperator(task_id="end_dag", dag=dag)
 

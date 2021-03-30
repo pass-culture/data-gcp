@@ -20,6 +20,9 @@ from airflow.operators.python_operator import PythonOperator
 
 from dependencies.access_gcp_secrets import access_secret_data
 from dependencies.bigquery_client import BigQueryClient
+from dependencies.data_analytics.enriched_data.enriched_matomo import (
+    aggregate_matomo_offer_events,
+)
 from dependencies.matomo_client import MatomoClient
 from dependencies.matomo_data_schema import PROD_TABLE_DATA, STAGING_TABLE_DATA
 from dependencies.matomo_sql_queries import (
@@ -34,13 +37,15 @@ from dependencies.matomo_sql_queries import (
     copy_events_to_analytics,
 )
 from dependencies.slack_alert import task_fail_slack_alert
+from dependencies.config import (
+    GCP_PROJECT,
+    BIGQUERY_RAW_DATASET,
+    BIGQUERY_CLEAN_DATASET,
+    BIGQUERY_ANALYTICS_DATASET,
+)
 
 ENV = os.environ.get("ENV")
-GCP_PROJECT = os.environ.get("GCP_PROJECT")
 DATA_GCS_BUCKET_NAME = os.environ.get("DATA_GCS_BUCKET_NAME")
-BIGQUERY_RAW_DATASET = os.environ.get("BIGQUERY_RAW_DATASET")
-BIGQUERY_CLEAN_DATASET = os.environ.get("BIGQUERY_CLEAN_DATASET")
-BIGQUERY_ANALYTICS_DATASET = os.environ.get("BIGQUERY_ANALYTICS_DATASET")
 TABLE_DATA = STAGING_TABLE_DATA if ENV == "dev" else PROD_TABLE_DATA
 LOCAL_HOST = "127.0.0.1"
 LOCAL_PORT = 10026
@@ -203,7 +208,7 @@ def define_tasks_parameters(table_data):
 
 
 default_args = {
-    "start_date": datetime(2021, 3, 29),
+    "start_date": datetime(2021, 3, 28),
     "retries": 5,
     "retry_delay": timedelta(minutes=5),
 }
@@ -514,6 +519,19 @@ copy_events_to_analytics = BigQueryOperator(
     dag=dag,
 )
 
+aggregate_matomo_offer_events = BigQueryOperator(
+    task_id="aggregate_matomo_offer_events",
+    sql=aggregate_matomo_offer_events(
+        gcp_project=GCP_PROJECT,
+        bigquery_raw_dataset=BIGQUERY_RAW_DATASET,
+        bigquery_clean_dataset=BIGQUERY_CLEAN_DATASET,
+    ),
+    destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.matomo_aggregated_offers",
+    write_disposition="WRITE_TRUNCATE",
+    use_legacy_sql=False,
+    dag=dag,
+)
+
 end_preprocess = DummyOperator(task_id="end_preprocess", dag=dag)
 
 define_tasks_end = PythonOperator(
@@ -532,7 +550,7 @@ end_import >> [
     copy_goal_task,
 ] >> end_preprocess
 
-end_import >> transform_matomo_events >> add_screen_view_matomo_events >> copy_events_to_analytics >> end_preprocess
+end_import >> transform_matomo_events >> add_screen_view_matomo_events >> copy_events_to_analytics >> aggregate_matomo_offer_events >> end_preprocess
 
 end_dag = DummyOperator(task_id="end_dag", dag=dag)
 

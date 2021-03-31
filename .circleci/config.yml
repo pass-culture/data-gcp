@@ -716,5 +716,5 @@ jobs:
       - run:
           name: Deploy the function
           command: |
-            cd additional_data_sources/function-source
+            cd additional_data_sources/qpi-function-source
             gcloud functions deploy << parameters.cloud-function-name >> --region "europe-west1"  --entry-point run --source .

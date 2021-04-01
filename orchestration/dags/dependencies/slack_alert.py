@@ -7,10 +7,15 @@ from airflow.hooks.base_hook import BaseHook
 from airflow.models.connection import Connection
 
 from dependencies.access_gcp_secrets import access_secret_data
+from dependencies.config import GCP_PROJECT, ENV_SHORT_NAME
 
 SLACK_CONN_ID = "slack"
-GCP_PROJECT = os.environ.get("GCP_PROJECT")
 SLACK_CONN_PASSWORD = access_secret_data(GCP_PROJECT, "slack-conn-password")
+
+if ENV_SHORT_NAME == "prod":
+    ENV_WITH_STYLE = ":fire: *PROD* :fire:"
+else:
+    ENV_WITH_STYLE = ENV_SHORT_NAME
 
 try:
     conn = BaseHook.get_connection(SLACK_CONN_ID)
@@ -36,10 +41,12 @@ def task_fail_slack_alert(context):
 
     slack_msg = """
             :red_circle: Dag Failed.
+            *Environnement*: {env}
             *Dag*: {dag}
             *Execution Time*: {exec_date}
             *DAG Url*: {dag_url}
             """.format(
+        env=ENV_WITH_STYLE,
         dag=context.get("dag").dag_id,
         exec_date=context.get("execution_date"),
         dag_url=link,

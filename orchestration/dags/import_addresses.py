@@ -19,7 +19,7 @@ from dependencies.config import (
 )
 
 
-TYPEFORM_FUNCTION_NAME = "addresses_import_" + ENV_SHORT_NAME
+ADDRESSES_FUNCTION_NAME = "addresses_import_" + ENV_SHORT_NAME
 USER_LOCATIONS_TABLE = "user_locations"
 
 default_args = {
@@ -35,7 +35,7 @@ def getting_service_account_token():
         "https://europe-west1-"
         + GCP_PROJECT
         + ".cloudfunctions.net/"
-        + TYPEFORM_FUNCTION_NAME
+        + ADDRESSES_FUNCTION_NAME
     )
     open_id_connect_token = id_token.fetch_id_token(Request(), function_url)
     return open_id_connect_token
@@ -60,8 +60,8 @@ with DAG(
     addresses_to_gcs = SimpleHttpOperator(
         task_id="addresses_to_gcs",
         method="POST",
-        http_conn_id="http_addresses_function",
-        endpoint=TYPEFORM_FUNCTION_NAME,
+        http_conn_id="http_gcp_cloud_function",
+        endpoint=ADDRESSES_FUNCTION_NAME,
         headers={
             "Content-Type": "application/json",
             "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_service_account_token', key='return_value')}}",
@@ -82,6 +82,8 @@ with DAG(
         source_format="CSV",
         autodetect=False,
         schema_fields=USER_LOCATIONS_SCHEMA,
+        skip_leading_rows=1,
+        field_delimiter="|",
     )
 
     end = DummyOperator(task_id="end")

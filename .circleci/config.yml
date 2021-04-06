@@ -273,8 +273,8 @@ workflows:
 
 # Cloud Function jobs
 # -------------------
-      - cloud-function-deploy:
-          name: cloud-function-deploy-stg
+      - typeform-cloud-function-deploy:
+          name: typeform-cloud-function-deploy-stg
           cloud-function-name: qpi_import_stg
           requires:
             - linter
@@ -288,9 +288,39 @@ workflows:
             - Slack
           <<: *slack-fail-post-step
 
-      - cloud-function-deploy:
-          name: cloud-function-deploy-prod
+      - typeform-cloud-function-deploy:
+          name: typeform-cloud-function-deploy-prod
           cloud-function-name: qpi_import_prod
+          requires:
+            - linter
+          filters:
+            branches:
+              only:
+                - production
+          context:
+            - DATA_GCP
+            - DATA_GCP_PROD
+            - Slack
+          <<: *slack-fail-post-step
+
+      - addresses-cloud-function-deploy:
+          name: addresses-cloud-function-deploy-stg
+          cloud-function-name: addresses_import_stg
+          requires:
+            - linter
+          filters:
+            branches:
+              only:
+                - master
+          context:
+            - DATA_GCP
+            - DATA_GCP_EHP
+            - Slack
+          <<: *slack-fail-post-step
+
+      - addresses-cloud-function-deploy:
+          name: addresses-cloud-function-deploy-prod
+          cloud-function-name: addresses_import_prod
           requires:
             - linter
           filters:
@@ -318,7 +348,8 @@ workflows:
             - production-composer-deploy
             - api_integration_tests_production
             - recommendation-integration-tests-dev
-            - cloud-function-deploy-prod
+            - typeform-cloud-function-deploy-prod
+            - addresses-cloud-function-deploy-prod
 
       - slack-alert:
           name: slack-alert-staging
@@ -333,7 +364,8 @@ workflows:
             - staging-composer-deploy
             - api_integration_tests_staging
             - recommendation-integration-tests-dev
-            - cloud-function-deploy-stg
+            - typeform-cloud-function-deploy-stg
+            - addresses-cloud-function-deploy-stg
 
 
 ###################
@@ -698,7 +730,7 @@ jobs:
             exit 0
       - <<: *slack-send-deployment-notification
 
-  cloud-function-deploy:
+  typeform-cloud-function-deploy:
     executor: gcp-sdk
     parameters:
       cloud-function-name:
@@ -717,4 +749,25 @@ jobs:
           name: Deploy the function
           command: |
             cd additional_data_sources/qpi-function-source
+            gcloud functions deploy << parameters.cloud-function-name >> --region "europe-west1"  --entry-point run --source .
+
+  addresses-cloud-function-deploy:
+    executor: gcp-sdk
+    parameters:
+      cloud-function-name:
+        description: "The cloud function name"
+        type: string
+    working_directory: ~/data-gcp
+    steps:
+      - checkout:
+          path: ~/data-gcp
+      - run:
+          name: Connect to GCP
+          command: |
+            echo $GCLOUD_SERVICE_KEY | gcloud auth activate-service-account --key-file=-
+            gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
+      - run:
+          name: Deploy the function
+          command: |
+            cd additional_data_sources/addresses-function-source
             gcloud functions deploy << parameters.cloud-function-name >> --region "europe-west1"  --entry-point run --source .

@@ -5,7 +5,7 @@ from scripts import fetch_user_location
 
 project_name = os.environ["PROJECT_NAME"]
 BUCKET_NAME = os.environ["BUCKET_NAME"]
-STORAGE_PATH = BUCKET_NAME + "/addresses_exports/"
+STORAGE_PATH = f"{BUCKET_NAME}/addresses_exports/"
 
 
 def run(request):

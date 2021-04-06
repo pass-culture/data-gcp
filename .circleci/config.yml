@@ -273,9 +273,10 @@ workflows:
 
 # Cloud Function jobs
 # -------------------
-      - typeform-cloud-function-deploy:
+      - cloud-function-deploy:
           name: typeform-cloud-function-deploy-stg
           cloud-function-name: qpi_import_stg
+          cloud-function-folder: qpi-function-source
           requires:
             - linter
           filters:
@@ -288,9 +289,10 @@ workflows:
             - Slack
           <<: *slack-fail-post-step
 
-      - typeform-cloud-function-deploy:
+      - cloud-function-deploy:
           name: typeform-cloud-function-deploy-prod
           cloud-function-name: qpi_import_prod
+          cloud-function-folder: qpi-function-source
           requires:
             - linter
           filters:
@@ -303,9 +305,10 @@ workflows:
             - Slack
           <<: *slack-fail-post-step
 
-      - addresses-cloud-function-deploy:
+      - cloud-function-deploy:
           name: addresses-cloud-function-deploy-stg
           cloud-function-name: addresses_import_stg
+          cloud-function-folder: addresses-function-source
           requires:
             - linter
           filters:
@@ -318,9 +321,10 @@ workflows:
             - Slack
           <<: *slack-fail-post-step
 
-      - addresses-cloud-function-deploy:
+      - cloud-function-deploy:
           name: addresses-cloud-function-deploy-prod
           cloud-function-name: addresses_import_prod
+          cloud-function-folder: addresses-function-source
           requires:
             - linter
           filters:
@@ -730,11 +734,14 @@ jobs:
             exit 0
       - <<: *slack-send-deployment-notification
 
-  typeform-cloud-function-deploy:
+  cloud-function-deploy:
     executor: gcp-sdk
     parameters:
       cloud-function-name:
         description: "The cloud function name"
+        type: string
+      cloud-function-folder:
+        description: "The cloud function code folder"
         type: string
     working_directory: ~/data-gcp
     steps:
@@ -748,26 +755,5 @@ jobs:
       - run:
           name: Deploy the function
           command: |
-            cd additional_data_sources/qpi-function-source
-            gcloud functions deploy << parameters.cloud-function-name >> --region "europe-west1"  --entry-point run --source .
-
-  addresses-cloud-function-deploy:
-    executor: gcp-sdk
-    parameters:
-      cloud-function-name:
-        description: "The cloud function name"
-        type: string
-    working_directory: ~/data-gcp
-    steps:
-      - checkout:
-          path: ~/data-gcp
-      - run:
-          name: Connect to GCP
-          command: |
-            echo $GCLOUD_SERVICE_KEY | gcloud auth activate-service-account --key-file=-
-            gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
-      - run:
-          name: Deploy the function
-          command: |
-            cd additional_data_sources/addresses-function-source
+            cd additional_data_sources/<<parameters.cloud-function-folder>>
             gcloud functions deploy << parameters.cloud-function-name >> --region "europe-west1"  --entry-point run --source .

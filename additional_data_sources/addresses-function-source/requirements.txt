@@ -1,7 +1,7 @@
 gcsfs==0.7.2
-pandas==1.2.3
-requests==2.25.0
-urllib3==1.26.3
-shapely==1.7.1
 google-cloud-bigquery==2.13.1
+pandas==1.2.3
 pyarrow==3.0.0
+requests==2.25.0
+shapely==1.7.1
+urllib3==1.26.3

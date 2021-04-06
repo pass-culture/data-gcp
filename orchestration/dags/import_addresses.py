@@ -1,28 +1,28 @@
 from datetime import datetime, timedelta
 
 from airflow import DAG
+from airflow.contrib.operators.bigquery_operator import BigQueryOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.http_operator import SimpleHttpOperator
-from airflow.operators.python_operator import PythonOperator, BranchPythonOperator
-from airflow.contrib.operators.bigquery_operator import BigQueryOperator
 from airflow.contrib.operators.gcs_to_bq import GoogleCloudStorageToBigQueryOperator
+from airflow.operators.python_operator import BranchPythonOperator, PythonOperator
 
 from google.auth.transport.requests import Request
 from google.oauth2 import id_token
 
-from dependencies.slack_alert import task_fail_slack_alert
-from dependencies.user_locations_schema import USER_LOCATIONS_SCHEMA
 from dependencies.config import (
-    GCP_PROJECT,
-    DATA_GCS_BUCKET_NAME,
     BIGQUERY_RAW_DATASET,
     BIGQUERY_CLEAN_DATASET,
     BIGQUERY_ANALYTICS_DATASET,
+    DATA_GCS_BUCKET_NAME,
     ENV_SHORT_NAME,
+    GCP_PROJECT,
 )
+from dependencies.slack_alert import task_fail_slack_alert
+from dependencies.user_locations_schema import USER_LOCATIONS_SCHEMA
 
 
-ADDRESSES_FUNCTION_NAME = "addresses_import_" + ENV_SHORT_NAME
+FUNCTION_NAME = f"addresses_import_{ENV_SHORT_NAME}"
 USER_LOCATIONS_TABLE = "user_locations"
 
 default_args = {
@@ -35,16 +35,13 @@ default_args = {
 
 def getting_service_account_token():
     function_url = (
-        "https://europe-west1-"
-        + GCP_PROJECT
-        + ".cloudfunctions.net/"
-        + ADDRESSES_FUNCTION_NAME
+        f"https://europe-west1-{GCP_PROJECT}.cloudfunctions.net/{FUNCTION_NAME}"
     )
     open_id_connect_token = id_token.fetch_id_token(Request(), function_url)
     return open_id_connect_token
 
 
-def branch_func(ti, **kwargs):
+def branch_function(ti, **kwargs):
     xcom_value = ti.xcom_pull(task_ids=["addresses_to_gcs"])
     if "No new users !" not in xcom_value:
         return "import_addresses_to_bigquery"
@@ -72,7 +69,7 @@ with DAG(
         task_id="addresses_to_gcs",
         method="POST",
         http_conn_id="http_gcp_cloud_function",
-        endpoint=ADDRESSES_FUNCTION_NAME,
+        endpoint=FUNCTION_NAME,
         headers={
             "Content-Type": "application/json",
             "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_service_account_token', key='return_value')}}",
@@ -83,7 +80,7 @@ with DAG(
 
     branch_op = BranchPythonOperator(
         task_id="checking_if_new_users",
-        python_callable=branch_func,
+        python_callable=branch_function,
         provide_context=True,
         do_xcom_push=False,
         dag=dag,

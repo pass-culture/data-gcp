@@ -19,9 +19,9 @@ class AdressesDownloader:
     def __init__(self, project_name, user_locations_file_name):
         self.project_name = project_name
         self.user_locations_file_name = user_locations_file_name
-        self.user_adress_dataframe = None
+        self.user_address_dataframe = None
 
-    def fetch_user(self):
+    def fetch_new_user_data(self):
         bigquery_query = f"""
         SELECT user_id, user_address, user_postal_code, user_city, user_department_code
         FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_user`
@@ -29,11 +29,11 @@ class AdressesDownloader:
         AND user_id not in (SELECT user_id FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.user_locations`);
         """
 
-        user_adress_dataframe = bigquery_client.query(bigquery_query)
-        return user_adress_dataframe
+        user_address_dataframe = bigquery_client.query(bigquery_query)
+        return user_address_dataframe
 
     def add_parsed_adress(self):
-        self.user_adress_dataframe["parsed_address"] = self.user_adress_dataframe[
+        self.user_address_dataframe["parsed_address"] = self.user_address_dataframe[
             ["user_address", "user_postal_code", "user_city"]
         ].apply(
             lambda row: quote(" ".join(row)),
@@ -62,9 +62,9 @@ class AdressesDownloader:
         return [None, None, None, None]
 
     def add_coordinates(self):
-        self.user_adress_dataframe[
+        self.user_address_dataframe[
             ["longitude", "latitude", "city_code", "api_adresse_city"]
-        ] = self.user_adress_dataframe.apply(
+        ] = self.user_address_dataframe.apply(
             lambda row: self.fetch_coordinates(row["parsed_address"]),
             axis=1,
             result_type="expand",
@@ -145,51 +145,55 @@ class AdressesDownloader:
             for row in reader:
                 zrr.append(row)
 
-        self.user_adress_dataframe["code_epci"] = None
-        self.user_adress_dataframe["epci_name"] = None
-        self.user_adress_dataframe["qpv_communes"] = None
-        self.user_adress_dataframe["qpv_name"] = None
-        self.user_adress_dataframe["code_qpv"] = None
-        self.user_adress_dataframe["zrr"] = None
-        for i in range(self.user_adress_dataframe.shape[0]):
+        self.user_address_dataframe["code_epci"] = None
+        self.user_address_dataframe["epci_name"] = None
+        self.user_address_dataframe["qpv_communes"] = None
+        self.user_address_dataframe["qpv_name"] = None
+        self.user_address_dataframe["code_qpv"] = None
+        self.user_address_dataframe["zrr"] = None
+        for i in range(self.user_address_dataframe.shape[0]):
             user_coordinates = {
-                "longitude": self.user_adress_dataframe["longitude"].loc[i],
-                "latitude": self.user_adress_dataframe["latitude"].loc[i],
+                "longitude": self.user_address_dataframe["longitude"].loc[i],
+                "latitude": self.user_address_dataframe["latitude"].loc[i],
             }
-            user_department_code = self.user_adress_dataframe[
+            user_department_code = self.user_address_dataframe[
                 "user_department_code"
             ].loc[i]
-            user_city_code = self.user_adress_dataframe["city_code"].loc[i]
+            user_city_code = self.user_address_dataframe["city_code"].loc[i]
 
             commune_informations = self.find_commune_informations(
                 user_city_code, communes
             )
-            self.user_adress_dataframe["code_epci"].loc[i] = commune_informations[
+            self.user_address_dataframe["code_epci"].loc[i] = commune_informations[
                 "code_epci"
             ]
-            self.user_adress_dataframe["epci_name"].loc[i] = commune_informations[
+            self.user_address_dataframe["epci_name"].loc[i] = commune_informations[
                 "epci_name"
             ]
 
             qpv_informations = self.find_qpv_informations(
                 user_coordinates, user_department_code, qpv
             )
-            self.user_adress_dataframe["qpv_communes"].loc[i] = qpv_informations[
+            self.user_address_dataframe["qpv_communes"].loc[i] = qpv_informations[
                 "qpv_communes"
             ]
-            self.user_adress_dataframe["qpv_name"].loc[i] = qpv_informations["qpv_name"]
-            self.user_adress_dataframe["code_qpv"].loc[i] = qpv_informations["code_qpv"]
+            self.user_address_dataframe["qpv_name"].loc[i] = qpv_informations[
+                "qpv_name"
+            ]
+            self.user_address_dataframe["code_qpv"].loc[i] = qpv_informations[
+                "code_qpv"
+            ]
 
-            self.user_adress_dataframe["zrr"].loc[i] = self.find_zrr_informations(
+            self.user_address_dataframe["zrr"].loc[i] = self.find_zrr_informations(
                 user_city_code, zrr
             )
 
     def run(self):
         print("start script")
-        print("fetch user")
-        self.user_adress_dataframe = self.fetch_user()
-        print(f"{self.user_adress_dataframe.shape[0]} users fetched")
-        if self.user_adress_dataframe.shape[0] == 0:
+        print("fetch new user data")
+        self.user_address_dataframe = self.fetch_new_user_data()
+        print(f"{self.user_address_dataframe.shape[0]} users fetched")
+        if self.user_address_dataframe.shape[0] == 0:
             return "No new users !"
         print("add address")
         self.add_parsed_adress()
@@ -201,7 +205,7 @@ class AdressesDownloader:
         self.add_commune_epci_qpv()
         print("qpv / commune info added")
         print("create csv")
-        self.user_adress_dataframe[
+        self.user_address_dataframe[
             [
                 "user_id",
                 "user_address",

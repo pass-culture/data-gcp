@@ -1,17 +1,18 @@
 import csv
 import json
+import os
 import time
 from urllib.parse import quote
-import gcsfs
 import requests
+import gcsfs
 from shapely.geometry import Point, Polygon
 from scripts.bigquery_client import BigQueryClient
 
 bigquery_client = BigQueryClient()
 
-GCP_PROJECT = "passculture-data-ehp"
-BIGQUERY_CLEAN_DATASET = "clean_dev"
-BIGQUERY_ANALYTICS_DATASET = "analytics_dev"
+GCP_PROJECT = os.environ["PROJECT_NAME"]
+BIGQUERY_RAW_DATASET = os.environ["BIGQUERY_RAW_DATASET"]
+BIGQUERY_CLEAN_DATASET = os.environ["BIGQUERY_CLEAN_DATASET"]
 
 
 class AdressesDownloader:
@@ -25,7 +26,7 @@ class AdressesDownloader:
         SELECT user_id, user_address, user_postal_code, user_city, user_department_code
         FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_user`
         WHERE user_address is not NULL AND user_address <> ""
-        AND user_id not in (SELECT user_id FROM `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.user_locations`);
+        AND user_id not in (SELECT user_id FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.user_locations`);
         """
 
         user_adress_dataframe = bigquery_client.query(bigquery_query)
@@ -187,7 +188,9 @@ class AdressesDownloader:
         print("start script")
         print("fetch user")
         self.user_adress_dataframe = self.fetch_user()
-        print("user fetched")
+        print(f"{self.user_adress_dataframe.shape[0]} users fetched")
+        if self.user_adress_dataframe.shape[0] == 0:
+            return "No new users !"
         print("add address")
         self.add_parsed_adress()
         print("address added")
@@ -222,3 +225,4 @@ class AdressesDownloader:
             sep="|",
         )
         print("csv created")
+        return "Addresses added"

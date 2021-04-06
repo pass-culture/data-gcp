@@ -3,7 +3,8 @@ from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.http_operator import SimpleHttpOperator
-from airflow.operators.python_operator import PythonOperator
+from airflow.operators.python_operator import PythonOperator, BranchPythonOperator
+from airflow.contrib.operators.bigquery_operator import BigQueryOperator
 from airflow.contrib.operators.gcs_to_bq import GoogleCloudStorageToBigQueryOperator
 
 from google.auth.transport.requests import Request
@@ -14,6 +15,8 @@ from dependencies.user_locations_schema import USER_LOCATIONS_SCHEMA
 from dependencies.config import (
     GCP_PROJECT,
     DATA_GCS_BUCKET_NAME,
+    BIGQUERY_RAW_DATASET,
+    BIGQUERY_CLEAN_DATASET,
     BIGQUERY_ANALYTICS_DATASET,
     ENV_SHORT_NAME,
 )
@@ -39,6 +42,14 @@ def getting_service_account_token():
     )
     open_id_connect_token = id_token.fetch_id_token(Request(), function_url)
     return open_id_connect_token
+
+
+def branch_func(ti, **kwargs):
+    xcom_value = ti.xcom_pull(task_ids=["addresses_to_gcs"])
+    if "No new users !" not in xcom_value:
+        return "import_addresses_to_bigquery"
+    else:
+        return "end"
 
 
 with DAG(
@@ -67,6 +78,15 @@ with DAG(
             "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_service_account_token', key='return_value')}}",
         },
         log_response=True,
+        xcom_push=True,
+    )
+
+    branch_op = BranchPythonOperator(
+        task_id="checking_if_new_users",
+        python_callable=branch_func,
+        provide_context=True,
+        do_xcom_push=False,
+        dag=dag,
     )
 
     # the tomorrow_ds_nodash enables catchup :
@@ -77,7 +97,7 @@ with DAG(
         source_objects=[
             "addresses_exports/user_locations_{{ tomorrow_ds_nodash }}.csv"
         ],
-        destination_project_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.{USER_LOCATIONS_TABLE}",
+        destination_project_dataset_table=f"{BIGQUERY_RAW_DATASET}.{USER_LOCATIONS_TABLE}",
         write_disposition="WRITE_APPEND",
         source_format="CSV",
         autodetect=False,
@@ -86,6 +106,26 @@ with DAG(
         field_delimiter="|",
     )
 
-    end = DummyOperator(task_id="end")
+    to_clean = BigQueryOperator(
+        task_id="copy_to_clean",
+        sql=f"SELECT * FROM {BIGQUERY_RAW_DATASET}.{USER_LOCATIONS_TABLE}",
+        write_disposition="WRITE_TRUNCATE",
+        use_legacy_sql=False,
+        destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.{USER_LOCATIONS_TABLE}",
+        dag=dag,
+    )
 
-    start >> getting_service_account_token >> addresses_to_gcs >> import_addresses_to_bigquery >> end
+    to_analytics = BigQueryOperator(
+        task_id="copy_to_analytics",
+        sql=f"SELECT * FROM {BIGQUERY_CLEAN_DATASET}.{USER_LOCATIONS_TABLE}",
+        write_disposition="WRITE_TRUNCATE",
+        use_legacy_sql=False,
+        destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.{USER_LOCATIONS_TABLE}",
+        dag=dag,
+    )
+
+    end = DummyOperator(task_id="end", trigger_rule="one_success")
+
+    start >> getting_service_account_token >> addresses_to_gcs >> branch_op
+    branch_op >> import_addresses_to_bigquery >> to_clean >> to_analytics >> end
+    branch_op >> end

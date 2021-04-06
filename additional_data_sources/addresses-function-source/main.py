@@ -17,6 +17,6 @@ def run(request):
     downloader = fetch_user_location.AdressesDownloader(
         project_name, user_locations_file_name
     )
-    downloader.run()
+    result = downloader.run()
 
-    return "Done"
+    return result

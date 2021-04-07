@@ -1,5 +1,5 @@
 import os
-from datetime import date
+from datetime import datetime
 from scripts import fetch_user_location
 
 
@@ -11,8 +11,8 @@ STORAGE_PATH = f"{BUCKET_NAME}/addresses_exports/"
 def run(request):
     """The Cloud Function entrypoint."""
 
-    today = date.today().strftime("%Y%m%d")
-    user_locations_file_name = STORAGE_PATH + f"user_locations_{today}.csv"
+    now = datetime.now().isoformat(timespec="minutes")
+    user_locations_file_name = STORAGE_PATH + f"user_locations_{now}.csv"
 
     downloader = fetch_user_location.AdressesDownloader(
         project_name, user_locations_file_name

@@ -17,8 +17,7 @@ BUCKET_NAME = os.environ["BUCKET_NAME"]
 
 
 class AdressesDownloader:
-    def __init__(self, project_name, user_locations_file_name):
-        self.project_name = project_name
+    def __init__(self, user_locations_file_name):
         self.user_locations_file_name = user_locations_file_name
         self.user_address_dataframe = None
 
@@ -132,7 +131,7 @@ class AdressesDownloader:
         return None
 
     def add_commune_epci_qpv(self):
-        fs = gcsfs.GCSFileSystem(project=self.project_name)
+        fs = gcsfs.GCSFileSystem(project=GCP_PROJECT)
         with fs.open(f"{BUCKET_NAME}/functions/georef-france-commune.json") as file:
             communes = json.load(file)
 
@@ -207,9 +206,9 @@ class AdressesDownloader:
                 "zrr",
             ]
         ].to_csv(
-            "gcs://" + self.user_locations_file_name,
+            f"gcs://{BUCKET_NAME}/{self.user_locations_file_name}",
             index=False,
             sep="|",
         )
         print("csv created")
-        return "Addresses added"
+        return self.user_locations_file_name

@@ -41,7 +41,7 @@ class AdressesDownloader:
         )
 
     def fetch_coordinates(self, parsed_address):
-        url = "https://api-adresse.data.gouv.fr/search/?q=" + parsed_address
+        url = f"https://api-adresse.data.gouv.fr/search/?q={parsed_address}"
         response = requests.get(url)
         time.sleep(0.1)
         api_address_informations = []

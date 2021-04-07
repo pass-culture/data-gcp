@@ -1,4 +1,4 @@
-gcsfs==0.7.2
+gcsfs==0.8.0
 google-cloud-bigquery==2.13.1
 pandas==1.2.3
 pyarrow==3.0.0

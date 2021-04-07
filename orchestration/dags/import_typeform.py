@@ -84,7 +84,7 @@ with DAG(
     typeform_to_gcs = SimpleHttpOperator(
         task_id="typeform_to_gcs",
         method="POST",
-        http_conn_id="http_typeform_function",
+        http_conn_id="http_gcp_cloud_function",
         endpoint=TYPEFORM_FUNCTION_NAME,
         data=json.dumps(
             {

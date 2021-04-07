@@ -666,7 +666,6 @@ jobs:
       machine_type:
         type: string
     environment:
-      VERSION_NAME: latest
       FRAMEWORK: SCIKIT_LEARN
     working_directory: ~/data-gcp
     steps:
@@ -684,7 +683,7 @@ jobs:
       - run:
           name: Deploy to AI Platform
           command: |
-            gcloud ai-platform versions delete $VERSION_NAME --model=$MODEL_NAME --region=$REGION
+            export VERSION_NAME=$(date +'version_%Y_%m_%d_%H%M')
             gcloud ai-platform versions create $VERSION_NAME \
               --model=$MODEL_NAME \
               --origin=$RECOMMENDATION_MODEL_DIR \
@@ -693,6 +692,9 @@ jobs:
               --python-version=3.7 \
               --region=$REGION \
               --machine-type=<< parameters.machine_type >>
+            gcloud ai-platform versions set-default $VERSION_NAME \
+              --model=$MODEL_NAME \
+              --region=$REGION
 
 
   build_and_deploy_api:

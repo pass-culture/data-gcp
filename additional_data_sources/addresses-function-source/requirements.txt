@@ -4,4 +4,4 @@ pandas==1.2.3
 pyarrow==3.0.0
 requests==2.25.0
 shapely==1.7.1
-urllib3==1.26.3
+urllib3==1.26.4

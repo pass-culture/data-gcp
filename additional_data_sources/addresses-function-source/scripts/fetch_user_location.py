@@ -13,6 +13,7 @@ bigquery_client = BigQueryClient()
 GCP_PROJECT = os.environ["PROJECT_NAME"]
 BIGQUERY_RAW_DATASET = os.environ["BIGQUERY_RAW_DATASET"]
 BIGQUERY_CLEAN_DATASET = os.environ["BIGQUERY_CLEAN_DATASET"]
+BUCKET_NAME = os.environ["BUCKET_NAME"]
 
 
 class AdressesDownloader:
@@ -26,7 +27,8 @@ class AdressesDownloader:
         SELECT user_id, user_address, user_postal_code, user_city, user_department_code
         FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_user`
         WHERE user_address is not NULL AND user_address <> ""
-        AND user_id not in (SELECT user_id FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.user_locations`);
+        AND user_id not in (SELECT user_id FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.user_locations`)
+        ORDER BY user_id LIMIT 500;
         """
 
         user_address_dataframe = bigquery_client.query(bigquery_query)
@@ -44,22 +46,25 @@ class AdressesDownloader:
         url = f"https://api-adresse.data.gouv.fr/search/?q={parsed_address}"
         response = requests.get(url)
         time.sleep(0.1)
-        api_address_informations = []
+        api_address_informations = {
+            "longitude": None,
+            "latitude": None,
+            "city_code": None,
+            "city": None,
+        }
         if response.status_code == 200:
             data = response.json()
             try:
-                longitude = data["features"][0]["geometry"]["coordinates"][0]
-                latitude = data["features"][0]["geometry"]["coordinates"][1]
-                city_code = data["features"][0]["properties"]["citycode"]
-                city = data["features"][0]["properties"]["city"]
-                api_address_informations.append(longitude)
-                api_address_informations.append(latitude)
-                api_address_informations.append(city_code)
-                api_address_informations.append(city)
+                api_address_informations = {
+                    "longitude": data["features"][0]["geometry"]["coordinates"][0],
+                    "latitude": data["features"][0]["geometry"]["coordinates"][1],
+                    "city_code": data["features"][0]["properties"]["citycode"],
+                    "city": data["features"][0]["properties"]["city"],
+                }
                 return api_address_informations
             except:
-                return [None, None, None, None]
-        return [None, None, None, None]
+                return api_address_informations
+        return api_address_informations
 
     def add_coordinates(self):
         self.user_address_dataframe[
@@ -90,18 +95,15 @@ class AdressesDownloader:
                     return commune_data
         return commune_data
 
-    def find_qpv_informations(self, user_coordinates, user_department_code, qpv):
+    def find_qpv_informations(self, longitude, latitude, user_department_code, qpv):
         qpv_informations = {
             "qpv_communes": None,
             "qpv_name": None,
             "code_qpv": None,
         }
-        if (
-            user_coordinates["longitude"] is None
-            or user_coordinates["latitude"] is None
-        ):
+        if longitude is None or latitude is None:
             return qpv_informations
-        point = Point(user_coordinates["longitude"], user_coordinates["latitude"])
+        point = Point(longitude, latitude)
         for i in range(len(qpv)):
             try:
                 qpv_department = qpv[i]["fields"]["departement"]
@@ -131,62 +133,43 @@ class AdressesDownloader:
 
     def add_commune_epci_qpv(self):
         fs = gcsfs.GCSFileSystem(project=self.project_name)
-        with fs.open("data-bucket-dev/functions/georef-france-commune.json") as file:
+        with fs.open(f"{BUCKET_NAME}/functions/georef-france-commune.json") as file:
             communes = json.load(file)
+
+        self.user_address_dataframe[
+            ["code_epci", "epci_name"]
+        ] = self.user_address_dataframe.apply(
+            lambda row: self.find_commune_informations(row["city_code"], communes),
+            axis=1,
+            result_type="expand",
+        )
+
         with fs.open(
-            "data-bucket-dev/functions/liste_quartiers_prioritairesville.json"
+            f"{BUCKET_NAME}/functions/liste_quartiers_prioritairesville.json"
         ) as file:
             qpv = json.load(file)
+
+        self.user_address_dataframe[
+            ["qpv_communes", "qpv_name", "code_qpv"]
+        ] = self.user_address_dataframe.apply(
+            lambda row: self.find_qpv_informations(
+                row["longitude"], row["latitude"], row["user_department_code"], qpv
+            ),
+            axis=1,
+            result_type="expand",
+        )
+
         with fs.open(
-            "data-bucket-dev/functions/diffusion-zonages-zrr-2020.csv", "r"
+            f"{BUCKET_NAME}/functions/diffusion-zonages-zrr-2020.csv", "r"
         ) as file:
             reader = csv.DictReader(file)
             zrr = []
             for row in reader:
                 zrr.append(row)
 
-        self.user_address_dataframe["code_epci"] = None
-        self.user_address_dataframe["epci_name"] = None
-        self.user_address_dataframe["qpv_communes"] = None
-        self.user_address_dataframe["qpv_name"] = None
-        self.user_address_dataframe["code_qpv"] = None
-        self.user_address_dataframe["zrr"] = None
-        for i in range(self.user_address_dataframe.shape[0]):
-            user_coordinates = {
-                "longitude": self.user_address_dataframe["longitude"].loc[i],
-                "latitude": self.user_address_dataframe["latitude"].loc[i],
-            }
-            user_department_code = self.user_address_dataframe[
-                "user_department_code"
-            ].loc[i]
-            user_city_code = self.user_address_dataframe["city_code"].loc[i]
-
-            commune_informations = self.find_commune_informations(
-                user_city_code, communes
-            )
-            self.user_address_dataframe["code_epci"].loc[i] = commune_informations[
-                "code_epci"
-            ]
-            self.user_address_dataframe["epci_name"].loc[i] = commune_informations[
-                "epci_name"
-            ]
-
-            qpv_informations = self.find_qpv_informations(
-                user_coordinates, user_department_code, qpv
-            )
-            self.user_address_dataframe["qpv_communes"].loc[i] = qpv_informations[
-                "qpv_communes"
-            ]
-            self.user_address_dataframe["qpv_name"].loc[i] = qpv_informations[
-                "qpv_name"
-            ]
-            self.user_address_dataframe["code_qpv"].loc[i] = qpv_informations[
-                "code_qpv"
-            ]
-
-            self.user_address_dataframe["zrr"].loc[i] = self.find_zrr_informations(
-                user_city_code, zrr
-            )
+        self.user_address_dataframe["zrr"] = self.user_address_dataframe.apply(
+            lambda row: self.find_zrr_informations(row["city_code"], zrr), axis=1
+        )
 
     def run(self):
         print("start script")

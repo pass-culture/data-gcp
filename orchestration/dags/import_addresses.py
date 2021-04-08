@@ -86,13 +86,11 @@ with DAG(
         dag=dag,
     )
 
-    # the tomorrow_ds_nodash enables catchup :
-    # it fetches the file corresponding to the initial execution date of the dag and not the day the task is run.
     import_addresses_to_bigquery = GoogleCloudStorageToBigQueryOperator(
         task_id="import_addresses_to_bigquery",
         bucket=DATA_GCS_BUCKET_NAME,
         source_objects=[
-            "addresses_exports/user_locations_{{ tomorrow_ds_nodash }}.csv"
+            "{{task_instance.xcom_pull(task_ids='addresses_to_gcs', key='return_value')}}"
         ],
         destination_project_dataset_table=f"{BIGQUERY_RAW_DATASET}.{USER_LOCATIONS_TABLE}",
         write_disposition="WRITE_APPEND",

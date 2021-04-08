@@ -21,7 +21,7 @@ APP_CONFIG = {
     "NUMBER_OF_RECOMMENDATIONS": int(os.environ.get("NUMBER_OF_RECOMMENDATIONS", 10)),
     "MODEL_REGION": os.environ.get("MODEL_REGION"),
     "MODEL_NAME": os.environ.get("MODEL_NAME"),
-    "MODEL_VERSION": os.environ.get("MODEL_VERSION"),
+    "MODEL_VERSION": None,  # With none we call the default version (ie the latest)
 }
 
 app = Flask(__name__)

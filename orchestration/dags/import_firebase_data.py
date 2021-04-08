@@ -10,6 +10,7 @@ from airflow.operators.python_operator import BranchPythonOperator
 
 from dependencies.config import (
     BIGQUERY_RAW_DATASET,
+    BIGQUERY_CLEAN_DATASET,
     BIGQUERY_ANALYTICS_DATASET,
     ENV_SHORT_NAME,
     GCP_PROJECT,
@@ -30,7 +31,7 @@ app_info_id_list = ENV_SHORT_NAME_APP_INFO_ID_MAPPING[ENV_SHORT_NAME]
 EXECUTION_DATE = "{{ ds_nodash }}"
 
 default_dag_args = {
-    "start_date": datetime.datetime(2021, 3, 10),
+    "start_date": datetime.datetime(2021, 4, 7),
     "retries": 1,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT,
@@ -47,7 +48,7 @@ def _env_switcher():
 
 
 dag = DAG(
-    "import_firebase_data_v1",
+    "import_firebase_data_v2",
     default_args=default_dag_args,
     description="Import firebase data and dispatch it to each env",
     on_failure_callback=task_fail_slack_alert,
@@ -90,10 +91,31 @@ copy_table_to_env = BigQueryOperator(
         SELECT * FROM passculture-data-prod.firebase_raw_data.events_{EXECUTION_DATE} WHERE app_info.id IN ({", ".join([f"'{app_info_id}'" for app_info_id in app_info_id_list])})
         """,
     use_legacy_sql=False,
-    destination_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_RAW_DATASET}.events_"
-    + EXECUTION_DATE,
+    destination_dataset_table=f"{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.events_{EXECUTION_DATE}",
     write_disposition="WRITE_EMPTY",
     trigger_rule="none_failed",
+    dag=dag,
+)
+
+copy_table_to_clean = BigQueryOperator(
+    task_id="copy_table_to_clean",
+    sql=f"""
+        SELECT * FROM {GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.events_{EXECUTION_DATE}
+        """,
+    use_legacy_sql=False,
+    destination_dataset_table=f"{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.firebase_events_{EXECUTION_DATE}",
+    write_disposition="WRITE_TRUNCATE",
+    dag=dag,
+)
+
+copy_table_to_analytics = BigQueryOperator(
+    task_id=f"copy_table_to_analytics",
+    sql=f"""
+        SELECT * FROM {GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.firebase_events_{EXECUTION_DATE}
+        """,
+    use_legacy_sql=False,
+    destination_dataset_table=f"{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.firebase_events_{EXECUTION_DATE}",
+    write_disposition="WRITE_TRUNCATE",
     dag=dag,
 )
 
@@ -126,4 +148,6 @@ end = DummyOperator(task_id="end", dag=dag)
 
 start >> env_switcher
 env_switcher >> dummy_task_for_branch >> copy_table_to_env
-env_switcher >> copy_table >> delete_table >> copy_table_to_env >> aggregate_firebase_offer_events >> aggregate_firebase_user_events >> end
+env_switcher >> copy_table >> delete_table >> copy_table_to_env
+copy_table_to_env >> copy_table_to_clean >> copy_table_to_analytics >> end
+copy_table_to_env >> aggregate_firebase_offer_events >> aggregate_firebase_user_events >> end

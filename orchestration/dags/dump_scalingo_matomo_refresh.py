@@ -36,6 +36,7 @@ from dependencies.matomo_sql_queries import (
     transform_matomo_events_query,
     add_screen_view_matomo_events_query,
     copy_events_to_analytics,
+    copy_matomo_visits_to_analytics,
 )
 from dependencies.slack_alert import task_fail_slack_alert
 from dependencies.config import (
@@ -217,7 +218,7 @@ default_args = {
 # DAG is launched once a week on dev env to have enough data to import
 # on other env it is launched once a day
 dag = DAG(
-    "dump_scalingo_matomo_refresh_v3",
+    "dump_scalingo_matomo_refresh_v4",
     default_args=default_args,
     description="Dump scalingo matomo new data to cloud storage in csv format and use it to refresh data in bigquery",
     schedule_interval="0 4 * * *" if ENV != "dev" else "0 4 * * 1",
@@ -334,9 +335,12 @@ for table in TABLE_DATA:
         end_export >> import_task >> end_import
 
 
-preprocess_log_visit_tasks = []
+end_preprocess = DummyOperator(task_id="end_preprocess", dag=dag)
 
-column_group_queries = {
+
+matomo_visits_start = DummyOperator(task_id="matomo_visits_start", dag=dag)
+
+normalize_log_visit_queries = {
     "": preprocess_log_visit_query(GCP_PROJECT, BIGQUERY_RAW_DATASET),
     "_referer": preprocess_log_visit_referer_query(GCP_PROJECT, BIGQUERY_RAW_DATASET),
     "_config": preprocess_log_visit_config_query(GCP_PROJECT, BIGQUERY_RAW_DATASET),
@@ -349,16 +353,47 @@ column_group_queries = {
     ),
 }
 
-for column_group in column_group_queries:
-    preprocess_log_visit_column_group_task = BigQueryOperator(
-        task_id=f"preprocess_log_visit{column_group}",
-        sql=column_group_queries[column_group],
+## -------------
+## MATOMO_VISITS
+## -------------
+
+normalize_matomo_visits_tasks = []
+matomo_visits_to_analytics = []
+
+for column_group in normalize_log_visit_queries:
+    normalize_matomo_visits_task = BigQueryOperator(
+        task_id=f"normalize_matomo_visits{column_group}",
+        sql=normalize_log_visit_queries[column_group],
         destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.matomo_visits{column_group}",
         write_disposition="WRITE_TRUNCATE",
         use_legacy_sql=False,
         dag=dag,
     )
-    preprocess_log_visit_tasks.append(preprocess_log_visit_column_group_task)
+
+    normalize_matomo_visits_tasks.append(normalize_matomo_visits_task)
+
+    matomo_visits_table_to_analytics = BigQueryOperator(
+        task_id=f"matomo_visits{column_group}_to_analytics",
+        sql=copy_matomo_visits_to_analytics(
+            GCP_PROJECT, BIGQUERY_CLEAN_DATASET, column_group
+        ),
+        destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.matomo_visits{column_group}",
+        write_disposition="WRITE_TRUNCATE",
+        use_legacy_sql=False,
+        dag=dag,
+    )
+
+    normalize_matomo_visits_task >> matomo_visits_table_to_analytics
+
+    matomo_visits_to_analytics.append(matomo_visits_table_to_analytics)
+
+matomo_visits_end = DummyOperator(task_id="matomo_visits_end", dag=dag)
+end_import >> matomo_visits_start >> normalize_matomo_visits_tasks
+matomo_visits_to_analytics >> matomo_visits_end >> end_preprocess
+
+## -------------
+## LEGACY PREPROCESS
+## -------------
 
 preprocess_log_action_query = f"""
 WITH filtered AS (
@@ -545,8 +580,6 @@ aggregate_matomo_user_events = BigQueryOperator(
     dag=dag,
 )
 
-end_preprocess = DummyOperator(task_id="end_preprocess", dag=dag)
-
 define_tasks_end = PythonOperator(
     task_id="define_tasks_parameters_end",
     python_callable=define_tasks_parameters,
@@ -555,7 +588,6 @@ define_tasks_end = PythonOperator(
 )
 
 
-end_import >> preprocess_log_visit_tasks >> end_preprocess
 end_import >> [
     preprocess_log_action_task,
     preprocess_log_link_visit_action_task,

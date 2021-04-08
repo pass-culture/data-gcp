@@ -84,12 +84,12 @@ class TestDags(unittest.TestCase):
 
     def test_dump_matomo_refresh_dag_is_loaded(self):
         # When
-        dag = self.dagbag.get_dag(dag_id="dump_scalingo_matomo_refresh_v3")
+        dag = self.dagbag.get_dag(dag_id="dump_scalingo_matomo_refresh_v4")
 
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 44)
+        self.assertEqual(len(dag.tasks), 52)
 
     def test_import_data_analytics_dag_is_loaded(self):
         # When
@@ -102,12 +102,12 @@ class TestDags(unittest.TestCase):
 
     def test_import_firebase_data_dag_is_loaded(self):
         # When
-        dag = self.dagbag.get_dag(dag_id="import_firebase_data_v1")
+        dag = self.dagbag.get_dag(dag_id="import_firebase_data_v2")
 
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 9)
+        self.assertEqual(len(dag.tasks), 11)
 
     def test_import_typeform_is_loaded(self):
         # When

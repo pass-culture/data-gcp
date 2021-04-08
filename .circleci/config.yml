@@ -695,6 +695,14 @@ jobs:
             gcloud ai-platform versions set-default $VERSION_NAME \
               --model=$MODEL_NAME \
               --region=$REGION
+            gcloud ai-platform versions delete \
+              $(gcloud ai-platform versions list \
+                --model=$MODEL_NAME \
+                --format="table[no-heading](name, createTime:sort=1:reverse)"\
+                | tail -n1 \
+                | awk '{print $1;}'
+              ) \
+              --model=$MODEL_NAME
 
 
   build_and_deploy_api:

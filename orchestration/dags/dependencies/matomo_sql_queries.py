@@ -266,3 +266,10 @@ def copy_events_to_analytics(gcp_project, bigquery_clean_dataset):
     SELECT *
     FROM `{gcp_project}.{bigquery_clean_dataset}.matomo_events`;
     """
+
+
+def copy_matomo_visits_to_analytics(gcp_project, bigquery_clean_dataset, column_group):
+    return f"""
+    SELECT *
+    FROM `{gcp_project}.{bigquery_clean_dataset}.matomo_visits{column_group}`;
+    """

@@ -112,7 +112,7 @@ with DAG(
 
     to_analytics = BigQueryOperator(
         task_id="copy_to_analytics",
-        sql=f"SELECT * FROM {BIGQUERY_CLEAN_DATASET}.{USER_LOCATIONS_TABLE}",
+        sql=f"SELECT * EXCEPT (user_address) FROM {BIGQUERY_CLEAN_DATASET}.{USER_LOCATIONS_TABLE}",
         write_disposition="WRITE_TRUNCATE",
         use_legacy_sql=False,
         destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.{USER_LOCATIONS_TABLE}",

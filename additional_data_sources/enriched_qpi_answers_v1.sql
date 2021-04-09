@@ -8,7 +8,7 @@ WITH unrolled_answers as (
 	) as qpi, qpi.answers as answers
 )
 
-select max(user_id) as user_id,
+select max(user_id) as user_id, max(catch_up_user_id) as catch_up_user_id,
 SUM(CAST("🎞 FILM & SÉRIE" IN UNNEST(choices) AS INT64)) > 0 and SUM(CAST(question_id = "Vo0aiAJsoymf" and choice != 'Jamais' AS INT64)) > 0 as cinema,
 SUM(CAST("🎞 FILM & SÉRIE" IN UNNEST(choices) AS INT64)) > 0 and SUM(CAST(question_id = "dZmbwWSzroeN" and ARRAY_LENGTH(choices) > 0 AS INT64)) > 0 as audiovisuel,
 SUM(CAST("🎮 JEU VIDÉO" IN UNNEST(choices) AS INT64)) > 0 as jeux_videos,

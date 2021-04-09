@@ -3,6 +3,7 @@ orbs:
   cloudrun: circleci/gcp-cloud-run@1.0.2
   slack: circleci/slack@4.2
 
+
 ###################
 #  SLACK
 ###################
@@ -40,36 +41,22 @@ slack-fail-post-step: &slack-fail-post-step
             ]
           }
 
-slack-send-deployment-notification: &slack-send-deployment-notification
-  - slack/notify:
-      event: pass
-      channel: alertes_data
-      custom: |
-        {
-          "blocks": [
-            {
-              "type": "section",
-              "text": {
-                "type": "mrkdwn",
-                "text": "Le déploiement du commit ${CIRCLE_SHA1} depuis la branche ${CIRCLE_BRANCH} est un succès :rocket:"
-              }
-            },
-            {
-              "type": "actions",
-              "elements": [
-                {
-                  "type": "button",
-                  "text": {
-                    "type": "plain_text",
-                    "text": "View job",
-                    "emoji": true
-                  },
-                  "url": "$CIRCLE_BUILD_URL"
-                }
-              ]
-            }
-          ]
-        }
+
+
+###################
+#  Aliases
+###################
+
+deploy_on_dev_commons: &deploy_on_dev_commons
+  filters:
+    branches:
+      only:
+        - production
+  context:
+    - DATA_GCP
+    - DATA_GCP_DEV
+    - Slack
+  <<: *slack-fail-post-step
 
 
 ###################
@@ -129,7 +116,7 @@ workflows:
           requires:
             - recommendation-api-tests
           context:
-            - DATA_GCP_EHP
+            - DATA_GCP_DEV
             - Slack
           <<: *slack-fail-post-step
 
@@ -341,6 +328,7 @@ workflows:
 # ----------------
       - slack-alert:
           name: slack-alert-production
+          destination_env: Production
           context: Slack
           filters:
             branches:
@@ -357,6 +345,7 @@ workflows:
 
       - slack-alert:
           name: slack-alert-staging
+          destination_env: Staging
           context: Slack
           filters:
             branches:
@@ -370,6 +359,55 @@ workflows:
             - recommendation-integration-tests-dev
             - typeform-cloud-function-deploy-stg
             - addresses-cloud-function-deploy-stg
+
+# ----------------
+# Workflow to deploy on dev
+# ----------------
+
+  deploy_on_dev:
+    jobs:
+      - composer-deploy:
+          name: dev-composer-deploy
+          <<: *deploy_on_dev_commons
+      - cloud-function-deploy:
+          name: typeform-cloud-function-deploy-dev
+          cloud-function-name: qpi_import_dev
+          cloud-function-folder: qpi-function-source
+          <<: *deploy_on_dev_commons
+      - cloud-function-deploy:
+          name: addresses-cloud-function-deploy-dev
+          cloud-function-name: addresses_import_dev
+          cloud-function-folder: addresses-function-source
+          <<: *deploy_on_dev_commons
+      - ai-platform-deploy:
+          name: ai-platform-deploy-dev
+          machine_type: n1-standard-2
+          <<: *deploy_on_dev_commons
+      - build_and_deploy_api:
+          name: build_and_deploy_api_dev
+          api-instance-name : apireco-dev
+          <<: *deploy_on_dev_commons
+      - api_integration_tests:
+          env: dev
+          api_token: $API_TOKEN_DEV
+          name: api-integration-tests-dev
+          requires:
+            - dev-composer-deploy
+            - typeform-cloud-function-deploy-dev
+            - addresses-cloud-function-deploy-dev
+            - ai-platform-deploy-dev
+            - build_and_deploy_api_dev
+          context:
+            - DATA_GCP_DEV
+            - Slack
+          <<: *slack-fail-post-step
+      - slack-alert:
+          name: slack-alert-dev
+          destination_env: dev
+          context: Slack
+          requires:
+            - api-integration-tests-dev
+
 
 
 ###################
@@ -738,13 +776,55 @@ jobs:
   slack-alert:
     docker:
       - image: cimg/base:stable
+    parameters:
+      destination_env:
+        description: "The environnement on which we deploy."
+        type: string
     steps:
       - run:
           name: Success
           when: always
           command: |
             exit 0
-      - <<: *slack-send-deployment-notification
+      - slack/notify:
+          event: pass
+          channel: alertes_data
+          custom: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "Le déploiement sur *<<parameters.destination_env>>* est un succès :rocket:"
+                  }
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "View job",
+                        "emoji": true
+                      },
+                      "url": "$CIRCLE_BUILD_URL"
+                    }
+                  ]
+                },
+                {
+                  "type": "context",
+                  "elements": [
+                    {
+                      "type": "plain_text",
+                      "text": "Author: $CIRCLE_USERNAME",
+                      "emoji": true
+                    }
+                  ]
+                }
+              ]
+            }
 
   cloud-function-deploy:
     executor: gcp-sdk

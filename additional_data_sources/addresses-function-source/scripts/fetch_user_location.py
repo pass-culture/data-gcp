@@ -2,6 +2,7 @@ import csv
 import json
 import os
 import time
+from datetime import datetime
 from urllib.parse import quote
 import requests
 import gcsfs
@@ -187,6 +188,7 @@ class AdressesDownloader:
         self.add_commune_epci_qpv()
         print("qpv / commune info added")
         print("create csv")
+        self.user_address_dataframe["date_updated"] = datetime.now().isoformat()
         self.user_address_dataframe[
             [
                 "user_id",
@@ -204,6 +206,7 @@ class AdressesDownloader:
                 "qpv_name",
                 "code_qpv",
                 "zrr",
+                "date_updated",
             ]
         ].to_csv(
             f"gcs://{BUCKET_NAME}/{self.user_locations_file_name}",

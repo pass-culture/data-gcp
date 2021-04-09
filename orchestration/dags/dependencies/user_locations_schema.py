@@ -14,4 +14,5 @@ USER_LOCATIONS_SCHEMA = [
     {"name": "qpv_name", "type": "STRING", "mode": "NULLABLE"},
     {"name": "code_qpv", "type": "STRING", "mode": "NULLABLE"},
     {"name": "zrr", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "date_updated", "type": "DATETIME", "mode": "NULLABLE"},
 ]

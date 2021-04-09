@@ -14,7 +14,7 @@ WITH favorite_offers AS (
     FROM favorite_offers AS fo
     INNER JOIN `passculture-data-prod.clean_prod.log_action_preprocessed` AS lap
     ON fo.idaction_name = lap.raw_data.idaction
-    WHERE lap.tracker_data.module_name = 'Module de reco'          -- A MODIFIER
+    WHERE lap.tracker_data.module_name = 'Fais le plein de découvertes'          -- A MODIFIER
 )
 SELECT
     count(*) AS count

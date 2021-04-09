@@ -117,7 +117,7 @@ workflows:
           requires:
             - recommendation-api-tests
           context:
-            - DATA_GCP_EHP
+            - DATA_GCP_DEV
             - Slack
           <<: *slack-fail-post-step
 
@@ -387,6 +387,20 @@ workflows:
           name: build_and_deploy_api_dev
           api-instance-name : apireco-dev
           <<: *deploy_on_dev_commons
+      - api_integration_tests:
+          env: dev
+          api_token: $API_TOKEN_DEV
+          name: api-integration-tests-dev
+          requires:
+            - dev-composer-deploy
+            - typeform-cloud-function-deploy-dev
+            - addresses-cloud-function-deploy-dev
+            - ai-platform-deploy-dev
+            - build_and_deploy_api_dev
+          context:
+            - DATA_GCP_DEV
+            - Slack
+          <<: *slack-fail-post-step
       - slack-alert:
           name: slack-alert-dev
           destination_env: dev
@@ -397,11 +411,7 @@ workflows:
                 - pc-7646-autodeploy-on-dev
           context: Slack
           requires:
-            - dev-composer-deploy
-            - typeform-cloud-function-deploy-dev
-            - addresses-cloud-function-deploy-dev
-            - ai-platform-deploy-dev
-            - build_and_deploy_api_dev
+            - api-integration-tests-dev
 
 
 
@@ -791,7 +801,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "Le déploiement sur **<<parameters.destination_env>>** est un succès :rocket:"
+                    "text": "Le déploiement sur *<<parameters.destination_env>>* est un succès :rocket:"
                   }
                 },
                 {
@@ -805,6 +815,16 @@ jobs:
                         "emoji": true
                       },
                       "url": "$CIRCLE_BUILD_URL"
+                    }
+                  ]
+                },
+                {
+                  "type": "context",
+                  "elements": [
+                    {
+                      "type": "plain_text",
+                      "text": "Author: $CIRCLE_USERNAME",
+                      "emoji": true
                     }
                   ]
                 }

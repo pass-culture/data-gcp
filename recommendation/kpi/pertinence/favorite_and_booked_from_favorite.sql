@@ -14,7 +14,7 @@ WITH favorite_offers AS (
     SELECT
         llvap.idaction_name, llvap.idvisit
     FROM passculture-data-prod.clean_prod.log_link_visit_action_preprocessed AS llvap
-    WHERE  llvap.idaction_event_action = 4132912
+    WHERE  llvap.idaction_event_action = 4132912                          -- 4132912 : FAVORIS - bookingOffer
     AND llvap.server_time >= PARSE_TIMESTAMP('%Y%m%d',@DS_START_DATE)     -- Dates à définir sur la dashboard
     AND llvap.server_time < PARSE_TIMESTAMP('%Y%m%d',@DS_END_DATE)        -- pour gérer la période d'AB testing
 )

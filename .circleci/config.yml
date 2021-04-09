@@ -52,7 +52,6 @@ deploy_on_dev_commons: &deploy_on_dev_commons
     branches:
       only:
         - production
-        - pc-7646-autodeploy-on-dev
   context:
     - DATA_GCP
     - DATA_GCP_DEV
@@ -361,6 +360,7 @@ workflows:
             - typeform-cloud-function-deploy-stg
             - addresses-cloud-function-deploy-stg
 
+# ----------------
 # Workflow to deploy on dev
 # ----------------
 
@@ -404,11 +404,6 @@ workflows:
       - slack-alert:
           name: slack-alert-dev
           destination_env: dev
-          filters:
-            branches:
-              only:
-                - production
-                - pc-7646-autodeploy-on-dev
           context: Slack
           requires:
             - api-integration-tests-dev

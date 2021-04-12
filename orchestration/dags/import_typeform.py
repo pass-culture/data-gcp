@@ -6,6 +6,9 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.http_operator import SimpleHttpOperator
 from airflow.operators.python_operator import PythonOperator
 from airflow.contrib.operators.bigquery_operator import BigQueryOperator
+from airflow.contrib.operators.bigquery_table_delete_operator import (
+    BigQueryTableDeleteOperator,
+)
 from airflow.contrib.operators.gcs_to_bq import GoogleCloudStorageToBigQueryOperator
 
 from google.auth.transport.requests import Request
@@ -104,26 +107,44 @@ with DAG(
         task_id="import_answers_to_bigquery",
         bucket=DATA_GCS_BUCKET_NAME,
         source_objects=["QPI_exports/qpi_answers_{{ tomorrow_ds_nodash }}.jsonl"],
-        destination_project_dataset_table=f"{BIGQUERY_RAW_DATASET}.{QPI_ANSWERS_TABLE}",
-        write_disposition="WRITE_APPEND",
+        destination_project_dataset_table=f"{BIGQUERY_RAW_DATASET}.temp_{QPI_ANSWERS_TABLE}",
+        write_disposition="WRITE_TRUNCATE",
         source_format="NEWLINE_DELIMITED_JSON",
         autodetect=False,
         schema_fields=QPI_ANSWERS_SCHEMA,
     )
 
-    # we use staging user in dev to avoid empty table
-    clean_answers = BigQueryOperator(
-        task_id="clean_answers",
+    add_answers_to_raw = BigQueryOperator(
+        task_id="add_answers_to_raw",
+        sql=f"""
+            select *
+            FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.temp_{QPI_ANSWERS_TABLE}` 
+        """,
+        use_legacy_sql=False,
+        destination_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_RAW_DATASET}.{QPI_ANSWERS_TABLE}",
+        write_disposition="WRITE_APPEND",
+    )
+
+    add_answers_to_clean = BigQueryOperator(
+        task_id="add_answers_to_clean",
         sql=f"""
             select (CASE raw_answers.user_id WHEN null THEN users.user_id else raw_answers.user_id END) as user_id,
-            landed_at, submitted_at, form_id, platform, answers
-            FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.qpi_answers_v2` raw_answers
+            landed_at, submitted_at, form_id, platform, answers,
+            NULL AS catch_up_user_id
+            FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.temp_{QPI_ANSWERS_TABLE}` raw_answers
             LEFT JOIN `{GCP_PROJECT}.{'clean_stg' if ENV_SHORT_NAME == 'dev' else BIGQUERY_CLEAN_DATASET}.applicative_database_user` users
             ON raw_answers.culturalsurvey_id = users.user_cultural_survey_id
         """,
         use_legacy_sql=False,
-        destination_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_CLEAN_DATASET}.qpi_answers_v2",
-        write_disposition="WRITE_TRUNCATE",
+        destination_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_CLEAN_DATASET}.{QPI_ANSWERS_TABLE}",
+        write_disposition="WRITE_APPEND",
+    )
+
+    delete_temp_answer_table = BigQueryTableDeleteOperator(
+        task_id="delete_temp_answer_table",
+        deletion_dataset_table=f"{BIGQUERY_RAW_DATASET}.temp_{QPI_ANSWERS_TABLE}",
+        ignore_if_missing=True,
+        dag=dag,
     )
 
     enrich_qpi_answers = BigQueryOperator(
@@ -140,4 +161,4 @@ with DAG(
     end = DummyOperator(task_id="end")
 
     start >> getting_last_token >> getting_service_account_token >> typeform_to_gcs
-    typeform_to_gcs >> import_answers_to_bigquery >> clean_answers >> enrich_qpi_answers >> end
+    typeform_to_gcs >> import_answers_to_bigquery >> add_answers_to_raw >> add_answers_to_clean >> delete_temp_answer_table >> enrich_qpi_answers >> end

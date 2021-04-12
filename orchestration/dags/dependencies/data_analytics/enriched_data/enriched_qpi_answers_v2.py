@@ -37,7 +37,7 @@ def enrich_answers(
             ) as qpi, qpi.answers as answers
         )
 
-        SELECT max(user_id) as user_id,
+        SELECT max(user_id) as user_id, max(catch_up_user_id) as catch_up_user_id,
             {
     f'{new_line}'.join(
         [

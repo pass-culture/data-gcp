@@ -640,28 +640,63 @@ ENRICHED_VENUE_DATA_EXPECTED = [
 
 # enriched_offerer_data => NO DATA (only structure can be tested)
 ENRICHED_OFFERER_DATA_INPUT = {
-    "booking": [],
-    "offer": [],
-    "offerer": [],
-    "stock": [],
-    "venue": [],
+    "booking": [
+        {
+            "booking_id": "1",
+            "booking_creation_date": datetime.now().replace(microsecond=0),
+            "stock_id": "1",
+            "booking_is_cancelled": False,
+            "booking_is_used": True,
+            "booking_quantity": 1,
+            "booking_amount": 2,
+        }
+    ],
+    "offer": [
+        {
+            "offer_id": "1",
+            "venue_id": "1",
+        }
+    ],
+    "offerer": [
+        {
+            "offerer_id": "1",
+            "offerer_postal_code": "973",
+            "offerer_name": "An offerer",
+            "offerer_creation_date": datetime.now().replace(microsecond=0),
+        }
+    ],
+    "stock": [
+        {
+            "stock_id": "1",
+            "offer_id": "1",
+            "stock_creation_date": datetime.now().replace(microsecond=0),
+        }
+    ],
+    "venue": [
+        {
+            "venue_id": "1",
+            "venue_managing_offerer_id": "1",
+        }
+    ],
     "venue_label": [],
     "venue_type": [],
 }
 
 ENRICHED_OFFERER_DATA_EXPECTED = [
-    "offerer_id",
-    "offerer_name",
-    "offerer_creation_date",
-    "first_stock_creation_date",
-    "first_booking_date",
-    "offer_cnt",
-    "no_cancelled_booking_cnt",
-    "offerer_department_code",
-    "venue_cnt",
-    "venue_with_offer",
-    "offerer_humanized_id",
-    "current_year_revenue",
+    {
+        "offerer_id": "1",
+        "offerer_name": "An offerer",
+        "offerer_creation_date": datetime.now().replace(microsecond=0),
+        "first_stock_creation_date": datetime.now().replace(microsecond=0),
+        "first_booking_date": datetime.now().replace(microsecond=0),
+        "offer_cnt": 1,
+        "no_cancelled_booking_cnt": 1,
+        "offerer_department_code": "973",
+        "venue_cnt": 1,
+        "venue_with_offer": 1,
+        "offerer_humanized_id": "AE",
+        "current_year_revenue": Decimal("2"),
+    }
 ]
 
 # enriched_booking_data => information for one booking not cancelled and used,

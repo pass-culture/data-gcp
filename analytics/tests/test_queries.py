@@ -100,6 +100,15 @@ def flush_dataset():
     ["table_name", "query", "input_data", "expected", "sorting_key"],
     [
         (
+            "enriched_offerer_data",
+            define_enriched_offerer_data_full_query(
+                dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX
+            ),
+            ENRICHED_OFFERER_DATA_INPUT,
+            ENRICHED_OFFERER_DATA_EXPECTED,
+            "offerer_id",
+        ),
+        (
             "enriched_venue_data",
             define_enriched_venue_data_full_query(
                 dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX
@@ -162,33 +171,6 @@ def test_create_queries(
     assert sorted(output, key=lambda d: d[sorting_key]) == sorted(
         expected, key=lambda d: d[sorting_key]
     )
-
-
-@pytest.mark.parametrize(
-    ["table_name", "query", "input_data", "expected"],
-    [
-        (
-            "enriched_offerer_data",
-            define_enriched_offerer_data_full_query(
-                dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX
-            ),
-            ENRICHED_OFFERER_DATA_INPUT,
-            ENRICHED_OFFERER_DATA_EXPECTED,
-        ),
-    ],
-)
-def test_create_queries_empty(flush_dataset, table_name, query, input_data, expected):
-    create_data(
-        client=pytest.bq_client,
-        dataset=TEST_DATASET,
-        data=input_data,
-        table_prefix=TEST_TABLE_PREFIX,
-    )
-    run_query(client=pytest.bq_client, query=query)
-    output = get_table_columns(
-        client=pytest.bq_client, dataset=TEST_DATASET, table=table_name, table_prefix=""
-    )
-    assert output == expected
 
 
 @pytest.mark.parametrize(

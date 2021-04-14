@@ -1865,22 +1865,6 @@ SELECT
 UNION ALL
 SELECT
 (
-  SELECT "user_has_allowed_recommendations"
-),
-(
-  SELECT count(id) FROM EXTERNAL_QUERY('passculture-metier-prod.europe-west1.metier-pcapi-production-connection',
-  'SELECT id, "dateCreated" as date_created FROM public.user WHERE "hasAllowedRecommendations" IS NULL')
-  WHERE date_created <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00")
-  AS DATETIME)
-) as count_null_in_user_has_allowed_recommendations_csql,
-(
-  SELECT count(user_id) FROM `passculture-data-prod.analytics_prod.applicative_database_user`
-  WHERE user_has_allowed_recommendations IS NULL
-  AND user_creation_date <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00") AS DATETIME)
-) as count_null_in_user_has_allowed_recommendations_big_query
-UNION ALL
-SELECT
-(
   SELECT "user_suspension_reason"
 ),
 (

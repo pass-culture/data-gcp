@@ -24,7 +24,6 @@ def define_import_query(
             "activity" as user_activity, "culturalSurveyFilledDate" as user_cultural_survey_filled_date,
             "hasSeenTutorials" as user_has_seen_tutorials, "address" as user_address, "city" as user_city,
             "lastConnectionDate" as user_last_connection_date, "isEmailValidated" as user_is_email_validated,
-            "hasAllowedRecommendations" as user_has_allowed_recommendations,
             "suspensionReason" as user_suspension_reason, "isActive" as user_is_active,
             "hasSeenProTutorials" as user_has_seen_pro_tutorials
         FROM public.user

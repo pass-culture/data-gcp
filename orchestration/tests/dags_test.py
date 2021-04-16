@@ -102,7 +102,7 @@ class TestDags(unittest.TestCase):
 
     def test_import_firebase_data_dag_is_loaded(self):
         # When
-        dag = self.dagbag.get_dag(dag_id="import_firebase_data_v2")
+        dag = self.dagbag.get_dag(dag_id="import_firebase_data_v3")
 
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})

@@ -31,7 +31,7 @@ app_info_id_list = ENV_SHORT_NAME_APP_INFO_ID_MAPPING[ENV_SHORT_NAME]
 EXECUTION_DATE = "{{ ds_nodash }}"
 
 default_dag_args = {
-    "start_date": datetime.datetime(2021, 4, 13),
+    "start_date": datetime.datetime(2021, 4, 17),
     "retries": 1,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT,

@@ -31,7 +31,7 @@ app_info_id_list = ENV_SHORT_NAME_APP_INFO_ID_MAPPING[ENV_SHORT_NAME]
 EXECUTION_DATE = "{{ ds_nodash }}"
 
 default_dag_args = {
-    "start_date": datetime.datetime(2021, 4, 7),
+    "start_date": datetime.datetime(2021, 4, 17),
     "retries": 1,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT,
@@ -48,7 +48,7 @@ def _env_switcher():
 
 
 dag = DAG(
-    "import_firebase_data_v2",
+    "import_firebase_data_v3",
     default_args=default_dag_args,
     description="Import firebase data and dispatch it to each env",
     on_failure_callback=task_fail_slack_alert,
@@ -67,7 +67,7 @@ env_switcher = BranchPythonOperator(
 
 copy_table = BigQueryOperator(
     task_id=f"copy_table",
-    sql=f"SELECT * FROM passculture-android-natif.analytics_249283927.events_"
+    sql=f"SELECT * FROM passculture-native.analytics_267263535.events_"
     + EXECUTION_DATE,
     use_legacy_sql=False,
     destination_dataset_table=f"passculture-data-prod:firebase_raw_data.events_"
@@ -77,7 +77,7 @@ copy_table = BigQueryOperator(
 )
 delete_table = BigQueryTableDeleteOperator(
     task_id=f"delete_table",
-    deletion_dataset_table=f"passculture-android-natif:analytics_249283927.events_"
+    deletion_dataset_table=f"passculture-native:analytics_267263535.events_"
     + EXECUTION_DATE,
     ignore_if_missing=True,
     dag=dag,

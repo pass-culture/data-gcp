@@ -50,7 +50,7 @@ class AdressesDownloader:
             "longitude": None,
             "latitude": None,
             "city_code": None,
-            "city": None,
+            "api_adresse_city": None,
         }
         if response.status_code == 200:
             data = response.json()
@@ -59,7 +59,7 @@ class AdressesDownloader:
                     "longitude": data["features"][0]["geometry"]["coordinates"][0],
                     "latitude": data["features"][0]["geometry"]["coordinates"][1],
                     "city_code": data["features"][0]["properties"]["citycode"],
-                    "city": data["features"][0]["properties"]["city"],
+                    "api_adresse_city": data["features"][0]["properties"]["city"],
                 }
                 return api_address_informations
             except:
@@ -67,15 +67,21 @@ class AdressesDownloader:
         return api_address_informations
 
     def add_coordinates(self):
-        self.user_address_dataframe[
-            ["longitude", "latitude", "city_code", "api_adresse_city"]
-        ] = self.user_address_dataframe.apply(
-            lambda row: self.fetch_coordinates(row["parsed_address"]),
-            axis=1,
-            result_type="expand",
+        dataframe_with_coordinates = self.user_address_dataframe.assign(
+            new_data=lambda df: df["parsed_address"].apply(
+                lambda parsed_address: self.fetch_coordinates(parsed_address)
+            )
+        )
+        for new_column in ["longitude", "latitude", "city_code", "api_adresse_city"]:
+            dataframe_with_coordinates[new_column] = dataframe_with_coordinates[
+                "new_data"
+            ].apply(lambda data: data[new_column])
+        self.user_address_dataframe = dataframe_with_coordinates.drop(
+            "new_data", axis=1
         )
 
-    def find_commune_informations(self, user_city_code, communes):
+    @staticmethod
+    def find_commune_informations(user_city_code, communes):
         commune_data = {
             "code_epci": None,
             "epci_name": None,

@@ -480,7 +480,6 @@ ENRICHED_USER_DATA_INPUT = {
             "amount": 500,
             "expirationDate": datetime.now().replace(microsecond=0),
         }
-
     ],
     "offerer": [
         {

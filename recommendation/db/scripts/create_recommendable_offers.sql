@@ -78,7 +78,8 @@ RETURNS TABLE (offer_id varchar,
                type VARCHAR,
                name VARCHAR,
                url VARCHAR,
-               is_national BOOLEAN) AS
+               is_national BOOLEAN,
+               booking_number BIGINT) AS
 $body$
 BEGIN
     RETURN QUERY
@@ -88,11 +89,20 @@ BEGIN
             offer.offer_type          AS type,
             offer.offer_name          AS name,
             offer.offer_url           AS url,
-            offer."offer_is_national" AS is_national
+            offer."offer_is_national" AS is_national,
+            (CASE WHEN booking_numbers.booking_number IS NOT NULL THEN booking_numbers.booking_number ELSE 0 END) AS booking_number
       FROM public.offer
       JOIN public.venue ON offer."venue_id" = venue.venue_id
       JOIN public.offerer ON offerer.offerer_id = venue."venue_managing_offerer_id"
-     WHERE offer."offer_is_active" = TRUE
+      LEFT JOIN (
+            SELECT count(*) AS booking_number, stock.offer_id
+            FROM public.booking
+            LEFT JOIN public.stock
+            ON booking.stock_id = stock.stock_id
+            GROUP BY stock.offer_id
+      ) booking_numbers
+      ON booking_numbers.offer_id = offer.offer_id
+    WHERE offer."offer_is_active" = TRUE
        AND (EXISTS (SELECT * FROM offer_has_at_least_one_active_mediation(offer.offer_id)))
        AND (EXISTS (SELECT * FROM offer_has_at_least_one_bookable_stock(offer.offer_id)))
        AND offerer."offerer_is_active" = TRUE

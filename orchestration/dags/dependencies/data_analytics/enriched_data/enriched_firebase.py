@@ -3,7 +3,7 @@ def aggregate_firebase_offer_events(gcp_project, bigquery_raw_dataset):
         WITH events AS  (
             SELECT event_name, CAST(CAST(event_params.value.double_value AS INT64) AS STRING) AS offer_id 
             FROM `{gcp_project}.{bigquery_raw_dataset}.events_*` AS events, events.event_params AS event_params
-            WHERE event_params.key = 'offerId'
+            WHERE event_params.key = 'offerId' AND CAST(event_params.value.double_value AS STRING) != 'nan'
         )
         SELECT offer_id, 
         SUM(CAST(event_name = 'ConsultOffer' AS INT64)) AS consult_offer,

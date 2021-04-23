@@ -4,7 +4,7 @@ services:
   testdb:
     image: kartoza/postgis:12.4
     ports:
-      - "${DATA_GCP_TEST_POSTGRES_PORT}:5432"
+      - "5433:5432"
     environment:
       - POSTGRES_PASS=postgres
       - POSTGRES_USER=postgres

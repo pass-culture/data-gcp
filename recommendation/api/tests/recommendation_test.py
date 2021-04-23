@@ -47,12 +47,13 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
     connection = engine.connect().execution_options(autocommit=True)
     recommendable_offers = pd.DataFrame(
         {
-            "offer_id": ["1", "2", "3", "4", "5"],
-            "venue_id": ["11", "22", "33", "44", "55"],
-            "type": ["A", "B", "C", "D", "E"],
-            "name": ["a", "b", "c", "d", "e"],
-            "url": [None, None, "url", "url", None],
-            "is_national": [True, False, True, False, True],
+            "offer_id": ["1", "2", "3", "4", "5", "6"],
+            "venue_id": ["11", "22", "33", "44", "55", "22"],
+            "type": ["A", "B", "C", "D", "E", "B"],
+            "name": ["a", "b", "c", "d", "e", "f"],
+            "url": [None, None, "url", "url", None, None],
+            "is_national": [True, False, True, False, True, False],
+            "booking_number": [3, 5, 10, 2, 1, 10],
         }
     )
     recommendable_offers.to_sql("recommendable_offers", con=engine, if_exists="replace")
@@ -63,6 +64,11 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
     non_recommendable_offers.to_sql(
         "non_recommendable_offers", con=engine, if_exists="replace"
     )
+
+    booking = pd.DataFrame(
+        {"user_id": ["111", "111", "111", "112"], "offer_id": ["1", "3", "2", "1"]}
+    )
+    booking.to_sql("booking", con=engine, if_exists="replace")
 
     iris_venues_mv = pd.DataFrame(
         {"iris_id": ["1", "1", "1", "2"], "venue_id": ["11", "22", "33", "44"]}
@@ -185,13 +191,28 @@ def test_get_intermediate_recommendation_for_user(setup_database: Any):
     user_id = 111
     user_iris_id = 1
     user_recommendation = get_intermediate_recommendations_for_user(
-        user_id, user_iris_id, connection
+        user_id, user_iris_id, False, [], connection
     )
 
     # Then
     assert_array_equal(
         sorted(user_recommendation, key=lambda k: k["id"]),
         [
+            {"id": "2", "type": "B", "url": None},
+            {"id": "3", "type": "C", "url": "url"},
+            {"id": "5", "type": "E", "url": None},
+        ],
+    )
+
+    user_recommendation = get_intermediate_recommendations_for_user(
+        user_id, user_iris_id, True, ["B"], connection
+    )
+
+    # Then
+    assert_array_equal(
+        user_recommendation,
+        [
+            {"id": "6", "type": "B", "url": None},
             {"id": "2", "type": "B", "url": None},
             {"id": "3", "type": "C", "url": "url"},
             {"id": "5", "type": "E", "url": None},
@@ -207,7 +228,7 @@ def test_get_intermediate_recommendation_for_user_with_no_iris(setup_database: A
     user_id = 222
     user_iris_id = None
     user_recommendation = get_intermediate_recommendations_for_user(
-        user_id, user_iris_id, connection
+        user_id, user_iris_id, False, [], connection
     )
 
     # Then
@@ -216,6 +237,21 @@ def test_get_intermediate_recommendation_for_user_with_no_iris(setup_database: A
         [
             {"id": "1", "type": "A", "url": None},
             {"id": "3", "type": "C", "url": "url"},
+            {"id": "4", "type": "D", "url": "url"},
+            {"id": "5", "type": "E", "url": None},
+        ],
+    )
+
+    user_recommendation = get_intermediate_recommendations_for_user(
+        user_id, user_iris_id, True, ["A", "C"], connection
+    )
+
+    # Then
+    assert_array_equal(
+        user_recommendation,
+        [
+            {"id": "3", "type": "C", "url": "url"},
+            {"id": "1", "type": "A", "url": None},
             {"id": "4", "type": "D", "url": "url"},
             {"id": "5", "type": "E", "url": None},
         ],

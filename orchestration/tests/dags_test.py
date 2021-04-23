@@ -62,7 +62,7 @@ class TestDags(unittest.TestCase):
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 58)
+        self.assertEqual(len(dag.tasks), 65)
 
     def test_create_ab_testing_table_dag_is_loaded(self):
         # When

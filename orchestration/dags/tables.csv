@@ -1,96 +1,109 @@
-table_name,column_name,data_type
-booking,booking_id,character varying
-booking,booking_creation_date,timestamp without time zone
-booking,stock_id,character varying
-booking,booking_quantity,integer
-booking,user_id,character varying
-booking,booking_amount,numeric
-booking,booking_is_cancelled,boolean
-booking,booking_is_used,boolean
-booking,booking_used_date,timestamp without time zone
-booking,booking_cancellation_date,timestamp without time zone
-iris_venues,id,character varying
-iris_venues,irisId,character varying
-iris_venues,venueId,character varying
-mediation,thumbCount,integer
-mediation,idAtProviders,character varying
-mediation,dateModifiedAtLastProvider,timestamp without time zone
-mediation,id,character varying
-mediation,dateCreated,timestamp without time zone
-mediation,authorId,character varying
-mediation,lastProviderId,character varying
-mediation,offerId,character varying
-mediation,credit,character varying
-mediation,isActive,boolean
-mediation,fieldsUpdated,string[]
-offer,offer_id_at_providers,character varying
-offer,offer_modified_at_last_provider_date,timestamp without time zone
-offer,offer_id,character varying
-offer,offer_creation_date,timestamp without time zone
-offer,offer_product_id,character varying
-offer,venue_id,character varying
-offer,offer_last_provider_id,character varying
-offer,booking_email,character varying
-offer,offer_is_active,boolean
-offer,offer_type,character varying
-offer,offer_name,character varying
-offer,offer_description,character varying
-offer,offer_conditions,character varying
-offer,offer_age_min,integer
-offer,offer_age_max,integer
-offer,offer_url,character varying
-offer,offer_media_urls,[]
-offer,offer_duration_minutes,integer
-offer,offer_is_national,boolean
-offer,offer_extra_data,character varying
-offer,offer_is_duo,boolean
-offer,offer_fields_updated,string[]
-offer,offer_withdrawal_details,character varying
-offerer,offerer_is_active,boolean
-offerer,offerer_thumb_count,integer
-offerer,offerer_id_at_providers,character varying
-offerer,offerer_modified_at_last_provider_date,timestamp without time zone
-offerer,offerer_address,character varying
-offerer,offerer_postal_code,character varying
-offerer,offerer_city,character varying
-offerer,offerer_id,character varying
-offerer,offerer_creation_date,timestamp without time zone
-offerer,offerer_name,character varying
-offerer,offerer_siren,character varying
-offerer,offerer_last_provider_id,character varying
-offerer,offerer_fields_updated,string[]
-venue,venue_thumb_count,integer
-venue,venue_id_at_providers,character varying
-venue,venue_modified_at_last_provider,timestamp without time zone
-venue,venue_address,character varying
-venue,venue_postal_code,character varying
-venue,venue_city,character varying
-venue,venue_id,character varying
-venue,venue_name,character varying
-venue,venue_siret,character varying
-venue,venue_department_code,character varying
-venue,venue_latitude,numeric
-venue,venue_longitude,numeric
-venue,venue_managing_offerer_id,character varying
-venue,venue_booking_email,character varying
-venue,venue_last_provider_id,character varying
-venue,venue_is_virtual,boolean
-venue,venue_comment,character varying
-venue,venue_public_name,character varying
-venue,venue_fields_updated,string[]
-venue,venue_type_id,character varying
-venue,venue_label_id,character varying
-venue,venue_creation_date,timestamp without time zone
-stock,stock_id_at_providers,character varying
-stock,stock_modified_at_last_provider_date,timestamp without time zone
-stock,stock_id,character varying
-stock,stock_modified_date,timestamp without time zone
-stock,stock_price,numeric
-stock,stock_quantity,integer
-stock,stock_booking_limit_date,timestamp without time zone
-stock,stock_last_provider_id,character varying
-stock,offer_id,character varying
-stock,stock_is_soft_deleted,boolean
-stock,stock_beginning_date,timestamp without time zone
-stock,stock_creation_date,timestamp without time zone
-stock,stock_fields_updated,string[]
+table_name,column_name,data_type,bigquery_table_name,dataset_type
+booking,booking_id,character varying,applicative_database_booking,clean
+booking,booking_creation_date,timestamp without time zone,applicative_database_booking,clean
+booking,stock_id,character varying,applicative_database_booking,clean
+booking,booking_quantity,integer,applicative_database_booking,clean
+booking,user_id,character varying,applicative_database_booking,clean
+booking,booking_amount,numeric,applicative_database_booking,clean
+booking,booking_is_cancelled,boolean,applicative_database_booking,clean
+booking,booking_is_used,boolean,applicative_database_booking,clean
+booking,booking_used_date,timestamp without time zone,applicative_database_booking,clean
+booking,booking_cancellation_date,timestamp without time zone,applicative_database_booking,clean
+iris_venues,id,character varying,applicative_database_iris_venues,clean
+iris_venues,irisId,character varying,applicative_database_iris_venues,clean
+iris_venues,venueId,character varying,applicative_database_iris_venues,clean
+mediation,thumbCount,integer,applicative_database_mediation,clean
+mediation,idAtProviders,character varying,applicative_database_mediation,clean
+mediation,dateModifiedAtLastProvider,timestamp without time zone,applicative_database_mediation,clean
+mediation,id,character varying,applicative_database_mediation,clean
+mediation,dateCreated,timestamp without time zone,applicative_database_mediation,clean
+mediation,authorId,character varying,applicative_database_mediation,clean
+mediation,lastProviderId,character varying,applicative_database_mediation,clean
+mediation,offerId,character varying,applicative_database_mediation,clean
+mediation,credit,character varying,applicative_database_mediation,clean
+mediation,isActive,boolean,applicative_database_mediation,clean
+mediation,fieldsUpdated,string[],applicative_database_mediation,clean
+offer,offer_id_at_providers,character varying,applicative_database_offer,clean
+offer,offer_modified_at_last_provider_date,timestamp without time zone,applicative_database_offer,clean
+offer,offer_id,character varying,applicative_database_offer,clean
+offer,offer_creation_date,timestamp without time zone,applicative_database_offer,clean
+offer,offer_product_id,character varying,applicative_database_offer,clean
+offer,venue_id,character varying,applicative_database_offer,clean
+offer,offer_last_provider_id,character varying,applicative_database_offer,clean
+offer,booking_email,character varying,applicative_database_offer,clean
+offer,offer_is_active,boolean,applicative_database_offer,clean
+offer,offer_type,character varying,applicative_database_offer,clean
+offer,offer_name,character varying,applicative_database_offer,clean
+offer,offer_description,character varying,applicative_database_offer,clean
+offer,offer_conditions,character varying,applicative_database_offer,clean
+offer,offer_age_min,integer,applicative_database_offer,clean
+offer,offer_age_max,integer,applicative_database_offer,clean
+offer,offer_url,character varying,applicative_database_offer,clean
+offer,offer_media_urls,[],applicative_database_offer,clean
+offer,offer_duration_minutes,integer,applicative_database_offer,clean
+offer,offer_is_national,boolean,applicative_database_offer,clean
+offer,offer_extra_data,character varying,applicative_database_offer,clean
+offer,offer_is_duo,boolean,applicative_database_offer,clean
+offer,offer_fields_updated,string[],applicative_database_offer,clean
+offer,offer_withdrawal_details,character varying,applicative_database_offer,clean
+offerer,offerer_is_active,boolean,applicative_database_offerer,clean
+offerer,offerer_thumb_count,integer,applicative_database_offerer,clean
+offerer,offerer_id_at_providers,character varying,applicative_database_offerer,clean
+offerer,offerer_modified_at_last_provider_date,timestamp without time zone,applicative_database_offerer,clean
+offerer,offerer_address,character varying,applicative_database_offerer,clean
+offerer,offerer_postal_code,character varying,applicative_database_offerer,clean
+offerer,offerer_city,character varying,applicative_database_offerer,clean
+offerer,offerer_id,character varying,applicative_database_offerer,clean
+offerer,offerer_creation_date,timestamp without time zone,applicative_database_offerer,clean
+offerer,offerer_name,character varying,applicative_database_offerer,clean
+offerer,offerer_siren,character varying,applicative_database_offerer,clean
+offerer,offerer_last_provider_id,character varying,applicative_database_offerer,clean
+offerer,offerer_fields_updated,string[],applicative_database_offerer,clean
+venue,venue_thumb_count,integer,applicative_database_venue,clean
+venue,venue_id_at_providers,character varying,applicative_database_venue,clean
+venue,venue_modified_at_last_provider,timestamp without time zone,applicative_database_venue,clean
+venue,venue_address,character varying,applicative_database_venue,clean
+venue,venue_postal_code,character varying,applicative_database_venue,clean
+venue,venue_city,character varying,applicative_database_venue,clean
+venue,venue_id,character varying,applicative_database_venue,clean
+venue,venue_name,character varying,applicative_database_venue,clean
+venue,venue_siret,character varying,applicative_database_venue,clean
+venue,venue_department_code,character varying,applicative_database_venue,clean
+venue,venue_latitude,numeric,applicative_database_venue,clean
+venue,venue_longitude,numeric,applicative_database_venue,clean
+venue,venue_managing_offerer_id,character varying,applicative_database_venue,clean
+venue,venue_booking_email,character varying,applicative_database_venue,clean
+venue,venue_last_provider_id,character varying,applicative_database_venue,clean
+venue,venue_is_virtual,boolean,applicative_database_venue,clean
+venue,venue_comment,character varying,applicative_database_venue,clean
+venue,venue_public_name,character varying,applicative_database_venue,clean
+venue,venue_fields_updated,string[],applicative_database_venue,clean
+venue,venue_type_id,character varying,applicative_database_venue,clean
+venue,venue_label_id,character varying,applicative_database_venue,clean
+venue,venue_creation_date,timestamp without time zone,applicative_database_venue,clean
+stock,stock_id_at_providers,character varying,applicative_database_stock,clean
+stock,stock_modified_at_last_provider_date,timestamp without time zone,applicative_database_stock,clean
+stock,stock_id,character varying,applicative_database_stock,clean
+stock,stock_modified_date,timestamp without time zone,applicative_database_stock,clean
+stock,stock_price,numeric,applicative_database_stock,clean
+stock,stock_quantity,integer,applicative_database_stock,clean
+stock,stock_booking_limit_date,timestamp without time zone,applicative_database_stock,clean
+stock,stock_last_provider_id,character varying,applicative_database_stock,clean
+stock,offer_id,character varying,applicative_database_stock,clean
+stock,stock_is_soft_deleted,boolean,applicative_database_stock,clean
+stock,stock_beginning_date,timestamp without time zone,applicative_database_stock,clean
+stock,stock_creation_date,timestamp without time zone,applicative_database_stock,clean
+stock,stock_fields_updated,string[],applicative_database_stock,clean
+qpi_answers,user_id,character varying,enriched_qpi_answers,analytics
+qpi_answers,catch_up_user_id,character varying,enriched_qpi_answers,analytics
+qpi_answers,cinema,boolean,enriched_qpi_answers,analytics
+qpi_answers,audiovisuel,boolean,enriched_qpi_answers,analytics
+qpi_answers,jeux_videos,boolean,enriched_qpi_answers,analytics
+qpi_answers,livre,boolean,enriched_qpi_answers,analytics
+qpi_answers,musees_patrimoine,boolean,enriched_qpi_answers,analytics
+qpi_answers,musique,boolean,enriched_qpi_answers,analytics
+qpi_answers,pratique_artistique,boolean,enriched_qpi_answers,analytics
+qpi_answers,spectacle_vivant,boolean,enriched_qpi_answers,analytics
+qpi_answers,instrument,boolean,enriched_qpi_answers,analytics
+qpi_answers,presse,boolean,enriched_qpi_answers,analytics
+qpi_answers,autre,boolean,enriched_qpi_answers,analytics

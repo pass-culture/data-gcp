@@ -17,14 +17,18 @@ from airflow.operators.python_operator import PythonOperator
 
 from dependencies.access_gcp_secrets import access_secret_data
 from dependencies.compose_gcs_files import compose_gcs_files
+from dependencies.config import (
+    GCP_PROJECT,
+    DATA_GCS_BUCKET_NAME,
+    BIGQUERY_CLEAN_DATASET,
+    BIGQUERY_ANALYTICS_DATASET,
+)
 from dependencies.slack_alert import task_fail_slack_alert
 
-GCP_PROJECT = os.environ.get("GCP_PROJECT")
 LOCATION = os.environ.get("REGION")
 
 RECOMMENDATION_SQL_INSTANCE = os.environ.get("RECOMMENDATION_SQL_INSTANCE")
 RECOMMENDATION_SQL_BASE = os.environ.get("RECOMMENDATION_SQL_BASE")
-BIGQUERY_CLEAN_DATASET = os.environ.get("BIGQUERY_CLEAN_DATASET")
 
 database_url = access_secret_data(
     GCP_PROJECT, f"{RECOMMENDATION_SQL_BASE}-database-url"
@@ -36,7 +40,6 @@ os.environ["AIRFLOW_CONN_PROXY_POSTGRES_TCP"] = (
 
 
 TABLES_DATA_PATH = f"{os.environ.get('DAG_FOLDER')}/tables.csv"
-DATA_GCS_BUCKET_NAME = os.environ.get("DATA_GCS_BUCKET_NAME")
 BUCKET_PATH = f"gs://{DATA_GCS_BUCKET_NAME}/bigquery_exports"
 
 default_args = {
@@ -50,15 +53,19 @@ def get_table_data():
     data = {}
     tables = pd.read_csv(TABLES_DATA_PATH)
     for table_name in set(tables["table_name"].values):
-
+        data[table_name] = {}
         table_data = tables.loc[lambda df: df.table_name == table_name]
-        data[table_name] = {
+        data[table_name]["columns"] = {
             column_name: data_type
             for column_name, data_type in zip(
                 list(table_data.column_name.values),
                 list(table_data.data_type.values),
             )
         }
+        for additional_data in ["dataset_type", "bigquery_table_name"]:
+            data[table_name][additional_data] = tables.loc[
+                lambda df: df.table_name == table_name
+            ][additional_data].values[0]
     return data
 
 
@@ -88,6 +95,13 @@ with DAG(
 
     for table in TABLES:
 
+        dataset_type = TABLES[table]["dataset_type"]
+        bigquery_table_name = TABLES[table]["bigquery_table_name"]
+        if dataset_type == "clean":
+            dataset = BIGQUERY_CLEAN_DATASET
+        if dataset_type == "analytics":
+            dataset = BIGQUERY_ANALYTICS_DATASET
+
         drop_table_task = CloudSqlQueryOperator(
             gcp_cloudsql_conn_id="proxy_postgres_tcp",
             task_id=f"drop_table_public_{table}",
@@ -95,36 +109,52 @@ with DAG(
             autocommit=True,
         )
 
+        list_type_columns = [
+            column_name
+            for column_name in TABLES[table]["columns"]
+            if "[]" in TABLES[table]["columns"][column_name]
+        ]
+        extra_columns = ["presse", "autre"] if table == "qpi_answers" else []
+
         select_columns = ", ".join(
             [
                 column_name
-                for column_name in TABLES[table]
-                if "[]" not in TABLES[table][column_name]
+                for column_name in TABLES[table]["columns"]
+                if column_name not in list_type_columns + extra_columns
             ]
         )
 
         filter_column_task = BigQueryOperator(
             task_id=f"filter_column_{table}",
             sql=f"""
+                SELECT {select_columns}, False AS presse, False AS autre
+                FROM `{GCP_PROJECT}.{dataset}.{bigquery_table_name}_v1`
+                UNION ALL (
+                    SELECT {select_columns}, presse, autre 
+                    FROM `{GCP_PROJECT}.{dataset}.{bigquery_table_name}_v2`
+                )
+            """
+            if table == "qpi_answers"
+            else f"""
                 SELECT {select_columns}
-                FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_{table}`
+                FROM `{GCP_PROJECT}.{dataset}.{bigquery_table_name}`
             """,
             use_legacy_sql=False,
-            destination_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_CLEAN_DATASET}.temp_export_{table}",
+            destination_dataset_table=f"{GCP_PROJECT}:{dataset}.temp_export_{table}",
             write_disposition="WRITE_TRUNCATE",
         )
 
         typed_columns = ", ".join(
             [
-                f'"{col}" {TABLES[table][col]}'
-                for col in TABLES[table]
-                if "[]" not in TABLES[table][col]
+                f'"{col}" {TABLES[table]["columns"][col]}'
+                for col in TABLES[table]["columns"]
+                if "[]" not in TABLES[table]["columns"][col]
             ]
         )
 
         export_task = BigQueryToCloudStorageOperator(
             task_id=f"export_{table}_to_gcs",
-            source_project_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_CLEAN_DATASET}.temp_export_{table}",
+            source_project_dataset_table=f"{GCP_PROJECT}:{dataset}.temp_export_{table}",
             destination_cloud_storage_uris=[f"{BUCKET_PATH}/{table}-*.csv"],
             export_format="CSV",
             print_header=False,
@@ -132,7 +162,7 @@ with DAG(
 
         delete_temp_table_task = BigQueryTableDeleteOperator(
             task_id=f"delete_temp_export_{table}_in_bigquery",
-            deletion_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_CLEAN_DATASET}.temp_export_{table}",
+            deletion_dataset_table=f"{GCP_PROJECT}:{dataset}.temp_export_{table}",
             ignore_if_missing=True,
         )
 

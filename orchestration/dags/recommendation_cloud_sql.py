@@ -109,29 +109,35 @@ with DAG(
             autocommit=True,
         )
 
+        list_type_columns = [
+            column_name
+            for column_name in TABLES[table]["columns"]
+            if "[]" in TABLES[table]["columns"][column_name]
+        ]
+        extra_columns = ["presse", "autre"] if table == "qpi_answers" else []
+
         select_columns = ", ".join(
             [
                 column_name
                 for column_name in TABLES[table]["columns"]
-                if "[]" not in TABLES[table]["columns"][column_name]
-                and (table != "qpi_answers" or column_name not in ["presse", "autre"])
+                if column_name not in list_type_columns + extra_columns
             ]
         )
 
         filter_column_task = BigQueryOperator(
             task_id=f"filter_column_{table}",
             sql=f"""
-                SELECT {select_columns}
-                FROM `{GCP_PROJECT}.{dataset}.{bigquery_table_name}`
-            """
-            if table != "qpi_answers"
-            else f"""
                 SELECT {select_columns}, False AS presse, False AS autre
                 FROM `{GCP_PROJECT}.{dataset}.{bigquery_table_name}_v1`
                 UNION ALL (
                     SELECT {select_columns}, presse, autre 
                     FROM `{GCP_PROJECT}.{dataset}.{bigquery_table_name}_v2`
                 )
+            """
+            if table == "qpi_answers"
+            else f"""
+                SELECT {select_columns}
+                FROM `{GCP_PROJECT}.{dataset}.{bigquery_table_name}`
             """,
             use_legacy_sql=False,
             destination_dataset_table=f"{GCP_PROJECT}:{dataset}.temp_export_{table}",

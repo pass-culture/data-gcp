@@ -7,7 +7,8 @@ TABLE_DATA = {
             CAST(server_time AS TIMESTAMP) AS server_time,
             TO_BASE64(idvisitor) as idvisitor,
             CAST(custom_float AS STRING) AS custom_float,
-            * except(idvisit, idlink_va, server_time, idvisitor, custom_float)
+            CAST(bandwidth AS INT64) as bandwidth,
+            * except(idvisit, idlink_va, server_time, idvisitor, custom_float, bandwidth)
         """,
     },
     "log_visit": {
@@ -23,7 +24,8 @@ TABLE_DATA = {
             CAST(visitor_localtime AS STRING) AS visitor_localtime,
             CAST(location_latitude AS FLOAT64) AS location_latitude,
             CAST(location_longitude AS FLOAT64) AS location_longitude,
-            * EXCEPT(idvisit, idvisitor, visit_last_action_time, config_id, location_ip, visit_first_action_time, visitor_localtime, location_latitude, location_longitude),
+            CAST(last_idlink_va AS INT64) as last_idlink_va,
+            * EXCEPT(idvisit, idvisitor, visit_last_action_time, config_id, location_ip, visit_first_action_time, visitor_localtime, location_latitude, location_longitude, last_idlink_va),
         """,
     },
     "log_action": {

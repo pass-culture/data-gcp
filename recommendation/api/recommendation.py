@@ -10,7 +10,7 @@ from googleapiclient import discovery
 from sqlalchemy import create_engine, engine
 
 from access_gcp_secrets import access_secret
-from cold_start import get_cold_start_status, get_cold_start_categories
+from cold_start import get_cold_start_status, get_cold_start_types
 from geolocalisation import get_iris_from_coordinates
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
@@ -74,14 +74,14 @@ def get_final_recommendations(
 
     if group_id == "A":
         is_cold_start = get_cold_start_status(user_id, connection)
-        if is_cold_start:
-            cold_start_categories = get_cold_start_categories(user_id, connection)
-        else:
-            cold_start_categories = []
+        cold_start_types = (
+            get_cold_start_types(user_id, connection) if is_cold_start else []
+        )
+
         user_iris_id = get_iris_from_coordinates(longitude, latitude, connection)
 
         recommendations_for_user = get_intermediate_recommendations_for_user(
-            user_id, user_iris_id, is_cold_start, cold_start_categories, connection
+            user_id, user_iris_id, is_cold_start, cold_start_types, connection
         )
         scored_recommendation_for_user = get_scored_recommendation_for_user(
             recommendations_for_user,
@@ -119,12 +119,12 @@ def get_intermediate_recommendations_for_user(
     user_id: int,
     user_iris_id: int,
     is_cold_start: bool,
-    cold_start_categories: list,
+    cold_start_types: list,
     connection,
 ) -> List[Dict[str, Any]]:
 
     recommendations_query = get_recommendations_query(
-        user_id, user_iris_id, is_cold_start, cold_start_categories
+        user_id, user_iris_id, is_cold_start, cold_start_types
     )
     query_result = connection.execute(recommendations_query).fetchall()
 
@@ -136,12 +136,12 @@ def get_intermediate_recommendations_for_user(
 
 
 def get_recommendations_query(
-    user_id: int, user_iris_id: int, is_cold_start: bool, cold_start_categories: list
+    user_id: int, user_iris_id: int, is_cold_start: bool, cold_start_types: list
 ) -> str:
     order_query = (
         f"""
         ORDER BY 
-            (type in ({', '.join([f"'{category}'" for category in cold_start_categories])})) DESC, 
+            (type in ({', '.join([f"'{offer_type}'" for offer_type in cold_start_types])})) DESC, 
             booking_number DESC
     """
         if is_cold_start

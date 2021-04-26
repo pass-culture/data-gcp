@@ -1,8 +1,32 @@
+MACRO_CATEGORIES_TYPE_MAPPING = {
+    "cinema": ["EventType.CINEMA", "ThingType.CINEMA_CARD", "ThingType.CINEMA_ABO"],
+    "audiovisuel": ["ThingType.AUDIOVISUEL"],
+    "jeux_videos": ["ThingType.JEUX_VIDEO_ABO", "ThingType.JEUX_VIDEO"],
+    "livre": ["ThingType.LIVRE_EDITION", "ThingType.LIVRE_AUDIO"],
+    "musees_patrimoine": [
+        "EventType.MUSEES_PATRIMOINE",
+        "ThingType.MUSEES_PATRIMOINE_ABO",
+    ],
+    "musique": ["EventType.MUSIQUE", "ThingType.MUSIQUE_ABO", "ThingType.MUSIQUE"],
+    "pratique_artistique": [
+        "EventType.PRATIQUE_ARTISTIQUE",
+        "ThingType.PRATIQUE_ARTISTIQUE_ABO",
+    ],
+    "spectacle_vivant": [
+        "EventType.SPECTACLE_VIVANT",
+        "ThingType.SPECTACLE_VIVANT_ABO",
+    ],
+    "instrument": ["ThingType.INSTRUMENT"],
+    "presse": ["ThingType.PRESSE_ABO"],
+    "autre": ["EventType.CONFERENCE_DEBAT_DEDICACE"],
+}
+
+
 def get_cold_start_status(user_id: int, connection) -> bool:
     cold_start_query = f"""
         SELECT count(*)
         FROM booking
-        WHERE user_id = {user_id};
+        WHERE user_id = '{user_id}';
     """
     query_result = connection.execute(cold_start_query).fetchall()
 
@@ -11,7 +35,7 @@ def get_cold_start_status(user_id: int, connection) -> bool:
     return user_cold_start_status
 
 
-def get_cold_start_categories(user_id: int, connection) -> list:
+def get_cold_start_types(user_id: int, connection) -> list:
     qpi_answers_categories = [
         "cinema",
         "audiovisuel",
@@ -32,11 +56,13 @@ def get_cold_start_categories(user_id: int, connection) -> list:
     """
     query_result = connection.execute(cold_start_query).fetchall()
 
-    cold_start_categories = []
+    cold_start_types = []
     if len(query_result) == 0:
         return []
     for category_index, category in enumerate(query_result[0]):
         if category:
-            cold_start_categories.append(qpi_answers_categories[category_index])
+            cold_start_types.extend(
+                MACRO_CATEGORIES_TYPE_MAPPING[qpi_answers_categories[category_index]]
+            )
 
-    return cold_start_categories
+    return cold_start_types

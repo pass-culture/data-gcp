@@ -13,7 +13,10 @@ yesterday = (datetime.datetime.now() + datetime.timedelta(days=-1)).strftime(
     "%Y-%m-%d"
 ) + " 00:00:00"
 TABLES = {
-    "ab_testing_20201207": {"query": None, "write_disposition": "WRITE_TRUNCATE"},
+    "ab_testing_202104_v0_v0bis": {
+        "query": None,
+        "write_disposition": "WRITE_TRUNCATE",
+    },
     "past_recommended_offers": {
         "query": f"SELECT * FROM public.past_recommended_offers where date <= '{yesterday}'",
         "write_disposition": "WRITE_APPEND",

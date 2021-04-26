@@ -23,7 +23,7 @@ TEST_DATABASE_CONFIG = {
 @pytest.fixture
 def app_config() -> Dict[str, Any]:
     return {
-        "AB_TESTING_TABLE": "ab_testing_20201207",
+        "AB_TESTING_TABLE": "ab_testing_202104_v0_v0bis",
         "NUMBER_OF_RECOMMENDATIONS": 10,
         "MODEL_REGION": "model_region",
         "MODEL_NAME": "model_name",

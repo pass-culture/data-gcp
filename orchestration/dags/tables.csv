@@ -59,6 +59,7 @@ offerer,offerer_name,character varying,applicative_database_offerer,clean
 offerer,offerer_siren,character varying,applicative_database_offerer,clean
 offerer,offerer_last_provider_id,character varying,applicative_database_offerer,clean
 offerer,offerer_fields_updated,string[],applicative_database_offerer,clean
+offerer,offerer_validation_token,character varying,applicative_database_offerer,clean
 venue,venue_thumb_count,integer,applicative_database_venue,clean
 venue,venue_id_at_providers,character varying,applicative_database_venue,clean
 venue,venue_modified_at_last_provider,timestamp without time zone,applicative_database_venue,clean
@@ -81,6 +82,7 @@ venue,venue_fields_updated,string[],applicative_database_venue,clean
 venue,venue_type_id,character varying,applicative_database_venue,clean
 venue,venue_label_id,character varying,applicative_database_venue,clean
 venue,venue_creation_date,timestamp without time zone,applicative_database_venue,clean
+venue,venue_validation_token,character varying,applicative_database_venue,clean
 stock,stock_id_at_providers,character varying,applicative_database_stock,clean
 stock,stock_modified_at_last_provider_date,timestamp without time zone,applicative_database_stock,clean
 stock,stock_id,character varying,applicative_database_stock,clean

@@ -45,7 +45,7 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
             "name": ["a", "b", "c", "d", "e", "f"],
             "url": [None, None, "url", "url", None, None],
             "is_national": [True, False, True, False, True, False],
-            "booking_number": [3, 5, 10, 2, 1, 10],
+            "booking_number": [3, 5, 10, 2, 1, 9],
         }
     )
     recommendable_offers.to_sql("recommendable_offers", con=engine, if_exists="replace")

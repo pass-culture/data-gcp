@@ -101,7 +101,44 @@ def test_get_final_recommendation_for_new_user(
     assert recommendations == []
 
 
-def test_get_intermediate_recommendation_for_user(setup_database: Any):
+@pytest.mark.parametrize(
+    ["is_cold_start", "cold_start_types", "expected_recommendation"],
+    [
+        (
+            False,
+            [],
+            [
+                {"id": "2", "type": "B", "url": None},
+                {"id": "3", "type": "C", "url": "url"},
+                {"id": "5", "type": "E", "url": None},
+                {"id": "6", "type": "B", "url": None},
+            ],
+        ),
+        (
+            True,
+            [],
+            [
+                {"id": "3", "type": "C", "url": "url"},
+                {"id": "6", "type": "B", "url": None},
+                {"id": "2", "type": "B", "url": None},
+                {"id": "5", "type": "E", "url": None},
+            ],
+        ),
+        (
+            True,
+            "B",
+            [
+                {"id": "6", "type": "B", "url": None},
+                {"id": "2", "type": "B", "url": None},
+                {"id": "3", "type": "C", "url": "url"},
+                {"id": "5", "type": "E", "url": None},
+            ],
+        ),
+    ],
+)
+def test_get_intermediate_recommendation_for_user(
+    setup_database: Any, is_cold_start, cold_start_types, expected_recommendation
+):
     # Given
     connection = setup_database
 
@@ -109,37 +146,56 @@ def test_get_intermediate_recommendation_for_user(setup_database: Any):
     user_id = 111
     user_iris_id = 1
     user_recommendation = get_intermediate_recommendations_for_user(
-        user_id, user_iris_id, False, [], connection
+        user_id, user_iris_id, is_cold_start, cold_start_types, connection
     )
 
     # Then
     assert_array_equal(
-        sorted(user_recommendation, key=lambda k: k["id"]),
-        [
-            {"id": "2", "type": "B", "url": None},
-            {"id": "3", "type": "C", "url": "url"},
-            {"id": "5", "type": "E", "url": None},
-            {"id": "6", "type": "B", "url": None},
-        ],
-    )
-
-    user_recommendation = get_intermediate_recommendations_for_user(
-        user_id, user_iris_id, True, ["B"], connection
-    )
-
-    # Then
-    assert_array_equal(
-        user_recommendation,
-        [
-            {"id": "6", "type": "B", "url": None},
-            {"id": "2", "type": "B", "url": None},
-            {"id": "3", "type": "C", "url": "url"},
-            {"id": "5", "type": "E", "url": None},
-        ],
+        user_recommendation
+        if is_cold_start
+        else sorted(user_recommendation, key=lambda k: k["id"]),
+        expected_recommendation,
     )
 
 
-def test_get_intermediate_recommendation_for_user_with_no_iris(setup_database: Any):
+@pytest.mark.parametrize(
+    ["is_cold_start", "cold_start_types", "expected_recommendation"],
+    [
+        (
+            False,
+            [],
+            [
+                {"id": "1", "type": "A", "url": None},
+                {"id": "3", "type": "C", "url": "url"},
+                {"id": "4", "type": "D", "url": "url"},
+                {"id": "5", "type": "E", "url": None},
+            ],
+        ),
+        (
+            True,
+            [],
+            [
+                {"id": "3", "type": "C", "url": "url"},
+                {"id": "1", "type": "A", "url": None},
+                {"id": "4", "type": "D", "url": "url"},
+                {"id": "5", "type": "E", "url": None},
+            ],
+        ),
+        (
+            True,
+            ["A", "C"],
+            [
+                {"id": "3", "type": "C", "url": "url"},
+                {"id": "1", "type": "A", "url": None},
+                {"id": "4", "type": "D", "url": "url"},
+                {"id": "5", "type": "E", "url": None},
+            ],
+        ),
+    ],
+)
+def test_get_intermediate_recommendation_for_user_with_no_iris(
+    setup_database: Any, is_cold_start, cold_start_types, expected_recommendation
+):
     # Given
     connection = setup_database
 
@@ -147,33 +203,15 @@ def test_get_intermediate_recommendation_for_user_with_no_iris(setup_database: A
     user_id = 222
     user_iris_id = None
     user_recommendation = get_intermediate_recommendations_for_user(
-        user_id, user_iris_id, False, [], connection
+        user_id, user_iris_id, is_cold_start, cold_start_types, connection
     )
 
     # Then
     assert_array_equal(
-        sorted(user_recommendation, key=lambda k: k["id"]),
-        [
-            {"id": "1", "type": "A", "url": None},
-            {"id": "3", "type": "C", "url": "url"},
-            {"id": "4", "type": "D", "url": "url"},
-            {"id": "5", "type": "E", "url": None},
-        ],
-    )
-
-    user_recommendation = get_intermediate_recommendations_for_user(
-        user_id, user_iris_id, True, ["A", "C"], connection
-    )
-
-    # Then
-    assert_array_equal(
-        user_recommendation,
-        [
-            {"id": "3", "type": "C", "url": "url"},
-            {"id": "1", "type": "A", "url": None},
-            {"id": "4", "type": "D", "url": "url"},
-            {"id": "5", "type": "E", "url": None},
-        ],
+        user_recommendation
+        if is_cold_start
+        else sorted(user_recommendation, key=lambda k: k["id"]),
+        expected_recommendation,
     )
 
 

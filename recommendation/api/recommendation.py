@@ -138,15 +138,17 @@ def get_intermediate_recommendations_for_user(
 def get_recommendations_query(
     user_id: int, user_iris_id: int, is_cold_start: bool, cold_start_types: list
 ) -> str:
-    order_query = (
-        f"""
-        ORDER BY 
-            (type in ({', '.join([f"'{offer_type}'" for offer_type in cold_start_types])})) DESC, 
-            booking_number DESC
-    """
-        if is_cold_start
-        else "ORDER BY RANDOM()"
-    )
+    if is_cold_start:
+        if cold_start_types:
+            order_query = f"""
+                ORDER BY 
+                    (type in ({', '.join([f"'{offer_type}'" for offer_type in cold_start_types])})) DESC, 
+                    booking_number DESC
+                 """
+        else:
+            order_query = "ORDER BY booking_number DESC"
+    else:
+        order_query = "ORDER BY RANDOM()"
 
     if not user_iris_id:
         query = f"""

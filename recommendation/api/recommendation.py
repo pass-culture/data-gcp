@@ -83,16 +83,27 @@ def get_final_recommendations(
         recommendations_for_user = get_intermediate_recommendations_for_user(
             user_id, user_iris_id, is_cold_start, cold_start_types, connection
         )
-        scored_recommendation_for_user = get_scored_recommendation_for_user(
-            recommendations_for_user,
-            app_config["MODEL_REGION"],
-            app_config["MODEL_NAME"],
-            app_config["MODEL_VERSION"],
-        )
 
-        final_recommendations = order_offers_by_score_and_diversify_types(
-            scored_recommendation_for_user
-        )[: app_config["NUMBER_OF_RECOMMENDATIONS"]]
+        if is_cold_start:
+            scored_recommendation_for_user = [
+                {**recommendation, "score": len(recommendations_for_user) - i}
+                for i, recommendation in enumerate(recommendations_for_user)
+            ]
+            final_recommendations = get_cold_start_ordered_recommendations(
+                recommendations=scored_recommendation_for_user,
+                cold_start_types=cold_start_types,
+                number_of_recommendations=app_config["NUMBER_OF_RECOMMENDATIONS"],
+            )
+        else:
+            scored_recommendation_for_user = get_scored_recommendation_for_user(
+                recommendations_for_user,
+                app_config["MODEL_REGION"],
+                app_config["MODEL_NAME"],
+                app_config["MODEL_VERSION"],
+            )
+            final_recommendations = order_offers_by_score_and_diversify_types(
+                scored_recommendation_for_user
+            )[: app_config["NUMBER_OF_RECOMMENDATIONS"]]
     else:
         final_recommendations = []
 
@@ -113,6 +124,37 @@ def save_recommendation(user_id: int, recommendations: List[int], cursor):
             f"VALUES (%s, %s, %s)",
             row,
         )
+
+
+def get_cold_start_ordered_recommendations(
+    recommendations: List[Dict[str, Any]],
+    cold_start_types: List[str],
+    number_of_recommendations: int,
+):
+    cold_start_types_recommendation = [
+        recommendation
+        for recommendation in recommendations
+        if recommendation["type"] in cold_start_types
+    ]
+    other_recommendations = [
+        recommendation
+        for recommendation in recommendations
+        if recommendation["type"] not in cold_start_types
+    ]
+    if len(cold_start_types_recommendation) >= number_of_recommendations:
+        return order_offers_by_score_and_diversify_types(
+            cold_start_types_recommendation
+        )[:number_of_recommendations]
+
+    missing_recommendations = number_of_recommendations - len(
+        cold_start_types_recommendation
+    )
+    return (
+        order_offers_by_score_and_diversify_types(cold_start_types_recommendation)
+        + order_offers_by_score_and_diversify_types(other_recommendations)[
+            :missing_recommendations
+        ]
+    )
 
 
 def get_intermediate_recommendations_for_user(
@@ -251,7 +293,7 @@ def order_offers_by_score_and_diversify_types(
     for offer_type in offers_by_type_ordered_by_frequency:
         offers_by_type_ordered_by_frequency[offer_type] = sorted(
             offers_by_type_ordered_by_frequency[offer_type],
-            key=lambda k: (k["score"]),
+            key=lambda k: k["score"],
             reverse=False,
         )
 

@@ -15,6 +15,7 @@ COPY health_check_queries.py ./
 COPY recommendation.py ./
 COPY access_gcp_secrets.py ./
 COPY api-requirements.txt ./
+COPY cold_start.py ./
 
 # Install production dependencies.
 RUN pip install -r api-requirements.txt

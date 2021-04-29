@@ -103,9 +103,7 @@ def get_final_recommendations(
             scored_recommendation_for_user
         )[: app_config["NUMBER_OF_RECOMMENDATIONS"]]
 
-    if final_recommendations:
-        save_recommendation(user_id, final_recommendations, connection)
-
+    save_recommendation(user_id, final_recommendations, connection)
     connection.close()
     return final_recommendations
 

@@ -72,40 +72,36 @@ def get_final_recommendations(
     else:
         group_id = request_response[0]
 
-    if group_id == "A":
-        is_cold_start = get_cold_start_status(user_id, connection)
-        cold_start_types = (
-            get_cold_start_types(user_id, connection) if is_cold_start else []
-        )
+    is_cold_start = get_cold_start_status(user_id, connection)
+    user_iris_id = get_iris_from_coordinates(longitude, latitude, connection)
 
-        user_iris_id = get_iris_from_coordinates(longitude, latitude, connection)
-
+    if group_id == "A" and is_cold_start:
+        cold_start_types = get_cold_start_types(user_id, connection)
         recommendations_for_user = get_intermediate_recommendations_for_user(
-            user_id, user_iris_id, is_cold_start, cold_start_types, connection
+            user_id, user_iris_id, True, cold_start_types, connection
         )
-
-        if is_cold_start:
-            scored_recommendation_for_user = [
-                {**recommendation, "score": len(recommendations_for_user) - i}
-                for i, recommendation in enumerate(recommendations_for_user)
-            ]
-            final_recommendations = get_cold_start_ordered_recommendations(
-                recommendations=scored_recommendation_for_user,
-                cold_start_types=cold_start_types,
-                number_of_recommendations=app_config["NUMBER_OF_RECOMMENDATIONS"],
-            )
-        else:
-            scored_recommendation_for_user = get_scored_recommendation_for_user(
-                recommendations_for_user,
-                app_config["MODEL_REGION"],
-                app_config["MODEL_NAME"],
-                app_config["MODEL_VERSION"],
-            )
-            final_recommendations = order_offers_by_score_and_diversify_types(
-                scored_recommendation_for_user
-            )[: app_config["NUMBER_OF_RECOMMENDATIONS"]]
+        scored_recommendation_for_user = [
+            {**recommendation, "score": len(recommendations_for_user) - i}
+            for i, recommendation in enumerate(recommendations_for_user)
+        ]
+        final_recommendations = get_cold_start_ordered_recommendations(
+            recommendations=scored_recommendation_for_user,
+            cold_start_types=cold_start_types,
+            number_of_recommendations=app_config["NUMBER_OF_RECOMMENDATIONS"],
+        )
     else:
-        final_recommendations = []
+        recommendations_for_user = get_intermediate_recommendations_for_user(
+            user_id, user_iris_id, False, [], connection
+        )
+        scored_recommendation_for_user = get_scored_recommendation_for_user(
+            recommendations_for_user,
+            app_config["MODEL_REGION"],
+            app_config["MODEL_NAME"],
+            app_config["MODEL_VERSION"],
+        )
+        final_recommendations = order_offers_by_score_and_diversify_types(
+            scored_recommendation_for_user
+        )[: app_config["NUMBER_OF_RECOMMENDATIONS"]]
 
     if final_recommendations:
         save_recommendation(user_id, final_recommendations, connection)

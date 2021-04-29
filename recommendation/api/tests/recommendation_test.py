@@ -50,26 +50,6 @@ def test_get_final_recommendation_for_group_a(
     save_recommendation_mock.assert_called_once()
 
 
-@patch("recommendation.save_recommendation")
-@patch("recommendation.create_db_connection")
-def test_get_final_recommendation_for_group_b(
-    connection_mock: Mock,
-    save_recommendation_mock: Mock,
-    setup_database: Any,
-    app_config: Dict[str, Any],
-):
-    # Given
-    connection_mock.return_value = setup_database
-    user_id = 112
-
-    # When
-    recommendations = get_final_recommendations(user_id, None, None, app_config)
-
-    # Then
-    assert recommendations == []
-    save_recommendation_mock.assert_not_called()
-
-
 @patch("recommendation.get_intermediate_recommendations_for_user")
 @patch("recommendation.get_scored_recommendation_for_user")
 @patch("recommendation.get_iris_from_coordinates")

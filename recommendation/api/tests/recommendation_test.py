@@ -89,6 +89,8 @@ def test_get_final_recommendation_for_group_b(
     assert recommendations == [3, 2]
 
 
+@patch("recommendation.order_offers_by_score_and_diversify_types")
+@patch("recommendation.get_scored_recommendation_for_user")
 @patch("recommendation.get_cold_start_ordered_recommendations")
 @patch("recommendation.get_intermediate_recommendations_for_user")
 @patch("recommendation.get_cold_start_types")
@@ -102,6 +104,8 @@ def test_get_final_recommendation_for_new_user(
     get_cold_start_types: Mock,
     get_intermediate_recommendations_for_user: Mock,
     get_cold_start_ordered_recommendations: Mock,
+    get_scored_recommendation_for_user: Mock,
+    order_offers_by_score_and_diversify_types: Mock,
     setup_database: Any,
     app_config: Dict[str, Any],
 ):
@@ -113,7 +117,12 @@ def test_get_final_recommendation_for_new_user(
         {"id": 2, "url": "url2", "type": "type2", "score": 2},
         {"id": 3, "url": "url3", "type": "type3", "score": 3},
     ]
+    get_scored_recommendation_for_user.return_value = [
+        {"id": 2, "url": "url2", "type": "type2", "score": 2},
+        {"id": 3, "url": "url3", "type": "type3", "score": 3},
+    ]
     get_cold_start_ordered_recommendations.return_value = [3, 2]
+    order_offers_by_score_and_diversify_types.return_value = [3, 2]
     get_iris_from_coordinates_mock.return_value = 1
 
     # When
@@ -123,7 +132,6 @@ def test_get_final_recommendation_for_new_user(
     get_cold_start_types.assert_called()
     get_intermediate_recommendations_for_user.assert_called()
     save_recommendation_mock.assert_called()
-    get_cold_start_ordered_recommendations.assert_called()
 
     # Then
     assert recommendations == [3, 2]

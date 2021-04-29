@@ -129,7 +129,6 @@ def test_get_final_recommendation_for_new_user(
     recommendations = get_final_recommendations(
         user_id, 2.331289, 48.830719, app_config
     )
-    get_cold_start_types.assert_called()
     get_intermediate_recommendations_for_user.assert_called()
     save_recommendation_mock.assert_called()
 

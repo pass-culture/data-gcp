@@ -190,9 +190,9 @@
 							"});",
 							"",
 							"",
-							"pm.test(\"Response for Group B must contain an empty array recommended_offers\", function () {",
+							"pm.test(\"Response for Group B must contain an array of recommended_offers of lenght 10\", function () {",
 							"  const jsonResponse = pm.response.json();",
-							"  pm.expect(jsonResponse.recommended_offers).to.be.empty;",
+							"  pm.expect(jsonResponse.recommended_offers).to.have.lengthOf(10);",
 							"});"
 						],
 						"type": "text/javascript"

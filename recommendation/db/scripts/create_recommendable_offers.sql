@@ -70,32 +70,6 @@ LANGUAGE plpgsql;
 
 
 
-  /* Function to check if a given offer is released. */
-DROP FUNCTION IF EXISTS offer_is_released;
-CREATE OR REPLACE FUNCTION offer_is_released(var_offer_id varchar)
-RETURNS SETOF INTEGER AS
-$body$
-BEGIN
-    --TODO : FINISH THIS QUERY 
-
-    -- (
-    --     SELECT * 
-    --     FROM public.venue
-    --     WHERE venue.isValidated = TRUE
-    --    )
-
-    RETURN QUERY
-    SELECT 1
-      FROM public.mediation
-     WHERE mediation."offerId" = var_offer_id
-	   AND mediation."isActive"
-	   AND mediation."thumbCount" > 0;
-END
-$body$
-LANGUAGE plpgsql;
-
-
-
 /* Function to get all recommendable offers ids. */
 DROP FUNCTION IF EXISTS get_recommendable_offers CASCADE;
 CREATE OR REPLACE FUNCTION get_recommendable_offers()
@@ -118,8 +92,8 @@ BEGIN
             offer."offer_is_national" AS is_national,
             (CASE WHEN booking_numbers.booking_number IS NOT NULL THEN booking_numbers.booking_number ELSE 0 END) AS booking_number
       FROM public.offer
-      JOIN public.venue ON offer."venue_id" = venue.venue_id
-      JOIN public.offerer ON offerer.offerer_id = venue."venue_managing_offerer_id"
+      JOIN (SELECT * FROM public.venue WHERE venue_validation_token IS NULL) ON offer."venue_id" = venue.venue_id
+      JOIN (SELECT * FROM public.offerer WHERE offerer_validation_token IS NULL) ON offerer.offerer_id = venue."venue_managing_offerer_id"
       LEFT JOIN (
             SELECT count(*) AS booking_number, stock.offer_id
             FROM public.booking
@@ -131,7 +105,6 @@ BEGIN
     WHERE offer."offer_is_active" = TRUE
        AND (EXISTS (SELECT * FROM offer_has_at_least_one_active_mediation(offer.offer_id)))
        AND (EXISTS (SELECT * FROM offer_has_at_least_one_bookable_stock(offer.offer_id)))
-       AND (EXISTS (SELECT * FROM offer_is_released(offer.offer_id)))
        AND offerer."offerer_is_active" = TRUE
        AND offer.offer_type != 'ThingType.ACTIVATION'
        AND offer.offer_type != 'EventType.ACTIVATION';

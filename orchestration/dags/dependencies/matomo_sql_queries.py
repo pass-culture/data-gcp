@@ -257,7 +257,7 @@ def add_screen_view_matomo_events_query(gcp_project, bigquery_raw_dataset):
     ON pages.idaction_name = idaction_name.idaction
     LEFT JOIN `{gcp_project}.{bigquery_raw_dataset}.log_action` previous_idaction_name
     ON pages.idaction_name = previous_idaction_name.idaction
-    WHERE idaction_url != previous_idaction_url OR previous_idaction_url IS NULL
+    WHERE idaction_url.name != previous_idaction_url.name OR previous_idaction_url.name IS NULL
     """
 
 

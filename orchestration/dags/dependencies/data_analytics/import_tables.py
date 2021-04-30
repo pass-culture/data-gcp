@@ -86,7 +86,12 @@ def define_import_query(
             "ageMax" as offer_age_max, "url" as offer_url, "mediaUrls" as offer_media_urls,
             "durationMinutes" as offer_duration_minutes, "isNational" as offer_is_national,
             "extraData" as offer_extra_data, "isDuo" as offer_is_duo, "fieldsUpdated" as offer_fields_updated,
-            "withdrawalDetails" as offer_withdrawal_details
+            "withdrawalDetails" as offer_withdrawal_details,
+            "audioDisabilityCompliant" as offer_audio_disability_compliant,
+            "mentalDisabilityCompliant" as offer_mental_disability_compliant,
+            "motorDisabilityCompliant" as offer_motor_disability_compliant,
+            "externalTicketOfficeUrl" as offer_external_ticket_office_url,
+            CAST("validation" AS varchar(255)) as offer_validation
         FROM public.offer
     """
     cloudsql_queries[

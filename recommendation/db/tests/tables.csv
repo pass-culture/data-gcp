@@ -46,6 +46,7 @@ offer,offer_extra_data,character varying
 offer,offer_is_duo,boolean
 offer,offer_fields_updated,string[]
 offer,offer_withdrawal_details,character varying
+offer,offer_validation,character varying
 offerer,offerer_is_active,boolean
 offerer,offerer_thumb_count,integer
 offerer,offerer_id_at_providers,character varying
@@ -59,6 +60,7 @@ offerer,offerer_name,character varying
 offerer,offerer_siren,character varying
 offerer,offerer_last_provider_id,character varying
 offerer,offerer_fields_updated,string[]
+offerer,offerer_validation_token,character varying
 venue,venue_thumb_count,integer
 venue,venue_id_at_providers,character varying
 venue,venue_modified_at_last_provider,timestamp without time zone
@@ -80,6 +82,7 @@ venue,venue_public_name,character varying
 venue,venue_fields_updated,string[]
 venue,venue_type_id,character varying
 venue,venue_label_id,character varying
+venue,venue_validation_token,character varying
 venue,venue_creation_date,timestamp without time zone
 stock,stock_id_at_providers,character varying
 stock,stock_modified_at_last_provider_date,timestamp without time zone

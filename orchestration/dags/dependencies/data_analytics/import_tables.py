@@ -122,7 +122,7 @@ def define_import_query(
             "comment" AS venue_comment, "publicName" AS venue_public_name,
             "fieldsUpdated" AS venue_fields_updated, CAST("venueTypeId" AS varchar(255)) AS venue_type_id,
             CAST("venueLabelId" AS varchar(255)) AS venue_label_id, "dateCreated" AS venue_creation_date,
-            "isPermanent" AS venue_is_permanent, "validationToken" AS validation_token
+            "isPermanent" AS venue_is_permanent, "validationToken" AS venue_validation_token
         FROM public.venue
     """
     cloudsql_queries[
@@ -135,7 +135,7 @@ def define_import_query(
             "postalCode" AS offerer_postal_code, "city" AS offerer_city, CAST("id" AS varchar(255)) AS offerer_id,
             "dateCreated" AS offerer_creation_date, "name" AS offerer_name,
             "siren" AS offerer_siren, CAST("lastProviderId" AS varchar(255)) AS offerer_last_provider_id,
-            "fieldsUpdated" AS offerer_fields_updated, "validationToken" AS validation_token
+            "fieldsUpdated" AS offerer_fields_updated, "validationToken" AS offerer_validation_token
         FROM public.offerer
     """
     cloudsql_queries[

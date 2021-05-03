@@ -27,6 +27,7 @@ class AdressesDownloader:
         SELECT user_id, user_address, user_postal_code, user_city, user_department_code
         FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_user`
         WHERE user_address is not NULL AND user_address <> ""
+        AND user_postal_code is not NULL AND user_city is not NULL AND user_department_code is not NULL
         AND user_id not in (SELECT user_id FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.user_locations`)
         ORDER BY user_id LIMIT 500;
         """

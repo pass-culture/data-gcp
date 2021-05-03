@@ -90,6 +90,7 @@ def define_import_query(
             "audioDisabilityCompliant" as offer_audio_disability_compliant,
             "mentalDisabilityCompliant" as offer_mental_disability_compliant,
             "motorDisabilityCompliant" as offer_motor_disability_compliant,
+            "visualDisabilityCompliant" as offer_visual_disability_compliant,
             "externalTicketOfficeUrl" as offer_external_ticket_office_url,
             CAST("validation" AS varchar(255)) as offer_validation
         FROM public.offer

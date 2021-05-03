@@ -8,11 +8,11 @@
   },
   "offerer": {
     "offerer_id": 1073,
-    "offerer_is_active": "t",
+    "offerer_is_active": "t"
   },
   "venue": {
     "venue_id": 1814,
-    "venue_managing_offerer_id": 1073,
+    "venue_managing_offerer_id": 1073
    },
   "stock": {
     "stock_id": 141098,

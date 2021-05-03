@@ -5,18 +5,6 @@ from dependencies.data_analytics.import_tables import define_import_query
 
 
 class TestImportTables(unittest.TestCase):
-    def test_import_tables_does_not_import_not_anonymized_column_for_offerer(self):
-        # Given
-        table = "offerer"
-
-        # When
-        result = define_import_query(
-            table, region="GCP_REGION", external_connection_id="EXTERNAL_CONNECTION_ID"
-        )
-
-        # Then
-        assert not '"validationToken"' in result
-
     def test_import_tables_does_not_import_not_anonymized_column_for_provider(self):
         # Given
         table = "provider"
@@ -100,15 +88,3 @@ class TestImportTables(unittest.TestCase):
 
         # Then
         assert not '"token"' in result
-
-    def test_import_tables_does_not_import_not_anonymized_column_for_venue(self):
-        # Given
-        table = "venue"
-
-        # When
-        result = define_import_query(
-            table, region="GCP_REGION", external_connection_id="EXTERNAL_CONNECTION_ID"
-        )
-
-        # Then
-        assert not '"validationToken"' in result

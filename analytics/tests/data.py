@@ -560,8 +560,8 @@ ENRICHED_USER_DATA_EXPECTED = [
         "user_suspension_reason": None,
         "user_deposit_initial_amount": 500,
         "user_deposit_expiration_date": datetime.now().replace(microsecond=0),
-        "user_is_former_beneficiary": False,
-        "user_is_current_beneficiary": True,
+        "user_is_former_beneficiary": True,
+        "user_is_current_beneficiary": False,
     }
 ]
 

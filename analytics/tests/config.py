@@ -157,6 +157,8 @@ BIGQUERY_SCHEMAS = {
         "user_address": "STRING",
         "user_city": "STRING",
         "user_lastConnectionDate": "DATETIME",
+        "user_is_active": "BOOLEAN",
+        "user_suspension_reason": "STRING",
     },
     "venue": {
         "venue_thumb_count": "INT64",
@@ -198,5 +200,11 @@ BIGQUERY_SCHEMAS = {
         "num_dep": "STRING",
         "dep_name": "STRING",
         "region_name": "STRING",
+    },
+    "deposit": {
+        "id": "STRING",
+        "userId": "STRING",
+        "amount": "NUMERIC",
+        "expirationDate": "DATETIME",
     },
 }

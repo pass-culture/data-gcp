@@ -92,8 +92,8 @@ BEGIN
             offer."offer_is_national" AS is_national,
             (CASE WHEN booking_numbers.booking_number IS NOT NULL THEN booking_numbers.booking_number ELSE 0 END) AS booking_number
       FROM public.offer
-      JOIN public.venue ON offer."venue_id" = venue.venue_id
-      JOIN public.offerer ON offerer.offerer_id = venue."venue_managing_offerer_id"
+      JOIN (SELECT * FROM public.venue WHERE venue_validation_token IS NULL) venue ON offer."venue_id" = venue.venue_id
+      JOIN (SELECT * FROM public.offerer WHERE offerer_validation_token IS NULL) offerer ON offerer.offerer_id = venue."venue_managing_offerer_id"
       LEFT JOIN (
             SELECT count(*) AS booking_number, stock.offer_id
             FROM public.booking
@@ -106,6 +106,7 @@ BEGIN
        AND (EXISTS (SELECT * FROM offer_has_at_least_one_active_mediation(offer.offer_id)))
        AND (EXISTS (SELECT * FROM offer_has_at_least_one_bookable_stock(offer.offer_id)))
        AND offerer."offerer_is_active" = TRUE
+       AND offer."offer_validation" = 'APPROVED'
        AND offer.offer_type != 'ThingType.ACTIVATION'
        AND offer.offer_type != 'EventType.ACTIVATION';
 END;

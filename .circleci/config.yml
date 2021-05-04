@@ -264,6 +264,7 @@ workflows:
           name: typeform-cloud-function-deploy-stg
           cloud-function-name: qpi_import_stg
           cloud-function-folder: qpi-function-source
+          additional-options: ''
           requires:
             - linter
           filters:
@@ -280,6 +281,7 @@ workflows:
           name: typeform-cloud-function-deploy-prod
           cloud-function-name: qpi_import_prod
           cloud-function-folder: qpi-function-source
+          additional-options: ''
           requires:
             - linter
           filters:
@@ -296,6 +298,7 @@ workflows:
           name: addresses-cloud-function-deploy-stg
           cloud-function-name: addresses_import_stg
           cloud-function-folder: addresses-function-source
+          additional-options: ''
           requires:
             - linter
           filters:
@@ -312,6 +315,41 @@ workflows:
           name: addresses-cloud-function-deploy-prod
           cloud-function-name: addresses_import_prod
           cloud-function-folder: addresses-function-source
+          additional-options: ''
+          requires:
+            - linter
+          filters:
+            branches:
+              only:
+                - production
+          context:
+            - DATA_GCP
+            - DATA_GCP_PROD
+            - Slack
+          <<: *slack-fail-post-step
+
+      - cloud-function-deploy:
+          name: typeform-webhook-cloud-function-deploy-stg
+          cloud-function-name: qpi_webhook_stg
+          cloud-function-folder: qpi-webhook-function-source
+          additional-options: '--allow-unauthenticated --security-level=secure-always'
+          requires:
+            - linter
+          filters:
+            branches:
+              only:
+                - master
+          context:
+            - DATA_GCP
+            - DATA_GCP_EHP
+            - Slack
+          <<: *slack-fail-post-step
+
+      - cloud-function-deploy:
+          name: typeform-webhook-cloud-function-deploy-prod
+          cloud-function-name: qpi_webhook_prod
+          cloud-function-folder: qpi-webhook-function-source
+          additional-options: '--allow-unauthenticated --security-level=secure-always'
           requires:
             - linter
           filters:
@@ -342,6 +380,7 @@ workflows:
             - recommendation-integration-tests-dev
             - typeform-cloud-function-deploy-prod
             - addresses-cloud-function-deploy-prod
+            - typeform-webhook-cloud-function-deploy-prod
 
       - slack-alert:
           name: slack-alert-staging
@@ -359,6 +398,7 @@ workflows:
             - recommendation-integration-tests-dev
             - typeform-cloud-function-deploy-stg
             - addresses-cloud-function-deploy-stg
+            - typeform-webhook-cloud-function-deploy-stg
 
 # ----------------
 # Workflow to deploy on dev
@@ -373,11 +413,19 @@ workflows:
           name: typeform-cloud-function-deploy-dev
           cloud-function-name: qpi_import_dev
           cloud-function-folder: qpi-function-source
+          additional-options: ''
           <<: *deploy_on_dev_commons
       - cloud-function-deploy:
           name: addresses-cloud-function-deploy-dev
           cloud-function-name: addresses_import_dev
           cloud-function-folder: addresses-function-source
+          additional-options: ''
+          <<: *deploy_on_dev_commons
+      - cloud-function-deploy:
+          name: typeform-webhook-cloud-function-deploy-dev
+          cloud-function-name: qpi_webhook_dev
+          cloud-function-folder: qpi-webhook-function-source
+          additional-options: '--allow-unauthenticated --security-level=secure-always'
           <<: *deploy_on_dev_commons
       - ai-platform-deploy:
           name: ai-platform-deploy-dev
@@ -835,6 +883,9 @@ jobs:
       cloud-function-folder:
         description: "The cloud function code folder"
         type: string
+      additional-options:
+        description: "Additional gcloud functions deploy parameters"
+        type: string
     working_directory: ~/data-gcp
     steps:
       - checkout:
@@ -848,4 +899,4 @@ jobs:
           name: Deploy the function
           command: |
             cd additional_data_sources/<<parameters.cloud-function-folder>>
-            gcloud functions deploy << parameters.cloud-function-name >> --region "europe-west1"  --entry-point run --source .
+            gcloud functions deploy << parameters.cloud-function-name >> --region "europe-west1"  --entry-point run --source . << parameters.additional-options >>

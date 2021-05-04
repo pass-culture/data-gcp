@@ -39,3 +39,5 @@ CREATE UNIQUE INDEX idx_non_recommendable_userid_offerid ON public.non_recommend
 REFRESH MATERIALIZED CONCURRENTLY VIEW non_recommendable_offers;
 
 */
+INSERT INTO booking (booking_id, booking_creation_date, stock_id, booking_quantity, user_id, booking_amount, booking_is_cancelled, booking_is_used, booking_used_date, booking_cancellation_date)
+VALUES ('1', '2021-03-29T19:24:38.946506', '222284', '1', '124776', '29.99', false, true, null, null)

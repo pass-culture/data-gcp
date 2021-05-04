@@ -40,7 +40,7 @@ def access_secret(project_id, secret_id, version_id=1, default=None):
 
 project_name = os.environ["PROJECT_NAME"]
 environment = os.environ["ENV"]
-# Les noms de la cloudsql de staging utilisent staging au lieu de stg
+# The staging cloudsql database names are using 'staging' instead of 'stg'
 cloud_sql_names_environment = "staging" if environment == "stg" else environment
 TYPEFORM_WEBHOOK_SECRET_KEY = access_secret(
     project_name, f"typeform-webhook-secret-{environment}"
@@ -79,11 +79,13 @@ def run(request):
 
     # Authentification
     header_signature = request.headers.get("Typeform-Signature")
-    if header_signature is None:
+    if not header_signature:
         raise ValueError("No Signature Provided.")
+
     sha_name, signature = header_signature.split("=", 1)
     if sha_name != "sha256":
         raise ValueError("Wrong Signature Encoding")
+
     mac = hmac.new(
         bytearray(TYPEFORM_WEBHOOK_SECRET_KEY, encoding="utf-8"),
         msg=bytearray(request.get_data()),
@@ -99,7 +101,6 @@ def run(request):
     request_json = request.get_json()
     answer_dictionary = {
         "user_id": f"'{request_json['form_response']['hidden']['userpk']}'",
-        "catch_up_user_id": "null",
     }
     answers = request_json["form_response"]["answers"]
     for answer in answers:
@@ -112,6 +113,11 @@ def run(request):
                     answer_dictionary[category] += int(
                         FORM[question_id][category] in answer["choices"]["labels"]
                     )
+
+    answer_values_dictionary = {
+        "user_id": answer_dictionary["user_id"],
+        "catch_up_user_id": "null",
+    }
     for category in [
         "cinema",
         "audiovisuel",
@@ -125,7 +131,7 @@ def run(request):
         "presse",
         "autre",
     ]:
-        answer_dictionary[category] = (
+        answer_values_dictionary[category] = (
             "true" if answer_dictionary.get(category, 0) > 0 else "false"
         )
 
@@ -133,7 +139,7 @@ def run(request):
     connection = create_db_connection()
 
     connection.execute(
-        f"INSERT INTO qpi_answers ({', '.join([key for key in answer_dictionary])}) "
-        f"VALUES ({', '.join([answer_dictionary[key] for key in answer_dictionary])})"
+        f"INSERT INTO qpi_answers ({', '.join([key for key in answer_values_dictionary])}) "
+        f"VALUES ({', '.join([answer_values_dictionary[key] for key in answer_values_dictionary])})"
     )
     return "Success"

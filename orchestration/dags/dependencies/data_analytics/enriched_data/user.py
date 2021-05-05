@@ -465,7 +465,13 @@ def define_enriched_user_data_query(dataset, table_prefix=""):
                 AS days_between_activation_date_and_first_booking_paid,
                 first_booking_type.first_booking_type,
                 first_paid_booking_type.first_paid_booking_type,
-                count_distinct_types.cnt_distinct_types AS cnt_distinct_type_booking
+                count_distinct_types.cnt_distinct_types AS cnt_distinct_type_booking,
+                user.user_is_active,
+                user.user_suspension_reason,
+                deposit.amount AS user_deposit_initial_amount,
+                deposit.expirationDate AS user_deposit_expiration_date,
+                CASE WHEN TIMESTAMP(deposit.expirationDate) < CURRENT_TIMESTAMP() OR actual_amount_spent.actual_amount_spent >= deposit.amount THEN TRUE ELSE FALSE END AS user_is_former_beneficiary,
+                CASE WHEN (TIMESTAMP(deposit.expirationDate) >= CURRENT_TIMESTAMP() AND actual_amount_spent.actual_amount_spent < deposit.amount) AND user_is_active THEN TRUE ELSE FALSE END AS user_is_current_beneficiary
             FROM {dataset}.{table_prefix}user AS user
             LEFT JOIN experimentation_sessions ON user.user_id = experimentation_sessions.user_id
             LEFT JOIN activation_dates ON user.user_id  = activation_dates.user_id
@@ -489,6 +495,7 @@ def define_enriched_user_data_query(dataset, table_prefix=""):
             LEFT JOIN first_booking_type ON user.user_id = first_booking_type.user_id
             LEFT JOIN first_paid_booking_type ON user.user_id = first_paid_booking_type.user_id
             LEFT JOIN count_distinct_types ON user.user_id = count_distinct_types.user_id
+            LEFT JOIN {dataset}.{table_prefix}deposit AS deposit ON user.user_id = deposit.userId
             WHERE user.user_is_beneficiary
         );
     """

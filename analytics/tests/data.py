@@ -469,6 +469,16 @@ ENRICHED_USER_DATA_INPUT = {
             "user_creation_date": datetime.now().replace(microsecond=0),
             "user_has_seen_tutorials": True,
             "user_cultural_survey_filled_date": datetime.now().replace(microsecond=0),
+            "user_is_active": True,
+            "user_suspension_reason": None,
+        }
+    ],
+    "deposit": [
+        {
+            "id": "1",
+            "userId": "1",
+            "amount": 500,
+            "expirationDate": datetime.now().replace(microsecond=0),
         }
     ],
     "offerer": [
@@ -546,6 +556,12 @@ ENRICHED_USER_DATA_EXPECTED = [
         "first_booking_type": "ThingType.MUSIQUE",
         "first_paid_booking_type": "ThingType.MUSIQUE",
         "cnt_distinct_type_booking": 1,
+        "user_is_active": True,
+        "user_suspension_reason": None,
+        "user_deposit_initial_amount": 500,
+        "user_deposit_expiration_date": datetime.now().replace(microsecond=0),
+        "user_is_former_beneficiary": True,
+        "user_is_current_beneficiary": False,
     }
 ]
 

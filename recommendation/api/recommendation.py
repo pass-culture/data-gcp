@@ -274,7 +274,7 @@ def order_offers_by_score_and_diversify_types(
     Sort offers by taking the last offer of each group (maximum score), by decreasing size of group.
     Return only the ids of these sorted offers.
     """
-    offers_by_type = _get_offers_grouped_by_type_and_onlineless(offers)
+    offers_by_type = _get_offers_grouped_by_type(offers)
 
     offers_by_type_ordered_by_frequency = collections.OrderedDict(
         sorted(
@@ -303,14 +303,14 @@ def order_offers_by_score_and_diversify_types(
     return [offer["id"] for offer in diversified_offers]
 
 
-def _get_offers_grouped_by_type_and_onlineless(offers: List[Dict[str, Any]]) -> Dict:
+def _get_offers_grouped_by_type(offers: List[Dict[str, Any]]) -> Dict:
     offers_by_type = dict()
     for offer in offers:
-        offer_type_and_onlineness = _get_offer_type_and_onlineness(offer)
-        if offer_type_and_onlineness in offers_by_type.keys():
-            offers_by_type[offer_type_and_onlineness].append(offer)
+        offer_type = offer["type"]
+        if offer_type in offers_by_type.keys():
+            offers_by_type[offer_type].append(offer)
         else:
-            offers_by_type[offer_type_and_onlineness] = [offer]
+            offers_by_type[offer_type] = [offer]
     return offers_by_type
 
 
@@ -318,12 +318,4 @@ def _get_number_of_offers_and_max_score_by_type(type_and_offers: Tuple) -> Tuple
     return (
         len(type_and_offers[1]),
         max([offer["score"] for offer in type_and_offers[1]]),
-    )
-
-
-def _get_offer_type_and_onlineness(offer: Dict[str, Any]) -> str:
-    return (
-        str(offer["type"]) + "_DIGITAL"
-        if offer["url"]
-        else str(offer["type"]) + "_PHYSICAL"
     )

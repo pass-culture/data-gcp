@@ -40,14 +40,14 @@ def access_secret(project_id, secret_id, version_id=1, default=None):
 
 project_name = os.environ["PROJECT_NAME"]
 environment = os.environ["ENV"]
-# The staging cloudsql database names are using 'staging' instead of 'stg'
+# The staging cloudsql database connection name is using 'staging' instead of 'stg'
 cloud_sql_names_environment = "staging" if environment == "stg" else environment
 TYPEFORM_WEBHOOK_SECRET_KEY = access_secret(
     project_name, f"typeform-webhook-secret-{environment}"
 )
 
-db_user = f"cloudsql-recommendation-{cloud_sql_names_environment}"
-db_name = f"cloudsql-recommendation-{cloud_sql_names_environment}"
+db_user = f"cloudsql-recommendation-{environment}"
+db_name = f"cloudsql-recommendation-{environment}"
 db_pass = access_secret(
     project_name, f"cloudsql-recommendation-{environment}-database-password"
 )

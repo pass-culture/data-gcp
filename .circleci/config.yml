@@ -334,7 +334,6 @@ workflows:
             branches:
               only:
                 - master
-                - PC-8487-ci-typeform-webhook
           context:
             - DATA_GCP
             - DATA_GCP_EHP
@@ -351,7 +350,6 @@ workflows:
             branches:
               only:
                 - production
-                - PC-8487-ci-typeform-webhook
           context:
             - DATA_GCP
             - DATA_GCP_PROD

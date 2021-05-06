@@ -43,7 +43,7 @@ environment = os.environ["ENV"]
 
 # Staging is receiving data from production and staging application (for test purpose)
 if environment == "stg":
-    FORM["n0H2TLS3lzC9"] = FORM["ge0Egr2m8V1T"]
+    FORM["ApKEvHgWIs0D"] = FORM["ge0Egr2m8V1T"]
     FORM["zg4ydcgaiF6a"] = FORM["NeyLJOqShoHw"]
     # The staging cloudsql database connection name is using 'staging' instead of 'stg'
     cloud_sql_names_environment = "staging"

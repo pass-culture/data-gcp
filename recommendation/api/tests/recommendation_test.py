@@ -31,12 +31,12 @@ def test_get_final_recommendation_for_group_a(
     connection_mock.return_value = setup_database
     user_id = 111
     get_intermediate_recommendations_for_user_mock.return_value = [
-        {"id": 2, "url": "url2", "type": "type2"},
-        {"id": 3, "url": "url3", "type": "type3"},
+        {"id": 2, "url": "url2", "type": "type2", "item_id": "offer-2"},
+        {"id": 3, "url": "url3", "type": "type3", "item_id": "offer-3"},
     ]
     get_scored_recommendation_for_user_mock.return_value = [
-        {"id": 2, "url": "url2", "type": "type2", "score": 2},
-        {"id": 3, "url": "url3", "type": "type3", "score": 3},
+        {"id": 2, "url": "url2", "type": "type2", "item_id": "offer-2", "score": 2},
+        {"id": 3, "url": "url3", "type": "type3", "item_id": "offer-3", "score": 3},
     ]
     get_iris_from_coordinates_mock.return_value = 1
 
@@ -70,12 +70,12 @@ def test_get_final_recommendation_for_group_b(
     connection_mock.return_value = setup_database
     user_id = 112
     get_intermediate_recommendations_for_user_mock.return_value = [
-        {"id": 2, "url": "url2", "type": "type2"},
-        {"id": 3, "url": "url3", "type": "type3"},
+        {"id": 2, "url": "url2", "type": "type2", "item_id": "offer-2"},
+        {"id": 3, "url": "url3", "type": "type3", "item_id": "offer-3"},
     ]
     get_scored_recommendation_for_user_mock.return_value = [
-        {"id": 2, "url": "url2", "type": "type2", "score": 2},
-        {"id": 3, "url": "url3", "type": "type3", "score": 3},
+        {"id": 2, "url": "url2", "type": "type2", "item_id": "offer-2", "score": 2},
+        {"id": 3, "url": "url3", "type": "type3", "item_id": "offer-3", "score": 3},
     ]
     get_iris_from_coordinates_mock.return_value = 1
 
@@ -114,12 +114,12 @@ def test_get_final_recommendation_for_new_user(
     user_id = 113
     get_cold_start_types.return_value = ["type2", "type3"]
     get_intermediate_recommendations_for_user.return_value = [
-        {"id": 2, "url": "url2", "type": "type2", "score": 2},
-        {"id": 3, "url": "url3", "type": "type3", "score": 3},
+        {"id": 2, "url": "url2", "type": "type2", "score": 2, "item_id": "offer-2"},
+        {"id": 3, "url": "url3", "type": "type3", "score": 3, "item_id": "offer-3"},
     ]
     get_scored_recommendation_for_user.return_value = [
-        {"id": 2, "url": "url2", "type": "type2", "score": 2},
-        {"id": 3, "url": "url3", "type": "type3", "score": 3},
+        {"id": 2, "url": "url2", "type": "type2", "item_id": "offer-2", "score": 2},
+        {"id": 3, "url": "url3", "type": "type3", "item_id": "offer-3", "score": 3},
     ]
     get_cold_start_ordered_recommendations.return_value = [3, 2]
     order_offers_by_score_and_diversify_types.return_value = [3, 2]
@@ -143,30 +143,30 @@ def test_get_final_recommendation_for_new_user(
             False,
             [],
             [
-                {"id": "2", "type": "B", "url": None},
-                {"id": "3", "type": "C", "url": "url"},
-                {"id": "5", "type": "E", "url": None},
-                {"id": "6", "type": "B", "url": None},
+                {"id": "2", "type": "B", "url": None, "item_id": "offer-2"},
+                {"id": "3", "type": "C", "url": "url", "item_id": "offer-3"},
+                {"id": "5", "type": "E", "url": None, "item_id": "offer-5"},
+                {"id": "6", "type": "B", "url": None, "item_id": "offer-6"},
             ],
         ),
         (
             True,
             [],
             [
-                {"id": "3", "type": "C", "url": "url"},
-                {"id": "6", "type": "B", "url": None},
-                {"id": "2", "type": "B", "url": None},
-                {"id": "5", "type": "E", "url": None},
+                {"id": "3", "type": "C", "url": "url", "item_id": "offer-3"},
+                {"id": "6", "type": "B", "url": None, "item_id": "offer-6"},
+                {"id": "2", "type": "B", "url": None, "item_id": "offer-2"},
+                {"id": "5", "type": "E", "url": None, "item_id": "offer-5"},
             ],
         ),
         (
             True,
             "B",
             [
-                {"id": "6", "type": "B", "url": None},
-                {"id": "2", "type": "B", "url": None},
-                {"id": "3", "type": "C", "url": "url"},
-                {"id": "5", "type": "E", "url": None},
+                {"id": "6", "type": "B", "url": None, "item_id": "offer-6"},
+                {"id": "2", "type": "B", "url": None, "item_id": "offer-2"},
+                {"id": "3", "type": "C", "url": "url", "item_id": "offer-3"},
+                {"id": "5", "type": "E", "url": None, "item_id": "offer-5"},
             ],
         ),
     ],
@@ -200,30 +200,30 @@ def test_get_intermediate_recommendation_for_user(
             False,
             [],
             [
-                {"id": "1", "type": "A", "url": None},
-                {"id": "3", "type": "C", "url": "url"},
-                {"id": "4", "type": "D", "url": "url"},
-                {"id": "5", "type": "E", "url": None},
+                {"id": "1", "type": "A", "url": None, "item_id": "offer-1"},
+                {"id": "3", "type": "C", "url": "url", "item_id": "offer-3"},
+                {"id": "4", "type": "D", "url": "url", "item_id": "offer-4"},
+                {"id": "5", "type": "E", "url": None, "item_id": "offer-5"},
             ],
         ),
         (
             True,
             [],
             [
-                {"id": "3", "type": "C", "url": "url"},
-                {"id": "1", "type": "A", "url": None},
-                {"id": "4", "type": "D", "url": "url"},
-                {"id": "5", "type": "E", "url": None},
+                {"id": "3", "type": "C", "url": "url", "item_id": "offer-3"},
+                {"id": "1", "type": "A", "url": None, "item_id": "offer-1"},
+                {"id": "4", "type": "D", "url": "url", "item_id": "offer-4"},
+                {"id": "5", "type": "E", "url": None, "item_id": "offer-5"},
             ],
         ),
         (
             True,
             ["A", "C"],
             [
-                {"id": "3", "type": "C", "url": "url"},
-                {"id": "1", "type": "A", "url": None},
-                {"id": "4", "type": "D", "url": "url"},
-                {"id": "5", "type": "E", "url": None},
+                {"id": "3", "type": "C", "url": "url", "item_id": "offer-3"},
+                {"id": "1", "type": "A", "url": None, "item_id": "offer-1"},
+                {"id": "4", "type": "D", "url": "url", "item_id": "offer-4"},
+                {"id": "5", "type": "E", "url": None, "item_id": "offer-5"},
             ],
         ),
     ],
@@ -255,19 +255,19 @@ def test_get_intermediate_recommendation_for_user_with_no_iris(
     [
         (
             [
-                {"id": 1, "url": None, "type": "A", "score": 1},
-                {"id": 2, "url": None, "type": "A", "score": 1},
-                {"id": 3, "url": None, "type": "B", "score": 10},
-                {"id": 4, "url": None, "type": "B", "score": 10},
+                {"id": 1, "url": None, "type": "A", "item_id": "offer-1", "score": 1},
+                {"id": 2, "url": None, "type": "A", "item_id": "offer-2", "score": 1},
+                {"id": 3, "url": None, "type": "B", "item_id": "offer-3", "score": 10},
+                {"id": 4, "url": None, "type": "B", "item_id": "offer-4", "score": 10},
             ],
             [4, 2, 3, 1],
         ),
         (
             [
-                {"id": 1, "url": None, "type": "A", "score": 1},
-                {"id": 2, "url": None, "type": "A", "score": 2},
-                {"id": 3, "url": None, "type": "A", "score": 10},
-                {"id": 4, "url": None, "type": "A", "score": 11},
+                {"id": 1, "url": None, "type": "A", "item_id": "offer-1", "score": 1},
+                {"id": 2, "url": None, "type": "A", "item_id": "offer-2", "score": 2},
+                {"id": 3, "url": None, "type": "A", "item_id": "offer-3", "score": 10},
+                {"id": 4, "url": None, "type": "A", "item_id": "offer-4", "score": 11},
             ],
             [4, 3, 2, 1],
         ),
@@ -287,9 +287,9 @@ def test_get_scored_recommendation_for_user(
     # Given
     predict_score_mock.return_value = [1, 2, 3]
     user_recommendation = [
-        {"id": 1, "url": "url1", "type": "type1"},
-        {"id": 2, "url": "url2", "type": "type2"},
-        {"id": 3, "url": "url3", "type": "type3"},
+        {"id": 1, "url": "url1", "type": "type1", "item_id": "offer-1"},
+        {"id": 2, "url": "url2", "type": "type2", "item_id": "offer-2"},
+        {"id": 3, "url": "url3", "type": "type3", "item_id": "offer-3"},
     ]
 
     # When
@@ -302,9 +302,9 @@ def test_get_scored_recommendation_for_user(
 
     # Then
     assert scored_recommendation_for_user == [
-        {"id": 1, "url": "url1", "type": "type1", "score": 1},
-        {"id": 2, "url": "url2", "type": "type2", "score": 2},
-        {"id": 3, "url": "url3", "type": "type3", "score": 3},
+        {"id": 1, "url": "url1", "type": "type1", "item_id": "offer-1", "score": 1},
+        {"id": 2, "url": "url2", "type": "type2", "item_id": "offer-2", "score": 2},
+        {"id": 3, "url": "url3", "type": "type3", "item_id": "offer-3", "score": 3},
     ]
 
 

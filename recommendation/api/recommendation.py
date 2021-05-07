@@ -165,7 +165,8 @@ def get_intermediate_recommendations_for_user(
     query_result = connection.execute(recommendations_query).fetchall()
 
     user_recommendation = [
-        {"id": row[0], "type": row[1], "url": row[2]} for row in query_result
+        {"id": row[0], "type": row[1], "url": row[2], "item_id": row[3]}
+        for row in query_result
     ]
 
     return user_recommendation

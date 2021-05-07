@@ -188,7 +188,7 @@ def get_recommendations_query(
 
     if not user_iris_id:
         query = f"""
-            SELECT offer_id, type, url
+            SELECT offer_id, type, url, item_id
             FROM recommendable_offers
             WHERE is_national = True or url IS NOT NULL
             AND offer_id NOT IN
@@ -201,7 +201,7 @@ def get_recommendations_query(
         """
     else:
         query = f"""
-            SELECT offer_id, type, url
+            SELECT offer_id, type, url, item_id
             FROM recommendable_offers
             WHERE
                 (

@@ -140,7 +140,7 @@ def transform_matomo_events_query(gcp_project, bigquery_raw_dataset):
         FROM `{gcp_project}.{bigquery_raw_dataset}.log_link_visit_action`
         LEFT JOIN `{gcp_project}.{bigquery_raw_dataset}.log_action` la1
         ON idaction_url_ref = la1.idaction
-        JOIN `{gcp_project}.{bigquery_raw_dataset}.log_action` la3
+        LEFT JOIN `{gcp_project}.{bigquery_raw_dataset}.log_action` la3
         ON idaction_name = la3.idaction
         JOIN `{gcp_project}.{bigquery_raw_dataset}.log_action` la4
         ON idaction_url = la4.idaction

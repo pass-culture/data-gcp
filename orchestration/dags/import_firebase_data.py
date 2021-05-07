@@ -66,18 +66,17 @@ env_switcher = BranchPythonOperator(
 )
 
 copy_table = BigQueryOperator(
-    task_id=f"copy_table",
-    sql=f"SELECT * FROM passculture-native.analytics_267263535.events_"
-    + EXECUTION_DATE,
+    task_id="copy_table",
+    sql="SELECT * FROM passculture-native.analytics_267263535.events_" + EXECUTION_DATE,
     use_legacy_sql=False,
-    destination_dataset_table=f"passculture-data-prod:firebase_raw_data.events_"
+    destination_dataset_table="passculture-data-prod:firebase_raw_data.events_"
     + EXECUTION_DATE,
     write_disposition="WRITE_EMPTY",
     dag=dag,
 )
 delete_table = BigQueryTableDeleteOperator(
-    task_id=f"delete_table",
-    deletion_dataset_table=f"passculture-native:analytics_267263535.events_"
+    task_id="delete_table",
+    deletion_dataset_table="passculture-native:analytics_267263535.events_"
     + EXECUTION_DATE,
     ignore_if_missing=True,
     dag=dag,
@@ -86,7 +85,7 @@ delete_table = BigQueryTableDeleteOperator(
 dummy_task_for_branch = DummyOperator(task_id="dummy_task_for_branch", dag=dag)
 
 copy_table_to_env = BigQueryOperator(
-    task_id=f"copy_table_to_env",
+    task_id="copy_table_to_env",
     sql=f"""
         SELECT * FROM passculture-data-prod.firebase_raw_data.events_{EXECUTION_DATE} WHERE app_info.id IN ({", ".join([f"'{app_info_id}'" for app_info_id in app_info_id_list])})
         """,
@@ -109,13 +108,18 @@ copy_table_to_clean = BigQueryOperator(
 )
 
 copy_table_to_analytics = BigQueryOperator(
-    task_id=f"copy_table_to_analytics",
+    task_id="copy_table_to_analytics",
     sql=f"""
-        SELECT * FROM {GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.firebase_events_{EXECUTION_DATE}
+        SELECT * except(event_date, event_timestamp, event_previous_timestamp, user_first_touch_timestamp),
+        PARSE_DATE("%Y%m%d", event_date) AS event_date,
+        TIMESTAMP_SECONDS(CAST(CAST(event_timestamp as INT64)/1000000 as INT64)) AS event_timestamp,
+        TIMESTAMP_SECONDS(CAST(CAST(event_previous_timestamp as INT64)/1000000 as INT64)) AS event_previous_timestamp,
+        TIMESTAMP_SECONDS(CAST(CAST(event_timestamp as INT64)/1000000 as INT64)) AS user_first_touch_timestamp
+        FROM {GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.firebase_events_{EXECUTION_DATE}
         """,
     use_legacy_sql=False,
-    destination_dataset_table=f"{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.firebase_events_{EXECUTION_DATE}",
-    write_disposition="WRITE_TRUNCATE",
+    destination_dataset_table=f"{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.firebase_events",
+    write_disposition="WRITE_APPEND",
     dag=dag,
 )
 

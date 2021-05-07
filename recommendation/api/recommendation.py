@@ -165,7 +165,8 @@ def get_intermediate_recommendations_for_user(
     query_result = connection.execute(recommendations_query).fetchall()
 
     user_recommendation = [
-        {"id": row[0], "type": row[1], "url": row[2]} for row in query_result
+        {"id": row[0], "type": row[1], "url": row[2], "item_id": row[3]}
+        for row in query_result
     ]
 
     return user_recommendation
@@ -188,7 +189,7 @@ def get_recommendations_query(
 
     if not user_iris_id:
         query = f"""
-            SELECT offer_id, type, url
+            SELECT offer_id, type, url, item_id
             FROM recommendable_offers
             WHERE is_national = True or url IS NOT NULL
             AND offer_id NOT IN
@@ -201,7 +202,7 @@ def get_recommendations_query(
         """
     else:
         query = f"""
-            SELECT offer_id, type, url
+            SELECT offer_id, type, url, item_id
             FROM recommendable_offers
             WHERE
                 (

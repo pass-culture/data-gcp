@@ -2,7 +2,7 @@ import os
 import pandas as pd
 
 
-def feature_engineering(str storage_path):
+def feature_engineering(storage_path: str):
     bookings = pd.read_csv(f"{storage_path}/clean_data.csv")
     bookings.rename(
         columns={"offer_id": "item_id", "nb_bookings": "rating"}, inplace=True
@@ -26,7 +26,6 @@ def feature_engineering(str storage_path):
 
     bookings["user_id"] = bookings["user_id"].map(user2user_encoded)
     bookings["item_id"] = bookings["item_id"].map(item2item_encoded)
-
 
     df = bookings.sample(frac=1).reset_index(drop=True)
     lim = df.shape[0] * 80 / 100

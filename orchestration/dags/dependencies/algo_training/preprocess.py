@@ -7,7 +7,7 @@ def preprocess(storage_path: str):
     bookings.rename(
         columns={"offer_id": "item_id", "nb_bookings": "rating"}, inplace=True
     )
-    bookings.to_csv(f"{STORAGE_PATH}/clean_data.csv", delimiter=",")
+    bookings.to_csv(f"{storage_path}/clean_data.csv", delimiter=",")
 
 
 def main():

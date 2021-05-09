@@ -24,8 +24,8 @@ def get_bookings(start_date, end_date):
 def main():
     STORAGE_PATH = os.environ.get("STORAGE_PATH", "")
     START_DATE = "2020-11-13"
-    # TODO replace with datetime formatting
-    END_DATE = "2021-04-13"
+    now = datetime.now()
+    END_DATE = x.strftime("%Y-%m-%d"))
     bookings = get_bookings(start_date=START_DATE, end_date=END_DATE)
     bookings.to_csv(f"{STORAGE_PATH}/raw_data.csv", delimiter=",")
 

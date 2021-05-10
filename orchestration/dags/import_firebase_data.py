@@ -110,11 +110,19 @@ copy_table_to_clean = BigQueryOperator(
 copy_table_to_analytics = BigQueryOperator(
     task_id="copy_table_to_analytics",
     sql=f"""
-        SELECT * except(event_date, event_timestamp, event_previous_timestamp, user_first_touch_timestamp),
+        SELECT event_name, user_pseudo_id, user_id, platform,
         PARSE_DATE("%Y%m%d", event_date) AS event_date,
         TIMESTAMP_SECONDS(CAST(CAST(event_timestamp as INT64)/1000000 as INT64)) AS event_timestamp,
         TIMESTAMP_SECONDS(CAST(CAST(event_previous_timestamp as INT64)/1000000 as INT64)) AS event_previous_timestamp,
-        TIMESTAMP_SECONDS(CAST(CAST(event_timestamp as INT64)/1000000 as INT64)) AS user_first_touch_timestamp
+        TIMESTAMP_SECONDS(CAST(CAST(event_timestamp as INT64)/1000000 as INT64)) AS user_first_touch_timestamp,
+        (select event_params.value.string_value
+            from unnest(event_params) event_params
+            where event_params.key = 'firebase_screen'
+        ) as firebase_screen,
+        (select event_params.value.string_value
+            from unnest(event_params) event_params
+            where event_params.key = 'firebase_previous_screen'
+        ) as firebase_previous_screen,
         FROM {GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.firebase_events_{EXECUTION_DATE}
         """,
     use_legacy_sql=False,

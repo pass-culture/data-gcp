@@ -1,21 +1,19 @@
 import os
 from datetime import datetime, timedelta
 
-
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.python_operator import PythonOperator
 from airflow.operators.bash_operator import BashOperator
 from airflow.contrib.operators.gcp_compute_operator import (
     GceInstanceStartOperator,
     GceInstanceStopOperator,
 )
 from dependencies.slack_alert import task_fail_slack_alert
+from dependencies.config import DATA_GCS_BUCKET_NAME, GCP_PROJECT_ID
 
-GCP_PROJECT_ID = os.environ.get("GCP_PROJECT", "passculture-data-ehp")
 GCE_ZONE = os.environ.get("GCE_ZONE", "europe-west1-b")
 GCE_INSTANCE = os.environ.get("GCE_INSTANCE", "algo-training-dev")
-
+STORAGE_PATH = f"gs://{DATA_GCS_BUCKET_NAME}/tests_training"
 
 default_args = {
     "start_date": datetime(2021, 5, 5),
@@ -44,11 +42,7 @@ with DAG(
         task_id="gce_start_task",
     )
 
-    COMMAND = """
-    'cat /dev/zero | ssh-keygen -t ed25519 -C composer-dev@passculture-data-ehp.iam.gserviceaccount.com -f "/home/airflow/.ssh/id_ed25519" -N ""
-    if cd data-gcp; then git pull; else git clone git@github.com:pass-culture/data-gcp.git && cd data-gcp; fi
-    export VAR_ENV="plop"'
-    """
+    FETCH_CODE = '"if cd data-gcp; then git pull; else git clone git@github.com:pass-culture/data-gcp.git && cd data-gcp; fi"'
 
     fetch_code = BashOperator(
         task_id="fetch_code",
@@ -56,7 +50,39 @@ with DAG(
         gcloud compute ssh {GCE_INSTANCE} \
         --zone {GCE_ZONE} \
         --project {GCP_PROJECT_ID} \
-        --command {COMMAND}
+        --command {FETCH_CODE}
+        """,
+        dag=dag,
+    )
+
+    DATA_COLLECT = f""" 'cd data-gcp/algo_training
+                        export STORAGE_PATH={STORAGE_PATH}
+                        python data_collect.py'
+                    """
+
+    data_collect = BashOperator(
+        task_id="data_collect",
+        bash_command=f"""
+        gcloud compute ssh {GCE_INSTANCE} \
+        --zone {GCE_ZONE} \
+        --project {GCP_PROJECT_ID} \
+        --command {DATA_COLLECT}
+        """,
+        dag=dag,
+    )
+
+    FEATURE_ENG = f""" 'cd data-gcp/algo_training
+                        export STORAGE_PATH={STORAGE_PATH}
+                        python feature_engineering.py'
+                    """
+
+    feature_engineering = BashOperator(
+        task_id="feature_engineering",
+        bash_command=f"""
+        gcloud compute ssh {GCE_INSTANCE} \
+        --zone {GCE_ZONE} \
+        --project {GCP_PROJECT_ID} \
+        --command {FEATURE_ENG}
         """,
         dag=dag,
     )
@@ -68,4 +94,4 @@ with DAG(
         task_id="gce_stop_task",
     )
 
-    start >> gce_instance_start >> fetch_code >> gce_instance_stop >> end
+    start >> gce_instance_start >> fetch_code >> data_collect >> feature_engineering >> gce_instance_stop >> end

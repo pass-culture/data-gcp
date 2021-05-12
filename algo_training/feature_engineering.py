@@ -1,4 +1,6 @@
 import os
+import json
+import gcsfs
 import pandas as pd
 
 
@@ -37,14 +39,16 @@ def feature_engineering(storage_path: str):
 
 
 def save_dict_to_path(dictionnary, path):
-    with open(path, "w") as fp:
+    with fs.open(path, "w") as fp:
         json.dump(dictionnary, fp)
 
 
 def main():
-    STORAGE_PATH = os.environ.get("STORAGE_PATH", "")
     feature_engineering(STORAGE_PATH)
 
 
 if __name__ == "__main__":
+    STORAGE_PATH = os.environ.get("STORAGE_PATH", "")
+    GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "")
+    fs = gcsfs.GCSFileSystem(project=GCP_PROJECT_ID)
     main()

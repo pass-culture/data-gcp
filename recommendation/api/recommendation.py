@@ -1,7 +1,7 @@
 import collections
 import datetime
 import os
-from random import random
+from random import random, shuffle
 from typing import Any, Dict, List, Tuple
 
 import pytz
@@ -87,7 +87,8 @@ def get_final_recommendations(
         final_recommendations = get_cold_start_ordered_recommendations(
             recommendations=scored_recommendation_for_user,
             cold_start_types=cold_start_types,
-            number_of_recommendations=app_config["NUMBER_OF_RECOMMENDATIONS"],
+            #number_of_recommendations=app_config["NUMBER_OF_RECOMMENDATIONS"],
+            number_of_recommendations=100,
         )
     else:
         recommendations_for_user = get_intermediate_recommendations_for_user(
@@ -100,7 +101,7 @@ def get_final_recommendations(
             app_config["MODEL_VERSION"],
         )
         final_recommendations = order_offers_by_score_and_diversify_types(
-            scored_recommendation_for_user
+            final_recommendations
         )[: app_config["NUMBER_OF_RECOMMENDATIONS"]]
 
     save_recommendation(user_id, final_recommendations, connection)
@@ -120,13 +121,14 @@ def save_recommendation(user_id: int, recommendations: List[int], cursor):
         )
 
 
+
 def get_cold_start_ordered_recommendations(
     recommendations: List[Dict[str, Any]],
     cold_start_types: List[str],
     number_of_recommendations: int,
 ):
     cold_start_types_recommendation = [
-        recommendation
+        {**recommendation, 'score': 1}
         for recommendation in recommendations
         if recommendation["type"] in cold_start_types
     ]
@@ -136,19 +138,16 @@ def get_cold_start_ordered_recommendations(
         if recommendation["type"] not in cold_start_types
     ]
     if len(cold_start_types_recommendation) >= number_of_recommendations:
-        return order_offers_by_score_and_diversify_types(
-            cold_start_types_recommendation
-        )[:number_of_recommendations]
+
+        return shuffle(cold_start_types_recommendation)
 
     missing_recommendations = number_of_recommendations - len(
         cold_start_types_recommendation
     )
-    return (
-        order_offers_by_score_and_diversify_types(cold_start_types_recommendation)
-        + order_offers_by_score_and_diversify_types(other_recommendations)[
+
+    return shuffle([{**recommendation, 'score': 1} for recommendation in cold_start_types_recommendation+ other_recommendations)[
             :missing_recommendations
-        ]
-    )
+            ]
 
 
 def get_intermediate_recommendations_for_user(
@@ -178,8 +177,8 @@ def get_recommendations_query(
     if is_cold_start:
         if cold_start_types:
             order_query = f"""
-                ORDER BY 
-                    (type in ({', '.join([f"'{offer_type}'" for offer_type in cold_start_types])})) DESC, 
+                ORDER BY
+                    (type in ({', '.join([f"'{offer_type}'" for offer_type in cold_start_types])})) DESC,
                     booking_number DESC
                  """
         else:

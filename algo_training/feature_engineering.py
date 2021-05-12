@@ -36,6 +36,11 @@ def feature_engineering(storage_path: str):
     pos_data_test.to_csv(f"{storage_path}/pos_data_test.csv", index=False)
 
 
+def save_dict_to_path(dictionnary, path):
+    with open(path, "w") as fp:
+        json.dump(dictionnary, fp)
+
+
 def main():
     STORAGE_PATH = os.environ.get("STORAGE_PATH", "")
     feature_engineering(STORAGE_PATH)

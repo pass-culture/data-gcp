@@ -25,9 +25,9 @@ def main():
     STORAGE_PATH = os.environ.get("STORAGE_PATH", "")
     START_DATE = "2020-11-13"
     now = datetime.now()
-    END_DATE = x.strftime("%Y-%m-%d")
+    END_DATE = now.strftime("%Y-%m-%d")
     bookings = get_bookings(start_date=START_DATE, end_date=END_DATE)
-    bookings.to_csv(f"{STORAGE_PATH}/raw_data.csv", delimiter=",")
+    bookings.to_csv(f"{STORAGE_PATH}/raw_data.csv")
 
 
 if __name__ == "__main__":

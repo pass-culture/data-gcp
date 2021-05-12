@@ -9,9 +9,11 @@ from metrics import compute_metrics
 from tf_model import TripletModel, MatchModel, identity_loss
 from matplotlib import pyplot as plt
 
-MODEL_DATA_PATH = "tf_bpr_string_input_5_months"
+MODEL_DATA_PATH = "tf_bpr_string_input_5_months_reg_0"
 START_DATE = "2020-12-10"
 END_DATE = "2021-05-10"
+EMBEDDING_SIZE = 64
+L2_REG = 0  # 1e-6
 
 n_epochs = 20
 batch_size = 32
@@ -63,7 +65,9 @@ pos_data_test = df[df.index >= lim_eval]
 pos_data_train.to_csv(f"{MODEL_DATA_PATH}/pos_data_train.csv", index=False)
 pos_data_test.to_csv(f"{MODEL_DATA_PATH}/pos_data_test.csv", index=False)
 
-triplet_model = TripletModel(user_ids, item_ids, latent_dim=64, l2_reg=1e-6)
+triplet_model = TripletModel(
+    user_ids, item_ids, latent_dim=EMBEDDING_SIZE, l2_reg=L2_REG
+)
 match_model = MatchModel(triplet_model.user_layer, triplet_model.item_layer)
 
 

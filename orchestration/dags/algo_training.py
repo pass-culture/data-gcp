@@ -9,11 +9,19 @@ from airflow.contrib.operators.gcp_compute_operator import (
     GceInstanceStopOperator,
 )
 from dependencies.slack_alert import task_fail_slack_alert
-from dependencies.config import DATA_GCS_BUCKET_NAME, GCP_PROJECT_ID
+from dependencies.config import GCP_PROJECT_ID, GCE_ZONE
 
-GCE_ZONE = os.environ.get("GCE_ZONE", "europe-west1-b")
-GCE_INSTANCE = os.environ.get("GCE_INSTANCE", "algo-training-dev")
-STORAGE_PATH = f"gs://{DATA_GCS_BUCKET_NAME}/tests_training"
+
+GCE_INSTANCE = os.environ.get("GCE_TRAINING_INSTANCE", "algo-training-dev")
+MLFLOW_BUCKET_NAME = os.environ.get("MLFLOW_BUCKET_NAME", "mlflow-bucket-ehp")
+
+DATE = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+STORAGE_PATH = f"gs://{MLFLOW_BUCKET_NAME}/algo_training/algo_training_{DATE}"
+
+DEFAULT = f""" cd data-gcp/algo_training
+export PATH="/opt/conda/bin:/opt/conda/condabin:"+$PATH
+export STORAGE_PATH={STORAGE_PATH}
+"""
 
 default_args = {
     "start_date": datetime(2021, 5, 5),
@@ -55,10 +63,9 @@ with DAG(
         dag=dag,
     )
 
-    DATA_COLLECT = f""" 'cd data-gcp/algo_training
-                        export STORAGE_PATH={STORAGE_PATH}
-                        python data_collect.py'
-                    """
+    DATA_COLLECT = f""" '{DEFAULT}
+python data_collect.py'
+"""
 
     data_collect = BashOperator(
         task_id="data_collect",
@@ -71,10 +78,9 @@ with DAG(
         dag=dag,
     )
 
-    FEATURE_ENG = f""" 'cd data-gcp/algo_training
-                        export STORAGE_PATH={STORAGE_PATH}
-                        python feature_engineering.py'
-                    """
+    FEATURE_ENG = f""" '{DEFAULT}
+python feature_engineering.py'
+"""
 
     feature_engineering = BashOperator(
         task_id="feature_engineering",
@@ -94,4 +100,6 @@ with DAG(
         task_id="gce_stop_task",
     )
 
-    start >> gce_instance_start >> fetch_code >> data_collect >> feature_engineering >> gce_instance_stop >> end
+    start >> gce_instance_start
+    gce_instance_start >> fetch_code >> data_collect >> feature_engineering >> gce_instance_stop
+    gce_instance_stop >> end

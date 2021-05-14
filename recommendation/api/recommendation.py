@@ -130,7 +130,7 @@ def get_final_recommendations(
             app_config["MODEL_VERSION"],
         )
         final_recommendations = order_offers_by_score_and_diversify_types(
-            final_recommendations
+            scored_recommendation_for_user
         )[: app_config["NUMBER_OF_RECOMMENDATIONS"]]
 
     save_recommendation(user_id, final_recommendations, connection)

@@ -9,7 +9,7 @@ from metrics import compute_metrics
 from tf_model import TripletModel, MatchModel, identity_loss
 from matplotlib import pyplot as plt
 
-MODEL_DATA_PATH = "tf_bpr_string_input_5_months_reg_0"
+MODEL_DATA_PATH = "../../../model_training/tf_bpr_string_input_5_months_reg_0"
 START_DATE = "2020-12-10"
 END_DATE = "2021-05-10"
 EMBEDDING_SIZE = 64

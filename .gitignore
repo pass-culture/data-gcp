@@ -8,6 +8,7 @@ __pycache__
 .python-version
 .venv/
 venv/
+model_training/
 
 # ignore .json credential files
 # *.json

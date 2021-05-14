@@ -50,10 +50,7 @@ def create_db_connection() -> Any:
 
 
 def get_final_recommendations(
-    user_id: int,
-    longitude: int,
-    latitude: int,
-    app_config: Dict[str, Any],
+    user_id: int, longitude: int, latitude: int, app_config: Dict[str, Any]
 ) -> List[int]:
 
     ab_testing_table = app_config["AB_TESTING_TABLE"]
@@ -87,7 +84,7 @@ def get_final_recommendations(
         final_recommendations = get_cold_start_ordered_recommendations(
             recommendations=scored_recommendation_for_user,
             cold_start_types=cold_start_types,
-            #number_of_recommendations=app_config["NUMBER_OF_RECOMMENDATIONS"],
+            # number_of_recommendations=app_config["NUMBER_OF_RECOMMENDATIONS"],
             number_of_recommendations=100,
         )
     else:
@@ -121,14 +118,13 @@ def save_recommendation(user_id: int, recommendations: List[int], cursor):
         )
 
 
-
 def get_cold_start_ordered_recommendations(
     recommendations: List[Dict[str, Any]],
     cold_start_types: List[str],
     number_of_recommendations: int,
 ):
     cold_start_types_recommendation = [
-        {**recommendation, 'score': 1}
+        {**recommendation, "score": 1}
         for recommendation in recommendations
         if recommendation["type"] in cold_start_types
     ]
@@ -145,9 +141,14 @@ def get_cold_start_ordered_recommendations(
         cold_start_types_recommendation
     )
 
-    return shuffle([{**recommendation, 'score': 1} for recommendation in cold_start_types_recommendation+ other_recommendations)[
-            :missing_recommendations
-            ]
+    return shuffle(
+        [
+            {**recommendation, "score": 1}
+            for recommendation in (
+                cold_start_types_recommendation + other_recommendations
+            )
+        ][:missing_recommendations]
+    )
 
 
 def get_intermediate_recommendations_for_user(
@@ -235,10 +236,7 @@ def get_scored_recommendation_for_user(
         model_region, GCP_PROJECT, model_name, offers_ids, version
     )
     return [
-        {
-            **recommendation,
-            "score": predicted_scores[i],
-        }
+        {**recommendation, "score": predicted_scores[i]}
         for i, recommendation in enumerate(user_recommendations)
     ]
 

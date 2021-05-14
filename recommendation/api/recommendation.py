@@ -196,7 +196,7 @@ def get_recommendations_query(
                 (
                 SELECT offer_id
                 FROM non_recommendable_offers
-                WHERE CAST(user_id AS BIGINT) = {user_id}
+                WHERE user_id = '{user_id}'
                 )
             {order_query};
         """
@@ -210,7 +210,7 @@ def get_recommendations_query(
                     (
                     SELECT "venue_id"
                     FROM iris_venues_mv
-                    WHERE CAST("iris_id" AS BIGINT) = {user_iris_id}
+                    WHERE "iris_id" = '{user_iris_id}'
                     )
                 OR is_national = True
                 )
@@ -218,7 +218,7 @@ def get_recommendations_query(
                 (
                 SELECT offer_id
                 FROM non_recommendable_offers
-                WHERE CAST(user_id AS BIGINT) = {user_id}
+                WHERE user_id = '{user_id}'
                 )
             {order_query};
         """

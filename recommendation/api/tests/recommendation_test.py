@@ -15,13 +15,13 @@ from recommendation import (
 
 @patch("recommendation.get_intermediate_recommendations_for_user")
 @patch("recommendation.get_scored_recommendation_for_user")
-@patch("recommendation.get_iris_from_coordinates")
+@patch("recommendation.get_accessible_departements_from_coordinates")
 @patch("recommendation.save_recommendation")
 @patch("recommendation.create_db_connection")
 def test_get_final_recommendation_for_group_a(
     connection_mock: Mock,
     save_recommendation_mock: Mock,
-    get_iris_from_coordinates_mock: Mock,
+    get_accessible_departements_from_coordinates: Mock,
     get_scored_recommendation_for_user_mock: Mock,
     get_intermediate_recommendations_for_user_mock: Mock,
     setup_database: Any,
@@ -38,7 +38,7 @@ def test_get_final_recommendation_for_group_a(
         {"id": 2, "url": "url2", "type": "type2", "item_id": "offer-2", "score": 2},
         {"id": 3, "url": "url3", "type": "type3", "item_id": "offer-3", "score": 3},
     ]
-    get_iris_from_coordinates_mock.return_value = 1
+    get_accessible_departements_from_coordinates.return_value = ["93"]
 
     # When
     recommendations = get_final_recommendations(
@@ -52,7 +52,7 @@ def test_get_final_recommendation_for_group_a(
 
 @patch("recommendation.get_intermediate_recommendations_for_user")
 @patch("recommendation.get_scored_recommendation_for_user")
-@patch("recommendation.get_iris_from_coordinates")
+@patch("recommendation.get_accessible_departements_from_coordinates")
 @patch("recommendation.get_cold_start_types")
 @patch("recommendation.save_recommendation")
 @patch("recommendation.create_db_connection")
@@ -60,7 +60,7 @@ def test_get_final_recommendation_for_group_b(
     connection_mock: Mock,
     save_recommendation_mock: Mock,
     get_cold_start_types: Mock,
-    get_iris_from_coordinates_mock: Mock,
+    get_accessible_departements_from_coordinates: Mock,
     get_scored_recommendation_for_user_mock: Mock,
     get_intermediate_recommendations_for_user_mock: Mock,
     setup_database: Any,
@@ -77,7 +77,7 @@ def test_get_final_recommendation_for_group_b(
         {"id": 2, "url": "url2", "type": "type2", "item_id": "offer-2", "score": 2},
         {"id": 3, "url": "url3", "type": "type3", "item_id": "offer-3", "score": 3},
     ]
-    get_iris_from_coordinates_mock.return_value = 1
+    get_accessible_departements_from_coordinates.return_value = ["93"]
 
     recommendations = get_final_recommendations(
         user_id, 2.331289, 48.830719, app_config
@@ -94,13 +94,13 @@ def test_get_final_recommendation_for_group_b(
 @patch("recommendation.get_cold_start_ordered_recommendations")
 @patch("recommendation.get_intermediate_recommendations_for_user")
 @patch("recommendation.get_cold_start_types")
-@patch("recommendation.get_iris_from_coordinates")
+@patch("recommendation.get_accessible_departements_from_coordinates")
 @patch("recommendation.save_recommendation")
 @patch("recommendation.create_db_connection")
 def test_get_final_recommendation_for_new_user(
     connection_mock: Mock,
     save_recommendation_mock: Mock,
-    get_iris_from_coordinates_mock: Mock,
+    get_accessible_departements_from_coordinates: Mock,
     get_cold_start_types: Mock,
     get_intermediate_recommendations_for_user: Mock,
     get_cold_start_ordered_recommendations: Mock,
@@ -123,7 +123,7 @@ def test_get_final_recommendation_for_new_user(
     ]
     get_cold_start_ordered_recommendations.return_value = [3, 2]
     order_offers_by_score_and_diversify_types.return_value = [3, 2]
-    get_iris_from_coordinates_mock.return_value = 1
+    get_accessible_departements_from_coordinates.return_value = ["93"]
 
     # When
     recommendations = get_final_recommendations(
@@ -179,9 +179,9 @@ def test_get_intermediate_recommendation_for_user(
 
     # When
     user_id = 111
-    user_iris_id = 1
+    user_accessible_department = []
     user_recommendation = get_intermediate_recommendations_for_user(
-        user_id, user_iris_id, is_cold_start, cold_start_types, connection
+        user_id, user_accessible_department, is_cold_start, cold_start_types, connection
     )
 
     # Then
@@ -228,7 +228,7 @@ def test_get_intermediate_recommendation_for_user(
         ),
     ],
 )
-def test_get_intermediate_recommendation_for_user_with_no_iris(
+def test_get_intermediate_recommendation_for_user_with_no_department(
     setup_database: Any, is_cold_start, cold_start_types, expected_recommendation
 ):
     # Given
@@ -236,9 +236,9 @@ def test_get_intermediate_recommendation_for_user_with_no_iris(
 
     # When
     user_id = 222
-    user_iris_id = None
+    user_accessible_department = []
     user_recommendation = get_intermediate_recommendations_for_user(
-        user_id, user_iris_id, is_cold_start, cold_start_types, connection
+        user_id, user_accessible_department, is_cold_start, cold_start_types, connection
     )
 
     # Then

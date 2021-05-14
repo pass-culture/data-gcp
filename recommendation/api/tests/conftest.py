@@ -54,6 +54,7 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
                 "offer-5",
                 "offer-6",
             ],
+            "department": ["93", "93", "93", "75", "93", "93"],
         }
     )
     recommendable_offers.to_sql("recommendable_offers", con=engine, if_exists="replace")

@@ -39,11 +39,11 @@ def setup_database() -> Any:
 
     department_france = pd.read_csv("tests/departement_france_tests.csv")
     department_france.to_sql(
-        "departments", con=engine, if_exists="replace", index=False
+        "departements", con=engine, if_exists="replace", index=False
     )
     sql = """ALTER TABLE public.departements
         ALTER COLUMN geom TYPE Geometry(GEOMETRY, 0)
-        USING ST_SetSRID(shape::Geometry, 0);
+        USING ST_SetSRID(geom::Geometry, 0);
     """
     connection.execute(sql)
     yield connection
@@ -96,8 +96,8 @@ def test_get_departement_from_coordinates(setup_database: Any):
     connection = setup_database
 
     # When
-    longitude = 46.2
-    latitude = 5.2167
+    latitude = 46.2
+    longitude = 5.2167
     departement = get_departements_from_coordinates(longitude, latitude, connection)
 
     # Then

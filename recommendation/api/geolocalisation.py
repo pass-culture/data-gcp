@@ -37,9 +37,18 @@ def get_iris_from_coordinates(longitude: float, latitude: float, connection) -> 
     return iris_id
 
 
+def convert_departement_to_string(departement: int) -> str | None:
+    if departement is None:
+        return None
+    departement_str = str(departement)
+    if len(departement_str) == 1:
+        return f"0{departement_str}"
+    return departement_str
+
+
 def get_departements_from_coordinates(
     longitude: float, latitude: float, connection
-) -> str:
+) -> str | None:
 
     if not (longitude and latitude):
         return None
@@ -55,7 +64,7 @@ def get_departements_from_coordinates(
     else:
         departement = None
 
-    return departement
+    return convert_departement_to_string(departement)
 
 
 def get_accessible_departements_from_coordinates(

@@ -80,7 +80,8 @@ RETURNS TABLE (offer_id varchar,
                url VARCHAR,
                is_national BOOLEAN,
                booking_number BIGINT,
-               item_id text) AS
+               item_id text,
+               department character varying) AS
 $body$
 BEGIN
     RETURN QUERY
@@ -92,7 +93,8 @@ BEGIN
             offer.offer_url           AS url,
             offer."offer_is_national" AS is_national,
             (CASE WHEN booking_numbers.booking_number IS NOT NULL THEN booking_numbers.booking_number ELSE 0 END) AS booking_number,
-            (CASE WHEN offer.offer_type in ('ThingType.LIVRE_EDITION', 'EventType.CINEMA') THEN CONCAT('product-', offer.offer_product_id) ELSE CONCAT('offer-', offer.offer_id) END) AS item_id
+            (CASE WHEN offer.offer_type in ('ThingType.LIVRE_EDITION', 'EventType.CINEMA') THEN CONCAT('product-', offer.offer_product_id) ELSE CONCAT('offer-', offer.offer_id) END) AS item_id,
+            venue.venue_department_code as department
       FROM public.offer
       JOIN (SELECT * FROM public.venue WHERE venue_validation_token IS NULL) venue ON offer."venue_id" = venue.venue_id
       JOIN (SELECT * FROM public.offerer WHERE offerer_validation_token IS NULL) offerer ON offerer.offerer_id = venue."venue_managing_offerer_id"

@@ -11,7 +11,7 @@ from sqlalchemy import create_engine, engine
 
 from access_gcp_secrets import access_secret
 from cold_start import get_cold_start_status, get_cold_start_types
-from geolocalisation import get_iris_from_coordinates
+from geolocalisation import get_accessible_departements_from_coordinates
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
 
@@ -73,12 +73,14 @@ def get_final_recommendations(
         group_id = request_response[0]
 
     is_cold_start = get_cold_start_status(user_id, connection)
-    user_iris_id = get_iris_from_coordinates(longitude, latitude, connection)
+    accessible_departments = get_accessible_departements_from_coordinates(
+        longitude, latitude, connection
+    )
 
     if group_id == "A" and is_cold_start:
         cold_start_types = get_cold_start_types(user_id, connection)
         recommendations_for_user = get_intermediate_recommendations_for_user(
-            user_id, user_iris_id, True, cold_start_types, connection
+            user_id, accessible_departments, True, cold_start_types, connection
         )
         scored_recommendation_for_user = [
             {**recommendation, "score": len(recommendations_for_user) - i}
@@ -91,7 +93,7 @@ def get_final_recommendations(
         )
     else:
         recommendations_for_user = get_intermediate_recommendations_for_user(
-            user_id, user_iris_id, False, [], connection
+            user_id, accessible_departments, False, [], connection
         )
         scored_recommendation_for_user = get_scored_recommendation_for_user(
             recommendations_for_user,
@@ -153,14 +155,14 @@ def get_cold_start_ordered_recommendations(
 
 def get_intermediate_recommendations_for_user(
     user_id: int,
-    user_iris_id: int,
+    accessible_departments: List[str],
     is_cold_start: bool,
     cold_start_types: list,
     connection,
 ) -> List[Dict[str, Any]]:
 
     recommendations_query = get_recommendations_query(
-        user_id, user_iris_id, is_cold_start, cold_start_types
+        user_id, accessible_departments, is_cold_start, cold_start_types
     )
     query_result = connection.execute(recommendations_query).fetchall()
 
@@ -173,7 +175,10 @@ def get_intermediate_recommendations_for_user(
 
 
 def get_recommendations_query(
-    user_id: int, user_iris_id: int, is_cold_start: bool, cold_start_types: list
+    user_id: int,
+    accessible_departments: List[str],
+    is_cold_start: bool,
+    cold_start_types: list,
 ) -> str:
     if is_cold_start:
         if cold_start_types:
@@ -187,7 +192,7 @@ def get_recommendations_query(
     else:
         order_query = "ORDER BY RANDOM()"
 
-    if not user_iris_id:
+    if not accessible_departments:
         query = f"""
             SELECT offer_id, type, url, item_id
             FROM recommendable_offers
@@ -204,16 +209,10 @@ def get_recommendations_query(
         query = f"""
             SELECT offer_id, type, url, item_id
             FROM recommendable_offers
-            WHERE
-                (
-                venue_id IN
-                    (
-                    SELECT "venue_id"
-                    FROM iris_venues_mv
-                    WHERE CAST("iris_id" AS BIGINT) = {user_iris_id}
-                    )
+            WHERE (
+                department IN ({', '.join([f"'{department}'" for department in accessible_departments])})
                 OR is_national = True
-                )
+            )
             AND offer_id NOT IN
                 (
                 SELECT offer_id

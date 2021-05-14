@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 from sqlalchemy import create_engine
 
-from geolocalisation import get_iris_from_coordinates
+from geolocalisation import get_iris_from_coordinates, get_departements_from_coordinates
 
 DATA_GCP_TEST_POSTGRES_PORT = os.getenv("DATA_GCP_TEST_POSTGRES_PORT")
 DB_NAME = os.getenv("DB_NAME")
@@ -37,6 +37,15 @@ def setup_database() -> Any:
 
     connection.execute(sql)
 
+    department_france = pd.read_csv("tests/departement_france_tests.csv")
+    department_france.to_sql(
+        "departments", con=engine, if_exists="replace", index=False
+    )
+    sql = """ALTER TABLE public.departements
+        ALTER COLUMN geom TYPE Geometry(GEOMETRY, 0)
+        USING ST_SetSRID(shape::Geometry, 0);
+    """
+    connection.execute(sql)
     yield connection
 
     engine.execute("DROP TABLE IF EXISTS iris_france;")
@@ -80,3 +89,42 @@ def test_get_iris_from_coordinates_not_in_france(setup_database: Any):
 
     # Then
     assert iris_id is None
+
+
+def test_get_departement_from_coordinates(setup_database: Any):
+    # Given
+    connection = setup_database
+
+    # When
+    longitude = 46.2
+    latitude = 5.2167
+    departement = get_departements_from_coordinates(longitude, latitude, connection)
+
+    # Then
+    assert departement == "01"
+
+
+def test_get_departement_from_coordinates_without_coordinates(setup_database: Any):
+    # Given
+    connection = setup_database
+
+    # When
+    longitude = None
+    latitude = None
+    departement = get_departements_from_coordinates(longitude, latitude, connection)
+
+    # Then
+    assert departement is None
+
+
+def test_get_departement_from_coordinates_not_in_france(setup_database: Any):
+    # Given
+    connection = setup_database
+
+    # When
+    longitude = -122.1639346
+    latitude = 37.4449422
+    departement = get_departements_from_coordinates(longitude, latitude, connection)
+
+    # Then
+    assert departement is None

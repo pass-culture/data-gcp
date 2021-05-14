@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 ACCESSIBLE_DEPARTMENTS = {
     "08": ["02", "08", "51", "55", "59"],
@@ -37,7 +37,7 @@ def get_iris_from_coordinates(longitude: float, latitude: float, connection) -> 
     return iris_id
 
 
-def convert_departement_to_string(departement: int) -> str | None:
+def convert_departement_to_string(departement: int) -> Optional[str]:
     if departement is None:
         return None
     departement_str = str(departement)
@@ -48,7 +48,7 @@ def convert_departement_to_string(departement: int) -> str | None:
 
 def get_departements_from_coordinates(
     longitude: float, latitude: float, connection
-) -> str | None:
+) -> Optional[str]:
 
     if not (longitude and latitude):
         return None

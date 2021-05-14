@@ -179,7 +179,7 @@ def test_get_intermediate_recommendation_for_user(
 
     # When
     user_id = 111
-    user_accessible_department = []
+    user_accessible_department = ["93"]
     user_recommendation = get_intermediate_recommendations_for_user(
         user_id, user_accessible_department, is_cold_start, cold_start_types, connection
     )

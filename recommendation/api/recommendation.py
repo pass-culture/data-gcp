@@ -48,6 +48,7 @@ engine = create_engine(
 def create_db_connection() -> Any:
     return engine.connect().execution_options(autocommit=True)
 
+
 def get_cold_start_ordered_recommendations(
     recommendations: List[Dict[str, Any]],
     cold_start_types: List[str],
@@ -117,7 +118,7 @@ def get_final_recommendations(
             recommendations=scored_recommendation_for_user,
             cold_start_types=cold_start_types,
             # number_of_recommendations=app_config["NUMBER_OF_RECOMMENDATIONS"],
-            number_of_recommendations=100,
+            number_of_recommendations=50,
         )
     else:
         recommendations_for_user = get_intermediate_recommendations_for_user(
@@ -148,8 +149,6 @@ def save_recommendation(user_id: int, recommendations: List[int], cursor):
             f"VALUES (%s, %s, %s)",
             row,
         )
-
-
 
 
 def get_intermediate_recommendations_for_user(

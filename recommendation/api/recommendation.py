@@ -1,7 +1,7 @@
 import collections
 import datetime
 import os
-from random import random, shuffle
+import random
 from typing import Any, Dict, List, Tuple
 
 import pytz
@@ -55,31 +55,34 @@ def get_cold_start_ordered_recommendations(
     number_of_recommendations: int,
 ):
     cold_start_types_recommendation = [
-        {**recommendation, "score": 1}
+        recommendation["id"]
+        # recommendation
         for recommendation in recommendations
         if recommendation["type"] in cold_start_types
     ]
     other_recommendations = [
-        recommendation
+        recommendation["id"]
         for recommendation in recommendations
         if recommendation["type"] not in cold_start_types
     ]
-    if len(cold_start_types_recommendation) >= number_of_recommendations:
 
-        return shuffle(cold_start_types_recommendation)
+    if len(cold_start_types_recommendation) >= number_of_recommendations:
+        return random.sample(
+            cold_start_types_recommendation, len(cold_start_types_recommendation)
+        )
 
     missing_recommendations = number_of_recommendations - len(
         cold_start_types_recommendation
     )
 
-    return shuffle(
-        [
-            {**recommendation, "score": 1}
-            for recommendation in (
-                cold_start_types_recommendation + other_recommendations
-            )
-        ][:missing_recommendations]
-    )
+    output_recommendation = [
+        recommendation
+        # {**recommendation, "score": 1}
+        for recommendation in cold_start_types_recommendation
+        + other_recommendations[:missing_recommendations]
+    ]
+
+    return random.sample(output_recommendation, len(output_recommendation))
 
 
 def get_final_recommendations(
@@ -94,7 +97,7 @@ def get_final_recommendations(
     ).scalar()
 
     if not request_response:
-        group_id = "A" if random() > 0.5 else "B"
+        group_id = "A" if random.random() > 0.5 else "B"
         connection.execute(
             f"""INSERT INTO {ab_testing_table}(userid, groupid) VALUES ({user_id}, '{group_id}')"""
         )
@@ -141,6 +144,7 @@ def get_final_recommendations(
 
 def save_recommendation(user_id: int, recommendations: List[int], cursor):
     date = datetime.datetime.now(pytz.utc)
+
     for offer_id in recommendations:
         row = (user_id, offer_id, date)
         cursor.execute(

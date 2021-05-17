@@ -101,7 +101,7 @@ BEGIN
             FROM public.booking
             LEFT JOIN public.stock
             ON booking.stock_id = stock.stock_id
-            WHERE booking.booking_creation_date >= NOW() - INTERVAL '30 days'
+            WHERE booking.booking_creation_date >= NOW() - INTERVAL '7 days'
             AND NOT booking.booking_is_cancelled
             GROUP BY stock.offer_id
       ) booking_numbers

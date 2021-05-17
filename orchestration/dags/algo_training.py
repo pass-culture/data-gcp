@@ -15,7 +15,7 @@ from dependencies.config import GCP_PROJECT_ID, GCE_ZONE
 GCE_INSTANCE = os.environ.get("GCE_TRAINING_INSTANCE", "algo-training-dev")
 MLFLOW_BUCKET_NAME = os.environ.get("MLFLOW_BUCKET_NAME", "mlflow-bucket-ehp")
 
-DATE = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+DATE = "{{ts_nodash}}"
 STORAGE_PATH = f"gs://{MLFLOW_BUCKET_NAME}/algo_training/algo_training_{DATE}"
 
 DEFAULT = f""" cd data-gcp/algo_training
@@ -78,6 +78,21 @@ python data_collect.py'
         dag=dag,
     )
 
+    PREPROCESS = f""" '{DEFAULT}
+python preprocess.py'
+"""
+
+    preprocess = BashOperator(
+        task_id="preprocessing",
+        bash_command=f"""
+        gcloud compute ssh {GCE_INSTANCE} \
+        --zone {GCE_ZONE} \
+        --project {GCP_PROJECT_ID} \
+        --command {PREPROCESS}
+        """,
+        dag=dag,
+    )
+
     FEATURE_ENG = f""" '{DEFAULT}
 python feature_engineering.py'
 """
@@ -101,5 +116,5 @@ python feature_engineering.py'
     )
 
     start >> gce_instance_start
-    gce_instance_start >> fetch_code >> data_collect >> feature_engineering >> gce_instance_stop
+    gce_instance_start >> fetch_code >> data_collect >> preprocess >> feature_engineering >> gce_instance_stop
     gce_instance_stop >> end

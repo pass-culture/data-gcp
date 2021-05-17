@@ -74,7 +74,6 @@ def get_cold_start_ordered_recommendations(
     missing_recommendations = number_of_recommendations - len(
         cold_start_types_recommendation
     )
-
     output_recommendation = [
         recommendation
         # {**recommendation, "score": 1}
@@ -82,7 +81,9 @@ def get_cold_start_ordered_recommendations(
         + other_recommendations[:missing_recommendations]
     ]
 
-    return random.sample(output_recommendation, len(output_recommendation))
+    #return random.sample(output_recommendation, len(output_recommendation))
+    #return random.sample(output_recommendation, app_config["NUMBER_OF_RECOMMENDATIONS"]
+    return random.sample(output_recommendation,10)
 
 
 def get_final_recommendations(

@@ -49,43 +49,6 @@ def create_db_connection() -> Any:
     return engine.connect().execution_options(autocommit=True)
 
 
-def get_cold_start_ordered_recommendations(
-    recommendations: List[Dict[str, Any]],
-    cold_start_types: List[str],
-    number_of_recommendations: int,
-):
-    cold_start_types_recommendation = [
-        recommendation["id"]
-        # recommendation
-        for recommendation in recommendations
-        if recommendation["type"] in cold_start_types
-    ]
-    other_recommendations = [
-        recommendation["id"]
-        for recommendation in recommendations
-        if recommendation["type"] not in cold_start_types
-    ]
-
-    if len(cold_start_types_recommendation) >= number_of_recommendations:
-        return random.sample(
-            cold_start_types_recommendation, len(cold_start_types_recommendation)
-        )
-
-    missing_recommendations = number_of_recommendations - len(
-        cold_start_types_recommendation
-    )
-    output_recommendation = [
-        recommendation
-        # {**recommendation, "score": 1}
-        for recommendation in cold_start_types_recommendation
-        + other_recommendations[:missing_recommendations]
-    ]
-
-    #return random.sample(output_recommendation, len(output_recommendation))
-    #return random.sample(output_recommendation, app_config["NUMBER_OF_RECOMMENDATIONS"]
-    return random.sample(output_recommendation,10)
-
-
 def get_final_recommendations(
     user_id: int, longitude: int, latitude: int, app_config: Dict[str, Any]
 ) -> List[int]:
@@ -154,6 +117,43 @@ def save_recommendation(user_id: int, recommendations: List[int], cursor):
             f"VALUES (%s, %s, %s)",
             row,
         )
+
+
+def get_cold_start_ordered_recommendations(
+    recommendations: List[Dict[str, Any]],
+    cold_start_types: List[str],
+    number_of_recommendations: int,
+):
+    cold_start_types_recommendation = [
+        recommendation["id"]
+        # recommendation
+        for recommendation in recommendations
+        if recommendation["type"] in cold_start_types
+    ]
+    other_recommendations = [
+        recommendation["id"]
+        for recommendation in recommendations
+        if recommendation["type"] not in cold_start_types
+    ]
+
+    if len(cold_start_types_recommendation) >= number_of_recommendations:
+        return random.sample(
+            cold_start_types_recommendation, len(cold_start_types_recommendation)
+        )
+
+    missing_recommendations = number_of_recommendations - len(
+        cold_start_types_recommendation
+    )
+    output_recommendation = [
+        recommendation
+        # {**recommendation, "score": 1}
+        for recommendation in cold_start_types_recommendation
+        + other_recommendations[:missing_recommendations]
+    ]
+
+    # return random.sample(output_recommendation, len(output_recommendation))
+    # return random.sample(output_recommendation, app_config["NUMBER_OF_RECOMMENDATIONS"]
+    return random.sample(output_recommendation, 10)
 
 
 def get_intermediate_recommendations_for_user(

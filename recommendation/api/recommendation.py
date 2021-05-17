@@ -84,8 +84,8 @@ def get_final_recommendations(
         final_recommendations = get_cold_start_ordered_recommendations(
             recommendations=scored_recommendation_for_user,
             cold_start_types=cold_start_types,
-            # number_of_recommendations=app_config["NUMBER_OF_RECOMMENDATIONS"],
-            number_of_recommendations=50,
+            number_of_recommendations=app_config["NUMBER_OF_RECOMMENDATIONS"],
+            number_of_preselected_offers=app_config["NUMBER_OF_PRESELECTED_OFFERS"],
         )
     else:
         recommendations_for_user = get_intermediate_recommendations_for_user(
@@ -123,10 +123,10 @@ def get_cold_start_ordered_recommendations(
     recommendations: List[Dict[str, Any]],
     cold_start_types: List[str],
     number_of_recommendations: int,
+    number_of_preselected_offers: int,
 ):
     cold_start_types_recommendation = [
         recommendation["id"]
-        # recommendation
         for recommendation in recommendations
         if recommendation["type"] in cold_start_types
     ]
@@ -136,24 +136,21 @@ def get_cold_start_ordered_recommendations(
         if recommendation["type"] not in cold_start_types
     ]
 
-    if len(cold_start_types_recommendation) >= number_of_recommendations:
+    if len(cold_start_types_recommendation) >= number_of_preselected_offers:
         return random.sample(
-            cold_start_types_recommendation, len(cold_start_types_recommendation)
+            cold_start_types_recommendation, len(number_of_recommendations)
         )
 
-    missing_recommendations = number_of_recommendations - len(
+    missing_recommendations = number_of_preselected_offers - len(
         cold_start_types_recommendation
     )
     output_recommendation = [
         recommendation
-        # {**recommendation, "score": 1}
         for recommendation in cold_start_types_recommendation
         + other_recommendations[:missing_recommendations]
     ]
 
-    # return random.sample(output_recommendation, len(output_recommendation))
-    # return random.sample(output_recommendation, app_config["NUMBER_OF_RECOMMENDATIONS"]
-    return random.sample(output_recommendation, 10)
+    return random.sample(output_recommendation, number_of_recommendations)
 
 
 def get_intermediate_recommendations_for_user(

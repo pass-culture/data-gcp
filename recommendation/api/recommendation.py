@@ -160,7 +160,7 @@ def get_cold_start_recommendations_for_user(
                 (
                     SELECT "venue_id"
                     FROM iris_venues_mv
-                    WHERE CAST("iris_id" AS BIGINT) = {user_iris_id}
+                    WHERE "iris_id" = '{user_iris_id}'
                 )
             OR is_national = True
         )
@@ -173,7 +173,7 @@ def get_cold_start_recommendations_for_user(
             (
                 SELECT offer_id
                 FROM non_recommendable_offers
-                WHERE CAST(user_id AS BIGINT) = {user_id}
+                WHERE user_id = '{user_id}'
             )
         AND {where_clause}
         AND booking_number > 0

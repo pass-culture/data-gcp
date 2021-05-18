@@ -27,6 +27,7 @@ import mlflow
 
 
 def train(storage_path: str):
+    TRAIN_DIR = "/home/airflow/train"
 
     # fetch data
     bookings = pd.read_csv(
@@ -88,7 +89,7 @@ def train(storage_path: str):
             # sampled triplets.
             print(f"Training epoch {i}")
             train_result = triplet_model.fit(
-                x=triplet_inputs, y=fake_y, shuffle=True, batch_size=64, epochs=1
+                x=triplet_inputs, y=fake_y, shuffle=True, batch_size=64, epochs=1, verbose=2
             )
 
             # train.append(train_result.history["loss"][0])
@@ -107,24 +108,13 @@ def train(storage_path: str):
             # evaluation.append(eval_result)
             runned_epochs += 1
             if eval_result < best_eval:
-                tf.saved_model.save(match_model, f"{MODEL_DATA_PATH}/tf_bpr_{i}epochs")
+                # tf.saved_model.save(match_model, f"{MODEL_DATA_PATH}/tf_bpr_{i}epochs")
                 best_eval = eval_result
-                mlflow.tensorflow.log_model(f"{storage_path}/model/test1")
 
-        # TRAINING CURVES
-        # plt.plot(list(range(runned_epochs)), train[:runned_epochs], label="Train Loss")
-        # plt.plot(
-        #     list(range(runned_epochs)), evaluation[:runned_epochs], label="Evaluation Loss"
-        # )
-        # plt.xlabel("Epoch")
-        # plt.ylabel("Losses")
-        # plt.legend()
-        # plt.savefig(f"{MODEL_DATA_PATH}/learning_curves.png")
-
-        # metrics = compute_metrics(10, pos_data_train, pos_data_test, match_model)
-
-        # print(metrics)
-        # save_dict_to_path(metrics, f"{MODEL_DATA_PATH}/metrics.json")
+                run_uuid = mlflow.active_run().info.run_uuid
+                export_path = TRAIN_DIR + '/' + run_uuid
+                tf.saved_model.save(match_model, export_path)
+                mlflow.log_artifacts(export_path, "model")
 
 
 def identity_loss(y_true, y_pred):

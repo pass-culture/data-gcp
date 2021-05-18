@@ -23,6 +23,7 @@ def feature_engineering(storage_path: str):
 
     pos_data_train.to_csv(f"{storage_path}/pos_data_train.csv", index=False)
     pos_data_test.to_csv(f"{storage_path}/pos_data_test.csv", index=False)
+    pos_data_eval.to_csv(f"{storage_path}/pos_data_eval.csv", index=False)
 
 
 def save_dict_to_path(dictionnary, path):

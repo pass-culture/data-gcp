@@ -30,9 +30,13 @@ def train(storage_path: str):
 
     pos_data_test = pd.read_csv(f"{storage_path}/pos_data_test.csv")
     pos_data_train = pd.read_csv(f"{storage_path}/pos_data_train.csv")
+    pos_data_eval = pd.read_csv(f"{storage_path}/pos_data_eval.csv")
 
     n_users = len(set(bookings.user_id.values))
     n_items = len(set(bookings.item_id.values))
+
+    user_ids = bookings["user_id"].unique().tolist()
+    item_ids = bookings["item_id"].unique().tolist()
 
     with mlflow.start_run():
         MODEL_DATA_PATH = "tf_bpr_string_input_5_months_reg_0"
@@ -96,10 +100,10 @@ def train(storage_path: str):
         # plt.legend()
         # plt.savefig(f"{MODEL_DATA_PATH}/learning_curves.png")
 
-        metrics = compute_metrics(10, pos_data_train, pos_data_test, match_model)
+        # metrics = compute_metrics(10, pos_data_train, pos_data_test, match_model)
 
-        print(metrics)
-        save_dict_to_path(metrics, f"{MODEL_DATA_PATH}/metrics.json")
+        # print(metrics)
+        # save_dict_to_path(metrics, f"{MODEL_DATA_PATH}/metrics.json")
 
 
 def identity_loss(y_true, y_pred):
@@ -153,6 +157,7 @@ def connect_remote_mlflow(client_id, env="dev"):
 def main():
     STORAGE_PATH = os.environ.get("STORAGE_PATH", "")
     ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "ehp")
+    mlflow.set_tracking_uri("https://mlflow-ehp.internal-passculture.app/")
     train(STORAGE_PATH)
 
 

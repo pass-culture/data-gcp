@@ -131,7 +131,7 @@ def save_model(storage_path: str, model_name: str):
     loaded = tf.saved_model.load(model_path)
 
 
-def get_secret(secret_name: str):
+def get_secret():  # secret_name: str):
     client = secretmanager_v1.SecretManagerServiceClient()
     secret = client.get_secret(request={"mlflow_client_id": "mlflow_client_id"})
     return secret
@@ -157,7 +157,9 @@ def connect_remote_mlflow(client_id, env="dev"):
 def main():
     STORAGE_PATH = os.environ.get("STORAGE_PATH", "")
     ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "ehp")
-    mlflow.set_tracking_uri("https://mlflow-ehp.internal-passculture.app/")
+    # mlflow.set_tracking_uri("https://mlflow-ehp.internal-passculture.app/")
+    client_id = get_secret()
+    connect_remote_mlflow(client_id)
     train(STORAGE_PATH)
 
 

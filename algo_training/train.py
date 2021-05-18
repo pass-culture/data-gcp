@@ -38,11 +38,12 @@ def train(storage_path: str):
     user_ids = bookings["user_id"].unique().tolist()
     item_ids = bookings["item_id"].unique().tolist()
 
-    mlflow.tensorflow.autolog()
-    experiment = os.environ.get("EXPERIMENT_ID", "")
-    mlflow.set_experiment(experiment)
+    # mlflow.tensorflow.autolog()
 
-    with mlflow.start_run():
+    experiment_name = "algo_training_v1"
+    experiment = mlflow.get_experiment_by_name(experiment_name)
+
+    with mlflow.start_run(experiment_id=experiment.experiment_id):
         MODEL_DATA_PATH = "tf_bpr_string_input_5_months_reg_0"
         EMBEDDING_SIZE = 64
         L2_REG = 0  # 1e-6
@@ -78,17 +79,21 @@ def train(storage_path: str):
             train_result = triplet_model.fit(
                 x=triplet_inputs, y=fake_y, shuffle=True, batch_size=64, epochs=1
             )
-            train.append(train_result.history["loss"][0])
-            print(train)
+
+            # train.append(train_result.history["loss"][0])
+            # print(train)
             print(f"Evaluation epoch {i}")
             eval_result = triplet_model.evaluate(
                 x=evaluation_triplet_inputs, y=evaluation_fake_train, batch_size=64
             )
-            # LOG into MLFLOW
-            mlflow.log_metric(key="eval_result", value=eval_result, step=i)
 
-            evaluation.append(eval_result)
-            print(evaluation)
+            # Log into Mlflow
+            mlflow.log_metric(
+                key="Train Loss", value=train_result.history["loss"][0], step=i
+            )
+            mlflow.log_metric(key="Evaluation Loss", value=eval_result, step=i)
+
+            # evaluation.append(eval_result)
             runned_epochs += 1
             if eval_result < best_eval:
                 tf.saved_model.save(match_model, f"{MODEL_DATA_PATH}/tf_bpr_{i}epochs")

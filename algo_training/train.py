@@ -38,6 +38,10 @@ def train(storage_path: str):
     user_ids = bookings["user_id"].unique().tolist()
     item_ids = bookings["item_id"].unique().tolist()
 
+    mlflow.tensorflow.autolog()
+    experiment = os.environ.get("EXPERIMENT_ID", "")
+    mlflow.set_experiment(experiment)
+
     with mlflow.start_run():
         MODEL_DATA_PATH = "tf_bpr_string_input_5_months_reg_0"
         EMBEDDING_SIZE = 64
@@ -89,6 +93,7 @@ def train(storage_path: str):
             if eval_result < best_eval:
                 tf.saved_model.save(match_model, f"{MODEL_DATA_PATH}/tf_bpr_{i}epochs")
                 best_eval = eval_result
+                mlflow.tensorflow.log_model(f"{storage_path}/model/test1")
 
         # TRAINING CURVES
         # plt.plot(list(range(runned_epochs)), train[:runned_epochs], label="Train Loss")
@@ -133,15 +138,9 @@ def save_model(storage_path: str, model_name: str):
 
 def get_secret(secret_id: str):
     client = secretmanager.SecretManagerServiceClient()
-    # Build the resource name of the secret version.
     GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
     name = f"projects/{GCP_PROJECT_ID}/secrets/{secret_id}/versions/1"
-
-    # Access the secret version.
     response = client.access_secret_version(name=name)
-
-    # secret = client.get_secret(request={"mlflow_client_id": "mlflow_client_id"})
-    # return secret
     return response.payload.data.decode("UTF-8")
 
 
@@ -165,7 +164,6 @@ def connect_remote_mlflow(client_id, env="dev"):
 def main():
     STORAGE_PATH = os.environ.get("STORAGE_PATH", "")
     ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "ehp")
-    # mlflow.set_tracking_uri("https://mlflow-ehp.internal-passculture.app/")
     client_id = get_secret("mlflow_client_id")
     connect_remote_mlflow(client_id)
     train(STORAGE_PATH)

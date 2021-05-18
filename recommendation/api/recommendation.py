@@ -74,22 +74,21 @@ def get_final_recommendations(
 
     if group_id == "A" and is_cold_start:
         cold_start_types = get_cold_start_types(user_id, connection)
-        recommendations_for_user = get_intermediate_recommendations_for_user(
-            user_id, user_iris_id, True, cold_start_types, connection
+        recommendations_for_user = get_cold_start_recommendations_for_user(
+            user_id,
+            user_iris_id,
+            cold_start_types,
+            app_config["NUMBER_OF_PRESELECTED_OFFERS"],
+            connection,
         )
-        scored_recommendation_for_user = [
-            {**recommendation, "score": len(recommendations_for_user) - i}
-            for i, recommendation in enumerate(recommendations_for_user)
-        ]
-        final_recommendations = get_cold_start_ordered_recommendations(
-            recommendations=scored_recommendation_for_user,
-            cold_start_types=cold_start_types,
+
+        final_recommendations = get_cold_start_final_recommendations(
+            recommendations=recommendations_for_user,
             number_of_recommendations=app_config["NUMBER_OF_RECOMMENDATIONS"],
-            number_of_preselected_offers=app_config["NUMBER_OF_PRESELECTED_OFFERS"],
         )
     else:
         recommendations_for_user = get_intermediate_recommendations_for_user(
-            user_id, user_iris_id, False, [], connection
+            user_id, user_iris_id, connection
         )
         scored_recommendation_for_user = get_scored_recommendation_for_user(
             recommendations_for_user,
@@ -112,58 +111,92 @@ def save_recommendation(user_id: int, recommendations: List[int], cursor):
     for offer_id in recommendations:
         row = (user_id, offer_id, date)
         cursor.execute(
-            f"INSERT INTO public.past_recommended_offers "
-            f"(userid, offerid, date) "
-            f"VALUES (%s, %s, %s)",
+            "INSERT INTO public.past_recommended_offers "
+            "(userid, offerid, date) "
+            "VALUES (%s, %s, %s)",
             row,
         )
 
 
-def get_cold_start_ordered_recommendations(
+def get_cold_start_final_recommendations(
     recommendations: List[Dict[str, Any]],
-    cold_start_types: List[str],
     number_of_recommendations: int,
-    number_of_preselected_offers: int,
 ):
-    cold_start_types_recommendation = [
-        recommendation["id"]
-        for recommendation in recommendations
-        if recommendation["type"] in cold_start_types
-    ]
-    other_recommendations = [
-        recommendation["id"]
-        for recommendation in recommendations
-        if recommendation["type"] not in cold_start_types
+    cold_start_recommendations = [
+        recommendation["id"] for recommendation in recommendations
     ]
 
-    if len(cold_start_types_recommendation) >= number_of_preselected_offers:
-        return random.sample(
-            cold_start_types_recommendation, len(number_of_recommendations)
+    try:
+        return random.sample(cold_start_recommendations, number_of_recommendations)
+    except ValueError:
+        return (
+            []
+        )  # not enough recommendable offers (happens often in dev because few bookings)
+
+
+def get_cold_start_recommendations_for_user(
+    user_id: int,
+    user_iris_id: int,
+    cold_start_types: list,
+    number_of_preselected_offers: int,
+    connection,
+) -> List[Dict[str, Any]]:
+
+    if cold_start_types:
+        order_query = f"""
+            ORDER BY
+                (type in ({', '.join([f"'{offer_type}'" for offer_type in cold_start_types])})) DESC,
+                booking_number DESC
+            """
+    else:
+        order_query = "ORDER BY booking_number DESC"
+
+    if not user_iris_id:
+        where_clause = "is_national = True or url IS NOT NULL"
+    else:
+        where_clause = f"""
+        (
+            venue_id IN
+                (
+                    SELECT "venue_id"
+                    FROM iris_venues_mv
+                    WHERE CAST("iris_id" AS BIGINT) = {user_iris_id}
+                )
+            OR is_national = True
         )
+        """
 
-    missing_recommendations = number_of_preselected_offers - len(
-        cold_start_types_recommendation
-    )
-    output_recommendation = [
-        recommendation
-        for recommendation in cold_start_types_recommendation
-        + other_recommendations[:missing_recommendations]
+    recommendations_query = f"""
+        SELECT offer_id, type, url
+        FROM recommendable_offers
+        WHERE offer_id NOT IN
+            (
+                SELECT offer_id
+                FROM non_recommendable_offers
+                WHERE CAST(user_id AS BIGINT) = {user_id}
+            )
+        AND {where_clause}
+        AND booking_number > 0
+        {order_query}
+        LIMIT {number_of_preselected_offers};
+    """
+
+    query_result = connection.execute(recommendations_query).fetchall()
+
+    cold_start_recommendations = [
+        {"id": row[0], "type": row[1], "url": row[2]} for row in query_result
     ]
 
-    return random.sample(output_recommendation, number_of_recommendations)
+    return cold_start_recommendations
 
 
 def get_intermediate_recommendations_for_user(
     user_id: int,
     user_iris_id: int,
-    is_cold_start: bool,
-    cold_start_types: list,
     connection,
 ) -> List[Dict[str, Any]]:
 
-    recommendations_query = get_recommendations_query(
-        user_id, user_iris_id, is_cold_start, cold_start_types
-    )
+    recommendations_query = get_recommendations_query(user_id, user_iris_id)
     query_result = connection.execute(recommendations_query).fetchall()
 
     user_recommendation = [
@@ -174,20 +207,7 @@ def get_intermediate_recommendations_for_user(
     return user_recommendation
 
 
-def get_recommendations_query(
-    user_id: int, user_iris_id: int, is_cold_start: bool, cold_start_types: list
-) -> str:
-    if is_cold_start:
-        if cold_start_types:
-            order_query = f"""
-                ORDER BY
-                    (type in ({', '.join([f"'{offer_type}'" for offer_type in cold_start_types])})) DESC,
-                    booking_number DESC
-                 """
-        else:
-            order_query = "ORDER BY booking_number DESC"
-    else:
-        order_query = "ORDER BY RANDOM()"
+def get_recommendations_query(user_id: int, user_iris_id: int) -> str:
 
     if not user_iris_id:
         query = f"""
@@ -200,7 +220,7 @@ def get_recommendations_query(
                 FROM non_recommendable_offers
                 WHERE user_id = '{user_id}'
                 )
-            {order_query};
+            ORDER BY RANDOM();
         """
     else:
         query = f"""
@@ -222,7 +242,7 @@ def get_recommendations_query(
                 FROM non_recommendable_offers
                 WHERE user_id = '{user_id}'
                 )
-            {order_query};
+            ORDER BY RANDOM();
         """
     return query
 

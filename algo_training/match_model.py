@@ -1,5 +1,8 @@
 import numpy as np
 from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Embedding, Flatten, Input, Dense
+from tensorflow.keras.layers import Lambda, Dot
+from tensorflow.keras.regularizers import l2
 
 
 class MatchModel(Model):

@@ -1,6 +1,10 @@
+import json
+import random
+
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+
 from tensorflow.keras import layers
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Embedding, Flatten, Input, Dense
@@ -25,12 +29,19 @@ import mlflow
 def train(storage_path: str):
 
     # fetch data
-    bookings = pd.read_csv(f"{storage_path}/clean_data.csv")
-    # bookings = pd.read_csv(f"{storage_path}/pos_data_train.csv")
+    bookings = pd.read_csv(
+        f"{storage_path}/clean_data.csv", dtype={"user_id": str, "item_id": str}
+    )
 
-    pos_data_test = pd.read_csv(f"{storage_path}/pos_data_test.csv")
-    pos_data_train = pd.read_csv(f"{storage_path}/pos_data_train.csv")
-    pos_data_eval = pd.read_csv(f"{storage_path}/pos_data_eval.csv")
+    pos_data_test = pd.read_csv(
+        f"{storage_path}/pos_data_test.csv", dtype={"user_id": str, "item_id": str}
+    )
+    pos_data_train = pd.read_csv(
+        f"{storage_path}/pos_data_train.csv", dtype={"user_id": str, "item_id": str}
+    )
+    pos_data_eval = pd.read_csv(
+        f"{storage_path}/pos_data_eval.csv", dtype={"user_id": str, "item_id": str}
+    )
 
     n_users = len(set(bookings.user_id.values))
     n_items = len(set(bookings.item_id.values))

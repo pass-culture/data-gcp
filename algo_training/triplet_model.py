@@ -4,6 +4,7 @@ from tensorflow.keras.layers import Embedding, Flatten, Input, Dense
 from tensorflow.keras.layers import Lambda, Dot
 from tensorflow.keras.regularizers import l2
 from tensorflow.keras.layers.experimental.preprocessing import StringLookup
+from margin_loss import MarginLoss
 
 
 class TripletModel(Model):

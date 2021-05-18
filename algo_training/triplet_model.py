@@ -1,3 +1,4 @@
+import tensorflow as tf
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Embedding, Flatten, Input, Dense
 from tensorflow.keras.layers import Lambda, Dot

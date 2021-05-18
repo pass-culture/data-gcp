@@ -9,7 +9,6 @@ class MatchModel(Model):
     def __init__(self, user_layer, item_layer):
         super().__init__(name="MatchModel")
 
-        # Reuse shared weights for those layers:
         self.user_layer = user_layer
         self.item_layer = item_layer
 

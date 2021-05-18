@@ -1,9 +1,18 @@
+import os
 import json
 import random
+import mlflow
 
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+
+from match_model import MatchModel
+from margin_loss import MarginLoss
+
+from google.cloud import secretmanager
+from google.auth.transport.requests import Request
+from google.oauth2 import id_token
 
 from tensorflow.keras import layers
 from tensorflow.keras.models import Model
@@ -11,25 +20,11 @@ from tensorflow.keras.layers import Embedding, Flatten, Input, Dense
 from tensorflow.keras.layers import Lambda, Dot
 from tensorflow.keras.regularizers import l2
 from triplet_model import TripletModel
-from sklearn.metrics import roc_auc_score
-
-from match_model import MatchModel
-from margin_loss import MarginLoss
-
-# Get secret
-from google.cloud import secretmanager
-
-# Get token for connection
-from google.auth.transport.requests import Request
-from google.oauth2 import id_token
-import os
-import mlflow
 
 
 def train(storage_path: str):
     TRAIN_DIR = "/home/airflow/train"
 
-    # fetch data
     bookings = pd.read_csv(
         f"{storage_path}/clean_data.csv", dtype={"user_id": str, "item_id": str}
     )
@@ -50,15 +45,12 @@ def train(storage_path: str):
     user_ids = bookings["user_id"].unique().tolist()
     item_ids = bookings["item_id"].unique().tolist()
 
-    # mlflow.tensorflow.autolog()
-
     experiment_name = "algo_training_v1"
     experiment = mlflow.get_experiment_by_name(experiment_name)
 
     with mlflow.start_run(experiment_id=experiment.experiment_id):
-        MODEL_DATA_PATH = "tf_bpr_string_input_5_months_reg_0"
         EMBEDDING_SIZE = 64
-        L2_REG = 0  # 1e-6
+        L2_REG = 0
 
         n_epochs = 20
         batch_size = 32
@@ -80,39 +72,34 @@ def train(storage_path: str):
         evaluation = []
         runned_epochs = 0
         for i in range(n_epochs):
-            # Sample new negatives to build different triplets at each epoch
             triplet_inputs = sample_triplets(pos_data_train, item_ids)
             evaluation_triplet_inputs = sample_triplets(pos_data_eval, item_ids)
-            # ds = tf.data.Dataset.from_tensor_slices(triplet_inputs)
 
-            # Fit the model incrementally by doing a single pass over the
-            # sampled triplets.
             print(f"Training epoch {i}")
             train_result = triplet_model.fit(
-                x=triplet_inputs, y=fake_y, shuffle=True, batch_size=64, epochs=1, verbose=2
+                x=triplet_inputs,
+                y=fake_y,
+                shuffle=True,
+                batch_size=64,
+                epochs=1,
+                verbose=2,
+            )
+            mlflow.log_metric(
+                key="Train Loss", value=train_result.history["loss"][0], step=i
             )
 
-            # train.append(train_result.history["loss"][0])
-            # print(train)
             print(f"Evaluation epoch {i}")
             eval_result = triplet_model.evaluate(
                 x=evaluation_triplet_inputs, y=evaluation_fake_train, batch_size=64
             )
-
-            # Log into Mlflow
-            mlflow.log_metric(
-                key="Train Loss", value=train_result.history["loss"][0], step=i
-            )
             mlflow.log_metric(key="Evaluation Loss", value=eval_result, step=i)
 
-            # evaluation.append(eval_result)
             runned_epochs += 1
             if eval_result < best_eval:
-                # tf.saved_model.save(match_model, f"{MODEL_DATA_PATH}/tf_bpr_{i}epochs")
                 best_eval = eval_result
 
                 run_uuid = mlflow.active_run().info.run_uuid
-                export_path = TRAIN_DIR + '/' + run_uuid
+                export_path = TRAIN_DIR + "/" + run_uuid
                 tf.saved_model.save(match_model, export_path)
                 mlflow.log_artifacts(export_path, "model")
 
@@ -136,12 +123,6 @@ def sample_triplets(pos_data, item_ids):
     return [user_ids, pos_item_ids, neg_item_ids]
 
 
-def save_model(storage_path: str, model_name: str):
-    model_path = f"{storage_path}/{model_name}"
-    tf.saved_model.save(match_model, model_path)
-    loaded = tf.saved_model.load(model_path)
-
-
 def get_secret(secret_id: str):
     client = secretmanager.SecretManagerServiceClient()
     GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
@@ -150,7 +131,7 @@ def get_secret(secret_id: str):
     return response.payload.data.decode("UTF-8")
 
 
-def connect_remote_mlflow(client_id, env="dev"):
+def connect_remote_mlflow(client_id, env="ehp"):
     """
     Use this function to connect to the mlflow remote server.
 
@@ -170,7 +151,7 @@ def connect_remote_mlflow(client_id, env="dev"):
 def main():
     STORAGE_PATH = os.environ.get("STORAGE_PATH", "")
     ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "ehp")
-    client_id = get_secret("mlflow_client_id")
+    client_id = get_secret("mlflow_client_id", env=ENV_SHORT_NAME)
     connect_remote_mlflow(client_id)
     train(STORAGE_PATH)
 

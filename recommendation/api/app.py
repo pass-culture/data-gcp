@@ -19,6 +19,9 @@ API_TOKEN = access_secret(GCP_PROJECT, API_TOKEN_SECRET_ID, API_TOKEN_SECRET_VER
 APP_CONFIG = {
     "AB_TESTING_TABLE": os.environ.get("AB_TESTING_TABLE"),
     "NUMBER_OF_RECOMMENDATIONS": int(os.environ.get("NUMBER_OF_RECOMMENDATIONS", 10)),
+    "NUMBER_OF_PRESELECTED_OFFERS": int(
+        os.environ.get("NUMBER_OF_PRESELECTED_OFFERS", 50)
+    ),
     "MODEL_REGION": os.environ.get("MODEL_REGION"),
     "MODEL_NAME": os.environ.get("MODEL_NAME"),
     "MODEL_VERSION": None,  # With none we call the default version (ie the latest)
@@ -87,10 +90,7 @@ def recommendation(user_id: int):
         return "Forbidden", 403
 
     recommendations = get_final_recommendations(
-        user_id,
-        longitude,
-        latitude,
-        APP_CONFIG,
+        user_id, longitude, latitude, APP_CONFIG
     )
 
     return jsonify({"recommended_offers": recommendations})

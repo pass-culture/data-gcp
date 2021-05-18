@@ -91,7 +91,7 @@ def test_get_final_recommendation_for_group_b(
 
 @patch("recommendation.order_offers_by_score_and_diversify_types")
 @patch("recommendation.get_scored_recommendation_for_user")
-@patch("recommendation.get_cold_start_ordered_recommendations")
+@patch("recommendation.get_cold_start_final_recommendations")
 @patch("recommendation.get_intermediate_recommendations_for_user")
 @patch("recommendation.get_cold_start_types")
 @patch("recommendation.get_iris_from_coordinates")
@@ -103,7 +103,7 @@ def test_get_final_recommendation_for_new_user(
     get_iris_from_coordinates_mock: Mock,
     get_cold_start_types: Mock,
     get_intermediate_recommendations_for_user: Mock,
-    get_cold_start_ordered_recommendations: Mock,
+    get_cold_start_final_recommendations: Mock,
     get_scored_recommendation_for_user: Mock,
     order_offers_by_score_and_diversify_types: Mock,
     setup_database: Any,
@@ -121,7 +121,7 @@ def test_get_final_recommendation_for_new_user(
         {"id": 2, "url": "url2", "type": "type2", "item_id": "offer-2", "score": 2},
         {"id": 3, "url": "url3", "type": "type3", "item_id": "offer-3", "score": 3},
     ]
-    get_cold_start_ordered_recommendations.return_value = [3, 2]
+    get_cold_start_final_recommendations.return_value = [3, 2]
     order_offers_by_score_and_diversify_types.return_value = [3, 2]
     get_iris_from_coordinates_mock.return_value = 1
 
@@ -136,44 +136,7 @@ def test_get_final_recommendation_for_new_user(
     assert recommendations == [3, 2]
 
 
-@pytest.mark.parametrize(
-    ["is_cold_start", "cold_start_types", "expected_recommendation"],
-    [
-        (
-            False,
-            [],
-            [
-                {"id": "2", "type": "B", "url": None, "item_id": "offer-2"},
-                {"id": "3", "type": "C", "url": "url", "item_id": "offer-3"},
-                {"id": "5", "type": "E", "url": None, "item_id": "offer-5"},
-                {"id": "6", "type": "B", "url": None, "item_id": "offer-6"},
-            ],
-        ),
-        (
-            True,
-            [],
-            [
-                {"id": "3", "type": "C", "url": "url", "item_id": "offer-3"},
-                {"id": "6", "type": "B", "url": None, "item_id": "offer-6"},
-                {"id": "2", "type": "B", "url": None, "item_id": "offer-2"},
-                {"id": "5", "type": "E", "url": None, "item_id": "offer-5"},
-            ],
-        ),
-        (
-            True,
-            "B",
-            [
-                {"id": "6", "type": "B", "url": None, "item_id": "offer-6"},
-                {"id": "2", "type": "B", "url": None, "item_id": "offer-2"},
-                {"id": "3", "type": "C", "url": "url", "item_id": "offer-3"},
-                {"id": "5", "type": "E", "url": None, "item_id": "offer-5"},
-            ],
-        ),
-    ],
-)
-def test_get_intermediate_recommendation_for_user(
-    setup_database: Any, is_cold_start, cold_start_types, expected_recommendation
-):
+def test_get_intermediate_recommendation_for_user(setup_database: Any):
     # Given
     connection = setup_database
 
@@ -181,55 +144,23 @@ def test_get_intermediate_recommendation_for_user(
     user_id = 111
     user_iris_id = 1
     user_recommendation = get_intermediate_recommendations_for_user(
-        user_id, user_iris_id, is_cold_start, cold_start_types, connection
+        user_id, user_iris_id, connection
     )
 
     # Then
     assert_array_equal(
-        user_recommendation
-        if is_cold_start
-        else sorted(user_recommendation, key=lambda k: k["id"]),
-        expected_recommendation,
+        sorted(user_recommendation, key=lambda k: k["id"]),
+        [
+            {"id": "2", "type": "B", "url": None, "item_id": "offer-2"},
+            {"id": "3", "type": "C", "url": "url", "item_id": "offer-3"},
+            {"id": "5", "type": "E", "url": None, "item_id": "offer-5"},
+            {"id": "6", "type": "B", "url": None, "item_id": "offer-6"},
+        ],
     )
 
 
-@pytest.mark.parametrize(
-    ["is_cold_start", "cold_start_types", "expected_recommendation"],
-    [
-        (
-            False,
-            [],
-            [
-                {"id": "1", "type": "A", "url": None, "item_id": "offer-1"},
-                {"id": "3", "type": "C", "url": "url", "item_id": "offer-3"},
-                {"id": "4", "type": "D", "url": "url", "item_id": "offer-4"},
-                {"id": "5", "type": "E", "url": None, "item_id": "offer-5"},
-            ],
-        ),
-        (
-            True,
-            [],
-            [
-                {"id": "3", "type": "C", "url": "url", "item_id": "offer-3"},
-                {"id": "1", "type": "A", "url": None, "item_id": "offer-1"},
-                {"id": "4", "type": "D", "url": "url", "item_id": "offer-4"},
-                {"id": "5", "type": "E", "url": None, "item_id": "offer-5"},
-            ],
-        ),
-        (
-            True,
-            ["A", "C"],
-            [
-                {"id": "3", "type": "C", "url": "url", "item_id": "offer-3"},
-                {"id": "1", "type": "A", "url": None, "item_id": "offer-1"},
-                {"id": "4", "type": "D", "url": "url", "item_id": "offer-4"},
-                {"id": "5", "type": "E", "url": None, "item_id": "offer-5"},
-            ],
-        ),
-    ],
-)
 def test_get_intermediate_recommendation_for_user_with_no_iris(
-    setup_database: Any, is_cold_start, cold_start_types, expected_recommendation
+    setup_database: Any,
 ):
     # Given
     connection = setup_database
@@ -238,15 +169,18 @@ def test_get_intermediate_recommendation_for_user_with_no_iris(
     user_id = 222
     user_iris_id = None
     user_recommendation = get_intermediate_recommendations_for_user(
-        user_id, user_iris_id, is_cold_start, cold_start_types, connection
+        user_id, user_iris_id, connection
     )
 
     # Then
     assert_array_equal(
-        user_recommendation
-        if is_cold_start
-        else sorted(user_recommendation, key=lambda k: k["id"]),
-        expected_recommendation,
+        sorted(user_recommendation, key=lambda k: k["id"]),
+        [
+            {"id": "1", "type": "A", "url": None, "item_id": "offer-1"},
+            {"id": "3", "type": "C", "url": "url", "item_id": "offer-3"},
+            {"id": "4", "type": "D", "url": "url", "item_id": "offer-4"},
+            {"id": "5", "type": "E", "url": None, "item_id": "offer-5"},
+        ],
     )
 
 

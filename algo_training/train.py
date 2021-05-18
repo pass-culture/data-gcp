@@ -12,15 +12,14 @@ from sklearn.metrics import roc_auc_score
 from match_model import MatchModel
 from margin_loss import MarginLoss
 
-# Get secret 
+# Get secret
 from google.cloud import secretmanager_v1
 
-# Get token for connection 
+# Get token for connection
 from google.auth.transport.requests import Request
 from google.oauth2 import id_token
 import os
 import mlflow
-
 
 
 def train(storage_path: str):
@@ -38,7 +37,6 @@ def train(storage_path: str):
     triplet_model = TripletModel(n_users, n_items, latent_dim=64, l2_reg=1e-6)
     match_model = MatchModel(triplet_model.user_layer, triplet_model.item_layer)
 
-
     with mlflow.start_run():
         MODEL_DATA_PATH = "tf_bpr_string_input_5_months_reg_0"
         EMBEDDING_SIZE = 64
@@ -47,12 +45,10 @@ def train(storage_path: str):
         n_epochs = 20
         batch_size = 32
 
-
         triplet_model = TripletModel(
             user_ids, item_ids, latent_dim=EMBEDDING_SIZE, l2_reg=L2_REG
         )
         match_model = MatchModel(triplet_model.user_layer, triplet_model.item_layer)
-
 
         fake_y = np.array(["1"] * pos_data_train["user_id"].shape[0], dtype=object)
         evaluation_fake_train = np.array(
@@ -83,7 +79,7 @@ def train(storage_path: str):
             eval_result = triplet_model.evaluate(
                 x=evaluation_triplet_inputs, y=evaluation_fake_train, batch_size=64
             )
-            # LOG into MLFLOW 
+            # LOG into MLFLOW
             mlflow.log_metric(key="eval_result", value=eval_result, step=i)
 
             evaluation.append(eval_result)
@@ -134,21 +130,21 @@ def save_model(storage_path: str, model_name: str):
     loaded = tf.saved_model.load(model_path)
 
 
-def get_secret(secret_name: str)
+def get_secret(secret_name: str):
     client = secretmanager_v1.SecretManagerServiceClient()
-    secret = client.get_secret(request={'mlflow_client_id': "mlflow_client_id"})
+    secret = client.get_secret(request={"mlflow_client_id": "mlflow_client_id"})
     return secret
 
 
 def connect_remote_mlflow(client_id, env="dev"):
     """
     Use this function to connect to the mlflow remote server.
-    
-    client_id : the oauth iap client id (in 1password)    
+
+    client_id : the oauth iap client id (in 1password)
     """
 
-    MLFLOW_EHP_URI = 'https://mlflow-ehp.internal-passculture.app/'
-    MLFLOW_PROD_URI = 'https://mlflow.internal-passculture.app/'
+    MLFLOW_EHP_URI = "https://mlflow-ehp.internal-passculture.app/"
+    MLFLOW_PROD_URI = "https://mlflow.internal-passculture.app/"
 
     client_id = get_secret("mlflow_client_id")
 

@@ -13,7 +13,7 @@ from match_model import MatchModel
 from margin_loss import MarginLoss
 
 # Get secret
-from google.cloud import secretmanager_v1
+from google.cloud import secretmanager
 
 # Get token for connection
 from google.auth.transport.requests import Request
@@ -131,10 +131,18 @@ def save_model(storage_path: str, model_name: str):
     loaded = tf.saved_model.load(model_path)
 
 
-def get_secret():  # secret_name: str):
-    client = secretmanager_v1.SecretManagerServiceClient()
-    secret = client.get_secret(request={"mlflow_client_id": "mlflow_client_id"})
-    return secret
+def get_secret(secret_id: str):
+    client = secretmanager.SecretManagerServiceClient()
+    # Build the resource name of the secret version.
+    GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
+    name = f"projects/{GCP_PROJECT_ID}/secrets/{secret_id}/versions/1"
+
+    # Access the secret version.
+    response = client.access_secret_version(name=name)
+
+    # secret = client.get_secret(request={"mlflow_client_id": "mlflow_client_id"})
+    # return secret
+    return response.payload.data.decode("UTF-8")
 
 
 def connect_remote_mlflow(client_id, env="dev"):
@@ -158,7 +166,7 @@ def main():
     STORAGE_PATH = os.environ.get("STORAGE_PATH", "")
     ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "ehp")
     # mlflow.set_tracking_uri("https://mlflow-ehp.internal-passculture.app/")
-    client_id = get_secret()
+    client_id = get_secret("mlflow_client_id")
     connect_remote_mlflow(client_id)
     train(STORAGE_PATH)
 

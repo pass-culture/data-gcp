@@ -34,9 +34,6 @@ def train(storage_path: str):
     n_users = len(set(bookings.user_id.values))
     n_items = len(set(bookings.item_id.values))
 
-    triplet_model = TripletModel(n_users, n_items, latent_dim=64, l2_reg=1e-6)
-    match_model = MatchModel(triplet_model.user_layer, triplet_model.item_layer)
-
     with mlflow.start_run():
         MODEL_DATA_PATH = "tf_bpr_string_input_5_months_reg_0"
         EMBEDDING_SIZE = 64

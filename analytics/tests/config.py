@@ -178,6 +178,7 @@ BIGQUERY_SCHEMAS = {
         "venue_booking_email": "STRING",
         "venue_last_provider_id": "STRING",
         "venue_is_virtual": "BOOLEAN",
+        "venue_is_permanent" : "BOOLEAN",
         "venue_comment": "STRING",
         "venue_validation_token": "STRING",
         "venue_public_name": "STRING",

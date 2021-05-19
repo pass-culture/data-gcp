@@ -123,6 +123,14 @@ copy_table_to_analytics = BigQueryOperator(
             from unnest(event_params) event_params
             where event_params.key = 'firebase_previous_screen'
         ) as firebase_previous_screen,
+        (select event_params.value.int_value
+            from unnest(event_params) event_params
+            where event_params.key = 'ga_session_number'
+        ) as session_number,
+        (select event_params.value.int_value
+            from unnest(event_params) event_params
+            where event_params.key = 'ga_session_id'
+        ) as session_id,
         FROM {GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.firebase_events_{EXECUTION_DATE}
         """,
     use_legacy_sql=False,

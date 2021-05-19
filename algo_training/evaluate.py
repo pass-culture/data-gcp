@@ -1,13 +1,12 @@
 import os
+import mlflow
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-import mlflow
 import mlflow.tensorflow
+from match_model import MatchModel
 
-import tqdm
 from scipy.spatial.distance import cosine
-from mlflow import pyfunc
 
 from google.cloud import secretmanager
 from google.auth.transport.requests import Request
@@ -43,8 +42,12 @@ TYPE_LIST = [
 
 
 def evaluate(model, storage_path: str):
-    pos_data_test = pd.read_csv(f"{storage_path}/pos_data_test.csv", dtype={"user_id": str, "item_id": str})
-    pos_data_train = pd.read_csv(f"{storage_path}/pos_data_train.csv", dtype={"user_id": str, "item_id": str})
+    pos_data_test = pd.read_csv(
+        f"{storage_path}/pos_data_test.csv", dtype={"user_id": str, "item_id": str}
+    )
+    pos_data_train = pd.read_csv(
+        f"{storage_path}/pos_data_train.csv", dtype={"user_id": str, "item_id": str}
+    )
 
     metrics = compute_metrics(10, pos_data_train, pos_data_test, model)
     mlflow.log_metrics(metrics)
@@ -116,7 +119,7 @@ def compute_metrics(k, pos_data_train, pos_data_test, match_model):
     serendipity = []
     new_types_ratio = []
 
-    for user_id in tqdm.tqdm(all_test_user_ids):
+    for user_id in all_test_user_ids:
         user_count += 1
 
         pos_item_train = pos_data_train[pos_data_train["user_id"] == user_id]
@@ -207,12 +210,8 @@ def compute_metrics(k, pos_data_train, pos_data_test, match_model):
     return metrics
 
 
-def load_model(storage_path: str):
-    model_path = f"{storage_path}/model"
-    loaded_model = tf.saved_model.load(model_path)
+F
 
-    pyfunc_model = pyfunc.load_model(mlflow.get_artifact_uri("model"))
-    return loaded_model
 
 def get_secret(secret_id: str):
     client = secretmanager.SecretManagerServiceClient()
@@ -251,7 +250,9 @@ def main():
     experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
     run_id = mlflow.list_run_infos(experiment_id)[0].run_id
     with mlflow.start_run(run_id=run_id):
-        loaded_model = tf.keras.models.load_model(mlflow.get_artifact_uri("model"))
+        loaded_model = tf.keras.models.load_model(
+            mlflow.get_artifact_uri("model"), custom_objects={"MatchModel": MatchModel}
+        )
         evaluate(loaded_model, STORAGE_PATH)
 
 

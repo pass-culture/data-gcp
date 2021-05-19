@@ -248,11 +248,11 @@ def main():
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
 
     experiment_name = "algo_training_v1"
-    experiment_id = mlflow.get_experiment_by_name(experiment_name)
-    run_id = mlflow.list_run_infos(experiment_id)[0]
+    experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
+    run_id = mlflow.list_run_infos(experiment_id)[0].run_id
     with mlflow.start_run(run_id=run_id):
-        pyfunc_model = pyfunc.load_model(mlflow.get_artifact_uri("model"))
-        evaluate(pyfunc_model, STORAGE_PATH)
+        loaded_model = tf.keras.models.load_model(mlflow.get_artifact_uri("model"))
+        evaluate(loaded_model, STORAGE_PATH)
 
 
 if __name__ == "__main__":

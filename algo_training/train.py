@@ -150,8 +150,8 @@ def connect_remote_mlflow(client_id, env="ehp"):
 def main():
     STORAGE_PATH = os.environ.get("STORAGE_PATH", "")
     ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "ehp")
-    client_id = get_secret("mlflow_client_id", env=ENV_SHORT_NAME)
-    connect_remote_mlflow(client_id)
+    client_id = get_secret("mlflow_client_id")
+    connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
     train(STORAGE_PATH)
     print("------- TRAINING DONE -------")
 

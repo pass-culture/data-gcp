@@ -185,7 +185,12 @@ with DAG(
         )
 
         start_drop_restore >> drop_table_task >> filter_column_task
-        filter_column_task >> export_task >> delete_temp_table_task >> compose_files_task
+        (
+            filter_column_task
+            >> export_task
+            >> delete_temp_table_task
+            >> compose_files_task
+        )
         compose_files_task >> create_table_task >> end_data_prep
 
     def create_restore_task(table_name: str):

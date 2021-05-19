@@ -116,5 +116,12 @@ python feature_engineering.py'
     )
 
     start >> gce_instance_start
-    gce_instance_start >> fetch_code >> data_collect >> preprocess >> feature_engineering >> gce_instance_stop
+    (
+        gce_instance_start
+        >> fetch_code
+        >> data_collect
+        >> preprocess
+        >> feature_engineering
+        >> gce_instance_stop
+    )
     gce_instance_stop >> end

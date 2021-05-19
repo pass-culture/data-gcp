@@ -191,6 +191,7 @@ ENRICHED_OFFER_DATA_INPUT = {
             "venue_department_code": "93",
             "venue_is_virtual": False,
             "venue_fields_updated": "{}",
+            "venue_is_permanent": True,
         },
         {
             "venue_managing_offerer_id": "4",
@@ -230,6 +231,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "passculture_pro_url": "https://pro.passculture.beta.gouv.fr/offres/AM",
         "webapp_url": "https://app.passculture.beta.gouv.fr/offre/details/AM",
         "first_booking_cnt": 1,
+        "venue_is_permanent": True,
     },
     {
         "offer_id": "4",

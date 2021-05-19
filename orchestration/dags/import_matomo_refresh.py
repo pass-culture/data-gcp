@@ -420,14 +420,26 @@ aggregate_matomo_user_events = BigQueryOperator(
 )
 
 
-end_import >> [
-    preprocess_log_action_task,
-    preprocess_log_link_visit_action_task,
-    copy_log_conversion_task,
-    copy_goal_task,
-] >> end_preprocess
+(
+    end_import
+    >> [
+        preprocess_log_action_task,
+        preprocess_log_link_visit_action_task,
+        copy_log_conversion_task,
+        copy_goal_task,
+    ]
+    >> end_preprocess
+)
 
-end_import >> transform_matomo_events >> add_screen_view_matomo_events >> copy_events_to_analytics >> aggregate_matomo_offer_events >> aggregate_matomo_user_events >> end_preprocess
+(
+    end_import
+    >> transform_matomo_events
+    >> add_screen_view_matomo_events
+    >> copy_events_to_analytics
+    >> aggregate_matomo_offer_events
+    >> aggregate_matomo_user_events
+    >> end_preprocess
+)
 
 end_dag = DummyOperator(task_id="end_dag", dag=dag)
 

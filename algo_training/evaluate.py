@@ -183,7 +183,8 @@ def compute_metrics(k, pos_data_train, pos_data_test, match_model):
                 serendipity.append(user_serendipity)
 
         metrics = {
-            f"recall-at-{k}": (recommended_hidden_items_number / hidden_items_number) * 100
+            f"recall-at-{k}": (recommended_hidden_items_number / hidden_items_number)
+            * 100
             if hidden_items_number > 0
             else None,
             f"precision-at-{k}": (
@@ -201,7 +202,9 @@ def compute_metrics(k, pos_data_train, pos_data_test, match_model):
             f"new_types_ratio-at-{k}": np.mean(new_types_ratio)
             if len(new_types_ratio) > 0
             else None,
-            f"serendipity-at-{k}": np.mean(serendipity) if len(serendipity) > 0 else None,
+            f"serendipity-at-{k}": np.mean(serendipity)
+            if len(serendipity) > 0
+            else None,
         }
 
         if user_count % 100 == 0:

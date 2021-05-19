@@ -586,7 +586,7 @@ ENRICHED_VENUE_DATA_INPUT = {
             "offer_type": "EventType.AUDIOVISUEL",
             "booking_email": "test@example.com",
             "offer_creation_date": datetime.now().replace(microsecond=0),
-        }
+        }git
     ],
     "offerer": [{"offerer_id": "1", "offerer_name": "An offerer"}],
     "payment": [],

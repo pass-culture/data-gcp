@@ -210,9 +210,6 @@ def compute_metrics(k, pos_data_train, pos_data_test, match_model):
     return metrics
 
 
-F
-
-
 def get_secret(secret_id: str):
     client = secretmanager.SecretManagerServiceClient()
     GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")

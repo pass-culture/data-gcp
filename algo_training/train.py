@@ -16,8 +16,7 @@ from google.oauth2 import id_token
 
 from tensorflow.keras import layers
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Embedding, Flatten, Input, Dense
-from tensorflow.keras.layers import Lambda, Dot
+from tensorflow.keras.layers import Embedding, Flatten, Input, Dense, Lambda, Dot
 from tensorflow.keras.regularizers import l2
 from triplet_model import TripletModel
 
@@ -154,6 +153,7 @@ def main():
     client_id = get_secret("mlflow_client_id", env=ENV_SHORT_NAME)
     connect_remote_mlflow(client_id)
     train(STORAGE_PATH)
+    print("------- TRAINING DONE -------")
 
 
 if __name__ == "__main__":

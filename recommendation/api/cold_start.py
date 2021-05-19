@@ -30,7 +30,7 @@ def get_cold_start_status(user_id: int, connection) -> bool:
     """
     query_result = connection.execute(cold_start_query).fetchall()
 
-    user_cold_start_status = query_result[0][0] < 3
+    user_cold_start_status = query_result[0][0] < 2
 
     return user_cold_start_status
 

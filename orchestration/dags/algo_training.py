@@ -9,7 +9,7 @@ from airflow.contrib.operators.gcp_compute_operator import (
     GceInstanceStopOperator,
 )
 from dependencies.slack_alert import task_fail_slack_alert
-from dependencies.config import GCP_PROJECT_ID, GCE_ZONE
+from dependencies.config import GCP_PROJECT_ID, GCE_ZONE, ENV_SHORT_NAME
 
 
 GCE_INSTANCE = os.environ.get("GCE_TRAINING_INSTANCE", "algo-training-dev")
@@ -21,6 +21,7 @@ STORAGE_PATH = f"gs://{MLFLOW_BUCKET_NAME}/algo_training/algo_training_{DATE}"
 DEFAULT = f""" cd data-gcp/algo_training
 export PATH="/opt/conda/bin:/opt/conda/condabin:"+$PATH
 export STORAGE_PATH={STORAGE_PATH}
+export ENV_SHORT_NAME={ENV_SHORT_NAME}
 """
 
 default_args = {
@@ -108,6 +109,51 @@ python feature_engineering.py'
         dag=dag,
     )
 
+    TRAINING = f""" '{DEFAULT}
+python train.py'
+"""
+
+    training = BashOperator(
+        task_id="training",
+        bash_command=f"""
+        gcloud compute ssh {GCE_INSTANCE} \
+        --zone {GCE_ZONE} \
+        --project {GCP_PROJECT_ID} \
+        --command {TRAINING}
+        """,
+        dag=dag,
+    )
+
+    POSTPROCESSING = f""" '{DEFAULT}
+python postprocess.py'
+"""
+
+    postprocess = BashOperator(
+        task_id="postprocess",
+        bash_command=f"""
+        gcloud compute ssh {GCE_INSTANCE} \
+        --zone {GCE_ZONE} \
+        --project {GCP_PROJECT_ID} \
+        --command {POSTPROCESSING}
+        """,
+        dag=dag,
+    )
+
+    EVALUATION = f""" '{DEFAULT}
+python evaluate.py'
+"""
+
+    evaluate = BashOperator(
+        task_id="evaluate",
+        bash_command=f"""
+        gcloud compute ssh {GCE_INSTANCE} \
+        --zone {GCE_ZONE} \
+        --project {GCP_PROJECT_ID} \
+        --command {EVALUATION}
+        """,
+        dag=dag,
+    )
+
     gce_instance_stop = GceInstanceStopOperator(
         project_id=GCP_PROJECT_ID,
         zone=GCE_ZONE,
@@ -116,5 +162,7 @@ python feature_engineering.py'
     )
 
     start >> gce_instance_start
-    gce_instance_start >> fetch_code >> data_collect >> preprocess >> feature_engineering >> gce_instance_stop
+    gce_instance_start >> fetch_code >> data_collect >> preprocess
+    preprocess >> feature_engineering >> training >> postprocess
+    postprocess >> evaluate >> gce_instance_stop
     gce_instance_stop >> end

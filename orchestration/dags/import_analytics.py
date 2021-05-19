@@ -211,4 +211,12 @@ create_enriched_data_tasks = [
 
 end = DummyOperator(task_id="end", dag=dag)
 
-start >> import_tables_to_clean_tasks >> end_import_table_to_clean >> import_tables_to_analytics_tasks >> end_import >> create_enriched_data_tasks >> end
+(
+    start
+    >> import_tables_to_clean_tasks
+    >> end_import_table_to_clean
+    >> import_tables_to_analytics_tasks
+    >> end_import
+    >> create_enriched_data_tasks
+    >> end
+)

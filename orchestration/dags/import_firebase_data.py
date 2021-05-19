@@ -170,4 +170,9 @@ start >> env_switcher
 env_switcher >> dummy_task_for_branch >> copy_table_to_env
 env_switcher >> copy_table >> delete_table >> copy_table_to_env
 copy_table_to_env >> copy_table_to_clean >> copy_table_to_analytics >> end
-copy_table_to_env >> aggregate_firebase_offer_events >> aggregate_firebase_user_events >> end
+(
+    copy_table_to_env
+    >> aggregate_firebase_offer_events
+    >> aggregate_firebase_user_events
+    >> end
+)

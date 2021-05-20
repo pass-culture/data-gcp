@@ -240,7 +240,6 @@ def connect_remote_mlflow(client_id, env="ehp"):
 
 def main():
     STORAGE_PATH = os.environ.get("STORAGE_PATH", "")
-    # model = load_model(STORAGE_PATH)
 
     ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "ehp")
     client_id = get_secret("mlflow_client_id")
@@ -254,6 +253,7 @@ def main():
             mlflow.get_artifact_uri("model"), custom_objects={"MatchModel": MatchModel}
         )
         evaluate(loaded_model, STORAGE_PATH)
+    print("------- EVALUATE DONE -------")
 
 
 if __name__ == "__main__":

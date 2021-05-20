@@ -129,7 +129,12 @@ def test_get_final_recommendation_for_new_user(
     recommendations = get_final_recommendations(
         user_id, 2.331289, 48.830719, app_config
     )
-    get_intermediate_recommendations_for_user.assert_called()
+    try:
+        get_intermediate_recommendations_for_user.assert_called()
+    except AssertionError:
+        get_cold_start_final_recommendations.assert_called()
+    # User should be either in cold start or algo
+
     save_recommendation_mock.assert_called()
 
     # Then

@@ -87,7 +87,9 @@ def train(storage_path: str):
 
             print(f"Evaluation epoch {i}")
             eval_result = triplet_model.evaluate(
-                x=evaluation_triplet_inputs, y=evaluation_fake_train, batch_size=batch_size
+                x=evaluation_triplet_inputs,
+                y=evaluation_fake_train,
+                batch_size=batch_size,
             )
             mlflow.log_metric(key="Evaluation Loss", value=eval_result, step=i)
 

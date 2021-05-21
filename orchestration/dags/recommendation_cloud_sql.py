@@ -224,20 +224,21 @@ with DAG(
     restore_tasks[-1] >> end_drop_restore
 
     recreate_indexes_query = """
-        CREATE INDEX IF NOT EXISTS idx_stock_id                      ON public.stock                    USING btree (stock_id);
-        CREATE INDEX IF NOT EXISTS idx_stock_offerid                 ON public.stock                    USING btree ("offer_id");
-        CREATE INDEX IF NOT EXISTS idx_booking_stockid               ON public.booking                  USING btree ("stock_id");
-        CREATE INDEX IF NOT EXISTS idx_mediation_offerid             ON public.mediation                USING btree ("offerId");
-        CREATE INDEX IF NOT EXISTS idx_offer_id                      ON public.offer                    USING btree (offer_id);
-        CREATE INDEX IF NOT EXISTS idx_offer_type                    ON public.offer                    USING btree (offer_type);
-        CREATE INDEX IF NOT EXISTS idx_offer_venueid                 ON public.offer                    USING btree ("venue_id");
-        CREATE INDEX IF NOT EXISTS idx_venue_id                      ON public.venue                    USING btree (venue_id);
-        CREATE INDEX IF NOT EXISTS idx_venue_managingoffererid       ON public.venue                    USING btree ("venue_managing_offerer_id");
-        CREATE INDEX IF NOT EXISTS idx_offerer_id                    ON public.offerer                  USING btree (offerer_id);
-        CREATE INDEX IF NOT EXISTS idx_iris_venues_mv_irisid         ON public.iris_venues_mv           USING btree (iris_id);
-        CREATE INDEX IF NOT EXISTS idx_non_recommendable_userid      ON public.non_recommendable_offers USING btree (user_id);
-        CREATE INDEX IF NOT EXISTS idx_offer_recommendable_venue_id  ON public.recommendable_offers     USING btree (venue_id);
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_id ON public.recommendable_offers     USING btree (offer_id);
+        CREATE INDEX IF NOT EXISTS idx_stock_id                      ON public.stock                       USING btree (stock_id);
+        CREATE INDEX IF NOT EXISTS idx_stock_offerid                 ON public.stock                       USING btree ("offer_id");
+        CREATE INDEX IF NOT EXISTS idx_booking_stockid               ON public.booking                     USING btree ("stock_id");
+        CREATE INDEX IF NOT EXISTS idx_mediation_offerid             ON public.mediation                   USING btree ("offerId");
+        CREATE INDEX IF NOT EXISTS idx_offer_id                      ON public.offer                       USING btree (offer_id);
+        CREATE INDEX IF NOT EXISTS idx_offer_type                    ON public.offer                       USING btree (offer_type);
+        CREATE INDEX IF NOT EXISTS idx_offer_venueid                 ON public.offer                       USING btree ("venue_id");
+        CREATE INDEX IF NOT EXISTS idx_venue_id                      ON public.venue                       USING btree (venue_id);
+        CREATE INDEX IF NOT EXISTS idx_venue_managingoffererid       ON public.venue                       USING btree ("venue_managing_offerer_id");
+        CREATE INDEX IF NOT EXISTS idx_offerer_id                    ON public.offerer                     USING btree (offerer_id);
+        CREATE INDEX IF NOT EXISTS idx_iris_venues_mv_irisid         ON public.iris_venues_mv              USING btree (iris_id);
+        CREATE INDEX IF NOT EXISTS idx_non_recommendable_userid      ON public.non_recommendable_offers    USING btree (user_id);
+        CREATE INDEX IF NOT EXISTS idx_offer_recommendable_venue_id  ON public.recommendable_offers        USING btree (venue_id);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_id ON public.recommendable_offers        USING btree (offer_id);
+        CREATE INDEX IF NOT EXISTS idx_number_of_bookings_per_user   ON public.number_of_bookings_per_user USING btree ("user_id");
     """
 
     recreate_indexes_task = CloudSqlQueryOperator(
@@ -268,10 +269,18 @@ with DAG(
         autocommit=True,
     )
 
+    refresh_number_of_bookings_per_user = CloudSqlQueryOperator(
+        task_id="refresh_number_of_bookings_per_user",
+        gcp_cloudsql_conn_id="proxy_postgres_tcp",
+        sql="REFRESH MATERIALIZED VIEW number_of_bookings_per_user;",
+        autocommit=True,
+    )
+
     refresh_materialized_views_tasks = [
         refresh_recommendable_offers,
         refresh_non_recommendable_offers,
         refresh_iris_venues_mv,
+        refresh_number_of_bookings_per_user,
     ]
 
     end = DummyOperator(task_id="end")

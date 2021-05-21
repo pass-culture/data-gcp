@@ -28,9 +28,9 @@ def get_cold_start_status(user_id: int, connection) -> bool:
         FROM number_of_bookings_per_user
         WHERE user_id='{user_id}';
     """
-    query_result = connection.execute(cold_start_query).fetchall()
-
-    user_cold_start_status = query_result[0][0] < 2
+    query_result = connection.execute(cold_start_query).fetchone()
+    bookings_count = query_result[0] if query_result is not None else 0
+    user_cold_start_status = bookings_count < 2
 
     return user_cold_start_status
 

@@ -27,3 +27,10 @@ class MatchModel(Model):
         pos_similarity = self.dot([user_embedding, pos_item_embedding])
 
         return pos_similarity
+
+    def get_config(self):
+        return {"user_layer": self.user_layer, "item_layer": self.item_layer}
+
+    @classmethod
+    def from_config(cls, config):
+        return cls(**config)

@@ -57,7 +57,7 @@ def get_final_recommendations(
     connection = create_db_connection()
 
     request_response = connection.execute(
-        f"""SELECT groupid FROM {ab_testing_table} WHERE CAST(userid AS BIGINT)={user_id}"""
+        f"""SELECT groupid FROM {ab_testing_table} WHERE userid='{user_id}'"""
     ).scalar()
 
     if not request_response:

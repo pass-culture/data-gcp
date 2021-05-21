@@ -24,9 +24,9 @@ MACRO_CATEGORIES_TYPE_MAPPING = {
 
 def get_cold_start_status(user_id: int, connection) -> bool:
     cold_start_query = f"""
-        SELECT count(*)
-        FROM booking
-        WHERE user_id = '{user_id}';
+        SELECT bookings_count
+        FROM number_of_bookings_per_user
+        WHERE user_id='{user_id}';
     """
     query_result = connection.execute(cold_start_query).fetchall()
 

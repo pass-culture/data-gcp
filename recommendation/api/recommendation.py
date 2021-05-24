@@ -258,7 +258,7 @@ def get_scored_recommendation_for_user(
     model_name: str,
     version: str,
 ) -> List[Dict[str, int]]:
-    offers_ids = [recommendation["id"] for recommendation in user_recommendations]
+    offers_ids = [recommendation["item_id"] for recommendation in user_recommendations]
     user_to_rank = [user_id for reco in user_recommendations]
     instances = dict()
     instances["input_1"] = user_to_rank
@@ -266,6 +266,7 @@ def get_scored_recommendation_for_user(
     predicted_scores = predict_score(
         model_region, GCP_PROJECT, model_name, [instances], version
     )
+    print("predicted_scores[0]: ",predicted_scores[0])
     return [
         {**recommendation, "score": predicted_scores[i]}
         for i, recommendation in enumerate(user_recommendations)

@@ -337,11 +337,9 @@ def _get_offers_grouped_by_type(offers: List[Dict[str, Any]]) -> Dict:
     for offer in offers:
         offer_type = offer["type"]
         offer_product_id = offer["product_id"]
-        if _isInList(offers_by_type, offer_product_id):
-            continue
-        else:
             if offer_type in offers_by_type.keys():
-                offers_by_type[offer_type].append(offer)
+                if not _isInList(offers_by_type[offer_type], offer_product_id):
+                    offers_by_type[offer_type].append(offer)
             else:
                 offers_by_type[offer_type] = [offer]
     return offers_by_type
@@ -354,12 +352,9 @@ def _get_number_of_offers_and_max_score_by_type(type_and_offers: Tuple) -> Tuple
     )
 
 
-def _isInList(dict_obj, ValueToFind):
-    for key, value in dict_obj.items():
+def _isInList(offers, product_id):
+    for offer in offers:
         # Check if value is of dict type
-        if isinstance(value, dict):
-            continue
-        else:
-            if value == ValueToFind:
-                return True
+        if offer["product_id"] == product_id:
+            return True
     return False

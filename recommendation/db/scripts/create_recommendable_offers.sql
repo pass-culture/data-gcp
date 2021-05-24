@@ -74,6 +74,7 @@ LANGUAGE plpgsql;
 DROP FUNCTION IF EXISTS get_recommendable_offers CASCADE;
 CREATE OR REPLACE FUNCTION get_recommendable_offers()
 RETURNS TABLE (offer_id varchar,
+               product_id varchar,
                venue_id varchar,
                type VARCHAR,
                name VARCHAR,
@@ -86,6 +87,7 @@ BEGIN
     RETURN QUERY
     SELECT DISTINCT ON (offer.offer_id)
             offer.offer_id            AS offer_id,
+            offer.offer_product_id    AS product_id,
             offer."venue_id"          AS venue_id,
             offer.offer_type          AS type,
             offer.offer_name          AS name,

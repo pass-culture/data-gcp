@@ -266,7 +266,6 @@ def get_scored_recommendation_for_user(
     predicted_scores = predict_score(
         model_region, GCP_PROJECT, model_name, [instances], version
     )
-    print("predicted_scores[0]: ",predicted_scores[0])
     return [
         {**recommendation, "score": predicted_scores[i]}
         for i, recommendation in enumerate(user_recommendations)

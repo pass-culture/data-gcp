@@ -2,6 +2,8 @@ import collections
 import datetime
 import os
 import random
+import numpy as np
+import json
 from typing import Any, Dict, List, Tuple
 
 import pytz
@@ -91,6 +93,7 @@ def get_final_recommendations(
             user_id, user_iris_id, connection
         )
         scored_recommendation_for_user = get_scored_recommendation_for_user(
+            user_id,
             recommendations_for_user,
             app_config["MODEL_REGION"],
             app_config["MODEL_NAME"],
@@ -119,8 +122,7 @@ def save_recommendation(user_id: int, recommendations: List[int], cursor):
 
 
 def get_cold_start_final_recommendations(
-    recommendations: List[Dict[str, Any]],
-    number_of_recommendations: int,
+    recommendations: List[Dict[str, Any]], number_of_recommendations: int
 ):
     cold_start_recommendations = [
         recommendation["id"] for recommendation in recommendations
@@ -191,16 +193,20 @@ def get_cold_start_recommendations_for_user(
 
 
 def get_intermediate_recommendations_for_user(
-    user_id: int,
-    user_iris_id: int,
-    connection,
+    user_id: int, user_iris_id: int, connection
 ) -> List[Dict[str, Any]]:
 
     recommendations_query = get_recommendations_query(user_id, user_iris_id)
     query_result = connection.execute(recommendations_query).fetchall()
 
     user_recommendation = [
-        {"id": row[0], "type": row[1], "url": row[2], "item_id": row[3]}
+        {
+            "id": row[0],
+            "type": row[1],
+            "url": row[2],
+            "item_id": row[3],
+            "product_id": row[4],
+        }
         for row in query_result
     ]
 
@@ -211,7 +217,7 @@ def get_recommendations_query(user_id: int, user_iris_id: int) -> str:
 
     if not user_iris_id:
         query = f"""
-            SELECT offer_id, type, url, item_id
+            SELECT offer_id, type, url, item_id, product_id
             FROM recommendable_offers
             WHERE is_national = True or url IS NOT NULL
             AND offer_id NOT IN
@@ -220,11 +226,10 @@ def get_recommendations_query(user_id: int, user_iris_id: int) -> str:
                 FROM non_recommendable_offers
                 WHERE user_id = '{user_id}'
                 )
-            ORDER BY RANDOM();
         """
     else:
         query = f"""
-            SELECT offer_id, type, url, item_id
+            SELECT offer_id, type, url, item_id, product_id
             FROM recommendable_offers
             WHERE
                 (
@@ -242,20 +247,24 @@ def get_recommendations_query(user_id: int, user_iris_id: int) -> str:
                 FROM non_recommendable_offers
                 WHERE user_id = '{user_id}'
                 )
-            ORDER BY RANDOM();
         """
     return query
 
 
 def get_scored_recommendation_for_user(
+    user_id: int,
     user_recommendations: List[Dict[str, Any]],
     model_region: str,
     model_name: str,
     version: str,
 ) -> List[Dict[str, int]]:
     offers_ids = [recommendation["id"] for recommendation in user_recommendations]
+    user_to_rank = [user_id for reco in user_recommendations]
+    instances = dict()
+    instances["input_1"] = user_to_rank
+    instances["input_2"] = offers_ids
     predicted_scores = predict_score(
-        model_region, GCP_PROJECT, model_name, offers_ids, version
+        model_region, GCP_PROJECT, model_name, [instances], version
     )
     return [
         {**recommendation, "score": predicted_scores[i]}
@@ -327,10 +336,14 @@ def _get_offers_grouped_by_type(offers: List[Dict[str, Any]]) -> Dict:
     offers_by_type = dict()
     for offer in offers:
         offer_type = offer["type"]
-        if offer_type in offers_by_type.keys():
-            offers_by_type[offer_type].append(offer)
+        offer_product_id = offer["product_id"]
+        if _isInList(offers_by_type, offer_product_id):
+            continue
         else:
-            offers_by_type[offer_type] = [offer]
+            if offer_type in offers_by_type.keys():
+                offers_by_type[offer_type].append(offer)
+            else:
+                offers_by_type[offer_type] = [offer]
     return offers_by_type
 
 
@@ -339,3 +352,14 @@ def _get_number_of_offers_and_max_score_by_type(type_and_offers: Tuple) -> Tuple
         len(type_and_offers[1]),
         max([offer["score"] for offer in type_and_offers[1]]),
     )
+
+
+def _isInList(dict_obj, ValueToFind):
+    for key, value in dict_obj.items():
+        # Check if value is of dict type
+        if isinstance(value, dict):
+            continue
+        else:
+            if value == ValueToFind:
+                return True
+    return False

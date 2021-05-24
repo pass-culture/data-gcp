@@ -22,10 +22,9 @@ APP_CONFIG = {
     "NUMBER_OF_PRESELECTED_OFFERS": int(
         os.environ.get("NUMBER_OF_PRESELECTED_OFFERS", 50)
     ),
-    "MODEL_REGION": os.environ.get("MODEL_REGION", "europe-west1"),
-    "MODEL_NAME": os.environ.get("MODEL_NAME", "test_44k"),
-    "MODEL_VERSION": os.environ.get(
-        "MODEL_VERSION", "tf_bpr_string_input"
+    "MODEL_REGION": os.environ.get("MODEL_REGION"),
+    "MODEL_NAME": os.environ.get("MODEL_NAME"),
+    "MODEL_VERSION": None
     ),  # With none we call the default version (ie the latest)
 }
 

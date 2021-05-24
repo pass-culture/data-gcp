@@ -26,11 +26,10 @@ def app_config() -> Dict[str, Any]:
         "AB_TESTING_TABLE": "ab_testing_202104_v0_v0bis",
         "NUMBER_OF_RECOMMENDATIONS": 10,
         "NUMBER_OF_PRESELECTED_OFFERS": 50,
-        "MODEL_REGION": "europe-west1",
-        "MODEL_NAME": "test_44k",
-        "MODEL_VERSION": "tf_bpr_string_input",
+        "MODEL_REGION": "model_region",
+        "MODEL_NAME": "model_name",
+        "MODEL_VERSION": "model_version",
     }
-
 
 @pytest.fixture
 def setup_database(app_config: Dict[str, Any]) -> Any:

@@ -254,9 +254,7 @@ def test_get_intermediate_recommendation_for_user(setup_database: Any):
     )
 
 
-def test_get_intermediate_recommendation_for_user_with_no_iris(
-    setup_database: Any,
-):
+def test_get_intermediate_recommendation_for_user_with_no_iris(setup_database: Any,):
     # Given
     connection = setup_database
 
@@ -390,9 +388,10 @@ def test_order_offers_by_score_and_diversify_types(
 
 @patch("recommendation.predict_score")
 def test_get_scored_recommendation_for_user(
-    predict_score_mock: Mock, app_config: Dict[str, Any]
+    user_id: int, predict_score_mock: Mock, app_config: Dict[str, Any]
 ):
     # Given
+    user_id = 333
     predict_score_mock.return_value = [1, 2, 3]
     user_recommendation = [
         {

@@ -337,11 +337,11 @@ def _get_offers_grouped_by_type(offers: List[Dict[str, Any]]) -> Dict:
     for offer in offers:
         offer_type = offer["type"]
         offer_product_id = offer["product_id"]
-            if offer_type in offers_by_type.keys():
-                if not _isInList(offers_by_type[offer_type], offer_product_id):
-                    offers_by_type[offer_type].append(offer)
-            else:
-                offers_by_type[offer_type] = [offer]
+        if offer_type in offers_by_type.keys():
+            if not _isInList(offers_by_type[offer_type], offer_product_id):
+                offers_by_type[offer_type].append(offer)
+        else:
+            offers_by_type[offer_type] = [offer]
     return offers_by_type
 
 

@@ -24,8 +24,7 @@ APP_CONFIG = {
     ),
     "MODEL_REGION": os.environ.get("MODEL_REGION"),
     "MODEL_NAME": os.environ.get("MODEL_NAME"),
-    "MODEL_VERSION": None
-    ),  # With none we call the default version (ie the latest)
+    "MODEL_VERSION": None,  # With none we call the default version (ie the latest)
 }
 
 

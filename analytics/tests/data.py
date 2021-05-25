@@ -471,6 +471,7 @@ ENRICHED_USER_DATA_INPUT = {
             "user_cultural_survey_filled_date": datetime.now().replace(microsecond=0),
             "user_is_active": True,
             "user_suspension_reason": None,
+            "user_age": 18,
         }
     ],
     "deposit": [
@@ -562,6 +563,7 @@ ENRICHED_USER_DATA_EXPECTED = [
         "user_deposit_expiration_date": datetime.now().replace(microsecond=0),
         "user_is_former_beneficiary": True,
         "user_is_current_beneficiary": False,
+        "user_age": 18,
     }
 ]
 

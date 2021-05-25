@@ -233,6 +233,7 @@ def test_get_scored_recommendation_for_user(
 
     # When
     scored_recommendation_for_user = get_scored_recommendation_for_user(
+        user_id,
         user_recommendation,
         app_config["MODEL_REGION"],
         app_config["MODEL_NAME"],

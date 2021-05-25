@@ -31,6 +31,7 @@ def app_config() -> Dict[str, Any]:
         "MODEL_VERSION": "model_version",
     }
 
+
 @pytest.fixture
 def setup_database(app_config: Dict[str, Any]) -> Any:
     engine = create_engine(

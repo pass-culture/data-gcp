@@ -459,9 +459,9 @@ def define_enriched_user_data_query(dataset, table_prefix=""):
                 last_booking_date.last_booking_date,
                 region_department.region_name AS user_region_name,
                 first_paid_booking_date.booking_creation_date_first,
-                (EXTRACT(DAY FROM date_of_first_bookings.first_booking_date) - EXTRACT(DAY FROM activation_dates.user_activation_date))
+                DATE_DIFF(date_of_first_bookings.first_booking_date, activation_dates.user_activation_date, DAY)
                 AS days_between_activation_date_and_first_booking_date,
-                (EXTRACT(DAY FROM first_paid_booking_date.booking_creation_date_first) - EXTRACT(DAY FROM activation_dates.user_activation_date))
+                DATE_DIFF(first_paid_booking_date.booking_creation_date_first, activation_dates.user_activation_date, DAY)
                 AS days_between_activation_date_and_first_booking_paid,
                 first_booking_type.first_booking_type,
                 first_paid_booking_type.first_paid_booking_type,

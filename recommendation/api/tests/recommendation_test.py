@@ -276,7 +276,7 @@ def test_get_intermediate_recommendation_for_user_with_no_iris(
                 "type": "A",
                 "url": None,
                 "item_id": "offer-1",
-                "product_id": "product-2",
+                "product_id": "product-1",
             },
             {
                 "id": "3",

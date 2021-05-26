@@ -159,7 +159,7 @@ BIGQUERY_SCHEMAS = {
         "user_lastConnectionDate": "DATETIME",
         "user_is_active": "BOOLEAN",
         "user_suspension_reason": "STRING",
-        "user_age": "INTEGER",
+        "user_age": "INT64",
     },
     "venue": {
         "venue_thumb_count": "INT64",

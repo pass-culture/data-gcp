@@ -390,7 +390,7 @@ def test_order_offers_by_score_and_diversify_types(
 
 @patch("recommendation.predict_score")
 def test_get_scored_recommendation_for_user(
-    user_id: int, predict_score_mock: Mock, app_config: Dict[str, Any]
+    predict_score_mock: Mock, user_id: int, app_config: Dict[str, Any]
 ):
     # Given
     user_id = 333

@@ -126,6 +126,7 @@ for i in range(n_epochs):
         if eval_result < best_eval:
             tf.saved_model.save(match_model, f"{MODEL_DATA_PATH}/tf_bpr_{i}epochs")
             best_eval = eval_result
+            best_model_path = f"{MODEL_DATA_PATH}/tf_bpr_{i}epochs"
     except KeyboardInterrupt:
         break
 
@@ -139,7 +140,8 @@ plt.ylabel("Losses")
 plt.legend()
 plt.savefig(f"{MODEL_DATA_PATH}/learning_curves.png")
 
-metrics = compute_metrics(10, pos_data_train, pos_data_test, match_model)
+best_model_loaded = tf.saved_model.load(best_model_path)
+metrics = compute_metrics(10, pos_data_train, pos_data_test, best_model_loaded)
 
 print(metrics)
 save_dict_to_path(metrics, f"{MODEL_DATA_PATH}/metrics.json")

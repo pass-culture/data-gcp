@@ -29,8 +29,10 @@ def app_config() -> Dict[str, Any]:
         "MODEL_REGION": "model_region",
         "MODEL_NAME_A": "model_name",
         "MODEL_VERSION_A": "model_version",
+        "MODEL_INPUT_A": "model_input",
         "MODEL_NAME_B": "model_name",
         "MODEL_VERSION_B": "model_version",
+        "MODEL_INPUT_B": "model_input",
     }
 
 

@@ -394,6 +394,7 @@ def test_get_scored_recommendation_for_user(
 ):
     # Given
     group_id = "A"
+    input_type = "input_type"
     user_id = 333
     predict_score_mock.return_value = [1, 2, 3]
     user_recommendation = [
@@ -427,6 +428,7 @@ def test_get_scored_recommendation_for_user(
         app_config["MODEL_REGION"],
         app_config[f"MODEL_NAME_{group_id}"],
         app_config[f"MODEL_VERSION_{group_id}"],
+        app_config[f"MODEL_INPUT_{group_id}"],
     )
 
     # Then

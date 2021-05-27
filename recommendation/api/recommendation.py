@@ -92,13 +92,13 @@ def get_final_recommendations(
         recommendations_for_user = get_intermediate_recommendations_for_user(
             user_id, user_iris_id, connection
         )
-
         scored_recommendation_for_user = get_scored_recommendation_for_user(
             user_id,
             recommendations_for_user,
             app_config["MODEL_REGION"],
             app_config[f"MODEL_NAME_{group_id}"],
             app_config[f"MODEL_VERSION_{group_id}"],
+            app_config[f"MODEL_INPUT_{group_id}"],
         )
 
         final_recommendations = order_offers_by_score_and_diversify_types(
@@ -227,6 +227,7 @@ def get_recommendations_query(user_id: int, user_iris_id: int) -> str:
                 FROM non_recommendable_offers
                 WHERE user_id = '{user_id}'
                 )
+            ORDER BY RANDOM();
         """
     else:
         query = f"""
@@ -248,6 +249,7 @@ def get_recommendations_query(user_id: int, user_iris_id: int) -> str:
                 FROM non_recommendable_offers
                 WHERE user_id = '{user_id}'
                 )
+            ORDER BY RANDOM();
         """
     return query
 
@@ -258,14 +260,23 @@ def get_scored_recommendation_for_user(
     model_region: str,
     model_name: str,
     version: str,
+    input_type: str,
 ) -> List[Dict[str, int]]:
-    offers_ids = [recommendation["item_id"] for recommendation in user_recommendations]
     user_to_rank = [user_id for reco in user_recommendations]
-    instances = dict()
-    instances["input_1"] = user_to_rank
-    instances["input_2"] = offers_ids
+    if input_type == "offer_id_list":
+        offers_ids = [recommendation["id"] for recommendation in user_recommendations]
+        instances = offers_ids
+    if input_type == "item_id_and_user_id_lists":
+        offers_ids = [
+            recommendation["item_id"] if recommendation["item_id"] != None else ""
+            for recommendation in user_recommendations
+        ]
+        instances = dict()
+        instances["input_1"] = user_to_rank
+        instances["input_2"] = offers_ids
+        instances = [instances]
     predicted_scores = predict_score(
-        model_region, GCP_PROJECT, model_name, [instances], version
+        model_region, GCP_PROJECT, model_name, instances, version
     )
     return [
         {**recommendation, "score": predicted_scores[i]}
@@ -281,8 +292,8 @@ def predict_score(region, project, model, instances, version):
     )
     name = "projects/{}/models/{}".format(project, model)
 
-    if version is not None:
-        name += "/versions/{}".format(version)
+    # if version is not None:
+    #    name += "/versions/{}".format(version)
 
     response = (
         service.projects().predict(name=name, body={"instances": instances}).execute()
@@ -353,11 +364,3 @@ def _get_number_of_offers_and_max_score_by_type(type_and_offers: Tuple) -> Tuple
         len(type_and_offers[1]),
         max([offer["score"] for offer in type_and_offers[1]]),
     )
-
-
-def _isInList(offers, product_id):
-    for offer in offers:
-        # Check if value is of dict type
-        if offer["product_id"] == product_id:
-            return True
-    return False

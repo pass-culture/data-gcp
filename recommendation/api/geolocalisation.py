@@ -7,9 +7,11 @@ def get_iris_from_coordinates(longitude: float, latitude: float, connection) -> 
         return None
 
     iris_query = text(
-        """SELECT id FROM iris_france
+        """
+        SELECT id FROM iris_france
         WHERE ST_CONTAINS(shape, ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326))
-        ORDER BY id;"""
+        ORDER BY id;
+        """
     )
 
     result = connection.execute(

@@ -57,7 +57,7 @@ def get_final_recommendations(
     connection = create_db_connection()
 
     request_response = connection.execute(
-        text("SELECT groupid FROM " + ab_testing_table + " WHERE userid= :user_id"),
+        text(f"SELECT groupid FROM {ab_testing_table} WHERE userid= :user_id"),
         user_id=str(user_id),
     ).scalar()
 
@@ -65,9 +65,7 @@ def get_final_recommendations(
         group_id = "A" if random.random() > 0.5 else "B"
         connection.execute(
             text(
-                "INSERT INTO "
-                + ab_testing_table
-                + "(userid, groupid) VALUES (:user_id, :group_id)"
+                f"INSERT INTO {ab_testing_table}(userid, groupid) VALUES (:user_id, :group_id)"
             ),
             user_id=user_id,
             group_id=str(group_id),
@@ -118,9 +116,10 @@ def save_recommendation(user_id: int, recommendations: List[int], cursor):
     for offer_id in recommendations:
         cursor.execute(
             text(
-                """INSERT INTO public.past_recommended_offers """
-                """(userid, offerid, date) """
-                """VALUES (:user_id, :offer_id, :date)"""
+                """
+                INSERT INTO public.past_recommended_offers(userid, offerid, date) 
+                VALUES (:user_id, :offer_id, :date)
+                """
             ),
             user_id=user_id,
             offer_id=offer_id,
@@ -155,14 +154,14 @@ def get_cold_start_recommendations_for_user(
     if cold_start_types:
         order_query = f"""
             ORDER BY
-                (type in ({', '.join([f"'{offer_type}'" for offer_type in cold_start_types])})) DESC,
-                booking_number DESC 
+                (type in ({', '.join([f"{str(offer_type)}" for offer_type in cold_start_types])})) DESC,
+                booking_number DESC
             """
     else:
-        order_query = "ORDER BY booking_number DESC "
+        order_query = "ORDER BY booking_number DESC"
 
     if not user_iris_id:
-        where_clause = "is_national = True or url IS NOT NULL "
+        where_clause = "is_national = True or url IS NOT NULL"
     else:
         where_clause = """
         (
@@ -173,11 +172,11 @@ def get_cold_start_recommendations_for_user(
                     WHERE "iris_id" = :user_iris_id
                 )
             OR is_national = True
-        ) 
+        )
         """
 
     recommendations_query = text(
-        """
+        f"""
         SELECT offer_id, type, url
         FROM recommendable_offers
         WHERE offer_id NOT IN
@@ -186,11 +185,11 @@ def get_cold_start_recommendations_for_user(
                 FROM non_recommendable_offers
                 WHERE user_id = :user_id
             )
-        AND """
-        + where_clause
-        + "AND booking_number > 0 "
-        + order_query
-        + "LIMIT :number_of_preselected_offers;"
+        AND {where_clause}
+        AND booking_number > 0 
+        {order_query}
+        LIMIT :number_of_preselected_offers;
+        """
     )
 
     query_result = connection.execute(
@@ -226,7 +225,7 @@ def get_intermediate_recommendations_for_user(
                 WHERE user_id = :user_id
                 )
             ORDER BY RANDOM();
-        """
+            """
         )
         query_result = connection.execute(query, user_id=str(user_id)).fetchall()
     else:
@@ -251,7 +250,7 @@ def get_intermediate_recommendations_for_user(
                 WHERE user_id = :user_id
                 )
             ORDER BY RANDOM();
-        """
+            """
         )
         query_result = connection.execute(
             query, user_id=str(user_id), user_iris_id=str(user_iris_id)

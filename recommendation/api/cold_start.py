@@ -30,7 +30,7 @@ def get_cold_start_status(user_id: int, connection) -> bool:
         SELECT bookings_count
         FROM number_of_bookings_per_user
         WHERE user_id= :user_id;
-    """
+        """
     )
     query_result = connection.execute(cold_start_query, user_id=str(user_id)).fetchone()
     bookings_count = query_result[0] if query_result is not None else 0
@@ -54,8 +54,7 @@ def get_cold_start_types(user_id: int, connection) -> list:
         "autre",
     )
     cold_start_query = text(
-        f"""SELECT {', '.join(qpi_answers_categories)} """
-        + """FROM qpi_answers WHERE user_id = :user_id;"""
+        f"SELECT {', '.join(qpi_answers_categories)} FROM qpi_answers WHERE user_id = :user_id;"
     )
     query_result = connection.execute(
         cold_start_query,

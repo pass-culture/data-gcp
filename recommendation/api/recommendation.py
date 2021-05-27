@@ -57,11 +57,7 @@ def get_final_recommendations(
     connection = create_db_connection()
 
     request_response = connection.execute(
-        text(
-            """SELECT groupid FROM """
-            + ab_testing_table
-            + """ WHERE userid= :user_id"""
-        ),
+        text("SELECT groupid FROM " + ab_testing_table + " WHERE userid= :user_id"),
         user_id=str(user_id),
     ).scalar()
 
@@ -69,9 +65,9 @@ def get_final_recommendations(
         group_id = "A" if random.random() > 0.5 else "B"
         connection.execute(
             text(
-                """INSERT INTO """
+                "INSERT INTO "
                 + ab_testing_table
-                + """(userid, groupid) VALUES (:user_id, :group_id)"""
+                + "(userid, groupid) VALUES (:user_id, :group_id)"
             ),
             user_id=user_id,
             group_id=str(group_id),
@@ -163,10 +159,10 @@ def get_cold_start_recommendations_for_user(
                 booking_number DESC 
             """
     else:
-        order_query = """ORDER BY booking_number DESC """
+        order_query = "ORDER BY booking_number DESC "
 
     if not user_iris_id:
-        where_clause = """is_national = True or url IS NOT NULL """
+        where_clause = "is_national = True or url IS NOT NULL "
     else:
         where_clause = """
         (
@@ -192,9 +188,9 @@ def get_cold_start_recommendations_for_user(
             )
         AND """
         + where_clause
-        + """AND booking_number > 0 """
+        + "AND booking_number > 0 "
         + order_query
-        + """LIMIT :number_of_preselected_offers;"""
+        + "LIMIT :number_of_preselected_offers;"
     )
 
     query_result = connection.execute(

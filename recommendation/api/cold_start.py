@@ -1,3 +1,5 @@
+from sqlalchemy import text
+
 MACRO_CATEGORIES_TYPE_MAPPING = {
     "cinema": ["EventType.CINEMA", "ThingType.CINEMA_CARD", "ThingType.CINEMA_ABO"],
     "audiovisuel": ["ThingType.AUDIOVISUEL"],
@@ -23,12 +25,14 @@ MACRO_CATEGORIES_TYPE_MAPPING = {
 
 
 def get_cold_start_status(user_id: int, connection) -> bool:
-    cold_start_query = f"""
+    cold_start_query = text(
+        """
         SELECT bookings_count
         FROM number_of_bookings_per_user
-        WHERE user_id='{user_id}';
+        WHERE user_id= :user_id;
     """
-    query_result = connection.execute(cold_start_query).fetchone()
+    )
+    query_result = connection.execute(cold_start_query, user_id=str(user_id)).fetchone()
     bookings_count = query_result[0] if query_result is not None else 0
     user_cold_start_status = bookings_count < 2
 
@@ -36,7 +40,7 @@ def get_cold_start_status(user_id: int, connection) -> bool:
 
 
 def get_cold_start_types(user_id: int, connection) -> list:
-    qpi_answers_categories = [
+    qpi_answers_categories = (
         "cinema",
         "audiovisuel",
         "jeux_videos",
@@ -48,13 +52,15 @@ def get_cold_start_types(user_id: int, connection) -> list:
         "instrument",
         "presse",
         "autre",
-    ]
-    cold_start_query = f"""
-        SELECT {', '.join(qpi_answers_categories)}
-        FROM qpi_answers
-        WHERE user_id = '{user_id}';
-    """
-    query_result = connection.execute(cold_start_query).fetchall()
+    )
+    cold_start_query = text(
+        f"""SELECT {', '.join(qpi_answers_categories)} """
+        + """FROM qpi_answers WHERE user_id = :user_id;"""
+    )
+    query_result = connection.execute(
+        cold_start_query,
+        user_id=str(user_id),
+    ).fetchall()
 
     cold_start_types = []
     if len(query_result) == 0:

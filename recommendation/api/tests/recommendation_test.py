@@ -254,9 +254,7 @@ def test_get_intermediate_recommendation_for_user(setup_database: Any):
     )
 
 
-def test_get_intermediate_recommendation_for_user_with_no_iris(
-    setup_database: Any,
-):
+def test_get_intermediate_recommendation_for_user_with_no_iris(setup_database: Any,):
     # Given
     connection = setup_database
 
@@ -393,6 +391,7 @@ def test_get_scored_recommendation_for_user(
     predict_score_mock: Mock, app_config: Dict[str, Any]
 ):
     # Given
+    group_id = "A"
     user_id = 333
     predict_score_mock.return_value = [1, 2, 3]
     user_recommendation = [
@@ -424,8 +423,8 @@ def test_get_scored_recommendation_for_user(
         user_id,
         user_recommendation,
         app_config["MODEL_REGION"],
-        app_config["MODEL_NAME"],
-        app_config["MODEL_VERSION"],
+        app_config[f"MODEL_NAME_{group_id}"],
+        app_config[f"MODEL_VERSION_{group_id}"],
     )
 
     # Then

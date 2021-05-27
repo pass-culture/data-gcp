@@ -40,7 +40,7 @@ def get_cold_start_status(user_id: int, connection) -> bool:
 
 
 def get_cold_start_types(user_id: int, connection) -> list:
-    qpi_answers_categories = (
+    qpi_answers_categories = [
         "cinema",
         "audiovisuel",
         "jeux_videos",
@@ -52,7 +52,7 @@ def get_cold_start_types(user_id: int, connection) -> list:
         "instrument",
         "presse",
         "autre",
-    )
+    ]
     cold_start_query = text(
         f"SELECT {', '.join(qpi_answers_categories)} FROM qpi_answers WHERE user_id = :user_id;"
     )

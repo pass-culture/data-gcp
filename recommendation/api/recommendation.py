@@ -291,10 +291,10 @@ def predict_score(region, project, model, instances, version):
     service = discovery.build(
         "ml", "v1", client_options=client_options, cache_discovery=False
     )
-    name = "projects/{}/models/{}".format(project, model)
+    name = f"projects/{project}/models/{model}"
 
     if version is not None:
-        name += "/versions/{}".format(version)
+        name += f"/versions/{version}"
 
     response = (
         service.projects().predict(name=name, body={"instances": instances}).execute()

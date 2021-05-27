@@ -25,7 +25,7 @@ def define_import_query(
             "hasSeenTutorials" as user_has_seen_tutorials, "address" as user_address, "city" as user_city,
             "lastConnectionDate" as user_last_connection_date, "isEmailValidated" as user_is_email_validated,
             "suspensionReason" as user_suspension_reason, "isActive" as user_is_active,
-            "hasSeenProTutorials" as user_has_seen_pro_tutorials
+            "hasSeenProTutorials" as user_has_seen_pro_tutorials, DATE_PART('year',current_date) - DATE_PART('year',"user"."dateOfBirth") AS user_age
         FROM public.user
     """
     cloudsql_queries[

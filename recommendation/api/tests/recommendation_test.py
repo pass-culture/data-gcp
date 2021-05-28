@@ -254,7 +254,9 @@ def test_get_intermediate_recommendation_for_user(setup_database: Any):
     )
 
 
-def test_get_intermediate_recommendation_for_user_with_no_iris(setup_database: Any,):
+def test_get_intermediate_recommendation_for_user_with_no_iris(
+    setup_database: Any,
+):
     # Given
     connection = setup_database
 

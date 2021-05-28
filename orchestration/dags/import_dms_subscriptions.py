@@ -6,7 +6,7 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python_operator import PythonOperator
 
 from dependencies.slack_alert import task_fail_slack_alert
-from dependencies.import_dms_subscriptions import update_dms_applications
+from dependencies.request_dms import update_dms_applications
 
 
 default_args = {

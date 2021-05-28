@@ -24,10 +24,10 @@ APP_CONFIG = {
     ),
     "MODEL_REGION": os.environ.get("MODEL_REGION"),
     "MODEL_NAME_A": os.environ.get("MODEL_NAME_A"),
-    "MODEL_VERSION_A": None,
+    "MODEL_VERSION_A": os.environ.get("MODEL_VERSION_A"),
     "MODEL_INPUT_A": os.environ.get("MODEL_INPUT_A"),
     "MODEL_NAME_B": os.environ.get("MODEL_NAME_B"),
-    "MODEL_VERSION_B": None,
+    "MODEL_VERSION_B": os.environ.get("MODEL_VERSION_B"),
     "MODEL_INPUT_B": os.environ.get("MODEL_INPUT_B"),
 }
 

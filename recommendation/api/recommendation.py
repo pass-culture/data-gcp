@@ -303,7 +303,7 @@ def predict_score(region, project, model, instances, version):
         "ml", "v1", client_options=client_options, cache_discovery=False
     )
     name = f"projects/{project}/models/{model}"
-    if version is not None:
+    if version:
         name += f"/versions/{version}"
 
     response = (

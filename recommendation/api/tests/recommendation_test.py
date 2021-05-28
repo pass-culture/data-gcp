@@ -31,12 +31,38 @@ def test_get_final_recommendation_for_group_a(
     connection_mock.return_value = setup_database
     user_id = 111
     get_intermediate_recommendations_for_user_mock.return_value = [
-        {"id": 2, "url": "url2", "type": "type2", "item_id": "offer-2"},
-        {"id": 3, "url": "url3", "type": "type3", "item_id": "offer-3"},
+        {
+            "id": 2,
+            "url": "url2",
+            "type": "type2",
+            "item_id": "offer-2",
+            "product_id": "product-2",
+        },
+        {
+            "id": 3,
+            "url": "url3",
+            "type": "type3",
+            "item_id": "offer-3",
+            "product_id": "product-3",
+        },
     ]
     get_scored_recommendation_for_user_mock.return_value = [
-        {"id": 2, "url": "url2", "type": "type2", "item_id": "offer-2", "score": 2},
-        {"id": 3, "url": "url3", "type": "type3", "item_id": "offer-3", "score": 3},
+        {
+            "id": 2,
+            "url": "url2",
+            "type": "type2",
+            "item_id": "offer-2",
+            "product_id": "product-2",
+            "score": 2,
+        },
+        {
+            "id": 3,
+            "url": "url3",
+            "type": "type3",
+            "item_id": "offer-3",
+            "product_id": "product-3",
+            "score": 3,
+        },
     ]
     get_iris_from_coordinates_mock.return_value = 1
 
@@ -70,12 +96,38 @@ def test_get_final_recommendation_for_group_b(
     connection_mock.return_value = setup_database
     user_id = 112
     get_intermediate_recommendations_for_user_mock.return_value = [
-        {"id": 2, "url": "url2", "type": "type2", "item_id": "offer-2"},
-        {"id": 3, "url": "url3", "type": "type3", "item_id": "offer-3"},
+        {
+            "id": 2,
+            "url": "url2",
+            "type": "type2",
+            "item_id": "offer-2",
+            "product_id": "product-2",
+        },
+        {
+            "id": 3,
+            "url": "url3",
+            "type": "type3",
+            "item_id": "offer-3",
+            "product_id": "product-3",
+        },
     ]
     get_scored_recommendation_for_user_mock.return_value = [
-        {"id": 2, "url": "url2", "type": "type2", "item_id": "offer-2", "score": 2},
-        {"id": 3, "url": "url3", "type": "type3", "item_id": "offer-3", "score": 3},
+        {
+            "id": 2,
+            "url": "url2",
+            "type": "type2",
+            "item_id": "offer-2",
+            "product_id": "product-2",
+            "score": 2,
+        },
+        {
+            "id": 3,
+            "url": "url3",
+            "type": "type3",
+            "item_id": "offer-3",
+            "product_id": "product-3",
+            "score": 3,
+        },
     ]
     get_iris_from_coordinates_mock.return_value = 1
 
@@ -118,8 +170,22 @@ def test_get_final_recommendation_for_new_user(
         {"id": 3, "url": "url3", "type": "type3", "score": 3, "item_id": "offer-3"},
     ]
     get_scored_recommendation_for_user.return_value = [
-        {"id": 2, "url": "url2", "type": "type2", "item_id": "offer-2", "score": 2},
-        {"id": 3, "url": "url3", "type": "type3", "item_id": "offer-3", "score": 3},
+        {
+            "id": 2,
+            "url": "url2",
+            "type": "type2",
+            "item_id": "offer-2",
+            "product_id": "product-2",
+            "score": 2,
+        },
+        {
+            "id": 3,
+            "url": "url3",
+            "type": "type3",
+            "item_id": "offer-3",
+            "product_id": "product-3",
+            "score": 3,
+        },
     ]
     get_cold_start_final_recommendations.return_value = [3, 2]
     order_offers_by_score_and_diversify_types.return_value = [3, 2]
@@ -156,17 +222,39 @@ def test_get_intermediate_recommendation_for_user(setup_database: Any):
     assert_array_equal(
         sorted(user_recommendation, key=lambda k: k["id"]),
         [
-            {"id": "2", "type": "B", "url": None, "item_id": "offer-2"},
-            {"id": "3", "type": "C", "url": "url", "item_id": "offer-3"},
-            {"id": "5", "type": "E", "url": None, "item_id": "offer-5"},
-            {"id": "6", "type": "B", "url": None, "item_id": "offer-6"},
+            {
+                "id": "2",
+                "type": "B",
+                "url": None,
+                "item_id": "offer-2",
+                "product_id": "product-2",
+            },
+            {
+                "id": "3",
+                "type": "C",
+                "url": "url",
+                "item_id": "offer-3",
+                "product_id": "product-3",
+            },
+            {
+                "id": "5",
+                "type": "E",
+                "url": None,
+                "item_id": "offer-5",
+                "product_id": "product-5",
+            },
+            {
+                "id": "6",
+                "type": "B",
+                "url": None,
+                "item_id": "offer-6",
+                "product_id": "product-6",
+            },
         ],
     )
 
 
-def test_get_intermediate_recommendation_for_user_with_no_iris(
-    setup_database: Any,
-):
+def test_get_intermediate_recommendation_for_user_with_no_iris(setup_database: Any,):
     # Given
     connection = setup_database
 
@@ -181,10 +269,34 @@ def test_get_intermediate_recommendation_for_user_with_no_iris(
     assert_array_equal(
         sorted(user_recommendation, key=lambda k: k["id"]),
         [
-            {"id": "1", "type": "A", "url": None, "item_id": "offer-1"},
-            {"id": "3", "type": "C", "url": "url", "item_id": "offer-3"},
-            {"id": "4", "type": "D", "url": "url", "item_id": "offer-4"},
-            {"id": "5", "type": "E", "url": None, "item_id": "offer-5"},
+            {
+                "id": "1",
+                "type": "A",
+                "url": None,
+                "item_id": "offer-1",
+                "product_id": "product-1",
+            },
+            {
+                "id": "3",
+                "type": "C",
+                "url": "url",
+                "item_id": "offer-3",
+                "product_id": "product-3",
+            },
+            {
+                "id": "4",
+                "type": "D",
+                "url": "url",
+                "item_id": "offer-4",
+                "product_id": "product-4",
+            },
+            {
+                "id": "5",
+                "type": "E",
+                "url": None,
+                "item_id": "offer-5",
+                "product_id": "product-5",
+            },
         ],
     )
 
@@ -194,19 +306,75 @@ def test_get_intermediate_recommendation_for_user_with_no_iris(
     [
         (
             [
-                {"id": 1, "url": None, "type": "A", "item_id": "offer-1", "score": 1},
-                {"id": 2, "url": None, "type": "A", "item_id": "offer-2", "score": 1},
-                {"id": 3, "url": None, "type": "B", "item_id": "offer-3", "score": 10},
-                {"id": 4, "url": None, "type": "B", "item_id": "offer-4", "score": 10},
+                {
+                    "id": 1,
+                    "url": None,
+                    "type": "A",
+                    "item_id": "offer-1",
+                    "product_id": "product-1",
+                    "score": 1,
+                },
+                {
+                    "id": 2,
+                    "url": None,
+                    "type": "A",
+                    "item_id": "offer-2",
+                    "product_id": "product-2",
+                    "score": 1,
+                },
+                {
+                    "id": 3,
+                    "url": None,
+                    "type": "B",
+                    "item_id": "offer-3",
+                    "product_id": "product-3",
+                    "score": 10,
+                },
+                {
+                    "id": 4,
+                    "url": None,
+                    "type": "B",
+                    "item_id": "offer-4",
+                    "product_id": "product-4",
+                    "score": 10,
+                },
             ],
             [4, 2, 3, 1],
         ),
         (
             [
-                {"id": 1, "url": None, "type": "A", "item_id": "offer-1", "score": 1},
-                {"id": 2, "url": None, "type": "A", "item_id": "offer-2", "score": 2},
-                {"id": 3, "url": None, "type": "A", "item_id": "offer-3", "score": 10},
-                {"id": 4, "url": None, "type": "A", "item_id": "offer-4", "score": 11},
+                {
+                    "id": 1,
+                    "url": None,
+                    "type": "A",
+                    "item_id": "offer-1",
+                    "product_id": "product-1",
+                    "score": 1,
+                },
+                {
+                    "id": 2,
+                    "url": None,
+                    "type": "A",
+                    "item_id": "offer-2",
+                    "product_id": "product-2",
+                    "score": 2,
+                },
+                {
+                    "id": 3,
+                    "url": None,
+                    "type": "A",
+                    "item_id": "offer-3",
+                    "product_id": "product-3",
+                    "score": 10,
+                },
+                {
+                    "id": 4,
+                    "url": None,
+                    "type": "A",
+                    "item_id": "offer-4",
+                    "product_id": "product-4",
+                    "score": 11,
+                },
             ],
             [4, 3, 2, 1],
         ),
@@ -220,30 +388,71 @@ def test_order_offers_by_score_and_diversify_types(
 
 @patch("recommendation.predict_score")
 def test_get_scored_recommendation_for_user(
-    predict_score_mock: Mock,
-    app_config: Dict[str, Any],
+    predict_score_mock: Mock, app_config: Dict[str, Any]
 ):
     # Given
+    group_id = "A"
+    user_id = 333
     predict_score_mock.return_value = [1, 2, 3]
     user_recommendation = [
-        {"id": 1, "url": "url1", "type": "type1", "item_id": "offer-1"},
-        {"id": 2, "url": "url2", "type": "type2", "item_id": "offer-2"},
-        {"id": 3, "url": "url3", "type": "type3", "item_id": "offer-3"},
+        {
+            "id": 1,
+            "url": "url1",
+            "type": "type1",
+            "item_id": "offer-1",
+            "product_id": "product-1",
+        },
+        {
+            "id": 2,
+            "url": "url2",
+            "type": "type2",
+            "item_id": "offer-2",
+            "product_id": "product-2",
+        },
+        {
+            "id": 3,
+            "url": "url3",
+            "type": "type3",
+            "item_id": "offer-3",
+            "product_id": "product-3",
+        },
     ]
 
     # When
     scored_recommendation_for_user = get_scored_recommendation_for_user(
+        user_id,
         user_recommendation,
         app_config["MODEL_REGION"],
-        app_config["MODEL_NAME"],
-        app_config["MODEL_VERSION"],
+        app_config[f"MODEL_NAME_{group_id}"],
+        app_config[f"MODEL_VERSION_{group_id}"],
     )
 
     # Then
     assert scored_recommendation_for_user == [
-        {"id": 1, "url": "url1", "type": "type1", "item_id": "offer-1", "score": 1},
-        {"id": 2, "url": "url2", "type": "type2", "item_id": "offer-2", "score": 2},
-        {"id": 3, "url": "url3", "type": "type3", "item_id": "offer-3", "score": 3},
+        {
+            "id": 1,
+            "url": "url1",
+            "type": "type1",
+            "item_id": "offer-1",
+            "product_id": "product-1",
+            "score": 1,
+        },
+        {
+            "id": 2,
+            "url": "url2",
+            "type": "type2",
+            "item_id": "offer-2",
+            "product_id": "product-2",
+            "score": 2,
+        },
+        {
+            "id": 3,
+            "url": "url3",
+            "type": "type3",
+            "item_id": "offer-3",
+            "product_id": "product-3",
+            "score": 3,
+        },
     ]
 
 

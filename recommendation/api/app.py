@@ -23,8 +23,10 @@ APP_CONFIG = {
         os.environ.get("NUMBER_OF_PRESELECTED_OFFERS", 50)
     ),
     "MODEL_REGION": os.environ.get("MODEL_REGION"),
-    "MODEL_NAME": os.environ.get("MODEL_NAME"),
-    "MODEL_VERSION": None,  # With none we call the default version (ie the latest)
+    "MODEL_NAME_A": os.environ.get("MODEL_NAME_A"),
+    "MODEL_VERSION_A": None,  # With none we call the default version (ie the latest)
+    "MODEL_NAME_B": os.environ.get("MODEL_NAME_B"),
+    "MODEL_VERSION_B": None,  # With none we call the default version (ie the latest)
 }
 
 

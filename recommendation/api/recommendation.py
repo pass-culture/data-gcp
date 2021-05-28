@@ -1,5 +1,7 @@
 import collections
 import datetime
+import json
+import numpy as np
 import os
 import random
 import numpy as np
@@ -54,10 +56,8 @@ def create_db_connection() -> Any:
 def get_final_recommendations(
     user_id: int, longitude: int, latitude: int, app_config: Dict[str, Any]
 ) -> List[int]:
-
     ab_testing_table = app_config["AB_TESTING_TABLE"]
     connection = create_db_connection()
-
     request_response = connection.execute(
         f"""SELECT groupid FROM {ab_testing_table} WHERE userid='{user_id}'"""
     ).scalar()
@@ -92,17 +92,18 @@ def get_final_recommendations(
         recommendations_for_user = get_intermediate_recommendations_for_user(
             user_id, user_iris_id, connection
         )
+
         scored_recommendation_for_user = get_scored_recommendation_for_user(
             user_id,
             recommendations_for_user,
             app_config["MODEL_REGION"],
-            app_config["MODEL_NAME"],
-            app_config["MODEL_VERSION"],
+            app_config[f"MODEL_NAME_{group_id}"],
+            app_config[f"MODEL_VERSION_{group_id}"],
         )
+
         final_recommendations = order_offers_by_score_and_diversify_types(
             scored_recommendation_for_user
         )[: app_config["NUMBER_OF_RECOMMENDATIONS"]]
-
     save_recommendation(user_id, final_recommendations, connection)
     connection.close()
     return final_recommendations
@@ -321,14 +322,14 @@ def order_offers_by_score_and_diversify_types(
         )
 
     diversified_offers = []
-
-    while len(diversified_offers) != len(offers):
+    while (len(diversified_offers) != len(offers)) and (
+        len(diversified_offers) != np.sum([len(l) for l in offers_by_type.values()])
+    ):
         for offer_type in offers_by_type_ordered_by_frequency.keys():
             if offers_by_type_ordered_by_frequency[offer_type]:
                 diversified_offers.append(
                     offers_by_type_ordered_by_frequency[offer_type].pop()
                 )
-
     return [offer["id"] for offer in diversified_offers]
 
 
@@ -338,7 +339,9 @@ def _get_offers_grouped_by_type(offers: List[Dict[str, Any]]) -> Dict:
         offer_type = offer["type"]
         offer_product_id = offer["product_id"]
         if offer_type in offers_by_type.keys():
-            if not _isInList(offers_by_type[offer_type], offer_product_id):
+            if offer_product_id not in [
+                offer["product_id"] for offer in offers_by_type[offer_type]
+            ]:
                 offers_by_type[offer_type].append(offer)
         else:
             offers_by_type[offer_type] = [offer]

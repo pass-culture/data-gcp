@@ -126,3 +126,12 @@ class TestDags(unittest.TestCase):
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
         self.assertEqual(len(dag.tasks), 8)
+
+    def test_import_dms_subscription_is_loaded(self):
+        # When
+        dag = self.dagbag.get_dag(dag_id="import_dms_subscriptions")
+
+        # Then
+        self.assertDictEqual(self.dagbag.import_errors, {})
+        self.assertIsNotNone(dag)
+        self.assertEqual(len(dag.tasks), 3)

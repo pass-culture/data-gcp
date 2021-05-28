@@ -159,6 +159,7 @@ BIGQUERY_SCHEMAS = {
         "user_lastConnectionDate": "DATETIME",
         "user_is_active": "BOOLEAN",
         "user_suspension_reason": "STRING",
+        "user_age": "INT64",
     },
     "venue": {
         "venue_thumb_count": "INT64",
@@ -178,6 +179,7 @@ BIGQUERY_SCHEMAS = {
         "venue_booking_email": "STRING",
         "venue_last_provider_id": "STRING",
         "venue_is_virtual": "BOOLEAN",
+        "venue_is_permanent": "BOOLEAN",
         "venue_comment": "STRING",
         "venue_validation_token": "STRING",
         "venue_public_name": "STRING",

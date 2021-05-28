@@ -24,7 +24,7 @@ class AdressesDownloader:
 
     def fetch_new_user_data(self):
         bigquery_query = f"""
-        SELECT user_id, user_address, user_postal_code, user_city, user_department_code
+        SELECT user_id, REPLACE(REPLACE(user_address, '\r', ''), '\n', '') AS user_address, user_postal_code, user_city, user_department_code
         FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_user`
         WHERE user_address is not NULL AND user_address <> ""
         AND user_postal_code is not NULL AND user_city is not NULL AND user_department_code is not NULL

@@ -105,11 +105,20 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
         "past_recommended_offers", con=engine, if_exists="replace"
     )
 
+    number_of_bookings_per_user = pd.DataFrame(
+        {"user_id": [111], "bookings_count": [3]},
+        {"user_id": [113], "bookings_count": [1]},
+    )
+    number_of_bookings_per_user.to_sql(
+        "number_of_bookings_per_user", con=engine, if_exists="replace"
+    )
+
     yield connection
 
     engine.execute("DROP TABLE IF EXISTS recommendable_offers;")
     engine.execute("DROP TABLE IF EXISTS non_recommendable_offers;")
     engine.execute("DROP TABLE IF EXISTS iris_venues;")
     engine.execute(f"DROP TABLE IF EXISTS {app_config['AB_TESTING_TABLE']} ;")
-    engine.execute(f"DROP TABLE IF EXISTS past_recommended_offers ;")
+    engine.execute("DROP TABLE IF EXISTS past_recommended_offers ;")
+    engine.execute("DROP TABLE IF EXISTS number_of_bookings_per_user ;")
     connection.close()

@@ -227,7 +227,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "favourite_cnt": 2.0,
         "stock": 10.0,
         "offer_humanized_id": "AM",
-        "passculture_pro_url": "https://pro.passculture.beta.gouv.fr/offres/AM",
+        "passculture_pro_url": "https://pro.passculture.beta.gouv.fr/offres/AM/edition",
         "webapp_url": "https://app.passculture.beta.gouv.fr/offre/details/AM",
         "first_booking_cnt": 1,
     },
@@ -251,7 +251,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "favourite_cnt": 1.0,
         "stock": 12.0,
         "offer_humanized_id": "AQ",
-        "passculture_pro_url": "https://pro.passculture.beta.gouv.fr/offres/AQ",
+        "passculture_pro_url": "https://pro.passculture.beta.gouv.fr/offres/AQ/edition",
         "webapp_url": "https://app.passculture.beta.gouv.fr/offre/details/AQ",
         "first_booking_cnt": None,
     },
@@ -471,6 +471,7 @@ ENRICHED_USER_DATA_INPUT = {
             "user_cultural_survey_filled_date": datetime.now().replace(microsecond=0),
             "user_is_active": True,
             "user_suspension_reason": None,
+            "user_age": 18,
         }
     ],
     "deposit": [
@@ -562,6 +563,7 @@ ENRICHED_USER_DATA_EXPECTED = [
         "user_deposit_expiration_date": datetime.now().replace(microsecond=0),
         "user_is_former_beneficiary": True,
         "user_is_current_beneficiary": False,
+        "user_age": 18,
     }
 ]
 
@@ -611,6 +613,7 @@ ENRICHED_VENUE_DATA_INPUT = {
             "venue_city": "Levallois",
             "venue_siret": "12345678912345",
             "venue_is_virtual": False,
+            "venue_is_permanent": True,
             "venue_managing_offerer_id": "1",
             "venue_creation_date": datetime.now().replace(microsecond=0),
             "venue_label_id": "1",
@@ -635,6 +638,7 @@ ENRICHED_VENUE_DATA_EXPECTED = [
         "venue_city": "Levallois",
         "venue_siret": "12345678912345",
         "venue_is_virtual": False,
+        "venue_is_permanent": True,
         "venue_managing_offerer_id": "1",
         "venue_creation_date": datetime.now().replace(microsecond=0),
         "offerer_name": "An offerer",

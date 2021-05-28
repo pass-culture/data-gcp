@@ -67,8 +67,6 @@ def train(storage_path: str):
 
         best_eval = 1
 
-        train = []
-        evaluation = []
         runned_epochs = 0
         for i in range(n_epochs):
             triplet_inputs = sample_triplets(pos_data_train, item_ids)
@@ -89,7 +87,9 @@ def train(storage_path: str):
 
             print(f"Evaluation epoch {i}")
             eval_result = triplet_model.evaluate(
-                x=evaluation_triplet_inputs, y=evaluation_fake_train, batch_size=64
+                x=evaluation_triplet_inputs,
+                y=evaluation_fake_train,
+                batch_size=batch_size,
             )
             mlflow.log_metric(key="Evaluation Loss", value=eval_result, step=i)
 
@@ -150,8 +150,8 @@ def connect_remote_mlflow(client_id, env="ehp"):
 def main():
     STORAGE_PATH = os.environ.get("STORAGE_PATH", "")
     ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "ehp")
-    client_id = get_secret("mlflow_client_id", env=ENV_SHORT_NAME)
-    connect_remote_mlflow(client_id)
+    client_id = get_secret("mlflow_client_id")
+    connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
     train(STORAGE_PATH)
     print("------- TRAINING DONE -------")
 

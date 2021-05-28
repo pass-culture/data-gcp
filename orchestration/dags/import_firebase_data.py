@@ -24,7 +24,7 @@ from dependencies.slack_alert import task_fail_slack_alert
 ENV_SHORT_NAME_APP_INFO_ID_MAPPING = {
     "dev": ["app.passculture.test", "app.passculture.testing"],
     "stg": ["app.passculture.staging"],
-    "prod": ["app.passculture"],
+    "prod": ["app.passculture", "app.passculture.webapp"],
 }
 
 app_info_id_list = ENV_SHORT_NAME_APP_INFO_ID_MAPPING[ENV_SHORT_NAME]
@@ -71,16 +71,16 @@ copy_table = BigQueryOperator(
     use_legacy_sql=False,
     destination_dataset_table="passculture-data-prod:firebase_raw_data.events_"
     + EXECUTION_DATE,
-    write_disposition="WRITE_EMPTY",
+    write_disposition="WRITE_TRUNCATE",
     dag=dag,
 )
-delete_table = BigQueryTableDeleteOperator(
-    task_id="delete_table",
-    deletion_dataset_table="passculture-native:analytics_267263535.events_"
-    + EXECUTION_DATE,
-    ignore_if_missing=True,
-    dag=dag,
-)
+# delete_table = BigQueryTableDeleteOperator(
+#     task_id="delete_table",
+#     deletion_dataset_table="passculture-native:analytics_267263535.events_"
+#     + EXECUTION_DATE,
+#     ignore_if_missing=True,
+#     dag=dag,
+# )
 
 dummy_task_for_branch = DummyOperator(task_id="dummy_task_for_branch", dag=dag)
 
@@ -91,7 +91,7 @@ copy_table_to_env = BigQueryOperator(
         """,
     use_legacy_sql=False,
     destination_dataset_table=f"{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.events_{EXECUTION_DATE}",
-    write_disposition="WRITE_EMPTY",
+    write_disposition="WRITE_TRUNCATE",
     trigger_rule="none_failed",
     dag=dag,
 )
@@ -172,6 +172,7 @@ end = DummyOperator(task_id="end", dag=dag)
 
 start >> env_switcher
 env_switcher >> dummy_task_for_branch >> copy_table_to_env
-env_switcher >> copy_table >> delete_table >> copy_table_to_env
+# env_switcher >> copy_table >> delete_table >> copy_table_to_env
+env_switcher >> copy_table >> copy_table_to_env
 copy_table_to_env >> copy_table_to_clean >> copy_table_to_analytics >> end
 copy_table_to_env >> aggregate_firebase_offer_events >> aggregate_firebase_user_events >> end

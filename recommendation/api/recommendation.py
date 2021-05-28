@@ -262,6 +262,7 @@ def get_scored_recommendation_for_user(
     version: str,
     input_type: str,
 ) -> List[Dict[str, int]]:
+    instances = []
     user_to_rank = [user_id for reco in user_recommendations]
     if input_type == "offer_id_list":
         offers_ids = [recommendation["id"] for recommendation in user_recommendations]

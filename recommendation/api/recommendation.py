@@ -279,12 +279,14 @@ def get_scored_recommendation_for_user(
     user_to_rank = [user_id for reco in user_recommendations]
     if input_type == "offer_id_list":
         instances = [recommendation["id"] for recommendation in user_recommendations]
-    if input_type == "item_id_and_user_id_lists":
+    elif input_type == "item_id_and_user_id_lists":
         offers_ids = [
             recommendation["item_id"] if recommendation["item_id"] else ""
             for recommendation in user_recommendations
         ]
         instances = [{"input_1": user_to_rank, "input_2": offers_ids}]
+    else:
+        instances = []
     predicted_scores = predict_score(
         model_region, GCP_PROJECT, model_name, instances, version
     )

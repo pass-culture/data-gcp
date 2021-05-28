@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Tuple
 import pytz
 from google.api_core.client_options import ClientOptions
 from googleapiclient import discovery
-from sqlalchemy import create_engine, engine
+from sqlalchemy import create_engine, engine, text
 
 from access_gcp_secrets import access_secret
 from cold_start import get_cold_start_status, get_cold_start_types
@@ -57,13 +57,18 @@ def get_final_recommendations(
     connection = create_db_connection()
 
     request_response = connection.execute(
-        f"""SELECT groupid FROM {ab_testing_table} WHERE userid='{user_id}'"""
+        text(f"SELECT groupid FROM {ab_testing_table} WHERE userid= :user_id"),
+        user_id=str(user_id),
     ).scalar()
 
     if not request_response:
         group_id = "A" if random.random() > 0.5 else "B"
         connection.execute(
-            f"""INSERT INTO {ab_testing_table}(userid, groupid) VALUES ({user_id}, '{group_id}')"""
+            text(
+                f"INSERT INTO {ab_testing_table}(userid, groupid) VALUES (:user_id, :group_id)"
+            ),
+            user_id=user_id,
+            group_id=str(group_id),
         )
 
     else:
@@ -109,12 +114,16 @@ def save_recommendation(user_id: int, recommendations: List[int], cursor):
     date = datetime.datetime.now(pytz.utc)
 
     for offer_id in recommendations:
-        row = (user_id, offer_id, date)
         cursor.execute(
-            "INSERT INTO public.past_recommended_offers "
-            "(userid, offerid, date) "
-            "VALUES (%s, %s, %s)",
-            row,
+            text(
+                """
+                INSERT INTO public.past_recommended_offers(userid, offerid, date) 
+                VALUES (:user_id, :offer_id, :date)
+                """
+            ),
+            user_id=user_id,
+            offer_id=offer_id,
+            date=date,
         )
 
 
@@ -154,34 +163,41 @@ def get_cold_start_recommendations_for_user(
     if not user_iris_id:
         where_clause = "is_national = True or url IS NOT NULL"
     else:
-        where_clause = f"""
+        where_clause = """
         (
             venue_id IN
                 (
                     SELECT "venue_id"
                     FROM iris_venues_mv
-                    WHERE "iris_id" = '{user_iris_id}'
+                    WHERE "iris_id" = :user_iris_id
                 )
             OR is_national = True
         )
         """
 
-    recommendations_query = f"""
+    recommendations_query = text(
+        f"""
         SELECT offer_id, type, url
         FROM recommendable_offers
         WHERE offer_id NOT IN
             (
                 SELECT offer_id
                 FROM non_recommendable_offers
-                WHERE user_id = '{user_id}'
+                WHERE user_id = :user_id
             )
         AND {where_clause}
-        AND booking_number > 0
+        AND booking_number > 0 
         {order_query}
-        LIMIT {number_of_preselected_offers};
-    """
+        LIMIT :number_of_preselected_offers;
+        """
+    )
 
-    query_result = connection.execute(recommendations_query).fetchall()
+    query_result = connection.execute(
+        recommendations_query,
+        user_iris_id=str(user_iris_id),
+        user_id=str(user_id),
+        number_of_preselected_offers=number_of_preselected_offers,
+    ).fetchall()
 
     cold_start_recommendations = [
         {"id": row[0], "type": row[1], "url": row[2]} for row in query_result
@@ -196,21 +212,9 @@ def get_intermediate_recommendations_for_user(
     connection,
 ) -> List[Dict[str, Any]]:
 
-    recommendations_query = get_recommendations_query(user_id, user_iris_id)
-    query_result = connection.execute(recommendations_query).fetchall()
-
-    user_recommendation = [
-        {"id": row[0], "type": row[1], "url": row[2], "item_id": row[3]}
-        for row in query_result
-    ]
-
-    return user_recommendation
-
-
-def get_recommendations_query(user_id: int, user_iris_id: int) -> str:
-
     if not user_iris_id:
-        query = f"""
+        query = text(
+            """
             SELECT offer_id, type, url, item_id
             FROM recommendable_offers
             WHERE is_national = True or url IS NOT NULL
@@ -218,12 +222,15 @@ def get_recommendations_query(user_id: int, user_iris_id: int) -> str:
                 (
                 SELECT offer_id
                 FROM non_recommendable_offers
-                WHERE user_id = '{user_id}'
+                WHERE user_id = :user_id
                 )
             ORDER BY RANDOM();
-        """
+            """
+        )
+        query_result = connection.execute(query, user_id=str(user_id)).fetchall()
     else:
-        query = f"""
+        query = text(
+            """
             SELECT offer_id, type, url, item_id
             FROM recommendable_offers
             WHERE
@@ -232,7 +239,7 @@ def get_recommendations_query(user_id: int, user_iris_id: int) -> str:
                     (
                     SELECT "venue_id"
                     FROM iris_venues_mv
-                    WHERE "iris_id" = '{user_iris_id}'
+                    WHERE "iris_id" = :user_iris_id
                     )
                 OR is_national = True
                 )
@@ -240,11 +247,21 @@ def get_recommendations_query(user_id: int, user_iris_id: int) -> str:
                 (
                 SELECT offer_id
                 FROM non_recommendable_offers
-                WHERE user_id = '{user_id}'
+                WHERE user_id = :user_id
                 )
             ORDER BY RANDOM();
-        """
-    return query
+            """
+        )
+        query_result = connection.execute(
+            query, user_id=str(user_id), user_iris_id=str(user_iris_id)
+        ).fetchall()
+
+    user_recommendation = [
+        {"id": row[0], "type": row[1], "url": row[2], "item_id": row[3]}
+        for row in query_result
+    ]
+
+    return user_recommendation
 
 
 def get_scored_recommendation_for_user(
@@ -269,10 +286,10 @@ def predict_score(region, project, model, instances, version):
     service = discovery.build(
         "ml", "v1", client_options=client_options, cache_discovery=False
     )
-    name = "projects/{}/models/{}".format(project, model)
+    name = f"projects/{project}/models/{model}"
 
     if version is not None:
-        name += "/versions/{}".format(version)
+        name += f"/versions/{version}"
 
     response = (
         service.projects().predict(name=name, body={"instances": instances}).execute()

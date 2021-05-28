@@ -154,7 +154,7 @@ def get_cold_start_recommendations_for_user(
     if cold_start_types:
         order_query = f"""
             ORDER BY
-                (type in ({', '.join([f"{str(offer_type)}" for offer_type in cold_start_types])})) DESC,
+                (type in ({', '.join([f"'{offer_type}'" for offer_type in cold_start_types])})) DESC,
                 booking_number DESC
             """
     else:

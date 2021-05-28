@@ -276,20 +276,15 @@ def get_scored_recommendation_for_user(
     version: str,
     input_type: str,
 ) -> List[Dict[str, int]]:
-    instances = []
     user_to_rank = [user_id for reco in user_recommendations]
     if input_type == "offer_id_list":
-        offers_ids = [recommendation["id"] for recommendation in user_recommendations]
-        instances = offers_ids
+        instances = [recommendation["id"] for recommendation in user_recommendations]
     if input_type == "item_id_and_user_id_lists":
         offers_ids = [
             recommendation["item_id"] if recommendation["item_id"] else ""
             for recommendation in user_recommendations
         ]
-        instance = dict()
-        instance["input_1"] = user_to_rank
-        instance["input_2"] = offers_ids
-        instances = [instance]
+        instances = [{"input_1": user_to_rank, "input_2": offers_ids}]
     predicted_scores = predict_score(
         model_region, GCP_PROJECT, model_name, instances, version
     )
@@ -347,9 +342,7 @@ def order_offers_by_score_and_diversify_types(
         )
 
     diversified_offers = []
-    while (len(diversified_offers) != len(offers)) and (
-        len(diversified_offers) != np.sum([len(l) for l in offers_by_type.values()])
-    ):
+    while len(diversified_offers) != np.sum([len(l) for l in offers_by_type.values()]):
         for offer_type in offers_by_type_ordered_by_frequency.keys():
             if offers_by_type_ordered_by_frequency[offer_type]:
                 diversified_offers.append(

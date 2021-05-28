@@ -213,7 +213,7 @@ def get_intermediate_recommendations_for_user(
     if not user_iris_id:
         query = text(
             """
-            SELECT offer_id, type, url, item_id
+            SELECT offer_id, type, url, item_id, product_id,
             FROM recommendable_offers
             WHERE is_national = True or url IS NOT NULL
             AND offer_id NOT IN
@@ -229,7 +229,7 @@ def get_intermediate_recommendations_for_user(
     else:
         query = text(
             """
-            SELECT offer_id, type, url, item_id
+            SELECT offer_id, type, url, item_id, product_id,
             FROM recommendable_offers
             WHERE
                 (

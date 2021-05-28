@@ -7,24 +7,26 @@ from google.cloud import secretmanager
 
 API_URL = "https://www.demarches-simplifiees.fr/api/v2/graphql"
 demarches_ids = ["44675", "44623", "29161"]
-df = pd.DataFrame(columns=[
-    "demarche_id",
-    "application_id",
-    "application_status",
-    "last_update_at",
-    "application_submitted_at",
-    "passed_in_instruction_at",
-    "processed_at",
-    "instructor_mail",
-    "applicant_department",
-    "applicant_birthday",
-    "applicant_postal_code",
-])
+df = pd.DataFrame(
+    columns=[
+        "demarche_id",
+        "application_id",
+        "application_status",
+        "last_update_at",
+        "application_submitted_at",
+        "passed_in_instruction_at",
+        "processed_at",
+        "instructor_mail",
+        "applicant_department",
+        "applicant_birthday",
+        "applicant_postal_code",
+    ]
+)
 
 
 def parse_result(result, df, demarche_id):
     for node in result["data"]["demarche"]["dossiers"]["edges"]:
-        dossier = node["node"] 
+        dossier = node["node"]
         dossier_line = {
             "demarche_id": demarche_id,
             "application_id": dossier["id"],
@@ -42,7 +44,7 @@ def parse_result(result, df, demarche_id):
         for champ in dossier["champs"]:
             if not champ or "id" not in champ:
                 continue
-            if champ["id"] == 'Q2hhbXAtNTk2NDUz':
+            if champ["id"] == "Q2hhbXAtNTk2NDUz":
                 dossier_line["applicant_department"] = champ["stringValue"]
             elif champ["id"] == "Q2hhbXAtNTgyMjIw":
                 dossier_line["applicant_birthday"] = champ["stringValue"]
@@ -65,23 +67,32 @@ def fetch_result(demarches_ids, df, dms_token):
         while has_next_page:
             result = run_query(query, dms_token)
             parse_result(result, df, demarche_id)
-            
-            has_next_page = result["data"]["demarche"]["dossiers"]["pageInfo"]["hasNextPage"]
+
+            has_next_page = result["data"]["demarche"]["dossiers"]["pageInfo"][
+                "hasNextPage"
+            ]
             if has_next_page:
-                end_cursor = result["data"]["demarche"]["dossiers"]["pageInfo"]["endCursor"]
+                end_cursor = result["data"]["demarche"]["dossiers"]["pageInfo"][
+                    "endCursor"
+                ]
                 query = get_query(demarche_id, end_cursor)
-            
+
 
 def get_query(demarche_id, end_cursor):
     if not end_cursor:
         parameter = "first:100"
-    else: 
-        parameter = f"after: \"{end_cursor}\""
-    query = """
+    else:
+        parameter = f'after: "{end_cursor}"'
+    query = (
+        """
         query getDemarches {
-          demarche(number: """ + demarche_id + """) {
+          demarche(number: """
+        + demarche_id
+        + """) {
             title
-            dossiers(""" + parameter +""") {
+            dossiers("""
+        + parameter
+        + """) {
               edges {
                 node {
                   id
@@ -111,16 +122,23 @@ def get_query(demarche_id, end_cursor):
           }
         }
         """
+    )
     return query
 
 
 def run_query(query, dms_token):
     headers = {"Authorization": "Bearer " + dms_token}
-    request = requests.post(API_URL, json={'query': query}, headers=headers, verify=False) # warn: SSL verification disabled
+    request = requests.post(
+        API_URL, json={"query": query}, headers=headers, verify=False
+    )  # warn: SSL verification disabled
     if request.status_code == 200:
         return request.json()
     else:
-        raise Exception("Query failed to run by returning code of {}. {}".format(request.status_code, query))
+        raise Exception(
+            "Query failed to run by returning code of {}. {}".format(
+                request.status_code, query
+            )
+        )
 
 
 def get_secret_token():
@@ -135,7 +153,7 @@ def save_result(df):
     analytics_dataset = os.environ.get("BIGQUERY_ANALYTICS_DATASET", "")
     target_table = f"{analytics_dataset}.dms_applications"
     project_id = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
-    df.to_gbq(target_table, project_id=project_id, if_exists='replace')
+    df.to_gbq(target_table, project_id=project_id, if_exists="replace")
 
 
 def update_dms_applications():

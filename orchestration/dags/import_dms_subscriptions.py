@@ -31,7 +31,7 @@ with DAG(
     fetch_dms = PythonOperator(
         task_id=f"download_dms_subscriptions",
         python_callable=update_dms_applications,
-    )  
+    )
 
     end = DummyOperator(task_id="end")
 

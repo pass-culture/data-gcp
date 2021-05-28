@@ -4,7 +4,9 @@ import os
 import random
 from typing import Any, Dict, List, Tuple
 
+import numpy as np
 import pytz
+
 from google.api_core.client_options import ClientOptions
 from googleapiclient import discovery
 from sqlalchemy import create_engine, engine, text
@@ -281,13 +283,13 @@ def get_scored_recommendation_for_user(
         instances = offers_ids
     if input_type == "item_id_and_user_id_lists":
         offers_ids = [
-            recommendation["item_id"] if recommendation["item_id"] != None else ""
+            recommendation["item_id"] if recommendation["item_id"] else ""
             for recommendation in user_recommendations
         ]
-        instances = dict()
-        instances["input_1"] = user_to_rank
-        instances["input_2"] = offers_ids
-        instances = [instances]
+        instance = dict()
+        instance["input_1"] = user_to_rank
+        instance["input_2"] = offers_ids
+        instances = [instance]
     predicted_scores = predict_score(
         model_region, GCP_PROJECT, model_name, instances, version
     )

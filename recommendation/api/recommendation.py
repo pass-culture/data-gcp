@@ -1,11 +1,7 @@
 import collections
 import datetime
-import json
-import numpy as np
 import os
 import random
-import numpy as np
-import json
 from typing import Any, Dict, List, Tuple
 
 import pytz
@@ -212,25 +208,6 @@ def get_cold_start_recommendations_for_user(
 def get_intermediate_recommendations_for_user(
     user_id: int, user_iris_id: int, connection
 ) -> List[Dict[str, Any]]:
-
-    recommendations_query = get_recommendations_query(user_id, user_iris_id)
-    query_result = connection.execute(recommendations_query).fetchall()
-
-    user_recommendation = [
-        {
-            "id": row[0],
-            "type": row[1],
-            "url": row[2],
-            "item_id": row[3],
-            "product_id": row[4],
-        }
-        for row in query_result
-    ]
-
-    return user_recommendation
-
-
-def get_recommendations_query(user_id: int, user_iris_id: int) -> str:
     if not user_iris_id:
         query = text(
             """
@@ -276,7 +253,13 @@ def get_recommendations_query(user_id: int, user_iris_id: int) -> str:
         ).fetchall()
 
     user_recommendation = [
-        {"id": row[0], "type": row[1], "url": row[2], "item_id": row[3]}
+        {
+            "id": row[0],
+            "type": row[1],
+            "url": row[2],
+            "item_id": row[3],
+            "product_id": row[4],
+        }
         for row in query_result
     ]
 

@@ -74,7 +74,7 @@ def fetch_result(demarches_ids, df, dms_token):
 
 def get_query(demarche_id, end_cursor):
     if not end_cursor:
-        parameter = "first:1"
+        parameter = "first:100"
     else: 
         parameter = f"after: \"{end_cursor}\""
     query = """

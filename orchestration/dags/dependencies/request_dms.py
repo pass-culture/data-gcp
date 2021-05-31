@@ -157,10 +157,29 @@ def save_result(df):
     analytics_dataset = os.environ.get("BIGQUERY_ANALYTICS_DATASET", "")
     target_table = f"{analytics_dataset}.dms_applications"
     project_id = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
-    df.to_gbq(target_table, project_id=project_id, if_exists="replace")
+
+    df.last_update_at = pd.to_datetime(df.last_update_at)
+    df.application_submitted_at = pd.to_datetime(df.application_submitted_at)
+    df.passed_in_instruction_at = pd.to_datetime(df.passed_in_instruction_at)
+    df.processed_at = pd.to_datetime(df.processed_at)
+
+    df.to_gbq(target_table, project_id=project_id, if_exists="replace", table_schema=[
+        {'name': 'demarche_id', 'type': 'STRING'},
+        {'name': 'application_id', 'type': 'STRING'},
+        {'name': 'application_status', 'type': 'STRING'},
+        {'name': 'last_update_at', 'type': 'DATETIME'},
+        {'name': 'application_submitted_at', 'type': 'DATETIME'},
+        {'name': 'passed_in_instruction_at', 'type': 'DATETIME'},
+        {'name': 'processed_at', 'type': 'DATETIME'},
+        {'name': 'instructor_mail', 'type': 'STRING'},
+        {'name': 'applicant_department', 'type': 'STRING'},
+        {'name': 'applicant_birthday', 'type': 'STRING'},
+        {'name': 'applicant_postal_code', 'type': 'STRING'},
+    ])
 
 
 def update_dms_applications():
     dms_token = get_secret_token()
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     fetch_result(demarches_ids, df, dms_token)
     save_result(df)

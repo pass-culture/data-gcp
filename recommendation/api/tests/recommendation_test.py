@@ -72,7 +72,7 @@ def test_get_final_recommendation_for_group_a(
     )
 
     # Then
-    assert recommendations == [3, 2]
+    assert sorted(recommendations) == [2, 3]
     save_recommendation_mock.assert_called_once()
 
 

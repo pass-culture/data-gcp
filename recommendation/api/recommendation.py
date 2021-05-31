@@ -103,6 +103,12 @@ def get_final_recommendations(
             app_config[f"MODEL_VERSION_{group_id}"],
             app_config[f"MODEL_INPUT_{group_id}"],
         )
+        if group_id == "A":
+            scored_recommendation_for_user = sorted(
+                scored_recommendation_for_user, key=lambda k: k["score"], reverse=True
+            )[:40]
+            for recommendation in scored_recommendation_for_user:
+                recommendation["score"] = random.random()
 
         final_recommendations = order_offers_by_score_and_diversify_types(
             scored_recommendation_for_user

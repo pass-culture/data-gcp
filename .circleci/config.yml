@@ -3,7 +3,6 @@ orbs:
   cloudrun: circleci/gcp-cloud-run@1.0.2
   slack: circleci/slack@4.2
 
-
 ###################
 #  SLACK
 ###################
@@ -226,37 +225,7 @@ workflows:
             - Slack
           <<: *slack-fail-post-step
 
-# AI Platform jobs
-# ----------------
-      - ai-platform-deploy:
-          name: staging-ai-platform-deploy
-          machine_type: n1-standard-2
-          requires:
-            - linter
-          filters:
-            branches:
-              only:
-                - master
-          context:
-            - DATA_GCP
-            - DATA_GCP_EHP
-            - Slack
-          <<: *slack-fail-post-step
 
-      - ai-platform-deploy:
-          name: production-ai-platform-deploy
-          machine_type: n1-standard-2
-          requires:
-            - linter
-          filters:
-            branches:
-              only:
-                - production
-          context:
-            - DATA_GCP
-            - DATA_GCP_PROD
-            - Slack
-          <<: *slack-fail-post-step
 
 # Cloud Function jobs
 # -------------------
@@ -368,7 +337,6 @@ workflows:
                 - production
           requires:
             - analytics_tests
-            - production-ai-platform-deploy
             - production-composer-deploy
             - api_integration_tests_production
             - recommendation-integration-tests-dev
@@ -386,7 +354,6 @@ workflows:
                 - master
           requires:
             - analytics_tests
-            - staging-ai-platform-deploy
             - staging-composer-deploy
             - api_integration_tests_staging
             - recommendation-integration-tests-dev
@@ -418,10 +385,6 @@ workflows:
           cloud-function-name: qpi_webhook_dev
           cloud-function-folder: qpi-webhook-function-source
           <<: *deploy_on_dev_commons
-      - ai-platform-deploy:
-          name: ai-platform-deploy-dev
-          machine_type: n1-standard-2
-          <<: *deploy_on_dev_commons
       - build_and_deploy_api:
           name: build_and_deploy_api_dev
           api-instance-name : apireco-dev
@@ -434,7 +397,6 @@ workflows:
             - dev-composer-deploy
             - typeform-cloud-function-deploy-dev
             - addresses-cloud-function-deploy-dev
-            - ai-platform-deploy-dev
             - build_and_deploy_api_dev
           context:
             - DATA_GCP_DEV
@@ -736,52 +698,6 @@ jobs:
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_FIREBASE_DATA} 6 20
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_TYPEFORM} 6 20
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_ADDRESSES} 6 20
-
-  ai-platform-deploy:
-    executor: gcp-sdk
-    parameters:
-      machine_type:
-        type: string
-    environment:
-      FRAMEWORK: SCIKIT_LEARN
-    working_directory: ~/data-gcp
-    steps:
-      - checkout:
-          path: ~/data-gcp
-      - run:
-          name: Connect to GCP
-          command: |
-            echo $GCLOUD_SERVICE_KEY | gcloud auth activate-service-account --key-file=-
-            gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
-      - run:
-          name: Deploy to Cloud Storage
-          command: |
-            gsutil cp recommendation/model/model.joblib $RECOMMENDATION_MODEL_DIR/model.joblib
-      - run:
-          name: Deploy to AI Platform
-          command: |
-            export VERSION_NAME=$(date +'version_%Y_%m_%d_%H%M')
-            gcloud ai-platform versions create $VERSION_NAME \
-              --model=$MODEL_NAME \
-              --origin=$RECOMMENDATION_MODEL_DIR \
-              --runtime-version=2.3 \
-              --framework=$FRAMEWORK \
-              --python-version=3.7 \
-              --region=$REGION \
-              --machine-type=<< parameters.machine_type >>
-            gcloud ai-platform versions set-default $VERSION_NAME \
-              --model=$MODEL_NAME \
-              --region=$REGION
-            gcloud ai-platform versions delete \
-              $(gcloud ai-platform versions list \
-                --model=$MODEL_NAME \
-                --region=$REGION \
-                --format="table[no-heading](name, createTime:sort=1:reverse)"\
-                | tail -n1 \
-                | awk '{print $1;}'
-              ) \
-              --model=$MODEL_NAME \
-              --region=$REGION
 
 
   build_and_deploy_api:

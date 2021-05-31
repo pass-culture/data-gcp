@@ -27,8 +27,12 @@ def app_config() -> Dict[str, Any]:
         "NUMBER_OF_RECOMMENDATIONS": 10,
         "NUMBER_OF_PRESELECTED_OFFERS": 50,
         "MODEL_REGION": "model_region",
-        "MODEL_NAME": "model_name",
-        "MODEL_VERSION": "model_version",
+        "MODEL_NAME_A": "model_name",
+        "MODEL_VERSION_A": "model_version",
+        "MODEL_INPUT_A": "model_input",
+        "MODEL_NAME_B": "model_name",
+        "MODEL_VERSION_B": "model_version",
+        "MODEL_INPUT_B": "model_input",
     }
 
 
@@ -54,6 +58,14 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
                 "offer-4",
                 "offer-5",
                 "offer-6",
+            ],
+            "product_id": [
+                "product-1",
+                "product-2",
+                "product-3",
+                "product-4",
+                "product-5",
+                "product-6",
             ],
         }
     )

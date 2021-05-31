@@ -26,14 +26,14 @@ def save_dict_to_path(dictionnary, path):
 
 def get_bookings(start_date, end_date):
     query = f"""
-        select user_id, 
+        select user_id,
         (CASE WHEN offer.offer_type in ('ThingType.LIVRE_EDITION', 'EventType.CINEMA') THEN CONCAT('product-', offer.offer_product_id) ELSE CONCAT('offer-', offer.offer_id) END) AS offer_id, offer.offer_type as type,
         count(*) as nb_bookings
         from `passculture-data-prod.clean_prod.applicative_database_booking` booking
         inner join `passculture-data-prod.clean_prod.applicative_database_stock` stock
         on booking.stock_id = stock.stock_id
         inner join `passculture-data-prod.clean_prod.applicative_database_offer` offer
-        on stock.offer_id = offer.offer_id 
+        on stock.offer_id = offer.offer_id
         where offer.offer_creation_date >= DATETIME '{start_date} 00:00:00'
         and offer.offer_creation_date <= DATETIME '{end_date} 00:00:00'
         group by user_id, offer_id, type
@@ -69,6 +69,15 @@ triplet_model = TripletModel(
     user_ids, item_ids, latent_dim=EMBEDDING_SIZE, l2_reg=L2_REG
 )
 match_model = MatchModel(triplet_model.user_layer, triplet_model.item_layer)
+
+user_id = "19373"
+items_to_rank = np.array(
+    ["offer-7514002", "product-2987109", "offer-6406524", "toto", "tata"]
+)
+repeated_user_id = np.empty_like(items_to_rank)
+repeated_user_id.fill(user_id)
+predicted = match_model.predict([repeated_user_id, items_to_rank], batch_size=4096)
+print(predicted)
 
 
 def sample_triplets(pos_data, item_ids):
@@ -117,6 +126,7 @@ for i in range(n_epochs):
         if eval_result < best_eval:
             tf.saved_model.save(match_model, f"{MODEL_DATA_PATH}/tf_bpr_{i}epochs")
             best_eval = eval_result
+            best_model_path = f"{MODEL_DATA_PATH}/tf_bpr_{i}epochs"
     except KeyboardInterrupt:
         break
 
@@ -130,7 +140,8 @@ plt.ylabel("Losses")
 plt.legend()
 plt.savefig(f"{MODEL_DATA_PATH}/learning_curves.png")
 
-metrics = compute_metrics(10, pos_data_train, pos_data_test, match_model)
+best_model_loaded = tf.saved_model.load(best_model_path)
+metrics = compute_metrics(10, pos_data_train, pos_data_test, best_model_loaded)
 
 print(metrics)
 save_dict_to_path(metrics, f"{MODEL_DATA_PATH}/metrics.json")

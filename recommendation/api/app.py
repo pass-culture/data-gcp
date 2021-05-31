@@ -23,8 +23,12 @@ APP_CONFIG = {
         os.environ.get("NUMBER_OF_PRESELECTED_OFFERS", 50)
     ),
     "MODEL_REGION": os.environ.get("MODEL_REGION"),
-    "MODEL_NAME": os.environ.get("MODEL_NAME"),
-    "MODEL_VERSION": None,  # With none we call the default version (ie the latest)
+    "MODEL_NAME_A": os.environ.get("MODEL_NAME_A"),
+    "MODEL_VERSION_A": os.environ.get("MODEL_VERSION_A"),
+    "MODEL_INPUT_A": os.environ.get("MODEL_INPUT_A"),
+    "MODEL_NAME_B": os.environ.get("MODEL_NAME_B"),
+    "MODEL_VERSION_B": os.environ.get("MODEL_VERSION_B"),
+    "MODEL_INPUT_B": os.environ.get("MODEL_INPUT_B"),
 }
 
 app = Flask(__name__)

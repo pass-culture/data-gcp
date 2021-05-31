@@ -4,7 +4,9 @@ import os
 import random
 from typing import Any, Dict, List, Tuple
 
+import numpy as np
 import pytz
+
 from google.api_core.client_options import ClientOptions
 from googleapiclient import discovery
 from sqlalchemy import create_engine, engine, text
@@ -52,10 +54,8 @@ def create_db_connection() -> Any:
 def get_final_recommendations(
     user_id: int, longitude: int, latitude: int, app_config: Dict[str, Any]
 ) -> List[int]:
-
     ab_testing_table = app_config["AB_TESTING_TABLE"]
     connection = create_db_connection()
-
     request_response = connection.execute(
         text(f"SELECT groupid FROM {ab_testing_table} WHERE userid= :user_id"),
         user_id=str(user_id),
@@ -96,15 +96,17 @@ def get_final_recommendations(
             user_id, user_iris_id, connection
         )
         scored_recommendation_for_user = get_scored_recommendation_for_user(
+            user_id,
             recommendations_for_user,
             app_config["MODEL_REGION"],
-            app_config["MODEL_NAME"],
-            app_config["MODEL_VERSION"],
+            app_config[f"MODEL_NAME_{group_id}"],
+            app_config[f"MODEL_VERSION_{group_id}"],
+            app_config[f"MODEL_INPUT_{group_id}"],
         )
+
         final_recommendations = order_offers_by_score_and_diversify_types(
             scored_recommendation_for_user
         )[: app_config["NUMBER_OF_RECOMMENDATIONS"]]
-
     save_recommendation(user_id, final_recommendations, connection)
     connection.close()
     return final_recommendations
@@ -117,7 +119,7 @@ def save_recommendation(user_id: int, recommendations: List[int], cursor):
         cursor.execute(
             text(
                 """
-                INSERT INTO public.past_recommended_offers(userid, offerid, date) 
+                INSERT INTO public.past_recommended_offers(userid, offerid, date)
                 VALUES (:user_id, :offer_id, :date)
                 """
             ),
@@ -128,8 +130,7 @@ def save_recommendation(user_id: int, recommendations: List[int], cursor):
 
 
 def get_cold_start_final_recommendations(
-    recommendations: List[Dict[str, Any]],
-    number_of_recommendations: int,
+    recommendations: List[Dict[str, Any]], number_of_recommendations: int
 ):
     cold_start_recommendations = [
         recommendation["id"] for recommendation in recommendations
@@ -186,7 +187,7 @@ def get_cold_start_recommendations_for_user(
                 WHERE user_id = :user_id
             )
         AND {where_clause}
-        AND booking_number > 0 
+        AND booking_number > 0
         {order_query}
         LIMIT :number_of_preselected_offers;
         """
@@ -207,15 +208,12 @@ def get_cold_start_recommendations_for_user(
 
 
 def get_intermediate_recommendations_for_user(
-    user_id: int,
-    user_iris_id: int,
-    connection,
+    user_id: int, user_iris_id: int, connection
 ) -> List[Dict[str, Any]]:
-
     if not user_iris_id:
         query = text(
             """
-            SELECT offer_id, type, url, item_id
+            SELECT offer_id, type, url, item_id, product_id
             FROM recommendable_offers
             WHERE is_national = True or url IS NOT NULL
             AND offer_id NOT IN
@@ -231,7 +229,7 @@ def get_intermediate_recommendations_for_user(
     else:
         query = text(
             """
-            SELECT offer_id, type, url, item_id
+            SELECT offer_id, type, url, item_id, product_id
             FROM recommendable_offers
             WHERE
                 (
@@ -257,7 +255,13 @@ def get_intermediate_recommendations_for_user(
         ).fetchall()
 
     user_recommendation = [
-        {"id": row[0], "type": row[1], "url": row[2], "item_id": row[3]}
+        {
+            "id": row[0],
+            "type": row[1],
+            "url": row[2],
+            "item_id": row[3],
+            "product_id": row[4],
+        }
         for row in query_result
     ]
 
@@ -265,14 +269,26 @@ def get_intermediate_recommendations_for_user(
 
 
 def get_scored_recommendation_for_user(
+    user_id: int,
     user_recommendations: List[Dict[str, Any]],
     model_region: str,
     model_name: str,
     version: str,
+    input_type: str,
 ) -> List[Dict[str, int]]:
-    offers_ids = [recommendation["id"] for recommendation in user_recommendations]
+    user_to_rank = [user_id for reco in user_recommendations]
+    if input_type == "offer_id_list":
+        instances = [recommendation["id"] for recommendation in user_recommendations]
+    elif input_type == "item_id_and_user_id_lists":
+        offers_ids = [
+            recommendation["item_id"] if recommendation["item_id"] else ""
+            for recommendation in user_recommendations
+        ]
+        instances = [{"input_1": user_to_rank, "input_2": offers_ids}]
+    else:
+        instances = []
     predicted_scores = predict_score(
-        model_region, GCP_PROJECT, model_name, offers_ids, version
+        model_region, GCP_PROJECT, model_name, instances, version
     )
     return [
         {**recommendation, "score": predicted_scores[i]}
@@ -287,8 +303,7 @@ def predict_score(region, project, model, instances, version):
         "ml", "v1", client_options=client_options, cache_discovery=False
     )
     name = f"projects/{project}/models/{model}"
-
-    if version is not None:
+    if version:
         name += f"/versions/{version}"
 
     response = (
@@ -329,14 +344,12 @@ def order_offers_by_score_and_diversify_types(
         )
 
     diversified_offers = []
-
-    while len(diversified_offers) != len(offers):
+    while len(diversified_offers) != np.sum([len(l) for l in offers_by_type.values()]):
         for offer_type in offers_by_type_ordered_by_frequency.keys():
             if offers_by_type_ordered_by_frequency[offer_type]:
                 diversified_offers.append(
                     offers_by_type_ordered_by_frequency[offer_type].pop()
                 )
-
     return [offer["id"] for offer in diversified_offers]
 
 
@@ -344,8 +357,12 @@ def _get_offers_grouped_by_type(offers: List[Dict[str, Any]]) -> Dict:
     offers_by_type = dict()
     for offer in offers:
         offer_type = offer["type"]
+        offer_product_id = offer["product_id"]
         if offer_type in offers_by_type.keys():
-            offers_by_type[offer_type].append(offer)
+            if offer_product_id not in [
+                offer["product_id"] for offer in offers_by_type[offer_type]
+            ]:
+                offers_by_type[offer_type].append(offer)
         else:
             offers_by_type[offer_type] = [offer]
     return offers_by_type

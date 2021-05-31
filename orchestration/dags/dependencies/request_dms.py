@@ -1,9 +1,12 @@
 import requests
 import os
 import json
+import time
+import urllib3
 import pandas as pd
 
 from google.cloud import secretmanager
+
 
 API_URL = "https://www.demarches-simplifiees.fr/api/v2/graphql"
 demarches_ids = ["44675", "44623", "29161"]
@@ -127,6 +130,7 @@ def get_query(demarche_id, end_cursor):
 
 
 def run_query(query, dms_token):
+    time.sleep(0.2)
     headers = {"Authorization": "Bearer " + dms_token}
     request = requests.post(
         API_URL, json={"query": query}, headers=headers, verify=False

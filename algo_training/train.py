@@ -4,13 +4,11 @@ import mlflow
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-from google.auth.transport.requests import Request
-from google.cloud import secretmanager
-from google.oauth2 import id_token
 
 from models.match_model import MatchModel
 from models.triplet_model import TripletModel
 from models.utils import identity_loss, sample_triplets, predict
+from utils import get_secret, connect_remote_mlflow
 
 
 STORAGE_PATH = os.environ.get("STORAGE_PATH", "")
@@ -95,24 +93,6 @@ def train(storage_path: str):
                 export_path = f"{TRAIN_DIR}/{run_uuid}"
                 tf.saved_model.save(match_model, export_path)
                 mlflow.log_artifacts(export_path, "model")
-
-
-def get_secret(secret_id: str):
-    client = secretmanager.SecretManagerServiceClient()
-    name = f"projects/{GCP_PROJECT_ID}/secrets/{secret_id}/versions/1"
-    response = client.access_secret_version(name=name)
-    return response.payload.data.decode("UTF-8")
-
-
-def connect_remote_mlflow(client_id, env="ehp"):
-    """
-    Use this function to connect to the mlflow remote server.
-
-    client_id : the oauth iap client id (in 1password)
-    """
-    os.environ["MLFLOW_TRACKING_TOKEN"] = id_token.fetch_id_token(Request(), client_id)
-    uri = MLFLOW_PROD_URI if env == "prod" else MLFLOW_EHP_URI
-    mlflow.set_tracking_uri(uri)
 
 
 if __name__ == "__main__":

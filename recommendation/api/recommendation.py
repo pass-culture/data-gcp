@@ -173,6 +173,7 @@ def get_cold_start_recommendations_for_user(
                     WHERE "iris_id" = :user_iris_id
                 )
             OR is_national = True
+            OR url IS NOT NULL
         )
         """
 
@@ -240,6 +241,7 @@ def get_intermediate_recommendations_for_user(
                     WHERE "iris_id" = :user_iris_id
                     )
                 OR is_national = True
+                OR url IS NOT NULL
                 )
             AND offer_id NOT IN
                 (

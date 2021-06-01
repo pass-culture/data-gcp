@@ -237,6 +237,13 @@ def test_get_intermediate_recommendation_for_user(setup_database: Any):
                 "product_id": "product-3",
             },
             {
+                "id": "4",
+                "type": "D",
+                "url": "url",
+                "item_id": "offer-4",
+                "product_id": "product-4",
+            },
+            {
                 "id": "5",
                 "type": "E",
                 "url": None,

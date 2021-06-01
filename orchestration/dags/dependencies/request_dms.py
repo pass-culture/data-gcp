@@ -6,6 +6,8 @@ import urllib3
 import pandas as pd
 
 from google.cloud import secretmanager
+from config import DATA_GCS_BUCKET_NAME
+from datetime import datetime
 
 
 API_URL = "https://www.demarches-simplifiees.fr/api/v2/graphql"
@@ -74,11 +76,12 @@ def fetch_result(demarches_ids, df, dms_token):
             has_next_page = result["data"]["demarche"]["dossiers"]["pageInfo"][
                 "hasNextPage"
             ]
-            if has_next_page:
-                end_cursor = result["data"]["demarche"]["dossiers"]["pageInfo"][
-                    "endCursor"
-                ]
-                query = get_query(demarche_id, end_cursor)
+            has_next_page = False
+            # if has_next_page:
+            #     end_cursor = result["data"]["demarche"]["dossiers"]["pageInfo"][
+            #         "endCursor"
+            #     ]
+            #     query = get_query(demarche_id, end_cursor)
 
 
 def get_query(demarche_id, end_cursor):
@@ -154,33 +157,35 @@ def get_secret_token():
 
 
 def save_result(df):
-    analytics_dataset = os.environ.get("BIGQUERY_ANALYTICS_DATASET", "")
-    target_table = f"{analytics_dataset}.dms_applications"
-    project_id = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
+    # analytics_dataset = os.environ.get("BIGQUERY_ANALYTICS_DATASET", "")
+    # target_table = f"{analytics_dataset}.dms_applications"
+    # project_id = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 
     df.last_update_at = pd.to_datetime(df.last_update_at)
     df.application_submitted_at = pd.to_datetime(df.application_submitted_at)
     df.passed_in_instruction_at = pd.to_datetime(df.passed_in_instruction_at)
     df.processed_at = pd.to_datetime(df.processed_at)
 
-    df.to_gbq(
-        target_table,
-        project_id=project_id,
-        if_exists="replace",
-        table_schema=[
-            {"name": "demarche_id", "type": "STRING"},
-            {"name": "application_id", "type": "STRING"},
-            {"name": "application_status", "type": "STRING"},
-            {"name": "last_update_at", "type": "DATETIME"},
-            {"name": "application_submitted_at", "type": "DATETIME"},
-            {"name": "passed_in_instruction_at", "type": "DATETIME"},
-            {"name": "processed_at", "type": "DATETIME"},
-            {"name": "instructor_mail", "type": "STRING"},
-            {"name": "applicant_department", "type": "STRING"},
-            {"name": "applicant_birthday", "type": "STRING"},
-            {"name": "applicant_postal_code", "type": "STRING"},
-        ],
-    )
+    now = datetime.now()
+    df.to_csv(f"{DATA_GCS_BUCKET_NAME}/dms_export/dms_{now.year}_{now.month}_{now.day}.csv")
+    # df.to_gbq(
+    #     target_table,
+    #     project_id=project_id,
+    #     if_exists="replace",
+    #     table_schema=[
+    #         {"name": "demarche_id", "type": "STRING"},
+    #         {"name": "application_id", "type": "STRING"},
+    #         {"name": "application_status", "type": "STRING"},
+    #         {"name": "last_update_at", "type": "DATETIME"},
+    #         {"name": "application_submitted_at", "type": "DATETIME"},
+    #         {"name": "passed_in_instruction_at", "type": "DATETIME"},
+    #         {"name": "processed_at", "type": "DATETIME"},
+    #         {"name": "instructor_mail", "type": "STRING"},
+    #         {"name": "applicant_department", "type": "STRING"},
+    #         {"name": "applicant_birthday", "type": "STRING"},
+    #         {"name": "applicant_postal_code", "type": "STRING"},
+    #     ],
+    # )
 
 
 def update_dms_applications():

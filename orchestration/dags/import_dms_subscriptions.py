@@ -4,7 +4,9 @@ from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python_operator import PythonOperator
-from airflow.providers.google.cloud.transfers.gcs_to_bigquery import GCSToBigQueryOperator
+from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
+    GCSToBigQueryOperator,
+)
 
 from dependencies.slack_alert import task_fail_slack_alert
 from dependencies.request_dms import update_dms_applications
@@ -14,7 +16,7 @@ from dependencies.config import DATA_GCS_BUCKET_NAME, BIGQUERY_ANALYTICS_DATASET
 
 default_args = {
     "start_date": datetime(2021, 5, 26),
-    # "on_failure_callback": task_fail_slack_alert,
+    "on_failure_callback": task_fail_slack_alert,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }
@@ -38,9 +40,9 @@ with DAG(
 
     now = datetime.now()
     import_to_bq = GCSToBigQueryOperator(
-        task_id='import_dms_to_bq',
+        task_id="import_dms_to_bq",
         bucket=DATA_GCS_BUCKET_NAME,
-        source_objects=[f'dms_export/dms_{now.year}_{now.month}_{now.day}.csv'],
+        source_objects=[f"dms_export/dms_{now.year}_{now.month}_{now.day}.csv"],
         destination_project_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.dms_applications",
         schema_fields=[
             {"name": "demarche_id", "type": "STRING"},
@@ -55,7 +57,7 @@ with DAG(
             {"name": "applicant_birthday", "type": "STRING"},
             {"name": "applicant_postal_code", "type": "STRING"},
         ],
-        write_disposition='WRITE_TRUNCATE',
+        write_disposition="WRITE_TRUNCATE",
     )
 
     end = DummyOperator(task_id="end")

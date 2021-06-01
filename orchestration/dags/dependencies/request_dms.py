@@ -81,7 +81,7 @@ def fetch_result(demarches_ids, df_applications, dms_token):
 
             if ENV_SHORT_NAME != "prod":
                 has_next_page = False
-            
+
             if has_next_page:
                 end_cursor = result["data"]["demarche"]["dossiers"]["pageInfo"][
                     "endCursor"
@@ -164,7 +164,11 @@ def get_secret_token():
 def save_result(df_applications):
     DATA_GCS_BUCKET_NAME = os.environ.get("DATA_GCS_BUCKET_NAME")
     now = datetime.now()
-    df_applications.to_csv(f"gs://{DATA_GCS_BUCKET_NAME}/dms_export/dms_{now.year}_{now.month}_{now.day}.csv", header=False, index=False)
+    df_applications.to_csv(
+        f"gs://{DATA_GCS_BUCKET_NAME}/dms_export/dms_{now.year}_{now.month}_{now.day}.csv",
+        header=False,
+        index=False,
+    )
 
 
 def update_dms_applications():

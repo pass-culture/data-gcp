@@ -5,7 +5,7 @@ from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python_operator import PythonOperator
 from airflow.contrib.operators.gcs_to_bq import (
-    GCSToBigQueryOperator,
+    GoogleCloudStorageToBigQueryOperator,
 )
 
 from dependencies.slack_alert import task_fail_slack_alert
@@ -39,7 +39,7 @@ with DAG(
     )
 
     now = datetime.now()
-    import_to_bq = GCSToBigQueryOperator(
+    import_to_bq = GoogleCloudStorageToBigQueryOperator(
         task_id="import_dms_to_bq",
         bucket=DATA_GCS_BUCKET_NAME,
         source_objects=[f"dms_export/dms_{now.year}_{now.month}_{now.day}.csv"],

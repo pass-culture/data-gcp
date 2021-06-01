@@ -1,6 +1,8 @@
 import os
 import pandas as pd
 
+STORAGE_PATH = os.environ.get("STORAGE_PATH", "")
+
 
 def preprocess(storage_path: str):
     bookings = pd.read_csv(f"{storage_path}/raw_data.csv")
@@ -11,7 +13,6 @@ def preprocess(storage_path: str):
 
 
 def main():
-    STORAGE_PATH = os.environ.get("STORAGE_PATH", "")
     preprocess(STORAGE_PATH)
 
 

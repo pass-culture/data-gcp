@@ -23,7 +23,9 @@ def evaluate(model, storage_path: str):
         f"{storage_path}/pos_data_train.csv", dtype={"user_id": str, "item_id": str}
     )
 
-    metrics = compute_metrics(RECOMMENDATION_NUMBER, pos_data_train, pos_data_test, model)
+    metrics = compute_metrics(
+        RECOMMENDATION_NUMBER, pos_data_train, pos_data_test, model
+    )
     mlflow.log_metrics(metrics)
 
 

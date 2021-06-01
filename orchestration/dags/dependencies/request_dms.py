@@ -12,7 +12,7 @@ from datetime import datetime
 
 API_URL = "https://www.demarches-simplifiees.fr/api/v2/graphql"
 demarches_ids = ["44675", "44623", "29161"]
-df = pd.DataFrame(
+df_applications = pd.DataFrame(
     columns=[
         "demarche_id",
         "application_id",
@@ -29,7 +29,7 @@ df = pd.DataFrame(
 )
 
 
-def parse_result(result, df, demarche_id):
+def parse_result(result, df_applications, demarche_id):
     for node in result["data"]["demarche"]["dossiers"]["edges"]:
         dossier = node["node"]
         dossier_line = {
@@ -61,10 +61,10 @@ def parse_result(result, df, demarche_id):
                 continue
             dossier_line["instructor_mail"] = avis["profil"]["email"]
 
-        df.loc[len(df)] = dossier_line
+        df_applications.loc[len(df_applications)] = dossier_line
 
 
-def fetch_result(demarches_ids, df, dms_token):
+def fetch_result(demarches_ids, df_applications, dms_token):
     ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
     for demarche_id in demarches_ids:
         end_cursor = ""
@@ -72,7 +72,7 @@ def fetch_result(demarches_ids, df, dms_token):
         has_next_page = True
         while has_next_page:
             result = run_query(query, dms_token)
-            parse_result(result, df, demarche_id)
+            parse_result(result, df_applications, demarche_id)
 
             has_next_page = result["data"]["demarche"]["dossiers"]["pageInfo"][
                 "hasNextPage"
@@ -160,14 +160,14 @@ def get_secret_token():
     return response.payload.data.decode("UTF-8")
 
 
-def save_result(df):
+def save_result(df_applications):
     DATA_GCS_BUCKET_NAME = os.environ.get("DATA_GCS_BUCKET_NAME")
     now = datetime.now()
-    df.to_csv(f"gs://{DATA_GCS_BUCKET_NAME}/dms_export/dms_{now.year}_{now.month}_{now.day}.csv", header=False, index=False)
+    df_applications.to_csv(f"gs://{DATA_GCS_BUCKET_NAME}/dms_export/dms_{now.year}_{now.month}_{now.day}.csv", header=False, index=False)
 
 
 def update_dms_applications():
     dms_token = get_secret_token()
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-    fetch_result(demarches_ids, df, dms_token)
-    save_result(df)
+    fetch_result(demarches_ids, df_applications, dms_token)
+    save_result(df_applications)

@@ -1,13 +1,14 @@
-import requests
-import os
+import gcsfs
 import json
+import os
+import requests
 import time
 import urllib3
-import gcsfs
+
 import pandas as pd
 
-from google.cloud import secretmanager
 from datetime import datetime
+from google.cloud import secretmanager
 
 
 API_URL = "https://www.demarches-simplifiees.fr/api/v2/graphql"

@@ -1,9 +1,22 @@
 import tensorflow as tf
+from tensorflow.keras import layers
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Embedding, Flatten, Input, Dense, Lambda, Dot
 from tensorflow.keras.regularizers import l2
 from tensorflow.keras.layers.experimental.preprocessing import StringLookup
-from margin_loss import MarginLoss
+
+
+class MarginLoss(layers.Layer):
+    def __init__(self, margin=1.0):
+        super().__init__()
+        self.margin = margin
+
+    def call(self, inputs):
+        pos_pair_similarity = inputs[0]
+        neg_pair_similarity = inputs[1]
+
+        diff = neg_pair_similarity - pos_pair_similarity
+        return tf.maximum(diff + self.margin, 0.0)
 
 
 class TripletModel(Model):
@@ -17,6 +30,7 @@ class TripletModel(Model):
         self.user_layer = tf.keras.Sequential(
             [
                 StringLookup(vocabulary=user_ids, mask_token=None),
+                # We add an additional embedding to account for unknown tokens.
                 Embedding(
                     len(user_ids) + 1,
                     latent_dim,
@@ -28,9 +42,12 @@ class TripletModel(Model):
             ]
         )
 
+        # The following embedding parameters will be shared to
+        # encode both the positive and negative items.
         self.item_layer = tf.keras.Sequential(
             [
                 StringLookup(vocabulary=item_ids, mask_token=None),
+                # We add an additional embedding to account for unknown tokens.
                 Embedding(
                     len(item_ids) + 1,
                     latent_dim,
@@ -42,6 +59,8 @@ class TripletModel(Model):
             ]
         )
 
+        # The 2 following layers are without parameters, and can
+        # therefore be used for both positive and negative items.
         self.flatten = Flatten()
         self.dot = Dot(axes=1, normalize=True)
 
@@ -61,6 +80,7 @@ class TripletModel(Model):
         neg_item_embedding = self.item_layer(neg_item_input)
         neg_item_embedding = self.flatten(neg_item_embedding)
 
+        # Similarity computation between embeddings
         pos_similarity = self.dot([user_embedding, pos_item_embedding])
         neg_similarity = self.dot([user_embedding, neg_item_embedding])
 

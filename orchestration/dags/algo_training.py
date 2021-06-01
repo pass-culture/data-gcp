@@ -104,17 +104,17 @@ with DAG(
         dag=dag,
     )
 
-    FEATURE_ENG = f""" '{DEFAULT}
-        python feature_engineering.py'
+    SPLIT_DATA = f""" '{DEFAULT}
+        python split_data.py'
     """
 
-    feature_engineering = BashOperator(
-        task_id="feature_engineering",
+    split_data = BashOperator(
+        task_id="split_data",
         bash_command=f"""
         gcloud compute ssh {GCE_INSTANCE} \
         --zone {GCE_ZONE} \
         --project {GCP_PROJECT_ID} \
-        --command {FEATURE_ENG}
+        --command {SPLIT_DATA}
         """,
         dag=dag,
     )
@@ -232,7 +232,7 @@ with DAG(
         >> fetch_code
         >> data_collect
         >> preprocess
-        >> feature_engineering
+        >> split_data
         >> training
         >> postprocess
         >> evaluate

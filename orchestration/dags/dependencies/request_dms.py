@@ -3,10 +3,10 @@ import os
 import json
 import time
 import urllib3
+import gcsfs
 import pandas as pd
 
 from google.cloud import secretmanager
-from config import DATA_GCS_BUCKET_NAME
 from datetime import datetime
 
 
@@ -157,35 +157,9 @@ def get_secret_token():
 
 
 def save_result(df):
-    # analytics_dataset = os.environ.get("BIGQUERY_ANALYTICS_DATASET", "")
-    # target_table = f"{analytics_dataset}.dms_applications"
-    # project_id = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
-
-    df.last_update_at = pd.to_datetime(df.last_update_at)
-    df.application_submitted_at = pd.to_datetime(df.application_submitted_at)
-    df.passed_in_instruction_at = pd.to_datetime(df.passed_in_instruction_at)
-    df.processed_at = pd.to_datetime(df.processed_at)
-
+    DATA_GCS_BUCKET_NAME = os.environ.get("DATA_GCS_BUCKET_NAME")
     now = datetime.now()
-    df.to_csv(f"{DATA_GCS_BUCKET_NAME}/dms_export/dms_{now.year}_{now.month}_{now.day}.csv")
-    # df.to_gbq(
-    #     target_table,
-    #     project_id=project_id,
-    #     if_exists="replace",
-    #     table_schema=[
-    #         {"name": "demarche_id", "type": "STRING"},
-    #         {"name": "application_id", "type": "STRING"},
-    #         {"name": "application_status", "type": "STRING"},
-    #         {"name": "last_update_at", "type": "DATETIME"},
-    #         {"name": "application_submitted_at", "type": "DATETIME"},
-    #         {"name": "passed_in_instruction_at", "type": "DATETIME"},
-    #         {"name": "processed_at", "type": "DATETIME"},
-    #         {"name": "instructor_mail", "type": "STRING"},
-    #         {"name": "applicant_department", "type": "STRING"},
-    #         {"name": "applicant_birthday", "type": "STRING"},
-    #         {"name": "applicant_postal_code", "type": "STRING"},
-    #     ],
-    # )
+    df.to_csv(f"gs://{DATA_GCS_BUCKET_NAME}/dms_export/dms_{now.year}_{now.month}_{now.day}.csv", header=False, index=False)
 
 
 def update_dms_applications():

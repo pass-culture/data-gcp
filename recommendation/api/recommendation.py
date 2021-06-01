@@ -79,17 +79,12 @@ def get_final_recommendations(
 
     if group_id == "A" and is_cold_start:
         cold_start_types = get_cold_start_types(user_id, connection)
-        recommendations_for_user = get_cold_start_recommendations_for_user(
+        final_recommendations = get_cold_start_recommendations_for_user(
             user_id,
             user_iris_id,
             cold_start_types,
             app_config["NUMBER_OF_PRESELECTED_OFFERS"],
             connection,
-        )
-
-        final_recommendations = get_cold_start_final_recommendations(
-            recommendations=recommendations_for_user,
-            number_of_recommendations=app_config["NUMBER_OF_RECOMMENDATIONS"],
         )
     else:
         recommendations_for_user = get_intermediate_recommendations_for_user(
@@ -136,28 +131,13 @@ def save_recommendation(user_id: int, recommendations: List[int], cursor):
         )
 
 
-def get_cold_start_final_recommendations(
-    recommendations: List[Dict[str, Any]], number_of_recommendations: int
-):
-    cold_start_recommendations = [
-        recommendation["id"] for recommendation in recommendations
-    ]
-
-    try:
-        return random.sample(cold_start_recommendations, number_of_recommendations)
-    except ValueError:
-        return (
-            []
-        )  # not enough recommendable offers (happens often in dev because few bookings)
-
-
 def get_cold_start_recommendations_for_user(
     user_id: int,
     user_iris_id: int,
     cold_start_types: list,
     number_of_preselected_offers: int,
     connection,
-) -> List[Dict[str, Any]]:
+) -> List[int]:
 
     if cold_start_types:
         order_query = f"""
@@ -209,10 +189,13 @@ def get_cold_start_recommendations_for_user(
     ).fetchall()
 
     cold_start_recommendations = [
-        {"id": row[0], "type": row[1], "url": row[2]} for row in query_result
+        {"id": row[0], "type": row[1], "url": row[2], "score": random.random()}
+        for row in query_result
     ]
-
-    return cold_start_recommendations
+    ordered_recommendations = order_offers_by_score_and_diversify_types(
+        cold_start_recommendations
+    )
+    return ordered_recommendations
 
 
 def get_intermediate_recommendations_for_user(

@@ -160,6 +160,11 @@ BIGQUERY_SCHEMAS = {
         "user_is_active": "BOOLEAN",
         "user_suspension_reason": "STRING",
         "user_age": "INT64",
+        "user_has_completed_idCheck": "BOOLEAN",
+        "user_phone_validation_status": "BOOLEAN",
+        "user_has_validated_email": "BOOLEAN",
+        "user_has_enabled_marketing_push": "BOOLEAN",
+        "user_has_enabled_marketing_email": "BOOLEAN",
     },
     "venue": {
         "venue_thumb_count": "INT64",

@@ -75,8 +75,8 @@ with DAG(
     )
 
     DATA_COLLECT = f""" '{DEFAULT}
-python data_collect.py'
-"""
+        python data_collect.py'
+    """
 
     data_collect = BashOperator(
         task_id="data_collect",
@@ -90,8 +90,8 @@ python data_collect.py'
     )
 
     PREPROCESS = f""" '{DEFAULT}
-python preprocess.py'
-"""
+        python preprocess.py'
+    """
 
     preprocess = BashOperator(
         task_id="preprocessing",
@@ -105,8 +105,8 @@ python preprocess.py'
     )
 
     FEATURE_ENG = f""" '{DEFAULT}
-python feature_engineering.py'
-"""
+        python feature_engineering.py'
+    """
 
     feature_engineering = BashOperator(
         task_id="feature_engineering",
@@ -120,8 +120,8 @@ python feature_engineering.py'
     )
 
     TRAINING = f""" '{DEFAULT}
-python train.py'
-"""
+        python train.py'
+    """
 
     training = BashOperator(
         task_id="training",
@@ -135,8 +135,8 @@ python train.py'
     )
 
     POSTPROCESSING = f""" '{DEFAULT}
-python postprocess.py'
-"""
+        python postprocess.py'
+    """
 
     postprocess = BashOperator(
         task_id="postprocess",
@@ -150,8 +150,8 @@ python postprocess.py'
     )
 
     EVALUATION = f""" '{DEFAULT}
-python evaluate.py'
-"""
+        python evaluate.py'
+    """
 
     evaluate = BashOperator(
         task_id="evaluate",

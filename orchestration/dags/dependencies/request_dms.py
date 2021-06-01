@@ -65,6 +65,7 @@ def parse_result(result, df, demarche_id):
 
 
 def fetch_result(demarches_ids, df, dms_token):
+    ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
     for demarche_id in demarches_ids:
         end_cursor = ""
         query = get_query(demarche_id, "")
@@ -76,12 +77,15 @@ def fetch_result(demarches_ids, df, dms_token):
             has_next_page = result["data"]["demarche"]["dossiers"]["pageInfo"][
                 "hasNextPage"
             ]
-            has_next_page = False
-            # if has_next_page:
-            #     end_cursor = result["data"]["demarche"]["dossiers"]["pageInfo"][
-            #         "endCursor"
-            #     ]
-            #     query = get_query(demarche_id, end_cursor)
+
+            if ENV_SHORT_NAME != "prod":
+                has_next_page = False
+            
+            if has_next_page:
+                end_cursor = result["data"]["demarche"]["dossiers"]["pageInfo"][
+                    "endCursor"
+                ]
+                query = get_query(demarche_id, end_cursor)
 
 
 def get_query(demarche_id, end_cursor):

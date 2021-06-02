@@ -333,12 +333,14 @@ def order_offers_by_score_and_diversify_types(
         )
 
     diversified_offers = []
-    while len(diversified_offers) < number_of_recommendations:
+    while len(diversified_offers) != np.sum([len(l) for l in offers_by_type.values()]):
         for offer_type in offers_by_type_ordered_by_frequency.keys():
             if offers_by_type_ordered_by_frequency[offer_type]:
                 diversified_offers.append(
                     offers_by_type_ordered_by_frequency[offer_type].pop()
                 )
+        if len(diversified_offers) == number_of_recommendations:
+            break
     return [offer["id"] for offer in diversified_offers]
 
 

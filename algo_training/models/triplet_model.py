@@ -1,22 +1,9 @@
 import tensorflow as tf
-from tensorflow.keras import layers
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Embedding, Flatten, Input, Dense, Lambda, Dot
 from tensorflow.keras.regularizers import l2
 from tensorflow.keras.layers.experimental.preprocessing import StringLookup
-
-
-class MarginLoss(layers.Layer):
-    def __init__(self, margin=1.0):
-        super().__init__()
-        self.margin = margin
-
-    def call(self, inputs):
-        pos_pair_similarity = inputs[0]
-        neg_pair_similarity = inputs[1]
-
-        diff = neg_pair_similarity - pos_pair_similarity
-        return tf.maximum(diff + self.margin, 0.0)
+from margin_loss import MarginLoss
 
 
 class TripletModel(Model):

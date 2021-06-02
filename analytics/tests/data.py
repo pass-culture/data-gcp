@@ -472,6 +472,11 @@ ENRICHED_USER_DATA_INPUT = {
             "user_is_active": True,
             "user_suspension_reason": None,
             "user_age": 18,
+            "user_has_completed_idCheck": True,
+            "user_phone_validation_status": True,
+            "user_has_validated_email": True,
+            "user_has_enabled_marketing_push": True,
+            "user_has_enabled_marketing_email": True,
         }
     ],
     "deposit": [

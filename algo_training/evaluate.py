@@ -10,15 +10,16 @@ RECOMMENDATION_NUMBER = 40
 
 
 def evaluate(model, storage_path: str):
-    pos_data_test = pd.read_csv(
-        f"{storage_path}/pos_data_test.csv", dtype={"user_id": str, "item_id": str}
+    positive_data_test = pd.read_csv(
+        f"{storage_path}/positive_data_test.csv", dtype={"user_id": str, "item_id": str}
     )
-    pos_data_train = pd.read_csv(
-        f"{storage_path}/pos_data_train.csv", dtype={"user_id": str, "item_id": str}
+    positive_data_train = pd.read_csv(
+        f"{storage_path}/positive_data_train.csv",
+        dtype={"user_id": str, "item_id": str},
     )
 
     metrics = compute_metrics(
-        RECOMMENDATION_NUMBER, pos_data_train, pos_data_test, model
+        RECOMMENDATION_NUMBER, positive_data_train, positive_data_test, model
     )
     mlflow.log_metrics(metrics)
 

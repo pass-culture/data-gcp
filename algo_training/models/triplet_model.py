@@ -55,20 +55,20 @@ class TripletModel(Model):
 
     def call(self, inputs, training=False):
         user_input = inputs[0]
-        pos_item_input = inputs[1]
-        neg_item_input = inputs[2]
+        positive_item_input = inputs[1]
+        negative_item_input = inputs[2]
 
         user_embedding = self.user_layer(user_input)
         user_embedding = self.flatten(user_embedding)
 
-        pos_item_embedding = self.item_layer(pos_item_input)
-        pos_item_embedding = self.flatten(pos_item_embedding)
+        positive_item_embedding = self.item_layer(positive_item_input)
+        positive_item_embedding = self.flatten(positive_item_embedding)
 
-        neg_item_embedding = self.item_layer(neg_item_input)
-        neg_item_embedding = self.flatten(neg_item_embedding)
+        negative_item_embedding = self.item_layer(negative_item_input)
+        negative_item_embedding = self.flatten(negative_item_embedding)
 
         # Similarity computation between embeddings
-        pos_similarity = self.dot([user_embedding, pos_item_embedding])
-        neg_similarity = self.dot([user_embedding, neg_item_embedding])
+        positive_similarity = self.dot([user_embedding, positive_item_embedding])
+        negative_similarity = self.dot([user_embedding, negative_item_embedding])
 
-        return self.margin_loss([pos_similarity, neg_similarity])
+        return self.margin_loss([positive_similarity, negative_similarity])

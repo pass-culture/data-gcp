@@ -14,17 +14,17 @@ class MatchModel(Model):
 
     def call(self, inputs):
         user_input = inputs[0]
-        pos_item_input = inputs[1]
+        positive_item_input = inputs[1]
 
         user_embedding = self.user_layer(user_input)
         user_embedding = self.flatten(user_embedding)
 
-        pos_item_embedding = self.item_layer(pos_item_input)
-        pos_item_embedding = self.flatten(pos_item_embedding)
+        positive_item_embedding = self.item_layer(positive_item_input)
+        positive_item_embedding = self.flatten(positive_item_embedding)
 
-        pos_similarity = self.dot([user_embedding, pos_item_embedding])
+        positive_similarity = self.dot([user_embedding, positive_item_embedding])
 
-        return pos_similarity
+        return positive_similarity
 
     def get_config(self):
         return {"user_layer": self.user_layer, "item_layer": self.item_layer}

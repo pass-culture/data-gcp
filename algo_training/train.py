@@ -21,11 +21,12 @@ def train(storage_path: str):
         f"{storage_path}/clean_data.csv", dtype={"user_id": str, "item_id": str}
     )
 
-    pos_data_train = pd.read_csv(
-        f"{storage_path}/pos_data_train.csv", dtype={"user_id": str, "item_id": str}
+    positive_data_train = pd.read_csv(
+        f"{storage_path}/positive_data_train.csv",
+        dtype={"user_id": str, "item_id": str},
     )
-    pos_data_eval = pd.read_csv(
-        f"{storage_path}/pos_data_eval.csv", dtype={"user_id": str, "item_id": str}
+    positive_data_eval = pd.read_csv(
+        f"{storage_path}/positive_data_eval.csv", dtype={"user_id": str, "item_id": str}
     )
 
     user_ids = bookings["user_id"].unique().tolist()
@@ -42,9 +43,9 @@ def train(storage_path: str):
         match_model = MatchModel(triplet_model.user_layer, triplet_model.item_layer)
         predict(match_model)
 
-        fake_y = np.array(["1"] * pos_data_train["user_id"].shape[0], dtype=object)
+        fake_y = np.array(["1"] * positive_data_train["user_id"].shape[0], dtype=object)
         evaluation_fake_train = np.array(
-            ["1"] * pos_data_eval["user_id"].shape[0], dtype=object
+            ["1"] * positive_data_eval["user_id"].shape[0], dtype=object
         )
         triplet_model.compile(loss=identity_loss, optimizer="adam")
 
@@ -52,8 +53,8 @@ def train(storage_path: str):
 
         runned_epochs = 0
         for i in range(N_EPOCHS):
-            triplet_inputs = sample_triplets(pos_data_train, item_ids)
-            evaluation_triplet_inputs = sample_triplets(pos_data_eval, item_ids)
+            triplet_inputs = sample_triplets(positive_data_train, item_ids)
+            evaluation_triplet_inputs = sample_triplets(positive_data_eval, item_ids)
 
             print(f"Training epoch {i}")
             train_result = triplet_model.fit(

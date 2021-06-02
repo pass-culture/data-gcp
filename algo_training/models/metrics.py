@@ -49,43 +49,43 @@ def get_unexpectedness(booked_type_list, recommended_type_list):
     return (1 / (len(booked_type_list) * len(recommended_type_list))) * cosine_sum
 
 
-def compute_metrics(k, pos_data_train, pos_data_test, match_model):
+def compute_metrics(k, positive_data_train, positive_data_test, match_model):
     # map all offers to corresponding types
     offer_type_dict = {}
     unique_offer_types = (
-        pos_data_train.groupby(["item_id", "type"]).first().reset_index()
+        positive_data_train.groupby(["item_id", "type"]).first().reset_index()
     )
     for item_id, item_type in zip(
         unique_offer_types.item_id.values, unique_offer_types.type.values
     ):
         offer_type_dict[item_id] = item_type
 
-    # Only keep user - item iteractions in pos_data_test, which can be infered from model
-    cleaned_pos_data_test = pos_data_test.copy()
+    # Only keep user - item iteractions in positive_data_test, which can be infered from model
+    cleaned_positive_data_test = positive_data_test.copy()
     print(
-        f"Original number of positive feedbacks in test: {cleaned_pos_data_test.shape[0]}"
+        f"Original number of positive feedbacks in test: {cleaned_positive_data_test.shape[0]}"
     )
-    cleaned_pos_data_test = cleaned_pos_data_test.loc[
+    cleaned_positive_data_test = cleaned_positive_data_test.loc[
         lambda df: df.user_id.apply(
-            lambda user_id: user_id in pos_data_train.user_id.values
+            lambda user_id: user_id in positive_data_train.user_id.values
         )
     ]
     print(
-        f"Number of positive feedbacks in test after removing users not present in train: {cleaned_pos_data_test.shape[0]}"
+        f"Number of positive feedbacks in test after removing users not present in train: {cleaned_positive_data_test.shape[0]}"
     )
-    cleaned_pos_data_test = cleaned_pos_data_test.loc[
+    cleaned_positive_data_test = cleaned_positive_data_test.loc[
         lambda df: df.item_id.apply(
-            lambda item_id: item_id in pos_data_train.item_id.values
+            lambda item_id: item_id in positive_data_train.item_id.values
         )
     ]
     print(
-        f"Number of positive feedbacks in test after removing offers not present in train: {cleaned_pos_data_test.shape[0]}"
+        f"Number of positive feedbacks in test after removing offers not present in train: {cleaned_positive_data_test.shape[0]}"
     )
 
     # Get all offers the model may predict
-    all_item_ids = list(set(pos_data_train.item_id.values))
+    all_item_ids = list(set(positive_data_train.item_id.values))
     # Get all users in cleaned test data
-    all_test_user_ids = list(set(cleaned_pos_data_test.user_id.values))
+    all_test_user_ids = list(set(cleaned_positive_data_test.user_id.values))
 
     hidden_items_number = 0
     recommended_hidden_items_number = 0
@@ -100,17 +100,21 @@ def compute_metrics(k, pos_data_train, pos_data_test, match_model):
     for user_id in tqdm.tqdm(all_test_user_ids):
         user_count += 1
 
-        pos_item_train = pos_data_train[pos_data_train["user_id"] == user_id]
-        pos_item_test = cleaned_pos_data_test[
-            cleaned_pos_data_test["user_id"] == user_id
+        positive_item_train = positive_data_train[
+            positive_data_train["user_id"] == user_id
+        ]
+        positive_item_test = cleaned_positive_data_test[
+            cleaned_positive_data_test["user_id"] == user_id
         ]
 
         # remove items in train - they can not be in test set anyway
-        items_to_rank = np.setdiff1d(all_item_ids, pos_item_train["item_id"].values)
-        booked_offer_types = pos_item_train["type"].values
+        items_to_rank = np.setdiff1d(
+            all_item_ids, positive_item_train["item_id"].values
+        )
+        booked_offer_types = positive_item_train["type"].values
 
         # check if any item of items_to_rank is in the test positive feedbacks for this user
-        expected = np.in1d(items_to_rank, pos_item_test["item_id"].values)
+        expected = np.in1d(items_to_rank, positive_item_test["item_id"].values)
 
         repeated_user_id = np.empty_like(items_to_rank)
         repeated_user_id.fill(user_id)
@@ -143,7 +147,7 @@ def compute_metrics(k, pos_data_train, pos_data_test, match_model):
             recommended_items.extend([item[0] for item in scored_items])
             recommended_items = list(set(recommended_items))
 
-            hidden_items = pos_item_test["item_id"].values
+            hidden_items = positive_item_test["item_id"].values
             recommended_hidden_items = [
                 item[0] for item in scored_items if item[0] in hidden_items
             ]
@@ -170,7 +174,7 @@ def compute_metrics(k, pos_data_train, pos_data_test, match_model):
             )
             * 100,
             f"maximal_precision_at_{k}": (
-                cleaned_pos_data_test.shape[0] / (prediction_number * k)
+                cleaned_positive_data_test.shape[0] / (prediction_number * k)
             )
             * 100,
             f"coverage_at_{k}": (len(recommended_items) / len(all_item_ids)) * 100,

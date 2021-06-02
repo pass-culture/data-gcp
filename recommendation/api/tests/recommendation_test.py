@@ -6,6 +6,7 @@ import pytest
 
 from recommendation import (
     get_final_recommendations,
+    get_cold_start_scored_recommendations_for_user,
     get_intermediate_recommendations_for_user,
     get_scored_recommendation_for_user,
     order_offers_by_score_and_diversify_types,
@@ -13,12 +14,55 @@ from recommendation import (
 )
 
 
+@patch("recommendation.get_cold_start_scored_recommendations_for_user")
+@patch("recommendation.get_iris_from_coordinates")
+@patch("recommendation.save_recommendation")
+@patch("recommendation.create_db_connection")
+def test_get_final_recommendation_for_group_a_cold_start(
+    connection_mock: Mock,
+    save_recommendation_mock: Mock,
+    get_iris_from_coordinates_mock: Mock,
+    get_cold_start_scored_recommendations_for_user_mock: Mock,
+    setup_database: Any,
+    app_config: Dict[str, Any],
+):
+    # Given
+    connection_mock.return_value = setup_database
+    user_id = 113
+    get_cold_start_scored_recommendations_for_user_mock.return_value = [
+        {
+            "id": 2,
+            "url": "url2",
+            "type": "type2",
+            "product_id": "product-2",
+            "score": "2",
+        },
+        {
+            "id": 3,
+            "url": "url3",
+            "type": "type3",
+            "product_id": "product-3",
+            "score": "3",
+        },
+    ]
+    get_iris_from_coordinates_mock.return_value = 1
+
+    # When
+    recommendations = get_final_recommendations(
+        user_id, 2.331289, 48.830719, app_config
+    )
+
+    # Then
+    assert sorted(recommendations) == [2, 3]
+    save_recommendation_mock.assert_called_once()
+
+
 @patch("recommendation.get_intermediate_recommendations_for_user")
 @patch("recommendation.get_scored_recommendation_for_user")
 @patch("recommendation.get_iris_from_coordinates")
 @patch("recommendation.save_recommendation")
 @patch("recommendation.create_db_connection")
-def test_get_final_recommendation_for_group_a(
+def test_get_final_recommendation_for_group_a_algo(
     connection_mock: Mock,
     save_recommendation_mock: Mock,
     get_iris_from_coordinates_mock: Mock,
@@ -256,6 +300,56 @@ def test_get_intermediate_recommendation_for_user(setup_database: Any):
                 "url": None,
                 "item_id": "offer-6",
                 "product_id": "product-6",
+            },
+        ],
+    )
+
+
+@patch("random.random")
+def test_get_cold_start_scored_recommendations_for_user(
+    random_mock: Mock, setup_database: Any
+):
+    # Given
+    connection = setup_database
+    random_mock.return_value = 1
+
+    # When
+    user_id = 113
+    user_iris_id = None
+    cold_start_types = []
+    number_of_preselected_offers = 3
+    user_recommendation = get_cold_start_scored_recommendations_for_user(
+        user_id,
+        user_iris_id,
+        cold_start_types,
+        number_of_preselected_offers,
+        connection,
+    )
+
+    # Then
+    assert_array_equal(
+        user_recommendation,
+        [
+            {
+                "id": "3",
+                "type": "C",
+                "url": "url",
+                "product_id": "product-3",
+                "score": 1,
+            },
+            {
+                "id": "1",
+                "type": "A",
+                "url": None,
+                "product_id": "product-1",
+                "score": 1,
+            },
+            {
+                "id": "4",
+                "type": "D",
+                "url": "url",
+                "product_id": "product-4",
+                "score": 1,
             },
         ],
     )

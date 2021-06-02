@@ -79,7 +79,7 @@ def get_final_recommendations(
 
     if group_id == "A" and is_cold_start:
         cold_start_types = get_cold_start_types(user_id, connection)
-        final_recommendations = get_cold_start_recommendations_for_user(
+        scored_recommendation_for_user = get_cold_start_scored_recommendations_for_user(
             user_id,
             user_iris_id,
             cold_start_types,
@@ -106,9 +106,9 @@ def get_final_recommendations(
             for recommendation in scored_recommendation_for_user:
                 recommendation["score"] = random.random()
 
-        final_recommendations = order_offers_by_score_and_diversify_types(
-            scored_recommendation_for_user
-        )[: app_config["NUMBER_OF_RECOMMENDATIONS"]]
+    final_recommendations = order_offers_by_score_and_diversify_types(
+        scored_recommendation_for_user, app_config["NUMBER_OF_RECOMMENDATIONS"]
+    )
     save_recommendation(user_id, final_recommendations, connection)
     connection.close()
     return final_recommendations
@@ -131,13 +131,13 @@ def save_recommendation(user_id: int, recommendations: List[int], cursor):
         )
 
 
-def get_cold_start_recommendations_for_user(
+def get_cold_start_scored_recommendations_for_user(
     user_id: int,
     user_iris_id: int,
     cold_start_types: list,
     number_of_preselected_offers: int,
     connection,
-) -> List[int]:
+) -> List[Dict[str, Any]]:
 
     if cold_start_types:
         order_query = f"""
@@ -192,10 +192,7 @@ def get_cold_start_recommendations_for_user(
         {"id": row[0], "type": row[1], "url": row[2], "score": random.random()}
         for row in query_result
     ]
-    ordered_recommendations = order_offers_by_score_and_diversify_types(
-        cold_start_recommendations
-    )
-    return ordered_recommendations
+    return cold_start_recommendations
 
 
 def get_intermediate_recommendations_for_user(
@@ -309,7 +306,7 @@ def predict_score(region, project, model, instances, version):
 
 
 def order_offers_by_score_and_diversify_types(
-    offers: List[Dict[str, Any]]
+    offers: List[Dict[str, Any]], number_of_recommendations: int
 ) -> List[int]:
     """
     Group offers by type.
@@ -336,7 +333,7 @@ def order_offers_by_score_and_diversify_types(
         )
 
     diversified_offers = []
-    while len(diversified_offers) != np.sum([len(l) for l in offers_by_type.values()]):
+    while len(diversified_offers) < number_of_recommendations:
         for offer_type in offers_by_type_ordered_by_frequency.keys():
             if offers_by_type_ordered_by_frequency[offer_type]:
                 diversified_offers.append(

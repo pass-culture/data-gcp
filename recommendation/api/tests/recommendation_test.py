@@ -143,7 +143,7 @@ def test_get_final_recommendation_for_group_b(
 
 @patch("recommendation.order_offers_by_score_and_diversify_types")
 @patch("recommendation.get_scored_recommendation_for_user")
-@patch("recommendation.get_cold_start_final_recommendations")
+@patch("recommendation.get_cold_start_scored_recommendations_for_user")
 @patch("recommendation.get_intermediate_recommendations_for_user")
 @patch("recommendation.get_cold_start_types")
 @patch("recommendation.get_iris_from_coordinates")
@@ -155,7 +155,7 @@ def test_get_final_recommendation_for_new_user(
     get_iris_from_coordinates_mock: Mock,
     get_cold_start_types: Mock,
     get_intermediate_recommendations_for_user: Mock,
-    get_cold_start_final_recommendations: Mock,
+    get_cold_start_scored_recommendations_for_user: Mock,
     get_scored_recommendation_for_user: Mock,
     order_offers_by_score_and_diversify_types: Mock,
     setup_database: Any,
@@ -187,7 +187,7 @@ def test_get_final_recommendation_for_new_user(
             "score": 3,
         },
     ]
-    get_cold_start_final_recommendations.return_value = [3, 2]
+    get_cold_start_scored_recommendations_for_user.return_value = [3, 2]
     order_offers_by_score_and_diversify_types.return_value = [3, 2]
     get_iris_from_coordinates_mock.return_value = 1
 
@@ -198,7 +198,7 @@ def test_get_final_recommendation_for_new_user(
     try:
         get_intermediate_recommendations_for_user.assert_called()
     except AssertionError:
-        get_cold_start_final_recommendations.assert_called()
+        get_cold_start_scored_recommendations_for_user.assert_called()
     # User should be either in cold start or algo
 
     save_recommendation_mock.assert_called()
@@ -235,6 +235,13 @@ def test_get_intermediate_recommendation_for_user(setup_database: Any):
                 "url": "url",
                 "item_id": "offer-3",
                 "product_id": "product-3",
+            },
+            {
+                "id": "4",
+                "type": "D",
+                "url": "url",
+                "item_id": "offer-4",
+                "product_id": "product-4",
             },
             {
                 "id": "5",
@@ -385,7 +392,7 @@ def test_get_intermediate_recommendation_for_user_with_no_iris(
 def test_order_offers_by_score_and_diversify_types(
     offers: List[Dict[str, Any]], output: List[int]
 ):
-    assert_array_equal(output, order_offers_by_score_and_diversify_types(offers))
+    assert_array_equal(output, order_offers_by_score_and_diversify_types(offers, 10))
 
 
 @patch("recommendation.predict_score")

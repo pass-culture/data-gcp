@@ -11,7 +11,7 @@ from utils import get_secret, connect_remote_mlflow, STORAGE_PATH, ENV_SHORT_NAM
 TRAIN_DIR = "/home/airflow/train"
 EMBEDDING_SIZE = 64
 L2_REG = 0
-N_EPOCHS = 1
+N_EPOCHS = 20
 BATCH_SIZE = 32
 
 

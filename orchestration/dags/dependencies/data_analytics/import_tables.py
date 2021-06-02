@@ -29,8 +29,8 @@ def define_import_query(
             "hasCompletedIdCheck" AS user_has_completed_idCheck,
             "phoneValidationStatus" AS user_phone_validation_status,
             "isEmailValidated" AS user_has_validated_email,
-            CAST("notificationSubscriptions" -> 'marketing_push' AS BOOLEAN) AS user_has_enabled_marketing_push,
-            CAST("notificationSubscriptions" -> 'marketing_email' AS BOOLEAN) AS user_has_enabled_marketing_email
+            CAST("notificationSubscriptions" -> \\'marketing_push\\' AS BOOLEAN) AS user_has_enabled_marketing_push,
+            CAST("notificationSubscriptions" -> \\'marketing_email\\' AS BOOLEAN) AS user_has_enabled_marketing_email
         FROM public.user
     """
     cloudsql_queries[

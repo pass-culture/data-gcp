@@ -341,7 +341,7 @@ def order_offers_by_score_and_diversify_types(
                 )
         if len(diversified_offers) >= number_of_recommendations:
             break
-    return [offer["id"] for offer in diversified_offers]
+    return [offer["id"] for offer in diversified_offers][:number_of_recommendations]
 
 
 def _get_offers_grouped_by_type(offers: List[Dict[str, Any]]) -> Dict:

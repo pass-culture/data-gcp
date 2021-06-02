@@ -166,7 +166,7 @@ def get_cold_start_scored_recommendations_for_user(
 
     recommendations_query = text(
         f"""
-        SELECT offer_id, type, url
+        SELECT offer_id, type, url, product_id
         FROM recommendable_offers
         WHERE offer_id NOT IN
             (
@@ -189,7 +189,13 @@ def get_cold_start_scored_recommendations_for_user(
     ).fetchall()
 
     cold_start_recommendations = [
-        {"id": row[0], "type": row[1], "url": row[2], "score": random.random()}
+        {
+            "id": row[0],
+            "type": row[1],
+            "url": row[2],
+            "product_id": row[3],
+            "score": random.random(),
+        }
         for row in query_result
     ]
     return cold_start_recommendations

@@ -339,7 +339,7 @@ def order_offers_by_score_and_diversify_types(
                 diversified_offers.append(
                     offers_by_type_ordered_by_frequency[offer_type].pop()
                 )
-        if len(diversified_offers) == number_of_recommendations:
+        if len(diversified_offers) >= number_of_recommendations:
             break
     return [offer["id"] for offer in diversified_offers]
 

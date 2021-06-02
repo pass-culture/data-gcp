@@ -1,17 +1,11 @@
-import os
 import pandas as pd
 import tensorflow as tf
 import mlflow.tensorflow
-from match_model import MatchModel
+from models.match_model import MatchModel
 
 from models.metrics import compute_metrics
-from utils import get_secret, connect_remote_mlflow
+from utils import get_secret, connect_remote_mlflow, STORAGE_PATH, ENV_SHORT_NAME
 
-GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
-MLFLOW_EHP_URI = "https://mlflow-ehp.internal-passculture.app/"
-MLFLOW_PROD_URI = "https://mlflow.internal-passculture.app/"
-STORAGE_PATH = os.environ.get("STORAGE_PATH", "")
-ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "ehp")
 RECOMMENDATION_NUMBER = 40
 
 

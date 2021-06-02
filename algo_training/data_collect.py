@@ -1,8 +1,7 @@
-import os
 import pandas as pd
 from datetime import datetime, timedelta
 
-STORAGE_PATH = os.environ.get("STORAGE_PATH", "")
+from utils import STORAGE_PATH
 
 
 def get_bookings(start_date, end_date):
@@ -24,7 +23,7 @@ def get_bookings(start_date, end_date):
 
 
 def main():
-    start_date = datetime.now() - timedelta(days=5 * 30).strftime("%Y-%m-%d")
+    start_date = (datetime.now() - timedelta(days=5 * 30)).strftime("%Y-%m-%d")
     end_date = datetime.now().strftime("%Y-%m-%d")
     bookings = get_bookings(start_date=start_date, end_date=end_date)
     bookings.to_csv(f"{STORAGE_PATH}/raw_data.csv")

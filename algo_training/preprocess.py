@@ -1,7 +1,6 @@
-import os
 import pandas as pd
 
-STORAGE_PATH = os.environ.get("STORAGE_PATH", "")
+from utils import STORAGE_PATH
 
 
 def preprocess(storage_path: str):

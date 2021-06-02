@@ -1,6 +1,4 @@
-import os
 import mlflow
-
 import numpy as np
 import pandas as pd
 import tensorflow as tf
@@ -8,19 +6,12 @@ import tensorflow as tf
 from models.match_model import MatchModel
 from models.triplet_model import TripletModel
 from models.utils import identity_loss, sample_triplets, predict
-from utils import get_secret, connect_remote_mlflow
-
-
-STORAGE_PATH = os.environ.get("STORAGE_PATH", "")
-ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "ehp")
-GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
-MLFLOW_EHP_URI = "https://mlflow-ehp.internal-passculture.app/"
-MLFLOW_PROD_URI = "https://mlflow.internal-passculture.app/"
+from utils import get_secret, connect_remote_mlflow, STORAGE_PATH, ENV_SHORT_NAME
 
 TRAIN_DIR = "/home/airflow/train"
 EMBEDDING_SIZE = 64
 L2_REG = 0
-N_EPOCHS = 20
+N_EPOCHS = 1
 BATCH_SIZE = 32
 
 
@@ -69,9 +60,8 @@ def train(storage_path: str):
                 x=triplet_inputs,
                 y=fake_y,
                 shuffle=True,
-                BATCH_SIZE=BATCH_SIZE,
+                batch_size=BATCH_SIZE,
                 epochs=1,
-                verbose=2,
             )
             mlflow.log_metric(
                 key="Training Loss", value=train_result.history["loss"][0], step=i
@@ -81,7 +71,7 @@ def train(storage_path: str):
             eval_result = triplet_model.evaluate(
                 x=evaluation_triplet_inputs,
                 y=evaluation_fake_train,
-                BATCH_SIZE=BATCH_SIZE,
+                batch_size=BATCH_SIZE,
             )
             mlflow.log_metric(key="Evaluation Loss", value=eval_result, step=i)
 
@@ -92,7 +82,7 @@ def train(storage_path: str):
                 run_uuid = mlflow.active_run().info.run_uuid
                 export_path = f"{TRAIN_DIR}/{run_uuid}"
                 tf.saved_model.save(match_model, export_path)
-                mlflow.log_artifacts(export_path, "model")
+        mlflow.log_artifacts(export_path, "model")
 
 
 if __name__ == "__main__":

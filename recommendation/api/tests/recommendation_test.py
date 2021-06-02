@@ -392,7 +392,7 @@ def test_get_intermediate_recommendation_for_user_with_no_iris(
 def test_order_offers_by_score_and_diversify_types(
     offers: List[Dict[str, Any]], output: List[int]
 ):
-    assert_array_equal(output, order_offers_by_score_and_diversify_types(offers))
+    assert_array_equal(output, order_offers_by_score_and_diversify_types(offers, 10))
 
 
 @patch("recommendation.predict_score")

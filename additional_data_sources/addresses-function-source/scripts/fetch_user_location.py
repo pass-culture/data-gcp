@@ -26,8 +26,12 @@ class AdressesDownloader:
         bigquery_query = f"""
         SELECT user_id, REPLACE(REPLACE(user_address, '\\r', ''), '\\n', '') AS user_address, user_postal_code, user_city, user_department_code
         FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_user`
+        JOIN `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_beneficiary_import`ON beneficiaryId = user_id
         WHERE user_address is not NULL AND user_address <> ""
-        AND user_postal_code is not NULL AND user_city is not NULL AND user_department_code is not NULL
+        AND (
+            (user_postal_code is not NULL AND user_city is not NULL AND user_department_code is not NULL)
+            OR source="demarches_simplifiees"
+            )
         AND user_id not in (SELECT user_id FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.user_locations`)
         ORDER BY user_id LIMIT 500;
         """
@@ -39,7 +43,7 @@ class AdressesDownloader:
         self.user_address_dataframe["parsed_address"] = self.user_address_dataframe[
             ["user_address", "user_postal_code", "user_city"]
         ].apply(
-            lambda row: quote(" ".join(row)),
+            lambda row: quote(" ".join(filter(None, row))),
             axis=1,
         )
 

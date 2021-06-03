@@ -44,8 +44,8 @@ BUCKET_PATH = f"gs://{DATA_GCS_BUCKET_NAME}/bigquery_exports"
 
 default_args = {
     "start_date": datetime(2020, 12, 1),
-    "retries": 1,
-    "retry_delay": timedelta(minutes=2),
+    "retries": 3,
+    "retry_delay": timedelta(minutes=5),
 }
 
 
@@ -130,7 +130,7 @@ with DAG(
                 SELECT {select_columns}, False AS presse, False AS autre
                 FROM `{GCP_PROJECT}.{dataset}.{bigquery_table_name}_v1`
                 UNION ALL (
-                    SELECT {select_columns}, presse, autre 
+                    SELECT {select_columns}, presse, autre
                     FROM `{GCP_PROJECT}.{dataset}.{bigquery_table_name}_v2`
                 )
             """

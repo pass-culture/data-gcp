@@ -61,7 +61,7 @@ with DAG(
         task_id="gce_start_task",
     )
 
-    FETCH_CODE = '"if cd data-gcp; then git pull; else git clone git@github.com:pass-culture/data-gcp.git && cd data-gcp; fi"'
+    FETCH_CODE = '"if cd data-gcp; then git checkout master && git pull; else git clone git@github.com:pass-culture/data-gcp.git && git checkout PC-9088-train-model-with-mlops && cd data-gcp; fi"'
 
     fetch_code = BashOperator(
         task_id="fetch_code",

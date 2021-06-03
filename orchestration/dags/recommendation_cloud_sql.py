@@ -102,13 +102,6 @@ with DAG(
         if dataset_type == "analytics":
             dataset = BIGQUERY_ANALYTICS_DATASET
 
-        drop_table_task = CloudSqlQueryOperator(
-            gcp_cloudsql_conn_id="proxy_postgres_tcp",
-            task_id=f"drop_table_public_{table}",
-            sql=f"DROP TABLE IF EXISTS public.{table};",
-            autocommit=True,
-        )
-
         list_type_columns = [
             column_name
             for column_name in TABLES[table]["columns"]
@@ -177,6 +170,13 @@ with DAG(
             dag=dag,
         )
 
+        drop_table_task = CloudSqlQueryOperator(
+            gcp_cloudsql_conn_id="proxy_postgres_tcp",
+            task_id=f"drop_table_public_{table}",
+            sql=f"DROP TABLE IF EXISTS public.{table};",
+            autocommit=True,
+        )
+
         create_table_task = CloudSqlQueryOperator(
             task_id=f"create_table_public_{table}",
             gcp_cloudsql_conn_id="proxy_postgres_tcp",
@@ -184,9 +184,9 @@ with DAG(
             autocommit=True,
         )
 
-        start_drop_restore >> drop_table_task >> filter_column_task
+        start_drop_restore >> filter_column_task
         filter_column_task >> export_task >> delete_temp_table_task >> compose_files_task
-        compose_files_task >> create_table_task >> end_data_prep
+        compose_files_task >> drop_table_task >> create_table_task >> end_data_prep
 
     def create_restore_task(table_name: str):
         import_body = {
@@ -276,6 +276,7 @@ with DAG(
         sql="REFRESH MATERIALIZED VIEW number_of_bookings_per_user;",
         autocommit=True,
     )
+    ##here define refresh qpi + add to refresh mv tasks
 
     refresh_materialized_views_tasks = [
         refresh_recommendable_offers,

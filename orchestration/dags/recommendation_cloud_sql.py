@@ -239,6 +239,7 @@ with DAG(
         CREATE INDEX IF NOT EXISTS idx_offer_recommendable_venue_id  ON public.recommendable_offers        USING btree (venue_id);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_id ON public.recommendable_offers        USING btree (offer_id);
         CREATE INDEX IF NOT EXISTS idx_number_of_bookings_per_user   ON public.number_of_bookings_per_user USING btree ("user_id");
+        CREATE INDEX IF NOT EXISTS qpi_answers_user_id               ON public.qpi_answers                 USING btree (user_id);
     """
 
     recreate_indexes_task = CloudSqlQueryOperator(

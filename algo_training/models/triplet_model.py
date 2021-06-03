@@ -3,7 +3,7 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Embedding, Flatten, Input, Dense, Lambda, Dot
 from tensorflow.keras.regularizers import l2
 from tensorflow.keras.layers.experimental.preprocessing import StringLookup
-from margin_loss import MarginLoss
+from models.margin_loss import MarginLoss
 
 
 class TripletModel(Model):
@@ -17,6 +17,7 @@ class TripletModel(Model):
         self.user_layer = tf.keras.Sequential(
             [
                 StringLookup(vocabulary=user_ids, mask_token=None),
+                # We add an additional embedding to account for unknown tokens.
                 Embedding(
                     len(user_ids) + 1,
                     latent_dim,
@@ -28,9 +29,12 @@ class TripletModel(Model):
             ]
         )
 
+        # The following embedding parameters will be shared to
+        # encode both the positive and negative items.
         self.item_layer = tf.keras.Sequential(
             [
                 StringLookup(vocabulary=item_ids, mask_token=None),
+                # We add an additional embedding to account for unknown tokens.
                 Embedding(
                     len(item_ids) + 1,
                     latent_dim,
@@ -42,6 +46,8 @@ class TripletModel(Model):
             ]
         )
 
+        # The 2 following layers are without parameters, and can
+        # therefore be used for both positive and negative items.
         self.flatten = Flatten()
         self.dot = Dot(axes=1, normalize=True)
 
@@ -49,19 +55,20 @@ class TripletModel(Model):
 
     def call(self, inputs, training=False):
         user_input = inputs[0]
-        pos_item_input = inputs[1]
-        neg_item_input = inputs[2]
+        positive_item_input = inputs[1]
+        negative_item_input = inputs[2]
 
         user_embedding = self.user_layer(user_input)
         user_embedding = self.flatten(user_embedding)
 
-        pos_item_embedding = self.item_layer(pos_item_input)
-        pos_item_embedding = self.flatten(pos_item_embedding)
+        positive_item_embedding = self.item_layer(positive_item_input)
+        positive_item_embedding = self.flatten(positive_item_embedding)
 
-        neg_item_embedding = self.item_layer(neg_item_input)
-        neg_item_embedding = self.flatten(neg_item_embedding)
+        negative_item_embedding = self.item_layer(negative_item_input)
+        negative_item_embedding = self.flatten(negative_item_embedding)
 
-        pos_similarity = self.dot([user_embedding, pos_item_embedding])
-        neg_similarity = self.dot([user_embedding, neg_item_embedding])
+        # Similarity computation between embeddings
+        positive_similarity = self.dot([user_embedding, positive_item_embedding])
+        negative_similarity = self.dot([user_embedding, negative_item_embedding])
 
-        return self.margin_loss([pos_similarity, neg_similarity])
+        return self.margin_loss([positive_similarity, negative_similarity])

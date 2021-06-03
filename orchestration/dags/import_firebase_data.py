@@ -135,6 +135,10 @@ copy_table_to_analytics = BigQueryOperator(
             from unnest(event_params) event_params
             where event_params.key = 'pageName'
         ) as page_name,
+        (select CAST(event_params.value.double_value AS STRING)
+            from unnest(event_params) event_params
+            where event_params.key = 'offerId'
+        ) as offer_id,
         FROM {GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.firebase_events_{EXECUTION_DATE}
         """,
     use_legacy_sql=False,

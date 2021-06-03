@@ -29,7 +29,6 @@ class TestImportTables(unittest.TestCase):
         # Then
         assert not '"fistName"' in result
         assert not '"lastName"' in result
-        assert not '"dateOfBirth"' in result
         assert not '"phoneNumber"' in result
         assert not '"email"' in result
         assert not '"publicName"' in result

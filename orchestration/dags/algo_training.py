@@ -61,7 +61,7 @@ with DAG(
         task_id="gce_start_task",
     )
 
-    FETCH_CODE = '"if cd data-gcp; then git pull; else git clone git@github.com:pass-culture/data-gcp.git && cd data-gcp; fi"'
+    FETCH_CODE = '"if cd data-gcp; then git checkout master && git pull; else git clone git@github.com:pass-culture/data-gcp.git && cd data-gcp && git checkout master; fi"'
 
     fetch_code = BashOperator(
         task_id="fetch_code",
@@ -75,8 +75,8 @@ with DAG(
     )
 
     DATA_COLLECT = f""" '{DEFAULT}
-python data_collect.py'
-"""
+        python data_collect.py'
+    """
 
     data_collect = BashOperator(
         task_id="data_collect",
@@ -90,8 +90,8 @@ python data_collect.py'
     )
 
     PREPROCESS = f""" '{DEFAULT}
-python preprocess.py'
-"""
+        python preprocess.py'
+    """
 
     preprocess = BashOperator(
         task_id="preprocessing",
@@ -104,24 +104,24 @@ python preprocess.py'
         dag=dag,
     )
 
-    FEATURE_ENG = f""" '{DEFAULT}
-python feature_engineering.py'
-"""
+    SPLIT_DATA = f""" '{DEFAULT}
+        python split_data.py'
+    """
 
-    feature_engineering = BashOperator(
-        task_id="feature_engineering",
+    split_data = BashOperator(
+        task_id="split_data",
         bash_command=f"""
         gcloud compute ssh {GCE_INSTANCE} \
         --zone {GCE_ZONE} \
         --project {GCP_PROJECT_ID} \
-        --command {FEATURE_ENG}
+        --command {SPLIT_DATA}
         """,
         dag=dag,
     )
 
     TRAINING = f""" '{DEFAULT}
-python train.py'
-"""
+        python train.py'
+    """
 
     training = BashOperator(
         task_id="training",
@@ -135,8 +135,8 @@ python train.py'
     )
 
     POSTPROCESSING = f""" '{DEFAULT}
-python postprocess.py'
-"""
+        python postprocess.py'
+    """
 
     postprocess = BashOperator(
         task_id="postprocess",
@@ -150,8 +150,8 @@ python postprocess.py'
     )
 
     EVALUATION = f""" '{DEFAULT}
-python evaluate.py'
-"""
+        python evaluate.py'
+    """
 
     evaluate = BashOperator(
         task_id="evaluate",
@@ -232,7 +232,7 @@ python evaluate.py'
         >> fetch_code
         >> data_collect
         >> preprocess
-        >> feature_engineering
+        >> split_data
         >> training
         >> postprocess
         >> evaluate

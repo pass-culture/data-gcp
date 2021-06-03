@@ -165,6 +165,7 @@ def define_enriched_venue_query(dataset, table_prefix=""):
                 ,venue.venue_is_virtual
                 ,venue.venue_managing_offerer_id
                 ,venue.venue_creation_date
+                ,venue.venue_is_permanent
                 ,offerer.offerer_name
                 ,venue_type.label AS venue_type_label
                 ,venue_label.label AS venue_label

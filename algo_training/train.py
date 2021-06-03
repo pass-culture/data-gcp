@@ -35,6 +35,11 @@ def train(storage_path: str):
     experiment_name = "algo_training_v1"
     experiment = mlflow.get_experiment_by_name(experiment_name)
 
+    mlflow.log_param("embedding_size", EMBEDDING_SIZE)
+    mlflow.log_param("batch_size", BATCH_SIZE)
+    mlflow.log_param("l2_regularization", L2_REG)
+    mlflow.log_param("epoch_number", N_EPOCHS)
+
     with mlflow.start_run(experiment_id=experiment.experiment_id):
 
         triplet_model = TripletModel(

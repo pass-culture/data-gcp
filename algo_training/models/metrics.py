@@ -50,7 +50,7 @@ def get_unexpectedness(booked_type_list, recommended_type_list):
 
 
 def compute_metrics(k, positive_data_train, positive_data_test, match_model):
-    # map all offers to corresponding types
+    # Map all offers to corresponding types
     offer_type_dict = {}
     unique_offer_types = (
         positive_data_train.groupby(["item_id", "type"]).first().reset_index()
@@ -107,13 +107,13 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
             cleaned_positive_data_test["user_id"] == user_id
         ]
 
-        # remove items in train - they can not be in test set anyway
+        # Remove items in train - they can not be in test set anyway
         items_to_rank = np.setdiff1d(
             all_item_ids, positive_item_train["item_id"].values
         )
         booked_offer_types = positive_item_train["type"].values
 
-        # check if any item of items_to_rank is in the test positive feedbacks for this user
+        # Check if any item of items_to_rank is in the test positive feedbacks for this user
         expected = np.in1d(items_to_rank, positive_item_test["item_id"].values)
 
         repeated_user_id = np.empty_like(items_to_rank)

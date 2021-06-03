@@ -15,7 +15,7 @@ API_URL = "https://www.demarches-simplifiees.fr/api/v2/graphql"
 demarches_ids = ["44675", "44623", "29161"]
 df_applications = pd.DataFrame(
     columns=[
-        "demarche_id",
+        "procedure_id",
         "application_id",
         "application_status",
         "last_update_at",
@@ -34,7 +34,7 @@ def parse_result(result, df_applications, demarche_id):
     for node in result["data"]["demarche"]["dossiers"]["edges"]:
         dossier = node["node"]
         dossier_line = {
-            "demarche_id": demarche_id,
+            "procedure_id": demarche_id,
             "application_id": dossier["id"],
             "application_status": dossier["state"],
             "last_update_at": dossier["dateDerniereModification"],

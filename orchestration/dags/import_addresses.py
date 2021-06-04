@@ -54,7 +54,7 @@ with DAG(
     default_args=default_args,
     description="Importing new data from addresses api every day.",
     # every 10min if prod once a day otherwise
-    schedule_interval="*/10 * * * *" if ENV_SHORT_NAME == "prod" else "30 2 * * *",
+    schedule_interval="*/30 * * * *" if ENV_SHORT_NAME == "prod" else "30 2 * * *",
     catchup=False,
     dagrun_timeout=timedelta(minutes=180),
 ) as dag:

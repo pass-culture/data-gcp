@@ -6,7 +6,13 @@ import tensorflow as tf
 from models.match_model import MatchModel
 from models.triplet_model import TripletModel
 from models.utils import identity_loss, sample_triplets, predict
-from utils import get_secret, connect_remote_mlflow, STORAGE_PATH, ENV_SHORT_NAME
+from utils import (
+    get_secret,
+    connect_remote_mlflow,
+    STORAGE_PATH,
+    ENV_SHORT_NAME,
+    BOOKING_DAY_NUMBER,
+)
 
 TRAIN_DIR = "/home/airflow/train"
 EMBEDDING_SIZE = 64
@@ -43,6 +49,8 @@ def train(storage_path: str):
         match_model = MatchModel(triplet_model.user_layer, triplet_model.item_layer)
         predict(match_model)
 
+        mlflow.log_param("environment", ENV_SHORT_NAME)
+        mlflow.log_param("booking_day_number", BOOKING_DAY_NUMBER)
         mlflow.log_param("embedding_size", EMBEDDING_SIZE)
         mlflow.log_param("batch_size", BATCH_SIZE)
         mlflow.log_param("l2_regularization", L2_REG)

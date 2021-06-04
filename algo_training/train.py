@@ -77,6 +77,7 @@ def train(storage_path: str):
                 batch_size=BATCH_SIZE,
                 epochs=1,
             )
+            connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
             mlflow.log_metric(
                 key="Training Loss", value=train_result.history["loss"][0], step=i
             )
@@ -87,6 +88,7 @@ def train(storage_path: str):
                 y=evaluation_fake_train,
                 batch_size=BATCH_SIZE,
             )
+            connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
             mlflow.log_metric(key="Evaluation Loss", value=eval_result, step=i)
 
             runned_epochs += 1
@@ -96,6 +98,7 @@ def train(storage_path: str):
                 run_uuid = mlflow.active_run().info.run_uuid
                 export_path = f"{TRAIN_DIR}/{run_uuid}"
                 tf.saved_model.save(match_model, export_path)
+        connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
         mlflow.log_artifacts(export_path, "model")
 
 

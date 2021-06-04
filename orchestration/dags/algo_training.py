@@ -62,7 +62,7 @@ with DAG(
     )
 
     if ENV_SHORT_NAME == "dev":
-        branch = "PC-9207-debug-mlops"
+        branch = "PC-9207-debug-timeout"
     if ENV_SHORT_NAME == "stg":
         branch = "master"
     if ENV_SHORT_NAME == "prod":

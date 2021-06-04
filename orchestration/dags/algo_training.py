@@ -68,7 +68,7 @@ with DAG(
     if ENV_SHORT_NAME == "prod":
         branch = "production"
 
-    FETCH_CODE = f'"if cd data-gcp; then git checkout {branch} && git pull; else git clone git@github.com:pass-culture/data-gcp.git && cd data-gcp && git checkout {branch}; fi"'
+    FETCH_CODE = f'"if cd data-gcp; then git checkout master && git pull && git checkout {branch}; else git clone git@github.com:pass-culture/data-gcp.git && cd data-gcp && git checkout {branch}; fi"'
 
     fetch_code = BashOperator(
         task_id="fetch_code",

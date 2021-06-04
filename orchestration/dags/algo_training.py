@@ -61,7 +61,14 @@ with DAG(
         task_id="gce_start_task",
     )
 
-    FETCH_CODE = '"if cd data-gcp; then git checkout master && git pull; else git clone git@github.com:pass-culture/data-gcp.git && cd data-gcp && git checkout master; fi"'
+    if ENV_SHORT_NAME == "dev":
+        branch = "PC-9207-debug-mlops"
+    if ENV_SHORT_NAME == "stg":
+        branch = "master"
+    if ENV_SHORT_NAME == "prod":
+        branch = "production"
+
+    FETCH_CODE = f'"if cd data-gcp; then git checkout {branch} && git pull; else git clone git@github.com:pass-culture/data-gcp.git && cd data-gcp && git checkout {branch}; fi"'
 
     fetch_code = BashOperator(
         task_id="fetch_code",
@@ -71,6 +78,21 @@ with DAG(
         --project {GCP_PROJECT_ID} \
         --command {FETCH_CODE}
         """,
+        dag=dag,
+    )
+
+    INSTALL_DEPENDENCIES = f""" '{DEFAULT}
+        pip install -r requirements.txt'
+    """
+
+    install_dependencies = BashOperator(
+        task_id="install_dependencies",
+        bash_command=f"""
+            gcloud compute ssh {GCE_INSTANCE} \
+            --zone {GCE_ZONE} \
+            --project {GCP_PROJECT_ID} \
+            --command {INSTALL_DEPENDENCIES}
+            """,
         dag=dag,
     )
 
@@ -230,6 +252,7 @@ with DAG(
         start
         >> gce_instance_start
         >> fetch_code
+        >> install_dependencies
         >> data_collect
         >> preprocess
         >> split_data

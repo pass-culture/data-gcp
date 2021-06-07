@@ -135,7 +135,7 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
         )
         unexpectedness.append(user_unexpectedness)
         new_types_ratio.append(
-            np.mean(
+            np.nanmean(
                 [
                     int(recommended_offer_type not in booked_offer_types)
                     for recommended_offer_type in recommended_offer_types
@@ -178,13 +178,13 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
             )
             * 100,
             f"coverage_at_{k}": (len(recommended_items) / len(all_item_ids)) * 100,
-            f"unexpectedness_at_{k}": np.mean(unexpectedness)
+            f"unexpectedness_at_{k}": np.nanmean(unexpectedness)
             if len(unexpectedness) > 0
             else None,
-            f"new_types_ratio_at_{k}": np.mean(new_types_ratio)
+            f"new_types_ratio_at_{k}": np.nanmean(new_types_ratio)
             if len(new_types_ratio) > 0
             else None,
-            f"serendipity_at_{k}": np.mean(serendipity)
+            f"serendipity_at_{k}": np.nanmean(serendipity)
             if len(serendipity) > 0
             else None,
         }

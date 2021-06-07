@@ -130,18 +130,19 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
         )[:k]
         recommended_offer_types = [offer_type_dict[item[0]] for item in scored_items]
 
-        user_unexpectedness = get_unexpectedness(
-            booked_offer_types, recommended_offer_types
-        )
-        unexpectedness.append(user_unexpectedness)
-        new_types_ratio.append(
-            np.mean(
-                [
-                    int(recommended_offer_type not in booked_offer_types)
-                    for recommended_offer_type in recommended_offer_types
-                ]
+        if booked_offer_types and recommended_offer_types:
+            user_unexpectedness = get_unexpectedness(
+                booked_offer_types, recommended_offer_types
             )
-        )
+            unexpectedness.append(user_unexpectedness)
+            new_types_ratio.append(
+                np.mean(
+                    [
+                        int(recommended_offer_type not in booked_offer_types)
+                        for recommended_offer_type in recommended_offer_types
+                    ]
+                )
+            )
 
         if np.sum(expected) >= 1:
             recommended_items.extend([item[0] for item in scored_items])
@@ -156,7 +157,7 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
             recommended_hidden_items_number += len(recommended_hidden_items)
             prediction_number += 1
 
-            if hidden_items_number > 0:
+            if hidden_items and booked_offer_types and recommended_offer_types:
                 user_serendipity = (
                     (len(recommended_hidden_items) / len(hidden_items))
                     * user_unexpectedness
@@ -178,13 +179,13 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
             )
             * 100,
             f"coverage_at_{k}": (len(recommended_items) / len(all_item_ids)) * 100,
-            f"unexpectedness_at_{k}": np.mean(unexpectedness)
+            f"unexpectedness_at_{k}": np.nanmean(unexpectedness)
             if len(unexpectedness) > 0
             else None,
             f"new_types_ratio_at_{k}": np.mean(new_types_ratio)
             if len(new_types_ratio) > 0
             else None,
-            f"serendipity_at_{k}": np.mean(serendipity)
+            f"serendipity_at_{k}": np.nanmean(serendipity)
             if len(serendipity) > 0
             else None,
         }

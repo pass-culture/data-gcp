@@ -21,6 +21,7 @@ def evaluate(model, storage_path: str):
     metrics = compute_metrics(
         RECOMMENDATION_NUMBER, positive_data_train, positive_data_test, model
     )
+    connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
     mlflow.log_metrics(metrics)
 
 

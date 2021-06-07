@@ -55,6 +55,8 @@ def train(storage_path: str):
         mlflow.log_param("batch_size", BATCH_SIZE)
         mlflow.log_param("l2_regularization", L2_REG)
         mlflow.log_param("epoch_number", N_EPOCHS)
+        mlflow.log_param("user_number", len(user_ids))
+        mlflow.log_param("item_number", len(item_ids))
 
         fake_y = np.array(["1"] * positive_data_train["user_id"].shape[0], dtype=object)
         evaluation_fake_train = np.array(

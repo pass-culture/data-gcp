@@ -10,7 +10,7 @@ STORAGE_PATH = os.environ.get("STORAGE_PATH", "")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "ehp")
 MLFLOW_EHP_URI = "https://mlflow-ehp.internal-passculture.app/"
 MLFLOW_PROD_URI = "https://mlflow.internal-passculture.app/"
-BOOKING_DAY_NUMBER = 5 * 30  # if ENV_SHORT_NAME == "dev" else 5 * 30
+BOOKING_DAY_NUMBER = 10 if ENV_SHORT_NAME == "dev" else 5 * 30
 
 
 def get_secret(secret_id: str):

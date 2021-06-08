@@ -94,7 +94,7 @@ def train(storage_path: str):
             mlflow.log_metric(key="Evaluation Loss", value=eval_result, step=i)
 
             runned_epochs += 1
-            if eval_result < best_eval:
+            if eval_result < best_eval or runned_epochs == 1:
                 best_eval = eval_result
 
                 run_uuid = mlflow.active_run().info.run_uuid

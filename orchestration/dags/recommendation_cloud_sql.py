@@ -276,7 +276,6 @@ with DAG(
         sql="REFRESH MATERIALIZED VIEW number_of_bookings_per_user;",
         autocommit=True,
     )
-    ##here define refresh qpi + add to refresh mv tasks
 
     refresh_materialized_views_tasks = [
         refresh_recommendable_offers,

@@ -111,7 +111,7 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
         items_to_rank = np.setdiff1d(
             all_item_ids, positive_item_train["item_id"].values
         )
-        booked_offer_types = positive_item_train["type"].values
+        booked_offer_types = list(positive_item_train["type"].values)
 
         # Check if any item of items_to_rank is in the test positive feedbacks for this user
         expected = np.in1d(items_to_rank, positive_item_test["item_id"].values)
@@ -148,7 +148,7 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
             recommended_items.extend([item[0] for item in scored_items])
             recommended_items = list(set(recommended_items))
 
-            hidden_items = positive_item_test["item_id"].values
+            hidden_items = list(positive_item_test["item_id"].values)
             recommended_hidden_items = [
                 item[0] for item in scored_items if item[0] in hidden_items
             ]

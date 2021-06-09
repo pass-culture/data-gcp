@@ -40,7 +40,7 @@ engine = create_engine(
         database=SQL_BASE,
         query=query_string,
     ),
-    pool_size=5,
+    pool_size=20,
     max_overflow=2,
     pool_timeout=30,
     pool_recycle=1800,

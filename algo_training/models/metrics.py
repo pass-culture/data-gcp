@@ -49,43 +49,43 @@ def get_unexpectedness(booked_type_list, recommended_type_list):
     return (1 / (len(booked_type_list) * len(recommended_type_list))) * cosine_sum
 
 
-def compute_metrics(k, pos_data_train, pos_data_test, match_model):
-    # map all offers to corresponding types
+def compute_metrics(k, positive_data_train, positive_data_test, match_model):
+    # Map all offers to corresponding types
     offer_type_dict = {}
     unique_offer_types = (
-        pos_data_train.groupby(["item_id", "type"]).first().reset_index()
+        positive_data_train.groupby(["item_id", "type"]).first().reset_index()
     )
     for item_id, item_type in zip(
         unique_offer_types.item_id.values, unique_offer_types.type.values
     ):
         offer_type_dict[item_id] = item_type
 
-    # Only keep user - item iteractions in pos_data_test, which can be infered from model
-    cleaned_pos_data_test = pos_data_test.copy()
+    # Only keep user - item iteractions in positive_data_test, which can be infered from model
+    cleaned_positive_data_test = positive_data_test.copy()
     print(
-        f"Original number of positive feedbacks in test: {cleaned_pos_data_test.shape[0]}"
+        f"Original number of positive feedbacks in test: {cleaned_positive_data_test.shape[0]}"
     )
-    cleaned_pos_data_test = cleaned_pos_data_test.loc[
+    cleaned_positive_data_test = cleaned_positive_data_test.loc[
         lambda df: df.user_id.apply(
-            lambda user_id: user_id in pos_data_train.user_id.values
+            lambda user_id: user_id in positive_data_train.user_id.values
         )
     ]
     print(
-        f"Number of positive feedbacks in test after removing users not present in train: {cleaned_pos_data_test.shape[0]}"
+        f"Number of positive feedbacks in test after removing users not present in train: {cleaned_positive_data_test.shape[0]}"
     )
-    cleaned_pos_data_test = cleaned_pos_data_test.loc[
+    cleaned_positive_data_test = cleaned_positive_data_test.loc[
         lambda df: df.item_id.apply(
-            lambda item_id: item_id in pos_data_train.item_id.values
+            lambda item_id: item_id in positive_data_train.item_id.values
         )
     ]
     print(
-        f"Number of positive feedbacks in test after removing offers not present in train: {cleaned_pos_data_test.shape[0]}"
+        f"Number of positive feedbacks in test after removing offers not present in train: {cleaned_positive_data_test.shape[0]}"
     )
 
     # Get all offers the model may predict
-    all_item_ids = list(set(pos_data_train.item_id.values))
+    all_item_ids = list(set(positive_data_train.item_id.values))
     # Get all users in cleaned test data
-    all_test_user_ids = list(set(cleaned_pos_data_test.user_id.values))
+    all_test_user_ids = list(set(cleaned_positive_data_test.user_id.values))
 
     hidden_items_number = 0
     recommended_hidden_items_number = 0
@@ -100,17 +100,21 @@ def compute_metrics(k, pos_data_train, pos_data_test, match_model):
     for user_id in tqdm.tqdm(all_test_user_ids):
         user_count += 1
 
-        pos_item_train = pos_data_train[pos_data_train["user_id"] == user_id]
-        pos_item_test = cleaned_pos_data_test[
-            cleaned_pos_data_test["user_id"] == user_id
+        positive_item_train = positive_data_train[
+            positive_data_train["user_id"] == user_id
+        ]
+        positive_item_test = cleaned_positive_data_test[
+            cleaned_positive_data_test["user_id"] == user_id
         ]
 
-        # remove items in train - they can not be in test set anyway
-        items_to_rank = np.setdiff1d(all_item_ids, pos_item_train["item_id"].values)
-        booked_offer_types = pos_item_train["type"].values
+        # Remove items in train - they can not be in test set anyway
+        items_to_rank = np.setdiff1d(
+            all_item_ids, positive_item_train["item_id"].values
+        )
+        booked_offer_types = list(positive_item_train["type"].values)
 
-        # check if any item of items_to_rank is in the test positive feedbacks for this user
-        expected = np.in1d(items_to_rank, pos_item_test["item_id"].values)
+        # Check if any item of items_to_rank is in the test positive feedbacks for this user
+        expected = np.in1d(items_to_rank, positive_item_test["item_id"].values)
 
         repeated_user_id = np.empty_like(items_to_rank)
         repeated_user_id.fill(user_id)
@@ -126,24 +130,25 @@ def compute_metrics(k, pos_data_train, pos_data_test, match_model):
         )[:k]
         recommended_offer_types = [offer_type_dict[item[0]] for item in scored_items]
 
-        user_unexpectedness = get_unexpectedness(
-            booked_offer_types, recommended_offer_types
-        )
-        unexpectedness.append(user_unexpectedness)
-        new_types_ratio.append(
-            np.mean(
-                [
-                    int(recommended_offer_type not in booked_offer_types)
-                    for recommended_offer_type in recommended_offer_types
-                ]
+        if booked_offer_types and recommended_offer_types:
+            user_unexpectedness = get_unexpectedness(
+                booked_offer_types, recommended_offer_types
             )
-        )
+            unexpectedness.append(user_unexpectedness)
+            new_types_ratio.append(
+                np.mean(
+                    [
+                        int(recommended_offer_type not in booked_offer_types)
+                        for recommended_offer_type in recommended_offer_types
+                    ]
+                )
+            )
 
         if np.sum(expected) >= 1:
             recommended_items.extend([item[0] for item in scored_items])
             recommended_items = list(set(recommended_items))
 
-            hidden_items = pos_item_test["item_id"].values
+            hidden_items = list(positive_item_test["item_id"].values)
             recommended_hidden_items = [
                 item[0] for item in scored_items if item[0] in hidden_items
             ]
@@ -152,7 +157,7 @@ def compute_metrics(k, pos_data_train, pos_data_test, match_model):
             recommended_hidden_items_number += len(recommended_hidden_items)
             prediction_number += 1
 
-            if hidden_items_number > 0:
+            if hidden_items and booked_offer_types and recommended_offer_types:
                 user_serendipity = (
                     (len(recommended_hidden_items) / len(hidden_items))
                     * user_unexpectedness
@@ -161,25 +166,28 @@ def compute_metrics(k, pos_data_train, pos_data_test, match_model):
                 serendipity.append(user_serendipity)
 
         metrics = {
-            f"recall@{k}": (recommended_hidden_items_number / hidden_items_number) * 100
+            f"recall_at_{k}": (recommended_hidden_items_number / hidden_items_number)
+            * 100
             if hidden_items_number > 0
             else None,
-            f"precision@{k}": (
+            f"precision_at_{k}": (
                 recommended_hidden_items_number / (prediction_number * k)
             )
             * 100,
-            f"maximal_precision@{k}": (
-                cleaned_pos_data_test.shape[0] / (prediction_number * k)
+            f"maximal_precision_at_{k}": (
+                cleaned_positive_data_test.shape[0] / (prediction_number * k)
             )
             * 100,
-            f"coverage@{k}": (len(recommended_items) / len(all_item_ids)) * 100,
-            f"unexpectedness@{k}": np.mean(unexpectedness)
+            f"coverage_at_{k}": (len(recommended_items) / len(all_item_ids)) * 100,
+            f"unexpectedness_at_{k}": np.nanmean(unexpectedness)
             if len(unexpectedness) > 0
             else None,
-            f"new_types_ratio@{k}": np.mean(new_types_ratio)
+            f"new_types_ratio_at_{k}": np.mean(new_types_ratio)
             if len(new_types_ratio) > 0
             else None,
-            f"serendipity@{k}": np.mean(serendipity) if len(serendipity) > 0 else None,
+            f"serendipity_at_{k}": np.nanmean(serendipity)
+            if len(serendipity) > 0
+            else None,
         }
 
         if user_count % 100 == 0:

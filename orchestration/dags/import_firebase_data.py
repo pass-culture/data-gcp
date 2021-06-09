@@ -18,13 +18,15 @@ from dependencies.config import (
 from dependencies.data_analytics.enriched_data.enriched_firebase import (
     aggregate_firebase_user_events,
     aggregate_firebase_offer_events,
+    aggregate_firebase_visits,
+    copy_table_to_analytics,
 )
 from dependencies.slack_alert import task_fail_slack_alert
 
 ENV_SHORT_NAME_APP_INFO_ID_MAPPING = {
     "dev": ["app.passculture.test", "app.passculture.testing"],
     "stg": ["app.passculture.staging"],
-    "prod": ["app.passculture"],
+    "prod": ["app.passculture", "app.passculture.webapp"],
 }
 
 app_info_id_list = ENV_SHORT_NAME_APP_INFO_ID_MAPPING[ENV_SHORT_NAME]
@@ -74,13 +76,13 @@ copy_table = BigQueryOperator(
     write_disposition="WRITE_EMPTY",
     dag=dag,
 )
-delete_table = BigQueryTableDeleteOperator(
-    task_id="delete_table",
-    deletion_dataset_table="passculture-native:analytics_267263535.events_"
-    + EXECUTION_DATE,
-    ignore_if_missing=True,
-    dag=dag,
-)
+# delete_table = BigQueryTableDeleteOperator(
+#     task_id="delete_table",
+#     deletion_dataset_table="passculture-native:analytics_267263535.events_"
+#     + EXECUTION_DATE,
+#     ignore_if_missing=True,
+#     dag=dag,
+# )
 
 dummy_task_for_branch = DummyOperator(task_id="dummy_task_for_branch", dag=dag)
 
@@ -109,37 +111,26 @@ copy_table_to_clean = BigQueryOperator(
 
 copy_table_to_analytics = BigQueryOperator(
     task_id="copy_table_to_analytics",
-    sql=f"""
-        SELECT event_name, user_pseudo_id, user_id, platform,
-        PARSE_DATE("%Y%m%d", event_date) AS event_date,
-        TIMESTAMP_SECONDS(CAST(CAST(event_timestamp as INT64)/1000000 as INT64)) AS event_timestamp,
-        TIMESTAMP_SECONDS(CAST(CAST(event_previous_timestamp as INT64)/1000000 as INT64)) AS event_previous_timestamp,
-        TIMESTAMP_SECONDS(CAST(CAST(event_timestamp as INT64)/1000000 as INT64)) AS user_first_touch_timestamp,
-        (select event_params.value.string_value
-            from unnest(event_params) event_params
-            where event_params.key = 'firebase_screen'
-        ) as firebase_screen,
-        (select event_params.value.string_value
-            from unnest(event_params) event_params
-            where event_params.key = 'firebase_previous_screen'
-        ) as firebase_previous_screen,
-        (select event_params.value.int_value
-            from unnest(event_params) event_params
-            where event_params.key = 'ga_session_number'
-        ) as session_number,
-        (select event_params.value.int_value
-            from unnest(event_params) event_params
-            where event_params.key = 'ga_session_id'
-        ) as session_id,
-        (select event_params.value.string_value
-            from unnest(event_params) event_params
-            where event_params.key = 'pageName'
-        ) as page_name,
-        FROM {GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.firebase_events_{EXECUTION_DATE}
-        """,
+    sql=copy_table_to_analytics(
+        gcp_project=GCP_PROJECT,
+        bigquery_raw_dataset=BIGQUERY_RAW_DATASET,
+        execution_date=EXECUTION_DATE,
+    ),
     use_legacy_sql=False,
     destination_dataset_table=f"{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.firebase_events",
     write_disposition="WRITE_APPEND",
+    dag=dag,
+)
+
+aggregate_firebase_visits = BigQueryOperator(
+    task_id="aggregate_firebase_visits",
+    sql=aggregate_firebase_visits(
+        gcp_project=GCP_PROJECT,
+        bigquery_raw_dataset=BIGQUERY_RAW_DATASET,
+    ),
+    destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.firebase_visits",
+    write_disposition="WRITE_TRUNCATE",
+    use_legacy_sql=False,
     dag=dag,
 )
 
@@ -172,6 +163,11 @@ end = DummyOperator(task_id="end", dag=dag)
 
 start >> env_switcher
 env_switcher >> dummy_task_for_branch >> copy_table_to_env
-env_switcher >> copy_table >> delete_table >> copy_table_to_env
+# env_switcher >> copy_table >> delete_table >> copy_table_to_env
+env_switcher >> copy_table >> copy_table_to_env
 copy_table_to_env >> copy_table_to_clean >> copy_table_to_analytics >> end
-copy_table_to_env >> aggregate_firebase_offer_events >> aggregate_firebase_user_events >> end
+copy_table_to_env >> [
+    aggregate_firebase_visits,
+    aggregate_firebase_offer_events,
+    aggregate_firebase_user_events,
+] >> end

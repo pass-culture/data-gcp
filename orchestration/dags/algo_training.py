@@ -61,7 +61,14 @@ with DAG(
         task_id="gce_start_task",
     )
 
-    FETCH_CODE = '"if cd data-gcp; then git pull; else git clone git@github.com:pass-culture/data-gcp.git && cd data-gcp; fi"'
+    if ENV_SHORT_NAME == "dev":
+        branch = "PC-9207-debug-evaluate"
+    if ENV_SHORT_NAME == "stg":
+        branch = "master"
+    if ENV_SHORT_NAME == "prod":
+        branch = "production"
+
+    FETCH_CODE = f'"if cd data-gcp; then git checkout master && git pull && git checkout {branch}; else git clone git@github.com:pass-culture/data-gcp.git && cd data-gcp && git checkout {branch}; fi"'
 
     fetch_code = BashOperator(
         task_id="fetch_code",
@@ -74,9 +81,24 @@ with DAG(
         dag=dag,
     )
 
+    INSTALL_DEPENDENCIES = f""" '{DEFAULT}
+        pip install -r requirements.txt'
+    """
+
+    install_dependencies = BashOperator(
+        task_id="install_dependencies",
+        bash_command=f"""
+            gcloud compute ssh {GCE_INSTANCE} \
+            --zone {GCE_ZONE} \
+            --project {GCP_PROJECT_ID} \
+            --command {INSTALL_DEPENDENCIES}
+            """,
+        dag=dag,
+    )
+
     DATA_COLLECT = f""" '{DEFAULT}
-python data_collect.py'
-"""
+        python data_collect.py'
+    """
 
     data_collect = BashOperator(
         task_id="data_collect",
@@ -90,8 +112,8 @@ python data_collect.py'
     )
 
     PREPROCESS = f""" '{DEFAULT}
-python preprocess.py'
-"""
+        python preprocess.py'
+    """
 
     preprocess = BashOperator(
         task_id="preprocessing",
@@ -104,24 +126,24 @@ python preprocess.py'
         dag=dag,
     )
 
-    FEATURE_ENG = f""" '{DEFAULT}
-python feature_engineering.py'
-"""
+    SPLIT_DATA = f""" '{DEFAULT}
+        python split_data.py'
+    """
 
-    feature_engineering = BashOperator(
-        task_id="feature_engineering",
+    split_data = BashOperator(
+        task_id="split_data",
         bash_command=f"""
         gcloud compute ssh {GCE_INSTANCE} \
         --zone {GCE_ZONE} \
         --project {GCP_PROJECT_ID} \
-        --command {FEATURE_ENG}
+        --command {SPLIT_DATA}
         """,
         dag=dag,
     )
 
     TRAINING = f""" '{DEFAULT}
-python train.py'
-"""
+        python train.py'
+    """
 
     training = BashOperator(
         task_id="training",
@@ -135,8 +157,8 @@ python train.py'
     )
 
     POSTPROCESSING = f""" '{DEFAULT}
-python postprocess.py'
-"""
+        python postprocess.py'
+    """
 
     postprocess = BashOperator(
         task_id="postprocess",
@@ -150,8 +172,8 @@ python postprocess.py'
     )
 
     EVALUATION = f""" '{DEFAULT}
-python evaluate.py'
-"""
+        python evaluate.py'
+    """
 
     evaluate = BashOperator(
         task_id="evaluate",
@@ -230,9 +252,10 @@ python evaluate.py'
         start
         >> gce_instance_start
         >> fetch_code
+        >> install_dependencies
         >> data_collect
         >> preprocess
-        >> feature_engineering
+        >> split_data
         >> training
         >> postprocess
         >> evaluate

@@ -44,8 +44,8 @@ BUCKET_PATH = f"gs://{DATA_GCS_BUCKET_NAME}/bigquery_exports"
 
 default_args = {
     "start_date": datetime(2020, 12, 1),
-    "retries": 1,
-    "retry_delay": timedelta(minutes=2),
+    "retries": 3,
+    "retry_delay": timedelta(minutes=5),
 }
 
 
@@ -102,13 +102,6 @@ with DAG(
         if dataset_type == "analytics":
             dataset = BIGQUERY_ANALYTICS_DATASET
 
-        drop_table_task = CloudSqlQueryOperator(
-            gcp_cloudsql_conn_id="proxy_postgres_tcp",
-            task_id=f"drop_table_public_{table}",
-            sql=f"DROP TABLE IF EXISTS public.{table};",
-            autocommit=True,
-        )
-
         list_type_columns = [
             column_name
             for column_name in TABLES[table]["columns"]
@@ -130,7 +123,7 @@ with DAG(
                 SELECT {select_columns}, False AS presse, False AS autre
                 FROM `{GCP_PROJECT}.{dataset}.{bigquery_table_name}_v1`
                 UNION ALL (
-                    SELECT {select_columns}, presse, autre 
+                    SELECT {select_columns}, presse, autre
                     FROM `{GCP_PROJECT}.{dataset}.{bigquery_table_name}_v2`
                 )
             """
@@ -177,6 +170,13 @@ with DAG(
             dag=dag,
         )
 
+        drop_table_task = CloudSqlQueryOperator(
+            gcp_cloudsql_conn_id="proxy_postgres_tcp",
+            task_id=f"drop_table_public_{table}",
+            sql=f"DROP TABLE IF EXISTS public.{table};",
+            autocommit=True,
+        )
+
         create_table_task = CloudSqlQueryOperator(
             task_id=f"create_table_public_{table}",
             gcp_cloudsql_conn_id="proxy_postgres_tcp",
@@ -184,9 +184,9 @@ with DAG(
             autocommit=True,
         )
 
-        start_drop_restore >> drop_table_task >> filter_column_task
+        start_drop_restore >> filter_column_task
         filter_column_task >> export_task >> delete_temp_table_task >> compose_files_task
-        compose_files_task >> create_table_task >> end_data_prep
+        compose_files_task >> drop_table_task >> create_table_task >> end_data_prep
 
     def create_restore_task(table_name: str):
         import_body = {

@@ -1,4 +1,17 @@
 table_name,column_name,data_type,bigquery_table_name,dataset_type
+qpi_answers,user_id,character varying,enriched_qpi_answers,analytics
+qpi_answers,catch_up_user_id,character varying,enriched_qpi_answers,analytics
+qpi_answers,cinema,boolean,enriched_qpi_answers,analytics
+qpi_answers,audiovisuel,boolean,enriched_qpi_answers,analytics
+qpi_answers,jeux_videos,boolean,enriched_qpi_answers,analytics
+qpi_answers,livre,boolean,enriched_qpi_answers,analytics
+qpi_answers,musees_patrimoine,boolean,enriched_qpi_answers,analytics
+qpi_answers,musique,boolean,enriched_qpi_answers,analytics
+qpi_answers,pratique_artistique,boolean,enriched_qpi_answers,analytics
+qpi_answers,spectacle_vivant,boolean,enriched_qpi_answers,analytics
+qpi_answers,instrument,boolean,enriched_qpi_answers,analytics
+qpi_answers,presse,boolean,enriched_qpi_answers,analytics
+qpi_answers,autre,boolean,enriched_qpi_answers,analytics
 booking,booking_id,character varying,applicative_database_booking,clean
 booking,booking_creation_date,timestamp without time zone,applicative_database_booking,clean
 booking,stock_id,character varying,applicative_database_booking,clean
@@ -97,16 +110,3 @@ stock,stock_is_soft_deleted,boolean,applicative_database_stock,clean
 stock,stock_beginning_date,timestamp without time zone,applicative_database_stock,clean
 stock,stock_creation_date,timestamp without time zone,applicative_database_stock,clean
 stock,stock_fields_updated,string[],applicative_database_stock,clean
-qpi_answers,user_id,character varying,enriched_qpi_answers,analytics
-qpi_answers,catch_up_user_id,character varying,enriched_qpi_answers,analytics
-qpi_answers,cinema,boolean,enriched_qpi_answers,analytics
-qpi_answers,audiovisuel,boolean,enriched_qpi_answers,analytics
-qpi_answers,jeux_videos,boolean,enriched_qpi_answers,analytics
-qpi_answers,livre,boolean,enriched_qpi_answers,analytics
-qpi_answers,musees_patrimoine,boolean,enriched_qpi_answers,analytics
-qpi_answers,musique,boolean,enriched_qpi_answers,analytics
-qpi_answers,pratique_artistique,boolean,enriched_qpi_answers,analytics
-qpi_answers,spectacle_vivant,boolean,enriched_qpi_answers,analytics
-qpi_answers,instrument,boolean,enriched_qpi_answers,analytics
-qpi_answers,presse,boolean,enriched_qpi_answers,analytics
-qpi_answers,autre,boolean,enriched_qpi_answers,analytics

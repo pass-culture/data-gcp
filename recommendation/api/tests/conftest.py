@@ -27,8 +27,12 @@ def app_config() -> Dict[str, Any]:
         "NUMBER_OF_RECOMMENDATIONS": 10,
         "NUMBER_OF_PRESELECTED_OFFERS": 50,
         "MODEL_REGION": "model_region",
-        "MODEL_NAME": "model_name",
-        "MODEL_VERSION": "model_version",
+        "MODEL_NAME_A": "model_name",
+        "MODEL_VERSION_A": "model_version",
+        "MODEL_INPUT_A": "model_input",
+        "MODEL_NAME_B": "model_name",
+        "MODEL_VERSION_B": "model_version",
+        "MODEL_INPUT_B": "model_input",
     }
 
 
@@ -55,6 +59,14 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
                 "offer-5",
                 "offer-6",
             ],
+            "product_id": [
+                "product-1",
+                "product-2",
+                "product-3",
+                "product-4",
+                "product-5",
+                "product-6",
+            ],
         }
     )
     recommendable_offers.to_sql("recommendable_offers", con=engine, if_exists="replace")
@@ -73,19 +85,19 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
 
     qpi_answers = pd.DataFrame(
         {
-            "user_id": ["111", "112", "113"],
-            "catch_up_user_id": [None, None, None],
-            "pratique_artistique": [True, True, False],
-            "autre": [True, False, False],
-            "musees_patrimoine": [True, True, False],
-            "spectacle_vivant": [True, False, False],
-            "cinema": [True, True, False],
-            "instrument": [True, False, False],
-            "presse": [True, True, False],
-            "audiovisuel": [True, False, False],
-            "jeux_videos": [True, True, False],
-            "livre": [True, False, False],
-            "musique": [True, True, False],
+            "user_id": ["111", "112", "113", "114"],
+            "catch_up_user_id": [None, None, None, None],
+            "pratique_artistique": [True, True, False, False],
+            "autre": [True, False, False, False],
+            "musees_patrimoine": [True, True, False, False],
+            "spectacle_vivant": [True, False, False, False],
+            "cinema": [True, True, False, False],
+            "instrument": [True, False, False, False],
+            "presse": [True, True, False, False],
+            "audiovisuel": [True, False, False, False],
+            "jeux_videos": [True, True, False, False],
+            "livre": [True, False, False, False],
+            "musique": [True, True, False, False],
         }
     )
     qpi_answers.to_sql("qpi_answers", con=engine, if_exists="replace")
@@ -95,7 +107,9 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
     )
     iris_venues_mv.to_sql("iris_venues_mv", con=engine, if_exists="replace")
 
-    ab_testing = pd.DataFrame({"userid": ["111", "112"], "groupid": ["A", "B"]})
+    ab_testing = pd.DataFrame(
+        {"userid": ["111", "112", "113"], "groupid": ["A", "B", "A"]}
+    )
     ab_testing.to_sql(app_config["AB_TESTING_TABLE"], con=engine, if_exists="replace")
 
     past_recommended_offers = pd.DataFrame(
@@ -108,6 +122,7 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
     number_of_bookings_per_user = pd.DataFrame(
         {"user_id": [111], "bookings_count": [3]},
         {"user_id": [113], "bookings_count": [1]},
+        {"user_id": [114], "bookings_count": [1]},
     )
     number_of_bookings_per_user.to_sql(
         "number_of_bookings_per_user", con=engine, if_exists="replace"

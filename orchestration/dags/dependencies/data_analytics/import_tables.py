@@ -1,4 +1,8 @@
-from dependencies.config import APPLICATIVE_EXTERNAL_CONNECTION_ID, GCP_REGION
+from dependencies.config import (
+    APPLICATIVE_EXTERNAL_CONNECTION_ID,
+    GCP_REGION,
+    CONVERT_TO_PARIS_TIME,
+)
 
 
 def define_import_query(
@@ -14,23 +18,18 @@ def define_import_query(
     cloudsql_queries = {}
     cloudsql_queries[
         "user"
-    ] = """
+    ] = f"""
         SELECT
-            CAST("id" AS varchar(255)) AS user_id, "dateCreated" as user_creation_date,
+            CAST("id" AS varchar(255)) AS user_id, "dateCreated"{CONVERT_TO_PARIS_TIME} as user_creation_date,
             "departementCode" as user_department_code, "isBeneficiary" as user_is_beneficiary,
             "isAdmin" as user_is_admin, "resetPasswordTokenValidityLimit" as user_reset_password_token_validity_limit,
             "postalCode" as user_postal_code, "needsToFillCulturalSurvey" as user_needs_to_fill_cultural_survey,
             CAST("culturalSurveyId" AS varchar(255)) as user_cultural_survey_id, "civility" as user_civility,
-            "activity" as user_activity, "culturalSurveyFilledDate" as user_cultural_survey_filled_date,
+            "activity" as user_activity, "culturalSurveyFilledDate"{CONVERT_TO_PARIS_TIME} as user_cultural_survey_filled_date,
             "hasSeenTutorials" as user_has_seen_tutorials, "address" as user_address, "city" as user_city,
-            "lastConnectionDate" as user_last_connection_date, "isEmailValidated" as user_is_email_validated,
+            "lastConnectionDate"{CONVERT_TO_PARIS_TIME} as user_last_connection_date, "isEmailValidated" as user_is_email_validated,
             "suspensionReason" as user_suspension_reason, "isActive" as user_is_active,
-            "hasSeenProTutorials" as user_has_seen_pro_tutorials, EXTRACT(YEAR FROM AGE("user"."dateOfBirth")) AS user_age,
-            "hasCompletedIdCheck" AS user_has_completed_idCheck,
-            "phoneValidationStatus" AS user_phone_validation_status,
-            "isEmailValidated" AS user_has_validated_email,
-            CAST("notificationSubscriptions" -> \\'marketing_push\\' AS BOOLEAN) AS user_has_enabled_marketing_push,
-            CAST("notificationSubscriptions" -> \\'marketing_email\\' AS BOOLEAN) AS user_has_enabled_marketing_email
+            "hasSeenProTutorials" as user_has_seen_pro_tutorials, EXTRACT(YEAR FROM AGE("user"."dateOfBirth")) AS user_age
         FROM public.user
     """
     cloudsql_queries[
@@ -42,10 +41,10 @@ def define_import_query(
     """
     cloudsql_queries[
         "bank_information"
-    ] = """
+    ] = f"""
         SELECT
             CAST("id" AS varchar(255)), CAST("offererId" AS varchar(255)), CAST("venueId" AS varchar(255)),
-            CAST("applicationId" AS varchar(255)), "dateModified",
+            CAST("applicationId" AS varchar(255)), "dateModified"{CONVERT_TO_PARIS_TIME},
             CAST("status" AS varchar(255))
         FROM public.bank_information
     """
@@ -60,30 +59,30 @@ def define_import_query(
     """
     cloudsql_queries[
         "payment_status"
-    ] = """
+    ] = f"""
         SELECT
-            CAST("id" AS varchar(255)), CAST("paymentId" AS varchar(255)), "date", CAST("status" AS varchar(255)), "detail"
+            CAST("id" AS varchar(255)), CAST("paymentId" AS varchar(255)), "date"{CONVERT_TO_PARIS_TIME}, CAST("status" AS varchar(255)), "detail"
         FROM public.payment_status
     """
     cloudsql_queries[
         "booking"
-    ] = """
+    ] = f"""
         SELECT
-            CAST("id" AS varchar(255)) as booking_id, "dateCreated" as booking_creation_date,
+            CAST("id" AS varchar(255)) as booking_id, "dateCreated"{CONVERT_TO_PARIS_TIME} as booking_creation_date,
             CAST("stockId" AS varchar(255)) as stock_id, "quantity" as booking_quantity,
             CAST("userId" AS varchar(255)) as user_id, "amount" as booking_amount,
-            "isCancelled" as booking_is_cancelled, "isUsed" as booking_is_used, "dateUsed" as booking_used_date,
-            "cancellationDate" as booking_cancellation_date,
+            "isCancelled" as booking_is_cancelled, "isUsed" as booking_is_used, "dateUsed"{CONVERT_TO_PARIS_TIME} as booking_used_date,
+            "cancellationDate"{CONVERT_TO_PARIS_TIME} as booking_cancellation_date,
             CAST("cancellationReason" AS VARCHAR) AS booking_cancellation_reason
         FROM public.booking
     """
     cloudsql_queries[
         "offer"
-    ] = """
+    ] = f"""
         SELECT
             CAST("idAtProviders" AS varchar(255)) as offer_id_at_providers,
-            "dateModifiedAtLastProvider" as offer_modified_at_last_provider_date,
-            CAST("id" AS varchar(255)) as offer_id, "dateCreated" as offer_creation_date,
+            "dateModifiedAtLastProvider"{CONVERT_TO_PARIS_TIME} as offer_modified_at_last_provider_date,
+            CAST("id" AS varchar(255)) as offer_id, "dateCreated"{CONVERT_TO_PARIS_TIME} as offer_creation_date,
             CAST("productId" AS varchar(255)) as offer_product_id, CAST("venueId" AS varchar(255)) as venue_id,
             CAST("lastProviderId" AS varchar(255)) as offer_last_provider_id, "bookingEmail" as booking_email,
             "isActive" as offer_is_active, "type" as offer_type, "name" as offer_name,
@@ -102,24 +101,24 @@ def define_import_query(
     """
     cloudsql_queries[
         "stock"
-    ] = """
+    ] = f"""
         SELECT
             CAST("idAtProviders" AS varchar(255)) AS stock_id_at_providers ,
-            "dateModifiedAtLastProvider" AS stock_modified_at_last_provider_date,
-            CAST("id" AS varchar(255)) AS stock_id, "dateModified" AS stock_modified_date, "price" AS stock_price,
-            "quantity" AS stock_quantity, "bookingLimitDatetime" AS stock_booking_limit_date,
+            "dateModifiedAtLastProvider"{CONVERT_TO_PARIS_TIME} AS stock_modified_at_last_provider_date,
+            CAST("id" AS varchar(255)) AS stock_id, "dateModified"{CONVERT_TO_PARIS_TIME} AS stock_modified_date, "price" AS stock_price,
+            "quantity" AS stock_quantity, "bookingLimitDatetime"{CONVERT_TO_PARIS_TIME} AS stock_booking_limit_date,
             CAST("lastProviderId" AS varchar(255)) AS stock_last_provider_id,
             CAST("offerId" AS varchar(255)) AS offer_id, "isSoftDeleted" AS stock_is_soft_deleted,
-            "beginningDatetime" AS stock_beginning_date, "dateCreated" AS stock_creation_date,
+            "beginningDatetime" AS stock_beginning_date, "dateCreated"{CONVERT_TO_PARIS_TIME} AS stock_creation_date,
             "fieldsUpdated" AS stock_fields_updated
         FROM public.stock
     """
     cloudsql_queries[
         "venue"
-    ] = """
+    ] = f"""
         SELECT
             "thumbCount" AS venue_thumb_count, "idAtProviders" AS venue_id_at_providers,
-            "dateModifiedAtLastProvider" AS venue_modified_at_last_provider, "address" as venue_address,
+            "dateModifiedAtLastProvider"{CONVERT_TO_PARIS_TIME} AS venue_modified_at_last_provider, "address" as venue_address,
             "postalCode" as venue_postal_code, "city" as venue_city, CAST("id" AS varchar(255)) AS venue_id,
             "name" AS venue_name, "siret" AS venue_siret, "departementCode" AS venue_department_code,
             "latitude" AS venue_latitude, "longitude" AS venue_longitude,
@@ -127,19 +126,19 @@ def define_import_query(
             CAST("lastProviderId" AS varchar(255)) AS venue_last_provider_id, "isVirtual" AS venue_is_virtual,
             "comment" AS venue_comment, "publicName" AS venue_public_name,
             "fieldsUpdated" AS venue_fields_updated, CAST("venueTypeId" AS varchar(255)) AS venue_type_id,
-            CAST("venueLabelId" AS varchar(255)) AS venue_label_id, "dateCreated" AS venue_creation_date,
+            CAST("venueLabelId" AS varchar(255)) AS venue_label_id, "dateCreated"{CONVERT_TO_PARIS_TIME} AS venue_creation_date,
             "isPermanent" AS venue_is_permanent, "validationToken" AS venue_validation_token
         FROM public.venue
     """
     cloudsql_queries[
         "offerer"
-    ] = """
+    ] = f"""
         SELECT
             "isActive" AS offerer_is_active, "thumbCount" AS offerer_thumb_count,
             CAST("idAtProviders" AS varchar(255)) AS offerer_id_at_providers,
-            "dateModifiedAtLastProvider" AS offerer_modified_at_last_provider_date, "address" AS offerer_address,
+            "dateModifiedAtLastProvider"{CONVERT_TO_PARIS_TIME} AS offerer_modified_at_last_provider_date, "address" AS offerer_address,
             "postalCode" AS offerer_postal_code, "city" AS offerer_city, CAST("id" AS varchar(255)) AS offerer_id,
-            "dateCreated" AS offerer_creation_date, "name" AS offerer_name,
+            "dateCreated"{CONVERT_TO_PARIS_TIME} AS offerer_creation_date, "name" AS offerer_name,
             "siren" AS offerer_siren, CAST("lastProviderId" AS varchar(255)) AS offerer_last_provider_id,
             "fieldsUpdated" AS offerer_fields_updated, "validationToken" AS offerer_validation_token
         FROM public.offerer
@@ -168,10 +167,10 @@ def define_import_query(
     """
     cloudsql_queries[
         "favorite"
-    ] = """
+    ] = f"""
             SELECT
                 CAST("id" AS varchar(255)), CAST("userId" AS varchar(255)), CAST("offerId" AS varchar(255)),
-                CAST("mediationId" AS varchar(255)), "dateCreated"
+                CAST("mediationId" AS varchar(255)), "dateCreated"{CONVERT_TO_PARIS_TIME}
             FROM public.favorite
         """
     cloudsql_queries[
@@ -191,25 +190,25 @@ def define_import_query(
         """
     cloudsql_queries[
         "local_provider_event"
-    ] = """
+    ] = f"""
             SELECT
-                CAST("id" AS varchar(255)), CAST("providerId" AS varchar(255)),"date",
+                CAST("id" AS varchar(255)), CAST("providerId" AS varchar(255)),"date"{CONVERT_TO_PARIS_TIME},
                 CAST("type" AS varchar(255)), "payload"
             FROM public.local_provider_event
         """
     cloudsql_queries[
         "beneficiary_import_status"
-    ] = """
+    ] = f"""
             SELECT
-                CAST("id" AS varchar(255)), CAST("status" AS varchar(255)), "date", "detail",
+                CAST("id" AS varchar(255)), CAST("status" AS varchar(255)), "date"{CONVERT_TO_PARIS_TIME}, "detail",
                 CAST("beneficiaryImportId" AS varchar(255)),  CAST("authorId" AS varchar(255))
             FROM public.beneficiary_import_status
         """
     cloudsql_queries[
         "deposit"
-    ] = """
+    ] = f"""
             SELECT
-                CAST("id" AS varchar(255)), "amount", CAST("userId" AS varchar(255)), "source", "dateCreated", "expirationDate"
+                CAST("id" AS varchar(255)), "amount", CAST("userId" AS varchar(255)), "source", "dateCreated"{CONVERT_TO_PARIS_TIME}, "expirationDate"
             FROM public.deposit
         """
     cloudsql_queries[
@@ -222,10 +221,10 @@ def define_import_query(
         """
     cloudsql_queries[
         "mediation"
-    ] = """
+    ] = f"""
             SELECT
-                "thumbCount",CAST("idAtProviders" AS varchar(255)), "dateModifiedAtLastProvider",CAST("id" AS varchar(255)),
-                "dateCreated",CAST("authorId" AS varchar(255)), CAST("lastProviderId" AS varchar(255)),
+                "thumbCount",CAST("idAtProviders" AS varchar(255)), "dateModifiedAtLastProvider"{CONVERT_TO_PARIS_TIME},CAST("id" AS varchar(255)),
+                "dateCreated"{CONVERT_TO_PARIS_TIME},CAST("authorId" AS varchar(255)), CAST("lastProviderId" AS varchar(255)),
                 CAST("offerId" AS varchar(255)), "credit", "isActive", "fieldsUpdated"
             FROM public.mediation
         """
@@ -252,9 +251,9 @@ def define_import_query(
         """
     cloudsql_queries[
         "venue_provider"
-    ] = """
+    ] = f"""
             SELECT
-                "isActive", CAST("id" AS varchar(255)), CAST("idAtProviders" AS varchar(255)),"dateModifiedAtLastProvider",
+                "isActive", CAST("id" AS varchar(255)), CAST("idAtProviders" AS varchar(255)),"dateModifiedAtLastProvider"{CONVERT_TO_PARIS_TIME},
                 CAST("venueId" AS varchar(255)), CAST("providerId" AS varchar(255)), CAST("venueIdAtOfferProvider" AS varchar(255)),
                 "lastSyncDate",  CAST("lastProviderId" AS varchar(255)), CAST("syncWorkerId" AS varchar(255)), "fieldsUpdated"
             FROM public.venue_provider

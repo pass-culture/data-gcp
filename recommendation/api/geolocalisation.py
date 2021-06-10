@@ -1,8 +1,13 @@
+import time
+
 from sqlalchemy import text
 
+from utils import create_db_connection, log_duration
 
-def get_iris_from_coordinates(longitude: float, latitude: float, connection) -> int:
 
+def get_iris_from_coordinates(longitude: float, latitude: float) -> int:
+
+    start = time.time()
     if not (longitude and latitude):
         return None
 
@@ -14,12 +19,14 @@ def get_iris_from_coordinates(longitude: float, latitude: float, connection) -> 
         """
     )
 
-    result = connection.execute(
-        iris_query, longitude=longitude, latitude=latitude
-    ).fetchone()
+    with create_db_connection() as connection:
+        result = connection.execute(
+            iris_query, longitude=longitude, latitude=latitude
+        ).fetchone()
+
     if result:
         iris_id = result[0]
     else:
         iris_id = None
-
+    log_duration(f"get_iris_from_coordinates", start)
     return iris_id

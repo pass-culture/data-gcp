@@ -3,8 +3,6 @@ import re
 
 from flask import Flask, jsonify, make_response, request
 from flask_cors import CORS
-from sqlalchemy import create_engine, engine
-from typing import Any
 
 from access_gcp_secrets import access_secret
 from health_check_queries import get_materialized_view_status
@@ -40,39 +38,6 @@ CORS(
         r"/*": {"origins": re.compile(os.environ.get("CORS_ALLOWED_ORIGIN", ".*"))}
     },
 )
-
-
-def create_db_connection() -> Any:
-    if os.environ.get("CI", False):
-        return
-    database = os.environ.get("SQL_BASE")
-    username = os.environ.get("SQL_BASE_USER")
-    sql_base_secret_id = os.environ.get("SQL_BASE_SECRET_ID")
-    sql_base_secret_version = os.environ.get("SQL_BASE_SECRET_VERSION")
-    sql_connection_name = os.environ.get("SQL_CONNECTION_NAME")
-    password = access_secret(GCP_PROJECT, sql_base_secret_id, sql_base_secret_version)
-
-    query_string = dict(
-        {"unix_sock": "/cloudsql/{}/.s.PGSQL.5432".format(sql_connection_name)}
-    )
-
-    connection_engine = create_engine(
-        engine.url.URL(
-            drivername="postgres+pg8000",
-            username=username,
-            password=password,
-            database=database,
-            query=query_string,
-        ),
-        pool_size=20,
-        max_overflow=2,
-        pool_timeout=30,
-        pool_recycle=1800,
-    )
-    return connection_engine.connect().execution_options(autocommit=True)
-
-
-connection = create_db_connection()
 
 
 @app.route("/")
@@ -129,7 +94,7 @@ def recommendation(user_id: int):
         return "Forbidden", 403
 
     recommendations = get_final_recommendations(
-        user_id, longitude, latitude, APP_CONFIG, connection
+        user_id, longitude, latitude, APP_CONFIG
     )
 
     return jsonify({"recommended_offers": recommendations})

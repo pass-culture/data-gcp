@@ -17,7 +17,9 @@ from recommendation import (
 @patch("recommendation.get_cold_start_scored_recommendations_for_user")
 @patch("recommendation.get_iris_from_coordinates")
 @patch("recommendation.save_recommendation")
+@patch("recommendation.create_db_connection")
 def test_get_final_recommendation_for_group_a_cold_start(
+    connection_mock: Mock,
     save_recommendation_mock: Mock,
     get_iris_from_coordinates_mock: Mock,
     get_cold_start_scored_recommendations_for_user_mock: Mock,
@@ -25,6 +27,7 @@ def test_get_final_recommendation_for_group_a_cold_start(
     app_config: Dict[str, Any],
 ):
     # Given
+    connection_mock.return_value = setup_database
     user_id = 113
     get_cold_start_scored_recommendations_for_user_mock.return_value = [
         {
@@ -46,7 +49,7 @@ def test_get_final_recommendation_for_group_a_cold_start(
 
     # When
     recommendations = get_final_recommendations(
-        user_id, 2.331289, 48.830719, app_config, setup_database
+        user_id, 2.331289, 48.830719, app_config
     )
 
     # Then
@@ -58,7 +61,9 @@ def test_get_final_recommendation_for_group_a_cold_start(
 @patch("recommendation.get_scored_recommendation_for_user")
 @patch("recommendation.get_iris_from_coordinates")
 @patch("recommendation.save_recommendation")
+@patch("recommendation.create_db_connection")
 def test_get_final_recommendation_for_group_a_algo(
+    connection_mock: Mock,
     save_recommendation_mock: Mock,
     get_iris_from_coordinates_mock: Mock,
     get_scored_recommendation_for_user_mock: Mock,
@@ -67,6 +72,7 @@ def test_get_final_recommendation_for_group_a_algo(
     app_config: Dict[str, Any],
 ):
     # Given
+    connection_mock.return_value = setup_database
     user_id = 111
     get_intermediate_recommendations_for_user_mock.return_value = [
         {
@@ -106,7 +112,7 @@ def test_get_final_recommendation_for_group_a_algo(
 
     # When
     recommendations = get_final_recommendations(
-        user_id, 2.331289, 48.830719, app_config, setup_database
+        user_id, 2.331289, 48.830719, app_config
     )
 
     # Then
@@ -119,7 +125,9 @@ def test_get_final_recommendation_for_group_a_algo(
 @patch("recommendation.get_iris_from_coordinates")
 @patch("recommendation.get_cold_start_types")
 @patch("recommendation.save_recommendation")
+@patch("recommendation.create_db_connection")
 def test_get_final_recommendation_for_group_b(
+    connection_mock: Mock,
     save_recommendation_mock: Mock,
     get_cold_start_types: Mock,
     get_iris_from_coordinates_mock: Mock,
@@ -129,6 +137,7 @@ def test_get_final_recommendation_for_group_b(
     app_config: Dict[str, Any],
 ):
     # Given
+    connection_mock.return_value = setup_database
     user_id = 112
     get_intermediate_recommendations_for_user_mock.return_value = [
         {
@@ -167,7 +176,7 @@ def test_get_final_recommendation_for_group_b(
     get_iris_from_coordinates_mock.return_value = 1
 
     recommendations = get_final_recommendations(
-        user_id, 2.331289, 48.830719, app_config, setup_database
+        user_id, 2.331289, 48.830719, app_config
     )
 
     # Then
@@ -183,7 +192,9 @@ def test_get_final_recommendation_for_group_b(
 @patch("recommendation.get_cold_start_types")
 @patch("recommendation.get_iris_from_coordinates")
 @patch("recommendation.save_recommendation")
+@patch("recommendation.create_db_connection")
 def test_get_final_recommendation_for_new_user(
+    connection_mock: Mock,
     save_recommendation_mock: Mock,
     get_iris_from_coordinates_mock: Mock,
     get_cold_start_types: Mock,
@@ -195,6 +206,7 @@ def test_get_final_recommendation_for_new_user(
     app_config: Dict[str, Any],
 ):
     # Given
+    connection_mock.return_value = setup_database
     user_id = 113
     get_cold_start_types.return_value = ["type2", "type3"]
     get_intermediate_recommendations_for_user.return_value = [
@@ -225,7 +237,7 @@ def test_get_final_recommendation_for_new_user(
 
     # When
     recommendations = get_final_recommendations(
-        user_id, 2.331289, 48.830719, app_config, setup_database
+        user_id, 2.331289, 48.830719, app_config
     )
     try:
         get_intermediate_recommendations_for_user.assert_called()

@@ -43,14 +43,13 @@ CORS(
 
 
 def create_db_connection() -> Any:
-
+    if os.environ.get("CI", False):
+        return
     database = os.environ.get("SQL_BASE")
     username = os.environ.get("SQL_BASE_USER")
     sql_base_secret_id = os.environ.get("SQL_BASE_SECRET_ID")
     sql_base_secret_version = os.environ.get("SQL_BASE_SECRET_VERSION")
     sql_connection_name = os.environ.get("SQL_CONNECTION_NAME")
-    if not username:
-        return
     password = access_secret(GCP_PROJECT, sql_base_secret_id, sql_base_secret_version)
 
     query_string = dict(

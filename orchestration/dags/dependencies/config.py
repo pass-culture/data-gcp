@@ -27,4 +27,4 @@ BIGQUERY_ANALYTICS_DATASET = os.environ.get(
 APPLICATIVE_PREFIX = "applicative_database_"
 MATOMO_PREFIX = "matomo_"
 SURVEY_PREFIX = "survey_"
-CONVERT_TO_PARIS_TIME = " at time zone 'utc' at time zone 'Europe/Paris'"
+CONVERT_TO_PARIS_TIME = " at time zone \'utc\' at time zone \'Europe/Paris\'"

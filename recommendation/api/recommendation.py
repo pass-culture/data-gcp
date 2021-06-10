@@ -76,7 +76,6 @@ def get_final_recommendations(
     )
 
     save_recommendation(user_id, final_recommendations, connection)
-    connection.close()
     return final_recommendations
 
 

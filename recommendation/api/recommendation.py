@@ -9,53 +9,18 @@ import pytz
 
 from google.api_core.client_options import ClientOptions
 from googleapiclient import discovery
-from sqlalchemy import create_engine, engine, text
+from sqlalchemy import text
 
-from access_gcp_secrets import access_secret
 from cold_start import get_cold_start_status, get_cold_start_types
 from geolocalisation import get_iris_from_coordinates
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
 
-SQL_BASE = os.environ.get("SQL_BASE")
-SQL_BASE_USER = os.environ.get("SQL_BASE_USER")
-SQL_BASE_SECRET_ID = os.environ.get("SQL_BASE_SECRET_ID")
-SQL_BASE_SECRET_VERSION = os.environ.get("SQL_BASE_SECRET_VERSION")
-SQL_CONNECTION_NAME = os.environ.get("SQL_CONNECTION_NAME")
-
-SQL_BASE_PASSWORD = access_secret(
-    GCP_PROJECT, SQL_BASE_SECRET_ID, SQL_BASE_SECRET_VERSION
-)
-
-
-query_string = dict(
-    {"unix_sock": "/cloudsql/{}/.s.PGSQL.5432".format(SQL_CONNECTION_NAME)}
-)
-
-engine = create_engine(
-    engine.url.URL(
-        drivername="postgres+pg8000",
-        username=SQL_BASE_USER,
-        password=SQL_BASE_PASSWORD,
-        database=SQL_BASE,
-        query=query_string,
-    ),
-    pool_size=20,
-    max_overflow=2,
-    pool_timeout=30,
-    pool_recycle=1800,
-)
-
-
-def create_db_connection() -> Any:
-    return engine.connect().execution_options(autocommit=True)
-
 
 def get_final_recommendations(
-    user_id: int, longitude: int, latitude: int, app_config: Dict[str, Any]
+    user_id: int, longitude: int, latitude: int, app_config: Dict[str, Any], connection
 ) -> List[int]:
     ab_testing_table = app_config["AB_TESTING_TABLE"]
-    connection = create_db_connection()
     request_response = connection.execute(
         text(f"SELECT groupid FROM {ab_testing_table} WHERE userid= :user_id"),
         user_id=str(user_id),

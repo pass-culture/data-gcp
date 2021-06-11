@@ -7,7 +7,7 @@ from dependencies.config import (
 )
 
 FIREBASE_EVENTS_TABLE = "firebase_events"
-TABLE_AB_TESTING = 'ab_testing_202104_v0_v0bis'
+TABLE_AB_TESTING = "ab_testing_202104_v0_v0bis"
 
 
 def get_request_click_through_reco_module(start_date, group_id):

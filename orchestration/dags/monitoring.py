@@ -26,8 +26,6 @@ from dependencies.config import (
 FIREBASE_EVENTS_TABLE = "firebase_events"
 MONITORING_TABLE = "monitoring_data"
 START_DATE = datetime(2021, 5, 20)
-
-
 groups = ["A", "B"]
 
 
@@ -50,16 +48,17 @@ def compute_click_through_reco_module(ti, **kwargs):
 
 
 def insert_metric_bq(project_name, dataset, table, ti, **kwargs):
-    bigquery_query = f"INSERT {project_name}.{dataset}.{table} (compute_time, from_time, last_metric_time, metric_name, metric_value, algorithm_id, environment, group_id) VALUES"
+    bigquery_query = f"""INSERT `{project_name}.{dataset}.{table}` (compute_time, from_time, last_metric_time, metric_name, metric_value, algorithm_id, environment, group_id) 
+    VALUES"""
     last_metric_time = ti.xcom_pull(key="from_time")
     for metric_id, _ in metrics_to_compute.items():
         for group_id in groups:
             metric_query = f"""
-            (   {datetime.now()}, 
-                TIMESTAMP_SECONDS(CAST(CAST({START_DATE} as INT64)/1000000 as INT64)), 
-                {last_metric_time}, 
+            (   '{datetime.now()}', 
+                '{START_DATE}', 
+                TIMESTAMP_SECONDS(CAST(CAST({last_metric_time} as INT64)/1000000 as INT64)), 
                 '{metric_id}', 
-                '{ti.xcom_pull(key=f"{metric_id}_{group_id}")}',
+                {float(ti.xcom_pull(key=f"{metric_id}_{group_id}"))},
                 'algo_v0',
                 '{ENV_SHORT_NAME}',
                 '{group_id}'
@@ -68,8 +67,8 @@ def insert_metric_bq(project_name, dataset, table, ti, **kwargs):
             bigquery_query += ","
     bigquery_client = BigQueryClient()
     bigquery_query = f"{bigquery_query[:-1]};"
-    print(bigquery_query)
     bigquery_client.query(bigquery_query)
+
 
 metrics_to_compute = {
     "COUNT_CLICK_RECO": compute_click_through_reco_module,
@@ -78,7 +77,7 @@ metrics_to_compute = {
 
 default_args = {
     "start_date": datetime(2021, 5, 26),
-    #"on_failure_callback": task_fail_slack_alert,
+    "on_failure_callback": task_fail_slack_alert,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }
@@ -110,11 +109,6 @@ with DAG(
         PythonOperator(
             task_id=f"compute_{metric}",
             python_callable=function_to_call,
-            # op_kwargs={
-            #     "project_name": GCP_PROJECT,
-            #     "dataset": BIGQUERY_ANALYTICS_DATASET,
-            #     "table": FIREBASE_EVENTS_TABLE,
-            # },
             provide_context=True,
         )
         for metric, function_to_call in metrics_to_compute.items()

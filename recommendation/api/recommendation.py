@@ -21,7 +21,7 @@ def get_final_recommendations(
 ) -> List[int]:
     request_response = query_ab_testing_table(user_id, app_config)
     if not request_response:
-        ab_testing_assign_user(user_id, app_config)
+        group_id = ab_testing_assign_user(user_id, app_config)
     else:
         group_id = request_response[0]
 
@@ -93,6 +93,7 @@ def ab_testing_assign_user(user_id, app_config):
         )
 
     log_duration(f"ab_testing_assign_user for {user_id}", start)
+    return group_id
 
 
 def save_recommendation(user_id: int, recommendations: List[int]):
@@ -371,14 +372,14 @@ def order_offers_by_score_and_diversify_types(
 def _get_offers_grouped_by_type(offers: List[Dict[str, Any]]) -> Dict:
     start = time.time()
     offers_by_type = dict()
+    product_ids = set()
     for offer in offers:
         offer_type = offer["type"]
         offer_product_id = offer["product_id"]
         if offer_type in offers_by_type.keys():
-            if offer_product_id not in [
-                offer["product_id"] for offer in offers_by_type[offer_type]
-            ]:
+            if offer_product_id not in product_ids:
                 offers_by_type[offer_type].append(offer)
+                product_ids.add(offer_product_id)
         else:
             offers_by_type[offer_type] = [offer]
 

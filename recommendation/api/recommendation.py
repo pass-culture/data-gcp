@@ -1,59 +1,44 @@
 import collections
 import datetime
-import os
 import random
+import time
 from typing import Any, Dict, List, Tuple
 
+from sqlalchemy import text
 import numpy as np
 import pytz
 
 from google.api_core.client_options import ClientOptions
 from googleapiclient import discovery
-from sqlalchemy import text
 
 from cold_start import get_cold_start_status, get_cold_start_types
 from geolocalisation import get_iris_from_coordinates
-
-GCP_PROJECT = os.environ.get("GCP_PROJECT")
+from utils import create_db_connection, log_duration, GCP_PROJECT
 
 
 def get_final_recommendations(
-    user_id: int, longitude: int, latitude: int, app_config: Dict[str, Any], connection
+    user_id: int, longitude: int, latitude: int, app_config: Dict[str, Any]
 ) -> List[int]:
-    ab_testing_table = app_config["AB_TESTING_TABLE"]
-    request_response = connection.execute(
-        text(f"SELECT groupid FROM {ab_testing_table} WHERE userid= :user_id"),
-        user_id=str(user_id),
-    ).scalar()
-
+    request_response = query_ab_testing_table(user_id, app_config)
     if not request_response:
-        group_id = "A" if random.random() > 0.5 else "B"
-        connection.execute(
-            text(
-                f"INSERT INTO {ab_testing_table}(userid, groupid) VALUES (:user_id, :group_id)"
-            ),
-            user_id=user_id,
-            group_id=str(group_id),
-        )
-
+        ab_testing_assign_user(user_id, app_config)
     else:
         group_id = request_response[0]
 
-    is_cold_start = get_cold_start_status(user_id, connection)
-    user_iris_id = get_iris_from_coordinates(longitude, latitude, connection)
+    is_cold_start = get_cold_start_status(user_id)
+    user_iris_id = get_iris_from_coordinates(longitude, latitude)
 
     if group_id == "A" and is_cold_start:
-        cold_start_types = get_cold_start_types(user_id, connection)
+        cold_start_types = get_cold_start_types(user_id)
         scored_recommendation_for_user = get_cold_start_scored_recommendations_for_user(
             user_id,
             user_iris_id,
             cold_start_types,
             app_config["NUMBER_OF_PRESELECTED_OFFERS"],
-            connection,
         )
     else:
         recommendations_for_user = get_intermediate_recommendations_for_user(
-            user_id, user_iris_id, connection
+            user_id, user_iris_id
         )
         scored_recommendation_for_user = get_scored_recommendation_for_user(
             user_id,
@@ -75,26 +60,59 @@ def get_final_recommendations(
         scored_recommendation_for_user, app_config["NUMBER_OF_RECOMMENDATIONS"]
     )
 
-    save_recommendation(user_id, final_recommendations, connection)
-    connection.close()
+    save_recommendation(user_id, final_recommendations)
     return final_recommendations
 
 
-def save_recommendation(user_id: int, recommendations: List[int], cursor):
-    date = datetime.datetime.now(pytz.utc)
+def query_ab_testing_table(user_id, app_config):
+    start = time.time()
+    ab_testing_table = app_config["AB_TESTING_TABLE"]
 
-    for offer_id in recommendations:
-        cursor.execute(
+    with create_db_connection() as connection:
+        request_response = connection.execute(
+            text(f"SELECT groupid FROM {ab_testing_table} WHERE userid= :user_id"),
+            user_id=str(user_id),
+        ).scalar()
+
+    log_duration(f"query_ab_testing_table for {user_id}", start)
+    return request_response
+
+
+def ab_testing_assign_user(user_id, app_config):
+    start = time.time()
+    ab_testing_table = app_config["AB_TESTING_TABLE"]
+    group_id = "A" if random.random() > 0.5 else "B"
+
+    with create_db_connection() as connection:
+        connection.execute(
             text(
-                """
-                INSERT INTO public.past_recommended_offers(userid, offerid, date)
-                VALUES (:user_id, :offer_id, :date)
-                """
+                f"INSERT INTO {ab_testing_table}(userid, groupid) VALUES (:user_id, :group_id)"
             ),
             user_id=user_id,
-            offer_id=offer_id,
-            date=date,
+            group_id=str(group_id),
         )
+
+    log_duration(f"ab_testing_assign_user for {user_id}", start)
+
+
+def save_recommendation(user_id: int, recommendations: List[int]):
+    start = time.time()
+    date = datetime.datetime.now(pytz.utc)
+
+    with create_db_connection() as connection:
+        for offer_id in recommendations:
+            connection.execute(
+                text(
+                    """
+                    INSERT INTO public.past_recommended_offers(userid, offerid, date)
+                    VALUES (:user_id, :offer_id, :date)
+                    """
+                ),
+                user_id=user_id,
+                offer_id=offer_id,
+                date=date,
+            )
+    log_duration(f"save_recommendations for {user_id}", start)
 
 
 def get_cold_start_scored_recommendations_for_user(
@@ -102,9 +120,9 @@ def get_cold_start_scored_recommendations_for_user(
     user_iris_id: int,
     cold_start_types: list,
     number_of_preselected_offers: int,
-    connection,
 ) -> List[Dict[str, Any]]:
 
+    start = time.time()
     if cold_start_types:
         order_query = f"""
             ORDER BY
@@ -147,12 +165,13 @@ def get_cold_start_scored_recommendations_for_user(
         """
     )
 
-    query_result = connection.execute(
-        recommendations_query,
-        user_iris_id=str(user_iris_id),
-        user_id=str(user_id),
-        number_of_preselected_offers=number_of_preselected_offers,
-    ).fetchall()
+    with create_db_connection() as connection:
+        query_result = connection.execute(
+            recommendations_query,
+            user_iris_id=str(user_iris_id),
+            user_id=str(user_id),
+            number_of_preselected_offers=number_of_preselected_offers,
+        ).fetchall()
 
     cold_start_recommendations = [
         {
@@ -164,12 +183,18 @@ def get_cold_start_scored_recommendations_for_user(
         }
         for row in query_result
     ]
+    log_duration(
+        f"get_cold_start_scored_recommendations_for_user for {user_id} {'with localisation' if user_iris_id else ''}",
+        start,
+    )
     return cold_start_recommendations
 
 
 def get_intermediate_recommendations_for_user(
-    user_id: int, user_iris_id: int, connection
+    user_id: int, user_iris_id: int
 ) -> List[Dict[str, Any]]:
+
+    start = time.time()
     if not user_iris_id:
         query = text(
             """
@@ -185,7 +210,10 @@ def get_intermediate_recommendations_for_user(
             ORDER BY RANDOM();
             """
         )
-        query_result = connection.execute(query, user_id=str(user_id)).fetchall()
+
+        with create_db_connection() as connection:
+            query_result = connection.execute(query, user_id=str(user_id)).fetchall()
+
     else:
         query = text(
             """
@@ -211,9 +239,11 @@ def get_intermediate_recommendations_for_user(
             ORDER BY RANDOM();
             """
         )
-        query_result = connection.execute(
-            query, user_id=str(user_id), user_iris_id=str(user_iris_id)
-        ).fetchall()
+
+        with create_db_connection() as connection:
+            query_result = connection.execute(
+                query, user_id=str(user_id), user_iris_id=str(user_iris_id)
+            ).fetchall()
 
     user_recommendation = [
         {
@@ -226,6 +256,10 @@ def get_intermediate_recommendations_for_user(
         for row in query_result
     ]
 
+    log_duration(
+        f"get_intermediate_recommendations_for_user for {user_id} {'with localisation' if user_iris_id else ''}",
+        start,
+    )
     return user_recommendation
 
 
@@ -237,6 +271,8 @@ def get_scored_recommendation_for_user(
     version: str,
     input_type: str,
 ) -> List[Dict[str, int]]:
+
+    start = time.time()
     user_to_rank = [user_id for reco in user_recommendations]
     if input_type == "offer_id_list":
         instances = [recommendation["id"] for recommendation in user_recommendations]
@@ -251,13 +287,20 @@ def get_scored_recommendation_for_user(
     predicted_scores = predict_score(
         model_region, GCP_PROJECT, model_name, instances, version
     )
-    return [
+
+    recommendations = [
         {**recommendation, "score": predicted_scores[i]}
         for i, recommendation in enumerate(user_recommendations)
     ]
 
+    log_duration(
+        f"get_scored_recommendation_for_user for {user_id} - {model_name}", start
+    )
+    return recommendations
+
 
 def predict_score(region, project, model, instances, version):
+    start = time.time()
     endpoint = f"https://{region}-ml.googleapis.com"
     client_options = ClientOptions(api_endpoint=endpoint)
     service = discovery.build(
@@ -274,6 +317,7 @@ def predict_score(region, project, model, instances, version):
     if "error" in response:
         raise RuntimeError(response["error"])
 
+    log_duration(f"predict_score", start)
     return response["predictions"]
 
 
@@ -287,6 +331,8 @@ def order_offers_by_score_and_diversify_types(
     Sort offers by taking the last offer of each group (maximum score), by decreasing size of group.
     Return only the ids of these sorted offers.
     """
+
+    start = time.time()
     offers_by_type = _get_offers_grouped_by_type(offers)
 
     offers_by_type_ordered_by_frequency = collections.OrderedDict(
@@ -313,10 +359,17 @@ def order_offers_by_score_and_diversify_types(
                 )
         if len(diversified_offers) >= number_of_recommendations:
             break
-    return [offer["id"] for offer in diversified_offers][:number_of_recommendations]
+
+    ordered_and_diversified_offers = [offer["id"] for offer in diversified_offers][
+        :number_of_recommendations
+    ]
+
+    log_duration(f"order_offers_by_score_and_diversify_types", start)
+    return ordered_and_diversified_offers
 
 
 def _get_offers_grouped_by_type(offers: List[Dict[str, Any]]) -> Dict:
+    start = time.time()
     offers_by_type = dict()
     for offer in offers:
         offer_type = offer["type"]
@@ -328,6 +381,8 @@ def _get_offers_grouped_by_type(offers: List[Dict[str, Any]]) -> Dict:
                 offers_by_type[offer_type].append(offer)
         else:
             offers_by_type[offer_type] = [offer]
+
+    log_duration("_get_offers_grouped_by_type", start)
     return offers_by_type
 
 

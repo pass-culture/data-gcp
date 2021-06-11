@@ -175,6 +175,13 @@ def define_import_query(
             FROM public.favorite
         """
     cloudsql_queries[
+        "iris_venues"
+    ] = """
+            SELECT
+                CAST("id" AS varchar(255)), CAST("irisId" AS varchar(255)), CAST("venueId" AS varchar(255))
+            FROM public.iris_venues
+        """
+    cloudsql_queries[
         "transaction"
     ] = """
             SELECT
@@ -221,6 +228,13 @@ def define_import_query(
                 "dateCreated",CAST("authorId" AS varchar(255)), CAST("lastProviderId" AS varchar(255)),
                 CAST("offerId" AS varchar(255)), "credit", "isActive", "fieldsUpdated"
             FROM public.mediation
+        """
+    cloudsql_queries[
+        "iris_france"
+    ] = """
+            SELECT
+                CAST("id" AS varchar(255)), "irisCode",CAST("centroid" AS varchar(255)), CAST("shape" AS varchar(255))
+            FROM public.iris_france
         """
     cloudsql_queries[
         "offer_criterion"

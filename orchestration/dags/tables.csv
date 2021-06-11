@@ -22,8 +22,9 @@ booking,booking_is_cancelled,boolean,applicative_database_booking,clean
 booking,booking_is_used,boolean,applicative_database_booking,clean
 booking,booking_used_date,timestamp without time zone,applicative_database_booking,clean
 booking,booking_cancellation_date,timestamp without time zone,applicative_database_booking,clean
-iris_venues,irisId,character varying,iris_venues,clean
-iris_venues,venueId,character varying,iris_venues,clean
+iris_venues,id,character varying,applicative_database_iris_venues,clean
+iris_venues,irisId,character varying,applicative_database_iris_venues,clean
+iris_venues,venueId,character varying,applicative_database_iris_venues,clean
 mediation,thumbCount,integer,applicative_database_mediation,clean
 mediation,idAtProviders,character varying,applicative_database_mediation,clean
 mediation,dateModifiedAtLastProvider,timestamp without time zone,applicative_database_mediation,clean

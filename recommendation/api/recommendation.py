@@ -50,9 +50,26 @@ def get_final_recommendations(
         )
 
         if group_id == "A":
-            scored_recommendation_for_user = sorted(
+            sorted_scored_recommendation_for_user = sorted(
                 scored_recommendation_for_user, key=lambda k: k["score"], reverse=True
-            )[:40]
+            )
+            scored_recommendation_for_user = sorted_scored_recommendation_for_user[:40]
+
+            last_offer_index = 40
+            while (
+                len(
+                    set(
+                        [
+                            recommendation["product_id"]
+                            for recommendation in scored_recommendation_for_user
+                        ]
+                    )
+                )
+                < 10
+            ):
+                scored_recommendation_for_user.append(
+                    sorted_scored_recommendation_for_user[last_offer_index]
+                )
             for recommendation in scored_recommendation_for_user:
                 recommendation["score"] = random.random()
 

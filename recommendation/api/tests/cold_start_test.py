@@ -1,4 +1,5 @@
 import pytest
+from unittest.mock import Mock, patch
 
 from typing import Any, List
 
@@ -13,12 +14,13 @@ from cold_start import get_cold_start_status, get_cold_start_types
         ("113", True),
     ],
 )
+@patch("cold_start.create_db_connection")
 def test_get_cold_start_status(
-    setup_database: Any, user_id: str, cold_start_status: bool
+    connection_mock: Mock, setup_database: Any, user_id: str, cold_start_status: bool
 ):
     # Given
-    connection = setup_database
-    assert get_cold_start_status(user_id, connection) == cold_start_status
+    connection_mock.return_value = setup_database
+    assert get_cold_start_status(user_id) == cold_start_status
 
 
 @pytest.mark.parametrize(
@@ -70,11 +72,13 @@ def test_get_cold_start_status(
         ("113", []),
     ],
 )
+@patch("cold_start.create_db_connection")
 def test_get_cold_start_types(
+    connection_mock: Mock,
     setup_database: Any,
     user_id: str,
     cold_start_types: List[str],
 ):
     # Given
-    connection = setup_database
-    assert sorted(get_cold_start_types(user_id, connection)) == sorted(cold_start_types)
+    connection_mock.return_value = setup_database
+    assert sorted(get_cold_start_types(user_id)) == sorted(cold_start_types)

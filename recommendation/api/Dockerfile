@@ -16,6 +16,7 @@ COPY recommendation.py ./
 COPY access_gcp_secrets.py ./
 COPY api-requirements.txt ./
 COPY cold_start.py ./
+COPY utils.py ./
 
 # Install production dependencies.
 RUN pip install -r api-requirements.txt

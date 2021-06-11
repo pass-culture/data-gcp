@@ -12,6 +12,7 @@ from recommendation import (
     order_offers_by_score_and_diversify_types,
     save_recommendation,
 )
+from utils import create_db_connection
 
 
 @patch("recommendation.get_cold_start_scored_recommendations_for_user")
@@ -62,15 +63,19 @@ def test_get_final_recommendation_for_group_a_cold_start(
 @patch("recommendation.get_scored_recommendation_for_user")
 @patch("recommendation.get_iris_from_coordinates")
 @patch("recommendation.save_recommendation")
+@patch("utils.create_pool")
 def test_get_final_recommendation_for_group_a_algo(
+    mock_pool: Mock,
     save_recommendation_mock: Mock,
     get_iris_from_coordinates_mock: Mock,
     get_scored_recommendation_for_user_mock: Mock,
     get_intermediate_recommendations_for_user_mock: Mock,
-    setup_database: Any,
+    setup_pool: Any,
     app_config: Dict[str, Any],
 ):
     # Given
+    mock_pool.return_value = setup_pool
+
     user_id = 111
     get_intermediate_recommendations_for_user_mock.return_value = [
         {
@@ -123,16 +128,20 @@ def test_get_final_recommendation_for_group_a_algo(
 @patch("recommendation.get_iris_from_coordinates")
 @patch("recommendation.get_cold_start_types")
 @patch("recommendation.save_recommendation")
+@patch("utils.create_pool")
 def test_get_final_recommendation_for_group_b(
+    mock_pool: Mock,
     save_recommendation_mock: Mock,
     get_cold_start_types: Mock,
     get_iris_from_coordinates_mock: Mock,
     get_scored_recommendation_for_user_mock: Mock,
     get_intermediate_recommendations_for_user_mock: Mock,
-    setup_database: Any,
+    setup_pool: Any,
     app_config: Dict[str, Any],
 ):
     # Given
+    mock_pool.return_value = setup_pool
+
     user_id = 112
     get_intermediate_recommendations_for_user_mock.return_value = [
         {
@@ -187,7 +196,9 @@ def test_get_final_recommendation_for_group_b(
 @patch("recommendation.get_cold_start_types")
 @patch("recommendation.get_iris_from_coordinates")
 @patch("recommendation.save_recommendation")
+@patch("utils.create_pool")
 def test_get_final_recommendation_for_new_user(
+    mock_pool: Mock,
     save_recommendation_mock: Mock,
     get_iris_from_coordinates_mock: Mock,
     get_cold_start_types: Mock,
@@ -195,10 +206,12 @@ def test_get_final_recommendation_for_new_user(
     get_cold_start_scored_recommendations_for_user: Mock,
     get_scored_recommendation_for_user: Mock,
     order_offers_by_score_and_diversify_types: Mock,
-    setup_database: Any,
+    setup_pool: Any,
     app_config: Dict[str, Any],
 ):
     # Given
+    mock_pool.return_value = setup_pool
+
     user_id = 113
     get_cold_start_types.return_value = ["type2", "type3"]
     get_intermediate_recommendations_for_user.return_value = [
@@ -556,19 +569,24 @@ def test_get_scored_recommendation_for_user(
     ]
 
 
-@patch("recommendation.create_db_connection")
-def test_save_recommendation(connection_mock: Mock, setup_database: Tuple[Any, Any]):
+@patch("utils.create_pool")
+def test_save_recommendation(
+    mock_pool: Mock,
+    setup_pool: Any,
+):
     # Given
+    mock_pool.return_value = setup_pool
+
     user_id = 1
     recommendations = [2, 3, 4]
-    connection_mock.return_value = setup_database
 
     # When
     save_recommendation(user_id, recommendations)
 
     # Then
+    connection = create_db_connection()
     for offer_id in recommendations:
-        query_result = setup_database.execute(
+        query_result = connection.execute(
             f"SELECT * FROM public.past_recommended_offers where userid = {user_id} and offerId = {offer_id}"
         ).fetchall()
         assert len(query_result) == 1

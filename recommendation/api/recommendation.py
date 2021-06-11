@@ -21,7 +21,7 @@ def get_final_recommendations(
 ) -> List[int]:
     request_response = query_ab_testing_table(user_id, app_config)
     if not request_response:
-        ab_testing_assign_user(user_id, app_config)
+        group_id = ab_testing_assign_user(user_id, app_config)
     else:
         group_id = request_response[0]
 
@@ -93,6 +93,7 @@ def ab_testing_assign_user(user_id, app_config):
         )
 
     log_duration(f"ab_testing_assign_user for {user_id}", start)
+    return group_id
 
 
 def save_recommendation(user_id: int, recommendations: List[int]):

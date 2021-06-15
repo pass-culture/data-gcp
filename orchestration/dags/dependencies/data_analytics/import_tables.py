@@ -301,3 +301,24 @@ def define_import_query(
     default_query = f"SELECT * FROM EXTERNAL_QUERY('{external_connection_id}', 'SELECT * FROM {table}');"
 
     return queries.get(table, default_query)
+
+
+def define_replace_query(table, tables_to_convert):
+    query_begining = f"REPLACE("
+    query_body = ""
+    if tables_to_convert[table] == "":
+        return ""
+    i = 0
+    if isinstance(tables_to_convert[table], str):
+        query_body += f"""DATETIME(timestamp({tables_to_convert[table]}),'Europe/Paris') as {tables_to_convert[table]})"""
+    else:
+        for date in tables_to_convert[table]:
+            query_body += f"""DATETIME(timestamp({date}),'Europe/Paris') as {date} """
+            i += 1
+            if i < len(tables_to_convert[table]):
+                query_body += ","
+            else:
+                query_body += ")"
+
+    query = query_begining + query_body
+    return query

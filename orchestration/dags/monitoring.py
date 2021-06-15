@@ -31,7 +31,7 @@ groups = ["A", "B"]
 LAST_EVENT_TIME_KEY = "last_event_time_key"
 
 
-def get_last_data_timestamp(project_name, dataset, table, ti, **kwargs):
+def get_last_data_timestamp(ti, **kwargs):
     bigquery_client = BigQueryClient()
     bigquery_query = get_last_event_time_request()
     results = bigquery_client.query(bigquery_query)
@@ -81,11 +81,6 @@ with DAG(
     init_dag = PythonOperator(
         task_id="get_last_data_timestamp",
         python_callable=get_last_data_timestamp,
-        op_kwargs={
-            "project_name": GCP_PROJECT,
-            "dataset": BIGQUERY_ANALYTICS_DATASET,
-            "table": FIREBASE_EVENTS_TABLE,
-        },
         provide_context=True,
     )
 

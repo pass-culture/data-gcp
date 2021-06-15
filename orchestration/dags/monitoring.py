@@ -30,7 +30,7 @@ groups = ["A", "B"]
 
 
 def get_last_data_timestamp(project_name, dataset, table, ti, **kwargs):
-    bigquery_query = f"SELECT event_timestamp FROM {project_name}.{dataset}.{table} ORDER BY event_timestamp DESC LIMIT 1;"
+    bigquery_query = f"SELECT max(event_timestamp) FROM {project_name}.{dataset}.{table};"
     bigquery_client = BigQueryClient()
     results = bigquery_client.query(bigquery_query)
     result = int(results.values[0][0].to_pydatetime().timestamp())

@@ -1,4 +1,4 @@
-# enriched_booked_categories
+# Enriched_booked_categories
 ENRICHED_BOOKED_CATEGORIES_DATA_INPUT = {
     "booking": [],
     "stock": [],

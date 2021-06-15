@@ -12,7 +12,7 @@ from airflow.contrib.operators.gcs_to_bq import (
 
 from dependencies.slack_alert import task_fail_slack_alert
 from dependencies.bigquery_client import BigQueryClient
-from dependencies.monitoring import get_request_click_through_reco_module
+from dependencies.monitoring import get_request_click_through_reco_module, get_insert_metric_request, get_last_event_time_request
 
 from dependencies.config import (
     GCP_PROJECT,
@@ -28,18 +28,19 @@ MONITORING_TABLE = "monitoring_data"
 START_DATE = datetime(2021, 5, 20)
 groups = ["A", "B"]
 
+LAST_EVENT_TIME_KEY = "last_event_time_key"
+
 
 def get_last_data_timestamp(project_name, dataset, table, ti, **kwargs):
-    bigquery_query = f"SELECT max(event_timestamp) FROM {project_name}.{dataset}.{table};"
     bigquery_client = BigQueryClient()
+    bigquery_query = get_last_event_time_request()
     results = bigquery_client.query(bigquery_query)
     result = int(results.values[0][0].to_pydatetime().timestamp())
-    print(f"result : {result} is type : {type(result)}")
-    ti.xcom_push(key="from_time", value=result)
+    ti.xcom_push(key=LAST_EVENT_TIME_KEY, value=result)
 
 
 def compute_click_through_reco_module(ti, **kwargs):
-    start_date = ti.xcom_pull(key="from_time")
+    start_date = ti.xcom_pull(key=LAST_EVENT_TIME_KEY)
     for group_id in groups:
         bigquery_query = get_request_click_through_reco_module(start_date, group_id)
         bigquery_client = BigQueryClient()
@@ -47,26 +48,9 @@ def compute_click_through_reco_module(ti, **kwargs):
         ti.xcom_push(key=f"COUNT_CLICK_RECO_{group_id}", value=result)
 
 
-def insert_metric_bq(project_name, dataset, table, ti, **kwargs):
-    bigquery_query = f"""INSERT `{project_name}.{dataset}.{table}` (compute_time, from_time, last_metric_time, metric_name, metric_value, algorithm_id, environment, group_id) 
-    VALUES"""
-    last_metric_time = ti.xcom_pull(key="from_time")
-    for metric_id, _ in metrics_to_compute.items():
-        for group_id in groups:
-            metric_query = f"""
-            (   '{datetime.now()}', 
-                '{START_DATE}', 
-                TIMESTAMP_SECONDS(CAST(CAST({last_metric_time} as INT64)/1000000 as INT64)), 
-                '{metric_id}', 
-                {float(ti.xcom_pull(key=f"{metric_id}_{group_id}"))},
-                'algo_v0',
-                '{ENV_SHORT_NAME}',
-                '{group_id}'
-            )"""
-            bigquery_query += metric_query
-            bigquery_query += ","
+def insert_metric_bq(ti, **kwargs):
     bigquery_client = BigQueryClient()
-    bigquery_query = f"{bigquery_query[:-1]};"
+    bigquery_query = get_insert_metric_request(ti, START_DATE)
     bigquery_client.query(bigquery_query)
 
 
@@ -117,11 +101,6 @@ with DAG(
     insert_metric_bq = PythonOperator(
         task_id=f"insert_metric_bigquery",
         python_callable=insert_metric_bq,
-        op_kwargs={
-            "project_name": GCP_PROJECT,
-            "dataset": BIGQUERY_ANALYTICS_DATASET,
-            "table": MONITORING_TABLE,
-        },
         provide_context=True,
     )
 

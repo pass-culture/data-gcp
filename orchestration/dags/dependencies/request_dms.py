@@ -10,6 +10,13 @@ import pandas as pd
 from datetime import datetime
 from google.cloud import secretmanager
 
+from dependencies.access_gcp_secrets import access_secret_data
+
+from dependencies.config import (
+    GCP_PROJECT_ID,
+    DATA_GCS_BUCKET_NAME,
+)
+
 
 API_URL = "https://www.demarches-simplifiees.fr/api/v2/graphql"
 demarches_ids = ["44675", "44623", "29161"]
@@ -153,16 +160,7 @@ def run_query(query, dms_token):
         )
 
 
-def get_secret_token():
-    client = secretmanager.SecretManagerServiceClient()
-    GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
-    name = f"projects/{GCP_PROJECT_ID}/secrets/token_dms/versions/1"
-    response = client.access_secret_version(name=name)
-    return response.payload.data.decode("UTF-8")
-
-
 def save_result(df_applications):
-    DATA_GCS_BUCKET_NAME = os.environ.get("DATA_GCS_BUCKET_NAME")
     now = datetime.now()
     df_applications.to_csv(
         f"gs://{DATA_GCS_BUCKET_NAME}/dms_export/dms_{now.year}_{now.month}_{now.day}.csv",
@@ -172,7 +170,7 @@ def save_result(df_applications):
 
 
 def update_dms_applications():
-    dms_token = get_secret_token()
+    dms_token = access_secret_data(GCP_PROJECT_ID, "token_dms")
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     fetch_result(demarches_ids, df_applications, dms_token)
     save_result(df_applications)

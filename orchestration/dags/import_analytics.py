@@ -39,7 +39,6 @@ from dependencies.data_analytics.import_tables import (
 from dependencies.slack_alert import task_fail_slack_alert
 
 # Variables
-
 data_applicative_tables_and_date_columns = {
     "user": [
         "user_creation_date",

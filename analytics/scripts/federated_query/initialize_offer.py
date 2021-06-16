@@ -21,15 +21,15 @@ logger = logging.getLogger()
 def main():
     client = bigquery.Client()
 
-    # define destination table
+    # Define destination table
     job_config = bigquery.QueryJobConfig()
     job_config.destination = f"{GCP_PROJECT_ID}.{BIGQUERY_POC_DATASET}.offer"
     job_config.write_disposition = "WRITE_TRUNCATE"
 
-    # define query
+    # Define query
     query = f"SELECT * FROM EXTERNAL_QUERY('{GCP_REGION}.{CLOUDSQL_DATABASE}', 'SELECT * FROM offer');"
 
-    # define and launch job
+    # Define and launch job
     run_query(bq_client=client, query=query, job_config=job_config)
 
 

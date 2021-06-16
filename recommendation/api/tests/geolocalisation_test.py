@@ -4,6 +4,7 @@ from typing import Any
 import pandas as pd
 import pytest
 from sqlalchemy import create_engine
+from unittest.mock import Mock, patch
 
 from geolocalisation import get_iris_from_coordinates
 
@@ -43,40 +44,47 @@ def setup_database() -> Any:
     connection.close()
 
 
-def test_get_iris_from_coordinates(setup_database: Any):
+@patch("geolocalisation.create_db_connection")
+def test_get_iris_from_coordinates(mock_connection: Mock, setup_database: Any):
     # Given
-    connection = setup_database
+    mock_connection.return_value = setup_database
 
     # When
     longitude = 2.331289
     latitude = 48.830719
-    iris_id = get_iris_from_coordinates(longitude, latitude, connection)
+    iris_id = get_iris_from_coordinates(longitude, latitude)
 
     # Then
     assert iris_id == 45327
 
 
-def test_get_iris_from_coordinates_without_coordinates(setup_database: Any):
+@patch("geolocalisation.create_db_connection")
+def test_get_iris_from_coordinates_without_coordinates(
+    mock_connection: Mock, setup_database: Any
+):
     # Given
-    connection = setup_database
+    mock_connection.return_value = setup_database
 
     # When
     longitude = None
     latitude = None
-    iris_id = get_iris_from_coordinates(longitude, latitude, connection)
+    iris_id = get_iris_from_coordinates(longitude, latitude)
 
     # Then
     assert iris_id is None
 
 
-def test_get_iris_from_coordinates_not_in_france(setup_database: Any):
+@patch("geolocalisation.create_db_connection")
+def test_get_iris_from_coordinates_not_in_france(
+    mock_connection: Mock, setup_database: Any
+):
     # Given
-    connection = setup_database
+    mock_connection.return_value = setup_database
 
     # When
     longitude = -122.1639346
     latitude = 37.4449422
-    iris_id = get_iris_from_coordinates(longitude, latitude, connection)
+    iris_id = get_iris_from_coordinates(longitude, latitude)
 
     # Then
     assert iris_id is None

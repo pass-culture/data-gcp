@@ -12,7 +12,11 @@ from airflow.contrib.operators.gcs_to_bq import (
 
 from dependencies.slack_alert import task_fail_slack_alert
 from dependencies.bigquery_client import BigQueryClient
-from dependencies.monitoring import get_request_click_through_reco_module, get_insert_metric_request, get_last_event_time_request
+from dependencies.monitoring import (
+    get_request_click_through_reco_module,
+    get_insert_metric_request,
+    get_last_event_time_request,
+)
 
 from dependencies.config import (
     GCP_PROJECT,

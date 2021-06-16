@@ -20,8 +20,8 @@ metrics_to_compute = {
 def get_last_event_time_request():
     return f"SELECT max(event_timestamp) FROM `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.{FIREBASE_EVENTS_TABLE}`;"
 
+
 def get_request_click_through_reco_module(start_date, group_id):
-    print(f"group_id : {group_id}")
     return f"""SELECT COUNT(*) FROM (
             SELECT AS STRUCT event_timestamp, event_date, event_name, user_id, 
                 (select event_params.value.string_value

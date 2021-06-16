@@ -152,7 +152,7 @@ import_tables_to_analytics_tasks = []
 for table in data_applicative_tables:
     task = BigQueryOperator(
         task_id=f"import_to_analytics_{table}",
-        sql=f"SELECT * {define_replace_query(table,tables_to_convert)} FROM {BIGQUERY_CLEAN_DATASET}.{APPLICATIVE_PREFIX}{table}",
+        sql=f"SELECT * {define_replace_query(tables_to_convert[table])} FROM {BIGQUERY_CLEAN_DATASET}.{APPLICATIVE_PREFIX}{table}",
         write_disposition="WRITE_TRUNCATE",
         use_legacy_sql=False,
         destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.{APPLICATIVE_PREFIX}{table}",

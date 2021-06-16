@@ -1,4 +1,5 @@
 import unittest
+from datetime import timedelta
 from unittest import mock
 
 import pandas as pd
@@ -6,7 +7,7 @@ from airflow.models import DagBag
 
 
 class TestDags(unittest.TestCase):
-    LOAD_SECOND_THRESHOLD = 2
+    LOAD_SECOND_THRESHOLD = timedelta(seconds=2)
 
     def setUp(self):
         with mock.patch(

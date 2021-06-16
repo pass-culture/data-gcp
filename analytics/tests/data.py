@@ -3,7 +3,7 @@ from decimal import Decimal
 
 TEST_TABLE_PREFIX = ""
 
-# enriched_offer_data
+# Enriched_offer_data
 ENRICHED_OFFER_DATA_INPUT = {
     "booking": [
         {
@@ -257,7 +257,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
     },
 ]
 
-# enriched_stock_data
+# Enriched_stock_data
 ENRICHED_STOCK_DATA_INPUT = {
     "booking": [
         {
@@ -456,8 +456,8 @@ ENRICHED_STOCK_DATA_EXPECTED = [
     },
 ]
 
-# enriched_user_data => user 1 is beneficiary and its department has to exist in region_department, has one used booking on digital goods.
-# This booking is corresponding to an offer, with an offered, stock and venue
+# Enriched_user_data => user 1 is beneficiary and its department has to exist in region_department, has one used booking
+# on digital goods. This booking is corresponding to an offer, with an offered, stock and venue
 ENRICHED_USER_DATA_INPUT = {
     "user": [
         {
@@ -529,10 +529,10 @@ ENRICHED_USER_DATA_INPUT = {
     ],
 }
 
-# test experimentation session should return 2 when user has unused activation booking
+# Test experimentation session should return 2 when user has unused activation booking
 # all date should return current date and seniority should return 0
-# booking_cnt and no_cancelled_booking should return 1 when user have only one booking and None or 0 for second or third booking
-# amount_spent_in_digital_goods should return the amount of the booking when the offer type is MUSIQUE
+# booking_cnt and no_cancelled_booking should return 1 when user have only one booking and None or 0 for second or
+# third booking amount_spent_in_digital_goods should return the amount of the booking when the offer type is MUSIQUE
 ENRICHED_USER_DATA_EXPECTED = [
     {
         "user_id": "1",
@@ -572,7 +572,7 @@ ENRICHED_USER_DATA_EXPECTED = [
     }
 ]
 
-# enriched_venue_data => NO DATA (only structure can be tested)
+# Enriched_venue_data => NO DATA (only structure can be tested)
 ENRICHED_VENUE_DATA_INPUT = {
     "booking": [
         {
@@ -663,7 +663,7 @@ ENRICHED_VENUE_DATA_EXPECTED = [
     }
 ]
 
-# enriched_offerer_data => NO DATA (only structure can be tested)
+# Enriched_offerer_data => NO DATA (only structure can be tested)
 ENRICHED_OFFERER_DATA_INPUT = {
     "booking": [
         {
@@ -724,7 +724,7 @@ ENRICHED_OFFERER_DATA_EXPECTED = [
     }
 ]
 
-# enriched_booking_data => information for one booking not cancelled and used,
+# Enriched_booking_data => information for one booking not cancelled and used,
 # booking is linked with user, venue, offerer and paiement
 # venue is linked with venue label and type
 ENRICHED_BOOKING_DATA_INPUT = {

@@ -303,19 +303,19 @@ def define_import_query(
     return queries.get(table, default_query)
 
 
-def define_replace_query(table, tables_to_convert):
+def define_replace_query(tables_to_convert):
     query_begining = f"REPLACE("
     query_body = ""
-    if tables_to_convert[table] == "":
+    if tables_to_convert == "":
         return ""
     i = 0
-    if isinstance(tables_to_convert[table], str):
-        query_body += f"""DATETIME(timestamp({tables_to_convert[table]}),'Europe/Paris') as {tables_to_convert[table]})"""
+    if isinstance(tables_to_convert, str):
+        query_body += f"""DATETIME(timestamp({tables_to_convert}),'Europe/Paris') as {tables_to_convert})"""
     else:
-        for date in tables_to_convert[table]:
-            query_body += f"""DATETIME(timestamp({date}),'Europe/Paris') as {date} """
+        for date_column in tables_to_convert:
+            query_body += f"""DATETIME(timestamp({date_column}),'Europe/Paris') as {date_column} """
             i += 1
-            if i < len(tables_to_convert[table]):
+            if i < len(tables_to_convert):
                 query_body += ","
             else:
                 query_body += ")"

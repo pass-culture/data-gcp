@@ -485,6 +485,7 @@ ENRICHED_USER_DATA_INPUT = {
             "userId": "1",
             "amount": 500,
             "expirationDate": datetime.now().replace(microsecond=0),
+            "dateCreated": datetime.now().replace(microsecond=0),
         }
     ],
     "offerer": [
@@ -541,6 +542,7 @@ ENRICHED_USER_DATA_EXPECTED = [
         "user_postal_code": "93000",
         "user_activity": "Inactif (ni en emploi ni au chômage), En incapacité de travailler",
         "user_activation_date": datetime.now().replace(microsecond=0),
+        "user_deposit_creation_date": datetime.now().replace(microsecond=0),
         "first_connection_date": datetime.now().replace(microsecond=0),
         "first_booking_date": datetime.now().replace(microsecond=0),
         "second_booking_date": None,

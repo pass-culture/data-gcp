@@ -32,40 +32,56 @@ from dependencies.data_analytics.enriched_data.user import (
 from dependencies.data_analytics.enriched_data.venue import (
     define_enriched_venue_data_full_query,
 )
-from dependencies.data_analytics.import_tables import define_import_query
+from dependencies.data_analytics.import_tables import (
+    define_import_query,
+    define_replace_query,
+)
 from dependencies.slack_alert import task_fail_slack_alert
 
 # Variables
-data_applicative_tables = [
-    "user",
-    "provider",
-    "offerer",
-    "bank_information",
-    "booking",
-    "payment",
-    "venue",
-    "user_offerer",
-    "offer",
-    "stock",
-    "favorite",
-    "venue_type",
-    "venue_label",
-    "payment_status",
-    "transaction",
-    "local_provider_event",
-    "beneficiary_import_status",
-    "deposit",
-    "beneficiary_import",
-    "mediation",
-    "offer_criterion",
-    "allocine_pivot",
-    "venue_provider",
-    "allocine_venue_provider_price_rule",
-    "allocine_venue_provider",
-    "payment_message",
-    "feature",
-    "criterion",
-]
+data_applicative_tables_and_date_columns = {
+    "user": [
+        "user_creation_date",
+        "user_cultural_survey_filled_date",
+        "user_last_connection_date",
+    ],
+    "provider": [""],
+    "offerer": ["offerer_modified_at_last_provider_date", "offerer_creation_date"],
+    "bank_information": ["dateModified"],
+    "booking": [
+        "booking_creation_date",
+        "booking_used_date",
+        "booking_cancellation_date",
+    ],
+    "payment": [""],
+    "venue": ["venue_modified_at_last_provider", "venue_creation_date"],
+    "user_offerer": [""],
+    "offer": ["offer_modified_at_last_provider_date", "offer_creation_date"],
+    "stock": [
+        "stock_modified_at_last_provider_date",
+        "stock_modified_date",
+        "stock_booking_limit_date",
+        "stock_creation_date",
+    ],
+    "favorite": ["dateCreated"],
+    "venue_type": [""],
+    "venue_label": [""],
+    "payment_status": ["date"],
+    "transaction": [""],
+    "local_provider_event": ["date"],
+    "beneficiary_import_status": ["date"],
+    "deposit": ["dateCreated"],
+    "beneficiary_import": [""],
+    "mediation": ["dateCreated"],
+    "offer_criterion": [""],
+    "allocine_pivot": [""],
+    "venue_provider": ["dateModifiedAtLastProvider"],
+    "allocine_venue_provider_price_rule": [""],
+    "allocine_venue_provider": [""],
+    "payment_message": [""],
+    "feature": [""],
+    "criterion": [""],
+}
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),
@@ -87,7 +103,7 @@ dag = DAG(
 start = DummyOperator(task_id="start", dag=dag)
 
 import_tables_to_clean_tasks = []
-for table in data_applicative_tables:
+for table in data_applicative_tables_and_date_columns.keys():
     task = BigQueryOperator(
         task_id=f"import_to_clean_{table}",
         sql=define_import_query(
@@ -103,10 +119,10 @@ for table in data_applicative_tables:
 end_import_table_to_clean = DummyOperator(task_id="end_import_table_to_clean", dag=dag)
 
 import_tables_to_analytics_tasks = []
-for table in data_applicative_tables:
+for table in data_applicative_tables_and_date_columns.keys():
     task = BigQueryOperator(
         task_id=f"import_to_analytics_{table}",
-        sql=f"SELECT * FROM {BIGQUERY_CLEAN_DATASET}.{APPLICATIVE_PREFIX}{table}",
+        sql=f"SELECT * {define_replace_query(data_applicative_tables_and_date_columns[table])} FROM {BIGQUERY_CLEAN_DATASET}.{APPLICATIVE_PREFIX}{table}",
         write_disposition="WRITE_TRUNCATE",
         use_legacy_sql=False,
         destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.{APPLICATIVE_PREFIX}{table}",

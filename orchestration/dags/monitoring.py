@@ -14,7 +14,6 @@ from dependencies.slack_alert import task_fail_slack_alert
 from dependencies.bigquery_client import BigQueryClient
 from dependencies.monitoring import (
     get_request_click_through_reco_module,
-    get_insert_metric_request,
     get_last_event_time_request,
 )
 
@@ -82,7 +81,6 @@ def insert_metric_bq(ti, **kwargs):
     bigquery_client = BigQueryClient()
     bigquery_query = get_insert_metric_request(ti, START_DATE)
     bigquery_client.query(bigquery_query)
-
 
 
 default_args = {

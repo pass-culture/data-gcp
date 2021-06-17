@@ -21,21 +21,47 @@ def run(request):
         key_id=KEY_ID, issuer_id=ISSUER_ID, private_key=PRIVATE_KEY
     )
     last_month_apple_downloads = apple_client.get_monthly_donloads(last_month)
-    current_month_apple_downloads = apple_client.get_monthly_donloads(current_month)
+    try:
+        current_month_apple_downloads = apple_client.get_monthly_donloads(current_month)
+    except:
+        current_month_apple_downloads = None
 
     google_client = GoogleClient(report_bucket_name="pubsite_prod_8102412585126803216")
     last_month_google_downloads = google_client.get_monthly_donloads(last_month)
-    current_month_google_downloads = google_client.get_monthly_donloads(current_month)
+    try:
+        current_month_google_downloads = google_client.get_monthly_donloads(
+            current_month
+        )
+    except:
+        current_month_google_downloads = None
 
-    bigquery_client.query(
+    delete_query = bigquery_client.query(
         f"DELETE FROM {BIGQUERY_RAW_DATASET}.app_downloads_stats WHERE month IN ('{last_month}', '{current_month}')"
     )
-    bigquery_client.query(
-        f"""
-        INSERT {BIGQUERY_RAW_DATASET}.app_downloads_stats (date, apple_downloads, google_downloads)
-        VALUES ('{last_month}', {last_month_apple_downloads}, {last_month_google_downloads}),
-        ('{current_month}', {current_month_apple_downloads}, {current_month_google_downloads}), 
-        """
-    )
+    delete_query.result()
+
+    for values in [
+        {
+            "month": last_month,
+            "apple": int(last_month_apple_downloads),
+            "google": int(last_month_google_downloads),
+        },
+        {
+            "month": current_month,
+            "apple": int(current_month_apple_downloads)
+            if current_month_apple_downloads
+            else "null",
+            "google": int(current_month_google_downloads)
+            if current_month_google_downloads
+            else "null",
+        },
+    ]:
+        write_query = bigquery_client.query(
+            f"""
+            INSERT {BIGQUERY_RAW_DATASET}.app_downloads_stats (month, apple_downloads, google_downloads)
+            VALUES ('{values["month"]}', {values["apple"]}, {values["google"]})
+            """
+        )
+        write_query.result()
 
     return "Success"

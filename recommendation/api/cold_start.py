@@ -1,4 +1,7 @@
+import time
 from sqlalchemy import text
+
+from utils import create_db_connection, log_duration
 
 MACRO_CATEGORIES_TYPE_MAPPING = {
     "cinema": ["EventType.CINEMA", "ThingType.CINEMA_CARD", "ThingType.CINEMA_ABO"],
@@ -24,7 +27,8 @@ MACRO_CATEGORIES_TYPE_MAPPING = {
 }
 
 
-def get_cold_start_status(user_id: int, connection) -> bool:
+def get_cold_start_status(user_id: int) -> bool:
+    start = time.time()
     cold_start_query = text(
         """
         SELECT bookings_count
@@ -32,14 +36,20 @@ def get_cold_start_status(user_id: int, connection) -> bool:
         WHERE user_id= :user_id;
         """
     )
-    query_result = connection.execute(cold_start_query, user_id=str(user_id)).fetchone()
+
+    with create_db_connection() as connection:
+        query_result = connection.execute(
+            cold_start_query, user_id=str(user_id)
+        ).fetchone()
+
     bookings_count = query_result[0] if query_result is not None else 0
     user_cold_start_status = bookings_count < 2
-
+    log_duration(f"get_cold_start_status", start)
     return user_cold_start_status
 
 
-def get_cold_start_types(user_id: int, connection) -> list:
+def get_cold_start_types(user_id: int) -> list:
+    start = time.time()
     qpi_answers_categories = [
         "cinema",
         "audiovisuel",
@@ -56,10 +66,12 @@ def get_cold_start_types(user_id: int, connection) -> list:
     cold_start_query = text(
         f"SELECT {', '.join(qpi_answers_categories)} FROM qpi_answers WHERE user_id = :user_id;"
     )
-    query_result = connection.execute(
-        cold_start_query,
-        user_id=str(user_id),
-    ).fetchall()
+
+    with create_db_connection() as connection:
+        query_result = connection.execute(
+            cold_start_query,
+            user_id=str(user_id),
+        ).fetchall()
 
     cold_start_types = []
     if len(query_result) == 0:
@@ -69,5 +81,5 @@ def get_cold_start_types(user_id: int, connection) -> list:
             cold_start_types.extend(
                 MACRO_CATEGORIES_TYPE_MAPPING[qpi_answers_categories[category_index]]
             )
-
+    log_duration("get_cold_start_types", start)
     return cold_start_types

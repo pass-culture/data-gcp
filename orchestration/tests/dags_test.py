@@ -1,4 +1,5 @@
 import unittest
+from datetime import timedelta
 from unittest import mock
 
 import pandas as pd
@@ -6,7 +7,7 @@ from airflow.models import DagBag
 
 
 class TestDags(unittest.TestCase):
-    LOAD_SECOND_THRESHOLD = 2
+    LOAD_SECOND_THRESHOLD = timedelta(seconds=2)
 
     def setUp(self):
         with mock.patch(
@@ -98,7 +99,7 @@ class TestDags(unittest.TestCase):
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 72)
+        self.assertEqual(len(dag.tasks), 70)
 
     def test_import_firebase_data_dag_is_loaded(self):
         # When

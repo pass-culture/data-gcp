@@ -175,13 +175,6 @@ def define_import_query(
             FROM public.favorite
         """
     cloudsql_queries[
-        "iris_venues"
-    ] = """
-            SELECT
-                CAST("id" AS varchar(255)), CAST("irisId" AS varchar(255)), CAST("venueId" AS varchar(255))
-            FROM public.iris_venues
-        """
-    cloudsql_queries[
         "transaction"
     ] = """
             SELECT
@@ -230,13 +223,6 @@ def define_import_query(
             FROM public.mediation
         """
     cloudsql_queries[
-        "iris_france"
-    ] = """
-            SELECT
-                CAST("id" AS varchar(255)), "irisCode",CAST("centroid" AS varchar(255)), CAST("shape" AS varchar(255))
-            FROM public.iris_france
-        """
-    cloudsql_queries[
         "offer_criterion"
     ] = """
             SELECT
@@ -256,7 +242,7 @@ def define_import_query(
             SELECT
                 "isActive", CAST("id" AS varchar(255)), CAST("idAtProviders" AS varchar(255)),"dateModifiedAtLastProvider",
                 CAST("venueId" AS varchar(255)), CAST("providerId" AS varchar(255)), CAST("venueIdAtOfferProvider" AS varchar(255)),
-                "lastSyncDate",  CAST("lastProviderId" AS varchar(255)), CAST("syncWorkerId" AS varchar(255)), "fieldsUpdated"
+                "lastSyncDate",  CAST("lastProviderId" AS varchar(255)), "fieldsUpdated"
             FROM public.venue_provider
         """
     cloudsql_queries[
@@ -315,3 +301,10 @@ def define_import_query(
     default_query = f"SELECT * FROM EXTERNAL_QUERY('{external_connection_id}', 'SELECT * FROM {table}');"
 
     return queries.get(table, default_query)
+
+
+def define_replace_query(columns_to_convert):
+    if columns_to_convert == [""]:
+        return ""
+    else:
+        return f"""REPLACE({', '.join([f"DATETIME(timestamp({date_column}),'Europe/Paris') as {date_column}" for date_column in columns_to_convert]) })"""

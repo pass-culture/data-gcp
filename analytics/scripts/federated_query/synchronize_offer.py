@@ -21,10 +21,10 @@ logger = logging.getLogger()
 
 
 def retrieve_last_check(bq_client, table_name):
-    # define query
+    # Define query
     query = f"SELECT MAX(lastUpdate) AS last_check FROM {BIGQUERY_POC_DATASET}.{table_name};"
 
-    # run query
+    # Run query
     query_job = bq_client.query(query=query)
     results = query_job.result()
 

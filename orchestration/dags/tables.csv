@@ -1,4 +1,17 @@
 table_name,column_name,data_type,bigquery_table_name,dataset_type
+qpi_answers,user_id,character varying,enriched_qpi_answers,analytics
+qpi_answers,catch_up_user_id,character varying,enriched_qpi_answers,analytics
+qpi_answers,cinema,boolean,enriched_qpi_answers,analytics
+qpi_answers,audiovisuel,boolean,enriched_qpi_answers,analytics
+qpi_answers,jeux_videos,boolean,enriched_qpi_answers,analytics
+qpi_answers,livre,boolean,enriched_qpi_answers,analytics
+qpi_answers,musees_patrimoine,boolean,enriched_qpi_answers,analytics
+qpi_answers,musique,boolean,enriched_qpi_answers,analytics
+qpi_answers,pratique_artistique,boolean,enriched_qpi_answers,analytics
+qpi_answers,spectacle_vivant,boolean,enriched_qpi_answers,analytics
+qpi_answers,instrument,boolean,enriched_qpi_answers,analytics
+qpi_answers,presse,boolean,enriched_qpi_answers,analytics
+qpi_answers,autre,boolean,enriched_qpi_answers,analytics
 booking,booking_id,character varying,applicative_database_booking,clean
 booking,booking_creation_date,timestamp without time zone,applicative_database_booking,clean
 booking,stock_id,character varying,applicative_database_booking,clean
@@ -9,9 +22,8 @@ booking,booking_is_cancelled,boolean,applicative_database_booking,clean
 booking,booking_is_used,boolean,applicative_database_booking,clean
 booking,booking_used_date,timestamp without time zone,applicative_database_booking,clean
 booking,booking_cancellation_date,timestamp without time zone,applicative_database_booking,clean
-iris_venues,id,character varying,applicative_database_iris_venues,clean
-iris_venues,irisId,character varying,applicative_database_iris_venues,clean
-iris_venues,venueId,character varying,applicative_database_iris_venues,clean
+iris_venues,irisId,character varying,iris_venues,clean
+iris_venues,venueId,character varying,iris_venues,clean
 mediation,thumbCount,integer,applicative_database_mediation,clean
 mediation,idAtProviders,character varying,applicative_database_mediation,clean
 mediation,dateModifiedAtLastProvider,timestamp without time zone,applicative_database_mediation,clean
@@ -97,16 +109,3 @@ stock,stock_is_soft_deleted,boolean,applicative_database_stock,clean
 stock,stock_beginning_date,timestamp without time zone,applicative_database_stock,clean
 stock,stock_creation_date,timestamp without time zone,applicative_database_stock,clean
 stock,stock_fields_updated,string[],applicative_database_stock,clean
-qpi_answers,user_id,character varying,enriched_qpi_answers,analytics
-qpi_answers,catch_up_user_id,character varying,enriched_qpi_answers,analytics
-qpi_answers,cinema,boolean,enriched_qpi_answers,analytics
-qpi_answers,audiovisuel,boolean,enriched_qpi_answers,analytics
-qpi_answers,jeux_videos,boolean,enriched_qpi_answers,analytics
-qpi_answers,livre,boolean,enriched_qpi_answers,analytics
-qpi_answers,musees_patrimoine,boolean,enriched_qpi_answers,analytics
-qpi_answers,musique,boolean,enriched_qpi_answers,analytics
-qpi_answers,pratique_artistique,boolean,enriched_qpi_answers,analytics
-qpi_answers,spectacle_vivant,boolean,enriched_qpi_answers,analytics
-qpi_answers,instrument,boolean,enriched_qpi_answers,analytics
-qpi_answers,presse,boolean,enriched_qpi_answers,analytics
-qpi_answers,autre,boolean,enriched_qpi_answers,analytics

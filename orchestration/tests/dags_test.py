@@ -136,3 +136,12 @@ class TestDags(unittest.TestCase):
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
         self.assertEqual(len(dag.tasks), 4)
+
+    def test_compute_monitoring_is_loaded(self):
+        # When
+        dag = self.dagbag.get_dag(dag_id="compute_monitoring")
+
+        # Then
+        self.assertDictEqual(self.dagbag.import_errors, {})
+        self.assertIsNotNone(dag)
+        self.assertEqual(len(dag.tasks), 5)

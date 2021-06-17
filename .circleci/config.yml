@@ -294,6 +294,38 @@ workflows:
           <<: *slack-fail-post-step
 
       - cloud-function-deploy:
+          name: downloads-cloud-function-deploy-stg
+          cloud-function-name: downloads_stg
+          cloud-function-folder: downloads-function-source
+          requires:
+            - linter
+          filters:
+            branches:
+              only:
+                - master
+          context:
+            - DATA_GCP
+            - DATA_GCP_EHP
+            - Slack
+          <<: *slack-fail-post-step
+
+      - cloud-function-deploy:
+          name: downloads-cloud-function-deploy-prod
+          cloud-function-name: downloads_prod
+          cloud-function-folder: downloads-function-source
+          requires:
+            - linter
+          filters:
+            branches:
+              only:
+                - production
+          context:
+            - DATA_GCP
+            - DATA_GCP_PROD
+            - Slack
+          <<: *slack-fail-post-step
+
+      - cloud-function-deploy:
           name: typeform-webhook-cloud-function-deploy-stg
           cloud-function-name: qpi_webhook_stg
           cloud-function-folder: qpi-webhook-function-source

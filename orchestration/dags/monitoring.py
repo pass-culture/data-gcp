@@ -15,6 +15,7 @@ from dependencies.bigquery_client import BigQueryClient
 from dependencies.monitoring import (
     get_request_click_through_reco_module,
     get_last_event_time_request,
+    get_average_booked_category_request,
 )
 
 from dependencies.config import (
@@ -51,8 +52,19 @@ def compute_click_through_reco_module(ti, **kwargs):
         ti.xcom_push(key=f"COUNT_CLICK_RECO_{group_id}", value=result)
 
 
+def compute_average_category_reco_module(ti, **kwargs):
+    start_date = ti.xcom_pull(key=LAST_EVENT_TIME_KEY)
+    bigquery_query = get_average_booked_category_request(start_date)
+    bigquery_client = BigQueryClient()
+    for index, group_id in enum(groups):
+        results = bigquery_client.query(bigquery_query)
+        result = float(results.values[index][0])
+        ti.xcom_push(key=f"AVERAGE_CATEGORY_RECO_{group_id}", value=result)
+
+
 metrics_to_compute = {
     "COUNT_CLICK_RECO": compute_click_through_reco_module,
+    "AVERAGE_CATEGORY_RECO": compute_average_category_reco_module,
 }
 
 

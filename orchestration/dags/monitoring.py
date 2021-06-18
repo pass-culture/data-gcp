@@ -80,14 +80,14 @@ def get_insert_metric_request(ti, start_date):
     VALUES"""
     last_metric_time = ti.xcom_pull(key=LAST_EVENT_TIME_KEY)
     for metric_id, _ in metrics_to_compute.items():
-        metric_value = ti.xcom_pull(key=f"{metric_id}_{group_id}")
         for group_id in groups:
+            metric_value = ti.xcom_pull(key=f"{metric_id}_{group_id}")
             metric_query = f"""
             (   '{datetime.now()}', 
                 '{start_date}', 
                 TIMESTAMP_MICROS({last_metric_time}), 
                 '{metric_id}', 
-                {float(metric_value) if metric_value else None},
+                {float(metric_value) if metric_value else 'NULL'},
                 '{eval(f"ALGO_{group_id}")}',
                 '{ENV_SHORT_NAME}',
                 '{group_id}'

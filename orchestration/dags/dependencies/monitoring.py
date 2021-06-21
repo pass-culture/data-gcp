@@ -37,7 +37,7 @@ def get_click_through_recommendation_module_request(start_date, end_date, group_
         """
 
 
-def get_average_booked_category_request(start_date, end_date):
+def _define_recommendation_booking_funnel(start_date, end_date):
     return f"""
         WITH booking_events AS (
         SELECT event_name, event_timestamp, user_id, 
@@ -51,31 +51,51 @@ def get_average_booked_category_request(start_date, end_date):
         AND event_timestamp > {start_date}
         AND event_timestamp < {end_date}
         GROUP BY user_id, event_name, event_timestamp
-    ),
-    booking_funnel AS (
-        SELECT *, LEAD(event_name) OVER (PARTITION BY session_id ORDER BY event_timestamp ASC) AS next_event_name FROM booking_events 
-        ORDER BY user_id, session_id, event_timestamp
-    ),
-    recommendation_booking_funnel AS (
-        SELECT event_name, event_timestamp, user_id, session_id, firebase_screen, module, booking_funnel.offer_id, next_event_name, groupid AS group_id, offer_type 
-        FROM booking_funnel
-        LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.ab_testing_202104_v0_v0bis` ab_testing
-        ON booking_funnel.user_id = ab_testing.userid
-        LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_offer` offers
-        ON offers.offer_id = CAST(booking_funnel.offer_id AS STRING)
-        WHERE next_event_name = "screen_view_bookingconfirmation" and event_name = "ConsultOffer" 
-        AND module = "{RECOMMENDATION_MODULE_TITLE}" 
-    ),
+        ),
+        booking_funnel AS (
+            SELECT *, LEAD(event_name) OVER (PARTITION BY session_id ORDER BY event_timestamp ASC) AS next_event_name FROM booking_events 
+            ORDER BY user_id, session_id, event_timestamp
+        ),
+        recommendation_booking_funnel AS (
+            SELECT event_name, event_timestamp, user_id, session_id, firebase_screen, module, booking_funnel.offer_id, next_event_name, groupid AS group_id, offer_type 
+            FROM booking_funnel
+            LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.ab_testing_202104_v0_v0bis` ab_testing
+            ON booking_funnel.user_id = ab_testing.userid
+            LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_offer` offers
+            ON offers.offer_id = CAST(booking_funnel.offer_id AS STRING)
+            WHERE next_event_name = "screen_view_bookingconfirmation" and event_name = "ConsultOffer" 
+        )
+    """
+
+
+def get_average_booked_category_request(start_date, end_date):
+    return f"""
+        {_define_recommendation_booking_funnel(start_date, end_date)},
+        
+        diversification AS (
+            SELECT COUNT(DISTINCT offer_type) AS distinct_booking_offer_type_count, COUNT(*) AS booking_offer_count, group_id 
+            FROM recommendation_booking_funnel
+            WHERE module = "{RECOMMENDATION_MODULE_TITLE}" 
+            GROUP BY user_id, group_id
+        )
+        
+        SELECT AVG(distinct_booking_offer_type_count) as avg_distinct_booking_offer_type_count,
+        group_id 
+        FROM diversification 
+        GROUP BY group_id
+        ORDER BY group_id 
+    """
+
+
+def get_total_bookings_request(start_date, end_date, group_id_list):
+    group_id_list = sorted(group_id_list)
+    return f"""
+        {_define_recommendation_booking_funnel(start_date, end_date)}
     
-    diversification AS (
-        SELECT COUNT(DISTINCT offer_type) AS distinct_booking_offer_type_count, COUNT(*) AS booking_offer_count, group_id 
+        SELECT
+        COUNT(*) AS bookings,
+        SUM(CAST(firebase_screen = "Home" AS INT64)) as home_bookings,
+        SUM(CAST(module = "{RECOMMENDATION_MODULE_TITLE}" AS INT64)) AS total_recommendation_bookings, 
+        {", ".join([f"SUM(CAST((module = '{RECOMMENDATION_MODULE_TITLE}' AND group_id = '{group_id}') AS INT64)) AS recommendation_bookings_{group_id}" for group_id in group_id_list])},
         FROM recommendation_booking_funnel
-        GROUP BY user_id, group_id
-    )
-    
-    SELECT AVG(distinct_booking_offer_type_count) as avg_distinct_booking_offer_type_count,
-    group_id 
-    FROM diversification 
-    GROUP BY group_id
-    ORDER BY group_id 
     """

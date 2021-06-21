@@ -11,6 +11,7 @@ from dependencies.monitoring import (
     get_click_through_recommendation_module_request,
     get_last_event_time_request,
     get_average_booked_category_request,
+    get_total_bookings_request,
 )
 
 from dependencies.config import (
@@ -69,9 +70,39 @@ def compute_average_category_reco_module(ti, **kwargs):
         ti.xcom_push(key=f"AVERAGE_CATEGORY_RECO_{group_id}", value=result)
 
 
-metrics_to_compute = {
-    "COUNT_CLICK_RECO": compute_click_through_recommendation_module,
-    "AVERAGE_CATEGORY_RECO": compute_average_category_reco_module,
+def compute_total_bookings(ti, **kwargs):
+    start_date = convert_datetime_to_microseconds(START_DATE)
+    end_date = ti.xcom_pull(key=LAST_EVENT_TIME_KEY)
+    bigquery_client = BigQueryClient()
+    results = bigquery_client.query(
+        get_total_bookings_request(start_date, end_date, groups)
+    )
+    for index, metric in enumerate(
+        ["BOOKINGS", "HOME_BOOKINGS", "TOTAL_RECOMMENDATION_BOOKINGS"]
+        + [f"RECOMMENDATION_BOOKINGS_{group_id}" for group_id in groups]
+    ):
+        result = float(results.values[0][index])
+        ti.xcom_push(key=metric.upper(), value=result)
+
+
+metric_groups_to_compute = {
+    "COUNT_CLICK_RECO": {
+        "function": compute_click_through_recommendation_module,
+        "metric_list": [{"name": "COUNT_CLICK_RECO", "ab_testing": True}],
+    },
+    "AVERAGE_CATEGORY_RECO": {
+        "function": compute_average_category_reco_module,
+        "metric_list": [{"name": "AVERAGE_CATEGORY_RECO", "ab_testing": True}],
+    },
+    "BOOKINGS": {
+        "function": compute_total_bookings,
+        "metric_list": [
+            {"name": "BOOKINGS", "ab_testing": False},
+            {"name": "HOME_BOOKINGS", "ab_testing": False},
+            {"name": "TOTAL_RECOMMENDATION_BOOKINGS", "ab_testing": False},
+            {"name": "RECOMMENDATION_BOOKINGS", "ab_testing": True},
+        ],
+    },
 }
 
 
@@ -79,20 +110,36 @@ def get_insert_metric_request(ti, start_date):
     bigquery_query = f"""INSERT `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.{MONITORING_TABLE}` (compute_time, from_time, last_metric_time, metric_name, metric_value, algorithm_id, environment, group_id) 
     VALUES"""
     last_metric_time = ti.xcom_pull(key=LAST_EVENT_TIME_KEY)
-    for metric_id, _ in metrics_to_compute.items():
-        for group_id in groups:
-            metric_value = ti.xcom_pull(key=f"{metric_id}_{group_id}")
-            metric_query = f"""
-            (   '{datetime.now()}', 
-                '{start_date}', 
-                TIMESTAMP_MICROS({last_metric_time}), 
-                '{metric_id}', 
-                {float(metric_value) if metric_value else 'NULL'},
-                '{eval(f"ALGO_{group_id}")}',
-                '{ENV_SHORT_NAME}',
-                '{group_id}'
-            ),"""
-            bigquery_query += metric_query
+    for metric_group in list(metric_groups_to_compute.keys()):
+        metric_list = metric_groups_to_compute[metric_group]["metric_list"]
+        for metric in metric_list:
+            if metric["ab_testing"]:
+                for group_id in groups:
+                    metric_value = ti.xcom_pull(key=f"{metric['name']}_{group_id}")
+                    metric_query = f"""
+                    (   '{datetime.now()}', 
+                        '{start_date}', 
+                        TIMESTAMP_MICROS({last_metric_time}), 
+                        '{metric["name"]}', 
+                        {float(metric_value) if metric_value and str(metric_value) != 'nan' else 'NULL'},
+                        '{eval(f"ALGO_{group_id}")}',
+                        '{ENV_SHORT_NAME}',
+                        '{group_id}'
+                    ),"""
+                    bigquery_query += metric_query
+            else:
+                metric_value = ti.xcom_pull(key=metric["name"])
+                metric_query = f"""
+                (   '{datetime.now()}', 
+                    '{start_date}', 
+                    TIMESTAMP_MICROS({last_metric_time}), 
+                    '{metric["name"]}', 
+                    {float(metric_value) if metric_value and str(metric_value) != 'nan' else 'NULL'},
+                    'NULL',
+                    '{ENV_SHORT_NAME}',
+                    'NULL'
+                ),"""
+                bigquery_query += metric_query
     bigquery_query = f"{bigquery_query[:-1]};"
     return bigquery_query
 
@@ -131,10 +178,10 @@ with DAG(
     compute_metric_task = [
         PythonOperator(
             task_id=f"compute_{metric}",
-            python_callable=function_to_call,
+            python_callable=metric_groups_to_compute[metric]["function"],
             provide_context=True,
         )
-        for metric, function_to_call in metrics_to_compute.items()
+        for metric in list(metric_groups_to_compute.keys())
     ]
 
     insert_metric_bq = PythonOperator(

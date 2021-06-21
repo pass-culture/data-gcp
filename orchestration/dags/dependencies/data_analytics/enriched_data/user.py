@@ -441,6 +441,7 @@ def define_enriched_user_data_query(dataset, table_prefix=""):
                             WHEN user.user_activity in ("Chômeur") THEN "Chômeur, En recherche d'emploi"
                                 ELSE user.user_activity END AS user_activity,
                 activation_dates.user_activation_date,
+                deposit.dateCreated AS user_deposit_creation_date,
                 CASE WHEN user.user_has_seen_tutorials THEN user.user_cultural_survey_filled_date
                     ELSE NULL
                 END AS first_connection_date,
@@ -459,9 +460,9 @@ def define_enriched_user_data_query(dataset, table_prefix=""):
                 last_booking_date.last_booking_date,
                 region_department.region_name AS user_region_name,
                 first_paid_booking_date.booking_creation_date_first,
-                DATE_DIFF(date_of_first_bookings.first_booking_date, activation_dates.user_activation_date, DAY)
+                DATE_DIFF(date_of_first_bookings.first_booking_date, deposit.dateCreated, DAY)
                 AS days_between_activation_date_and_first_booking_date,
-                DATE_DIFF(first_paid_booking_date.booking_creation_date_first, activation_dates.user_activation_date, DAY)
+                DATE_DIFF(first_paid_booking_date.booking_creation_date_first, deposit.dateCreated, DAY)
                 AS days_between_activation_date_and_first_booking_paid,
                 first_booking_type.first_booking_type,
                 first_paid_booking_type.first_paid_booking_type,

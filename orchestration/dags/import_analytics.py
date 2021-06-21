@@ -3,12 +3,18 @@ import datetime
 from airflow import DAG
 from airflow.contrib.operators.bigquery_operator import BigQueryOperator
 from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.http_operator import SimpleHttpOperator
+from airflow.operators.python_operator import PythonOperator
+from google.auth.transport.requests import Request
+from google.oauth2 import id_token
 
 from dependencies.config import (
     APPLICATIVE_EXTERNAL_CONNECTION_ID,
     APPLICATIVE_PREFIX,
     BIGQUERY_ANALYTICS_DATASET,
     BIGQUERY_CLEAN_DATASET,
+    BIGQUERY_RAW_DATASET,
+    ENV_SHORT_NAME,
     GCP_PROJECT,
 )
 from dependencies.data_analytics.enriched_data.booked_categories import (
@@ -37,6 +43,13 @@ from dependencies.data_analytics.import_tables import (
     define_replace_query,
 )
 from dependencies.slack_alert import task_fail_slack_alert
+
+
+def getting_service_account_token():
+    function_url = f"https://europe-west1-{GCP_PROJECT}.cloudfunctions.net/downloads_{ENV_SHORT_NAME}"
+    open_id_connect_token = id_token.fetch_id_token(Request(), function_url)
+    return open_id_connect_token
+
 
 # Variables
 data_applicative_tables_and_date_columns = {
@@ -245,6 +258,35 @@ create_enriched_booked_categories_data_v2_task = BigQueryOperator(
     dag=dag,
 )
 
+getting_service_account_token = PythonOperator(
+    task_id="getting_service_account_token",
+    python_callable=getting_service_account_token,
+    dag=dag,
+)
+
+import_downloads_data_to_bigquery = SimpleHttpOperator(
+    task_id="import_downloads_data_to_bigquery",
+    method="POST",
+    http_conn_id="http_gcp_cloud_function",
+    endpoint=f"downloads_{ENV_SHORT_NAME}",
+    headers={
+        "Content-Type": "application/json",
+        "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_service_account_token', key='return_value')}}",
+    },
+    log_response=True,
+    dag=dag,
+)
+
+create_enriched_app_downloads_stats = BigQueryOperator(
+    task_id="create_enriched_app_downloads_stats",
+    sql=f"SELECT * FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.app_downloads_stats`",
+    destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.app_downloads_stats",
+    write_disposition="WRITE_TRUNCATE",
+    use_legacy_sql=False,
+    dag=dag,
+)
+
+
 create_enriched_data_tasks = [
     create_enriched_offer_data_task,
     create_enriched_stock_data_task,
@@ -259,4 +301,5 @@ create_enriched_data_tasks = [
 end = DummyOperator(task_id="end", dag=dag)
 
 start >> import_tables_to_clean_tasks >> end_import_table_to_clean >> import_tables_to_analytics_tasks >> end_import
-end_import >> link_iris_venues_task >> copy_to_analytics_iris_venues >> create_enriched_data_tasks >> end
+end_import >> link_iris_venues_task >> copy_to_analytics_iris_venues >> create_enriched_data_tasks
+create_enriched_data_tasks >> getting_service_account_token >> import_downloads_data_to_bigquery >> create_enriched_app_downloads_stats >> end

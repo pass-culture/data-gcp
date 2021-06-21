@@ -105,7 +105,7 @@ def insert_metric_bq(ti, **kwargs):
 
 default_args = {
     "start_date": datetime(2021, 5, 26),
-    # "on_failure_callback": task_fail_slack_alert,
+     "on_failure_callback": task_fail_slack_alert,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }

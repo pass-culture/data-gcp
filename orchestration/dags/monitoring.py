@@ -12,6 +12,7 @@ from dependencies.monitoring import (
     get_last_event_time_request,
     get_diversification_bookings_request,
     get_pertinence_bookings_request,
+    get_recommendations_count,
 )
 
 from dependencies.config import (
@@ -88,6 +89,20 @@ def compute_booking_diversification_metrics(ti, **kwargs):
         ti.xcom_push(key=f"AVERAGE_CATEGORY_RECO_{group_id}", value=result)
 
 
+def compute_recommendations_count_metrics(ti, **kwargs):
+    start_date = convert_datetime_to_microseconds(START_DATE)
+    end_date = ti.xcom_pull(key=LAST_EVENT_TIME_KEY)
+    bigquery_client = BigQueryClient()
+    results = bigquery_client.query(
+        get_recommendations_count(start_date, end_date, groups)
+    )
+    for index, metric in enumerate(
+        [f"RECOMMENDATIONS_COUNT_{group_id}" for group_id in groups]
+    ):
+        result = float(results.values[0][index])
+        ti.xcom_push(key=metric, value=result)
+
+
 metric_groups_to_compute = {
     "PERTINENCE_CLICKS": {
         "function": compute_click_pertinence_metrics,
@@ -110,6 +125,10 @@ metric_groups_to_compute = {
             {"name": "TOTAL_RECOMMENDATION_BOOKINGS", "ab_testing": False},
             {"name": "RECOMMENDATION_BOOKINGS", "ab_testing": True},
         ],
+    },
+    "RECOMMENDATION_COUNT": {
+        "function": compute_recommendations_count_metrics,
+        "metric_list": [{"name": "RECOMMENDATIONS_COUNT", "ab_testing": True}],
     },
 }
 
@@ -185,11 +204,11 @@ with DAG(
 
     compute_metric_task = [
         PythonOperator(
-            task_id=f"compute_{metric}",
-            python_callable=metric_groups_to_compute[metric]["function"],
+            task_id=f"compute_{metric_group}",
+            python_callable=metric_groups_to_compute[metric_group]["function"],
             provide_context=True,
         )
-        for metric in list(metric_groups_to_compute.keys())
+        for metric_group in list(metric_groups_to_compute.keys())
     ]
 
     insert_metric_bq = PythonOperator(

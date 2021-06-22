@@ -16,27 +16,6 @@ def get_last_event_time_request():
     return f"SELECT MAX(event_timestamp) FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.{FIREBASE_EVENTS_TABLE}_*`;"
 
 
-def get_click_through_recommendation_module_request(start_date, end_date, group_id):
-    return f"""
-        SELECT COUNT(*) FROM (
-            SELECT AS STRUCT event_timestamp, event_date, event_name, user_id, 
-            (select event_params.value.string_value
-                from unnest(event_params) event_params
-                where event_params.key = 'moduleName'
-            ) as module_name, 
-            FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.{FIREBASE_EVENTS_TABLE}_*` events
-            LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.{TABLE_AB_TESTING}` ab_testing ON events.user_id = ab_testing.userid, 
-            UNNEST(event_params) AS params
-            WHERE event_name = 'ConsultOffer' 
-            AND params.key = 'moduleName' 
-            AND params.value.string_value = '{RECOMMENDATION_MODULE_TITLE}' 
-            AND ab_testing.groupid = '{group_id}'
-            AND event_timestamp > {start_date}
-            AND event_timestamp < {end_date}
-        );
-        """
-
-
 def _define_recommendation_booking_funnel(start_date, end_date):
     return f"""
         WITH booking_events AS (
@@ -68,7 +47,50 @@ def _define_recommendation_booking_funnel(start_date, end_date):
     """
 
 
-def get_average_booked_category_request(start_date, end_date):
+def _define_clicks(start_date, end_date):
+    return f"""
+        WITH clicks AS (
+            SELECT user_id, groupid as group_id, event_name, event_date, event_timestamp,  
+            MAX(CASE WHEN params.key = "moduleName" THEN params.value.string_value ELSE NULL END) AS module,
+            MAX(CASE WHEN params.key = "firebase_screen" THEN params.value.string_value ELSE NULL END) AS firebase_screen,
+            FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.{FIREBASE_EVENTS_TABLE}_*` events, events.event_params AS params
+            LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.{TABLE_AB_TESTING}` ab_testing ON events.user_id = ab_testing.userid
+            WHERE event_timestamp > {start_date}
+            AND event_timestamp < {end_date}
+            GROUP BY event_timestamp, event_date, event_name, user_id, group_id
+        )
+    """
+
+
+def get_pertinence_bookings_request(start_date, end_date, group_id_list):
+    group_id_list = sorted(group_id_list)
+    return f"""
+        {_define_recommendation_booking_funnel(start_date, end_date)}
+
+        SELECT
+        COUNT(*) AS bookings,
+        SUM(CAST(firebase_screen = "Home" AS INT64)) as home_bookings,
+        SUM(CAST(module = "{RECOMMENDATION_MODULE_TITLE}" AS INT64)) AS total_recommendation_bookings, 
+        {", ".join([f"SUM(CAST((module = '{RECOMMENDATION_MODULE_TITLE}' AND group_id = '{group_id}') AS INT64)) AS recommendation_bookings_{group_id}" for group_id in group_id_list])}
+        FROM recommendation_booking_funnel
+    """
+
+
+def get_pertinence_clicks_request(start_date, end_date, group_id_list):
+    group_id_list = sorted(group_id_list)
+    return f"""
+        {_define_clicks(start_date, end_date)}
+        
+        SELECT
+        COUNT(*) AS clicks,
+        SUM(CAST(firebase_screen = "Home" AS INT64)) as home_clicks,
+        SUM(CAST(module = "{RECOMMENDATION_MODULE_TITLE}" AS INT64)) AS total_recommendation_clicks, 
+        {", ".join([f"SUM(CAST((module = '{RECOMMENDATION_MODULE_TITLE}' AND group_id = '{group_id}') AS INT64)) AS recommendation_clicks_{group_id}" for group_id in group_id_list])}
+        FROM clicks
+    """
+
+
+def get_diversification_bookings_request(start_date, end_date):
     return f"""
         {_define_recommendation_booking_funnel(start_date, end_date)},
         
@@ -84,18 +106,4 @@ def get_average_booked_category_request(start_date, end_date):
         FROM diversification 
         GROUP BY group_id
         ORDER BY group_id 
-    """
-
-
-def get_total_bookings_request(start_date, end_date, group_id_list):
-    group_id_list = sorted(group_id_list)
-    return f"""
-        {_define_recommendation_booking_funnel(start_date, end_date)}
-    
-        SELECT
-        COUNT(*) AS bookings,
-        SUM(CAST(firebase_screen = "Home" AS INT64)) as home_bookings,
-        SUM(CAST(module = "{RECOMMENDATION_MODULE_TITLE}" AS INT64)) AS total_recommendation_bookings, 
-        {", ".join([f"SUM(CAST((module = '{RECOMMENDATION_MODULE_TITLE}' AND group_id = '{group_id}') AS INT64)) AS recommendation_bookings_{group_id}" for group_id in group_id_list])},
-        FROM recommendation_booking_funnel
     """

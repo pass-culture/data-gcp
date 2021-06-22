@@ -8,10 +8,10 @@ from airflow.operators.python_operator import PythonOperator
 from dependencies.slack_alert import task_fail_slack_alert
 from dependencies.bigquery_client import BigQueryClient
 from dependencies.monitoring import (
-    get_click_through_recommendation_module_request,
+    get_pertinence_clicks_request,
     get_last_event_time_request,
-    get_average_booked_category_request,
-    get_total_bookings_request,
+    get_diversification_bookings_request,
+    get_pertinence_bookings_request,
 )
 
 from dependencies.config import (
@@ -43,24 +43,42 @@ def get_last_data_timestamp(ti, **kwargs):
     ti.xcom_push(key=LAST_EVENT_TIME_KEY, value=result)
 
 
-def compute_click_through_recommendation_module(ti, **kwargs):
-    start_date = convert_datetime_to_microseconds(START_DATE)
-    end_date = ti.xcom_pull(key=LAST_EVENT_TIME_KEY)
-    for group_id in groups:
-        bigquery_query = get_click_through_recommendation_module_request(
-            start_date, end_date, group_id
-        )
-        bigquery_client = BigQueryClient()
-        result = int(bigquery_client.query(bigquery_query).values[0][0])
-        ti.xcom_push(key=f"COUNT_CLICK_RECO_{group_id}", value=result)
-
-
-def compute_average_category_reco_module(ti, **kwargs):
+def compute_click_pertinence_metrics(ti, **kwargs):
     start_date = convert_datetime_to_microseconds(START_DATE)
     end_date = ti.xcom_pull(key=LAST_EVENT_TIME_KEY)
     bigquery_client = BigQueryClient()
     results = bigquery_client.query(
-        get_average_booked_category_request(start_date, end_date)
+        get_pertinence_clicks_request(start_date, end_date, groups)
+    )
+    for index, metric in enumerate(
+        ["CLICKS", "HOME_CLICKS", "TOTAL_RECOMMENDATION_CLICKS"]
+        + [f"RECOMMENDATION_CLICKS_{group_id}" for group_id in groups]
+    ):
+        result = float(results.values[0][index])
+        ti.xcom_push(key=metric, value=result)
+
+
+def compute_booking_pertinence_metrics(ti, **kwargs):
+    start_date = convert_datetime_to_microseconds(START_DATE)
+    end_date = ti.xcom_pull(key=LAST_EVENT_TIME_KEY)
+    bigquery_client = BigQueryClient()
+    results = bigquery_client.query(
+        get_pertinence_bookings_request(start_date, end_date, groups)
+    )
+    for index, metric in enumerate(
+        ["BOOKINGS", "HOME_BOOKINGS", "TOTAL_RECOMMENDATION_BOOKINGS"]
+        + [f"RECOMMENDATION_BOOKINGS_{group_id}" for group_id in groups]
+    ):
+        result = float(results.values[0][index])
+        ti.xcom_push(key=metric, value=result)
+
+
+def compute_booking_diversification_metrics(ti, **kwargs):
+    start_date = convert_datetime_to_microseconds(START_DATE)
+    end_date = ti.xcom_pull(key=LAST_EVENT_TIME_KEY)
+    bigquery_client = BigQueryClient()
+    results = bigquery_client.query(
+        get_diversification_bookings_request(start_date, end_date)
     )
     for index, group_id in enumerate(sorted(groups)):
         result = None
@@ -70,32 +88,22 @@ def compute_average_category_reco_module(ti, **kwargs):
         ti.xcom_push(key=f"AVERAGE_CATEGORY_RECO_{group_id}", value=result)
 
 
-def compute_total_bookings(ti, **kwargs):
-    start_date = convert_datetime_to_microseconds(START_DATE)
-    end_date = ti.xcom_pull(key=LAST_EVENT_TIME_KEY)
-    bigquery_client = BigQueryClient()
-    results = bigquery_client.query(
-        get_total_bookings_request(start_date, end_date, groups)
-    )
-    for index, metric in enumerate(
-        ["BOOKINGS", "HOME_BOOKINGS", "TOTAL_RECOMMENDATION_BOOKINGS"]
-        + [f"RECOMMENDATION_BOOKINGS_{group_id}" for group_id in groups]
-    ):
-        result = float(results.values[0][index])
-        ti.xcom_push(key=metric.upper(), value=result)
-
-
 metric_groups_to_compute = {
-    "COUNT_CLICK_RECO": {
-        "function": compute_click_through_recommendation_module,
-        "metric_list": [{"name": "COUNT_CLICK_RECO", "ab_testing": True}],
+    "PERTINENCE_CLICKS": {
+        "function": compute_click_pertinence_metrics,
+        "metric_list": [
+            {"name": "CLICKS", "ab_testing": False},
+            {"name": "HOME_CLICKS", "ab_testing": False},
+            {"name": "TOTAL_RECOMMENDATION_CLICKS", "ab_testing": False},
+            {"name": "RECOMMENDATION_CLICKS", "ab_testing": True},
+        ],
     },
-    "AVERAGE_CATEGORY_RECO": {
-        "function": compute_average_category_reco_module,
+    "DIVERSIFICATION_BOOKING": {
+        "function": compute_booking_diversification_metrics,
         "metric_list": [{"name": "AVERAGE_CATEGORY_RECO", "ab_testing": True}],
     },
-    "BOOKINGS": {
-        "function": compute_total_bookings,
+    "PERTINENCE_BOOKINGS": {
+        "function": compute_booking_pertinence_metrics,
         "metric_list": [
             {"name": "BOOKINGS", "ab_testing": False},
             {"name": "HOME_BOOKINGS", "ab_testing": False},
@@ -120,7 +128,7 @@ def get_insert_metric_request(ti, start_date):
                     (   '{datetime.now()}', 
                         '{start_date}', 
                         TIMESTAMP_MICROS({last_metric_time}), 
-                        '{metric["name"]}', 
+                        '{metric["name"]}_{group_id}', 
                         {float(metric_value) if metric_value and str(metric_value) != 'nan' else 'NULL'},
                         '{eval(f"ALGO_{group_id}")}',
                         '{ENV_SHORT_NAME}',

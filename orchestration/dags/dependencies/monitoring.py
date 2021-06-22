@@ -107,3 +107,15 @@ def get_diversification_bookings_request(start_date, end_date):
         GROUP BY group_id
         ORDER BY group_id 
     """
+
+
+def get_recommendations_count(start_date, end_date, group_id_list):
+    group_id_list = sorted(group_id_list)
+    return f"""
+        SELECT 
+        {", ".join([f"SUM(CAST(groupid = '{group_id}' AS INT64)) AS recommendations_count_{group_id}" for group_id in group_id_list])}
+        FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.past_recommended_offers` past_recommendations
+        LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.{TABLE_AB_TESTING}` ab_testing
+        ON CAST(past_recommendations.userid AS STRING) = ab_testing.userid
+        WHERE date > TIMESTAMP_MICROS({start_date}) AND date < TIMESTAMP_MICROS({end_date})
+    """

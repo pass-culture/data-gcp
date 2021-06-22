@@ -35,11 +35,11 @@ logger = logging.getLogger()
 def main(tables, dataset):
     client = bigquery.Client()
 
-    # define destination table
+    # Define destination table
     job_config = bigquery.QueryJobConfig()
     job_config.write_disposition = "WRITE_TRUNCATE"
 
-    # define and launch jobs
+    # Define and launch jobs
     for table in tables:
         query = define_import_query(table, region=GCP_REGION)
         job_config.destination = f"{GCP_PROJECT_ID}.{dataset}.{table}"

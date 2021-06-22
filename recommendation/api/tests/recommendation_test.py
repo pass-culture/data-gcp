@@ -248,7 +248,7 @@ def test_get_final_recommendation_for_new_user(
         get_intermediate_recommendations_for_user.assert_called()
     except AssertionError:
         get_cold_start_scored_recommendations_for_user.assert_called()
-    # User should be either in cold start or algo
+    # User should be either in cold start or algorithme
 
     save_recommendation_mock.assert_called()
 

@@ -43,7 +43,7 @@ with DAG(
         task_id="import_dms_to_bq",
         bucket=DATA_GCS_BUCKET_NAME,
         source_objects=[f"dms_export/dms_{now.year}_{now.month}_{now.day}.csv"],
-        destination_project_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.dms_applications",
+        destination_project_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.dms_applications_api",
         schema_fields=[
             {"name": "procedure_id", "type": "STRING"},
             {"name": "application_id", "type": "STRING"},

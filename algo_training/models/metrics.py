@@ -60,7 +60,7 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
     ):
         offer_type_dict[item_id] = item_type
 
-    # Only keep user - item iteractions in positive_data_test, which can be infered from model
+    # Only keep user - item interactions in positive_data_test, which can be inferred from model
     cleaned_positive_data_test = positive_data_test.copy()
     print(
         f"Original number of positive feedbacks in test: {cleaned_positive_data_test.shape[0]}"
@@ -113,7 +113,7 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
         )
         booked_offer_types = list(positive_item_train["type"].values)
 
-        # Check if any item of items_to_rank is in the test positive feedbacks for this user
+        # Check if any item of items_to_rank is in the test positive feedback for this user
         expected = np.in1d(items_to_rank, positive_item_test["item_id"].values)
 
         repeated_user_id = np.empty_like(items_to_rank)

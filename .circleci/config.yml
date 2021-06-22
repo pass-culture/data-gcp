@@ -294,6 +294,38 @@ workflows:
           <<: *slack-fail-post-step
 
       - cloud-function-deploy:
+          name: downloads-cloud-function-deploy-stg
+          cloud-function-name: downloads_stg
+          cloud-function-folder: downloads-function-source
+          requires:
+            - linter
+          filters:
+            branches:
+              only:
+                - master
+          context:
+            - DATA_GCP
+            - DATA_GCP_EHP
+            - Slack
+          <<: *slack-fail-post-step
+
+      - cloud-function-deploy:
+          name: downloads-cloud-function-deploy-prod
+          cloud-function-name: downloads_prod
+          cloud-function-folder: downloads-function-source
+          requires:
+            - linter
+          filters:
+            branches:
+              only:
+                - production
+          context:
+            - DATA_GCP
+            - DATA_GCP_PROD
+            - Slack
+          <<: *slack-fail-post-step
+
+      - cloud-function-deploy:
           name: typeform-webhook-cloud-function-deploy-stg
           cloud-function-name: qpi_webhook_stg
           cloud-function-folder: qpi-webhook-function-source
@@ -673,6 +705,7 @@ jobs:
       DAG_IMPORT_TYPEFORM: import_typeform_v1
       DAG_IMPORT_ADDRESSES: import_addresses_v1
       DAG_IMPORT_DMS: import_dms_subscriptions
+      DAG_COMPUTE_MONITORING: compute_monitoring
     working_directory: ~/data-gcp/orchestration
     steps:
       - checkout:
@@ -700,6 +733,7 @@ jobs:
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_TYPEFORM} 6 20
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_ADDRESSES} 6 20
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_DMS} 6 20
+            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_COMPUTE_MONITORING} 6 20
 
 
   build_and_deploy_api:

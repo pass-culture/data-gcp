@@ -128,7 +128,7 @@ def get_insert_metric_request(ti, start_date):
                     (   '{datetime.now()}', 
                         '{start_date}', 
                         TIMESTAMP_MICROS({last_metric_time}), 
-                        '{metric["name"]}', 
+                        '{metric["name"]}_{group_id}', 
                         {float(metric_value) if metric_value and str(metric_value) != 'nan' else 'NULL'},
                         '{eval(f"ALGO_{group_id}")}',
                         '{ENV_SHORT_NAME}',

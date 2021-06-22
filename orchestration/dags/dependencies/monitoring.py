@@ -54,10 +54,10 @@ def _define_clicks(start_date, end_date):
             MAX(CASE WHEN params.key = "moduleName" THEN params.value.string_value ELSE NULL END) AS module,
             MAX(CASE WHEN params.key = "firebase_screen" THEN params.value.string_value ELSE NULL END) AS firebase_screen,
             FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.{FIREBASE_EVENTS_TABLE}_*` events, events.event_params AS params
-            LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.{TABLE_AB_TESTING}` ab_testing ON events.user_id = ab_testing.userid, 
+            LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.{TABLE_AB_TESTING}` ab_testing ON events.user_id = ab_testing.userid
             WHERE event_timestamp > {start_date}
             AND event_timestamp < {end_date}
-            GROUP BY event_timestamp, event_date, event_name, user_id
+            GROUP BY event_timestamp, event_date, event_name, user_id, group_id
         )
     """
 
@@ -71,7 +71,7 @@ def get_pertinence_bookings_request(start_date, end_date, group_id_list):
         COUNT(*) AS bookings,
         SUM(CAST(firebase_screen = "Home" AS INT64)) as home_bookings,
         SUM(CAST(module = "{RECOMMENDATION_MODULE_TITLE}" AS INT64)) AS total_recommendation_bookings, 
-        {", ".join([f"SUM(CAST((module = '{RECOMMENDATION_MODULE_TITLE}' AND group_id = '{group_id}') AS INT64)) AS recommendation_bookings_{group_id}" for group_id in group_id_list])},
+        {", ".join([f"SUM(CAST((module = '{RECOMMENDATION_MODULE_TITLE}' AND group_id = '{group_id}') AS INT64)) AS recommendation_bookings_{group_id}" for group_id in group_id_list])}
         FROM recommendation_booking_funnel
     """
 
@@ -79,12 +79,13 @@ def get_pertinence_bookings_request(start_date, end_date, group_id_list):
 def get_pertinence_clicks_request(start_date, end_date, group_id_list):
     group_id_list = sorted(group_id_list)
     return f"""
-        {_define_clicks(start_date, end_date)},
+        {_define_clicks(start_date, end_date)}
         
+        SELECT
         COUNT(*) AS clicks,
         SUM(CAST(firebase_screen = "Home" AS INT64)) as home_clicks,
         SUM(CAST(module = "{RECOMMENDATION_MODULE_TITLE}" AS INT64)) AS total_recommendation_clicks, 
-        {", ".join([f"SUM(CAST((module = '{RECOMMENDATION_MODULE_TITLE}' AND group_id = '{group_id}') AS INT64)) AS recommendation_clicks_{group_id}" for group_id in group_id_list])},
+        {", ".join([f"SUM(CAST((module = '{RECOMMENDATION_MODULE_TITLE}' AND group_id = '{group_id}') AS INT64)) AS recommendation_clicks_{group_id}" for group_id in group_id_list])}
         FROM clicks
     """
 

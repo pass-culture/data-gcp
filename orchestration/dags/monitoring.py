@@ -55,7 +55,22 @@ def compute_click_pertinence_metrics(ti, **kwargs):
         + [f"RECOMMENDATION_CLICKS_{group_id}" for group_id in groups]
     ):
         result = float(results.values[0][index])
-        ti.xcom_push(key=metric.upper(), value=result)
+        ti.xcom_push(key=metric, value=result)
+
+
+def compute_booking_pertinence_metrics(ti, **kwargs):
+    start_date = convert_datetime_to_microseconds(START_DATE)
+    end_date = ti.xcom_pull(key=LAST_EVENT_TIME_KEY)
+    bigquery_client = BigQueryClient()
+    results = bigquery_client.query(
+        get_pertinence_bookings_request(start_date, end_date, groups)
+    )
+    for index, metric in enumerate(
+        ["BOOKINGS", "HOME_BOOKINGS", "TOTAL_RECOMMENDATION_BOOKINGS"]
+        + [f"RECOMMENDATION_BOOKINGS_{group_id}" for group_id in groups]
+    ):
+        result = float(results.values[0][index])
+        ti.xcom_push(key=metric, value=result)
 
 
 def compute_booking_diversification_metrics(ti, **kwargs):
@@ -71,21 +86,6 @@ def compute_booking_diversification_metrics(ti, **kwargs):
             if results.values[index]:
                 result = float(results.values[index][0])
         ti.xcom_push(key=f"AVERAGE_CATEGORY_RECO_{group_id}", value=result)
-
-
-def compute_booking_pertinence_metrics(ti, **kwargs):
-    start_date = convert_datetime_to_microseconds(START_DATE)
-    end_date = ti.xcom_pull(key=LAST_EVENT_TIME_KEY)
-    bigquery_client = BigQueryClient()
-    results = bigquery_client.query(
-        get_pertinence_bookings_request(start_date, end_date, groups)
-    )
-    for index, metric in enumerate(
-        ["BOOKINGS", "HOME_BOOKINGS", "TOTAL_RECOMMENDATION_BOOKINGS"]
-        + [f"RECOMMENDATION_BOOKINGS_{group_id}" for group_id in groups]
-    ):
-        result = float(results.values[0][index])
-        ti.xcom_push(key=metric.upper(), value=result)
 
 
 metric_groups_to_compute = {
@@ -160,7 +160,7 @@ def insert_metric_bq(ti, **kwargs):
 
 default_args = {
     "start_date": datetime(2021, 5, 26),
-    "on_failure_callback": task_fail_slack_alert,
+    # "on_failure_callback": task_fail_slack_alert,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }

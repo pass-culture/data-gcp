@@ -39,7 +39,7 @@ def get_final_recommendations(
     else:
         filter_unbooked_offers = group_id == "A"
         recommendations_for_user = get_intermediate_recommendations_for_user(
-            user_id, user_iris_id, filter_unbooked_offers=filter_unbooked_offers
+            user_id, user_iris_id, filter_unbooked_offers
         )
         scored_recommendation_for_user = get_scored_recommendation_for_user(
             user_id,
@@ -197,6 +197,7 @@ def get_intermediate_recommendations_for_user(
 ) -> List[Dict[str, Any]]:
 
     start = time.time()
+    unbooked_offers_filter = "AND booking_number > 0 " if filter_unbooked_offers else ""
     if not user_iris_id:
         query = text(
             f"""
@@ -209,7 +210,7 @@ def get_intermediate_recommendations_for_user(
                 FROM non_recommendable_offers
                 WHERE user_id = :user_id
                 )
-            {'AND booking_number > 0' if filter_unbooked_offers else ''} ORDER BY RANDOM();
+            {unbooked_offers_filter}ORDER BY RANDOM();
             """
         )
 
@@ -238,7 +239,7 @@ def get_intermediate_recommendations_for_user(
                 FROM non_recommendable_offers
                 WHERE user_id = :user_id
                 )
-            {'AND booking_number > 0' if filter_unbooked_offers else ''} ORDER BY RANDOM();
+            {unbooked_offers_filter}ORDER BY RANDOM();
             """
         )
 

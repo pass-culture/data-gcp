@@ -103,6 +103,7 @@ def copy_table_to_analytics(gcp_project, bigquery_raw_dataset, execution_date):
     return f"""
     SELECT
         event_name, user_pseudo_id, user_id, platform,
+        traffic_source.name,traffic_source.medium,traffic_source.source,
         PARSE_DATE("%Y%m%d", event_date) AS event_date,
         TIMESTAMP_SECONDS(CAST(CAST(event_timestamp as INT64)/1000000 as INT64)) AS event_timestamp,
         TIMESTAMP_SECONDS(CAST(CAST(event_previous_timestamp as INT64)/1000000 as INT64)) AS event_previous_timestamp,

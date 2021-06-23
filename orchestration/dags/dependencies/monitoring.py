@@ -24,6 +24,7 @@ def _define_recommendation_booking_funnel(start_date, end_date):
         MAX(CASE WHEN params.key = "moduleName" THEN params.value.string_value ELSE NULL END) AS module,
         MAX(CASE WHEN params.key = "offerId" THEN CAST(params.value.double_value AS INT64) ELSE NULL END) AS offer_id,
         MAX(CASE WHEN params.key = "firebase_screen" THEN params.value.string_value ELSE NULL END) AS firebase_screen,
+        MAX(CASE WHEN params.key = "firebase_screen_class" THEN params.value.string_value ELSE NULL END) AS screen_view_event
         FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.{FIREBASE_EVENTS_TABLE}_*` events, 
         events.user_properties AS user_prop, events.event_params AS params
         WHERE event_name IN ("screen_view_bookingconfirmation", "ConsultOffer") AND user_id IS NOT NULL
@@ -32,7 +33,11 @@ def _define_recommendation_booking_funnel(start_date, end_date):
         GROUP BY user_id, event_name, event_timestamp
         ),
         booking_funnel AS (
-            SELECT *, LEAD(event_name) OVER (PARTITION BY session_id ORDER BY event_timestamp ASC) AS next_event_name FROM booking_events 
+            SELECT *, 
+            LEAD(event_name) OVER (PARTITION BY session_id ORDER BY event_timestamp ASC) AS next_event_name,
+            LEAD(screen_view_event) OVER (PARTITION BY session_id ORDER BY event_timestamp ASC) AS next_screen_view_event
+            FROM booking_events 
+            WHERE event_name IN ("screen_view_bookingconfirmation", "ConsultOffer") or screen_view_event = "BookingConfirmation"
             ORDER BY user_id, session_id, event_timestamp
         ),
         recommendation_booking_funnel AS (
@@ -42,7 +47,11 @@ def _define_recommendation_booking_funnel(start_date, end_date):
             ON booking_funnel.user_id = ab_testing.userid
             LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_offer` offers
             ON offers.offer_id = CAST(booking_funnel.offer_id AS STRING)
-            WHERE next_event_name = "screen_view_bookingconfirmation" and event_name = "ConsultOffer" 
+            WHERE (
+                next_event_name = "screen_view_bookingconfirmation" OR (
+                    next_event_name = "screen_view" AND next_screen_view_event = "BookingConfirmation"
+                )
+            ) and event_name = "ConsultOffer" 
         )
     """
 

@@ -13,7 +13,7 @@ class AppleClient:
         self.issuer_id = issuer_id
         self.private_key = private_key
 
-    def get_monthly_donloads(self, month="2021-05"):
+    def get_downloads(self, frequency="MONTHLY", report_date="2021-05"):
         expiration_time = int(
             round(time.time() + (20.0 * 60.0))
         )  # 20 minutes timestamp
@@ -36,8 +36,8 @@ class AppleClient:
         r = requests.get(
             url,
             params={
-                "filter[frequency]": "MONTHLY",
-                "filter[reportDate]": month,
+                "filter[frequency]": frequency,
+                "filter[reportDate]": report_date,
                 "filter[reportSubType]": "SUMMARY",
                 "filter[reportType]": "SALES",
                 "filter[vendorNumber]": "89881612",
@@ -45,6 +45,8 @@ class AppleClient:
             headers=head,
         )
         print(r.status_code)
+        if r.status_code == 404:
+            return 0
 
         data = zlib.decompress(r.content, zlib.MAX_WBITS | 32)
 

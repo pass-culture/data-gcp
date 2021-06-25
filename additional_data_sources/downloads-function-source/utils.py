@@ -35,3 +35,8 @@ def get_last_month():
 def get_current_month():
     today = datetime.date.today()
     return today.strftime("%Y-%m")
+
+
+def get_current_day():
+    today = datetime.date.today()
+    return today.strftime("%d")

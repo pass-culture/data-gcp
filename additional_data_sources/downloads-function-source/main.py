@@ -9,6 +9,7 @@ from utils import (
     BIGQUERY_RAW_DATASET,
     get_last_month,
     get_current_month,
+    get_current_day,
 )
 
 
@@ -16,20 +17,25 @@ def run(request):
     bigquery_client = bigquery.Client()
     last_month = get_last_month()
     current_month = get_current_month()
+    current_day = get_current_day()
 
     apple_client = AppleClient(
         key_id=KEY_ID, issuer_id=ISSUER_ID, private_key=PRIVATE_KEY
     )
-    last_month_apple_downloads = apple_client.get_monthly_donloads(last_month)
-    try:
-        current_month_apple_downloads = apple_client.get_monthly_donloads(current_month)
-    except:
-        current_month_apple_downloads = None
+    last_month_apple_downloads = apple_client.get_downloads(
+        frequency="MONTHLY", report_date=last_month
+    )
+    current_month_apple_downloads = 0
+    for day in range(1, int(current_day)):
+        day_string = f"0{day}" if day < 10 else str(day)
+        current_month_apple_downloads += apple_client.get_downloads(
+            frequency="DAILY", report_date=f"{current_month}-{day_string}"
+        )
 
     google_client = GoogleClient(report_bucket_name="pubsite_prod_8102412585126803216")
-    last_month_google_downloads = google_client.get_monthly_donloads(last_month)
+    last_month_google_downloads = google_client.get_monthly_downloads(last_month)
     try:
-        current_month_google_downloads = google_client.get_monthly_donloads(
+        current_month_google_downloads = google_client.get_monthly_downloads(
             current_month
         )
     except:

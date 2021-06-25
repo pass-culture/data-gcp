@@ -14,12 +14,12 @@ class GoogleClient:
     def get_monthly_downloads(self, month="2021-05"):
         file_name = f"stats/installs/installs_app.passculture.webapp_{month.replace('-', '')}_app_version.csv"
 
-        temp_destination_file_name = self.download_file_from_gcs(
+        temp_destination_file_path = self.download_file_from_gcs(
             self.report_bucket_name, file_name, "report.csv"
         )
-        df = pd.read_csv(temp_destination_file_name, encoding="utf-16")
+        df = pd.read_csv(temp_destination_file_path, encoding="utf-16")
         download_stats = df["Daily Device Installs"].sum()
-        os.remove(temp_destination_file_name)
+        os.remove(temp_destination_file_path)
         return download_stats
 
     @staticmethod
@@ -33,6 +33,6 @@ class GoogleClient:
         storage_client = storage.Client()
         bucket = storage_client.get_bucket(bucket_name)
         blob = bucket.blob(source_file_name)
-        temp_destination_file_name = self.get_file_path(destination_file_name)
-        blob.download_to_filename(temp_destination_file_name)
-        return temp_destination_file_name
+        temp_destination_file_path = self.get_file_path(destination_file_name)
+        blob.download_to_filename(temp_destination_file_path)
+        return temp_destination_file_path

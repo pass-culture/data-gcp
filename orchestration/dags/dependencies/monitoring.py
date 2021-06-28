@@ -27,7 +27,7 @@ def _define_recommendation_booking_funnel(start_date, end_date):
         MAX(CASE WHEN params.key = "firebase_screen_class" THEN params.value.string_value ELSE NULL END) AS screen_view_event
         FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.{FIREBASE_EVENTS_TABLE}_*` events, 
         events.user_properties AS user_prop, events.event_params AS params
-        WHERE event_name IN ("screen_view_bookingconfirmation", "ConsultOffer") AND user_id IS NOT NULL
+        WHERE event_name IN ("screen_view_bookingconfirmation", "ConsultOffer", "screen_view") AND user_id IS NOT NULL
         AND event_timestamp > {start_date}
         AND event_timestamp < {end_date}
         GROUP BY user_id, event_name, event_timestamp

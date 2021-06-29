@@ -104,7 +104,13 @@ with DAG(
 
     to_clean = BigQueryOperator(
         task_id="copy_to_clean",
-        sql=f"SELECT * FROM {BIGQUERY_RAW_DATASET}.{USER_LOCATIONS_TABLE}",
+        sql=f"""
+            SELECT * EXCEPT(id, irisCode, centroid, shape), iris_france.id AS iris_id
+            FROM {BIGQUERY_RAW_DATASET}.{USER_LOCATIONS_TABLE}
+            LEFT JOIN `{BIGQUERY_CLEAN_DATASET}.iris_france` iris_france
+            ON 1 = 1
+            WHERE ST_CONTAINS(shape, ST_GEOGPOINT(longitude, latitude))
+        """,
         write_disposition="WRITE_TRUNCATE",
         use_legacy_sql=False,
         destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.{USER_LOCATIONS_TABLE}",

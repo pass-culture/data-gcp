@@ -39,7 +39,7 @@ def main():
 
     plt.plot(booking_day_numbers, user_count, label="Users")
     plt.plot(booking_day_numbers, item_count, label="Items")
-    plt.plot(booking_day_numbers, row_count, label="Rows")
+    plt.plot(booking_day_numbers, row_count, label="Bookings")
     plt.xlabel("Booking day number")
     plt.ylabel("Count")
     plt.legend()

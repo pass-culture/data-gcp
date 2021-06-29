@@ -19,18 +19,18 @@ def get_last_event_time_request():
 def _define_recommendation_booking_funnel(start_date, end_date):
     return f"""
         WITH booking_events AS (
-        SELECT event_name, event_timestamp, user_id, 
-        MAX(CASE WHEN user_prop.key = "ga_session_id" THEN user_prop.value.int_value ELSE NULL END) AS session_id,
-        MAX(CASE WHEN params.key = "moduleName" THEN params.value.string_value ELSE NULL END) AS module,
-        MAX(CASE WHEN params.key = "offerId" THEN CAST(params.value.double_value AS INT64) ELSE NULL END) AS offer_id,
-        MAX(CASE WHEN params.key = "firebase_screen" THEN params.value.string_value ELSE NULL END) AS firebase_screen,
-        MAX(CASE WHEN params.key = "firebase_screen_class" THEN params.value.string_value ELSE NULL END) AS screen_view_event
-        FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.{FIREBASE_EVENTS_TABLE}_*` events, 
-        events.user_properties AS user_prop, events.event_params AS params
-        WHERE event_name IN ("screen_view_bookingconfirmation", "ConsultOffer") AND user_id IS NOT NULL
-        AND event_timestamp > {start_date}
-        AND event_timestamp < {end_date}
-        GROUP BY user_id, event_name, event_timestamp
+            SELECT event_name, event_timestamp, user_id, 
+            MAX(CASE WHEN user_prop.key = "ga_session_id" THEN user_prop.value.int_value ELSE NULL END) AS session_id,
+            MAX(CASE WHEN params.key = "moduleName" THEN params.value.string_value ELSE NULL END) AS module,
+            MAX(CASE WHEN params.key = "offerId" THEN CAST(params.value.double_value AS INT64) ELSE NULL END) AS offer_id,
+            MAX(CASE WHEN params.key = "firebase_screen" THEN params.value.string_value ELSE NULL END) AS firebase_screen,
+            MAX(CASE WHEN params.key = "firebase_screen_class" THEN params.value.string_value ELSE NULL END) AS screen_view_event
+            FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.{FIREBASE_EVENTS_TABLE}_*` events, 
+            events.user_properties AS user_prop, events.event_params AS params
+            WHERE event_name IN ("screen_view_bookingconfirmation", "ConsultOffer", "screen_view") AND user_id IS NOT NULL
+            AND event_timestamp > {start_date}
+            AND event_timestamp < {end_date}
+            GROUP BY user_id, event_name, event_timestamp
         ),
         booking_funnel AS (
             SELECT *, 

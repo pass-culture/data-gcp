@@ -85,7 +85,7 @@ def compute_booking_diversification_metrics(ti, **kwargs):
     for index, group_id in enumerate(sorted(groups)):
         result = None
         if len(results.values) > index:
-            if results.values[index]:
+            if len(results.values[index]) > 0:
                 result = float(results.values[index][0])
         ti.xcom_push(key=f"AVERAGE_CATEGORY_RECO_{group_id}", value=result)
 

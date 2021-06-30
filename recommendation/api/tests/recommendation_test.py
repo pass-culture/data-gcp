@@ -264,10 +264,9 @@ def test_get_intermediate_recommendation_for_user(
     connection_mock.return_value = setup_database
     # When
     user_id = 111
-    filter_unbooked_offers = False
     user_iris_id = 1
     user_recommendation = get_intermediate_recommendations_for_user(
-        user_id, user_iris_id, filter_unbooked_offers
+        user_id, user_iris_id
     )
 
     # Then
@@ -373,10 +372,9 @@ def test_get_intermediate_recommendation_for_user_with_no_iris(
 
     # When
     user_id = 222
-    filter_unbooked_offers = False
     user_iris_id = None
     user_recommendation = get_intermediate_recommendations_for_user(
-        user_id, user_iris_id, filter_unbooked_offers
+        user_id, user_iris_id
     )
 
     # Then

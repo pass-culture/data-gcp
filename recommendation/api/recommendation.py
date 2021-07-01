@@ -28,7 +28,7 @@ def get_final_recommendations(
     is_cold_start = get_cold_start_status(user_id)
     user_iris_id = get_iris_from_coordinates(longitude, latitude)
 
-    if group_id == "A" and is_cold_start:
+    if is_cold_start:
         cold_start_types = get_cold_start_types(user_id)
         scored_recommendation_for_user = get_cold_start_scored_recommendations_for_user(
             user_id,
@@ -37,9 +37,8 @@ def get_final_recommendations(
             app_config["NUMBER_OF_PRESELECTED_OFFERS"],
         )
     else:
-        filter_unbooked_offers = group_id == "A"
         recommendations_for_user = get_intermediate_recommendations_for_user(
-            user_id, user_iris_id, filter_unbooked_offers
+            user_id, user_iris_id
         )
         scored_recommendation_for_user = get_scored_recommendation_for_user(
             user_id,
@@ -193,11 +192,10 @@ def get_cold_start_scored_recommendations_for_user(
 
 
 def get_intermediate_recommendations_for_user(
-    user_id: int, user_iris_id: int, filter_unbooked_offers: bool
+    user_id: int, user_iris_id: int
 ) -> List[Dict[str, Any]]:
 
     start = time.time()
-    unbooked_offers_filter = "AND booking_number > 0 " if filter_unbooked_offers else ""
     if not user_iris_id:
         query = text(
             f"""
@@ -210,7 +208,8 @@ def get_intermediate_recommendations_for_user(
                 FROM non_recommendable_offers
                 WHERE user_id = :user_id
                 )
-            {unbooked_offers_filter}ORDER BY RANDOM();
+            AND booking_number > 0 
+            ORDER BY RANDOM();
             """
         )
 
@@ -239,7 +238,8 @@ def get_intermediate_recommendations_for_user(
                 FROM non_recommendable_offers
                 WHERE user_id = :user_id
                 )
-            {unbooked_offers_filter}ORDER BY RANDOM();
+            AND booking_number > 0 
+            ORDER BY RANDOM();
             """
         )
 
@@ -276,7 +276,7 @@ def get_scored_recommendation_for_user(
 ) -> List[Dict[str, int]]:
 
     start = time.time()
-    user_to_rank = [user_id for reco in user_recommendations]
+    user_to_rank = [user_id] * len(user_recommendations)
     if input_type == "offer_id_list":
         instances = [recommendation["id"] for recommendation in user_recommendations]
     elif input_type == "item_id_and_user_id_lists":

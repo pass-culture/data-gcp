@@ -16,18 +16,13 @@ from dependencies.monitoring import (
     get_favorite_request,
 )
 
-from dependencies.config import (
-    GCP_PROJECT,
-    BIGQUERY_ANALYTICS_DATASET,
-    ENV_SHORT_NAME,
-)
+from dependencies.config import GCP_PROJECT, BIGQUERY_ANALYTICS_DATASET, ENV_SHORT_NAME
 
-FIREBASE_EVENTS_TABLE = "firebase_events"
 MONITORING_TABLE = "monitoring_data"
-START_DATE = datetime(2021, 6, 12, tzinfo=pytz.utc)  # expressed in UTC TimeZone
+START_DATE = datetime(2021, 7, 2, tzinfo=pytz.utc)  # expressed in UTC TimeZone
 groups = ["A", "B"]
 ALGO_A = "algo v1 + cold start"
-ALGO_B = "algo v0"
+ALGO_B = "algo v0 + cold start"
 
 LAST_EVENT_TIME_KEY = "last_event_time"
 
@@ -85,7 +80,7 @@ def compute_booking_diversification_metrics(ti, **kwargs):
     for index, group_id in enumerate(sorted(groups)):
         result = None
         if len(results.values) > index:
-            if results.values[index]:
+            if len(results.values[index]) > 0:
                 result = float(results.values[index][0])
         ti.xcom_push(key=f"AVERAGE_CATEGORY_RECO_{group_id}", value=result)
 

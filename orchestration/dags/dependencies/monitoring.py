@@ -5,10 +5,10 @@ from dependencies.config import (
     BIGQUERY_ANALYTICS_DATASET,
     ENV_SHORT_NAME,
     APPLICATIVE_PREFIX,
+    TABLE_AB_TESTING,
 )
 
 FIREBASE_EVENTS_TABLE = "firebase_events"
-TABLE_AB_TESTING = "ab_testing_202104_v0_v0bis"
 RECOMMENDATION_MODULE_TITLE = "Fais le plein de découvertes"
 
 
@@ -22,7 +22,8 @@ def _define_recommendation_booking_funnel(start_date, end_date):
             SELECT event_name, event_timestamp, user_id, 
             MAX(CASE WHEN user_prop.key = "ga_session_id" THEN user_prop.value.int_value ELSE NULL END) AS session_id,
             MAX(CASE WHEN params.key = "moduleName" THEN params.value.string_value ELSE NULL END) AS module,
-            MAX(CASE WHEN params.key = "offerId" THEN CAST(params.value.double_value AS INT64) ELSE NULL END) AS offer_id,
+            MAX(CASE WHEN params.key = "offerId" THEN CAST(params.value.double_value AS INT64) ELSE NULL END) AS double_offer_id,
+            MAX(CASE WHEN params.key = "offerId" THEN CAST(params.value.string_value AS INT64) ELSE NULL END) AS string_offer_id,
             MAX(CASE WHEN params.key = "firebase_screen" THEN params.value.string_value ELSE NULL END) AS firebase_screen,
             MAX(CASE WHEN params.key = "firebase_screen_class" THEN params.value.string_value ELSE NULL END) AS screen_view_event
             FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.{FIREBASE_EVENTS_TABLE}_*` events, 
@@ -35,7 +36,8 @@ def _define_recommendation_booking_funnel(start_date, end_date):
         booking_funnel AS (
             SELECT *, 
             LEAD(event_name) OVER (PARTITION BY session_id ORDER BY event_timestamp ASC) AS next_event_name,
-            LEAD(screen_view_event) OVER (PARTITION BY session_id ORDER BY event_timestamp ASC) AS next_screen_view_event
+            LEAD(screen_view_event) OVER (PARTITION BY session_id ORDER BY event_timestamp ASC) AS next_screen_view_event,
+            (CASE WHEN double_offer_id IS NULL THEN string_offer_id ELSE double_offer_id END) AS offer_id 
             FROM booking_events 
             WHERE event_name IN ("screen_view_bookingconfirmation", "ConsultOffer") or screen_view_event = "BookingConfirmation"
             ORDER BY user_id, session_id, event_timestamp
@@ -61,7 +63,7 @@ def _define_clicks(start_date, end_date):
         WITH clicks AS (
             SELECT user_id, groupid as group_id, event_name, event_date, event_timestamp,  
             MAX(CASE WHEN params.key = "moduleName" THEN params.value.string_value ELSE NULL END) AS module,
-            MAX(CASE WHEN params.key = "firebase_screen" THEN params.value.string_value ELSE NULL END) AS firebase_screen,
+            MAX(CASE WHEN params.key = "from" THEN params.value.string_value ELSE NULL END) AS firebase_screen,
             FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.{FIREBASE_EVENTS_TABLE}_*` events, events.event_params AS params
             LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.{TABLE_AB_TESTING}` ab_testing ON events.user_id = ab_testing.userid
             WHERE event_timestamp > {start_date}
@@ -98,7 +100,7 @@ def get_favorite_request(start_date, end_date, group_id_list):
 
         SELECT
         COUNT(*) AS favorites,
-        SUM(CAST(firebase_screen = "Home" AS INT64)) as home_favorites,
+        SUM(CAST(firebase_screen = "home" AS INT64)) as home_favorites,
         SUM(CAST(module = "{RECOMMENDATION_MODULE_TITLE}" AS INT64)) AS total_recommendation_favorites, 
         {", ".join([f"SUM(CAST((module = '{RECOMMENDATION_MODULE_TITLE}' AND group_id = '{group_id}') AS INT64)) AS recommendation_favorites_{group_id}" for group_id in group_id_list])}
         FROM favorite_events

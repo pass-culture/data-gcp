@@ -223,9 +223,7 @@ def setup_pool(app_config: Dict[str, Any]) -> Any:
     )
 
     number_of_bookings_per_user = pd.DataFrame(
-        {"user_id": [111], "bookings_count": [3]},
-        {"user_id": [113], "bookings_count": [1]},
-        {"user_id": [114], "bookings_count": [1]},
+        {"user_id": [111, 112, 113, 114], "bookings_count": [3, 3, 1, 1]}
     )
     number_of_bookings_per_user.to_sql(
         "number_of_bookings_per_user", con=engine, if_exists="replace"

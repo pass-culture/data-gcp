@@ -276,7 +276,7 @@ def get_scored_recommendation_for_user(
 ) -> List[Dict[str, int]]:
 
     start = time.time()
-    user_to_rank = [user_id for reco in user_recommendations]
+    user_to_rank = [user_id] * len(user_recommendations)
     if input_type == "offer_id_list":
         instances = [recommendation["id"] for recommendation in user_recommendations]
     elif input_type == "item_id_and_user_id_lists":

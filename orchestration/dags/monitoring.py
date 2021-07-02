@@ -62,10 +62,17 @@ def compute_booking_pertinence_metrics(ti, **kwargs):
     results = bigquery_client.query(
         get_pertinence_bookings_request(start_date, end_date, groups)
     )
-    for index, metric in enumerate(
-        ["BOOKINGS", "HOME_BOOKINGS", "TOTAL_RECOMMENDATION_BOOKINGS"]
-        + [f"RECOMMENDATION_BOOKINGS_{group_id}" for group_id in groups]
-    ):
+    metric_list = ["BOOKINGS", "HOME_BOOKINGS", "TOTAL_RECOMMENDATION_BOOKINGS"]
+    for selection in [
+        "",
+        "COLD_START_ONLY_",
+        "ALGO_ONLY_",
+        "MIXED_COLD_START_AND_ALGO_",
+    ]:
+        metric_list.extend(
+            [f"{selection}RECOMMENDATION_BOOKINGS_{group_id}" for group_id in groups]
+        )
+    for index, metric in enumerate(metric_list):
         result = float(results.values[0][index])
         ti.xcom_push(key=metric, value=result)
 
@@ -133,6 +140,12 @@ metric_groups_to_compute = {
             {"name": "HOME_BOOKINGS", "ab_testing": False},
             {"name": "TOTAL_RECOMMENDATION_BOOKINGS", "ab_testing": False},
             {"name": "RECOMMENDATION_BOOKINGS", "ab_testing": True},
+            {"name": "COLD_START_ONLY_RECOMMENDATION_BOOKINGS", "ab_testing": True},
+            {"name": "ALGO_ONLY_RECOMMENDATION_BOOKINGS", "ab_testing": True},
+            {
+                "name": "MIXED_COLD_START_AND_ALGO_RECOMMENDATION_BOOKINGS",
+                "ab_testing": True,
+            },
         ],
     },
     "RECOMMENDATION_COUNT": {

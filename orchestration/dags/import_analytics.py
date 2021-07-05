@@ -298,8 +298,7 @@ create_offer_extracted_data = BigQueryOperator(
             json_extract(offer_extra_data, "$.showSubType") AS showSubType,
             json_extract(offer_extra_data, "$.speaker") AS speaker,
             json_extract(offer_extra_data, "$.rayon") AS rayon
-            from (SELECT offer_extra_data, offer_id, offer_type
-                    FROM `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.applicative_database_offer`) B""",
+          FROM `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.applicative_database_offer`""",
     destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.offer_extracted_data",
     write_disposition="WRITE_TRUNCATE",
     use_legacy_sql=False,

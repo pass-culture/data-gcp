@@ -286,6 +286,25 @@ create_enriched_app_downloads_stats = BigQueryOperator(
     dag=dag,
 )
 
+create_offer_extracted_data = BigQueryOperator(
+    task_id="create_offer_extracted_data",
+    sql=f"""SELECT offer_id, offer_type, JSON_EXTRACT_SCALAR(offer_extra_data, "$.author") AS Author, 
+             JSON_EXTRACT_SCALAR(offer_extra_data, "$.performer") AS Performer, 
+             JSON_EXTRACT_SCALAR(offer_extra_data, "$.MusicType") AS MusicType, 
+             JSON_EXTRACT_SCALAR(offer_extra_data, "$.MusicSubtype") AS MusicSubtype,
+             JSON_EXTRACT_SCALAR(offer_extra_data, "$.stageDirector") AS stageDirector, 
+             JSON_EXTRACT_SCALAR(offer_extra_data, "$.theater") AS Theater,
+             JSON_EXTRACT_SCALAR(offer_extra_data, "$.showType") AS showType,
+             JSON_EXTRACT_SCALAR(offer_extra_data, "$.showSubType") AS showSubType,
+             JSON_EXTRACT_SCALAR(offer_extra_data, "$.speaker") AS speaker,
+             JSON_EXTRACT_SCALAR(offer_extra_data, "$.rayon") AS rayon
+          FROM `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.applicative_database_offer`""",
+    destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.offer_extracted_data",
+    write_disposition="WRITE_TRUNCATE",
+    use_legacy_sql=False,
+    dag=dag,
+)
+
 
 create_enriched_data_tasks = [
     create_enriched_offer_data_task,
@@ -296,6 +315,7 @@ create_enriched_data_tasks = [
     create_enriched_booked_categories_data_v1_task,
     create_enriched_booked_categories_data_v2_task,
     create_enriched_offerer_data_task,
+    create_offer_extracted_data,
 ]
 
 end = DummyOperator(task_id="end", dag=dag)

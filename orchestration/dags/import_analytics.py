@@ -110,7 +110,7 @@ dag = DAG(
     on_failure_callback=task_fail_slack_alert,
     schedule_interval="0 23 * * *",
     catchup=False,
-    dagrun_timeout=datetime.timedelta(minutes=90),
+    dagrun_timeout=datetime.timedelta(minutes=120),
 )
 
 start = DummyOperator(task_id="start", dag=dag)

@@ -181,7 +181,9 @@ copy_to_analytics_iris_venues = BigQueryOperator(
 create_enriched_offer_data_task = BigQueryOperator(
     task_id="create_enriched_offer_data",
     sql=define_enriched_offer_data_full_query(
-        analytics_dataset=BIGQUERY_ANALYTICS_DATASET, clean_dataset=BIGQUERY_CLEAN_DATASET, table_prefix=APPLICATIVE_PREFIX
+        analytics_dataset=BIGQUERY_ANALYTICS_DATASET,
+        clean_dataset=BIGQUERY_CLEAN_DATASET,
+        table_prefix=APPLICATIVE_PREFIX,
     ),
     use_legacy_sql=False,
     dag=dag,
@@ -320,6 +322,23 @@ create_enriched_data_tasks = [
 
 end = DummyOperator(task_id="end", dag=dag)
 
-start >> import_tables_to_clean_tasks >> end_import_table_to_clean >> import_tables_to_analytics_tasks >> end_import
-end_import >> link_iris_venues_task >> copy_to_analytics_iris_venues >> create_enriched_data_tasks
-create_enriched_data_tasks >> getting_service_account_token >> import_downloads_data_to_bigquery >> create_enriched_app_downloads_stats >> end
+(
+    start
+    >> import_tables_to_clean_tasks
+    >> end_import_table_to_clean
+    >> import_tables_to_analytics_tasks
+    >> end_import
+)
+(
+    end_import
+    >> link_iris_venues_task
+    >> copy_to_analytics_iris_venues
+    >> create_enriched_data_tasks
+)
+(
+    create_enriched_data_tasks
+    >> getting_service_account_token
+    >> import_downloads_data_to_bigquery
+    >> create_enriched_app_downloads_stats
+    >> end
+)

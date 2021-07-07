@@ -100,7 +100,7 @@ def define_count_first_booking_query(dataset, table_prefix=""):
     """
 
 
-def define_enriched_offer_data_query(analytics_dataset, clean_dataset,  table_prefix=""):
+def define_enriched_offer_data_query(analytics_dataset, clean_dataset, table_prefix=""):
     return f"""
         CREATE OR REPLACE TABLE {analytics_dataset}.enriched_offer_data AS (
             SELECT
@@ -157,7 +157,9 @@ def define_enriched_offer_data_query(analytics_dataset, clean_dataset,  table_pr
     """
 
 
-def define_enriched_offer_data_full_query(analytics_dataset, clean_dataset, table_prefix=""):
+def define_enriched_offer_data_full_query(
+    analytics_dataset, clean_dataset, table_prefix=""
+):
     return f"""
         {define_is_physical_view_query(dataset=analytics_dataset, table_prefix=table_prefix)}
         {define_is_outing_view_query(dataset=analytics_dataset, table_prefix=table_prefix)}

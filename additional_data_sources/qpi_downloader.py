@@ -52,7 +52,7 @@ class QPIDownloader:
         self.questions_file_name = questions_file_name
 
     def run(self):
-        """ Main method : used to launch the download. """
+        """Main method : used to launch the download."""
 
         print("Fetching the answers...")
         responses = self.query_all()

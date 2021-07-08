@@ -230,7 +230,16 @@ for table in TABLE_DATA:
             ignore_if_missing=True,
             dag=dag,
         )
-        end_export >> delete_temp_table_task >> create_empty_table_task >> import_task >> delete_old_rows >> add_new_rows >> end_delete_temp_table_task >> end_import
+        (
+            end_export
+            >> delete_temp_table_task
+            >> create_empty_table_task
+            >> import_task
+            >> delete_old_rows
+            >> add_new_rows
+            >> end_delete_temp_table_task
+            >> end_import
+        )
     else:
         import_task = GoogleCloudStorageToBigQueryOperator(
             task_id=f"import_{table}_in_bigquery",

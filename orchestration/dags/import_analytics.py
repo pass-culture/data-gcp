@@ -181,7 +181,9 @@ copy_to_analytics_iris_venues = BigQueryOperator(
 create_enriched_offer_data_task = BigQueryOperator(
     task_id="create_enriched_offer_data",
     sql=define_enriched_offer_data_full_query(
-        dataset=BIGQUERY_ANALYTICS_DATASET, table_prefix=APPLICATIVE_PREFIX
+        analytics_dataset=BIGQUERY_ANALYTICS_DATASET,
+        clean_dataset=BIGQUERY_CLEAN_DATASET,
+        table_prefix=APPLICATIVE_PREFIX,
     ),
     use_legacy_sql=False,
     dag=dag,
@@ -288,12 +290,12 @@ create_enriched_app_downloads_stats = BigQueryOperator(
 
 create_offer_extracted_data = BigQueryOperator(
     task_id="create_offer_extracted_data",
-    sql=f"""SELECT offer_id, offer_type, JSON_EXTRACT_SCALAR(offer_extra_data, "$.author") AS Author, 
-             JSON_EXTRACT_SCALAR(offer_extra_data, "$.performer") AS Performer, 
-             JSON_EXTRACT_SCALAR(offer_extra_data, "$.MusicType") AS MusicType, 
-             JSON_EXTRACT_SCALAR(offer_extra_data, "$.MusicSubtype") AS MusicSubtype,
+    sql=f"""SELECT offer_id, offer_type, JSON_EXTRACT_SCALAR(offer_extra_data, "$.author") AS author, 
+             JSON_EXTRACT_SCALAR(offer_extra_data, "$.performer") AS performer, 
+             JSON_EXTRACT_SCALAR(offer_extra_data, "$.musicType") AS musicType, 
+             JSON_EXTRACT_SCALAR(offer_extra_data, "$.musicSubtype") AS musicSubtype,
              JSON_EXTRACT_SCALAR(offer_extra_data, "$.stageDirector") AS stageDirector, 
-             JSON_EXTRACT_SCALAR(offer_extra_data, "$.theater") AS Theater,
+             JSON_EXTRACT_SCALAR(offer_extra_data, "$.theater") AS theater,
              JSON_EXTRACT_SCALAR(offer_extra_data, "$.showType") AS showType,
              JSON_EXTRACT_SCALAR(offer_extra_data, "$.showSubType") AS showSubType,
              JSON_EXTRACT_SCALAR(offer_extra_data, "$.speaker") AS speaker,
@@ -320,6 +322,23 @@ create_enriched_data_tasks = [
 
 end = DummyOperator(task_id="end", dag=dag)
 
-start >> import_tables_to_clean_tasks >> end_import_table_to_clean >> import_tables_to_analytics_tasks >> end_import
-end_import >> link_iris_venues_task >> copy_to_analytics_iris_venues >> create_enriched_data_tasks
-create_enriched_data_tasks >> getting_service_account_token >> import_downloads_data_to_bigquery >> create_enriched_app_downloads_stats >> end
+(
+    start
+    >> import_tables_to_clean_tasks
+    >> end_import_table_to_clean
+    >> import_tables_to_analytics_tasks
+    >> end_import
+)
+(
+    end_import
+    >> link_iris_venues_task
+    >> copy_to_analytics_iris_venues
+    >> create_enriched_data_tasks
+)
+(
+    create_enriched_data_tasks
+    >> getting_service_account_token
+    >> import_downloads_data_to_bigquery
+    >> create_enriched_app_downloads_stats
+    >> end
+)

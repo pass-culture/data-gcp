@@ -100,9 +100,9 @@ def define_count_first_booking_query(dataset, table_prefix=""):
     """
 
 
-def define_enriched_offer_data_query(dataset, table_prefix=""):
+def define_enriched_offer_data_query(analytics_dataset, clean_dataset, table_prefix=""):
     return f"""
-        CREATE OR REPLACE TABLE {dataset}.enriched_offer_data AS (
+        CREATE OR REPLACE TABLE {analytics_dataset}.enriched_offer_data AS (
             SELECT
                 offerer.offerer_id,
                 offerer.offerer_name,
@@ -130,10 +130,21 @@ def define_enriched_offer_data_query(dataset, table_prefix=""):
                     AS passculture_pro_url,
                 CONCAT('https://app.passculture.beta.gouv.fr/offre/details/',offer_humanized_id.humanized_id)
                     AS webapp_url,
-                count_first_booking_view.first_booking_cnt
-            FROM {dataset}.{table_prefix}offer AS offer
-            LEFT JOIN {dataset}.{table_prefix}venue AS venue ON offer.venue_id = venue.venue_id
-            LEFT JOIN {dataset}.{table_prefix}offerer AS offerer ON venue.venue_managing_offerer_id = offerer.offerer_id
+                count_first_booking_view.first_booking_cnt,
+                offer_extracted_data.author,
+                offer_extracted_data.performer, 
+                offer_extracted_data.stageDirector,
+                offer_extracted_data.theater, 
+                offer_extracted_data.speaker, 
+                offer_extracted_data.rayon, 
+                CASE  WHEN offer_extracted_data.offer_type <>'EventType.MUSIQUE' AND offer_extracted_data.showType IS NOT NULL THEN offer_extracted_data.showType 
+				WHEN offer_extracted_data.offer_type = 'EventType.MUSIQUE' THEN offer_extracted_data.musicType WHEN offer_extracted_data.offer_type <> 'EventType.SPECTACLE_VIVANT' AND offer_extracted_data.musicType IS NOT NULL THEN offer_extracted_data.musicType END AS type,
+				CASE WHEN offer_extracted_data.offer_type <>'EventType.MUSIQUE' AND offer_extracted_data.showSubType IS NOT NULL THEN offer_extracted_data.showSubType 
+				WHEN offer_extracted_data.offer_type = 'EventType.MUSIQUE' THEN offer_extracted_data.musicSubtype WHEN offer_extracted_data.offer_type <> 'EventType.SPECTACLE_VIVANT' AND offer_extracted_data.musicsubType IS NOT NULL THEN offer_extracted_data.musicSubtype
+				END AS subType
+            FROM {analytics_dataset}.{table_prefix}offer AS offer
+            LEFT JOIN {analytics_dataset}.{table_prefix}venue AS venue ON offer.venue_id = venue.venue_id
+            LEFT JOIN {analytics_dataset}.{table_prefix}offerer AS offerer ON venue.venue_managing_offerer_id = offerer.offerer_id
             LEFT JOIN is_physical_view ON is_physical_view.offer_id = offer.offer_id
             LEFT JOIN is_outing_view ON is_outing_view.offer_id = offer.offer_id
             LEFT JOIN offer_booking_information_view ON offer_booking_information_view.offer_id = offer.offer_id
@@ -141,18 +152,21 @@ def define_enriched_offer_data_query(dataset, table_prefix=""):
             LEFT JOIN sum_stock_view ON sum_stock_view.offer_id = offer.offer_id
             LEFT JOIN offer_humanized_id AS offer_humanized_id ON offer_humanized_id.offer_id = offer.offer_id
             LEFT JOIN count_first_booking_view ON count_first_booking_view.offer_id = offer.offer_id
+            LEFT JOIN {clean_dataset}.offer_extracted_data AS offer_extracted_data ON offer_extracted_data.offer_id = offer.offer_id
         );
     """
 
 
-def define_enriched_offer_data_full_query(dataset, table_prefix=""):
+def define_enriched_offer_data_full_query(
+    analytics_dataset, clean_dataset, table_prefix=""
+):
     return f"""
-        {define_is_physical_view_query(dataset=dataset, table_prefix=table_prefix)}
-        {define_is_outing_view_query(dataset=dataset, table_prefix=table_prefix)}
-        {define_offer_booking_information_view_query(dataset=dataset, table_prefix=table_prefix)}
-        {define_count_favorites_view_query(dataset=dataset, table_prefix=table_prefix)}
-        {define_sum_stock_view_query(dataset=dataset, table_prefix=table_prefix)}
-        {define_humanized_id_query(table=f"offer", dataset=dataset, table_prefix=table_prefix)}
-        {define_count_first_booking_query(dataset=dataset, table_prefix=table_prefix)}
-        {define_enriched_offer_data_query(dataset=dataset, table_prefix=table_prefix)}
+        {define_is_physical_view_query(dataset=analytics_dataset, table_prefix=table_prefix)}
+        {define_is_outing_view_query(dataset=analytics_dataset, table_prefix=table_prefix)}
+        {define_offer_booking_information_view_query(dataset=analytics_dataset, table_prefix=table_prefix)}
+        {define_count_favorites_view_query(dataset=analytics_dataset, table_prefix=table_prefix)}
+        {define_sum_stock_view_query(dataset=analytics_dataset, table_prefix=table_prefix)}
+        {define_humanized_id_query(table=f"offer", dataset=analytics_dataset, table_prefix=table_prefix)}
+        {define_count_first_booking_query(dataset=analytics_dataset, table_prefix=table_prefix)}
+        {define_enriched_offer_data_query(analytics_dataset =analytics_dataset, clean_dataset= clean_dataset,  table_prefix=table_prefix)}
     """

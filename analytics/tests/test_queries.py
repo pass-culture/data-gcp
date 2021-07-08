@@ -138,7 +138,9 @@ def flush_dataset():
         (
             "enriched_offer_data",
             define_enriched_offer_data_full_query(
-                dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX
+                analytics_dataset=TEST_DATASET,
+                clean_dataset=TEST_DATASET,
+                table_prefix=TEST_TABLE_PREFIX,
             ),
             ENRICHED_OFFER_DATA_INPUT,
             ENRICHED_OFFER_DATA_EXPECTED,

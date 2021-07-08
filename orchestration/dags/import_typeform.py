@@ -161,4 +161,12 @@ with DAG(
     end = DummyOperator(task_id="end")
 
     start >> getting_last_token >> getting_service_account_token >> typeform_to_gcs
-    typeform_to_gcs >> import_answers_to_bigquery >> add_answers_to_raw >> add_answers_to_clean >> delete_temp_answer_table >> enrich_qpi_answers >> end
+    (
+        typeform_to_gcs
+        >> import_answers_to_bigquery
+        >> add_answers_to_raw
+        >> add_answers_to_clean
+        >> delete_temp_answer_table
+        >> enrich_qpi_answers
+        >> end
+    )

@@ -35,8 +35,8 @@ def _define_recommendation_booking_funnel(start_date, end_date):
         ),
         booking_funnel AS (
             SELECT *, 
-            LEAD(event_name) OVER (PARTITION BY session_id ORDER BY event_timestamp ASC) AS next_event_name,
-            LEAD(screen_view_event) OVER (PARTITION BY session_id ORDER BY event_timestamp ASC) AS next_screen_view_event,
+            LEAD(event_name) OVER (PARTITION BY session_id, user_id ORDER BY event_timestamp ASC) AS next_event_name,
+            LEAD(screen_view_event) OVER (PARTITION BY session_id, user_id ORDER BY event_timestamp ASC) AS next_screen_view_event,
             (CASE WHEN double_offer_id IS NULL THEN string_offer_id ELSE double_offer_id END) AS offer_id 
             FROM booking_events 
             WHERE event_name IN ("screen_view_bookingconfirmation", "ConsultOffer") or screen_view_event = "BookingConfirmation"

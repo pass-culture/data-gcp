@@ -9,32 +9,28 @@ from authlib.jose import jwt
 
 class AppleClient:
     def __init__(self, key_id, issuer_id, private_key):
-        self.key_id = key_id
-        self.issuer_id = issuer_id
-        self.private_key = private_key
-
-    def get_downloads(self, frequency="MONTHLY", report_date="2021-05"):
         expiration_time = int(
             round(time.time() + (20.0 * 60.0))
         )  # 20 minutes timestamp
-        header = {"alg": "ES256", "kid": self.key_id, "typ": "JWT"}
+        header = {"alg": "ES256", "kid": key_id, "typ": "JWT"}
 
         payload = {
-            "iss": self.issuer_id,
+            "iss": issuer_id,
             "exp": expiration_time,
             "aud": "appstoreconnect-v1",
         }
 
         # Create the JWT
-        token = jwt.encode(header, payload, self.private_key)
+        token = jwt.encode(header, payload, private_key)
 
-        # API Request
         jwt_bearer = "Bearer " + token.decode()
-        url = "https://api.appstoreconnect.apple.com/v1/salesReports"
-        head = {"Authorization": jwt_bearer}
+        self.url = "https://api.appstoreconnect.apple.com/v1/salesReports"
+        self.head = {"Authorization": jwt_bearer}
+
+    def get_downloads(self, frequency="MONTHLY", report_date="2021-05"):
 
         r = requests.get(
-            url,
+            self.url,
             params={
                 "filter[frequency]": frequency,
                 "filter[reportDate]": report_date,
@@ -42,7 +38,7 @@ class AppleClient:
                 "filter[reportType]": "SALES",
                 "filter[vendorNumber]": "89881612",
             },
-            headers=head,
+            headers=self.head,
         )
         print(r.status_code)
         if r.status_code == 404:

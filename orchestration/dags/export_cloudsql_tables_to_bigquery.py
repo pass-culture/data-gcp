@@ -84,7 +84,7 @@ delete_rows_task = drop_table_task = CloudSqlQueryOperator(
 )
 
 copy_to_analytics_past_recommended_offers = BigQueryOperator(
-    task_id=f"copy_to_analytics_copy_to_analytics_past_recommended_offers",
+    task_id=f"copy_to_analytics_past_recommended_offers",
     sql=f"SELECT * FROM {BIGQUERY_RAW_DATASET}.past_recommended_offers",
     write_disposition="WRITE_TRUNCATE",
     use_legacy_sql=False,

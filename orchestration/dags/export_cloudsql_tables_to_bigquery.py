@@ -8,6 +8,8 @@ from airflow.operators.dummy_operator import DummyOperator
 
 from dependencies.access_gcp_secrets import access_secret_data
 from dependencies.slack_alert import task_fail_slack_alert
+from dependencies.config import BIGQUERY_ANALYTICS_DATASET
+
 
 yesterday = (datetime.datetime.now() + datetime.timedelta(days=-1)).strftime(
     "%Y-%m-%d"
@@ -81,7 +83,22 @@ delete_rows_task = drop_table_task = CloudSqlQueryOperator(
     dag=dag,
 )
 
+copy_to_analytics_past_recommended_offers = BigQueryOperator(
+    task_id=f"copy_to_analytics_iris_venues",
+    sql=f"SELECT * FROM {BIGQUERY_RAW_DATASET}.past_recommended_offers",
+    write_disposition="WRITE_TRUNCATE",
+    use_legacy_sql=False,
+    destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.past_recommended_offers",
+    dag=dag,
+)
+
 
 end = DummyOperator(task_id="end", dag=dag)
 
-start >> export_table_tasks >> delete_rows_task >> end
+(
+    start
+    >> export_table_tasks
+    >> delete_rows_task
+    >> copy_to_analytics_past_recommended_offers
+    >> end
+)

@@ -92,6 +92,14 @@ copy_to_analytics_past_recommended_offers = BigQueryOperator(
     dag=dag,
 )
 
+copy_to_analytics_ab_testing_202104_v0_v0bis = BigQueryOperator(
+    task_id=f"copy_to_analytics_ab_testing",
+    sql=f"SELECT * FROM {BIGQUERY_RAW_DATASET}.ab_testing_202104_v0_v0bis",
+    write_disposition="WRITE_TRUNCATE",
+    use_legacy_sql=False,
+    destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.ab_testing_202104_v0_v0bis",
+    dag=dag,
+)
 
 end = DummyOperator(task_id="end", dag=dag)
 
@@ -100,5 +108,6 @@ end = DummyOperator(task_id="end", dag=dag)
     >> export_table_tasks
     >> delete_rows_task
     >> copy_to_analytics_past_recommended_offers
+    >> copy_to_analytics_ab_testing_202104_v0_v0bis
     >> end
 )

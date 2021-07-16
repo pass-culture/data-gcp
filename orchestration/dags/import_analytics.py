@@ -286,6 +286,15 @@ import_downloads_data_to_bigquery = SimpleHttpOperator(
     dag=dag,
 )
 
+create_enriched_app_downloads_stats = BigQueryOperator(
+    task_id="create_enriched_app_downloads_stats",
+    sql=f"SELECT * FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.app_downloads_stats`",
+    destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.app_downloads_stats",
+    write_disposition="WRITE_TRUNCATE",
+    use_legacy_sql=False,
+    dag=dag,
+)
+
 getting_contentful_service_account_token = PythonOperator(
     task_id="getting_contentful_service_account_token",
     python_callable=getting_service_account_token,
@@ -308,14 +317,27 @@ import_contentful_data_to_bigquery = SimpleHttpOperator(
     dag=dag,
 )
 
-create_enriched_app_downloads_stats = BigQueryOperator(
-    task_id="create_enriched_app_downloads_stats",
-    sql=f"SELECT * FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.app_downloads_stats`",
-    destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.app_downloads_stats",
+copy_playlists_to_analytics = BigQueryOperator(
+    task_id="copy_playlists_to_analytics",
+    sql=f"""
+    SELECT * except(row_number)
+    FROM (
+        SELECT 
+        *,
+        ROW_NUMBER() OVER (PARTITION BY tag
+                                        ORDER BY date_updated DESC
+                                    ) as row_number
+        FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_criterion` c
+        LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.contentful_data` d ON c.name = d.tag
+        )
+    WHERE row_number=1
+    """,
+    destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.applicative_database_criterion",
     write_disposition="WRITE_TRUNCATE",
     use_legacy_sql=False,
     dag=dag,
 )
+
 
 create_offer_extracted_data = BigQueryOperator(
     task_id="create_offer_extracted_data",
@@ -381,5 +403,6 @@ end = DummyOperator(task_id="end", dag=dag)
     extract_tags
     >> getting_contentful_service_account_token
     >> import_contentful_data_to_bigquery
+    >> copy_playlists_to_analytics
     >> end
 )

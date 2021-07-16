@@ -94,10 +94,10 @@ copy_to_analytics_past_recommended_offers = BigQueryOperator(
 
 copy_to_analytics_ab_testing = BigQueryOperator(
     task_id=f"copy_to_analytics_ab_testing",
-    sql=f"SELECT * FROM {BIGQUERY_RAW_DATASET}.AB_TESTING_TABLE",
+    sql=f"SELECT * FROM {BIGQUERY_RAW_DATASET}.{AB_TESTING_TABLE}",
     write_disposition="WRITE_TRUNCATE",
     use_legacy_sql=False,
-    destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.AB_TESTING_TABLE",
+    destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.{AB_TESTING_TABLE}",
     dag=dag,
 )
 

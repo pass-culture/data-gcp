@@ -1,0 +1,5 @@
+authlib==0.15.4
+contentful==1.13.1
+google-cloud-bigquery==2.2.0
+google-cloud-secret-manager==2.2.0
+requests==2.20.1

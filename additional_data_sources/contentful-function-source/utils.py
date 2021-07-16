@@ -2,7 +2,7 @@ import os
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import secretmanager
 
-BIGQUERY_CLEAN_DATASET = os.environ.get("BIGQUERY_CLEAN_DATASET")
+BIGQUERY_RAW_DATASET = os.environ.get("BIGQUERY_RAW_DATASET")
 ENV_SHORT_NAME = os.environ.get("ENVIRONMENT_SHORT_NAME")
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
 

@@ -8,7 +8,10 @@ from airflow.operators.dummy_operator import DummyOperator
 
 from dependencies.access_gcp_secrets import access_secret_data
 from dependencies.slack_alert import task_fail_slack_alert
-from dependencies.config import BIGQUERY_ANALYTICS_DATASET
+from dependencies.config import (
+    BIGQUERY_ANALYTICS_DATASET,
+    BIGQUERY_CLEAN_DATASET,
+)
 
 AB_TESTING_TABLE = "ab_testing_202104_v0_v0bis"
 yesterday = (datetime.datetime.now() + datetime.timedelta(days=-1)).strftime(
@@ -92,6 +95,15 @@ copy_to_analytics_past_recommended_offers = BigQueryOperator(
     dag=dag,
 )
 
+copy_to_clean_past_recommended_offers = BigQueryOperator(
+    task_id=f"copy_to_clean_past_recommended_offers",
+    sql=f"SELECT * FROM {BIGQUERY_RAW_DATASET}.past_recommended_offers",
+    write_disposition="WRITE_TRUNCATE",
+    use_legacy_sql=False,
+    destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.past_recommended_offers",
+    dag=dag,
+)
+
 copy_to_analytics_ab_testing = BigQueryOperator(
     task_id=f"copy_to_analytics_ab_testing",
     sql=f"SELECT * FROM {BIGQUERY_RAW_DATASET}.{AB_TESTING_TABLE}",
@@ -101,6 +113,14 @@ copy_to_analytics_ab_testing = BigQueryOperator(
     dag=dag,
 )
 
+copy_to_clean_ab_testing = BigQueryOperator(
+    task_id=f"copy_to_clean_ab_testing",
+    sql=f"SELECT * FROM {BIGQUERY_RAW_DATASET}.{AB_TESTING_TABLE}",
+    write_disposition="WRITE_TRUNCATE",
+    use_legacy_sql=False,
+    destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.{AB_TESTING_TABLE}",
+    dag=dag,
+)
 end = DummyOperator(task_id="end", dag=dag)
 
 (
@@ -108,6 +128,8 @@ end = DummyOperator(task_id="end", dag=dag)
     >> export_table_tasks
     >> delete_rows_task
     >> copy_to_analytics_past_recommended_offers
+    >> copy_to_clean_past_recommended_offers
     >> copy_to_analytics_ab_testing
+    >> copy_to_clean_ab_testing
     >> end
 )

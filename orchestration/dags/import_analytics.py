@@ -290,16 +290,16 @@ create_enriched_app_downloads_stats = BigQueryOperator(
 
 create_offer_extracted_data = BigQueryOperator(
     task_id="create_offer_extracted_data",
-    sql=f"""SELECT offer_id, offer_type, JSON_EXTRACT_SCALAR(offer_extra_data, "$.author") AS author, 
-             JSON_EXTRACT_SCALAR(offer_extra_data, "$.performer") AS performer, 
-             JSON_EXTRACT_SCALAR(offer_extra_data, "$.musicType") AS musicType, 
-             JSON_EXTRACT_SCALAR(offer_extra_data, "$.musicSubtype") AS musicSubtype,
-             JSON_EXTRACT_SCALAR(offer_extra_data, "$.stageDirector") AS stageDirector, 
-             JSON_EXTRACT_SCALAR(offer_extra_data, "$.theater") AS theater,
-             JSON_EXTRACT_SCALAR(offer_extra_data, "$.showType") AS showType,
-             JSON_EXTRACT_SCALAR(offer_extra_data, "$.showSubType") AS showSubType,
-             JSON_EXTRACT_SCALAR(offer_extra_data, "$.speaker") AS speaker,
-             JSON_EXTRACT_SCALAR(offer_extra_data, "$.rayon") AS rayon
+    sql=f"""SELECT offer_id, offer_type, LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.author"), " ")) AS author, 
+             LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.performer")," ")) AS performer, 
+             LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.musicType"), " ")) AS musicType, 
+             LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.musicSubtype"), " ")) AS musicSubtype,
+             LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.stageDirector"), " ")) AS stageDirector, 
+             LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.theater"), " ")) AS theater,
+             LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.showType"), " ") AS showType,
+             LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.showSubType"), " ") AS showSubType,
+             LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.speaker"), " ")) AS speaker,
+             LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.rayon"), " ")) AS rayon
           FROM `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.applicative_database_offer`""",
     destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.offer_extracted_data",
     write_disposition="WRITE_TRUNCATE",

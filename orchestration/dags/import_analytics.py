@@ -296,8 +296,8 @@ create_offer_extracted_data = BigQueryOperator(
              LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.musicSubtype"), " ")) AS musicSubtype,
              LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.stageDirector"), " ")) AS stageDirector, 
              LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.theater"), " ")) AS theater,
-             LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.showType"), " ") AS showType,
-             LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.showSubType"), " ") AS showSubType,
+             LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.showType"), " ")) AS showType,
+             LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.showSubType"), " ")) AS showSubType,
              LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.speaker"), " ")) AS speaker,
              LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.rayon"), " ")) AS rayon
           FROM `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.applicative_database_offer`""",

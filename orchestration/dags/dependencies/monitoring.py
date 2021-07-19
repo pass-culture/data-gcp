@@ -9,7 +9,7 @@ from dependencies.config import (
 )
 
 FIREBASE_EVENTS_TABLE = "firebase_events"
-RECOMMENDATION_MODULE_TITLE = "Fais le plein de découvertes"
+RECOMMENDATION_MODULE_TITLES = '("Fais le plein de découvertes", "Nos recommandations pour toi")'  # Ce n'est pas une liste mais une string utilisée directement dans des requêtes
 
 
 def get_last_event_time_request():
@@ -35,8 +35,8 @@ def _define_recommendation_booking_funnel(start_date, end_date):
         ),
         booking_funnel AS (
             SELECT *, 
-            LEAD(event_name) OVER (PARTITION BY session_id ORDER BY event_timestamp ASC) AS next_event_name,
-            LEAD(screen_view_event) OVER (PARTITION BY session_id ORDER BY event_timestamp ASC) AS next_screen_view_event,
+            LEAD(event_name) OVER (PARTITION BY session_id, user_id ORDER BY event_timestamp ASC) AS next_event_name,
+            LEAD(screen_view_event) OVER (PARTITION BY session_id, user_id ORDER BY event_timestamp ASC) AS next_screen_view_event,
             (CASE WHEN double_offer_id IS NULL THEN string_offer_id ELSE double_offer_id END) AS offer_id 
             FROM booking_events 
             WHERE event_name IN ("screen_view_bookingconfirmation", "ConsultOffer") or screen_view_event = "BookingConfirmation"
@@ -95,14 +95,15 @@ def _define_favorites(start_date, end_date):
 
 def get_favorite_request(start_date, end_date, group_id_list):
     group_id_list = sorted(group_id_list)
+
     return f"""
         {_define_favorites(start_date, end_date)}
 
         SELECT
         COUNT(*) AS favorites,
         SUM(CAST(origin = "home" AS INT64)) as home_favorites,
-        SUM(CAST(module = "{RECOMMENDATION_MODULE_TITLE}" AS INT64)) AS total_recommendation_favorites, 
-        {", ".join([f"SUM(CAST((module = '{RECOMMENDATION_MODULE_TITLE}' AND group_id = '{group_id}') AS INT64)) AS recommendation_favorites_{group_id}" for group_id in group_id_list])}
+        SUM(CAST(module IN {RECOMMENDATION_MODULE_TITLES} AS INT64)) AS total_recommendation_favorites,
+        {", ".join([f'SUM(CAST((module IN {RECOMMENDATION_MODULE_TITLES} AND group_id = "{group_id}") AS INT64)) AS recommendation_favorites_{group_id}' for group_id in group_id_list])}
         FROM favorite_events
     """
 
@@ -115,8 +116,8 @@ def get_pertinence_bookings_request(start_date, end_date, group_id_list):
         SELECT
         COUNT(*) AS bookings,
         SUM(CAST(firebase_screen = "Home" AS INT64)) as home_bookings,
-        SUM(CAST(module = "{RECOMMENDATION_MODULE_TITLE}" AS INT64)) AS total_recommendation_bookings, 
-        {", ".join([f"SUM(CAST((module = '{RECOMMENDATION_MODULE_TITLE}' AND group_id = '{group_id}') AS INT64)) AS recommendation_bookings_{group_id}" for group_id in group_id_list])}
+        SUM(CAST(module IN {RECOMMENDATION_MODULE_TITLES} AS INT64)) AS total_recommendation_bookings,
+        {", ".join([f"SUM(CAST((module IN {RECOMMENDATION_MODULE_TITLES} AND group_id = '{group_id}') AS INT64)) AS recommendation_bookings_{group_id}" for group_id in group_id_list])}
         FROM recommendation_booking_funnel
     """
 
@@ -129,8 +130,8 @@ def get_pertinence_clicks_request(start_date, end_date, group_id_list):
         SELECT
         COUNT(*) AS clicks,
         SUM(CAST(firebase_screen = "Home" AS INT64)) as home_clicks,
-        SUM(CAST(module = "{RECOMMENDATION_MODULE_TITLE}" AS INT64)) AS total_recommendation_clicks, 
-        {", ".join([f"SUM(CAST((module = '{RECOMMENDATION_MODULE_TITLE}' AND group_id = '{group_id}') AS INT64)) AS recommendation_clicks_{group_id}" for group_id in group_id_list])}
+        SUM(CAST(module IN {RECOMMENDATION_MODULE_TITLES} AS INT64)) AS total_recommendation_clicks,
+        {", ".join([f"SUM(CAST((module IN {RECOMMENDATION_MODULE_TITLES} AND group_id = '{group_id}') AS INT64)) AS recommendation_clicks_{group_id}" for group_id in group_id_list])}
         FROM clicks
     """
 
@@ -142,7 +143,7 @@ def get_diversification_bookings_request(start_date, end_date):
         diversification AS (
             SELECT COUNT(DISTINCT offer_type) AS distinct_booking_offer_type_count, COUNT(*) AS booking_offer_count, group_id 
             FROM recommendation_booking_funnel
-            WHERE module = "{RECOMMENDATION_MODULE_TITLE}" 
+            WHERE module IN {RECOMMENDATION_MODULE_TITLES}
             GROUP BY user_id, group_id
         )
         

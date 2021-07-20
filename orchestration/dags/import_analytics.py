@@ -292,12 +292,11 @@ create_enriched_app_downloads_stats = BigQueryOperator(
 
 create_offer_extracted_data = BigQueryOperator(
     task_id="create_offer_extracted_data",
-
-    sql=f"""SELECT offer_id, offer_type,[""] as offer_tags, LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.author"), " ")) AS author, 
-             LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.performer")," ")) AS performer, 
-             LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.musicType"), " ")) AS musicType, 
+    sql=f"""SELECT offer_id, offer_type,[None] as offer_tags, LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.author"), " ")) AS author,
+             LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.performer")," ")) AS performer,
+             LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.musicType"), " ")) AS musicType,
              LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.musicSubtype"), " ")) AS musicSubtype,
-             LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.stageDirector"), " ")) AS stageDirector, 
+             LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.stageDirector"), " ")) AS stageDirector,
              LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.theater"), " ")) AS theater,
              LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.showType"), " ")) AS showType,
              LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.showSubType"), " ")) AS showSubType,

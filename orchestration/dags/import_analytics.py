@@ -314,6 +314,8 @@ extract_tags = PythonOperator(
     python_callable=extract_tags,
     dag=dag,
 )
+end_enriched_data = DummyOperator(task_id="end_enriched_data", dag=dag)
+
 
 create_enriched_data_tasks = [
     create_enriched_offer_data_task,
@@ -324,7 +326,6 @@ create_enriched_data_tasks = [
     create_enriched_booked_categories_data_v1_task,
     create_enriched_booked_categories_data_v2_task,
     create_enriched_offerer_data_task,
-    create_offer_extracted_data,
 ]
 
 end = DummyOperator(task_id="end", dag=dag)
@@ -341,12 +342,18 @@ end = DummyOperator(task_id="end", dag=dag)
     >> link_iris_venues_task
     >> copy_to_analytics_iris_venues
     >> create_enriched_data_tasks
-    >> extract_tags
+    >> end_enriched_data
 )
 (
-    extract_tags
+    end_enriched_data
     >> getting_service_account_token
     >> import_downloads_data_to_bigquery
     >> create_enriched_app_downloads_stats
     >> end
+)
+(
+    copy_to_analytics_iris_venues
+    >> create_offer_extracted_data
+    >> extract_tags
+    >> end_enriched_data
 )

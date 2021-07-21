@@ -44,6 +44,8 @@ from dependencies.data_analytics.import_tables import (
 )
 from dependencies.slack_alert import task_fail_slack_alert
 
+from dependencies.tag_offers import extract_tags
+
 
 def getting_service_account_token():
     function_url = f"https://europe-west1-{GCP_PROJECT}.cloudfunctions.net/downloads_{ENV_SHORT_NAME}"
@@ -290,11 +292,11 @@ create_enriched_app_downloads_stats = BigQueryOperator(
 
 create_offer_extracted_data = BigQueryOperator(
     task_id="create_offer_extracted_data",
-    sql=f"""SELECT offer_id, offer_type, LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.author"), " ")) AS author, 
-             LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.performer")," ")) AS performer, 
-             LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.musicType"), " ")) AS musicType, 
+    sql=f"""SELECT offer_id, offer_type,[""] as offer_tags, LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.author"), " ")) AS author,
+             LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.performer")," ")) AS performer,
+             LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.musicType"), " ")) AS musicType,
              LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.musicSubtype"), " ")) AS musicSubtype,
-             LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.stageDirector"), " ")) AS stageDirector, 
+             LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.stageDirector"), " ")) AS stageDirector,
              LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.theater"), " ")) AS theater,
              LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.showType"), " ")) AS showType,
              LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.showSubType"), " ")) AS showSubType,
@@ -307,6 +309,11 @@ create_offer_extracted_data = BigQueryOperator(
     dag=dag,
 )
 
+extract_tags = PythonOperator(
+    task_id=f"extract_tags",
+    python_callable=extract_tags,
+    dag=dag,
+)
 
 create_enriched_data_tasks = [
     create_enriched_offer_data_task,
@@ -334,9 +341,10 @@ end = DummyOperator(task_id="end", dag=dag)
     >> link_iris_venues_task
     >> copy_to_analytics_iris_venues
     >> create_enriched_data_tasks
+    >> extract_tags
 )
 (
-    create_enriched_data_tasks
+    extract_tags
     >> getting_service_account_token
     >> import_downloads_data_to_bigquery
     >> create_enriched_app_downloads_stats

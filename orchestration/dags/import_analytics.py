@@ -292,7 +292,7 @@ create_enriched_app_downloads_stats = BigQueryOperator(
 
 create_offer_extracted_data = BigQueryOperator(
     task_id="create_offer_extracted_data",
-    sql=f"""SELECT offer_id, offer_type,[None] as offer_tags, LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.author"), " ")) AS author,
+    sql=f"""SELECT offer_id, offer_type,[""] as offer_tags, LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.author"), " ")) AS author,
              LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.performer")," ")) AS performer,
              LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.musicType"), " ")) AS musicType,
              LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.musicSubtype"), " ")) AS musicSubtype,

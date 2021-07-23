@@ -110,6 +110,7 @@ TagDict = {
 }
 
 TAG_OFFERS_CATEGORIES = [categories for categories in TagDict.keys()]
+OFFERS_TO_TAG_MAX_LENGTH = 1000
 
 
 def get_offers_to_tag_request(category):
@@ -130,19 +131,38 @@ def get_update_tags_request(offers_tagged):
 
     bigquery_query = ""
     for index, row in offers_tagged.iterrows():
-
-        query = "".join(
-            f"""UPDATE `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.offer_extracted_data` SET offer_tags={row['tag']} WHERE offer_id="{row['offer_id']}"; """
-        )
+        query = ""
+        for tag in row["tag"]:
+            query += "".join(
+                f"""INSERT INTO {GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.offer_tags (offer_id,tag) VALUES ({row['offer_id']},"{tag}"); """
+            )
         bigquery_query += query
 
     return bigquery_query
 
 
 def update_table(offers_tagged):
-    bigquery_client = BigQueryClient()
-    bigquery_query = get_update_tags_request(offers_tagged)
-    bigquery_client.query(bigquery_query)
+    # bigquery_client = BigQueryClient()
+    if offers_tagged.shape[0] > OFFERS_TO_TAG_MAX_LENGTH:
+        nb_df_sub_divisions = offers_tagged.shape[0] // OFFERS_TO_TAG_MAX_LENGTH
+        for k in range(nb_df_sub_divisions):
+            bigquery_client = BigQueryClient()
+            bigquery_query = get_update_tags_request(
+                offers_tagged[
+                    k * OFFERS_TO_TAG_MAX_LENGTH : (k + 1) * OFFERS_TO_TAG_MAX_LENGTH
+                ]
+            )
+            bigquery_client.query(bigquery_query)
+
+        bigquery_client = BigQueryClient()
+        bigquery_query = get_update_tags_request(
+            offers_tagged[(nb_df_sub_divisions) * OFFERS_TO_TAG_MAX_LENGTH :]
+        )
+        bigquery_client.query(bigquery_query)
+    else:
+        bigquery_client = BigQueryClient()
+        bigquery_query = get_update_tags_request(offers_tagged)
+        bigquery_client.query(bigquery_query)
 
 
 def TagDescriptions(offers_to_tag, TopicList):
@@ -160,15 +180,16 @@ def TagDescriptions(offers_to_tag, TopicList):
     return pd.DataFrame(offer_tagged)
 
 
-def tag_offers(category):
+def extract_tags(category):
     return TagDescriptions(
         pd.read_gbq(get_offers_to_tag_request(category)), TagDict[f"{category}"]
     )
 
 
-def extract_tags():
+def tag_offers():
     for category in TAG_OFFERS_CATEGORIES:
-        offer_tagged = tag_offers(category)
+        offer_tagged = extract_tags(category)
         if offer_tagged.shape[0] > 0:
             update_table(offer_tagged)
+
     return

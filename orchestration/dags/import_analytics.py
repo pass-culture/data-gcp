@@ -292,7 +292,7 @@ create_enriched_app_downloads_stats = BigQueryOperator(
 
 create_offer_extracted_data = BigQueryOperator(
     task_id="create_offer_extracted_data",
-    sql=f"""SELECT offer_id, offer_type,[""] as offer_tags, LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.author"), " ")) AS author,
+    sql=f"""SELECT offer_id, offer_type, LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.author"), " ")) AS author,
              LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.performer")," ")) AS performer,
              LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.musicType"), " ")) AS musicType,
              LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.musicSubtype"), " ")) AS musicSubtype,
@@ -309,11 +309,6 @@ create_offer_extracted_data = BigQueryOperator(
     dag=dag,
 )
 
-extract_tags = PythonOperator(
-    task_id=f"extract_tags",
-    python_callable=extract_tags,
-    dag=dag,
-)
 end_enriched_data = DummyOperator(task_id="end_enriched_data", dag=dag)
 
 
@@ -350,10 +345,4 @@ end = DummyOperator(task_id="end", dag=dag)
     >> import_downloads_data_to_bigquery
     >> create_enriched_app_downloads_stats
     >> end
-)
-(
-    copy_to_analytics_iris_venues
-    >> create_offer_extracted_data
-    >> extract_tags
-    >> end_enriched_data
 )

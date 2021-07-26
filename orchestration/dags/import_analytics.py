@@ -358,11 +358,11 @@ create_offer_extracted_data = BigQueryOperator(
     dag=dag,
 )
 
-extract_tags = PythonOperator(
-    task_id=f"extract_tags",
-    python_callable=extract_tags,
-    dag=dag,
-)
+# extract_tags = PythonOperator(
+#     task_id=f"extract_tags",
+#     python_callable=extract_tags,
+#     dag=dag,
+# )
 
 create_enriched_data_tasks = [
     create_enriched_offer_data_task,
@@ -390,17 +390,16 @@ end = DummyOperator(task_id="end", dag=dag)
     >> link_iris_venues_task
     >> copy_to_analytics_iris_venues
     >> create_enriched_data_tasks
-    >> extract_tags
 )
 (
-    extract_tags
+    create_enriched_data_tasks
     >> getting_downloads_service_account_token
     >> import_downloads_data_to_bigquery
     >> create_enriched_app_downloads_stats
     >> end
 )
 (
-    extract_tags
+    create_enriched_data_tasks
     >> getting_contentful_service_account_token
     >> import_contentful_data_to_bigquery
     >> copy_playlists_to_analytics

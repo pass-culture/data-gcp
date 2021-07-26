@@ -4,10 +4,14 @@ import re
 from nltk.corpus import stopwords as StopWords
 import collections
 from dependencies.bigquery_client import BigQueryClient
-from dependencies.config import GCP_PROJECT, BIGQUERY_CLEAN_DATASET, BIGQUERY_ANALYTICS_DATASET
+from dependencies.config import (
+    GCP_PROJECT,
+    BIGQUERY_CLEAN_DATASET,
+    BIGQUERY_ANALYTICS_DATASET,
+)
 
-nltk.download('stopwords')
-stopwords = StopWords.words('french')
+nltk.download("stopwords")
+stopwords = StopWords.words("french")
 
 
 def get_offers_name_to_tags():
@@ -18,15 +22,15 @@ def get_offers_name_to_tags():
 
 
 def clean(name):
-    name = re.sub(r'[^\w\s]', '', name.lower())
-    return ' '.join([w for w in name.split() if w not in stopwords])
+    name = re.sub(r"[^\w\s]", "", name.lower())
+    return " ".join([w for w in name.split() if w not in stopwords])
 
 
 def tokenize(string):
     """Convert string to lowercase and split into words (ignoring
     punctuation), returning list of words.
     """
-    return re.findall(r'\w+', string.lower())
+    return re.findall(r"\w+", string.lower())
 
 
 def meaning_score(ngram):
@@ -75,10 +79,10 @@ def count_ngrams(lines, min_length=2, max_length=4):
 def print_most_frequent(ngrams, num=10):
     """Print num most common n-grams of each length in n-grams dict."""
     for n in sorted(ngrams):
-        print('----- {} most common {}-grams -----'.format(num, n))
+        print("----- {} most common {}-grams -----".format(num, n))
         for gram, count in ngrams[n].most_common(num):
-            print('{0}: {1}'.format(' '.join(gram), count))
-        print('')
+            print("{0}: {1}".format(" ".join(gram), count))
+        print("")
 
 
 def get_most_frequent(ngrams, num=10):
@@ -110,22 +114,35 @@ def map_common_ngrams(df, most_common, min_length=2, max_length=4):
                 if meaning_score(current[:length]) < 0.7:
                     # If the n-gram is contained in the list of common n-grams
                     if current[:length] in most_common[len(current[:length]) - 2]:
-                        col_name = 'offer_tag'
+                        col_name = "offer_tag"
                         try:
                             # If the selected cell is empty (if there is not a more common n-gram already)
-                            if (df.loc[df.offer_name_clean_stop == line, col_name].isnull().values[0]):
+                            if (
+                                df.loc[df.offer_name_clean_stop == line, col_name]
+                                .isnull()
+                                .values[0]
+                            ):
                                 # The n-gram is added is the corresponding row
-                                df.loc[df.offer_name_clean_stop == line, col_name] = '{0}'.format(
-                                    ' '.join(current[:length]))
+                                df.loc[
+                                    df.offer_name_clean_stop == line, col_name
+                                ] = "{0}".format(" ".join(current[:length]))
                             # If the cell is not empty there is a longer n-gram we can add
-                            elif (len(
-                                    df.loc[df.offer_name_clean_stop == line, col_name].values[0].split(" ")) < length):
+                            elif (
+                                len(
+                                    df.loc[df.offer_name_clean_stop == line, col_name]
+                                    .values[0]
+                                    .split(" ")
+                                )
+                                < length
+                            ):
                                 # The n-gram is added is the corresponding row
-                                df.loc[df.offer_name_clean_stop == line, col_name] = '{0}'.format(
-                                    ' '.join(current[:length]))
+                                df.loc[
+                                    df.offer_name_clean_stop == line, col_name
+                                ] = "{0}".format(" ".join(current[:length]))
                         except:
-                            df.loc[df.offer_name_clean_stop == line, col_name] = '{0}'.format(
-                                ' '.join(current[:length]))
+                            df.loc[
+                                df.offer_name_clean_stop == line, col_name
+                            ] = "{0}".format(" ".join(current[:length]))
 
     # Loop through all lines and words and add n-grams to dict
     for line in lines:

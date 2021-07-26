@@ -14,6 +14,7 @@ from dependencies.config import (
 )
 
 AB_TESTING_TABLE = "ab_testing_202104_v0_v0bis"
+
 yesterday = (datetime.datetime.now() + datetime.timedelta(days=-1)).strftime(
     "%Y-%m-%d"
 ) + " 00:00:00"

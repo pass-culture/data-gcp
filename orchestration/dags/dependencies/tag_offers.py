@@ -127,6 +127,7 @@ def get_offers_to_tag_request(category):
             AND   offer_ID NOT In (SELECT CAST(offer_id AS STRING ) FROM {GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.offer_tags)
             """
 
+
 def get_update_tags_request(offers_tagged):
 
     bigquery_query = ""

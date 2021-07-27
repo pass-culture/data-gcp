@@ -9,7 +9,7 @@ from dependencies.tag_offers import tag_offers
 from dependencies.config import GCP_PROJECT
 
 default_dag_args = {
-    "start_date": airflow.utils.dates.days_ago(0),
+    "start_date": datetime.datetime(2020, 12, 21),
     "retries": 1,
     "project_id": GCP_PROJECT,
 }
@@ -19,7 +19,7 @@ dag = DAG(
     default_args=default_dag_args,
     description="Tag offer based on description topic",
     on_failure_callback=None,
-    schedule_interval=None,
+    schedule_interval="0 23 * * *",
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
 )

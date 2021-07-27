@@ -12,7 +12,7 @@ default_dag_args = {
     "start_date": datetime.datetime(2021, 7, 27),
     "retries": 1,
     "project_id": GCP_PROJECT,
-    }
+}
 
 dag = DAG(
     "extract_offer_tags",

@@ -352,7 +352,6 @@ create_offer_extracted_data = BigQueryOperator(
              LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.speaker"), " ")) AS speaker,
              LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.rayon"), " ")) AS rayon
           FROM `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.applicative_database_offer`""",
-
     destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.offer_extracted_data",
     write_disposition="WRITE_TRUNCATE",
     use_legacy_sql=False,
@@ -360,7 +359,6 @@ create_offer_extracted_data = BigQueryOperator(
 )
 
 end_enriched_data = DummyOperator(task_id="end_enriched_data", dag=dag)
-
 
 
 create_enriched_data_tasks = [
@@ -393,7 +391,6 @@ end = DummyOperator(task_id="end", dag=dag)
 (
     end_enriched_data
     >> getting_service_account_token
-
     >> import_downloads_data_to_bigquery
     >> create_enriched_app_downloads_stats
     >> end

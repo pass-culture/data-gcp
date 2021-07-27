@@ -320,11 +320,11 @@ import_contentful_data_to_bigquery = SimpleHttpOperator(
 copy_playlists_to_analytics = BigQueryOperator(
     task_id="copy_playlists_to_analytics",
     sql=f"""
-    SELECT * except(row_number)
+    SELECT * except(row_number, tag)
     FROM (
         SELECT 
         *,
-        ROW_NUMBER() OVER (PARTITION BY tag
+        ROW_NUMBER() OVER (PARTITION BY name
                                         ORDER BY date_updated DESC
                                     ) as row_number
         FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_criterion` c

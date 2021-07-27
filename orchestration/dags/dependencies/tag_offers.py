@@ -142,11 +142,10 @@ def get_insert_tags_request(offers_tagged):
 
 
 def update_table(offers_tagged):
-    # bigquery_client = BigQueryClient()
+    bigquery_client = BigQueryClient()
     if offers_tagged.shape[0] > OFFERS_TO_TAG_MAX_LENGTH:
         nb_df_sub_divisions = offers_tagged.shape[0] // OFFERS_TO_TAG_MAX_LENGTH
         for k in range(nb_df_sub_divisions):
-            bigquery_client = BigQueryClient()
             bigquery_query = get_insert_tags_request(
                 offers_tagged[
                     k * OFFERS_TO_TAG_MAX_LENGTH : (k + 1) * OFFERS_TO_TAG_MAX_LENGTH
@@ -154,13 +153,11 @@ def update_table(offers_tagged):
             )
             bigquery_client.query(bigquery_query)
 
-        bigquery_client = BigQueryClient()
         bigquery_query = get_insert_tags_request(
             offers_tagged[(nb_df_sub_divisions) * OFFERS_TO_TAG_MAX_LENGTH :]
         )
         bigquery_client.query(bigquery_query)
     else:
-        bigquery_client = BigQueryClient()
         bigquery_query = get_insert_tags_request(offers_tagged)
         bigquery_client.query(bigquery_query)
 

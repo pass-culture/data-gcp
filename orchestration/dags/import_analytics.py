@@ -390,13 +390,13 @@ end = DummyOperator(task_id="end", dag=dag)
 )
 (
     end_enriched_data
-    >> getting_service_account_token
+    >> getting_downloads_service_account_token
     >> import_downloads_data_to_bigquery
     >> create_enriched_app_downloads_stats
     >> end
 )
 (
-    create_enriched_data_tasks
+    end_enriched_data
     >> getting_contentful_service_account_token
     >> import_contentful_data_to_bigquery
     >> copy_playlists_to_analytics

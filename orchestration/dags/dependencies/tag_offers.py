@@ -114,21 +114,20 @@ OFFERS_TO_TAG_MAX_LENGTH = 1000
 
 
 def get_offers_to_tag_request(category):
-    return f"""WITH extra_data_description AS (
-            SELECT offer_extra_data.offer_id as offer_ID, offer.offer_description as description, offer.offer_type,
+    return f"""WITH offers_CatAgg AS (
+            SELECT offer.offer_id as offer_id, offer.offer_description as description, offer.offer_type,
             {CaseCatAgg}
-            FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.offer_extracted_data` offer_extra_data
-            LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_offer` offer ON offer_extra_data.offer_id = offer.offer_id
+            FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_offer` offer 
             )
-            SELECT offer_ID, description FROM extra_data_description
+            SELECT offer_id, description FROM offers_CatAgg
             WHERE categorie_principale = '{category}'
             AND   description <> 'none'
             AND   description <> ""
-            AND   offer_ID NOT In (SELECT CAST(offer_id AS STRING ) FROM {GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.offer_tags)
+            AND   offer_id NOT In (SELECT CAST(offer_id AS STRING ) FROM {GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.offer_tags)
             """
 
 
-def get_update_tags_request(offers_tagged):
+def get_insert_tags_request(offers_tagged):
 
     bigquery_query = ""
     for index, row in offers_tagged.iterrows():
@@ -148,7 +147,7 @@ def update_table(offers_tagged):
         nb_df_sub_divisions = offers_tagged.shape[0] // OFFERS_TO_TAG_MAX_LENGTH
         for k in range(nb_df_sub_divisions):
             bigquery_client = BigQueryClient()
-            bigquery_query = get_update_tags_request(
+            bigquery_query = get_insert_tags_request(
                 offers_tagged[
                     k * OFFERS_TO_TAG_MAX_LENGTH : (k + 1) * OFFERS_TO_TAG_MAX_LENGTH
                 ]
@@ -156,13 +155,13 @@ def update_table(offers_tagged):
             bigquery_client.query(bigquery_query)
 
         bigquery_client = BigQueryClient()
-        bigquery_query = get_update_tags_request(
+        bigquery_query = get_insert_tags_request(
             offers_tagged[(nb_df_sub_divisions) * OFFERS_TO_TAG_MAX_LENGTH :]
         )
         bigquery_client.query(bigquery_query)
     else:
         bigquery_client = BigQueryClient()
-        bigquery_query = get_update_tags_request(offers_tagged)
+        bigquery_query = get_insert_tags_request(offers_tagged)
         bigquery_client.query(bigquery_query)
 
 

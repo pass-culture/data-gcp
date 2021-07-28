@@ -341,28 +341,25 @@ copy_playlists_to_analytics = BigQueryOperator(
 
 create_offer_extracted_data = BigQueryOperator(
     task_id="create_offer_extracted_data",
-    sql=f"""SELECT offer_id, offer_type,[""] as offer_tags, LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.author"), " ")) AS author,
-            LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.performer")," ")) AS performer,
-            LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.musicType"), " ")) AS musicType,
-            LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.musicSubtype"), " ")) AS musicSubtype,
-            LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.stageDirector"), " ")) AS stageDirector,
-            LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.theater"), " ")) AS theater,
-            LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.showType"), " ")) AS showType,
-            LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.showSubType"), " ")) AS showSubType,
-            LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.speaker"), " ")) AS speaker,
-            LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.rayon"), " ")) AS rayon
-        FROM `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.applicative_database_offer`""",
+    sql=f"""SELECT offer_id, offer_type, LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.author"), " ")) AS author,
+             LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.performer")," ")) AS performer,
+             LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.musicType"), " ")) AS musicType,
+             LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.musicSubtype"), " ")) AS musicSubtype,
+             LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.stageDirector"), " ")) AS stageDirector,
+             LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.theater"), " ")) AS theater,
+             LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.showType"), " ")) AS showType,
+             LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.showSubType"), " ")) AS showSubType,
+             LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.speaker"), " ")) AS speaker,
+             LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.rayon"), " ")) AS rayon
+          FROM `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.applicative_database_offer`""",
     destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.offer_extracted_data",
     write_disposition="WRITE_TRUNCATE",
     use_legacy_sql=False,
     dag=dag,
 )
 
-# extract_tags = PythonOperator(
-#     task_id=f"extract_tags",
-#     python_callable=extract_tags,
-#     dag=dag,
-# )
+end_enriched_data = DummyOperator(task_id="end_enriched_data", dag=dag)
+
 
 create_enriched_data_tasks = [
     create_enriched_offer_data_task,
@@ -373,7 +370,6 @@ create_enriched_data_tasks = [
     create_enriched_booked_categories_data_v1_task,
     create_enriched_booked_categories_data_v2_task,
     create_enriched_offerer_data_task,
-    create_offer_extracted_data,
 ]
 
 end = DummyOperator(task_id="end", dag=dag)
@@ -390,16 +386,17 @@ end = DummyOperator(task_id="end", dag=dag)
     >> link_iris_venues_task
     >> copy_to_analytics_iris_venues
     >> create_enriched_data_tasks
+    >> end_enriched_data
 )
 (
-    create_enriched_data_tasks
+    end_enriched_data
     >> getting_downloads_service_account_token
     >> import_downloads_data_to_bigquery
     >> create_enriched_app_downloads_stats
     >> end
 )
 (
-    create_enriched_data_tasks
+    end_enriched_data
     >> getting_contentful_service_account_token
     >> import_contentful_data_to_bigquery
     >> copy_playlists_to_analytics

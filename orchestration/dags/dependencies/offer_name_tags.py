@@ -33,13 +33,6 @@ def tokenize(string):
     return re.findall(r"\w+", string.lower())
 
 
-def meaning_score(ngram):
-    score = 0
-    for w in ngram:
-        if w in stopwords:
-            score += 1
-    return score / len(ngram)
-
 
 def count_ngrams(lines, min_length=2, max_length=4):
     """Iterate through given lines iterator (file object or list of
@@ -57,7 +50,7 @@ def count_ngrams(lines, min_length=2, max_length=4):
         current = tuple(queue)
         for length in lengths:
             if len(current) >= length:
-                if meaning_score(current[:length]) < 0.7:
+                #if meaning_score(current[:length]) < 0.7:
                     ngrams[length][current[:length]] += 1
 
     # Loop through all lines and words and add n-grams to dict
@@ -76,13 +69,13 @@ def count_ngrams(lines, min_length=2, max_length=4):
     return ngrams
 
 
-def print_most_frequent(ngrams, num=10):
-    """Print num most common n-grams of each length in n-grams dict."""
-    for n in sorted(ngrams):
-        print("----- {} most common {}-grams -----".format(num, n))
-        for gram, count in ngrams[n].most_common(num):
-            print("{0}: {1}".format(" ".join(gram), count))
-        print("")
+#def print_most_frequent(ngrams, num=10):
+#    """Print num most common n-grams of each length in n-grams dict."""
+#   for n in sorted(ngrams):
+ #       print("----- {} most common {}-grams -----".format(num, n))
+  #      for gram, count in ngrams[n].most_common(num):
+   #         print("{0}: {1}".format(" ".join(gram), count))
+    #    print("")
 
 
 def get_most_frequent(ngrams, num=10):
@@ -111,7 +104,7 @@ def map_common_ngrams(df, most_common, min_length=2, max_length=4):
         current = tuple(queue)
         for length in lengths:
             if len(current) >= length:
-                if meaning_score(current[:length]) < 0.7:
+                #if meaning_score(current[:length]) < 0.7:
                     # If the n-gram is contained in the list of common n-grams
                     if current[:length] in most_common[len(current[:length]) - 2]:
                         col_name = "offer_tag"

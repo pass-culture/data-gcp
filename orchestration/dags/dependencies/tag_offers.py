@@ -2,6 +2,9 @@ import pandas as pd
 import pandas_gbq as gbq
 from dependencies.bigquery_client import BigQueryClient
 from dependencies.config import GCP_PROJECT, BIGQUERY_CLEAN_DATASET
+from dependencies.Offer_name_tags import (
+    extract_tags_offer_name,
+)
 
 CaseCatAgg = """CASE
                 when offer.offer_type ='ThingType.AUDIOVISUEL' then 'Audiovisuel'
@@ -188,5 +191,5 @@ def tag_offers():
         offer_tagged = extract_tags(category)
         if offer_tagged.shape[0] > 0:
             update_table(offer_tagged)
-
+    update_table(extract_tags_offer_name())
     return

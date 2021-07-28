@@ -16,7 +16,7 @@ stopwords = StopWords.words("french")
 
 def get_offers_name_to_tags():
     query = f"""SELECT offer_name, offer_id, 
-                FROM {BIGQUERY_ANALYTICS_DATASET}.applicative_database_offer """
+                FROM {GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_offer """
     offer_name_to_tag = pd.read_gbq(query)
     return offer_name_to_tag
 

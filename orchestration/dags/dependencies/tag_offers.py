@@ -188,5 +188,5 @@ def tag_offers():
         offer_tagged = extract_tags(category)
         if offer_tagged.shape[0] > 0:
             update_table(offer_tagged)
-
+    update_table(extract_tags_offer_name())
     return

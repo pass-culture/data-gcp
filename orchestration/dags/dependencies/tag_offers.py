@@ -2,6 +2,7 @@ import pandas as pd
 import pandas_gbq as gbq
 from dependencies.bigquery_client import BigQueryClient
 from dependencies.config import GCP_PROJECT, BIGQUERY_CLEAN_DATASET
+from dependencies.offer_name_tags import extract_tags_offer_name
 
 CaseCatAgg = """CASE
                 when offer.offer_type ='ThingType.AUDIOVISUEL' then 'Audiovisuel'

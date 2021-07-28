@@ -95,7 +95,7 @@ def map_common_ngrams(df, most_common, min_length=2, max_length=4):
             if len(current) >= length:
                 # If the n-gram is contained in the list of common n-grams
                 if current[:length] in most_common[len(current[:length]) - 2]:
-                    col_name = "offer_tag"
+                    col_name = "tag"
                     try:
                         # If the selected cell is empty (if there is not a more common n-gram already)
                         if (

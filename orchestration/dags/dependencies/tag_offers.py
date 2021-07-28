@@ -162,7 +162,7 @@ def update_table(offers_tagged):
         bigquery_client.query(bigquery_query)
 
 
-def Tag_Descriptions(offers_to_tag, TopicList):
+def tag_descriptions(offers_to_tag, TopicList):
     offer_tagged = []
     for index, row in offers_to_tag.iterrows():
         descrip_dict = {"offer_id": row["offer_id"]}
@@ -178,7 +178,7 @@ def Tag_Descriptions(offers_to_tag, TopicList):
 
 
 def extract_tags(category):
-    return Tag_Descriptions(
+    return tag_descriptions(
         pd.read_gbq(get_offers_to_tag_request(category)), TagDict[f"{category}"]
     )
 

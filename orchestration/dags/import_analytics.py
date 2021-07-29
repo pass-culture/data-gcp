@@ -379,7 +379,7 @@ create_enriched_data_tasks = [
     create_enriched_booked_categories_data_v1_task,
     create_enriched_booked_categories_data_v2_task,
     create_enriched_offerer_data_task,
-    create_offer_extracted_data
+    create_offer_extracted_data,
 ]
 
 end = DummyOperator(task_id="end", dag=dag)

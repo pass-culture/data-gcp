@@ -15,7 +15,7 @@ stopwords = StopWords.words("french")
 
 
 def get_offers_name_to_tags():
-    query = f"""SELECT offer_name, CAST(offer_id AS FLOAT64) AS offer_id 
+    query = f"""SELECT offer_name, offer_id 
                 FROM {GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_offer """
     offer_name_to_tag = pd.read_gbq(query)
     return offer_name_to_tag
@@ -149,6 +149,8 @@ def add_tags(min_length=2, max_length=4, num=10):
     most_common = get_most_frequent(ngrams, num=num)
     # Addition of common n-gram to the lines containing them
     map_common_ngrams(df, most_common, max_length=max_length)
+    # Replace the NaN values by "NA"
+    df.tag.fillna("NA", inplace=True)
     return df
 
 

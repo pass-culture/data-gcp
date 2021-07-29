@@ -168,7 +168,7 @@ def update_table(offers_tagged):
 def tag_descriptions(offers_to_tag, TopicList):
     offer_tagged = []
     for index, row in offers_to_tag.iterrows():
-        descrip_dict = {"offer_id": row["offer_id"]}
+        descrip_dict = {"offer_id": f"""{row["offer_id"]}"""}
         description_topic = []
         for word in TopicList:
             if word in row["description"].lower():

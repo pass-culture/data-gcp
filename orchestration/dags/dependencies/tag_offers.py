@@ -126,7 +126,7 @@ def get_offers_to_tag_request(category):
             WHERE categorie_principale = '{category}'
             AND   description <> 'none'
             AND   description <> ""
-            AND   offer_id NOT In (SELECT CAST(offer_id AS STRING ) FROM {GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.offer_tags)
+            AND   offer_id NOT In (SELECT offer_id FROM {GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.offer_tags)
             """
 
 
@@ -135,11 +135,17 @@ def get_insert_tags_request(offers_tagged):
     bigquery_query = ""
     for index, row in offers_tagged.iterrows():
         query = ""
-        for tag in row["tag"]:
+        if isinstance(row["tag"], list):
+            for tag in row["tag"]:
+                query += "".join(
+                    f"""INSERT INTO {GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.offer_tags (offer_id,tag) VALUES ("{row['offer_id']}","{tag}"); """
+                )
+                bigquery_query += query
+        else:
             query += "".join(
-                f"""INSERT INTO {GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.offer_tags (offer_id,tag) VALUES ({row['offer_id']},"{tag}"); """
-            )
-        bigquery_query += query
+                    f"""INSERT INTO {GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.offer_tags (offer_id,tag) VALUES ("{row['offer_id']}","{row["tag"]}"); """
+                )
+            bigquery_query += query
 
     return bigquery_query
 

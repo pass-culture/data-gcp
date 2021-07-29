@@ -44,9 +44,13 @@ from dependencies.data_analytics.import_tables import (
 )
 from dependencies.slack_alert import task_fail_slack_alert
 
+from dependencies.tag_offers import extract_tags
 
-def getting_service_account_token():
-    function_url = f"https://europe-west1-{GCP_PROJECT}.cloudfunctions.net/downloads_{ENV_SHORT_NAME}"
+
+def getting_service_account_token(function_name):
+    function_url = (
+        f"https://europe-west1-{GCP_PROJECT}.cloudfunctions.net/{function_name}"
+    )
     open_id_connect_token = id_token.fetch_id_token(Request(), function_url)
     return open_id_connect_token
 
@@ -260,9 +264,12 @@ create_enriched_booked_categories_data_v2_task = BigQueryOperator(
     dag=dag,
 )
 
-getting_service_account_token = PythonOperator(
-    task_id="getting_service_account_token",
+getting_downloads_service_account_token = PythonOperator(
+    task_id="getting_downloads_service_account_token",
     python_callable=getting_service_account_token,
+    op_kwargs={
+        "function_name": f"downloads_{ENV_SHORT_NAME}",
+    },
     dag=dag,
 )
 
@@ -273,7 +280,7 @@ import_downloads_data_to_bigquery = SimpleHttpOperator(
     endpoint=f"downloads_{ENV_SHORT_NAME}",
     headers={
         "Content-Type": "application/json",
-        "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_service_account_token', key='return_value')}}",
+        "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_downloads_service_account_token', key='return_value')}}",
     },
     log_response=True,
     dag=dag,
@@ -288,24 +295,79 @@ create_enriched_app_downloads_stats = BigQueryOperator(
     dag=dag,
 )
 
+getting_contentful_service_account_token = PythonOperator(
+    task_id="getting_contentful_service_account_token",
+    python_callable=getting_service_account_token,
+    op_kwargs={
+        "function_name": f"contentful_{ENV_SHORT_NAME}",
+    },
+    dag=dag,
+)
+
+import_contentful_data_to_bigquery = SimpleHttpOperator(
+    task_id="import_contentful_data_to_bigquery",
+    method="POST",
+    http_conn_id="http_gcp_cloud_function",
+    endpoint=f"contentful_{ENV_SHORT_NAME}",
+    headers={
+        "Content-Type": "application/json",
+        "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_contentful_service_account_token', key='return_value')}}",
+    },
+    log_response=True,
+    dag=dag,
+)
+
+copy_playlists_to_analytics = BigQueryOperator(
+    task_id="copy_playlists_to_analytics",
+    sql=f"""
+    SELECT * except(row_number, tag)
+    FROM (
+        SELECT 
+        *,
+        ROW_NUMBER() OVER (PARTITION BY name
+                                        ORDER BY date_updated DESC
+                                    ) as row_number
+        FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_criterion` c
+        LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.contentful_data` d ON c.name = d.tag
+        )
+    WHERE row_number=1
+    """,
+    destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.applicative_database_criterion",
+    write_disposition="WRITE_TRUNCATE",
+    use_legacy_sql=False,
+    dag=dag,
+)
+
+
 create_offer_extracted_data = BigQueryOperator(
     task_id="create_offer_extracted_data",
-    sql=f"""SELECT offer_id, offer_type, JSON_EXTRACT_SCALAR(offer_extra_data, "$.author") AS author, 
-             JSON_EXTRACT_SCALAR(offer_extra_data, "$.performer") AS performer, 
-             JSON_EXTRACT_SCALAR(offer_extra_data, "$.musicType") AS musicType, 
-             JSON_EXTRACT_SCALAR(offer_extra_data, "$.musicSubtype") AS musicSubtype,
-             JSON_EXTRACT_SCALAR(offer_extra_data, "$.stageDirector") AS stageDirector, 
-             JSON_EXTRACT_SCALAR(offer_extra_data, "$.theater") AS theater,
-             JSON_EXTRACT_SCALAR(offer_extra_data, "$.showType") AS showType,
-             JSON_EXTRACT_SCALAR(offer_extra_data, "$.showSubType") AS showSubType,
-             JSON_EXTRACT_SCALAR(offer_extra_data, "$.speaker") AS speaker,
-             JSON_EXTRACT_SCALAR(offer_extra_data, "$.rayon") AS rayon
+    sql=f"""SELECT offer_id, offer_type, LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.author"), " ")) AS author,
+                LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.performer")," ")) AS performer,
+                LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.musicType"), " ")) AS musicType,
+                LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.musicSubtype"), " ")) AS musicSubtype,
+                LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.stageDirector"), " ")) AS stageDirector,
+                LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.showType"), " ")) AS showType,
+                LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.showSubType"), " ")) AS showSubType,
+                LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.speaker"), " ")) AS speaker,
+                LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.rayon"), " ")) AS rayon,
+                LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.theater.allocine_movie_id"), " ")) AS theater_movie_id,
+                LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.theater.allocine_room_id"), " ")) AS theater_room_id,
+                LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.type"), " ")) AS type,
+                LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.visa"), " ")) AS visa,
+                LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.releaseDate"), " ")) AS releaseDate,
+                LOWER(TRIM(JSON_EXTRACT(offer_extra_data, "$.genres"), " ")) AS genres,
+                LOWER(TRIM(JSON_EXTRACT(offer_extra_data, "$.companies"), " ")) AS companies,
+                LOWER(TRIM(JSON_EXTRACT(offer_extra_data, "$.countries"), " ")) AS countries,
+                LOWER(TRIM(JSON_EXTRACT(offer_extra_data, "$.cast"), " ")) AS casting,
+    
           FROM `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.applicative_database_offer`""",
     destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.offer_extracted_data",
     write_disposition="WRITE_TRUNCATE",
     use_legacy_sql=False,
     dag=dag,
 )
+
+end_enriched_data = DummyOperator(task_id="end_enriched_data", dag=dag)
 
 
 create_enriched_data_tasks = [
@@ -334,11 +396,19 @@ end = DummyOperator(task_id="end", dag=dag)
     >> link_iris_venues_task
     >> copy_to_analytics_iris_venues
     >> create_enriched_data_tasks
+    >> end_enriched_data
 )
 (
-    create_enriched_data_tasks
-    >> getting_service_account_token
+    end_enriched_data
+    >> getting_downloads_service_account_token
     >> import_downloads_data_to_bigquery
     >> create_enriched_app_downloads_stats
+    >> end
+)
+(
+    end_enriched_data
+    >> getting_contentful_service_account_token
+    >> import_contentful_data_to_bigquery
+    >> copy_playlists_to_analytics
     >> end
 )

@@ -143,8 +143,8 @@ def get_insert_tags_request(offers_tagged):
                 bigquery_query += query
         else:
             query += "".join(
-                    f"""INSERT INTO {GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.offer_tags (offer_id,tag) VALUES ("{row['offer_id']}","{row["tag"]}"); """
-                )
+                f"""INSERT INTO {GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.offer_tags (offer_id,tag) VALUES ("{row['offer_id']}","{row["tag"]}"); """
+            )
             bigquery_query += query
 
     return bigquery_query

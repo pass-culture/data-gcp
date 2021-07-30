@@ -378,7 +378,6 @@ create_enriched_data_tasks = [
     create_enriched_booked_categories_data_v1_task,
     create_enriched_booked_categories_data_v2_task,
     create_enriched_offerer_data_task,
-    create_offer_extracted_data,
 ]
 
 end = DummyOperator(task_id="end", dag=dag)
@@ -394,6 +393,7 @@ end = DummyOperator(task_id="end", dag=dag)
     end_import
     >> link_iris_venues_task
     >> copy_to_analytics_iris_venues
+    >> create_offer_extracted_data
     >> create_enriched_data_tasks
     >> end_enriched_data
 )

@@ -352,15 +352,14 @@ create_offer_extracted_data = BigQueryOperator(
                 LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.rayon"), " ")) AS rayon,
                 LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.theater.allocine_movie_id"), " ")) AS theater_movie_id,
                 LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.theater.allocine_room_id"), " ")) AS theater_room_id,
-                LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.type"), " ")) AS type,
+                LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.type"), " ")) AS movie_type,
                 LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.visa"), " ")) AS visa,
                 LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.releaseDate"), " ")) AS releaseDate,
                 LOWER(TRIM(JSON_EXTRACT(offer_extra_data, "$.genres"), " ")) AS genres,
                 LOWER(TRIM(JSON_EXTRACT(offer_extra_data, "$.companies"), " ")) AS companies,
                 LOWER(TRIM(JSON_EXTRACT(offer_extra_data, "$.countries"), " ")) AS countries,
                 LOWER(TRIM(JSON_EXTRACT(offer_extra_data, "$.cast"), " ")) AS casting,
-    
-          FROM `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.applicative_database_offer`""",
+            FROM `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.applicative_database_offer`""",
     destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.offer_extracted_data",
     write_disposition="WRITE_TRUNCATE",
     use_legacy_sql=False,
@@ -379,7 +378,6 @@ create_enriched_data_tasks = [
     create_enriched_booked_categories_data_v1_task,
     create_enriched_booked_categories_data_v2_task,
     create_enriched_offerer_data_task,
-    create_offer_extracted_data,
 ]
 
 end = DummyOperator(task_id="end", dag=dag)
@@ -395,6 +393,7 @@ end = DummyOperator(task_id="end", dag=dag)
     end_import
     >> link_iris_venues_task
     >> copy_to_analytics_iris_venues
+    >> create_offer_extracted_data
     >> create_enriched_data_tasks
     >> end_enriched_data
 )

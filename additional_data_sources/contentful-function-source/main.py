@@ -42,7 +42,6 @@ def insert_criterion(playlists):
             "date_updated",
         ],
     )
-    print(playlists_df.dtypes)
 
     job_config = bigquery.LoadJobConfig(
         write_disposition="WRITE_APPEND",

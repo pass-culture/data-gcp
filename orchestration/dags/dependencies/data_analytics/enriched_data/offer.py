@@ -138,7 +138,7 @@ def define_enriched_offer_data_query(analytics_dataset, clean_dataset, table_pre
                 offer_extracted_data.theater_room_id,
                 offer_extracted_data.speaker, 
                 offer_extracted_data.rayon,
-                offer_extracted_data.type,
+                offer_extracted_data.movie_type,
                 offer_extracted_data.visa,
                 offer_extracted_data.releaseDate,
                 offer_extracted_data.genres,

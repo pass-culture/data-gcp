@@ -1,6 +1,8 @@
+import gcsfs
 import pandas as pd
 import nltk
 import re
+import json 
 from nltk.corpus import stopwords as StopWords
 import collections
 from dependencies.bigquery_client import BigQueryClient
@@ -8,6 +10,7 @@ from dependencies.config import (
     GCP_PROJECT,
     BIGQUERY_CLEAN_DATASET,
     BIGQUERY_ANALYTICS_DATASET,
+    DATA_GCS_BUCKET_NAME,
 )
 
 nltk.download("stopwords")

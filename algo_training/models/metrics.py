@@ -1,7 +1,8 @@
+import random
 import numpy as np
-import tqdm
 from scipy.spatial.distance import cosine
 
+NUMBER_OF_USERS = 10000
 
 TYPE_LIST = [
     "ThingType.LIVRE_EDITION",
@@ -97,7 +98,8 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
     serendipity = []
     new_types_ratio = []
 
-    for user_id in tqdm.tqdm(all_test_user_ids):
+    random_users_to_test = random.sample(all_test_user_ids, NUMBER_OF_USERS)
+    for user_id in random_users_to_test:
         user_count += 1
 
         positive_item_train = positive_data_train[
@@ -191,6 +193,7 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
         }
 
         if user_count % 100 == 0:
+            print(f"Metrics at user number {user_count} / {len(random_users_to_test)}")
             print(metrics)
 
     return metrics

@@ -2,7 +2,7 @@ import gcsfs
 import pandas as pd
 import nltk
 import re
-import json 
+import json
 from nltk.corpus import stopwords as StopWords
 import collections
 from dependencies.bigquery_client import BigQueryClient

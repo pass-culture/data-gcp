@@ -579,14 +579,22 @@ def test_save_recommendation(
 
     user_id = 1
     recommendations = [2, 3, 4]
+    group_id = "A"
+    reco_origin = "algo"
 
     # When
-    save_recommendation(user_id, recommendations)
+    save_recommendation(user_id, recommendations, group_id, reco_origin)
 
     # Then
     connection = create_db_connection()
     for offer_id in recommendations:
         query_result = connection.execute(
-            f"SELECT * FROM public.past_recommended_offers where userid = {user_id} and offerId = {offer_id}"
+            f"""
+            SELECT * FROM public.past_recommended_offers
+            WHERE userid = {user_id}
+            AND offerid = {offer_id}
+            AND group_id = {group_id}
+            AND reco_origin = {reco_origin}
+            """
         ).fetchall()
         assert len(query_result) == 1

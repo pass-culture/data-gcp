@@ -4,3 +4,7 @@ CREATE TABLE past_recommended_offers (
     offerId        int,
     date           timestamp with time zone
 );
+
+ALTER TABLE past_recommended_offers
+ADD COLUMN  group_id       varchar,
+ADD COLUMN  reco_origin    varchar;

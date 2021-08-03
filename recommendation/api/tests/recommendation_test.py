@@ -593,8 +593,8 @@ def test_save_recommendation(
             SELECT * FROM public.past_recommended_offers
             WHERE userid = {user_id}
             AND offerid = {offer_id}
-            AND group_id = {group_id}
-            AND reco_origin = {reco_origin}
+            AND group_id = '{group_id}'
+            AND reco_origin = '{reco_origin}'
             """
         ).fetchall()
         assert len(query_result) == 1

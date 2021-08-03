@@ -113,7 +113,13 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
     ab_testing.to_sql(app_config["AB_TESTING_TABLE"], con=engine, if_exists="replace")
 
     past_recommended_offers = pd.DataFrame(
-        {"userid": [1], "offerid": [1], "date": [datetime.datetime.now(pytz.utc)]}
+        {
+            "userid": [1],
+            "offerid": [1],
+            "date": [datetime.datetime.now(pytz.utc)],
+            "group_id": "A",
+            "reco_origin": "algo",
+        }
     )
     past_recommended_offers.to_sql(
         "past_recommended_offers", con=engine, if_exists="replace"
@@ -216,7 +222,13 @@ def setup_pool(app_config: Dict[str, Any]) -> Any:
     ab_testing.to_sql(app_config["AB_TESTING_TABLE"], con=engine, if_exists="replace")
 
     past_recommended_offers = pd.DataFrame(
-        {"userid": [1], "offerid": [1], "date": [datetime.datetime.now(pytz.utc)]}
+        {
+            "userid": [1],
+            "offerid": [1],
+            "date": [datetime.datetime.now(pytz.utc)],
+            "group_id": "A",
+            "reco_origin": "algo",
+        }
     )
     past_recommended_offers.to_sql(
         "past_recommended_offers", con=engine, if_exists="replace"

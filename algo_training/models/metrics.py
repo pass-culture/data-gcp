@@ -1,6 +1,7 @@
 import random
 import numpy as np
 from scipy.spatial.distance import cosine
+import time
 
 NUMBER_OF_USERS = 10000
 
@@ -51,6 +52,7 @@ def get_unexpectedness(booked_type_list, recommended_type_list):
 
 
 def compute_metrics(k, positive_data_train, positive_data_test, match_model):
+    print("time0 (start) :", time.gmtime(time.time()))
     # Map all offers to corresponding types
     offer_type_dict = {}
     unique_offer_types = (
@@ -61,11 +63,14 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
     ):
         offer_type_dict[item_id] = item_type
 
+    print("time1 :", time.gmtime(time.time()))
     # Only keep user - item interactions in positive_data_test, which can be inferred from model
     cleaned_positive_data_test = positive_data_test.copy()
     print(
         f"Original number of positive feedbacks in test: {cleaned_positive_data_test.shape[0]}"
     )
+
+    print("time2 :", time.gmtime(time.time()))
     cleaned_positive_data_test = cleaned_positive_data_test.loc[
         lambda df: df.user_id.apply(
             lambda user_id: user_id in positive_data_train.user_id.values
@@ -74,6 +79,8 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
     print(
         f"Number of positive feedbacks in test after removing users not present in train: {cleaned_positive_data_test.shape[0]}"
     )
+
+    print("time3 :", time.gmtime(time.time()))
     cleaned_positive_data_test = cleaned_positive_data_test.loc[
         lambda df: df.item_id.apply(
             lambda item_id: item_id in positive_data_train.item_id.values
@@ -98,10 +105,11 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
     serendipity = []
     new_types_ratio = []
 
+    print("time4 :", time.gmtime(time.time()))
     random_users_to_test = random.sample(all_test_user_ids, NUMBER_OF_USERS)
     for user_id in random_users_to_test:
         user_count += 1
-
+        print("time5 :", time.gmtime(time.time()))
         positive_item_train = positive_data_train[
             positive_data_train["user_id"] == user_id
         ]

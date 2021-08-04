@@ -2,6 +2,9 @@ import pandas as pd
 import pandas_gbq as gbq
 from dependencies.bigquery_client import BigQueryClient
 from dependencies.config import GCP_PROJECT, BIGQUERY_CLEAN_DATASET
+from dependencies.Offer_name_tags import (
+    extract_tags_offer_name,
+)
 
 CaseCatAgg = """CASE
                 when offer.offer_type ='ThingType.AUDIOVISUEL' then 'Audiovisuel'
@@ -123,7 +126,7 @@ def get_offers_to_tag_request(category):
             WHERE categorie_principale = '{category}'
             AND   description <> 'none'
             AND   description <> ""
-            AND   offer_id NOT In (SELECT CAST(offer_id AS STRING ) FROM {GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.offer_tags)
+            AND   offer_id NOT In (SELECT offer_id FROM {GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.offer_tags)
             """
 
 
@@ -132,11 +135,17 @@ def get_insert_tags_request(offers_tagged):
     bigquery_query = ""
     for index, row in offers_tagged.iterrows():
         query = ""
-        for tag in row["tag"]:
+        if isinstance(row["tag"], list):
+            for tag in row["tag"]:
+                query += "".join(
+                    f"""INSERT INTO {GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.offer_tags (offer_id,tag) VALUES ("{row['offer_id']}","{tag}"); """
+                )
+                bigquery_query += query
+        else:
             query += "".join(
-                f"""INSERT INTO {GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.offer_tags (offer_id,tag) VALUES ({row['offer_id']},"{tag}"); """
+                f"""INSERT INTO {GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.offer_tags (offer_id,tag) VALUES ("{row['offer_id']}","{row["tag"]}"); """
             )
-        bigquery_query += query
+            bigquery_query += query
 
     return bigquery_query
 
@@ -165,7 +174,7 @@ def update_table(offers_tagged):
 def tag_descriptions(offers_to_tag, TopicList):
     offer_tagged = []
     for index, row in offers_to_tag.iterrows():
-        descrip_dict = {"offer_id": row["offer_id"]}
+        descrip_dict = {"offer_id": f"""{row["offer_id"]}"""}
         description_topic = []
         for word in TopicList:
             if word in row["description"].lower():
@@ -188,5 +197,5 @@ def tag_offers():
         offer_tagged = extract_tags(category)
         if offer_tagged.shape[0] > 0:
             update_table(offer_tagged)
-
+    update_table(extract_tags_offer_name())
     return

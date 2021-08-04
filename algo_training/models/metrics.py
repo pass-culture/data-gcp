@@ -120,8 +120,8 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
         # Check if any item of items_to_rank is in the test positive feedback for this user
         expected = np.in1d(items_to_rank, positive_item_test["item_id"].values)
 
-        repeated_user_id = np.empty_like(items_to_rank)
-        repeated_user_id.fill(user_id)
+        repeated_user_id = [user_id] * len(items_to_rank)
+
         print("time 3:", datetime.now().isoformat())
         predicted = match_model.predict(
             [repeated_user_id, items_to_rank], batch_size=4096

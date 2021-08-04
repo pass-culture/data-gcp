@@ -1,7 +1,7 @@
 import random
 import numpy as np
 from scipy.spatial.distance import cosine
-import time
+from datetime import datetime
 
 NUMBER_OF_USERS = 10000
 
@@ -52,7 +52,7 @@ def get_unexpectedness(booked_type_list, recommended_type_list):
 
 
 def compute_metrics(k, positive_data_train, positive_data_test, match_model):
-    print("time0 (start) :", time.gmtime(time.time()))
+    print("time0 (start) :", datetime.now().isoformat())
     # Map all offers to corresponding types
     offer_type_dict = {}
     unique_offer_types = (
@@ -63,19 +63,11 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
     ):
         offer_type_dict[item_id] = item_type
 
-    print("time1 :", time.gmtime(time.time()))
     # Only keep user - item interactions in positive_data_test, which can be inferred from model
     cleaned_positive_data_test = positive_data_test.copy()
     print(
         f"Original number of positive feedbacks in test: {cleaned_positive_data_test.shape[0]}"
     )
-
-    print("time2 :", time.gmtime(time.time()))
-    # cleaned_positive_data_test = cleaned_positive_data_test.loc[
-    #     lambda df: df.user_id.apply(
-    #         lambda user_id: user_id in positive_data_train.user_id.values
-    #     )
-    # ]
 
     cleaned_positive_data_test = cleaned_positive_data_test[
         cleaned_positive_data_test.user_id.isin(positive_data_train.user_id)
@@ -83,13 +75,6 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
     print(
         f"Number of positive feedbacks in test after removing users not present in train: {cleaned_positive_data_test.shape[0]}"
     )
-
-    print("time3 :", time.gmtime(time.time()))
-    # cleaned_positive_data_test = cleaned_positive_data_test.loc[
-    #     lambda df: df.item_id.apply(
-    #         lambda item_id: item_id in positive_data_train.item_id.values
-    #     )
-    # ]
 
     cleaned_positive_data_test = cleaned_positive_data_test[
         cleaned_positive_data_test.item_id.isin(positive_data_train.item_id)
@@ -113,18 +98,18 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
     serendipity = []
     new_types_ratio = []
 
-    print("time4 :", time.gmtime(time.time()))
     random_users_to_test = random.sample(all_test_user_ids, NUMBER_OF_USERS)
     for user_id in random_users_to_test:
+        print("#############")
         user_count += 1
-        print("time5 :", time.gmtime(time.time()))
+        print("time 1:", datetime.now().isoformat())
         positive_item_train = positive_data_train[
             positive_data_train["user_id"] == user_id
         ]
         positive_item_test = cleaned_positive_data_test[
             cleaned_positive_data_test["user_id"] == user_id
         ]
-
+        print("time 2:", datetime.now().isoformat())
         # Remove items in train - they can not be in test set anyway
         items_to_rank = np.setdiff1d(
             all_item_ids, positive_item_train["item_id"].values
@@ -136,16 +121,17 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
 
         repeated_user_id = np.empty_like(items_to_rank)
         repeated_user_id.fill(user_id)
-
+        print("time 3:", datetime.now().isoformat())
         predicted = match_model.predict(
             [repeated_user_id, items_to_rank], batch_size=4096
         )
-
+        print("time 4:", datetime.now().isoformat())
         scored_items = sorted(
             [(item_id, score[0]) for item_id, score in zip(items_to_rank, predicted)],
             key=lambda k: k[1],
             reverse=True,
         )[:k]
+        print("time 5:", datetime.now().isoformat())
         recommended_offer_types = [offer_type_dict[item[0]] for item in scored_items]
 
         if booked_offer_types and recommended_offer_types:
@@ -161,7 +147,7 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
                     ]
                 )
             )
-
+        print("time 6:", datetime.now().isoformat())
         if np.sum(expected) >= 1:
             recommended_items.extend([item[0] for item in scored_items])
             recommended_items = list(set(recommended_items))
@@ -182,7 +168,7 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
                     * 100
                 )
                 serendipity.append(user_serendipity)
-
+        print("time 7:", datetime.now().isoformat())
         metrics = {
             f"recall_at_{k}": (recommended_hidden_items_number / hidden_items_number)
             * 100

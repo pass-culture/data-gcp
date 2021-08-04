@@ -2,6 +2,7 @@ import random
 import numpy as np
 from scipy.spatial.distance import cosine
 from datetime import datetime
+from operator import itemgetter
 
 NUMBER_OF_USERS = 10000
 
@@ -128,7 +129,7 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
         print("time 4:", datetime.now().isoformat())
         scored_items = sorted(
             [(item_id, score[0]) for item_id, score in zip(items_to_rank, predicted)],
-            key=lambda k: k[1],
+            key=itemgetter(1),
             reverse=True,
         )[:k]
         print("time 5:", datetime.now().isoformat())

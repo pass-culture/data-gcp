@@ -5,7 +5,12 @@ from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python_operator import PythonOperator
 
-from dependencies.tag_offers import tag_offers
+from dependencies.tag_offers import (
+    tag_offers_description,
+    tag_offers_name,
+    get_offers_to_tag,
+    update_table,
+)
 from dependencies.config import GCP_PROJECT
 
 default_dag_args = {
@@ -26,13 +31,35 @@ dag = DAG(
 
 start = DummyOperator(task_id="start", dag=dag)
 
+get_offers_to_tag = PythonOperator(
+    task_id=f"get_offers_to_tag",
+    python_callable=get_offers_to_tag,
+    dag=dag,
+)
 
-tag_offers = PythonOperator(
-    task_id=f"tag_offers",
-    python_callable=tag_offers,
+tag_offers_description = PythonOperator(
+    task_id=f"tag_offers_description",
+    python_callable=tag_offers_description,
+    dag=dag,
+)
+
+tag_offers_name = PythonOperator(
+    task_id=f"tag_offers_name",
+    python_callable=tag_offers_name,
+    dag=dag,
+)
+
+update_table = PythonOperator(
+    task_id=f"update_table",
+    python_callable=update_table,
     dag=dag,
 )
 
 end = DummyOperator(task_id="end", dag=dag)
 
-(start >> tag_offers >> end)
+tag_offers = [
+    tag_offers_description,
+    tag_offers_name,
+]
+
+(start >> get_offers_to_tag >> tag_offers >> update_table >> end)

@@ -106,9 +106,9 @@ def get_most_common():
     return most_common
 
 
-def add_tags(min_length=2, max_length=4, num=10):
+def add_tags(dataframe, min_length=2, max_length=4, num=10):
     # Data recovery
-    df = get_offers_name_to_tags()
+    df = dataframe
     df["offer_name_clean_stop"] = df["offer_name"].apply(lambda s: clean(s))
     # Get top Ngrams
     most_common = get_most_common()
@@ -119,5 +119,5 @@ def add_tags(min_length=2, max_length=4, num=10):
     return df
 
 
-def extract_tags_offer_name():
-    return add_tags(max_length=4, num=10)
+def extract_tags_offer_name(dataframe):
+    return add_tags(dataframe, max_length=4, num=10)

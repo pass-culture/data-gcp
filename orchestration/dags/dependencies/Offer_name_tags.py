@@ -2,6 +2,7 @@ import gcsfs
 import pandas as pd
 import nltk
 import re
+import yaml
 import json
 from nltk.corpus import stopwords as StopWords
 import collections
@@ -101,7 +102,7 @@ def get_most_common():
     with fs.open(
         f"gs://{DATA_GCS_BUCKET_NAME}/top_commons_ngrams/top_commons_ngrams.json"
     ) as file:
-        most_common = json.load(file)
+        most_common = yaml.load(file)
     return most_common
 
 
@@ -113,10 +114,10 @@ def add_tags(min_length=2, max_length=4, num=10):
     most_common = get_most_common()
     # Addition of common n-gram to the lines containing them
     map_common_ngrams(df, most_common, max_length=max_length)
-    # Replace the NaN values by "NA"
-    df.tag.fillna("NA", inplace=True)
+    # Delete the NaN values by "NA"
+    df = df.dropna(subset=["tag"])
     return df
 
 
 def extract_tags_offer_name():
-    return add_tags(max_length=5, num=10)
+    return add_tags(max_length=4, num=10)

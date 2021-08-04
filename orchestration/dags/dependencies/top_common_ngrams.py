@@ -1,6 +1,7 @@
 import pandas as pd
 import nltk
 import json
+import yaml
 import re
 import os
 from datetime import datetime
@@ -89,7 +90,7 @@ def save_result(most_common):
     with fs.open(
         f"gs://{DATA_GCS_BUCKET_NAME}/top_commons_ngrams/top_commons_ngrams.json", "w"
     ) as file:
-        json.dump(most_common, file)
+        yaml.dump(most_common, file)
 
 
 def save_top_common(min_length=2, max_length=4, num=10):

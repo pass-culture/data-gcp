@@ -85,10 +85,14 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
     )
 
     print("time3 :", time.gmtime(time.time()))
-    cleaned_positive_data_test = cleaned_positive_data_test.loc[
-        lambda df: df.item_id.apply(
-            lambda item_id: item_id in positive_data_train.item_id.values
-        )
+    # cleaned_positive_data_test = cleaned_positive_data_test.loc[
+    #     lambda df: df.item_id.apply(
+    #         lambda item_id: item_id in positive_data_train.item_id.values
+    #     )
+    # ]
+
+    cleaned_positive_data_test = cleaned_positive_data_test[
+        cleaned_positive_data_test.item_id.isin(positive_data_train.item_id)
     ]
     print(
         f"Number of positive feedbacks in test after removing offers not present in train: {cleaned_positive_data_test.shape[0]}"

@@ -281,6 +281,17 @@ def define_import_query(
                 CAST("id" AS varchar(255)),"name", "description", "scoreDelta", "endDateTime", "startDateTime"
             FROM public.criterion
         """
+    cloudsql_queries[
+        "offer_report"
+    ] = """
+            SELECT
+                CAST("id" AS varchar(255)) AS offer_report_id
+                ,CAST("userId" AS varchar(255)) AS offer_report_user_id
+                ,CAST("offerId" AS varchar(255)) AS offer_report_offer_id
+                ,reason AS offer_report_reason
+                ,"customReasonContent" AS offer_report_custom_reason_content
+            FROM public.offer_report
+        """
 
     # Build specific federated queries
     queries = {}

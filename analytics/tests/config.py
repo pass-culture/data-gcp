@@ -237,4 +237,11 @@ BIGQUERY_SCHEMAS = {
         "expirationDate": "DATETIME",
         "dateCreated": "DATETIME",
     },
+    "offer_report": {
+        "offer_report_id": "STRING",
+        "offer_report_user_id": "STRING",
+        "offer_report_offer_id": "STRING",
+        "offer_report_reason": "STRING",
+        "offer_report_custom_reason_content": "STRING",
+    },
 }

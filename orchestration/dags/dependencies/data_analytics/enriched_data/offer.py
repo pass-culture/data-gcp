@@ -131,6 +131,7 @@ def define_enriched_offer_data_query(analytics_dataset, clean_dataset, table_pre
                 CONCAT('https://app.passculture.beta.gouv.fr/offre/details/',offer_humanized_id.humanized_id)
                     AS webapp_url,
                 count_first_booking_view.first_booking_cnt,
+                offer_tags.tag,
                 offer_extracted_data.author,
                 offer_extracted_data.performer, 
                 offer_extracted_data.stageDirector,
@@ -161,6 +162,8 @@ def define_enriched_offer_data_query(analytics_dataset, clean_dataset, table_pre
             LEFT JOIN offer_humanized_id AS offer_humanized_id ON offer_humanized_id.offer_id = offer.offer_id
             LEFT JOIN count_first_booking_view ON count_first_booking_view.offer_id = offer.offer_id
             LEFT JOIN {clean_dataset}.offer_extracted_data AS offer_extracted_data ON offer_extracted_data.offer_id = offer.offer_id
+            LEFT JOIN {clean_dataset}.offer_tags AS offer_tags ON offer_tags.offer_id = offer.offer_id
+
         );
     """
 

@@ -100,6 +100,16 @@ ENRICHED_OFFER_DATA_INPUT = {
             "casting": None,
         },
     ],
+    "offer_tags": [
+        {
+            "offer_id": "3",
+            "tag": "none",
+        },
+        {
+            "offer_id": "4",
+            "tag": "none",
+        },
+    ],
     "offerer": [
         {
             "offerer_id": "3",

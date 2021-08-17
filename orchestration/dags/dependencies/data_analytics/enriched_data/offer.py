@@ -131,7 +131,7 @@ def define_enriched_offer_data_query(analytics_dataset, clean_dataset, table_pre
                 CONCAT('https://app.passculture.beta.gouv.fr/offre/details/',offer_humanized_id.humanized_id)
                     AS webapp_url,
                 count_first_booking_view.first_booking_cnt,
-                offer_tags.tag,
+                offer_tags.tag as offer_tag,
                 offer_extracted_data.author,
                 offer_extracted_data.performer, 
                 offer_extracted_data.stageDirector,

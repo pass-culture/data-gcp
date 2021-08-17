@@ -100,6 +100,16 @@ ENRICHED_OFFER_DATA_INPUT = {
             "casting": None,
         },
     ],
+    "offer_tags": [
+        {
+            "offer_id": "3",
+            "tag": "none",
+        },
+        {
+            "offer_id": "4",
+            "tag": "none",
+        },
+    ],
     "offerer": [
         {
             "offerer_id": "3",
@@ -276,6 +286,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "passculture_pro_url": "https://pro.passculture.beta.gouv.fr/offres/AM/edition",
         "webapp_url": "https://app.passculture.beta.gouv.fr/offre/details/AM",
         "first_booking_cnt": 1,
+        "offer_tag": "none",
         "author": "Tarantino",
         "performer": "Uma Turman",
         "stageDirector": None,
@@ -316,6 +327,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "passculture_pro_url": "https://pro.passculture.beta.gouv.fr/offres/AQ/edition",
         "webapp_url": "https://app.passculture.beta.gouv.fr/offre/details/AQ",
         "first_booking_cnt": None,
+        "offer_tag": "none",
         "author": "Kevin Francois",
         "performer": None,
         "stageDirector": None,

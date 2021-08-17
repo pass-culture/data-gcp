@@ -76,6 +76,10 @@ BIGQUERY_SCHEMAS = {
         "countries": "STRING",
         "casting": "STRING",
     },
+    "offer_tags": {
+        "offer_id": "STRING",
+        "tag": "STRING",
+    },
     "offerer": {
         "offerer_is_active": "BOOLEAN",
         "offerer_thumb_count": "INT64",

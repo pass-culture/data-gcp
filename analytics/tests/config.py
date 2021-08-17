@@ -78,7 +78,7 @@ BIGQUERY_SCHEMAS = {
     },
     "offer_tags": {
         "offer_id": "STRING",
-        "tags": "STRING",
+        "tag": "STRING",
     },
     "offerer": {
         "offerer_is_active": "BOOLEAN",

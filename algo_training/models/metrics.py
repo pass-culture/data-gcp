@@ -1,7 +1,9 @@
+import random
 import numpy as np
-import tqdm
 from scipy.spatial.distance import cosine
+from operator import itemgetter
 
+NUMBER_OF_USERS = 5000
 
 TYPE_LIST = [
     "ThingType.LIVRE_EDITION",
@@ -65,18 +67,16 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
     print(
         f"Original number of positive feedbacks in test: {cleaned_positive_data_test.shape[0]}"
     )
-    cleaned_positive_data_test = cleaned_positive_data_test.loc[
-        lambda df: df.user_id.apply(
-            lambda user_id: user_id in positive_data_train.user_id.values
-        )
+
+    cleaned_positive_data_test = cleaned_positive_data_test[
+        cleaned_positive_data_test.user_id.isin(positive_data_train.user_id)
     ]
     print(
         f"Number of positive feedbacks in test after removing users not present in train: {cleaned_positive_data_test.shape[0]}"
     )
-    cleaned_positive_data_test = cleaned_positive_data_test.loc[
-        lambda df: df.item_id.apply(
-            lambda item_id: item_id in positive_data_train.item_id.values
-        )
+
+    cleaned_positive_data_test = cleaned_positive_data_test[
+        cleaned_positive_data_test.item_id.isin(positive_data_train.item_id)
     ]
     print(
         f"Number of positive feedbacks in test after removing offers not present in train: {cleaned_positive_data_test.shape[0]}"
@@ -97,16 +97,15 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
     serendipity = []
     new_types_ratio = []
 
-    for user_id in tqdm.tqdm(all_test_user_ids):
+    random_users_to_test = random.sample(all_test_user_ids, NUMBER_OF_USERS)
+    for user_id in random_users_to_test:
         user_count += 1
-
         positive_item_train = positive_data_train[
             positive_data_train["user_id"] == user_id
         ]
         positive_item_test = cleaned_positive_data_test[
             cleaned_positive_data_test["user_id"] == user_id
         ]
-
         # Remove items in train - they can not be in test set anyway
         items_to_rank = np.setdiff1d(
             all_item_ids, positive_item_train["item_id"].values
@@ -116,16 +115,14 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
         # Check if any item of items_to_rank is in the test positive feedback for this user
         expected = np.in1d(items_to_rank, positive_item_test["item_id"].values)
 
-        repeated_user_id = np.empty_like(items_to_rank)
-        repeated_user_id.fill(user_id)
+        repeated_user_id = [user_id] * len(items_to_rank)
 
         predicted = match_model.predict(
             [repeated_user_id, items_to_rank], batch_size=4096
         )
-
         scored_items = sorted(
             [(item_id, score[0]) for item_id, score in zip(items_to_rank, predicted)],
-            key=lambda k: k[1],
+            key=itemgetter(1),
             reverse=True,
         )[:k]
         recommended_offer_types = [offer_type_dict[item[0]] for item in scored_items]
@@ -143,7 +140,6 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
                     ]
                 )
             )
-
         if np.sum(expected) >= 1:
             recommended_items.extend([item[0] for item in scored_items])
             recommended_items = list(set(recommended_items))
@@ -165,32 +161,57 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
                 )
                 serendipity.append(user_serendipity)
 
-        metrics = {
-            f"recall_at_{k}": (recommended_hidden_items_number / hidden_items_number)
-            * 100
-            if hidden_items_number > 0
-            else None,
-            f"precision_at_{k}": (
-                recommended_hidden_items_number / (prediction_number * k)
-            )
-            * 100,
-            f"maximal_precision_at_{k}": (
-                cleaned_positive_data_test.shape[0] / (prediction_number * k)
-            )
-            * 100,
-            f"coverage_at_{k}": (len(recommended_items) / len(all_item_ids)) * 100,
-            f"unexpectedness_at_{k}": np.nanmean(unexpectedness)
-            if len(unexpectedness) > 0
-            else None,
-            f"new_types_ratio_at_{k}": np.mean(new_types_ratio)
-            if len(new_types_ratio) > 0
-            else None,
-            f"serendipity_at_{k}": np.nanmean(serendipity)
-            if len(serendipity) > 0
-            else None,
-        }
-
         if user_count % 100 == 0:
+            metrics = {
+                f"recall_at_{k}": (
+                    recommended_hidden_items_number / hidden_items_number
+                )
+                * 100
+                if hidden_items_number > 0
+                else None,
+                f"precision_at_{k}": (
+                    recommended_hidden_items_number / (prediction_number * k)
+                )
+                * 100,
+                f"maximal_precision_at_{k}": (
+                    cleaned_positive_data_test.shape[0] / (prediction_number * k)
+                )
+                * 100,
+                f"coverage_at_{k}": (len(recommended_items) / len(all_item_ids)) * 100,
+                f"unexpectedness_at_{k}": np.nanmean(unexpectedness)
+                if len(unexpectedness) > 0
+                else None,
+                f"new_types_ratio_at_{k}": np.mean(new_types_ratio)
+                if len(new_types_ratio) > 0
+                else None,
+                f"serendipity_at_{k}": np.nanmean(serendipity)
+                if len(serendipity) > 0
+                else None,
+            }
+
+            print(f"Metrics at user number {user_count} / {len(random_users_to_test)}")
             print(metrics)
+
+    metrics = {
+        f"recall_at_{k}": (recommended_hidden_items_number / hidden_items_number) * 100
+        if hidden_items_number > 0
+        else None,
+        f"precision_at_{k}": (recommended_hidden_items_number / (prediction_number * k))
+        * 100,
+        f"maximal_precision_at_{k}": (
+            cleaned_positive_data_test.shape[0] / (prediction_number * k)
+        )
+        * 100,
+        f"coverage_at_{k}": (len(recommended_items) / len(all_item_ids)) * 100,
+        f"unexpectedness_at_{k}": np.nanmean(unexpectedness)
+        if len(unexpectedness) > 0
+        else None,
+        f"new_types_ratio_at_{k}": np.mean(new_types_ratio)
+        if len(new_types_ratio) > 0
+        else None,
+        f"serendipity_at_{k}": np.nanmean(serendipity)
+        if len(serendipity) > 0
+        else None,
+    }
 
     return metrics

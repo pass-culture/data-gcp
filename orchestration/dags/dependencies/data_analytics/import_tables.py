@@ -97,7 +97,8 @@ def define_import_query(
             "motorDisabilityCompliant" as offer_motor_disability_compliant,
             "visualDisabilityCompliant" as offer_visual_disability_compliant,
             "externalTicketOfficeUrl" as offer_external_ticket_office_url,
-            CAST("validation" AS varchar(255)) as offer_validation
+            CAST("validation" AS varchar(255)) as offer_validation,
+            CAST("subcategoryId" AS varchar(255)) as offer_subcategoryId
         FROM public.offer
     """
     cloudsql_queries[

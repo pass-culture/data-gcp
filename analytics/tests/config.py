@@ -40,6 +40,7 @@ BIGQUERY_SCHEMAS = {
         "booking_email": "STRING",
         "offer_is_active": "BOOLEAN",
         "offer_type": "STRING",
+        "offer_subcategoryId": "STRING",
         "offer_name": "STRING",
         "offer_description": "STRING",
         "offer_conditions": "STRING",

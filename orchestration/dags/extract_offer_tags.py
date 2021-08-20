@@ -4,14 +4,22 @@ import airflow
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python_operator import PythonOperator
+from airflow.contrib.operators.bigquery_operator import BigQueryOperator
+from airflow.contrib.operators.bigquery_to_gcs import BigQueryToCloudStorageOperator
 
 from dependencies.tag_offers import (
     tag_offers_description,
     tag_offers_name,
     get_offers_to_tag,
+    get_offers_to_tag_request,
     update_table,
+    FILENAME_INITIAL,
 )
-from dependencies.config import GCP_PROJECT
+
+from dependencies.config import (
+    GCP_PROJECT,
+    BIGQUERY_CLEAN_DATASET,
+)
 
 default_dag_args = {
     "start_date": datetime.datetime(2021, 7, 27),
@@ -31,9 +39,21 @@ dag = DAG(
 
 start = DummyOperator(task_id="start", dag=dag)
 
-get_offers_to_tag = PythonOperator(
+get_offers_to_tag = BigQueryOperator(
     task_id=f"get_offers_to_tag",
-    python_callable=get_offers_to_tag,
+    sql=get_offers_to_tag_request(),
+    use_legacy_sql=False,
+    destination_dataset_table=f"{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.temp_offers_to_tag",
+    write_disposition="WRITE_TRUNCATE",
+    dag=dag,
+)
+
+get_offers_to_tag_to_gcs = BigQueryToCloudStorageOperator(
+    task_id=f"get_offers_to_tag_to_gcs",
+    source_project_dataset_table=f"{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.temp_offers_to_tag",
+    destination_cloud_storage_uris=[f"gs://{FILENAME_INITIAL}"],
+    export_format="CSV",
+    print_header=True,
     dag=dag,
 )
 
@@ -62,4 +82,11 @@ tag_offers = [
     tag_offers_name,
 ]
 
-(start >> get_offers_to_tag >> tag_offers >> update_table >> end)
+(
+    start
+    >> get_offers_to_tag
+    >> get_offers_to_tag_to_gcs
+    >> tag_offers
+    >> update_table
+    >> end
+)

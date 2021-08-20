@@ -17,7 +17,8 @@ from utils import (
 TRAIN_DIR = "/home/airflow/train"
 EMBEDDING_SIZE = 64
 L2_REG = 0
-N_EPOCHS = 20
+# N_EPOCHS = 20
+N_EPOCHS = 10
 BATCH_SIZE = 32
 
 

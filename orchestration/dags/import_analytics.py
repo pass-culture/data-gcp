@@ -44,8 +44,6 @@ from dependencies.data_analytics.import_tables import (
 )
 from dependencies.slack_alert import task_fail_slack_alert
 
-from dependencies.tag_offers import extract_tags
-
 
 def getting_service_account_token(function_name):
     function_url = (

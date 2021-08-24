@@ -97,7 +97,8 @@ def define_import_query(
             "motorDisabilityCompliant" as offer_motor_disability_compliant,
             "visualDisabilityCompliant" as offer_visual_disability_compliant,
             "externalTicketOfficeUrl" as offer_external_ticket_office_url,
-            CAST("validation" AS varchar(255)) as offer_validation
+            CAST("validation" AS varchar(255)) as offer_validation,
+            CAST("subcategoryId" AS varchar(255)) as offer_subcategoryId
         FROM public.offer
     """
     cloudsql_queries[
@@ -280,6 +281,17 @@ def define_import_query(
             SELECT
                 CAST("id" AS varchar(255)),"name", "description", "scoreDelta", "endDateTime", "startDateTime"
             FROM public.criterion
+        """
+    cloudsql_queries[
+        "offer_report"
+    ] = """
+            SELECT
+                CAST("id" AS varchar(255)) AS offer_report_id
+                ,CAST("userId" AS varchar(255)) AS offer_report_user_id
+                ,CAST("offerId" AS varchar(255)) AS offer_report_offer_id
+                ,reason AS offer_report_reason
+                ,"customReasonContent" AS offer_report_custom_reason_content
+            FROM public.offer_report
         """
 
     # Build specific federated queries

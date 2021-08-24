@@ -4,9 +4,22 @@ import airflow
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python_operator import PythonOperator
+from airflow.contrib.operators.bigquery_operator import BigQueryOperator
+from airflow.contrib.operators.bigquery_to_gcs import BigQueryToCloudStorageOperator
 
-from dependencies.tag_offers import tag_offers
-from dependencies.config import GCP_PROJECT
+from dependencies.tag_offers import (
+    tag_offers_description,
+    tag_offers_name,
+    get_offers_to_tag,
+    get_offers_to_tag_request,
+    update_table,
+    FILENAME_INITIAL,
+)
+
+from dependencies.config import (
+    GCP_PROJECT,
+    BIGQUERY_CLEAN_DATASET,
+)
 
 default_dag_args = {
     "start_date": datetime.datetime(2021, 7, 27),
@@ -26,13 +39,54 @@ dag = DAG(
 
 start = DummyOperator(task_id="start", dag=dag)
 
+get_offers_to_tag = BigQueryOperator(
+    task_id=f"get_offers_to_tag",
+    sql=get_offers_to_tag_request(),
+    use_legacy_sql=False,
+    destination_dataset_table=f"{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.temp_offers_to_tag",
+    write_disposition="WRITE_TRUNCATE",
+    dag=dag,
+)
 
-tag_offers = PythonOperator(
-    task_id=f"tag_offers",
-    python_callable=tag_offers,
+get_offers_to_tag_to_gcs = BigQueryToCloudStorageOperator(
+    task_id=f"get_offers_to_tag_to_gcs",
+    source_project_dataset_table=f"{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.temp_offers_to_tag",
+    destination_cloud_storage_uris=[f"gs://{FILENAME_INITIAL}"],
+    export_format="CSV",
+    print_header=True,
+    dag=dag,
+)
+
+tag_offers_description = PythonOperator(
+    task_id=f"tag_offers_description",
+    python_callable=tag_offers_description,
+    dag=dag,
+)
+
+tag_offers_name = PythonOperator(
+    task_id=f"tag_offers_name",
+    python_callable=tag_offers_name,
+    dag=dag,
+)
+
+update_table = PythonOperator(
+    task_id=f"update_table",
+    python_callable=update_table,
     dag=dag,
 )
 
 end = DummyOperator(task_id="end", dag=dag)
 
-(start >> tag_offers >> end)
+tag_offers = [
+    tag_offers_description,
+    tag_offers_name,
+]
+
+(
+    start
+    >> get_offers_to_tag
+    >> get_offers_to_tag_to_gcs
+    >> tag_offers
+    >> update_table
+    >> end
+)

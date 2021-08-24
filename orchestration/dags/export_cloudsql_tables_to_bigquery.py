@@ -79,24 +79,15 @@ for table in TABLES:
     export_table_tasks.append(task)
 
 delete_rows_task = drop_table_task = CloudSqlQueryOperator(
-    task_id=f"drop_yesterday_rows_past_recommended_offers",
+    task_id="drop_yesterday_rows_past_recommended_offers",
     gcp_cloudsql_conn_id="proxy_postgres_tcp",
     sql=f"DELETE FROM public.past_recommended_offers where date <= '{yesterday}'",
     autocommit=True,
     dag=dag,
 )
 
-copy_to_analytics_past_recommended_offers = BigQueryOperator(
-    task_id=f"copy_to_analytics_past_recommended_offers",
-    sql=f"SELECT * FROM {BIGQUERY_RAW_DATASET}.past_recommended_offers",
-    write_disposition="WRITE_TRUNCATE",
-    use_legacy_sql=False,
-    destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.past_recommended_offers",
-    dag=dag,
-)
-
 copy_to_clean_past_recommended_offers = BigQueryOperator(
-    task_id=f"copy_to_clean_past_recommended_offers",
+    task_id="copy_to_clean_past_recommended_offers",
     sql=f"SELECT * FROM {BIGQUERY_RAW_DATASET}.past_recommended_offers",
     write_disposition="WRITE_TRUNCATE",
     use_legacy_sql=False,
@@ -104,32 +95,42 @@ copy_to_clean_past_recommended_offers = BigQueryOperator(
     dag=dag,
 )
 
-copy_to_analytics_ab_testing = BigQueryOperator(
-    task_id=f"copy_to_analytics_ab_testing",
-    sql=f"SELECT * FROM {BIGQUERY_RAW_DATASET}.{AB_TESTING_TABLE}",
+copy_to_analytics_past_recommended_offers = BigQueryOperator(
+    task_id="copy_to_analytics_past_recommended_offers",
+    sql=f"SELECT * FROM {BIGQUERY_CLEAN_DATASET}.past_recommended_offers",
     write_disposition="WRITE_TRUNCATE",
     use_legacy_sql=False,
-    destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.{AB_TESTING_TABLE}",
+    destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.past_recommended_offers",
     dag=dag,
 )
 
 copy_to_clean_ab_testing = BigQueryOperator(
-    task_id=f"copy_to_clean_ab_testing",
+    task_id="copy_to_clean_ab_testing",
     sql=f"SELECT * FROM {BIGQUERY_RAW_DATASET}.{AB_TESTING_TABLE}",
     write_disposition="WRITE_TRUNCATE",
     use_legacy_sql=False,
     destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.{AB_TESTING_TABLE}",
     dag=dag,
 )
+
+copy_to_analytics_ab_testing = BigQueryOperator(
+    task_id="copy_to_analytics_ab_testing",
+    sql=f"SELECT * FROM {BIGQUERY_CLEAN_DATASET}.{AB_TESTING_TABLE}",
+    write_disposition="WRITE_TRUNCATE",
+    use_legacy_sql=False,
+    destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.{AB_TESTING_TABLE}",
+    dag=dag,
+)
+
+
 end = DummyOperator(task_id="end", dag=dag)
 
 (
     start
     >> export_table_tasks
     >> delete_rows_task
-    >> copy_to_analytics_past_recommended_offers
     >> copy_to_clean_past_recommended_offers
-    >> copy_to_analytics_ab_testing
-    >> copy_to_clean_ab_testing
+    >> copy_to_analytics_past_recommended_offers
     >> end
 )
+(delete_rows_task >> copy_to_clean_ab_testing >> copy_to_analytics_ab_testing >> end)

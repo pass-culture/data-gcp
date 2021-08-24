@@ -40,6 +40,7 @@ BIGQUERY_SCHEMAS = {
         "booking_email": "STRING",
         "offer_is_active": "BOOLEAN",
         "offer_type": "STRING",
+        "offer_subcategoryId": "STRING",
         "offer_name": "STRING",
         "offer_description": "STRING",
         "offer_conditions": "STRING",
@@ -75,6 +76,10 @@ BIGQUERY_SCHEMAS = {
         "companies": "STRING",
         "countries": "STRING",
         "casting": "STRING",
+    },
+    "offer_tags": {
+        "offer_id": "STRING",
+        "tag": "STRING",
     },
     "offerer": {
         "offerer_is_active": "BOOLEAN",
@@ -236,5 +241,12 @@ BIGQUERY_SCHEMAS = {
         "amount": "NUMERIC",
         "expirationDate": "DATETIME",
         "dateCreated": "DATETIME",
+    },
+    "offer_report": {
+        "offer_report_id": "STRING",
+        "offer_report_user_id": "STRING",
+        "offer_report_offer_id": "STRING",
+        "offer_report_reason": "STRING",
+        "offer_report_custom_reason_content": "STRING",
     },
 }

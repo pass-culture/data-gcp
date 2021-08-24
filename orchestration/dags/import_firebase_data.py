@@ -29,6 +29,9 @@ ENV_SHORT_NAME_APP_INFO_ID_MAPPING = {
     "prod": ["app.passculture", "app.passculture.webapp"],
 }
 
+GCP_PROJECT_NATIVE_ENV = "passculture-native"
+FIREBASE_RAW_DATASET = "analytics_267263535"
+
 app_info_id_list = ENV_SHORT_NAME_APP_INFO_ID_MAPPING[ENV_SHORT_NAME]
 EXECUTION_DATE = "{{ ds_nodash }}"
 
@@ -38,15 +41,6 @@ default_dag_args = {
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT,
 }
-
-
-def _env_switcher():
-    next_steps = ["dummy_task_for_branch"]
-
-    if ENV_SHORT_NAME == "prod":
-        next_steps.append("copy_table")
-
-    return next_steps
 
 
 dag = DAG(
@@ -61,35 +55,11 @@ dag = DAG(
 
 start = DummyOperator(task_id="start", dag=dag)
 
-env_switcher = BranchPythonOperator(
-    task_id="env_switcher",
-    python_callable=_env_switcher,
-    dag=dag,
-)
-
-copy_table = BigQueryOperator(
-    task_id="copy_table",
-    sql="SELECT * FROM passculture-native.analytics_267263535.events_" + EXECUTION_DATE,
-    use_legacy_sql=False,
-    destination_dataset_table="passculture-data-prod:firebase_raw_data.events_"
-    + EXECUTION_DATE,
-    write_disposition="WRITE_EMPTY",
-    dag=dag,
-)
-# delete_table = BigQueryTableDeleteOperator(
-#     task_id="delete_table",
-#     deletion_dataset_table="passculture-native:analytics_267263535.events_"
-#     + EXECUTION_DATE,
-#     ignore_if_missing=True,
-#     dag=dag,
-# )
-
-dummy_task_for_branch = DummyOperator(task_id="dummy_task_for_branch", dag=dag)
 
 copy_table_to_env = BigQueryOperator(
     task_id="copy_table_to_env",
     sql=f"""
-        SELECT * FROM passculture-data-prod.firebase_raw_data.events_{EXECUTION_DATE} WHERE app_info.id IN ({", ".join([f"'{app_info_id}'" for app_info_id in app_info_id_list])})
+        SELECT * FROM {GCP_PROJECT_NATIVE_ENV}.{FIREBASE_RAW_DATASET}.events_{EXECUTION_DATE} WHERE app_info.id IN ({", ".join([f"'{app_info_id}'" for app_info_id in app_info_id_list])})
         """,
     use_legacy_sql=False,
     destination_dataset_table=f"{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.events_{EXECUTION_DATE}",
@@ -161,11 +131,7 @@ aggregate_firebase_user_events = BigQueryOperator(
 
 end = DummyOperator(task_id="end", dag=dag)
 
-start >> env_switcher
-env_switcher >> dummy_task_for_branch >> copy_table_to_env
-# env_switcher >> copy_table >> delete_table >> copy_table_to_env
-env_switcher >> copy_table >> copy_table_to_env
-copy_table_to_env >> copy_table_to_clean >> copy_table_to_analytics >> end
+start >> copy_table_to_env >> copy_table_to_clean >> copy_table_to_analytics >> end
 (
     copy_table_to_env
     >> [

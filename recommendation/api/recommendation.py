@@ -29,6 +29,7 @@ def get_final_recommendations(
     user_iris_id = get_iris_from_coordinates(longitude, latitude)
 
     if is_cold_start:
+        reco_origin = "cold_start"
         cold_start_types = get_cold_start_types(user_id)
         scored_recommendation_for_user = get_cold_start_scored_recommendations_for_user(
             user_id,
@@ -37,6 +38,7 @@ def get_final_recommendations(
             app_config["NUMBER_OF_PRESELECTED_OFFERS"],
         )
     else:
+        reco_origin = "algo"
         recommendations_for_user = get_intermediate_recommendations_for_user(
             user_id, user_iris_id
         )
@@ -60,7 +62,7 @@ def get_final_recommendations(
         scored_recommendation_for_user, app_config["NUMBER_OF_RECOMMENDATIONS"]
     )
 
-    save_recommendation(user_id, final_recommendations)
+    save_recommendation(user_id, final_recommendations, group_id, reco_origin)
     return final_recommendations
 
 
@@ -96,23 +98,33 @@ def ab_testing_assign_user(user_id, app_config):
     return group_id
 
 
-def save_recommendation(user_id: int, recommendations: List[int]):
+def save_recommendation(
+    user_id: int, recommendations: List[int], group_id, reco_origin
+):
     start = time.time()
     date = datetime.datetime.now(pytz.utc)
+    rows = []
+    for offer_id in recommendations:
+        rows.append(
+            {
+                "user_id": user_id,
+                "offer_id": offer_id,
+                "date": date,
+                "group_id": group_id,
+                "reco_origin": reco_origin,
+            }
+        )
 
     with create_db_connection() as connection:
-        for offer_id in recommendations:
-            connection.execute(
-                text(
-                    """
-                    INSERT INTO public.past_recommended_offers(userid, offerid, date)
-                    VALUES (:user_id, :offer_id, :date)
-                    """
-                ),
-                user_id=user_id,
-                offer_id=offer_id,
-                date=date,
-            )
+        connection.execute(
+            text(
+                """
+                INSERT INTO public.past_recommended_offers (userid, offerid, date, group_id, reco_origin)
+                VALUES (:user_id, :offer_id, :date, :group_id, :reco_origin)
+                """
+            ),
+            rows,
+        )
     log_duration(f"save_recommendations for {user_id}", start)
 
 

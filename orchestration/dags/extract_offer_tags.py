@@ -48,15 +48,6 @@ get_offers_to_tag = BigQueryOperator(
     dag=dag,
 )
 
-get_offers_to_tag_to_gcs = BigQueryToCloudStorageOperator(
-    task_id=f"get_offers_to_tag_to_gcs",
-    source_project_dataset_table=f"{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.temp_offers_to_tag",
-    destination_cloud_storage_uris=[f"gs://{FILENAME_INITIAL}"],
-    export_format="CSV",
-    print_header=True,
-    dag=dag,
-)
-
 tag_offers_description = PythonOperator(
     task_id=f"tag_offers_description",
     python_callable=tag_offers_description,
@@ -82,11 +73,4 @@ tag_offers = [
     tag_offers_name,
 ]
 
-(
-    start
-    >> get_offers_to_tag
-    >> get_offers_to_tag_to_gcs
-    >> tag_offers
-    >> update_table
-    >> end
-)
+(start >> get_offers_to_tag >> tag_offers >> update_table >> end)

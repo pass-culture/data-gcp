@@ -32,7 +32,7 @@ dag = DAG(
     default_args=default_dag_args,
     description="Tag offer based on description topic",
     on_failure_callback=None,
-    schedule_interval="0 23 * * *",
+    schedule_interval="0 * * * *",
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
 )

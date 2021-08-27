@@ -133,7 +133,14 @@ def get_offers_to_tag_request():
             WHERE description <> 'none'
             AND   description <> ""
             AND   offer_id NOT In (SELECT offer_id FROM {GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.offer_tags)
+            LIMIT 10000
             """
+
+
+def fetch_offers_to_tag():
+    return pd.read_gbq(
+        f""" SELECT * FROM {GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.temp_offers_to_tag"""
+    )
 
 
 def get_insert_tags_request(offers_tagged):
@@ -199,7 +206,8 @@ def get_offers_to_tag():
 
 
 def tag_offers_description():
-    offers_to_tag = load_from_csv(FILENAME_INITIAL)
+    # offers_to_tag = load_from_csv(FILENAME_INITIAL)
+    offers_to_tag = fetch_offers_to_tag()
     df_offers_tagged_list = []
     for category in TAG_OFFERS_CATEGORIES:
         df_offers_tagged_list.append(
@@ -215,7 +223,9 @@ def tag_offers_description():
 
 def tag_offers_name():
     save_to_csv(
-        extract_tags_offer_name(load_from_csv(FILENAME_INITIAL)), FILENAME_OFFER_NAME
+        extract_tags_offer_name(fetch_offers_to_tag()),
+        FILENAME_OFFER_NAME
+        # extract_tags_offer_name(load_from_csv(FILENAME_INITIAL)), FILENAME_OFFER_NAME
     )
     return
 

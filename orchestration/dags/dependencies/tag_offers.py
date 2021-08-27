@@ -133,6 +133,7 @@ def get_offers_to_tag_request():
             WHERE description <> 'none'
             AND   description <> ""
             AND   offer_id NOT In (SELECT offer_id FROM {GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.offer_tags)
+            LIMIT 10000
             """
 
 

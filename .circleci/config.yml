@@ -357,7 +357,7 @@ workflows:
           <<: *slack-fail-post-step
 
       - cloud-function-deploy:
-          name: siren-function-deploy-stg
+          name: siren-cloud-function-deploy-stg
           cloud-function-name: siren_stg
           cloud-function-folder: siren-function-source
           requires:

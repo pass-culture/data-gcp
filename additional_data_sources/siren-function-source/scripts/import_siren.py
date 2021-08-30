@@ -2,10 +2,9 @@ from datetime import datetime, timedelta
 import pandas as pd
 import requests
 import time
-from scripts.utils import GCP_PROJECT, BIGQUERY_CLEAN_DATASET, BUCKET_NAME, TOKEN
+from scripts.utils import GCP_PROJECT, BIGQUERY_CLEAN_DATASET, TOKEN
 
-SIREN_FILENAME = "siren_data.csv"
-LIME_DATE_SIREN = 35
+LIMIT_DATE_SIREN = 35
 MAX_SIREN_CALL = 150
 
 
@@ -26,68 +25,60 @@ def get_offerer_siren_list():
 def get_siren_query(siren_list):
     query = "https://api.insee.fr/entreprises/sirene/V3/siren?q="
     for i in range(len(siren_list) - 1):
-        query += "".join(f"""siren:{siren_list[i]} OR """)
+        query += f"""siren:{siren_list[i]} OR """
     query += f"""siren:{siren_list[len(siren_list)-1]}&curseur=*&nombre=1000"""
     return query
 
 
 def append_info_siren_list(siren_info_list, result):
-    for i in range(len(result["unitesLegales"])):
+    for unitesLegales in result["unitesLegales"]:
         try:
             siren_info_list.append(
                 {
-                    "siren": result["unitesLegales"][i]["siren"],
-                    "unite_legale": result["unitesLegales"][i]["categorieEntreprise"],
-                    "derniertraitement": result["unitesLegales"][i][
+                    "siren": unitesLegales["siren"],
+                    "unite_legale": unitesLegales["categorieEntreprise"],
+                    "derniertraitement": unitesLegales[
                         "dateDernierTraitementUniteLegale"
                     ],
-                    "dateCreationUniteLegale": result["unitesLegales"][i][
-                        "dateCreationUniteLegale"
-                    ],
-                    "identifiantAssociationUniteLegale": result["unitesLegales"][i][
+                    "dateCreationUniteLegale": unitesLegales["dateCreationUniteLegale"],
+                    "identifiantAssociationUniteLegale": unitesLegales[
                         "identifiantAssociationUniteLegale"
                     ],
-                    "trancheEffectifsUniteLegale": result["unitesLegales"][i][
+                    "trancheEffectifsUniteLegale": unitesLegales[
                         "trancheEffectifsUniteLegale"
                     ],
-                    "anneeEffectifsUniteLegale": result["unitesLegales"][i][
+                    "anneeEffectifsUniteLegale": unitesLegales[
                         "anneeEffectifsUniteLegale"
                     ],
-                    "dateDernierTraitementUniteLegale": result["unitesLegales"][i][
+                    "dateDernierTraitementUniteLegale": unitesLegales[
                         "dateDernierTraitementUniteLegale"
                     ],
-                    "categorieEntreprise": result["unitesLegales"][i][
-                        "categorieEntreprise"
-                    ],
-                    "etatAdministratifUniteLegale": result["unitesLegales"][i][
+                    "categorieEntreprise": unitesLegales["categorieEntreprise"],
+                    "etatAdministratifUniteLegale": unitesLegales[
                         "periodesUniteLegale"
                     ][0]["etatAdministratifUniteLegale"],
-                    "nomUniteLegale": result["unitesLegales"][i]["periodesUniteLegale"][
-                        0
-                    ]["nomUniteLegale"],
-                    "denominationUniteLegale": result["unitesLegales"][i][
-                        "periodesUniteLegale"
-                    ][0]["denominationUniteLegale"],
-                    "categorieJuridiqueUniteLegale": result["unitesLegales"][i][
+                    "nomUniteLegale": unitesLegales["periodesUniteLegale"][0][
+                        "nomUniteLegale"
+                    ],
+                    "denominationUniteLegale": unitesLegales["periodesUniteLegale"][0][
+                        "denominationUniteLegale"
+                    ],
+                    "categorieJuridiqueUniteLegale": unitesLegales[
                         "periodesUniteLegale"
                     ][0]["categorieJuridiqueUniteLegale"],
-                    "activitePrincipaleUniteLegale": result["unitesLegales"][i][
+                    "activitePrincipaleUniteLegale": unitesLegales[
                         "periodesUniteLegale"
                     ][0]["activitePrincipaleUniteLegale"],
-                    "changementCategorieJuridiqueUniteLegale": result["unitesLegales"][
-                        i
-                    ]["periodesUniteLegale"][0][
-                        "changementCategorieJuridiqueUniteLegale"
-                    ],
-                    "nomenclatureActivitePrincipaleUniteLegale": result[
-                        "unitesLegales"
-                    ][i]["periodesUniteLegale"][0][
-                        "nomenclatureActivitePrincipaleUniteLegale"
-                    ],
-                    "economieSocialeSolidaireUniteLegale": result["unitesLegales"][i][
+                    "changementCategorieJuridiqueUniteLegale": unitesLegales[
+                        "periodesUniteLegale"
+                    ][0]["changementCategorieJuridiqueUniteLegale"],
+                    "nomenclatureActivitePrincipaleUniteLegale": unitesLegales[
+                        "periodesUniteLegale"
+                    ][0]["nomenclatureActivitePrincipaleUniteLegale"],
+                    "economieSocialeSolidaireUniteLegale": unitesLegales[
                         "periodesUniteLegale"
                     ][0]["economieSocialeSolidaireUniteLegale"],
-                    "caractereEmployeurUniteLegale": result["unitesLegales"][i][
+                    "caractereEmployeurUniteLegale": unitesLegales[
                         "periodesUniteLegale"
                     ][0]["caractereEmployeurUniteLegale"],
                 }
@@ -95,24 +86,24 @@ def append_info_siren_list(siren_info_list, result):
         except:
             siren_info_list.append(
                 {
-                    "siren": result["unitesLegales"][i]["siren"],
-                    "unite_legale": "Not found",
-                    "derniertraitement": "Not found",
-                    "dateCreationUniteLegale": "Not found",
-                    "identifiantAssociationUniteLegale": "Not found",
-                    "trancheEffectifsUniteLegale": "Not found",
-                    "anneeEffectifsUniteLegale": "Not found",
-                    "dateDernierTraitementUniteLegale": "Not found",
-                    "categorieEntreprise": "Not found",
-                    "etatAdministratifUniteLegale": "Not found",
-                    "nomUniteLegale": "Not found",
-                    "denominationUniteLegale": "Not found",
-                    "categorieJuridiqueUniteLegale": "Not found",
-                    "activitePrincipaleUniteLegale": "Not found",
-                    "changementCategorieJuridiqueUniteLegale": "Not found",
-                    "nomenclatureActivitePrincipaleUniteLegale": "Not found",
-                    "economieSocialeSolidaireUniteLegale": "Not found",
-                    "caractereEmployeurUniteLegale": "Not found",
+                    "siren": unitesLegales["siren"],
+                    "unite_legale": None,
+                    "derniertraitement": None,
+                    "dateCreationUniteLegale": None,
+                    "identifiantAssociationUniteLegale": None,
+                    "trancheEffectifsUniteLegale": None,
+                    "anneeEffectifsUniteLegale": None,
+                    "dateDernierTraitementUniteLegale": None,
+                    "categorieEntreprise": None,
+                    "etatAdministratifUniteLegale": None,
+                    "nomUniteLegale": None,
+                    "denominationUniteLegale": None,
+                    "categorieJuridiqueUniteLegale": None,
+                    "activitePrincipaleUniteLegale": None,
+                    "changementCategorieJuridiqueUniteLegale": None,
+                    "nomenclatureActivitePrincipaleUniteLegale": None,
+                    "economieSocialeSolidaireUniteLegale": None,
+                    "caractereEmployeurUniteLegale": None,
                 }
             )
 
@@ -129,22 +120,9 @@ def query_siren():
         "Authorization": f"""Bearer {TOKEN}""",
     }
     siren_list = get_offerer_siren_list()
-    if siren_list.shape[0] > MAX_SIREN_CALL:
-        nb_df_sub_divisions = siren_list.shape[0] // MAX_SIREN_CALL
-        for k in range(nb_df_sub_divisions):
-            temp_siren_list = siren_list[k * MAX_SIREN_CALL : (k + 1) * MAX_SIREN_CALL]
-            temp_siren_list.reset_index(drop=True, inplace=True)
-            query = get_siren_query(temp_siren_list["siren"])
-            response = requests.get(
-                query,
-                headers=headers,
-            )
-            if response.status_code != 200:
-                print("error")
-            result = response.json()
-            siren_info_list = append_info_siren_list(siren_info_list, result)
-            time.sleep(2)
-        temp_siren_list = siren_list[nb_df_sub_divisions * MAX_SIREN_CALL :]
+    nb_df_sub_divisions = siren_list.shape[0] // MAX_SIREN_CALL
+    for k in range(nb_df_sub_divisions + 1):
+        temp_siren_list = siren_list[k * MAX_SIREN_CALL : (k + 1) * MAX_SIREN_CALL]
         temp_siren_list.reset_index(drop=True, inplace=True)
         query = get_siren_query(temp_siren_list["siren"])
         response = requests.get(
@@ -152,30 +130,12 @@ def query_siren():
             headers=headers,
         )
         if response.status_code != 200:
-            print("error")
-        result = response.json()
-        siren_info_list = append_info_siren_list(siren_info_list, result)
-    else:
-        query = get_siren_query(siren_list["siren"])
-        response = requests.get(
-            query,
-            headers=headers,
-        )
-        if response.status_code != 200:
-            print("error")
-        result = response.json()
-        siren_info_list = append_info_siren_list(siren_info_list, result)
+            raise ValueError("Error API CALL")
+        else:
+            result = response.json()
+            siren_info_list = append_info_siren_list(siren_info_list, result)
+        time.sleep(2)
     return siren_info_list
-
-
-def save_to_csv(siren_list):
-    pd.DataFrame(siren_list).to_csv(f"gcs://{BUCKET_NAME}/{SIREN_FILENAME}")
-    return
-
-
-def siren_to_csv():
-    save_to_csv(query_siren())
-    return
 
 
 def siren_to_bq():

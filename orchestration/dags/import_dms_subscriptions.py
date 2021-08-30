@@ -1,4 +1,3 @@
-import os
 from datetime import datetime, timedelta
 
 from airflow import DAG
@@ -33,9 +32,20 @@ with DAG(
 
     start = DummyOperator(task_id="start")
 
-    fetch_dms = PythonOperator(
-        task_id=f"download_dms_subscriptions",
+    fetch_dms_jeunes = PythonOperator(
+        task_id="fetch_dms_jeunes",
         python_callable=update_dms_applications,
+        op_kwargs={
+            "target": "jeunes",
+        },
+    )
+
+    fetch_dms_pro = PythonOperator(
+        task_id="fetch_dms_pro",
+        python_callable=update_dms_applications,
+        op_kwargs={
+            "target": "pro",
+        },
     )
 
     now = datetime.now()

@@ -1,17 +1,11 @@
-import gcsfs
-import json
 import os
-import requests
 import time
+from datetime import datetime
+import requests
 import urllib3
-
 import pandas as pd
 
-from datetime import datetime
-from google.cloud import secretmanager
-
 from dependencies.access_gcp_secrets import access_secret_data
-
 from dependencies.config import (
     GCP_PROJECT_ID,
     DATA_GCS_BUCKET_NAME,
@@ -20,21 +14,6 @@ from dependencies.config import (
 
 API_URL = "https://www.demarches-simplifiees.fr/api/v2/graphql"
 demarches_ids = ["44675", "44623", "29161"]
-df_applications = pd.DataFrame(
-    columns=[
-        "procedure_id",
-        "application_id",
-        "application_status",
-        "last_update_at",
-        "application_submitted_at",
-        "passed_in_instruction_at",
-        "processed_at",
-        "instructor_mail",
-        "applicant_department",
-        "applicant_birthday",
-        "applicant_postal_code",
-    ]
-)
 
 
 def parse_result(result, df_applications, demarche_id):
@@ -76,10 +55,10 @@ def fetch_result(demarches_ids, df_applications, dms_token):
     ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
     for demarche_id in demarches_ids:
         end_cursor = ""
-        query = get_query(demarche_id, "")
+        query_body = get_query_body(demarche_id, "")
         has_next_page = True
         while has_next_page:
-            result = run_query(query, dms_token)
+            result = run_query(query_body, dms_token)
             parse_result(result, df_applications, demarche_id)
 
             has_next_page = result["data"]["demarche"]["dossiers"]["pageInfo"][
@@ -93,69 +72,64 @@ def fetch_result(demarches_ids, df_applications, dms_token):
                 end_cursor = result["data"]["demarche"]["dossiers"]["pageInfo"][
                     "endCursor"
                 ]
-                query = get_query(demarche_id, end_cursor)
+                query_body = get_query_body(demarche_id, end_cursor)
 
 
-def get_query(demarche_id, end_cursor):
-    if not end_cursor:
-        parameter = "first:100"
-    else:
-        parameter = f'after: "{end_cursor}"'
-    query = (
-        """
-        query getDemarches {
-          demarche(number: """
-        + demarche_id
-        + """) {
-            title
-            dossiers("""
-        + parameter
-        + """) {
-              edges {
-                node {
-                  id
-                  state
-                  dateDerniereModification
-                  datePassageEnInstruction
-                  datePassageEnConstruction
-                  dateTraitement
-                  champs {
-                    id
-                    label
-                    stringValue
-                  }
-                  avis {
-                    instructeur {
-                      email
+def get_query_body(demarche_id, end_cursor):
+    query = """
+        query getDemarches($demarcheNumber: Int!, $after: String) {
+            demarche(number:$demarcheNumber) {
+                title
+                dossiers(first: 100, after: $after) {
+                    edges {
+                        node {
+                            id
+                            state
+                            dateDerniereModification
+                            datePassageEnInstruction
+                            datePassageEnConstruction
+                            dateTraitement
+                            champs {
+                                id
+                                label
+                                stringValue
+                            }
+                            avis {
+                                instructeur {
+                                    email
+                                }
+                            }
+                        }
+                        cursor
                     }
-                  }
-                }
-                cursor
-              }
-              pageInfo {
-                  endCursor
-                  hasNextPage
+                    pageInfo {
+                        endCursor
+                        hasNextPage
+                    }
                 }
             }
-          }
         }
         """
-    )
-    return query
+    variables = {"demarcheNumber": demarche_id, "after": end_cursor}
+    query_body = {"query": query, "variables": variables}
+    return query_body
 
 
-def run_query(query, dms_token):
+def run_query(query_body, dms_token):
     time.sleep(0.2)
     headers = {"Authorization": "Bearer " + dms_token}
     request = requests.post(
-        API_URL, json={"query": query}, headers=headers, verify=False
+        API_URL,
+        json=query_body,
+        headers=headers,
+        verify=False,
     )  # warn: SSL verification disabled
     if request.status_code == 200:
         return request.json()
     else:
         raise Exception(
             "Query failed to run by returning code of {}. {}".format(
-                request.status_code, query
+                request.status_code, query_body
             )
         )
 
@@ -170,6 +144,22 @@ def save_result(df_applications):
 
 
 def update_dms_applications():
+    df_applications = pd.DataFrame(
+        columns=[
+            "procedure_id",
+            "application_id",
+            "application_status",
+            "last_update_at",
+            "application_submitted_at",
+            "passed_in_instruction_at",
+            "processed_at",
+            "instructor_mail",
+            "applicant_department",
+            "applicant_birthday",
+            "applicant_postal_code",
+        ]
+    )
+
     dms_token = access_secret_data(GCP_PROJECT_ID, "token_dms")
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     fetch_result(demarches_ids, df_applications, dms_token)

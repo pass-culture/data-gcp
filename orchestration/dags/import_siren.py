@@ -29,7 +29,7 @@ def getting_service_account_token():
 
 
 dag = DAG(
-    "import_siren",
+    "import_siren_v1",
     default_args=default_dag_args,
     description="Import Siren from INSEE API",
     on_failure_callback=None,

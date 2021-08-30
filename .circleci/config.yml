@@ -458,7 +458,7 @@ workflows:
             - typeform-webhook-cloud-function-deploy-stg
             - downloads-cloud-function-deploy-stg
             - contentful-cloud-function-deploy-stg
-            - siren_prod-cloud-function-deploy-stg
+            - siren-cloud-function-deploy-stg
 
   # ----------------
   # Workflow to deploy on dev

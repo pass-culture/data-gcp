@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from google.cloud import bigquery
 import pandas as pd
 import requests
 import time
@@ -14,12 +15,18 @@ def get_limit_date():
 
 
 def get_offerer_siren_list():
-    return pd.read_gbq(
+    siren_list = []
+    client = bigquery.Client()
+    query_job = client.query(
         f"""SELECT offerer_siren as siren
         FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_offerer` 
         WHERE offerer_siren is not null
         """
     )
+    rows = query_job.result()
+    for row in rows:
+        siren_list.append(row.siren)
+    return siren_list
 
 
 def get_siren_query(siren_list):
@@ -119,7 +126,7 @@ def query_siren():
         "Accept": "application/json",
         "Authorization": f"""Bearer {TOKEN}""",
     }
-    siren_list = get_offerer_siren_list()["siren"].tolist()
+    siren_list = get_offerer_siren_list()
     nb_df_sub_divisions = len(siren_list) // MAX_SIREN_CALL
     for k in range(nb_df_sub_divisions + 1):
         query = get_siren_query(

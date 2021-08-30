@@ -24,8 +24,8 @@ def get_offerer_siren_list():
 
 def get_siren_query(siren_list):
     query = "https://api.insee.fr/entreprises/sirene/V3/siren?q="
-    for i in range(len(siren_list) - 1):
-        query += f"""siren:{siren_list[i]} OR """
+    for siren in siren_list:
+        query += f"""siren:{siren} OR """
     query += f"""siren:{siren_list[len(siren_list)-1]}&curseur=*&nombre=1000"""
     return query
 
@@ -119,12 +119,12 @@ def query_siren():
         "Accept": "application/json",
         "Authorization": f"""Bearer {TOKEN}""",
     }
-    siren_list = get_offerer_siren_list()
-    nb_df_sub_divisions = siren_list.shape[0] // MAX_SIREN_CALL
+    siren_list = get_offerer_siren_list()["siren"].tolist()
+    nb_df_sub_divisions = len(siren_list) // MAX_SIREN_CALL
     for k in range(nb_df_sub_divisions + 1):
-        temp_siren_list = siren_list[k * MAX_SIREN_CALL : (k + 1) * MAX_SIREN_CALL]
-        temp_siren_list.reset_index(drop=True, inplace=True)
-        query = get_siren_query(temp_siren_list["siren"])
+        query = get_siren_query(
+            siren_list[k * MAX_SIREN_CALL : (k + 1) * MAX_SIREN_CALL]
+        )
         response = requests.get(
             query,
             headers=headers,

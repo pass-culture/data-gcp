@@ -245,7 +245,7 @@ def load_from_csv(filename):
 
 def update_table():
     # dfinit table with all offers to tag not present in offer_tags
-    df_offers_to_tag = load_from_csv(FILENAME_INITIAL)
+    df_offers_to_tag = fetch_offers_to_tag()
     df_description_tags = load_from_csv(FILENAME_DESCRIPTION)
     df_offer_name_tags = load_from_csv(FILENAME_OFFER_NAME)
 

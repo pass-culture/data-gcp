@@ -32,7 +32,7 @@ dag = DAG(
     default_args=default_dag_args,
     description="Tag offer based on description topic",
     on_failure_callback=None,
-    schedule_interval="0 23 * * *",
+    schedule_interval="0 */6 * * *",
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
 )
@@ -45,15 +45,6 @@ get_offers_to_tag = BigQueryOperator(
     use_legacy_sql=False,
     destination_dataset_table=f"{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.temp_offers_to_tag",
     write_disposition="WRITE_TRUNCATE",
-    dag=dag,
-)
-
-get_offers_to_tag_to_gcs = BigQueryToCloudStorageOperator(
-    task_id=f"get_offers_to_tag_to_gcs",
-    source_project_dataset_table=f"{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.temp_offers_to_tag",
-    destination_cloud_storage_uris=[f"gs://{FILENAME_INITIAL}"],
-    export_format="CSV",
-    print_header=True,
     dag=dag,
 )
 
@@ -82,11 +73,4 @@ tag_offers = [
     tag_offers_name,
 ]
 
-(
-    start
-    >> get_offers_to_tag
-    >> get_offers_to_tag_to_gcs
-    >> tag_offers
-    >> update_table
-    >> end
-)
+(start >> get_offers_to_tag >> tag_offers >> update_table >> end)

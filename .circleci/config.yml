@@ -420,6 +420,38 @@ workflows:
             - Slack
           <<: *slack-fail-post-step
 
+      - cloud-function-deploy:
+          name: dms-cloud-function-deploy-stg
+          cloud-function-name: dms_stg
+          cloud-function-folder: dms-function-source
+          requires:
+            - linter
+          filters:
+            branches:
+              only:
+                - master
+          context:
+            - DATA_GCP
+            - DATA_GCP_EHP
+            - Slack
+          <<: *slack-fail-post-step
+
+      - cloud-function-deploy:
+          name: dms-cloud-function-deploy-prod
+          cloud-function-name: dms_prod
+          cloud-function-folder: dms-function-source
+          requires:
+            - linter
+          filters:
+            branches:
+              only:
+                - production
+          context:
+            - DATA_GCP
+            - DATA_GCP_PROD
+            - Slack
+          <<: *slack-fail-post-step
+
       # Slack alerts jobs
       # ----------------
       - slack-alert:
@@ -440,6 +472,7 @@ workflows:
             - downloads-cloud-function-deploy-prod
             - contentful-cloud-function-deploy-prod
             - siren-cloud-function-deploy-prod
+            - dms-cloud-function-deploy-prod
 
       - slack-alert:
           name: slack-alert-staging
@@ -459,6 +492,7 @@ workflows:
             - downloads-cloud-function-deploy-stg
             - contentful-cloud-function-deploy-stg
             - siren-cloud-function-deploy-stg
+            - dms-cloud-function-deploy-stg
 
   # ----------------
   # Workflow to deploy on dev
@@ -499,6 +533,11 @@ workflows:
           cloud-function-name: siren_import_dev
           cloud-function-folder: siren-function-source
           <<: *deploy_on_dev_commons
+      - cloud-function-deploy:
+          name: dms-cloud-function-deploy-dev
+          cloud-function-name: dms_dev
+          cloud-function-folder: dms-function-source
+          <<: *deploy_on_dev_commons
       - build_and_deploy_api:
           name: build_and_deploy_api_dev
           api-instance-name: apireco-dev
@@ -514,6 +553,7 @@ workflows:
             - downloads-cloud-function-deploy-dev
             - contentful-cloud-function-deploy-dev
             - siren-cloud-function-deploy-dev
+            - dms-cloud-function-deploy-dev
             - build_and_deploy_api_dev
           context:
             - DATA_GCP_DEV

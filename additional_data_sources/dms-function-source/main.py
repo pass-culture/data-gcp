@@ -235,25 +235,28 @@ def parse_result_pro(result, df_applications, demarche_id):
         if dossier["demandeur"]["siret"]:
             dossier_line["demandeur_siret"] = dossier["demandeur"]["siret"]
             dossier_line["demandeur_naf"] = dossier["demandeur"]["naf"]
-            dossier_line["demandeur_libelleNaf"] = dossier["demandeur"]["libelleNaf"]
-            dossier_line["demandeur_entreprise_siren"] = dossier["demandeur"][
-                "entreprise"
-            ]["siren"]
-            dossier_line["demandeur_entreprise_formeJuridique"] = dossier["demandeur"][
-                "entreprise"
-            ]["formeJuridique"]
-            dossier_line["demandeur_entreprise_formeJuridiqueCode"] = dossier[
-                "demandeur"
-            ]["entreprise"]["formeJuridiqueCode"]
-            dossier_line["demandeur_entreprise_codeEffectifEntreprise"] = dossier[
-                "demandeur"
-            ]["entreprise"]["codeEffectifEntreprise"]
-            dossier_line["demandeur_entreprise_raisonSociale"] = dossier["demandeur"][
-                "entreprise"
-            ]["raisonSociale"]
-            dossier_line["demandeur_entreprise_siretSiegeSocial"] = dossier[
-                "demandeur"
-            ]["entreprise"]["siretSiegeSocial"]
+            dossier_line["demandeur_libelleNaf"] = dossier["demandeur"][
+                "libelleNaf"
+            ].replace("\n", " ")
+            if dossier["demandeur"]["entreprise"]:
+                dossier_line["demandeur_entreprise_siren"] = dossier["demandeur"][
+                    "entreprise"
+                ]["siren"]
+                dossier_line["demandeur_entreprise_formeJuridique"] = dossier[
+                    "demandeur"
+                ]["entreprise"]["formeJuridique"]
+                dossier_line["demandeur_entreprise_formeJuridiqueCode"] = dossier[
+                    "demandeur"
+                ]["entreprise"]["formeJuridiqueCode"]
+                dossier_line["demandeur_entreprise_codeEffectifEntreprise"] = dossier[
+                    "demandeur"
+                ]["entreprise"]["codeEffectifEntreprise"]
+                dossier_line["demandeur_entreprise_raisonSociale"] = dossier[
+                    "demandeur"
+                ]["entreprise"]["raisonSociale"]
+                dossier_line["demandeur_entreprise_siretSiegeSocial"] = dossier[
+                    "demandeur"
+                ]["entreprise"]["siretSiegeSocial"]
 
         instructeurs = []
         for instructeur in dossier["instructeurs"]:

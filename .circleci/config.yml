@@ -358,7 +358,7 @@ workflows:
 
       - cloud-function-deploy:
           name: siren-cloud-function-deploy-stg
-          cloud-function-name: siren_stg
+          cloud-function-name: siren_import_stg
           cloud-function-folder: siren-function-source
           requires:
             - linter
@@ -374,7 +374,7 @@ workflows:
 
       - cloud-function-deploy:
           name: siren-cloud-function-deploy-prod
-          cloud-function-name: siren_prod
+          cloud-function-name: siren_import_prod
           cloud-function-folder: siren-function-source
           requires:
             - linter
@@ -496,7 +496,7 @@ workflows:
           <<: *deploy_on_dev_commons
       - cloud-function-deploy:
           name: siren-cloud-function-deploy-dev
-          cloud-function-name: siren_dev
+          cloud-function-name: siren_import_dev
           cloud-function-folder: siren-function-source
           <<: *deploy_on_dev_commons
       - build_and_deploy_api:

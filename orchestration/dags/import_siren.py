@@ -63,7 +63,7 @@ siren_to_bq = SimpleHttpOperator(
 )
 
 import_siren_to_analytics = BigQueryOperator(
-    task_id=f"import_to_analytics_siren",
+    task_id="import_to_analytics_siren",
     sql=f"SELECT * FROM {BIGQUERY_CLEAN_DATASET}.siren_data",
     write_disposition="WRITE_TRUNCATE",
     use_legacy_sql=False,

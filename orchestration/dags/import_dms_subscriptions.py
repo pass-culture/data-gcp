@@ -1,23 +1,47 @@
+import json
 from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python_operator import PythonOperator
+from airflow.operators.http_operator import SimpleHttpOperator
+from airflow.contrib.operators.bigquery_operator import BigQueryOperator
 from airflow.contrib.operators.gcs_to_bq import (
     GoogleCloudStorageToBigQueryOperator,
 )
 
-from dependencies.slack_alert import task_fail_slack_alert
-from dependencies.request_dms import update_dms_applications
+from google.auth.transport.requests import Request
+from google.oauth2 import id_token
 
-from dependencies.config import DATA_GCS_BUCKET_NAME, BIGQUERY_ANALYTICS_DATASET
+from dependencies.slack_alert import task_fail_slack_alert
+
+from dependencies.config import (
+    DATA_GCS_BUCKET_NAME,
+    BIGQUERY_CLEAN_DATASET,
+    BIGQUERY_ANALYTICS_DATASET,
+    ENV_SHORT_NAME,
+    GCP_PROJECT,
+)
+
+DMS_FUNCTION_NAME = "dms_" + ENV_SHORT_NAME
+
+
+def getting_service_account_token():
+    function_url = (
+        "https://europe-west1-"
+        + GCP_PROJECT
+        + ".cloudfunctions.net/"
+        + DMS_FUNCTION_NAME
+    )
+    open_id_connect_token = id_token.fetch_id_token(Request(), function_url)
+    return open_id_connect_token
 
 
 default_args = {
-    "start_date": datetime(2021, 5, 26),
+    "start_date": datetime(2021, 8, 29),
     "on_failure_callback": task_fail_slack_alert,
-    "retries": 0,
-    "retry_delay": timedelta(minutes=2),
+    "retries": 2,
+    "retry_delay": timedelta(minutes=5),
 }
 
 
@@ -32,45 +56,125 @@ with DAG(
 
     start = DummyOperator(task_id="start")
 
-    fetch_dms_jeunes = PythonOperator(
-        task_id="fetch_dms_jeunes",
-        python_callable=update_dms_applications,
-        op_kwargs={
-            "target": "jeunes",
-        },
+    getting_service_account_token = PythonOperator(
+        task_id="getting_service_account_token",
+        python_callable=getting_service_account_token,
     )
 
-    fetch_dms_pro = PythonOperator(
-        task_id="fetch_dms_pro",
-        python_callable=update_dms_applications,
-        op_kwargs={
-            "target": "pro",
+    dms_to_gcs = SimpleHttpOperator(
+        task_id="dms_to_gcs",
+        method="POST",
+        http_conn_id="http_gcp_cloud_function",
+        endpoint=DMS_FUNCTION_NAME,
+        data=json.dumps({"updated_since": "{{ prev_start_date_success.isoformat() }}"}),
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_service_account_token', key='return_value')}}",
         },
+        log_response=True,
+        xcom_push=True,
     )
 
-    now = datetime.now()
-    import_to_bq = GoogleCloudStorageToBigQueryOperator(
-        task_id="import_dms_to_bq",
+    import_dms_jeunes_to_bq = GoogleCloudStorageToBigQueryOperator(
+        task_id="import_dms_jeunes_to_bq",
         bucket=DATA_GCS_BUCKET_NAME,
-        source_objects=[f"dms_export/dms_{now.year}_{now.month}_{now.day}.csv"],
-        destination_project_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.dms_applications_api",
+        source_objects=[
+            "dms_export/dms_jeunes_{{task_instance.xcom_pull(task_ids='dms_to_gcs', key='return_value')}}.csv"
+        ],
+        destination_project_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.dms_jeunes",
         schema_fields=[
             {"name": "procedure_id", "type": "STRING"},
             {"name": "application_id", "type": "STRING"},
+            {"name": "application_number", "type": "STRING"},
+            {"name": "application_archived", "type": "STRING"},
             {"name": "application_status", "type": "STRING"},
             {"name": "last_update_at", "type": "TIMESTAMP"},
             {"name": "application_submitted_at", "type": "TIMESTAMP"},
             {"name": "passed_in_instruction_at", "type": "TIMESTAMP"},
             {"name": "processed_at", "type": "TIMESTAMP"},
-            {"name": "instructor_mail", "type": "STRING"},
+            {"name": "application_motivation", "type": "STRING"},
+            {"name": "instructors", "type": "STRING"},
             {"name": "applicant_department", "type": "STRING"},
-            {"name": "applicant_birthday", "type": "STRING"},
             {"name": "applicant_postal_code", "type": "STRING"},
         ],
+        write_disposition="WRITE_APPEND",
+    )
+
+    import_dms_pro_to_bq = GoogleCloudStorageToBigQueryOperator(
+        task_id="import_dms_pro_to_bq",
+        bucket=DATA_GCS_BUCKET_NAME,
+        source_objects=[
+            "dms_export/dms_pro_{{task_instance.xcom_pull(task_ids='dms_to_gcs', key='return_value')}}.csv"
+        ],
+        destination_project_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.dms_pro",
+        schema_fields=[
+            {"name": "procedure_id", "type": "STRING"},
+            {"name": "application_id", "type": "STRING"},
+            {"name": "application_number", "type": "STRING"},
+            {"name": "application_archived", "type": "STRING"},
+            {"name": "application_status", "type": "STRING"},
+            {"name": "last_update_at", "type": "TIMESTAMP"},
+            {"name": "application_submitted_at", "type": "TIMESTAMP"},
+            {"name": "passed_in_instruction_at", "type": "TIMESTAMP"},
+            {"name": "processed_at", "type": "TIMESTAMP"},
+            {"name": "application_motivation", "type": "STRING"},
+            {"name": "instructors", "type": "STRING"},
+            {"name": "demandeur_siret", "type": "STRING"},
+            {"name": "demandeur_naf", "type": "STRING"},
+            {"name": "demandeur_libelleNaf", "type": "STRING"},
+            {"name": "demandeur_entreprise_siren", "type": "STRING"},
+            {"name": "demandeur_entreprise_formeJuridique", "type": "STRING"},
+            {"name": "demandeur_entreprise_formeJuridiqueCode", "type": "STRING"},
+            {"name": "demandeur_entreprise_codeEffectifEntreprise", "type": "STRING"},
+            {"name": "demandeur_entreprise_raisonSociale", "type": "STRING"},
+            {"name": "demandeur_entreprise_siretSiegeSocial", "type": "STRING"},
+        ],
+        write_disposition="WRITE_APPEND",
+    )
+
+    def deduplicate_query(target):
+        return f"""
+        SELECT * except(row_number)
+        FROM (
+            SELECT
+            *,
+            ROW_NUMBER() OVER (PARTITION BY application_number
+                                            ORDER BY last_update_at DESC
+                                        ) as row_number
+            FROM `{BIGQUERY_CLEAN_DATASET}.dms_{target}`
+            )
+        WHERE row_number=1
+        """
+
+    copy_dms_jeunes_to_analytics = BigQueryOperator(
+        task_id="copy_dms_jeunes_to_analytics",
+        sql=deduplicate_query("jeunes"),
+        destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.dms_jeunes",
         write_disposition="WRITE_TRUNCATE",
+        use_legacy_sql=False,
+        dag=dag,
+    )
+
+    copy_dms_pro_to_analytics = BigQueryOperator(
+        task_id="copy_dms_pro_to_analytics",
+        sql=deduplicate_query("pro"),
+        destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.dms_pro",
+        write_disposition="WRITE_TRUNCATE",
+        use_legacy_sql=False,
+        dag=dag,
     )
 
     end = DummyOperator(task_id="end")
 
 
-start >> fetch_dms >> import_to_bq >> end
+(
+    start
+    >> getting_service_account_token
+    >> dms_to_gcs
+    >> [import_dms_jeunes_to_bq, import_dms_pro_to_bq]
+)
+
+import_dms_jeunes_to_bq >> copy_dms_jeunes_to_analytics
+import_dms_pro_to_bq >> copy_dms_pro_to_analytics
+
+[copy_dms_jeunes_to_analytics, copy_dms_pro_to_analytics] >> end

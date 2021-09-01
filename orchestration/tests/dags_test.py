@@ -137,6 +137,15 @@ class TestDags(unittest.TestCase):
         self.assertIsNotNone(dag)
         self.assertEqual(len(dag.tasks), 4)
 
+    def test_import_siren_is_loaded(self):
+        # When
+        dag = self.dagbag.get_dag(dag_id="import_siren_v1")
+
+        # Then
+        self.assertDictEqual(self.dagbag.import_errors, {})
+        self.assertIsNotNone(dag)
+        self.assertEqual(len(dag.tasks), 4)
+
     def test_compute_monitoring_is_loaded(self):
         # When
         dag = self.dagbag.get_dag(dag_id="compute_monitoring")

@@ -40,8 +40,6 @@ slack-fail-post-step: &slack-fail-post-step
             ]
           }
 
-
-
 ###################
 #  Aliases
 ###################
@@ -57,7 +55,6 @@ deploy_on_dev_commons: &deploy_on_dev_commons
     - Slack
   <<: *slack-fail-post-step
 
-
 ###################
 #  WORKFLOWS
 ###################
@@ -66,7 +63,6 @@ workflows:
   version: 2
   run-checks:
     jobs:
-
       - linter
 
       - analytics_tests:
@@ -77,8 +73,8 @@ workflows:
             - Slack
           <<: *slack-fail-post-step
 
-# Recommendation jobs
-# -------------------
+      # Recommendation jobs
+      # -------------------
 
       - recommendation-db-install:
           requires:
@@ -126,7 +122,7 @@ workflows:
 
       - build_and_deploy_api:
           name: build_and_deploy_api_staging
-          api-instance-name : apireco-stg
+          api-instance-name: apireco-stg
           requires:
             - recommendation-api-tests
             - recommendation-db-tests
@@ -157,7 +153,7 @@ workflows:
 
       - build_and_deploy_api:
           name: build_and_deploy_api_production
-          api-instance-name : apireco-prod
+          api-instance-name: apireco-prod
           requires:
             - recommendation-api-tests
             - recommendation-db-tests
@@ -186,8 +182,8 @@ workflows:
             - Slack
           <<: *slack-fail-post-step
 
-# Composer jobs
-# -------------
+      # Composer jobs
+      # -------------
       - orchestration-install:
           requires:
             - linter
@@ -230,10 +226,8 @@ workflows:
             - Slack
           <<: *slack-fail-post-step
 
-
-
-# Cloud Function jobs
-# -------------------
+      # Cloud Function jobs
+      # -------------------
       - cloud-function-deploy:
           name: typeform-cloud-function-deploy-stg
           cloud-function-name: qpi_import_stg
@@ -363,6 +357,38 @@ workflows:
           <<: *slack-fail-post-step
 
       - cloud-function-deploy:
+          name: siren-cloud-function-deploy-stg
+          cloud-function-name: siren_stg
+          cloud-function-folder: siren-function-source
+          requires:
+            - linter
+          filters:
+            branches:
+              only:
+                - master
+          context:
+            - DATA_GCP
+            - DATA_GCP_EHP
+            - Slack
+          <<: *slack-fail-post-step
+
+      - cloud-function-deploy:
+          name: siren-cloud-function-deploy-prod
+          cloud-function-name: siren_prod
+          cloud-function-folder: siren-function-source
+          requires:
+            - linter
+          filters:
+            branches:
+              only:
+                - production
+          context:
+            - DATA_GCP
+            - DATA_GCP_PROD
+            - Slack
+          <<: *slack-fail-post-step
+
+      - cloud-function-deploy:
           name: typeform-webhook-cloud-function-deploy-stg
           cloud-function-name: qpi_webhook_stg
           cloud-function-folder: qpi-webhook-function-source
@@ -394,8 +420,8 @@ workflows:
             - Slack
           <<: *slack-fail-post-step
 
-# Slack alerts jobs
-# ----------------
+      # Slack alerts jobs
+      # ----------------
       - slack-alert:
           name: slack-alert-production
           destination_env: Production
@@ -413,7 +439,7 @@ workflows:
             - typeform-webhook-cloud-function-deploy-prod
             - downloads-cloud-function-deploy-prod
             - contentful-cloud-function-deploy-prod
-
+            - siren-cloud-function-deploy-prod
 
       - slack-alert:
           name: slack-alert-staging
@@ -432,10 +458,11 @@ workflows:
             - typeform-webhook-cloud-function-deploy-stg
             - downloads-cloud-function-deploy-stg
             - contentful-cloud-function-deploy-stg
+            - siren-cloud-function-deploy-stg
 
-# ----------------
-# Workflow to deploy on dev
-# ----------------
+  # ----------------
+  # Workflow to deploy on dev
+  # ----------------
 
   deploy_on_dev:
     jobs:
@@ -467,9 +494,14 @@ workflows:
           cloud-function-name: qpi_webhook_dev
           cloud-function-folder: qpi-webhook-function-source
           <<: *deploy_on_dev_commons
+      - cloud-function-deploy:
+          name: siren-cloud-function-deploy-dev
+          cloud-function-name: siren_dev
+          cloud-function-folder: siren-function-source
+          <<: *deploy_on_dev_commons
       - build_and_deploy_api:
           name: build_and_deploy_api_dev
-          api-instance-name : apireco-dev
+          api-instance-name: apireco-dev
           <<: *deploy_on_dev_commons
       - api-integration-tests:
           env: dev
@@ -481,6 +513,7 @@ workflows:
             - addresses-cloud-function-deploy-dev
             - downloads-cloud-function-deploy-dev
             - contentful-cloud-function-deploy-dev
+            - siren-cloud-function-deploy-dev
             - build_and_deploy_api_dev
           context:
             - DATA_GCP_DEV
@@ -492,8 +525,6 @@ workflows:
           context: Slack
           requires:
             - api-integration-tests-dev
-
-
 
 ###################
 #  EXECUTORS
@@ -541,7 +572,6 @@ jobs:
             . venv-lint/bin/activate
             black --exclude="venv-lint" --check .
 
-
   analytics_tests:
     executor: python
     working_directory: ~/data-gcp/analytics
@@ -572,7 +602,6 @@ jobs:
             export PYTHONPATH=$PYTHONPATH:~/data-gcp:~/data-gcp/orchestration/dags
             pytest tests
 
-
   recommendation-api-build:
     executor: python
     working_directory: ~/data-gcp/recommendation/api
@@ -595,7 +624,6 @@ jobs:
           root: .
           paths:
             - .
-
 
   recommendation-api-tests:
     docker:
@@ -621,7 +649,6 @@ jobs:
             export PYTHONPATH=$PYTHONPATH:~/data-gcp/recommendation/api
             . venv-api/bin/activate
             ./run_tests.sh
-
 
   api-integration-tests:
     parameters:
@@ -653,7 +680,6 @@ jobs:
             cd recommendation/api/postman
             newman run api_integration_tests.postman_collection.json --environment <<parameters.env>>.postman_environment.json --env-var "api_token=<<parameters.api_token>>"
 
-
   orchestration-install:
     executor: python
     working_directory: ~/data-gcp/orchestration
@@ -677,15 +703,14 @@ jobs:
           paths:
             - .
 
-
   orchestration-tests:
     executor: python
     working_directory: ~/data-gcp/orchestration
     environment:
-        AIRFLOW_HOME: ~/data-gcp/orchestration
-        DAG_FOLDER: ~/data-gcp/orchestration/dags
-        RECOMMENDATION_SQL_INSTANCE: cloudsql-recommendation-circleci
-        RECOMMENDATION_SQL_BASE: cloudsql-recommendation-circleci
+      AIRFLOW_HOME: ~/data-gcp/orchestration
+      DAG_FOLDER: ~/data-gcp/orchestration/dags
+      RECOMMENDATION_SQL_INSTANCE: cloudsql-recommendation-circleci
+      RECOMMENDATION_SQL_BASE: cloudsql-recommendation-circleci
     steps:
       - attach_workspace:
           at: .
@@ -695,7 +720,6 @@ jobs:
             . venv-orchestration/bin/activate
             airflow initdb
             pytest tests
-
 
   recommendation-db-install:
     executor: python
@@ -720,7 +744,6 @@ jobs:
           paths:
             - .
 
-
   recommendation-db-tests:
     docker:
       - image: circleci/python:3.7
@@ -744,7 +767,6 @@ jobs:
             . venv-db/bin/activate
             ./run_tests.sh
 
-
   composer-deploy:
     executor: gcp-sdk
     environment:
@@ -757,6 +779,7 @@ jobs:
       DAG_IMPORT_TYPEFORM: import_typeform_v1
       DAG_IMPORT_ADDRESSES: import_addresses_v1
       DAG_IMPORT_DMS: import_dms_subscriptions
+      DAG_IMPORT_SIREN: import_siren_v1
       DAG_COMPUTE_MONITORING: compute_monitoring
     working_directory: ~/data-gcp/orchestration
     steps:
@@ -785,12 +808,12 @@ jobs:
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_TYPEFORM} 6 20
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_ADDRESSES} 6 20
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_DMS} 6 20
+            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_SIREN} 6 20
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_COMPUTE_MONITORING} 6 20
-
 
   build_and_deploy_api:
     docker:
-      - image: 'cimg/base:stable'
+      - image: "cimg/base:stable"
     parameters:
       api-instance-name:
         description: "API instance name"
@@ -801,7 +824,7 @@ jobs:
           path: ~/data-gcp
       - cloudrun/init
       - cloudrun/build:
-          tag: 'eu.gcr.io/${GOOGLE_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}/<< parameters.api-instance-name >>:${CIRCLE_SHA1}'
+          tag: "eu.gcr.io/${GOOGLE_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}/<< parameters.api-instance-name >>:${CIRCLE_SHA1}"
       - run:
           name: Apply latest tag
           command: |
@@ -809,12 +832,11 @@ jobs:
             eu.gcr.io/${GOOGLE_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}/<< parameters.api-instance-name >>:${CIRCLE_SHA1} \
             eu.gcr.io/${GOOGLE_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}/<< parameters.api-instance-name >>:latest
       - cloudrun/deploy:
-          image: 'eu.gcr.io/${GOOGLE_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}/<< parameters.api-instance-name >>:${CIRCLE_SHA1}'
+          image: "eu.gcr.io/${GOOGLE_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}/<< parameters.api-instance-name >>:${CIRCLE_SHA1}"
           platform: managed
           region: europe-west1
           service-name: << parameters.api-instance-name >>
           unauthenticated: true
-
 
   slack-alert:
     docker:

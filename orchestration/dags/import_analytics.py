@@ -148,7 +148,7 @@ for table in data_applicative_tables_and_date_columns.keys():
 
 end_import = DummyOperator(task_id="end_import", dag=dag)
 
-IRIS_DISTANCE = 100000
+IRIS_DISTANCE = 50000
 
 link_iris_venues_task = BigQueryOperator(
     task_id="link_iris_venues_task",

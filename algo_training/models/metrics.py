@@ -3,7 +3,7 @@ import numpy as np
 from scipy.spatial.distance import cosine
 from operator import itemgetter
 
-NUMBER_OF_USERS = 5000
+NUMBER_OF_USERS = 5000 if ENV_SHORT_NAME == "prod" else 200
 
 TYPE_LIST = [
     "ThingType.LIVRE_EDITION",

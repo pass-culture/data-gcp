@@ -2,6 +2,7 @@ import random
 import numpy as np
 from scipy.spatial.distance import cosine
 from operator import itemgetter
+from utils import ENV_SHORT_NAME
 
 NUMBER_OF_USERS = 5000 if ENV_SHORT_NAME == "prod" else 200
 

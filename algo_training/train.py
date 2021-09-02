@@ -18,8 +18,7 @@ TRAIN_DIR = "/home/airflow/train"
 EMBEDDING_SIZE = 64
 L2_REG = 0
 N_EPOCHS = 20 if ENV_SHORT_NAME == "prod" else 10
-# BATCH_SIZE = 16
-BATCH_SIZE = 32
+BATCH_SIZE = 16
 
 
 def train(storage_path: str):
@@ -79,7 +78,6 @@ def train(storage_path: str):
                 shuffle=True,
                 batch_size=BATCH_SIZE,
                 epochs=1,
-                verbose=0,
             )
             connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
             mlflow.log_metric(
@@ -91,7 +89,6 @@ def train(storage_path: str):
                 x=evaluation_triplet_inputs,
                 y=evaluation_fake_train,
                 batch_size=BATCH_SIZE,
-                verbose=0,
             )
             connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
             mlflow.log_metric(key="Evaluation Loss", value=eval_result, step=i)

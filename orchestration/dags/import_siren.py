@@ -39,7 +39,7 @@ dag = DAG(
     default_args=default_dag_args,
     description="Import Siren from INSEE API",
     on_failure_callback=None,
-    schedule_interval="0 0 1 * *",
+    schedule_interval="0 0 * * *",
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
 )

@@ -154,6 +154,6 @@ def save_to_bq(siren_list):
     pd.DataFrame(siren_list).to_gbq(
         f"""{BIGQUERY_CLEAN_DATASET}.siren_data""",
         project_id=GCP_PROJECT,
-        if_exists="append",
+        if_exists="replace",
     )
     return

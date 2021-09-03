@@ -18,7 +18,7 @@ def define_import_query(
         SELECT
             CAST("id" AS varchar(255)) AS user_id, "dateCreated" as user_creation_date,
             "departementCode" as user_department_code, "isBeneficiary" as user_is_beneficiary,
-            "isAdmin" as user_is_admin, "resetPasswordTokenValidityLimit" as user_reset_password_token_validity_limit,
+            "isAdmin" as user_is_admin,
             "postalCode" as user_postal_code, "needsToFillCulturalSurvey" as user_needs_to_fill_cultural_survey,
             CAST("culturalSurveyId" AS varchar(255)) as user_cultural_survey_id, "civility" as user_civility,
             "activity" as user_activity, "culturalSurveyFilledDate" as user_cultural_survey_filled_date,
@@ -98,8 +98,10 @@ def define_import_query(
             "visualDisabilityCompliant" as offer_visual_disability_compliant,
             "externalTicketOfficeUrl" as offer_external_ticket_office_url,
             CAST("validation" AS varchar(255)) as offer_validation,
-            CAST("subcategoryId" AS varchar(255)) as offer_subcategoryId
+            CAST("subcategoryId" AS varchar(255)) as offer_subcategoryId,
+            "dateUpdated" as offer_date_updated
         FROM public.offer
+        WHERE "dateUpdated" >= CURRENT_DATE - 1
     """
     cloudsql_queries[
         "stock"

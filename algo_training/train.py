@@ -19,6 +19,7 @@ EMBEDDING_SIZE = 64
 L2_REG = 0
 N_EPOCHS = 20 if ENV_SHORT_NAME == "prod" else 10
 BATCH_SIZE = 16
+LOSS_CUTOFF = 0.01
 
 
 def train(storage_path: str):
@@ -97,11 +98,14 @@ def train(storage_path: str):
 
             runned_epochs += 1
             if eval_result < best_eval or runned_epochs == 1:
-                best_eval = eval_result
-
                 run_uuid = mlflow.active_run().info.run_uuid
                 export_path = f"{TRAIN_DIR}/{run_uuid}"
                 tf.saved_model.save(match_model, export_path)
+                if ((best_eval - eval_result) / best_eval) < LOSS_CUTOFF:
+                    mlflow.log_param("Exit Epoch", runned_epochs)
+                    break
+                else:
+                    best_eval = eval_result
         connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
         mlflow.log_artifacts(export_path, "model")
 

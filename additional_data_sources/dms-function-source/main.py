@@ -131,8 +131,8 @@ def fetch_result(demarches_ids, df_applications, dms_target, updated_since):
                 "hasNextPage"
             ]
 
-            # if ENV_SHORT_NAME != "prod":
-            #     has_next_page = False
+            if ENV_SHORT_NAME != "prod":
+                has_next_page = False
 
             if has_next_page:
                 end_cursor = result["data"]["demarche"]["dossiers"]["pageInfo"][

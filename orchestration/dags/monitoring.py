@@ -50,6 +50,11 @@ def compute_click_pertinence_metrics(ti, **kwargs):
     for index, metric in enumerate(
         ["CLICKS", "HOME_CLICKS", "TOTAL_RECOMMENDATION_CLICKS"]
         + [f"RECOMMENDATION_CLICKS_{group_id}" for group_id in groups]
+        + [
+            f"RECOMMENDATION_CLICKS_{key}_{group_id}"
+            for group_id in groups
+            for key, value in MODULE_DICT.items()
+        ]
     ):
         result = float(results.values[0][index])
         ti.xcom_push(key=metric, value=result)
@@ -65,6 +70,11 @@ def compute_booking_pertinence_metrics(ti, **kwargs):
     for index, metric in enumerate(
         ["BOOKINGS", "HOME_BOOKINGS", "TOTAL_RECOMMENDATION_BOOKINGS"]
         + [f"RECOMMENDATION_BOOKINGS_{group_id}" for group_id in groups]
+        + [
+            f"RECOMMENDATION_BOOKINGS_{key}_{group_id}"
+            for group_id in groups
+            for key, value in MODULE_DICT.items()
+        ]
     ):
         result = float(results.values[0][index])
         ti.xcom_push(key=metric, value=result)
@@ -107,6 +117,11 @@ def compute_favorites_metrics(ti, **kwargs):
     for index, metric in enumerate(
         ["FAVORITES", "HOME_FAVORITES", "TOTAL_RECOMMENDATION_FAVORITES"]
         + [f"RECOMMENDATION_FAVORITES_{group_id}" for group_id in groups]
+        + [
+            f"RECOMMENDATION_FAVORITES_{key}_{group_id}"
+            for group_id in groups
+            for key, value in MODULE_DICT.items()
+        ]
     ):
         result = float(results.values[0][index])
         ti.xcom_push(key=metric, value=result)

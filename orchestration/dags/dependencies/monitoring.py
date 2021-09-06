@@ -9,7 +9,11 @@ from dependencies.config import (
 )
 
 FIREBASE_EVENTS_TABLE = "firebase_events"
-RECOMMENDATION_MODULE_TITLES = '("Fais le plein de découvertes", "Nos recommandations pour toi")'  # Ce n'est pas une liste mais une string utilisée directement dans des requêtes
+MODULE_DICT = {
+    "cold_start": "Fais le plein de découvertes",
+    "algo": "Nos recommandations pour toi",
+}
+RECOMMENDATION_MODULE_SQL_STRING = "(" + ", ".join(MODULE_DICT.values()) + ") "
 
 
 def get_last_event_time_request():
@@ -102,8 +106,9 @@ def get_favorite_request(start_date, end_date, group_id_list):
         SELECT
         COUNT(*) AS favorites,
         SUM(CAST(origin = "home" AS INT64)) as home_favorites,
-        SUM(CAST(module IN {RECOMMENDATION_MODULE_TITLES} AS INT64)) AS total_recommendation_favorites,
-        {", ".join([f'SUM(CAST((module IN {RECOMMENDATION_MODULE_TITLES} AND group_id = "{group_id}") AS INT64)) AS recommendation_favorites_{group_id}' for group_id in group_id_list])}
+        SUM(CAST(module IN {RECOMMENDATION_MODULE_SQL_STRING} AS INT64)) AS total_recommendation_favorites,
+        {",".join([f'SUM(CAST((module IN ({value}) AND group_id = "{group_id}") AS INT64)) AS recommendation_favorites_{key}_{group_id}'  for group_id in group_id_list for key, value in MODULE_DICT.items()])}
+        {", ".join([f'SUM(CAST((module IN {RECOMMENDATION_MODULE_SQL_STRING} AND group_id = "{group_id}") AS INT64)) AS recommendation_favorites_{group_id}' for group_id in group_id_list])}
         FROM favorite_events
     """
 
@@ -116,8 +121,9 @@ def get_pertinence_bookings_request(start_date, end_date, group_id_list):
         SELECT
         COUNT(*) AS bookings,
         SUM(CAST(firebase_screen = "Home" AS INT64)) as home_bookings,
-        SUM(CAST(module IN {RECOMMENDATION_MODULE_TITLES} AS INT64)) AS total_recommendation_bookings,
-        {", ".join([f"SUM(CAST((module IN {RECOMMENDATION_MODULE_TITLES} AND group_id = '{group_id}') AS INT64)) AS recommendation_bookings_{group_id}" for group_id in group_id_list])}
+        SUM(CAST(module IN {RECOMMENDATION_MODULE_SQL_STRING} AS INT64)) AS total_recommendation_bookings,
+        {",".join([f'SUM(CAST((module IN ({value}) AND group_id = "{group_id}") AS INT64)) AS recommendation_bookings_{key}_{group_id}'  for group_id in group_id_list for key, value in MODULE_DICT.items()])}
+        {", ".join([f"SUM(CAST((module IN {RECOMMENDATION_MODULE_SQL_STRING} AND group_id = '{group_id}') AS INT64)) AS recommendation_bookings_{group_id}" for group_id in group_id_list])}
         FROM recommendation_booking_funnel
     """
 
@@ -130,8 +136,9 @@ def get_pertinence_clicks_request(start_date, end_date, group_id_list):
         SELECT
         COUNT(*) AS clicks,
         SUM(CAST(firebase_screen = "Home" AS INT64)) as home_clicks,
-        SUM(CAST(module IN {RECOMMENDATION_MODULE_TITLES} AS INT64)) AS total_recommendation_clicks,
-        {", ".join([f"SUM(CAST((module IN {RECOMMENDATION_MODULE_TITLES} AND group_id = '{group_id}') AS INT64)) AS recommendation_clicks_{group_id}" for group_id in group_id_list])}
+        SUM(CAST(module IN {RECOMMENDATION_MODULE_SQL_STRING} AS INT64)) AS total_recommendation_clicks,
+        {",".join([f'SUM(CAST((module IN ({value}) AND group_id = "{group_id}") AS INT64)) AS recommendation_clicks_{key}_{group_id}'  for group_id in group_id_list for key, value in MODULE_DICT.items()])}
+        {", ".join([f"SUM(CAST((module IN {RECOMMENDATION_MODULE_SQL_STRING} AND group_id = '{group_id}') AS INT64)) AS recommendation_clicks_{group_id}" for group_id in group_id_list] )}
         FROM clicks
     """
 
@@ -143,7 +150,7 @@ def get_diversification_bookings_request(start_date, end_date):
         diversification AS (
             SELECT COUNT(DISTINCT offer_type) AS distinct_booking_offer_type_count, COUNT(*) AS booking_offer_count, group_id 
             FROM recommendation_booking_funnel
-            WHERE module IN {RECOMMENDATION_MODULE_TITLES}
+            WHERE module IN {RECOMMENDATION_MODULE_SQL_STRING}
             GROUP BY user_id, group_id
         )
         

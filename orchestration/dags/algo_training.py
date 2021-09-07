@@ -63,7 +63,7 @@ with DAG(
     )
 
     if ENV_SHORT_NAME == "dev":
-        branch = "PC-9207-debug-evaluate"
+        branch = "pc-10458-auto-deploy"
     if ENV_SHORT_NAME == "stg":
         branch = "master"
     if ENV_SHORT_NAME == "prod":
@@ -155,6 +155,7 @@ with DAG(
         --command {TRAINING}
         """,
         dag=dag,
+        xcom_push=True,
     )
 
     POSTPROCESSING = f""" '{DEFAULT}

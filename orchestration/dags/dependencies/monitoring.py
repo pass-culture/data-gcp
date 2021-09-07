@@ -9,11 +9,9 @@ from dependencies.config import (
 )
 
 FIREBASE_EVENTS_TABLE = "firebase_events"
-MODULE_DICT = {
-    "cold_start": "Fais le plein de découvertes",
-    "algo": "Nos recommandations pour toi",
-}
-RECOMMENDATION_MODULE_SQL_STRING = "(" + ", ".join(MODULE_DICT.values()) + ") "
+RECOMMENDATION_MODULE_SQL_STRING = (
+    '("Fais le plein de découvertes", "Nos recommandations pour toi")'
+)
 
 
 def get_last_event_time_request():
@@ -47,12 +45,14 @@ def _define_recommendation_booking_funnel(start_date, end_date):
             ORDER BY user_id, session_id, event_timestamp
         ),
         recommendation_booking_funnel AS (
-            SELECT event_name, event_timestamp, user_id, session_id, firebase_screen, module, booking_funnel.offer_id, next_event_name, groupid AS group_id, offer_type 
+            SELECT event_name, event_timestamp, user_id, session_id, firebase_screen, module, booking_funnel.offer_id, next_event_name, groupid AS group_id, offer_type,  pastreco.reco_origin,
             FROM booking_funnel
             LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.ab_testing_202104_v0_v0bis` ab_testing
             ON booking_funnel.user_id = ab_testing.userid
             LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_offer` offers
             ON offers.offer_id = CAST(booking_funnel.offer_id AS STRING)
+            LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.past_recommended_offers` pastreco 
+            ON pastreco.offerid = booking_funnel.offer_id
             WHERE (
                 next_event_name = "screen_view_bookingconfirmation" OR (
                     next_event_name = "screen_view" AND next_screen_view_event = "BookingConfirmation"
@@ -68,11 +68,18 @@ def _define_clicks(start_date, end_date):
             SELECT user_id, groupid as group_id, event_name, event_date, event_timestamp,  
             MAX(CASE WHEN params.key = "moduleName" THEN params.value.string_value ELSE NULL END) AS module,
             MAX(CASE WHEN params.key = "firebase_screen" THEN params.value.string_value ELSE NULL END) AS firebase_screen,
+            MAX(CASE WHEN params.key = "offerId" THEN CAST(params.value.double_value AS INT64) ELSE NULL END) AS offer_id,
             FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.{FIREBASE_EVENTS_TABLE}_*` events, events.event_params AS params
             LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.{TABLE_AB_TESTING}` ab_testing ON events.user_id = ab_testing.userid
             WHERE event_timestamp > {start_date}
             AND event_timestamp < {end_date}
             GROUP BY event_timestamp, event_date, event_name, user_id, group_id
+        ),
+        recommendation_clicks_funnel AS (
+            SELECT clicks.* , pastreco.reco_origin, 
+            FROM clicks
+            LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.past_recommended_offers` pastreco 
+            ON pastreco.offerid = clicks.offer_id
         )
     """
 
@@ -93,11 +100,17 @@ def _define_favorites(start_date, end_date):
             AND event_timestamp > {start_date}
             AND event_timestamp < {end_date}
             GROUP BY user_id, event_name, event_timestamp,groupid
+        ),
+        recommendation_favorite_funnel AS (
+            SELECT favorite_events.* , pastreco.reco_origin,
+            FROM favorite_events
+            LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.past_recommended_offers` pastreco 
+            ON pastreco.offerid = favorite_events.offer_id
         )
     """
 
 
-def get_favorite_request(start_date, end_date, group_id_list):
+def get_favorite_request(start_date, end_date, group_id_list, reco_origin_list):
     group_id_list = sorted(group_id_list)
 
     return f"""
@@ -107,13 +120,15 @@ def get_favorite_request(start_date, end_date, group_id_list):
         COUNT(*) AS favorites,
         SUM(CAST(origin = "home" AS INT64)) as home_favorites,
         SUM(CAST(module IN {RECOMMENDATION_MODULE_SQL_STRING} AS INT64)) AS total_recommendation_favorites,
-        {",".join([f'SUM(CAST((module IN ({value}) AND group_id = "{group_id}") AS INT64)) AS recommendation_favorites_{key}_{group_id}'  for group_id in group_id_list for key, value in MODULE_DICT.items()])}
-        {", ".join([f'SUM(CAST((module IN {RECOMMENDATION_MODULE_SQL_STRING} AND group_id = "{group_id}") AS INT64)) AS recommendation_favorites_{group_id}' for group_id in group_id_list])}
-        FROM favorite_events
+        {", ".join([f'SUM(CAST((module IN {RECOMMENDATION_MODULE_SQL_STRING} AND group_id = "{group_id}") AS INT64)) AS recommendation_favorites_{group_id}' for group_id in group_id_list])},
+        {",".join([f'SUM(CAST((module IN {RECOMMENDATION_MODULE_SQL_STRING} AND group_id = "{group_id}" AND reco_origin="{reco_origin}") AS INT64)) AS recommendation_favorites_{reco_origin}_{group_id}'  for group_id in group_id_list for reco_origin in reco_origin_list])},
+        FROM recommendation_favorite_funnel
     """
 
 
-def get_pertinence_bookings_request(start_date, end_date, group_id_list):
+def get_pertinence_bookings_request(
+    start_date, end_date, group_id_list, reco_origin_list
+):
     group_id_list = sorted(group_id_list)
     return f"""
         {_define_recommendation_booking_funnel(start_date, end_date)}
@@ -122,13 +137,16 @@ def get_pertinence_bookings_request(start_date, end_date, group_id_list):
         COUNT(*) AS bookings,
         SUM(CAST(firebase_screen = "Home" AS INT64)) as home_bookings,
         SUM(CAST(module IN {RECOMMENDATION_MODULE_SQL_STRING} AS INT64)) AS total_recommendation_bookings,
-        {",".join([f'SUM(CAST((module IN ({value}) AND group_id = "{group_id}") AS INT64)) AS recommendation_bookings_{key}_{group_id}'  for group_id in group_id_list for key, value in MODULE_DICT.items()])}
-        {", ".join([f"SUM(CAST((module IN {RECOMMENDATION_MODULE_SQL_STRING} AND group_id = '{group_id}') AS INT64)) AS recommendation_bookings_{group_id}" for group_id in group_id_list])}
+        {", ".join([f"SUM(CAST((module IN {RECOMMENDATION_MODULE_SQL_STRING} AND group_id = '{group_id}') AS INT64)) AS recommendation_bookings_{group_id}" for group_id in group_id_list])},
+        {",".join([f'SUM(CAST((module IN {RECOMMENDATION_MODULE_SQL_STRING} AND group_id = "{group_id}" AND reco_origin="{reco_origin}") AS INT64)) AS recommendation_bookings_{reco_origin}_{group_id}'  for group_id in group_id_list for reco_origin in reco_origin_list])},
         FROM recommendation_booking_funnel
+
     """
 
 
-def get_pertinence_clicks_request(start_date, end_date, group_id_list):
+def get_pertinence_clicks_request(
+    start_date, end_date, group_id_list, reco_origin_list
+):
     group_id_list = sorted(group_id_list)
     return f"""
         {_define_clicks(start_date, end_date)}
@@ -137,9 +155,9 @@ def get_pertinence_clicks_request(start_date, end_date, group_id_list):
         COUNT(*) AS clicks,
         SUM(CAST(firebase_screen = "Home" AS INT64)) as home_clicks,
         SUM(CAST(module IN {RECOMMENDATION_MODULE_SQL_STRING} AS INT64)) AS total_recommendation_clicks,
-        {",".join([f'SUM(CAST((module IN ({value}) AND group_id = "{group_id}") AS INT64)) AS recommendation_clicks_{key}_{group_id}'  for group_id in group_id_list for key, value in MODULE_DICT.items()])}
-        {", ".join([f"SUM(CAST((module IN {RECOMMENDATION_MODULE_SQL_STRING} AND group_id = '{group_id}') AS INT64)) AS recommendation_clicks_{group_id}" for group_id in group_id_list] )}
-        FROM clicks
+        {", ".join([f"SUM(CAST((module IN {RECOMMENDATION_MODULE_SQL_STRING} AND group_id = '{group_id}') AS INT64)) AS recommendation_clicks_{group_id}" for group_id in group_id_list] )},
+        {",".join([f'SUM(CAST((module IN {RECOMMENDATION_MODULE_SQL_STRING} AND group_id = "{group_id}" AND reco_origin="{reco_origin}") AS INT64)) AS recommendation_clicks_{reco_origin}_{group_id}'  for group_id in group_id_list for reco_origin in reco_origin_list])},
+        FROM recommendation_clicks_funnel
     """
 
 
@@ -148,25 +166,26 @@ def get_diversification_bookings_request(start_date, end_date):
         {_define_recommendation_booking_funnel(start_date, end_date)},
         
         diversification AS (
-            SELECT COUNT(DISTINCT offer_type) AS distinct_booking_offer_type_count, COUNT(*) AS booking_offer_count, group_id 
+            SELECT COUNT(DISTINCT offer_type) AS distinct_booking_offer_type_count, COUNT(*) AS booking_offer_count, group_id , reco_origin
             FROM recommendation_booking_funnel
             WHERE module IN {RECOMMENDATION_MODULE_SQL_STRING}
-            GROUP BY user_id, group_id
+            GROUP BY user_id, group_id, reco_origin
         )
         
         SELECT AVG(distinct_booking_offer_type_count) as avg_distinct_booking_offer_type_count,
-        group_id 
+        group_id , reco_origin
         FROM diversification 
-        GROUP BY group_id
-        ORDER BY group_id 
+        GROUP BY reco_origin,group_id
+        order by reco_origin,group_id
     """
 
 
-def get_recommendations_count(start_date, end_date, group_id_list):
+def get_recommendations_count(start_date, end_date, group_id_list, reco_origin_list):
     group_id_list = sorted(group_id_list)
     return f"""
         SELECT 
-        {", ".join([f"SUM(CAST(groupid = '{group_id}' AS INT64)) AS recommendations_count_{group_id}" for group_id in group_id_list])}
+        {", ".join([f"SUM(CAST(groupid = '{group_id}' AS INT64)) AS recommendations_count_{group_id}" for group_id in group_id_list])},
+        {",".join([f'SUM(CAST(group_id = "{group_id}" AND reco_origin="{reco_origin}" AS INT64)) AS recommendation_count_{reco_origin}_{group_id}'  for group_id in group_id_list for reco_origin in reco_origin_list])}
         FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.past_recommended_offers` past_recommendations
         LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.{TABLE_AB_TESTING}` ab_testing
         ON CAST(past_recommendations.userid AS STRING) = ab_testing.userid

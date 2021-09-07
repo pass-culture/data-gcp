@@ -211,5 +211,6 @@ def define_enriched_venue_data_full_query(dataset, table_prefix=""):
         {define_theoretic_revenue_per_venue_query(dataset=dataset, table_prefix=table_prefix)}
         {define_real_revenue_per_venue_query(dataset=dataset, table_prefix=table_prefix)}
         {define_humanized_id_query(table=f"venue", dataset=dataset, table_prefix=table_prefix)}
+        {define_humanized_id_query(table=f"offerer", dataset=dataset, table_prefix=table_prefix)}        
         {define_enriched_venue_query(dataset=dataset, table_prefix=table_prefix)}
     """

@@ -250,6 +250,42 @@ with DAG(
         task_id="gce_stop_task",
     )
 
+    DEPLOY_COMMAND = f"""
+    export REGION=europe-west1
+    export MODEL_NAME=tf_model_reco_dev
+    export RECOMMENDATION_MODEL_DIR={{ ti.xcom_pull(task_ids=['training']) }}
+
+    export VERSION_NAME={{ ts_nodash }}
+
+    gcloud ai-platform versions create $VERSION_NAME \
+        --model=$MODEL_NAME \
+        --origin=$RECOMMENDATION_MODEL_DIR \
+        --runtime-version=2.5 \
+        --framework=tensorflow \
+        --python-version=3.7 \
+        --region=$REGION \
+        --machine-type=n1-standard-2
+
+    gcloud ai-platform versions set-default $VERSION_NAME \
+        --model=$MODEL_NAME \
+        --region=$REGION
+    """
+    # gcloud ai-platform versions delete \
+    #     $(gcloud ai-platform versions list \
+    #         --model=$MODEL_NAME \
+    #         --region=$REGION \
+    #         --format="table[no-heading](name, createTime:sort=1:reverse)"\
+    #         | tail -n1 \
+    #         | awk '{print $1;}'
+    #     ) \
+    #     --model=$MODEL_NAME \
+    #     --region=$REGION
+
+    deploy_model = BashOperator(
+        task_id="deploy_model",
+        bash_command=DEPLOY_COMMAND,
+    )
+
     (
         start
         >> gce_instance_start
@@ -263,5 +299,6 @@ with DAG(
         >> evaluate
         >> send_slack_notif
         >> gce_instance_stop
+        >> deploy_model
         >> end
     )

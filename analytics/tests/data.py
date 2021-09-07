@@ -756,6 +756,7 @@ ENRICHED_VENUE_DATA_EXPECTED = [
         "venue_humanized_id": "AE",
         "venue_flaskadmin_link": "https://backend.passculture.beta.gouv.fr/pc/back-office/venue/edit/?id=1&url=%2Fpc%2Fback-office%2Fvenue%2F",
         "venue_region_name": "IDF",
+        "venue_pc_pro_link": "https://pro.passculture.beta.gouv.fr/structures/AE/lieux/AE",
     }
 ]
 

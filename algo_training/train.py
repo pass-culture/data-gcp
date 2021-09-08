@@ -65,7 +65,7 @@ def train(storage_path: str):
         )
         triplet_model.compile(loss=identity_loss, optimizer="adam")
 
-        best_eval = 1
+        best_eval = 10
 
         runned_epochs = 0
         for i in range(N_EPOCHS):

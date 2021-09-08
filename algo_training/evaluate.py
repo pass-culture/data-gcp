@@ -1,6 +1,7 @@
 import pandas as pd
 import tensorflow as tf
 import mlflow.tensorflow
+import time
 from models.match_model import MatchModel
 
 from models.metrics import compute_metrics
@@ -24,6 +25,7 @@ def evaluate(model, storage_path: str):
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
     mlflow.log_metrics(metrics)
     print("------- EVALUATE DONE -------")
+    time.sleep(0.2)
     check_before_deploy(metrics, RECOMMENDATION_NUMBER)
 
 

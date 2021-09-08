@@ -140,7 +140,6 @@ def get_pertinence_bookings_request(
         {", ".join([f"SUM(CAST((module IN {RECOMMENDATION_MODULE_SQL_STRING} AND group_id = '{group_id}') AS INT64)) AS recommendation_bookings_{group_id}" for group_id in group_id_list])},
         {",".join([f'SUM(CAST((module IN {RECOMMENDATION_MODULE_SQL_STRING} AND group_id = "{group_id}" AND reco_origin="{reco_origin}") AS INT64)) AS recommendation_bookings_{reco_origin}_{group_id}'  for group_id in group_id_list for reco_origin in reco_origin_list])},
         FROM recommendation_booking_funnel
-
     """
 
 

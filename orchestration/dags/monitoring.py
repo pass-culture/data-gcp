@@ -113,7 +113,7 @@ def compute_recommendations_count_metrics(ti, **kwargs):
     for index, metric in enumerate(
         [f"RECOMMENDATIONS_COUNT_{group_id}" for group_id in groups]
         + [
-            f"RECOMMENDATION_COUNT_{reco_origin}_{group_id}"
+            f"RECOMMENDATIONS_COUNT_{reco_origin}_{group_id}"
             for group_id in groups
             for reco_origin in reco_origin_list
         ]
@@ -241,7 +241,7 @@ def insert_metric_bq(ti, **kwargs):
 
 default_args = {
     "start_date": datetime(2021, 5, 26),
-    #"on_failure_callback": task_fail_slack_alert,
+    "on_failure_callback": task_fail_slack_alert,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }

@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.bash_operator import BashOperator
+from airflow.operators.python_operator import BranchPythonOperator
 from airflow.contrib.operators.slack_webhook_operator import SlackWebhookOperator
 from airflow.contrib.operators.gcp_compute_operator import (
     GceInstanceStartOperator,
@@ -35,9 +36,18 @@ export STORAGE_PATH={STORAGE_PATH}
 export ENV_SHORT_NAME={ENV_SHORT_NAME}
 export GCP_PROJECT_ID={GCP_PROJECT_ID}"""
 
+
+def branch_function(ti, **kwargs):
+    evaluate_ending = ti.xcom_pull(task_ids="evaluate")
+    if evaluate_ending == "Metrics OK":
+        return "deploy_model"
+
+    return "end"
+
+
 default_args = {
     "start_date": datetime(2021, 5, 20),
-    "on_failure_callback": task_fail_slack_alert,
+    # "on_failure_callback": task_fail_slack_alert,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }
@@ -53,7 +63,6 @@ with DAG(
 ) as dag:
 
     start = DummyOperator(task_id="start")
-    end = DummyOperator(task_id="end")
 
     gce_instance_start = GceInstanceStartOperator(
         project_id=GCP_PROJECT_ID,
@@ -186,61 +195,7 @@ with DAG(
         --command {EVALUATION}
         """,
         dag=dag,
-    )
-
-    SLACK_BLOCKS = [
-        {
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": ":robot_face: Entrainement de l'algo fini !",
-            },
-        },
-        {
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": "Il faut aller checker si les métriques sont bonnes puis déployer la nouvelle version! :rocket:",
-            },
-        },
-        {
-            "type": "actions",
-            "elements": [
-                {
-                    "type": "button",
-                    "text": {
-                        "type": "plain_text",
-                        "text": "Voir les métriques :chart_with_upwards_trend:",
-                        "emoji": True,
-                    },
-                    "url": MLFLOW_URL,
-                },
-                {
-                    "type": "button",
-                    "text": {
-                        "type": "plain_text",
-                        "text": "Déploiement :rocket:",
-                        "emoji": True,
-                    },
-                    "url": "https://github.com/pass-culture/data-gcp/tree/master/recommendation/model",
-                },
-            ],
-        },
-        {
-            "type": "context",
-            "elements": [
-                {"type": "mrkdwn", "text": f"Environnement: {ENV_SHORT_NAME}"}
-            ],
-        },
-    ]
-
-    send_slack_notif = SlackWebhookOperator(
-        task_id="send_slack_notif",
-        http_conn_id=SLACK_CONN_ID,
-        webhook_token=SLACK_CONN_PASSWORD,
-        blocks=SLACK_BLOCKS,
-        username="Algo trainer robot",
-        icon_emoji=":robot_face:",
+        xcom_push=True,
     )
 
     gce_instance_stop = GceInstanceStopOperator(
@@ -250,12 +205,20 @@ with DAG(
         task_id="gce_stop_task",
     )
 
+    check_metrics = BranchPythonOperator(
+        task_id="checking_metrics",
+        python_callable=branch_function,
+        provide_context=True,
+        do_xcom_push=False,
+        dag=dag,
+    )
+
     DEPLOY_COMMAND = f"""
     export REGION=europe-west1
     export MODEL_NAME=tf_model_reco_dev
-    export RECOMMENDATION_MODEL_DIR={{ ti.xcom_pull(task_ids=['training']) }}
+    export RECOMMENDATION_MODEL_DIR={{{{ ti.xcom_pull(task_ids='training') }}}}
 
-    export VERSION_NAME={{ ts_nodash }}
+    export VERSION_NAME=v_{{{{ ts_nodash }}}}
 
     gcloud ai-platform versions create $VERSION_NAME \
         --model=$MODEL_NAME \
@@ -270,20 +233,60 @@ with DAG(
         --model=$MODEL_NAME \
         --region=$REGION
     """
-    # gcloud ai-platform versions delete \
-    #     $(gcloud ai-platform versions list \
-    #         --model=$MODEL_NAME \
-    #         --region=$REGION \
-    #         --format="table[no-heading](name, createTime:sort=1:reverse)"\
-    #         | tail -n1 \
-    #         | awk '{print $1;}'
-    #     ) \
-    #     --model=$MODEL_NAME \
-    #     --region=$REGION
 
     deploy_model = BashOperator(
         task_id="deploy_model",
         bash_command=DEPLOY_COMMAND,
+    )
+
+    SLACK_BLOCKS = [
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": ":robot_face: Nouvelle version de l'algo déployée ! :rocket:",
+            },
+        },
+        {
+            "type": "context",
+            "elements": [
+                {"type": "mrkdwn", "text": f"Environnement: {ENV_SHORT_NAME}"}
+            ],
+        },
+    ]
+
+    send_slack_notif_success = SlackWebhookOperator(
+        task_id="send_slack_notif_success",
+        http_conn_id=SLACK_CONN_ID,
+        webhook_token=SLACK_CONN_PASSWORD,
+        blocks=SLACK_BLOCKS,
+        username=f"Algo trainer robot - {ENV_SHORT_NAME}",
+        icon_emoji=":robot_face:",
+    )
+
+    SLACK_BLOCKS_FAIL = [
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": ":x: Les métriques sont pas bonnes ! :sadpanda:",
+            },
+        },
+        {
+            "type": "context",
+            "elements": [
+                {"type": "mrkdwn", "text": f"Environnement: {ENV_SHORT_NAME}"}
+            ],
+        },
+    ]
+
+    send_slack_notif_fail = SlackWebhookOperator(
+        task_id="send_slack_notif_fail",
+        http_conn_id=SLACK_CONN_ID,
+        webhook_token=SLACK_CONN_PASSWORD,
+        blocks=SLACK_BLOCKS_FAIL,
+        username=f"Algo trainer robot - {ENV_SHORT_NAME}",
+        icon_emoji=":robot_face:",
     )
 
     (
@@ -297,8 +300,10 @@ with DAG(
         >> training
         >> postprocess
         >> evaluate
-        >> send_slack_notif
         >> gce_instance_stop
+        >> check_metrics
         >> deploy_model
-        >> end
+        >> send_slack_notif_success
     )
+
+    check_metrics >> send_slack_notif_fail

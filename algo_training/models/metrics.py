@@ -97,7 +97,10 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
     serendipity = []
     new_types_ratio = []
 
-    random_users_to_test = random.sample(all_test_user_ids, NUMBER_OF_USERS)
+    if len(all_test_user_ids) > NUMBER_OF_USERS:
+        random_users_to_test = random.sample(all_test_user_ids, NUMBER_OF_USERS)
+    else:
+        random_users_to_test = all_test_user_ids
     for user_id in random_users_to_test:
         user_count += 1
         positive_item_train = positive_data_train[

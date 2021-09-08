@@ -1,8 +1,5 @@
-from datetime import date
-from os import name
 import pandas as pd
 from google.cloud import bigquery
-from google.auth.exceptions import DefaultCredentialsError
 
 from contentful_client import ContentfulClient
 from utils import (

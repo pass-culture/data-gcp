@@ -125,12 +125,34 @@ for table in data_applicative_tables_and_date_columns.keys():
         sql=define_import_query(
             external_connection_id=APPLICATIVE_EXTERNAL_CONNECTION_ID, table=table
         ),
-        write_disposition="WRITE_TRUNCATE",
+        write_disposition="WRITE_TRUNCATE" if table != "offer" else "WRITE_APPEND",
         use_legacy_sql=False,
         destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.{APPLICATIVE_PREFIX}{table}",
         dag=dag,
     )
     import_tables_to_clean_tasks.append(task)
+
+
+offer_clean_duplicates = BigQueryOperator(
+    task_id="offer_clean_duplicates",
+    sql=f"""
+    SELECT * except(row_number)
+    FROM (
+        SELECT
+        *,
+        ROW_NUMBER() OVER (PARTITION BY offer_id
+                                        ORDER BY offer_date_updated DESC
+                                    ) as row_number
+        FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.{APPLICATIVE_PREFIX}offer`
+        )
+    WHERE row_number=1
+    """,
+    write_disposition="WRITE_TRUNCATE",
+    use_legacy_sql=False,
+    destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.{APPLICATIVE_PREFIX}offer",
+    dag=dag,
+)
+
 
 end_import_table_to_clean = DummyOperator(task_id="end_import_table_to_clean", dag=dag)
 
@@ -148,7 +170,7 @@ for table in data_applicative_tables_and_date_columns.keys():
 
 end_import = DummyOperator(task_id="end_import", dag=dag)
 
-IRIS_DISTANCE = 100000
+IRIS_DISTANCE = 50000
 
 link_iris_venues_task = BigQueryOperator(
     task_id="link_iris_venues_task",
@@ -321,7 +343,7 @@ copy_playlists_to_analytics = BigQueryOperator(
     sql=f"""
     SELECT * except(row_number, tag)
     FROM (
-        SELECT 
+        SELECT
         *,
         ROW_NUMBER() OVER (PARTITION BY name
                                         ORDER BY date_updated DESC
@@ -384,6 +406,7 @@ end = DummyOperator(task_id="end", dag=dag)
 (
     start
     >> import_tables_to_clean_tasks
+    >> offer_clean_duplicates
     >> end_import_table_to_clean
     >> import_tables_to_analytics_tasks
     >> end_import

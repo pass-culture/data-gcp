@@ -99,7 +99,7 @@ class TestDags(unittest.TestCase):
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 80)
+        self.assertEqual(len(dag.tasks), 81)
 
     def test_import_firebase_data_dag_is_loaded(self):
         # When
@@ -135,7 +135,16 @@ class TestDags(unittest.TestCase):
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 4)
+        self.assertEqual(len(dag.tasks), 8)
+
+    def test_import_siren_is_loaded(self):
+        # When
+        dag = self.dagbag.get_dag(dag_id="import_siren_v1")
+
+        # Then
+        self.assertDictEqual(self.dagbag.import_errors, {})
+        self.assertIsNotNone(dag)
+        self.assertEqual(len(dag.tasks), 5)
 
     def test_compute_monitoring_is_loaded(self):
         # When

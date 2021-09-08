@@ -65,7 +65,7 @@ def train(storage_path: str):
         )
         triplet_model.compile(loss=identity_loss, optimizer="adam")
 
-        best_eval = 10
+        best_eval = 1
 
         runned_epochs = 0
         for i in range(N_EPOCHS):
@@ -101,7 +101,7 @@ def train(storage_path: str):
                 run_uuid = mlflow.active_run().info.run_uuid
                 export_path = f"{TRAIN_DIR}/{run_uuid}"
                 tf.saved_model.save(match_model, export_path)
-                if ((best_eval - eval_result) / best_eval) < LOSS_CUTOFF:
+                if ((best_eval - eval_result) / best_eval) < LOSS_CUTOFF and runned_epochs != 1:
                     mlflow.log_param("Exit Epoch", runned_epochs)
                     break
                 else:

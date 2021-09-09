@@ -1,5 +1,6 @@
 from dependencies.data_analytics.enriched_data.enriched_data_utils import (
-    define_humanized_id_query,
+    create_humanize_id_function,
+    create_temp_humanize_id,
 )
 
 
@@ -80,13 +81,13 @@ def define_enriched_stock_data_query(dataset, table_prefix=""):
                 stock_booking_information.booking_quantity,
                 stock_booking_information.bookings_cancelled AS booking_cancelled,
                 stock_booking_information.bookings_paid AS booking_paid
-             FROM {dataset}.{table_prefix}stock AS stock
-             LEFT JOIN {dataset}.{table_prefix}offer AS offer ON stock.offer_id = offer.offer_id
-             LEFT JOIN {dataset}.{table_prefix}venue AS venue ON venue.venue_id = offer.venue_id
-             LEFT JOIN {dataset}.stock_booking_information ON stock.stock_id = stock_booking_information.stock_id
-             LEFT JOIN stock_humanized_id AS stock_humanized_id ON stock_humanized_id.stock_id = stock.stock_id
-             LEFT JOIN {dataset}.available_stock_information
-             ON stock_booking_information.stock_id = available_stock_information.stock_id);
+            FROM {dataset}.{table_prefix}stock AS stock
+            LEFT JOIN {dataset}.{table_prefix}offer AS offer ON stock.offer_id = offer.offer_id
+            LEFT JOIN {dataset}.{table_prefix}venue AS venue ON venue.venue_id = offer.venue_id
+            LEFT JOIN {dataset}.stock_booking_information ON stock.stock_id = stock_booking_information.stock_id
+            LEFT JOIN stock_humanized_id AS stock_humanized_id ON stock_humanized_id.stock_id = stock.stock_id
+            LEFT JOIN {dataset}.available_stock_information
+            ON stock_booking_information.stock_id = available_stock_information.stock_id);
     """
 
 
@@ -94,6 +95,7 @@ def define_enriched_stock_data_full_query(dataset, table_prefix=""):
     return f"""
         {define_stocks_booking_view_query(dataset, table_prefix=table_prefix)}
         {define_available_stocks_view_query(dataset, table_prefix=table_prefix)}
-        {define_humanized_id_query(table=f"stock", dataset=dataset, table_prefix=table_prefix)}
+        {create_humanize_id_function()}
+        {create_temp_humanize_id(table="stock", dataset=dataset, table_prefix=table_prefix)}
         {define_enriched_stock_data_query(dataset, table_prefix=table_prefix)}
     """

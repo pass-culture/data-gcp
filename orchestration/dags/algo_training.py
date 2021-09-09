@@ -41,8 +41,7 @@ def branch_function(ti, **kwargs):
     evaluate_ending = ti.xcom_pull(task_ids="evaluate")
     if evaluate_ending == "Metrics OK":
         return "deploy_model"
-
-    return "end"
+    return "send_slack_notif_fail"
 
 
 default_args = {

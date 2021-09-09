@@ -49,8 +49,12 @@ def _define_recommendation_booking_funnel(start_date, end_date):
             ON booking_funnel.user_id = ab_testing.userid
             LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_offer` offers
             ON offers.offer_id = CAST(booking_funnel.offer_id AS STRING)
-            LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.past_recommended_offers` pastreco 
-            ON pastreco.offerid = booking_funnel.offer_id
+            LEFT JOIN (
+                SELECT reco_origin, CAST(userid as STRING) as pr_user_id,
+                offerid as pr_offer_id, max(date) as pr_date 
+                FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.past_recommended_offers`
+                GROUP BY pr_user_id, pr_offer_id, reco_origin ) pastreco 
+            ON pr_offer_id  = booking_funnel.offer_id AND pr_user_id  = user_id
             WHERE (
                 next_event_name = "screen_view_bookingconfirmation" OR (
                     next_event_name = "screen_view" AND next_screen_view_event = "BookingConfirmation"

@@ -1,5 +1,6 @@
 from dependencies.data_analytics.enriched_data.enriched_data_utils import (
-    define_humanized_id_query,
+    create_humanize_id_function,
+    create_temp_humanize_id,
 )
 
 
@@ -167,7 +168,8 @@ def define_enriched_offerer_data_full_query(dataset, table_prefix=""):
         {define_offerer_departement_code_query(dataset=dataset, table_prefix=table_prefix)}
         {define_number_of_venues_query(dataset=dataset, table_prefix=table_prefix)}
         {define_number_of_venues_without_offer_query(dataset=dataset, table_prefix=table_prefix)}
-        {define_humanized_id_query(table=f"offerer", dataset=dataset, table_prefix=table_prefix)}
+        {create_humanize_id_function()}
+        {create_temp_humanize_id(table="offerer", dataset=dataset, table_prefix=table_prefix)}
         {define_current_year_revenue(dataset=dataset, table_prefix=table_prefix)}
         {define_enriched_offerer_query(dataset=dataset, table_prefix=table_prefix)}
     """

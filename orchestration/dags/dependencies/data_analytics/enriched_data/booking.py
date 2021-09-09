@@ -1,5 +1,6 @@
 from dependencies.data_analytics.enriched_data.enriched_data_utils import (
-    define_humanized_id_query,
+    create_humanize_id_function,
+    create_temp_humanize_id,
 )
 
 
@@ -137,11 +138,12 @@ def create_materialized_enriched_booking_view(dataset, table_prefix=""):
 
 def define_enriched_booking_data_full_query(dataset, table_prefix=""):
     return f"""
-         {create_booking_amount_view(dataset=dataset, table_prefix=table_prefix)}
-         {create_booking_payment_status_view(dataset=dataset, table_prefix=table_prefix)}
-         {create_booking_ranking_view(dataset=dataset, table_prefix=table_prefix)}
-         {create_booking_ranking_in_category_view(dataset=dataset, table_prefix=table_prefix)}
-         {create_materialized_booking_intermediary_view(dataset=dataset, table_prefix=table_prefix)}
-         {define_humanized_id_query(table=f"booking", dataset=dataset, table_prefix=table_prefix)}
-         {create_materialized_enriched_booking_view(dataset=dataset, table_prefix=table_prefix)}
+        {create_booking_amount_view(dataset=dataset, table_prefix=table_prefix)}
+        {create_booking_payment_status_view(dataset=dataset, table_prefix=table_prefix)}
+        {create_booking_ranking_view(dataset=dataset, table_prefix=table_prefix)}
+        {create_booking_ranking_in_category_view(dataset=dataset, table_prefix=table_prefix)}
+        {create_materialized_booking_intermediary_view(dataset=dataset, table_prefix=table_prefix)}
+        {create_humanize_id_function()}
+        {create_temp_humanize_id(table="booking", dataset=dataset, table_prefix=table_prefix)}
+        {create_materialized_enriched_booking_view(dataset=dataset, table_prefix=table_prefix)}
     """

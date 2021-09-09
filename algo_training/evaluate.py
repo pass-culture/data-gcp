@@ -1,6 +1,7 @@
 import pandas as pd
 import tensorflow as tf
 import mlflow.tensorflow
+import time
 from models.match_model import MatchModel
 
 from models.metrics import compute_metrics
@@ -23,6 +24,28 @@ def evaluate(model, storage_path: str):
     )
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
     mlflow.log_metrics(metrics)
+    print("------- EVALUATE DONE -------")
+    check_before_deploy(metrics, RECOMMENDATION_NUMBER)
+
+
+def check_before_deploy(metrics, k):
+    if (
+        metrics[f"recall_at_{k}"] > 20
+        and metrics[f"precision_at_{k}"] > 1
+        and metrics[f"maximal_precision_at_{k}"] > 4.5
+        and metrics[f"coverage_at_{k}"] > 30
+        and metrics[f"coverage_at_{k}"] < 70
+        and metrics[f"unexpectedness_at_{k}"] > 0.07
+        and metrics[f"new_types_ratio_at_{k}"] > 0.05
+        and metrics[f"serendipity_at_{k}"] > 1.5
+        and metrics[f"serendipity_at_{k}"] < 2.5
+    ):
+        print("Metrics OK")
+    else:
+        print("Bad metrics")
+    if ENV_SHORT_NAME == "dev":
+        # INFO : metrics are never ok in dev so we force the deploy
+        print("Metrics OK")
 
 
 if __name__ == "__main__":
@@ -37,4 +60,3 @@ if __name__ == "__main__":
             mlflow.get_artifact_uri("model"), custom_objects={"MatchModel": MatchModel}
         )
         evaluate(loaded_model, STORAGE_PATH)
-    print("------- EVALUATE DONE -------")

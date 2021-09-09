@@ -46,16 +46,11 @@ def compute_click_pertinence_metrics(ti, **kwargs):
     end_date = ti.xcom_pull(key=LAST_EVENT_TIME_KEY)
     bigquery_client = BigQueryClient()
     results = bigquery_client.query(
-        get_pertinence_clicks_request(start_date, end_date, groups, reco_origin_list)
+        get_pertinence_clicks_request(start_date, end_date, groups)
     )
     for index, metric in enumerate(
         ["CLICKS", "HOME_CLICKS", "TOTAL_RECOMMENDATION_CLICKS"]
         + [f"RECOMMENDATION_CLICKS_{group_id}" for group_id in groups]
-        + [
-            f"RECOMMENDATION_CLICKS_{reco_origin}_{group_id}"
-            for group_id in groups
-            for reco_origin in reco_origin_list
-        ]
     ):
         result = float(results.values[0][index])
         ti.xcom_push(key=metric, value=result)
@@ -126,17 +121,10 @@ def compute_favorites_metrics(ti, **kwargs):
     start_date = convert_datetime_to_microseconds(START_DATE)
     end_date = ti.xcom_pull(key=LAST_EVENT_TIME_KEY)
     bigquery_client = BigQueryClient()
-    results = bigquery_client.query(
-        get_favorite_request(start_date, end_date, groups, reco_origin_list)
-    )
+    results = bigquery_client.query(get_favorite_request(start_date, end_date, groups))
     for index, metric in enumerate(
         ["FAVORITES", "HOME_FAVORITES", "TOTAL_RECOMMENDATION_FAVORITES"]
         + [f"RECOMMENDATION_FAVORITES_{group_id}" for group_id in groups]
-        + [
-            f"RECOMMENDATION_FAVORITES_{reco_origin}_{group_id}"
-            for group_id in groups
-            for reco_origin in reco_origin_list
-        ]
     ):
         result = float(results.values[0][index])
         ti.xcom_push(key=metric, value=result)
@@ -150,8 +138,6 @@ metric_groups_to_compute = {
             {"name": "HOME_CLICKS", "ab_testing": False},
             {"name": "TOTAL_RECOMMENDATION_CLICKS", "ab_testing": False},
             {"name": "RECOMMENDATION_CLICKS", "ab_testing": True},
-            {"name": "RECOMMENDATION_CLICKS_cold_start", "ab_testing": True},
-            {"name": "RECOMMENDATION_CLICKS_algo", "ab_testing": True},
         ],
     },
     "DIVERSIFICATION_BOOKING": {
@@ -188,8 +174,6 @@ metric_groups_to_compute = {
             {"name": "HOME_FAVORITES", "ab_testing": False},
             {"name": "TOTAL_RECOMMENDATION_FAVORITES", "ab_testing": False},
             {"name": "RECOMMENDATION_FAVORITES", "ab_testing": True},
-            {"name": "RECOMMENDATION_FAVORITES_cold_start", "ab_testing": True},
-            {"name": "RECOMMENDATION_FAVORITES_algo", "ab_testing": True},
         ],
     },
 }

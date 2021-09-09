@@ -1,5 +1,6 @@
 import random
 import numpy as np
+import warnings
 from scipy.spatial.distance import cosine
 from operator import itemgetter
 
@@ -44,9 +45,11 @@ def get_unexpectedness(booked_type_list, recommended_type_list):
     ]
 
     cosine_sum = 0
-    for booked_type_vector in booked_type_vector_list:
-        for recommended_type_vector in recommended_type_vector_list:
-            cosine_sum += cosine(booked_type_vector, recommended_type_vector)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        for booked_type_vector in booked_type_vector_list:
+            for recommended_type_vector in recommended_type_vector_list:
+                cosine_sum += cosine(booked_type_vector, recommended_type_vector)
 
     return (1 / (len(booked_type_list) * len(recommended_type_list))) * cosine_sum
 

@@ -38,7 +38,6 @@ def check_before_deploy(metrics, k):
         and metrics[f"unexpectedness_at_{k}"] > 0.07
         and metrics[f"new_types_ratio_at_{k}"] > 0.05
         and metrics[f"serendipity_at_{k}"] > 1.5
-        and metrics[f"serendipity_at_{k}"] < 2.5
     ):
         print("Metrics OK")
     else:

@@ -46,7 +46,7 @@ def branch_function(ti, **kwargs):
 
 default_args = {
     "start_date": datetime(2021, 5, 20),
-    # "on_failure_callback": task_fail_slack_alert,
+    "on_failure_callback": task_fail_slack_alert,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }
@@ -247,6 +247,24 @@ with DAG(
             },
         },
         {
+            "type": "actions",
+            "elements": [
+                {
+                    "type": "button",
+                    "text": {
+                        "type": "plain_text",
+                        "text": "Voir les métriques :chart_with_upwards_trend:",
+                        "emoji": True,
+                    },
+                    "url": MLFLOW_URL
+                    + "#/experiments/"
+                    + "{{ ti.xcom_pull(task_ids='training').split('/')[4] }}"
+                    + "/runs/"
+                    + "{{ ti.xcom_pull(task_ids='training').split('/')[5] }}",
+                },
+            ],
+        },
+        {
             "type": "context",
             "elements": [
                 {"type": "mrkdwn", "text": f"Environnement: {ENV_SHORT_NAME}"}
@@ -270,6 +288,24 @@ with DAG(
                 "type": "mrkdwn",
                 "text": ":x: Les métriques sont pas bonnes ! :sadpanda:",
             },
+        },
+        {
+            "type": "actions",
+            "elements": [
+                {
+                    "type": "button",
+                    "text": {
+                        "type": "plain_text",
+                        "text": "Voir les métriques :chart_with_upwards_trend:",
+                        "emoji": True,
+                    },
+                    "url": MLFLOW_URL
+                    + "#/experiments/"
+                    + "{{ ti.xcom_pull(task_ids='training').split('/')[4] }}"
+                    + "/runs/"
+                    + "{{ ti.xcom_pull(task_ids='training').split('/')[5] }}",
+                },
+            ],
         },
         {
             "type": "context",

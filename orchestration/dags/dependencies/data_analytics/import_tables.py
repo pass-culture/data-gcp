@@ -295,6 +295,47 @@ def define_import_query(
                 ,"customReasonContent" AS offer_report_custom_reason_content
             FROM public.offer_report
         """
+    cloudsql_queries[
+        "beneficiary_fraud_review"
+    ] = """
+            SELECT
+                CAST("id" AS varchar(255)) AS id
+                ,CAST("userId" AS varchar(255)) AS beneficiary_fraud_review_user_id
+                ,CAST("authorId" AS varchar(255)) AS beneficiary_fraud_review_author_id
+                ,review AS beneficiary_fraud_review_review
+                ,"dateReviewed" AS beneficiary_fraud_review_datereviewed
+                ,reason AS beneficiary_fraud_review_reason
+            FROM public.beneficiary_fraud_review
+        """
+    cloudsql_queries[
+        "beneficiary_fraud_result"
+    ] = """
+            SELECT
+                CAST("id" AS varchar(255)) AS id
+                ,CAST("userId" AS varchar(255)) AS beneficiary_fraud_result_user_id
+                ,status AS beneficiary_fraud_result_status
+                ,reason AS beneficiary_fraud_result_reason
+                ,"dateCreated" AS beneficiary_fraud_result_datecreated
+                ,"dateUpdated" AS beneficiary_fraud_result_dateupdated
+            FROM public.beneficiary_fraud_result
+        """
+
+    cloudsql_queries[
+        "beneficiary_fraud_check"
+    ] = """
+            SELECT
+                CAST("id" AS varchar(255)) AS id
+                ,"dateCreated" AS beneficiary_fraud_check_datecreated
+                ,CAST("userId" AS varchar(255)) AS beneficiary_fraud_check_user_id
+                ,type AS beneficiary_fraud_check_type
+                ,"thirdPartyId" AS beneficiary_fraud_check_thirdPartyId
+                ,jsonb_extract_path_text("resultContent", \\'id\\') AS beneficiary_fraud_check_id_content
+                , jsonb_extract_path_text("resultContent", \\'city\\') AS beneficiary_fraud_check_city
+                , jsonb_extract_path_text("resultContent", \\'gender\\' ) AS beneficiary_fraud_check_gender
+                , jsonb_extract_path_text("resultContent", \\'activity\\' ) AS beneficiary_fraud_check_activity
+                , jsonb_extract_path_text("resultContent", \\'postalCode\\' ) AS beneficiary_fraud_check_postalCode
+            FROM public.beneficiary_fraud_check
+        """
 
     # Build specific federated queries
     queries = {}

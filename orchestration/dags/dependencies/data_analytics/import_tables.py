@@ -300,11 +300,11 @@ def define_import_query(
     ] = """
             SELECT
                 CAST("id" AS varchar(255)) AS id
-                ,CAST("userId" AS varchar(255)) AS beneficiary_fraud_review_user_id
-                ,CAST("authorId" AS varchar(255)) AS beneficiary_fraud_review_author_id
-                ,review AS beneficiary_fraud_review_review
-                ,"dateReviewed" AS beneficiary_fraud_review_datereviewed
-                ,reason AS beneficiary_fraud_review_reason
+                ,CAST("userId" AS varchar(255)) AS user_id
+                ,CAST("authorId" AS varchar(255)) AS author_id
+                ,review AS review
+                ,"dateReviewed" AS datereviewed
+                ,reason AS reason
             FROM public.beneficiary_fraud_review
         """
     cloudsql_queries[
@@ -312,11 +312,10 @@ def define_import_query(
     ] = """
             SELECT
                 CAST("id" AS varchar(255)) AS id
-                ,CAST("userId" AS varchar(255)) AS beneficiary_fraud_result_user_id
-                ,status AS beneficiary_fraud_result_status
-                ,reason AS beneficiary_fraud_result_reason
-                ,"dateCreated" AS beneficiary_fraud_result_datecreated
-                ,"dateUpdated" AS beneficiary_fraud_result_dateupdated
+                ,CAST("userId" AS varchar(255)) AS user_id
+                ,status AS status
+                ,"dateCreated" AS datecreated
+                ,"dateUpdated" AS dateupdated
             FROM public.beneficiary_fraud_result
         """
 
@@ -325,15 +324,15 @@ def define_import_query(
     ] = """
             SELECT
                 CAST("id" AS varchar(255)) AS id
-                ,"dateCreated" AS beneficiary_fraud_check_datecreated
-                ,CAST("userId" AS varchar(255)) AS beneficiary_fraud_check_user_id
-                ,type AS beneficiary_fraud_check_type
-                ,"thirdPartyId" AS beneficiary_fraud_check_thirdPartyId
-                ,jsonb_extract_path_text("resultContent", \\'id\\') AS beneficiary_fraud_check_id_content
-                , jsonb_extract_path_text("resultContent", \\'city\\') AS beneficiary_fraud_check_city
-                , jsonb_extract_path_text("resultContent", \\'gender\\' ) AS beneficiary_fraud_check_gender
-                , jsonb_extract_path_text("resultContent", \\'activity\\' ) AS beneficiary_fraud_check_activity
-                , jsonb_extract_path_text("resultContent", \\'postalCode\\' ) AS beneficiary_fraud_check_postalCode
+                ,"dateCreated" AS datecreated
+                ,CAST("userId" AS varchar(255)) AS user_id
+                ,type AS type
+                ,"thirdPartyId" AS thirdpartyid
+                ,jsonb_extract_path_text("resultContent", \\'id\\') AS id_content
+                , jsonb_extract_path_text("resultContent", \\'city\\') AS city
+                , jsonb_extract_path_text("resultContent", \\'gender\\' ) AS gender
+                , jsonb_extract_path_text("resultContent", \\'activity\\' ) AS activity
+                , jsonb_extract_path_text("resultContent", \\'postalCode\\' ) AS postalCode
             FROM public.beneficiary_fraud_check
         """
 

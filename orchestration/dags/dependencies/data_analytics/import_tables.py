@@ -331,8 +331,23 @@ def define_import_query(
                 ,jsonb_extract_path_text("resultContent", \\'id\\') AS id_content
                 , jsonb_extract_path_text("resultContent", \\'city\\') AS city
                 , jsonb_extract_path_text("resultContent", \\'gender\\' ) AS gender
+                , jsonb_extract_path_text("resultContent", \\'address\\' ) AS address
                 , jsonb_extract_path_text("resultContent", \\'activity\\' ) AS activity
                 , jsonb_extract_path_text("resultContent", \\'postalCode\\' ) AS postalCode
+                , jsonb_extract_path_text("resultContent", \\'creatorCtrl\\' ) AS creatorCtrl
+                , jsonb_extract_path_text("resultContent", \\'bodyNameCtrl\\' ) AS bodyNameCtrl
+                , jsonb_extract_path_text("resultContent", \\'bodyNameLevel\\' ) AS bodyNameLevel
+                , jsonb_extract_path_text("resultContent", \\'posteCodeCtrl\\' ) AS posteCodeCtrl
+                , jsonb_extract_path_text("resultContent", \\'initialSizeCtrl\\' ) AS initialSizeCtrl
+                , jsonb_extract_path_text("resultContent", \\'serviceCodeCtrl\\' ) AS serviceCodeCtrl
+                , jsonb_extract_path_text("resultContent", \\'birthLocationCtrl\\' ) AS birthLocationCtrl
+                , jsonb_extract_path_text("resultContent", \\'bodyBirthDateCtrl\\' ) AS bodyBirthDateCtrl
+                , jsonb_extract_path_text("resultContent", \\'bodyFirstNameCtrl\\' ) AS bodyFirstNameCtrl
+                , jsonb_extract_path_text("resultContent", \\'initialNumberCtrl\\' ) AS initialNumberCtrl
+                , jsonb_extract_path_text("resultContent", \\'bodyBirthDateLevel\\' ) AS bodyBirthDateLevel
+                , jsonb_extract_path_text("resultContent", \\'bodyFirstNameLevel\\' ) AS bodyFirstNameLevel
+                , jsonb_extract_path_text("resultContent", \\'bodyPieceNumberCtrl\\' ) AS bodyPieceNumberCtrl
+                , jsonb_extract_path_text("resultContent", \\'bodyPieceNumberLevel\\' ) AS bodyPieceNumberLevel
             FROM public.beneficiary_fraud_check
         """
 

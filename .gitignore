@@ -17,5 +17,3 @@ airflow.cfg
 unittests.cfg
 logs/
 credentials/
-additional_data_sources/siren-function-source/siren_function.zip
-offers_to_tag.csv

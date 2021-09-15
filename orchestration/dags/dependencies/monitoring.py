@@ -42,6 +42,17 @@ def _define_recommendation_booking_funnel(start_date, end_date):
             WHERE event_name IN ("screen_view_bookingconfirmation", "ConsultOffer") or screen_view_event = "BookingConfirmation"
             ORDER BY user_id, session_id, event_timestamp
         ),
+        booking_reco_origin AS
+        (
+            SELECT reco_origin,
+            CAST(userid as STRING) as pr_user_id, offerid as pr_offer_id,
+            TIMESTAMP_DIFF(TIMESTAMP_MICROS(bk.event_timestamp), CAST(date as TIMESTAMP), SECOND) as timediff, 
+            ROW_NUMBER() OVER(PARTITION BY pr.userid, pr.offerid ORDER BY TIMESTAMP_DIFF(TIMESTAMP_MICROS(bk.event_timestamp), CAST(date as TIMESTAMP), SECOND)) AS row_nb,
+            FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.past_recommended_offers` pr
+            LEFT JOIN booking_funnel as bk 
+            ON bk.offer_id = pr.offerid and bk.user_id = CAST(pr.userid as STRING)
+            WHERE TIMESTAMP_DIFF(TIMESTAMP_MICROS(bk.event_timestamp), CAST(date as TIMESTAMP), SECOND) >= 0
+        ),
         recommendation_booking_funnel AS (
             SELECT event_name, event_timestamp, user_id, session_id, firebase_screen, module, booking_funnel.offer_id, next_event_name, groupid AS group_id, offer_type,  pastreco.reco_origin,
             FROM booking_funnel
@@ -50,15 +61,11 @@ def _define_recommendation_booking_funnel(start_date, end_date):
             LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_offer` offers
             ON offers.offer_id = CAST(booking_funnel.offer_id AS STRING)
             LEFT JOIN(
-                SELECT reco_origin,
-                    CAST(userid as STRING) as pr_user_id, offerid as pr_offer_id,
-                    MIN(TIMESTAMP_DIFF(TIMESTAMP_MICROS(bkf.event_timestamp), CAST(date as TIMESTAMP), SECOND)) as mintimediff
-                    FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.past_recommended_offers` pr
-                    LEFT JOIN booking_funnel as bkf 
-                    ON bkf.offer_id = pr.offerid AND bkf.user_id = CAST(pr.userid as STRING)
-                    WHERE TIMESTAMP_DIFF(TIMESTAMP_MICROS(bkf.event_timestamp), CAST(date as TIMESTAMP), SECOND) >= 0
-                    GROUP BY pr_user_id,pr_offer_id,reco_origin 
-                ) pastreco 
+                SELECT reco_origin,pr_user_id, pr_offer_id
+                FROM booking_reco_origin
+                WHERE row_nb=1
+                GROUP BY pr_user_id,pr_offer_id,reco_origin
+            ) pastreco 
             ON pr_offer_id  = booking_funnel.offer_id AND pr_user_id  = user_id
             WHERE (
                 next_event_name = "screen_view_bookingconfirmation" OR (

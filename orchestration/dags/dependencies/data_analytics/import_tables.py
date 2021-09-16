@@ -152,7 +152,7 @@ def define_import_query(
     ] = """
         SELECT
             "isActive", CAST("id" AS varchar(255)), "name", "localClass",
-            "enabledForPro", "requireProviderIdentifier"
+            "enabledForPro"
         FROM public.provider
     """
     cloudsql_queries[

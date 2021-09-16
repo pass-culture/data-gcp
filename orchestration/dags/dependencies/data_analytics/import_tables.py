@@ -152,7 +152,7 @@ def define_import_query(
     ] = """
         SELECT
             "isActive", CAST("id" AS varchar(255)), "name", "localClass",
-            "enabledForPro", "requireProviderIdentifier"
+            "enabledForPro"
         FROM public.provider
     """
     cloudsql_queries[
@@ -281,7 +281,7 @@ def define_import_query(
         "criterion"
     ] = """
             SELECT
-                CAST("id" AS varchar(255)),"name", "description", "scoreDelta", "endDateTime", "startDateTime"
+                CAST("id" AS varchar(255)),"name", "description", "endDateTime", "startDateTime"
             FROM public.criterion
         """
     cloudsql_queries[

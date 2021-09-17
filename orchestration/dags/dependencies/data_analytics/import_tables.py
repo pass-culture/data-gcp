@@ -321,15 +321,18 @@ def define_import_query(
 
     cloudsql_queries[
         "beneficiary_fraud_check"
-    ] = """
-            SELECT
-                CAST("id" AS varchar(255)) AS id
-                ,"dateCreated" AS datecreated
-                ,CAST("userId" AS varchar(255)) AS user_id
-                ,type AS type
-                ,"thirdPartyId" AS thirdpartyid
-                ,regexp_replace(content, \'"(email|phone)": "[a-zA-Z0-9.@]*",\' ,\'"\\1":"XXX",\', \'g\') FROM SELECT  CAST("resultContent" AS text) as content
-            FROM public.beneficiary_fraud_check
+    ] = r"""
+            SELECT *
+                ,regexp_replace(content, \'"(email|phone|lastName|birthDate|firstName|phoneNumber|bodyPieceNumber|reason_code|account_email)": "[a-zA-Z0-9.@]*",\' ,\'"\\1":"XXX",\', \'g\') 
+                FROM (
+                SELECT CAST("id" AS varchar(255)) AS id
+                    ,"dateCreated" AS datecreated
+                    ,CAST("userId" AS varchar(255)) AS user_id
+                    ,type AS type
+                    ,"thirdPartyId" AS thirdpartyid
+                    ,CAST("resultContent" AS text) as content 
+                    FROM public.beneficiary_fraud_check
+                    ) AS data
         """
 
     # Build specific federated queries

@@ -214,7 +214,7 @@ with DAG(
 
     DEPLOY_COMMAND = f"""
     export REGION=europe-west1
-    export MODEL_NAME=tf_model_reco_dev
+    export MODEL_NAME=tf_model_reco_{ENV_SHORT_NAME}
     export RECOMMENDATION_MODEL_DIR={{{{ ti.xcom_pull(task_ids='training') }}}}
 
     export VERSION_NAME=v_{{{{ ts_nodash }}}}

@@ -239,11 +239,11 @@ with DAG(
         CREATE INDEX IF NOT EXISTS idx_venue_id                           ON public.venue                       USING btree (venue_id);
         CREATE INDEX IF NOT EXISTS idx_venue_managingoffererid            ON public.venue                       USING btree ("venue_managing_offerer_id");
         CREATE INDEX IF NOT EXISTS idx_offerer_id                         ON public.offerer                     USING btree (offerer_id);
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_iris_venues_mv_irisid       ON public.iris_venues_mv              USING btree (iris_id);
-        CREATE INDEX IF NOT EXISTS idx_non_recommendable_userid           ON public.non_recommendable_offers    USING btree (user_id);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_iris_venues_mv_unique       ON public.iris_venues_mv              USING btree (iris_id,venue_id);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_non_recommendable_id        ON public.non_recommendable_offers    USING btree (user_id,offer_id);
         CREATE INDEX IF NOT EXISTS idx_offer_recommendable_venue_id       ON public.recommendable_offers        USING btree (venue_id);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_id      ON public.recommendable_offers        USING btree (offer_id);
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_number_of_bookings_per_user ON public.number_of_bookings_per_user USING btree ("user_id");
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_nb_bookings_unique          ON public.number_of_bookings_per_user USING btree ("user_id",bookings_count);
         CREATE INDEX IF NOT EXISTS qpi_answers_user_id                    ON public.qpi_answers                 USING btree (user_id);
     """
 

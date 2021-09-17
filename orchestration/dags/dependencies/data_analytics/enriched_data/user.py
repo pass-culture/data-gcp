@@ -1,5 +1,6 @@
 from dependencies.data_analytics.enriched_data.enriched_data_utils import (
-    define_humanized_id_query,
+    create_humanize_id_function,
+    create_temp_humanize_id,
 )
 
 
@@ -519,7 +520,8 @@ def define_enriched_user_data_full_query(dataset, table_prefix=""):
         {define_theoretical_amount_spent_in_physical_goods_query(dataset=dataset, table_prefix=table_prefix)}
         {define_theoretical_amount_spent_in_outings_query(dataset=dataset, table_prefix=table_prefix)}
         {define_last_booking_date_query(dataset=dataset, table_prefix=table_prefix)}
-        {define_humanized_id_query(table=f"user", dataset=dataset, table_prefix=table_prefix)}
+        {create_humanize_id_function()}
+        {create_temp_humanize_id(table="user", dataset=dataset, table_prefix=table_prefix)}
         {define_first_paid_booking_date_query(dataset=dataset, table_prefix=table_prefix)}
         {define_first_booking_type_query(dataset=dataset, table_prefix=table_prefix)}
         {define_first_paid_booking_type_query(dataset=dataset, table_prefix=table_prefix)}

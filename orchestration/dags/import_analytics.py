@@ -97,6 +97,12 @@ data_applicative_tables_and_date_columns = {
     "payment_message": [""],
     "feature": [""],
     "criterion": [""],
+    "beneficiary_fraud_review": ["datereviewed"],
+    "beneficiary_fraud_result": [
+        "datecreated",
+        "dateupdated",
+    ],
+    "beneficiary_fraud_check": [""],
 }
 
 default_dag_args = {

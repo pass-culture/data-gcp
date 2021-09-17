@@ -1,5 +1,6 @@
 from dependencies.data_analytics.enriched_data.enriched_data_utils import (
-    define_humanized_id_query,
+    create_humanize_id_function,
+    create_temp_humanize_id,
 )
 
 
@@ -180,6 +181,7 @@ def define_enriched_venue_query(dataset, table_prefix=""):
                 ,venue_humanized_id.humanized_id AS venue_humanized_id
                 ,CONCAT("https://backend.passculture.beta.gouv.fr/pc/back-office/venue/edit/?id=",venue.venue_id,"&url=%2Fpc%2Fback-office%2Fvenue%2F") AS venue_flaskadmin_link
                 ,venue_region_departement.region_name AS venue_region_name
+                ,CONCAT('https://pro.passculture.beta.gouv.fr/structures/',offerer_humanized_id.humanized_id,'/lieux/',venue_humanized_id.humanized_id) AS venue_pc_pro_link
             FROM {dataset}.{table_prefix}venue AS venue
             LEFT JOIN {dataset}.{table_prefix}offerer AS offerer ON venue.venue_managing_offerer_id = offerer.offerer_id
             LEFT JOIN {dataset}.{table_prefix}venue_type AS venue_type ON venue.venue_type_id = venue_type.id
@@ -194,6 +196,7 @@ def define_enriched_venue_query(dataset, table_prefix=""):
             LEFT JOIN real_revenue_per_venue ON venue.venue_id = real_revenue_per_venue.venue_id
             LEFT JOIN venue_humanized_id AS venue_humanized_id ON venue_humanized_id.venue_id = venue.venue_id
             LEFT JOIN {dataset}.region_department AS venue_region_departement ON venue.venue_department_code = venue_region_departement.num_dep
+            LEFT JOIN offerer_humanized_id AS offerer_humanized_id ON offerer_humanized_id.offerer_id = venue.venue_managing_offerer_id
         );
     """
 
@@ -208,6 +211,8 @@ def define_enriched_venue_data_full_query(dataset, table_prefix=""):
         {define_offers_created_per_venue_query(dataset=dataset, table_prefix=table_prefix)}
         {define_theoretic_revenue_per_venue_query(dataset=dataset, table_prefix=table_prefix)}
         {define_real_revenue_per_venue_query(dataset=dataset, table_prefix=table_prefix)}
-        {define_humanized_id_query(table=f"venue", dataset=dataset, table_prefix=table_prefix)}
+        {create_humanize_id_function()}
+        {create_temp_humanize_id(table="venue", dataset=dataset, table_prefix=table_prefix)}
+        {create_temp_humanize_id(table="offerer", dataset=dataset, table_prefix=table_prefix)}
         {define_enriched_venue_query(dataset=dataset, table_prefix=table_prefix)}
     """

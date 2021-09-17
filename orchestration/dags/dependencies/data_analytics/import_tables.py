@@ -152,7 +152,7 @@ def define_import_query(
     ] = """
         SELECT
             "isActive", CAST("id" AS varchar(255)), "name", "localClass",
-            "enabledForPro", "requireProviderIdentifier"
+            "enabledForPro"
         FROM public.provider
     """
     cloudsql_queries[
@@ -281,7 +281,7 @@ def define_import_query(
         "criterion"
     ] = """
             SELECT
-                CAST("id" AS varchar(255)),"name", "description", "scoreDelta", "endDateTime", "startDateTime"
+                CAST("id" AS varchar(255)),"name", "description", "endDateTime", "startDateTime"
             FROM public.criterion
         """
     cloudsql_queries[
@@ -294,6 +294,45 @@ def define_import_query(
                 ,reason AS offer_report_reason
                 ,"customReasonContent" AS offer_report_custom_reason_content
             FROM public.offer_report
+        """
+    cloudsql_queries[
+        "beneficiary_fraud_review"
+    ] = """
+            SELECT
+                CAST("id" AS varchar(255)) AS id
+                ,CAST("userId" AS varchar(255)) AS user_id
+                ,CAST("authorId" AS varchar(255)) AS author_id
+                ,review AS review
+                ,"dateReviewed" AS datereviewed
+                ,reason AS reason
+            FROM public.beneficiary_fraud_review
+        """
+    cloudsql_queries[
+        "beneficiary_fraud_result"
+    ] = """
+            SELECT
+                CAST("id" AS varchar(255)) AS id
+                ,CAST("userId" AS varchar(255)) AS user_id
+                ,status AS status
+                ,"dateCreated" AS datecreated
+                ,"dateUpdated" AS dateupdated
+            FROM public.beneficiary_fraud_result
+        """
+
+    cloudsql_queries[
+        "beneficiary_fraud_check"
+    ] = r"""
+            SELECT id, datecreated, user_id, type, thirdpartyid
+                ,regexp_replace(content, \'"(email|phone|lastName|birthDate|firstName|phoneNumber|reason_code|account_email|last_name|birth_date|first_name|phone_number)": "[^"]*",\' ,\'"\\1":"XXX",\', \'g\') as result_content
+                FROM (
+                SELECT CAST("id" AS varchar(255)) AS id
+                    ,"dateCreated" AS datecreated
+                    ,CAST("userId" AS varchar(255)) AS user_id
+                    ,type AS type
+                    ,"thirdPartyId" AS thirdpartyid
+                    ,CAST("resultContent" AS text) as content 
+                    FROM public.beneficiary_fraud_check
+                    ) AS data
         """
 
     # Build specific federated queries

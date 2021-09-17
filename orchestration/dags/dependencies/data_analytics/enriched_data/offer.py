@@ -1,5 +1,6 @@
 from dependencies.data_analytics.enriched_data.enriched_data_utils import (
-    define_humanized_id_query,
+    create_humanize_id_function,
+    create_temp_humanize_id,
 )
 
 
@@ -178,7 +179,8 @@ def define_enriched_offer_data_full_query(
         {define_offer_booking_information_view_query(dataset=analytics_dataset, table_prefix=table_prefix)}
         {define_count_favorites_view_query(dataset=analytics_dataset, table_prefix=table_prefix)}
         {define_sum_stock_view_query(dataset=analytics_dataset, table_prefix=table_prefix)}
-        {define_humanized_id_query(table=f"offer", dataset=analytics_dataset, table_prefix=table_prefix)}
+        {create_humanize_id_function()}
+        {create_temp_humanize_id(table="offer", dataset=analytics_dataset, table_prefix=table_prefix)}
         {define_count_first_booking_query(dataset=analytics_dataset, table_prefix=table_prefix)}
         {define_enriched_offer_data_query(analytics_dataset =analytics_dataset, clean_dataset= clean_dataset,  table_prefix=table_prefix)}
     """

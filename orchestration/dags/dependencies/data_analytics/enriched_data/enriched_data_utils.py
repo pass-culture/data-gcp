@@ -5,15 +5,15 @@ from dependencies.config import BASE32_JS_LIB_PATH
 PATH_TO_DIR = os.path.dirname(os.path.realpath(__file__))
 
 
-def define_humanized_id_query(table, dataset, table_prefix=""):
-    # 1. Define function humanize_id(int) -> str
+def create_humanize_id_function():
+    # Define function humanize_id(int) -> str
     humanize_id_definition_query = f"""
         CREATE TEMPORARY FUNCTION humanize_id(id STRING)
         RETURNS STRING
         LANGUAGE js
         OPTIONS (
             library="{BASE32_JS_LIB_PATH}"
-          )
+        )
         AS \"\"\"
     """
 
@@ -26,17 +26,17 @@ def define_humanized_id_query(table, dataset, table_prefix=""):
         \"\"\";
     """
 
-    # 2. Use humanize_id function to create (temp) table
-    tmp_table_query = f"""
-                CREATE TEMP TABLE {table}_humanized_id AS
-                    SELECT
-                        {table}_id,
-                        humanize_id({table}_id) AS humanized_id
-                    FROM {dataset}.{table_prefix}{table}
-                    WHERE {table}_id is not NULL;
-    """
+    return humanize_id_definition_query
 
-    return f"""
-        {humanize_id_definition_query}
-        {tmp_table_query}
+
+def create_temp_humanize_id(table, dataset, table_prefix=""):
+    # Use humanize_id function to create (temp) table
+    tmp_table_query = f"""
+        CREATE TEMP TABLE {table}_humanized_id AS
+            SELECT
+                {table}_id,
+                humanize_id({table}_id) AS humanized_id
+            FROM {dataset}.{table_prefix}{table}
+            WHERE {table}_id is not NULL;
     """
+    return tmp_table_query

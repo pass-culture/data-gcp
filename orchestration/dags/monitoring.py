@@ -21,6 +21,7 @@ from dependencies.config import GCP_PROJECT, BIGQUERY_ANALYTICS_DATASET, ENV_SHO
 MONITORING_TABLE = "monitoring_data"
 START_DATE = datetime(2021, 7, 2, tzinfo=pytz.utc)  # expressed in UTC TimeZone
 groups = ["A", "B"]
+reco_origin_list = {"cold_start", "algo"}
 ALGO_A = "algo v1 + cold start"
 ALGO_B = "algo v0 + cold start"
 
@@ -60,11 +61,16 @@ def compute_booking_pertinence_metrics(ti, **kwargs):
     end_date = ti.xcom_pull(key=LAST_EVENT_TIME_KEY)
     bigquery_client = BigQueryClient()
     results = bigquery_client.query(
-        get_pertinence_bookings_request(start_date, end_date, groups)
+        get_pertinence_bookings_request(start_date, end_date, groups, reco_origin_list)
     )
     for index, metric in enumerate(
         ["BOOKINGS", "HOME_BOOKINGS", "TOTAL_RECOMMENDATION_BOOKINGS"]
         + [f"RECOMMENDATION_BOOKINGS_{group_id}" for group_id in groups]
+        + [
+            f"RECOMMENDATION_BOOKINGS_{reco_origin}_{group_id}"
+            for group_id in groups
+            for reco_origin in reco_origin_list
+        ]
     ):
         result = float(results.values[0][index])
         ti.xcom_push(key=metric, value=result)
@@ -77,12 +83,19 @@ def compute_booking_diversification_metrics(ti, **kwargs):
     results = bigquery_client.query(
         get_diversification_bookings_request(start_date, end_date)
     )
-    for index, group_id in enumerate(sorted(groups)):
+    for index, metric in enumerate(
+        [f"AVERAGE_CATEGORY_RECO_{group_id}" for group_id in groups]
+        + [
+            f"AVERAGE_CATEGORY_RECO_{reco_origin}_{group_id}"
+            for group_id in groups
+            for reco_origin in reco_origin_list
+        ]
+    ):
         result = None
         if len(results.values) > index:
             if len(results.values[index]) > 0:
                 result = float(results.values[index][0])
-        ti.xcom_push(key=f"AVERAGE_CATEGORY_RECO_{group_id}", value=result)
+        ti.xcom_push(key=metric, value=result)
 
 
 def compute_recommendations_count_metrics(ti, **kwargs):
@@ -90,10 +103,15 @@ def compute_recommendations_count_metrics(ti, **kwargs):
     end_date = ti.xcom_pull(key=LAST_EVENT_TIME_KEY)
     bigquery_client = BigQueryClient()
     results = bigquery_client.query(
-        get_recommendations_count(start_date, end_date, groups)
+        get_recommendations_count(start_date, end_date, groups, reco_origin_list)
     )
     for index, metric in enumerate(
         [f"RECOMMENDATIONS_COUNT_{group_id}" for group_id in groups]
+        + [
+            f"RECOMMENDATIONS_COUNT_{reco_origin}_{group_id}"
+            for group_id in groups
+            for reco_origin in reco_origin_list
+        ]
     ):
         result = float(results.values[0][index])
         ti.xcom_push(key=metric, value=result)
@@ -124,7 +142,11 @@ metric_groups_to_compute = {
     },
     "DIVERSIFICATION_BOOKING": {
         "function": compute_booking_diversification_metrics,
-        "metric_list": [{"name": "AVERAGE_CATEGORY_RECO", "ab_testing": True}],
+        "metric_list": [
+            {"name": "AVERAGE_CATEGORY_RECO", "ab_testing": True},
+            {"name": "AVERAGE_CATEGORY_RECO_cold_start", "ab_testing": True},
+            {"name": "AVERAGE_CATEGORY_RECO_algo", "ab_testing": True},
+        ],
     },
     "PERTINENCE_BOOKINGS": {
         "function": compute_booking_pertinence_metrics,
@@ -133,11 +155,17 @@ metric_groups_to_compute = {
             {"name": "HOME_BOOKINGS", "ab_testing": False},
             {"name": "TOTAL_RECOMMENDATION_BOOKINGS", "ab_testing": False},
             {"name": "RECOMMENDATION_BOOKINGS", "ab_testing": True},
+            {"name": "RECOMMENDATION_BOOKINGS_cold_start", "ab_testing": True},
+            {"name": "RECOMMENDATION_BOOKINGS_algo", "ab_testing": True},
         ],
     },
     "RECOMMENDATION_COUNT": {
         "function": compute_recommendations_count_metrics,
-        "metric_list": [{"name": "RECOMMENDATIONS_COUNT", "ab_testing": True}],
+        "metric_list": [
+            {"name": "RECOMMENDATIONS_COUNT", "ab_testing": True},
+            {"name": "RECOMMENDATIONS_COUNT_cold_start", "ab_testing": True},
+            {"name": "RECOMMENDATIONS_COUNT_algo", "ab_testing": True},
+        ],
     },
     "FAVORITES": {
         "function": compute_favorites_metrics,

@@ -49,7 +49,7 @@ def _define_recommendation_booking_funnel(start_date, end_date):
             TIMESTAMP_DIFF(TIMESTAMP_MICROS(bk.event_timestamp), CAST(date as TIMESTAMP), SECOND) as timediff, 
             ROW_NUMBER() OVER(PARTITION BY pr.userid, pr.offerid ORDER BY TIMESTAMP_DIFF(TIMESTAMP_MICROS(bk.event_timestamp), CAST(date as TIMESTAMP), SECOND)) AS row_nb,
             FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.past_recommended_offers` pr
-            LEFT JOIN booking_funnel as bk 
+            INNER JOIN booking_funnel as bk 
             ON bk.offer_id = pr.offerid and bk.user_id = CAST(pr.userid as STRING)
             WHERE TIMESTAMP_DIFF(TIMESTAMP_MICROS(bk.event_timestamp), CAST(date as TIMESTAMP), SECOND) >= 0
         ),

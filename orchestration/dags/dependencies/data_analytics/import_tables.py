@@ -323,7 +323,7 @@ def define_import_query(
         "beneficiary_fraud_check"
     ] = r"""
             SELECT *
-                ,regexp_replace(content, \'"(email|phone|lastName|birthDate|firstName|phoneNumber|bodyPieceNumber|reason_code|account_email)": "[a-zA-Z0-9.@]*",\' ,\'"\\1":"XXX",\', \'g\') 
+                ,regexp_replace(content, \'"(email|phone|lastName|birthDate|firstName|phoneNumber|reason_code|account_email|last_name|birth_date|first_name|phone_number)": "[^"]*",\' ,\'"\\1":"XXX",\', \'g\')
                 FROM (
                 SELECT CAST("id" AS varchar(255)) AS id
                     ,"dateCreated" AS datecreated

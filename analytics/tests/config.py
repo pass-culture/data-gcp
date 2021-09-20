@@ -54,6 +54,7 @@ BIGQUERY_SCHEMAS = {
         "offer_is_duo": "BOOLEAN",
         "offer_fields_updated": "STRING",
         "offer_withdrawal_details": "STRING",
+        "offer_is_educational": "BOOLEAN",
     },
     "offer_extracted_data": {
         "offer_id": "STRING",

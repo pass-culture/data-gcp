@@ -101,6 +101,7 @@ ENRICHED_OFFER_DATA_INPUT = {
             "companies": None,
             "countries": None,
             "casting": None,
+            "offer_is_educational": False,
         },
     ],
     "offer_tags": [
@@ -350,6 +351,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "companies": None,
         "countries": None,
         "casting": None,
+        "offer_is_educational": False,
     },
 ]
 

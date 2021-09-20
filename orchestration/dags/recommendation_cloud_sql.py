@@ -229,22 +229,22 @@ with DAG(
     restore_tasks[-1] >> end_drop_restore
 
     recreate_indexes_query = """
-        CREATE INDEX IF NOT EXISTS idx_stock_id                      ON public.stock                       USING btree (stock_id);
-        CREATE INDEX IF NOT EXISTS idx_stock_offerid                 ON public.stock                       USING btree ("offer_id");
-        CREATE INDEX IF NOT EXISTS idx_booking_stockid               ON public.booking                     USING btree ("stock_id");
-        CREATE INDEX IF NOT EXISTS idx_mediation_offerid             ON public.mediation                   USING btree ("offerId");
-        CREATE INDEX IF NOT EXISTS idx_offer_id                      ON public.offer                       USING btree (offer_id);
-        CREATE INDEX IF NOT EXISTS idx_offer_type                    ON public.offer                       USING btree (offer_type);
-        CREATE INDEX IF NOT EXISTS idx_offer_venueid                 ON public.offer                       USING btree ("venue_id");
-        CREATE INDEX IF NOT EXISTS idx_venue_id                      ON public.venue                       USING btree (venue_id);
-        CREATE INDEX IF NOT EXISTS idx_venue_managingoffererid       ON public.venue                       USING btree ("venue_managing_offerer_id");
-        CREATE INDEX IF NOT EXISTS idx_offerer_id                    ON public.offerer                     USING btree (offerer_id);
-        CREATE INDEX IF NOT EXISTS idx_iris_venues_mv_irisid         ON public.iris_venues_mv              USING btree (iris_id);
-        CREATE INDEX IF NOT EXISTS idx_non_recommendable_userid      ON public.non_recommendable_offers    USING btree (user_id);
-        CREATE INDEX IF NOT EXISTS idx_offer_recommendable_venue_id  ON public.recommendable_offers        USING btree (venue_id);
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_id ON public.recommendable_offers        USING btree (offer_id);
-        CREATE INDEX IF NOT EXISTS idx_number_of_bookings_per_user   ON public.number_of_bookings_per_user USING btree ("user_id");
-        CREATE INDEX IF NOT EXISTS qpi_answers_user_id               ON public.qpi_answers                 USING btree (user_id);
+        CREATE INDEX IF NOT EXISTS idx_stock_id                           ON public.stock                       USING btree (stock_id);
+        CREATE INDEX IF NOT EXISTS idx_stock_offerid                      ON public.stock                       USING btree ("offer_id");
+        CREATE INDEX IF NOT EXISTS idx_booking_stockid                    ON public.booking                     USING btree ("stock_id");
+        CREATE INDEX IF NOT EXISTS idx_mediation_offerid                  ON public.mediation                   USING btree ("offerId");
+        CREATE INDEX IF NOT EXISTS idx_offer_id                           ON public.offer                       USING btree (offer_id);
+        CREATE INDEX IF NOT EXISTS idx_offer_type                         ON public.offer                       USING btree (offer_type);
+        CREATE INDEX IF NOT EXISTS idx_offer_venueid                      ON public.offer                       USING btree ("venue_id");
+        CREATE INDEX IF NOT EXISTS idx_venue_id                           ON public.venue                       USING btree (venue_id);
+        CREATE INDEX IF NOT EXISTS idx_venue_managingoffererid            ON public.venue                       USING btree ("venue_managing_offerer_id");
+        CREATE INDEX IF NOT EXISTS idx_offerer_id                         ON public.offerer                     USING btree (offerer_id);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_iris_venues_mv_unique       ON public.iris_venues_mv              USING btree (iris_id,venue_id);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_non_recommendable_id        ON public.non_recommendable_offers    USING btree (user_id,offer_id);
+        CREATE INDEX IF NOT EXISTS idx_offer_recommendable_venue_id       ON public.recommendable_offers        USING btree (venue_id);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_id      ON public.recommendable_offers        USING btree (offer_id);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_nb_bookings_unique          ON public.number_of_bookings_per_user USING btree ("user_id",bookings_count);
+        CREATE INDEX IF NOT EXISTS qpi_answers_user_id                    ON public.qpi_answers                 USING btree (user_id);
     """
 
     recreate_indexes_task = CloudSqlQueryOperator(
@@ -264,21 +264,21 @@ with DAG(
     refresh_non_recommendable_offers = CloudSqlQueryOperator(
         task_id="refresh_non_recommendable_offers",
         gcp_cloudsql_conn_id="proxy_postgres_tcp",
-        sql="REFRESH MATERIALIZED VIEW non_recommendable_offers;",
+        sql="REFRESH MATERIALIZED VIEW CONCURRENTLY non_recommendable_offers;",
         autocommit=True,
     )
 
     refresh_iris_venues_mv = CloudSqlQueryOperator(
         task_id="refresh_iris_venues_mv",
         gcp_cloudsql_conn_id="proxy_postgres_tcp",
-        sql="REFRESH MATERIALIZED VIEW iris_venues_mv;",
+        sql="REFRESH MATERIALIZED VIEW CONCURRENTLY iris_venues_mv;",
         autocommit=True,
     )
 
     refresh_number_of_bookings_per_user = CloudSqlQueryOperator(
         task_id="refresh_number_of_bookings_per_user",
         gcp_cloudsql_conn_id="proxy_postgres_tcp",
-        sql="REFRESH MATERIALIZED VIEW number_of_bookings_per_user;",
+        sql="REFRESH MATERIALIZED VIEW CONCURRENTLY number_of_bookings_per_user;",
         autocommit=True,
     )
 

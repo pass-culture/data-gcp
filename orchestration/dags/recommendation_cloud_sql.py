@@ -85,7 +85,7 @@ with DAG(
     schedule_interval="30 3 * * *",
     on_failure_callback=task_fail_slack_alert,
     catchup=False,
-    dagrun_timeout=timedelta(minutes=180),
+    dagrun_timeout=timedelta(minutes=240),
 ) as dag:
 
     start = DummyOperator(task_id="start")

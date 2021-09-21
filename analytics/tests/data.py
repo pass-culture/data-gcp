@@ -39,6 +39,7 @@ ENRICHED_OFFER_DATA_INPUT = {
             "offer_creation_date": "2019-11-20",
             "offer_is_duo": False,
             "offer_fields_updated": "{}",
+            "offer_is_educational": False,
         },
         {
             "venue_id": "2",
@@ -54,6 +55,7 @@ ENRICHED_OFFER_DATA_INPUT = {
             "offer_creation_date": "2019-11-20",
             "offer_is_duo": False,
             "offer_fields_updated": "{}",
+            "offer_is_educational": False,
         },
     ],
     "offer_extracted_data": [
@@ -306,6 +308,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "companies": '[{"activity":"production","company":{"name":"universal pictures"}}]',
         "countries": '["usa"]',
         "casting": "[]",
+        "offer_is_educational": False,
     },
     {
         "offer_id": "4",
@@ -348,6 +351,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "companies": None,
         "countries": None,
         "casting": None,
+        "offer_is_educational": False,
     },
 ]
 

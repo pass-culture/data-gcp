@@ -116,6 +116,7 @@ def define_enriched_offer_data_query(analytics_dataset, clean_dataset, table_pre
                 offer.offer_subcategoryId ,
                 offer.offer_creation_date,
                 offer.offer_is_duo,
+                offer.offer_is_educational
                 venue.venue_is_virtual,
                 is_physical_view.physical_goods,
                 is_outing_view.outing,
@@ -152,8 +153,7 @@ def define_enriched_offer_data_query(analytics_dataset, clean_dataset, table_pre
 				WHEN offer_extracted_data.offer_type = 'EventType.MUSIQUE' THEN offer_extracted_data.musicType WHEN offer_extracted_data.offer_type <> 'EventType.SPECTACLE_VIVANT' AND offer_extracted_data.musicType IS NOT NULL THEN offer_extracted_data.musicType END AS type,
 				CASE WHEN offer_extracted_data.offer_type <>'EventType.MUSIQUE' AND offer_extracted_data.showSubType IS NOT NULL THEN offer_extracted_data.showSubType 
 				WHEN offer_extracted_data.offer_type = 'EventType.MUSIQUE' THEN offer_extracted_data.musicSubtype WHEN offer_extracted_data.offer_type <> 'EventType.SPECTACLE_VIVANT' AND offer_extracted_data.musicsubType IS NOT NULL THEN offer_extracted_data.musicSubtype
-				END AS subType,
-                offer_is_educational
+				END AS subType
             FROM {analytics_dataset}.{table_prefix}offer AS offer
             LEFT JOIN {analytics_dataset}.{table_prefix}venue AS venue ON offer.venue_id = venue.venue_id
             LEFT JOIN {analytics_dataset}.{table_prefix}offerer AS offerer ON venue.venue_managing_offerer_id = offerer.offerer_id

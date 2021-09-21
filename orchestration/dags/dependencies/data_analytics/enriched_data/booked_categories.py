@@ -1,7 +1,7 @@
 def temporary_booking_table(gcp_project, bigquery_analytics_dataset):
     return f"""
         WITH bookings AS (
-            SELECT user_id, offer.offer_type,  venue_is_virtual 
+            SELECT user_id, offer.offer_subcategoryId,  venue_is_virtual 
             FROM `{gcp_project}.{bigquery_analytics_dataset}.applicative_database_booking` booking
             LEFT JOIN `{gcp_project}.{bigquery_analytics_dataset}.applicative_database_stock` stock
             ON booking.stock_id = stock.stock_id
@@ -60,8 +60,12 @@ def define_user_booked_cinema_query(dataset, table_prefix=""):
     return f"""
         CREATE TEMP TABLE user_booked_cinema AS (
           SELECT booking.user_id as user_id FROM `{dataset}.{table_prefix}booking` booking
-          JOIN `{dataset}.{table_prefix}stock`stock on stock.stock_id = booking.stock_id
-          JOIN `{dataset}.{table_prefix}offer` offer on offer.offer_id = stock.offer_id
+          INNER JOIN `{dataset}.{table_prefix}stock`stock
+            ON stock.stock_id = booking.stock_id
+          INNER JOIN `{dataset}.{table_prefix}offer` offer
+            ON offer.offer_id = stock.offer_id
+          INNER JOIN `passculture-data-prod.analytics_prod.subcategories` sc
+            ON offer.offer_subcategoryId = sc.id 
           WHERE offer.offer_type IN ('EventType.CINEMA', 'ThingType.CINEMA_ABO', 'ThingType.CINEMA_CARD')
           GROUP BY booking.user_id
         );

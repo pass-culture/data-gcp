@@ -14,7 +14,7 @@ def define_experimentation_sessions_query(dataset, table_prefix=""):
                     ROW_NUMBER() OVER (PARTITION BY booking_id ORDER BY booking_is_used DESC) rank
                 FROM {dataset}.{table_prefix}booking AS booking
                 JOIN {dataset}.{table_prefix}stock AS stock ON stock.stock_id = booking.stock_id
-                JOIN {dataset}.{table_prefix}offer AS offer ON offer.offer_id = stock.offer_id AND offer.offer_type = 'ThingType.ACTIVATION'
+                JOIN {dataset}.{table_prefix}offer AS offer ON offer.offer_id = stock.offer_id AND offer.offer_subcategoryId = 'ACTIVATION_THING'
                 ORDER BY user_id, booking_is_used DESC
             )
             SELECT
@@ -33,7 +33,7 @@ def define_activation_dates_query(dataset, table_prefix=""):
             WITH ranked_bookings AS (
                 SELECT
                     booking.user_id
-                    ,offer.offer_type
+                    ,offer.offer_subcategoryId
                     ,booking_used_date
                     ,booking_is_used
                     ,RANK() OVER (PARTITION BY booking.user_id ORDER BY booking.booking_creation_date ASC, booking.booking_id ASC) AS rank_
@@ -43,8 +43,8 @@ def define_activation_dates_query(dataset, table_prefix=""):
             )
             SELECT
                 user.user_id
-                ,CASE WHEN "offer_type" = 'ThingType.ACTIVATION' AND booking_used_date IS NOT NULL THEN booking_used_date
-                 ELSE user_creation_date END AS user_activation_date
+                ,CASE WHEN "offer_subcategoryId" = 'ACTIVATION_THING' AND booking_used_date IS NOT NULL THEN booking_used_date
+                ELSE user_creation_date END AS user_activation_date
             FROM {dataset}.{table_prefix}user AS user
             LEFT JOIN ranked_bookings ON user.user_id = ranked_bookings.user_id
             AND rank_ = 1
@@ -62,7 +62,7 @@ def define_date_of_first_bookings_query(dataset, table_prefix=""):
             FROM {dataset}.{table_prefix}booking AS booking
             JOIN {dataset}.{table_prefix}stock AS stock ON stock.stock_id = booking.stock_id
             JOIN {dataset}.{table_prefix}offer AS offer ON offer.offer_id = stock.offer_id
-                AND offer.offer_type != 'ThingType.ACTIVATION'
+                AND offer.offer_subcategoryId != 'ACTIVATION_THING'
                 AND (offer.booking_email != 'jeux-concours@passculture.app' OR offer.booking_email IS NULL)
             GROUP BY user_id
         );
@@ -80,7 +80,7 @@ def define_date_of_second_bookings_query(dataset, table_prefix=""):
                 FROM {dataset}.{table_prefix}booking AS booking
                 JOIN {dataset}.{table_prefix}stock AS stock ON stock.stock_id = booking.stock_id
                 JOIN {dataset}.{table_prefix}offer AS offer ON offer.offer_id = stock.offer_id
-                WHERE offer.offer_type != 'ThingType.ACTIVATION'
+                WHERE offer.offer_subcategoryId != 'ACTIVATION_THING'
                 AND (offer.booking_email != 'jeux-concours@passculture.app' OR offer.booking_email IS NULL)
             )
             SELECT
@@ -98,15 +98,15 @@ def define_date_of_bookings_on_third_product_query(dataset, table_prefix=""):
             WITH dat AS (
                 SELECT
                     booking.*,
-                    offer.offer_type,
+                    offer.offer_subcategoryId,
                     offer.offer_name,
                     offer.offer_id,
-                    rank() OVER (PARTITION BY booking.user_id, offer.offer_type ORDER BY booking.booking_creation_date)
+                    rank() OVER (PARTITION BY booking.user_id, offer.offer_subcategoryId ORDER BY booking.booking_creation_date)
                     AS rank_booking_in_cat
                 FROM {dataset}.{table_prefix}booking AS booking
                 JOIN {dataset}.{table_prefix}stock AS stock ON booking.stock_id = stock.stock_id
                 JOIN {dataset}.{table_prefix}offer AS offer ON offer.offer_id = stock.offer_id
-                WHERE offer.offer_type NOT IN ('ThingType.ACTIVATION','EventType.ACTIVATION')
+                WHERE offer.offer_subcategoryId NOT IN ('ACTIVATION_THING','ACTIVATION_THING')
                     AND (offer.booking_email != 'jeux-concours@passculture.app' OR offer.booking_email IS NULL)
             ),
             ranked_data AS (
@@ -134,7 +134,7 @@ def define_number_of_bookings_query(dataset, table_prefix=""):
             FROM {dataset}.{table_prefix}booking AS booking
             JOIN {dataset}.{table_prefix}stock AS stock ON stock.stock_id = booking.stock_id
             JOIN {dataset}.{table_prefix}offer AS offer ON offer.offer_id = stock.offer_id
-                AND offer.offer_type != 'ThingType.ACTIVATION'
+                AND offer.offer_subcategoryId != 'ACTIVATION_THING'
                 AND (offer.booking_email != 'jeux-concours@passculture.app' OR offer.booking_email IS NULL)
             GROUP BY user_id
             ORDER BY number_of_bookings ASC
@@ -151,7 +151,7 @@ def define_number_of_non_cancelled_bookings_query(dataset, table_prefix=""):
             FROM {dataset}.{table_prefix}booking AS booking
             JOIN {dataset}.{table_prefix}stock AS stock ON stock.stock_id = booking.stock_id
             JOIN {dataset}.{table_prefix}offer AS offer ON offer.offer_id = stock.offer_id
-                AND offer.offer_type != 'ThingType.ACTIVATION'
+                AND offer.offer_subcategoryId != 'ACTIVATION_THING'
                 AND (offer.booking_email != 'jeux-concours@passculture.app' OR offer.booking_email IS NULL)
                 AND NOT booking.booking_is_cancelled
             GROUP BY user_id
@@ -170,7 +170,7 @@ def define_users_seniority_query(dataset, table_prefix=""):
                     booking.booking_is_used
                 FROM {dataset}.{table_prefix}booking AS booking
                 JOIN {dataset}.{table_prefix}stock AS stock ON stock.stock_id = booking.stock_id
-                JOIN {dataset}.{table_prefix}offer AS offer ON stock.offer_id = offer.offer_id AND offer.offer_type = 'ThingType.ACTIVATION'
+                JOIN {dataset}.{table_prefix}offer AS offer ON stock.offer_id = offer.offer_id AND offer.offer_subcategoryId = 'ACTIVATION_THING'
                 WHERE booking.booking_is_used
             ),
             activation_date AS (
@@ -233,13 +233,8 @@ def define_theoretical_amount_spent_in_digital_goods_query(dataset, table_prefix
                 FROM {dataset}.{table_prefix}booking AS booking
                 LEFT JOIN {dataset}.{table_prefix}stock AS stock ON booking.stock_id = stock.stock_id
                 LEFT JOIN {dataset}.{table_prefix}offer AS offer ON stock.offer_id = offer.offer_id
-                WHERE offer.offer_type IN ('ThingType.AUDIOVISUEL',
-                                     'ThingType.JEUX_VIDEO',
-                                     'ThingType.JEUX_VIDEO_ABO',
-                                     'ThingType.LIVRE_AUDIO',
-                                     'ThingType.LIVRE_EDITION',
-                                     'Thi{table_prefix}ngType.MUSIQUE',
-                                     'ThingType.PRESSE_ABO')
+                INNER JOIN {dataset}.subcategories AS subcategories ON offer.offer_subcategoryId = subcategories.id
+                WHERE subcategories.is_digital_deposit = true
                     AND offer.offer_url IS NOT NULL
                     AND booking.booking_is_cancelled IS FALSE
             )
@@ -265,12 +260,8 @@ def define_theoretical_amount_spent_in_physical_goods_query(dataset, table_prefi
                 FROM {dataset}.{table_prefix}booking AS booking
                 LEFT JOIN {dataset}.{table_prefix}stock AS stock ON booking.stock_id = stock.stock_id
                 LEFT JOIN {dataset}.{table_prefix}offer AS offer ON stock.offer_id = offer.offer_id
-                WHERE offer.offer_type IN ('ThingType.INSTRUMENT',
-                                     'ThingType.JEUX',
-                                     'ThingType.LIVRE_EDITION',
-                                     'ThingType.MUSIQUE',
-                                     'ThingType.OEUVRE_ART',
-                                     'ThingType.AUDIOVISUEL')
+                INNER JOIN {dataset}.subcategories AS subcategories ON offer.offer_subcategoryId = subcategories.id
+                WHERE subcategories.is_physical_deposit = true
                     AND offer.offer_url IS NULL
                     AND booking.booking_is_cancelled IS FALSE
             )
@@ -296,18 +287,8 @@ def define_theoretical_amount_spent_in_outings_query(dataset, table_prefix=""):
                 FROM {dataset}.{table_prefix}booking AS booking
                 LEFT JOIN {dataset}.{table_prefix}stock AS stock ON booking.stock_id = stock.stock_id
                 LEFT JOIN {dataset}.{table_prefix}offer AS offer ON stock.offer_id = offer.offer_id
-                WHERE offer.offer_type IN ('EventType.SPECTACLE_VIVANT',
-                                     'EventType.CINEMA',
-                                     'EventType.JEUX',
-                                     'ThingType.SPECTACLE_VIVANT_ABO',
-                                     'EventType.MUSIQUE',
-                                     'ThingType.MUSEES_PATRIMOINE_ABO',
-                                     'ThingType.CINEMA_CARD',
-                                     'ThingType.PRATIQUE_ARTISTIQUE_ABO',
-                                     'ThingType.CINEMA_ABO',
-                                     'EventType.MUSEES_PATRIMOINE',
-                                     'EventType.PRATIQUE_ARTISTIQUE',
-                                     'EventType.CONFERENCE_DEBAT_DEDICACE')
+                INNER JOIN {dataset}.subcategories AS subcategories ON offer.offer_subcategoryId = subcategories.id
+                WHERE subcategories.is_event = true
                     AND booking.booking_is_cancelled IS FALSE
             )
             SELECT
@@ -331,7 +312,7 @@ def define_last_booking_date_query(dataset, table_prefix=""):
             FROM {dataset}.{table_prefix}booking AS booking
             JOIN {dataset}.{table_prefix}stock AS stock ON stock.stock_id = booking.stock_id
             JOIN {dataset}.{table_prefix}offer AS offer ON offer.offer_id = stock.offer_id
-                AND offer.offer_type != 'ThingType.ACTIVATION'
+                AND offer.offer_subcategoryId != 'ACTIVATION_THING'
                 AND (offer.booking_email != 'jeux-concours@passculture.app' OR offer.booking_email IS NULL)
             GROUP BY user_id
         );
@@ -347,7 +328,7 @@ def define_first_paid_booking_date_query(dataset, table_prefix=""):
         FROM {dataset}.{table_prefix}booking AS booking
         JOIN {dataset}.{table_prefix}stock AS stock ON stock.stock_id = booking.stock_id
         JOIN {dataset}.{table_prefix}offer AS offer ON offer.offer_id = stock.offer_id
-        AND offer.offer_type != 'ThingType.ACTIVATION'
+        AND offer.offer_subcategoryId != 'ACTIVATION_THING'
         AND (offer.booking_email != 'jeux-concours@passculture.app' OR offer.booking_email IS NULL)
         AND COALESCE(booking.booking_amount,0) > 0
         GROUP BY user_id
@@ -362,19 +343,19 @@ def define_first_booking_type_query(dataset, table_prefix=""):
                 SELECT
                     booking.booking_id
                     ,booking.user_id
-                    ,offer.offer_type
+                    ,offer.offer_subcategoryId
                     ,rank() over (partition by booking.user_id order by booking.booking_creation_date, booking.booking_id ASC) AS rank_booking
                 FROM {dataset}.{table_prefix}booking AS booking
                 JOIN {dataset}.{table_prefix}stock AS stock
                 ON booking.stock_id = stock.stock_id
                 JOIN {dataset}.{table_prefix}offer AS offer
                 ON offer.offer_id = stock.offer_id
-                AND offer.offer_type NOT IN ('ThingType.ACTIVATION','EventType.ACTIVATION')
+                AND offer.offer_subcategoryId NOT IN ('ACTIVATION_THING','ACTIVATION_EVENT')
                 AND (offer.booking_email != 'jeux-concours@passculture.app' OR offer.booking_email IS NULL)
                 )
             SELECT
                 user_id
-                ,offer_type AS first_booking_type
+                ,offer_subcategoryId AS first_booking_type
             FROM bookings_ranked
             WHERE rank_booking = 1
 
@@ -389,20 +370,20 @@ def define_first_paid_booking_type_query(dataset, table_prefix=""):
                 SELECT
                     booking.booking_id
                     ,booking.user_id
-                    ,offer.offer_type
+                    ,offer.offer_subcategoryId
                     ,rank() over (partition by booking.user_id order by booking.booking_creation_date) AS rank_booking
                 FROM {dataset}.{table_prefix}booking AS booking
                 JOIN {dataset}.{table_prefix}stock AS stock
                 ON booking.stock_id = stock.stock_id
                 JOIN {dataset}.{table_prefix}offer AS offer
                 ON offer.offer_id = stock.offer_id
-                AND offer.offer_type NOT IN ('ThingType.ACTIVATION','EventType.ACTIVATION')
+                AND offer.offer_subcategoryId NOT IN ('ACTIVATION_THING','ACTIVATION_EVENT')
                 AND (offer.booking_email != 'jeux-concours@passculture.app' OR offer.booking_email IS NULL)
                 AND booking.booking_amount > 0
             )
             SELECT
                 user_id
-                ,offer_type AS first_paid_booking_type
+                ,offer_subcategoryId AS first_paid_booking_type
             FROM paid_bookings_ranked
             WHERE rank_booking = 1
 
@@ -415,13 +396,13 @@ def define_count_distinct_types_query(dataset, table_prefix=""):
         CREATE TEMP TABLE count_distinct_types AS (
             SELECT
                booking.user_id
-               ,COUNT(DISTINCT offer.offer_type) AS cnt_distinct_types
+               ,COUNT(DISTINCT offer.offer_subcategoryId) AS cnt_distinct_types
             FROM {dataset}.{table_prefix}booking AS booking
             JOIN {dataset}.{table_prefix}stock AS stock
             ON booking.stock_id = stock.stock_id
             JOIN {dataset}.{table_prefix}offer AS offer
             ON offer.offer_id = stock.offer_id
-            AND offer.offer_type NOT IN ('ThingType.ACTIVATION','EventType.ACTIVATION')
+            AND offer.offer_subcategoryId NOT IN ('ACTIVATION_THING','ACTIVATION_EVENT')
             AND (offer.booking_email != 'jeux-concours@passculture.app' OR offer.booking_email IS NULL)
             GROUP BY user_id
         );

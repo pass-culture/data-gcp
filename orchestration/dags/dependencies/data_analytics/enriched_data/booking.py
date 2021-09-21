@@ -45,7 +45,7 @@ def create_booking_ranking_in_category_view(dataset, table_prefix=""):
         CREATE TEMP TABLE booking_ranking_in_category_view AS (
             SELECT
                 booking.booking_id,
-                rank() OVER (PARTITION BY booking.user_id, offer.offer_type ORDER BY booking.booking_creation_date)
+                rank() OVER (PARTITION BY booking.user_id, offer.offer_subcategoryId ORDER BY booking.booking_creation_date)
                 AS same_category_booking_rank
             FROM {dataset}.{table_prefix}booking AS booking
             INNER JOIN {dataset}.{table_prefix}stock AS stock ON booking.stock_id = stock.stock_id
@@ -57,12 +57,12 @@ def create_booking_ranking_in_category_view(dataset, table_prefix=""):
 def create_materialized_booking_intermediary_view(dataset, table_prefix=""):
     return f"""
         CREATE TEMP TABLE booking_intermediary_view AS (
-               SELECT booking.booking_id,
-                      booking_amount_view.booking_intermediary_amount,
-                      booking_payment_status_view.booking_reimburse,
-                      booking_ranking_view.booking_rank,
-                      booking_ranking_in_category_view.same_category_booking_rank
-               FROM {dataset}.{table_prefix}booking AS booking
+                SELECT booking.booking_id,
+                    booking_amount_view.booking_intermediary_amount,
+                    booking_payment_status_view.booking_reimburse,
+                    booking_ranking_view.booking_rank,
+                    booking_ranking_in_category_view.same_category_booking_rank
+                FROM {dataset}.{table_prefix}booking AS booking
             LEFT JOIN booking_amount_view ON booking_amount_view.booking_id = booking.booking_id
             LEFT JOIN booking_payment_status_view ON booking_payment_status_view.booking_id = booking.booking_id
             LEFT JOIN booking_ranking_view ON booking_ranking_view.booking_id = booking.booking_id
@@ -74,7 +74,7 @@ def create_materialized_booking_intermediary_view(dataset, table_prefix=""):
 def create_materialized_enriched_booking_view(dataset, table_prefix=""):
     return f"""
         CREATE OR REPLACE TABLE {dataset}.enriched_booking_data AS (
-             SELECT
+            SELECT
                 booking.booking_id,
                 booking.booking_creation_date,
                 booking.booking_quantity,
@@ -86,7 +86,7 @@ def create_materialized_enriched_booking_view(dataset, table_prefix=""):
                 stock.stock_beginning_date,
                 stock.stock_id,
                 offer.offer_id,
-                offer.offer_type,
+                offer.offer_subcategoryId,
                 offer.offer_name,
                 offer.offer_subcategoryId,
                 coalesce(venue.venue_public_name, venue.venue_name) AS venue_name,
@@ -102,16 +102,9 @@ def create_materialized_enriched_booking_view(dataset, table_prefix=""):
                 booking_intermediary_view.booking_intermediary_amount,
                 CASE WHEN booking_intermediary_view.booking_reimburse = 'Remboursé'
                     THEN True ELSE False END AS reimbursed,
-                CASE WHEN
-                    offer.offer_type IN ('ThingType.INSTRUMENT','ThingType.JEUX','ThingType.LIVRE_EDITION','ThingType.MUSIQUE','ThingType.OEUVRE_ART','ThingType.AUDIOVISUEL')
-                    AND venue.venue_name <> 'Offre numérique'
-                        THEN true else false end as physical_goods,
-                CASE WHEN venue.venue_name = 'Offre numérique'
-                    THEN true else false end as digital_goods,
-                CASE WHEN
-                    offer.offer_type NOT IN ('ThingType.INSTRUMENT','ThingType.JEUX','ThingType.LIVRE_EDITION','ThingType.MUSIQUE','ThingType.OEUVRE_ART','ThingType.AUDIOVISUEL')
-                    AND venue.venue_name <> 'Offre numérique'
-                        THEN true else false end as event,
+                subcategories.is_physical_deposit as physical_goods,
+                subcategories.is_digital_deposit digital_goods,
+                subcategories.is_event as event,
                 booking_intermediary_view.booking_rank,
                 booking_intermediary_view.same_category_booking_rank
             FROM {dataset}.{table_prefix}booking AS booking
@@ -119,7 +112,7 @@ def create_materialized_enriched_booking_view(dataset, table_prefix=""):
                 ON booking.stock_id = stock.stock_id
             INNER JOIN {dataset}.{table_prefix}offer AS offer
                 ON offer.offer_id = stock.offer_id
-                AND offer.offer_type NOT IN ('ThingType.ACTIVATION','EventType.ACTIVATION')
+                AND offer.offer_subcategoryId NOT IN ('ACTIVATION_THING','ACTIVATION_EVENT')
             INNER JOIN {dataset}.{table_prefix}venue AS venue
                 ON venue.venue_id = offer.venue_id
             INNER JOIN {dataset}.{table_prefix}offerer AS offerer
@@ -130,6 +123,8 @@ def create_materialized_enriched_booking_view(dataset, table_prefix=""):
                 ON venue.venue_type_id = venue_type.id
             LEFT JOIN {dataset}.{table_prefix}venue_label AS venue_label
                 ON venue.venue_label_id = venue_label.id
+            INNER JOIN {dataset}.subcategories subcategories
+                ON offer.offer_subcategoryId = subcategories.id
             LEFT JOIN booking_humanized_id AS booking_humanized_id ON booking_humanized_id.booking_id = booking.booking_id
             LEFT JOIN booking_intermediary_view ON booking_intermediary_view.booking_id = booking.booking_id
         );

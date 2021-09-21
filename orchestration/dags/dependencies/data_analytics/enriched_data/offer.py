@@ -116,7 +116,7 @@ def define_enriched_offer_data_query(analytics_dataset, clean_dataset, table_pre
                 offer.offer_subcategoryId ,
                 offer.offer_creation_date,
                 offer.offer_is_duo,
-                offer.offer_is_educational
+                offer.offer_is_educational,
                 venue.venue_is_virtual,
                 is_physical_view.physical_goods,
                 is_outing_view.outing,

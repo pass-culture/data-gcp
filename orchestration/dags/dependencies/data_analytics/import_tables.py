@@ -99,7 +99,8 @@ def define_import_query(
             "externalTicketOfficeUrl" as offer_external_ticket_office_url,
             CAST("validation" AS varchar(255)) as offer_validation,
             CAST("subcategoryId" AS varchar(255)) as offer_subcategoryId,
-            "dateUpdated" as offer_date_updated
+            "dateUpdated" as offer_date_updated,
+            "isEducational" AS offer_is_educational
         FROM public.offer
         WHERE "dateUpdated" >= CURRENT_DATE - 1
     """

@@ -395,8 +395,8 @@ def define_count_distinct_types_query(dataset, table_prefix=""):
     return f"""
         CREATE TEMP TABLE count_distinct_types AS (
             SELECT
-               booking.user_id
-               ,COUNT(DISTINCT offer.offer_subcategoryId) AS cnt_distinct_types
+                booking.user_id
+                ,COUNT(DISTINCT offer.offer_subcategoryId) AS cnt_distinct_types
             FROM {dataset}.{table_prefix}booking AS booking
             JOIN {dataset}.{table_prefix}stock AS stock
             ON booking.stock_id = stock.stock_id

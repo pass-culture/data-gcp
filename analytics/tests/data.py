@@ -59,7 +59,6 @@ ENRICHED_OFFER_DATA_INPUT = {
     "offer_extracted_data": [
         {
             "offer_id": "3",
-            "offer_type": "EventType.CINEMA",
             "author": "Tarantino",
             "performer": "Uma Turman",
             "musicType": None,
@@ -81,7 +80,6 @@ ENRICHED_OFFER_DATA_INPUT = {
         },
         {
             "offer_id": "4",
-            "offer_type": "ThingType.LIVRE_EDITION",
             "author": "Kevin Francois",
             "performer": None,
             "musicType": None,
@@ -263,6 +261,20 @@ ENRICHED_OFFER_DATA_INPUT = {
             "venue_fields_updated": "{}",
         },
     ],
+    "subcategories": [
+        {
+            "id": "SEANCE_CINE",
+            "category_id": "CINEMA",
+            "is_physical_deposit": False,
+            "is_event": True,
+        },
+        {
+            "id": "LIVRE_PAPIER",
+            "category_id": "LIVRE",
+            "is_physical_deposit": True,
+            "is_event": False,
+        },
+    ],
 }
 ENRICHED_OFFER_DATA_EXPECTED = [
     {
@@ -273,7 +285,6 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "venue_name": "Test Venue",
         "venue_department_code": "93",
         "offer_name": "Test",
-        "offer_type": "EventType.CINEMA",
         "offer_subcategoryId": "SEANCE_CINE",
         "offer_creation_date": datetime(2019, 11, 20, 0, 0),
         "offer_is_duo": False,
@@ -315,7 +326,6 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "venue_name": "Test Venue",
         "venue_department_code": "93",
         "offer_name": "RIP Dylan Rieder",
-        "offer_type": "ThingType.LIVRE_EDITION",
         "offer_subcategoryId": "LIVRE_PAPIER",
         "offer_creation_date": datetime(2019, 11, 20, 0, 0),
         "offer_is_duo": False,
@@ -373,6 +383,7 @@ ENRICHED_STOCK_DATA_INPUT = {
             "product_id": "1",
             "offer_id": "3",
             "offer_type": "EventType.CINEMA",
+            "offer_subcategoryId": "SEANCE_CINE",
             "offer_name": "Test",
             "offer_is_active": True,
             "offer_media_urls": '["https://url.test", "https://someurl.test"]',
@@ -387,6 +398,7 @@ ENRICHED_STOCK_DATA_INPUT = {
             "product_id": "2",
             "offer_id": "2",
             "offer_type": "ThingType.LIVRE_EDITION",
+            "offer_subcategoryId": "LIVRE_PAPIER",
             "offer_name": "Test bis",
             "offer_is_active": True,
             "offer_media_urls": '["https://url.test", "https://someurl.test"]',
@@ -521,7 +533,7 @@ ENRICHED_STOCK_DATA_EXPECTED = [
         "offer_id": "3",
         "offer_name": "Test",
         "offerer_id": "3",
-        "offer_type": "EventType.CINEMA",
+        "offer_subcategoryId": "SEANCE_CINE",
         "venue_department_code": None,
         "stock_creation_date": datetime(2019, 11, 1),
         "stock_booking_limit_date": datetime(2019, 11, 23),
@@ -537,7 +549,7 @@ ENRICHED_STOCK_DATA_EXPECTED = [
         "offer_id": "2",
         "offer_name": "Test bis",
         "offerer_id": "3",
-        "offer_type": "ThingType.LIVRE_EDITION",
+        "offer_subcategoryId": "LIVRE_PAPIER",
         "venue_department_code": None,
         "stock_creation_date": datetime(2019, 10, 1),
         "stock_booking_limit_date": None,
@@ -606,7 +618,7 @@ ENRICHED_USER_DATA_INPUT = {
     "offer": [
         {
             "offer_id": "1",
-            "offer_type": "ThingType.MUSIQUE",
+            "offer_subcategoryId": "TELECHARGEMENT_MUSIQUE",
             "venue_id": "1",
             "product_id": "1",
             "offer_url": "url",
@@ -620,6 +632,14 @@ ENRICHED_USER_DATA_INPUT = {
             "num_dep": 93,
             "dep_name": "Seine-Saint-Denis",
             "region_name": "Île-de-France",
+        }
+    ],
+    "subcategories": [
+        {
+            "id": "TELECHARGEMENT_MUSIQUE",
+            "is_physical_deposit": False,
+            "is_digital_deposit": True,
+            "is_event": False,
         }
     ],
 }
@@ -655,8 +675,8 @@ ENRICHED_USER_DATA_EXPECTED = [
         "booking_creation_date_first": datetime.now().replace(microsecond=0),
         "days_between_activation_date_and_first_booking_date": 0,
         "days_between_activation_date_and_first_booking_paid": 0,
-        "first_booking_type": "ThingType.MUSIQUE",
-        "first_paid_booking_type": "ThingType.MUSIQUE",
+        "first_booking_type": "TELECHARGEMENT_MUSIQUE",
+        "first_paid_booking_type": "TELECHARGEMENT_MUSIQUE",
         "cnt_distinct_type_booking": 1,
         "user_is_active": True,
         "user_suspension_reason": None,
@@ -686,7 +706,7 @@ ENRICHED_VENUE_DATA_INPUT = {
         {
             "offer_id": "1",
             "venue_id": "1",
-            "offer_type": "EventType.AUDIOVISUEL",
+            "offer_subcategoryId": "SEANCE_CINE",
             "booking_email": "test@example.com",
             "offer_creation_date": datetime.now().replace(microsecond=0),
         }
@@ -883,6 +903,14 @@ ENRICHED_BOOKING_DATA_INPUT = {
     ],
     "venue_type": [{"id": "1", "label": "label"}],
     "venue_label": [{"id": "15", "label": "label"}],
+    "subcategories": [
+        {
+            "id": "ACHAT_INSTRUMENT",
+            "is_physical_deposit": True,
+            "is_digital_deposit": False,
+            "is_event": False,
+        }
+    ],
 }
 
 # Enriched booking data return data linked to the booking like booking data, offer data, offerer and venue data
@@ -905,7 +933,6 @@ ENRICHED_BOOKING_DATA_EXPECTED = [
         "event": False,
         "offer_id": "2",
         "offer_name": "An Awesome Offer",
-        "offer_type": "ThingType.INSTRUMENT",
         "offer_subcategoryId": "ACHAT_INSTRUMENT",
         "offerer_id": "2",
         "offerer_name": "Offerer",

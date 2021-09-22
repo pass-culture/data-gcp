@@ -1,3 +1,11 @@
+##################################################################################
+#                               --- DEPRECATED ---                               #
+# This was used to compare the users' bookings by categories to his QPI answers. #
+# As the QPI is removed it has no use for now                                    #
+# When the QPI will be back, we should rework on those tables                    #
+##################################################################################
+
+
 def temporary_booking_table(gcp_project, bigquery_analytics_dataset):
     return f"""
         WITH bookings AS (

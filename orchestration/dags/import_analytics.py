@@ -17,9 +17,6 @@ from dependencies.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT,
 )
-from dependencies.data_analytics.enriched_data.booked_categories import (
-    enrich_booked_categories,
-)
 from dependencies.data_analytics.enriched_data.booking import (
     define_enriched_booking_data_full_query,
 )
@@ -265,31 +262,6 @@ create_enriched_offerer_data_task = BigQueryOperator(
     dag=dag,
 )
 
-create_enriched_booked_categories_data_v1_task = BigQueryOperator(
-    task_id="create_enriched_booked_categories_data_v1",
-    sql=enrich_booked_categories(
-        gcp_project=GCP_PROJECT,
-        bigquery_analytics_dataset=BIGQUERY_ANALYTICS_DATASET,
-        version=1,
-    ),
-    destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.enriched_booked_categories_v1",
-    write_disposition="WRITE_TRUNCATE",
-    use_legacy_sql=False,
-    dag=dag,
-)
-
-create_enriched_booked_categories_data_v2_task = BigQueryOperator(
-    task_id="create_enriched_booked_categories_data_v2",
-    sql=enrich_booked_categories(
-        gcp_project=GCP_PROJECT,
-        bigquery_analytics_dataset=BIGQUERY_ANALYTICS_DATASET,
-        version=2,
-    ),
-    destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.enriched_booked_categories_v2",
-    write_disposition="WRITE_TRUNCATE",
-    use_legacy_sql=False,
-    dag=dag,
-)
 
 getting_downloads_service_account_token = PythonOperator(
     task_id="getting_downloads_service_account_token",
@@ -402,8 +374,6 @@ create_enriched_data_tasks = [
     create_enriched_user_data_task,
     create_enriched_venue_data_task,
     create_enriched_booking_data_task,
-    create_enriched_booked_categories_data_v1_task,
-    create_enriched_booked_categories_data_v2_task,
     create_enriched_offerer_data_task,
 ]
 

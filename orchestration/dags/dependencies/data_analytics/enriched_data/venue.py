@@ -14,7 +14,7 @@ def define_total_bookings_per_venue_query(dataset, table_prefix=""):
             LEFT JOIN {dataset}.{table_prefix}offer AS offer
             ON venue.venue_id = offer.venue_id
             AND (offer.booking_email != 'jeux-concours@passculture.app' or offer.booking_email is NULL)
-            AND offer.offer_type NOT IN ('EventType.ACTIVATION','ThingType.ACTIVATION')
+            AND offer.offer_subcategoryId NOT IN ('ACTIVATION_EVENT','ACTIVATION_THING')
             LEFT JOIN {dataset}.{table_prefix}stock AS stock
             ON stock.offer_id = offer.offer_id
             LEFT JOIN {dataset}.{table_prefix}booking AS booking
@@ -33,7 +33,7 @@ def define_non_cancelled_bookings_per_venue_query(dataset, table_prefix=""):
             LEFT JOIN {dataset}.{table_prefix}offer AS offer
             ON venue.venue_id = offer.venue_id
             AND (offer.booking_email != 'jeux-concours@passculture.app' or offer.booking_email is NULL)
-            AND offer.offer_type NOT IN ('EventType.ACTIVATION','ThingType.ACTIVATION')
+            AND offer.offer_subcategoryId NOT IN ('ACTIVATION_EVENT','ACTIVATION_THING')
             LEFT JOIN {dataset}.{table_prefix}stock AS stock
             ON stock.offer_id = offer.offer_id
             LEFT JOIN {dataset}.{table_prefix}booking AS booking
@@ -53,7 +53,7 @@ def define_used_bookings_per_venue_query(dataset, table_prefix=""):
             LEFT JOIN {dataset}.{table_prefix}offer AS offer
             ON venue.venue_id = offer.venue_id
             AND (offer.booking_email != 'jeux-concours@passculture.app' or offer.booking_email is NULL)
-            AND offer.offer_type NOT IN ('EventType.ACTIVATION','ThingType.ACTIVATION')
+            AND offer.offer_subcategoryId NOT IN ('ACTIVATION_EVENT','ACTIVATION_THING')
             LEFT JOIN {dataset}.{table_prefix}stock AS stock
             ON stock.offer_id = offer.offer_id
             LEFT JOIN {dataset}.{table_prefix}booking AS booking
@@ -73,7 +73,7 @@ def define_first_offer_creation_date_query(dataset, table_prefix=""):
             LEFT JOIN {dataset}.{table_prefix}offer AS offer
             ON venue.venue_id = offer.venue_id
             AND (offer.booking_email != 'jeux-concours@passculture.app' or offer.booking_email is NULL)
-            AND offer.offer_type NOT IN ('EventType.ACTIVATION','ThingType.ACTIVATION')
+            AND offer.offer_subcategoryId NOT IN ('ACTIVATION_EVENT','ACTIVATION_THING')
             GROUP BY venue.venue_id;
     """
 
@@ -88,7 +88,7 @@ def define_last_offer_creation_date_query(dataset, table_prefix=""):
             LEFT JOIN {dataset}.{table_prefix}offer AS offer
             ON venue.venue_id = offer.venue_id
             AND (offer.booking_email != 'jeux-concours@passculture.app' or offer.booking_email is NULL)
-            AND offer.offer_type NOT IN ('EventType.ACTIVATION','ThingType.ACTIVATION')
+            AND offer.offer_subcategoryId NOT IN ('ACTIVATION_EVENT','ACTIVATION_THING')
             GROUP BY venue.venue_id;
     """
 
@@ -103,7 +103,7 @@ def define_offers_created_per_venue_query(dataset, table_prefix=""):
             LEFT JOIN {dataset}.{table_prefix}offer AS offer
             ON venue.venue_id = offer.venue_id
             AND (offer.booking_email != 'jeux-concours@passculture.app' or offer.booking_email is NULL)
-            AND offer.offer_type NOT IN ('EventType.ACTIVATION','ThingType.ACTIVATION')
+            AND offer.offer_subcategoryId NOT IN ('ACTIVATION_EVENT','ACTIVATION_THING')
             GROUP BY venue.venue_id;
     """
 
@@ -118,7 +118,7 @@ def define_theoretic_revenue_per_venue_query(dataset, table_prefix=""):
             LEFT JOIN {dataset}.{table_prefix}offer AS offer
             ON venue.venue_id = offer.venue_id
             AND (offer.booking_email != 'jeux-concours@passculture.app' or offer.booking_email is NULL)
-            AND offer.offer_type NOT IN ('EventType.ACTIVATION','ThingType.ACTIVATION')
+            AND offer.offer_subcategoryId NOT IN ('ACTIVATION_EVENT','ACTIVATION_THING')
             LEFT JOIN {dataset}.{table_prefix}stock AS stock
             ON offer.offer_id = stock.offer_id
             LEFT JOIN {dataset}.{table_prefix}booking AS booking
@@ -138,7 +138,7 @@ def define_real_revenue_per_venue_query(dataset, table_prefix=""):
             LEFT JOIN {dataset}.{table_prefix}offer AS offer
             ON venue.venue_id = offer.venue_id
             AND (offer.booking_email != 'jeux-concours@passculture.app' or offer.booking_email is NULL)
-            AND offer.offer_type NOT IN ('EventType.ACTIVATION','ThingType.ACTIVATION')
+            AND offer.offer_subcategoryId NOT IN ('ACTIVATION_EVENT','ACTIVATION_THING')
             LEFT JOIN {dataset}.{table_prefix}stock AS stock
             ON offer.offer_id = stock.offer_id
             LEFT JOIN {dataset}.{table_prefix}booking AS booking

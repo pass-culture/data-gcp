@@ -250,4 +250,11 @@ BIGQUERY_SCHEMAS = {
         "offer_report_reason": "STRING",
         "offer_report_custom_reason_content": "STRING",
     },
+    "subcategories": {
+        "id": "STRING",
+        "category_id": "STRING",
+        "is_event": "BOOLEAN",
+        "is_physical_deposit": "BOOLEAN",
+        "is_digital_deposit": "BOOLEAN",
+    },
 }

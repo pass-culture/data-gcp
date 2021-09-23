@@ -1,2 +1,2 @@
-thumbCount|idAtProviders|dateModifiedAtLastProvider|id|dateCreated|authorId|lastProviderId|offerId|credit|isActive
-1||2021-02-05 15:17:06.463861|4876|2021-02-05 15:17:06.463883|3814||138717|undefined|t
+thumbCount,id,offerId,isActive
+1,4876,138717,t

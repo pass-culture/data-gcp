@@ -38,6 +38,10 @@ def compose_gcs_files(bucket_name, source_prefix, destination_blob_name):
         destination.content_type = "text/plain"
         destination.compose(sources)
 
+    with storage_client.batch():
+        for blob in sources:
+            blob.delete()
+
     logging.info(
         "Composed new object %s in the bucket %s", destination_blob_name, bucket.name
     )

@@ -1,0 +1,2 @@
+id,category_id,matching_type,is_event,is_digital_deposit,is_physical_deposit
+EVENEMENT_JEU,JEU,EventType.JEUX,t,f,f

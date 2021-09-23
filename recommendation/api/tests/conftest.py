@@ -46,7 +46,7 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
         {
             "offer_id": ["1", "2", "3", "4", "5", "6"],
             "venue_id": ["11", "22", "33", "44", "55", "22"],
-            "type": ["A", "B", "C", "D", "E", "B"],
+            "category": ["A", "B", "C", "D", "E", "B"],
             "name": ["a", "b", "c", "d", "e", "f"],
             "url": [None, None, "url", "url", None, None],
             "is_national": [True, False, True, False, True, False],
@@ -155,7 +155,7 @@ def setup_pool(app_config: Dict[str, Any]) -> Any:
         {
             "offer_id": ["1", "2", "3", "4", "5", "6"],
             "venue_id": ["11", "22", "33", "44", "55", "22"],
-            "type": ["A", "B", "C", "D", "E", "B"],
+            "category": ["A", "B", "C", "D", "E", "B"],
             "name": ["a", "b", "c", "d", "e", "f"],
             "url": [None, None, "url", "url", None, None],
             "is_national": [True, False, True, False, True, False],

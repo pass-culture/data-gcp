@@ -9,7 +9,7 @@ from recommendation import (
     get_cold_start_scored_recommendations_for_user,
     get_intermediate_recommendations_for_user,
     get_scored_recommendation_for_user,
-    order_offers_by_score_and_diversify_types,
+    order_offers_by_score_and_diversify_categories,
     save_recommendation,
 )
 from utils import create_db_connection
@@ -35,14 +35,14 @@ def test_get_final_recommendation_for_group_a_cold_start(
         {
             "id": 2,
             "url": "url2",
-            "type": "type2",
+            "category": "category2",
             "product_id": "product-2",
             "score": "2",
         },
         {
             "id": 3,
             "url": "url3",
-            "type": "type3",
+            "category": "category3",
             "product_id": "product-3",
             "score": "3",
         },
@@ -81,14 +81,14 @@ def test_get_final_recommendation_for_group_a_algo(
         {
             "id": 2,
             "url": "url2",
-            "type": "type2",
+            "category": "category2",
             "item_id": "offer-2",
             "product_id": "product-2",
         },
         {
             "id": 3,
             "url": "url3",
-            "type": "type3",
+            "category": "category3",
             "item_id": "offer-3",
             "product_id": "product-3",
         },
@@ -97,7 +97,7 @@ def test_get_final_recommendation_for_group_a_algo(
         {
             "id": 2,
             "url": "url2",
-            "type": "type2",
+            "category": "category2",
             "item_id": "offer-2",
             "product_id": "product-2",
             "score": 2,
@@ -105,7 +105,7 @@ def test_get_final_recommendation_for_group_a_algo(
         {
             "id": 3,
             "url": "url3",
-            "type": "type3",
+            "category": "category3",
             "item_id": "offer-3",
             "product_id": "product-3",
             "score": 3,
@@ -126,13 +126,13 @@ def test_get_final_recommendation_for_group_a_algo(
 @patch("recommendation.get_intermediate_recommendations_for_user")
 @patch("recommendation.get_scored_recommendation_for_user")
 @patch("recommendation.get_iris_from_coordinates")
-@patch("recommendation.get_cold_start_types")
+@patch("recommendation.get_cold_start_categories")
 @patch("recommendation.save_recommendation")
 @patch("utils.create_pool")
 def test_get_final_recommendation_for_group_b(
     mock_pool: Mock,
     save_recommendation_mock: Mock,
-    get_cold_start_types: Mock,
+    get_cold_start_categories: Mock,
     get_iris_from_coordinates_mock: Mock,
     get_scored_recommendation_for_user_mock: Mock,
     get_intermediate_recommendations_for_user_mock: Mock,
@@ -147,14 +147,14 @@ def test_get_final_recommendation_for_group_b(
         {
             "id": 2,
             "url": "url2",
-            "type": "type2",
+            "category": "category2",
             "item_id": "offer-2",
             "product_id": "product-2",
         },
         {
             "id": 3,
             "url": "url3",
-            "type": "type3",
+            "category": "category3",
             "item_id": "offer-3",
             "product_id": "product-3",
         },
@@ -163,7 +163,7 @@ def test_get_final_recommendation_for_group_b(
         {
             "id": 2,
             "url": "url2",
-            "type": "type2",
+            "category": "category2",
             "item_id": "offer-2",
             "product_id": "product-2",
             "score": 2,
@@ -171,7 +171,7 @@ def test_get_final_recommendation_for_group_b(
         {
             "id": 3,
             "url": "url3",
-            "type": "type3",
+            "category": "category3",
             "item_id": "offer-3",
             "product_id": "product-3",
             "score": 3,
@@ -184,16 +184,16 @@ def test_get_final_recommendation_for_group_b(
     )
 
     # Then
-    get_cold_start_types.assert_not_called()
+    get_cold_start_categories.assert_not_called()
     save_recommendation_mock.assert_called()
     assert recommendations == [3, 2]
 
 
-@patch("recommendation.order_offers_by_score_and_diversify_types")
+@patch("recommendation.order_offers_by_score_and_diversify_categories")
 @patch("recommendation.get_scored_recommendation_for_user")
 @patch("recommendation.get_cold_start_scored_recommendations_for_user")
 @patch("recommendation.get_intermediate_recommendations_for_user")
-@patch("recommendation.get_cold_start_types")
+@patch("recommendation.get_cold_start_categories")
 @patch("recommendation.get_iris_from_coordinates")
 @patch("recommendation.save_recommendation")
 @patch("utils.create_pool")
@@ -201,11 +201,11 @@ def test_get_final_recommendation_for_new_user(
     mock_pool: Mock,
     save_recommendation_mock: Mock,
     get_iris_from_coordinates_mock: Mock,
-    get_cold_start_types: Mock,
+    get_cold_start_categories: Mock,
     get_intermediate_recommendations_for_user: Mock,
     get_cold_start_scored_recommendations_for_user: Mock,
     get_scored_recommendation_for_user: Mock,
-    order_offers_by_score_and_diversify_types: Mock,
+    order_offers_by_score_and_diversify_categories: Mock,
     setup_pool: Any,
     app_config: Dict[str, Any],
 ):
@@ -213,16 +213,28 @@ def test_get_final_recommendation_for_new_user(
     mock_pool.return_value = setup_pool
 
     user_id = 113
-    get_cold_start_types.return_value = ["type2", "type3"]
+    get_cold_start_categories.return_value = ["category2", "category3"]
     get_intermediate_recommendations_for_user.return_value = [
-        {"id": 2, "url": "url2", "type": "type2", "score": 2, "item_id": "offer-2"},
-        {"id": 3, "url": "url3", "type": "type3", "score": 3, "item_id": "offer-3"},
+        {
+            "id": 2,
+            "url": "url2",
+            "category": "category2",
+            "score": 2,
+            "item_id": "offer-2",
+        },
+        {
+            "id": 3,
+            "url": "url3",
+            "category": "category3",
+            "score": 3,
+            "item_id": "offer-3",
+        },
     ]
     get_scored_recommendation_for_user.return_value = [
         {
             "id": 2,
             "url": "url2",
-            "type": "type2",
+            "category": "category2",
             "item_id": "offer-2",
             "product_id": "product-2",
             "score": 2,
@@ -230,14 +242,14 @@ def test_get_final_recommendation_for_new_user(
         {
             "id": 3,
             "url": "url3",
-            "type": "type3",
+            "category": "category3",
             "item_id": "offer-3",
             "product_id": "product-3",
             "score": 3,
         },
     ]
     get_cold_start_scored_recommendations_for_user.return_value = [3, 2]
-    order_offers_by_score_and_diversify_types.return_value = [3, 2]
+    order_offers_by_score_and_diversify_categories.return_value = [3, 2]
     get_iris_from_coordinates_mock.return_value = 1
 
     # When
@@ -275,35 +287,35 @@ def test_get_intermediate_recommendation_for_user(
         [
             {
                 "id": "2",
-                "type": "B",
+                "category": "B",
                 "url": None,
                 "item_id": "offer-2",
                 "product_id": "product-2",
             },
             {
                 "id": "3",
-                "type": "C",
+                "category": "C",
                 "url": "url",
                 "item_id": "offer-3",
                 "product_id": "product-3",
             },
             {
                 "id": "4",
-                "type": "D",
+                "category": "D",
                 "url": "url",
                 "item_id": "offer-4",
                 "product_id": "product-4",
             },
             {
                 "id": "5",
-                "type": "E",
+                "category": "E",
                 "url": None,
                 "item_id": "offer-5",
                 "product_id": "product-5",
             },
             {
                 "id": "6",
-                "type": "B",
+                "category": "B",
                 "url": None,
                 "item_id": "offer-6",
                 "product_id": "product-6",
@@ -324,12 +336,12 @@ def test_get_cold_start_scored_recommendations_for_user(
     # When
     user_id = 113
     user_iris_id = None
-    cold_start_types = []
+    cold_start_categories = []
     number_of_preselected_offers = 3
     user_recommendation = get_cold_start_scored_recommendations_for_user(
         user_id,
         user_iris_id,
-        cold_start_types,
+        cold_start_categories,
         number_of_preselected_offers,
     )
 
@@ -339,21 +351,21 @@ def test_get_cold_start_scored_recommendations_for_user(
         [
             {
                 "id": "3",
-                "type": "C",
+                "category": "C",
                 "url": "url",
                 "product_id": "product-3",
                 "score": 1,
             },
             {
                 "id": "1",
-                "type": "A",
+                "category": "A",
                 "url": None,
                 "product_id": "product-1",
                 "score": 1,
             },
             {
                 "id": "4",
-                "type": "D",
+                "category": "D",
                 "url": "url",
                 "product_id": "product-4",
                 "score": 1,
@@ -383,28 +395,28 @@ def test_get_intermediate_recommendation_for_user_with_no_iris(
         [
             {
                 "id": "1",
-                "type": "A",
+                "category": "A",
                 "url": None,
                 "item_id": "offer-1",
                 "product_id": "product-1",
             },
             {
                 "id": "3",
-                "type": "C",
+                "category": "C",
                 "url": "url",
                 "item_id": "offer-3",
                 "product_id": "product-3",
             },
             {
                 "id": "4",
-                "type": "D",
+                "category": "D",
                 "url": "url",
                 "item_id": "offer-4",
                 "product_id": "product-4",
             },
             {
                 "id": "5",
-                "type": "E",
+                "category": "E",
                 "url": None,
                 "item_id": "offer-5",
                 "product_id": "product-5",
@@ -421,7 +433,7 @@ def test_get_intermediate_recommendation_for_user_with_no_iris(
                 {
                     "id": 1,
                     "url": None,
-                    "type": "A",
+                    "category": "A",
                     "item_id": "offer-1",
                     "product_id": "product-1",
                     "score": 1,
@@ -429,7 +441,7 @@ def test_get_intermediate_recommendation_for_user_with_no_iris(
                 {
                     "id": 2,
                     "url": None,
-                    "type": "A",
+                    "category": "A",
                     "item_id": "offer-2",
                     "product_id": "product-2",
                     "score": 1,
@@ -437,7 +449,7 @@ def test_get_intermediate_recommendation_for_user_with_no_iris(
                 {
                     "id": 3,
                     "url": None,
-                    "type": "B",
+                    "category": "B",
                     "item_id": "offer-3",
                     "product_id": "product-3",
                     "score": 10,
@@ -445,7 +457,7 @@ def test_get_intermediate_recommendation_for_user_with_no_iris(
                 {
                     "id": 4,
                     "url": None,
-                    "type": "B",
+                    "category": "B",
                     "item_id": "offer-4",
                     "product_id": "product-4",
                     "score": 10,
@@ -458,7 +470,7 @@ def test_get_intermediate_recommendation_for_user_with_no_iris(
                 {
                     "id": 1,
                     "url": None,
-                    "type": "A",
+                    "category": "A",
                     "item_id": "offer-1",
                     "product_id": "product-1",
                     "score": 1,
@@ -466,7 +478,7 @@ def test_get_intermediate_recommendation_for_user_with_no_iris(
                 {
                     "id": 2,
                     "url": None,
-                    "type": "A",
+                    "category": "A",
                     "item_id": "offer-2",
                     "product_id": "product-2",
                     "score": 2,
@@ -474,7 +486,7 @@ def test_get_intermediate_recommendation_for_user_with_no_iris(
                 {
                     "id": 3,
                     "url": None,
-                    "type": "A",
+                    "category": "A",
                     "item_id": "offer-3",
                     "product_id": "product-3",
                     "score": 10,
@@ -482,7 +494,7 @@ def test_get_intermediate_recommendation_for_user_with_no_iris(
                 {
                     "id": 4,
                     "url": None,
-                    "type": "A",
+                    "category": "A",
                     "item_id": "offer-4",
                     "product_id": "product-4",
                     "score": 11,
@@ -492,10 +504,12 @@ def test_get_intermediate_recommendation_for_user_with_no_iris(
         ),
     ],
 )
-def test_order_offers_by_score_and_diversify_types(
+def test_order_offers_by_score_and_diversify_categories(
     offers: List[Dict[str, Any]], output: List[int]
 ):
-    assert_array_equal(output, order_offers_by_score_and_diversify_types(offers, 10))
+    assert_array_equal(
+        output, order_offers_by_score_and_diversify_categories(offers, 10)
+    )
 
 
 @patch("recommendation.predict_score")
@@ -510,21 +524,21 @@ def test_get_scored_recommendation_for_user(
         {
             "id": 1,
             "url": "url1",
-            "type": "type1",
+            "category": "category1",
             "item_id": "offer-1",
             "product_id": "product-1",
         },
         {
             "id": 2,
             "url": "url2",
-            "type": "type2",
+            "category": "category2",
             "item_id": "offer-2",
             "product_id": "product-2",
         },
         {
             "id": 3,
             "url": "url3",
-            "type": "type3",
+            "category": "category3",
             "item_id": "offer-3",
             "product_id": "product-3",
         },
@@ -545,7 +559,7 @@ def test_get_scored_recommendation_for_user(
         {
             "id": 1,
             "url": "url1",
-            "type": "type1",
+            "category": "category1",
             "item_id": "offer-1",
             "product_id": "product-1",
             "score": 1,
@@ -553,7 +567,7 @@ def test_get_scored_recommendation_for_user(
         {
             "id": 2,
             "url": "url2",
-            "type": "type2",
+            "category": "category2",
             "item_id": "offer-2",
             "product_id": "product-2",
             "score": 2,
@@ -561,7 +575,7 @@ def test_get_scored_recommendation_for_user(
         {
             "id": 3,
             "url": "url3",
-            "type": "type3",
+            "category": "category3",
             "item_id": "offer-3",
             "product_id": "product-3",
             "score": 3,

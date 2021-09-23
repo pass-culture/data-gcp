@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 
 from typing import Any, List
 
-from cold_start import get_cold_start_status, get_cold_start_types
+from cold_start import get_cold_start_status, get_cold_start_categories
 
 
 @pytest.mark.parametrize(
@@ -24,61 +24,48 @@ def test_get_cold_start_status(
 
 
 @pytest.mark.parametrize(
-    ["user_id", "cold_start_types"],
+    ["user_id", "cold_start_categories"],
     [
         (
             "111",
             [
-                "EventType.CINEMA",
-                "ThingType.CINEMA_CARD",
-                "ThingType.CINEMA_ABO",
-                "ThingType.AUDIOVISUEL",
-                "ThingType.JEUX_VIDEO_ABO",
-                "ThingType.JEUX_VIDEO",
-                "ThingType.LIVRE_EDITION",
-                "ThingType.LIVRE_AUDIO",
-                "EventType.MUSEES_PATRIMOINE",
-                "ThingType.MUSEES_PATRIMOINE_ABO",
-                "EventType.MUSIQUE",
-                "ThingType.MUSIQUE_ABO",
-                "ThingType.MUSIQUE",
-                "EventType.PRATIQUE_ARTISTIQUE",
-                "ThingType.PRATIQUE_ARTISTIQUE_ABO",
-                "EventType.SPECTACLE_VIVANT",
-                "ThingType.SPECTACLE_VIVANT_ABO",
-                "ThingType.INSTRUMENT",
-                "ThingType.PRESSE_ABO",
-                "EventType.CONFERENCE_DEBAT_DEDICACE",
+                "CINEMA",
+                "FILM",
+                "JEU",
+                "LIVRE",
+                "MUSEE",
+                "MUSIQUE_LIVE",
+                "MUSIQUE_ENREGISTREE",
+                "PRATIQUE_ART",
+                "SPECTACLE",
+                "INSTRUMENT",
+                "MEDIA",
+                "CONFERENCE_RENCONTRE",
+                "BEAUX_ARTS",
             ],
         ),
         (
             "112",
             [
-                "EventType.CINEMA",
-                "ThingType.CINEMA_CARD",
-                "ThingType.CINEMA_ABO",
-                "ThingType.JEUX_VIDEO_ABO",
-                "ThingType.JEUX_VIDEO",
-                "EventType.MUSEES_PATRIMOINE",
-                "ThingType.MUSEES_PATRIMOINE_ABO",
-                "EventType.MUSIQUE",
-                "ThingType.MUSIQUE_ABO",
-                "ThingType.MUSIQUE",
-                "EventType.PRATIQUE_ARTISTIQUE",
-                "ThingType.PRATIQUE_ARTISTIQUE_ABO",
-                "ThingType.PRESSE_ABO",
+                "CINEMA",
+                "JEU",
+                "MUSEE",
+                "MUSIQUE_LIVE",
+                "MUSIQUE_ENREGISTREE",
+                "PRATIQUE_ART",
+                "MEDIA",
             ],
         ),
         ("113", []),
     ],
 )
 @patch("cold_start.create_db_connection")
-def test_get_cold_start_types(
+def test_get_cold_start_categories(
     connection_mock: Mock,
     setup_database: Any,
     user_id: str,
-    cold_start_types: List[str],
+    cold_start_categories: List[str],
 ):
     # Given
     connection_mock.return_value = setup_database
-    assert sorted(get_cold_start_types(user_id)) == sorted(cold_start_types)
+    assert sorted(get_cold_start_categories(user_id)) == sorted(cold_start_categories)

@@ -7,6 +7,7 @@ from airflow.operators.python_operator import PythonOperator
 from airflow.contrib.operators.bigquery_operator import BigQueryOperator
 from airflow.contrib.operators.bigquery_to_gcs import BigQueryToCloudStorageOperator
 
+from dependencies.slack_alert import task_fail_slack_alert
 from dependencies.tag_offers import (
     tag_offers_description,
     tag_offers_name,

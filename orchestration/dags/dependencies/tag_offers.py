@@ -145,21 +145,17 @@ def fetch_offers_to_tag():
 
 def get_insert_tags_request(offers_tagged):
 
-    bigquery_query = ""
+    bigquery_query = f"INSERT INTO {GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.offer_tags (offer_id,tag) VALUES "
+    query = ""
     for index, row in offers_tagged.iterrows():
-        query = ""
         if isinstance(row["tag"], list):
-            for tag in row["tag"]:
-                query += "".join(
-                    f"""INSERT INTO {GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.offer_tags (offer_id,tag) VALUES ("{row['offer_id']}","{tag}"); """
-                )
-                bigquery_query += query
-        else:
-            query += "".join(
-                f"""INSERT INTO {GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.offer_tags (offer_id,tag) VALUES ("{row['offer_id']}","{row["tag"]}"); """
+            query += ",".join(
+                [f"""("{row['offer_id']}","{tag}")""" for tag in row["tag"]]
             )
-            bigquery_query += query
-
+        else:
+            query += f"""("{row['offer_id']}","{row["tag"]}")"""
+        query += ","
+    bigquery_query += query[:-1] + ";"
     return bigquery_query
 
 

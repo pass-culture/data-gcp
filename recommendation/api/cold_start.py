@@ -4,26 +4,17 @@ from sqlalchemy import text
 from utils import create_db_connection, log_duration
 
 MACRO_CATEGORIES_TYPE_MAPPING = {
-    "cinema": ["EventType.CINEMA", "ThingType.CINEMA_CARD", "ThingType.CINEMA_ABO"],
-    "audiovisuel": ["ThingType.AUDIOVISUEL"],
-    "jeux_videos": ["ThingType.JEUX_VIDEO_ABO", "ThingType.JEUX_VIDEO"],
-    "livre": ["ThingType.LIVRE_EDITION", "ThingType.LIVRE_AUDIO"],
-    "musees_patrimoine": [
-        "EventType.MUSEES_PATRIMOINE",
-        "ThingType.MUSEES_PATRIMOINE_ABO",
-    ],
-    "musique": ["EventType.MUSIQUE", "ThingType.MUSIQUE_ABO", "ThingType.MUSIQUE"],
-    "pratique_artistique": [
-        "EventType.PRATIQUE_ARTISTIQUE",
-        "ThingType.PRATIQUE_ARTISTIQUE_ABO",
-    ],
-    "spectacle_vivant": [
-        "EventType.SPECTACLE_VIVANT",
-        "ThingType.SPECTACLE_VIVANT_ABO",
-    ],
-    "instrument": ["ThingType.INSTRUMENT"],
-    "presse": ["ThingType.PRESSE_ABO"],
-    "autre": ["EventType.CONFERENCE_DEBAT_DEDICACE"],
+    "cinema": ["CINEMA"],
+    "audiovisuel": ["FILM"],
+    "jeux_videos": ["JEU"],
+    "livre": ["LIVRE"],
+    "musees_patrimoine": ["MUSEE"],
+    "musique": ["MUSIQUE_LIVE", "MUSIQUE_ENREGISTREE"],
+    "pratique_artistique": ["PRATIQUE_ART"],
+    "spectacle_vivant": ["SPECTACLE"],
+    "instrument": ["INSTRUMENT"],
+    "presse": ["MEDIA"],
+    "autre": ["CONFERENCE_RENCONTRE", "BEAUX_ARTS"],
 }
 
 
@@ -48,7 +39,7 @@ def get_cold_start_status(user_id: int) -> bool:
     return user_cold_start_status
 
 
-def get_cold_start_types(user_id: int) -> list:
+def get_cold_start_categories(user_id: int) -> list:
     start = time.time()
     qpi_answers_categories = [
         "cinema",
@@ -73,13 +64,13 @@ def get_cold_start_types(user_id: int) -> list:
             user_id=str(user_id),
         ).fetchall()
 
-    cold_start_types = []
+    cold_start_categories = []
     if len(query_result) == 0:
         return []
     for category_index, category in enumerate(query_result[0]):
         if category:
-            cold_start_types.extend(
+            cold_start_categories.extend(
                 MACRO_CATEGORIES_TYPE_MAPPING[qpi_answers_categories[category_index]]
             )
-    log_duration("get_cold_start_types", start)
-    return cold_start_types
+    log_duration("get_cold_start_categories", start)
+    return cold_start_categories

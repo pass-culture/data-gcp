@@ -7,6 +7,7 @@ from airflow.operators.python_operator import PythonOperator
 from airflow.contrib.operators.bigquery_operator import BigQueryOperator
 from airflow.contrib.operators.bigquery_to_gcs import BigQueryToCloudStorageOperator
 
+from dependencies.slack_alert import task_fail_slack_alert
 from dependencies.tag_offers import (
     tag_offers_description,
     tag_offers_name,
@@ -31,7 +32,7 @@ dag = DAG(
     "extract_offer_tags",
     default_args=default_dag_args,
     description="Tag offer based on description topic",
-    on_failure_callback=None,
+    on_failure_callback=task_fail_slack_alert,
     schedule_interval="0 */6 * * *",
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),

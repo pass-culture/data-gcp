@@ -11,7 +11,7 @@ import pytz
 from google.api_core.client_options import ClientOptions
 from googleapiclient import discovery
 
-from cold_start import get_cold_start_status, get_cold_start_types
+from cold_start import get_cold_start_status, get_cold_start_categories
 from geolocalisation import get_iris_from_coordinates
 from utils import create_db_connection, log_duration, GCP_PROJECT
 
@@ -30,11 +30,11 @@ def get_final_recommendations(
 
     if is_cold_start:
         reco_origin = "cold_start"
-        cold_start_types = get_cold_start_types(user_id)
+        cold_start_categories = get_cold_start_categories(user_id)
         scored_recommendation_for_user = get_cold_start_scored_recommendations_for_user(
             user_id,
             user_iris_id,
-            cold_start_types,
+            cold_start_categories,
             app_config["NUMBER_OF_PRESELECTED_OFFERS"],
         )
     else:
@@ -58,7 +58,7 @@ def get_final_recommendations(
             for recommendation in scored_recommendation_for_user:
                 recommendation["score"] = random.random()
 
-    final_recommendations = order_offers_by_score_and_diversify_types(
+    final_recommendations = order_offers_by_score_and_diversify_categories(
         scored_recommendation_for_user, app_config["NUMBER_OF_RECOMMENDATIONS"]
     )
 
@@ -131,15 +131,15 @@ def save_recommendation(
 def get_cold_start_scored_recommendations_for_user(
     user_id: int,
     user_iris_id: int,
-    cold_start_types: list,
+    cold_start_categories: list,
     number_of_preselected_offers: int,
 ) -> List[Dict[str, Any]]:
 
     start = time.time()
-    if cold_start_types:
+    if cold_start_categories:
         order_query = f"""
             ORDER BY
-                (type in ({', '.join([f"'{offer_type}'" for offer_type in cold_start_types])})) DESC,
+                (subcategories.category_id in ({', '.join([f"'{category}'" for category in cold_start_categories])})) DESC,
                 booking_number DESC
             """
     else:
@@ -163,7 +163,7 @@ def get_cold_start_scored_recommendations_for_user(
 
     recommendations_query = text(
         f"""
-        SELECT offer_id, type, url, product_id
+        SELECT offer_id, category, url, product_id
         FROM recommendable_offers
         WHERE offer_id NOT IN
             (
@@ -189,7 +189,7 @@ def get_cold_start_scored_recommendations_for_user(
     cold_start_recommendations = [
         {
             "id": row[0],
-            "type": row[1],
+            "category": row[1],
             "url": row[2],
             "product_id": row[3],
             "score": random.random(),
@@ -210,8 +210,8 @@ def get_intermediate_recommendations_for_user(
     start = time.time()
     if not user_iris_id:
         query = text(
-            f"""
-            SELECT offer_id, type, url, item_id, product_id
+            """
+            SELECT offer_id, category, url, item_id, product_id
             FROM recommendable_offers
             WHERE is_national = True or url IS NOT NULL
             AND offer_id NOT IN
@@ -220,7 +220,7 @@ def get_intermediate_recommendations_for_user(
                 FROM non_recommendable_offers
                 WHERE user_id = :user_id
                 )
-            AND booking_number > 0 
+            AND booking_number > 0
             ORDER BY RANDOM();
             """
         )
@@ -231,7 +231,7 @@ def get_intermediate_recommendations_for_user(
     else:
         query = text(
             f"""
-            SELECT offer_id, type, url, item_id, product_id
+            SELECT offer_id, category, url, item_id, product_id
             FROM recommendable_offers
             WHERE
                 (
@@ -263,7 +263,7 @@ def get_intermediate_recommendations_for_user(
     user_recommendation = [
         {
             "id": row[0],
-            "type": row[1],
+            "category": row[1],
             "url": row[2],
             "item_id": row[3],
             "product_id": row[4],
@@ -336,11 +336,11 @@ def predict_score(region, project, model, instances, version):
     return response["predictions"]
 
 
-def order_offers_by_score_and_diversify_types(
+def order_offers_by_score_and_diversify_categories(
     offers: List[Dict[str, Any]], number_of_recommendations: int
 ) -> List[int]:
     """
-    Group offers by type.
+    Group offers by category.
     Order offer groups by decreasing number of offers in each group and decreasing maximal score.
     Order each offers within a group by increasing score.
     Sort offers by taking the last offer of each group (maximum score), by decreasing size of group.
@@ -348,29 +348,31 @@ def order_offers_by_score_and_diversify_types(
     """
 
     start = time.time()
-    offers_by_type = _get_offers_grouped_by_type(offers)
+    offers_by_category = _get_offers_grouped_by_category(offers)
 
-    offers_by_type_ordered_by_frequency = collections.OrderedDict(
+    offers_by_category_ordered_by_frequency = collections.OrderedDict(
         sorted(
-            offers_by_type.items(),
-            key=_get_number_of_offers_and_max_score_by_type,
+            offers_by_category.items(),
+            key=_get_number_of_offers_and_max_score_by_category,
             reverse=True,
         )
     )
 
-    for offer_type in offers_by_type_ordered_by_frequency:
-        offers_by_type_ordered_by_frequency[offer_type] = sorted(
-            offers_by_type_ordered_by_frequency[offer_type],
+    for offer_category in offers_by_category_ordered_by_frequency:
+        offers_by_category_ordered_by_frequency[offer_category] = sorted(
+            offers_by_category_ordered_by_frequency[offer_category],
             key=lambda k: k["score"],
             reverse=False,
         )
 
     diversified_offers = []
-    while len(diversified_offers) != np.sum([len(l) for l in offers_by_type.values()]):
-        for offer_type in offers_by_type_ordered_by_frequency.keys():
-            if offers_by_type_ordered_by_frequency[offer_type]:
+    while len(diversified_offers) != np.sum(
+        [len(l) for l in offers_by_category.values()]
+    ):
+        for offer_category in offers_by_category_ordered_by_frequency.keys():
+            if offers_by_category_ordered_by_frequency[offer_category]:
                 diversified_offers.append(
-                    offers_by_type_ordered_by_frequency[offer_type].pop()
+                    offers_by_category_ordered_by_frequency[offer_category].pop()
                 )
         if len(diversified_offers) >= number_of_recommendations:
             break
@@ -379,30 +381,32 @@ def order_offers_by_score_and_diversify_types(
         :number_of_recommendations
     ]
 
-    log_duration(f"order_offers_by_score_and_diversify_types", start)
+    log_duration(f"order_offers_by_score_and_diversify_categories", start)
     return ordered_and_diversified_offers
 
 
-def _get_offers_grouped_by_type(offers: List[Dict[str, Any]]) -> Dict:
+def _get_offers_grouped_by_category(offers: List[Dict[str, Any]]) -> Dict:
     start = time.time()
-    offers_by_type = dict()
+    offers_by_category = dict()
     product_ids = set()
     for offer in offers:
-        offer_type = offer["type"]
+        offer_category = offer["category"]
         offer_product_id = offer["product_id"]
-        if offer_type in offers_by_type.keys():
+        if offer_category in offers_by_category.keys():
             if offer_product_id not in product_ids:
-                offers_by_type[offer_type].append(offer)
+                offers_by_category[offer_category].append(offer)
                 product_ids.add(offer_product_id)
         else:
-            offers_by_type[offer_type] = [offer]
+            offers_by_category[offer_category] = [offer]
 
-    log_duration("_get_offers_grouped_by_type", start)
-    return offers_by_type
+    log_duration("_get_offers_grouped_by_category", start)
+    return offers_by_category
 
 
-def _get_number_of_offers_and_max_score_by_type(type_and_offers: Tuple) -> Tuple:
+def _get_number_of_offers_and_max_score_by_category(
+    category_and_offers: Tuple,
+) -> Tuple:
     return (
-        len(type_and_offers[1]),
-        max([offer["score"] for offer in type_and_offers[1]]),
+        len(category_and_offers[1]),
+        max([offer["score"] for offer in category_and_offers[1]]),
     )

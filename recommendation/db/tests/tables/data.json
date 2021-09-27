@@ -13,7 +13,7 @@
   "venue": {
     "venue_id": 1814,
     "venue_managing_offerer_id": 1073
-   },
+  },
   "stock": {
     "stock_id": 141098,
     "stock_quantity": 1,
@@ -26,13 +26,23 @@
     "stock_id": 141098,
     "booking_quantity": 0,
     "user_id": 3777,
-    "booking_amount": 38.00,
-    "booking_is_cancelled": "f",
-    "booking_is_used": "t"
+    "booking_is_cancelled": "f"
   },
   "mediation": {
     "offerId": 138717,
     "isActive": "t"
   },
-  "iris_venues": {}
+  "iris_venues": {
+    "id": 320058,
+    "irisId": 142286,
+    "venueId": 1801
+  },
+  "subcategories": {
+    "id": "EVENEMENT_JEU",
+    "category_id": "JEU",
+    "matching_type": "EventType.JEUX",
+    "is_event": "t",
+    "is_digital_deposit": "f",
+    "is_physical_deposit": "f"
+  }
 }

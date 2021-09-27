@@ -4,96 +4,36 @@ booking,booking_creation_date,timestamp without time zone
 booking,stock_id,character varying
 booking,booking_quantity,integer
 booking,user_id,character varying
-booking,booking_amount,numeric
 booking,booking_is_cancelled,boolean
-booking,booking_is_used,boolean
-booking,booking_used_date,timestamp without time zone
-booking,booking_cancellation_date,timestamp without time zone
-iris_venues,id,character varying
-iris_venues,irisId,character varying
-iris_venues,venueId,character varying
 mediation,thumbCount,integer
-mediation,idAtProviders,character varying
-mediation,dateModifiedAtLastProvider,timestamp without time zone
 mediation,id,character varying
-mediation,dateCreated,timestamp without time zone
-mediation,authorId,character varying
-mediation,lastProviderId,character varying
 mediation,offerId,character varying
-mediation,credit,character varying
 mediation,isActive,boolean
-mediation,fieldsUpdated,string[]
-offer,offer_id_at_providers,character varying
-offer,offer_modified_at_last_provider_date,timestamp without time zone
 offer,offer_id,character varying
-offer,offer_creation_date,timestamp without time zone
 offer,offer_product_id,character varying
 offer,venue_id,character varying
-offer,offer_last_provider_id,character varying
-offer,booking_email,character varying
 offer,offer_is_active,boolean
 offer,offer_type,character varying
+offer,offer_subcategoryId,character varying
 offer,offer_name,character varying
-offer,offer_description,character varying
-offer,offer_conditions,character varying
-offer,offer_age_min,integer
-offer,offer_age_max,integer
 offer,offer_url,character varying
-offer,offer_media_urls,[]
-offer,offer_duration_minutes,integer
 offer,offer_is_national,boolean
-offer,offer_extra_data,character varying
-offer,offer_is_duo,boolean
-offer,offer_fields_updated,string[]
-offer,offer_withdrawal_details,character varying
 offer,offer_validation,character varying
 offerer,offerer_is_active,boolean
-offerer,offerer_thumb_count,integer
-offerer,offerer_id_at_providers,character varying
-offerer,offerer_modified_at_last_provider_date,timestamp without time zone
-offerer,offerer_address,character varying
-offerer,offerer_postal_code,character varying
-offerer,offerer_city,character varying
 offerer,offerer_id,character varying
-offerer,offerer_creation_date,timestamp without time zone
-offerer,offerer_name,character varying
-offerer,offerer_siren,character varying
-offerer,offerer_last_provider_id,character varying
-offerer,offerer_fields_updated,string[]
 offerer,offerer_validation_token,character varying
-venue,venue_thumb_count,integer
-venue,venue_id_at_providers,character varying
-venue,venue_modified_at_last_provider,timestamp without time zone
-venue,venue_address,character varying
-venue,venue_postal_code,character varying
-venue,venue_city,character varying
 venue,venue_id,character varying
-venue,venue_name,character varying
-venue,venue_siret,character varying
-venue,venue_department_code,character varying
-venue,venue_latitude,numeric
-venue,venue_longitude,numeric
 venue,venue_managing_offerer_id,character varying
-venue,venue_booking_email,character varying
-venue,venue_last_provider_id,character varying
-venue,venue_is_virtual,boolean
-venue,venue_comment,character varying
-venue,venue_public_name,character varying
-venue,venue_fields_updated,string[]
-venue,venue_type_id,character varying
-venue,venue_label_id,character varying
 venue,venue_validation_token,character varying
-venue,venue_creation_date,timestamp without time zone
-stock,stock_id_at_providers,character varying
-stock,stock_modified_at_last_provider_date,timestamp without time zone
 stock,stock_id,character varying
-stock,stock_modified_date,timestamp without time zone
-stock,stock_price,numeric
 stock,stock_quantity,integer
 stock,stock_booking_limit_date,timestamp without time zone
-stock,stock_last_provider_id,character varying
 stock,offer_id,character varying
 stock,stock_is_soft_deleted,boolean
 stock,stock_beginning_date,timestamp without time zone
-stock,stock_creation_date,timestamp without time zone
-stock,stock_fields_updated,string[]
+subcategories,id,character varying
+subcategories,category_id,character varying
+subcategories,matching_type,character varying
+subcategories,is_event,boolean
+subcategories,is_digital_deposit,boolean
+subcategories,is_physical_deposit,boolean

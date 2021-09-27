@@ -72,6 +72,7 @@ def define_enriched_stock_data_query(dataset, table_prefix=""):
                 offer.offer_name,
                 venue.venue_managing_offerer_id AS offerer_id,
                 offer.offer_type,
+                offer.offer_subcategoryId,
                 venue.venue_department_code,
                 stock.stock_creation_date,
                 stock.stock_booking_limit_date,

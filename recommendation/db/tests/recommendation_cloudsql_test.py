@@ -15,7 +15,7 @@ def create_and_fill_tables(connection):
     tables = pd.read_csv("tests/tables.csv")
 
     for table in set(tables["table_name"].values):
-        table_data = tables.loc[lambda df: df.table_name == table]
+        table_data = tables[tables.table_name == table]
         schema = {
             column_name: data_type
             for column_name, data_type in zip(
@@ -31,7 +31,7 @@ def create_and_fill_tables(connection):
         connection.execute(
             f"CREATE TABLE IF NOT EXISTS public.{table} ({typed_columns})"
         )
-        dataframe = pd.read_csv(f"tests/tables/{table}.csv", sep="|")
+        dataframe = pd.read_csv(f"tests/tables/{table}.csv", sep=",")
         dataframe.to_sql(table, con=connection, if_exists="append", index=False)
 
 
@@ -65,7 +65,7 @@ def test_data():
         checks = json.loads(f.read())
     tables = pd.read_csv("tests/tables.csv")
     for table in set(tables["table_name"].values):
-        df = pd.read_csv(f"tests/tables/{table}.csv", sep="|")
+        df = pd.read_csv(f"tests/tables/{table}.csv", sep=",")
         for column in checks[table]:
             if checks[table][column] == "nan":
                 assert pd.isnull(df[column].values[0])
@@ -105,12 +105,12 @@ def test_recommendable_offer_non_filtered(setup_database):
         ),
         (
             "offer_with_thing_type_activation_type",
-            """UPDATE public.offer SET offer_type = 'ThingType.ACTIVATION' where offer_id = '138717'""",
+            """UPDATE public.offer SET "offer_subcategoryId" = 'ACTIVATION_THING' where offer_id = '138717'""",
             False,
         ),
         (
             "offer_with_event_type_activation_type",
-            """UPDATE public.offer SET offer_type = 'EventType.ACTIVATION' where offer_id = '138717'""",
+            """UPDATE public.offer SET "offer_subcategoryId" = 'ACTIVATION_EVENT' where offer_id = '138717'""",
             False,
         ),
         (

@@ -4,47 +4,6 @@ from dependencies.data_analytics.enriched_data.enriched_data_utils import (
 )
 
 
-def define_is_physical_view_query(dataset, table_prefix=""):
-    return f"""
-        CREATE TEMP TABLE is_physical_view AS
-            SELECT
-                offer.offer_id,
-                CASE WHEN offer.offer_type IN ('ThingType.INSTRUMENT',
-                                         'ThingType.JEUX',
-                                         'ThingType.LIVRE_EDITION',
-                                         'ThingType.MUSIQUE',
-                                         'ThingType.OEUVRE_ART',
-                                         'ThingType.AUDIOVISUEL')
-                    AND offer.offer_url IS NULL
-                    THEN true
-                    ELSE false END as physical_goods
-            FROM {dataset}.{table_prefix}offer AS offer;
-    """
-
-
-def define_is_outing_view_query(dataset, table_prefix=""):
-    return f"""
-        CREATE TEMP TABLE is_outing_view AS
-            SELECT
-                offer.offer_id,
-                CASE WHEN offer.offer_type IN ('EventType.SPECTACLE_VIVANT',
-                                         'EventType.CINEMA',
-                                         'EventType.JEUX',
-                                         'ThingType.SPECTACLE_VIVANT_ABO',
-                                         'EventType.MUSIQUE',
-                                         'ThingType.MUSEES_PATRIMOINE_ABO',
-                                         'ThingType.CINEMA_CARD',
-                                         'ThingType.PRATIQUE_ARTISTIQUE_ABO',
-                                         'ThingType.CINEMA_ABO',
-                                         'EventType.MUSEES_PATRIMOINE',
-                                         'EventType.PRATIQUE_ARTISTIQUE',
-                                         'EventType.CONFERENCE_DEBAT_DEDICACE')
-                    THEN true
-                    ELSE false END AS outing
-            FROM {dataset}.{table_prefix}offer AS offer;
-    """
-
-
 def define_offer_booking_information_view_query(dataset, table_prefix=""):
     return f"""
         CREATE TEMP TABLE offer_booking_information_view AS
@@ -113,13 +72,13 @@ def define_enriched_offer_data_query(analytics_dataset, clean_dataset, table_pre
                 offer.offer_id,
                 offer.offer_name,
                 offer.offer_type,
-                offer.offer_subcategoryId ,
+                offer.offer_subcategoryId,
                 offer.offer_creation_date,
                 offer.offer_is_duo,
                 offer.offer_is_educational,
                 venue.venue_is_virtual,
-                is_physical_view.physical_goods,
-                is_outing_view.outing,
+                subcategories.is_physical_deposit as physical_goods,
+                subcategories.is_event as outing,
                 COALESCE(offer_booking_information_view.count_booking, 0.0) AS booking_cnt,
                 COALESCE(offer_booking_information_view.count_booking_cancelled, 0.0)
                     AS booking_cancelled_cnt,
@@ -149,16 +108,20 @@ def define_enriched_offer_data_query(analytics_dataset, clean_dataset, table_pre
                 offer_extracted_data.companies,
                 offer_extracted_data.countries,
                 offer_extracted_data.casting,
-                CASE  WHEN offer_extracted_data.offer_type <>'EventType.MUSIQUE' AND offer_extracted_data.showType IS NOT NULL THEN offer_extracted_data.showType 
-				WHEN offer_extracted_data.offer_type = 'EventType.MUSIQUE' THEN offer_extracted_data.musicType WHEN offer_extracted_data.offer_type <> 'EventType.SPECTACLE_VIVANT' AND offer_extracted_data.musicType IS NOT NULL THEN offer_extracted_data.musicType END AS type,
-				CASE WHEN offer_extracted_data.offer_type <>'EventType.MUSIQUE' AND offer_extracted_data.showSubType IS NOT NULL THEN offer_extracted_data.showSubType 
-				WHEN offer_extracted_data.offer_type = 'EventType.MUSIQUE' THEN offer_extracted_data.musicSubtype WHEN offer_extracted_data.offer_type <> 'EventType.SPECTACLE_VIVANT' AND offer_extracted_data.musicsubType IS NOT NULL THEN offer_extracted_data.musicSubtype
+                CASE 
+                    WHEN subcategories.category_id <> 'MUSIQUE_LIVE' AND offer_extracted_data.showType IS NOT NULL THEN offer_extracted_data.showType 
+                    WHEN subcategories.category_id = 'MUSIQUE_LIVE' THEN offer_extracted_data.musicType
+                    WHEN subcategories.category_id <> 'SPECTACLE' AND offer_extracted_data.musicType IS NOT NULL THEN offer_extracted_data.musicType
+                END AS type,
+				CASE
+                    WHEN subcategories.category_id <>'MUSIQUE_LIVE' AND offer_extracted_data.showSubType IS NOT NULL THEN offer_extracted_data.showSubType 
+                    WHEN subcategories.category_id = 'MUSIQUE_LIVE' THEN offer_extracted_data.musicSubtype
+                    WHEN subcategories.category_id <> 'SPECTACLE' AND offer_extracted_data.musicsubType IS NOT NULL THEN offer_extracted_data.musicSubtype
 				END AS subType
             FROM {analytics_dataset}.{table_prefix}offer AS offer
+            INNER JOIN {analytics_dataset}.subcategories subcategories ON offer.offer_subcategoryId = subcategories.id
             LEFT JOIN {analytics_dataset}.{table_prefix}venue AS venue ON offer.venue_id = venue.venue_id
             LEFT JOIN {analytics_dataset}.{table_prefix}offerer AS offerer ON venue.venue_managing_offerer_id = offerer.offerer_id
-            LEFT JOIN is_physical_view ON is_physical_view.offer_id = offer.offer_id
-            LEFT JOIN is_outing_view ON is_outing_view.offer_id = offer.offer_id
             LEFT JOIN offer_booking_information_view ON offer_booking_information_view.offer_id = offer.offer_id
             LEFT JOIN count_favorites_view ON count_favorites_view.offerId = offer.offer_id
             LEFT JOIN sum_stock_view ON sum_stock_view.offer_id = offer.offer_id
@@ -175,8 +138,6 @@ def define_enriched_offer_data_full_query(
     analytics_dataset, clean_dataset, table_prefix=""
 ):
     return f"""
-        {define_is_physical_view_query(dataset=analytics_dataset, table_prefix=table_prefix)}
-        {define_is_outing_view_query(dataset=analytics_dataset, table_prefix=table_prefix)}
         {define_offer_booking_information_view_query(dataset=analytics_dataset, table_prefix=table_prefix)}
         {define_count_favorites_view_query(dataset=analytics_dataset, table_prefix=table_prefix)}
         {define_sum_stock_view_query(dataset=analytics_dataset, table_prefix=table_prefix)}

@@ -30,10 +30,13 @@ def get_offerer_siren_list():
 
 
 def get_siren_query(siren_list):
-    query = "https://api.insee.fr/entreprises/sirene/V3/siren?q="
-    for siren in siren_list:
-        query += f"""siren:{siren} OR """
-    query += f"""siren:{siren_list[len(siren_list)-1]}&curseur=*&nombre=1000"""
+    if len(siren_list) == 0:
+        query = ""
+    else:
+        query = "https://api.insee.fr/entreprises/sirene/V3/siren?q="
+        for siren in siren_list:
+            query += f"""siren:{siren} OR """
+        query += f"""siren:{siren_list[len(siren_list)-1]}&curseur=*&nombre=1000"""
     return query
 
 
@@ -132,6 +135,8 @@ def query_siren():
         query = get_siren_query(
             siren_list[k * MAX_SIREN_CALL : (k + 1) * MAX_SIREN_CALL]
         )
+        if len(query) == 0:
+            break
         response = requests.get(
             query,
             headers=headers,

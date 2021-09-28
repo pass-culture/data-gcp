@@ -9,4 +9,4 @@ google-cloud-core==1.6.0
 google-cloud-secret-manager==2.2.0
 google-cloud-storage==1.38.0
 Authlib==0.15.4
-fsspec==2021.4.0
+fsspec==2021.09.0

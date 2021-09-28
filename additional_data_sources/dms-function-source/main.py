@@ -123,7 +123,6 @@ def fetch_result(demarches_ids, df_applications, dms_target, updated_since):
         has_next_page = True
         while has_next_page:
             result = run_query(query_body)
-            print("=> query !")
             print(result)
             parse_result(result, df_applications, demarche_id, dms_target=dms_target)
 

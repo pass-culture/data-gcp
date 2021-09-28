@@ -139,7 +139,7 @@ def get_cold_start_scored_recommendations_for_user(
     if cold_start_categories:
         order_query = f"""
             ORDER BY
-                (subcategories.category_id in ({', '.join([f"'{category}'" for category in cold_start_categories])})) DESC,
+                (category in ({', '.join([f"'{category}'" for category in cold_start_categories])})) DESC,
                 booking_number DESC
             """
     else:

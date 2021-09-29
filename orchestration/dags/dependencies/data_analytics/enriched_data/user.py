@@ -455,7 +455,8 @@ def define_enriched_user_data_query(dataset, table_prefix=""):
                 deposit.expirationDate AS user_deposit_expiration_date,
                 CASE WHEN TIMESTAMP(deposit.expirationDate) < CURRENT_TIMESTAMP() OR actual_amount_spent.actual_amount_spent >= deposit.amount THEN TRUE ELSE FALSE END AS user_is_former_beneficiary,
                 CASE WHEN (TIMESTAMP(deposit.expirationDate) >= CURRENT_TIMESTAMP() AND actual_amount_spent.actual_amount_spent < deposit.amount) AND user_is_active THEN TRUE ELSE FALSE END AS user_is_current_beneficiary,
-                user.user_age
+                user.user_age,
+                user.user_birth_date
             FROM {dataset}.{table_prefix}user AS user
             LEFT JOIN experimentation_sessions ON user.user_id = experimentation_sessions.user_id
             LEFT JOIN activation_dates ON user.user_id  = activation_dates.user_id

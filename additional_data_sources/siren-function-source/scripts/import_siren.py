@@ -128,6 +128,8 @@ def query_siren():
     }
     siren_list = get_offerer_siren_list()
     nb_df_sub_divisions = len(siren_list) // MAX_SIREN_CALL
+    if (len(siren_list) - nb_df_sub_divisions * MAX_SIREN_CALL) == 0:
+        nb_df_sub_divisions -= 1
     for k in range(nb_df_sub_divisions + 1):
         query = get_siren_query(
             siren_list[k * MAX_SIREN_CALL : (k + 1) * MAX_SIREN_CALL]

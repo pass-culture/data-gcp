@@ -28,7 +28,7 @@ DMS_TOKEN = access_secret_data(GCP_PROJECT_ID, "token_dms")
 
 
 API_URL = "https://www.demarches-simplifiees.fr/api/v2/graphql"
-demarches_jeunes = [44675, 44623, 29161]
+demarches_jeunes = [44675, 44623, 29161, 47380, 47480]
 demarches_pro = [29425, 29426, 11990]
 
 

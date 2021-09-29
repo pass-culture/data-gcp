@@ -175,7 +175,6 @@ BIGQUERY_SCHEMAS = {
         "user_last_name": "STRING",
         "user_postal_code": "STRING",
         "user_phone_number": "STRING",
-        "user_birth_date": "DATETIME",
         "user_needs_to_fill_cultural_survey": "BOOLEAN",
         "user_cultural_survey_id": "STRING",
         "user_civility": "STRING",
@@ -193,6 +192,7 @@ BIGQUERY_SCHEMAS = {
         "user_has_validated_email": "BOOLEAN",
         "user_has_enabled_marketing_push": "BOOLEAN",
         "user_has_enabled_marketing_email": "BOOLEAN",
+        "user_birth_date": "DATETIME",
     },
     "venue": {
         "venue_thumb_count": "INT64",

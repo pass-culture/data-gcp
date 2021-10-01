@@ -38,7 +38,8 @@ def define_import_query(
         "user_offerer"
     ] = """
         SELECT
-            CAST("id" AS varchar(255)), CAST("userId" AS varchar(255)), CAST("offererId" AS varchar(255))
+            CAST("id" AS varchar(255)), CAST("userId" AS varchar(255)), CAST("offererId" AS varchar(255)), 
+            CAST(CAST("user_offerer"."validationToken" AS varchar(255)) IS NULL AS boolean) AS user_offerer_is_validated
         FROM public.user_offerer
     """
     cloudsql_queries[
@@ -295,6 +296,7 @@ def define_import_query(
                 ,CAST("offerId" AS varchar(255)) AS offer_report_offer_id
                 ,reason AS offer_report_reason
                 ,"customReasonContent" AS offer_report_custom_reason_content
+                ,"reportedAt" AS offer_report_date
             FROM public.offer_report
         """
     cloudsql_queries[

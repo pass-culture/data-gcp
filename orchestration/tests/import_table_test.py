@@ -64,18 +64,6 @@ class TestImportTables(unittest.TestCase):
         assert not '"iban"' in result
         assert not '"bic"' in result
 
-    def test_import_tables_does_not_import_not_anonymized_column_for_user_offerer(self):
-        # Given
-        table = "user_offerer"
-
-        # When
-        result = define_import_query(
-            table, region="GCP_REGION", external_connection_id="EXTERNAL_CONNECTION_ID"
-        )
-
-        # Then
-        assert not '"validationToken"' in result
-
     def test_import_tables_does_not_import_not_anonymized_column_for_booking(self):
         # Given
         table = "booking"

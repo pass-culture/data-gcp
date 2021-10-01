@@ -54,7 +54,7 @@ def _define_recommendation_booking_funnel(start_date, end_date):
             WHERE TIMESTAMP_DIFF(TIMESTAMP_MICROS(bk.event_timestamp), CAST(date as TIMESTAMP), SECOND) >= 0
         ),
         recommendation_booking_funnel AS (
-            SELECT event_name, event_timestamp, user_id, session_id, firebase_screen, module, booking_funnel.offer_id, next_event_name, groupid AS group_id, offer_subcategory_id,  pastreco.reco_origin,
+            SELECT event_name, event_timestamp, user_id, session_id, firebase_screen, module, booking_funnel.offer_id, next_event_name, groupid AS group_id, offer_subcategoryid,  pastreco.reco_origin,
             FROM booking_funnel
             LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.ab_testing_202104_v0_v0bis` ab_testing
             ON booking_funnel.user_id = ab_testing.userid
@@ -162,7 +162,7 @@ def get_diversification_bookings_request(start_date, end_date):
         {_define_recommendation_booking_funnel(start_date, end_date)},
         
         diversification AS (
-            SELECT COUNT(DISTINCT offer_subcategory_id) AS distinct_booking_offer_subcategory_id_count, COUNT(*) AS booking_offer_count, group_id , reco_origin
+            SELECT COUNT(DISTINCT offer_subcategoryid) AS distinct_booking_offer_subcategory_id_count, COUNT(*) AS booking_offer_count, group_id , reco_origin
             FROM recommendation_booking_funnel
             WHERE module IN {RECOMMENDATION_MODULE_SQL_STRING}
             GROUP BY user_id, group_id, reco_origin

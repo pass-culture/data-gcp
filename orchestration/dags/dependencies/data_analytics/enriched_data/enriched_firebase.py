@@ -80,7 +80,7 @@ def aggregate_firebase_visits(gcp_project, bigquery_raw_dataset):
     return f"""
     WITH base AS (
         SELECT
-            event_name, event_timestamp, user_id, user_first_touch_timestamp,
+            event_name, event_timestamp, user_id,user_pseudo_id, user_first_touch_timestamp,
             device.category, device.mobile_brand_name, device.operating_system, device.operating_system_version,
             traffic_source.name, traffic_source.medium, traffic_source.source,
             (select event_params.value.int_value
@@ -92,9 +92,12 @@ def aggregate_firebase_visits(gcp_project, bigquery_raw_dataset):
                 where event_params.key = 'ga_session_number'
             ) as session_number,
         FROM `{gcp_project}.{bigquery_raw_dataset}.events_*`
-    )
+        WHERE event_name <> 'app_remove' AND event_name <> 'os_update' AND event_name <> 'batch_notification_open' 
+        AND event_name <> 'batch_notification_display'  AND event_name <> 'batch_notification_dismiss'
+         )
     SELECT
         session_id,
+        user_pseudo_id,
         ANY_VALUE(session_number) AS session_number,
         ANY_VALUE(category) AS category,
         ANY_VALUE(mobile_brand_name) AS mobile_brand_name,
@@ -109,7 +112,7 @@ def aggregate_firebase_visits(gcp_project, bigquery_raw_dataset):
         COUNTIF(event_name="ConsultOffer") AS nb_consult_offer,
         COUNTIF(event_name="screen_view_bookingconfirmation") AS nb_booking_confirmation,
     FROM base
-    GROUP BY session_id;
+    GROUP BY session_id,user_pseudo_id;
     """
 
 

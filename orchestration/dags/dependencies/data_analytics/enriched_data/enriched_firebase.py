@@ -109,7 +109,7 @@ def aggregate_firebase_visits(gcp_project, bigquery_raw_dataset):
         ANY_VALUE(source) AS source,
         TIMESTAMP_SECONDS(CAST(CAST(MAX(event_timestamp) as INT64)/1000000 as INT64)) AS last_event_timestamp,
         COUNTIF(event_name="ConsultOffer") AS nb_consult_offer,
-        COUNTIF(event_name="screen_view_bookingconfirmation") AS nb_booking_confirmation,
+        COUNTIF(event_name="BookingConfirmation") AS nb_booking_confirmation,
     FROM base
     GROUP BY session_id,user_pseudo_id;
     """

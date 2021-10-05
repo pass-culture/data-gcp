@@ -155,6 +155,7 @@ def define_enriched_offerer_query(dataset, table_prefix=""):
                 ON related_venues_with_offer.offerer_id = offerer.offerer_id
             LEFT JOIN offerer_humanized_id ON offerer_humanized_id.offerer_id = offerer.offerer_id
             LEFT JOIN current_year_revenue ON current_year_revenue.offerer_id = offerer.offerer_id
+            WHERE offerer.offerer_validation_token IS NULL
         );
     """
 

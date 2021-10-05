@@ -249,6 +249,7 @@ BIGQUERY_SCHEMAS = {
         "offer_report_offer_id": "STRING",
         "offer_report_reason": "STRING",
         "offer_report_custom_reason_content": "STRING",
+        "offer_report_date": "DATETIME",
     },
     "subcategories": {
         "id": "STRING",

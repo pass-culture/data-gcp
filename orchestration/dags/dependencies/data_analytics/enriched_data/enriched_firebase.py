@@ -103,14 +103,14 @@ def aggregate_firebase_visits(gcp_project, bigquery_raw_dataset):
         ANY_VALUE(operating_system) AS operating_system,
         ANY_VALUE(operating_system_version) AS operating_system_version,
         ANY_VALUE(user_id) AS user_id,
-        TIMESTAMP_SECONDS(CAST(CAST(MIN(user_first_touch_timestamp) as INT64)/1000000 as INT64)) AS user_first_touch_timestamp,
+        TIMESTAMP_SECONDS(CAST(MIN(user_first_touch_timestamp)/1000000 as INT64)) AS user_first_touch_timestamp,
         ANY_VALUE(name) AS name,
         ANY_VALUE(medium) AS medium,
         ANY_VALUE(source) AS source,
-        TIMESTAMP_SECONDS(CAST(CAST(MAX(event_timestamp) as INT64)/1000000 as INT64)) AS last_event_timestamp,
+        TIMESTAMP_SECONDS(CAST(MAX(event_timestamp)/1000000 as INT64)) AS last_event_timestamp,
         COUNTIF(event_name="ConsultOffer") AS nb_consult_offer,
         COUNTIF(event_name="BookingConfirmation") AS nb_booking_confirmation,
-        DATE_DIFF(TIMESTAMP_SECONDS(CAST(CAST(MAX(event_timestamp) as INT64)/1000000 as INT64)), TIMESTAMP_SECONDS(CAST(CAST(MIN(user_first_touch_timestamp) as INT64)/1000000 as INT64)),SECOND) AS visit_duration_seconds,
+        DATE_DIFF(TIMESTAMP_SECONDS(CAST(MAX(event_timestamp)/1000000 as INT64)), TIMESTAMP_SECONDS(CAST(MIN(user_first_touch_timestamp)/1000000 as INT64)),SECOND) AS visit_duration_seconds,
     FROM base
     GROUP BY session_id,user_pseudo_id;
     """

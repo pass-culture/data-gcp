@@ -33,7 +33,7 @@ def check_before_deploy(metrics, k):
         metrics[f"recall_at_{k}"] > 20
         and metrics[f"precision_at_{k}"] > 1
         and metrics[f"maximal_precision_at_{k}"] > 4.5
-        and metrics[f"coverage_at_{k}"] > 30
+        and metrics[f"coverage_at_{k}"] > 10
         and metrics[f"coverage_at_{k}"] < 70
         and metrics[f"unexpectedness_at_{k}"] > 0.07
         and metrics[f"new_types_ratio_at_{k}"] > 0.05
@@ -56,6 +56,8 @@ if __name__ == "__main__":
     run_id = mlflow.list_run_infos(experiment_id)[0].run_id
     with mlflow.start_run(run_id=run_id):
         loaded_model = tf.keras.models.load_model(
-            mlflow.get_artifact_uri("model"), custom_objects={"MatchModel": MatchModel}
+            mlflow.get_artifact_uri("model"),
+            custom_objects={"MatchModel": MatchModel},
+            compile=False,
         )
         evaluate(loaded_model, STORAGE_PATH)

@@ -18,7 +18,7 @@ TRAIN_DIR = "/home/airflow/train"
 EMBEDDING_SIZE = 64
 L2_REG = 0
 N_EPOCHS = 20 if ENV_SHORT_NAME == "prod" else 10
-BATCH_SIZE = 16
+BATCH_SIZE = 128
 LOSS_CUTOFF = 0.005
 
 
@@ -90,7 +90,7 @@ def train(storage_path: str):
             eval_result = triplet_model.evaluate(
                 x=evaluation_triplet_inputs,
                 y=evaluation_fake_train,
-                batch_size=BATCH_SIZE,
+                batch_size=2048,
                 verbose=0,
             )
             connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)

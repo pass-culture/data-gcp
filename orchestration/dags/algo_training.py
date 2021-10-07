@@ -56,7 +56,7 @@ with DAG(
     "algo_training_v1",
     default_args=default_args,
     description="Continuous algorithm training",
-    schedule_interval="@once",
+    schedule_interval="0 7 * * 1",  # Train every monday at 07:00
     catchup=False,
     dagrun_timeout=timedelta(minutes=180),
 ) as dag:

@@ -23,7 +23,7 @@ START_DATE = datetime(2021, 8, 24, tzinfo=pytz.utc)  # expressed in UTC TimeZone
 groups = ["A"]
 reco_origin_list = {"cold_start", "algo"}
 ALGO_A = "algo v1 + cold start"
-#ALGO_B = "algo v0 + cold start"
+# ALGO_B = "algo v0 + cold start"
 
 LAST_EVENT_TIME_KEY = "last_event_time"
 

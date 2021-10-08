@@ -139,7 +139,7 @@ def test_get_final_recommendation_for_group_a_algo(
 #    setup_pool: Any,
 #    app_config: Dict[str, Any],
 # ):
-    # Given
+# Given
 #   mock_pool.return_value = setup_pool
 
 #    user_id = 112
@@ -183,7 +183,7 @@ def test_get_final_recommendation_for_group_a_algo(
 #        user_id, 2.331289, 48.830719, app_config
 #    )
 
-    # Then
+# Then
 #    get_cold_start_categories.assert_not_called()
 #    save_recommendation_mock.assert_called()
 #    assert recommendations == [3, 2]

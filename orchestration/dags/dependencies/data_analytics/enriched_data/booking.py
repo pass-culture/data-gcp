@@ -106,7 +106,8 @@ def create_materialized_enriched_booking_view(dataset, table_prefix=""):
                 subcategories.is_digital_deposit digital_goods,
                 subcategories.is_event as event,
                 booking_intermediary_view.booking_rank,
-                booking_intermediary_view.same_category_booking_rank
+                booking_intermediary_view.same_category_booking_rank,
+                booking_used_date
             FROM {dataset}.{table_prefix}booking AS booking
             INNER JOIN {dataset}.{table_prefix}stock AS stock
                 ON booking.stock_id = stock.stock_id

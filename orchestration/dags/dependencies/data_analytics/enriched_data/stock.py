@@ -81,7 +81,8 @@ def define_enriched_stock_data_query(dataset, table_prefix=""):
                 stock.stock_quantity,
                 stock_booking_information.booking_quantity,
                 stock_booking_information.bookings_cancelled AS booking_cancelled,
-                stock_booking_information.bookings_paid AS booking_paid
+                stock_booking_information.bookings_paid AS booking_paid,
+                stock.stock_price
             FROM {dataset}.{table_prefix}stock AS stock
             LEFT JOIN {dataset}.{table_prefix}offer AS offer ON stock.offer_id = offer.offer_id
             LEFT JOIN {dataset}.{table_prefix}venue AS venue ON venue.venue_id = offer.venue_id

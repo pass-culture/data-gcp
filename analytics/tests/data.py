@@ -550,6 +550,7 @@ ENRICHED_STOCK_DATA_EXPECTED = [
         "booking_quantity": 2,
         "booking_cancelled": 0,
         "booking_paid": 2,
+        "stock_price": 0,
     },
     {
         "stock_id": "2",
@@ -567,6 +568,7 @@ ENRICHED_STOCK_DATA_EXPECTED = [
         "booking_quantity": 0,
         "booking_cancelled": 0,
         "booking_paid": 0,
+        "stock_price": 0,
     },
 ]
 
@@ -866,6 +868,7 @@ ENRICHED_BOOKING_DATA_INPUT = {
             "booking_is_cancelled": False,
             "booking_is_used": True,
             "booking_cancellation_date": None,
+            "booking_used_date": datetime.now().replace(microsecond=0),
         }
     ],
     "payment": [
@@ -960,5 +963,6 @@ ENRICHED_BOOKING_DATA_EXPECTED = [
         "venue_label_name": "label",
         "venue_name": "My Wonderful Venue",
         "venue_type_name": "label",
+        "booking_used_date": datetime.now().replace(microsecond=0),
     }
 ]

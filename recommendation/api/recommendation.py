@@ -19,12 +19,13 @@ from utils import create_db_connection, log_duration, GCP_PROJECT
 def get_final_recommendations(
     user_id: int, longitude: int, latitude: int, app_config: Dict[str, Any]
 ) -> List[int]:
-    request_response = query_ab_testing_table(user_id, app_config)
-    if not request_response:
-        group_id = ab_testing_assign_user(user_id, app_config)
-    else:
-        group_id = request_response[0]
-
+    # Uncomment to reactivate A/B Testing
+    # request_response = query_ab_testing_table(user_id, app_config)
+    # if not request_response:
+    #   group_id = ab_testing_assign_user(user_id, app_config)
+    # else:
+    #   group_id = request_response[0]
+    group_id = "A"
     is_cold_start = get_cold_start_status(user_id)
     user_iris_id = get_iris_from_coordinates(longitude, latitude)
 

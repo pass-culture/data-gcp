@@ -265,7 +265,7 @@ def test_get_final_recommendation_for_new_user(
     save_recommendation_mock.assert_called()
 
     # Then
-    assert recommendations == [3, 2]
+    assert recommendations == [3]
 
 
 @patch("recommendation.create_db_connection")

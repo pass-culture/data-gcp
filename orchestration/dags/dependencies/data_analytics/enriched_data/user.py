@@ -420,8 +420,9 @@ def define_enriched_user_data_query(dataset, table_prefix=""):
                 CASE WHEN user.user_activity in ("Alternant","Apprenti","Volontaire") THEN "Apprenti, Alternant, Volontaire en service civique rémunéré"
                     WHEN user.user_activity in ("Inactif") THEN "Inactif (ni en emploi ni au chômage), En incapacité de travailler"
                         WHEN user.user_activity in ("Étudiant") THEN "Etudiant"
-                            WHEN user.user_activity in ("Chômeur") THEN "Chômeur, En recherche d'emploi"
+                            WHEN user.user_activity in ("Chômeur", "En recherche d'emploi ou chômeur") THEN "Chômeur, En recherche d'emploi"
                                 ELSE user.user_activity END AS user_activity,
+                user.user_civility,
                 activation_dates.user_activation_date,
                 deposit.dateCreated AS user_deposit_creation_date,
                 CASE WHEN user.user_has_seen_tutorials THEN user.user_cultural_survey_filled_date

@@ -35,20 +35,72 @@ OLD_TYPE_LIST = [
 ]
 
 TYPE_LIST = [
-    "BEAUX_ARTS",
-    "CINEMA",
-    "CONFERENCE_RENCONTRE",
-    "FILM",
-    "INSTRUMENT",
-    "JEU",
-    "LIVRE",
-    "MEDIA",
-    "MUSEE",
-    "MUSIQUE_ENREGISTREE",
-    "MUSIQUE_LIVE",
-    "PRATIQUE_ART",
-    "SPECTACLE",
-    "TECHNIQUE",
+    "ABO_BIBLIOTHEQUE",
+    "ABO_CONCERT",
+    "ABO_JEU_VIDEO",
+    "ABO_LIVRE_NUMERIQUE",
+    "ABO_LUDOTHEQUE",
+    "ABO_MEDIATHEQUE",
+    "ABO_MUSEE",
+    "ABO_PLATEFORME_MUSIQUE",
+    "ABO_PLATEFORME_VIDEO",
+    "ABO_PRATIQUE_ART",
+    "ABO_PRESSE_EN_LIGNE",
+    "ABO_SPECTACLE",
+    "ACHAT_INSTRUMENT",
+    "ACTIVATION_EVENT",
+    "ACTIVATION_THING",
+    "APP_CULTURELLE",
+    "ATELIER_PRATIQUE_ART",
+    "AUTRE_SUPPORT_NUMERIQUE",
+    "BON_ACHAT_INSTRUMENT",
+    "CAPTATION_MUSIQUE",
+    "CARTE_CINE_ILLIMITE",
+    "CARTE_CINE_MULTISEANCES",
+    "CARTE_MUSEE",
+    "CINE_PLEIN_AIR",
+    "CINE_VENTE_DISTANCE",
+    "CONCERT",
+    "CONCOURS",
+    "CONFERENCE",
+    "DECOUVERTE_METIERS",
+    "ESCAPE_GAME",
+    "EVENEMENT_CINE",
+    "EVENEMENT_JEU",
+    "EVENEMENT_MUSIQUE",
+    "EVENEMENT_PATRIMOINE",
+    "FESTIVAL_CINE",
+    "FESTIVAL_LIVRE",
+    "FESTIVAL_MUSIQUE",
+    "FESTIVAL_SPECTACLE",
+    "JEU_EN_LIGNE",
+    "JEU_SUPPORT_PHYSIQUE",
+    "LIVESTREAM_EVENEMENT",
+    "LIVESTREAM_MUSIQUE",
+    "LIVRE_AUDIO_PHYSIQUE",
+    "LIVRE_NUMERIQUE",
+    "LIVRE_PAPIER",
+    "LOCATION_INSTRUMENT",
+    "MATERIEL_ART_CREATIF",
+    "MUSEE_VENTE_DISTANCE",
+    "OEUVRE_ART",
+    "PARTITION",
+    "PODCAST",
+    "RENCONTRE_JEU",
+    "RENCONTRE",
+    "SALON",
+    "SEANCE_CINE",
+    "SEANCE_ESSAI_PRATIQUE_ART",
+    "SPECTACLE_ENREGISTRE",
+    "SPECTACLE_REPRESENTATION",
+    "SUPPORT_PHYSIQUE_FILM",
+    "SUPPORT_PHYSIQUE_MUSIQUE",
+    "TELECHARGEMENT_LIVRE_AUDIO",
+    "TELECHARGEMENT_MUSIQUE",
+    "VISITE_GUIDEE",
+    "VISITE_VIRTUELLE",
+    "VISITE",
+    "VOD",
 ]
 
 
@@ -227,7 +279,7 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
                 f"unexpectedness_at_{k}": np.nanmean(unexpectedness)
                 if len(unexpectedness) > 0
                 else None,
-                f"new_subcategoryIds_ratio_at_{k}": np.mean(new_subcategoryIds_ratio)
+                f"new_types_ratio_at_{k}": np.mean(new_subcategoryIds_ratio)
                 if len(new_subcategoryIds_ratio) > 0
                 else None,
                 f"serendipity_at_{k}": np.nanmean(serendipity)
@@ -252,7 +304,7 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
         f"unexpectedness_at_{k}": np.nanmean(unexpectedness)
         if len(unexpectedness) > 0
         else None,
-        f"new_subcategoryIds_ratio_at_{k}": np.mean(new_subcategoryIds_ratio)
+        f"new_types_ratio_at_{k}": np.mean(new_subcategoryIds_ratio)
         if len(new_subcategoryIds_ratio) > 0
         else None,
         f"serendipity_at_{k}": np.nanmean(serendipity)

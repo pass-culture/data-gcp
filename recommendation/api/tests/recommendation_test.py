@@ -449,7 +449,7 @@ def test_get_intermediate_recommendation_for_user_with_no_iris(
                 {
                     "id": 3,
                     "url": None,
-                    "category": "B",
+                    "category": "A",
                     "item_id": "offer-3",
                     "product_id": "product-3",
                     "score": 10,
@@ -457,7 +457,7 @@ def test_get_intermediate_recommendation_for_user_with_no_iris(
                 {
                     "id": 4,
                     "url": None,
-                    "category": "B",
+                    "category": "A",
                     "item_id": "offer-4",
                     "product_id": "product-4",
                     "score": 10,

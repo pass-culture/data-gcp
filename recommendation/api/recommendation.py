@@ -84,7 +84,8 @@ def query_ab_testing_table(user_id, app_config):
 def ab_testing_assign_user(user_id, app_config):
     start = time.time()
     ab_testing_table = app_config["AB_TESTING_TABLE"]
-    group_id = "A" if random.random() > 0.5 else "B"
+    group_id = "A"
+    # if random.random() > 0.5 else "B"
 
     with create_db_connection() as connection:
         connection.execute(

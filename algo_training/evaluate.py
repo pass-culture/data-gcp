@@ -36,7 +36,7 @@ def check_before_deploy(metrics, k):
         and metrics[f"coverage_at_{k}"] > 30
         and metrics[f"coverage_at_{k}"] < 70
         and metrics[f"unexpectedness_at_{k}"] > 0.07
-        and metrics[f"new_subcategoryIds_ratio_at_{k}"] > 0.05
+        and metrics[f"new_types_ratio_at_{k}"] > 0.05
         and metrics[f"serendipity_at_{k}"] > 1.5
     ):
         print("Metrics OK")

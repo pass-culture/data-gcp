@@ -7,7 +7,7 @@ from utils import STORAGE_PATH, BOOKING_DAY_NUMBER
 def get_bookings(start_date, end_date):
     query = f"""
         select user_id,
-        (CASE WHEN offer.offer_subcategoryId in ('LIVRE', 'CINEMA') THEN CONCAT('product-', offer.offer_product_id) ELSE CONCAT('offer-', offer.offer_id) END) AS offer_id, offer.offer_type as type,
+        (CASE WHEN offer.offer_subcategoryId in ('LIVRE_PAPIER','LIVRE_AUDIO_PHYSIQUE','SEANCE_CINE') THEN CONCAT('product-', offer.offer_product_id) ELSE CONCAT('offer-', offer.offer_id) END) AS offer_id, offer.offer_type as type,
         offer.offer_subcategoryId as subcategoryId, count(*) as nb_bookings
         from `passculture-data-prod.clean_prod.applicative_database_booking` booking
         inner join `passculture-data-prod.clean_prod.applicative_database_stock` stock

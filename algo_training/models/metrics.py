@@ -7,33 +7,6 @@ from utils import ENV_SHORT_NAME
 
 NUMBER_OF_USERS = 5000 if ENV_SHORT_NAME == "prod" else 200
 
-OLD_TYPE_LIST = [
-    "ThingType.LIVRE_EDITION",
-    "ThingType.INSTRUMENT",
-    "EventType.PRATIQUE_ARTISTIQUE",
-    "ThingType.AUDIOVISUEL",
-    "ThingType.MUSIQUE",
-    "EventType.SPECTACLE_VIVANT",
-    "ThingType.PRATIQUE_ARTISTIQUE_ABO",
-    "EventType.CINEMA",
-    "EventType.MUSIQUE",
-    "EventType.CONFERENCE_DEBAT_DEDICACE",
-    "EventType.MUSEES_PATRIMOINE",
-    "ThingType.MUSEES_PATRIMOINE_ABO",
-    "ThingType.PRESSE_ABO",
-    "ThingType.OEUVRE_ART",
-    "ThingType.LIVRE_AUDIO",
-    "EventType.JEUX",
-    "ThingType.CINEMA_ABO",
-    "ThingType.JEUX_VIDEO",
-    "ThingType.CINEMA_CARD",
-    "ThingType.MUSIQUE_ABO",
-    "EventType.ACTIVATION",
-    "ThingType.JEUX_VIDEO_ABO",
-    "ThingType.SPECTACLE_VIVANT_ABO",
-    "ThingType.ACTIVATION",
-]
-
 TYPE_LIST = [
     "ABO_BIBLIOTHEQUE",
     "ABO_CONCERT",

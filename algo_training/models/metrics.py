@@ -8,63 +8,118 @@ from utils import ENV_SHORT_NAME
 NUMBER_OF_USERS = 5000 if ENV_SHORT_NAME == "prod" else 200
 
 TYPE_LIST = [
-    "ThingType.LIVRE_EDITION",
-    "ThingType.INSTRUMENT",
-    "EventType.PRATIQUE_ARTISTIQUE",
-    "ThingType.AUDIOVISUEL",
-    "ThingType.MUSIQUE",
-    "EventType.SPECTACLE_VIVANT",
-    "ThingType.PRATIQUE_ARTISTIQUE_ABO",
-    "EventType.CINEMA",
-    "EventType.MUSIQUE",
-    "EventType.CONFERENCE_DEBAT_DEDICACE",
-    "EventType.MUSEES_PATRIMOINE",
-    "ThingType.MUSEES_PATRIMOINE_ABO",
-    "ThingType.PRESSE_ABO",
-    "ThingType.OEUVRE_ART",
-    "ThingType.LIVRE_AUDIO",
-    "EventType.JEUX",
-    "ThingType.CINEMA_ABO",
-    "ThingType.JEUX_VIDEO",
-    "ThingType.CINEMA_CARD",
-    "ThingType.MUSIQUE_ABO",
-    "EventType.ACTIVATION",
-    "ThingType.JEUX_VIDEO_ABO",
-    "ThingType.SPECTACLE_VIVANT_ABO",
-    "ThingType.ACTIVATION",
+    "ABO_BIBLIOTHEQUE",
+    "ABO_CONCERT",
+    "ABO_JEU_VIDEO",
+    "ABO_LIVRE_NUMERIQUE",
+    "ABO_LUDOTHEQUE",
+    "ABO_MEDIATHEQUE",
+    "ABO_MUSEE",
+    "ABO_PLATEFORME_MUSIQUE",
+    "ABO_PLATEFORME_VIDEO",
+    "ABO_PRATIQUE_ART",
+    "ABO_PRESSE_EN_LIGNE",
+    "ABO_SPECTACLE",
+    "ACHAT_INSTRUMENT",
+    "ACTIVATION_EVENT",
+    "ACTIVATION_THING",
+    "APP_CULTURELLE",
+    "ATELIER_PRATIQUE_ART",
+    "AUTRE_SUPPORT_NUMERIQUE",
+    "BON_ACHAT_INSTRUMENT",
+    "CAPTATION_MUSIQUE",
+    "CARTE_CINE_ILLIMITE",
+    "CARTE_CINE_MULTISEANCES",
+    "CARTE_MUSEE",
+    "CINE_PLEIN_AIR",
+    "CINE_VENTE_DISTANCE",
+    "CONCERT",
+    "CONCOURS",
+    "CONFERENCE",
+    "DECOUVERTE_METIERS",
+    "ESCAPE_GAME",
+    "EVENEMENT_CINE",
+    "EVENEMENT_JEU",
+    "EVENEMENT_MUSIQUE",
+    "EVENEMENT_PATRIMOINE",
+    "FESTIVAL_CINE",
+    "FESTIVAL_LIVRE",
+    "FESTIVAL_MUSIQUE",
+    "FESTIVAL_SPECTACLE",
+    "JEU_EN_LIGNE",
+    "JEU_SUPPORT_PHYSIQUE",
+    "LIVESTREAM_EVENEMENT",
+    "LIVESTREAM_MUSIQUE",
+    "LIVRE_AUDIO_PHYSIQUE",
+    "LIVRE_NUMERIQUE",
+    "LIVRE_PAPIER",
+    "LOCATION_INSTRUMENT",
+    "MATERIEL_ART_CREATIF",
+    "MUSEE_VENTE_DISTANCE",
+    "OEUVRE_ART",
+    "PARTITION",
+    "PODCAST",
+    "RENCONTRE_JEU",
+    "RENCONTRE",
+    "SALON",
+    "SEANCE_CINE",
+    "SEANCE_ESSAI_PRATIQUE_ART",
+    "SPECTACLE_ENREGISTRE",
+    "SPECTACLE_REPRESENTATION",
+    "SUPPORT_PHYSIQUE_FILM",
+    "SUPPORT_PHYSIQUE_MUSIQUE",
+    "TELECHARGEMENT_LIVRE_AUDIO",
+    "TELECHARGEMENT_MUSIQUE",
+    "VISITE_GUIDEE",
+    "VISITE_VIRTUELLE",
+    "VISITE",
+    "VOD",
 ]
 
 
-def get_unexpectedness(booked_type_list, recommended_type_list):
-    booked_type_vector_list = [
-        [int(booked_type == offer_type) for offer_type in TYPE_LIST]
-        for booked_type in booked_type_list
+def get_unexpectedness(booked_subcategoryId_list, recommended_subcategoryId_list):
+    booked_subcategoryId_vector_list = [
+        [
+            int(booked_subcategoryId == offer_subcategoryId)
+            for offer_subcategoryId in TYPE_LIST
+        ]
+        for booked_subcategoryId in booked_subcategoryId_list
     ]
-    recommended_type_vector_list = [
-        [int(recommended_type == offer_type) for offer_type in TYPE_LIST]
-        for recommended_type in recommended_type_list
+    recommended_subcategoryId_vector_list = [
+        [
+            int(recommended_subcategoryId == offer_subcategoryId)
+            for offer_subcategoryId in TYPE_LIST
+        ]
+        for recommended_subcategoryId in recommended_subcategoryId_list
     ]
 
     cosine_sum = 0
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        for booked_type_vector in booked_type_vector_list:
-            for recommended_type_vector in recommended_type_vector_list:
-                cosine_sum += cosine(booked_type_vector, recommended_type_vector)
+        for booked_subcategoryId_vector in booked_subcategoryId_vector_list:
+            for (
+                recommended_subcategoryId_vector
+            ) in recommended_subcategoryId_vector_list:
+                cosine_sum += cosine(
+                    booked_subcategoryId_vector, recommended_subcategoryId_vector
+                )
 
-    return (1 / (len(booked_type_list) * len(recommended_type_list))) * cosine_sum
+    return (
+        1 / (len(booked_subcategoryId_list) * len(recommended_subcategoryId_list))
+    ) * cosine_sum
 
 
 def compute_metrics(k, positive_data_train, positive_data_test, match_model):
-    # Map all offers to corresponding types
-    offer_type_dict = {}
-    unique_offer_types = (
-        positive_data_train.groupby(["item_id", "type"]).first().reset_index()
+    # Map all offers to corresponding subcategoryIds
+    offer_subcategoryId_dict = {}
+    unique_offer_subcategoryIds = (
+        positive_data_train.groupby(["item_id", "subcategoryId"]).first().reset_index()
     )
-    for item_id, item_type in zip(
-        unique_offer_types.item_id.values, unique_offer_types.type.values
+    for item_id, item_subcategoryId in zip(
+        unique_offer_subcategoryIds.item_id.values,
+        unique_offer_subcategoryIds.subcategoryId.values,
     ):
-        offer_type_dict[item_id] = item_type
+        offer_subcategoryId_dict[item_id] = item_subcategoryId
 
     # Only keep user - item interactions in positive_data_test, which can be inferred from model
     cleaned_positive_data_test = positive_data_test.copy()
@@ -99,7 +154,7 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
     user_count = 0
     unexpectedness = []
     serendipity = []
-    new_types_ratio = []
+    new_subcategoryIds_ratio = []
 
     if len(all_test_user_ids) > NUMBER_OF_USERS:
         random_users_to_test = random.sample(all_test_user_ids, NUMBER_OF_USERS)
@@ -117,7 +172,7 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
         items_to_rank = np.setdiff1d(
             all_item_ids, positive_item_train["item_id"].values
         )
-        booked_offer_types = list(positive_item_train["type"].values)
+        booked_offer_subcategoryIds = list(positive_item_train["subcategoryId"].values)
 
         # Check if any item of items_to_rank is in the test positive feedback for this user
         expected = np.in1d(items_to_rank, positive_item_test["item_id"].values)
@@ -132,18 +187,23 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
             key=itemgetter(1),
             reverse=True,
         )[:k]
-        recommended_offer_types = [offer_type_dict[item[0]] for item in scored_items]
+        recommended_offer_subcategoryIds = [
+            offer_subcategoryId_dict[item[0]] for item in scored_items
+        ]
 
-        if booked_offer_types and recommended_offer_types:
+        if booked_offer_subcategoryIds and recommended_offer_subcategoryIds:
             user_unexpectedness = get_unexpectedness(
-                booked_offer_types, recommended_offer_types
+                booked_offer_subcategoryIds, recommended_offer_subcategoryIds
             )
             unexpectedness.append(user_unexpectedness)
-            new_types_ratio.append(
+            new_subcategoryIds_ratio.append(
                 np.mean(
                     [
-                        int(recommended_offer_type not in booked_offer_types)
-                        for recommended_offer_type in recommended_offer_types
+                        int(
+                            recommended_offer_subcategoryId
+                            not in booked_offer_subcategoryIds
+                        )
+                        for recommended_offer_subcategoryId in recommended_offer_subcategoryIds
                     ]
                 )
             )
@@ -160,7 +220,11 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
             recommended_hidden_items_number += len(recommended_hidden_items)
             prediction_number += 1
 
-            if hidden_items and booked_offer_types and recommended_offer_types:
+            if (
+                hidden_items
+                and booked_offer_subcategoryIds
+                and recommended_offer_subcategoryIds
+            ):
                 user_serendipity = (
                     (len(recommended_hidden_items) / len(hidden_items))
                     * user_unexpectedness
@@ -188,8 +252,8 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
                 f"unexpectedness_at_{k}": np.nanmean(unexpectedness)
                 if len(unexpectedness) > 0
                 else None,
-                f"new_types_ratio_at_{k}": np.mean(new_types_ratio)
-                if len(new_types_ratio) > 0
+                f"new_types_ratio_at_{k}": np.mean(new_subcategoryIds_ratio)
+                if len(new_subcategoryIds_ratio) > 0
                 else None,
                 f"serendipity_at_{k}": np.nanmean(serendipity)
                 if len(serendipity) > 0
@@ -213,8 +277,8 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
         f"unexpectedness_at_{k}": np.nanmean(unexpectedness)
         if len(unexpectedness) > 0
         else None,
-        f"new_types_ratio_at_{k}": np.mean(new_types_ratio)
-        if len(new_types_ratio) > 0
+        f"new_types_ratio_at_{k}": np.mean(new_subcategoryIds_ratio)
+        if len(new_subcategoryIds_ratio) > 0
         else None,
         f"serendipity_at_{k}": np.nanmean(serendipity)
         if len(serendipity) > 0

@@ -141,7 +141,6 @@ def test_get_final_recommendation_for_group_b(
 ):
     # Given
     mock_pool.return_value = setup_pool
-
     user_id = 112
     get_intermediate_recommendations_for_user_mock.return_value = [
         {

@@ -54,7 +54,7 @@ def _define_recommendation_booking_funnel(start_date, end_date):
             WHERE TIMESTAMP_DIFF(TIMESTAMP_MICROS(bk.event_timestamp), CAST(date as TIMESTAMP), SECOND) >= 0
         ),
         recommendation_booking_funnel AS (
-            SELECT event_name, event_timestamp, user_id, session_id, firebase_screen, module, booking_funnel.offer_id, next_event_name, groupid AS group_id, offer_subcategoryid,  pastreco.reco_origin,
+            SELECT event_name, event_timestamp, user_id, session_id, firebase_screen, module, booking_funnel.offer_id, next_event_name, "A" AS group_id, offer_subcategoryid,  pastreco.reco_origin,
             FROM booking_funnel
             LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.ab_testing_202104_v0_v0bis` ab_testing
             ON booking_funnel.user_id = ab_testing.userid
@@ -79,7 +79,7 @@ def _define_recommendation_booking_funnel(start_date, end_date):
 def _define_clicks(start_date, end_date):
     return f"""
         WITH clicks AS (
-            SELECT user_id, groupid as group_id, event_name, event_date, event_timestamp,  
+            SELECT user_id, "A" as group_id, event_name, event_date, event_timestamp,  
             MAX(CASE WHEN params.key = "moduleName" THEN params.value.string_value ELSE NULL END) AS module,
             MAX(CASE WHEN params.key = "firebase_screen" THEN params.value.string_value ELSE NULL END) AS firebase_screen,
             FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.{FIREBASE_EVENTS_TABLE}_*` events, events.event_params AS params
@@ -98,7 +98,7 @@ def _define_favorites(start_date, end_date):
             MAX(CASE WHEN params.key = "moduleName" THEN params.value.string_value ELSE NULL END) AS module,
             MAX(CASE WHEN params.key = "offerId" THEN CAST(params.value.double_value AS INT64) ELSE NULL END) AS offer_id,
             MAX(CASE WHEN params.key = "from" THEN params.value.string_value ELSE NULL END) AS origin,
-            groupid AS group_id,
+            "A" AS group_id,
             FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.{FIREBASE_EVENTS_TABLE}_*` events, 
             events.user_properties AS user_prop, events.event_params AS params
             LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.{TABLE_AB_TESTING}` ab_testing ON events.user_id = ab_testing.userid

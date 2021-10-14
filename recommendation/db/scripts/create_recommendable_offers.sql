@@ -117,6 +117,7 @@ BEGIN
       AND offerer."offerer_is_active" = TRUE
       AND offer."offer_validation" = 'APPROVED'
       AND offer."offer_subcategoryId" not in ('ACTIVATION_THING', 'ACTIVATION_EVENT');
+      AND offer."offer_product_id"    not in ('3469240')
 END;
 $body$
 LANGUAGE plpgsql;

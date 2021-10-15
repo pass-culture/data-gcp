@@ -129,63 +129,63 @@ def test_get_final_recommendation_for_group_a_algo(
 @patch("recommendation.get_cold_start_categories")
 @patch("recommendation.save_recommendation")
 @patch("utils.create_pool")
-# def test_get_final_recommendation_for_group_b(
-#    mock_pool: Mock,
-#   save_recommendation_mock: Mock,
-#    get_cold_start_categories: Mock,
-#    get_iris_from_coordinates_mock: Mock,
-#    get_scored_recommendation_for_user_mock: Mock,
-#    get_intermediate_recommendations_for_user_mock: Mock,
-#    setup_pool: Any,
-#    app_config: Dict[str, Any],
-# ):
-# Given
-#    mock_pool.return_value = setup_pool
-#    user_id = 112
-#    get_intermediate_recommendations_for_user_mock.return_value = [
-#        {
-#            "id": 2,
-#            "url": "url2",
-#            "category": "category2",
-#            "item_id": "offer-2",
-#            "product_id": "product-2",
-#        },
-#        {
-#            "id": 3,
-#            "url": "url3",
-#            "category": "category3",
-#            "item_id": "offer-3",
-#            "product_id": "product-3",
-#        },
-#    ]
-#    get_scored_recommendation_for_user_mock.return_value = [
-#        {
-#            "id": 2,
-#            "url": "url2",
-#            "category": "category2",
-#            "item_id": "offer-2",
-#            "product_id": "product-2",
-#            "score": 2,
-#        },
-#        {
-#            "id": 3,
-#            "url": "url3",
-#            "category": "category3",
-#            "item_id": "offer-3",
-#            "product_id": "product-3",
-#            "score": 3,
-#        },
-#    ]
-#    get_iris_from_coordinates_mock.return_value = 1
+def test_get_final_recommendation_for_group_b(
+    mock_pool: Mock,
+    save_recommendation_mock: Mock,
+    get_cold_start_categories: Mock,
+    get_iris_from_coordinates_mock: Mock,
+    get_scored_recommendation_for_user_mock: Mock,
+    get_intermediate_recommendations_for_user_mock: Mock,
+    setup_pool: Any,
+    app_config: Dict[str, Any],
+):
+    # Given
+    mock_pool.return_value = setup_pool
+    user_id = 112
+    get_intermediate_recommendations_for_user_mock.return_value = [
+        {
+            "id": 2,
+            "url": "url2",
+            "category": "category2",
+            "item_id": "offer-2",
+            "product_id": "product-2",
+        },
+        {
+            "id": 3,
+            "url": "url3",
+            "category": "category3",
+            "item_id": "offer-3",
+            "product_id": "product-3",
+        },
+    ]
+    get_scored_recommendation_for_user_mock.return_value = [
+        {
+            "id": 2,
+            "url": "url2",
+            "category": "category2",
+            "item_id": "offer-2",
+            "product_id": "product-2",
+            "score": 2,
+        },
+        {
+            "id": 3,
+            "url": "url3",
+            "category": "category3",
+            "item_id": "offer-3",
+            "product_id": "product-3",
+            "score": 3,
+        },
+    ]
+    get_iris_from_coordinates_mock.return_value = 1
 
-#    recommendations = get_final_recommendations(
-#        user_id, 2.331289, 48.830719, app_config
-#    )
+    recommendations = get_final_recommendations(
+        user_id, 2.331289, 48.830719, app_config
+    )
 
-# Then
-#    get_cold_start_categories.assert_not_called()
-#    save_recommendation_mock.assert_called()
-#    assert recommendations == [3, 2]
+    # Then
+    get_cold_start_categories.assert_not_called()
+    save_recommendation_mock.assert_called()
+    assert recommendations == [2, 3]
 
 
 @patch("recommendation.order_offers_by_score_and_diversify_categories")

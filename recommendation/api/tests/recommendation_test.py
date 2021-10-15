@@ -185,7 +185,7 @@ def test_get_final_recommendation_for_group_b(
     # Then
     get_cold_start_categories.assert_not_called()
     save_recommendation_mock.assert_called()
-    assert recommendations == [3, 2] or [2,3]
+    assert recommendations == [3, 2] or [2, 3]
 
 
 @patch("recommendation.order_offers_by_score_and_diversify_categories")

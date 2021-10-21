@@ -921,6 +921,7 @@ ENRICHED_BOOKING_DATA_INPUT = {
     "subcategories": [
         {
             "id": "ACHAT_INSTRUMENT",
+            "category_id": "INSTRUMENT",
             "is_physical_deposit": True,
             "is_digital_deposit": False,
             "is_event": False,
@@ -950,6 +951,7 @@ ENRICHED_BOOKING_DATA_EXPECTED = [
         "offer_name": "An Awesome Offer",
         "offer_type": "ThingType.INSTRUMENT",
         "offer_subcategoryId": "ACHAT_INSTRUMENT",
+        "offer_category_id": "INSTRUMENT",
         "offerer_id": "2",
         "offerer_name": "Offerer",
         "physical_goods": True,

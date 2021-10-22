@@ -11,28 +11,28 @@ from dependencies.Offer_name_tags import (
 )
 
 CaseCatAgg = """CASE
-                when offer.offer_type ='ThingType.AUDIOVISUEL' then 'Audiovisuel'
-                when offer.offer_type = 'ThingType.OEUVRE_ART' then 'Autre'
-                when offer.offer_type ='EventType.JEUX' then 'Autre'
-                when offer.offer_type ='EventType.CONFERENCE_DEBAT_DEDICACE' then 'Autre'
-                when offer.offer_type ='ThingType.CINEMA_CARD' then 'Cinéma'
-                when offer.offer_type ='EventType.CINEMA' then 'Cinéma'
-                when offer.offer_type = 'ThingType.CINEMA_ABO' then 'Cinéma'
-                when offer.offer_type = 'ThingType.INSTRUMENT' then 'Instrument'
-                when offer.offer_type = 'ThingType.JEUX_VIDEO' then 'Jeux vidéo'
-                when offer.offer_type = 'ThingType.JEUX_VIDEO_ABO' then 'Jeux vidéo'
-                when offer.offer_type ='ThingType.LIVRE_AUDIO' then 'Livre'
-                when offer.offer_type ='ThingType.LIVRE_EDITION' then 'Livre'
-                when offer.offer_type ='EventType.MUSEES_PATRIMOINE' then 'Musée-patrimoine'
-                when offer.offer_type ='ThingType.MUSEES_PATRIMOINE_ABO' then 'Musée-patrimoine'
-                when offer.offer_type ='ThingType.MUSIQUE' then 'Musique'
-                when offer.offer_type ='ThingType.MUSIQUE_ABO' then 'Musique'
-                when offer.offer_type ='EventType.MUSIQUE' then 'Musique'
-                when offer.offer_type ='ThingType.PRATIQUE_ARTISTIQUE_ABO' then 'Pratique-artistique'
-                when offer.offer_type ='EventType.PRATIQUE_ARTISTIQUE' then 'Pratique-artistique'
-                when offer.offer_type ='ThingType.PRESSE_ABO' then 'Presse'
-                when offer.offer_type ='EventType.SPECTACLE_VIVANT' then 'Spectacle-vivant'
-                when offer.offer_type ='ThingType.SPECTACLE_VIVANT_ABO' then 'Spectacle-vivant'
+                when offer.offer_subcategoryId ='ThingType.AUDIOVISUEL' then 'Audiovisuel'
+                when offer.offer_subcategoryId = 'ThingType.OEUVRE_ART' then 'Autre'
+                when offer.offer_subcategoryId ='EventType.JEUX' then 'Autre'
+                when offer.offer_subcategoryId ='EventType.CONFERENCE_DEBAT_DEDICACE' then 'Autre'
+                when offer.offer_subcategoryId ='ThingType.CINEMA_CARD' then 'Cinéma'
+                when offer.offer_subcategoryId ='EventType.CINEMA' then 'Cinéma'
+                when offer.offer_subcategoryId = 'ThingType.CINEMA_ABO' then 'Cinéma'
+                when offer.offer_subcategoryId = 'ThingType.INSTRUMENT' then 'Instrument'
+                when offer.offer_subcategoryId = 'ThingType.JEUX_VIDEO' then 'Jeux vidéo'
+                when offer.offer_subcategoryId = 'ThingType.JEUX_VIDEO_ABO' then 'Jeux vidéo'
+                when offer.offer_subcategoryId = 'ThingType.LIVRE_AUDIO' then 'Livre'
+                when offer.offer_subcategoryId = 'ThingType.LIVRE_EDITION' then 'Livre'
+                when offer.offer_subcategoryId = 'EventType.MUSEES_PATRIMOINE' then 'Musée-patrimoine'
+                when offer.offer_subcategoryId = 'ThingType.MUSEES_PATRIMOINE_ABO' then 'Musée-patrimoine'
+                when offer.offer_subcategoryId = 'ThingType.MUSIQUE' then 'Musique'
+                when offer.offer_subcategoryId = 'ThingType.MUSIQUE_ABO' then 'Musique'
+                when offer.offer_subcategoryId = 'EventType.MUSIQUE' then 'Musique'
+                when offer.offer_subcategoryId ='ThingType.PRATIQUE_ARTISTIQUE_ABO' then 'Pratique-artistique'
+                when offer.offer_subcategoryId ='EventType.PRATIQUE_ARTISTIQUE' then 'Pratique-artistique'
+                when offer.offer_subcategoryId ='ThingType.PRESSE_ABO' then 'Presse'
+                when offer.offer_subcategoryId ='EventType.SPECTACLE_VIVANT' then 'Spectacle-vivant'
+                when offer.offer_subcategoryId ='ThingType.SPECTACLE_VIVANT_ABO' then 'Spectacle-vivant'
                 else 'Autre'
             END as categorie_principale """
 
@@ -125,7 +125,7 @@ FILENAME_OFFER_NAME = f"{DATA_GCS_BUCKET_NAME}/offer_tags/tag_offer_name.csv"
 
 def get_offers_to_tag_request():
     return f"""WITH offers_CatAgg AS (
-            SELECT offer.offer_id as offer_id, offer.offer_name as offer_name, offer.offer_description as description, offer.offer_type,
+            SELECT offer.offer_id as offer_id, offer.offer_name as offer_name, offer.offer_description as description, offer.offer_subcategoryId as tagcategories,
             {CaseCatAgg}
             FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_offer` offer 
             )

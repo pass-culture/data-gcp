@@ -1,20 +1,37 @@
 FORM = {
     "ge0Egr2m8V1T": {
-        "pratique_artistique": "pris un cours de pratique artistique (danse, théâtre, musique, dessin...) 🎨",
-        "autre": "participé à une conférence, une rencontre ou une découverte de métiers de la Culture 🎤",
-        "musees_patrimoine": "allé à un musée, une visite ou une exposition  🏛",
-        "spectacle_vivant": "assisté à une pièce de théâtre, à un spectacle de cirque, de danse... 💃",
-        "musique": "allé à un concert ou un festival 🤘",
-        "cinema": "allé au cinéma 🎞",
+        "PRATIQUE_ART": "pris un cours de pratique artistique (danse, théâtre, musique, dessin...) 🎨",
+        "AUTRE": "participé à une conférence, une rencontre ou une découverte de métiers de la Culture 🎤",
+        "MUSEE": "allé à un musée, une visite ou une exposition  🏛",
+        "SPECTACLE": "assisté à une pièce de théâtre, à un spectacle de cirque, de danse... 💃",
+        "MUSIQUE_LIVE": "allé à un concert ou un festival 🤘",
+        "CINEMA": "allé au cinéma 🎞",
     },
     "NeyLJOqShoHw": {
-        "musique": "écouté de la musique ♫",
-        "instrument": "joué de ton instrument de musique 🎸",
-        "presse": "lu un article de presse 📰",
-        "audiovisuel": "regardé un film chez toi 🍿",
-        "jeux_videos": "joué à un jeu vidéo 🎮",
-        "livre": "lu un livre 📚",
+        "MUSIQUE_ENREGISTREE": "écouté de la musique ♫",
+        "INSTRUMENT": "joué de ton instrument de musique 🎸",
+        "MEDIA": "lu un article de presse 📰",
+        "FILM": "regardé un film chez toi 🍿",
+        "JEU": "joué à un jeu vidéo 🎮",
+        "LIVRE": "lu un livre 📚",
     },
+    "WiWTxBLGoou4": {
+        "SPECTACLE": "Théâtre 🎭",
+        "SPECTACLE": "Spectacle de danse 💃",
+        "SPECTACLE": "Spectacle d'humour, café théâtre 🎙️",
+        "SPECTACLE": "Spectacle de rue 🏢",
+        "SPECTACLE": "Comédie musicale, opéra 👨‍🎤",
+        "SPECTACLE": "Cirque 🤸",
+        "SPECTACLE": "Un autre type de spectacle",
+    },
+    "iX7doTby1OqL": {
+        "CINEMA": "Festival de cinéma 🎬",
+        "LIVRE": "Festival littéraire 📕",
+        "MUSIQUE_LIVE": "Festival de musique 🎵",
+        "PRATIQUE_ART": "Festival de danse, de cirque... 🕺",
+        "CINEMA": "Avant-première de film 🎦",
+    },
+    ##add new question IDs , with associate responces
 }
 
 
@@ -42,8 +59,7 @@ def enrich_answers(
     f'{new_line}'.join(
         [
             f"{create_condition(question_id, category)} > 0 as {category}"
-            for question_id in FORM for category in FORM[question_id] if category != "musique"
-        ] + [f"{create_condition('ge0Egr2m8V1T', 'musique')} + {create_condition('NeyLJOqShoHw', 'musique')} > 0 as musique"]
+            for question_id in FORM for category in FORM[question_id] ] 
     )
     }
         FROM  unrolled_answers

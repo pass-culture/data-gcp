@@ -10,21 +10,38 @@ from google.auth.exceptions import DefaultCredentialsError
 
 FORM = {
     "ge0Egr2m8V1T": {
-        "pratique_artistique": "pris un cours de pratique artistique (danse, théâtre, musique, dessin...) 🎨",
-        "autre": "participé à une conférence, une rencontre ou une découverte de métiers de la Culture 🎤",
-        "musees_patrimoine": "allé à un musée, une visite ou une exposition  🏛",
-        "spectacle_vivant": "assisté à une pièce de théâtre, à un spectacle de cirque, de danse... 💃",
-        "musique": "allé à un concert ou un festival 🤘",
-        "cinema": "allé au cinéma 🎞",
+        "PRATIQUE_ART": "pris un cours de pratique artistique (danse, théâtre, musique, dessin...) 🎨",
+        "AUTRE": "participé à une conférence, une rencontre ou une découverte de métiers de la Culture 🎤",
+        "MUSEE": "allé à un musée, une visite ou une exposition  🏛",
+        "SPECTACLE": "assisté à une pièce de théâtre, à un spectacle de cirque, de danse... 💃",
+        "MUSIQUE_LIVE": "allé à un concert ou un festival 🤘",
+        "CINEMA": "allé au cinéma 🎞",
     },
     "NeyLJOqShoHw": {
-        "musique": "écouté de la musique ♫",
-        "instrument": "joué de ton instrument de musique 🎸",
-        "presse": "lu un article de presse 📰",
-        "audiovisuel": "regardé un film chez toi 🍿",
-        "jeux_videos": "joué à un jeu vidéo 🎮",
-        "livre": "lu un livre 📚",
+        "MUSIQUE_ENREGISTREE": "écouté de la musique ♫",
+        "INSTRUMENT": "joué de ton instrument de musique 🎸",
+        "MEDIA": "lu un article de presse 📰",
+        "FILM": "regardé un film chez toi 🍿",
+        "JEU": "joué à un jeu vidéo 🎮",
+        "LIVRE": "lu un livre 📚",
     },
+    "WiWTxBLGoou4": {
+        "SPECTACLE": "Théâtre 🎭",
+        "SPECTACLE": "Spectacle de danse 💃",
+        "SPECTACLE": "Spectacle d'humour, café théâtre 🎙️",
+        "SPECTACLE": "Spectacle de rue 🏢",
+        "SPECTACLE": "Comédie musicale, opéra 👨‍🎤",
+        "SPECTACLE": "Cirque 🤸",
+        "SPECTACLE": "Un autre type de spectacle",
+    },
+    "iX7doTby1OqL": {
+        "CINEMA": "Festival de cinéma 🎬",
+        "LIVRE": "Festival littéraire 📕",
+        "MUSIQUE_LIVE": "Festival de musique 🎵",
+        "PRATIQUE_ART": "Festival de danse, de cirque... 🕺",
+        "CINEMA": "Avant-première de film 🎦",
+    },
+    ##add new question IDs , with associate responces
 }
 
 
@@ -42,9 +59,20 @@ project_name = os.environ["PROJECT_NAME"]
 environment = os.environ["ENV"]
 
 # Staging is receiving data from production and staging application (for test purpose)
-if environment == "stg":
-    FORM["n0H2TLS3lzC9"] = FORM["ge0Egr2m8V1T"]
-    FORM["zg4ydcgaiF6a"] = FORM["NeyLJOqShoHw"]
+if environment == "dev":
+    FORM["QiK2FlxvTWtK"] = FORM["ge0Egr2m8V1T"]
+    FORM["DIsOskUyDgbw"] = FORM["NeyLJOqShoHw"]
+    FORM["PuKW507niOgt"] = FORM["WiWTxBLGoou4"]
+    FORM["4J8N6fC1aGzh"] = FORM["iX7doTby1OqL"]
+
+    cloud_sql_names_environment = environment
+
+elif environment == "stg":
+    FORM["qVZoIyHvj5uu"] = FORM["ge0Egr2m8V1T"]
+    FORM["67hKXLLXKMvO"] = FORM["NeyLJOqShoHw"]
+    FORM["jwO0vLQzSN5N"] = FORM["WiWTxBLGoou4"]
+    FORM["79Zh7dyttVDS"] = FORM["iX7doTby1OqL"]
+
     # The staging cloudsql database connection name is using 'staging' instead of 'stg'
     cloud_sql_names_environment = "staging"
 else:
@@ -127,17 +155,20 @@ def run(request):
         "catch_up_user_id": "null",
     }
     for category in [
-        "cinema",
-        "audiovisuel",
-        "jeux_videos",
-        "livre",
-        "musees_patrimoine",
-        "musique",
-        "pratique_artistique",
-        "spectacle_vivant",
-        "instrument",
-        "presse",
-        "autre",
+        "BEAUX_ARTS",
+        "CINEMA",
+        "CONFERENCE_RENCONTRE",
+        "FILM",
+        "INSTRUMENT",
+        "JEU",
+        "LIVRE",
+        "MEDIA",
+        "MUSEE",
+        "MUSIQUE_ENREGISTREE",
+        "MUSIQUE_LIVE",
+        "PRATIQUE_ART",
+        "SPECTACLE",
+        "TECHNIQUE",
     ]:
         answer_values_dictionary[category] = (
             "true" if answer_dictionary.get(category, 0) > 0 else "false"

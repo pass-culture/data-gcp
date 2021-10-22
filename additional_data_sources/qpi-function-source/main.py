@@ -18,7 +18,12 @@ def access_secret(project_id, secret_id, version_id=1, default=None):
 
 project_name = os.environ["PROJECT_NAME"]
 TYPEFORM_API_KEY = access_secret(project_name, "typeform_api_key")
-NEW_PROD_FORM_ID = "HGBAFB"
+if os.environ["ENV"] == "prod":
+    FORM_ID = "HGBAFB"
+elif os.environ["ENV"] == "stg":
+    FORM_ID = "WCBwrmqL"
+else:
+    FORM_ID = "OAzQTppn"
 BUCKET_NAME = os.environ["BUCKET_NAME"]
 STORAGE_PATH = BUCKET_NAME + "/QPI_exports/"
 
@@ -44,7 +49,7 @@ def run(request):
 
     downloader = qpi_downloader.QPIDownloader(
         TYPEFORM_API_KEY,
-        NEW_PROD_FORM_ID,
+        FORM_ID,
         answers_file_name,
         questions_file_name,
         project_name,

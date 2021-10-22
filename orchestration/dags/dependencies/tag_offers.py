@@ -4,40 +4,15 @@ from dependencies.bigquery_client import BigQueryClient
 from dependencies.config import (
     GCP_PROJECT,
     BIGQUERY_CLEAN_DATASET,
+    BIGQUERY_ANALYTICS_DATASET,
     DATA_GCS_BUCKET_NAME,
 )
 from dependencies.Offer_name_tags import (
     extract_tags_offer_name,
 )
 
-CaseCatAgg = """CASE
-                when offer.offer_type ='ThingType.AUDIOVISUEL' then 'Audiovisuel'
-                when offer.offer_type = 'ThingType.OEUVRE_ART' then 'Autre'
-                when offer.offer_type ='EventType.JEUX' then 'Autre'
-                when offer.offer_type ='EventType.CONFERENCE_DEBAT_DEDICACE' then 'Autre'
-                when offer.offer_type ='ThingType.CINEMA_CARD' then 'Cinéma'
-                when offer.offer_type ='EventType.CINEMA' then 'Cinéma'
-                when offer.offer_type = 'ThingType.CINEMA_ABO' then 'Cinéma'
-                when offer.offer_type = 'ThingType.INSTRUMENT' then 'Instrument'
-                when offer.offer_type = 'ThingType.JEUX_VIDEO' then 'Jeux vidéo'
-                when offer.offer_type = 'ThingType.JEUX_VIDEO_ABO' then 'Jeux vidéo'
-                when offer.offer_type ='ThingType.LIVRE_AUDIO' then 'Livre'
-                when offer.offer_type ='ThingType.LIVRE_EDITION' then 'Livre'
-                when offer.offer_type ='EventType.MUSEES_PATRIMOINE' then 'Musée-patrimoine'
-                when offer.offer_type ='ThingType.MUSEES_PATRIMOINE_ABO' then 'Musée-patrimoine'
-                when offer.offer_type ='ThingType.MUSIQUE' then 'Musique'
-                when offer.offer_type ='ThingType.MUSIQUE_ABO' then 'Musique'
-                when offer.offer_type ='EventType.MUSIQUE' then 'Musique'
-                when offer.offer_type ='ThingType.PRATIQUE_ARTISTIQUE_ABO' then 'Pratique-artistique'
-                when offer.offer_type ='EventType.PRATIQUE_ARTISTIQUE' then 'Pratique-artistique'
-                when offer.offer_type ='ThingType.PRESSE_ABO' then 'Presse'
-                when offer.offer_type ='EventType.SPECTACLE_VIVANT' then 'Spectacle-vivant'
-                when offer.offer_type ='ThingType.SPECTACLE_VIVANT_ABO' then 'Spectacle-vivant'
-                else 'Autre'
-            END as categorie_principale """
-
 TagDict = {
-    "Instrument": [
+    "INSTRUMENT": [
         "guitare",
         "manche",
         "touche",
@@ -59,7 +34,7 @@ TagDict = {
         "casque",
         "ukulélé",
     ],
-    "Musée-patrimoine": [
+    "MUSEE": [
         "exposition",
         "musée",
         "visite",
@@ -71,7 +46,7 @@ TagDict = {
         "château",
         "patrimoine",
     ],
-    "Spectacle-vivant": [
+    "SPECTACLE": [
         "spectacle",
         "histoire",
         "théâtre",
@@ -88,7 +63,7 @@ TagDict = {
         "rire",
         "famille",
     ],
-    "Musique": [
+    "MUSIQUE_ENREGISTREE": [
         "album",
         "musique",
         "vinyle",
@@ -102,7 +77,7 @@ TagDict = {
         "nouveau",
         "jazz",
     ],
-    "Pratique-artistique": [
+    "PRATIQUE_ART": [
         "cours",
         "danse",
         "atelier",
@@ -125,9 +100,14 @@ FILENAME_OFFER_NAME = f"{DATA_GCS_BUCKET_NAME}/offer_tags/tag_offer_name.csv"
 
 def get_offers_to_tag_request():
     return f"""WITH offers_CatAgg AS (
-            SELECT offer.offer_id as offer_id, offer.offer_name as offer_name, offer.offer_description as description, offer.offer_type,
-            {CaseCatAgg}
-            FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_offer` offer 
+            SELECT
+                offer.offer_id as offer_id,
+                offer.offer_name as offer_name,
+                offer.offer_description as description,
+                offer.offer_subcategoryId as offer_subcategoryId,
+                subcategories.category_id as categorie_principale
+            FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_offer` offer
+            JOIN `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.subcategories` subcategories ON offer.offer_subcategoryId = subcategories.id
             )
             SELECT offer_id, offer_name, categorie_principale, description FROM offers_CatAgg
             WHERE description <> 'none'

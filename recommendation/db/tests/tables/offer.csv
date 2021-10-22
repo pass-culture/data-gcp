@@ -1,2 +1,2 @@
-offer_id,offer_product_id,venue_id,offer_is_active,offer_type,offer_subcategoryId,offer_name,offer_url,offer_is_national,offer_validation
-138717,1515827,1814,t,EventType.JEUX,EVENEMENT_JEU,Autantenemportemongilet,,f,APPROVED
+offer_id,offer_product_id,venue_id,offer_is_active,offer_subcategoryId,offer_name,offer_url,offer_is_national,offer_validation
+138717,1515827,1814,t,EVENEMENT_JEU,Autantenemportemongilet,,f,APPROVED

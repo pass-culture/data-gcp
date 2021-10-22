@@ -9,10 +9,10 @@ def define_offer_booking_information_view_query(dataset, table_prefix=""):
         CREATE TEMP TABLE offer_booking_information_view AS
             SELECT
                 offer.offer_id,
-                SUM(booking.booking_quantity) AS count_booking,
-                SUM(CASE WHEN booking.booking_is_cancelled THEN booking.booking_quantity ELSE NULL END)
+                COUNT(DISTINCT booking.booking_id) AS count_booking,
+                COUNT(DISTINCT CASE WHEN booking.booking_is_cancelled THEN booking.booking_id ELSE NULL END)
                     AS count_booking_cancelled,
-                SUM(CASE WHEN booking.booking_is_used THEN booking.booking_quantity ELSE NULL END)
+                COUNT(DISTINCT CASE WHEN booking.booking_is_used THEN booking.booking_id ELSE NULL END)
                 AS count_booking_confirm
             FROM {dataset}.{table_prefix}offer AS offer
             LEFT JOIN {dataset}.{table_prefix}stock AS stock ON stock.offer_id = offer.offer_id
@@ -71,7 +71,6 @@ def define_enriched_offer_data_query(analytics_dataset, clean_dataset, table_pre
                 venue.venue_department_code,
                 offer.offer_id,
                 offer.offer_name,
-                offer.offer_type,
                 offer.offer_subcategoryId,
                 offer.offer_creation_date,
                 offer.offer_is_duo,

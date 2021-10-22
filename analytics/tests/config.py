@@ -39,7 +39,6 @@ BIGQUERY_SCHEMAS = {
         "offer_last_provider_id": "STRING",
         "booking_email": "STRING",
         "offer_is_active": "BOOLEAN",
-        "offer_type": "STRING",
         "offer_subcategoryId": "STRING",
         "offer_name": "STRING",
         "offer_description": "STRING",
@@ -58,7 +57,6 @@ BIGQUERY_SCHEMAS = {
     },
     "offer_extracted_data": {
         "offer_id": "STRING",
-        "offer_type": "STRING",
         "author": "STRING",
         "performer": "STRING",
         "musicType": "STRING",

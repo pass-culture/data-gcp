@@ -13,7 +13,6 @@ offer,offer_id,character varying
 offer,offer_product_id,character varying
 offer,venue_id,character varying
 offer,offer_is_active,boolean
-offer,offer_type,character varying
 offer,offer_subcategoryId,character varying
 offer,offer_name,character varying
 offer,offer_url,character varying

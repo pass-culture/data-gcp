@@ -28,7 +28,6 @@ offer,offer_id,character varying,applicative_database_offer,clean
 offer,offer_product_id,character varying,applicative_database_offer,clean
 offer,venue_id,character varying,applicative_database_offer,clean
 offer,offer_is_active,boolean,applicative_database_offer,clean
-offer,offer_type,character varying,applicative_database_offer,clean
 offer,offer_subcategoryId,character varying,applicative_database_offer,clean
 offer,offer_name,character varying,applicative_database_offer,clean
 offer,offer_url,character varying,applicative_database_offer,clean

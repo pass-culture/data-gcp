@@ -4,81 +4,12 @@ from dependencies.bigquery_client import BigQueryClient
 from dependencies.config import (
     GCP_PROJECT,
     BIGQUERY_CLEAN_DATASET,
+    BIGQUERY_ANALYTICS_DATASET,
     DATA_GCS_BUCKET_NAME,
 )
 from dependencies.Offer_name_tags import (
     extract_tags_offer_name,
 )
-
-CaseCatAgg = """CASE
-                when offer.offer_subcategoryId = 'SUPPORT_PHYSIQUE_FILM' then 'FILM' 
-                when offer.offer_subcategoryId = 'ABO_MEDIATHEQUE' then 'FILM' 
-                when offer.offer_subcategoryId = 'VOD' then 'FILM' 
-                when offer.offer_subcategoryId = 'ABO_PLATEFORME_VIDEO' then 'FILM' 
-                when offer.offer_subcategoryId = 'AUTRE_SUPPORT_NUMERIQUE' then 'FILM' 
-                when offer.offer_subcategoryId = 'CARTE_CINE_MULTISEANCES' then 'CINEMA' 
-                when offer.offer_subcategoryId = 'CARTE_CINE_ILLIMITE' then 'CINEMA' 
-                when offer.offer_subcategoryId = 'SEANCE_CINE' then 'CINEMA' 
-                when offer.offer_subcategoryId = 'EVENEMENT_CINE' then 'CINEMA' 
-                when offer.offer_subcategoryId = 'FESTIVAL_CINE' then 'CINEMA' 
-                when offer.offer_subcategoryId = 'CINE_VENTE_DISTANCE' then 'CINEMA' 
-                when offer.offer_subcategoryId = 'CINE_PLEIN_AIR' then 'CINEMA' 
-                when offer.offer_subcategoryId = 'CONFERENCE' then 'CONFERENCE_RENCONTRE' 
-                when offer.offer_subcategoryId = 'RENCONTRE' then 'CONFERENCE_RENCONTRE' 
-                when offer.offer_subcategoryId = 'DECOUVERTE_METIERS' then 'CONFERENCE_RENCONTRE' 
-                when offer.offer_subcategoryId = 'SALON' then 'CONFERENCE_RENCONTRE' 
-                when offer.offer_subcategoryId = 'CONCOURS' then 'JEU' 
-                when offer.offer_subcategoryId = 'RENCONTRE_JEU' then 'JEU' 
-                when offer.offer_subcategoryId = 'ESCAPE_GAME' then 'JEU' 
-                when offer.offer_subcategoryId = 'EVENEMENT_JEU' then 'JEU' 
-                when offer.offer_subcategoryId = 'JEU_EN_LIGNE' then 'JEU' 
-                when offer.offer_subcategoryId = 'ABO_JEU_VIDEO' then 'JEU' 
-                when offer.offer_subcategoryId = 'ABO_LUDOTHEQUE' then 'JEU' 
-                when offer.offer_subcategoryId = 'LIVRE_PAPIER' then 'LIVRE' 
-                when offer.offer_subcategoryId = 'LIVRE_NUMERIQUE' then 'LIVRE' 
-                when offer.offer_subcategoryId = 'TELECHARGEMENT_LIVRE_AUDIO' then 'LIVRE' 
-                when offer.offer_subcategoryId = 'LIVRE_AUDIO_PHYSIQUE' then 'LIVRE' 
-                when offer.offer_subcategoryId = 'ABO_BIBLIOTHEQUE' then 'LIVRE' 
-                when offer.offer_subcategoryId = 'ABO_LIVRE_NUMERIQUE' then 'LIVRE' 
-                when offer.offer_subcategoryId = 'FESTIVAL_LIVRE' then 'LIVRE' 
-                when offer.offer_subcategoryId = 'CARTE_MUSEE' then 'MUSEE' 
-                when offer.offer_subcategoryId = 'ABO_MUSEE' then 'MUSEE' 
-                when offer.offer_subcategoryId = 'VISITE' then 'MUSEE' 
-                when offer.offer_subcategoryId = 'VISITE_GUIDEE' then 'MUSEE' 
-                when offer.offer_subcategoryId = 'EVENEMENT_PATRIMOINE' then 'MUSEE' 
-                when offer.offer_subcategoryId = 'VISITE_VIRTUELLE' then 'MUSEE' 
-                when offer.offer_subcategoryId = 'MUSEE_VENTE_DISTANCE' then 'MUSEE' 
-                when offer.offer_subcategoryId = 'CONCERT' then 'MUSIQUE_LIVE' 
-                when offer.offer_subcategoryId = 'EVENEMENT_MUSIQUE' then 'MUSIQUE_LIVE' 
-                when offer.offer_subcategoryId = 'LIVESTREAM_MUSIQUE' then 'MUSIQUE_LIVE' 
-                when offer.offer_subcategoryId = 'ABO_CONCERT' then 'MUSIQUE_LIVE' 
-                when offer.offer_subcategoryId = 'FESTIVAL_MUSIQUE' then 'MUSIQUE_LIVE' 
-                when offer.offer_subcategoryId = 'SUPPORT_PHYSIQUE_MUSIQUE' then 'MUSIQUE_ENREGISTREE' 
-                when offer.offer_subcategoryId = 'TELECHARGEMENT_MUSIQUE' then 'MUSIQUE_ENREGISTREE' 
-                when offer.offer_subcategoryId = 'ABO_PLATEFORME_MUSIQUE' then 'MUSIQUE_ENREGISTREE' 
-                when offer.offer_subcategoryId = 'CAPTATION_MUSIQUE' then 'MUSIQUE_ENREGISTREE' 
-                when offer.offer_subcategoryId = 'SEANCE_ESSAI_PRATIQUE_ART' then 'PRATIQUE_ART' 
-                when offer.offer_subcategoryId = 'ATELIER_PRATIQUE_ART' then 'PRATIQUE_ART' 
-                when offer.offer_subcategoryId = 'ABO_PRATIQUE_ART' then 'PRATIQUE_ART' 
-                when offer.offer_subcategoryId = 'ABO_PRESSE_EN_LIGNE' then 'MEDIA' 
-                when offer.offer_subcategoryId = 'PODCAST' then 'MEDIA' 
-                when offer.offer_subcategoryId = 'APP_CULTURELLE' then 'MEDIA' 
-                when offer.offer_subcategoryId = 'SPECTACLE_REPRESENTATION' then 'SPECTACLE' 
-                when offer.offer_subcategoryId = 'SPECTACLE_ENREGISTRE' then 'SPECTACLE' 
-                when offer.offer_subcategoryId = 'LIVESTREAM_EVENEMENT' then 'SPECTACLE' 
-                when offer.offer_subcategoryId = 'FESTIVAL_SPECTACLE' then 'SPECTACLE' 
-                when offer.offer_subcategoryId = 'ABO_SPECTACLE' then 'SPECTACLE' 
-                when offer.offer_subcategoryId = 'ACHAT_INSTRUMENT' then 'INSTRUMENT' 
-                when offer.offer_subcategoryId = 'BON_ACHAT_INSTRUMENT' then 'INSTRUMENT' 
-                when offer.offer_subcategoryId = 'LOCATION_INSTRUMENT' then 'INSTRUMENT' 
-                when offer.offer_subcategoryId = 'PARTITION' then 'INSTRUMENT' 
-                when offer.offer_subcategoryId = 'MATERIEL_ART_CREATIF' then 'BEAUX_ARTS' 
-                when offer.offer_subcategoryId = 'ACTIVATION_EVENT' then 'TECHNIQUE' 
-                when offer.offer_subcategoryId = 'ACTIVATION_THING' then 'TECHNIQUE' 
-                when offer.offer_subcategoryId = 'JEU_SUPPORT_PHYSIQUE' then 'TECHNIQUE' 
-                when offer.offer_subcategoryId = 'OEUVRE_ART' then 'TECHNIQUE' 
-                else 'Autre'
-            END as categorie_principale """
 
 TagDict = {
     "INSTRUMENT": [
@@ -169,9 +100,14 @@ FILENAME_OFFER_NAME = f"{DATA_GCS_BUCKET_NAME}/offer_tags/tag_offer_name.csv"
 
 def get_offers_to_tag_request():
     return f"""WITH offers_CatAgg AS (
-            SELECT offer.offer_id as offer_id, offer.offer_name as offer_name, offer.offer_description as description, offer.offer_subcategoryId,
-            {CaseCatAgg}
-            FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_offer` offer 
+            SELECT
+                offer.offer_id as offer_id,
+                offer.offer_name as offer_name,
+                offer.offer_description as description,
+                offer.offer_subcategoryId as offer_subcategoryId,
+                subcategories.category_id as categorie_principale
+            FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_offer` offer
+            JOIN `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.subcategories` subcategories ON offer.offer_subcategoryId = subcategories.id
             )
             SELECT offer_id, offer_name, categorie_principale, description FROM offers_CatAgg
             WHERE description <> 'none'

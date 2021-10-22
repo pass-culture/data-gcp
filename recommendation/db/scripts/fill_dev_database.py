@@ -46,7 +46,6 @@ offer = pd.DataFrame(
         "offer_last_provider_id": [None] * 20,
         "booking_email": ["test@email.com"] * 20,
         "offer_is_active": [True] * 20,
-        "offer_type": ["EventType.JEUX"] * 20,
         "offer_name": ["test"] * 20,
         "offer_description": ["test"] * 20,
         "offer_conditions": [None] * 20,
@@ -64,7 +63,6 @@ offer = pd.DataFrame(
 offer_dtype = {
     "offer_id": sqlalchemy.types.VARCHAR(length=255),
     "offer_product_id": sqlalchemy.types.VARCHAR(length=255),
-    "offer_type": sqlalchemy.types.VARCHAR(length=255),
     "offer_name": sqlalchemy.types.VARCHAR(length=255),
     "offer_url": sqlalchemy.types.VARCHAR(length=255),
     "venue_id": sqlalchemy.types.VARCHAR(length=255),

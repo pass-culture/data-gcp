@@ -169,7 +169,7 @@ FILENAME_OFFER_NAME = f"{DATA_GCS_BUCKET_NAME}/offer_tags/tag_offer_name.csv"
 
 def get_offers_to_tag_request():
     return f"""WITH offers_CatAgg AS (
-            SELECT offer.offer_id as offer_id, offer.offer_name as offer_name, offer.offer_description as description, offer.offer_subcategoryId as offer_subcategoryId,
+            SELECT offer.offer_id as offer_id, offer.offer_name as offer_name, offer.offer_description as description, offer.offer_subcategoryId,
             {CaseCatAgg}
             FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_offer` offer 
             )

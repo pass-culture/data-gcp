@@ -88,7 +88,7 @@ def define_import_query(
             CAST("id" AS varchar(255)) as offer_id, "dateCreated" as offer_creation_date,
             CAST("productId" AS varchar(255)) as offer_product_id, CAST("venueId" AS varchar(255)) as venue_id,
             CAST("lastProviderId" AS varchar(255)) as offer_last_provider_id, "bookingEmail" as booking_email,
-            "isActive" as offer_is_active, "type" as offer_type, "name" as offer_name,
+            "isActive" as offer_is_active, "name" as offer_name,
             "description" as offer_description, "conditions" as offer_conditions, "ageMin" as offer_age_min,
             "ageMax" as offer_age_max, "url" as offer_url, "mediaUrls" as offer_media_urls,
             "durationMinutes" as offer_duration_minutes, "isNational" as offer_is_national,

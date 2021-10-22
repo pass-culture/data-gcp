@@ -86,7 +86,6 @@ def create_materialized_enriched_booking_view(dataset, table_prefix=""):
                 stock.stock_beginning_date,
                 stock.stock_id,
                 offer.offer_id,
-                offer.offer_type,
                 offer.offer_subcategoryId,
                 subcategories.category_id AS offer_category_id,
                 offer.offer_name,

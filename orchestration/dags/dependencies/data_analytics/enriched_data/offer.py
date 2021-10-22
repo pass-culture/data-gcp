@@ -71,7 +71,6 @@ def define_enriched_offer_data_query(analytics_dataset, clean_dataset, table_pre
                 venue.venue_department_code,
                 offer.offer_id,
                 offer.offer_name,
-                offer.offer_type,
                 offer.offer_subcategoryId,
                 offer.offer_creation_date,
                 offer.offer_is_duo,

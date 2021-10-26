@@ -10,43 +10,43 @@ from google.auth.exceptions import DefaultCredentialsError
 
 FORM = {
     "NeyLJOqShoHw": {
-        "CINEMA": "regardé un film chez toi 🍿",
-        "MUSIQUE": "écouté de la musique ♫",
-        "MEDIA": "écouté un podcast 🎧",
-        "LIVRE": "lu un livre 📚",
-        "MEDIA": "lu un article de presse en ligne 📰",
-        "JEU": "joué à un jeu vidéo 🎮",
-        "INSTRUMENT": "joué d'un instrument de musique 🎸",
-        "PRATIQUE_ART": "utilisé du matériel art pour peindre, dessiner... 🎨",
-        "AUTRES": "Aucune de ces activités culturelles",
+        "Q0": "regardé un film chez toi 🍿",
+        "Q1": "écouté de la musique ♫",
+        "Q2": "écouté un podcast 🎧",
+        "Q3": "lu un livre 📚",
+        "Q4": "lu un article de presse en ligne 📰",
+        "Q5": "joué à un jeu vidéo 🎮",
+        "Q6": "joué d'un instrument de musique 🎸",
+        "Q7": "utilisé du matériel art pour peindre, dessiner... 🎨",
+        "Q8": "Aucune de ces activités culturelles",
     },
     "ge0Egr2m8V1T": {
-        "CINEMA": "allé au cinéma 🎞",
-        "MUSIQUE": "allé à un concert 🤘",
-        "LIVRE": "allé à la bibliothèque, à la médiathèque 📚",
-        "MUSEE": "visité un musée, un monument ou une exposition 🏛",
-        "SPECTACLE": "assisté à une pièce de théâtre, à un spectacle de cirque, de danse... 💃",
-        "SPECTACLE": "participé à un festival, à une avant-première 🎷",
-        "JEU": "participé à un escape game, à un jeu concours 🎲",
-        "CONFERENCE_RENCONTRE": "participé à une conférence, une rencontre ou une découverte de métiers de la Culture 🎤",
-        "PRATIQUE_ART": "pris un cours de danse, de théâtre, de musique, de dessin... 🎨",
-        "AUTRES": "Aucune de ces sorties culturelles",
+        "Q9": "allé au cinéma 🎞",
+        "Q10": "allé à un concert 🤘",
+        "Q11": "allé à la bibliothèque, à la médiathèque 📚",
+        "Q12": "visité un musée, un monument ou une exposition 🏛",
+        "Q13": "assisté à une pièce de théâtre, à un spectacle de cirque, de danse... 💃",
+        "Q14": "participé à un festival, à une avant-première 🎷",
+        "Q15": "participé à un escape game, à un jeu concours 🎲",
+        "Q16": "participé à une conférence, une rencontre ou une découverte de métiers de la Culture 🎤",
+        "Q17": "pris un cours de danse, de théâtre, de musique, de dessin... 🎨",
+        "Q18": "Aucune de ces sorties culturelles",
     },
     "WiWTxBLGoou4": {
-        "SPECTACLE": "Théâtre 🎭",
-        "SPECTACLE": "Spectacle de danse 💃",
-        "SPECTACLE": "Spectacle d'humour, café théâtre 🎙️",
-        "SPECTACLE": "Spectacle de rue 🏢",
-        "SPECTACLE": "Comédie musicale, opéra 👨‍🎤",
-        "SPECTACLE": "Cirque 🤸",
-        "SPECTACLE": "Un autre type de spectacle",
+        "Q19": "Théâtre 🎭",
+        "Q20": "Spectacle de danse 💃",
+        "Q21": "Spectacle d'humour, café théâtre 🎙️",
+        "Q22": "Spectacle de rue 🏢",
+        "Q23": "Comédie musicale, opéra 👨‍🎤",
+        "Q24": "Cirque 🤸",
+        "Q25": "Un autre type de spectacle",
     },
     "iX7doTby1OqL": {
-        "CINEMA": "Festival de cinéma 🎬",
-        "LIVRE": "Festival littéraire 📕",
-        "MUSIQUE": "Festival de musique 🎵",
-        "PRATIQUE_ART": "Festival de danse, de cirque... 🕺",
-        "CINEMA": "Avant-première de film 🎦",
+        "Q26": "Festival de cinéma 🎬",
+        "Q27": "Festival littéraire 📕",
+        "Q28": "Festival de musique 🎵",
+        "Q29": "Festival de danse, de cirque... 🕺",
+        "Q30": "Avant-première de film 🎦",
     },
     ##add new question IDs , with associate responces
 }
@@ -71,10 +71,6 @@ if environment == "dev":
     FORM["DIsOskUyDgbw"] = FORM["NeyLJOqShoHw"]
     FORM["PuKW507niOgt"] = FORM["WiWTxBLGoou4"]
     FORM["4J8N6fC1aGzh"] = FORM["iX7doTby1OqL"]
-    FORM.pop("ge0Egr2m8V1T")
-    FORM.pop("NeyLJOqShoHw")
-    FORM.pop("WiWTxBLGoou4")
-    FORM.pop("iX7doTby1OqL")
     cloud_sql_names_environment = environment
 
 elif environment == "stg":
@@ -82,10 +78,6 @@ elif environment == "stg":
     FORM["67hKXLLXKMvO"] = FORM["NeyLJOqShoHw"]
     FORM["jwO0vLQzSN5N"] = FORM["WiWTxBLGoou4"]
     FORM["79Zh7dyttVDS"] = FORM["iX7doTby1OqL"]
-    FORM.pop("ge0Egr2m8V1T")
-    FORM.pop("NeyLJOqShoHw")
-    FORM.pop("WiWTxBLGoou4")
-    FORM.pop("iX7doTby1OqL")
     # The staging cloudsql database connection name is using 'staging' instead of 'stg'
     cloud_sql_names_environment = "staging"
 else:
@@ -154,36 +146,24 @@ def run(request):
     answers = request_json["form_response"]["answers"]
     for answer in answers:
         question_id = answer["field"]["id"]
-        for category in FORM[question_id]:
-            if category not in answer_dictionary:
-                answer_dictionary[category] = 0
+        for question_nb in FORM[question_id]:
+            if question_nb not in answer_dictionary:
+                answer_dictionary[question_nb] = 0
             if "choices" in answer:
                 if "labels" in answer["choices"]:
-                    answer_dictionary[category] += int(
-                        FORM[question_id][category] in answer["choices"]["labels"]
+                    answer_dictionary[question_nb] += int(
+                        FORM[question_id][question_nb] in answer["choices"]["labels"]
                     )
 
     answer_values_dictionary = {
         "user_id": answer_dictionary["user_id"],
         "catch_up_user_id": "null",
     }
-    for category in [
-        "BEAUX_ARTS",
-        "CINEMA",
-        "CONFERENCE_RENCONTRE",
-        "FILM",
-        "INSTRUMENT",
-        "JEU",
-        "LIVRE",
-        "MEDIA",
-        "MUSEE",
-        "MUSIQUE",
-        "PRATIQUE_ART",
-        "SPECTACLE",
-        "TECHNIQUE",
-    ]:
-        answer_values_dictionary[category] = (
-            "true" if answer_dictionary.get(category, 0) > 0 else "false"
+    NbOfQPIquestions = 31
+    qpi_questions = [f"Q{i}" for i in range(NbOfQPIquestions)]
+    for qpi_question in qpi_questions:
+        answer_values_dictionary[qpi_question] = (
+            "true" if answer_dictionary.get(qpi_question, 0) > 0 else "false"
         )
 
     # Ingest Data

@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
@@ -30,7 +30,7 @@ from dependencies.data_analytics.enriched_data.enriched_qpi_answers_v2 import (
 )
 
 TYPEFORM_FUNCTION_NAME = "qpi_import_" + ENV_SHORT_NAME
-QPI_ANSWERS_TABLE = "qpi_answers_v2"
+QPI_ANSWERS_TABLE = "qpi_answers_v3"
 
 default_args = {
     "start_date": datetime(2021, 3, 10),
@@ -89,11 +89,7 @@ with DAG(
         method="POST",
         http_conn_id="http_gcp_cloud_function",
         endpoint=TYPEFORM_FUNCTION_NAME,
-        data=json.dumps(
-            {
-                "after": "{{task_instance.xcom_pull(task_ids='getting_last_token', key='return_value')}}"
-            }
-        ),
+        data=json.dumps({"after": None}),
         headers={
             "Content-Type": "application/json",
             "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_service_account_token', key='return_value')}}",
@@ -101,12 +97,13 @@ with DAG(
         log_response=True,
     )
 
+    today = date.today().strftime("%Y%m%d")
     # the tomorrow_ds_nodash enables catchup :
     # it fetches the file corresponding to the initial execution date of the dag and not the day the task is run.
     import_answers_to_bigquery = GoogleCloudStorageToBigQueryOperator(
         task_id="import_answers_to_bigquery",
         bucket=DATA_GCS_BUCKET_NAME,
-        source_objects=["QPI_exports/qpi_answers_{{ tomorrow_ds_nodash }}.jsonl"],
+        source_objects=[f"QPI_exports/qpi_answers_{today}.jsonl"],
         destination_project_dataset_table=f"{BIGQUERY_RAW_DATASET}.temp_{QPI_ANSWERS_TABLE}",
         write_disposition="WRITE_TRUNCATE",
         source_format="NEWLINE_DELIMITED_JSON",
@@ -154,7 +151,7 @@ with DAG(
             bigquery_clean_dataset=BIGQUERY_CLEAN_DATASET,
         ),
         use_legacy_sql=False,
-        destination_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_ANALYTICS_DATASET}.enriched_qpi_answers_v2",
+        destination_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_ANALYTICS_DATASET}.enriched_{QPI_ANSWERS_TABLE}",
         write_disposition="WRITE_TRUNCATE",
     )
 

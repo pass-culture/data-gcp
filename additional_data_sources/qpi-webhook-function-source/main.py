@@ -9,21 +9,28 @@ from google.cloud import secretmanager
 from google.auth.exceptions import DefaultCredentialsError
 
 FORM = {
-    "ge0Egr2m8V1T": {
-        "PRATIQUE_ART": "pris un cours de pratique artistique (danse, théâtre, musique, dessin...) 🎨",
-        "AUTRE": "participé à une conférence, une rencontre ou une découverte de métiers de la Culture 🎤",
-        "MUSEE": "allé à un musée, une visite ou une exposition  🏛",
-        "SPECTACLE": "assisté à une pièce de théâtre, à un spectacle de cirque, de danse... 💃",
-        "MUSIQUE_LIVE": "allé à un concert ou un festival 🤘",
-        "CINEMA": "allé au cinéma 🎞",
-    },
     "NeyLJOqShoHw": {
-        "MUSIQUE_ENREGISTREE": "écouté de la musique ♫",
-        "INSTRUMENT": "joué de ton instrument de musique 🎸",
-        "MEDIA": "lu un article de presse 📰",
-        "FILM": "regardé un film chez toi 🍿",
-        "JEU": "joué à un jeu vidéo 🎮",
+        "CINEMA": "regardé un film chez toi 🍿",
+        "MUSIQUE": "écouté de la musique ♫",
+        "MEDIA": "écouté un podcast 🎧",
         "LIVRE": "lu un livre 📚",
+        "MEDIA": "lu un article de presse en ligne 📰",
+        "JEU": "joué à un jeu vidéo 🎮",
+        "INSTRUMENT": "joué d'un instrument de musique 🎸",
+        "PRATIQUE_ART": "utilisé du matériel art pour peindre, dessiner... 🎨",
+        "AUTRES": "Aucune de ces activités culturelles",
+    },
+    "ge0Egr2m8V1T": {
+        "CINEMA": "allé au cinéma 🎞",
+        "MUSIQUE": "allé à un concert 🤘",
+        "LIVRE": "allé à la bibliothèque, à la médiathèque 📚",
+        "MUSEE": "visité un musée, un monument ou une exposition 🏛",
+        "SPECTACLE": "assisté à une pièce de théâtre, à un spectacle de cirque, de danse... 💃",
+        "SPECTACLE": "participé à un festival, à une avant-première 🎷",
+        "JEU": "participé à un escape game, à un jeu concours 🎲",
+        "CONFERENCE_RENCONTRE": "participé à une conférence, une rencontre ou une découverte de métiers de la Culture 🎤",
+        "PRATIQUE_ART": "pris un cours de danse, de théâtre, de musique, de dessin... 🎨",
+        "AUTRES": "Aucune de ces sorties culturelles",
     },
     "WiWTxBLGoou4": {
         "SPECTACLE": "Théâtre 🎭",
@@ -37,7 +44,7 @@ FORM = {
     "iX7doTby1OqL": {
         "CINEMA": "Festival de cinéma 🎬",
         "LIVRE": "Festival littéraire 📕",
-        "MUSIQUE_LIVE": "Festival de musique 🎵",
+        "MUSIQUE": "Festival de musique 🎵",
         "PRATIQUE_ART": "Festival de danse, de cirque... 🕺",
         "CINEMA": "Avant-première de film 🎦",
     },
@@ -64,7 +71,10 @@ if environment == "dev":
     FORM["DIsOskUyDgbw"] = FORM["NeyLJOqShoHw"]
     FORM["PuKW507niOgt"] = FORM["WiWTxBLGoou4"]
     FORM["4J8N6fC1aGzh"] = FORM["iX7doTby1OqL"]
-
+    FORM.pop("ge0Egr2m8V1T")
+    FORM.pop("NeyLJOqShoHw")
+    FORM.pop("WiWTxBLGoou4")
+    FORM.pop("iX7doTby1OqL")
     cloud_sql_names_environment = environment
 
 elif environment == "stg":
@@ -72,7 +82,10 @@ elif environment == "stg":
     FORM["67hKXLLXKMvO"] = FORM["NeyLJOqShoHw"]
     FORM["jwO0vLQzSN5N"] = FORM["WiWTxBLGoou4"]
     FORM["79Zh7dyttVDS"] = FORM["iX7doTby1OqL"]
-
+    FORM.pop("ge0Egr2m8V1T")
+    FORM.pop("NeyLJOqShoHw")
+    FORM.pop("WiWTxBLGoou4")
+    FORM.pop("iX7doTby1OqL")
     # The staging cloudsql database connection name is using 'staging' instead of 'stg'
     cloud_sql_names_environment = "staging"
 else:
@@ -164,8 +177,7 @@ def run(request):
         "LIVRE",
         "MEDIA",
         "MUSEE",
-        "MUSIQUE_ENREGISTREE",
-        "MUSIQUE_LIVE",
+        "MUSIQUE",
         "PRATIQUE_ART",
         "SPECTACLE",
         "TECHNIQUE",

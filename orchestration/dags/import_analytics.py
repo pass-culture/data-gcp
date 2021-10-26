@@ -294,6 +294,22 @@ create_enriched_app_downloads_stats = BigQueryOperator(
     dag=dag,
 )
 
+create_table_venue_locations = BigQueryOperator(
+    task_id="create_table_venue_locations",
+    sql=f"""WITH SUBQ1 AS 
+            (SELECT code_quartier, noms_des_communes_concernees, commune_qp,geoshape,ZRR.LIBGEO,ZRR.ZRR_SIMP, ZRR.ZONAGE_ZRR,ZRR.Code_Postal ,venue.venue_postal_code,venue.venue_department_code, venue.venue_id,venue.venue_address, venue.venue_latitude,venue.venue_longitude,venue.venue_city, ST_CONTAINS(geoshape, ST_GEOGPOINT(venue.venue_latitude,venue.venue_longitude)) as Test,epci.reg_name,epci.geo_shape,epci.epci_name,epci.epci_code,epci.geo_shape 
+            FROM `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.QPV`, `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.applicative_database_venue` venue, `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.epci` epci, `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.ZRR` ZRR
+            where ST_CONTAINS(geoshape, ST_GEOGPOINT(venue.venue_longitude,venue.venue_latitude)) is true 
+            and venue.venue_latitude>-90 and venue.venue_latitude <90 and venue.venue_longitude >-90 
+            and venue.venue_longitude <90 and ST_CONTAINS(epci.geo_shape, ST_GEOGPOINT(venue.venue_longitude,venue.venue_latitude)) is true
+            and ZRR.Code_Postal = venue.venue_postal_code)
+            SELECT SUbQ1.venue_id,SUbQ1.venue_city, SUbQ1.venue_postal_code,SUbQ1.venue_department_code,SUbQ1.venue_longitude,SUbQ1.venue_latitude,SUBQ1.code_quartier as code_qpv, SUBQ1.noms_des_communes_concernees as qpv_name, SUBQ1.commune_qp as qpv_communes, SUBQ1.epci_code,SUBQ1.epci_name,SUBQ1.LIBGEO,SUBQ1.ZRR_SIMP, SUBQ1.ZONAGE_ZRR  from SUBQ1""",
+    destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.venue_locations",
+    write_disposition="WRITE_TRUNCATE",
+    use_legacy_sql=False,
+    dag=dag,
+)
+
 getting_contentful_service_account_token = PythonOperator(
     task_id="getting_contentful_service_account_token",
     python_callable=getting_service_account_token,
@@ -375,6 +391,7 @@ create_enriched_data_tasks = [
     create_enriched_venue_data_task,
     create_enriched_booking_data_task,
     create_enriched_offerer_data_task,
+    create_table_venue_locations,
 ]
 
 end = DummyOperator(task_id="end", dag=dag)

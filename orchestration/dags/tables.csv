@@ -1,17 +1,4 @@
 table_name,column_name,data_type,bigquery_table_name,dataset_type
-qpi_answers,user_id,character varying,enriched_qpi_answers,analytics
-qpi_answers,catch_up_user_id,character varying,enriched_qpi_answers,analytics
-qpi_answers,cinema,boolean,enriched_qpi_answers,analytics
-qpi_answers,audiovisuel,boolean,enriched_qpi_answers,analytics
-qpi_answers,jeux_videos,boolean,enriched_qpi_answers,analytics
-qpi_answers,livre,boolean,enriched_qpi_answers,analytics
-qpi_answers,musees_patrimoine,boolean,enriched_qpi_answers,analytics
-qpi_answers,musique,boolean,enriched_qpi_answers,analytics
-qpi_answers,pratique_artistique,boolean,enriched_qpi_answers,analytics
-qpi_answers,spectacle_vivant,boolean,enriched_qpi_answers,analytics
-qpi_answers,instrument,boolean,enriched_qpi_answers,analytics
-qpi_answers,presse,boolean,enriched_qpi_answers,analytics
-qpi_answers,autre,boolean,enriched_qpi_answers,analytics
 booking,booking_id,character varying,applicative_database_booking,clean
 booking,booking_creation_date,timestamp without time zone,applicative_database_booking,clean
 booking,stock_id,character varying,applicative_database_booking,clean
@@ -52,3 +39,36 @@ subcategories,matching_type,character varying,subcategories,analytics
 subcategories,is_event,boolean,subcategories,analytics
 subcategories,is_digital_deposit,boolean,subcategories,analytics
 subcategories,is_physical_deposit,boolean,subcategories,analytics
+qpi_answers,user_id,character varying,enriched_qpi_answers,analytics
+qpi_answers,catch_up_user_id,character varying,enriched_qpi_answers,analytics
+qpi_answers,Q0,character varying,enriched_qpi_answers,analytics
+qpi_answers,Q1,character varying,enriched_qpi_answers,analytics
+qpi_answers,Q2,character varying,enriched_qpi_answers,analytics
+qpi_answers,Q3,character varying,enriched_qpi_answers,analytics
+qpi_answers,Q4,character varying,enriched_qpi_answers,analytics
+qpi_answers,Q5,character varying,enriched_qpi_answers,analytics
+qpi_answers,Q6,character varying,enriched_qpi_answers,analytics
+qpi_answers,Q7,character varying,enriched_qpi_answers,analytics
+qpi_answers,Q8,character varying,enriched_qpi_answers,analytics
+qpi_answers,Q9,character varying,enriched_qpi_answers,analytics
+qpi_answers,Q10,character varying,enriched_qpi_answers,analytics
+qpi_answers,Q11,character varying,enriched_qpi_answers,analytics
+qpi_answers,Q12,character varying,enriched_qpi_answers,analytics
+qpi_answers,Q13,character varying,enriched_qpi_answers,analytics
+qpi_answers,Q14,character varying,enriched_qpi_answers,analytics
+qpi_answers,Q15,character varying,enriched_qpi_answers,analytics
+qpi_answers,Q16,character varying,enriched_qpi_answers,analytics
+qpi_answers,Q17,character varying,enriched_qpi_answers,analytics
+qpi_answers,Q18,character varying,enriched_qpi_answers,analytics
+qpi_answers,Q19,character varying,enriched_qpi_answers,analytics
+qpi_answers,Q20,character varying,enriched_qpi_answers,analytics
+qpi_answers,Q21,character varying,enriched_qpi_answers,analytics
+qpi_answers,Q22,character varying,enriched_qpi_answers,analytics
+qpi_answers,Q23,character varying,enriched_qpi_answers,analytics
+qpi_answers,Q24,character varying,enriched_qpi_answers,analytics
+qpi_answers,Q25,character varying,enriched_qpi_answers,analytics
+qpi_answers,Q26,character varying,enriched_qpi_answers,analytics
+qpi_answers,Q27,character varying,enriched_qpi_answers,analytics
+qpi_answers,Q28,character varying,enriched_qpi_answers,analytics
+qpi_answers,Q29,character varying,enriched_qpi_answers,analytics
+qpi_answers,Q30,character varying,enriched_qpi_answers,analytics

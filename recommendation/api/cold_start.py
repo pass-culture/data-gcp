@@ -3,18 +3,53 @@ from sqlalchemy import text
 
 from utils import create_db_connection, log_duration
 
+
 MACRO_CATEGORIES_TYPE_MAPPING = {
-    "cinema": ["CINEMA"],
-    "audiovisuel": ["FILM"],
-    "jeux_videos": ["JEU"],
-    "livre": ["LIVRE"],
-    "musees_patrimoine": ["MUSEE"],
-    "musique": ["MUSIQUE_LIVE", "MUSIQUE_ENREGISTREE"],
-    "pratique_artistique": ["PRATIQUE_ART"],
-    "spectacle_vivant": ["SPECTACLE"],
-    "instrument": ["INSTRUMENT"],
-    "presse": ["MEDIA"],
-    "autre": ["CONFERENCE_RENCONTRE", "BEAUX_ARTS"],
+    "CINEMA": ["CINEMA"],
+    "FILM": ["FILM"],
+    "JEU": ["JEU"],
+    "LIVRE": ["LIVRE"],
+    "MUSEE": ["MUSEE"],
+    "MUSIQUE": ["MUSIQUE_LIVE", "MUSIQUE_ENREGISTREE"],
+    "PRATIQUE_ART": ["PRATIQUE_ART"],
+    "SPECTACLE": ["SPECTACLE"],
+    "INSTRUMENT": ["INSTRUMENT"],
+    "MEDIA": ["MEDIA"],
+    "AUTRE": ["CONFERENCE_RENCONTRE", "BEAUX_ARTS"],
+}
+
+QPI_TO_CAT = {
+    "Q0": "FILM",
+    "Q1": "MUSIQUE",
+    "Q2": "MEDIA",
+    "Q3": "LIVRE",
+    "Q4": "MEDIA",
+    "Q5": "INSTRUMENT",
+    "Q6": "JEU",
+    "Q7": "PRATIQUE_ART",
+    "Q8": "",
+    "Q9": "CINEMA",
+    "Q10": "LIVRE",
+    "Q11": "SPECTACLE",
+    "Q12": "MUSEE",
+    "Q13": "SPECTACLE",
+    "Q14": "SPECTACLE",
+    "Q15": "JEU",
+    "Q16": "AUTRE",
+    "Q17": "PRATIQUE_ART",
+    "Q18": "",
+    "Q19": "SPECTACLE",
+    "Q20": "SPECTACLE",
+    "Q21": "SPECTACLE",
+    "Q22": "SPECTACLE",
+    "Q23": "SPECTACLE",
+    "Q24": "SPECTACLE",
+    "Q25": "SPECTACLE",
+    "Q26": "CINEMA",
+    "Q27": "LIVRE",
+    "Q28": "MUSIQUE",
+    "Q29": "SPECTACLE",
+    "Q30": "CINEMA",
 }
 
 
@@ -41,21 +76,10 @@ def get_cold_start_status(user_id: int) -> bool:
 
 def get_cold_start_categories(user_id: int) -> list:
     start = time.time()
-    qpi_answers_categories = [
-        "cinema",
-        "audiovisuel",
-        "jeux_videos",
-        "livre",
-        "musees_patrimoine",
-        "musique",
-        "pratique_artistique",
-        "spectacle_vivant",
-        "instrument",
-        "presse",
-        "autre",
-    ]
+    NbOfQPIquestions = 31
+    qpi_questions = [f"Q{i}" for i in range(NbOfQPIquestions)]
     cold_start_query = text(
-        f"SELECT {', '.join(qpi_answers_categories)} FROM qpi_answers WHERE user_id = :user_id;"
+        f"SELECT {', '.join(qpi_questions)} FROM qpi_answers WHERE user_id = :user_id;"
     )
 
     with create_db_connection() as connection:
@@ -67,10 +91,16 @@ def get_cold_start_categories(user_id: int) -> list:
     cold_start_categories = []
     if len(query_result) == 0:
         return []
-    for category_index, category in enumerate(query_result[0]):
-        if category:
+    for question_index, answers in enumerate(query_result[0]):
+        if (
+            answers
+            and len(
+                MACRO_CATEGORIES_TYPE_MAPPING[QPI_TO_CAT[qpi_questions[question_index]]]
+            )
+            > 0
+        ):
             cold_start_categories.extend(
-                MACRO_CATEGORIES_TYPE_MAPPING[qpi_answers_categories[category_index]]
+                MACRO_CATEGORIES_TYPE_MAPPING[QPI_TO_CAT[qpi_questions[question_index]]]
             )
     log_duration("get_cold_start_categories", start)
-    return cold_start_categories
+    return list(set(cold_start_categories))

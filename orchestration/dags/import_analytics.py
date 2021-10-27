@@ -297,7 +297,9 @@ create_enriched_app_downloads_stats = BigQueryOperator(
 
 create_table_venue_locations = BigQueryOperator(
     task_id="create_table_venue_locations",
-    sql=creat_table_venue_locations(dataset=BIGQUERY_ANALYTICS_DATASET, table_prefix=APPLICATIVE_PREFIX),
+    sql=creat_table_venue_locations(
+        dataset=BIGQUERY_ANALYTICS_DATASET, table_prefix=APPLICATIVE_PREFIX
+    ),
     destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.venue_locations",
     write_disposition="WRITE_TRUNCATE",
     use_legacy_sql=False,

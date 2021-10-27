@@ -34,7 +34,9 @@ from dependencies.data_analytics.enriched_data.user import (
 )
 from dependencies.data_analytics.enriched_data.venue import (
     define_enriched_venue_data_full_query,
-    creat_table_venue_locations,
+)
+from dependencies.data_analytics.enriched_data.venue_locations import (
+    define_table_venue_locations,
 )
 from dependencies.data_analytics.import_tables import (
     define_import_query,
@@ -297,7 +299,7 @@ create_enriched_app_downloads_stats = BigQueryOperator(
 
 create_table_venue_locations = BigQueryOperator(
     task_id="create_table_venue_locations",
-    sql=creat_table_venue_locations(
+    sql=define_table_venue_locations(
         dataset=BIGQUERY_ANALYTICS_DATASET, table_prefix=APPLICATIVE_PREFIX
     ),
     destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.venue_locations",

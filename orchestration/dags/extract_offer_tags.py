@@ -32,7 +32,7 @@ dag = DAG(
     "extract_offer_tags",
     default_args=default_dag_args,
     description="Tag offer based on description topic",
-    on_failure_callback=None,
+    on_failure_callback=task_fail_slack_alert,
     schedule_interval="0 * * * *",
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),

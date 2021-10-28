@@ -3,53 +3,19 @@ from sqlalchemy import text
 
 from utils import create_db_connection, log_duration
 
-
+# build with notebook
 MACRO_CATEGORIES_TYPE_MAPPING = {
-    "CINEMA": ["CINEMA"],
-    "FILM": ["FILM"],
-    "JEU": ["JEU"],
-    "LIVRE": ["LIVRE"],
-    "MUSEE": ["MUSEE"],
-    "MUSIQUE": ["MUSIQUE_LIVE", "MUSIQUE_ENREGISTREE"],
-    "PRATIQUE_ART": ["PRATIQUE_ART"],
-    "SPECTACLE": ["SPECTACLE"],
-    "INSTRUMENT": ["INSTRUMENT"],
-    "MEDIA": ["MEDIA"],
-    "AUTRE": ["CONFERENCE_RENCONTRE", "BEAUX_ARTS"],
-}
-
-QPI_TO_CAT = {
-    "Q0": "FILM",
-    "Q1": "MUSIQUE",
-    "Q2": "MEDIA",
-    "Q3": "LIVRE",
-    "Q4": "MEDIA",
-    "Q5": "INSTRUMENT",
-    "Q6": "JEU",
-    "Q7": "PRATIQUE_ART",
-    "Q8": "",
-    "Q9": "CINEMA",
-    "Q10": "LIVRE",
-    "Q11": "SPECTACLE",
-    "Q12": "MUSEE",
-    "Q13": "SPECTACLE",
-    "Q14": "SPECTACLE",
-    "Q15": "JEU",
-    "Q16": "AUTRE",
-    "Q17": "PRATIQUE_ART",
-    "Q18": "",
-    "Q19": "SPECTACLE",
-    "Q20": "SPECTACLE",
-    "Q21": "SPECTACLE",
-    "Q22": "SPECTACLE",
-    "Q23": "SPECTACLE",
-    "Q24": "SPECTACLE",
-    "Q25": "SPECTACLE",
-    "Q26": "CINEMA",
-    "Q27": "LIVRE",
-    "Q28": "MUSIQUE",
-    "Q29": "SPECTACLE",
-    "Q30": "CINEMA",
+    "cinema": ["CINEMA"],
+    "audiovisuel": ["FILM"],
+    "jeux_videos": ["JEU"],
+    "livre": ["LIVRE"],
+    "musees_patrimoine": ["MUSEE"],
+    "musique": ["MUSIQUE_LIVE", "MUSIQUE_ENREGISTREE"],
+    "pratique_artistique": ["PRATIQUE_ART"],
+    "spectacle_vivant": ["SPECTACLE"],
+    "instrument": ["INSTRUMENT"],
+    "presse": ["MEDIA"],
+    "autre": ["CONFERENCE_RENCONTRE", "BEAUX_ARTS"],
 }
 
 
@@ -76,10 +42,77 @@ def get_cold_start_status(user_id: int) -> bool:
 
 def get_cold_start_categories(user_id: int) -> list:
     start = time.time()
-    NbOfQPIquestions = 31
-    qpi_questions = [f"Q{i}" for i in range(NbOfQPIquestions)]
+
+    qpi_answers_categories = [
+        "ABO_BIBLIOTHEQUE",
+        "ABO_CONCERT",
+        "ABO_JEU_VIDEO",
+        "ABO_LIVRE_NUMERIQUE",
+        "ABO_LUDOTHEQUE",
+        "ABO_MEDIATHEQUE",
+        "ABO_MUSEE",
+        "ABO_PLATEFORME_MUSIQUE",
+        "ABO_PLATEFORME_VIDEO",
+        "ABO_PRATIQUE_ART",
+        "ABO_PRESSE_EN_LIGNE",
+        "ABO_SPECTACLE",
+        "ACHAT_INSTRUMENT",
+        "ACTIVATION_EVENT",
+        "ACTIVATION_THING",
+        "APP_CULTURELLE",
+        "ATELIER_PRATIQUE_ART",
+        "AUTRE_SUPPORT_NUMERIQUE",
+        "BON_ACHAT_INSTRUMENT",
+        "CAPTATION_MUSIQUE",
+        "CARTE_CINE_ILLIMITE",
+        "CARTE_CINE_MULTISEANCES",
+        "CARTE_MUSEE",
+        "CINE_PLEIN_AIR",
+        "CINE_VENTE_DISTANCE",
+        "CONCERT",
+        "CONCOURS",
+        "CONFERENCE",
+        "DECOUVERTE_METIERS",
+        "ESCAPE_GAME",
+        "EVENEMENT_CINE",
+        "EVENEMENT_JEU",
+        "EVENEMENT_MUSIQUE",
+        "EVENEMENT_PATRIMOINE",
+        "FESTIVAL_CINE",
+        "FESTIVAL_LIVRE",
+        "FESTIVAL_MUSIQUE",
+        "FESTIVAL_SPECTACLE",
+        "JEU_EN_LIGNE",
+        "JEU_SUPPORT_PHYSIQUE",
+        "LIVESTREAM_EVENEMENT",
+        "LIVESTREAM_MUSIQUE",
+        "LIVRE_AUDIO_PHYSIQUE",
+        "LIVRE_NUMERIQUE",
+        "LIVRE_PAPIER",
+        "LOCATION_INSTRUMENT",
+        "MATERIEL_ART_CREATIF",
+        "MUSEE_VENTE_DISTANCE",
+        "OEUVRE_ART",
+        "PARTITION",
+        "PODCAST",
+        "RENCONTRE_JEU",
+        "RENCONTRE",
+        "SALON",
+        "SEANCE_CINE",
+        "SEANCE_ESSAI_PRATIQUE_ART",
+        "SPECTACLE_ENREGISTRE",
+        "SPECTACLE_REPRESENTATION",
+        "SUPPORT_PHYSIQUE_FILM",
+        "SUPPORT_PHYSIQUE_MUSIQUE",
+        "TELECHARGEMENT_LIVRE_AUDIO",
+        "TELECHARGEMENT_MUSIQUE",
+        "VISITE_GUIDEE",
+        "VISITE_VIRTUELLE",
+        "VISITE",
+        "VOD",
+    ]
     cold_start_query = text(
-        f"SELECT {', '.join(qpi_questions)} FROM qpi_answers WHERE user_id = :user_id;"
+        f"SELECT {', '.join(qpi_answers_categories)} FROM qpi_answers WHERE user_id = :user_id;"
     )
 
     with create_db_connection() as connection:
@@ -91,16 +124,10 @@ def get_cold_start_categories(user_id: int) -> list:
     cold_start_categories = []
     if len(query_result) == 0:
         return []
-    for question_index, answers in enumerate(query_result[0]):
-        if (
-            answers
-            and len(
-                MACRO_CATEGORIES_TYPE_MAPPING[QPI_TO_CAT[qpi_questions[question_index]]]
-            )
-            > 0
-        ):
+    for category_index, category in enumerate(query_result[0]):
+        if category:
             cold_start_categories.extend(
-                MACRO_CATEGORIES_TYPE_MAPPING[QPI_TO_CAT[qpi_questions[question_index]]]
+                MACRO_CATEGORIES_TYPE_MAPPING[qpi_answers_categories[category_index]]
             )
     log_duration("get_cold_start_categories", start)
-    return list(set(cold_start_categories))
+    return cold_start_categories

@@ -1,3 +1,5 @@
+import pandas as pd
+
 FORM = {
     "NeyLJOqShoHw": {
         "Q0": "regardé un film chez toi 🍿",
@@ -40,6 +42,8 @@ FORM = {
     },
     ##add new question IDs , with associate responces
 }
+
+NBQPIQUESTION = 31
 
 QPI_TO_SUBCAT = {
     "Q0": ["ABO_MEDIATHEQUE", "AUTRE_SUPPORT_NUMERIQUE", "VOD"],
@@ -85,6 +89,75 @@ QPI_TO_SUBCAT = {
     "Q30": [""],
 }
 
+SUBCAT_LIST = [
+    "ABO_BIBLIOTHEQUE",
+    "ABO_CONCERT",
+    "ABO_JEU_VIDEO",
+    "ABO_LIVRE_NUMERIQUE",
+    "ABO_LUDOTHEQUE",
+    "ABO_MEDIATHEQUE",
+    "ABO_MUSEE",
+    "ABO_PLATEFORME_MUSIQUE",
+    "ABO_PLATEFORME_VIDEO",
+    "ABO_PRATIQUE_ART",
+    "ABO_PRESSE_EN_LIGNE",
+    "ABO_SPECTACLE",
+    "ACHAT_INSTRUMENT",
+    "ACTIVATION_EVENT",
+    "ACTIVATION_THING",
+    "APP_CULTURELLE",
+    "ATELIER_PRATIQUE_ART",
+    "AUTRE_SUPPORT_NUMERIQUE",
+    "BON_ACHAT_INSTRUMENT",
+    "CAPTATION_MUSIQUE",
+    "CARTE_CINE_ILLIMITE",
+    "CARTE_CINE_MULTISEANCES",
+    "CARTE_MUSEE",
+    "CINE_PLEIN_AIR",
+    "CINE_VENTE_DISTANCE",
+    "CONCERT",
+    "CONCOURS",
+    "CONFERENCE",
+    "DECOUVERTE_METIERS",
+    "ESCAPE_GAME",
+    "EVENEMENT_CINE",
+    "EVENEMENT_JEU",
+    "EVENEMENT_MUSIQUE",
+    "EVENEMENT_PATRIMOINE",
+    "FESTIVAL_CINE",
+    "FESTIVAL_LIVRE",
+    "FESTIVAL_MUSIQUE",
+    "FESTIVAL_SPECTACLE",
+    "JEU_EN_LIGNE",
+    "JEU_SUPPORT_PHYSIQUE",
+    "LIVESTREAM_EVENEMENT",
+    "LIVESTREAM_MUSIQUE",
+    "LIVRE_AUDIO_PHYSIQUE",
+    "LIVRE_NUMERIQUE",
+    "LIVRE_PAPIER",
+    "LOCATION_INSTRUMENT",
+    "MATERIEL_ART_CREATIF",
+    "MUSEE_VENTE_DISTANCE",
+    "OEUVRE_ART",
+    "PARTITION",
+    "PODCAST",
+    "RENCONTRE_JEU",
+    "RENCONTRE",
+    "SALON",
+    "SEANCE_CINE",
+    "SEANCE_ESSAI_PRATIQUE_ART",
+    "SPECTACLE_ENREGISTRE",
+    "SPECTACLE_REPRESENTATION",
+    "SUPPORT_PHYSIQUE_FILM",
+    "SUPPORT_PHYSIQUE_MUSIQUE",
+    "TELECHARGEMENT_LIVRE_AUDIO",
+    "TELECHARGEMENT_MUSIQUE",
+    "VISITE_GUIDEE",
+    "VISITE_VIRTUELLE",
+    "VISITE",
+    "VOD",
+]
+
 
 def create_condition(question_id, question_nb):
     return (
@@ -125,7 +198,7 @@ def enrich_answers(
                 select *, ROW_NUMBER() OVER() as row_id from `{gcp_project}.{bigquery_clean_dataset}.qpi_answers_v3`
             ) as qpi, qpi.answers as answers
         )
-
+        
         SELECT max(user_id) as user_id, CAST(max(catch_up_user_id) AS STRING) as catch_up_user_id,
             {
         f'{new_line}'.join(
@@ -137,3 +210,44 @@ def enrich_answers(
         group by row_id
 
     """
+
+
+def format_answers(
+    gcp_project,
+    bigquery_clean_dataset,
+    enriched_qpi_answer_table,
+):
+    ucs = {}
+    df_qpi = pd.read_gbq(
+        f"""SELECT * FROM {gcp_project}.{bigquery_clean_dataset}.cs_{enriched_qpi_answer_table}"""
+    )
+    qpi_questions = [f"Q{i}" for i in range(NBQPIQUESTION)]
+    for ind in df_qpi.index:
+        ucs[f"{df_qpi['user_id'][ind]}"] = {
+            "subcat": list(
+                set(
+                    subcat
+                    for question in qpi_questions
+                    for subcat in df_qpi[f"{question}"][ind]
+                )
+            )
+        }
+
+    dict_list = []
+    for user_id in ucs.keys():
+        final_dict = {}
+        final_dict["user_id"] = user_id
+        for category in SUBCAT_LIST:
+            if category in ucs[f"{user_id}"]["subcat"]:
+                final_dict[f"{category}"] = True
+            else:
+                final_dict[f"{category}"] = False
+        dict_list.append(final_dict)
+
+    df_formatted_answers = pd.DataFrame(data=dict_list)
+    df_formatted_answers.to_gbq(
+        f"""{bigquery_clean_dataset}.{enriched_qpi_answer_table}""",
+        project_id=f"{gcp_project}",
+        if_exists="append",
+    )
+    return

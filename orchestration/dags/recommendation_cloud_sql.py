@@ -110,13 +110,9 @@ with DAG(
 
         select_columns = ", ".join(
             [
-                column_name
-                if table != "qpi_answers"
-                else (
-                    column_name
-                    if column_name in ("user_id", "catch_up_user_id")
-                    else f"CASE WHEN array_length({column_name})>0 THEN TRUE else FALSE end as {column_name}"
-                )
+                f"""{column_name}"""
+                if (table == "qpi_answers" and column_name == "user_id")
+                else column_name
                 for column_name in TABLES[table]["columns"]
                 if column_name not in list_type_columns
             ]
@@ -125,7 +121,7 @@ with DAG(
         filter_column_task = BigQueryOperator(
             task_id=f"filter_column_{table}",
             sql=f"""
-                SELECT {select_columns},
+                SELECT *
                 FROM `{GCP_PROJECT}.{dataset}.{bigquery_table_name}_v3`
             """
             if table == "qpi_answers"

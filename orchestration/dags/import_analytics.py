@@ -35,6 +35,9 @@ from dependencies.data_analytics.enriched_data.user import (
 from dependencies.data_analytics.enriched_data.venue import (
     define_enriched_venue_data_full_query,
 )
+from dependencies.data_analytics.enriched_data.venue_locations import (
+    define_table_venue_locations,
+)
 from dependencies.data_analytics.import_tables import (
     define_import_query,
     define_replace_query,
@@ -294,6 +297,17 @@ create_enriched_app_downloads_stats = BigQueryOperator(
     dag=dag,
 )
 
+create_table_venue_locations = BigQueryOperator(
+    task_id="create_table_venue_locations",
+    sql=define_table_venue_locations(
+        dataset=BIGQUERY_ANALYTICS_DATASET, table_prefix=APPLICATIVE_PREFIX
+    ),
+    destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.venue_locations",
+    write_disposition="WRITE_TRUNCATE",
+    use_legacy_sql=False,
+    dag=dag,
+)
+
 getting_contentful_service_account_token = PythonOperator(
     task_id="getting_contentful_service_account_token",
     python_callable=getting_service_account_token,
@@ -375,6 +389,7 @@ create_enriched_data_tasks = [
     create_enriched_venue_data_task,
     create_enriched_booking_data_task,
     create_enriched_offerer_data_task,
+    create_table_venue_locations,
 ]
 
 end = DummyOperator(task_id="end", dag=dag)

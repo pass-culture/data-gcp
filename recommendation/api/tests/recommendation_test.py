@@ -178,9 +178,7 @@ def test_get_final_recommendation_for_group_b(
     ]
     get_iris_from_coordinates_mock.return_value = 1
 
-    recommendations = get_final_recommendations(
-        user_id, 2.331289, 48.830719, app_config
-    )
+    recommendations = get_final_recommendations(user_id, 2.331289, 48.830719)
 
     # Then
     get_cold_start_categories.assert_not_called()
@@ -218,6 +216,7 @@ def test_get_final_recommendation_for_new_user(
             "id": 2,
             "url": "url2",
             "category": "category2",
+            "subcategory_id": "EVENEMENT_CINE",
             "score": 2,
             "item_id": "offer-2",
         },
@@ -225,6 +224,7 @@ def test_get_final_recommendation_for_new_user(
             "id": 3,
             "url": "url3",
             "category": "category3",
+            "subcategory_id": "EVENEMENT_CINE",
             "score": 3,
             "item_id": "offer-3",
         },
@@ -234,6 +234,7 @@ def test_get_final_recommendation_for_new_user(
             "id": 2,
             "url": "url2",
             "category": "category2",
+            "subcategory_id": "EVENEMENT_CINE",
             "item_id": "offer-2",
             "product_id": "product-2",
             "score": 2,
@@ -242,6 +243,7 @@ def test_get_final_recommendation_for_new_user(
             "id": 3,
             "url": "url3",
             "category": "category3",
+            "subcategory_id": "EVENEMENT_CINE",
             "item_id": "offer-3",
             "product_id": "product-3",
             "score": 3,
@@ -287,6 +289,7 @@ def test_get_intermediate_recommendation_for_user(
             {
                 "id": "2",
                 "category": "B",
+                "subcategory_id": "EVENEMENT_CINE",
                 "url": None,
                 "item_id": "offer-2",
                 "product_id": "product-2",
@@ -294,6 +297,7 @@ def test_get_intermediate_recommendation_for_user(
             {
                 "id": "3",
                 "category": "C",
+                "subcategory_id": "EVENEMENT_CINE",
                 "url": "url",
                 "item_id": "offer-3",
                 "product_id": "product-3",
@@ -301,6 +305,7 @@ def test_get_intermediate_recommendation_for_user(
             {
                 "id": "4",
                 "category": "D",
+                "subcategory_id": "EVENEMENT_CINE",
                 "url": "url",
                 "item_id": "offer-4",
                 "product_id": "product-4",
@@ -308,6 +313,7 @@ def test_get_intermediate_recommendation_for_user(
             {
                 "id": "5",
                 "category": "E",
+                "subcategory_id": "EVENEMENT_CINE",
                 "url": None,
                 "item_id": "offer-5",
                 "product_id": "product-5",
@@ -315,6 +321,7 @@ def test_get_intermediate_recommendation_for_user(
             {
                 "id": "6",
                 "category": "B",
+                "subcategory_id": "EVENEMENT_CINE",
                 "url": None,
                 "item_id": "offer-6",
                 "product_id": "product-6",
@@ -351,6 +358,7 @@ def test_get_cold_start_scored_recommendations_for_user(
             {
                 "id": "3",
                 "category": "C",
+                "subcategory_id": "EVENEMENT_CINE",
                 "url": "url",
                 "product_id": "product-3",
                 "score": 1,
@@ -358,6 +366,7 @@ def test_get_cold_start_scored_recommendations_for_user(
             {
                 "id": "1",
                 "category": "A",
+                "subcategory_id": "EVENEMENT_CINE",
                 "url": None,
                 "product_id": "product-1",
                 "score": 1,
@@ -365,6 +374,7 @@ def test_get_cold_start_scored_recommendations_for_user(
             {
                 "id": "4",
                 "category": "D",
+                "subcategory_id": "EVENEMENT_CINE",
                 "url": "url",
                 "product_id": "product-4",
                 "score": 1,
@@ -395,6 +405,7 @@ def test_get_intermediate_recommendation_for_user_with_no_iris(
             {
                 "id": "1",
                 "category": "A",
+                "subcategory_id": "EVENEMENT_CINE",
                 "url": None,
                 "item_id": "offer-1",
                 "product_id": "product-1",
@@ -402,6 +413,7 @@ def test_get_intermediate_recommendation_for_user_with_no_iris(
             {
                 "id": "3",
                 "category": "C",
+                "subcategory_id": "EVENEMENT_CINE",
                 "url": "url",
                 "item_id": "offer-3",
                 "product_id": "product-3",
@@ -409,6 +421,7 @@ def test_get_intermediate_recommendation_for_user_with_no_iris(
             {
                 "id": "4",
                 "category": "D",
+                "subcategory_id": "EVENEMENT_CINE",
                 "url": "url",
                 "item_id": "offer-4",
                 "product_id": "product-4",
@@ -416,6 +429,7 @@ def test_get_intermediate_recommendation_for_user_with_no_iris(
             {
                 "id": "5",
                 "category": "E",
+                "subcategory_id": "EVENEMENT_CINE",
                 "url": None,
                 "item_id": "offer-5",
                 "product_id": "product-5",
@@ -433,6 +447,7 @@ def test_get_intermediate_recommendation_for_user_with_no_iris(
                     "id": 1,
                     "url": None,
                     "category": "A",
+                    "subcategory_id": "EVENEMENT_CINE",
                     "item_id": "offer-1",
                     "product_id": "product-1",
                     "score": 1,
@@ -441,6 +456,7 @@ def test_get_intermediate_recommendation_for_user_with_no_iris(
                     "id": 2,
                     "url": None,
                     "category": "A",
+                    "subcategory_id": "EVENEMENT_CINE",
                     "item_id": "offer-2",
                     "product_id": "product-2",
                     "score": 1,
@@ -449,6 +465,7 @@ def test_get_intermediate_recommendation_for_user_with_no_iris(
                     "id": 3,
                     "url": None,
                     "category": "B",
+                    "subcategory_id": "EVENEMENT_CINE",
                     "item_id": "offer-3",
                     "product_id": "product-3",
                     "score": 10,
@@ -457,6 +474,7 @@ def test_get_intermediate_recommendation_for_user_with_no_iris(
                     "id": 4,
                     "url": None,
                     "category": "B",
+                    "subcategory_id": "EVENEMENT_CINE",
                     "item_id": "offer-4",
                     "product_id": "product-4",
                     "score": 10,
@@ -470,6 +488,7 @@ def test_get_intermediate_recommendation_for_user_with_no_iris(
                     "id": 1,
                     "url": None,
                     "category": "A",
+                    "subcategory_id": "EVENEMENT_CINE",
                     "item_id": "offer-1",
                     "product_id": "product-1",
                     "score": 1,
@@ -478,6 +497,7 @@ def test_get_intermediate_recommendation_for_user_with_no_iris(
                     "id": 2,
                     "url": None,
                     "category": "A",
+                    "subcategory_id": "EVENEMENT_CINE",
                     "item_id": "offer-2",
                     "product_id": "product-2",
                     "score": 2,
@@ -486,6 +506,7 @@ def test_get_intermediate_recommendation_for_user_with_no_iris(
                     "id": 3,
                     "url": None,
                     "category": "A",
+                    "subcategory_id": "EVENEMENT_CINE",
                     "item_id": "offer-3",
                     "product_id": "product-3",
                     "score": 10,
@@ -494,6 +515,7 @@ def test_get_intermediate_recommendation_for_user_with_no_iris(
                     "id": 4,
                     "url": None,
                     "category": "A",
+                    "subcategory_id": "EVENEMENT_CINE",
                     "item_id": "offer-4",
                     "product_id": "product-4",
                     "score": 11,
@@ -524,6 +546,7 @@ def test_get_scored_recommendation_for_user(
             "id": 1,
             "url": "url1",
             "category": "category1",
+            "subcategory_id": "EVENEMENT_CINE",
             "item_id": "offer-1",
             "product_id": "product-1",
         },
@@ -531,6 +554,7 @@ def test_get_scored_recommendation_for_user(
             "id": 2,
             "url": "url2",
             "category": "category2",
+            "subcategory_id": "EVENEMENT_CINE",
             "item_id": "offer-2",
             "product_id": "product-2",
         },
@@ -538,6 +562,7 @@ def test_get_scored_recommendation_for_user(
             "id": 3,
             "url": "url3",
             "category": "category3",
+            "subcategory_id": "EVENEMENT_CINE",
             "item_id": "offer-3",
             "product_id": "product-3",
         },
@@ -545,12 +570,7 @@ def test_get_scored_recommendation_for_user(
 
     # When
     scored_recommendation_for_user = get_scored_recommendation_for_user(
-        user_id,
-        user_recommendation,
-        app_config["MODEL_REGION"],
-        app_config[f"MODEL_NAME_{group_id}"],
-        app_config[f"MODEL_VERSION_{group_id}"],
-        app_config[f"MODEL_INPUT_{group_id}"],
+        user_id, group_id, user_recommendation
     )
 
     # Then
@@ -559,6 +579,7 @@ def test_get_scored_recommendation_for_user(
             "id": 1,
             "url": "url1",
             "category": "category1",
+            "subcategory_id": "EVENEMENT_CINE",
             "item_id": "offer-1",
             "product_id": "product-1",
             "score": 1,
@@ -567,6 +588,7 @@ def test_get_scored_recommendation_for_user(
             "id": 2,
             "url": "url2",
             "category": "category2",
+            "subcategory_id": "EVENEMENT_CINE",
             "item_id": "offer-2",
             "product_id": "product-2",
             "score": 2,
@@ -575,6 +597,7 @@ def test_get_scored_recommendation_for_user(
             "id": 3,
             "url": "url3",
             "category": "category3",
+            "subcategory_id": "EVENEMENT_CINE",
             "item_id": "offer-3",
             "product_id": "product-3",
             "score": 3,

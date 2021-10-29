@@ -18,6 +18,15 @@ SQL_BASE_PASSWORD = access_secret(
     GCP_PROJECT, SQL_BASE_SECRET_ID, SQL_BASE_SECRET_VERSION
 )
 
+AB_TESTING_TABLE = os.environ.get("AB_TESTING_TABLE")
+NUMBER_OF_RECOMMENDATIONS = int(os.environ.get("NUMBER_OF_RECOMMENDATIONS", 10))
+NUMBER_OF_PRESELECTED_OFFERS = int(os.environ.get("NUMBER_OF_PRESELECTED_OFFERS", 50))
+
+MODEL_REGION = os.environ.get("MODEL_REGION")
+MODEL_NAME_A = os.environ.get("MODEL_NAME_A")
+MODEL_NAME_B = os.environ.get("MODEL_NAME_B")
+MODEL_NAME_C = os.environ.get("MODEL_NAME_C")
+
 query_string = dict(
     {"unix_sock": "/cloudsql/{}/.s.PGSQL.5432".format(SQL_CONNECTION_NAME)}
 )

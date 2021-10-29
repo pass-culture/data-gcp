@@ -13,19 +13,28 @@ from googleapiclient import discovery
 
 from cold_start import get_cold_start_status, get_cold_start_categories
 from geolocalisation import get_iris_from_coordinates
-from utils import create_db_connection, log_duration, GCP_PROJECT
+from utils import (
+    create_db_connection,
+    log_duration,
+    GCP_PROJECT,
+    AB_TESTING_TABLE,
+    NUMBER_OF_RECOMMENDATIONS,
+    NUMBER_OF_PRESELECTED_OFFERS,
+    MODEL_REGION,
+    MODEL_NAME_A,
+    MODEL_NAME_B,
+    MODEL_NAME_C,
+)
 
 
-def get_final_recommendations(
-    user_id: int, longitude: int, latitude: int, app_config: Dict[str, Any]
-) -> List[int]:
-    # Uncomment to reactivate A/B Testing
-    # request_response = query_ab_testing_table(user_id, app_config)
-    # if not request_response:
-    #   group_id = ab_testing_assign_user(user_id, app_config)
-    # else:
-    #   group_id = request_response[0]
-    group_id = "A"
+def get_final_recommendations(user_id: int, longitude: int, latitude: int) -> List[int]:
+
+    request_response = query_ab_testing_table(user_id)
+    if not request_response:
+        group_id = ab_testing_assign_user(user_id)
+    else:
+        group_id = request_response[0]
+
     is_cold_start = get_cold_start_status(user_id)
     user_iris_id = get_iris_from_coordinates(longitude, latitude)
 
@@ -36,7 +45,6 @@ def get_final_recommendations(
             user_id,
             user_iris_id,
             cold_start_categories,
-            app_config["NUMBER_OF_PRESELECTED_OFFERS"],
         )
     else:
         reco_origin = "algo"
@@ -44,36 +52,32 @@ def get_final_recommendations(
             user_id, user_iris_id
         )
         scored_recommendation_for_user = get_scored_recommendation_for_user(
-            user_id,
-            recommendations_for_user,
-            app_config["MODEL_REGION"],
-            app_config[f"MODEL_NAME_{group_id}"],
-            app_config[f"MODEL_VERSION_{group_id}"],
-            app_config[f"MODEL_INPUT_{group_id}"],
+            user_id, group_id, recommendations_for_user
         )
 
-        if group_id == "A":
-            scored_recommendation_for_user = sorted(
-                scored_recommendation_for_user, key=lambda k: k["score"], reverse=True
-            )[:40]
-            for recommendation in scored_recommendation_for_user:
-                recommendation["score"] = random.random()
+        # Keep the top 40 offers and shuffle them
+        best_recommendations_for_user = sorted(
+            scored_recommendation_for_user, key=lambda k: k["score"], reverse=True
+        )[:40]
+        for recommendation in best_recommendations_for_user:
+            recommendation["score"] = random.random()
 
     final_recommendations = order_offers_by_score_and_diversify_categories(
-        scored_recommendation_for_user, app_config["NUMBER_OF_RECOMMENDATIONS"]
+        scored_recommendation_for_user
     )
 
     save_recommendation(user_id, final_recommendations, group_id, reco_origin)
     return final_recommendations
 
 
-def query_ab_testing_table(user_id, app_config):
+def query_ab_testing_table(
+    user_id,
+):
     start = time.time()
-    ab_testing_table = app_config["AB_TESTING_TABLE"]
 
     with create_db_connection() as connection:
         request_response = connection.execute(
-            text(f"SELECT groupid FROM {ab_testing_table} WHERE userid= :user_id"),
+            text(f"SELECT groupid FROM {AB_TESTING_TABLE} WHERE userid= :user_id"),
             user_id=str(user_id),
         ).scalar()
 
@@ -81,16 +85,15 @@ def query_ab_testing_table(user_id, app_config):
     return request_response
 
 
-def ab_testing_assign_user(user_id, app_config):
+def ab_testing_assign_user(user_id):
     start = time.time()
-    ab_testing_table = app_config["AB_TESTING_TABLE"]
-    group_id = "A"
-    # if random.random() > 0.5 else "B"
+    groups = ["A", "B", "C"]
+    group_id = random.choice(groups)
 
     with create_db_connection() as connection:
         connection.execute(
             text(
-                f"INSERT INTO {ab_testing_table}(userid, groupid) VALUES (:user_id, :group_id)"
+                f"INSERT INTO {AB_TESTING_TABLE}(userid, groupid) VALUES (:user_id, :group_id)"
             ),
             user_id=user_id,
             group_id=str(group_id),
@@ -101,7 +104,7 @@ def ab_testing_assign_user(user_id, app_config):
 
 
 def save_recommendation(
-    user_id: int, recommendations: List[int], group_id, reco_origin
+    user_id: int, recommendations: List[int], group_id: str, reco_origin: str
 ):
     start = time.time()
     date = datetime.datetime.now(pytz.utc)
@@ -131,10 +134,7 @@ def save_recommendation(
 
 
 def get_cold_start_scored_recommendations_for_user(
-    user_id: int,
-    user_iris_id: int,
-    cold_start_categories: list,
-    number_of_preselected_offers: int,
+    user_id: int, user_iris_id: int, cold_start_categories: list
 ) -> List[Dict[str, Any]]:
 
     start = time.time()
@@ -185,7 +185,7 @@ def get_cold_start_scored_recommendations_for_user(
             recommendations_query,
             user_iris_id=str(user_iris_id),
             user_id=str(user_id),
-            number_of_preselected_offers=number_of_preselected_offers,
+            number_of_preselected_offers=NUMBER_OF_PRESELECTED_OFFERS,
         ).fetchall()
 
     cold_start_recommendations = [
@@ -213,7 +213,7 @@ def get_intermediate_recommendations_for_user(
     if not user_iris_id:
         query = text(
             """
-            SELECT offer_id, category, url, item_id, product_id
+            SELECT offer_id, category, subcategory_id, url, item_id, product_id
             FROM recommendable_offers
             WHERE is_national = True or url IS NOT NULL
             AND offer_id NOT IN
@@ -233,7 +233,7 @@ def get_intermediate_recommendations_for_user(
     else:
         query = text(
             f"""
-            SELECT offer_id, category, url, item_id, product_id
+            SELECT offer_id, category, subcategory_id, url, item_id, product_id
             FROM recommendable_offers
             WHERE
                 (
@@ -252,7 +252,7 @@ def get_intermediate_recommendations_for_user(
                 FROM non_recommendable_offers
                 WHERE user_id = :user_id
                 )
-            AND booking_number > 0 
+            AND booking_number > 0
             ORDER BY RANDOM();
             """
         )
@@ -266,9 +266,10 @@ def get_intermediate_recommendations_for_user(
         {
             "id": row[0],
             "category": row[1],
-            "url": row[2],
-            "item_id": row[3],
-            "product_id": row[4],
+            "subcategory_id": row[2],
+            "url": row[3],
+            "item_id": row[4],
+            "product_id": row[5],
         }
         for row in query_result
     ]
@@ -281,29 +282,57 @@ def get_intermediate_recommendations_for_user(
 
 
 def get_scored_recommendation_for_user(
-    user_id: int,
-    user_recommendations: List[Dict[str, Any]],
-    model_region: str,
-    model_name: str,
-    version: str,
-    input_type: str,
+    user_id: int, group_id: str, user_recommendations: List[Dict[str, Any]]
 ) -> List[Dict[str, int]]:
+    """
+    Depending on the user group, prepare the data to send to the model, and make the call.
+    """
 
     start = time.time()
     user_to_rank = [user_id] * len(user_recommendations)
-    if input_type == "offer_id_list":
-        instances = [recommendation["id"] for recommendation in user_recommendations]
-    elif input_type == "item_id_and_user_id_lists":
+
+    if group_id == "A":
+        # 29/10/2021 : A = Algo v1
+        model_name = MODEL_NAME_A
         offers_ids = [
             recommendation["item_id"] if recommendation["item_id"] else ""
             for recommendation in user_recommendations
         ]
         instances = [{"input_1": user_to_rank, "input_2": offers_ids}]
+
+    elif group_id == "B":
+        # 29/10/2021 : B = Algo v2 : Deep Reco
+        model_name = MODEL_NAME_B
+        offers_ids = [
+            recommendation["item_id"] if recommendation["item_id"] else ""
+            for recommendation in user_recommendations
+        ]
+        offers_subcategories = [
+            recommendation["subcategory_id"] if recommendation["subcategory_id"] else ""
+            for recommendation in user_recommendations
+        ]
+
+        instances = [
+            {
+                "input_1": user_to_rank,
+                "input_2": offers_ids,
+                "input_3": offers_subcategories,
+            }
+        ]
+        instances = [recommendation["id"] for recommendation in user_recommendations]
+
+    elif group_id == "C":
+        # 29/10/2021 : C = Algo v2 : Matrix Factorization
+        model_name = MODEL_NAME_C
+        offers_ids = [
+            recommendation["item_id"] if recommendation["item_id"] else ""
+            for recommendation in user_recommendations
+        ]
+        instances = [{"input_1": user_to_rank, "input_2": offers_ids}]
+
     else:
         instances = []
-    predicted_scores = predict_score(
-        model_region, GCP_PROJECT, model_name, instances, version
-    )
+    predicted_scores = predict_score(MODEL_REGION, GCP_PROJECT, model_name, instances)
 
     recommendations = [
         {**recommendation, "score": predicted_scores[i]}
@@ -316,7 +345,10 @@ def get_scored_recommendation_for_user(
     return recommendations
 
 
-def predict_score(region, project, model, instances, version):
+def predict_score(region, project, model, instances):
+    """
+    Calls the AI Platform endpoint for the given model and instances and retrieves the scores.
+    """
     start = time.time()
     endpoint = f"https://{region}-ml.googleapis.com"
     client_options = ClientOptions(api_endpoint=endpoint)
@@ -324,8 +356,6 @@ def predict_score(region, project, model, instances, version):
         "ml", "v1", client_options=client_options, cache_discovery=False
     )
     name = f"projects/{project}/models/{model}"
-    if version:
-        name += f"/versions/{version}"
 
     response = (
         service.projects().predict(name=name, body={"instances": instances}).execute()
@@ -339,7 +369,7 @@ def predict_score(region, project, model, instances, version):
 
 
 def order_offers_by_score_and_diversify_categories(
-    offers: List[Dict[str, Any]], number_of_recommendations: int
+    offers: List[Dict[str, Any]]
 ) -> List[int]:
     """
     Group offers by category.
@@ -376,14 +406,14 @@ def order_offers_by_score_and_diversify_categories(
                 diversified_offers.append(
                     offers_by_category_ordered_by_frequency[offer_category].pop()
                 )
-        if len(diversified_offers) >= number_of_recommendations:
+        if len(diversified_offers) >= NUMBER_OF_RECOMMENDATIONS:
             break
 
     ordered_and_diversified_offers = [offer["id"] for offer in diversified_offers][
-        :number_of_recommendations
+        :NUMBER_OF_RECOMMENDATIONS
     ]
 
-    log_duration(f"order_offers_by_score_and_diversify_categories", start)
+    log_duration("order_offers_by_score_and_diversify_categories", start)
     return ordered_and_diversified_offers
 
 

@@ -346,6 +346,7 @@ def test_get_cold_start_scored_recommendations_for_user(
             {
                 "id": "3",
                 "category": "C",
+                "subcategory_id": "EVENEMENT_CINE",
                 "url": "url",
                 "product_id": "product-3",
                 "score": 1,
@@ -353,6 +354,7 @@ def test_get_cold_start_scored_recommendations_for_user(
             {
                 "id": "1",
                 "category": "A",
+                "subcategory_id": "EVENEMENT_CINE",
                 "url": None,
                 "product_id": "product-1",
                 "score": 1,
@@ -360,6 +362,7 @@ def test_get_cold_start_scored_recommendations_for_user(
             {
                 "id": "4",
                 "category": "D",
+                "subcategory_id": "EVENEMENT_CINE",
                 "url": "url",
                 "product_id": "product-4",
                 "score": 1,

@@ -3,7 +3,7 @@ from sqlalchemy import text
 
 from utils import create_db_connection, log_duration
 
-# build with notebook
+# build with notebook , to improve use subcategories table in db 
 MACRO_CATEGORIES_TYPE_MAPPING = {
     "SUPPORT_PHYSIQUE_FILM": ["FILM"],
     "ABO_MEDIATHEQUE": ["FILM"],
@@ -118,4 +118,4 @@ def get_cold_start_categories(user_id: int) -> list:
                 MACRO_CATEGORIES_TYPE_MAPPING[qpi_answers_categories[category_index]]
             )
     log_duration("get_cold_start_categories", start)
-    return cold_start_categories
+    return list(set(cold_start_categories))

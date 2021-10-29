@@ -214,12 +214,12 @@ def enrich_answers(
 
 def format_answers(
     gcp_project,
-    bigquery_clean_dataset,
+    bigquery_analytics_dataset,
     enriched_qpi_answer_table,
 ):
     ucs = {}
     df_qpi = pd.read_gbq(
-        f"""SELECT * FROM {gcp_project}.{bigquery_clean_dataset}.cs_{enriched_qpi_answer_table}"""
+        f"""SELECT * FROM {gcp_project}.{bigquery_analytics_dataset}.{enriched_qpi_answer_table}_temp"""
     )
     qpi_questions = [f"Q{i}" for i in range(NBQPIQUESTION)]
     for ind in df_qpi.index:
@@ -246,7 +246,7 @@ def format_answers(
 
     df_formatted_answers = pd.DataFrame(data=dict_list)
     df_formatted_answers.to_gbq(
-        f"""{bigquery_clean_dataset}.{enriched_qpi_answer_table}""",
+        f"""{bigquery_analytics_dataset}.{enriched_qpi_answer_table}""",
         project_id=f"{gcp_project}",
         if_exists="append",
     )

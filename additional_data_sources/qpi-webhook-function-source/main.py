@@ -2,7 +2,7 @@ import hashlib
 import hmac
 import base64
 import os
-
+import pandas as pd
 import psycopg2
 import sqlalchemy
 from google.cloud import secretmanager
@@ -50,6 +50,119 @@ FORM = {
     },
     ##add new question IDs , with associate responces
 }
+
+QPI_TO_SUBCAT = {
+    "Q0": ["ABO_MEDIATHEQUE", "AUTRE_SUPPORT_NUMERIQUE", "VOD"],
+    "Q1": ["ABO_PLATEFORME_MUSIQUE", "CAPTATION_MUSIQUE", "TELECHARGEMENT_MUSIQUE"],
+    "Q2": ["PODCAST"],
+    "Q3": ["LIVRE_AUDIO_PHYSIQUE", "TELECHARGEMENT_LIVRE_AUDIO", "LIVRE_PAPIER"],
+    "Q4": ["ABO_PRESSE_EN_LIGNE", "APP_CULTURELLE"],
+    "Q5": [
+        "ACHAT_INSTRUMENT",
+        "BON_ACHAT_INSTRUMENT",
+        "LOCATION_INSTRUMENT",
+        "PARTITION",
+    ],
+    "Q6": ["ABO_JEU_VIDEO", "ABO_LUDOTHEQUE", "JEU_EN_LIGNE"],
+    "Q7": ["MATERIEL_ART_CREATIF"],
+    "Q8": [""],
+    "Q9": [
+        "CARTE_CINE_ILLIMITE",
+        "CARTE_CINE_MULTISEANCES",
+        "CINE_VENTE_DISTANCE",
+        "SEANCE_CINE",
+    ],
+    "Q10": [""],
+    "Q11": ["ABO_CONCERT", "CONCERT", "LIVESTREAM_MUSIQUE"],
+    "Q12": ["VISITE", "VISITE_GUIDEE", "VISITE_VIRTUELLE", "EVENEMENT_PATRIMOINE"],
+    "Q13": ["ABO_SPECTACLE", "SPECTACLE_ENREGISTRE"],
+    "Q14": [""],
+    "Q15": ["CONCOURS", "ESCAPE_GAME", "RENCONTRE_JEU", "EVENEMENT_JEU"],
+    "Q16": ["CONFERENCE", "DECOUVERTE_METIERS", "RENCONTRE"],
+    "Q17": ["ABO_PRATIQUE_ART", "SEANCE_ESSAI_PRATIQUE_ART"],
+    "Q18": [""],
+    "Q19": ["SPECTACLE_REPRESENTATION"],
+    "Q20": ["SPECTACLE_REPRESENTATION"],
+    "Q21": ["SPECTACLE_REPRESENTATION"],
+    "Q22": ["SPECTACLE_REPRESENTATION"],
+    "Q23": ["SPECTACLE_REPRESENTATION"],
+    "Q24": ["SPECTACLE_REPRESENTATION"],
+    "Q25": ["SPECTACLE_REPRESENTATION"],
+    "Q26": ["FESTIVAL_CINE"],
+    "Q27": ["FESTIVAL_LIVRE"],
+    "Q28": ["FESTIVAL_MUSIQUE"],
+    "Q29": ["FESTIVAL_SPECTACLE"],
+    "Q30": [""],
+}
+
+SUBCAT_LIST = [
+    "ABO_BIBLIOTHEQUE",
+    "ABO_CONCERT",
+    "ABO_JEU_VIDEO",
+    "ABO_LIVRE_NUMERIQUE",
+    "ABO_LUDOTHEQUE",
+    "ABO_MEDIATHEQUE",
+    "ABO_MUSEE",
+    "ABO_PLATEFORME_MUSIQUE",
+    "ABO_PLATEFORME_VIDEO",
+    "ABO_PRATIQUE_ART",
+    "ABO_PRESSE_EN_LIGNE",
+    "ABO_SPECTACLE",
+    "ACHAT_INSTRUMENT",
+    "ACTIVATION_EVENT",
+    "ACTIVATION_THING",
+    "APP_CULTURELLE",
+    "ATELIER_PRATIQUE_ART",
+    "AUTRE_SUPPORT_NUMERIQUE",
+    "BON_ACHAT_INSTRUMENT",
+    "CAPTATION_MUSIQUE",
+    "CARTE_CINE_ILLIMITE",
+    "CARTE_CINE_MULTISEANCES",
+    "CARTE_MUSEE",
+    "CINE_PLEIN_AIR",
+    "CINE_VENTE_DISTANCE",
+    "CONCERT",
+    "CONCOURS",
+    "CONFERENCE",
+    "DECOUVERTE_METIERS",
+    "ESCAPE_GAME",
+    "EVENEMENT_CINE",
+    "EVENEMENT_JEU",
+    "EVENEMENT_MUSIQUE",
+    "EVENEMENT_PATRIMOINE",
+    "FESTIVAL_CINE",
+    "FESTIVAL_LIVRE",
+    "FESTIVAL_MUSIQUE",
+    "FESTIVAL_SPECTACLE",
+    "JEU_EN_LIGNE",
+    "JEU_SUPPORT_PHYSIQUE",
+    "LIVESTREAM_EVENEMENT",
+    "LIVESTREAM_MUSIQUE",
+    "LIVRE_AUDIO_PHYSIQUE",
+    "LIVRE_NUMERIQUE",
+    "LIVRE_PAPIER",
+    "LOCATION_INSTRUMENT",
+    "MATERIEL_ART_CREATIF",
+    "MUSEE_VENTE_DISTANCE",
+    "OEUVRE_ART",
+    "PARTITION",
+    "PODCAST",
+    "RENCONTRE_JEU",
+    "RENCONTRE",
+    "SALON",
+    "SEANCE_CINE",
+    "SEANCE_ESSAI_PRATIQUE_ART",
+    "SPECTACLE_ENREGISTRE",
+    "SPECTACLE_REPRESENTATION",
+    "SUPPORT_PHYSIQUE_FILM",
+    "SUPPORT_PHYSIQUE_MUSIQUE",
+    "TELECHARGEMENT_LIVRE_AUDIO",
+    "TELECHARGEMENT_MUSIQUE",
+    "VISITE_GUIDEE",
+    "VISITE_VIRTUELLE",
+    "VISITE",
+    "VOD",
+]
 
 
 def access_secret(project_id, secret_id, version_id=1, default=None):
@@ -163,14 +276,35 @@ def run(request):
     qpi_questions = [f"Q{i}" for i in range(NbOfQPIquestions)]
     for qpi_question in qpi_questions:
         answer_values_dictionary[qpi_question] = (
-            "true" if answer_dictionary.get(qpi_question, 0) > 0 else "false"
+            ["true"] if answer_dictionary.get(qpi_question, 0) > 0 else ["false"]
         )
 
+    ucs = {}
+    df_qpi = pd.DataFrame(data=answer_values_dictionary)
+    for ind in df_qpi.index:
+        user_subcat_list = []
+        for question in qpi_questions:
+            if df_qpi[f"{question}"][ind] == "true":
+                for subcat in QPI_TO_SUBCAT[f"{question}"]:
+                    user_subcat_list.append(subcat)
+        ucs[f"{df_qpi['user_id'][ind]}"] = {"subcat": list(set(user_subcat_list))}
+
+    for user_id in ucs.keys():
+        final_dict = {}
+        final_dict["user_id"] = user_id
+        for category in SUBCAT_LIST:
+            if category in ucs[f"{user_id}"]["subcat"]:
+                final_dict[f"{category}"] = True
+            else:
+                final_dict[f"{category}"] = False
     # Ingest Data
     connection = create_db_connection()
 
+    values_to_insert = ""
+    for key in final_dict:
+        values_to_insert += f"{final_dict[key]}" + ","
     connection.execute(
-        f"INSERT INTO qpi_answers ({', '.join([key for key in answer_values_dictionary])}) "
-        f"VALUES ({', '.join([answer_values_dictionary[key] for key in answer_values_dictionary])})"
+        f"""INSERT INTO qpi_answers ({', '.join(f'"{key}"' for key in final_dict)}) """
+        f"VALUES (" + values_to_insert[:-1] + ")"
     )
     return "Success"

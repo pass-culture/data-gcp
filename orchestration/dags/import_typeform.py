@@ -152,7 +152,7 @@ with DAG(
             bigquery_clean_dataset=BIGQUERY_CLEAN_DATASET,
         ),
         use_legacy_sql=False,
-        destination_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_ANALYTICS_DATASET}.cs_enriched_{QPI_ANSWERS_TABLE}",
+        destination_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_ANALYTICS_DATASET}.enriched_{QPI_ANSWERS_TABLE}_temp",
         write_disposition="WRITE_TRUNCATE",
     )
 
@@ -161,7 +161,7 @@ with DAG(
         python_callable=format_answers,
         op_kwargs={
             "gcp_project": GCP_PROJECT,
-            "bigquery_clean_dataset": BIGQUERY_ANALYTICS_DATASET,
+            "bigquery_analytics_dataset": BIGQUERY_ANALYTICS_DATASET,
             "enriched_qpi_answer_table": f"enriched_{QPI_ANSWERS_TABLE}",
         },
         dag=dag,

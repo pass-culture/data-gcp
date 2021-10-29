@@ -90,7 +90,11 @@ with DAG(
         method="POST",
         http_conn_id="http_gcp_cloud_function",
         endpoint=TYPEFORM_FUNCTION_NAME,
-        data=json.dumps({"after": None}),
+        data=json.dumps(
+            {
+                "after": "{{task_instance.xcom_pull(task_ids='getting_last_token', key='return_value')}}"
+            }
+        ),
         headers={
             "Content-Type": "application/json",
             "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_service_account_token', key='return_value')}}",
@@ -104,7 +108,7 @@ with DAG(
     import_answers_to_bigquery = GoogleCloudStorageToBigQueryOperator(
         task_id="import_answers_to_bigquery",
         bucket=DATA_GCS_BUCKET_NAME,
-        source_objects=[f"QPI_exports/qpi_answers_{today}.jsonl"],
+        source_objects=["QPI_exports/qpi_answers_{{ tomorrow_ds_nodash }}.jsonl"],
         destination_project_dataset_table=f"{BIGQUERY_RAW_DATASET}.temp_{QPI_ANSWERS_TABLE}",
         write_disposition="WRITE_TRUNCATE",
         source_format="NEWLINE_DELIMITED_JSON",

@@ -346,7 +346,7 @@ def define_import_query(
                 id AS educational_booking_id
                 ,"educationalInstitutionId" AS educational_booking_educational_institution_id
                 ,"educationalYearId" AS educational_booking_educational_year_id
-                ,status AS educational_booking_status
+                ,CAST("status" AS VARCHAR) AS educational_booking_status
                 ,"confirmationDate" AS educational_booking_confirmation_date
                 ,"confirmationLimitDate" AS educational_booking_confirmation_limit_date
                 ,"educationalRedactorId" AS educational_booking_educational_redactor_id

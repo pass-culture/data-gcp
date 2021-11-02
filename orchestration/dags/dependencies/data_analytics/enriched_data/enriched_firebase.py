@@ -165,7 +165,19 @@ def copy_table_to_analytics(gcp_project, bigquery_raw_dataset, execution_date):
             (select event_params.value.string_value
                 from unnest(event_params) event_params
                 where event_params.key = 'moduleName'
-            ) as module_name
+            ) as module_name,
+            (select event_params.value.string_value
+                from unnest(event_params) event_params
+                where event_params.key = 'traffic_campaign'
+            ) as traffic_campaign,
+            (select event_params.value.string_value
+                from unnest(event_params) event_params
+                where event_params.key = 'traffic_medium'
+            ) as traffic_medium,
+            (select event_params.value.string_value
+                from unnest(event_params) event_params
+                where event_params.key = 'traffic_source'
+            ) as traffic_source
         FROM {gcp_project}.{bigquery_raw_dataset}.events_{execution_date}
     )
     SELECT * EXCEPT(double_offer_id, string_offer_id),

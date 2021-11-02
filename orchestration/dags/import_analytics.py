@@ -103,6 +103,17 @@ data_applicative_tables_and_date_columns = {
         "dateupdated",
     ],
     "beneficiary_fraud_check": [""],
+    "educational_booking": [
+        "educational_booking_confirmation_date",
+        "educational_booking_confirmation_limit_date",
+    ],
+    "educational_deposit": ["educational_deposit_creation_date"],
+    "educational_institution": [""],
+    "educational_redactor": [""],
+    "educational_year": [
+        "educational_year_beginning_date",
+        "educational_year_expiration_date",
+    ],
 }
 
 default_dag_args = {

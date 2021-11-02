@@ -110,9 +110,7 @@ with DAG(
 
         select_columns = ", ".join(
             [
-                f"""{column_name}"""
-                if (table == "qpi_answers" and column_name == "user_id")
-                else column_name
+                column_name
                 for column_name in TABLES[table]["columns"]
                 if column_name not in list_type_columns
             ]

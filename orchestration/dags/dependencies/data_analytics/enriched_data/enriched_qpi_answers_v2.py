@@ -198,7 +198,6 @@ def enrich_answers(
                 select *, ROW_NUMBER() OVER() as row_id from `{gcp_project}.{bigquery_clean_dataset}.qpi_answers_v3`
             ) as qpi, qpi.answers as answers
         )
-        
         SELECT max(user_id) as user_id, CAST(max(catch_up_user_id) AS STRING) as catch_up_user_id,
             {
         f'{new_line}'.join(

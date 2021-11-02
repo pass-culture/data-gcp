@@ -289,8 +289,8 @@ def run(request):
                     user_subcat_list.append(subcat)
         ucs[f"{df_qpi['user_id'][ind]}"] = {"subcat": list(set(user_subcat_list))}
 
+    final_dict = {}
     for user_id in ucs.keys():
-        final_dict = {}
         final_dict["user_id"] = user_id
         for category in SUBCAT_LIST:
             if category in ucs[f"{user_id}"]["subcat"]:
@@ -300,11 +300,11 @@ def run(request):
     # Ingest Data
     connection = create_db_connection()
 
-    values_to_insert = ""
-    for key in final_dict:
-        values_to_insert += f"{final_dict[key]}" + ","
+    values_to_insert = (
+        f"VALUES ({', '.join([f'{final_dict[key]}' for key in final_dict])})"
+    )
     connection.execute(
         f"""INSERT INTO qpi_answers ({', '.join(f'"{key}"' for key in final_dict)}) """
-        f"VALUES (" + values_to_insert[:-1] + ")"
+        f"{values_to_insert}"
     )
     return "Success"

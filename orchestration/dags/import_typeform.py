@@ -102,7 +102,6 @@ with DAG(
         log_response=True,
     )
 
-    today = date.today().strftime("%Y%m%d")
     # the tomorrow_ds_nodash enables catchup :
     # it fetches the file corresponding to the initial execution date of the dag and not the day the task is run.
     import_answers_to_bigquery = GoogleCloudStorageToBigQueryOperator(
@@ -161,7 +160,7 @@ with DAG(
     )
 
     format_qpi_answers = PythonOperator(
-        task_id=f"format_qpi_answers",
+        task_id="format_qpi_answers",
         python_callable=format_answers,
         op_kwargs={
             "gcp_project": GCP_PROJECT,

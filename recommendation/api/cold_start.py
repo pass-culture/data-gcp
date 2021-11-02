@@ -3,7 +3,7 @@ from sqlalchemy import text
 
 from utils import create_db_connection, log_duration
 
-# build with notebook , to improve use subcategories table in db 
+# build with notebook , to improve use subcategories table in db
 MACRO_CATEGORIES_TYPE_MAPPING = {
     "SUPPORT_PHYSIQUE_FILM": ["FILM"],
     "ABO_MEDIATHEQUE": ["FILM"],

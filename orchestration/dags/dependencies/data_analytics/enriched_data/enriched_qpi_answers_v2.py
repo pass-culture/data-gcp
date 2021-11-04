@@ -159,10 +159,10 @@ SUBCAT_LIST = [
 ]
 
 
-def create_condition(question_id, question_nb):
+def create_condition(question_id, question_nb, qpi_form):
     return (
         f"SUM(CAST(question_id = '{question_id}' "
-        f"""and "{FORM[question_id][question_nb]}" IN UNNEST(choices) AS INT64))"""
+        f"""and "{qpi_form[question_id][question_nb]}" IN UNNEST(choices) AS INT64))"""
     )
 
 
@@ -198,7 +198,7 @@ def enrich_answers(gcp_project, bigquery_clean_dataset):
         SELECT max(user_id) as user_id, CAST(max(catch_up_user_id) AS STRING) as catch_up_user_id,
             {
         f'{new_line}'.join(
-        [f"CASE WHEN ({create_condition(question_id, question_nb)} > 0)  then { [f'{tag}' for tag in QPI_TO_SUBCAT[question_nb]]} else NULL END  as {question_nb}"
+        [f"CASE WHEN ({create_condition(question_id, question_nb,qpi_form)} > 0)  then { [f'{tag}' for tag in QPI_TO_SUBCAT[question_nb]]} else NULL END  as {question_nb}"
             for question_id in qpi_form for question_nb in qpi_form[question_id] ] 
             )
             }

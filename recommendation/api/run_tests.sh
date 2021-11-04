@@ -13,12 +13,13 @@ fi
 function wait_for_container () {(
     until PGPASSWORD=postgres psql -h localhost -p $DATA_GCP_TEST_POSTGRES_PORT -U "postgres" -c '\q'; do
       >&2 echo "Postgres is unavailable - sleeping"
-      sleep 1
+      sleep 2
     done
 )}
 function run () {(
     pytest --cov
 )}
+sleep 3
 wait_for_container
 run
 status=$?

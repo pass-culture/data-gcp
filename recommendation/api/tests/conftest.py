@@ -23,7 +23,7 @@ TEST_DATABASE_CONFIG = {
 @pytest.fixture
 def app_config() -> Dict[str, Any]:
     return {
-        "AB_TESTING_TABLE": "ab_testing_202104_v0_v0bis",
+        "AB_TESTING_TABLE": "ab_testing",
         "NUMBER_OF_RECOMMENDATIONS": 10,
         "NUMBER_OF_PRESELECTED_OFFERS": 50,
         "MODEL_REGION": "model_region",
@@ -47,6 +47,14 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
             "offer_id": ["1", "2", "3", "4", "5", "6"],
             "venue_id": ["11", "22", "33", "44", "55", "22"],
             "category": ["A", "B", "C", "D", "E", "B"],
+            "subcategory_id": [
+                "EVENEMENT_CINE",
+                "EVENEMENT_CINE",
+                "EVENEMENT_CINE",
+                "EVENEMENT_CINE",
+                "EVENEMENT_CINE",
+                "EVENEMENT_CINE",
+            ],
             "name": ["a", "b", "c", "d", "e", "f"],
             "url": [None, None, "url", "url", None, None],
             "is_national": [True, False, True, False, True, False],

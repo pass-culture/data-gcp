@@ -102,7 +102,7 @@ with DAG(
         },
         log_response=True,
     )
-    today = date.today().strftime("%Y%m%d") # usefull to test in dev 
+    today = date.today().strftime("%Y%m%d")  # usefull to test in dev
     # the tomorrow_ds_nodash enables catchup :
     # it fetches the file corresponding to the initial execution date of the dag and not the day the task is run.
     import_answers_to_bigquery = GoogleCloudStorageToBigQueryOperator(

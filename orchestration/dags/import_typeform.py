@@ -28,7 +28,6 @@ from dependencies.config import (
 from dependencies.data_analytics.enriched_data.enriched_qpi_answers_v2 import (
     enrich_answers,
     format_answers,
-    FORM,
 )
 
 TYPEFORM_FUNCTION_NAME = "qpi_import_" + ENV_SHORT_NAME
@@ -152,9 +151,7 @@ with DAG(
     enrich_qpi_answers = BigQueryOperator(
         task_id="enrich_qpi_answers",
         sql=enrich_answers(
-            gcp_project=GCP_PROJECT,
-            bigquery_clean_dataset=BIGQUERY_CLEAN_DATASET,
-            FORM=FORM,
+            gcp_project=GCP_PROJECT, bigquery_clean_dataset=BIGQUERY_CLEAN_DATASET
         ),
         use_legacy_sql=False,
         destination_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_ANALYTICS_DATASET}.enriched_{QPI_ANSWERS_TABLE}_temp",

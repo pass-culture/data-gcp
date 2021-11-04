@@ -166,30 +166,27 @@ def create_condition(question_id, question_nb):
     )
 
 
-def enrich_answers(
-    gcp_project,
-    bigquery_clean_dataset,
-    FORM=FORM,
-):
+def enrich_answers(gcp_project, bigquery_clean_dataset):
+    qpi_form = FORM
     if bigquery_clean_dataset == "clean_dev":
-        FORM["QiK2FlxvTWtK"] = FORM["ge0Egr2m8V1T"]
-        FORM["DIsOskUyDgbw"] = FORM["NeyLJOqShoHw"]
-        FORM["PuKW507niOgt"] = FORM["WiWTxBLGoou4"]
-        FORM["4J8N6fC1aGzh"] = FORM["iX7doTby1OqL"]
-        FORM.pop("ge0Egr2m8V1T")
-        FORM.pop("NeyLJOqShoHw")
-        FORM.pop("WiWTxBLGoou4")
-        FORM.pop("iX7doTby1OqL")
+        qpi_form["QiK2FlxvTWtK"] = qpi_form["ge0Egr2m8V1T"]
+        qpi_form["DIsOskUyDgbw"] = qpi_form["NeyLJOqShoHw"]
+        qpi_form["PuKW507niOgt"] = qpi_form["WiWTxBLGoou4"]
+        qpi_form["4J8N6fC1aGzh"] = qpi_form["iX7doTby1OqL"]
+        qpi_form.pop("ge0Egr2m8V1T")
+        qpi_form.pop("NeyLJOqShoHw")
+        qpi_form.pop("WiWTxBLGoou4")
+        qpi_form.pop("iX7doTby1OqL")
 
     elif bigquery_clean_dataset == "clean_stg":
-        FORM["qVZoIyHvj5uu"] = FORM["ge0Egr2m8V1T"]
-        FORM["67hKXLLXKMvO"] = FORM["NeyLJOqShoHw"]
-        FORM["jwO0vLQzSN5N"] = FORM["WiWTxBLGoou4"]
-        FORM["79Zh7dyttVDS"] = FORM["iX7doTby1OqL"]
-        FORM.pop("ge0Egr2m8V1T")
-        FORM.pop("NeyLJOqShoHw")
-        FORM.pop("WiWTxBLGoou4")
-        FORM.pop("iX7doTby1OqL")
+        qpi_form["qVZoIyHvj5uu"] = qpi_form["ge0Egr2m8V1T"]
+        qpi_form["67hKXLLXKMvO"] = qpi_form["NeyLJOqShoHw"]
+        qpi_form["jwO0vLQzSN5N"] = qpi_form["WiWTxBLGoou4"]
+        qpi_form["79Zh7dyttVDS"] = qpi_form["iX7doTby1OqL"]
+        qpi_form.pop("ge0Egr2m8V1T")
+        qpi_form.pop("NeyLJOqShoHw")
+        qpi_form.pop("WiWTxBLGoou4")
+        qpi_form.pop("iX7doTby1OqL")
 
     new_line = ", \n\t     "
     return f"""

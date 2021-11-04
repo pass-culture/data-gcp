@@ -167,7 +167,7 @@ def create_condition(question_id, question_nb):
 
 
 def enrich_answers(gcp_project, bigquery_clean_dataset):
-    qpi_form = FORM
+    qpi_form = FORM.copy()
     if bigquery_clean_dataset == "clean_dev":
         qpi_form["QiK2FlxvTWtK"] = qpi_form["ge0Egr2m8V1T"]
         qpi_form["DIsOskUyDgbw"] = qpi_form["NeyLJOqShoHw"]
@@ -199,7 +199,7 @@ def enrich_answers(gcp_project, bigquery_clean_dataset):
             {
         f'{new_line}'.join(
         [f"CASE WHEN ({create_condition(question_id, question_nb)} > 0)  then { [f'{tag}' for tag in QPI_TO_SUBCAT[question_nb]]} else NULL END  as {question_nb}"
-            for question_id in FORM for question_nb in FORM[question_id] ] 
+            for question_id in qpi_form for question_nb in qpi_form[question_id] ] 
             )
             }
         FROM  unrolled_answers

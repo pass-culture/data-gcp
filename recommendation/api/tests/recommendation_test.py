@@ -25,7 +25,6 @@ def test_get_final_recommendation_for_group_a_cold_start(
     get_iris_from_coordinates_mock: Mock,
     get_cold_start_scored_recommendations_for_user_mock: Mock,
     setup_pool: Any,
-    app_config: Dict[str, Any],
 ):
     # Given
     mock_pool.return_value = setup_pool
@@ -50,9 +49,7 @@ def test_get_final_recommendation_for_group_a_cold_start(
     get_iris_from_coordinates_mock.return_value = 1
 
     # When
-    recommendations = get_final_recommendations(
-        user_id, 2.331289, 48.830719, app_config
-    )
+    recommendations = get_final_recommendations(user_id, 2.331289, 48.830719)
 
     # Then
     assert sorted(recommendations) == [2, 3]
@@ -71,7 +68,6 @@ def test_get_final_recommendation_for_group_a_algo(
     get_scored_recommendation_for_user_mock: Mock,
     get_intermediate_recommendations_for_user_mock: Mock,
     setup_pool: Any,
-    app_config: Dict[str, Any],
 ):
     # Given
     mock_pool.return_value = setup_pool
@@ -114,9 +110,7 @@ def test_get_final_recommendation_for_group_a_algo(
     get_iris_from_coordinates_mock.return_value = 1
 
     # When
-    recommendations = get_final_recommendations(
-        user_id, 2.331289, 48.830719, app_config
-    )
+    recommendations = get_final_recommendations(user_id, 2.331289, 48.830719)
 
     # Then
     assert sorted(recommendations) == [2, 3]
@@ -137,7 +131,6 @@ def test_get_final_recommendation_for_group_b(
     get_scored_recommendation_for_user_mock: Mock,
     get_intermediate_recommendations_for_user_mock: Mock,
     setup_pool: Any,
-    app_config: Dict[str, Any],
 ):
     # Given
     mock_pool.return_value = setup_pool
@@ -204,7 +197,6 @@ def test_get_final_recommendation_for_new_user(
     get_scored_recommendation_for_user: Mock,
     order_offers_by_score_and_diversify_categories: Mock,
     setup_pool: Any,
-    app_config: Dict[str, Any],
 ):
     # Given
     mock_pool.return_value = setup_pool
@@ -254,9 +246,7 @@ def test_get_final_recommendation_for_new_user(
     get_iris_from_coordinates_mock.return_value = 1
 
     # When
-    recommendations = get_final_recommendations(
-        user_id, 2.331289, 48.830719, app_config
-    )
+    recommendations = get_final_recommendations(user_id, 2.331289, 48.830719)
     try:
         get_intermediate_recommendations_for_user.assert_called()
     except AssertionError:
@@ -343,12 +333,10 @@ def test_get_cold_start_scored_recommendations_for_user(
     user_id = 113
     user_iris_id = None
     cold_start_categories = []
-    number_of_preselected_offers = 3
     user_recommendation = get_cold_start_scored_recommendations_for_user(
         user_id,
         user_iris_id,
         cold_start_categories,
-        number_of_preselected_offers,
     )
 
     # Then
@@ -358,7 +346,6 @@ def test_get_cold_start_scored_recommendations_for_user(
             {
                 "id": "3",
                 "category": "C",
-                "subcategory_id": "EVENEMENT_CINE",
                 "url": "url",
                 "product_id": "product-3",
                 "score": 1,
@@ -366,7 +353,6 @@ def test_get_cold_start_scored_recommendations_for_user(
             {
                 "id": "1",
                 "category": "A",
-                "subcategory_id": "EVENEMENT_CINE",
                 "url": None,
                 "product_id": "product-1",
                 "score": 1,
@@ -374,7 +360,6 @@ def test_get_cold_start_scored_recommendations_for_user(
             {
                 "id": "4",
                 "category": "D",
-                "subcategory_id": "EVENEMENT_CINE",
                 "url": "url",
                 "product_id": "product-4",
                 "score": 1,
@@ -528,15 +513,11 @@ def test_get_intermediate_recommendation_for_user_with_no_iris(
 def test_order_offers_by_score_and_diversify_categories(
     offers: List[Dict[str, Any]], output: List[int]
 ):
-    assert_array_equal(
-        output, order_offers_by_score_and_diversify_categories(offers, 10)
-    )
+    assert_array_equal(output, order_offers_by_score_and_diversify_categories(offers))
 
 
 @patch("recommendation.predict_score")
-def test_get_scored_recommendation_for_user(
-    predict_score_mock: Mock, app_config: Dict[str, Any]
-):
+def test_get_scored_recommendation_for_user(predict_score_mock: Mock):
     # Given
     group_id = "A"
     user_id = 333

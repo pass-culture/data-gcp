@@ -100,7 +100,7 @@ def get_cold_start_categories(user_id: int) -> list:
 
     qpi_answers_categories = list(MACRO_CATEGORIES_TYPE_MAPPING.keys())
     cold_start_query = text(
-        f"SELECT {', '.join(qpi_answers_categories)} FROM qpi_answers WHERE user_id = :user_id;"
+        f"""SELECT {', '.join(f'"{qpi_answers_categories}"')} FROM qpi_answers WHERE user_id = :user_id;"""
     )
 
     with create_db_connection() as connection:

@@ -299,6 +299,7 @@ def get_scored_recommendation_for_user(
             for recommendation in user_recommendations
         ]
         instances = [{"input_1": user_to_rank, "input_2": offers_ids}]
+        # Format = dict with 2 inputs: arrays of users and offers
 
     elif group_id == "B":
         # 29/10/2021 : B = Algo v2 : Deep Reco
@@ -319,19 +320,21 @@ def get_scored_recommendation_for_user(
                 "input_3": offers_subcategories,
             }
         ]
-        instances = [recommendation["id"] for recommendation in user_recommendations]
+        # Format = dict with 3 inputs: arrays of users, offers and subcategories
 
     elif group_id == "C":
         # 29/10/2021 : C = Algo v2 : Matrix Factorization
         model_name = MODEL_NAME_C
-        offers_ids = [
-            recommendation["item_id"] if recommendation["item_id"] else ""
-            for recommendation in user_recommendations
-        ]
-        instances = [{"input_1": user_to_rank, "input_2": offers_ids}]
+        instances = []
+
+        for recommendation in user_recommendations:
+            offer_id = recommendation["item_id"] if recommendation["item_id"] else ""
+            instances.append({"inputs": [user_id, offer_id]})
+            # Format = array of dicts {"inputs": [user_id, offer_id]}
 
     else:
         instances = []
+
     predicted_scores = predict_score(MODEL_REGION, GCP_PROJECT, model_name, instances)
 
     recommendations = [

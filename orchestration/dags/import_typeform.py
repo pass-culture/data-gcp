@@ -28,6 +28,7 @@ from dependencies.config import (
 from dependencies.data_analytics.enriched_data.enriched_qpi_answers_v2 import (
     enrich_answers,
     format_answers,
+    FORM,
 )
 
 TYPEFORM_FUNCTION_NAME = "qpi_import_" + ENV_SHORT_NAME
@@ -101,7 +102,7 @@ with DAG(
         },
         log_response=True,
     )
-
+    today = date.today().strftime("%Y%m%d") # usefull to test in dev 
     # the tomorrow_ds_nodash enables catchup :
     # it fetches the file corresponding to the initial execution date of the dag and not the day the task is run.
     import_answers_to_bigquery = GoogleCloudStorageToBigQueryOperator(
@@ -153,6 +154,7 @@ with DAG(
         sql=enrich_answers(
             gcp_project=GCP_PROJECT,
             bigquery_clean_dataset=BIGQUERY_CLEAN_DATASET,
+            FORM=FORM,
         ),
         use_legacy_sql=False,
         destination_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_ANALYTICS_DATASET}.enriched_{QPI_ANSWERS_TABLE}_temp",

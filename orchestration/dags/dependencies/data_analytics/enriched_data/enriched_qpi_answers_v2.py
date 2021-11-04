@@ -169,7 +169,7 @@ def create_condition(question_id, question_nb):
 def enrich_answers(
     gcp_project,
     bigquery_clean_dataset,
-    FORM,
+    FORM=FORM,
 ):
     if bigquery_clean_dataset == "clean_dev":
         FORM["QiK2FlxvTWtK"] = FORM["ge0Egr2m8V1T"]

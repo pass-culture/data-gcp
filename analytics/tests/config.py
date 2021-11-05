@@ -240,6 +240,7 @@ BIGQUERY_SCHEMAS = {
         "amount": "NUMERIC",
         "expirationDate": "DATETIME",
         "dateCreated": "DATETIME",
+        "type": "STRING",
     },
     "offer_report": {
         "offer_report_id": "STRING",

@@ -393,7 +393,15 @@ def define_import_query(
                 ,"adageId" AS educational_year_adage_id
             FROM educational_year
         """
-
+    cloudsql_queries[
+        "individual_booking"
+    ] = """
+            SELECT
+                id AS individual_booking_id
+                ,"userId" AS user_id
+                ,"depositId" AS deposit_id
+            FROM individual_booking
+        """
     # Build specific federated queries
     queries = {}
     for external_table, external_query in cloudsql_queries.items():

@@ -521,7 +521,7 @@ def test_get_scored_recommendation_for_user(predict_score_mock: Mock):
     # Given
     group_id = "A"
     user_id = 333
-    predict_score_mock.return_value = [1, 2, 3]
+    predict_score_mock.return_value = [[1], [2], [3]]
     user_recommendation = [
         {
             "id": 1,

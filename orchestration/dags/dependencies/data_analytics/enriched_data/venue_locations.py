@@ -20,6 +20,6 @@ def define_table_venue_locations(dataset, table_prefix=""):
         where ST_CONTAINS(geoshape, ST_GEOGPOINT(venue.venue_longitude,venue.venue_latitude)) is true 
               and venue.venue_latitude>-90 and venue.venue_latitude <90 and venue.venue_longitude >-90 
               and venue.venue_longitude <90 and ST_CONTAINS(epci.geo_shape, ST_GEOGPOINT(venue.venue_longitude,venue.venue_latitude)) is true
-              and venue.venue_longitude <90 and ST_CONTAINS(table_insee.geo_shape_insee, ST_GEOGPOINT(venue.venue_longitude,venue.venue_latitude)) is true
+              and ST_CONTAINS(table_insee.geo_shape_insee, ST_GEOGPOINT(venue.venue_longitude,venue.venue_latitude)) is true
               and cast(ZRR.CODGEO as string) = table_insee.insee_com;
     """

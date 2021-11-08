@@ -325,12 +325,11 @@ def get_scored_recommendation_for_user(
     elif group_id == "C":
         # 29/10/2021 : C = Algo v2 : Matrix Factorization
         model_name = MODEL_NAME_C
-        instances = []
-
-        for recommendation in user_recommendations:
-            offer_id = recommendation["item_id"] if recommendation["item_id"] else ""
-            instances.append({"inputs": [user_id, offer_id]})
-            # Format = array of dicts {"inputs": [user_id, offer_id]}
+        offers_ids = [
+            recommendation["item_id"] if recommendation["item_id"] else ""
+            for recommendation in user_recommendations
+        ]
+        instances = [{"input_1": user_to_rank, "input_2": offers_ids}]
 
     else:
         instances = []
@@ -338,7 +337,7 @@ def get_scored_recommendation_for_user(
     predicted_scores = predict_score(MODEL_REGION, GCP_PROJECT, model_name, instances)
 
     recommendations = [
-        {**recommendation, "score": predicted_scores[i]}
+        {**recommendation, "score": predicted_scores[i][0]}
         for i, recommendation in enumerate(user_recommendations)
     ]
 

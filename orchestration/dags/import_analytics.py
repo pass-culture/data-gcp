@@ -68,6 +68,7 @@ data_applicative_tables_and_date_columns = {
         "booking_used_date",
         "booking_cancellation_date",
     ],
+    "individual_booking": [""],
     "payment": [""],
     "venue": ["venue_modified_at_last_provider", "venue_creation_date"],
     "user_offerer": [""],

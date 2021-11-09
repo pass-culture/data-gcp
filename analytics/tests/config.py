@@ -191,7 +191,7 @@ BIGQUERY_SCHEMAS = {
         "user_has_enabled_marketing_push": "BOOLEAN",
         "user_has_enabled_marketing_email": "BOOLEAN",
         "user_birth_date": "DATETIME",
-        "user_role": "ARRAY<STRING>",
+        "user_role": "STRING",
     },
     "venue": {
         "venue_thumb_count": "INT64",

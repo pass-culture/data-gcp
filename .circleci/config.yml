@@ -452,6 +452,41 @@ workflows:
             - Slack
           <<: *slack-fail-post-step
 
+
+      - cloud-function-deploy:
+          name: cni-fraude-algo-cloud-function-deploy-stg
+          cloud-function-name: cni_fraude_algo_import_stg
+          cloud-function-folder: cni_fraude_algo-function-source
+          requires:
+            - linter
+          filters:
+            branches:
+              only:
+                - master
+          context:
+            - DATA_GCP
+            - DATA_GCP_EHP
+            - Slack
+          <<: *slack-fail-post-step
+
+
+      - cloud-function-deploy:
+          name: cni-fraude-algo-cloud-function-deploy-prod
+          cloud-function-name: cni_fraude_algo_import_prod
+          cloud-function-folder: cni_fraude_algo-function-source
+          requires:
+            - linter
+          filters:
+            branches:
+              only:
+                - production
+          context:
+            - DATA_GCP
+            - DATA_GCP_PROD
+            - Slack
+          <<: *slack-fail-post-step
+
+
       # Slack alerts jobs
       # ----------------
       - slack-alert:

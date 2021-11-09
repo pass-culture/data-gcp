@@ -452,6 +452,39 @@ workflows:
             - Slack
           <<: *slack-fail-post-step
 
+
+      - cloud-function-deploy:
+          name: cni-fraude-algo-cloud-function-deploy-stg
+          cloud-function-name: cni_fraude_algo_stg
+          cloud-function-folder: cni_fraude_algo-function-source
+          requires:
+            - linter
+          filters:
+            branches:
+              only:
+                - master
+          context:
+            - DATA_GCP
+            - DATA_GCP_EHP
+            - Slack
+          <<: *slack-fail-post-step
+
+      - cloud-function-deploy:
+          name: cni-fraude-algo-cloud-function-deploy-prod
+          cloud-function-name: cni_fraude_algo_prod
+          cloud-function-folder: cni_fraude_algo-function-source
+          requires:
+            - linter
+          filters:
+            branches:
+              only:
+                - production
+          context:
+            - DATA_GCP
+            - DATA_GCP_PROD
+            - Slack
+          <<: *slack-fail-post-step
+
       # Slack alerts jobs
       # ----------------
       - slack-alert:
@@ -473,6 +506,7 @@ workflows:
             - contentful-cloud-function-deploy-prod
             - siren-cloud-function-deploy-prod
             - dms-cloud-function-deploy-prod
+            - cni-fraude-algo-cloud-function-deploy-prod
 
       - slack-alert:
           name: slack-alert-staging
@@ -493,6 +527,7 @@ workflows:
             - contentful-cloud-function-deploy-stg
             - siren-cloud-function-deploy-stg
             - dms-cloud-function-deploy-stg
+            - cni-fraude-algo-cloud-function-deploy-stg
 
   # ----------------
   # Workflow to deploy on dev
@@ -538,6 +573,11 @@ workflows:
           cloud-function-name: dms_dev
           cloud-function-folder: dms-function-source
           <<: *deploy_on_dev_commons
+      - cloud-function-deploy:
+          name: cni-fraude-algo-cloud-function-deploy-dev
+          cloud-function-name: cni_fraude_algo_dev
+          cloud-function-folder: cni_fraude_algo-function-source
+          <<: *deploy_on_dev_commons
       - build_and_deploy_api:
           name: build_and_deploy_api_dev
           api-instance-name: apireco-dev
@@ -554,6 +594,7 @@ workflows:
             - contentful-cloud-function-deploy-dev
             - siren-cloud-function-deploy-dev
             - dms-cloud-function-deploy-dev
+            - cni-fraude-algo-cloud-function-deploy-dev
             - build_and_deploy_api_dev
           context:
             - DATA_GCP_DEV

@@ -483,6 +483,7 @@ def define_enriched_user_data_query(dataset, table_prefix=""):
             LEFT JOIN count_distinct_types ON user.user_id = count_distinct_types.user_id
             LEFT JOIN {dataset}.{table_prefix}deposit AS deposit ON user.user_id = deposit.userId
             WHERE user.user_is_beneficiary
+            AND (user.user_is_active OR user.user_suspension_reason = 'upon user request')
         );
     """
 

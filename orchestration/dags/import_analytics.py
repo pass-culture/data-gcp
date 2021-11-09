@@ -35,6 +35,9 @@ from dependencies.data_analytics.enriched_data.user import (
 from dependencies.data_analytics.enriched_data.venue import (
     define_enriched_venue_data_full_query,
 )
+from dependencies.data_analytics.enriched_data.venue_locations import (
+    define_table_venue_locations,
+)
 from dependencies.data_analytics.import_tables import (
     define_import_query,
     define_replace_query,
@@ -65,6 +68,7 @@ data_applicative_tables_and_date_columns = {
         "booking_used_date",
         "booking_cancellation_date",
     ],
+    "individual_booking": [""],
     "payment": [""],
     "venue": ["venue_modified_at_last_provider", "venue_creation_date"],
     "user_offerer": [""],
@@ -100,6 +104,17 @@ data_applicative_tables_and_date_columns = {
         "dateupdated",
     ],
     "beneficiary_fraud_check": [""],
+    "educational_booking": [
+        "educational_booking_confirmation_date",
+        "educational_booking_confirmation_limit_date",
+    ],
+    "educational_deposit": ["educational_deposit_creation_date"],
+    "educational_institution": [""],
+    "educational_redactor": [""],
+    "educational_year": [
+        "educational_year_beginning_date",
+        "educational_year_expiration_date",
+    ],
 }
 
 default_dag_args = {
@@ -294,6 +309,17 @@ create_enriched_app_downloads_stats = BigQueryOperator(
     dag=dag,
 )
 
+create_table_venue_locations = BigQueryOperator(
+    task_id="create_table_venue_locations",
+    sql=define_table_venue_locations(
+        dataset=BIGQUERY_ANALYTICS_DATASET, table_prefix=APPLICATIVE_PREFIX
+    ),
+    destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.venue_locations",
+    write_disposition="WRITE_TRUNCATE",
+    use_legacy_sql=False,
+    dag=dag,
+)
+
 getting_contentful_service_account_token = PythonOperator(
     task_id="getting_contentful_service_account_token",
     python_callable=getting_service_account_token,
@@ -375,6 +401,7 @@ create_enriched_data_tasks = [
     create_enriched_venue_data_task,
     create_enriched_booking_data_task,
     create_enriched_offerer_data_task,
+    create_table_venue_locations,
 ]
 
 end = DummyOperator(task_id="end", dag=dag)

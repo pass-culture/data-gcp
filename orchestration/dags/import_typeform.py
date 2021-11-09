@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
@@ -27,10 +27,11 @@ from dependencies.config import (
 )
 from dependencies.data_analytics.enriched_data.enriched_qpi_answers_v2 import (
     enrich_answers,
+    format_answers,
 )
 
 TYPEFORM_FUNCTION_NAME = "qpi_import_" + ENV_SHORT_NAME
-QPI_ANSWERS_TABLE = "qpi_answers_v2"
+QPI_ANSWERS_TABLE = "qpi_answers_v3"
 
 default_args = {
     "start_date": datetime(2021, 3, 10),
@@ -100,7 +101,7 @@ with DAG(
         },
         log_response=True,
     )
-
+    today = date.today().strftime("%Y%m%d")  # usefull to test in dev
     # the tomorrow_ds_nodash enables catchup :
     # it fetches the file corresponding to the initial execution date of the dag and not the day the task is run.
     import_answers_to_bigquery = GoogleCloudStorageToBigQueryOperator(
@@ -150,12 +151,22 @@ with DAG(
     enrich_qpi_answers = BigQueryOperator(
         task_id="enrich_qpi_answers",
         sql=enrich_answers(
-            gcp_project=GCP_PROJECT,
-            bigquery_clean_dataset=BIGQUERY_CLEAN_DATASET,
+            gcp_project=GCP_PROJECT, bigquery_clean_dataset=BIGQUERY_CLEAN_DATASET
         ),
         use_legacy_sql=False,
-        destination_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_ANALYTICS_DATASET}.enriched_qpi_answers_v2",
+        destination_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_ANALYTICS_DATASET}.enriched_{QPI_ANSWERS_TABLE}_temp",
         write_disposition="WRITE_TRUNCATE",
+    )
+
+    format_qpi_answers = PythonOperator(
+        task_id="format_qpi_answers",
+        python_callable=format_answers,
+        op_kwargs={
+            "gcp_project": GCP_PROJECT,
+            "bigquery_analytics_dataset": BIGQUERY_ANALYTICS_DATASET,
+            "enriched_qpi_answer_table": f"enriched_{QPI_ANSWERS_TABLE}",
+        },
+        dag=dag,
     )
 
     end = DummyOperator(task_id="end")
@@ -168,5 +179,6 @@ with DAG(
         >> add_answers_to_clean
         >> delete_temp_answer_table
         >> enrich_qpi_answers
+        >> format_qpi_answers
         >> end
     )

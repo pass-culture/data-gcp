@@ -76,7 +76,8 @@ def define_import_query(
             CAST("userId" AS varchar(255)) as user_id, "amount" as booking_amount,
             "isCancelled" as booking_is_cancelled, "isUsed" as booking_is_used, "dateUsed" as booking_used_date,
             "cancellationDate" as booking_cancellation_date,
-            CAST("cancellationReason" AS VARCHAR) AS booking_cancellation_reason
+            CAST("cancellationReason" AS VARCHAR) AS booking_cancellation_reason,
+            CAST("individualBookingId" AS varchar(255)) as individual_booking_id
         FROM public.booking
     """
     cloudsql_queries[

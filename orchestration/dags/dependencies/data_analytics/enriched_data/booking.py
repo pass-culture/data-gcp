@@ -119,12 +119,12 @@ def create_materialized_enriched_booking_view(dataset, table_prefix=""):
                 AND offer.offer_subcategoryId NOT IN ('ACTIVATION_THING','ACTIVATION_EVENT')
             INNER JOIN {dataset}.{table_prefix}venue AS venue
                 ON venue.venue_id = offer.venue_id
-            INNER JOIN {dataset}.{table_prefix}user AS user
-                ON user.user_id = individual_booking.user_id
             INNER JOIN {dataset}.{table_prefix}offerer AS offerer
                 ON venue.venue_managing_offerer_id = offerer.offerer_id
             INNER JOIN {dataset}.{table_prefix}individual_booking AS individual_booking
                 ON individual_booking.individual_booking_id = booking.individual_booking_id
+            INNER JOIN {dataset}.{table_prefix}user AS user
+                ON user.user_id = individual_booking.user_id
             INNER JOIN {dataset}.{table_prefix}deposit AS deposit
                 ON deposit.id = individual_booking.deposit_id
             LEFT JOIN {dataset}.{table_prefix}venue_type AS venue_type

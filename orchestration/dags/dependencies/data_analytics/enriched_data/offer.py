@@ -118,7 +118,7 @@ def define_enriched_offer_data_query(analytics_dataset, clean_dataset, table_pre
                     WHEN subcategories.category_id <> 'SPECTACLE' AND offer_extracted_data.musicsubType IS NOT NULL THEN offer_extracted_data.musicSubtype
 				END AS subType
             FROM {analytics_dataset}.{table_prefix}offer AS offer
-            INNER JOIN {analytics_dataset}.subcategories subcategories ON offer.offer_subcategoryId = subcategories.id
+            LEFT JOIN {analytics_dataset}.subcategories subcategories ON offer.offer_subcategoryId = subcategories.id
             LEFT JOIN {analytics_dataset}.{table_prefix}venue AS venue ON offer.venue_id = venue.venue_id
             LEFT JOIN {analytics_dataset}.{table_prefix}offerer AS offerer ON venue.venue_managing_offerer_id = offerer.offerer_id
             LEFT JOIN offer_booking_information_view ON offer_booking_information_view.offer_id = offer.offer_id

@@ -244,6 +244,7 @@ BIGQUERY_SCHEMAS = {
         "id": "STRING",
         "userId": "STRING",
         "amount": "NUMERIC",
+        "source": "STRING",
         "expirationDate": "DATETIME",
         "dateCreated": "DATETIME",
         "type": "STRING",

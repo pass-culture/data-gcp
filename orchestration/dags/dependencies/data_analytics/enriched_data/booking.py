@@ -99,7 +99,7 @@ def create_materialized_enriched_booking_view(dataset, table_prefix=""):
                 offerer.offerer_name,
                 individual_booking.user_id,
                 individual_booking.deposit_id,
-                deposit.type AS deposit_type
+                deposit.type AS deposit_type,
                 user.user_department_code,
                 user.user_creation_date,
                 booking_intermediary_view.booking_intermediary_amount,

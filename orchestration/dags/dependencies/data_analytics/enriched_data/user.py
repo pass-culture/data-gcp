@@ -20,9 +20,9 @@ def define_experimentation_sessions_query(dataset, table_prefix=""):
             SELECT
                 CASE WHEN experimentation_session.booking_is_used THEN 1 ELSE 2 END AS vague_experimentation,
                 user.user_id
-            FROM {dataset}.{table_prefix}user AS user, UNNEST(user_role) AS user_role_clean
+            FROM {dataset}.{table_prefix}user AS user
             LEFT JOIN experimentation_session ON experimentation_session.user_id = user.user_id
-            WHERE user_role_clean IN ('UNDERAGE_BENEFICIARY','BENEFICIARY') 
+            WHERE user_role IN ('UNDERAGE_BENEFICIARY','BENEFICIARY') 
             AND (rank = 1 OR rank is NULL)
         );
         """
@@ -180,9 +180,9 @@ def define_users_seniority_query(dataset, table_prefix=""):
                         ELSE user.user_creation_date
                     END AS activation_date,
                     user.user_id
-                FROM {dataset}.{table_prefix}user AS user, UNNEST(user.user_role) AS user_role_clean
+                FROM {dataset}.{table_prefix}user AS user
                 LEFT JOIN validated_activation_booking ON validated_activation_booking.user_id = user.user_id
-                WHERE user_role_clean IN ('BENEFICIARY','UNDERAGE_BENEFICIARY')
+                WHERE user_role IN ('BENEFICIARY','UNDERAGE_BENEFICIARY')
 
             )
             SELECT
@@ -200,11 +200,11 @@ def define_actual_amount_spent_query(dataset, table_prefix=""):
             SELECT
                 user.user_id,
                 COALESCE(SUM(booking.booking_amount * booking.booking_quantity), 0) AS actual_amount_spent
-            FROM {dataset}.{table_prefix}user AS user, UNNEST(user.user_role) AS user_role_clean
+            FROM {dataset}.{table_prefix}user AS user
             LEFT JOIN {dataset}.{table_prefix}booking AS booking ON user.user_id = booking.user_id
                 AND booking.booking_is_used IS TRUE
                 AND booking.booking_is_cancelled IS FALSE
-            WHERE user_role_clean IN ('BENEFICIARY','UNDERAGE_BENEFICIARY')
+            WHERE user_role IN ('BENEFICIARY','UNDERAGE_BENEFICIARY')
             GROUP BY user.user_id
         );
         """
@@ -216,9 +216,9 @@ def define_theoretical_amount_spent_query(dataset, table_prefix=""):
             SELECT
                 user.user_id,
                 COALESCE(SUM(booking.booking_amount * booking.booking_quantity), 0) AS theoretical_amount_spent
-            FROM {dataset}.{table_prefix}user AS user, UNNEST(user.user_role) AS user_role_clean
+            FROM {dataset}.{table_prefix}user AS user
             LEFT JOIN {dataset}.{table_prefix}booking AS booking ON user.user_id = booking.user_id AND booking.booking_is_cancelled IS FALSE
-            WHERE user_role_clean IN ('BENEFICIARY','UNDERAGE_BENEFICIARY')
+            WHERE user_role IN ('BENEFICIARY','UNDERAGE_BENEFICIARY')
             GROUP BY user.user_id
         );
         """
@@ -243,9 +243,9 @@ def define_theoretical_amount_spent_in_digital_goods_query(dataset, table_prefix
             SELECT
                 user.user_id,
                 COALESCE(SUM(eligible_booking.booking_amount * eligible_booking.booking_quantity), 0.) AS amount_spent_in_digital_goods
-            FROM {dataset}.{table_prefix}user AS user, UNNEST(user.user_role) AS user_role_clean
+            FROM {dataset}.{table_prefix}user AS user
             LEFT JOIN eligible_booking ON user.user_id = eligible_booking.user_id
-            WHERE user_role_clean IN ('BENEFICIARY','UNDERAGE_BENEFICIARY')
+            WHERE user_role IN ('BENEFICIARY','UNDERAGE_BENEFICIARY')
             GROUP BY user.user_id
         );
         """
@@ -270,9 +270,9 @@ def define_theoretical_amount_spent_in_physical_goods_query(dataset, table_prefi
             SELECT
                 user.user_id,
                 COALESCE(SUM(eligible_booking.booking_amount * eligible_booking.booking_quantity), 0.) AS amount_spent_in_physical_goods
-            FROM {dataset}.{table_prefix}user AS user, UNNEST(user.user_role) AS user_role_clean
+            FROM {dataset}.{table_prefix}user AS user
             LEFT JOIN eligible_booking ON user.user_id = eligible_booking.user_id
-            WHERE user_role_clean IN ('BENEFICIARY','UNDERAGE_BENEFICIARY')
+            WHERE user_role IN ('BENEFICIARY','UNDERAGE_BENEFICIARY')
             GROUP BY user.user_id
         );
         """
@@ -297,9 +297,9 @@ def define_theoretical_amount_spent_in_outings_query(dataset, table_prefix=""):
                 user.user_id,
                 COALESCE(SUM(eligible_booking.booking_amount * eligible_booking.booking_quantity), 0.)
                 AS amount_spent_in_outings
-            FROM {dataset}.{table_prefix}user AS user, UNNEST(user.user_role) AS user_role_clean
+            FROM {dataset}.{table_prefix}user AS user
             LEFT JOIN eligible_booking ON user.user_id = eligible_booking.user_id
-            WHERE user_role_clean IN ('BENEFICIARY','UNDERAGE_BENEFICIARY')
+            WHERE user_role IN ('BENEFICIARY','UNDERAGE_BENEFICIARY')
             GROUP BY user.user_id
         );
         """

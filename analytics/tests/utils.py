@@ -23,7 +23,7 @@ def drop_table(client, dataset, table):
 def create_table(client, dataset, table, table_prefix=""):
     table_id = f"{GCP_PROJECT}.{dataset}.{table_prefix}{table}"
     schema = [
-        bigquery.SchemaField(col_name, col_type)
+        bigquery.SchemaField(col_name, col_type, mode='REPEATED')
         for col_name, col_type in BIGQUERY_SCHEMAS[table].items()
     ]
     table = bigquery.Table(table_id, schema=schema)

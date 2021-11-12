@@ -587,7 +587,7 @@ ENRICHED_USER_DATA_INPUT = {
             "user_has_enabled_marketing_push": True,
             "user_has_enabled_marketing_email": True,
             "user_birth_date": datetime.now().replace(microsecond=0),
-            "user_role": ["BENEFICIARY"],
+            "user_role": "BENEFICIARY",
         }
     ],
     "deposit": [

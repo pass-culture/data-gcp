@@ -46,10 +46,10 @@ def define_activation_dates_query(dataset, table_prefix=""):
                 user.user_id
                 ,CASE WHEN "offer_subcategoryId" = 'ACTIVATION_THING' AND booking_used_date IS NOT NULL THEN booking_used_date
                 ELSE user_creation_date END AS user_activation_date
-            FROM {dataset}.{table_prefix}user AS user, UNNEST(user.user_role) AS user_role_clean
+            FROM {dataset}.{table_prefix}user AS user
             LEFT JOIN ranked_bookings ON user.user_id = ranked_bookings.user_id
             AND rank_ = 1
-            WHERE user_role_clean IN ('BENEFICIARY','UNDERAGE_BENEFICIARY')
+            WHERE user_role IN ('BENEFICIARY','UNDERAGE_BENEFICIARY')
         );
         """
 
@@ -460,7 +460,7 @@ def define_enriched_user_data_query(dataset, table_prefix=""):
                 CASE WHEN (TIMESTAMP(deposit.expirationDate) >= CURRENT_TIMESTAMP() AND actual_amount_spent.actual_amount_spent < deposit.amount) AND user_is_active THEN TRUE ELSE FALSE END AS user_is_current_beneficiary,
                 user.user_age,
                 user.user_birth_date
-            FROM {dataset}.{table_prefix}user AS user, UNNEST(user_role) AS user_role_clean
+            FROM {dataset}.{table_prefix}user AS user
             LEFT JOIN experimentation_sessions ON user.user_id = experimentation_sessions.user_id
             LEFT JOIN activation_dates ON user.user_id  = activation_dates.user_id
             LEFT JOIN date_of_first_bookings ON user.user_id  = date_of_first_bookings.user_id
@@ -484,7 +484,7 @@ def define_enriched_user_data_query(dataset, table_prefix=""):
             LEFT JOIN first_paid_booking_type ON user.user_id = first_paid_booking_type.user_id
             LEFT JOIN count_distinct_types ON user.user_id = count_distinct_types.user_id
             LEFT JOIN {dataset}.{table_prefix}deposit AS deposit ON user.user_id = deposit.userId
-            WHERE user_role_clean IN ('UNDERAGE_BENEFICIARY','BENEFICIARY')
+            WHERE user_role IN ('UNDERAGE_BENEFICIARY','BENEFICIARY')
             AND (user.user_is_active OR user.user_suspension_reason = 'upon user request')
         );
     """

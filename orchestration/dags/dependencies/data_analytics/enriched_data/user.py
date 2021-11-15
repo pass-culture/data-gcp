@@ -22,7 +22,8 @@ def define_experimentation_sessions_query(dataset, table_prefix=""):
                 user.user_id
             FROM {dataset}.{table_prefix}user AS user
             LEFT JOIN experimentation_session ON experimentation_session.user_id = user.user_id
-            WHERE user.user_is_beneficiary AND (rank = 1 OR rank is NULL)
+            WHERE user_role IN ('UNDERAGE_BENEFICIARY','BENEFICIARY') 
+            AND (rank = 1 OR rank is NULL)
         );
         """
 
@@ -48,7 +49,7 @@ def define_activation_dates_query(dataset, table_prefix=""):
             FROM {dataset}.{table_prefix}user AS user
             LEFT JOIN ranked_bookings ON user.user_id = ranked_bookings.user_id
             AND rank_ = 1
-            WHERE user.user_is_beneficiary
+            WHERE user_role IN ('BENEFICIARY','UNDERAGE_BENEFICIARY')
         );
         """
 
@@ -181,7 +182,8 @@ def define_users_seniority_query(dataset, table_prefix=""):
                     user.user_id
                 FROM {dataset}.{table_prefix}user AS user
                 LEFT JOIN validated_activation_booking ON validated_activation_booking.user_id = user.user_id
-                WHERE user.user_is_beneficiary
+                WHERE user_role IN ('BENEFICIARY','UNDERAGE_BENEFICIARY')
+
             )
             SELECT
                 DATE_DIFF(CURRENT_DATE(), CAST(activation_date.activation_date AS DATE), DAY) AS user_seniority,
@@ -202,7 +204,7 @@ def define_actual_amount_spent_query(dataset, table_prefix=""):
             LEFT JOIN {dataset}.{table_prefix}booking AS booking ON user.user_id = booking.user_id
                 AND booking.booking_is_used IS TRUE
                 AND booking.booking_is_cancelled IS FALSE
-            WHERE user.user_is_beneficiary
+            WHERE user_role IN ('BENEFICIARY','UNDERAGE_BENEFICIARY')
             GROUP BY user.user_id
         );
         """
@@ -216,7 +218,7 @@ def define_theoretical_amount_spent_query(dataset, table_prefix=""):
                 COALESCE(SUM(booking.booking_amount * booking.booking_quantity), 0) AS theoretical_amount_spent
             FROM {dataset}.{table_prefix}user AS user
             LEFT JOIN {dataset}.{table_prefix}booking AS booking ON user.user_id = booking.user_id AND booking.booking_is_cancelled IS FALSE
-            WHERE user.user_is_beneficiary
+            WHERE user_role IN ('BENEFICIARY','UNDERAGE_BENEFICIARY')
             GROUP BY user.user_id
         );
         """
@@ -243,7 +245,7 @@ def define_theoretical_amount_spent_in_digital_goods_query(dataset, table_prefix
                 COALESCE(SUM(eligible_booking.booking_amount * eligible_booking.booking_quantity), 0.) AS amount_spent_in_digital_goods
             FROM {dataset}.{table_prefix}user AS user
             LEFT JOIN eligible_booking ON user.user_id = eligible_booking.user_id
-            WHERE user.user_is_beneficiary IS TRUE
+            WHERE user_role IN ('BENEFICIARY','UNDERAGE_BENEFICIARY')
             GROUP BY user.user_id
         );
         """
@@ -270,7 +272,7 @@ def define_theoretical_amount_spent_in_physical_goods_query(dataset, table_prefi
                 COALESCE(SUM(eligible_booking.booking_amount * eligible_booking.booking_quantity), 0.) AS amount_spent_in_physical_goods
             FROM {dataset}.{table_prefix}user AS user
             LEFT JOIN eligible_booking ON user.user_id = eligible_booking.user_id
-            WHERE user.user_is_beneficiary IS TRUE
+            WHERE user_role IN ('BENEFICIARY','UNDERAGE_BENEFICIARY')
             GROUP BY user.user_id
         );
         """
@@ -297,7 +299,7 @@ def define_theoretical_amount_spent_in_outings_query(dataset, table_prefix=""):
                 AS amount_spent_in_outings
             FROM {dataset}.{table_prefix}user AS user
             LEFT JOIN eligible_booking ON user.user_id = eligible_booking.user_id
-            WHERE user.user_is_beneficiary IS TRUE
+            WHERE user_role IN ('BENEFICIARY','UNDERAGE_BENEFICIARY')
             GROUP BY user.user_id
         );
         """
@@ -482,7 +484,7 @@ def define_enriched_user_data_query(dataset, table_prefix=""):
             LEFT JOIN first_paid_booking_type ON user.user_id = first_paid_booking_type.user_id
             LEFT JOIN count_distinct_types ON user.user_id = count_distinct_types.user_id
             LEFT JOIN {dataset}.{table_prefix}deposit AS deposit ON user.user_id = deposit.userId
-            WHERE user.user_is_beneficiary
+            WHERE user_role IN ('UNDERAGE_BENEFICIARY','BENEFICIARY')
             AND (user.user_is_active OR user.user_suspension_reason = 'upon user request')
         );
     """

@@ -3,6 +3,7 @@ import imagehash
 import mFiles
 import pandas as pd
 from PIL import Image
+from google.cloud import bigquery
 
 from utils import BIGQUERY_ANALYTICS_DATASET, GCP_PROJECT
 
@@ -27,10 +28,24 @@ def run(request):
     else:
         raise RuntimeError("You need to provide an `application_id` argument.")
 
-    record = process_frame(application_id)
-    save_to_bq(record)
+    # Check if already exists
+    client = bigquery.Client()
+    query = f"""
+        SELECT *
+        FROM `{BIGQUERY_ANALYTICS_DATASET}.hashed-cni`
+        WHERE applicationId = {application_id}
+    """
 
-    return record[0].to_db()
+    query_job = client.query(query)
+    rows = query_job.result()
+
+    if rows.total_rows > 0:
+        return "AlreadyExists"
+    else:
+        record = process_frame(application_id)
+        save_to_bq(record)
+
+    return "Success"
 
 
 def process_frame(application_id):
@@ -56,7 +71,7 @@ def save_to_bq(record):
     df = pd.DataFrame(
         [
             [
-                f'{details["applicationId"]}',
+                details["applicationId"],
                 hash_img.to_db(),
                 f'{details["objectId"]}',
                 f'{details["fileId"]}',
@@ -64,7 +79,6 @@ def save_to_bq(record):
         ],
         columns=columns,
     )
-    print(df.dtypes)
     df.to_gbq(
         f"{BIGQUERY_ANALYTICS_DATASET}.hashed-cni",
         project_id=GCP_PROJECT,

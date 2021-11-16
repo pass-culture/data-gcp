@@ -8,6 +8,7 @@ BIGQUERY_SCHEMAS = {
     "booking": {
         "booking_is_active": "BOOLEAN",
         "booking_id": "STRING",
+        "individual_booking_id": "STRING",
         "booking_creation_date": "DATETIME",
         "recommendation_id": "STRING",
         "stock_id": "STRING",
@@ -20,6 +21,11 @@ BIGQUERY_SCHEMAS = {
         "booking_used_date": "DATETIME",
         "booking_cancellation_date": "DATETIME",
         "booking_cancellation_reason": "STRING",
+    },
+    "individual_booking": {
+        "individual_booking_id": "STRING",
+        "user_id": "STRING",
+        "deposit_id": "STRING",
     },
     "favorite": {
         "id": "STRING",
@@ -239,6 +245,7 @@ BIGQUERY_SCHEMAS = {
         "id": "STRING",
         "userId": "STRING",
         "amount": "NUMERIC",
+        "source": "STRING",
         "expirationDate": "DATETIME",
         "dateCreated": "DATETIME",
         "type": "STRING",

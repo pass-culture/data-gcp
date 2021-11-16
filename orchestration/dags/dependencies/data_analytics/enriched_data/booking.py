@@ -76,6 +76,7 @@ def create_materialized_enriched_booking_view(dataset, table_prefix=""):
         CREATE OR REPLACE TABLE {dataset}.enriched_booking_data AS (
             SELECT
                 booking.booking_id,
+                booking.individual_booking_id,
                 booking.booking_creation_date,
                 booking.booking_quantity,
                 booking.booking_amount,
@@ -96,7 +97,9 @@ def create_materialized_enriched_booking_view(dataset, table_prefix=""):
                 venue.venue_department_code,
                 offerer.offerer_id,
                 offerer.offerer_name,
-                user.user_id,
+                individual_booking.user_id,
+                individual_booking.deposit_id,
+                deposit.type AS deposit_type,
                 user.user_department_code,
                 user.user_creation_date,
                 booking_intermediary_view.booking_intermediary_amount,
@@ -118,8 +121,12 @@ def create_materialized_enriched_booking_view(dataset, table_prefix=""):
                 ON venue.venue_id = offer.venue_id
             INNER JOIN {dataset}.{table_prefix}offerer AS offerer
                 ON venue.venue_managing_offerer_id = offerer.offerer_id
+            INNER JOIN {dataset}.{table_prefix}individual_booking AS individual_booking
+                ON individual_booking.individual_booking_id = booking.individual_booking_id
             INNER JOIN {dataset}.{table_prefix}user AS user
-                ON user.user_id = booking.user_id
+                ON user.user_id = individual_booking.user_id
+            INNER JOIN {dataset}.{table_prefix}deposit AS deposit
+                ON deposit.id = individual_booking.deposit_id
             LEFT JOIN {dataset}.{table_prefix}venue_type AS venue_type
                 ON venue.venue_type_id = venue_type.id
             LEFT JOIN {dataset}.{table_prefix}venue_label AS venue_label

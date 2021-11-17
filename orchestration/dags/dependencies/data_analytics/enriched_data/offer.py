@@ -162,5 +162,6 @@ def define_enriched_offer_data_full_query(
         {create_humanize_id_function()}
         {create_temp_humanize_id(table="offer", dataset=analytics_dataset, table_prefix=table_prefix)}
         {define_count_first_booking_query(dataset=analytics_dataset, table_prefix=table_prefix)}
+        {define_last_stock_price(dataset=analytics_dataset, table_prefix=table_prefix)}
         {define_enriched_offer_data_query(analytics_dataset =analytics_dataset, clean_dataset= clean_dataset,  table_prefix=table_prefix)}
     """

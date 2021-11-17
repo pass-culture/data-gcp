@@ -855,15 +855,33 @@ ENRICHED_BOOKING_DATA_INPUT = {
     "booking": [
         {
             "booking_id": "1",
+            "individual_booking_id": "1",
             "booking_amount": 3,
             "booking_quantity": 1,
-            "user_id": "13",
             "booking_creation_date": datetime.now().replace(microsecond=0),
             "stock_id": "4",
             "booking_is_cancelled": False,
             "booking_is_used": True,
             "booking_cancellation_date": None,
             "booking_used_date": datetime.now().replace(microsecond=0),
+        }
+    ],
+    "individual_booking": [
+        {
+            "individual_booking_id": "1",
+            "user_id": "13",
+            "deposit_id": "18",
+        }
+    ],
+    "deposit": [
+        {
+            "id": "18",
+            "amount": "300",
+            "userId": "13",
+            "source": "dossier jouve [587030]",
+            "dateCreated": datetime.now().replace(microsecond=0),
+            "expirationDate": datetime.now().replace(microsecond=0),
+            "type": "GRANT_18",
         }
     ],
     "payment": [
@@ -932,6 +950,7 @@ ENRICHED_BOOKING_DATA_EXPECTED = [
         "booking_cancellation_reason": None,
         "booking_creation_date": datetime.now().replace(microsecond=0),
         "booking_id": "1",
+        "individual_booking_id": "1",
         "booking_intermediary_amount": Decimal("3"),
         "booking_is_cancelled": False,
         "booking_is_used": True,
@@ -953,6 +972,8 @@ ENRICHED_BOOKING_DATA_EXPECTED = [
         "user_creation_date": datetime.now().replace(microsecond=0),
         "user_department_code": "68",
         "user_id": "13",
+        "deposit_id": "18",
+        "deposit_type": "GRANT_18",
         "venue_department_code": "78",
         "venue_id": "8",
         "venue_label_name": "label",

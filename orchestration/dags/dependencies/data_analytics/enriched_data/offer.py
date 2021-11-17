@@ -58,6 +58,21 @@ def define_count_first_booking_query(dataset, table_prefix=""):
             WHERE c.booking_rank = 1
             GROUP BY offer_id ORDER BY first_booking_cnt DESC;
     """
+def define_last_stock_price(dataset, table_prefix=""):
+    return f"""
+        CREATE TEMP TABLE last_stock AS
+            SELECT
+                offer_id, stock_price AS last_stock_price
+            FROM (
+                SELECT
+                    offer.offer_id,
+                    stock.stock_price
+                    rank() OVER (PARTITION BY stock.offer_id ORDER BY stock.stock_creation_date DESC, stock.stock_id DESC) 
+                    AS rang_stock
+                FROM {dataset}.{table_prefix}offer AS offer
+                JOIN {dataset}.{table_prefix}stock AS stock on stock.offer_id = offer.offer_id) c
+            WHERE c.rang_stock = 1;
+    """
 
 
 def define_enriched_offer_data_query(analytics_dataset, clean_dataset, table_prefix=""):
@@ -72,6 +87,7 @@ def define_enriched_offer_data_query(analytics_dataset, clean_dataset, table_pre
                 offer.offer_id,
                 offer.offer_name,
                 offer.offer_subcategoryId,
+                last_stock.last_stock_price
                 offer.offer_creation_date,
                 offer.offer_is_duo,
                 offer.offer_is_educational,
@@ -126,6 +142,7 @@ def define_enriched_offer_data_query(analytics_dataset, clean_dataset, table_pre
             LEFT JOIN sum_stock_view ON sum_stock_view.offer_id = offer.offer_id
             LEFT JOIN offer_humanized_id AS offer_humanized_id ON offer_humanized_id.offer_id = offer.offer_id
             LEFT JOIN count_first_booking_view ON count_first_booking_view.offer_id = offer.offer_id
+            LEFT JOIN last_stock ON last_stock.offer_id = offer.offer_id
             LEFT JOIN {clean_dataset}.offer_extracted_data AS offer_extracted_data ON offer_extracted_data.offer_id = offer.offer_id
             LEFT JOIN {clean_dataset}.offer_tags AS offer_tags ON offer_tags.offer_id = offer.offer_id
 

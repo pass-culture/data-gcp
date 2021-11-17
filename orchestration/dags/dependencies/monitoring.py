@@ -56,7 +56,7 @@ def _define_recommendation_booking_funnel(start_date, end_date):
         recommendation_booking_funnel AS (
             SELECT event_name, event_timestamp, user_id, session_id, firebase_screen, module, booking_funnel.offer_id, next_event_name, "A" AS group_id, offer_subcategoryid,  pastreco.reco_origin,
             FROM booking_funnel
-            LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.ab_testing_202104_v0_v0bis` ab_testing
+            LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.TABLE_AB_TESTING` ab_testing
             ON booking_funnel.user_id = ab_testing.userid
             LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_offer` offers
             ON offers.offer_id = CAST(booking_funnel.offer_id AS STRING)

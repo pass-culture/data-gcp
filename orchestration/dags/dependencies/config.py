@@ -28,4 +28,4 @@ APPLICATIVE_PREFIX = "applicative_database_"
 MATOMO_PREFIX = "matomo_"
 SURVEY_PREFIX = "survey_"
 
-TABLE_AB_TESTING = "ab_testing_202104_v0_v0bis"
+TABLE_AB_TESTING = "abc_testing_20211029_v1v2"

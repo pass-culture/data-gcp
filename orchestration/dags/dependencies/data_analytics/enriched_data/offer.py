@@ -58,6 +58,8 @@ def define_count_first_booking_query(dataset, table_prefix=""):
             WHERE c.booking_rank = 1
             GROUP BY offer_id ORDER BY first_booking_cnt DESC;
     """
+
+
 def define_last_stock_price(dataset, table_prefix=""):
     return f"""
         CREATE TEMP TABLE last_stock AS
@@ -67,7 +69,7 @@ def define_last_stock_price(dataset, table_prefix=""):
                 SELECT
                     offer.offer_id,
                     stock.stock_price
-                    rank() OVER (PARTITION BY stock.offer_id ORDER BY stock.stock_creation_date DESC, stock.stock_id DESC) 
+                    rank() OVER (PARTITION BY stock.offer_id ORDER BY stock.stock_creation_date DESC, stock.stock_id DESC)
                     AS rang_stock
                 FROM {dataset}.{table_prefix}offer AS offer
                 JOIN {dataset}.{table_prefix}stock AS stock on stock.offer_id = offer.offer_id) c

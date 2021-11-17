@@ -68,7 +68,7 @@ def define_last_stock_price(dataset, table_prefix=""):
             FROM (
                 SELECT
                     offer.offer_id,
-                    stock.stock_price
+                    stock.stock_price,
                     rank() OVER (PARTITION BY stock.offer_id ORDER BY stock.stock_creation_date DESC, stock.stock_id DESC)
                     AS rang_stock
                 FROM {dataset}.{table_prefix}offer AS offer

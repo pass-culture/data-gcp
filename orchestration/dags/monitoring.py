@@ -20,7 +20,8 @@ from dependencies.config import GCP_PROJECT, BIGQUERY_ANALYTICS_DATASET, ENV_SHO
 
 MONITORING_TABLE = "monitoring_data"
 # A changer en fonction des dates de changement d'algo
-START_DATE = datetime(2021, 10, 29, tzinfo=pytz.utc)  # expressed in UTC TimeZone
+
+START_DATE = datetime(2021, 11, 9, tzinfo=pytz.utc)  # expressed in UTC TimeZone
 groups = ["A", "B", "C"]
 reco_origin_list = {"cold_start", "algo"}
 ALGO_A = "algo v1 + cold start"

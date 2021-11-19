@@ -77,7 +77,9 @@ def define_import_query(
             "isCancelled" as booking_is_cancelled, "isUsed" as booking_is_used, "dateUsed" as booking_used_date,
             "cancellationDate" as booking_cancellation_date,
             CAST("cancellationReason" AS VARCHAR) AS booking_cancellation_reason,
-            CAST("individualBookingId" AS varchar(255)) as individual_booking_id
+            CAST("individualBookingId" AS varchar(255)) as individual_booking_id,
+            CAST("educationalBookingId" AS varchar(255)) as educational_booking_id,
+            "reimbursementDate" AS booking_reimbursement_date
         FROM public.booking
     """
     cloudsql_queries[
@@ -398,9 +400,9 @@ def define_import_query(
         "individual_booking"
     ] = """
             SELECT
-                id AS individual_booking_id
-                ,"userId" AS user_id
-                ,"depositId" AS deposit_id
+                CAST("id" AS varchar(255)) AS individual_booking_id
+                ,CAST(""userId"" AS varchar(255)) AS user_id
+                ,CAST("depositId" AS varchar(255)) AS deposit_id
             FROM individual_booking
         """
     # Build specific federated queries

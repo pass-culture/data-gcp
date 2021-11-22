@@ -180,7 +180,12 @@ with DAG(
         )
 
         start_drop_restore >> filter_column_task
-        filter_column_task >> export_task >> delete_temp_table_task >> compose_files_task
+        (
+            filter_column_task
+            >> export_task
+            >> delete_temp_table_task
+            >> compose_files_task
+        )
         compose_files_task >> drop_table_task >> create_table_task >> end_data_prep
 
     def create_restore_task(table_name: str):
@@ -244,12 +249,14 @@ with DAG(
         autocommit=True,
     )
 
-    views_to_refresh = ['recommendable_offers',
-                        'recommendable_offers_eac_15',
-                        'recommendable_offers_eac_16_17',
-                        'non_recommendable_offers',
-                        'iris_venues_mv',
-                        'number_of_bookings_per_user']
+    views_to_refresh = [
+        "recommendable_offers",
+        "recommendable_offers_eac_15",
+        "recommendable_offers_eac_16_17",
+        "non_recommendable_offers",
+        "iris_venues_mv",
+        "number_of_bookings_per_user",
+    ]
 
     refresh_materialized_view_tasks = []
     for materialized_view in views_to_refresh:

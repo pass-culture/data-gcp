@@ -180,12 +180,7 @@ with DAG(
         )
 
         start_drop_restore >> filter_column_task
-        (
-            filter_column_task
-            >> export_task
-            >> delete_temp_table_task
-            >> compose_files_task
-        )
+        filter_column_task >> export_task >> delete_temp_table_task >> compose_files_task
         compose_files_task >> drop_table_task >> create_table_task >> end_data_prep
 
     def create_restore_task(table_name: str):
@@ -249,42 +244,24 @@ with DAG(
         autocommit=True,
     )
 
-    refresh_recommendable_offers = CloudSqlQueryOperator(
-        task_id="refresh_recommendable_offers",
-        gcp_cloudsql_conn_id="proxy_postgres_tcp",
-        sql="REFRESH MATERIALIZED VIEW CONCURRENTLY recommendable_offers;",
-        autocommit=True,
-    )
+    views_to_refresh = ['recommendable_offers',
+                        'recommendable_offers_eac_15',
+                        'recommendable_offers_eac_16_17',
+                        'non_recommendable_offers',
+                        'iris_venues_mv',
+                        'number_of_bookings_per_user']
 
-    refresh_non_recommendable_offers = CloudSqlQueryOperator(
-        task_id="refresh_non_recommendable_offers",
-        gcp_cloudsql_conn_id="proxy_postgres_tcp",
-        sql="REFRESH MATERIALIZED VIEW CONCURRENTLY non_recommendable_offers;",
-        autocommit=True,
-    )
-
-    refresh_iris_venues_mv = CloudSqlQueryOperator(
-        task_id="refresh_iris_venues_mv",
-        gcp_cloudsql_conn_id="proxy_postgres_tcp",
-        sql="REFRESH MATERIALIZED VIEW CONCURRENTLY iris_venues_mv;",
-        autocommit=True,
-    )
-
-    refresh_number_of_bookings_per_user = CloudSqlQueryOperator(
-        task_id="refresh_number_of_bookings_per_user",
-        gcp_cloudsql_conn_id="proxy_postgres_tcp",
-        sql="REFRESH MATERIALIZED VIEW CONCURRENTLY number_of_bookings_per_user;",
-        autocommit=True,
-    )
-
-    refresh_materialized_views_tasks = [
-        refresh_recommendable_offers,
-        refresh_non_recommendable_offers,
-        refresh_iris_venues_mv,
-        refresh_number_of_bookings_per_user,
-    ]
+    refresh_materialized_view_tasks = []
+    for materialized_view in views_to_refresh:
+        refresh_materialized_view_task = CloudSqlQueryOperator(
+            task_id=f"refresh_{materialized_view}",
+            gcp_cloudsql_conn_id="proxy_postgres_tcp",
+            sql=f"REFRESH MATERIALIZED VIEW CONCURRENTLY {materialized_view};",
+            autocommit=True,
+        )
+        refresh_materialized_view_tasks.append(refresh_materialized_view_task)
 
     end = DummyOperator(task_id="end")
 
     start >> start_drop_restore
-    end_drop_restore >> recreate_indexes_task >> refresh_materialized_views_tasks >> end
+    end_drop_restore >> recreate_indexes_task >> refresh_materialized_view_tasks >> end

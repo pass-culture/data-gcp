@@ -65,6 +65,7 @@ def define_date_of_first_bookings_query(dataset, table_prefix=""):
             JOIN {dataset}.{table_prefix}offer AS offer ON offer.offer_id = stock.offer_id
                 AND offer.offer_subcategoryId != 'ACTIVATION_THING'
                 AND (offer.booking_email != 'jeux-concours@passculture.app' OR offer.booking_email IS NULL)
+            WHERE booking.booking_is_cancelled IS FALSE
             GROUP BY user_id
         );
         """
@@ -83,6 +84,7 @@ def define_date_of_second_bookings_query(dataset, table_prefix=""):
                 JOIN {dataset}.{table_prefix}offer AS offer ON offer.offer_id = stock.offer_id
                 WHERE offer.offer_subcategoryId != 'ACTIVATION_THING'
                 AND (offer.booking_email != 'jeux-concours@passculture.app' OR offer.booking_email IS NULL)
+                AND booking.booking_is_cancelled IS FALSE
             )
             SELECT
                 user_id,
@@ -109,6 +111,7 @@ def define_date_of_bookings_on_third_product_query(dataset, table_prefix=""):
                 JOIN {dataset}.{table_prefix}offer AS offer ON offer.offer_id = stock.offer_id
                 WHERE offer.offer_subcategoryId NOT IN ('ACTIVATION_THING','ACTIVATION_THING')
                     AND (offer.booking_email != 'jeux-concours@passculture.app' OR offer.booking_email IS NULL)
+                    AND booking.booking_is_cancelled IS FALSE
             ),
             ranked_data AS (
                 SELECT

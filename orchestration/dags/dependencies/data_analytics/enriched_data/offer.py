@@ -93,6 +93,17 @@ def define_enriched_offer_data_query(analytics_dataset, clean_dataset, table_pre
                 offer.offer_creation_date,
                 offer.offer_is_duo,
                 offer.offer_is_educational,
+                CASE WHEN (offer.offer_subcategoryId <> 'JEU_EN_LIGNE'
+                    AND offer.offer_subcategoryId <> 'JEU_SUPPORT_PHYSIQUE'
+                    AND offer.offer_subcategoryId <> 'ABO_JEU_VIDEO'
+                    AND offer.offer_subcategoryId <> 'ABO_LUDOTHEQUE'
+                    AND NOT offer.offer_is_educational
+                    AND (offer.offer_url IS NULL
+                    OR last_stock.last_stock_price = 0
+                    OR subcategories.id = 'LIVRE_NUMERIQUE'
+                    OR subcategories.id = 'ABO_LIVRE_NUMERIQUE'
+                    OR subcategories.id = 'TELECHARGEMENT_LIVRE_AUDIO'
+                    OR subcategories.category_id = 'MEDIA')) THEN TRUE ELSE FALSE END AS offer_is_underage_selectable,
                 venue.venue_is_virtual,
                 subcategories.is_physical_deposit as physical_goods,
                 subcategories.is_event as outing,

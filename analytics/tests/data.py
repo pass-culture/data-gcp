@@ -319,6 +319,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "countries": '["usa"]',
         "casting": "[]",
         "offer_is_educational": False,
+        "offer_is_underage_selectable": True,
     },
     {
         "offer_id": "4",
@@ -362,6 +363,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "countries": None,
         "casting": None,
         "offer_is_educational": False,
+        "offer_is_underage_selectable": True,
     },
 ]
 

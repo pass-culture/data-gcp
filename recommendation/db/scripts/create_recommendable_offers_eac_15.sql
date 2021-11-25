@@ -146,6 +146,8 @@ WITH NO DATA;
 
 
 /* Populating the materialized view. */
+CREATE UNIQUE INDEX idx_offer_recommendable_15_id ON public.recommendable_offers_eac_15 USING btree (offer_id)
+CREATE INDEX idx_recommendable_offers_eac_15_venue_id ON public.recommendable_offers_eac_15 (venue_id);
 REFRESH MATERIALIZED VIEW recommendable_offers_eac_15;
 /* Takes about 80 secondes with the indexes.*/
 

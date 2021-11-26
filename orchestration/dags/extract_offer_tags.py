@@ -11,9 +11,9 @@ from dependencies.slack_alert import task_fail_slack_alert
 from dependencies.tag_offers import (
     tag_offers_description,
     tag_offers_name,
-    get_offers_to_tag,
     get_offers_to_tag_request,
-    update_table,
+    prepare_table,
+    get_upsert_request,
     FILENAME_INITIAL,
 )
 
@@ -41,7 +41,7 @@ dag = DAG(
 start = DummyOperator(task_id="start", dag=dag)
 
 get_offers_to_tag = BigQueryOperator(
-    task_id=f"get_offers_to_tag",
+    task_id="get_offers_to_tag",
     sql=get_offers_to_tag_request(),
     use_legacy_sql=False,
     destination_dataset_table=f"{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.temp_offers_to_tag",
@@ -50,20 +50,27 @@ get_offers_to_tag = BigQueryOperator(
 )
 
 tag_offers_description = PythonOperator(
-    task_id=f"tag_offers_description",
+    task_id="tag_offers_description",
     python_callable=tag_offers_description,
     dag=dag,
 )
 
 tag_offers_name = PythonOperator(
-    task_id=f"tag_offers_name",
+    task_id="tag_offers_name",
     python_callable=tag_offers_name,
     dag=dag,
 )
 
-update_table = PythonOperator(
-    task_id=f"update_table",
-    python_callable=update_table,
+prepare_table = PythonOperator(
+    task_id="prepare_temp_offer_tagged_table",
+    python_callable=prepare_table,
+    dag=dag,
+)
+
+update_offer_tags_table = BigQueryOperator(
+    task_id="update_offer_tags_table",
+    sql=get_upsert_request(),
+    use_legacy_sql=False,
     dag=dag,
 )
 
@@ -74,4 +81,11 @@ tag_offers = [
     tag_offers_name,
 ]
 
-(start >> get_offers_to_tag >> tag_offers >> update_table >> end)
+(
+    start
+    >> get_offers_to_tag
+    >> tag_offers
+    >> prepare_table
+    >> update_offer_tags_table
+    >> end
+)

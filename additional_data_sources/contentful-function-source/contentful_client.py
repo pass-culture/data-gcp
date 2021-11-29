@@ -65,12 +65,15 @@ class ContentfulClient:
                     playlist["date_updated"] = datetime.today()
 
                     if module.fields().get("additional_algolia_parameters") is not None:
-                        playlist["child_playlists"] = str(
-                            [
-                                add.tags[0]
-                                for add in module.additional_algolia_parameters
-                            ]
-                        )
+                        try:
+                            playlist["child_playlists"] = str(
+                                [
+                                    add.tags[0]
+                                    for add in module.additional_algolia_parameters
+                                ]
+                            )
+                        except AttributeError as error:
+                            print(f"Error: no tags in additional_algolia_parameters :{error}")
                     else:
                         playlist["child_playlists"] = None
 

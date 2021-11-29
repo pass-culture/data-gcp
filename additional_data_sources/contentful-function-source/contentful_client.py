@@ -73,7 +73,9 @@ class ContentfulClient:
                                 ]
                             )
                         except AttributeError as error:
-                            print(f"Error: no tags in additional_algolia_parameters :{error}")
+                            print(
+                                f"Error: no tags in additional_algolia_parameters :{error}"
+                            )
                     else:
                         playlist["child_playlists"] = None
 

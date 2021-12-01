@@ -11,7 +11,7 @@ import pytz
 from google.api_core.client_options import ClientOptions
 from googleapiclient import discovery
 
-from cold_start import get_cold_start_status, get_cold_start_categories
+from recommendation.api.not_eac.cold_start import get_cold_start_status, get_cold_start_categories
 from geolocalisation import get_iris_from_coordinates
 from utils import (
     create_db_connection,
@@ -28,23 +28,21 @@ from utils import (
 
 
 def get_final_recommendations(user_id: int, longitude: int, latitude: int) -> List[int]:
+    userStatus = is_eac_user(user_id)
 
-    #userStatus = IsEacUser(user_id)
-
-
-    request_response = query_ab_testing_table(user_id)
-    if not request_response:
-        #Creer un dossier ab_testing avec une fonction d'assignation en fonction du statut :
+    ab_testing = query_ab_testing_table(user_id)
+    if not ab_testing:
+        # Creer un dossier ab_testing avec une fonction d'assignation en fonction du statut :
         group_id = ab_testing_assign_user(user_id)
     else:
-        group_id = request_response[0]
+        group_id = ab_testing[0]
 
-    #Modifier la fonction pour faire une action différente si EAC ou non
+    # Modifier la fonction pour faire une action différente si EAC ou non
     is_cold_start = get_cold_start_status(user_id)
     user_iris_id = get_iris_from_coordinates(longitude, latitude)
 
     if is_cold_start:
-        #Mettre ça dans une fonction et en faire une autre pour eac, faire une fonction mère avec if eac
+        # Mettre ça dans une fonction et en faire une autre pour eac, faire une fonction mère avec if eac
         reco_origin = "cold_start"
         cold_start_categories = get_cold_start_categories(user_id)
         scored_recommendation_for_user = get_cold_start_scored_recommendations_for_user(
@@ -76,8 +74,25 @@ def get_final_recommendations(user_id: int, longitude: int, latitude: int) -> Li
     return final_recommendations
 
 
+def is_eac_user(
+        user_id,
+):
+    start = time.time()
+
+    with create_db_connection() as connection:
+        request_response = connection.execute(
+            text(f"SELECT user_id FROM `analytics_prod.enriched_user_data` "
+                 f"WHERE userid= :user_id AND user_deposit_initial_amount < 300 "
+                 f"AND FLOOR(DATE_DIFF(user_deposit_creation_date,user_birth_date, DAY)/365) < 18"),
+            user_id=str(user_id),
+        ).scalar()
+
+    log_duration(f"is_eac_user for {user_id}", start)
+    return True if request_response else False
+
+
 def query_ab_testing_table(
-    user_id,
+        user_id,
 ):
     start = time.time()
 
@@ -110,7 +125,7 @@ def ab_testing_assign_user(user_id):
 
 
 def save_recommendation(
-    user_id: int, recommendations: List[int], group_id: str, reco_origin: str
+        user_id: int, recommendations: List[int], group_id: str, reco_origin: str
 ):
     start = time.time()
     date = datetime.datetime.now(pytz.utc)
@@ -140,9 +155,8 @@ def save_recommendation(
 
 
 def get_cold_start_scored_recommendations_for_user(
-    user_id: int, user_iris_id: int, cold_start_categories: list
+        user_id: int, user_iris_id: int, cold_start_categories: list
 ) -> List[Dict[str, Any]]:
-
     start = time.time()
     if cold_start_categories:
         order_query = f"""
@@ -212,9 +226,8 @@ def get_cold_start_scored_recommendations_for_user(
 
 
 def get_intermediate_recommendations_for_user(
-    user_id: int, user_iris_id: int
+        user_id: int, user_iris_id: int
 ) -> List[Dict[str, Any]]:
-
     start = time.time()
     if not user_iris_id:
         query = text(
@@ -288,7 +301,7 @@ def get_intermediate_recommendations_for_user(
 
 
 def get_scored_recommendation_for_user(
-    user_id: int, group_id: str, user_recommendations: List[Dict[str, Any]]
+        user_id: int, group_id: str, user_recommendations: List[Dict[str, Any]]
 ) -> List[Dict[str, int]]:
     """
     Depending on the user group, prepare the data to send to the model, and make the call.
@@ -377,7 +390,7 @@ def predict_score(region, project, model, instances):
 
 
 def order_offers_by_score_and_diversify_categories(
-    offers: List[Dict[str, Any]]
+        offers: List[Dict[str, Any]]
 ) -> List[int]:
     """
     Group offers by category.
@@ -407,7 +420,7 @@ def order_offers_by_score_and_diversify_categories(
 
     diversified_offers = []
     while len(diversified_offers) != np.sum(
-        [len(l) for l in offers_by_category.values()]
+            [len(l) for l in offers_by_category.values()]
     ):
         for offer_category in offers_by_category_ordered_by_frequency.keys():
             if offers_by_category_ordered_by_frequency[offer_category]:
@@ -418,8 +431,8 @@ def order_offers_by_score_and_diversify_categories(
             break
 
     ordered_and_diversified_offers = [offer["id"] for offer in diversified_offers][
-        :NUMBER_OF_RECOMMENDATIONS
-    ]
+                                     :NUMBER_OF_RECOMMENDATIONS
+                                     ]
 
     log_duration("order_offers_by_score_and_diversify_categories", start)
     return ordered_and_diversified_offers
@@ -444,7 +457,7 @@ def _get_offers_grouped_by_category(offers: List[Dict[str, Any]]) -> Dict:
 
 
 def _get_number_of_offers_and_max_score_by_category(
-    category_and_offers: Tuple,
+        category_and_offers: Tuple,
 ) -> Tuple:
     return (
         len(category_and_offers[1]),

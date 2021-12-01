@@ -11,7 +11,7 @@ import pytz
 from google.api_core.client_options import ClientOptions
 from googleapiclient import discovery
 
-from cold_start import get_cold_start_status, get_cold_start_categories
+from recommendation.api.not_eac.cold_start import get_cold_start_status, get_cold_start_categories
 from geolocalisation import get_iris_from_coordinates
 from utils import (
     create_db_connection,

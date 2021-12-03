@@ -361,7 +361,7 @@ def define_import_query(
     ] = """
             SELECT
                 CAST(id AS varchar(255)) AS educational_deposit_id
-                ,CAST("educationalInstitutionId" id AS varchar(255)) AS educational_deposit_educational_institution_id
+                ,CAST("educationalInstitutionId" AS varchar(255)) AS educational_deposit_educational_institution_id
                 ,CAST("educationalYearId" AS varchar(255)) AS educational_deposit_educational_year_id
                 ,amount AS educational_deposit_amount
                 ,"dateCreated" AS educational_deposit_creation_date

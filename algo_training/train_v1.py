@@ -3,9 +3,9 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 
-from models.match_model import MatchModel
-from models.triplet_model import TripletModel
-from models.utils import identity_loss, sample_triplets, predict
+from models.v1.match_model import MatchModel
+from models.v1.triplet_model import TripletModel
+from models.v1.utils import identity_loss, sample_triplets, predict
 from utils import (
     get_secret,
     connect_remote_mlflow,

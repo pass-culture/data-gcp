@@ -104,6 +104,18 @@ def define_enriched_offer_data_query(analytics_dataset, clean_dataset, table_pre
                     OR subcategories.id = 'ABO_LIVRE_NUMERIQUE'
                     OR subcategories.id = 'TELECHARGEMENT_LIVRE_AUDIO'
                     OR subcategories.category_id = 'MEDIA')) THEN TRUE ELSE FALSE END AS offer_is_underage_selectable,
+                    , CASE WHEN offer.offer_id IN (
+                        SELECT enriched_stock.offer_id
+                        FROM {dataset}.enriched_stock_data AS enriched_stock 
+                        JOIN {dataset}.{table_prefix}stock AS stock ON stock.stock_id = enriched_stock.stock_id AND NOT stock_is_soft_deleted
+                        JOIN {dataset}.{table_prefix}offer AS offer
+                        ON enriched_stock.offer_id = offer.offer_id AND offer.offer_is_active
+                        WHERE (
+                        (DATE(enriched_stock.stock_booking_limit_date) > CURRENT_DATE OR enriched_stock.stock_booking_limit_date IS NULL)
+                        AND (DATE(enriched_stock.stock_beginning_date) > CURRENT_DATE OR enriched_stock.stock_beginning_date IS NULL)
+                        AND offer.offer_is_active
+                        AND (available_stock_information > 0 OR available_stock_information IS NULL))
+                             ) THEN TRUE ELSE FALSE END AS offer_is_bookable,
                 venue.venue_is_virtual,
                 subcategories.is_physical_deposit as physical_goods,
                 subcategories.is_event as outing,

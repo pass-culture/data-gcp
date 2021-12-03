@@ -320,6 +320,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "casting": "[]",
         "offer_is_educational": False,
         "offer_is_underage_selectable": True,
+        "offer_is_bookable": False,
     },
     {
         "offer_id": "4",
@@ -364,6 +365,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "casting": None,
         "offer_is_educational": False,
         "offer_is_underage_selectable": True,
+        "offer_is_bookable": True,
     },
 ]
 

@@ -5,7 +5,13 @@ import time
 from models.match_model import MatchModel
 
 from models.metrics import compute_metrics
-from utils import get_secret, connect_remote_mlflow, STORAGE_PATH, ENV_SHORT_NAME
+from utils import (
+    get_secret,
+    connect_remote_mlflow,
+    STORAGE_PATH,
+    ENV_SHORT_NAME,
+    MODEL_NAME,
+)
 
 RECOMMENDATION_NUMBER = 40
 
@@ -50,8 +56,7 @@ def check_before_deploy(metrics, k):
 if __name__ == "__main__":
     client_id = get_secret("mlflow_client_id")
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
-
-    experiment_name = "algo_training_v1"
+    experiment_name = "algo_training_{MODEL_NAME}"
     experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
     run_id = mlflow.list_run_infos(experiment_id)[0].run_id
     with mlflow.start_run(run_id=run_id):

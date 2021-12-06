@@ -23,8 +23,8 @@ TRAIN_DIR = "/home/airflow/train"
 EMBEDDING_SIZE = 64
 L2_REG = 0
 N_EPOCHS = 20 if ENV_SHORT_NAME == "prod" else 10
-BATCH_SIZE = 128
 LOSS_CUTOFF = 0.005
+BATCH_SIZE = 512
 
 
 def train(storage_path: str):
@@ -67,8 +67,6 @@ def train(storage_path: str):
         )
         mlflow.log_params(hyper_parameters)
 
-        LOSS_CUTOFF = 0.005
-        BATCH_SIZE = 512
         mlflow.log_param("batch_size", BATCH_SIZE)
 
         deep_triplet_model = DeepTripletModel(
@@ -89,14 +87,11 @@ def train(storage_path: str):
         evaluation_fake_y = np.array(
             ["1"] * clicks_test_light["user_id"].shape[0], dtype=object
         )
-
-        n_epochs = 5
-        mlflow.log_param("n_epochs", n_epochs)
-
+        mlflow.log_param("n_epochs", N_EPOCHS)
         best_eval = 1
-        for i in range(n_epochs):
+        for i in range(N_EPOCHS):
             connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
-            print(f"Epoch {i}/{n_epochs}")
+            print(f"Epoch {i}/{N_EPOCHS}")
             # Sample new negatives to build different triplets at each epoch
             triplet_inputs = sample_triplets(clicks_train_light, random_seed=i)
             triplet_inputs[0] = mask_random(triplet_inputs[0], proportion=0.01)
@@ -134,7 +129,7 @@ def train(storage_path: str):
                 export_path = f"saved_model/prod_ready/{run_uuid}"
                 tf.saved_model.save(deep_match_model, export_path)
                 if ((best_eval - eval_result) / best_eval) < LOSS_CUTOFF and i != 0:
-                    mlflow.log_param("Exit Epoch", runned_epochs)
+                    mlflow.log_param("Exit Epoch", i)
                     print("EXIT")
                     break
                 else:

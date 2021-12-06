@@ -10,7 +10,7 @@
 
 
 CREATE TABLE IF NOT EXISTS public.abc_testing_20211029_v1v2_eac (userId varchar, groupId text);
-INSERT INTO public.abc_testing_20211029_v1v2 (userId, groupId)(
+INSERT INTO public.abc_testing_20211029_v1v2_eac (userId, groupId)(
         SELECT userid AS "user_id",
             CASE
                 WHEN base.rand < 0.33 THEN 'A'
@@ -19,11 +19,10 @@ INSERT INTO public.abc_testing_20211029_v1v2 (userId, groupId)(
             END AS groupId
         FROM (
                 SELECT RANDOM() as rand, user_id
-                FROM `analytics_prod.enriched_user_data` "
-	            WHERE user_deposit_initial_amount < 300 "
+                FROM `analytics_prod.enriched_user_data`
+	            WHERE user_deposit_initial_amount < 300
                 AND FLOOR(DATE_DIFF(user_deposit_creation_date,user_birth_date, DAY)/365) < 18)
-            ) AS base
-    );
+            ) AS base;
 
 UPDATE abc_testing_20211029_v1v2_eac set groupid = 'A' where userid = '1';
 UPDATE abc_testing_20211029_v1v2_eac set groupid = 'B' where userid = '2';

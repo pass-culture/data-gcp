@@ -5,7 +5,12 @@ import tensorflow as tf
 
 from models.v2.deep_reco.deep_match_model import DeepMatchModel
 from models.v2.deep_reco.deep_triplet_model import DeepTripletModel
-from models.v2.deep_reco.utils import identity_loss, sample_triplets, predict
+from models.v2.deep_reco.utils import (
+    identity_loss,
+    sample_triplets,
+    predict,
+    mask_random,
+)
 from utils import (
     get_secret,
     connect_remote_mlflow,
@@ -23,6 +28,18 @@ LOSS_CUTOFF = 0.005
 
 
 def train(storage_path: str):
+
+    clicks = pd.read_csv(
+        f"{storage_path}/clean_data.csv", dtype={"user_id": str, "item_id": str}
+    )
+
+    clicks_train_light = pd.read_csv(
+        f"{storage_path}/positive_data_train.csv",
+        dtype={"user_id": str, "item_id": str},
+    )
+    clicks_test_light = pd.read_csv(
+        f"{storage_path}/positive_data_test.csv", dtype={"user_id": str, "item_id": str}
+    )
     # TRAIN
     user_ids = clicks_train_light["user_id"].unique().tolist()
     item_ids = clicks_train_light["item_id"].unique().tolist()

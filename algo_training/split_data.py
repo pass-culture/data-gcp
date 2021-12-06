@@ -3,7 +3,7 @@ import pandas as pd
 from utils import STORAGE_PATH, MODEL_NAME
 
 
-def split_data(storage_path: str,model_name: str):
+def split_data(storage_path: str, model_name: str):
     if model_name == "v1":
         bookings = pd.read_csv(f"{storage_path}/clean_data.csv")
 
@@ -24,7 +24,7 @@ def split_data(storage_path: str,model_name: str):
         positive_data_eval.to_csv(f"{storage_path}/positive_data_eval.csv", index=False)
 
     if model_name == "v2_deep_reco":
-        clicks_light=pd.read_csv(f"{storage_path}/clean_data.csv")
+        clicks_light = pd.read_csv(f"{storage_path}/clean_data.csv")
         clicks_train_light = clicks_light[clicks_light.train_set == True]
         clicks_test_light = clicks_light[clicks_light.train_set == False]
         clicks_train_light.to_csv(

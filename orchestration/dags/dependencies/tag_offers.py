@@ -178,14 +178,18 @@ def prepare_table():
     df_description_tags = load_from_csv(FILENAME_DESCRIPTION)
     df_offer_name_tags = load_from_csv(FILENAME_OFFER_NAME)
 
+    df_offers_to_tag = df_offers_to_tag.astype({"offer_id": "string"})
+    df_description_tags = df_description_tags.astype({"offer_id": "string"})
+    df_offer_name_tags = df_offer_name_tags.astype({"offer_id": "string"})
+
     # df12 merge of offer_name and description
     df_all_tags = merge_dataframes(df_description_tags, df_offer_name_tags)
+    df_all_tags = df_all_tags.astype({"offer_id": "string"})
 
     # df3 offer wO tags
     df_offers_wo_tags = df_offers_to_tag[
         ~df_offers_to_tag.offer_id.isin(df_all_tags.offer_id)
     ].assign(tag="none")
-
     # df_final , should be the same as dfinit but all the offers have a tag or 'none'
     df_offers_tagged = merge_dataframes(df_all_tags, df_offers_wo_tags)
     df_offers_tagged["offer_id"] = df_offers_tagged["offer_id"].apply(str)

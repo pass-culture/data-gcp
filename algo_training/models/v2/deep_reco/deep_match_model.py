@@ -1,5 +1,8 @@
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Embedding, Flatten, Input, Dense, Lambda, Dot
+from tensorflow.keras.layers import (
+    Flatten,
+    Concatenate,
+)
 
 
 class DeepMatchModel(Model):

@@ -1,9 +1,15 @@
 import tensorflow as tf
+from tensorflow.keras import layers
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Embedding, Flatten, Input, Dense, Lambda, Dot
+from tensorflow.keras.layers import (
+    Embedding,
+    Flatten,
+    Dense,
+    StringLookup,
+    Concatenate,
+    Dropout,
+)
 from tensorflow.keras.regularizers import l2
-from tensorflow.keras.layers.experimental.preprocessing import StringLookup
-from models.margin_loss import MarginLoss
 
 
 class MLP(layers.Layer):

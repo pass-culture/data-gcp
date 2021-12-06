@@ -16,7 +16,6 @@ def identity_loss(y_true, y_pred):
 def sample_triplets(pos_data, random_seed=0):
     """Sample negatives at random"""
     """Mask some user_ids at random for cold start"""
-    rng = np.random.RandomState(random_seed)
     user_ids = pos_data["user_id"].values
     pos_item_ids = pos_data["item_id"].values
     pos_subcategories = pos_data["offer_subcategoryid"].values
@@ -44,9 +43,20 @@ def predict(match_model):
     items_to_rank = np.array(
         ["offer-7514002", "product-2987109", "offer-6406524", "toto", "tata"]
     )
+    subcat = np.array(
+        [
+            "BON_ACHAT_INSTRUMENT",
+            "VISITE_GUIDEE",
+            "ABO_BIBLIOTHEQUE",
+            "EVENEMENT_CINE",
+            "VISITE",
+        ]
+    )
     repeated_user_id = np.empty_like(items_to_rank)
     repeated_user_id.fill(user_id)
-    predicted = match_model.predict([repeated_user_id, items_to_rank], batch_size=4096)
+    predicted = match_model.predict(
+        [repeated_user_id, items_to_rank, subcat], batch_size=4096
+    )
     return predicted
 
 

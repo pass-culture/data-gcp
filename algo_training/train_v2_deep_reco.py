@@ -99,7 +99,8 @@ def train(storage_path: str):
             evaluation_triplet_inputs = sample_triplets(
                 clicks_test_light, random_seed=i
             )
-
+            print("Debug_00: len(triplet_inputs)", len(triplet_inputs))
+            print("Debug_01: len(fake_y)", len(fake_y))
             # Fit the model incrementally by doing a single pass over the
             # sampled triplets.
             train_result = deep_triplet_model.fit(
@@ -108,7 +109,7 @@ def train(storage_path: str):
                 shuffle=True,
                 batch_size=BATCH_SIZE,
                 epochs=1,
-                # use_multiprocessing=True,
+                use_multiprocessing=True,
             )
             connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
 

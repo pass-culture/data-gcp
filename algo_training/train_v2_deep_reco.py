@@ -108,7 +108,7 @@ def train(storage_path: str):
                 shuffle=True,
                 batch_size=BATCH_SIZE,
                 epochs=1,
-                use_multiprocessing=True,
+                # use_multiprocessing=True,
             )
             connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
 

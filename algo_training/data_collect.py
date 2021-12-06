@@ -31,14 +31,14 @@ def get_clics(start_date, end_date, test_date):
                 offer_id,
                 count(*) as click_count,
                 CASE
-                    WHEN event_date > {test_date} THEN False
+                    WHEN event_date > '{test_date}' THEN False
                     ELSE True
                 END
                 AS train_set
             FROM `passculture-data-prod.analytics_prod.firebase_events`
             WHERE event_name = "ConsultOffer"
-            AND event_date >= {start_date}
-            AND event_date < {end_date}
+            AND event_date >= '{start_date}'
+            AND event_date < '{end_date}'
             AND user_id is not null
             AND offer_id is not null
             AND offer_id != 'NaN'

@@ -49,16 +49,10 @@ def train(storage_path: str):
 
     subcategories = clicks.offer_subcategoryid.unique().tolist()
 
-    connect_remote_mlflow(
-        "962488981524-a9k170v01gtlflkh37vblmdomfkvdc9t.apps.googleusercontent.com"
-    )
     experiment_name = "algo_training_v2_deep_reco"
     mlflow.set_experiment(experiment_name)
     experiment = mlflow.get_experiment_by_name(experiment_name)
 
-    connect_remote_mlflow(
-        "962488981524-a9k170v01gtlflkh37vblmdomfkvdc9t.apps.googleusercontent.com"
-    )
     with mlflow.start_run(experiment_id=experiment.experiment_id):
         mlflow.set_tag("type", "prod_ready")
         hyper_parameters = dict(
@@ -101,9 +95,7 @@ def train(storage_path: str):
 
         best_eval = 1
         for i in range(n_epochs):
-            connect_remote_mlflow(
-                "962488981524-a9k170v01gtlflkh37vblmdomfkvdc9t.apps.googleusercontent.com"
-            )
+            connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
             print(f"Epoch {i}/{n_epochs}")
             # Sample new negatives to build different triplets at each epoch
             triplet_inputs = sample_triplets(clicks_train_light, random_seed=i)
@@ -123,10 +115,7 @@ def train(storage_path: str):
                 epochs=1,
                 use_multiprocessing=True,
             )
-
-            connect_remote_mlflow(
-                "962488981524-a9k170v01gtlflkh37vblmdomfkvdc9t.apps.googleusercontent.com"
-            )
+            connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
 
             mlflow.log_metric(
                 key="Training Loss", value=train_result.history["loss"][0], step=i

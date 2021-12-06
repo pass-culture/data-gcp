@@ -13,7 +13,7 @@ MLFLOW_PROD_URI = "https://mlflow.internal-passculture.app/"
 
 MODEL_NAME = os.environ.get("MODEL_NAME", "")
 if MODEL_NAME == "v2_deep_reco":
-    BOOKING_DAY_NUMBER = 3 * 30
+    BOOKING_DAY_NUMBER = 30
 else:
     BOOKING_DAY_NUMBER = 4 * 30 if ENV_SHORT_NAME == "prod" else 10
 

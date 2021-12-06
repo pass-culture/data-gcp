@@ -9,8 +9,8 @@
 -- UPDATE ab_testing_ < suffix > set groupid = 'B' where userid = '2';
 
 
-CREATE TABLE IF NOT EXISTS public.abc_testing_20211029_v1v2_eac (userId varchar, groupId text);
-INSERT INTO public.abc_testing_20211029_v1v2_eac (userId, groupId)(
+CREATE TABLE IF NOT EXISTS public.abc_testing_v1v2_eac (userId varchar, groupId text);
+INSERT INTO public.abc_testing_v1v2_eac (userId, groupId)(
         SELECT user_id AS "user_id",
             CASE
                 WHEN base.rand < 0.33 THEN 'A'
@@ -24,8 +24,8 @@ INSERT INTO public.abc_testing_20211029_v1v2_eac (userId, groupId)(
                 AND FLOOR(DATE_PART('DAY',user_deposit_creation_date - user_birth_date)/365) < 18) AS base
                );
 
-UPDATE abc_testing_20211029_v1v2_eac set groupid = 'A' where userid = '1';
-UPDATE abc_testing_20211029_v1v2_eac set groupid = 'B' where userid = '2';
-UPDATE abc_testing_20211029_v1v2_eac set groupid = 'C' where userid = '3';
+UPDATE abc_testing_v1v2_eac set groupid = 'A' where userid = '1';
+UPDATE abc_testing_v1v2_eac set groupid = 'B' where userid = '2';
+UPDATE abc_testing_v1v2_eac set groupid = 'C' where userid = '3';
 
-CREATE INDEX ab_testing_user_id_eac ON public.abc_testing_20211029_v1v2_eac USING btree (userId);
+CREATE INDEX ab_testing_user_id_eac ON public.abc_testing_v1v2_eac USING btree (userId);

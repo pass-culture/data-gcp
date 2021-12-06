@@ -229,7 +229,7 @@ with DAG(
         CREATE INDEX IF NOT EXISTS idx_booking_stockid                    ON public.booking                     USING btree ("stock_id");
         CREATE INDEX IF NOT EXISTS idx_mediation_offerid                  ON public.mediation                   USING btree ("offerId");
         CREATE INDEX IF NOT EXISTS idx_offer_id                           ON public.offer                       USING btree (offer_id);
-        CREATE INDEX IF NOT EXISTS idx_user_id                           ON public.user                         USING btree (user_id);
+        CREATE INDEX IF NOT EXISTS idx_user_id                            ON public.user                         USING btree (user_id);
         CREATE INDEX IF NOT EXISTS idx_offer_subcategoryid                ON public.offer                       USING btree ("offer_subcategoryId");
         CREATE INDEX IF NOT EXISTS idx_offer_venueid                      ON public.offer                       USING btree ("venue_id");
         CREATE INDEX IF NOT EXISTS idx_venue_id                           ON public.venue                       USING btree (venue_id);
@@ -257,6 +257,7 @@ with DAG(
         "non_recommendable_offers",
         "iris_venues_mv",
         "number_of_bookings_per_user",
+        "abc_testing_v1v2_eac",
     ]
 
     refresh_materialized_view_tasks = []

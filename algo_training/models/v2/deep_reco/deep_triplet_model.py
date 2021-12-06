@@ -10,6 +10,7 @@ from tensorflow.keras.layers import (
     Dropout,
 )
 from tensorflow.keras.regularizers import l2
+from models.v2.deep_reco.margin_loss import MarginLoss
 
 
 class MLP(layers.Layer):

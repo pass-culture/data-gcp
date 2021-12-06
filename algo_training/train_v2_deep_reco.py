@@ -33,8 +33,13 @@ def train(storage_path: str):
         f"{storage_path}/clean_data.csv", dtype={"user_id": str, "item_id": str}
     )
 
-    clicks_train_light = pd.read_csv(f"{storage_path}/positive_data_train.csv")
-    clicks_test_light = pd.read_csv(f"{storage_path}/positive_data_test.csv")
+    clicks_train_light = pd.read_csv(
+        f"{storage_path}/positive_data_train.csv",
+        dtype={"user_id": str, "item_id": str},
+    )
+    clicks_test_light = pd.read_csv(
+        f"{storage_path}/positive_data_test.csv", dtype={"user_id": str, "item_id": str}
+    )
     # TRAIN
     user_ids = clicks_train_light["user_id"].unique().tolist()
     item_ids = clicks_train_light["item_id"].unique().tolist()

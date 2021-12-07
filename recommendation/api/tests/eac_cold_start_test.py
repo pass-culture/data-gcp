@@ -92,4 +92,6 @@ def test_get_cold_start_categories(
 ):
     # Given
     connection_mock.return_value = setup_database
-    assert sorted(get_cold_start_categories_eac(user_id)) == sorted(cold_start_categories)
+    assert sorted(get_cold_start_categories_eac(user_id)) == sorted(
+        cold_start_categories
+    )

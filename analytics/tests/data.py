@@ -197,7 +197,7 @@ ENRICHED_OFFER_DATA_INPUT = {
             "stock_fields_updated": "{}",
         },
     ],
-    "enriched_stock": [
+    "enriched_stock_data": [
         {
             "stock_id": "1",
             "offer_id": "3",

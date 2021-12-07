@@ -3,15 +3,15 @@ from unittest.mock import Mock, patch
 
 from typing import Any, List
 
-from not_eac.cold_start import get_cold_start_status, get_cold_start_categories
+from eac.eac_cold_start import get_cold_start_status_eac, get_cold_start_categories_eac
 
 
 @pytest.mark.parametrize(
     ["user_id", "cold_start_status"],
     [
         ("111", False),
-        ("112", True),
-        ("113", True),
+        ("112", False),
+        ("3800", True),
     ],
 )
 @patch("cold_start.create_db_connection")
@@ -20,7 +20,7 @@ def test_get_cold_start_status(
 ):
     # Given
     connection_mock.return_value = setup_database
-    assert get_cold_start_status(user_id) == cold_start_status
+    assert get_cold_start_status_eac(user_id) == cold_start_status
 
 
 @pytest.mark.parametrize(
@@ -92,4 +92,4 @@ def test_get_cold_start_categories(
 ):
     # Given
     connection_mock.return_value = setup_database
-    assert sorted(get_cold_start_categories(user_id)) == sorted(cold_start_categories)
+    assert sorted(get_cold_start_categories_eac(user_id)) == sorted(cold_start_categories)

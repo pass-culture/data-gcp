@@ -1,10 +1,14 @@
-
+import random
+from sqlalchemy import text
+from utils import (
+    create_db_connection,
+    AB_TESTING_TABLE,
+)
 
 
 def query_ab_testing_table(
         user_id,
 ):
-    start = time.time()
 
     with create_db_connection() as connection:
         request_response = connection.execute(
@@ -12,5 +16,19 @@ def query_ab_testing_table(
             user_id=str(user_id),
         ).scalar()
 
-    log_duration(f"query_ab_testing_table for {user_id}", start)
     return request_response
+
+def ab_testing_assign_user(user_id):
+    groups = ["A", "B", "C"]
+    group_id = random.choice(groups)
+
+    with create_db_connection() as connection:
+        connection.execute(
+            text(
+                f"INSERT INTO {AB_TESTING_TABLE}(userid, groupid) VALUES (:user_id, :group_id)"
+            ),
+            user_id=user_id,
+            group_id=str(group_id),
+        )
+
+    return group_id

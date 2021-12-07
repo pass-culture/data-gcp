@@ -106,7 +106,7 @@ def define_enriched_offer_data_query(analytics_dataset, clean_dataset, table_pre
                     OR subcategories.category_id = 'MEDIA')) THEN TRUE ELSE FALSE END AS offer_is_underage_selectable,
                     CASE WHEN offer.offer_id IN (
                         SELECT enriched_stock.offer_id
-                        FROM enriched_stock_data AS enriched_stock
+                        FROM {analytics_dataset}.enriched_stock_data AS enriched_stock
                         JOIN {analytics_dataset}.{table_prefix}stock AS stock ON stock.stock_id = enriched_stock.stock_id AND NOT stock_is_soft_deleted
                         JOIN {analytics_dataset}.{table_prefix}offer AS offer
                         ON enriched_stock.offer_id = offer.offer_id AND offer.offer_is_active

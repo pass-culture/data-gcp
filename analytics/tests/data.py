@@ -197,6 +197,24 @@ ENRICHED_OFFER_DATA_INPUT = {
             "stock_fields_updated": "{}",
         },
     ],
+    "enriched_stock": [
+        {
+            "stock_id": "1",
+            "offer_id": "3",
+            "available_stock_information": "8",
+            "stock_booking_limit_date": "2019-11-23",
+            "stock_beginning_date": "2019-11-24",
+            "stock_price": "0",
+        },
+        {
+            "stock_id": "2",
+            "offer_id": "4",
+            "available_stock_information": "12",
+            "stock_price": "0",
+            "stock_booking_limit_date": None,
+            "stock_beginning_date": None,
+        },
+    ],
     "user": [
         {
             "user_id": "1",

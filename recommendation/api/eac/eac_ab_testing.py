@@ -5,8 +5,9 @@ from utils import (
     AB_TESTING_TABLE,
 )
 
+
 def query_ab_testing_table_eac(
-        user_id,
+    user_id,
 ):
     with create_db_connection() as connection:
         request_response = connection.execute(
@@ -14,6 +15,7 @@ def query_ab_testing_table_eac(
             user_id=str(user_id),
         ).scalar()
     return request_response
+
 
 def ab_testing_assign_user_eac(user_id):
     groups = ["A", "B", "C"]

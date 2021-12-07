@@ -21,7 +21,7 @@ from utils import (
 
 
 def get_intermediate_recommendations_for_user(
-        user_id: int, user_iris_id: int
+    user_id: int, user_iris_id: int
 ) -> List[Dict[str, Any]]:
     if not user_iris_id:
         query = text(
@@ -91,7 +91,7 @@ def get_intermediate_recommendations_for_user(
 
 
 def get_scored_recommendation_for_user(
-        user_id: int, group_id: str, user_recommendations: List[Dict[str, Any]]
+    user_id: int, group_id: str, user_recommendations: List[Dict[str, Any]]
 ) -> List[Dict[str, int]]:
     """
     Depending on the user group, prepare the data to send to the model, and make the call.
@@ -177,4 +177,3 @@ def predict_score(region, project, model, instances):
 
     log_duration(f"predict_score", start)
     return response["predictions"]
-

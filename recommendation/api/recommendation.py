@@ -8,20 +8,28 @@ from sqlalchemy import text
 import numpy as np
 import pytz
 
-from cold_start import get_cold_start_status, get_cold_start_categories, \
-    get_cold_start_scored_recommendations_for_user
-from eac_cold_start import get_cold_start_status_eac, get_cold_start_categories_eac, \
-    get_cold_start_scored_recommendations_for_user_eac
+from cold_start import (
+    get_cold_start_status,
+    get_cold_start_categories,
+    get_cold_start_scored_recommendations_for_user,
+)
+from eac_cold_start import (
+    get_cold_start_status_eac,
+    get_cold_start_categories_eac,
+    get_cold_start_scored_recommendations_for_user_eac,
+)
 from ab_testing import query_ab_testing_table, ab_testing_assign_user
 from eac_ab_testing import query_ab_testing_table_eac, ab_testing_assign_user_eac
-from scoring import get_intermediate_recommendations_for_user, get_scored_recommendation_for_user
-from eac_scoring import get_intermediate_recommendations_for_user_eac, get_scored_recommendation_for_user_eac
-from geolocalisation import get_iris_from_coordinates
-from utils import (
-    create_db_connection,
-    log_duration,
-    NUMBER_OF_RECOMMENDATIONS
+from scoring import (
+    get_intermediate_recommendations_for_user,
+    get_scored_recommendation_for_user,
 )
+from eac_scoring import (
+    get_intermediate_recommendations_for_user_eac,
+    get_scored_recommendation_for_user_eac,
+)
+from geolocalisation import get_iris_from_coordinates
+from utils import create_db_connection, log_duration, NUMBER_OF_RECOMMENDATIONS
 
 
 def get_final_recommendations(user_id: int, longitude: int, latitude: int) -> List[int]:
@@ -39,11 +47,10 @@ def get_final_recommendations(user_id: int, longitude: int, latitude: int) -> Li
     if is_cold_start:
         reco_origin = "cold_start"
         cold_start_categories = fork_get_cold_start_categories(user_id, is_eac)
-        scored_recommendation_for_user = fork_cold_start_scored_recommendations_for_user(
-            user_id,
-            user_iris_id,
-            cold_start_categories,
-            is_eac
+        scored_recommendation_for_user = (
+            fork_cold_start_scored_recommendations_for_user(
+                user_id, user_iris_id, cold_start_categories, is_eac
+            )
         )
     else:
         reco_origin = "algo"
@@ -70,25 +77,24 @@ def get_final_recommendations(user_id: int, longitude: int, latitude: int) -> Li
 
 
 def is_eac_user(
-        user_id,
+    user_id,
 ):
     start = time.time()
 
     with create_db_connection() as connection:
         request_response = connection.execute(
-            text(f"SELECT count(1) > 0 "
-                 f"FROM abc_testing_v1v2_eac "
-                 f"WHERE userid = '{str(user_id)}'")
+            text(
+                f"SELECT count(1) > 0 "
+                f"FROM abc_testing_v1v2_eac "
+                f"WHERE userid = '{str(user_id)}'"
+            )
         ).scalar()
     print(f"is_eac_user = {request_response}")
     log_duration(f"is_eac_user for {user_id}", start)
     return request_response
 
 
-def fork_query_ab_testing_table(
-        user_id,
-        is_eac
-):
+def fork_query_ab_testing_table(user_id, is_eac):
     start = time.time()
     if is_eac:
         request_response = query_ab_testing_table_eac(user_id)
@@ -129,20 +135,16 @@ def fork_get_cold_start_categories(user_id, is_eac):
 
 
 def fork_cold_start_scored_recommendations_for_user(
-        user_id: int, user_iris_id: int, cold_start_categories: list, is_eac: bool
+    user_id: int, user_iris_id: int, cold_start_categories: list, is_eac: bool
 ):
     start = time.time()
     if is_eac:
         cold_start_recommendations = get_cold_start_scored_recommendations_for_user_eac(
-            user_id,
-            user_iris_id,
-            cold_start_categories
+            user_id, user_iris_id, cold_start_categories
         )
     else:
         cold_start_recommendations = get_cold_start_scored_recommendations_for_user(
-            user_id,
-            user_iris_id,
-            cold_start_categories
+            user_id, user_iris_id, cold_start_categories
         )
     log_duration(
         f"get_cold_start_scored_recommendations_for_user for {user_id} {'with localisation' if user_iris_id else ''}",
@@ -152,18 +154,16 @@ def fork_cold_start_scored_recommendations_for_user(
 
 
 def fork_intermediate_recommendations_for_user(
-        user_id: int, user_iris_id: int, is_eac: bool
+    user_id: int, user_iris_id: int, is_eac: bool
 ) -> List[Dict[str, Any]]:
     start = time.time()
     if is_eac:
         user_recommendation = get_intermediate_recommendations_for_user_eac(
-            user_id,
-            user_iris_id
+            user_id, user_iris_id
         )
     else:
         user_recommendation = get_intermediate_recommendations_for_user(
-            user_id,
-            user_iris_id
+            user_id, user_iris_id
         )
     log_duration(
         f"get_intermediate_recommendations_for_user for {user_id} {'with localisation' if user_iris_id else ''}",
@@ -173,7 +173,10 @@ def fork_intermediate_recommendations_for_user(
 
 
 def fork_scored_recommendation_for_user(
-        user_id: int, group_id: str, user_recommendations: List[Dict[str, Any]], is_eac: bool
+    user_id: int,
+    group_id: str,
+    user_recommendations: List[Dict[str, Any]],
+    is_eac: bool,
 ) -> List[Dict[str, int]]:
     if is_eac:
         recommendations = get_scored_recommendation_for_user_eac(
@@ -187,7 +190,7 @@ def fork_scored_recommendation_for_user(
 
 
 def order_offers_by_score_and_diversify_categories(
-        offers: List[Dict[str, Any]]
+    offers: List[Dict[str, Any]]
 ) -> List[int]:
     """
     Group offers by category.
@@ -217,7 +220,7 @@ def order_offers_by_score_and_diversify_categories(
 
     diversified_offers = []
     while len(diversified_offers) != np.sum(
-            [len(l) for l in offers_by_category.values()]
+        [len(l) for l in offers_by_category.values()]
     ):
         for offer_category in offers_by_category_ordered_by_frequency.keys():
             if offers_by_category_ordered_by_frequency[offer_category]:
@@ -228,8 +231,8 @@ def order_offers_by_score_and_diversify_categories(
             break
 
     ordered_and_diversified_offers = [offer["id"] for offer in diversified_offers][
-                                     :NUMBER_OF_RECOMMENDATIONS
-                                     ]
+        :NUMBER_OF_RECOMMENDATIONS
+    ]
 
     log_duration("order_offers_by_score_and_diversify_categories", start)
     return ordered_and_diversified_offers
@@ -254,7 +257,7 @@ def _get_offers_grouped_by_category(offers: List[Dict[str, Any]]) -> Dict:
 
 
 def _get_number_of_offers_and_max_score_by_category(
-        category_and_offers: Tuple,
+    category_and_offers: Tuple,
 ) -> Tuple:
     return (
         len(category_and_offers[1]),
@@ -263,7 +266,7 @@ def _get_number_of_offers_and_max_score_by_category(
 
 
 def save_recommendation(
-        user_id: int, recommendations: List[int], group_id: str, reco_origin: str
+    user_id: int, recommendations: List[int], group_id: str, reco_origin: str
 ):
     start = time.time()
     date = datetime.datetime.now(pytz.utc)

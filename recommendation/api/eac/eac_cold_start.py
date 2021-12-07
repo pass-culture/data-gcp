@@ -122,7 +122,7 @@ def get_cold_start_categories_eac(user_id: int) -> list:
 
 
 def get_cold_start_scored_recommendations_for_user_eac(
-        user_id: int, user_iris_id: int, cold_start_categories: list
+    user_id: int, user_iris_id: int, cold_start_categories: list
 ) -> List[Dict[str, Any]]:
     if cold_start_categories:
         order_query = f"""

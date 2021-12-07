@@ -7,7 +7,7 @@ from utils import (
 
 
 def query_ab_testing_table(
-        user_id,
+    user_id,
 ):
 
     with create_db_connection() as connection:
@@ -17,6 +17,7 @@ def query_ab_testing_table(
         ).scalar()
 
     return request_response
+
 
 def ab_testing_assign_user(user_id):
     groups = ["A", "B", "C"]

@@ -257,7 +257,6 @@ with DAG(
         "non_recommendable_offers",
         "iris_venues_mv",
         "number_of_bookings_per_user",
-        "abc_testing_v1v2_eac",
     ]
 
     refresh_materialized_view_tasks = []

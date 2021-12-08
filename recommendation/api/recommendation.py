@@ -8,23 +8,23 @@ from sqlalchemy import text
 import numpy as np
 import pytz
 
-from cold_start import (
+from not_eac.cold_start import (
     get_cold_start_status,
     get_cold_start_categories,
     get_cold_start_scored_recommendations_for_user,
 )
-from eac_cold_start import (
+from eac.eac_cold_start import (
     get_cold_start_status_eac,
     get_cold_start_categories_eac,
     get_cold_start_scored_recommendations_for_user_eac,
 )
-from ab_testing import query_ab_testing_table, ab_testing_assign_user
-from eac_ab_testing import query_ab_testing_table_eac, ab_testing_assign_user_eac
-from scoring import (
+from not_eac.ab_testing import query_ab_testing_table, ab_testing_assign_user
+from eac.eac_ab_testing import query_ab_testing_table_eac, ab_testing_assign_user_eac
+from not_eac.scoring import (
     get_intermediate_recommendations_for_user,
     get_scored_recommendation_for_user,
 )
-from eac_scoring import (
+from eac.eac_scoring import (
     get_intermediate_recommendations_for_user_eac,
     get_scored_recommendation_for_user_eac,
 )
@@ -85,8 +85,10 @@ def is_eac_user(
         request_response = connection.execute(
             text(
                 f"SELECT count(1) > 0 "
-                f"FROM abc_testing_v1v2_eac "
-                f"WHERE userid = '{str(user_id)}'"
+                f"FROM public.enriched_user "
+                f"WHERE user_id = '{str(user_id)}' "
+                f"AND user_deposit_initial_amount < 300 "
+                f"AND FLOOR(DATE_PART('DAY',user_deposit_creation_date - user_birth_date)/365) < 18"
             )
         ).scalar()
     print(f"is_eac_user = {request_response}")

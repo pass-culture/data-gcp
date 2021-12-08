@@ -15,12 +15,12 @@ COPY health_check_queries.py ./
 COPY recommendation.py ./
 COPY access_gcp_secrets.py ./
 COPY api-requirements.txt ./
-COPY not_eac/cold_start.py ./
-COPY eac/eac_cold_start.py ./
-COPY not_eac/ab_testing.py ./
-COPY eac/eac_ab_testing.py ./
-COPY not_eac/scoring.py ./
-COPY eac/eac_scoring.py ./
+COPY not_eac/cold_start.py not_eac/
+COPY eac/eac_cold_start.py eac/
+COPY not_eac/ab_testing.py not_eac/
+COPY eac/eac_ab_testing.py eac/
+COPY not_eac/scoring.py not_eac/
+COPY eac/eac_scoring.py eac/
 COPY utils.py ./
 
 # Install production dependencies.

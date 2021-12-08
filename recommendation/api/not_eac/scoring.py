@@ -5,14 +5,10 @@ from sqlalchemy import text
 
 from google.api_core.client_options import ClientOptions
 from googleapiclient import discovery
-from geolocalisation import get_iris_from_coordinates
 from utils import (
     create_db_connection,
     log_duration,
     GCP_PROJECT,
-    AB_TESTING_TABLE,
-    NUMBER_OF_RECOMMENDATIONS,
-    NUMBER_OF_PRESELECTED_OFFERS,
     MODEL_REGION,
     MODEL_NAME_A,
     MODEL_NAME_B,

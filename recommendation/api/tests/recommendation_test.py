@@ -6,12 +6,14 @@ import pytest
 
 from recommendation import (
     get_final_recommendations,
-    get_cold_start_scored_recommendations_for_user,
-    get_intermediate_recommendations_for_user,
-    get_scored_recommendation_for_user,
     order_offers_by_score_and_diversify_categories,
     save_recommendation,
 )
+from not_eac.scoring import (
+    get_intermediate_recommendations_for_user,
+    get_scored_recommendation_for_user,
+)
+from not_eac.cold_start import get_cold_start_scored_recommendations_for_user
 from utils import create_db_connection
 
 

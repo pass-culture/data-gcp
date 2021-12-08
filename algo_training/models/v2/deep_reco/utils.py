@@ -20,6 +20,27 @@ def sample_triplets(pos_data, random_seed=0):
     pos_item_ids = pos_data["item_id"].values
     pos_subcategories = pos_data["offer_subcategoryid"].values
 
+    client = bigquery.Client()
+    query_job = client.query(
+        f"""with neg_items as (
+        SELECT pos_data.item_id,pos_data.offer_subcategoryid
+        FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.temp_positive_data_train` pos_data
+        ORDER BY RAND()
+        LIMIT {len(user_ids)}
+        )
+        SELECT item_id, offer_subcategoryid from neg_items
+        """
+    )
+    neg_items = query_job.result()
+    neg_item_ids = []
+    neg_subcategories = []
+    for row in neg_items:
+        neg_item_ids.append(row["item_id"])
+        neg_subcategories.append(row["offer_subcategoryid"])
+
+    neg_item_ids = np.array(neg_item_ids)
+    neg_subcategories = np.array(neg_subcategories)
+    """
     neg_item_ids = np.array(
         random.choices(pos_data["item_id"].values, k=len(user_ids)), dtype=object
     )
@@ -34,6 +55,7 @@ def sample_triplets(pos_data, random_seed=0):
         )
         .offer_subcategoryid.values
     )
+    """
 
     return [user_ids, pos_item_ids, pos_subcategories, neg_item_ids, neg_subcategories]
 

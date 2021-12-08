@@ -1,6 +1,6 @@
 import pandas as pd
-
-from utils import STORAGE_PATH, MODEL_NAME
+import pandas_gbq as gbq
+from utils import STORAGE_PATH, MODEL_NAME, GCP_PROJECT_ID, ENV_SHORT_NAME
 
 
 def split_data(storage_path: str, model_name: str):
@@ -30,7 +30,14 @@ def split_data(storage_path: str, model_name: str):
         clicks_train_light.to_csv(
             f"{storage_path}/positive_data_train.csv", index=False
         )
+
         clicks_test_light.to_csv(f"{storage_path}/positive_data_test.csv", index=False)
+
+        clicks_train_light.to_gbq(
+            f"""clean_{ENV_SHORT_NAME}.temp_positive_data_train""",
+            project_id=f"{GCP_PROJECT_ID}",
+            if_exists="replace",
+        )
 
 
 if __name__ == "__main__":

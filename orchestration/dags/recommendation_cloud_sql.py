@@ -229,6 +229,7 @@ with DAG(
         CREATE INDEX IF NOT EXISTS idx_booking_stockid                    ON public.booking                     USING btree ("stock_id");
         CREATE INDEX IF NOT EXISTS idx_mediation_offerid                  ON public.mediation                   USING btree ("offerId");
         CREATE INDEX IF NOT EXISTS idx_offer_id                           ON public.offer                       USING btree (offer_id);
+        CREATE INDEX IF NOT EXISTS idx_user_id                            ON public.enriched_user               USING btree (user_id);
         CREATE INDEX IF NOT EXISTS idx_offer_subcategoryid                ON public.offer                       USING btree ("offer_subcategoryId");
         CREATE INDEX IF NOT EXISTS idx_offer_venueid                      ON public.offer                       USING btree ("venue_id");
         CREATE INDEX IF NOT EXISTS idx_venue_id                           ON public.venue                       USING btree (venue_id);

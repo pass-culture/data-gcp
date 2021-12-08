@@ -7,6 +7,10 @@ booking,user_id,character varying,applicative_database_booking,clean
 booking,booking_is_cancelled,boolean,applicative_database_booking,clean
 enriched_offer,offer_id,character varying,enriched_offer_data,analytics
 enriched_offer,last_stock_price,real,enriched_offer_data,analytics
+enriched_user,user_id,character varying,enriched_user_data,analytics
+enriched_user,user_deposit_creation_date,timestamp without time zone,enriched_user_data,analytics
+enriched_user,user_birth_date,timestamp without time zone,enriched_user_data,analytics
+enriched_user,user_deposit_initial_amount,real,enriched_user_data,analytics
 iris_venues,irisId,character varying,iris_venues,clean
 iris_venues,venueId,character varying,iris_venues,clean
 mediation,thumbCount,integer,applicative_database_mediation,clean

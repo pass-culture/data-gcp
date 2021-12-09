@@ -17,21 +17,25 @@ from not_eac.cold_start import get_cold_start_scored_recommendations_for_user
 from utils import create_db_connection
 
 
+@patch("recommendation.is_eac_user")
 @patch("recommendation.get_cold_start_scored_recommendations_for_user")
 @patch("recommendation.get_iris_from_coordinates")
 @patch("recommendation.save_recommendation")
 @patch("utils.create_pool")
 def test_get_final_recommendation_for_group_a_cold_start(
     mock_pool: Mock,
+    is_eac_user_mock: Mock,
     save_recommendation_mock: Mock,
     get_iris_from_coordinates_mock: Mock,
     get_cold_start_scored_recommendations_for_user_mock: Mock,
     setup_pool: Any,
-):
+) -> object:
     # Given
     mock_pool.return_value = setup_pool
 
     user_id = 113
+
+    is_eac_user_mock.return_value = False
     get_cold_start_scored_recommendations_for_user_mock.return_value = [
         {
             "id": 2,

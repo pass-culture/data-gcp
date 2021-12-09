@@ -24,7 +24,7 @@ from utils import create_db_connection
 @patch("recommendation.save_recommendation")
 @patch("utils.create_pool")
 def test_get_final_recommendation_for_group_a_cold_start(
-    # mock_pool: Mock,
+    mock_pool: Mock,
     is_eac_user_mock: Mock,
     fork_query_ab_testing_table_mock: Mock,
     save_recommendation_mock: Mock,
@@ -33,12 +33,12 @@ def test_get_final_recommendation_for_group_a_cold_start(
     setup_pool: Any,
 ) -> object:
     # Given
-    # mock_pool.return_value = setup_pool
 
     user_id = 113
 
     is_eac_user_mock.return_value = False
     fork_query_ab_testing_table_mock.return_value = ["A"]
+    mock_pool.return_value = setup_pool
     get_cold_start_scored_recommendations_for_user_mock.return_value = [
         {
             "id": 2,

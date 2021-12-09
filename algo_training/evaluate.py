@@ -2,9 +2,11 @@ import pandas as pd
 import tensorflow as tf
 import mlflow.tensorflow
 import time
-from models.match_model import MatchModel
+from models.v1.match_model import MatchModel
+from models.v1.metrics import compute_metrics_v1
 
-from models.metrics import compute_metrics
+from models.v2.deep_reco.deep_match_model import DeepMatchModel
+from models.v2.deep_reco.metrics import compute_metrics_v2_deep_reco
 from utils import (
     get_secret,
     connect_remote_mlflow,
@@ -16,7 +18,7 @@ from utils import (
 RECOMMENDATION_NUMBER = 40
 
 
-def evaluate(model, storage_path: str):
+def evaluate(model, storage_path: str,model_name):
     positive_data_test = pd.read_csv(
         f"{storage_path}/positive_data_test.csv", dtype={"user_id": str, "item_id": str}
     )
@@ -24,10 +26,14 @@ def evaluate(model, storage_path: str):
         f"{storage_path}/positive_data_train.csv",
         dtype={"user_id": str, "item_id": str},
     )
-
-    metrics = compute_metrics(
-        RECOMMENDATION_NUMBER, positive_data_train, positive_data_test, model
-    )
+    if model_name=='v1':
+        metrics = compute_metrics_v1(
+            RECOMMENDATION_NUMBER, positive_data_train, positive_data_test, model
+        )
+    elif model_name=='v2_deep_reco':
+        metrics = compute_metrics_v2_deep_reco(
+            RECOMMENDATION_NUMBER, positive_data_train, positive_data_test, model
+        )
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
     mlflow.log_metrics(metrics)
     print("------- EVALUATE DONE -------")

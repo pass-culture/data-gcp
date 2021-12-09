@@ -3,7 +3,7 @@ from google.cloud import bigquery
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-
+from utils import GCP_PROJECT_ID,ENV_SHORT_NAME
 
 def identity_loss(y_true, y_pred):
     """Ignore y_true and return the mean of y_pred
@@ -25,7 +25,7 @@ def sample_triplets(pos_data, random_seed=0):
     query_job = client.query(
         f"""with neg_items as (
         SELECT pos_data.item_id,pos_data.offer_subcategoryid
-        FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.temp_positive_data_train` pos_data
+        FROM `{GCP_PROJECT_ID}.clean_{ENV_SHORT_NAME}.temp_positive_data_train` pos_data
         ORDER BY RAND()
         LIMIT {len(user_ids)}
         )

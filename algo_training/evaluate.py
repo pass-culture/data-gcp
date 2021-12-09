@@ -3,10 +3,10 @@ import tensorflow as tf
 import mlflow.tensorflow
 import time
 from models.v1.match_model import MatchModel
-from models.v1.metrics import compute_metrics_v1
+from models.v1.metrics import compute_metrics as compute_metrics_v1
 
 from models.v2.deep_reco.deep_match_model import DeepMatchModel
-from models.v2.deep_reco.metrics import compute_metrics_v2_deep_reco
+from models.v2.deep_reco.metrics import compute_metrics as compute_metrics_v2_deep_reco
 from utils import (
     get_secret,
     connect_remote_mlflow,

@@ -128,7 +128,7 @@ def train(storage_path: str):
             if eval_result < best_eval or i == 0:
                 run_uuid = mlflow.active_run().info.run_uuid
                 export_path = f"saved_model/prod_ready/{run_uuid}"
-                tf.saved_model.save(deep_match_model, export_path)
+                tf.keras.models.saved_model.save(deep_match_model, export_path)
                 if ((best_eval - eval_result) / best_eval) < LOSS_CUTOFF and i != 0:
                     mlflow.log_param("Exit Epoch", i)
                     print("EXIT")

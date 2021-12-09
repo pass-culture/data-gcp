@@ -18,7 +18,7 @@ from utils import (
 RECOMMENDATION_NUMBER = 40
 
 
-def evaluate(model, storage_path: str,model_name):
+def evaluate(model, storage_path: str, model_name):
     positive_data_test = pd.read_csv(
         f"{storage_path}/positive_data_test.csv", dtype={"user_id": str, "item_id": str}
     )
@@ -26,11 +26,11 @@ def evaluate(model, storage_path: str,model_name):
         f"{storage_path}/positive_data_train.csv",
         dtype={"user_id": str, "item_id": str},
     )
-    if model_name=='v1':
+    if model_name == "v1":
         metrics = compute_metrics_v1(
             RECOMMENDATION_NUMBER, positive_data_train, positive_data_test, model
         )
-    elif model_name=='v2_deep_reco':
+    elif model_name == "v2_deep_reco":
         metrics = compute_metrics_v2_deep_reco(
             RECOMMENDATION_NUMBER, positive_data_train, positive_data_test, model
         )

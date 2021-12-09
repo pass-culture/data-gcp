@@ -178,9 +178,12 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
         expected = np.in1d(items_to_rank, positive_item_test["item_id"].values)
 
         repeated_user_id = [user_id] * len(items_to_rank)
-        items_to_rank_subcategoryIds= [offer_subcategoryId_dict[item_id] for item_id in items_to_rank]
+        items_to_rank_subcategoryIds = [
+            offer_subcategoryId_dict[item_id] for item_id in items_to_rank
+        ]
         predicted = match_model.predict(
-            [repeated_user_id, items_to_rank,items_to_rank_subcategoryIds ], batch_size=4096
+            [repeated_user_id, items_to_rank, items_to_rank_subcategoryIds],
+            batch_size=4096,
         )
         scored_items = sorted(
             [(item_id, score[0]) for item_id, score in zip(items_to_rank, predicted)],

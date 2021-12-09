@@ -17,16 +17,14 @@ from not_eac.cold_start import get_cold_start_scored_recommendations_for_user
 from utils import create_db_connection
 
 
-@patch("recommendation.is_eac_user")
-@patch("recommendation.fork_query_ab_testing_table")
+@patch("recommendation.is_eac_user", False)
+@patch("recommendation.fork_query_ab_testing_table", ["A"])
 @patch("recommendation.get_cold_start_scored_recommendations_for_user")
 @patch("recommendation.get_iris_from_coordinates")
 @patch("recommendation.save_recommendation")
 @patch("utils.create_pool")
 def test_get_final_recommendation_for_group_a_cold_start(
     mock_pool: Mock,
-    is_eac_user_mock: Mock,
-    fork_query_ab_testing_table_mock: Mock,
     save_recommendation_mock: Mock,
     get_iris_from_coordinates_mock: Mock,
     get_cold_start_scored_recommendations_for_user_mock: Mock,
@@ -37,8 +35,6 @@ def test_get_final_recommendation_for_group_a_cold_start(
 
     user_id = 113
 
-    is_eac_user_mock.return_value = False
-    fork_query_ab_testing_table_mock.return_value = ["A"]
     get_cold_start_scored_recommendations_for_user_mock.return_value = [
         {
             "id": 2,

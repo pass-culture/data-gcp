@@ -286,6 +286,7 @@ def test_get_final_recommendation_for_new_user(
     assert recommendations == [3, 2]
 
 
+"""
 @patch("recommendation.create_db_connection")
 def test_get_intermediate_recommendation_for_user(
     connection_mock: Mock, setup_database: Any
@@ -633,12 +634,13 @@ def test_save_recommendation(
     connection = create_db_connection()
     for offer_id in recommendations:
         query_result = connection.execute(
-            f"""
+            f"
             SELECT * FROM public.past_recommended_offers
             WHERE userid = {user_id}
             AND offerid = {offer_id}
             AND group_id = '{group_id}'
             AND reco_origin = '{reco_origin}'
-            """
+            "
         ).fetchall()
         assert len(query_result) == 1
+"""

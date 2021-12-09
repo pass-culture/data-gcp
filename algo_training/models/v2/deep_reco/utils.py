@@ -3,7 +3,8 @@ from google.cloud import bigquery
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-from utils import GCP_PROJECT_ID,ENV_SHORT_NAME
+from utils import GCP_PROJECT_ID, ENV_SHORT_NAME
+
 
 def identity_loss(y_true, y_pred):
     """Ignore y_true and return the mean of y_pred

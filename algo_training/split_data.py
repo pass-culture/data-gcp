@@ -33,11 +33,21 @@ def split_data(storage_path: str, model_name: str):
 
         clicks_test_light.to_csv(f"{storage_path}/positive_data_test.csv", index=False)
 
-        clicks_train_light[["user_id","offer_id","offer_subcategoryid","item_id","click_count","train_set"]].to_gbq(
+        clicks_train_light[
+            [
+                "user_id",
+                "offer_id",
+                "offer_subcategoryid",
+                "item_id",
+                "click_count",
+                "train_set",
+            ]
+        ].to_gbq(
             f"""clean_{ENV_SHORT_NAME}.temp_positive_data_train""",
             project_id=f"{GCP_PROJECT_ID}",
             if_exists="replace",
         )
+
 
 if __name__ == "__main__":
     split_data(STORAGE_PATH, MODEL_NAME)

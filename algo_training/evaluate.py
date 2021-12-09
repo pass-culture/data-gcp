@@ -59,10 +59,19 @@ if __name__ == "__main__":
     experiment_name = "algo_training_{MODEL_NAME}"
     experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
     run_id = mlflow.list_run_infos(experiment_id)[0].run_id
-    with mlflow.start_run(run_id=run_id):
-        loaded_model = tf.keras.models.load_model(
-            mlflow.get_artifact_uri("model"),
-            custom_objects={"MatchModel": MatchModel},
-            compile=False,
-        )
-        evaluate(loaded_model, STORAGE_PATH)
+    if MODEL_NAME == "v1":
+        with mlflow.start_run(run_id=run_id):
+            loaded_model = tf.keras.models.load_model(
+                mlflow.get_artifact_uri("model"),
+                custom_objects={"MatchModel": MatchModel},
+                compile=False,
+            )
+            evaluate(loaded_model, STORAGE_PATH)
+    elif MODEL_NAME == "v2_deep_reco":
+        with mlflow.start_run(run_id=run_id):
+            loaded_model = tf.keras.models.load_model(
+                mlflow.get_artifact_uri("model"),
+                custom_objects={"DeepMatchModel": DeepMatchModel},
+                compile=False,
+            )
+            evaluate(loaded_model, STORAGE_PATH)

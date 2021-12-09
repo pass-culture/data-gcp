@@ -17,8 +17,8 @@ from not_eac.cold_start import get_cold_start_scored_recommendations_for_user
 from utils import create_db_connection
 
 
-@patch("recommendation.is_eac_user", False)
-@patch("recommendation.fork_query_ab_testing_table", ["A"])
+@patch("recommendation.is_eac_user", return_value=False)
+@patch("recommendation.fork_query_ab_testing_table", return_value=["A"])
 @patch("recommendation.get_cold_start_scored_recommendations_for_user")
 @patch("recommendation.get_iris_from_coordinates")
 @patch("recommendation.save_recommendation")

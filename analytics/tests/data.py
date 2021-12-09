@@ -210,9 +210,9 @@ ENRICHED_OFFER_DATA_INPUT = {
             "stock_id": "2",
             "offer_id": "4",
             "available_stock_information": "12",
-            "stock_price": "0",
             "stock_booking_limit_date": None,
             "stock_beginning_date": None,
+            "stock_price": "0",
         },
     ],
     "user": [

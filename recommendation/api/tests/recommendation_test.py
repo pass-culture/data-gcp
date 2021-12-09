@@ -38,7 +38,7 @@ def test_get_final_recommendation_for_group_a_cold_start(
     user_id = 113
 
     is_eac_user_mock.return_value = False
-    query_ab_testing_table_mock.return_value = ['A']
+    query_ab_testing_table_mock.return_value = ["A"]
     get_cold_start_scored_recommendations_for_user_mock.return_value = [
         {
             "id": 2,

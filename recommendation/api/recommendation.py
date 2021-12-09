@@ -98,9 +98,12 @@ def is_eac_user(
 
 def fork_query_ab_testing_table(user_id, is_eac):
     start = time.time()
+    print(f"is_eac : {is_eac}")
     if is_eac:
+        print("Search in eac table ab_testing")
         request_response = query_ab_testing_table_eac(user_id)
     else:
+        print("Search in not eac table ab_testing")
         request_response = query_ab_testing_table(user_id)
     log_duration(f"query_ab_testing_table for {user_id}", start)
     return request_response

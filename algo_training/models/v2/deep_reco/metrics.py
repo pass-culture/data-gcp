@@ -183,10 +183,11 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
         # Check if any item of items_to_rank is in the test positive feedback for this user
         expected = np.in1d(items_to_rank, positive_item_test["item_id"].values)
 
-        repeated_user_id = [user_id] * len(items_to_rank)
-        items_to_rank_subcategoryIds = [
-            offer_subcategoryId_dict[item_id] for item_id in items_to_rank
-        ]
+        repeated_user_id = np.array([user_id] * len(items_to_rank))
+        items_to_rank_subcategoryIds = np.array(
+            [offer_subcategoryId_dict[item_id] for item_id in items_to_rank]
+        )
+
         deep_reco_input = [
             [user, item_to_rank, item_to_rank_subcategoryId]
             for user, item_to_rank, item_to_rank_subcategoryId in zip(
@@ -210,7 +211,7 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
         ]
         print("********* SET deep_reco instance DONE ************")
         predicted = match_model.predict(
-            instances,
+            [repeated_user_id, items_to_rank, items_to_rank_subcategoryIds],
             batch_size=4096,
         )
         scored_items = sorted(

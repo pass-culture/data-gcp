@@ -1,5 +1,6 @@
 import random
 import numpy as np
+import tensorflow as tf
 import warnings
 from scipy.spatial.distance import cosine
 from operator import itemgetter
@@ -191,9 +192,12 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
                 repeated_user_id, items_to_rank, items_to_rank_subcategoryIds
             )
         ]
-        print("********* SET deep_reco_input ************")
+        print("********* SET deep_reco_input DONE ************")
+        deep_reco_input_mat = tf.convert_to_tensor(deep_reco_input, dtype=tf.string)
+        print("********* SET deep_reco_input_mat DONE ************")
+
         predicted = match_model.predict(
-            deep_reco_input,
+            deep_reco_input_mat,
             batch_size=4096,
         )
         scored_items = sorted(

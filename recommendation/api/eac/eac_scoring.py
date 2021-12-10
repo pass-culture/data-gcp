@@ -23,7 +23,7 @@ def get_intermediate_recommendations_for_user_eac(
         query = text(
             """
             SELECT offer_id, category, subcategory_id, url, item_id, product_id
-            FROM recommendable_offers
+            FROM recommendable_offers_eac_16_17
             WHERE is_national = True or url IS NOT NULL
             AND offer_id NOT IN
                 (
@@ -43,7 +43,7 @@ def get_intermediate_recommendations_for_user_eac(
         query = text(
             f"""
             SELECT offer_id, category, subcategory_id, url, item_id, product_id
-            FROM recommendable_offers
+            FROM recommendable_offers_eac_16_17
             WHERE
                 (
                 venue_id IN

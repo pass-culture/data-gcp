@@ -152,11 +152,11 @@ def get_cold_start_scored_recommendations_for_user_eac(
     recommendations_query = text(
         f"""
         SELECT offer_id, category, url, product_id
-        FROM recommendable_offers
+        FROM recommendable_offers_eac_16_17
         WHERE offer_id NOT IN
             (
                 SELECT offer_id
-                FROM recommendable_offers_eac_16_17
+                FROM non_recommendable_offers
                 WHERE user_id = :user_id
             )
         AND {where_clause}

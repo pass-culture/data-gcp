@@ -72,7 +72,7 @@ if __name__ == "__main__":
                 custom_objects={"MatchModel": MatchModel},
                 compile=False,
             )
-            evaluate(loaded_model, STORAGE_PATH)
+            evaluate(loaded_model, STORAGE_PATH, MODEL_NAME)
     elif MODEL_NAME == "v2_deep_reco":
         with mlflow.start_run(run_id=run_id):
             loaded_model = tf.keras.models.load_model(
@@ -80,4 +80,4 @@ if __name__ == "__main__":
                 custom_objects={"DeepMatchModel": DeepMatchModel},
                 compile=False,
             )
-            evaluate(loaded_model, STORAGE_PATH)
+            evaluate(loaded_model, STORAGE_PATH, MODEL_NAME)

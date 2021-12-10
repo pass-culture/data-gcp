@@ -196,8 +196,16 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
         deep_reco_input_mat = tf.convert_to_tensor(deep_reco_input, dtype=tf.string)
         print("********* SET deep_reco_input_mat DONE ************")
 
+        instances = [
+            {
+                "input_1": repeated_user_id,
+                "input_2": items_to_rank,
+                "input_3": items_to_rank_subcategoryIds,
+            }
+        ]
+        print("********* SET deep_reco instance DONE ************")
         predicted = match_model.predict(
-            deep_reco_input_mat,
+            instances,
             batch_size=4096,
         )
         scored_items = sorted(

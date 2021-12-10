@@ -191,6 +191,7 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
                 repeated_user_id, items_to_rank, items_to_rank_subcategoryIds
             )
         ]
+        print("********* SET deep_reco_input ************")
         predicted = match_model.predict(
             deep_reco_input,
             batch_size=4096,

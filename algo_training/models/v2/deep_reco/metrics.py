@@ -185,8 +185,14 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
         items_to_rank_subcategoryIds = [
             offer_subcategoryId_dict[item_id] for item_id in items_to_rank
         ]
+        deep_reco_input = [
+            [user, item_to_rank, item_to_rank_subcategoryId]
+            for user, item_to_rank, item_to_rank_subcategoryId in zip(
+                repeated_user_id, items_to_rank, items_to_rank_subcategoryIds
+            )
+        ]
         predicted = match_model.predict(
-            [repeated_user_id, items_to_rank, items_to_rank_subcategoryIds],
+            deep_reco_input,
             batch_size=4096,
         )
         scored_items = sorted(

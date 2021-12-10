@@ -164,6 +164,7 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
     else:
         random_users_to_test = all_test_user_ids
     for user_id in random_users_to_test:
+        print(f"*********** user_count = {user_count} ****************")
         user_count += 1
         positive_item_train = positive_data_train[
             positive_data_train["user_id"] == user_id
@@ -196,6 +197,9 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
         print("********* SET deep_reco_input DONE ************")
         deep_reco_input_mat = tf.convert_to_tensor(deep_reco_input, dtype=tf.string)
         print("********* SET deep_reco_input_mat DONE ************")
+        print("user: ", repeated_user_id[0])
+        print("items_to_rank: ", items_to_rank[0])
+        print("items_to_rank_subcategoryIds: ", items_to_rank_subcategoryIds[0])
 
         instances = [
             {

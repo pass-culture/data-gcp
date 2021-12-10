@@ -156,7 +156,7 @@ def get_cold_start_scored_recommendations_for_user_eac(
         WHERE offer_id NOT IN
             (
                 SELECT offer_id
-                FROM non_recommendable_offers
+                FROM recommendable_offers_eac_16_17
                 WHERE user_id = :user_id
             )
         AND {where_clause}

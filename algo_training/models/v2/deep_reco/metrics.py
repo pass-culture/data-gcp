@@ -164,7 +164,6 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
     else:
         random_users_to_test = all_test_user_ids
     for user_id in random_users_to_test:
-        print(f"*********** user_count = {user_count} ****************")
         user_count += 1
         positive_item_train = positive_data_train[
             positive_data_train["user_id"] == user_id
@@ -187,29 +186,6 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
         items_to_rank_subcategoryIds = np.array(
             [offer_subcategoryId_dict[item_id] for item_id in items_to_rank]
         )
-
-        deep_reco_input = [
-            [user, item_to_rank, item_to_rank_subcategoryId]
-            for user, item_to_rank, item_to_rank_subcategoryId in zip(
-                repeated_user_id, items_to_rank, items_to_rank_subcategoryIds
-            )
-        ]
-        # print("deep_reco_input: ", print(deep_reco_input))
-        print("********* SET deep_reco_input DONE ************")
-        deep_reco_input_mat = tf.convert_to_tensor(deep_reco_input, dtype=tf.string)
-        print("********* SET deep_reco_input_mat DONE ************")
-        print("user: ", repeated_user_id[0])
-        print("items_to_rank: ", items_to_rank[0])
-        print("items_to_rank_subcategoryIds: ", items_to_rank_subcategoryIds[0])
-
-        instances = [
-            {
-                "input_1": repeated_user_id,
-                "input_2": items_to_rank,
-                "input_3": items_to_rank_subcategoryIds,
-            }
-        ]
-        print("********* SET deep_reco instance DONE ************")
         predicted = match_model.predict(
             [repeated_user_id, items_to_rank, items_to_rank_subcategoryIds],
             batch_size=4096,

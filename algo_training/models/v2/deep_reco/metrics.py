@@ -192,6 +192,7 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
                 repeated_user_id, items_to_rank, items_to_rank_subcategoryIds
             )
         ]
+        print("deep_reco_input: ", print(deep_reco_input))
         print("********* SET deep_reco_input DONE ************")
         deep_reco_input_mat = tf.convert_to_tensor(deep_reco_input, dtype=tf.string)
         print("********* SET deep_reco_input_mat DONE ************")

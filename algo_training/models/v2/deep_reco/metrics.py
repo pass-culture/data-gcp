@@ -113,11 +113,13 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
     # Map all offers to corresponding subcategoryIds
     offer_subcategoryId_dict = {}
     unique_offer_subcategoryIds = (
-        positive_data_train.groupby(["item_id", "subcategoryId"]).first().reset_index()
+        positive_data_train.groupby(["item_id", "offer_subcategoryid"])
+        .first()
+        .reset_index()
     )
     for item_id, item_subcategoryId in zip(
         unique_offer_subcategoryIds.item_id.values,
-        unique_offer_subcategoryIds.subcategoryId.values,
+        unique_offer_subcategoryIds.offer_subcategoryid.values,
     ):
         offer_subcategoryId_dict[item_id] = item_subcategoryId
 
@@ -172,7 +174,9 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
         items_to_rank = np.setdiff1d(
             all_item_ids, positive_item_train["item_id"].values
         )
-        booked_offer_subcategoryIds = list(positive_item_train["subcategoryId"].values)
+        booked_offer_subcategoryIds = list(
+            positive_item_train["offer_subcategoryid"].values
+        )
 
         # Check if any item of items_to_rank is in the test positive feedback for this user
         expected = np.in1d(items_to_rank, positive_item_test["item_id"].values)

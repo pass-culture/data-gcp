@@ -242,7 +242,7 @@ with DAG(
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": ":robot_face: Nouvelle version de l'algo déployée ! :rocket:",
+                "text": ":robot_face: Nouvelle version de l'algo 'v2_deep_reco' déployée ! :rocket:",
             },
         },
         {
@@ -285,7 +285,7 @@ with DAG(
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": ":x: Les métriques sont pas bonnes ! :sadpanda:",
+                "text": ":x: Les métriques de l'algo 'v2_deep_reco' sont pas bonnes ! :sadpanda:",
             },
         },
         {

@@ -452,7 +452,6 @@ workflows:
             - Slack
           <<: *slack-fail-post-step
 
-
       - cloud-function-deploy:
           name: cni-fraude-algo-cloud-function-deploy-stg
           cloud-function-name: cni_fraude_algo_stg
@@ -862,6 +861,8 @@ jobs:
       DAG_IMPORT_DMS: import_dms_subscriptions
       DAG_IMPORT_SIREN: import_siren_v1
       DAG_COMPUTE_MONITORING: compute_monitoring
+      DAG_ALGO_TRAINING_v1: algo_training_v1
+      DAG_ALGO_TRAINING_v2_deep_reco: algo_training_v2_deep_reco
     working_directory: ~/data-gcp/orchestration
     steps:
       - checkout:
@@ -891,6 +892,8 @@ jobs:
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_DMS} 6 20
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_SIREN} 6 20
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_COMPUTE_MONITORING} 6 20
+            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_ALGO_TRAINING_v1} 6 20
+            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_ALGO_TRAINING_v2_deep_reco} 6 20
 
   build_and_deploy_api:
     docker:

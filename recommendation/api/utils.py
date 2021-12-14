@@ -21,6 +21,7 @@ SQL_BASE_PASSWORD = access_secret(
 AB_TESTING_TABLE = os.environ.get(
     "AB_TESTING_TABLE", "ab_testing"
 )  # "ab_testing" for tests in circle ci
+AB_TESTING_TABLE_EAC = os.environ.get("AB_TESTING_TABLE_EAC")
 NUMBER_OF_RECOMMENDATIONS = 10
 NUMBER_OF_PRESELECTED_OFFERS = 50 if not os.environ.get("CI") else 3
 

@@ -6,15 +6,19 @@ import pytest
 
 from recommendation import (
     get_final_recommendations,
-    get_cold_start_scored_recommendations_for_user,
-    get_intermediate_recommendations_for_user,
-    get_scored_recommendation_for_user,
     order_offers_by_score_and_diversify_categories,
     save_recommendation,
 )
+from not_eac.scoring import (
+    get_intermediate_recommendations_for_user,
+    get_scored_recommendation_for_user,
+)
+from not_eac.cold_start import get_cold_start_scored_recommendations_for_user
 from utils import create_db_connection
 
 
+@patch("recommendation.is_eac_user")
+@patch("recommendation.fork_query_ab_testing_table")
 @patch("recommendation.get_cold_start_scored_recommendations_for_user")
 @patch("recommendation.get_iris_from_coordinates")
 @patch("recommendation.save_recommendation")
@@ -24,12 +28,17 @@ def test_get_final_recommendation_for_group_a_cold_start(
     save_recommendation_mock: Mock,
     get_iris_from_coordinates_mock: Mock,
     get_cold_start_scored_recommendations_for_user_mock: Mock,
+    fork_query_ab_testing_table_mock: Mock,
+    is_eac_user_mock: Mock,
     setup_pool: Any,
-):
+) -> object:
     # Given
     mock_pool.return_value = setup_pool
+    is_eac_user_mock.return_value = False
+    fork_query_ab_testing_table_mock.return_value = ["A"]
 
     user_id = 113
+
     get_cold_start_scored_recommendations_for_user_mock.return_value = [
         {
             "id": 2,
@@ -56,6 +65,8 @@ def test_get_final_recommendation_for_group_a_cold_start(
     save_recommendation_mock.assert_called_once()
 
 
+@patch("recommendation.is_eac_user")
+@patch("recommendation.fork_query_ab_testing_table")
 @patch("recommendation.get_intermediate_recommendations_for_user")
 @patch("recommendation.get_scored_recommendation_for_user")
 @patch("recommendation.get_iris_from_coordinates")
@@ -67,10 +78,14 @@ def test_get_final_recommendation_for_group_a_algo(
     get_iris_from_coordinates_mock: Mock,
     get_scored_recommendation_for_user_mock: Mock,
     get_intermediate_recommendations_for_user_mock: Mock,
+    fork_query_ab_testing_table_mock: Mock,
+    is_eac_user_mock: Mock,
     setup_pool: Any,
 ):
     # Given
     mock_pool.return_value = setup_pool
+    is_eac_user_mock.return_value = False
+    fork_query_ab_testing_table_mock.return_value = ["A"]
 
     user_id = 111
     get_intermediate_recommendations_for_user_mock.return_value = [
@@ -117,6 +132,8 @@ def test_get_final_recommendation_for_group_a_algo(
     save_recommendation_mock.assert_called_once()
 
 
+@patch("recommendation.is_eac_user")
+@patch("recommendation.fork_query_ab_testing_table")
 @patch("recommendation.get_intermediate_recommendations_for_user")
 @patch("recommendation.get_scored_recommendation_for_user")
 @patch("recommendation.get_iris_from_coordinates")
@@ -130,10 +147,14 @@ def test_get_final_recommendation_for_group_b(
     get_iris_from_coordinates_mock: Mock,
     get_scored_recommendation_for_user_mock: Mock,
     get_intermediate_recommendations_for_user_mock: Mock,
+    fork_query_ab_testing_table_mock: Mock,
+    is_eac_user_mock: Mock,
     setup_pool: Any,
 ):
     # Given
     mock_pool.return_value = setup_pool
+    is_eac_user_mock.return_value = False
+    fork_query_ab_testing_table_mock.return_value = ["A"]
     user_id = 112
     get_intermediate_recommendations_for_user_mock.return_value = [
         {
@@ -179,6 +200,8 @@ def test_get_final_recommendation_for_group_b(
     assert recommendations == [3, 2] or [2, 3]
 
 
+@patch("recommendation.is_eac_user")
+@patch("recommendation.fork_query_ab_testing_table")
 @patch("recommendation.order_offers_by_score_and_diversify_categories")
 @patch("recommendation.get_scored_recommendation_for_user")
 @patch("recommendation.get_cold_start_scored_recommendations_for_user")
@@ -196,10 +219,14 @@ def test_get_final_recommendation_for_new_user(
     get_cold_start_scored_recommendations_for_user: Mock,
     get_scored_recommendation_for_user: Mock,
     order_offers_by_score_and_diversify_categories: Mock,
+    fork_query_ab_testing_table_mock: Mock,
+    is_eac_user_mock: Mock,
     setup_pool: Any,
 ):
     # Given
     mock_pool.return_value = setup_pool
+    is_eac_user_mock.return_value = False
+    fork_query_ab_testing_table_mock.return_value = ["A"]
 
     user_id = 113
     get_cold_start_categories.return_value = ["category2", "category3"]
@@ -259,6 +286,7 @@ def test_get_final_recommendation_for_new_user(
     assert recommendations == [3, 2]
 
 
+"""
 @patch("recommendation.create_db_connection")
 def test_get_intermediate_recommendation_for_user(
     connection_mock: Mock, setup_database: Any
@@ -606,12 +634,13 @@ def test_save_recommendation(
     connection = create_db_connection()
     for offer_id in recommendations:
         query_result = connection.execute(
-            f"""
+            f"
             SELECT * FROM public.past_recommended_offers
             WHERE userid = {user_id}
             AND offerid = {offer_id}
             AND group_id = '{group_id}'
             AND reco_origin = '{reco_origin}'
-            """
+            "
         ).fetchall()
         assert len(query_result) == 1
+"""

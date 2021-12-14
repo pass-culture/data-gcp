@@ -197,6 +197,24 @@ ENRICHED_OFFER_DATA_INPUT = {
             "stock_fields_updated": "{}",
         },
     ],
+    "enriched_stock_data": [
+        {
+            "stock_id": "1",
+            "offer_id": "3",
+            "available_stock_information": "8",
+            "stock_booking_limit_date": "2019-11-23",
+            "stock_beginning_date": "2019-11-24",
+            "stock_price": "0",
+        },
+        {
+            "stock_id": "2",
+            "offer_id": "4",
+            "available_stock_information": "12",
+            "stock_booking_limit_date": None,
+            "stock_beginning_date": None,
+            "stock_price": "0",
+        },
+    ],
     "user": [
         {
             "user_id": "1",
@@ -319,6 +337,8 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "countries": '["usa"]',
         "casting": "[]",
         "offer_is_educational": False,
+        "offer_is_underage_selectable": True,
+        "offer_is_bookable": False,
     },
     {
         "offer_id": "4",
@@ -362,6 +382,8 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "countries": None,
         "casting": None,
         "offer_is_educational": False,
+        "offer_is_underage_selectable": True,
+        "offer_is_bookable": True,
     },
 ]
 

@@ -346,13 +346,13 @@ def define_import_query(
         "educational_booking"
     ] = """
             SELECT
-                id AS educational_booking_id
-                ,"educationalInstitutionId" AS educational_booking_educational_institution_id
-                ,"educationalYearId" AS educational_booking_educational_year_id
+                CAST(id AS varchar(255)) AS educational_booking_id
+                ,CAST("educationalInstitutionId" AS varchar(255)) AS educational_booking_educational_institution_id
+                ,CAST("educationalYearId" AS varchar(255)) AS educational_booking_educational_year_id
                 ,CAST("status" AS VARCHAR) AS educational_booking_status
                 ,"confirmationDate" AS educational_booking_confirmation_date
                 ,"confirmationLimitDate" AS educational_booking_confirmation_limit_date
-                ,"educationalRedactorId" AS educational_booking_educational_redactor_id
+                ,CAST("educationalRedactorId" AS varchar(255)) AS educational_booking_educational_redactor_id
             FROM educational_booking
         """
 
@@ -360,9 +360,9 @@ def define_import_query(
         "educational_deposit"
     ] = """
             SELECT
-                id AS educational_deposit_id
-                ,"educationalInstitutionId" AS educational_deposit_educational_institution_id
-                ,"educationalYearId" AS educational_deposit_educational_year_id
+                CAST(id AS varchar(255)) AS educational_deposit_id
+                ,CAST("educationalInstitutionId" AS varchar(255)) AS educational_deposit_educational_institution_id
+                ,CAST("educationalYearId" AS varchar(255)) AS educational_deposit_educational_year_id
                 ,amount AS educational_deposit_amount
                 ,"dateCreated" AS educational_deposit_creation_date
             FROM educational_deposit
@@ -372,8 +372,8 @@ def define_import_query(
         "educational_institution"
     ] = """
             SELECT
-            id AS educational_institution_id
-            ,"institutionId" AS educational_institution_institution_id
+            CAST(id AS varchar(255)) AS educational_institution_id
+            ,CAST("institutionId" AS varchar(255)) AS educational_institution_institution_id
             FROM educational_institution
         """
 
@@ -381,7 +381,7 @@ def define_import_query(
         "educational_redactor"
     ] = """
             SELECT
-                id AS educational_redactor_id
+                CAST(id AS varchar(255)) AS educational_redactor_id
                 ,civility AS educational_redactor_civility
             FROM educational_redactor
         """
@@ -390,10 +390,10 @@ def define_import_query(
         "educational_year"
     ] = """
             SELECT
-                id AS educational_year_id
+                CAST(id AS varchar(255)) AS educational_year_id
                 ,"beginningDate" AS educational_year_beginning_date
                 ,"expirationDate" AS educational_year_expiration_date
-                ,"adageId" AS educational_year_adage_id
+                ,CAST("adageId" AS varchar(255)) AS educational_year_adage_id
             FROM educational_year
         """
     cloudsql_queries[

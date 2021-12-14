@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 
 from typing import Any, List
 
-from cold_start import get_cold_start_status, get_cold_start_categories
+from not_eac.cold_start import get_cold_start_status, get_cold_start_categories
 
 
 @pytest.mark.parametrize(
@@ -14,7 +14,7 @@ from cold_start import get_cold_start_status, get_cold_start_categories
         ("113", True),
     ],
 )
-@patch("cold_start.create_db_connection")
+@patch("not_eac.cold_start.create_db_connection")
 def test_get_cold_start_status(
     connection_mock: Mock, setup_database: Any, user_id: str, cold_start_status: bool
 ):
@@ -83,7 +83,7 @@ def test_get_cold_start_status(
         ),
     ],
 )
-@patch("cold_start.create_db_connection")
+@patch("not_eac.cold_start.create_db_connection")
 def test_get_cold_start_categories(
     connection_mock: Mock,
     setup_database: Any,

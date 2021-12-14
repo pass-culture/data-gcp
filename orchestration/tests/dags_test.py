@@ -63,7 +63,7 @@ class TestDags(unittest.TestCase):
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 73)
+        self.assertEqual(len(dag.tasks), 89)
 
     def test_create_ab_testing_table_dag_is_loaded(self):
         # When
@@ -99,7 +99,7 @@ class TestDags(unittest.TestCase):
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 98)
+        self.assertEqual(len(dag.tasks), 99)
 
     def test_import_firebase_data_dag_is_loaded(self):
         # When
@@ -154,3 +154,21 @@ class TestDags(unittest.TestCase):
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
         self.assertEqual(len(dag.tasks), 9)
+
+    def test_algo_training_v1_is_loaded(self):
+        # When
+        dag = self.dagbag.get_dag(dag_id="algo_training_v1")
+
+        # Then
+        self.assertDictEqual(self.dagbag.import_errors, {})
+        self.assertIsNotNone(dag)
+        self.assertEqual(len(dag.tasks), 15)
+
+    def test_algo_training_v2_deep_reco_is_loaded(self):
+        # When
+        dag = self.dagbag.get_dag(dag_id="algo_training_v2_deep_reco")
+
+        # Then
+        self.assertDictEqual(self.dagbag.import_errors, {})
+        self.assertIsNotNone(dag)
+        self.assertEqual(len(dag.tasks), 15)

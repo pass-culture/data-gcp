@@ -8,51 +8,57 @@ from sqlalchemy import text
 import numpy as np
 import pytz
 
-from google.api_core.client_options import ClientOptions
-from googleapiclient import discovery
-
-from cold_start import get_cold_start_status, get_cold_start_categories
-from geolocalisation import get_iris_from_coordinates
-from utils import (
-    create_db_connection,
-    log_duration,
-    GCP_PROJECT,
-    AB_TESTING_TABLE,
-    NUMBER_OF_RECOMMENDATIONS,
-    NUMBER_OF_PRESELECTED_OFFERS,
-    MODEL_REGION,
-    MODEL_NAME_A,
-    MODEL_NAME_B,
-    MODEL_NAME_C,
+from not_eac.cold_start import (
+    get_cold_start_status,
+    get_cold_start_categories,
+    get_cold_start_scored_recommendations_for_user,
 )
+from eac.eac_cold_start import (
+    get_cold_start_status_eac,
+    get_cold_start_categories_eac,
+    get_cold_start_scored_recommendations_for_user_eac,
+)
+from not_eac.ab_testing import query_ab_testing_table, ab_testing_assign_user
+from eac.eac_ab_testing import query_ab_testing_table_eac, ab_testing_assign_user_eac
+from not_eac.scoring import (
+    get_intermediate_recommendations_for_user,
+    get_scored_recommendation_for_user,
+)
+from eac.eac_scoring import (
+    get_intermediate_recommendations_for_user_eac,
+    get_scored_recommendation_for_user_eac,
+)
+from geolocalisation import get_iris_from_coordinates
+from utils import create_db_connection, log_duration, NUMBER_OF_RECOMMENDATIONS
 
 
 def get_final_recommendations(user_id: int, longitude: int, latitude: int) -> List[int]:
+    is_eac = is_eac_user(user_id)
 
-    request_response = query_ab_testing_table(user_id)
-    if not request_response:
-        group_id = ab_testing_assign_user(user_id)
+    ab_testing = fork_query_ab_testing_table(user_id, is_eac)
+    if not ab_testing:
+        group_id = fork_ab_testing_assign_user(user_id, is_eac)
     else:
-        group_id = request_response[0]
+        group_id = ab_testing[0]
 
-    is_cold_start = get_cold_start_status(user_id)
+    is_cold_start = fork_get_cold_start_status(user_id, is_eac)
     user_iris_id = get_iris_from_coordinates(longitude, latitude)
 
     if is_cold_start:
         reco_origin = "cold_start"
-        cold_start_categories = get_cold_start_categories(user_id)
-        scored_recommendation_for_user = get_cold_start_scored_recommendations_for_user(
-            user_id,
-            user_iris_id,
-            cold_start_categories,
+        cold_start_categories = fork_get_cold_start_categories(user_id, is_eac)
+        scored_recommendation_for_user = (
+            fork_cold_start_scored_recommendations_for_user(
+                user_id, user_iris_id, cold_start_categories, is_eac
+            )
         )
     else:
         reco_origin = "algo"
-        recommendations_for_user = get_intermediate_recommendations_for_user(
-            user_id, user_iris_id
+        recommendations_for_user = fork_intermediate_recommendations_for_user(
+            user_id, user_iris_id, is_eac
         )
-        scored_recommendation_for_user = get_scored_recommendation_for_user(
-            user_id, group_id, recommendations_for_user
+        scored_recommendation_for_user = fork_scored_recommendation_for_user(
+            user_id, group_id, recommendations_for_user, is_eac
         )
 
         # Keep the top 40 offers and shuffle them
@@ -70,134 +76,81 @@ def get_final_recommendations(user_id: int, longitude: int, latitude: int) -> Li
     return final_recommendations
 
 
-def query_ab_testing_table(
+def is_eac_user(
     user_id,
 ):
     start = time.time()
 
     with create_db_connection() as connection:
         request_response = connection.execute(
-            text(f"SELECT groupid FROM {AB_TESTING_TABLE} WHERE userid= :user_id"),
-            user_id=str(user_id),
+            text(
+                f"SELECT count(1) > 0 "
+                f"FROM public.enriched_user "
+                f"WHERE user_id = '{str(user_id)}' "
+                f"AND user_deposit_initial_amount < 300 "
+                f"AND FLOOR(DATE_PART('DAY',user_deposit_creation_date - user_birth_date)/365) < 18"
+            )
         ).scalar()
+    print(f"is_eac_user = {request_response}")
+    log_duration(f"is_eac_user for {user_id}", start)
+    return request_response
 
+
+def fork_query_ab_testing_table(user_id, is_eac):
+    start = time.time()
+    print(f"is_eac : {is_eac}")
+    if is_eac:
+        print("Search in eac table ab_testing")
+        request_response = query_ab_testing_table_eac(user_id)
+    else:
+        print("Search in not eac table ab_testing")
+        request_response = query_ab_testing_table(user_id)
     log_duration(f"query_ab_testing_table for {user_id}", start)
     return request_response
 
 
-def ab_testing_assign_user(user_id):
+def fork_ab_testing_assign_user(user_id, is_eac):
     start = time.time()
-    groups = ["A", "B", "C"]
-    group_id = random.choice(groups)
-
-    with create_db_connection() as connection:
-        connection.execute(
-            text(
-                f"INSERT INTO {AB_TESTING_TABLE}(userid, groupid) VALUES (:user_id, :group_id)"
-            ),
-            user_id=user_id,
-            group_id=str(group_id),
-        )
-
+    if is_eac:
+        group_id = ab_testing_assign_user_eac(user_id)
+    else:
+        group_id = ab_testing_assign_user(user_id)
     log_duration(f"ab_testing_assign_user for {user_id}", start)
     return group_id
 
 
-def save_recommendation(
-    user_id: int, recommendations: List[int], group_id: str, reco_origin: str
+def fork_get_cold_start_status(user_id, is_eac):
+    start = time.time()
+    if is_eac:
+        user_cold_start_status = get_cold_start_status_eac(user_id)
+    else:
+        user_cold_start_status = get_cold_start_status(user_id)
+    log_duration(f"get_cold_start_status for {user_id}", start)
+    return user_cold_start_status
+
+
+def fork_get_cold_start_categories(user_id, is_eac):
+    start = time.time()
+    if is_eac:
+        cold_start_categories = get_cold_start_categories_eac(user_id)
+    else:
+        cold_start_categories = get_cold_start_categories(user_id)
+    log_duration(f"get_cold_start_categories for {user_id}", start)
+    return cold_start_categories
+
+
+def fork_cold_start_scored_recommendations_for_user(
+    user_id: int, user_iris_id: int, cold_start_categories: list, is_eac: bool
 ):
     start = time.time()
-    date = datetime.datetime.now(pytz.utc)
-    rows = []
-    for offer_id in recommendations:
-        rows.append(
-            {
-                "user_id": user_id,
-                "offer_id": offer_id,
-                "date": date,
-                "group_id": group_id,
-                "reco_origin": reco_origin,
-            }
+    if is_eac:
+        cold_start_recommendations = get_cold_start_scored_recommendations_for_user_eac(
+            user_id, user_iris_id, cold_start_categories
         )
-
-    with create_db_connection() as connection:
-        connection.execute(
-            text(
-                """
-                INSERT INTO public.past_recommended_offers (userid, offerid, date, group_id, reco_origin)
-                VALUES (:user_id, :offer_id, :date, :group_id, :reco_origin)
-                """
-            ),
-            rows,
-        )
-    log_duration(f"save_recommendations for {user_id}", start)
-
-
-def get_cold_start_scored_recommendations_for_user(
-    user_id: int, user_iris_id: int, cold_start_categories: list
-) -> List[Dict[str, Any]]:
-
-    start = time.time()
-    if cold_start_categories:
-        order_query = f"""
-            ORDER BY
-                (category in ({', '.join([f"'{category}'" for category in cold_start_categories])})) DESC,
-                booking_number DESC
-            """
     else:
-        order_query = "ORDER BY booking_number DESC"
-
-    if not user_iris_id:
-        where_clause = "is_national = True or url IS NOT NULL"
-    else:
-        where_clause = """
-        (
-            venue_id IN
-                (
-                    SELECT "venue_id"
-                    FROM iris_venues_mv
-                    WHERE "iris_id" = :user_iris_id
-                )
-            OR is_national = True
-            OR url IS NOT NULL
+        cold_start_recommendations = get_cold_start_scored_recommendations_for_user(
+            user_id, user_iris_id, cold_start_categories
         )
-        """
-
-    recommendations_query = text(
-        f"""
-        SELECT offer_id, category, url, product_id
-        FROM recommendable_offers
-        WHERE offer_id NOT IN
-            (
-                SELECT offer_id
-                FROM non_recommendable_offers
-                WHERE user_id = :user_id
-            )
-        AND {where_clause}
-        AND booking_number > 0
-        {order_query}
-        LIMIT :number_of_preselected_offers;
-        """
-    )
-
-    with create_db_connection() as connection:
-        query_result = connection.execute(
-            recommendations_query,
-            user_iris_id=str(user_iris_id),
-            user_id=str(user_id),
-            number_of_preselected_offers=NUMBER_OF_PRESELECTED_OFFERS,
-        ).fetchall()
-
-    cold_start_recommendations = [
-        {
-            "id": row[0],
-            "category": row[1],
-            "url": row[2],
-            "product_id": row[3],
-            "score": random.random(),
-        }
-        for row in query_result
-    ]
     log_duration(
         f"get_cold_start_scored_recommendations_for_user for {user_id} {'with localisation' if user_iris_id else ''}",
         start,
@@ -205,75 +158,18 @@ def get_cold_start_scored_recommendations_for_user(
     return cold_start_recommendations
 
 
-def get_intermediate_recommendations_for_user(
-    user_id: int, user_iris_id: int
+def fork_intermediate_recommendations_for_user(
+    user_id: int, user_iris_id: int, is_eac: bool
 ) -> List[Dict[str, Any]]:
-
     start = time.time()
-    if not user_iris_id:
-        query = text(
-            """
-            SELECT offer_id, category, subcategory_id, url, item_id, product_id
-            FROM recommendable_offers
-            WHERE is_national = True or url IS NOT NULL
-            AND offer_id NOT IN
-                (
-                SELECT offer_id
-                FROM non_recommendable_offers
-                WHERE user_id = :user_id
-                )
-            AND booking_number > 0
-            ORDER BY RANDOM();
-            """
+    if is_eac:
+        user_recommendation = get_intermediate_recommendations_for_user_eac(
+            user_id, user_iris_id
         )
-
-        with create_db_connection() as connection:
-            query_result = connection.execute(query, user_id=str(user_id)).fetchall()
-
     else:
-        query = text(
-            f"""
-            SELECT offer_id, category, subcategory_id, url, item_id, product_id
-            FROM recommendable_offers
-            WHERE
-                (
-                venue_id IN
-                    (
-                    SELECT "venue_id"
-                    FROM iris_venues_mv
-                    WHERE "iris_id" = :user_iris_id
-                    )
-                OR is_national = True
-                OR url IS NOT NULL
-                )
-            AND offer_id NOT IN
-                (
-                SELECT offer_id
-                FROM non_recommendable_offers
-                WHERE user_id = :user_id
-                )
-            AND booking_number > 0
-            ORDER BY RANDOM();
-            """
+        user_recommendation = get_intermediate_recommendations_for_user(
+            user_id, user_iris_id
         )
-
-        with create_db_connection() as connection:
-            query_result = connection.execute(
-                query, user_id=str(user_id), user_iris_id=str(user_iris_id)
-            ).fetchall()
-
-    user_recommendation = [
-        {
-            "id": row[0],
-            "category": row[1],
-            "subcategory_id": row[2],
-            "url": row[3],
-            "item_id": row[4],
-            "product_id": row[5],
-        }
-        for row in query_result
-    ]
-
     log_duration(
         f"get_intermediate_recommendations_for_user for {user_id} {'with localisation' if user_iris_id else ''}",
         start,
@@ -281,93 +177,21 @@ def get_intermediate_recommendations_for_user(
     return user_recommendation
 
 
-def get_scored_recommendation_for_user(
-    user_id: int, group_id: str, user_recommendations: List[Dict[str, Any]]
+def fork_scored_recommendation_for_user(
+    user_id: int,
+    group_id: str,
+    user_recommendations: List[Dict[str, Any]],
+    is_eac: bool,
 ) -> List[Dict[str, int]]:
-    """
-    Depending on the user group, prepare the data to send to the model, and make the call.
-    """
-
-    start = time.time()
-    user_to_rank = [user_id] * len(user_recommendations)
-
-    if group_id == "A":
-        # 29/10/2021 : A = Algo v1
-        model_name = MODEL_NAME_A
-        offers_ids = [
-            recommendation["item_id"] if recommendation["item_id"] else ""
-            for recommendation in user_recommendations
-        ]
-        instances = [{"input_1": user_to_rank, "input_2": offers_ids}]
-        # Format = dict with 2 inputs: arrays of users and offers
-
-    elif group_id == "B":
-        # 29/10/2021 : B = Algo v2 : Deep Reco
-        model_name = MODEL_NAME_B
-        offers_ids = [
-            recommendation["item_id"] if recommendation["item_id"] else ""
-            for recommendation in user_recommendations
-        ]
-        offers_subcategories = [
-            recommendation["subcategory_id"] if recommendation["subcategory_id"] else ""
-            for recommendation in user_recommendations
-        ]
-
-        instances = [
-            {
-                "input_1": user_to_rank,
-                "input_2": offers_ids,
-                "input_3": offers_subcategories,
-            }
-        ]
-        # Format = dict with 3 inputs: arrays of users, offers and subcategories
-
-    elif group_id == "C":
-        # 29/10/2021 : C = Algo v2 : Matrix Factorization
-        model_name = MODEL_NAME_C
-        offers_ids = [
-            recommendation["item_id"] if recommendation["item_id"] else ""
-            for recommendation in user_recommendations
-        ]
-        instances = [{"input_1": user_to_rank, "input_2": offers_ids}]
-
+    if is_eac:
+        recommendations = get_scored_recommendation_for_user_eac(
+            user_id, group_id, user_recommendations
+        )
     else:
-        instances = []
-
-    predicted_scores = predict_score(MODEL_REGION, GCP_PROJECT, model_name, instances)
-
-    recommendations = [
-        {**recommendation, "score": predicted_scores[i][0]}
-        for i, recommendation in enumerate(user_recommendations)
-    ]
-
-    log_duration(
-        f"get_scored_recommendation_for_user for {user_id} - {model_name}", start
-    )
+        recommendations = get_scored_recommendation_for_user(
+            user_id, group_id, user_recommendations
+        )
     return recommendations
-
-
-def predict_score(region, project, model, instances):
-    """
-    Calls the AI Platform endpoint for the given model and instances and retrieves the scores.
-    """
-    start = time.time()
-    endpoint = f"https://{region}-ml.googleapis.com"
-    client_options = ClientOptions(api_endpoint=endpoint)
-    service = discovery.build(
-        "ml", "v1", client_options=client_options, cache_discovery=False
-    )
-    name = f"projects/{project}/models/{model}"
-
-    response = (
-        service.projects().predict(name=name, body={"instances": instances}).execute()
-    )
-
-    if "error" in response:
-        raise RuntimeError(response["error"])
-
-    log_duration(f"predict_score", start)
-    return response["predictions"]
 
 
 def order_offers_by_score_and_diversify_categories(
@@ -444,3 +268,33 @@ def _get_number_of_offers_and_max_score_by_category(
         len(category_and_offers[1]),
         max([offer["score"] for offer in category_and_offers[1]]),
     )
+
+
+def save_recommendation(
+    user_id: int, recommendations: List[int], group_id: str, reco_origin: str
+):
+    start = time.time()
+    date = datetime.datetime.now(pytz.utc)
+    rows = []
+    for offer_id in recommendations:
+        rows.append(
+            {
+                "user_id": user_id,
+                "offer_id": offer_id,
+                "date": date,
+                "group_id": group_id,
+                "reco_origin": reco_origin,
+            }
+        )
+
+    with create_db_connection() as connection:
+        connection.execute(
+            text(
+                """
+                INSERT INTO public.past_recommended_offers (userid, offerid, date, group_id, reco_origin)
+                VALUES (:user_id, :offer_id, :date, :group_id, :reco_origin)
+                """
+            ),
+            rows,
+        )
+    log_duration(f"save_recommendations for {user_id}", start)

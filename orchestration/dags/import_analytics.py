@@ -392,17 +392,11 @@ create_offer_extracted_data = BigQueryOperator(
 )
 
 end_enriched_data = DummyOperator(task_id="end_enriched_data", dag=dag)
+start_enriched_data = DummyOperator(task_id="start_enriched_data", dag=dag)
 
 
-create_enriched_data_tasks = [
-    create_enriched_offer_data_task,
-    create_enriched_stock_data_task,
-    create_enriched_user_data_task,
-    create_enriched_venue_data_task,
-    create_enriched_booking_data_task,
-    create_enriched_offerer_data_task,
-    create_table_venue_locations,
-]
+enriched_venues = [create_enriched_venue_data_task, create_table_venue_locations]
+
 
 end = DummyOperator(task_id="end", dag=dag)
 
@@ -419,7 +413,16 @@ end = DummyOperator(task_id="end", dag=dag)
     >> link_iris_venues_task
     >> copy_to_analytics_iris_venues
     >> create_offer_extracted_data
-    >> create_enriched_data_tasks
+    >> start_enriched_data
+)
+(
+    start_enriched_data
+    >> create_enriched_stock_data_task
+    >> create_enriched_offer_data_task
+    >> create_enriched_booking_data_task
+    >> create_enriched_user_data_task
+    >> enriched_venues
+    >> create_enriched_offerer_data_task
     >> end_enriched_data
 )
 (

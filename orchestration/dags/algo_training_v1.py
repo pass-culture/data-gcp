@@ -26,7 +26,7 @@ DATE = "{{ts_nodash}}"
 STORAGE_PATH = (
     f"gs://{MLFLOW_BUCKET_NAME}/algo_training_{ENV_SHORT_NAME}/algo_training_{DATE}"
 )
-
+MODEL_NAME = "v1"
 SLACK_CONN_ID = "slack"
 SLACK_CONN_PASSWORD = access_secret_data(GCP_PROJECT_ID, "slack-conn-password")
 
@@ -34,7 +34,8 @@ DEFAULT = f"""cd data-gcp/algo_training
 export PATH="/opt/conda/bin:/opt/conda/condabin:"+$PATH
 export STORAGE_PATH={STORAGE_PATH}
 export ENV_SHORT_NAME={ENV_SHORT_NAME}
-export GCP_PROJECT_ID={GCP_PROJECT_ID}"""
+export GCP_PROJECT_ID={GCP_PROJECT_ID}
+export MODEL_NAME={MODEL_NAME}"""
 
 
 def branch_function(ti, **kwargs):
@@ -151,7 +152,7 @@ with DAG(
     )
 
     TRAINING = f""" '{DEFAULT}
-        python train.py'
+        python train_{MODEL_NAME}.py'
     """
 
     training = BashOperator(

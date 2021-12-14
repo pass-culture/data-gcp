@@ -1,7 +1,11 @@
-import time
+import random
 from sqlalchemy import text
 
-from utils import create_db_connection, log_duration
+from utils import (
+    create_db_connection,
+    NUMBER_OF_PRESELECTED_OFFERS,
+)
+from typing import Any, Dict, List
 
 # build with notebook , to improve use subcategories table in db
 MACRO_CATEGORIES_TYPE_MAPPING = {
@@ -75,7 +79,6 @@ MACRO_CATEGORIES_TYPE_MAPPING = {
 
 
 def get_cold_start_status(user_id: int) -> bool:
-    start = time.time()
     cold_start_query = text(
         """
         SELECT bookings_count
@@ -91,13 +94,10 @@ def get_cold_start_status(user_id: int) -> bool:
 
     bookings_count = query_result[0] if query_result is not None else 0
     user_cold_start_status = bookings_count < 2
-    log_duration(f"get_cold_start_status", start)
     return user_cold_start_status
 
 
 def get_cold_start_categories(user_id: int) -> list:
-    start = time.time()
-
     qpi_answers_categories = list(MACRO_CATEGORIES_TYPE_MAPPING.keys())
     cold_start_query = text(
         f"""SELECT {'"' + '","'.join(qpi_answers_categories) + '"'} FROM qpi_answers WHERE user_id = :user_id;"""
@@ -117,5 +117,70 @@ def get_cold_start_categories(user_id: int) -> list:
             cold_start_categories.extend(
                 MACRO_CATEGORIES_TYPE_MAPPING[qpi_answers_categories[category_index]]
             )
-    log_duration("get_cold_start_categories", start)
     return list(set(cold_start_categories))
+
+
+def get_cold_start_scored_recommendations_for_user(
+    user_id: int, user_iris_id: int, cold_start_categories: list
+) -> List[Dict[str, Any]]:
+    if cold_start_categories:
+        order_query = f"""
+            ORDER BY
+                (category in ({', '.join([f"'{category}'" for category in cold_start_categories])})) DESC,
+                booking_number DESC
+            """
+    else:
+        order_query = "ORDER BY booking_number DESC"
+
+    if not user_iris_id:
+        where_clause = "is_national = True or url IS NOT NULL"
+    else:
+        where_clause = """
+        (
+            venue_id IN
+                (
+                    SELECT "venue_id"
+                    FROM iris_venues_mv
+                    WHERE "iris_id" = :user_iris_id
+                )
+            OR is_national = True
+            OR url IS NOT NULL
+        )
+        """
+
+    recommendations_query = text(
+        f"""
+        SELECT offer_id, category, url, product_id
+        FROM recommendable_offers
+        WHERE offer_id NOT IN
+            (
+                SELECT offer_id
+                FROM non_recommendable_offers
+                WHERE user_id = :user_id
+            )
+        AND {where_clause}
+        AND booking_number > 0
+        {order_query}
+        LIMIT :number_of_preselected_offers;
+        """
+    )
+
+    with create_db_connection() as connection:
+        query_result = connection.execute(
+            recommendations_query,
+            user_iris_id=str(user_iris_id),
+            user_id=str(user_id),
+            number_of_preselected_offers=NUMBER_OF_PRESELECTED_OFFERS,
+        ).fetchall()
+
+    cold_start_recommendations = [
+        {
+            "id": row[0],
+            "category": row[1],
+            "url": row[2],
+            "product_id": row[3],
+            "score": random.random(),
+        }
+        for row in query_result
+    ]
+    return cold_start_recommendations

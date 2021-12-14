@@ -98,6 +98,19 @@ FILENAME_DESCRIPTION = f"{DATA_GCS_BUCKET_NAME}/offer_tags/tag_description.csv"
 FILENAME_OFFER_NAME = f"{DATA_GCS_BUCKET_NAME}/offer_tags/tag_offer_name.csv"
 
 
+def merge_dataframes(df1, df2):
+    return pd.concat([df1, df2], ignore_index=True)
+
+
+def save_to_csv(dataframe, filename):
+    dataframe.to_csv(f"gs://{filename}")
+    return
+
+
+def load_from_csv(filename):
+    return pd.read_csv(f"gs://{filename}")
+
+
 def get_offers_to_tag_request():
     return f"""WITH offers_CatAgg AS (
             SELECT
@@ -123,44 +136,6 @@ def fetch_offers_to_tag():
     )
 
 
-def get_insert_tags_request(offers_tagged):
-
-    bigquery_query = f"INSERT INTO {GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.offer_tags (offer_id,tag) VALUES "
-    query = ""
-    for index, row in offers_tagged.iterrows():
-        if isinstance(row["tag"], list):
-            query += ",".join(
-                [f"""("{row['offer_id']}","{tag}")""" for tag in row["tag"]]
-            )
-        else:
-            query += f"""("{row['offer_id']}","{row["tag"]}")"""
-        query += ","
-    bigquery_query += query[:-1] + ";"
-    return bigquery_query
-
-
-def insert_to_table(offers_tagged):
-    bigquery_client = BigQueryClient()
-    if offers_tagged.shape[0] > OFFERS_TO_TAG_MAX_LENGTH:
-        nb_df_sub_divisions = offers_tagged.shape[0] // OFFERS_TO_TAG_MAX_LENGTH
-        for k in range(nb_df_sub_divisions):
-            bigquery_query = get_insert_tags_request(
-                offers_tagged[
-                    k * OFFERS_TO_TAG_MAX_LENGTH : (k + 1) * OFFERS_TO_TAG_MAX_LENGTH
-                ]
-            )
-            bigquery_client.query(bigquery_query)
-
-        bigquery_query = get_insert_tags_request(
-            offers_tagged[(nb_df_sub_divisions) * OFFERS_TO_TAG_MAX_LENGTH :]
-        )
-        bigquery_client.query(bigquery_query)
-    else:
-        bigquery_query = get_insert_tags_request(offers_tagged)
-        bigquery_client.query(bigquery_query)
-    return
-
-
 def tag_descriptions(offers_to_tag, TopicList):
     offer_tagged = []
     for index, row in offers_to_tag.iterrows():
@@ -174,11 +149,6 @@ def tag_descriptions(offers_to_tag, TopicList):
             offer_tagged.append(descrip_dict)
 
     return pd.DataFrame(offer_tagged)
-
-
-def get_offers_to_tag():
-    save_to_csv(pd.read_gbq(get_offers_to_tag_request()), FILENAME_INITIAL)
-    return
 
 
 def tag_offers_description():
@@ -198,43 +168,46 @@ def tag_offers_description():
 
 
 def tag_offers_name():
-    save_to_csv(
-        extract_tags_offer_name(fetch_offers_to_tag()),
-        FILENAME_OFFER_NAME
-        # extract_tags_offer_name(load_from_csv(FILENAME_INITIAL)), FILENAME_OFFER_NAME
-    )
+    save_to_csv(extract_tags_offer_name(fetch_offers_to_tag()), FILENAME_OFFER_NAME)
     return
 
 
-def merge_dataframes(df1, df2):
-    return pd.concat([df1, df2], ignore_index=True)
-
-
-def save_to_csv(dataframe, filename):
-    dataframe.to_csv(f"gs://{filename}")
-    return
-
-
-def load_from_csv(filename):
-    return pd.read_csv(f"gs://{filename}")
-
-
-def update_table():
+def prepare_table():
     # dfinit table with all offers to tag not present in offer_tags
     df_offers_to_tag = fetch_offers_to_tag()
     df_description_tags = load_from_csv(FILENAME_DESCRIPTION)
     df_offer_name_tags = load_from_csv(FILENAME_OFFER_NAME)
 
+    df_offers_to_tag = df_offers_to_tag.astype({"offer_id": "string"})
+    df_description_tags = df_description_tags.astype({"offer_id": "string"})
+    df_offer_name_tags = df_offer_name_tags.astype({"offer_id": "string"})
+
     # df12 merge of offer_name and description
     df_all_tags = merge_dataframes(df_description_tags, df_offer_name_tags)
+    df_all_tags = df_all_tags.astype({"offer_id": "string"})
 
     # df3 offer wO tags
     df_offers_wo_tags = df_offers_to_tag[
         ~df_offers_to_tag.offer_id.isin(df_all_tags.offer_id)
     ].assign(tag="none")
-
     # df_final , should be the same as dfinit but all the offers have a tag or 'none'
     df_offers_tagged = merge_dataframes(df_all_tags, df_offers_wo_tags)
-    insert_to_table(df_offers_tagged)
-
+    df_offers_tagged["offer_id"] = df_offers_tagged["offer_id"].apply(str)
+    df_offers_tagged[["offer_id", "tag"]].to_gbq(
+        f"""{BIGQUERY_CLEAN_DATASET}.temp_offer_tagged""",
+        project_id=f"{GCP_PROJECT}",
+        if_exists="replace",
+    )
     return
+
+
+def get_upsert_request():
+    return f"""
+        MERGE `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.offer_tags` T
+        USING `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.temp_offer_tagged` S
+        ON T.offer_id = S.offer_id
+        WHEN MATCHED THEN
+            UPDATE SET tag = s.tag
+        WHEN NOT MATCHED THEN
+            INSERT (offer_id, tag) VALUES(offer_id, tag)
+        """

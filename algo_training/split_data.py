@@ -4,7 +4,7 @@ from utils import STORAGE_PATH, MODEL_NAME, GCP_PROJECT_ID, ENV_SHORT_NAME
 
 
 def split_data(storage_path: str, model_name: str):
-    if model_name == "v1" and model_name == "v2_mf_reco":
+    if model_name == "v1" or model_name == "v2_mf_reco":
         clean_data = pd.read_csv(f"{storage_path}/clean_data.csv")
 
         df = clean_data.sample(frac=1).reset_index(drop=True)

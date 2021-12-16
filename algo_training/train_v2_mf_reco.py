@@ -55,16 +55,22 @@ def train(storage_path: str):
         user_embedding = model.item_factors
         item_embedding = model.user_factors
 
-        MFModelFinalh = MFModel(
+        MFModel = MFModel(
             list(map(str, user_listwEAC)),
             list(map(str, item_list)),
             user_embedding,
             item_embedding,
         )
-
+        # Need to do a first predict to be able to save the model
+        input_test_user = ["eac15" for i in range(4)]
+        input_test_items = ["3119148" for i in range(4)]
+        MFModel.predict(
+            [np.array(input_test_user), np.array(input_test_items)], batch_size=4096
+        )
+        # Now we can save the trained model
         run_uuid = mlflow.active_run().info.run_uuid
         export_path = f"saved_model/prod_ready/{run_uuid}"
-        tf.keras.models.save_model(MFModelFinalh, export_path)
+        tf.keras.models.save_model(MFModel, export_path)
         connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
         mlflow.log_artifacts(export_path, "model")
         print("------- TRAINING DONE -------")

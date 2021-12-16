@@ -4,10 +4,10 @@ from utils import STORAGE_PATH, MODEL_NAME, GCP_PROJECT_ID, ENV_SHORT_NAME
 
 
 def split_data(storage_path: str, model_name: str):
-    if model_name == "v1":
-        bookings = pd.read_csv(f"{storage_path}/clean_data.csv")
+    if model_name == "v1" and model_name == "v2_mf_reco":
+        clean_data = pd.read_csv(f"{storage_path}/clean_data.csv")
 
-        df = bookings.sample(frac=1).reset_index(drop=True)
+        df = clean_data.sample(frac=1).reset_index(drop=True)
         lim_train = df.shape[0] * 80 / 100
         lim_eval = df.shape[0] * 90 / 100
         positive_data_train = df.loc[df.index < lim_train]
@@ -16,7 +16,6 @@ def split_data(storage_path: str, model_name: str):
             positive_data_eval.index >= lim_train
         ]
         positive_data_test = df[df.index >= lim_eval]
-
         positive_data_train.to_csv(
             f"{storage_path}/positive_data_train.csv", index=False
         )

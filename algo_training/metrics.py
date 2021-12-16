@@ -1,5 +1,6 @@
 import random
 import numpy as np
+import tensorflow as tf
 import warnings
 from scipy.spatial.distance import cosine
 from operator import itemgetter
@@ -109,15 +110,17 @@ def get_unexpectedness(booked_subcategoryId_list, recommended_subcategoryId_list
     ) * cosine_sum
 
 
-def compute_metrics(k, positive_data_train, positive_data_test, match_model):
+def compute_metrics(k, positive_data_train, positive_data_test, model_name, model):
     # Map all offers to corresponding subcategoryIds
     offer_subcategoryId_dict = {}
     unique_offer_subcategoryIds = (
-        positive_data_train.groupby(["item_id", "subcategoryId"]).first().reset_index()
+        positive_data_train.groupby(["item_id", "offer_subcategoryid"])
+        .first()
+        .reset_index()
     )
     for item_id, item_subcategoryId in zip(
         unique_offer_subcategoryIds.item_id.values,
-        unique_offer_subcategoryIds.subcategoryId.values,
+        unique_offer_subcategoryIds.offer_subcategoryid.values,
     ):
         offer_subcategoryId_dict[item_id] = item_subcategoryId
 
@@ -172,16 +175,33 @@ def compute_metrics(k, positive_data_train, positive_data_test, match_model):
         items_to_rank = np.setdiff1d(
             all_item_ids, positive_item_train["item_id"].values
         )
-        booked_offer_subcategoryIds = list(positive_item_train["subcategoryId"].values)
+        booked_offer_subcategoryIds = list(
+            positive_item_train["offer_subcategoryid"].values
+        )
 
         # Check if any item of items_to_rank is in the test positive feedback for this user
         expected = np.in1d(items_to_rank, positive_item_test["item_id"].values)
 
-        repeated_user_id = [user_id] * len(items_to_rank)
+        repeated_user_id = np.array([user_id] * len(items_to_rank))
 
-        predicted = match_model.predict(
-            [repeated_user_id, items_to_rank], batch_size=4096
-        )
+        if model_name == "v1":
+            predicted = model.predict(
+                [repeated_user_id, items_to_rank], batch_size=4096
+            )
+        if model_name == "v2_deep_reco":
+            items_to_rank_subcategoryIds = np.array(
+                [offer_subcategoryId_dict[item_id] for item_id in items_to_rank]
+            )
+            predicted = model.predict(
+                [repeated_user_id, items_to_rank, items_to_rank_subcategoryIds],
+                batch_size=4096,
+            )
+        if model_name == "v2_mf_reco":
+            predicted = model.predict(
+                [repeated_user_id, items_to_rank],
+                batch_size=4096,
+            )
+
         scored_items = sorted(
             [(item_id, score[0]) for item_id, score in zip(items_to_rank, predicted)],
             key=itemgetter(1),

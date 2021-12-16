@@ -1,7 +1,6 @@
 import pandas as pd
 import tensorflow as tf
 import mlflow.tensorflow
-import time
 from metrics import compute_metrics
 from models.v1.match_model import MatchModel
 from models.v2.deep_reco.deep_match_model import DeepMatchModel

@@ -4,10 +4,12 @@ import numpy as np
 import scipy.sparse as sparse
 from scipy.optimize import minimize, Bounds
 
+EVENT_TYPE_STRENGTH = {"clic": 1, "favorites": 3, "bookings": 10}
+
 
 def weighted_interactions(interaction):
     interaction["eventStrength"] = (
-        interaction["event_type"].apply(lambda x: event_type_strength[x])
+        interaction["event_type"].apply(lambda x: EVENT_TYPE_STRENGTH[x])
         * interaction["event_count"]
     )
     return interaction
@@ -16,7 +18,7 @@ def weighted_interactions(interaction):
 def weighted_fav(favorites):
     favorites = favorites[~favorites["offer_id"].isin(["NaN"])]
     favorites["eventStrength"] = (
-        favorites["event_type"].apply(lambda x: event_type_strength[x]) * 1
+        favorites["event_type"].apply(lambda x: EVENT_TYPE_STRENGTH[x]) * 1
     )
     return favorites
 
@@ -151,7 +153,7 @@ def get_sparcity_filters(df):
         get_feedback_sparcity_error,
         np.array([5, 500]),
         method="Nelder-Mead",
-        args=(grouped_df),
+        args=(df),
         bounds=bounds,
         options={"maxiter": 10, "ftol": 0.1, "xtol": 0.1},
     )
@@ -169,7 +171,9 @@ def get_weighted_interactions(storage_path: str):
     return bookings, clicks, favorites
 
 
-def get_offers_and_users_to_keep(minimal_user_strength, minimal_offer_strength):
+def get_offers_and_users_to_keep(
+    grouped_df, minimal_user_strength, minimal_offer_strength
+):
     grouped_df_offer_sum = grouped_df.groupby(["offer_id"], as_index=False)[
         "eventStrength"
     ].sum()
@@ -208,7 +212,9 @@ def csr_vappend(a, b):
     return a
 
 
-def add_CS_users(fm, storage_path):
+def add_CS_users_and_get_user_list(fm, storage_path):
+
+    # Building EAC CS users
     df_u15 = pd.read_csv(f"{storage_path}/clean_data_u15.csv")
     df_u16 = pd.read_csv(f"{storage_path}/clean_data_u16.csv")
     df_u17 = pd.read_csv(f"{storage_path}/clean_data_u17.csv")
@@ -223,3 +229,10 @@ def add_CS_users(fm, storage_path):
     sp_u_17 = sparse.csr_matrix(mean_axis_u17)
     spu_15_16 = csr_vappend(sp_u_15, sp_u_16)
     spu_15_16_17 = csr_vappend(spu_15_16, sp_u_17)
+    # Building +18 CS user
+    mean_axis0 = fm.sum(axis=0) / fm.getnnz(axis=0)
+    sp_cs_user = sparse.csr_matrix(mean_axis0)
+    sp_train_cold_start = csr_vappend(sp_cs_user, spu_15_16_17)
+    df_train_with_cs_user = csr_vappend(sp_train_cold_start, fm)
+    eac_user_list = np.array(["eac15", "eac16", "eac17"])
+    return df_train_with_cs_user, eac_user_list

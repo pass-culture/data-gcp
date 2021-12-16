@@ -3,7 +3,7 @@ import mlflow
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-from utils.v2.mf_reco.preprocess_tools import (
+from tools.v2.mf_reco.preprocess_tools import (
     get_meta_and_sparse,
     add_CS_users_and_get_user_list,
 )

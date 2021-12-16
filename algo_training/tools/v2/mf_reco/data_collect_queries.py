@@ -19,8 +19,8 @@ def get_firebase_event(start_date, end_date, event_type):
         JOIN `passculture-data-prod.analytics_prod.applicative_database_offer` offer 
         ON offer.offer_id = event.offer_id
         WHERE event_name = f"{event_type}"
-        AND event_date >= '{start_date_train}'
-        AND event_date < '{end_date_train}'
+        AND event_date >= '{start_date}'
+        AND event_date < '{end_date}'
         AND user_id is not null
         AND event.offer_id is not null
         GROUP BY user_id, event.offer_id, offer.offer_id,offer.offer_name,offer.offer_subcategoryid,offer.offer_product_id

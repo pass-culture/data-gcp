@@ -113,6 +113,10 @@ def get_unexpectedness(booked_subcategoryId_list, recommended_subcategoryId_list
 def compute_metrics(k, positive_data_train, positive_data_test, model_name, model):
     # Map all offers to corresponding subcategoryIds
     offer_subcategoryId_dict = {}
+    if model_name == "v2_mf_reco":
+        positive_data_train.rename(columns={"offer_id": "item_id"}, inplace=True)
+        positive_data_test.rename(columns={"offer_id": "item_id"}, inplace=True)
+
     unique_offer_subcategoryIds = (
         positive_data_train.groupby(["item_id", "offer_subcategoryid"])
         .first()

@@ -4,9 +4,9 @@ import numpy as np
 from scipy.optimize import minimize, Bounds
 
 from utils import STORAGE_PATH, MODEL_NAME
-from utils.v1.preprocess_tools import preprocess
-from utils.v2.deep_reco.preprocess_tools import lighten_matrice
-from utils.v2.mf_reco.preprocess_tools import (
+from tools.v1.preprocess_tools import preprocess
+from tools.v2.deep_reco.preprocess_tools import lighten_matrice
+from tools.v2.mf_reco.preprocess_tools import (
     get_weighted_interactions,
     group_data,
     data_prep,

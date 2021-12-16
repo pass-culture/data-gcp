@@ -60,7 +60,7 @@ def check_before_deploy(metrics, k):
 if __name__ == "__main__":
     client_id = get_secret("mlflow_client_id")
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
-    experiment_name = f"algo_training_{MODEL_NAME}"
+    experiment_name = f"TEST_algo_training_{MODEL_NAME}"
     experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
     run_id = mlflow.list_run_infos(experiment_id)[0].run_id
     if MODEL_NAME == "v1":

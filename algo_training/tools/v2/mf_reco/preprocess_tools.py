@@ -4,7 +4,7 @@ import numpy as np
 import scipy.sparse as sparse
 from scipy.optimize import minimize, Bounds
 
-EVENT_TYPE_STRENGTH = {"clic": 1, "favorites": 3, "bookings": 10}
+EVENT_TYPE_STRENGTH = {"CLICK": 1.0, "FAVORITE": 3.0, "BOOKINGS": 10.0}
 
 
 def weighted_interactions(interaction):

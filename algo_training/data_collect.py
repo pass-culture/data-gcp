@@ -21,13 +21,17 @@ def main():
         clics.to_csv(f"{STORAGE_PATH}/raw_data.csv")
     if MODEL_NAME == "v2_mf_reco":
         clicks = get_firebase_event(
-            start_date=start_date, end_date=end_date, event_type="ConsultOffer"
+            start_date=start_date,
+            end_date=end_date,
+            event_type="ConsultOffer",
+            event_name="CLICK",
         )
         clicks.to_csv(f"{STORAGE_PATH}/raw_data_clicks.csv")
         favorites = get_firebase_event(
             start_date=start_date,
             end_date=end_date,
             event_type="HasAddedOfferToFavorites",
+            event_name="FAVORITE",
         )
         favorites.to_csv(f"{STORAGE_PATH}/raw_data_favorites.csv")
         bookings = get_bookings_v2_mf(start_date=start_date, end_date=end_date)

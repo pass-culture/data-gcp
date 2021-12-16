@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from utils import STORAGE_PATH, BOOKING_DAY_NUMBER, MODEL_NAME
 
 # events can be "ConsultOffer" for a clic and 'HasAddedOfferToFavorites' for favorites
-def get_firebase_event(start_date, end_date, event_type):
+def get_firebase_event(start_date, end_date, event_type, event_name):
     query = f"""
     with clicks_clean AS (
         SELECT
@@ -14,7 +14,7 @@ def get_firebase_event(start_date, end_date, event_type):
             THEN CONCAT('product-', offer.offer_product_id)
             ELSE CONCAT('offer-', offer.offer_id) END
         AS offer_id,
-        offer.offer_name,ANY_VALUE(offer_subcategoryid) AS offer_subcategoryid,"CLICK" as event_type, count(*) as event_count
+        offer.offer_name,ANY_VALUE(offer_subcategoryid) AS offer_subcategoryid,{event_name} as event_type, count(*) as event_count
         FROM `passculture-data-prod.analytics_prod.firebase_events` event 
         JOIN `passculture-data-prod.analytics_prod.applicative_database_offer` offer 
         ON offer.offer_id = event.offer_id

@@ -4,7 +4,7 @@ import mlflow.tensorflow
 from metrics import compute_metrics
 from models.v1.match_model import MatchModel
 from models.v2.deep_reco.deep_match_model import DeepMatchModel
-from models.v2.mf_reco.matrix_factorization_model import MFmodel
+from models.v2.mf_reco.matrix_factorization_model import MFModel
 from utils import (
     get_secret,
     connect_remote_mlflow,
@@ -83,7 +83,7 @@ if __name__ == "__main__":
         with mlflow.start_run(run_id=run_id):
             loaded_model = tf.keras.models.load_model(
                 mlflow.get_artifact_uri("model"),
-                custom_objects={"MFmodel": MFmodel},
+                custom_objects={"MFmodel": MFModel},
                 compile=False,
             )
             evaluate(loaded_model, STORAGE_PATH, MODEL_NAME)

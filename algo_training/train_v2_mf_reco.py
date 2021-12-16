@@ -1,25 +1,34 @@
 import implicit
 import mlflow
+import numpy as np
+import pandas as pd
+import tensorflow as tf
 from utils.v2.mf_reco.preprocess_tools import (
     get_meta_and_sparse,
-    csr_vappend,
     add_CS_users_and_get_user_list,
 )
-
-from models.v2.mf_reco.matrix_factorization_model import MFmodel
+from models.v2.mf_reco.matrix_factorization_model import MFModel
+from utils import (
+    get_secret,
+    connect_remote_mlflow,
+    STORAGE_PATH,
+    ENV_SHORT_NAME,
+)
 
 TRAIN_DIR = "/home/airflow/train"
 
 
 def train(storage_path: str):
 
-    df_train = pd.read_csv("./df_train_0104_1508.csv")
+    df_train = pd.read_csv(
+        f"{storage_path}/clean_data.csv", dtype={"user_id": str, "item_id": str}
+    )
     purchases_sparse_train, user_list, item_list = get_meta_and_sparse(df_train)
     feedback_matrix, eac_user_list = add_CS_users_and_get_user_list(
         purchases_sparse_train, storage_path
     )
 
-    user_list = eac_user_list.append(user_list)
+    user_listwEAC = np.append(eac_user_list, user_list)
 
     experiment_name = "algo_training_v2_mf_reco"
     mlflow.set_experiment(experiment_name)
@@ -40,17 +49,30 @@ def train(storage_path: str):
             factors=20, regularization=0.1, iterations=50
         )
         alpha_val = 15
-        data_conf = (purchases_sparse_train * alpha_val).astype("double")
+        data_conf = (feedback_matrix * alpha_val).astype("double")
         model.fit(data_conf)
 
-        user_embedding = model.factors()
-        item_embedding = model.factors()
+        user_embedding = model.item_factors
+        item_embedding = model.user_factors
+
+        MFModelFinalh = MFModel(
+            list(map(str, user_listwEAC)),
+            list(map(str, item_list)),
+            user_embedding,
+            item_embedding,
+        )
 
         run_uuid = mlflow.active_run().info.run_uuid
         export_path = f"saved_model/prod_ready/{run_uuid}"
-        tf.keras.models.save_model(deep_match_model, export_path)
+        tf.keras.models.save_model(MFModelFinalh, export_path)
         connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
         mlflow.log_artifacts(export_path, "model")
         print("------- TRAINING DONE -------")
         print(mlflow.get_artifact_uri("model"))
     return
+
+
+if __name__ == "__main__":
+    client_id = get_secret("mlflow_client_id")
+    connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
+    train(STORAGE_PATH)

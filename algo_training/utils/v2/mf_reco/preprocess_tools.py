@@ -213,7 +213,6 @@ def csr_vappend(a, b):
 
 
 def add_CS_users_and_get_user_list(fm, storage_path):
-
     # Building EAC CS users
     df_u15 = pd.read_csv(f"{storage_path}/clean_data_u15.csv")
     df_u16 = pd.read_csv(f"{storage_path}/clean_data_u16.csv")

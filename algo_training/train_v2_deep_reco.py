@@ -16,7 +16,6 @@ from utils import (
     connect_remote_mlflow,
     STORAGE_PATH,
     ENV_SHORT_NAME,
-    BOOKING_DAY_NUMBER,
 )
 
 TRAIN_DIR = "/home/airflow/train"

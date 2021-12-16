@@ -2,9 +2,9 @@ import pandas as pd
 from datetime import datetime, timedelta
 
 from utils import STORAGE_PATH, BOOKING_DAY_NUMBER, MODEL_NAME
-from utils.v1.data_collect_queries import get_bookings
-from utils.v2.mf_reco.data_collect_queries import get_firebase_event, get_bookings_v2_mf
-from utils.v2.deep_reco.data_collect_queries import get_clics
+from tools.v1.data_collect_queries import get_bookings
+from tools.v2.mf_reco.data_collect_queries import get_firebase_event, get_bookings_v2_mf
+from tools.v2.deep_reco.data_collect_queries import get_clics
 
 
 def main():

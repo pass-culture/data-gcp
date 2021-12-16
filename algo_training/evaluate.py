@@ -83,7 +83,7 @@ if __name__ == "__main__":
         with mlflow.start_run(run_id=run_id):
             loaded_model = tf.keras.models.load_model(
                 mlflow.get_artifact_uri("model"),
-                custom_objects={"MFmodel": MFModel},
+                custom_objects={"MFModel": MFModel},
                 compile=False,
             )
             evaluate(loaded_model, STORAGE_PATH, MODEL_NAME)

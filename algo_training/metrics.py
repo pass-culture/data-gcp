@@ -187,7 +187,8 @@ def compute_metrics(k, positive_data_train, positive_data_test, model_name, mode
         expected = np.in1d(items_to_rank, positive_item_test["item_id"].values)
 
         repeated_user_id = np.array([user_id] * len(items_to_rank))
-
+        print("len(repeated_user_id)", len(repeated_user_id))
+        print("len(items_to_rank)", len(items_to_rank))
         if model_name == "v1":
             predicted = model.predict(
                 [repeated_user_id, items_to_rank], batch_size=4096

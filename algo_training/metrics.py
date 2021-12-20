@@ -167,8 +167,11 @@ def compute_metrics(k, positive_data_train, positive_data_test, model_name, mode
         random_users_to_test = random.sample(all_test_user_ids, NUMBER_OF_USERS)
     else:
         random_users_to_test = all_test_user_ids
+    print("len(random_users_to_test: ", len(random_users_to_test))
     for user_id in random_users_to_test:
         user_count += 1
+        print("user_count: ", user_count)
+        print("user_id: ", user_id)
         positive_item_train = positive_data_train[
             positive_data_train["user_id"] == user_id
         ]
@@ -188,6 +191,7 @@ def compute_metrics(k, positive_data_train, positive_data_test, model_name, mode
 
         repeated_user_id = np.array([user_id] * len(items_to_rank))
         print("len(repeated_user_id)", len(repeated_user_id))
+        print("repeated_user_id[0]", repeated_user_id[0])
         print("len(items_to_rank)", len(items_to_rank))
         if model_name == "v1":
             predicted = model.predict(

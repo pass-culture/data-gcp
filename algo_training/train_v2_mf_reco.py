@@ -30,7 +30,7 @@ def train(storage_path: str):
 
     user_listwEAC = np.append(eac_user_list, user_list)
 
-    experiment_name = "TEST_algo_training_v2_mf_reco"
+    experiment_name = "TEST_bis_algo_training_v2_mf_reco"
     mlflow.set_experiment(experiment_name)
     experiment = mlflow.get_experiment_by_name(experiment_name)
 

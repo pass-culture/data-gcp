@@ -55,6 +55,11 @@ def train(storage_path: str):
         user_embedding = model.item_factors
         item_embedding = model.user_factors
 
+        print("***** MF_model *****")
+        print("user_list: ", len(user_listwEAC))
+        print("item_list: ", len(item_list))
+        print("user_emb: ", len(user_embedding))
+        print("item_emb: ", len(item_embedding))
         MF_Model = MFModel(
             list(map(str, user_listwEAC)),
             list(map(str, item_list)),
@@ -64,9 +69,10 @@ def train(storage_path: str):
         # Need to do a first predict to be able to save the model
         input_test_user = ["eac15" for i in range(4)]
         input_test_items = ["3119148" for i in range(4)]
-        MF_Model.predict(
+        predicted = MF_Model.predict(
             [np.array(input_test_user), np.array(input_test_items)], batch_size=4096
         )
+        print("predicted :", predicted)
         # Now we can save the trained model
         run_uuid = mlflow.active_run().info.run_uuid
         export_path = f"saved_model/prod_ready/{run_uuid}"

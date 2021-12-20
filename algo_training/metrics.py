@@ -206,7 +206,10 @@ def compute_metrics(k, positive_data_train, positive_data_test, model_name, mode
                 batch_size=4096,
             )
         if model_name == "v2_mf_reco":
-            predicted = model.predict([repeated_user_id, items_to_rank])
+            predicted = model.predict(
+                [repeated_user_id, items_to_rank],
+                batch_size=4096,
+            )
 
         scored_items = sorted(
             [(item_id, score[0]) for item_id, score in zip(items_to_rank, predicted)],

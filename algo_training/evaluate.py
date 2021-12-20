@@ -17,10 +17,21 @@ RECOMMENDATION_NUMBER = 40
 
 
 def evaluate(model, storage_path: str, model_name):
-    positive_data_test = pd.read_csv(
-        f"{storage_path}/positive_data_test.csv",
-        dtype={"user_id": str, "item_id": str, "offer_subcategoryid": str},
-    )
+
+    if model_name == "v2_mf_reco":
+        positive_data_test = pd.read_csv(
+            f"{storage_path}/positive_data_test.csv",
+            dtype={"user_id": str, "offer_id": str, "offer_subcategoryid": str},
+        )
+        positive_data_train = pd.read_csv(
+            f"{storage_path}/positive_data_train.csv",
+            dtype={"user_id": str, "offer_id": str, "offer_subcategoryid": str},
+        )
+    else:
+        positive_data_test = pd.read_csv(
+            f"{storage_path}/positive_data_test.csv",
+            dtype={"user_id": str, "item_id": str, "offer_subcategoryid": str},
+        )
     positive_data_train = pd.read_csv(
         f"{storage_path}/positive_data_train.csv",
         dtype={"user_id": str, "item_id": str, "offer_subcategoryid": str},

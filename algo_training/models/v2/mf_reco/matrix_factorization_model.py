@@ -22,8 +22,9 @@ class MFModel(Model):
                 StringLookup(vocabulary=user_ids, mask_token=None),
                 # We add an additional embedding to account for unknown tokens.
                 Embedding(
-                    len(self.user_ids)
-                    + 1,  # +1 was default, so we need additional one for the cs_user
+                    len(
+                        self.user_ids
+                    ),  # +1 was default, so we need additional one for the cs_user #20/12/21: try without additionnal emb since we have the CS user added by hand
                     20,
                     input_length=1,
                     input_shape=(1,),

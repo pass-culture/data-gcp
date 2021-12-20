@@ -43,7 +43,7 @@ class MFModel(Model):
                 StringLookup(vocabulary=item_ids, mask_token=None),
                 # We add an additional embedding to account for unknown tokens.
                 Embedding(
-                    len(self.item_ids) + 1,
+                    len(self.item_ids),
                     20,
                     input_length=1,
                     input_shape=(1,),

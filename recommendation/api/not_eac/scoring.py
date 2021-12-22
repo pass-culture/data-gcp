@@ -16,6 +16,7 @@ from utils import (
     ENV_SHORT_NAME,
 )
 
+
 def get_intermediate_recommendations_for_user(
     user_id: int, user_iris_id: int
 ) -> List[Dict[str, Any]]:

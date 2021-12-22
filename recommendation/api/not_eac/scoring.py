@@ -14,6 +14,7 @@ from utils import (
     MODEL_NAME_B,
     MODEL_NAME_C,
 )
+from orchestration.dags.dependencies.config import ENV_SHORT_NAME
 
 
 def get_intermediate_recommendations_for_user(
@@ -30,11 +31,15 @@ def get_intermediate_recommendations_for_user(
                 SELECT offer_id
                 FROM non_recommendable_offers
                 WHERE user_id = :user_id
-                )
-            AND booking_number > 0
-            ORDER BY RANDOM();
+                )    
             """
         )
+        if {ENV_SHORT_NAME} == "prod":
+            and_clause = """AND booking_number > 0 ORDER BY RANDOM();"""
+            query += and_clause
+        else:
+            and_clause = "ORDER BY RANDOM();"
+            query += and_clause
 
         with create_db_connection() as connection:
             query_result = connection.execute(query, user_id=str(user_id)).fetchall()

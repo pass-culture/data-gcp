@@ -13,9 +13,8 @@ from utils import (
     MODEL_NAME_A,
     MODEL_NAME_B,
     MODEL_NAME_C,
+    ENV_SHORT_NAME,
 )
-from orchestration.dags.dependencies.config import ENV_SHORT_NAME
-
 
 def get_intermediate_recommendations_for_user(
     user_id: int, user_iris_id: int

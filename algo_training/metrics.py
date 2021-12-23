@@ -227,7 +227,7 @@ def compute_metrics(k, positive_data_train, positive_data_test, model_name, mode
             )
         if model_name == "v2_mf_reco":
             predicted = loaded_model.predict(
-                [repeated_user_id, items_to_rank],
+                [repeated_user_id, np.array(items_to_rank)],
                 batch_size=4096,
             )
 

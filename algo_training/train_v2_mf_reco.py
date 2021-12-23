@@ -33,7 +33,7 @@ def train(storage_path: str):
 
     user_listwEAC = np.append(eac_user_list, user_list)
 
-    experiment_name = "TEST_bis_algo_training_v2_mf_reco"
+    experiment_name = "algo_training_v2_mf_reco"
     mlflow.set_experiment(experiment_name)
     experiment = mlflow.get_experiment_by_name(experiment_name)
 
@@ -63,16 +63,6 @@ def train(storage_path: str):
         print("item_list: ", len(item_list))
         print("user_emb: ", len(user_embedding))
         print("item_emb: ", len(item_embedding))
-
-        fs = gcsfs.GCSFileSystem(project=GCP_PROJECT_ID)
-        with fs.open(
-            f"{storage_path}/Model/MF_als_model_with_cs_user_EAC_test.pickle", "wb"
-        ) as fileA:
-            pickle.dump(model, fileA)
-        with fs.open(f"{storage_path}/Model/user_list_wEAC.npy", "wb") as fileB:
-            np.save(fileB, user_listwEAC)
-        with fs.open(f"{storage_path}/Model/item_list.npy", "wb") as fileC:
-            np.save(fileC, item_list)
 
         MF_Model = MFModel(
             list(map(str, user_listwEAC)),

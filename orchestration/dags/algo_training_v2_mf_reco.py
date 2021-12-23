@@ -24,7 +24,7 @@ else:
 
 DATE = "{{ts_nodash}}"
 STORAGE_PATH = f"gs://{MLFLOW_BUCKET_NAME}/algo_training_v2_deep_reco_{ENV_SHORT_NAME}/algo_training_v2_deep_reco_{DATE}"
-MODEL_NAME = "v2_deep_reco"
+MODEL_NAME = "v2_mf_reco"
 SLACK_CONN_ID = "slack"
 SLACK_CONN_PASSWORD = access_secret_data(GCP_PROJECT_ID, "slack-conn-password")
 
@@ -52,7 +52,7 @@ default_args = {
 
 
 with DAG(
-    "algo_training_v2_deep_reco",
+    "algo_training_v2_mf_reco",
     default_args=default_args,
     description="Continuous algorithm training for v2 recommendation algorithm",
     schedule_interval="0 7 * * 1",  # Train every monday at 07:00
@@ -184,31 +184,12 @@ with DAG(
         python evaluate.py'
     """
 
-    evaluate = BashOperator(
-        task_id="evaluate",
-        bash_command=f"""
-        gcloud compute ssh {GCE_INSTANCE} \
-        --zone {GCE_ZONE} \
-        --project {GCP_PROJECT_ID} \
-        --command {EVALUATION}
-        """,
-        dag=dag,
-        xcom_push=True,
-    )
 
     gce_instance_stop = GceInstanceStopOperator(
         project_id=GCP_PROJECT_ID,
         zone=GCE_ZONE,
         resource_id=GCE_INSTANCE,
         task_id="gce_stop_task",
-    )
-
-    check_metrics = BranchPythonOperator(
-        task_id="checking_metrics",
-        python_callable=branch_function,
-        provide_context=True,
-        do_xcom_push=False,
-        dag=dag,
     )
 
     DEPLOY_COMMAND = f"""
@@ -276,49 +257,6 @@ with DAG(
         http_conn_id=SLACK_CONN_ID,
         webhook_token=SLACK_CONN_PASSWORD,
         blocks=SLACK_BLOCKS,
-        username=f"Algo trainer robot - {ENV_SHORT_NAME}",
-        icon_emoji=":robot_face:",
-    )
-
-    SLACK_BLOCKS_FAIL = [
-        {
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": ":x: Les métriques de l'algo 'v2_deep_reco' sont pas bonnes ! :sadpanda:",
-            },
-        },
-        {
-            "type": "actions",
-            "elements": [
-                {
-                    "type": "button",
-                    "text": {
-                        "type": "plain_text",
-                        "text": "Voir les métriques :chart_with_upwards_trend:",
-                        "emoji": True,
-                    },
-                    "url": MLFLOW_URL
-                    + "#/experiments/"
-                    + "{{ ti.xcom_pull(task_ids='training').split('/')[4] }}"
-                    + "/runs/"
-                    + "{{ ti.xcom_pull(task_ids='training').split('/')[5] }}",
-                },
-            ],
-        },
-        {
-            "type": "context",
-            "elements": [
-                {"type": "mrkdwn", "text": f"Environnement: {ENV_SHORT_NAME}"}
-            ],
-        },
-    ]
-
-    send_slack_notif_fail = SlackWebhookOperator(
-        task_id="send_slack_notif_fail",
-        http_conn_id=SLACK_CONN_ID,
-        webhook_token=SLACK_CONN_PASSWORD,
-        blocks=SLACK_BLOCKS_FAIL,
         username=f"Algo trainer robot - {ENV_SHORT_NAME}",
         icon_emoji=":robot_face:",
     )

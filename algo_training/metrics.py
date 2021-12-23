@@ -1,10 +1,12 @@
 import random
+import gcsfs
+import pickle
 import numpy as np
 import tensorflow as tf
 import warnings
 from scipy.spatial.distance import cosine
 from operator import itemgetter
-from utils import ENV_SHORT_NAME
+from utils import ENV_SHORT_NAME,STORAGE_PATH, GCP_PROJECT_ID
 
 NUMBER_OF_USERS = 5000 if ENV_SHORT_NAME == "prod" else 200
 
@@ -116,6 +118,23 @@ def compute_metrics(k, positive_data_train, positive_data_test, model_name, mode
     if model_name == "v2_mf_reco":
         positive_data_train.rename(columns={"offer_id": "item_id"}, inplace=True)
         positive_data_test.rename(columns={"offer_id": "item_id"}, inplace=True)
+        fs = gcsfs.GCSFileSystem(project=GCP_PROJECT_ID)
+        with fs.open(
+            f"{STORAGE_PATH}/Model/MF_als_model_with_cs_user_EAC_test.pickle", "rb"
+        ) as fileA:
+            model = pickle.load(fileA)
+        with fs.open(f"{STORAGE_PATH}/Model/user_list_wEAC.npy") as fileB:
+            user_list_wEAC = np.load(fileB)
+        with fs.open(f"{STORAGE_PATH}/Model/item_list.npy") as fileC:
+            item_list = np.load(fileC)
+        user_embedding = model.item_factors
+        item_embedding = model.user_factors
+        loaded_model = MFModel(
+            list(map(str, user_list_wEAC)),
+            list(map(str, item_list)),
+            user_embedding,
+            item_embedding,
+        )
 
     unique_offer_subcategoryIds = (
         positive_data_train.groupby(["item_id", "offer_subcategoryid"])
@@ -206,7 +225,7 @@ def compute_metrics(k, positive_data_train, positive_data_test, model_name, mode
                 batch_size=4096,
             )
         if model_name == "v2_mf_reco":
-            predicted = model.predict(
+            predicted = loaded_model.predict(
                 [repeated_user_id, items_to_rank],
                 batch_size=4096,
             )

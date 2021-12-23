@@ -6,7 +6,8 @@ import tensorflow as tf
 import warnings
 from scipy.spatial.distance import cosine
 from operator import itemgetter
-from utils import ENV_SHORT_NAME,STORAGE_PATH, GCP_PROJECT_ID
+from utils import ENV_SHORT_NAME, STORAGE_PATH, GCP_PROJECT_ID
+from models.v2.mf_reco.matrix_factorization_model import MFModel
 
 NUMBER_OF_USERS = 5000 if ENV_SHORT_NAME == "prod" else 200
 

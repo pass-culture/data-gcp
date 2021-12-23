@@ -15,6 +15,7 @@ from utils import (
     connect_remote_mlflow,
     STORAGE_PATH,
     ENV_SHORT_NAME,
+    GCP_PROJECT_ID,
 )
 
 TRAIN_DIR = "/home/airflow/train"
@@ -63,7 +64,7 @@ def train(storage_path: str):
         print("user_emb: ", len(user_embedding))
         print("item_emb: ", len(item_embedding))
 
-        fs = gcsfs.GCSFileSystem(project=GCP_PROJECT)
+        fs = gcsfs.GCSFileSystem(project=GCP_PROJECT_ID)
         with fs.open(
             f"{storage_path}/Model/MF_als_model_with_cs_user_EAC_test.pickle", "wb"
         ) as fileA:

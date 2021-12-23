@@ -12,6 +12,7 @@ from utils import (
     STORAGE_PATH,
     ENV_SHORT_NAME,
     MODEL_NAME,
+    GCP_PROJECT_ID,
 )
 
 RECOMMENDATION_NUMBER = 40
@@ -93,7 +94,7 @@ if __name__ == "__main__":
             evaluate(loaded_model, STORAGE_PATH, MODEL_NAME)
     elif MODEL_NAME == "v2_mf_reco":
         with mlflow.start_run(run_id=run_id):
-            fs = gcsfs.GCSFileSystem(project=GCP_PROJECT)
+            fs = gcsfs.GCSFileSystem(project=GCP_PROJECT_ID)
             with fs.open(
                 f"{BUCKET_NAME}/Model/MF_als_model_with_cs_user_EAC_test.pickle", "rb"
             ) as fileA:

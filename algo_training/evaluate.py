@@ -96,12 +96,12 @@ if __name__ == "__main__":
         with mlflow.start_run(run_id=run_id):
             fs = gcsfs.GCSFileSystem(project=GCP_PROJECT_ID)
             with fs.open(
-                f"{BUCKET_NAME}/Model/MF_als_model_with_cs_user_EAC_test.pickle", "rb"
+                f"{STORAGE_PATH}/Model/MF_als_model_with_cs_user_EAC_test.pickle", "rb"
             ) as fileA:
                 model = pickle.load(fileA)
-            with fs.open(f"{BUCKET_NAME}/Model/user_list_wEAC.npy") as fileB:
+            with fs.open(f"{STORAGE_PATH}/Model/user_list_wEAC.npy") as fileB:
                 user_list_wEAC = np.load(fileB)
-            with fs.open(f"{BUCKET_NAME}/Model/item_list.npy") as fileC:
+            with fs.open(f"{STORAGE_PATH}/Model/item_list.npy") as fileC:
                 item_list = np.load(fileC)
             user_embedding = model.item_factors
             item_embedding = model.user_factors

@@ -108,7 +108,7 @@ if __name__ == "__main__":
             user_embedding = model.item_factors
             item_embedding = model.user_factors
             loaded_model = MFModel(
-                list(map(str, user_listwEAC)),
+                list(map(str, user_list_wEAC)),
                 list(map(str, item_list)),
                 user_embedding,
                 item_embedding,

@@ -96,21 +96,9 @@ if __name__ == "__main__":
             evaluate(loaded_model, STORAGE_PATH, MODEL_NAME)
     elif MODEL_NAME == "v2_mf_reco":
         with mlflow.start_run(run_id=run_id):
-            fs = gcsfs.GCSFileSystem(project=GCP_PROJECT_ID)
-            with fs.open(
-                f"{STORAGE_PATH}/Model/MF_als_model_with_cs_user_EAC_test.pickle", "rb"
-            ) as fileA:
-                model = pickle.load(fileA)
-            with fs.open(f"{STORAGE_PATH}/Model/user_list_wEAC.npy") as fileB:
-                user_list_wEAC = np.load(fileB)
-            with fs.open(f"{STORAGE_PATH}/Model/item_list.npy") as fileC:
-                item_list = np.load(fileC)
-            user_embedding = model.item_factors
-            item_embedding = model.user_factors
-            loaded_model = MFModel(
-                list(map(str, user_list_wEAC)),
-                list(map(str, item_list)),
-                user_embedding,
-                item_embedding,
+            loaded_model = tf.keras.models.load_model(
+                mlflow.get_artifact_uri("model"),
+                custom_objects={"MFModel": MFModel},
+                compile=False,
             )
             evaluate(loaded_model, STORAGE_PATH, MODEL_NAME)

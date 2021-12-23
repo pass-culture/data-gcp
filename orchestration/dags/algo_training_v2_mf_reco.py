@@ -184,7 +184,6 @@ with DAG(
         python evaluate.py'
     """
 
-
     gce_instance_stop = GceInstanceStopOperator(
         project_id=GCP_PROJECT_ID,
         zone=GCE_ZONE,

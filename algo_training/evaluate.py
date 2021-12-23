@@ -1,5 +1,6 @@
 import gcsfs
 import pandas as pd
+import pickle
 import tensorflow as tf
 import mlflow.tensorflow
 from metrics import compute_metrics

@@ -1,7 +1,8 @@
 import pandas as pd
 from datetime import datetime, timedelta
 
-from utils import STORAGE_PATH, BOOKING_DAY_NUMBER, MODEL_NAME
+from utils import GCP_PROJECT_ID, ENV_SHORT_NAME
+
 
 # events can be "ConsultOffer" for a clic and 'HasAddedOfferToFavorites' for favorites
 def get_firebase_event(start_date, end_date, event_type, event_name):
@@ -15,8 +16,8 @@ def get_firebase_event(start_date, end_date, event_type, event_name):
             ELSE CONCAT('offer-', offer.offer_id) END
         AS offer_id,
         offer.offer_name,ANY_VALUE(offer_subcategoryid) AS offer_subcategoryid,"{event_name}" as event_type, count(*) as event_count
-        FROM `passculture-data-prod.analytics_prod.firebase_events` event 
-        JOIN `passculture-data-prod.analytics_prod.applicative_database_offer` offer 
+        FROM `{GCP_PROJECT_ID}.analytics_{ENV_SHORT_NAME}.firebase_events` event 
+        JOIN `{GCP_PROJECT_ID}.analytics_{ENV_SHORT_NAME}.applicative_database_offer` offer 
         ON offer.offer_id = event.offer_id
         WHERE event_name = "{event_type}"
         AND event_date >= '{start_date}'
@@ -27,7 +28,7 @@ def get_firebase_event(start_date, end_date, event_type, event_name):
     )
     SELECT clicks.user_id, CAST(offer_id AS STRING) as offer_id, offer_name,offer_subcategoryid,event_type,event_count,user.user_age
     from clicks_clean clicks
-    JOIN `passculture-data-prod.analytics_prod.applicative_database_user` user 
+    JOIN `{GCP_PROJECT_ID}.analytics_{ENV_SHORT_NAME}.applicative_database_user` user 
     ON user.user_id = clicks.user_id
     """
     fbevents = pd.read_gbq(query)
@@ -44,10 +45,10 @@ def get_bookings_v2_mf(start_date, end_date):
                     ELSE CONCAT('offer-', offer.offer_id) END
                 AS offer_id,
             offer_name, ANY_VALUE(offer_subcategoryid) AS offer_subcategoryid,"BOOKING" as event_type,count(*) as event_count, 
-            from `passculture-data-prod.clean_prod.applicative_database_booking` booking
-            inner join `passculture-data-prod.clean_prod.applicative_database_stock` stock
+            from `{GCP_PROJECT_ID}.clean_{ENV_SHORT_NAME}.applicative_database_booking` booking
+            inner join `{GCP_PROJECT_ID}.clean_{ENV_SHORT_NAME}.applicative_database_stock` stock
             on booking.stock_id = stock.stock_id
-            inner join `passculture-data-prod.clean_prod.applicative_database_offer` offer
+            inner join `{GCP_PROJECT_ID}.clean_{ENV_SHORT_NAME}.applicative_database_offer` offer
             on stock.offer_id = offer.offer_id 
             where offer.offer_creation_date >= DATETIME '{start_date} 00:00:00'
             and offer.offer_creation_date <= DATETIME '{end_date} 00:00:00'
@@ -56,7 +57,7 @@ def get_bookings_v2_mf(start_date, end_date):
     SELECT
     CAST(bookings.user_id as STRING) as user_id,CAST(offer_id as STRING) as offer_id, offer_name,offer_subcategoryid, event_type,event_count,user.user_age
     from bookings
-    JOIN `passculture-data-prod.analytics_prod.applicative_database_user` user 
+    JOIN `{GCP_PROJECT_ID}.analytics_{ENV_SHORT_NAME}.applicative_database_user` user 
     ON user.user_id = bookings.user_id
         """
     bookings = pd.read_gbq(query)

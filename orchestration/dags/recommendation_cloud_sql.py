@@ -22,6 +22,7 @@ from dependencies.config import (
     DATA_GCS_BUCKET_NAME,
     BIGQUERY_CLEAN_DATASET,
     BIGQUERY_ANALYTICS_DATASET,
+    ENV_SHORT_NAME,
 )
 from dependencies.slack_alert import task_fail_slack_alert
 
@@ -47,7 +48,7 @@ default_args = {
     "retries": 3,
     "retry_delay": timedelta(minutes=5),
 }
-FIREBASE_PERIOD_DAYS = 10
+FIREBASE_PERIOD_DAYS = 4 * 30 if ENV_SHORT_NAME == "prod" else 10
 
 
 def get_table_data():

@@ -78,22 +78,33 @@ MACRO_CATEGORIES_TYPE_MAPPING = {
 }
 
 
-def get_cold_start_status_eac(user_id: int) -> bool:
-    cold_start_query = text(
-        """
-        SELECT bookings_count
-        FROM number_of_bookings_per_user
-        WHERE user_id= :user_id;
-        """
-    )
-
+def get_cold_start_status_eac(user_id: int, group_id: str) -> bool:
+    app_interaction_type = ["bookings", "clicks", "favorites"]
+    app_interaction_count = []
     with create_db_connection() as connection:
-        query_result = connection.execute(
-            cold_start_query, user_id=str(user_id)
-        ).fetchone()
-
-    bookings_count = query_result[0] if query_result is not None else 0
-    user_cold_start_status = bookings_count < 2
+        for app_interaction in app_interaction_type:
+            cold_start_query = text(
+                f"""
+            SELECT {app_interaction}_count
+            FROM number_of_{app_interaction}_per_user
+            WHERE user_id= :user_id;
+            """
+            )
+            query_result = connection.execute(
+                cold_start_query, user_id=str(user_id)
+            ).fetchone()
+            result = query_result[0] if query_result is not None else 0
+            app_interaction_count.append(result)
+    bookings_count = app_interaction_count[0]
+    clicks_count = app_interaction_count[1]
+    favorites_count = app_interaction_count[2]
+    if group_id == "C":
+        user_app_interaction_count = (
+            bookings_count * 10 + favorites_count * 3 + clicks_count
+        )
+        user_cold_start_status = user_app_interaction_count < 20
+    else:
+        user_cold_start_status = bookings_count < 2
     return user_cold_start_status
 
 

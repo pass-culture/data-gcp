@@ -112,3 +112,7 @@ qpi_answers,VISITE_GUIDEE,boolean,enriched_qpi_answers,analytics
 qpi_answers,VISITE_VIRTUELLE,boolean,enriched_qpi_answers,analytics
 qpi_answers,VISITE,boolean,enriched_qpi_answers,analytics
 qpi_answers,VOD,boolean,enriched_qpi_answers,analytics
+firebase_events,user_id,character varying,firebase_events,analytics
+firebase_events,offer_id,character varying,firebase_events,analytics
+firebase_events,event_date,timestamp without time zone,firebase_events,analytics
+firebase_events,event_name,character varying,firebase_events,analytics

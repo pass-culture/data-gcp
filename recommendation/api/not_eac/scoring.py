@@ -13,15 +13,20 @@ from utils import (
     MODEL_NAME_A,
     MODEL_NAME_B,
     MODEL_NAME_C,
+    ENV_SHORT_NAME,
 )
 
 
 def get_intermediate_recommendations_for_user(
     user_id: int, user_iris_id: int
 ) -> List[Dict[str, Any]]:
+    if ENV_SHORT_NAME == "prod":
+        and_clause = "AND booking_number > 0"
+    else:
+        and_clause = ""
     if not user_iris_id:
         query = text(
-            """
+            f"""
             SELECT offer_id, category, subcategory_id, url, item_id, product_id
             FROM recommendable_offers
             WHERE is_national = True or url IS NOT NULL
@@ -30,12 +35,11 @@ def get_intermediate_recommendations_for_user(
                 SELECT offer_id
                 FROM non_recommendable_offers
                 WHERE user_id = :user_id
-                )
-            AND booking_number > 0
-            ORDER BY RANDOM();
+                )   
+                {and_clause}
+                ORDER BY RANDOM(); 
             """
         )
-
         with create_db_connection() as connection:
             query_result = connection.execute(query, user_id=str(user_id)).fetchall()
 
@@ -61,7 +65,7 @@ def get_intermediate_recommendations_for_user(
                 FROM non_recommendable_offers
                 WHERE user_id = :user_id
                 )
-            AND booking_number > 0
+            {and_clause}
             ORDER BY RANDOM();
             """
         )

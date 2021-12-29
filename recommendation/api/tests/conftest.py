@@ -236,7 +236,7 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
         },
     )
     firebase_events.to_sql(
-        "number_of_bookings_per_user", con=engine, if_exists="replace"
+        "firebase_events", con=engine, if_exists="replace"
     )
 
     number_of_clicks_per_user = pd.DataFrame(
@@ -459,7 +459,7 @@ def setup_pool(app_config: Dict[str, Any]) -> Any:
         },
     )
     firebase_events.to_sql(
-        "number_of_bookings_per_user", con=engine, if_exists="replace"
+        "firebase_events", con=engine, if_exists="replace"
     )
 
     number_of_clicks_per_user = pd.DataFrame(

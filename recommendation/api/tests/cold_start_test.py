@@ -7,7 +7,8 @@ from not_eac.cold_start import get_cold_start_status, get_cold_start_categories
 
 
 @pytest.mark.parametrize(
-    ["user_id", "group_id", "cold_start_status"][
+    ["user_id", "group_id", "cold_start_status"],
+    [
         ("111", "A", False),
         ("112", "B", True),
         ("113", "C", True),

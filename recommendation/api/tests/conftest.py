@@ -238,18 +238,18 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
     firebase_events.to_sql("firebase_events", con=engine, if_exists="replace")
 
     number_of_clicks_per_user = pd.DataFrame(
-        {"user_id": [111], "clicks_count": [2]},
-        {"user_id": [112], "clicks_count": [1]},
-        {"user_id": [113], "clicks_count": [1]},
+        {"user_id": ["111"], "clicks_count": [2]},
+        {"user_id": ["112"], "clicks_count": [1]},
+        {"user_id": ["113"], "clicks_count": [1]},
     )
     number_of_clicks_per_user.to_sql(
         "number_of_clicks_per_user", con=engine, if_exists="replace"
     )
 
     number_of_favorites_per_user = pd.DataFrame(
-        {"user_id": [111], "favorites_count": [0]},
-        {"user_id": [112], "favorites_count": [1]},
-        {"user_id": [113], "favorites_count": [1]},
+        {"user_id": ["111"], "favorites_count": [0]},
+        {"user_id": ["112"], "favorites_count": [1]},
+        {"user_id": ["113"], "favorites_count": [1]},
     )
     number_of_favorites_per_user.to_sql(
         "number_of_favorites_per_user", con=engine, if_exists="replace"
@@ -459,18 +459,18 @@ def setup_pool(app_config: Dict[str, Any]) -> Any:
     firebase_events.to_sql("firebase_events", con=engine, if_exists="replace")
 
     number_of_clicks_per_user = pd.DataFrame(
-        {"user_id": [111], "clicks_count": [2]},
-        {"user_id": [112], "clicks_count": [1]},
-        {"user_id": [113], "clicks_count": [1]},
+        {"user_id": ["111"], "clicks_count": [2]},
+        {"user_id": ["112"], "clicks_count": [1]},
+        {"user_id": ["113"], "clicks_count": [1]},
     )
     number_of_clicks_per_user.to_sql(
         "number_of_clicks_per_user", con=engine, if_exists="replace"
     )
 
     number_of_favorites_per_user = pd.DataFrame(
-        {"user_id": [111], "favorites_count": [0]},
-        {"user_id": [112], "favorites_count": [1]},
-        {"user_id": [113], "favorites_count": [1]},
+        {"user_id": ["111"], "favorites_count": [0]},
+        {"user_id": ["112"], "favorites_count": [1]},
+        {"user_id": ["113"], "favorites_count": [1]},
     )
     number_of_favorites_per_user.to_sql(
         "number_of_favorites_per_user", con=engine, if_exists="replace"

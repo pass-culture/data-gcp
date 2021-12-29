@@ -235,9 +235,7 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
             "event_name": ["HasAddedOfferToFavorites"],
         },
     )
-    firebase_events.to_sql(
-        "firebase_events", con=engine, if_exists="replace"
-    )
+    firebase_events.to_sql("firebase_events", con=engine, if_exists="replace")
 
     number_of_clicks_per_user = pd.DataFrame(
         {"user_id": [111], "clicks_count": [2]},
@@ -458,9 +456,7 @@ def setup_pool(app_config: Dict[str, Any]) -> Any:
             "event_name": ["HasAddedOfferToFavorites"],
         },
     )
-    firebase_events.to_sql(
-        "firebase_events", con=engine, if_exists="replace"
-    )
+    firebase_events.to_sql("firebase_events", con=engine, if_exists="replace")
 
     number_of_clicks_per_user = pd.DataFrame(
         {"user_id": [111], "clicks_count": [2]},

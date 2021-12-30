@@ -199,41 +199,18 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
 
     firebase_events = pd.DataFrame(
         {
-            "user_id": ["111"],
-            "offer_id": ["1"],
-            "event_date": [datetime.datetime.now(pytz.utc)],
-            "event_name": ["ConsultOffer"],
-        },
-        {
-            "user_id": ["111"],
-            "offer_id": ["2"],
-            "event_date": [datetime.datetime.now(pytz.utc)],
-            "event_name": ["ConsultOffer"],
-        },
-        {
-            "user_id": ["112"],
-            "offer_id": ["1"],
-            "event_date": [datetime.datetime.now(pytz.utc)],
-            "event_name": ["ConsultOffer"],
-        },
-        {
-            "user_id": ["112"],
-            "offer_id": ["1"],
-            "event_date": [datetime.datetime.now(pytz.utc)],
-            "event_name": ["HasAddedOfferToFavorites"],
-        },
-        {
-            "user_id": ["113"],
-            "offer_id": ["2"],
-            "event_date": [datetime.datetime.now(pytz.utc)],
-            "event_name": ["ConsultOffer"],
-        },
-        {
-            "user_id": ["113"],
-            "offer_id": ["3"],
-            "event_date": [datetime.datetime.now(pytz.utc)],
-            "event_name": ["HasAddedOfferToFavorites"],
-        },
+            "user_id": ["111", "111", "112", "112", "113", "113"],
+            "offer_id": ["1", "2", "1", "1", "2", "3"],
+            "event_date": [datetime.datetime.now(pytz.utc)] * 6,
+            "event_name": [
+                "ConsultOffer",
+                "ConsultOffer",
+                "ConsultOffer",
+                "HasAddedOfferToFavorites",
+                "ConsultOffer",
+                "HasAddedOfferToFavorites",
+            ],
+        }
     )
     firebase_events.to_sql("firebase_events", con=engine, if_exists="replace")
 

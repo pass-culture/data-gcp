@@ -16,6 +16,7 @@ from utils import (
     STORAGE_PATH,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
+    MODEL_NAME,
 )
 
 TRAIN_DIR = "/home/airflow/train"
@@ -32,7 +33,11 @@ def train(storage_path: str):
     )
 
     user_listwEAC = np.append(eac_user_list, user_list)
-
+    pd.DataFrame({"user_id": user_list_wEAC}).to_gbq(
+        f"clean_{ENV_SHORT_NAME}.trained_users_{MODEL_NAME}",
+        project_id=GCP_PROJECT_ID,
+        if_exists="replace",
+    )
     experiment_name = "algo_training_v2_mf_reco"
     mlflow.set_experiment(experiment_name)
     experiment = mlflow.get_experiment_by_name(experiment_name)
@@ -57,12 +62,6 @@ def train(storage_path: str):
 
         user_embedding = model.item_factors
         item_embedding = model.user_factors
-
-        print("***** MF_model *****")
-        print("user_list: ", len(user_listwEAC))
-        print("item_list: ", len(item_list))
-        print("user_emb: ", len(user_embedding))
-        print("item_emb: ", len(item_embedding))
 
         MF_Model = MFModel(
             list(map(str, user_listwEAC)),

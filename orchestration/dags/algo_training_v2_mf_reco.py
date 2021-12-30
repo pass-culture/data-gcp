@@ -70,7 +70,7 @@ with DAG(
     )
 
     if ENV_SHORT_NAME == "dev":
-        branch = "PC-11838-build-automatic-train-algo-v2"
+        branch = "PC-12275-build-automatic-training-matrix-factorization"
     if ENV_SHORT_NAME == "stg":
         branch = "master"
     if ENV_SHORT_NAME == "prod":

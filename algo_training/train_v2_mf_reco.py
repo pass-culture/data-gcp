@@ -33,7 +33,7 @@ def train(storage_path: str):
     )
 
     user_listwEAC = np.append(eac_user_list, user_list)
-    pd.DataFrame({"user_id": user_list_wEAC}).to_gbq(
+    pd.DataFrame({"user_id": user_listwEAC}).to_gbq(
         f"clean_{ENV_SHORT_NAME}.trained_users_{MODEL_NAME}",
         project_id=GCP_PROJECT_ID,
         if_exists="replace",

@@ -252,6 +252,7 @@ with DAG(
         CREATE INDEX IF NOT EXISTS idx_venue_id                           ON public.venue                       USING btree (venue_id);
         CREATE INDEX IF NOT EXISTS idx_venue_managingoffererid            ON public.venue                       USING btree ("venue_managing_offerer_id");
         CREATE INDEX IF NOT EXISTS idx_offerer_id                         ON public.offerer                     USING btree (offerer_id);
+        CREATE INDEX IF NOT EXISTS idx_firebase_event_id                  ON public.firebase_events             USING btree (user_id);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_iris_venues_mv_unique       ON public.iris_venues_mv              USING btree (iris_id,venue_id);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_non_recommendable_id        ON public.non_recommendable_offers    USING btree (user_id,offer_id);
         CREATE INDEX IF NOT EXISTS idx_offer_recommendable_venue_id       ON public.recommendable_offers        USING btree (venue_id);
@@ -260,6 +261,7 @@ with DAG(
         CREATE UNIQUE INDEX IF NOT EXISTS idx_nb_clicks_unique            ON public.number_of_clicks_per_user   USING btree ("user_id",clicks_count);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_nb_favorites_unique         ON public.number_of_favorites_per_user USING btree ("user_id",favorites_count);
         CREATE INDEX IF NOT EXISTS qpi_answers_user_id                    ON public.qpi_answers                 USING btree (user_id);
+        CREATE INDEX IF NOT EXISTS trained_users_mf_reco_user_id          ON public.trained_users_mf_reco       USING btree (user_id);
     """
 
     recreate_indexes_task = CloudSqlQueryOperator(

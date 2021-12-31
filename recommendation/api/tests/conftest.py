@@ -33,6 +33,9 @@ def app_config() -> Dict[str, Any]:
         "MODEL_NAME_B": "model_name",
         "MODEL_VERSION_B": "model_version",
         "MODEL_INPUT_B": "model_input",
+        "MODEL_NAME_C": "mf_reco",
+        "MODEL_VERSION_C": "model_version",
+        "MODEL_INPUT_C": "model_input",
     }
 
 

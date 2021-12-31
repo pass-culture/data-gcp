@@ -103,8 +103,8 @@ def get_cold_start_status_eac(user_id: int, group_id: str) -> bool:
         user_app_interaction_count = (
             bookings_count * 10 + favorites_count * 3 + clicks_count
         )
-        with create_db_connection() as connection:
-            is_trained_user = connection.execute(
+        with create_db_connection() as connection2:
+            is_trained_user = connection2.execute(
                 text(
                     f"SELECT user_id FROM trained_users_{MODEL_NAME_C} WHERE userid= :user_id"
                 ),

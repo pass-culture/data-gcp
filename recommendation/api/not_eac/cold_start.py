@@ -103,7 +103,7 @@ def get_cold_start_status(user_id: int, group_id: str) -> bool:
             user_app_interaction_count = (
                 bookings_count * 10 + favorites_count * 3 + clicks_count
             )
-            is_trained_user = connection2.execute(
+            is_trained_user = connection.execute(
                 text(
                     f"SELECT user_id FROM trained_users_{MODEL_NAME_C} WHERE userid= :user_id"
                 ),

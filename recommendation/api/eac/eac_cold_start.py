@@ -96,26 +96,24 @@ def get_cold_start_status_eac(user_id: int, group_id: str) -> bool:
             ).fetchone()
             result = query_result[0] if query_result is not None else 0
             app_interaction_count.append(result)
-    bookings_count = app_interaction_count[0]
-    clicks_count = app_interaction_count[1]
-    favorites_count = app_interaction_count[2]
-    if group_id == "C":
-        user_app_interaction_count = (
-            bookings_count * 10 + favorites_count * 3 + clicks_count
-        )
-        with create_db_connection() as connection2:
+        bookings_count = app_interaction_count[0]
+        clicks_count = app_interaction_count[1]
+        favorites_count = app_interaction_count[2]
+        if group_id == "C":
+            user_app_interaction_count = (
+                bookings_count * 10 + favorites_count * 3 + clicks_count
+            )
             is_trained_user = connection2.execute(
                 text(
                     f"SELECT user_id FROM trained_users_{MODEL_NAME_C} WHERE userid= :user_id"
                 ),
                 user_id=str(user_id),
             ).scalar()
-
-        user_cold_start_status = (user_app_interaction_count < 20) and not (
-            is_trained_user
-        )
-    else:
-        user_cold_start_status = bookings_count < 2
+            user_cold_start_status = (user_app_interaction_count < 20) and not (
+                is_trained_user
+            )
+        else:
+            user_cold_start_status = bookings_count < 2
     return user_cold_start_status
 
 

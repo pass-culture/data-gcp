@@ -4,6 +4,7 @@ from sqlalchemy import text
 from utils import (
     create_db_connection,
     NUMBER_OF_PRESELECTED_OFFERS,
+    MODEL_NAME_C,
 )
 from typing import Any, Dict, List
 
@@ -102,7 +103,17 @@ def get_cold_start_status(user_id: int, group_id: str) -> bool:
         user_app_interaction_count = (
             bookings_count * 10 + favorites_count * 3 + clicks_count
         )
-        user_cold_start_status = user_app_interaction_count < 20
+        with create_db_connection() as connection:
+            is_trained_user = connection.execute(
+                text(
+                    f"SELECT user_id FROM trained_users_{MODEL_NAME_C} WHERE userid= :user_id"
+                ),
+                user_id=str(user_id),
+            ).scalar()
+
+        user_cold_start_status = (user_app_interaction_count < 20) and not (
+            is_trained_user
+        )
     else:
         user_cold_start_status = bookings_count < 2
     return user_cold_start_status

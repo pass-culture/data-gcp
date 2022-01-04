@@ -41,7 +41,7 @@ def get_final_recommendations(user_id: int, longitude: int, latitude: int) -> Li
     else:
         group_id = ab_testing[0]
 
-    is_cold_start = fork_get_cold_start_status(user_id, is_eac)
+    is_cold_start = fork_get_cold_start_status(user_id, is_eac, group_id)
     user_iris_id = get_iris_from_coordinates(longitude, latitude)
 
     if is_cold_start:
@@ -119,12 +119,12 @@ def fork_ab_testing_assign_user(user_id, is_eac):
     return group_id
 
 
-def fork_get_cold_start_status(user_id, is_eac):
+def fork_get_cold_start_status(user_id, is_eac, group_id):
     start = time.time()
     if is_eac:
-        user_cold_start_status = get_cold_start_status_eac(user_id)
+        user_cold_start_status = get_cold_start_status_eac(user_id, group_id)
     else:
-        user_cold_start_status = get_cold_start_status(user_id)
+        user_cold_start_status = get_cold_start_status(user_id, group_id)
     log_duration(f"get_cold_start_status for {user_id}", start)
     return user_cold_start_status
 

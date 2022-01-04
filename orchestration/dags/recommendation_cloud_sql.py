@@ -22,6 +22,7 @@ from dependencies.config import (
     DATA_GCS_BUCKET_NAME,
     BIGQUERY_CLEAN_DATASET,
     BIGQUERY_ANALYTICS_DATASET,
+    ENV_SHORT_NAME,
 )
 from dependencies.slack_alert import task_fail_slack_alert
 
@@ -47,6 +48,7 @@ default_args = {
     "retries": 3,
     "retry_delay": timedelta(minutes=5),
 }
+FIREBASE_PERIOD_DAYS = 4 * 30 if ENV_SHORT_NAME == "prod" else 10
 
 
 def get_table_data():
@@ -93,6 +95,10 @@ with DAG(
     start_drop_restore = DummyOperator(task_id="start_drop_restore")
     end_data_prep = DummyOperator(task_id="end_data_prep")
 
+    firebase_start_date = (
+        datetime.now() - timedelta(days=FIREBASE_PERIOD_DAYS)
+    ).strftime("%Y-%m-%d")
+    firebase_end_date = datetime.now().strftime("%Y-%m-%d")
     for table in TABLES:
 
         dataset_type = TABLES[table]["dataset_type"]
@@ -115,18 +121,29 @@ with DAG(
                 if column_name not in list_type_columns
             ]
         )
-
-        filter_column_task = BigQueryOperator(
-            task_id=f"filter_column_{table}",
-            sql=f"""
+        if table == "qpi_answers":
+            filter_column_query = f"""
                 SELECT *
                 FROM `{GCP_PROJECT}.{dataset}.{bigquery_table_name}_v3`
             """
-            if table == "qpi_answers"
-            else f"""
+        elif table == "firebase_events":
+            filter_column_query = f"""SELECT {select_columns}
+                FROM `{GCP_PROJECT}.{dataset}.{bigquery_table_name}`
+                WHERE (event_name='ConsultOffer' OR event_name='HasAddedOfferToFavorites')
+                AND (event_date > '{firebase_start_date}' AND event_date < '{firebase_end_date}')
+                AND user_id is not null
+                AND offer_id is not null
+                AND offer_id != 'NaN'
+                """
+        else:
+            filter_column_query = f"""
                 SELECT {select_columns}
                 FROM `{GCP_PROJECT}.{dataset}.{bigquery_table_name}`
-            """,
+            """
+
+        filter_column_task = BigQueryOperator(
+            task_id=f"filter_column_{table}",
+            sql=filter_column_query,
             use_legacy_sql=False,
             destination_dataset_table=f"{GCP_PROJECT}:{dataset}.temp_export_{table}",
             write_disposition="WRITE_TRUNCATE",
@@ -235,12 +252,16 @@ with DAG(
         CREATE INDEX IF NOT EXISTS idx_venue_id                           ON public.venue                       USING btree (venue_id);
         CREATE INDEX IF NOT EXISTS idx_venue_managingoffererid            ON public.venue                       USING btree ("venue_managing_offerer_id");
         CREATE INDEX IF NOT EXISTS idx_offerer_id                         ON public.offerer                     USING btree (offerer_id);
+        CREATE INDEX IF NOT EXISTS idx_firebase_event_id                  ON public.firebase_events             USING btree (user_id);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_iris_venues_mv_unique       ON public.iris_venues_mv              USING btree (iris_id,venue_id);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_non_recommendable_id        ON public.non_recommendable_offers    USING btree (user_id,offer_id);
         CREATE INDEX IF NOT EXISTS idx_offer_recommendable_venue_id       ON public.recommendable_offers        USING btree (venue_id);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_id      ON public.recommendable_offers        USING btree (offer_id);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_nb_bookings_unique          ON public.number_of_bookings_per_user USING btree ("user_id",bookings_count);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_nb_clicks_unique            ON public.number_of_clicks_per_user   USING btree ("user_id",clicks_count);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_nb_favorites_unique         ON public.number_of_favorites_per_user USING btree ("user_id",favorites_count);
         CREATE INDEX IF NOT EXISTS qpi_answers_user_id                    ON public.qpi_answers                 USING btree (user_id);
+        CREATE INDEX IF NOT EXISTS trained_users_mf_reco_user_id          ON public.trained_users_mf_reco       USING btree (user_id);
     """
 
     recreate_indexes_task = CloudSqlQueryOperator(
@@ -257,6 +278,8 @@ with DAG(
         "non_recommendable_offers",
         "iris_venues_mv",
         "number_of_bookings_per_user",
+        "number_of_clicks_per_user",
+        "number_of_favorites_per_user",
     ]
 
     refresh_materialized_view_tasks = []

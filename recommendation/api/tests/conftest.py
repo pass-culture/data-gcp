@@ -374,7 +374,7 @@ def setup_pool(app_config: Dict[str, Any]) -> Any:
     iris_venues_mv.to_sql("iris_venues_mv", con=engine, if_exists="replace")
 
     ab_testing = pd.DataFrame(
-        {"userid": ["111", "112", "113"], "groupid": ["A", "B", "A"]}
+        {"userid": ["111", "112", "113"], "groupid": ["A", "B", "C"]}
     )
     ab_testing.to_sql(app_config["AB_TESTING_TABLE"], con=engine, if_exists="replace")
 
@@ -431,6 +431,11 @@ def setup_pool(app_config: Dict[str, Any]) -> Any:
     )
     number_of_favorites_per_user.to_sql(
         "number_of_favorites_per_user", con=engine, if_exists="replace"
+    )
+
+    trained_users_mf_reco = pd.DataFrame({"user_id": ["111", "113"]})
+    trained_users_mf_reco.to_sql(
+        "trained_users_mf_reco", con=engine, if_exists="replace"
     )
 
     yield engine

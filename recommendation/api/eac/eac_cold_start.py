@@ -105,7 +105,7 @@ def get_cold_start_status_eac(user_id: int, group_id: str) -> bool:
             )
             is_trained_user = connection.execute(
                 text(
-                    f"SELECT user_id FROM trained_users_mf_reco WHERE userid= :user_id"
+                    f"SELECT user_id FROM trained_users_mf_reco WHERE user_id= :user_id"
                 ),
                 user_id=str(user_id),
             ).scalar()

@@ -127,6 +127,18 @@ def define_current_year_revenue(dataset, table_prefix=""):
     """
 
 
+def define_bookable_offer_cnt_query(dataset, table_prefix=""):
+    return f"""
+        CREATE TEMP TABLE bookable_offer_cnt_offerer AS
+        SELECT
+                offerer_id
+                ,COUNT(DISTINCT offer_id) AS offerer_bookable_offer_cnt
+        FROM {analytics_dataset}.enriched_offer_data
+        WHERE offer_is_bookable
+        GROUP BY 1;
+    """
+
+
 def define_enriched_offerer_query(dataset, table_prefix=""):
     return f"""
         CREATE OR REPLACE TABLE {dataset}.enriched_offerer_data AS (
@@ -137,6 +149,7 @@ def define_enriched_offerer_query(dataset, table_prefix=""):
                 related_stocks.first_stock_creation_date,
                 related_bookings.first_booking_date,
                 related_offers.offer_cnt,
+                bookable_offer_cnt_offerer.offerer_bookable_offer_cnt,
                 related_non_cancelled_bookings.no_cancelled_booking_cnt,
                 offerer_department_code.offerer_department_code,
                 related_venues.venue_cnt,
@@ -155,6 +168,7 @@ def define_enriched_offerer_query(dataset, table_prefix=""):
                 ON related_venues_with_offer.offerer_id = offerer.offerer_id
             LEFT JOIN offerer_humanized_id ON offerer_humanized_id.offerer_id = offerer.offerer_id
             LEFT JOIN current_year_revenue ON current_year_revenue.offerer_id = offerer.offerer_id
+            LEFT JOIN bookable_offer_cnt_offerer ON bookable_offer_cnt_offerer.offerer_id = offerer.offerer_id
             WHERE offerer.offerer_validation_token IS NULL
         );
     """
@@ -172,5 +186,6 @@ def define_enriched_offerer_data_full_query(dataset, table_prefix=""):
         {create_humanize_id_function()}
         {create_temp_humanize_id(table="offerer", dataset=dataset, table_prefix=table_prefix)}
         {define_current_year_revenue(dataset=dataset, table_prefix=table_prefix)}
+        {define_bookable_offer_cnt_query(dataset=dataset, table_prefix=table_prefix)}
         {define_enriched_offerer_query(dataset=dataset, table_prefix=table_prefix)}
     """

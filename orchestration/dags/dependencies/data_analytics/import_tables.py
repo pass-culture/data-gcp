@@ -31,7 +31,9 @@ def define_import_query(
             "isEmailValidated" AS user_has_validated_email,
             CAST("notificationSubscriptions" -> \\'marketing_push\\' AS BOOLEAN) AS user_has_enabled_marketing_push,
             CAST("notificationSubscriptions" -> \\'marketing_email\\' AS BOOLEAN) AS user_has_enabled_marketing_email,
-            "user"."dateOfBirth" AS user_birth_date
+            "user"."dateOfBirth" AS user_birth_date,
+            "user"."subscriptionState" AS user_subscription_state,
+            "user"."schoolType" AS user_school_type
         FROM public.user
     """
     cloudsql_queries[

@@ -127,7 +127,7 @@ def define_current_year_revenue(dataset, table_prefix=""):
     """
 
 
-def define_bookable_offer_cnt_query(analytics_dataset, table_prefix=""):
+def define_bookable_offer_cnt_query(analytics_dataset):
     return f"""
         CREATE TEMP TABLE bookable_offer_cnt_offerer AS
         SELECT
@@ -186,6 +186,6 @@ def define_enriched_offerer_data_full_query(dataset, table_prefix=""):
         {create_humanize_id_function()}
         {create_temp_humanize_id(table="offerer", dataset=dataset, table_prefix=table_prefix)}
         {define_current_year_revenue(dataset=dataset, table_prefix=table_prefix)}
-        {define_bookable_offer_cnt_query(analytics_dataset=analytics_dataset, table_prefix=table_prefix)}
+        {define_bookable_offer_cnt_query(analytics_dataset=dataset)}
         {define_enriched_offerer_query(dataset=dataset, table_prefix=table_prefix)}
     """

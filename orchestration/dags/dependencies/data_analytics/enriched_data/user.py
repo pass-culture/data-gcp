@@ -412,6 +412,8 @@ def define_count_distinct_types_query(dataset, table_prefix=""):
             GROUP BY user_id
         );
         """
+
+
 def define_user_agg_deposit_data_query(dataset, table_prefix=""):
     return f"""
         CREATE TEMP TABLE user_agg_deposit_data AS (
@@ -431,6 +433,7 @@ def define_user_agg_deposit_data_query(dataset, table_prefix=""):
         FROM user_deposit_agg
         );
         """
+
 
 def define_enriched_user_data_query(dataset, table_prefix=""):
     return f"""

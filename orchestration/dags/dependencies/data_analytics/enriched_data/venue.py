@@ -149,7 +149,7 @@ def define_real_revenue_per_venue_query(dataset, table_prefix=""):
     """
 
 
-def define_bookable_offer_cnt_query(dataset, table_prefix=""):
+def define_bookable_offer_cnt_query(analytics_dataset, table_prefix=""):
     return f"""
         CREATE TEMP TABLE bookable_offer_cnt AS
         SELECT
@@ -229,6 +229,6 @@ def define_enriched_venue_data_full_query(dataset, table_prefix=""):
         {create_humanize_id_function()}
         {create_temp_humanize_id(table="venue", dataset=dataset, table_prefix=table_prefix)}
         {create_temp_humanize_id(table="offerer", dataset=dataset, table_prefix=table_prefix)}
-        {define_bookable_offer_cnt_query(dataset=dataset, table_prefix=table_prefix)}
+        {define_bookable_offer_cnt_query(analytics_dataset=analytics_dataset, table_prefix=table_prefix)}
         {define_enriched_venue_query(dataset=dataset, table_prefix=table_prefix)}
     """

@@ -162,7 +162,7 @@ class TestDags(unittest.TestCase):
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 15)
+        self.assertEqual(len(dag.tasks), 12)
 
     def test_algo_training_v2_deep_reco_is_loaded(self):
         # When
@@ -171,4 +171,13 @@ class TestDags(unittest.TestCase):
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 15)
+        self.assertEqual(len(dag.tasks), 12)
+
+    def test_algo_training_v2_mf_reco_is_loaded(self):
+        # When
+        dag = self.dagbag.get_dag(dag_id="algo_training_v2_deep_reco")
+
+        # Then
+        self.assertDictEqual(self.dagbag.import_errors, {})
+        self.assertIsNotNone(dag)
+        self.assertEqual(len(dag.tasks), 12)

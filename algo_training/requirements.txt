@@ -1,8 +1,12 @@
 datetime==4.3
 google-cloud-secret-manager==2.4.0
+gcsfs==2021.9.0
 mlflow==1.17.0
 numpy==1.19.4
 pandas==1.2.4
 pandas-gbq==0.15.0
 scipy==1.5.4
-tensorflow==2.7.0
+# Si problème, passer tensorflow en 2.7.0
+tensorflow==2.6.0
+keras==2.6.0
+implicit

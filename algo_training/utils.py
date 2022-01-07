@@ -11,7 +11,7 @@ ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "ehp")
 MLFLOW_EHP_URI = "https://mlflow-ehp.internal-passculture.app/"
 MLFLOW_PROD_URI = "https://mlflow.internal-passculture.app/"
 MODEL_NAME = os.environ.get("MODEL_NAME", "")
-BOOKING_DAY_NUMBER = 4 * 30 if ENV_SHORT_NAME == "prod" else 30
+BOOKING_DAY_NUMBER = 4 * 30 if ENV_SHORT_NAME == "prod" else 10
 
 
 def get_secret(secret_id: str):

@@ -55,7 +55,7 @@ with DAG(
     "algo_training_v2_deep_reco",
     default_args=default_args,
     description="Continuous algorithm training for v2 recommendation algorithm",
-    schedule_interval="0 7 * * 1",  # Train every monday at 07:00
+    schedule_interval="0 18 * * 0",  # Train every sunday at 18:00
     catchup=False,
     dagrun_timeout=timedelta(minutes=300),
 ) as dag:

@@ -141,7 +141,9 @@ for table in data_applicative_tables_and_date_columns.keys():
     task = BigQueryOperator(
         task_id=f"import_to_clean_{table}",
         sql=define_import_query(
-            external_connection_id=APPLICATIVE_EXTERNAL_CONNECTION_ID, table=table
+            external_connection_id=APPLICATIVE_EXTERNAL_CONNECTION_ID,
+            table=table,
+            current_date="{{ ds }}",
         ),
         write_disposition="WRITE_TRUNCATE" if table != "offer" else "WRITE_APPEND",
         use_legacy_sql=False,

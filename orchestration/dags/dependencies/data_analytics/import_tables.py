@@ -1,8 +1,13 @@
 from dependencies.config import APPLICATIVE_EXTERNAL_CONNECTION_ID, GCP_REGION
+from datetime import datetime, timedelta
+from dateutil import parser
 
 
 def define_import_query(
-    table, region=GCP_REGION, external_connection_id=APPLICATIVE_EXTERNAL_CONNECTION_ID
+    table,
+    region=GCP_REGION,
+    external_connection_id=APPLICATIVE_EXTERNAL_CONNECTION_ID,
+    current_date="",
 ):
     """
     Given a table (from "external_connection_id" located in "region"), we build and return the federated query that
@@ -84,9 +89,13 @@ def define_import_query(
             "reimbursementDate" AS booking_reimbursement_date
         FROM public.booking
     """
+    # define day before and after execution date
+    EXECUTION_DATE = parser.parse(current_date).date()
+    DAY_BEFORE_EXECUTION = EXECUTION_DATE - timedelta(days=1)
+    DAY_AFTER_EXECUTION = EXECUTION_DATE - timedelta(days=1)
     cloudsql_queries[
         "offer"
-    ] = """
+    ] = f"""
         SELECT
             CAST("idAtProviders" AS varchar(255)) as offer_id_at_providers,
             "dateModifiedAtLastProvider" as offer_modified_at_last_provider_date,
@@ -109,7 +118,8 @@ def define_import_query(
             "dateUpdated" as offer_date_updated,
             "isEducational" AS offer_is_educational
         FROM public.offer
-        WHERE "dateUpdated" >= CURRENT_DATE - 1
+        WHERE "dateUpdated" >= make_date({DAY_BEFORE_EXECUTION.year},{DAY_BEFORE_EXECUTION.month},{DAY_BEFORE_EXECUTION.day})
+        WHERE "dateUpdated" <  make_date({DAY_AFTER_EXECUTION.year},{DAY_AFTER_EXECUTION.month},{DAY_AFTER_EXECUTION.day})
     """
     cloudsql_queries[
         "stock"

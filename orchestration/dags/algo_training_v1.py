@@ -182,35 +182,11 @@ with DAG(
         dag=dag,
     )
 
-    EVALUATION = f""" '{DEFAULT}
-        python evaluate.py'
-    """
-
-    evaluate = BashOperator(
-        task_id="evaluate",
-        bash_command=f"""
-        gcloud compute ssh {GCE_INSTANCE} \
-        --zone {GCE_ZONE} \
-        --project {GCP_PROJECT_ID} \
-        --command {EVALUATION}
-        """,
-        dag=dag,
-        xcom_push=True,
-    )
-
     gce_instance_stop = GceInstanceStopOperator(
         project_id=GCP_PROJECT_ID,
         zone=GCE_ZONE,
         resource_id=GCE_INSTANCE,
         task_id="gce_stop_task",
-    )
-
-    check_metrics = BranchPythonOperator(
-        task_id="checking_metrics",
-        python_callable=branch_function,
-        provide_context=True,
-        do_xcom_push=False,
-        dag=dag,
     )
 
     DEPLOY_COMMAND = f"""
@@ -282,49 +258,6 @@ with DAG(
         icon_emoji=":robot_face:",
     )
 
-    SLACK_BLOCKS_FAIL = [
-        {
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": ":x: Les métriques sont pas bonnes ! :sadpanda:",
-            },
-        },
-        {
-            "type": "actions",
-            "elements": [
-                {
-                    "type": "button",
-                    "text": {
-                        "type": "plain_text",
-                        "text": "Voir les métriques :chart_with_upwards_trend:",
-                        "emoji": True,
-                    },
-                    "url": MLFLOW_URL
-                    + "#/experiments/"
-                    + "{{ ti.xcom_pull(task_ids='training').split('/')[4] }}"
-                    + "/runs/"
-                    + "{{ ti.xcom_pull(task_ids='training').split('/')[5] }}",
-                },
-            ],
-        },
-        {
-            "type": "context",
-            "elements": [
-                {"type": "mrkdwn", "text": f"Environnement: {ENV_SHORT_NAME}"}
-            ],
-        },
-    ]
-
-    send_slack_notif_fail = SlackWebhookOperator(
-        task_id="send_slack_notif_fail",
-        http_conn_id=SLACK_CONN_ID,
-        webhook_token=SLACK_CONN_PASSWORD,
-        blocks=SLACK_BLOCKS_FAIL,
-        username=f"Algo trainer robot - {ENV_SHORT_NAME}",
-        icon_emoji=":robot_face:",
-    )
-
     (
         start
         >> gce_instance_start
@@ -335,11 +268,7 @@ with DAG(
         >> split_data
         >> training
         >> postprocess
-        >> evaluate
         >> gce_instance_stop
-        >> check_metrics
         >> deploy_model
         >> send_slack_notif_success
     )
-
-    check_metrics >> send_slack_notif_fail

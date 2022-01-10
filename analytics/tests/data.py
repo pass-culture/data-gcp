@@ -612,6 +612,8 @@ ENRICHED_USER_DATA_INPUT = {
             "user_has_enabled_marketing_email": True,
             "user_birth_date": datetime.now().replace(microsecond=0),
             "user_role": "BENEFICIARY",
+            "user_school_type": "AGRICULTURAL_HIGH_SCHOOL",
+            "user_subscription_state": "account_created",
         }
     ],
     "deposit": [
@@ -687,6 +689,8 @@ ENRICHED_USER_DATA_EXPECTED = [
         "user_civility": "Mme",
         "user_activation_date": datetime.now().replace(microsecond=0),
         "user_deposit_creation_date": datetime.now().replace(microsecond=0),
+        "user_total_deposit_amount": 500,
+        "user_current_deposit_type": "GRANT_18",
         "first_connection_date": datetime.now().replace(microsecond=0),
         "first_booking_date": datetime.now().replace(microsecond=0),
         "second_booking_date": None,
@@ -716,6 +720,8 @@ ENRICHED_USER_DATA_EXPECTED = [
         "user_is_current_beneficiary": False,
         "user_age": 18,
         "user_birth_date": datetime.now().replace(microsecond=0),
+        "user_school_type": "AGRICULTURAL_HIGH_SCHOOL",
+        "user_subscription_state": "account_created",
     }
 ]
 

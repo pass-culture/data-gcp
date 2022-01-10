@@ -414,6 +414,27 @@ def define_count_distinct_types_query(dataset, table_prefix=""):
         """
 
 
+def define_user_agg_deposit_data_query(dataset, table_prefix=""):
+    return f"""
+        CREATE TEMP TABLE user_agg_deposit_data AS (
+        WITH user_deposit_agg AS (
+            SELECT
+                userId
+                , MIN(dateCreated) AS user_first_deposit_creation_date
+                , MIN(amount) AS user_first_deposit_amount
+                , MAX(amount) AS user_last_deposit_amount
+                , MAX(expirationDate) AS user_last_deposit_expiration_date
+                , SUM(amount) AS user_total_deposit_amount
+            FROM {dataset}.{table_prefix}deposit
+            GROUP BY 1 )
+        SELECT
+            user_deposit_agg.*
+            ,CASE WHEN user_last_deposit_amount < 300 THEN 'GRANT_15_17' ELSE 'GRANT_18' END AS user_current_deposit_type
+        FROM user_deposit_agg
+        );
+        """
+
+
 def define_enriched_user_data_query(dataset, table_prefix=""):
     return f"""
         CREATE OR REPLACE TABLE {dataset}.enriched_user_data AS (
@@ -428,8 +449,12 @@ def define_enriched_user_data_query(dataset, table_prefix=""):
                             WHEN user.user_activity in ("Chômeur", "En recherche d'emploi ou chômeur") THEN "Chômeur, En recherche d'emploi"
                                 ELSE user.user_activity END AS user_activity,
                 user.user_civility,
+                user.user_subscription_state,
+                user.user_school_type,
                 activation_dates.user_activation_date,
-                deposit.dateCreated AS user_deposit_creation_date,
+                user_agg_deposit_data.user_first_deposit_creation_date AS user_deposit_creation_date,
+                user_agg_deposit_data.user_total_deposit_amount,
+                user_agg_deposit_data.user_current_deposit_type,
                 CASE WHEN user.user_has_seen_tutorials THEN user.user_cultural_survey_filled_date
                     ELSE NULL
                 END AS first_connection_date,
@@ -448,19 +473,19 @@ def define_enriched_user_data_query(dataset, table_prefix=""):
                 last_booking_date.last_booking_date,
                 region_department.region_name AS user_region_name,
                 first_paid_booking_date.booking_creation_date_first,
-                DATE_DIFF(date_of_first_bookings.first_booking_date, deposit.dateCreated, DAY)
+                DATE_DIFF(date_of_first_bookings.first_booking_date, user_agg_deposit_data.user_first_deposit_creation_date, DAY)
                 AS days_between_activation_date_and_first_booking_date,
-                DATE_DIFF(first_paid_booking_date.booking_creation_date_first, deposit.dateCreated, DAY)
+                DATE_DIFF(first_paid_booking_date.booking_creation_date_first, user_agg_deposit_data.user_first_deposit_creation_date, DAY)
                 AS days_between_activation_date_and_first_booking_paid,
                 first_booking_type.first_booking_type,
                 first_paid_booking_type.first_paid_booking_type,
                 count_distinct_types.cnt_distinct_types AS cnt_distinct_type_booking,
                 user.user_is_active,
                 user.user_suspension_reason,
-                deposit.amount AS user_deposit_initial_amount,
-                deposit.expirationDate AS user_deposit_expiration_date,
-                CASE WHEN TIMESTAMP(deposit.expirationDate) < CURRENT_TIMESTAMP() OR actual_amount_spent.actual_amount_spent >= deposit.amount THEN TRUE ELSE FALSE END AS user_is_former_beneficiary,
-                CASE WHEN (TIMESTAMP(deposit.expirationDate) >= CURRENT_TIMESTAMP() AND actual_amount_spent.actual_amount_spent < deposit.amount) AND user_is_active THEN TRUE ELSE FALSE END AS user_is_current_beneficiary,
+                user_agg_deposit_data.user_first_deposit_amount AS user_deposit_initial_amount,
+                user_agg_deposit_data.user_last_deposit_expiration_date AS user_deposit_expiration_date,
+                CASE WHEN TIMESTAMP(user_agg_deposit_data.user_last_deposit_expiration_date) < CURRENT_TIMESTAMP() OR actual_amount_spent.actual_amount_spent >= user_agg_deposit_data.user_total_deposit_amount THEN TRUE ELSE FALSE END AS user_is_former_beneficiary,
+                CASE WHEN (TIMESTAMP(user_agg_deposit_data.user_last_deposit_expiration_date) >= CURRENT_TIMESTAMP() AND actual_amount_spent.actual_amount_spent < user_agg_deposit_data.user_total_deposit_amount) AND user_is_active THEN TRUE ELSE FALSE END AS user_is_current_beneficiary,
                 user.user_age,
                 user.user_birth_date
             FROM {dataset}.{table_prefix}user AS user
@@ -486,7 +511,7 @@ def define_enriched_user_data_query(dataset, table_prefix=""):
             LEFT JOIN first_booking_type ON user.user_id = first_booking_type.user_id
             LEFT JOIN first_paid_booking_type ON user.user_id = first_paid_booking_type.user_id
             LEFT JOIN count_distinct_types ON user.user_id = count_distinct_types.user_id
-            LEFT JOIN {dataset}.{table_prefix}deposit AS deposit ON user.user_id = deposit.userId
+             JOIN user_agg_deposit_data ON user.user_id = user_agg_deposit_data.userId
             WHERE user_role IN ('UNDERAGE_BENEFICIARY','BENEFICIARY')
             AND (user.user_is_active OR user.user_suspension_reason = 'upon user request')
         );
@@ -515,5 +540,6 @@ def define_enriched_user_data_full_query(dataset, table_prefix=""):
         {define_first_booking_type_query(dataset=dataset, table_prefix=table_prefix)}
         {define_first_paid_booking_type_query(dataset=dataset, table_prefix=table_prefix)}
         {define_count_distinct_types_query(dataset=dataset, table_prefix=table_prefix)}
+        {define_user_agg_deposit_data_query(dataset=dataset, table_prefix=table_prefix)}
         {define_enriched_user_data_query(dataset=dataset, table_prefix=table_prefix)}
     """

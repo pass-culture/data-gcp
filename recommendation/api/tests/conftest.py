@@ -33,6 +33,9 @@ def app_config() -> Dict[str, Any]:
         "MODEL_NAME_B": "model_name",
         "MODEL_VERSION_B": "model_version",
         "MODEL_INPUT_B": "model_input",
+        "MODEL_NAME_C": "mf_reco",
+        "MODEL_VERSION_C": "model_version",
+        "MODEL_INPUT_C": "model_input",
     }
 
 
@@ -197,6 +200,46 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
         "number_of_bookings_per_user", con=engine, if_exists="replace"
     )
 
+    firebase_events = pd.DataFrame(
+        {
+            "user_id": ["111", "111", "112", "112", "113", "113"],
+            "offer_id": ["1", "2", "1", "1", "2", "3"],
+            "event_date": [datetime.datetime.now(pytz.utc)] * 6,
+            "event_name": [
+                "ConsultOffer",
+                "ConsultOffer",
+                "ConsultOffer",
+                "HasAddedOfferToFavorites",
+                "ConsultOffer",
+                "HasAddedOfferToFavorites",
+            ],
+        }
+    )
+    firebase_events.to_sql("firebase_events", con=engine, if_exists="replace")
+
+    number_of_clicks_per_user = pd.DataFrame(
+        {"user_id": ["111"], "clicks_count": [2]},
+        {"user_id": ["112"], "clicks_count": [1]},
+        {"user_id": ["113"], "clicks_count": [1]},
+    )
+    number_of_clicks_per_user.to_sql(
+        "number_of_clicks_per_user", con=engine, if_exists="replace"
+    )
+
+    number_of_favorites_per_user = pd.DataFrame(
+        {"user_id": ["111"], "favorites_count": [0]},
+        {"user_id": ["112"], "favorites_count": [1]},
+        {"user_id": ["113"], "favorites_count": [1]},
+    )
+    number_of_favorites_per_user.to_sql(
+        "number_of_favorites_per_user", con=engine, if_exists="replace"
+    )
+
+    trained_users_mf_reco = pd.DataFrame({"user_id": ["111", "113"]})
+    trained_users_mf_reco.to_sql(
+        "trained_users_mf_reco", con=engine, if_exists="replace"
+    )
+
     yield connection
 
     engine.execute("DROP TABLE IF EXISTS recommendable_offers;")
@@ -205,6 +248,8 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
     engine.execute(f"DROP TABLE IF EXISTS {app_config['AB_TESTING_TABLE']} ;")
     engine.execute("DROP TABLE IF EXISTS past_recommended_offers ;")
     engine.execute("DROP TABLE IF EXISTS number_of_bookings_per_user ;")
+    engine.execute("DROP TABLE IF EXISTS number_of_clicks_per_user ;")
+    engine.execute("DROP TABLE IF EXISTS number_of_favorites_per_user ;")
     connection.close()
 
 
@@ -335,7 +380,7 @@ def setup_pool(app_config: Dict[str, Any]) -> Any:
     iris_venues_mv.to_sql("iris_venues_mv", con=engine, if_exists="replace")
 
     ab_testing = pd.DataFrame(
-        {"userid": ["111", "112", "113"], "groupid": ["A", "B", "A"]}
+        {"userid": ["111", "112", "113"], "groupid": ["A", "B", "C"]}
     )
     ab_testing.to_sql(app_config["AB_TESTING_TABLE"], con=engine, if_exists="replace")
 
@@ -359,6 +404,46 @@ def setup_pool(app_config: Dict[str, Any]) -> Any:
         "number_of_bookings_per_user", con=engine, if_exists="replace"
     )
 
+    firebase_events = pd.DataFrame(
+        {
+            "user_id": ["111", "111", "112", "112", "113", "113"],
+            "offer_id": ["1", "2", "1", "1", "2", "3"],
+            "event_date": [datetime.datetime.now(pytz.utc)] * 6,
+            "event_name": [
+                "ConsultOffer",
+                "ConsultOffer",
+                "ConsultOffer",
+                "HasAddedOfferToFavorites",
+                "ConsultOffer",
+                "HasAddedOfferToFavorites",
+            ],
+        }
+    )
+    firebase_events.to_sql("firebase_events", con=engine, if_exists="replace")
+
+    number_of_clicks_per_user = pd.DataFrame(
+        {"user_id": ["111"], "clicks_count": [2]},
+        {"user_id": ["112"], "clicks_count": [1]},
+        {"user_id": ["113"], "clicks_count": [1]},
+    )
+    number_of_clicks_per_user.to_sql(
+        "number_of_clicks_per_user", con=engine, if_exists="replace"
+    )
+
+    number_of_favorites_per_user = pd.DataFrame(
+        {"user_id": ["111"], "favorites_count": [0]},
+        {"user_id": ["112"], "favorites_count": [1]},
+        {"user_id": ["113"], "favorites_count": [1]},
+    )
+    number_of_favorites_per_user.to_sql(
+        "number_of_favorites_per_user", con=engine, if_exists="replace"
+    )
+
+    trained_users_mf_reco = pd.DataFrame({"user_id": ["111", "113"]})
+    trained_users_mf_reco.to_sql(
+        "trained_users_mf_reco", con=engine, if_exists="replace"
+    )
+
     yield engine
 
     engine.execute("DROP TABLE IF EXISTS recommendable_offers;")
@@ -367,4 +452,6 @@ def setup_pool(app_config: Dict[str, Any]) -> Any:
     engine.execute(f"DROP TABLE IF EXISTS {app_config['AB_TESTING_TABLE']} ;")
     engine.execute("DROP TABLE IF EXISTS past_recommended_offers ;")
     engine.execute("DROP TABLE IF EXISTS number_of_bookings_per_user ;")
+    engine.execute("DROP TABLE IF EXISTS number_of_clicks_per_user ;")
+    engine.execute("DROP TABLE IF EXISTS number_of_favorites_per_user ;")
     connection.close()

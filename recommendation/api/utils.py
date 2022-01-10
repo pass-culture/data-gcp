@@ -25,6 +25,8 @@ AB_TESTING_TABLE_EAC = os.environ.get("AB_TESTING_TABLE_EAC")
 NUMBER_OF_RECOMMENDATIONS = 10
 NUMBER_OF_PRESELECTED_OFFERS = 50 if not os.environ.get("CI") else 3
 
+ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
+
 MODEL_REGION = os.environ.get("MODEL_REGION")
 MODEL_NAME_A = os.environ.get("MODEL_NAME_A")
 MODEL_NAME_B = os.environ.get("MODEL_NAME_B")

@@ -24,7 +24,7 @@ else:
 
 DATE = "{{ts_nodash}}"
 STORAGE_PATH = f"gs://{MLFLOW_BUCKET_NAME}/algo_training_v2_deep_reco_{ENV_SHORT_NAME}/algo_training_v2_deep_reco_{DATE}"
-MODEL_NAME = "v2_deep_reco"
+MODEL_NAME = "v2_mf_reco"
 SLACK_CONN_ID = "slack"
 SLACK_CONN_PASSWORD = access_secret_data(GCP_PROJECT_ID, "slack-conn-password")
 
@@ -52,10 +52,10 @@ default_args = {
 
 
 with DAG(
-    "algo_training_v2_deep_reco",
+    "algo_training_v2_mf_reco",
     default_args=default_args,
     description="Continuous algorithm training for v2 recommendation algorithm",
-    schedule_interval="0 18 * * 0",  # Train every sunday at 18:00
+    schedule_interval="0 7 * * 1",  # Train every monday at 07:00
     catchup=False,
     dagrun_timeout=timedelta(minutes=300),
 ) as dag:
@@ -70,7 +70,7 @@ with DAG(
     )
 
     if ENV_SHORT_NAME == "dev":
-        branch = "PC-11838-build-automatic-train-algo-v2"
+        branch = "PC-12275-build-automatic-training-matrix-factorization"
     if ENV_SHORT_NAME == "stg":
         branch = "master"
     if ENV_SHORT_NAME == "prod":

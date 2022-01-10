@@ -1,40 +1,52 @@
+import gcsfs
+import numpy as np
 import pandas as pd
+import pickle
 import tensorflow as tf
 import mlflow.tensorflow
-import time
+from metrics import compute_metrics
 from models.v1.match_model import MatchModel
-from models.v1.metrics import compute_metrics as compute_metrics_v1
-
 from models.v2.deep_reco.deep_match_model import DeepMatchModel
-from models.v2.deep_reco.metrics import compute_metrics as compute_metrics_v2_deep_reco
+from models.v2.mf_reco.matrix_factorization_model import MFModel
 from utils import (
     get_secret,
     connect_remote_mlflow,
     STORAGE_PATH,
     ENV_SHORT_NAME,
     MODEL_NAME,
+    GCP_PROJECT_ID,
 )
 
 RECOMMENDATION_NUMBER = 40
 
 
 def evaluate(model, storage_path: str, model_name):
-    positive_data_test = pd.read_csv(
-        f"{storage_path}/positive_data_test.csv",
-        dtype={"user_id": str, "item_id": str, "offer_subcategoryid": str},
-    )
+
+    if model_name == "v2_mf_reco":
+        positive_data_test = pd.read_csv(
+            f"{storage_path}/positive_data_test.csv",
+            dtype={"user_id": str, "offer_id": str, "offer_subcategoryid": str},
+        )
+        positive_data_train = pd.read_csv(
+            f"{storage_path}/positive_data_train.csv",
+            dtype={"user_id": str, "offer_id": str, "offer_subcategoryid": str},
+        )
+    else:
+        positive_data_test = pd.read_csv(
+            f"{storage_path}/positive_data_test.csv",
+            dtype={"user_id": str, "item_id": str, "offer_subcategoryid": str},
+        )
     positive_data_train = pd.read_csv(
         f"{storage_path}/positive_data_train.csv",
         dtype={"user_id": str, "item_id": str, "offer_subcategoryid": str},
     )
-    if model_name == "v1":
-        metrics = compute_metrics_v1(
-            RECOMMENDATION_NUMBER, positive_data_train, positive_data_test, model
-        )
-    elif model_name == "v2_deep_reco":
-        metrics = compute_metrics_v2_deep_reco(
-            RECOMMENDATION_NUMBER, positive_data_train, positive_data_test, model
-        )
+    metrics = compute_metrics(
+        RECOMMENDATION_NUMBER,
+        positive_data_train,
+        positive_data_test,
+        model_name,
+        model,
+    )
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
     mlflow.log_metrics(metrics)
     print("------- EVALUATE DONE -------")
@@ -79,6 +91,14 @@ if __name__ == "__main__":
             loaded_model = tf.keras.models.load_model(
                 mlflow.get_artifact_uri("model"),
                 custom_objects={"DeepMatchModel": DeepMatchModel},
+                compile=False,
+            )
+            evaluate(loaded_model, STORAGE_PATH, MODEL_NAME)
+    elif MODEL_NAME == "v2_mf_reco":
+        with mlflow.start_run(run_id=run_id):
+            loaded_model = tf.keras.models.load_model(
+                mlflow.get_artifact_uri("model"),
+                custom_objects={"MFModel": MFModel},
                 compile=False,
             )
             evaluate(loaded_model, STORAGE_PATH, MODEL_NAME)

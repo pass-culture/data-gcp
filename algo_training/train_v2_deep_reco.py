@@ -16,7 +16,6 @@ from utils import (
     connect_remote_mlflow,
     STORAGE_PATH,
     ENV_SHORT_NAME,
-    BOOKING_DAY_NUMBER,
 )
 
 TRAIN_DIR = "/home/airflow/train"
@@ -24,7 +23,7 @@ EMBEDDING_SIZE = 64
 L2_REG = 0
 N_EPOCHS = 20 if ENV_SHORT_NAME == "prod" else 10
 LOSS_CUTOFF = 0.005
-BATCH_SIZE = 512
+BATCH_SIZE = 128
 
 
 def train(storage_path: str):
@@ -99,8 +98,7 @@ def train(storage_path: str):
             evaluation_triplet_inputs = sample_triplets(
                 clicks_test_light, random_seed=i
             )
-            print("Debug_00: len(triplet_inputs)", len(triplet_inputs))
-            print("Debug_01: len(fake_y)", len(fake_y))
+
             # Fit the model incrementally by doing a single pass over the
             # sampled triplets.
             train_result = deep_triplet_model.fit(

@@ -122,7 +122,8 @@ def define_import_query(
             CAST("lastProviderId" AS varchar(255)) AS stock_last_provider_id,
             CAST("offerId" AS varchar(255)) AS offer_id, "isSoftDeleted" AS stock_is_soft_deleted,
             "beginningDatetime" AS stock_beginning_date, "dateCreated" AS stock_creation_date,
-            "fieldsUpdated" AS stock_fields_updated
+            "fieldsUpdated" AS stock_fields_updated,"numberOfTickets" AS number_of_tickets,
+            "educationalPriceDetail" AS educational_price_detail
         FROM public.stock
     """
     cloudsql_queries[

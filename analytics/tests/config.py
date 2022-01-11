@@ -164,6 +164,8 @@ BIGQUERY_SCHEMAS = {
         "stock_creation_date": "DATETIME",
         "stock_fields_updated": "STRING",
         "stock_has_been_migrated": "BOOLEAN",
+        "number_of_tickets": "INT64",
+        "educational_price_detail": "STRING",
     },
     "enriched_stock_data": {
         "stock_id": "STRING",

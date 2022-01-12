@@ -192,10 +192,10 @@ def enrich_answers(gcp_project, bigquery_clean_dataset):
     return f"""
         WITH unrolled_answers as (
             SELECT * FROM (
-                select *, ROW_NUMBER() OVER() as row_id from `{gcp_project}.{bigquery_clean_dataset}.qpi_answers_v3`
+                select *, ROW_NUMBER() OVER() as row_id from `{gcp_project}.{bigquery_clean_dataset}.temp_qpi_answers_v3`
             ) as qpi, qpi.answers as answers
         )
-        SELECT max(user_id) as user_id, CAST(max(catch_up_user_id) AS STRING) as catch_up_user_id,
+        SELECT max(user_id) as user_id, CAST(max(catch_up_user_id) AS STRING) as catch_up_user_id, max(submitted_at) as submitted_at,
             {
         f'{new_line}'.join(
         [f"CASE WHEN ({create_condition(question_id, question_nb,qpi_form)} > 0)  then { [f'{tag}' for tag in QPI_TO_SUBCAT[question_nb]]} else NULL END  as {question_nb}"
@@ -217,29 +217,38 @@ def format_answers(
     df_qpi = pd.read_gbq(
         f"""SELECT * FROM {gcp_project}.{bigquery_analytics_dataset}.{enriched_qpi_answer_table}_temp"""
     )
+    # Create an array like ["Q1","Q2",...,"Q30"]
     qpi_questions = [f"Q{i}" for i in range(NBQPIQUESTION)]
+    # Create a dictionary associating each user to a list of subcategories
     for ind in df_qpi.index:
-        ucs[f"{df_qpi['user_id'][ind]}"] = {
-            "subcat": list(
-                set(
-                    subcat
-                    for question in qpi_questions
-                    for subcat in df_qpi[f"{question}"][ind]
+        ucs[f"{df_qpi['user_id'][ind]}"] = [
+            {
+                "subcat": list(
+                    set(
+                        subcat
+                        for question in qpi_questions
+                        for subcat in df_qpi[f"{question}"][ind]
+                    )
                 )
-            )
-        }
+            },
+            df_qpi["submitted_at"][ind],
+        ]
 
     dict_list = []
     for user_id in ucs.keys():
         final_dict = {}
         final_dict["user_id"] = user_id
+        final_dict["submitted_at"] = ucs[f"{user_id}"][1]
         for category in SUBCAT_LIST:
-            if category in ucs[f"{user_id}"]["subcat"]:
+            if category in ucs[f"{user_id}"][0]["subcat"]:
                 final_dict[f"{category}"] = True
             else:
                 final_dict[f"{category}"] = False
         dict_list.append(final_dict)
 
+    # if error with schema run :
+    # ALTER TABLE `passculture-data-ehp.analytics_dev.enriched_qpi_answers_v3`
+    # ADD COLUMN submitted_at TIMESTAMP
     df_formatted_answers = pd.DataFrame(data=dict_list)
     df_formatted_answers.to_gbq(
         f"""{bigquery_analytics_dataset}.{enriched_qpi_answer_table}""",

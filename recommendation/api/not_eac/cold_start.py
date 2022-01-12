@@ -113,7 +113,7 @@ def get_cold_start_status(user_id: int, group_id: str) -> bool:
                 is_trained_user
             )
         if group_id == "B":
-            user_cold_start_status = (clicks_count < 20)
+            user_cold_start_status = clicks_count < 20
         else:
             user_cold_start_status = bookings_count < 2
     return user_cold_start_status

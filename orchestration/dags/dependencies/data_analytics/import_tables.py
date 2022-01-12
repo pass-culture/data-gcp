@@ -1,4 +1,6 @@
 from dependencies.config import APPLICATIVE_EXTERNAL_CONNECTION_ID, GCP_REGION
+from datetime import datetime, timedelta
+from dateutil import parser
 
 
 def define_import_query(
@@ -84,9 +86,13 @@ def define_import_query(
             "reimbursementDate" AS booking_reimbursement_date
         FROM public.booking
     """
+    # define day before and after execution date
+    # we jinja template reference to user the dates around execution date
+    DAY_BEFORE_EXECUTION = "{{ yesterday_ds }}"
+    DAY_AFTER_EXECUTION = "{{ tomorrow_ds }}"
     cloudsql_queries[
         "offer"
-    ] = """
+    ] = f"""
         SELECT
             CAST("idAtProviders" AS varchar(255)) as offer_id_at_providers,
             "dateModifiedAtLastProvider" as offer_modified_at_last_provider_date,
@@ -109,7 +115,8 @@ def define_import_query(
             "dateUpdated" as offer_date_updated,
             "isEducational" AS offer_is_educational
         FROM public.offer
-        WHERE "dateUpdated" >= CURRENT_DATE - 1
+        WHERE "dateUpdated" >= \\'{DAY_BEFORE_EXECUTION}\\'
+        AND "dateUpdated" <  \\'{DAY_AFTER_EXECUTION}\\' 
     """
     cloudsql_queries[
         "stock"
@@ -427,7 +434,7 @@ def define_import_query(
         """
 
     # Define default federated query (for tables that do not need specific CAST)
-    default_query = f"SELECT * FROM EXTERNAL_QUERY('{external_connection_id}', 'SELECT * FROM {table}');"
+    default_query = f"""SELECT * FROM EXTERNAL_QUERY('{external_connection_id}', 'SELECT * FROM {table}');"""
 
     return queries.get(table, default_query)
 

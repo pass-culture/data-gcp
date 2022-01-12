@@ -141,8 +141,23 @@ with DAG(
         write_disposition="WRITE_APPEND",
     )
 
-    delete_temp_answer_table = BigQueryTableDeleteOperator(
-        task_id="delete_temp_answer_table",
+    add_temp_answers_to_clean = BigQueryOperator(
+        task_id="add_temp_answers_to_clean",
+        sql=f"""
+            select (CASE raw_answers.user_id WHEN null THEN users.user_id else raw_answers.user_id END) as user_id,
+            landed_at, submitted_at, form_id, platform, answers,
+            CAST(NULL AS STRING) AS catch_up_user_id
+            FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.temp_{QPI_ANSWERS_TABLE}` raw_answers
+            LEFT JOIN `{GCP_PROJECT}.{'clean_stg' if ENV_SHORT_NAME == 'dev' else BIGQUERY_CLEAN_DATASET}.applicative_database_user` users
+            ON raw_answers.culturalsurvey_id = users.user_cultural_survey_id
+        """,
+        use_legacy_sql=False,
+        destination_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_CLEAN_DATASET}.temp_{QPI_ANSWERS_TABLE}",
+        write_disposition="WRITE_TRUNCATE",
+    )
+
+    delete_temp_answer_table_raw = BigQueryTableDeleteOperator(
+        task_id="delete_temp_answer_table_raw",
         deletion_dataset_table=f"{BIGQUERY_RAW_DATASET}.temp_{QPI_ANSWERS_TABLE}",
         ignore_if_missing=True,
         dag=dag,
@@ -177,7 +192,8 @@ with DAG(
         >> import_answers_to_bigquery
         >> add_answers_to_raw
         >> add_answers_to_clean
-        >> delete_temp_answer_table
+        >> add_temp_answers_to_clean
+        >> delete_temp_answer_table_raw
         >> enrich_qpi_answers
         >> format_qpi_answers
         >> end

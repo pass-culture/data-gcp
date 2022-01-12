@@ -75,6 +75,20 @@ def get_final_recommendations(user_id: int, longitude: int, latitude: int) -> Li
     save_recommendation(user_id, final_recommendations, group_id, reco_origin)
     return final_recommendations
 
+def get_user_age(
+    user_id,
+):
+    start = time.time()
+    with create_db_connection() as connection:
+        request_response = connection.execute(
+            text(
+                f"SELECT FLOOR(DATE_PART('DAY',user_deposit_creation_date - user_birth_date)/365) "
+                f"FROM public.enriched_user "
+                f"WHERE user_id = '{str(user_id)}' "
+            )
+        ).scalar()
+    log_duration(f"get_user_age for {user_id}", start)
+    return request_response
 
 def is_eac_user(
     user_id,
@@ -140,17 +154,37 @@ def fork_get_cold_start_categories(user_id, is_eac):
 
 
 def fork_cold_start_scored_recommendations_for_user(
-    user_id: int, user_iris_id: int, cold_start_categories: list, is_eac: bool
+    user_id: int, user_iris_id: int, cold_start_categories: list, is_eac: bool,group_id:str
 ):
     start = time.time()
     if is_eac:
-        cold_start_recommendations = get_cold_start_scored_recommendations_for_user_eac(
-            user_id, user_iris_id, cold_start_categories
+        recommendations_for_user = fork_intermediate_recommendations_for_user(
+            user_id, user_iris_id, is_eac
+        )
+        #here we change user_id for cs user_id and put group C to get mf_reco model
+        user_age=get_user_age(user_id)
+        print("user_age",user_age)
+        user_id_CS=f"eac{user_age}"
+        cold_start_recommendations = fork_scored_recommendation_for_user(
+            user_id_CS, "C", recommendations_for_user, is_eac
         )
     else:
-        cold_start_recommendations = get_cold_start_scored_recommendations_for_user(
-            user_id, user_iris_id, cold_start_categories
-        )
+        if group_id == "C":
+            recommendations_for_user = fork_intermediate_recommendations_for_user(
+            user_id, user_iris_id, is_eac
+            )
+            #here we change user_id for cs user_id and put group C to get mf_reco model
+            # the CS user for 18+ user is at index 0 of feedback matrix,
+            # any unknow user in the stringlookup will return 0 
+            # here 'cs_18' is only for code clarity any value would have work 
+            user_id_CS='cs_18'
+            cold_start_recommendations = fork_scored_recommendation_for_user(
+                user_id_CS, group_id, recommendations_for_user, is_eac
+            )
+        else:
+            cold_start_recommendations = get_cold_start_scored_recommendations_for_user(
+                user_id, user_iris_id, cold_start_categories, group_id
+            )
     log_duration(
         f"get_cold_start_scored_recommendations_for_user for {user_id} {'with localisation' if user_iris_id else ''}",
         start,

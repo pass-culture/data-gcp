@@ -181,7 +181,7 @@ def define_enriched_venue_query(dataset, table_prefix=""):
                 ,venue_humanized_id.humanized_id AS venue_humanized_id
                 ,CONCAT("https://backend.passculture.beta.gouv.fr/pc/back-office/venue/edit/?id=",venue.venue_id,"&url=%2Fpc%2Fback-office%2Fvenue%2F") AS venue_flaskadmin_link
                 ,venue_region_departement.region_name AS venue_region_name
-                ,CONCAT('https://pro.passculture.beta.gouv.fr/structures/',offerer_humanized_id.humanized_id,'/lieux/',venue_humanized_id.humanized_id) AS venue_pc_pro_link
+                ,CONCAT('https://passculture.pro/structures/',offerer_humanized_id.humanized_id,'/lieux/',venue_humanized_id.humanized_id) AS venue_pc_pro_link
             FROM {dataset}.{table_prefix}venue AS venue
             LEFT JOIN {dataset}.{table_prefix}offerer AS offerer ON venue.venue_managing_offerer_id = offerer.offerer_id
             LEFT JOIN {dataset}.{table_prefix}venue_type AS venue_type ON venue.venue_type_id = venue_type.id

@@ -316,8 +316,8 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "favourite_cnt": 2.0,
         "stock": 10.0,
         "offer_humanized_id": "AM",
-        "passculture_pro_url": "https://pro.passculture.beta.gouv.fr/offres/AM/edition",
-        "webapp_url": "https://app.passculture.beta.gouv.fr/offre/details/AM",
+        "passculture_pro_url": "https://passculture.pro/offres/AM/edition",
+        "webapp_url": "https://passculture.app/offre/3",
         "first_booking_cnt": 1,
         "offer_tag": "none",
         "author": "Tarantino",
@@ -361,8 +361,8 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "favourite_cnt": 1.0,
         "stock": 12.0,
         "offer_humanized_id": "AQ",
-        "passculture_pro_url": "https://pro.passculture.beta.gouv.fr/offres/AQ/edition",
-        "webapp_url": "https://app.passculture.beta.gouv.fr/offre/details/AQ",
+        "passculture_pro_url": "https://passculture.pro/offres/AQ/edition",
+        "webapp_url": "https://passculture.app/offre/4",
         "first_booking_cnt": None,
         "offer_tag": "none",
         "author": "Kevin Francois",
@@ -811,7 +811,7 @@ ENRICHED_VENUE_DATA_EXPECTED = [
         "venue_humanized_id": "AE",
         "venue_flaskadmin_link": "https://backend.passculture.beta.gouv.fr/pc/back-office/venue/edit/?id=1&url=%2Fpc%2Fback-office%2Fvenue%2F",
         "venue_region_name": "IDF",
-        "venue_pc_pro_link": "https://pro.passculture.beta.gouv.fr/structures/AE/lieux/AE",
+        "venue_pc_pro_link": "https://passculture.pro/structures/AE/lieux/AE",
     }
 ]
 

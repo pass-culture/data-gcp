@@ -189,7 +189,7 @@ def fork_cold_start_scored_recommendations_for_user(
             )
         else:
             cold_start_recommendations = get_cold_start_scored_recommendations_for_user(
-                user_id, user_iris_id, cold_start_categories, group_id
+                user_id, user_iris_id, cold_start_categories
             )
     log_duration(
         f"get_cold_start_scored_recommendations_for_user for {user_id} {'with localisation' if user_iris_id else ''}",

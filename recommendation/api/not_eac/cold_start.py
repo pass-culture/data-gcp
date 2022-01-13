@@ -4,7 +4,7 @@ from sqlalchemy import text
 from utils import (
     create_db_connection,
     NUMBER_OF_PRESELECTED_OFFERS,
-    MODEL_NAME_C,
+    ENV_SHORT_NAME,
 )
 from typing import Any, Dict, List
 
@@ -169,6 +169,10 @@ def get_cold_start_scored_recommendations_for_user(
             OR url IS NOT NULL
         )
         """
+    if ENV_SHORT_NAME == "prod":
+        and_clause = "booking_number > 0"
+    else:
+        and_clause = "booking_number >= 0"
 
     recommendations_query = text(
         f"""
@@ -181,7 +185,7 @@ def get_cold_start_scored_recommendations_for_user(
                 WHERE user_id = :user_id
             )
         AND {where_clause}
-        AND booking_number > 0
+        AND {and_clause}
         {order_query}
         LIMIT :number_of_preselected_offers;
         """

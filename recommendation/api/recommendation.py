@@ -49,7 +49,7 @@ def get_final_recommendations(user_id: int, longitude: int, latitude: int) -> Li
         cold_start_categories = fork_get_cold_start_categories(user_id, is_eac)
         scored_recommendation_for_user = (
             fork_cold_start_scored_recommendations_for_user(
-                user_id, user_iris_id, cold_start_categories, is_eac
+                user_id, user_iris_id, cold_start_categories, is_eac, group_id
             )
         )
     else:

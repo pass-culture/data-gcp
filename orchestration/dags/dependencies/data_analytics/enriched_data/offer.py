@@ -170,6 +170,7 @@ def define_enriched_offer_data_query(analytics_dataset, clean_dataset, table_pre
             LEFT JOIN last_stock ON last_stock.offer_id = offer.offer_id
             LEFT JOIN {clean_dataset}.offer_extracted_data AS offer_extracted_data ON offer_extracted_data.offer_id = offer.offer_id
             LEFT JOIN {clean_dataset}.offer_tags AS offer_tags ON offer_tags.offer_id = offer.offer_id
+            WHERE offer.offer_validation = 'APPROVED'
 
         );
     """

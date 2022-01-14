@@ -38,6 +38,7 @@ ENRICHED_OFFER_DATA_INPUT = {
             "offer_creation_date": "2019-11-20",
             "offer_is_duo": False,
             "offer_fields_updated": "{}",
+            "offer_validation": "APPROVED",
             "offer_is_educational": False,
         },
         {
@@ -53,6 +54,7 @@ ENRICHED_OFFER_DATA_INPUT = {
             "offer_creation_date": "2019-11-20",
             "offer_is_duo": False,
             "offer_fields_updated": "{}",
+            "offer_validation": "APPROVED",
             "offer_is_educational": False,
         },
     ],

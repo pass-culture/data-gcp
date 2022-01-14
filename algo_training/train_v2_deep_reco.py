@@ -119,7 +119,7 @@ def train(storage_path: str):
             eval_result = deep_triplet_model.evaluate(
                 x=evaluation_triplet_inputs,
                 y=evaluation_fake_y,
-                batch_size=BATCH_SIZE * 2 * 2,
+                batch_size=2048,
             )
             mlflow.log_metric(key="Evaluation Loss", value=eval_result, step=i)
 

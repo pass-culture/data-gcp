@@ -84,7 +84,6 @@ def train(storage_path: str):
         mlflow.log_artifacts(export_path, "model")
         print("------- TRAINING DONE -------")
         print(mlflow.get_artifact_uri("model"))
-    return
 
 
 if __name__ == "__main__":

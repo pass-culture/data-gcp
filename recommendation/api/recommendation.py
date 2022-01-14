@@ -168,7 +168,7 @@ def fork_cold_start_scored_recommendations_for_user(
             user_id, user_iris_id, is_eac
         )
         # here we change user_id for cs user_id and put group C to get mf_reco model
-        user_age = get_user_age(user_id)
+        user_age = int(get_user_age(user_id))
         print("user_age", user_age)
         user_id_CS = f"eac{user_age}"
         cold_start_recommendations = fork_scored_recommendation_for_user(

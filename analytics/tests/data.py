@@ -1019,7 +1019,7 @@ ENRICHED_EDUCATIONAL_BOOKING_DATA_INPUT = {
     "booking": [
         {
             "booking_id": "8",
-            "booking_amount": 50
+            "booking_amount": 50,
             "educational_booking_id": "8",
             "booking_creation_date": datetime.now().replace(microsecond=0),
             "stock_id": "9",

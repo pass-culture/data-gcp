@@ -116,14 +116,14 @@ with DAG(
 
         select_columns = ", ".join(
             [
-                column_name
+                f"`{column_name}`"
                 for column_name in TABLES[table]["columns"]
                 if column_name not in list_type_columns
             ]
         )
         if table == "qpi_answers":
             filter_column_query = f"""
-                SELECT *
+                SELECT {select_columns}
                 FROM `{GCP_PROJECT}.{dataset}.{bigquery_table_name}_v3`
             """
         elif table == "firebase_events":

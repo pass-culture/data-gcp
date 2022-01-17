@@ -85,7 +85,6 @@ def train(storage_path: str):
         print("------- TRAINING DONE -------")
         print(mlflow.get_artifact_uri("model"))
 
-
 if __name__ == "__main__":
     client_id = get_secret("mlflow_client_id")
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)

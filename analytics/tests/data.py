@@ -1035,8 +1035,12 @@ ENRICHED_EDUCATIONAL_BOOKING_DATA_INPUT = {
             "educational_booking_educational_institution_id": "14",
             "educational_booking_educational_year_id": "1",
             "educational_booking_status": "USED_BY_INSTITUTE",
-            "educational_booking_confirmation_date": datetime.now().replace(microsecond=0),
-            "educational_booking_confirmation_limit_date": datetime.now().replace(microsecond=0),
+            "educational_booking_confirmation_date": datetime.now().replace(
+                microsecond=0
+            ),
+            "educational_booking_confirmation_limit_date": datetime.now().replace(
+                microsecond=0
+            ),
             "educational_booking_educational_redactor_id": "1",
         }
     ],
@@ -1046,7 +1050,6 @@ ENRICHED_EDUCATIONAL_BOOKING_DATA_INPUT = {
             "educational_institution_institution_id": "14",
         }
     ],
-
     "offer": [
         {
             "offer_id": "11",
@@ -1055,7 +1058,6 @@ ENRICHED_EDUCATIONAL_BOOKING_DATA_INPUT = {
             "venue_id": "8",
         }
     ],
-
     "stock": [
         {
             "stock_id": "9",
@@ -1063,7 +1065,6 @@ ENRICHED_EDUCATIONAL_BOOKING_DATA_INPUT = {
             "stock_beginning_date": datetime.now().replace(microsecond=0),
         }
     ],
-
     "venue": [
         {
             "venue_id": "8",
@@ -1075,7 +1076,6 @@ ENRICHED_EDUCATIONAL_BOOKING_DATA_INPUT = {
             "venue_type_id": "1",
         }
     ],
-
     "eple": [
         {
             "id_etablissement": "14",
@@ -1105,7 +1105,9 @@ ENRICHED_EDUCATIONAL_BOOKING_DATA_EXPECTED = [
         "booking_is_used": True,
         "booking_cancellation_date": None,
         "educational_booking_confirmation_date": datetime.now().replace(microsecond=0),
-        "educational_booking_confirmation_limit_date": datetime.now().replace(microsecond=0),
+        "educational_booking_confirmation_limit_date": datetime.now().replace(
+            microsecond=0
+        ),
         "booking_used_date": datetime.now().replace(microsecond=0),
         "booking_reimbursement_date": None,
     }

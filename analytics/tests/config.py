@@ -29,6 +29,19 @@ BIGQUERY_SCHEMAS = {
         "user_id": "STRING",
         "deposit_id": "STRING",
     },
+    "educational_booking": {
+        "educational_booking_id": "STRING",
+        "educational_booking_educational_institution_id": "STRING",
+        "educational_booking_educational_year_id": "STRING",
+        "educational_booking_status": "STRING",
+        "educational_booking_confirmation_date": "DATETIME",
+        "educational_booking_confirmation_limit_date": "DATETIME",
+        "educational_booking_educational_redactor_id": "STRING",
+    },
+    "educational_institution": {
+        "educational_institution_id": "STRING",
+        "educational_institution_institution_id": "STRING",
+    },
     "favorite": {
         "id": "STRING",
         "userId": "STRING",
@@ -285,5 +298,10 @@ BIGQUERY_SCHEMAS = {
         "is_event": "BOOLEAN",
         "is_physical_deposit": "BOOLEAN",
         "is_digital_deposit": "BOOLEAN",
+    },
+    "eple": {
+        "id_etablissement": "STRING",
+        "nom_etablissement": "STRING",
+        "libelle_academie": "STRING",
     },
 }

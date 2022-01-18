@@ -60,6 +60,7 @@ BIGQUERY_SCHEMAS = {
         "offer_extra_data": "STRING",
         "offer_is_duo": "BOOLEAN",
         "offer_fields_updated": "STRING",
+        "offer_validation": "STRING",
         "offer_withdrawal_details": "STRING",
         "offer_is_educational": "BOOLEAN",
     },

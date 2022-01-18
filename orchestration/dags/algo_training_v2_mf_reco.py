@@ -23,7 +23,7 @@ else:
     MLFLOW_URL = "https://mlflow.internal-passculture.app/"
 
 DATE = "{{ts_nodash}}"
-STORAGE_PATH = f"gs://{MLFLOW_BUCKET_NAME}/algo_training_v2_deep_reco_{ENV_SHORT_NAME}/algo_training_v2_deep_reco_{DATE}"
+STORAGE_PATH = f"gs://{MLFLOW_BUCKET_NAME}/algo_training_v2_mf_reco_{ENV_SHORT_NAME}/algo_training_v2_mf_reco_{DATE}"
 MODEL_NAME = "v2_mf_reco"
 SLACK_CONN_ID = "slack"
 SLACK_CONN_PASSWORD = access_secret_data(GCP_PROJECT_ID, "slack-conn-password")
@@ -74,7 +74,7 @@ with DAG(
     if ENV_SHORT_NAME == "stg":
         branch = "master"
     if ENV_SHORT_NAME == "prod":
-        branch = "production"
+        branch = "fix-batch-size-deep-reco-evaluation"
 
     FETCH_CODE = f'"if cd data-gcp; then git checkout master && git pull && git checkout {branch} && git pull; else git clone git@github.com:pass-culture/data-gcp.git && cd data-gcp && git checkout {branch} && git pull; fi"'
 
@@ -189,7 +189,7 @@ with DAG(
 
     DEPLOY_COMMAND = f"""
     export REGION=europe-west1
-    export MODEL_NAME=deep_reco_{ENV_SHORT_NAME}
+    export MODEL_NAME=MF_reco_{ENV_SHORT_NAME}
     export RECOMMENDATION_MODEL_DIR={{{{ ti.xcom_pull(task_ids='training') }}}}
 
     export VERSION_NAME=v_{{{{ ts_nodash }}}}

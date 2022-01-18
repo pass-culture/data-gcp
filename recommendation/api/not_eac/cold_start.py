@@ -4,9 +4,14 @@ from sqlalchemy import text
 from utils import (
     create_db_connection,
     NUMBER_OF_PRESELECTED_OFFERS,
-    MODEL_NAME_C,
+    ENV_SHORT_NAME,
 )
 from typing import Any, Dict, List
+
+from not_eac.scoring import (
+    get_intermediate_recommendations_for_user,
+    get_scored_recommendation_for_user,
+)
 
 # build with notebook , to improve use subcategories table in db
 MACRO_CATEGORIES_TYPE_MAPPING = {
@@ -112,6 +117,8 @@ def get_cold_start_status(user_id: int, group_id: str) -> bool:
             user_cold_start_status = (user_app_interaction_count < 20) and not (
                 is_trained_user
             )
+        if group_id == "B":
+            user_cold_start_status = clicks_count < 20
         else:
             user_cold_start_status = bookings_count < 2
     return user_cold_start_status
@@ -141,66 +148,83 @@ def get_cold_start_categories(user_id: int) -> list:
 
 
 def get_cold_start_scored_recommendations_for_user(
-    user_id: int, user_iris_id: int, cold_start_categories: list
+    user_id: int, user_iris_id: int, cold_start_categories: list, group_id: str
 ) -> List[Dict[str, Any]]:
-    if cold_start_categories:
-        order_query = f"""
-            ORDER BY
-                (category in ({', '.join([f"'{category}'" for category in cold_start_categories])})) DESC,
-                booking_number DESC
-            """
-    else:
-        order_query = "ORDER BY booking_number DESC"
-
-    if not user_iris_id:
-        where_clause = "is_national = True or url IS NOT NULL"
-    else:
-        where_clause = """
-        (
-            venue_id IN
-                (
-                    SELECT "venue_id"
-                    FROM iris_venues_mv
-                    WHERE "iris_id" = :user_iris_id
-                )
-            OR is_national = True
-            OR url IS NOT NULL
+    if group_id == "C":
+        recommendations_for_user = get_intermediate_recommendations_for_user(
+            user_id, user_iris_id
         )
-        """
+        # here we change user_id for cs user_id and put group C to get mf_reco model
+        # the CS user for 18+ user is at index 0 of feedback matrix,
+        # any unknow user in the stringlookup will return 0
+        # here 'cs_18' is only for code clarity any value would have work
+        user_id_CS = "cs_18"
+        cold_start_recommendations = get_scored_recommendation_for_user(
+            user_id_CS, group_id, recommendations_for_user
+        )
+    else:
+        if cold_start_categories:
+            order_query = f"""
+                ORDER BY
+                    (category in ({', '.join([f"'{category}'" for category in cold_start_categories])})) DESC,
+                    booking_number DESC
+                """
+        else:
+            order_query = "ORDER BY booking_number DESC"
 
-    recommendations_query = text(
-        f"""
-        SELECT offer_id, category, url, product_id
-        FROM recommendable_offers
-        WHERE offer_id NOT IN
+        if not user_iris_id:
+            where_clause = "is_national = True or url IS NOT NULL"
+        else:
+            where_clause = """
             (
-                SELECT offer_id
-                FROM non_recommendable_offers
-                WHERE user_id = :user_id
+                venue_id IN
+                    (
+                        SELECT "venue_id"
+                        FROM iris_venues_mv
+                        WHERE "iris_id" = :user_iris_id
+                    )
+                OR is_national = True
+                OR url IS NOT NULL
             )
-        AND {where_clause}
-        AND booking_number > 0
-        {order_query}
-        LIMIT :number_of_preselected_offers;
-        """
-    )
+            """
+        if ENV_SHORT_NAME == "prod":
+            and_clause = "booking_number > 0"
+        else:
+            and_clause = "booking_number >= 0"
 
-    with create_db_connection() as connection:
-        query_result = connection.execute(
-            recommendations_query,
-            user_iris_id=str(user_iris_id),
-            user_id=str(user_id),
-            number_of_preselected_offers=NUMBER_OF_PRESELECTED_OFFERS,
-        ).fetchall()
+        recommendations_query = text(
+            f"""
+            SELECT offer_id, category, url, product_id
+            FROM recommendable_offers
+            WHERE offer_id NOT IN
+                (
+                    SELECT offer_id
+                    FROM non_recommendable_offers
+                    WHERE user_id = :user_id
+                )
+            AND {where_clause}
+            AND {and_clause}
+            {order_query}
+            LIMIT :number_of_preselected_offers;
+            """
+        )
 
-    cold_start_recommendations = [
-        {
-            "id": row[0],
-            "category": row[1],
-            "url": row[2],
-            "product_id": row[3],
-            "score": random.random(),
-        }
-        for row in query_result
-    ]
+        with create_db_connection() as connection:
+            query_result = connection.execute(
+                recommendations_query,
+                user_iris_id=str(user_iris_id),
+                user_id=str(user_id),
+                number_of_preselected_offers=NUMBER_OF_PRESELECTED_OFFERS,
+            ).fetchall()
+
+        cold_start_recommendations = [
+            {
+                "id": row[0],
+                "category": row[1],
+                "url": row[2],
+                "product_id": row[3],
+                "score": random.random(),
+            }
+            for row in query_result
+        ]
     return cold_start_recommendations

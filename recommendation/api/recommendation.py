@@ -49,7 +49,7 @@ def get_final_recommendations(user_id: int, longitude: int, latitude: int) -> Li
         cold_start_categories = fork_get_cold_start_categories(user_id, is_eac)
         scored_recommendation_for_user = (
             fork_cold_start_scored_recommendations_for_user(
-                user_id, user_iris_id, cold_start_categories, is_eac
+                user_id, user_iris_id, cold_start_categories, is_eac, group_id
             )
         )
     else:
@@ -140,7 +140,11 @@ def fork_get_cold_start_categories(user_id, is_eac):
 
 
 def fork_cold_start_scored_recommendations_for_user(
-    user_id: int, user_iris_id: int, cold_start_categories: list, is_eac: bool
+    user_id: int,
+    user_iris_id: int,
+    cold_start_categories: list,
+    is_eac: bool,
+    group_id: str,
 ):
     start = time.time()
     if is_eac:
@@ -149,7 +153,7 @@ def fork_cold_start_scored_recommendations_for_user(
         )
     else:
         cold_start_recommendations = get_cold_start_scored_recommendations_for_user(
-            user_id, user_iris_id, cold_start_categories
+            user_id, user_iris_id, cold_start_categories, group_id
         )
     log_duration(
         f"get_cold_start_scored_recommendations_for_user for {user_id} {'with localisation' if user_iris_id else ''}",

@@ -186,10 +186,9 @@ with DAG(
         resource_id=GCE_INSTANCE,
         task_id="gce_stop_task",
     )
-
     DEPLOY_COMMAND = f"""
     export REGION=europe-west1
-    export MODEL_NAME=deep_reco_{ENV_SHORT_NAME}
+    export MODEL_NAME=MF_reco_{ENV_SHORT_NAME}
     export RECOMMENDATION_MODEL_DIR={{{{ ti.xcom_pull(task_ids='training') }}}}
 
     export VERSION_NAME=v_{{{{ ts_nodash }}}}

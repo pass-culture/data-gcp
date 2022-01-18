@@ -128,9 +128,9 @@ def define_enriched_offer_data_query(analytics_dataset, clean_dataset, table_pre
                     AS favourite_cnt,
                 COALESCE(sum_stock_view.stock, 0.0) AS stock,
                 offer_humanized_id.humanized_id AS offer_humanized_id,
-                CONCAT('https://pro.passculture.beta.gouv.fr/offres/', offer_humanized_id.humanized_id, '/edition')
+                CONCAT('https://passculture.pro/offres/', offer_humanized_id.humanized_id, '/edition')
                     AS passculture_pro_url,
-                CONCAT('https://app.passculture.beta.gouv.fr/offre/details/',offer_humanized_id.humanized_id)
+                CONCAT('https://passculture.app/offre/',offer.offer_id)
                     AS webapp_url,
                 count_first_booking_view.first_booking_cnt,
                 offer_tags.tag as offer_tag,

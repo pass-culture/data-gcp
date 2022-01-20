@@ -74,7 +74,7 @@ with DAG(
     if ENV_SHORT_NAME == "stg":
         branch = "master"
     if ENV_SHORT_NAME == "prod":
-        branch = "fix-batch-size-deep-reco-evaluation"
+        branch = "production"
 
     FETCH_CODE = f'"if cd data-gcp; then git checkout master && git pull && git checkout {branch} && git pull; else git clone git@github.com:pass-culture/data-gcp.git && cd data-gcp && git checkout {branch} && git pull; fi"'
 
@@ -218,7 +218,7 @@ with DAG(
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": ":robot_face: Nouvelle version de l'algo 'v2_deep_reco' déployée ! :rocket:",
+                "text": ":robot_face: Nouvelle version de l'algo 'v2_MF_reco' déployée ! :rocket:",
             },
         },
         {

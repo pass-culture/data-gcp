@@ -108,6 +108,7 @@ def train(storage_path: str):
                 batch_size=BATCH_SIZE,
                 epochs=1,
                 use_multiprocessing=True,
+                verbose=0,
             )
             connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
 
@@ -120,6 +121,7 @@ def train(storage_path: str):
                 x=evaluation_triplet_inputs,
                 y=evaluation_fake_y,
                 batch_size=2048,
+                verbose=0,
             )
             mlflow.log_metric(key="Evaluation Loss", value=eval_result, step=i)
 

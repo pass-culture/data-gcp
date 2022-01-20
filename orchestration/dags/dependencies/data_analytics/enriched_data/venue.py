@@ -229,6 +229,6 @@ def define_enriched_venue_data_full_query(dataset, table_prefix=""):
         {create_humanize_id_function()}
         {create_temp_humanize_id(table="venue", dataset=dataset, table_prefix=table_prefix)}
         {create_temp_humanize_id(table="offerer", dataset=dataset, table_prefix=table_prefix)}
-        {define_bookable_offer_cnt_query(analytics_dataset=dataset}
+        {define_bookable_offer_cnt_query(analytics_dataset=dataset)}
         {define_enriched_venue_query(dataset=dataset, table_prefix=table_prefix)}
     """

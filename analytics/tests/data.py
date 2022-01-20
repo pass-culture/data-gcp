@@ -846,6 +846,7 @@ ENRICHED_OFFERER_DATA_INPUT = {
     "enriched_offer_data": [
         {
             "offer_id": "1",
+            "offerer_id": "1",
             "venue_id": "1",
             "offer_is_bookable": True,
         }

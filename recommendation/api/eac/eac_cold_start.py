@@ -1,10 +1,13 @@
 import random
+import time
+
 from sqlalchemy import text
 
 from utils import (
     create_db_connection,
     NUMBER_OF_PRESELECTED_OFFERS,
     ENV_SHORT_NAME,
+    log_duration,
 )
 from typing import Any, Dict, List
 from eac.eac_scoring import (

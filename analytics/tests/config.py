@@ -16,6 +16,7 @@ BIGQUERY_SCHEMAS = {
         "booking_token": "STRING",
         "user_id": "STRING",
         "booking_amount": "NUMERIC",
+        "booking_status": "STRING",
         "booking_is_cancelled": "BOOLEAN",
         "booking_is_used": "BOOLEAN",
         "booking_used_date": "DATETIME",

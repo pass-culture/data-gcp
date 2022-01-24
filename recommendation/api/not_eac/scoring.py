@@ -21,7 +21,7 @@ def get_intermediate_recommendations_for_user(
     user_id: int, user_iris_id: int
 ) -> List[Dict[str, Any]]:
     if ENV_SHORT_NAME == "prod":
-        and_clause = "AND booking_number > 5"
+        and_clause = "AND booking_number > 10"
     else:
         and_clause = ""
     if not user_iris_id:
@@ -29,7 +29,7 @@ def get_intermediate_recommendations_for_user(
             f"""
             SELECT offer_id, category, subcategory_id, url, item_id, product_id
             FROM recommendable_offers
-            WHERE is_national = True or url IS NOT NULL
+            WHERE (is_national = True or url IS NOT NULL)
             AND offer_id NOT IN
                 (
                 SELECT offer_id

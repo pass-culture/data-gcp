@@ -77,8 +77,8 @@ def define_import_query(
         SELECT
             CAST("id" AS varchar(255)) as booking_id, "dateCreated" as booking_creation_date,
             CAST("stockId" AS varchar(255)) as stock_id, "quantity" as booking_quantity,
-            CAST("userId" AS varchar(255)) as user_id, "amount" as booking_amount,
-            "isCancelled" as booking_is_cancelled, "isUsed" as booking_is_used, "dateUsed" as booking_used_date,
+            CAST("userId" AS varchar(255)) as user_id, "amount" as booking_amount, "status" AS booking_status,
+            "status" = 'CANCELLED' AS booking_is_cancelled, "isUsed" as booking_is_used, "dateUsed" as booking_used_date,
             "cancellationDate" as booking_cancellation_date,
             CAST("cancellationReason" AS VARCHAR) AS booking_cancellation_reason,
             CAST("individualBookingId" AS varchar(255)) as individual_booking_id,
@@ -129,7 +129,8 @@ def define_import_query(
             CAST("lastProviderId" AS varchar(255)) AS stock_last_provider_id,
             CAST("offerId" AS varchar(255)) AS offer_id, "isSoftDeleted" AS stock_is_soft_deleted,
             "beginningDatetime" AS stock_beginning_date, "dateCreated" AS stock_creation_date,
-            "fieldsUpdated" AS stock_fields_updated
+            "fieldsUpdated" AS stock_fields_updated,"numberOfTickets" AS number_of_tickets,
+            "educationalPriceDetail" AS educational_price_detail
         FROM public.stock
     """
     cloudsql_queries[

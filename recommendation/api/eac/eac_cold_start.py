@@ -1,12 +1,36 @@
 import random
+import time
+
 from sqlalchemy import text
 
 from utils import (
     create_db_connection,
     NUMBER_OF_PRESELECTED_OFFERS,
-    MODEL_NAME_C,
+    ENV_SHORT_NAME,
+    log_duration,
 )
 from typing import Any, Dict, List
+from eac.eac_scoring import (
+    get_intermediate_recommendations_for_user_eac,
+    get_scored_recommendation_for_user_eac,
+)
+
+
+def get_user_age(
+    user_id,
+):
+    start = time.time()
+    with create_db_connection() as connection:
+        request_response = connection.execute(
+            text(
+                f"SELECT FLOOR(DATE_PART('DAY',user_deposit_creation_date - user_birth_date)/365) "
+                f"FROM public.enriched_user "
+                f"WHERE user_id = '{str(user_id)}' "
+            )
+        ).scalar()
+    log_duration(f"get_user_age for {user_id}", start)
+    return request_response
+
 
 # build with notebook , to improve use subcategories table in db
 MACRO_CATEGORIES_TYPE_MAPPING = {
@@ -112,6 +136,8 @@ def get_cold_start_status_eac(user_id: int, group_id: str) -> bool:
             user_cold_start_status = (user_app_interaction_count < 20) and not (
                 is_trained_user
             )
+        if group_id == "B":
+            user_cold_start_status = clicks_count < 20
         else:
             user_cold_start_status = bookings_count < 2
     return user_cold_start_status
@@ -144,64 +170,14 @@ def get_cold_start_categories_eac(user_id: int) -> list:
 def get_cold_start_scored_recommendations_for_user_eac(
     user_id: int, user_iris_id: int, cold_start_categories: list
 ) -> List[Dict[str, Any]]:
-    if cold_start_categories:
-        order_query = f"""
-            ORDER BY
-                (category in ({', '.join([f"'{category}'" for category in cold_start_categories])})) DESC,
-                booking_number DESC
-            """
-    else:
-        order_query = "ORDER BY booking_number DESC"
-
-    if not user_iris_id:
-        where_clause = "is_national = True or url IS NOT NULL"
-    else:
-        where_clause = """
-        (
-            venue_id IN
-                (
-                    SELECT "venue_id"
-                    FROM iris_venues_mv
-                    WHERE "iris_id" = :user_iris_id
-                )
-            OR is_national = True
-            OR url IS NOT NULL
-        )
-        """
-
-    recommendations_query = text(
-        f"""
-        SELECT offer_id, category, url, product_id
-        FROM recommendable_offers_eac_16_17
-        WHERE offer_id NOT IN
-            (
-                SELECT offer_id
-                FROM non_recommendable_offers
-                WHERE user_id = :user_id
-            )
-        AND {where_clause}
-        AND booking_number > 0
-        {order_query}
-        LIMIT :number_of_preselected_offers;
-        """
+    recommendations_for_user = get_intermediate_recommendations_for_user_eac(
+        user_id, user_iris_id
     )
-
-    with create_db_connection() as connection:
-        query_result = connection.execute(
-            recommendations_query,
-            user_iris_id=str(user_iris_id),
-            user_id=str(user_id),
-            number_of_preselected_offers=NUMBER_OF_PRESELECTED_OFFERS,
-        ).fetchall()
-
-    cold_start_recommendations = [
-        {
-            "id": row[0],
-            "category": row[1],
-            "url": row[2],
-            "product_id": row[3],
-            "score": random.random(),
-        }
-        for row in query_result
-    ]
+    # here we change user_id for cs user_id and put group C to get mf_reco model
+    user_age = int(get_user_age(user_id))
+    print("user_age", user_age)
+    user_id_CS = f"eac{user_age}"
+    cold_start_recommendations = get_scored_recommendation_for_user_eac(
+        user_id_CS, "C", recommendations_for_user
+    )
     return cold_start_recommendations

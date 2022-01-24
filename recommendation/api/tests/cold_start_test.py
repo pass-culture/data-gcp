@@ -11,7 +11,7 @@ from not_eac.cold_start import get_cold_start_status, get_cold_start_categories
     [
         ("111", "A", False),
         ("112", "B", True),
-        ("113", "C", False),
+        ("113", "C", True),
     ],
 )
 @patch("not_eac.cold_start.create_db_connection")

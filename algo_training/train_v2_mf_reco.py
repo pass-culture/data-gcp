@@ -83,8 +83,7 @@ def train(storage_path: str):
         connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
         mlflow.log_artifacts(export_path, "model")
         print("------- TRAINING DONE -------")
-        print(mlflow.get_artifact_uri("model"))
-    return
+        print(mlflow.get_artifact_uri("model"), end="")
 
 
 if __name__ == "__main__":

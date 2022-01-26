@@ -115,6 +115,16 @@ data_applicative_tables_and_date_columns = {
         "educational_year_beginning_date",
         "educational_year_expiration_date",
     ],
+    "pricing" : [""],
+    "pricing_cashflow" :[""],
+    "cashflow" :[""],
+    "cashflow_batch" :[""],
+    "cashflow_log":[""],
+    "invoice":[""],
+    "invoice_cashflow":[""],
+    "invoice_line":[""],
+    "business_unit":[""],
+
 }
 
 default_dag_args = {

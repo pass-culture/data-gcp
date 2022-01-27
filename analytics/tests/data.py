@@ -750,6 +750,14 @@ ENRICHED_VENUE_DATA_INPUT = {
             "offer_creation_date": datetime.now().replace(microsecond=0),
         }
     ],
+    "enriched_offer_data": [
+        {
+            "offer_id": "1",
+            "venue_id": "1",
+            "offer_subcategoryId": "SEANCE_CINE",
+            "offer_is_bookable": True,
+        }
+    ],
     "offerer": [{"offerer_id": "1", "offerer_name": "An offerer"}],
     "payment": [],
     "payment_status": [],
@@ -810,6 +818,7 @@ ENRICHED_VENUE_DATA_EXPECTED = [
         "first_offer_creation_date": datetime.now().replace(microsecond=0),
         "last_offer_creation_date": datetime.now().replace(microsecond=0),
         "offers_created": 1,
+        "venue_bookable_offer_cnt": 1,
         "theoretic_revenue": Decimal("2"),
         "real_revenue": Decimal("2"),
         "venue_humanized_id": "AE",
@@ -836,6 +845,14 @@ ENRICHED_OFFERER_DATA_INPUT = {
         {
             "offer_id": "1",
             "venue_id": "1",
+        }
+    ],
+    "enriched_offer_data": [
+        {
+            "offer_id": "1",
+            "offerer_id": "1",
+            "venue_id": "1",
+            "offer_is_bookable": True,
         }
     ],
     "offerer": [
@@ -871,6 +888,7 @@ ENRICHED_OFFERER_DATA_EXPECTED = [
         "first_stock_creation_date": datetime.now().replace(microsecond=0),
         "first_booking_date": datetime.now().replace(microsecond=0),
         "offer_cnt": 1,
+        "offerer_bookable_offer_cnt": 1,
         "no_cancelled_booking_cnt": 1,
         "offerer_department_code": "973",
         "venue_cnt": 1,

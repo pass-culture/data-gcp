@@ -149,6 +149,18 @@ def define_real_revenue_per_venue_query(dataset, table_prefix=""):
     """
 
 
+def define_bookable_offer_cnt_query(analytics_dataset):
+    return f"""
+        CREATE TEMP TABLE bookable_offer_cnt AS
+        SELECT
+                venue_id
+                ,COUNT(DISTINCT offer_id) AS venue_bookable_offer_cnt
+        FROM {analytics_dataset}.enriched_offer_data
+        WHERE offer_is_bookable
+        GROUP BY 1;
+    """
+
+
 def define_enriched_venue_query(dataset, table_prefix=""):
     return f"""
         CREATE OR REPLACE TABLE {dataset}.enriched_venue_data AS (
@@ -176,6 +188,7 @@ def define_enriched_venue_query(dataset, table_prefix=""):
                 ,first_offer_creation_date.first_offer_creation_date
                 ,last_offer_creation_date.last_offer_creation_date
                 ,offers_created_per_venue.offers_created
+                ,bookable_offer_cnt.venue_bookable_offer_cnt
                 ,theoretic_revenue_per_venue.theoretic_revenue
                 ,real_revenue_per_venue.real_revenue
                 ,venue_humanized_id.humanized_id AS venue_humanized_id
@@ -197,6 +210,7 @@ def define_enriched_venue_query(dataset, table_prefix=""):
             LEFT JOIN venue_humanized_id AS venue_humanized_id ON venue_humanized_id.venue_id = venue.venue_id
             LEFT JOIN {dataset}.region_department AS venue_region_departement ON venue.venue_department_code = venue_region_departement.num_dep
             LEFT JOIN offerer_humanized_id AS offerer_humanized_id ON offerer_humanized_id.offerer_id = venue.venue_managing_offerer_id
+            LEFT JOIN bookable_offer_cnt ON bookable_offer_cnt.venue_id = venue.venue_id
             WHERE offerer.offerer_validation_token IS NULL 
         );
     """
@@ -215,5 +229,6 @@ def define_enriched_venue_data_full_query(dataset, table_prefix=""):
         {create_humanize_id_function()}
         {create_temp_humanize_id(table="venue", dataset=dataset, table_prefix=table_prefix)}
         {create_temp_humanize_id(table="offerer", dataset=dataset, table_prefix=table_prefix)}
+        {define_bookable_offer_cnt_query(analytics_dataset=dataset)}
         {define_enriched_venue_query(dataset=dataset, table_prefix=table_prefix)}
     """

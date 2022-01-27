@@ -1034,3 +1034,105 @@ ENRICHED_BOOKING_DATA_EXPECTED = [
         "booking_used_date": datetime.now().replace(microsecond=0),
     }
 ]
+
+# Enriched_educational_booking =>
+# booking is linked with user, venue, educational_booking, educational_institution and eple
+ENRICHED_EDUCATIONAL_BOOKING_DATA_INPUT = {
+    "booking": [
+        {
+            "booking_id": "8",
+            "booking_amount": 50,
+            "educational_booking_id": "8",
+            "booking_creation_date": datetime.now().replace(microsecond=0),
+            "stock_id": "9",
+            "booking_is_cancelled": False,
+            "booking_is_used": True,
+            "booking_cancellation_date": None,
+            "booking_used_date": datetime.now().replace(microsecond=0),
+        }
+    ],
+    "educational_booking": [
+        {
+            "educational_booking_id": "8",
+            "educational_booking_educational_institution_id": "14",
+            "educational_booking_educational_year_id": "1",
+            "educational_booking_status": "USED_BY_INSTITUTE",
+            "educational_booking_confirmation_date": datetime.now().replace(
+                microsecond=0
+            ),
+            "educational_booking_confirmation_limit_date": datetime.now().replace(
+                microsecond=0
+            ),
+            "educational_booking_educational_redactor_id": "1",
+        }
+    ],
+    "educational_institution": [
+        {
+            "educational_institution_id": "14",
+            "educational_institution_institution_id": "14",
+        }
+    ],
+    "offer": [
+        {
+            "offer_id": "11",
+            "offer_subcategoryId": "CINE_PLEIN_AIR",
+            "offer_name": "EAC sympa",
+            "venue_id": "8",
+        }
+    ],
+    "stock": [
+        {
+            "stock_id": "9",
+            "offer_id": "11",
+            "stock_beginning_date": datetime.now().replace(microsecond=0),
+        }
+    ],
+    "venue": [
+        {
+            "venue_id": "8",
+            "venue_public_name": "My Wonderful Venue",
+            "venue_name": "My Wonderful Venue",
+            "venue_label_id": "15",
+            "venue_department_code": 78,
+            "venue_managing_offerer_id": "2",
+            "venue_type_id": "1",
+        }
+    ],
+    "eple": [
+        {
+            "id_etablissement": "14",
+            "nom_etablissement": "Mon etablissement",
+            "libelle_academie": "Mon academie",
+            "code_departement": 78,
+        }
+    ],
+}
+
+ENRICHED_EDUCATIONAL_BOOKING_DATA_EXPECTED = [
+    {
+        "educational_booking_id": "8",
+        "booking_id": "8",
+        "offer_id": "11",
+        "stock_id": "9",
+        "offer_name": "EAC sympa",
+        "offer_subcategoryid": "CINE_PLEIN_AIR",
+        "venue_id": "8",
+        "venue_name": "My Wonderful Venue",
+        "venue_department_code": 78,
+        "booking_amount": 50,
+        "nom_etablissement": "Mon etablissement",
+        "school_department_code": 78,
+        "libelle_academie": "Mon academie",
+        "booking_creation_date": datetime.now().replace(microsecond=0),
+        "educational_booking_status": "USED_BY_INSTITUTE",
+        "booking_is_cancelled": False,
+        "booking_is_used": True,
+        "booking_cancellation_date": None,
+        "educational_booking_confirmation_date": datetime.now().replace(microsecond=0),
+        "educational_booking_confirmation_limit_date": datetime.now().replace(
+            microsecond=0
+        ),
+        "booking_used_date": datetime.now().replace(microsecond=0),
+        "booking_reimbursement_date": None,
+    }
+]

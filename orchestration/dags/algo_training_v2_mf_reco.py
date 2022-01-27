@@ -23,7 +23,7 @@ else:
     MLFLOW_URL = "https://mlflow.internal-passculture.app/"
 
 DATE = "{{ts_nodash}}"
-STORAGE_PATH = f"gs://{MLFLOW_BUCKET_NAME}/algo_training_v2_deep_reco_{ENV_SHORT_NAME}/algo_training_v2_deep_reco_{DATE}"
+STORAGE_PATH = f"gs://{MLFLOW_BUCKET_NAME}/algo_training_v2_mf_reco_{ENV_SHORT_NAME}/algo_training_v2_mf_reco_{DATE}"
 MODEL_NAME = "v2_mf_reco"
 SLACK_CONN_ID = "slack"
 SLACK_CONN_PASSWORD = access_secret_data(GCP_PROJECT_ID, "slack-conn-password")
@@ -217,7 +217,7 @@ with DAG(
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": ":robot_face: Nouvelle version de l'algo 'v2_deep_reco' déployée ! :rocket:",
+                "text": ":robot_face: Nouvelle version de l'algo 'v2_MF_reco' déployée ! :rocket:",
             },
         },
         {

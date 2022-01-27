@@ -30,7 +30,7 @@ INNER JOIN {dataset}.{table_prefix}stock AS stock  ON stock.stock_id  = booking.
 INNER JOIN {dataset}.{table_prefix}offer AS offer  ON offer.offer_id = stock.offer_id
 INNER JOIN {dataset}.{table_prefix}venue AS venue ON offer.venue_id = venue.venue_id
 INNER JOIN {dataset}.{table_prefix}educational_institution AS educational_institution  ON educational_institution.educational_institution_id = educational_booking.educational_booking_educational_institution_id
-LEFT JOIN analytics_prod.eple AS eple  ON eple.id_etablissement  = educational_institution.educational_institution_institution_id
+LEFT JOIN  {dataset}.eple AS eple  ON eple.id_etablissement  = educational_institution.educational_institution_institution_id
  );
     """
 

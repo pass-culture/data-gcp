@@ -17,6 +17,7 @@ SELECT
     , eple.libelle_academie
     , booking.booking_creation_date
     , educational_booking_status
+    , booking.booking_status
     , booking.booking_is_cancelled
     , booking.booking_is_used
     , booking.booking_cancellation_date

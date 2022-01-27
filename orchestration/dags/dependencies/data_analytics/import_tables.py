@@ -72,14 +72,83 @@ def define_import_query(
         FROM public.payment_status
     """
     cloudsql_queries[
+        "pricing"
+    ] = """
+        SELECT
+            CAST("id" AS varchar(255))
+            ,CAST("status" AS varchar(255))
+            ,CAST("bookingId" AS varchar(255))
+            ,CAST("businessUnitId" AS varchar(255))
+            ,"creationDate"
+            ,"valueDate"
+            ,"amount"
+            ,"standardRule"
+            ,CAST("customRuleId" AS varchar(255))
+            ,"revenue"
+            ,"siret"
+        FROM public.pricing
+    """
+    cloudsql_queries[
+        "pricing_line"
+    ] = """
+        SELECT
+            CAST("id" AS varchar(255)), CAST("pricingId" AS varchar(255)), "amount", CAST("category" AS varchar(255))
+        FROM public.pricing_line
+    """
+    cloudsql_queries[
+        "pricing_log"
+    ] = """
+        SELECT
+            CAST("id" AS varchar(255)), CAST("pricingId" AS varchar(255)), "timestamp", "statusBefore", "statusAfter", "reason"
+        FROM public.pricing_log
+    """
+    cloudsql_queries[
+        "business_unit"
+    ] = """
+        SELECT
+            CAST("id" AS varchar(255)), "name","siret",CAST("bankAccountId" AS varchar(255)), "cashflowFrequency"
+            , "invoiceFrequency", "status"
+        FROM public.business_unit
+    """
+    cloudsql_queries[
+        "cashflow"
+    ] = """
+        SELECT
+            CAST("id" AS varchar(255)), "creationDate","status",CAST("bankAccountId" AS varchar(255)), CAST("batchId" AS varchar(255))
+            , "amount",CAST("transactionId" AS varchar(255))
+        FROM public.cashflow
+    """
+    cloudsql_queries[
+        "cashflow_batch"
+    ] = """
+        SELECT
+            CAST("id" AS varchar(255)), "creationDate", "cutoff"
+        FROM public.cashflow_batch
+    """
+    cloudsql_queries[
+        "cashflow_log"
+    ] = """
+        SELECT
+            CAST("id" AS varchar(255)), CAST("cashflowId" AS varchar(255)), "timestamp","statusBefore", "statusAfter"
+            ,"details"
+        FROM public.cashflow_log
+    """
+    cloudsql_queries[
+        "cashflow_pricing"
+    ] = """
+        SELECT
+            CAST("cashflowId" AS varchar(255)), CAST("pricingId" AS varchar(255))
+        FROM public.cashflow_pricing
+    """
+    cloudsql_queries[
         "booking"
     ] = """
         SELECT
             CAST("id" AS varchar(255)) as booking_id, "dateCreated" as booking_creation_date,
             CAST("stockId" AS varchar(255)) as stock_id, "quantity" as booking_quantity,
             CAST("userId" AS varchar(255)) as user_id, "amount" as booking_amount, CAST("status" AS varchar(255)) AS booking_status,
-            "status" = \\'CANCELLED\\' AS booking_is_cancelled, "isUsed" as booking_is_used, "dateUsed" as booking_used_date,
-            "cancellationDate" as booking_cancellation_date,
+            "status" = \\'CANCELLED\\' AS booking_is_cancelled, "status" IN (\\'USED\\', \\'REIMBURSED\\') as booking_is_used,
+            "dateUsed" as booking_used_date,"cancellationDate" as booking_cancellation_date,
             CAST("cancellationReason" AS VARCHAR) AS booking_cancellation_reason,
             CAST("individualBookingId" AS varchar(255)) as individual_booking_id,
             CAST("educationalBookingId" AS varchar(255)) as educational_booking_id,

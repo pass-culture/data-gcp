@@ -13,6 +13,7 @@ SELECT
     , venue.venue_department_code
     , booking.booking_amount
     , eple.nom_etablissement
+    , eple.code_departement AS school_department_code
     , eple.libelle_academie
     , booking.booking_creation_date
     , educational_booking_status

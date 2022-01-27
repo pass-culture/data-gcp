@@ -1081,6 +1081,7 @@ ENRICHED_EDUCATIONAL_BOOKING_DATA_INPUT = {
             "id_etablissement": "14",
             "nom_etablissement": "Mon etablissement",
             "libelle_academie": "Mon academie",
+            "code_departement": 78,
         }
     ],
 }
@@ -1098,6 +1099,7 @@ ENRICHED_EDUCATIONAL_BOOKING_DATA_EXPECTED = [
         "venue_department_code": 78,
         "booking_amount": 50,
         "nom_etablissement": "Mon etablissement",
+        "school_department_code": 78,
         "libelle_academie": "Mon academie",
         "booking_creation_date": datetime.now().replace(microsecond=0),
         "educational_booking_status": "USED_BY_INSTITUTE",

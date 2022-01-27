@@ -303,5 +303,6 @@ BIGQUERY_SCHEMAS = {
         "id_etablissement": "STRING",
         "nom_etablissement": "STRING",
         "libelle_academie": "STRING",
+        "code_departement": "STRING",
     },
 }

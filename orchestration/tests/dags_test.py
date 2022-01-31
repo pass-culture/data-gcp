@@ -94,7 +94,7 @@ class TestDags(unittest.TestCase):
 
     def test_import_data_analytics_dag_is_loaded(self):
         # When
-        dag = self.dagbag.get_dag(dag_id="import_data_analytics_v6")
+        dag = self.dagbag.get_dag(dag_id="import_data_analytics_v7")
 
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})

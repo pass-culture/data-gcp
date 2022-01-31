@@ -45,7 +45,7 @@ def define_import_query(
             WHEN "user"."schoolType" = \\'APPRENTICE_FORMATION_CENTER\\' THEN \\'Centre de formation apprentis\\'
             WHEN "user"."schoolType" = \\'PRIVATE_SECONDARY_SCHOOL\\' THEN \\'Collège privé\\'
             WHEN "user"."schoolType" = \\'NAVAL_HIGH_SCHOOL\\' THEN \\'Lycée maritime\\'
-            ELSE "user"."schoolType" END AS user_school_type_new
+            ELSE "user"."schoolType" END AS user_school_type
         FROM public.user
     """
     cloudsql_queries[

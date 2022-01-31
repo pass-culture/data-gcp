@@ -35,7 +35,17 @@ def define_import_query(
             CAST("notificationSubscriptions" -> \\'marketing_email\\' AS BOOLEAN) AS user_has_enabled_marketing_email,
             "user"."dateOfBirth" AS user_birth_date,
             "user"."subscriptionState" AS user_subscription_state,
-            "user"."schoolType" AS user_school_type
+            CASE
+            WHEN "user"."schoolType" = \\'PUBLIC_SECONDARY_SCHOOL\\' THEN \\'Collège public\\'
+            WHEN "user"."schoolType" = \\'PUBLIC_HIGH_SCHOOL\\' THEN \\'Lycée public\\'
+            WHEN "user"."schoolType" = \\'PRIVATE_HIGH_SCHOOL\\' THEN \\'Lycée privé\\'
+            WHEN "user"."schoolType" = \\'MILITARY_HIGH_SCHOOL\\' THEN \\'Lycée militaire\\'
+            WHEN "user"."schoolType" = \\'HOME_OR_REMOTE_SCHOOLING\\' THEN \\'À domicile (CNED, institut de santé, etc.)\\'
+            WHEN "user"."schoolType" = \\'AGRICULTURAL_HIGH_SCHOOL\\' THEN \\'Lycée agricole\\'
+            WHEN "user"."schoolType" = \\'APPRENTICE_FORMATION_CENTER\\' THEN \\'Centre de formation apprentis\\'
+            WHEN "user"."schoolType" = \\'PRIVATE_SECONDARY_SCHOOL\\' THEN \\'Collège privé\\'
+            WHEN "user"."schoolType" = \\'NAVAL_HIGH_SCHOOL\\' THEN \\'Lycée maritime\\'
+            ELSE "user"."schoolType" END AS user_school_type_new
         FROM public.user
     """
     cloudsql_queries[

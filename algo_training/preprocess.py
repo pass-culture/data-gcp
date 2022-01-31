@@ -25,12 +25,12 @@ def main():
         # Weigth interactions
         bookings, clicks, favorites = get_weighted_interactions(STORAGE_PATH)
         grouped_df = group_data(bookings, clicks, favorites)
-        minimal_user_strength, maximal_offer_strength = get_sparcity_filters(grouped_df)
+        minimal_user_strength, minimal_offer_strength = get_sparcity_filters(grouped_df)
         print(
-            "SPARCITY CHECK (min,max):, ", minimal_user_strength, maximal_offer_strength
+            "SPARCITY CHECK (min,max):, ", minimal_user_strength, minimal_offer_strength
         )
         list_user_to_keep, list_offer_to_keep = get_offers_and_users_to_keep(
-            grouped_df, minimal_user_strength, maximal_offer_strength
+            grouped_df, minimal_user_strength, minimal_offer_strength
         )
         df_cleaned = grouped_df[grouped_df.offer_id.isin(list_offer_to_keep)]
         # Only filter on offers before get EAC feedback, the user filter could remove most of EAC users

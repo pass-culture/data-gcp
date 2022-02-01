@@ -155,7 +155,7 @@ def get_sparcity_filters(df):
         method="Nelder-Mead",
         args=(df),
         bounds=bounds,
-        options={"maxiter": 20, "ftol": 0.01, "xtol": 0.01},
+        options={"maxiter": 20, "ftol": 0.1, "xtol": 0.1},
     )
 
     return int(min_res.x[0]), int(min_res.x[1])

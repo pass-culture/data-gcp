@@ -853,7 +853,7 @@ jobs:
       DAG_RECOMMMENDATION_CLOUDSQL: recommendation_cloud_sql_v1
       DAG_EXPORT_CLOUDSQL_BIGQUERY: export_cloudsql_tables_to_bigquery_v1
       DAG_REFRESH_MATOMO_DATA: import_matomo_refresh_v1
-      DAG_IMPORT_DATA_ANALYTICS: import_data_analytics_v6
+      DAG_IMPORT_DATA_ANALYTICS: import_data_analytics_v7
       DAG_DUMP_SCALINGO_MATOMO_HISTORY: import_matomo_history_v1
       DAG_IMPORT_FIREBASE_DATA: import_firebase_data_v3
       DAG_IMPORT_TYPEFORM: import_typeform_v1

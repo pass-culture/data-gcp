@@ -11,7 +11,7 @@ def main():
     start_date = (datetime.now() - timedelta(days=BOOKING_DAY_NUMBER)).strftime(
         "%Y-%m-%d"
     )
-    start_date_clics == (datetime.now() - timedelta(days=CLICS_DAY_NUMBER)).strftime(
+    start_date_clics = (datetime.now() - timedelta(days=CLICS_DAY_NUMBER)).strftime(
         "%Y-%m-%d"
     )
     end_date = datetime.now().strftime("%Y-%m-%d")

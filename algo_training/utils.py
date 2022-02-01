@@ -15,7 +15,8 @@ if ENV_SHORT_NAME == "prod":
     if MODEL_NAME == "v2_deep_reco":
         BOOKING_DAY_NUMBER = 2 * 30
     else:
-        BOOKING_DAY_NUMBER = 3 * 30
+        BOOKING_DAY_NUMBER = 4 * 30
+        CLICS_DAY_NUMBER = 2 * 30
 else:
     BOOKING_DAY_NUMBER = 20
 

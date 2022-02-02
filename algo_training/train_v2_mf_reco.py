@@ -7,6 +7,7 @@ import pickle
 import tensorflow as tf
 from tools.v2.mf_reco.preprocess_tools import (
     get_meta_and_sparse,
+    get_sparcity,
     add_CS_users_and_get_user_list,
 )
 from models.v2.mf_reco.matrix_factorization_model import MFModel
@@ -28,6 +29,7 @@ def train(storage_path: str):
         f"{storage_path}/clean_data.csv", dtype={"user_id": str, "item_id": str}
     )
     purchases_sparse_train, user_list, item_list = get_meta_and_sparse(df_train)
+    print("SPARCITY CHECK: ", get_sparcity(purchases_sparse_train))
     feedback_matrix, eac_user_list = add_CS_users_and_get_user_list(
         purchases_sparse_train, storage_path
     )

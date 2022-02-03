@@ -22,6 +22,7 @@ from dependencies.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT,
 )
+from dependencies.dms_import import parse_api_result
 
 DMS_FUNCTION_NAME = "dms_" + ENV_SHORT_NAME
 
@@ -73,6 +74,20 @@ with DAG(
         },
         log_response=True,
         xcom_push=True,
+    )
+
+    parse_api_result_jeunes = PythonOperator(
+        task_id="parse_api_result_jeunes",
+        python_callable=parse_api_result,
+        op_args=["{{task_instance.xcom_pull(task_ids='dms_to_gcs', key='return_value')}}", "jeunes"],
+        dag=dag,
+    )
+
+    parse_api_result_pro = PythonOperator(
+        task_id="parse_api_result_pro",
+        python_callable=parse_api_result,
+        op_args=["{{task_instance.xcom_pull(task_ids='dms_to_gcs', key='return_value')}}", "pro"],
+        dag=dag,
     )
 
     import_dms_jeunes_to_bq = GoogleCloudStorageToBigQueryOperator(
@@ -171,10 +186,10 @@ with DAG(
     start
     >> getting_service_account_token
     >> dms_to_gcs
-    >> [import_dms_jeunes_to_bq, import_dms_pro_to_bq]
+    >> [parse_api_result_jeunes, parse_api_result_pro]
 )
 
-import_dms_jeunes_to_bq >> copy_dms_jeunes_to_analytics
-import_dms_pro_to_bq >> copy_dms_pro_to_analytics
+parse_api_result_jeunes>>import_dms_jeunes_to_bq >> copy_dms_jeunes_to_analytics
+parse_api_result_pro>>import_dms_pro_to_bq >> copy_dms_pro_to_analytics
 
 [copy_dms_jeunes_to_analytics, copy_dms_pro_to_analytics] >> end

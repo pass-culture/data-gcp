@@ -2,12 +2,23 @@ import os
 import requests
 import urllib3
 import time
+import json
 from datetime import datetime
 import pandas as pd
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import secretmanager
-
+from google.cloud import storage
 from dms_query import DMS_QUERY
+
+
+storage_client = storage.Client()
+GCP_PROJECT_ID = os.environ["GCP_PROJECT"]
+DATA_GCS_BUCKET_NAME = os.environ["DATA_GCS_BUCKET_NAME"]
+ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
+
+API_URL = "https://www.demarches-simplifiees.fr/api/v2/graphql"
+demarches_jeunes = [44675, 44623, 29161, 47380, 47480]
+demarches_pro = [29425, 29426, 11990]
 
 
 def access_secret_data(project_id, secret_id, version_id=1, default=None):
@@ -20,16 +31,7 @@ def access_secret_data(project_id, secret_id, version_id=1, default=None):
         return default
 
 
-GCP_PROJECT_ID = os.environ["GCP_PROJECT"]
-DATA_GCS_BUCKET_NAME = os.environ["DATA_GCS_BUCKET_NAME"]
-ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
-
 DMS_TOKEN = access_secret_data(GCP_PROJECT_ID, "token_dms")
-
-
-API_URL = "https://www.demarches-simplifiees.fr/api/v2/graphql"
-demarches_jeunes = [44675, 44623, 29161, 47380, 47480]
-demarches_pro = [29425, 29426, 11990]
 
 
 def run(request):
@@ -59,59 +61,42 @@ def run(request):
 
 
 def fetch_dms_jeunes(updated_since):
-    result_dict = fetch_result(
+    result = fetch_result(
         demarches_jeunes,
         updated_since=updated_since,
     )
-    for index, (key, value) in enumerate(result_dict.items()):
-        if index == 0:
-            struct_df = pd.DataFrame(value)
-            struct_df["demarcheID"] = key
-        else:
-            temp_df = pd.DataFrame(value)
-            temp_df["demarcheID"] = key
-            struct_df = pd.concat([struct_df, temp_df], ignore_index=True)
-    save_results(struct_df, dms_target="jeunes", updated_since=updated_since)
+    save_json(result, f"/dms_export/unsorted_dms_jeunes_{updated_since}.json")
 
 
 def fetch_dms_pro(updated_since):
-    result_dict = fetch_result(demarches_pro, updated_since=updated_since)
-    for index, (key, value) in enumerate(result_dict.items()):
-        if index == 0:
-            struct_df = pd.DataFrame(value)
-            struct_df["demarcheID"] = key
-        else:
-            temp_df = pd.DataFrame(value)
-            temp_df["demarcheID"] = key
-            struct_df = pd.concat([struct_df, temp_df], ignore_index=True)
-    save_results(struct_df, dms_target="pro", updated_since=updated_since)
+    result = fetch_result(demarches_pro, updated_since=updated_since)
+    save_json(result, f"/dms_export/unsorted_dms_pro_{updated_since}.json")
 
 
 def fetch_result(demarches_ids, updated_since):
-    result_dict = {}
+    result = {}
     for demarche_id in demarches_ids:
-        result_list = []
         end_cursor = ""
         query_body = get_query_body(demarche_id, "", updated_since)
         has_next_page = True
         while has_next_page:
-            result = run_query(query_body)
-            print(result)
-            result_list.append(result)
-            has_next_page = result["data"]["demarche"]["dossiers"]["pageInfo"][
+            resultTemp = run_query(query_body)
+            for node in resultTemp["data"]["demarche"]["dossiers"]["edges"]:
+                dossier = node["node"]
+                dossier["procedure_id"] = demarche_id
+            has_next_page = resultTemp["data"]["demarche"]["dossiers"]["pageInfo"][
                 "hasNextPage"
             ]
-
+            result = mergeDictionary(resultTemp, run_query(query_body))
             if ENV_SHORT_NAME != "prod":
                 has_next_page = False
 
             if has_next_page:
-                end_cursor = result["data"]["demarche"]["dossiers"]["pageInfo"][
+                end_cursor = resultTemp["data"]["demarche"]["dossiers"]["pageInfo"][
                     "endCursor"
                 ]
                 query_body = get_query_body(demarche_id, end_cursor, updated_since)
-        result_dict[f"demarche_id"] = result_list
-    return result_dict
+    return result
 
 
 def get_query_body(demarche_id, end_cursor, updated_since):
@@ -143,9 +128,33 @@ def run_query(query_body):
         )
 
 
+def mergeDictionary(dict_1, dict_2):
+    dict_3 = {**dict_1, **dict_2}
+    for key, value in dict_3.items():
+        if key in dict_1 and key in dict_2:
+            dict_3[key] = [value, dict_1[key]]
+    return dict_3
+
+
 def save_results(df_applications, dms_target, updated_since):
     df_applications.to_csv(
         f"gs://{DATA_GCS_BUCKET_NAME}/dms_export/unsorted_dms_{dms_target}_{updated_since}.csv",
         header=False,
         index=False,
     )
+
+
+def save_json(json_object, filename):
+    """
+    this function will create json object in
+    google cloud storage
+    """
+    # create a blob
+    BUCKET = storage_client.get_bucket(DATA_GCS_BUCKET_NAME)
+    blob = BUCKET.blob(filename)
+    # upload the blob
+    blob.upload_from_string(
+        data=json.dumps(json_object), content_type="application/json"
+    )
+    result = filename + " upload complete"
+    return {"response": result}

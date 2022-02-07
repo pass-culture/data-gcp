@@ -6,7 +6,7 @@ from scripts.import_adage import (
 from google.cloud import bigquery
 
 
-def run():
+def run(request):
     """The Cloud Function entrypoint."""
     client = bigquery.Client()
     client.query(create_adage_table()).result()

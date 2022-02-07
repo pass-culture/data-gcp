@@ -1,9 +1,12 @@
-from utils import API_KEY, ENDPOINT, GCP_PROJECT, ENV_SHORT_NAME, BIGQUERY_CLEAN_DATASET, BUCKET_NAME
+from utils import (
+    API_KEY,
+    ENDPOINT,
+    GCP_PROJECT,
+    ENV_SHORT_NAME,
+    BIGQUERY_CLEAN_DATASET,
+    BUCKET_NAME,
+)
 import requests
-import os
-
-if os.environ["ENV"] == "prod":
-    ENDPOINT = "https://omogen-api-pr.phm.education.gouv.fr/adage-api-prod/v1"
 
 
 def get_partenaire_culturel():
@@ -74,9 +77,13 @@ def create_adage_table():
 
 def adding_value(datas, i):
     d1 = list(dict(datas[i]).values())
-    d2 = ['None' if v is None else v for v in d1]
-    return f"""INSERT INTO `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.adage` """ + """ ({}) VALUES {};""".format(
-        ','.join(map(str, list((((dict(datas[i]).keys())))))), tuple(d2))
+    d2 = ["None" if v is None else v for v in d1]
+    return (
+        f"""INSERT INTO `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.adage` """
+        + """ ({}) VALUES {};""".format(
+            ",".join(map(str, list((((dict(datas[i]).keys())))))), tuple(d2)
+        )
+    )
 
 
 def save_adage_to_bq(datas, i):

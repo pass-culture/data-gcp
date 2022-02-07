@@ -1,4 +1,4 @@
-from utils import (
+from scripts.utils import (
     API_KEY,
     ENDPOINT,
     GCP_PROJECT,
@@ -75,16 +75,73 @@ def create_adage_table():
         """
 
 
-def adding_value(datas, i):
-    d1 = list(dict(datas[i]).values())
-    d2 = ["None" if v is None else v for v in d1]
-    return (
-        f"""INSERT INTO `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.adage` """
-        + """ ({}) VALUES {};""".format(
-            ",".join(map(str, list((((dict(datas[i]).keys())))))), tuple(d2)
-        )
-    )
-
-
-def save_adage_to_bq(datas, i):
-    return adding_value(datas, i)
+def adding_value():
+    return f"""MERGE `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.adage` A
+        USING `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.adage_data_temp` B
+        ON B.id = A.id
+        WHEN MATCHED THEN
+            UPDATE SET 
+            siret = B.siret, 
+            regionId = B.regionId, 
+            academieId = B.academieId, 
+            statutId = B.statutId , 
+            labelId = B.labelId,
+            typeId = B.typeId, 
+            communeId = B.communeId, 
+            libelle = B.libelle, 
+            adresse = B.adresse, 
+            siteWeb = B.siteWeb, 
+            latitude = B.latitude,
+            longitude = B.longitude, 
+            actif = B.actif, 
+            dateModification = B.dateModification, 
+            statutLibelle = B.statutLibelle,
+            labelLibelle = B.labelLibelle, 
+            typeIcone = B.typeIcone, 
+            typeLibelle = B.typeLibelle, 
+            communeLibelle = B.communeLibelle,
+            communeDepartement = B.communeDepartement, 
+            academieLibelle = B.academieLibelle, 
+            regionLibelle = B.regionLibelle, 
+            domaines = B.domaines
+        WHEN NOT MATCHED THEN
+        INSERT (id,siret,regionId,academieId,
+                statutId,
+                labelId,
+                typeId, 
+                communeId,
+                 libelle,
+                 adresse,
+                siteWeb,
+                latitude, 
+                longitude,
+                actif,
+                dateModification,
+                statutLibelle,
+                labelLibelle,
+                typeIcone,
+                typeLibelle,
+                communeLibelle,
+                communeDepartement,
+                academieLibelle,
+                regionLibelle,
+                domaines) VALUES(id,siret,regionId,academieId, statutId,
+                                 labelId,
+                                 typeId,
+                                 communeId,
+                                 libelle,
+                                 adresse, 
+                                 siteWeb,
+                                 latitude,
+                                 longitude,
+                                 actif,
+                                 dateModification, 
+                                 statutLibelle,
+                                 labelLibelle,
+                                 typeIcone,
+                                 typeLibelle,
+                                 communeLibelle,
+                                 communeDepartement,
+                                 academieLibelle,
+                                 regionLibelle,
+                                 domaines)"""

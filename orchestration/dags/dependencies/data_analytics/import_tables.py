@@ -185,7 +185,7 @@ def define_import_query(
             "dateUpdated" as offer_date_updated,
             "isEducational" AS offer_is_educational
         FROM public.offer
-        WHERE "dateUpdated" > \\'{EXECUTION_DAY}\\'
+        WHERE "dateUpdated" >= \\'{EXECUTION_DAY}\\'
         AND "dateUpdated" <  \\'{DAY_AFTER_EXECUTION}\\' 
     """
     cloudsql_queries[

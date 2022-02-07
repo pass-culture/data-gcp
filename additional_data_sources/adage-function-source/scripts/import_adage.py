@@ -1,5 +1,9 @@
-from scripts.utils import API_KEY, ENDPOINT
+from utils import API_KEY, ENDPOINT, GCP_PROJECT, ENV_SHORT_NAME, BIGQUERY_CLEAN_DATASET, BUCKET_NAME
 import requests
+import os
+
+if os.environ["ENV"] == "prod":
+    ENDPOINT = "https://omogen-api-pr.phm.education.gouv.fr/adage-api-prod/v1"
 
 
 def get_partenaire_culturel():
@@ -20,6 +24,7 @@ def get_partenaire_culturel():
 
 def get_data_adage():
     datas = get_partenaire_culturel()
+    print(datas)
     keys = ",".join(list(datas[0].keys()))
     values = ", ".join(
         [
@@ -39,44 +44,40 @@ def get_data_adage():
 
 def create_adage_table():
     return f"""
-    CREATE TABLE IF NOT EXIST `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.adage`  (
-        'id' varchar(250),
-        'siret' varchar(250), 
-        'regionId' varchar(250), 
-        'academieId' varchar(250), 
-        'statutId' varchar(250), 
-        'labelId' varchar(250),
-        'typeId' varchar(250), 
-        'communeId' varchar(250), 
-        'libelle' varchar(250), 
-        'adresse' varchar(250), 
-        'siteWeb' varchar(250), 
-        'latitude' int(11),
-        'longitude' int(11), 
-        'actif' int(11), 
-        'dateModification' datetime, 
-        'statutLibelle' varchar(250),
-        'labelLibelle' varchar(250), 
-        'typeIcone' varchar(250), 
-        'typeLibelle' varchar(250), 
-        'communeLibelle' varchar(250),
-        'communeDepartement' varchar(250), 
-        'academieLibelle' varchar(250), 
-        'regionLibelle' varchar(250), 
-        'domaines' varchar(250);)
+    CREATE TABLE IF NOT EXISTS `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.adage`(
+        id STRING,
+        siret STRING, 
+        regionId STRING, 
+        academieId STRING, 
+        statutId STRING, 
+        labelId STRING,
+        typeId STRING, 
+        communeId STRING, 
+        libelle STRING, 
+        adresse STRING, 
+        siteWeb STRING, 
+        latitude STRING,
+        longitude STRING, 
+        actif STRING, 
+        dateModification STRING, 
+        statutLibelle STRING,
+        labelLibelle STRING, 
+        typeIcone STRING, 
+        typeLibelle STRING, 
+        communeLibelle STRING,
+        communeDepartement STRING, 
+        academieLibelle STRING, 
+        regionLibelle STRING, 
+        domaines STRING);
         """
 
 
-def adding_value():
-    keys = get_data_adage()[0]
-    values = get_data_adage()[1]
-    return (
-        f"""INSERT INTO `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.adage`"""
-        + """ ({}) VALUES {} AS new ON DUPLICATE KEY UPDATE siret = new.siret, regionId = new.regionId""".format(
-            {keys}, {values}
-        )
-    )
+def adding_value(datas, i):
+    d1 = list(dict(datas[i]).values())
+    d2 = ['None' if v is None else v for v in d1]
+    return f"""INSERT INTO `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.adage` """ + """ ({}) VALUES {};""".format(
+        ','.join(map(str, list((((dict(datas[i]).keys())))))), tuple(d2))
 
 
-def save_adage_to_bq():
-    return adding_value()
+def save_adage_to_bq(datas, i):
+    return adding_value(datas, i)

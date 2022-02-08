@@ -65,12 +65,14 @@ def fetch_dms_jeunes(updated_since):
         demarches_jeunes,
         updated_since=updated_since,
     )
-    save_json(result, f"/dms_export/unsorted_dms_jeunes_{updated_since}.json")
+    print("LEN result JEUNES:", len(result.keys()))
+    save_json(result, f"/dms_export_temp/unsorted_dms_jeunes_{updated_since}.json")
 
 
 def fetch_dms_pro(updated_since):
     result = fetch_result(demarches_pro, updated_since=updated_since)
-    save_json(result, f"/dms_export/unsorted_dms_pro_{updated_since}.json")
+    print("LEN result PRO:", len(result.keys()))
+    save_json(result, f"/dms_export_temp/unsorted_dms_pro_{updated_since}.json")
 
 
 def fetch_result(demarches_ids, updated_since):

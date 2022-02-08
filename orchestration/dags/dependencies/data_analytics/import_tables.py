@@ -35,7 +35,17 @@ def define_import_query(
             CAST("notificationSubscriptions" -> \\'marketing_email\\' AS BOOLEAN) AS user_has_enabled_marketing_email,
             "user"."dateOfBirth" AS user_birth_date,
             "user"."subscriptionState" AS user_subscription_state,
-            "user"."schoolType" AS user_school_type
+            CASE
+            WHEN "user"."schoolType" = \\'PUBLIC_SECONDARY_SCHOOL\\' THEN \\'Collège public\\'
+            WHEN "user"."schoolType" = \\'PUBLIC_HIGH_SCHOOL\\' THEN \\'Lycée public\\'
+            WHEN "user"."schoolType" = \\'PRIVATE_HIGH_SCHOOL\\' THEN \\'Lycée privé\\'
+            WHEN "user"."schoolType" = \\'MILITARY_HIGH_SCHOOL\\' THEN \\'Lycée militaire\\'
+            WHEN "user"."schoolType" = \\'HOME_OR_REMOTE_SCHOOLING\\' THEN \\'À domicile (CNED, institut de santé, etc.)\\'
+            WHEN "user"."schoolType" = \\'AGRICULTURAL_HIGH_SCHOOL\\' THEN \\'Lycée agricole\\'
+            WHEN "user"."schoolType" = \\'APPRENTICE_FORMATION_CENTER\\' THEN \\'Centre de formation apprentis\\'
+            WHEN "user"."schoolType" = \\'PRIVATE_SECONDARY_SCHOOL\\' THEN \\'Collège privé\\'
+            WHEN "user"."schoolType" = \\'NAVAL_HIGH_SCHOOL\\' THEN \\'Lycée maritime\\'
+            ELSE "user"."schoolType" END AS user_school_type
         FROM public.user
     """
     cloudsql_queries[
@@ -158,7 +168,6 @@ def define_import_query(
     # define day before and after execution date
     # we jinja template reference to user the dates around execution date
     DAY_BEFORE_EXECUTION = "{{ yesterday_ds }}"
-    EXECUTION_DAY = "{{ ds }}"
     DAY_AFTER_EXECUTION = "{{ tomorrow_ds }}"
     cloudsql_queries[
         "offer"
@@ -185,7 +194,7 @@ def define_import_query(
             "dateUpdated" as offer_date_updated,
             "isEducational" AS offer_is_educational
         FROM public.offer
-        WHERE "dateUpdated" > \\'{EXECUTION_DAY}\\'
+        WHERE "dateUpdated" >= \\'{DAY_BEFORE_EXECUTION}\\'
         AND "dateUpdated" <  \\'{DAY_AFTER_EXECUTION}\\' 
     """
     cloudsql_queries[

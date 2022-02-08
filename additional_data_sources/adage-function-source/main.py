@@ -11,6 +11,10 @@ def run(request):
     client = bigquery.Client()
     client.query(create_adage_table()).result()
     datas = get_partenaire_culturel()
-    pd.DataFrame(datas).to_gbq(f"""{BIGQUERY_CLEAN_DATASET}.adage_data_temp""", project_id=GCP_PROJECT, if_exists="replace")
+    pd.DataFrame(datas).to_gbq(
+        f"""{BIGQUERY_CLEAN_DATASET}.adage_data_temp""",
+        project_id=GCP_PROJECT,
+        if_exists="replace",
+    )
     client.query(adding_value()).result()
     return "Success"

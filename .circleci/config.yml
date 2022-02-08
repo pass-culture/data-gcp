@@ -468,10 +468,45 @@ workflows:
             - Slack
           <<: *slack-fail-post-step
 
+
       - cloud-function-deploy:
           name: cni-fraude-algo-cloud-function-deploy-prod
           cloud-function-name: cni_fraude_algo_prod
           cloud-function-folder: cni_fraude_algo-function-source
+          requires:
+            - linter
+          filters:
+            branches:
+              only:
+                - production
+          context:
+            - DATA_GCP
+            - DATA_GCP_PROD
+            - Slack
+          <<: *slack-fail-post-step
+
+
+      - cloud-function-deploy:
+          name: cni-import-adage-cloud-function-deploy-stg
+          cloud-function-name: adage_import_stg
+          cloud-function-folder: adage_import-function-source
+          requires:
+            - linter
+          filters:
+            branches:
+              only:
+                - master
+          context:
+            - DATA_GCP
+            - DATA_GCP_EHP
+            - Slack
+          <<: *slack-fail-post-step
+
+
+      - cloud-function-deploy:
+          name: cni-import-adage-cloud-function-deploy-prod
+          cloud-function-name: adage_import_prod
+          cloud-function-folder: adage_import-function-source
           requires:
             - linter
           filters:
@@ -506,6 +541,7 @@ workflows:
             - siren-cloud-function-deploy-prod
             - dms-cloud-function-deploy-prod
             - cni-fraude-algo-cloud-function-deploy-prod
+            - cni-import-adage-cloud-function-deploy-prod
 
       - slack-alert:
           name: slack-alert-staging
@@ -527,6 +563,7 @@ workflows:
             - siren-cloud-function-deploy-stg
             - dms-cloud-function-deploy-stg
             - cni-fraude-algo-cloud-function-deploy-stg
+            - cni-import-adage-cloud-function-deploy-stg
 
   # ----------------
   # Workflow to deploy on dev
@@ -541,6 +578,11 @@ workflows:
           name: typeform-cloud-function-deploy-dev
           cloud-function-name: qpi_import_dev
           cloud-function-folder: qpi-function-source
+          <<: *deploy_on_dev_commons
+      - cloud-function-deploy:
+          name: adage-import-function-deploy-dev
+          cloud-function-name: adage_import_dev
+          cloud-function-folder: adage_import-function-source
           <<: *deploy_on_dev_commons
       - cloud-function-deploy:
           name: addresses-cloud-function-deploy-dev
@@ -595,6 +637,7 @@ workflows:
             - dms-cloud-function-deploy-dev
             - cni-fraude-algo-cloud-function-deploy-dev
             - build_and_deploy_api_dev
+            - adage-import-function-deploy-dev
           context:
             - DATA_GCP_DEV
             - Slack
@@ -863,6 +906,7 @@ jobs:
       DAG_COMPUTE_MONITORING: compute_monitoring
       DAG_ALGO_TRAINING_v1: algo_training_v1
       DAG_ALGO_TRAINING_v2_deep_reco: algo_training_v2_deep_reco
+      DAG_ADAGE_IMPORT: import_adage_v1
     working_directory: ~/data-gcp/orchestration
     steps:
       - checkout:
@@ -894,6 +938,7 @@ jobs:
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_COMPUTE_MONITORING} 6 20
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_ALGO_TRAINING_v1} 6 20
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_ALGO_TRAINING_v2_deep_reco} 6 20
+            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_ADAGE_IMPORT} 6 20
 
   build_and_deploy_api:
     docker:

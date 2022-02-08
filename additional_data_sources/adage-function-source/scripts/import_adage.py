@@ -1,15 +1,26 @@
 from scripts.utils import (
     API_KEY,
-    ENDPOINT,
     GCP_PROJECT,
     ENV_SHORT_NAME,
     BIGQUERY_CLEAN_DATASET,
     BUCKET_NAME,
 )
 import requests
+import os
+
+
+def get_endpoint():
+    if os.environ["ENV_SHORT_NAME"] == "prod":
+        return "https://omogen-api-pr.phm.education.gouv.fr/adage-api/v1"
+
+    elif os.environ["ENV_SHORT_NAME"] == "stg":
+        return "https://omogen-api-pr.phm.education.gouv.fr/adage-api-staging/v1"
+    else:
+        return "https://omogen-api-pr.phm.education.gouv.fr/adage-api-test/v1"
 
 
 def get_partenaire_culturel():
+    ENDPOINT = get_endpoint()
     try:
         headers = {"X-omogen-api-key": API_KEY}
 

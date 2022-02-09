@@ -9,6 +9,7 @@ from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import secretmanager
 from google.cloud import storage
 from dms_query import DMS_QUERY
+import gcsfs
 
 
 storage_client = storage.Client()
@@ -17,8 +18,11 @@ DATA_GCS_BUCKET_NAME = os.environ["DATA_GCS_BUCKET_NAME"]
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
 
 API_URL = "https://www.demarches-simplifiees.fr/api/v2/graphql"
-demarches_jeunes = [44675, 44623, 29161, 47380, 47480]
-demarches_pro = [29425, 29426, 11990]
+# demarches_jeunes = [44675, 44623, 29161, 47380, 47480]
+# demarches_pro = [29425, 29426, 11990]
+
+demarches_jeunes = [47480]
+demarches_pro = [11990]
 
 
 def access_secret_data(project_id, secret_id, version_id=1, default=None):
@@ -66,13 +70,19 @@ def fetch_dms_jeunes(updated_since):
         updated_since=updated_since,
     )
     print("LEN result JEUNES:", len(result.keys()))
-    save_json(result, f"/dms_export_temp/unsorted_dms_jeunes_{updated_since}.json")
+    save_json(
+        result,
+        f"gs://{DATA_GCS_BUCKET_NAME}/dms_export/unsorted_dms_jeunes_{updated_since}.json",
+    )
 
 
 def fetch_dms_pro(updated_since):
     result = fetch_result(demarches_pro, updated_since=updated_since)
     print("LEN result PRO:", len(result.keys()))
-    save_json(result, f"/dms_export_temp/unsorted_dms_pro_{updated_since}.json")
+    save_json(
+        result,
+        f"gs://{DATA_GCS_BUCKET_NAME}/dms_export/unsorted_dms_pro_{updated_since}.json",
+    )
 
 
 def fetch_result(demarches_ids, updated_since):
@@ -85,11 +95,11 @@ def fetch_result(demarches_ids, updated_since):
             resultTemp = run_query(query_body)
             for node in resultTemp["data"]["demarche"]["dossiers"]["edges"]:
                 dossier = node["node"]
-                dossier["procedure_id"] = demarche_id
+                dossier["demarche_id"] = demarche_id
             has_next_page = resultTemp["data"]["demarche"]["dossiers"]["pageInfo"][
                 "hasNextPage"
             ]
-            result = mergeDictionary(resultTemp, run_query(query_body))
+            result = mergeDictionary(result, resultTemp)
             if ENV_SHORT_NAME != "prod":
                 has_next_page = False
 
@@ -152,11 +162,14 @@ def save_json(json_object, filename):
     google cloud storage
     """
     # create a blob
-    BUCKET = storage_client.get_bucket(DATA_GCS_BUCKET_NAME)
-    blob = BUCKET.blob(filename)
+    # BUCKET = storage_client.get_bucket(DATA_GCS_BUCKET_NAME)
+    # blob = BUCKET.blob(filename)
     # upload the blob
-    blob.upload_from_string(
-        data=json.dumps(json_object), content_type="application/json"
-    )
+    # blob.upload_from_string(
+    #    data=json.dumps(json_object), content_type="application/json"
+    # )
+    fs = gcsfs.GCSFileSystem(project=GCP_PROJECT_ID)
+    with fs.open(filename, "w") as json_file:
+        json_file.write(json.dumps(json_object))
     result = filename + " upload complete"
     return {"response": result}

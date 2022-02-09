@@ -1,6 +1,9 @@
 import pandas as pd
+import json
+import gcsfs
 from dependencies.config import (
     DATA_GCS_BUCKET_NAME,
+    GCP_PROJECT_ID,
 )
 
 
@@ -25,14 +28,14 @@ def parse_api_result(updated_since, dms_target):
                 "applicant_postal_code",
             ]
         )
-        result = pd.read_csv(
-            f"gs://{DATA_GCS_BUCKET_NAME}/dms_export/unsorted_dms_{dms_target}_{updated_since}.csv"
-        )
-        demarcheIDs = list(result.demarcheID.unique())
-        print("len:df_appli, AFTER=", len(df_applications))
-        for dem in demarcheIDs:
-            df_temp = result.query(f"demarcheID=={dem}")
-            parse_result_jeunes(df_temp.to_json(orient="records"), df_applications, dem)
+        fs = gcsfs.GCSFileSystem(project=GCP_PROJECT_ID)
+        with fs.open(
+            f"gs://{DATA_GCS_BUCKET_NAME}/dms_export/unsorted_dms_{dms_target}_{updated_since}.json"
+        ) as json_file:
+            result = json.load(json_file)
+        print("LEN result JEUNES:", len(result.keys()))
+        print("len:df_appli, BEFORE=", len(df_applications))
+        parse_result_jeunes(result, df_applications)
         print("len:df_appli, AFTER=", len(df_applications))
         save_results(df_applications, dms_target="jeunes", updated_since=updated_since)
     if dms_target == "pro":
@@ -60,13 +63,13 @@ def parse_api_result(updated_since, dms_target):
                 "demandeur_entreprise_siretSiegeSocial",
             ]
         )
-        result = pd.read_csv(
-            f"gs://{DATA_GCS_BUCKET_NAME}/dms_export/unsorted_dms_{dms_target}_{updated_since}.csv"
-        )
-        demarcheIDs = list(result.demarcheID.unique())
-        for dem in demarcheIDs:
-            df_temp = result.query(f"demarcheID=={dem}")
-            parse_result_jeunes(df_temp.to_json(orient="records"), df_applications, dem)
+        fs = gcsfs.GCSFileSystem(project=GCP_PROJECT_ID)
+        with fs.open(
+            f"gs://{DATA_GCS_BUCKET_NAME}/dms_export/unsorted_dms_{dms_target}_{updated_since}.json"
+        ) as json_file:
+            result = json.load(json_file)
+        print("LEN result PRO:", len(result.keys()))
+        parse_result_pro(result, df_applications)
         save_results(df_applications, dms_target="pro", updated_since=updated_since)
     return
 
@@ -84,20 +87,12 @@ def save_results(df_applications, dms_target, updated_since):
     return
 
 
-def parse_result(result, df_applications, demarche_id, dms_target):
-    if dms_target == "pro":
-        parse_result_pro(result, df_applications, demarche_id)
-    else:
-        parse_result_jeunes(result, df_applications, demarche_id)
-    return
-
-
-def parse_result_jeunes(result, df_applications, demarche_id):
+def parse_result_jeunes(result, df_applications):
     for data in result["data"]:
         for node in data["demarche"]["dossiers"]["edges"]:
             dossier = node["node"]
             dossier_line = {
-                "procedure_id": dossier["procedure_id"],
+                "procedure_id": dossier["demarche_id"],
                 "application_id": dossier["id"],
                 "application_number": dossier["number"],
                 "application_archived": dossier["archived"],
@@ -111,7 +106,6 @@ def parse_result_jeunes(result, df_applications, demarche_id):
                 else None,
                 "instructors": "",
             }
-
             for champ in dossier["champs"]:
                 if not champ or "id" not in champ:
                     continue
@@ -130,12 +124,12 @@ def parse_result_jeunes(result, df_applications, demarche_id):
     return
 
 
-def parse_result_pro(result, df_applications, demarche_id):
+def parse_result_pro(result, df_applications):
     for data in result["data"]:
         for node in data["demarche"]["dossiers"]["edges"]:
             dossier = node["node"]
             dossier_line = {
-                "procedure_id": demarche_id,
+                "procedure_id": dossier["demarche_id"],
                 "application_id": dossier["id"],
                 "application_number": dossier["number"],
                 "application_archived": dossier["archived"],
@@ -166,9 +160,9 @@ def parse_result_pro(result, df_applications, demarche_id):
                     dossier_line["demandeur_entreprise_formeJuridiqueCode"] = dossier[
                         "demandeur"
                     ]["entreprise"]["formeJuridiqueCode"]
-                    dossier_line[
-                        "demandeur_entreprise_codeEffectifEntreprise"
-                    ] = dossier["demandeur"]["entreprise"]["codeEffectifEntreprise"]
+                    dossier_line["demandeur_entreprise_codeEffectifEntreprise"] = dossier[
+                        "demandeur"
+                    ]["entreprise"]["codeEffectifEntreprise"]
                     dossier_line["demandeur_entreprise_raisonSociale"] = dossier[
                         "demandeur"
                     ]["entreprise"]["raisonSociale"]

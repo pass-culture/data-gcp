@@ -1,10 +1,11 @@
 from scripts.utils import (
-    API_KEY,
     GCP_PROJECT,
     ENV_SHORT_NAME,
-    BIGQUERY_CLEAN_DATASET,
+    BIGQUERY_ANALYTICS_DATASET,
     BUCKET_NAME,
 )
+from google.cloud import secretmanager
+from google.auth.exceptions import DefaultCredentialsError
 import requests
 import os
 
@@ -19,8 +20,22 @@ def get_endpoint():
         return "https://omogen-api-pr.phm.education.gouv.fr/adage-api-test/v1"
 
 
-def get_partenaire_culturel():
-    ENDPOINT = get_endpoint()
+def access_secret(project_id, secret_id, version_id=1, default=None):
+    try:
+        client = secretmanager.SecretManagerServiceClient()
+        name = f"projects/{project_id}/secrets/{secret_id}/versions/{version_id}"
+        response = client.access_secret_version(request={"name": name})
+        return response.payload.data.decode("UTF-8")
+    except DefaultCredentialsError:
+        return default
+
+
+ENDPOINT = get_endpoint()
+project_name = os.environ["PROJECT_NAME"]
+API_KEY = access_secret(project_name, "adage_import_api_key")
+
+
+def get_partenaire_culturel(ENDPOINT, API_KEY):
     try:
         headers = {"X-omogen-api-key": API_KEY}
 
@@ -37,8 +52,7 @@ def get_partenaire_culturel():
 
 
 def get_data_adage():
-    datas = get_partenaire_culturel()
-    print(datas)
+    datas = get_partenaire_culturel(ENDPOINT, API_KEY)
     keys = ",".join(list(datas[0].keys()))
     values = ", ".join(
         [
@@ -58,7 +72,7 @@ def get_data_adage():
 
 def create_adage_table():
     return f"""
-    CREATE TABLE IF NOT EXISTS `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.adage`(
+    CREATE TABLE IF NOT EXISTS `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.adage`(
         id STRING,
         siret STRING, 
         regionId STRING, 
@@ -87,8 +101,8 @@ def create_adage_table():
 
 
 def adding_value():
-    return f"""MERGE `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.adage` A
-        USING `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.adage_data_temp` B
+    return f"""MERGE `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.adage` A
+        USING `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.adage_data_temp` B
         ON B.id = A.id
         WHEN MATCHED THEN
             UPDATE SET 

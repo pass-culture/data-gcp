@@ -18,11 +18,9 @@ DATA_GCS_BUCKET_NAME = os.environ["DATA_GCS_BUCKET_NAME"]
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
 
 API_URL = "https://www.demarches-simplifiees.fr/api/v2/graphql"
-# demarches_jeunes = [44675, 44623, 29161, 47380, 47480]
-# demarches_pro = [29425, 29426, 11990]
+demarches_jeunes = [44675, 44623, 29161, 47380, 47480]
+demarches_pro = [29425, 29426, 11990]
 
-demarches_jeunes = [47480]
-demarches_pro = [11990]
 
 
 def access_secret_data(project_id, secret_id, version_id=1, default=None):
@@ -147,27 +145,7 @@ def mergeDictionary(dict_1, dict_2):
             dict_3[key] = [value, dict_1[key]]
     return dict_3
 
-
-def save_results(df_applications, dms_target, updated_since):
-    df_applications.to_csv(
-        f"gs://{DATA_GCS_BUCKET_NAME}/dms_export/unsorted_dms_{dms_target}_{updated_since}.csv",
-        header=False,
-        index=False,
-    )
-
-
 def save_json(json_object, filename):
-    """
-    this function will create json object in
-    google cloud storage
-    """
-    # create a blob
-    # BUCKET = storage_client.get_bucket(DATA_GCS_BUCKET_NAME)
-    # blob = BUCKET.blob(filename)
-    # upload the blob
-    # blob.upload_from_string(
-    #    data=json.dumps(json_object), content_type="application/json"
-    # )
     fs = gcsfs.GCSFileSystem(project=GCP_PROJECT_ID)
     with fs.open(filename, "w") as json_file:
         json_file.write(json.dumps(json_object))

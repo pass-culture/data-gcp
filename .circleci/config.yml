@@ -489,7 +489,7 @@ workflows:
       - cloud-function-deploy:
           name: import-adage-cloud-function-deploy-stg
           cloud-function-name: adage_import_stg
-          cloud-function-folder: adage_import-function-source
+          cloud-function-folder: adage-function-source
           requires:
             - linter
           filters:
@@ -506,7 +506,7 @@ workflows:
       - cloud-function-deploy:
           name: import-adage-cloud-function-deploy-prod
           cloud-function-name: adage_import_prod
-          cloud-function-folder: adage_import-function-source
+          cloud-function-folder: adage-function-source
           requires:
             - linter
           filters:
@@ -582,7 +582,7 @@ workflows:
       - cloud-function-deploy:
           name: adage-import-function-deploy-dev
           cloud-function-name: adage_import_dev
-          cloud-function-folder: adage_import-function-source
+          cloud-function-folder: adage-function-source
           <<: *deploy_on_dev_commons
       - cloud-function-deploy:
           name: addresses-cloud-function-deploy-dev

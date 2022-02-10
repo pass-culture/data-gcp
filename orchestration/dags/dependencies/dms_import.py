@@ -33,10 +33,7 @@ def parse_api_result(updated_since, dms_target):
             f"gs://{DATA_GCS_BUCKET_NAME}/dms_export/unsorted_dms_{dms_target}_{updated_since}.json"
         ) as json_file:
             result = json.load(json_file)
-        print("LEN result JEUNES:", len(result.keys()))
-        print("len:df_appli, BEFORE=", len(df_applications))
         parse_result_jeunes(result, df_applications)
-        print("len:df_appli, AFTER=", len(df_applications))
         save_results(df_applications, dms_target="jeunes", updated_since=updated_since)
     if dms_target == "pro":
         df_applications = pd.DataFrame(
@@ -68,17 +65,12 @@ def parse_api_result(updated_since, dms_target):
             f"gs://{DATA_GCS_BUCKET_NAME}/dms_export/unsorted_dms_{dms_target}_{updated_since}.json"
         ) as json_file:
             result = json.load(json_file)
-        print("LEN result PRO:", len(result.keys()))
         parse_result_pro(result, df_applications)
         save_results(df_applications, dms_target="pro", updated_since=updated_since)
     return
 
 
 def save_results(df_applications, dms_target, updated_since):
-    print(
-        "EXPORT PATH = ",
-        f"gs://{DATA_GCS_BUCKET_NAME}/dms_export/dms_{dms_target}_{updated_since}.csv",
-    )
     df_applications.to_csv(
         f"gs://{DATA_GCS_BUCKET_NAME}/dms_export/dms_{dms_target}_{updated_since}.csv",
         header=False,

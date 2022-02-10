@@ -488,7 +488,7 @@ workflows:
 
       - cloud-function-deploy:
           name: import-adage-cloud-function-deploy-stg
-          cloud-function-name: adage_import_dev
+          cloud-function-name: adage_import_stg
           cloud-function-folder: adage-function-source
           requires:
             - linter
@@ -505,7 +505,7 @@ workflows:
 
       - cloud-function-deploy:
           name: import-adage-cloud-function-deploy-prod
-          cloud-function-name: adage_import_dev
+          cloud-function-name: adage_import_prod
           cloud-function-folder: adage-function-source
           requires:
             - linter

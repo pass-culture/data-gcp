@@ -18,8 +18,8 @@ DATA_GCS_BUCKET_NAME = os.environ["DATA_GCS_BUCKET_NAME"]
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
 
 API_URL = "https://www.demarches-simplifiees.fr/api/v2/graphql"
-demarches_jeunes = [44675, 44623, 29161, 47380, 47480]
-demarches_pro = [29425, 29426, 11990]
+demarches_jeunes = [47380, 47480]
+demarches_pro = [50362]
 
 
 def access_secret_data(project_id, secret_id, version_id=1, default=None):

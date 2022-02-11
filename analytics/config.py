@@ -10,7 +10,7 @@ BASE32_JS_LIB_PATH = "gs://pass-culture-data/base32-encode/base32.js"
 OFFER_TABLE_NAME = "offer"
 OFFER_ID = "id"
 OFFER_COLUMNS = [
-    "idAtProviders",
+    "idAtProvider",
     "dateModifiedAtLastProvider",
     "id",
     "dateCreated",

@@ -707,7 +707,7 @@ SELECT
 )  as column_name,
 (
   SELECT count(id) FROM EXTERNAL_QUERY('passculture-metier-prod.europe-west1.metier-pcapi-production-connection',
-  'SELECT id, "dateCreated" as date_created FROM public.offer WHERE "idAtProviders" IS NULL')
+  'SELECT id, "dateCreated" as date_created FROM public.offer WHERE "idAtProvider" IS NULL')
   WHERE date_created <= CAST(CONCAT(EXTRACT(DATE from DATETIME_ADD(CURRENT_DATETIME(), INTERVAL -1 DAY)), " 05:00:00")
   AS DATETIME)
 ) as count_null_in_offer_id_at_providers_csql,

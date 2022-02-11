@@ -173,7 +173,7 @@ def define_import_query(
         "offer"
     ] = f"""
         SELECT
-            CAST("idAtProviders" AS varchar(255)) as offer_id_at_providers,
+            CAST("idAtProvider" AS varchar(255)) as offer_id_at_providers,
             "dateModifiedAtLastProvider" as offer_modified_at_last_provider_date,
             CAST("id" AS varchar(255)) as offer_id, "dateCreated" as offer_creation_date,
             CAST("productId" AS varchar(255)) as offer_product_id, CAST("venueId" AS varchar(255)) as venue_id,

@@ -35,7 +35,17 @@ def define_import_query(
             CAST("notificationSubscriptions" -> \\'marketing_email\\' AS BOOLEAN) AS user_has_enabled_marketing_email,
             "user"."dateOfBirth" AS user_birth_date,
             "user"."subscriptionState" AS user_subscription_state,
-            "user"."schoolType" AS user_school_type
+            CASE
+            WHEN "user"."schoolType" = \\'PUBLIC_SECONDARY_SCHOOL\\' THEN \\'Collège public\\'
+            WHEN "user"."schoolType" = \\'PUBLIC_HIGH_SCHOOL\\' THEN \\'Lycée public\\'
+            WHEN "user"."schoolType" = \\'PRIVATE_HIGH_SCHOOL\\' THEN \\'Lycée privé\\'
+            WHEN "user"."schoolType" = \\'MILITARY_HIGH_SCHOOL\\' THEN \\'Lycée militaire\\'
+            WHEN "user"."schoolType" = \\'HOME_OR_REMOTE_SCHOOLING\\' THEN \\'À domicile (CNED, institut de santé, etc.)\\'
+            WHEN "user"."schoolType" = \\'AGRICULTURAL_HIGH_SCHOOL\\' THEN \\'Lycée agricole\\'
+            WHEN "user"."schoolType" = \\'APPRENTICE_FORMATION_CENTER\\' THEN \\'Centre de formation apprentis\\'
+            WHEN "user"."schoolType" = \\'PRIVATE_SECONDARY_SCHOOL\\' THEN \\'Collège privé\\'
+            WHEN "user"."schoolType" = \\'NAVAL_HIGH_SCHOOL\\' THEN \\'Lycée maritime\\'
+            ELSE "user"."schoolType" END AS user_school_type
         FROM public.user
     """
     cloudsql_queries[
@@ -163,7 +173,7 @@ def define_import_query(
         "offer"
     ] = f"""
         SELECT
-            CAST("idAtProviders" AS varchar(255)) as offer_id_at_providers,
+            CAST("idAtProvider" AS varchar(255)) as offer_id_at_providers,
             "dateModifiedAtLastProvider" as offer_modified_at_last_provider_date,
             CAST("id" AS varchar(255)) as offer_id, "dateCreated" as offer_creation_date,
             CAST("productId" AS varchar(255)) as offer_product_id, CAST("venueId" AS varchar(255)) as venue_id,
@@ -216,7 +226,8 @@ def define_import_query(
             "comment" AS venue_comment, "publicName" AS venue_public_name,
             "fieldsUpdated" AS venue_fields_updated, CAST("venueTypeId" AS varchar(255)) AS venue_type_id,
             CAST("venueLabelId" AS varchar(255)) AS venue_label_id, "dateCreated" AS venue_creation_date,
-            "isPermanent" AS venue_is_permanent, "validationToken" AS venue_validation_token
+            "isPermanent" AS venue_is_permanent, "validationToken" AS venue_validation_token, 
+            CAST("businessUnitId" AS varchar(255)) AS business_unit_id
         FROM public.venue
     """
     cloudsql_queries[

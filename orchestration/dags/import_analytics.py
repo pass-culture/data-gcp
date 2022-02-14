@@ -140,7 +140,7 @@ dag = DAG(
     default_args=default_dag_args,
     description="Import tables from CloudSQL and enrich data for create dashboards with Metabase",
     on_failure_callback=task_fail_slack_alert,
-    schedule_interval="30 23 * * *",
+    schedule_interval="00 01 * * *",
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
 )

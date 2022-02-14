@@ -26,6 +26,9 @@ def main():
         bookings, clicks, favorites = get_weighted_interactions(STORAGE_PATH)
         grouped_df = group_data(bookings, clicks, favorites)
         minimal_user_strength, minimal_offer_strength = get_sparcity_filters(grouped_df)
+        print(
+            "SPARCITY CHECK (min,max):, ", minimal_user_strength, minimal_offer_strength
+        )
         list_user_to_keep, list_offer_to_keep = get_offers_and_users_to_keep(
             grouped_df, minimal_user_strength, minimal_offer_strength
         )

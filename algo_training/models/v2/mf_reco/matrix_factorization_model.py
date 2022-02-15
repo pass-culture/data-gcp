@@ -28,9 +28,7 @@ class MFModel(Model):
                     input_length=1,
                     input_shape=(1,),
                     name="user_embedding",
-                    embeddings_initializer=tf.keras.initializers.Constant(
-                        self.user_vecs
-                    ),
+                    # embeddings_initializer=tf.keras.initializers.Constant(self.user_vecs),
                     trainable=False,
                 ),
             ]
@@ -48,9 +46,7 @@ class MFModel(Model):
                     input_length=1,
                     input_shape=(1,),
                     name="item_embedding",
-                    embeddings_initializer=tf.keras.initializers.Constant(
-                        self.item_vecs
-                    ),
+                    # embeddings_initializer=tf.keras.initializers.Constant(self.item_vecs),
                     trainable=False,
                 ),
             ]

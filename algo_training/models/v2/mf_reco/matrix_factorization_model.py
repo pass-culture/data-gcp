@@ -5,7 +5,7 @@ from tensorflow.keras.layers.experimental.preprocessing import StringLookup
 
 
 class MFModel(Model):
-    def __init__(self, user_ids, item_ids, user_vecs, item_vecs):
+    def __init__(self, user_ids, item_ids):
         super().__init__(name="MFModel")
 
         # self.margin = margin
@@ -13,9 +13,6 @@ class MFModel(Model):
         # l2_reg = None if l2_reg == 0 else l2(l2_reg)
         self.user_ids = user_ids
         self.item_ids = item_ids
-
-        self.user_vecs = user_vecs
-        self.item_vecs = item_vecs
 
         self.user_layer = tf.keras.Sequential(
             [
@@ -28,7 +25,6 @@ class MFModel(Model):
                     input_length=1,
                     input_shape=(1,),
                     name="user_embedding",
-                    # embeddings_initializer=tf.keras.initializers.Constant(self.user_vecs),
                     trainable=False,
                 ),
             ]
@@ -46,7 +42,6 @@ class MFModel(Model):
                     input_length=1,
                     input_shape=(1,),
                     name="item_embedding",
-                    # embeddings_initializer=tf.keras.initializers.Constant(self.item_vecs),
                     trainable=False,
                 ),
             ]
@@ -81,8 +76,6 @@ class MFModel(Model):
         return {
             "user_ids": self.user_ids,
             "item_ids": self.item_ids,
-            "user_vecs": self.user_vecs,
-            "item_vecs": self.item_vecs,
         }
 
     @classmethod

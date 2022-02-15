@@ -68,8 +68,6 @@ def train(storage_path: str):
         MF_Model = MFModel(
             list(map(str, user_listwEAC)),
             list(map(str, item_list)),
-            user_embedding,
-            item_embedding,
         )
         # Need to do a first predict to be able to save the model
         input_test_user = ["1725388" for i in range(4)]

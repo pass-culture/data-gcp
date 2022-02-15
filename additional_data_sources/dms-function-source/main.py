@@ -103,6 +103,8 @@ def fetch_result(demarches_ids, updated_since):
                     "endCursor"
                 ]
                 query_body = get_query_body(demarche_id, end_cursor, updated_since)
+    if not isinstance(result["data"], list):
+        result["data"] = [result["data"]]
     return result
 
 

@@ -32,7 +32,13 @@ def access_secret(project_id, secret_id, version_id=1, default=None):
 
 ENDPOINT = get_endpoint()
 project_name = os.environ["PROJECT_NAME"]
-API_KEY = access_secret(project_name, "adage_import_api_key")
+
+if os.environ["ENV_SHORT_NAME"] == "dev":
+    API_KEY = access_secret(project_name, "adage_import_api_key")
+elif os.environ["ENV_SHORT_NAME"] == "stg":
+    API_KEY = access_secret(project_name, "adage_import_api_key_stg")
+else:
+    API_KEY = access_secret(project_name, "adage_import_api_key_prod")
 
 
 def get_partenaire_culturel(ENDPOINT, API_KEY):

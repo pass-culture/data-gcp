@@ -12,6 +12,7 @@ SELECT
     , venue.venue_name
     , venue.venue_department_code
     , booking.booking_amount
+    , stock.number_of_tickets
     , eple.nom_etablissement
     , eple.code_departement AS school_department_code
     , eple.libelle_academie

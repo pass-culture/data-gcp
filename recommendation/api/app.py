@@ -6,7 +6,7 @@ from flask_cors import CORS
 
 from access_gcp_secrets import access_secret
 from health_check_queries import get_materialized_view_status
-from recommendation import get_final_recommendations
+from recommendation import get_final_recommendations, get_user_metadata
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
 
@@ -78,8 +78,18 @@ def recommendation(user_id: int):
         return "Forbidden", 403
 
     recommendations = get_final_recommendations(user_id, longitude, latitude)
-
-    return jsonify({"recommended_offers": recommendations})
+    group_id, is_cold_start = get_user_metadata(user_id)
+    if is_cold_start:
+        reco_origin = "ColdStart"
+    else:
+        reco_origin = "Algo"
+    return jsonify(
+        {
+            "recommended_offers": recommendations,
+            "AB_test": group_id,
+            "reco_origin": reco_origin,
+        }
+    )
 
 
 if __name__ == "__main__":

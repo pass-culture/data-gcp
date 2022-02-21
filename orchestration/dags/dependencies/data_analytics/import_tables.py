@@ -494,11 +494,25 @@ def define_import_query(
         "individual_booking"
     ] = """
             SELECT
-                CAST("id" AS varchar(255)) AS individual_booking_id
+                CAST(id AS varchar(255)) AS individual_booking_id
                 ,CAST("userId" AS varchar(255)) AS user_id
                 ,CAST("depositId" AS varchar(255)) AS deposit_id
             FROM individual_booking
         """
+    cloudsql_queries[
+        "custom_reimbursement_rule"
+    ] = """
+            SELECT 
+                CAST("id" AS varchar(255)) AS custom_reimbursement_rule_id
+                ,CAST("offerId" AS varchar(255)) AS offer_id 
+                ,CAST("offererId" AS varchar(255)) AS offerer_id 
+                ,"amount" AS amount 
+                ,"rate" AS rate 
+                ,"subcategories"[1] AS offer_subcategory_id 
+                ,lower("timespan") AS start_date
+                ,upper("timespan") AS end_date 
+        """
+        
     # Build specific federated queries
     queries = {}
     for external_table, external_query in cloudsql_queries.items():

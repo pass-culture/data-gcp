@@ -31,9 +31,9 @@ from eac.eac_scoring import (
 from geolocalisation import get_iris_from_coordinates
 from utils import create_db_connection, log_duration, NUMBER_OF_RECOMMENDATIONS
 
+
 def get_user_metadata(user_id: int):
     is_eac = is_eac_user(user_id)
-
 
     ab_testing = fork_query_ab_testing_table(user_id, is_eac)
     if not ab_testing:
@@ -41,15 +41,15 @@ def get_user_metadata(user_id: int):
     else:
         group_id = ab_testing[0]
 
-
     is_cold_start = fork_get_cold_start_status(user_id, is_eac, group_id)
     user_iris_id = get_iris_from_coordinates(longitude, latitude)
 
-    return group_id,is_cold_start,is_eac,user_iris_id
+    return group_id, is_cold_start, is_eac, user_iris_id
+
 
 def get_final_recommendations(user_id: int, longitude: int, latitude: int) -> List[int]:
-    
-    group_id,is_cold_start,is_eac,user_iris_id=get_user_metadata(user_id)
+
+    group_id, is_cold_start, is_eac, user_iris_id = get_user_metadata(user_id)
     if is_cold_start:
         reco_origin = "cold_start"
         cold_start_categories = fork_get_cold_start_categories(user_id, is_eac)

@@ -140,7 +140,7 @@ def get_feedback_sparcity_error(filters, dfgrp):
     )
     sparcity = get_sparcity(purchases_sparse)
     error = 99.5 - sparcity
-    return error ** 2
+    return error**2
 
 
 def get_sparcity_filters(df):

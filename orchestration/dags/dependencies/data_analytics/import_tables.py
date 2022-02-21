@@ -512,7 +512,7 @@ def define_import_query(
                 ,lower("timespan") AS start_date
                 ,upper("timespan") AS end_date 
         """
-        
+
     # Build specific federated queries
     queries = {}
     for external_table, external_query in cloudsql_queries.items():

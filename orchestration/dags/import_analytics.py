@@ -126,7 +126,7 @@ data_applicative_tables_and_date_columns = {
         "educational_year_beginning_date",
         "educational_year_expiration_date",
     ],
-    "custom_reimbursement_rule" : [
+    "custom_reimbursement_rule": [
         "start_date",
         "end_date",
     ],

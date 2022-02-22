@@ -193,7 +193,28 @@ def define_import_query(
             CAST("validation" AS varchar(255)) as offer_validation,
             CAST("subcategoryId" AS varchar(255)) as offer_subcategoryId,
             "dateUpdated" as offer_date_updated,
-            "isEducational" AS offer_is_educational
+            "isEducational" AS offer_is_educational,
+            CASE
+            WHEN "venueTypeCode" = \\'ADMINISTRATIVE\\' THEN \\'Lieu administratif\\'
+            WHEN "venueTypeCode" = \\'DIGITAL\\' THEN \\'Offre numérique\\'
+            WHEN "venueTypeCode" = \\'BOOKSTORE\\' THEN \\'Librairie\\'
+            WHEN "venueTypeCode" = \\'PERFORMING_ARTS\\' THEN \\'Spectacle vivant\\'
+            WHEN "venueTypeCode" = \\'ARTISTIC_COURSE\\' THEN \\'Cours et pratique artistiques\\'
+            WHEN "venueTypeCode" = \\'MOVIE\\' THEN \\'Cinéma - Salle de projections\\'
+            WHEN "venueTypeCode" = \\'OTHER\\' THEN \\'Autre\\'
+            WHEN "venueTypeCode" = \\'CONCERT_HALL\\' THEN \\'Musique - Salle de concerts\\'
+            WHEN "venueTypeCode" = \\'MUSEUM\\' THEN \\'Musée\\'
+            WHEN "venueTypeCode" = \\'CULTURAL_CENTRE\\' THEN \\'Centre culturel\\'
+            WHEN "venueTypeCode" = \\'PATRIMONY_TOURISM\\' THEN \\'Patrimoine et tourisme\\'
+            WHEN "venueTypeCode" = \\'FESTIVAL\\' THEN \\'Festival\\'
+            WHEN "venueTypeCode" = \\'MUSICAL_INSTRUMENT_STORE\\' THEN \\'Musique - Magasin d’instruments\\'
+            WHEN "venueTypeCode" = \\'LIBRARY\\' THEN \\'Bibliothèque ou médiathèque\\'
+            WHEN "venueTypeCode" = \\'VISUAL_ARTS\\' THEN \\'Arts visuels, arts plastiques et galeries\\'
+            WHEN "venueTypeCode" = \\'GAMES\\' THEN \\'Jeux / Jeux vidéos\\'
+            WHEN "venueTypeCode" = \\'CREATIVE_ARTS_STORE\\' THEN \\'Magasin arts créatifs\\'
+            WHEN "venueTypeCode" = \\'RECORD_STORE\\' THEN \\'Musique - Disquaire\\'
+            WHEN "venueTypeCode" = \\'SCIENTIFIC_CULTURE\\' THEN \\'Culture scientifique\\'
+            else "venueTypeCode" END AS venue_type_code
         FROM public.offer
         WHERE "dateUpdated" > \\'{EXECUTION_DAY}\\'
         AND "dateUpdated" <  \\'{DAY_AFTER_EXECUTION}\\' 

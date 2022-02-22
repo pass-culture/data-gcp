@@ -181,7 +181,7 @@ def define_enriched_venue_query(dataset, table_prefix=""):
                 ,venue.venue_is_permanent
                 ,venue.business_unit_id
                 ,offerer.offerer_name
-                ,venue_type.label AS venue_type_label
+                ,venue.venue_type_code AS venue_type_label
                 ,venue_label.label AS venue_label
                 ,total_bookings_per_venue.total_bookings
                 ,non_cancelled_bookings_per_venue.non_cancelled_bookings
@@ -198,7 +198,6 @@ def define_enriched_venue_query(dataset, table_prefix=""):
                 ,CONCAT('https://passculture.pro/structures/',offerer_humanized_id.humanized_id,'/lieux/',venue_humanized_id.humanized_id) AS venue_pc_pro_link
             FROM {dataset}.{table_prefix}venue AS venue
             LEFT JOIN {dataset}.{table_prefix}offerer AS offerer ON venue.venue_managing_offerer_id = offerer.offerer_id
-            LEFT JOIN {dataset}.{table_prefix}venue_type AS venue_type ON venue.venue_type_id = venue_type.id
             LEFT JOIN {dataset}.{table_prefix}venue_label AS venue_label ON venue_label.id = venue.venue_label_id
             LEFT JOIN total_bookings_per_venue ON venue.venue_id = total_bookings_per_venue.venue_id
             LEFT JOIN non_cancelled_bookings_per_venue ON venue.venue_id = non_cancelled_bookings_per_venue.venue_id

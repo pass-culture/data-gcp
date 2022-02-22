@@ -308,6 +308,7 @@ BIGQUERY_SCHEMAS = {
         "venue_type_id": "STRING",
         "venue_label_id": "STRING",
         "venue_creation_date": "DATETIME",
+        "venue_type_code": "STRING",
         "business_unit_id": "STRING",
     },
     "venue_label": {

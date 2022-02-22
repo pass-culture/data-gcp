@@ -168,6 +168,7 @@ def define_import_query(
     # define day before and after execution date
     # we jinja template reference to user the dates around execution date
     DAY_BEFORE_EXECUTION = "{{ yesterday_ds }}"
+    EXECUTION_DAY = "{{ ds }}"
     DAY_AFTER_EXECUTION = "{{ tomorrow_ds }}"
     cloudsql_queries[
         "offer"
@@ -194,7 +195,7 @@ def define_import_query(
             "dateUpdated" as offer_date_updated,
             "isEducational" AS offer_is_educational
         FROM public.offer
-        WHERE "dateUpdated" >= \\'{DAY_BEFORE_EXECUTION}\\'
+        WHERE "dateUpdated" > \\'{EXECUTION_DAY}\\'
         AND "dateUpdated" <  \\'{DAY_AFTER_EXECUTION}\\' 
     """
     cloudsql_queries[

@@ -1032,9 +1032,9 @@ ENRICHED_BOOKING_DATA_EXPECTED = [
         "deposit_type": "GRANT_18",
         "venue_department_code": "78",
         "venue_id": "8",
-        "venue_label_name": "Librairie",
+        "venue_label_name": "label",
         "venue_name": "My Wonderful Venue",
-        "venue_type_name": "label",
+        "venue_type_name": "Librairie",
         "booking_used_date": datetime.now().replace(microsecond=0),
     }
 ]

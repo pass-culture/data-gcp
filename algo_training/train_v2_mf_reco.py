@@ -68,8 +68,6 @@ def train(storage_path: str):
         MF_Model = MFModel(
             list(map(str, user_listwEAC)),
             list(map(str, item_list)),
-            user_embedding,
-            item_embedding,
         )
         # Need to do a first predict to be able to save the model
         input_test_user = ["1725388" for i in range(4)]
@@ -78,6 +76,12 @@ def train(storage_path: str):
             [np.array(input_test_user), np.array(input_test_items)], batch_size=4096
         )
         print("predicted :", predicted)
+        MF_Model.user_layer.layers[1].set_weights([user_embedding])
+        MF_Model.item_layer.layers[1].set_weights([item_embedding])
+        predicted = MF_Model.predict(
+            [np.array(input_test_user), np.array(input_test_items)], batch_size=4096
+        )
+        print("predicted (after set_weights) :", predicted)
         # Now we can save the trained model
         run_uuid = mlflow.active_run().info.run_uuid
         export_path = f"saved_model/prod_ready/{run_uuid}"

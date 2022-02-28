@@ -143,9 +143,38 @@ def get_scored_recommendation_for_user_eac(
 
     else:
         instances = []
-
-    predicted_scores = predict_score(MODEL_REGION, GCP_PROJECT, model_name, instances)
-
+    nbmaxoffers = 100
+    if group_id == "B" and (len(instances[0]["input_2"]) > nbmaxoffers):
+        print("Number of offers to score: ", len(instances[0]["input_2"]))
+        nbdivisions = len(instances[0]["input_2"]) // nbmaxoffers
+        predicted_scores = []
+        for k in range(nbdivisions):
+            instances_batch = [
+                {
+                    "input_1": instances[0]["input_1"][
+                        k * nbmaxoffers : (k + 1) * nbmaxoffers
+                    ],
+                    "input_2": instances[0]["input_2"][
+                        k * nbmaxoffers : (k + 1) * nbmaxoffers
+                    ],
+                }
+            ]
+            predicted_scores = predicted_scores + predict_score(
+                MODEL_REGION, GCP_PROJECT, model_name, instances_batch
+            )
+        instances_batch = [
+            {
+                "input_1": instances[0]["input_1"][nbdivisions * nbmaxoffers :],
+                "input_2": instances[0]["input_2"][nbdivisions * nbmaxoffers :],
+            }
+        ]
+        predicted_scores = predicted_scores + predict_score(
+            MODEL_REGION, GCP_PROJECT, model_name, instances_batch
+        )
+    else:
+        predicted_scores = predict_score(
+            MODEL_REGION, GCP_PROJECT, model_name, instances
+        )
     recommendations = [
         {**recommendation, "score": predicted_scores[i][0]}
         for i, recommendation in enumerate(user_recommendations)

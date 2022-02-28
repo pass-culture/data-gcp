@@ -23,6 +23,9 @@ BIGQUERY_CLEAN_DATASET = os.environ.get(
 BIGQUERY_ANALYTICS_DATASET = os.environ.get(
     "BIGQUERY_ANALYTICS_DATASET", f"analytics_{ENV_SHORT_NAME}"
 )
+BIGQUERY_BACKEND_DATASET = os.environ.get(
+    "BIGQUERY_BACKEND_DATASET", f"backend_{ENV_SHORT_NAME}"
+)
 
 APPLICATIVE_PREFIX = "applicative_database_"
 MATOMO_PREFIX = "matomo_"

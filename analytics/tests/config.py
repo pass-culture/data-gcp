@@ -43,12 +43,12 @@ BIGQUERY_SCHEMAS = {
         "educational_institution_id": "STRING",
         "educational_institution_institution_id": "STRING",
     },
-    "user_suspension" :{
-        "id" : "STRING",
-        "userId" :"STRING",
-        "eventType":"STRING",
-        "eventDate":"DATETIME",
-        "actorUserId":"STRING",
+    "user_suspension": {
+        "id": "STRING",
+        "userId": "STRING",
+        "eventType": "STRING",
+        "eventDate": "DATETIME",
+        "actorUserId": "STRING",
         "reasonCode": "STRING",
     },
     "favorite": {

@@ -280,7 +280,7 @@ def define_import_query(
         "user_suspension"
     ] = """
             SELECT
-                CAST("id" AS varchar(255)), CAST("userId" AS varchar(255)), "eventType", "eventDate", cast("actorUserId" AS VARCHAR(255)), reasonCode
+                CAST("id" AS varchar(255)), CAST("userId" AS varchar(255)), "eventType", "eventDate", cast("actorUserId" AS VARCHAR(255)), "reasonCode"
             FROM public.user_suspension
         """
     cloudsql_queries[

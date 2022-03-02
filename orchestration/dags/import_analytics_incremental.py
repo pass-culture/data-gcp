@@ -47,7 +47,7 @@ from dependencies.data_analytics.import_tables import (
 )
 from dependencies.slack_alert import task_fail_slack_alert
 
-SCHEDULE_HOURS_INTERVAL = 6
+SCHEDULE_HOURS_INTERVAL = 3
 
 
 def getting_service_account_token(function_name):

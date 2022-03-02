@@ -437,7 +437,8 @@ def define_user_agg_deposit_data_query(dataset, table_prefix=""):
 
 def define_user_suspension_history_query(dataset, table_prefix=""):
     return f"""
-    CREATE TEMP TABLE user_suspension_history AS (SELECT *, RANK() OVER(PARTITION BY "userId" ORDER BY "eventDate" DESC, "id" DESC) AS rank
+    CREATE TEMP TABLE user_suspension_history AS 
+            (SELECT *, RANK() OVER(PARTITION BY "userId" ORDER BY "eventDate" DESC, "id" DESC) AS rank
             FROM {dataset}.{table_prefix}user_suspension);
         """
 
@@ -549,6 +550,6 @@ def define_enriched_user_data_full_query(dataset, table_prefix=""):
         {define_first_paid_booking_type_query(dataset=dataset, table_prefix=table_prefix)}
         {define_count_distinct_types_query(dataset=dataset, table_prefix=table_prefix)}
         {define_user_agg_deposit_data_query(dataset=dataset, table_prefix=table_prefix)}
-        {define_enriched_user_data_query(dataset=dataset, table_prefix=table_prefix)}
         {define_user_suspension_history_query(dataset, table_prefix=table_prefix)}
+        {define_enriched_user_data_query(dataset=dataset, table_prefix=table_prefix)}
     """

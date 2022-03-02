@@ -29,7 +29,7 @@ def define_import_query(
             "activity" as user_activity, "culturalSurveyFilledDate" as user_cultural_survey_filled_date,
             "hasSeenTutorials" as user_has_seen_tutorials, "address" as user_address, "city" as user_city,
             "lastConnectionDate" as user_last_connection_date, "isEmailValidated" as user_is_email_validated,
-            "suspensionReason" as user_suspension_reason, "isActive" as user_is_active,
+            "isActive" as user_is_active,
             "hasSeenProTutorials" as user_has_seen_pro_tutorials, EXTRACT(YEAR FROM AGE("user"."dateOfBirth")) AS user_age,
             "hasCompletedIdCheck" AS user_has_completed_idCheck,
             "phoneValidationStatus" AS user_phone_validation_status,
@@ -280,7 +280,7 @@ def define_import_query(
         "user_suspension"
     ] = """
             SELECT
-                CAST("id" AS varchar(255)), CAST("user_id" AS varchar(255)), "eventType", "eventDate", cast("actorUserId" AS VARCHAR(255)), reasonCode
+                CAST("id" AS varchar(255)), CAST("userId" AS varchar(255)), "eventType", "eventDate", cast("actorUserId" AS VARCHAR(255)), reasonCode
             FROM public.user_suspension
         """
     cloudsql_queries[

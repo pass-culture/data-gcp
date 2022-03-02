@@ -437,7 +437,7 @@ def define_user_agg_deposit_data_query(dataset, table_prefix=""):
 
 def define_user_suspension_history_query(dataset, table_prefix=""):
     return f"""
-    CREATE TEMP TABLE user_suspension_history AS (SELECT * RANK() OVER(PARTITION BY "userId" ORDER BY "eventDate" DESC, "id" DESC) AS rank
+    CREATE TEMP TABLE user_suspension_history AS (SELECT *, RANK() OVER(PARTITION BY "userId" ORDER BY "eventDate" DESC, "id" DESC) AS rank
             FROM {dataset}.{table_prefix}user_suspension);
         """
 

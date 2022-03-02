@@ -75,7 +75,6 @@ data_applicative_tables_and_date_columns = {
     "payment": [""],
     "venue": ["venue_modified_at_last_provider", "venue_creation_date"],
     "user_offerer": [""],
-    "offer": ["offer_modified_at_last_provider_date", "offer_creation_date"],
     "offer_report": [""],
     "stock": [
         "stock_modified_at_last_provider_date",

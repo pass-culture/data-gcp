@@ -4,7 +4,7 @@ from dateutil import parser
 
 
 def define_import_query(
-    table, region=GCP_REGION, external_connection_id=APPLICATIVE_EXTERNAL_CONNECTION_ID
+    table, region=GCP_REGION, external_connection_id=APPLICATIVE_EXTERNAL_CONNECTION_ID, schedule_hour_interval=12
 ):
     """
     Given a table (from "external_connection_id" located in "region"), we build and return the federated query that
@@ -166,10 +166,9 @@ def define_import_query(
         FROM public.booking
     """
     # define day before and after execution date
-    # we jinja template reference to user the dates around execution date
-    DAY_BEFORE_EXECUTION = "{{ yesterday_ds }}"
-    EXECUTION_DAY = "{{ ds }}"
-    DAY_AFTER_EXECUTION = "{{ tomorrow_ds }}"
+    # we jinja template reference to user the datetimes around execution time
+    EXECUTION_TIME = "{{ ts }}"
+
     cloudsql_queries[
         "offer"
     ] = f"""
@@ -195,8 +194,8 @@ def define_import_query(
             "dateUpdated" as offer_date_updated,
             "isEducational" AS offer_is_educational
         FROM public.offer
-        WHERE "dateUpdated" > \\'{EXECUTION_DAY}\\'
-        AND "dateUpdated" <  \\'{DAY_AFTER_EXECUTION}\\' 
+        WHERE "dateUpdated" >= timestamp \\'{EXECUTION_TIME}\\' - INTERVAL \\'{schedule_hour_interval} HOUR\\'
+        AND "dateUpdated" <  \\'{EXECUTION_TIME}\\' 
     """
     cloudsql_queries[
         "stock"

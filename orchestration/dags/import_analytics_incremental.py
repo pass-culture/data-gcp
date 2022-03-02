@@ -49,6 +49,7 @@ from dependencies.slack_alert import task_fail_slack_alert
 
 SCHEDULE_HOURS_INTERVAL = 6
 
+
 def getting_service_account_token(function_name):
     function_url = (
         f"https://europe-west1-{GCP_PROJECT}.cloudfunctions.net/{function_name}"
@@ -73,7 +74,7 @@ dag = DAG(
     "import_data_analytics_incremental",
     default_args=default_dag_args,
     description="Import tables from CloudSQL and enrich data for create dashboards with Metabase. "
-                "This DAG import data incrementally",
+    "This DAG import data incrementally",
     on_failure_callback=task_fail_slack_alert,
     schedule_interval=f"00 */{SCHEDULE_HOURS_INTERVAL} * * *",
     catchup=True,
@@ -89,7 +90,7 @@ for table in data_applicative_tables_and_date_columns.keys():
         sql=define_import_query(
             external_connection_id=APPLICATIVE_EXTERNAL_CONNECTION_ID,
             table=table,
-            schedule_hour_interval=SCHEDULE_HOURS_INTERVAL
+            schedule_hour_interval=SCHEDULE_HOURS_INTERVAL,
         ),
         write_disposition="WRITE_APPEND",
         use_legacy_sql=False,
@@ -108,7 +109,9 @@ for table in data_applicative_tables_and_date_columns.keys():
             dag=dag,
         )
 
-    end_import_table_to_analytics = DummyOperator(task_id="end_import_table_to_clean", dag=dag)
+    end_import_table_to_analytics = DummyOperator(
+        task_id="end_import_table_to_clean", dag=dag
+    )
 
     clean_task >> analytics_task >> end_import_table_to_analytics
 
@@ -136,12 +139,5 @@ offer_clean_duplicates = BigQueryOperator(
 
 end = DummyOperator(task_id="end", dag=dag)
 
-(
-    start
-    >> import_tables_to_clean_tasks
-)
-(
-    end_import_table_to_analytics
-    >> offer_clean_duplicates
-    >> end
-)
+(start >> import_tables_to_clean_tasks)
+(end_import_table_to_analytics >> offer_clean_duplicates >> end)

@@ -4,7 +4,10 @@ from dateutil import parser
 
 
 def define_import_query(
-    table, region=GCP_REGION, external_connection_id=APPLICATIVE_EXTERNAL_CONNECTION_ID, schedule_hour_interval=12
+    table,
+    region=GCP_REGION,
+    external_connection_id=APPLICATIVE_EXTERNAL_CONNECTION_ID,
+    schedule_hour_interval=12,
 ):
     """
     Given a table (from "external_connection_id" located in "region"), we build and return the federated query that

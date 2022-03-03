@@ -171,7 +171,6 @@ def define_import_query(
     # define day before and after execution date
     # we jinja template reference to user the datetimes around execution time
     EXECUTION_TIME = "{{ ts }}"
-
     cloudsql_queries[
         "offer"
     ] = f"""

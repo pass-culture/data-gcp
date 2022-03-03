@@ -617,6 +617,16 @@ ENRICHED_USER_DATA_INPUT = {
             "user_subscription_state": "account_created",
         }
     ],
+    "user_suspension": [
+        {
+            "id": "1",
+            "userId": "1",
+            "eventType": "UNSUSPENDED",
+            "eventDate": datetime.now().replace(microsecond=0),
+            "actorUserId": "1388409",
+            "reasonCode": "1",
+        }
+    ],
     "deposit": [
         {
             "id": "1",

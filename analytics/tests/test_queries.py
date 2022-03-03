@@ -98,6 +98,15 @@ def flush_dataset():
             "booking_id",
         ),
         (
+            "enriched_user_data",
+            define_enriched_user_data_full_query(
+                dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX
+            ),
+            ENRICHED_USER_DATA_INPUT,
+            ENRICHED_USER_DATA_EXPECTED,
+            "user_id",
+        ),
+        (
             "enriched_offer_data",
             define_enriched_offer_data_full_query(
                 analytics_dataset=TEST_DATASET,

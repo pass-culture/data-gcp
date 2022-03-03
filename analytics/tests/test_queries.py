@@ -107,17 +107,6 @@ def flush_dataset():
             "user_id",
         ),
         (
-            "enriched_offer_data",
-            define_enriched_offer_data_full_query(
-                analytics_dataset=TEST_DATASET,
-                clean_dataset=TEST_DATASET,
-                table_prefix=TEST_TABLE_PREFIX,
-            ),
-            ENRICHED_OFFER_DATA_INPUT,
-            ENRICHED_OFFER_DATA_EXPECTED,
-            "offer_id",
-        ),
-        (
             "enriched_stock_data",
             define_enriched_stock_data_full_query(
                 dataset=TEST_DATASET, table_prefix=TEST_TABLE_PREFIX

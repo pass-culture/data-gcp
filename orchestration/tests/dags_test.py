@@ -101,6 +101,15 @@ class TestDags(unittest.TestCase):
         self.assertIsNotNone(dag)
         self.assertEqual(len(dag.tasks), 116)
 
+    def test_import_data_analytics_incremental_dag_is_loaded(self):
+        # When
+        dag = self.dagbag.get_dag(dag_id="import_data_analytics_incremental")
+
+        # Then
+        self.assertDictEqual(self.dagbag.import_errors, {})
+        self.assertIsNotNone(dag)
+        self.assertEqual(len(dag.tasks), 6)
+
     def test_import_firebase_data_dag_is_loaded(self):
         # When
         dag = self.dagbag.get_dag(dag_id="import_firebase_data_v3")

@@ -4,7 +4,10 @@ from dateutil import parser
 
 
 def define_import_query(
-    table, region=GCP_REGION, external_connection_id=APPLICATIVE_EXTERNAL_CONNECTION_ID
+    table,
+    region=GCP_REGION,
+    external_connection_id=APPLICATIVE_EXTERNAL_CONNECTION_ID,
+    schedule_hour_interval=12,
 ):
     """
     Given a table (from "external_connection_id" located in "region"), we build and return the federated query that
@@ -26,7 +29,7 @@ def define_import_query(
             "activity" as user_activity, "culturalSurveyFilledDate" as user_cultural_survey_filled_date,
             "hasSeenTutorials" as user_has_seen_tutorials, "address" as user_address, "city" as user_city,
             "lastConnectionDate" as user_last_connection_date, "isEmailValidated" as user_is_email_validated,
-            "suspensionReason" as user_suspension_reason, "isActive" as user_is_active,
+            "isActive" as user_is_active,
             "hasSeenProTutorials" as user_has_seen_pro_tutorials, EXTRACT(YEAR FROM AGE("user"."dateOfBirth")) AS user_age,
             "hasCompletedIdCheck" AS user_has_completed_idCheck,
             "phoneValidationStatus" AS user_phone_validation_status,
@@ -166,10 +169,8 @@ def define_import_query(
         FROM public.booking
     """
     # define day before and after execution date
-    # we jinja template reference to user the dates around execution date
-    DAY_BEFORE_EXECUTION = "{{ yesterday_ds }}"
-    EXECUTION_DAY = "{{ ds }}"
-    DAY_AFTER_EXECUTION = "{{ tomorrow_ds }}"
+    # we jinja template reference to user the datetimes around execution time
+    EXECUTION_TIME = "{{ ts }}"
     cloudsql_queries[
         "offer"
     ] = f"""
@@ -195,8 +196,8 @@ def define_import_query(
             "dateUpdated" as offer_date_updated,
             "isEducational" AS offer_is_educational
         FROM public.offer
-        WHERE "dateUpdated" > \\'{EXECUTION_DAY}\\'
-        AND "dateUpdated" <  \\'{DAY_AFTER_EXECUTION}\\' 
+        WHERE "dateUpdated" >= timestamp \\'{EXECUTION_TIME}\\' - INTERVAL \\'{schedule_hour_interval} HOUR\\'
+        AND "dateUpdated" <  \\'{EXECUTION_TIME}\\' 
     """
     cloudsql_queries[
         "stock"
@@ -273,6 +274,13 @@ def define_import_query(
                 CAST("id" AS varchar(255)), CAST("userId" AS varchar(255)), CAST("offerId" AS varchar(255)),
                 CAST("mediationId" AS varchar(255)), "dateCreated"
             FROM public.favorite
+        """
+    cloudsql_queries[
+        "user_suspension"
+    ] = """
+            SELECT
+                CAST("id" AS varchar(255)), CAST("userId" AS varchar(255)), "eventType", "eventDate", cast("actorUserId" AS VARCHAR(255)), "reasonCode"
+            FROM public.user_suspension
         """
     cloudsql_queries[
         "transaction"

@@ -624,7 +624,7 @@ ENRICHED_USER_DATA_INPUT = {
             "eventType": "UNSUSPENDED",
             "eventDate": datetime.now().replace(microsecond=0),
             "actorUserId": "1388409",
-            "reasonCode": "1",
+            "reasonCode": None,
         }
     ],
     "deposit": [

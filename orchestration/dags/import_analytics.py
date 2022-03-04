@@ -45,6 +45,9 @@ from dependencies.data_analytics.import_tables import (
     define_import_query,
     define_replace_query,
 )
+from dependencies.import_contentful_file import (
+    load_from_csv_contentful_file,
+)
 from dependencies.slack_alert import task_fail_slack_alert
 
 
@@ -330,6 +333,15 @@ create_enriched_app_downloads_stats = BigQueryOperator(
     dag=dag,
 )
 
+create_contentful_home = BigQueryOperator(
+    task_id="import_contentful_home_from_storage",
+    python_callable=load_from_csv_contentful_file(),
+    use_legacy_sql=False,
+    destination_dataset_table=f"{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.contentful_home",
+    write_disposition="WRITE_TRUNCATE",
+    dag=dag,
+)
+
 create_table_venue_locations = BigQueryOperator(
     task_id="create_table_venue_locations",
     sql=define_table_venue_locations(
@@ -444,6 +456,7 @@ end = DummyOperator(task_id="end", dag=dag)
     >> create_enriched_educational_booking_data_task
     >> create_enriched_user_data_task
     >> enriched_venues
+    >> create_contentful_home
     >> create_enriched_offerer_data_task
     >> end_enriched_data
 )

@@ -118,6 +118,7 @@ data_applicative_tables_and_date_columns = {
         "dateupdated",
     ],
     "beneficiary_fraud_check": [""],
+    "contentful_home": [""],
     "educational_booking": [
         "educational_booking_confirmation_date",
         "educational_booking_confirmation_limit_date",

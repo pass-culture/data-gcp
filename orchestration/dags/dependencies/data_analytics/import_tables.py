@@ -229,7 +229,7 @@ def define_import_query(
             "fieldsUpdated" AS venue_fields_updated, CAST("venueTypeId" AS varchar(255)) AS venue_type_id,
             CAST("venueLabelId" AS varchar(255)) AS venue_label_id, "dateCreated" AS venue_creation_date,
             "isPermanent" AS venue_is_permanent, "validationToken" AS venue_validation_token, 
-            CAST("businessUnitId" AS varchar(255)) AS business_unit_id
+            CAST("businessUnitId" AS varchar(255)) AS business_unit_id, "bannerUrl" as banner_url
         FROM public.venue
     """
     cloudsql_queries[

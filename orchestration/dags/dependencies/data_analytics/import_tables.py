@@ -8,12 +8,14 @@ def define_import_query(
     region=GCP_REGION,
     external_connection_id=APPLICATIVE_EXTERNAL_CONNECTION_ID,
     schedule_hour_interval=12,
+    interval=1,
 ):
     """
     Given a table (from "external_connection_id" located in "region"), we build and return the federated query that
     selects table content (for import purpose).
     In order to handle type incompatibility between postgresql and BigQuery (eg. UUID and custom types),
     we sometimes have to explicitly select and cast columns.
+    Added schedule_hour_interval and interval for incremental imports. As of today only import_offers uses them.
     """
     # Define select-queries for tables that need a specific CAST and ID for metabase
     cloudsql_queries = {}
@@ -196,8 +198,8 @@ def define_import_query(
             "dateUpdated" as offer_date_updated,
             "isEducational" AS offer_is_educational
         FROM public.offer
-        WHERE "dateUpdated" >= timestamp \\'{EXECUTION_TIME}\\' - INTERVAL \\'{schedule_hour_interval} HOUR\\'
-        AND "dateUpdated" <  \\'{EXECUTION_TIME}\\' 
+        WHERE "dateUpdated" >= timestamp \\'{EXECUTION_TIME}\\' - INTERVAL \\'{interval + 1} HOUR\\'
+        AND "dateUpdated" <  \\'{EXECUTION_TIME}\\'  - INTERVAL \\'{interval} HOUR\\'
     """
     cloudsql_queries[
         "stock"

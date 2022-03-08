@@ -45,6 +45,7 @@ from dependencies.data_analytics.import_tables import (
     define_import_query,
     define_replace_query,
 )
+
 from dependencies.slack_alert import task_fail_slack_alert
 
 

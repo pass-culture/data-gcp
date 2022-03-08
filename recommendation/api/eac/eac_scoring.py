@@ -70,7 +70,6 @@ def get_intermediate_recommendations_for_user_eac(
             ORDER BY RANDOM();
             """
         )
-
         with create_db_connection() as connection:
             query_result = connection.execute(
                 query, user_id=str(user_id), user_iris_id=str(user_iris_id)
@@ -100,7 +99,7 @@ def get_scored_recommendation_for_user_eac(
 
     start = time.time()
     user_to_rank = [user_id] * len(user_recommendations)
-
+    print("/!\ Number of offers to score  /!\ = ", len(user_recommendations))
     if group_id == "A":
         # 29/10/2021 : A = Algo v1
         model_name = MODEL_NAME_A
@@ -143,38 +142,9 @@ def get_scored_recommendation_for_user_eac(
 
     else:
         instances = []
-    nbmaxoffers = 100
-    if group_id == "B" and (len(instances[0]["input_2"]) > nbmaxoffers):
-        print("Number of offers to score: ", len(instances[0]["input_2"]))
-        nbdivisions = len(instances[0]["input_2"]) // nbmaxoffers
-        predicted_scores = []
-        for k in range(nbdivisions):
-            instances_batch = [
-                {
-                    "input_1": instances[0]["input_1"][
-                        k * nbmaxoffers : (k + 1) * nbmaxoffers
-                    ],
-                    "input_2": instances[0]["input_2"][
-                        k * nbmaxoffers : (k + 1) * nbmaxoffers
-                    ],
-                }
-            ]
-            predicted_scores = predicted_scores + predict_score(
-                MODEL_REGION, GCP_PROJECT, model_name, instances_batch
-            )
-        instances_batch = [
-            {
-                "input_1": instances[0]["input_1"][nbdivisions * nbmaxoffers :],
-                "input_2": instances[0]["input_2"][nbdivisions * nbmaxoffers :],
-            }
-        ]
-        predicted_scores = predicted_scores + predict_score(
-            MODEL_REGION, GCP_PROJECT, model_name, instances_batch
-        )
-    else:
-        predicted_scores = predict_score(
-            MODEL_REGION, GCP_PROJECT, model_name, instances
-        )
+
+    predicted_scores = predict_score(MODEL_REGION, GCP_PROJECT, model_name, instances)
+
     recommendations = [
         {**recommendation, "score": predicted_scores[i][0]}
         for i, recommendation in enumerate(user_recommendations)

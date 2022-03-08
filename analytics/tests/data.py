@@ -605,7 +605,6 @@ ENRICHED_USER_DATA_INPUT = {
             "user_has_seen_tutorials": True,
             "user_cultural_survey_filled_date": datetime.now().replace(microsecond=0),
             "user_is_active": True,
-            "user_suspension_reason": None,
             "user_age": 18,
             "user_has_completed_idCheck": True,
             "user_phone_validation_status": True,
@@ -616,6 +615,16 @@ ENRICHED_USER_DATA_INPUT = {
             "user_role": "BENEFICIARY",
             "user_school_type": "Lycée agricole",
             "user_subscription_state": "account_created",
+        }
+    ],
+    "user_suspension": [
+        {
+            "id": "1",
+            "userId": "1",
+            "eventType": "UNSUSPENDED",
+            "eventDate": datetime.now().replace(microsecond=0),
+            "actorUserId": "1388409",
+            "reasonCode": None,
         }
     ],
     "deposit": [

@@ -77,7 +77,7 @@ dag = DAG(
     "This DAG import data incrementally",
     on_failure_callback=task_fail_slack_alert,
     schedule_interval=f"00 */{SCHEDULE_HOURS_INTERVAL} * * *",
-    catchup=True,
+    catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
 )
 
@@ -85,35 +85,40 @@ start = DummyOperator(task_id="start", dag=dag)
 
 import_tables_to_clean_tasks = []
 for table in data_applicative_tables_and_date_columns.keys():
-    clean_task = BigQueryOperator(
-        task_id=f"import_to_clean_{table}",
-        sql=define_import_query(
-            external_connection_id=APPLICATIVE_EXTERNAL_CONNECTION_ID,
-            table=table,
-            schedule_hour_interval=SCHEDULE_HOURS_INTERVAL,
-        ),
-        write_disposition="WRITE_APPEND",
+
+    start_import = DummyOperator(task_id=f"start_import_{table}", dag=dag)
+
+    start >> start_import
+
+    analytics_task = BigQueryOperator(
+        task_id=f"import_to_analytics_{table}",
+        sql=f"SELECT * {define_replace_query(data_applicative_tables_and_date_columns[table])} FROM {BIGQUERY_CLEAN_DATASET}.{APPLICATIVE_PREFIX}{table}",
+        write_disposition="WRITE_TRUNCATE",
         use_legacy_sql=False,
-        destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.{APPLICATIVE_PREFIX}{table}",
+        destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.{APPLICATIVE_PREFIX}{table}",
         dag=dag,
     )
-    import_tables_to_clean_tasks.append(clean_task)
-
-    for table in data_applicative_tables_and_date_columns.keys():
-        analytics_task = BigQueryOperator(
-            task_id=f"import_to_analytics_{table}",
-            sql=f"SELECT * {define_replace_query(data_applicative_tables_and_date_columns[table])} FROM {BIGQUERY_CLEAN_DATASET}.{APPLICATIVE_PREFIX}{table}",
-            write_disposition="WRITE_TRUNCATE",
-            use_legacy_sql=False,
-            destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.{APPLICATIVE_PREFIX}{table}",
-            dag=dag,
-        )
-
     end_import_table_to_analytics = DummyOperator(
         task_id="end_import_table_to_clean", dag=dag
     )
 
-    clean_task >> analytics_task >> end_import_table_to_analytics
+    import_offer_to_clean_tasks = []
+    for i in range(SCHEDULE_HOURS_INTERVAL):
+        offer_task = BigQueryOperator(
+            task_id=f"import_to_clean_{table}_{i}",
+            sql=define_import_query(
+                external_connection_id=APPLICATIVE_EXTERNAL_CONNECTION_ID,
+                table=table,
+                interval=i,
+            ),
+            write_disposition="WRITE_APPEND",
+            use_legacy_sql=False,
+            destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.{APPLICATIVE_PREFIX}{table}",
+            dag=dag,
+        )
+        start_import >> offer_task >> analytics_task
+
+    analytics_task >> end_import_table_to_analytics
 
 
 offer_clean_duplicates = BigQueryOperator(

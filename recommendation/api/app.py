@@ -82,9 +82,9 @@ def recommendation(user_id: int):
         user_id, longitude, latitude
     )
     if is_cold_start:
-        reco_origin = "ColdStart"
+        reco_origin = "cold_start"
     else:
-        reco_origin = "Algo"
+        reco_origin = "algo"
     return jsonify(
         {
             "recommended_offers": recommendations,

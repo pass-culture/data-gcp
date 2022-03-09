@@ -16,9 +16,10 @@ if ENV_SHORT_NAME == "prod":
         BOOKING_DAY_NUMBER = 2 * 30
     else:
         BOOKING_DAY_NUMBER = 4 * 30
-        CLICS_DAY_NUMBER = 2 * 30
+    CLICS_DAY_NUMBER = 2 * 30
 else:
     BOOKING_DAY_NUMBER = 20
+    CLICS_DAY_NUMBER = 20
 
 
 def get_secret(secret_id: str):

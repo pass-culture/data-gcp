@@ -203,7 +203,7 @@ def define_import_query(
     """
 
     cloudsql_queries[
-        "stock"
+        "stock":
     ] = """
         SELECT
             CAST("idAtProviders" AS varchar(255)) AS stock_id_at_providers ,

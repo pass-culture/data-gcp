@@ -198,8 +198,8 @@ def define_import_query(
             "dateUpdated" as offer_date_updated,
             "isEducational" AS offer_is_educational
         FROM public.offer
-        WHERE "dateUpdated" >= timestamp \\'{EXECUTION_TIME}\\' - INTERVAL \\'{interval + 1} HOUR\\'
-        AND "dateUpdated" < timestamp \\'{EXECUTION_TIME}\\' - INTERVAL \\'{interval} HOUR\\'
+        WHERE "dateUpdated" >= timestamp \\'{EXECUTION_TIME}\\' - INTERVAL \\'{(interval + 1) * 15} MINUTE\\'
+        AND "dateUpdated" <  \\'{EXECUTION_TIME}\\'  - INTERVAL \\'{interval * 15} MINUTE\\'
     """
 
     cloudsql_queries[

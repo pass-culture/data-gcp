@@ -186,7 +186,7 @@ def define_import_query(
             "description" as offer_description, "conditions" as offer_conditions, "ageMin" as offer_age_min,
             "ageMax" as offer_age_max, "url" as offer_url, "mediaUrls" as offer_media_urls,
             "durationMinutes" as offer_duration_minutes, "isNational" as offer_is_national,
-            "extraData" as offer_extra_data, "isDuo" as offer_is_duo, "fieldsUpdated" as offer_fields_updated,
+            "jsonData" as offer_extra_data, "isDuo" as offer_is_duo, "fieldsUpdated" as offer_fields_updated,
             "withdrawalDetails" as offer_withdrawal_details,
             "audioDisabilityCompliant" as offer_audio_disability_compliant,
             "mentalDisabilityCompliant" as offer_mental_disability_compliant,
@@ -199,8 +199,9 @@ def define_import_query(
             "isEducational" AS offer_is_educational
         FROM public.offer
         WHERE "dateUpdated" >= timestamp \\'{EXECUTION_TIME}\\' - INTERVAL \\'{interval + 1} HOUR\\'
-        AND "dateUpdated" <  \\'{EXECUTION_TIME}\\'  - INTERVAL \\'{interval} HOUR\\'
+        AND "dateUpdated" < timestamp \\'{EXECUTION_TIME}\\' - INTERVAL \\'{interval} HOUR\\'
     """
+
     cloudsql_queries[
         "stock"
     ] = """

@@ -145,7 +145,7 @@ def query_siren():
         else:
             result = response.json()
             siren_info_list = append_info_siren_list(siren_info_list, result)
-        time.sleep(2)
+        time.sleep(3)
     return siren_info_list
 
 

@@ -103,7 +103,7 @@ for table in data_applicative_tables_and_date_columns.keys():
     )
 
     import_offer_to_clean_tasks = []
-    for i in range(SCHEDULE_HOURS_INTERVAL):
+    for i in range(SCHEDULE_HOURS_INTERVAL*4):
         offer_task = BigQueryOperator(
             task_id=f"import_to_clean_{table}_{i}",
             sql=define_import_query(

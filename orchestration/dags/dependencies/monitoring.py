@@ -87,8 +87,14 @@ def _define_clicks(start_date, end_date):
             LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.{TABLE_AB_TESTING}` ab_testing ON events.user_id = ab_testing.userid
             WHERE event_timestamp > {start_date}
             AND event_timestamp < {end_date}
-            GROUP BY event_timestamp, event_date, event_name, user_id, group_id,reco_origin
+            GROUP BY event_timestamp, event_date, event_name, user_id, group_id
+        ),
+        clicks_agg as (
+            SELECT user_id, group_id,reco_origin,event_timestamp,event_date, event_name,firebase_screen,module
+            FROM clicks
+            GROUP BY event_timestamp, event_date, event_name, user_id, group_id,reco_origin,firebase_screen,module
         )
+
     """
 
 
@@ -108,8 +114,14 @@ def _define_favorites(start_date, end_date):
             AND user_id IS NOT NULL
             AND event_timestamp > {start_date}
             AND event_timestamp < {end_date}
-            GROUP BY user_id, event_name, event_timestamp,groupid,reco_origin
+            GROUP BY user_id, event_name, event_timestamp,groupid
+        ),
+        favorites_agg as(
+            SELECT user_id, event_name, event_timestamp,group_id,reco_origin,origin,module
+            FROM favorite_events
+            GROUP BY user_id, event_name, event_timestamp,group_id,reco_origin,module,origin
         )
+
     """
 
 
@@ -122,9 +134,10 @@ def get_favorite_request(start_date, end_date, group_id_list, reco_origin_list):
         SELECT
         COUNT(*) AS favorites,
         SUM(CAST(origin = "home" AS INT64)) as home_favorites,
+        SUM(CAST(module IN {RECOMMENDATION_MODULE_SQL_STRING} AS INT64)) AS total_recommendation_favorites,
         {", ".join([f"SUM(CAST((module IN {RECOMMENDATION_MODULE_SQL_STRING} AND group_id = '{group_id}') AS INT64)) AS recommendation_favorites_{group_id}" for group_id in group_id_list])},
         {",".join([f'SUM(CAST((module IN {RECOMMENDATION_MODULE_SQL_STRING} AND group_id = "{group_id}" AND reco_origin="{reco_origin}") AS INT64)) AS recommendation_favorites_{reco_origin}_{group_id}'  for group_id in group_id_list for reco_origin in reco_origin_list])},
-        FROM favorite_events
+        FROM favorites_agg
     """
 
 
@@ -155,9 +168,10 @@ def get_pertinence_clicks_request(
         SELECT
         COUNT(*) AS clicks,
         SUM(CAST(firebase_screen = "Home" AS INT64)) as home_clicks,
+        SUM(CAST(module IN {RECOMMENDATION_MODULE_SQL_STRING} AS INT64)) AS total_recommendation_clicks,
         {", ".join([f"SUM(CAST((module IN {RECOMMENDATION_MODULE_SQL_STRING} AND group_id = '{group_id}') AS INT64)) AS recommendation_clicks_{group_id}" for group_id in group_id_list])},
         {",".join([f'SUM(CAST((module IN {RECOMMENDATION_MODULE_SQL_STRING} AND group_id = "{group_id}" AND reco_origin="{reco_origin}") AS INT64)) AS recommendation_clicks_{reco_origin}_{group_id}'  for group_id in group_id_list for reco_origin in reco_origin_list])},
-        FROM clicks
+        FROM clicks_agg
     """
 
 

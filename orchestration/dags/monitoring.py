@@ -18,7 +18,7 @@ from dependencies.monitoring import (
 
 from dependencies.config import GCP_PROJECT, BIGQUERY_ANALYTICS_DATASET, ENV_SHORT_NAME
 
-MONITORING_TABLE = "monitoring_data_v202203"
+MONITORING_TABLE = "monitoring_data"
 # A changer en fonction des dates de changement d'algo
 
 START_DATE = datetime(2021, 11, 9, tzinfo=pytz.utc)  # expressed in UTC TimeZone

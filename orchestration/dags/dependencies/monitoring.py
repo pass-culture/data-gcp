@@ -82,12 +82,19 @@ def _define_clicks(start_date, end_date):
             SELECT user_id, groupid as group_id, event_name, event_date, event_timestamp,  
             MAX(CASE WHEN params.key = "moduleName" THEN params.value.string_value ELSE NULL END) AS module,
             MAX(CASE WHEN params.key = "firebase_screen" THEN params.value.string_value ELSE NULL END) AS firebase_screen,
+            MAX(CASE WHEN params.key = "reco_origin" THEN params.value.string_value ELSE NULL END) AS reco_origin,
             FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.{FIREBASE_EVENTS_TABLE}_*` events, events.event_params AS params
             LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.{TABLE_AB_TESTING}` ab_testing ON events.user_id = ab_testing.userid
             WHERE event_timestamp > {start_date}
             AND event_timestamp < {end_date}
             GROUP BY event_timestamp, event_date, event_name, user_id, group_id
+        ),
+        clicks_agg as (
+            SELECT user_id, group_id,reco_origin,event_timestamp,event_date, event_name,firebase_screen,module
+            FROM clicks
+            GROUP BY event_timestamp, event_date, event_name, user_id, group_id,reco_origin,firebase_screen,module
         )
+
     """
 
 
@@ -98,6 +105,7 @@ def _define_favorites(start_date, end_date):
             MAX(CASE WHEN params.key = "moduleName" THEN params.value.string_value ELSE NULL END) AS module,
             MAX(CASE WHEN params.key = "offerId" THEN CAST(params.value.double_value AS INT64) ELSE NULL END) AS offer_id,
             MAX(CASE WHEN params.key = "from" THEN params.value.string_value ELSE NULL END) AS origin,
+            MAX(CASE WHEN params.key = "reco_origin" THEN params.value.string_value ELSE NULL END) AS reco_origin,
             groupid AS group_id,
             FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.{FIREBASE_EVENTS_TABLE}_*` events, 
             events.user_properties AS user_prop, events.event_params AS params
@@ -107,11 +115,17 @@ def _define_favorites(start_date, end_date):
             AND event_timestamp > {start_date}
             AND event_timestamp < {end_date}
             GROUP BY user_id, event_name, event_timestamp,groupid
+        ),
+        favorites_agg as(
+            SELECT user_id, event_name, event_timestamp,group_id,reco_origin,origin,module
+            FROM favorite_events
+            GROUP BY user_id, event_name, event_timestamp,group_id,reco_origin,module,origin
         )
+
     """
 
 
-def get_favorite_request(start_date, end_date, group_id_list):
+def get_favorite_request(start_date, end_date, group_id_list, reco_origin_list):
     group_id_list = sorted(group_id_list)
 
     return f"""
@@ -121,8 +135,9 @@ def get_favorite_request(start_date, end_date, group_id_list):
         COUNT(*) AS favorites,
         SUM(CAST(origin = "home" AS INT64)) as home_favorites,
         SUM(CAST(module IN {RECOMMENDATION_MODULE_SQL_STRING} AS INT64)) AS total_recommendation_favorites,
-        {", ".join([f'SUM(CAST((module IN {RECOMMENDATION_MODULE_SQL_STRING} AND group_id = "{group_id}") AS INT64)) AS recommendation_favorites_{group_id}' for group_id in group_id_list])}
-        FROM favorite_events
+        {", ".join([f"SUM(CAST((module IN {RECOMMENDATION_MODULE_SQL_STRING} AND group_id = '{group_id}') AS INT64)) AS recommendation_favorites_{group_id}" for group_id in group_id_list])},
+        {",".join([f'SUM(CAST((module IN {RECOMMENDATION_MODULE_SQL_STRING} AND group_id = "{group_id}" AND reco_origin="{reco_origin}") AS INT64)) AS recommendation_favorites_{reco_origin}_{group_id}'  for group_id in group_id_list for reco_origin in reco_origin_list])},
+        FROM favorites_agg
     """
 
 
@@ -143,7 +158,9 @@ def get_pertinence_bookings_request(
     """
 
 
-def get_pertinence_clicks_request(start_date, end_date, group_id_list):
+def get_pertinence_clicks_request(
+    start_date, end_date, group_id_list, reco_origin_list
+):
     group_id_list = sorted(group_id_list)
     return f"""
         {_define_clicks(start_date, end_date)}
@@ -152,8 +169,9 @@ def get_pertinence_clicks_request(start_date, end_date, group_id_list):
         COUNT(*) AS clicks,
         SUM(CAST(firebase_screen = "Home" AS INT64)) as home_clicks,
         SUM(CAST(module IN {RECOMMENDATION_MODULE_SQL_STRING} AS INT64)) AS total_recommendation_clicks,
-        {", ".join([f"SUM(CAST((module IN {RECOMMENDATION_MODULE_SQL_STRING} AND group_id = '{group_id}') AS INT64)) AS recommendation_clicks_{group_id}" for group_id in group_id_list] )}
-        FROM clicks
+        {", ".join([f"SUM(CAST((module IN {RECOMMENDATION_MODULE_SQL_STRING} AND group_id = '{group_id}') AS INT64)) AS recommendation_clicks_{group_id}" for group_id in group_id_list])},
+        {",".join([f'SUM(CAST((module IN {RECOMMENDATION_MODULE_SQL_STRING} AND group_id = "{group_id}" AND reco_origin="{reco_origin}") AS INT64)) AS recommendation_clicks_{reco_origin}_{group_id}'  for group_id in group_id_list for reco_origin in reco_origin_list])},
+        FROM clicks_agg
     """
 
 

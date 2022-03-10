@@ -130,7 +130,9 @@ def compute_favorites_metrics(ti, **kwargs):
     start_date = convert_datetime_to_microseconds(START_DATE)
     end_date = ti.xcom_pull(key=LAST_EVENT_TIME_KEY)
     bigquery_client = BigQueryClient()
-    results = bigquery_client.query(get_favorite_request(start_date, end_date, groups, reco_origin_list))
+    results = bigquery_client.query(
+        get_favorite_request(start_date, end_date, groups, reco_origin_list)
+    )
     for index, metric in enumerate(
         ["FAVORITES", "HOME_FAVORITES", "TOTAL_RECOMMENDATION_FAVORITES"]
         + [f"RECOMMENDATION_FAVORITES_{group_id}" for group_id in groups]

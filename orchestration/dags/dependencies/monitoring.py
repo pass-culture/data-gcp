@@ -145,7 +145,9 @@ def get_pertinence_bookings_request(
     """
 
 
-def get_pertinence_clicks_request(start_date, end_date, group_id_list, reco_origin_list):
+def get_pertinence_clicks_request(
+    start_date, end_date, group_id_list, reco_origin_list
+):
     group_id_list = sorted(group_id_list)
     return f"""
         {_define_clicks(start_date, end_date)}

@@ -29,7 +29,7 @@ SELECT
 FROM {dataset}.{table_prefix}educational_booking AS educational_booking
 INNER JOIN {dataset}.{table_prefix}booking AS booking  ON educational_booking.educational_booking_id  = booking.educational_booking_id
 INNER JOIN {dataset}.{table_prefix}stock AS stock  ON stock.stock_id  = booking.stock_id
-INNER JOIN {dataset}.{table_prefix}offer AS offer  ON offer.offer_id = stock.offer_id
+LEFT JOIN {dataset}.{table_prefix}offer AS offer  ON offer.offer_id = stock.offer_id
 INNER JOIN {dataset}.{table_prefix}venue AS venue ON offer.venue_id = venue.venue_id
 INNER JOIN {dataset}.{table_prefix}educational_institution AS educational_institution  ON educational_institution.educational_institution_id = educational_booking.educational_booking_educational_institution_id
 LEFT JOIN  {dataset}.eple AS eple  ON eple.id_etablissement  = educational_institution.educational_institution_institution_id

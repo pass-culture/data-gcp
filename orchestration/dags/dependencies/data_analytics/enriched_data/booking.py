@@ -115,7 +115,7 @@ def create_materialized_enriched_booking_view(dataset, table_prefix=""):
             FROM {dataset}.{table_prefix}booking AS booking
             INNER JOIN {dataset}.{table_prefix}stock AS stock
                 ON booking.stock_id = stock.stock_id
-            INNER JOIN {dataset}.{table_prefix}offer AS offer
+            LEFT JOIN {dataset}.{table_prefix}offer AS offer
                 ON offer.offer_id = stock.offer_id
                 AND offer.offer_subcategoryId NOT IN ('ACTIVATION_THING','ACTIVATION_EVENT')
             INNER JOIN {dataset}.{table_prefix}venue AS venue

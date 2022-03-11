@@ -791,6 +791,7 @@ ENRICHED_VENUE_DATA_INPUT = {
             "venue_siret": "12345678912345",
             "venue_is_virtual": False,
             "venue_is_permanent": True,
+            "venue_type_code": "Librairie",
             "venue_managing_offerer_id": "1",
             "venue_creation_date": datetime.now().replace(microsecond=0),
             "venue_label_id": "1",
@@ -820,7 +821,7 @@ ENRICHED_VENUE_DATA_EXPECTED = [
         "venue_managing_offerer_id": "1",
         "venue_creation_date": datetime.now().replace(microsecond=0),
         "offerer_name": "An offerer",
-        "venue_type_label": "a label",
+        "venue_type_label": "Librairie",
         "venue_label": "an other label",
         "total_bookings": 1,
         "non_cancelled_bookings": 1,
@@ -978,6 +979,7 @@ ENRICHED_BOOKING_DATA_INPUT = {
             "venue_department_code": 78,
             "venue_managing_offerer_id": "2",
             "venue_type_id": "1",
+            "venue_type_code": "Librairie",
         }
     ],
     "offerer": [{"offerer_id": "2", "offerer_name": "Offerer"}],
@@ -1041,7 +1043,7 @@ ENRICHED_BOOKING_DATA_EXPECTED = [
         "venue_id": "8",
         "venue_label_name": "label",
         "venue_name": "My Wonderful Venue",
-        "venue_type_name": "label",
+        "venue_type_name": "Librairie",
         "booking_used_date": datetime.now().replace(microsecond=0),
     }
 ]

@@ -1096,6 +1096,7 @@ ENRICHED_EDUCATIONAL_BOOKING_DATA_INPUT = {
         {
             "stock_id": "9",
             "offer_id": "11",
+            "number_of_tickets": 30,
             "stock_beginning_date": datetime.now().replace(microsecond=0),
         }
     ],
@@ -1132,6 +1133,7 @@ ENRICHED_EDUCATIONAL_BOOKING_DATA_EXPECTED = [
         "venue_name": "My Wonderful Venue",
         "venue_department_code": 78,
         "booking_amount": 50,
+        "number_of_tickets": 30,
         "nom_etablissement": "Mon etablissement",
         "school_department_code": 78,
         "libelle_academie": "Mon academie",

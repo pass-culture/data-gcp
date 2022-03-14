@@ -468,7 +468,6 @@ workflows:
             - Slack
           <<: *slack-fail-post-step
 
-
       - cloud-function-deploy:
           name: cni-fraude-algo-cloud-function-deploy-prod
           cloud-function-name: cni_fraude_algo_prod
@@ -485,7 +484,6 @@ workflows:
             - Slack
           <<: *slack-fail-post-step
 
-
       - cloud-function-deploy:
           name: import-adage-cloud-function-deploy-stg
           cloud-function-name: adage_import_stg
@@ -501,7 +499,6 @@ workflows:
             - DATA_GCP_EHP
             - Slack
           <<: *slack-fail-post-step
-
 
       - cloud-function-deploy:
           name: import-adage-cloud-function-deploy-prod
@@ -738,7 +735,7 @@ jobs:
           command: |
             python3 -m venv venv-api
             . venv-api/bin/activate
-            pip install -r api-dev-requirements.txt
+            pip install -r api-dev-requirements.txt -U
       - save_cache:
           key: deps-{{ checksum "api-dev-requirements.txt" }}
           paths:

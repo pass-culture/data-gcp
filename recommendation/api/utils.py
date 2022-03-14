@@ -5,6 +5,7 @@ from typing import Any
 from access_gcp_secrets import access_secret
 from sqlalchemy import create_engine, engine, text
 from loguru import logger
+import logging
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
 
@@ -38,9 +39,10 @@ query_string = dict(
 
 
 def create_pool():
+    print("SQL_BASE_USER:", SQL_BASE_USER)
     return create_engine(
         engine.url.URL(
-            drivername="postgres+pg8000",
+            drivername="postgresql+pg8000",
             username=SQL_BASE_USER,
             password=SQL_BASE_PASSWORD,
             database=SQL_BASE,
@@ -54,7 +56,11 @@ def create_pool():
 
 
 def create_db_connection() -> Any:
-    return create_pool().connect().execution_options(autocommit=True)
+    logging.basicConfig()
+    logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
+    logging.getLogger("sqlalchemy.pool").setLevel(logging.DEBUG)
+    pool = create_pool()
+    return pool.connect()
 
 
 def log_duration(message, start):

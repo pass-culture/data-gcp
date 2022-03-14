@@ -42,7 +42,7 @@ def create_pool():
     return create_engine(
         engine.url.URL(
             drivername="postgres+pg8000",
-            username=SQL_BASE_USER,
+            user=SQL_BASE_USER,
             password=SQL_BASE_PASSWORD,
             database=SQL_BASE,
             query=query_string,
@@ -55,9 +55,10 @@ def create_pool():
 
 
 def create_db_connection() -> Any:
-    pool = create_pool()
     logging.basicConfig()
     logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
+    logging.getLogger("sqlalchemy.pool").setLevel(logging.DEBUG)
+    pool = create_pool()
     return pool.connect().execution_options(autocommit=True)
 
 

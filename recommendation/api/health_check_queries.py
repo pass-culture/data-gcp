@@ -29,7 +29,7 @@ query_string = dict(
     {"unix_sock": "/cloudsql/{}/.s.PGSQL.5432".format(SQL_CONNECTION_NAME)}
 )
 engine = create_engine(
-    engine.url.URL.create(
+    engine.URL.create(
         drivername="postgresql+pg8000",
         username=SQL_BASE_USER,
         password=SQL_BASE_PASSWORD,

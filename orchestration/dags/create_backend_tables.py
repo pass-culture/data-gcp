@@ -2,7 +2,9 @@ import datetime
 
 from airflow import DAG
 from airflow.contrib.operators.bigquery_operator import BigQueryOperator
-from airflow.contrib.operators.bigquery_table_delete_operator import BigQueryTableDeleteOperator
+from airflow.contrib.operators.bigquery_table_delete_operator import (
+    BigQueryTableDeleteOperator,
+)
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.http_operator import SimpleHttpOperator
 from airflow.operators.python_operator import PythonOperator
@@ -48,7 +50,8 @@ from dependencies.data_analytics.import_tables import (
 )
 from dependencies.slack_alert import task_fail_slack_alert
 
-tables_creation_requests = {"favorite_not_booked": """WITH favorites as (SELECT DISTINCT favorite.userId, offerId, offer.offer_subcategoryId as subcat, 
+tables_creation_requests = {
+    "favorite_not_booked": """WITH favorites as (SELECT DISTINCT favorite.userId, offerId, offer.offer_subcategoryId as subcat, 
     (select count(*) from `passculture-data-ehp.analytics_dev.enriched_booking_data` where offer_subcategoryId = offer.offer_subcategoryId AND user_id = favorite.userId ) as user_bookings_for_this_subcat
 FROM `passculture-data-ehp.analytics_dev.applicative_database_favorite` as favorite
 LEFT JOIN `passculture-data-ehp.analytics_dev.enriched_booking_data` as booking 
@@ -64,7 +67,8 @@ ARRAY_AGG(
         ORDER BY user_bookings_for_this_subcat DESC LIMIT 1
     )[OFFSET(0)].*
 FROM favorites
-GROUP BY userId"""}
+GROUP BY userId"""
+}
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),
@@ -111,7 +115,4 @@ for table_name, request in tables_creation_requests.items():
     create_task >> delete_task >> end
 
 
-(
-    start
-    >> create_tables_tasks
-)
+(start >> create_tables_tasks)

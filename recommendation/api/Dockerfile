@@ -24,7 +24,7 @@ COPY eac/eac_scoring.py eac/
 COPY utils.py ./
 
 # Install production dependencies.
-RUN pip install -r api-requirements.txt
+RUN pip install -r api-requirements.txt -U
 
 # Run the web service on container startup. Here we use the gunicorn
 # webserver, with one worker process and 8 threads.

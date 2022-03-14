@@ -70,6 +70,7 @@ def test_recommendation_return_recommended_offers_when_there_is_right_token(
     get_final_recommendations_mock.return_value = [3, 2, 1]
 
     # When
+    app.testing = True
     response = app.test_client().get(
         f"/recommendation/{user_id}?token={api_token}&latitude=2.331289&longitude=48.830719"
     )

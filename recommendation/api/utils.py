@@ -5,6 +5,7 @@ from typing import Any
 from access_gcp_secrets import access_secret
 from sqlalchemy import create_engine, engine, text
 from loguru import logger
+import logging
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
 
@@ -54,7 +55,10 @@ def create_pool():
 
 
 def create_db_connection() -> Any:
-    return create_pool().connect().execution_options(autocommit=True)
+    pool = create_pool()
+    logging.basicConfig()
+    logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
+    return pool.connect().execution_options(autocommit=True)
 
 
 def log_duration(message, start):

@@ -7,7 +7,7 @@ then
   export DB_NAME="db"
   export SQL_BASE_USER="postgres"
   export SQL_BASE="db"
-  export SQL_CONNECTION_NAME="127.0.0.1"
+  export SQL_CONNECTION_NAME="localhost"
 else
   set +a; source ../../.env.local; set -a;
 fi

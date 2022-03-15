@@ -1,13 +1,9 @@
 #!/bin/bash
-
 export PYTHONPATH=$PYTHONPATH:$(pwd)
 if [ "$CI" '=' true ]
 then
   export DATA_GCP_TEST_POSTGRES_PORT=5432
-  export SQL_BASE="db"
-  export SQL_BASE_USER="postgres"
-  export SQL_BASE_PASSWORD="postgres"
-  export SQL_CONNECTION_NAME="testdb"
+  export SQL_BASE_USER="cloudsql-recommendation-dev"
 else
   set +a; source ../../.env.local; set -a;
 fi

@@ -60,7 +60,7 @@ def create_db_connection() -> Any:
     logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
     logging.getLogger("sqlalchemy.pool").setLevel(logging.DEBUG)
     pool = create_pool()
-    return pool.connect().execution_options(autocommit=True)
+    return pool.connect()
 
 
 def log_duration(message, start):

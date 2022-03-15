@@ -7,7 +7,7 @@ then
   export DB_NAME="db"
   export SQL_BASE_USER="postgres"
   export SQL_BASE="db"
-  export SQL_CONNECTION_NAME="localhost"
+  export SQL_CONNECTION_NAME="passculture-data-ehp:europe-west1:cloudsql-recommendation-dev"
 else
   set +a; source ../../.env.local; set -a;
 fi

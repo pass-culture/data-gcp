@@ -7,6 +7,7 @@ then
   export SQL_BASE="db"
   export SQL_BASE_USER="postgres"
   export SQL_BASE_PASSWORD="postgres"
+  export SQL_CONNECTION_NAME="testdb"
 else
   set +a; source ../../.env.local; set -a;
 fi

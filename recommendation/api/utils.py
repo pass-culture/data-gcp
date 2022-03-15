@@ -42,6 +42,7 @@ def create_pool():
     print("SQL_BASE_USER:", SQL_BASE_USER)
     print("SQL_BASE_PASSWORD:", SQL_BASE_PASSWORD)
     print("SQL_BASE:", SQL_BASE)
+    print("SQL_CONNECTION_NAME:", SQL_CONNECTION_NAME)
     return create_engine(
         engine.url.URL(
             drivername="postgresql+pg8000",

@@ -41,7 +41,7 @@ query_string = dict(
 def create_pool():
     print("SQL_BASE_USER:", SQL_BASE_USER)
     return create_engine(
-        engine.url.URL(
+        engine.url.URL.create(
             drivername="postgresql+pg8000",
             username=SQL_BASE_USER,
             password=SQL_BASE_PASSWORD,

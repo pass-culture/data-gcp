@@ -6,7 +6,7 @@ from flask_cors import CORS
 
 from access_gcp_secrets import access_secret
 from health_check_queries import get_materialized_view_status
-from .recommendation import get_final_recommendations, get_user_metadata
+from recommendations import get_final_recommendations, get_user_metadata
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
 

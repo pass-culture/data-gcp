@@ -334,8 +334,15 @@ def define_import_query(
         "deposit"
     ] = """
             SELECT
-                CAST("id" AS varchar(255)), "amount", CAST("userId" AS varchar(255)), "source", "dateCreated", "expirationDate","type"
+                CAST("id" AS varchar(255)), "amount", CAST("userId" AS varchar(255)), "source", "dateCreated", "dateUpdated", "expirationDate","type"
             FROM public.deposit
+        """
+    cloudsql_queries[
+        "recredit"
+    ] = """
+            SELECT
+                CAST("id" AS varchar(255)),CAST("depositId" AS varchar(255)), "amount", "dateCreated", "recreditType"
+            FROM public.recredit
         """
     cloudsql_queries[
         "beneficiary_import"

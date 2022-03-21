@@ -44,7 +44,11 @@ def create_pool():
             username=SQL_BASE_USER,
             password=SQL_BASE_PASSWORD,
             database=SQL_BASE,
-            query=query_string,
+            query={
+                "unix_socket": "{}/{}".format(
+                    "/cloudsql", SQL_CONNECTION_NAME  # e.g. "/cloudsql"
+                )  # i.e "<PROJECT-NAME>:<INSTANCE-REGION>:<INSTANCE-NAME>"
+            },
         ),
         pool_size=20,
         max_overflow=2,

@@ -38,6 +38,7 @@ query_string = {"unix_sock": "/cloudsql/{}/.s.PGSQL.5432".format(SQL_CONNECTION_
 
 
 def create_pool():
+    print("SQL_BASE_USER:", SQL_BASE_USER)
     return create_engine(
         engine.url.URL(
             drivername="postgresql+pg8000",
@@ -55,6 +56,7 @@ def create_pool():
 
 def create_db_connection() -> Any:
     return create_pool().connect()
+
 
 
 def log_duration(message, start):

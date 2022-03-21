@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 from numpy.testing import assert_array_equal
 import pytest
 
-from recommendation import (
+from recommendations import (
     get_final_recommendations,
     order_offers_by_score_and_diversify_categories,
     save_recommendation,
@@ -17,11 +17,11 @@ from not_eac.cold_start import get_cold_start_scored_recommendations_for_user
 from utils import create_db_connection
 
 
-@patch("recommendation.is_eac_user")
-@patch("recommendation.fork_query_ab_testing_table")
-@patch("recommendation.get_cold_start_scored_recommendations_for_user")
-@patch("recommendation.get_iris_from_coordinates")
-@patch("recommendation.save_recommendation")
+@patch("recommendations.is_eac_user")
+@patch("recommendations.fork_query_ab_testing_table")
+@patch("recommendations.get_cold_start_scored_recommendations_for_user")
+@patch("recommendations.get_iris_from_coordinates")
+@patch("recommendations.save_recommendation")
 @patch("utils.create_pool")
 def test_get_final_recommendation_for_group_a_cold_start(
     mock_pool: Mock,
@@ -65,12 +65,12 @@ def test_get_final_recommendation_for_group_a_cold_start(
     save_recommendation_mock.assert_called_once()
 
 
-@patch("recommendation.is_eac_user")
-@patch("recommendation.fork_query_ab_testing_table")
-@patch("recommendation.get_intermediate_recommendations_for_user")
-@patch("recommendation.get_scored_recommendation_for_user")
-@patch("recommendation.get_iris_from_coordinates")
-@patch("recommendation.save_recommendation")
+@patch("recommendations.is_eac_user")
+@patch("recommendations.fork_query_ab_testing_table")
+@patch("recommendations.get_intermediate_recommendations_for_user")
+@patch("recommendations.get_scored_recommendation_for_user")
+@patch("recommendations.get_iris_from_coordinates")
+@patch("recommendations.save_recommendation")
 @patch("utils.create_pool")
 def test_get_final_recommendation_for_group_a_algo(
     mock_pool: Mock,
@@ -132,13 +132,13 @@ def test_get_final_recommendation_for_group_a_algo(
     save_recommendation_mock.assert_called_once()
 
 
-@patch("recommendation.is_eac_user")
-@patch("recommendation.fork_query_ab_testing_table")
-@patch("recommendation.get_intermediate_recommendations_for_user")
-@patch("recommendation.get_scored_recommendation_for_user")
-@patch("recommendation.get_iris_from_coordinates")
-@patch("recommendation.get_cold_start_categories")
-@patch("recommendation.save_recommendation")
+@patch("recommendations.is_eac_user")
+@patch("recommendations.fork_query_ab_testing_table")
+@patch("recommendations.get_intermediate_recommendations_for_user")
+@patch("recommendations.get_scored_recommendation_for_user")
+@patch("recommendations.get_iris_from_coordinates")
+@patch("recommendations.get_cold_start_categories")
+@patch("recommendations.save_recommendation")
 @patch("utils.create_pool")
 def test_get_final_recommendation_for_group_b(
     mock_pool: Mock,
@@ -200,15 +200,15 @@ def test_get_final_recommendation_for_group_b(
     assert recommendations == [3, 2] or [2, 3]
 
 
-@patch("recommendation.is_eac_user")
-@patch("recommendation.fork_query_ab_testing_table")
-@patch("recommendation.order_offers_by_score_and_diversify_categories")
-@patch("recommendation.get_scored_recommendation_for_user")
-@patch("recommendation.get_cold_start_scored_recommendations_for_user")
-@patch("recommendation.get_intermediate_recommendations_for_user")
-@patch("recommendation.get_cold_start_categories")
-@patch("recommendation.get_iris_from_coordinates")
-@patch("recommendation.save_recommendation")
+@patch("recommendations.is_eac_user")
+@patch("recommendations.fork_query_ab_testing_table")
+@patch("recommendations.order_offers_by_score_and_diversify_categories")
+@patch("recommendations.get_scored_recommendation_for_user")
+@patch("recommendations.get_cold_start_scored_recommendations_for_user")
+@patch("recommendations.get_intermediate_recommendations_for_user")
+@patch("recommendations.get_cold_start_categories")
+@patch("recommendations.get_iris_from_coordinates")
+@patch("recommendations.save_recommendation")
 @patch("utils.create_pool")
 def test_get_final_recommendation_for_new_user(
     mock_pool: Mock,
@@ -287,7 +287,7 @@ def test_get_final_recommendation_for_new_user(
 
 
 """
-@patch("recommendation.create_db_connection")
+@patch("recommendations.create_db_connection")
 def test_get_intermediate_recommendation_for_user(
     connection_mock: Mock, setup_database: Any
 ):
@@ -349,7 +349,7 @@ def test_get_intermediate_recommendation_for_user(
 
 
 @patch("random.random")
-@patch("recommendation.create_db_connection")
+@patch("recommendations.create_db_connection")
 def test_get_cold_start_scored_recommendations_for_user(
     connection_mock: Mock, random_mock: Mock, setup_database: Any
 ):
@@ -396,7 +396,7 @@ def test_get_cold_start_scored_recommendations_for_user(
     )
 
 
-@patch("recommendation.create_db_connection")
+@patch("recommendations.create_db_connection")
 def test_get_intermediate_recommendation_for_user_with_no_iris(
     connection_mock: Mock,
     setup_database: Any,
@@ -544,7 +544,7 @@ def test_order_offers_by_score_and_diversify_categories(
     assert_array_equal(output, order_offers_by_score_and_diversify_categories(offers))
 
 
-@patch("recommendation.predict_score")
+@patch("recommendations.predict_score")
 def test_get_scored_recommendation_for_user(predict_score_mock: Mock):
     # Given
     group_id = "A"

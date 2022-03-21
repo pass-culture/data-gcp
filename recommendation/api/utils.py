@@ -36,7 +36,6 @@ MODEL_NAME_C = os.environ.get("MODEL_NAME_C")
 query_string = {"unix_sock": "/cloudsql/{}/.s.PGSQL.5432".format(SQL_CONNECTION_NAME)}
 
 
-
 def create_pool():
     print("SQL_BASE_USER:", SQL_BASE_USER)
     return create_engine(
@@ -56,7 +55,6 @@ def create_pool():
 
 def create_db_connection() -> Any:
     return create_pool().connect()
-
 
 
 def log_duration(message, start):

@@ -33,13 +33,11 @@ MODEL_NAME_A = os.environ.get("MODEL_NAME_A")
 MODEL_NAME_B = os.environ.get("MODEL_NAME_B")
 MODEL_NAME_C = os.environ.get("MODEL_NAME_C")
 
-query_string = dict(
-    {"unix_sock": "/cloudsql/{}/.s.PGSQL.5432".format(SQL_CONNECTION_NAME)}
-)
+query_string = {"unix_sock": "/cloudsql/{}/.s.PGSQL.5432".format(SQL_CONNECTION_NAME)}
+
 
 
 def create_pool():
-    print("SQL_BASE_USER:", SQL_BASE_USER)
     return create_engine(
         engine.url.URL(
             drivername="postgresql+pg8000",
@@ -56,11 +54,7 @@ def create_pool():
 
 
 def create_db_connection() -> Any:
-    logging.basicConfig()
-    logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
-    logging.getLogger("sqlalchemy.pool").setLevel(logging.DEBUG)
-    pool = create_pool()
-    return pool.connect()
+    return create_pool().connect()
 
 
 def log_duration(message, start):

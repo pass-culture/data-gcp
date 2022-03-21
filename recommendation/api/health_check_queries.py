@@ -44,7 +44,7 @@ engine = create_engine(
 
 
 def create_db_connection() -> Any:
-    return engine.connect().execution_options(autocommit=True)
+    return engine.connect()
 
 
 def does_materialized_view_exist(connection: Any, materialized_view_name: str) -> bool:

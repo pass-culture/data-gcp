@@ -14,7 +14,6 @@ SQL_BASE_USER = os.environ.get("SQL_BASE_USER")
 SQL_BASE_SECRET_ID = os.environ.get("SQL_BASE_SECRET_ID")
 SQL_BASE_SECRET_VERSION = os.environ.get("SQL_BASE_SECRET_VERSION")
 SQL_CONNECTION_NAME = os.environ.get("SQL_CONNECTION_NAME")
-
 SQL_BASE_PASSWORD = access_secret(
     GCP_PROJECT, SQL_BASE_SECRET_ID, SQL_BASE_SECRET_VERSION
 )
@@ -33,18 +32,18 @@ MODEL_NAME_A = os.environ.get("MODEL_NAME_A")
 MODEL_NAME_B = os.environ.get("MODEL_NAME_B")
 MODEL_NAME_C = os.environ.get("MODEL_NAME_C")
 
-query_string = {"unix_sock": "/cloudsql/{}/.s.PGSQL.5432".format(SQL_CONNECTION_NAME)}
+query_string = dict(
+    {"unix_sock": "/cloudsql/{}/.s.PGSQL.5432".format(SQL_CONNECTION_NAME)}
+)
 
 
 def create_pool():
+    print("SQL_BASE:", SQL_BASE)
     print("SQL_BASE_USER:", SQL_BASE_USER)
+    print("SQL_BASE_PASSWORD:", SQL_BASE_PASSWORD)
+    print("SQL_CONNECTION_NAME: ", SQL_CONNECTION_NAME)
     return create_engine(
-        engine.URL.create(
-            drivername="postgresql+pg8000",
-            username=SQL_BASE_USER,
-            password=SQL_BASE_PASSWORD,
-            database=SQL_BASE,
-        ),
+        f"postgresql+pg8000://{SQL_BASE_USER}:{SQL_BASE_PASSWORD}@/{SQL_BASE}?unix_sock=/cloudsql/{SQL_CONNECTION_NAME}/.s.PGSQL.5432",
         pool_size=20,
         max_overflow=2,
         pool_timeout=30,

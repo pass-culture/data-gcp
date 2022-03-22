@@ -9,8 +9,8 @@ jsonify
 loguru
 numpy
 oauth2client
-pandas
-pg8000
+pandas==1.1.5
+pg8000==1.15.3
 psycopg2-binary
 pytest
 pytest-cov

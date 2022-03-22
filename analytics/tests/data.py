@@ -872,6 +872,7 @@ ENRICHED_OFFERER_DATA_INPUT = {
             "offerer_id": "1",
             "offerer_postal_code": "973",
             "offerer_name": "An offerer",
+            "offerer_siren": "123456789",
             "offerer_creation_date": datetime.now().replace(microsecond=0),
         }
     ],
@@ -890,6 +891,7 @@ ENRICHED_OFFERER_DATA_INPUT = {
     ],
     "venue_label": [],
     "venue_type": [],
+    "region_department": [{"num_dep": "973", "region_name": "Guyane"}],
 }
 
 ENRICHED_OFFERER_DATA_EXPECTED = [
@@ -903,6 +905,8 @@ ENRICHED_OFFERER_DATA_EXPECTED = [
         "offerer_bookable_offer_cnt": 1,
         "no_cancelled_booking_cnt": 1,
         "offerer_department_code": "973",
+        "offerer_region_name": "Guyane",
+        "offerer_siren": "123456789",
         "venue_cnt": 1,
         "venue_with_offer": 1,
         "offerer_humanized_id": "AE",

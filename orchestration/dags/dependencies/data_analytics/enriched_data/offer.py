@@ -148,7 +148,6 @@ def define_enriched_offer_data_query(analytics_dataset, clean_dataset, table_pre
                 offer_extracted_data.companies,
                 offer_extracted_data.countries,
                 offer_extracted_data.casting,
-                offer_extracted_data.isbn,
                 CASE 
                     WHEN subcategories.category_id <> 'MUSIQUE_LIVE' AND offer_extracted_data.showType IS NOT NULL THEN offer_extracted_data.showType 
                     WHEN subcategories.category_id = 'MUSIQUE_LIVE' THEN offer_extracted_data.musicType

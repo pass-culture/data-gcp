@@ -79,7 +79,6 @@ ENRICHED_OFFER_DATA_INPUT = {
             "companies": '[{"activity":"production","company":{"name":"universal pictures"}}]',
             "countries": '["usa"]',
             "casting": "[]",
-            "isbn": None,
         },
         {
             "offer_id": "4",
@@ -101,7 +100,6 @@ ENRICHED_OFFER_DATA_INPUT = {
             "companies": None,
             "countries": None,
             "casting": None,
-            "isbn": None,
         },
     ],
     "offer_tags": [
@@ -340,7 +338,6 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "companies": '[{"activity":"production","company":{"name":"universal pictures"}}]',
         "countries": '["usa"]',
         "casting": "[]",
-        "isbn": None,
         "offer_is_educational": False,
         "offer_is_underage_selectable": True,
         "offer_is_bookable": False,
@@ -386,7 +383,6 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "companies": None,
         "countries": None,
         "casting": None,
-        "isbn": None,
         "offer_is_educational": False,
         "offer_is_underage_selectable": True,
         "offer_is_bookable": True,

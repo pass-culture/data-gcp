@@ -106,7 +106,6 @@ BIGQUERY_SCHEMAS = {
         "companies": "STRING",
         "countries": "STRING",
         "casting": "STRING",
-        "isbn": "STRING",
     },
     "offer_tags": {
         "offer_id": "STRING",

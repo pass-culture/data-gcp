@@ -193,7 +193,7 @@ def define_enriched_venue_query(dataset, table_prefix=""):
                 ,theoretic_revenue_per_venue.theoretic_revenue
                 ,real_revenue_per_venue.real_revenue
                 ,venue_humanized_id.humanized_id AS venue_humanized_id
-                ,CONCAT("https://backend.passculture.beta.gouv.fr/pc/back-office/venue/edit/?id=",venue.venue_id,"&url=%2Fpc%2Fback-office%2Fvenue%2F") AS venue_flaskadmin_link
+                ,CONCAT("https://backend.passculture.pro/pc/back-office/venue/edit/?id=",venue.venue_id,"&url=%2Fpc%2Fback-office%2Fvenue%2F") AS venue_flaskadmin_link
                 ,venue_region_departement.region_name AS venue_region_name
                 ,CONCAT('https://passculture.pro/structures/',offerer_humanized_id.humanized_id,'/lieux/',venue_humanized_id.humanized_id) AS venue_pc_pro_link
             FROM {dataset}.{table_prefix}venue AS venue

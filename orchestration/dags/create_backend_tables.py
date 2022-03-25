@@ -112,7 +112,7 @@ for table_name, request in tables_creation_requests.items():
     )
     create_tables_tasks.append(create_task)
 
-    create_task >> delete_task >> end
+    delete_task >> create_task >> end
 
 
-(start >> create_tables_tasks)
+(start >> delete_task)

@@ -30,7 +30,7 @@ def fuse_columns_into_format(is_physical_good, is_digital_good, is_event):
 
 
 def get_users_bookings(data):
-    query = """SELECT user_id, offer.offer_id, roffer.offer_description,booking_creation_date, booking_amount,
+    query = f"""SELECT user_id, offer.offer_id, roffer.offer_description,booking_creation_date, booking_amount,
     offer_category_id as category, bkg.offer_subcategoryId as subcategory, bkg.physical_goods, 
     bkg.digital_goods, bkg.event, offer.genres, offer.rayon, offer.type, offer.venue_id, offer.venue_name
     FROM {GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_booking_data bkg
@@ -45,3 +45,25 @@ def get_users_bookings(data):
     query = query[:-2] + ")"
     users_bookings = pd.read_gbq(query)
     return users_bookings
+
+
+def data_preparation():
+    bookings_enriched = pd.merge(bookings, users_sample, on="user_id", validate="m:1")
+    bookings_enriched["offer_description"] = (
+        '"' + bookings_enriched["offer_description"] + '"'
+    )
+    bookings_enriched["format"] = bookings_enriched.apply(
+        lambda x: fuse_columns_into_format(
+            x["physical_goods"], x["digital_goods"], x["event"]
+        ),
+        axis=1,
+    )
+    return bookings_enriched
+
+
+def get_rayon():
+    data = pd.read_csv(
+        f"gs://{DATA_GCS_BUCKET_NAME}/macron_rayon/correspondance_rayon_macro_rayon.csv",
+        sep=",",
+    )
+    return data

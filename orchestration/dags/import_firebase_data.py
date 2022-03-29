@@ -37,8 +37,8 @@ EXECUTION_DATE = "{{ ds_nodash }}"
 
 default_dag_args = {
     "start_date": datetime.datetime(2021, 4, 17),
-    "retries": 1,
-    "retry_delay": datetime.timedelta(minutes=5),
+    "retries": 3,
+    "retry_delay": datetime.timedelta(hours=6),
     "project_id": GCP_PROJECT,
 }
 

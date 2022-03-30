@@ -553,8 +553,8 @@ def define_import_query(
                 ,CAST("offererId" AS varchar(255)) AS collective_booking_offerer_id
                 , "cancellationDate" AS collective_booking_cancellation_date
                 , "cancellationLimitDate" AS collective_booking_cancellation_limit_date
-                , "cancellationReason" AS collective_booking_cancellation_reason
-                , "status" AS collective_booking_status
+                , CAST("cancellationReason" AS VARCHAR) AS collective_booking_cancellation_reason
+                , CAST("status" AS VARCHAR) AS collective_booking_status
                 , "reimbursementDate" AS collective_booking_reimbursement_date
                 , CAST("educationalInstitutionId" AS varchar(255)) AS collective_booking_educational_institution_id
                 , CAST("educationalYearId" AS varchar(255)) AS collective_booking_educational_year_id
@@ -572,7 +572,7 @@ def define_import_query(
                 ,"motorDisabilityCompliant" AS collective_offer_motor_disability_compliant
                 ,"visualDisabilityCompliant" AS collective_offer_visual_disability_compliant
                 ,"lastValidationDate" AS collective_offer_last_validation_date
-                , "validation" AS collective_offer_validation
+                , CAST("validation" AS VARCHAR) AS collective_offer_validation
                 , CAST("id" AS varchar(255)) AS collective_offer_id
                 , CAST("offerId" AS varchar(255)) AS collective_offer_offer_id
                 , "isActive" AS collective_offer_is_active
@@ -584,11 +584,11 @@ def define_import_query(
                 ,"dateCreated" AS collective_offer_creation_date
                 ,CAST("subcategoryId" AS varchar(255)) AS collective_offer_subcategory_id
                 ,"dateUpdated" AS collective_offer_date_updated
-                ,"students" AS collective_offer_students
+                ,BTRIM(array_to_string("students", \\',\\'), \\'{\\') AS collective_offer_students
                 , "contactEmail" AS collective_offer_contact_email
                 ,"contactPhone" AS collective_offer_contact_phone
                 ,"offerVenue" AS collective_offer_offer_venue
-                ,"lastValidationType" AS collective_offer_last_validation_type
+                ,CAST("lastValidationType" AS VARCHAR) AS collective_offer_last_validation_type
             FROM public.collective_offer
         """
     cloudsql_queries[

@@ -266,7 +266,8 @@ def define_import_query(
             "postalCode" AS offerer_postal_code, "city" AS offerer_city, CAST("id" AS varchar(255)) AS offerer_id,
             "dateCreated" AS offerer_creation_date, "name" AS offerer_name,
             "siren" AS offerer_siren, CAST("lastProviderId" AS varchar(255)) AS offerer_last_provider_id,
-            "fieldsUpdated" AS offerer_fields_updated, "validationToken" AS offerer_validation_token
+            "fieldsUpdated" AS offerer_fields_updated, "validationToken" AS offerer_validation_token,
+            "dateValidated" AS offerer_validation_date
         FROM public.offerer
     """
     cloudsql_queries[

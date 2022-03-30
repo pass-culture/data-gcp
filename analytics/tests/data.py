@@ -874,6 +874,7 @@ ENRICHED_OFFERER_DATA_INPUT = {
             "offerer_name": "An offerer",
             "offerer_siren": "123456789",
             "offerer_creation_date": datetime.now().replace(microsecond=0),
+            "offerer_validation_date": datetime.now().replace(microsecond=0),
         }
     ],
     "stock": [
@@ -899,6 +900,7 @@ ENRICHED_OFFERER_DATA_EXPECTED = [
         "offerer_id": "1",
         "offerer_name": "An offerer",
         "offerer_creation_date": datetime.now().replace(microsecond=0),
+        "offerer_validation_date": datetime.now().replace(microsecond=0),
         "first_stock_creation_date": datetime.now().replace(microsecond=0),
         "first_booking_date": datetime.now().replace(microsecond=0),
         "offer_cnt": 1,

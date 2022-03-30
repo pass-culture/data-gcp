@@ -123,6 +123,7 @@ BIGQUERY_SCHEMAS = {
         "offerer_validation_token": "STRING",
         "offerer_id": "STRING",
         "offerer_creation_date": "DATETIME",
+        "offerer_validation_date": "DATETIME",
         "offerer_name": "STRING",
         "offerer_siren": "STRING",
         "offerer_last_provider_id": "STRING",

@@ -617,7 +617,7 @@ def define_import_query(
                 ,"website" AS venue_contact_website
                 ,"phone_number" AS venue_contact_phone_number
                 ,"social_medias" AS venue_contact_social_medias
-            FROM public.collective_stock
+            FROM public.venue_contact
         """
     # Build specific federated queries
     queries = {}

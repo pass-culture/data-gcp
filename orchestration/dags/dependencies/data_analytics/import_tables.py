@@ -548,7 +548,7 @@ def define_import_query(
                 ,CAST("bookingId" AS varchar(255)) AS booking_id
                 , "dateCreated" AS collective_booking_creation_date
                 , "dateUsed" AS collective_booking_used_date
-                ,"CAST(collectiveStockId" AS varchar(255)) AS collective_booking_collective_stock_id
+                ,CAST("collectiveStockId" AS varchar(255)) AS collective_booking_collective_stock_id
                 ,CAST("venueId" AS varchar(255)) AS collective_booking_venue_id
                 ,CAST("offererId" AS varchar(255)) AS collective_booking_offerer_id
                 , "cancellationDate" AS collective_booking_cancellation_date
@@ -560,7 +560,7 @@ def define_import_query(
                 , CAST("educationalYearId" AS varchar(255)) AS collective_booking_educational_year_id
                 , "confirmationDate" AS collective_booking_confirmation_date
                 , "confirmationLimitDate" AS collective_booking_confirmation_limit_date
-                , CAST("educationalRedactorId") AS collective_booking_educational_redactor_id
+                , CAST("educationalRedactorId" AS varchar(255)) AS collective_booking_educational_redactor_id
             FROM public.collective_booking
         """
     cloudsql_queries[
@@ -587,7 +587,7 @@ def define_import_query(
                 ,"students" AS collective_offer_students
                 , "contactEmail" AS collective_offer_contact_email
                 ,"contactPhone" AS collective_offer_contact_phone
-                "offerVenue" AS collective_offer_offer_venue
+                ,"offerVenue" AS collective_offer_offer_venue
                 ,"lastValidationType" AS collective_offer_last_validation_type
             FROM public.collective_offer
         """

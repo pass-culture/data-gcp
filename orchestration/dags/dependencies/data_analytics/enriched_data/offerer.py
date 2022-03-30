@@ -146,6 +146,7 @@ def define_enriched_offerer_query(dataset, table_prefix=""):
                 offerer.offerer_id,
                 offerer.offerer_name,
                 offerer.offerer_creation_date,
+                offerer.offerer_validation_date,
                 related_stocks.first_stock_creation_date,
                 related_bookings.first_booking_date,
                 related_offers.offer_cnt,

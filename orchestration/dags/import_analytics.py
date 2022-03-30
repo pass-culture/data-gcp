@@ -65,7 +65,11 @@ data_applicative_tables_and_date_columns = {
         "user_last_connection_date",
     ],
     "provider": [""],
-    "offerer": ["offerer_modified_at_last_provider_date", "offerer_creation_date"],
+    "offerer": [
+        "offerer_modified_at_last_provider_date",
+        "offerer_creation_date",
+        "offerer_validation_date",
+    ],
     "bank_information": ["dateModified"],
     "booking": [
         "booking_creation_date",

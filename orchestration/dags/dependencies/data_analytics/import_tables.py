@@ -540,6 +540,85 @@ def define_import_query(
                 ,CAST("depositId" AS varchar(255)) AS deposit_id
             FROM individual_booking
         """
+    cloudsql_queries[
+        "collective_booking"
+    ] = """
+            SELECT
+                CAST("id" AS varchar(255)) AS collective_booking_id
+                ,CAST("bookingId" AS varchar(255)) AS booking_id
+                , "dateCreated" AS collective_booking_creation_date
+                , "dateUsed" AS collective_booking_used_date
+                ,"CAST(collectiveStockId" AS varchar(255)) AS collective_booking_collective_stock_id
+                ,CAST("venueId" AS varchar(255)) AS collective_booking_venue_id
+                ,CAST("offererId" AS varchar(255)) AS collective_booking_offerer_id
+                , "cancellationDate" AS collective_booking_cancellation_date
+                , "cancellationLimitDate" AS collective_booking_cancellation_limit_date
+                , "cancellationReason" AS collective_booking_cancellation_reason
+                , "status" AS collective_booking_status
+                , "reimbursementDate" AS collective_booking_reimbursement_date
+                , CAST("educationalInstitutionId" AS varchar(255)) AS collective_booking_educational_institution_id
+                , CAST("educationalYearId" AS varchar(255)) AS collective_booking_educational_year_id
+                , "confirmationDate" AS collective_booking_confirmation_date
+                , "confirmationLimitDate" AS collective_booking_confirmation_limit_date
+                , CAST("educationalRedactorId") AS collective_booking_educational_redactor_id
+            FROM public.collective_booking
+        """
+    cloudsql_queries[
+        "collective_offer"
+    ] = """
+            SELECT
+                "audioDisabilityCompliant" AS collective_offer_audio_disability_compliant
+                ,"mentalDisabilityCompliant" AS collective_offer_mental_disability_compliant
+                ,"motorDisabilityCompliant" AS collective_offer_motor_disability_compliant
+                ,"visualDisabilityCompliant" AS collective_offer_visual_disability_compliant
+                ,"lastValidationDate" AS collective_offer_last_validation_date
+                , "validation" AS collective_offer_validation
+                , CAST("id" AS varchar(255)) AS collective_offer_id
+                , CAST("offerId" AS varchar(255)) AS collective_offer_offer_id
+                , "isActive" AS collective_offer_is_active
+                , CAST("venueId" AS varchar(255)) AS collective_offer_venue_id
+                , "name" AS collective_offer_name
+                ,"bookingEmail" AS collective_offer_booking_email
+                ,"description" AS collective_offer_description
+                ,"durationMinutes" AS collective_offer_duration_minutes
+                ,"dateCreated" AS collective_offer_creation_date
+                ,CAST("subcategoryId" AS varchar(255)) AS collective_offer_subcategory_id
+                ,"dateUpdated" AS collective_offer_date_updated
+                ,"students" AS collective_offer_students
+                , "contactEmail" AS collective_offer_contact_email
+                ,"contactPhone" AS collective_offer_contact_phone
+                "offerVenue" AS collective_offer_offer_venue
+                ,"lastValidationType" AS collective_offer_last_validation_type
+            FROM public.collective_offer
+        """
+    cloudsql_queries[
+        "collective_stock"
+    ] = """
+            SELECT
+                CAST("id" AS varchar(255)) AS collective_stock_id
+                ,CAST("stockId" AS varchar(255)) AS collective_stock_stock_id
+                ,"dateCreated" AS collective_stock_creation_date
+                ,"dateModified" AS collective_stock_modification_date
+                ,"beginningDatetime" AS collective_stock_beginning_date_time
+                , CAST("collectiveOfferId" AS varchar(255)) AS collective_stock_collective_offer_id
+                ,"price" AS collective_stock_price
+                ,"bookingLimitDatetime" AS collective_stock_booking_limit_date_time
+                ,"numberOfTickets" AS collective_stock_number_of_tickets
+                ,"priceDetail" AS collective_stock_price_detail
+            FROM public.collective_stock
+        """
+    cloudsql_queries[
+        "venue_contact"
+    ] = """
+            SELECT
+                CAST("id" AS varchar(255)) AS venue_contact_id
+                ,CAST("venueId" AS varchar(255)) AS venue_contact_venue_id
+                ,"email" AS venue_contact_email
+                ,"website" AS venue_contact_website
+                ,"phone_number" AS venue_contact_phone_number
+                ,"social_medias" AS venue_contact_social_medias
+            FROM public.collective_stock
+        """
     # Build specific federated queries
     queries = {}
     for external_table, external_query in cloudsql_queries.items():

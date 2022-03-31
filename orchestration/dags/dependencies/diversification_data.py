@@ -7,7 +7,8 @@ from dependencies.config import (
     DATA_GCS_BUCKET_NAME,
 )
 from dependencies.diversification_kpi import (
-calculate_diversification_per_feature,
+    calculate_diversification_per_feature,
+    fuse_columns_into_format,
 )
 
 
@@ -19,17 +20,6 @@ def get_data_diversification():
     data = pd.read_gbq(query)
     data["user_civility"] = data["user_civility"].replace(["M.", "Mme"], ["M", "F"])
     return data
-
-
-def fuse_columns_into_format(is_physical_good, is_digital_good, is_event):
-    b_format = ""
-    if is_physical_good == True:
-        b_format = "physical"
-    elif is_digital_good == True:
-        b_format = "digital"
-    elif is_event == True:
-        b_format = "event"
-    return b_format
 
 
 def get_users_bookings(data):
@@ -67,12 +57,12 @@ def data_preparation():
 
 
 def get_rayon():
-    data = pd.read_csv(
+    data_rayon = pd.read_csv(
         f"gs://{DATA_GCS_BUCKET_NAME}/macron_rayon/correspondance_rayon_macro_rayon.csv",
         sep=",",
     )
-    data = data.drop(columns=["Unnamed: 0"])
-    return data
+    data_rayon = data_rayon.drop(columns=["Unnamed: 0"])
+    return data_rayon
 
 
 def get_users_qpi(users_sample):
@@ -91,22 +81,31 @@ def get_users_qpi(users_sample):
 
 
 def diversification_kpi(df):
-    df_dropped = df.drop(columns=['offer_description'])
+    df_dropped = df.drop(columns=["offer_description"])
     df_clean = df_dropped.rename(columns={"venue_id": "venue"})
-    features = ['category', 'subcategory', 'format', 'venue', 'macro_rayon']
+    features = ["category", "subcategory", "format", "venue", "macro_rayon"]
     divers_per_feature = calculate_diversification_per_feature(df_clean, features)
     for feature in features:
         divers_col = {f"{feature}_diversification": divers_per_feature[feature]}
-        df_clean = pd.merge(df_clean, pd.DataFrame(divers_col), left_index=True, right_index=True)
+        df_clean = pd.merge(
+            df_clean, pd.DataFrame(divers_col), left_index=True, right_index=True
+        )
 
     divers_col = {f"qpi_diversification": divers_per_feature["qpi_diversification"]}
-    df_clean = pd.merge(df_clean, pd.DataFrame(divers_col), left_index=True, right_index=True)
+    df_clean = pd.merge(
+        df_clean, pd.DataFrame(divers_col), left_index=True, right_index=True
+    )
     # Calculate delta diversification
     features_qpi = features
-    features_qpi.append('qpi')
-    df_clean[f'delta_diversification'] = df_clean.apply(
-        lambda x: sum([float(x[f"{feature}_diversification"]) for feature in features_qpi]), axis=1)
+    features_qpi.append("qpi")
+    df_clean[f"delta_diversification"] = df_clean.apply(
+        lambda x: sum(
+            [float(x[f"{feature}_diversification"]) for feature in features_qpi]
+        ),
+        axis=1,
+    )
     return df_clean
+
 
 def main_get_data():
     bookings_enriched = data_preparation()
@@ -134,4 +133,3 @@ def main_get_data():
         if_exists="replace",
     )
     return
-

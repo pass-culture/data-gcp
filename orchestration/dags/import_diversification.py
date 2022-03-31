@@ -35,7 +35,6 @@ start = DummyOperator(task_id="start", dag=dag)
 import_data_diversification = PythonOperator(
     task_id="import_data_diversification",
     python_callable=main_get_data,
-    destination_dataset_table=f"{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.user_diversification",
     write_disposition="WRITE_TRUNCATE",
     dag=dag,
 )

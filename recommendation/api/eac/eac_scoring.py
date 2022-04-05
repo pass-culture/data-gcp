@@ -99,7 +99,7 @@ def get_scored_recommendation_for_user_eac(
 
     start = time.time()
     user_to_rank = [user_id] * len(user_recommendations)
-    print("/!\ Number of offers to score  /!\ = ", len(user_recommendations))
+    print("/!\ Number of offers to score (EAC) /!\ = ", len(user_recommendations))
     if group_id == "A":
         # 29/10/2021 : A = Algo v1
         model_name = MODEL_NAME_A

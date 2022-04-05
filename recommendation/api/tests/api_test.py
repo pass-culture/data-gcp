@@ -78,5 +78,5 @@ def test_recommendation_return_recommended_offers_when_there_is_right_token(
     assert response.status_code == 200
     assert (
         response.data
-        == b'{"AB_test":"A","reco_origin":"cold_start","recommended_offers":[3, 2, 1]}\n'
+        == b'{"AB_test":"A","reco_origin":"cold_start","recommended_offers":[3,2,1]}\n'
     )

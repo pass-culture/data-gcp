@@ -127,7 +127,9 @@ def test_get_final_recommendation_for_group_a_algo(
     get_iris_from_coordinates_mock.return_value = 1
 
     # When
-    recommendations = get_final_recommendations(user_id, 2.331289, 48.830719)
+    recommendations, group_id, is_cold_start = get_final_recommendations(
+        user_id, 2.331289, 48.830719
+    )
 
     # Then
     assert sorted(recommendations) == [2, 3]
@@ -194,7 +196,9 @@ def test_get_final_recommendation_for_group_b(
     ]
     get_iris_from_coordinates_mock.return_value = 1
 
-    recommendations = get_final_recommendations(user_id, 2.331289, 48.830719)
+    recommendations, group_id, is_cold_start = get_final_recommendations(
+        user_id, 2.331289, 48.830719
+    )
 
     # Then
     get_cold_start_categories.assert_not_called()

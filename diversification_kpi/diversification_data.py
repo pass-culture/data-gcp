@@ -1,6 +1,6 @@
 import pandas as pd
 
-from dependencies.config import (
+from tools.utils import (
     GCP_PROJECT,
     BIGQUERY_CLEAN_DATASET,
     BIGQUERY_ANALYTICS_DATASET,

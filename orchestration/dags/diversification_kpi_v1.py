@@ -29,7 +29,7 @@ export GCP_PROJECT_ID={GCP_PROJECT_ID}"""
 
 
 default_args = {
-    "start_date": datetime(2022, 4, 6),
+    "start_date": datetime(2022, 4, 5),
     "on_failure_callback": task_fail_slack_alert,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),

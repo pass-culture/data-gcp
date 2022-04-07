@@ -15,7 +15,7 @@ from dependencies.access_gcp_secrets import access_secret_data
 from dependencies.config import GCP_PROJECT_ID, GCE_ZONE, ENV_SHORT_NAME
 
 
-GCE_INSTANCE = os.environ.get("GCE_TRAINING_INSTANCE", "diversification-dev-001")
+GCE_INSTANCE = os.environ.get("GCE_DIVERSIFICATION_INSTANCE", "diversification-dev-001")
 
 DATE = "{{ts_nodash}}"
 

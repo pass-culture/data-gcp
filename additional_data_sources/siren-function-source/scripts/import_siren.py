@@ -6,7 +6,7 @@ import time
 from scripts.utils import GCP_PROJECT, BIGQUERY_CLEAN_DATASET, TOKEN
 
 LIMIT_DATE_SIREN = 35
-MAX_SIREN_CALL = 7
+MAX_SIREN_CALL = 150
 
 
 def get_limit_date():
@@ -145,7 +145,7 @@ def query_siren():
         else:
             result = response.json()
             siren_info_list = append_info_siren_list(siren_info_list, result)
-        time.sleep(2)
+        time.sleep(4)
     return siren_info_list
 
 

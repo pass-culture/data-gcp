@@ -117,25 +117,25 @@ def diversification_kpi(df):
 
 def main_get_data():
     df = data_preparation()
-    #df_cluster = get_rayon()
-    #data = pd.merge(bookings_enriched, df_cluster, on="rayon", how="left")
-  #  qpi = get_users_qpi(data)
-  #  qpi = qpi.drop(columns=["submitted_at"])
-   # data = pd.merge(data, qpi, on="user_id", how="left", validate="many_to_one")
-    #data = data.drop(
-        columns=[
-            #"physical_goods",
-           # "digital_goods",
-          #  "event",
-         #   "genres",
-        #    "rayon",
-       #     "user_total_deposit_amount",
-      #      "actual_amount_spent",
-     #   ]
-    #)
-    #data = data.sort_values(by=["user_id", "booking_creation_date"])
+    # df_cluster = get_rayon()
+    # data = pd.merge(bookings_enriched, df_cluster, on="rayon", how="left")
+    #  qpi = get_users_qpi(data)
+    #  qpi = qpi.drop(columns=["submitted_at"])
+    # data = pd.merge(data, qpi, on="user_id", how="left", validate="many_to_one")
+    # data = data.drop(
+    # columns=[
+    # "physical_goods",
+    # "digital_goods",
+    #  "event",
+    #   "genres",
+    #    "rayon",
+    #     "user_total_deposit_amount",
+    #      "actual_amount_spent",
+    #   ]
+    # )
+    # data = data.sort_values(by=["user_id", "booking_creation_date"])
     print("8")
-    #df = diversification_kpi(data)
+    # df = diversification_kpi(data)
     print("10")
     df.to_gbq(
         f"""{BIGQUERY_ANALYTICS_DATASET}.user_diversification""",

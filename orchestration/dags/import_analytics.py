@@ -46,7 +46,7 @@ from dependencies.data_analytics.import_tables import (
     define_replace_query,
 )
 
-from dependencies.slack_alert import task_fail_slack_alert
+from dependencies.slack_alert_analytics import task_fail_slack_alert
 
 
 def getting_service_account_token(function_name):

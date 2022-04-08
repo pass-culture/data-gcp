@@ -67,7 +67,7 @@ def test_recommendation_return_recommended_offers_when_there_is_right_token(
     # Given
     api_token = "good_token"
     user_id = 1
-    get_final_recommendations_mock.return_value = [3, 2, 1]
+    get_final_recommendations_mock.return_value = [3, 2, 1], "A", True
 
     # When
     response = app.test_client().get(
@@ -78,5 +78,5 @@ def test_recommendation_return_recommended_offers_when_there_is_right_token(
     assert response.status_code == 200
     assert (
         response.data
-        == b'{"recommended_offers": [3, 2, 1],"AB_test": "A","reco_origin": "ColdStart"}\n'
+        == b'{"AB_test":"A","reco_origin":"cold_start","recommended_offers":[3,2,1]}\n'
     )

@@ -81,7 +81,7 @@ def get_final_recommendations(user_id: int, longitude: int, latitude: int) -> Li
     )
 
     save_recommendation(user_id, final_recommendations, group_id, reco_origin)
-    return final_recommendations
+    return final_recommendations, group_id, is_cold_start
 
 
 def is_eac_user(

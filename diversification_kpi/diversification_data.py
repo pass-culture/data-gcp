@@ -2,9 +2,7 @@ import pandas as pd
 
 from tools.utils import (
     GCP_PROJECT,
-    BIGQUERY_CLEAN_DATASET,
     BIGQUERY_ANALYTICS_DATASET,
-    DATA_GCS_BUCKET_NAME,
 )
 from tools.diversification_kpi import (
     calculate_diversification_per_feature,
@@ -19,7 +17,6 @@ def get_data_diversification():
     WHERE user_total_deposit_amount = 300 AND actual_amount_spent>=0 """
     data = pd.read_gbq(query)
     data["user_civility"] = data["user_civility"].replace(["M.", "Mme"], ["M", "F"])
-    print("1")
     return data
 
 
@@ -38,28 +35,23 @@ def get_users_bookings(data):
         query = query + f"'{user}',"
     query = query[:-2] + """ ')"""
     users_bookings = pd.read_gbq(query)
-    print("2")
     return users_bookings
 
 
 def data_preparation():
     users_sample = get_data_diversification()
     bookings = get_users_bookings(users_sample)
-    print("3")
     bookings_enriched = pd.merge(bookings, users_sample, on="user_id", validate="m:1")
-    print("4")
     bookings_enriched["offer_description"] = (
         '"' + bookings_enriched["offer_description"] + '"'
     )
-    print("23")
     bookings_enriched["format"] = bookings_enriched.apply(
         lambda x: fuse_columns_into_format(
             x["physical_goods"], x["digital_goods"], x["event"]
         ),
         axis=1,
     )
-    print("5")
-    return users_sample
+    return bookings_enriched
 
 
 def get_rayon():
@@ -68,7 +60,6 @@ def get_rayon():
         sep=",",
     )
     data_rayon = data_rayon.drop(columns=["Unnamed: 0"])
-    print("6")
     return data_rayon
 
 
@@ -84,7 +75,6 @@ def get_users_qpi(users_sample):
         query = query + f"'{user}',"
     query = query[:-2] + """ ')"""
     users_bookings = pd.read_gbq(query)
-    print("7")
     return users_bookings
 
 
@@ -116,30 +106,27 @@ def diversification_kpi(df):
 
 
 if __name__ == "__main__":
-    df = data_preparation()
-    # df_cluster = get_rayon()
-    # data = pd.merge(bookings_enriched, df_cluster, on="rayon", how="left")
-    #  qpi = get_users_qpi(data)
-    #  qpi = qpi.drop(columns=["submitted_at"])
-    # data = pd.merge(data, qpi, on="user_id", how="left", validate="many_to_one")
-    # data = data.drop(
-    # columns=[
-    # "physical_goods",
-    # "digital_goods",
-    #  "event",
-    #   "genres",
-    #    "rayon",
-    #     "user_total_deposit_amount",
-    #      "actual_amount_spent",
-    #   ]
-    # )
-    # data = data.sort_values(by=["user_id", "booking_creation_date"])
-    print("8")
-    # df = diversification_kpi(data)
-    print("10")
+    bookings_enriched = data_preparation()
+    df_cluster = get_rayon()
+    data = pd.merge(bookings_enriched, df_cluster, on="rayon", how="left")
+    qpi = get_users_qpi(data)
+    qpi = qpi.drop(columns=["submitted_at"])
+    data = pd.merge(data, qpi, on="user_id", how="left", validate="many_to_one")
+    data = data.drop(
+        columns=[
+            "physical_goods",
+            "digital_goods",
+            "event",
+            "genres",
+            "rayon",
+            "user_total_deposit_amount",
+            "actual_amount_spent",
+        ]
+    )
+    data = data.sort_values(by=["user_id", "booking_creation_date"])
+    df = diversification_kpi(data)
     df.to_gbq(
         f"""{BIGQUERY_ANALYTICS_DATASET}.user_diversification""",
         project_id=f"{GCP_PROJECT}",
         if_exists="replace",
     )
-

@@ -115,7 +115,7 @@ def diversification_kpi(df):
     return df_clean
 
 
-def main_get_data():
+if __name__ == "__main__":
     df = data_preparation()
     # df_cluster = get_rayon()
     # data = pd.merge(bookings_enriched, df_cluster, on="rayon", how="left")

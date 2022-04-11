@@ -35,7 +35,7 @@ def get_users_bookings(data):
     AND bkg.user_id IN ( """
     for user in data["user_id"]:
         query = query + f"'{user}',"
-    query = query[:-2] + ')'
+    query = query[:-2] + """ ')"""
     users_bookings = pd.read_gbq(query)
     return users_bookings
 

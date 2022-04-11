@@ -25,7 +25,8 @@ SLACK_CONN_PASSWORD = access_secret_data(GCP_PROJECT_ID, "slack-conn-password")
 DEFAULT = f"""cd data-gcp/diversification_kpi
 export PATH="/opt/conda/bin:/opt/conda/condabin:"+$PATH
 export ENV_SHORT_NAME={ENV_SHORT_NAME}
-export GCP_PROJECT_ID={GCP_PROJECT_ID}"""
+export GCP_PROJECT={GCP_PROJECT_ID}
+"""
 
 
 default_args = {

@@ -14,7 +14,7 @@ def get_data_diversification():
     query = f"""SELECT DISTINCT user_id, user_region_name, user_activity, 
     user_civility, user_deposit_creation_date, user_total_deposit_amount, actual_amount_spent
     FROM {GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_user_data
-    WHERE user_total_deposit_amount = 300 AND actual_amount_spent>=0 """
+    WHERE user_total_deposit_amount = 300 AND actual_amount_spent>280 """
     data = pd.read_gbq(query)
     data["user_civility"] = data["user_civility"].replace(["M.", "Mme"], ["M", "F"])
     return data

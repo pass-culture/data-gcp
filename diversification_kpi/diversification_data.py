@@ -142,4 +142,4 @@ if __name__ == "__main__":
         project_id=f"{GCP_PROJECT}",
         if_exists="replace",
     )
-    return
+

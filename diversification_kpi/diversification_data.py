@@ -3,6 +3,7 @@ import pandas as pd
 from tools.utils import (
     GCP_PROJECT,
     BIGQUERY_ANALYTICS_DATASET,
+    BIGQUERY_CLEAN_DATASET,
 )
 from tools.diversification_kpi import (
     calculate_diversification_per_feature,

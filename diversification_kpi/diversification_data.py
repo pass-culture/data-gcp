@@ -4,6 +4,7 @@ from tools.utils import (
     GCP_PROJECT,
     BIGQUERY_ANALYTICS_DATASET,
     BIGQUERY_CLEAN_DATASET,
+    DATA_GCS_BUCKET_NAME,
 )
 from tools.diversification_kpi import (
     calculate_diversification_per_feature,

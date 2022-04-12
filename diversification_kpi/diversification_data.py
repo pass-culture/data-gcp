@@ -39,7 +39,9 @@ def get_users_bookings(data):
 def data_preparation():
     users_sample = get_data_diversification()
     bookings = get_users_bookings()
-    bookings_enriched = pd.merge(bookings, users_sample, on="user_id", how="right", validate="m:1")
+    bookings_enriched = pd.merge(
+        bookings, users_sample, on="user_id", how="right", validate="m:1"
+    )
     bookings_enriched["offer_description"] = (
         '"' + bookings_enriched["offer_description"] + '"'
     )

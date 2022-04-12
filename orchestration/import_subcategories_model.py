@@ -94,7 +94,7 @@ with DAG(
             """,
         dag=dag,
     )
-    #HERE WE FETCH THE SECOND REPOSITORY
+    # HERE WE FETCH THE SECOND REPOSITORY
     fetch_code_native = BashOperator(
         task_id="fetch_code_native",
         bash_command=f"""
@@ -106,7 +106,7 @@ with DAG(
         dag=dag,
     )
 
-    SETUP_PYTHON_SCRIPT=f""" '{DEFAULT_NATIVE}'
+    SETUP_PYTHON_SCRIPT = f""" '{DEFAULT_NATIVE}'
         cp export_subcategories_from_native_definition.py pass-culture-main/export_subcategories_from_native_definition.py
         cd pass-culture-main/
         export SCRIPTPATH=pass-culture-main/api/src

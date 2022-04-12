@@ -31,19 +31,15 @@ def get_users_bookings(data):
     ON bkg.offer_id = offer.offer_id
     JOIN {GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_offer as roffer
     ON bkg.offer_id = roffer.offer_id
-    WHERE booking_is_cancelled<> True 
-    AND bkg.user_id IN ( """
-    for user in data["user_id"]:
-        query = query + f"'{user}',"
-    query = query[:-2] + """ ')"""
+    WHERE booking_is_cancelled<> True"""
     users_bookings = pd.read_gbq(query)
     return users_bookings
 
 
 def data_preparation():
     users_sample = get_data_diversification()
-    bookings = get_users_bookings(users_sample)
-    bookings_enriched = pd.merge(bookings, users_sample, on="user_id", validate="m:1")
+    bookings = get_users_bookings()
+    bookings_enriched = pd.merge(bookings, users_sample, on="user_id", how="right", validate="m:1")
     bookings_enriched["offer_description"] = (
         '"' + bookings_enriched["offer_description"] + '"'
     )
@@ -71,11 +67,7 @@ def get_users_qpi(users_sample):
          FROM {GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_qpi_answers_v3
 
     )
-    WHERE row_number=1
-    AND user_id IN ("""
-    for user in users_sample["user_id"]:
-        query = query + f"'{user}',"
-    query = query[:-2] + """')"""
+    WHERE row_number=1"""
     users_bookings = pd.read_gbq(query)
     return users_bookings
 

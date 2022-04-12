@@ -109,8 +109,8 @@ with DAG(
     SETUP_PYTHON_SCRIPT = f""" '{DEFAULT_NATIVE}'
         cp export_subcategories_from_native_definition.py pass-culture-main/export_subcategories_from_native_definition.py
         cd pass-culture-main/
-        export SCRIPTPATH=pass-culture-main/api/src
-        export PYTHONPATH="$pwd$SCRIPTPATH"+$PYTHONPATH"""
+        export SCRIPTPATH=api/src
+        export PYTHONPATH="$(pwd)/$SCRIPTPATH":$PYTHONPATH"""
 
     EXPORT_SUBCAT = f""" '{DEFAULT_NATIVE}
         python3.9 export_subcategories_from_native_definition.py'

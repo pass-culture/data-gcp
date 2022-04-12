@@ -22,7 +22,7 @@ def get_data_diversification():
     return data
 
 
-def get_users_bookings(data):
+def get_users_bookings():
     query = f"""SELECT user_id, offer.offer_id, roffer.offer_description,booking_creation_date, booking_amount,
     offer_category_id as category, bkg.offer_subcategoryId as subcategory, bkg.physical_goods, 
     bkg.digital_goods, bkg.event, offer.genres, offer.rayon, offer.type, offer.venue_id, offer.venue_name
@@ -63,7 +63,7 @@ def get_rayon():
     return data_rayon
 
 
-def get_users_qpi(users_sample):
+def get_users_qpi():
     query = f"""SELECT * except(row_number)
     FROM ( select *, ROW_NUMBER() OVER (PARTITION BY user_id) as row_number
          FROM {GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_qpi_answers_v3
@@ -105,7 +105,7 @@ if __name__ == "__main__":
     bookings_enriched = data_preparation()
     df_cluster = get_rayon()
     data = pd.merge(bookings_enriched, df_cluster, on="rayon", how="left")
-    qpi = get_users_qpi(data)
+    qpi = get_users_qpi()
     qpi = qpi.drop(columns=["submitted_at"])
     data = pd.merge(data, qpi, on="user_id", how="left", validate="many_to_one")
     data = data.drop(

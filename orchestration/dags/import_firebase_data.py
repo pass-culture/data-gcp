@@ -29,10 +29,20 @@ ENV_SHORT_NAME_APP_INFO_ID_MAPPING = {
     "prod": ["app.passculture", "app.passculture.webapp"],
 }
 
+ENV_SHORT_NAME_APP_INFO_ID_MAPPING_PRO = {
+    "dev": ["localhost", "pro.testing.passculture.team"],
+    "stg": ["pro.testing.passculture.team","integration.passculture.pro"],
+    "prod": ["passculture.pro"],
+}
+
 GCP_PROJECT_NATIVE_ENV = "passculture-native"
 FIREBASE_RAW_DATASET = "analytics_267263535"
 
+GCP_PROJECT_PRO_ENV = "passculture-pro"
+FIREBASE_PRO_RAW_DATASET = "analytics_301948526"
+
 app_info_id_list = ENV_SHORT_NAME_APP_INFO_ID_MAPPING[ENV_SHORT_NAME]
+app_info_id_list_pro = ENV_SHORT_NAME_APP_INFO_ID_MAPPING[ENV_SHORT_NAME]
 EXECUTION_DATE = "{{ ds_nodash }}"
 
 default_dag_args = {
@@ -68,6 +78,18 @@ copy_table_to_env = BigQueryOperator(
     dag=dag,
 )
 
+import_table_pro_to_raw = BigQueryOperator(
+    task_id="import_pro_to_raw",
+    sql=f"""
+        SELECT * FROM {GCP_PROJECT_PRO_ENV}.{FIREBASE_PRO_RAW_DATASET}.events_{EXECUTION_DATE} WHERE device.web_info.hostname IN ({", ".join([f"'{app_info_id}'" for app_info_id in app_info_id_list_pro])})
+        """,
+    use_legacy_sql=False,
+    destination_dataset_table=f"{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.events_pro_{EXECUTION_DATE}",
+    write_disposition="WRITE_EMPTY",
+    trigger_rule="none_failed",
+    dag=dag,
+)
+
 copy_table_to_clean = BigQueryOperator(
     task_id="copy_table_to_clean",
     sql=f"""
@@ -79,6 +101,17 @@ copy_table_to_clean = BigQueryOperator(
     dag=dag,
 )
 
+copy_table_pro_to_clean = BigQueryOperator(
+    task_id="copy_table_pro_to_clean",
+    sql=f"""
+        SELECT * FROM {GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.events_pro_{EXECUTION_DATE}
+        """,
+    use_legacy_sql=False,
+    destination_dataset_table=f"{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.firebase_pro_events_{EXECUTION_DATE}",
+    write_disposition="WRITE_TRUNCATE",
+    dag=dag,
+)
+
 copy_table_to_analytics = BigQueryOperator(
     task_id="copy_table_to_analytics",
     sql=copy_table_to_analytics(
@@ -86,6 +119,17 @@ copy_table_to_analytics = BigQueryOperator(
         bigquery_raw_dataset=BIGQUERY_RAW_DATASET,
         execution_date=EXECUTION_DATE,
     ),
+    use_legacy_sql=False,
+    destination_dataset_table=f"{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.firebase_events",
+    write_disposition="WRITE_APPEND",
+    dag=dag,
+)
+
+copy_table_pro_to_analytics = BigQueryOperator(
+    task_id="copy_table_pro_to_analytics",
+    sql=f"""
+         SELECT * FROM {GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.firebase_pro_events_{EXECUTION_DATE}
+         """,
     use_legacy_sql=False,
     destination_dataset_table=f"{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.firebase_events",
     write_disposition="WRITE_APPEND",
@@ -132,6 +176,7 @@ aggregate_firebase_user_events = BigQueryOperator(
 end = DummyOperator(task_id="end", dag=dag)
 
 start >> copy_table_to_env >> copy_table_to_clean >> copy_table_to_analytics >> end
+start >> import_table_pro_to_raw >> copy_table_pro_to_clean >> copy_table_pro_to_analytics >> end
 (
     copy_table_to_env
     >> [

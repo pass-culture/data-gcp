@@ -83,7 +83,26 @@ dag = DAG(
 
 start = DummyOperator(task_id="start", dag=dag)
 
-import_tables_to_clean_tasks = []
+offer_clean_duplicates = BigQueryOperator(
+    task_id="offer_clean_duplicates",
+    sql=f"""
+    SELECT * except(row_number)
+    FROM (
+        SELECT
+        *,
+        ROW_NUMBER() OVER (PARTITION BY offer_id
+                                        ORDER BY offer_date_updated DESC
+                                    ) as row_number
+        FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.{APPLICATIVE_PREFIX}offer`
+        )
+    WHERE row_number=1
+    """,
+    write_disposition="WRITE_TRUNCATE",
+    use_legacy_sql=False,
+    destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.{APPLICATIVE_PREFIX}offer",
+    dag=dag,
+)
+
 for table in data_applicative_tables_and_date_columns.keys():
 
     start_import = DummyOperator(task_id=f"start_import_{table}", dag=dag)
@@ -116,33 +135,11 @@ for table in data_applicative_tables_and_date_columns.keys():
             destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.{APPLICATIVE_PREFIX}{table}",
             dag=dag,
         )
-        start_import >> offer_task >> analytics_task
+        start_import >> offer_task >> offer_clean_duplicates
 
-    analytics_task >> end_import_table_to_analytics
-
-
-offer_clean_duplicates = BigQueryOperator(
-    task_id="offer_clean_duplicates",
-    sql=f"""
-    SELECT * except(row_number)
-    FROM (
-        SELECT
-        *,
-        ROW_NUMBER() OVER (PARTITION BY offer_id
-                                        ORDER BY offer_date_updated DESC
-                                    ) as row_number
-        FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.{APPLICATIVE_PREFIX}offer`
-        )
-    WHERE row_number=1
-    """,
-    write_disposition="WRITE_TRUNCATE",
-    use_legacy_sql=False,
-    destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.{APPLICATIVE_PREFIX}offer",
-    dag=dag,
-)
+    offer_clean_duplicates >> analytics_task >> end_import_table_to_analytics
 
 
 end = DummyOperator(task_id="end", dag=dag)
 
-(start >> import_tables_to_clean_tasks)
-(end_import_table_to_analytics >> offer_clean_duplicates >> end)
+end_import_table_to_analytics >> end

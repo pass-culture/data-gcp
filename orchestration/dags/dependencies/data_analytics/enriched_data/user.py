@@ -456,7 +456,9 @@ def define_enriched_user_data_query(dataset, table_prefix=""):
                         WHEN user.user_activity in ("Étudiant") THEN "Etudiant"
                             WHEN user.user_activity in ("Chômeur", "En recherche d'emploi ou chômeur") THEN "Chômeur, En recherche d'emploi"
                                 ELSE user.user_activity END AS user_activity,
-                CASE WHEN user.user_civility in ("M","M.") THEN "M." ELSE "Mme" END AS user_civility,
+                CASE WHEN user.user_civility in ("M","M.") THEN "M."
+                        WHEN user.user_civility IN ("Mme") THEN "Mme"
+                            ELSE user.user_civility END AS user_civility,
                 user.user_subscription_state,
                 user.user_school_type,
                 activation_dates.user_activation_date,

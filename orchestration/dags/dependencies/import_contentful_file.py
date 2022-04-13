@@ -8,7 +8,7 @@ from dependencies.config import (
 
 
 def create_table_contentful_home():
-    return f"""CREATE TABLE IF NOT EXISTS {GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.content_home (
+    return f"""CREATE TABLE IF NOT EXISTS {GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.contentful_home (
                 Home STRING, 
                 EntryID STRING, )
     """

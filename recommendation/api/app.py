@@ -77,8 +77,7 @@ def recommendation(user_id: int):
     if token != API_TOKEN:
         return "Forbidden", 403
 
-    recommendations = get_final_recommendations(user_id, longitude, latitude)
-    group_id, is_cold_start, is_eac, user_iris_id = get_user_metadata(
+    recommendations, group_id, is_cold_start = get_final_recommendations(
         user_id, longitude, latitude
     )
     if is_cold_start:

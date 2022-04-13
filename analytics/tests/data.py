@@ -836,7 +836,7 @@ ENRICHED_VENUE_DATA_EXPECTED = [
         "theoretic_revenue": Decimal("2"),
         "real_revenue": Decimal("2"),
         "venue_humanized_id": "AE",
-        "venue_flaskadmin_link": "https://backend.passculture.beta.gouv.fr/pc/back-office/venue/edit/?id=1&url=%2Fpc%2Fback-office%2Fvenue%2F",
+        "venue_flaskadmin_link": "https://backend.passculture.pro/pc/back-office/venue/edit/?id=1&url=%2Fpc%2Fback-office%2Fvenue%2F",
         "venue_region_name": "IDF",
         "venue_pc_pro_link": "https://passculture.pro/structures/AE/lieux/AE",
         "business_unit_id": "1234",
@@ -875,7 +875,9 @@ ENRICHED_OFFERER_DATA_INPUT = {
             "offerer_id": "1",
             "offerer_postal_code": "973",
             "offerer_name": "An offerer",
+            "offerer_siren": "123456789",
             "offerer_creation_date": datetime.now().replace(microsecond=0),
+            "offerer_validation_date": datetime.now().replace(microsecond=0),
         }
     ],
     "stock": [
@@ -893,6 +895,7 @@ ENRICHED_OFFERER_DATA_INPUT = {
     ],
     "venue_label": [],
     "venue_type": [],
+    "region_department": [{"num_dep": "973", "region_name": "Guyane"}],
 }
 
 ENRICHED_OFFERER_DATA_EXPECTED = [
@@ -900,12 +903,15 @@ ENRICHED_OFFERER_DATA_EXPECTED = [
         "offerer_id": "1",
         "offerer_name": "An offerer",
         "offerer_creation_date": datetime.now().replace(microsecond=0),
+        "offerer_validation_date": datetime.now().replace(microsecond=0),
         "first_stock_creation_date": datetime.now().replace(microsecond=0),
         "first_booking_date": datetime.now().replace(microsecond=0),
         "offer_cnt": 1,
         "offerer_bookable_offer_cnt": 1,
         "no_cancelled_booking_cnt": 1,
         "offerer_department_code": "973",
+        "offerer_region_name": "Guyane",
+        "offerer_siren": "123456789",
         "venue_cnt": 1,
         "venue_with_offer": 1,
         "offerer_humanized_id": "AE",

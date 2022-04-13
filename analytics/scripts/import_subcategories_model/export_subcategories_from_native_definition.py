@@ -12,7 +12,7 @@ df_subcat = pd.DataFrame(ALL_SUBCAT_DICT)
 df_subcat.to_csv("./temp.csv")
 df_subcatbis = pd.read_csv("./temp.csv", index_col=[0])
 df_subcatbis.to_gbq(
-    f"""clean_{ENV_SHORT_NAME}.subcategories_model """,
+    f"""clean_{ENV_SHORT_NAME}.subcategories""",
     project_id=GCP_PROJECT_ID,
     if_exists="replace",
 )

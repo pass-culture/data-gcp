@@ -432,6 +432,7 @@ create_offer_extracted_data = BigQueryOperator(
                 LOWER(TRIM(JSON_EXTRACT(offer_extra_data, "$.companies"), " ")) AS companies,
                 LOWER(TRIM(JSON_EXTRACT(offer_extra_data, "$.countries"), " ")) AS countries,
                 LOWER(TRIM(JSON_EXTRACT(offer_extra_data, "$.cast"), " ")) AS casting,
+                LOWER(TRIM(JSON_EXTRACT(offer_extra_data, "$.isbn"), " ")) AS isbn,
             FROM `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.applicative_database_offer`""",
     destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.offer_extracted_data",
     write_disposition="WRITE_TRUNCATE",

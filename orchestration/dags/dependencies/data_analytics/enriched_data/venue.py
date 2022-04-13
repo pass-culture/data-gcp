@@ -188,6 +188,8 @@ def define_enriched_venue_query(dataset, table_prefix=""):
                 ,used_bookings_per_venue.used_bookings
                 ,first_offer_creation_date.first_offer_creation_date
                 ,last_offer_creation_date.last_offer_creation_date
+                ,first_booking_date
+                ,last_booking_date
                 ,offers_created_per_venue.offers_created
                 ,bookable_offer_cnt.venue_bookable_offer_cnt
                 ,theoretic_revenue_per_venue.theoretic_revenue
@@ -199,6 +201,7 @@ def define_enriched_venue_query(dataset, table_prefix=""):
             FROM {dataset}.{table_prefix}venue AS venue
             LEFT JOIN {dataset}.{table_prefix}offerer AS offerer ON venue.venue_managing_offerer_id = offerer.offerer_id
             LEFT JOIN {dataset}.{table_prefix}venue_label AS venue_label ON venue_label.id = venue.venue_label_id
+            LEFT JOIN related_bookings ON related_bookings.venue_id = venue.venue_id
             LEFT JOIN total_bookings_per_venue ON venue.venue_id = total_bookings_per_venue.venue_id
             LEFT JOIN non_cancelled_bookings_per_venue ON venue.venue_id = non_cancelled_bookings_per_venue.venue_id
             LEFT JOIN used_bookings_per_venue ON venue.venue_id = used_bookings_per_venue.venue_id
@@ -216,6 +219,21 @@ def define_enriched_venue_query(dataset, table_prefix=""):
     """
 
 
+def define_first_booking_creation_dates_query(dataset, table_prefix=""):
+    return f"""
+    CREATE TEMP TABLE related_bookings AS
+        SELECT
+            venue.venue_id,
+            MIN(booking.booking_creation_date) AS first_booking_date,
+            MAX(booking.booking_creation_date) AS last_booking_date
+        FROM {dataset}.{table_prefix}venue AS venue
+        LEFT JOIN {dataset}.{table_prefix}offer AS offer ON offer.venue_id = venue.venue_id
+        LEFT JOIN {dataset}.{table_prefix}stock AS stock ON stock.offer_id = offer.offer_id
+        LEFT JOIN {dataset}.{table_prefix}booking AS booking ON booking.stock_id = stock.stock_id
+        GROUP BY venue_id;
+        """
+
+
 def define_enriched_venue_data_full_query(dataset, table_prefix=""):
     return f"""
         {define_total_bookings_per_venue_query(dataset=dataset, table_prefix=table_prefix)}
@@ -230,5 +248,6 @@ def define_enriched_venue_data_full_query(dataset, table_prefix=""):
         {create_temp_humanize_id(table="venue", dataset=dataset, table_prefix=table_prefix)}
         {create_temp_humanize_id(table="offerer", dataset=dataset, table_prefix=table_prefix)}
         {define_bookable_offer_cnt_query(analytics_dataset=dataset)}
+        {define_first_booking_creation_dates_query(dataset=dataset, table_prefix=table_prefix)}
         {define_enriched_venue_query(dataset=dataset, table_prefix=table_prefix)}
     """

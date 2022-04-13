@@ -136,7 +136,7 @@ default_dag_args = {
 }
 
 dag = DAG(
-    "import_data_analytics_v6",
+    "import_data_analytics_v7",
     default_args=default_dag_args,
     description="Import tables from CloudSQL and enrich data for create dashboards with Data Studio",
     on_failure_callback=task_fail_slack_alert,

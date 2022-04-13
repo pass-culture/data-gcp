@@ -4,13 +4,18 @@ from dateutil import parser
 
 
 def define_import_query(
-    table, region=GCP_REGION, external_connection_id=APPLICATIVE_EXTERNAL_CONNECTION_ID
+    table,
+    region=GCP_REGION,
+    external_connection_id=APPLICATIVE_EXTERNAL_CONNECTION_ID,
+    schedule_hour_interval=12,
+    interval=1,
 ):
     """
     Given a table (from "external_connection_id" located in "region"), we build and return the federated query that
     selects table content (for import purpose).
     In order to handle type incompatibility between postgresql and BigQuery (eg. UUID and custom types),
     we sometimes have to explicitly select and cast columns.
+    Added schedule_hour_interval and interval for incremental imports. As of today only import_offers uses them.
     """
     # Define select-queries for tables that need a specific CAST and ID for metabase
     cloudsql_queries = {}
@@ -26,7 +31,7 @@ def define_import_query(
             "activity" as user_activity, "culturalSurveyFilledDate" as user_cultural_survey_filled_date,
             "hasSeenTutorials" as user_has_seen_tutorials, "address" as user_address, "city" as user_city,
             "lastConnectionDate" as user_last_connection_date, "isEmailValidated" as user_is_email_validated,
-            "suspensionReason" as user_suspension_reason, "isActive" as user_is_active,
+            "isActive" as user_is_active,
             "hasSeenProTutorials" as user_has_seen_pro_tutorials, EXTRACT(YEAR FROM AGE("user"."dateOfBirth")) AS user_age,
             "hasCompletedIdCheck" AS user_has_completed_idCheck,
             "phoneValidationStatus" AS user_phone_validation_status,
@@ -35,7 +40,17 @@ def define_import_query(
             CAST("notificationSubscriptions" -> \\'marketing_email\\' AS BOOLEAN) AS user_has_enabled_marketing_email,
             "user"."dateOfBirth" AS user_birth_date,
             "user"."subscriptionState" AS user_subscription_state,
-            "user"."schoolType" AS user_school_type
+            CASE
+            WHEN "user"."schoolType" = \\'PUBLIC_SECONDARY_SCHOOL\\' THEN \\'Collège public\\'
+            WHEN "user"."schoolType" = \\'PUBLIC_HIGH_SCHOOL\\' THEN \\'Lycée public\\'
+            WHEN "user"."schoolType" = \\'PRIVATE_HIGH_SCHOOL\\' THEN \\'Lycée privé\\'
+            WHEN "user"."schoolType" = \\'MILITARY_HIGH_SCHOOL\\' THEN \\'Lycée militaire\\'
+            WHEN "user"."schoolType" = \\'HOME_OR_REMOTE_SCHOOLING\\' THEN \\'À domicile (CNED, institut de santé, etc.)\\'
+            WHEN "user"."schoolType" = \\'AGRICULTURAL_HIGH_SCHOOL\\' THEN \\'Lycée agricole\\'
+            WHEN "user"."schoolType" = \\'APPRENTICE_FORMATION_CENTER\\' THEN \\'Centre de formation apprentis\\'
+            WHEN "user"."schoolType" = \\'PRIVATE_SECONDARY_SCHOOL\\' THEN \\'Collège privé\\'
+            WHEN "user"."schoolType" = \\'NAVAL_HIGH_SCHOOL\\' THEN \\'Lycée maritime\\'
+            ELSE "user"."schoolType" END AS user_school_type
         FROM public.user
     """
     cloudsql_queries[
@@ -156,14 +171,13 @@ def define_import_query(
         FROM public.booking
     """
     # define day before and after execution date
-    # we jinja template reference to user the dates around execution date
-    DAY_BEFORE_EXECUTION = "{{ yesterday_ds }}"
-    DAY_AFTER_EXECUTION = "{{ tomorrow_ds }}"
+    # we jinja template reference to user the datetimes around execution time
+    EXECUTION_TIME = "{{ ts }}"
     cloudsql_queries[
         "offer"
     ] = f"""
         SELECT
-            CAST("idAtProviders" AS varchar(255)) as offer_id_at_providers,
+            CAST("idAtProvider" AS varchar(255)) as offer_id_at_providers,
             "dateModifiedAtLastProvider" as offer_modified_at_last_provider_date,
             CAST("id" AS varchar(255)) as offer_id, "dateCreated" as offer_creation_date,
             CAST("productId" AS varchar(255)) as offer_product_id, CAST("venueId" AS varchar(255)) as venue_id,
@@ -172,7 +186,7 @@ def define_import_query(
             "description" as offer_description, "conditions" as offer_conditions, "ageMin" as offer_age_min,
             "ageMax" as offer_age_max, "url" as offer_url, "mediaUrls" as offer_media_urls,
             "durationMinutes" as offer_duration_minutes, "isNational" as offer_is_national,
-            "extraData" as offer_extra_data, "isDuo" as offer_is_duo, "fieldsUpdated" as offer_fields_updated,
+            "jsonData" as offer_extra_data, "isDuo" as offer_is_duo, "fieldsUpdated" as offer_fields_updated,
             "withdrawalDetails" as offer_withdrawal_details,
             "audioDisabilityCompliant" as offer_audio_disability_compliant,
             "mentalDisabilityCompliant" as offer_mental_disability_compliant,
@@ -184,9 +198,10 @@ def define_import_query(
             "dateUpdated" as offer_date_updated,
             "isEducational" AS offer_is_educational
         FROM public.offer
-        WHERE "dateUpdated" >= \\'{DAY_BEFORE_EXECUTION}\\'
-        AND "dateUpdated" <  \\'{DAY_AFTER_EXECUTION}\\' 
+        WHERE "dateUpdated" >= timestamp \\'{EXECUTION_TIME}\\' - INTERVAL \\'{(interval + 1) * 15} MINUTE\\'
+        AND "dateUpdated" < timestamp \\'{EXECUTION_TIME}\\' - INTERVAL \\'{interval * 15} MINUTE\\'
     """
+
     cloudsql_queries[
         "stock"
     ] = """
@@ -214,9 +229,31 @@ def define_import_query(
             CAST("managingOffererId" AS varchar(255)) AS venue_managing_offerer_id, "bookingEmail" AS venue_booking_email,
             CAST("lastProviderId" AS varchar(255)) AS venue_last_provider_id, "isVirtual" AS venue_is_virtual,
             "comment" AS venue_comment, "publicName" AS venue_public_name,
-            "fieldsUpdated" AS venue_fields_updated, CAST("venueTypeId" AS varchar(255)) AS venue_type_id,
+            "fieldsUpdated" AS venue_fields_updated,
+            CASE
+            WHEN "venueTypeCode" = \\'ADMINISTRATIVE\\' THEN \\'Lieu administratif\\'
+            WHEN "venueTypeCode" = \\'DIGITAL\\' THEN \\'Offre numérique\\'
+            WHEN "venueTypeCode" = \\'BOOKSTORE\\' THEN \\'Librairie\\'
+            WHEN "venueTypeCode" = \\'PERFORMING_ARTS\\' THEN \\'Spectacle vivant\\'
+            WHEN "venueTypeCode" = \\'ARTISTIC_COURSE\\' THEN \\'Cours et pratique artistiques\\'
+            WHEN "venueTypeCode" = \\'MOVIE\\' THEN \\'Cinéma - Salle de projections\\'
+            WHEN "venueTypeCode" = \\'OTHER\\' THEN \\'Autre\\'
+            WHEN "venueTypeCode" = \\'CONCERT_HALL\\' THEN \\'Musique - Salle de concerts\\'
+            WHEN "venueTypeCode" = \\'MUSEUM\\' THEN \\'Musée\\'
+            WHEN "venueTypeCode" = \\'CULTURAL_CENTRE\\' THEN \\'Centre culturel\\'
+            WHEN "venueTypeCode" = \\'PATRIMONY_TOURISM\\' THEN \\'Patrimoine et tourisme\\'
+            WHEN "venueTypeCode" = \\'FESTIVAL\\' THEN \\'Festival\\'
+            WHEN "venueTypeCode" = \\'MUSICAL_INSTRUMENT_STORE\\' THEN \\'Musique - Magasin d’instruments\\'
+            WHEN "venueTypeCode" = \\'LIBRARY\\' THEN \\'Bibliothèque ou médiathèque\\'
+            WHEN "venueTypeCode" = \\'VISUAL_ARTS\\' THEN \\'Arts visuels, arts plastiques et galeries\\'
+            WHEN "venueTypeCode" = \\'GAMES\\' THEN \\'Jeux / Jeux vidéos\\'
+            WHEN "venueTypeCode" = \\'CREATIVE_ARTS_STORE\\' THEN \\'Magasin arts créatifs\\'
+            WHEN "venueTypeCode" = \\'RECORD_STORE\\' THEN \\'Musique - Disquaire\\'
+            WHEN "venueTypeCode" = \\'SCIENTIFIC_CULTURE\\' THEN \\'Culture scientifique\\'
+            else "venueTypeCode" END AS venue_type_code,
             CAST("venueLabelId" AS varchar(255)) AS venue_label_id, "dateCreated" AS venue_creation_date,
-            "isPermanent" AS venue_is_permanent, "validationToken" AS venue_validation_token
+            "isPermanent" AS venue_is_permanent, "validationToken" AS venue_validation_token, 
+            CAST("businessUnitId" AS varchar(255)) AS business_unit_id, "bannerUrl" as banner_url
         FROM public.venue
     """
     cloudsql_queries[
@@ -229,7 +266,8 @@ def define_import_query(
             "postalCode" AS offerer_postal_code, "city" AS offerer_city, CAST("id" AS varchar(255)) AS offerer_id,
             "dateCreated" AS offerer_creation_date, "name" AS offerer_name,
             "siren" AS offerer_siren, CAST("lastProviderId" AS varchar(255)) AS offerer_last_provider_id,
-            "fieldsUpdated" AS offerer_fields_updated, "validationToken" AS offerer_validation_token
+            "fieldsUpdated" AS offerer_fields_updated, "validationToken" AS offerer_validation_token,
+            "dateValidated" AS offerer_validation_date
         FROM public.offerer
     """
     cloudsql_queries[
@@ -263,6 +301,13 @@ def define_import_query(
             FROM public.favorite
         """
     cloudsql_queries[
+        "user_suspension"
+    ] = """
+            SELECT
+                CAST("id" AS varchar(255)), CAST("userId" AS varchar(255)), "eventType", "eventDate", cast("actorUserId" AS VARCHAR(255)), "reasonCode"
+            FROM public.user_suspension
+        """
+    cloudsql_queries[
         "transaction"
     ] = """
             SELECT
@@ -290,8 +335,15 @@ def define_import_query(
         "deposit"
     ] = """
             SELECT
-                CAST("id" AS varchar(255)), "amount", CAST("userId" AS varchar(255)), "source", "dateCreated", "expirationDate","type"
+                CAST("id" AS varchar(255)), "amount", CAST("userId" AS varchar(255)), "source", "dateCreated", "dateUpdated", "expirationDate","type"
             FROM public.deposit
+        """
+    cloudsql_queries[
+        "recredit"
+    ] = """
+            SELECT
+                CAST("id" AS varchar(255)),CAST("depositId" AS varchar(255)), "amount", "dateCreated", "recreditType"
+            FROM public.recredit
         """
     cloudsql_queries[
         "beneficiary_import"
@@ -487,6 +539,85 @@ def define_import_query(
                 ,CAST("userId" AS varchar(255)) AS user_id
                 ,CAST("depositId" AS varchar(255)) AS deposit_id
             FROM individual_booking
+        """
+    cloudsql_queries[
+        "collective_booking"
+    ] = """
+            SELECT
+                CAST("id" AS varchar(255)) AS collective_booking_id
+                ,CAST("bookingId" AS varchar(255)) AS booking_id
+                , "dateCreated" AS collective_booking_creation_date
+                , "dateUsed" AS collective_booking_used_date
+                ,CAST("collectiveStockId" AS varchar(255)) AS collective_booking_collective_stock_id
+                ,CAST("venueId" AS varchar(255)) AS collective_booking_venue_id
+                ,CAST("offererId" AS varchar(255)) AS collective_booking_offerer_id
+                , "cancellationDate" AS collective_booking_cancellation_date
+                , "cancellationLimitDate" AS collective_booking_cancellation_limit_date
+                , CAST("cancellationReason" AS VARCHAR) AS collective_booking_cancellation_reason
+                , CAST("status" AS VARCHAR) AS collective_booking_status
+                , "reimbursementDate" AS collective_booking_reimbursement_date
+                , CAST("educationalInstitutionId" AS varchar(255)) AS collective_booking_educational_institution_id
+                , CAST("educationalYearId" AS varchar(255)) AS collective_booking_educational_year_id
+                , "confirmationDate" AS collective_booking_confirmation_date
+                , "confirmationLimitDate" AS collective_booking_confirmation_limit_date
+                , CAST("educationalRedactorId" AS varchar(255)) AS collective_booking_educational_redactor_id
+            FROM public.collective_booking
+        """
+    cloudsql_queries[
+        "collective_offer"
+    ] = """
+            SELECT
+                "audioDisabilityCompliant" AS collective_offer_audio_disability_compliant
+                ,"mentalDisabilityCompliant" AS collective_offer_mental_disability_compliant
+                ,"motorDisabilityCompliant" AS collective_offer_motor_disability_compliant
+                ,"visualDisabilityCompliant" AS collective_offer_visual_disability_compliant
+                ,"lastValidationDate" AS collective_offer_last_validation_date
+                , CAST("validation" AS VARCHAR) AS collective_offer_validation
+                , CAST("id" AS varchar(255)) AS collective_offer_id
+                , CAST("offerId" AS varchar(255)) AS collective_offer_offer_id
+                , "isActive" AS collective_offer_is_active
+                , CAST("venueId" AS varchar(255)) AS collective_offer_venue_id
+                , "name" AS collective_offer_name
+                ,"bookingEmail" AS collective_offer_booking_email
+                ,"description" AS collective_offer_description
+                ,"durationMinutes" AS collective_offer_duration_minutes
+                ,"dateCreated" AS collective_offer_creation_date
+                ,CAST("subcategoryId" AS varchar(255)) AS collective_offer_subcategory_id
+                ,"dateUpdated" AS collective_offer_date_updated
+                ,BTRIM(array_to_string("students", \\',\\'), \\'{\\') AS collective_offer_students
+                , "contactEmail" AS collective_offer_contact_email
+                ,"contactPhone" AS collective_offer_contact_phone
+                ,"offerVenue" AS collective_offer_offer_venue
+                ,CAST("lastValidationType" AS VARCHAR) AS collective_offer_last_validation_type
+            FROM public.collective_offer
+        """
+    cloudsql_queries[
+        "collective_stock"
+    ] = """
+            SELECT
+                CAST("id" AS varchar(255)) AS collective_stock_id
+                ,CAST("stockId" AS varchar(255)) AS collective_stock_stock_id
+                ,"dateCreated" AS collective_stock_creation_date
+                ,"dateModified" AS collective_stock_modification_date
+                ,"beginningDatetime" AS collective_stock_beginning_date_time
+                , CAST("collectiveOfferId" AS varchar(255)) AS collective_stock_collective_offer_id
+                ,"price" AS collective_stock_price
+                ,"bookingLimitDatetime" AS collective_stock_booking_limit_date_time
+                ,"numberOfTickets" AS collective_stock_number_of_tickets
+                ,"priceDetail" AS collective_stock_price_detail
+            FROM public.collective_stock
+        """
+    cloudsql_queries[
+        "venue_contact"
+    ] = """
+            SELECT
+                CAST("id" AS varchar(255)) AS venue_contact_id
+                ,CAST("venueId" AS varchar(255)) AS venue_contact_venue_id
+                ,"email" AS venue_contact_email
+                ,"website" AS venue_contact_website
+                ,"phone_number" AS venue_contact_phone_number
+                ,"social_medias" AS venue_contact_social_medias
+            FROM public.venue_contact
         """
     # Build specific federated queries
     queries = {}

@@ -45,7 +45,8 @@ from dependencies.data_analytics.import_tables import (
     define_import_query,
     define_replace_query,
 )
-from dependencies.slack_alert import task_fail_slack_alert
+
+from dependencies.slack_alert_analytics import task_fail_slack_alert
 
 
 def getting_service_account_token(function_name):
@@ -64,18 +65,22 @@ data_applicative_tables_and_date_columns = {
         "user_last_connection_date",
     ],
     "provider": [""],
-    "offerer": ["offerer_modified_at_last_provider_date", "offerer_creation_date"],
+    "offerer": [
+        "offerer_modified_at_last_provider_date",
+        "offerer_creation_date",
+        "offerer_validation_date",
+    ],
     "bank_information": ["dateModified"],
     "booking": [
         "booking_creation_date",
         "booking_used_date",
         "booking_cancellation_date",
     ],
+    "user_suspension": ["eventDate"],
     "individual_booking": [""],
     "payment": [""],
     "venue": ["venue_modified_at_last_provider", "venue_creation_date"],
     "user_offerer": [""],
-    "offer": ["offer_modified_at_last_provider_date", "offer_creation_date"],
     "offer_report": [""],
     "stock": [
         "stock_modified_at_last_provider_date",
@@ -86,6 +91,7 @@ data_applicative_tables_and_date_columns = {
     "favorite": ["dateCreated"],
     "venue_type": [""],
     "venue_label": [""],
+    "venue_contact": [""],
     "payment_status": ["date"],
     "cashflow": ["creationDate"],
     "cashflow_batch": ["creationDate"],
@@ -98,7 +104,8 @@ data_applicative_tables_and_date_columns = {
     "transaction": [""],
     "local_provider_event": ["date"],
     "beneficiary_import_status": ["date"],
-    "deposit": ["dateCreated"],
+    "deposit": ["dateCreated", "dateUpdated"],
+    "recredit": ["dateCreated"],
     "beneficiary_import": [""],
     "mediation": ["dateCreated"],
     "offer_criterion": [""],
@@ -126,6 +133,26 @@ data_applicative_tables_and_date_columns = {
         "educational_year_beginning_date",
         "educational_year_expiration_date",
     ],
+    "collective_booking": [
+        "collective_booking_creation_date",
+        "collective_booking_used_date",
+        "collective_booking_cancellation_date",
+        "collective_booking_cancellation_limit_date",
+        "collective_booking_reimbursement_date",
+        "collective_booking_confirmation_date",
+        "collective_booking_confirmation_limit_date",
+    ],
+    "collective_offer": [
+        "collective_offer_last_validation_date",
+        "collective_offer_creation_date",
+        "collective_offer_date_updated",
+    ],
+    "collective_stock": [
+        "collective_stock_creation_date",
+        "collective_stock_modification_date",
+        "collective_stock_beginning_date_time",
+        "collective_stock_booking_limit_date_time",
+    ],
 }
 
 default_dag_args = {
@@ -138,9 +165,9 @@ default_dag_args = {
 dag = DAG(
     "import_data_analytics_v7",
     default_args=default_dag_args,
-    description="Import tables from CloudSQL and enrich data for create dashboards with Data Studio",
+    description="Import tables from CloudSQL and enrich data for create dashboards with Metabase",
     on_failure_callback=task_fail_slack_alert,
-    schedule_interval="0 23 * * *",
+    schedule_interval="00 01 * * *",
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
 )

@@ -144,10 +144,10 @@ def get_feedback_sparcity_error(filters, dfgrp):
 
 
 def get_sparcity_filters(df):
-    x1min = 5
-    x1max = 50
-    x2min = 100
-    x2max = 1000
+    x1min = 20
+    x1max = 200
+    x2min = 500
+    x2max = 2000
     bounds = Bounds([x1min, x2min], [x1max, x2max])
     min_res = minimize(
         get_feedback_sparcity_error,
@@ -155,7 +155,7 @@ def get_sparcity_filters(df):
         method="Nelder-Mead",
         args=(df),
         bounds=bounds,
-        options={"maxiter": 10, "ftol": 0.1, "xtol": 0.1},
+        options={"maxiter": 20, "ftol": 0.1, "xtol": 0.1},
     )
 
     return int(min_res.x[0]), int(min_res.x[1])

@@ -37,8 +37,8 @@ EXECUTION_DATE = "{{ ds_nodash }}"
 
 default_dag_args = {
     "start_date": datetime.datetime(2021, 4, 17),
-    "retries": 1,
-    "retry_delay": datetime.timedelta(minutes=5),
+    "retries": 3,
+    "retry_delay": datetime.timedelta(hours=6),
     "project_id": GCP_PROJECT,
 }
 
@@ -59,7 +59,7 @@ start = DummyOperator(task_id="start", dag=dag)
 copy_table_to_env = BigQueryOperator(
     task_id="copy_table_to_env",
     sql=f"""
-        SELECT * FROM {GCP_PROJECT_NATIVE_ENV}.{FIREBASE_RAW_DATASET}.events_{EXECUTION_DATE} WHERE app_info.id IN ({", ".join([f"'{app_info_id}'" for app_info_id in app_info_id_list])})
+        SELECT * FROM {GCP_PROJECT_NATIVE_ENV}.{FIREBASE_RAW_DATASET}.events_{EXECUTION_DATE} WHERE app_info.id IN ({", ".join([f"'{app_info_id}'" for app_info_id in app_info_id_list])}) OR app_info.id is NULL
         """,
     use_legacy_sql=False,
     destination_dataset_table=f"{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.events_{EXECUTION_DATE}",

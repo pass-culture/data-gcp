@@ -93,7 +93,7 @@ def create_materialized_enriched_booking_view(dataset, table_prefix=""):
                 offer.offer_name,
                 coalesce(venue.venue_public_name, venue.venue_name) AS venue_name,
                 venue_label.label as venue_label_name,
-                venue_type.label as venue_type_name,
+                venue.venue_type_code as venue_type_name,
                 venue.venue_id,
                 venue.venue_department_code,
                 offerer.offerer_id,
@@ -115,7 +115,7 @@ def create_materialized_enriched_booking_view(dataset, table_prefix=""):
             FROM {dataset}.{table_prefix}booking AS booking
             INNER JOIN {dataset}.{table_prefix}stock AS stock
                 ON booking.stock_id = stock.stock_id
-            INNER JOIN {dataset}.{table_prefix}offer AS offer
+            LEFT JOIN {dataset}.{table_prefix}offer AS offer
                 ON offer.offer_id = stock.offer_id
                 AND offer.offer_subcategoryId NOT IN ('ACTIVATION_THING','ACTIVATION_EVENT')
             INNER JOIN {dataset}.{table_prefix}venue AS venue
@@ -128,8 +128,6 @@ def create_materialized_enriched_booking_view(dataset, table_prefix=""):
                 ON user.user_id = individual_booking.user_id
             INNER JOIN {dataset}.{table_prefix}deposit AS deposit
                 ON deposit.id = individual_booking.deposit_id
-            LEFT JOIN {dataset}.{table_prefix}venue_type AS venue_type
-                ON venue.venue_type_id = venue_type.id
             LEFT JOIN {dataset}.{table_prefix}venue_label AS venue_label
                 ON venue.venue_label_id = venue_label.id
             INNER JOIN {dataset}.subcategories subcategories

@@ -484,6 +484,38 @@ workflows:
             - Slack
           <<: *slack-fail-post-step
 
+      - cloud-function-deploy:
+          name: import-adage-cloud-function-deploy-stg
+          cloud-function-name: adage_import_stg
+          cloud-function-folder: adage-function-source
+          requires:
+            - linter
+          filters:
+            branches:
+              only:
+                - master
+          context:
+            - DATA_GCP
+            - DATA_GCP_EHP
+            - Slack
+          <<: *slack-fail-post-step
+
+      - cloud-function-deploy:
+          name: import-adage-cloud-function-deploy-prod
+          cloud-function-name: adage_import_prod
+          cloud-function-folder: adage-function-source
+          requires:
+            - linter
+          filters:
+            branches:
+              only:
+                - production
+          context:
+            - DATA_GCP
+            - DATA_GCP_PROD
+            - Slack
+          <<: *slack-fail-post-step
+
       # Slack alerts jobs
       # ----------------
       - slack-alert:
@@ -506,6 +538,7 @@ workflows:
             - siren-cloud-function-deploy-prod
             - dms-cloud-function-deploy-prod
             - cni-fraude-algo-cloud-function-deploy-prod
+            - import-adage-cloud-function-deploy-prod
 
       - slack-alert:
           name: slack-alert-staging
@@ -527,6 +560,7 @@ workflows:
             - siren-cloud-function-deploy-stg
             - dms-cloud-function-deploy-stg
             - cni-fraude-algo-cloud-function-deploy-stg
+            - import-adage-cloud-function-deploy-stg
 
   # ----------------
   # Workflow to deploy on dev
@@ -541,6 +575,11 @@ workflows:
           name: typeform-cloud-function-deploy-dev
           cloud-function-name: qpi_import_dev
           cloud-function-folder: qpi-function-source
+          <<: *deploy_on_dev_commons
+      - cloud-function-deploy:
+          name: adage-import-function-deploy-dev
+          cloud-function-name: adage_import_dev
+          cloud-function-folder: adage-function-source
           <<: *deploy_on_dev_commons
       - cloud-function-deploy:
           name: addresses-cloud-function-deploy-dev
@@ -595,6 +634,7 @@ workflows:
             - dms-cloud-function-deploy-dev
             - cni-fraude-algo-cloud-function-deploy-dev
             - build_and_deploy_api_dev
+            - adage-import-function-deploy-dev
           context:
             - DATA_GCP_DEV
             - Slack
@@ -852,9 +892,7 @@ jobs:
     environment:
       DAG_RECOMMMENDATION_CLOUDSQL: recommendation_cloud_sql_v1
       DAG_EXPORT_CLOUDSQL_BIGQUERY: export_cloudsql_tables_to_bigquery_v1
-      DAG_REFRESH_MATOMO_DATA: import_matomo_refresh_v1
-      DAG_IMPORT_DATA_ANALYTICS: import_data_analytics_v6
-      DAG_DUMP_SCALINGO_MATOMO_HISTORY: import_matomo_history_v1
+      DAG_IMPORT_DATA_ANALYTICS: import_data_analytics_v7
       DAG_IMPORT_FIREBASE_DATA: import_firebase_data_v3
       DAG_IMPORT_TYPEFORM: import_typeform_v1
       DAG_IMPORT_ADDRESSES: import_addresses_v1
@@ -863,6 +901,7 @@ jobs:
       DAG_COMPUTE_MONITORING: compute_monitoring
       DAG_ALGO_TRAINING_v1: algo_training_v1
       DAG_ALGO_TRAINING_v2_deep_reco: algo_training_v2_deep_reco
+      DAG_ADAGE_IMPORT: import_adage_v1
     working_directory: ~/data-gcp/orchestration
     steps:
       - checkout:
@@ -883,9 +922,7 @@ jobs:
           command: |
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_RECOMMMENDATION_CLOUDSQL} 6 20
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_EXPORT_CLOUDSQL_BIGQUERY} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_REFRESH_MATOMO_DATA} 6 20
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_DATA_ANALYTICS} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_DUMP_SCALINGO_MATOMO_HISTORY} 6 20
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_FIREBASE_DATA} 6 20
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_TYPEFORM} 6 20
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_ADDRESSES} 6 20
@@ -894,6 +931,7 @@ jobs:
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_COMPUTE_MONITORING} 6 20
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_ALGO_TRAINING_v1} 6 20
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_ALGO_TRAINING_v2_deep_reco} 6 20
+            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_ADAGE_IMPORT} 6 20
 
   build_and_deploy_api:
     docker:

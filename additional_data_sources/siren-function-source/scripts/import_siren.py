@@ -139,11 +139,13 @@ def query_siren():
             headers=headers,
         )
         if response.status_code != 200:
-            raise ValueError("Error API CALL")
+            raise ValueError(
+                f"Error API CALL {response.status_code} : {response.reason}"
+            )
         else:
             result = response.json()
             siren_info_list = append_info_siren_list(siren_info_list, result)
-        time.sleep(2)
+        time.sleep(4)
     return siren_info_list
 
 

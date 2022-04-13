@@ -435,6 +435,14 @@ def define_user_agg_deposit_data_query(dataset, table_prefix=""):
         """
 
 
+def define_user_suspension_history_query(dataset, table_prefix=""):
+    return f"""
+    CREATE TEMP TABLE user_suspension_history AS 
+            (SELECT *, RANK() OVER(PARTITION BY "userId" ORDER BY "eventDate" DESC, "id" DESC) AS rank
+            FROM {dataset}.{table_prefix}user_suspension);
+        """
+
+
 def define_enriched_user_data_query(dataset, table_prefix=""):
     return f"""
         CREATE OR REPLACE TABLE {dataset}.enriched_user_data AS (
@@ -448,7 +456,9 @@ def define_enriched_user_data_query(dataset, table_prefix=""):
                         WHEN user.user_activity in ("Étudiant") THEN "Etudiant"
                             WHEN user.user_activity in ("Chômeur", "En recherche d'emploi ou chômeur") THEN "Chômeur, En recherche d'emploi"
                                 ELSE user.user_activity END AS user_activity,
-                user.user_civility,
+                CASE WHEN user.user_civility in ("M","M.") THEN "M."
+                        WHEN user.user_civility IN ("Mme") THEN "Mme"
+                            ELSE user.user_civility END AS user_civility,
                 user.user_subscription_state,
                 user.user_school_type,
                 activation_dates.user_activation_date,
@@ -481,7 +491,7 @@ def define_enriched_user_data_query(dataset, table_prefix=""):
                 first_paid_booking_type.first_paid_booking_type,
                 count_distinct_types.cnt_distinct_types AS cnt_distinct_type_booking,
                 user.user_is_active,
-                user.user_suspension_reason,
+                user_suspension_history.reasonCode AS user_suspension_reason,
                 user_agg_deposit_data.user_first_deposit_amount AS user_deposit_initial_amount,
                 user_agg_deposit_data.user_last_deposit_expiration_date AS user_deposit_expiration_date,
                 CASE WHEN TIMESTAMP(user_agg_deposit_data.user_last_deposit_expiration_date) < CURRENT_TIMESTAMP() OR actual_amount_spent.actual_amount_spent >= user_agg_deposit_data.user_total_deposit_amount THEN TRUE ELSE FALSE END AS user_is_former_beneficiary,
@@ -511,9 +521,10 @@ def define_enriched_user_data_query(dataset, table_prefix=""):
             LEFT JOIN first_booking_type ON user.user_id = first_booking_type.user_id
             LEFT JOIN first_paid_booking_type ON user.user_id = first_paid_booking_type.user_id
             LEFT JOIN count_distinct_types ON user.user_id = count_distinct_types.user_id
+            LEFT JOIN user_suspension_history ON user_suspension_history.userId = user.user_id and rank = 1
              JOIN user_agg_deposit_data ON user.user_id = user_agg_deposit_data.userId
             WHERE user_role IN ('UNDERAGE_BENEFICIARY','BENEFICIARY')
-            AND (user.user_is_active OR user.user_suspension_reason = 'upon user request')
+            AND (user.user_is_active OR user_suspension_history.reasonCode = 'upon user request')
         );
     """
 
@@ -541,5 +552,6 @@ def define_enriched_user_data_full_query(dataset, table_prefix=""):
         {define_first_paid_booking_type_query(dataset=dataset, table_prefix=table_prefix)}
         {define_count_distinct_types_query(dataset=dataset, table_prefix=table_prefix)}
         {define_user_agg_deposit_data_query(dataset=dataset, table_prefix=table_prefix)}
+        {define_user_suspension_history_query(dataset, table_prefix=table_prefix)}
         {define_enriched_user_data_query(dataset=dataset, table_prefix=table_prefix)}
     """

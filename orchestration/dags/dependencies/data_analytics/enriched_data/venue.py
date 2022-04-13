@@ -179,26 +179,29 @@ def define_enriched_venue_query(dataset, table_prefix=""):
                 ,venue.venue_managing_offerer_id
                 ,venue.venue_creation_date
                 ,venue.venue_is_permanent
+                ,venue.business_unit_id
                 ,offerer.offerer_name
-                ,venue_type.label AS venue_type_label
+                ,venue.venue_type_code AS venue_type_label
                 ,venue_label.label AS venue_label
                 ,total_bookings_per_venue.total_bookings
                 ,non_cancelled_bookings_per_venue.non_cancelled_bookings
                 ,used_bookings_per_venue.used_bookings
                 ,first_offer_creation_date.first_offer_creation_date
                 ,last_offer_creation_date.last_offer_creation_date
+                ,first_booking_date
+                ,last_booking_date
                 ,offers_created_per_venue.offers_created
                 ,bookable_offer_cnt.venue_bookable_offer_cnt
                 ,theoretic_revenue_per_venue.theoretic_revenue
                 ,real_revenue_per_venue.real_revenue
                 ,venue_humanized_id.humanized_id AS venue_humanized_id
-                ,CONCAT("https://backend.passculture.beta.gouv.fr/pc/back-office/venue/edit/?id=",venue.venue_id,"&url=%2Fpc%2Fback-office%2Fvenue%2F") AS venue_flaskadmin_link
+                ,CONCAT("https://backend.passculture.pro/pc/back-office/venue/edit/?id=",venue.venue_id,"&url=%2Fpc%2Fback-office%2Fvenue%2F") AS venue_flaskadmin_link
                 ,venue_region_departement.region_name AS venue_region_name
                 ,CONCAT('https://passculture.pro/structures/',offerer_humanized_id.humanized_id,'/lieux/',venue_humanized_id.humanized_id) AS venue_pc_pro_link
             FROM {dataset}.{table_prefix}venue AS venue
             LEFT JOIN {dataset}.{table_prefix}offerer AS offerer ON venue.venue_managing_offerer_id = offerer.offerer_id
-            LEFT JOIN {dataset}.{table_prefix}venue_type AS venue_type ON venue.venue_type_id = venue_type.id
             LEFT JOIN {dataset}.{table_prefix}venue_label AS venue_label ON venue_label.id = venue.venue_label_id
+            LEFT JOIN related_bookings ON related_bookings.venue_id = venue.venue_id
             LEFT JOIN total_bookings_per_venue ON venue.venue_id = total_bookings_per_venue.venue_id
             LEFT JOIN non_cancelled_bookings_per_venue ON venue.venue_id = non_cancelled_bookings_per_venue.venue_id
             LEFT JOIN used_bookings_per_venue ON venue.venue_id = used_bookings_per_venue.venue_id
@@ -216,6 +219,21 @@ def define_enriched_venue_query(dataset, table_prefix=""):
     """
 
 
+def define_first_booking_creation_dates_query(dataset, table_prefix=""):
+    return f"""
+    CREATE TEMP TABLE related_bookings AS
+        SELECT
+            venue.venue_id,
+            MIN(booking.booking_creation_date) AS first_booking_date,
+            MAX(booking.booking_creation_date) AS last_booking_date
+        FROM {dataset}.{table_prefix}venue AS venue
+        LEFT JOIN {dataset}.{table_prefix}offer AS offer ON offer.venue_id = venue.venue_id
+        LEFT JOIN {dataset}.{table_prefix}stock AS stock ON stock.offer_id = offer.offer_id
+        LEFT JOIN {dataset}.{table_prefix}booking AS booking ON booking.stock_id = stock.stock_id
+        GROUP BY venue_id;
+        """
+
+
 def define_enriched_venue_data_full_query(dataset, table_prefix=""):
     return f"""
         {define_total_bookings_per_venue_query(dataset=dataset, table_prefix=table_prefix)}
@@ -230,5 +248,6 @@ def define_enriched_venue_data_full_query(dataset, table_prefix=""):
         {create_temp_humanize_id(table="venue", dataset=dataset, table_prefix=table_prefix)}
         {create_temp_humanize_id(table="offerer", dataset=dataset, table_prefix=table_prefix)}
         {define_bookable_offer_cnt_query(analytics_dataset=dataset)}
+        {define_first_booking_creation_dates_query(dataset=dataset, table_prefix=table_prefix)}
         {define_enriched_venue_query(dataset=dataset, table_prefix=table_prefix)}
     """

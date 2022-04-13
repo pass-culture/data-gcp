@@ -146,12 +146,15 @@ def define_enriched_offerer_query(dataset, table_prefix=""):
                 offerer.offerer_id,
                 offerer.offerer_name,
                 offerer.offerer_creation_date,
+                offerer.offerer_validation_date,
                 related_stocks.first_stock_creation_date,
                 related_bookings.first_booking_date,
                 related_offers.offer_cnt,
                 bookable_offer_cnt_offerer.offerer_bookable_offer_cnt,
                 related_non_cancelled_bookings.no_cancelled_booking_cnt,
                 offerer_department_code.offerer_department_code,
+                region_department.region_name AS offerer_region_name,
+                offerer.offerer_siren,
                 related_venues.venue_cnt,
                 related_venues_with_offer.venue_with_offer,
                 offerer_humanized_id.humanized_id AS offerer_humanized_id,
@@ -163,6 +166,7 @@ def define_enriched_offerer_query(dataset, table_prefix=""):
             LEFT JOIN related_non_cancelled_bookings
                 ON related_non_cancelled_bookings.offerer_id = offerer.offerer_id
             LEFT JOIN offerer_department_code ON offerer_department_code.offerer_id = offerer.offerer_id
+            LEFT JOIN {dataset}.region_department AS region_department ON offerer_department_code.offerer_department_code = region_department.num_dep
             LEFT JOIN related_venues ON related_venues.offerer_id = offerer.offerer_id
             LEFT JOIN related_venues_with_offer
                 ON related_venues_with_offer.offerer_id = offerer.offerer_id

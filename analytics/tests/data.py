@@ -609,7 +609,6 @@ ENRICHED_USER_DATA_INPUT = {
             "user_has_seen_tutorials": True,
             "user_cultural_survey_filled_date": datetime.now().replace(microsecond=0),
             "user_is_active": True,
-            "user_suspension_reason": None,
             "user_age": 18,
             "user_has_completed_idCheck": True,
             "user_phone_validation_status": True,
@@ -618,8 +617,18 @@ ENRICHED_USER_DATA_INPUT = {
             "user_has_enabled_marketing_email": True,
             "user_birth_date": datetime.now().replace(microsecond=0),
             "user_role": "BENEFICIARY",
-            "user_school_type": "AGRICULTURAL_HIGH_SCHOOL",
+            "user_school_type": "Lycée agricole",
             "user_subscription_state": "account_created",
+        }
+    ],
+    "user_suspension": [
+        {
+            "id": "1",
+            "userId": "1",
+            "eventType": "UNSUSPENDED",
+            "eventDate": datetime.now().replace(microsecond=0),
+            "actorUserId": "1388409",
+            "reasonCode": None,
         }
     ],
     "deposit": [
@@ -726,7 +735,7 @@ ENRICHED_USER_DATA_EXPECTED = [
         "user_is_current_beneficiary": False,
         "user_age": 18,
         "user_birth_date": datetime.now().replace(microsecond=0),
-        "user_school_type": "AGRICULTURAL_HIGH_SCHOOL",
+        "user_school_type": "Lycée agricole",
         "user_subscription_state": "account_created",
     }
 ]
@@ -742,6 +751,7 @@ ENRICHED_VENUE_DATA_INPUT = {
             "booking_amount": 2,
             "booking_quantity": 1,
             "booking_is_cancelled": False,
+            "booking_creation_date": datetime.now().replace(microsecond=0),
         }
     ],
     "favorite": [],
@@ -786,10 +796,12 @@ ENRICHED_VENUE_DATA_INPUT = {
             "venue_siret": "12345678912345",
             "venue_is_virtual": False,
             "venue_is_permanent": True,
+            "venue_type_code": "Librairie",
             "venue_managing_offerer_id": "1",
             "venue_creation_date": datetime.now().replace(microsecond=0),
             "venue_label_id": "1",
             "venue_type_id": "1",
+            "business_unit_id": "1234",
         }
     ],
     "venue_label": [{"id": "1", "label": "an other label"}],
@@ -814,21 +826,24 @@ ENRICHED_VENUE_DATA_EXPECTED = [
         "venue_managing_offerer_id": "1",
         "venue_creation_date": datetime.now().replace(microsecond=0),
         "offerer_name": "An offerer",
-        "venue_type_label": "a label",
+        "venue_type_label": "Librairie",
         "venue_label": "an other label",
         "total_bookings": 1,
         "non_cancelled_bookings": 1,
         "used_bookings": 1,
         "first_offer_creation_date": datetime.now().replace(microsecond=0),
         "last_offer_creation_date": datetime.now().replace(microsecond=0),
+        "first_booking_date": datetime.now().replace(microsecond=0),
+        "last_booking_date": datetime.now().replace(microsecond=0),
         "offers_created": 1,
         "venue_bookable_offer_cnt": 1,
         "theoretic_revenue": Decimal("2"),
         "real_revenue": Decimal("2"),
         "venue_humanized_id": "AE",
-        "venue_flaskadmin_link": "https://backend.passculture.beta.gouv.fr/pc/back-office/venue/edit/?id=1&url=%2Fpc%2Fback-office%2Fvenue%2F",
+        "venue_flaskadmin_link": "https://backend.passculture.pro/pc/back-office/venue/edit/?id=1&url=%2Fpc%2Fback-office%2Fvenue%2F",
         "venue_region_name": "IDF",
         "venue_pc_pro_link": "https://passculture.pro/structures/AE/lieux/AE",
+        "business_unit_id": "1234",
     }
 ]
 
@@ -864,7 +879,9 @@ ENRICHED_OFFERER_DATA_INPUT = {
             "offerer_id": "1",
             "offerer_postal_code": "973",
             "offerer_name": "An offerer",
+            "offerer_siren": "123456789",
             "offerer_creation_date": datetime.now().replace(microsecond=0),
+            "offerer_validation_date": datetime.now().replace(microsecond=0),
         }
     ],
     "stock": [
@@ -882,6 +899,7 @@ ENRICHED_OFFERER_DATA_INPUT = {
     ],
     "venue_label": [],
     "venue_type": [],
+    "region_department": [{"num_dep": "973", "region_name": "Guyane"}],
 }
 
 ENRICHED_OFFERER_DATA_EXPECTED = [
@@ -889,12 +907,15 @@ ENRICHED_OFFERER_DATA_EXPECTED = [
         "offerer_id": "1",
         "offerer_name": "An offerer",
         "offerer_creation_date": datetime.now().replace(microsecond=0),
+        "offerer_validation_date": datetime.now().replace(microsecond=0),
         "first_stock_creation_date": datetime.now().replace(microsecond=0),
         "first_booking_date": datetime.now().replace(microsecond=0),
         "offer_cnt": 1,
         "offerer_bookable_offer_cnt": 1,
         "no_cancelled_booking_cnt": 1,
         "offerer_department_code": "973",
+        "offerer_region_name": "Guyane",
+        "offerer_siren": "123456789",
         "venue_cnt": 1,
         "venue_with_offer": 1,
         "offerer_humanized_id": "AE",
@@ -971,6 +992,7 @@ ENRICHED_BOOKING_DATA_INPUT = {
             "venue_department_code": 78,
             "venue_managing_offerer_id": "2",
             "venue_type_id": "1",
+            "venue_type_code": "Librairie",
         }
     ],
     "offerer": [{"offerer_id": "2", "offerer_name": "Offerer"}],
@@ -1034,7 +1056,7 @@ ENRICHED_BOOKING_DATA_EXPECTED = [
         "venue_id": "8",
         "venue_label_name": "label",
         "venue_name": "My Wonderful Venue",
-        "venue_type_name": "label",
+        "venue_type_name": "Librairie",
         "booking_used_date": datetime.now().replace(microsecond=0),
     }
 ]
@@ -1089,6 +1111,7 @@ ENRICHED_EDUCATIONAL_BOOKING_DATA_INPUT = {
         {
             "stock_id": "9",
             "offer_id": "11",
+            "number_of_tickets": 30,
             "stock_beginning_date": datetime.now().replace(microsecond=0),
         }
     ],
@@ -1125,6 +1148,7 @@ ENRICHED_EDUCATIONAL_BOOKING_DATA_EXPECTED = [
         "venue_name": "My Wonderful Venue",
         "venue_department_code": 78,
         "booking_amount": 50,
+        "number_of_tickets": 30,
         "nom_etablissement": "Mon etablissement",
         "school_department_code": 78,
         "libelle_academie": "Mon academie",

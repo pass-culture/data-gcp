@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 from api.src.pcapi.core.categories.subcategories import *
+from api.src.pcapi.core.categories.subcategories import ALL_SUBCATEGORIES
 
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "default")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "ehp")

@@ -17,7 +17,6 @@ from dependencies.config import GCP_PROJECT_ID, GCE_ZONE, ENV_SHORT_NAME
 
 GCE_INSTANCE = os.environ.get("GCE_TRAINING_INSTANCE", "algo-training-dev")
 
-STORAGE_PATH = f"gs://{MLFLOW_BUCKET_NAME}/algo_training_v2_deep_reco_{ENV_SHORT_NAME}/algo_training_v2_deep_reco_{DATE}"
 SLACK_CONN_ID = "slack"
 SLACK_CONN_PASSWORD = access_secret_data(GCP_PROJECT_ID, "slack-conn-password")
 
@@ -28,7 +27,6 @@ export GCP_PROJECT_ID={GCP_PROJECT_ID}
 """
 
 DEFAULT_NATIVE = f"""cd data-gcp/analytics/scripts/import_subcategories_model
-export STORAGE_PATH={STORAGE_PATH}
 export ENV_SHORT_NAME={ENV_SHORT_NAME}
 export GCP_PROJECT_ID={GCP_PROJECT_ID}"""
 
@@ -67,7 +65,7 @@ with DAG(
 
     FETCH_CODE = f'"if cd data-gcp; then git checkout master && git pull && git checkout {branch} && git pull; else git clone git@github.com:pass-culture/data-gcp.git && cd data-gcp && git checkout {branch} && git pull; fi"'
 
-    FETCH_CODE_NATIVE = f'"if cd pass-culture-main; then git checkout master && git pull ; else git clone git@github.com:pass-culture/pass-culture-main.git && git pull; fi"'
+    FETCH_CODE_NATIVE = f'"if cd pass-culture-main; then git checkout master && git pull ; else git clone git@github.com:pass-culture/pass-culture-main.git && cd pass-culture-main && git checkout master && git pull; fi"'
 
     fetch_code = BashOperator(
         task_id="fetch_code",
@@ -112,7 +110,7 @@ with DAG(
         export SCRIPTPATH=api/src
         export PYTHONPATH="$(pwd)/$SCRIPTPATH":$PYTHONPATH"""
 
-    EXPORT_SUBCAT = f""" '{DEFAULT_NATIVE}
+    EXPORT_SUBCAT = f""" '{SETUP_PYTHON_SCRIPT}
         python3.9 export_subcategories_from_native_definition.py'
     """
 
@@ -141,4 +139,5 @@ with DAG(
         >> install_dependencies
         >> fetch_code_native
         >> export_subcategories
+        >> gce_instance_stop
     )

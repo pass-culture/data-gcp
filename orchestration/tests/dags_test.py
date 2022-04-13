@@ -75,7 +75,7 @@ class TestDags(unittest.TestCase):
         self.assertEqual(len(dag.tasks), 9)
 
     def test_dump_matomo_history_dag_is_loaded(self):
-        # When
+        # Whenv
         dag = self.dagbag.get_dag(dag_id="import_matomo_history_v1")
 
         # Then
@@ -94,7 +94,7 @@ class TestDags(unittest.TestCase):
 
     def test_import_data_analytics_dag_is_loaded(self):
         # When
-        dag = self.dagbag.get_dag(dag_id="import_data_analytics_v6")
+        dag = self.dagbag.get_dag(dag_id="import_data_analytics_v7")
 
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})

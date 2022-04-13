@@ -15,7 +15,7 @@ from dependencies.access_gcp_secrets import access_secret_data
 from dependencies.config import GCP_PROJECT_ID, GCE_ZONE, ENV_SHORT_NAME
 
 
-GCE_INSTANCE = os.environ.get("GCE_TRAINING_INSTANCE", "algo-training-dev")
+GCE_INSTANCE = os.environ.get("GCE_DIVERSIFICATION_INSTANCE", "algo-training-dev")
 
 DATE = "{{ts_nodash}}"
 
@@ -58,7 +58,7 @@ with DAG(
     if ENV_SHORT_NAME == "dev":
         branch = "PC-13733-ADD_diversification_score"
     if ENV_SHORT_NAME == "stg":
-        branch = "PC-13733-ADD_diversification_score"
+        branch = "master"
     if ENV_SHORT_NAME == "prod":
         branch = "production"
 

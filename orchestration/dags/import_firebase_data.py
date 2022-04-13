@@ -31,7 +31,7 @@ ENV_SHORT_NAME_APP_INFO_ID_MAPPING = {
 
 ENV_SHORT_NAME_APP_INFO_ID_MAPPING_PRO = {
     "dev": ["localhost", "pro.testing.passculture.team"],
-    "stg": ["pro.testing.passculture.team","integration.passculture.pro"],
+    "stg": ["pro.testing.passculture.team", "integration.passculture.pro"],
     "prod": ["passculture.pro"],
 }
 
@@ -176,7 +176,13 @@ aggregate_firebase_user_events = BigQueryOperator(
 end = DummyOperator(task_id="end", dag=dag)
 
 start >> copy_table_to_env >> copy_table_to_clean >> copy_table_to_analytics >> end
-start >> import_table_pro_to_raw >> copy_table_pro_to_clean >> copy_table_pro_to_analytics >> end
+(
+    start
+    >> import_table_pro_to_raw
+    >> copy_table_pro_to_clean
+    >> copy_table_pro_to_analytics
+    >> end
+)
 (
     copy_table_to_env
     >> [

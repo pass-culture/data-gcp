@@ -747,6 +747,7 @@ ENRICHED_VENUE_DATA_INPUT = {
             "booking_amount": 2,
             "booking_quantity": 1,
             "booking_is_cancelled": False,
+            "booking_creation_date": datetime.now().replace(microsecond=0),
         }
     ],
     "favorite": [],
@@ -828,6 +829,8 @@ ENRICHED_VENUE_DATA_EXPECTED = [
         "used_bookings": 1,
         "first_offer_creation_date": datetime.now().replace(microsecond=0),
         "last_offer_creation_date": datetime.now().replace(microsecond=0),
+        "first_booking_date": datetime.now().replace(microsecond=0),
+        "last_booking_date": datetime.now().replace(microsecond=0),
         "offers_created": 1,
         "venue_bookable_offer_cnt": 1,
         "theoretic_revenue": Decimal("2"),

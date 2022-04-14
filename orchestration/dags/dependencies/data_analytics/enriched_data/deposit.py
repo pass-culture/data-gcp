@@ -85,7 +85,7 @@ def define_enriched_deposit_data_query(dataset, table_prefix=""):
                 deposit_first_booking_date,
                 deposit_last_booking_date,
                 DATE_DIFF(CURRENT_DATE(), CAST(deposit.dateCreated AS DATE), DAY) AS deposit_seniority,
-                DATE_DIFF(CAST(user.user_creation_date AS DATE), CAST(deposit.dateCreated AS DATE), DAY) AS days_between_user_creation_and_deposit_creation
+                DATE_DIFF(CAST(deposit.dateCreated AS DATE), CAST(user.user_creation_date AS DATE), DAY) AS days_between_user_creation_and_deposit_creation
             FROM {dataset}.{table_prefix}deposit AS deposit
             JOIN  {dataset}.{table_prefix}user AS user ON user.user_id = deposit.userId
             JOIN ranked_deposit ON ranked_deposit.deposit_id = deposit.id

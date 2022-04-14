@@ -35,6 +35,9 @@ from dependencies.data_analytics.enriched_data.stock import (
 from dependencies.data_analytics.enriched_data.user import (
     define_enriched_user_data_full_query,
 )
+from dependencies.data_analytics.enriched_data.deposit import (
+    define_enriched_deposit_data_full_query,
+)
 from dependencies.data_analytics.enriched_data.venue import (
     define_enriched_venue_data_full_query,
 )

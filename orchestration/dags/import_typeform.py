@@ -85,7 +85,7 @@ with DAG(
         python_callable=getting_service_account_token,
     )
 
-    typeform_to_gcs = SimpleHttpOperator(
+    """typeform_to_gcs = SimpleHttpOperator(
         task_id="typeform_to_gcs",
         method="POST",
         http_conn_id="http_gcp_cloud_function",
@@ -100,14 +100,15 @@ with DAG(
             "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_service_account_token', key='return_value')}}",
         },
         log_response=True,
-    )
+    )"""
     today = date.today().strftime("%Y%m%d")  # usefull to test in dev
     # the tomorrow_ds_nodash enables catchup :
     # it fetches the file corresponding to the initial execution date of the dag and not the day the task is run.
     import_answers_to_bigquery = GoogleCloudStorageToBigQueryOperator(
         task_id="import_answers_to_bigquery",
         bucket=DATA_GCS_BUCKET_NAME,
-        source_objects=["QPI_exports/qpi_answers_{{ tomorrow_ds_nodash }}.jsonl"],
+        #source_objects=["QPI_exports/qpi_answers_{{ tomorrow_ds_nodash }}.jsonl"],
+        source_objects=["QPI_exports/qpi_answers_20220405/test.json"],
         destination_project_dataset_table=f"{BIGQUERY_RAW_DATASET}.temp_{QPI_ANSWERS_TABLE}",
         write_disposition="WRITE_TRUNCATE",
         source_format="NEWLINE_DELIMITED_JSON",
@@ -186,10 +187,9 @@ with DAG(
 
     end = DummyOperator(task_id="end")
 
-    start >> getting_last_token >> getting_service_account_token >> typeform_to_gcs
+    start >> getting_last_token >> getting_service_account_token >> import_answers_to_bigquery
     (
-        typeform_to_gcs
-        >> import_answers_to_bigquery
+        import_answers_to_bigquery
         >> add_answers_to_raw
         >> add_answers_to_clean
         >> add_temp_answers_to_clean

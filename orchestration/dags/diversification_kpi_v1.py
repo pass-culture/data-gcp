@@ -60,7 +60,7 @@ with DAG(
     if ENV_SHORT_NAME == "stg":
         branch = "PC-13733-Add_diversification_v2"
     if ENV_SHORT_NAME == "prod":
-        branch = "production"
+        branch = "PC-13733-Add_diversification_v2"
 
     FETCH_CODE = f'"if cd data-gcp; then git checkout master && git pull && git checkout {branch} && git pull; else git clone git@github.com:pass-culture/data-gcp.git && cd data-gcp && git checkout {branch} && git pull; fi"'
 

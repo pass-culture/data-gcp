@@ -3,7 +3,7 @@ def define_deposit_rank_query(dataset, table_prefix=""):
         CREATE TEMP TABLE ranked_deposit AS (
             SELECT
                 deposit.userId,
-                deposit.id AS deposit_id
+                deposit.id AS deposit_id,
                 RANK() OVER(PARTITION BY deposit.userId ORDER BY deposit.dateCreated, id) AS deposit_rank
             FROM {dataset}.{table_prefix}deposit AS deposit
         );
@@ -92,7 +92,7 @@ def define_enriched_deposit_data_query(dataset, table_prefix=""):
             LEFT JOIN {dataset}.region_department ON user.user_department_code = region_department.num_dep
             LEFT JOIN actual_amount_spent ON deposit.id = actual_amount_spent.deposit_id
             LEFT JOIN theoretical_amount_spent ON deposit.id = theoretical_amount_spent.deposit_id
-            LEFT JOIN first_booking_date ON deposit.id = first_booking_date.depositId
+            LEFT JOIN first_booking_date ON deposit.id = first_booking_date.deposit_id
             LEFT JOIN user_suspension_history ON user_suspension_history.userId = user.user_id and rank = 1
             WHERE user_role IN ('UNDERAGE_BENEFICIARY','BENEFICIARY')
             AND (user.user_is_active OR user_suspension_history.reasonCode = 'upon user request')

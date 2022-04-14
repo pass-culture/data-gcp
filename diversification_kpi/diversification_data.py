@@ -80,7 +80,7 @@ def diversification_kpi(df):
 if __name__ == "__main__":
     t_0_1 = time.time()
     df = get_data()
-    t_0 =time.time()
+    t_0 = time.time()
     df_cluster = get_rayon()
     t_1 = time.time()
     data = pd.merge(df, df_cluster, on="rayon", how="left")

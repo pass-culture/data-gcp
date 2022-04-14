@@ -11,47 +11,33 @@ from tools.diversification_kpi import (
     fuse_columns_into_format,
 )
 
-
-def get_data_diversification():
-    query = f"""SELECT DISTINCT user_id, user_region_name, user_activity, 
-    user_civility, user_deposit_creation_date, user_total_deposit_amount, actual_amount_spent
-    FROM {GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_user_data
-    WHERE user_total_deposit_amount = 300"""
+def get_data():
+    query = f"""SELECT DISTINCT A.user_id, user_region_name, user_activity,
+    user_civility, user_deposit_creation_date, user_total_deposit_amount, actual_amount_spent, offer.offer_id, booking_creation_date, booking_amount,
+    offer_category_id as category, bkg.offer_subcategoryId as subcategory, bkg.physical_goods,
+    bkg.digital_goods, bkg.event, offer.genres, offer.rayon, offer.type, offer.venue_id, offer.venue_name,C.*
+    FROM {GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_user_data A
+    LEFT join  {GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_booking_data as bkg
+    ON A.user_id = bkg.user_id
+    LEFT JOIN {GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_offer_data as offer
+    ON bkg.offer_id = offer.offer_id
+    LEFT JOIN (
+        SELECT * except(row_number)
+        FROM ( select *, ROW_NUMBER() OVER (PARTITION BY user_id) as row_number
+            FROM {GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_qpi_answers_v3
+        )
+    WHERE row_number=1) AS C
+    ON A.user_id = C.user_id
+    WHERE user_total_deposit_amount = 300 LIMIT 100"""
     data = pd.read_gbq(query)
     data["user_civility"] = data["user_civility"].replace(["M.", "Mme"], ["M", "F"])
-    return data
-
-
-def get_users_bookings():
-    query = f"""SELECT user_id, offer.offer_id, roffer.offer_description,booking_creation_date, booking_amount,
-    offer_category_id as category, bkg.offer_subcategoryId as subcategory, bkg.physical_goods, 
-    bkg.digital_goods, bkg.event, offer.genres, offer.rayon, offer.type, offer.venue_id, offer.venue_name
-    FROM {GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_booking_data bkg
-    JOIN {GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_offer_data as offer
-    ON bkg.offer_id = offer.offer_id
-    JOIN {GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_offer as roffer
-    ON bkg.offer_id = roffer.offer_id
-    WHERE booking_is_cancelled<> True"""
-    users_bookings = pd.read_gbq(query)
-    return users_bookings
-
-
-def data_preparation():
-    users_sample = get_data_diversification()
-    bookings = get_users_bookings()
-    bookings_enriched = pd.merge(
-        bookings, users_sample, on="user_id", how="right", validate="m:1"
-    )
-    bookings_enriched["offer_description"] = (
-        '"' + bookings_enriched["offer_description"] + '"'
-    )
-    bookings_enriched["format"] = bookings_enriched.apply(
+    data["format"] = data.apply(
         lambda x: fuse_columns_into_format(
             x["physical_goods"], x["digital_goods"], x["event"]
         ),
         axis=1,
     )
-    return bookings_enriched
+    return data
 
 
 def get_rayon():
@@ -61,17 +47,6 @@ def get_rayon():
     )
     data_rayon = data_rayon.drop(columns=["Unnamed: 0"])
     return data_rayon
-
-
-def get_users_qpi():
-    query = f"""SELECT * except(row_number)
-    FROM ( select *, ROW_NUMBER() OVER (PARTITION BY user_id) as row_number
-         FROM {GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_qpi_answers_v3
-
-    )
-    WHERE row_number=1"""
-    users_bookings = pd.read_gbq(query)
-    return users_bookings
 
 
 def diversification_kpi(df):
@@ -102,12 +77,10 @@ def diversification_kpi(df):
 
 
 if __name__ == "__main__":
-    bookings_enriched = data_preparation()
+    df = get_data()
     df_cluster = get_rayon()
-    data = pd.merge(bookings_enriched, df_cluster, on="rayon", how="left")
-    qpi = get_users_qpi()
-    qpi = qpi.drop(columns=["submitted_at"])
-    data = pd.merge(data, qpi, on="user_id", how="left", validate="many_to_one")
+    data = pd.merge(df, df_cluster, on="rayon", how="left")
+    data = data.drop(columns=["submitted_at"])
     data = data.drop(
         columns=[
             "physical_goods",

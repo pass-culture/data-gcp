@@ -7,6 +7,7 @@ def create_collective_booking_ranking_view(dataset, table_prefix=""):
             FROM {dataset}.{table_prefix}collective_booking AS collective_booking);
         """
 
+
 def define_enriched_collective_booking_query(dataset, table_prefix=""):
     return f"""
         CREATE OR REPLACE TABLE {dataset}.enriched_collective_booking_data AS (

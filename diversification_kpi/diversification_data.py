@@ -29,7 +29,7 @@ def get_data():
         )
     WHERE row_number=1) AS C
     ON A.user_id = C.user_id
-    WHERE user_total_deposit_amount = 300 LIMIT 100"""
+    WHERE user_total_deposit_amount = 300"""
     data = pd.read_gbq(query)
     data["user_civility"] = data["user_civility"].replace(["M.", "Mme"], ["M", "F"])
     data["format"] = data.apply(

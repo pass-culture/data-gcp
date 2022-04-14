@@ -59,6 +59,6 @@ LEFT JOIN collective_booking_ranking_view ON collective_booking_ranking_view.col
 
 def define_enriched_collective_booking_full_query(dataset, table_prefix=""):
     return f"""
-        {create_collective_booking_amount_view(dataset=dataset, table_prefix=table_prefix)}
+        {create_collective_booking_ranking_view(dataset=dataset, table_prefix=table_prefix)}
         {define_enriched_collective_booking_query(dataset=dataset, table_prefix=table_prefix)}
     """

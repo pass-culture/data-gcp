@@ -469,7 +469,7 @@ end = DummyOperator(task_id="end", dag=dag)
     >> create_enriched_stock_data_task
     >> create_enriched_offer_data_task
     >> create_enriched_booking_data_task
-    >> create_enriched_educational_booking_data_task
+    >> create_enriched_collective_booking_data_task
     >> create_enriched_user_data_task
     >> enriched_venues
     >> create_enriched_offerer_data_task

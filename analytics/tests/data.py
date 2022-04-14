@@ -1061,14 +1061,14 @@ ENRICHED_BOOKING_DATA_EXPECTED = [
     }
 ]
 
-# Enriched_educational_booking =>
+# Enriched_collective_booking =>
 # booking is linked with user, venue, educational_booking, educational_institution and eple
-ENRICHED_EDUCATIONAL_BOOKING_DATA_INPUT = {
+ENRICHED_COLLECTIVE_BOOKING_DATA_INPUT = {
     "booking": [
         {
             "booking_id": "8",
             "booking_amount": 50,
-            "educational_booking_id": "8",
+            "collective_booking_id": "8",
             "booking_creation_date": datetime.now().replace(microsecond=0),
             "stock_id": "9",
             "booking_status": "USED",
@@ -1078,19 +1078,22 @@ ENRICHED_EDUCATIONAL_BOOKING_DATA_INPUT = {
             "booking_used_date": datetime.now().replace(microsecond=0),
         }
     ],
-    "educational_booking": [
+    "collective_booking": [
         {
-            "educational_booking_id": "8",
-            "educational_booking_educational_institution_id": "14",
-            "educational_booking_educational_year_id": "1",
-            "educational_booking_status": "USED_BY_INSTITUTE",
-            "educational_booking_confirmation_date": datetime.now().replace(
+            "collective_booking_id": "8",
+            "booking_id": "8",
+            "collective_booking_collective_stock_id" : "9",
+            "collective_booking_educational_institution_id": "14",
+            "collective_booking_educational_year_id": "1",
+            "collective_booking_venue_id": "8",
+            "collective_booking_status": "USED_BY_INSTITUTE",
+            "collective_booking_confirmation_date": datetime.now().replace(
                 microsecond=0
             ),
-            "educational_booking_confirmation_limit_date": datetime.now().replace(
+            "collective_booking_confirmation_limit_date": datetime.now().replace(
                 microsecond=0
             ),
-            "educational_booking_educational_redactor_id": "1",
+            "collective_booking_educational_redactor_id": "1",
         }
     ],
     "educational_institution": [
@@ -1099,20 +1102,20 @@ ENRICHED_EDUCATIONAL_BOOKING_DATA_INPUT = {
             "educational_institution_institution_id": "14",
         }
     ],
-    "offer": [
+    "collective_offer": [
         {
-            "offer_id": "11",
-            "offer_subcategoryId": "CINE_PLEIN_AIR",
-            "offer_name": "EAC sympa",
-            "venue_id": "8",
+            "collective_offer_offer_id": "11",
+            "collective_offer_subcategory_id": "CINE_PLEIN_AIR",
+            "collective_offer_name": "EAC sympa",
+            "collective_offer_venue_id": "8",
         }
     ],
-    "stock": [
+    "collective_stock": [
         {
-            "stock_id": "9",
-            "offer_id": "11",
-            "number_of_tickets": 30,
-            "stock_beginning_date": datetime.now().replace(microsecond=0),
+            "collective_stock_stock_id": "9",
+            "collective_stock_collective_offer_id": "11",
+            "collective_stock_number_of_tickets": 30,
+            "collective_stock_beginning_date": datetime.now().replace(microsecond=0),
         }
     ],
     "venue": [
@@ -1126,6 +1129,13 @@ ENRICHED_EDUCATIONAL_BOOKING_DATA_INPUT = {
             "venue_type_id": "1",
         }
     ],
+    "region_department": [
+        {
+            "num_dep": 78,
+            "dep_name": "Yvelines",
+            "region_name": "Île-de-France",
+        }
+    ],
     "eple": [
         {
             "id_etablissement": "14",
@@ -1134,35 +1144,47 @@ ENRICHED_EDUCATIONAL_BOOKING_DATA_INPUT = {
             "code_departement": 78,
         }
     ],
+    "offerer": [
+        {
+            "offerer_id": "2",
+            "offerer_name": "Ma structure",
+        }
+    ],
 }
 
-ENRICHED_EDUCATIONAL_BOOKING_DATA_EXPECTED = [
+ENRICHED_COLLECTIVE_BOOKING_DATA_EXPECTED = [
     {
-        "educational_booking_id": "8",
+        "collective_booking_id": "8",
         "booking_id": "8",
+        "collective_offer_id": "11",
         "offer_id": "11",
         "stock_id": "9",
-        "offer_name": "EAC sympa",
-        "offer_subcategoryid": "CINE_PLEIN_AIR",
+        "collective_stock_id": "9",
+        "collective_offer_name": "EAC sympa",
+        "collective_offer_subcategory_id": "CINE_PLEIN_AIR",
         "venue_id": "8",
         "venue_name": "My Wonderful Venue",
         "venue_department_code": 78,
+        "offerer_id": "2",
+        "offerer_name": "Ma structure",
         "booking_amount": 50,
         "number_of_tickets": 30,
+        "educational_institution_id": "14",
+        "educational_year_id": "1",
+        "educational_redactor_id": "1",
         "nom_etablissement": "Mon etablissement",
         "school_department_code": 78,
         "libelle_academie": "Mon academie",
-        "booking_creation_date": datetime.now().replace(microsecond=0),
-        "educational_booking_status": "USED_BY_INSTITUTE",
-        "booking_status": "USED",
-        "booking_is_cancelled": False,
-        "booking_is_used": True,
-        "booking_cancellation_date": None,
-        "educational_booking_confirmation_date": datetime.now().replace(microsecond=0),
-        "educational_booking_confirmation_limit_date": datetime.now().replace(
+        "collective_booking_creation_date": datetime.now().replace(microsecond=0),
+        "collective_booking_status": "USED_BY_INSTITUTE",
+        "collective_booking_cancellation_date": None,
+        "collective_booking_cancellation_reason": None,
+        "collective_booking_confirmation_date": datetime.now().replace(microsecond=0),
+        "collective_booking_confirmation_limit_date": datetime.now().replace(
             microsecond=0
         ),
-        "booking_used_date": datetime.now().replace(microsecond=0),
-        "booking_reimbursement_date": None,
+        "collective_booking_used_date": datetime.now().replace(microsecond=0),
+        "collective_booking_reimbursement_date": None,
+        "collective_booking_rank": 1,
     }
 ]

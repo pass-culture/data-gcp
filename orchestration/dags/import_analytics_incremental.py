@@ -20,7 +20,7 @@ from dependencies.config import (
 from dependencies.data_analytics.enriched_data.booking import (
     define_enriched_booking_data_full_query,
 )
-from dependencies.data_analytics.enriched_data.educational_booking import (
+from dependencies.data_analytics.enriched_data.collective_booking import (
     define_enriched_educational_booking_full_query,
 )
 from dependencies.data_analytics.enriched_data.offer import (

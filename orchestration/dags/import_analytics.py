@@ -20,8 +20,8 @@ from dependencies.config import (
 from dependencies.data_analytics.enriched_data.booking import (
     define_enriched_booking_data_full_query,
 )
-from dependencies.data_analytics.enriched_data.educational_booking import (
-    define_enriched_educational_booking_full_query,
+from dependencies.data_analytics.enriched_data.collective_booking import (
+    define_enriched_collective_booking_full_query,
 )
 from dependencies.data_analytics.enriched_data.offer import (
     define_enriched_offer_data_full_query,
@@ -307,9 +307,9 @@ create_enriched_booking_data_task = BigQueryOperator(
     dag=dag,
 )
 
-create_enriched_educational_booking_data_task = BigQueryOperator(
-    task_id="create_enriched_educational_booking_data",
-    sql=define_enriched_educational_booking_full_query(
+create_enriched_collective_booking_data_task = BigQueryOperator(
+    task_id="create_enriched_collective_booking_data",
+    sql=define_enriched_collective_booking_full_query(
         dataset=BIGQUERY_ANALYTICS_DATASET, table_prefix=APPLICATIVE_PREFIX
     ),
     use_legacy_sql=False,

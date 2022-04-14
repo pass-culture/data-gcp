@@ -51,8 +51,7 @@ def get_rayon():
 
 
 def diversification_kpi(df):
-    df_dropped = df.drop(columns=["offer_description"])
-    df_clean = df_dropped.rename(columns={"venue_id": "venue"})
+    df_clean = df.rename(columns={"venue_id": "venue"})
     features = ["category", "subcategory", "format", "venue", "macro_rayon"]
     divers_per_feature = calculate_diversification_per_feature(df_clean, features)
     for feature in features:

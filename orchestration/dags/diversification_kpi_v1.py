@@ -58,7 +58,7 @@ with DAG(
     if ENV_SHORT_NAME == "dev":
         branch = "PC-13733-ADD_diversification_score"
     if ENV_SHORT_NAME == "stg":
-        branch = "master"
+        branch = "PC-13733-Add_diversification_v2"
     if ENV_SHORT_NAME == "prod":
         branch = "production"
 

@@ -11,6 +11,7 @@ from tools.diversification_kpi import (
     fuse_columns_into_format,
 )
 
+
 def get_data():
     query = f"""SELECT DISTINCT A.user_id, user_region_name, user_activity,
     user_civility, user_deposit_creation_date, user_total_deposit_amount, actual_amount_spent, offer.offer_id, booking_creation_date, booking_amount,

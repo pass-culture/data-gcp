@@ -1,4 +1,5 @@
 import pandas as pd
+import time
 
 from tools.utils import (
     GCP_PROJECT,
@@ -77,9 +78,13 @@ def diversification_kpi(df):
 
 
 if __name__ == "__main__":
+    t_0_1 = time.time()
     df = get_data()
+    t_0 =time.time()
     df_cluster = get_rayon()
+    t_1 = time.time()
     data = pd.merge(df, df_cluster, on="rayon", how="left")
+    t_2 = time.time()
     data = data.drop(columns=["submitted_at"])
     data = data.drop(
         columns=[
@@ -94,6 +99,9 @@ if __name__ == "__main__":
     )
     data = data.sort_values(by=["user_id", "booking_creation_date"])
     df = diversification_kpi(data)
+    time_3 = time.time()
+    total = time_3 - time_0_1
+    print(total)
     df.to_gbq(
         f"""{BIGQUERY_ANALYTICS_DATASET}.user_diversification""",
         project_id=f"{GCP_PROJECT}",

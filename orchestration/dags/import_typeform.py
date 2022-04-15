@@ -107,7 +107,7 @@ with DAG(
     import_answers_to_bigquery = GoogleCloudStorageToBigQueryOperator(
         task_id="import_answers_to_bigquery",
         bucket=DATA_GCS_BUCKET_NAME,
-        #source_objects=["QPI_exports/qpi_answers_{{ tomorrow_ds_nodash }}.jsonl"],
+        # source_objects=["QPI_exports/qpi_answers_{{ tomorrow_ds_nodash }}.jsonl"],
         source_objects=["QPI_exports/qpi_answers_20220405/test.json"],
         destination_project_dataset_table=f"{BIGQUERY_RAW_DATASET}.temp_{QPI_ANSWERS_TABLE}",
         write_disposition="WRITE_TRUNCATE",
@@ -185,7 +185,12 @@ with DAG(
 
     end = DummyOperator(task_id="end")
 
-    start >> getting_last_token >> getting_service_account_token >> import_answers_to_bigquery
+    (
+        start
+        >> getting_last_token
+        >> getting_service_account_token
+        >> import_answers_to_bigquery
+    )
     (
         import_answers_to_bigquery
         >> add_answers_to_raw

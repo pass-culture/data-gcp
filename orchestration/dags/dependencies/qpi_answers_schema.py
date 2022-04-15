@@ -11,4 +11,3 @@ QPI_ANSWERS_SCHEMA = [
         ],
     },
 ]
-

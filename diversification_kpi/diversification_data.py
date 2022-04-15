@@ -23,7 +23,7 @@ def count_data():
 
 def get_batch_of_users(batch, batch_size):
     query = f"""SELECT DISTINCT user_id
-            FROM `passculture-data-prod.analytics_prod.enriched_user_data` 
+            FROM {GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_user_data` 
             WHERE user_total_deposit_amount = 300
             ORDER BY user_id
             LIMIT {batch_size} OFFSET {batch * batch_size}"""

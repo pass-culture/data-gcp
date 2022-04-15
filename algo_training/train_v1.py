@@ -100,7 +100,7 @@ def train(storage_path: str):
             if eval_result < best_eval or runned_epochs == 1:
                 run_uuid = mlflow.active_run().info.run_uuid
                 export_path = f"{TRAIN_DIR}/{run_uuid}"
-                tf.saved_model.save(match_model, export_path)
+                tf.keras.models.save_model(match_model, export_path)
                 if (
                     (best_eval - eval_result) / best_eval
                 ) < LOSS_CUTOFF and runned_epochs != 1:

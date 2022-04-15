@@ -11,7 +11,6 @@ BASE32_JS_LIB_PATH = f"gs://data-bucket-{ENV_SHORT_NAME}/base32-encode/base32.js
 APPLICATIVE_EXTERNAL_CONNECTION_ID = os.environ.get(
     "APPLICATIVE_EXTERNAL_CONNECTION_ID", ""
 )
-MATOMO_EXTERNAL_CONNECTION_ID = os.environ.get("MATOMO_EXTERNAL_CONNECTION_ID", "")
 DATA_GCS_BUCKET_NAME = os.environ.get(
     "DATA_GCS_BUCKET_NAME", f"data-bucket-{ENV_SHORT_NAME}"
 )
@@ -25,7 +24,6 @@ BIGQUERY_ANALYTICS_DATASET = os.environ.get(
 )
 
 APPLICATIVE_PREFIX = "applicative_database_"
-MATOMO_PREFIX = "matomo_"
 SURVEY_PREFIX = "survey_"
 
 TABLE_AB_TESTING = "abc_testing_20211029_v1v2"

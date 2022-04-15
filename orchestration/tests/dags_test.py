@@ -13,8 +13,6 @@ class TestDags(unittest.TestCase):
         with mock.patch(
             "dependencies.bigquery_client.BigQueryClient.query"
         ) as bigquery_mocker, mock.patch(
-            "dependencies.matomo_client.MatomoClient.query"
-        ) as matomo_mocker, mock.patch(
             "dependencies.access_gcp_secrets.access_secret_data"
         ) as access_secret_mocker:
 
@@ -28,7 +26,6 @@ class TestDags(unittest.TestCase):
                 )
 
             access_secret_mocker.return_value = "{}"
-            matomo_mocker.return_value = [[0]]
             bigquery_mocker.side_effect = bigquery_client
             self.dagbag = DagBag(include_examples=False)
 
@@ -74,24 +71,6 @@ class TestDags(unittest.TestCase):
         self.assertIsNotNone(dag)
         self.assertEqual(len(dag.tasks), 9)
 
-    def test_dump_matomo_history_dag_is_loaded(self):
-        # When
-        dag = self.dagbag.get_dag(dag_id="import_matomo_history_v1")
-
-        # Then
-        self.assertDictEqual(self.dagbag.import_errors, {})
-        self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 19)
-
-    def test_import_matomo_refresh_dag_is_loaded(self):
-        # When
-        dag = self.dagbag.get_dag(dag_id="import_matomo_refresh_v1")
-
-        # Then
-        self.assertDictEqual(self.dagbag.import_errors, {})
-        self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 41)
-
     def test_import_data_analytics_dag_is_loaded(self):
         # When
         dag = self.dagbag.get_dag(dag_id="import_data_analytics_v7")
@@ -99,10 +78,11 @@ class TestDags(unittest.TestCase):
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 126)
+        self.assertEqual(len(dag.tasks), 127)
 
     def test_import_data_analytics_incremental_dag_is_loaded(self):
         # When
+        dag = self.dagbag.get_dag(dag_id="import_data_analytics_v7")
         dag = self.dagbag.get_dag(dag_id="import_data_analytics_incremental")
 
         # Then

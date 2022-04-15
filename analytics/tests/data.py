@@ -1115,6 +1115,7 @@ ENRICHED_COLLECTIVE_BOOKING_DATA_INPUT = {
             "collective_stock_stock_id": "9",
             "collective_stock_collective_offer_id": "11",
             "collective_stock_number_of_tickets": 30,
+            "collective_stock_price": 50,
             "collective_stock_beginning_date": datetime.now().replace(microsecond=0),
         }
     ],

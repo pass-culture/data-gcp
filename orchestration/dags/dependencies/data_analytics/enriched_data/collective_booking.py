@@ -25,7 +25,7 @@ SELECT
     , venue.venue_department_code
     , collective_booking.collective_booking_offerer_id AS offerer_id
     , offerer.offerer_name
-    , booking.booking_amount
+    , collective_stock.collective_stock_price AS booking_amount
     , collective_stock.collective_stock_number_of_tickets AS number_of_tickets
     , collective_booking.collective_booking_educational_institution_id AS educational_institution_id
     , collective_booking.collective_booking_educational_year_id AS educational_year_id
@@ -33,7 +33,6 @@ SELECT
     , eple.nom_etablissement
     , eple.code_departement AS school_department_code
     , eple.libelle_academie
-    , collective_booking.collective_booking_creation_date
     , collective_booking.collective_booking_creation_date
     , collective_booking.collective_booking_cancellation_date
     , collective_booking.collective_booking_status
@@ -44,7 +43,6 @@ SELECT
     , collective_booking.collective_booking_reimbursement_date
     , collective_booking_ranking_view.collective_booking_rank
 FROM {dataset}.{table_prefix}collective_booking AS collective_booking
-INNER JOIN {dataset}.{table_prefix}booking AS booking  ON collective_booking.booking_id  = booking.booking_id
 INNER JOIN {dataset}.{table_prefix}collective_stock AS collective_stock  ON collective_stock.collective_stock_id  = collective_booking.collective_booking_collective_stock_id
 INNER JOIN {dataset}.{table_prefix}collective_offer AS collective_offer  ON collective_offer.collective_offer_id = collective_stock.collective_stock_collective_offer_id
 INNER JOIN {dataset}.{table_prefix}venue AS venue ON collective_booking.collective_booking_venue_id = venue.venue_id

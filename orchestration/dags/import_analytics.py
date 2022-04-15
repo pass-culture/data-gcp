@@ -35,6 +35,9 @@ from dependencies.data_analytics.enriched_data.stock import (
 from dependencies.data_analytics.enriched_data.user import (
     define_enriched_user_data_full_query,
 )
+from dependencies.data_analytics.enriched_data.deposit import (
+    define_enriched_deposit_data_full_query,
+)
 from dependencies.data_analytics.enriched_data.venue import (
     define_enriched_venue_data_full_query,
 )
@@ -288,6 +291,14 @@ create_enriched_user_data_task = BigQueryOperator(
     use_legacy_sql=False,
     dag=dag,
 )
+create_enriched_deposit_data_task = BigQueryOperator(
+    task_id="create_enriched_deposit_data",
+    sql=define_enriched_deposit_data_full_query(
+        dataset=BIGQUERY_ANALYTICS_DATASET, table_prefix=APPLICATIVE_PREFIX
+    ),
+    use_legacy_sql=False,
+    dag=dag,
+)
 
 create_enriched_venue_data_task = BigQueryOperator(
     task_id="create_enriched_venue_data",
@@ -471,6 +482,7 @@ end = DummyOperator(task_id="end", dag=dag)
     >> create_enriched_booking_data_task
     >> create_enriched_collective_booking_data_task
     >> create_enriched_user_data_task
+    >> create_enriched_deposit_data_task
     >> enriched_venues
     >> create_enriched_offerer_data_task
     >> end_enriched_data

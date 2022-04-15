@@ -131,7 +131,7 @@ with DAG(
         task_id="add_answers_to_clean",
         sql=f"""
             select (CASE raw_answers.user_id WHEN null THEN users.user_id else raw_answers.user_id END) as user_id,
-            landed_at, submitted_at, form_id, platform, answers,
+            submitted_at, answers,
             CAST(NULL AS STRING) AS catch_up_user_id
             FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.temp_{QPI_ANSWERS_TABLE}` raw_answers
             LEFT JOIN `{GCP_PROJECT}.{'clean_stg' if ENV_SHORT_NAME == 'dev' else BIGQUERY_CLEAN_DATASET}.applicative_database_user` users
@@ -145,12 +145,10 @@ with DAG(
     add_temp_answers_to_clean = BigQueryOperator(
         task_id="add_temp_answers_to_clean",
         sql=f"""
-            select (CASE raw_answers.user_id WHEN null THEN users.user_id else raw_answers.user_id END) as user_id,
-            landed_at, submitted_at, form_id, platform, answers,
+            select  raw_answers.user_id,
+            submitted_at, answers,
             CAST(NULL AS STRING) AS catch_up_user_id
             FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.temp_{QPI_ANSWERS_TABLE}` raw_answers
-            LEFT JOIN `{GCP_PROJECT}.{'clean_stg' if ENV_SHORT_NAME == 'dev' else BIGQUERY_CLEAN_DATASET}.applicative_database_user` users
-            ON raw_answers.culturalsurvey_id = users.user_cultural_survey_id
         """,
         use_legacy_sql=False,
         destination_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_CLEAN_DATASET}.temp_{QPI_ANSWERS_TABLE}",

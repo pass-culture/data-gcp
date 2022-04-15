@@ -144,7 +144,7 @@ if __name__ == "__main__":
         t3 = time.time()
         print(f"calcul diversification : {t3-t2}")
 
-        data = data[
+        df = df[
             ['user_id', 'offer_id', 'booking_creation_date', 'booking_amount', 'category', 'subcategory', 'type', 'venue',
              'venue_name', 'user_region_name', 'user_activity', 'user_civility', 'user_deposit_creation_date', 'format',
              'macro_rayon', 'category_diversification', 'subcategory_diversification', 'format_diversification',

@@ -196,7 +196,9 @@ def define_import_query(
             CAST("validation" AS varchar(255)) as offer_validation,
             CAST("subcategoryId" AS varchar(255)) as offer_subcategoryId,
             "dateUpdated" as offer_date_updated,
-            "isEducational" AS offer_is_educational
+            "isEducational" AS offer_is_educational, 
+            "withdrawalType" AS offer_withdrawal_type,
+            "withdrawalDelay" AS offer_withdrawal_delay
         FROM public.offer
         WHERE "dateUpdated" >= timestamp \\'{EXECUTION_TIME}\\' - INTERVAL \\'{(interval + 1) * 15} MINUTE\\'
         AND "dateUpdated" < timestamp \\'{EXECUTION_TIME}\\' - INTERVAL \\'{interval * 15} MINUTE\\'

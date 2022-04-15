@@ -85,6 +85,8 @@ BIGQUERY_SCHEMAS = {
         "offer_validation": "STRING",
         "offer_withdrawal_details": "STRING",
         "offer_is_educational": "BOOLEAN",
+        "offer_withdrawalDelay": "INT64",
+        "offer_withdrawal_type": "STRING",
     },
     "offer_extracted_data": {
         "offer_id": "STRING",

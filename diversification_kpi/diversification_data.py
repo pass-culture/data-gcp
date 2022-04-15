@@ -18,7 +18,7 @@ def count_data():
         FROM {GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_user_data 
         WHERE user_total_deposit_amount = 300"""
     count = pd.read_gbq(query)
-    return count.iloc[0]['nb']
+    return count.iloc[0]["nb"]
 
 
 def get_batch_of_users(batch, batch_size):
@@ -32,11 +32,11 @@ def get_batch_of_users(batch, batch_size):
 
 
 def get_data(users_batch):
-    where_user_in=f"""A.user_id IN ("""
-    for user in users_batch['user_id']:
+    where_user_in = f"""A.user_id IN ("""
+    for user in users_batch["user_id"]:
         where_user_in = where_user_in + f"'{user}',"
-    where_user_in=where_user_in[:-1]+')'
-    
+    where_user_in = where_user_in[:-1] + ")"
+
     query = f"""SELECT DISTINCT A.user_id, booking_creation_date, user_region_name, user_activity,
     user_civility, user_deposit_creation_date, user_total_deposit_amount, actual_amount_spent, offer.offer_id, booking_amount,
     offer_category_id as category, bkg.offer_subcategoryId as subcategory, bkg.physical_goods,
@@ -105,19 +105,19 @@ if __name__ == "__main__":
     count = count_data()
     batch_size = 10000
     # roof division to get number of batches
-    batch_number = int(-1 * (-count//batch_size))
+    batch_number = int(-1 * (-count // batch_size))
 
     # calculate diversification in batch of users
     for batch in range(batch_number):
         t0 = time.time()
         df_users = get_batch_of_users(batch, batch_size)
         t1 = time.time()
-        print(f'get batch of users : {t1 - t0}')
+        print(f"get batch of users : {t1 - t0}")
 
         t0_1 = time.time()
         df = get_data(df_users)
         t0 = time.time()
-        print(f'get data : {t0 - t0_1}')
+        print(f"get data : {t0 - t0_1}")
 
         t1 = time.time()
         df_macro_rayons = get_rayon()
@@ -145,13 +145,33 @@ if __name__ == "__main__":
         print(f"calcul diversification : {t3-t2}")
 
         df = df[
-            ['user_id', 'offer_id', 'booking_creation_date', 'category', 'subcategory', 'type', 'venue',
-             'venue_name', 'user_region_name', 'user_activity', 'user_civility', 'user_deposit_creation_date', 'format',
-             'macro_rayon', 'category_diversification', 'subcategory_diversification', 'format_diversification',
-             'venue_diversification', 'macro_rayon_diversification', 'qpi_diversification', 'delta_diversification']]
+            [
+                "user_id",
+                "offer_id",
+                "booking_creation_date",
+                "category",
+                "subcategory",
+                "type",
+                "venue",
+                "venue_name",
+                "user_region_name",
+                "user_activity",
+                "user_civility",
+                "user_deposit_creation_date",
+                "format",
+                "macro_rayon",
+                "category_diversification",
+                "subcategory_diversification",
+                "format_diversification",
+                "venue_diversification",
+                "macro_rayon_diversification",
+                "qpi_diversification",
+                "delta_diversification",
+            ]
+        ]
 
         df.to_gbq(
             f"""{BIGQUERY_ANALYTICS_DATASET}.diversification_booking""",
             project_id=f"{GCP_PROJECT}",
-            if_exists=("replace" if batch == 0 else "append")
+            if_exists=("replace" if batch == 0 else "append"),
         )

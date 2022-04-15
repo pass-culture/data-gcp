@@ -76,6 +76,10 @@ class TestDags(unittest.TestCase):
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
+<<<<<<< HEAD
+=======
+        self.assertEqual(len(dag.tasks), 127)
+>>>>>>> d13b77d ([PC-14475] create enriched deposit data (#695))
 
     def test_import_data_analytics_incremental_dag_is_loaded(self):
         # When

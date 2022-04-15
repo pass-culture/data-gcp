@@ -145,13 +145,13 @@ if __name__ == "__main__":
         print(f"calcul diversification : {t3-t2}")
 
         df = df[
-            ['user_id', 'offer_id', 'booking_creation_date', 'booking_amount', 'category', 'subcategory', 'type', 'venue',
+            ['user_id', 'offer_id', 'booking_creation_date', 'category', 'subcategory', 'type', 'venue',
              'venue_name', 'user_region_name', 'user_activity', 'user_civility', 'user_deposit_creation_date', 'format',
              'macro_rayon', 'category_diversification', 'subcategory_diversification', 'format_diversification',
              'venue_diversification', 'macro_rayon_diversification', 'qpi_diversification', 'delta_diversification']]
 
         df.to_gbq(
-            f"""{BIGQUERY_ANALYTICS_DATASET}.user_diversification""",
+            f"""{BIGQUERY_ANALYTICS_DATASET}.diversification_booking""",
             project_id=f"{GCP_PROJECT}",
             if_exists=("replace" if batch == 0 else "append")
         )

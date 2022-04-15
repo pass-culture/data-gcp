@@ -41,7 +41,7 @@ with DAG(
     "diversification_kpi",
     default_args=default_args,
     description="Measure the diversification",
-    schedule_interval="0 * * * *",
+    schedule_interval="0 2 * * 6",
     catchup=False,
     dagrun_timeout=timedelta(minutes=300),
 ) as dag:
@@ -56,7 +56,7 @@ with DAG(
     )
 
     if ENV_SHORT_NAME == "dev":
-        branch = "PC-13733-ADD_diversification_score"
+        branch = "PC-13733-Add_diversification_v2"
     if ENV_SHORT_NAME == "stg":
         branch = "master"
     if ENV_SHORT_NAME == "prod":

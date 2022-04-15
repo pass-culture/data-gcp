@@ -164,6 +164,10 @@ def copy_table_to_analytics(gcp_project, bigquery_raw_dataset, execution_date):
             ) as query,
             (select event_params.value.string_value
                 from unnest(event_params) event_params
+                where event_params.key = 'filter'
+            ) as filter,
+            (select event_params.value.string_value
+                from unnest(event_params) event_params
                 where event_params.key = 'moduleName'
             ) as module_name,
             (select event_params.value.string_value

@@ -41,7 +41,7 @@ with DAG(
     "diversification_kpi",
     default_args=default_args,
     description="Measure the diversification",
-    schedule_interval="0 2 * * *",
+    schedule_interval="0 2 * * 6",
     catchup=False,
     dagrun_timeout=timedelta(minutes=300),
 ) as dag:

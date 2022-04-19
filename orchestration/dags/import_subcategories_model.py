@@ -15,7 +15,9 @@ from dependencies.access_gcp_secrets import access_secret_data
 from dependencies.config import GCP_PROJECT_ID, GCE_ZONE, ENV_SHORT_NAME
 
 
-GCE_INSTANCE = os.environ.get("GCE_TRAINING_INSTANCE", "algo-training-dev")
+GCE_INSTANCE = os.environ.get(
+    "GCE_TRAINING_INSTANCE", f"algo-training-{ENV_SHORT_NAME}"
+)
 
 SLACK_CONN_ID = "slack"
 SLACK_CONN_PASSWORD = access_secret_data(GCP_PROJECT_ID, "slack-conn-password")
@@ -26,10 +28,10 @@ export ENV_SHORT_NAME={ENV_SHORT_NAME}
 export GCP_PROJECT_ID={GCP_PROJECT_ID}
 """
 
-DEFAULT_NATIVE = f"""cd data-gcp/analytics/scripts/import_subcategories_model
+DEFAULT_NATIVE = f"""cd /home/airflow/data-gcp/analytics/scripts/import_subcategories_model
 export ENV_SHORT_NAME={ENV_SHORT_NAME}
-export GCP_PROJECT_ID={GCP_PROJECT_ID}"""
-
+export GCP_PROJECT_ID={GCP_PROJECT_ID}
+"""
 default_args = {
     "start_date": datetime(2022, 4, 13),
     "on_failure_callback": task_fail_slack_alert,
@@ -65,7 +67,9 @@ with DAG(
 
     FETCH_CODE = f'"if cd data-gcp; then git checkout master && git pull && git checkout {branch} && git pull; else git clone git@github.com:pass-culture/data-gcp.git && cd data-gcp && git checkout {branch} && git pull; fi"'
 
-    FETCH_CODE_NATIVE = f'"if cd pass-culture-main; then git checkout master && git pull ; else git clone git@github.com:pass-culture/pass-culture-main.git && cd pass-culture-main && git checkout master && git pull; fi"'
+    FETCH_CODE_NATIVE = f"""'{DEFAULT_NATIVE} 
+        if cd pass-culture-main; then git checkout master && git pull; else git clone git@github.com:pass-culture/pass-culture-main.git && cd pass-culture-main && git checkout master && git pull; fi'
+        """
 
     fetch_code = BashOperator(
         task_id="fetch_code",
@@ -106,7 +110,7 @@ with DAG(
 
     SETUP_PYTHON_SCRIPT = f"""{DEFAULT_NATIVE}
         cp export_subcategories_from_native_definition.py pass-culture-main/export_subcategories_from_native_definition.py
-        cd pass-culture-main/
+        cd /home/airflow/data-gcp/analytics/scripts/import_subcategories_model/pass-culture-main/
         export SCRIPTPATH=api/src
         export PYTHONPATH="$(pwd)/$SCRIPTPATH":$PYTHONPATH
         """

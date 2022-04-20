@@ -94,7 +94,7 @@ def train(storage_path: str):
                 verbose=0,
             )
             connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
-            mlflow.log_metric(key="Evaluation Loss", value=eval_result, step=i)
+            # mlflow.log_metric(key="Evaluation Loss", value=eval_result, step=i)
 
             runned_epochs += 1
             if eval_result < best_eval or runned_epochs == 1:

@@ -8,8 +8,8 @@ def split_data(storage_path: str, model_name: str):
         clean_data = pd.read_csv(f"{storage_path}/clean_data.csv")
 
         df = clean_data.sample(frac=1).reset_index(drop=True)
-        lim_train = df.shape[0]
-        lim_eval = df.shape[0] * 90 / 100
+        lim_train = df.shape[0] * 90 / 100
+        lim_eval = df.shape[0] * 95 / 100
         positive_data_train = df.loc[df.index < lim_train]
         positive_data_eval = df.loc[df.index < lim_eval]
         positive_data_eval = positive_data_eval.loc[

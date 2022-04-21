@@ -83,7 +83,12 @@ class TestDags(unittest.TestCase):
 
     def test_import_data_analytics_incremental_dag_is_loaded(self):
         # When
+<<<<<<< HEAD
         dag = self.dagbag.get_dag(dag_id="import_data_analytics_incremental_v2")
+=======
+        dag = self.dagbag.get_dag(dag_id="import_data_analytics_v7")
+        dag = self.dagbag.get_dag(dag_id="import_data_analytics_incremental")
+>>>>>>> d295ef8 ([PC-14622] rm wrong commit)
 
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})

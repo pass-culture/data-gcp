@@ -41,7 +41,6 @@ stock,stock_is_soft_deleted,boolean,applicative_database_stock,clean
 stock,stock_beginning_date,timestamp without time zone,applicative_database_stock,clean
 subcategories,id,character varying,subcategories,analytics
 subcategories,category_id,character varying,subcategories,analytics
-subcategories,matching_type,character varying,subcategories,analytics
 subcategories,is_event,boolean,subcategories,analytics
 subcategories,is_digital_deposit,boolean,subcategories,analytics
 subcategories,is_physical_deposit,boolean,subcategories,analytics

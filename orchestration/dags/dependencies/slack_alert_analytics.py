@@ -17,7 +17,7 @@ if ENV_SHORT_NAME == "prod":
 if ENV_SHORT_NAME == "stg":
     ENV_WITH_STYLE = ":fire: *STAGING* :fire:"
 else:
-    ENV_WITH_STYLE = ":flocon_de_neige: *DEV* :flocon_de_neige:"
+    ENV_WITH_STYLE = ":snowflake: *DEV* :snowflake:"
 
 try:
     conn = BaseHook.get_connection(SLACK_CONN_ID)

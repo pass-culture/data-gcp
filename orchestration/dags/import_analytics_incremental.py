@@ -47,8 +47,6 @@ from dependencies.data_analytics.import_tables import (
 )
 from dependencies.slack_alert import task_fail_slack_alert
 
-SCHEDULE_HOURS_INTERVAL = 3
-
 
 def getting_service_account_token(function_name):
     function_url = (
@@ -76,7 +74,7 @@ dag = DAG(
     description="Import tables from CloudSQL and enrich data for create dashboards with Metabase. "
     "This DAG import data incrementally",
     on_failure_callback=task_fail_slack_alert,
-    schedule_interval=f"00 */{SCHEDULE_HOURS_INTERVAL} * * *",
+    schedule_interval=f"0 * * * *",
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
 )
@@ -107,8 +105,6 @@ for table in data_applicative_tables_and_date_columns.keys():
 
     start_import = DummyOperator(task_id=f"start_import_{table}", dag=dag)
 
-    start >> start_import
-
     analytics_task = BigQueryOperator(
         task_id=f"import_to_analytics_{table}",
         sql=f"SELECT * {define_replace_query(data_applicative_tables_and_date_columns[table])} FROM {BIGQUERY_CLEAN_DATASET}.{APPLICATIVE_PREFIX}{table}",
@@ -122,24 +118,23 @@ for table in data_applicative_tables_and_date_columns.keys():
     )
 
     import_offer_to_clean_tasks = []
-    for i in range(SCHEDULE_HOURS_INTERVAL * 4):
-        offer_task = BigQueryOperator(
-            task_id=f"import_to_clean_{table}_{i}",
-            sql=define_import_query(
-                external_connection_id=APPLICATIVE_EXTERNAL_CONNECTION_ID,
-                table=table,
-                interval=i,
-            ),
-            write_disposition="WRITE_APPEND",
-            use_legacy_sql=False,
-            destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.{APPLICATIVE_PREFIX}{table}",
-            dag=dag,
-        )
-        start_import >> offer_task >> offer_clean_duplicates
+    offer_task = BigQueryOperator(
+        task_id=f"import_to_clean_{table}",
+        sql=define_import_query(
+            external_connection_id=APPLICATIVE_EXTERNAL_CONNECTION_ID,
+            table=table,
+        ),
+        write_disposition="WRITE_APPEND",
+        use_legacy_sql=False,
+        destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.{APPLICATIVE_PREFIX}{table}",
+        dag=dag,
+    )
+    end = DummyOperator(task_id="end", dag=dag)
 
-    offer_clean_duplicates >> analytics_task >> end_import_table_to_analytics
-
-
-end = DummyOperator(task_id="end", dag=dag)
-
-end_import_table_to_analytics >> end
+    (
+        start
+        >> offer_task
+        >> offer_clean_duplicates
+        >> analytics_task
+        >> end
+    )

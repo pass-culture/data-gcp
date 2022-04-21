@@ -444,17 +444,6 @@ def define_import_query(
                 ,reason AS reason
             FROM public.beneficiary_fraud_review
         """
-    cloudsql_queries[
-        "beneficiary_fraud_result"
-    ] = """
-            SELECT
-                CAST("id" AS varchar(255)) AS id
-                ,CAST("userId" AS varchar(255)) AS user_id
-                ,status AS status
-                ,"dateCreated" AS datecreated
-                ,"dateUpdated" AS dateupdated
-            FROM public.beneficiary_fraud_result
-        """
 
     cloudsql_queries[
         "beneficiary_fraud_check"

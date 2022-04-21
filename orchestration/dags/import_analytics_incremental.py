@@ -131,10 +131,4 @@ for table in data_applicative_tables_and_date_columns.keys():
     )
     end = DummyOperator(task_id="end", dag=dag)
 
-    (
-        start
-        >> offer_task
-        >> offer_clean_duplicates
-        >> analytics_task
-        >> end
-    )
+    (start >> offer_task >> offer_clean_duplicates >> analytics_task >> end)

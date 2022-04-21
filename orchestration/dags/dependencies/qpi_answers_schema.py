@@ -7,7 +7,7 @@ QPI_ANSWERS_SCHEMA = [
         "mode": "REPEATED",
         "fields": [
             {"name": "question_id", "type": "STRING", "mode": "NULLABLE"},
-            {"name": "choices", "type": "STRING", "mode": "REPEATED"},
+            {"name": "answer_ids", "type": "STRING", "mode": "REPEATED"},
         ],
     },
 ]

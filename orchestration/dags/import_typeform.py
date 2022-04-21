@@ -31,7 +31,8 @@ from dependencies.data_analytics.enriched_data.enriched_qpi_answers_v2 import (
 )
 
 TYPEFORM_FUNCTION_NAME = "qpi_import_" + ENV_SHORT_NAME
-QPI_ANSWERS_TABLE = "qpi_answers_v3"
+QPI_ANSWERS_TABLE = "qpi_answers_v4"
+QPI_ANSWERS_TABLE_1 = "qpi_answers_v3"
 
 default_args = {
     "start_date": datetime(2021, 3, 10),
@@ -107,8 +108,10 @@ with DAG(
     import_answers_to_bigquery = GoogleCloudStorageToBigQueryOperator(
         task_id="import_answers_to_bigquery",
         bucket=DATA_GCS_BUCKET_NAME,
-        # source_objects=["QPI_exports/qpi_answers_{{ tomorrow_ds_nodash }}.jsonl"],
-        source_objects=["QPI_exports/qpi_answers_20220405/test.json"],
+        # source_objects=[
+        #    "QPI_exports/qpi_answers_{{ ds_nodash }}/*.jsonl"
+        # ],
+        source_objects=["QPI_exports/qpi_answers_20220420/*.jsonl"],
         destination_project_dataset_table=f"{BIGQUERY_RAW_DATASET}.temp_{QPI_ANSWERS_TABLE}",
         write_disposition="WRITE_TRUNCATE",
         source_format="NEWLINE_DELIMITED_JSON",

@@ -113,18 +113,18 @@ if __name__ == "__main__":
         t0 = time.time()
         df_users = get_batch_of_users(batch, batch_size)
         t1 = time.time()
-        print(f"get batch of users : {t1 - t0}")
+        print(f"get batch of users : {(t1 - t0)/60} min")
 
         t0_1 = time.time()
         df = get_data(df_users)
         t0 = time.time()
-        print(f"get data : {t0 - t0_1}")
+        print(f"get data : {(t0 - t0_1)/60} min")
 
         t1 = time.time()
         df_macro_rayons = get_rayon()
         data = pd.merge(df, df_macro_rayons, on="rayon", how="left")
         t1_1 = time.time()
-        print(f"merge macro rayon : {t1_1 - t1}")
+        print(f"merge macro rayon : {(t1_1 - t1)/60} min")
 
         data = data.drop(columns=["submitted_at"])
         data = data.drop(
@@ -143,7 +143,7 @@ if __name__ == "__main__":
         t2 = time.time()
         df = diversification_kpi(data)
         t3 = time.time()
-        print(f"calcul diversification : {t3-t2}")
+        print(f"calcul diversification : {(t3-t2)/60} min")
 
         df = df[
             [

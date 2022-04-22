@@ -16,7 +16,8 @@ from tools.diversification_kpi import (
 def count_data():
     query = f"""SELECT count(DISTINCT user_id) as nb
         FROM {GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_user_data 
-        WHERE user_total_deposit_amount = 300"""
+        WHERE user_total_deposit_amount = 300
+        LIMIT 1000"""
     count = pd.read_gbq(query)
     return count.iloc[0]["nb"]
 
@@ -103,7 +104,7 @@ def diversification_kpi(df):
 
 if __name__ == "__main__":
     count = count_data()
-    batch_size = 10000
+    batch_size = 100
     # roof division to get number of batches
     batch_number = int(-1 * (-count // batch_size))
 

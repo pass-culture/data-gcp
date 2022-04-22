@@ -62,14 +62,14 @@ data_applicative_tables_and_date_columns = {
 }
 
 default_dag_args = {
-    "start_date": datetime.datetime(2022, 2, 1),
+    "start_date": datetime.datetime(2022, 4, 22),
     "retries": 1,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT,
 }
 
 dag = DAG(
-    "import_data_analytics_incremental",
+    "import_data_analytics_incremental_v2",
     default_args=default_dag_args,
     description="Import tables from CloudSQL and enrich data for create dashboards with Metabase. "
     "This DAG import data incrementally",

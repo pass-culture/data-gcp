@@ -84,7 +84,7 @@ import_table_pro_to_raw = BigQueryOperator(
         SELECT * FROM {GCP_PROJECT_PRO_ENV}.{FIREBASE_PRO_RAW_DATASET}.events_{EXECUTION_DATE} WHERE device.web_info.hostname IN ({", ".join([f"'{app_info_id}'" for app_info_id in app_info_id_list_pro])})
         """,
     use_legacy_sql=False,
-    destination_dataset_table=f"{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.events_pro_{EXECUTION_DATE}",
+    destination_dataset_table=f"{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.firebase_pro_{EXECUTION_DATE}",
     write_disposition="WRITE_EMPTY",
     trigger_rule="none_failed",
     dag=dag,
@@ -131,7 +131,7 @@ copy_table_pro_to_analytics = BigQueryOperator(
          SELECT * FROM {GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.firebase_pro_events_{EXECUTION_DATE}
          """,
     use_legacy_sql=False,
-    destination_dataset_table=f"{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.firebase_events",
+    destination_dataset_table=f"{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.firebase_pro_events",
     write_disposition="WRITE_APPEND",
     dag=dag,
 )

@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+import pandas_gbq as gbq
 from api.src.pcapi.core.categories.subcategories import *
 from api.src.pcapi.core.categories.subcategories import ALL_SUBCATEGORIES
 

@@ -103,8 +103,6 @@ offer_clean_duplicates = BigQueryOperator(
 
 for table in data_applicative_tables_and_date_columns.keys():
 
-    start_import = DummyOperator(task_id=f"start_import_{table}", dag=dag)
-
     analytics_task = BigQueryOperator(
         task_id=f"import_to_analytics_{table}",
         sql=f"SELECT * {define_replace_query(data_applicative_tables_and_date_columns[table])} FROM {BIGQUERY_CLEAN_DATASET}.{APPLICATIVE_PREFIX}{table}",
@@ -112,9 +110,6 @@ for table in data_applicative_tables_and_date_columns.keys():
         use_legacy_sql=False,
         destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.{APPLICATIVE_PREFIX}{table}",
         dag=dag,
-    )
-    end_import_table_to_analytics = DummyOperator(
-        task_id="end_import_table_to_clean", dag=dag
     )
 
     import_offer_to_clean_tasks = []

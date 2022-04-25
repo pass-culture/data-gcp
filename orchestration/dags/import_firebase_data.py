@@ -42,7 +42,7 @@ GCP_PROJECT_PRO_ENV = "passculture-pro"
 FIREBASE_PRO_RAW_DATASET = "analytics_301948526"
 
 app_info_id_list = ENV_SHORT_NAME_APP_INFO_ID_MAPPING[ENV_SHORT_NAME]
-app_info_id_list_pro = ENV_SHORT_NAME_APP_INFO_ID_MAPPING[ENV_SHORT_NAME]
+app_info_id_list_pro = ENV_SHORT_NAME_APP_INFO_ID_MAPPING_PRO[ENV_SHORT_NAME]
 EXECUTION_DATE = "{{ ds_nodash }}"
 
 default_dag_args = {
@@ -104,7 +104,7 @@ copy_table_to_clean = BigQueryOperator(
 copy_table_pro_to_clean = BigQueryOperator(
     task_id="copy_table_pro_to_clean",
     sql=f"""
-        SELECT * FROM {GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.events_pro_{EXECUTION_DATE}
+        SELECT * FROM {GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.firebase_pro_{EXECUTION_DATE}
         """,
     use_legacy_sql=False,
     destination_dataset_table=f"{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.firebase_pro_events_{EXECUTION_DATE}",

@@ -64,15 +64,6 @@ workflows:
   run-checks:
     jobs:
       - linter
-
-      - analytics_tests:
-          requires:
-            - linter
-          context:
-            - DATA_GCP_EHP
-            - Slack
-          <<: *slack-fail-post-step
-
       # Recommendation jobs
       # -------------------
 
@@ -196,6 +187,8 @@ workflows:
             - orchestration-install
           context:
             - Slack
+            - DATA_GCP
+            - DATA_GCP_EHP
           <<: *slack-fail-post-step
 
       - composer-deploy:
@@ -527,7 +520,6 @@ workflows:
               only:
                 - production
           requires:
-            - analytics_tests
             - production-composer-deploy
             - api-integration-tests-prod
             - typeform-cloud-function-deploy-prod
@@ -549,7 +541,6 @@ workflows:
               only:
                 - master
           requires:
-            - analytics_tests
             - staging-composer-deploy
             - api-integration-tests-staging
             - typeform-cloud-function-deploy-stg
@@ -692,36 +683,6 @@ jobs:
             . venv-lint/bin/activate
             black --exclude="venv-lint" --check .
 
-  analytics_tests:
-    executor: python
-    working_directory: ~/data-gcp/analytics
-    steps:
-      - checkout:
-          path: ~/data-gcp
-      - restore_cache:
-          key: deps-v2-{{ checksum "analytics-requirements.txt" }}
-      - run:
-          name: Install python dependencies
-          command: |
-            python3 -m venv venv-analytics
-            . venv-analytics/bin/activate
-            pip install -r analytics-requirements.txt
-      - save_cache:
-          key: deps-v2-{{ checksum "analytics-requirements.txt" }}
-          paths:
-            - "venv-analytics"
-      - run:
-          name: GCP service account authentication
-          command: |
-            echo $GCLOUD_SERVICE_KEY >> ~/data-gcp/analytics/gcloud_credentials.json
-            echo GOOGLE_APPLICATION_CREDENTIALS=~/data-gcp/analytics/gcloud_credentials.json >> ~/data-gcp/.env
-      - run:
-          name: Run tests
-          command: |
-            . venv-analytics/bin/activate
-            export PYTHONPATH=$PYTHONPATH:~/data-gcp:~/data-gcp/orchestration/dags
-            pytest tests
-
   recommendation-api-build:
     executor: python
     working_directory: ~/data-gcp/recommendation/api
@@ -837,6 +798,8 @@ jobs:
       - run:
           name: Run tests
           command: |
+            echo $GCLOUD_SERVICE_KEY > /home/circle-ci/service_account.json
+            export GOOGLE_APPLICATION_CREDENTIALS="/home/circle-ci/service_account.json" 
             . venv-orchestration/bin/activate
             airflow initdb
             pytest tests

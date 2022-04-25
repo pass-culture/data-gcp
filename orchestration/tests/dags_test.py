@@ -60,7 +60,6 @@ class TestDags(unittest.TestCase):
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 105)
 
     def test_create_ab_testing_table_dag_is_loaded(self):
         # When
@@ -69,7 +68,6 @@ class TestDags(unittest.TestCase):
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 9)
 
     def test_import_data_analytics_dag_is_loaded(self):
         # When
@@ -78,7 +76,6 @@ class TestDags(unittest.TestCase):
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 125)
 
     def test_import_data_analytics_incremental_dag_is_loaded(self):
         # When
@@ -87,7 +84,6 @@ class TestDags(unittest.TestCase):
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 7)
 
     def test_import_firebase_data_dag_is_loaded(self):
         # When
@@ -96,7 +92,6 @@ class TestDags(unittest.TestCase):
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 11)
 
     def test_import_typeform_is_loaded(self):
         # When
@@ -105,7 +100,6 @@ class TestDags(unittest.TestCase):
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 12)
 
     def test_import_addresses_is_loaded(self):
         # When
@@ -114,7 +108,6 @@ class TestDags(unittest.TestCase):
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 8)
 
     def test_import_dms_subscription_is_loaded(self):
         # When
@@ -123,7 +116,6 @@ class TestDags(unittest.TestCase):
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 10)
 
     def test_import_siren_is_loaded(self):
         # When
@@ -132,7 +124,6 @@ class TestDags(unittest.TestCase):
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 5)
 
     def test_compute_monitoring_is_loaded(self):
         # When
@@ -141,7 +132,6 @@ class TestDags(unittest.TestCase):
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 9)
 
     def test_algo_training_v1_is_loaded(self):
         # When
@@ -150,7 +140,6 @@ class TestDags(unittest.TestCase):
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 12)
 
     def test_algo_training_v2_deep_reco_is_loaded(self):
         # When
@@ -159,7 +148,6 @@ class TestDags(unittest.TestCase):
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 12)
 
     def test_algo_training_v2_mf_reco_is_loaded(self):
         # When
@@ -168,4 +156,3 @@ class TestDags(unittest.TestCase):
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 12)

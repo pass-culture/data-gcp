@@ -798,11 +798,11 @@ jobs:
       - run:
           name: Run tests
           command: |
-            echo $GCLOUD_SERVICE_KEY > /home/circle-ci/service_account.json
-            export GOOGLE_APPLICATION_CREDENTIALS="/home/circle-ci/service_account.json" 
+            echo $GCLOUD_SERVICE_KEY > /tmp/service_account.json
+            export GOOGLE_APPLICATION_CREDENTIALS="/tmp/service_account.json" 
             . venv-orchestration/bin/activate
             airflow initdb
-            pytest tests -vv
+            pytest tests
 
   recommendation-db-install:
     executor: python

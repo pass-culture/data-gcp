@@ -4,12 +4,13 @@ import queue
 import threading
 
 exitFlag = 0
+BATCH_SIZE = 10000
 
 from tools.utils import (
     GCP_PROJECT,
     BIGQUERY_ANALYTICS_DATASET,
-    BIGQUERY_CLEAN_DATASET,
     DATA_GCS_BUCKET_NAME,
+    TABLE_NAME
 )
 from tools.diversification_kpi import (
     calculate_diversification_per_feature,
@@ -58,8 +59,7 @@ def get_data(users_batch):
         )
     WHERE row_number=1) AS C
     ON A.user_id = C.user_id
-    WHERE {where_user_in}
-    ORDER BY A.user_id, booking_creation_date"""
+    WHERE {where_user_in}"""
     data = pd.read_gbq(query)
     data["user_civility"] = data["user_civility"].replace(["M.", "Mme"], ["M", "F"])
     data["format"] = data.apply(
@@ -107,112 +107,33 @@ def diversification_kpi(df):
 
 
 class DiversificationBatchThread(threading.Thread):
-   def __init__(self, threadID, name, q):
-      threading.Thread.__init__(self)
-      self.threadID = threadID
-      self.name = name
-      self.q = q
-   def run(self):
-      print("Starting " + self.name)
-      process_diversification(self.name, self.q)
-      print("Exiting " + self.name)
+
+    def __init__(self, thread_id, name, q):
+        threading.Thread.__init__(self)
+        self.threadID = thread_id
+        self.name = name
+        self.q = q
+        print(f"Thread {tName} created.")
+
+    def run(self):
+        print("Starting " + self.name)
+        process_diversification(self.name, self.q)
+        print("Exiting " + self.name)
 
 
-def process_diversification(threadName, q):
-   while not exitFlag:
-      queueLock.acquire()
-         if not workQueue.empty():
-            data = q.get()
+def process_diversification(thread_name, q):
+    while not exitFlag:
+        queueLock.acquire()
+        if not workQueue.empty():
+            batch_number = q.get()
             queueLock.release()
-            print("%s processing %s" % (threadName, data))
-         else:
-            queueLock.release()
-         time.sleep(1)
-
-if __name__ == "__main__":
-    count = count_data()
-    batch_size = 10000
-    # roof division to get number of batches
-    batch_number = int(-1 * (-count // batch_size))
-
-    # Timers
-    get_data_timer = 0
-    merge_rayon_timer = 0
-    diversification_timer = 0
-
-    threadList = ["Thread-1", "Thread-2", "Thread-3"]
-    batchList = range(batch_number)
-    queueLock = threading.Lock()
-    workQueue = queue.Queue(10)
-    threads = []
-    threadID = 1
-
-    # Create new threads
-    for tName in threadList:
-        thread = DiversificationBatchThread(threadID, tName, workQueue)
-        thread.start()
-        threads.append(thread)
-        threadID += 1
-
-    # Fill the queue
-    queueLock.acquire()
-    for word in nameList:
-        workQueue.put(word)
-    queueLock.release()
-
-    # Wait for queue to empty
-    while not workQueue.empty():
-        pass
-
-    # Notify threads it's time to exit
-    exitFlag = 1
-
-    # Wait for all threads to complete
-    for t in threads:
-        t.join()
-    print("Exiting Main Thread")
-
-    # calculate diversification in batch of users
-    for batch in range(batch_number):
-        t0 = time.time()
-        df_users = get_batch_of_users(batch, batch_size)
-        t1 = time.time()
-        print(f"get batch of users : {(t1 - t0)/60} min")
-
-        t0_1 = time.time()
-        df = get_data(df_users)
-        t0 = time.time()
-        get_data_timer += (t0 - t0_1)/60
-
-        t1 = time.time()
-        df_macro_rayons = get_rayon()
-        data = pd.merge(df, df_macro_rayons, on="rayon", how="left")
-        t1_1 = time.time()
-        merge_rayon_timer += (t1_1 - t1)/60
-        print(f"merge macro rayon : {(t1_1 - t1)/60} min")
-
-        data = data.drop(columns=["submitted_at"])
-        data = data.drop(
-            columns=[
-                "physical_goods",
-                "digital_goods",
-                "event",
-                "genres",
-                "rayon",
-                "user_total_deposit_amount",
-                "actual_amount_spent",
-            ]
-        )
-        data = data.sort_values(by=["user_id", "booking_creation_date"])
-
-        t2 = time.time()
-        df = diversification_kpi(data)
-        t3 = time.time()
-        diversification_timer += (t3 - t2)/60
-        print(f"calcul diversification : {(t3-t2)/60} min")
-
-        df = df[
-            [
+            print(f"{thread_name} started process of batch {batch_number}...")
+            t0 = time.time()
+            df_users = get_batch_of_users(batch_number, BATCH_SIZE)
+            df = get_data(df_users)
+            data = pd.merge(df, macro_rayons, on="rayon", how="left")
+            df = diversification_kpi(data)
+            df = df[[
                 "user_id",
                 "offer_id",
                 "booking_id",
@@ -236,13 +157,60 @@ if __name__ == "__main__":
                 "macro_rayon_diversification",
                 "qpi_diversification",
                 "delta_diversification",
-            ]
-        ]
+            ]]
+            df.to_gbq(
+                f"""{BIGQUERY_ANALYTICS_DATASET}.{TABLE_NAME}""",
+                project_id=f"{GCP_PROJECT}",
+                if_exists="append",
+            )
+            t1 = time.time()
+            print(f"{thread_name} processed batch {batch_number} / {max_batch}\nTotal time : {(t1-t0)/60}min")
+        else:
+            queueLock.release()
 
-        df.to_gbq(
-            f"""{BIGQUERY_ANALYTICS_DATASET}.diversification_booking""",
-            project_id=f"{GCP_PROJECT}",
-            if_exists=("replace" if batch == 0 else "append"),
-        )
 
-    print(f"get data : {get_data_timer} min")
+if __name__ == "__main__":
+    count = count_data()
+    macro_rayons = get_rayon()
+    # roof division to get number of batches
+    max_batch = int(-1 * (-count // BATCH_SIZE))
+
+    # Timers
+    get_data_timer = 0
+    merge_rayon_timer = 0
+    diversification_timer = 0
+
+    threadList = ["Thread-1", "Thread-2", "Thread-3"]
+    batchList = range(max_batch)
+    queueLock = threading.Lock()
+    workQueue = queue.Queue()
+    threads = []
+    threadID = 1
+
+    # Create new threads
+    for tName in threadList:
+        print(f"Creating thread {tName}...")
+        thread = DiversificationBatchThread(threadID, tName, workQueue)
+        thread.start()
+        threads.append(thread)
+        threadID += 1
+
+    # Fill the queue
+    queueLock.acquire()
+    for batch in batchList:
+        workQueue.put(batch)
+    queueLock.release()
+
+    # Wait for queue to empty
+    while not workQueue.empty():
+        pass
+
+    # Notify threads it's time to exit
+    exitFlag = 1
+
+    # Wait for all threads to complete
+    for t in threads:
+        t.join()
+    print("Exiting Main Thread")
+
+

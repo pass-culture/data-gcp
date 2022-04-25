@@ -4,8 +4,8 @@ from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.bash_operator import BashOperator
-from airflow.operators.python_operator import BranchPythonOperator
 from airflow.contrib.operators.slack_webhook_operator import SlackWebhookOperator
+from airflow.contrib.operators.bigquery_table_delete_operator import BigQueryTableDeleteOperator
 from airflow.contrib.operators.gcp_compute_operator import (
     GceInstanceStartOperator,
     GceInstanceStopOperator,
@@ -21,11 +21,13 @@ DATE = "{{ts_nodash}}"
 
 SLACK_CONN_ID = "slack"
 SLACK_CONN_PASSWORD = access_secret_data(GCP_PROJECT_ID, "slack-conn-password")
+TABLE_NAME = "diversification_booking"
 
 DEFAULT = f"""cd data-gcp/diversification_kpi
 export PATH="/opt/conda/bin:/opt/conda/condabin:"+$PATH
 export ENV_SHORT_NAME={ENV_SHORT_NAME}
 export GCP_PROJECT={GCP_PROJECT_ID}
+export TABLE_NAME={TABLE_NAME}
 """
 
 
@@ -47,6 +49,13 @@ with DAG(
 ) as dag:
 
     start = DummyOperator(task_id="start")
+
+    delete_old_table = BigQueryTableDeleteOperator(
+        task_id="delete_old_table",
+        deletion_dataset_table=f"{GCP_PROJECT_ID}.analytics_{ENV_SHORT_NAME}.{TABLE_NAME}",
+        ignore_if_missing=True,
+        dag=dag,
+    )
 
     gce_instance_start = GceInstanceStartOperator(
         project_id=GCP_PROJECT_ID,
@@ -105,4 +114,4 @@ with DAG(
         dag=dag,
     )
 
-    (start >> gce_instance_start >> fetch_code >> install_dependencies >> data_collect)
+    (start >> delete_old_table >> gce_instance_start >> fetch_code >> install_dependencies >> data_collect)

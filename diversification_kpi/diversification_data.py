@@ -175,10 +175,7 @@ if __name__ == "__main__":
     # roof division to get number of batches
     max_batch = int(-1 * (-count // BATCH_SIZE))
 
-    # Timers
-    get_data_timer = 0
-    merge_rayon_timer = 0
-    diversification_timer = 0
+    print(f"Starting process of {count} users by batch of {BATCH_SIZE} users.\n Hence a total of {max_batch} batches")
 
     threadList = ["Thread-1", "Thread-2", "Thread-3"]
     batchList = range(max_batch)

@@ -73,7 +73,7 @@ def get_data(users_batch):
 
 def get_rayon():
     data_rayon = pd.read_csv(
-        f"gs://{DATA_GCS_BUCKET_NAME}/macron_rayon/correspondance_rayon_macro_rayon.csv",
+        f"gs://{DATA_GCS_BUCKET_NAME}/macro_rayon/correspondance_rayon_macro_rayon.csv",
         sep=",",
     )
     data_rayon = data_rayon.drop(columns=["Unnamed: 0"])

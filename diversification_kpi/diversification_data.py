@@ -1,5 +1,9 @@
 import pandas as pd
 import time
+import queue
+import threading
+
+exitFlag = 0
 
 from tools.utils import (
     GCP_PROJECT,
@@ -17,7 +21,7 @@ def count_data():
     query = f"""SELECT count(DISTINCT user_id) as nb
         FROM {GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_user_data 
         WHERE user_total_deposit_amount = 300
-        LIMIT 1000"""
+        LIMIT 10000"""
     count = pd.read_gbq(query)
     return count.iloc[0]["nb"]
 
@@ -38,7 +42,7 @@ def get_data(users_batch):
         where_user_in = where_user_in + f"'{user}',"
     where_user_in = where_user_in[:-1] + ")"
 
-    query = f"""SELECT DISTINCT A.user_id, booking_creation_date, user_region_name, user_activity,
+    query = f"""SELECT DISTINCT A.user_id, bkg.booking_creation_date, bkg.booking_id, user_region_name, user_activity,
     user_civility, user_deposit_creation_date, user_total_deposit_amount, actual_amount_spent, offer.offer_id, booking_amount,
     offer_category_id as category, bkg.offer_subcategoryId as subcategory, bkg.physical_goods,
     bkg.digital_goods, bkg.event, offer.genres, offer.rayon, offer.type, offer.venue_id, offer.venue_name,C.*
@@ -102,11 +106,71 @@ def diversification_kpi(df):
     return df_clean
 
 
+class DiversificationBatchThread(threading.Thread):
+   def __init__(self, threadID, name, q):
+      threading.Thread.__init__(self)
+      self.threadID = threadID
+      self.name = name
+      self.q = q
+   def run(self):
+      print("Starting " + self.name)
+      process_diversification(self.name, self.q)
+      print("Exiting " + self.name)
+
+
+def process_diversification(threadName, q):
+   while not exitFlag:
+      queueLock.acquire()
+         if not workQueue.empty():
+            data = q.get()
+            queueLock.release()
+            print("%s processing %s" % (threadName, data))
+         else:
+            queueLock.release()
+         time.sleep(1)
+
 if __name__ == "__main__":
     count = count_data()
-    batch_size = 100
+    batch_size = 10000
     # roof division to get number of batches
     batch_number = int(-1 * (-count // batch_size))
+
+    # Timers
+    get_data_timer = 0
+    merge_rayon_timer = 0
+    diversification_timer = 0
+
+    threadList = ["Thread-1", "Thread-2", "Thread-3"]
+    batchList = range(batch_number)
+    queueLock = threading.Lock()
+    workQueue = queue.Queue(10)
+    threads = []
+    threadID = 1
+
+    # Create new threads
+    for tName in threadList:
+        thread = DiversificationBatchThread(threadID, tName, workQueue)
+        thread.start()
+        threads.append(thread)
+        threadID += 1
+
+    # Fill the queue
+    queueLock.acquire()
+    for word in nameList:
+        workQueue.put(word)
+    queueLock.release()
+
+    # Wait for queue to empty
+    while not workQueue.empty():
+        pass
+
+    # Notify threads it's time to exit
+    exitFlag = 1
+
+    # Wait for all threads to complete
+    for t in threads:
+        t.join()
+    print("Exiting Main Thread")
 
     # calculate diversification in batch of users
     for batch in range(batch_number):
@@ -118,12 +182,13 @@ if __name__ == "__main__":
         t0_1 = time.time()
         df = get_data(df_users)
         t0 = time.time()
-        print(f"get data : {(t0 - t0_1)/60} min")
+        get_data_timer += (t0 - t0_1)/60
 
         t1 = time.time()
         df_macro_rayons = get_rayon()
         data = pd.merge(df, df_macro_rayons, on="rayon", how="left")
         t1_1 = time.time()
+        merge_rayon_timer += (t1_1 - t1)/60
         print(f"merge macro rayon : {(t1_1 - t1)/60} min")
 
         data = data.drop(columns=["submitted_at"])
@@ -143,12 +208,14 @@ if __name__ == "__main__":
         t2 = time.time()
         df = diversification_kpi(data)
         t3 = time.time()
+        diversification_timer += (t3 - t2)/60
         print(f"calcul diversification : {(t3-t2)/60} min")
 
         df = df[
             [
                 "user_id",
                 "offer_id",
+                "booking_id",
                 "booking_creation_date",
                 "category",
                 "subcategory",
@@ -158,6 +225,7 @@ if __name__ == "__main__":
                 "user_region_name",
                 "user_activity",
                 "user_civility",
+                "booking_amount",
                 "user_deposit_creation_date",
                 "format",
                 "macro_rayon",
@@ -176,3 +244,5 @@ if __name__ == "__main__":
             project_id=f"{GCP_PROJECT}",
             if_exists=("replace" if batch == 0 else "append"),
         )
+
+    print(f"get data : {get_data_timer} min")

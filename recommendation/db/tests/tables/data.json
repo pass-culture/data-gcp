@@ -39,7 +39,6 @@
   "subcategories": {
     "id": "EVENEMENT_JEU",
     "category_id": "JEU",
-    "matching_type": "EventType.JEUX",
     "is_event": "t",
     "is_digital_deposit": "f",
     "is_physical_deposit": "f"

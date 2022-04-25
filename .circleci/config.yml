@@ -802,7 +802,7 @@ jobs:
             export GOOGLE_APPLICATION_CREDENTIALS="/home/circle-ci/service_account.json" 
             . venv-orchestration/bin/activate
             airflow initdb
-            pytest tests
+            pytest tests -vv
 
   recommendation-db-install:
     executor: python

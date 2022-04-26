@@ -20,8 +20,8 @@ from dependencies.config import (
 from dependencies.data_analytics.enriched_data.booking import (
     define_enriched_booking_data_full_query,
 )
-from dependencies.data_analytics.enriched_data.educational_booking import (
-    define_enriched_educational_booking_full_query,
+from dependencies.data_analytics.enriched_data.collective_booking import (
+    define_enriched_collective_booking_full_query,
 )
 from dependencies.data_analytics.enriched_data.offer import (
     define_enriched_offer_data_full_query,
@@ -34,6 +34,9 @@ from dependencies.data_analytics.enriched_data.stock import (
 )
 from dependencies.data_analytics.enriched_data.user import (
     define_enriched_user_data_full_query,
+)
+from dependencies.data_analytics.enriched_data.deposit import (
+    define_enriched_deposit_data_full_query,
 )
 from dependencies.data_analytics.enriched_data.venue import (
     define_enriched_venue_data_full_query,
@@ -117,10 +120,6 @@ data_applicative_tables_and_date_columns = {
     "feature": [""],
     "criterion": [""],
     "beneficiary_fraud_review": ["datereviewed"],
-    "beneficiary_fraud_result": [
-        "datecreated",
-        "dateupdated",
-    ],
     "beneficiary_fraud_check": [""],
     "educational_booking": [
         "educational_booking_confirmation_date",
@@ -288,6 +287,14 @@ create_enriched_user_data_task = BigQueryOperator(
     use_legacy_sql=False,
     dag=dag,
 )
+create_enriched_deposit_data_task = BigQueryOperator(
+    task_id="create_enriched_deposit_data",
+    sql=define_enriched_deposit_data_full_query(
+        dataset=BIGQUERY_ANALYTICS_DATASET, table_prefix=APPLICATIVE_PREFIX
+    ),
+    use_legacy_sql=False,
+    dag=dag,
+)
 
 create_enriched_venue_data_task = BigQueryOperator(
     task_id="create_enriched_venue_data",
@@ -307,9 +314,9 @@ create_enriched_booking_data_task = BigQueryOperator(
     dag=dag,
 )
 
-create_enriched_educational_booking_data_task = BigQueryOperator(
-    task_id="create_enriched_educational_booking_data",
-    sql=define_enriched_educational_booking_full_query(
+create_enriched_collective_booking_data_task = BigQueryOperator(
+    task_id="create_enriched_collective_booking_data",
+    sql=define_enriched_collective_booking_full_query(
         dataset=BIGQUERY_ANALYTICS_DATASET, table_prefix=APPLICATIVE_PREFIX
     ),
     use_legacy_sql=False,
@@ -469,8 +476,9 @@ end = DummyOperator(task_id="end", dag=dag)
     >> create_enriched_stock_data_task
     >> create_enriched_offer_data_task
     >> create_enriched_booking_data_task
-    >> create_enriched_educational_booking_data_task
+    >> create_enriched_collective_booking_data_task
     >> create_enriched_user_data_task
+    >> create_enriched_deposit_data_task
     >> enriched_venues
     >> create_enriched_offerer_data_task
     >> end_enriched_data

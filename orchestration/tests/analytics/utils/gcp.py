@@ -1,6 +1,6 @@
 from google.cloud import bigquery
 
-from analytics.tests.config import GCP_PROJECT, GCP_REGION, BIGQUERY_SCHEMAS
+from analytics.config import GCP_PROJECT, GCP_REGION, BIGQUERY_SCHEMAS
 
 
 def drop_dataset(client, dataset):
@@ -73,9 +73,3 @@ def retrieve_data(client, dataset, table, table_prefix=""):
     table_id = f"{GCP_PROJECT}.{dataset}.{table_prefix}{table}"
     rows_iter = client.list_rows(table_id)
     return [dict(row.items()) for row in rows_iter]
-
-
-def get_table_columns(client, dataset, table, table_prefix=""):
-    table_id = f"{GCP_PROJECT}.{dataset}.{table_prefix}{table}"
-    table = client.get_table(table_id)
-    return [field.name for field in table.schema]

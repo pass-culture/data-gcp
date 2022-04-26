@@ -7,8 +7,6 @@ def define_import_query(
     table,
     region=GCP_REGION,
     external_connection_id=APPLICATIVE_EXTERNAL_CONNECTION_ID,
-    schedule_hour_interval=12,
-    interval=1,
 ):
     """
     Given a table (from "external_connection_id" located in "region"), we build and return the federated query that
@@ -172,10 +170,10 @@ def define_import_query(
     """
     # define day before and after execution date
     # we jinja template reference to user the datetimes around execution time
-    EXECUTION_TIME = "{{ ts }}"
+    EXECUTION_TIME = "{{ ds }}"
     cloudsql_queries[
         "offer"
-    ] = f"""
+    ] = """
         SELECT
             CAST("idAtProvider" AS varchar(255)) as offer_id_at_providers,
             "dateModifiedAtLastProvider" as offer_modified_at_last_provider_date,
@@ -196,10 +194,11 @@ def define_import_query(
             CAST("validation" AS varchar(255)) as offer_validation,
             CAST("subcategoryId" AS varchar(255)) as offer_subcategoryId,
             "dateUpdated" as offer_date_updated,
-            "isEducational" AS offer_is_educational
+            "isEducational" AS offer_is_educational, 
+            "withdrawalType" AS offer_withdrawal_type,
+            "withdrawalDelay" AS offer_withdrawal_delay
         FROM public.offer
-        WHERE "dateUpdated" >= timestamp \\'{EXECUTION_TIME}\\' - INTERVAL \\'{(interval + 1) * 15} MINUTE\\'
-        AND "dateUpdated" < timestamp \\'{EXECUTION_TIME}\\' - INTERVAL \\'{interval * 15} MINUTE\\'
+        WHERE date("dateUpdated") = \\'{{ ds }}\\'
     """
 
     cloudsql_queries[
@@ -444,17 +443,6 @@ def define_import_query(
                 ,"dateReviewed" AS datereviewed
                 ,reason AS reason
             FROM public.beneficiary_fraud_review
-        """
-    cloudsql_queries[
-        "beneficiary_fraud_result"
-    ] = """
-            SELECT
-                CAST("id" AS varchar(255)) AS id
-                ,CAST("userId" AS varchar(255)) AS user_id
-                ,status AS status
-                ,"dateCreated" AS datecreated
-                ,"dateUpdated" AS dateupdated
-            FROM public.beneficiary_fraud_result
         """
 
     cloudsql_queries[

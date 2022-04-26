@@ -1,6 +1,6 @@
-import os
+import uuid
 
-TEST_DATASET = f"test_{os.uname().nodename.replace('-', '_').replace('.', '_')}"  # Temporary => find a better way to make dataset unique
+TEST_DATASET = f"test_{uuid.uuid1().hex}"
 GCP_REGION = "europe-west1"
 GCP_PROJECT = "passculture-data-ehp"
 TEST_TABLE_PREFIX = ""
@@ -85,6 +85,8 @@ BIGQUERY_SCHEMAS = {
         "offer_validation": "STRING",
         "offer_withdrawal_details": "STRING",
         "offer_is_educational": "BOOLEAN",
+        "offer_withdrawalDelay": "INT64",
+        "offer_withdrawal_type": "STRING",
     },
     "offer_extracted_data": {
         "offer_id": "STRING",

@@ -185,7 +185,11 @@ def copy_table_to_analytics(gcp_project, bigquery_raw_dataset, execution_date):
             (select event_params.value.string_value
                 from unnest(event_params) event_params
                 where event_params.key = 'entryId'
-            ) as entry_id
+            ) as entry_id,
+            (select event_params.value.string_value
+                from unnest(event_params) event_params
+                where event_params.key = 'AB_test'
+            ) as ab_test
         FROM {gcp_project}.{bigquery_raw_dataset}.events_{execution_date}
     )
     SELECT * EXCEPT(double_offer_id, string_offer_id),

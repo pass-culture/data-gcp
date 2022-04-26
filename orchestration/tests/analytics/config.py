@@ -1,6 +1,6 @@
-import os
+import uuid
 
-TEST_DATASET = f"test_{os.uname().nodename.replace('-', '_').replace('.', '_')}"  # Temporary => find a better way to make dataset unique
+TEST_DATASET = f"test_{uuid.uuid1().hex}"
 GCP_REGION = "europe-west1"
 GCP_PROJECT = "passculture-data-ehp"
 TEST_TABLE_PREFIX = ""

@@ -56,7 +56,7 @@ def _define_recommendation_booking_funnel(start_date, end_date):
         recommendation_booking_funnel AS (
             SELECT event_name, event_timestamp, user_id, session_id, firebase_screen, module, booking_funnel.offer_id, next_event_name, groupid AS group_id, offer_subcategoryid,  pastreco.reco_origin,
             FROM booking_funnel
-            LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.{TABLE_AB_TESTING}` ab_testing
+            LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.{TABLE_AB_TESTING}` ab_testing
             ON booking_funnel.user_id = ab_testing.userid
             LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_offer` offers
             ON offers.offer_id = CAST(booking_funnel.offer_id AS STRING)
@@ -84,7 +84,7 @@ def _define_clicks(start_date, end_date):
             MAX(CASE WHEN params.key = "firebase_screen" THEN params.value.string_value ELSE NULL END) AS firebase_screen,
             MAX(CASE WHEN params.key = "reco_origin" THEN params.value.string_value ELSE NULL END) AS reco_origin,
             FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.{FIREBASE_EVENTS_TABLE}_*` events, events.event_params AS params
-            LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.{TABLE_AB_TESTING}` ab_testing ON events.user_id = ab_testing.userid
+            LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.{TABLE_AB_TESTING}` ab_testing ON events.user_id = ab_testing.userid
             WHERE event_timestamp > {start_date}
             AND event_timestamp < {end_date}
             GROUP BY event_timestamp, event_date, event_name, user_id, group_id
@@ -109,7 +109,7 @@ def _define_favorites(start_date, end_date):
             groupid AS group_id,
             FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.{FIREBASE_EVENTS_TABLE}_*` events, 
             events.user_properties AS user_prop, events.event_params AS params
-            LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.{TABLE_AB_TESTING}` ab_testing ON events.user_id = ab_testing.userid
+            LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.{TABLE_AB_TESTING}` ab_testing ON events.user_id = ab_testing.userid
             WHERE event_name = "HasAddedOfferToFavorites" 
             AND user_id IS NOT NULL
             AND event_timestamp > {start_date}
@@ -201,7 +201,7 @@ def get_recommendations_count(start_date, end_date, group_id_list, reco_origin_l
         {", ".join([f"SUM(CAST(groupid = '{group_id}' AS INT64)) AS recommendations_count_{group_id}" for group_id in group_id_list])},
         {",".join([f'SUM(CAST(group_id = "{group_id}" AND reco_origin="{reco_origin}" AS INT64)) AS recommendation_count_{reco_origin}_{group_id}'  for group_id in group_id_list for reco_origin in reco_origin_list])}
         FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.past_recommended_offers` past_recommendations
-        LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.{TABLE_AB_TESTING}` ab_testing
+        LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.{TABLE_AB_TESTING}` ab_testing
         ON CAST(past_recommendations.userid AS STRING) = ab_testing.userid
         WHERE date > TIMESTAMP_MICROS({start_date}) AND date < TIMESTAMP_MICROS({end_date})
     """

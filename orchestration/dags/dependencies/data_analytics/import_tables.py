@@ -488,6 +488,7 @@ def define_import_query(
                 ,CAST("educationalYearId" AS varchar(255)) AS educational_deposit_educational_year_id
                 ,amount AS educational_deposit_amount
                 ,"dateCreated" AS educational_deposit_creation_date
+                ,CAST("ministry" AS TEXT) AS ministry
             FROM educational_deposit
         """
 

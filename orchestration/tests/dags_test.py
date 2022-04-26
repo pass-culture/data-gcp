@@ -76,24 +76,14 @@ class TestDags(unittest.TestCase):
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-<<<<<<< HEAD
-=======
-        self.assertEqual(len(dag.tasks), 127)
->>>>>>> d13b77d ([PC-14475] create enriched deposit data (#695))
 
     def test_import_data_analytics_incremental_dag_is_loaded(self):
         # When
-<<<<<<< HEAD
         dag = self.dagbag.get_dag(dag_id="import_data_analytics_incremental_v2")
-=======
-        dag = self.dagbag.get_dag(dag_id="import_data_analytics_v7")
-        dag = self.dagbag.get_dag(dag_id="import_data_analytics_incremental")
->>>>>>> d295ef8 ([PC-14622] rm wrong commit)
 
         # Then
         self.assertDictEqual(self.dagbag.import_errors, {})
         self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 18)
 
     def test_import_firebase_data_dag_is_loaded(self):
         # When

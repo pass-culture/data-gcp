@@ -1060,6 +1060,7 @@ ENRICHED_BOOKING_DATA_EXPECTED = [
     }
 ]
 
+
 # Enriched_collective_booking =>
 # booking is linked with user, venue, educational_booking, educational_institution and eple
 ENRICHED_COLLECTIVE_BOOKING_DATA_INPUT = {

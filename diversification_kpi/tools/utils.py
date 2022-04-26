@@ -19,6 +19,4 @@ DATA_GCS_BUCKET_NAME = os.environ.get(
     "DATA_GCS_BUCKET_NAME", f"data-bucket-{ENV_SHORT_NAME}"
 )
 
-TABLE_NAME = os.environ.get(
-    "TABLE_NAME", f"diversification_bookings"
-)
+TABLE_NAME = os.environ.get("TABLE_NAME", f"diversification_bookings")

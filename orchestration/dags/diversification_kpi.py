@@ -5,7 +5,9 @@ from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.bash_operator import BashOperator
 from airflow.contrib.operators.slack_webhook_operator import SlackWebhookOperator
-from airflow.contrib.operators.bigquery_table_delete_operator import BigQueryTableDeleteOperator
+from airflow.contrib.operators.bigquery_table_delete_operator import (
+    BigQueryTableDeleteOperator,
+)
 from airflow.contrib.operators.gcp_compute_operator import (
     GceInstanceStartOperator,
     GceInstanceStopOperator,
@@ -67,7 +69,7 @@ with DAG(
     if ENV_SHORT_NAME == "dev":
         branch = "PC-14596-fix-bug-and-improve-diversification"
     if ENV_SHORT_NAME == "stg":
-        branch = "master"
+        branch = "PC-14596-fix-bug-and-improve-diversification"
     if ENV_SHORT_NAME == "prod":
         branch = "production"
 
@@ -114,4 +116,11 @@ with DAG(
         dag=dag,
     )
 
-    (start >> delete_old_table >> gce_instance_start >> fetch_code >> install_dependencies >> data_collect)
+    (
+        start
+        >> delete_old_table
+        >> gce_instance_start
+        >> fetch_code
+        >> install_dependencies
+        >> data_collect
+    )

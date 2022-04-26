@@ -10,7 +10,7 @@ from tools.utils import (
     GCP_PROJECT,
     BIGQUERY_ANALYTICS_DATASET,
     DATA_GCS_BUCKET_NAME,
-    TABLE_NAME
+    TABLE_NAME,
 )
 from tools.diversification_kpi import (
     calculate_diversification_per_feature,
@@ -107,7 +107,6 @@ def diversification_kpi(df):
 
 
 class DiversificationBatchThread(threading.Thread):
-
     def __init__(self, thread_id, name, q):
         threading.Thread.__init__(self)
         self.threadID = thread_id
@@ -133,38 +132,42 @@ def process_diversification(thread_name, q):
             df = get_data(df_users)
             data = pd.merge(df, macro_rayons, on="rayon", how="left")
             df = diversification_kpi(data)
-            df = df[[
-                "user_id",
-                "offer_id",
-                "booking_id",
-                "booking_creation_date",
-                "category",
-                "subcategory",
-                "type",
-                "venue",
-                "venue_name",
-                "user_region_name",
-                "user_activity",
-                "user_civility",
-                "booking_amount",
-                "user_deposit_creation_date",
-                "format",
-                "macro_rayon",
-                "category_diversification",
-                "subcategory_diversification",
-                "format_diversification",
-                "venue_diversification",
-                "macro_rayon_diversification",
-                "qpi_diversification",
-                "delta_diversification",
-            ]]
+            df = df[
+                [
+                    "user_id",
+                    "offer_id",
+                    "booking_id",
+                    "booking_creation_date",
+                    "category",
+                    "subcategory",
+                    "type",
+                    "venue",
+                    "venue_name",
+                    "user_region_name",
+                    "user_activity",
+                    "user_civility",
+                    "booking_amount",
+                    "user_deposit_creation_date",
+                    "format",
+                    "macro_rayon",
+                    "category_diversification",
+                    "subcategory_diversification",
+                    "format_diversification",
+                    "venue_diversification",
+                    "macro_rayon_diversification",
+                    "qpi_diversification",
+                    "delta_diversification",
+                ]
+            ]
             df.to_gbq(
                 f"""{BIGQUERY_ANALYTICS_DATASET}.{TABLE_NAME}""",
                 project_id=f"{GCP_PROJECT}",
                 if_exists="append",
             )
             t1 = time.time()
-            print(f"{thread_name} processed batch {batch_number} / {max_batch}\nTotal time : {(t1-t0)/60}min")
+            print(
+                f"{thread_name} processed batch {batch_number} / {max_batch}\nTotal time : {(t1-t0)/60}min"
+            )
         else:
             queueLock.release()
 
@@ -175,7 +178,9 @@ if __name__ == "__main__":
     # roof division to get number of batches
     max_batch = int(-1 * (-count // BATCH_SIZE))
 
-    print(f"Starting process of {count} users by batch of {BATCH_SIZE} users.\n Hence a total of {max_batch} batches")
+    print(
+        f"Starting process of {count} users by batch of {BATCH_SIZE} users.\nHence a total of {max_batch} batch(es)"
+    )
 
     threadList = ["Thread-1", "Thread-2", "Thread-3"]
     batchList = range(max_batch)
@@ -209,5 +214,3 @@ if __name__ == "__main__":
     for t in threads:
         t.join()
     print("Exiting Main Thread")
-
-

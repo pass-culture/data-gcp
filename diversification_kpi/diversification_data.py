@@ -24,7 +24,7 @@ def count_data():
         WHERE user_total_deposit_amount = 300
     """
     count = pd.read_gbq(query)
-    #return count.iloc[0]["nb"]
+    # return count.iloc[0]["nb"]
     return 600
 
 
@@ -173,6 +173,41 @@ def process_diversification(thread_name, q):
             queueLock.release()
 
 
+def clean_old_table():
+    df_empty = pd.DataFrame(
+        columns=[
+            "user_id",
+            "offer_id",
+            "booking_id",
+            "booking_creation_date",
+            "category",
+            "subcategory",
+            "type",
+            "venue",
+            "venue_name",
+            "user_region_name",
+            "user_activity",
+            "user_civility",
+            "booking_amount",
+            "user_deposit_creation_date",
+            "format",
+            "macro_rayon",
+            "category_diversification",
+            "subcategory_diversification",
+            "format_diversification",
+            "venue_diversification",
+            "macro_rayon_diversification",
+            "qpi_diversification",
+            "delta_diversification",
+        ]
+    )
+    df_empty.to_gbq(
+        f"""{BIGQUERY_ANALYTICS_DATASET}.{TABLE_NAME}""",
+        project_id=f"{GCP_PROJECT}",
+        if_exists="replace",
+    )
+
+
 if __name__ == "__main__":
     count = count_data()
     macro_rayons = get_rayon()
@@ -182,6 +217,9 @@ if __name__ == "__main__":
     print(
         f"Starting process of {count} users by batch of {BATCH_SIZE} users.\nHence a total of {max_batch} batch(es)"
     )
+
+    # Empty table before inserting new data
+    clean_old_table()
 
     threadList = ["Thread-1", "Thread-2", "Thread-3"]
     batchList = range(max_batch)

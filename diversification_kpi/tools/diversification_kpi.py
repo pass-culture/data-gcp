@@ -81,7 +81,9 @@ def calculate_diversification_per_feature(df_clean, features):
                         multiplicator = multiplicator * 0.5
                     if booking["booking_amount"] == 0:
                         multiplicator = multiplicator * 0.5
-                        list_per_feature_free[feature] = add_feature_if_feature_not_booked(
+                        list_per_feature_free[
+                            feature
+                        ] = add_feature_if_feature_not_booked(
                             list_per_feature_free[feature], feature_value
                         )
 
@@ -93,7 +95,9 @@ def calculate_diversification_per_feature(df_clean, features):
                         and feature_value not in [np.nan]
                     ):
                         for theme in feature_value:
-                            list_per_feature[feature] = add_feature_if_feature_not_booked(
+                            list_per_feature[
+                                feature
+                            ] = add_feature_if_feature_not_booked(
                                 list_per_feature[feature], theme
                             )
                     else:

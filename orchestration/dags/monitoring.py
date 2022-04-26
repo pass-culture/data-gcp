@@ -252,7 +252,7 @@ default_args = {
 
 
 with DAG(
-    "compute_monitoring_v2",
+    "compute_monitoring",
     default_args=default_args,
     description="Compute monitoring metrics",
     schedule_interval="0 1 * * *",

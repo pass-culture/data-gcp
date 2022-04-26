@@ -22,9 +22,10 @@ def count_data():
     query = f"""SELECT count(DISTINCT user_id) as nb
         FROM {GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_user_data 
         WHERE user_total_deposit_amount = 300
-        LIMIT 600"""
+    """
     count = pd.read_gbq(query)
-    return count.iloc[0]["nb"]
+    #return count.iloc[0]["nb"]
+    return 600
 
 
 def get_batch_of_users(batch, batch_size):

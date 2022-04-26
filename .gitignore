@@ -1,5 +1,6 @@
 .idea
-__pycache__
+.vscode/
+__pycache__/
 
 .env.local
 
@@ -8,6 +9,7 @@ __pycache__
 .python-version
 .venv/
 venv/
+venv-lint/
 
 # ignore .json credential files
 # *.json

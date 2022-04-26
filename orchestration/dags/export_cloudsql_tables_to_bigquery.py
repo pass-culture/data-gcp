@@ -13,12 +13,12 @@ from dependencies.config import (
     BIGQUERY_CLEAN_DATASET,
 )
 
-AB_TESTING_TABLE = "abc_testing_20211029_v1v2"
+AB_TESTING_TABLE = os.environ.get("TABLE_AB_TESTING", "abc_testing_20220322_v1v2")
 yesterday = (datetime.datetime.now() + datetime.timedelta(days=-1)).strftime(
     "%Y-%m-%d"
 ) + " 00:00:00"
 TABLES = {
-    "abc_testing_20211029_v1v2": {
+    f"{AB_TESTING_TABLE}": {
         "query": None,
         "write_disposition": "WRITE_TRUNCATE",
     },

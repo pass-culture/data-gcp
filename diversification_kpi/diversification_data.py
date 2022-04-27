@@ -188,7 +188,7 @@ def process_diversification(thread_name, q):
                                 {"name": "format_diversification", "type": "FLOAT"},
                                 {"name": "venue_diversification", "type": "FLOAT"},
                                 {"name": "macro_rayon_diversification", "type": "FLOAT"},
-                                {"name": "qpi_diversification", "type": "FLOAT"},
+                                {"name": "qpi_diversification", "type": "INTEGER"},
                                 {"name": "delta_diversification", "type": "FLOAT"}
                               ],
             )

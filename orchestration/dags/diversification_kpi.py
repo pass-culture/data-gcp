@@ -8,6 +8,7 @@ from airflow.contrib.operators.slack_webhook_operator import SlackWebhookOperato
 from airflow.contrib.operators.bigquery_table_delete_operator import (
     BigQueryTableDeleteOperator,
 )
+from airflow.providers.google.cloud.operators.bigquery import BigQueryCreateEmptyTableOperator
 from airflow.contrib.operators.gcp_compute_operator import (
     GceInstanceStartOperator,
     GceInstanceStopOperator,
@@ -57,6 +58,38 @@ with DAG(
         deletion_dataset_table=f"{GCP_PROJECT_ID}.analytics_{ENV_SHORT_NAME}.{TABLE_NAME}",
         ignore_if_missing=True,
         dag=dag,
+    )
+
+    create_table = BigQueryCreateEmptyTableOperator(
+        task_id="create_table",
+        project_id=GCP_PROJECT_ID,
+        dataset_id=f"analytics_{ENV_SHORT_NAME}",
+        table_id=TABLE_NAME,
+        schema_fields=[
+            {"name": "user_id", "type": "STRING", "mode": "REQUIRED"},
+            {"name": "offer_id", "type": "STRING", "mode": "REQUIRED"},
+            {"name": "booking_id", "type": "STRING", "mode": "REQUIRED"},
+            {"name": "booking_creation_date", "type": "TIMESTAMP", "mode": "NULLABLE"},
+            {"name": "category", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "subcategory", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "type", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "venue", "type": "STRING", "mode": "REQUIRED"},
+            {"name": "venue_name", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "user_region_name", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "user_activity", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "user_civility", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "booking_amount", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "user_deposit_creation_date", "type": "TIMESTAMP", "mode": "NULLABLE"},
+            {"name": "format", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "macro_rayon", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "category_diversification", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "subcategory_diversification", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "format_diversification", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "venue_diversification", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "macro_rayon_diversification", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "qpi_diversification", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "delta_diversification", "type": "STRING", "mode": "NULLABLE"},
+        ],
     )
 
     gce_instance_start = GceInstanceStartOperator(
@@ -119,6 +152,7 @@ with DAG(
     (
         start
         >> delete_old_table
+        >> create_table
         >> gce_instance_start
         >> fetch_code
         >> install_dependencies

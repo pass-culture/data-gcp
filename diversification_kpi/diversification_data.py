@@ -130,6 +130,7 @@ def process_diversification(thread_name, q):
             print(f"{thread_name} started process of batch {batch_number}...")
             t0 = time.time()
             df_users = get_batch_of_users(batch_number, BATCH_SIZE)
+            print(f"Batch {batch_number} contains {df_users.shape} users.")
             df = get_data(df_users)
             data = pd.merge(df, macro_rayons, on="rayon", how="left")
             df = diversification_kpi(data)
@@ -219,7 +220,7 @@ if __name__ == "__main__":
     )
 
     # Empty table before inserting new data
-    clean_old_table()
+    #clean_old_table()
 
     threadList = ["Thread-1", "Thread-2", "Thread-3"]
     batchList = range(max_batch)

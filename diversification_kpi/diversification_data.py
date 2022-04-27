@@ -127,10 +127,10 @@ def process_diversification(thread_name, q):
         if not workQueue.empty():
             batch_number = q.get()
             queueLock.release()
-            print(f"{thread_name} started process of batch {batch_number}...")
+            print(f"{thread_name} started process of batch {batch_number +1}...")
             t0 = time.time()
             df_users = get_batch_of_users(batch_number, BATCH_SIZE)
-            print(f"Batch {batch_number} contains {df_users.shape} users.")
+            print(f"Batch {batch_number+1} contains {df_users.shape} users.")
             df = get_data(df_users)
             data = pd.merge(df, macro_rayons, on="rayon", how="left")
             df = diversification_kpi(data)
@@ -139,7 +139,7 @@ def process_diversification(thread_name, q):
                     "user_id",
                     "offer_id",
                     "booking_id",
-                    #"booking_creation_date",
+                    "booking_creation_date",
                     "category",
                     "subcategory",
                     "type",
@@ -149,7 +149,7 @@ def process_diversification(thread_name, q):
                     "user_activity",
                     "user_civility",
                     "booking_amount",
-                    #"user_deposit_creation_date",
+                    "user_deposit_creation_date",
                     "format",
                     "macro_rayon",
                     "category_diversification",
@@ -170,7 +170,7 @@ def process_diversification(thread_name, q):
                                 {"name": "user_id", "type": "STRING"},
                                 {"name": "offer_id", "type": "STRING"},
                                 {"name": "booking_id", "type": "STRING"},
-                                #{"name": "booking_creation_date", "type": "TIMESTAMP"},
+                                {"name": "booking_creation_date", "type": "TIMESTAMP"},
                                 {"name": "category", "type": "STRING"},
                                 {"name": "subcategory", "type": "STRING"},
                                 {"name": "type", "type": "STRING"},
@@ -180,7 +180,7 @@ def process_diversification(thread_name, q):
                                 {"name": "user_activity", "type": "STRING"},
                                 {"name": "user_civility", "type": "STRING"},
                                 {"name": "booking_amount", "type": "STRING"},
-                               # {"name": "user_deposit_creation_date", "type": "TIMESTAMP"},
+                                {"name": "user_deposit_creation_date", "type": "TIMESTAMP"},
                                 {"name": "format", "type": "STRING"},
                                 {"name": "macro_rayon", "type": "STRING"},
                                 {"name": "category_diversification", "type": "FLOAT"},
@@ -194,7 +194,7 @@ def process_diversification(thread_name, q):
             )
             t1 = time.time()
             print(
-                f"{thread_name} processed batch {batch_number} / {max_batch}\nTotal time : {(t1-t0)/60}min"
+                f"{thread_name} processed batch {batch_number +1} / {max_batch}\nTotal time : {(t1-t0)/60}min"
             )
         else:
             queueLock.release()

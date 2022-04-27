@@ -8,6 +8,7 @@ from googleapiclient import discovery
 from utils import (
     create_db_connection,
     log_duration,
+    get_conditions,
     GCP_PROJECT,
     MODEL_REGION,
     MODEL_NAME_A,
@@ -18,8 +19,9 @@ from utils import (
 
 
 def get_intermediate_recommendations_for_user(
-    user_id: int, user_iris_id: int
+    user_id: int, user_iris_id: int, playlist_arg=None
 ) -> List[Dict[str, Any]]:
+    condition = get_conditions(playlist_arg)
     if ENV_SHORT_NAME == "prod":
         and_clause = "AND booking_number > 10"
     else:
@@ -36,6 +38,7 @@ def get_intermediate_recommendations_for_user(
                 FROM non_recommendable_offers
                 WHERE user_id = :user_id
                 )   
+            {condition}
             {and_clause}
             ORDER BY RANDOM(); 
             """
@@ -65,6 +68,7 @@ def get_intermediate_recommendations_for_user(
                 FROM non_recommendable_offers
                 WHERE user_id = :user_id
                 )
+            {condition}
             {and_clause}
             ORDER BY RANDOM();
             """

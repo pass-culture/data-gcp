@@ -47,7 +47,9 @@ def get_user_metadata(user_id: int, longitude: int, latitude: int):
     return group_id, is_cold_start, is_eac, user_iris_id
 
 
-def get_final_recommendations(user_id: int, longitude: int, latitude: int) -> List[int]:
+def get_final_recommendations(
+    user_id: int, longitude: int, latitude: int, playlist_arg=None
+) -> List[int]:
 
     group_id, is_cold_start, is_eac, user_iris_id = get_user_metadata(
         user_id, longitude, latitude
@@ -57,28 +59,38 @@ def get_final_recommendations(user_id: int, longitude: int, latitude: int) -> Li
         cold_start_categories = fork_get_cold_start_categories(user_id, is_eac)
         scored_recommendation_for_user = (
             fork_cold_start_scored_recommendations_for_user(
-                user_id, user_iris_id, cold_start_categories, is_eac, group_id
+                user_id,
+                user_iris_id,
+                cold_start_categories,
+                is_eac,
+                group_id,
+                playlist_arg,
             )
         )
     else:
         reco_origin = "algo"
         recommendations_for_user = fork_intermediate_recommendations_for_user(
-            user_id, user_iris_id, is_eac
+            user_id, user_iris_id, is_eac, playlist_arg
         )
         scored_recommendation_for_user = fork_scored_recommendation_for_user(
             user_id, group_id, recommendations_for_user, is_eac
         )
-
         # Keep the top 40 offers and shuffle them
-        best_recommendations_for_user = sorted(
+        scored_recommendation_for_user = sorted(
             scored_recommendation_for_user, key=lambda k: k["score"], reverse=True
         )[:40]
-        for recommendation in best_recommendations_for_user:
+        for recommendation in scored_recommendation_for_user:
             recommendation["score"] = random.random()
 
-    final_recommendations = order_offers_by_score_and_diversify_categories(
-        scored_recommendation_for_user
-    )
+    # For playlists we dont need to shuffle the categories
+    if playlist_arg:
+        final_recommendations = sorted(
+            scored_recommendation_for_user, key=lambda k: k["score"], reverse=True
+        )[:10]
+    else:
+        final_recommendations = order_offers_by_score_and_diversify_categories(
+            scored_recommendation_for_user
+        )
 
     save_recommendation(user_id, final_recommendations, group_id, reco_origin)
     return final_recommendations, group_id, is_cold_start
@@ -153,15 +165,16 @@ def fork_cold_start_scored_recommendations_for_user(
     cold_start_categories: list,
     is_eac: bool,
     group_id: str,
+    playlist_arg=None,
 ):
     start = time.time()
     if is_eac:
         cold_start_recommendations = get_cold_start_scored_recommendations_for_user_eac(
-            user_id, user_iris_id, cold_start_categories
+            user_id, user_iris_id, cold_start_categories, playlist_arg
         )
     else:
         cold_start_recommendations = get_cold_start_scored_recommendations_for_user(
-            user_id, user_iris_id, cold_start_categories, group_id
+            user_id, user_iris_id, cold_start_categories, group_id, playlist_arg
         )
     log_duration(
         f"get_cold_start_scored_recommendations_for_user for {user_id} {'with localisation' if user_iris_id else ''}",
@@ -171,16 +184,16 @@ def fork_cold_start_scored_recommendations_for_user(
 
 
 def fork_intermediate_recommendations_for_user(
-    user_id: int, user_iris_id: int, is_eac: bool
+    user_id: int, user_iris_id: int, is_eac: bool, playlist_arg=None
 ) -> List[Dict[str, Any]]:
     start = time.time()
     if is_eac:
         user_recommendation = get_intermediate_recommendations_for_user_eac(
-            user_id, user_iris_id
+            user_id, user_iris_id, playlist_arg
         )
     else:
         user_recommendation = get_intermediate_recommendations_for_user(
-            user_id, user_iris_id
+            user_id, user_iris_id, playlist_arg
         )
     log_duration(
         f"get_intermediate_recommendations_for_user for {user_id} {'with localisation' if user_iris_id else ''}",

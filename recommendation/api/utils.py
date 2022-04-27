@@ -59,3 +59,20 @@ def create_db_connection() -> Any:
 
 def log_duration(message, start):
     logger.info(f"{message}: {time.time() - start} seconds.")
+
+
+def get_conditions(arg: dict):
+    condition = ""
+    if arg["start_date"]:
+        condition += f'AND (creation_date > {arg["start_date"]} AND creation_date > {arg["end_date"]}) \n'
+    if arg["category"]:
+        condition += (
+            "AND ("
+            + " OR ".join([f"offer.category={cat}" for cat in arg["category"]])
+            + ")\n"
+        )
+    if arg["start_event_date"]:
+        condition += f'AND (stock_begining_date > {arg["start_event_date"]} AND stock_begining_date < {arg["end_event_date"]}) \n'
+    if arg["price_max"]:
+        condition += f"AND offer_price<=0.0 \n"
+    return condition

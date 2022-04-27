@@ -88,7 +88,7 @@ with DAG(
             {"name": "venue_diversification", "type": "FLOAT", "mode": "NULLABLE"},
             {"name": "macro_rayon_diversification", "type": "FLOAT", "mode": "NULLABLE"},
             {"name": "qpi_diversification", "type": "INTEGER", "mode": "NULLABLE"},
-            {"name": "delta_diversification", "type": "FLOAT", "mode": "NULLABLE"},
+            {"name": "delta_diversification", "type": "FLOAT", "mode": "NULLABLE"}
         ],
     )
 

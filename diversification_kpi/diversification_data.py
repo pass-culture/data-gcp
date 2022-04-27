@@ -161,7 +161,7 @@ def process_diversification(thread_name, q):
                     "delta_diversification",
                 ]
             ]
-            print(f"Saving to bq with types :\n{df.dtypes}")
+            print(f"Saving to bq with types :\n{df.dtypes}\n{df.head(3)}")
             df.to_gbq(
                 f"""{BIGQUERY_ANALYTICS_DATASET}.{TABLE_NAME}""",
                 project_id=f"{GCP_PROJECT}",

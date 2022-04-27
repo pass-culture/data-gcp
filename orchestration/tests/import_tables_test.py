@@ -14,6 +14,7 @@ class TestImportTables(unittest.TestCase):
             table, region="GCP_REGION", external_connection_id="EXTERNAL_CONNECTION_ID"
         )
 
+<<<<<<< HEAD:orchestration/tests/import_table_test.py
         # Then
         assert not '"apiKey"' in result
 
@@ -75,3 +76,20 @@ class TestImportTables(unittest.TestCase):
 
         # Then
         assert not '"token"' in result
+=======
+class TestImportTables(unittest.TestCase):
+    def test_import_tables_does_not_import_not_anonymized_columns(self):
+        for params in IMPORT_TABLES:
+            table_name = params["table_name"]
+            excluded_fields = params["excluded_fields"]
+            result = define_import_query(
+                table_name,
+                region="GCP_REGION",
+                external_connection_id="EXTERNAL_CONNECTION_ID",
+            )
+            for f in excluded_fields:
+                self.assertFalse(
+                    f'"{f}"' in result,
+                    f"Error in import_tables. Field {f} found in {table_name}",
+                )
+>>>>>>> 8788153 (fix tests):orchestration/tests/import_tables_test.py

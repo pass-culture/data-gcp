@@ -21,7 +21,7 @@ from utils import (
 def get_intermediate_recommendations_for_user(
     user_id: int, user_iris_id: int, playlist_arg=None
 ) -> List[Dict[str, Any]]:
-    condition = get_conditions(playlist_arg)
+    conditions = get_conditions(playlist_arg)
     if ENV_SHORT_NAME == "prod":
         and_clause = "AND booking_number > 10"
     else:
@@ -38,7 +38,7 @@ def get_intermediate_recommendations_for_user(
                 FROM non_recommendable_offers
                 WHERE user_id = :user_id
                 )   
-            {condition}
+            {conditions}
             {and_clause}
             ORDER BY RANDOM(); 
             """
@@ -68,7 +68,7 @@ def get_intermediate_recommendations_for_user(
                 FROM non_recommendable_offers
                 WHERE user_id = :user_id
                 )
-            {condition}
+            {conditions}
             {and_clause}
             ORDER BY RANDOM();
             """

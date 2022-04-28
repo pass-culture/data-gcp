@@ -71,9 +71,5 @@ class TestDags(unittest.TestCase):
 
     def test_dags_are_loaded(self):
         for dag_id in DAG_ID_LIST:
-<<<<<<< HEAD
             dag = self.dagbag.get_dag(dag_id=dag_id)
-=======
-            dag = self.dagbag.get_dag(dag_id="")
->>>>>>> 60b9b24 ([PC-9130] Factorize tests)
             self.assertIsNotNone(dag, f"DAG {dag_id} should exist.")

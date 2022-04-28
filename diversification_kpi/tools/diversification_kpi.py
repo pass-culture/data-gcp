@@ -39,7 +39,7 @@ def calculate_diversification_per_feature(df_clean, features):
         for feature in features:
 
             feature_value = booking[feature]
-            if feature_value not in [np.nan]:
+            if feature_value not in [np.nan, ""]:
 
                 # Use a unique venue for numerical bookings
                 if feature == "venue" and booking["format"] == "numerical":
@@ -109,10 +109,10 @@ def calculate_diversification_per_feature(df_clean, features):
 
         # QPI
         qpi_diversification = 0
-        if qpi_point_given == False:
+        if not qpi_point_given:
             subcat = booking["subcategory"]
             if subcat in df_clean.columns:
-                if booking[subcat] == False:
+                if not booking[subcat]:
                     qpi_point_given = True
                     qpi_diversification = 1
         divers_per_feature["qpi_diversification"].append(qpi_diversification)

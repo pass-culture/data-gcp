@@ -1,5 +1,6 @@
 import mlflow
 import os
+import shutil
 
 from google.auth.transport.requests import Request
 from google.cloud import secretmanager
@@ -38,3 +39,7 @@ def connect_remote_mlflow(client_id, env="ehp"):
     os.environ["MLFLOW_TRACKING_TOKEN"] = id_token.fetch_id_token(Request(), client_id)
     uri = MLFLOW_PROD_URI if env == "prod" else MLFLOW_EHP_URI
     mlflow.set_tracking_uri(uri)
+
+
+def remove_dir(path):
+    shutil.rmtree(path)

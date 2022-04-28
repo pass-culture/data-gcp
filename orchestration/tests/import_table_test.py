@@ -1,5 +1,4 @@
 import unittest
-from unittest import mock
 
 from dependencies.data_analytics.import_tables import define_import_query
 
@@ -37,6 +36,6 @@ class TestImportTables(unittest.TestCase):
             )
             for f in excluded_fields:
                 self.assertFalse(
-                    f'\"{f}\"' in result,
+                    f'"{f}"' in result,
                     f"Error in import_tables. Field {f} found in {table_name}",
                 )

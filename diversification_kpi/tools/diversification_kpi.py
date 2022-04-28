@@ -35,6 +35,7 @@ def calculate_diversification_per_feature(df_clean, features):
 
     for i in range(0, len(df_clean)):
         booking = df_clean.iloc[i]
+        print('\n=======================================================================\n')
 
         for feature in features:
 
@@ -49,9 +50,8 @@ def calculate_diversification_per_feature(df_clean, features):
             if df_clean.iloc[i - 1].user_id != booking.user_id or i == 0:
                 list_per_feature[feature] = []
                 list_per_feature_free[feature] = []
-                div = 1
+                div = 0
                 qpi_point_given = False
-                print('\n=======================================================================\n')
 
             elif (
                 feature == "type"

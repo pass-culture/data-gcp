@@ -25,7 +25,7 @@ def count_data():
     """
     count = pd.read_gbq(query)
     # return count.iloc[0]["nb"]
-    return 100
+    return 4
 
 
 def get_batch_of_users(batch, batch_size):
@@ -95,9 +95,9 @@ def diversification_kpi(df):
     df_clean = pd.merge(
         df_clean, pd.DataFrame(divers_col), left_index=True, right_index=True
     )
-    # Calculate delta diversification
     features_qpi = features
     features_qpi.append("qpi")
+    # Calculate delta diversification
     df_clean[f"delta_diversification"] = df_clean.apply(
         lambda x: sum(
             [float(x[f"{feature}_diversification"]) for feature in features_qpi]
@@ -163,7 +163,7 @@ def process_diversification(thread_name, q):
                     "delta_diversification",
                 ]
             ]
-            print(df.head(30))
+            print(df.head(100))
             df.to_gbq(
                 f"""{BIGQUERY_ANALYTICS_DATASET}.{TABLE_NAME}""",
                 project_id=f"{GCP_PROJECT}",

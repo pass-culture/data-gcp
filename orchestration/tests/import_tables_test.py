@@ -1,5 +1,4 @@
 import unittest
-from unittest import mock
 
 from dependencies.data_analytics.import_tables import define_import_query
 

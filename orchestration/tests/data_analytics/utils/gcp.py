@@ -1,6 +1,6 @@
 from google.cloud import bigquery
 
-from analytics.config import GCP_PROJECT, GCP_REGION, BIGQUERY_SCHEMAS
+from data_analytics.config import GCP_PROJECT, GCP_REGION, BIGQUERY_SCHEMAS
 
 
 def drop_dataset(client, dataset):

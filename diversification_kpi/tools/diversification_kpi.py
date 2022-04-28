@@ -32,6 +32,7 @@ def calculate_diversification_per_feature(df_clean, features):
     for feature in features:
         divers_per_feature[feature] = []
     divers_per_feature["qpi_diversification"] = []
+    divers_per_feature["delta_diversification"] = []
 
     for i in range(0, len(df_clean)):
         booking = df_clean.iloc[i]
@@ -89,11 +90,6 @@ def calculate_diversification_per_feature(df_clean, features):
                             list_per_feature_free[feature], feature_value
                         )
 
-            print(f"Processing div on feature {feature} for user {booking['user_id']}. The value is {booking[feature]}\n Value already booked are : {list_per_feature[feature]}.")
-            print(f"Price is {booking['booking_amount']} and last user booking was {df_clean.iloc[i - 1].user_id}")
-            print(f"Diversification is {div} and multiplicator is {multiplicator}")
-            print("-------------------------------------")
-
             # Add feature value to the list of values booked
             if booking["booking_amount"] != 0:
                 if (
@@ -121,6 +117,13 @@ def calculate_diversification_per_feature(df_clean, features):
                     qpi_point_given = True
                     qpi_diversification = 1
         divers_per_feature["qpi_diversification"].append(qpi_diversification)
+
+        #Calculate delta div
+        if df_clean.iloc[i - 1].user_id != booking.user_id or i == 0:
+            delta_div = sum([float(divers_per_feature[feature][-1]) for feature in features])
+        else:
+            delta_div = 1
+        divers_per_feature['delta_diversification'].append(delta_div)
 
     return divers_per_feature
 

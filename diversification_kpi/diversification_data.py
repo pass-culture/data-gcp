@@ -95,6 +95,11 @@ def diversification_kpi(df):
     df_clean = pd.merge(
         df_clean, pd.DataFrame(divers_col), left_index=True, right_index=True
     )
+    divers_col = {f"delta_diversification": divers_per_feature["delta_diversification"]}
+    df_clean = pd.merge(
+        df_clean, pd.DataFrame(divers_col), left_index=True, right_index=True
+    )
+    """
     features_qpi = features
     features_qpi.append("qpi")
     # Calculate delta diversification
@@ -103,7 +108,7 @@ def diversification_kpi(df):
             [float(x[f"{feature}_diversification"]) for feature in features_qpi]
         ),
         axis=1,
-    )
+    )"""
     return df_clean
 
 

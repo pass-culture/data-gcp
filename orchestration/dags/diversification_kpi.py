@@ -167,6 +167,11 @@ with DAG(
         start
         >> delete_old_table
         >> create_table
+        >> data_collect
+    )
+
+    (
+        start
         >> gce_instance_start
         >> fetch_code
         >> install_dependencies

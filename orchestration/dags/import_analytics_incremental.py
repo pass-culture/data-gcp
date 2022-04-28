@@ -62,21 +62,21 @@ data_applicative_tables_and_date_columns = {
 }
 
 default_dag_args = {
-    "start_date": datetime.datetime(2022, 4, 22),
+    "start_date": datetime.datetime(2022, 4, 10),
     "retries": 1,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT,
 }
 
 dag = DAG(
-    "import_data_analytics_incremental_v2",
+    "import_data_analytics_incremental_v3",
     default_args=default_dag_args,
     description="Import tables from CloudSQL and enrich data for create dashboards with Metabase. "
     "This DAG import data incrementally",
     on_failure_callback=task_fail_slack_alert,
-    schedule_interval=f"0 * * * *",
-    catchup=False,
-    dagrun_timeout=datetime.timedelta(minutes=120),
+    schedule_interval=f"0 0 * * *",
+    catchup=True,
+    dagrun_timeout=datetime.timedelta(minutes=60),
 )
 
 start = DummyOperator(task_id="start", dag=dag)

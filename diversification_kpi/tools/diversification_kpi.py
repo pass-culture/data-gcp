@@ -123,3 +123,5 @@ def calculate_diversification_per_feature(df_clean, features):
         divers_per_feature["qpi_diversification"].append(qpi_diversification)
 
     return divers_per_feature
+
+

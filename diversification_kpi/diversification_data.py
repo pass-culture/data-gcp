@@ -133,8 +133,13 @@ def process_diversification(thread_name, q):
             print(f"Batch {batch_number+1} contains {df_users.shape[0]} users.")
             bookings = get_data(df_users)
             bookings_enriched = pd.merge(bookings, macro_rayons, on="rayon", how="left")
-            bookings_sorted = bookings_enriched.sort_values(by=['user_id', 'booking_creation_date'])
-            print(f"Batch {batch_number + 1} contains {bookings_sorted.shape[0]} bookings.")
+            bookings_sorted = bookings_enriched.sort_values(
+                by=["user_id", "booking_creation_date"],
+                ignore_index=True
+            )
+            print(
+                f"Batch {batch_number + 1} contains {bookings_sorted.shape[0]} bookings."
+            )
             df = diversification_kpi(bookings_sorted)
             df = df[
                 [

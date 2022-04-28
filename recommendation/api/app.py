@@ -93,5 +93,32 @@ def recommendation(user_id: int):
     )
 
 
+@app.route("/playlist_recommendation/<user_id>", methods=["GET", "POST"])
+def playlist_recommendation(user_id: int):
+    token = request.args.get("token", None)
+    longitude = request.args.get("longitude", None)
+    latitude = request.args.get("latitude", None)
+    playlist_args = None
+    if request.method == "POST":
+        playlist_args = request.get_json()
+        print(playlist_args)
+    if token != API_TOKEN:
+        return "Forbidden", 403
+
+    recommendations, group_id, is_cold_start = get_final_recommendations(
+        user_id, longitude, latitude, playlist_args
+    )
+    if is_cold_start:
+        reco_origin = "cold_start"
+    else:
+        reco_origin = "algo"
+    return jsonify(
+        {
+            "recommended_offers": recommendations,
+            "reco_origin": reco_origin,
+        }
+    )
+
+
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))

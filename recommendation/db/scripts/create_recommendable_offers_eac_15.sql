@@ -95,6 +95,9 @@ BEGIN
             offer.offer_name             AS name,
             offer.offer_url              AS url,
             offer."offer_is_national"    AS is_national,
+            offer."offer_creation_date"  as offer_creation_date,
+            stock."stock_beginning_date" as stock_begining_date,
+            enriched_offer.last_stock_price as stock_price,
             (CASE WHEN booking_numbers.booking_number IS NOT NULL THEN booking_numbers.booking_number ELSE 0 END) AS booking_number,
             (CASE WHEN offer."offer_subcategoryId" in ('LIVRE_PAPIER', 'SEANCE_CINE') THEN CONCAT('product-', offer.offer_product_id) ELSE CONCAT('offer-', offer.offer_id) END) AS item_id
       FROM public.offer
@@ -102,6 +105,7 @@ BEGIN
       JOIN enriched_offer ON offer.offer_id = enriched_offer.offer_id
       JOIN (SELECT * FROM public.venue WHERE venue_validation_token IS NULL) venue ON offer."venue_id" = venue.venue_id
       JOIN (SELECT * FROM public.offerer WHERE offerer_validation_token IS NULL) offerer ON offerer.offerer_id = venue."venue_managing_offerer_id"
+      LEFT JOIN public.stock on offer.offer_id = stock.offer_id
       LEFT JOIN (
             SELECT count(*) AS booking_number, stock.offer_id
             FROM public.booking

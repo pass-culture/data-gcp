@@ -63,16 +63,26 @@ def log_duration(message, start):
 
 def get_conditions(arg: dict):
     condition = ""
-    if arg["start_date"]:
-        condition += f'AND (creation_date > {arg["start_date"]} AND creation_date > {arg["end_date"]}) \n'
-    if arg["category"]:
-        condition += (
-            "AND ("
-            + " OR ".join([f"offer.category={cat}" for cat in arg["category"]])
-            + ")\n"
-        )
-    if arg["start_event_date"]:
-        condition += f'AND (stock_begining_date > {arg["start_event_date"]} AND stock_begining_date < {arg["end_event_date"]}) \n'
-    if arg["price_max"]:
-        condition += f"AND offer_price<=0.0 \n"
+    if arg:
+        condition = ""
+        if arg["start_date"] and arg["isEvent"]:
+            condition += f'AND (stock_begining_date > {arg["start_date"]} AND stock_begining_date < {arg["end_date"]}) \n'
+        if arg["start_date"] and not arg["isEvent"]:
+            condition += f'AND (offer_creation_date > {arg["start_date"]} AND offer_creation_date < {arg["end_date"]}) \n'
+        if arg["category"]:
+            condition += (
+                "AND ("
+                + " OR ".join([f"offer.category={cat}" for cat in arg["category"]])
+                + ")\n"
+            )
+        if arg["subcategory_id"]:
+            condition += (
+                "AND ("
+                + " OR ".join(
+                    [f"offer.subcategory_id={cat}" for cat in arg["subcategory_id"]]
+                )
+                + ")\n"
+            )
+        if arg["price_max"]:
+            condition += f'AND stock_price<={arg["price_max"]} \n'
     return condition

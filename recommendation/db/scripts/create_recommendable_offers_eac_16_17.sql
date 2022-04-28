@@ -81,6 +81,9 @@ RETURNS TABLE (offer_id varchar,
                 name VARCHAR,
                 url VARCHAR,
                 is_national BOOLEAN,
+                offer_creation_date TIMESTAMP,
+                stock_begining_date TIMESTAMP,
+                stock_price REAL,
                 booking_number BIGINT,
                 item_id text) AS
 $body$

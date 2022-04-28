@@ -104,6 +104,10 @@ def calculate_diversification_per_feature(df_clean, features):
                         list_per_feature[feature], feature_value
                     )
 
+            print(f"Processing div on feature {feature}. The value is {booking[feature]}\n Value already booked are : {list_per_feature[feature]}.")
+            print(f"Price is {booking['booking_amount']} and last user booking was {df_clean.iloc[i - 1].user_id}")
+            print(f"Diversification is {div} and multiplicator is {multiplicator}")
+            print("-------------------------------------")
             divers_per_feature[feature].append(div * multiplicator)
 
         # QPI

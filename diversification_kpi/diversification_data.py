@@ -25,7 +25,7 @@ def count_data():
     """
     count = pd.read_gbq(query)
     # return count.iloc[0]["nb"]
-    return 600
+    return 100
 
 
 def get_batch_of_users(batch, batch_size):
@@ -163,6 +163,7 @@ def process_diversification(thread_name, q):
                     "delta_diversification",
                 ]
             ]
+            print(df.head(30))
             df.to_gbq(
                 f"""{BIGQUERY_ANALYTICS_DATASET}.{TABLE_NAME}""",
                 project_id=f"{GCP_PROJECT}",

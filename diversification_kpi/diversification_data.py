@@ -131,10 +131,11 @@ def process_diversification(thread_name, q):
             t0 = time.time()
             df_users = get_batch_of_users(batch_number, BATCH_SIZE)
             print(f"Batch {batch_number+1} contains {df_users.shape[0]} users.")
-            df = get_data(df_users)
-            data = pd.merge(df, macro_rayons, on="rayon", how="left")
-            print(f"Batch {batch_number + 1} contains {data.shape[0]} bookings.")
-            df = diversification_kpi(data)
+            bookings = get_data(df_users)
+            bookings_enriched = pd.merge(bookings, macro_rayons, on="rayon", how="left")
+            bookings_sorted = bookings_enriched.sort_values(by=['user_id', 'booking_creation_date'])
+            print(f"Batch {batch_number + 1} contains {bookings_sorted.shape[0]} bookings.")
+            df = diversification_kpi(bookings_sorted)
             df = df[
                 [
                     "user_id",
@@ -167,30 +168,30 @@ def process_diversification(thread_name, q):
                 project_id=f"{GCP_PROJECT}",
                 if_exists="append",
                 table_schema=[
-                                {"name": "user_id", "type": "STRING"},
-                                {"name": "offer_id", "type": "STRING"},
-                                {"name": "booking_id", "type": "STRING"},
-                                {"name": "booking_creation_date", "type": "TIMESTAMP"},
-                                {"name": "category", "type": "STRING"},
-                                {"name": "subcategory", "type": "STRING"},
-                                {"name": "type", "type": "STRING"},
-                                {"name": "venue", "type": "STRING"},
-                                {"name": "venue_name", "type": "STRING"},
-                                {"name": "user_region_name", "type": "STRING"},
-                                {"name": "user_activity", "type": "STRING"},
-                                {"name": "user_civility", "type": "STRING"},
-                                {"name": "booking_amount", "type": "STRING"},
-                                {"name": "user_deposit_creation_date", "type": "TIMESTAMP"},
-                                {"name": "format", "type": "STRING"},
-                                {"name": "macro_rayon", "type": "STRING"},
-                                {"name": "category_diversification", "type": "FLOAT"},
-                                {"name": "subcategory_diversification", "type": "FLOAT"},
-                                {"name": "format_diversification", "type": "FLOAT"},
-                                {"name": "venue_diversification", "type": "FLOAT"},
-                                {"name": "macro_rayon_diversification", "type": "FLOAT"},
-                                {"name": "qpi_diversification", "type": "INTEGER"},
-                                {"name": "delta_diversification", "type": "FLOAT"}
-                              ],
+                    {"name": "user_id", "type": "STRING"},
+                    {"name": "offer_id", "type": "STRING"},
+                    {"name": "booking_id", "type": "STRING"},
+                    {"name": "booking_creation_date", "type": "TIMESTAMP"},
+                    {"name": "category", "type": "STRING"},
+                    {"name": "subcategory", "type": "STRING"},
+                    {"name": "type", "type": "STRING"},
+                    {"name": "venue", "type": "STRING"},
+                    {"name": "venue_name", "type": "STRING"},
+                    {"name": "user_region_name", "type": "STRING"},
+                    {"name": "user_activity", "type": "STRING"},
+                    {"name": "user_civility", "type": "STRING"},
+                    {"name": "booking_amount", "type": "STRING"},
+                    {"name": "user_deposit_creation_date", "type": "TIMESTAMP"},
+                    {"name": "format", "type": "STRING"},
+                    {"name": "macro_rayon", "type": "STRING"},
+                    {"name": "category_diversification", "type": "FLOAT"},
+                    {"name": "subcategory_diversification", "type": "FLOAT"},
+                    {"name": "format_diversification", "type": "FLOAT"},
+                    {"name": "venue_diversification", "type": "FLOAT"},
+                    {"name": "macro_rayon_diversification", "type": "FLOAT"},
+                    {"name": "qpi_diversification", "type": "INTEGER"},
+                    {"name": "delta_diversification", "type": "FLOAT"},
+                ],
             )
             t1 = time.time()
             print(
@@ -211,7 +212,7 @@ if __name__ == "__main__":
     )
 
     # Empty table before inserting new data
-    #clean_old_table()
+    # clean_old_table()
 
     threadList = [f"Thread-{i}" for i in range(16)]
     batchList = range(max_batch)

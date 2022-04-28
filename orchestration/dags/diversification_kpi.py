@@ -8,7 +8,9 @@ from airflow.contrib.operators.slack_webhook_operator import SlackWebhookOperato
 from airflow.contrib.operators.bigquery_table_delete_operator import (
     BigQueryTableDeleteOperator,
 )
-from airflow.providers.google.cloud.operators.bigquery import BigQueryCreateEmptyTableOperator
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryCreateEmptyTableOperator,
+)
 from airflow.contrib.operators.gcp_compute_operator import (
     GceInstanceStartOperator,
     GceInstanceStopOperator,
@@ -79,16 +81,28 @@ with DAG(
             {"name": "user_activity", "type": "STRING", "mode": "NULLABLE"},
             {"name": "user_civility", "type": "STRING", "mode": "NULLABLE"},
             {"name": "booking_amount", "type": "STRING", "mode": "NULLABLE"},
-            {"name": "user_deposit_creation_date", "type": "TIMESTAMP", "mode": "NULLABLE"},
+            {
+                "name": "user_deposit_creation_date",
+                "type": "TIMESTAMP",
+                "mode": "NULLABLE",
+            },
             {"name": "format", "type": "STRING", "mode": "NULLABLE"},
             {"name": "macro_rayon", "type": "STRING", "mode": "NULLABLE"},
             {"name": "category_diversification", "type": "FLOAT", "mode": "NULLABLE"},
-            {"name": "subcategory_diversification", "type": "FLOAT", "mode": "NULLABLE"},
+            {
+                "name": "subcategory_diversification",
+                "type": "FLOAT",
+                "mode": "NULLABLE",
+            },
             {"name": "format_diversification", "type": "FLOAT", "mode": "NULLABLE"},
             {"name": "venue_diversification", "type": "FLOAT", "mode": "NULLABLE"},
-            {"name": "macro_rayon_diversification", "type": "FLOAT", "mode": "NULLABLE"},
+            {
+                "name": "macro_rayon_diversification",
+                "type": "FLOAT",
+                "mode": "NULLABLE",
+            },
             {"name": "qpi_diversification", "type": "INTEGER", "mode": "NULLABLE"},
-            {"name": "delta_diversification", "type": "FLOAT", "mode": "NULLABLE"}
+            {"name": "delta_diversification", "type": "FLOAT", "mode": "NULLABLE"},
         ],
     )
 

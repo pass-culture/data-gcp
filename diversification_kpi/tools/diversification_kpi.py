@@ -14,13 +14,13 @@ def fuse_columns_into_format(is_physical_good, is_digital_good, is_event):
 
 def get_diversification_feature(list_used, feature_value):
     div = 0
-    if feature_value not in list_used:
+    if feature_value not in list_used and feature_value not in [np.nan, ""]:
         div = 1
     return div
 
 
 def add_feature_if_feature_not_booked(list_used, feature_value):
-    if feature_value not in list_used:
+    if feature_value not in list_used and feature_value not in [np.nan, ""]:
         list_used.append(feature_value)
     return list_used
 
@@ -39,73 +39,72 @@ def calculate_diversification_per_feature(df_clean, features):
         for feature in features:
 
             feature_value = booking[feature]
-            if feature_value not in [np.nan, ""]:
+            multiplicator = 1
 
-                # Use a unique venue for numerical bookings
-                if feature == "venue" and booking["format"] == "numerical":
-                    feature_value = "numerical"
-                multiplicator = 1
+            # Use a unique venue for numerical bookings
+            if feature == "venue" and booking["format"] == "numerical":
+                feature_value = "numerical"
 
-                # Calculate diversification for feature
-                if df_clean.iloc[i - 1].user_id != booking.user_id or i == 0:
-                    list_per_feature[feature] = []
-                    list_per_feature_free[feature] = []
-                    div = 1
-                    qpi_point_given = False
-                elif (
+            # Calculate diversification for feature
+            if df_clean.iloc[i - 1].user_id != booking.user_id or i == 0:
+                list_per_feature[feature] = []
+                list_per_feature_free[feature] = []
+                div = 1
+                qpi_point_given = False
+            elif (
+                feature == "type"
+                and booking["subcategory"] == "SEANCE_CINE"
+                and feature_value not in [np.nan]
+            ):
+                div_temp = 0
+                for theme in feature_value:
+                    div_temp = div_temp + get_diversification_feature(
+                        list_per_feature[feature], theme
+                    )
+                div = 1 if div_temp > 0 else 0
+            else:
+                div = get_diversification_feature(
+                    list_per_feature[feature], feature_value
+                )
+
+            # Multiplicator of the diversification
+            if feature == "venue" and booking["category"] != "LIVRE":
+                multiplicator = multiplicator * 2
+            if (
+                booking["booking_amount"] == 0
+                and feature_value in list_per_feature_free[feature]
+            ):
+                multiplicator = multiplicator * 0
+            else:
+                if feature_value in list_per_feature_free[feature]:
+                    multiplicator = multiplicator * 0.5
+                if booking["booking_amount"] == 0:
+                    multiplicator = multiplicator * 0.5
+                    list_per_feature_free[
+                        feature
+                    ] = add_feature_if_feature_not_booked(
+                        list_per_feature_free[feature], feature_value
+                    )
+
+            # Add feature value to the list of values booked
+            if booking["booking_amount"] != 0:
+                if (
                     feature == "type"
                     and booking["subcategory"] == "SEANCE_CINE"
                     and feature_value not in [np.nan]
                 ):
-                    div_temp = 0
                     for theme in feature_value:
-                        div_temp = div_temp + get_diversification_feature(
+                        list_per_feature[
+                            feature
+                        ] = add_feature_if_feature_not_booked(
                             list_per_feature[feature], theme
                         )
-                    div = 1 if div_temp > 0 else 0
                 else:
-                    div = get_diversification_feature(
+                    list_per_feature[feature] = add_feature_if_feature_not_booked(
                         list_per_feature[feature], feature_value
                     )
 
-                # Multiplicator of the diversification
-                if feature == "venue" and booking["category"] != "LIVRE":
-                    multiplicator = multiplicator * 2
-                if (
-                    booking["booking_amount"] == 0
-                    and feature_value in list_per_feature_free[feature]
-                ):
-                    multiplicator = multiplicator * 0
-                else:
-                    if feature_value in list_per_feature_free[feature]:
-                        multiplicator = multiplicator * 0.5
-                    if booking["booking_amount"] == 0:
-                        multiplicator = multiplicator * 0.5
-                        list_per_feature_free[
-                            feature
-                        ] = add_feature_if_feature_not_booked(
-                            list_per_feature_free[feature], feature_value
-                        )
-
-                # Add feature value to the list of values booked
-                if booking["booking_amount"] != 0:
-                    if (
-                        feature == "type"
-                        and booking["subcategory"] == "SEANCE_CINE"
-                        and feature_value not in [np.nan]
-                    ):
-                        for theme in feature_value:
-                            list_per_feature[
-                                feature
-                            ] = add_feature_if_feature_not_booked(
-                                list_per_feature[feature], theme
-                            )
-                    else:
-                        list_per_feature[feature] = add_feature_if_feature_not_booked(
-                            list_per_feature[feature], feature_value
-                        )
-
-                divers_per_feature[feature].append(div * multiplicator)
+            divers_per_feature[feature].append(div * multiplicator)
 
         # QPI
         qpi_diversification = 0

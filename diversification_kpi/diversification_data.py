@@ -4,7 +4,7 @@ import queue
 import threading
 
 exitFlag = 0
-BATCH_SIZE = 100
+BATCH_SIZE = 10000
 
 from tools.utils import (
     GCP_PROJECT,
@@ -24,8 +24,7 @@ def count_data():
         WHERE user_total_deposit_amount = 300
     """
     count = pd.read_gbq(query)
-    # return count.iloc[0]["nb"]
-    return 4
+    return count.iloc[0]["nb"]
 
 
 def get_batch_of_users(batch, batch_size):
@@ -99,16 +98,6 @@ def diversification_kpi(df):
     df_clean = pd.merge(
         df_clean, pd.DataFrame(divers_col), left_index=True, right_index=True
     )
-    """
-    features_qpi = features
-    features_qpi.append("qpi")
-    # Calculate delta diversification
-    df_clean[f"delta_diversification"] = df_clean.apply(
-        lambda x: sum(
-            [float(x[f"{feature}_diversification"]) for feature in features_qpi]
-        ),
-        axis=1,
-    )"""
     return df_clean
 
 

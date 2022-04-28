@@ -37,6 +37,6 @@ class TestImportTables(unittest.TestCase):
             )
             for f in excluded_fields:
                 self.assertFalse(
-                    f in result,
+                    f'\"{f}\"' in result,
                     f"Error in import_tables. Field {f} found in {table_name}",
                 )

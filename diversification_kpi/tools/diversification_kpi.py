@@ -120,9 +120,9 @@ def calculate_diversification_per_feature(df_clean, features):
 
         #Calculate delta div
         if df_clean.iloc[i - 1].user_id != booking.user_id or i == 0:
-            delta_div = sum([float(divers_per_feature[feature][-1]) for feature in features])
-        else:
             delta_div = 1
+        else:
+            delta_div = sum([float(divers_per_feature[feature][-1]) for feature in features]) + qpi_diversification
         divers_per_feature['delta_diversification'].append(delta_div)
 
     return divers_per_feature

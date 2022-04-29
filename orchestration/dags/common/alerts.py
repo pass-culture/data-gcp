@@ -19,9 +19,15 @@ JOB_TYPE = {
     "analytics": access_secret_data(
         GCP_PROJECT, "slack-composer-analytics-webhook-token"
     ),
-    "prod": access_secret_data(GCP_PROJECT, "slack-composer-prod-webhook-token", default=None),
-    "stg": access_secret_data(GCP_PROJECT, "slack-composer-stg-webhook-token", default=None),
-    "dev": access_secret_data(GCP_PROJECT, "slack-composer-dev-webhook-token", default=None),
+    "prod": access_secret_data(
+        GCP_PROJECT, "slack-composer-prod-webhook-token", default=None
+    ),
+    "stg": access_secret_data(
+        GCP_PROJECT, "slack-composer-stg-webhook-token", default=None
+    ),
+    "dev": access_secret_data(
+        GCP_PROJECT, "slack-composer-dev-webhook-token", default=None
+    ),
 }
 
 

@@ -64,22 +64,20 @@ def log_duration(message, start):
 def get_conditions(arg: dict):
     condition = ""
     if arg:
-        condition = ""
-        if arg["start_date"] and arg["isEvent"]:
-            condition += f'AND (stock_begining_date > {arg["start_date"]} AND stock_begining_date < {arg["end_date"]}) \n'
-        if arg["start_date"] and not arg["isEvent"]:
-            condition += f'AND (offer_creation_date > {arg["start_date"]} AND offer_creation_date < {arg["end_date"]}) \n'
+        if arg["start_date"]:
+            column = "stock_begining_date" if arg["isEvent"] else "offer_creation_date"
+            condition += f"""AND ({column} > TO_TIMESTAMP('{arg["start_date"]}','YYYY-MM-DD HH24:MI:SS') AND {column} < TO_TIMESTAMP('{arg["end_date"]}','YYYY-MM-DD HH24:MI:SS')) \n"""
         if arg["category"]:
             condition += (
                 "AND ("
-                + " OR ".join([f"offer.category={cat}" for cat in arg["category"]])
+                + " OR ".join([f"category='{cat}'" for cat in arg["category"]])
                 + ")\n"
             )
         if arg["subcategory_id"]:
             condition += (
                 "AND ("
                 + " OR ".join(
-                    [f"offer.subcategory_id={cat}" for cat in arg["subcategory_id"]]
+                    [f"subcategory_id='{cat}'" for cat in arg["subcategory_id"]]
                 )
                 + ")\n"
             )

@@ -115,7 +115,6 @@ def playlist_recommendation(user_id: int):
     return jsonify(
         {
             "recommended_offers": recommendations,
-            "reco_origin": reco_origin,
         }
     )
 

@@ -29,7 +29,12 @@ from eac.eac_scoring import (
     get_scored_recommendation_for_user_eac,
 )
 from geolocalisation import get_iris_from_coordinates
-from utils import create_db_connection, log_duration, NUMBER_OF_RECOMMENDATIONS
+from utils import (
+    create_db_connection,
+    log_duration,
+    NUMBER_OF_RECOMMENDATIONS,
+    SHUFFLE_RECOMMENDATION,
+)
 
 
 def get_user_metadata(user_id: int, longitude: int, latitude: int):
@@ -73,20 +78,24 @@ def get_final_recommendations(
             user_id, user_iris_id, is_eac, playlist_arg
         )
         scored_recommendation_for_user = fork_scored_recommendation_for_user(
-            user_id, group_id, recommendations_for_user, is_eac
+            user_id, group_id, recommendations_for_user, is_eac, playlist_arg
         )
         # Keep the top 40 offers and shuffle them
         scored_recommendation_for_user = sorted(
             scored_recommendation_for_user, key=lambda k: k["score"], reverse=True
         )[:40]
-        for recommendation in scored_recommendation_for_user:
-            recommendation["score"] = random.random()
+        if SHUFFLE_RECOMMENDATION:
+            for recommendation in scored_recommendation_for_user:
+                recommendation["score"] = random.random()
 
     # For playlists we dont need to shuffle the categories
     if playlist_arg:
-        final_recommendations = sorted(
+        scored_recommendation_for_user = sorted(
             scored_recommendation_for_user, key=lambda k: k["score"], reverse=True
-        )[:10]
+        )
+        final_recommendations = [
+            offer["id"] for offer in scored_recommendation_for_user
+        ][:NUMBER_OF_RECOMMENDATIONS]
     else:
         final_recommendations = order_offers_by_score_and_diversify_categories(
             scored_recommendation_for_user
@@ -207,14 +216,15 @@ def fork_scored_recommendation_for_user(
     group_id: str,
     user_recommendations: List[Dict[str, Any]],
     is_eac: bool,
+    playlist_arg=None,
 ) -> List[Dict[str, int]]:
     if is_eac:
         recommendations = get_scored_recommendation_for_user_eac(
-            user_id, group_id, user_recommendations
+            user_id, group_id, user_recommendations, playlist_arg
         )
     else:
         recommendations = get_scored_recommendation_for_user(
-            user_id, group_id, user_recommendations
+            user_id, group_id, user_recommendations, playlist_arg
         )
     return recommendations
 

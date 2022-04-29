@@ -23,6 +23,7 @@ AB_TESTING_TABLE = os.environ.get(
 )  # "ab_testing" for tests in circle ci
 AB_TESTING_TABLE_EAC = os.environ.get("AB_TESTING_TABLE_EAC")
 NUMBER_OF_RECOMMENDATIONS = 10
+SHUFFLE_RECOMMENDATION = False
 NUMBER_OF_PRESELECTED_OFFERS = 50 if not os.environ.get("CI") else 3
 
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
@@ -64,16 +65,19 @@ def log_duration(message, start):
 def get_conditions(arg: dict):
     condition = ""
     if arg:
-        if arg["start_date"]:
-            column = "stock_begining_date" if arg["isEvent"] else "offer_creation_date"
-            condition += f"""AND ({column} > TO_TIMESTAMP('{arg["start_date"]}','YYYY-MM-DD HH24:MI:SS') AND {column} < TO_TIMESTAMP('{arg["end_date"]}','YYYY-MM-DD HH24:MI:SS')) \n"""
-        if arg["category"]:
+        if "start_date" in arg.keys():
+            if "isEvent" in arg.keys() and arg["isEvent"]:
+                column = "stock_begining_date"
+            else:
+                column = "offer_creation_date"
+            condition += f"""AND ({column} > '{arg["start_date"]}' AND {column} < '{arg["end_date"]}') \n"""
+        if "category" in arg.keys():
             condition += (
                 "AND ("
                 + " OR ".join([f"category='{cat}'" for cat in arg["category"]])
                 + ")\n"
             )
-        if arg["subcategory_id"]:
+        if "subcategory_id" in arg.keys():
             condition += (
                 "AND ("
                 + " OR ".join(
@@ -81,6 +85,6 @@ def get_conditions(arg: dict):
                 )
                 + ")\n"
             )
-        if arg["price_max"]:
+        if "price_max" in arg.keys():
             condition += f'AND stock_price<={arg["price_max"]} \n'
     return condition

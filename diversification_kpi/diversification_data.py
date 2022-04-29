@@ -4,7 +4,7 @@ import queue
 import threading
 
 exitFlag = 0
-BATCH_SIZE = 10
+BATCH_SIZE = 1000
 
 from tools.utils import (
     GCP_PROJECT,
@@ -25,7 +25,7 @@ def count_data():
     """
     count = pd.read_gbq(query)
     #return count.iloc[0]["nb"]
-    return 160
+    return 100000
 
 
 def get_batch_of_users(batch, batch_size):
@@ -209,7 +209,7 @@ if __name__ == "__main__":
     # Empty table before inserting new data
     # clean_old_table()
 
-    threadList = [f"Thread-{i}" for i in range(16)]
+    threadList = [f"Thread-{i}" for i in range(12)]
     batchList = range(max_batch)
     queueLock = threading.Lock()
     workQueue = queue.Queue()

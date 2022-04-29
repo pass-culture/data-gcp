@@ -110,9 +110,9 @@ class DiversificationBatchThread(threading.Thread):
         print(f"Thread {tName} created.")
 
     def run(self):
-        print("Starting " + self.name)
+        #print("Starting " + self.name)
         process_diversification(self.name, self.q)
-        print("Exiting " + self.name)
+        #print("Exiting " + self.name)
 
 
 def process_diversification(thread_name, q):

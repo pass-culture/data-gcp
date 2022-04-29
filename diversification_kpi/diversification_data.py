@@ -4,7 +4,7 @@ import queue
 import threading
 
 exitFlag = 0
-BATCH_SIZE = 10000
+BATCH_SIZE = 10
 
 from tools.utils import (
     GCP_PROJECT,
@@ -24,7 +24,8 @@ def count_data():
         WHERE user_total_deposit_amount = 300
     """
     count = pd.read_gbq(query)
-    return count.iloc[0]["nb"]
+    #return count.iloc[0]["nb"]
+    return 160
 
 
 def get_batch_of_users(batch, batch_size):

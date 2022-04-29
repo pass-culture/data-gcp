@@ -115,6 +115,7 @@ copy_table_pro_to_clean = BigQueryOperator(
 copy_table_to_analytics = BigQueryOperator(
     task_id="copy_table_to_analytics",
     sql=copy_table_to_analytics(
+        table_name='events',
         gcp_project=GCP_PROJECT,
         bigquery_raw_dataset=BIGQUERY_RAW_DATASET,
         execution_date=EXECUTION_DATE,
@@ -127,9 +128,12 @@ copy_table_to_analytics = BigQueryOperator(
 
 copy_table_pro_to_analytics = BigQueryOperator(
     task_id="copy_table_pro_to_analytics",
-    sql=f"""
-         SELECT * FROM {GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.firebase_pro_events_{EXECUTION_DATE}
-         """,
+    sql=copy_table_to_analytics(
+        table_name='firebase_pro',
+        gcp_project=GCP_PROJECT,
+        bigquery_raw_dataset=BIGQUERY_RAW_DATASET,
+        execution_date=EXECUTION_DATE,
+    ),
     use_legacy_sql=False,
     destination_dataset_table=f"{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.firebase_pro_events",
     write_disposition="WRITE_APPEND",

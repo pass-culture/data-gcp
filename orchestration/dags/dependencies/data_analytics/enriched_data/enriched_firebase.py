@@ -116,7 +116,7 @@ def aggregate_firebase_visits(gcp_project, bigquery_raw_dataset):
     """
 
 
-def copy_table_to_analytics(gcp_project, bigquery_raw_dataset, execution_date):
+def copy_table_to_analytics(gcp_project, bigquery_raw_dataset, table_name, execution_date):
     return f"""
     WITH temp_firebase_events AS (
         SELECT
@@ -190,7 +190,7 @@ def copy_table_to_analytics(gcp_project, bigquery_raw_dataset, execution_date):
                 from unnest(event_params) event_params
                 where event_params.key = 'AB_test'
             ) as ab_test
-        FROM {gcp_project}.{bigquery_raw_dataset}.events_{execution_date}
+        FROM {gcp_project}.{bigquery_raw_dataset}.{table_name}_{execution_date}
     )
     SELECT * EXCEPT(double_offer_id, string_offer_id),
     (CASE WHEN double_offer_id IS NULL THEN string_offer_id ELSE double_offer_id END) AS offer_id

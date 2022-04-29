@@ -116,7 +116,9 @@ def aggregate_firebase_visits(gcp_project, bigquery_raw_dataset):
     """
 
 
-def copy_table_to_analytics(gcp_project, bigquery_raw_dataset, table_name, execution_date):
+def copy_table_to_analytics(
+    gcp_project, bigquery_raw_dataset, table_name, execution_date
+):
     return f"""
     WITH temp_firebase_events AS (
         SELECT

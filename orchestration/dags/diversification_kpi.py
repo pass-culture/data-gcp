@@ -163,6 +163,13 @@ with DAG(
         dag=dag,
     )
 
+    gce_instance_stop = GceInstanceStopOperator(
+        project_id=GCP_PROJECT_ID,
+        zone=GCE_ZONE,
+        resource_id=GCE_INSTANCE,
+        task_id="gce_stop_task",
+    )
+
     (
         start
         >> delete_old_table
@@ -177,3 +184,4 @@ with DAG(
         >> install_dependencies
         >> data_collect
     )
+    data_collect >> gce_instance_stop

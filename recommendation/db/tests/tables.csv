@@ -18,6 +18,7 @@ offer,offer_name,character varying
 offer,offer_url,character varying
 offer,offer_is_national,boolean
 offer,offer_validation,character varying
+offer,offer_creation_date,timestamp without time zone,applicative_database_offer,clean
 offerer,offerer_is_active,boolean
 offerer,offerer_id,character varying
 offerer,offerer_validation_token,character varying
@@ -35,3 +36,5 @@ subcategories,category_id,character varying
 subcategories,is_event,boolean
 subcategories,is_digital_deposit,boolean
 subcategories,is_physical_deposit,boolean
+enriched_offer,offer_id,character varying,enriched_offer_data,analytics
+enriched_offer,last_stock_price,real,enriched_offer_data,analytics

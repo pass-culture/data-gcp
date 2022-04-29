@@ -15,7 +15,7 @@ from google.auth.transport.requests import Request
 from google.oauth2 import id_token
 
 from dependencies.bigquery_client import BigQueryClient
-from dependencies.slack_alert import task_fail_slack_alert
+from common.alerts import task_fail_slack_alert
 from dependencies.qpi_answers_schema import QPI_ANSWERS_SCHEMA
 from dependencies.config import (
     GCP_PROJECT,

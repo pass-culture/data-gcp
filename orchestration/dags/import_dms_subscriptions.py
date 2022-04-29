@@ -13,7 +13,7 @@ from airflow.contrib.operators.gcs_to_bq import (
 from google.auth.transport.requests import Request
 from google.oauth2 import id_token
 
-from dependencies.slack_alert import task_fail_slack_alert
+from common.alerts import task_fail_slack_alert
 
 from dependencies.config import (
     DATA_GCS_BUCKET_NAME,

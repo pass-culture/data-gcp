@@ -21,7 +21,7 @@ from dependencies.data_analytics.enriched_data.enriched_firebase import (
     aggregate_firebase_visits,
     copy_table_to_analytics,
 )
-from dependencies.slack_alert import task_fail_slack_alert
+from common.alerts import task_fail_slack_alert
 
 ENV_SHORT_NAME_APP_INFO_ID_MAPPING = {
     "dev": ["app.passculture.test", "app.passculture.testing"],

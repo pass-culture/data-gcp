@@ -36,7 +36,6 @@ def calculate_diversification_per_feature(df_clean, features):
 
     for i in range(0, len(df_clean)):
         booking = df_clean.iloc[i]
-        print('\n=======================================================================\n')
 
         for feature in features:
 

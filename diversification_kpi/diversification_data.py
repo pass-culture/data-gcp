@@ -121,18 +121,15 @@ def process_diversification(thread_name, q):
         if not workQueue.empty():
             batch_number = q.get()
             queueLock.release()
-            print(f"{thread_name} started process of batch {batch_number +1}...")
+            #print(f"{thread_name} started process of batch {batch_number +1}...")
             t0 = time.time()
             df_users = get_batch_of_users(batch_number, BATCH_SIZE)
-            print(f"Batch {batch_number+1} contains {df_users.shape[0]} users.")
+            #print(f"Batch {batch_number+1} contains {df_users.shape[0]} users.")
             bookings = get_data(df_users)
             bookings_enriched = pd.merge(bookings, macro_rayons, on="rayon", how="left")
             bookings_sorted = bookings_enriched.sort_values(
                 by=["user_id", "booking_creation_date"],
                 ignore_index=True
-            )
-            print(
-                f"Batch {batch_number + 1} contains {bookings_sorted.shape[0]} bookings."
             )
             df = diversification_kpi(bookings_sorted)
             df = df[
@@ -162,7 +159,6 @@ def process_diversification(thread_name, q):
                     "delta_diversification",
                 ]
             ]
-            print(df.head(100))
             df.to_gbq(
                 f"""{BIGQUERY_ANALYTICS_DATASET}.{TABLE_NAME}""",
                 project_id=f"{GCP_PROJECT}",
@@ -194,9 +190,7 @@ def process_diversification(thread_name, q):
                 ],
             )
             t1 = time.time()
-            print(
-                f"{thread_name} processed batch {batch_number +1} / {max_batch}\nTotal time : {(t1-t0)/60}min"
-            )
+            #print(f"{thread_name} processed batch {batch_number +1}/{max_batch}\nTotal time : {(t1-t0)/60}min")
         else:
             queueLock.release()
 

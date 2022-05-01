@@ -124,7 +124,7 @@ def process_diversification(thread_name, q):
             #print(f"{thread_name} started process of batch {batch_number +1}...")
             t0 = time.time()
             df_users = get_batch_of_users(batch_number, BATCH_SIZE)
-            #print(f"Batch {batch_number+1} contains {df_users.shape[0]} users.")
+            print(f"{thread_name} : batch {batch_number+1} contains {df_users.shape[0]} users.")
             bookings = get_data(df_users)
             bookings_enriched = pd.merge(bookings, macro_rayons, on="rayon", how="left")
             bookings_sorted = bookings_enriched.sort_values(
@@ -190,7 +190,7 @@ def process_diversification(thread_name, q):
                 ],
             )
             t1 = time.time()
-            #print(f"{thread_name} processed batch {batch_number +1}/{max_batch}\nTotal time : {(t1-t0)/60}min")
+            print(f"{thread_name} processed batch {batch_number +1}/{max_batch}\nTotal time : {(t1-t0)/60}min")
         else:
             queueLock.release()
 
@@ -208,7 +208,7 @@ if __name__ == "__main__":
     # Empty table before inserting new data
     # clean_old_table()
 
-    threadList = [f"Thread-{i}" for i in range(12)]
+    threadList = [f"Thread-{i}" for i in range(15)]
     batchList = range(max_batch)
     queueLock = threading.Lock()
     workQueue = queue.Queue()

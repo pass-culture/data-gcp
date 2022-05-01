@@ -24,8 +24,7 @@ def count_data():
         WHERE user_total_deposit_amount = 300
     """
     count = pd.read_gbq(query)
-    #return count.iloc[0]["nb"]
-    return 100000
+    return count.iloc[0]["nb"]
 
 
 def get_batch_of_users(batch, batch_size):

@@ -110,9 +110,9 @@ class DiversificationBatchThread(threading.Thread):
         print(f"Thread {tName} created.")
 
     def run(self):
-        #print("Starting " + self.name)
+        # print("Starting " + self.name)
         process_diversification(self.name, self.q)
-        #print("Exiting " + self.name)
+        # print("Exiting " + self.name)
 
 
 def process_diversification(thread_name, q):
@@ -121,15 +121,15 @@ def process_diversification(thread_name, q):
         if not workQueue.empty():
             batch_number = q.get()
             queueLock.release()
-            #print(f"{thread_name} started process of batch {batch_number +1}...")
             t0 = time.time()
             df_users = get_batch_of_users(batch_number, BATCH_SIZE)
             bookings = get_data(df_users)
-            print(f"{thread_name} : batch {batch_number+1} contains {bookings.shape[0]} bookings.")
+            print(
+                f"{thread_name} : batch {batch_number+1} contains {bookings.shape[0]} bookings."
+            )
             bookings_enriched = pd.merge(bookings, macro_rayons, on="rayon", how="left")
             bookings_sorted = bookings_enriched.sort_values(
-                by=["user_id", "booking_creation_date"],
-                ignore_index=True
+                by=["user_id", "booking_creation_date"], ignore_index=True
             )
             df = diversification_kpi(bookings_sorted)
             df = df[
@@ -190,7 +190,9 @@ def process_diversification(thread_name, q):
                 ],
             )
             t1 = time.time()
-            print(f"{thread_name} processed batch {batch_number +1}/{max_batch}\nTotal time : {(t1-t0)/60}min")
+            print(
+                f"{thread_name} processed batch {batch_number +1}/{max_batch}\nTotal time : {(t1-t0)/60}min"
+            )
         else:
             queueLock.release()
 

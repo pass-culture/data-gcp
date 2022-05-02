@@ -116,7 +116,7 @@ with DAG(
     if ENV_SHORT_NAME == "dev":
         branch = "PC-14596-fix-bug-and-improve-diversification"
     if ENV_SHORT_NAME == "stg":
-        branch = "PC-14596-fix-bug-and-improve-diversification"
+        branch = "master"
     if ENV_SHORT_NAME == "prod":
         branch = "production"
 
@@ -170,18 +170,7 @@ with DAG(
         task_id="gce_stop_task",
     )
 
-    (
-        start
-        >> delete_old_table
-        >> create_table
-        >> data_collect
-    )
+    (start >> delete_old_table >> create_table >> data_collect)
 
-    (
-        start
-        >> gce_instance_start
-        >> fetch_code
-        >> install_dependencies
-        >> data_collect
-    )
+    (start >> gce_instance_start >> fetch_code >> install_dependencies >> data_collect)
     data_collect >> gce_instance_stop

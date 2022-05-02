@@ -1,7 +1,7 @@
 import os
 
-GCP_PROJECT_ID = os.environ.get("GCP_PROJECT", "project-test-ci")
-GCP_PROJECT = os.environ.get("GCP_PROJECT", "project-test-ci")
+GCP_PROJECT_ID = os.environ.get("GCP_PROJECT", "passculture-data-ehp")
+GCP_PROJECT = os.environ.get("GCP_PROJECT", "passculture-data-ehp")
 GCP_REGION = "europe-west1"
 GCE_ZONE = "europe-west1-b"
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")

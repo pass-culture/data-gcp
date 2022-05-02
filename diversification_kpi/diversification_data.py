@@ -24,7 +24,8 @@ def count_data():
         WHERE user_total_deposit_amount = 300
     """
     count = pd.read_gbq(query)
-    return count.iloc[0]["nb"]
+    #return count.iloc[0]["nb"]
+    return 6000
 
 
 def get_batch_of_users(batch, batch_size):
@@ -122,16 +123,33 @@ def process_diversification(thread_name, q):
             batch_number = q.get()
             queueLock.release()
             t0 = time.time()
+
             df_users = get_batch_of_users(batch_number, BATCH_SIZE)
+            t_getusers = time.time()
+            print(f"Get users : {t_getusers-t0} sec.")
+
+
             bookings = get_data(df_users)
+            t_get_bookings = time.time()
+            print(f"Get bookings : {t_get_bookings - t_getusers} sec.")
             print(
                 f"{thread_name} : batch {batch_number+1} contains {bookings.shape[0]} bookings."
             )
+
             bookings_enriched = pd.merge(bookings, macro_rayons, on="rayon", how="left")
+            t_mergemarcrorayon = time.time()
+            print(f"Merge macro rayon : {t_mergemarcrorayon - t_get_bookings} sec.")
+
             bookings_sorted = bookings_enriched.sort_values(
                 by=["user_id", "booking_creation_date"], ignore_index=True
             )
+            t_orderby = time.time()
+            print(f"Order by : {t_orderby - t_mergemarcrorayon} sec.")
+
             df = diversification_kpi(bookings_sorted)
+            t_div = time.time()
+            print(f"Calculate div: {t_div - t_orderby} sec.")
+
             df = df[
                 [
                     "user_id",
@@ -189,6 +207,9 @@ def process_diversification(thread_name, q):
                     {"name": "delta_diversification", "type": "FLOAT"},
                 ],
             )
+            t_tobq = time.time()
+            print(f"Save to bq : {t_tobq - t_div} sec.")
+
             t1 = time.time()
             print(
                 f"{thread_name} processed batch {batch_number +1}/{max_batch}\nTotal time : {(t1-t0)/60}min"
@@ -210,7 +231,7 @@ if __name__ == "__main__":
     # Empty table before inserting new data
     # clean_old_table()
 
-    threadList = [f"Thread-{i}" for i in range(15)]
+    threadList = [f"Thread-{i}" for i in range(6)]
     batchList = range(max_batch)
     queueLock = threading.Lock()
     workQueue = queue.Queue()

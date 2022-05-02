@@ -1,8 +1,8 @@
 import pytest
-from analytics.utils.json import approx_equal
+from data_analytics.utils.json import approx_equal
 from google.cloud import bigquery
-from analytics.config import GCP_PROJECT, TEST_DATASET, TEST_TABLE_PREFIX
-from analytics.data import (
+from data_analytics.config import GCP_PROJECT, TEST_DATASET, TEST_TABLE_PREFIX
+from data_analytics.data import (
     ENRICHED_BOOKING_DATA_EXPECTED,
     ENRICHED_BOOKING_DATA_INPUT,
     ENRICHED_OFFER_DATA_EXPECTED,
@@ -18,7 +18,7 @@ from analytics.data import (
     TEST_TABLE_PREFIX,
 )
 
-from analytics.utils.gcp import (
+from data_analytics.utils.gcp import (
     create_data,
     create_dataset,
     drop_dataset,

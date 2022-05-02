@@ -80,7 +80,8 @@ def create_adage_table():
     return f"""
     CREATE TABLE IF NOT EXISTS `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.adage`(
         id STRING,
-        siret STRING, 
+        siret STRING,
+        venueId STRING,  
         regionId STRING, 
         academieId STRING, 
         statutId STRING, 
@@ -113,6 +114,7 @@ def adding_value():
         WHEN MATCHED THEN
             UPDATE SET 
             siret = B.siret, 
+            venueId = B.venueId,
             regionId = B.regionId, 
             academieId = B.academieId, 
             statutId = B.statutId , 
@@ -136,7 +138,7 @@ def adding_value():
             regionLibelle = B.regionLibelle, 
             domaines = B.domaines
         WHEN NOT MATCHED THEN
-        INSERT (id,siret,regionId,academieId,
+        INSERT (id,siret,venueId,regionId,academieId,
                 statutId,
                 labelId,
                 typeId, 
@@ -156,7 +158,7 @@ def adding_value():
                 communeDepartement,
                 academieLibelle,
                 regionLibelle,
-                domaines) VALUES(id,siret,regionId,academieId, statutId,
+                domaines) VALUES(id,siret,venueId,regionId,academieId, statutId,
                                  labelId,
                                  typeId,
                                  communeId,

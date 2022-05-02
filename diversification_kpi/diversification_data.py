@@ -44,6 +44,7 @@ def get_data(users_batch):
         where_user_in = where_user_in + f"'{user}',"
     where_user_in = where_user_in[:-1] + ")"
 
+    # Créer un flag contenant l'info a reserver en dehors du qpi plutot que d'importer tous les qpi
     query = f"""SELECT DISTINCT A.user_id, bkg.booking_creation_date, bkg.booking_id, user_region_name, user_activity,
     user_civility, user_deposit_creation_date, user_total_deposit_amount, actual_amount_spent, offer.offer_id, booking_amount,
     offer_category_id as category, bkg.offer_subcategoryId as subcategory, bkg.physical_goods,
@@ -111,9 +112,7 @@ class DiversificationBatchThread(threading.Thread):
         print(f"Thread {tName} created.")
 
     def run(self):
-        # print("Starting " + self.name)
         process_diversification(self.name, self.q)
-        # print("Exiting " + self.name)
 
 
 def process_diversification(thread_name, q):

@@ -114,9 +114,9 @@ with DAG(
     )
 
     if ENV_SHORT_NAME == "dev":
-        branch = "PC-14596-fix-bug-and-improve-diversification"
+        branch = "PC-14596-bis-rename-dag-file-diversification"
     if ENV_SHORT_NAME == "stg":
-        branch = "master"
+        branch = "PC-14596-bis-rename-dag-file-diversification"
     if ENV_SHORT_NAME == "prod":
         branch = "master"
 

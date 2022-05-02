@@ -8,9 +8,13 @@ from airflow.contrib.operators.slack_webhook_operator import SlackWebhookOperato
 from airflow.contrib.operators.bigquery_table_delete_operator import (
     BigQueryTableDeleteOperator,
 )
-from airflow.providers.google.cloud.operators.bigquery import (
+from airflow.contrib.operators.bigquery_operator import (
     BigQueryCreateEmptyTableOperator,
 )
+"""
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryCreateEmptyTableOperator,
+)"""
 from airflow.contrib.operators.gcp_compute_operator import (
     GceInstanceStartOperator,
     GceInstanceStopOperator,

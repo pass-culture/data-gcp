@@ -9,6 +9,7 @@ from models.v1.utils import identity_loss, sample_triplets, predict
 from utils import (
     get_secret,
     connect_remote_mlflow,
+    remove_dir,
     STORAGE_PATH,
     ENV_SHORT_NAME,
     BOOKING_DAY_NUMBER,
@@ -110,6 +111,7 @@ def train(storage_path: str):
                     best_eval = eval_result
         connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
         mlflow.log_artifacts(export_path, "model")
+        remove_dir(export_path)
         print("------- TRAINING DONE -------")
         print(mlflow.get_artifact_uri("model"))
 

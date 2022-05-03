@@ -2,7 +2,7 @@ import pandas as pd
 import time
 import queue
 import threading
-import multiprocessing
+from multiprocessing import cpu_count, Pool
 
 
 exitFlag = 0
@@ -109,7 +109,7 @@ class DiversificationBatchThread(threading.Thread):
         self.threadID = thread_id
         self.name = name
         self.q = q
-        print(f"Thread {tName} created.")
+        print(f"Thread {name} created.")
 
     def run(self):
         # print("Starting " + self.name)
@@ -117,86 +117,84 @@ class DiversificationBatchThread(threading.Thread):
         # print("Exiting " + self.name)
 
 
-def process_diversification(thread_name, q):
-    while not exitFlag:
+def process_diversification( q):
+    """while not exitFlag:
         queueLock.acquire()
-        if not workQueue.empty():
-            batch_number = q.get()
-            queueLock.release()
-            t0 = time.time()
-            df_users = get_batch_of_users(batch_number, BATCH_SIZE)
-            bookings = get_data(df_users)
-            print(
-                f"{thread_name} : batch {batch_number+1} contains {bookings.shape[0]} bookings."
-            )
-            bookings_enriched = pd.merge(bookings, macro_rayons, on="rayon", how="left")
-            bookings_sorted = bookings_enriched.sort_values(
-                by=["user_id", "booking_creation_date"], ignore_index=True
-            )
-            df = diversification_kpi(bookings_sorted)
-            df = df[
-                [
-                    "user_id",
-                    "offer_id",
-                    "booking_id",
-                    "booking_creation_date",
-                    "category",
-                    "subcategory",
-                    "type",
-                    "venue",
-                    "venue_name",
-                    "user_region_name",
-                    "user_activity",
-                    "user_civility",
-                    "booking_amount",
-                    "user_deposit_creation_date",
-                    "format",
-                    "macro_rayon",
-                    "category_diversification",
-                    "subcategory_diversification",
-                    "format_diversification",
-                    "venue_diversification",
-                    "macro_rayon_diversification",
-                    "qpi_diversification",
-                    "delta_diversification",
-                ]
-            ]
-            df.to_gbq(
-                f"""{BIGQUERY_ANALYTICS_DATASET}.{TABLE_NAME}""",
-                project_id=f"{GCP_PROJECT}",
-                if_exists="append",
-                table_schema=[
-                    {"name": "user_id", "type": "STRING"},
-                    {"name": "offer_id", "type": "STRING"},
-                    {"name": "booking_id", "type": "STRING"},
-                    {"name": "booking_creation_date", "type": "TIMESTAMP"},
-                    {"name": "category", "type": "STRING"},
-                    {"name": "subcategory", "type": "STRING"},
-                    {"name": "type", "type": "STRING"},
-                    {"name": "venue", "type": "STRING"},
-                    {"name": "venue_name", "type": "STRING"},
-                    {"name": "user_region_name", "type": "STRING"},
-                    {"name": "user_activity", "type": "STRING"},
-                    {"name": "user_civility", "type": "STRING"},
-                    {"name": "booking_amount", "type": "STRING"},
-                    {"name": "user_deposit_creation_date", "type": "TIMESTAMP"},
-                    {"name": "format", "type": "STRING"},
-                    {"name": "macro_rayon", "type": "STRING"},
-                    {"name": "category_diversification", "type": "FLOAT"},
-                    {"name": "subcategory_diversification", "type": "FLOAT"},
-                    {"name": "format_diversification", "type": "FLOAT"},
-                    {"name": "venue_diversification", "type": "FLOAT"},
-                    {"name": "macro_rayon_diversification", "type": "FLOAT"},
-                    {"name": "qpi_diversification", "type": "INTEGER"},
-                    {"name": "delta_diversification", "type": "FLOAT"},
-                ],
-            )
-            t1 = time.time()
-            print(
-                f"{thread_name} processed batch {batch_number +1}/{max_batch}\nTotal time : {(t1-t0)/60}min"
-            )
-        else:
-            queueLock.release()
+        if not workQueue.empty():"""
+    batch_number = q.get()
+    #queueLock.release()
+    t0 = time.time()
+    df_users = get_batch_of_users(batch_number, BATCH_SIZE)
+    bookings = get_data(df_users)
+    print(
+        f"Batch {batch_number+1} contains {bookings.shape[0]} bookings."
+    )
+    bookings_enriched = pd.merge(bookings, macro_rayons, on="rayon", how="left")
+    bookings_sorted = bookings_enriched.sort_values(
+        by=["user_id", "booking_creation_date"], ignore_index=True
+    )
+    df = diversification_kpi(bookings_sorted)
+    df = df[
+        [
+            "user_id",
+            "offer_id",
+            "booking_id",
+            "booking_creation_date",
+            "category",
+            "subcategory",
+            "type",
+            "venue",
+            "venue_name",
+            "user_region_name",
+            "user_activity",
+            "user_civility",
+            "booking_amount",
+            "user_deposit_creation_date",
+            "format",
+            "macro_rayon",
+            "category_diversification",
+            "subcategory_diversification",
+            "format_diversification",
+            "venue_diversification",
+            "macro_rayon_diversification",
+            "qpi_diversification",
+            "delta_diversification",
+        ]
+    ]
+    df.to_gbq(
+        f"""{BIGQUERY_ANALYTICS_DATASET}.{TABLE_NAME}""",
+        project_id=f"{GCP_PROJECT}",
+        if_exists="append",
+        table_schema=[
+            {"name": "user_id", "type": "STRING"},
+            {"name": "offer_id", "type": "STRING"},
+            {"name": "booking_id", "type": "STRING"},
+            {"name": "booking_creation_date", "type": "TIMESTAMP"},
+            {"name": "category", "type": "STRING"},
+            {"name": "subcategory", "type": "STRING"},
+            {"name": "type", "type": "STRING"},
+            {"name": "venue", "type": "STRING"},
+            {"name": "venue_name", "type": "STRING"},
+            {"name": "user_region_name", "type": "STRING"},
+            {"name": "user_activity", "type": "STRING"},
+            {"name": "user_civility", "type": "STRING"},
+            {"name": "booking_amount", "type": "STRING"},
+            {"name": "user_deposit_creation_date", "type": "TIMESTAMP"},
+            {"name": "format", "type": "STRING"},
+            {"name": "macro_rayon", "type": "STRING"},
+            {"name": "category_diversification", "type": "FLOAT"},
+            {"name": "subcategory_diversification", "type": "FLOAT"},
+            {"name": "format_diversification", "type": "FLOAT"},
+            {"name": "venue_diversification", "type": "FLOAT"},
+            {"name": "macro_rayon_diversification", "type": "FLOAT"},
+            {"name": "qpi_diversification", "type": "INTEGER"},
+            {"name": "delta_diversification", "type": "FLOAT"},
+        ],
+    )
+    t1 = time.time()
+    print(
+        f"Processed batch {batch_number +1}/{max_batch}\nTotal time : {(t1-t0)/60}min"
+    )
 
 
 if __name__ == "__main__":
@@ -204,7 +202,7 @@ if __name__ == "__main__":
     macro_rayons = get_rayon()
     # roof division to get number of batches
     max_batch = int(-1 * (-count // BATCH_SIZE))
-    max_process = multiprocessing.cpu_count()
+    max_process = cpu_count()
 
     print(
         f"Starting process of {count} users by batch of {BATCH_SIZE} users.\nHence a total of {max_batch} batch(es)"
@@ -213,7 +211,10 @@ if __name__ == "__main__":
     # Empty table before inserting new data
     # clean_old_table()
 
-    threadList = [f"Thread-{i}" for i in range(15)]
+    with Pool(max_process) as p:
+        print(p.map(process_diversification, range(max_batch)))
+
+    """threadList = [f"Thread-{i}" for i in range(15)]
     batchList = range(max_batch)
     queueLock = threading.Lock()
     workQueue = queue.Queue()
@@ -244,4 +245,4 @@ if __name__ == "__main__":
     # Wait for all threads to complete
     for t in threads:
         t.join()
-    print("Exiting Main Thread")
+    print("Exiting Main Thread")"""

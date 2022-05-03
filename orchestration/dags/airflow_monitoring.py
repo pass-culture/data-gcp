@@ -24,5 +24,5 @@ t1 = BashOperator(
     bash_command="echo test",
     dag=dag,
     depends_on_past=False,
-    priority_weight=2**31 - 1,
+    priority_weight=2 ** 31 - 1
 )

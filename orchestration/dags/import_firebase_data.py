@@ -112,12 +112,12 @@ copy_table_pro_to_clean = BigQueryOperator(
     dag=dag,
 )
 
-copy_table_to_analytics = BigQueryOperator(
-    task_id="copy_table_to_analytics",
+copy_firebase_table_to_analytics = BigQueryOperator(
+    task_id="copy_firebase_table_to_analytics",
     sql=copy_table_to_analytics(
-        table_name="events",
         gcp_project=GCP_PROJECT,
         bigquery_raw_dataset=BIGQUERY_RAW_DATASET,
+        table_name="events",
         execution_date=EXECUTION_DATE,
     ),
     use_legacy_sql=False,
@@ -129,9 +129,9 @@ copy_table_to_analytics = BigQueryOperator(
 copy_table_pro_to_analytics = BigQueryOperator(
     task_id="copy_table_pro_to_analytics",
     sql=copy_table_to_analytics(
-        table_name="firebase_pro",
         gcp_project=GCP_PROJECT,
         bigquery_raw_dataset=BIGQUERY_RAW_DATASET,
+        table_name="firebase_pro",
         execution_date=EXECUTION_DATE,
     ),
     use_legacy_sql=False,
@@ -179,7 +179,13 @@ aggregate_firebase_user_events = BigQueryOperator(
 
 end = DummyOperator(task_id="end", dag=dag)
 
-start >> copy_table_to_env >> copy_table_to_clean >> copy_table_to_analytics >> end
+(
+    start
+    >> copy_table_to_env
+    >> copy_table_to_clean
+    >> copy_firebase_table_to_analytics
+    >> end
+)
 (
     start
     >> import_table_pro_to_raw

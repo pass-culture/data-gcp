@@ -331,7 +331,7 @@ create_enriched_educational_booking_data_task = BigQueryOperator(
 create_enriched_institution_data_task = BigQueryOperator(
     task_id="create_enriched_institution_data",
     sql=define_enriched_institution_data_full_query(
-        dataset=BIGQUERY_ANALYTICS_DATASET,table_prefix=APPLICATIVE_PREFIX
+        dataset=BIGQUERY_ANALYTICS_DATASET, table_prefix=APPLICATIVE_PREFIX
     ),
     use_legacy_sql=False,
     dag=dag,

@@ -193,7 +193,7 @@ def old_hex_to_hash(hexstr, hash_size=8):
     for i in range(count // 2):
         h = hexstr[i * 2 : i * 2 + 2]
         v = int("0x" + h, 16)
-        l.append([v & 2 ** i > 0 for i in range(8)])
+        l.append([v & 2**i > 0 for i in range(8)])
     return ImageHash(numpy.array(l))
 
 
@@ -398,7 +398,7 @@ def colorhash(image, binbits=3):
 
     # now we have fractions in each category (6*2 + 2 = 14 bins)
     # convert to hash and discretize:
-    maxvalue = 2 ** binbits
+    maxvalue = 2**binbits
     values = [
         min(maxvalue - 1, int(frac_black * maxvalue)),
         min(maxvalue - 1, int(frac_gray * maxvalue)),

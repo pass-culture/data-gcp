@@ -84,3 +84,13 @@ class ContentfulClient:
 
         print(f"Processed {len(playlists)} playlists !")
         return playlists
+
+    def get_contentful_homepages(self):
+        homepages = self.client.entries({"content_type": "homepageNatif"})
+        entry_id_list = []
+        entry_title_list = []
+        for homepage in homepages:
+            entry_id_list.append(homepage.id)
+            entry_title_list.append(homepage.title)
+        contentful_home_dict = {"id": entry_id_list, "home_title": entry_title_list}
+        return contentful_home_dict

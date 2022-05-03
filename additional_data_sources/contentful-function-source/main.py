@@ -50,6 +50,21 @@ def insert_criterion(playlists):
     job.result()
 
 
+def export_homepages(homepages):
+    bigquery_client = bigquery.Client()
+    table_id = f"{GCP_PROJECT}.analytics_{ENV_SHORT_NAME}.contentful_homepages"
+    homepages_df = pd.DataFrame(homepages)
+
+    job_config = bigquery.LoadJobConfig(
+        write_disposition="WRITE_TRUNCATE",
+    )
+
+    job = bigquery_client.load_table_from_dataframe(
+        homepages_df, table_id, job_config=job_config
+    )
+    job.result()
+
+
 def run(request):
     """The Cloud Function entrypoint.
     Args:
@@ -58,7 +73,8 @@ def run(request):
     contentful_envs = {"prod": "production", "stg": "testing", "dev": "testing"}
     contentful_client = ContentfulClient(env=contentful_envs[ENV_SHORT_NAME])
     playlists = contentful_client.get_algolia_modules()
-
     insert_criterion(playlists)
-
+    print("Exporting Homepages...")
+    homepages = contentful_client.get_contentful_homepages()
+    export_homepages(homepages)
     return "Done"

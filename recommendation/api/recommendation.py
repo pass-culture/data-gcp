@@ -53,7 +53,7 @@ def get_user_metadata(user_id: int, longitude: int, latitude: int):
 
 
 def get_final_recommendations(
-    user_id: int, longitude: int, latitude: int, playlist_arg=None
+    user_id: int, longitude: int, latitude: int, playlist_args_json=None
 ) -> List[int]:
 
     group_id, is_cold_start, is_eac, user_iris_id = get_user_metadata(
@@ -69,16 +69,16 @@ def get_final_recommendations(
                 cold_start_categories,
                 is_eac,
                 group_id,
-                playlist_arg,
+                playlist_args_json,
             )
         )
     else:
         reco_origin = "algo"
         recommendations_for_user = fork_intermediate_recommendations_for_user(
-            user_id, user_iris_id, is_eac, playlist_arg
+            user_id, user_iris_id, is_eac, playlist_args_json
         )
         scored_recommendation_for_user = fork_scored_recommendation_for_user(
-            user_id, group_id, recommendations_for_user, is_eac, playlist_arg
+            user_id, group_id, recommendations_for_user, is_eac, playlist_args_json
         )
         # Keep the top 40 offers and shuffle them
         scored_recommendation_for_user = sorted(
@@ -89,7 +89,7 @@ def get_final_recommendations(
                 recommendation["score"] = random.random()
 
     # For playlists we dont need to shuffle the categories
-    if playlist_arg:
+    if playlist_args_json:
         scored_recommendation_for_user = sorted(
             scored_recommendation_for_user, key=lambda k: k["score"], reverse=True
         )
@@ -174,16 +174,16 @@ def fork_cold_start_scored_recommendations_for_user(
     cold_start_categories: list,
     is_eac: bool,
     group_id: str,
-    playlist_arg=None,
+    playlist_args_json=None,
 ):
     start = time.time()
     if is_eac:
         cold_start_recommendations = get_cold_start_scored_recommendations_for_user_eac(
-            user_id, user_iris_id, cold_start_categories, playlist_arg
+            user_id, user_iris_id, cold_start_categories, playlist_args_json
         )
     else:
         cold_start_recommendations = get_cold_start_scored_recommendations_for_user(
-            user_id, user_iris_id, cold_start_categories, group_id, playlist_arg
+            user_id, user_iris_id, cold_start_categories, group_id, playlist_args_json
         )
     log_duration(
         f"get_cold_start_scored_recommendations_for_user for {user_id} {'with localisation' if user_iris_id else ''}",
@@ -193,16 +193,16 @@ def fork_cold_start_scored_recommendations_for_user(
 
 
 def fork_intermediate_recommendations_for_user(
-    user_id: int, user_iris_id: int, is_eac: bool, playlist_arg=None
+    user_id: int, user_iris_id: int, is_eac: bool, playlist_args_json=None
 ) -> List[Dict[str, Any]]:
     start = time.time()
     if is_eac:
         user_recommendation = get_intermediate_recommendations_for_user_eac(
-            user_id, user_iris_id, playlist_arg
+            user_id, user_iris_id, playlist_args_json
         )
     else:
         user_recommendation = get_intermediate_recommendations_for_user(
-            user_id, user_iris_id, playlist_arg
+            user_id, user_iris_id, playlist_args_json
         )
     log_duration(
         f"get_intermediate_recommendations_for_user for {user_id} {'with localisation' if user_iris_id else ''}",
@@ -216,15 +216,15 @@ def fork_scored_recommendation_for_user(
     group_id: str,
     user_recommendations: List[Dict[str, Any]],
     is_eac: bool,
-    playlist_arg=None,
+    playlist_args_json=None,
 ) -> List[Dict[str, int]]:
     if is_eac:
         recommendations = get_scored_recommendation_for_user_eac(
-            user_id, group_id, user_recommendations, playlist_arg
+            user_id, group_id, user_recommendations, playlist_args_json
         )
     else:
         recommendations = get_scored_recommendation_for_user(
-            user_id, group_id, user_recommendations, playlist_arg
+            user_id, group_id, user_recommendations, playlist_args_json
         )
     return recommendations
 

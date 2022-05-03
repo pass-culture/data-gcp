@@ -3,7 +3,7 @@ from sqlalchemy import text
 
 from utils import (
     create_db_connection,
-    get_conditions,
+    Playlist_args,
     NUMBER_OF_PRESELECTED_OFFERS,
     ENV_SHORT_NAME,
 )
@@ -153,11 +153,11 @@ def get_cold_start_scored_recommendations_for_user(
     user_iris_id: int,
     cold_start_categories: list,
     group_id: str,
-    playlist_arg=None,
+    playlist_args_json=None,
 ) -> List[Dict[str, Any]]:
     if group_id == "C":
         recommendations_for_user = get_intermediate_recommendations_for_user(
-            user_id, user_iris_id, playlist_arg
+            user_id, user_iris_id, playlist_args_json
         )
         # here we change user_id for cs user_id and put group C to get mf_reco model
         # the CS user for 18+ user is at index 0 of feedback matrix,
@@ -196,7 +196,12 @@ def get_cold_start_scored_recommendations_for_user(
             and_clause = "booking_number > 0"
         else:
             and_clause = "booking_number >= 0"
-        conditions = get_conditions(playlist_arg)
+
+        conditions = (
+            Playlist_args(playlist_args_json).get_conditions()
+            if playlist_args_json
+            else ""
+        )
         recommendations_query = text(
             f"""
             SELECT offer_id, category, url, product_id

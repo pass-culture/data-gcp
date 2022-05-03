@@ -62,29 +62,35 @@ def log_duration(message, start):
     logger.info(f"{message}: {time.time() - start} seconds.")
 
 
-def get_conditions(arg: dict):
-    condition = ""
-    if arg:
-        if "start_date" in arg.keys():
-            if "isEvent" in arg.keys() and arg["isEvent"]:
+class Playlist_args:
+    def __init__(self, json):
+        self.start_date = json.get("start_date", None)
+        self.end_date = json.get("end_date", None)
+        self.isEvent = json.get("isEvent", None)
+        self.categories = json.get("categories", None)
+        self.subcategories = json.get("subcategories", None)
+        self.price_max = json.get("price_max", None)
+
+    def get_conditions(self):
+        condition = ""
+        if self.start_date:
+            if self.isEvent:
                 column = "stock_begining_date"
             else:
                 column = "offer_creation_date"
-            condition += f"""AND ({column} > '{arg["start_date"]}' AND {column} < '{arg["end_date"]}') \n"""
-        if "category" in arg.keys():
+            condition += f"""AND ({column} > '{self.start_date}' AND {column} < '{self.end_date}') \n"""
+        if self.categories:
             condition += (
                 "AND ("
-                + " OR ".join([f"category='{cat}'" for cat in arg["category"]])
+                + " OR ".join([f"category='{cat}'" for cat in self.categories])
                 + ")\n"
             )
-        if "subcategory_id" in arg.keys():
+        if self.subcategories:
             condition += (
                 "AND ("
-                + " OR ".join(
-                    [f"subcategory_id='{cat}'" for cat in arg["subcategory_id"]]
-                )
+                + " OR ".join([f"subcategory_id='{cat}'" for cat in self.subcategories])
                 + ")\n"
             )
-        if "price_max" in arg.keys():
-            condition += f'AND stock_price<={arg["price_max"]} \n'
-    return condition
+        if self.price_max:
+            condition += f"AND stock_price<={self.price_max} \n"
+        return condition

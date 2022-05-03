@@ -8,7 +8,7 @@ from googleapiclient import discovery
 from utils import (
     create_db_connection,
     log_duration,
-    get_conditions,
+    Playlist_args,
     GCP_PROJECT,
     MODEL_REGION,
     MODEL_NAME_A,
@@ -19,9 +19,11 @@ from utils import (
 
 
 def get_intermediate_recommendations_for_user(
-    user_id: int, user_iris_id: int, playlist_arg=None
+    user_id: int, user_iris_id: int, playlist_args_json=None
 ) -> List[Dict[str, Any]]:
-    conditions = get_conditions(playlist_arg)
+    conditions = (
+        Playlist_args(playlist_args_json).get_conditions() if playlist_args_json else ""
+    )
     if ENV_SHORT_NAME == "prod":
         and_clause = "AND booking_number > 10"
     else:
@@ -97,13 +99,13 @@ def get_scored_recommendation_for_user(
     user_id: int,
     group_id: str,
     user_recommendations: List[Dict[str, Any]],
-    playlist_arg=None,
+    playlist_args_json=None,
 ) -> List[Dict[str, int]]:
     """
     Depending on the user group, prepare the data to send to the model, and make the call.
     """
     temp_group_id = group_id
-    if playlist_arg is not None:
+    if playlist_args_json is not None:
         temp_group_id = "B"
     else:
         temp_group_id = group_id

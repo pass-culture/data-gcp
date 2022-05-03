@@ -4,6 +4,7 @@ from google.cloud import bigquery
 from contentful_client import ContentfulClient
 from utils import (
     BIGQUERY_RAW_DATASET,
+    BIGQUERY_ANALYTICS_DATASET,
     GCP_PROJECT,
     ENV_SHORT_NAME,
 )
@@ -52,7 +53,7 @@ def insert_criterion(playlists):
 
 def export_homepages(homepages):
     bigquery_client = bigquery.Client()
-    table_id = f"{GCP_PROJECT}.analytics_{ENV_SHORT_NAME}.contentful_homepages"
+    table_id = f"{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.contentful_homepages"
     homepages_df = pd.DataFrame(homepages)
 
     job_config = bigquery.LoadJobConfig(

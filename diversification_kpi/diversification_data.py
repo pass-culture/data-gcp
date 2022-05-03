@@ -1,12 +1,10 @@
 import pandas as pd
 import time
-import queue
-import threading
 from multiprocessing import cpu_count, Pool
 
 
 exitFlag = 0
-BATCH_SIZE = 1000
+BATCH_SIZE = 50000
 
 from tools.utils import (
     GCP_PROJECT,
@@ -103,26 +101,7 @@ def diversification_kpi(df):
     return df_clean
 
 
-class DiversificationBatchThread(threading.Thread):
-    def __init__(self, thread_id, name, q):
-        threading.Thread.__init__(self)
-        self.threadID = thread_id
-        self.name = name
-        self.q = q
-        print(f"Thread {name} created.")
-
-    def run(self):
-        # print("Starting " + self.name)
-        process_diversification(self.name, self.q)
-        # print("Exiting " + self.name)
-
-
-def process_diversification( q):
-    """while not exitFlag:
-        queueLock.acquire()
-        if not workQueue.empty():"""
-    batch_number = q.get()
-    #queueLock.release()
+def process_diversification(batch_number):
     t0 = time.time()
     df_users = get_batch_of_users(batch_number, BATCH_SIZE)
     bookings = get_data(df_users)
@@ -200,49 +179,12 @@ def process_diversification( q):
 if __name__ == "__main__":
     count = count_data()
     macro_rayons = get_rayon()
-    # roof division to get number of batches
-    max_batch = int(-1 * (-count // BATCH_SIZE))
+    max_batch = int(-1 * (-count // BATCH_SIZE))  # roof division to get number of batches
     max_process = cpu_count()
 
     print(
         f"Starting process of {count} users by batch of {BATCH_SIZE} users.\nHence a total of {max_batch} batch(es)"
     )
 
-    # Empty table before inserting new data
-    # clean_old_table()
-
     with Pool(max_process) as p:
-        print(p.map(process_diversification, range(max_batch)))
-
-    """threadList = [f"Thread-{i}" for i in range(15)]
-    batchList = range(max_batch)
-    queueLock = threading.Lock()
-    workQueue = queue.Queue()
-    threads = []
-    threadID = 1
-
-    # Create new threads
-    for tName in threadList:
-        print(f"Creating thread {tName}...")
-        thread = DiversificationBatchThread(threadID, tName, workQueue)
-        thread.start()
-        threads.append(thread)
-        threadID += 1
-
-    # Fill the queue
-    queueLock.acquire()
-    for batch in batchList:
-        workQueue.put(batch)
-    queueLock.release()
-
-    # Wait for queue to empty
-    while not workQueue.empty():
-        pass
-
-    # Notify threads it's time to exit
-    exitFlag = 1
-
-    # Wait for all threads to complete
-    for t in threads:
-        t.join()
-    print("Exiting Main Thread")"""
+        p.map(process_diversification, range(max_batch))

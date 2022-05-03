@@ -35,7 +35,7 @@ JOB_TYPE = {
 
 
 def task_fail_slack_alert(context):
-    return __task_fail_slack_alert(context, job_type=GCP_PROJECT)
+    return __task_fail_slack_alert(context, job_type=ENV_SHORT_NAME)
 
 
 def analytics_fail_slack_alert(context):

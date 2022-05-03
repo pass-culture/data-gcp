@@ -2,6 +2,8 @@ import pandas as pd
 import time
 import queue
 import threading
+import multiprocessing
+
 
 exitFlag = 0
 BATCH_SIZE = 1000
@@ -202,6 +204,7 @@ if __name__ == "__main__":
     macro_rayons = get_rayon()
     # roof division to get number of batches
     max_batch = int(-1 * (-count // BATCH_SIZE))
+    max_process = multiprocessing.cpu_count()
 
     print(
         f"Starting process of {count} users by batch of {BATCH_SIZE} users.\nHence a total of {max_batch} batch(es)"

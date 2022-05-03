@@ -105,9 +105,7 @@ def process_diversification(batch_number):
     t0 = time.time()
     df_users = get_batch_of_users(batch_number, BATCH_SIZE)
     bookings = get_data(df_users)
-    print(
-        f"Batch {batch_number+1} contains {bookings.shape[0]} bookings."
-    )
+    print(f"Batch {batch_number+1} contains {bookings.shape[0]} bookings.")
     bookings_enriched = pd.merge(bookings, macro_rayons, on="rayon", how="left")
     bookings_sorted = bookings_enriched.sort_values(
         by=["user_id", "booking_creation_date"], ignore_index=True
@@ -179,7 +177,9 @@ def process_diversification(batch_number):
 if __name__ == "__main__":
     count = count_data()
     macro_rayons = get_rayon()
-    max_batch = int(-1 * (-count // BATCH_SIZE))  # roof division to get number of batches
+    max_batch = int(
+        -1 * (-count // BATCH_SIZE)
+    )  # roof division to get number of batches
     max_process = cpu_count()
 
     print(

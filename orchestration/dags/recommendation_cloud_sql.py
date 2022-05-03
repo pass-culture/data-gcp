@@ -24,7 +24,7 @@ from dependencies.config import (
     BIGQUERY_ANALYTICS_DATASET,
     ENV_SHORT_NAME,
 )
-from dependencies.slack_alert import task_fail_slack_alert
+from common.alerts import task_fail_slack_alert
 
 LOCATION = os.environ.get("REGION")
 

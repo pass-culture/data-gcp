@@ -466,6 +466,7 @@ start_enriched_data = DummyOperator(task_id="start_enriched_data", dag=dag)
 
 
 enriched_venues = [create_enriched_venue_data_task, create_table_venue_locations]
+enriched_venues = [create_enriched_venue_data_task, create_table_venue_locations]
 
 
 end = DummyOperator(task_id="end", dag=dag)

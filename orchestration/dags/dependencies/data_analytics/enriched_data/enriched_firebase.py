@@ -195,6 +195,10 @@ def copy_table_to_analytics(
             ) as entry_id,
             (select event_params.value.string_value
                 from unnest(event_params) event_params
+                where event_params.key = 'reco_origin'
+            ) as reco_origin,
+            (select event_params.value.string_value
+                from unnest(event_params) event_params
                 where event_params.key = 'AB_test'
             ) as ab_test
         FROM {gcp_project}.{bigquery_raw_dataset}.{table_name}_{execution_date}

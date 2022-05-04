@@ -5,7 +5,7 @@ from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python_operator import PythonOperator
 from airflow.contrib.operators.bigquery_operator import BigQueryOperator
-from dependencies.slack_alert import task_fail_slack_alert
+from common.alerts import task_fail_slack_alert
 from dependencies.import_contentful_file import (
     load_from_csv_contentful_file,
     create_table_contentful_home,

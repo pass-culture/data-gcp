@@ -45,7 +45,7 @@ from dependencies.data_analytics.import_tables import (
     define_import_query,
     define_replace_query,
 )
-from dependencies.slack_alert import task_fail_slack_alert
+from common.alerts import analytics_fail_slack_alert
 
 
 def getting_service_account_token(function_name):
@@ -73,7 +73,7 @@ dag = DAG(
     default_args=default_dag_args,
     description="Import tables from CloudSQL and enrich data for create dashboards with Metabase. "
     "This DAG import data incrementally",
-    on_failure_callback=task_fail_slack_alert,
+    on_failure_callback=analytics_fail_slack_alert,
     schedule_interval=f"0 0 * * *",
     catchup=True,
     dagrun_timeout=datetime.timedelta(minutes=60),

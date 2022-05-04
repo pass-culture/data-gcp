@@ -18,7 +18,7 @@ from dependencies.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT,
 )
-from dependencies.slack_alert import task_fail_slack_alert
+from common.alerts import task_fail_slack_alert
 from dependencies.user_locations_schema import USER_LOCATIONS_SCHEMA
 
 

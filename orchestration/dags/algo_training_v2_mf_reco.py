@@ -10,7 +10,7 @@ from airflow.contrib.operators.gcp_compute_operator import (
     GceInstanceStartOperator,
     GceInstanceStopOperator,
 )
-from dependencies.slack_alert import task_fail_slack_alert
+from common.alerts import task_fail_slack_alert
 from dependencies.access_gcp_secrets import access_secret_data
 from dependencies.config import GCP_PROJECT_ID, GCE_ZONE, ENV_SHORT_NAME
 

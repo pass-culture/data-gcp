@@ -75,7 +75,7 @@ class PlaylistArgs:
         condition = ""
         if self.start_date:
             if self.isevent:
-                column = "stock_begining_date"
+                column = "stock_beginning_date"
             else:
                 column = "offer_creation_date"
             condition += f"""AND ({column} > '{self.start_date}' AND {column} < '{self.end_date}') \n"""

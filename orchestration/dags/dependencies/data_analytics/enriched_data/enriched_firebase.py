@@ -59,7 +59,7 @@ def aggregate_firebase_user_events(gcp_project, bigquery_raw_dataset):
         FROM `{gcp_project}.{bigquery_raw_dataset}.events_*`
         GROUP BY user_id
         )
-        SELECT user_id, 
+        SELECT events.user_id,
         first_connexion_date,
         last_connexion_date,
         SUM(total_time) AS visit_total_time,
@@ -80,9 +80,11 @@ def aggregate_firebase_user_events(gcp_project, bigquery_raw_dataset):
         SUM(CAST(event_name = 'RecommendationModuleSeen' AS INT64)) AS recommendation_module_seen,
         SUM(CAST(event_name = 'ConsultOffer' AS INT64)) AS consult_offer,
         SUM(CAST(event_name = 'ClickBookOffer' AS INT64)) AS click_book_offer,
-        FROM events LEFT JOIN sessions ON events.session_id = sessions.session_id
-        WHERE user_id IS NOT NULL
-        GROUP BY user_id,first_connexion_date, last_connexion_date
+        FROM events
+        LEFT JOIN sessions ON events.session_id = sessions.session_id
+        LEFT JOIN first_and_last_co_date ON first_and_last_co_date.user_id  = events.user_id
+        WHERE events.user_id IS NOT NULL
+        GROUP BY events.user_id,first_connexion_date, last_connexion_date
     """
 
 

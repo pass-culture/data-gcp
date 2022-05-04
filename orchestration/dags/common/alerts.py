@@ -43,8 +43,6 @@ def analytics_fail_slack_alert(context):
 
 
 def __task_fail_slack_alert(context, job_type):
-    run_id = context.get("templates_dict", {}).get("run_id", "")
-    status_str = "_(scheduled)_" if run_id.startswith("scheduled__") else "_(manual)_"
     webhook_token = JOB_TYPE.get(job_type)
 
     dag_url = "{base_url}/admin/airflow/graph?dag_id={dag_id}&execution_date={exec_date}".format(
@@ -63,7 +61,7 @@ def __task_fail_slack_alert(context, job_type):
             {ENV_EMOJI[ENV_SHORT_NAME]}: 
             *Task* <{task_url}|{task_name}> has failed!
             *Dag*: <{dag_url}|{dag_name}>
-            *Execution Time*: {execution_date} {status_str}
+            *Execution Time*: {execution_date}
             """
 
     failed_alert = SlackWebhookOperator(

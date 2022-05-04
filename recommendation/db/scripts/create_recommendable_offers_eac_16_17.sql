@@ -82,7 +82,7 @@ RETURNS TABLE (offer_id varchar,
                 url VARCHAR,
                 is_national BOOLEAN,
                 offer_creation_date TIMESTAMP,
-                stock_begining_date TIMESTAMP,
+                stock_beginning_date TIMESTAMP,
                 stock_price REAL,
                 booking_number BIGINT,
                 item_id text) AS
@@ -99,7 +99,7 @@ BEGIN
             offer.offer_url              AS url,
             offer."offer_is_national"    AS is_national,
             offer."offer_creation_date"  AS offer_creation_date,
-            stock."stock_beginning_date" AS stock_begining_date,
+            stock."stock_beginning_date" AS stock_beginning_date,
             enriched_offer.last_stock_price AS stock_price,
             (CASE WHEN booking_numbers.booking_number IS NOT NULL THEN booking_numbers.booking_number ELSE 0 END) AS booking_number,
             (CASE WHEN offer."offer_subcategoryId" in ('LIVRE_PAPIER', 'SEANCE_CINE') THEN CONCAT('product-', offer.offer_product_id) ELSE CONCAT('offer-', offer.offer_id) END) AS item_id

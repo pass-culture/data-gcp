@@ -8,7 +8,7 @@ from googleapiclient import discovery
 from utils import (
     create_db_connection,
     log_duration,
-    Playlist_args,
+    PlaylistArgs,
     GCP_PROJECT,
     MODEL_REGION,
     MODEL_NAME_A,
@@ -22,7 +22,7 @@ def get_intermediate_recommendations_for_user_eac(
     user_id: int, user_iris_id: int, playlist_args_json=None
 ) -> List[Dict[str, Any]]:
     conditions = (
-        Playlist_args(playlist_args_json).get_conditions() if playlist_args_json else ""
+        PlaylistArgs(playlist_args_json).get_conditions() if playlist_args_json else ""
     )
     if ENV_SHORT_NAME == "prod":
         and_clause = "AND booking_number > 10"

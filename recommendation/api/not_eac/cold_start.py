@@ -3,7 +3,7 @@ from sqlalchemy import text
 
 from utils import (
     create_db_connection,
-    Playlist_args,
+    PlaylistArgs,
     NUMBER_OF_PRESELECTED_OFFERS,
     ENV_SHORT_NAME,
 )
@@ -198,7 +198,7 @@ def get_cold_start_scored_recommendations_for_user(
             and_clause = "booking_number >= 0"
 
         conditions = (
-            Playlist_args(playlist_args_json).get_conditions()
+            PlaylistArgs(playlist_args_json).get_conditions()
             if playlist_args_json
             else ""
         )

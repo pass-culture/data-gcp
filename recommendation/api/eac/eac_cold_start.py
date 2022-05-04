@@ -5,7 +5,7 @@ from sqlalchemy import text
 
 from utils import (
     create_db_connection,
-    Playlist_args,
+    PlaylistArgs,
     NUMBER_OF_PRESELECTED_OFFERS,
     ENV_SHORT_NAME,
     log_duration,

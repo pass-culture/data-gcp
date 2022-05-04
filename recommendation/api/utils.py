@@ -62,11 +62,11 @@ def log_duration(message, start):
     logger.info(f"{message}: {time.time() - start} seconds.")
 
 
-class Playlist_args:
+class PlaylistArgs:
     def __init__(self, json):
         self.start_date = json.get("start_date", None)
         self.end_date = json.get("end_date", None)
-        self.isEvent = json.get("isEvent", None)
+        self.isevent = json.get("isevent", None)
         self.categories = json.get("categories", None)
         self.subcategories = json.get("subcategories", None)
         self.price_max = json.get("price_max", None)
@@ -74,7 +74,7 @@ class Playlist_args:
     def get_conditions(self):
         condition = ""
         if self.start_date:
-            if self.isEvent:
+            if self.isevent:
                 column = "stock_begining_date"
             else:
                 column = "offer_creation_date"

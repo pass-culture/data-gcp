@@ -1,5 +1,4 @@
 from datetime import datetime
-from decimal import Decimal
 
 TEST_TABLE_PREFIX = ""
 
@@ -713,8 +712,8 @@ ENRICHED_USER_DATA_EXPECTED = [
         "booking_cnt": 1,
         "no_cancelled_booking": 1,
         "user_seniority": 0,
-        "actual_amount_spent": Decimal("20"),
-        "theoretical_amount_spent": Decimal("20"),
+        "actual_amount_spent": 20.0,
+        "theoretical_amount_spent": 20.0,
         "amount_spent_in_digital_goods": 20.0,
         "amount_spent_in_physical_goods": 0.0,
         "amount_spent_in_outings": 0.0,
@@ -815,8 +814,8 @@ ENRICHED_VENUE_DATA_EXPECTED = [
         "venue_name": "Venue public name",
         "venue_booking_email": "venue@example.com",
         "venue_address": "37 rue de la Martinière",
-        "venue_latitude": Decimal("2.23"),
-        "venue_longitude": Decimal("35.5"),
+        "venue_latitude": 2.23,
+        "venue_longitude": 35.5,
         "venue_department_code": "92",
         "venue_postal_code": "92300",
         "venue_city": "Levallois",
@@ -837,8 +836,8 @@ ENRICHED_VENUE_DATA_EXPECTED = [
         "last_booking_date": datetime.now().replace(microsecond=0),
         "offers_created": 1,
         "venue_bookable_offer_cnt": 1,
-        "theoretic_revenue": Decimal("2"),
-        "real_revenue": Decimal("2"),
+        "theoretic_revenue": 2,
+        "real_revenue": 2,
         "venue_humanized_id": "AE",
         "venue_flaskadmin_link": "https://backend.passculture.pro/pc/back-office/venue/edit/?id=1&url=%2Fpc%2Fback-office%2Fvenue%2F",
         "venue_region_name": "IDF",
@@ -919,7 +918,7 @@ ENRICHED_OFFERER_DATA_EXPECTED = [
         "venue_cnt": 1,
         "venue_with_offer": 1,
         "offerer_humanized_id": "AE",
-        "current_year_revenue": Decimal("2"),
+        "current_year_revenue": 2,
     }
 ]
 
@@ -1022,13 +1021,13 @@ ENRICHED_BOOKING_DATA_INPUT = {
 # Offer type is ThingType.Instrument and venue name is not Offre numérique so event is false, digital_good is false and physical good is true
 ENRICHED_BOOKING_DATA_EXPECTED = [
     {
-        "booking_amount": Decimal("3"),
+        "booking_amount": 3,
         "booking_cancellation_date": None,
         "booking_cancellation_reason": None,
         "booking_creation_date": datetime.now().replace(microsecond=0),
         "booking_id": "1",
         "individual_booking_id": "1",
-        "booking_intermediary_amount": Decimal("3"),
+        "booking_intermediary_amount": 3,
         "booking_status": "USED",
         "booking_is_cancelled": False,
         "booking_is_used": True,

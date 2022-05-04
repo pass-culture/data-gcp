@@ -1,7 +1,8 @@
 import pytest
+from data_analytics.utils.json import approx_equal
 from google.cloud import bigquery
-from analytics.tests.config import GCP_PROJECT, TEST_DATASET, TEST_TABLE_PREFIX
-from analytics.tests.data import (
+from data_analytics.config import GCP_PROJECT, TEST_DATASET, TEST_TABLE_PREFIX
+from data_analytics.data import (
     ENRICHED_BOOKING_DATA_EXPECTED,
     ENRICHED_BOOKING_DATA_INPUT,
     ENRICHED_OFFER_DATA_EXPECTED,
@@ -17,12 +18,11 @@ from analytics.tests.data import (
     TEST_TABLE_PREFIX,
 )
 
-from analytics.tests.utils import (
+from data_analytics.utils.gcp import (
     create_data,
     create_dataset,
     drop_dataset,
     drop_table,
-    get_table_columns,
     retrieve_data,
     run_query,
 )
@@ -45,12 +45,10 @@ from dependencies.data_analytics.enriched_data.venue import (
     define_enriched_venue_data_full_query,
 )
 
-from set_env import set_env_vars
-
 
 @pytest.fixture(scope="module", autouse=True)
 def prepare_bigquery():
-    set_env_vars()
+
     pytest.bq_client = bigquery.Client()
     drop_dataset(client=pytest.bq_client, dataset=TEST_DATASET)
     create_dataset(client=pytest.bq_client, dataset=TEST_DATASET)
@@ -141,6 +139,12 @@ def test_create_queries(
     output = retrieve_data(
         client=pytest.bq_client, dataset=TEST_DATASET, table=table_name, table_prefix=""
     )
-    assert sorted(output, key=lambda d: d[sorting_key]) == sorted(
-        expected, key=lambda d: d[sorting_key]
+    output = approx_equal(
+        sorted(output, key=lambda d: d[sorting_key]),
+        precision=2,
     )
+    expected = approx_equal(sorted(expected, key=lambda d: d[sorting_key]), precision=2)
+
+    assert len(output) == len(expected)
+    for x, y in zip(output, expected):
+        assert x == y

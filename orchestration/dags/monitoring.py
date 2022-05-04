@@ -5,7 +5,7 @@ from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python_operator import PythonOperator
 
-from dependencies.slack_alert import task_fail_slack_alert
+from common.alerts import task_fail_slack_alert
 from dependencies.bigquery_client import BigQueryClient
 from dependencies.monitoring import (
     get_pertinence_clicks_request,
@@ -244,7 +244,7 @@ def insert_metric_bq(ti, **kwargs):
 
 
 default_args = {
-    "start_date": datetime(2021, 5, 26),
+    "start_date": datetime(2022, 3, 22),
     "on_failure_callback": task_fail_slack_alert,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),

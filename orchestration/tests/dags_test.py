@@ -6,6 +6,22 @@ import pandas as pd
 from airflow.models import DagBag
 
 
+DAG_ID_LIST = [
+    "recommendation_cloud_sql_v1",
+    "export_cloudsql_tables_to_bigquery_v1",
+    "import_data_analytics_incremental_v3",
+    "import_firebase_data_v3",
+    "import_typeform_v1",
+    "import_addresses_v1",
+    "import_dms_subscriptions",
+    "import_siren_v1",
+    "algo_training_v1",
+    "algo_training_v2_deep_reco",
+    "algo_training_v2_mf_reco",
+    "compute_monitoring",
+]
+
+
 class TestDags(unittest.TestCase):
     LOAD_SECOND_THRESHOLD = timedelta(seconds=2)
 
@@ -53,119 +69,7 @@ class TestDags(unittest.TestCase):
             ),
         )
 
-    def test_recommendation_cloud_sql_dag_is_loaded(self):
-        # When
-        dag = self.dagbag.get_dag(dag_id="recommendation_cloud_sql_v1")
-
-        # Then
-        self.assertDictEqual(self.dagbag.import_errors, {})
-        self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 105)
-
-    def test_create_ab_testing_table_dag_is_loaded(self):
-        # When
-        dag = self.dagbag.get_dag(dag_id="export_cloudsql_tables_to_bigquery_v1")
-
-        # Then
-        self.assertDictEqual(self.dagbag.import_errors, {})
-        self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 9)
-
-    def test_import_data_analytics_dag_is_loaded(self):
-        # When
-        dag = self.dagbag.get_dag(dag_id="import_data_analytics_v7")
-
-        # Then
-        self.assertDictEqual(self.dagbag.import_errors, {})
-        self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 125)
-
-    def test_import_data_analytics_incremental_dag_is_loaded(self):
-        # When
-        dag = self.dagbag.get_dag(dag_id="import_data_analytics_incremental_v2")
-
-        # Then
-        self.assertDictEqual(self.dagbag.import_errors, {})
-        self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 5)
-
-    def test_import_firebase_data_dag_is_loaded(self):
-        # When
-        dag = self.dagbag.get_dag(dag_id="import_firebase_data_v3")
-
-        # Then
-        self.assertDictEqual(self.dagbag.import_errors, {})
-        self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 11)
-
-    def test_import_typeform_is_loaded(self):
-        # When
-        dag = self.dagbag.get_dag(dag_id="import_typeform_v1")
-
-        # Then
-        self.assertDictEqual(self.dagbag.import_errors, {})
-        self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 12)
-
-    def test_import_addresses_is_loaded(self):
-        # When
-        dag = self.dagbag.get_dag(dag_id="import_addresses_v1")
-
-        # Then
-        self.assertDictEqual(self.dagbag.import_errors, {})
-        self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 8)
-
-    def test_import_dms_subscription_is_loaded(self):
-        # When
-        dag = self.dagbag.get_dag(dag_id="import_dms_subscriptions")
-
-        # Then
-        self.assertDictEqual(self.dagbag.import_errors, {})
-        self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 10)
-
-    def test_import_siren_is_loaded(self):
-        # When
-        dag = self.dagbag.get_dag(dag_id="import_siren_v1")
-
-        # Then
-        self.assertDictEqual(self.dagbag.import_errors, {})
-        self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 5)
-
-    def test_compute_monitoring_is_loaded(self):
-        # When
-        dag = self.dagbag.get_dag(dag_id="compute_monitoring")
-
-        # Then
-        self.assertDictEqual(self.dagbag.import_errors, {})
-        self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 9)
-
-    def test_algo_training_v1_is_loaded(self):
-        # When
-        dag = self.dagbag.get_dag(dag_id="algo_training_v1")
-
-        # Then
-        self.assertDictEqual(self.dagbag.import_errors, {})
-        self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 12)
-
-    def test_algo_training_v2_deep_reco_is_loaded(self):
-        # When
-        dag = self.dagbag.get_dag(dag_id="algo_training_v2_deep_reco")
-
-        # Then
-        self.assertDictEqual(self.dagbag.import_errors, {})
-        self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 12)
-
-    def test_algo_training_v2_mf_reco_is_loaded(self):
-        # When
-        dag = self.dagbag.get_dag(dag_id="algo_training_v2_deep_reco")
-
-        # Then
-        self.assertDictEqual(self.dagbag.import_errors, {})
-        self.assertIsNotNone(dag)
-        self.assertEqual(len(dag.tasks), 12)
+    def test_dags_are_loaded(self):
+        for dag_id in DAG_ID_LIST:
+            dag = self.dagbag.get_dag(dag_id=dag_id)
+            self.assertIsNotNone(dag, f"DAG {dag_id} should exist.")

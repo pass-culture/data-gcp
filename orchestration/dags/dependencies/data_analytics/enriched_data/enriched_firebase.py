@@ -116,12 +116,19 @@ def aggregate_firebase_visits(gcp_project, bigquery_raw_dataset):
     """
 
 
-def copy_table_to_analytics(gcp_project, bigquery_raw_dataset, execution_date):
+def copy_table_to_analytics(
+    gcp_project, bigquery_raw_dataset, table_name, execution_date
+):
+    traffic_source_fields = ""
+    if "pro" not in table_name:
+        traffic_source_fields = (
+            "traffic_source.name,traffic_source.medium,traffic_source.source,"
+        )
     return f"""
     WITH temp_firebase_events AS (
         SELECT
             event_name, user_pseudo_id, user_id, platform,
-            traffic_source.name,traffic_source.medium,traffic_source.source,
+            {traffic_source_fields}
             PARSE_DATE("%Y%m%d", event_date) AS event_date,
             TIMESTAMP_SECONDS(CAST(CAST(event_timestamp as INT64)/1000000 as INT64)) AS event_timestamp,
             TIMESTAMP_SECONDS(CAST(CAST(event_previous_timestamp as INT64)/1000000 as INT64)) AS event_previous_timestamp,
@@ -185,8 +192,16 @@ def copy_table_to_analytics(gcp_project, bigquery_raw_dataset, execution_date):
             (select event_params.value.string_value
                 from unnest(event_params) event_params
                 where event_params.key = 'entryId'
-            ) as entry_id
-        FROM {gcp_project}.{bigquery_raw_dataset}.events_{execution_date}
+            ) as entry_id,
+            (select event_params.value.string_value
+                from unnest(event_params) event_params
+                where event_params.key = 'reco_origin'
+            ) as reco_origin,
+            (select event_params.value.string_value
+                from unnest(event_params) event_params
+                where event_params.key = 'AB_test'
+            ) as ab_test
+        FROM {gcp_project}.{bigquery_raw_dataset}.{table_name}_{execution_date}
     )
     SELECT * EXCEPT(double_offer_id, string_offer_id),
     (CASE WHEN double_offer_id IS NULL THEN string_offer_id ELSE double_offer_id END) AS offer_id

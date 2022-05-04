@@ -21,7 +21,7 @@ from dependencies.data_analytics.enriched_data.enriched_firebase import (
     aggregate_firebase_visits,
     copy_table_to_analytics,
 )
-from dependencies.slack_alert import task_fail_slack_alert
+from common.alerts import task_fail_slack_alert
 
 ENV_SHORT_NAME_APP_INFO_ID_MAPPING = {
     "dev": ["app.passculture.test", "app.passculture.testing"],
@@ -112,11 +112,12 @@ copy_table_pro_to_clean = BigQueryOperator(
     dag=dag,
 )
 
-copy_table_to_analytics = BigQueryOperator(
-    task_id="copy_table_to_analytics",
+copy_firebase_table_to_analytics = BigQueryOperator(
+    task_id="copy_firebase_table_to_analytics",
     sql=copy_table_to_analytics(
         gcp_project=GCP_PROJECT,
         bigquery_raw_dataset=BIGQUERY_RAW_DATASET,
+        table_name="events",
         execution_date=EXECUTION_DATE,
     ),
     use_legacy_sql=False,
@@ -127,9 +128,12 @@ copy_table_to_analytics = BigQueryOperator(
 
 copy_table_pro_to_analytics = BigQueryOperator(
     task_id="copy_table_pro_to_analytics",
-    sql=f"""
-         SELECT * FROM {GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.firebase_pro_events_{EXECUTION_DATE}
-         """,
+    sql=copy_table_to_analytics(
+        gcp_project=GCP_PROJECT,
+        bigquery_raw_dataset=BIGQUERY_RAW_DATASET,
+        table_name="firebase_pro",
+        execution_date=EXECUTION_DATE,
+    ),
     use_legacy_sql=False,
     destination_dataset_table=f"{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.firebase_pro_events",
     write_disposition="WRITE_APPEND",
@@ -175,7 +179,13 @@ aggregate_firebase_user_events = BigQueryOperator(
 
 end = DummyOperator(task_id="end", dag=dag)
 
-start >> copy_table_to_env >> copy_table_to_clean >> copy_table_to_analytics >> end
+(
+    start
+    >> copy_table_to_env
+    >> copy_table_to_clean
+    >> copy_firebase_table_to_analytics
+    >> end
+)
 (
     start
     >> import_table_pro_to_raw

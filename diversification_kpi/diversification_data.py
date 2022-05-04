@@ -1,11 +1,16 @@
 import pandas as pd
 import time
+from multiprocessing import cpu_count, Pool
+
+
+exitFlag = 0
+BATCH_SIZE = 50000
 
 from tools.utils import (
     GCP_PROJECT,
     BIGQUERY_ANALYTICS_DATASET,
-    BIGQUERY_CLEAN_DATASET,
     DATA_GCS_BUCKET_NAME,
+    TABLE_NAME,
 )
 from tools.diversification_kpi import (
     calculate_diversification_per_feature,
@@ -16,7 +21,8 @@ from tools.diversification_kpi import (
 def count_data():
     query = f"""SELECT count(DISTINCT user_id) as nb
         FROM {GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_user_data 
-        WHERE user_total_deposit_amount = 300"""
+        WHERE user_total_deposit_amount = 300
+    """
     count = pd.read_gbq(query)
     return count.iloc[0]["nb"]
 
@@ -37,7 +43,7 @@ def get_data(users_batch):
         where_user_in = where_user_in + f"'{user}',"
     where_user_in = where_user_in[:-1] + ")"
 
-    query = f"""SELECT DISTINCT A.user_id, booking_creation_date, user_region_name, user_activity,
+    query = f"""SELECT DISTINCT A.user_id, bkg.booking_creation_date, bkg.booking_id, user_region_name, user_activity,
     user_civility, user_deposit_creation_date, user_total_deposit_amount, actual_amount_spent, offer.offer_id, booking_amount,
     offer_category_id as category, bkg.offer_subcategoryId as subcategory, bkg.physical_goods,
     bkg.digital_goods, bkg.event, offer.genres, offer.rayon, offer.type, offer.venue_id, offer.venue_name,C.*
@@ -53,8 +59,7 @@ def get_data(users_batch):
         )
     WHERE row_number=1) AS C
     ON A.user_id = C.user_id
-    WHERE {where_user_in}
-    ORDER BY A.user_id, booking_creation_date"""
+    WHERE {where_user_in}"""
     data = pd.read_gbq(query)
     data["user_civility"] = data["user_civility"].replace(["M.", "Mme"], ["M", "F"])
     data["format"] = data.apply(
@@ -68,7 +73,7 @@ def get_data(users_batch):
 
 def get_rayon():
     data_rayon = pd.read_csv(
-        f"gs://{DATA_GCS_BUCKET_NAME}/macron_rayon/correspondance_rayon_macro_rayon.csv",
+        f"gs://{DATA_GCS_BUCKET_NAME}/macro_rayon/correspondance_rayon_macro_rayon.csv",
         sep=",",
     )
     data_rayon = data_rayon.drop(columns=["Unnamed: 0"])
@@ -89,89 +94,97 @@ def diversification_kpi(df):
     df_clean = pd.merge(
         df_clean, pd.DataFrame(divers_col), left_index=True, right_index=True
     )
-    # Calculate delta diversification
-    features_qpi = features
-    features_qpi.append("qpi")
-    df_clean[f"delta_diversification"] = df_clean.apply(
-        lambda x: sum(
-            [float(x[f"{feature}_diversification"]) for feature in features_qpi]
-        ),
-        axis=1,
+    divers_col = {f"delta_diversification": divers_per_feature["delta_diversification"]}
+    df_clean = pd.merge(
+        df_clean, pd.DataFrame(divers_col), left_index=True, right_index=True
     )
     return df_clean
 
 
+def process_diversification(batch_number):
+    t0 = time.time()
+    df_users = get_batch_of_users(batch_number, BATCH_SIZE)
+    bookings = get_data(df_users)
+    print(f"Batch {batch_number+1} contains {bookings.shape[0]} bookings.")
+    bookings_enriched = pd.merge(bookings, macro_rayons, on="rayon", how="left")
+    bookings_sorted = bookings_enriched.sort_values(
+        by=["user_id", "booking_creation_date"], ignore_index=True
+    )
+    df = diversification_kpi(bookings_sorted)
+    df = df[
+        [
+            "user_id",
+            "offer_id",
+            "booking_id",
+            "booking_creation_date",
+            "category",
+            "subcategory",
+            "type",
+            "venue",
+            "venue_name",
+            "user_region_name",
+            "user_activity",
+            "user_civility",
+            "booking_amount",
+            "user_deposit_creation_date",
+            "format",
+            "macro_rayon",
+            "category_diversification",
+            "subcategory_diversification",
+            "format_diversification",
+            "venue_diversification",
+            "macro_rayon_diversification",
+            "qpi_diversification",
+            "delta_diversification",
+        ]
+    ]
+    df.to_gbq(
+        f"""{BIGQUERY_ANALYTICS_DATASET}.{TABLE_NAME}""",
+        project_id=f"{GCP_PROJECT}",
+        if_exists="append",
+        table_schema=[
+            {"name": "user_id", "type": "STRING"},
+            {"name": "offer_id", "type": "STRING"},
+            {"name": "booking_id", "type": "STRING"},
+            {"name": "booking_creation_date", "type": "TIMESTAMP"},
+            {"name": "category", "type": "STRING"},
+            {"name": "subcategory", "type": "STRING"},
+            {"name": "type", "type": "STRING"},
+            {"name": "venue", "type": "STRING"},
+            {"name": "venue_name", "type": "STRING"},
+            {"name": "user_region_name", "type": "STRING"},
+            {"name": "user_activity", "type": "STRING"},
+            {"name": "user_civility", "type": "STRING"},
+            {"name": "booking_amount", "type": "STRING"},
+            {"name": "user_deposit_creation_date", "type": "TIMESTAMP"},
+            {"name": "format", "type": "STRING"},
+            {"name": "macro_rayon", "type": "STRING"},
+            {"name": "category_diversification", "type": "FLOAT"},
+            {"name": "subcategory_diversification", "type": "FLOAT"},
+            {"name": "format_diversification", "type": "FLOAT"},
+            {"name": "venue_diversification", "type": "FLOAT"},
+            {"name": "macro_rayon_diversification", "type": "FLOAT"},
+            {"name": "qpi_diversification", "type": "INTEGER"},
+            {"name": "delta_diversification", "type": "FLOAT"},
+        ],
+    )
+    t1 = time.time()
+    print(
+        f"Processed batch {batch_number +1}/{max_batch}\nTotal time : {(t1-t0)/60}min"
+    )
+
+
 if __name__ == "__main__":
     count = count_data()
-    batch_size = 10000
-    # roof division to get number of batches
-    batch_number = int(-1 * (-count // batch_size))
+    macro_rayons = get_rayon()
+    max_batch = int(
+        -1 * (-count // BATCH_SIZE)
+    )  # roof division to get number of batches
+    max_process = cpu_count()
 
-    # calculate diversification in batch of users
-    for batch in range(batch_number):
-        t0 = time.time()
-        df_users = get_batch_of_users(batch, batch_size)
-        t1 = time.time()
-        print(f"get batch of users : {t1 - t0}")
+    print(
+        f"Starting process of {count} users by batch of {BATCH_SIZE} users.\nHence a total of {max_batch} batch(es)"
+    )
 
-        t0_1 = time.time()
-        df = get_data(df_users)
-        t0 = time.time()
-        print(f"get data : {t0 - t0_1}")
-
-        t1 = time.time()
-        df_macro_rayons = get_rayon()
-        data = pd.merge(df, df_macro_rayons, on="rayon", how="left")
-        t1_1 = time.time()
-        print(f"merge macro rayon : {t1_1 - t1}")
-
-        data = data.drop(columns=["submitted_at"])
-        data = data.drop(
-            columns=[
-                "physical_goods",
-                "digital_goods",
-                "event",
-                "genres",
-                "rayon",
-                "user_total_deposit_amount",
-                "actual_amount_spent",
-            ]
-        )
-        data = data.sort_values(by=["user_id", "booking_creation_date"])
-
-        t2 = time.time()
-        df = diversification_kpi(data)
-        t3 = time.time()
-        print(f"calcul diversification : {t3-t2}")
-
-        df = df[
-            [
-                "user_id",
-                "offer_id",
-                "booking_creation_date",
-                "category",
-                "subcategory",
-                "type",
-                "venue",
-                "venue_name",
-                "user_region_name",
-                "user_activity",
-                "user_civility",
-                "user_deposit_creation_date",
-                "format",
-                "macro_rayon",
-                "category_diversification",
-                "subcategory_diversification",
-                "format_diversification",
-                "venue_diversification",
-                "macro_rayon_diversification",
-                "qpi_diversification",
-                "delta_diversification",
-            ]
-        ]
-
-        df.to_gbq(
-            f"""{BIGQUERY_ANALYTICS_DATASET}.diversification_booking""",
-            project_id=f"{GCP_PROJECT}",
-            if_exists=("replace" if batch == 0 else "append"),
-        )
+    with Pool(max_process) as p:
+        p.map(process_diversification, range(max_batch))

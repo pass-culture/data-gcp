@@ -7,18 +7,18 @@ from airflow.contrib.operators.gcp_sql_operator import CloudSqlQueryOperator
 from airflow.operators.dummy_operator import DummyOperator
 
 from dependencies.access_gcp_secrets import access_secret_data
-from dependencies.slack_alert import task_fail_slack_alert
+from common.alerts import task_fail_slack_alert
 from dependencies.config import (
     BIGQUERY_ANALYTICS_DATASET,
     BIGQUERY_CLEAN_DATASET,
 )
 
-AB_TESTING_TABLE = "abc_testing_20211029_v1v2"
+AB_TESTING_TABLE = os.environ.get("TABLE_AB_TESTING", "abc_testing_20220322_v1v2")
 yesterday = (datetime.datetime.now() + datetime.timedelta(days=-1)).strftime(
     "%Y-%m-%d"
 ) + " 00:00:00"
 TABLES = {
-    "abc_testing_20211029_v1v2": {
+    f"{AB_TESTING_TABLE}": {
         "query": None,
         "write_disposition": "WRITE_TRUNCATE",
     },
@@ -37,7 +37,7 @@ BIGQUERY_RAW_DATASET = os.environ.get("BIGQUERY_RAW_DATASET")
 
 # Recreate proprely the connection url
 database_url = access_secret_data(
-    GCP_PROJECT, f"{RECOMMENDATION_SQL_BASE}-database-url"
+    GCP_PROJECT, f"{RECOMMENDATION_SQL_BASE}-database-url", default=""
 )
 os.environ["AIRFLOW_CONN_PROXY_POSTGRES_TCP"] = (
     database_url.replace("postgresql://", "gcpcloudsql://")

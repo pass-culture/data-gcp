@@ -1,36 +1,14 @@
 # Analytics
-Repo contenant le code source pour la partie analytics du projet. Notamment les requêtes pour BigQuery.
 
+Repo contenant le code source pour les scripts python (ssh) pour la partie analytics du projet.
 
-## Installation
+## Scripts 
 
-**Prérequis** :
-- pyenv
-- accès aux comptes de services GCP
+### import_subcategories_model
 
-**1. Configure le projet**
+- Recupère les sous_categories `api.src.pcapi.core.categories.subcategories`
+- Export `analytics.subcategories`
 
-```
-git clone git@github.com:pass-culture/data-gcp.git
-cd data-gcp
-pyenv install 3.7  # si nécessaire
-pyenv local 3.7
-pip install -r requirements.txt
-```
+### human_ids
 
-**2. Configure le compte de service GCP**
-
-Crée une clé sur un compte de service existant (ou nouveau) et télécharge la en JSON.
-
-(ou copie le fichier présent dans le 1password ("compte de service [Bigquery][test]") pour des droits par défaut sur BigQuery)
-
-Copie le fichier `.env` en `.env.local`.
-
-Dans `.env.local`, renseigne le chemin vers ta clé (.JSON) dans la variable `GOOGLE_APPLICATION_CREDENTIALS`.
-
-**3. Ajoute analytics au PYTHONPATH**
-```
-export PYTHONPATH=$PYTHONPATH:"path/to/analytics"
-```
-
-Vous pouvez maintenant lancer les différents scripts !
+Legacy script.

@@ -13,6 +13,7 @@ from models.v2.deep_reco.utils import (
 )
 from utils import (
     get_secret,
+    remove_dir,
     connect_remote_mlflow,
     STORAGE_PATH,
     ENV_SHORT_NAME,
@@ -137,6 +138,7 @@ def train(storage_path: str):
                     best_eval = eval_result
         connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
         mlflow.log_artifacts(export_path, "model")
+        remove_dir(export_path)
         print("------- TRAINING DONE -------")
         print(mlflow.get_artifact_uri("model"))
 

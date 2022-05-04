@@ -20,7 +20,6 @@ from dependencies.data_analytics.enriched_data.enriched_firebase import (
     aggregate_firebase_offer_events,
     aggregate_firebase_visits,
     copy_table_to_analytics,
-    copy_pro_to_analytics
 )
 from common.alerts import task_fail_slack_alert
 
@@ -129,7 +128,7 @@ copy_firebase_table_to_analytics = BigQueryOperator(
 
 copy_table_pro_to_analytics = BigQueryOperator(
     task_id="copy_table_pro_to_analytics",
-    sql=copy_pro_to_analytics(
+    sql=copy_table_to_analytics(
         gcp_project=GCP_PROJECT,
         bigquery_raw_dataset=BIGQUERY_RAW_DATASET,
         table_name="firebase_pro",

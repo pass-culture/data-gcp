@@ -20,7 +20,7 @@ from dependencies.data_analytics.enriched_data.enriched_firebase import (
     aggregate_firebase_offer_events,
     aggregate_firebase_visits,
     copy_table_to_analytics,
-    copy_pro_to_analytics
+    copy_pro_to_analytics,
 )
 from common.alerts import task_fail_slack_alert
 

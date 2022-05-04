@@ -108,7 +108,6 @@ def calculate_diversification_per_feature(df_clean, features):
 
             divers_per_feature[feature].append(div * multiplicator)
 
-
         # QPI
         qpi_diversification = 0
         if not qpi_point_given:

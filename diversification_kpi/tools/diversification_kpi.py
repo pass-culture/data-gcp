@@ -108,23 +108,23 @@ def calculate_diversification_per_feature(df_clean, features):
 
             divers_per_feature[feature].append(div * multiplicator)
 
+
+        # QPI
+        qpi_diversification = 0
+        if not qpi_point_given:
+            subcat = booking["subcategory"]
+            if subcat in df_clean.columns:
+                if not pd.isna(booking[subcat]):
+                    if not booking[subcat]:
+                        qpi_point_given = True
+                        qpi_diversification = 1
+        divers_per_feature["qpi_diversification"].append(qpi_diversification)
+
         # Calculate delta div
         if df_clean.iloc[i - 1].user_id != booking.user_id or i == 0:
-            delta_div = 1
+            delta_div = 1 + qpi_diversification
 
         else:
-
-            # QPI
-            qpi_diversification = 0
-            if not qpi_point_given:
-                subcat = booking["subcategory"]
-                if subcat in df_clean.columns:
-                    if not pd.isna(booking[subcat]):
-                        if not booking[subcat]:
-                            qpi_point_given = True
-                            qpi_diversification = 1
-            divers_per_feature["qpi_diversification"].append(qpi_diversification)
-
             delta_div = (
                 sum([float(divers_per_feature[feature][-1]) for feature in features])
                 + qpi_diversification

@@ -50,8 +50,18 @@ def aggregate_firebase_user_events(gcp_project, bigquery_raw_dataset):
             FROM `{gcp_project}.{bigquery_raw_dataset}.events_*` AS events, events.event_params AS event_params
             WHERE event_params.key = 'ga_session_id'
             GROUP BY session_id
-        )  
+        ),
+        first_and_last_co_date AS (
+        SELECT
+            user_id
+            , MIN(event_timestamp) AS first_connexion_date
+            , MAX(event_timestamp) AS last_connexion_date
+        FROM `{gcp_project}.{bigquery_raw_dataset}.events_*`
+        GROUP BY user_id
+        )
         SELECT user_id, 
+        first_connexion_date,
+        last_connexion_date,
         SUM(total_time) AS visit_total_time,
         AVG(total_time) AS visit_avg_time,
         COUNT(DISTINCT events.session_id) AS visit_count,
@@ -72,7 +82,7 @@ def aggregate_firebase_user_events(gcp_project, bigquery_raw_dataset):
         SUM(CAST(event_name = 'ClickBookOffer' AS INT64)) AS click_book_offer,
         FROM events LEFT JOIN sessions ON events.session_id = sessions.session_id
         WHERE user_id IS NOT NULL
-        GROUP BY user_id
+        GROUP BY user_id,first_connexion_date, last_connexion_date
     """
 
 
@@ -103,14 +113,14 @@ def aggregate_firebase_visits(gcp_project, bigquery_raw_dataset):
         ANY_VALUE(operating_system) AS operating_system,
         ANY_VALUE(operating_system_version) AS operating_system_version,
         ANY_VALUE(user_id) AS user_id,
-        TIMESTAMP_SECONDS(CAST(MIN(user_first_touch_timestamp)/1000000 as INT64)) AS user_first_touch_timestamp,
+        TIMESTAMP_SECONDS(CAST(MIN(event_timestamp)/1000000 as INT64)) AS first_event_timestamp,
         ANY_VALUE(name) AS name,
         ANY_VALUE(medium) AS medium,
         ANY_VALUE(source) AS source,
         TIMESTAMP_SECONDS(CAST(MAX(event_timestamp)/1000000 as INT64)) AS last_event_timestamp,
         COUNTIF(event_name="ConsultOffer") AS nb_consult_offer,
         COUNTIF(event_name="BookingConfirmation") AS nb_booking_confirmation,
-        DATE_DIFF(TIMESTAMP_SECONDS(CAST(MAX(event_timestamp)/1000000 as INT64)), TIMESTAMP_SECONDS(CAST(MIN(user_first_touch_timestamp)/1000000 as INT64)),SECOND) AS visit_duration_seconds,
+        DATE_DIFF(TIMESTAMP_SECONDS(CAST(MAX(event_timestamp)/1000000 as INT64)), TIMESTAMP_SECONDS(CAST(MIN(event_timestamp)/1000000 as INT64)),SECOND) AS visit_duration_seconds,
     FROM base
     GROUP BY session_id,user_pseudo_id;
     """

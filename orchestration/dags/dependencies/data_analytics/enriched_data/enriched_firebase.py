@@ -119,16 +119,11 @@ def aggregate_firebase_visits(gcp_project, bigquery_raw_dataset):
 def copy_table_to_analytics(
     gcp_project, bigquery_raw_dataset, table_name, execution_date
 ):
-    traffic_source_fields = ""
-    if "pro" not in table_name:
-        traffic_source_fields = (
-            "traffic_source.name,traffic_source.medium,traffic_source.source,"
-        )
     return f"""
     WITH temp_firebase_events AS (
         SELECT
             event_name, user_pseudo_id, user_id, platform,
-            {traffic_source_fields}
+            traffic_source.name,traffic_source.medium,traffic_source.source,
             PARSE_DATE("%Y%m%d", event_date) AS event_date,
             TIMESTAMP_SECONDS(CAST(CAST(event_timestamp as INT64)/1000000 as INT64)) AS event_timestamp,
             TIMESTAMP_SECONDS(CAST(CAST(event_previous_timestamp as INT64)/1000000 as INT64)) AS event_previous_timestamp,
@@ -201,6 +196,85 @@ def copy_table_to_analytics(
                 from unnest(event_params) event_params
                 where event_params.key = 'AB_test'
             ) as ab_test
+        FROM {gcp_project}.{bigquery_raw_dataset}.{table_name}_{execution_date}
+    )
+    SELECT * EXCEPT(double_offer_id, string_offer_id),
+    (CASE WHEN double_offer_id IS NULL THEN string_offer_id ELSE double_offer_id END) AS offer_id
+    FROM temp_firebase_events
+    """
+
+
+def copy_pro_to_analytics(
+    gcp_project, bigquery_raw_dataset, table_name, execution_date
+):
+    return f"""
+    WITH temp_firebase_events AS (
+        SELECT
+            event_name, user_pseudo_id, user_id, platform,
+            PARSE_DATE("%Y%m%d", event_date) AS event_date,
+            TIMESTAMP_SECONDS(CAST(CAST(event_timestamp as INT64)/1000000 as INT64)) AS event_timestamp,
+            TIMESTAMP_SECONDS(CAST(CAST(event_previous_timestamp as INT64)/1000000 as INT64)) AS event_previous_timestamp,
+            TIMESTAMP_SECONDS(CAST(CAST(event_timestamp as INT64)/1000000 as INT64)) AS user_first_touch_timestamp,
+            (select event_params.value.string_value
+                from unnest(event_params) event_params
+                where event_params.key = 'firebase_screen'
+            ) as firebase_screen,
+            (select event_params.value.string_value
+                from unnest(event_params) event_params
+                where event_params.key = 'firebase_previous_screen'
+            ) as firebase_previous_screen,
+            (select event_params.value.int_value
+                from unnest(event_params) event_params
+                where event_params.key = 'ga_session_number'
+            ) as session_number,
+            (select event_params.value.int_value
+                from unnest(event_params) event_params
+                where event_params.key = 'ga_session_id'
+            ) as session_id,
+            (select event_params.value.string_value
+                from unnest(event_params) event_params
+                where event_params.key = 'pageName'
+            ) as page_name,
+            (select CAST(event_params.value.double_value AS STRING)
+                from unnest(event_params) event_params
+                where event_params.key = 'offerId'
+            ) as double_offer_id,
+            (select event_params.value.string_value
+                from unnest(event_params) event_params
+                where event_params.key = 'offerId'
+            ) as string_offer_id,
+            (select event_params.value.string_value
+                from unnest(event_params) event_params
+                where event_params.key = 'from'
+            ) as origin,
+            (select event_params.value.string_value
+                from unnest(event_params) event_params
+                where event_params.key = 'query'
+            ) as query,
+            (select event_params.value.string_value
+                from unnest(event_params) event_params
+                where event_params.key = 'filter'
+            ) as filter,
+            (select event_params.value.string_value
+                from unnest(event_params) event_params
+                where event_params.key = 'moduleName'
+            ) as module_name,
+            (select event_params.value.string_value
+                from unnest(event_params) event_params
+                where event_params.key = 'traffic_campaign'
+            ) as traffic_campaign,
+            (select event_params.value.string_value
+                from unnest(event_params) event_params
+                where event_params.key = 'traffic_medium'
+            ) as traffic_medium,
+            (select event_params.value.string_value
+                from unnest(event_params) event_params
+                where event_params.key = 'traffic_source'
+            ) as traffic_source,
+            (select event_params.value.string_value
+                from unnest(event_params) event_params
+                where event_params.key = 'entryId'
+            ) as entry_id
         FROM {gcp_project}.{bigquery_raw_dataset}.{table_name}_{execution_date}
     )
     SELECT * EXCEPT(double_offer_id, string_offer_id),

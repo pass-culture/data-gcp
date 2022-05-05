@@ -38,6 +38,11 @@ from dependencies.data_analytics.enriched_data.user import (
 from dependencies.data_analytics.enriched_data.deposit import (
     define_enriched_deposit_data_full_query,
 )
+
+from dependencies.data_analytics.enriched_data.institution import (
+    define_enriched_institution_data_full_query,
+)
+
 from dependencies.data_analytics.enriched_data.venue import (
     define_enriched_venue_data_full_query,
 )
@@ -323,6 +328,15 @@ create_enriched_educational_booking_data_task = BigQueryOperator(
     dag=dag,
 )
 
+create_enriched_institution_data_task = BigQueryOperator(
+    task_id="create_enriched_institution_data",
+    sql=define_enriched_institution_data_full_query(
+        dataset=BIGQUERY_ANALYTICS_DATASET, table_prefix=APPLICATIVE_PREFIX
+    ),
+    use_legacy_sql=False,
+    dag=dag,
+)
+
 create_enriched_offerer_data_task = BigQueryOperator(
     task_id="create_enriched_offerer_data",
     sql=define_enriched_offerer_data_full_query(
@@ -452,6 +466,7 @@ start_enriched_data = DummyOperator(task_id="start_enriched_data", dag=dag)
 
 
 enriched_venues = [create_enriched_venue_data_task, create_table_venue_locations]
+enriched_venues = [create_enriched_venue_data_task, create_table_venue_locations]
 
 
 end = DummyOperator(task_id="end", dag=dag)
@@ -481,6 +496,7 @@ end = DummyOperator(task_id="end", dag=dag)
     >> create_enriched_deposit_data_task
     >> enriched_venues
     >> create_enriched_offerer_data_task
+    >> create_enriched_institution_data_task
     >> end_enriched_data
 )
 (

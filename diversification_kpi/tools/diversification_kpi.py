@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 
 def fuse_columns_into_format(is_physical_good, is_digital_good, is_event):
@@ -107,22 +108,22 @@ def calculate_diversification_per_feature(df_clean, features):
 
             divers_per_feature[feature].append(div * multiplicator)
 
-        # Calculate delta div
-        if df_clean.iloc[i - 1].user_id != booking.user_id or i == 0:
-            delta_div = 1
-
-        else:
-
-            # QPI
-            qpi_diversification = 0
-            if not qpi_point_given:
-                subcat = booking["subcategory"]
-                if subcat in df_clean.columns:
+        # QPI
+        qpi_diversification = 0
+        if not qpi_point_given:
+            subcat = booking["subcategory"]
+            if subcat in df_clean.columns:
+                if not pd.isna(booking[subcat]):
                     if not booking[subcat]:
                         qpi_point_given = True
                         qpi_diversification = 1
-            divers_per_feature["qpi_diversification"].append(qpi_diversification)
+        divers_per_feature["qpi_diversification"].append(qpi_diversification)
 
+        # Calculate delta div
+        if df_clean.iloc[i - 1].user_id != booking.user_id or i == 0:
+            delta_div = 1 + qpi_diversification
+
+        else:
             delta_div = (
                 sum([float(divers_per_feature[feature][-1]) for feature in features])
                 + qpi_diversification

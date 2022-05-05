@@ -23,6 +23,7 @@ AB_TESTING_TABLE = os.environ.get(
 )  # "ab_testing" for tests in circle ci
 AB_TESTING_TABLE_EAC = os.environ.get("AB_TESTING_TABLE_EAC")
 NUMBER_OF_RECOMMENDATIONS = 10
+SHUFFLE_RECOMMENDATION = False
 NUMBER_OF_PRESELECTED_OFFERS = 50 if not os.environ.get("CI") else 3
 
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
@@ -59,3 +60,37 @@ def create_db_connection() -> Any:
 
 def log_duration(message, start):
     logger.info(f"{message}: {time.time() - start} seconds.")
+
+
+class PlaylistArgs:
+    def __init__(self, json):
+        self.start_date = json.get("start_date", None)
+        self.end_date = json.get("end_date", None)
+        self.isevent = json.get("isevent", None)
+        self.categories = json.get("categories", None)
+        self.subcategories = json.get("subcategories", None)
+        self.price_max = json.get("price_max", None)
+
+    def get_conditions(self):
+        condition = ""
+        if self.start_date:
+            if self.isevent:
+                column = "stock_beginning_date"
+            else:
+                column = "offer_creation_date"
+            condition += f"""AND ({column} > '{self.start_date}' AND {column} < '{self.end_date}') \n"""
+        if self.categories:
+            condition += (
+                "AND ("
+                + " OR ".join([f"category='{cat}'" for cat in self.categories])
+                + ")\n"
+            )
+        if self.subcategories:
+            condition += (
+                "AND ("
+                + " OR ".join([f"subcategory_id='{cat}'" for cat in self.subcategories])
+                + ")\n"
+            )
+        if self.price_max:
+            condition += f"AND stock_price<={self.price_max} \n"
+        return condition

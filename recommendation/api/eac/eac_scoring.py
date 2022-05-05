@@ -8,6 +8,7 @@ from googleapiclient import discovery
 from utils import (
     create_db_connection,
     log_duration,
+    PlaylistArgs,
     GCP_PROJECT,
     MODEL_REGION,
     MODEL_NAME_A,
@@ -18,8 +19,11 @@ from utils import (
 
 
 def get_intermediate_recommendations_for_user_eac(
-    user_id: int, user_iris_id: int
+    user_id: int, user_iris_id: int, playlist_args_json=None
 ) -> List[Dict[str, Any]]:
+    conditions = (
+        PlaylistArgs(playlist_args_json).get_conditions() if playlist_args_json else ""
+    )
     if ENV_SHORT_NAME == "prod":
         and_clause = "AND booking_number > 10"
     else:
@@ -36,6 +40,7 @@ def get_intermediate_recommendations_for_user_eac(
                 FROM non_recommendable_offers
                 WHERE user_id = :user_id
                 )
+            {conditions}
             {and_clause}
             ORDER BY RANDOM();
             """
@@ -66,6 +71,7 @@ def get_intermediate_recommendations_for_user_eac(
                 FROM non_recommendable_offers
                 WHERE user_id = :user_id
                 )
+            {conditions}
             {and_clause}
             ORDER BY RANDOM();
             """
@@ -91,16 +97,23 @@ def get_intermediate_recommendations_for_user_eac(
 
 
 def get_scored_recommendation_for_user_eac(
-    user_id: int, group_id: str, user_recommendations: List[Dict[str, Any]]
+    user_id: int,
+    group_id: str,
+    user_recommendations: List[Dict[str, Any]],
+    playlist_arg=None,
 ) -> List[Dict[str, int]]:
     """
     Depending on the user group, prepare the data to send to the model, and make the call.
     """
-
+    temp_group_id = group_id
+    if playlist_arg is not None:
+        temp_group_id = "B"
+    else:
+        temp_group_id = group_id
     start = time.time()
     user_to_rank = [user_id] * len(user_recommendations)
     print("/!\ Number of offers to score (EAC) /!\ = ", len(user_recommendations))
-    if group_id == "A":
+    if temp_group_id == "A":
         # 29/10/2021 : A = Algo v1
         model_name = MODEL_NAME_A
         offers_ids = [
@@ -110,7 +123,7 @@ def get_scored_recommendation_for_user_eac(
         instances = [{"input_1": user_to_rank, "input_2": offers_ids}]
         # Format = dict with 2 inputs: arrays of users and offers
 
-    elif group_id == "B":
+    elif temp_group_id == "B":
         # 29/10/2021 : B = Algo v2 : Deep Reco
         model_name = MODEL_NAME_B
         offers_ids = [
@@ -131,7 +144,7 @@ def get_scored_recommendation_for_user_eac(
         ]
         # Format = dict with 3 inputs: arrays of users, offers and subcategories
 
-    elif group_id == "C":
+    elif temp_group_id == "C":
         # 29/10/2021 : C = Algo v2 : Matrix Factorization
         model_name = MODEL_NAME_C
         offers_ids = [

@@ -20,10 +20,7 @@ COPY eac/eac_cold_start.py eac/
 COPY not_eac/ab_testing.py not_eac/
 COPY eac/eac_ab_testing.py eac/
 COPY not_eac/scoring.py not_eac/
-COPY eac/eac_scoring.py eac/ 
-COPY refacto_api/src/user.py refacto_api/src/
-COPY refacto_api/src/scoring.py refacto_api/src/
-COPY refacto_api/tools/* refacto_api/tools/
+COPY eac/eac_scoring.py eac/
 COPY utils.py ./
 
 # Install production dependencies.

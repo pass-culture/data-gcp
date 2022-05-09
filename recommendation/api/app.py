@@ -6,7 +6,11 @@ from flask_cors import CORS
 
 from access_gcp_secrets import access_secret
 from health_check_queries import get_materialized_view_status
-from recommendation import get_final_recommendations, get_user_metadata
+from recommendation import get_final_recommendations
+
+from refacto_api.src.user import User
+from refacto_api.src.scoring import Scoring
+from refacto_api.tools.playlist import Playlist
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
 
@@ -111,6 +115,32 @@ def playlist_recommendation(user_id: int):
     return jsonify(
         {
             "playlist_recommended_offers": recommendations,
+        }
+    )
+
+
+@app.route("/refacto_api/<user_id>", methods=["GET", "POST"])
+def refacto_api(user_id: int):
+    token = request.args.get("token", None)
+    longitude = request.args.get("longitude", None)
+    latitude = request.args.get("latitude", None)
+    playlist_args_json = None
+    if request.method == "POST":
+        playlist_args_json = request.get_json()
+        print(playlist_args_json)
+    if token != API_TOKEN:
+        return "Forbidden", 403
+
+    user = User(user_id, longitude, latitude)
+    playlist = Playlist(playlist_args_json) if playlist_args_json else None
+    scoring = Scoring(user, Playlist=playlist)
+
+    print("user final reco:", scoring.get_recommendation())
+    return jsonify(
+        {
+            "recommended_offers": scoring.get_recommendation(),
+            "AB_test": user.group_id,
+            "reco_origin": "cold_start" if scoring.iscoldstart else "algo",
         }
     )
 

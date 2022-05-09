@@ -771,7 +771,7 @@ ENRICHED_VENUE_DATA_INPUT = {
             "offer_is_bookable": True,
         }
     ],
-    "offerer": [{"offerer_id": "1", "offerer_name": "An offerer"}],
+    "offerer": [{"offerer_id": "1", "offerer_name": "An offerer", "offerer_is_active": True}],
     "payment": [],
     "payment_status": [],
     "stock": [
@@ -881,6 +881,7 @@ ENRICHED_OFFERER_DATA_INPUT = {
             "offerer_siren": "123456789",
             "offerer_creation_date": datetime.now().replace(microsecond=0),
             "offerer_validation_date": datetime.now().replace(microsecond=0),
+            "offerer_is_active": True,
         }
     ],
     "stock": [

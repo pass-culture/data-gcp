@@ -771,7 +771,9 @@ ENRICHED_VENUE_DATA_INPUT = {
             "offer_is_bookable": True,
         }
     ],
-    "offerer": [{"offerer_id": "1", "offerer_name": "An offerer", "offerer_is_active": True}],
+    "offerer": [
+        {"offerer_id": "1", "offerer_name": "An offerer", "offerer_is_active": True}
+    ],
     "payment": [],
     "payment_status": [],
     "stock": [

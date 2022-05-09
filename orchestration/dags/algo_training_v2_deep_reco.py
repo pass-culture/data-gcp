@@ -190,7 +190,7 @@ with DAG(
 
     DEPLOY_COMMAND = f"""
     export REGION=europe-west1
-    export MODEL_NAME=deep_reco_{ENV_SHORT_NAME}
+    export MODEL_NAME={AI_MODEL_NAME}
     export RECOMMENDATION_MODEL_DIR={{{{ ti.xcom_pull(task_ids='training') }}}}
 
     export VERSION_NAME=v_{{{{ ts_nodash }}}}

@@ -37,7 +37,7 @@ def get_data(batch, batch_size):
                 ) as format,
                 user_deposit_creation_date, user_total_deposit_amount, actual_amount_spent, offer.offer_id, booking_amount,
                 offer_category_id as category, bkg.offer_subcategoryId as subcategory, offer.genres, offer.rayon, offer.type, offer.venue_id, offer.venue_name,
-                C*
+                C.*
                 FROM `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_booking_data` as bkg
                 RIGHT JOIN (
                   SELECT DISTINCT user_id, user_region_name, user_activity, user_civility, user_deposit_creation_date, user_total_deposit_amount, actual_amount_spent

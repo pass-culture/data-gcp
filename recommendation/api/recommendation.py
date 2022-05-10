@@ -55,7 +55,6 @@ def get_user_metadata(user_id: int, longitude: int, latitude: int):
 def get_final_recommendations(
     user_id: int, longitude: int, latitude: int, playlist_args_json=None
 ) -> List[int]:
-
     group_id, is_cold_start, is_eac, user_iris_id = get_user_metadata(
         user_id, longitude, latitude
     )
@@ -100,7 +99,6 @@ def get_final_recommendations(
         final_recommendations = order_offers_by_score_and_diversify_categories(
             scored_recommendation_for_user
         )
-
     save_recommendation(user_id, final_recommendations, group_id, reco_origin)
     return final_recommendations, group_id, is_cold_start
 

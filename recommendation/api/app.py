@@ -12,7 +12,8 @@ from refacto_api.src.user import User
 from refacto_api.src.scoring import Scoring
 from refacto_api.tools.playlist import Playlist
 
-from utils import AB_TESTING
+from utils import AB_TESTING, log_duration
+import time
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
 
@@ -129,11 +130,9 @@ def refacto_api(user_id: int):
     longitude = request.args.get("longitude", None)
     latitude = request.args.get("latitude", None)
     playlist_args_json = request.get_json() if request.method == "POST" else None
-
     user = User(user_id, longitude, latitude)
     playlist = Playlist(playlist_args_json) if playlist_args_json else None
     scoring = Scoring(user, Playlist=playlist)
-
     return jsonify(
         {
             "recommended_offers": scoring.get_recommendation(),

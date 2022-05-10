@@ -7,7 +7,6 @@ from utils import (
     RECOMMENDABLE_OFFER_TABLE_PREFIX,
     RECOMMENDABLE_OFFER_TABLE_SUFFIX_DICT,
 )
-import time
 
 
 class User:
@@ -16,48 +15,44 @@ class User:
         self.longitude = False if longitude is None else longitude
         self.latitude = False if latitude is None else latitude
         self.iris_id = get_iris_from_coordinates(longitude, latitude)
-        self.age = self.get_user_age()
-        self.iseac = self.is_eac()
-        self.group_id = self.get_ab_testing_group()
+        self.get_user_profile()
+        self.get_ab_testing_group()
         self.recommendable_offer_table = (
             RECOMMENDABLE_OFFER_TABLE_PREFIX
-            if not self.iseac
+            if not self.is_eac
             else f"{RECOMMENDABLE_OFFER_TABLE_PREFIX}_{RECOMMENDABLE_OFFER_TABLE_SUFFIX_DICT[self.age]}"
         )
 
+    @property
     def is_eac(self):
-        start = time.time()
-        with create_db_connection() as connection:
-            request_response = connection.execute(
-                text(
-                    "SELECT count(1) > 0 "
-                    "FROM public.enriched_user "
-                    f"WHERE user_id = '{str(self.id)}' "
-                    "AND user_deposit_initial_amount < 300 "
-                    "AND FLOOR(DATE_PART('DAY',user_deposit_creation_date - user_birth_date)/365) < 18"
-                )
-            ).scalar()
-        print(f"is_eac_user = {request_response}")
-        log_duration(f"is_eac_user for {self.id}", start)
-        return request_response
+        if self.age:
+            return self.age < 18 and self.user_deposit_initial_amount < 300
+        else:
+            return False
 
-    def get_user_age(self):
-        start = time.time()
+    def get_user_profile(self):
+        self.age = None
+        self.user_deposit_initial_amount = 0
         with create_db_connection() as connection:
+
             request_response = connection.execute(
                 text(
-                    "SELECT FLOOR(DATE_PART('DAY',user_deposit_creation_date - user_birth_date)/365)"
-                    "FROM public.enriched_user"
+                    f"""
+                    SELECT 
+                        FLOOR(DATE_PART('DAY',user_deposit_creation_date - user_birth_date)/365) as age,
+                        user_deposit_initial_amount
+                        FROM public.enriched_user
+                        WHERE user_id = '{str(self.id)}' 
+                    """
                 )
-            ).scalar()
-        print(f"user_age= {request_response}")
-        log_duration(f"user_age for {self.id}", start)
-        return int(request_response)
+            ).fetchone()
+            if len(request_response) is not None:
+                self.age = request_response[0]
+                self.user_deposit_initial_amount = request_response[1]
 
     def get_ab_testing_group(self):
         ab_testing = query_ab_testing_table(self.id)
         if ab_testing:
-            group_id = ab_testing[0]
+            self.group_id = ab_testing[0]
         else:
-            group_id = ab_testing_assign_user(self.id)
-        return group_id
+            self.group_id = ab_testing_assign_user(self.id)

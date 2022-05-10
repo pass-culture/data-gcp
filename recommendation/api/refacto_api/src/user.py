@@ -15,14 +15,12 @@ RECOMMENDABLE_OFFER_TABLE_SUFFIX_DICT = {
 
 class User:
     def __init__(self, user_id, longitude=None, latitude=None):
-        # user metadata
         self.id = user_id
         self.longitude = False if longitude is None else longitude
         self.latitude = False if latitude is None else latitude
         self.iris_id = get_iris_from_coordinates(longitude, latitude)
         self.age = self.get_user_age()
 
-        # user calculated attributes
         self.iseac = self.is_eac()
         self.group_id = self.get_ab_testing_group()
         self.recommendable_offer_table = (

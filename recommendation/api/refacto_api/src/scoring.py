@@ -44,7 +44,6 @@ class Scoring:
         return scoring_method
 
     def get_recommendation(self):
-        # score the offers
         final_recommendations = order_offers_by_score_and_diversify_categories(
             sorted(
                 self.scoring.get_scored_offers(), key=lambda k: k["score"], reverse=True

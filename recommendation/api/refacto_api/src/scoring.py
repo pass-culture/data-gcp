@@ -13,19 +13,16 @@ from utils import (
     ENV_SHORT_NAME,
     GCP_PROJECT,
     MACRO_CATEGORIES_TYPE_MAPPING,
-    MODEL_REGION,
     NUMBER_OF_PRESELECTED_OFFERS,
+    ACTIVE_MODEL,
+    MODEL_REGION,
+    AB_TEST,
+    AB_TEST_MODEL_DICT,
     log_duration,
 )
 import datetime
 import time
 import pytz
-
-AB_TEST_MODEL_DICT = {
-    "A": f"tf_reco_{ENV_SHORT_NAME}",
-    "B": f"deep_reco_{ENV_SHORT_NAME}",
-    "C": f"MF_reco_{ENV_SHORT_NAME}",
-}
 
 
 class Scoring:
@@ -33,7 +30,9 @@ class Scoring:
         self.user = User
         self.playlist_filters = Playlist._get_conditions() if Playlist else ""
         self.iscoldstart = get_cold_start_status(self.user)
-        self.model_name = AB_TEST_MODEL_DICT[f"{self.user.group_id}"]
+        self.model_name = (
+            AB_TEST_MODEL_DICT[f"{self.user.group_id}"] if AB_TEST else ACTIVE_MODEL
+        )
         self.scoring = self.get_scoring_method()
 
     def get_scoring_method(self):

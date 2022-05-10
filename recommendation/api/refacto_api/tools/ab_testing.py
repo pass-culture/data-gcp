@@ -1,6 +1,6 @@
 import random
 from sqlalchemy import text
-from utils import AB_TESTING_TABLE
+from utils import AB_TESTING_TABLE, AB_TESTING_GROUPS
 from refacto_api.tools.db_connection import create_db_connection
 
 
@@ -18,7 +18,7 @@ def query_ab_testing_table(
 
 
 def ab_testing_assign_user(user_id):
-    groups = ["A", "B", "C"]
+    groups = AB_TESTING_GROUPS
     group_id = random.choice(groups)
 
     with create_db_connection() as connection:

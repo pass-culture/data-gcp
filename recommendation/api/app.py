@@ -12,6 +12,8 @@ from refacto_api.src.user import User
 from refacto_api.src.scoring import Scoring
 from refacto_api.tools.playlist import Playlist
 
+from utils import AB_TESTING
+
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
 
 API_TOKEN_SECRET_ID = os.environ.get("API_TOKEN_SECRET_ID")
@@ -121,25 +123,21 @@ def playlist_recommendation(user_id: int):
 
 @app.route("/refacto_api/<user_id>", methods=["GET", "POST"])
 def refacto_api(user_id: int):
-    token = request.args.get("token", None)
+    if request.args.get("token", None) != API_TOKEN:
+        return "Forbidden", 403
+
     longitude = request.args.get("longitude", None)
     latitude = request.args.get("latitude", None)
-    playlist_args_json = None
-    if request.method == "POST":
-        playlist_args_json = request.get_json()
-        print(playlist_args_json)
-    if token != API_TOKEN:
-        return "Forbidden", 403
+    playlist_args_json = request.get_json() if request.method == "POST" else None
 
     user = User(user_id, longitude, latitude)
     playlist = Playlist(playlist_args_json) if playlist_args_json else None
     scoring = Scoring(user, Playlist=playlist)
 
-    print("user final reco:", scoring.get_recommendation())
     return jsonify(
         {
             "recommended_offers": scoring.get_recommendation(),
-            "AB_test": user.group_id,
+            "AB_test": user.group_id if AB_TESTING else None,
             "reco_origin": "cold_start" if scoring.iscoldstart else "algo",
         }
     )

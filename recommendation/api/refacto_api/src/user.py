@@ -2,15 +2,12 @@ from refacto_api.tools.ab_testing import query_ab_testing_table, ab_testing_assi
 from refacto_api.tools.geolocalisation import get_iris_from_coordinates
 from refacto_api.tools.db_connection import create_db_connection
 from sqlalchemy import text
-from utils import log_duration
+from utils import (
+    log_duration,
+    RECOMMENDABLE_OFFER_TABLE_PREFIX,
+    RECOMMENDABLE_OFFER_TABLE_SUFFIX_DICT,
+)
 import time
-
-RECOMMENDABLE_OFFER_TABLE_PREFIX = "recommendable_offers"
-RECOMMENDABLE_OFFER_TABLE_SUFFIX_DICT = {
-    "15": "eac_15",
-    "16": "eac_16_17",
-    "17": "eac_16_17",
-}
 
 
 class User:
@@ -20,7 +17,6 @@ class User:
         self.latitude = False if latitude is None else latitude
         self.iris_id = get_iris_from_coordinates(longitude, latitude)
         self.age = self.get_user_age()
-
         self.iseac = self.is_eac()
         self.group_id = self.get_ab_testing_group()
         self.recommendable_offer_table = (

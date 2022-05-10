@@ -16,7 +16,7 @@ from utils import (
     NUMBER_OF_PRESELECTED_OFFERS,
     ACTIVE_MODEL,
     MODEL_REGION,
-    AB_TEST,
+    AB_TESTING,
     AB_TEST_MODEL_DICT,
     log_duration,
 )
@@ -31,7 +31,7 @@ class Scoring:
         self.playlist_filters = Playlist._get_conditions() if Playlist else ""
         self.iscoldstart = get_cold_start_status(self.user)
         self.model_name = (
-            AB_TEST_MODEL_DICT[f"{self.user.group_id}"] if AB_TEST else ACTIVE_MODEL
+            AB_TEST_MODEL_DICT[f"{self.user.group_id}"] if AB_TESTING else ACTIVE_MODEL
         )
         self.scoring = self.get_scoring_method()
 

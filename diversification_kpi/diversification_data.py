@@ -27,18 +27,17 @@ def count_data():
     return count.iloc[0]["nb"]
 
 
-
 def get_data(batch, batch_size):
     query = f"""SELECT DISTINCT A.user_id, bkg.booking_creation_date, bkg.booking_id, user_region_name, user_activity,
-                REPLACE(REPLACE(user_civility, 'M.', 'M'),'Mme','F'), 
+                REPLACE(REPLACE(user_civility, 'M.', 'M'),'Mme','F') as user_civility, 
                 COALESCE(
                   IF(bkg.physical_goods = True, 'physical', null),
                   IF(bkg.digital_goods = True, 'digital', null),
                   IF(bkg.event = True, 'event', null)
                 ) as format,
                 user_deposit_creation_date, user_total_deposit_amount, actual_amount_spent, offer.offer_id, booking_amount,
-                offer_category_id as category, bkg.offer_subcategoryId as subcategory, bkg.physical_goods,
-                bkg.digital_goods, bkg.event, offer.genres, offer.rayon, offer.type, offer.venue_id, offer.venue_name
+                offer_category_id as category, bkg.offer_subcategoryId as subcategory, offer.genres, offer.rayon, offer.type, offer.venue_id, offer.venue_name,
+                C*
                 FROM `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_booking_data` as bkg
                 RIGHT JOIN (
                   SELECT DISTINCT user_id, user_region_name, user_activity, user_civility, user_deposit_creation_date, user_total_deposit_amount, actual_amount_spent

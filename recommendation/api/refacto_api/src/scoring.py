@@ -117,7 +117,7 @@ class Scoring:
             instances = [{"input_1": user_to_rank, "input_2": offer_ids_to_rank}]
 
             if self.model_name == "deep_reco":
-                instances["input_3"] = offers_subcategories
+                instances[0]["input_3"] = offers_subcategories
             return instances
 
         def get_recommendable_offers(self):

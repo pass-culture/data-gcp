@@ -44,6 +44,7 @@ class Scoring:
         return scoring_method
 
     def get_recommendation(self):
+        # score the offers
         final_recommendations = order_offers_by_score_and_diversify_categories(
             sorted(
                 self.scoring.get_scored_offers(), key=lambda k: k["score"], reverse=True
@@ -105,16 +106,15 @@ class Scoring:
 
         def _get_instances(self):
             user_to_rank = [self.user.id] * len(self.recommendable_offers)
-            offer_ids_to_rank = [
-                recommendation["item_id"] if recommendation["item_id"] else ""
-                for recommendation in self.recommendable_offers
-            ]
-            offers_subcategories = [
-                recommendation["subcategory_id"]
-                if recommendation["subcategory_id"]
-                else ""
-                for recommendation in self.recommendable_offers
-            ]
+            for recommendation in self.recommendable_offers:
+                offer_ids_to_rank = [
+                    recommendation["item_id"] if recommendation["item_id"] else ""
+                ]
+                offers_subcategories = [
+                    recommendation["subcategory_id"]
+                    if recommendation["subcategory_id"]
+                    else ""
+                ]
             instances = [{"input_1": user_to_rank, "input_2": offer_ids_to_rank}]
 
             if self.model_name == "deep_reco":

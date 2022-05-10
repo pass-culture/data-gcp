@@ -49,7 +49,7 @@ with DAG(
     "diversification_kpi",
     default_args=default_args,
     description="Measure the diversification",
-    schedule_interval="0 2 * * 6",
+    schedule_interval="0 4 * * *",
     catchup=False,
     dagrun_timeout=timedelta(minutes=300),
 ) as dag:
@@ -81,7 +81,7 @@ with DAG(
             {"name": "user_region_name", "type": "STRING", "mode": "NULLABLE"},
             {"name": "user_activity", "type": "STRING", "mode": "NULLABLE"},
             {"name": "user_civility", "type": "STRING", "mode": "NULLABLE"},
-            {"name": "booking_amount", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "booking_amount", "type": "INTEGER", "mode": "NULLABLE"},
             {
                 "name": "user_deposit_creation_date",
                 "type": "TIMESTAMP",

@@ -34,11 +34,11 @@ class User:
         with create_db_connection() as connection:
             request_response = connection.execute(
                 text(
-                    f"SELECT count(1) > 0 "
-                    f"FROM public.enriched_user "
+                    "SELECT count(1) > 0 "
+                    "FROM public.enriched_user "
                     f"WHERE user_id = '{str(self.id)}' "
-                    f"AND user_deposit_initial_amount < 300 "
-                    f"AND FLOOR(DATE_PART('DAY',user_deposit_creation_date - user_birth_date)/365) < 18"
+                    "AND user_deposit_initial_amount < 300 "
+                    "AND FLOOR(DATE_PART('DAY',user_deposit_creation_date - user_birth_date)/365) < 18"
                 )
             ).scalar()
         print(f"is_eac_user = {request_response}")

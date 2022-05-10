@@ -23,22 +23,28 @@ def _get_user_app_interaction(User):
     app_interaction_count = []
     with create_db_connection() as connection:
         for app_interaction in app_interaction_type:
-            cold_start_query = text(
-                f"""
+            app_interaction_count.append(
+                _get_app_interaction_count(User, connection, app_interaction)
+            )
+    bookings_count = app_interaction_count[0]
+    clicks_count = app_interaction_count[1]
+    favorites_count = app_interaction_count[2]
+    return bookings_count, clicks_count, favorites_count
+
+
+def _get_app_interaction_count(User, connection, app_interaction):
+    app_interaction_query = text(
+        f"""
             SELECT {app_interaction}_count
             FROM number_of_{app_interaction}_per_user
             WHERE user_id= :user_id;
             """
-            )
-            query_result = connection.execute(
-                cold_start_query, user_id=str(User.id)
-            ).fetchone()
-            result = query_result[0] if query_result is not None else 0
-            app_interaction_count.append(result)
-        bookings_count = app_interaction_count[0]
-        clicks_count = app_interaction_count[1]
-        favorites_count = app_interaction_count[2]
-    return bookings_count, clicks_count, favorites_count
+    )
+    query_result = connection.execute(
+        app_interaction_query, user_id=str(User.id)
+    ).fetchone()
+    result = query_result[0] if query_result is not None else 0
+    return result
 
 
 def _is_trained_user(User):

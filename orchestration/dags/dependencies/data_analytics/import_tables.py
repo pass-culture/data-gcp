@@ -425,8 +425,8 @@ def define_import_query(
     ] = """
             SELECT
                 CAST("id" AS varchar(255)) AS offer_report_id
-                ,CAST("userId" AS varchar(255)) AS offer_report_user_id
-                ,CAST("offerId" AS varchar(255)) AS offer_report_offer_id
+                ,CAST("userId" AS varchar(255)) AS user_id
+                ,CAST("offerId" AS varchar(255)) AS offer_id
                 ,reason AS offer_report_reason
                 ,"customReasonContent" AS offer_report_custom_reason_content
                 ,"reportedAt" AS offer_report_date
@@ -484,8 +484,8 @@ def define_import_query(
     ] = """
             SELECT
                 CAST(id AS varchar(255)) AS educational_deposit_id
-                ,CAST("educationalInstitutionId" AS varchar(255)) AS educational_deposit_educational_institution_id
-                ,CAST("educationalYearId" AS varchar(255)) AS educational_deposit_educational_year_id
+                ,CAST("educationalInstitutionId" AS varchar(255)) AS educational_institution_id
+                ,CAST("educationalYearId" AS varchar(255)) AS educational_year_id
                 ,amount AS educational_deposit_amount
                 ,"dateCreated" AS educational_deposit_creation_date
                 ,CAST("ministry" AS TEXT) AS ministry
@@ -497,7 +497,7 @@ def define_import_query(
     ] = """
             SELECT
             CAST(id AS varchar(255)) AS educational_institution_id
-            ,CAST("institutionId" AS varchar(255)) AS educational_institution_institution_id
+            ,CAST("institutionId" AS varchar(255)) AS institution_id
             ,"city" AS institution_city
             ,"name" AS institution_name 
             ,"postalCode" AS institution_postal_code
@@ -523,7 +523,7 @@ def define_import_query(
                 CAST(id AS varchar(255)) AS educational_year_id
                 ,"beginningDate" AS educational_year_beginning_date
                 ,"expirationDate" AS educational_year_expiration_date
-                ,CAST("adageId" AS varchar(255)) AS educational_year_adage_id
+                ,CAST("adageId" AS varchar(255)) AS adage_id
             FROM educational_year
         """
     cloudsql_queries[
@@ -543,19 +543,19 @@ def define_import_query(
                 ,CAST("bookingId" AS varchar(255)) AS booking_id
                 , "dateCreated" AS collective_booking_creation_date
                 , "dateUsed" AS collective_booking_used_date
-                ,CAST("collectiveStockId" AS varchar(255)) AS collective_booking_collective_stock_id
-                ,CAST("venueId" AS varchar(255)) AS collective_booking_venue_id
-                ,CAST("offererId" AS varchar(255)) AS collective_booking_offerer_id
+                ,CAST("collectiveStockId" AS varchar(255)) AS collective_stock_id
+                ,CAST("venueId" AS varchar(255)) AS venue_id
+                ,CAST("offererId" AS varchar(255)) AS offerer_id
                 , "cancellationDate" AS collective_booking_cancellation_date
                 , "cancellationLimitDate" AS collective_booking_cancellation_limit_date
                 , CAST("cancellationReason" AS VARCHAR) AS collective_booking_cancellation_reason
                 , CAST("status" AS VARCHAR) AS collective_booking_status
                 , "reimbursementDate" AS collective_booking_reimbursement_date
-                , CAST("educationalInstitutionId" AS varchar(255)) AS collective_booking_educational_institution_id
-                , CAST("educationalYearId" AS varchar(255)) AS collective_booking_educational_year_id
+                , CAST("educationalInstitutionId" AS varchar(255)) AS educational_institution_id
+                , CAST("educationalYearId" AS varchar(255)) AS educational_year_id
                 , "confirmationDate" AS collective_booking_confirmation_date
                 , "confirmationLimitDate" AS collective_booking_confirmation_limit_date
-                , CAST("educationalRedactorId" AS varchar(255)) AS collective_booking_educational_redactor_id
+                , CAST("educationalRedactorId" AS varchar(255)) AS educational_redactor_id
             FROM public.collective_booking
         """
     cloudsql_queries[
@@ -569,9 +569,9 @@ def define_import_query(
                 ,"lastValidationDate" AS collective_offer_last_validation_date
                 , CAST("validation" AS VARCHAR) AS collective_offer_validation
                 , CAST("id" AS varchar(255)) AS collective_offer_id
-                , CAST("offerId" AS varchar(255)) AS collective_offer_offer_id
+                , CAST("offerId" AS varchar(255)) AS offer_id
                 , "isActive" AS collective_offer_is_active
-                , CAST("venueId" AS varchar(255)) AS collective_offer_venue_id
+                , CAST("venueId" AS varchar(255)) AS venue_id
                 , "name" AS collective_offer_name
                 ,"bookingEmail" AS collective_offer_booking_email
                 ,"description" AS collective_offer_description
@@ -591,11 +591,11 @@ def define_import_query(
     ] = """
             SELECT
                 CAST("id" AS varchar(255)) AS collective_stock_id
-                ,CAST("stockId" AS varchar(255)) AS collective_stock_stock_id
+                ,CAST("stockId" AS varchar(255)) AS stock_id
                 ,"dateCreated" AS collective_stock_creation_date
                 ,"dateModified" AS collective_stock_modification_date
                 ,"beginningDatetime" AS collective_stock_beginning_date_time
-                , CAST("collectiveOfferId" AS varchar(255)) AS collective_stock_collective_offer_id
+                , CAST("collectiveOfferId" AS varchar(255)) AS collective_offer_id
                 ,"price" AS collective_stock_price
                 ,"bookingLimitDatetime" AS collective_stock_booking_limit_date_time
                 ,"numberOfTickets" AS collective_stock_number_of_tickets
@@ -607,7 +607,7 @@ def define_import_query(
     ] = """
             SELECT
                 CAST("id" AS varchar(255)) AS venue_contact_id
-                ,CAST("venueId" AS varchar(255)) AS venue_contact_venue_id
+                ,CAST("venueId" AS varchar(255)) AS venue_id
                 ,"email" AS venue_contact_email
                 ,"website" AS venue_contact_website
                 ,"phone_number" AS venue_contact_phone_number

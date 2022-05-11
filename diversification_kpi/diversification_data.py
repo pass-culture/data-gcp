@@ -143,7 +143,7 @@ def process_diversification(batch_number):
             {"name": "user_region_name", "type": "STRING"},
             {"name": "user_activity", "type": "STRING"},
             {"name": "user_civility", "type": "STRING"},
-            {"name": "booking_amount", "type": "INTEGER"},
+            {"name": "booking_amount", "type": "FLOAT"},
             {"name": "user_deposit_creation_date", "type": "TIMESTAMP"},
             {"name": "format", "type": "STRING"},
             {"name": "macro_rayon", "type": "STRING"},

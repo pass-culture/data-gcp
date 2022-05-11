@@ -81,7 +81,7 @@ with DAG(
             {"name": "user_region_name", "type": "STRING", "mode": "NULLABLE"},
             {"name": "user_activity", "type": "STRING", "mode": "NULLABLE"},
             {"name": "user_civility", "type": "STRING", "mode": "NULLABLE"},
-            {"name": "booking_amount", "type": "INTEGER", "mode": "NULLABLE"},
+            {"name": "booking_amount", "type": "FLOAT", "mode": "NULLABLE"},
             {
                 "name": "user_deposit_creation_date",
                 "type": "TIMESTAMP",

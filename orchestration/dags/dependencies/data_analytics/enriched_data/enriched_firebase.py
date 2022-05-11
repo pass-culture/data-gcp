@@ -233,8 +233,20 @@ def copy_pro_to_analytics(
             ) as session_id,
             (select event_params.value.string_value
                 from unnest(event_params) event_params
+                where event_params.key = 'venue_id'
+            ) as venue_id,
+            (select event_params.value.string_value
+                from unnest(event_params) event_params
+                where event_params.key = 'offerer_id'
+            ) as offerer_humanized_id,
+            (select event_params.value.string_value
+                from unnest(event_params) event_params
                 where event_params.key = 'pageName'
             ) as page_name,
+            (select event_params.value.int_value
+                from unnest(event_params) event_params
+                where event_params.key = 'page_number'
+            ) as page_number,
             (select CAST(event_params.value.double_value AS STRING)
                 from unnest(event_params) event_params
                 where event_params.key = 'offerId'

@@ -117,7 +117,7 @@ with DAG(
     if ENV_SHORT_NAME == "dev":
         branch = "PC-14596-fix-bug-and-improve-diversification"
     if ENV_SHORT_NAME == "stg":
-        branch = "PC-14834-use-bq-for-diversification-data-prep"
+        branch = "master"
     if ENV_SHORT_NAME == "prod":
         branch = "production"
 

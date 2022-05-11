@@ -238,7 +238,7 @@ def copy_pro_to_analytics(
             (select event_params.value.string_value
                 from unnest(event_params) event_params
                 where event_params.key = 'offerer_id'
-            ) as offerer_id,
+            ) as offerer_humanized_id,
             (select event_params.value.string_value
                 from unnest(event_params) event_params
                 where event_params.key = 'pageName'

@@ -49,34 +49,36 @@ class Scoring:
                 self.scoring.get_scored_offers(), key=lambda k: k["score"], reverse=True
             )[:NUMBER_OF_PRESELECTED_OFFERS]
         )
+
         return final_recommendations
 
     def save_recommendation(self, recommendations):
-        start = time.time()
-        date = datetime.datetime.now(pytz.utc)
-        rows = []
-        for offer_id in recommendations:
-            rows.append(
-                {
-                    "user_id": self.user.id,
-                    "offer_id": offer_id,
-                    "date": date,
-                    "group_id": self.user.group_id,
-                    "reco_origin": "cold-start" if self.iscoldstart else "algo",
-                }
-            )
+        if len(recommendations) > 0:
+            start = time.time()
+            date = datetime.datetime.now(pytz.utc)
+            rows = []
+            for offer_id in recommendations:
+                rows.append(
+                    {
+                        "user_id": self.user.id,
+                        "offer_id": offer_id,
+                        "date": date,
+                        "group_id": self.user.group_id,
+                        "reco_origin": "cold-start" if self.iscoldstart else "algo",
+                    }
+                )
 
-        with create_db_connection() as connection:
-            connection.execute(
-                text(
-                    """
-                    INSERT INTO public.past_recommended_offers (userid, offerid, date, group_id, reco_origin)
-                    VALUES (:user_id, :offer_id, :date, :group_id, :reco_origin)
-                    """
-                ),
-                rows,
-            )
-        log_duration(f"save_recommendations for {self.user.id}", start)
+            with create_db_connection() as connection:
+                connection.execute(
+                    text(
+                        """
+                        INSERT INTO public.past_recommended_offers (userid, offerid, date, group_id, reco_origin)
+                        VALUES (:user_id, :offer_id, :date, :group_id, :reco_origin)
+                        """
+                    ),
+                    rows,
+                )
+            log_duration(f"save_recommendations for {self.user.id}", start)
 
     class Algo:
         def __init__(self, Scoring):

@@ -130,12 +130,16 @@ def refacto_api(user_id: int):
     longitude = request.args.get("longitude", None)
     latitude = request.args.get("latitude", None)
     playlist_args_json = request.get_json() if request.method == "POST" else None
+
     user = User(user_id, longitude, latitude)
     playlist = Playlist(playlist_args_json) if playlist_args_json else None
     scoring = Scoring(user, Playlist=playlist)
+
+    user_recommendations = scoring.get_recommendation()
+    scoring.save_recommendation(user_recommendations)
     return jsonify(
         {
-            "recommended_offers": scoring.get_recommendation(),
+            "recommended_offers": user_recommendations,
             "AB_test": user.group_id if AB_TESTING else None,
             "reco_origin": "cold_start" if scoring.iscoldstart else "algo",
         }

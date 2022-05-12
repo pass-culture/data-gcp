@@ -30,27 +30,27 @@ def count_data():
 def get_data(batch, batch_size):
     query = f"""WITH batch_users AS (
                   SELECT DISTINCT user_id, user_region_name, user_activity, user_civility, user_deposit_creation_date, user_total_deposit_amount, actual_amount_spent
-                  FROM `passculture-data-ehp.analytics_stg.enriched_user_data`
+                  FROM `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_user_data`
                   WHERE user_total_deposit_amount = 300
                   ORDER BY user_id
-                  LIMIT 5 OFFSET 10              
+                  LIMIT {batch_size} OFFSET {batch * batch_size}             
                 ),
                 
                 bookings AS (
                   SELECT user_id, offer_id, booking_amount, booking_creation_date, booking_id, offer_subcategoryId, physical_goods, digital_goods, event, offer_category_id
-                  FROM `passculture-data-ehp.analytics_stg.enriched_booking_data`
+                  FROM `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_booking_data`
                 ),
                 
                 offer AS (
                   SELECT offer_id, genres, rayon, type, venue_id, venue_name
-                  FROM `passculture-data-ehp.analytics_stg.enriched_offer_data`
+                  FROM `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_offer_data`
                 ),
                 
                 
                 qpi_answers AS (
                   SELECT * except(row_number)
                   FROM ( select *, ROW_NUMBER() OVER (PARTITION BY user_id) as row_number
-                    FROM `passculture-data-ehp.analytics_stg.enriched_qpi_answers_v3` ) 
+                    FROM `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_qpi_answers_v3` ) 
                   WHERE row_number=1)
                 
                 

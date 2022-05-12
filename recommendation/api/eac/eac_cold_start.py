@@ -5,6 +5,7 @@ from sqlalchemy import text
 
 from utils import (
     create_db_connection,
+    PlaylistArgs,
     NUMBER_OF_PRESELECTED_OFFERS,
     ENV_SHORT_NAME,
     log_duration,
@@ -168,10 +169,13 @@ def get_cold_start_categories_eac(user_id: int) -> list:
 
 
 def get_cold_start_scored_recommendations_for_user_eac(
-    user_id: int, user_iris_id: int, cold_start_categories: list
+    user_id: int,
+    user_iris_id: int,
+    cold_start_categories: list,
+    playlist_args_json=None,
 ) -> List[Dict[str, Any]]:
     recommendations_for_user = get_intermediate_recommendations_for_user_eac(
-        user_id, user_iris_id
+        user_id, user_iris_id, playlist_args_json
     )
     # here we change user_id for cs user_id and put group C to get mf_reco model
     user_age = int(get_user_age(user_id))

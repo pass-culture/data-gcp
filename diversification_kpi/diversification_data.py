@@ -27,47 +27,52 @@ def count_data():
     return count.iloc[0]["nb"]
 
 
-def get_batch_of_users(batch, batch_size):
-    query = f"""SELECT DISTINCT user_id
-            FROM {GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_user_data 
-            WHERE user_total_deposit_amount = 300
-            ORDER BY user_id
-            LIMIT {batch_size} OFFSET {batch * batch_size}"""
-    users_batch = pd.read_gbq(query)
-    return users_batch
-
-
-def get_data(users_batch):
-    where_user_in = f"""A.user_id IN ("""
-    for user in users_batch["user_id"]:
-        where_user_in = where_user_in + f"'{user}',"
-    where_user_in = where_user_in[:-1] + ")"
-
-    query = f"""SELECT DISTINCT A.user_id, bkg.booking_creation_date, bkg.booking_id, user_region_name, user_activity,
-    user_civility, user_deposit_creation_date, user_total_deposit_amount, actual_amount_spent, offer.offer_id, booking_amount,
-    offer_category_id as category, bkg.offer_subcategoryId as subcategory, bkg.physical_goods,
-    bkg.digital_goods, bkg.event, offer.genres, offer.rayon, offer.type, offer.venue_id, offer.venue_name,C.*
-    FROM {GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_user_data A
-    INNER join  {GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_booking_data as bkg
-    ON A.user_id = bkg.user_id
-    INNER JOIN {GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_offer_data as offer
-    ON bkg.offer_id = offer.offer_id
-    LEFT JOIN (
-        SELECT * except(row_number)
-        FROM ( select *, ROW_NUMBER() OVER (PARTITION BY user_id) as row_number
-            FROM {GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_qpi_answers_v3
-        )
-    WHERE row_number=1) AS C
-    ON A.user_id = C.user_id
-    WHERE {where_user_in}"""
+def get_data(batch, batch_size):
+    query = f"""WITH batch_users AS (
+                  SELECT DISTINCT user_id, user_region_name, user_activity, user_civility, user_deposit_creation_date, user_total_deposit_amount, actual_amount_spent
+                  FROM `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_user_data`
+                  WHERE user_total_deposit_amount = 300
+                  ORDER BY user_id
+                  LIMIT {batch_size} OFFSET {batch * batch_size}             
+                ),
+                
+                bookings AS (
+                  SELECT user_id, offer_id, booking_amount, booking_creation_date, booking_id, offer_subcategoryId, physical_goods, digital_goods, event, offer_category_id
+                  FROM `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_booking_data`
+                ),
+                
+                offer AS (
+                  SELECT offer_id, genres, rayon, type, venue_id, venue_name
+                  FROM `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_offer_data`
+                ),
+                
+                
+                qpi_answers AS (
+                  SELECT * except(row_number)
+                  FROM ( select *, ROW_NUMBER() OVER (PARTITION BY user_id) as row_number
+                    FROM `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_qpi_answers_v3` ) 
+                  WHERE row_number=1)
+                
+                
+                SELECT batch_users.user_id, bookings.booking_creation_date, bookings.booking_id, user_region_name, user_activity,
+                  REPLACE(REPLACE(user_civility, 'M.', 'M'),'Mme','F') as user_civility, 
+                  COALESCE(
+                    IF(bookings.physical_goods = True, 'physical', null),
+                    IF(bookings.digital_goods = True, 'digital', null),
+                    IF(bookings.event = True, 'event', null)
+                  ) as format,
+                  user_deposit_creation_date, user_total_deposit_amount, actual_amount_spent, offer.offer_id, booking_amount,
+                  bookings.offer_category_id as category, bookings.offer_subcategoryId as subcategory, offer.genres, offer.rayon, offer.type, offer.venue_id, offer.venue_name,
+                  qpi_answers.*
+                FROM batch_users
+                INNER JOIN bookings
+                ON batch_users.user_id = bookings.user_id
+                INNER JOIN offer
+                ON bookings.offer_id = offer.offer_id
+                LEFT JOIN qpi_answers
+                ON batch_users.user_id = qpi_answers.user_id
+                ORDER BY batch_users.user_id"""
     data = pd.read_gbq(query)
-    data["user_civility"] = data["user_civility"].replace(["M.", "Mme"], ["M", "F"])
-    data["format"] = data.apply(
-        lambda x: fuse_columns_into_format(
-            x["physical_goods"], x["digital_goods"], x["event"]
-        ),
-        axis=1,
-    )
     return data
 
 
@@ -103,8 +108,7 @@ def diversification_kpi(df):
 
 def process_diversification(batch_number):
     t0 = time.time()
-    df_users = get_batch_of_users(batch_number, BATCH_SIZE)
-    bookings = get_data(df_users)
+    bookings = get_data(batch_number, BATCH_SIZE)
     print(f"Batch {batch_number+1} contains {bookings.shape[0]} bookings.")
     bookings_enriched = pd.merge(bookings, macro_rayons, on="rayon", how="left")
     bookings_sorted = bookings_enriched.sort_values(
@@ -155,7 +159,7 @@ def process_diversification(batch_number):
             {"name": "user_region_name", "type": "STRING"},
             {"name": "user_activity", "type": "STRING"},
             {"name": "user_civility", "type": "STRING"},
-            {"name": "booking_amount", "type": "STRING"},
+            {"name": "booking_amount", "type": "FLOAT"},
             {"name": "user_deposit_creation_date", "type": "TIMESTAMP"},
             {"name": "format", "type": "STRING"},
             {"name": "macro_rayon", "type": "STRING"},

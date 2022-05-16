@@ -306,28 +306,29 @@ def _get_number_of_offers_and_max_score_by_category(
 def save_recommendation(
     user_id: int, recommendations: List[int], group_id: str, reco_origin: str
 ):
-    start = time.time()
-    date = datetime.datetime.now(pytz.utc)
-    rows = []
-    for offer_id in recommendations:
-        rows.append(
-            {
-                "user_id": user_id,
-                "offer_id": offer_id,
-                "date": date,
-                "group_id": group_id,
-                "reco_origin": reco_origin,
-            }
-        )
+    if len(recommendations) > 0:
+        start = time.time()
+        date = datetime.datetime.now(pytz.utc)
+        rows = []
+        for offer_id in recommendations:
+            rows.append(
+                {
+                    "user_id": user_id,
+                    "offer_id": offer_id,
+                    "date": date,
+                    "group_id": group_id,
+                    "reco_origin": reco_origin,
+                }
+            )
 
-    with create_db_connection() as connection:
-        connection.execute(
-            text(
-                """
-                INSERT INTO public.past_recommended_offers (userid, offerid, date, group_id, reco_origin)
-                VALUES (:user_id, :offer_id, :date, :group_id, :reco_origin)
-                """
-            ),
-            rows,
-        )
-    log_duration(f"save_recommendations for {user_id}", start)
+        with create_db_connection() as connection:
+            connection.execute(
+                text(
+                    """
+                    INSERT INTO public.past_recommended_offers (userid, offerid, date, group_id, reco_origin)
+                    VALUES (:user_id, :offer_id, :date, :group_id, :reco_origin)
+                    """
+                ),
+                rows,
+            )
+        log_duration(f"save_recommendations for {user_id}", start)

@@ -26,14 +26,30 @@ import pytz
 
 
 class Scoring:
-    def __init__(self, User, Playlist=None):
+    def __init__(self, User, InputApi=None):
         self.user = User
-        self.playlist_filters = Playlist._get_conditions() if Playlist else ""
-        self.iscoldstart = get_cold_start_status(self.user)
-        self.model_name = (
-            AB_TEST_MODEL_DICT[f"{self.user.group_id}"] if AB_TESTING else ACTIVE_MODEL
+        self.input_api_filters = InputApi._get_conditions() if InputApi else ""
+        self.input_api_model_name = InputApi.model_name if InputApi else None
+        self.iscoldstart = (
+            False if self.is_model_test else get_cold_start_status(self.user)
         )
+        self.model_name = self.set_model_name()
         self.scoring = self.get_scoring_method()
+
+    @property
+    def is_model_test(self):
+        if self.input_api_model_name:
+            return True
+        else:
+            return False
+
+    def set_model_name(self):
+        if self.is_model_test:
+            return self.input_api_model_name
+        elif AB_TESTING:
+            return AB_TEST_MODEL_DICT[f"{self.user.group_id}"]
+        else:
+            return ACTIVE_MODEL
 
     def get_scoring_method(self):
         if self.iscoldstart:
@@ -83,7 +99,7 @@ class Scoring:
     class Algo:
         def __init__(self, Scoring):
             self.user = Scoring.user
-            self.playlist_filters = Scoring.playlist_filters
+            self.input_api_filters = Scoring.input_api_filters
             self.model_name = Scoring.model_name
             self.recommendable_offers = self.get_recommendable_offers()
 
@@ -107,18 +123,19 @@ class Scoring:
 
         def _get_instances(self):
             user_to_rank = [self.user.id] * len(self.recommendable_offers)
+            offer_ids_to_rank = []
+            offers_subcategories = []
             for recommendation in self.recommendable_offers:
-                offer_ids_to_rank = [
+                offer_ids_to_rank.append(
                     recommendation["item_id"] if recommendation["item_id"] else ""
-                ]
-                offers_subcategories = [
+                )
+                offers_subcategories.append(
                     recommendation["subcategory_id"]
                     if recommendation["subcategory_id"]
                     else ""
-                ]
+                )
             instances = [{"input_1": user_to_rank, "input_2": offer_ids_to_rank}]
-
-            if self.model_name == "deep_reco":
+            if self.model_name == f"deep_reco_{ENV_SHORT_NAME}":
                 instances[0]["input_3"] = offers_subcategories
             return instances
 
@@ -162,7 +179,7 @@ class Scoring:
                     FROM non_recommendable_offers
                     WHERE user_id = :user_id
                     )   
-                {self.playlist_filters}
+                {self.input_api_filters}
                 AND booking_number >={reco_booking_limit}
                 ORDER BY RANDOM(); 
                 """
@@ -193,7 +210,7 @@ class Scoring:
     class ColdStart:
         def __init__(self, Scoring):
             self.user = Scoring.user
-            self.playlist_filters = Scoring.playlist_filters
+            self.input_api_filters = Scoring.input_api_filters
             self.cold_start_categories = self.get_cold_start_categories()
 
         def get_scored_offers(self):
@@ -218,7 +235,7 @@ class Scoring:
                         FROM non_recommendable_offers
                         WHERE user_id = :user_id
                     )
-                {self.playlist_filters}
+                {self.input_api_filters}
                 AND {where_clause}
                 {order_query}
                 LIMIT :number_of_preselected_offers;

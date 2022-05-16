@@ -10,7 +10,7 @@ from recommendation import get_final_recommendations
 
 from refacto_api.src.user import User
 from refacto_api.src.scoring import Scoring
-from refacto_api.tools.playlist import Playlist
+from refacto_api.tools.input_api import InputApi
 
 from utils import AB_TESTING, log_duration
 import time
@@ -129,11 +129,11 @@ def refacto_api(user_id: int):
 
     longitude = request.args.get("longitude", None)
     latitude = request.args.get("latitude", None)
-    playlist_args_json = request.get_json() if request.method == "POST" else None
+    post_args_json = request.get_json() if request.method == "POST" else None
 
     user = User(user_id, longitude, latitude)
-    playlist = Playlist(playlist_args_json) if playlist_args_json else None
-    scoring = Scoring(user, Playlist=playlist)
+    input_api = InputApi(post_args_json) if post_args_json else None
+    scoring = Scoring(user, InputApi=input_api)
 
     user_recommendations = scoring.get_recommendation()
     scoring.save_recommendation(user_recommendations)
@@ -142,6 +142,7 @@ def refacto_api(user_id: int):
             "recommended_offers": user_recommendations,
             "AB_test": user.group_id if AB_TESTING else None,
             "reco_origin": "cold_start" if scoring.iscoldstart else "algo",
+            "model_name": scoring.model_name if not scoring.iscoldstart else None,
         }
     )
 

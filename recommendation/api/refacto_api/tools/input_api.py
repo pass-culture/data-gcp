@@ -1,4 +1,4 @@
-class Playlist:
+class InputApi:
     def __init__(self, json):
         self.start_date = json.get("start_date", None)
         self.end_date = json.get("end_date", None)
@@ -6,12 +6,13 @@ class Playlist:
         self.categories = json.get("categories", None)
         self.subcategories = json.get("subcategories", None)
         self.price_max = json.get("price_max", None)
+        self.model_name = json.get("model_name", None)
 
     def _get_conditions(self):
         condition = ""
         if self.start_date:
             if self.isevent:
-                column = "stock_begining_date"
+                column = "stock_beginning_date"
             else:
                 column = "offer_creation_date"
             condition += f"""AND ({column} > '{self.start_date}' AND {column} < '{self.end_date}') \n"""

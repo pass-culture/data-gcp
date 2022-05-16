@@ -46,7 +46,7 @@ class User:
                     """
                 )
             ).fetchone()
-            if len(request_response) is not None:
+            if request_response is not None:
                 self.age = request_response[0]
                 self.user_deposit_initial_amount = request_response[1]
 

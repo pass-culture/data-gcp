@@ -188,6 +188,15 @@ def copy_table_to_analytics(
                 from unnest(event_params) event_params
                 where event_params.key = 'entryId'
             ) as entry_id,
+             CASE WHEN (select event_params.value.string_value
+                from unnest(event_params) event_params
+                where event_params.key = 'entryId')
+                IN ('4XbgmX7fVVgBMoCJiLiY9n', '1ZmUjN7Za1HfxlbAOJpik2') THEN "generale"
+                WHEN  (select event_params.value.string_value
+                from unnest(event_params) event_params
+                where event_params.key = 'entryId'
+            ) IS NULL THEN NULL
+            ELSE "marketing" END AS home_type,
             (select event_params.value.string_value
                 from unnest(event_params) event_params
                 where event_params.key = 'reco_origin'

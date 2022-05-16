@@ -215,6 +215,7 @@ def define_enriched_venue_query(dataset, table_prefix=""):
             LEFT JOIN offerer_humanized_id AS offerer_humanized_id ON offerer_humanized_id.offerer_id = venue.venue_managing_offerer_id
             LEFT JOIN bookable_offer_cnt ON bookable_offer_cnt.venue_id = venue.venue_id
             WHERE offerer.offerer_validation_token IS NULL 
+            AND offerer.offerer_is_active
         );
     """
 

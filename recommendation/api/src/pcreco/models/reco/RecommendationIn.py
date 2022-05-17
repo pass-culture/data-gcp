@@ -1,4 +1,5 @@
-class InputApi:
+# rename to specific api route , and put in models dir
+class RecommendationIn:
     def __init__(self, json):
         self.start_date = json.get("start_date", None)
         self.end_date = json.get("end_date", None)
@@ -8,7 +9,7 @@ class InputApi:
         self.price_max = json.get("price_max", None)
         self.model_name = json.get("model_name", None)
 
-    def _get_conditions(self):
+    def _get_conditions(self) -> str:
         condition = ""
         if self.start_date:
             if self.isevent:

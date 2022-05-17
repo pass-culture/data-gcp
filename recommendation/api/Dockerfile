@@ -10,21 +10,14 @@ ENV PYTHONUNBUFFERED True
 ENV APP_HOME /app
 WORKDIR $APP_HOME
 COPY app.py ./
-COPY geolocalisation.py ./
-COPY health_check_queries.py ./
-COPY recommendation.py ./
-COPY access_gcp_secrets.py ./
 COPY api-requirements.txt ./
-COPY not_eac/cold_start.py not_eac/
-COPY eac/eac_cold_start.py eac/
-COPY not_eac/ab_testing.py not_eac/
-COPY eac/eac_ab_testing.py eac/
-COPY not_eac/scoring.py not_eac/
-COPY eac/eac_scoring.py eac/ 
-COPY refacto_api/src/user.py refacto_api/src/
-COPY refacto_api/src/scoring.py refacto_api/src/
-COPY refacto_api/tools/* refacto_api/tools/
-COPY utils.py ./
+COPY src/pcreco/core/user.py src/pcreco/core/
+COPY src/pcreco/core/scoring.py src/pcreco/core/
+COPY src/pcreco/core/utils/* src/pcreco/core/utils/
+COPY src/pcreco/models/reco/* src/pcreco/models/reco/
+COPY src/pcreco/utils/db/* src/pcreco/utils/db/
+COPY src/pcreco/utils/secrets/* src/pcreco/utils/secrets/
+COPY src/pcreco/utils/* src/pcreco/utils/
 
 # Install production dependencies.
 RUN pip install -r api-requirements.txt

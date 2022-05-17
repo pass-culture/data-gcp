@@ -1,9 +1,11 @@
-from refacto_api.tools.ab_testing import query_ab_testing_table, ab_testing_assign_user
-from refacto_api.tools.geolocalisation import get_iris_from_coordinates
-from refacto_api.tools.db_connection import create_db_connection
+from src.pcreco.core.utils.ab_testing import (
+    query_ab_testing_table,
+    ab_testing_assign_user,
+)
+from src.pcreco.utils.geolocalisation import get_iris_from_coordinates
+from src.pcreco.utils.db.db_connection import create_db_connection
 from sqlalchemy import text
-from utils import (
-    log_duration,
+from src.pcreco.utils.env_vars import (
     RECOMMENDABLE_OFFER_TABLE_PREFIX,
     RECOMMENDABLE_OFFER_TABLE_SUFFIX_DICT,
 )
@@ -24,13 +26,13 @@ class User:
         )
 
     @property
-    def is_eac(self):
+    def is_eac(self) -> bool:
         if self.age:
             return self.age < 18 and self.user_deposit_initial_amount < 300
         else:
             return False
 
-    def get_user_profile(self):
+    def get_user_profile(self) -> None:
         self.age = None
         self.user_deposit_initial_amount = 0
         with create_db_connection() as connection:
@@ -50,7 +52,7 @@ class User:
                 self.age = request_response[0]
                 self.user_deposit_initial_amount = request_response[1]
 
-    def get_ab_testing_group(self):
+    def get_ab_testing_group(self) -> None:
         ab_testing = query_ab_testing_table(self.id)
         if ab_testing:
             self.group_id = ab_testing[0]

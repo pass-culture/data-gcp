@@ -1110,7 +1110,7 @@
 			"response": []
 		},
 		{
-			"name": "/refacto_api/user_id Geoloc",
+			"name": "/pcreco/user_id Geoloc",
 			"event": [
 				{
 					"listen": "test",
@@ -1177,12 +1177,12 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{api_url}}/refacto_api/{{user_id_A}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
+					"raw": "{{api_url}}/pcreco/{{user_id_A}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
 					"host": [
 						"{{api_url}}"
 					],
 					"path": [
-						"refacto_api",
+						"pcreco",
 						"{{user_id_A}}"
 					],
 					"query": [
@@ -1204,7 +1204,7 @@
 			"response": []
 		},
 		{
-			"name": "/refacto_api/user_id",
+			"name": "/pcreco/user_id",
 			"event": [
 				{
 					"listen": "test",
@@ -1277,12 +1277,12 @@
 					"raw": ""
 				},
 				"url": {
-					"raw": "{{api_url}}/refacto_api/{{user_id_A}}?token={{api_token}}",
+					"raw": "{{api_url}}/pcreco/{{user_id_A}}?token={{api_token}}",
 					"host": [
 						"{{api_url}}"
 					],
 					"path": [
-						"refacto_api",
+						"pcreco",
 						"{{user_id_A}}"
 					],
 					"query": [
@@ -1296,7 +1296,7 @@
 			"response": []
 		},
 		{
-			"name": "/refacto_api/user_id no token",
+			"name": "/pcreco/user_id no token",
 			"event": [
 				{
 					"listen": "test",
@@ -1318,12 +1318,12 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{api_url}}/refacto_api/{{user_id}}",
+					"raw": "{{api_url}}/pcreco/{{user_id}}",
 					"host": [
 						"{{api_url}}"
 					],
 					"path": [
-						"refacto_api",
+						"pcreco",
 						"{{user_id}}"
 					]
 				}
@@ -1331,7 +1331,7 @@
 			"response": []
 		},
 		{
-			"name": "/refacto_api/user_id Groupe A",
+			"name": "/pcreco/user_id Groupe A",
 			"event": [
 				{
 					"listen": "test",
@@ -1368,12 +1368,12 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{api_url}}/refacto_api/{{user_id_A}}?token={{api_token}}",
+					"raw": "{{api_url}}/pcreco/{{user_id_A}}?token={{api_token}}",
 					"host": [
 						"{{api_url}}"
 					],
 					"path": [
-						"refacto_api",
+						"pcreco",
 						"{{user_id_A}}"
 					],
 					"query": [
@@ -1387,7 +1387,7 @@
 			"response": []
 		},
 		{
-			"name": "/refacto_api/user_id Groupe B",
+			"name": "/pcreco/user_id Groupe B",
 			"event": [
 				{
 					"listen": "test",
@@ -1424,12 +1424,12 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{api_url}}/refacto_api/{{user_id_B}}?token={{api_token}}",
+					"raw": "{{api_url}}/pcreco/{{user_id_B}}?token={{api_token}}",
 					"host": [
 						"{{api_url}}"
 					],
 					"path": [
-						"refacto_api",
+						"pcreco",
 						"{{user_id_B}}"
 					],
 					"query": [
@@ -1443,7 +1443,7 @@
 			"response": []
 		},
 		{
-			"name": "/refacto_api/user_id Group A Geoloc",
+			"name": "/pcreco/user_id Group A Geoloc",
 			"event": [
 				{
 					"listen": "test",
@@ -1480,12 +1480,12 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{api_url}}/refacto_api/{{user_id_A}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
+					"raw": "{{api_url}}/pcreco/{{user_id_A}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
 					"host": [
 						"{{api_url}}"
 					],
 					"path": [
-						"refacto_api",
+						"pcreco",
 						"{{user_id_A}}"
 					],
 					"query": [
@@ -1507,7 +1507,7 @@
 			"response": []
 		},
 		{
-			"name": "/refacto_api/user_id Geoloc with empyt body",
+			"name": "/pcreco/user_id Geoloc with empyt body",
 			"event": [
 				{
 					"listen": "test",
@@ -1567,12 +1567,12 @@
 					}
 				},
 				"url": {
-					"raw": "{{api_url}}/refacto_api/{{user_id_A}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
+					"raw": "{{api_url}}/pcreco/{{user_id_A}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
 					"host": [
 						"{{api_url}}"
 					],
 					"path": [
-						"refacto_api",
+						"pcreco",
 						"{{user_id_A}}"
 					],
 					"query": [
@@ -1594,7 +1594,7 @@
 			"response": []
 		},
 		{
-			"name": "/refacto_api/user_id Geoloc free offers",
+			"name": "/pcreco/user_id Geoloc free offers",
 			"event": [
 				{
 					"listen": "test",
@@ -1663,12 +1663,12 @@
 					}
 				},
 				"url": {
-					"raw": "{{api_url}}/refacto_api/{{user_id_A}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
+					"raw": "{{api_url}}/pcreco/{{user_id_A}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
 					"host": [
 						"{{api_url}}"
 					],
 					"path": [
-						"refacto_api",
+						"pcreco",
 						"{{user_id_A}}"
 					],
 					"query": [
@@ -1690,7 +1690,7 @@
 			"response": []
 		},
 		{
-			"name": "/refacto_api/user_id Geoloc last 30 days",
+			"name": "/pcreco/user_id Geoloc last 30 days",
 			"event": [
 				{
 					"listen": "test",
@@ -1765,12 +1765,12 @@
 					}
 				},
 				"url": {
-					"raw": "{{api_url}}/refacto_api/{{user_id_A}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
+					"raw": "{{api_url}}/pcreco/{{user_id_A}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
 					"host": [
 						"{{api_url}}"
 					],
 					"path": [
-						"refacto_api",
+						"pcreco",
 						"{{user_id_A}}"
 					],
 					"query": [
@@ -1792,7 +1792,7 @@
 			"response": []
 		},
 		{
-			"name": "/refacto_api/user_id Geoloc last 15 days CINEMA",
+			"name": "/pcreco/user_id Geoloc last 15 days CINEMA",
 			"event": [
 				{
 					"listen": "test",
@@ -1867,12 +1867,12 @@
 					}
 				},
 				"url": {
-					"raw": "{{api_url}}/refacto_api/{{user_id_A}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
+					"raw": "{{api_url}}/pcreco/{{user_id_A}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
 					"host": [
 						"{{api_url}}"
 					],
 					"path": [
-						"refacto_api",
+						"pcreco",
 						"{{user_id_A}}"
 					],
 					"query": [
@@ -1894,7 +1894,7 @@
 			"response": []
 		},
 		{
-			"name": "/refacto_api/user_id Geoloc last 15 days THEATRE",
+			"name": "/pcreco/user_id Geoloc last 15 days THEATRE",
 			"event": [
 				{
 					"listen": "test",
@@ -1969,12 +1969,12 @@
 					}
 				},
 				"url": {
-					"raw": "{{api_url}}/refacto_api/{{user_id_A}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
+					"raw": "{{api_url}}/pcreco/{{user_id_A}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
 					"host": [
 						"{{api_url}}"
 					],
 					"path": [
-						"refacto_api",
+						"pcreco",
 						"{{user_id_A}}"
 					],
 					"query": [
@@ -1996,7 +1996,7 @@
 			"response": []
 		},
 		{
-			"name": "/refacto_api/user_id Geoloc Tonight isevent",
+			"name": "/pcreco/user_id Geoloc Tonight isevent",
 			"event": [
 				{
 					"listen": "test",
@@ -2086,12 +2086,12 @@
 					}
 				},
 				"url": {
-					"raw": "{{api_url}}/refacto_api/{{user_id_A}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
+					"raw": "{{api_url}}/pcreco/{{user_id_A}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
 					"host": [
 						"{{api_url}}"
 					],
 					"path": [
-						"refacto_api",
+						"pcreco",
 						"{{user_id_A}}"
 					],
 					"query": [
@@ -2113,7 +2113,7 @@
 			"response": []
 		},
 		{
-			"name": "/refacto_api/user_id Geoloc model : 'deep_reco'",
+			"name": "/pcreco/user_id Geoloc model : 'deep_reco'",
 			"event": [
 				{
 					"listen": "test",
@@ -2173,12 +2173,12 @@
 					}
 				},
 				"url": {
-					"raw": "{{api_url}}/refacto_api/{{user_id_A}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
+					"raw": "{{api_url}}/pcreco/{{user_id_A}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
 					"host": [
 						"{{api_url}}"
 					],
 					"path": [
-						"refacto_api",
+						"pcreco",
 						"{{user_id_A}}"
 					],
 					"query": [
@@ -2200,7 +2200,7 @@
 			"response": []
 		},
 		{
-			"name": "/refacto_api/user_id Geoloc model : 'tf_model_reco'",
+			"name": "/pcreco/user_id Geoloc model : 'tf_model_reco'",
 			"event": [
 				{
 					"listen": "test",
@@ -2260,12 +2260,12 @@
 					}
 				},
 				"url": {
-					"raw": "{{api_url}}/refacto_api/{{user_id_A}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
+					"raw": "{{api_url}}/pcreco/{{user_id_A}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
 					"host": [
 						"{{api_url}}"
 					],
 					"path": [
-						"refacto_api",
+						"pcreco",
 						"{{user_id_A}}"
 					],
 					"query": [
@@ -2287,7 +2287,7 @@
 			"response": []
 		},
 		{
-			"name": "/refacto_api/user_id Geoloc model : 'MF_reco'",
+			"name": "/pcreco/user_id Geoloc model : 'MF_reco'",
 			"event": [
 				{
 					"listen": "test",
@@ -2347,12 +2347,12 @@
 					}
 				},
 				"url": {
-					"raw": "{{api_url}}/refacto_api/{{user_id_A}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
+					"raw": "{{api_url}}/pcreco/{{user_id_A}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
 					"host": [
 						"{{api_url}}"
 					],
 					"path": [
-						"refacto_api",
+						"pcreco",
 						"{{user_id_A}}"
 					],
 					"query": [

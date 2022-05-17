@@ -1,7 +1,12 @@
 from sqlalchemy import create_engine, engine, text
 from typing import Any, Dict, List, Tuple
 
-from utils import SQL_BASE_USER, SQL_BASE_PASSWORD, SQL_BASE, SQL_CONNECTION_NAME
+from src.pcreco.utils.env_vars import (
+    SQL_BASE_USER,
+    SQL_BASE_PASSWORD,
+    SQL_BASE,
+    SQL_CONNECTION_NAME,
+)
 
 query_string = dict(
     {"unix_sock": "/cloudsql/{}/.s.PGSQL.5432".format(SQL_CONNECTION_NAME)}

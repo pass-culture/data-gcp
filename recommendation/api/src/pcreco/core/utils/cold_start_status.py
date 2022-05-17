@@ -1,8 +1,8 @@
-from refacto_api.tools.db_connection import create_db_connection
+from src.pcreco.utils.db.db_connection import create_db_connection
 from sqlalchemy import text
 
 
-def get_cold_start_status(User):
+def get_cold_start_status(User) -> bool:
     bookings_count, clicks_count, favorites_count = _get_user_app_interaction(User)
     if User.group_id == "C":
         user_app_interaction_count = (
@@ -18,7 +18,7 @@ def get_cold_start_status(User):
     return user_cold_start_status
 
 
-def _get_user_app_interaction(User):
+def _get_user_app_interaction(User) -> int:
     app_interaction_type = ["bookings", "clicks", "favorites"]
     app_interaction_count = []
     with create_db_connection() as connection:
@@ -32,7 +32,7 @@ def _get_user_app_interaction(User):
     return bookings_count, clicks_count, favorites_count
 
 
-def _get_app_interaction_count(User, connection, app_interaction):
+def _get_app_interaction_count(User, connection, app_interaction) -> int:
     app_interaction_query = text(
         f"""
             SELECT {app_interaction}_count
@@ -47,7 +47,7 @@ def _get_app_interaction_count(User, connection, app_interaction):
     return result
 
 
-def _is_trained_user(User):
+def _is_trained_user(User) -> bool:
     with create_db_connection() as connection:
         is_trained_user = connection.execute(
             text("SELECT user_id FROM trained_users_mf_reco WHERE user_id= :user_id"),

@@ -2,8 +2,7 @@ import os
 import time
 from typing import Any
 
-from access_gcp_secrets import access_secret
-from sqlalchemy import create_engine, engine, text
+from src.pcreco.utils.secrets.access_gcp_secrets import access_secret
 from loguru import logger
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
@@ -114,67 +113,6 @@ MACRO_CATEGORIES_TYPE_MAPPING = {
     "OEUVRE_ART": ["TECHNIQUE"],
 }
 
-# To remove after migration -> it will be in tools/db_connection
-
-query_string = dict(
-    {"unix_sock": "/cloudsql/{}/.s.PGSQL.5432".format(SQL_CONNECTION_NAME)}
-)
-
-
-def create_pool():
-    return create_engine(
-        engine.url.URL(
-            drivername="postgres+pg8000",
-            username=SQL_BASE_USER,
-            password=SQL_BASE_PASSWORD,
-            database=SQL_BASE,
-            query=query_string,
-        ),
-        pool_size=20,
-        max_overflow=2,
-        pool_timeout=30,
-        pool_recycle=1800,
-    )
-
-
-def create_db_connection() -> Any:
-    return create_pool().connect().execution_options(autocommit=True)
-
 
 def log_duration(message, start):
     logger.info(f"{message}: {time.time() - start} seconds.")
-
-
-# To remove after migration -> it will be in tools/playlist
-class PlaylistArgs:
-    def __init__(self, json):
-        self.start_date = json.get("start_date", None)
-        self.end_date = json.get("end_date", None)
-        self.isevent = json.get("isevent", None)
-        self.categories = json.get("categories", None)
-        self.subcategories = json.get("subcategories", None)
-        self.price_max = json.get("price_max", None)
-
-    def get_conditions(self):
-        condition = ""
-        if self.start_date:
-            if self.isevent:
-                column = "stock_beginning_date"
-            else:
-                column = "offer_creation_date"
-            condition += f"""AND ({column} > '{self.start_date}' AND {column} < '{self.end_date}') \n"""
-        if self.categories:
-            condition += (
-                "AND ("
-                + " OR ".join([f"category='{cat}'" for cat in self.categories])
-                + ")\n"
-            )
-        if self.subcategories:
-            condition += (
-                "AND ("
-                + " OR ".join([f"subcategory_id='{cat}'" for cat in self.subcategories])
-                + ")\n"
-            )
-        if self.price_max:
-            condition += f"AND stock_price<={self.price_max} \n"
-        return condition

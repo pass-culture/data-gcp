@@ -4,12 +4,15 @@ import random
 from google.api_core.client_options import ClientOptions
 from googleapiclient import discovery
 from sqlalchemy import text
-from refacto_api.tools.cold_start_status import get_cold_start_status
-from refacto_api.tools.db_connection import create_db_connection
-from refacto_api.tools.diversification import (
+from src.pcreco.core.user import User
+from src.pcreco.core.utils.cold_start_status import get_cold_start_status
+from src.pcreco.core.utils.diversification import (
     order_offers_by_score_and_diversify_categories,
 )
-from utils import (
+from src.pcreco.models.reco.RecommendationIn import RecommendationIn
+from src.pcreco.utils.db.db_connection import create_db_connection
+
+from src.pcreco.utils.env_vars import (
     ENV_SHORT_NAME,
     GCP_PROJECT,
     MACRO_CATEGORIES_TYPE_MAPPING,
@@ -23,42 +26,48 @@ from utils import (
 import datetime
 import time
 import pytz
+from typing import List, Dict, Any
 
 
 class Scoring:
-    def __init__(self, User, InputApi=None):
-        self.user = User
-        self.input_api_filters = InputApi._get_conditions() if InputApi else ""
-        self.input_api_model_name = InputApi.model_name if InputApi else None
-        self.iscoldstart = (
-            False if self.is_model_test else get_cold_start_status(self.user)
+    def __init__(self, user: User, RecommendationIn: RecommendationIn = None):
+        self.user = user
+        self.RecommendationIn_filters = (
+            RecommendationIn._get_conditions() if RecommendationIn else ""
         )
-        self.model_name = self.set_model_name()
+        self.RecommendationIn_model_name = (
+            RecommendationIn.model_name if RecommendationIn else None
+        )
+        self.iscoldstart = (
+            False if self.force_model else get_cold_start_status(self.user)
+        )
+        self.model_name = self.get_model_name()
         self.scoring = self.get_scoring_method()
 
+    # rename force model
     @property
-    def is_model_test(self):
-        if self.input_api_model_name:
+    def force_model(self) -> bool:
+        if self.RecommendationIn_model_name:
             return True
         else:
             return False
 
-    def set_model_name(self):
-        if self.is_model_test:
-            return self.input_api_model_name
+    def get_model_name(self) -> str:
+        if self.force_model:
+            return self.RecommendationIn_model_name
         elif AB_TESTING:
             return AB_TEST_MODEL_DICT[f"{self.user.group_id}"]
         else:
             return ACTIVE_MODEL
 
-    def get_scoring_method(self):
+    def get_scoring_method(self) -> object:
         if self.iscoldstart:
             scoring_method = self.ColdStart(self)
         else:
             scoring_method = self.Algo(self)
         return scoring_method
 
-    def get_recommendation(self):
+    def get_recommendation(self) -> List[str]:
         # score the offers
         final_recommendations = order_offers_by_score_and_diversify_categories(
             sorted(
@@ -68,7 +77,7 @@ class Scoring:
 
         return final_recommendations
 
-    def save_recommendation(self, recommendations):
+    def save_recommendation(self, recommendations) -> None:
         if len(recommendations) > 0:
             start = time.time()
             date = datetime.datetime.now(pytz.utc)
@@ -99,11 +108,11 @@ class Scoring:
     class Algo:
         def __init__(self, Scoring):
             self.user = Scoring.user
-            self.input_api_filters = Scoring.input_api_filters
+            self.RecommendationIn_filters = Scoring.RecommendationIn_filters
             self.model_name = Scoring.model_name
             self.recommendable_offers = self.get_recommendable_offers()
 
-        def get_scored_offers(self):
+        def get_scored_offers(self) -> List[Dict[str, Any]]:
             start = time.time()
 
             instances = self._get_instances()
@@ -121,7 +130,7 @@ class Scoring:
             )
             return recommendations
 
-        def _get_instances(self):
+        def _get_instances(self) -> List[Dict[str, str]]:
             user_to_rank = [self.user.id] * len(self.recommendable_offers)
             offer_ids_to_rank = []
             offers_subcategories = []
@@ -139,7 +148,7 @@ class Scoring:
                 instances[0]["input_3"] = offers_subcategories
             return instances
 
-        def get_recommendable_offers(self):
+        def get_recommendable_offers(self) -> List[Dict[str, Any]]:
             query = text(self._get_intermediate_query())
             with create_db_connection() as connection:
                 query_result = connection.execute(
@@ -162,7 +171,7 @@ class Scoring:
 
             return user_recommendation
 
-        def _get_intermediate_query(self):
+        def _get_intermediate_query(self) -> str:
             geoloc_filter = (
                 f"""( venue_id IN (SELECT "venue_id" FROM iris_venues_mv WHERE "iris_id" = :user_iris_id) OR is_national = True OR url IS NOT NULL)"""
                 if self.user.iris_id
@@ -179,13 +188,13 @@ class Scoring:
                     FROM non_recommendable_offers
                     WHERE user_id = :user_id
                     )   
-                {self.input_api_filters}
+                {self.RecommendationIn_filters}
                 AND booking_number >={reco_booking_limit}
                 ORDER BY RANDOM(); 
                 """
             return query
 
-        def _predict_score(self, instances):
+        def _predict_score(self, instances) -> List[List[float]]:
             """Calls the AI Platform endpoint for the given model and instances and retrieves the scores."""
             start = time.time()
             endpoint = f"https://{MODEL_REGION}-ml.googleapis.com"
@@ -210,10 +219,10 @@ class Scoring:
     class ColdStart:
         def __init__(self, Scoring):
             self.user = Scoring.user
-            self.input_api_filters = Scoring.input_api_filters
+            self.RecommendationIn_filters = Scoring.RecommendationIn_filters
             self.cold_start_categories = self.get_cold_start_categories()
 
-        def get_scored_offers(self):
+        def get_scored_offers(self) -> List[Dict[str, Any]]:
             order_query = (
                 f"""ORDER BY (category in ({', '.join([f"'{category}'" for category in self.cold_start_categories])})) DESC, booking_number DESC"""
                 if self.cold_start_categories
@@ -235,7 +244,7 @@ class Scoring:
                         FROM non_recommendable_offers
                         WHERE user_id = :user_id
                     )
-                {self.input_api_filters}
+                {self.RecommendationIn_filters}
                 AND {where_clause}
                 {order_query}
                 LIMIT :number_of_preselected_offers;
@@ -261,7 +270,7 @@ class Scoring:
             ]
             return cold_start_recommendations
 
-        def get_cold_start_categories(self):
+        def get_cold_start_categories(self) -> List[str]:
             qpi_answers_categories = list(MACRO_CATEGORIES_TYPE_MAPPING.keys())
             cold_start_query = text(
                 f"""SELECT {'"' + '","'.join(qpi_answers_categories) + '"'} FROM qpi_answers WHERE user_id = :user_id;"""

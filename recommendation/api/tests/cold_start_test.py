@@ -3,7 +3,9 @@ from unittest.mock import Mock, patch
 
 from typing import Any, List
 
-from not_eac.cold_start import get_cold_start_status, get_cold_start_categories
+from src.pcreco.core.user import User
+from src.pcreco.core.scoring import Scoring
+from src.pcreco.core.utils.cold_start_status import get_cold_start_status
 
 
 @pytest.mark.parametrize(
@@ -14,7 +16,7 @@ from not_eac.cold_start import get_cold_start_status, get_cold_start_categories
         ("113", "C", True),
     ],
 )
-@patch("not_eac.cold_start.create_db_connection")
+@patch("src.pcreco.utils.db.create_db_connection")
 def test_get_cold_start_status(
     connection_mock: Mock,
     setup_database: Any,
@@ -87,7 +89,7 @@ def test_get_cold_start_status(
         ),
     ],
 )
-@patch("not_eac.cold_start.create_db_connection")
+@patch("src.pcreco.utils.db.create_db_connection")
 def test_get_cold_start_categories(
     connection_mock: Mock,
     setup_database: Any,
@@ -95,5 +97,9 @@ def test_get_cold_start_categories(
     cold_start_categories: List[str],
 ):
     # Given
+    user = User(user_id)
+    scoring = Scoring(user)
     connection_mock.return_value = setup_database
-    assert sorted(get_cold_start_categories(user_id)) == sorted(cold_start_categories)
+    assert sorted(scoring.ColdStart.get_cold_start_categories()) == sorted(
+        cold_start_categories
+    )

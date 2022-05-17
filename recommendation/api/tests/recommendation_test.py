@@ -9,12 +9,16 @@ from recommendation import (
     order_offers_by_score_and_diversify_categories,
     save_recommendation,
 )
+from src.pcreco.core.user import User
+from src.pcreco.core.scoring import Scoring
+
 from not_eac.scoring import (
     get_intermediate_recommendations_for_user,
     get_scored_recommendation_for_user,
 )
 from not_eac.cold_start import get_cold_start_scored_recommendations_for_user
-from utils import create_db_connection
+
+from src.pcreco.utils.db.db_connection import create_db_connection
 
 
 @patch("recommendation.is_eac_user")

@@ -6,7 +6,7 @@ import pytest
 from sqlalchemy import create_engine
 from unittest.mock import Mock, patch
 
-from geolocalisation import get_iris_from_coordinates
+from src.pcreco.utils.geolocalisation import get_iris_from_coordinates
 
 DATA_GCP_TEST_POSTGRES_PORT = os.getenv("DATA_GCP_TEST_POSTGRES_PORT")
 DB_NAME = os.getenv("DB_NAME")

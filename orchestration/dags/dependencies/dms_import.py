@@ -6,6 +6,22 @@ from dependencies.config import (
     GCP_PROJECT_ID,
 )
 
+destination_table_schema = [
+    {"name": "procedure_id", "type": "STRING"},
+    {"name": "application_id", "type": "STRING"},
+    {"name": "application_number", "type": "STRING"},
+    {"name": "application_archived", "type": "STRING"},
+    {"name": "application_status", "type": "STRING"},
+    {"name": "last_update_at", "type": "TIMESTAMP"},
+    {"name": "application_submitted_at", "type": "TIMESTAMP"},
+    {"name": "passed_in_instruction_at", "type": "TIMESTAMP"},
+    {"name": "processed_at", "type": "TIMESTAMP"},
+    {"name": "application_motivation", "type": "STRING"},
+    {"name": "instructors", "type": "STRING"},
+    {"name": "applicant_department", "type": "STRING"},
+    {"name": "applicant_postal_code", "type": "STRING"},
+]
+
 
 def parse_api_result(updated_since, dms_target):
     print("updated_since:", updated_since)
@@ -71,10 +87,28 @@ def parse_api_result(updated_since, dms_target):
 
 
 def save_results(df_applications, dms_target, updated_since):
-    df_applications.to_csv(
-        f"gs://{DATA_GCS_BUCKET_NAME}/dms_export/dms_{dms_target}_{updated_since}.csv",
-        header=False,
-        index=False,
+    #for dict in destination_table_schema:
+
+    df_applications["last_update_at"] = pd.to_datetime(
+        df_applications["last_update_at"]
+    )
+    df_applications["procedure_id"] = df_applications["procedure_id"].astype(str)
+    {"name": "procedure_id", "type": "STRING"},
+    {"name": "application_id", "type": "STRING"},
+    {"name": "application_number", "type": "STRING"},
+    {"name": "application_archived", "type": "STRING"},
+    {"name": "application_status", "type": "STRING"},
+    {"name": "last_update_at", "type": "TIMESTAMP"},
+    {"name": "application_submitted_at", "type": "TIMESTAMP"},
+    {"name": "passed_in_instruction_at", "type": "TIMESTAMP"},
+    {"name": "processed_at", "type": "TIMESTAMP"},
+    {"name": "application_motivation", "type": "STRING"},
+    {"name": "instructors", "type": "STRING"},
+    {"name": "applicant_department", "type": "STRING"},
+    {"name": "applicant_postal_code", "type": "STRING"},
+    df_applications.to_parquet(
+        f"gs://{DATA_GCS_BUCKET_NAME}/dms_export/dms_{dms_target}_{updated_since}.parquet",
+        engine="pyarrow",
     )
     return
 

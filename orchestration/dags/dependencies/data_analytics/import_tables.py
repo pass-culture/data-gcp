@@ -192,6 +192,7 @@ def define_import_query(
             "visualDisabilityCompliant" as offer_visual_disability_compliant,
             "externalTicketOfficeUrl" as offer_external_ticket_office_url,
             CAST("validation" AS varchar(255)) as offer_validation,
+            CAST("lastValidationType" AS varchar(255)) as offer_last_validation_type,
             CAST("subcategoryId" AS varchar(255)) as offer_subcategoryId,
             "dateUpdated" as offer_date_updated,
             "isEducational" AS offer_is_educational, 

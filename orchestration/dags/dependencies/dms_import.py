@@ -113,7 +113,7 @@ def parse_api_result(updated_since, dms_target):
 def save_results(df_applications, dms_target, updated_since):
     destination_table_schema = (
         destination_table_schema_jeunes
-        if dms_target == "Jeunes"
+        if dms_target == "jeunes"
         else destination_table_schema_pro
     )
     for column in destination_table_schema:

@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine, engine, text
 from typing import Any, Dict, List, Tuple
 
-from src.pcreco.utils.env_vars import (
+from pcreco.utils.env_vars import (
     SQL_BASE_USER,
     SQL_BASE_PASSWORD,
     SQL_BASE,

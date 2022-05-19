@@ -4,7 +4,7 @@ import sys
 from typing import Any
 
 from sqlalchemy import create_engine, engine
-from src.pcreco.utils.secrets.access_gcp_secrets import access_secret
+from pcreco.utils.secrets.access_gcp_secrets import access_secret
 
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT")

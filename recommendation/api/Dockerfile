@@ -9,15 +9,15 @@ ENV PYTHONUNBUFFERED True
 # Copy local code to the container image.
 ENV APP_HOME /app
 WORKDIR $APP_HOME
-COPY app.py ./
+COPY src/app.py ./
 COPY api-requirements.txt ./
-COPY src/pcreco/core/user.py src/pcreco/core/
-COPY src/pcreco/core/scoring.py src/pcreco/core/
-COPY src/pcreco/core/utils/* src/pcreco/core/utils/
-COPY src/pcreco/models/reco/* src/pcreco/models/reco/
-COPY src/pcreco/utils/db/* src/pcreco/utils/db/
-COPY src/pcreco/utils/secrets/* src/pcreco/utils/secrets/
-COPY src/pcreco/utils/* src/pcreco/utils/
+COPY src/pcreco/core/user.py pcreco/core/
+COPY src/pcreco/core/scoring.py pcreco/core/
+COPY src/pcreco/core/utils/* pcreco/core/utils/
+COPY src/pcreco/models/reco/* pcreco/models/reco/
+COPY src/pcreco/utils/db/* pcreco/utils/db/
+COPY src/pcreco/utils/secrets/* pcreco/utils/secrets/
+COPY src/pcreco/utils/* pcreco/utils/
 
 # Install production dependencies.
 RUN pip install -r api-requirements.txt

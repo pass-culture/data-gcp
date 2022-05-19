@@ -1,4 +1,4 @@
-from src.pcreco.utils.db.db_connection import create_db_connection
+from pcreco.utils.db.db_connection import create_db_connection
 from sqlalchemy import text
 
 

@@ -2,7 +2,7 @@ import os
 import time
 from typing import Any
 
-from src.pcreco.utils.secrets.access_gcp_secrets import access_secret
+from pcreco.utils.secrets.access_gcp_secrets import access_secret
 from loguru import logger
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT")

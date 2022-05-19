@@ -1,7 +1,7 @@
 import random
 from sqlalchemy import text
-from src.pcreco.utils.env_vars import AB_TESTING_TABLE, AB_TESTING_GROUPS
-from src.pcreco.utils.db.db_connection import create_db_connection
+from pcreco.utils.env_vars import AB_TESTING_TABLE, AB_TESTING_GROUPS
+from pcreco.utils.db.db_connection import create_db_connection
 from typing import Any
 
 

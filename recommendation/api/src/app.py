@@ -4,14 +4,14 @@ import re
 from flask import Flask, jsonify, make_response, request
 from flask_cors import CORS
 
-from src.pcreco.utils.secrets.access_gcp_secrets import access_secret
-from src.pcreco.utils.health_check_queries import get_materialized_view_status
+from pcreco.utils.secrets.access_gcp_secrets import access_secret
+from pcreco.utils.health_check_queries import get_materialized_view_status
 
-from src.pcreco.core.user import User
-from src.pcreco.core.scoring import Scoring
-from src.pcreco.models.reco.RecommendationIn import RecommendationIn
+from pcreco.core.user import User
+from pcreco.core.scoring import Scoring
+from pcreco.models.reco.RecommendationIn import RecommendationIn
 
-from src.pcreco.utils.env_vars import AB_TESTING, log_duration
+from pcreco.utils.env_vars import AB_TESTING, log_duration
 import time
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT")

@@ -4,15 +4,15 @@ import random
 from google.api_core.client_options import ClientOptions
 from googleapiclient import discovery
 from sqlalchemy import text
-from src.pcreco.core.user import User
-from src.pcreco.core.utils.cold_start_status import get_cold_start_status
-from src.pcreco.core.utils.diversification import (
+from pcreco.core.user import User
+from pcreco.core.utils.cold_start_status import get_cold_start_status
+from pcreco.core.utils.diversification import (
     order_offers_by_score_and_diversify_categories,
 )
-from src.pcreco.models.reco.RecommendationIn import RecommendationIn
-from src.pcreco.utils.db.db_connection import create_db_connection
+from pcreco.models.reco.RecommendationIn import RecommendationIn
+from pcreco.utils.db.db_connection import create_db_connection
 
-from src.pcreco.utils.env_vars import (
+from pcreco.utils.env_vars import (
     ENV_SHORT_NAME,
     GCP_PROJECT,
     MACRO_CATEGORIES_TYPE_MAPPING,

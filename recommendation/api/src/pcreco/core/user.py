@@ -1,11 +1,11 @@
-from src.pcreco.core.utils.ab_testing import (
+from pcreco.core.utils.ab_testing import (
     query_ab_testing_table,
     ab_testing_assign_user,
 )
-from src.pcreco.utils.geolocalisation import get_iris_from_coordinates
-from src.pcreco.utils.db.db_connection import create_db_connection
+from pcreco.utils.geolocalisation import get_iris_from_coordinates
+from pcreco.utils.db.db_connection import create_db_connection
 from sqlalchemy import text
-from src.pcreco.utils.env_vars import (
+from pcreco.utils.env_vars import (
     RECOMMENDABLE_OFFER_TABLE_PREFIX,
     RECOMMENDABLE_OFFER_TABLE_SUFFIX_DICT,
 )

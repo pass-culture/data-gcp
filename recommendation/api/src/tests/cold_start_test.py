@@ -3,17 +3,17 @@ from unittest.mock import Mock, patch
 
 from typing import Any, List
 
-from src.pcreco.core.user import User
-from src.pcreco.core.scoring import Scoring
-from src.pcreco.core.utils.cold_start_status import get_cold_start_status
+from pcreco.core.user import User
+from pcreco.core.scoring import Scoring
+from pcreco.core.utils.cold_start_status import get_cold_start_status
 
 
 @pytest.mark.parametrize(
-    ["user_id", "group_id", "cold_start_status"],
+    ["user_id", "cold_start_status"],
     [
-        ("111", "A", False),
-        ("112", "B", True),
-        ("113", "C", True),
+        ("111", False),
+        ("112", True),
+        ("113", True),
     ],
 )
 @patch("src.pcreco.utils.db.db_connection.create_db_connection")

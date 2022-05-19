@@ -3,7 +3,7 @@ import time
 from typing import Any, Dict, List, Tuple
 
 import numpy as np
-from src.pcreco.utils.env_vars import NUMBER_OF_RECOMMENDATIONS, log_duration
+from pcreco.utils.env_vars import NUMBER_OF_RECOMMENDATIONS, log_duration
 
 
 def order_offers_by_score_and_diversify_categories(

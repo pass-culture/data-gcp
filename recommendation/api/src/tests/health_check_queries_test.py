@@ -6,7 +6,7 @@ import pandas as pd
 import pytest
 from sqlalchemy import create_engine
 
-from src.pcreco.utils.health_check_queries import (
+from pcreco.utils.health_check_queries import (
     does_materialized_view_exist,
     does_materialized_view_have_data,
     get_materialized_view_status,

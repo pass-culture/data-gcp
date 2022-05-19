@@ -252,7 +252,11 @@ def define_import_query(
             else "venueTypeCode" END AS venue_type_code,
             CAST("venueLabelId" AS varchar(255)) AS venue_label_id, "dateCreated" AS venue_creation_date,
             "isPermanent" AS venue_is_permanent, "validationToken" AS venue_validation_token, 
-            CAST("businessUnitId" AS varchar(255)) AS business_unit_id, "bannerUrl" as banner_url
+            CAST("businessUnitId" AS varchar(255)) AS business_unit_id, "bannerUrl" as banner_url,
+            "mentalDisabilityCompliant" AS venue_mentalDisabilityCompliant,
+            "motorDisabilityCompliant" AS venue_motorDisabilityCompliant,
+            "visualDisabilityCompliant" AS venue_visualDisabilityCompliant,
+            "adageId" AS venue_adage_id
         FROM public.venue
     """
     cloudsql_queries[

@@ -6,6 +6,46 @@ from dependencies.config import (
     GCP_PROJECT_ID,
 )
 
+# find and replace string to str
+destination_table_schema_jeunes = [
+    {"name": "procedure_id", "type": "STRING"},
+    {"name": "application_id", "type": "STRING"},
+    {"name": "application_number", "type": "STRING"},
+    {"name": "application_archived", "type": "STRING"},
+    {"name": "application_status", "type": "STRING"},
+    {"name": "last_update_at", "type": "TIMESTAMP"},
+    {"name": "application_submitted_at", "type": "TIMESTAMP"},
+    {"name": "passed_in_instruction_at", "type": "TIMESTAMP"},
+    {"name": "processed_at", "type": "TIMESTAMP"},
+    {"name": "application_motivation", "type": "STRING"},
+    {"name": "instructors", "type": "STRING"},
+    {"name": "applicant_department", "type": "STRING"},
+    {"name": "applicant_postal_code", "type": "STRING"},
+]
+
+destination_table_schema_pro = [
+    {"name": "procedure_id", "type": "STRING"},
+    {"name": "application_id", "type": "STRING"},
+    {"name": "application_number", "type": "STRING"},
+    {"name": "application_archived", "type": "STRING"},
+    {"name": "application_status", "type": "STRING"},
+    {"name": "last_update_at", "type": "TIMESTAMP"},
+    {"name": "application_submitted_at", "type": "TIMESTAMP"},
+    {"name": "passed_in_instruction_at", "type": "TIMESTAMP"},
+    {"name": "processed_at", "type": "TIMESTAMP"},
+    {"name": "application_motivation", "type": "STRING"},
+    {"name": "instructors", "type": "STRING"},
+    {"name": "demandeur_siret", "type": "STRING"},
+    {"name": "demandeur_naf", "type": "STRING"},
+    {"name": "demandeur_libelleNaf", "type": "STRING"},
+    {"name": "demandeur_entreprise_siren", "type": "STRING"},
+    {"name": "demandeur_entreprise_formeJuridique", "type": "STRING"},
+    {"name": "demandeur_entreprise_formeJuridiqueCode", "type": "STRING"},
+    {"name": "demandeur_entreprise_codeEffectifEntreprise", "type": "STRING"},
+    {"name": "demandeur_entreprise_raisonSociale", "type": "STRING"},
+    {"name": "demandeur_entreprise_siretSiegeSocial", "type": "STRING"},
+]
+
 
 def parse_api_result(updated_since, dms_target):
     print("updated_since:", updated_since)
@@ -71,9 +111,21 @@ def parse_api_result(updated_since, dms_target):
 
 
 def save_results(df_applications, dms_target, updated_since):
-    df_applications.to_csv(
-        f"gs://{DATA_GCS_BUCKET_NAME}/dms_export/dms_{dms_target}_{updated_since}.csv",
-        header=False,
+    destination_table_schema = (
+        destination_table_schema_jeunes
+        if dms_target == "Jeunes"
+        else destination_table_schema_pro
+    )
+    for column in destination_table_schema:
+        name = column["name"]
+        type = column["type"]
+        if type == "TIMESTAMP":
+            df_applications[f"{name}"] = pd.to_datetime(df_applications[f"{name}"])
+        elif type == "STRING":
+            df_applications[f"{name}"] = df_applications[f"{name}"].astype(str)
+    df_applications.to_parquet(
+        f"gs://{DATA_GCS_BUCKET_NAME}/dms_export/dms_{dms_target}_{updated_since}.parquet",
+        engine="pyarrow",
         index=False,
     )
     return

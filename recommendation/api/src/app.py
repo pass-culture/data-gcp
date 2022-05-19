@@ -9,7 +9,7 @@ from pcreco.utils.health_check_queries import get_materialized_view_status
 
 from pcreco.core.user import User
 from pcreco.core.scoring import Scoring
-from pcreco.models.reco.RecommendationIn import RecommendationIn
+from pcreco.models.reco.recommendation import RecommendationIn
 
 from pcreco.utils.env_vars import AB_TESTING, log_duration
 import time
@@ -74,7 +74,7 @@ def health_check_iris_venues_mv_status():
     return jsonify(table_status), 200
 
 
-@app.route("/recommendation/<user_id>")
+@app.route("/recommendation/<user_id>", methods=["GET", "POST"])
 def recommendation(user_id: int):
     if request.args.get("token", None) != API_TOKEN:
         return "Forbidden", 403
@@ -85,7 +85,7 @@ def recommendation(user_id: int):
 
     user = User(user_id, longitude, latitude)
     input_reco = RecommendationIn(post_args_json) if post_args_json else None
-    scoring = Scoring(user, RecommendationIn=input_reco)
+    scoring = Scoring(user, recommendation_in=input_reco)
 
     user_recommendations = scoring.get_recommendation()
     scoring.save_recommendation(user_recommendations)
@@ -110,38 +110,13 @@ def playlist_recommendation(user_id: int):
 
     user = User(user_id, longitude, latitude)
     input_reco = RecommendationIn(post_args_json) if post_args_json else None
-    scoring = Scoring(user, RecommendationIn=input_reco)
+    scoring = Scoring(user, recommendation_in=input_reco)
 
     user_recommendations = scoring.get_recommendation()
     scoring.save_recommendation(user_recommendations)
     return jsonify(
         {
             "playlist_recommended_offers": user_recommendations,
-        }
-    )
-
-
-@app.route("/pcreco/<user_id>", methods=["GET", "POST"])
-def pcreco(user_id: int):
-    if request.args.get("token", None) != API_TOKEN:
-        return "Forbidden", 403
-
-    longitude = request.args.get("longitude", None)
-    latitude = request.args.get("latitude", None)
-    post_args_json = request.get_json() if request.method == "POST" else None
-
-    user = User(user_id, longitude, latitude)
-    input_reco = RecommendationIn(post_args_json) if post_args_json else None
-    scoring = Scoring(user, RecommendationIn=input_reco)
-
-    user_recommendations = scoring.get_recommendation()
-    scoring.save_recommendation(user_recommendations)
-    return jsonify(
-        {
-            "recommended_offers": user_recommendations,
-            "AB_test": user.group_id if AB_TESTING else None,
-            "reco_origin": "cold_start" if scoring.iscoldstart else "algo",
-            "model_name": scoring.model_name if not scoring.iscoldstart else None,
         }
     )
 

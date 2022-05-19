@@ -9,7 +9,7 @@ from pcreco.core.utils.cold_start_status import get_cold_start_status
 from pcreco.core.utils.diversification import (
     order_offers_by_score_and_diversify_categories,
 )
-from pcreco.models.reco.RecommendationIn import RecommendationIn
+from pcreco.models.reco.recommendation import RecommendationIn
 from pcreco.utils.db.db_connection import create_db_connection
 
 from pcreco.utils.env_vars import (
@@ -30,13 +30,13 @@ from typing import List, Dict, Any
 
 
 class Scoring:
-    def __init__(self, user: User, RecommendationIn: RecommendationIn = None):
+    def __init__(self, user: User, recommendation_in: RecommendationIn = None):
         self.user = user
-        self.RecommendationIn_filters = (
-            RecommendationIn._get_conditions() if RecommendationIn else ""
+        self.recommendation_in_filters = (
+            recommendation_in._get_conditions() if recommendation_in else ""
         )
-        self.RecommendationIn_model_name = (
-            RecommendationIn.model_name if RecommendationIn else None
+        self.recommendation_in_model_name = (
+            recommendation_in.model_name if recommendation_in else None
         )
         self.iscoldstart = (
             False if self.force_model else get_cold_start_status(self.user)
@@ -47,14 +47,14 @@ class Scoring:
     # rename force model
     @property
     def force_model(self) -> bool:
-        if self.RecommendationIn_model_name:
+        if self.recommendation_in_model_name:
             return True
         else:
             return False
 
     def get_model_name(self) -> str:
         if self.force_model:
-            return self.RecommendationIn_model_name
+            return self.recommendation_in_model_name
         elif AB_TESTING:
             return AB_TEST_MODEL_DICT[f"{self.user.group_id}"]
         else:
@@ -106,10 +106,10 @@ class Scoring:
             log_duration(f"save_recommendations for {self.user.id}", start)
 
     class Algo:
-        def __init__(self, Scoring):
-            self.user = Scoring.user
-            self.RecommendationIn_filters = Scoring.RecommendationIn_filters
-            self.model_name = Scoring.model_name
+        def __init__(self, scoring):
+            self.user = scoring.user
+            self.recommendation_in_filters = scoring.recommendation_in_filters
+            self.model_name = scoring.model_name
             self.recommendable_offers = self.get_recommendable_offers()
 
         def get_scored_offers(self) -> List[Dict[str, Any]]:
@@ -188,7 +188,7 @@ class Scoring:
                     FROM non_recommendable_offers
                     WHERE user_id = :user_id
                     )   
-                {self.RecommendationIn_filters}
+                {self.recommendation_in_filters}
                 AND booking_number >={reco_booking_limit}
                 ORDER BY RANDOM(); 
                 """
@@ -217,9 +217,9 @@ class Scoring:
             return response["predictions"]
 
     class ColdStart:
-        def __init__(self, Scoring):
-            self.user = Scoring.user
-            self.RecommendationIn_filters = Scoring.RecommendationIn_filters
+        def __init__(self, scoring):
+            self.user = scoring.user
+            self.recommendation_in_filters = scoring.recommendation_in_filters
             self.cold_start_categories = self.get_cold_start_categories()
 
         def get_scored_offers(self) -> List[Dict[str, Any]]:
@@ -244,7 +244,7 @@ class Scoring:
                         FROM non_recommendable_offers
                         WHERE user_id = :user_id
                     )
-                {self.RecommendationIn_filters}
+                {self.recommendation_in_filters}
                 AND {where_clause}
                 {order_query}
                 LIMIT :number_of_preselected_offers;

@@ -28,7 +28,7 @@ def setup_database() -> Any:
     )
     connection = engine.connect().execution_options(autocommit=True)
 
-    iris_france = pd.read_csv("./iris_france_tests.csv")
+    iris_france = pd.read_csv("./src/tests/iris_france_tests.csv")
     iris_france.to_sql("iris_france", con=engine, if_exists="replace", index=False)
 
     sql = """ALTER TABLE public.iris_france

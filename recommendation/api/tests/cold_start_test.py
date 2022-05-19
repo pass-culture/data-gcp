@@ -26,8 +26,7 @@ def test_get_cold_start_status(
     # Given
     connection_mock.return_value = setup_database
     user = User(user_id)
-    scoring = Scoring(user)
-    assert scoring.ColdStart.get_cold_start_status(user) == cold_start_status
+    assert get_cold_start_status(user) == cold_start_status
 
 
 @pytest.mark.parametrize(

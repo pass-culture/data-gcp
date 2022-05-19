@@ -44,7 +44,7 @@ def setup_database() -> Any:
     connection.close()
 
 
-@patch("geolocalisation.create_db_connection")
+@patch("src.pcreco.utils.db.db_connection.create_db_connection")
 def test_get_iris_from_coordinates(mock_connection: Mock, setup_database: Any):
     # Given
     mock_connection.return_value = setup_database
@@ -58,7 +58,7 @@ def test_get_iris_from_coordinates(mock_connection: Mock, setup_database: Any):
     assert iris_id == 45327
 
 
-@patch("geolocalisation.create_db_connection")
+@patch("src.pcreco.utils.db.db_connection.create_db_connection")
 def test_get_iris_from_coordinates_without_coordinates(
     mock_connection: Mock, setup_database: Any
 ):
@@ -74,7 +74,7 @@ def test_get_iris_from_coordinates_without_coordinates(
     assert iris_id is None
 
 
-@patch("geolocalisation.create_db_connection")
+@patch("src.pcreco.utils.db.db_connection.create_db_connection")
 def test_get_iris_from_coordinates_not_in_france(
     mock_connection: Mock, setup_database: Any
 ):

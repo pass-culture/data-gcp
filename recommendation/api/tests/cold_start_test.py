@@ -16,7 +16,7 @@ from src.pcreco.core.utils.cold_start_status import get_cold_start_status
         ("113", "C", True),
     ],
 )
-@patch("src.pcreco.utils.db.create_db_connection")
+@patch("src.pcreco.utils.db.db_connection.create_db_connection")
 def test_get_cold_start_status(
     connection_mock: Mock,
     setup_database: Any,
@@ -89,7 +89,7 @@ def test_get_cold_start_status(
         ),
     ],
 )
-@patch("src.pcreco.utils.db.create_db_connection")
+@patch("src.pcreco.utils.db.db_connection.create_db_connection")
 def test_get_cold_start_categories(
     connection_mock: Mock,
     setup_database: Any,

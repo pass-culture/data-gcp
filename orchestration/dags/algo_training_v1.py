@@ -219,7 +219,7 @@ with DAG(
     list_model_versions = BashOperator(
         task_id="list_model_versions",
         bash_command="gcloud ml-engine versions list "
-        "--model=tf_model_reco_{{ENV_SHORT_NAME}} "
+        "--model={{params.model}} "
         "--region=europe-west1 "
         "--project={{params.project}} "
         "--sort-by=~NAME",

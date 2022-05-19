@@ -42,14 +42,17 @@ def aggregate_firebase_user_events(gcp_project, bigquery_raw_dataset):
                 from unnest(event_params) event_params
                 where event_params.key = 'firebase_screen_class'
             ) as firebase_screen_class,
+            user_pseudo_id
             FROM `{gcp_project}.{bigquery_raw_dataset}.events_*` AS events
         ),
         sessions AS ( 
             SELECT ROUND((max(event_timestamp) - min(event_timestamp))/(1000 * 1000), 1) AS total_time, 
-            event_params.value.int_value AS session_id 
+            event_params.value.int_value AS session_id, user_pseudo_id
             FROM `{gcp_project}.{bigquery_raw_dataset}.events_*` AS events, events.event_params AS event_params
             WHERE event_params.key = 'ga_session_id'
-            GROUP BY session_id
+            AND event_name NOT IN ('app_remove', 'os_update', 'batch_notification_open','batch_notification_display',
+            'batch_notification_dismiss', 'user_engagement', 'app_update')
+            GROUP BY session_id, user_pseudo_id
         ),
         first_and_last_co_date AS (
         SELECT
@@ -57,6 +60,8 @@ def aggregate_firebase_user_events(gcp_project, bigquery_raw_dataset):
             , MIN(event_timestamp) AS first_connexion_date
             , MAX(event_timestamp) AS last_connexion_date
         FROM `{gcp_project}.{bigquery_raw_dataset}.events_*`
+        WHERE event_name NOT IN ('app_remove', 'os_update', 'batch_notification_open','batch_notification_display',
+        'batch_notification_dismiss', 'user_engagement', 'app_update')
         GROUP BY user_id
         )
         SELECT events.user_id,
@@ -81,7 +86,7 @@ def aggregate_firebase_user_events(gcp_project, bigquery_raw_dataset):
         SUM(CAST(event_name = 'ConsultOffer' AS INT64)) AS consult_offer,
         SUM(CAST(event_name = 'ClickBookOffer' AS INT64)) AS click_book_offer,
         FROM events
-        LEFT JOIN sessions ON events.session_id = sessions.session_id
+        LEFT JOIN sessions ON events.session_id = sessions.session_id AND events.user_pseudo_id = sessions.user_pseudo_id
         LEFT JOIN first_and_last_co_date ON first_and_last_co_date.user_id  = events.user_id
         WHERE events.user_id IS NOT NULL
         GROUP BY events.user_id,first_connexion_date, last_connexion_date
@@ -104,7 +109,7 @@ def aggregate_firebase_visits(gcp_project, bigquery_raw_dataset):
                 where event_params.key = 'ga_session_number'
             ) as session_number,
         FROM `{gcp_project}.{bigquery_raw_dataset}.events_*`
-        WHERE event_name NOT IN ('app_remove', 'os_update', 'batch_notification_open','batch_notification_display', 'batch_notification_dismiss')
+        WHERE event_name NOT IN ('app_remove', 'os_update', 'batch_notification_open','batch_notification_display', 'batch_notification_dismiss', 'app_update')
          )
     SELECT
         session_id,

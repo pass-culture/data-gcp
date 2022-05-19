@@ -1,2397 +1,2001 @@
 {
-	"info": {
-		"_postman_id": "6e39d1a8-5b44-49f9-9382-af450dd63605",
-		"name": "API Integration Tests",
-		"description": "Collection of integration tests for the reco api.\nMade with Postman",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-	},
-	"item": [
-		{
-			"name": "/check",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Request is successful with a status code of 200\", function () {",
-							"  pm.response.to.have.status(200);",
-							"});",
-							"",
-							"pm.test(\"Body matches string OK\", function () {",
-							"    pm.expect(pm.response.text()).to.include(\"OK\");",
-							"});"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{api_url}}/check",
-					"host": [
-						"{{api_url}}"
-					],
-					"path": [
-						"check"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "root",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Request is successful with a status code of 200\", function () {",
-							"  pm.response.to.have.status(200);",
-							"});",
-							"",
-							"pm.test(\"Body matches string Welcome\", function () {",
-							"    pm.expect(pm.response.text()).to.include(\"Welcome to the recommendation API!\");",
-							"});"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{api_url}}/",
-					"host": [
-						"{{api_url}}"
-					],
-					"path": [
-						""
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "/recommendation/user_id no token",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Request is forbidden with a status code of 403\", function () {",
-							"  pm.response.to.have.status(403);",
-							"});",
-							"",
-							"pm.test(\"Body matches string Forbidden\", function () {",
-							"    pm.expect(pm.response.text()).to.include(\"Forbidden\");",
-							"});"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{api_url}}/recommendation/{{user_id}}",
-					"host": [
-						"{{api_url}}"
-					],
-					"path": [
-						"recommendation",
-						"{{user_id}}"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "/recommendation/user_id Groupe A",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Request is successful with a status code of 200\", function () {",
-							"  pm.response.to.have.status(200);",
-							"});",
-							"",
-							"pm.test(\"Response must be a JSON and have a body\", function () {",
-							"     pm.response.to.be.ok;",
-							"     pm.response.to.be.withBody;",
-							"     pm.response.to.be.json;",
-							"});",
-							"",
-							"pm.test(\"Response must contain an array recommended_offers\", function () {",
-							"  const jsonResponse = pm.response.json();",
-							"  pm.expect(jsonResponse).to.be.an(\"object\");",
-							"  pm.expect(jsonResponse).to.have.property('recommended_offers')",
-							"  pm.expect(jsonResponse.recommended_offers).to.be.an(\"array\");",
-							"});",
-							"",
-							"",
-							"pm.test(\"Response for Group A must contain 10 offers\", function () {",
-							"  const jsonResponse = pm.response.json();",
-							"  pm.expect(jsonResponse.recommended_offers).to.have.lengthOf(10);",
-							"});"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{api_url}}/recommendation/{{user_id_A}}?token={{api_token}}",
-					"host": [
-						"{{api_url}}"
-					],
-					"path": [
-						"recommendation",
-						"{{user_id_A}}"
-					],
-					"query": [
-						{
-							"key": "token",
-							"value": "{{api_token}}"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "/recommendation/user_id Groupe B",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Request is successful with a status code of 200\", function () {",
-							"  pm.response.to.have.status(200);",
-							"});",
-							"",
-							"pm.test(\"Response must be a JSON and have a body\", function () {",
-							"     pm.response.to.be.ok;",
-							"     pm.response.to.be.withBody;",
-							"     pm.response.to.be.json;",
-							"});",
-							"",
-							"pm.test(\"Response must contain an array recommended_offers\", function () {",
-							"  const jsonResponse = pm.response.json();",
-							"  pm.expect(jsonResponse).to.be.an(\"object\");",
-							"  pm.expect(jsonResponse).to.have.property('recommended_offers')",
-							"  pm.expect(jsonResponse.recommended_offers).to.be.an(\"array\");",
-							"});",
-							"",
-							"",
-							"pm.test(\"Response for Group B must contain an array of recommended_offers of lenght 10\", function () {",
-							"  const jsonResponse = pm.response.json();",
-							"  pm.expect(jsonResponse.recommended_offers).to.have.lengthOf(10);",
-							"});"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{api_url}}/recommendation/{{user_id_B}}?token={{api_token}}",
-					"host": [
-						"{{api_url}}"
-					],
-					"path": [
-						"recommendation",
-						"{{user_id_B}}"
-					],
-					"query": [
-						{
-							"key": "token",
-							"value": "{{api_token}}"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "/recommendation/user_id Group A Geoloc",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Request is successful with a status code of 200\", function () {",
-							"  pm.response.to.have.status(200);",
-							"});",
-							"",
-							"pm.test(\"Response must be a JSON and have a body\", function () {",
-							"     pm.response.to.be.ok;",
-							"     pm.response.to.be.withBody;",
-							"     pm.response.to.be.json;",
-							"});",
-							"",
-							"pm.test(\"Response must contain an array recommended_offers\", function () {",
-							"  const jsonResponse = pm.response.json();",
-							"  pm.expect(jsonResponse).to.be.an(\"object\");",
-							"  pm.expect(jsonResponse).to.have.property('recommended_offers')",
-							"  pm.expect(jsonResponse.recommended_offers).to.be.an(\"array\");",
-							"});",
-							"",
-							"",
-							"pm.test(\"Response for Group A with geoloc must contain 10 offers\", function () {",
-							"  const jsonResponse = pm.response.json();",
-							"  pm.expect(jsonResponse.recommended_offers).to.have.lengthOf(10);",
-							"});"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{api_url}}/recommendation/{{user_id_A}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
-					"host": [
-						"{{api_url}}"
-					],
-					"path": [
-						"recommendation",
-						"{{user_id_A}}"
-					],
-					"query": [
-						{
-							"key": "token",
-							"value": "{{api_token}}"
-						},
-						{
-							"key": "longitude",
-							"value": "2.3688874"
-						},
-						{
-							"key": "latitude",
-							"value": "48.8632553"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "/health/recommendable_offers",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Request is successful with a status code of 200\", function () {",
-							"  pm.response.to.have.status(200);",
-							"});",
-							"",
-							"pm.test(\"Response must be a JSON and have a body\", function () {",
-							"     pm.response.to.be.ok;",
-							"     pm.response.to.be.withBody;",
-							"     pm.response.to.be.json;",
-							"});",
-							"",
-							"pm.test(\"Response must be a JSON with the right keys\", function () {",
-							"  const jsonResponse = pm.response.json();",
-							"  pm.expect(jsonResponse).to.be.an(\"object\");",
-							"  pm.expect(jsonResponse).to.have.property('is_recommendable_offers_ok')",
-							"  pm.expect(jsonResponse).to.have.property('is_recommendable_offers_datasource_exists')",
-							"});",
-							"",
-							"",
-							"pm.test(\"Response must be healthy\", function () {",
-							"  const jsonResponse = pm.response.json();",
-							"  pm.expect(jsonResponse.is_recommendable_offers_datasource_exists).to.be.true;",
-							"  pm.expect(jsonResponse.is_recommendable_offers_ok).to.be.true;",
-							"});"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{api_url}}/health/recommendable_offers",
-					"host": [
-						"{{api_url}}"
-					],
-					"path": [
-						"health",
-						"recommendable_offers"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "/health/non_recommendable_offers",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Request is successful with a status code of 200\", function () {",
-							"  pm.response.to.have.status(200);",
-							"});",
-							"",
-							"pm.test(\"Response must be a JSON and have a body\", function () {",
-							"     pm.response.to.be.ok;",
-							"     pm.response.to.be.withBody;",
-							"     pm.response.to.be.json;",
-							"});",
-							"",
-							"pm.test(\"Response must be a JSON with the right keys\", function () {",
-							"  const jsonResponse = pm.response.json();",
-							"  pm.expect(jsonResponse).to.be.an(\"object\");",
-							"  pm.expect(jsonResponse).to.have.property('is_non_recommendable_offers_ok')",
-							"  pm.expect(jsonResponse).to.have.property('is_non_recommendable_offers_datasource_exists')",
-							"});",
-							"",
-							"",
-							"pm.test(\"Response must be healthy\", function () {",
-							"  const jsonResponse = pm.response.json();",
-							"  pm.expect(jsonResponse.is_non_recommendable_offers_datasource_exists).to.be.true;",
-							"  pm.expect(jsonResponse.is_non_recommendable_offers_ok).to.be.true;",
-							"});"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{api_url}}/health/non_recommendable_offers",
-					"host": [
-						"{{api_url}}"
-					],
-					"path": [
-						"health",
-						"non_recommendable_offers"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "/health/iris_venues_mv",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Request is successful with a status code of 200\", function () {",
-							"  pm.response.to.have.status(200);",
-							"});",
-							"",
-							"pm.test(\"Response must be a JSON and have a body\", function () {",
-							"     pm.response.to.be.ok;",
-							"     pm.response.to.be.withBody;",
-							"     pm.response.to.be.json;",
-							"});",
-							"",
-							"pm.test(\"Response must be a JSON with the right keys\", function () {",
-							"  const jsonResponse = pm.response.json();",
-							"  pm.expect(jsonResponse).to.be.an(\"object\");",
-							"  pm.expect(jsonResponse).to.have.property('is_iris_venues_mv_ok')",
-							"  pm.expect(jsonResponse).to.have.property('is_iris_venues_mv_datasource_exists')",
-							"});",
-							"",
-							"",
-							"pm.test(\"Response must be healthy\", function () {",
-							"  const jsonResponse = pm.response.json();",
-							"  pm.expect(jsonResponse.is_iris_venues_mv_datasource_exists).to.be.true;",
-							"  pm.expect(jsonResponse.is_iris_venues_mv_ok).to.be.true;",
-							"});"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{api_url}}/health/iris_venues_mv",
-					"host": [
-						"{{api_url}}"
-					],
-					"path": [
-						"health",
-						"iris_venues_mv"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "/playlis_recommendation/user_id",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});\r",
-							"pm.test(\"Response time is less than 2s\", function () {\r",
-							"    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
-							"});\r",
-							"pm.test(\"Response must be a JSON and have a body\", function () {\r",
-							"     pm.response.to.be.ok;\r",
-							"     pm.response.to.be.withBody;\r",
-							"     pm.response.to.be.json;\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response must contain an array playlist_recommended_offers\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
-							"  pm.expect(jsonResponse).to.have.property('playlist_recommended_offers')\r",
-							"  pm.expect(jsonResponse.playlist_recommended_offers).to.be.an(\"array\");\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response must contain 10 offers\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse.playlist_recommended_offers).to.have.lengthOf(10);\r",
-							"});"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{api_url}}/playlist_recommendation/{{user_id_A}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
-					"host": [
-						"{{api_url}}"
-					],
-					"path": [
-						"playlist_recommendation",
-						"{{user_id_A}}"
-					],
-					"query": [
-						{
-							"key": "token",
-							"value": "{{api_token}}"
-						},
-						{
-							"key": "longitude",
-							"value": "2.3688874"
-						},
-						{
-							"key": "latitude",
-							"value": "48.8632553"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "/playlis_recommendation/user_id Geoloc with empyt body",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});\r",
-							"pm.test(\"Response time is less than 2s\", function () {\r",
-							"    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
-							"});\r",
-							"pm.test(\"Response must be a JSON and have a body\", function () {\r",
-							"     pm.response.to.be.ok;\r",
-							"     pm.response.to.be.withBody;\r",
-							"     pm.response.to.be.json;\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response must contain an array playlist_recommended_offers\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
-							"  pm.expect(jsonResponse).to.have.property('playlist_recommended_offers')\r",
-							"  pm.expect(jsonResponse.playlist_recommended_offers).to.be.an(\"array\");\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response must contain 10 offers\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse.playlist_recommended_offers).to.have.lengthOf(10);\r",
-							"});\r",
-							"\r",
-							"function checkIfArrayIsUnique(array) {\r",
-							"  return array.length === new Set(array).size;\r",
-							"}\r",
-							"\r",
-							"pm.test('Check if Offer_ids are unique', () => {\r",
-							"    let ids = []\r",
-							"    _.each(pm.response.json().playlist_recommended_offers, (item) => {\r",
-							"        ids.push(item)\r",
-							"    })\r",
-							"\r",
-							"    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
-							"})"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{api_url}}/playlist_recommendation/{{user_id_A}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
-					"host": [
-						"{{api_url}}"
-					],
-					"path": [
-						"playlist_recommendation",
-						"{{user_id_A}}"
-					],
-					"query": [
-						{
-							"key": "token",
-							"value": "{{api_token}}"
-						},
-						{
-							"key": "longitude",
-							"value": "2.3688874"
-						},
-						{
-							"key": "latitude",
-							"value": "48.8632553"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "/playlist_recommendation/user_id Geoloc free offers",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});\r",
-							"pm.test(\"Response time is less than 2s\", function () {\r",
-							"    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
-							"});\r",
-							"pm.test(\"Response must be a JSON and have a body\", function () {\r",
-							"     pm.response.to.be.ok;\r",
-							"     pm.response.to.be.withBody;\r",
-							"     pm.response.to.be.json;\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response must contain an array playlist_recommended_offers\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
-							"  pm.expect(jsonResponse).to.have.property('playlist_recommended_offers')\r",
-							"  pm.expect(jsonResponse.playlist_recommended_offers).to.be.an(\"array\");\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response must contain 10 offers\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse.playlist_recommended_offers).to.have.lengthOf(10);\r",
-							"});\r",
-							"\r",
-							"function checkIfArrayIsUnique(array) {\r",
-							"  return array.length === new Set(array).size;\r",
-							"}\r",
-							"\r",
-							"pm.test('Check if Offer_ids are unique', () => {\r",
-							"    let ids = []\r",
-							"    _.each(pm.response.json().playlist_recommended_offers, (item) => {\r",
-							"        ids.push(item)\r",
-							"    })\r",
-							"\r",
-							"    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
-							"})"
-						],
-						"type": "text/javascript"
-					}
-				},
-				{
-					"listen": "prerequest",
-					"script": {
-						"exec": [
-							""
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"price_max\":0\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{api_url}}/playlist_recommendation/{{user_id_A}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
-					"host": [
-						"{{api_url}}"
-					],
-					"path": [
-						"playlist_recommendation",
-						"{{user_id_A}}"
-					],
-					"query": [
-						{
-							"key": "token",
-							"value": "{{api_token}}"
-						},
-						{
-							"key": "longitude",
-							"value": "2.3688874"
-						},
-						{
-							"key": "latitude",
-							"value": "48.8632553"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "/playlist_recommendation/user_id Geoloc last 30 days",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});\r",
-							"pm.test(\"Response time is less than 2s\", function () {\r",
-							"    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
-							"});\r",
-							"pm.test(\"Response must be a JSON and have a body\", function () {\r",
-							"     pm.response.to.be.ok;\r",
-							"     pm.response.to.be.withBody;\r",
-							"     pm.response.to.be.json;\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response must contain an array playlist_recommended_offers\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
-							"  pm.expect(jsonResponse).to.have.property('playlist_recommended_offers')\r",
-							"  pm.expect(jsonResponse.playlist_recommended_offers).to.be.an(\"array\");\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response must contain 10 offers\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse.playlist_recommended_offers).to.have.lengthOf(10);\r",
-							"});\r",
-							"\r",
-							"function checkIfArrayIsUnique(array) {\r",
-							"  return array.length === new Set(array).size;\r",
-							"}\r",
-							"\r",
-							"pm.test('Check if Offer_ids are unique', () => {\r",
-							"    let ids = []\r",
-							"    _.each(pm.response.json().playlist_recommended_offers, (item) => {\r",
-							"        ids.push(item)\r",
-							"    })\r",
-							"\r",
-							"    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
-							"})"
-						],
-						"type": "text/javascript"
-					}
-				},
-				{
-					"listen": "prerequest",
-					"script": {
-						"exec": [
-							"const moment = require('moment'); \r",
-							"const today = moment();\r",
-							"var todayDate = today.format('YYYYMMDD'); \r",
-							"pm.globals.set(\"todayDate\", todayDate); \r",
-							"var thirtyDaysBack = moment().subtract(30, 'days'); \r",
-							"console.log(thirtyDaysBack); \r",
-							"pm.globals.set(\"thirtyDaysBack\", thirtyDaysBack.format('YYYYMMDD'));"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"start_date\": {{thirtyDaysBack}},\r\n    \"end_date\": {{todayDate}}\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{api_url}}/playlist_recommendation/{{user_id_A}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
-					"host": [
-						"{{api_url}}"
-					],
-					"path": [
-						"playlist_recommendation",
-						"{{user_id_A}}"
-					],
-					"query": [
-						{
-							"key": "token",
-							"value": "{{api_token}}"
-						},
-						{
-							"key": "longitude",
-							"value": "2.3688874"
-						},
-						{
-							"key": "latitude",
-							"value": "48.8632553"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "/playlist_recommendation/user_id Geoloc last 15 days THEATRE",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});\r",
-							"pm.test(\"Response time is less than 2s\", function () {\r",
-							"    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
-							"});\r",
-							"pm.test(\"Response must be a JSON and have a body\", function () {\r",
-							"     pm.response.to.be.ok;\r",
-							"     pm.response.to.be.withBody;\r",
-							"     pm.response.to.be.json;\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response must contain an array playlist_recommended_offers\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
-							"  pm.expect(jsonResponse).to.have.property('playlist_recommended_offers')\r",
-							"  pm.expect(jsonResponse.playlist_recommended_offers).to.be.an(\"array\");\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response must contain 10 offers\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse.playlist_recommended_offers).to.have.lengthOf(10);\r",
-							"});\r",
-							"\r",
-							"function checkIfArrayIsUnique(array) {\r",
-							"  return array.length === new Set(array).size;\r",
-							"}\r",
-							"\r",
-							"pm.test('Check if Offer_ids are unique', () => {\r",
-							"    let ids = []\r",
-							"    _.each(pm.response.json().playlist_recommended_offers, (item) => {\r",
-							"        ids.push(item)\r",
-							"    })\r",
-							"\r",
-							"    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
-							"})"
-						],
-						"type": "text/javascript"
-					}
-				},
-				{
-					"listen": "prerequest",
-					"script": {
-						"exec": [
-							"const moment = require('moment'); \r",
-							"const today = moment();\r",
-							"var todayDate = today.format('YYYYMMDD'); \r",
-							"pm.globals.set(\"todayDate\", todayDate); \r",
-							"var FifteenDaysBack = moment().subtract(15, 'days'); \r",
-							"console.log(FifteenDaysBack); \r",
-							"pm.globals.set(\"FifteenDaysBack\", FifteenDaysBack.format('YYYYMMDD'));"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"start_date\": {{thirtyDaysBack}},\r\n    \"end_date\": {{todayDate}},\r\n    \"categories\":[\"SPECTACLE\"],\r\n    \"subcategories\":[\"SPECTACLE_REPRESENTATION\"]\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{api_url}}/playlist_recommendation/{{user_id_A}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
-					"host": [
-						"{{api_url}}"
-					],
-					"path": [
-						"playlist_recommendation",
-						"{{user_id_A}}"
-					],
-					"query": [
-						{
-							"key": "token",
-							"value": "{{api_token}}"
-						},
-						{
-							"key": "longitude",
-							"value": "2.3688874"
-						},
-						{
-							"key": "latitude",
-							"value": "48.8632553"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "/playlist_recommendation/user_id Geoloc last 15 days CINEMA",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});\r",
-							"pm.test(\"Response time is less than 2s\", function () {\r",
-							"    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
-							"});\r",
-							"pm.test(\"Response must be a JSON and have a body\", function () {\r",
-							"     pm.response.to.be.ok;\r",
-							"     pm.response.to.be.withBody;\r",
-							"     pm.response.to.be.json;\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response must contain an array playlist_recommended_offers\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
-							"  pm.expect(jsonResponse).to.have.property('playlist_recommended_offers')\r",
-							"  pm.expect(jsonResponse.playlist_recommended_offers).to.be.an(\"array\");\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response must contain 10 offers\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse.playlist_recommended_offers).to.have.lengthOf(10);\r",
-							"});\r",
-							"\r",
-							"function checkIfArrayIsUnique(array) {\r",
-							"  return array.length === new Set(array).size;\r",
-							"}\r",
-							"\r",
-							"pm.test('Check if Offer_ids are unique', () => {\r",
-							"    let ids = []\r",
-							"    _.each(pm.response.json().playlist_recommended_offers, (item) => {\r",
-							"        ids.push(item)\r",
-							"    })\r",
-							"\r",
-							"    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
-							"})"
-						],
-						"type": "text/javascript"
-					}
-				},
-				{
-					"listen": "prerequest",
-					"script": {
-						"exec": [
-							"const moment = require('moment'); \r",
-							"const today = moment();\r",
-							"var todayDate = today.format('YYYYMMDD'); \r",
-							"pm.globals.set(\"todayDate\", todayDate); \r",
-							"var FifteenDaysBack = moment().subtract(15, 'days'); \r",
-							"console.log(FifteenDaysBack); \r",
-							"pm.globals.set(\"FifteenDaysBack\", FifteenDaysBack.format('YYYYMMDD'));"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"start_date\": {{thirtyDaysBack}},\r\n    \"end_date\": {{todayDate}},\r\n    \"category\":[\"CINEMA\"]\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{api_url}}/playlist_recommendation/{{user_id_A}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
-					"host": [
-						"{{api_url}}"
-					],
-					"path": [
-						"playlist_recommendation",
-						"{{user_id_A}}"
-					],
-					"query": [
-						{
-							"key": "token",
-							"value": "{{api_token}}"
-						},
-						{
-							"key": "longitude",
-							"value": "2.3688874"
-						},
-						{
-							"key": "latitude",
-							"value": "48.8632553"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "/playlist_recommendation/user_id Geoloc Tonight isevent",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});\r",
-							"pm.test(\"Response time is less than 2s\", function () {\r",
-							"    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
-							"});\r",
-							"pm.test(\"Response must be a JSON and have a body\", function () {\r",
-							"     pm.response.to.be.ok;\r",
-							"     pm.response.to.be.withBody;\r",
-							"     pm.response.to.be.json;\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response must contain an array playlist_recommended_offers\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
-							"  pm.expect(jsonResponse).to.have.property('playlist_recommended_offers')\r",
-							"  pm.expect(jsonResponse.playlist_recommended_offers).to.be.an(\"array\");\r",
-							"});\r",
-							"function checkIfArrayIsUnique(array) {\r",
-							"  return array.length === new Set(array).size;\r",
-							"}\r",
-							"\r",
-							"pm.test('Check if Offer_ids are unique', () => {\r",
-							"    let ids = []\r",
-							"    _.each(pm.response.json().playlist_recommended_offers, (item) => {\r",
-							"        ids.push(item)\r",
-							"    })\r",
-							"\r",
-							"    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
-							"})"
-						],
-						"type": "text/javascript"
-					}
-				},
-				{
-					"listen": "prerequest",
-					"script": {
-						"exec": [
-							"const moment = require('moment'); \r",
-							"const today = moment().utc();\r",
-							"var todayDate = today.format('YYYYMMDDTHHMMSS'); \r",
-							"\r",
-							"var FifteenDaysBack = moment().utc().subtract(15, 'days').format('YYYYMMDDTHHMMSS');\r",
-							"pm.globals.set(\"todayDate\", todayDate); \r",
-							"pm.globals.set(\"FifteenDaysBack\", FifteenDaysBack);\r",
-							"console.log(todayDate);  \r",
-							"console.log(FifteenDaysBack); \r",
-							"\r",
-							"\r",
-							"var current_timestamp18 = new Date();\r",
-							"// 2019-01-14T06:13:47.757Z\r",
-							"current_timestamp18.setUTCHours(18); \r",
-							"current_timestamp18.setUTCMinutes(00); \r",
-							"\r",
-							"var current_timestamp24 = new Date();\r",
-							"current_timestamp24.setUTCHours(23); \r",
-							"current_timestamp24.setUTCMinutes(59); \r",
-							"\r",
-							"pm.globals.set(\"current_timestamp18\", current_timestamp18.toISOString())\r",
-							"pm.globals.set(\"current_timestamp24\", current_timestamp24.toISOString())\r",
-							"\r",
-							"console.log(current_timestamp18.toISOString())\r",
-							"console.log(current_timestamp24.toISOString())\r",
-							"\r",
-							"\r",
-							""
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"isevent\":true,\r\n    \"start_date\": \"{{current_timestamp18}}\",\r\n    \"end_date\": \"{{current_timestamp24}}\"\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{api_url}}/playlist_recommendation/{{user_id_A}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
-					"host": [
-						"{{api_url}}"
-					],
-					"path": [
-						"playlist_recommendation",
-						"{{user_id_A}}"
-					],
-					"query": [
-						{
-							"key": "token",
-							"value": "{{api_token}}"
-						},
-						{
-							"key": "longitude",
-							"value": "2.3688874"
-						},
-						{
-							"key": "latitude",
-							"value": "48.8632553"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "/pcreco/user_id Geoloc",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});\r",
-							"pm.test(\"Response time is less than 2s\", function () {\r",
-							"    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
-							"});\r",
-							"pm.test(\"Response must be a JSON and have a body\", function () {\r",
-							"     pm.response.to.be.ok;\r",
-							"     pm.response.to.be.withBody;\r",
-							"     pm.response.to.be.json;\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response must contain an array recommended_offers\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
-							"  pm.expect(jsonResponse).to.have.property('recommended_offers')\r",
-							"  pm.expect(jsonResponse.recommended_offers).to.be.an(\"array\");\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response must contain an string AB_test\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
-							"  pm.expect(jsonResponse).to.have.property('AB_test')\r",
-							"  pm.expect(jsonResponse.AB_test).to.be.an(\"string\");\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response must contain an string reco_origin\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
-							"  pm.expect(jsonResponse).to.have.property('reco_origin')\r",
-							"  pm.expect(jsonResponse.reco_origin).to.be.an(\"string\");\r",
-							"});\r",
-							"\r",
-							"\r",
-							"pm.test(\"Response must contain 10 offers\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse.recommended_offers).to.have.lengthOf(10);\r",
-							"});\r",
-							"\r",
-							"function checkIfArrayIsUnique(array) {\r",
-							"  return array.length === new Set(array).size;\r",
-							"}\r",
-							"\r",
-							"pm.test('Check if Offer_ids are unique', () => {\r",
-							"    let ids = []\r",
-							"    _.each(pm.response.json().recommended_offers, (item) => {\r",
-							"        ids.push(item)\r",
-							"    })\r",
-							"\r",
-							"    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
-							"})\r",
-							""
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{api_url}}/pcreco/{{user_id_A}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
-					"host": [
-						"{{api_url}}"
-					],
-					"path": [
-						"pcreco",
-						"{{user_id_A}}"
-					],
-					"query": [
-						{
-							"key": "token",
-							"value": "{{api_token}}"
-						},
-						{
-							"key": "longitude",
-							"value": "2.3688874"
-						},
-						{
-							"key": "latitude",
-							"value": "48.8632553"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "/pcreco/user_id",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});\r",
-							"pm.test(\"Response time is less than 2s\", function () {\r",
-							"    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
-							"});\r",
-							"pm.test(\"Response must be a JSON and have a body\", function () {\r",
-							"     pm.response.to.be.ok;\r",
-							"     pm.response.to.be.withBody;\r",
-							"     pm.response.to.be.json;\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response must contain an array recommended_offers\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
-							"  pm.expect(jsonResponse).to.have.property('recommended_offers')\r",
-							"  pm.expect(jsonResponse.recommended_offers).to.be.an(\"array\");\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response must contain an string AB_test\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
-							"  pm.expect(jsonResponse).to.have.property('AB_test')\r",
-							"  pm.expect(jsonResponse.AB_test).to.be.an(\"string\");\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response must contain an string reco_origin\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
-							"  pm.expect(jsonResponse).to.have.property('reco_origin')\r",
-							"  pm.expect(jsonResponse.reco_origin).to.be.an(\"string\");\r",
-							"});\r",
-							"\r",
-							"\r",
-							"pm.test(\"Response must contain 10 offers\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse.recommended_offers).to.have.lengthOf(10);\r",
-							"});\r",
-							"\r",
-							"function checkIfArrayIsUnique(array) {\r",
-							"  return array.length === new Set(array).size;\r",
-							"}\r",
-							"\r",
-							"pm.test('Check if Offer_ids are unique', () => {\r",
-							"    let ids = []\r",
-							"    _.each(pm.response.json().recommended_offers, (item) => {\r",
-							"        ids.push(item)\r",
-							"    })\r",
-							"\r",
-							"    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
-							"})"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"protocolProfileBehavior": {
-				"disableBodyPruning": true
-			},
-			"request": {
-				"method": "GET",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": ""
-				},
-				"url": {
-					"raw": "{{api_url}}/pcreco/{{user_id_A}}?token={{api_token}}",
-					"host": [
-						"{{api_url}}"
-					],
-					"path": [
-						"pcreco",
-						"{{user_id_A}}"
-					],
-					"query": [
-						{
-							"key": "token",
-							"value": "{{api_token}}"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "/pcreco/user_id no token",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Request is forbidden with a status code of 403\", function () {",
-							"  pm.response.to.have.status(403);",
-							"});",
-							"",
-							"pm.test(\"Body matches string Forbidden\", function () {",
-							"    pm.expect(pm.response.text()).to.include(\"Forbidden\");",
-							"});"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{api_url}}/pcreco/{{user_id}}",
-					"host": [
-						"{{api_url}}"
-					],
-					"path": [
-						"pcreco",
-						"{{user_id}}"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "/pcreco/user_id Groupe A",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Request is successful with a status code of 200\", function () {",
-							"  pm.response.to.have.status(200);",
-							"});",
-							"",
-							"pm.test(\"Response must be a JSON and have a body\", function () {",
-							"     pm.response.to.be.ok;",
-							"     pm.response.to.be.withBody;",
-							"     pm.response.to.be.json;",
-							"});",
-							"",
-							"pm.test(\"Response must contain an array recommended_offers\", function () {",
-							"  const jsonResponse = pm.response.json();",
-							"  pm.expect(jsonResponse).to.be.an(\"object\");",
-							"  pm.expect(jsonResponse).to.have.property('recommended_offers')",
-							"  pm.expect(jsonResponse.recommended_offers).to.be.an(\"array\");",
-							"});",
-							"",
-							"",
-							"pm.test(\"Response for Group A must contain 10 offers\", function () {",
-							"  const jsonResponse = pm.response.json();",
-							"  pm.expect(jsonResponse.recommended_offers).to.have.lengthOf(10);",
-							"});"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{api_url}}/pcreco/{{user_id_A}}?token={{api_token}}",
-					"host": [
-						"{{api_url}}"
-					],
-					"path": [
-						"pcreco",
-						"{{user_id_A}}"
-					],
-					"query": [
-						{
-							"key": "token",
-							"value": "{{api_token}}"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "/pcreco/user_id Groupe B",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Request is successful with a status code of 200\", function () {",
-							"  pm.response.to.have.status(200);",
-							"});",
-							"",
-							"pm.test(\"Response must be a JSON and have a body\", function () {",
-							"     pm.response.to.be.ok;",
-							"     pm.response.to.be.withBody;",
-							"     pm.response.to.be.json;",
-							"});",
-							"",
-							"pm.test(\"Response must contain an array recommended_offers\", function () {",
-							"  const jsonResponse = pm.response.json();",
-							"  pm.expect(jsonResponse).to.be.an(\"object\");",
-							"  pm.expect(jsonResponse).to.have.property('recommended_offers')",
-							"  pm.expect(jsonResponse.recommended_offers).to.be.an(\"array\");",
-							"});",
-							"",
-							"",
-							"pm.test(\"Response for Group B must contain an array of recommended_offers of lenght 10\", function () {",
-							"  const jsonResponse = pm.response.json();",
-							"  pm.expect(jsonResponse.recommended_offers).to.have.lengthOf(10);",
-							"});"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{api_url}}/pcreco/{{user_id_B}}?token={{api_token}}",
-					"host": [
-						"{{api_url}}"
-					],
-					"path": [
-						"pcreco",
-						"{{user_id_B}}"
-					],
-					"query": [
-						{
-							"key": "token",
-							"value": "{{api_token}}"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "/pcreco/user_id Group A Geoloc",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Request is successful with a status code of 200\", function () {",
-							"  pm.response.to.have.status(200);",
-							"});",
-							"",
-							"pm.test(\"Response must be a JSON and have a body\", function () {",
-							"     pm.response.to.be.ok;",
-							"     pm.response.to.be.withBody;",
-							"     pm.response.to.be.json;",
-							"});",
-							"",
-							"pm.test(\"Response must contain an array recommended_offers\", function () {",
-							"  const jsonResponse = pm.response.json();",
-							"  pm.expect(jsonResponse).to.be.an(\"object\");",
-							"  pm.expect(jsonResponse).to.have.property('recommended_offers')",
-							"  pm.expect(jsonResponse.recommended_offers).to.be.an(\"array\");",
-							"});",
-							"",
-							"",
-							"pm.test(\"Response for Group A with geoloc must contain 10 offers\", function () {",
-							"  const jsonResponse = pm.response.json();",
-							"  pm.expect(jsonResponse.recommended_offers).to.have.lengthOf(10);",
-							"});"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{api_url}}/pcreco/{{user_id_A}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
-					"host": [
-						"{{api_url}}"
-					],
-					"path": [
-						"pcreco",
-						"{{user_id_A}}"
-					],
-					"query": [
-						{
-							"key": "token",
-							"value": "{{api_token}}"
-						},
-						{
-							"key": "longitude",
-							"value": "2.3688874"
-						},
-						{
-							"key": "latitude",
-							"value": "48.8632553"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "/pcreco/user_id Geoloc with empyt body",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});\r",
-							"pm.test(\"Response time is less than 2s\", function () {\r",
-							"    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
-							"});\r",
-							"pm.test(\"Response must be a JSON and have a body\", function () {\r",
-							"     pm.response.to.be.ok;\r",
-							"     pm.response.to.be.withBody;\r",
-							"     pm.response.to.be.json;\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response must contain an array recommended_offers\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
-							"  pm.expect(jsonResponse).to.have.property('recommended_offers')\r",
-							"  pm.expect(jsonResponse.recommended_offers).to.be.an(\"array\");\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response must contain 10 offers\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse.recommended_offers).to.have.lengthOf(10);\r",
-							"});\r",
-							"\r",
-							"function checkIfArrayIsUnique(array) {\r",
-							"  return array.length === new Set(array).size;\r",
-							"}\r",
-							"\r",
-							"pm.test('Check if Offer_ids are unique', () => {\r",
-							"    let ids = []\r",
-							"    _.each(pm.response.json().recommended_offers, (item) => {\r",
-							"        ids.push(item)\r",
-							"    })\r",
-							"\r",
-							"    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
-							"})"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{api_url}}/pcreco/{{user_id_A}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
-					"host": [
-						"{{api_url}}"
-					],
-					"path": [
-						"pcreco",
-						"{{user_id_A}}"
-					],
-					"query": [
-						{
-							"key": "token",
-							"value": "{{api_token}}"
-						},
-						{
-							"key": "longitude",
-							"value": "2.3688874"
-						},
-						{
-							"key": "latitude",
-							"value": "48.8632553"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "/pcreco/user_id Geoloc free offers",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});\r",
-							"pm.test(\"Response time is less than 2s\", function () {\r",
-							"    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
-							"});\r",
-							"pm.test(\"Response must be a JSON and have a body\", function () {\r",
-							"     pm.response.to.be.ok;\r",
-							"     pm.response.to.be.withBody;\r",
-							"     pm.response.to.be.json;\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response must contain an array recommended_offers\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
-							"  pm.expect(jsonResponse).to.have.property('recommended_offers')\r",
-							"  pm.expect(jsonResponse.recommended_offers).to.be.an(\"array\");\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response must contain 10 offers\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse.recommended_offers).to.have.lengthOf(10);\r",
-							"});\r",
-							"\r",
-							"function checkIfArrayIsUnique(array) {\r",
-							"  return array.length === new Set(array).size;\r",
-							"}\r",
-							"\r",
-							"pm.test('Check if Offer_ids are unique', () => {\r",
-							"    let ids = []\r",
-							"    _.each(pm.response.json().recommended_offers, (item) => {\r",
-							"        ids.push(item)\r",
-							"    })\r",
-							"\r",
-							"    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
-							"})"
-						],
-						"type": "text/javascript"
-					}
-				},
-				{
-					"listen": "prerequest",
-					"script": {
-						"exec": [
-							""
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"price_max\":0\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{api_url}}/pcreco/{{user_id_A}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
-					"host": [
-						"{{api_url}}"
-					],
-					"path": [
-						"pcreco",
-						"{{user_id_A}}"
-					],
-					"query": [
-						{
-							"key": "token",
-							"value": "{{api_token}}"
-						},
-						{
-							"key": "longitude",
-							"value": "2.3688874"
-						},
-						{
-							"key": "latitude",
-							"value": "48.8632553"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "/pcreco/user_id Geoloc last 30 days",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});\r",
-							"pm.test(\"Response time is less than 2s\", function () {\r",
-							"    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
-							"});\r",
-							"pm.test(\"Response must be a JSON and have a body\", function () {\r",
-							"     pm.response.to.be.ok;\r",
-							"     pm.response.to.be.withBody;\r",
-							"     pm.response.to.be.json;\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response must contain an array recommended_offers\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
-							"  pm.expect(jsonResponse).to.have.property('recommended_offers')\r",
-							"  pm.expect(jsonResponse.recommended_offers).to.be.an(\"array\");\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response must contain 10 offers\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse.recommended_offers).to.have.lengthOf(10);\r",
-							"});\r",
-							"\r",
-							"function checkIfArrayIsUnique(array) {\r",
-							"  return array.length === new Set(array).size;\r",
-							"}\r",
-							"\r",
-							"pm.test('Check if Offer_ids are unique', () => {\r",
-							"    let ids = []\r",
-							"    _.each(pm.response.json().recommended_offers, (item) => {\r",
-							"        ids.push(item)\r",
-							"    })\r",
-							"\r",
-							"    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
-							"})"
-						],
-						"type": "text/javascript"
-					}
-				},
-				{
-					"listen": "prerequest",
-					"script": {
-						"exec": [
-							"const moment = require('moment'); \r",
-							"const today = moment();\r",
-							"var todayDate = today.format('YYYYMMDD'); \r",
-							"pm.globals.set(\"todayDate\", todayDate); \r",
-							"var thirtyDaysBack = moment().subtract(30, 'days'); \r",
-							"console.log(thirtyDaysBack); \r",
-							"pm.globals.set(\"thirtyDaysBack\", thirtyDaysBack.format('YYYYMMDD'));"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"start_date\": {{thirtyDaysBack}},\r\n    \"end_date\": {{todayDate}}\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{api_url}}/pcreco/{{user_id_A}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
-					"host": [
-						"{{api_url}}"
-					],
-					"path": [
-						"pcreco",
-						"{{user_id_A}}"
-					],
-					"query": [
-						{
-							"key": "token",
-							"value": "{{api_token}}"
-						},
-						{
-							"key": "longitude",
-							"value": "2.3688874"
-						},
-						{
-							"key": "latitude",
-							"value": "48.8632553"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "/pcreco/user_id Geoloc last 15 days CINEMA",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});\r",
-							"pm.test(\"Response time is less than 2s\", function () {\r",
-							"    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
-							"});\r",
-							"pm.test(\"Response must be a JSON and have a body\", function () {\r",
-							"     pm.response.to.be.ok;\r",
-							"     pm.response.to.be.withBody;\r",
-							"     pm.response.to.be.json;\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response must contain an array recommended_offers\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
-							"  pm.expect(jsonResponse).to.have.property('recommended_offers')\r",
-							"  pm.expect(jsonResponse.recommended_offers).to.be.an(\"array\");\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response must contain 10 offers\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse.recommended_offers).to.have.lengthOf(10);\r",
-							"});\r",
-							"\r",
-							"function checkIfArrayIsUnique(array) {\r",
-							"  return array.length === new Set(array).size;\r",
-							"}\r",
-							"\r",
-							"pm.test('Check if Offer_ids are unique', () => {\r",
-							"    let ids = []\r",
-							"    _.each(pm.response.json().recommended_offers, (item) => {\r",
-							"        ids.push(item)\r",
-							"    })\r",
-							"\r",
-							"    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
-							"})"
-						],
-						"type": "text/javascript"
-					}
-				},
-				{
-					"listen": "prerequest",
-					"script": {
-						"exec": [
-							"const moment = require('moment'); \r",
-							"const today = moment();\r",
-							"var todayDate = today.format('YYYYMMDD'); \r",
-							"pm.globals.set(\"todayDate\", todayDate); \r",
-							"var FifteenDaysBack = moment().subtract(15, 'days'); \r",
-							"console.log(FifteenDaysBack); \r",
-							"pm.globals.set(\"FifteenDaysBack\", FifteenDaysBack.format('YYYYMMDD'));"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"start_date\": {{thirtyDaysBack}},\r\n    \"end_date\": {{todayDate}},\r\n    \"category\":[\"CINEMA\"]\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{api_url}}/pcreco/{{user_id_A}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
-					"host": [
-						"{{api_url}}"
-					],
-					"path": [
-						"pcreco",
-						"{{user_id_A}}"
-					],
-					"query": [
-						{
-							"key": "token",
-							"value": "{{api_token}}"
-						},
-						{
-							"key": "longitude",
-							"value": "2.3688874"
-						},
-						{
-							"key": "latitude",
-							"value": "48.8632553"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "/pcreco/user_id Geoloc last 15 days THEATRE",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});\r",
-							"pm.test(\"Response time is less than 2s\", function () {\r",
-							"    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
-							"});\r",
-							"pm.test(\"Response must be a JSON and have a body\", function () {\r",
-							"     pm.response.to.be.ok;\r",
-							"     pm.response.to.be.withBody;\r",
-							"     pm.response.to.be.json;\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response must contain an array recommended_offers\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
-							"  pm.expect(jsonResponse).to.have.property('recommended_offers')\r",
-							"  pm.expect(jsonResponse.recommended_offers).to.be.an(\"array\");\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response must contain 10 offers\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse.recommended_offers).to.have.lengthOf(10);\r",
-							"});\r",
-							"\r",
-							"function checkIfArrayIsUnique(array) {\r",
-							"  return array.length === new Set(array).size;\r",
-							"}\r",
-							"\r",
-							"pm.test('Check if Offer_ids are unique', () => {\r",
-							"    let ids = []\r",
-							"    _.each(pm.response.json().recommended_offers, (item) => {\r",
-							"        ids.push(item)\r",
-							"    })\r",
-							"\r",
-							"    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
-							"})"
-						],
-						"type": "text/javascript"
-					}
-				},
-				{
-					"listen": "prerequest",
-					"script": {
-						"exec": [
-							"const moment = require('moment'); \r",
-							"const today = moment();\r",
-							"var todayDate = today.format('YYYYMMDD'); \r",
-							"pm.globals.set(\"todayDate\", todayDate); \r",
-							"var FifteenDaysBack = moment().subtract(15, 'days'); \r",
-							"console.log(FifteenDaysBack); \r",
-							"pm.globals.set(\"FifteenDaysBack\", FifteenDaysBack.format('YYYYMMDD'));"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"start_date\": {{thirtyDaysBack}},\r\n    \"end_date\": {{todayDate}},\r\n    \"categories\":[\"SPECTACLE\"],\r\n    \"subcategories\":[\"SPECTACLE_REPRESENTATION\"]\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{api_url}}/pcreco/{{user_id_A}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
-					"host": [
-						"{{api_url}}"
-					],
-					"path": [
-						"pcreco",
-						"{{user_id_A}}"
-					],
-					"query": [
-						{
-							"key": "token",
-							"value": "{{api_token}}"
-						},
-						{
-							"key": "longitude",
-							"value": "2.3688874"
-						},
-						{
-							"key": "latitude",
-							"value": "48.8632553"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "/pcreco/user_id Geoloc Tonight isevent",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});\r",
-							"pm.test(\"Response time is less than 2s\", function () {\r",
-							"    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
-							"});\r",
-							"pm.test(\"Response must be a JSON and have a body\", function () {\r",
-							"     pm.response.to.be.ok;\r",
-							"     pm.response.to.be.withBody;\r",
-							"     pm.response.to.be.json;\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response must contain an array recommended_offers\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
-							"  pm.expect(jsonResponse).to.have.property('recommended_offers')\r",
-							"  pm.expect(jsonResponse.recommended_offers).to.be.an(\"array\");\r",
-							"});\r",
-							"function checkIfArrayIsUnique(array) {\r",
-							"  return array.length === new Set(array).size;\r",
-							"}\r",
-							"\r",
-							"pm.test('Check if Offer_ids are unique', () => {\r",
-							"    let ids = []\r",
-							"    _.each(pm.response.json().recommended_offers, (item) => {\r",
-							"        ids.push(item)\r",
-							"    })\r",
-							"\r",
-							"    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
-							"})"
-						],
-						"type": "text/javascript"
-					}
-				},
-				{
-					"listen": "prerequest",
-					"script": {
-						"exec": [
-							"const moment = require('moment'); \r",
-							"const today = moment().utc();\r",
-							"var todayDate = today.format('YYYYMMDDTHHMMSS'); \r",
-							"\r",
-							"var FifteenDaysBack = moment().utc().subtract(15, 'days').format('YYYYMMDDTHHMMSS');\r",
-							"pm.globals.set(\"todayDate\", todayDate); \r",
-							"pm.globals.set(\"FifteenDaysBack\", FifteenDaysBack);\r",
-							"console.log(todayDate);  \r",
-							"console.log(FifteenDaysBack); \r",
-							"\r",
-							"\r",
-							"var current_timestamp18 = new Date();\r",
-							"// 2019-01-14T06:13:47.757Z\r",
-							"current_timestamp18.setUTCHours(18); \r",
-							"current_timestamp18.setUTCMinutes(00); \r",
-							"\r",
-							"var current_timestamp24 = new Date();\r",
-							"current_timestamp24.setUTCHours(23); \r",
-							"current_timestamp24.setUTCMinutes(59); \r",
-							"\r",
-							"pm.globals.set(\"current_timestamp18\", current_timestamp18.toISOString())\r",
-							"pm.globals.set(\"current_timestamp24\", current_timestamp24.toISOString())\r",
-							"\r",
-							"console.log(current_timestamp18.toISOString())\r",
-							"console.log(current_timestamp24.toISOString())\r",
-							"\r",
-							"\r",
-							""
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"isevent\":true,\r\n    \"start_date\": \"{{current_timestamp18}}\",\r\n    \"end_date\": \"{{current_timestamp24}}\"\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{api_url}}/pcreco/{{user_id_A}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
-					"host": [
-						"{{api_url}}"
-					],
-					"path": [
-						"pcreco",
-						"{{user_id_A}}"
-					],
-					"query": [
-						{
-							"key": "token",
-							"value": "{{api_token}}"
-						},
-						{
-							"key": "longitude",
-							"value": "2.3688874"
-						},
-						{
-							"key": "latitude",
-							"value": "48.8632553"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "/pcreco/user_id Geoloc model : 'deep_reco'",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});\r",
-							"pm.test(\"Response time is less than 2s\", function () {\r",
-							"    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
-							"});\r",
-							"pm.test(\"Response must be a JSON and have a body\", function () {\r",
-							"     pm.response.to.be.ok;\r",
-							"     pm.response.to.be.withBody;\r",
-							"     pm.response.to.be.json;\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response must contain an array recommended_offers\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
-							"  pm.expect(jsonResponse).to.have.property('recommended_offers')\r",
-							"  pm.expect(jsonResponse.recommended_offers).to.be.an(\"array\");\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response must contain 10 offers\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse.recommended_offers).to.have.lengthOf(10);\r",
-							"});\r",
-							"\r",
-							"function checkIfArrayIsUnique(array) {\r",
-							"  return array.length === new Set(array).size;\r",
-							"}\r",
-							"\r",
-							"pm.test('Check if Offer_ids are unique', () => {\r",
-							"    let ids = []\r",
-							"    _.each(pm.response.json().recommended_offers, (item) => {\r",
-							"        ids.push(item)\r",
-							"    })\r",
-							"\r",
-							"    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
-							"})"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"model_name\":\"deep_reco_dev\"\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{api_url}}/pcreco/{{user_id_A}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
-					"host": [
-						"{{api_url}}"
-					],
-					"path": [
-						"pcreco",
-						"{{user_id_A}}"
-					],
-					"query": [
-						{
-							"key": "token",
-							"value": "{{api_token}}"
-						},
-						{
-							"key": "longitude",
-							"value": "2.3688874"
-						},
-						{
-							"key": "latitude",
-							"value": "48.8632553"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "/pcreco/user_id Geoloc model : 'tf_model_reco'",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});\r",
-							"pm.test(\"Response time is less than 2s\", function () {\r",
-							"    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
-							"});\r",
-							"pm.test(\"Response must be a JSON and have a body\", function () {\r",
-							"     pm.response.to.be.ok;\r",
-							"     pm.response.to.be.withBody;\r",
-							"     pm.response.to.be.json;\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response must contain an array recommended_offers\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
-							"  pm.expect(jsonResponse).to.have.property('recommended_offers')\r",
-							"  pm.expect(jsonResponse.recommended_offers).to.be.an(\"array\");\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response must contain 10 offers\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse.recommended_offers).to.have.lengthOf(10);\r",
-							"});\r",
-							"\r",
-							"function checkIfArrayIsUnique(array) {\r",
-							"  return array.length === new Set(array).size;\r",
-							"}\r",
-							"\r",
-							"pm.test('Check if Offer_ids are unique', () => {\r",
-							"    let ids = []\r",
-							"    _.each(pm.response.json().recommended_offers, (item) => {\r",
-							"        ids.push(item)\r",
-							"    })\r",
-							"\r",
-							"    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
-							"})"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"model_name\":\"tf_model_reco_dev\"\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{api_url}}/pcreco/{{user_id_A}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
-					"host": [
-						"{{api_url}}"
-					],
-					"path": [
-						"pcreco",
-						"{{user_id_A}}"
-					],
-					"query": [
-						{
-							"key": "token",
-							"value": "{{api_token}}"
-						},
-						{
-							"key": "longitude",
-							"value": "2.3688874"
-						},
-						{
-							"key": "latitude",
-							"value": "48.8632553"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "/pcreco/user_id Geoloc model : 'MF_reco'",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});\r",
-							"pm.test(\"Response time is less than 2s\", function () {\r",
-							"    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
-							"});\r",
-							"pm.test(\"Response must be a JSON and have a body\", function () {\r",
-							"     pm.response.to.be.ok;\r",
-							"     pm.response.to.be.withBody;\r",
-							"     pm.response.to.be.json;\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response must contain an array recommended_offers\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
-							"  pm.expect(jsonResponse).to.have.property('recommended_offers')\r",
-							"  pm.expect(jsonResponse.recommended_offers).to.be.an(\"array\");\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response must contain 10 offers\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse.recommended_offers).to.have.lengthOf(10);\r",
-							"});\r",
-							"\r",
-							"function checkIfArrayIsUnique(array) {\r",
-							"  return array.length === new Set(array).size;\r",
-							"}\r",
-							"\r",
-							"pm.test('Check if Offer_ids are unique', () => {\r",
-							"    let ids = []\r",
-							"    _.each(pm.response.json().recommended_offers, (item) => {\r",
-							"        ids.push(item)\r",
-							"    })\r",
-							"\r",
-							"    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
-							"})"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"model_name\":\"MF_reco_dev\"\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{api_url}}/pcreco/{{user_id_A}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
-					"host": [
-						"{{api_url}}"
-					],
-					"path": [
-						"pcreco",
-						"{{user_id_A}}"
-					],
-					"query": [
-						{
-							"key": "token",
-							"value": "{{api_token}}"
-						},
-						{
-							"key": "longitude",
-							"value": "2.3688874"
-						},
-						{
-							"key": "latitude",
-							"value": "48.8632553"
-						}
-					]
-				}
-			},
-			"response": []
-		}
-	],
-	"event": [
-		{
-			"listen": "prerequest",
-			"script": {
-				"type": "text/javascript",
-				"exec": [
-					""
-				]
-			}
-		},
-		{
-			"listen": "test",
-			"script": {
-				"type": "text/javascript",
-				"exec": [
-					""
-				]
-			}
-		}
-	]
+  "info": {
+    "_postman_id": "0c8b0d5a-7aac-4ada-a4cc-1466e8697b23",
+    "name": "API Integration Tests",
+    "description": "Collection of integration tests for the reco api.\nMade with Postman",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "/check",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Request is successful with a status code of 200\", function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Body matches string OK\", function () {",
+              "    pm.expect(pm.response.text()).to.include(\"OK\");",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{api_url}}/check",
+          "host": ["{{api_url}}"],
+          "path": ["check"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "root",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Request is successful with a status code of 200\", function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Body matches string Welcome\", function () {",
+              "    pm.expect(pm.response.text()).to.include(\"Welcome to the recommendation API!\");",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{api_url}}/",
+          "host": ["{{api_url}}"],
+          "path": [""]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "/recommendation/user_id",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "pm.test(\"Response time is less than 2s\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
+              "});\r",
+              "pm.test(\"Response must be a JSON and have a body\", function () {\r",
+              "     pm.response.to.be.ok;\r",
+              "     pm.response.to.be.withBody;\r",
+              "     pm.response.to.be.json;\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response must contain an array recommended_offers\", function () {\r",
+              "  const jsonResponse = pm.response.json();\r",
+              "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
+              "  pm.expect(jsonResponse).to.have.property('recommended_offers')\r",
+              "  pm.expect(jsonResponse.recommended_offers).to.be.an(\"array\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response must contain an string AB_test\", function () {\r",
+              "  const jsonResponse = pm.response.json();\r",
+              "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
+              "  pm.expect(jsonResponse).to.have.property('AB_test')\r",
+              "  pm.expect(jsonResponse.AB_test).to.be.an(\"string\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response must contain an string reco_origin\", function () {\r",
+              "  const jsonResponse = pm.response.json();\r",
+              "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
+              "  pm.expect(jsonResponse).to.have.property('reco_origin')\r",
+              "  pm.expect(jsonResponse.reco_origin).to.be.an(\"string\");\r",
+              "});\r",
+              "\r",
+              "\r",
+              "pm.test(\"Response must contain 10 offers\", function () {\r",
+              "  const jsonResponse = pm.response.json();\r",
+              "  pm.expect(jsonResponse.recommended_offers).to.have.lengthOf(10);\r",
+              "});\r",
+              "\r",
+              "function checkIfArrayIsUnique(array) {\r",
+              "  return array.length === new Set(array).size;\r",
+              "}\r",
+              "\r",
+              "pm.test('Check if Offer_ids are unique', () => {\r",
+              "    let ids = []\r",
+              "    _.each(pm.response.json().recommended_offers, (item) => {\r",
+              "        ids.push(item)\r",
+              "    })\r",
+              "\r",
+              "    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
+              "})"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "{{api_url}}/recommendation/{{user_id}}?token={{api_token}}",
+          "host": ["{{api_url}}"],
+          "path": ["recommendation", "{{user_id}}"],
+          "query": [
+            {
+              "key": "token",
+              "value": "{{api_token}}"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "/recommendation/user_id no token",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Request is forbidden with a status code of 403\", function () {",
+              "  pm.response.to.have.status(403);",
+              "});",
+              "",
+              "pm.test(\"Body matches string Forbidden\", function () {",
+              "    pm.expect(pm.response.text()).to.include(\"Forbidden\");",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{api_url}}/recommendation/{{user_id}}",
+          "host": ["{{api_url}}"],
+          "path": ["recommendation", "{{user_id}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "/health/recommendable_offers",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Request is successful with a status code of 200\", function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response must be a JSON and have a body\", function () {",
+              "     pm.response.to.be.ok;",
+              "     pm.response.to.be.withBody;",
+              "     pm.response.to.be.json;",
+              "});",
+              "",
+              "pm.test(\"Response must be a JSON with the right keys\", function () {",
+              "  const jsonResponse = pm.response.json();",
+              "  pm.expect(jsonResponse).to.be.an(\"object\");",
+              "  pm.expect(jsonResponse).to.have.property('is_recommendable_offers_ok')",
+              "  pm.expect(jsonResponse).to.have.property('is_recommendable_offers_datasource_exists')",
+              "});",
+              "",
+              "",
+              "pm.test(\"Response must be healthy\", function () {",
+              "  const jsonResponse = pm.response.json();",
+              "  pm.expect(jsonResponse.is_recommendable_offers_datasource_exists).to.be.true;",
+              "  pm.expect(jsonResponse.is_recommendable_offers_ok).to.be.true;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{api_url}}/health/recommendable_offers",
+          "host": ["{{api_url}}"],
+          "path": ["health", "recommendable_offers"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "/health/non_recommendable_offers",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Request is successful with a status code of 200\", function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response must be a JSON and have a body\", function () {",
+              "     pm.response.to.be.ok;",
+              "     pm.response.to.be.withBody;",
+              "     pm.response.to.be.json;",
+              "});",
+              "",
+              "pm.test(\"Response must be a JSON with the right keys\", function () {",
+              "  const jsonResponse = pm.response.json();",
+              "  pm.expect(jsonResponse).to.be.an(\"object\");",
+              "  pm.expect(jsonResponse).to.have.property('is_non_recommendable_offers_ok')",
+              "  pm.expect(jsonResponse).to.have.property('is_non_recommendable_offers_datasource_exists')",
+              "});",
+              "",
+              "",
+              "pm.test(\"Response must be healthy\", function () {",
+              "  const jsonResponse = pm.response.json();",
+              "  pm.expect(jsonResponse.is_non_recommendable_offers_datasource_exists).to.be.true;",
+              "  pm.expect(jsonResponse.is_non_recommendable_offers_ok).to.be.true;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{api_url}}/health/non_recommendable_offers",
+          "host": ["{{api_url}}"],
+          "path": ["health", "non_recommendable_offers"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "/health/iris_venues_mv",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Request is successful with a status code of 200\", function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response must be a JSON and have a body\", function () {",
+              "     pm.response.to.be.ok;",
+              "     pm.response.to.be.withBody;",
+              "     pm.response.to.be.json;",
+              "});",
+              "",
+              "pm.test(\"Response must be a JSON with the right keys\", function () {",
+              "  const jsonResponse = pm.response.json();",
+              "  pm.expect(jsonResponse).to.be.an(\"object\");",
+              "  pm.expect(jsonResponse).to.have.property('is_iris_venues_mv_ok')",
+              "  pm.expect(jsonResponse).to.have.property('is_iris_venues_mv_datasource_exists')",
+              "});",
+              "",
+              "",
+              "pm.test(\"Response must be healthy\", function () {",
+              "  const jsonResponse = pm.response.json();",
+              "  pm.expect(jsonResponse.is_iris_venues_mv_datasource_exists).to.be.true;",
+              "  pm.expect(jsonResponse.is_iris_venues_mv_ok).to.be.true;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{api_url}}/health/iris_venues_mv",
+          "host": ["{{api_url}}"],
+          "path": ["health", "iris_venues_mv"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "/playlis_recommendation/user_id",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "pm.test(\"Response time is less than 2s\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
+              "});\r",
+              "pm.test(\"Response must be a JSON and have a body\", function () {\r",
+              "     pm.response.to.be.ok;\r",
+              "     pm.response.to.be.withBody;\r",
+              "     pm.response.to.be.json;\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response must contain an array playlist_recommended_offers\", function () {\r",
+              "  const jsonResponse = pm.response.json();\r",
+              "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
+              "  pm.expect(jsonResponse).to.have.property('playlist_recommended_offers')\r",
+              "  pm.expect(jsonResponse.playlist_recommended_offers).to.be.an(\"array\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response must contain 10 offers\", function () {\r",
+              "  const jsonResponse = pm.response.json();\r",
+              "  pm.expect(jsonResponse.playlist_recommended_offers).to.have.lengthOf(10);\r",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{api_url}}/playlist_recommendation/{{user_id}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
+          "host": ["{{api_url}}"],
+          "path": ["playlist_recommendation", "{{user_id}}"],
+          "query": [
+            {
+              "key": "token",
+              "value": "{{api_token}}"
+            },
+            {
+              "key": "longitude",
+              "value": "2.3688874"
+            },
+            {
+              "key": "latitude",
+              "value": "48.8632553"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "/playlis_recommendation/user_id Geoloc with empyt body",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "pm.test(\"Response time is less than 2s\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
+              "});\r",
+              "pm.test(\"Response must be a JSON and have a body\", function () {\r",
+              "     pm.response.to.be.ok;\r",
+              "     pm.response.to.be.withBody;\r",
+              "     pm.response.to.be.json;\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response must contain an array playlist_recommended_offers\", function () {\r",
+              "  const jsonResponse = pm.response.json();\r",
+              "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
+              "  pm.expect(jsonResponse).to.have.property('playlist_recommended_offers')\r",
+              "  pm.expect(jsonResponse.playlist_recommended_offers).to.be.an(\"array\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response must contain 10 offers\", function () {\r",
+              "  const jsonResponse = pm.response.json();\r",
+              "  pm.expect(jsonResponse.playlist_recommended_offers).to.have.lengthOf(10);\r",
+              "});\r",
+              "\r",
+              "function checkIfArrayIsUnique(array) {\r",
+              "  return array.length === new Set(array).size;\r",
+              "}\r",
+              "\r",
+              "pm.test('Check if Offer_ids are unique', () => {\r",
+              "    let ids = []\r",
+              "    _.each(pm.response.json().playlist_recommended_offers, (item) => {\r",
+              "        ids.push(item)\r",
+              "    })\r",
+              "\r",
+              "    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
+              "})"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{api_url}}/playlist_recommendation/{{user_id}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
+          "host": ["{{api_url}}"],
+          "path": ["playlist_recommendation", "{{user_id}}"],
+          "query": [
+            {
+              "key": "token",
+              "value": "{{api_token}}"
+            },
+            {
+              "key": "longitude",
+              "value": "2.3688874"
+            },
+            {
+              "key": "latitude",
+              "value": "48.8632553"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "/playlist_recommendation/user_id Geoloc free offers",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "pm.test(\"Response time is less than 2s\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
+              "});\r",
+              "pm.test(\"Response must be a JSON and have a body\", function () {\r",
+              "     pm.response.to.be.ok;\r",
+              "     pm.response.to.be.withBody;\r",
+              "     pm.response.to.be.json;\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response must contain an array playlist_recommended_offers\", function () {\r",
+              "  const jsonResponse = pm.response.json();\r",
+              "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
+              "  pm.expect(jsonResponse).to.have.property('playlist_recommended_offers')\r",
+              "  pm.expect(jsonResponse.playlist_recommended_offers).to.be.an(\"array\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response must contain 10 offers\", function () {\r",
+              "  const jsonResponse = pm.response.json();\r",
+              "  pm.expect(jsonResponse.playlist_recommended_offers).to.have.lengthOf(10);\r",
+              "});\r",
+              "\r",
+              "function checkIfArrayIsUnique(array) {\r",
+              "  return array.length === new Set(array).size;\r",
+              "}\r",
+              "\r",
+              "pm.test('Check if Offer_ids are unique', () => {\r",
+              "    let ids = []\r",
+              "    _.each(pm.response.json().playlist_recommended_offers, (item) => {\r",
+              "        ids.push(item)\r",
+              "    })\r",
+              "\r",
+              "    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
+              "})"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [""],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"price_max\":0\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{api_url}}/playlist_recommendation/{{user_id}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
+          "host": ["{{api_url}}"],
+          "path": ["playlist_recommendation", "{{user_id}}"],
+          "query": [
+            {
+              "key": "token",
+              "value": "{{api_token}}"
+            },
+            {
+              "key": "longitude",
+              "value": "2.3688874"
+            },
+            {
+              "key": "latitude",
+              "value": "48.8632553"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "/playlist_recommendation/user_id Geoloc last 30 days",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "pm.test(\"Response time is less than 2s\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
+              "});\r",
+              "pm.test(\"Response must be a JSON and have a body\", function () {\r",
+              "     pm.response.to.be.ok;\r",
+              "     pm.response.to.be.withBody;\r",
+              "     pm.response.to.be.json;\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response must contain an array playlist_recommended_offers\", function () {\r",
+              "  const jsonResponse = pm.response.json();\r",
+              "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
+              "  pm.expect(jsonResponse).to.have.property('playlist_recommended_offers')\r",
+              "  pm.expect(jsonResponse.playlist_recommended_offers).to.be.an(\"array\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response must contain 10 offers\", function () {\r",
+              "  const jsonResponse = pm.response.json();\r",
+              "  pm.expect(jsonResponse.playlist_recommended_offers).to.have.lengthOf(10);\r",
+              "});\r",
+              "\r",
+              "function checkIfArrayIsUnique(array) {\r",
+              "  return array.length === new Set(array).size;\r",
+              "}\r",
+              "\r",
+              "pm.test('Check if Offer_ids are unique', () => {\r",
+              "    let ids = []\r",
+              "    _.each(pm.response.json().playlist_recommended_offers, (item) => {\r",
+              "        ids.push(item)\r",
+              "    })\r",
+              "\r",
+              "    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
+              "})"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const moment = require('moment'); \r",
+              "const today = moment();\r",
+              "var todayDate = today.format('YYYYMMDD'); \r",
+              "pm.globals.set(\"todayDate\", todayDate); \r",
+              "var thirtyDaysBack = moment().subtract(30, 'days'); \r",
+              "console.log(thirtyDaysBack); \r",
+              "pm.globals.set(\"thirtyDaysBack\", thirtyDaysBack.format('YYYYMMDD'));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"start_date\": {{thirtyDaysBack}},\r\n    \"end_date\": {{todayDate}}\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{api_url}}/playlist_recommendation/{{user_id}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
+          "host": ["{{api_url}}"],
+          "path": ["playlist_recommendation", "{{user_id}}"],
+          "query": [
+            {
+              "key": "token",
+              "value": "{{api_token}}"
+            },
+            {
+              "key": "longitude",
+              "value": "2.3688874"
+            },
+            {
+              "key": "latitude",
+              "value": "48.8632553"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "/playlist_recommendation/user_id Geoloc last 15 days THEATRE",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "pm.test(\"Response time is less than 2s\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
+              "});\r",
+              "pm.test(\"Response must be a JSON and have a body\", function () {\r",
+              "     pm.response.to.be.ok;\r",
+              "     pm.response.to.be.withBody;\r",
+              "     pm.response.to.be.json;\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response must contain an array playlist_recommended_offers\", function () {\r",
+              "  const jsonResponse = pm.response.json();\r",
+              "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
+              "  pm.expect(jsonResponse).to.have.property('playlist_recommended_offers')\r",
+              "  pm.expect(jsonResponse.playlist_recommended_offers).to.be.an(\"array\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response must contain 10 offers\", function () {\r",
+              "  const jsonResponse = pm.response.json();\r",
+              "  pm.expect(jsonResponse.playlist_recommended_offers).to.have.lengthOf(10);\r",
+              "});\r",
+              "\r",
+              "function checkIfArrayIsUnique(array) {\r",
+              "  return array.length === new Set(array).size;\r",
+              "}\r",
+              "\r",
+              "pm.test('Check if Offer_ids are unique', () => {\r",
+              "    let ids = []\r",
+              "    _.each(pm.response.json().playlist_recommended_offers, (item) => {\r",
+              "        ids.push(item)\r",
+              "    })\r",
+              "\r",
+              "    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
+              "})"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const moment = require('moment'); \r",
+              "const today = moment();\r",
+              "var todayDate = today.format('YYYYMMDD'); \r",
+              "pm.globals.set(\"todayDate\", todayDate); \r",
+              "var FifteenDaysBack = moment().subtract(15, 'days'); \r",
+              "console.log(FifteenDaysBack); \r",
+              "pm.globals.set(\"FifteenDaysBack\", FifteenDaysBack.format('YYYYMMDD'));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"start_date\": {{thirtyDaysBack}},\r\n    \"end_date\": {{todayDate}},\r\n    \"categories\":[\"SPECTACLE\"],\r\n    \"subcategories\":[\"SPECTACLE_REPRESENTATION\"]\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{api_url}}/playlist_recommendation/{{user_id}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
+          "host": ["{{api_url}}"],
+          "path": ["playlist_recommendation", "{{user_id}}"],
+          "query": [
+            {
+              "key": "token",
+              "value": "{{api_token}}"
+            },
+            {
+              "key": "longitude",
+              "value": "2.3688874"
+            },
+            {
+              "key": "latitude",
+              "value": "48.8632553"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "/playlist_recommendation/user_id Geoloc last 15 days CINEMA",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "pm.test(\"Response time is less than 2s\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
+              "});\r",
+              "pm.test(\"Response must be a JSON and have a body\", function () {\r",
+              "     pm.response.to.be.ok;\r",
+              "     pm.response.to.be.withBody;\r",
+              "     pm.response.to.be.json;\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response must contain an array playlist_recommended_offers\", function () {\r",
+              "  const jsonResponse = pm.response.json();\r",
+              "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
+              "  pm.expect(jsonResponse).to.have.property('playlist_recommended_offers')\r",
+              "  pm.expect(jsonResponse.playlist_recommended_offers).to.be.an(\"array\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response must contain 10 offers\", function () {\r",
+              "  const jsonResponse = pm.response.json();\r",
+              "  pm.expect(jsonResponse.playlist_recommended_offers).to.have.lengthOf(10);\r",
+              "});\r",
+              "\r",
+              "function checkIfArrayIsUnique(array) {\r",
+              "  return array.length === new Set(array).size;\r",
+              "}\r",
+              "\r",
+              "pm.test('Check if Offer_ids are unique', () => {\r",
+              "    let ids = []\r",
+              "    _.each(pm.response.json().playlist_recommended_offers, (item) => {\r",
+              "        ids.push(item)\r",
+              "    })\r",
+              "\r",
+              "    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
+              "})"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const moment = require('moment'); \r",
+              "const today = moment();\r",
+              "var todayDate = today.format('YYYYMMDD'); \r",
+              "pm.globals.set(\"todayDate\", todayDate); \r",
+              "var FifteenDaysBack = moment().subtract(15, 'days'); \r",
+              "console.log(FifteenDaysBack); \r",
+              "pm.globals.set(\"FifteenDaysBack\", FifteenDaysBack.format('YYYYMMDD'));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"start_date\": {{thirtyDaysBack}},\r\n    \"end_date\": {{todayDate}},\r\n    \"category\":[\"CINEMA\"]\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{api_url}}/playlist_recommendation/{{user_id}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
+          "host": ["{{api_url}}"],
+          "path": ["playlist_recommendation", "{{user_id}}"],
+          "query": [
+            {
+              "key": "token",
+              "value": "{{api_token}}"
+            },
+            {
+              "key": "longitude",
+              "value": "2.3688874"
+            },
+            {
+              "key": "latitude",
+              "value": "48.8632553"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "/playlist_recommendation/user_id Geoloc Tonight isevent",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "pm.test(\"Response time is less than 2s\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
+              "});\r",
+              "pm.test(\"Response must be a JSON and have a body\", function () {\r",
+              "     pm.response.to.be.ok;\r",
+              "     pm.response.to.be.withBody;\r",
+              "     pm.response.to.be.json;\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response must contain an array playlist_recommended_offers\", function () {\r",
+              "  const jsonResponse = pm.response.json();\r",
+              "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
+              "  pm.expect(jsonResponse).to.have.property('playlist_recommended_offers')\r",
+              "  pm.expect(jsonResponse.playlist_recommended_offers).to.be.an(\"array\");\r",
+              "});\r",
+              "function checkIfArrayIsUnique(array) {\r",
+              "  return array.length === new Set(array).size;\r",
+              "}\r",
+              "\r",
+              "pm.test('Check if Offer_ids are unique', () => {\r",
+              "    let ids = []\r",
+              "    _.each(pm.response.json().playlist_recommended_offers, (item) => {\r",
+              "        ids.push(item)\r",
+              "    })\r",
+              "\r",
+              "    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
+              "})"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const moment = require('moment'); \r",
+              "const today = moment().utc();\r",
+              "var todayDate = today.format('YYYYMMDDTHHMMSS'); \r",
+              "\r",
+              "var FifteenDaysBack = moment().utc().subtract(15, 'days').format('YYYYMMDDTHHMMSS');\r",
+              "pm.globals.set(\"todayDate\", todayDate); \r",
+              "pm.globals.set(\"FifteenDaysBack\", FifteenDaysBack);\r",
+              "console.log(todayDate);  \r",
+              "console.log(FifteenDaysBack); \r",
+              "\r",
+              "\r",
+              "var current_timestamp18 = new Date();\r",
+              "// 2019-01-14T06:13:47.757Z\r",
+              "current_timestamp18.setUTCHours(18); \r",
+              "current_timestamp18.setUTCMinutes(00); \r",
+              "\r",
+              "var current_timestamp24 = new Date();\r",
+              "current_timestamp24.setUTCHours(23); \r",
+              "current_timestamp24.setUTCMinutes(59); \r",
+              "\r",
+              "pm.globals.set(\"current_timestamp18\", current_timestamp18.toISOString())\r",
+              "pm.globals.set(\"current_timestamp24\", current_timestamp24.toISOString())\r",
+              "\r",
+              "console.log(current_timestamp18.toISOString())\r",
+              "console.log(current_timestamp24.toISOString())\r",
+              "\r",
+              "\r",
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"isevent\":true,\r\n    \"start_date\": \"{{current_timestamp18}}\",\r\n    \"end_date\": \"{{current_timestamp24}}\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{api_url}}/playlist_recommendation/{{user_id}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
+          "host": ["{{api_url}}"],
+          "path": ["playlist_recommendation", "{{user_id}}"],
+          "query": [
+            {
+              "key": "token",
+              "value": "{{api_token}}"
+            },
+            {
+              "key": "longitude",
+              "value": "2.3688874"
+            },
+            {
+              "key": "latitude",
+              "value": "48.8632553"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "/pcreco/user_id",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "pm.test(\"Response time is less than 2s\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
+              "});\r",
+              "pm.test(\"Response must be a JSON and have a body\", function () {\r",
+              "     pm.response.to.be.ok;\r",
+              "     pm.response.to.be.withBody;\r",
+              "     pm.response.to.be.json;\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response must contain an array recommended_offers\", function () {\r",
+              "  const jsonResponse = pm.response.json();\r",
+              "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
+              "  pm.expect(jsonResponse).to.have.property('recommended_offers')\r",
+              "  pm.expect(jsonResponse.recommended_offers).to.be.an(\"array\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response must contain an string AB_test\", function () {\r",
+              "  const jsonResponse = pm.response.json();\r",
+              "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
+              "  pm.expect(jsonResponse).to.have.property('AB_test')\r",
+              "  pm.expect(jsonResponse.AB_test).to.be.an(\"string\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response must contain an string reco_origin\", function () {\r",
+              "  const jsonResponse = pm.response.json();\r",
+              "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
+              "  pm.expect(jsonResponse).to.have.property('reco_origin')\r",
+              "  pm.expect(jsonResponse.reco_origin).to.be.an(\"string\");\r",
+              "});\r",
+              "\r",
+              "\r",
+              "pm.test(\"Response must contain 10 offers\", function () {\r",
+              "  const jsonResponse = pm.response.json();\r",
+              "  pm.expect(jsonResponse.recommended_offers).to.have.lengthOf(10);\r",
+              "});\r",
+              "\r",
+              "function checkIfArrayIsUnique(array) {\r",
+              "  return array.length === new Set(array).size;\r",
+              "}\r",
+              "\r",
+              "pm.test('Check if Offer_ids are unique', () => {\r",
+              "    let ids = []\r",
+              "    _.each(pm.response.json().recommended_offers, (item) => {\r",
+              "        ids.push(item)\r",
+              "    })\r",
+              "\r",
+              "    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
+              "})"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "{{api_url}}/pcreco/{{user_id}}?token={{api_token}}",
+          "host": ["{{api_url}}"],
+          "path": ["pcreco", "{{user_id}}"],
+          "query": [
+            {
+              "key": "token",
+              "value": "{{api_token}}"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "/pcreco/user_id no token",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Request is forbidden with a status code of 403\", function () {",
+              "  pm.response.to.have.status(403);",
+              "});",
+              "",
+              "pm.test(\"Body matches string Forbidden\", function () {",
+              "    pm.expect(pm.response.text()).to.include(\"Forbidden\");",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{api_url}}/pcreco/{{user_id}}",
+          "host": ["{{api_url}}"],
+          "path": ["pcreco", "{{user_id}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "/pcreco/user_id Geoloc",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "pm.test(\"Response time is less than 2s\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
+              "});\r",
+              "pm.test(\"Response must be a JSON and have a body\", function () {\r",
+              "     pm.response.to.be.ok;\r",
+              "     pm.response.to.be.withBody;\r",
+              "     pm.response.to.be.json;\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response must contain an array recommended_offers\", function () {\r",
+              "  const jsonResponse = pm.response.json();\r",
+              "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
+              "  pm.expect(jsonResponse).to.have.property('recommended_offers')\r",
+              "  pm.expect(jsonResponse.recommended_offers).to.be.an(\"array\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response must contain an string AB_test\", function () {\r",
+              "  const jsonResponse = pm.response.json();\r",
+              "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
+              "  pm.expect(jsonResponse).to.have.property('AB_test')\r",
+              "  pm.expect(jsonResponse.AB_test).to.be.an(\"string\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response must contain an string reco_origin\", function () {\r",
+              "  const jsonResponse = pm.response.json();\r",
+              "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
+              "  pm.expect(jsonResponse).to.have.property('reco_origin')\r",
+              "  pm.expect(jsonResponse.reco_origin).to.be.an(\"string\");\r",
+              "});\r",
+              "\r",
+              "\r",
+              "pm.test(\"Response must contain 10 offers\", function () {\r",
+              "  const jsonResponse = pm.response.json();\r",
+              "  pm.expect(jsonResponse.recommended_offers).to.have.lengthOf(10);\r",
+              "});\r",
+              "\r",
+              "function checkIfArrayIsUnique(array) {\r",
+              "  return array.length === new Set(array).size;\r",
+              "}\r",
+              "\r",
+              "pm.test('Check if Offer_ids are unique', () => {\r",
+              "    let ids = []\r",
+              "    _.each(pm.response.json().recommended_offers, (item) => {\r",
+              "        ids.push(item)\r",
+              "    })\r",
+              "\r",
+              "    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
+              "})\r",
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{api_url}}/pcreco/{{user_id}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
+          "host": ["{{api_url}}"],
+          "path": ["pcreco", "{{user_id}}"],
+          "query": [
+            {
+              "key": "token",
+              "value": "{{api_token}}"
+            },
+            {
+              "key": "longitude",
+              "value": "2.3688874"
+            },
+            {
+              "key": "latitude",
+              "value": "48.8632553"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "/pcreco/user_id Geoloc with empyt body",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "pm.test(\"Response time is less than 2s\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
+              "});\r",
+              "pm.test(\"Response must be a JSON and have a body\", function () {\r",
+              "     pm.response.to.be.ok;\r",
+              "     pm.response.to.be.withBody;\r",
+              "     pm.response.to.be.json;\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response must contain an array recommended_offers\", function () {\r",
+              "  const jsonResponse = pm.response.json();\r",
+              "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
+              "  pm.expect(jsonResponse).to.have.property('recommended_offers')\r",
+              "  pm.expect(jsonResponse.recommended_offers).to.be.an(\"array\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response must contain 10 offers\", function () {\r",
+              "  const jsonResponse = pm.response.json();\r",
+              "  pm.expect(jsonResponse.recommended_offers).to.have.lengthOf(10);\r",
+              "});\r",
+              "\r",
+              "function checkIfArrayIsUnique(array) {\r",
+              "  return array.length === new Set(array).size;\r",
+              "}\r",
+              "\r",
+              "pm.test('Check if Offer_ids are unique', () => {\r",
+              "    let ids = []\r",
+              "    _.each(pm.response.json().recommended_offers, (item) => {\r",
+              "        ids.push(item)\r",
+              "    })\r",
+              "\r",
+              "    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
+              "})"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{api_url}}/pcreco/{{user_id}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
+          "host": ["{{api_url}}"],
+          "path": ["pcreco", "{{user_id}}"],
+          "query": [
+            {
+              "key": "token",
+              "value": "{{api_token}}"
+            },
+            {
+              "key": "longitude",
+              "value": "2.3688874"
+            },
+            {
+              "key": "latitude",
+              "value": "48.8632553"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "/pcreco/user_id Geoloc free offers",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "pm.test(\"Response time is less than 2s\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
+              "});\r",
+              "pm.test(\"Response must be a JSON and have a body\", function () {\r",
+              "     pm.response.to.be.ok;\r",
+              "     pm.response.to.be.withBody;\r",
+              "     pm.response.to.be.json;\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response must contain an array recommended_offers\", function () {\r",
+              "  const jsonResponse = pm.response.json();\r",
+              "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
+              "  pm.expect(jsonResponse).to.have.property('recommended_offers')\r",
+              "  pm.expect(jsonResponse.recommended_offers).to.be.an(\"array\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response must contain 10 offers\", function () {\r",
+              "  const jsonResponse = pm.response.json();\r",
+              "  pm.expect(jsonResponse.recommended_offers).to.have.lengthOf(10);\r",
+              "});\r",
+              "\r",
+              "function checkIfArrayIsUnique(array) {\r",
+              "  return array.length === new Set(array).size;\r",
+              "}\r",
+              "\r",
+              "pm.test('Check if Offer_ids are unique', () => {\r",
+              "    let ids = []\r",
+              "    _.each(pm.response.json().recommended_offers, (item) => {\r",
+              "        ids.push(item)\r",
+              "    })\r",
+              "\r",
+              "    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
+              "})"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [""],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"price_max\":0\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{api_url}}/pcreco/{{user_id}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
+          "host": ["{{api_url}}"],
+          "path": ["pcreco", "{{user_id}}"],
+          "query": [
+            {
+              "key": "token",
+              "value": "{{api_token}}"
+            },
+            {
+              "key": "longitude",
+              "value": "2.3688874"
+            },
+            {
+              "key": "latitude",
+              "value": "48.8632553"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "/pcreco/user_id Geoloc last 30 days",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "pm.test(\"Response time is less than 2s\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
+              "});\r",
+              "pm.test(\"Response must be a JSON and have a body\", function () {\r",
+              "     pm.response.to.be.ok;\r",
+              "     pm.response.to.be.withBody;\r",
+              "     pm.response.to.be.json;\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response must contain an array recommended_offers\", function () {\r",
+              "  const jsonResponse = pm.response.json();\r",
+              "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
+              "  pm.expect(jsonResponse).to.have.property('recommended_offers')\r",
+              "  pm.expect(jsonResponse.recommended_offers).to.be.an(\"array\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response must contain 10 offers\", function () {\r",
+              "  const jsonResponse = pm.response.json();\r",
+              "  pm.expect(jsonResponse.recommended_offers).to.have.lengthOf(10);\r",
+              "});\r",
+              "\r",
+              "function checkIfArrayIsUnique(array) {\r",
+              "  return array.length === new Set(array).size;\r",
+              "}\r",
+              "\r",
+              "pm.test('Check if Offer_ids are unique', () => {\r",
+              "    let ids = []\r",
+              "    _.each(pm.response.json().recommended_offers, (item) => {\r",
+              "        ids.push(item)\r",
+              "    })\r",
+              "\r",
+              "    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
+              "})"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const moment = require('moment'); \r",
+              "const today = moment();\r",
+              "var todayDate = today.format('YYYYMMDD'); \r",
+              "pm.globals.set(\"todayDate\", todayDate); \r",
+              "var thirtyDaysBack = moment().subtract(30, 'days'); \r",
+              "console.log(thirtyDaysBack); \r",
+              "pm.globals.set(\"thirtyDaysBack\", thirtyDaysBack.format('YYYYMMDD'));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"start_date\": {{thirtyDaysBack}},\r\n    \"end_date\": {{todayDate}}\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{api_url}}/pcreco/{{user_id}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
+          "host": ["{{api_url}}"],
+          "path": ["pcreco", "{{user_id}}"],
+          "query": [
+            {
+              "key": "token",
+              "value": "{{api_token}}"
+            },
+            {
+              "key": "longitude",
+              "value": "2.3688874"
+            },
+            {
+              "key": "latitude",
+              "value": "48.8632553"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "/pcreco/user_id Geoloc last 15 days CINEMA",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "pm.test(\"Response time is less than 2s\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
+              "});\r",
+              "pm.test(\"Response must be a JSON and have a body\", function () {\r",
+              "     pm.response.to.be.ok;\r",
+              "     pm.response.to.be.withBody;\r",
+              "     pm.response.to.be.json;\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response must contain an array recommended_offers\", function () {\r",
+              "  const jsonResponse = pm.response.json();\r",
+              "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
+              "  pm.expect(jsonResponse).to.have.property('recommended_offers')\r",
+              "  pm.expect(jsonResponse.recommended_offers).to.be.an(\"array\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response must contain 10 offers\", function () {\r",
+              "  const jsonResponse = pm.response.json();\r",
+              "  pm.expect(jsonResponse.recommended_offers).to.have.lengthOf(10);\r",
+              "});\r",
+              "\r",
+              "function checkIfArrayIsUnique(array) {\r",
+              "  return array.length === new Set(array).size;\r",
+              "}\r",
+              "\r",
+              "pm.test('Check if Offer_ids are unique', () => {\r",
+              "    let ids = []\r",
+              "    _.each(pm.response.json().recommended_offers, (item) => {\r",
+              "        ids.push(item)\r",
+              "    })\r",
+              "\r",
+              "    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
+              "})"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const moment = require('moment'); \r",
+              "const today = moment();\r",
+              "var todayDate = today.format('YYYYMMDD'); \r",
+              "pm.globals.set(\"todayDate\", todayDate); \r",
+              "var FifteenDaysBack = moment().subtract(15, 'days'); \r",
+              "console.log(FifteenDaysBack); \r",
+              "pm.globals.set(\"FifteenDaysBack\", FifteenDaysBack.format('YYYYMMDD'));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"start_date\": {{thirtyDaysBack}},\r\n    \"end_date\": {{todayDate}},\r\n    \"category\":[\"CINEMA\"]\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{api_url}}/pcreco/{{user_id}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
+          "host": ["{{api_url}}"],
+          "path": ["pcreco", "{{user_id}}"],
+          "query": [
+            {
+              "key": "token",
+              "value": "{{api_token}}"
+            },
+            {
+              "key": "longitude",
+              "value": "2.3688874"
+            },
+            {
+              "key": "latitude",
+              "value": "48.8632553"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "/pcreco/user_id Geoloc last 15 days THEATRE",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "pm.test(\"Response time is less than 2s\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
+              "});\r",
+              "pm.test(\"Response must be a JSON and have a body\", function () {\r",
+              "     pm.response.to.be.ok;\r",
+              "     pm.response.to.be.withBody;\r",
+              "     pm.response.to.be.json;\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response must contain an array recommended_offers\", function () {\r",
+              "  const jsonResponse = pm.response.json();\r",
+              "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
+              "  pm.expect(jsonResponse).to.have.property('recommended_offers')\r",
+              "  pm.expect(jsonResponse.recommended_offers).to.be.an(\"array\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response must contain 10 offers\", function () {\r",
+              "  const jsonResponse = pm.response.json();\r",
+              "  pm.expect(jsonResponse.recommended_offers).to.have.lengthOf(10);\r",
+              "});\r",
+              "\r",
+              "function checkIfArrayIsUnique(array) {\r",
+              "  return array.length === new Set(array).size;\r",
+              "}\r",
+              "\r",
+              "pm.test('Check if Offer_ids are unique', () => {\r",
+              "    let ids = []\r",
+              "    _.each(pm.response.json().recommended_offers, (item) => {\r",
+              "        ids.push(item)\r",
+              "    })\r",
+              "\r",
+              "    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
+              "})"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const moment = require('moment'); \r",
+              "const today = moment();\r",
+              "var todayDate = today.format('YYYYMMDD'); \r",
+              "pm.globals.set(\"todayDate\", todayDate); \r",
+              "var FifteenDaysBack = moment().subtract(15, 'days'); \r",
+              "console.log(FifteenDaysBack); \r",
+              "pm.globals.set(\"FifteenDaysBack\", FifteenDaysBack.format('YYYYMMDD'));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"start_date\": {{thirtyDaysBack}},\r\n    \"end_date\": {{todayDate}},\r\n    \"categories\":[\"SPECTACLE\"],\r\n    \"subcategories\":[\"SPECTACLE_REPRESENTATION\"]\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{api_url}}/pcreco/{{user_id}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
+          "host": ["{{api_url}}"],
+          "path": ["pcreco", "{{user_id}}"],
+          "query": [
+            {
+              "key": "token",
+              "value": "{{api_token}}"
+            },
+            {
+              "key": "longitude",
+              "value": "2.3688874"
+            },
+            {
+              "key": "latitude",
+              "value": "48.8632553"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "/pcreco/user_id Geoloc Tonight isevent",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "pm.test(\"Response time is less than 2s\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
+              "});\r",
+              "pm.test(\"Response must be a JSON and have a body\", function () {\r",
+              "     pm.response.to.be.ok;\r",
+              "     pm.response.to.be.withBody;\r",
+              "     pm.response.to.be.json;\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response must contain an array recommended_offers\", function () {\r",
+              "  const jsonResponse = pm.response.json();\r",
+              "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
+              "  pm.expect(jsonResponse).to.have.property('recommended_offers')\r",
+              "  pm.expect(jsonResponse.recommended_offers).to.be.an(\"array\");\r",
+              "});\r",
+              "function checkIfArrayIsUnique(array) {\r",
+              "  return array.length === new Set(array).size;\r",
+              "}\r",
+              "\r",
+              "pm.test('Check if Offer_ids are unique', () => {\r",
+              "    let ids = []\r",
+              "    _.each(pm.response.json().recommended_offers, (item) => {\r",
+              "        ids.push(item)\r",
+              "    })\r",
+              "\r",
+              "    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
+              "})"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const moment = require('moment'); \r",
+              "const today = moment().utc();\r",
+              "var todayDate = today.format('YYYYMMDDTHHMMSS'); \r",
+              "\r",
+              "var FifteenDaysBack = moment().utc().subtract(15, 'days').format('YYYYMMDDTHHMMSS');\r",
+              "pm.globals.set(\"todayDate\", todayDate); \r",
+              "pm.globals.set(\"FifteenDaysBack\", FifteenDaysBack);\r",
+              "console.log(todayDate);  \r",
+              "console.log(FifteenDaysBack); \r",
+              "\r",
+              "\r",
+              "var current_timestamp18 = new Date();\r",
+              "// 2019-01-14T06:13:47.757Z\r",
+              "current_timestamp18.setUTCHours(18); \r",
+              "current_timestamp18.setUTCMinutes(00); \r",
+              "\r",
+              "var current_timestamp24 = new Date();\r",
+              "current_timestamp24.setUTCHours(23); \r",
+              "current_timestamp24.setUTCMinutes(59); \r",
+              "\r",
+              "pm.globals.set(\"current_timestamp18\", current_timestamp18.toISOString())\r",
+              "pm.globals.set(\"current_timestamp24\", current_timestamp24.toISOString())\r",
+              "\r",
+              "console.log(current_timestamp18.toISOString())\r",
+              "console.log(current_timestamp24.toISOString())\r",
+              "\r",
+              "\r",
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"isevent\":true,\r\n    \"start_date\": \"{{current_timestamp18}}\",\r\n    \"end_date\": \"{{current_timestamp24}}\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{api_url}}/pcreco/{{user_id}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
+          "host": ["{{api_url}}"],
+          "path": ["pcreco", "{{user_id}}"],
+          "query": [
+            {
+              "key": "token",
+              "value": "{{api_token}}"
+            },
+            {
+              "key": "longitude",
+              "value": "2.3688874"
+            },
+            {
+              "key": "latitude",
+              "value": "48.8632553"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "/pcreco/user_id Geoloc model : 'deep_reco'",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "pm.test(\"Response time is less than 2s\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
+              "});\r",
+              "pm.test(\"Response must be a JSON and have a body\", function () {\r",
+              "     pm.response.to.be.ok;\r",
+              "     pm.response.to.be.withBody;\r",
+              "     pm.response.to.be.json;\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response must contain an array recommended_offers\", function () {\r",
+              "  const jsonResponse = pm.response.json();\r",
+              "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
+              "  pm.expect(jsonResponse).to.have.property('recommended_offers')\r",
+              "  pm.expect(jsonResponse.recommended_offers).to.be.an(\"array\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response must contain 10 offers\", function () {\r",
+              "  const jsonResponse = pm.response.json();\r",
+              "  pm.expect(jsonResponse.recommended_offers).to.have.lengthOf(10);\r",
+              "});\r",
+              "\r",
+              "function checkIfArrayIsUnique(array) {\r",
+              "  return array.length === new Set(array).size;\r",
+              "}\r",
+              "\r",
+              "pm.test('Check if Offer_ids are unique', () => {\r",
+              "    let ids = []\r",
+              "    _.each(pm.response.json().recommended_offers, (item) => {\r",
+              "        ids.push(item)\r",
+              "    })\r",
+              "\r",
+              "    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
+              "})"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"model_name\":\"deep_reco_dev\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{api_url}}/pcreco/{{user_id}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
+          "host": ["{{api_url}}"],
+          "path": ["pcreco", "{{user_id}}"],
+          "query": [
+            {
+              "key": "token",
+              "value": "{{api_token}}"
+            },
+            {
+              "key": "longitude",
+              "value": "2.3688874"
+            },
+            {
+              "key": "latitude",
+              "value": "48.8632553"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "/pcreco/user_id Geoloc model : 'tf_model_reco'",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "pm.test(\"Response time is less than 2s\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
+              "});\r",
+              "pm.test(\"Response must be a JSON and have a body\", function () {\r",
+              "     pm.response.to.be.ok;\r",
+              "     pm.response.to.be.withBody;\r",
+              "     pm.response.to.be.json;\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response must contain an array recommended_offers\", function () {\r",
+              "  const jsonResponse = pm.response.json();\r",
+              "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
+              "  pm.expect(jsonResponse).to.have.property('recommended_offers')\r",
+              "  pm.expect(jsonResponse.recommended_offers).to.be.an(\"array\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response must contain 10 offers\", function () {\r",
+              "  const jsonResponse = pm.response.json();\r",
+              "  pm.expect(jsonResponse.recommended_offers).to.have.lengthOf(10);\r",
+              "});\r",
+              "\r",
+              "function checkIfArrayIsUnique(array) {\r",
+              "  return array.length === new Set(array).size;\r",
+              "}\r",
+              "\r",
+              "pm.test('Check if Offer_ids are unique', () => {\r",
+              "    let ids = []\r",
+              "    _.each(pm.response.json().recommended_offers, (item) => {\r",
+              "        ids.push(item)\r",
+              "    })\r",
+              "\r",
+              "    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
+              "})"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"model_name\":\"tf_model_reco_dev\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{api_url}}/pcreco/{{user_id}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
+          "host": ["{{api_url}}"],
+          "path": ["pcreco", "{{user_id}}"],
+          "query": [
+            {
+              "key": "token",
+              "value": "{{api_token}}"
+            },
+            {
+              "key": "longitude",
+              "value": "2.3688874"
+            },
+            {
+              "key": "latitude",
+              "value": "48.8632553"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "/pcreco/user_id Geoloc model : 'MF_reco'",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "pm.test(\"Response time is less than 2s\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
+              "});\r",
+              "pm.test(\"Response must be a JSON and have a body\", function () {\r",
+              "     pm.response.to.be.ok;\r",
+              "     pm.response.to.be.withBody;\r",
+              "     pm.response.to.be.json;\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response must contain an array recommended_offers\", function () {\r",
+              "  const jsonResponse = pm.response.json();\r",
+              "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
+              "  pm.expect(jsonResponse).to.have.property('recommended_offers')\r",
+              "  pm.expect(jsonResponse.recommended_offers).to.be.an(\"array\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response must contain 10 offers\", function () {\r",
+              "  const jsonResponse = pm.response.json();\r",
+              "  pm.expect(jsonResponse.recommended_offers).to.have.lengthOf(10);\r",
+              "});\r",
+              "\r",
+              "function checkIfArrayIsUnique(array) {\r",
+              "  return array.length === new Set(array).size;\r",
+              "}\r",
+              "\r",
+              "pm.test('Check if Offer_ids are unique', () => {\r",
+              "    let ids = []\r",
+              "    _.each(pm.response.json().recommended_offers, (item) => {\r",
+              "        ids.push(item)\r",
+              "    })\r",
+              "\r",
+              "    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
+              "})"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"model_name\":\"MF_reco_dev\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{api_url}}/pcreco/{{user_id}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
+          "host": ["{{api_url}}"],
+          "path": ["pcreco", "{{user_id}}"],
+          "query": [
+            {
+              "key": "token",
+              "value": "{{api_token}}"
+            },
+            {
+              "key": "longitude",
+              "value": "2.3688874"
+            },
+            {
+              "key": "latitude",
+              "value": "48.8632553"
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    }
+  ]
 }

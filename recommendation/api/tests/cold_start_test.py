@@ -21,12 +21,13 @@ def test_get_cold_start_status(
     connection_mock: Mock,
     setup_database: Any,
     user_id: str,
-    group_id: str,
     cold_start_status: bool,
 ):
     # Given
     connection_mock.return_value = setup_database
-    assert get_cold_start_status(user_id, group_id) == cold_start_status
+    user = User(user_id)
+    scoring = Scoring(user)
+    assert scoring.ColdStart.get_cold_start_status(user) == cold_start_status
 
 
 @pytest.mark.parametrize(

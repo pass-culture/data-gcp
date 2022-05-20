@@ -125,6 +125,7 @@ def define_bookings_per_institution_query(dataset, table_prefix=""):
         );
         """
 
+
 def define_students_per_institution_query(dataset, table_prefix=""):
     return f"""
         CREATE TEMP TABLE students_per_institution AS (  

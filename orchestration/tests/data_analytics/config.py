@@ -277,7 +277,6 @@ BIGQUERY_SCHEMAS = {
         "user_civility": "STRING",
         "user_activity": "STRING",
         "user_cultural_survey_filled_date": "DATETIME",
-        "user_has_seen_tutorials": "BOOLEAN",
         "user_address": "STRING",
         "user_city": "STRING",
         "user_lastConnectionDate": "DATETIME",

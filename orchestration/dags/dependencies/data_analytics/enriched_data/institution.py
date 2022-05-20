@@ -121,7 +121,18 @@ def define_bookings_per_institution_query(dataset, table_prefix=""):
             ON bookings_infos.collective_booking_collective_stock_id = collective_stock.collective_stock_id
         JOIN {dataset}.{table_prefix}collective_offer AS collective_offer 
             ON collective_stock.collective_stock_collective_offer_id = collective_offer.collective_offer_id
-        WHERE booking_rank_desc = 1
+        GROUP BY 1
+        );
+        """
+
+def define_students_per_institution_query(dataset, table_prefix=""):
+    return f"""
+        CREATE TEMP TABLE students_per_institution AS (  
+            SELECT educational_institution.educational_institution_institution_id
+            ,SUM(number_of_students) AS nb_of_students
+        FROM {dataset}.{table_prefix}educational_institution AS educational_institution
+        LEFT JOIN {dataset}.number_of_students_per_eple AS number_of_students_per_eple
+            ON educational_institution.educational_institution_institution_id = number_of_students_per_eple.institution_external_id
         GROUP BY 1
         );
         """
@@ -132,7 +143,7 @@ def define_enriched_institution_data_query(dataset, table_prefix=""):
         CREATE OR REPLACE TABLE {dataset}.enriched_institution_data AS (
             SELECT 
                 educational_institution.educational_institution_id AS institution_id 
-                ,educational_institution_institution_id AS institution_external_id 
+                ,educational_institution.educational_institution_institution_id AS institution_external_id 
                 ,institution_name AS institution_name 
                 ,educational_institution.institution_departement_code
                 ,institution_postal_code
@@ -149,14 +160,16 @@ def define_enriched_institution_data_query(dataset, table_prefix=""):
                 ,bookings_per_institution.theoric_amount_spent
                 ,bookings_per_institution.nb_used_bookings
                 ,bookings_per_institution.real_amount_spent
-                ,bookings_per_institution.total_eleves_concernes
+                ,bookings_per_institution.total_eleves_concernes AS total_nb_of_tickets
+                ,students_per_institution.nb_of_students AS total_nb_of_students_in_institution
             FROM {dataset}.{table_prefix}educational_institution AS educational_institution
-            JOIN first_deposit ON educational_institution.educational_institution_id = first_deposit.institution_id 
-            JOIN current_deposit ON educational_institution.educational_institution_id = current_deposit.institution_id
-            JOIN all_deposits ON educational_institution.educational_institution_id = all_deposits.institution_id
-            JOIN first_booking ON educational_institution.educational_institution_id = first_booking.institution_id
-            JOIN last_booking ON educational_institution.educational_institution_id = last_booking.institution_id
-            JOIN bookings_per_institution ON educational_institution.educational_institution_id = bookings_per_institution.institution_id
+            LEFT JOIN first_deposit ON educational_institution.educational_institution_id = first_deposit.institution_id 
+            LEFT JOIN current_deposit ON educational_institution.educational_institution_id = current_deposit.institution_id
+            LEFT JOIN all_deposits ON educational_institution.educational_institution_id = all_deposits.institution_id
+            LEFT JOIN first_booking ON educational_institution.educational_institution_id = first_booking.institution_id
+            LEFT JOIN last_booking ON educational_institution.educational_institution_id = last_booking.institution_id
+            LEFT JOIN bookings_per_institution ON educational_institution.educational_institution_id = bookings_per_institution.institution_id
+            LEFT JOIN students_per_institution ON educational_institution.educational_institution_institution_id = students_per_institution.educational_institution_institution_id
     );
     """
 
@@ -171,5 +184,6 @@ def define_enriched_institution_data_full_query(dataset, table_prefix=""):
         {define_first_booking_query(dataset=dataset, table_prefix=table_prefix)}
         {define_last_booking_query(dataset=dataset, table_prefix=table_prefix)}
         {define_bookings_per_institution_query(dataset=dataset, table_prefix=table_prefix)}
+        {define_students_per_institution_query(dataset=dataset, table_prefix=table_prefix)}
         {define_enriched_institution_data_query(dataset=dataset, table_prefix=table_prefix)}
     """

@@ -106,7 +106,7 @@ def aggregate_firebase_visits(gcp_project, bigquery_raw_dataset):
                 where event_params.key = 'ga_session_number'
             ) as session_number,
         FROM `{gcp_project}.{bigquery_raw_dataset}.events_*`
-        WHERE event_name NOT IN event_name NOT IN ('app_remove', 'os_update', 'batch_notification_open','batch_notification_display', 'batch_notification_dismiss','app_update')
+        WHERE event_name NOT IN ('app_remove', 'os_update', 'batch_notification_open','batch_notification_display', 'batch_notification_dismiss','app_update')
          )
     SELECT
         session_id,

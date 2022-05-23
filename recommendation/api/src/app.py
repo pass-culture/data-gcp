@@ -4,9 +4,15 @@ import re
 from flask import Flask, jsonify, make_response, request
 from flask_cors import CORS
 
-from access_gcp_secrets import access_secret
-from health_check_queries import get_materialized_view_status
-from recommendation import get_final_recommendations, get_user_metadata
+from pcreco.utils.secrets.access_gcp_secrets import access_secret
+from pcreco.utils.health_check_queries import get_materialized_view_status
+
+from pcreco.core.user import User
+from pcreco.core.scoring import Scoring
+from pcreco.models.reco.recommendation import RecommendationIn
+
+from pcreco.utils.env_vars import AB_TESTING, log_duration
+import time
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
 
@@ -68,49 +74,49 @@ def health_check_iris_venues_mv_status():
     return jsonify(table_status), 200
 
 
-@app.route("/recommendation/<user_id>")
+@app.route("/recommendation/<user_id>", methods=["GET", "POST"])
 def recommendation(user_id: int):
-    token = request.args.get("token", None)
-    longitude = request.args.get("longitude", None)
-    latitude = request.args.get("latitude", None)
-
-    if token != API_TOKEN:
+    if request.args.get("token", None) != API_TOKEN:
         return "Forbidden", 403
 
-    recommendations, group_id, is_cold_start = get_final_recommendations(
-        user_id, longitude, latitude
-    )
-    if is_cold_start:
-        reco_origin = "cold_start"
-    else:
-        reco_origin = "algo"
+    longitude = request.args.get("longitude", None)
+    latitude = request.args.get("latitude", None)
+    post_args_json = request.get_json() if request.method == "POST" else None
+
+    user = User(user_id, longitude, latitude)
+    input_reco = RecommendationIn(post_args_json) if post_args_json else None
+    scoring = Scoring(user, recommendation_in=input_reco)
+
+    user_recommendations = scoring.get_recommendation()
+    scoring.save_recommendation(user_recommendations)
     return jsonify(
         {
-            "recommended_offers": recommendations,
-            "AB_test": group_id,
-            "reco_origin": reco_origin,
+            "recommended_offers": user_recommendations,
+            "AB_test": user.group_id if AB_TESTING else None,
+            "reco_origin": "cold_start" if scoring.iscoldstart else "algo",
+            "model_name": scoring.model_name if not scoring.iscoldstart else None,
         }
     )
 
 
 @app.route("/playlist_recommendation/<user_id>", methods=["GET", "POST"])
 def playlist_recommendation(user_id: int):
-    token = request.args.get("token", None)
-    longitude = request.args.get("longitude", None)
-    latitude = request.args.get("latitude", None)
-    playlist_args_json = None
-    if request.method == "POST":
-        playlist_args_json = request.get_json()
-        print(playlist_args_json)
-    if token != API_TOKEN:
+    if request.args.get("token", None) != API_TOKEN:
         return "Forbidden", 403
 
-    recommendations, group_id, is_cold_start = get_final_recommendations(
-        user_id, longitude, latitude, playlist_args_json
-    )
+    longitude = request.args.get("longitude", None)
+    latitude = request.args.get("latitude", None)
+    post_args_json = request.get_json() if request.method == "POST" else None
+
+    user = User(user_id, longitude, latitude)
+    input_reco = RecommendationIn(post_args_json) if post_args_json else None
+    scoring = Scoring(user, recommendation_in=input_reco)
+
+    user_recommendations = scoring.get_recommendation()
+    scoring.save_recommendation(user_recommendations)
     return jsonify(
         {
-            "playlist_recommended_offers": recommendations,
+            "playlist_recommended_offers": user_recommendations,
         }
     )
 

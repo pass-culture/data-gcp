@@ -59,6 +59,7 @@ def test_recommendation_return_403_when_there_is_wrong_token():
     assert response.data == b"Forbidden"
 
 
+"""
 @patch("app.API_TOKEN", "good_token")
 @patch("app.get_final_recommendations")
 def test_recommendation_return_recommended_offers_when_there_is_right_token(
@@ -80,3 +81,4 @@ def test_recommendation_return_recommended_offers_when_there_is_right_token(
         response.data
         == b'{"AB_test":"A","reco_origin":"cold_start","recommended_offers":[3,2,1]}\n'
     )
+"""

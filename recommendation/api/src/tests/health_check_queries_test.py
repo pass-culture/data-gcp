@@ -6,7 +6,7 @@ import pandas as pd
 import pytest
 from sqlalchemy import create_engine
 
-from health_check_queries import (
+from pcreco.utils.health_check_queries import (
     does_materialized_view_exist,
     does_materialized_view_have_data,
     get_materialized_view_status,
@@ -96,9 +96,9 @@ def test_does_view_have_data(
     assert result is expected_result
 
 
-@patch("health_check_queries.does_materialized_view_have_data")
-@patch("health_check_queries.does_materialized_view_exist")
-@patch("health_check_queries.create_db_connection")
+@patch("src.pcreco.utils.health_check_queries.does_materialized_view_have_data")
+@patch("src.pcreco.utils.health_check_queries.does_materialized_view_exist")
+@patch("src.pcreco.utils.db.db_connection.create_db_connection")
 def test_should_raise_exception_when_it_does_not_come_from_sql_alchemy(
     connection_mock: Mock,
     does_materialized_view_exist_mock: Mock,

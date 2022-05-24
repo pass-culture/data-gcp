@@ -3,7 +3,8 @@
     "_postman_id": "846c46bf-29e3-41c3-93be-a98f574a8108",
     "name": "API Integration Tests",
     "description": "Collection of integration tests for the reco api.\nMade with Postman",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "20735314"
   },
   "item": [
     {
@@ -1799,7 +1800,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"model_name\":\"deep_reco_dev\"\r\n}",
+          "raw": "{\r\n    \"model_name\":\"deep_reco_{{env_name}}\"\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -1902,7 +1903,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"model_name\":\"tf_model_reco_dev\"\r\n}",
+          "raw": "{\r\n    \"model_name\":\"tf_model_reco_{{env_name}}\"\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -2005,7 +2006,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"model_name\":\"MF_reco_dev\"\r\n}",
+          "raw": "{\r\n    \"model_name\":\"MF_reco_{{env_name}}\"\r\n}",
           "options": {
             "raw": {
               "language": "json"

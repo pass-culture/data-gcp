@@ -9,19 +9,15 @@ ENV PYTHONUNBUFFERED True
 # Copy local code to the container image.
 ENV APP_HOME /app
 WORKDIR $APP_HOME
-COPY app.py ./
-COPY geolocalisation.py ./
-COPY health_check_queries.py ./
-COPY recommendation.py ./
-COPY access_gcp_secrets.py ./
+COPY src/app.py ./
 COPY api-requirements.txt ./
-COPY not_eac/cold_start.py not_eac/
-COPY eac/eac_cold_start.py eac/
-COPY not_eac/ab_testing.py not_eac/
-COPY eac/eac_ab_testing.py eac/
-COPY not_eac/scoring.py not_eac/
-COPY eac/eac_scoring.py eac/
-COPY utils.py ./
+COPY src/pcreco/core/user.py pcreco/core/
+COPY src/pcreco/core/scoring.py pcreco/core/
+COPY src/pcreco/core/utils/* pcreco/core/utils/
+COPY src/pcreco/models/reco/* pcreco/models/reco/
+COPY src/pcreco/utils/db/* pcreco/utils/db/
+COPY src/pcreco/utils/secrets/* pcreco/utils/secrets/
+COPY src/pcreco/utils/* pcreco/utils/
 
 # Install production dependencies.
 RUN pip install -r api-requirements.txt

@@ -2,7 +2,8 @@ import time
 
 from sqlalchemy import text
 
-from utils import create_db_connection, log_duration
+from pcreco.utils.env_vars import log_duration
+from pcreco.utils.db.db_connection import create_db_connection
 
 
 def get_iris_from_coordinates(longitude: float, latitude: float) -> int:

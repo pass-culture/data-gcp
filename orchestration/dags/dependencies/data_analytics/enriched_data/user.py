@@ -409,6 +409,7 @@ def define_count_distinct_types_query(dataset, table_prefix=""):
             ON offer.offer_id = stock.offer_id
             AND offer.offer_subcategoryId NOT IN ('ACTIVATION_THING','ACTIVATION_EVENT')
             AND (offer.booking_email != 'jeux-concours@passculture.app' OR offer.booking_email IS NULL)
+            AND NOT booking_is_cancelled
             GROUP BY user_id
         );
         """

@@ -5,7 +5,7 @@ import pandas as pd
 from airflow import DAG
 from airflow.providers.google.cloud.operators.bigquery import BigQueryExecuteQueryOperator
 from airflow.providers.google.cloud.operators.bigquery import BigQueryDeleteTableOperator
-from airflow.providers.google.cloud.transfers.gcs_to_bigquery import GCSToBigQueryOperator
+from airflow.providers.google.cloud.transfers.bigquery_to_gcs import BigQueryToGCSOperator
 from airflow.providers.google.cloud.operators.cloud_sql import (
     CloudSQLImportInstanceOperator,
     CloudSQLExecuteQueryOperator,
@@ -155,7 +155,7 @@ with DAG(
             ]
         )
 
-        export_task = GCSToBigQueryOperator(
+        export_task = BigQueryToGCSOperator(
             task_id=f"export_{table}_to_gcs",
             source_project_dataset_table=f"{GCP_PROJECT}:{dataset}.temp_export_{table}",
             destination_cloud_storage_uris=[f"{BUCKET_PATH}/{table}-*.csv"],

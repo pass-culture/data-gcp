@@ -2,17 +2,17 @@ def define_deposit_rank_query(dataset, table_prefix=""):
     return f"""
         CREATE TEMP TABLE ranked_deposit AS (
             SELECT 
-                educational_deposit.educational_deposit_educational_institution_id AS institution_id
+                educational_deposit.educational_institution_id AS institution_id
                 ,educational_deposit_creation_date AS deposit_creation_date
                 ,educational_year_beginning_date AS educational_year_beginning_date
                 ,educational_year_expiration_date AS educational_year_expiration_date
                 ,educational_deposit_amount
                 ,CASE WHEN (CAST(educational_year_beginning_date AS DATE) <= CURRENT_DATE AND CAST(educational_year_expiration_date AS DATE) >= CURRENT_DATE) THEN TRUE ELSE FALSE END AS is_current_deposit
-                ,RANK() OVER(PARTITION BY educational_deposit_educational_institution_id ORDER BY educational_deposit_creation_date,educational_deposit_id) AS deposit_rank_asc 
-                ,RANK() OVER(PARTITION BY educational_deposit_educational_institution_id ORDER BY educational_deposit_creation_date DESC,educational_deposit_id DESC) AS deposit_rank_desc            
+                ,RANK() OVER(PARTITION BY educational_institution_id ORDER BY educational_deposit_creation_date,educational_deposit_id) AS deposit_rank_asc 
+                ,RANK() OVER(PARTITION BY educational_institution_id ORDER BY educational_deposit_creation_date DESC,educational_deposit_id DESC) AS deposit_rank_desc            
             FROM {dataset}.{table_prefix}educational_deposit AS educational_deposit
             JOIN {dataset}.{table_prefix}educational_year AS educational_year 
-                ON educational_deposit.educational_deposit_educational_year_id = educational_year.educational_year_adage_id
+                ON educational_deposit.educational_year_id = educational_year.adage_id
         );
         """
 
@@ -61,7 +61,7 @@ def define_bookings_infos_query(dataset, table_prefix=""):
             SELECT 
             educational_institution.educational_institution_id AS institution_id 
             ,collective_booking.collective_booking_id AS booking_id
-            ,collective_booking_collective_stock_id
+            ,collective_stock_id
             ,collective_booking.collective_booking_creation_date AS booking_creation_date
             ,collective_booking_status AS booking_status 
             ,collective_booking_confirmation_date
@@ -70,7 +70,7 @@ def define_bookings_infos_query(dataset, table_prefix=""):
             ,RANK() OVER(PARTITION BY educational_institution.educational_institution_id ORDER BY collective_booking.collective_booking_creation_date DESC) AS booking_rank_desc
         FROM {dataset}.{table_prefix}educational_institution AS educational_institution
         JOIN {dataset}.{table_prefix}collective_booking AS collective_booking 
-            ON educational_institution.educational_institution_id = collective_booking.collective_booking_educational_institution_id
+            ON educational_institution.educational_institution_id = collective_booking.educational_institution_id
             AND collective_booking_status != 'CANCELLED' 
         ); 
         """
@@ -97,9 +97,9 @@ def define_last_booking_query(dataset, table_prefix=""):
                 ,collective_offer_subcategory_id AS last_category_booked
             FROM bookings_infos 
             JOIN {dataset}.{table_prefix}collective_stock AS collective_stock
-                ON bookings_infos.collective_booking_collective_stock_id = collective_stock.collective_stock_id
+                ON bookings_infos.collective_stock_id = collective_stock.collective_stock_id
             JOIN {dataset}.{table_prefix}collective_offer AS collective_offer 
-                ON collective_stock.collective_stock_collective_offer_id = collective_offer.collective_offer_id
+                ON collective_stock.collective_offer_id = collective_offer.collective_offer_id
             WHERE booking_rank_desc = 1
         );
         """
@@ -118,9 +118,9 @@ def define_bookings_per_institution_query(dataset, table_prefix=""):
             ,COUNT(DISTINCT collective_offer_subcategory_id) AS nb_distinct_categories_booked
         FROM bookings_infos
         JOIN {dataset}.{table_prefix}collective_stock AS collective_stock
-            ON bookings_infos.collective_booking_collective_stock_id = collective_stock.collective_stock_id
+            ON bookings_infos.collective_stock_id = collective_stock.collective_stock_id
         JOIN {dataset}.{table_prefix}collective_offer AS collective_offer 
-            ON collective_stock.collective_stock_collective_offer_id = collective_offer.collective_offer_id
+            ON collective_stock.collective_offer_id = collective_offer.collective_offer_id
         WHERE booking_rank_desc = 1
         GROUP BY 1
         );
@@ -132,7 +132,7 @@ def define_enriched_institution_data_query(dataset, table_prefix=""):
         CREATE OR REPLACE TABLE {dataset}.enriched_institution_data AS (
             SELECT 
                 educational_institution.educational_institution_id AS institution_id 
-                ,educational_institution_institution_id AS institution_external_id 
+                ,educational_institution.institution_id AS institution_external_id 
                 ,institution_name AS institution_name 
                 ,educational_institution.institution_departement_code
                 ,institution_postal_code

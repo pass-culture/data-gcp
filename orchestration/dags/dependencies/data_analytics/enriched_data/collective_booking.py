@@ -48,7 +48,7 @@ INNER JOIN {dataset}.{table_prefix}collective_offer AS collective_offer  ON coll
 INNER JOIN {dataset}.{table_prefix}venue AS venue ON collective_booking.collective_booking_venue_id = venue.venue_id
 INNER JOIN {dataset}.{table_prefix}offerer AS offerer ON offerer.offerer_id = venue.venue_managing_offerer_id
 INNER JOIN {dataset}.{table_prefix}educational_institution AS educational_institution  ON educational_institution.educational_institution_id = collective_booking.collective_booking_educational_institution_id
-LEFT JOIN  {dataset}.eple AS eple  ON eple.id_etablissement  = educational_institution.educational_institution_institution_id
+LEFT JOIN  {dataset}.eple AS eple  ON eple.id_etablissement  = educational_institution.institution_id
 LEFT JOIN collective_booking_ranking_view ON collective_booking_ranking_view.collective_booking_id = collective_booking.collective_booking_id
 
  );

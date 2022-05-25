@@ -24,9 +24,9 @@ SHUFFLE_RECOMMENDATION = True
 NUMBER_OF_PRESELECTED_OFFERS = 50 if not os.environ.get("CI") else 3
 RECOMMENDABLE_OFFER_TABLE_PREFIX = "recommendable_offers"
 RECOMMENDABLE_OFFER_TABLE_SUFFIX_DICT = {
-    "15": "eac_15",
-    "16": "eac_16_17",
-    "17": "eac_16_17",
+    15: "eac_15",
+    16: "eac_16_17",
+    17: "eac_16_17",
 }
 # AB TESTING
 AB_TESTING = True

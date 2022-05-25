@@ -3,7 +3,12 @@ import time
 from typing import Any, Dict, List, Tuple
 
 import numpy as np
-from pcreco.utils.env_vars import NUMBER_OF_RECOMMENDATIONS, log_duration
+import random
+from pcreco.utils.env_vars import (
+    NUMBER_OF_RECOMMENDATIONS,
+    SHUFFLE_RECOMMENDATION,
+    log_duration,
+)
 
 
 def order_offers_by_score_and_diversify_categories(
@@ -18,6 +23,10 @@ def order_offers_by_score_and_diversify_categories(
     """
 
     start = time.time()
+    if SHUFFLE_RECOMMENDATION:
+        for recommendation in offers:
+            recommendation["score"] = random.random()
+
     offers_by_category = _get_offers_grouped_by_category(offers)
 
     offers_by_category_ordered_by_frequency = collections.OrderedDict(
@@ -27,7 +36,6 @@ def order_offers_by_score_and_diversify_categories(
             reverse=True,
         )
     )
-
     for offer_category in offers_by_category_ordered_by_frequency:
         offers_by_category_ordered_by_frequency[offer_category] = sorted(
             offers_by_category_ordered_by_frequency[offer_category],

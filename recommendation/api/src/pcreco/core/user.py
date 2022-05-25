@@ -22,7 +22,7 @@ class User:
         self.recommendable_offer_table = (
             RECOMMENDABLE_OFFER_TABLE_PREFIX
             if not self.is_eac
-            else f"{RECOMMENDABLE_OFFER_TABLE_PREFIX}_{RECOMMENDABLE_OFFER_TABLE_SUFFIX_DICT[self.age]}"
+            else f"{RECOMMENDABLE_OFFER_TABLE_PREFIX}_{RECOMMENDABLE_OFFER_TABLE_SUFFIX_DICT[str(self.age)]}"
         )
 
     @property
@@ -49,7 +49,7 @@ class User:
                 )
             ).fetchone()
             if request_response is not None:
-                self.age = request_response[0]
+                self.age = int(request_response[0])
                 self.user_deposit_initial_amount = request_response[1]
 
     def get_ab_testing_group(self) -> None:

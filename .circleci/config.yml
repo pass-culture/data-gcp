@@ -801,7 +801,7 @@ jobs:
             echo $GCLOUD_SERVICE_KEY > /tmp/service_account.json
             export GOOGLE_APPLICATION_CREDENTIALS="/tmp/service_account.json" 
             . venv-orchestration/bin/activate
-            airflow initdb
+            airflow db init
             pytest tests
 
   recommendation-db-install:

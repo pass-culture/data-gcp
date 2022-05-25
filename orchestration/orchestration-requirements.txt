@@ -12,4 +12,5 @@ mock==4.0.2
 nltk==3.6.6
 apache-airflow-providers-slack==4.2.3
 apache-airflow-providers-mysql==2.2.3
+apache-airflow-providers-postgres==4.1.0
 pendulum==2.1.2

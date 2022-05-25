@@ -30,6 +30,4 @@ def create_pool():
 
 
 def create_db_connection() -> Any:
-    print("debug: SQL_BASE_USER: ", SQL_BASE_USER)
-    print("debug: SQL_BASE: ", SQL_BASE)
     return create_pool().connect().execution_options(autocommit=True)

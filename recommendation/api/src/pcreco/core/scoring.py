@@ -114,20 +114,22 @@ class Scoring:
 
         def get_scored_offers(self) -> List[Dict[str, Any]]:
             start = time.time()
+            if not len(self.recommendable_offers) > 0:
+                return []
+            else:
+                instances = self._get_instances()
 
-            instances = self._get_instances()
+                predicted_scores = self._predict_score(instances)
 
-            predicted_scores = self._predict_score(instances)
+                recommendations = [
+                    {**recommendation, "score": predicted_scores[i][0]}
+                    for i, recommendation in enumerate(self.recommendable_offers)
+                ]
 
-            recommendations = [
-                {**recommendation, "score": predicted_scores[i][0]}
-                for i, recommendation in enumerate(self.recommendable_offers)
-            ]
-
-            log_duration(
-                f"get_scored_recommendation_for_user for {self.user.id} - {self.model_name}",
-                start,
-            )
+                log_duration(
+                    f"get_scored_recommendation_for_user for {self.user.id} - {self.model_name}",
+                    start,
+                )
             return recommendations
 
         def _get_instances(self) -> List[Dict[str, str]]:

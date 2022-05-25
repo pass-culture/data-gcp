@@ -20,13 +20,13 @@ SQL_BASE_PASSWORD = access_secret(
 # Attributes on API output and recommendation
 ACTIVE_MODEL = f"deep_reco_{ENV_SHORT_NAME}"
 NUMBER_OF_RECOMMENDATIONS = 10
-SHUFFLE_RECOMMENDATION = False
+SHUFFLE_RECOMMENDATION = True
 NUMBER_OF_PRESELECTED_OFFERS = 50 if not os.environ.get("CI") else 3
 RECOMMENDABLE_OFFER_TABLE_PREFIX = "recommendable_offers"
 RECOMMENDABLE_OFFER_TABLE_SUFFIX_DICT = {
-    "15": "eac_15",
-    "16": "eac_16_17",
-    "17": "eac_16_17",
+    15: "eac_15",
+    16: "eac_16_17",
+    17: "eac_16_17",
 }
 # AB TESTING
 AB_TESTING = True

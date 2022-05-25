@@ -6,7 +6,7 @@ import pytest
 from sqlalchemy import create_engine
 from unittest.mock import Mock, patch
 
-from geolocalisation import get_iris_from_coordinates
+from pcreco.utils.geolocalisation import get_iris_from_coordinates
 
 DATA_GCP_TEST_POSTGRES_PORT = os.getenv("DATA_GCP_TEST_POSTGRES_PORT")
 DB_NAME = os.getenv("DB_NAME")
@@ -28,7 +28,7 @@ def setup_database() -> Any:
     )
     connection = engine.connect().execution_options(autocommit=True)
 
-    iris_france = pd.read_csv("tests/iris_france_tests.csv")
+    iris_france = pd.read_csv("./src/tests/iris_france_tests.csv")
     iris_france.to_sql("iris_france", con=engine, if_exists="replace", index=False)
 
     sql = """ALTER TABLE public.iris_france
@@ -44,7 +44,7 @@ def setup_database() -> Any:
     connection.close()
 
 
-@patch("geolocalisation.create_db_connection")
+@patch("src.pcreco.utils.db.db_connection.create_db_connection")
 def test_get_iris_from_coordinates(mock_connection: Mock, setup_database: Any):
     # Given
     mock_connection.return_value = setup_database
@@ -58,7 +58,7 @@ def test_get_iris_from_coordinates(mock_connection: Mock, setup_database: Any):
     assert iris_id == 45327
 
 
-@patch("geolocalisation.create_db_connection")
+@patch("src.pcreco.utils.db.db_connection.create_db_connection")
 def test_get_iris_from_coordinates_without_coordinates(
     mock_connection: Mock, setup_database: Any
 ):
@@ -74,7 +74,7 @@ def test_get_iris_from_coordinates_without_coordinates(
     assert iris_id is None
 
 
-@patch("geolocalisation.create_db_connection")
+@patch("src.pcreco.utils.db.db_connection.create_db_connection")
 def test_get_iris_from_coordinates_not_in_france(
     mock_connection: Mock, setup_database: Any
 ):

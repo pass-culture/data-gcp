@@ -3,12 +3,10 @@ from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.python_operator import PythonOperator
-from airflow.operators.http_operator import SimpleHttpOperator
-from airflow.contrib.operators.bigquery_operator import BigQueryOperator
-from airflow.contrib.operators.gcs_to_bq import (
-    GoogleCloudStorageToBigQueryOperator,
-)
+from airflow.providers.http.operators.http import SimpleHttpOperator
+from airflow.operators.python import PythonOperator
+from airflow.providers.google.cloud.operators.bigquery import BigQueryExecuteQueryOperator
+from airflow.providers.google.cloud.transfers.gcs_to_bigquery import GCSToBigQueryOperator
 
 from google.auth.transport.requests import Request
 from google.oauth2 import id_token
@@ -73,7 +71,7 @@ with DAG(
             "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_service_account_token', key='return_value')}}",
         },
         log_response=True,
-        xcom_push=True,
+        do_xcom_push=True,
     )
 
     parse_api_result_jeunes = PythonOperator(
@@ -96,7 +94,7 @@ with DAG(
         dag=dag,
     )
 
-    import_dms_jeunes_to_bq = GoogleCloudStorageToBigQueryOperator(
+    import_dms_jeunes_to_bq = GCSToBigQueryOperator(
         task_id="import_dms_jeunes_to_bq",
         bucket=DATA_GCS_BUCKET_NAME,
         source_objects=[
@@ -121,7 +119,7 @@ with DAG(
         write_disposition="WRITE_APPEND",
     )
 
-    import_dms_pro_to_bq = GoogleCloudStorageToBigQueryOperator(
+    import_dms_pro_to_bq = GCSToBigQueryOperator(
         task_id="import_dms_pro_to_bq",
         bucket=DATA_GCS_BUCKET_NAME,
         source_objects=[
@@ -167,7 +165,7 @@ with DAG(
         WHERE row_number=1
         """
 
-    copy_dms_jeunes_to_analytics = BigQueryOperator(
+    copy_dms_jeunes_to_analytics = BigQueryExecuteQueryOperator(
         task_id="copy_dms_jeunes_to_analytics",
         sql=deduplicate_query("jeunes"),
         destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.dms_jeunes",
@@ -176,7 +174,7 @@ with DAG(
         dag=dag,
     )
 
-    copy_dms_pro_to_analytics = BigQueryOperator(
+    copy_dms_pro_to_analytics = BigQueryExecuteQueryOperator(
         task_id="copy_dms_pro_to_analytics",
         sql=deduplicate_query("pro"),
         destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.dms_pro",

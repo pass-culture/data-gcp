@@ -1,7 +1,7 @@
 from urllib.parse import quote
 
 from airflow import configuration
-from airflow.contrib.operators.slack_webhook_operator import SlackWebhookOperator
+from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
 
 from datetime import datetime
 from dependencies.access_gcp_secrets import access_secret_data

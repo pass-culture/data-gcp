@@ -1,10 +1,10 @@
 import datetime
 import airflow
 from airflow import DAG
-from airflow.contrib.operators.bigquery_operator import BigQueryOperator
+from airflow.providers.google.cloud.operators.bigquery import BigQueryExecuteQueryOperator
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.http_operator import SimpleHttpOperator
-from airflow.operators.python_operator import PythonOperator
+from airflow.providers.http.operators.http import SimpleHttpOperator
+from airflow.operators.python import PythonOperator
 
 from google.auth.transport.requests import Request
 from google.oauth2 import id_token
@@ -62,7 +62,7 @@ siren_to_bq = SimpleHttpOperator(
     dag=dag,
 )
 
-import_siren_to_analytics = BigQueryOperator(
+import_siren_to_analytics = BigQueryExecuteQueryOperator(
     task_id="import_to_analytics_siren",
     sql=f"SELECT * FROM {BIGQUERY_CLEAN_DATASET}.siren_data",
     write_disposition="WRITE_TRUNCATE",

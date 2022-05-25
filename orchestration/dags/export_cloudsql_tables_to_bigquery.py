@@ -2,8 +2,8 @@ import datetime
 import os
 
 from airflow import DAG
-from airflow.contrib.operators.bigquery_operator import BigQueryOperator
-from airflow.contrib.operators.gcp_sql_operator import CloudSqlQueryOperator
+from airflow.providers.google.cloud.operators.bigquery import BigQueryExecuteQueryOperator
+from airflow.providers.google.cloud.operators.cloud_sql import CloudSQLExecuteQueryOperator
 from airflow.operators.dummy_operator import DummyOperator
 
 from dependencies.access_gcp_secrets import access_secret_data
@@ -68,7 +68,7 @@ for table in TABLES:
     query = TABLES[table]["query"]
     if query is None:
         query = f"SELECT * FROM public.{table}"
-    task = BigQueryOperator(
+    task = BigQueryExecuteQueryOperator(
         task_id=f"import_{table}",
         sql=f'SELECT * FROM EXTERNAL_QUERY("{CONNECTION_ID}", "{query}");',
         write_disposition=TABLES[table]["write_disposition"],
@@ -78,7 +78,7 @@ for table in TABLES:
     )
     export_table_tasks.append(task)
 
-delete_rows_task = drop_table_task = CloudSqlQueryOperator(
+delete_rows_task = drop_table_task = CloudSQLExecuteQueryOperator(
     task_id="drop_yesterday_rows_past_recommended_offers",
     gcp_cloudsql_conn_id="proxy_postgres_tcp",
     sql=f"DELETE FROM public.past_recommended_offers where date <= '{yesterday}'",
@@ -86,7 +86,7 @@ delete_rows_task = drop_table_task = CloudSqlQueryOperator(
     dag=dag,
 )
 
-copy_to_clean_past_recommended_offers = BigQueryOperator(
+copy_to_clean_past_recommended_offers = BigQueryExecuteQueryOperator(
     task_id="copy_to_clean_past_recommended_offers",
     sql=f"SELECT * FROM {BIGQUERY_RAW_DATASET}.past_recommended_offers",
     write_disposition="WRITE_TRUNCATE",
@@ -95,7 +95,7 @@ copy_to_clean_past_recommended_offers = BigQueryOperator(
     dag=dag,
 )
 
-copy_to_analytics_past_recommended_offers = BigQueryOperator(
+copy_to_analytics_past_recommended_offers = BigQueryExecuteQueryOperator(
     task_id="copy_to_analytics_past_recommended_offers",
     sql=f"SELECT * FROM {BIGQUERY_CLEAN_DATASET}.past_recommended_offers",
     write_disposition="WRITE_TRUNCATE",
@@ -104,7 +104,7 @@ copy_to_analytics_past_recommended_offers = BigQueryOperator(
     dag=dag,
 )
 
-copy_to_clean_ab_testing = BigQueryOperator(
+copy_to_clean_ab_testing = BigQueryExecuteQueryOperator(
     task_id="copy_to_clean_ab_testing",
     sql=f"SELECT * FROM {BIGQUERY_RAW_DATASET}.{AB_TESTING_TABLE}",
     write_disposition="WRITE_TRUNCATE",
@@ -113,7 +113,7 @@ copy_to_clean_ab_testing = BigQueryOperator(
     dag=dag,
 )
 
-copy_to_analytics_ab_testing = BigQueryOperator(
+copy_to_analytics_ab_testing = BigQueryExecuteQueryOperator(
     task_id="copy_to_analytics_ab_testing",
     sql=f"SELECT * FROM {BIGQUERY_CLEAN_DATASET}.{AB_TESTING_TABLE}",
     write_disposition="WRITE_TRUNCATE",

@@ -1,12 +1,8 @@
 import datetime
 
 from airflow import DAG
-from airflow.contrib.operators.bigquery_operator import BigQueryOperator
-from airflow.contrib.operators.bigquery_table_delete_operator import (
-    BigQueryTableDeleteOperator,
-)
+from airflow.providers.google.cloud.operators.bigquery import BigQueryExecuteQueryOperator
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.python_operator import BranchPythonOperator
 
 from dependencies.config import (
     BIGQUERY_RAW_DATASET,
@@ -67,7 +63,7 @@ dag = DAG(
 start = DummyOperator(task_id="start", dag=dag)
 
 
-copy_table_to_env = BigQueryOperator(
+copy_table_to_env = BigQueryExecuteQueryOperator(
     task_id="copy_table_to_env",
     sql=f"""
         SELECT * FROM {GCP_PROJECT_NATIVE_ENV}.{FIREBASE_RAW_DATASET}.events_{EXECUTION_DATE} WHERE app_info.id IN ({", ".join([f"'{app_info_id}'" for app_info_id in app_info_id_list])}) OR app_info.id is NULL
@@ -79,7 +75,7 @@ copy_table_to_env = BigQueryOperator(
     dag=dag,
 )
 
-import_table_pro_to_raw = BigQueryOperator(
+import_table_pro_to_raw = BigQueryExecuteQueryOperator(
     task_id="import_pro_to_raw",
     sql=f"""
         SELECT * FROM {GCP_PROJECT_PRO_ENV}.{FIREBASE_PRO_RAW_DATASET}.events_{EXECUTION_DATE} WHERE device.web_info.hostname IN ({", ".join([f"'{app_info_id}'" for app_info_id in app_info_id_list_pro])})
@@ -91,7 +87,7 @@ import_table_pro_to_raw = BigQueryOperator(
     dag=dag,
 )
 
-copy_table_to_clean = BigQueryOperator(
+copy_table_to_clean = BigQueryExecuteQueryOperator(
     task_id="copy_table_to_clean",
     sql=f"""
         SELECT * FROM {GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.events_{EXECUTION_DATE}
@@ -102,7 +98,7 @@ copy_table_to_clean = BigQueryOperator(
     dag=dag,
 )
 
-copy_table_pro_to_clean = BigQueryOperator(
+copy_table_pro_to_clean = BigQueryExecuteQueryOperator(
     task_id="copy_table_pro_to_clean",
     sql=f"""
         SELECT * FROM {GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.firebase_pro_{EXECUTION_DATE}
@@ -113,7 +109,7 @@ copy_table_pro_to_clean = BigQueryOperator(
     dag=dag,
 )
 
-copy_firebase_table_to_analytics = BigQueryOperator(
+copy_firebase_table_to_analytics = BigQueryExecuteQueryOperator(
     task_id="copy_firebase_table_to_analytics",
     sql=copy_table_to_analytics(
         gcp_project=GCP_PROJECT,
@@ -127,7 +123,7 @@ copy_firebase_table_to_analytics = BigQueryOperator(
     dag=dag,
 )
 
-copy_table_pro_to_analytics = BigQueryOperator(
+copy_table_pro_to_analytics = BigQueryExecuteQueryOperator(
     task_id="copy_table_pro_to_analytics",
     sql=copy_pro_to_analytics(
         gcp_project=GCP_PROJECT,
@@ -141,7 +137,7 @@ copy_table_pro_to_analytics = BigQueryOperator(
     dag=dag,
 )
 
-aggregate_firebase_visits = BigQueryOperator(
+aggregate_firebase_visits = BigQueryExecuteQueryOperator(
     task_id="aggregate_firebase_visits",
     sql=aggregate_firebase_visits(
         gcp_project=GCP_PROJECT,
@@ -153,7 +149,7 @@ aggregate_firebase_visits = BigQueryOperator(
     dag=dag,
 )
 
-aggregate_firebase_offer_events = BigQueryOperator(
+aggregate_firebase_offer_events = BigQueryExecuteQueryOperator(
     task_id="aggregate_firebase_offer_events",
     sql=aggregate_firebase_offer_events(
         gcp_project=GCP_PROJECT,
@@ -165,7 +161,7 @@ aggregate_firebase_offer_events = BigQueryOperator(
     dag=dag,
 )
 
-aggregate_firebase_user_events = BigQueryOperator(
+aggregate_firebase_user_events = BigQueryExecuteQueryOperator(
     task_id="aggregate_firebase_user_events",
     sql=aggregate_firebase_user_events(
         gcp_project=GCP_PROJECT,

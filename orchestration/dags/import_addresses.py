@@ -1,11 +1,11 @@
 from datetime import datetime, timedelta
 
 from airflow import DAG
-from airflow.contrib.operators.bigquery_operator import BigQueryOperator
+from airflow.providers.google.cloud.operators.bigquery import BigQueryExecuteQueryOperator
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.http_operator import SimpleHttpOperator
-from airflow.contrib.operators.gcs_to_bq import GoogleCloudStorageToBigQueryOperator
-from airflow.operators.python_operator import BranchPythonOperator, PythonOperator
+from airflow.providers.http.operators.http import SimpleHttpOperator
+from airflow.providers.google.cloud.transfers.gcs_to_bigquery import GCSToBigQueryOperator
+from airflow.operators.python import BranchPythonOperator, PythonOperator
 
 from google.auth.transport.requests import Request
 from google.oauth2 import id_token
@@ -76,7 +76,7 @@ with DAG(
             "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_service_account_token', key='return_value')}}",
         },
         log_response=True,
-        xcom_push=True,
+        do_xcom_push=True,
     )
 
     branch_op = BranchPythonOperator(
@@ -87,7 +87,7 @@ with DAG(
         dag=dag,
     )
 
-    import_addresses_to_bigquery = GoogleCloudStorageToBigQueryOperator(
+    import_addresses_to_bigquery = GCSToBigQueryOperator(
         task_id="import_addresses_to_bigquery",
         bucket=DATA_GCS_BUCKET_NAME,
         source_objects=[
@@ -102,7 +102,7 @@ with DAG(
         field_delimiter="|",
     )
 
-    to_clean = BigQueryOperator(
+    to_clean = BigQueryExecuteQueryOperator(
         task_id="copy_to_clean",
         sql=f"""
             SELECT * EXCEPT(id, irisCode, centroid, shape), iris_france.id AS iris_id
@@ -117,7 +117,7 @@ with DAG(
         dag=dag,
     )
 
-    to_analytics = BigQueryOperator(
+    to_analytics = BigQueryExecuteQueryOperator(
         task_id="copy_to_analytics",
         sql=f"SELECT * EXCEPT (user_address) FROM {BIGQUERY_CLEAN_DATASET}.{USER_LOCATIONS_TABLE}",
         write_disposition="WRITE_TRUNCATE",

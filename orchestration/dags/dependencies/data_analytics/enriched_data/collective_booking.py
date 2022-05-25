@@ -15,12 +15,12 @@ SELECT
     collective_booking.collective_booking_id
     , collective_booking.booking_id
     , collective_booking.collective_stock_id AS collective_stock_id
-    , collective_stock.collective_stock_stock_id AS stock_id
+    , collective_stock.stock_id AS stock_id
     , collective_stock.collective_offer_id AS collective_offer_id
-    , collective_offer_offer_id AS offer_id
+    , offer_id AS offer_id
     , collective_offer.collective_offer_name
     , collective_offer.collective_offer_subcategory_id
-    , collective_offer.collective_offer_venue_id AS venue_id
+    , collective_offer.venue_id AS venue_id
     , venue.venue_name
     , venue.venue_department_code
     , collective_booking.offerer_id AS offerer_id

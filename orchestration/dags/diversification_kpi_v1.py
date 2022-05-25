@@ -6,7 +6,7 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.bash import BashOperator
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryDeleteTableOperator,
-    BigQueryCreateEmptyTableOperator
+    BigQueryCreateEmptyTableOperator,
 )
 from airflow.providers.google.cloud.operators.compute import (
     ComputeEngineStartInstanceOperator,

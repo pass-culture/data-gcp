@@ -2,8 +2,12 @@ import datetime
 import os
 
 from airflow import DAG
-from airflow.providers.google.cloud.operators.bigquery import BigQueryExecuteQueryOperator
-from airflow.providers.google.cloud.operators.cloud_sql import CloudSQLExecuteQueryOperator
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryExecuteQueryOperator,
+)
+from airflow.providers.google.cloud.operators.cloud_sql import (
+    CloudSQLExecuteQueryOperator,
+)
 from airflow.operators.dummy_operator import DummyOperator
 
 from dependencies.access_gcp_secrets import access_secret_data

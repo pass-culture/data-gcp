@@ -3,7 +3,9 @@ import datetime
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python import PythonOperator
-from airflow.providers.google.cloud.operators.bigquery import BigQueryExecuteQueryOperator
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryExecuteQueryOperator,
+)
 from common.alerts import task_fail_slack_alert
 from dependencies.import_contentful_file import (
     load_from_csv_contentful_file,

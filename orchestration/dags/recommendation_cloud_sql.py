@@ -3,9 +3,15 @@ from datetime import datetime, timedelta
 
 import pandas as pd
 from airflow import DAG
-from airflow.providers.google.cloud.operators.bigquery import BigQueryExecuteQueryOperator
-from airflow.providers.google.cloud.operators.bigquery import BigQueryDeleteTableOperator
-from airflow.providers.google.cloud.transfers.bigquery_to_gcs import BigQueryToGCSOperator
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryExecuteQueryOperator,
+)
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryDeleteTableOperator,
+)
+from airflow.providers.google.cloud.transfers.bigquery_to_gcs import (
+    BigQueryToGCSOperator,
+)
 from airflow.providers.google.cloud.operators.cloud_sql import (
     CloudSQLImportInstanceOperator,
     CloudSQLExecuteQueryOperator,

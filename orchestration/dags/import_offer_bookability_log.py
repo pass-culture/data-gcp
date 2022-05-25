@@ -1,7 +1,9 @@
 import datetime
 
 from airflow import DAG
-from airflow.providers.google.cloud.operators.bigquery import BigQueryExecuteQueryOperator
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryExecuteQueryOperator,
+)
 from airflow.operators.dummy_operator import DummyOperator
 
 from dependencies.config import (

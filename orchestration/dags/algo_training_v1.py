@@ -10,7 +10,7 @@ from airflow.contrib.operators.gcp_compute_operator import (
     GceInstanceStartOperator,
     GceInstanceStopOperator,
 )
-from dependencies.slack_alert import task_fail_slack_alert
+from common.alerts import task_fail_slack_alert
 from dependencies.access_gcp_secrets import access_secret_data
 from dependencies.config import GCP_PROJECT_ID, GCE_ZONE, ENV_SHORT_NAME
 
@@ -27,6 +27,7 @@ STORAGE_PATH = (
     f"gs://{MLFLOW_BUCKET_NAME}/algo_training_{ENV_SHORT_NAME}/algo_training_{DATE}"
 )
 MODEL_NAME = "v1"
+AI_MODEL_NAME = f"tf_model_reco_{ENV_SHORT_NAME}"
 SLACK_CONN_ID = "slack"
 SLACK_CONN_PASSWORD = access_secret_data(GCP_PROJECT_ID, "slack-conn-password")
 
@@ -191,7 +192,7 @@ with DAG(
 
     DEPLOY_COMMAND = f"""
     export REGION=europe-west1
-    export MODEL_NAME=tf_model_reco_{ENV_SHORT_NAME}
+    export MODEL_NAME={AI_MODEL_NAME}
     export RECOMMENDATION_MODEL_DIR={{{{ ti.xcom_pull(task_ids='training') }}}}
 
     export VERSION_NAME=v_{{{{ ts_nodash }}}}
@@ -213,6 +214,42 @@ with DAG(
     deploy_model = BashOperator(
         task_id="deploy_model",
         bash_command=DEPLOY_COMMAND,
+    )
+
+    list_model_versions = BashOperator(
+        task_id="list_model_versions",
+        bash_command="gcloud ml-engine versions list "
+        "--model={{params.model}} "
+        "--region=europe-west1 "
+        "--project={{params.project}} "
+        "--sort-by=~NAME",
+        xcom_push=True,
+        params={
+            "model": AI_MODEL_NAME,
+            "project": GCP_PROJECT_ID,
+        },
+        dag=dag,
+    )
+
+    get_version_task = BashOperator(
+        task_id="get_version_task",
+        bash_command="echo '{{ ti.xcom_pull(task_ids='list_model_versions') }}' | awk '{print $1}'",
+        xcom_push=True,
+        dag=dag,
+    )
+
+    delete_last_version = BashOperator(
+        task_id="delete_last_version",
+        bash_command="gcloud ml-engine versions delete {{ ti.xcom_pull(task_ids='get_version_task') }} "
+        "--model {{params.model}} "
+        "--region=europe-west1 "
+        "--project={{params.project}}",
+        xcom_push=True,
+        params={
+            "model": AI_MODEL_NAME,
+            "project": GCP_PROJECT_ID,
+        },
+        dag=dag,
     )
 
     SLACK_BLOCKS = [
@@ -270,5 +307,8 @@ with DAG(
         >> postprocess
         >> gce_instance_stop
         >> deploy_model
+        >> list_model_versions
+        >> get_version_task
+        >> delete_last_version
         >> send_slack_notif_success
     )

@@ -1,0 +1,175 @@
+def define_deposit_rank_query(dataset, table_prefix=""):
+    return f"""
+        CREATE TEMP TABLE ranked_deposit AS (
+            SELECT 
+                educational_deposit.educational_deposit_educational_institution_id AS institution_id
+                ,educational_deposit_creation_date AS deposit_creation_date
+                ,educational_year_beginning_date AS educational_year_beginning_date
+                ,educational_year_expiration_date AS educational_year_expiration_date
+                ,educational_deposit_amount
+                ,CASE WHEN (CAST(educational_year_beginning_date AS DATE) <= CURRENT_DATE AND CAST(educational_year_expiration_date AS DATE) >= CURRENT_DATE) THEN TRUE ELSE FALSE END AS is_current_deposit
+                ,RANK() OVER(PARTITION BY educational_deposit_educational_institution_id ORDER BY educational_deposit_creation_date,educational_deposit_id) AS deposit_rank_asc 
+                ,RANK() OVER(PARTITION BY educational_deposit_educational_institution_id ORDER BY educational_deposit_creation_date DESC,educational_deposit_id DESC) AS deposit_rank_desc            
+            FROM {dataset}.{table_prefix}educational_deposit AS educational_deposit
+            JOIN {dataset}.{table_prefix}educational_year AS educational_year 
+                ON educational_deposit.educational_deposit_educational_year_id = educational_year.educational_year_adage_id
+        );
+        """
+
+
+def define_first_deposit_query(dataset, table_prefix=""):
+    return f"""
+        CREATE TEMP TABLE first_deposit AS (
+            SELECT 
+                institution_id
+                ,deposit_creation_date AS first_deposit_creation_date
+            FROM ranked_deposit 
+            WHERE deposit_rank_asc = 1 
+        );
+        """
+
+
+def define_current_deposit_query(dataset, table_prefix=""):
+    return f"""
+        CREATE TEMP TABLE current_deposit AS (
+            SELECT 
+                institution_id
+                ,educational_deposit_amount AS institution_current_deposit_amount
+                ,deposit_creation_date AS current_deposit_creation_date
+            FROM ranked_deposit
+            WHERE is_current_deposit IS TRUE 
+        );
+        """
+
+
+def define_all_deposits_query(dataset, table_prefix=""):
+    return f"""
+        CREATE TEMP TABLE all_deposits AS (
+            SELECT 
+                institution_id
+                ,SUM(educational_deposit_amount) AS institution_deposits_total_amount
+                ,COUNT(*) AS institution_total_number_of_deposits
+            FROM ranked_deposit 
+            GROUP BY 1 
+        );
+        """
+
+
+def define_bookings_infos_query(dataset, table_prefix=""):
+    return f"""
+        CREATE TEMP TABLE bookings_infos AS (
+            SELECT 
+            educational_institution.educational_institution_id AS institution_id 
+            ,collective_booking.collective_booking_id AS booking_id
+            ,collective_booking_collective_stock_id
+            ,collective_booking.collective_booking_creation_date AS booking_creation_date
+            ,collective_booking_status AS booking_status 
+            ,collective_booking_confirmation_date
+            ,collective_booking_confirmation_limit_date
+            ,RANK() OVER(PARTITION BY educational_institution.educational_institution_id ORDER BY collective_booking.collective_booking_creation_date) AS booking_rank_asc
+            ,RANK() OVER(PARTITION BY educational_institution.educational_institution_id ORDER BY collective_booking.collective_booking_creation_date DESC) AS booking_rank_desc
+        FROM {dataset}.{table_prefix}educational_institution AS educational_institution
+        JOIN {dataset}.{table_prefix}collective_booking AS collective_booking 
+            ON educational_institution.educational_institution_id = collective_booking.collective_booking_educational_institution_id
+            AND collective_booking_status != 'CANCELLED' 
+        ); 
+        """
+
+
+def define_first_booking_query(dataset, table_prefix=""):
+    return f"""
+        CREATE TEMP TABLE first_booking AS (   
+            SELECT  
+                institution_id
+                ,booking_creation_date AS first_booking_date
+            FROM bookings_infos
+            WHERE booking_rank_asc = 1
+        );
+        """
+
+
+def define_last_booking_query(dataset, table_prefix=""):
+    return f"""
+        CREATE TEMP TABLE last_booking AS (   
+            SELECT  
+                institution_id
+                ,bookings_infos.booking_creation_date AS last_booking_date
+                ,collective_offer_subcategory_id AS last_category_booked
+            FROM bookings_infos 
+            JOIN {dataset}.{table_prefix}collective_stock AS collective_stock
+                ON bookings_infos.collective_booking_collective_stock_id = collective_stock.collective_stock_id
+            JOIN {dataset}.{table_prefix}collective_offer AS collective_offer 
+                ON collective_stock.collective_stock_collective_offer_id = collective_offer.collective_offer_id
+            WHERE booking_rank_desc = 1
+        );
+        """
+
+
+def define_bookings_per_institution_query(dataset, table_prefix=""):
+    return f"""
+        CREATE TEMP TABLE bookings_per_institution AS (   
+            SELECT  
+            institution_id
+            ,COUNT(DISTINCT booking_id) AS nb_non_cancelled_bookings
+            ,SUM(collective_stock_price) AS theoric_amount_spent
+            ,COUNT(CASE WHEN booking_status IN ('USED','REIMBURSED') THEN 1 ELSE NULL END) AS nb_used_bookings
+            ,SUM(CASE WHEN booking_status IN ('USED','REIMBURSED') THEN collective_stock_price ELSE NULL END) AS real_amount_spent
+            ,SUM(collective_stock_number_of_tickets) AS total_eleves_concernes
+            ,COUNT(DISTINCT collective_offer_subcategory_id) AS nb_distinct_categories_booked
+        FROM bookings_infos
+        JOIN {dataset}.{table_prefix}collective_stock AS collective_stock
+            ON bookings_infos.collective_booking_collective_stock_id = collective_stock.collective_stock_id
+        JOIN {dataset}.{table_prefix}collective_offer AS collective_offer 
+            ON collective_stock.collective_stock_collective_offer_id = collective_offer.collective_offer_id
+        WHERE booking_rank_desc = 1
+        GROUP BY 1
+        );
+        """
+
+
+def define_enriched_institution_data_query(dataset, table_prefix=""):
+    return f"""
+        CREATE OR REPLACE TABLE {dataset}.enriched_institution_data AS (
+            SELECT 
+                educational_institution.educational_institution_id AS institution_id 
+                ,educational_institution_institution_id AS institution_external_id 
+                ,institution_name AS institution_name 
+                ,educational_institution.institution_departement_code
+                ,institution_postal_code
+                ,institution_city 
+                ,first_deposit.first_deposit_creation_date
+                ,current_deposit.institution_current_deposit_amount
+                ,current_deposit.current_deposit_creation_date
+                ,all_deposits.institution_deposits_total_amount
+                ,all_deposits.institution_total_number_of_deposits
+                ,first_booking.first_booking_date
+                ,last_booking.last_booking_date
+                ,last_booking.last_category_booked
+                ,bookings_per_institution.nb_non_cancelled_bookings AS nb_non_cancelled_bookings 
+                ,bookings_per_institution.theoric_amount_spent
+                ,bookings_per_institution.nb_used_bookings
+                ,bookings_per_institution.real_amount_spent
+                ,bookings_per_institution.total_eleves_concernes
+            FROM {dataset}.{table_prefix}educational_institution AS educational_institution
+            JOIN first_deposit ON educational_institution.educational_institution_id = first_deposit.institution_id 
+            JOIN current_deposit ON educational_institution.educational_institution_id = current_deposit.institution_id
+            JOIN all_deposits ON educational_institution.educational_institution_id = all_deposits.institution_id
+            JOIN first_booking ON educational_institution.educational_institution_id = first_booking.institution_id
+            JOIN last_booking ON educational_institution.educational_institution_id = last_booking.institution_id
+            JOIN bookings_per_institution ON educational_institution.educational_institution_id = bookings_per_institution.institution_id
+    );
+    """
+
+
+def define_enriched_institution_data_full_query(dataset, table_prefix=""):
+    return f"""
+        {define_deposit_rank_query(dataset=dataset, table_prefix=table_prefix)}
+        {define_first_deposit_query(dataset=dataset, table_prefix=table_prefix)}
+        {define_current_deposit_query(dataset=dataset, table_prefix=table_prefix)}
+        {define_all_deposits_query(dataset=dataset, table_prefix=table_prefix)}
+        {define_bookings_infos_query(dataset=dataset, table_prefix=table_prefix)}
+        {define_first_booking_query(dataset=dataset, table_prefix=table_prefix)}
+        {define_last_booking_query(dataset=dataset, table_prefix=table_prefix)}
+        {define_bookings_per_institution_query(dataset=dataset, table_prefix=table_prefix)}
+        {define_enriched_institution_data_query(dataset=dataset, table_prefix=table_prefix)}
+    """

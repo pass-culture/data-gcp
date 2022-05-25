@@ -192,6 +192,7 @@ def define_import_query(
             "visualDisabilityCompliant" as offer_visual_disability_compliant,
             "externalTicketOfficeUrl" as offer_external_ticket_office_url,
             CAST("validation" AS varchar(255)) as offer_validation,
+            CAST("lastValidationType" AS varchar(255)) as offer_last_validation_type,
             CAST("subcategoryId" AS varchar(255)) as offer_subcategoryId,
             "dateUpdated" as offer_date_updated,
             "isEducational" AS offer_is_educational, 
@@ -252,7 +253,11 @@ def define_import_query(
             else "venueTypeCode" END AS venue_type_code,
             CAST("venueLabelId" AS varchar(255)) AS venue_label_id, "dateCreated" AS venue_creation_date,
             "isPermanent" AS venue_is_permanent, "validationToken" AS venue_validation_token, 
-            CAST("businessUnitId" AS varchar(255)) AS business_unit_id, "bannerUrl" as banner_url
+            CAST("businessUnitId" AS varchar(255)) AS business_unit_id, "bannerUrl" as banner_url,
+            "mentalDisabilityCompliant" AS venue_mentalDisabilityCompliant,
+            "motorDisabilityCompliant" AS venue_motorDisabilityCompliant,
+            "visualDisabilityCompliant" AS venue_visualDisabilityCompliant,
+            "adageId" AS venue_adage_id
         FROM public.venue
     """
     cloudsql_queries[
@@ -488,6 +493,7 @@ def define_import_query(
                 ,CAST("educationalYearId" AS varchar(255)) AS educational_deposit_educational_year_id
                 ,amount AS educational_deposit_amount
                 ,"dateCreated" AS educational_deposit_creation_date
+                ,CAST("ministry" AS TEXT) AS ministry
             FROM educational_deposit
         """
 
@@ -497,6 +503,12 @@ def define_import_query(
             SELECT
             CAST(id AS varchar(255)) AS educational_institution_id
             ,CAST("institutionId" AS varchar(255)) AS educational_institution_institution_id
+            ,"city" AS institution_city
+            ,"name" AS institution_name 
+            ,"postalCode" AS institution_postal_code
+            ,CASE 
+                    WHEN ("postalCode" LIKE \\'97%\\' OR "postalCode" LIKE \\'98%\\') THEN SUBSTRING("postalCode",1,3) 
+                    ELSE SUBSTRING("postalCode",1,2) END AS institution_departement_code
             FROM educational_institution
         """
 

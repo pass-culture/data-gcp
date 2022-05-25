@@ -42,5 +42,9 @@
     "is_event": "t",
     "is_digital_deposit": "f",
     "is_physical_deposit": "f"
+  },
+  "enriched_offer": {
+    "offer_id": 138717,
+    "last_stock_price": 10
   }
 }

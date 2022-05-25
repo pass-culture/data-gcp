@@ -16,7 +16,7 @@ from dependencies.config import (
     GCP_PROJECT,
 )
 
-from dependencies.slack_alert import task_fail_slack_alert
+from common.alerts import task_fail_slack_alert
 
 EXECUTION_DATE = "{{ ds_nodash }}"
 

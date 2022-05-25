@@ -15,10 +15,8 @@ BIGQUERY_ANALYTICS_DATASET = os.environ.get(
     "BIGQUERY_ANALYTICS_DATASET", f"analytics_{ENV_SHORT_NAME}"
 )
 
-BIGQUERY_CLEAN_DATASET = os.environ.get(
-    "BIGQUERY_CLEAN_DATASET", f"clean_{ENV_SHORT_NAME}"
-)
-
 DATA_GCS_BUCKET_NAME = os.environ.get(
     "DATA_GCS_BUCKET_NAME", f"data-bucket-{ENV_SHORT_NAME}"
 )
+
+TABLE_NAME = os.environ.get("TABLE_NAME", f"diversification_bookings")

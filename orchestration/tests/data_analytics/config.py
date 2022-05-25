@@ -416,7 +416,7 @@ BIGQUERY_SCHEMAS = {
         "collective_stock_creation_date": "DATETIME",
         "collective_stock_modification_date": "DATETIME",
         "collective_stock_beginning_date_time": "DATETIME",
-        "collective_stock_collective_offer_id": "STRING",
+        "collective_offer_id": "STRING",
         "collective_stock_price": "NUMERIC",
         "collective_stock_booking_limit_date_time": "DATETIME",
         "collective_stock_number_of_tickets": "INT64",

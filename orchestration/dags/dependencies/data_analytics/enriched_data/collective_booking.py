@@ -16,7 +16,7 @@ SELECT
     , collective_booking.booking_id
     , collective_booking.collective_stock_id AS collective_stock_id
     , collective_stock.collective_stock_stock_id AS stock_id
-    , collective_stock.collective_stock_collective_offer_id AS collective_offer_id
+    , collective_stock.collective_offer_id AS collective_offer_id
     , collective_offer_offer_id AS offer_id
     , collective_offer.collective_offer_name
     , collective_offer.collective_offer_subcategory_id
@@ -44,7 +44,7 @@ SELECT
     , collective_booking_ranking_view.collective_booking_rank
 FROM {dataset}.{table_prefix}collective_booking AS collective_booking
 INNER JOIN {dataset}.{table_prefix}collective_stock AS collective_stock  ON collective_stock.collective_stock_id  = collective_booking.collective_stock_id
-INNER JOIN {dataset}.{table_prefix}collective_offer AS collective_offer  ON collective_offer.collective_offer_id = collective_stock.collective_stock_collective_offer_id
+INNER JOIN {dataset}.{table_prefix}collective_offer AS collective_offer  ON collective_offer.collective_offer_id = collective_stock.collective_offer_id
 INNER JOIN {dataset}.{table_prefix}venue AS venue ON collective_booking.venue_id = venue.venue_id
 INNER JOIN {dataset}.{table_prefix}offerer AS offerer ON offerer.offerer_id = venue.venue_managing_offerer_id
 INNER JOIN {dataset}.{table_prefix}educational_institution AS educational_institution  ON educational_institution.educational_institution_id = collective_booking.educational_institution_id

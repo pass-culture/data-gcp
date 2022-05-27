@@ -61,7 +61,7 @@ def get_data(batch, batch_size):
                     IF(bookings.digital_goods = True, 'digital', null),
                     IF(bookings.event = True, 'event', null)
                   ) as format,
-                  user_deposit_creation_date, user_total_deposit_amount, actual_amount_spent, offer.offer_id, booking_amount, user_department_code
+                  user_deposit_creation_date, user_total_deposit_amount, actual_amount_spent, offer.offer_id, booking_amount, user_department_code,
                   bookings.offer_category_id as category, bookings.offer_subcategoryId as subcategory, offer.genres, offer.rayon, offer.type, offer.venue_id, offer.venue_name,
                   qpi_answers.*
                 FROM batch_users

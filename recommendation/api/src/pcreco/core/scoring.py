@@ -21,6 +21,7 @@ from pcreco.utils.env_vars import (
     MODEL_REGION,
     AB_TESTING,
     AB_TEST_MODEL_DICT,
+    RECOMMENDABLE_OFFER_LIMIT,
     log_duration,
 )
 import datetime
@@ -179,7 +180,6 @@ class Scoring:
                 if self.user.iris_id
                 else "(is_national = True or url IS NOT NULL)"
             )
-            reco_booking_limit = 10 if ENV_SHORT_NAME == "prod" else 0
             query = f"""
                 SELECT offer_id, category, subcategory_id, url, item_id, product_id
                 FROM {self.user.recommendable_offer_table}
@@ -191,8 +191,8 @@ class Scoring:
                     WHERE user_id = :user_id
                     )   
                 {self.recommendation_in_filters}
-                AND booking_number >={reco_booking_limit}
-                ORDER BY RANDOM(); 
+                ORDER BY booking_number DESC
+                LIMIT {RECOMMENDABLE_OFFER_LIMIT}; 
                 """
             return query
 

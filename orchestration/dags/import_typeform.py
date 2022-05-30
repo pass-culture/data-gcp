@@ -7,18 +7,16 @@ from google.cloud import storage
 
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.http_operator import SimpleHttpOperator
-from airflow.operators.python_operator import PythonOperator, BranchPythonOperator
-from airflow.contrib.operators.bigquery_operator import BigQueryOperator
-from airflow.contrib.operators.bigquery_table_delete_operator import (
-    BigQueryTableDeleteOperator,
+from airflow.operators.python import PythonOperator, BranchPythonOperator
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryExecuteQueryOperator,
+    BigQueryDeleteTableOperator,
 )
-from airflow.contrib.operators.gcs_to_bq import GoogleCloudStorageToBigQueryOperator
+from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
+    GCSToBigQueryOperator,
+)
 
-from google.auth.transport.requests import Request
-from google.oauth2 import id_token
 
-from dependencies.bigquery_client import BigQueryClient
 from common.alerts import task_fail_slack_alert
 from dependencies.qpi_answers_schema import QPI_ANSWERS_SCHEMA
 from dependencies.config import (
@@ -79,7 +77,7 @@ with DAG(
     empty = DummyOperator(task_id="Empty")
 
     # it fetches the file corresponding to the initial execution date of the dag and not the day the task is run.
-    import_answers_to_bigquery = GoogleCloudStorageToBigQueryOperator(
+    import_answers_to_bigquery = GCSToBigQueryOperator(
         task_id="import_answers_to_bigquery",
         bucket=DATA_GCS_BUCKET_NAME,
         source_objects=["QPI_exports/qpi_answers_{{ ds_nodash }}/*.jsonl"],
@@ -90,7 +88,7 @@ with DAG(
         schema_fields=QPI_ANSWERS_SCHEMA,
     )
 
-    add_answers_to_raw = BigQueryOperator(
+    add_answers_to_raw = BigQueryExecuteQueryOperator(
         task_id="add_answers_to_raw",
         sql=f"""
             select *
@@ -102,7 +100,7 @@ with DAG(
         trigger_rule="none_failed_or_skipped",
     )
 
-    add_answers_to_clean = BigQueryOperator(
+    add_answers_to_clean = BigQueryExecuteQueryOperator(
         task_id="add_answers_to_clean",
         sql=f"""
             select raw_answers.user_id,
@@ -116,7 +114,7 @@ with DAG(
         trigger_rule="none_failed_or_skipped",
     )
 
-    add_temp_answers_to_clean = BigQueryOperator(
+    add_temp_answers_to_clean = BigQueryExecuteQueryOperator(
         task_id="add_temp_answers_to_clean",
         sql=f"""
             select  raw_answers.user_id,
@@ -130,7 +128,7 @@ with DAG(
         trigger_rule="none_failed_or_skipped",
     )
 
-    delete_temp_answer_table_raw = BigQueryTableDeleteOperator(
+    delete_temp_answer_table_raw = BigQueryDeleteTableOperator(
         task_id="delete_temp_answer_table_raw",
         deletion_dataset_table=f"{BIGQUERY_RAW_DATASET}.temp_{QPI_ANSWERS_TABLE}",
         ignore_if_missing=True,
@@ -138,7 +136,7 @@ with DAG(
         trigger_rule="none_failed_or_skipped",
     )
 
-    enrich_qpi_answers = BigQueryOperator(
+    enrich_qpi_answers = BigQueryExecuteQueryOperator(
         task_id="enrich_qpi_answers",
         sql=enrich_answers(
             gcp_project=GCP_PROJECT, bigquery_clean_dataset=BIGQUERY_CLEAN_DATASET

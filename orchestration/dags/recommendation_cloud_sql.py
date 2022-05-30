@@ -3,17 +3,21 @@ from datetime import datetime, timedelta
 
 import pandas as pd
 from airflow import DAG
-from airflow.contrib.operators.bigquery_operator import BigQueryOperator
-from airflow.contrib.operators.bigquery_table_delete_operator import (
-    BigQueryTableDeleteOperator,
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryExecuteQueryOperator,
 )
-from airflow.contrib.operators.bigquery_to_gcs import BigQueryToCloudStorageOperator
-from airflow.contrib.operators.gcp_sql_operator import (
-    CloudSqlInstanceImportOperator,
-    CloudSqlQueryOperator,
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryDeleteTableOperator,
+)
+from airflow.providers.google.cloud.transfers.bigquery_to_gcs import (
+    BigQueryToGCSOperator,
+)
+from airflow.providers.google.cloud.operators.cloud_sql import (
+    CloudSQLImportInstanceOperator,
+    CloudSQLExecuteQueryOperator,
 )
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.python_operator import PythonOperator
+from airflow.operators.python import PythonOperator
 
 from dependencies.access_gcp_secrets import access_secret_data
 from dependencies.compose_gcs_files import compose_gcs_files
@@ -141,7 +145,7 @@ with DAG(
                 FROM `{GCP_PROJECT}.{dataset}.{bigquery_table_name}`
             """
 
-        filter_column_task = BigQueryOperator(
+        filter_column_task = BigQueryExecuteQueryOperator(
             task_id=f"filter_column_{table}",
             sql=filter_column_query,
             use_legacy_sql=False,
@@ -157,7 +161,7 @@ with DAG(
             ]
         )
 
-        export_task = BigQueryToCloudStorageOperator(
+        export_task = BigQueryToGCSOperator(
             task_id=f"export_{table}_to_gcs",
             source_project_dataset_table=f"{GCP_PROJECT}:{dataset}.temp_export_{table}",
             destination_cloud_storage_uris=[f"{BUCKET_PATH}/{table}-*.csv"],
@@ -165,7 +169,7 @@ with DAG(
             print_header=False,
         )
 
-        delete_temp_table_task = BigQueryTableDeleteOperator(
+        delete_temp_table_task = BigQueryDeleteTableOperator(
             task_id=f"delete_temp_export_{table}_in_bigquery",
             deletion_dataset_table=f"{GCP_PROJECT}:{dataset}.temp_export_{table}",
             ignore_if_missing=True,
@@ -182,14 +186,14 @@ with DAG(
             dag=dag,
         )
 
-        drop_table_task = CloudSqlQueryOperator(
+        drop_table_task = CloudSQLExecuteQueryOperator(
             gcp_cloudsql_conn_id="proxy_postgres_tcp",
             task_id=f"drop_table_public_{table}",
             sql=f"DROP TABLE IF EXISTS public.{table};",
             autocommit=True,
         )
 
-        create_table_task = CloudSqlQueryOperator(
+        create_table_task = CloudSQLExecuteQueryOperator(
             task_id=f"create_table_public_{table}",
             gcp_cloudsql_conn_id="proxy_postgres_tcp",
             sql=f"CREATE TABLE IF NOT EXISTS public.{table} ({typed_columns});",
@@ -217,7 +221,7 @@ with DAG(
             }
         }
 
-        sql_restore_task = CloudSqlInstanceImportOperator(
+        sql_restore_task = CloudSQLImportInstanceOperator(
             task_id=f"cloud_sql_restore_table_{table_name}",
             project_id=GCP_PROJECT,
             body=import_body,
@@ -264,7 +268,7 @@ with DAG(
         CREATE INDEX IF NOT EXISTS trained_users_mf_reco_user_id          ON public.trained_users_mf_reco       USING btree (user_id);
     """
 
-    recreate_indexes_task = CloudSqlQueryOperator(
+    recreate_indexes_task = CloudSQLExecuteQueryOperator(
         task_id="recreate_indexes",
         gcp_cloudsql_conn_id="proxy_postgres_tcp",
         sql=recreate_indexes_query,
@@ -284,7 +288,7 @@ with DAG(
 
     refresh_materialized_view_tasks = []
     for materialized_view in views_to_refresh:
-        refresh_materialized_view_task = CloudSqlQueryOperator(
+        refresh_materialized_view_task = CloudSQLExecuteQueryOperator(
             task_id=f"refresh_{materialized_view}",
             gcp_cloudsql_conn_id="proxy_postgres_tcp",
             sql=f"REFRESH MATERIALIZED VIEW CONCURRENTLY {materialized_view};",

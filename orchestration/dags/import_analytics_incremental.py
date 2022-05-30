@@ -15,6 +15,31 @@ from dependencies.config import (
     BIGQUERY_CLEAN_DATASET,
     GCP_PROJECT,
 )
+from dependencies.data_analytics.enriched_data.booking import (
+    define_enriched_booking_data_full_query,
+)
+from dependencies.data_analytics.enriched_data.collective_booking import (
+    define_enriched_collective_booking_full_query,
+)
+from dependencies.data_analytics.enriched_data.offer import (
+    define_enriched_offer_data_full_query,
+)
+from dependencies.data_analytics.enriched_data.offerer import (
+    define_enriched_offerer_data_full_query,
+)
+from dependencies.data_analytics.enriched_data.stock import (
+    define_enriched_stock_data_full_query,
+)
+from dependencies.data_analytics.enriched_data.user import (
+    define_enriched_user_data_full_query,
+)
+from dependencies.data_analytics.enriched_data.venue import (
+    define_enriched_venue_data_full_query,
+)
+from dependencies.data_analytics.enriched_data.venue_locations import (
+    define_table_venue_locations,
+)
+
 from dependencies.data_analytics.import_tables import (
     define_import_query,
     define_replace_query,

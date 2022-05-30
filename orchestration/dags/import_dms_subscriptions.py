@@ -102,8 +102,9 @@ with DAG(
         task_id="import_dms_jeunes_to_bq",
         bucket=DATA_GCS_BUCKET_NAME,
         source_objects=[
-            "dms_export/dms_jeunes_{{task_instance.xcom_pull(task_ids='dms_to_gcs', key='return_value')}}.csv"
+            "dms_export/dms_jeunes_{{task_instance.xcom_pull(task_ids='dms_to_gcs', key='return_value')}}.parquet"
         ],
+        source_format="PARQUET",
         destination_project_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.dms_jeunes",
         schema_fields=[
             {"name": "procedure_id", "type": "STRING"},
@@ -127,8 +128,9 @@ with DAG(
         task_id="import_dms_pro_to_bq",
         bucket=DATA_GCS_BUCKET_NAME,
         source_objects=[
-            "dms_export/dms_pro_{{task_instance.xcom_pull(task_ids='dms_to_gcs', key='return_value')}}.csv"
+            "dms_export/dms_pro_{{task_instance.xcom_pull(task_ids='dms_to_gcs', key='return_value')}}.parquet"
         ],
+        source_format="PARQUET",
         destination_project_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.dms_pro",
         schema_fields=[
             {"name": "procedure_id", "type": "STRING"},

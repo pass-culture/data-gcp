@@ -22,8 +22,8 @@ from dependencies.config import (
 from dependencies.data_analytics.enriched_data.booking import (
     define_enriched_booking_data_full_query,
 )
-from dependencies.data_analytics.enriched_data.educational_booking import (
-    define_enriched_educational_booking_full_query,
+from dependencies.data_analytics.enriched_data.collective_booking import (
+    define_enriched_collective_booking_full_query,
 )
 from dependencies.data_analytics.enriched_data.offer import (
     define_enriched_offer_data_full_query,
@@ -493,7 +493,7 @@ end = DummyOperator(task_id="end", dag=dag)
     >> create_enriched_stock_data_task
     >> create_enriched_offer_data_task
     >> create_enriched_booking_data_task
-    >> create_enriched_educational_booking_data_task
+    >> create_enriched_collective_booking_data_task
     >> create_enriched_user_data_task
     >> create_enriched_deposit_data_task
     >> enriched_venues

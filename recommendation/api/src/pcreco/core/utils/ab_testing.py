@@ -1,14 +1,13 @@
 import random
 from sqlalchemy import text
-from utils import (
-    create_db_connection,
-    AB_TESTING_TABLE,
-)
+from pcreco.utils.env_vars import AB_TESTING_TABLE, AB_TESTING_GROUPS
+from pcreco.utils.db.db_connection import create_db_connection
+from typing import Any
 
 
 def query_ab_testing_table(
     user_id,
-):
+) -> Any:
 
     with create_db_connection() as connection:
         request_response = connection.execute(
@@ -19,8 +18,8 @@ def query_ab_testing_table(
     return request_response
 
 
-def ab_testing_assign_user(user_id):
-    groups = ["A", "B", "C"]
+def ab_testing_assign_user(user_id) -> str:
+    groups = AB_TESTING_GROUPS
     group_id = random.choice(groups)
 
     with create_db_connection() as connection:

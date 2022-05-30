@@ -1,8 +1,8 @@
 import datetime
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.http_operator import SimpleHttpOperator
-from airflow.operators.python_operator import PythonOperator
+from airflow.providers.http.operators.http import SimpleHttpOperator
+from airflow.operators.python import PythonOperator
 
 from google.auth.transport.requests import Request
 from google.oauth2 import id_token
@@ -10,8 +10,6 @@ from google.oauth2 import id_token
 from dependencies.config import (
     GCP_PROJECT,
     ENV_SHORT_NAME,
-    BIGQUERY_CLEAN_DATASET,
-    BIGQUERY_ANALYTICS_DATASET,
 )
 
 FUNCTION_NAME = f"adage_import_{ENV_SHORT_NAME}"

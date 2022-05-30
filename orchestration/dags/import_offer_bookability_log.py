@@ -1,18 +1,14 @@
 import datetime
 
 from airflow import DAG
-from airflow.contrib.operators.bigquery_operator import BigQueryOperator
-from airflow.contrib.operators.bigquery_table_delete_operator import (
-    BigQueryTableDeleteOperator,
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryExecuteQueryOperator,
 )
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.python_operator import BranchPythonOperator
 
 from dependencies.config import (
-    BIGQUERY_RAW_DATASET,
     BIGQUERY_CLEAN_DATASET,
     BIGQUERY_ANALYTICS_DATASET,
-    ENV_SHORT_NAME,
     GCP_PROJECT,
 )
 
@@ -39,7 +35,7 @@ dag = DAG(
 
 start = DummyOperator(task_id="start", dag=dag)
 
-import_offer_bookability_log = BigQueryOperator(
+import_offer_bookability_log = BigQueryExecuteQueryOperator(
     task_id="import_to_analytics_offer_bookability_log",
     sql=f"""
         SELECT CURRENT_DATE() AS date, offer_id FROM {GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_offer WHERE offer_is_active=TRUE 
@@ -51,7 +47,7 @@ import_offer_bookability_log = BigQueryOperator(
     dag=dag,
 )
 
-import_collective_offer_bookability_log = BigQueryOperator(
+import_collective_offer_bookability_log = BigQueryExecuteQueryOperator(
     task_id="import_to_analytics_collective_offer_bookability_log",
     sql=f"""
         SELECT CURRENT_DATE() AS date, collective_offer_id FROM {GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_collective_offer WHERE collective_offer_is_active=TRUE 

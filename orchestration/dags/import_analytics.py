@@ -151,6 +151,11 @@ data_applicative_tables_and_date_columns = {
         "collective_offer_creation_date",
         "collective_offer_date_updated",
     ],
+    "collective_offer_template": [
+        "collective_offer_last_validation_date",
+        "collective_offer_creation_date",
+        "collective_offer_date_updated",
+    ],
     "collective_stock": [
         "collective_stock_creation_date",
         "collective_stock_modification_date",

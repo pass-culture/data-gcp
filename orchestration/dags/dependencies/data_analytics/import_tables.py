@@ -591,6 +591,37 @@ def define_import_query(
                 ,CAST("lastValidationType" AS VARCHAR) AS collective_offer_last_validation_type
             FROM public.collective_offer
         """
+
+    cloudsql_queries[
+        "collective_offer_template"
+    ] = """
+            SELECT 
+                "audioDisabilityCompliant" AS collective_offer_audio_disability_compliant
+                ,"mentalDisabilityCompliant" AS collective_offer_mental_disability_compliant
+                ,"motorDisabilityCompliant" AS collective_offer_motor_disability_compliant
+                ,"visualDisabilityCompliant" AS collective_offer_visual_disability_compliant
+                ,"lastValidationDate" AS collective_offer_last_validation_date
+                , CAST("validation" AS VARCHAR) AS collective_offer_validation
+                , CAST("id" AS varchar(255)) AS collective_offer_id
+                , CAST("offerId" AS varchar(255)) AS offer_id
+                , "isActive" AS collective_offer_is_active
+                , CAST("venueId" AS varchar(255)) AS venue_id
+                , "name" AS collective_offer_name
+                ,"description" AS collective_offer_description
+                ,"durationMinutes" AS collective_offer_duration_minutes
+                ,"dateCreated" AS collective_offer_creation_date
+                ,CAST("subcategoryId" AS varchar(255)) AS collective_offer_subcategory_id
+                ,"dateUpdated" AS collective_offer_date_updated
+                ,BTRIM(array_to_string("students", \\',\\'), \\'{\\') AS collective_offer_students
+                ,"priceDetail" AS collective_offer_price_detail
+                ,"bookingEmail" AS collective_offer_booking_email
+                ,"contactEmail" AS collective_offer_contact_email
+                , "contactPhone" AS collective_offer_contact_phone
+                ,"offerVenue" AS collective_offer_offer_venue
+                ,CAST("lastValidationType" AS VARCHAR) AS collective_offer_last_validation_type
+            FROM public.collective_offer_template
+    """
+
     cloudsql_queries[
         "collective_stock"
     ] = """

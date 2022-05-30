@@ -45,7 +45,7 @@ app_info_id_list_pro = ENV_SHORT_NAME_APP_INFO_ID_MAPPING_PRO[ENV_SHORT_NAME]
 EXECUTION_DATE = "{{ ds_nodash }}"
 
 default_dag_args = {
-    "start_date": datetime.datetime(2021, 4, 17),
+    "start_date": datetime.datetime(2022, 5, 30),
     "retries": 3,
     "retry_delay": datetime.timedelta(hours=6),
     "project_id": GCP_PROJECT,
@@ -57,7 +57,7 @@ dag = DAG(
     default_args=default_dag_args,
     description="Import firebase data and dispatch it to each env",
     on_failure_callback=task_fail_slack_alert,
-    schedule_interval="0 12 * * *" if ENV_SHORT_NAME == "prod" else "30 12 * * *",
+    schedule_interval="00 13 * * *" if ENV_SHORT_NAME == "prod" else "30 12 * * *",
     catchup=True,
     dagrun_timeout=datetime.timedelta(minutes=90),
 )

@@ -149,7 +149,7 @@ with DAG(
             task_id=f"filter_column_{table}",
             sql=filter_column_query,
             use_legacy_sql=False,
-            destination_dataset_table=f"{GCP_PROJECT}:{dataset}.temp_export_{table}",
+            destination_dataset_table=f"{GCP_PROJECT}.{dataset}.temp_export_{table}",
             write_disposition="WRITE_TRUNCATE",
         )
 
@@ -163,7 +163,7 @@ with DAG(
 
         export_task = BigQueryToGCSOperator(
             task_id=f"export_{table}_to_gcs",
-            source_project_dataset_table=f"{GCP_PROJECT}:{dataset}.temp_export_{table}",
+            source_project_dataset_table=f"{GCP_PROJECT}.{dataset}.temp_export_{table}",
             destination_cloud_storage_uris=[f"{BUCKET_PATH}/{table}-*.csv"],
             export_format="CSV",
             print_header=False,
@@ -171,7 +171,7 @@ with DAG(
 
         delete_temp_table_task = BigQueryDeleteTableOperator(
             task_id=f"delete_temp_export_{table}_in_bigquery",
-            deletion_dataset_table=f"{GCP_PROJECT}:{dataset}.temp_export_{table}",
+            deletion_dataset_table=f"{GCP_PROJECT}.{dataset}.temp_export_{table}",
             ignore_if_missing=True,
         )
 

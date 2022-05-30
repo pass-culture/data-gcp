@@ -72,7 +72,7 @@ with DAG(
     )
 
     if ENV_SHORT_NAME == "dev":
-        branch = "pc-10458-auto-deploy"
+        branch = "master"
     if ENV_SHORT_NAME == "stg":
         branch = "master"
     if ENV_SHORT_NAME == "prod":

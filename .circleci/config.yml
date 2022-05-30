@@ -723,7 +723,7 @@ jobs:
           at: .
       - run:
           name: Install psql
-          command: sudo apt install postgresql-client
+          command: sudo apt update && sudo apt install postgresql-client
       - run:
           name: Run tests
           command: |
@@ -842,7 +842,7 @@ jobs:
           at: .
       - run:
           name: Install psql
-          command: sudo apt install postgresql-client
+          command: sudo apt update && sudo apt install postgresql-client
       - run:
           name: Run tests
           command: |

@@ -61,7 +61,7 @@ data_applicative_tables_and_date_columns = {
 }
 
 default_dag_args = {
-    "start_date": datetime.datetime(2022, 4, 10),
+    "start_date": datetime.datetime(2022, 5, 30),
     "retries": 1,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT,

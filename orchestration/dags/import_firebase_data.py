@@ -57,7 +57,7 @@ dag = DAG(
     default_args=default_dag_args,
     description="Import firebase data and dispatch it to each env",
     on_failure_callback=task_fail_slack_alert,
-    schedule_interval="0 12 * * *" if ENV_SHORT_NAME == "prod" else "30 12 * * *",
+    schedule_interval="00 13 * * *" if ENV_SHORT_NAME == "prod" else "30 12 * * *",
     catchup=True,
     dagrun_timeout=datetime.timedelta(minutes=90),
 )

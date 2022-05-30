@@ -17,7 +17,7 @@ from common.alerts import task_fail_slack_alert
 EXECUTION_DATE = "{{ ds_nodash }}"
 
 default_dag_args = {
-    "start_date": datetime.datetime(2022, 4, 11),
+    "start_date": datetime.datetime(2022, 5, 30),
     "retries": 3,
     "retry_delay": datetime.timedelta(hours=6),
     "project_id": GCP_PROJECT,

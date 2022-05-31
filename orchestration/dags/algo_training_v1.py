@@ -27,7 +27,7 @@ STORAGE_PATH = (
 )
 MODEL_NAME = "v1"
 AI_MODEL_NAME = f"tf_model_reco_{ENV_SHORT_NAME}"
-SLACK_CONN_ID = "slack"
+SLACK_CONN_ID = "slack_analytics"
 SLACK_CONN_PASSWORD = access_secret_data(GCP_PROJECT_ID, "slack-conn-password")
 
 DEFAULT = f"""cd data-gcp/algo_training

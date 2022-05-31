@@ -17,9 +17,6 @@ GCE_INSTANCE = os.environ.get(
     "GCE_TRAINING_INSTANCE", f"algo-training-{ENV_SHORT_NAME}"
 )
 
-SLACK_CONN_ID = "slack"
-SLACK_CONN_PASSWORD = access_secret_data(GCP_PROJECT_ID, "slack-conn-password")
-
 DEFAULT = f"""cd data-gcp/analytics/scripts/import_subcategories_model
 export PATH="/opt/conda/bin:/opt/conda/condabin:"+$PATH
 export ENV_SHORT_NAME={ENV_SHORT_NAME}

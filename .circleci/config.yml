@@ -883,18 +883,18 @@ jobs:
       - run:
           name: Wait for dags to be deployed
           command: |
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_RECOMMMENDATION_CLOUDSQL} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_EXPORT_CLOUDSQL_BIGQUERY} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_DATA_ANALYTICS} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_FIREBASE_DATA} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_TYPEFORM} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_ADDRESSES} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_DMS} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_SIREN} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_COMPUTE_MONITORING} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_ALGO_TRAINING_v1} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_ALGO_TRAINING_v2_deep_reco} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_ADAGE_IMPORT} 6 20
+            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_RECOMMMENDATION_CLOUDSQL} 6 60
+            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_EXPORT_CLOUDSQL_BIGQUERY} 6 60
+            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_DATA_ANALYTICS} 6 60
+            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_FIREBASE_DATA} 6 60
+            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_TYPEFORM} 6 60
+            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_ADDRESSES} 6 60
+            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_DMS} 6 60
+            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_SIREN} 6 60
+            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_COMPUTE_MONITORING} 6 60
+            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_ALGO_TRAINING_v1} 6 60
+            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_ALGO_TRAINING_v2_deep_reco} 6 60
+            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_ADAGE_IMPORT} 6 60
 
   build_and_deploy_api:
     docker:

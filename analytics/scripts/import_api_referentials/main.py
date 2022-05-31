@@ -13,7 +13,7 @@ CATEGORIES_DTYPES = {
     "search_group_name": str,
     "homepage_label_name": str,
     "is_event": bool,
-    "conditional_fields": list,
+    "conditional_fields": str,
     "can_expire": bool,
     "is_physical_deposit": bool,
     "is_digital_deposit": bool,
@@ -45,10 +45,7 @@ def get_subcategories(gcp_project_id, env_short_name):
         export_subcat.append(subcats.__dict__)
     df = pd.DataFrame(export_subcat)
     for k, v in CATEGORIES_DTYPES.items():
-        if isinstance(v, list):
-            df[k] = df[k].apply(np.array)
-        else:
-            df[k] = df[k].astype(v)
+        df[k] = df[k].astype(v)
     df.to_gbq(
         f"""analytics_{env_short_name}.subcategories""",
         project_id=gcp_project_id,
@@ -58,27 +55,28 @@ def get_subcategories(gcp_project_id, env_short_name):
 
 def get_types(gcp_project_id, env_short_name):
     show_types = importlib.import_module(
-        "pcapi.core.domain.show_types"
+        "pcapi.domain.show_types"
     ).show_types
     music_types = importlib.import_module(
-        "pcapi.core.domain.music_types"
+        "pcapi.domain.music_types"
     ).music_types
 
     types = {"show": show_types, "music": music_types}
     export_types = []
-    for k, _t in types.items():
-        code = _t["code"]
-        label = _t["label"]
-        for _c in _t["children"]:
-            export_types.append(
-                {
-                    "domain": k,
-                    "type": code,
-                    "label": label,
-                    "sub_type": _c["code"],
-                    "sub_label": _c["label"],
-                }
-            )
+    for k, types_list in types.items():
+        for _t in types_list:
+            code = _t["code"]
+            label = _t["label"]
+            for _c in _t["children"]:
+                export_types.append(
+                    {
+                        "domain": k,
+                        "type": code,
+                        "label": label,
+                        "sub_type": _c["code"],
+                        "sub_label": _c["label"],
+                    }
+                )
     df = pd.DataFrame(export_types)
     for k, v in TYPES_DTYPES.items():
         df[k] = df[k].astype(v)

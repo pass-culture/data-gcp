@@ -91,7 +91,7 @@ with DAG(
 
         EXPORT_SUBCAT = f""" 
             cd {BASE_PATH}/{SCRIPT_PATH}
-            python3.9 main.py {job_type} {GCP_PROJECT_ID} {ENV_SHORT_NAME}
+            python3.9 main.py --job_type={job_type} --gcp_project_id={GCP_PROJECT_ID} --env_short_name={ENV_SHORT_NAME}
         """
 
         import_job = BashOperator(

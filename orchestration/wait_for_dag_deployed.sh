@@ -16,6 +16,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+gcloud composer environments run "${1}" --location "${2}" dags list 
+
 n=0
 until [[ $n -ge $4 ]]
 do

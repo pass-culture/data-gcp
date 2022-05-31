@@ -15,8 +15,8 @@ from dependencies.config import GCP_PROJECT_ID, GCE_ZONE, ENV_SHORT_NAME
 GCE_INSTANCE = os.environ.get(
     "GCE_TRAINING_INSTANCE", f"algo-training-{ENV_SHORT_NAME}"
 )
-
-SCRIPT_PATH = "data-gcp/analytics/scripts/import_api_referentials"
+BASE_PATH = "data-gcp"
+SCRIPT_PATH = "analytics/scripts/import_api_referentials"
 
 default_args = {
     "start_date": datetime(2022, 4, 13),
@@ -52,9 +52,11 @@ with DAG(
         branch = "production"
 
     FETCH_CODE = f"""
-        cd {SCRIPT_PATH}
+        
         if cd data-gcp; then git checkout master && git pull && git checkout {branch} && git pull; else git clone git@github.com:pass-culture/data-gcp.git && cd data-gcp && git checkout {branch} && git pull; fi
-        if cd pass-culture-main; then git checkout master && git pull; else git clone git@github.com:pass-culture/pass-culture-main.git && cd pass-culture-main && git checkout master && git pull; fi
+        cd {SCRIPT_PATH}
+        if cd pass-culture-main; then git checkout master && git reset --hard origin/master; else git clone git@github.com:pass-culture/pass-culture-main.git && cd pass-culture-main && git checkout master && git pull; fi
+        cp -r pass-culture-main/api/src/pcapi .
         """
 
     fetch_code = BashOperator(
@@ -69,9 +71,9 @@ with DAG(
     )
 
     INSTALL_DEPENDENCIES = f"""
-        cd {SCRIPT_PATH}
+        cd {BASE_PATH}/{SCRIPT_PATH}
         export PATH="/opt/conda/bin:/opt/conda/condabin:"+$PATH
-        pip install -r requirements.txt'
+        pip install -r requirements.txt
     """
 
     install_dependencies = BashOperator(
@@ -88,7 +90,7 @@ with DAG(
     for job_type in ["subcategories", "types"]:
 
         EXPORT_SUBCAT = f""" 
-            cd {SCRIPT_PATH}
+            cd {BASE_PATH}/{SCRIPT_PATH}
             python3.9 main.py {job_type} {GCP_PROJECT_ID} {ENV_SHORT_NAME}
         """
 

@@ -3,6 +3,7 @@ import pandas as pd
 import pandas_gbq as gbq
 import importlib
 import argparse
+import numpy as np
 
 CATEGORIES_DTYPES = {
     "id": str,
@@ -12,7 +13,7 @@ CATEGORIES_DTYPES = {
     "search_group_name": str,
     "homepage_label_name": str,
     "is_event": bool,
-    "conditional_fields": str,
+    "conditional_fields": list,
     "can_expire": bool,
     "is_physical_deposit": bool,
     "is_digital_deposit": bool,
@@ -37,14 +38,17 @@ TYPES_DTYPES = {
 
 def get_subcategories(gcp_project_id, env_short_name):
     subcategories = importlib.import_module(
-        "pass-culture-main.api.src.pcapi.core.categories.subcategories"
+        "pcapi.core.categories.subcategories"
     ).ALL_SUBCATEGORIES
     export_subcat = []
     for subcats in subcategories:
         export_subcat.append(subcats.__dict__)
     df = pd.DataFrame(export_subcat)
     for k, v in CATEGORIES_DTYPES.items():
-        df[k] = df[k].astype(v)
+        if isinstance(v, list):
+            df[k] = df[k].apply(np.array)
+        else:
+            df[k] = df[k].astype(v)
     df.to_gbq(
         f"""analytics_{env_short_name}.subcategories""",
         project_id=gcp_project_id,
@@ -54,10 +58,10 @@ def get_subcategories(gcp_project_id, env_short_name):
 
 def get_types(gcp_project_id, env_short_name):
     show_types = importlib.import_module(
-        "pass-culture-main.api.src.pcapi.core.domain.show_types"
+        "pcapi.core.domain.show_types"
     ).show_types
     music_types = importlib.import_module(
-        "pass-culture-main.api.src.pcapi.core.domain.music_types"
+        "pcapi.core.domain.music_types"
     ).music_types
 
     types = {"show": show_types, "music": music_types}
@@ -87,15 +91,17 @@ def get_types(gcp_project_id, env_short_name):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("import_pcapi_model")
-    parser.add_argument("job_type", help="subcategories|types", type=str)
-    parser.add_argument("gcp_project_id", help="gcp_project_id", type=str)
-    parser.add_argument("env_short_name", help="env_short_name", type=str)
+    parser.add_argument("--job_type", help="subcategories|types", type=str)
+    parser.add_argument("--gcp_project_id", help="gcp_project_id", type=str)
+    parser.add_argument("--env_short_name", help="env_short_name", type=str)
     args = parser.parse_args()
     job_type = args.job_type
+    gcp_project_id = args.gcp_project_id
+    env_short_name = args.env_short_name
     if job_type == "subcategories":
-        get_subcategories()
+        get_subcategories(gcp_project_id, env_short_name)
     elif job_type == "types":
-        get_types()
+        get_types(gcp_project_id, env_short_name)
     else:
         raise Exception(
             f"Job type not found. Got {job_type}, expecting subcategories|types."

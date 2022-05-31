@@ -54,12 +54,8 @@ def get_subcategories(gcp_project_id, env_short_name):
 
 
 def get_types(gcp_project_id, env_short_name):
-    show_types = importlib.import_module(
-        "pcapi.domain.show_types"
-    ).show_types
-    music_types = importlib.import_module(
-        "pcapi.domain.music_types"
-    ).music_types
+    show_types = importlib.import_module("pcapi.domain.show_types").show_types
+    music_types = importlib.import_module("pcapi.domain.music_types").music_types
 
     types = {"show": show_types, "music": music_types}
     export_types = []

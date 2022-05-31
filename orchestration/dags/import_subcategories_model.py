@@ -3,12 +3,10 @@ from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.bash_operator import BashOperator
-from airflow.operators.python_operator import BranchPythonOperator
-from airflow.contrib.operators.slack_webhook_operator import SlackWebhookOperator
-from airflow.contrib.operators.gcp_compute_operator import (
-    GceInstanceStartOperator,
-    GceInstanceStopOperator,
+from airflow.operators.bash import BashOperator
+from airflow.providers.google.cloud.operators.compute import (
+    ComputeEngineStartInstanceOperator,
+    ComputeEngineStopInstanceOperator,
 )
 from common.alerts import task_fail_slack_alert
 from dependencies.access_gcp_secrets import access_secret_data
@@ -18,9 +16,6 @@ from dependencies.config import GCP_PROJECT_ID, GCE_ZONE, ENV_SHORT_NAME
 GCE_INSTANCE = os.environ.get(
     "GCE_TRAINING_INSTANCE", f"algo-training-{ENV_SHORT_NAME}"
 )
-
-SLACK_CONN_ID = "slack"
-SLACK_CONN_PASSWORD = access_secret_data(GCP_PROJECT_ID, "slack-conn-password")
 
 DEFAULT = f"""cd data-gcp/analytics/scripts/import_subcategories_model
 export PATH="/opt/conda/bin:/opt/conda/condabin:"+$PATH
@@ -51,7 +46,7 @@ with DAG(
 
     start = DummyOperator(task_id="start")
 
-    gce_instance_start = GceInstanceStartOperator(
+    gce_instance_start = ComputeEngineStartInstanceOperator(
         project_id=GCP_PROJECT_ID,
         zone=GCE_ZONE,
         resource_id=GCE_INSTANCE,
@@ -130,7 +125,7 @@ with DAG(
         dag=dag,
     )
 
-    gce_instance_stop = GceInstanceStopOperator(
+    gce_instance_stop = ComputeEngineStopInstanceOperator(
         project_id=GCP_PROJECT_ID,
         zone=GCE_ZONE,
         resource_id=GCE_INSTANCE,

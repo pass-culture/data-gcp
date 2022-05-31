@@ -3,12 +3,11 @@ from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.bash_operator import BashOperator
-from airflow.operators.python_operator import BranchPythonOperator
-from airflow.contrib.operators.slack_webhook_operator import SlackWebhookOperator
-from airflow.contrib.operators.gcp_compute_operator import (
-    GceInstanceStartOperator,
-    GceInstanceStopOperator,
+from airflow.operators.bash import BashOperator
+from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
+from airflow.providers.google.cloud.operators.compute import (
+    ComputeEngineStartInstanceOperator,
+    ComputeEngineStopInstanceOperator,
 )
 from common.alerts import task_fail_slack_alert
 from dependencies.access_gcp_secrets import access_secret_data
@@ -26,7 +25,7 @@ DATE = "{{ts_nodash}}"
 STORAGE_PATH = f"gs://{MLFLOW_BUCKET_NAME}/algo_training_v2_mf_reco_{ENV_SHORT_NAME}/algo_training_v2_mf_reco_{DATE}"
 MODEL_NAME = "v2_mf_reco"
 AI_MODEL_NAME = f"MF_reco_{ENV_SHORT_NAME}"
-SLACK_CONN_ID = "slack"
+SLACK_CONN_ID = "slack_analytics"
 SLACK_CONN_PASSWORD = access_secret_data(GCP_PROJECT_ID, "slack-conn-password")
 
 DEFAULT = f"""cd data-gcp/algo_training
@@ -63,7 +62,7 @@ with DAG(
 
     start = DummyOperator(task_id="start")
 
-    gce_instance_start = GceInstanceStartOperator(
+    gce_instance_start = ComputeEngineStartInstanceOperator(
         project_id=GCP_PROJECT_ID,
         zone=GCE_ZONE,
         resource_id=GCE_INSTANCE,
@@ -71,7 +70,7 @@ with DAG(
     )
 
     if ENV_SHORT_NAME == "dev":
-        branch = "PC-12275-build-automatic-training-matrix-factorization"
+        branch = "master"
     if ENV_SHORT_NAME == "stg":
         branch = "master"
     if ENV_SHORT_NAME == "prod":
@@ -163,7 +162,7 @@ with DAG(
         --command {TRAINING}
         """,
         dag=dag,
-        xcom_push=True,
+        do_xcom_push=True,
     )
 
     POSTPROCESSING = f""" '{DEFAULT}
@@ -181,7 +180,7 @@ with DAG(
         dag=dag,
     )
 
-    gce_instance_stop = GceInstanceStopOperator(
+    gce_instance_stop = ComputeEngineStopInstanceOperator(
         project_id=GCP_PROJECT_ID,
         zone=GCE_ZONE,
         resource_id=GCE_INSTANCE,
@@ -220,7 +219,7 @@ with DAG(
         "--region=europe-west1 "
         "--project={{params.project}} "
         "--sort-by=~NAME",
-        xcom_push=True,
+        do_xcom_push=True,
         params={
             "model": AI_MODEL_NAME,
             "project": GCP_PROJECT_ID,
@@ -231,7 +230,7 @@ with DAG(
     get_version_task = BashOperator(
         task_id="get_version_task",
         bash_command="echo '{{ ti.xcom_pull(task_ids='list_model_versions') }}' | awk '{print $1}'",
-        xcom_push=True,
+        do_xcom_push=True,
         dag=dag,
     )
 
@@ -241,7 +240,7 @@ with DAG(
         "--model {{params.model}} "
         "--region=europe-west1 "
         "--project={{params.project}}",
-        xcom_push=True,
+        do_xcom_push=True,
         params={
             "model": AI_MODEL_NAME,
             "project": GCP_PROJECT_ID,

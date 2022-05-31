@@ -709,7 +709,7 @@
       "response": []
     },
     {
-      "name": "/playlist_recommendation/user_id Geoloc Tonight isevent",
+      "name": "/playlist_recommendation/user_id Geoloc Tonight is_event",
       "event": [
         {
           "listen": "test",
@@ -791,7 +791,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"isevent\":true,\r\n    \"start_date\": \"{{current_timestamp18}}\",\r\n    \"end_date\": \"{{current_timestamp24}}\"\r\n}",
+          "raw": "{\r\n    \"isEvent\":true,\r\n    \"start_date\": \"{{current_timestamp18}}\",\r\n    \"end_date\": \"{{current_timestamp24}}\"\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -1592,7 +1592,7 @@
       "response": []
     },
     {
-      "name": "/recommendation/user_id Geoloc Tonight isevent",
+      "name": "/recommendation/user_id Geoloc Tonight is_event",
       "event": [
         {
           "listen": "test",
@@ -1697,7 +1697,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"isevent\":true,\r\n    \"start_date\": \"{{current_timestamp18}}\",\r\n    \"end_date\": \"{{current_timestamp24}}\"\r\n}",
+          "raw": "{\r\n    \"isEvent\":true,\r\n    \"start_date\": \"{{current_timestamp18}}\",\r\n    \"end_date\": \"{{current_timestamp24}}\"\r\n}",
           "options": {
             "raw": {
               "language": "json"

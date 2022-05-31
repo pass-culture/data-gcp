@@ -650,7 +650,7 @@ executors:
           password: $DOCKERHUB_PASSWORD
   gcp-sdk:
     docker:
-      - image: google/cloud-sdk:316.0.0
+      - image: google/cloud-sdk:381.0.0
         auth:
           username: $DOCKERHUB_USER
           password: $DOCKERHUB_PASSWORD
@@ -723,7 +723,7 @@ jobs:
           at: .
       - run:
           name: Install psql
-          command: sudo apt install postgresql-client
+          command: sudo apt update && sudo apt install postgresql-client
       - run:
           name: Run tests
           command: |
@@ -801,7 +801,7 @@ jobs:
             echo $GCLOUD_SERVICE_KEY > /tmp/service_account.json
             export GOOGLE_APPLICATION_CREDENTIALS="/tmp/service_account.json" 
             . venv-orchestration/bin/activate
-            airflow initdb
+            airflow db init
             pytest tests
 
   recommendation-db-install:
@@ -842,7 +842,7 @@ jobs:
           at: .
       - run:
           name: Install psql
-          command: sudo apt install postgresql-client
+          command: sudo apt update && sudo apt install postgresql-client
       - run:
           name: Run tests
           command: |
@@ -852,19 +852,6 @@ jobs:
 
   composer-deploy:
     executor: gcp-sdk
-    environment:
-      DAG_RECOMMMENDATION_CLOUDSQL: recommendation_cloud_sql_v1
-      DAG_EXPORT_CLOUDSQL_BIGQUERY: export_cloudsql_tables_to_bigquery_v1
-      DAG_IMPORT_DATA_ANALYTICS: import_data_analytics_v7
-      DAG_IMPORT_FIREBASE_DATA: import_firebase_data_v3
-      DAG_IMPORT_TYPEFORM: import_typeform_v1
-      DAG_IMPORT_ADDRESSES: import_addresses_v1
-      DAG_IMPORT_DMS: import_dms_subscriptions
-      DAG_IMPORT_SIREN: import_siren_v1
-      DAG_COMPUTE_MONITORING: compute_monitoring
-      DAG_ALGO_TRAINING_v1: algo_training_v1
-      DAG_ALGO_TRAINING_v2_deep_reco: algo_training_v2_deep_reco
-      DAG_ADAGE_IMPORT: import_adage_v1
     working_directory: ~/data-gcp/orchestration
     steps:
       - checkout:
@@ -881,20 +868,10 @@ jobs:
             gsutil -m rm -r gs://${COMPOSER_BUCKET}/dags
             gsutil cp -r dags gs://${COMPOSER_BUCKET}
       - run:
-          name: Wait for dags to be deployed
+          name: Wait for composer to be deployed (10s x 6 times)
           command: |
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_RECOMMMENDATION_CLOUDSQL} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_EXPORT_CLOUDSQL_BIGQUERY} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_DATA_ANALYTICS} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_FIREBASE_DATA} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_TYPEFORM} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_ADDRESSES} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_DMS} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_SIREN} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_COMPUTE_MONITORING} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_ALGO_TRAINING_v1} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_ALGO_TRAINING_v2_deep_reco} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_ADAGE_IMPORT} 6 20
+            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} airflow_monitoring 6 10
+
 
   build_and_deploy_api:
     docker:

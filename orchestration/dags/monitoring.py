@@ -3,7 +3,7 @@ import pytz
 
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.python_operator import PythonOperator
+from airflow.operators.python import PythonOperator
 
 from common.alerts import task_fail_slack_alert
 from dependencies.bigquery_client import BigQueryClient

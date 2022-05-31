@@ -1,10 +1,10 @@
 import datetime
 
 from airflow import DAG
-from airflow.contrib.operators.bigquery_operator import BigQueryOperator
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryExecuteQueryOperator,
+)
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.http_operator import SimpleHttpOperator
-from airflow.operators.python_operator import PythonOperator
 from google.auth.transport.requests import Request
 from google.oauth2 import id_token
 
@@ -13,8 +13,6 @@ from dependencies.config import (
     APPLICATIVE_PREFIX,
     BIGQUERY_ANALYTICS_DATASET,
     BIGQUERY_CLEAN_DATASET,
-    BIGQUERY_RAW_DATASET,
-    ENV_SHORT_NAME,
     GCP_PROJECT,
 )
 from dependencies.data_analytics.enriched_data.booking import (
@@ -41,6 +39,7 @@ from dependencies.data_analytics.enriched_data.venue import (
 from dependencies.data_analytics.enriched_data.venue_locations import (
     define_table_venue_locations,
 )
+
 from dependencies.data_analytics.import_tables import (
     define_import_query,
     define_replace_query,
@@ -62,7 +61,7 @@ data_applicative_tables_and_date_columns = {
 }
 
 default_dag_args = {
-    "start_date": datetime.datetime(2022, 4, 10),
+    "start_date": datetime.datetime(2022, 5, 30),
     "retries": 1,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT,
@@ -81,7 +80,7 @@ dag = DAG(
 
 start = DummyOperator(task_id="start", dag=dag)
 
-offer_clean_duplicates = BigQueryOperator(
+offer_clean_duplicates = BigQueryExecuteQueryOperator(
     task_id="offer_clean_duplicates",
     sql=f"""
     SELECT * except(row_number)
@@ -103,7 +102,7 @@ offer_clean_duplicates = BigQueryOperator(
 
 for table in data_applicative_tables_and_date_columns.keys():
 
-    analytics_task = BigQueryOperator(
+    analytics_task = BigQueryExecuteQueryOperator(
         task_id=f"import_to_analytics_{table}",
         sql=f"SELECT * {define_replace_query(data_applicative_tables_and_date_columns[table])} FROM {BIGQUERY_CLEAN_DATASET}.{APPLICATIVE_PREFIX}{table}",
         write_disposition="WRITE_TRUNCATE",
@@ -113,7 +112,7 @@ for table in data_applicative_tables_and_date_columns.keys():
     )
 
     import_offer_to_clean_tasks = []
-    offer_task = BigQueryOperator(
+    offer_task = BigQueryExecuteQueryOperator(
         task_id=f"import_to_clean_{table}",
         sql=define_import_query(
             external_connection_id=APPLICATIVE_EXTERNAL_CONNECTION_ID,

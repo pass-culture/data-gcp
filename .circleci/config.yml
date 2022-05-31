@@ -852,19 +852,6 @@ jobs:
 
   composer-deploy:
     executor: gcp-sdk
-    environment:
-      DAG_RECOMMMENDATION_CLOUDSQL: recommendation_cloud_sql_v1
-      DAG_EXPORT_CLOUDSQL_BIGQUERY: export_cloudsql_tables_to_bigquery_v1
-      DAG_IMPORT_DATA_ANALYTICS: import_data_analytics_v7
-      DAG_IMPORT_FIREBASE_DATA: import_firebase_data_v3
-      DAG_IMPORT_TYPEFORM: import_typeform_v1
-      DAG_IMPORT_ADDRESSES: import_addresses_v1
-      DAG_IMPORT_DMS: import_dms_subscriptions
-      DAG_IMPORT_SIREN: import_siren_v1
-      DAG_COMPUTE_MONITORING: compute_monitoring
-      DAG_ALGO_TRAINING_v1: algo_training_v1
-      DAG_ALGO_TRAINING_v2_deep_reco: algo_training_v2_deep_reco
-      DAG_ADAGE_IMPORT: import_adage_v1
     working_directory: ~/data-gcp/orchestration
     steps:
       - checkout:

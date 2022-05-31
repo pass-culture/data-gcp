@@ -56,7 +56,7 @@ with DAG(
         if cd data-gcp; then git checkout master && git pull && git checkout {branch} && git pull; else git clone git@github.com:pass-culture/data-gcp.git && cd data-gcp && git checkout {branch} && git pull; fi
         cd {SCRIPT_PATH}
         if cd pass-culture-main; then git checkout master && git reset --hard origin/master; else git clone git@github.com:pass-culture/pass-culture-main.git && cd pass-culture-main && git checkout master && git pull; fi
-        cp -r pass-culture-main/api/src/pcapi .
+        cp -r api/src/pcapi ..
         """
 
     fetch_code = BashOperator(

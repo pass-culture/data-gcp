@@ -377,7 +377,8 @@ def define_import_query(
         "allocine_pivot"
     ] = """
             SELECT
-                CAST("id" AS varchar(255)),"siret",CAST("theaterId" AS varchar(255))
+                CAST("id" AS varchar(255)),CAST("theaterId" AS varchar(255)), "internalId" AS internal_id,
+                CAST("venueId" AS varchar(255)) AS venue_id
             FROM public.allocine_pivot
         """
     cloudsql_queries[

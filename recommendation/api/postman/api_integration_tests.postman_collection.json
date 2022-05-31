@@ -791,7 +791,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"is_event\":true,\r\n    \"start_date\": \"{{current_timestamp18}}\",\r\n    \"end_date\": \"{{current_timestamp24}}\"\r\n}",
+          "raw": "{\r\n    \"isEvent\":true,\r\n    \"start_date\": \"{{current_timestamp18}}\",\r\n    \"end_date\": \"{{current_timestamp24}}\"\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -1697,7 +1697,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"is_event\":true,\r\n    \"start_date\": \"{{current_timestamp18}}\",\r\n    \"end_date\": \"{{current_timestamp24}}\"\r\n}",
+          "raw": "{\r\n    \"isEvent\":true,\r\n    \"start_date\": \"{{current_timestamp18}}\",\r\n    \"end_date\": \"{{current_timestamp24}}\"\r\n}",
           "options": {
             "raw": {
               "language": "json"

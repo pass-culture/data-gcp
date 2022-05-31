@@ -21,8 +21,6 @@ GCE_INSTANCE = os.environ.get("GCE_DIVERSIFICATION_INSTANCE", "algo-training-dev
 
 DATE = "{{ts_nodash}}"
 
-SLACK_CONN_ID = "slack"
-SLACK_CONN_PASSWORD = access_secret_data(GCP_PROJECT_ID, "slack-conn-password")
 TABLE_NAME = "diversification_booking"
 
 DEFAULT = f"""cd data-gcp/diversification_kpi

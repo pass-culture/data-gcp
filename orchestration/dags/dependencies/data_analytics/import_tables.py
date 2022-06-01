@@ -27,7 +27,7 @@ def define_import_query(
             "postalCode" as user_postal_code, "needsToFillCulturalSurvey" as user_needs_to_fill_cultural_survey,
             CAST("culturalSurveyId" AS varchar(255)) as user_cultural_survey_id, "civility" as user_civility,
             "activity" as user_activity, "culturalSurveyFilledDate" as user_cultural_survey_filled_date,
-            "hasSeenTutorials" as user_has_seen_tutorials, "address" as user_address, "city" as user_city,
+            "address" as user_address, "city" as user_city,
             "lastConnectionDate" as user_last_connection_date, "isEmailValidated" as user_is_email_validated,
             "isActive" as user_is_active,
             "hasSeenProTutorials" as user_has_seen_pro_tutorials, EXTRACT(YEAR FROM AGE("user"."dateOfBirth")) AS user_age,

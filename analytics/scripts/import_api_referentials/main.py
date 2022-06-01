@@ -3,7 +3,10 @@ import pandas as pd
 import pandas_gbq as gbq
 import importlib
 import argparse
+<<<<<<< HEAD
 import numpy as np
+=======
+>>>>>>> ac48d68 (PC-14911 Import API referentials)
 
 CATEGORIES_DTYPES = {
     "id": str,
@@ -38,7 +41,11 @@ TYPES_DTYPES = {
 
 def get_subcategories(gcp_project_id, env_short_name):
     subcategories = importlib.import_module(
+<<<<<<< HEAD
         "pcapi.core.categories.subcategories"
+=======
+        "pass-culture-main.api.src.pcapi.core.categories.subcategories"
+>>>>>>> ac48d68 (PC-14911 Import API referentials)
     ).ALL_SUBCATEGORIES
     export_subcat = []
     for subcats in subcategories:
@@ -54,6 +61,7 @@ def get_subcategories(gcp_project_id, env_short_name):
 
 
 def get_types(gcp_project_id, env_short_name):
+<<<<<<< HEAD
     show_types = importlib.import_module("pcapi.domain.show_types").show_types
     music_types = importlib.import_module("pcapi.domain.music_types").music_types
 
@@ -73,11 +81,39 @@ def get_types(gcp_project_id, env_short_name):
                         "sub_label": _c["label"],
                     }
                 )
+=======
+    show_types = importlib.import_module(
+        "pass-culture-main.api.src.pcapi.core.domain.show_types"
+    ).show_types
+    music_types = importlib.import_module(
+        "pass-culture-main.api.src.pcapi.core.domain.music_types"
+    ).music_types
+
+    types = {"show": show_types, "music": music_types}
+    export_types = []
+    for k, _t in types.items():
+        code = _t["code"]
+        label = _t["label"]
+        for _c in _t["children"]:
+            export_types.append(
+                {
+                    "domain": k,
+                    "type": code,
+                    "label": label,
+                    "sub_type": _c["code"],
+                    "sub_label": _c["label"],
+                }
+            )
+>>>>>>> ac48d68 (PC-14911 Import API referentials)
     df = pd.DataFrame(export_types)
     for k, v in TYPES_DTYPES.items():
         df[k] = df[k].astype(v)
     df.to_gbq(
+<<<<<<< HEAD
         f"""analytics_{env_short_name}.offer_types""",
+=======
+        f"""analytics_{env_short_name}.types""",
+>>>>>>> ac48d68 (PC-14911 Import API referentials)
         project_id=gcp_project_id,
         if_exists="replace",
     )
@@ -85,6 +121,7 @@ def get_types(gcp_project_id, env_short_name):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("import_pcapi_model")
+<<<<<<< HEAD
     parser.add_argument("--job_type", help="subcategories|types", type=str)
     parser.add_argument("--gcp_project_id", help="gcp_project_id", type=str)
     parser.add_argument("--env_short_name", help="env_short_name", type=str)
@@ -96,6 +133,17 @@ if __name__ == "__main__":
         get_subcategories(gcp_project_id, env_short_name)
     elif job_type == "types":
         get_types(gcp_project_id, env_short_name)
+=======
+    parser.add_argument("job_type", help="subcategories|types", type=str)
+    parser.add_argument("gcp_project_id", help="gcp_project_id", type=str)
+    parser.add_argument("env_short_name", help="env_short_name", type=str)
+    args = parser.parse_args()
+    job_type = args.job_type
+    if job_type == "subcategories":
+        get_subcategories()
+    elif job_type == "types":
+        get_types()
+>>>>>>> ac48d68 (PC-14911 Import API referentials)
     else:
         raise Exception(
             f"Job type not found. Got {job_type}, expecting subcategories|types."

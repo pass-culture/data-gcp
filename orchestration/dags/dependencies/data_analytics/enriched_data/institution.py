@@ -120,7 +120,7 @@ def define_bookings_per_institution_query(dataset, table_prefix=""):
         JOIN {dataset}.{table_prefix}collective_stock AS collective_stock
             ON bookings_infos.collective_booking_collective_stock_id = collective_stock.collective_stock_id
         JOIN {dataset}.{table_prefix}collective_offer AS collective_offer 
-            ON collective_stock.collective_stock_collective_offer_id = collective_offer.collective_offer_id
+            ON collective_stock.collective_offer_id = collective_offer.collective_offer_id
         GROUP BY 1
         );
         """
@@ -129,11 +129,11 @@ def define_bookings_per_institution_query(dataset, table_prefix=""):
 def define_students_per_institution_query(dataset, table_prefix=""):
     return f"""
         CREATE TEMP TABLE students_per_institution AS (  
-            SELECT educational_institution.educational_institution_institution_id
+            SELECT educational_institution.institution_id
             ,SUM(number_of_students) AS nb_of_students
         FROM {dataset}.{table_prefix}educational_institution AS educational_institution
         LEFT JOIN {dataset}.number_of_students_per_eple AS number_of_students_per_eple
-            ON educational_institution.educational_institution_institution_id = number_of_students_per_eple.institution_external_id
+            ON educational_institution.institution_id = number_of_students_per_eple.institution_external_id
         GROUP BY 1
         );
         """
@@ -144,7 +144,7 @@ def define_enriched_institution_data_query(dataset, table_prefix=""):
         CREATE OR REPLACE TABLE {dataset}.enriched_institution_data AS (
             SELECT 
                 educational_institution.educational_institution_id AS institution_id 
-                ,educational_institution.educational_institution_institution_id AS institution_external_id 
+                ,educational_institution.institution_id AS institution_external_id 
                 ,institution_name AS institution_name 
                 ,educational_institution.institution_departement_code
                 ,institution_postal_code

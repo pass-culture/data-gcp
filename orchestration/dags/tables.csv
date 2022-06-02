@@ -45,6 +45,7 @@ subcategories,category_id,character varying,subcategories,analytics
 subcategories,is_event,boolean,subcategories,analytics
 subcategories,is_digital_deposit,boolean,subcategories,analytics
 subcategories,is_physical_deposit,boolean,subcategories,analytics
+subcategories,search_group_name,boolean,subcategories,analytics
 qpi_answers,user_id,character varying,enriched_qpi_answers,analytics
 qpi_answers,ABO_BIBLIOTHEQUE,boolean,enriched_qpi_answers,analytics
 qpi_answers,ABO_CONCERT,boolean,enriched_qpi_answers,analytics

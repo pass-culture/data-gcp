@@ -194,7 +194,7 @@ for table in data_applicative_tables_and_date_columns.keys():
             external_connection_id=APPLICATIVE_EXTERNAL_CONNECTION_ID,
             table=table,
         ),
-        write_disposition="WRITE_TRUNCATE" if table != "offer" else "WRITE_APPEND",
+        write_disposition="WRITE_TRUNCATE",
         use_legacy_sql=False,
         destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.{APPLICATIVE_PREFIX}{table}",
         dag=dag,

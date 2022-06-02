@@ -17,6 +17,7 @@ class RecommendationIn:
                 column = "offer_creation_date"
             condition += f"""AND ({column} > '{self.start_date}' AND {column} < '{self.end_date}') \n"""
         if self.search_group_names:
+            # we filter by search_group_name to be iso with contentful categories
             condition += (
                 "AND ("
                 + " OR ".join(

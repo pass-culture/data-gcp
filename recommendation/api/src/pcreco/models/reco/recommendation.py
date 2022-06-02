@@ -4,8 +4,7 @@ class RecommendationIn:
         self.start_date = json.get("start_date", None)
         self.end_date = json.get("end_date", None)
         self.is_event = json.get("isEvent", None)
-        self.categories = json.get("categories", None)
-        self.subcategories = json.get("subcategories", None)
+        self.search_group_names = json.get("categories", None)
         self.price_max = json.get("price_max", None)
         self.model_name = json.get("model_name", None)
 
@@ -17,16 +16,13 @@ class RecommendationIn:
             else:
                 column = "offer_creation_date"
             condition += f"""AND ({column} > '{self.start_date}' AND {column} < '{self.end_date}') \n"""
-        if self.categories:
+        if self.search_group_names:
+            # we filter by search_group_name to be iso with contentful categories
             condition += (
                 "AND ("
-                + " OR ".join([f"category='{cat}'" for cat in self.categories])
-                + ")\n"
-            )
-        if self.subcategories:
-            condition += (
-                "AND ("
-                + " OR ".join([f"subcategory_id='{cat}'" for cat in self.subcategories])
+                + " OR ".join(
+                    [f"search_group_name='{cat}'" for cat in self.search_group_names]
+                )
                 + ")\n"
             )
         if self.price_max:

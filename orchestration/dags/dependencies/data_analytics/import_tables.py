@@ -168,9 +168,6 @@ def define_import_query(
             "reimbursementDate" AS booking_reimbursement_date
         FROM public.booking
     """
-    # define day before and after execution date
-    # we jinja template reference to user the datetimes around execution time
-    EXECUTION_TIME = "{{ ds }}"
     cloudsql_queries[
         "offer"
     ] = """
@@ -199,7 +196,6 @@ def define_import_query(
             "withdrawalType" AS offer_withdrawal_type,
             "withdrawalDelay" AS offer_withdrawal_delay
         FROM public.offer
-        WHERE date("dateUpdated") = \\'{{ ds }}\\'
     """
 
     cloudsql_queries[

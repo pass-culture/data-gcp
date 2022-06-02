@@ -95,7 +95,7 @@ BEGIN
             offer."venue_id"             AS venue_id,
             offer."offer_subcategoryId"  AS subcategory_id,
             subcategories.category_id    AS category,
-            subcategories.search_group_name AS search_group_name
+            subcategories.search_group_name AS search_group_name,
             offer.offer_name             AS name,
             offer.offer_url              AS url,
             offer."offer_is_national"    AS is_national,

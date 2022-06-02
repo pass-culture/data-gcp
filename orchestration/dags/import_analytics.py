@@ -58,6 +58,9 @@ from dependencies.data_analytics.import_tables import (
 
 from common.alerts import analytics_fail_slack_alert
 
+SQL_PATH = "sql"
+default_params = {"bigquery_clean_dataset": BIGQUERY_CLEAN_DATASET}
+
 
 def getting_service_account_token(function_name):
     function_url = (
@@ -167,6 +170,17 @@ data_applicative_tables_and_date_columns = {
     ],
 }
 
+historical_data_applicative_tables = {
+    "collective_offer_history": {
+        "sql": f"{SQL_PATH}/clean/applicative_database/collective_offer_history.sql",
+        "params": default_params,
+    },
+    "offer_history": {
+        "sql": f"{SQL_PATH}/clean/applicative_database/offer_history.sql",
+        "params": default_params,
+    },
+}
+
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),
     "retries": 1,
@@ -224,6 +238,19 @@ offer_clean_duplicates = BigQueryExecuteQueryOperator(
 
 
 end_import_table_to_clean = DummyOperator(task_id="end_import_table_to_clean", dag=dag)
+
+historical_data_applicative_tables_tasks = []
+for table, params in historical_data_applicative_tables.items():
+    task = BigQueryExecuteQueryOperator(
+        task_id=f"historical_{table}",
+        sql=params["sql"],
+        write_disposition="WRITE_TRUNCATE",
+        use_legacy_sql=False,
+        destination_dataset_table=params["destination_dataset_table"],
+        dag=dag,
+    )
+    historical_data_applicative_tables_tasks.append(task)
+
 
 import_tables_to_analytics_tasks = []
 for table in data_applicative_tables_and_date_columns.keys():
@@ -484,6 +511,7 @@ end = DummyOperator(task_id="end", dag=dag)
     >> import_tables_to_clean_tasks
     >> offer_clean_duplicates
     >> end_import_table_to_clean
+    >> historical_data_applicative_tables_tasks
     >> import_tables_to_analytics_tasks
     >> end_import
 )

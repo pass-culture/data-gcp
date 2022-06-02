@@ -20,7 +20,7 @@ class RecommendationIn:
             condition += (
                 "AND ("
                 + " OR ".join(
-                    [f"search_group_name='{cat}'" for cat in self.search_group_name]
+                    [f"search_group_name='{cat}'" for cat in self.search_group_names]
                 )
                 + ")\n"
             )

@@ -418,7 +418,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_INPUT = {
             "collective_stock_id": "2",
             "collective_offer_id": "9",
             "collective_stock_price": "300",
-            "collective_stock_begininng_date_time": "2022-05-01",
+            "collective_stock_beginning_date_time": "2022-05-01",
             "collective_stock_booking_limit_date_time": "2022-05-01",
             "collective_stock_number_of_tickets": "30",
         }

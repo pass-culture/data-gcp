@@ -377,7 +377,7 @@ BIGQUERY_SCHEMAS = {
         "booking_id": "STRING",
         "collective_booking_creation_date": "DATETIME",
         "collective_booking_used_date": "DATETIME",
-        "collective_booking_collective_stock_id": "STRING",
+        "collective_stock_id": "STRING",
         "venue_id": "STRING",
         "offerer_id": "STRING",
         "collective_booking_cancellation_date": "DATETIME",

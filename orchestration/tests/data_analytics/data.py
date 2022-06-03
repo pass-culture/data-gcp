@@ -1215,10 +1215,10 @@ ENRICHED_COLLECTIVE_BOOKING_DATA_INPUT = {
         {
             "collective_booking_id": "8",
             "booking_id": "8",
-            "collective_booking_collective_stock_id": "9",
-            "collective_booking_educational_institution_id": "14",
-            "collective_booking_educational_year_id": "1",
-            "collective_booking_venue_id": "8",
+            "collective_stock_id": "9",
+            "educational_institution_id": "14",
+            "educational_year_id": "1",
+            "venue_id": "8",
             "collective_booking_status": "USED_BY_INSTITUTE",
             "collective_booking_confirmation_date": datetime.now().replace(
                 microsecond=0
@@ -1226,7 +1226,7 @@ ENRICHED_COLLECTIVE_BOOKING_DATA_INPUT = {
             "collective_booking_confirmation_limit_date": datetime.now().replace(
                 microsecond=0
             ),
-            "collective_booking_educational_redactor_id": "1",
+            "educational_redactor_id": "1",
         }
     ],
     "educational_institution": [

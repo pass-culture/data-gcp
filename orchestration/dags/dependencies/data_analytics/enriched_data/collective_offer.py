@@ -9,7 +9,7 @@ def define_collective_offer_booking_information_view_query(dataset, table_prefix
         CREATE TEMP TABLE bookings_per_offer AS
             SELECT
                 collective_offer_id
-                ,COUNT(DISTINCT collective_booking_id) AS collective_booking_cnt,
+                ,COUNT(DISTINCT collective_booking_id) AS collective_booking_cnt
                 , COUNT(DISTINCT CASE WHEN collective_booking_status NOT IN ('CANCELLED') THEN collective_booking_id ELSE NULL END) AS collective_booking_no_cancelled_cnt
                 , COUNT(DISTINCT CASE WHEN collective_booking_status IN ('USED', 'REIMBURSED') THEN collective_booking_id ELSE NULL END) AS collective_booking_confirm_cnt
             FROM {dataset}.{table_prefix}collective_booking AS collective_booking

@@ -1,4 +1,5 @@
 import datetime
+from tkinter import N
 
 from airflow import DAG
 from airflow.providers.google.cloud.operators.bigquery import (
@@ -9,6 +10,10 @@ from airflow.providers.http.operators.http import SimpleHttpOperator
 from airflow.operators.python import PythonOperator
 from google.auth.transport.requests import Request
 from google.oauth2 import id_token
+from common import macros 
+from dependencies.data_analytics.import_historical import (
+    historical_data_applicative_tables,
+)
 
 from dependencies.config import (
     APPLICATIVE_EXTERNAL_CONNECTION_ID,
@@ -57,9 +62,6 @@ from dependencies.data_analytics.import_tables import (
 )
 
 from common.alerts import analytics_fail_slack_alert
-
-SQL_PATH = "sql"
-default_params = {"bigquery_clean_dataset": BIGQUERY_CLEAN_DATASET}
 
 
 def getting_service_account_token(function_name):
@@ -170,16 +172,6 @@ data_applicative_tables_and_date_columns = {
     ],
 }
 
-historical_data_applicative_tables = {
-    "collective_offer_history": {
-        "sql": f"{SQL_PATH}/clean/applicative_database/collective_offer_history.sql",
-        "params": default_params,
-    },
-    "offer_history": {
-        "sql": f"{SQL_PATH}/clean/applicative_database/offer_history.sql",
-        "params": default_params,
-    },
-}
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),
@@ -196,6 +188,7 @@ dag = DAG(
     schedule_interval="00 01 * * *",
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
+    user_defined_macros=macros.default,
 )
 
 start = DummyOperator(task_id="start", dag=dag)
@@ -247,6 +240,8 @@ for table, params in historical_data_applicative_tables.items():
         write_disposition="WRITE_TRUNCATE",
         use_legacy_sql=False,
         destination_dataset_table=params["destination_dataset_table"],
+        time_partitioning=params.get("time_partitioning", None),
+        cluster_fields=params.get("cluster_fields", None),
         dag=dag,
     )
     historical_data_applicative_tables_tasks.append(task)

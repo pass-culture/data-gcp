@@ -467,7 +467,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_INPUT = {
     "academie_dept": [
         {
             "code_dept": "35",
-            "academie": "Rennes",
+            "libelle_academie": "Rennes",
         }
     ],
 }

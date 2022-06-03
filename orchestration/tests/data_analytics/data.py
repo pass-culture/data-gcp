@@ -392,6 +392,137 @@ ENRICHED_OFFER_DATA_EXPECTED = [
     },
 ]
 
+# Enriched_collective_offer
+ENRICHED_COLLECTIVE_OFFER_DATA_INPUT = {
+    "collective_booking": [
+        {
+            "collective_booking_id": "1",
+            "collective_booking_creation_date": "2022-02-02",
+            "collective_stock_id": "2",
+            "venue_id": "7",
+            "offerer_id": "22",
+            "collective_booking_cancellation_date": None,
+            "collective_booking_cancellation_limit_date": "2022-02-15",
+            "collective_booking_cancellation_reason": None,
+            "collective_booking_status": "USED",
+            "collective_booking_reimbursment_date": None,
+            "educational_institution_id": "10",
+            "educational_year_id": "1",
+            "collective_booking_confirmation_date": "2022-02-03",
+            "collective_booking_confirmation_limit_date": "2022-02-05",
+            "educational_redactor_id": "3",
+        }
+    ],
+    "collective_stock": [
+        {
+            "collective_stock_id": "2",
+            "collective_offer_id": "9",
+            "collective_stock_price": "300",
+            "collective_stock_begininng_date_time": "2022-05-01",
+            "collective_stock_booking_limit_date_time": "2022-05-01",
+            "collective_stock_number_of_tickets": "30",
+        }
+    ],
+    "venue": [
+        {
+            "venue_id": "7",
+            "venue_name": "Lieu super",
+            "venue_department_code": "35",
+            "venue_is_virtual": False,
+            "venue_managing_offerer_id": "22",
+        }
+    ],
+    "offerer": [
+        {
+            "offerer_id": "22",
+            "offerer_name": "Ma structure",
+        }
+    ],
+    "collective_offer": [
+        {
+            "collective_offer_id": "9",
+            "collective_offer_name": "Offre collective vraiment bien",
+            "venue_id": "7",
+            "collective_offer_creation_date": "2022-01-15",
+            "collective_offer_subcategory_id": "CONCERT",
+            "collective_offer_is_active": True,
+        }
+    ],
+    "collective_offer_template": [
+        {
+            "collective_offer_id": "11",
+            "collective_offer_name": "Offre vitrine",
+            "venue_id": "7",
+            "collective_offer_creation_date": "2022-01-16",
+            "collective_offer_subcategory_id": "CONCERT",
+            "collective_offer_is_active": True,
+        }
+    ],
+    "subcategories": [
+        {
+            "id": "CONCERT",
+            "category_id": "MUSIQUE_LIVE",
+        }
+    ],
+    "academie_dept": [
+        {
+            "code_dept": "35",
+            "academie": "Rennes",
+        }
+    ],
+}
+
+ENRICHED_COLLECTIVE_OFFER_DATA_EXPECTED = [
+    {
+        "collective_offer_id": "9",
+        "collective_offer_name": "Offre collective vraiment bien",
+        "venue_id": "7",
+        "venue_name": "Lieu super",
+        "venue_department_code": "35",
+        "venue_region_name": "Bretagne",
+        "venue_academie": "Rennes",
+        "venue_is_virtual": False,
+        "offerer_id": "22",
+        "offerer_name": "Ma structure",
+        "collective_offer_creation_date": datetime(2022, 1, 15),
+        "collective_stock_price": 300,
+        "collective_stock_beginning_date_time": datetime(2022, 5, 1, 0, 0),
+        "collective_stock_booking_limit_date_time": datetime(2022, 5, 1, 0, 0),
+        "number_of_tickets": 30,
+        "collective_offer_subcategory_id": "CONCERT",
+        "collective_offer_category_id": "MUSIQUE_LIVE",
+        "collective_offer_is_active": True,
+        "collective_offer_is_bookable": False,
+        "collective_offer_humanized_id": "AE",
+        "passculture_pro_url": "https://passculture.pro/offres/AE/edition",
+        "offer_is_template": False,
+    },
+    {
+        "collective_offer_id": "11",
+        "collective_offer_name": "Offre vitrine",
+        "venue_id": "7",
+        "venue_name": "Lieu super",
+        "venue_department_code": "35",
+        "venue_region_name": "Bretagne",
+        "venue_academie": "Rennes",
+        "venue_is_virtual": False,
+        "offerer_id": "22",
+        "offerer_name": "Ma structure",
+        "collective_offer_creation_date": datetime(2022, 1, 16, 0, 0),
+        "collective_stock_price": None,
+        "collective_stock_beginning_date_time": None,
+        "collective_stock_booking_limit_date_time": None,
+        "number_of_tickets": None,
+        "collective_offer_subcategory_id": "CONCERT",
+        "collective_offer_category_id": "MUSIQUE_LIVE",
+        "collective_offer_is_active": True,
+        "collective_offer_is_bookable": False,
+        "collective_offer_humanized_id": "AE",
+        "passculture_pro_url": "https://passculture.pro/offres/AE/edition",
+        "offer_is_template": True,
+    },
+]
+
 # Enriched_stock_data
 ENRICHED_STOCK_DATA_INPUT = {
     "booking": [

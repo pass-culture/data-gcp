@@ -1,6 +1,4 @@
 import datetime
-from tkinter import N
-
 from airflow import DAG
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryExecuteQueryOperator,
@@ -10,7 +8,7 @@ from airflow.providers.http.operators.http import SimpleHttpOperator
 from airflow.operators.python import PythonOperator
 from google.auth.transport.requests import Request
 from google.oauth2 import id_token
-from common import macros 
+from common import macros
 from dependencies.data_analytics.import_historical import (
     historical_data_applicative_tables,
 )
@@ -232,6 +230,10 @@ offer_clean_duplicates = BigQueryExecuteQueryOperator(
 
 end_import_table_to_clean = DummyOperator(task_id="end_import_table_to_clean", dag=dag)
 
+start_historical_data_applicative_tables_tasks = DummyOperator(
+    task_id="start_historical_data_applicative_tables_tasks", dag=dag
+)
+
 historical_data_applicative_tables_tasks = []
 for table, params in historical_data_applicative_tables.items():
     task = BigQueryExecuteQueryOperator(
@@ -246,6 +248,9 @@ for table, params in historical_data_applicative_tables.items():
     )
     historical_data_applicative_tables_tasks.append(task)
 
+end_historical_data_applicative_tables_tasks = DummyOperator(
+    task_id="end_historical_data_applicative_tables_tasks", dag=dag
+)
 
 import_tables_to_analytics_tasks = []
 for table in data_applicative_tables_and_date_columns.keys():
@@ -506,9 +511,14 @@ end = DummyOperator(task_id="end", dag=dag)
     >> import_tables_to_clean_tasks
     >> offer_clean_duplicates
     >> end_import_table_to_clean
-    >> historical_data_applicative_tables_tasks
     >> import_tables_to_analytics_tasks
     >> end_import
+)
+(
+    end_import_table_to_clean
+    >> start_historical_data_applicative_tables_tasks
+    >> historical_data_applicative_tables_tasks
+    >> end_historical_data_applicative_tables_tasks
 )
 (
     end_import

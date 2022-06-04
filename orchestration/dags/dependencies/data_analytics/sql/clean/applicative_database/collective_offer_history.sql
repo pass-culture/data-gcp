@@ -21,4 +21,4 @@ SELECT
     collective_offer_offer_venue,
     collective_offer_last_validation_type,
     CURRENT_DATE() as partition_date
-FROM `{{ params.bigquery_clean_dataset }}`.`applicative_database_offer_history`
+FROM `{{ bigquery_clean_dataset }}`.`applicative_database_collective_offer`

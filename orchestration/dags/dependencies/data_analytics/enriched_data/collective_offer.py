@@ -116,7 +116,7 @@ LEFT JOIN {analytics_dataset}.{table_prefix}collective_stock AS collective_stock
 JOIN {analytics_dataset}.academie_dept ON academie_dept.code_dpt = venue.venue_department_code
 LEFT JOIN {analytics_dataset}.region_department venue_region ON venue_region.num_dep = venue.venue_department_code
 LEFT JOIN bookings_per_offer ON bookings_per_offer.collective_offer_id = template.collective_offer_id
-LEFT JOIN collective_offer_humanized_id AS collective_offer_humanized_id ON collective_offer_humanized_id.colletive_offer_id = template.collective_offer_id
+LEFT JOIN collective_offer_humanized_id AS collective_offer_humanized_id ON collective_offer_humanized_id.collective_offer_id = template.collective_offer_id
 
         );
     """

@@ -129,6 +129,6 @@ def define_enriched_collective_offer_data_full_query(
         {define_collective_offer_booking_information_view_query(dataset=analytics_dataset, table_prefix=table_prefix)}
         {define_collective_stock_booking_information_view_query(dataset=analytics_dataset, table_prefix=table_prefix)}
         {create_humanize_id_function()}
-        {create_temp_humanize_id(table="offer", dataset=analytics_dataset, table_prefix=table_prefix)}
+        {create_temp_humanize_id(table="collective_offer", dataset=analytics_dataset, table_prefix=table_prefix)}
         {define_enriched_collective_offer_data_query(analytics_dataset =analytics_dataset, clean_dataset= clean_dataset,  table_prefix=table_prefix)}
     """

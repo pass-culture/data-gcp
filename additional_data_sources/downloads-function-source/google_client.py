@@ -11,16 +11,16 @@ class GoogleClient:
     def __init__(self, report_bucket_name):
         self.report_bucket_name = report_bucket_name
 
-    def get_monthly_downloads(self, month="2021-05"):
+    def get_downloads(self, month="2021-05"):
         file_name = f"stats/installs/installs_app.passculture.webapp_{month.replace('-', '')}_app_version.csv"
 
         temp_destination_file_path = self.download_file_from_gcs(
             self.report_bucket_name, file_name, "report.csv"
         )
         df = pd.read_csv(temp_destination_file_path, encoding="utf-16")
-        download_stats = df["Daily Device Installs"].sum()
+        print(df.columns)
         os.remove(temp_destination_file_path)
-        return download_stats
+        return df
 
     @staticmethod
     def get_file_path(filename):

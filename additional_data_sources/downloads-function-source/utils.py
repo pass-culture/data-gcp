@@ -29,14 +29,4 @@ def get_last_month():
     today = datetime.date.today()
     current_month_first_day = today.replace(day=1)
     last_month = current_month_first_day - datetime.timedelta(days=1)
-    return last_month.strftime("%Y-%m")
-
-
-def get_current_month():
-    today = datetime.date.today()
-    return today.strftime("%Y-%m")
-
-
-def get_current_day():
-    today = datetime.date.today()
-    return today.strftime("%d")
+    return last_month

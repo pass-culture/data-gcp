@@ -6,6 +6,37 @@ import pandas as pd
 import zlib
 from authlib.jose import jwt
 
+OUT_COLS = [
+    "Provider",
+    "Provider Country",
+    "SKU",
+    "Developer",
+    "Title",
+    "Version",
+    "Product Type Identifier",
+    "Units",
+    "Developer Proceeds",
+    "Begin Date",
+    "End Date",
+    "Customer Currency",
+    "Country Code",
+    "Currency of Proceeds",
+    "Apple Identifier",
+    "Customer Price",
+    "Promo Code",
+    "Parent Identifier",
+    "Subscription",
+    "Period",
+    "Category",
+    "CMB",
+    "Device",
+    "Supported Platforms",
+    "Proceeds Reason",
+    "Preserved Pricing",
+    "Client",
+    "Order Type",
+]
+
 
 class AppleClient:
     def __init__(self, key_id, issuer_id, private_key):
@@ -53,34 +84,6 @@ class AppleClient:
             data = f.read()
 
         df = pd.DataFrame([x.rsplit("\t") for x in data.rsplit("\n")[1:]])
-        df.columns = [
-            "Provider",
-            "Provider Country",
-            "SKU",
-            "Developer",
-            "Title",
-            "Version",
-            "Product Type Identifier",
-            "Units",
-            "Developer Proceeds",
-            "Begin Date",
-            "End Date",
-            "Customer Currency",
-            "Country Code",
-            "Currency of Proceeds",
-            "Apple Identifier",
-            "Customer Price",
-            "Promo Code",
-            "Parent Identifier",
-            "Subscription",
-            "Period",
-            "Category",
-            "CMB",
-            "Device",
-            "Supported Platforms",
-            "Proceeds Reason",
-            "Preserved Pricing",
-            "Client",
-            "Order Type",
-        ]
-        return np.sum([int(x) for x in df["Units"].values if x is not None])
+        df.columns = OUT_COLS
+        df['date'] = report_date
+        return df

@@ -416,7 +416,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_INPUT = {
     "collective_stock": [
         {
             "collective_stock_id": "2",
-            "collective_offer_id": "9",
+            "collective_offer_id": "3",
             "collective_stock_price": "300",
             "collective_stock_beginning_date_time": "2022-05-01",
             "collective_stock_booking_limit_date_time": "2022-05-01",
@@ -440,7 +440,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_INPUT = {
     ],
     "collective_offer": [
         {
-            "collective_offer_id": "9",
+            "collective_offer_id": "3",
             "collective_offer_name": "Offre collective vraiment bien",
             "venue_id": "7",
             "collective_offer_creation_date": "2022-01-15",
@@ -450,7 +450,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_INPUT = {
     ],
     "collective_offer_template": [
         {
-            "collective_offer_id": "11",
+            "collective_offer_id": "4",
             "collective_offer_name": "Offre vitrine",
             "venue_id": "7",
             "collective_offer_creation_date": "2022-01-16",
@@ -481,7 +481,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_INPUT = {
 
 ENRICHED_COLLECTIVE_OFFER_DATA_EXPECTED = [
     {
-        "collective_offer_id": "9",
+        "collective_offer_id": "3",
         "collective_offer_name": "Offre collective vraiment bien",
         "venue_id": "7",
         "venue_name": "Lieu super",
@@ -500,12 +500,15 @@ ENRICHED_COLLECTIVE_OFFER_DATA_EXPECTED = [
         "collective_offer_category_id": "MUSIQUE_LIVE",
         "collective_offer_is_active": True,
         "collective_offer_is_bookable": False,
-        "collective_offer_humanized_id": "AE",
-        "passculture_pro_url": "https://passculture.pro/offres/AE/edition",
+        "collective_booking_cnt": 1.0,
+        "collective_booking_no_cancelled_cnt": 1.0,
+        "collective_booking_confirm_cnt": 1.0,
+        "collective_offer_humanized_id": "AM",
+        "passculture_pro_url": "https://passculture.pro/offres/AM/edition",
         "offer_is_template": False,
     },
     {
-        "collective_offer_id": "11",
+        "collective_offer_id": "4",
         "collective_offer_name": "Offre vitrine",
         "venue_id": "7",
         "venue_name": "Lieu super",
@@ -524,8 +527,11 @@ ENRICHED_COLLECTIVE_OFFER_DATA_EXPECTED = [
         "collective_offer_category_id": "MUSIQUE_LIVE",
         "collective_offer_is_active": True,
         "collective_offer_is_bookable": False,
-        "collective_offer_humanized_id": "AE",
-        "passculture_pro_url": "https://passculture.pro/offres/AE/edition",
+        "collective_booking_cnt": 0.0,
+        "collective_booking_no_cancelled_cnt": 0.0,
+        "collective_booking_confirm_cnt": 0.0,
+        "collective_offer_humanized_id": "AQ",
+        "passculture_pro_url": "https://passculture.pro/offres/AQ/edition",
         "offer_is_template": True,
     },
 ]

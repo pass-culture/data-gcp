@@ -368,7 +368,7 @@ BIGQUERY_SCHEMAS = {
         "code_departement": "STRING",
     },
     "academie_dept": {
-        "code_dept": "STRING",
+        "code_dpt": "STRING",
         "libelle_academie": "STRING",
         "libelle_region": "STRING",
     },

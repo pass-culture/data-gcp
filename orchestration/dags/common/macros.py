@@ -12,6 +12,7 @@ from dependencies.config import (
 def yyyymmdd():
     return datetime.today().strftime("%Y%m%d")
 
+
 def today():
     return datetime.today().strftime("%Y-%m-%d")
 
@@ -23,5 +24,5 @@ default = {
     "env_short_name": ENV_SHORT_NAME,
     "gcp_project": GCP_PROJECT,
     "yyyymmdd": yyyymmdd,
-    "today": today
+    "today": today,
 }

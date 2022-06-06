@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime, timedelta
 import os
 
 from google.auth.exceptions import DefaultCredentialsError
@@ -26,7 +26,7 @@ PRIVATE_KEY = access_secret_data(PROJECT_NAME, f"api-apple-{ENVIRONMENT_SHORT_NA
 
 
 def get_last_month():
-    today = datetime.date.today()
+    today = datetime.today()
     current_month_first_day = today.replace(day=1)
-    last_month = current_month_first_day - datetime.timedelta(days=1)
+    last_month = (current_month_first_day - timedelta(days=1)).replace(day=1)
     return last_month

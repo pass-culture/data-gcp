@@ -1,5 +1,5 @@
 from google.cloud import bigquery
-import datetime
+from datetime import datetime, timedelta
 from apple_client import AppleClient
 from google_client import GoogleClient
 import pandas as pd
@@ -14,10 +14,10 @@ from utils import (
 
 def get_apple():
 
-    end = datetime.datetime.today()
+    end = datetime.today()
     start = get_last_month()
     date_generated = [
-        start + datetime.timedelta(days=x) for x in range(0, (end - start).days)
+        start + timedelta(days=x) for x in range(0, (end - start).days)
     ]
     date_generated_str = [x.strftime("%Y-%m-%d") for x in date_generated]
     date_generated_str_join = "','".join(date_generated_str)
@@ -29,15 +29,18 @@ def get_apple():
         dfs.append(apple_client.get_downloads(frequency="DAILY", report_date=d))
     df = pd.concat(dfs)
     bigquery_client = bigquery.Client()
-    delete_query = bigquery_client.query(
-        f"DELETE FROM {BIGQUERY_RAW_DATASET}.apple_download_stats WHERE month IN ('{date_generated_str_join}')"
-    )
-    delete_query.result()
-    df.to_gbq("{BIGQUERY_RAW_DATASET}.apple_download_stats", if_exists="append")
+    try:
+        delete_query = bigquery_client.query(
+            f"DELETE FROM {BIGQUERY_RAW_DATASET}.apple_download_stats WHERE date IN ('{date_generated_str_join}')"
+        )
+        delete_query.result()
+    except:
+        pass
+    df.to_gbq(f"{BIGQUERY_RAW_DATASET}.apple_download_stats", if_exists="append")
 
 
 def get_google():
-    current_month = datetime.datetime.today().strftime("%Y-%m")
+    current_month = datetime.today().strftime("%Y-%m")
     last_month = get_last_month().strftime("%Y-%m")
     google_client = GoogleClient(report_bucket_name="pubsite_prod_8102412585126803216")
     df = google_client.get_downloads(last_month)
@@ -47,16 +50,19 @@ def get_google():
     except:
         pass
 
-    date_generated_str_join = "','".join(list(df["dates"].uniques()))
-    bigquery_client = bigquery.Client()
-    delete_query = bigquery_client.query(
-        f"DELETE FROM {BIGQUERY_RAW_DATASET}.google_download_stats WHERE month IN ('{date_generated_str_join}')"
-    )
-    delete_query.result()
-    df.to_gbq("{BIGQUERY_RAW_DATASET}.google_download_stats", if_exists="append")
+    date_generated_str_join = "','".join(list(df["date"].unique()))
+    try:
+        bigquery_client = bigquery.Client()
+        delete_query = bigquery_client.query(
+            f"DELETE FROM {BIGQUERY_RAW_DATASET}.google_download_stats WHERE date IN ('{date_generated_str_join}')"
+        )
+        delete_query.result()
+    except:
+        pass
+    df.to_gbq(f"{BIGQUERY_RAW_DATASET}.google_download_stats", if_exists="append")
 
 
 def run(request):
-    get_apple()
     get_google()
+    get_apple()
     return "Success"

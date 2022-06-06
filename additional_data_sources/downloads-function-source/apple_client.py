@@ -7,34 +7,34 @@ import zlib
 from authlib.jose import jwt
 
 OUT_COLS = [
-    "Provider",
-    "Provider Country",
-    "SKU",
-    "Developer",
-    "Title",
-    "Version",
-    "Product Type Identifier",
-    "Units",
-    "Developer Proceeds",
-    "Begin Date",
-    "End Date",
-    "Customer Currency",
-    "Country Code",
-    "Currency of Proceeds",
-    "Apple Identifier",
-    "Customer Price",
-    "Promo Code",
-    "Parent Identifier",
-    "Subscription",
-    "Period",
-    "Category",
-    "CMB",
-    "Device",
-    "Supported Platforms",
-    "Proceeds Reason",
-    "Preserved Pricing",
-    "Client",
-    "Order Type",
+    "provider",
+    "provider_country",
+    "sku",
+    "developer",
+    "title",
+    "version",
+    "product_type_identifier",
+    "units",
+    "developer_proceeds",
+    "begin_date",
+    "end_date",
+    "customer_currency",
+    "country_code",
+    "currency_of_proceeds",
+    "apple_identifier",
+    "customer_price",
+    "promo_code",
+    "parent_identifier",
+    "subscription",
+    "period",
+    "category",
+    "cmb",
+    "device",
+    "supported_platforms",
+    "proceeds_reason",
+    "preserved_pricing",
+    "client",
+    "order_type",
 ]
 
 
@@ -85,5 +85,5 @@ class AppleClient:
 
         df = pd.DataFrame([x.rsplit("\t") for x in data.rsplit("\n")[1:]])
         df.columns = OUT_COLS
-        df['date'] = report_date
+        df["date"] = report_date
         return df

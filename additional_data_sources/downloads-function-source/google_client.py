@@ -6,6 +6,22 @@ from werkzeug.utils import secure_filename
 
 from google.cloud import storage
 
+OUT_COLS = [
+    "date",
+    "package_name",
+    "app_version_code",
+    "daily_device_installs",
+    "daily_device_uninstalls",
+    "daily_device_upgrades",
+    "total_user_installs",
+    "daily_user_installs",
+    "daily_user_uninstalls",
+    "active_device_installs",
+    "install_events",
+    "update_events",
+    "uninstall_events",
+]
+
 
 class GoogleClient:
     def __init__(self, report_bucket_name):
@@ -18,7 +34,7 @@ class GoogleClient:
             self.report_bucket_name, file_name, "report.csv"
         )
         df = pd.read_csv(temp_destination_file_path, encoding="utf-16")
-        print(df.columns)
+        df.columns = OUT_COLS
         os.remove(temp_destination_file_path)
         return df
 

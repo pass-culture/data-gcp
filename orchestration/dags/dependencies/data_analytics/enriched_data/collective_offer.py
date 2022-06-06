@@ -1,6 +1,5 @@
 from dependencies.data_analytics.enriched_data.enriched_data_utils import (
     create_humanize_id_function,
-    create_temp_humanize_id,
 )
 
 
@@ -68,8 +67,8 @@ SELECT
     ,COALESCE(collective_booking_cnt, 0.0) AS collective_booking_cnt
     ,COALESCE(collective_booking_no_cancelled_cnt, 0.0) AS collective_booking_no_cancelled_cnt
     ,COALESCE(collective_booking_confirm_cnt, 0.0) AS collective_booking_confirm_cnt
-    ,collective_offer_humanized_id.humanized_id AS collective_offer_humanized_id
-    ,CONCAT('https://passculture.pro/offres/', collective_offer_humanized_id.humanized_id, '/edition') AS passculture_pro_url
+    , humanize_id(collective_offer.collective_offer_id) AS collective_offer_humanized_id
+    ,CONCAT('https://passculture.pro/offres/', humanize_id(collective_offer.collective_offer_id), '/edition') AS passculture_pro_url
     , FALSE AS offer_is_template
 FROM {analytics_dataset}.{table_prefix}collective_offer AS collective_offer
  JOIN {analytics_dataset}.{table_prefix}venue AS venue ON venue.venue_id = collective_offer.venue_id
@@ -79,7 +78,6 @@ LEFT JOIN {analytics_dataset}.subcategories ON subcategories.id = collective_off
  JOIN {analytics_dataset}.academie_dept ON academie_dept.code_dpt = venue.venue_department_code
 LEFT JOIN {analytics_dataset}.region_department venue_region ON venue_region.num_dep = venue.venue_department_code
 LEFT JOIN bookings_per_offer ON bookings_per_offer.collective_offer_id = collective_offer.collective_offer_id
-LEFT JOIN collective_offer_humanized_id AS collective_offer_humanized_id ON collective_offer_humanized_id.collective_offer_id = collective_offer.collective_offer_id
 
 UNION ALL
 SELECT
@@ -105,8 +103,8 @@ SELECT
     ,COALESCE(collective_booking_cnt, 0.0) AS collective_booking_cnt
     ,COALESCE(collective_booking_no_cancelled_cnt, 0.0) AS collective_booking_no_cancelled_cnt
     ,COALESCE(collective_booking_confirm_cnt, 0.0) AS collective_booking_confirm_cnt
-    ,collective_offer_humanized_id.humanized_id AS collective_offer_humanized_id
-    ,CONCAT('https://passculture.pro/offres/', collective_offer_humanized_id.humanized_id, '/edition') AS passculture_pro_url
+    , humanize_id(template.collective_offer_id) AS collective_offer_humanized_id
+    ,CONCAT('https://passculture.pro/offres/', humanize_id(template.collective_offer_id), '/edition') AS passculture_pro_url
     , TRUE AS offer_is_template
 FROM {analytics_dataset}.{table_prefix}collective_offer_template AS template
 JOIN {analytics_dataset}.{table_prefix}venue AS venue ON venue.venue_id = template.venue_id
@@ -126,9 +124,8 @@ def define_enriched_collective_offer_data_full_query(
     analytics_dataset, clean_dataset, table_prefix=""
 ):
     return f"""
+        {create_humanize_id_function()}
         {define_collective_offer_booking_information_view_query(dataset=analytics_dataset, table_prefix=table_prefix)}
         {define_collective_stock_booking_information_view_query(dataset=analytics_dataset, table_prefix=table_prefix)}
-        {create_humanize_id_function()}
-        {create_temp_humanize_id(table="collective_offer", dataset=analytics_dataset, table_prefix=table_prefix)}
         {define_enriched_collective_offer_data_query(analytics_dataset =analytics_dataset, clean_dataset= clean_dataset,  table_prefix=table_prefix)}
     """

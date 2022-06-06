@@ -470,6 +470,13 @@ ENRICHED_COLLECTIVE_OFFER_DATA_INPUT = {
             "libelle_academie": "Rennes",
         }
     ],
+    "region_department": [
+        {
+            "num_dep": 35,
+            "dep_name": "Ile-et-Vilaine",
+            "region_name": "Bretagne",
+        }
+    ],
 }
 
 ENRICHED_COLLECTIVE_OFFER_DATA_EXPECTED = [

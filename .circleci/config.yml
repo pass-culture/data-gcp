@@ -611,6 +611,7 @@ workflows:
           name: build_and_deploy_api_dev
           api-instance-name: apireco-dev
           <<: *deploy_on_dev_commons
+"""         ### temporarily removing api reco tests ###
       - api-integration-tests:
           env: dev
           api_token: $API_TOKEN_DEV
@@ -630,12 +631,15 @@ workflows:
             - DATA_GCP_DEV
             - Slack
           <<: *slack-fail-post-step
+"""
       - slack-alert:
           name: slack-alert-dev
           destination_env: dev
           context: Slack
+"""   ### temporarily removing api reco tests ###
           requires:
             - api-integration-tests-dev
+"""
 
 ###################
 #  EXECUTORS

@@ -1,73 +1,66 @@
 from google.cloud import bigquery
-
+from datetime import datetime, timedelta
 from apple_client import AppleClient
 from google_client import GoogleClient
+import pandas as pd
 from utils import (
     KEY_ID,
     ISSUER_ID,
     PRIVATE_KEY,
     BIGQUERY_RAW_DATASET,
     get_last_month,
-    get_current_month,
-    get_current_day,
 )
 
 
-def run(request):
-    bigquery_client = bigquery.Client()
-    last_month = get_last_month()
-    current_month = get_current_month()
-    current_day = get_current_day()
+def get_apple():
 
+    end = datetime.today()
+    start = get_last_month()
+    date_generated = [start + timedelta(days=x) for x in range(0, (end - start).days)]
+    date_generated_str = [x.strftime("%Y-%m-%d") for x in date_generated]
+    date_generated_str_join = "','".join(date_generated_str)
     apple_client = AppleClient(
         key_id=KEY_ID, issuer_id=ISSUER_ID, private_key=PRIVATE_KEY
     )
-    last_month_apple_downloads = apple_client.get_downloads(
-        frequency="MONTHLY", report_date=last_month
-    )
-    current_month_apple_downloads = 0
-    for day in range(1, int(current_day)):
-        day_string = f"0{day}" if day < 10 else str(day)
-        current_month_apple_downloads += apple_client.get_downloads(
-            frequency="DAILY", report_date=f"{current_month}-{day_string}"
-        )
-
-    google_client = GoogleClient(report_bucket_name="pubsite_prod_8102412585126803216")
-    last_month_google_downloads = google_client.get_monthly_downloads(last_month)
+    dfs = []
+    for d in date_generated_str:
+        dfs.append(apple_client.get_downloads(frequency="DAILY", report_date=d))
+    df = pd.concat(dfs)
+    bigquery_client = bigquery.Client()
     try:
-        current_month_google_downloads = google_client.get_monthly_downloads(
-            current_month
+        delete_query = bigquery_client.query(
+            f"DELETE FROM {BIGQUERY_RAW_DATASET}.apple_download_stats WHERE date IN ('{date_generated_str_join}')"
         )
+        delete_query.result()
     except:
-        current_month_google_downloads = None
+        pass
+    df.to_gbq(f"{BIGQUERY_RAW_DATASET}.apple_download_stats", if_exists="append")
 
-    delete_query = bigquery_client.query(
-        f"DELETE FROM {BIGQUERY_RAW_DATASET}.app_downloads_stats WHERE month IN ('{last_month}', '{current_month}')"
-    )
-    delete_query.result()
 
-    for values in [
-        {
-            "month": last_month,
-            "apple": int(last_month_apple_downloads),
-            "google": int(last_month_google_downloads),
-        },
-        {
-            "month": current_month,
-            "apple": int(current_month_apple_downloads)
-            if current_month_apple_downloads
-            else "null",
-            "google": int(current_month_google_downloads)
-            if current_month_google_downloads
-            else "null",
-        },
-    ]:
-        write_query = bigquery_client.query(
-            f"""
-            INSERT {BIGQUERY_RAW_DATASET}.app_downloads_stats (month, apple_downloads, google_downloads)
-            VALUES ('{values["month"]}', {values["apple"]}, {values["google"]})
-            """
+def get_google():
+    current_month = datetime.today().strftime("%Y-%m")
+    last_month = get_last_month().strftime("%Y-%m")
+    google_client = GoogleClient(report_bucket_name="pubsite_prod_8102412585126803216")
+    df = google_client.get_downloads(last_month)
+    try:
+        current_month_google_downloads = google_client.get_downloads(current_month)
+        df = pd.concat([df, current_month_google_downloads])
+    except:
+        pass
+
+    date_generated_str_join = "','".join(list(df["date"].unique()))
+    try:
+        bigquery_client = bigquery.Client()
+        delete_query = bigquery_client.query(
+            f"DELETE FROM {BIGQUERY_RAW_DATASET}.google_download_stats WHERE date IN ('{date_generated_str_join}')"
         )
-        write_query.result()
+        delete_query.result()
+    except:
+        pass
+    df.to_gbq(f"{BIGQUERY_RAW_DATASET}.google_download_stats", if_exists="append")
 
+
+def run(request):
+    get_google()
+    get_apple()
     return "Success"

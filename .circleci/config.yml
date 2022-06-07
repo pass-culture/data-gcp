@@ -95,21 +95,22 @@ workflows:
             - Slack
           <<: *slack-fail-post-step
 
-      - api-integration-tests:
-          env: dev
-          api_token: $API_TOKEN_DEV
-          name: api-integration-tests-dev
-          requires:
-            - recommendation-api-tests
-          filters:
-            branches:
-              ignore:
-                - master
-                - production
-          context:
-            - DATA_GCP_DEV
-            - Slack
-          <<: *slack-fail-post-step
+    ### temporarily removing api reco tests ###
+#      - api-integration-tests:
+#          env: dev
+#          api_token: $API_TOKEN_DEV
+#          name: api-integration-tests-dev
+#          requires:
+#            - recommendation-api-tests
+#          filters:
+#            branches:
+#              ignore:
+#                - master
+#                - production
+#          context:
+#            - DATA_GCP_DEV
+#            - Slack
+#          <<: *slack-fail-post-step
 
       - build_and_deploy_api:
           name: build_and_deploy_api_staging
@@ -611,31 +612,34 @@ workflows:
           name: build_and_deploy_api_dev
           api-instance-name: apireco-dev
           <<: *deploy_on_dev_commons
-      - api-integration-tests:
-          env: dev
-          api_token: $API_TOKEN_DEV
-          name: api-integration-tests-dev
-          requires:
-            - dev-composer-deploy
-            - typeform-cloud-function-deploy-dev
-            - addresses-cloud-function-deploy-dev
-            - downloads-cloud-function-deploy-dev
-            - contentful-cloud-function-deploy-dev
-            - siren-cloud-function-deploy-dev
-            - dms-cloud-function-deploy-dev
-            - cni-fraude-algo-cloud-function-deploy-dev
-            - build_and_deploy_api_dev
-            - adage-import-function-deploy-dev
-          context:
-            - DATA_GCP_DEV
-            - Slack
-          <<: *slack-fail-post-step
+         ### temporarily removing api reco tests ###
+#      - api-integration-tests:
+#          env: dev
+#          api_token: $API_TOKEN_DEV
+#          name: api-integration-tests-dev
+#          requires:
+#            - dev-composer-deploy
+#            - typeform-cloud-function-deploy-dev
+#            - addresses-cloud-function-deploy-dev
+#            - downloads-cloud-function-deploy-dev
+#            - contentful-cloud-function-deploy-dev
+#            - siren-cloud-function-deploy-dev
+#            - dms-cloud-function-deploy-dev
+#            - cni-fraude-algo-cloud-function-deploy-dev
+#            - build_and_deploy_api_dev
+#            - adage-import-function-deploy-dev
+#          context:
+#            - DATA_GCP_DEV
+#            - Slack
+#          <<: *slack-fail-post-step
       - slack-alert:
           name: slack-alert-dev
           destination_env: dev
           context: Slack
-          requires:
-            - api-integration-tests-dev
+  ### temporarily removing api reco tests ###
+#          requires:
+#            - api-integration-tests-dev
+
 
 ###################
 #  EXECUTORS

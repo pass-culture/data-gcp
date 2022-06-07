@@ -71,7 +71,7 @@ class AppleClient:
             },
             headers=self.head,
         )
-        print(r.status_code)
+
         if r.status_code == 404:
             return 0
 
@@ -85,5 +85,7 @@ class AppleClient:
 
         df = pd.DataFrame([x.rsplit("\t") for x in data.rsplit("\n")[1:]])
         df.columns = OUT_COLS
+        df["units"] = df["units"].astype(float)
+        df = df[df["units"] > 0]
         df["date"] = report_date
         return df

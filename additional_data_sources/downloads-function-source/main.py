@@ -16,9 +16,7 @@ def get_apple():
 
     end = datetime.today()
     start = get_last_month()
-    date_generated = [
-        start + timedelta(days=x) for x in range(0, (end - start).days)
-    ]
+    date_generated = [start + timedelta(days=x) for x in range(0, (end - start).days)]
     date_generated_str = [x.strftime("%Y-%m-%d") for x in date_generated]
     date_generated_str_join = "','".join(date_generated_str)
     apple_client = AppleClient(

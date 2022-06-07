@@ -28,6 +28,9 @@ from dependencies.data_analytics.enriched_data.collective_booking import (
 from dependencies.data_analytics.enriched_data.offer import (
     define_enriched_offer_data_full_query,
 )
+from dependencies.data_analytics.enriched_data.collective_offer import (
+    define_enriched_collective_offer_data_full_query,
+)
 from dependencies.data_analytics.enriched_data.offerer import (
     define_enriched_offerer_data_full_query,
 )
@@ -283,6 +286,17 @@ create_enriched_offer_data_task = BigQueryExecuteQueryOperator(
     dag=dag,
 )
 
+create_enriched_collective_offer_data_task = BigQueryExecuteQueryOperator(
+    task_id="create_enriched_collective_offer_data",
+    sql=define_enriched_collective_offer_data_full_query(
+        analytics_dataset=BIGQUERY_ANALYTICS_DATASET,
+        clean_dataset=BIGQUERY_CLEAN_DATASET,
+        table_prefix=APPLICATIVE_PREFIX,
+    ),
+    use_legacy_sql=False,
+    dag=dag,
+)
+
 create_enriched_stock_data_task = BigQueryExecuteQueryOperator(
     task_id="create_enriched_stock_data",
     sql=define_enriched_stock_data_full_query(
@@ -498,6 +512,7 @@ end = DummyOperator(task_id="end", dag=dag)
     start_enriched_data
     >> create_enriched_stock_data_task
     >> create_enriched_offer_data_task
+    >> create_enriched_collective_offer_data_task
     >> create_enriched_booking_data_task
     >> create_enriched_collective_booking_data_task
     >> create_enriched_user_data_task

@@ -7,6 +7,8 @@ from data_analytics.data import (
     ENRICHED_BOOKING_DATA_INPUT,
     ENRICHED_OFFER_DATA_EXPECTED,
     ENRICHED_OFFER_DATA_INPUT,
+    ENRICHED_COLLECTIVE_OFFER_DATA_EXPECTED,
+    ENRICHED_COLLECTIVE_OFFER_DATA_INPUT,
     ENRICHED_OFFERER_DATA_EXPECTED,
     ENRICHED_OFFERER_DATA_INPUT,
     ENRICHED_STOCK_DATA_EXPECTED,
@@ -31,6 +33,9 @@ from dependencies.data_analytics.enriched_data.booking import (
 )
 from dependencies.data_analytics.enriched_data.offer import (
     define_enriched_offer_data_full_query,
+)
+from dependencies.data_analytics.enriched_data.collective_offer import (
+    define_enriched_collective_offer_data_full_query,
 )
 from dependencies.data_analytics.enriched_data.offerer import (
     define_enriched_offerer_data_full_query,
@@ -114,6 +119,17 @@ def flush_dataset():
             ENRICHED_OFFER_DATA_INPUT,
             ENRICHED_OFFER_DATA_EXPECTED,
             "offer_id",
+        ),
+        (
+            "enriched_collective_offer_data",
+            define_enriched_collective_offer_data_full_query(
+                analytics_dataset=TEST_DATASET,
+                clean_dataset=TEST_DATASET,
+                table_prefix=TEST_TABLE_PREFIX,
+            ),
+            ENRICHED_COLLECTIVE_OFFER_DATA_INPUT,
+            ENRICHED_COLLECTIVE_OFFER_DATA_EXPECTED,
+            "collective_offer_id",
         ),
         (
             "enriched_stock_data",

@@ -126,7 +126,7 @@ def define_enriched_offer_data_query(analytics_dataset, clean_dataset, table_pre
                     AS booking_confirm_cnt,
                 COALESCE(count_favorites_view.count_favorite, 0.0)
                     AS favourite_cnt,
-                COALESCE(sum_stock_view.stock, 0.0) AS stock,
+                sum_stock_view.stock AS stock,
                 offer_humanized_id.humanized_id AS offer_humanized_id,
                 CONCAT('https://passculture.pro/offres/', offer_humanized_id.humanized_id, '/edition')
                     AS passculture_pro_url,

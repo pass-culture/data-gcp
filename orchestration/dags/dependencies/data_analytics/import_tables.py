@@ -27,7 +27,7 @@ def define_import_query(
             "postalCode" as user_postal_code, "needsToFillCulturalSurvey" as user_needs_to_fill_cultural_survey,
             CAST("culturalSurveyId" AS varchar(255)) as user_cultural_survey_id, "civility" as user_civility,
             "activity" as user_activity, "culturalSurveyFilledDate" as user_cultural_survey_filled_date,
-            "hasSeenTutorials" as user_has_seen_tutorials, "address" as user_address, "city" as user_city,
+            "address" as user_address, "city" as user_city,
             "lastConnectionDate" as user_last_connection_date, "isEmailValidated" as user_is_email_validated,
             "isActive" as user_is_active,
             "hasSeenProTutorials" as user_has_seen_pro_tutorials, EXTRACT(YEAR FROM AGE("user"."dateOfBirth")) AS user_age,
@@ -91,6 +91,7 @@ def define_import_query(
             CAST("id" AS varchar(255))
             ,CAST("status" AS varchar(255))
             ,CAST("bookingId" AS varchar(255))
+            ,CAST("collectiveBookingId" AS varchar(255)) AS collective_booking_id
             ,CAST("businessUnitId" AS varchar(255))
             ,"creationDate"
             ,"valueDate"
@@ -168,9 +169,6 @@ def define_import_query(
             "reimbursementDate" AS booking_reimbursement_date
         FROM public.booking
     """
-    # define day before and after execution date
-    # we jinja template reference to user the datetimes around execution time
-    EXECUTION_TIME = "{{ ds }}"
     cloudsql_queries[
         "offer"
     ] = """
@@ -199,7 +197,6 @@ def define_import_query(
             "withdrawalType" AS offer_withdrawal_type,
             "withdrawalDelay" AS offer_withdrawal_delay
         FROM public.offer
-        WHERE date("dateUpdated") = \\'{{ ds }}\\'
     """
 
     cloudsql_queries[
@@ -377,7 +374,8 @@ def define_import_query(
         "allocine_pivot"
     ] = """
             SELECT
-                CAST("id" AS varchar(255)),"siret",CAST("theaterId" AS varchar(255))
+                CAST("id" AS varchar(255)),CAST("theaterId" AS varchar(255)), "internalId" AS internal_id,
+                CAST("venueId" AS varchar(255)) AS venue_id
             FROM public.allocine_pivot
         """
     cloudsql_queries[

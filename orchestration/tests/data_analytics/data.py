@@ -392,6 +392,150 @@ ENRICHED_OFFER_DATA_EXPECTED = [
     },
 ]
 
+# Enriched_collective_offer
+ENRICHED_COLLECTIVE_OFFER_DATA_INPUT = {
+    "collective_booking": [
+        {
+            "collective_booking_id": "1",
+            "collective_booking_creation_date": "2022-02-02",
+            "collective_stock_id": "2",
+            "venue_id": "7",
+            "offerer_id": "22",
+            "collective_booking_cancellation_date": None,
+            "collective_booking_cancellation_limit_date": "2022-02-15",
+            "collective_booking_cancellation_reason": None,
+            "collective_booking_status": "USED",
+            "collective_booking_reimbursment_date": None,
+            "educational_institution_id": "10",
+            "educational_year_id": "1",
+            "collective_booking_confirmation_date": "2022-02-03",
+            "collective_booking_confirmation_limit_date": "2022-02-05",
+            "educational_redactor_id": "3",
+        }
+    ],
+    "collective_stock": [
+        {
+            "collective_stock_id": "2",
+            "collective_offer_id": "3",
+            "collective_stock_price": "300",
+            "collective_stock_beginning_date_time": "2022-05-01",
+            "collective_stock_booking_limit_date_time": "2022-05-01",
+            "collective_stock_number_of_tickets": "30",
+        }
+    ],
+    "venue": [
+        {
+            "venue_id": "7",
+            "venue_name": "Lieu super",
+            "venue_department_code": "35",
+            "venue_is_virtual": False,
+            "venue_managing_offerer_id": "22",
+        }
+    ],
+    "offerer": [
+        {
+            "offerer_id": "22",
+            "offerer_name": "Ma structure",
+        }
+    ],
+    "collective_offer": [
+        {
+            "collective_offer_id": "3",
+            "collective_offer_name": "Offre collective vraiment bien",
+            "venue_id": "7",
+            "collective_offer_creation_date": "2022-01-15",
+            "collective_offer_subcategory_id": "CONCERT",
+            "collective_offer_is_active": True,
+        }
+    ],
+    "collective_offer_template": [
+        {
+            "collective_offer_id": "4",
+            "collective_offer_name": "Offre vitrine",
+            "venue_id": "7",
+            "collective_offer_creation_date": "2022-01-16",
+            "collective_offer_subcategory_id": "CONCERT",
+            "collective_offer_is_active": True,
+        }
+    ],
+    "subcategories": [
+        {
+            "id": "CONCERT",
+            "category_id": "MUSIQUE_LIVE",
+        }
+    ],
+    "academie_dept": [
+        {
+            "code_dpt": "35",
+            "libelle_academie": "Rennes",
+        }
+    ],
+    "region_department": [
+        {
+            "num_dep": 35,
+            "dep_name": "Ile-et-Vilaine",
+            "region_name": "Bretagne",
+        }
+    ],
+}
+
+ENRICHED_COLLECTIVE_OFFER_DATA_EXPECTED = [
+    {
+        "collective_offer_id": "3",
+        "collective_offer_name": "Offre collective vraiment bien",
+        "venue_id": "7",
+        "venue_name": "Lieu super",
+        "venue_department_code": "35",
+        "venue_region_name": "Bretagne",
+        "venue_academie": "Rennes",
+        "venue_is_virtual": False,
+        "offerer_id": "22",
+        "offerer_name": "Ma structure",
+        "collective_offer_creation_date": datetime(2022, 1, 15),
+        "collective_stock_price": 300,
+        "collective_stock_beginning_date_time": datetime(2022, 5, 1, 0, 0),
+        "collective_stock_booking_limit_date_time": datetime(2022, 5, 1, 0, 0),
+        "number_of_tickets": 30,
+        "collective_offer_subcategory_id": "CONCERT",
+        "collective_offer_category_id": "MUSIQUE_LIVE",
+        "collective_offer_is_active": True,
+        "collective_offer_is_bookable": False,
+        "collective_booking_cnt": 1.0,
+        "collective_booking_no_cancelled_cnt": 1.0,
+        "collective_booking_confirm_cnt": 1.0,
+        "collective_offer_humanized_id": "AM",
+        "passculture_pro_url": "https://passculture.pro/offres/AM/edition",
+        "offer_is_template": False,
+    },
+    {
+        "collective_offer_id": "4",
+        "collective_offer_name": "Offre vitrine",
+        "venue_id": "7",
+        "venue_name": "Lieu super",
+        "venue_department_code": "35",
+        "venue_region_name": "Bretagne",
+        "venue_academie": "Rennes",
+        "venue_is_virtual": False,
+        "offerer_id": "22",
+        "offerer_name": "Ma structure",
+        "collective_offer_creation_date": datetime(2022, 1, 16, 0, 0),
+        "collective_stock_price": None,
+        "collective_stock_beginning_date_time": None,
+        "collective_stock_booking_limit_date_time": None,
+        "number_of_tickets": None,
+        "collective_offer_subcategory_id": "CONCERT",
+        "collective_offer_category_id": "MUSIQUE_LIVE",
+        "collective_offer_is_active": True,
+        "collective_offer_is_bookable": False,
+        "collective_booking_cnt": 0.0,
+        "collective_booking_no_cancelled_cnt": 0.0,
+        "collective_booking_confirm_cnt": 0.0,
+        "collective_offer_humanized_id": "AQ",
+        "passculture_pro_url": "https://passculture.pro/offres/AQ/edition",
+        "offer_is_template": True,
+    },
+]
+
 # Enriched_stock_data
 ENRICHED_STOCK_DATA_INPUT = {
     "booking": [
@@ -605,7 +749,6 @@ ENRICHED_USER_DATA_INPUT = {
             "user_activity": "Inactif",
             "user_civility": "Mme",
             "user_creation_date": datetime.now().replace(microsecond=0),
-            "user_has_seen_tutorials": True,
             "user_cultural_survey_filled_date": datetime.now().replace(microsecond=0),
             "user_is_active": True,
             "user_age": 18,
@@ -1085,10 +1228,10 @@ ENRICHED_COLLECTIVE_BOOKING_DATA_INPUT = {
         {
             "collective_booking_id": "8",
             "booking_id": "8",
-            "collective_booking_collective_stock_id": "9",
-            "collective_booking_educational_institution_id": "14",
-            "collective_booking_educational_year_id": "1",
-            "collective_booking_venue_id": "8",
+            "collective_stock_id": "9",
+            "educational_institution_id": "14",
+            "educational_year_id": "1",
+            "venue_id": "8",
             "collective_booking_status": "USED_BY_INSTITUTE",
             "collective_booking_confirmation_date": datetime.now().replace(
                 microsecond=0
@@ -1096,7 +1239,7 @@ ENRICHED_COLLECTIVE_BOOKING_DATA_INPUT = {
             "collective_booking_confirmation_limit_date": datetime.now().replace(
                 microsecond=0
             ),
-            "collective_booking_educational_redactor_id": "1",
+            "educational_redactor_id": "1",
         }
     ],
     "educational_institution": [

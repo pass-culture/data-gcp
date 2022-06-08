@@ -9,7 +9,6 @@ from airflow.models import DagBag
 DAG_ID_LIST = [
     "recommendation_cloud_sql_v1",
     "export_cloudsql_tables_to_bigquery_v1",
-    "import_data_analytics_incremental_v3",
     "import_firebase_data_v3",
     "import_typeform_v1",
     "import_addresses_v1",

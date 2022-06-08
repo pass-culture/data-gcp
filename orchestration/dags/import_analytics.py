@@ -28,6 +28,9 @@ from dependencies.data_analytics.enriched_data.collective_booking import (
 from dependencies.data_analytics.enriched_data.offer import (
     define_enriched_offer_data_full_query,
 )
+from dependencies.data_analytics.enriched_data.collective_offer import (
+    define_enriched_collective_offer_data_full_query,
+)
 from dependencies.data_analytics.enriched_data.offerer import (
     define_enriched_offerer_data_full_query,
 )
@@ -80,6 +83,7 @@ data_applicative_tables_and_date_columns = {
         "offerer_creation_date",
         "offerer_validation_date",
     ],
+    "offer": ["offer_modified_at_last_provider_date", "offer_creation_date"],
     "bank_information": ["dateModified"],
     "booking": [
         "booking_creation_date",
@@ -193,7 +197,7 @@ for table in data_applicative_tables_and_date_columns.keys():
             external_connection_id=APPLICATIVE_EXTERNAL_CONNECTION_ID,
             table=table,
         ),
-        write_disposition="WRITE_TRUNCATE" if table != "offer" else "WRITE_APPEND",
+        write_disposition="WRITE_TRUNCATE",
         use_legacy_sql=False,
         destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.{APPLICATIVE_PREFIX}{table}",
         dag=dag,
@@ -274,6 +278,17 @@ copy_to_analytics_iris_venues = BigQueryExecuteQueryOperator(
 create_enriched_offer_data_task = BigQueryExecuteQueryOperator(
     task_id="create_enriched_offer_data",
     sql=define_enriched_offer_data_full_query(
+        analytics_dataset=BIGQUERY_ANALYTICS_DATASET,
+        clean_dataset=BIGQUERY_CLEAN_DATASET,
+        table_prefix=APPLICATIVE_PREFIX,
+    ),
+    use_legacy_sql=False,
+    dag=dag,
+)
+
+create_enriched_collective_offer_data_task = BigQueryExecuteQueryOperator(
+    task_id="create_enriched_collective_offer_data",
+    sql=define_enriched_collective_offer_data_full_query(
         analytics_dataset=BIGQUERY_ANALYTICS_DATASET,
         clean_dataset=BIGQUERY_CLEAN_DATASET,
         table_prefix=APPLICATIVE_PREFIX,
@@ -378,7 +393,20 @@ import_downloads_data_to_bigquery = SimpleHttpOperator(
 
 create_enriched_app_downloads_stats = BigQueryExecuteQueryOperator(
     task_id="create_enriched_app_downloads_stats",
-    sql=f"SELECT * FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.app_downloads_stats`",
+    sql=f"""
+    SELECT 
+        date, 
+        'apple' as provider, 
+        sum(units) as total_downloads
+    FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.apple_download_stats` 
+    GROUP BY date
+    UNION ALL
+    SELECT 
+        date, 
+        'google' as provider, 
+        sum(daily_device_installs) as total_downloads
+    FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.google_download_stats` 
+    GROUP BY date""",
     destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.app_downloads_stats",
     write_disposition="WRITE_TRUNCATE",
     use_legacy_sql=False,
@@ -497,6 +525,7 @@ end = DummyOperator(task_id="end", dag=dag)
     start_enriched_data
     >> create_enriched_stock_data_task
     >> create_enriched_offer_data_task
+    >> create_enriched_collective_offer_data_task
     >> create_enriched_booking_data_task
     >> create_enriched_collective_booking_data_task
     >> create_enriched_user_data_task

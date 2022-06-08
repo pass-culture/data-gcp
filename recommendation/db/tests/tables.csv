@@ -33,6 +33,7 @@ stock,stock_is_soft_deleted,boolean
 stock,stock_beginning_date,timestamp without time zone
 subcategories,id,character varying
 subcategories,category_id,character varying
+subcategories,search_group_name,character varying
 subcategories,is_event,boolean
 subcategories,is_digital_deposit,boolean
 subcategories,is_physical_deposit,boolean

@@ -393,7 +393,20 @@ import_downloads_data_to_bigquery = SimpleHttpOperator(
 
 create_enriched_app_downloads_stats = BigQueryExecuteQueryOperator(
     task_id="create_enriched_app_downloads_stats",
-    sql=f"SELECT * FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.app_downloads_stats`",
+    sql=f"""
+    SELECT 
+        date, 
+        'apple' as provider, 
+        sum(units) as total_downloads
+    FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.apple_download_stats` 
+    GROUP BY date
+    UNION ALL
+    SELECT 
+        date, 
+        'google' as provider, 
+        sum(daily_device_installs) as total_downloads
+    FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.google_download_stats` 
+    GROUP BY date""",
     destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.app_downloads_stats",
     write_disposition="WRITE_TRUNCATE",
     use_legacy_sql=False,

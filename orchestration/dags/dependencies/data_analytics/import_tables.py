@@ -91,6 +91,7 @@ def define_import_query(
             CAST("id" AS varchar(255))
             ,CAST("status" AS varchar(255))
             ,CAST("bookingId" AS varchar(255))
+            ,CAST("collectiveBookingId" AS varchar(255)) AS collective_booking_id
             ,CAST("businessUnitId" AS varchar(255))
             ,"creationDate"
             ,"valueDate"

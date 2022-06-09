@@ -30,7 +30,7 @@ BIGQUERY_SCHEMAS = {
         "user_id": "STRING",
         "deposit_id": "STRING",
     },
-    "educational_booking": {
+    "outdated_educational_booking": {
         "educational_booking_id": "STRING",
         "educational_booking_educational_institution_id": "STRING",
         "educational_booking_educational_year_id": "STRING",

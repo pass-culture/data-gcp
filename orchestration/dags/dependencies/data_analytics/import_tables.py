@@ -469,7 +469,7 @@ def define_import_query(
         """
 
     cloudsql_queries[
-        "educational_booking"
+        "outdated_educational_booking"
     ] = """
             SELECT
                 CAST(id AS varchar(255)) AS educational_booking_id

@@ -469,20 +469,6 @@ def define_import_query(
         """
 
     cloudsql_queries[
-        "educational_booking"
-    ] = """
-            SELECT
-                CAST(id AS varchar(255)) AS educational_booking_id
-                ,CAST("educationalInstitutionId" AS varchar(255)) AS educational_booking_educational_institution_id
-                ,CAST("educationalYearId" AS varchar(255)) AS educational_booking_educational_year_id
-                ,CAST("status" AS VARCHAR) AS educational_booking_status
-                ,"confirmationDate" AS educational_booking_confirmation_date
-                ,"confirmationLimitDate" AS educational_booking_confirmation_limit_date
-                ,CAST("educationalRedactorId" AS varchar(255)) AS educational_booking_educational_redactor_id
-            FROM educational_booking
-        """
-
-    cloudsql_queries[
         "educational_deposit"
     ] = """
             SELECT

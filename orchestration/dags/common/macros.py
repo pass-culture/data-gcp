@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from dependencies.config import (
     BIGQUERY_ANALYTICS_DATASET,
@@ -9,12 +9,24 @@ from dependencies.config import (
 )
 
 
-def yyyymmdd():
-    return datetime.today().strftime("%Y%m%d")
+def yyyymmdd(ds):
+    if ds is None:
+        ds = datetime.today().strftime("%Y%m%d")
+    if isinstance(ds, str):
+        ds = datetime.strptime(ds, "%Y-%m-%d")
+    return ds.strftime("%Y%m%d")
 
 
 def today():
     return datetime.today().strftime("%Y-%m-%d")
+
+
+def add_days(ds, days):
+    if ds is None:
+        ds = datetime.now()
+    if isinstance(ds, str):
+        ds = datetime.strptime(ds, "%Y-%m-%d")
+    return ds + timedelta(days=days)
 
 
 default = {

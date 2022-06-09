@@ -1105,14 +1105,6 @@ ENRICHED_BOOKING_DATA_INPUT = {
             "type": "GRANT_18",
         }
     ],
-    "payment": [
-        {
-            "id": "1",
-            "bookingId": "1",
-            "author": "michel",
-        }
-    ],
-    "payment_status": [{"id": "1", "paymentId": "1", "status": "SENT"}],
     "stock": [
         {
             "stock_id": "4",
@@ -1188,7 +1180,7 @@ ENRICHED_BOOKING_DATA_EXPECTED = [
         "offerer_id": "2",
         "offerer_name": "Offerer",
         "physical_goods": True,
-        "reimbursed": True,
+        "reimbursed": False,
         "same_category_booking_rank": 1,
         "stock_beginning_date": datetime.now().replace(microsecond=0),
         "stock_id": "4",

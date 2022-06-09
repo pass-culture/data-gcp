@@ -135,10 +135,6 @@ data_applicative_tables_and_date_columns = {
     "criterion": [""],
     "beneficiary_fraud_review": ["datereviewed"],
     "beneficiary_fraud_check": [""],
-    "outdated_educational_booking": [
-        "educational_booking_confirmation_date",
-        "educational_booking_confirmation_limit_date",
-    ],
     "educational_deposit": ["educational_deposit_creation_date"],
     "educational_institution": [""],
     "educational_redactor": [""],

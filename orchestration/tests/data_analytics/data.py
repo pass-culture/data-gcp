@@ -531,7 +531,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_EXPECTED = [
         "collective_booking_no_cancelled_cnt": 0.0,
         "collective_booking_confirm_cnt": 0.0,
         "collective_offer_humanized_id": "AQ",
-        "passculture_pro_url": "https://passculture.pro/offre/AQ/collectif/edition",
+        "passculture_pro_url": "https://passculture.pro/offre/T-AQ/collectif/edition",
         "offer_is_template": True,
     },
 ]

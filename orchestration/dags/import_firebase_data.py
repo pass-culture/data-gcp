@@ -45,7 +45,7 @@ app_info_id_list_pro = ENV_SHORT_NAME_APP_INFO_ID_MAPPING_PRO[ENV_SHORT_NAME]
 
 
 dags = {
-    "full": {
+    "daily": {
         "prefix": "_",
         "schedule_interval": "00 13 * * *",
         # two days ago

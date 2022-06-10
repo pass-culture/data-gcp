@@ -73,7 +73,7 @@ dags = {
 
 
 for type, params in dags.items():
-    dag_id = f"import_{type}_firebase_data_v3"
+    dag_id = f"import_{type}_firebase_data"
     prefix = params["prefix"]
     yyyymmdd = params["yyyymmdd"]
 

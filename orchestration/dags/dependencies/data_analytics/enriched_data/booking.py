@@ -15,21 +15,6 @@ def create_booking_amount_view(dataset, table_prefix=""):
         """
 
 
-def create_booking_payment_status_view(dataset, table_prefix=""):
-    return f"""
-        CREATE TEMP TABLE booking_payment_status_view AS (
-            SELECT
-                distinct(booking.booking_id),'Remboursé' AS booking_reimburse
-            FROM {dataset}.{table_prefix}booking AS booking
-            INNER JOIN {dataset}.{table_prefix}payment AS payment
-                ON payment.bookingId = booking.booking_id
-                AND payment.author IS NOT NULL
-            INNER JOIN {dataset}.{table_prefix}payment_status AS payment_status
-                ON payment.id = payment_status.paymentId
-                AND payment_status.status = 'SENT');
-        """
-
-
 def create_booking_ranking_view(dataset, table_prefix=""):
     return f"""
         CREATE TEMP TABLE booking_ranking_view AS (
@@ -59,12 +44,10 @@ def create_materialized_booking_intermediary_view(dataset, table_prefix=""):
         CREATE TEMP TABLE booking_intermediary_view AS (
                 SELECT booking.booking_id,
                     booking_amount_view.booking_intermediary_amount,
-                    booking_payment_status_view.booking_reimburse,
                     booking_ranking_view.booking_rank,
                     booking_ranking_in_category_view.same_category_booking_rank
                 FROM {dataset}.{table_prefix}booking AS booking
             LEFT JOIN booking_amount_view ON booking_amount_view.booking_id = booking.booking_id
-            LEFT JOIN booking_payment_status_view ON booking_payment_status_view.booking_id = booking.booking_id
             LEFT JOIN booking_ranking_view ON booking_ranking_view.booking_id = booking.booking_id
             LEFT JOIN booking_ranking_in_category_view ON booking_ranking_in_category_view.booking_id = booking.booking_id
         );
@@ -104,7 +87,7 @@ def create_materialized_enriched_booking_view(dataset, table_prefix=""):
                 user.user_department_code,
                 user.user_creation_date,
                 booking_intermediary_view.booking_intermediary_amount,
-                CASE WHEN booking_intermediary_view.booking_reimburse = 'Remboursé'
+                CASE WHEN booking.booking_status = 'REIMBURSED'
                     THEN True ELSE False END AS reimbursed,
                 subcategories.is_physical_deposit as physical_goods,
                 subcategories.is_digital_deposit digital_goods,
@@ -141,7 +124,6 @@ def create_materialized_enriched_booking_view(dataset, table_prefix=""):
 def define_enriched_booking_data_full_query(dataset, table_prefix=""):
     return f"""
         {create_booking_amount_view(dataset=dataset, table_prefix=table_prefix)}
-        {create_booking_payment_status_view(dataset=dataset, table_prefix=table_prefix)}
         {create_booking_ranking_view(dataset=dataset, table_prefix=table_prefix)}
         {create_booking_ranking_in_category_view(dataset=dataset, table_prefix=table_prefix)}
         {create_materialized_booking_intermediary_view(dataset=dataset, table_prefix=table_prefix)}

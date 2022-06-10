@@ -636,7 +636,18 @@ workflows:
           name: slack-alert-dev
           destination_env: dev
           context: Slack
-  ### temporarily removing api reco tests ###
+          requires:
+            - dev-composer-deploy
+            - typeform-cloud-function-deploy-dev
+            - addresses-cloud-function-deploy-dev
+            - downloads-cloud-function-deploy-dev
+            - contentful-cloud-function-deploy-dev
+            - siren-cloud-function-deploy-dev
+            - dms-cloud-function-deploy-dev
+            - cni-fraude-algo-cloud-function-deploy-dev
+            - build_and_deploy_api_dev
+            - adage-import-function-deploy-dev
+### temporarily removing api reco tests ###
 #          requires:
 #            - api-integration-tests-dev
 

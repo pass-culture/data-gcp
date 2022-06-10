@@ -59,7 +59,7 @@ dags = {
     },
     "intraday": {
         "prefix": "_intraday_",
-        "schedule_interval": "00 01 * * *",
+        "schedule_interval": "00 03 * * *",
         # one day ago
         "yyyymmdd": "{{ yyyymmdd(ds) }}",
         "default_dag_args": {

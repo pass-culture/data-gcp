@@ -288,6 +288,14 @@ def copy_pro_to_analytics(
             ) as query,
             (select event_params.value.string_value
                 from unnest(event_params) event_params
+                where event_params.key = 'filled'
+            ) as filled,
+            (select event_params.value.string_value
+                from unnest(event_params) event_params
+                where event_params.key = 'filledWithErrors'
+            ) as filledWithErrors,
+            (select event_params.value.string_value
+                from unnest(event_params) event_params
                 where event_params.key = 'filter'
             ) as filter,
             (select event_params.value.string_value

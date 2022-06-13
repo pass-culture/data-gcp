@@ -37,5 +37,5 @@ default = {
     "gcp_project": GCP_PROJECT,
     "yyyymmdd": yyyymmdd,
     "today": today,
-    "add_days": add_days
+    "add_days": add_days,
 }

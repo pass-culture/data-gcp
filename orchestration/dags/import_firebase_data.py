@@ -99,7 +99,7 @@ for type, params in dags.items():
             """,
         use_legacy_sql=False,
         destination_dataset_table=f"{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.events_{yyyymmdd}",
-        write_disposition="WRITE_EMPTY",
+        write_disposition="WRITE_TRUNCATE",
         trigger_rule="none_failed",
         dag=dag,
     )
@@ -111,7 +111,7 @@ for type, params in dags.items():
             """,
         use_legacy_sql=False,
         destination_dataset_table=f"{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.firebase_pro_{yyyymmdd}",
-        write_disposition="WRITE_EMPTY",
+        write_disposition="WRITE_TRUNCATE",
         trigger_rule="none_failed",
         dag=dag,
     )

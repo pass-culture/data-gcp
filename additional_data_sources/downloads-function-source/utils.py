@@ -25,8 +25,8 @@ def access_secret_data(project_id, secret_id, version_id=1, default=None):
 PRIVATE_KEY = access_secret_data(PROJECT_NAME, f"api-apple-{ENVIRONMENT_SHORT_NAME}")
 
 
-def get_last_month():
-    today = datetime.today()
+def get_last_month(today):
+
     current_month_first_day = today.replace(day=1)
     last_month = (current_month_first_day - timedelta(days=1)).replace(day=1)
     return last_month

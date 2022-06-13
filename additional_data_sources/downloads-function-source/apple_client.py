@@ -73,10 +73,14 @@ class AppleClient:
         )
 
         if r.status_code == 404:
-            return 0
-
-        data = zlib.decompress(r.content, zlib.MAX_WBITS | 32)
-
+            return None
+        try:
+            data = zlib.decompress(r.content, zlib.MAX_WBITS | 32)
+        except:
+            print(f"Error with {report_date}")
+            print(r.status_code)
+            print(r.content)
+            return None
         with open("/tmp/report.txt", "wb") as outFile:
             outFile.write(data)
 

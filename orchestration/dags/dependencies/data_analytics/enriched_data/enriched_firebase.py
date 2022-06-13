@@ -186,6 +186,10 @@ def copy_table_to_analytics(gcp_project, bigquery_raw_dataset, table_name, yyyym
             ) as module_name,
             (select event_params.value.string_value
                 from unnest(event_params) event_params
+                where event_params.key = 'index'
+            ) as module_index,
+            (select event_params.value.string_value
+                from unnest(event_params) event_params
                 where event_params.key = 'traffic_campaign'
             ) as traffic_campaign,
             (select event_params.value.string_value
@@ -196,10 +200,14 @@ def copy_table_to_analytics(gcp_project, bigquery_raw_dataset, table_name, yyyym
                 from unnest(event_params) event_params
                 where event_params.key = 'traffic_source'
             ) as traffic_source,
+            COALESCE(
             (select event_params.value.string_value
                 from unnest(event_params) event_params
-                where event_params.key = 'entryId'
-            ) as entry_id,
+                where event_params.key = 'entryId')
+            ,(select event_params.value.string_value
+                from unnest(event_params) event_params
+                where event_params.key = 'homeEntryId')
+            ) AS entry_id,
              CASE WHEN (select event_params.value.string_value
                 from unnest(event_params) event_params
                 where event_params.key = 'entryId')

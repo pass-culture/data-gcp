@@ -45,10 +45,12 @@ def analytics_fail_slack_alert(context):
 def __task_fail_slack_alert(context, job_type):
     webhook_token = JOB_TYPE.get(job_type)
 
-    dag_url = "{base_url}/admin/airflow/graph?dag_id={dag_id}&root=&execution_date={exec_date}".format(
-        base_url=configuration.get("webserver", "BASE_URL"),
-        dag_id=context["dag"].dag_id,
-        exec_date=quote(context.get("execution_date").isoformat()),
+    dag_url = (
+        "{base_url}/graph?dag_id={dag_id}&root=&execution_date={exec_date}".format(
+            base_url=configuration.get("webserver", "BASE_URL"),
+            dag_id=context["dag"].dag_id,
+            exec_date=quote(context.get("execution_date").isoformat()),
+        )
     )
     dag_name = context.get("dag").dag_id
     task_name = context.get("task_instance").task_id

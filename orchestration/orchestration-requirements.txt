@@ -1,6 +1,6 @@
---constraint "https://raw.githubusercontent.com/apache/airflow/constraints-1.10.15/constraints-3.7.txt"
-apache-airflow[gcp]==1.10.15
-sshtunnel==0.3.1
+--constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.2.5/constraints-3.7.txt"
+apache-airflow[gcp]==2.2.5
+sshtunnel==0.3.2
 mysqlclient==2.0.1
 pytest==6.1.1
 pytest-cov==2.10.1
@@ -10,3 +10,7 @@ gcsfs==0.7.0
 google-cloud-secret-manager==1.0.0
 mock==4.0.2
 nltk==3.6.6
+apache-airflow-providers-slack==4.2.3
+apache-airflow-providers-mysql==2.2.3
+apache-airflow-providers-postgres==4.1.0
+pendulum==2.1.2

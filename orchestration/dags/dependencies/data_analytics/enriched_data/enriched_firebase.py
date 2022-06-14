@@ -37,7 +37,7 @@ def aggregate_firebase_user_events(gcp_project, bigquery_raw_dataset):
             (select event_params.value.int_value
                 from unnest(event_params) event_params
                 where event_params.key = 'ga_session_id'
-            ) as session_id,
+            ) as session_id, user_pseudo_id,
             (select event_params.value.string_value
                 from unnest(event_params) event_params
                 where event_params.key = 'firebase_screen_class'
@@ -46,10 +46,11 @@ def aggregate_firebase_user_events(gcp_project, bigquery_raw_dataset):
         ),
         sessions AS ( 
             SELECT ROUND((max(event_timestamp) - min(event_timestamp))/(1000 * 1000), 1) AS total_time, 
-            event_params.value.int_value AS session_id 
+            event_params.value.int_value AS session_id, user_pseudo_id
             FROM `{gcp_project}.{bigquery_raw_dataset}.events_*` AS events, events.event_params AS event_params
             WHERE event_params.key = 'ga_session_id'
-            GROUP BY session_id
+            AND event_name NOT IN ('app_remove', 'os_update', 'batch_notification_open','batch_notification_display', 'batch_notification_dismiss','app_update')
+            GROUP BY session_id, user_pseudo_id
         ),
         first_and_last_co_date AS (
         SELECT
@@ -57,6 +58,7 @@ def aggregate_firebase_user_events(gcp_project, bigquery_raw_dataset):
             , MIN(event_timestamp) AS first_connexion_date
             , MAX(event_timestamp) AS last_connexion_date
         FROM `{gcp_project}.{bigquery_raw_dataset}.events_*`
+        WHERE event_name NOT IN ('app_remove', 'os_update', 'batch_notification_open','batch_notification_display', 'batch_notification_dismiss','app_update')
         GROUP BY user_id
         )
         SELECT events.user_id,
@@ -81,7 +83,7 @@ def aggregate_firebase_user_events(gcp_project, bigquery_raw_dataset):
         SUM(CAST(event_name = 'ConsultOffer' AS INT64)) AS consult_offer,
         SUM(CAST(event_name = 'ClickBookOffer' AS INT64)) AS click_book_offer,
         FROM events
-        LEFT JOIN sessions ON events.session_id = sessions.session_id
+        LEFT JOIN sessions ON events.session_id = sessions.session_id AND sessions.user_pseudo_id = events.user_pseudo_id
         LEFT JOIN first_and_last_co_date ON first_and_last_co_date.user_id  = events.user_id
         WHERE events.user_id IS NOT NULL
         GROUP BY events.user_id,first_connexion_date, last_connexion_date
@@ -104,7 +106,7 @@ def aggregate_firebase_visits(gcp_project, bigquery_raw_dataset):
                 where event_params.key = 'ga_session_number'
             ) as session_number,
         FROM `{gcp_project}.{bigquery_raw_dataset}.events_*`
-        WHERE event_name NOT IN ('app_remove', 'os_update', 'batch_notification_open','batch_notification_display', 'batch_notification_dismiss')
+        WHERE event_name NOT IN ('app_remove', 'os_update', 'batch_notification_open','batch_notification_display', 'batch_notification_dismiss','app_update')
          )
     SELECT
         session_id,
@@ -128,9 +130,7 @@ def aggregate_firebase_visits(gcp_project, bigquery_raw_dataset):
     """
 
 
-def copy_table_to_analytics(
-    gcp_project, bigquery_raw_dataset, table_name, execution_date
-):
+def copy_table_to_analytics(gcp_project, bigquery_raw_dataset, table_name, yyyymmdd):
     return f"""
     WITH temp_firebase_events AS (
         SELECT
@@ -186,6 +186,10 @@ def copy_table_to_analytics(
             ) as module_name,
             (select event_params.value.string_value
                 from unnest(event_params) event_params
+                where event_params.key = 'index'
+            ) as module_index,
+            (select event_params.value.string_value
+                from unnest(event_params) event_params
                 where event_params.key = 'traffic_campaign'
             ) as traffic_campaign,
             (select event_params.value.string_value
@@ -196,10 +200,14 @@ def copy_table_to_analytics(
                 from unnest(event_params) event_params
                 where event_params.key = 'traffic_source'
             ) as traffic_source,
+            COALESCE(
             (select event_params.value.string_value
                 from unnest(event_params) event_params
-                where event_params.key = 'entryId'
-            ) as entry_id,
+                where event_params.key = 'entryId')
+            ,(select event_params.value.string_value
+                from unnest(event_params) event_params
+                where event_params.key = 'homeEntryId')
+            ) AS entry_id,
              CASE WHEN (select event_params.value.string_value
                 from unnest(event_params) event_params
                 where event_params.key = 'entryId')
@@ -217,7 +225,7 @@ def copy_table_to_analytics(
                 from unnest(event_params) event_params
                 where event_params.key = 'AB_test'
             ) as ab_test
-        FROM {gcp_project}.{bigquery_raw_dataset}.{table_name}_{execution_date}
+        FROM {gcp_project}.{bigquery_raw_dataset}.{table_name}_{yyyymmdd}
     )
     SELECT * EXCEPT(double_offer_id, string_offer_id),
     (CASE WHEN double_offer_id IS NULL THEN string_offer_id ELSE double_offer_id END) AS offer_id
@@ -225,9 +233,7 @@ def copy_table_to_analytics(
     """
 
 
-def copy_pro_to_analytics(
-    gcp_project, bigquery_raw_dataset, table_name, execution_date
-):
+def copy_pro_to_analytics(gcp_project, bigquery_raw_dataset, table_name, yyyymmdd):
     return f"""
     WITH temp_firebase_events AS (
         SELECT
@@ -286,6 +292,14 @@ def copy_pro_to_analytics(
             ) as query,
             (select event_params.value.string_value
                 from unnest(event_params) event_params
+                where event_params.key = 'filled'
+            ) as filled,
+            (select event_params.value.string_value
+                from unnest(event_params) event_params
+                where event_params.key = 'filledWithErrors'
+            ) as filledWithErrors,
+            (select event_params.value.string_value
+                from unnest(event_params) event_params
                 where event_params.key = 'filter'
             ) as filter,
             (select event_params.value.string_value
@@ -308,7 +322,7 @@ def copy_pro_to_analytics(
                 from unnest(event_params) event_params
                 where event_params.key = 'entryId'
             ) as entry_id
-        FROM {gcp_project}.{bigquery_raw_dataset}.{table_name}_{execution_date}
+        FROM {gcp_project}.{bigquery_raw_dataset}.{table_name}_{yyyymmdd}
     )
     SELECT * EXCEPT(double_offer_id, string_offer_id),
     (CASE WHEN double_offer_id IS NULL THEN string_offer_id ELSE double_offer_id END) AS offer_id

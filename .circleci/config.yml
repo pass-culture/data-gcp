@@ -95,21 +95,22 @@ workflows:
             - Slack
           <<: *slack-fail-post-step
 
-      - api-integration-tests:
-          env: dev
-          api_token: $API_TOKEN_DEV
-          name: api-integration-tests-dev
-          requires:
-            - recommendation-api-tests
-          filters:
-            branches:
-              ignore:
-                - master
-                - production
-          context:
-            - DATA_GCP_DEV
-            - Slack
-          <<: *slack-fail-post-step
+    ### temporarily removing api reco tests ###
+#      - api-integration-tests:
+#          env: dev
+#          api_token: $API_TOKEN_DEV
+#          name: api-integration-tests-dev
+#          requires:
+#            - recommendation-api-tests
+#          filters:
+#            branches:
+#              ignore:
+#                - master
+#                - production
+#          context:
+#            - DATA_GCP_DEV
+#            - Slack
+#          <<: *slack-fail-post-step
 
       - build_and_deploy_api:
           name: build_and_deploy_api_staging
@@ -446,38 +447,6 @@ workflows:
           <<: *slack-fail-post-step
 
       - cloud-function-deploy:
-          name: cni-fraude-algo-cloud-function-deploy-stg
-          cloud-function-name: cni_fraude_algo_stg
-          cloud-function-folder: cni_fraude_algo-function-source
-          requires:
-            - linter
-          filters:
-            branches:
-              only:
-                - master
-          context:
-            - DATA_GCP
-            - DATA_GCP_EHP
-            - Slack
-          <<: *slack-fail-post-step
-
-      - cloud-function-deploy:
-          name: cni-fraude-algo-cloud-function-deploy-prod
-          cloud-function-name: cni_fraude_algo_prod
-          cloud-function-folder: cni_fraude_algo-function-source
-          requires:
-            - linter
-          filters:
-            branches:
-              only:
-                - production
-          context:
-            - DATA_GCP
-            - DATA_GCP_PROD
-            - Slack
-          <<: *slack-fail-post-step
-
-      - cloud-function-deploy:
           name: import-adage-cloud-function-deploy-stg
           cloud-function-name: adage_import_stg
           cloud-function-folder: adage-function-source
@@ -529,7 +498,6 @@ workflows:
             - contentful-cloud-function-deploy-prod
             - siren-cloud-function-deploy-prod
             - dms-cloud-function-deploy-prod
-            - cni-fraude-algo-cloud-function-deploy-prod
             - import-adage-cloud-function-deploy-prod
 
       - slack-alert:
@@ -550,7 +518,6 @@ workflows:
             - contentful-cloud-function-deploy-stg
             - siren-cloud-function-deploy-stg
             - dms-cloud-function-deploy-stg
-            - cni-fraude-algo-cloud-function-deploy-stg
             - import-adage-cloud-function-deploy-stg
 
   # ----------------
@@ -602,19 +569,33 @@ workflows:
           cloud-function-name: dms_dev
           cloud-function-folder: dms-function-source
           <<: *deploy_on_dev_commons
-      - cloud-function-deploy:
-          name: cni-fraude-algo-cloud-function-deploy-dev
-          cloud-function-name: cni_fraude_algo_dev
-          cloud-function-folder: cni_fraude_algo-function-source
-          <<: *deploy_on_dev_commons
       - build_and_deploy_api:
           name: build_and_deploy_api_dev
           api-instance-name: apireco-dev
           <<: *deploy_on_dev_commons
-      - api-integration-tests:
-          env: dev
-          api_token: $API_TOKEN_DEV
-          name: api-integration-tests-dev
+         ### temporarily removing api reco tests ###
+#      - api-integration-tests:
+#          env: dev
+#          api_token: $API_TOKEN_DEV
+#          name: api-integration-tests-dev
+#          requires:
+#            - dev-composer-deploy
+#            - typeform-cloud-function-deploy-dev
+#            - addresses-cloud-function-deploy-dev
+#            - downloads-cloud-function-deploy-dev
+#            - contentful-cloud-function-deploy-dev
+#            - siren-cloud-function-deploy-dev
+#            - dms-cloud-function-deploy-dev
+#            - build_and_deploy_api_dev
+#            - adage-import-function-deploy-dev
+#          context:
+#            - DATA_GCP_DEV
+#            - Slack
+#          <<: *slack-fail-post-step
+      - slack-alert:
+          name: slack-alert-dev
+          destination_env: dev
+          context: Slack
           requires:
             - dev-composer-deploy
             - typeform-cloud-function-deploy-dev
@@ -623,19 +604,12 @@ workflows:
             - contentful-cloud-function-deploy-dev
             - siren-cloud-function-deploy-dev
             - dms-cloud-function-deploy-dev
-            - cni-fraude-algo-cloud-function-deploy-dev
             - build_and_deploy_api_dev
             - adage-import-function-deploy-dev
-          context:
-            - DATA_GCP_DEV
-            - Slack
-          <<: *slack-fail-post-step
-      - slack-alert:
-          name: slack-alert-dev
-          destination_env: dev
-          context: Slack
-          requires:
-            - api-integration-tests-dev
+### temporarily removing api reco tests ###
+#          requires:
+#            - api-integration-tests-dev
+
 
 ###################
 #  EXECUTORS
@@ -650,7 +624,7 @@ executors:
           password: $DOCKERHUB_PASSWORD
   gcp-sdk:
     docker:
-      - image: google/cloud-sdk:316.0.0
+      - image: google/cloud-sdk:381.0.0
         auth:
           username: $DOCKERHUB_USER
           password: $DOCKERHUB_PASSWORD
@@ -723,7 +697,7 @@ jobs:
           at: .
       - run:
           name: Install psql
-          command: sudo apt install postgresql-client
+          command: sudo apt update && sudo apt install postgresql-client
       - run:
           name: Run tests
           command: |
@@ -801,7 +775,7 @@ jobs:
             echo $GCLOUD_SERVICE_KEY > /tmp/service_account.json
             export GOOGLE_APPLICATION_CREDENTIALS="/tmp/service_account.json" 
             . venv-orchestration/bin/activate
-            airflow initdb
+            airflow db init
             pytest tests
 
   recommendation-db-install:
@@ -842,7 +816,7 @@ jobs:
           at: .
       - run:
           name: Install psql
-          command: sudo apt install postgresql-client
+          command: sudo apt update && sudo apt install postgresql-client
       - run:
           name: Run tests
           command: |
@@ -852,19 +826,6 @@ jobs:
 
   composer-deploy:
     executor: gcp-sdk
-    environment:
-      DAG_RECOMMMENDATION_CLOUDSQL: recommendation_cloud_sql_v1
-      DAG_EXPORT_CLOUDSQL_BIGQUERY: export_cloudsql_tables_to_bigquery_v1
-      DAG_IMPORT_DATA_ANALYTICS: import_data_analytics_v7
-      DAG_IMPORT_FIREBASE_DATA: import_firebase_data_v3
-      DAG_IMPORT_TYPEFORM: import_typeform_v1
-      DAG_IMPORT_ADDRESSES: import_addresses_v1
-      DAG_IMPORT_DMS: import_dms_subscriptions
-      DAG_IMPORT_SIREN: import_siren_v1
-      DAG_COMPUTE_MONITORING: compute_monitoring
-      DAG_ALGO_TRAINING_v1: algo_training_v1
-      DAG_ALGO_TRAINING_v2_deep_reco: algo_training_v2_deep_reco
-      DAG_ADAGE_IMPORT: import_adage_v1
     working_directory: ~/data-gcp/orchestration
     steps:
       - checkout:
@@ -881,20 +842,10 @@ jobs:
             gsutil -m rm -r gs://${COMPOSER_BUCKET}/dags
             gsutil cp -r dags gs://${COMPOSER_BUCKET}
       - run:
-          name: Wait for dags to be deployed
+          name: Wait for composer to be deployed (10s x 6 times)
           command: |
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_RECOMMMENDATION_CLOUDSQL} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_EXPORT_CLOUDSQL_BIGQUERY} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_DATA_ANALYTICS} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_FIREBASE_DATA} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_TYPEFORM} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_ADDRESSES} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_DMS} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_IMPORT_SIREN} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_COMPUTE_MONITORING} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_ALGO_TRAINING_v1} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_ALGO_TRAINING_v2_deep_reco} 6 20
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} ${DAG_ADAGE_IMPORT} 6 20
+            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} airflow_monitoring 6 10
+
 
   build_and_deploy_api:
     docker:

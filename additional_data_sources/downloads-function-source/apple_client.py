@@ -6,6 +6,37 @@ import pandas as pd
 import zlib
 from authlib.jose import jwt
 
+OUT_COLS = [
+    "provider",
+    "provider_country",
+    "sku",
+    "developer",
+    "title",
+    "version",
+    "product_type_identifier",
+    "units",
+    "developer_proceeds",
+    "begin_date",
+    "end_date",
+    "customer_currency",
+    "country_code",
+    "currency_of_proceeds",
+    "apple_identifier",
+    "customer_price",
+    "promo_code",
+    "parent_identifier",
+    "subscription",
+    "period",
+    "category",
+    "cmb",
+    "device",
+    "supported_platforms",
+    "proceeds_reason",
+    "preserved_pricing",
+    "client",
+    "order_type",
+]
+
 
 class AppleClient:
     def __init__(self, key_id, issuer_id, private_key):
@@ -40,12 +71,16 @@ class AppleClient:
             },
             headers=self.head,
         )
-        print(r.status_code)
+
         if r.status_code == 404:
-            return 0
-
-        data = zlib.decompress(r.content, zlib.MAX_WBITS | 32)
-
+            return None
+        try:
+            data = zlib.decompress(r.content, zlib.MAX_WBITS | 32)
+        except:
+            print(f"Error with {report_date}")
+            print(r.status_code)
+            print(r.content)
+            return None
         with open("/tmp/report.txt", "wb") as outFile:
             outFile.write(data)
 
@@ -53,34 +88,8 @@ class AppleClient:
             data = f.read()
 
         df = pd.DataFrame([x.rsplit("\t") for x in data.rsplit("\n")[1:]])
-        df.columns = [
-            "Provider",
-            "Provider Country",
-            "SKU",
-            "Developer",
-            "Title",
-            "Version",
-            "Product Type Identifier",
-            "Units",
-            "Developer Proceeds",
-            "Begin Date",
-            "End Date",
-            "Customer Currency",
-            "Country Code",
-            "Currency of Proceeds",
-            "Apple Identifier",
-            "Customer Price",
-            "Promo Code",
-            "Parent Identifier",
-            "Subscription",
-            "Period",
-            "Category",
-            "CMB",
-            "Device",
-            "Supported Platforms",
-            "Proceeds Reason",
-            "Preserved Pricing",
-            "Client",
-            "Order Type",
-        ]
-        return np.sum([int(x) for x in df["Units"].values if x is not None])
+        df.columns = OUT_COLS
+        df["units"] = df["units"].astype(float)
+        df = df[df["units"] > 0]
+        df["date"] = report_date
+        return df

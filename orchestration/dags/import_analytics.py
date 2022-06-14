@@ -1,12 +1,17 @@
 import datetime
-
 from airflow import DAG
-from airflow.contrib.operators.bigquery_operator import BigQueryOperator
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryExecuteQueryOperator,
+)
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.http_operator import SimpleHttpOperator
-from airflow.operators.python_operator import PythonOperator
+from airflow.providers.http.operators.http import SimpleHttpOperator
+from airflow.operators.python import PythonOperator
 from google.auth.transport.requests import Request
 from google.oauth2 import id_token
+from common import macros
+from dependencies.data_analytics.import_historical import (
+    historical_data_applicative_tables,
+)
 
 from dependencies.config import (
     APPLICATIVE_EXTERNAL_CONNECTION_ID,
@@ -20,11 +25,14 @@ from dependencies.config import (
 from dependencies.data_analytics.enriched_data.booking import (
     define_enriched_booking_data_full_query,
 )
-from dependencies.data_analytics.enriched_data.educational_booking import (
-    define_enriched_educational_booking_full_query,
+from dependencies.data_analytics.enriched_data.collective_booking import (
+    define_enriched_collective_booking_full_query,
 )
 from dependencies.data_analytics.enriched_data.offer import (
     define_enriched_offer_data_full_query,
+)
+from dependencies.data_analytics.enriched_data.collective_offer import (
+    define_enriched_collective_offer_data_full_query,
 )
 from dependencies.data_analytics.enriched_data.offerer import (
     define_enriched_offerer_data_full_query,
@@ -78,6 +86,7 @@ data_applicative_tables_and_date_columns = {
         "offerer_creation_date",
         "offerer_validation_date",
     ],
+    "offer": ["offer_modified_at_last_provider_date", "offer_creation_date"],
     "bank_information": ["dateModified"],
     "booking": [
         "booking_creation_date",
@@ -126,10 +135,6 @@ data_applicative_tables_and_date_columns = {
     "criterion": [""],
     "beneficiary_fraud_review": ["datereviewed"],
     "beneficiary_fraud_check": [""],
-    "educational_booking": [
-        "educational_booking_confirmation_date",
-        "educational_booking_confirmation_limit_date",
-    ],
     "educational_deposit": ["educational_deposit_creation_date"],
     "educational_institution": [""],
     "educational_redactor": [""],
@@ -151,6 +156,11 @@ data_applicative_tables_and_date_columns = {
         "collective_offer_creation_date",
         "collective_offer_date_updated",
     ],
+    "collective_offer_template": [
+        "collective_offer_last_validation_date",
+        "collective_offer_creation_date",
+        "collective_offer_date_updated",
+    ],
     "collective_stock": [
         "collective_stock_creation_date",
         "collective_stock_modification_date",
@@ -158,6 +168,7 @@ data_applicative_tables_and_date_columns = {
         "collective_stock_booking_limit_date_time",
     ],
 }
+
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),
@@ -174,19 +185,20 @@ dag = DAG(
     schedule_interval="00 01 * * *",
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
+    user_defined_macros=macros.default,
 )
 
 start = DummyOperator(task_id="start", dag=dag)
 
 import_tables_to_clean_tasks = []
 for table in data_applicative_tables_and_date_columns.keys():
-    task = BigQueryOperator(
+    task = BigQueryExecuteQueryOperator(
         task_id=f"import_to_clean_{table}",
         sql=define_import_query(
             external_connection_id=APPLICATIVE_EXTERNAL_CONNECTION_ID,
             table=table,
         ),
-        write_disposition="WRITE_TRUNCATE" if table != "offer" else "WRITE_APPEND",
+        write_disposition="WRITE_TRUNCATE",
         use_legacy_sql=False,
         destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.{APPLICATIVE_PREFIX}{table}",
         dag=dag,
@@ -194,7 +206,7 @@ for table in data_applicative_tables_and_date_columns.keys():
     import_tables_to_clean_tasks.append(task)
 
 
-offer_clean_duplicates = BigQueryOperator(
+offer_clean_duplicates = BigQueryExecuteQueryOperator(
     task_id="offer_clean_duplicates",
     sql=f"""
     SELECT * except(row_number)
@@ -217,9 +229,31 @@ offer_clean_duplicates = BigQueryOperator(
 
 end_import_table_to_clean = DummyOperator(task_id="end_import_table_to_clean", dag=dag)
 
+start_historical_data_applicative_tables_tasks = DummyOperator(
+    task_id="start_historical_data_applicative_tables_tasks", dag=dag
+)
+
+historical_data_applicative_tables_tasks = []
+for table, params in historical_data_applicative_tables.items():
+    task = BigQueryExecuteQueryOperator(
+        task_id=f"historical_{table}",
+        sql=params["sql"],
+        write_disposition="WRITE_TRUNCATE",
+        use_legacy_sql=False,
+        destination_dataset_table=params["destination_dataset_table"],
+        time_partitioning=params.get("time_partitioning", None),
+        cluster_fields=params.get("cluster_fields", None),
+        dag=dag,
+    )
+    historical_data_applicative_tables_tasks.append(task)
+
+end_historical_data_applicative_tables_tasks = DummyOperator(
+    task_id="end_historical_data_applicative_tables_tasks", dag=dag
+)
+
 import_tables_to_analytics_tasks = []
 for table in data_applicative_tables_and_date_columns.keys():
-    task = BigQueryOperator(
+    task = BigQueryExecuteQueryOperator(
         task_id=f"import_to_analytics_{table}",
         sql=f"SELECT * {define_replace_query(data_applicative_tables_and_date_columns[table])} FROM {BIGQUERY_CLEAN_DATASET}.{APPLICATIVE_PREFIX}{table}",
         write_disposition="WRITE_TRUNCATE",
@@ -233,7 +267,7 @@ end_import = DummyOperator(task_id="end_import", dag=dag)
 
 IRIS_DISTANCE = 50000
 
-link_iris_venues_task = BigQueryOperator(
+link_iris_venues_task = BigQueryExecuteQueryOperator(
     task_id="link_iris_venues_task",
     sql=f"""
     WITH venues_to_link AS (
@@ -255,7 +289,7 @@ link_iris_venues_task = BigQueryOperator(
     dag=dag,
 )
 
-copy_to_analytics_iris_venues = BigQueryOperator(
+copy_to_analytics_iris_venues = BigQueryExecuteQueryOperator(
     task_id=f"copy_to_analytics_iris_venues",
     sql=f"SELECT * FROM {BIGQUERY_CLEAN_DATASET}.iris_venues",
     write_disposition="WRITE_TRUNCATE",
@@ -264,7 +298,7 @@ copy_to_analytics_iris_venues = BigQueryOperator(
     dag=dag,
 )
 
-create_enriched_offer_data_task = BigQueryOperator(
+create_enriched_offer_data_task = BigQueryExecuteQueryOperator(
     task_id="create_enriched_offer_data",
     sql=define_enriched_offer_data_full_query(
         analytics_dataset=BIGQUERY_ANALYTICS_DATASET,
@@ -275,7 +309,18 @@ create_enriched_offer_data_task = BigQueryOperator(
     dag=dag,
 )
 
-create_enriched_stock_data_task = BigQueryOperator(
+create_enriched_collective_offer_data_task = BigQueryExecuteQueryOperator(
+    task_id="create_enriched_collective_offer_data",
+    sql=define_enriched_collective_offer_data_full_query(
+        analytics_dataset=BIGQUERY_ANALYTICS_DATASET,
+        clean_dataset=BIGQUERY_CLEAN_DATASET,
+        table_prefix=APPLICATIVE_PREFIX,
+    ),
+    use_legacy_sql=False,
+    dag=dag,
+)
+
+create_enriched_stock_data_task = BigQueryExecuteQueryOperator(
     task_id="create_enriched_stock_data",
     sql=define_enriched_stock_data_full_query(
         dataset=BIGQUERY_ANALYTICS_DATASET, table_prefix=APPLICATIVE_PREFIX
@@ -284,7 +329,7 @@ create_enriched_stock_data_task = BigQueryOperator(
     dag=dag,
 )
 
-create_enriched_user_data_task = BigQueryOperator(
+create_enriched_user_data_task = BigQueryExecuteQueryOperator(
     task_id="create_enriched_user_data",
     sql=define_enriched_user_data_full_query(
         dataset=BIGQUERY_ANALYTICS_DATASET, table_prefix=APPLICATIVE_PREFIX
@@ -292,7 +337,7 @@ create_enriched_user_data_task = BigQueryOperator(
     use_legacy_sql=False,
     dag=dag,
 )
-create_enriched_deposit_data_task = BigQueryOperator(
+create_enriched_deposit_data_task = BigQueryExecuteQueryOperator(
     task_id="create_enriched_deposit_data",
     sql=define_enriched_deposit_data_full_query(
         dataset=BIGQUERY_ANALYTICS_DATASET, table_prefix=APPLICATIVE_PREFIX
@@ -301,7 +346,7 @@ create_enriched_deposit_data_task = BigQueryOperator(
     dag=dag,
 )
 
-create_enriched_venue_data_task = BigQueryOperator(
+create_enriched_venue_data_task = BigQueryExecuteQueryOperator(
     task_id="create_enriched_venue_data",
     sql=define_enriched_venue_data_full_query(
         dataset=BIGQUERY_ANALYTICS_DATASET, table_prefix=APPLICATIVE_PREFIX
@@ -310,7 +355,7 @@ create_enriched_venue_data_task = BigQueryOperator(
     dag=dag,
 )
 
-create_enriched_booking_data_task = BigQueryOperator(
+create_enriched_booking_data_task = BigQueryExecuteQueryOperator(
     task_id="create_enriched_booking_data",
     sql=define_enriched_booking_data_full_query(
         dataset=BIGQUERY_ANALYTICS_DATASET, table_prefix=APPLICATIVE_PREFIX
@@ -319,16 +364,16 @@ create_enriched_booking_data_task = BigQueryOperator(
     dag=dag,
 )
 
-create_enriched_educational_booking_data_task = BigQueryOperator(
-    task_id="create_enriched_educational_booking_data",
-    sql=define_enriched_educational_booking_full_query(
+create_enriched_collective_booking_data_task = BigQueryExecuteQueryOperator(
+    task_id="create_enriched_collective_booking_data",
+    sql=define_enriched_collective_booking_full_query(
         dataset=BIGQUERY_ANALYTICS_DATASET, table_prefix=APPLICATIVE_PREFIX
     ),
     use_legacy_sql=False,
     dag=dag,
 )
 
-create_enriched_institution_data_task = BigQueryOperator(
+create_enriched_institution_data_task = BigQueryExecuteQueryOperator(
     task_id="create_enriched_institution_data",
     sql=define_enriched_institution_data_full_query(
         dataset=BIGQUERY_ANALYTICS_DATASET, table_prefix=APPLICATIVE_PREFIX
@@ -337,7 +382,7 @@ create_enriched_institution_data_task = BigQueryOperator(
     dag=dag,
 )
 
-create_enriched_offerer_data_task = BigQueryOperator(
+create_enriched_offerer_data_task = BigQueryExecuteQueryOperator(
     task_id="create_enriched_offerer_data",
     sql=define_enriched_offerer_data_full_query(
         dataset=BIGQUERY_ANALYTICS_DATASET, table_prefix=APPLICATIVE_PREFIX
@@ -369,16 +414,29 @@ import_downloads_data_to_bigquery = SimpleHttpOperator(
     dag=dag,
 )
 
-create_enriched_app_downloads_stats = BigQueryOperator(
+create_enriched_app_downloads_stats = BigQueryExecuteQueryOperator(
     task_id="create_enriched_app_downloads_stats",
-    sql=f"SELECT * FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.app_downloads_stats`",
+    sql=f"""
+    SELECT 
+        date, 
+        'apple' as provider, 
+        sum(units) as total_downloads
+    FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.apple_download_stats` 
+    GROUP BY date
+    UNION ALL
+    SELECT 
+        date, 
+        'google' as provider, 
+        sum(daily_device_installs) as total_downloads
+    FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.google_download_stats` 
+    GROUP BY date""",
     destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.app_downloads_stats",
     write_disposition="WRITE_TRUNCATE",
     use_legacy_sql=False,
     dag=dag,
 )
 
-create_table_venue_locations = BigQueryOperator(
+create_table_venue_locations = BigQueryExecuteQueryOperator(
     task_id="create_table_venue_locations",
     sql=define_table_venue_locations(
         dataset=BIGQUERY_ANALYTICS_DATASET, table_prefix=APPLICATIVE_PREFIX
@@ -411,7 +469,7 @@ import_contentful_data_to_bigquery = SimpleHttpOperator(
     dag=dag,
 )
 
-copy_playlists_to_analytics = BigQueryOperator(
+copy_playlists_to_analytics = BigQueryExecuteQueryOperator(
     task_id="copy_playlists_to_analytics",
     sql=f"""
     SELECT * except(row_number, tag)
@@ -433,7 +491,7 @@ copy_playlists_to_analytics = BigQueryOperator(
 )
 
 
-create_offer_extracted_data = BigQueryOperator(
+create_offer_extracted_data = BigQueryExecuteQueryOperator(
     task_id="create_offer_extracted_data",
     sql=f"""SELECT offer_id, LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.author"), " ")) AS author,
                 LOWER(TRIM(JSON_EXTRACT_SCALAR(offer_extra_data, "$.performer")," ")) AS performer,
@@ -480,6 +538,12 @@ end = DummyOperator(task_id="end", dag=dag)
     >> end_import
 )
 (
+    end_import_table_to_clean
+    >> start_historical_data_applicative_tables_tasks
+    >> historical_data_applicative_tables_tasks
+    >> end_historical_data_applicative_tables_tasks
+)
+(
     end_import
     >> link_iris_venues_task
     >> copy_to_analytics_iris_venues
@@ -490,8 +554,9 @@ end = DummyOperator(task_id="end", dag=dag)
     start_enriched_data
     >> create_enriched_stock_data_task
     >> create_enriched_offer_data_task
+    >> create_enriched_collective_offer_data_task
     >> create_enriched_booking_data_task
-    >> create_enriched_educational_booking_data_task
+    >> create_enriched_collective_booking_data_task
     >> create_enriched_user_data_task
     >> create_enriched_deposit_data_task
     >> enriched_venues

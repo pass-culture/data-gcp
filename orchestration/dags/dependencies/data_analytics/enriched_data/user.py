@@ -409,6 +409,7 @@ def define_count_distinct_types_query(dataset, table_prefix=""):
             ON offer.offer_id = stock.offer_id
             AND offer.offer_subcategoryId NOT IN ('ACTIVATION_THING','ACTIVATION_EVENT')
             AND (offer.booking_email != 'jeux-concours@passculture.app' OR offer.booking_email IS NULL)
+            AND NOT booking_is_cancelled
             GROUP BY user_id
         );
         """
@@ -438,7 +439,7 @@ def define_user_agg_deposit_data_query(dataset, table_prefix=""):
 def define_user_suspension_history_query(dataset, table_prefix=""):
     return f"""
     CREATE TEMP TABLE user_suspension_history AS 
-            (SELECT *, RANK() OVER(PARTITION BY "userId" ORDER BY "eventDate" DESC, "id" DESC) AS rank
+            (SELECT *, RANK() OVER (PARTITION BY "userId" ORDER BY CAST(id AS INTEGER) DESC) AS rank
             FROM {dataset}.{table_prefix}user_suspension);
         """
 
@@ -465,9 +466,7 @@ def define_enriched_user_data_query(dataset, table_prefix=""):
                 user_agg_deposit_data.user_first_deposit_creation_date AS user_deposit_creation_date,
                 user_agg_deposit_data.user_total_deposit_amount,
                 user_agg_deposit_data.user_current_deposit_type,
-                CASE WHEN user.user_has_seen_tutorials THEN user.user_cultural_survey_filled_date
-                    ELSE NULL
-                END AS first_connection_date,
+                user.user_cultural_survey_filled_date AS first_connection_date,
                 date_of_first_bookings.first_booking_date,
                 date_of_second_bookings.second_booking_date,
                 date_of_bookings_on_third_product.booking_on_third_product_date,
@@ -524,7 +523,7 @@ def define_enriched_user_data_query(dataset, table_prefix=""):
             LEFT JOIN user_suspension_history ON user_suspension_history.userId = user.user_id and rank = 1
              JOIN user_agg_deposit_data ON user.user_id = user_agg_deposit_data.userId
             WHERE user_role IN ('UNDERAGE_BENEFICIARY','BENEFICIARY')
-            AND (user.user_is_active OR user_suspension_history.reasonCode = 'upon user request')
+            AND (user.user_is_active OR user_suspension_history.reasonCode = 'UPON_USER_REQUEST')
         );
     """
 

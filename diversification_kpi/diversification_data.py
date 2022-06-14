@@ -21,7 +21,6 @@ from tools.diversification_kpi import (
 def count_data():
     query = f"""SELECT count(DISTINCT user_id) as nb
         FROM {GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_user_data 
-        WHERE user_total_deposit_amount = 300
     """
     count = pd.read_gbq(query)
     return count.iloc[0]["nb"]
@@ -29,9 +28,8 @@ def count_data():
 
 def get_data(batch, batch_size):
     query = f"""WITH batch_users AS (
-                  SELECT DISTINCT user_id, user_region_name, user_activity, user_civility, user_deposit_creation_date, user_total_deposit_amount, actual_amount_spent
+                  SELECT DISTINCT user_id, user_region_name, user_activity, user_civility, user_deposit_creation_date, user_total_deposit_amount, actual_amount_spent, user_department_code
                   FROM `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_user_data`
-                  WHERE user_total_deposit_amount = 300
                   ORDER BY user_id
                   LIMIT {batch_size} OFFSET {batch * batch_size}             
                 ),
@@ -61,7 +59,7 @@ def get_data(batch, batch_size):
                     IF(bookings.digital_goods = True, 'digital', null),
                     IF(bookings.event = True, 'event', null)
                   ) as format,
-                  user_deposit_creation_date, user_total_deposit_amount, actual_amount_spent, offer.offer_id, booking_amount,
+                  user_deposit_creation_date, user_total_deposit_amount, actual_amount_spent, offer.offer_id, booking_amount, user_department_code,
                   bookings.offer_category_id as category, bookings.offer_subcategoryId as subcategory, offer.genres, offer.rayon, offer.type, offer.venue_id, offer.venue_name,
                   qpi_answers.*
                 FROM batch_users
@@ -127,6 +125,7 @@ def process_diversification(batch_number):
             "venue",
             "venue_name",
             "user_region_name",
+            "user_department_code",
             "user_activity",
             "user_civility",
             "booking_amount",
@@ -157,6 +156,7 @@ def process_diversification(batch_number):
             {"name": "venue", "type": "STRING"},
             {"name": "venue_name", "type": "STRING"},
             {"name": "user_region_name", "type": "STRING"},
+            {"name": "user_department_code", "type": "STRING"},
             {"name": "user_activity", "type": "STRING"},
             {"name": "user_civility", "type": "STRING"},
             {"name": "booking_amount", "type": "FLOAT"},

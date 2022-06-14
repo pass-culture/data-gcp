@@ -18,7 +18,7 @@ dag = DAG(
     dagrun_timeout=timedelta(minutes=20),
 )
 
-# priority_weight has type int in Airflow DB, uses the maximum.
+# fmt: off
 t1 = BashOperator(
     task_id="echo",
     bash_command="echo test",
@@ -26,3 +26,4 @@ t1 = BashOperator(
     depends_on_past=False,
     priority_weight=2 ** 31 - 1,
 )
+# fmt: on

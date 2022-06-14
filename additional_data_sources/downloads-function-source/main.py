@@ -1,4 +1,5 @@
 from google.cloud import bigquery
+from time import sleep
 from datetime import datetime, timedelta
 from apple_client import AppleClient
 from google_client import GoogleClient
@@ -12,11 +13,12 @@ from utils import (
 )
 
 
-def get_apple():
+def get_apple(execution_date):
 
-    end = datetime.today()
-    start = get_last_month()
-    date_generated = [start + timedelta(days=x) for x in range(0, (end - start).days)]
+    start = get_last_month(execution_date)
+    date_generated = [
+        start + timedelta(days=x) for x in range(0, (execution_date - start).days)
+    ]
     date_generated_str = [x.strftime("%Y-%m-%d") for x in date_generated]
     date_generated_str_join = "','".join(date_generated_str)
     apple_client = AppleClient(
@@ -24,7 +26,10 @@ def get_apple():
     )
     dfs = []
     for d in date_generated_str:
-        dfs.append(apple_client.get_downloads(frequency="DAILY", report_date=d))
+        _df = apple_client.get_downloads(frequency="DAILY", report_date=d)
+        if _df is not None:
+            dfs.append(_df)
+        sleep(0.5)
     df = pd.concat(dfs)
     bigquery_client = bigquery.Client()
     try:
@@ -37,9 +42,9 @@ def get_apple():
     df.to_gbq(f"{BIGQUERY_RAW_DATASET}.apple_download_stats", if_exists="append")
 
 
-def get_google():
-    current_month = datetime.today().strftime("%Y-%m")
-    last_month = get_last_month().strftime("%Y-%m")
+def get_google(execution_date):
+    current_month = execution_date.strftime("%Y-%m")
+    last_month = get_last_month(execution_date).strftime("%Y-%m")
     google_client = GoogleClient(report_bucket_name="pubsite_prod_8102412585126803216")
     df = google_client.get_downloads(last_month)
     try:
@@ -61,6 +66,13 @@ def get_google():
 
 
 def run(request):
-    get_google()
-    get_apple()
+    execution_date = request.get_json().get("execution_date", None)
+    if execution_date is None:
+        execution_date = datetime.today()
+    else:
+        execution_date = datetime.strptime(execution_date, "%Y-%m-%d")
+
+    get_google(execution_date)
+    get_apple(execution_date)
+
     return "Success"

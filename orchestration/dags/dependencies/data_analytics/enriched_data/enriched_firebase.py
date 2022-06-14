@@ -186,6 +186,10 @@ def copy_table_to_analytics(gcp_project, bigquery_raw_dataset, table_name, yyyym
             ) as module_name,
             (select event_params.value.string_value
                 from unnest(event_params) event_params
+                where event_params.key = 'moduleId'
+            ) as module_id,
+            (select event_params.value.string_value
+                from unnest(event_params) event_params
                 where event_params.key = 'index'
             ) as module_index,
             (select event_params.value.string_value

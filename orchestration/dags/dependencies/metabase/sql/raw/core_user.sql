@@ -1,0 +1,1 @@
+SELECT id, email::varchar, date_joined, last_login, is_superuser FROM public.core_user

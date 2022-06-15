@@ -170,7 +170,7 @@ def define_enriched_institution_data_query(dataset, table_prefix=""):
             LEFT JOIN first_booking ON educational_institution.educational_institution_id = first_booking.institution_id
             LEFT JOIN last_booking ON educational_institution.educational_institution_id = last_booking.institution_id
             LEFT JOIN bookings_per_institution ON educational_institution.educational_institution_id = bookings_per_institution.institution_id
-            LEFT JOIN students_per_institution ON educational_institution.educational_institution_institution_id = students_per_institution.educational_institution_institution_id
+            LEFT JOIN students_per_institution ON educational_institution.institution_id = students_per_institution.institution_id
     );
     """
 

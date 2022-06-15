@@ -5,12 +5,13 @@ GCP_PROJECT = os.environ.get("GCP_PROJECT", "passculture-data-ehp")
 GCP_REGION = "europe-west1"
 GCE_ZONE = "europe-west1-b"
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
-
+DAG_FOLDER = os.environ.get("DAG_FOLDER", "")
 BASE32_JS_LIB_PATH = f"gs://data-bucket-{ENV_SHORT_NAME}/base32-encode/base32.js"
 
 APPLICATIVE_EXTERNAL_CONNECTION_ID = os.environ.get(
     "APPLICATIVE_EXTERNAL_CONNECTION_ID", ""
 )
+METABASE_EXTERNAL_CONNECTION_ID = os.environ.get("METABASE_EXTERNAL_CONNECTION_ID", "")
 DATA_GCS_BUCKET_NAME = os.environ.get(
     "DATA_GCS_BUCKET_NAME", f"data-bucket-{ENV_SHORT_NAME}"
 )

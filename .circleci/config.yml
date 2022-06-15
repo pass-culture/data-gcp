@@ -763,7 +763,7 @@ jobs:
     working_directory: ~/data-gcp/orchestration
     environment:
       AIRFLOW_HOME: ~/data-gcp/orchestration
-      DAG_FOLDER: ~/data-gcp/orchestration/dags
+      DAG_FOLDER: /home/circleci/data-gcp/orchestration/dags
       RECOMMENDATION_SQL_INSTANCE: cloudsql-recommendation-circleci
       RECOMMENDATION_SQL_BASE: cloudsql-recommendation-circleci
     steps:

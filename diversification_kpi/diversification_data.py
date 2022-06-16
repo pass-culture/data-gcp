@@ -14,7 +14,6 @@ from tools.utils import (
 )
 from tools.diversification_kpi import (
     calculate_diversification_per_feature,
-    fuse_columns_into_format,
 )
 
 
@@ -105,9 +104,8 @@ def diversification_kpi(df):
 
 
 def process_diversification(batch_number):
-    t0 = time.time()
     bookings = get_data(batch_number, BATCH_SIZE)
-    print(f"Batch {batch_number+1} contains {bookings.shape[0]} bookings.")
+
     bookings_enriched = pd.merge(bookings, macro_rayons, on="rayon", how="left")
     bookings_sorted = bookings_enriched.sort_values(
         by=["user_id", "booking_creation_date"], ignore_index=True
@@ -172,10 +170,6 @@ def process_diversification(batch_number):
             {"name": "delta_diversification", "type": "FLOAT"},
         ],
     )
-    t1 = time.time()
-    print(
-        f"Processed batch {batch_number +1}/{max_batch}\nTotal time : {(t1-t0)/60}min"
-    )
 
 
 if __name__ == "__main__":
@@ -192,3 +186,6 @@ if __name__ == "__main__":
 
     with Pool(max_process) as p:
         p.map(process_diversification, range(max_batch))
+
+    time.sleep(60)
+    print(f"End of calculation.")

@@ -2,17 +2,6 @@ import numpy as np
 import pandas as pd
 
 
-def fuse_columns_into_format(is_physical_good, is_digital_good, is_event):
-    b_format = ""
-    if is_physical_good == True:
-        b_format = "physical"
-    elif is_digital_good == True:
-        b_format = "digital"
-    elif is_event == True:
-        b_format = "event"
-    return b_format
-
-
 def get_diversification_feature(list_used, feature_value):
     div = 0
     if feature_value not in list_used and feature_value not in [np.nan, ""]:

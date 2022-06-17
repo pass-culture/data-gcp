@@ -70,6 +70,7 @@ def define_enriched_deposit_data_query(dataset, table_prefix=""):
                 deposit.id AS deposit_id,
                 deposit.amount AS deposit_amount,
                 deposit.userId AS user_id,
+                user.user_civility,
                 user.user_department_code,
                 region_department.region_name AS user_region_name,
                 deposit.source AS deposit_source,

@@ -10,7 +10,8 @@ from google.auth.transport.requests import Request
 from google.oauth2 import id_token
 from common import macros
 from dependencies.data_analytics.import_historical import (
-    historical_data_applicative_tables,
+    historical_clean_applicative_database,
+    historical_analytics,
 )
 
 from dependencies.config import (
@@ -232,9 +233,8 @@ end_import_table_to_clean = DummyOperator(task_id="end_import_table_to_clean", d
 start_historical_data_applicative_tables_tasks = DummyOperator(
     task_id="start_historical_data_applicative_tables_tasks", dag=dag
 )
-
 historical_data_applicative_tables_tasks = []
-for table, params in historical_data_applicative_tables.items():
+for table, params in historical_clean_applicative_database.items():
     task = BigQueryExecuteQueryOperator(
         task_id=f"historical_{table}",
         sql=params["sql"],
@@ -249,6 +249,27 @@ for table, params in historical_data_applicative_tables.items():
 
 end_historical_data_applicative_tables_tasks = DummyOperator(
     task_id="end_historical_data_applicative_tables_tasks", dag=dag
+)
+
+start_historical_analytics_table_tasks = DummyOperator(
+    task_id="start_historical_analytics_table_tasks", dag=dag
+)
+historical_analytics_table_tasks = []
+for table, params in historical_analytics.items():
+    task = BigQueryExecuteQueryOperator(
+        task_id=f"historical_{table}",
+        sql=params["sql"],
+        write_disposition="WRITE_TRUNCATE",
+        use_legacy_sql=False,
+        destination_dataset_table=params["destination_dataset_table"],
+        time_partitioning=params.get("time_partitioning", None),
+        cluster_fields=params.get("cluster_fields", None),
+        dag=dag,
+    )
+    historical_analytics_table_tasks.append(task)
+
+end_historical_analytics_table_tasks = DummyOperator(
+    task_id="end_historical_analytics_table_tasks", dag=dag
 )
 
 import_tables_to_analytics_tasks = []
@@ -542,6 +563,12 @@ end = DummyOperator(task_id="end", dag=dag)
     >> start_historical_data_applicative_tables_tasks
     >> historical_data_applicative_tables_tasks
     >> end_historical_data_applicative_tables_tasks
+)
+(
+    end_historical_data_applicative_tables_tasks
+    >> start_historical_analytics_table_tasks
+    >> historical_analytics_table_tasks
+    >> end_historical_analytics_table_tasks
 )
 (
     end_import

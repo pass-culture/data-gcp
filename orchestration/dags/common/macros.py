@@ -21,6 +21,10 @@ def today():
     return datetime.today().strftime("%Y-%m-%d")
 
 
+def yesterday():
+    return (datetime.today() - timedelta(days=1)).strftime("%Y-%m-%d")
+
+
 def add_days(ds, days):
     if ds is None:
         ds = datetime.now()
@@ -37,5 +41,6 @@ default = {
     "gcp_project": GCP_PROJECT,
     "yyyymmdd": yyyymmdd,
     "today": today,
+    "yesterday": yesterday,
     "add_days": add_days,
 }

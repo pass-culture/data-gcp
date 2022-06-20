@@ -16,5 +16,5 @@ SELECT
     collective_booking_confirmation_date,
     collective_booking_confirmation_limit_date,
     educational_redactor_id,
-    CURRENT_DATE() as partition_date
+    DATE_ADD(CURRENT_DATE(), INTERVAL -1 DAY) as partition_date
 FROM `{{ bigquery_clean_dataset }}`.`applicative_database_collective_booking`

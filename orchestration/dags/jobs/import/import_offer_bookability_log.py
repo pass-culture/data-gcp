@@ -6,7 +6,7 @@ from airflow.providers.google.cloud.operators.bigquery import (
 )
 from airflow.operators.dummy_operator import DummyOperator
 
-from dependencies.config import (
+from common.config import (
     BIGQUERY_CLEAN_DATASET,
     BIGQUERY_ANALYTICS_DATASET,
     GCP_PROJECT,

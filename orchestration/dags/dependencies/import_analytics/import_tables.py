@@ -1,4 +1,4 @@
-from dependencies.config import APPLICATIVE_EXTERNAL_CONNECTION_ID, GCP_REGION
+from common.config import APPLICATIVE_EXTERNAL_CONNECTION_ID, GCP_REGION
 from datetime import datetime, timedelta
 from dateutil import parser
 

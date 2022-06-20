@@ -10,8 +10,8 @@ from airflow.providers.google.cloud.operators.compute import (
     ComputeEngineStopInstanceOperator,
 )
 from common.alerts import task_fail_slack_alert
-from dependencies.access_gcp_secrets import access_secret_data
-from dependencies.config import GCP_PROJECT_ID, GCE_ZONE, ENV_SHORT_NAME
+from common.access_gcp_secrets import access_secret_data
+from common.config import GCP_PROJECT_ID, GCE_ZONE, ENV_SHORT_NAME
 
 
 GCE_INSTANCE = os.environ.get("GCE_TRAINING_INSTANCE", "algo-training-dev")
@@ -22,9 +22,9 @@ else:
     MLFLOW_URL = "https://mlflow.internal-passculture.app/"
 
 DATE = "{{ts_nodash}}"
-STORAGE_PATH = f"gs://{MLFLOW_BUCKET_NAME}/algo_training_v2_deep_reco_{ENV_SHORT_NAME}/algo_training_v2_deep_reco_{DATE}"
-MODEL_NAME = "v2_deep_reco"
-AI_MODEL_NAME = f"deep_reco_{ENV_SHORT_NAME}"
+STORAGE_PATH = f"gs://{MLFLOW_BUCKET_NAME}/algo_training_v2_mf_reco_{ENV_SHORT_NAME}/algo_training_v2_mf_reco_{DATE}"
+MODEL_NAME = "v2_mf_reco"
+AI_MODEL_NAME = f"MF_reco_{ENV_SHORT_NAME}"
 SLACK_CONN_ID = "slack_analytics"
 SLACK_CONN_PASSWORD = access_secret_data(GCP_PROJECT_ID, "slack-conn-password")
 
@@ -52,10 +52,10 @@ default_args = {
 
 
 with DAG(
-    "algo_training_v2_deep_reco",
+    "algo_training_v2_mf_reco",
     default_args=default_args,
     description="Continuous algorithm training for v2 recommendation algorithm",
-    schedule_interval="0 18 * * 0",  # Train every sunday at 18:00
+    schedule_interval="0 18 * * 1",  # Train every monday at 18:00
     catchup=False,
     dagrun_timeout=timedelta(minutes=300),
 ) as dag:
@@ -186,7 +186,6 @@ with DAG(
         resource_id=GCE_INSTANCE,
         task_id="gce_stop_task",
     )
-
     DEPLOY_COMMAND = f"""
     export REGION=europe-west1
     export MODEL_NAME={AI_MODEL_NAME}
@@ -254,7 +253,7 @@ with DAG(
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": ":robot_face: Nouvelle version de l'algo 'v2_deep_reco' déployée ! :rocket:",
+                "text": ":robot_face: Nouvelle version de l'algo 'v2_MF_reco' déployée ! :rocket:",
             },
         },
         {

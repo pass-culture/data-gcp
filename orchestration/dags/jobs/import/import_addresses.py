@@ -14,7 +14,7 @@ from airflow.operators.python import BranchPythonOperator, PythonOperator
 from google.auth.transport.requests import Request
 from google.oauth2 import id_token
 
-from dependencies.config import (
+from common.config import (
     BIGQUERY_RAW_DATASET,
     BIGQUERY_CLEAN_DATASET,
     BIGQUERY_ANALYTICS_DATASET,
@@ -23,7 +23,7 @@ from dependencies.config import (
     GCP_PROJECT,
 )
 from common.alerts import task_fail_slack_alert
-from dependencies.user_locations_schema import USER_LOCATIONS_SCHEMA
+from dependencies.import_addresses import USER_LOCATIONS_SCHEMA
 
 
 FUNCTION_NAME = f"addresses_import_{ENV_SHORT_NAME}"

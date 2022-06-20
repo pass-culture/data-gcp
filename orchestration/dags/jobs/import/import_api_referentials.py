@@ -9,7 +9,7 @@ from airflow.providers.google.cloud.operators.compute import (
     ComputeEngineStopInstanceOperator,
 )
 from common.alerts import task_fail_slack_alert
-from dependencies.config import GCP_PROJECT_ID, GCE_ZONE, ENV_SHORT_NAME
+from common.config import GCP_PROJECT_ID, GCE_ZONE, ENV_SHORT_NAME
 
 
 GCE_INSTANCE = os.environ.get(

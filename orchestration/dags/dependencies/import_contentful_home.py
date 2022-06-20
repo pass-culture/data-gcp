@@ -1,6 +1,6 @@
 import pandas as pd
 import pandas_gbq as gbq
-from dependencies.config import (
+from common.config import (
     DATA_GCS_BUCKET_NAME,
     GCP_PROJECT,
     BIGQUERY_ANALYTICS_DATASET,

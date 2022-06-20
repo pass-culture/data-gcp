@@ -18,8 +18,8 @@ from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
 
 
 from common.alerts import task_fail_slack_alert
-from dependencies.qpi_answers_schema import QPI_ANSWERS_SCHEMA
-from dependencies.config import (
+from dependencies.import_typeform import QPI_ANSWERS_SCHEMA
+from common.config import (
     GCP_PROJECT,
     DATA_GCS_BUCKET_NAME,
     BIGQUERY_RAW_DATASET,

@@ -6,8 +6,8 @@ from airflow.providers.google.cloud.operators.bigquery import (
 from airflow.operators.dummy_operator import DummyOperator
 from common import macros
 from dependencies.metabase.import_metabase import import_tables, from_external
-from dependencies.config import METABASE_EXTERNAL_CONNECTION_ID
-from dependencies.config import (
+from common.config import METABASE_EXTERNAL_CONNECTION_ID
+from common.config import (
     GCP_PROJECT,
 )
 from common.alerts import task_fail_slack_alert

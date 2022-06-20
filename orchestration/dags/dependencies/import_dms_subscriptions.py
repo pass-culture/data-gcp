@@ -1,7 +1,7 @@
 import pandas as pd
 import json
 import gcsfs
-from dependencies.config import (
+from common.config import (
     DATA_GCS_BUCKET_NAME,
     GCP_PROJECT_ID,
 )

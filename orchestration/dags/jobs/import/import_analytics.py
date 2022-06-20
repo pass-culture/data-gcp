@@ -9,12 +9,12 @@ from airflow.operators.python import PythonOperator
 from google.auth.transport.requests import Request
 from google.oauth2 import id_token
 from common import macros
-from dependencies.data_analytics.import_historical import (
+from dependencies.import_analytics.import_historical import (
     historical_clean_applicative_database,
     historical_analytics,
 )
 
-from dependencies.config import (
+from common.config import (
     APPLICATIVE_EXTERNAL_CONNECTION_ID,
     APPLICATIVE_PREFIX,
     BIGQUERY_ANALYTICS_DATASET,
@@ -23,42 +23,42 @@ from dependencies.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT,
 )
-from dependencies.data_analytics.enriched_data.booking import (
+from dependencies.import_analytics.enriched_data.booking import (
     define_enriched_booking_data_full_query,
 )
-from dependencies.data_analytics.enriched_data.collective_booking import (
+from dependencies.import_analytics.enriched_data.collective_booking import (
     define_enriched_collective_booking_full_query,
 )
-from dependencies.data_analytics.enriched_data.offer import (
+from dependencies.import_analytics.enriched_data.offer import (
     define_enriched_offer_data_full_query,
 )
-from dependencies.data_analytics.enriched_data.collective_offer import (
+from dependencies.import_analytics.enriched_data.collective_offer import (
     define_enriched_collective_offer_data_full_query,
 )
-from dependencies.data_analytics.enriched_data.offerer import (
+from dependencies.import_analytics.enriched_data.offerer import (
     define_enriched_offerer_data_full_query,
 )
-from dependencies.data_analytics.enriched_data.stock import (
+from dependencies.import_analytics.enriched_data.stock import (
     define_enriched_stock_data_full_query,
 )
-from dependencies.data_analytics.enriched_data.user import (
+from dependencies.import_analytics.enriched_data.user import (
     define_enriched_user_data_full_query,
 )
-from dependencies.data_analytics.enriched_data.deposit import (
+from dependencies.import_analytics.enriched_data.deposit import (
     define_enriched_deposit_data_full_query,
 )
 
-from dependencies.data_analytics.enriched_data.institution import (
+from dependencies.import_analytics.enriched_data.institution import (
     define_enriched_institution_data_full_query,
 )
 
-from dependencies.data_analytics.enriched_data.venue import (
+from dependencies.import_analytics.enriched_data.venue import (
     define_enriched_venue_data_full_query,
 )
-from dependencies.data_analytics.enriched_data.venue_locations import (
+from dependencies.import_analytics.enriched_data.venue_locations import (
     define_table_venue_locations,
 )
-from dependencies.data_analytics.import_tables import (
+from dependencies.import_analytics.import_tables import (
     define_import_query,
     define_replace_query,
 )
@@ -179,7 +179,7 @@ default_dag_args = {
 }
 
 dag = DAG(
-    "import_data_analytics_v7",
+    "import_import_analytics_v7",
     default_args=default_dag_args,
     description="Import tables from CloudSQL and enrich data for create dashboards with Metabase",
     on_failure_callback=analytics_fail_slack_alert,

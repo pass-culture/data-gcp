@@ -7,11 +7,11 @@ from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryExecuteQueryOperator,
 )
 from common.alerts import task_fail_slack_alert
-from dependencies.import_contentful_file import (
+from dependencies.import_contentful_home import (
     load_from_csv_contentful_file,
     create_table_contentful_home,
 )
-from dependencies.config import (
+from common.config import (
     GCP_PROJECT,
 )
 

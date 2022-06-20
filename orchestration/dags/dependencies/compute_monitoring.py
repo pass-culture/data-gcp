@@ -1,10 +1,8 @@
-from dependencies.config import (
+from common.config import (
     GCP_PROJECT,
     BIGQUERY_RAW_DATASET,
     BIGQUERY_CLEAN_DATASET,
     BIGQUERY_ANALYTICS_DATASET,
-    ENV_SHORT_NAME,
-    APPLICATIVE_PREFIX,
     TABLE_AB_TESTING,
 )
 

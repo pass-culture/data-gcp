@@ -19,9 +19,9 @@ from airflow.providers.google.cloud.operators.cloud_sql import (
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python import PythonOperator
 
-from dependencies.access_gcp_secrets import access_secret_data
-from dependencies.compose_gcs_files import compose_gcs_files
-from dependencies.config import (
+from common.access_gcp_secrets import access_secret_data
+from common.compose_gcs_files import compose_gcs_files
+from common.config import (
     GCP_PROJECT,
     DATA_GCS_BUCKET_NAME,
     BIGQUERY_CLEAN_DATASET,
@@ -44,7 +44,7 @@ os.environ["AIRFLOW_CONN_PROXY_POSTGRES_TCP"] = (
 )
 
 
-TABLES_DATA_PATH = f"{os.environ.get('DAG_FOLDER')}/tables.csv"
+TABLES_DATA_PATH = f"{os.environ.get('DAG_FOLDER')}/ressources/tables.csv"
 BUCKET_PATH = f"gs://{DATA_GCS_BUCKET_NAME}/bigquery_exports"
 
 default_args = {

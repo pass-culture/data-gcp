@@ -6,8 +6,8 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python import PythonOperator
 
 from common.alerts import task_fail_slack_alert
-from dependencies.bigquery_client import BigQueryClient
-from dependencies.monitoring import (
+from common.bigquery_client import BigQueryClient
+from dependencies.compute_monitoring import (
     get_pertinence_clicks_request,
     get_last_event_time_request,
     get_diversification_bookings_request,
@@ -16,7 +16,7 @@ from dependencies.monitoring import (
     get_favorite_request,
 )
 
-from dependencies.config import GCP_PROJECT, BIGQUERY_ANALYTICS_DATASET, ENV_SHORT_NAME
+from common.config import GCP_PROJECT, BIGQUERY_ANALYTICS_DATASET, ENV_SHORT_NAME
 
 MONITORING_TABLE = "monitoring_data"
 # A changer en fonction des dates de changement d'algo

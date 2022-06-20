@@ -17,14 +17,14 @@ from google.oauth2 import id_token
 
 from common.alerts import task_fail_slack_alert
 
-from dependencies.config import (
+from common.config import (
     DATA_GCS_BUCKET_NAME,
     BIGQUERY_CLEAN_DATASET,
     BIGQUERY_ANALYTICS_DATASET,
     ENV_SHORT_NAME,
     GCP_PROJECT,
 )
-from dependencies.dms_import import parse_api_result
+from dependencies.import_dms_subscriptions import parse_api_result
 
 DMS_FUNCTION_NAME = "dms_" + ENV_SHORT_NAME
 

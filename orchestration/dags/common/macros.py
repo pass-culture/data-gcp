@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from dependencies.config import (
+from common.config import (
     BIGQUERY_ANALYTICS_DATASET,
     BIGQUERY_CLEAN_DATASET,
     BIGQUERY_RAW_DATASET,

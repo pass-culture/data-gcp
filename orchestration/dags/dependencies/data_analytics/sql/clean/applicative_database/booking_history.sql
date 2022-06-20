@@ -14,5 +14,5 @@ SELECT
     individual_booking_id,
     educational_booking_id,
     booking_reimbursement_date,
-    CURRENT_DATE() as partition_date
+    DATE_ADD(CURRENT_DATE(), INTERVAL -1 DAY) as partition_date
 FROM `{{ bigquery_clean_dataset }}`.`applicative_database_booking`

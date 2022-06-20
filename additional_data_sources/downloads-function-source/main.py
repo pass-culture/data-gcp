@@ -66,7 +66,11 @@ def get_google(execution_date):
 
 
 def run(request):
-    execution_date = request.get_json().get("execution_date", None)
+    try:
+        execution_date = request.get_json().get("execution_date", None)
+    except:
+        execution_date = None
+
     if execution_date is None:
         execution_date = datetime.today()
     else:

@@ -1,4 +1,5 @@
 import contentful
+import pandas as pd
 from utils import SPACE_ID, TOKEN
 from datetime import datetime
 
@@ -12,85 +13,107 @@ class ContentfulClient:
             timeout_s=timeout,
         )
 
+    def add_parent_child_to_df(self, df, parent_id, child_id):
+        values_to_add = {'parent': parent_id, 'child': child_id}
+        row_to_add = pd.Series(values_to_add)
+        df = df.append(row_to_add, ignore_index=True)
+        return df
+
+    def get_basic_fields(self, module):
+        module_infos = dict()
+        module_infos["id"] = module.id
+        module_infos["title"] = module.title
+        module_infos["date_updated"] = datetime.today()
+        for sys_info in module.sys:
+            if sys_info in ['space', 'environment', 'content_type']:
+                module_infos[f"sys_{sys_info}"] = module.sys[sys_info].id
+            else:
+                module_infos[f"sys_{sys_info}"] = module.sys[sys_info]
+        return module_infos
+
+    def add_other_fields(self, basic_fields, other_fields):
+        if other_fields.get("tags") is not None:
+            other_fields["tag"] = other_fields.tags[0]
+            del other_fields['tags']
+        if other_fields.get("image_full_screen") is not None:
+            print(other_fields["image_full_screen"])
+            print(other_fields["image_full_screen"].get('fields'))
+            other_fields["image_full_screen"] = other_fields["image_full_screen"].url
+        all_fields = {**basic_fields, **other_fields}
+        return all_fields
+
+    def get_homepages(self):
+        homepages = self.client.entries({"content_type": "homepageNatif"})
+        df_homepages = pd.DataFrame()
+        df_links = pd.DataFrame(columns=['parent', 'child'])
+        for homepage in homepages:
+            homepage_infos = self.get_basic_fields(homepage)
+            row_to_add = pd.Series(homepage_infos)
+            df_homepages = df_homepages.append(row_to_add, ignore_index=True)
+
+            # Get parent-child relationships
+            modules = homepage.fields().get("modules")
+            for module in modules:
+                df_links = self.add_parent_child_to_df(df_links, homepage.id, module.id)
+
+        return df_homepages, df_links
+
     def get_algolia_modules(self):
         algolia_modules = self.client.entries(
             {"content_type": "algolia", "include": 1, "limit": 1000}
         )
-        print(f"Found {len(algolia_modules)} modules !")
-        print("Processing modules...")
-        tags = []
-        playlists = []
+        df_modules = pd.DataFrame()
+        df_links = pd.DataFrame(columns=['parent', 'child'])
+
         for module in algolia_modules:
-            playlist = dict()
+            module_infos = self.get_basic_fields(module)
+            row_to_add = pd.Series(module_infos)
+            df_modules = df_modules.append(row_to_add, ignore_index=True)
+
             try:
-                algolia_parameters = module.algolia_parameters.fields()
-                display_parameters = module.display_parameters.fields()
+                algolia_parameters = module.algolia_parameters
+                basic_infos = self.get_basic_fields(algolia_parameters)
+                other_infos = algolia_parameters.fields()
+                all_infos = self.add_other_fields(basic_infos, other_infos)
+                row_to_add = pd.Series(all_infos)
+                df_modules = df_modules.append(row_to_add, ignore_index=True)
+                df_links = self.add_parent_child_to_df(df_links, module.id, algolia_parameters.id)
             except AttributeError:
                 continue
-            if algolia_parameters.get("tags") is not None:
-                playlist["tag"] = module.algolia_parameters.tags[0]
-                if playlist["tag"] in tags:
-                    print(
-                        f"Duplicates for tag : {playlist['tag']}, keeping last version."
-                    )
-                else:
-                    playlist["module_id"] = module.id
-                    playlist["module_type"] = module.content_type.resolve(
-                        self.client
-                    ).name
-                    # Algolia parameters
-                    playlist["title"] = algolia_parameters.get("title")
-                    playlist["is_geolocated"] = algolia_parameters.get("is_geolocated")
-                    playlist["around_radius"] = algolia_parameters.get("around_radius")
-                    playlist["categories"] = str(algolia_parameters.get("categories"))
-                    playlist["is_digital"] = algolia_parameters.get("is_digital")
-                    playlist["is_thing"] = algolia_parameters.get("is_thing")
-                    playlist["is_event"] = algolia_parameters.get("is_event")
-                    playlist["beginning_datetime"] = algolia_parameters.get(
-                        "beginning_datetime"
-                    )
-                    playlist["ending_datetime"] = algolia_parameters.get(
-                        "ending_datetime"
-                    )
-                    playlist["is_free"] = algolia_parameters.get("is_free")
-                    playlist["price_min"] = algolia_parameters.get("price_min")
-                    playlist["price_max"] = algolia_parameters.get("price_max")
-                    playlist["is_duo"] = algolia_parameters.get("is_duo")
-                    playlist["newest_only"] = algolia_parameters.get("newest_only")
-                    playlist["hits_per_page"] = algolia_parameters.get("hits_per_page")
-                    # Display parameters
-                    playlist["layout"] = display_parameters.get("layout")
-                    playlist["min_offers"] = display_parameters.get("min_offers")
 
-                    playlist["date_updated"] = datetime.today()
+            try:
+                display_parameters = module.display_parameters
+                basic_infos = self.get_basic_fields(display_parameters)
+                other_infos = display_parameters.fields()
+                all_infos = self.add_other_fields(basic_infos, other_infos)
+                row_to_add = pd.Series(all_infos)
+                df_modules = df_modules.append(row_to_add, ignore_index=True)
+                df_links = self.add_parent_child_to_df(df_links, module.id, display_parameters.id)
+            except AttributeError:
+                continue
 
-                    if module.fields().get("additional_algolia_parameters") is not None:
-                        try:
-                            playlist["child_playlists"] = str(
-                                [
-                                    add.tags[0]
-                                    for add in module.additional_algolia_parameters
-                                ]
-                            )
-                        except AttributeError as error:
-                            print(
-                                f"Error: no tags in additional_algolia_parameters :{error}"
-                            )
-                    else:
-                        playlist["child_playlists"] = None
+            try:
+                additionals_algolia_parameters = module.additional_algolia_parameters
+                for additional_parameters in additionals_algolia_parameters:
+                    basic_infos = self.get_basic_fields(additional_parameters)
+                    other_infos = additional_parameters.fields()
+                    all_infos = self.add_other_fields(basic_infos, other_infos)
+                    row_to_add = pd.Series(all_infos)
+                    df_modules = df_modules.append(row_to_add, ignore_index=True)
+                    df_links = self.add_parent_child_to_df(df_links, module.id, additional_parameters.id)
+            except AttributeError:
+                continue
 
-                    tags.append(playlist["tag"])
-                    playlists.append(playlist)
+        return df_modules, df_links
 
-        print(f"Processed {len(playlists)} playlists !")
-        return playlists
+    def get_all_contentful(self):
+        homepages, homepages_links = self.get_homepages()
+        algolia_modules, algolia_links = self.get_algolia_modules()
+        all_modules = [homepages, algolia_modules]
+        contentful_modules = pd.concat(all_modules)
+        all_links = [homepages_links, algolia_links]
+        print(homepages_links.shape)
+        print(algolia_links.shape)
+        contentful_links = pd.concat(all_links)
 
-    def get_contentful_homepages(self):
-        homepages = self.client.entries({"content_type": "homepageNatif"})
-        entry_id_list = []
-        entry_title_list = []
-        for homepage in homepages:
-            entry_id_list.append(homepage.id)
-            entry_title_list.append(homepage.title)
-        contentful_home_dict = {"id": entry_id_list, "home_title": entry_title_list}
-        return contentful_home_dict
+        return contentful_modules, contentful_links

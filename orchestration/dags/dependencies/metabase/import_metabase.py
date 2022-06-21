@@ -1,4 +1,4 @@
-from dependencies.config import DAG_FOLDER
+from common.config import DAG_FOLDER
 
 SQL_PATH = f"{DAG_FOLDER}/dependencies/metabase/sql/raw"
 

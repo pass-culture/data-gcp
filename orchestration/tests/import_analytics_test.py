@@ -28,25 +28,25 @@ from data_analytics.utils.gcp import (
     retrieve_data,
     run_query,
 )
-from dependencies.data_analytics.enriched_data.booking import (
+from dependencies.import_analytics.enriched_data.booking import (
     define_enriched_booking_data_full_query,
 )
-from dependencies.data_analytics.enriched_data.offer import (
+from dependencies.import_analytics.enriched_data.offer import (
     define_enriched_offer_data_full_query,
 )
-from dependencies.data_analytics.enriched_data.collective_offer import (
+from dependencies.import_analytics.enriched_data.collective_offer import (
     define_enriched_collective_offer_data_full_query,
 )
-from dependencies.data_analytics.enriched_data.offerer import (
+from dependencies.import_analytics.enriched_data.offerer import (
     define_enriched_offerer_data_full_query,
 )
-from dependencies.data_analytics.enriched_data.stock import (
+from dependencies.import_analytics.enriched_data.stock import (
     define_enriched_stock_data_full_query,
 )
-from dependencies.data_analytics.enriched_data.user import (
+from dependencies.import_analytics.enriched_data.user import (
     define_enriched_user_data_full_query,
 )
-from dependencies.data_analytics.enriched_data.venue import (
+from dependencies.import_analytics.enriched_data.venue import (
     define_enriched_venue_data_full_query,
 )
 

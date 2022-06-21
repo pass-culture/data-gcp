@@ -27,9 +27,9 @@ class TestDags(unittest.TestCase):
 
     def setUp(self):
         with mock.patch(
-            "dependencies.bigquery_client.BigQueryClient.query"
+            "common.bigquery_client.BigQueryClient.query"
         ) as bigquery_mocker, mock.patch(
-            "dependencies.access_gcp_secrets.access_secret_data"
+            "common.access_gcp_secrets.access_secret_data"
         ) as access_secret_mocker:
 
             def bigquery_client(query):

@@ -13,7 +13,7 @@ from common.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT,
 )
-from dependencies.data_analytics.enriched_data.enriched_firebase import (
+from dependencies.import_analytics.enriched_data.enriched_firebase import (
     aggregate_firebase_user_events,
     aggregate_firebase_offer_events,
     aggregate_firebase_visits,

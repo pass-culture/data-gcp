@@ -27,7 +27,7 @@ from common.config import (
     BIGQUERY_ANALYTICS_DATASET,
     ENV_SHORT_NAME,
 )
-from dependencies.data_analytics.enriched_data.enriched_qpi_answers_v2 import (
+from dependencies.import_analytics.enriched_data.enriched_qpi_answers_v2 import (
     enrich_answers,
     format_answers,
 )

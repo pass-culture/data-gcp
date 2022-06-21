@@ -44,7 +44,6 @@ with DAG(
     description="Measure the diversification",
     schedule_interval="0 4 * * *",
     catchup=False,
-    dagrun_timeout=timedelta(minutes=300),
 ) as dag:
 
     start = DummyOperator(task_id="start")
@@ -158,6 +157,11 @@ with DAG(
         dag=dag,
     )
 
+    end = DummyOperator(
+        task_id="end",
+        trigger_rule="all_done",
+    )
+
     gce_instance_stop = ComputeEngineStopInstanceOperator(
         project_id=GCP_PROJECT_ID,
         zone=GCE_ZONE,
@@ -165,7 +169,14 @@ with DAG(
         task_id="gce_stop_task",
     )
 
-    (start >> delete_old_table >> create_table >> data_collect)
+    (start >> delete_old_table >> create_table >> data_collect >> end)
 
-    (start >> gce_instance_start >> fetch_code >> install_dependencies >> data_collect)
-    data_collect >> gce_instance_stop
+    (
+        start
+        >> gce_instance_start
+        >> fetch_code
+        >> install_dependencies
+        >> data_collect
+        >> end
+    )
+    end >> gce_instance_stop

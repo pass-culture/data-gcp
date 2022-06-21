@@ -1,6 +1,6 @@
 import unittest
 
-from dependencies.data_analytics.import_tables import define_import_query
+from dependencies.import_analytics.import_tables import define_import_query
 
 
 IMPORT_TABLES = [

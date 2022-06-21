@@ -13,6 +13,7 @@ from dependencies.import_analytics.import_historical import (
     historical_clean_applicative_database,
     historical_analytics,
 )
+from common.config import DAG_FOLDER
 
 from common.config import (
     APPLICATIVE_EXTERNAL_CONNECTION_ID,
@@ -179,7 +180,7 @@ default_dag_args = {
 }
 
 dag = DAG(
-    "import_import_analytics_v7",
+    "import_analytics_v7",
     default_args=default_dag_args,
     description="Import tables from CloudSQL and enrich data for create dashboards with Metabase",
     on_failure_callback=analytics_fail_slack_alert,
@@ -187,6 +188,7 @@ dag = DAG(
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,
+    template_searchpath=DAG_FOLDER,
 )
 
 start = DummyOperator(task_id="start", dag=dag)

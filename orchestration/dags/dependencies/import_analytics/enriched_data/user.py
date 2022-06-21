@@ -1,4 +1,4 @@
-from dependencies.data_analytics.enriched_data.enriched_data_utils import (
+from dependencies.import_analytics.enriched_data.enriched_data_utils import (
     create_humanize_id_function,
     create_temp_humanize_id,
 )

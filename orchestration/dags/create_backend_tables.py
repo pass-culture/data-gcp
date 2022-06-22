@@ -1,54 +1,18 @@
 import datetime
 
 from airflow import DAG
-from airflow.contrib.operators.bigquery_operator import BigQueryOperator
-from airflow.contrib.operators.bigquery_table_delete_operator import (
-    BigQueryTableDeleteOperator,
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryDeleteTableOperator,
+    BigQueryExecuteQueryOperator
 )
+
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.http_operator import SimpleHttpOperator
-from airflow.operators.python_operator import PythonOperator
-from google.auth.transport.requests import Request
-from google.oauth2 import id_token
 
 from dependencies.config import (
-    APPLICATIVE_EXTERNAL_CONNECTION_ID,
-    APPLICATIVE_PREFIX,
-    BIGQUERY_ANALYTICS_DATASET,
     BIGQUERY_BACKEND_DATASET,
-    BIGQUERY_RAW_DATASET,
-    ENV_SHORT_NAME,
     GCP_PROJECT,
 )
-from dependencies.data_analytics.enriched_data.booking import (
-    define_enriched_booking_data_full_query,
-)
-from dependencies.data_analytics.enriched_data.educational_booking import (
-    define_enriched_educational_booking_full_query,
-)
-from dependencies.data_analytics.enriched_data.offer import (
-    define_enriched_offer_data_full_query,
-)
-from dependencies.data_analytics.enriched_data.offerer import (
-    define_enriched_offerer_data_full_query,
-)
-from dependencies.data_analytics.enriched_data.stock import (
-    define_enriched_stock_data_full_query,
-)
-from dependencies.data_analytics.enriched_data.user import (
-    define_enriched_user_data_full_query,
-)
-from dependencies.data_analytics.enriched_data.venue import (
-    define_enriched_venue_data_full_query,
-)
-from dependencies.data_analytics.enriched_data.venue_locations import (
-    define_table_venue_locations,
-)
-from dependencies.data_analytics.import_tables import (
-    define_import_query,
-    define_replace_query,
-)
-from dependencies.slack_alert import task_fail_slack_alert
+#from dependencies.slack_alert import task_fail_slack_alert
 
 tables_creation_requests = {
     "favorite_not_booked": """WITH favorites as (SELECT DISTINCT favorite.userId, offerId, offer.offer_subcategoryId as subcat, 
@@ -81,7 +45,7 @@ dag = DAG(
     "create_backend_tables",
     default_args=default_dag_args,
     description="Create daily tables for backend needs",
-    on_failure_callback=task_fail_slack_alert,
+    #on_failure_callback=task_fail_slack_alert,
     schedule_interval="00 01 * * *",
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
@@ -95,14 +59,14 @@ delete_tables_tasks = []
 create_tables_tasks = []
 for table_name, request in tables_creation_requests.items():
 
-    delete_task = BigQueryTableDeleteOperator(
+    delete_task = BigQueryDeleteTableOperator(
         task_id=f"delete_table_{table_name}",
         deletion_dataset_table=f"{BIGQUERY_BACKEND_DATASET}.{table_name}",
         ignore_if_missing=True,
         dag=dag,
     )
 
-    create_task = BigQueryOperator(
+    create_task = BigQueryExecuteQueryOperator(
         task_id=f"create_table_{table_name}",
         sql=request,
         write_disposition="WRITE_TRUNCATE",

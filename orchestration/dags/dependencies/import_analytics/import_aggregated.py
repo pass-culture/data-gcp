@@ -10,4 +10,12 @@ aggregated_tables = {
         "sql": f"{ANALYTICS_SQL_PATH}/aggregated_daily_user_data.sql",
         "destination_dataset_table": "{{ bigquery_analytics_dataset }}.aggregated_daily_user_data",
     },
+    "aggregated_daily_user_used_activity": {
+        "sql": f"{ANALYTICS_SQL_PATH}/aggregated_daily_user_used_activity.sql",
+        "destination_dataset_table": "{{ bigquery_analytics_dataset }}.aggregated_daily_user_used_activity",
+    },
+    "aggregated_monthly_user_used_bookings_activity": {
+        "sql": f"{ANALYTICS_SQL_PATH}/aggregated_monthly_user_used_bookings_activity.sql",
+        "destination_dataset_table": "{{ bigquery_analytics_dataset }}.aggregated_monthly_user_used_bookings_activity",
+    },
 }

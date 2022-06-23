@@ -18,5 +18,4 @@ venv-lint/
 # !recommendation/api/*.json
 airflow.cfg
 unittests.cfg
-logs/
 credentials/

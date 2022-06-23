@@ -28,6 +28,7 @@ def define_enriched_suivi_dms_adage_query(analytics_dataset, table_prefix=""):
         LEFT JOIN {analytics_dataset}.adage AS adage ON adage.siret = dms_pro.demandeur_siret
     """
 
+
 def define_enriched_suivi_dms_adage_full_query(dataset, table_prefix=""):
     return f"""
         {define_enriched_suivi_dms_adage_query(analytics_dataset=dataset, table_prefix=table_prefix)}

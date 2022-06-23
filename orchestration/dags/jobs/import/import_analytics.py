@@ -59,6 +59,11 @@ from dependencies.import_analytics.enriched_data.venue import (
 from dependencies.import_analytics.enriched_data.venue_locations import (
     define_table_venue_locations,
 )
+
+from dependencies.import_analytics.enriched_data.suivi_dms_adage import (
+    define_enriched_suivi_dms_adage_full_query,
+)
+
 from dependencies.import_analytics.import_tables import (
     define_import_query,
     define_replace_query,
@@ -414,6 +419,14 @@ create_enriched_offerer_data_task = BigQueryExecuteQueryOperator(
     dag=dag,
 )
 
+create_enriched_suivi_dms_adage_task = BigQueryExecuteQueryOperator(
+    task_id="create_enriched_suivi_dms_adage",
+    sql=define_enriched_suivi_dms_adage_full_query(
+        dataset=BIGQUERY_ANALYTICS_DATASET, table_prefix=APPLICATIVE_PREFIX
+    ),
+    use_legacy_sql=False,
+    dag=dag,
+)
 
 getting_downloads_service_account_token = PythonOperator(
     task_id="getting_downloads_service_account_token",
@@ -591,6 +604,7 @@ end = DummyOperator(task_id="end", dag=dag)
     >> enriched_venues
     >> create_enriched_offerer_data_task
     >> create_enriched_institution_data_task
+    >> create_enriched_suivi_dms_adage_task
     >> end_enriched_data
 )
 (

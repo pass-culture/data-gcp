@@ -17,5 +17,6 @@ aggregated_tables = {
     "aggregated_monthly_user_used_bookings_activity": {
         "sql": f"{ANALYTICS_SQL_PATH}/aggregated_monthly_user_used_bookings_activity.sql",
         "destination_dataset_table": "{{ bigquery_analytics_dataset }}.aggregated_monthly_user_used_bookings_activity",
+        "depends" : ["aggregated_daily_user_used_activity"]
     },
 }

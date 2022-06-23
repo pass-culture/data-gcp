@@ -9,6 +9,7 @@ from airflow.operators.python import PythonOperator
 from google.auth.transport.requests import Request
 from google.oauth2 import id_token
 from common import macros
+from common.utils import depends_loop
 from dependencies.import_analytics.import_historical import (
     historical_clean_applicative_database,
     historical_analytics,
@@ -432,7 +433,7 @@ create_enriched_suivi_dms_adage_task = BigQueryExecuteQueryOperator(
 start_aggregated_analytics_table_tasks = DummyOperator(
     task_id="start_aggregated_analytics_table_tasks", dag=dag
 )
-aggregated_analytics_table_tasks = []
+aggregated_analytics_table_jobs = {}
 for table, params in aggregated_tables.items():
     task = BigQueryExecuteQueryOperator(
         task_id=f"aggregated_{table}",
@@ -444,8 +445,14 @@ for table, params in aggregated_tables.items():
         cluster_fields=params.get("cluster_fields", None),
         dag=dag,
     )
-    aggregated_analytics_table_tasks.append(task)
+    aggregated_analytics_table_jobs[table] = {
+        "operator": task,
+        "depends": params.get("depends", []),
+    }
 
+aggregated_analytics_table_tasks = depends_loop(
+    aggregated_analytics_table_jobs, start_aggregated_analytics_table_tasks
+)
 end_aggregated_analytics_table_tasks = DummyOperator(
     task_id="end_aggregated_analytics_table_tasks", dag=dag
 )
@@ -644,10 +651,5 @@ end = DummyOperator(task_id="end", dag=dag)
     >> copy_playlists_to_analytics
     >> end
 )
-(
-    end_enriched_data
-    >> start_aggregated_analytics_table_tasks
-    >> aggregated_analytics_table_tasks
-    >> end_aggregated_analytics_table_tasks
-    >> end
-)
+(end_enriched_data >> start_aggregated_analytics_table_tasks)
+(aggregated_analytics_table_tasks >> end_aggregated_analytics_table_tasks >> end)

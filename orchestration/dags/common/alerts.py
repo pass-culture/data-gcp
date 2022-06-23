@@ -4,8 +4,8 @@ from airflow import configuration
 from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
 
 from datetime import datetime
-from dependencies.access_gcp_secrets import access_secret_data
-from dependencies.config import GCP_PROJECT, ENV_SHORT_NAME
+from common.access_gcp_secrets import access_secret_data
+from common.config import GCP_PROJECT, ENV_SHORT_NAME
 
 SLACK_CONN_ID = "slack_analytics"
 

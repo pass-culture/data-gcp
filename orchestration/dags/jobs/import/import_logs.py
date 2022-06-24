@@ -9,7 +9,7 @@ from dependencies.logs.import_logs import (
     import_tables,
 )
 from common.config import DAG_FOLDER, GCP_PROJECT
-from common.alerts import analytics_fail_slack_alert
+from common.alerts import task_fail_slack_alert
 
 
 default_dag_args = {
@@ -23,7 +23,7 @@ dag = DAG(
     "import_logs",
     default_args=default_dag_args,
     description="Import tables from log sink",
-    on_failure_callback=analytics_fail_slack_alert,
+    on_failure_callback=task_fail_slack_alert,
     schedule_interval="00 01 * * *",
     catchup=True,
     dagrun_timeout=datetime.timedelta(minutes=120),

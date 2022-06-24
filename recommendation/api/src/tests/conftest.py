@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta
 import os
-from pyrsistent import s
 import pytest
 
 import pandas as pd

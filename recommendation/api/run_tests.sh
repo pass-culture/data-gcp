@@ -28,4 +28,4 @@ status=$?
 
 [ "$CI" '!=' true ] && docker-compose stop testdb && docker-compose rm -f testdb
 
-exit $status
+#exit $status

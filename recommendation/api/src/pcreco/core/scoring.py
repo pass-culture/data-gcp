@@ -62,6 +62,7 @@ class Scoring:
             return ACTIVE_MODEL
 
     def get_scoring_method(self) -> object:
+        print("self.iscoldstart: ", self.iscoldstart)
         if self.iscoldstart:
             scoring_method = self.ColdStart(self)
         else:
@@ -94,16 +95,16 @@ class Scoring:
                     }
                 )
 
-            with create_db_connection() as connection:
-                connection.execute(
-                    text(
-                        """
-                        INSERT INTO public.past_recommended_offers (userid, offerid, date, group_id, reco_origin)
-                        VALUES (:user_id, :offer_id, :date, :group_id, :reco_origin)
-                        """
-                    ),
-                    rows,
-                )
+            connection = create_db_connection()
+            connection.execute(
+                text(
+                    """
+                    INSERT INTO public.past_recommended_offers (userid, offerid, date, group_id, reco_origin)
+                    VALUES (:user_id, :offer_id, :date, :group_id, :reco_origin)
+                    """
+                ),
+                rows,
+            )
             log_duration(f"save_recommendations for {self.user.id}", start)
 
     class Algo:
@@ -153,12 +154,12 @@ class Scoring:
 
         def get_recommendable_offers(self) -> List[Dict[str, Any]]:
             query = text(self._get_intermediate_query())
-            with create_db_connection() as connection:
-                query_result = connection.execute(
-                    query,
-                    user_id=str(self.user.id),
-                    user_iris_id=str(self.user.iris_id),
-                ).fetchall()
+            connection = create_db_connection()
+            query_result = connection.execute(
+                query,
+                user_id=str(self.user.id),
+                user_iris_id=str(self.user.iris_id),
+            ).fetchall()
 
             user_recommendation = [
                 {
@@ -252,13 +253,13 @@ class Scoring:
                 LIMIT :number_of_preselected_offers;
                 """
             )
-            with create_db_connection() as connection:
-                query_result = connection.execute(
-                    recommendations_query,
-                    user_iris_id=str(self.user.iris_id),
-                    user_id=str(self.user.id),
-                    number_of_preselected_offers=NUMBER_OF_PRESELECTED_OFFERS,
-                ).fetchall()
+            connection = create_db_connection()
+            query_result = connection.execute(
+                recommendations_query,
+                user_iris_id=str(self.user.iris_id),
+                user_id=str(self.user.id),
+                number_of_preselected_offers=NUMBER_OF_PRESELECTED_OFFERS,
+            ).fetchall()
 
             cold_start_recommendations = [
                 {
@@ -278,11 +279,11 @@ class Scoring:
                 f"""SELECT {'"' + '","'.join(qpi_answers_categories) + '"'} FROM qpi_answers WHERE user_id = :user_id;"""
             )
 
-            with create_db_connection() as connection:
-                query_result = connection.execute(
-                    cold_start_query,
-                    user_id=str(self.user.id),
-                ).fetchall()
+            connection = create_db_connection()
+            query_result = connection.execute(
+                cold_start_query,
+                user_id=str(self.user.id),
+            ).fetchall()
 
             cold_start_categories = []
             if len(query_result) == 0:

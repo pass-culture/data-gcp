@@ -20,10 +20,10 @@ def get_iris_from_coordinates(longitude: float, latitude: float) -> int:
         """
     )
 
-    with create_db_connection() as connection:
-        result = connection.execute(
-            iris_query, longitude=longitude, latitude=latitude
-        ).fetchone()
+    connection = create_db_connection()
+    result = connection.execute(
+        iris_query, longitude=longitude, latitude=latitude
+    ).fetchone()
 
     if result:
         iris_id = result[0]

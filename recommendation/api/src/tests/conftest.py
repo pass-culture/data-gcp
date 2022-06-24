@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 import os
+from pyrsistent import s
 import pytest
 
 import pandas as pd
@@ -80,7 +81,12 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
             ],
         }
     )
-    recommendable_offers.to_sql("recommendable_offers_temporary_table", con=engine)
+
+    engine.execute("DROP MATERIALIZED VIEW IF EXISTS recommendable_offers CASCADE;")
+
+    recommendable_offers.to_sql(
+        "recommendable_offers_temporary_table", con=engine, if_exists="replace"
+    )
     engine.execute(
         "CREATE MATERIALIZED VIEW recommendable_offers AS SELECT * FROM recommendable_offers_temporary_table WITH DATA;"
     )
@@ -88,8 +94,10 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
     non_recommendable_offers = pd.DataFrame(
         {"user_id": ["111", "112"], "offer_id": ["1", "3"]}
     )
+    engine.execute("DROP MATERIALIZED VIEW IF EXISTS non_recommendable_offers CASCADE;")
+
     non_recommendable_offers.to_sql(
-        "non_recommendable_offers_temporary_table", con=engine
+        "non_recommendable_offers_temporary_table", con=engine, if_exists="replace"
     )
     engine.execute(
         "CREATE MATERIALIZED VIEW non_recommendable_offers AS SELECT * FROM non_recommendable_offers_temporary_table;"
@@ -102,15 +110,19 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
 
     enriched_user = pd.DataFrame(
         {
-            "user_id": ["111", "111", "113", "114"],
-            "user_deposit_creation_date": [datetime.now(pytz.utc)] * 4,
+            "user_id": ["111", "112", "113", "114", "115", "116", "117", "118"],
+            "user_deposit_creation_date": [datetime.now(pytz.utc)] * 8,
             "user_birth_date": [
-                (datetime.now() - timedelta(days=18 * 365)),
-                (datetime.now() - timedelta(days=17 * 365)),
-                (datetime.now() - timedelta(days=16 * 365)),
-                (datetime.now() - timedelta(days=15 * 365)),
+                (datetime.now() - timedelta(days=18 * 366)),
+                (datetime.now() - timedelta(days=18 * 366)),
+                (datetime.now() - timedelta(days=18 * 366)),
+                (datetime.now() - timedelta(days=18 * 366)),
+                (datetime.now() - timedelta(days=15 * 366)),
+                (datetime.now() - timedelta(days=16 * 366)),
+                (datetime.now() - timedelta(days=17 * 366)),
+                (datetime.now() - timedelta(days=18 * 366)),
             ],
-            "user_deposit_initial_amount": [300, 30, 30, 20],
+            "user_deposit_initial_amount": [300, 300, 300, 300, 20, 30, 30, 300],
         }
     )
     enriched_user.to_sql("enriched_user", con=engine, if_exists="replace")
@@ -195,7 +207,10 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
     iris_venues_mv.to_sql("iris_venues_mv", con=engine, if_exists="replace")
 
     ab_testing = pd.DataFrame(
-        {"userid": ["111", "112", "113", "114"], "groupid": ["A", "B", "A", "B"]}
+        {
+            "userid": ["111", "112", "113", "114", "115", "116", "117", "118"],
+            "groupid": ["A", "B", "C", "B", "A", "B", "C", "B"],
+        }
     )
     ab_testing.to_sql(app_config["AB_TESTING_TABLE"], con=engine, if_exists="replace")
 

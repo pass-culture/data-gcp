@@ -103,13 +103,13 @@ def test_get_cold_start_categories(
     ) as connection_mock:
         # Given
         connection_mock.return_value = setup_database
-        
-        #Force Scoring to be cold_start
+
+        # Force Scoring to be cold_start
         cold_start_status_mock.return_value = True
 
         user = User(user_id)
 
         scoring = Scoring(user)
-        assert sorted(
-            scoring.scoring.get_cold_start_categories()
-        ) == sorted(cold_start_categories)
+        assert sorted(scoring.scoring.get_cold_start_categories()) == sorted(
+            cold_start_categories
+        )

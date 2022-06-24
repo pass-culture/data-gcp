@@ -9,23 +9,23 @@ from dependencies.open_data.export_open_data import (
     aggregated_open_data_tables,
 )
 from common.config import DAG_FOLDER, GCP_PROJECT
-from common.alerts import analytics_fail_slack_alert
+from common.alerts import task_fail_slack_alert
 
 
 default_dag_args = {
-    "start_date": datetime.datetime(2022, 6, 20),
+    "start_date": datetime.datetime(2022, 6, 24),
     "retries": 1,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT,
+    "on_failure_callback": task_fail_slack_alert,
 }
 
 dag = DAG(
     "export_open_data",
     default_args=default_dag_args,
     description="Export aggregated tables for open data",
-    on_failure_callback=analytics_fail_slack_alert,
     schedule_interval="00 08 * * *",
-    catchup=True,
+    catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,

@@ -31,7 +31,7 @@ def run(request):
     """
     contentful_envs = {"prod": "production", "stg": "testing", "dev": "testing"}
     contentful_client = ContentfulClient(env=contentful_envs[ENV_SHORT_NAME])
-    modules, links = contentful_client.get_all_contentful()
+    modules, links = contentful_client.get_all_playlists()
     save_modules_to_bq(modules, CONTENTFUL_ENTRIES_TABLE_NAME)
     save_modules_to_bq(links, CONTENTFUL_RELATIONSHIPS_TABLE_NAME)
     return "Done"

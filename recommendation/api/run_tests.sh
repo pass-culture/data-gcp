@@ -5,8 +5,6 @@ if [ "$CI" '=' true ]
 then
   export DATA_GCP_TEST_POSTGRES_PORT=5432
   export DB_NAME="db"
-  #/!\ Temporary workaround to avoid unitary tests run by CI
-  exit $?
 else
   set +a; source ../../.env.local; set -a;
 fi

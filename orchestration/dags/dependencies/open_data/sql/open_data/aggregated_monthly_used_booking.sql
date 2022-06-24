@@ -9,7 +9,7 @@ SELECT
     sum(amount_spent) AS amount_spent
 FROM
     `{{ bigquery_analytics_dataset }}.aggregated_daily_used_booking`
-WHERE month < DATE_TRUNC(CURRENT_DATE, MONTH) 
+WHERE day < DATE_TRUNC(CURRENT_DATE, MONTH) 
 GROUP BY
     month,
     free_vs_paid_for,

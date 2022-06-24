@@ -13,12 +13,7 @@ ENV_SHORT_NAME = os.getenv("ENV_SHORT_NAME")
 class UserTest:
     @pytest.mark.parametrize(
         ["user_id", "expected_age", "expected_deposit"],
-        [
-            ("115", 15, 20),
-            ("116", 16, 30),
-            ("117", 17, 30),
-            ("118", 18, 300)
-        ],
+        [("115", 15, 20), ("116", 16, 30), ("117", 17, 30), ("118", 18, 300)],
     )
     def test_get_user_profile(
         self, setup_database: Any, user_id, expected_age, expected_deposit

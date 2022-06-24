@@ -9,6 +9,7 @@ from pcreco.models.reco.recommendation import RecommendationIn
 
 ENV_SHORT_NAME = os.getenv("ENV_SHORT_NAME")
 
+
 class RecommendationTest:
     @pytest.mark.parametrize(
         ["user_id", "geoloc", "model_name", "use_case"],

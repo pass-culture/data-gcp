@@ -18,6 +18,7 @@ from common.config import (
 default_dag_args = {
     "start_date": datetime.datetime(2021, 3, 7),
     "retries": 1,
+    "on_failure_callback": task_fail_slack_alert,
     "project_id": GCP_PROJECT,
 }
 
@@ -25,7 +26,6 @@ dag = DAG(
     "create_contentful_home",
     default_args=default_dag_args,
     description="Import from storage contentful home",
-    on_failure_callback=task_fail_slack_alert,
     schedule_interval="0 * * * *",
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),

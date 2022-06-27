@@ -6,6 +6,7 @@ from airflow.operators.python import PythonOperator
 
 from google.auth.transport.requests import Request
 from google.oauth2 import id_token
+from common.alerts import task_fail_slack_alert
 
 from common.config import (
     GCP_PROJECT,
@@ -17,6 +18,7 @@ SIREN_FILENAME = "adage_data.csv"
 
 default_dag_args = {
     "start_date": datetime.datetime(2022, 2, 7),
+    "on_failure_callback": task_fail_slack_alert,
     "retries": 1,
     "project_id": GCP_PROJECT,
 }

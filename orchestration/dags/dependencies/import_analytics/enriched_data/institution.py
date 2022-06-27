@@ -140,6 +140,7 @@ def define_students_per_institution_query(dataset, table_prefix=""):
         );
         """
 
+
 def define_students_educonnectes_query(dataset, table_prefix=""):
     return f"""
         CREATE TEMP TABLE students_educonnectes AS (  
@@ -153,7 +154,6 @@ def define_students_educonnectes_query(dataset, table_prefix=""):
             GROUP BY 1
         );
         """
-
 
 
 def define_enriched_institution_data_query(dataset, table_prefix=""):

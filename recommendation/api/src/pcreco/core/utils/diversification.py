@@ -6,13 +6,13 @@ import numpy as np
 import random
 from pcreco.utils.env_vars import (
     NUMBER_OF_RECOMMENDATIONS,
-    SHUFFLE_RECOMMENDATION,
     log_duration,
 )
 
 
 def order_offers_by_score_and_diversify_categories(
-    offers: List[Dict[str, Any]]
+    offers: List[Dict[str, Any]],
+    shuffle_recommendation=None,
 ) -> List[int]:
     """
     Group offers by category.
@@ -23,7 +23,7 @@ def order_offers_by_score_and_diversify_categories(
     """
 
     start = time.time()
-    if SHUFFLE_RECOMMENDATION:
+    if shuffle_recommendation:
         for recommendation in offers:
             recommendation["score"] = random.random()
 

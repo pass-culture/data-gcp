@@ -10,6 +10,7 @@ from typing import Any, Dict
 
 DATA_GCP_TEST_POSTGRES_PORT = os.getenv("DATA_GCP_TEST_POSTGRES_PORT")
 DB_NAME = os.getenv("DB_NAME")
+ACTIVE_MODEL = os.environ.get("ACTIVE_MODEL")
 
 TEST_DATABASE_CONFIG = {
     "user": "postgres",
@@ -55,8 +56,16 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
                 "EVENEMENT_CINE",
                 "EVENEMENT_CINE",
                 "EVENEMENT_CINE",
-                "EVENEMENT_CINE",
-                "EVENEMENT_CINE",
+                "SPECTACLE_REPRESENTATION",
+                "SPECTACLE_REPRESENTATION",
+            ],
+            "search_group_name": [
+                "CINEMA",
+                "CINEMA",
+                "CINEMA",
+                "CINEMA",
+                "SPECTACLE",
+                "SPECTACLE",
             ],
             "name": ["a", "b", "c", "d", "e", "f"],
             "url": [None, None, "url", "url", None, None],

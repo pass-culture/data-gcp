@@ -7,12 +7,11 @@ from pcreco.core.user import User
 from pcreco.core.scoring import Scoring
 from pcreco.models.reco.recommendation import RecommendationIn
 import pandas as pd
-
-ENV_SHORT_NAME = os.getenv("ENV_SHORT_NAME")
-ACTIVE_MODEL = os.getenv("ACTIVE_MODEL")
+from pcreco.utils.env_vars import ACTIVE_MODEL, ENV_SHORT_NAME
 
 
 class RecommendationTest:
+    # test_recommendation_algo
     @pytest.mark.parametrize(
         ["user_id", "geoloc", "model_name", "use_case"],
         [
@@ -77,6 +76,7 @@ class RecommendationTest:
                 len(user_recommendations) > 0
             ), f"{use_case}: user_recommendations list is non empty"
 
+    # test_recommendation_cold_start
     @pytest.mark.parametrize(
         ["user_id", "geoloc", "use_case"],
         [
@@ -116,6 +116,7 @@ class RecommendationTest:
                 len(user_recommendations) > 0
             ), f"{use_case}: user_recommendations list is non empty"
 
+    # test_recommendation_playlist_algo
     @pytest.mark.parametrize(
         ["user_id", "geoloc", "categories", "is_event", "use_case"],
         [
@@ -194,6 +195,7 @@ class RecommendationTest:
                 categories
             ), f"{use_case}: recommended categories are expected"
 
+    # test_recommendation_playlist_cold_start
     @pytest.mark.parametrize(
         ["user_id", "geoloc", "categories", "is_event", "use_case"],
         [

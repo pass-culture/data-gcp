@@ -11,32 +11,32 @@ from pcreco.utils.env_vars import ACTIVE_MODEL, ENV_SHORT_NAME
 
 
 class RecommendationTest:
+    def test_recommendable_offers_geoloc(
+        self,
+        get_scored_offers_algo_mock: Mock,
+        setup_database: Any,
+        user_id,
+        geoloc,
+        use_case,
+    ):
+
     # test_recommendation_algo
     @pytest.mark.parametrize(
-        ["user_id", "geoloc", "model_name", "use_case"],
+        ["user_id", "geoloc", "use_case"],
         [
             (
-                "118",
-                {"longitude": None, "latitude": None},
-                f"tf_reco_{ENV_SHORT_NAME}",
-                "18_nogeoloc",
+                "115",
+                {"longitude": 2.331289, "latitude": 48.830719},
+                "15_geoloc",
+            ),
+            (
+                "116",
+                {"longitude": 2.331289, "latitude": 48.830719},
+                "1617_geoloc",
             ),
             (
                 "118",
                 {"longitude": 2.331289, "latitude": 48.830719},
-                f"tf_reco_{ENV_SHORT_NAME}",
-                "18_geoloc",
-            ),
-            (
-                "118",
-                {"longitude": 2.331289, "latitude": 48.830719},
-                f"deep_reco_{ENV_SHORT_NAME}",
-                "18_geoloc",
-            ),
-            (
-                "118",
-                {"longitude": 2.331289, "latitude": 48.830719},
-                f"MF_reco_{ENV_SHORT_NAME}",
                 "18_geoloc",
             ),
         ],
@@ -48,7 +48,6 @@ class RecommendationTest:
         setup_database: Any,
         user_id,
         geoloc,
-        model_name,
         use_case,
     ):
         with patch(
@@ -60,9 +59,8 @@ class RecommendationTest:
 
             user = User(user_id, longitude, latitude)
 
-            input_reco = (
-                RecommendationIn({"model_name": model_name}) if model_name else None
-            )
+            # for this test the model is fixed as the active one
+            input_reco = RecommendationIn({"model_name": ACTIVE_MODEL})
 
             scoring = Scoring(user, recommendation_in=input_reco)
             recommendable_offers = scoring.scoring.recommendable_offers
@@ -80,11 +78,6 @@ class RecommendationTest:
     @pytest.mark.parametrize(
         ["user_id", "geoloc", "use_case"],
         [
-            (
-                "118",
-                {"longitude": None, "latitude": None},
-                "18_nogeoloc",
-            ),
             (
                 "118",
                 {"longitude": 2.331289, "latitude": 48.830719},

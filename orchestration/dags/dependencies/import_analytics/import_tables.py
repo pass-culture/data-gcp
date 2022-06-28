@@ -571,6 +571,7 @@ def define_import_query(
                 ,"contactPhone" AS collective_offer_contact_phone
                 ,"offerVenue" AS collective_offer_offer_venue
                 ,CAST("lastValidationType" AS VARCHAR) AS collective_offer_last_validation_type
+                ,CAST("institutionId" AS varchar(255)) AS institution_id
             FROM public.collective_offer
         """
 

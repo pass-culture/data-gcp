@@ -444,6 +444,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_INPUT = {
             "collective_offer_name": "Offre collective vraiment bien",
             "venue_id": "7",
             "collective_offer_creation_date": "2022-01-15",
+            "institution_id": None,
             "collective_offer_subcategory_id": "CONCERT",
             "collective_offer_is_active": True,
         }
@@ -484,6 +485,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_EXPECTED = [
         "collective_offer_id": "3",
         "collective_offer_name": "Offre collective vraiment bien",
         "venue_id": "7",
+        "institution_id": None,
         "venue_name": "Lieu super",
         "venue_department_code": "35",
         "venue_region_name": "Bretagne",

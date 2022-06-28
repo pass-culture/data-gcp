@@ -11,15 +11,6 @@ from pcreco.utils.env_vars import ACTIVE_MODEL, ENV_SHORT_NAME
 
 
 class RecommendationTest:
-    def test_recommendable_offers_geoloc(
-        self,
-        get_scored_offers_algo_mock: Mock,
-        setup_database: Any,
-        user_id,
-        geoloc,
-        use_case,
-    ):
-
     # test_recommendation_algo
     @pytest.mark.parametrize(
         ["user_id", "geoloc", "use_case"],

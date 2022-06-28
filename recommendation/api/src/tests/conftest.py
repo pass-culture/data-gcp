@@ -91,12 +91,26 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
     )
 
     engine.execute("DROP MATERIALIZED VIEW IF EXISTS recommendable_offers CASCADE;")
+    engine.execute(
+        "DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_eac_15 CASCADE;"
+    )
+    engine.execute(
+        "DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_eac_16_17 CASCADE;"
+    )
 
     recommendable_offers.to_sql(
         "recommendable_offers_temporary_table", con=engine, if_exists="replace"
     )
     engine.execute(
         "CREATE MATERIALIZED VIEW recommendable_offers AS SELECT * FROM recommendable_offers_temporary_table WITH DATA;"
+    )
+
+    engine.execute(
+        "CREATE MATERIALIZED VIEW recommendable_offers_eac_15 AS SELECT * FROM recommendable_offers_temporary_table WITH DATA;"
+    )
+
+    engine.execute(
+        "CREATE MATERIALIZED VIEW recommendable_offers_eac_16_17 AS SELECT * FROM recommendable_offers_temporary_table WITH DATA;"
     )
 
     non_recommendable_offers = pd.DataFrame(
@@ -297,6 +311,12 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
     yield connection
 
     engine.execute("DROP MATERIALIZED VIEW IF EXISTS recommendable_offers CASCADE;")
+    engine.execute(
+        "DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_eac_15 CASCADE;"
+    )
+    engine.execute(
+        "DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_eac_16_17 CASCADE;"
+    )
     engine.execute("DROP MATERIALIZED VIEW IF EXISTS non_recommendable_offers CASCADE;")
     engine.execute("DROP TABLE IF EXISTS recommendable_offers_temporary_table CASCADE;")
     engine.execute(

@@ -70,6 +70,16 @@ class RecommendationTest:
         ["user_id", "geoloc", "use_case"],
         [
             (
+                "115",
+                {"longitude": 2.331289, "latitude": 48.830719},
+                "15_geoloc",
+            ),
+            (
+                "116",
+                {"longitude": 2.331289, "latitude": 48.830719},
+                "1617_geoloc",
+            ),
+            (
                 "118",
                 {"longitude": 2.331289, "latitude": 48.830719},
                 "18_geoloc",

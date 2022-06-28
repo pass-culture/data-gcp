@@ -147,7 +147,7 @@ def define_students_educonnectes_query(dataset, table_prefix=""):
             SELECT
                   REGEXP_EXTRACT(result_content, '"school_uai": \"(.*?)\",') AS institution_external_id
                 , COUNT(DISTINCT enriched_user_data.user_id) AS nb_jeunes_credited
-            FROM beneficiary_fraud_check
+            FROM {dataset}.{table_prefix}beneficiary_fraud_check
             LEFT JOIN {dataset}.{table_prefix}enriched_user_data ON beneficiary_fraud_check.user_id = enriched_user_data.user_id
             WHERE type = 'EDUCONNECT'
             AND REGEXP_EXTRACT(result_content, '"school_uai": \"(.*?)\",') IS NOT NULL

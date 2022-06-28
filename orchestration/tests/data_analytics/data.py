@@ -513,6 +513,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_EXPECTED = [
         "collective_offer_id": "4",
         "collective_offer_name": "Offre vitrine",
         "venue_id": "7",
+        "institution_id": None,
         "venue_name": "Lieu super",
         "venue_department_code": "35",
         "venue_region_name": "Bretagne",

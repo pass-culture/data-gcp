@@ -393,6 +393,7 @@ BIGQUERY_SCHEMAS = {
         "offer_id": "STRING",
         "collective_offer_is_active": "BOOLEAN",
         "venue_id": "STRING",
+        "institution_id": "STRING",
         "collective_offer_name": "STRING",
         "collective_offer_booking_email": "STRING",
         "collective_offer_description": "STRING",

@@ -94,7 +94,7 @@ def define_last_booking_query(dataset, table_prefix=""):
     return f"""
         CREATE TEMP TABLE last_booking AS (   
             SELECT  
-                institution_id
+                bookings_infos.institution_id
                 ,bookings_infos.booking_creation_date AS last_booking_date
                 ,collective_offer_subcategory_id AS last_category_booked
             FROM bookings_infos 
@@ -111,7 +111,7 @@ def define_bookings_per_institution_query(dataset, table_prefix=""):
     return f"""
         CREATE TEMP TABLE bookings_per_institution AS (   
             SELECT  
-            institution_id
+            bookings_infos.institution_id
             ,COUNT(DISTINCT booking_id) AS nb_non_cancelled_bookings
             ,SUM(collective_stock_price) AS theoric_amount_spent
             ,COUNT(CASE WHEN booking_status IN ('USED','REIMBURSED') THEN 1 ELSE NULL END) AS nb_used_bookings
@@ -147,8 +147,9 @@ def define_students_educonnectes_query(dataset, table_prefix=""):
             SELECT
                   REGEXP_EXTRACT(result_content, '"school_uai": \"(.*?)\",') AS institution_external_id
                 , COUNT(DISTINCT enriched_user_data.user_id) AS nb_jeunes_credited
-            FROM {dataset}.{table_prefix}beneficiary_fraud_check
-            LEFT JOIN {dataset}.{table_prefix}enriched_user_data ON beneficiary_fraud_check.user_id = enriched_user_data.user_id
+            FROM {dataset}.{table_prefix}beneficiary_fraud_check AS beneficiary_fraud_check
+            LEFT JOIN {dataset}.enriched_user_data AS enriched_user_data 
+                ON beneficiary_fraud_check.user_id = enriched_user_data.user_id
             WHERE type = 'EDUCONNECT'
             AND REGEXP_EXTRACT(result_content, '"school_uai": \"(.*?)\",') IS NOT NULL
             GROUP BY 1
@@ -164,7 +165,7 @@ def define_enriched_institution_data_query(dataset, table_prefix=""):
                 ,educational_institution.institution_id AS institution_external_id 
                 ,institution_name AS institution_name 
                 ,current_deposit.ministry AS ministry 
-                ,region_departement.region_name AS institution_region_name
+                ,region_department.region_name AS institution_region_name
                 ,educational_institution.institution_departement_code
                 ,institution_postal_code
                 ,institution_city 
@@ -195,7 +196,7 @@ def define_enriched_institution_data_query(dataset, table_prefix=""):
             LEFT JOIN bookings_per_institution ON educational_institution.educational_institution_id = bookings_per_institution.institution_id
             LEFT JOIN students_per_institution ON educational_institution.institution_id = students_per_institution.institution_id
             LEFT JOIN {dataset}.academie_dept AS academie_dept ON educational_institution.institution_departement_code = academie_dept.code_dpt
-            LEFT JOIN students_educonnectes ON educational_institution.institution_id = students_educonnectes.school
+            LEFT JOIN students_educonnectes ON educational_institution.institution_id = students_educonnectes.institution_external_id
     );
     """
 

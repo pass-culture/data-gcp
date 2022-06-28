@@ -1,12 +1,8 @@
-import os
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 import pytest
-import random
 from typing import Any
 from pcreco.core.user import User
 from pcreco.core.scoring import Scoring
-from pcreco.models.reco.recommendation import RecommendationIn
-import pandas as pd
 from pcreco.utils.env_vars import ENV_SHORT_NAME
 
 

@@ -171,12 +171,18 @@ class ContentfulClient:
         )
         self.df_modules = pd.DataFrame()
         self.df_links = pd.DataFrame(columns=["parent", "child"])
+        self.df_tags = pd.DataFrame(columns=["tag_id", "tag_name", "entry_id"])
         self.datetime = datetime.today()
 
     def add_parent_child_to_df(self, parent_id, child_id):
         values_to_add = {"parent": parent_id, "child": child_id}
         row_to_add = pd.Series(values_to_add)
         self.df_links = self.df_links.append(row_to_add, ignore_index=True)
+
+    def add_tag_to_df(self, tag_id, tag_name, entry_id):
+        values_to_add = {"tag_id": tag_id, "tag_name": tag_name, "entry_id": entry_id}
+        row_to_add = pd.Series(values_to_add)
+        self.df_tags = self.df_tags.append(row_to_add, ignore_index=True)
 
     def get_basic_fields(self, module):
         sys_fields = [
@@ -193,7 +199,19 @@ class ContentfulClient:
         module_infos = dict()
         module_infos["title"] = module.title
         module_infos["date_imported"] = self.datetime
-        module_infos["contentful_tags"] = [tag.id for tag in module._metadata["tags"]]
+
+        contentful_tags_id = []
+        contentful_tags_name = []
+        for tag in module._metadata["tags"]:
+            tag_name = self.client._http_get(
+                self.client.environment_url(f"/tags/{tag.id}"), {}
+            ).json()["name"]
+            contentful_tags_id.append(tag.id)
+            self.add_tag_to_df(tag.id, tag_name, module.id)
+            contentful_tags_name.append(tag_name)
+        module_infos["contentful_tags_id"] = str(contentful_tags_id)
+        module_infos["contentful_tags_name"] = str(contentful_tags_name)
+
         for sys_info in sys_fields:
             if sys_info in ["space", "environment", "content_type"]:
                 module_infos[f"{sys_info}"] = module.sys[sys_info].id
@@ -210,7 +228,32 @@ class ContentfulClient:
                 f"WARNING fields not imported from {module_details['name']} : {fields_not_taken}"
             )
         for field in infos_to_get:
-            basic_fields[f"{field}"] = str(other_fields.get(field))
+            if (
+                field
+                in [
+                    "recommendation_parameters",
+                    "display_parameters",
+                    "algolia_parameters",
+                ]
+                and other_fields.get(field) is not None
+            ):
+                basic_fields[field] = str(other_fields.get(field).id)
+            elif (
+                field in ["additional_algolia_parameters"]
+                and other_fields.get(field) is not None
+            ):
+                basic_fields["algolia_parameters"] = [
+                    basic_fields["algolia_parameters"]
+                ].append([add_algo.id for add_algo in other_fields.get(field)])
+            elif (
+                field in ["venues_search_parameters", "modules"]
+                and other_fields.get(field) is not None
+            ):
+                basic_fields[f"{field}"] = [
+                    add_algo.id for add_algo in other_fields.get(field)
+                ]
+            else:
+                basic_fields[f"{field}"] = str(other_fields.get(field))
         return basic_fields
 
     def get_all_fields(self, module, module_details):
@@ -259,4 +302,5 @@ class ContentfulClient:
                     except KeyError as E:
                         continue
 
-        return self.df_modules, self.df_links
+        self.df_modules = self.df_modules.replace("None", float("nan"))
+        return self.df_modules, self.df_links, self.df_tags

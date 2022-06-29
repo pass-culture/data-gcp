@@ -10,6 +10,7 @@ from utils import (
 
 CONTENTFUL_ENTRIES_TABLE_NAME = "contentful_entries"
 CONTENTFUL_RELATIONSHIPS_TABLE_NAME = "contentful_relationships"
+CONTENTFUL_TAGS_TABLE_NAME = "contentful_tags"
 
 
 def save_modules_to_bq(modules_df, table_name):
@@ -31,7 +32,8 @@ def run(request):
     """
     contentful_envs = {"prod": "production", "stg": "testing", "dev": "testing"}
     contentful_client = ContentfulClient(env=contentful_envs[ENV_SHORT_NAME])
-    modules, links = contentful_client.get_all_playlists()
+    modules, links, tags = contentful_client.get_all_playlists()
     save_modules_to_bq(modules, CONTENTFUL_ENTRIES_TABLE_NAME)
     save_modules_to_bq(links, CONTENTFUL_RELATIONSHIPS_TABLE_NAME)
+    save_modules_to_bq(tags, CONTENTFUL_TAGS_TABLE_NAME)
     return "Done"

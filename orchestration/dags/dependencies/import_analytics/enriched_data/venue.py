@@ -93,17 +93,29 @@ def define_last_offer_creation_date_query(dataset, table_prefix=""):
     """
 
 
-def define_offers_created_per_venue_query(dataset, table_prefix=""):
+def define_individual_offers_created_per_venue_query(dataset, table_prefix=""):
     return f"""
-        CREATE TEMP TABLE offers_created_per_venue AS
+        CREATE TEMP TABLE individual_offers_created_per_venue AS
             SELECT
                 venue.venue_id
-                ,count(offer.offer_id) AS offers_created
+                ,count(offer.offer_id) AS individual_offers_created
             FROM {dataset}.{table_prefix}venue AS venue
             LEFT JOIN {dataset}.{table_prefix}offer AS offer
             ON venue.venue_id = offer.venue_id
             AND (offer.booking_email != 'jeux-concours@passculture.app' or offer.booking_email is NULL)
             AND offer.offer_subcategoryId NOT IN ('ACTIVATION_EVENT','ACTIVATION_THING')
+            GROUP BY venue.venue_id;
+    """
+
+def define_collective_offers_created_per_venue_query(dataset, table_prefix=""):
+    return f"""
+        CREATE TEMP TABLE collective_offers_created_per_venue AS
+            SELECT
+                venue.venue_id
+                ,count(collective_offer.collective_offer_id) AS collective_offers_created
+            FROM {dataset}.{table_prefix}venue AS venue
+            LEFT JOIN {dataset}.{table_prefix}collective_offer AS collective_offer
+            ON venue.venue_id = collective_offer.venue_id
             GROUP BY venue.venue_id;
     """
 
@@ -190,7 +202,8 @@ def define_enriched_venue_query(dataset, table_prefix=""):
                 ,last_offer_creation_date.last_offer_creation_date
                 ,first_booking_date
                 ,last_booking_date
-                ,offers_created_per_venue.offers_created
+                ,individual_offers_created_per_venue.individual_offers_created
+                ,collective_offers_created_per_venue.collective_offers_created
                 ,bookable_offer_cnt.venue_bookable_offer_cnt
                 ,theoretic_revenue_per_venue.theoretic_revenue
                 ,real_revenue_per_venue.real_revenue
@@ -207,7 +220,8 @@ def define_enriched_venue_query(dataset, table_prefix=""):
             LEFT JOIN used_bookings_per_venue ON venue.venue_id = used_bookings_per_venue.venue_id
             LEFT JOIN first_offer_creation_date ON venue.venue_id = first_offer_creation_date.venue_id
             LEFT JOIN last_offer_creation_date ON venue.venue_id = last_offer_creation_date.venue_id
-            LEFT JOIN offers_created_per_venue ON venue.venue_id = offers_created_per_venue.venue_id
+            LEFT JOIN individual_offers_created_per_venue ON venue.venue_id = individual_offers_created_per_venue.venue_id
+            LEFT JOIN collective_offers_created_per_venue ON venue.venue_id = collective_offers_created_per_venue.venue_id
             LEFT JOIN theoretic_revenue_per_venue ON venue.venue_id = theoretic_revenue_per_venue.venue_id
             LEFT JOIN real_revenue_per_venue ON venue.venue_id = real_revenue_per_venue.venue_id
             LEFT JOIN venue_humanized_id AS venue_humanized_id ON venue_humanized_id.venue_id = venue.venue_id
@@ -242,7 +256,8 @@ def define_enriched_venue_data_full_query(dataset, table_prefix=""):
         {define_used_bookings_per_venue_query(dataset=dataset, table_prefix=table_prefix)}
         {define_first_offer_creation_date_query(dataset=dataset, table_prefix=table_prefix)}
         {define_last_offer_creation_date_query(dataset=dataset, table_prefix=table_prefix)}
-        {define_offers_created_per_venue_query(dataset=dataset, table_prefix=table_prefix)}
+        {define_individual_offers_created_per_venue_query(dataset=dataset, table_prefix=table_prefix)}
+        {define_collective_offers_created_per_venue_query(dataset=dataset, table_prefix=table_prefix)}
         {define_theoretic_revenue_per_venue_query(dataset=dataset, table_prefix=table_prefix)}
         {define_real_revenue_per_venue_query(dataset=dataset, table_prefix=table_prefix)}
         {create_humanize_id_function()}

@@ -180,6 +180,7 @@ data_applicative_tables_and_date_columns = {
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),
     "retries": 1,
+    "on_failure_callback": analytics_fail_slack_alert,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT,
 }
@@ -188,7 +189,6 @@ dag = DAG(
     "import_analytics_v7",
     default_args=default_dag_args,
     description="Import tables from CloudSQL and enrich data for create dashboards with Metabase",
-    on_failure_callback=analytics_fail_slack_alert,
     schedule_interval="00 01 * * *",
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),

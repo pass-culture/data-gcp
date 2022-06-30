@@ -16,6 +16,7 @@ from common.alerts import task_fail_slack_alert
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),
     "retries": 1,
+    "on_failure_callback": task_fail_slack_alert,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT,
 }
@@ -24,7 +25,6 @@ dag = DAG(
     "import_metabase",
     default_args=default_dag_args,
     description="Import metabase tables from CloudSQL",
-    on_failure_callback=task_fail_slack_alert,
     schedule_interval="00 01 * * *",
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),

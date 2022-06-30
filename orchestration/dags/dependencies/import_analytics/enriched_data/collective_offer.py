@@ -37,6 +37,7 @@ SELECT
     collective_offer.collective_offer_id
     , collective_offer.collective_offer_name
     , collective_offer.venue_id
+    , collective_offer.institution_id
     , venue.venue_name
     , venue.venue_department_code
     , venue_region.region_name AS venue_region_name
@@ -84,6 +85,7 @@ SELECT
     template.collective_offer_id
     , template.collective_offer_name
     , template.venue_id
+    , NULL AS institution_id
     , venue.venue_name
     , venue.venue_department_code
     , venue_region.region_name AS venue_region_name

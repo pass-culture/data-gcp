@@ -249,9 +249,9 @@ class ContentfulClient:
                 field in ["venues_search_parameters", "modules"]
                 and other_fields.get(field) is not None
             ):
-                basic_fields[f"{field}"] = str([
-                    add_algo.id for add_algo in other_fields.get(field)
-                ])
+                basic_fields[f"{field}"] = str(
+                    [add_algo.id for add_algo in other_fields.get(field)]
+                )
             else:
                 basic_fields[f"{field}"] = str(other_fields.get(field))
         return basic_fields

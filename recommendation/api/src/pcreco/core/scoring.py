@@ -136,19 +136,11 @@ class Scoring:
         def _get_instances(self) -> List[Dict[str, str]]:
             user_to_rank = [self.user.id] * len(self.recommendable_offers)
             offer_ids_to_rank = []
-            offers_subcategories = []
             for recommendation in self.recommendable_offers:
                 offer_ids_to_rank.append(
                     recommendation["item_id"] if recommendation["item_id"] else ""
                 )
-                offers_subcategories.append(
-                    recommendation["subcategory_id"]
-                    if recommendation["subcategory_id"]
-                    else ""
-                )
             instances = [{"input_1": user_to_rank, "input_2": offer_ids_to_rank}]
-            if self.model_name == f"deep_reco_{ENV_SHORT_NAME}":
-                instances[0]["input_3"] = offers_subcategories
             return instances
 
         def get_recommendable_offers(self) -> List[Dict[str, Any]]:

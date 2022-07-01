@@ -909,6 +909,12 @@ ENRICHED_VENUE_DATA_INPUT = {
             "offer_creation_date": datetime.now().replace(microsecond=0),
         }
     ],
+    "collective_offer": [
+        {
+            "collective_offer_id":"1",
+            "venue_id": "1",
+        }
+    ],
     "enriched_offer_data": [
         {
             "offer_id": "1",

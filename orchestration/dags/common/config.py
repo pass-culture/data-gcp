@@ -24,6 +24,15 @@ BIGQUERY_ANALYTICS_DATASET = os.environ.get(
     "BIGQUERY_ANALYTICS_DATASET", f"analytics_{ENV_SHORT_NAME}"
 )
 
+BIGQUERY_OPEN_DATA_PROJECT = (
+    "passculture-opendata-prod"
+    if GCP_PROJECT_ID == "passculture-data-prod"
+    else "passculture-opendata-ehp"
+)
+BIGQUERY_OPEN_DATA_PUBLIC_DATASET = os.environ.get(
+    "BIGQUERY_OPEN_DATA_PUBLIC_DATASET", f"public_{ENV_SHORT_NAME}"
+)
+
 APPLICATIVE_PREFIX = "applicative_database_"
 SURVEY_PREFIX = "survey_"
 

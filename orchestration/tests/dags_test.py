@@ -16,8 +16,6 @@ DAG_ID_LIST = [
     "import_dms_subscriptions",
     "import_siren_v1",
     "algo_training_v1",
-    "algo_training_v2_deep_reco",
-    "algo_training_v2_mf_reco",
     "compute_monitoring",
 ]
 

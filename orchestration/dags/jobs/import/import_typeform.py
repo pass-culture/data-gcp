@@ -130,7 +130,7 @@ with DAG(
 
     delete_temp_answer_table_raw = BigQueryDeleteTableOperator(
         task_id="delete_temp_answer_table_raw",
-        deletion_dataset_table=f"{BIGQUERY_RAW_DATASET}.temp_{QPI_ANSWERS_TABLE}",
+        deletion_dataset_table=f"{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.temp_{QPI_ANSWERS_TABLE}",
         ignore_if_missing=True,
         dag=dag,
         trigger_rule="none_failed_or_skipped",

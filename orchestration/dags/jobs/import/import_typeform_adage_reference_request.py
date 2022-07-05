@@ -38,7 +38,7 @@ def getting_service_account_token():
 
 
 dag = DAG(
-    "import_adage_v1",
+    "import_typeform_adage_reference_request",
     default_args=default_dag_args,
     description="Import Typeform Adage Reference Request from API",
     on_failure_callback=None,

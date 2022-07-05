@@ -8,7 +8,7 @@ from pcreco.utils.env_vars import ENV_SHORT_NAME
 
 class ABtestingTest:
     # test_model_attribution
-    # cf. conftest to find ab groups for users in the test db
+    # cf. conftest to find ab_test groups for users in the test db
     @pytest.mark.parametrize(
         ["user_id", "expected_group", "expected_model_name"],
         [

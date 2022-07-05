@@ -118,7 +118,7 @@ def define_all_collective_offers_query(dataset, table_prefix=""):
             SELECT 
                 collective_offer_id 
                 ,venue_id 
-            FROM {dataset}.{table_prefix}collective_offer_templates AS collective_offer_templates;
+            FROM {dataset}.{table_prefix}collective_offer_template AS collective_offer_template;
     """
 
 
@@ -271,6 +271,7 @@ def define_enriched_venue_data_full_query(dataset, table_prefix=""):
         {define_first_offer_creation_date_query(dataset=dataset, table_prefix=table_prefix)}
         {define_last_offer_creation_date_query(dataset=dataset, table_prefix=table_prefix)}
         {define_individual_offers_created_per_venue_query(dataset=dataset, table_prefix=table_prefix)}
+        {define_all_collective_offers_query(dataset=dataset, table_prefix=table_prefix)}
         {define_collective_offers_created_per_venue_query(dataset=dataset, table_prefix=table_prefix)}
         {define_theoretic_revenue_per_venue_query(dataset=dataset, table_prefix=table_prefix)}
         {define_real_revenue_per_venue_query(dataset=dataset, table_prefix=table_prefix)}

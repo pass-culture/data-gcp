@@ -107,16 +107,29 @@ def define_individual_offers_created_per_venue_query(dataset, table_prefix=""):
             GROUP BY venue.venue_id;
     """
 
+def define_all_collective_offers_query(dataset, table_prefix=""):
+    return f"""
+        CREATE TEMP TABLE all_collective_offers AS 
+            SELECT 
+                collective_offer_id 
+                ,venue_id
+            FROM {dataset}.{table_prefix}collective_offer AS collective_offer
+            UNION ALL 
+            SELECT 
+                collective_offer_id 
+                ,venue_id 
+            FROM {dataset}.{table_prefix}collective_offer_templates AS collective_offer_templates;
+    """
+
 
 def define_collective_offers_created_per_venue_query(dataset, table_prefix=""):
     return f"""
         CREATE TEMP TABLE collective_offers_created_per_venue AS
             SELECT
                 venue.venue_id
-                ,count(collective_offer.collective_offer_id) AS collective_offers_created
+                ,count(collective_offer_id) AS collective_offers_created
             FROM {dataset}.{table_prefix}venue AS venue
-            LEFT JOIN {dataset}.{table_prefix}collective_offer AS collective_offer
-            ON venue.venue_id = collective_offer.venue_id
+            LEFT JOIN all_collective_offers ON venue.venue_id = all_collective_offers.venue_id
             GROUP BY venue.venue_id;
     """
 

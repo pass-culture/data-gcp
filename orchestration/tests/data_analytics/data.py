@@ -917,8 +917,8 @@ ENRICHED_VENUE_DATA_INPUT = {
     ],
     "collective_offer_template": [
         {
-            "collective_offer_id":"1",
-            "venue_id":"1",
+            "collective_offer_id": "1",
+            "venue_id": "1",
         }
     ],
     "enriched_offer_data": [

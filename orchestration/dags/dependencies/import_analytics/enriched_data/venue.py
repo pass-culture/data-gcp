@@ -107,6 +107,7 @@ def define_individual_offers_created_per_venue_query(dataset, table_prefix=""):
             GROUP BY venue.venue_id;
     """
 
+
 def define_all_collective_offers_query(dataset, table_prefix=""):
     return f"""
         CREATE TEMP TABLE all_collective_offers AS 

@@ -36,6 +36,7 @@ def get_data(batch, batch_size):
                 bookings AS (
                   SELECT user_id, offer_id, booking_amount, booking_creation_date, booking_id, offer_subcategoryId, physical_goods, digital_goods, event, offer_category_id
                   FROM `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_booking_data`
+                  WHERE booking_status != 'CANCELLED'
                 ),
                 
                 offer AS (

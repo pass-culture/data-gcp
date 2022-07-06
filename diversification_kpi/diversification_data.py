@@ -189,7 +189,6 @@ if __name__ == "__main__":
 
     with concurrent.futures.ProcessPoolExecutor(max_process) as executor:
         futures = executor.map(process_diversification, range(max_batch))
-    results = [f.result() for f in futures]
 
     print(f"End of calculation.")
     time.sleep(60)

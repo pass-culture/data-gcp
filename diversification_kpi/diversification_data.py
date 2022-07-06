@@ -1,9 +1,9 @@
 import pandas as pd
 import time
-from multiprocessing import cpu_count, Pool
+import datetime
+from multiprocessing import cpu_count
+import concurrent
 
-
-exitFlag = 0
 BATCH_SIZE = 50000
 
 from tools.utils import (
@@ -104,6 +104,7 @@ def diversification_kpi(df):
 
 
 def process_diversification(batch_number):
+    start = datetime.time.now()
     bookings = get_data(batch_number, BATCH_SIZE)
 
     bookings_enriched = pd.merge(bookings, macro_rayons, on="rayon", how="left")
@@ -170,6 +171,8 @@ def process_diversification(batch_number):
             {"name": "delta_diversification", "type": "FLOAT"},
         ],
     )
+    end = datetime.time.now()
+    return int((end - start).seconds)
 
 
 if __name__ == "__main__":
@@ -178,14 +181,16 @@ if __name__ == "__main__":
     max_batch = int(
         -1 * (-count // BATCH_SIZE)
     )  # roof division to get number of batches
-    max_process = cpu_count()
+    max_process = cpu_count() - 1
 
     print(
         f"Starting process of {count} users by batch of {BATCH_SIZE} users.\nHence a total of {max_batch} batch(es)"
     )
 
-    with Pool(max_process) as p:
-        p.map(process_diversification, range(max_batch))
+    with concurrent.futures.ProcessPoolExecutor(max_process) as executor:
+        futures = executor.map(process_diversification, range(max_batch))
+    results = [f.result() for f in futures]
 
+    time_per_batch = sum(results) / len(results)
+    print(f"End of calculation, took {round(time_per_batch)} seconds per batch")
     time.sleep(60)
-    print(f"End of calculation.")

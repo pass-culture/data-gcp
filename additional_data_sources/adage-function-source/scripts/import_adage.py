@@ -15,9 +15,9 @@ def get_endpoint():
         return "https://omogen-api-pr.phm.education.gouv.fr/adage-api/v1"
 
     elif os.environ["ENV_SHORT_NAME"] == "stg":
-        return "http://omogen-api-tst-pr.phm.education.gouv.fr/adage-api-staging/v1"
+        return "https://omogen-api-tst-pr.phm.education.gouv.fr/adage-api-staging/v1"
     else:
-        return "http://omogen-api-tst-pr.phm.education.gouv.fr/adage-api-test/v1"
+        return "https://omogen-api-tst-pr.phm.education.gouv.fr/adage-api-test/v1"
 
 
 def access_secret(project_id, secret_id, version_id=1, default=None):

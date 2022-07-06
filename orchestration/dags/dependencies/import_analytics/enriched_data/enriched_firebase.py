@@ -272,7 +272,7 @@ def copy_pro_to_analytics(gcp_project, bigquery_raw_dataset, table_name, yyyymmd
             ) as offerer_humanized_id,
             (select event_params.value.string_value
                 from unnest(event_params) event_params
-                where event_params.key = 'pageName'
+                where event_params.key = 'page_title'
             ) as page_name,
             (select event_params.value.int_value
                 from unnest(event_params) event_params

@@ -909,6 +909,18 @@ ENRICHED_VENUE_DATA_INPUT = {
             "offer_creation_date": datetime.now().replace(microsecond=0),
         }
     ],
+    "collective_offer": [
+        {
+            "collective_offer_id": "1",
+            "venue_id": "1",
+        }
+    ],
+    "collective_offer_template": [
+        {
+            "collective_offer_id": "1",
+            "venue_id": "1",
+        }
+    ],
     "enriched_offer_data": [
         {
             "offer_id": "1",
@@ -982,7 +994,8 @@ ENRICHED_VENUE_DATA_EXPECTED = [
         "last_offer_creation_date": datetime.now().replace(microsecond=0),
         "first_booking_date": datetime.now().replace(microsecond=0),
         "last_booking_date": datetime.now().replace(microsecond=0),
-        "offers_created": 1,
+        "individual_offers_created": 1,
+        "collective_offers_created": 2,
         "venue_bookable_offer_cnt": 1,
         "theoretic_revenue": 2,
         "real_revenue": 2,

@@ -105,7 +105,6 @@ def diversification_kpi(df):
 
 
 def process_diversification(batch_number):
-    start = datetime.time.now()
     bookings = get_data(batch_number, BATCH_SIZE)
 
     bookings_enriched = pd.merge(bookings, macro_rayons, on="rayon", how="left")
@@ -172,8 +171,8 @@ def process_diversification(batch_number):
             {"name": "delta_diversification", "type": "FLOAT"},
         ],
     )
-    end = datetime.time.now()
-    return int((end - start).seconds)
+
+    return True
 
 
 if __name__ == "__main__":
@@ -192,6 +191,5 @@ if __name__ == "__main__":
         futures = executor.map(process_diversification, range(max_batch))
     results = [f.result() for f in futures]
 
-    time_per_batch = sum(results) / len(results)
-    print(f"End of calculation, took {round(time_per_batch)} seconds per batch")
+    print(f"End of calculation.")
     time.sleep(60)

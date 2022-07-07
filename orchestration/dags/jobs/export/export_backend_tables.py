@@ -21,9 +21,9 @@ default_dag_args = {
 }
 
 dag = DAG(
-    "create_backend_tables",
+    "export_backend_tables",
     default_args=default_dag_args,
-    description="Create daily tables for backend needs",
+    description="Export daily tables for backend needs",
     on_failure_callback=task_fail_slack_alert,
     schedule_interval="00 01 * * *",
     catchup=False,
@@ -36,10 +36,10 @@ start = DummyOperator(task_id="start", dag=dag)
 
 end = DummyOperator(task_id="end", dag=dag)
 
-create_table_tasks = []
+export_table_tasks = []
 for table, params in create_tables.items():
     task = BigQueryExecuteQueryOperator(
-        task_id=f"create_{table}",
+        task_id=f"export_{table}",
         sql=params["sql"],
         write_disposition="WRITE_APPEND",
         use_legacy_sql=False,
@@ -48,12 +48,7 @@ for table, params in create_tables.items():
         cluster_fields=params.get("cluster_fields", None),
         dag=dag,
     )
-    create_table_tasks.append(task)
+    export_table_tasks.append(task)
 
 
-(
-    start
-    >> create_table_tasks
-    >> end
-)
-
+(start >> export_table_tasks >> end)

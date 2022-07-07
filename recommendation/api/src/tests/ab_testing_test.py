@@ -3,12 +3,13 @@ import pytest
 from typing import Any
 from pcreco.core.user import User
 from pcreco.core.scoring import Scoring
-from pcreco.utils.env_vars import ENV_SHORT_NAME
+from pcreco.utils.env_vars import ENV_SHORT_NAME, AB_TESTING
 
 
 class ABtestingTest:
     # test_model_attribution
     # cf. conftest to find ab_test groups for users in the test db
+    @pytest.mark.skipif(AB_TESTING == False, reason="AB test is currently OFF")
     @pytest.mark.parametrize(
         ["user_id", "expected_group", "expected_model_name"],
         [
@@ -40,9 +41,9 @@ class ABtestingTest:
             "pcreco.utils.db.db_connection.__create_db_connection"
         ) as connection_mock:
             connection_mock.return_value = setup_database
-
             user = User(user_id)
             scoring = Scoring(user)
+
             assert (
                 user.group_id == expected_group
             ), " AB test group attribution is correct"

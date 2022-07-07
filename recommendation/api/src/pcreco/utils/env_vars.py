@@ -1,4 +1,5 @@
 import os
+from pickle import FALSE
 import time
 from typing import Any
 
@@ -19,8 +20,7 @@ SQL_BASE_PASSWORD = os.environ.get(
     access_secret(GCP_PROJECT, SQL_BASE_SECRET_ID, SQL_BASE_SECRET_VERSION),
 )
 # Attributes on API output and recommendation
-ACTIVE_MODEL = f"deep_reco_{ENV_SHORT_NAME}"
-# ACTIVE_MODEL= os.environ.get("ACTIVE_MODEL")
+ACTIVE_MODEL = f"tf_model_reco_{ENV_SHORT_NAME}"
 NUMBER_OF_RECOMMENDATIONS = 10
 SHUFFLE_RECOMMENDATION = True
 NUMBER_OF_PRESELECTED_OFFERS = 50 if not os.environ.get("CI") else 3
@@ -32,7 +32,7 @@ RECOMMENDABLE_OFFER_TABLE_SUFFIX_DICT = {
     17: "eac_16_17",
 }
 # AB TESTING
-AB_TESTING = True
+AB_TESTING = False
 AB_TESTING_GROUPS = ["A", "B", "C"]
 AB_TESTING_TABLE = os.environ.get(
     "AB_TESTING_TABLE", "ab_testing"

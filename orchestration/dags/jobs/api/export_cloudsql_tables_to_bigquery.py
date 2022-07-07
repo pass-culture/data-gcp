@@ -51,6 +51,7 @@ os.environ["AIRFLOW_CONN_PROXY_POSTGRES_TCP"] = (
 default_dag_args = {
     "start_date": datetime.datetime(2021, 2, 2),
     "retries": 1,
+    "on_failure_callback": task_fail_slack_alert,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT,
 }
@@ -60,7 +61,6 @@ dag = DAG(
     default_args=default_dag_args,
     description="Export tables from recommendation CloudSQL to BigQuery",
     schedule_interval="0 3 * * *",
-    on_failure_callback=task_fail_slack_alert,
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=90),
 )

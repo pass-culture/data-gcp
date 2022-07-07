@@ -1,9 +1,9 @@
 import pandas as pd
 import time
-from multiprocessing import cpu_count, Pool
+import datetime
+from multiprocessing import cpu_count
+import concurrent
 
-
-exitFlag = 0
 BATCH_SIZE = 50000
 
 from tools.utils import (
@@ -36,6 +36,7 @@ def get_data(batch, batch_size):
                 bookings AS (
                   SELECT user_id, offer_id, booking_amount, booking_creation_date, booking_id, offer_subcategoryId, physical_goods, digital_goods, event, offer_category_id
                   FROM `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_booking_data`
+                  WHERE booking_status != 'CANCELLED'
                 ),
                 
                 offer AS (
@@ -171,6 +172,8 @@ def process_diversification(batch_number):
         ],
     )
 
+    return True
+
 
 if __name__ == "__main__":
     count = count_data()
@@ -178,14 +181,14 @@ if __name__ == "__main__":
     max_batch = int(
         -1 * (-count // BATCH_SIZE)
     )  # roof division to get number of batches
-    max_process = cpu_count()
+    max_process = cpu_count() - 1
 
     print(
         f"Starting process of {count} users by batch of {BATCH_SIZE} users.\nHence a total of {max_batch} batch(es)"
     )
 
-    with Pool(max_process) as p:
-        p.map(process_diversification, range(max_batch))
+    with concurrent.futures.ProcessPoolExecutor(max_process) as executor:
+        futures = executor.map(process_diversification, range(max_batch))
 
-    time.sleep(60)
     print(f"End of calculation.")
+    time.sleep(60)

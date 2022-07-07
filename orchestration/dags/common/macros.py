@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta
 
 from common.config import (
+    BIGQUERY_OPEN_DATA_PUBLIC_DATASET,
+    BIGQUERY_OPEN_DATA_PROJECT,
     BIGQUERY_ANALYTICS_DATASET,
     BIGQUERY_CLEAN_DATASET,
     BIGQUERY_RAW_DATASET,
@@ -34,6 +36,8 @@ def add_days(ds, days):
 
 
 default = {
+    "bigquery_open_data_project": BIGQUERY_OPEN_DATA_PROJECT,
+    "bigquery_open_data_public_dataset": BIGQUERY_OPEN_DATA_PUBLIC_DATASET,
     "bigquery_analytics_dataset": BIGQUERY_ANALYTICS_DATASET,
     "bigquery_clean_dataset": BIGQUERY_CLEAN_DATASET,
     "bigquery_raw_dataset": BIGQUERY_RAW_DATASET,

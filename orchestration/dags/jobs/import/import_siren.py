@@ -17,6 +17,7 @@ from common.config import (
     BIGQUERY_CLEAN_DATASET,
     BIGQUERY_ANALYTICS_DATASET,
 )
+from common.alerts import task_fail_slack_alert
 
 FUNCTION_NAME = f"siren_import_{ENV_SHORT_NAME}"
 SIREN_FILENAME = "siren_data.csv"
@@ -24,6 +25,7 @@ SIREN_FILENAME = "siren_data.csv"
 default_dag_args = {
     "start_date": datetime.datetime(2021, 8, 25),
     "retries": 1,
+    "on_failure_callback": task_fail_slack_alert,
     "project_id": GCP_PROJECT,
 }
 

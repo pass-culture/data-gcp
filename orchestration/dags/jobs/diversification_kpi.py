@@ -159,7 +159,6 @@ with DAG(
 
     end = DummyOperator(
         task_id="end",
-        trigger_rule="all_done",
     )
 
     gce_instance_stop = ComputeEngineStopInstanceOperator(

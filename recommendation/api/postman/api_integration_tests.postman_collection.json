@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "846c46bf-29e3-41c3-93be-a98f574a8108",
+    "_postman_id": "d626c7d1-6f6b-4982-8f35-1a7b1b9d60a1",
     "name": "API Integration Tests",
     "description": "Collection of integration tests for the reco api.\nMade with Postman",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
@@ -850,7 +850,6 @@
               "  const jsonResponse = pm.response.json();\r",
               "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
               "  pm.expect(jsonResponse).to.have.property('AB_test')\r",
-              "  pm.expect(jsonResponse.AB_test).to.be.an(\"string\");\r",
               "});\r",
               "\r",
               "pm.test(\"Response must contain an string reco_origin\", function () {\r",
@@ -864,7 +863,6 @@
               "  const jsonResponse = pm.response.json();\r",
               "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
               "  pm.expect(jsonResponse).to.have.property('model_name')\r",
-              "  pm.expect(jsonResponse.reco_origin).to.be.an(\"string\");\r",
               "});\r",
               "\r",
               "pm.test(\"Response must contain 10 offers\", function () {\r",
@@ -973,7 +971,6 @@
               "  const jsonResponse = pm.response.json();\r",
               "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
               "  pm.expect(jsonResponse).to.have.property('AB_test')\r",
-              "  pm.expect(jsonResponse.AB_test).to.be.an(\"string\");\r",
               "});\r",
               "\r",
               "pm.test(\"Response must contain an string reco_origin\", function () {\r",
@@ -987,7 +984,6 @@
               "  const jsonResponse = pm.response.json();\r",
               "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
               "  pm.expect(jsonResponse).to.have.property('model_name')\r",
-              "  pm.expect(jsonResponse.reco_origin).to.be.an(\"string\");\r",
               "});\r",
               "\r",
               "pm.test(\"Response must contain 10 offers\", function () {\r",
@@ -1067,7 +1063,6 @@
               "  const jsonResponse = pm.response.json();\r",
               "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
               "  pm.expect(jsonResponse).to.have.property('AB_test')\r",
-              "  pm.expect(jsonResponse.AB_test).to.be.an(\"string\");\r",
               "});\r",
               "\r",
               "pm.test(\"Response must contain an string reco_origin\", function () {\r",
@@ -1081,7 +1076,6 @@
               "  const jsonResponse = pm.response.json();\r",
               "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
               "  pm.expect(jsonResponse).to.have.property('model_name')\r",
-              "  pm.expect(jsonResponse.reco_origin).to.be.an(\"string\");\r",
               "});\r",
               "\r",
               "pm.test(\"Response must contain 10 offers\", function () {\r",
@@ -1170,7 +1164,6 @@
               "  const jsonResponse = pm.response.json();\r",
               "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
               "  pm.expect(jsonResponse).to.have.property('AB_test')\r",
-              "  pm.expect(jsonResponse.AB_test).to.be.an(\"string\");\r",
               "});\r",
               "\r",
               "pm.test(\"Response must contain an string reco_origin\", function () {\r",
@@ -1184,7 +1177,6 @@
               "  const jsonResponse = pm.response.json();\r",
               "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
               "  pm.expect(jsonResponse).to.have.property('model_name')\r",
-              "  pm.expect(jsonResponse.reco_origin).to.be.an(\"string\");\r",
               "});\r",
               "\r",
               "pm.test(\"Response must contain 10 offers\", function () {\r",
@@ -1280,7 +1272,6 @@
               "  const jsonResponse = pm.response.json();\r",
               "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
               "  pm.expect(jsonResponse).to.have.property('AB_test')\r",
-              "  pm.expect(jsonResponse.AB_test).to.be.an(\"string\");\r",
               "});\r",
               "\r",
               "pm.test(\"Response must contain an string reco_origin\", function () {\r",
@@ -1294,7 +1285,6 @@
               "  const jsonResponse = pm.response.json();\r",
               "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
               "  pm.expect(jsonResponse).to.have.property('model_name')\r",
-              "  pm.expect(jsonResponse.reco_origin).to.be.an(\"string\");\r",
               "});\r",
               "\r",
               "function checkIfArrayIsUnique(array) {\r",
@@ -1393,7 +1383,6 @@
               "  const jsonResponse = pm.response.json();\r",
               "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
               "  pm.expect(jsonResponse).to.have.property('AB_test')\r",
-              "  pm.expect(jsonResponse.AB_test).to.be.an(\"string\");\r",
               "});\r",
               "\r",
               "pm.test(\"Response must contain an string reco_origin\", function () {\r",
@@ -1407,7 +1396,6 @@
               "  const jsonResponse = pm.response.json();\r",
               "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
               "  pm.expect(jsonResponse).to.have.property('model_name')\r",
-              "  pm.expect(jsonResponse.reco_origin).to.be.an(\"string\");\r",
               "});\r",
               "\r",
               "\r",
@@ -1507,7 +1495,6 @@
               "  const jsonResponse = pm.response.json();\r",
               "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
               "  pm.expect(jsonResponse).to.have.property('AB_test')\r",
-              "  pm.expect(jsonResponse.AB_test).to.be.an(\"string\");\r",
               "});\r",
               "\r",
               "pm.test(\"Response must contain an string reco_origin\", function () {\r",
@@ -1521,7 +1508,6 @@
               "  const jsonResponse = pm.response.json();\r",
               "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
               "  pm.expect(jsonResponse).to.have.property('model_name')\r",
-              "  pm.expect(jsonResponse.reco_origin).to.be.an(\"string\");\r",
               "});\r",
               "\r",
               "\r",
@@ -1621,7 +1607,6 @@
               "  const jsonResponse = pm.response.json();\r",
               "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
               "  pm.expect(jsonResponse).to.have.property('AB_test')\r",
-              "  pm.expect(jsonResponse.AB_test).to.be.an(\"string\");\r",
               "});\r",
               "\r",
               "pm.test(\"Response must contain an string reco_origin\", function () {\r",
@@ -1635,7 +1620,6 @@
               "  const jsonResponse = pm.response.json();\r",
               "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
               "  pm.expect(jsonResponse).to.have.property('model_name')\r",
-              "  pm.expect(jsonResponse.reco_origin).to.be.an(\"string\");\r",
               "});\r",
               "\r",
               "\r",
@@ -1727,109 +1711,6 @@
       "response": []
     },
     {
-      "name": "/recommendation/user_id Geoloc model : 'deep_reco'",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test(\"Status code is 200\", function () {\r",
-              "    pm.response.to.have.status(200);\r",
-              "});\r",
-              "pm.test(\"Response time is less than 10s\", function () {\r",
-              "    pm.expect(pm.response.responseTime).to.be.below(10000);\r",
-              "});\r",
-              "pm.test(\"Response must be a JSON and have a body\", function () {\r",
-              "     pm.response.to.be.ok;\r",
-              "     pm.response.to.be.withBody;\r",
-              "     pm.response.to.be.json;\r",
-              "});\r",
-              "\r",
-              "pm.test(\"Response must contain an array recommended_offers\", function () {\r",
-              "  const jsonResponse = pm.response.json();\r",
-              "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
-              "  pm.expect(jsonResponse).to.have.property('recommended_offers')\r",
-              "  pm.expect(jsonResponse.recommended_offers).to.be.an(\"array\");\r",
-              "});\r",
-              "\r",
-              "pm.test(\"Response must contain an string AB_test\", function () {\r",
-              "  const jsonResponse = pm.response.json();\r",
-              "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
-              "  pm.expect(jsonResponse).to.have.property('AB_test')\r",
-              "  pm.expect(jsonResponse.AB_test).to.be.an(\"string\");\r",
-              "});\r",
-              "\r",
-              "pm.test(\"Response must contain an string reco_origin\", function () {\r",
-              "  const jsonResponse = pm.response.json();\r",
-              "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
-              "  pm.expect(jsonResponse).to.have.property('reco_origin')\r",
-              "  pm.expect(jsonResponse.reco_origin).to.be.an(\"string\");\r",
-              "});\r",
-              "\r",
-              "pm.test(\"Response must contain an string model_name\", function () {\r",
-              "  const jsonResponse = pm.response.json();\r",
-              "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
-              "  pm.expect(jsonResponse).to.have.property('model_name')\r",
-              "  pm.expect(jsonResponse.reco_origin).to.be.an(\"string\");\r",
-              "});\r",
-              "\r",
-              "pm.test(\"Response must contain 10 offers\", function () {\r",
-              "  const jsonResponse = pm.response.json();\r",
-              "  pm.expect(jsonResponse.recommended_offers).to.have.lengthOf(10);\r",
-              "});\r",
-              "\r",
-              "function checkIfArrayIsUnique(array) {\r",
-              "  return array.length === new Set(array).size;\r",
-              "}\r",
-              "\r",
-              "pm.test('Check if Offer_ids are unique', () => {\r",
-              "    let ids = []\r",
-              "    _.each(pm.response.json().recommended_offers, (item) => {\r",
-              "        ids.push(item)\r",
-              "    })\r",
-              "\r",
-              "    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
-              "})"
-            ],
-            "type": "text/javascript"
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [],
-        "body": {
-          "mode": "raw",
-          "raw": "{\r\n    \"model_name\":\"deep_reco_{{env_name}}\"\r\n}",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
-        },
-        "url": {
-          "raw": "{{api_url}}/recommendation/{{user_id}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
-          "host": ["{{api_url}}"],
-          "path": ["recommendation", "{{user_id}}"],
-          "query": [
-            {
-              "key": "token",
-              "value": "{{api_token}}"
-            },
-            {
-              "key": "longitude",
-              "value": "2.3688874"
-            },
-            {
-              "key": "latitude",
-              "value": "48.8632553"
-            }
-          ]
-        }
-      },
-      "response": []
-    },
-    {
       "name": "/recommendation/user_id Geoloc model : 'tf_model_reco'",
       "event": [
         {
@@ -1859,7 +1740,6 @@
               "  const jsonResponse = pm.response.json();\r",
               "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
               "  pm.expect(jsonResponse).to.have.property('AB_test')\r",
-              "  pm.expect(jsonResponse.AB_test).to.be.an(\"string\");\r",
               "});\r",
               "\r",
               "pm.test(\"Response must contain an string reco_origin\", function () {\r",
@@ -1873,7 +1753,6 @@
               "  const jsonResponse = pm.response.json();\r",
               "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
               "  pm.expect(jsonResponse).to.have.property('model_name')\r",
-              "  pm.expect(jsonResponse.reco_origin).to.be.an(\"string\");\r",
               "});\r",
               "\r",
               "pm.test(\"Response must contain 10 offers\", function () {\r",
@@ -1904,109 +1783,6 @@
         "body": {
           "mode": "raw",
           "raw": "{\r\n    \"model_name\":\"tf_model_reco_{{env_name}}\"\r\n}",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
-        },
-        "url": {
-          "raw": "{{api_url}}/recommendation/{{user_id}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
-          "host": ["{{api_url}}"],
-          "path": ["recommendation", "{{user_id}}"],
-          "query": [
-            {
-              "key": "token",
-              "value": "{{api_token}}"
-            },
-            {
-              "key": "longitude",
-              "value": "2.3688874"
-            },
-            {
-              "key": "latitude",
-              "value": "48.8632553"
-            }
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "/recommendation/user_id Geoloc model : 'MF_reco'",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test(\"Status code is 200\", function () {\r",
-              "    pm.response.to.have.status(200);\r",
-              "});\r",
-              "pm.test(\"Response time is less than 10s\", function () {\r",
-              "    pm.expect(pm.response.responseTime).to.be.below(10000);\r",
-              "});\r",
-              "pm.test(\"Response must be a JSON and have a body\", function () {\r",
-              "     pm.response.to.be.ok;\r",
-              "     pm.response.to.be.withBody;\r",
-              "     pm.response.to.be.json;\r",
-              "});\r",
-              "\r",
-              "pm.test(\"Response must contain an array recommended_offers\", function () {\r",
-              "  const jsonResponse = pm.response.json();\r",
-              "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
-              "  pm.expect(jsonResponse).to.have.property('recommended_offers')\r",
-              "  pm.expect(jsonResponse.recommended_offers).to.be.an(\"array\");\r",
-              "});\r",
-              "\r",
-              "pm.test(\"Response must contain an string AB_test\", function () {\r",
-              "  const jsonResponse = pm.response.json();\r",
-              "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
-              "  pm.expect(jsonResponse).to.have.property('AB_test')\r",
-              "  pm.expect(jsonResponse.AB_test).to.be.an(\"string\");\r",
-              "});\r",
-              "\r",
-              "pm.test(\"Response must contain an string reco_origin\", function () {\r",
-              "  const jsonResponse = pm.response.json();\r",
-              "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
-              "  pm.expect(jsonResponse).to.have.property('reco_origin')\r",
-              "  pm.expect(jsonResponse.reco_origin).to.be.an(\"string\");\r",
-              "});\r",
-              "\r",
-              "pm.test(\"Response must contain an string model_name\", function () {\r",
-              "  const jsonResponse = pm.response.json();\r",
-              "  pm.expect(jsonResponse).to.be.an(\"object\");\r",
-              "  pm.expect(jsonResponse).to.have.property('model_name')\r",
-              "  pm.expect(jsonResponse.reco_origin).to.be.an(\"string\");\r",
-              "});\r",
-              "\r",
-              "pm.test(\"Response must contain 10 offers\", function () {\r",
-              "  const jsonResponse = pm.response.json();\r",
-              "  pm.expect(jsonResponse.recommended_offers).to.have.lengthOf(10);\r",
-              "});\r",
-              "\r",
-              "function checkIfArrayIsUnique(array) {\r",
-              "  return array.length === new Set(array).size;\r",
-              "}\r",
-              "\r",
-              "pm.test('Check if Offer_ids are unique', () => {\r",
-              "    let ids = []\r",
-              "    _.each(pm.response.json().recommended_offers, (item) => {\r",
-              "        ids.push(item)\r",
-              "    })\r",
-              "\r",
-              "    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
-              "})"
-            ],
-            "type": "text/javascript"
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [],
-        "body": {
-          "mode": "raw",
-          "raw": "{\r\n    \"model_name\":\"MF_reco_{{env_name}}\"\r\n}",
           "options": {
             "raw": {
               "language": "json"

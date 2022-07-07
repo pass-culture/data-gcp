@@ -1,20 +1,25 @@
 import datetime
 from airflow import DAG
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryExecuteQueryOperator,
+)
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.http.operators.http import SimpleHttpOperator
 from airflow.operators.python import PythonOperator
-
 from google.auth.transport.requests import Request
 from google.oauth2 import id_token
 from common.alerts import task_fail_slack_alert
 
+
 from common.config import (
-    GCP_PROJECT,
+    BIGQUERY_ANALYTICS_DATASET,
+    BIGQUERY_RAW_DATASET,
     ENV_SHORT_NAME,
+    GCP_PROJECT,
 )
 
-FUNCTION_NAME = f"adage_import_{ENV_SHORT_NAME}"
-SIREN_FILENAME = "adage_data.csv"
+FUNCTION_NAME = f"typeform_adage_reference_request_{ENV_SHORT_NAME}"
+
 
 default_dag_args = {
     "start_date": datetime.datetime(2022, 2, 7),
@@ -33,14 +38,16 @@ def getting_service_account_token():
 
 
 dag = DAG(
-    "import_adage_v1",
+    "import_typeform_adage_reference_request",
     default_args=default_dag_args,
-    description="Import Adage from API",
+    description="Import Typeform Adage Reference Request from API",
     on_failure_callback=None,
     schedule_interval="0 2 * * *",
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
 )
+
+start = DummyOperator(task_id="start", dag=dag)
 
 getting_service_account_token = PythonOperator(
     task_id="getting_service_account_token",
@@ -48,8 +55,8 @@ getting_service_account_token = PythonOperator(
     dag=dag,
 )
 
-adage_to_bq = SimpleHttpOperator(
-    task_id="adage_to_bq",
+typeform_adage_reference_request_to_bq = SimpleHttpOperator(
+    task_id="typeform_adage_reference_request_to_bq",
     method="POST",
     http_conn_id="http_gcp_cloud_function",
     endpoint=FUNCTION_NAME,
@@ -61,8 +68,28 @@ adage_to_bq = SimpleHttpOperator(
 )
 
 
-start = DummyOperator(task_id="start", dag=dag)
+create_analytics_table = BigQueryExecuteQueryOperator(
+    task_id="create_enriched_app_downloads_stats",
+    sql=f"""
+    SELECT 
+        *
+    FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.typeform_adage_reference_request` 
+    WHERE vous_etes is not null
+
+    """,
+    destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.typeform_adage_reference_request",
+    write_disposition="WRITE_TRUNCATE",
+    use_legacy_sql=False,
+    dag=dag,
+)
+
 
 end = DummyOperator(task_id="end", dag=dag)
 
-(start >> getting_service_account_token >> adage_to_bq >> end)
+(
+    start
+    >> getting_service_account_token
+    >> typeform_adage_reference_request_to_bq
+    >> create_analytics_table
+    >> end
+)

@@ -9,10 +9,12 @@ from airflow.operators.python import PythonOperator
 from google.auth.transport.requests import Request
 from google.oauth2 import id_token
 from common import macros
+from common.utils import depends_loop
 from dependencies.import_analytics.import_historical import (
     historical_clean_applicative_database,
     historical_analytics,
 )
+from dependencies.import_analytics.import_aggregated import aggregated_tables
 from common.config import DAG_FOLDER
 
 from common.config import (
@@ -59,6 +61,11 @@ from dependencies.import_analytics.enriched_data.venue import (
 from dependencies.import_analytics.enriched_data.venue_locations import (
     define_table_venue_locations,
 )
+
+from dependencies.import_analytics.enriched_data.suivi_dms_adage import (
+    define_enriched_suivi_dms_adage_full_query,
+)
+
 from dependencies.import_analytics.import_tables import (
     define_import_query,
     define_replace_query,
@@ -175,6 +182,7 @@ data_applicative_tables_and_date_columns = {
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),
     "retries": 1,
+    "on_failure_callback": analytics_fail_slack_alert,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT,
 }
@@ -183,7 +191,6 @@ dag = DAG(
     "import_analytics_v7",
     default_args=default_dag_args,
     description="Import tables from CloudSQL and enrich data for create dashboards with Metabase",
-    on_failure_callback=analytics_fail_slack_alert,
     schedule_interval="00 01 * * *",
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
@@ -414,6 +421,42 @@ create_enriched_offerer_data_task = BigQueryExecuteQueryOperator(
     dag=dag,
 )
 
+create_enriched_suivi_dms_adage_task = BigQueryExecuteQueryOperator(
+    task_id="create_enriched_suivi_dms_adage",
+    sql=define_enriched_suivi_dms_adage_full_query(
+        dataset=BIGQUERY_ANALYTICS_DATASET, table_prefix=APPLICATIVE_PREFIX
+    ),
+    use_legacy_sql=False,
+    dag=dag,
+)
+
+start_aggregated_analytics_table_tasks = DummyOperator(
+    task_id="start_aggregated_analytics_table_tasks", dag=dag
+)
+aggregated_analytics_table_jobs = {}
+for table, params in aggregated_tables.items():
+    task = BigQueryExecuteQueryOperator(
+        task_id=f"aggregated_{table}",
+        sql=params["sql"],
+        write_disposition="WRITE_TRUNCATE",
+        use_legacy_sql=False,
+        destination_dataset_table=params["destination_dataset_table"],
+        time_partitioning=params.get("time_partitioning", None),
+        cluster_fields=params.get("cluster_fields", None),
+        dag=dag,
+    )
+    aggregated_analytics_table_jobs[table] = {
+        "operator": task,
+        "depends": params.get("depends", []),
+    }
+
+aggregated_analytics_table_tasks = depends_loop(
+    aggregated_analytics_table_jobs, start_aggregated_analytics_table_tasks
+)
+end_aggregated_analytics_table_tasks = DummyOperator(
+    task_id="end_aggregated_analytics_table_tasks", dag=dag
+)
+
 
 getting_downloads_service_account_token = PythonOperator(
     task_id="getting_downloads_service_account_token",
@@ -591,6 +634,7 @@ end = DummyOperator(task_id="end", dag=dag)
     >> enriched_venues
     >> create_enriched_offerer_data_task
     >> create_enriched_institution_data_task
+    >> create_enriched_suivi_dms_adage_task
     >> end_enriched_data
 )
 (
@@ -607,3 +651,5 @@ end = DummyOperator(task_id="end", dag=dag)
     >> copy_playlists_to_analytics
     >> end
 )
+(end_enriched_data >> start_aggregated_analytics_table_tasks)
+(aggregated_analytics_table_tasks >> end_aggregated_analytics_table_tasks >> end)

@@ -23,6 +23,12 @@ historical_clean_applicative_database = {
         "time_partitioning": {"field": "partition_date"},
         "cluster_fields": ["partition_date"],
     },
+    "collective_offer_template_history": {
+        "sql": f"{CLEAN_APPLICATIVE_DATABASE_SQL_PATH}/collective_offer_template_history.sql",
+        "destination_dataset_table": "{{ bigquery_clean_dataset }}.applicative_database_collective_offer_template_history${{ yyyymmdd(yesterday()) }}",
+        "time_partitioning": {"field": "partition_date"},
+        "cluster_fields": ["partition_date"],
+    },
     "collective_stock_history": {
         "sql": f"{CLEAN_APPLICATIVE_DATABASE_SQL_PATH}/collective_stock_history.sql",
         "destination_dataset_table": "{{ bigquery_clean_dataset }}.applicative_database_collective_stock_history${{ yyyymmdd(yesterday()) }}",

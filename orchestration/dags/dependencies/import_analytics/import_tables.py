@@ -450,7 +450,7 @@ def define_import_query(
         "beneficiary_fraud_check"
     ] = r"""
             SELECT id, datecreated, user_id, type, reason, reasonCodes, status, eligibility_type, thirdpartyid
-                ,regexp_replace(content, \'"(email|phone|lastName|birthDate|firstName|phoneNumber|reason_code|account_email|last_name|birth_date|first_name|phone_number)": "[^"]*",\' ,\'"\\1":"XXX",\', \'g\') as result_content
+                ,regexp_replace(content, \'"(email|phone|lastName|birthDate|firstName|phoneNumber|reason_code|account_email|last_name|birth_date|first_name|phone_number|address|id_piece_number)": "[^"]*",\' ,\'"\\1":"XXX",\', \'g\') as result_content
                 FROM (
                 SELECT CAST("id" AS varchar(255)) AS id
                     ,"dateCreated" AS datecreated
@@ -571,6 +571,7 @@ def define_import_query(
                 ,"contactPhone" AS collective_offer_contact_phone
                 ,"offerVenue" AS collective_offer_offer_venue
                 ,CAST("lastValidationType" AS VARCHAR) AS collective_offer_last_validation_type
+                ,CAST("institutionId" AS varchar(255)) AS institution_id
             FROM public.collective_offer
         """
 

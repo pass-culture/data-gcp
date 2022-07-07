@@ -50,6 +50,7 @@ BUCKET_PATH = f"gs://{DATA_GCS_BUCKET_NAME}/bigquery_exports"
 default_args = {
     "start_date": datetime(2020, 12, 1),
     "retries": 3,
+    "on_failure_callback": task_fail_slack_alert,
     "retry_delay": timedelta(minutes=5),
 }
 FIREBASE_PERIOD_DAYS = 4 * 30 if ENV_SHORT_NAME == "prod" else 10
@@ -89,7 +90,6 @@ with DAG(
     default_args=default_args,
     description="Export bigQuery tables to GCS to dump and restore Cloud SQL tables",
     schedule_interval="30 3 * * *",
-    on_failure_callback=task_fail_slack_alert,
     catchup=False,
     dagrun_timeout=timedelta(minutes=240),
 ) as dag:

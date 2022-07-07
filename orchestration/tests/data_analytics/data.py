@@ -444,6 +444,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_INPUT = {
             "collective_offer_name": "Offre collective vraiment bien",
             "venue_id": "7",
             "collective_offer_creation_date": "2022-01-15",
+            "institution_id": None,
             "collective_offer_subcategory_id": "CONCERT",
             "collective_offer_is_active": True,
         }
@@ -484,6 +485,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_EXPECTED = [
         "collective_offer_id": "3",
         "collective_offer_name": "Offre collective vraiment bien",
         "venue_id": "7",
+        "institution_id": None,
         "venue_name": "Lieu super",
         "venue_department_code": "35",
         "venue_region_name": "Bretagne",
@@ -511,6 +513,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_EXPECTED = [
         "collective_offer_id": "4",
         "collective_offer_name": "Offre vitrine",
         "venue_id": "7",
+        "institution_id": None,
         "venue_name": "Lieu super",
         "venue_department_code": "35",
         "venue_region_name": "Bretagne",
@@ -906,6 +909,18 @@ ENRICHED_VENUE_DATA_INPUT = {
             "offer_creation_date": datetime.now().replace(microsecond=0),
         }
     ],
+    "collective_offer": [
+        {
+            "collective_offer_id": "1",
+            "venue_id": "1",
+        }
+    ],
+    "collective_offer_template": [
+        {
+            "collective_offer_id": "1",
+            "venue_id": "1",
+        }
+    ],
     "enriched_offer_data": [
         {
             "offer_id": "1",
@@ -979,7 +994,8 @@ ENRICHED_VENUE_DATA_EXPECTED = [
         "last_offer_creation_date": datetime.now().replace(microsecond=0),
         "first_booking_date": datetime.now().replace(microsecond=0),
         "last_booking_date": datetime.now().replace(microsecond=0),
-        "offers_created": 1,
+        "individual_offers_created": 1,
+        "collective_offers_created": 2,
         "venue_bookable_offer_cnt": 1,
         "theoretic_revenue": 2,
         "real_revenue": 2,

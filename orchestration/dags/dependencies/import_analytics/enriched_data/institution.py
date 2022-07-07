@@ -7,6 +7,7 @@ def define_deposit_rank_query(dataset, table_prefix=""):
                 ,educational_year_beginning_date AS educational_year_beginning_date
                 ,educational_year_expiration_date AS educational_year_expiration_date
                 ,educational_deposit_amount
+                ,ministry
                 ,CASE WHEN (CAST(educational_year_beginning_date AS DATE) <= CURRENT_DATE AND CAST(educational_year_expiration_date AS DATE) >= CURRENT_DATE) THEN TRUE ELSE FALSE END AS is_current_deposit
                 ,RANK() OVER(PARTITION BY educational_institution_id ORDER BY educational_deposit_creation_date,educational_deposit_id) AS deposit_rank_asc 
                 ,RANK() OVER(PARTITION BY educational_institution_id ORDER BY educational_deposit_creation_date DESC,educational_deposit_id DESC) AS deposit_rank_desc            
@@ -36,6 +37,7 @@ def define_current_deposit_query(dataset, table_prefix=""):
                 institution_id
                 ,educational_deposit_amount AS institution_current_deposit_amount
                 ,deposit_creation_date AS current_deposit_creation_date
+                ,ministry
             FROM ranked_deposit
             WHERE is_current_deposit IS TRUE 
         );
@@ -92,7 +94,7 @@ def define_last_booking_query(dataset, table_prefix=""):
     return f"""
         CREATE TEMP TABLE last_booking AS (   
             SELECT  
-                institution_id
+                bookings_infos.institution_id
                 ,bookings_infos.booking_creation_date AS last_booking_date
                 ,collective_offer_subcategory_id AS last_category_booked
             FROM bookings_infos 
@@ -109,7 +111,7 @@ def define_bookings_per_institution_query(dataset, table_prefix=""):
     return f"""
         CREATE TEMP TABLE bookings_per_institution AS (   
             SELECT  
-            institution_id
+            bookings_infos.institution_id
             ,COUNT(DISTINCT booking_id) AS nb_non_cancelled_bookings
             ,SUM(collective_stock_price) AS theoric_amount_spent
             ,COUNT(CASE WHEN booking_status IN ('USED','REIMBURSED') THEN 1 ELSE NULL END) AS nb_used_bookings
@@ -139,6 +141,22 @@ def define_students_per_institution_query(dataset, table_prefix=""):
         """
 
 
+def define_students_educonnectes_query(dataset, table_prefix=""):
+    return f"""
+        CREATE TEMP TABLE students_educonnectes AS (  
+            SELECT
+                  REGEXP_EXTRACT(result_content, '"school_uai": \"(.*?)\",') AS institution_external_id
+                , COUNT(DISTINCT enriched_user_data.user_id) AS nb_jeunes_credited
+            FROM {dataset}.{table_prefix}beneficiary_fraud_check AS beneficiary_fraud_check
+            LEFT JOIN {dataset}.enriched_user_data AS enriched_user_data 
+                ON beneficiary_fraud_check.user_id = enriched_user_data.user_id
+            WHERE type = 'EDUCONNECT'
+            AND REGEXP_EXTRACT(result_content, '"school_uai": \"(.*?)\",') IS NOT NULL
+            GROUP BY 1
+        );
+        """
+
+
 def define_enriched_institution_data_query(dataset, table_prefix=""):
     return f"""
         CREATE OR REPLACE TABLE {dataset}.enriched_institution_data AS (
@@ -146,6 +164,8 @@ def define_enriched_institution_data_query(dataset, table_prefix=""):
                 educational_institution.educational_institution_id AS institution_id 
                 ,educational_institution.institution_id AS institution_external_id 
                 ,institution_name AS institution_name 
+                ,current_deposit.ministry AS ministry 
+                ,region_department.region_name AS institution_region_name
                 ,educational_institution.institution_departement_code
                 ,institution_postal_code
                 ,institution_city 
@@ -161,9 +181,13 @@ def define_enriched_institution_data_query(dataset, table_prefix=""):
                 ,bookings_per_institution.theoric_amount_spent
                 ,bookings_per_institution.nb_used_bookings
                 ,bookings_per_institution.real_amount_spent
+                ,SAFE_DIVIDE(bookings_per_institution.real_amount_spent, current_deposit.institution_current_deposit_amount) AS part_credit_actuel_depense_reel
                 ,bookings_per_institution.total_eleves_concernes AS total_nb_of_tickets
                 ,students_per_institution.nb_of_students AS total_nb_of_students_in_institution
+                ,students_educonnectes.nb_jeunes_credited AS nb_eleves_beneficiaires
+                ,SAFE_DIVIDE(students_educonnectes.nb_jeunes_credited,students_per_institution.nb_of_students) AS part_eleves_beneficiaires
             FROM {dataset}.{table_prefix}educational_institution AS educational_institution
+            LEFT JOIN {dataset}.region_department ON educational_institution.institution_departement_code = region_department.num_dep
             LEFT JOIN first_deposit ON educational_institution.educational_institution_id = first_deposit.institution_id 
             LEFT JOIN current_deposit ON educational_institution.educational_institution_id = current_deposit.institution_id
             LEFT JOIN all_deposits ON educational_institution.educational_institution_id = all_deposits.institution_id
@@ -171,6 +195,8 @@ def define_enriched_institution_data_query(dataset, table_prefix=""):
             LEFT JOIN last_booking ON educational_institution.educational_institution_id = last_booking.institution_id
             LEFT JOIN bookings_per_institution ON educational_institution.educational_institution_id = bookings_per_institution.institution_id
             LEFT JOIN students_per_institution ON educational_institution.institution_id = students_per_institution.institution_id
+            LEFT JOIN {dataset}.academie_dept AS academie_dept ON educational_institution.institution_departement_code = academie_dept.code_dpt
+            LEFT JOIN students_educonnectes ON educational_institution.institution_id = students_educonnectes.institution_external_id
     );
     """
 
@@ -186,5 +212,6 @@ def define_enriched_institution_data_full_query(dataset, table_prefix=""):
         {define_last_booking_query(dataset=dataset, table_prefix=table_prefix)}
         {define_bookings_per_institution_query(dataset=dataset, table_prefix=table_prefix)}
         {define_students_per_institution_query(dataset=dataset, table_prefix=table_prefix)}
+        {define_students_educonnectes_query(dataset=dataset, table_prefix=table_prefix)}
         {define_enriched_institution_data_query(dataset=dataset, table_prefix=table_prefix)}
     """

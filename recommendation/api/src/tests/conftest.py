@@ -6,10 +6,11 @@ import pandas as pd
 import pytz
 from sqlalchemy import create_engine
 from typing import Any, Dict
+from pcreco.utils.env_vars import AB_TESTING_TABLE
 
 
 DATA_GCP_TEST_POSTGRES_PORT = os.getenv("DATA_GCP_TEST_POSTGRES_PORT")
-DB_NAME = os.getenv("DB_NAME")
+DB_NAME = os.getenv("DB_NAME", "db")
 ACTIVE_MODEL = os.environ.get("ACTIVE_MODEL")
 
 TEST_DATABASE_CONFIG = {
@@ -24,7 +25,7 @@ TEST_DATABASE_CONFIG = {
 @pytest.fixture
 def app_config() -> Dict[str, Any]:
     return {
-        "AB_TESTING_TABLE": "ab_testing",
+        "AB_TESTING_TABLE": AB_TESTING_TABLE,
         "NUMBER_OF_RECOMMENDATIONS": 10,
         "NUMBER_OF_PRESELECTED_OFFERS": 50,
         "MODEL_REGION": "model_region",

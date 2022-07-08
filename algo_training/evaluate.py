@@ -48,9 +48,9 @@ def evaluate(model, storage_path: str, model_name):
     )
 
     metrics = {
-        f"recall_at_{k}": data_model_dict_w_metrics["metrics"]["mark"],
-        f"precision_at_{k}": data_model_dict_w_metrics["metrics"]["mapk"],
-        f"coverage_at_{k}": data_model_dict_w_metrics["metrics"]["coverage"],
+        f"recall_at_{RECOMMENDATION_NUMBER}": data_model_dict_w_metrics["metrics"]["mark"],
+        f"precision_at_{RECOMMENDATION_NUMBER}": data_model_dict_w_metrics["metrics"]["mapk"],
+        f"coverage_at_{RECOMMENDATION_NUMBER}": data_model_dict_w_metrics["metrics"]["coverage"],
     }
 
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)

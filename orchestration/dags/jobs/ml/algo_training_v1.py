@@ -74,7 +74,7 @@ with DAG(
     if ENV_SHORT_NAME == "dev":
         branch = "master"
     if ENV_SHORT_NAME == "stg":
-        branch = "master"
+        branch = "PC-15877-restore-evaluation-step-in-algo-training"
     if ENV_SHORT_NAME == "prod":
         branch = "production"
 
@@ -178,6 +178,21 @@ with DAG(
         --zone {GCE_ZONE} \
         --project {GCP_PROJECT_ID} \
         --command {POSTPROCESSING}
+        """,
+        dag=dag,
+    )
+
+    EVALUATION = f""" '{DEFAULT}
+        python evaluate.py'
+    """
+
+    evaluate = BashOperator(
+        task_id="evaluate",
+        bash_command=f"""
+        gcloud compute ssh {GCE_INSTANCE} \
+        --zone {GCE_ZONE} \
+        --project {GCP_PROJECT_ID} \
+        --command {EVALUATION}
         """,
         dag=dag,
     )
@@ -304,6 +319,7 @@ with DAG(
         >> split_data
         >> training
         >> postprocess
+        >> evaluate
         >> gce_instance_stop
         >> deploy_model
         >> list_model_versions

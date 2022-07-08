@@ -74,7 +74,7 @@ with DAG(
     if ENV_SHORT_NAME == "dev":
         branch = "master"
     if ENV_SHORT_NAME == "stg":
-        branch = "PC-15877-restore-evaluation-step-in-algo-training"
+        branch = "master"
     if ENV_SHORT_NAME == "prod":
         branch = "production"
 

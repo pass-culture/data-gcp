@@ -17,7 +17,8 @@ WITH bookings_per_stock AS (
 )
 SELECT
     DISTINCT collective_stock.collective_offer_id,
-    collective_stock.partition_date
+    collective_stock.partition_date,
+    FALSE AS collective_offer_is_template
 FROM
     `{{ bigquery_clean_dataset }}`.applicative_database_collective_stock_history AS collective_stock
     JOIN `{{ bigquery_clean_dataset }}`.applicative_database_collective_offer_history AS collective_offer ON collective_stock.collective_offer_id = collective_offer.collective_offer_id
@@ -45,3 +46,11 @@ WHERE
         )
     )
     AND collective_stock.partition_date = DATE("{{ ds }}")
+UNION ALL
+SELECT
+    collective_offer_template.collective_offer_id
+    ,collective_offer_template.partition_date
+    ,TRUE AS collective_offer_is_template
+FROM
+        `{{ bigquery_clean_dataset }}`.applicative_database_collective_offer_template_history AS collective_offer_template
+    WHERE partition_date = DATE("{{ ds }}")

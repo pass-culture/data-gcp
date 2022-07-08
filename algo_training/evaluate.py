@@ -14,7 +14,7 @@ from utils import (
 from metrics import compute_metrics, get_actual_and_predicted
 
 RECOMMENDATION_NUMBER = 40
-
+k_list = [10, RECOMMENDATION_NUMBER]
 
 def evaluate(model, storage_path: str, model_name):
 
@@ -42,22 +42,15 @@ def evaluate(model, storage_path: str, model_name):
         "data": {"train": positive_data_train, "test": positive_data_test_clean},
         "model": model,
     }
+    data_model_dict_w_actual_and_predicted = get_actual_and_predicted(
+        data_model_dict)
+    metrics={}
+    for k in k_list:
+        data_model_dict_w_metrics_at_k = compute_metrics(data_model_dict_w_actual_and_predicted, k)
 
-    data_model_dict_w_metrics = compute_metrics(
-        get_actual_and_predicted(data_model_dict), RECOMMENDATION_NUMBER
-    )
-
-    metrics = {
-        f"recall_at_{RECOMMENDATION_NUMBER}": data_model_dict_w_metrics["metrics"][
-            "mark"
-        ],
-        f"precision_at_{RECOMMENDATION_NUMBER}": data_model_dict_w_metrics["metrics"][
-            "mapk"
-        ],
-        f"coverage_at_{RECOMMENDATION_NUMBER}": data_model_dict_w_metrics["metrics"][
-            "coverage"
-        ],
-    }
+        metrics[f"recall_at_{k}"] = data_model_dict_w_metrics_at_k["metrics"]["mark"]
+        metrics[f"precision_at_{k}"]= data_model_dict_w_metrics_at_k["metrics"]["mapk"]
+        metrics[f"coverage_at_{k}"] = data_model_dict_w_metrics_at_k["metrics"]["coverage"],
 
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
     mlflow.log_metrics(metrics)

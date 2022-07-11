@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Tuple
 import numpy as np
 import random
 
-from utils import NUMBER_OF_RECOMMENDATIONS, SHUFFLE_RECOMMENDATION
+from utils import RECOMMENDATION_NUMBER, SHUFFLE_RECOMMENDATION
 
 
 def order_offers_by_score_and_diversify_categories(
@@ -50,14 +50,13 @@ def order_offers_by_score_and_diversify_categories(
                 diversified_offers.append(
                     offers_by_category_ordered_by_frequency[offer_category].pop()
                 )
-        if len(diversified_offers) >= NUMBER_OF_RECOMMENDATIONS:
+        if len(diversified_offers) >= RECOMMENDATION_NUMBER:
             break
 
     ordered_and_diversified_offers = [offer["id"] for offer in diversified_offers][
-        :NUMBER_OF_RECOMMENDATIONS
+        :RECOMMENDATION_NUMBER
     ]
 
-    log_duration("order_offers_by_score_and_diversify_categories", start)
     return ordered_and_diversified_offers
 
 
@@ -75,7 +74,6 @@ def _get_offers_grouped_by_category(offers: List[Dict[str, Any]]) -> Dict:
         else:
             offers_by_category[offer_category] = [offer]
 
-    log_duration("_get_offers_grouped_by_category", start)
     return offers_by_category
 
 

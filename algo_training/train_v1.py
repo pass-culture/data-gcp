@@ -40,7 +40,7 @@ def train(storage_path: str):
     user_ids = bookings["user_id"].unique().tolist()
     item_ids = bookings["item_id"].unique().tolist()
 
-    experiment_name = "algo_training_v1"
+    experiment_name = "algo_training_v1_test"
     experiment = mlflow.get_experiment_by_name(experiment_name)
 
     with mlflow.start_run(experiment_id=experiment.experiment_id):

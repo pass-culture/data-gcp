@@ -9,11 +9,10 @@ from utils import (
     STORAGE_PATH,
     ENV_SHORT_NAME,
     MODEL_NAME,
-    GCP_PROJECT_ID,
+    RECOMMENDATION_NUMBER,
 )
 from metrics import compute_metrics, get_actual_and_predicted
 
-RECOMMENDATION_NUMBER = 40
 k_list = [10, RECOMMENDATION_NUMBER]
 
 
@@ -52,6 +51,12 @@ def evaluate(model, storage_path: str, model_name):
 
         metrics[f"recall_at_{k}"] = data_model_dict_w_metrics_at_k["metrics"]["mark"]
         metrics[f"precision_at_{k}"] = data_model_dict_w_metrics_at_k["metrics"]["mapk"]
+        metrics[f"recall_at_{k}_div"] = data_model_dict_w_metrics_at_k["metrics"][
+            "div_mark"
+        ]
+        metrics[f"precision_at_{k}_div"] = data_model_dict_w_metrics_at_k["metrics"][
+            "div_mapk"
+        ]
         metrics[f"coverage_at_{k}"] = (
             data_model_dict_w_metrics_at_k["metrics"]["coverage"],
         )

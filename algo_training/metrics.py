@@ -6,6 +6,7 @@ from tqdm import tqdm
 import numpy as np
 import recmetrics
 import matplotlib.pyplot as plt
+from tools.diversification import order_offers_by_score_and_diversify_categories
 
 
 def get_actual_and_predicted(data_model_dict):
@@ -18,11 +19,18 @@ def get_actual_and_predicted(data_model_dict):
         .agg({"actual": (lambda x: list(x))})
     )
     deep_reco_prediction = []
+    predictions_diversified = []
     for user_id in tqdm(df_actual.user_id):
-        prediction = get_prediction(user_id, data_model_dict)
-        deep_reco_prediction.append(prediction)
+        df_predicted = get_prediction(user_id, data_model_dict)
+        deep_reco_prediction.append(list(df_predicted.item_id))
+        # Compute diversification with score and prediction
+        diversified_prediction = order_offers_by_score_and_diversify_categories(
+            df_predicted
+        )
+        predictions_diversified.append(diversified_prediction)
     df_actual_predicted = df_actual
     df_actual_predicted["model_predicted"] = deep_reco_prediction
+    df_actual_predicted["predictions_diversified"] = predictions_diversified
     data_model_dict["top_offers"] = df_actual_predicted
     return data_model_dict
 
@@ -39,23 +47,34 @@ def get_prediction(user_id, data_model_dict):
     user_to_rank = np.reshape(
         np.array([str(user_id)] * len(offer_to_score)), (nboffers, 1)
     )
-
+    offer_subcategoryid = np.reshape(
+        np.array(list(data.offer_subcategoryid)), (nboffers, 1)
+    )
     pred_input = [user_to_rank, offer_to_score]
     prediction = model.predict(pred_input, verbose=0)
     df_predicted = pd.DataFrame(
         {
             "item_id": offer_to_score.flatten().tolist(),
             "score": prediction.flatten().tolist(),
+            "subcategory": offer_subcategoryid.flatten().tolist(),
         }
     )
     df_predicted = df_predicted.sort_values(["score"], ascending=False)
-    return list(df_predicted.item_id)
+    return df_predicted
 
 
 def compute_metrics(data_model_dict, k):
-    mark, mapk = compute_recall_and_precision_at_k(data_model_dict, k)
+    mark, mapk, div_mark, div_mapk = compute_recall_and_precision_at_k(
+        data_model_dict, k
+    )
     coverage = get_coverage_at_k(data_model_dict, k)
-    data_model_dict["metrics"] = {"mark": mark, "mapk": mapk, "coverage": coverage}
+    data_model_dict["metrics"] = {
+        "mark": mark,
+        "mapk": mapk,
+        "coverage": coverage,
+        "div_mark": div_mark,
+        "div_mapk": div_mapk,
+    }
     return data_model_dict
 
 
@@ -63,9 +82,15 @@ def compute_recall_and_precision_at_k(data_model_dict, k):
 
     actual = data_model_dict["top_offers"].actual.values.tolist()
     model_predictions = data_model_dict["top_offers"].model_predicted.values.tolist()
+    model_predictions_diversified = data_model_dict[
+        "top_offers"
+    ].predictions_diversified.values.tolist()
     mark, mapk = get_avg_recall_and_precision_at_k(actual, model_predictions, k)
+    div_mark, div_mapk = get_avg_recall_and_precision_at_k(
+        actual, model_predictions_diversified, k
+    )
 
-    return mark, mapk
+    return mark, mapk, div_mark, div_mapk
 
 
 def get_avg_recall_and_precision_at_k(actual, model_predictions, k):

@@ -63,7 +63,6 @@ class Scoring:
             return ACTIVE_MODEL
 
     def get_scoring_method(self) -> object:
-        print("self.iscoldstart: ", self.iscoldstart)
         if self.iscoldstart:
             scoring_method = self.ColdStart(self)
         else:

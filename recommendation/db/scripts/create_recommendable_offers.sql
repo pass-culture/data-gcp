@@ -89,7 +89,7 @@ RETURNS TABLE (offer_id varchar,
                 item_id text) AS
 $body$
 BEGIN
-    RETURN QUERY
+    RETURN QUERY 
     SELECT DISTINCT ON (offer.offer_id)
             offer.offer_id               AS offer_id,
             offer.offer_product_id       AS product_id,

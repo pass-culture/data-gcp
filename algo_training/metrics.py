@@ -56,7 +56,7 @@ def get_prediction(user_id, data_model_dict):
         {
             "item_id": offer_to_score.flatten().tolist(),
             "score": prediction.flatten().tolist(),
-            "subcategory": offer_subcategoryid.flatten().tolist(),
+            "offer_subcategoryid": offer_subcategoryid.flatten().tolist(),
         }
     )
     df_predicted = df_predicted.sort_values(["score"], ascending=False)

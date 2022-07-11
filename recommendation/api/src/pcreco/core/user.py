@@ -36,22 +36,22 @@ class User:
     def get_user_profile(self) -> None:
         self.age = None
         self.user_deposit_initial_amount = 0
-        with create_db_connection() as connection:
+        connection = create_db_connection()
 
-            request_response = connection.execute(
-                text(
-                    f"""
-                    SELECT 
-                        FLOOR(DATE_PART('DAY',user_deposit_creation_date - user_birth_date)/365) as age,
-                        user_deposit_initial_amount
-                        FROM public.enriched_user
-                        WHERE user_id = '{str(self.id)}' 
-                    """
-                )
-            ).fetchone()
-            if request_response is not None:
-                self.age = int(request_response[0])
-                self.user_deposit_initial_amount = request_response[1]
+        request_response = connection.execute(
+            text(
+                f"""
+                SELECT 
+                    FLOOR(DATE_PART('DAY',user_deposit_creation_date - user_birth_date)/365) as age,
+                    user_deposit_initial_amount
+                    FROM public.enriched_user
+                    WHERE user_id = '{str(self.id)}' 
+                """
+            )
+        ).fetchone()
+        if request_response is not None:
+            self.age = int(request_response[0])
+            self.user_deposit_initial_amount = request_response[1]
 
     def get_ab_testing_group(self) -> None:
         if AB_TESTING:

@@ -30,4 +30,10 @@ def create_pool():
 
 
 def create_db_connection() -> Any:
-    return create_pool().connect().execution_options(autocommit=True)
+    return __create_db_connection()
+
+
+def __create_db_connection() -> Any:
+    connection = create_pool().connect().execution_options(autocommit=True)
+    yield connection
+    connection.close()

@@ -20,71 +20,49 @@ TEST_DATABASE_CONFIG = {
 }
 
 
-@pytest.fixture
-def setup_database() -> Any:
-
-    engine = create_engine(
-        f"postgresql+psycopg2://postgres:postgres@localhost:{DATA_GCP_TEST_POSTGRES_PORT}/{DB_NAME}"
-    )
-    connection = engine.connect().execution_options(autocommit=True)
-
-    iris_france = pd.read_csv("./src/tests/iris_france_tests.csv")
-    iris_france.to_sql("iris_france", con=engine, if_exists="replace", index=False)
-
-    sql = """ALTER TABLE public.iris_france
-            ALTER COLUMN shape TYPE Geometry(GEOMETRY, 4326)
-            USING ST_SetSRID(shape::Geometry, 4326);
-        """
-
-    connection.execute(sql)
-
-    yield connection
-
-    engine.execute("DROP TABLE IF EXISTS iris_france;")
-    connection.close()
-
-
-@patch("src.pcreco.utils.db.db_connection.create_db_connection")
-def test_get_iris_from_coordinates(mock_connection: Mock, setup_database: Any):
+def test_get_iris_from_coordinates(setup_database: Any):
     # Given
-    mock_connection.return_value = setup_database
+    with patch(
+        "pcreco.utils.db.db_connection.__create_db_connection"
+    ) as connection_mock:
+        connection_mock.return_value = setup_database
 
-    # When
-    longitude = 2.331289
-    latitude = 48.830719
-    iris_id = get_iris_from_coordinates(longitude, latitude)
+        # When
+        longitude = 2.331289
+        latitude = 48.830719
+        iris_id = get_iris_from_coordinates(longitude, latitude)
 
-    # Then
-    assert iris_id == 45327
+        # Then
+        assert iris_id == 45327
 
 
-@patch("src.pcreco.utils.db.db_connection.create_db_connection")
-def test_get_iris_from_coordinates_without_coordinates(
-    mock_connection: Mock, setup_database: Any
-):
+def test_get_iris_from_coordinates_without_coordinates(setup_database: Any):
     # Given
-    mock_connection.return_value = setup_database
+    with patch(
+        "pcreco.utils.db.db_connection.__create_db_connection"
+    ) as connection_mock:
+        connection_mock.return_value = setup_database
 
-    # When
-    longitude = None
-    latitude = None
-    iris_id = get_iris_from_coordinates(longitude, latitude)
+        # When
+        longitude = None
+        latitude = None
+        iris_id = get_iris_from_coordinates(longitude, latitude)
 
-    # Then
-    assert iris_id is None
+        # Then
+        assert iris_id is None
 
 
-@patch("src.pcreco.utils.db.db_connection.create_db_connection")
-def test_get_iris_from_coordinates_not_in_france(
-    mock_connection: Mock, setup_database: Any
-):
+def test_get_iris_from_coordinates_not_in_france(setup_database: Any):
     # Given
-    mock_connection.return_value = setup_database
+    with patch(
+        "pcreco.utils.db.db_connection.__create_db_connection"
+    ) as connection_mock:
+        connection_mock.return_value = setup_database
 
-    # When
-    longitude = -122.1639346
-    latitude = 37.4449422
-    iris_id = get_iris_from_coordinates(longitude, latitude)
+        # When
+        longitude = -122.1639346
+        latitude = 37.4449422
+        iris_id = get_iris_from_coordinates(longitude, latitude)
 
-    # Then
-    assert iris_id is None
+        # Then
+        assert iris_id is None

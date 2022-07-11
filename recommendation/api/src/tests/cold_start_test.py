@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, MagicMock, call
 
 from typing import Any, List
 
@@ -16,17 +16,18 @@ from pcreco.core.utils.cold_start_status import get_cold_start_status
         ("113", True),
     ],
 )
-@patch("src.pcreco.utils.db.db_connection.create_db_connection")
 def test_get_cold_start_status(
-    connection_mock: Mock,
     setup_database: Any,
     user_id: str,
     cold_start_status: bool,
 ):
-    # Given
-    connection_mock.return_value = setup_database
-    user = User(user_id)
-    assert get_cold_start_status(user) == cold_start_status
+    with patch(
+        "pcreco.utils.db.db_connection.__create_db_connection"
+    ) as connection_mock:
+        # Given
+        connection_mock.return_value = setup_database
+        user = User(user_id)
+        assert get_cold_start_status(user) == cold_start_status
 
 
 @pytest.mark.parametrize(
@@ -89,17 +90,26 @@ def test_get_cold_start_status(
         ),
     ],
 )
-@patch("src.pcreco.utils.db.db_connection.create_db_connection")
+@patch("pcreco.core.scoring.get_cold_start_status")
 def test_get_cold_start_categories(
-    connection_mock: Mock,
+    cold_start_status_mock: Mock,
     setup_database: Any,
     user_id: str,
     cold_start_categories: List[str],
 ):
     # Given
-    user = User(user_id)
-    scoring = Scoring(user)
-    connection_mock.return_value = setup_database
-    assert sorted(scoring.ColdStart.get_cold_start_categories()) == sorted(
-        cold_start_categories
-    )
+    with patch(
+        "pcreco.utils.db.db_connection.__create_db_connection"
+    ) as connection_mock:
+        # Given
+        connection_mock.return_value = setup_database
+
+        # Force Scoring to be cold_start
+        cold_start_status_mock.return_value = True
+
+        user = User(user_id)
+
+        scoring = Scoring(user)
+        assert sorted(scoring.scoring.get_cold_start_categories()) == sorted(
+            cold_start_categories
+        )

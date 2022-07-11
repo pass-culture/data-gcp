@@ -65,8 +65,8 @@ def _get_offers_grouped_by_category(offers: List[Dict[str, Any]]) -> Dict:
     offers_by_category = dict()
     product_ids = set()
     for offer in offers:
-        offer_category = offer["category"]
-        offer_product_id = offer["product_id"]
+        offer_category = offer["offer_subcategoryid"]
+        offer_product_id = offer["item_id"]
         if offer_category in offers_by_category.keys():
             if offer_product_id not in product_ids:
                 offers_by_category[offer_category].append(offer)

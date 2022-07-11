@@ -16,7 +16,7 @@ def get_bookings(start_date, end_date):
         where booking.booking_creation_date >= DATETIME '{start_date} 00:00:00'
         and booking.booking_creation_date <= DATETIME '{end_date} 00:00:00'
         and user_id is not null
-        group by user_id, offer_id,categoryId, offer_subcategoryid,
+        group by user_id, offer_id,categoryId, offer_subcategoryid
     """
     bookings = pd.read_gbq(query)
     return bookings

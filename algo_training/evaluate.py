@@ -12,6 +12,7 @@ from utils import (
     MODEL_NAME,
     RECOMMENDATION_NUMBER,
     EVALUATION_USER_NUMBER,
+    EXPERIMENT_NAME,
 )
 from metrics import compute_metrics, get_actual_and_predicted
 
@@ -22,12 +23,22 @@ def evaluate(model, storage_path: str, model_name):
 
     positive_data_train = pd.read_csv(
         f"{storage_path}/positive_data_train.csv",
-        dtype={"user_id": str, "item_id": str, "offer_subcategoryid": str},
+        dtype={
+            "user_id": str,
+            "item_id": str,
+            "offer_subcategoryid": str,
+            "offer_categoryId": str,
+        },
     )
 
     positive_data_test = pd.read_csv(
         f"{storage_path}/positive_data_test.csv",
-        dtype={"user_id": str, "item_id": str, "offer_subcategoryid": str},
+        dtype={
+            "user_id": str,
+            "item_id": str,
+            "offer_subcategoryid": str,
+            "offer_categoryId": str,
+        },
     )
 
     positive_data_test_clean = positive_data_test[
@@ -74,6 +85,10 @@ def evaluate(model, storage_path: str, model_name):
             "coverage"
         ]
 
+        metrics["personalization"] = data_model_dict_w_metrics_at_k["metrics"][
+            "personalization"
+        ]
+
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
     mlflow.log_metrics(metrics)
     print("------- EVALUATE DONE -------")
@@ -102,7 +117,7 @@ def check_before_deploy(metrics, k):
 if __name__ == "__main__":
     client_id = get_secret("mlflow_client_id")
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
-    experiment_name = f"algo_training_{MODEL_NAME}"
+    experiment_name = EXPERIMENT_NAME
     experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
     run_id = mlflow.list_run_infos(experiment_id)[0].run_id
     with mlflow.start_run(run_id=run_id):

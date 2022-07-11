@@ -13,6 +13,7 @@ from utils import (
     STORAGE_PATH,
     ENV_SHORT_NAME,
     BOOKING_DAY_NUMBER,
+    EXPERIMENT_NAME,
 )
 
 TRAIN_DIR = "/home/airflow/train"
@@ -40,7 +41,7 @@ def train(storage_path: str):
     user_ids = bookings["user_id"].unique().tolist()
     item_ids = bookings["item_id"].unique().tolist()
 
-    experiment_name = "algo_training_v1_test"
+    experiment_name = EXPERIMENT_NAME
     experiment = mlflow.get_experiment_by_name(experiment_name)
 
     with mlflow.start_run(experiment_id=experiment.experiment_id):

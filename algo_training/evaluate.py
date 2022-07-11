@@ -37,7 +37,7 @@ def evaluate(model, storage_path: str, model_name):
     # Extract random sub sample if len(users_to_evaluate) > EVALUATION_USER_NUMBER
     if len(positive_data_test_clean.user_id) > EVALUATION_USER_NUMBER:
         random_users_to_test = random.sample(
-            positive_data_test_clean.user_id, EVALUATION_USER_NUMBER
+            list(positive_data_test_clean.user_id), EVALUATION_USER_NUMBER
         )
 
     positive_data_test_clean = positive_data_test_clean[

@@ -70,9 +70,9 @@ def evaluate(model, storage_path: str, model_name):
         metrics[f"precision_at_{k}_div"] = data_model_dict_w_metrics_at_k["metrics"][
             "div_mapk"
         ]
-        metrics[f"coverage_at_{k}"] = (
-            data_model_dict_w_metrics_at_k["metrics"]["coverage"]
-        )
+        metrics[f"coverage_at_{k}"] = data_model_dict_w_metrics_at_k["metrics"][
+            "coverage"
+        ]
 
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
     mlflow.log_metrics(metrics)

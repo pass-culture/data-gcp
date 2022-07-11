@@ -24,16 +24,25 @@ class AdressesDownloader:
 
     def fetch_new_user_data(self):
         bigquery_query = f"""
-        SELECT user_id, REPLACE(REPLACE(user_address, '\\r', ''), '\\n', '') AS user_address, user_postal_code, user_city, user_department_code
-        FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_user`
-        JOIN `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_beneficiary_import`ON beneficiaryId = user_id
-        WHERE user_address is not NULL AND user_address <> ""
-        AND (
-            (user_postal_code is not NULL AND user_city is not NULL AND user_department_code is not NULL)
-            OR source="demarches_simplifiees"
-            )
-        AND user_id not in (SELECT user_id FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.user_locations`)
-        ORDER BY user_id LIMIT 500;
+        SELECT 
+            du.user_creation_date,
+            du.user_id, 
+            REPLACE(REPLACE(du.user_address, '\\r', ''), '\\n', '') AS user_address, 
+            du.user_postal_code,
+            du.user_city,
+            du.user_department_code
+        FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_user` du
+        LEFT JOIN  `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.user_locations` ul on ul.user_id = du.user_id
+        WHERE 
+            du.user_address is not NULL
+        AND du.user_address <> ""
+        AND du.user_postal_code is not NULL 
+        AND du.user_city is not NULL 
+        AND du.user_department_code is not NULL
+        -- 
+        AND ul.user_id IS NULL 
+        ORDER BY du.user_id 
+        LIMIT 1000;
         """
 
         user_address_dataframe = bigquery_client.query(bigquery_query)
@@ -50,7 +59,6 @@ class AdressesDownloader:
     def fetch_coordinates(self, parsed_address):
         url = f"https://api-adresse.data.gouv.fr/search/?q={parsed_address}"
         response = requests.get(url)
-        time.sleep(0.1)
         api_address_informations = {
             "longitude": None,
             "latitude": None,

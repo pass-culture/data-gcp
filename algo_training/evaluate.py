@@ -34,10 +34,11 @@ def evaluate(model, storage_path: str, model_name):
         positive_data_test.user_id.isin(positive_data_train.user_id)
     ]
 
-    #Extract random sub sample if len(users_to_evaluate) > EVALUATION_USER_NUMBER
+    # Extract random sub sample if len(users_to_evaluate) > EVALUATION_USER_NUMBER
     if len(positive_data_test_clean.user_id) > EVALUATION_USER_NUMBER:
         random_users_to_test = random.sample(
-            positive_data_test_clean.user_id, EVALUATION_USER_NUMBER)
+            positive_data_test_clean.user_id, EVALUATION_USER_NUMBER
+        )
 
     positive_data_test_clean = positive_data_test_clean[
         positive_data_test_clean.user_id.isin(random_users_to_test)
@@ -62,7 +63,7 @@ def evaluate(model, storage_path: str, model_name):
 
         metrics[f"recall_at_{k}"] = data_model_dict_w_metrics_at_k["metrics"]["mark"]
         metrics[f"precision_at_{k}"] = data_model_dict_w_metrics_at_k["metrics"]["mapk"]
-        
+
         metrics[f"recall_at_{k}_div"] = data_model_dict_w_metrics_at_k["metrics"][
             "div_mark"
         ]

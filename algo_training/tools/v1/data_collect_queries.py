@@ -11,7 +11,7 @@ def get_bookings(start_date, end_date):
         on booking.stock_id = stock.stock_id
         inner join `passculture-data-prod.clean_prod.applicative_database_offer` offer
         on stock.offer_id = offer.offer_id
-        inner join `passculture-data-prod.analytics_prod.subcategories` subcategories
+        inner join `passculture-data-prod.clean_prod.subcategories` subcategories
         on stock.offer_id = subcategories.offer_id
         where booking.booking_creation_date >= DATETIME '{start_date} 00:00:00'
         and booking.booking_creation_date <= DATETIME '{end_date} 00:00:00'

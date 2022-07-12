@@ -13,7 +13,7 @@ MLFLOW_EHP_URI = "https://mlflow-ehp.internal-passculture.app/"
 MLFLOW_PROD_URI = "https://mlflow.internal-passculture.app/"
 MODEL_NAME = os.environ.get("MODEL_NAME", "")
 
-EXPERIMENT_NAME = "algo_training_v1.1"
+EXPERIMENT_NAME = f"algo_training_v1.1_{ENV_SHORT_NAME}"
 
 RECOMMENDATION_NUMBER = 40
 SHUFFLE_RECOMMENDATION = True

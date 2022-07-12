@@ -1,5 +1,4 @@
 import collections
-import time
 from typing import Any, Dict, List, Tuple
 
 import numpy as np
@@ -20,7 +19,6 @@ def order_offers_by_score_and_diversify_categories(
     """
 
     offers = offers.to_dict("records")
-    start = time.time()
     if SHUFFLE_RECOMMENDATION:
         for recommendation in offers:
             recommendation["score"] = random.random()
@@ -53,15 +51,12 @@ def order_offers_by_score_and_diversify_categories(
         if len(diversified_offers) >= RECOMMENDATION_NUMBER:
             break
 
-    ordered_and_diversified_offers = [offer["item_id"] for offer in diversified_offers][
-        :RECOMMENDATION_NUMBER
-    ]
+    ordered_and_diversified_offers = [offer["item_id"] for offer in diversified_offers]
 
     return ordered_and_diversified_offers
 
 
 def _get_offers_grouped_by_category(offers: List[Dict[str, Any]]) -> Dict:
-    start = time.time()
     offers_by_category = dict()
     product_ids = set()
     for offer in offers:

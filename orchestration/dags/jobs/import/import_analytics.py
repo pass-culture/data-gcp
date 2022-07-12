@@ -176,6 +176,9 @@ data_applicative_tables_and_date_columns = {
         "collective_stock_beginning_date_time",
         "collective_stock_booking_limit_date_time",
     ],
+    "invoice": [
+        "invoice_creation_date",
+    ],
 }
 
 

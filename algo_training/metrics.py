@@ -58,7 +58,8 @@ def get_prediction(user_id, data_model_dict):
         }
     )
     df_predicted = df_predicted.sort_values(["score"], ascending=False)
-    return df_predicted
+    # return only top 50 offers since max k for metrics is 40
+    return df_predicted.head(50)
 
 
 def compute_metrics(data_model_dict, k):

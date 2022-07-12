@@ -1,8 +1,6 @@
 import os
 from typing import Any
 from unittest.mock import patch, Mock
-
-import pandas as pd
 import pytest
 
 from pcreco.utils.health_check_queries import (
@@ -58,9 +56,7 @@ def test_should_raise_exception_when_it_does_not_come_from_sql_alchemy(
     setup_database: Any,
 ):
     # Given
-    with patch(
-        "pcreco.utils.db.db_connection.__create_db_connection"
-    ) as connection_mock:
+    with patch("pcreco.utils.db.db_connection.__get_db") as connection_mock:
         does_materialized_view_exist_mock.return_value = True
         does_materialized_view_have_data_mock.return_value = False
         materialized_view_name = "materialized_view_name"

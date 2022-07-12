@@ -18,9 +18,7 @@ class UserTest:
     def test_get_user_profile(
         self, setup_database: Any, user_id, expected_age, expected_deposit
     ):
-        with patch(
-            "pcreco.utils.db.db_connection.__create_db_connection"
-        ) as connection_mock:
+        with patch("pcreco.utils.db.db_connection.__get_db") as connection_mock:
             connection_mock.return_value = setup_database
             user = User(user_id)
             assert user.age == expected_age, f"age is right"

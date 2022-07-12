@@ -1,6 +1,5 @@
 # pylint: disable=invalid-name
 import random
-
 from google.api_core.client_options import ClientOptions
 from googleapiclient import discovery
 from sqlalchemy import text
@@ -10,7 +9,7 @@ from pcreco.core.utils.diversification import (
     order_offers_by_score_and_diversify_categories,
 )
 from pcreco.models.reco.recommendation import RecommendationIn
-from pcreco.utils.db.db_connection import create_db_connection
+from pcreco.utils.db.db_connection import get_db
 
 from pcreco.utils.env_vars import (
     ENV_SHORT_NAME,
@@ -96,7 +95,7 @@ class Scoring:
                     }
                 )
 
-            connection = create_db_connection()
+            connection = get_db()
             connection.execute(
                 text(
                     """
@@ -147,7 +146,7 @@ class Scoring:
 
         def get_recommendable_offers(self) -> List[Dict[str, Any]]:
             query = text(self._get_intermediate_query())
-            connection = create_db_connection()
+            connection = get_db()
             query_result = connection.execute(
                 query,
                 user_id=str(self.user.id),
@@ -247,7 +246,7 @@ class Scoring:
                 LIMIT :number_of_preselected_offers;
                 """
             )
-            connection = create_db_connection()
+            connection = get_db()
             query_result = connection.execute(
                 recommendations_query,
                 user_iris_id=str(self.user.iris_id),
@@ -274,7 +273,7 @@ class Scoring:
                 f"""SELECT {'"' + '","'.join(qpi_answers_categories) + '"'} FROM qpi_answers WHERE user_id = :user_id;"""
             )
 
-            connection = create_db_connection()
+            connection = get_db()
             query_result = connection.execute(
                 cold_start_query,
                 user_id=str(self.user.id),

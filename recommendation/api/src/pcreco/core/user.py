@@ -3,7 +3,7 @@ from pcreco.core.utils.ab_testing import (
     ab_testing_assign_user,
 )
 from pcreco.utils.geolocalisation import get_iris_from_coordinates
-from pcreco.utils.db.db_connection import create_db_connection
+from pcreco.utils.db.db_connection import get_db
 from sqlalchemy import text
 from pcreco.utils.env_vars import (
     RECOMMENDABLE_OFFER_TABLE_PREFIX,
@@ -36,7 +36,7 @@ class User:
     def get_user_profile(self) -> None:
         self.age = None
         self.user_deposit_initial_amount = 0
-        connection = create_db_connection()
+        connection = get_db()
 
         request_response = connection.execute(
             text(

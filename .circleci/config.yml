@@ -604,11 +604,11 @@ workflows:
           cloud-function-name: dms_dev
           cloud-function-folder: dms-function-source
           <<: *deploy_on_dev_commons
-       - cloud-function-deploy:
-          name: import-typeform-adage-reference-request-dev
-          cloud-function-name: import_typeform_adage_reference_request_dev
-          cloud-function-folder: import-typeform-adage-reference-request-source
-          <<: *deploy_on_dev_commons
+      - cloud-function-deploy:
+        name: import-typeform-adage-reference-request-dev
+        cloud-function-name: import_typeform_adage_reference_request_dev
+        cloud-function-folder: import-typeform-adage-reference-request-source
+        <<: *deploy_on_dev_commons
       - build_and_deploy_api:
           name: build_and_deploy_api_dev
           api-instance-name: apireco-dev

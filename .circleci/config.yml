@@ -478,6 +478,39 @@ workflows:
             - Slack
           <<: *slack-fail-post-step
 
+      - cloud-function-deploy:
+          name: import-typeform-adage-reference-request-stg
+          cloud-function-name: typeform_adage_reference_request_stg
+          cloud-function-folder: typeform-adage-reference-request-source
+          requires:
+            - linter
+          filters:
+            branches:
+              only:
+                - master
+          context:
+            - DATA_GCP
+            - DATA_GCP_EHP
+            - Slack
+          <<: *slack-fail-post-step
+
+      - cloud-function-deploy:
+          name: import-typeform-adage-reference-request-prod
+          cloud-function-name: typeform_adage_reference_request_prod
+          cloud-function-folder: typeform-adage-reference-request-source
+          requires:
+            - linter
+          filters:
+            branches:
+              only:
+                - production
+          context:
+            - DATA_GCP
+            - DATA_GCP_PROD
+            - Slack
+          <<: *slack-fail-post-step
+      
+
       # Slack alerts jobs
       # ----------------
       - slack-alert:

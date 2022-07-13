@@ -104,7 +104,7 @@ def recommendation(user_id: int):
     return jsonify(
         {
             "recommended_offers": user_recommendations,
-            "AB_test": user.group_id if AB_TESTING else None,
+            "AB_test": user.group_id if AB_TESTING else "default",
             "reco_origin": "cold_start" if scoring.iscoldstart else "algo",
             "model_name": scoring.model_name if not scoring.iscoldstart else None,
         }

@@ -1,5 +1,6 @@
 from sqlalchemy import create_engine, engine, text
 from typing import Any, Dict, List, Tuple
+from flask import current_app, g
 
 from pcreco.utils.env_vars import (
     SQL_BASE_USER,
@@ -29,11 +30,18 @@ def create_pool():
     )
 
 
-def create_db_connection() -> Any:
+def get_db() -> Any:
+    return __get_db()
+
+
+def __get_db() -> Any:
+    return g.db
+
+
+def create_db_connection():
     return __create_db_connection()
 
 
 def __create_db_connection() -> Any:
     connection = create_pool().connect().execution_options(autocommit=True)
-    yield connection
-    connection.close()
+    return connection

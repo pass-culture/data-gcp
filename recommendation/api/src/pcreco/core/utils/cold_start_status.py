@@ -1,4 +1,4 @@
-from pcreco.utils.db.db_connection import create_db_connection
+from pcreco.utils.db.db_connection import get_db
 from sqlalchemy import text
 
 
@@ -21,7 +21,7 @@ def get_cold_start_status(User) -> bool:
 def _get_user_app_interaction(User) -> int:
     app_interaction_type = ["bookings", "clicks", "favorites"]
     app_interaction_count = []
-    connection = create_db_connection()
+    connection = get_db()
     for app_interaction in app_interaction_type:
         app_interaction_count.append(
             _get_app_interaction_count(User, connection, app_interaction)
@@ -48,7 +48,7 @@ def _get_app_interaction_count(User, connection, app_interaction) -> int:
 
 
 def _is_trained_user(User) -> bool:
-    connection = create_db_connection()
+    connection = get_db()
     is_trained_user = connection.execute(
         text("SELECT user_id FROM trained_users_mf_reco WHERE user_id= :user_id"),
         user_id=str(User.id),

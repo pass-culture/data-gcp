@@ -9,7 +9,6 @@ from sqlalchemy import false
 from pcreco.core.utils.diversification import (
     order_offers_by_score_and_diversify_categories,
 )
-import pandas as pd
 
 ENV_SHORT_NAME = os.getenv("ENV_SHORT_NAME")
 ACTIVE_MODEL = os.getenv("ACTIVE_MODEL")

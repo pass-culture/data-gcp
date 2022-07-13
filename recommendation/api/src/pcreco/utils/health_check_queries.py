@@ -3,7 +3,7 @@ import os
 import sys
 from typing import Any
 
-from pcreco.utils.db.db_connection import create_db_connection
+from pcreco.utils.db.db_connection import get_db
 from pcreco.utils.secrets.access_gcp_secrets import access_secret
 
 
@@ -42,7 +42,7 @@ def does_materialized_view_have_data(
 
 
 def get_materialized_view_status(materialized_view_name: str) -> dict:
-    connection = create_db_connection()
+    connection = get_db()
 
     materialized_view_status = {
         f"is_{materialized_view_name}_datasource_exists": does_materialized_view_exist(

@@ -646,7 +646,7 @@ workflows:
             - dms-cloud-function-deploy-dev
             - build_and_deploy_api_dev
             - adage-import-function-deploy-dev
-            - import-typeform-adage-reference-request-dev
+            - typeform-adage-reference-request-dev
 ### temporarily removing api reco tests ###
 #          requires:
 #            - api-integration-tests-dev

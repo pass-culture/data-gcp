@@ -176,6 +176,9 @@ data_applicative_tables_and_date_columns = {
         "collective_stock_beginning_date_time",
         "collective_stock_booking_limit_date_time",
     ],
+    "invoice": [
+        "invoice_creation_date",
+    ],
 }
 
 
@@ -295,7 +298,7 @@ for table in data_applicative_tables_and_date_columns.keys():
 
 end_import = DummyOperator(task_id="end_import", dag=dag)
 
-IRIS_DISTANCE = 50000
+IRIS_DISTANCE = 50000 if ENV_SHORT_NAME != "dev" else 10000
 
 link_iris_venues_task = BigQueryExecuteQueryOperator(
     task_id="link_iris_venues_task",

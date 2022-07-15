@@ -3,11 +3,12 @@ from pcreco.core.utils.ab_testing import (
     ab_testing_assign_user,
 )
 from pcreco.utils.geolocalisation import get_iris_from_coordinates
-from pcreco.utils.db.db_connection import create_db_connection
+from pcreco.utils.db.db_connection import get_db
 from sqlalchemy import text
 from pcreco.utils.env_vars import (
     RECOMMENDABLE_OFFER_TABLE_PREFIX,
     RECOMMENDABLE_OFFER_TABLE_SUFFIX_DICT,
+    AB_TESTING,
 )
 
 
@@ -35,26 +36,29 @@ class User:
     def get_user_profile(self) -> None:
         self.age = None
         self.user_deposit_initial_amount = 0
-        with create_db_connection() as connection:
+        connection = get_db()
 
-            request_response = connection.execute(
-                text(
-                    f"""
-                    SELECT 
-                        FLOOR(DATE_PART('DAY',user_deposit_creation_date - user_birth_date)/365) as age,
-                        user_deposit_initial_amount
-                        FROM public.enriched_user
-                        WHERE user_id = '{str(self.id)}' 
-                    """
-                )
-            ).fetchone()
-            if request_response is not None:
-                self.age = int(request_response[0])
-                self.user_deposit_initial_amount = request_response[1]
+        request_response = connection.execute(
+            text(
+                f"""
+                SELECT 
+                    FLOOR(DATE_PART('DAY',user_deposit_creation_date - user_birth_date)/365) as age,
+                    user_deposit_initial_amount
+                    FROM public.enriched_user
+                    WHERE user_id = '{str(self.id)}' 
+                """
+            )
+        ).fetchone()
+        if request_response is not None:
+            self.age = int(request_response[0])
+            self.user_deposit_initial_amount = request_response[1]
 
     def get_ab_testing_group(self) -> None:
-        ab_testing = query_ab_testing_table(self.id)
-        if ab_testing:
-            self.group_id = ab_testing[0]
+        if AB_TESTING:
+            ab_testing = query_ab_testing_table(self.id)
+            if ab_testing:
+                self.group_id = ab_testing[0]
+            else:
+                self.group_id = ab_testing_assign_user(self.id)
         else:
-            self.group_id = ab_testing_assign_user(self.id)
+            self.group_id = None

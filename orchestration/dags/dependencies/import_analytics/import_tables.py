@@ -633,6 +633,20 @@ def define_import_query(
                 ,"social_medias" AS venue_contact_social_medias
             FROM public.venue_contact
         """
+
+    cloudsql_queries[
+        "invoice"
+    ] = """
+             SELECT 
+                CAST("id" AS varchar(255)) AS invoice_id
+                ,"date" AS invoice_creation_date
+                ,"reference" AS invoice_reference
+                ,CAST("businessUnitId" AS varchar(255)) business_unit_id
+                ,-"amount"/100 AS amount
+                ,CAST("reimbursementPointId" AS varchar(255)) AS reimbursement_point_id
+            FROM public.invoice
+            """
+
     # Build specific federated queries
     queries = {}
     for external_table, external_query in cloudsql_queries.items():

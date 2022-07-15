@@ -1,6 +1,5 @@
 # pylint: disable=invalid-name
 import random
-
 from google.api_core.client_options import ClientOptions
 from googleapiclient import discovery
 from sqlalchemy import text
@@ -10,7 +9,7 @@ from pcreco.core.utils.diversification import (
     order_offers_by_score_and_diversify_categories,
 )
 from pcreco.models.reco.recommendation import RecommendationIn
-from pcreco.utils.db.db_connection import create_db_connection
+from pcreco.utils.db.db_connection import get_db
 
 from pcreco.utils.env_vars import (
     ENV_SHORT_NAME,
@@ -22,6 +21,7 @@ from pcreco.utils.env_vars import (
     AB_TESTING,
     AB_TEST_MODEL_DICT,
     RECOMMENDABLE_OFFER_LIMIT,
+    SHUFFLE_RECOMMENDATION,
     log_duration,
 )
 import datetime
@@ -73,7 +73,8 @@ class Scoring:
         final_recommendations = order_offers_by_score_and_diversify_categories(
             sorted(
                 self.scoring.get_scored_offers(), key=lambda k: k["score"], reverse=True
-            )[:NUMBER_OF_PRESELECTED_OFFERS]
+            )[:NUMBER_OF_PRESELECTED_OFFERS],
+            SHUFFLE_RECOMMENDATION,
         )
 
         return final_recommendations
@@ -94,16 +95,16 @@ class Scoring:
                     }
                 )
 
-            with create_db_connection() as connection:
-                connection.execute(
-                    text(
-                        """
-                        INSERT INTO public.past_recommended_offers (userid, offerid, date, group_id, reco_origin)
-                        VALUES (:user_id, :offer_id, :date, :group_id, :reco_origin)
-                        """
-                    ),
-                    rows,
-                )
+            connection = get_db()
+            connection.execute(
+                text(
+                    """
+                    INSERT INTO public.past_recommended_offers (userid, offerid, date, group_id, reco_origin)
+                    VALUES (:user_id, :offer_id, :date, :group_id, :reco_origin)
+                    """
+                ),
+                rows,
+            )
             log_duration(f"save_recommendations for {self.user.id}", start)
 
     class Algo:
@@ -136,38 +137,31 @@ class Scoring:
         def _get_instances(self) -> List[Dict[str, str]]:
             user_to_rank = [self.user.id] * len(self.recommendable_offers)
             offer_ids_to_rank = []
-            offers_subcategories = []
             for recommendation in self.recommendable_offers:
                 offer_ids_to_rank.append(
                     recommendation["item_id"] if recommendation["item_id"] else ""
                 )
-                offers_subcategories.append(
-                    recommendation["subcategory_id"]
-                    if recommendation["subcategory_id"]
-                    else ""
-                )
             instances = [{"input_1": user_to_rank, "input_2": offer_ids_to_rank}]
-            if self.model_name == f"deep_reco_{ENV_SHORT_NAME}":
-                instances[0]["input_3"] = offers_subcategories
             return instances
 
         def get_recommendable_offers(self) -> List[Dict[str, Any]]:
             query = text(self._get_intermediate_query())
-            with create_db_connection() as connection:
-                query_result = connection.execute(
-                    query,
-                    user_id=str(self.user.id),
-                    user_iris_id=str(self.user.iris_id),
-                ).fetchall()
+            connection = get_db()
+            query_result = connection.execute(
+                query,
+                user_id=str(self.user.id),
+                user_iris_id=str(self.user.iris_id),
+            ).fetchall()
 
             user_recommendation = [
                 {
                     "id": row[0],
                     "category": row[1],
                     "subcategory_id": row[2],
-                    "url": row[3],
-                    "item_id": row[4],
-                    "product_id": row[5],
+                    "search_group_name": row[3],
+                    "url": row[4],
+                    "item_id": row[5],
+                    "product_id": row[6],
                 }
                 for row in query_result
             ]
@@ -181,7 +175,7 @@ class Scoring:
                 else "(is_national = True or url IS NOT NULL)"
             )
             query = f"""
-                SELECT offer_id, category, subcategory_id, url, item_id, product_id
+                SELECT offer_id, category, subcategory_id,search_group_name,url, item_id, product_id
                 FROM {self.user.recommendable_offer_table}
                 WHERE {geoloc_filter}
                 AND offer_id NOT IN
@@ -234,11 +228,11 @@ class Scoring:
             where_clause = (
                 f"""(venue_id IN (SELECT "venue_id" FROM iris_venues_mv WHERE "iris_id" = :user_iris_id) OR is_national = True OR url IS NOT NULL)"""
                 if self.user.iris_id
-                else "is_national = True or url IS NOT NULL"
+                else "(is_national = True or url IS NOT NULL)"
             )
             recommendations_query = text(
                 f"""
-                SELECT offer_id, category, url, product_id
+                SELECT offer_id, category,search_group_name, url, product_id
                 FROM {self.user.recommendable_offer_table}
                 WHERE offer_id NOT IN
                     (
@@ -252,20 +246,21 @@ class Scoring:
                 LIMIT :number_of_preselected_offers;
                 """
             )
-            with create_db_connection() as connection:
-                query_result = connection.execute(
-                    recommendations_query,
-                    user_iris_id=str(self.user.iris_id),
-                    user_id=str(self.user.id),
-                    number_of_preselected_offers=NUMBER_OF_PRESELECTED_OFFERS,
-                ).fetchall()
+            connection = get_db()
+            query_result = connection.execute(
+                recommendations_query,
+                user_iris_id=str(self.user.iris_id),
+                user_id=str(self.user.id),
+                number_of_preselected_offers=NUMBER_OF_PRESELECTED_OFFERS,
+            ).fetchall()
 
             cold_start_recommendations = [
                 {
                     "id": row[0],
                     "category": row[1],
-                    "url": row[2],
-                    "product_id": row[3],
+                    "search_group_name": row[2],
+                    "url": row[3],
+                    "product_id": row[4],
                     "score": random.random(),
                 }
                 for row in query_result
@@ -278,11 +273,11 @@ class Scoring:
                 f"""SELECT {'"' + '","'.join(qpi_answers_categories) + '"'} FROM qpi_answers WHERE user_id = :user_id;"""
             )
 
-            with create_db_connection() as connection:
-                query_result = connection.execute(
-                    cold_start_query,
-                    user_id=str(self.user.id),
-                ).fetchall()
+            connection = get_db()
+            query_result = connection.execute(
+                cold_start_query,
+                user_id=str(self.user.id),
+            ).fetchall()
 
             cold_start_categories = []
             if len(query_result) == 0:

@@ -1,320 +1,152 @@
-import random
-import gcsfs
-import pickle
 import numpy as np
+import pandas as pd
 import tensorflow as tf
-import warnings
-from scipy.spatial.distance import cosine
-from operator import itemgetter
-from utils import ENV_SHORT_NAME, STORAGE_PATH, GCP_PROJECT_ID
-from models.v2.mf_reco.matrix_factorization_model import MFModel
-
-NUMBER_OF_USERS = 5000 if ENV_SHORT_NAME == "prod" else 200
-
-TYPE_LIST = [
-    "ABO_BIBLIOTHEQUE",
-    "ABO_CONCERT",
-    "ABO_JEU_VIDEO",
-    "ABO_LIVRE_NUMERIQUE",
-    "ABO_LUDOTHEQUE",
-    "ABO_MEDIATHEQUE",
-    "ABO_MUSEE",
-    "ABO_PLATEFORME_MUSIQUE",
-    "ABO_PLATEFORME_VIDEO",
-    "ABO_PRATIQUE_ART",
-    "ABO_PRESSE_EN_LIGNE",
-    "ABO_SPECTACLE",
-    "ACHAT_INSTRUMENT",
-    "ACTIVATION_EVENT",
-    "ACTIVATION_THING",
-    "APP_CULTURELLE",
-    "ATELIER_PRATIQUE_ART",
-    "AUTRE_SUPPORT_NUMERIQUE",
-    "BON_ACHAT_INSTRUMENT",
-    "CAPTATION_MUSIQUE",
-    "CARTE_CINE_ILLIMITE",
-    "CARTE_CINE_MULTISEANCES",
-    "CARTE_MUSEE",
-    "CINE_PLEIN_AIR",
-    "CINE_VENTE_DISTANCE",
-    "CONCERT",
-    "CONCOURS",
-    "CONFERENCE",
-    "DECOUVERTE_METIERS",
-    "ESCAPE_GAME",
-    "EVENEMENT_CINE",
-    "EVENEMENT_JEU",
-    "EVENEMENT_MUSIQUE",
-    "EVENEMENT_PATRIMOINE",
-    "FESTIVAL_CINE",
-    "FESTIVAL_LIVRE",
-    "FESTIVAL_MUSIQUE",
-    "FESTIVAL_SPECTACLE",
-    "JEU_EN_LIGNE",
-    "JEU_SUPPORT_PHYSIQUE",
-    "LIVESTREAM_EVENEMENT",
-    "LIVESTREAM_MUSIQUE",
-    "LIVRE_AUDIO_PHYSIQUE",
-    "LIVRE_NUMERIQUE",
-    "LIVRE_PAPIER",
-    "LOCATION_INSTRUMENT",
-    "MATERIEL_ART_CREATIF",
-    "MUSEE_VENTE_DISTANCE",
-    "OEUVRE_ART",
-    "PARTITION",
-    "PODCAST",
-    "RENCONTRE_JEU",
-    "RENCONTRE",
-    "SALON",
-    "SEANCE_CINE",
-    "SEANCE_ESSAI_PRATIQUE_ART",
-    "SPECTACLE_ENREGISTRE",
-    "SPECTACLE_REPRESENTATION",
-    "SUPPORT_PHYSIQUE_FILM",
-    "SUPPORT_PHYSIQUE_MUSIQUE",
-    "TELECHARGEMENT_LIVRE_AUDIO",
-    "TELECHARGEMENT_MUSIQUE",
-    "VISITE_GUIDEE",
-    "VISITE_VIRTUELLE",
-    "VISITE",
-    "VOD",
-]
+from tensorflow import keras
+from tqdm import tqdm
+import numpy as np
+import recmetrics
+import matplotlib.pyplot as plt
 
 
-def get_unexpectedness(booked_subcategoryId_list, recommended_subcategoryId_list):
-    booked_subcategoryId_vector_list = [
-        [
-            int(booked_subcategoryId == offer_subcategoryId)
-            for offer_subcategoryId in TYPE_LIST
-        ]
-        for booked_subcategoryId in booked_subcategoryId_list
-    ]
-    recommended_subcategoryId_vector_list = [
-        [
-            int(recommended_subcategoryId == offer_subcategoryId)
-            for offer_subcategoryId in TYPE_LIST
-        ]
-        for recommended_subcategoryId in recommended_subcategoryId_list
-    ]
+def get_actual_and_predicted(data_model_dict):
 
-    cosine_sum = 0
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        for booked_subcategoryId_vector in booked_subcategoryId_vector_list:
-            for (
-                recommended_subcategoryId_vector
-            ) in recommended_subcategoryId_vector_list:
-                cosine_sum += cosine(
-                    booked_subcategoryId_vector, recommended_subcategoryId_vector
-                )
-
-    return (
-        1 / (len(booked_subcategoryId_list) * len(recommended_subcategoryId_list))
-    ) * cosine_sum
-
-
-def compute_metrics(k, positive_data_train, positive_data_test, model_name, model):
-    # Map all offers to corresponding subcategoryIds
-    offer_subcategoryId_dict = {}
-    if model_name == "v2_mf_reco":
-        positive_data_train.rename(columns={"offer_id": "item_id"}, inplace=True)
-        positive_data_test.rename(columns={"offer_id": "item_id"}, inplace=True)
-
-    unique_offer_subcategoryIds = (
-        positive_data_train.groupby(["item_id", "offer_subcategoryid"])
-        .first()
-        .reset_index()
+    data_test = data_model_dict["data"]["test"]
+    data_test = data_test.sort_values(["user_id", "rating"], ascending=False)
+    df_actual = (
+        data_test.copy()
+        .groupby("user_id", as_index=False)["item_id"]
+        .agg({"actual": (lambda x: list(x))})
     )
-    for item_id, item_subcategoryId in zip(
-        unique_offer_subcategoryIds.item_id.values,
-        unique_offer_subcategoryIds.offer_subcategoryid.values,
-    ):
-        offer_subcategoryId_dict[item_id] = item_subcategoryId
+    deep_reco_prediction = []
+    for user_id in tqdm(df_actual.user_id):
+        prediction = get_prediction(user_id, data_model_dict)
+        deep_reco_prediction.append(prediction)
+    df_actual_predicted = df_actual
+    df_actual_predicted["model_predicted"] = deep_reco_prediction
+    data_model_dict["top_offers"] = df_actual_predicted
+    return data_model_dict
 
-    # Only keep user - item interactions in positive_data_test, which can be inferred from model
-    cleaned_positive_data_test = positive_data_test.copy()
-    print(
-        f"Original number of positive feedbacks in test: {cleaned_positive_data_test.shape[0]}"
+
+def get_prediction(user_id, data_model_dict):
+
+    model = data_model_dict["model"]
+    data = data_model_dict["data"]["test"][
+        ["item_id", "offer_subcategoryid"]
+    ].drop_duplicates()
+
+    nboffers = len(list(data.item_id))
+    offer_to_score = np.reshape(np.array(list(data.item_id)), (nboffers, 1))
+    user_to_rank = np.reshape(
+        np.array([str(user_id)] * len(offer_to_score)), (nboffers, 1)
     )
 
-    cleaned_positive_data_test = cleaned_positive_data_test[
-        cleaned_positive_data_test.user_id.isin(positive_data_train.user_id)
-    ]
-    print(
-        f"Number of positive feedbacks in test after removing users not present in train: {cleaned_positive_data_test.shape[0]}"
+    pred_input = [user_to_rank, offer_to_score]
+    prediction = model.predict(pred_input, verbose=0)
+    df_predicted = pd.DataFrame(
+        {
+            "item_id": offer_to_score.flatten().tolist(),
+            "score": prediction.flatten().tolist(),
+        }
     )
+    df_predicted = df_predicted.sort_values(["score"], ascending=False)
+    return list(df_predicted.item_id)
 
-    cleaned_positive_data_test = cleaned_positive_data_test[
-        cleaned_positive_data_test.item_id.isin(positive_data_train.item_id)
-    ]
-    print(
-        f"Number of positive feedbacks in test after removing offers not present in train: {cleaned_positive_data_test.shape[0]}"
-    )
 
-    # Get all offers the model may predict
-    all_item_ids = list(set(positive_data_train.item_id.values))
-    # Get all users in cleaned test data
-    all_test_user_ids = list(set(cleaned_positive_data_test.user_id.values))
+def compute_metrics(data_model_dict, k):
+    mark, mapk = compute_recall_and_precision_at_k(data_model_dict, k)
+    coverage = get_coverage_at_k(data_model_dict, k)
+    data_model_dict["metrics"] = {"mark": mark, "mapk": mapk, "coverage": coverage}
+    return data_model_dict
 
-    hidden_items_number = 0
-    recommended_hidden_items_number = 0
-    prediction_number = 0
-    recommended_items = []
 
-    user_count = 0
-    unexpectedness = []
-    serendipity = []
-    new_subcategoryIds_ratio = []
+def compute_recall_and_precision_at_k(data_model_dict, k):
 
-    if len(all_test_user_ids) > NUMBER_OF_USERS:
-        random_users_to_test = random.sample(all_test_user_ids, NUMBER_OF_USERS)
-    else:
-        random_users_to_test = all_test_user_ids
-    print("len(random_users_to_test: ", len(random_users_to_test))
-    for user_id in random_users_to_test:
-        user_count += 1
-        print("user_count: ", user_count)
-        print("user_id: ", user_id)
-        positive_item_train = positive_data_train[
-            positive_data_train["user_id"] == user_id
-        ]
-        positive_item_test = cleaned_positive_data_test[
-            cleaned_positive_data_test["user_id"] == user_id
-        ]
-        # Remove items in train - they can not be in test set anyway
-        items_to_rank = np.setdiff1d(
-            all_item_ids, positive_item_train["item_id"].values
-        )
-        booked_offer_subcategoryIds = list(
-            positive_item_train["offer_subcategoryid"].values
-        )
+    actual = data_model_dict["top_offers"].actual.values.tolist()
+    model_predictions = data_model_dict["top_offers"].model_predicted.values.tolist()
+    mark, mapk = get_avg_recall_and_precision_at_k(actual, model_predictions, k)
 
-        # Check if any item of items_to_rank is in the test positive feedback for this user
-        expected = np.in1d(items_to_rank, positive_item_test["item_id"].values)
+    return mark, mapk
 
-        repeated_user_id = np.array([user_id] * len(items_to_rank))
-        print("len(repeated_user_id)", len(repeated_user_id))
-        print("repeated_user_id[0]", repeated_user_id[0])
-        print("len(items_to_rank)", len(items_to_rank))
-        if model_name == "v1":
-            predicted = model.predict(
-                [repeated_user_id, items_to_rank], batch_size=4096
-            )
-        if model_name == "v2_deep_reco":
-            items_to_rank_subcategoryIds = np.array(
-                [offer_subcategoryId_dict[item_id] for item_id in items_to_rank]
-            )
-            predicted = model.predict(
-                [repeated_user_id, items_to_rank, items_to_rank_subcategoryIds],
-                batch_size=4096,
-            )
-        if model_name == "v2_mf_reco":
-            predicted = model.predict(
-                [repeated_user_id, np.array(items_to_rank)],
-                batch_size=4096,
-            )
 
-        scored_items = sorted(
-            [(item_id, score[0]) for item_id, score in zip(items_to_rank, predicted)],
-            key=itemgetter(1),
-            reverse=True,
-        )[:k]
-        recommended_offer_subcategoryIds = [
-            offer_subcategoryId_dict[item[0]] for item in scored_items
-        ]
+def get_avg_recall_and_precision_at_k(actual, model_predictions, k):
 
-        if booked_offer_subcategoryIds and recommended_offer_subcategoryIds:
-            user_unexpectedness = get_unexpectedness(
-                booked_offer_subcategoryIds, recommended_offer_subcategoryIds
-            )
-            unexpectedness.append(user_unexpectedness)
-            new_subcategoryIds_ratio.append(
-                np.mean(
-                    [
-                        int(
-                            recommended_offer_subcategoryId
-                            not in booked_offer_subcategoryIds
-                        )
-                        for recommended_offer_subcategoryId in recommended_offer_subcategoryIds
-                    ]
-                )
-            )
-        if np.sum(expected) >= 1:
-            recommended_items.extend([item[0] for item in scored_items])
-            recommended_items = list(set(recommended_items))
+    cf_mark = recmetrics.mark(actual, model_predictions, k)
+    cf_mapk = mapk(actual, model_predictions, k)
+    return cf_mark, cf_mapk
 
-            hidden_items = list(positive_item_test["item_id"].values)
-            recommended_hidden_items = [
-                item[0] for item in scored_items if item[0] in hidden_items
-            ]
 
-            hidden_items_number += len(hidden_items)
-            recommended_hidden_items_number += len(recommended_hidden_items)
-            prediction_number += 1
+def get_coverage_at_k(data_model_dict, k):
+    catalog = data_model_dict["data"]["train"].item_id.unique().tolist()
+    recos = data_model_dict["top_offers"].model_predicted.values.tolist()
+    recos_at_k = []
+    for reco in recos:
+        recos_at_k.append(reco[:k])
+    cf_coverage = recmetrics.prediction_coverage(recos_at_k, catalog)
 
-            if (
-                hidden_items
-                and booked_offer_subcategoryIds
-                and recommended_offer_subcategoryIds
-            ):
-                user_serendipity = (
-                    (len(recommended_hidden_items) / len(hidden_items))
-                    * user_unexpectedness
-                    * 100
-                )
-                serendipity.append(user_serendipity)
+    return cf_coverage
 
-        if user_count % 100 == 0:
-            metrics = {
-                f"recall_at_{k}": (
-                    recommended_hidden_items_number / hidden_items_number
-                )
-                * 100
-                if hidden_items_number > 0
-                else None,
-                f"precision_at_{k}": (
-                    recommended_hidden_items_number / (prediction_number * k)
-                )
-                * 100,
-                f"maximal_precision_at_{k}": (
-                    cleaned_positive_data_test.shape[0] / (prediction_number * k)
-                )
-                * 100,
-                f"coverage_at_{k}": (len(recommended_items) / len(all_item_ids)) * 100,
-                f"unexpectedness_at_{k}": np.nanmean(unexpectedness)
-                if len(unexpectedness) > 0
-                else None,
-                f"new_types_ratio_at_{k}": np.mean(new_subcategoryIds_ratio)
-                if len(new_subcategoryIds_ratio) > 0
-                else None,
-                f"serendipity_at_{k}": np.nanmean(serendipity)
-                if len(serendipity) > 0
-                else None,
-            }
 
-            print(f"Metrics at user number {user_count} / {len(random_users_to_test)}")
-            print(metrics)
+def apk(actual, predicted, k=10):
+    """
+    Computes the average precision at k.
 
-    metrics = {
-        f"recall_at_{k}": (recommended_hidden_items_number / hidden_items_number) * 100
-        if hidden_items_number > 0
-        else None,
-        f"precision_at_{k}": (recommended_hidden_items_number / (prediction_number * k))
-        * 100,
-        f"maximal_precision_at_{k}": (
-            cleaned_positive_data_test.shape[0] / (prediction_number * k)
-        )
-        * 100,
-        f"coverage_at_{k}": (len(recommended_items) / len(all_item_ids)) * 100,
-        f"unexpectedness_at_{k}": np.nanmean(unexpectedness)
-        if len(unexpectedness) > 0
-        else None,
-        f"new_types_ratio_at_{k}": np.mean(new_subcategoryIds_ratio)
-        if len(new_subcategoryIds_ratio) > 0
-        else None,
-        f"serendipity_at_{k}": np.nanmean(serendipity)
-        if len(serendipity) > 0
-        else None,
-    }
+    This function computes the average prescision at k between two lists of
+    items.
 
-    return metrics
+    Parameters
+    ----------
+    actual : list
+            A list of elements that are to be predicted (order doesn't matter)
+    predicted : list
+                A list of predicted elements (order does matter)
+    k : int, optional
+        The maximum number of predicted elements
+
+    Returns
+    -------
+    score : double
+            The average precision at k over the input lists
+
+    """
+    if len(predicted) > k:
+        predicted = predicted[:k]
+
+    score = 0.0
+    num_hits = 0.0
+
+    for i, p in enumerate(predicted):
+        if p in actual and p not in predicted[:i]:
+            num_hits += 1.0
+            score += num_hits / (i + 1.0)
+
+    if not actual:
+        return 0.0
+
+    return score / min(len(actual), k)
+
+
+def mapk(actual, predicted, k=10):
+    """
+    Computes the mean average precision at k.
+
+    This function computes the mean average prescision at k between two lists
+    of lists of items.
+
+    Parameters
+    ----------
+    actual : list
+            A list of lists of elements that are to be predicted
+            (order doesn't matter in the lists)
+    predicted : list
+                A list of lists of predicted elements
+                (order matters in the lists)
+    k : int, optional
+        The maximum number of predicted elements
+
+    Returns
+    -------
+    score : double
+            The mean average precision at k over the input lists
+
+    """
+    return np.mean([apk(a, p, k) for a, p in zip(actual, predicted)])

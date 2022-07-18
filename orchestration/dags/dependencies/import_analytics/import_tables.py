@@ -252,7 +252,16 @@ def define_import_query(
             "mentalDisabilityCompliant" AS venue_mentalDisabilityCompliant,
             "motorDisabilityCompliant" AS venue_motorDisabilityCompliant,
             "visualDisabilityCompliant" AS venue_visualDisabilityCompliant,
-            "adageId" AS venue_adage_id
+            "adageId" AS venue_adage_id,
+            CAST("venueEducationalStatusId"AS varchar(255)) AS venue_educational_status_id,
+            "collectiveDescription" AS collective_description,
+            BTRIM(array_to_string("collectiveStudents", \\',\\'), \\'{\\') AS collective_students,
+            "collectiveWebsite" AS collective_website,
+            "collectiveNetwork" AS collective_network,
+            "collectiveInterventionArea" AS collective_intervention_area
+            "collectiveAccessInformation" AS collective_access_information,
+            "collectivePhone" AS collective_phone,
+            "collectiveEmail" AS collective_email
         FROM public.venue
     """
     cloudsql_queries[
@@ -512,6 +521,31 @@ def define_import_query(
                 ,"expirationDate" AS educational_year_expiration_date
                 ,CAST("adageId" AS varchar(255)) AS adage_id
             FROM educational_year
+        """
+    cloudsql_queries[
+        "educational_domain"
+    ] = """
+            SELECT
+                CAST("id" AS varchar(255)) AS educational_domain_id
+                , "name" AS educational_domain_name
+            FROM educational_domain
+        """
+    cloudsql_queries[
+        "educational_domain_venue"
+    ] = """
+            SELECT
+                CAST("id" AS varchar(255)) AS educational_domain_venue_id
+                ,CAST("educationalDomainId" AS varchar(255)) AS educational_domain_id
+                ,CAST("venueId" AS varchar(255)) AS venue_id
+            FROM educational_domain_venue
+        """
+    cloudsql_queries[
+        "venue_educational_status"
+    ] = """
+            SELECT
+                CAST("id" AS varchar(255)) AS venue_educational_status_id
+                ,"name" AS venue_educational_status_name
+            FROM venue_educational_status
         """
     cloudsql_queries[
         "individual_booking"

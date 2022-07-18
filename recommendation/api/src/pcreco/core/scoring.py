@@ -183,7 +183,7 @@ class Scoring:
                     WHERE user_id = :user_id
                     )   
                 {self.recommendation_in_filters}
-                ORDER BY booking_number DESC
+                ORDER BY URL DESC,booking_number DESC
                 LIMIT {RECOMMENDABLE_OFFER_LIMIT}; 
                 """
             return query

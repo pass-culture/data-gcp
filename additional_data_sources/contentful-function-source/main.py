@@ -7,6 +7,7 @@ from utils import (
     GCP_PROJECT,
     ENV_SHORT_NAME,
 )
+from datetime import datetime
 
 CONTENTFUL_ENTRIES_TABLE_NAME = "contentful_entries"
 CONTENTFUL_RELATIONSHIPS_TABLE_NAME = "contentful_relationships"
@@ -14,10 +15,17 @@ CONTENTFUL_TAGS_TABLE_NAME = "contentful_tags"
 
 
 def save_modules_to_bq(modules_df, table_name):
+    _now = datetime.today()
+    yyyymmdd = _now.strftime("%Y%m%d")
+    modules_df["execution_date"] = _now
     bigquery_client = bigquery.Client()
-    table_id = f"{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.{table_name}"
+    table_id = f"{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.{table_name}${yyyymmdd}"
     job_config = bigquery.LoadJobConfig(
         write_disposition="WRITE_TRUNCATE",
+        time_partitioning=bigquery.TimePartitioning(
+            type_=bigquery.TimePartitioningType.DAY,
+            field="execution_date",
+        ),
     )
     job = bigquery_client.load_table_from_dataframe(
         modules_df, table_id, job_config=job_config

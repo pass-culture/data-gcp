@@ -3,6 +3,7 @@ import pandas as pd
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import secretmanager
 from typeform import TypeformDownloader
+from gsheet import export_sheet
 
 GCP_PROJECT_ID = os.environ["PROJECT_NAME"]
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
@@ -23,6 +24,12 @@ api_key = access_secret_data(GCP_PROJECT_ID, "typeform_api_key")
 
 
 def run(request):
+    sheet_df = export_sheet()
+    sheet_df.to_gbq(
+        f"{BIGQUERY_RAW_DATASET}.typeform_adage_reference_request_sheet",
+        GCP_PROJECT_ID,
+        if_exists="replace",
+    )
 
     clean_responses = TypeformDownloader(api_key, form_id="VtKospEg").run()
     responses_df = pd.DataFrame(clean_responses)

@@ -1,18 +1,14 @@
 import collections
-import time
 from typing import Any, Dict, List, Tuple
 
 import numpy as np
 import random
-from pcreco.utils.env_vars import (
-    NUMBER_OF_RECOMMENDATIONS,
-    log_duration,
-)
+
+from utils import RECOMMENDATION_NUMBER, SHUFFLE_RECOMMENDATION
 
 
 def order_offers_by_score_and_diversify_categories(
-    offers: List[Dict[str, Any]],
-    shuffle_recommendation=None,
+    offers: List[Dict[str, Any]]
 ) -> List[int]:
     """
     Group offers by category.
@@ -22,8 +18,8 @@ def order_offers_by_score_and_diversify_categories(
     Return only the ids of these sorted offers.
     """
 
-    start = time.time()
-    if shuffle_recommendation:
+    offers = offers.to_dict("records")
+    if SHUFFLE_RECOMMENDATION:
         for recommendation in offers:
             recommendation["score"] = random.random()
 
@@ -52,22 +48,20 @@ def order_offers_by_score_and_diversify_categories(
                 diversified_offers.append(
                     offers_by_category_ordered_by_frequency[offer_category].pop()
                 )
-        if len(diversified_offers) >= NUMBER_OF_RECOMMENDATIONS:
+        if len(diversified_offers) >= RECOMMENDATION_NUMBER:
             break
 
-    ordered_and_diversified_offers = [offer["id"] for offer in diversified_offers]
+    ordered_and_diversified_offers = [offer["item_id"] for offer in diversified_offers]
 
-    log_duration("order_offers_by_score_and_diversify_categories", start)
     return ordered_and_diversified_offers
 
 
 def _get_offers_grouped_by_category(offers: List[Dict[str, Any]]) -> Dict:
-    start = time.time()
     offers_by_category = dict()
     product_ids = set()
     for offer in offers:
-        offer_category = offer["category"]
-        offer_product_id = offer["product_id"]
+        offer_category = offer["offer_categoryId"]
+        offer_product_id = offer["item_id"]
         if offer_category in offers_by_category.keys():
             if offer_product_id not in product_ids:
                 offers_by_category[offer_category].append(offer)
@@ -75,7 +69,6 @@ def _get_offers_grouped_by_category(offers: List[Dict[str, Any]]) -> Dict:
         else:
             offers_by_category[offer_category] = [offer]
 
-    log_duration("_get_offers_grouped_by_category", start)
     return offers_by_category
 
 

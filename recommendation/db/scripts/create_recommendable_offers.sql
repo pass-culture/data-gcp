@@ -112,15 +112,17 @@ BEGIN
       JOIN (SELECT * FROM public.offerer WHERE offerer_validation_token IS NULL) offerer ON offerer.offerer_id = venue."venue_managing_offerer_id"
       LEFT JOIN public.stock on offer.offer_id = stock.offer_id
       LEFT JOIN (
-            SELECT count(*) AS booking_number, stock.offer_id
+            SELECT count(*) AS booking_number, offer.offer_product_id
             FROM public.booking
             LEFT JOIN public.stock
             ON booking.stock_id = stock.stock_id
+            LEFT JOIN public.offer offer 
+            ON stock.offer_id=offer.offer_id 
             WHERE booking.booking_creation_date >= NOW() - INTERVAL '7 days'
             AND NOT booking.booking_is_cancelled
-            GROUP BY stock.offer_id
+            GROUP BY offer.offer_product_id
       ) booking_numbers
-      ON booking_numbers.offer_id = offer.offer_id
+      ON booking_numbers.offer_product_id = offer.offer_product_id
     WHERE offer."offer_is_active" = TRUE
       AND (EXISTS (SELECT * FROM offer_has_at_least_one_active_mediation(offer.offer_id)))
       AND (EXISTS (SELECT * FROM offer_has_at_least_one_bookable_stock(offer.offer_id)))

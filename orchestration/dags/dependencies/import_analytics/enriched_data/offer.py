@@ -84,7 +84,7 @@ def define_enriched_offer_data_query(analytics_dataset, clean_dataset, table_pre
                 offerer.offerer_id,
                 offerer.offerer_name,
                 venue.venue_id,
-                venue.venue_name,
+                coalesce(venue.venue_public_name, venue.venue_name) AS venue_name,
                 venue.venue_department_code,
                 offer.offer_id,
                 offer.offer_name,

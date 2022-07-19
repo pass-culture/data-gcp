@@ -55,7 +55,9 @@ def order_offers_by_score_and_diversify_categories(
         if len(diversified_offers) >= NUMBER_OF_RECOMMENDATIONS:
             break
 
-    ordered_and_diversified_offers = [offer["id"] for offer in diversified_offers]
+    ordered_and_diversified_offers = [offer["id"] for offer in diversified_offers][
+        :NUMBER_OF_RECOMMENDATIONS
+    ]
 
     log_duration("order_offers_by_score_and_diversify_categories", start)
     return ordered_and_diversified_offers

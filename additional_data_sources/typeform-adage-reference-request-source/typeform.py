@@ -1,8 +1,7 @@
 import requests
 import pandas as pd
 from tqdm import tqdm
-import unicodedata
-import re
+import utils
 
 
 class ApiQueryError(Exception):
@@ -23,17 +22,8 @@ class TypeformDownloader:
 
         out_cols = {}
         for _d in columns:
-            out_cols[_d["question_id"]] = self.clean_question(_d["title"])
+            out_cols[_d["question_id"]] = utils.clean_question(_d["title"])
         return out_cols
-
-    @staticmethod
-    def clean_question(input_str):
-        input_str = re.sub(r"\?|\.", "", input_str).rstrip()
-        input_str = re.sub(r"-|\'| ", "_", input_str).lower()
-        nfkd_form = unicodedata.normalize("NFKD", input_str)
-        only_ascii = nfkd_form.encode("ASCII", "ignore")
-
-        return only_ascii.decode("utf-8")
 
     def run(self):
         print("Fetching the answers...")

@@ -14,7 +14,7 @@ from common.config import (
 
 def yyyymmdd(ds):
     if ds is None:
-        ds = datetime.today().strftime("%Y%m%d")
+        return datetime.today().strftime("%Y%m%d")
     if isinstance(ds, str):
         ds = datetime.strptime(ds, "%Y-%m-%d")
     return ds.strftime("%Y%m%d")

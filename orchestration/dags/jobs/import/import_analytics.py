@@ -151,6 +151,9 @@ data_applicative_tables_and_date_columns = {
         "educational_year_beginning_date",
         "educational_year_expiration_date",
     ],
+    "educational_domain": [""],
+    "educational_domain_venue": [""],
+    "venue_educational_status": [""],
     "collective_booking": [
         "collective_booking_creation_date",
         "collective_booking_used_date",
@@ -541,17 +544,10 @@ import_contentful_data_to_bigquery = SimpleHttpOperator(
 copy_playlists_to_analytics = BigQueryExecuteQueryOperator(
     task_id="copy_playlists_to_analytics",
     sql=f"""
-    SELECT * except(row_number, tag)
-    FROM (
-        SELECT
-        *,
-        ROW_NUMBER() OVER (PARTITION BY name
-                                        ORDER BY date_updated DESC
-                                    ) as row_number
-        FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_criterion` c
-        LEFT JOIN `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.contentful_data` d ON c.name = d.tag
-        )
-    WHERE row_number=1
+    SELECT
+        *
+    FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_criterion`
+
     """,
     destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.applicative_database_criterion",
     write_disposition="WRITE_TRUNCATE",

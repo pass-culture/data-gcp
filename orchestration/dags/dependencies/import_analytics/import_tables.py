@@ -258,7 +258,7 @@ def define_import_query(
             BTRIM(array_to_string("collectiveStudents", \\',\\'), \\'{\\') AS collective_students,
             "collectiveWebsite" AS collective_website,
             "collectiveNetwork" AS collective_network,
-            "collectiveInterventionArea" AS collective_intervention_area
+            "collectiveInterventionArea" AS collective_intervention_area,
             "collectiveAccessInformation" AS collective_access_information,
             "collectivePhone" AS collective_phone,
             "collectiveEmail" AS collective_email

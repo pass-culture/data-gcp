@@ -118,7 +118,7 @@ BEGIN
             ON booking.stock_id = stock.stock_id
             LEFT JOIN public.offer offer 
             ON stock.offer_id=offer.offer_id 
-            WHERE booking.booking_creation_date >= NOW() - INTERVAL '7 days'
+            WHERE booking.booking_creation_date >= NOW() - INTERVAL '14 days'
             AND NOT booking.booking_is_cancelled
             GROUP BY offer.offer_product_id
       ) booking_numbers

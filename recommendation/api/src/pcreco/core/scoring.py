@@ -173,7 +173,7 @@ class Scoring:
                 else "(is_national = True or url IS NOT NULL)"
             )
             query = f"""
-                SELECT offer_id, category, subcategory_id, url, item_id, product_id
+                SELECT offer_id, category, subcategory_id, url, url IS NOT NULL as is_numerical, item_id, product_id
                 FROM {self.user.recommendable_offer_table}
                 WHERE {geoloc_filter}
                 AND offer_id NOT IN
@@ -183,7 +183,7 @@ class Scoring:
                     WHERE user_id = :user_id
                     )   
                 {self.recommendation_in_filters}
-                ORDER BY URL DESC,booking_number DESC
+                ORDER BY is_numerical ASC,booking_number DESC
                 LIMIT {RECOMMENDABLE_OFFER_LIMIT}; 
                 """
             return query

@@ -9,29 +9,8 @@ WITH temp_firebase_events AS (
             CAST(CAST(event_timestamp as INT64) / 1000000 as INT64)
         ) AS event_timestamp,
         TIMESTAMP_SECONDS(
-            CAST(
-                CAST(event_previous_timestamp as INT64) / 1000000 as INT64
-            )
-        ) AS event_previous_timestamp,
-        TIMESTAMP_SECONDS(
             CAST(CAST(event_timestamp as INT64) / 1000000 as INT64)
         ) AS user_first_touch_timestamp,
-        (
-            select
-                event_params.value.string_value
-            from
-                unnest(event_params) event_params
-            where
-                event_params.key = 'firebase_screen'
-        ) as firebase_screen,
-        (
-            select
-                event_params.value.string_value
-            from
-                unnest(event_params) event_params
-            where
-                event_params.key = 'firebase_previous_screen'
-        ) as firebase_previous_screen,
         (
             select
                 event_params.value.int_value
@@ -74,6 +53,22 @@ WITH temp_firebase_events AS (
         ) as page_name,
         (
             select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'page_location'
+        ) as page_location,
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'page_referrer'
+        ) as page_referrer,
+        (
+            select
                 event_params.value.int_value
             from
                 unnest(event_params) event_params
@@ -110,8 +105,16 @@ WITH temp_firebase_events AS (
             from
                 unnest(event_params) event_params
             where
-                event_params.key = 'query'
-        ) as query,
+                event_params.key = 'to'
+        ) as destination,
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'used'
+        ) as used,
         (
             select
                 event_params.value.string_value
@@ -128,22 +131,6 @@ WITH temp_firebase_events AS (
             where
                 event_params.key = 'filledWithErrors'
         ) as filledWithErrors,
-        (
-            select
-                event_params.value.string_value
-            from
-                unnest(event_params) event_params
-            where
-                event_params.key = 'filter'
-        ) as filter,
-        (
-            select
-                event_params.value.string_value
-            from
-                unnest(event_params) event_params
-            where
-                event_params.key = 'moduleName'
-        ) as module_name,
         (
             select
                 event_params.value.string_value
@@ -168,14 +155,6 @@ WITH temp_firebase_events AS (
             where
                 event_params.key = 'traffic_source'
         ) as traffic_source,
-        (
-            select
-                event_params.value.string_value
-            from
-                unnest(event_params) event_params
-            where
-                event_params.key = 'entryId'
-        ) as entry_id
     FROM
         {% if params.dag_type == 'intraday' %}
         `{{ bigquery_clean_dataset }}.firebase_pro_events_{{ yyyymmdd(ds) }}`

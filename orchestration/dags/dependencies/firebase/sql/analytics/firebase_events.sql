@@ -202,7 +202,15 @@ WITH temp_firebase_events AS (
                 unnest(event_params) event_params
             where
                 event_params.key = 'AB_test'
-        ) as ab_test
+        ) as ab_test,
+        (
+            select
+                event_params.value.int_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'enabled'
+        ) as enabled
     FROM
         {% if params.dag_type == 'intraday' %}
         `{{ bigquery_clean_dataset }}.firebase_events_{{ yyyymmdd(ds) }}`

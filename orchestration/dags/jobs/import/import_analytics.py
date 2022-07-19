@@ -151,6 +151,9 @@ data_applicative_tables_and_date_columns = {
         "educational_year_beginning_date",
         "educational_year_expiration_date",
     ],
+    "educational_domain": [""],
+    "educational_domain_venue": [""],
+    "venue_educational_status": [""],
     "collective_booking": [
         "collective_booking_creation_date",
         "collective_booking_used_date",

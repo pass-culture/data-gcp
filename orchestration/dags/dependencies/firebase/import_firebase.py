@@ -109,6 +109,12 @@ import_firebase_tables = {
         "destination_table": "firebase_visits",
         "depends": ["clean_firebase_events"],
     },
+    "aggregated_daily_offer_consultation_data": {
+        "sql": f"{SQL_PATH}/analytics/aggregated_daily_offer_consultation_data.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "aggregated_daily_offer_consultation_data",
+        "depends": ["analytics_firebase_events"],
+    },
 }
 
 

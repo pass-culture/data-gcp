@@ -233,7 +233,7 @@ class Scoring:
             )
             recommendations_query = text(
                 f"""
-                SELECT offer_id, category,search_group_name, url, product_id
+                SELECT offer_id, category,subcategory_id,search_group_name, url, product_id
                 FROM {self.user.recommendable_offer_table}
                 WHERE offer_id NOT IN
                     (
@@ -259,9 +259,10 @@ class Scoring:
                 {
                     "id": row[0],
                     "category": row[1],
-                    "search_group_name": row[2],
-                    "url": row[3],
-                    "product_id": row[4],
+                    "subcategory_id": row[2],
+                    "search_group_name": row[3],
+                    "url": row[4],
+                    "product_id": row[5],
                     "score": random.random(),
                 }
                 for row in query_result

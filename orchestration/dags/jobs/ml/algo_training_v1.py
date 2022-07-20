@@ -59,7 +59,7 @@ with DAG(
     description="Continuous algorithm training",
     schedule_interval="0 18 * * 5",  # Train every Friday at 18:00
     catchup=False,
-    dagrun_timeout=timedelta(minutes=300),
+    dagrun_timeout=timedelta(minutes=600),
 ) as dag:
 
     start = DummyOperator(task_id="start")

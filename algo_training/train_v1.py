@@ -20,7 +20,7 @@ TRAIN_DIR = "/home/airflow/train"
 EMBEDDING_SIZE = 64
 L2_REG = 0
 N_EPOCHS = 20 if ENV_SHORT_NAME == "prod" else 10
-BATCH_SIZE = 128
+BATCH_SIZE = 512
 LOSS_CUTOFF = 0.0005
 
 

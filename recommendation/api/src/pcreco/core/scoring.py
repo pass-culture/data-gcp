@@ -158,8 +158,9 @@ class Scoring:
                     "category": row[1],
                     "subcategory_id": row[2],
                     "url": row[3],
-                    "item_id": row[4],
-                    "product_id": row[5],
+                    "is_numerical": row[4],
+                    "item_id": row[5],
+                    "product_id": row[6],
                 }
                 for row in query_result
             ]

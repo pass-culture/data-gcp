@@ -5,14 +5,8 @@ import requests
 import time
 from scripts.utils import GCP_PROJECT, BIGQUERY_CLEAN_DATASET, TOKEN
 
-LIMIT_DATE_SIREN = 35
-MAX_SIREN_CALL = 150
 
-
-def get_limit_date():
-    limit_date = (datetime.now() - timedelta(days=LIME_DATE_SIREN)).strftime("%Y-%m-%d")
-    return limit_date
-
+MAX_SIREN_CALL = 100
 
 def get_offerer_siren_list():
     siren_list = []

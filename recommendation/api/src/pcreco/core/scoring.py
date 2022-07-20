@@ -160,8 +160,8 @@ class Scoring:
                     "subcategory_id": row[2],
                     "search_group_name": row[3],
                     "url": row[4],
-                    "item_id": row[5],
-                    "is_numerical": row[6],
+                    "is_numerical": row[5],
+                    "item_id": row[6],
                     "product_id": row[7],
                 }
                 for row in query_result

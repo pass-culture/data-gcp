@@ -104,7 +104,7 @@ import_firebase_tables = {
         "depends": ["clean_firebase_events"],
     },
     "analytics_firebase_visits": {
-        "sql": f"{SQL_PATH}/analytics/firebase_aggregated_offers.sql",
+        "sql": f"{SQL_PATH}/analytics/firebase_visits.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "firebase_visits",
         "depends": ["clean_firebase_events"],

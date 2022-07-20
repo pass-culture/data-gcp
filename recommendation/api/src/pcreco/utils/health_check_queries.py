@@ -3,7 +3,7 @@ import os
 import sys
 from typing import Any
 
-from sqlalchemy import create_engine, engine
+from pcreco.utils.db.db_connection import get_db
 from pcreco.utils.secrets.access_gcp_secrets import access_secret
 
 
@@ -25,28 +25,6 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger()
 
 
-query_string = dict(
-    {"unix_sock": "/cloudsql/{}/.s.PGSQL.5432".format(SQL_CONNECTION_NAME)}
-)
-engine = create_engine(
-    engine.url.URL(
-        drivername="postgres+pg8000",
-        username=SQL_BASE_USER,
-        password=SQL_BASE_PASSWORD,
-        database=SQL_BASE,
-        query=query_string,
-    ),
-    pool_size=5,
-    max_overflow=2,
-    pool_timeout=30,
-    pool_recycle=1800,
-)
-
-
-def create_db_connection() -> Any:
-    return engine.connect().execution_options(autocommit=True)
-
-
 def does_materialized_view_exist(connection: Any, materialized_view_name: str) -> bool:
     query = f"""SELECT EXISTS(SELECT FROM pg_matviews WHERE matviewname = '{materialized_view_name}');"""
     is_data_present = connection.execute(query).scalar()
@@ -64,7 +42,7 @@ def does_materialized_view_have_data(
 
 
 def get_materialized_view_status(materialized_view_name: str) -> dict:
-    connection = create_db_connection()
+    connection = get_db()
 
     materialized_view_status = {
         f"is_{materialized_view_name}_datasource_exists": does_materialized_view_exist(
@@ -74,5 +52,4 @@ def get_materialized_view_status(materialized_view_name: str) -> dict:
             connection, materialized_view_name
         ),
     }
-    connection.close()
     return materialized_view_status

@@ -252,7 +252,16 @@ def define_import_query(
             "mentalDisabilityCompliant" AS venue_mentalDisabilityCompliant,
             "motorDisabilityCompliant" AS venue_motorDisabilityCompliant,
             "visualDisabilityCompliant" AS venue_visualDisabilityCompliant,
-            "adageId" AS venue_adage_id
+            "adageId" AS venue_adage_id,
+            CAST("venueEducationalStatusId"AS varchar(255)) AS venue_educational_status_id,
+            "collectiveDescription" AS collective_description,
+            BTRIM(array_to_string("collectiveStudents", \\',\\'), \\'{\\') AS collective_students,
+            "collectiveWebsite" AS collective_website,
+            "collectiveNetwork" AS collective_network,
+            "collectiveInterventionArea" AS collective_intervention_area,
+            "collectiveAccessInformation" AS collective_access_information,
+            "collectivePhone" AS collective_phone,
+            "collectiveEmail" AS collective_email
         FROM public.venue
     """
     cloudsql_queries[
@@ -514,6 +523,31 @@ def define_import_query(
             FROM educational_year
         """
     cloudsql_queries[
+        "educational_domain"
+    ] = """
+            SELECT
+                CAST("id" AS varchar(255)) AS educational_domain_id
+                , "name" AS educational_domain_name
+            FROM educational_domain
+        """
+    cloudsql_queries[
+        "educational_domain_venue"
+    ] = """
+            SELECT
+                CAST("id" AS varchar(255)) AS educational_domain_venue_id
+                ,CAST("educationalDomainId" AS varchar(255)) AS educational_domain_id
+                ,CAST("venueId" AS varchar(255)) AS venue_id
+            FROM educational_domain_venue
+        """
+    cloudsql_queries[
+        "venue_educational_status"
+    ] = """
+            SELECT
+                CAST("id" AS varchar(255)) AS venue_educational_status_id
+                ,"name" AS venue_educational_status_name
+            FROM venue_educational_status
+        """
+    cloudsql_queries[
         "individual_booking"
     ] = """
             SELECT
@@ -633,6 +667,20 @@ def define_import_query(
                 ,"social_medias" AS venue_contact_social_medias
             FROM public.venue_contact
         """
+
+    cloudsql_queries[
+        "invoice"
+    ] = """
+             SELECT 
+                CAST("id" AS varchar(255)) AS invoice_id
+                ,"date" AS invoice_creation_date
+                ,"reference" AS invoice_reference
+                ,CAST("businessUnitId" AS varchar(255)) business_unit_id
+                ,-"amount"/100 AS amount
+                ,CAST("reimbursementPointId" AS varchar(255)) AS reimbursement_point_id
+            FROM public.invoice
+            """
+
     # Build specific federated queries
     queries = {}
     for external_table, external_query in cloudsql_queries.items():

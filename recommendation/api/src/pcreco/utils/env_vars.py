@@ -15,8 +15,9 @@ SQL_BASE_USER = os.environ.get("SQL_BASE_USER")
 SQL_BASE_SECRET_ID = os.environ.get("SQL_BASE_SECRET_ID")
 SQL_BASE_SECRET_VERSION = os.environ.get("SQL_BASE_SECRET_VERSION")
 SQL_CONNECTION_NAME = os.environ.get("SQL_CONNECTION_NAME")
-SQL_BASE_PASSWORD = access_secret(
-    GCP_PROJECT, SQL_BASE_SECRET_ID, SQL_BASE_SECRET_VERSION
+SQL_BASE_PASSWORD = os.environ.get(
+    "SQL_BASE_PASSWORD",
+    access_secret(GCP_PROJECT, SQL_BASE_SECRET_ID, SQL_BASE_SECRET_VERSION),
 )
 # Attributes on API output and recommendation
 ACTIVE_MODEL = f"tf_model_reco_{ENV_SHORT_NAME}"

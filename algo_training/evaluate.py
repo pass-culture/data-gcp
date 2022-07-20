@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 import mlflow.tensorflow
+import random
 from models.v1.match_model import MatchModel
 from utils import (
     get_secret,
@@ -9,11 +10,12 @@ from utils import (
     STORAGE_PATH,
     ENV_SHORT_NAME,
     MODEL_NAME,
-    GCP_PROJECT_ID,
+    RECOMMENDATION_NUMBER,
+    EVALUATION_USER_NUMBER,
+    EXPERIMENT_NAME,
 )
 from metrics import compute_metrics, get_actual_and_predicted
 
-RECOMMENDATION_NUMBER = 40
 k_list = [10, RECOMMENDATION_NUMBER]
 
 
@@ -21,16 +23,36 @@ def evaluate(model, storage_path: str, model_name):
 
     positive_data_train = pd.read_csv(
         f"{storage_path}/positive_data_train.csv",
-        dtype={"user_id": str, "item_id": str, "offer_subcategoryid": str},
+        dtype={
+            "user_id": str,
+            "item_id": str,
+            "offer_subcategoryid": str,
+            "offer_categoryId": str,
+        },
     )
 
     positive_data_test = pd.read_csv(
         f"{storage_path}/positive_data_test.csv",
-        dtype={"user_id": str, "item_id": str, "offer_subcategoryid": str},
+        dtype={
+            "user_id": str,
+            "item_id": str,
+            "offer_subcategoryid": str,
+            "offer_categoryId": str,
+        },
     )
 
     positive_data_test_clean = positive_data_test[
         positive_data_test.user_id.isin(positive_data_train.user_id)
+    ]
+
+    # Extract random sub sample if len(users_to_evaluate) > EVALUATION_USER_NUMBER
+    if len(positive_data_test_clean.user_id) > EVALUATION_USER_NUMBER:
+        random_users_to_test = random.sample(
+            list(positive_data_test_clean.user_id), EVALUATION_USER_NUMBER
+        )
+
+    positive_data_test_clean = positive_data_test_clean[
+        positive_data_test_clean.user_id.isin(random_users_to_test)
     ]
 
     positive_data_test_clean = positive_data_test_clean[
@@ -52,9 +74,20 @@ def evaluate(model, storage_path: str, model_name):
 
         metrics[f"recall_at_{k}"] = data_model_dict_w_metrics_at_k["metrics"]["mark"]
         metrics[f"precision_at_{k}"] = data_model_dict_w_metrics_at_k["metrics"]["mapk"]
-        metrics[f"coverage_at_{k}"] = (
-            data_model_dict_w_metrics_at_k["metrics"]["coverage"],
-        )
+
+        metrics[f"recall_at_{k}_div"] = data_model_dict_w_metrics_at_k["metrics"][
+            "div_mark"
+        ]
+        metrics[f"precision_at_{k}_div"] = data_model_dict_w_metrics_at_k["metrics"][
+            "div_mapk"
+        ]
+        metrics[f"coverage_at_{k}"] = data_model_dict_w_metrics_at_k["metrics"][
+            "coverage"
+        ]
+
+        metrics["personalization"] = data_model_dict_w_metrics_at_k["metrics"][
+            "personalization"
+        ]
 
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
     mlflow.log_metrics(metrics)
@@ -84,7 +117,7 @@ def check_before_deploy(metrics, k):
 if __name__ == "__main__":
     client_id = get_secret("mlflow_client_id")
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
-    experiment_name = f"algo_training_{MODEL_NAME}"
+    experiment_name = EXPERIMENT_NAME
     experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
     run_id = mlflow.list_run_infos(experiment_id)[0].run_id
     with mlflow.start_run(run_id=run_id):

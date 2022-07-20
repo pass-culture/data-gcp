@@ -2,6 +2,8 @@ SELECT
     active_date,
     months_since_deposit_created,
     user_id,
+    user_department_code,
+    user_region_name,
     deposit_id,
     deposit_type,
     seniority_months,
@@ -13,6 +15,8 @@ GROUP BY
     active_date,
     months_since_deposit_created,
     user_id,
+    user_department_code,
+    user_region_name,
     deposit_id,
     deposit_type,
     seniority_months

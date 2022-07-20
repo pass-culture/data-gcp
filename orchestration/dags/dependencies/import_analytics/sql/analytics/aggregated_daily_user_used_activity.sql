@@ -9,6 +9,8 @@ WITH days AS (
 user_active_dates AS (
     SELECT
         user_id,
+        user_department_code,
+        user_region_name,
         deposit_id,
         deposit_amount,
         deposit_creation_date,
@@ -25,6 +27,8 @@ aggregated_daily_user_used_bookings_history_1 AS (
     SELECT
         user_active_dates.active_date,
         user_active_dates.user_id,
+        user_active_dates.user_department_code,
+        user_active_dates.user_region_name,
         user_active_dates.deposit_id,
         user_active_dates.deposit_type,
         user_active_dates.deposit_amount AS initial_deposit_amount,
@@ -56,11 +60,15 @@ aggregated_daily_user_used_bookings_history_1 AS (
         6,
         7,
         8,
-        9
+        9,
+        10,
+        11
 )
 SELECT
     active_date,
     user_id,
+    user_department_code,
+    user_region_name,
     deposit_id,
     deposit_type,
     initial_deposit_amount,

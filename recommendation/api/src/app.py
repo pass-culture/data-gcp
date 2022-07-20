@@ -1,12 +1,11 @@
 import os
 import re
 
-from flask import Flask, jsonify, make_response, request
+from flask import Flask, jsonify, make_response, request, g
 from flask_cors import CORS
-
 from pcreco.utils.secrets.access_gcp_secrets import access_secret
 from pcreco.utils.health_check_queries import get_materialized_view_status
-
+from pcreco.utils.db.db_connection import create_db_connection
 from pcreco.core.user import User
 from pcreco.core.scoring import Scoring
 from pcreco.models.reco.recommendation import RecommendationIn
@@ -29,6 +28,19 @@ CORS(
         r"/*": {"origins": re.compile(os.environ.get("CORS_ALLOWED_ORIGIN", ".*"))}
     },
 )
+
+
+@app.before_request
+def create_db_session():
+    g.db = create_db_connection()
+
+
+@app.teardown_request
+def close_db_session(exception):
+    try:
+        g.db.close()
+    except:
+        pass
 
 
 @app.route("/")
@@ -92,7 +104,7 @@ def recommendation(user_id: int):
     return jsonify(
         {
             "recommended_offers": user_recommendations,
-            "AB_test": user.group_id if AB_TESTING else None,
+            "AB_test": user.group_id if AB_TESTING else "default",
             "reco_origin": "cold_start" if scoring.iscoldstart else "algo",
             "model_name": scoring.model_name if not scoring.iscoldstart else None,
         }

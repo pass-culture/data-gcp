@@ -3,7 +3,7 @@ import time
 from sqlalchemy import text
 
 from pcreco.utils.env_vars import log_duration
-from pcreco.utils.db.db_connection import create_db_connection
+from pcreco.utils.db.db_connection import get_db
 
 
 def get_iris_from_coordinates(longitude: float, latitude: float) -> int:
@@ -20,10 +20,10 @@ def get_iris_from_coordinates(longitude: float, latitude: float) -> int:
         """
     )
 
-    with create_db_connection() as connection:
-        result = connection.execute(
-            iris_query, longitude=longitude, latitude=latitude
-        ).fetchone()
+    connection = get_db()
+    result = connection.execute(
+        iris_query, longitude=longitude, latitude=latitude
+    ).fetchone()
 
     if result:
         iris_id = result[0]

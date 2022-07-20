@@ -12,6 +12,13 @@ ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "ehp")
 MLFLOW_EHP_URI = "https://mlflow-ehp.internal-passculture.app/"
 MLFLOW_PROD_URI = "https://mlflow.internal-passculture.app/"
 MODEL_NAME = os.environ.get("MODEL_NAME", "")
+
+EXPERIMENT_NAME = f"algo_training_v1.1_{ENV_SHORT_NAME}"
+
+RECOMMENDATION_NUMBER = 40
+SHUFFLE_RECOMMENDATION = True
+EVALUATION_USER_NUMBER = 5000 if ENV_SHORT_NAME == "prod" else 200
+
 if ENV_SHORT_NAME == "prod":
     if MODEL_NAME == "v2_deep_reco":
         BOOKING_DAY_NUMBER = 1 * 30

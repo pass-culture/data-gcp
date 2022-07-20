@@ -478,6 +478,39 @@ workflows:
             - Slack
           <<: *slack-fail-post-step
 
+      - cloud-function-deploy:
+          name: import-typeform-adage-reference-request-stg
+          cloud-function-name: typeform_adage_reference_request_stg
+          cloud-function-folder: typeform-adage-reference-request-source
+          requires:
+            - linter
+          filters:
+            branches:
+              only:
+                - master
+          context:
+            - DATA_GCP
+            - DATA_GCP_EHP
+            - Slack
+          <<: *slack-fail-post-step
+
+      - cloud-function-deploy:
+          name: import-typeform-adage-reference-request-prod
+          cloud-function-name: typeform_adage_reference_request_prod
+          cloud-function-folder: typeform-adage-reference-request-source
+          requires:
+            - linter
+          filters:
+            branches:
+              only:
+                - production
+          context:
+            - DATA_GCP
+            - DATA_GCP_PROD
+            - Slack
+          <<: *slack-fail-post-step
+      
+
       # Slack alerts jobs
       # ----------------
       - slack-alert:
@@ -499,6 +532,7 @@ workflows:
             - siren-cloud-function-deploy-prod
             - dms-cloud-function-deploy-prod
             - import-adage-cloud-function-deploy-prod
+            - import-typeform-adage-reference-request-prod
 
       - slack-alert:
           name: slack-alert-staging
@@ -519,6 +553,7 @@ workflows:
             - siren-cloud-function-deploy-stg
             - dms-cloud-function-deploy-stg
             - import-adage-cloud-function-deploy-stg
+            - import-typeform-adage-reference-request-stg
 
   # ----------------
   # Workflow to deploy on dev
@@ -569,6 +604,11 @@ workflows:
           cloud-function-name: dms_dev
           cloud-function-folder: dms-function-source
           <<: *deploy_on_dev_commons
+      - cloud-function-deploy:
+          name: typeform-adage-reference-request-dev
+          cloud-function-name: typeform_adage_reference_request_dev
+          cloud-function-folder: typeform-adage-reference-request-source
+          <<: *deploy_on_dev_commons
       - build_and_deploy_api:
           name: build_and_deploy_api_dev
           api-instance-name: apireco-dev
@@ -606,6 +646,7 @@ workflows:
             - dms-cloud-function-deploy-dev
             - build_and_deploy_api_dev
             - adage-import-function-deploy-dev
+            - typeform-adage-reference-request-dev
 ### temporarily removing api reco tests ###
 #          requires:
 #            - api-integration-tests-dev

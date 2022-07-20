@@ -8,6 +8,7 @@ from scripts.utils import GCP_PROJECT, BIGQUERY_CLEAN_DATASET, TOKEN
 
 MAX_SIREN_CALL = 100
 
+
 def get_offerer_siren_list():
     siren_list = []
     client = bigquery.Client()

@@ -161,7 +161,8 @@ class Scoring:
                     "search_group_name": row[3],
                     "url": row[4],
                     "item_id": row[5],
-                    "product_id": row[6],
+                    "is_numerical": row[6],
+                    "product_id": row[7],
                 }
                 for row in query_result
             ]
@@ -175,7 +176,7 @@ class Scoring:
                 else "(is_national = True or url IS NOT NULL)"
             )
             query = f"""
-                SELECT offer_id, category, subcategory_id,search_group_name,url, item_id, product_id
+                SELECT offer_id, category, subcategory_id,search_group_name, url, url IS NOT NULL as is_numerical, item_id, product_id
                 FROM {self.user.recommendable_offer_table}
                 WHERE {geoloc_filter}
                 AND offer_id NOT IN
@@ -185,7 +186,7 @@ class Scoring:
                     WHERE user_id = :user_id
                     )   
                 {self.recommendation_in_filters}
-                ORDER BY booking_number DESC
+                ORDER BY is_numerical ASC,booking_number DESC
                 LIMIT {RECOMMENDABLE_OFFER_LIMIT}; 
                 """
             return query
@@ -232,7 +233,7 @@ class Scoring:
             )
             recommendations_query = text(
                 f"""
-                SELECT offer_id, category,search_group_name, url, product_id
+                SELECT offer_id, category,subcategory_id,search_group_name, url, product_id
                 FROM {self.user.recommendable_offer_table}
                 WHERE offer_id NOT IN
                     (
@@ -258,9 +259,10 @@ class Scoring:
                 {
                     "id": row[0],
                     "category": row[1],
-                    "search_group_name": row[2],
-                    "url": row[3],
-                    "product_id": row[4],
+                    "subcategory_id": row[2],
+                    "search_group_name": row[3],
+                    "url": row[4],
+                    "product_id": row[5],
                     "score": random.random(),
                 }
                 for row in query_result

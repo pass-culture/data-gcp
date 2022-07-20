@@ -15,11 +15,11 @@ ACTIVE_MODEL = os.getenv("ACTIVE_MODEL")
 SHUFFLE_RECOMMENDATION = os.getenv("SHUFFLE_RECOMMENDATION", False)
 
 mock_scored_offers = [
-    {"id": "item_1", "product_id": "item_1", "category": "LIVRE", "score": 1},
-    {"id": "item_2", "product_id": "item_2", "category": "LIVRE", "score": 2},
-    {"id": "item_3", "product_id": "item_3", "category": "LIVRE", "score": 3},
-    {"id": "item_4", "product_id": "item_4", "category": "SPECTACLE", "score": 1},
-    {"id": "item_5", "product_id": "item_5", "category": "CINEMA", "score": 2},
+    {"id": "item_1", "product_id": "item_1", "subcategory_id": "LIVRE", "score": 1},
+    {"id": "item_2", "product_id": "item_2", "subcategory_id": "LIVRE", "score": 2},
+    {"id": "item_3", "product_id": "item_3", "subcategory_id": "LIVRE", "score": 3},
+    {"id": "item_4", "product_id": "item_4", "subcategory_id": "SPECTACLE", "score": 1},
+    {"id": "item_5", "product_id": "item_5", "subcategory_id": "CINEMA", "score": 2},
 ]
 ## Reminder on diversification rule
 # output list is order by frequency of the category then by score , picking one in each category until reaching NbofRecommendations

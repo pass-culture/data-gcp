@@ -12,7 +12,7 @@ aggregated_open_data_tables = {
     },
     "aggregated_monthly_used_booking": {
         "sql": f"{SQL_PATH}/aggregated_monthly_used_booking.sql",
-        "destination_dataset_table": "{{ bigquery_open_data_project }}.{{ bigquery_open_data_public_dataset }}.aggregated_monthly_used_booking{{ yyyymmdd(current_month(ds)) }}",
+        "destination_dataset_table": "{{ bigquery_open_data_project }}.{{ bigquery_open_data_public_dataset }}.aggregated_monthly_used_booking${{ yyyymmdd(current_month(ds)) }}",
         "time_partitioning": {"field": "calculation_month"},
         "cluster_fields": ["calculation_month"],
     },

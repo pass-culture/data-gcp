@@ -6,7 +6,7 @@ import time
 from scripts.utils import GCP_PROJECT, BIGQUERY_CLEAN_DATASET, TOKEN
 
 
-MAX_SIREN_CALL = 100
+MAX_SIREN_CALL = 150
 
 
 def get_offerer_siren_list():
@@ -140,7 +140,7 @@ def query_siren():
         else:
             result = response.json()
             siren_info_list = append_info_siren_list(siren_info_list, result)
-        time.sleep(4)
+        time.sleep(2.5)
     return siren_info_list
 
 

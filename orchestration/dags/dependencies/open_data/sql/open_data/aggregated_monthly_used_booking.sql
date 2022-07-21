@@ -10,6 +10,7 @@ SELECT
 FROM
     `{{ bigquery_analytics_dataset }}.aggregated_daily_used_booking`
 WHERE day < DATE_TRUNC(CURRENT_DATE, MONTH) 
+AND deposit_type = "GRANT_18"
 GROUP BY
     month,
     free_vs_paid_for,

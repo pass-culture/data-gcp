@@ -24,6 +24,14 @@ def today():
     return datetime.today().strftime("%Y-%m-%d")
 
 
+def current_month(ds):
+    if ds is None:
+        ds = datetime.today().strftime("%Y%m%d")
+    if isinstance(ds, str):
+        ds = datetime.strptime(ds, "%Y-%m-%d")
+    return ds.replace(day=1).strftime("%Y-%m-%d")
+
+
 def yesterday():
     return (datetime.today() - timedelta(days=1)).strftime("%Y-%m-%d")
 
@@ -47,6 +55,7 @@ default = {
     "gcp_project": GCP_PROJECT,
     "yyyymmdd": yyyymmdd,
     "today": today,
+    "current_month": current_month,
     "yesterday": yesterday,
     "add_days": add_days,
 }

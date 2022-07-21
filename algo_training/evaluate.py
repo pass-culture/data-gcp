@@ -11,12 +11,13 @@ from utils import (
     ENV_SHORT_NAME,
     MODEL_NAME,
     RECOMMENDATION_NUMBER,
+    NUMBER_OF_PRESELECTED_OFFERS,
     EVALUATION_USER_NUMBER,
     EXPERIMENT_NAME,
 )
 from metrics import compute_metrics, get_actual_and_predicted
 
-k_list = [10, RECOMMENDATION_NUMBER]
+k_list = [RECOMMENDATION_NUMBER, NUMBER_OF_PRESELECTED_OFFERS]
 
 
 def evaluate(model, storage_path: str, model_name):
@@ -75,17 +76,18 @@ def evaluate(model, storage_path: str, model_name):
         metrics[f"recall_at_{k}"] = data_model_dict_w_metrics_at_k["metrics"]["mark"]
         metrics[f"precision_at_{k}"] = data_model_dict_w_metrics_at_k["metrics"]["mapk"]
 
-        metrics[f"recall_at_{k}_div"] = data_model_dict_w_metrics_at_k["metrics"][
-            "div_mark"
-        ]
-        metrics[f"precision_at_{k}_div"] = data_model_dict_w_metrics_at_k["metrics"][
-            "div_mapk"
-        ]
+        if k == RECOMMENDATION_NUMBER:
+            metrics[f"recall_at_{k}_div"] = data_model_dict_w_metrics_at_k["metrics"][
+                "div_mark"
+            ]
+            metrics[f"precision_at_{k}_div"] = data_model_dict_w_metrics_at_k[
+                "metrics"
+            ]["div_mapk"]
         metrics[f"coverage_at_{k}"] = data_model_dict_w_metrics_at_k["metrics"][
             "coverage"
         ]
 
-        metrics["personalization"] = data_model_dict_w_metrics_at_k["metrics"][
+        metrics[f"personalization_at_{k}"] = data_model_dict_w_metrics_at_k["metrics"][
             "personalization"
         ]
 

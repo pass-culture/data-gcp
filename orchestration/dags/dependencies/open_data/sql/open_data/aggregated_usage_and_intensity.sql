@@ -107,7 +107,7 @@ SELECT
         END
     ) AS intens_user_kpi1,
     -- Nombre total jeunes inscrits il y a entre 12 et 15 mois
-    SUM(
+    COUNT(
         DISTINCT CASE
             WHEN months_since_deposit_created = 12
             AND seniority_months BETWEEN 12
@@ -116,7 +116,7 @@ SELECT
         END
     ) AS intens_user_kpi2,
     --  Nombre total jeunes inscrits il y a entre 24 et 27 mois
-    SUM(
+    COUNT(
         DISTINCT CASE
             WHEN months_since_deposit_created = 24
             AND seniority_months BETWEEN 24

@@ -39,7 +39,7 @@ def get_prediction(user_id, data_model_dict):
 
     model = data_model_dict["model"]
     data = data_model_dict["data"]["test"][
-        ["item_id", "offer_categoryId"]
+        ["item_id", "offer_subcategoryid"]
     ].drop_duplicates()
 
     nboffers = len(list(data.item_id))
@@ -47,14 +47,16 @@ def get_prediction(user_id, data_model_dict):
     user_to_rank = np.reshape(
         np.array([str(user_id)] * len(offer_to_score)), (nboffers, 1)
     )
-    offer_categoryId = np.reshape(np.array(list(data.offer_categoryId)), (nboffers, 1))
+    offer_subcategoryid = np.reshape(
+        np.array(list(data.offer_subcategoryid)), (nboffers, 1)
+    )
     pred_input = [user_to_rank, offer_to_score]
     prediction = model.predict(pred_input, verbose=0)
     df_predicted = pd.DataFrame(
         {
             "item_id": offer_to_score.flatten().tolist(),
             "score": prediction.flatten().tolist(),
-            "offer_categoryId": offer_categoryId.flatten().tolist(),
+            "offer_subcategoryid": offer_subcategoryid.flatten().tolist(),
         }
     )
     df_predicted = df_predicted.sort_values(["score"], ascending=False)

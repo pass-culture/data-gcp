@@ -4,7 +4,11 @@ from typing import Any, Dict, List, Tuple
 import numpy as np
 import random
 
-from utils import RECOMMENDATION_NUMBER, SHUFFLE_RECOMMENDATION
+from utils import (
+    RECOMMENDATION_NUMBER,
+    NUMBER_OF_PRESELECTED_OFFERS,
+    SHUFFLE_RECOMMENDATION,
+)
 
 
 def order_offers_by_score_and_diversify_categories(
@@ -20,6 +24,8 @@ def order_offers_by_score_and_diversify_categories(
 
     offers = offers.to_dict("records")
     if SHUFFLE_RECOMMENDATION:
+        # select TOP NUMBER_OF_PRESELECTED_OFFERS to shuffle from
+        offers = offers[:NUMBER_OF_PRESELECTED_OFFERS]
         for recommendation in offers:
             recommendation["score"] = random.random()
 

@@ -4,8 +4,7 @@ SELECT
     user_activity,
     user_region_name,
     user_department_code,
-    sum(cnt_18_users_created) as cnt_18_users_created,
-    sum(cnt_15_17_users_created) AS cnt_15_17_users_created
+    sum(cnt_18_users_created) as cnt_18_users_created
 FROM
     `{{ bigquery_analytics_dataset }}.aggregated_daily_user_data`
 WHERE day < DATE_TRUNC(CURRENT_DATE, MONTH) 

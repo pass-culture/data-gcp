@@ -67,7 +67,7 @@ def compute_metrics(data_model_dict, k):
         data_model_dict, k
     )
     coverage = get_coverage_at_k(data_model_dict, k)
-    personalization = get_personalization(data_model_dict)
+    personalization = get_personalization(data_model_dict, k)
     data_model_dict["metrics"] = {
         "mark": mark,
         "mapk": mapk,
@@ -112,14 +112,15 @@ def get_coverage_at_k(data_model_dict, k):
     return cf_coverage
 
 
-def get_personalization(data_model_dict):
+def get_personalization(data_model_dict, k):
     """
     Personalization measures recommendation similarity across users.
     A high score indicates good personalization (user's lists of recommendations are different).
     A low score indicates poor personalization (user's lists of recommendations are very similar).
     """
     model_predictions = data_model_dict["top_offers"].model_predicted.values.tolist()
-    personalization = recmetrics.personalization(predicted=model_predictions)
+    model_predictions_at_k = [predictions[:k] for predictions in model_predictions]
+    personalization = recmetrics.personalization(predicted=model_predictions_at_k)
     return personalization
 
 

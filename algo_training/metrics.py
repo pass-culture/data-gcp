@@ -165,7 +165,6 @@ def get_avg_diversification_score(df_raw, recos, k):
 
     diversification_count = 0
     for reco in recos:
-        print("reco[:k]:", reco[:k])
         df_enriched_recos = df_raw.query(f"offer_id in {tuple(reco[:k])}")
         df_clean = df_enriched_recos[
             ["offer_categoryId", "offer_subcategoryid", "genres", "rayon", "type"]

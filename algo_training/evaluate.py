@@ -120,7 +120,6 @@ def evaluate(model, storage_path: str, model_name):
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
     mlflow.log_metrics(metrics)
     print("------- EVALUATE DONE -------")
-    check_before_deploy(metrics, RECOMMENDATION_NUMBER)
 
 
 def check_before_deploy(metrics, k):

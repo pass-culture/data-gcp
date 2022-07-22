@@ -89,10 +89,10 @@ def evaluate(model, storage_path: str, model_name):
 
             metrics[f"recall_at_{k}_panachage"] = data_model_dict_w_metrics_at_k[
                 "metrics"
-            ]["div_mark"]
+            ]["mark_panachage"]
             metrics[f"precision_at_{k}_panachage"] = data_model_dict_w_metrics_at_k[
                 "metrics"
-            ]["div_mapk"]
+            ]["mapk_panachage"]
 
             # AVG diverisification score is only calculate at k=RECOMMENDATION_NUMBER to match pcreco output
             metrics[

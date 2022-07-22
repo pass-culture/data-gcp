@@ -124,26 +124,21 @@ def get_coverage_at_k(data_model_dict, k):
 
 def compute_personalization(data_model_dict, k):
     model_predictions = data_model_dict["top_offers"].model_predicted.values.tolist()
-    model_predictions_at_k = [predictions[:k] for predictions in model_predictions]
     model_predictions_panachage = data_model_dict[
         "top_offers"
     ].predictions_diversified.values.tolist()
-    model_predictions_at_k_panachage = [
-        predictions[:k] for predictions in model_predictions_panachage
-    ]
-    personalization_at_k = get_personalization(model_predictions_at_k)
-    personalization_at_k_panachage = get_personalization(
-        model_predictions_at_k_panachage
-    )
+    personalization_at_k = get_personalization(model_predictions, k)
+    personalization_at_k_panachage = get_personalization(model_predictions_panachage, k)
     return personalization_at_k, personalization_at_k_panachage
 
 
-def get_personalization(model_predictions_at_k):
+def get_personalization(model_predictions, k):
     """
     Personalization measures recommendation similarity across users.
     A high score indicates good personalization (user's lists of recommendations are different).
     A low score indicates poor personalization (user's lists of recommendations are very similar).
     """
+    model_predictions_at_k = [predictions[:k] for predictions in model_predictions]
     personalization = recmetrics.personalization(predicted=model_predictions_at_k)
     return personalization
 

@@ -21,7 +21,7 @@ EMBEDDING_SIZE = 64
 L2_REG = 0
 N_EPOCHS = 20 if ENV_SHORT_NAME == "prod" else 10
 BATCH_SIZE = 1024
-LOSS_CUTOFF = 0.001
+LOSS_CUTOFF = 0.005
 
 
 def train(storage_path: str):

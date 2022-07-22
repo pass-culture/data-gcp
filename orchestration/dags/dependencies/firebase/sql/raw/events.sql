@@ -8,6 +8,6 @@ FROM
     {% endif %}
 WHERE
     app_info.id IN (
-        '{{ params.app_info_ids | join(',') }}'
+        "{{ params.app_info_ids | join('", "') }}"
     )
     OR app_info.id is NULL

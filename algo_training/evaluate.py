@@ -22,6 +22,10 @@ k_list = [RECOMMENDATION_NUMBER, NUMBER_OF_PRESELECTED_OFFERS]
 
 def evaluate(model, storage_path: str, model_name):
 
+    raw_data = pd.read_csv(
+        f"{storage_path}/raw_data.csv",
+    )
+
     positive_data_train = pd.read_csv(
         f"{storage_path}/positive_data_train.csv",
         dtype={
@@ -63,7 +67,11 @@ def evaluate(model, storage_path: str, model_name):
 
     data_model_dict = {
         "name": model_name,
-        "data": {"train": positive_data_train, "test": positive_data_test_clean},
+        "data": {
+            "raw": raw_data,
+            "train": positive_data_train,
+            "test": positive_data_test_clean,
+        },
         "model": model,
     }
     data_model_dict_w_actual_and_predicted = get_actual_and_predicted(data_model_dict)
@@ -76,25 +84,42 @@ def evaluate(model, storage_path: str, model_name):
         metrics[f"recall_at_{k}"] = data_model_dict_w_metrics_at_k["metrics"]["mark"]
         metrics[f"precision_at_{k}"] = data_model_dict_w_metrics_at_k["metrics"]["mapk"]
 
+        # Here we track metrics relate to pcreco output
         if k == RECOMMENDATION_NUMBER:
-            metrics[f"recall_at_{k}_div"] = data_model_dict_w_metrics_at_k["metrics"][
-                "div_mark"
-            ]
-            metrics[f"precision_at_{k}_div"] = data_model_dict_w_metrics_at_k[
+
+            metrics[f"recall_at_{k}_panachage"] = data_model_dict_w_metrics_at_k[
                 "metrics"
-            ]["div_mapk"]
+            ]["mark_panachage"]
+            metrics[f"precision_at_{k}_panachage"] = data_model_dict_w_metrics_at_k[
+                "metrics"
+            ]["mapk_panachage"]
+
+            # AVG diverisification score is only calculate at k=RECOMMENDATION_NUMBER to match pcreco output
+            metrics[
+                f"avg_diversification_score_at_{k}"
+            ] = data_model_dict_w_metrics_at_k["metrics"]["avg_div_score"]
+
+            metrics[
+                f"avg_diversification_score_at_{k}_panachage"
+            ] = data_model_dict_w_metrics_at_k["metrics"]["avg_div_score_panachage"]
+
+            metrics[
+                f"personalization_at_{k}_panachage"
+            ] = data_model_dict_w_metrics_at_k["metrics"][
+                "personalization_at_k_panachage"
+            ]
+
         metrics[f"coverage_at_{k}"] = data_model_dict_w_metrics_at_k["metrics"][
             "coverage"
         ]
 
         metrics[f"personalization_at_{k}"] = data_model_dict_w_metrics_at_k["metrics"][
-            "personalization"
+            "personalization_at_k"
         ]
 
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
     mlflow.log_metrics(metrics)
     print("------- EVALUATE DONE -------")
-    check_before_deploy(metrics, RECOMMENDATION_NUMBER)
 
 
 def check_before_deploy(metrics, k):

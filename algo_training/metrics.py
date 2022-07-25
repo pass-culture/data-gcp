@@ -39,7 +39,7 @@ def get_prediction(user_id, data_model_dict):
 
     model = data_model_dict["model"]
     data = data_model_dict["data"]["test"][
-        ["item_id", "offer_categoryId"]
+        ["item_id", "offer_subcategoryid"]
     ].drop_duplicates()
 
     nboffers = len(list(data.item_id))
@@ -47,14 +47,16 @@ def get_prediction(user_id, data_model_dict):
     user_to_rank = np.reshape(
         np.array([str(user_id)] * len(offer_to_score)), (nboffers, 1)
     )
-    offer_categoryId = np.reshape(np.array(list(data.offer_categoryId)), (nboffers, 1))
+    offer_subcategoryid = np.reshape(
+        np.array(list(data.offer_subcategoryid)), (nboffers, 1)
+    )
     pred_input = [user_to_rank, offer_to_score]
     prediction = model.predict(pred_input, verbose=0)
     df_predicted = pd.DataFrame(
         {
             "item_id": offer_to_score.flatten().tolist(),
             "score": prediction.flatten().tolist(),
-            "offer_categoryId": offer_categoryId.flatten().tolist(),
+            "offer_subcategoryid": offer_subcategoryid.flatten().tolist(),
         }
     )
     df_predicted = df_predicted.sort_values(["score"], ascending=False)
@@ -63,18 +65,26 @@ def get_prediction(user_id, data_model_dict):
 
 
 def compute_metrics(data_model_dict, k):
-    mark, mapk, div_mark, div_mapk = compute_recall_and_precision_at_k(
+    mark, mapk, mark_panachage, mapk_panachage = compute_recall_and_precision_at_k(
         data_model_dict, k
     )
     coverage = get_coverage_at_k(data_model_dict, k)
-    personalization = get_personalization(data_model_dict, k)
+    avg_div_score, avg_div_score_panachage = compute_diversification_score(
+        data_model_dict, k
+    )
+    personalization_at_k, personalization_at_k_panachage = compute_personalization(
+        data_model_dict, k
+    )
     data_model_dict["metrics"] = {
         "mark": mark,
         "mapk": mapk,
         "coverage": coverage,
-        "div_mark": div_mark,
-        "div_mapk": div_mapk,
-        "personalization": personalization,
+        "mark_panachage": mark_panachage,
+        "mapk_panachage": mapk_panachage,
+        "personalization_at_k": personalization_at_k,
+        "personalization_at_k_panachage": personalization_at_k_panachage,
+        "avg_div_score": avg_div_score,
+        "avg_div_score_panachage": avg_div_score_panachage,
     }
     return data_model_dict
 
@@ -83,15 +93,15 @@ def compute_recall_and_precision_at_k(data_model_dict, k):
 
     actual = data_model_dict["top_offers"].actual.values.tolist()
     model_predictions = data_model_dict["top_offers"].model_predicted.values.tolist()
-    model_predictions_diversified = data_model_dict[
+    model_predictions_panachage = data_model_dict[
         "top_offers"
     ].predictions_diversified.values.tolist()
     mark, mapk = get_avg_recall_and_precision_at_k(actual, model_predictions, k)
-    div_mark, div_mapk = get_avg_recall_and_precision_at_k(
-        actual, model_predictions_diversified, k
+    mark_panachage, mapk_panachage = get_avg_recall_and_precision_at_k(
+        actual, model_predictions_panachage, k
     )
 
-    return mark, mapk, div_mark, div_mapk
+    return mark, mapk, mark_panachage, mapk_panachage
 
 
 def get_avg_recall_and_precision_at_k(actual, model_predictions, k):
@@ -112,16 +122,55 @@ def get_coverage_at_k(data_model_dict, k):
     return cf_coverage
 
 
-def get_personalization(data_model_dict, k):
+def compute_personalization(data_model_dict, k):
+    model_predictions = data_model_dict["top_offers"].model_predicted.values.tolist()
+    model_predictions_panachage = data_model_dict[
+        "top_offers"
+    ].predictions_diversified.values.tolist()
+    personalization_at_k = get_personalization(model_predictions, k)
+    personalization_at_k_panachage = get_personalization(model_predictions_panachage, k)
+    return personalization_at_k, personalization_at_k_panachage
+
+
+def get_personalization(model_predictions, k):
     """
     Personalization measures recommendation similarity across users.
     A high score indicates good personalization (user's lists of recommendations are different).
     A low score indicates poor personalization (user's lists of recommendations are very similar).
     """
-    model_predictions = data_model_dict["top_offers"].model_predicted.values.tolist()
     model_predictions_at_k = [predictions[:k] for predictions in model_predictions]
     personalization = recmetrics.personalization(predicted=model_predictions_at_k)
     return personalization
+
+
+def compute_diversification_score(data_model_dict, k):
+    df_raw = data_model_dict["data"]["raw"]
+    recos = data_model_dict["top_offers"].model_predicted.values.tolist()
+    recos_panachage = data_model_dict[
+        "top_offers"
+    ].predictions_diversified.values.tolist()
+    avg_diversification = get_avg_diversification_score(df_raw, recos, k)
+    avg_diversification_panachage = get_avg_diversification_score(
+        df_raw, recos_panachage, k
+    )
+    return avg_diversification, avg_diversification_panachage
+
+
+def get_avg_diversification_score(df_raw, recos, k):
+
+    diversification_count = 0
+    for reco in recos:
+        df_enriched_recos = df_raw.query(f"offer_id in {tuple(reco[:k])}")
+        df_clean = df_enriched_recos[
+            ["offer_categoryId", "offer_subcategoryid", "genres", "rayon", "type"]
+        ]
+        df_clean = df_clean.drop_duplicates()
+        df_clean = df_clean.fillna("NA", inplace=False)
+        count_dist = np.array(df_clean.nunique())
+        diversification = np.sum(count_dist)
+        diversification_count += diversification
+    avg_diversification = diversification_count / len(recos)
+    return avg_diversification
 
 
 def apk(actual, predicted, k=10):

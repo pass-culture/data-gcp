@@ -4,14 +4,14 @@ SELECT
     IF(user_department_code = "99", "Étranger", user_region_name) as user_region_name
 
 FROM  `{{ bigquery_analytics_dataset }}.aggregated_daily_used_booking`
-),
+)
 
 
 SELECT
     DATE_TRUNC(day, MONTH) AS month,
     free_vs_paid_for,
-    IF(user_region_name is null, -1, user_department_code) as user_department_code,
-    COALESCE(user_region_name, "Inconnu") as user_region_name,
+    IF(user_region_name is null, "-1", user_department_code) as user_department_code,
+    COALESCE(user_region_name, "Non Communiqué") as user_region_name,
     deposit_type,
     offer_category_name,
     sum(cnt_bookings) as cnt_bookings,

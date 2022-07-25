@@ -7,10 +7,11 @@ WITH aggregated_monthly_user_used_booking_activity AS (
     WHERE
         active_date < DATE_TRUNC(DATE("{{ ds }}"), MONTH)
 )
+
 SELECT
     DATE("{{ current_month(ds) }}") as calculation_month,
-    IF(user_region_name is null, -1, user_department_code) as user_department_code,
-    COALESCE(user_region_name, "Inconnu") as user_region_name,
+    IF(user_region_name is null, "-1", user_department_code) as user_department_code,
+    COALESCE(user_region_name, "Non Communiqué") as user_region_name,
     -- Nombre d'inscrits ayant fait au moins une réservation validée dans les 3 premiers mois après l’obtention de son crédit, parmi les jeunes inscrits il y a entre 3 et 6 mois
     COUNT(
         DISTINCT CASE

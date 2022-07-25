@@ -2,7 +2,8 @@ from google.auth.exceptions import DefaultCredentialsError
 from google.api_core.client_options import ClientOptions
 from googleapiclient import discovery
 
-def get_ai_platform_service(MODEL_END_POINT,default=None):
+
+def get_ai_platform_service(MODEL_END_POINT, default=None):
     try:
         client = ClientOptions(api_endpoint=MODEL_END_POINT)
         ai_platform_service = discovery.build(

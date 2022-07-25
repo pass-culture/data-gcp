@@ -6,10 +6,8 @@ from airflow.providers.google.cloud.operators.bigquery import (
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.http.operators.http import SimpleHttpOperator
 from airflow.operators.python import PythonOperator
-from google.auth.transport.requests import Request
-from google.oauth2 import id_token
 from common import macros
-from common.utils import depends_loop
+from common.utils import depends_loop, getting_service_account_token
 from dependencies.import_analytics.import_historical import (
     historical_clean_applicative_database,
     historical_analytics,
@@ -72,14 +70,6 @@ from dependencies.import_analytics.import_tables import (
 )
 
 from common.alerts import analytics_fail_slack_alert
-
-
-def getting_service_account_token(function_name):
-    function_url = (
-        f"https://europe-west1-{GCP_PROJECT}.cloudfunctions.net/{function_name}"
-    )
-    open_id_connect_token = id_token.fetch_id_token(Request(), function_url)
-    return open_id_connect_token
 
 
 # Variables
@@ -519,42 +509,6 @@ create_table_venue_locations = BigQueryExecuteQueryOperator(
     dag=dag,
 )
 
-getting_contentful_service_account_token = PythonOperator(
-    task_id="getting_contentful_service_account_token",
-    python_callable=getting_service_account_token,
-    op_kwargs={
-        "function_name": f"contentful_{ENV_SHORT_NAME}",
-    },
-    dag=dag,
-)
-
-import_contentful_data_to_bigquery = SimpleHttpOperator(
-    task_id="import_contentful_data_to_bigquery",
-    method="POST",
-    http_conn_id="http_gcp_cloud_function",
-    endpoint=f"contentful_{ENV_SHORT_NAME}",
-    headers={
-        "Content-Type": "application/json",
-        "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_contentful_service_account_token', key='return_value')}}",
-    },
-    log_response=True,
-    dag=dag,
-)
-
-copy_playlists_to_analytics = BigQueryExecuteQueryOperator(
-    task_id="copy_playlists_to_analytics",
-    sql=f"""
-    SELECT
-        *
-    FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_criterion`
-
-    """,
-    destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.applicative_database_criterion",
-    write_disposition="WRITE_TRUNCATE",
-    use_legacy_sql=False,
-    dag=dag,
-)
-
 
 create_offer_extracted_data = BigQueryExecuteQueryOperator(
     task_id="create_offer_extracted_data",
@@ -643,12 +597,6 @@ end = DummyOperator(task_id="end", dag=dag)
     >> create_enriched_app_downloads_stats
     >> end
 )
-(
-    end_enriched_data
-    >> getting_contentful_service_account_token
-    >> import_contentful_data_to_bigquery
-    >> copy_playlists_to_analytics
-    >> end
-)
+(end_enriched_data >> end)
 (end_enriched_data >> start_aggregated_analytics_table_tasks)
 (aggregated_analytics_table_tasks >> end_aggregated_analytics_table_tasks >> end)

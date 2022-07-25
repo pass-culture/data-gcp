@@ -94,7 +94,6 @@ def recommendation(user_id: int):
     longitude = request.args.get("longitude", None)
     latitude = request.args.get("latitude", None)
     post_args_json = request.get_json() if request.method == "POST" else None
-
     user = User(user_id, longitude, latitude)
     input_reco = RecommendationIn(post_args_json) if post_args_json else None
     scoring = Scoring(user, recommendation_in=input_reco)
@@ -119,11 +118,9 @@ def playlist_recommendation(user_id: int):
     longitude = request.args.get("longitude", None)
     latitude = request.args.get("latitude", None)
     post_args_json = request.get_json() if request.method == "POST" else None
-
     user = User(user_id, longitude, latitude)
     input_reco = RecommendationIn(post_args_json) if post_args_json else None
     scoring = Scoring(user, recommendation_in=input_reco)
-
     user_recommendations = scoring.get_recommendation()
     scoring.save_recommendation(user_recommendations)
     return jsonify(

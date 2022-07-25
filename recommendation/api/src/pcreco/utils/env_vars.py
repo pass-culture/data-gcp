@@ -4,11 +4,21 @@ import time
 from typing import Any
 
 from pcreco.utils.secrets.access_gcp_secrets import access_secret
+from google.api_core.client_options import ClientOptions
+from googleapiclient import discovery
 from loguru import logger
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 MODEL_REGION = os.environ.get("MODEL_REGION")
+
+MODEL_END_POINT = f"https://{MODEL_REGION}-ml.googleapis.com"
+AI_PLATFORM_SERVICE = discovery.build(
+    "ml",
+    "v1",
+    client_options=ClientOptions(api_endpoint=MODEL_END_POINT),
+    cache_discovery=False,
+)
 # SQL
 SQL_BASE = os.environ.get("SQL_BASE")
 SQL_BASE_USER = os.environ.get("SQL_BASE_USER")

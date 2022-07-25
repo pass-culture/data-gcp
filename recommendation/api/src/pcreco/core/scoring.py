@@ -1,7 +1,5 @@
 # pylint: disable=invalid-name
 import random
-from google.api_core.client_options import ClientOptions
-from googleapiclient import discovery
 from sqlalchemy import text
 from pcreco.core.user import User
 from pcreco.core.utils.cold_start_status import get_cold_start_status
@@ -12,12 +10,11 @@ from pcreco.models.reco.recommendation import RecommendationIn
 from pcreco.utils.db.db_connection import get_db
 
 from pcreco.utils.env_vars import (
-    ENV_SHORT_NAME,
     GCP_PROJECT,
+    AI_PLATFORM_SERVICE,
     MACRO_CATEGORIES_TYPE_MAPPING,
     NUMBER_OF_PRESELECTED_OFFERS,
     ACTIVE_MODEL,
-    MODEL_REGION,
     AB_TESTING,
     AB_TEST_MODEL_DICT,
     RECOMMENDABLE_OFFER_LIMIT,
@@ -191,22 +188,17 @@ class Scoring:
                 """
             return query
 
-        def _predict_score(self, instances) -> List[List[float]]:
+        def _predict_score(
+            self, instances, service=AI_PLATFORM_SERVICE
+        ) -> List[List[float]]:
             """Calls the AI Platform endpoint for the given model and instances and retrieves the scores."""
             start = time.time()
-            endpoint = f"https://{MODEL_REGION}-ml.googleapis.com"
-            client_options = ClientOptions(api_endpoint=endpoint)
-            service = discovery.build(
-                "ml", "v1", client_options=client_options, cache_discovery=False
-            )
             name = f"projects/{GCP_PROJECT}/models/{self.model_name}"
-
             response = (
                 service.projects()
                 .predict(name=name, body={"instances": instances})
                 .execute()
             )
-
             if "error" in response:
                 raise RuntimeError(response["error"])
 

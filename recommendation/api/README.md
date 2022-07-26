@@ -79,6 +79,12 @@ En dev ça donne:
 gcloud builds submit --tag eu.gcr.io/passculture-data-ehp/data-gcp/apireco-dev
 ```
 
+
+En stg ça donne:
+```
+gcloud builds submit --tag eu.gcr.io/passculture-data-ehp/data-gcp/apireco-stg
+```
+
 -------
 
 **Etape 2:** Déployer une révision sur Cloud Run
@@ -104,6 +110,15 @@ En dev ça donne:
 ```
 gcloud run deploy apireco-dev \
 --image eu.gcr.io/passculture-data-ehp/data-gcp/apireco-dev:latest \
+--region europe-west1 \
+--allow-unauthenticated \
+--platform managed
+```
+
+En stg ça donne:
+```
+gcloud run deploy apireco-stg \
+--image eu.gcr.io/passculture-data-ehp/data-gcp/apireco-stg:latest \
 --region europe-west1 \
 --allow-unauthenticated \
 --platform managed

@@ -218,7 +218,7 @@ with DAG(
         --framework=tensorflow \
         --python-version=3.7 \
         --region=$REGION \
-        --machine-type=n1-standard-2
+        --machine-type=n1-standard-4
 
     gcloud ai-platform versions set-default $VERSION_NAME \
         --model=$MODEL_NAME \

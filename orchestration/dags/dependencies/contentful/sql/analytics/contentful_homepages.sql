@@ -43,9 +43,9 @@ firebase_modules AS (
         module_id AS module_id,
         MAX(homes.title) AS home_name,
         MAX(coalesce(modules.title, module_name)) AS module_name,
-        MAX(modules.content_ type) AS content_type
+        MAX(modules.content_type) AS content_type
     FROM
-        `{{ bigquery_analytics_dataset }}.firebase_events`
+        `{{ bigquery_analytics_dataset }}.firebase_events` firebase_events
         LEFT JOIN contentful_entries homes ON homes.id = firebase_events.entry_id
         AND homes.rnk = 1
         LEFT JOIN contentful_entries modules ON modules.id = firebase_events.module_id
@@ -99,8 +99,6 @@ FROM
             ) rnk
         FROM
             all_modules
-    )
+    ) inn
 WHERE
     rnk = 1
-ORDER BY
-    date DESC

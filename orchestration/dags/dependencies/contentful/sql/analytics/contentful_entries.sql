@@ -27,7 +27,7 @@ FROM
         SELECT
             *,
             ROW_NUMBER() OVER (
-                PARTITION BY { id_key }
+                PARTITION BY id
                 ORDER BY
                     execution_date DESC
             ) as row_number

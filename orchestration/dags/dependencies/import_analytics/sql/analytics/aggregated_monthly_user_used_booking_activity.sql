@@ -1,4 +1,4 @@
-SELECT DISTINCT
+SELECT
     DATE_TRUNC(active_date,MONTH) AS active_month,
     months_since_deposit_created,
     user_id,

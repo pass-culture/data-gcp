@@ -6,12 +6,13 @@ from pcreco.core.utils.cold_start_status import get_cold_start_status
 from pcreco.core.utils.diversification import (
     order_offers_by_score_and_diversify_categories,
 )
+from pcreco.utils.ai_platform.service import ai_platform_service
+
 from pcreco.models.reco.recommendation import RecommendationIn
 from pcreco.utils.db.db_connection import get_db
 
 from pcreco.utils.env_vars import (
     GCP_PROJECT,
-    AI_PLATFORM_SERVICE,
     MACRO_CATEGORIES_TYPE_MAPPING,
     NUMBER_OF_PRESELECTED_OFFERS,
     ACTIVE_MODEL,
@@ -114,6 +115,10 @@ class Scoring:
         def get_scored_offers(self) -> List[Dict[str, Any]]:
             start = time.time()
             if not len(self.recommendable_offers) > 0:
+                log_duration(
+                    f"no offers to score for {self.user.id} - {self.model_name}",
+                    start,
+                )
                 return []
             else:
                 instances = self._get_instances()
@@ -126,7 +131,7 @@ class Scoring:
                 ]
 
                 log_duration(
-                    f"get_scored_recommendation_for_user for {self.user.id} - {self.model_name}",
+                    f"scored {len(recommendations)} for {self.user.id} - {self.model_name}, ",
                     start,
                 )
             return recommendations
@@ -188,14 +193,14 @@ class Scoring:
                 """
             return query
 
-        def _predict_score(
-            self, instances, service=AI_PLATFORM_SERVICE
-        ) -> List[List[float]]:
+        def _predict_score(self, instances) -> List[List[float]]:
+
             """Calls the AI Platform endpoint for the given model and instances and retrieves the scores."""
             start = time.time()
             name = f"projects/{GCP_PROJECT}/models/{self.model_name}"
             response = (
-                service.projects()
+                ai_platform_service.get()
+                .projects()
                 .predict(name=name, body={"instances": instances})
                 .execute()
             )

@@ -1,10 +1,6 @@
 import os
-from pickle import FALSE
 import time
-from typing import Any
-
 from pcreco.utils.secrets.access_gcp_secrets import access_secret
-from pcreco.utils.ai_platform.get_ai_platform_service import get_ai_platform_service
 from loguru import logger
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
@@ -12,7 +8,6 @@ ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 MODEL_REGION = os.environ.get("MODEL_REGION")
 
 MODEL_END_POINT = f"https://{MODEL_REGION}-ml.googleapis.com"
-AI_PLATFORM_SERVICE = get_ai_platform_service(MODEL_END_POINT)
 # SQL
 SQL_BASE = os.environ.get("SQL_BASE")
 SQL_BASE_USER = os.environ.get("SQL_BASE_USER")

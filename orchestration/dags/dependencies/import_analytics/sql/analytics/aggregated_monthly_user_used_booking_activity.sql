@@ -1,5 +1,5 @@
 SELECT
-    active_date,
+    DATE_TRUNC(active_date,MONTH) AS active_month,
     months_since_deposit_created,
     user_id,
     user_department_code,
@@ -12,7 +12,7 @@ SELECT
 FROM
     `{{ bigquery_analytics_dataset }}.aggregated_daily_user_used_activity`
 GROUP BY
-    active_date,
+    active_month,
     months_since_deposit_created,
     user_id,
     user_department_code,

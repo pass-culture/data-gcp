@@ -1,6 +1,6 @@
 from common.config import DAG_FOLDER
 
-SQL_PATH = f"{DAG_FOLDER}/dependencies/metabase/sql"
+SQL_PATH = f"dependencies/metabase/sql"
 
 
 import_tables = {
@@ -47,7 +47,7 @@ analytics_tables = {
 
 
 def from_external(conn_id, params):
-    with open(params["sql"], "r") as f:
+    with open(f"{DAG_FOLDER}/{params['sql']}", "r") as f:
         sql_query = '"""{}"""'.format(f.read())
         return f"""SELECT * FROM EXTERNAL_QUERY(
                 "{conn_id}",

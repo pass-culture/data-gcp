@@ -11,9 +11,7 @@ from dependencies.metabase.import_metabase import (
     analytics_tables,
 )
 from common.config import METABASE_EXTERNAL_CONNECTION_ID
-from common.config import (
-    GCP_PROJECT,
-)
+from common.config import GCP_PROJECT, DAG_FOLDER
 from common.alerts import task_fail_slack_alert
 
 
@@ -33,6 +31,7 @@ dag = DAG(
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,
+    template_searchpath=DAG_FOLDER,
 )
 
 start = DummyOperator(task_id="start", dag=dag)
@@ -53,6 +52,8 @@ for name, params in import_tables.items():
     )
     import_tables_to_raw_tasks.append(task)
 
+end_raw = DummyOperator(task_id="end_raw", dag=dag)
+
 
 import_tables_to_analytics_tasks = []
 for name, params in analytics_tables.items():
@@ -70,4 +71,10 @@ for name, params in analytics_tables.items():
 end = DummyOperator(task_id="end", dag=dag)
 
 
-start >> import_tables_to_raw_tasks >> import_tables_to_analytics_tasks >> end
+(
+    start
+    >> import_tables_to_raw_tasks
+    >> end_raw
+    >> import_tables_to_analytics_tasks
+    >> end
+)

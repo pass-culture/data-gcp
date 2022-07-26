@@ -73,9 +73,7 @@ create_analytics_table = BigQueryExecuteQueryOperator(
     sql=f"""
     SELECT 
         *
-    FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.typeform_adage_reference_request` 
-    WHERE vous_etes is not null
-
+    FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.typeform_adage_reference_request_sheet` 
     """,
     destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.typeform_adage_reference_request",
     write_disposition="WRITE_TRUNCATE",

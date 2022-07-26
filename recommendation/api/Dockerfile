@@ -17,6 +17,7 @@ COPY src/pcreco/core/utils/* pcreco/core/utils/
 COPY src/pcreco/models/reco/* pcreco/models/reco/
 COPY src/pcreco/utils/db/* pcreco/utils/db/
 COPY src/pcreco/utils/secrets/* pcreco/utils/secrets/
+COPY src/pcreco/utils/ai_platform/* pcreco/utils/ai_platform/
 COPY src/pcreco/utils/* pcreco/utils/
 
 # Install production dependencies.

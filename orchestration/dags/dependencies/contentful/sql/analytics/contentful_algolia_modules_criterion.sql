@@ -44,4 +44,4 @@ except
 (child_module_id, child)
 FROM
   module_ids mi
-  LEFT JOIN criterion c on c.child_module_id = mi.child
+  INNER JOIN criterion c on c.child_module_id = mi.child

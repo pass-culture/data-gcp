@@ -193,7 +193,8 @@ def define_enriched_venue_query(dataset, table_prefix=""):
         CREATE OR REPLACE TABLE {dataset}.enriched_venue_data AS (
             SELECT
                 venue.venue_id
-                ,COALESCE(NULLIF(venue.venue_public_name, ""), venue.venue_name) AS venue_name
+                ,venue.venue_name
+                ,venue.venue_public_name
                 ,venue.venue_booking_email
                 ,venue.venue_address
                 ,venue.venue_latitude

@@ -42,7 +42,7 @@ dag = DAG(
 
 start = DummyOperator(task_id="start", dag=dag)
 training_data_tables = ["bookings", "clics", "favorites"]
-aggregated_tables = ["users"]
+aggregated_tables = ["users","offers"]
 import_tables_to_raw_tasks = []
 for table in training_data_tables:
     task = BigQueryExecuteQueryOperator(

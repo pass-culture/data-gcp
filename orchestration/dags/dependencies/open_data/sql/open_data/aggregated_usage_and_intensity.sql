@@ -5,7 +5,7 @@ WITH aggregated_monthly_user_used_booking_activity AS (
     FROM
         `{{ bigquery_analytics_dataset }}.aggregated_monthly_user_used_booking_activity`
     WHERE
-        active_date < DATE_TRUNC(DATE("{{ ds }}"), MONTH)
+        active_month < DATE_TRUNC(DATE("{{ ds }}"), MONTH)
 )
 
 SELECT

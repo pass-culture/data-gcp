@@ -74,7 +74,7 @@ def create_materialized_enriched_booking_view(dataset, table_prefix=""):
                 offer.offer_subcategoryId,
                 subcategories.category_id AS offer_category_id,
                 offer.offer_name,
-                coalesce(venue.venue_public_name, venue.venue_name) AS venue_name,
+                venue.venue_name,
                 venue_label.label as venue_label_name,
                 venue.venue_type_code as venue_type_name,
                 venue.venue_id,

@@ -971,7 +971,8 @@ ENRICHED_VENUE_DATA_INPUT = {
 ENRICHED_VENUE_DATA_EXPECTED = [
     {
         "venue_id": "1",
-        "venue_name": "Venue public name",
+        "venue_public_name": "Venue public name",
+        "venue_name": "venue name",
         "venue_booking_email": "venue@example.com",
         "venue_address": "37 rue de la Martinière",
         "venue_latitude": 2.23,

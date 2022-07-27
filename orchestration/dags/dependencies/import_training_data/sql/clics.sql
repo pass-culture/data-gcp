@@ -14,12 +14,31 @@ GROUP BY user_id, offer_id
 )
 SELECT
 user_id,
-ANY_VALUE(offer.offer_id) AS offer_id,
-ANY_VALUE(offer_subcategoryid) AS offer_subcategoryid,
+"CLIC" as event_type,
 CASE WHEN offer.offer_subcategoryId in ('LIVRE_PAPIER','LIVRE_AUDIO_PHYSIQUE','SEANCE_CINE')
 THEN CONCAT('product-', offer.offer_product_id) ELSE CONCAT('offer-', offer.offer_id)
-END AS item_id,
-SUM(clics_count) as clics_count,
+END AS offer_id,
+offer.offer_subcategoryId as offer_subcategoryid,
+subcategories.category_id as offer_categoryId,
+enroffer.genres,
+enroffer.rayon,
+enroffer.type,
+enroffer.venue_id,
+enroffer.venue_name,
+SUM(clics_count) as count,
 FROM events
 JOIN `{{ bigquery_clean_dataset }}`.`applicative_database_offer` offer ON offer.offer_id = events.offer_id
-GROUP BY user_id, item_id
+inner join `{{ bigquery_analytics_dataset }}`.`subcategories` subcategories on offer.offer_subcategoryId = subcategories.id
+inner join `{{ bigquery_analytics_dataset }}`.`enriched_offer_data` enroffer on enroffer.offer_id = offer.offer_id
+group by
+    user_id,
+    offer_id,
+    offer_product_id,
+    offer_categoryId,
+    offer.offer_subcategoryid,
+    enroffer.genres,
+    enroffer.rayon,
+    enroffer.type,
+    enroffer.venue_id,
+    enroffer.venue_name,
+    event_type

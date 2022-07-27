@@ -42,21 +42,41 @@ dag = DAG(
 
 start = DummyOperator(task_id="start", dag=dag)
 training_data_tables = ["bookings", "clics", "favorites"]
-
-import_tables_to_clean_tasks = []
+aggregated_tables = ["users"]
+import_tables_to_raw_tasks = []
 for table in training_data_tables:
     task = BigQueryExecuteQueryOperator(
-        task_id=f"import_to_clean_training_data_{table}",
+        task_id=f"import_to_raw_training_data_{table}",
         sql=f"{IMPORT_TRAINING_SQL_PATH}/{table}.sql",
         write_disposition="WRITE_TRUNCATE",
         use_legacy_sql=False,
         destination_dataset_table=f"{BIGQUERY_RAW_DATASET}.training_data_{table}",
         dag=dag,
     )
-    import_tables_to_clean_tasks.append(task)
+    import_tables_to_raw_tasks.append(task)
+
+aggregated_tables_to_clean_tasks = []
+for table in aggregated_tables:
+    task = BigQueryExecuteQueryOperator(
+        task_id=f"import_to_clean_aggregated_{table}",
+        sql=f"{IMPORT_TRAINING_SQL_PATH}/aggregated_{table}.sql",
+        write_disposition="WRITE_TRUNCATE",
+        use_legacy_sql=False,
+        destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.training_data_aggregated_{table}",
+        dag=dag,
+    )
+    aggregated_tables_to_clean_tasks.append(task)
 
 end_import_to_raw = DummyOperator(task_id="end_import_to_raw", dag=dag)
+end_import_to_clean = DummyOperator(task_id="end_import_to_clean", dag=dag)
 
 end = DummyOperator(task_id="end", dag=dag)
 
-(start >> import_tables_to_clean_tasks >> end_import_to_raw >> end)
+(
+    start
+    >> import_tables_to_raw_tasks
+    >> end_import_to_raw
+    >> aggregated_tables_to_clean_tasks
+    >> end_import_to_clean
+    >> end
+)

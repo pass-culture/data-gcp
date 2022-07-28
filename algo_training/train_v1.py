@@ -1,4 +1,9 @@
 import mlflow
+import warnings
+from pandas.errors import DtypeWarning
+
+warnings.simplefilter(action="ignore", category=DtypeWarning)
+
 import numpy as np
 import pandas as pd
 import tensorflow as tf

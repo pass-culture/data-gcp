@@ -3,9 +3,22 @@ import pandas as pd
 
 def get_bookings(start_date, end_date):
     query = f"""
-        select user_id,
-        (CASE WHEN offer.offer_subcategoryId in ('LIVRE_PAPIER','LIVRE_AUDIO_PHYSIQUE','SEANCE_CINE') THEN CONCAT('product-', offer.offer_product_id) ELSE CONCAT('offer-', offer.offer_id) END) AS offer_id,
-        offer.offer_subcategoryId as offer_subcategoryid,subcategories.category_id as offer_categoryId, count(*) as nb_bookings, enroffer.genres, enroffer.rayon, enroffer.type, enroffer.venue_id, enroffer.venue_name
+        select 
+        user_id,
+        (   CASE 
+                WHEN offer.offer_subcategoryId in ('LIVRE_PAPIER','LIVRE_AUDIO_PHYSIQUE','SEANCE_CINE') 
+                THEN CONCAT('product-', offer.offer_product_id) ELSE CONCAT('offer-', offer.offer_id) 
+            END
+        ) AS offer_id,
+        offer.offer_subcategoryId as offer_subcategoryid,
+        subcategories.category_id as offer_categoryId,
+        enroffer.genres,
+        enroffer.rayon,
+        enroffer.type,
+        enroffer.venue_id,
+        enroffer.venue_name,
+        count(*) as nb_bookings
+         
         from `passculture-data-prod.clean_prod.applicative_database_booking` booking
 
         inner join `passculture-data-prod.clean_prod.applicative_database_stock` stock

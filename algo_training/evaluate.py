@@ -24,6 +24,18 @@ def evaluate(model, storage_path: str, model_name):
 
     raw_data = pd.read_csv(
         f"{storage_path}/raw_data.csv",
+        dtype={
+            "user_id": str,
+            "offer_id": str,
+            "offer_subcategoryid": str,
+            "offer_categoryId": str,
+            "genres": str,
+            "rayon": str,
+            "type": str,
+            "venue_id": str,
+            "venue_name": str,
+            "nb_bookings": int,
+        },
     )
 
     positive_data_train = pd.read_csv(

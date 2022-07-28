@@ -10,12 +10,14 @@ from pcreco.utils.ai_platform.service import ai_platform_service
 
 from pcreco.models.reco.recommendation import RecommendationIn
 from pcreco.utils.db.db_connection import get_db
-
+from pcreco.core.utils.vertex_ai import predict_custom_trained_model_sample
 from pcreco.utils.env_vars import (
     GCP_PROJECT,
+    PROJECT_NUMBER,
     MACRO_CATEGORIES_TYPE_MAPPING,
     NUMBER_OF_PRESELECTED_OFFERS,
     ACTIVE_MODEL,
+    ENDPOINT_ID,
     AB_TESTING,
     AB_TEST_MODEL_DICT,
     RECOMMENDABLE_OFFER_LIMIT,
@@ -143,7 +145,7 @@ class Scoring:
                 offer_ids_to_rank.append(
                     recommendation["item_id"] if recommendation["item_id"] else ""
                 )
-            instances = [{"input_1": user_to_rank, "input_2": offer_ids_to_rank}]
+            instances = {"input_1": user_to_rank, "input_2": offer_ids_to_rank}
             return instances
 
         def get_recommendable_offers(self) -> List[Dict[str, Any]]:
@@ -194,21 +196,16 @@ class Scoring:
             return query
 
         def _predict_score(self, instances) -> List[List[float]]:
-
-            """Calls the AI Platform endpoint for the given model and instances and retrieves the scores."""
             start = time.time()
-            name = f"projects/{GCP_PROJECT}/models/{self.model_name}"
-            response = (
-                ai_platform_service.get()
-                .projects()
-                .predict(name=name, body={"instances": instances})
-                .execute()
+            """Calls Vertex AI endpoint for the given model and instances and retrieves the scores."""
+            predictions = predict_custom_trained_model_sample(
+                project=PROJECT_NUMBER,
+                endpoint_id=ENDPOINT_ID,
+                location="europe-west1",
+                instances=instances,
             )
-            if "error" in response:
-                raise RuntimeError(response["error"])
-
             log_duration("predict_score", start)
-            return response["predictions"]
+            return predictions
 
     class ColdStart:
         def __init__(self, scoring):

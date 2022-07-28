@@ -117,15 +117,34 @@ def playlist_recommendation(user_id: int):
 
     longitude = request.args.get("longitude", None)
     latitude = request.args.get("latitude", None)
+
+    if longitude is not None and latitude is not None:
+        geo_located = True
+    else:
+        geo_located = False
     post_args_json = request.get_json() if request.method == "POST" else None
     user = User(user_id, longitude, latitude)
-    input_reco = RecommendationIn(post_args_json) if post_args_json else None
+    input_reco = None
+    applied_filters = False
+    if post_args_json:
+        input_reco = RecommendationIn(post_args_json)
+        applied_filters = input_reco.has_conditions()
+
     scoring = Scoring(user, recommendation_in=input_reco)
     user_recommendations = scoring.get_recommendation()
     scoring.save_recommendation(user_recommendations)
     return jsonify(
         {
             "playlist_recommended_offers": user_recommendations,
+            "params": {
+                "reco_origin": "cold_start" if scoring.iscoldstart else "algo",
+                "model_name": scoring.model_name if not scoring.iscoldstart else None,
+                # keep same name for now
+                "model_version": scoring.model_name,
+                "ab_test": user.group_id if AB_TESTING else "default",
+                "geo_located": geo_located,
+                "filtered": applied_filters,
+            },
         }
     )
 

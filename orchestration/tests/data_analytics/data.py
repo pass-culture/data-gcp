@@ -1155,6 +1155,7 @@ ENRICHED_BOOKING_DATA_INPUT = {
             "user_id": "13",
             "user_department_code": 68,
             "user_creation_date": datetime.now().replace(microsecond=0),
+            "user_activity": "Lycéen",
         }
     ],
     "venue_type": [{"id": "1", "label": "label"}],
@@ -1201,6 +1202,7 @@ ENRICHED_BOOKING_DATA_EXPECTED = [
         "same_category_booking_rank": 1,
         "stock_beginning_date": datetime.now().replace(microsecond=0),
         "stock_id": "4",
+        "user_activity": "Lycéen",
         "user_creation_date": datetime.now().replace(microsecond=0),
         "user_department_code": "68",
         "user_id": "13",

@@ -10,7 +10,8 @@ FROM  `{{ bigquery_analytics_dataset }}.aggregated_daily_used_booking`
 SELECT
     DATE_TRUNC(day, MONTH) AS month,
     free_vs_paid_for,
-    IF(user_region_name is null, "-1", user_department_code) as user_department_code,
+    user_activity,
+    IF(user_region_name is null, "Non Communiqué", user_department_code) as user_department_code,
     COALESCE(user_region_name, "Non Communiqué") as user_region_name,
     deposit_type,
     offer_category_name,

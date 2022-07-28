@@ -59,6 +59,7 @@ class RecommendationTest:
                 for i, recommendation in enumerate(recommendable_offers)
             ]
             user_recommendations = scoring.get_recommendation()
+            assert input_reco.has_conditions == False
             assert (
                 len(user_recommendations) > 0
             ), f"{use_case}: user_recommendations list is non empty"
@@ -169,6 +170,7 @@ class RecommendationTest:
             scoring = Scoring(user, recommendation_in=input_reco)
 
             recommendable_offers = scoring.scoring.recommendable_offers
+
             recommendation_sgn = [
                 reco["search_group_name"] for reco in recommendable_offers
             ]
@@ -178,6 +180,7 @@ class RecommendationTest:
                 for i, recommendation in enumerate(recommendable_offers)
             ]
             assert len(recommendable_offers) > 0, f"{use_case}: playlist is not empty"
+            assert input_reco.has_conditions == True
 
             assert set(recommendation_sgn) == set(
                 categories
@@ -249,7 +252,58 @@ class RecommendationTest:
                 reco["search_group_name"] for reco in recommended_offers
             ]
             assert len(recommended_offers) > 0, f"{use_case}: playlist is not empty"
-
+            assert input_reco.has_conditions == True
             assert set(recommendation_sgn) == set(
                 categories
+            ), f"{use_case}: recommended categories are expected"
+
+    @pytest.mark.parametrize(
+        ["user_id", "geoloc", "subcategories", "use_case"],
+        [
+            (
+                "118",
+                {"longitude": None, "latitude": None},
+                ["SPECTACLE_REPRESENTATION"],
+                "18_geoloc_SPECTACLE_REPRESENTATION",
+            ),
+            (
+                "118",
+                {"longitude": 2.331289, "latitude": 48.830719},
+                ["SPECTACLE_REPRESENTATION"],
+                "18_no_geoloc_SPECTACLE_REPRESENTATION",
+            ),
+        ],
+    )
+    @patch("pcreco.core.scoring.get_cold_start_status")
+    def test_recommendation_playlist_cold_start(
+        self,
+        cold_start_status_mock: Mock,
+        setup_database: Any,
+        user_id,
+        geoloc,
+        subcategories,
+        use_case,
+    ):
+        with patch("pcreco.utils.db.db_connection.__get_db") as connection_mock:
+            connection_mock.return_value = setup_database
+            longitude = geoloc["longitude"]
+            latitude = geoloc["latitude"]
+
+            user = User(user_id, longitude, latitude)
+            cold_start_status_mock.return_value = True
+            input_reco = RecommendationIn(
+                {
+                    "subcategories": subcategories,
+                }
+            )
+
+            scoring = Scoring(user, recommendation_in=input_reco)
+
+            recommended_offers = scoring.scoring.get_scored_offers()
+            recommendation_sgn = [reco["subcategory_id"] for reco in recommended_offers]
+
+            assert len(recommended_offers) > 0, f"{use_case}: playlist is not empty"
+            assert input_reco.has_conditions == True
+            assert set(recommendation_sgn) == set(
+                subcategories
             ), f"{use_case}: recommended categories are expected"

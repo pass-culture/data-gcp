@@ -30,7 +30,7 @@ class RecommendationIn:
                 condition += f"""AND ({column} > '{self.start_date}' AND {column} < '{self.end_date}') \n"""
             else:
                 condition += f"""AND ({column} > '{self.start_date}') \n"""
-        if self.search_group_names is not None and len(self.subcategories_id) > 0:
+        if self.search_group_names is not None and len(self.search_group_names) > 0:
             # we filter by search_group_name to be iso with contentful categories
             condition += (
                 "AND ("

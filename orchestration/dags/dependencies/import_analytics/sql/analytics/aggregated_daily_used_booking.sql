@@ -4,6 +4,7 @@ SELECT
         WHEN booking_amount = 0 THEN "Gratuit"
         ELSE "Payant"
     END AS free_vs_paid_for,
+    user_activity,
     user_department_code,
     region_name AS user_region_name,
     deposit_type,
@@ -23,6 +24,7 @@ WHERE
     `{{ bigquery_analytics_dataset }}.enriched_booking_data`.booking_is_used
 GROUP BY
     day,
+    user_activity,
     user_department_code,
     user_region_name,
     deposit_type,

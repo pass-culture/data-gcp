@@ -1,7 +1,6 @@
 SELECT
     DATE(deposit_creation_date) AS day,
     eud.user_civility,
-    eud.user_activity,
     edd.user_region_name,
     edd.user_department_code,
     COUNT(
@@ -22,6 +21,5 @@ FROM
 GROUP BY
     day,
     eud.user_civility,
-    eud.user_activity,
     edd.user_region_name,
     edd.user_department_code

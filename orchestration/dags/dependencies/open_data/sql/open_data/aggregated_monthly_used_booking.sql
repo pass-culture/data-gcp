@@ -23,4 +23,4 @@ WHERE
     day < DATE_TRUNC(CURRENT_DATE, MONTH)
     AND deposit_type = "GRANT_18"
 GROUP BY
-    1, 2, 3, 4, 5, 6
+    1, 2, 3, 4, 5, 6, 7

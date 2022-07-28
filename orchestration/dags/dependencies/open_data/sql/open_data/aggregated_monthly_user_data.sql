@@ -16,4 +16,4 @@ FROM
    region_format
 WHERE day < DATE_TRUNC(CURRENT_DATE, MONTH) 
 GROUP BY
-    1, 2, 3, 4, 5
+    1, 2, 3, 4

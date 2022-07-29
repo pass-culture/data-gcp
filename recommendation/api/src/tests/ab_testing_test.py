@@ -44,7 +44,7 @@ class ABtestingTest:
 
             assert (
                 user.group_id == expected_group
-            ), " AB test group attribution is correct"
+            ), "AB test group attribution is correct"
             assert (
                 scoring.model_name == expected_model_name
             ), "Model attribution is correct"

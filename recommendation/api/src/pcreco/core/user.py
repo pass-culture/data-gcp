@@ -50,8 +50,11 @@ class User:
             )
         ).fetchone()
         if request_response is not None:
-            self.age = int(request_response[0])
-            self.user_deposit_initial_amount = request_response[1]
+            try:
+                self.age = int(request_response[0])
+                self.user_deposit_initial_amount = request_response[1]
+            except TypeError:
+                pass
 
     def get_ab_testing_group(self) -> None:
         if AB_TESTING:

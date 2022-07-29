@@ -20,7 +20,7 @@ SQL_BASE_PASSWORD = os.environ.get(
 )
 # Vertex ai attributes
 PROJECT_NUMBER = os.environ.get("PROJECT_NUMBER")
-ENDPOINT_ID = os.environ.get("ENDPOINT_ID")
+ENDPOINT_ID = os.environ.get("VERTEX_AI_ENDPOINT_ID")
 
 # Attributes on API output and recommendation
 ACTIVE_MODEL = f"tf_model_reco_{ENV_SHORT_NAME}"

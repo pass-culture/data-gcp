@@ -18,6 +18,10 @@ SQL_BASE_PASSWORD = os.environ.get(
     "SQL_BASE_PASSWORD",
     access_secret(GCP_PROJECT, SQL_BASE_SECRET_ID, SQL_BASE_SECRET_VERSION),
 )
+# Vertex ai attributes
+PROJECT_NUMBER = os.environ.get("PROJECT_NUMBER")
+ENDPOINT_ID = os.environ.get("ENDPOINT_ID")
+
 # Attributes on API output and recommendation
 ACTIVE_MODEL = f"tf_model_reco_{ENV_SHORT_NAME}"
 NUMBER_OF_RECOMMENDATIONS = 10

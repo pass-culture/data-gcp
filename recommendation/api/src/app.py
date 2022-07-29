@@ -128,7 +128,7 @@ def playlist_recommendation(user_id: int):
     applied_filters = False
     if post_args_json:
         input_reco = RecommendationIn(post_args_json)
-        applied_filters = input_reco.has_conditions()
+        applied_filters = input_reco.has_conditions
 
     scoring = Scoring(user, recommendation_in=input_reco)
     user_recommendations = scoring.get_recommendation()

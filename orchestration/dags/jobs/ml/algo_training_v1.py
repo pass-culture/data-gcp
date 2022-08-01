@@ -27,6 +27,7 @@ STORAGE_PATH = (
 )
 MODEL_NAME = "v1"
 AI_MODEL_NAME = f"tf_model_reco_{ENV_SHORT_NAME}"
+END_POINT_NAME=f"vertex_ai_{ENV_SHORT_NAME}"
 SLACK_CONN_ID = "slack_analytics"
 SLACK_CONN_PASSWORD = access_secret_data(GCP_PROJECT_ID, "slack-conn-password")
 
@@ -208,28 +209,18 @@ with DAG(
     export REGION=europe-west1
     export MODEL_NAME={AI_MODEL_NAME}
     export RECOMMENDATION_MODEL_DIR={{{{ ti.xcom_pull(task_ids='training') }}}}
-
     export VERSION_NAME=v_{{{{ ts_nodash }}}}
-
-    gcloud ai-platform versions create $VERSION_NAME \
-        --model=$MODEL_NAME \
-        --origin=$RECOMMENDATION_MODEL_DIR \
-        --runtime-version=2.5 \
-        --framework=tensorflow \
-        --python-version=3.7 \
-        --region=$REGION \
-        --machine-type=n1-standard-4
-
-    gcloud ai-platform versions set-default $VERSION_NAME \
-        --model=$MODEL_NAME \
-        --region=$REGION
+    export END_POINT_NAME={END_POINT_NAME}
+    python deploy_model.py
     """
+
 
     deploy_model = BashOperator(
         task_id="deploy_model",
         bash_command=DEPLOY_COMMAND,
     )
 
+    """
     list_model_versions = BashOperator(
         task_id="list_model_versions",
         bash_command="gcloud ml-engine versions list "
@@ -265,6 +256,7 @@ with DAG(
         },
         dag=dag,
     )
+    """
 
     SLACK_BLOCKS = [
         {
@@ -322,8 +314,5 @@ with DAG(
         >> evaluate
         >> gce_instance_stop
         >> deploy_model
-        >> list_model_versions
-        >> get_version_task
-        >> delete_last_version
         >> send_slack_notif_success
     )

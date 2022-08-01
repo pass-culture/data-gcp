@@ -225,6 +225,16 @@ with DAG(
         dag=dag,
     )
 
+    CLEAN_VERSIONS_COMMAND = f""" '{DEFAULT}
+    export REGION=europe-west1
+    export MODEL_NAME={AI_MODEL_NAME}
+    export RECOMMENDATION_MODEL_DIR={{{{ ti.xcom_pull(task_ids='training') }}}}
+    export VERSION_NAME=v_{{{{ ts_nodash }}}}
+    export END_POINT_NAME={END_POINT_NAME}
+    export MAX_MODEL_VERSIONS = 5
+    python deploy_model.py'
+    """
+
     """
     list_model_versions = BashOperator(
         task_id="list_model_versions",

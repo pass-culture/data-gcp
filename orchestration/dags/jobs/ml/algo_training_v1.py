@@ -213,7 +213,7 @@ with DAG(
     export END_POINT_NAME={END_POINT_NAME}
     python deploy_model.py'
     """
-    
+
     deploy_model = BashOperator(
         task_id="deploy_model",
         bash_command=f"""

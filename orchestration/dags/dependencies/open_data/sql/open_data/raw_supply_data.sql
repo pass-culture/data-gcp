@@ -6,6 +6,35 @@ WITH resa_6mois AS (
     WHERE
         booking_status IN ('USED', 'REIMBURSED')
         AND DATE_DIFF(DATE("{{ ds }}"), booking_used_date, MONTH) <= 6
+    UNION ALL
+    SELECT
+      DISTINCT venue_id
+    FROM
+        `{{ bigquery_analytics_dataset }}`.enriched_collective_booking_data
+    WHERE
+        collective_booking_status IN ('USED', 'REIMBURSED')
+        AND DATE_DIFF(DATE("{{ ds }}"), collective_booking_used_date, MONTH) <= 6
+),
+all_offers AS (
+  SELECT
+    venue_id,
+    offer_id,
+    offer_subcategoryid,
+    category_id,
+    subcategories.is_physical_deposit AS physical_goods,
+    last_stock_price
+  FROM `{{ bigquery_analytics_dataset }}`.enriched_offer_data
+        LEFT JOIN `{{ bigquery_analytics_dataset }}`.subcategories ON subcategories.id = enriched_offer_data.offer_subcategoryid
+  UNION ALL
+  SELECT
+    venue_id,
+    collective_offer_id,
+    collective_offer_subcategory_id,
+    collective_offer_category_id,
+    subcategories.is_physical_deposit AS physical_goods,
+    collective_stock_price
+  FROM `{{ bigquery_analytics_dataset }}`.enriched_collective_offer_data
+        LEFT JOIN `{{ bigquery_analytics_dataset }}`.subcategories ON subcategories.id = enriched_collective_offer_data.collective_offer_subcategory_id
 ),
 lieux_permanents1 AS (
     SELECT
@@ -19,9 +48,9 @@ lieux_permanents1 AS (
         enriched_offerer_data.offerer_department_code,
         enriched_venue_data.venue_department_code,
         enriched_venue_data.venue_type_label,
-        enriched_offer_data.offer_subcategoryid,
-        subcategories.category_id,
-        enriched_offer_data.offer_id,
+        all_offers.offer_subcategoryid,
+        all_offers.category_id,
+        all_offers.offer_id,
         physical_goods,
         last_stock_price AS stock_price
     FROM
@@ -30,8 +59,7 @@ lieux_permanents1 AS (
         AND venue_is_permanent IS TRUE
         AND venue_is_virtual IS FALSE
         JOIN resa_6mois ON enriched_venue_data.venue_id = resa_6mois.venue_id
-        JOIN `{{ bigquery_analytics_dataset }}`.enriched_offer_data ON enriched_venue_data.venue_id = enriched_offer_data.venue_id
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.subcategories ON subcategories.id = enriched_offer_data.offer_subcategoryid
+        JOIN all_offers ON all_offers.venue_id = resa_6mois.venue_id
         LEFT JOIN `{{ bigquery_analytics_dataset }}`.siren_data ON enriched_offerer_data.offerer_siren = siren_data.siren
         LEFT JOIN `{{ bigquery_analytics_dataset }}`.siren_data_labels ON siren_data.activitePrincipaleUniteLegale = siren_data_labels.activitePrincipaleUniteLegale
         AND CAST(
@@ -159,19 +187,18 @@ lieux_non_permanents1 AS (
         enriched_offerer_data.offerer_department_code AS offerer_dpt,
         enriched_venue_data.venue_department_code AS venue_dpt,
         enriched_venue_data.venue_type_label AS type_lieu,
-        enriched_offer_data.offer_subcategoryid,
-        subcategories.category_id,
-        enriched_offer_data.offer_id,
-        physical_goods,
-        last_stock_price AS stock_price
+        all_offers.offer_subcategoryid,
+        all_offers.category_id,
+        all_offers.offer_id,
+        all_offers.physical_goods,
+        all_offers.last_stock_price AS stock_price
     FROM
         `{{ bigquery_analytics_dataset }}`.enriched_offerer_data
         JOIN `{{ bigquery_analytics_dataset }}`.enriched_venue_data ON enriched_offerer_data.offerer_id = enriched_venue_data.venue_managing_offerer_id
         AND venue_is_permanent IS FALSE
         AND venue_is_virtual IS FALSE
         JOIN resa_6mois ON enriched_venue_data.venue_id = resa_6mois.venue_id
-        JOIN `{{ bigquery_analytics_dataset }}`.enriched_offer_data ON enriched_venue_data.venue_id = enriched_offer_data.venue_id
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.subcategories ON subcategories.id = enriched_offer_data.offer_subcategoryid
+        JOIN all_offers ON all_offers.venue_id = resa_6mois.venue_id
         LEFT JOIN `{{ bigquery_analytics_dataset }}`.siren_data ON enriched_offerer_data.offerer_siren = siren_data.siren
         LEFT JOIN `{{ bigquery_analytics_dataset }}`.siren_data_labels ON siren_data.activitePrincipaleUniteLegale = siren_data_labels.activitePrincipaleUniteLegale
         AND CAST(
@@ -299,18 +326,17 @@ lieux_virtuels1 AS (
         enriched_offerer_data.offerer_department_code AS offerer_dpt,
         enriched_venue_data.venue_department_code AS venue_dpt,
         enriched_venue_data.venue_type_label AS type_lieu,
-        enriched_offer_data.offer_subcategoryid,
-        subcategories.category_id,
-        enriched_offer_data.offer_id,
-        physical_goods,
-        last_stock_price AS stock_price
+        all_offers.offer_subcategoryid,
+        all_offers.category_id,
+        all_offers.offer_id,
+        all_offers.physical_goods,
+        all_offers.last_stock_price AS stock_price
     FROM
         `{{ bigquery_analytics_dataset }}`.enriched_offerer_data
         JOIN `{{ bigquery_analytics_dataset }}`.enriched_venue_data ON enriched_offerer_data.offerer_id = enriched_venue_data.venue_managing_offerer_id
         AND venue_is_virtual IS TRUE
         JOIN resa_6mois ON enriched_venue_data.venue_id = resa_6mois.venue_id
-        JOIN `{{ bigquery_analytics_dataset }}`.enriched_offer_data ON enriched_venue_data.venue_id = enriched_offer_data.venue_id
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.subcategories ON subcategories.id = enriched_offer_data.offer_subcategoryid
+        JOIN all_offers ON all_offers.venue_id = resa_6mois.venue_id
         LEFT JOIN `{{ bigquery_analytics_dataset }}`.siren_data ON enriched_offerer_data.offerer_siren = siren_data.siren
         LEFT JOIN `{{ bigquery_analytics_dataset }}`.siren_data_labels ON siren_data.activitePrincipaleUniteLegale = siren_data_labels.activitePrincipaleUniteLegale
         AND CAST(

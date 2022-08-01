@@ -70,14 +70,15 @@ class Scoring:
 
     def get_recommendation(self) -> List[str]:
         # score the offers
+        scored_offers, model_version_id, model_name = self.scoring.get_scored_offers()
         final_recommendations = order_offers_by_score_and_diversify_categories(
-            sorted(
-                self.scoring.get_scored_offers(), key=lambda k: k["score"], reverse=True
-            )[:NUMBER_OF_PRESELECTED_OFFERS],
+            sorted(scored_offers, key=lambda k: k["score"], reverse=True)[
+                :NUMBER_OF_PRESELECTED_OFFERS
+            ],
             SHUFFLE_RECOMMENDATION,
         )
 
-        return final_recommendations
+        return final_recommendations, model_version_id, model_name
 
     def save_recommendation(self, recommendations) -> None:
         if len(recommendations) > 0:
@@ -125,7 +126,9 @@ class Scoring:
             else:
                 instances = self._get_instances()
 
-                predicted_scores = self._predict_score(instances)
+                predicted_scores, model_version_id, model_name = self._predict_score(
+                    instances
+                )
 
                 recommendations = [
                     {**recommendation, "score": predicted_scores[i][0]}
@@ -136,7 +139,7 @@ class Scoring:
                     f"scored {len(recommendations)} for {self.user.id} - {self.model_name}, ",
                     start,
                 )
-            return recommendations
+            return recommendations, model_version_id, model_name
 
         def _get_instances(self) -> List[Dict[str, str]]:
             user_to_rank = [self.user.id] * len(self.recommendable_offers)
@@ -198,14 +201,18 @@ class Scoring:
         def _predict_score(self, instances) -> List[List[float]]:
             start = time.time()
             """Calls Vertex AI endpoint for the given model and instances and retrieves the scores."""
-            predictions = predict_custom_trained_model_sample(
+            response = predict_custom_trained_model_sample(
                 project=PROJECT_NUMBER,
                 endpoint_id=ENDPOINT_ID,
                 location="europe-west1",
                 instances=instances,
             )
             log_duration("predict_score", start)
-            return predictions
+            return (
+                response["predictions"],
+                response["model_version_id"],
+                response["model_display_name"],
+            )
 
     class ColdStart:
         def __init__(self, scoring):
@@ -261,7 +268,9 @@ class Scoring:
                 }
                 for row in query_result
             ]
-            return cold_start_recommendations
+            model_version_id = None
+            model_name = None
+            return cold_start_recommendations, model_version_id, model_name
 
         def get_cold_start_categories(self) -> List[str]:
             qpi_answers_categories = list(MACRO_CATEGORIES_TYPE_MAPPING.keys())

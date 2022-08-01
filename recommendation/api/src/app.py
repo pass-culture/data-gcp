@@ -98,7 +98,7 @@ def recommendation(user_id: int):
     input_reco = RecommendationIn(post_args_json) if post_args_json else None
     scoring = Scoring(user, recommendation_in=input_reco)
 
-    user_recommendations = scoring.get_recommendation()
+    user_recommendations, model_version_id, model_name = scoring.get_recommendation()
     scoring.save_recommendation(user_recommendations)
     return jsonify(
         {
@@ -106,6 +106,8 @@ def recommendation(user_id: int):
             "AB_test": user.group_id if AB_TESTING else "default",
             "reco_origin": "cold_start" if scoring.iscoldstart else "algo",
             "model_name": scoring.model_name if not scoring.iscoldstart else None,
+            "ai_vertex:model_version_id": model_version_id,
+            "ai_vertex:model_name": model_name,
         }
     )
 

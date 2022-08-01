@@ -27,7 +27,7 @@ STORAGE_PATH = (
 )
 MODEL_NAME = "v1"
 AI_MODEL_NAME = f"tf_model_reco_{ENV_SHORT_NAME}"
-END_POINT_NAME=f"vertex_ai_{ENV_SHORT_NAME}"
+END_POINT_NAME = f"vertex_ai_{ENV_SHORT_NAME}"
 SLACK_CONN_ID = "slack_analytics"
 SLACK_CONN_PASSWORD = access_secret_data(GCP_PROJECT_ID, "slack-conn-password")
 
@@ -93,7 +93,7 @@ with DAG(
     )
 
     INSTALL_DEPENDENCIES = f""" '{DEFAULT}
-        pip install -r requirements.txt'
+        pip install -r requirements.txt --user'
     """
 
     install_dependencies = BashOperator(
@@ -205,19 +205,24 @@ with DAG(
         task_id="gce_stop_task",
     )
 
-    DEPLOY_COMMAND = f"""
+    DEPLOY_COMMAND = f""" '{DEFAULT}
     export REGION=europe-west1
     export MODEL_NAME={AI_MODEL_NAME}
     export RECOMMENDATION_MODEL_DIR={{{{ ti.xcom_pull(task_ids='training') }}}}
     export VERSION_NAME=v_{{{{ ts_nodash }}}}
     export END_POINT_NAME={END_POINT_NAME}
-    python deploy_model.py
+    python deploy_model.py'
     """
-
-
+    
     deploy_model = BashOperator(
         task_id="deploy_model",
-        bash_command=DEPLOY_COMMAND,
+        bash_command=f"""
+        gcloud compute ssh {GCE_INSTANCE} \
+        --zone {GCE_ZONE} \
+        --project {GCP_PROJECT_ID} \
+        --command {DEPLOY_COMMAND}
+        """,
+        dag=dag,
     )
 
     """

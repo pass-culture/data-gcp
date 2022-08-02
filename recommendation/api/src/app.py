@@ -139,9 +139,8 @@ def playlist_recommendation(user_id: int):
             "playlist_recommended_offers": user_recommendations,
             "params": {
                 "reco_origin": "cold_start" if scoring.iscoldstart else "algo",
-                "model_name": scoring.model_name if not scoring.iscoldstart else None,
-                # keep same name for now
-                "model_version": scoring.model_name,
+                "model_name": scoring.scoring.model_display_name,
+                "model_version": scoring.scoring.model_version,
                 "ab_test": user.group_id if AB_TESTING else "default",
                 "geo_located": geo_located,
                 "filtered": applied_filters,

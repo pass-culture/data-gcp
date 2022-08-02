@@ -341,5 +341,6 @@ with DAG(
         >> evaluate
         >> gce_instance_stop
         >> deploy_model
+        >> clean_versions
         >> send_slack_notif_success
     )

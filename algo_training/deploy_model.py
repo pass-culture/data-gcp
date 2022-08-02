@@ -4,31 +4,40 @@ from google.cloud import aiplatform
 SERVING_CONTAINER = "europe-docker.pkg.dev/vertex-ai/prediction/tf2-cpu.2-5:latest"
 
 
-def upload_model_and_deploy_to_endpoint():
+def upload_model_and_deploy_to_endpoint(
+    region,
+    project_name,
+    model_name,
+    version_name,
+    recommendation_model_dir,
+    end_point_name,
+    min_nodes,
+    max_nodes,
+):
 
     print("Uploading model to Vertex AI model registery...")
     parent_model_id = aiplatform.Model.list(
-        filter=f"display_name={MODEL_NAME}", location=REGION, project=PROJECT_NAME
+        filter=f"display_name={model_name}", location=region, project=project_name
     )[0].name
 
     model = aiplatform.Model.upload(
-        display_name=VERSION_NAME,
-        project=PROJECT_NAME,
-        artifact_uri=RECOMMENDATION_MODEL_DIR,
+        display_name=version_name,
+        project=project_name,
+        artifact_uri=recommendation_model_dir,
         serving_container_image_uri=SERVING_CONTAINER,
         parent_model=parent_model_id,
         location="europe-west1",
     )
 
     endpoint = aiplatform.Endpoint.list(
-        filter=f"display_name={END_POINT_NAME}", location=REGION, project=PROJECT_NAME
+        filter=f"display_name={end_point_name}", location=region, project=project_name
     )[0]
     print("Deploy model to endpoint...")
     model.deploy(
         endpoint=endpoint,
-        deployed_model_display_name=VERSION_NAME,
-        min_replica_count=MIN_NODES,
-        max_replica_count=MAX_NODES,
+        deployed_model_display_name=version_name,
+        min_replica_count=min_nodes,
+        max_replica_count=max_nodes,
         traffic_percentage=100,
     )
     model.wait()
@@ -48,4 +57,13 @@ if __name__ == "__main__":
     END_POINT_NAME = os.environ.get("END_POINT_NAME", "")
     MIN_NODES = os.environ.get("MIN_NODES", "")
     MAX_NODES = os.environ.get("MAX_NODES", "")
-    upload_model_and_deploy_to_endpoint()
+    upload_model_and_deploy_to_endpoint(
+        REGION,
+        PROJECT_NAME,
+        MODEL_NAME,
+        VERSION_NAME,
+        RECOMMENDATION_MODEL_DIR,
+        END_POINT_NAME,
+        MIN_NODES,
+        MAX_NODES,
+    )

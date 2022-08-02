@@ -1,12 +1,10 @@
 import os
 from google.cloud import aiplatform
 
-SERVING_CONTAINER = "europe-docker.pkg.dev/vertex-ai/prediction/tf2-cpu.2-5:latest"
 
-
-def clean_model_versions():
+def clean_model_versions(project_name, region, model_name, max_model_versions):
     model_id = aiplatform.Model.list(
-        filter=f"display_name={MODEL_NAME}", location=REGION, project=PROJECT_NAME
+        filter=f"display_name={model_name}", location=region, project=project_name
     )[0].name
 
     model = aiplatform.Model(
@@ -14,15 +12,15 @@ def clean_model_versions():
     )
     ModelRegistry = aiplatform.models.ModelRegistry(
         model,
-        REGION,
-        PROJECT_NAME,
+        region,
+        project_name,
     )
 
     versions = ModelRegistry.list_versions()
-    if len(versions) < MAX_MODEL_VERSIONS:
+    if len(versions) < max_model_versions:
         print("SUCCES:versions already clean")
     else:
-        versions_to_clean = versions[:-MAX_MODEL_VERSIONS]
+        versions_to_clean = versions[:-max_model_versions]
         for versions in versions_to_clean:
             ModelRegistry.delete_version(f"{versions.version_id}")
 
@@ -34,4 +32,4 @@ if __name__ == "__main__":
     ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "")
     MAX_MODEL_VERSIONS = 5 if ENV_SHORT_NAME == "prod" else 1
 
-    clean_model_versions()
+    clean_model_versions(PROJECT_NAME, REGION, MODEL_NAME, MAX_MODEL_VERSIONS)

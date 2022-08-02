@@ -28,7 +28,8 @@ STORAGE_PATH = (
 MODEL_NAME = "v1"
 AI_MODEL_NAME = f"tf_model_reco_{ENV_SHORT_NAME}"
 END_POINT_NAME = f"vertex_ai_{ENV_SHORT_NAME}"
-MAX_MODEL_VERSIONS = 5 if ENV_SHORT_NAME == "prod" else 1
+MIN_NODES = 1
+MAX_NODES = 10 if ENV_SHORT_NAME == "prod" else 1
 SLACK_CONN_ID = "slack_analytics"
 SLACK_CONN_PASSWORD = access_secret_data(GCP_PROJECT_ID, "slack-conn-password")
 
@@ -212,6 +213,8 @@ with DAG(
     export RECOMMENDATION_MODEL_DIR={{{{ ti.xcom_pull(task_ids='training') }}}}
     export VERSION_NAME=v_{{{{ ts_nodash }}}}
     export END_POINT_NAME={END_POINT_NAME}
+    export MIN_NODES={MIN_NODES}
+    export MAX_NODES={MAX_NODES}
     python deploy_model.py'
     """
 
@@ -232,7 +235,6 @@ with DAG(
     export RECOMMENDATION_MODEL_DIR={{{{ ti.xcom_pull(task_ids='training') }}}}
     export VERSION_NAME=v_{{{{ ts_nodash }}}}
     export END_POINT_NAME={END_POINT_NAME}
-    export MAX_MODEL_VERSIONS ={MAX_MODEL_VERSIONS}
     python clean_model_versions.py'
     """
 
@@ -339,8 +341,8 @@ with DAG(
         >> training
         >> postprocess
         >> evaluate
-        >> gce_instance_stop
         >> deploy_model
         >> clean_versions
+        >> gce_instance_stop
         >> send_slack_notif_success
     )

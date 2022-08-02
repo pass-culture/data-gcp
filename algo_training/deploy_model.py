@@ -27,6 +27,8 @@ def upload_model_and_deploy_to_endpoint():
     model.deploy(
         endpoint=endpoint,
         deployed_model_display_name=VERSION_NAME,
+        min_replica_count=MIN_NODES,
+        max_replica_count=MAX_NODES,
         traffic_percentage=100,
     )
     model.wait()
@@ -47,4 +49,6 @@ if __name__ == "__main__":
     VERSION_NAME = os.environ.get("VERSION_NAME", "")
     RECOMMENDATION_MODEL_DIR = os.environ.get("RECOMMENDATION_MODEL_DIR", "")
     END_POINT_NAME = os.environ.get("END_POINT_NAME", "")
+    MIN_NODES = os.environ.get("MIN_NODES", "")
+    MAX_NODES = os.environ.get("MAX_NODES", "")
     upload_model_and_deploy_to_endpoint()

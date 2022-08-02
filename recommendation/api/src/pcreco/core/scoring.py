@@ -70,11 +70,10 @@ class Scoring:
 
     def get_recommendation(self) -> List[str]:
         # score the offers
-        scored_offers = self.scoring.get_scored_offers()
         final_recommendations = order_offers_by_score_and_diversify_categories(
-            sorted(scored_offers, key=lambda k: k["score"], reverse=True)[
-                :NUMBER_OF_PRESELECTED_OFFERS
-            ],
+            sorted(
+                self.scoring.get_scored_offers(), key=lambda k: k["score"], reverse=True
+            )[:NUMBER_OF_PRESELECTED_OFFERS],
             SHUFFLE_RECOMMENDATION,
         )
 

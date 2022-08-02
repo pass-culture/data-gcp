@@ -198,14 +198,16 @@ class Scoring:
         def _predict_score(self, instances) -> List[List[float]]:
             start = time.time()
             """Calls Vertex AI endpoint for the given model and instances and retrieves the scores."""
-            predictions = predict_custom_trained_model_sample(
+            response = predict_custom_trained_model_sample(
                 project=PROJECT_NUMBER,
                 endpoint_id=ENDPOINT_ID,
                 location="europe-west1",
                 instances=instances,
             )
+            self.model_version = response["model_version_id"]
+            self.model_display_name = response["model_display_name"]
             log_duration("predict_score", start)
-            return predictions
+            return response["predictions"]
 
     class ColdStart:
         def __init__(self, scoring):
@@ -261,6 +263,8 @@ class Scoring:
                 }
                 for row in query_result
             ]
+            self.model_version = None
+            self.model_display_name = None
             return cold_start_recommendations
 
         def get_cold_start_categories(self) -> List[str]:

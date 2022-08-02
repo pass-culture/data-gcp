@@ -34,4 +34,9 @@ def predict_custom_trained_model_sample(
     response = client.predict(
         endpoint=endpoint, instances=instances, parameters=parameters
     )
-    return response.predictions
+    response_dict = {
+        "predictions": response.predictions,
+        "model_version_id": response.model_version_id,
+        "model_display_name": response.model_display_name,
+    }
+    return response_dict

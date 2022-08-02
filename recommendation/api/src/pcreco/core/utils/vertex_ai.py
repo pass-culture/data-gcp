@@ -3,6 +3,9 @@ from typing import Dict, List, Union
 from google.cloud import aiplatform
 from google.protobuf import json_format
 from google.protobuf.struct_pb2 import Value
+from pcreco.utils.env_vars import ENV_SHORT_NAME, GCP_PROJECT
+
+END_POINT_NAME = f"vertex_ai_{ENV_SHORT_NAME}"
 
 
 def predict_custom_trained_model_sample(
@@ -28,15 +31,20 @@ def predict_custom_trained_model_sample(
     ]
     parameters_dict = {}
     parameters = json_format.ParseDict(parameters_dict, Value())
-    endpoint = client.endpoint_path(
+    endpoint_path = client.endpoint_path(
         project=project, location=location, endpoint=endpoint_id
     )
     response = client.predict(
-        endpoint=endpoint, instances=instances, parameters=parameters
+        endpoint=endpoint_path, instances=instances, parameters=parameters
     )
+    endpoint = aiplatform.Endpoint.list(
+        filter=f"display_name={END_POINT_NAME}", location=location, project=GCP_PROJECT
+    )[0]
+    endpoint_dict = endpoint.to_dict()
+    version_model_id = endpoint_dict["deployedModels"][0]["displayName"]
     response_dict = {
         "predictions": response.predictions,
-        "model_version_id": response.model_version_id,
+        "model_version_id": version_model_id,
         "model_display_name": response.model_display_name,
     }
     return response_dict

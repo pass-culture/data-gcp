@@ -28,6 +28,7 @@ STORAGE_PATH = (
 MODEL_NAME = "v1"
 AI_MODEL_NAME = f"tf_model_reco_{ENV_SHORT_NAME}"
 END_POINT_NAME = f"vertex_ai_{ENV_SHORT_NAME}"
+MAX_MODEL_VERSIONS = 5 if ENV_SHORT_NAME == "prod" else 1
 SLACK_CONN_ID = "slack_analytics"
 SLACK_CONN_PASSWORD = access_secret_data(GCP_PROJECT_ID, "slack-conn-password")
 
@@ -231,9 +232,20 @@ with DAG(
     export RECOMMENDATION_MODEL_DIR={{{{ ti.xcom_pull(task_ids='training') }}}}
     export VERSION_NAME=v_{{{{ ts_nodash }}}}
     export END_POINT_NAME={END_POINT_NAME}
-    export MAX_MODEL_VERSIONS = 5
-    python deploy_model.py'
+    export MAX_MODEL_VERSIONS ={MAX_MODEL_VERSIONS}
+    python clean_model_versions.py'
     """
+
+    clean_versions = BashOperator(
+        task_id="clean_versions",
+        bash_command=f"""
+        gcloud compute ssh {GCE_INSTANCE} \
+        --zone {GCE_ZONE} \
+        --project {GCP_PROJECT_ID} \
+        --command {CLEAN_VERSIONS_COMMAND}
+        """,
+        dag=dag,
+    )
 
     """
     list_model_versions = BashOperator(

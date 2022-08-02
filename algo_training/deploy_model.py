@@ -33,8 +33,11 @@ def upload_model_and_deploy_to_endpoint():
 
     print("Undeploy old versions..")
     # Problem get old deployed_model info
-    deployed_model_id = "4842372354027814912"  # info contained in object endpoint
-    endpoint.undeploy(deployed_model_id)
+    endpoint_dict = endpoint.to_dict()
+    previous_version_model_id = endpoint_dict["deployedModels"][1][
+        "id"
+    ]  # info contained in object endpoint
+    endpoint.undeploy(previous_version_model_id)
 
 
 if __name__ == "__main__":

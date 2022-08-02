@@ -31,5 +31,7 @@ if __name__ == "__main__":
     PROJECT_NAME = os.environ.get("PROJECT_NAME", "")
     REGION = os.environ.get("REGION", "")
     MODEL_NAME = os.environ.get("MODEL_NAME", "")
-    MAX_MODEL_VERSIONS = os.environ.get("MAX_MODEL_VERSIONS", "")
+    ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "")
+    MAX_MODEL_VERSIONS = 5 if ENV_SHORT_NAME == "prod" else 1
+
     clean_model_versions()

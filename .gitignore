@@ -19,3 +19,4 @@ venv-lint/
 airflow.cfg
 unittests.cfg
 credentials/
+./recommendation/api/src/locustfile.py

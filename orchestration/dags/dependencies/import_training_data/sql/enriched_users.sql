@@ -8,8 +8,6 @@ with base as(
     group by
         user_id,
         offer_subcategoryid
-    limit
-        10
 ), user_total as (
     select
         user_id,
@@ -18,8 +16,6 @@ with base as(
         `{{ bigquery_clean_dataset }}`.`training_data_aggregated_users`
     group by
         user_id
-    limit
-        10
 ), user_subcat_prop as(
     select
         b.user_id,

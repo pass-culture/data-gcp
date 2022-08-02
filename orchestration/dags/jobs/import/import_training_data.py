@@ -43,6 +43,7 @@ dag = DAG(
 start = DummyOperator(task_id="start", dag=dag)
 training_data_tables = ["bookings", "clics", "favorites"]
 aggregated_tables = ["users","offers"]
+enriched_tables = ["users"]
 import_tables_to_raw_tasks = []
 for table in training_data_tables:
     task = BigQueryExecuteQueryOperator(
@@ -66,9 +67,21 @@ for table in aggregated_tables:
         dag=dag,
     )
     aggregated_tables_to_clean_tasks.append(task)
+enriched_tasks=[]
+for table in enriched_tables:
+    task = BigQueryExecuteQueryOperator(
+        task_id=f"import_to_clean_enriched_{table}",
+        sql=f"{IMPORT_TRAINING_SQL_PATH}/enriched_{table}.sql",
+        write_disposition="WRITE_TRUNCATE",
+        use_legacy_sql=False,
+        destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.training_data_enriched_{table}",
+        dag=dag,
+    )
+    enriched_tasks.append(task)
 
 end_import_to_raw = DummyOperator(task_id="end_import_to_raw", dag=dag)
 end_import_to_clean = DummyOperator(task_id="end_import_to_clean", dag=dag)
+end_enriched_task = DummyOperator(task_id="end_enriched_task", dag=dag)
 
 end = DummyOperator(task_id="end", dag=dag)
 
@@ -78,5 +91,7 @@ end = DummyOperator(task_id="end", dag=dag)
     >> end_import_to_raw
     >> aggregated_tables_to_clean_tasks
     >> end_import_to_clean
+    >>enriched_tasks
+    >>end_enriched_task
     >> end
 )

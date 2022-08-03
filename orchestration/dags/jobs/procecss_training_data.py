@@ -11,7 +11,7 @@ from common.alerts import analytics_fail_slack_alert
 from common import macros
 from common.config import DAG_FOLDER
 
-IMPORT_TRAINING_SQL_PATH = f"dependencies/ml_training_data/sql"
+IMPORT_TRAINING_SQL_PATH = f"dependencies/training_data/sql"
 from common.config import (
     BIGQUERY_ANALYTICS_DATASET,
     BIGQUERY_CLEAN_DATASET,

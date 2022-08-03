@@ -1,4 +1,4 @@
-/* Create the function to fetch the iris_venues from the source table.
+p/* Create the function to fetch the iris_venues from the source table.
 We use a function otherwise the materialized view is a dependency of the tables and blocks the drop operation. */
 CREATE OR REPLACE FUNCTION get_iris_venues()
 RETURNS TABLE (iris_id varchar,

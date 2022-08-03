@@ -4,7 +4,7 @@ with base as(
         offer_subcategoryid,
         SUM(count) as sub_cat_count
     FROM
-        `{{ bigquery_raw_dataset }}`.`training_data_aggregated_users`
+        `{{ bigquery_clean_dataset }}`.`training_data_aggregated_users`
     group by
         user_id,
         offer_subcategoryid
@@ -13,7 +13,7 @@ with base as(
         user_id,
         sum(count) as total_count
     FROM
-        `{{ bigquery_raw_dataset }}`.`training_data_aggregated_users`
+        `{{ bigquery_clean_dataset }}`.`training_data_aggregated_users`
     group by
         user_id
 ), user_subcat_prop as(

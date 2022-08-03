@@ -11,7 +11,7 @@ from common.alerts import analytics_fail_slack_alert
 from common import macros
 from common.config import DAG_FOLDER
 
-IMPORT_TRAINING_SQL_PATH = f"dependencies/import_training_data/sql"
+IMPORT_TRAINING_SQL_PATH = f"dependencies/ml_training_data/sql"
 from common.config import (
     BIGQUERY_ANALYTICS_DATASET,
     BIGQUERY_CLEAN_DATASET,
@@ -30,7 +30,7 @@ default_dag_args = {
 }
 
 dag = DAG(
-    "import_training_data",
+    "process_training_data",
     default_args=default_dag_args,
     description="Import data for training and build aggregated tables",
     schedule_interval="0 10 * * 5",

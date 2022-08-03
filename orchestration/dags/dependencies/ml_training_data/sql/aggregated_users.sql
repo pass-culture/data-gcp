@@ -18,6 +18,6 @@ with base as(
     order by
         user_id
 ) 
-select user_id,event_type,offer_subcategoryid,count(*) as count
+select user_id,offer_id,event_type,offer_subcategoryid,event_date,count(*) as count
 from base 
-group by user_id,event_type,offer_subcategoryid
+group by user_id,offer_id,event_type,offer_subcategoryid,event_date

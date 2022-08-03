@@ -690,6 +690,16 @@ def define_import_query(
             FROM public.offerer_tag
             """
 
+    cloudsql_queries[
+        "offerer_tag_mapping"
+    ] = """
+             SELECT 
+                CAST("id" AS varchar(255)) AS offerer_tag_mapping_id
+                ,CAST("offererId" AS VARCHAR(255)) AS offerer_id
+                ,CAST("tagId" AS VARCHAR(255)) AS tag_id 
+             FROM offerer_tag_mapping
+            """
+
     # Build specific federated queries
     queries = {}
     for external_table, external_query in cloudsql_queries.items():

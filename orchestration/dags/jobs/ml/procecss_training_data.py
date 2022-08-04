@@ -11,7 +11,7 @@ from common.alerts import analytics_fail_slack_alert
 from common import macros
 from common.config import DAG_FOLDER
 
-IMPORT_TRAINING_SQL_PATH = f"dependencies/training_data/sql"
+IMPORT_TRAINING_SQL_PATH = f"dependencies/training_data/sql/"
 from common.config import (
     BIGQUERY_ANALYTICS_DATASET,
     BIGQUERY_CLEAN_DATASET,
@@ -48,7 +48,7 @@ import_tables_to_raw_tasks = []
 for table in training_data_tables:
     task = BigQueryExecuteQueryOperator(
         task_id=f"import_to_raw_training_data_{table}",
-        sql=f"{IMPORT_TRAINING_SQL_PATH}/{table}.sql",
+        sql=f"{IMPORT_TRAINING_SQL_PATH}/training_data_{table}.sql",
         write_disposition="WRITE_TRUNCATE",
         use_legacy_sql=False,
         destination_dataset_table=f"{BIGQUERY_RAW_DATASET}.training_data_{table}",
@@ -60,7 +60,7 @@ aggregated_tables_to_clean_tasks = []
 for table in aggregated_tables:
     task = BigQueryExecuteQueryOperator(
         task_id=f"import_to_clean_aggregated_{table}",
-        sql=f"{IMPORT_TRAINING_SQL_PATH}/aggregated_{table}.sql",
+        sql=f"{IMPORT_TRAINING_SQL_PATH}/training_data_aggregated_{table}.sql",
         write_disposition="WRITE_TRUNCATE",
         use_legacy_sql=False,
         destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.training_data_aggregated_{table}",
@@ -71,7 +71,7 @@ enriched_tasks = []
 for table in enriched_tables:
     task = BigQueryExecuteQueryOperator(
         task_id=f"import_to_clean_enriched_{table}",
-        sql=f"{IMPORT_TRAINING_SQL_PATH}/enriched_{table}.sql",
+        sql=f"{IMPORT_TRAINING_SQL_PATH}/training_data_enriched_{table}.sql",
         write_disposition="WRITE_TRUNCATE",
         use_legacy_sql=False,
         destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.training_data_enriched_{table}",

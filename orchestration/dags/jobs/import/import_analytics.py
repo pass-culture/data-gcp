@@ -85,7 +85,11 @@ data_applicative_tables_and_date_columns = {
         "offerer_creation_date",
         "offerer_validation_date",
     ],
-    "offer": ["offer_modified_at_last_provider_date", "offer_creation_date","offer_date_updated"],
+    "offer": [
+        "offer_modified_at_last_provider_date",
+        "offer_creation_date",
+        "offer_date_updated",
+    ],
     "bank_information": ["dateModified"],
     "booking": [
         "booking_creation_date",

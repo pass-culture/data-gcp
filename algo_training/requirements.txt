@@ -11,3 +11,4 @@ tensorflow==2.6.3
 keras==2.6.0
 implicit
 recmetrics
+google-cloud-aiplatform

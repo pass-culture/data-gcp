@@ -48,7 +48,7 @@ class RecommendationIn:
                 )
                 + ")\n"
             )
-        if self.price_max is not None and self.price_max > 0:
+        if self.price_max is not None and self.price_max >= 0:
             condition += f"AND stock_price<={self.price_max} \n"
 
         return condition

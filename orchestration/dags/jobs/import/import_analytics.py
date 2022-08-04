@@ -172,6 +172,8 @@ data_applicative_tables_and_date_columns = {
     "invoice": [
         "invoice_creation_date",
     ],
+    "offerer_tag": [""],
+    "offerer_tag_mapping": [""],
 }
 
 

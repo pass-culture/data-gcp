@@ -41,7 +41,7 @@ dag = DAG(
 )
 
 start = DummyOperator(task_id="start", dag=dag)
-training_data_tables = ["bookings", "clics", "favorites"]
+training_data_tables = ["bookings", "clicks", "favorites"]
 aggregated_tables = ["users", "offers"]
 enriched_tables = ["users"]
 import_tables_to_raw_tasks = []

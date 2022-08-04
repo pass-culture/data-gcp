@@ -3,7 +3,7 @@ SELECT
 user_id,
 offer_id,
 event_date,
-count(*) as clics_count,
+count(*) as clicks_count,
 FROM `{{ bigquery_analytics_dataset }}`.`firebase_events`
 WHERE event_name = "ConsultOffer"
 AND event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 4 MONTH)
@@ -15,7 +15,7 @@ GROUP BY user_id, offer_id,event_date
 )
 SELECT
 user_id,
-"CLIC" as event_type,
+"CLICK" as event_type,
 event_date,
 CASE WHEN offer.offer_subcategoryId in ('LIVRE_PAPIER','LIVRE_AUDIO_PHYSIQUE','SEANCE_CINE')
 THEN CONCAT('product-', offer.offer_product_id) ELSE CONCAT('offer-', offer.offer_id)
@@ -27,7 +27,7 @@ enroffer.rayon,
 enroffer.type,
 enroffer.venue_id,
 enroffer.venue_name,
-SUM(clics_count) as count,
+SUM(clicks_count) as count,
 FROM events
 JOIN `{{ bigquery_clean_dataset }}`.`applicative_database_offer` offer ON offer.offer_id = events.offer_id
 inner join `{{ bigquery_analytics_dataset }}`.`subcategories` subcategories on offer.offer_subcategoryId = subcategories.id

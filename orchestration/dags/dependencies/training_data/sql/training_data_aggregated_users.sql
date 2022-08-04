@@ -8,7 +8,7 @@ with base as(
     select
         *
     from
-        `{{ bigquery_raw_dataset }}`.`training_data_clics`
+        `{{ bigquery_raw_dataset }}`.`training_data_clicks`
     UNION
     ALL
     select

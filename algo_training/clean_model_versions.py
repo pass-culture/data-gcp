@@ -26,7 +26,7 @@ def clean_model_versions(project_name, region, model_name, max_model_versions):
 
 
 if __name__ == "__main__":
-    PROJECT_NAME = os.environ.get("PROJECT_NAME", "")
+    PROJECT_NAME = os.environ.get("GCP_PROJECT_ID", "")
     REGION = os.environ.get("REGION", "")
     MODEL_NAME = os.environ.get("MODEL_NAME", "")
     ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "")

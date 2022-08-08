@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-
+import os
 from common.config import (
     BIGQUERY_OPEN_DATA_PUBLIC_DATASET,
     BIGQUERY_OPEN_DATA_PROJECT,
@@ -9,6 +9,7 @@ from common.config import (
     BIGQUERY_BACKEND_DATASET,
     ENV_SHORT_NAME,
     GCP_PROJECT,
+    BASE32_JS_LIB_PATH,
 )
 
 
@@ -44,6 +45,25 @@ def add_days(ds, days):
     return ds + timedelta(days=days)
 
 
+def create_humanize_id_function():
+    PATH_TO_DIR = os.path.dirname(os.path.realpath(__file__))
+    # Define function humanize_id(int) -> str
+    humanize_id_definition_query = f"""
+        CREATE TEMPORARY FUNCTION humanize_id(id STRING)
+        RETURNS STRING
+        LANGUAGE js
+        OPTIONS (
+            library="{BASE32_JS_LIB_PATH}"
+        )
+        AS \"\"\"
+    """
+
+    # open js file and copy code
+    with open(os.path.join(PATH_TO_DIR, "js", "humanize_id.js")) as js_file:
+        js_code = "\t\t\t".join(js_file.readlines())
+        return f"""{humanize_id_definition_query} \t\t {js_code} \"\"\";"""
+
+
 default = {
     "bigquery_open_data_project": BIGQUERY_OPEN_DATA_PROJECT,
     "bigquery_open_data_public_dataset": BIGQUERY_OPEN_DATA_PUBLIC_DATASET,
@@ -58,4 +78,5 @@ default = {
     "current_month": current_month,
     "yesterday": yesterday,
     "add_days": add_days,
+    "create_humanize_id_function": create_humanize_id_function,
 }

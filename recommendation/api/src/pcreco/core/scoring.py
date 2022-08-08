@@ -112,6 +112,7 @@ class Scoring:
             self.user = scoring.user
             self.recommendation_in_filters = scoring.recommendation_in_filters
             self.model_name = scoring.model_name
+            self.model_display_name = None
             self.recommendable_offers = self.get_recommendable_offers()
 
         def get_scored_offers(self) -> List[Dict[str, Any]]:
@@ -214,6 +215,8 @@ class Scoring:
             self.user = scoring.user
             self.recommendation_in_filters = scoring.recommendation_in_filters
             self.cold_start_categories = self.get_cold_start_categories()
+            self.model_version = None
+            self.model_display_name = None
 
         def get_scored_offers(self) -> List[Dict[str, Any]]:
             order_query = (
@@ -263,8 +266,7 @@ class Scoring:
                 }
                 for row in query_result
             ]
-            self.model_version = None
-            self.model_display_name = None
+
             return cold_start_recommendations
 
         def get_cold_start_categories(self) -> List[str]:

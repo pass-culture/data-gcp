@@ -55,8 +55,12 @@ if __name__ == "__main__":
     VERSION_NAME = os.environ.get("VERSION_NAME", "")
     RECOMMENDATION_MODEL_DIR = os.environ.get("RECOMMENDATION_MODEL_DIR", "")
     END_POINT_NAME = os.environ.get("END_POINT_NAME", "")
-    MIN_NODES = os.environ.get("MIN_NODES", "")
-    MAX_NODES = os.environ.get("MAX_NODES", "")
+    try:
+        MIN_NODES = int(os.environ.get("MIN_NODES", ""))
+        MAX_NODES = int(os.environ.get("MAX_NODES", ""))
+    except:
+        MIN_NODES = 1
+        MAX_NODES = 1
     upload_model_and_deploy_to_endpoint(
         REGION,
         PROJECT_NAME,

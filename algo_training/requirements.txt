@@ -9,6 +9,6 @@ scipy==1.5.4
 # Si problème, passer tensorflow en 2.7.0
 tensorflow==2.6.3
 keras==2.6.0
-implicit
-recmetrics
-google-cloud-aiplatform
+implicit==0.4.8
+recmetrics==0.1.5
+google-cloud-aiplatform==1.16.0

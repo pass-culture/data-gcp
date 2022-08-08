@@ -8,7 +8,7 @@ def clean_model_versions(project_name, region, model_name, max_model_versions):
     )[0].name
 
     model = aiplatform.Model(
-        model_name=f"projects/passculture-data-ehp/locations/europe-west1/models/{model_id}"
+        model_name=f"projects/{project_name}/locations/europe-west1/models/{model_id}"
     )
     ModelRegistry = aiplatform.models.ModelRegistry(
         model,

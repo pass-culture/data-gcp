@@ -165,6 +165,8 @@ def define_enriched_institution_data_query(dataset, table_prefix=""):
                 ,educational_institution.institution_id AS institution_external_id 
                 ,institution_name AS institution_name 
                 ,current_deposit.ministry AS ministry 
+                ,educational_institution.institution_type
+                ,academie_dept.libelle_academie AS institution_academie
                 ,region_department.region_name AS institution_region_name
                 ,educational_institution.institution_departement_code
                 ,institution_postal_code

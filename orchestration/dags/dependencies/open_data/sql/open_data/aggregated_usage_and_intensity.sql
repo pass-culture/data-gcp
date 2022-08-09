@@ -6,6 +6,7 @@ WITH aggregated_monthly_user_used_booking_activity AS (
         `{{ bigquery_analytics_dataset }}.aggregated_monthly_user_used_booking_activity`
     WHERE
         active_month < DATE_TRUNC(DATE("{{ ds }}"), MONTH)
+        AND deposit_type = 'GRANT_18'
 )
 
 SELECT

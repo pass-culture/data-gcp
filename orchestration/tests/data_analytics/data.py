@@ -1,10 +1,8 @@
 from datetime import datetime
 
-TEST_TABLE_PREFIX = ""
-
 # Enriched_offer_data
 ENRICHED_OFFER_DATA_INPUT = {
-    "booking": [
+    "applicative_database_booking": [
         {
             "user_id": "1",
             "stock_id": "1",
@@ -18,12 +16,12 @@ ENRICHED_OFFER_DATA_INPUT = {
             "booking_used_date": "2019-11-22",
         },
     ],
-    "favorite": [
+    "applicative_database_favorite": [
         {"id": "1", "offerId": "3", "userId": "1"},
         {"id": "2", "offerId": "4", "userId": "2"},
         {"id": "3", "offerId": "3", "userId": "3"},
     ],
-    "offer": [
+    "applicative_database_offer": [
         {
             "venue_id": "1",
             "product_id": "1",
@@ -113,7 +111,7 @@ ENRICHED_OFFER_DATA_INPUT = {
             "tag": "none",
         },
     ],
-    "offerer": [
+    "applicative_database_offerer": [
         {
             "offerer_id": "3",
             "offerer_thumb_count": "0",
@@ -137,7 +135,7 @@ ENRICHED_OFFER_DATA_INPUT = {
             "offerer_fields_updated": "{}",
         },
     ],
-    "payment": [
+    "applicative_database_payment": [
         {
             "bookingId": "4",
             "id": "1",
@@ -149,10 +147,10 @@ ENRICHED_OFFER_DATA_INPUT = {
             "author": "test",
         },
     ],
-    "payment_status": [
+    "applicative_database_payment_status": [
         {"paymentId": "1", "id": "1", "date": "2019-01-01", "status": "PENDING"},
     ],
-    "product": [
+    "applicative_database_product": [
         {
             "id": "1",
             "type": "EventType.CINEMA",
@@ -174,7 +172,7 @@ ENRICHED_OFFER_DATA_INPUT = {
             "isNational": False,
         },
     ],
-    "stock": [
+    "applicative_database_stock": [
         {
             "stock_id": "1",
             "offer_id": "3",
@@ -218,7 +216,7 @@ ENRICHED_OFFER_DATA_INPUT = {
             "stock_price": "0",
         },
     ],
-    "user": [
+    "applicative_database_user": [
         {
             "user_id": "1",
             "user_email": "test@email.com",
@@ -256,7 +254,7 @@ ENRICHED_OFFER_DATA_INPUT = {
             "user_cultural_survey_filled_date": None,
         },
     ],
-    "venue": [
+    "applicative_database_venue": [
         {
             "venue_managing_offerer_id": "3",
             "venue_id": "1",
@@ -394,7 +392,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
 
 # Enriched_collective_offer
 ENRICHED_COLLECTIVE_OFFER_DATA_INPUT = {
-    "collective_booking": [
+    "applicative_database_collective_booking": [
         {
             "collective_booking_id": "1",
             "collective_booking_creation_date": "2022-02-02",
@@ -413,7 +411,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_INPUT = {
             "educational_redactor_id": "3",
         }
     ],
-    "collective_stock": [
+    "applicative_database_collective_stock": [
         {
             "collective_stock_id": "2",
             "collective_offer_id": "3",
@@ -423,7 +421,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_INPUT = {
             "collective_stock_number_of_tickets": "30",
         }
     ],
-    "venue": [
+    "applicative_database_venue": [
         {
             "venue_id": "7",
             "venue_name": "Lieu super",
@@ -432,13 +430,13 @@ ENRICHED_COLLECTIVE_OFFER_DATA_INPUT = {
             "venue_managing_offerer_id": "22",
         }
     ],
-    "offerer": [
+    "applicative_database_offerer": [
         {
             "offerer_id": "22",
             "offerer_name": "Ma structure",
         }
     ],
-    "collective_offer": [
+    "applicative_database_collective_offer": [
         {
             "collective_offer_id": "3",
             "collective_offer_name": "Offre collective vraiment bien",
@@ -449,7 +447,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_INPUT = {
             "collective_offer_is_active": True,
         }
     ],
-    "collective_offer_template": [
+    "applicative_database_collective_offer_template": [
         {
             "collective_offer_id": "4",
             "collective_offer_name": "Offre vitrine",
@@ -541,7 +539,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_EXPECTED = [
 
 # Enriched_stock_data
 ENRICHED_STOCK_DATA_INPUT = {
-    "booking": [
+    "applicative_database_booking": [
         {
             "user_id": "1",
             "stock_id": "1",
@@ -555,7 +553,7 @@ ENRICHED_STOCK_DATA_INPUT = {
             "booking_used_date": "2019-11-22",
         }
     ],
-    "offer": [
+    "applicative_database_offer": [
         {
             "venue_id": "1",
             "product_id": "1",
@@ -585,7 +583,7 @@ ENRICHED_STOCK_DATA_INPUT = {
             "offer_fields_updated": "{}",
         },
     ],
-    "offerer": [
+    "applicative_database_offerer": [
         {
             "offerer_id": "3",
             "offerer_thumb_count": "0",
@@ -598,7 +596,7 @@ ENRICHED_STOCK_DATA_INPUT = {
             "offerer_fields_updated": "{}",
         }
     ],
-    "payment": [
+    "applicative_database_payment": [
         {
             "bookingId": "4",
             "id": "1",
@@ -610,10 +608,10 @@ ENRICHED_STOCK_DATA_INPUT = {
             "author": "test",
         }
     ],
-    "payment_status": [
+    "applicative_database_payment_status": [
         {"paymentId": "1", "id": "1", "date": "2019-01-01", "status": "PENDING"}
     ],
-    "product": [
+    "applicative_database_product": [
         {
             "id": "1",
             "type": "EventType.CINEMA",
@@ -635,7 +633,31 @@ ENRICHED_STOCK_DATA_INPUT = {
             "isNational": False,
         },
     ],
-    "stock": [
+    "available_stock_information": [
+        {
+            "stock_id": "1",
+            "available_stock_information": 8,
+        },
+        {
+            "stock_id": "2",
+            "available_stock_information": 12,
+        },
+    ],
+    "stock_booking_information": [
+        {
+            "stock_id": "1",
+            "booking_quantity": 2,
+            "bookings_cancelled": 0,
+            "bookings_paid": 2,
+        },
+        {
+            "stock_id": "2",
+            "booking_quantity": 0,
+            "bookings_cancelled": 0,
+            "bookings_paid": 0,
+        },
+    ],
+    "applicative_database_stock": [
         {
             "stock_id": "1",
             "offer_id": "3",
@@ -661,7 +683,7 @@ ENRICHED_STOCK_DATA_INPUT = {
             "stock_fields_updated": "{}",
         },
     ],
-    "user": [
+    "applicative_database_user": [
         {
             "user_id": "1",
             "user_email": "test@email.com",
@@ -687,7 +709,7 @@ ENRICHED_STOCK_DATA_INPUT = {
             "user_cultural_survey_filled_date": None,
         },
     ],
-    "venue": [
+    "applicative_database_venue": [
         {
             "venue_managing_offerer_id": "3",
             "venue_id": "1",
@@ -743,7 +765,7 @@ ENRICHED_STOCK_DATA_EXPECTED = [
 # Enriched_user_data => user 1 is beneficiary and its department has to exist in region_department, has one used booking
 # on digital goods. This booking is corresponding to an offer, with an offered, stock and venue
 ENRICHED_USER_DATA_INPUT = {
-    "user": [
+    "applicative_database_user": [
         {
             "user_id": "1",
             "user_is_beneficiary": True,
@@ -766,7 +788,7 @@ ENRICHED_USER_DATA_INPUT = {
             "user_subscription_state": "account_created",
         }
     ],
-    "user_suspension": [
+    "applicative_database_user_suspension": [
         {
             "id": "1",
             "userId": "1",
@@ -776,7 +798,7 @@ ENRICHED_USER_DATA_INPUT = {
             "reasonCode": None,
         }
     ],
-    "deposit": [
+    "applicative_database_deposit": [
         {
             "id": "1",
             "userId": "1",
@@ -785,7 +807,7 @@ ENRICHED_USER_DATA_INPUT = {
             "dateCreated": datetime.now().replace(microsecond=0),
         }
     ],
-    "offerer": [
+    "applicative_database_offerer": [
         {
             "offerer_id": "1",
         },
@@ -793,8 +815,8 @@ ENRICHED_USER_DATA_INPUT = {
             "offerer_id": "1",
         },
     ],
-    "venue": [{"venue_id": "1", "venue_managing_offerer_id": "1"}],
-    "booking": [
+    "applicative_database_venue": [{"venue_id": "1", "venue_managing_offerer_id": "1"}],
+    "applicative_database_booking": [
         {
             "user_id": "1",
             "stock_id": "1",
@@ -806,7 +828,7 @@ ENRICHED_USER_DATA_INPUT = {
             "booking_creation_date": datetime.now().replace(microsecond=0),
         },
     ],
-    "offer": [
+    "applicative_database_offer": [
         {
             "offer_id": "1",
             "offer_subcategoryId": "TELECHARGEMENT_MUSIQUE",
@@ -815,7 +837,7 @@ ENRICHED_USER_DATA_INPUT = {
             "offer_url": "url",
         },
     ],
-    "stock": [
+    "applicative_database_stock": [
         {"stock_id": "1", "offer_id": "1"},
     ],
     "region_department": [
@@ -887,7 +909,7 @@ ENRICHED_USER_DATA_EXPECTED = [
 
 # Enriched_venue_data => NO DATA (only structure can be tested)
 ENRICHED_VENUE_DATA_INPUT = {
-    "booking": [
+    "applicative_database_booking": [
         {
             "booking_id": "1",
             "stock_id": "1",
@@ -899,8 +921,8 @@ ENRICHED_VENUE_DATA_INPUT = {
             "booking_creation_date": datetime.now().replace(microsecond=0),
         }
     ],
-    "favorite": [],
-    "offer": [
+    "applicative_database_favorite": [],
+    "applicative_database_offer": [
         {
             "offer_id": "1",
             "venue_id": "1",
@@ -909,13 +931,13 @@ ENRICHED_VENUE_DATA_INPUT = {
             "offer_creation_date": datetime.now().replace(microsecond=0),
         }
     ],
-    "collective_offer": [
+    "applicative_database_collective_offer": [
         {
             "collective_offer_id": "1",
             "venue_id": "1",
         }
     ],
-    "collective_offer_template": [
+    "applicative_database_collective_offer_template": [
         {
             "collective_offer_id": "1",
             "venue_id": "1",
@@ -929,18 +951,18 @@ ENRICHED_VENUE_DATA_INPUT = {
             "offer_is_bookable": True,
         }
     ],
-    "offerer": [
+    "applicative_database_offerer": [
         {"offerer_id": "1", "offerer_name": "An offerer", "offerer_is_active": True}
     ],
-    "payment": [],
-    "payment_status": [],
-    "stock": [
+    "applicative_database_payment": [],
+    "applicative_database_payment_status": [],
+    "applicative_database_stock": [
         {
             "stock_id": "1",
             "offer_id": "1",
         }
     ],
-    "venue": [
+    "applicative_database_venue": [
         {
             "venue_id": "1",
             "venue_public_name": "Venue public name",
@@ -963,8 +985,8 @@ ENRICHED_VENUE_DATA_INPUT = {
             "business_unit_id": "1234",
         }
     ],
-    "venue_label": [{"id": "1", "label": "an other label"}],
-    "venue_type": [{"id": "1", "label": "a label"}],
+    "applicative_database_venue_label": [{"id": "1", "label": "an other label"}],
+    "applicative_database_venue_type": [{"id": "1", "label": "a label"}],
     "region_department": [{"num_dep": "92", "region_name": "IDF"}],
 }
 
@@ -1010,7 +1032,7 @@ ENRICHED_VENUE_DATA_EXPECTED = [
 
 # Enriched_offerer_data => NO DATA (only structure can be tested)
 ENRICHED_OFFERER_DATA_INPUT = {
-    "booking": [
+    "applicative_database_booking": [
         {
             "booking_id": "1",
             "booking_creation_date": datetime.now().replace(microsecond=0),
@@ -1021,7 +1043,7 @@ ENRICHED_OFFERER_DATA_INPUT = {
             "booking_amount": 2,
         }
     ],
-    "offer": [
+    "applicative_database_offer": [
         {
             "offer_id": "1",
             "venue_id": "1",
@@ -1035,7 +1057,7 @@ ENRICHED_OFFERER_DATA_INPUT = {
             "offer_is_bookable": True,
         }
     ],
-    "offerer": [
+    "applicative_database_offerer": [
         {
             "offerer_id": "1",
             "offerer_postal_code": "973",
@@ -1046,21 +1068,21 @@ ENRICHED_OFFERER_DATA_INPUT = {
             "offerer_is_active": True,
         }
     ],
-    "stock": [
+    "applicative_database_stock": [
         {
             "stock_id": "1",
             "offer_id": "1",
             "stock_creation_date": datetime.now().replace(microsecond=0),
         }
     ],
-    "venue": [
+    "applicative_database_venue": [
         {
             "venue_id": "1",
             "venue_managing_offerer_id": "1",
         }
     ],
-    "venue_label": [],
-    "venue_type": [],
+    "applicative_database_venue_label": [],
+    "applicative_database_venue_type": [],
     "region_department": [{"num_dep": "973", "region_name": "Guyane"}],
 }
 
@@ -1089,7 +1111,7 @@ ENRICHED_OFFERER_DATA_EXPECTED = [
 # booking is linked with user, venue, offerer and paiement
 # venue is linked with venue label and type
 ENRICHED_BOOKING_DATA_INPUT = {
-    "booking": [
+    "applicative_database_booking": [
         {
             "booking_id": "1",
             "individual_booking_id": "1",
@@ -1104,14 +1126,14 @@ ENRICHED_BOOKING_DATA_INPUT = {
             "booking_used_date": datetime.now().replace(microsecond=0),
         }
     ],
-    "individual_booking": [
+    "applicative_database_individual_booking": [
         {
             "individual_booking_id": "1",
             "user_id": "13",
             "deposit_id": "18",
         }
     ],
-    "deposit": [
+    "applicative_database_deposit": [
         {
             "id": "18",
             "amount": "300",
@@ -1122,14 +1144,14 @@ ENRICHED_BOOKING_DATA_INPUT = {
             "type": "GRANT_18",
         }
     ],
-    "stock": [
+    "applicative_database_stock": [
         {
             "stock_id": "4",
             "offer_id": "2",
             "stock_beginning_date": datetime.now().replace(microsecond=0),
         }
     ],
-    "offer": [
+    "applicative_database_offer": [
         {
             "offer_id": "2",
             "offer_subcategoryId": "ACHAT_INSTRUMENT",
@@ -1137,7 +1159,7 @@ ENRICHED_BOOKING_DATA_INPUT = {
             "venue_id": "8",
         }
     ],
-    "venue": [
+    "applicative_database_venue": [
         {
             "venue_id": "8",
             "venue_public_name": "My Wonderful Venue",
@@ -1149,8 +1171,8 @@ ENRICHED_BOOKING_DATA_INPUT = {
             "venue_type_code": "Librairie",
         }
     ],
-    "offerer": [{"offerer_id": "2", "offerer_name": "Offerer"}],
-    "user": [
+    "applicative_database_offerer": [{"offerer_id": "2", "offerer_name": "Offerer"}],
+    "applicative_database_user": [
         {
             "user_id": "13",
             "user_department_code": 68,
@@ -1158,8 +1180,8 @@ ENRICHED_BOOKING_DATA_INPUT = {
             "user_activity": "Lycéen",
         }
     ],
-    "venue_type": [{"id": "1", "label": "label"}],
-    "venue_label": [{"id": "15", "label": "label"}],
+    "applicative_database_venue_type": [{"id": "1", "label": "label"}],
+    "applicative_database_venue_label": [{"id": "15", "label": "label"}],
     "subcategories": [
         {
             "id": "ACHAT_INSTRUMENT",
@@ -1221,7 +1243,7 @@ ENRICHED_BOOKING_DATA_EXPECTED = [
 # Enriched_collective_booking =>
 # booking is linked with user, venue, collective_booking, educational_institution and eple
 ENRICHED_COLLECTIVE_BOOKING_DATA_INPUT = {
-    "booking": [
+    "applicative_database_booking": [
         {
             "booking_id": "8",
             "booking_amount": 50,
@@ -1235,7 +1257,7 @@ ENRICHED_COLLECTIVE_BOOKING_DATA_INPUT = {
             "booking_used_date": datetime.now().replace(microsecond=0),
         }
     ],
-    "collective_booking": [
+    "applicative_database_collective_booking": [
         {
             "collective_booking_id": "8",
             "booking_id": "8",
@@ -1253,13 +1275,13 @@ ENRICHED_COLLECTIVE_BOOKING_DATA_INPUT = {
             "educational_redactor_id": "1",
         }
     ],
-    "educational_institution": [
+    "applicative_database_educational_institution": [
         {
             "educational_institution_id": "14",
             "educational_institution_institution_id": "14",
         }
     ],
-    "collective_offer": [
+    "applicative_database_collective_offer": [
         {
             "offer_id": "11",
             "collective_offer_subcategory_id": "CINE_PLEIN_AIR",
@@ -1267,7 +1289,7 @@ ENRICHED_COLLECTIVE_BOOKING_DATA_INPUT = {
             "venue_id": "8",
         }
     ],
-    "collective_stock": [
+    "applicative_database_collective_stock": [
         {
             "stock_id": "9",
             "collective_offer_id": "11",
@@ -1276,7 +1298,7 @@ ENRICHED_COLLECTIVE_BOOKING_DATA_INPUT = {
             "collective_stock_beginning_date": datetime.now().replace(microsecond=0),
         }
     ],
-    "venue": [
+    "applicative_database_venue": [
         {
             "venue_id": "8",
             "venue_public_name": "My Wonderful Venue",
@@ -1302,7 +1324,7 @@ ENRICHED_COLLECTIVE_BOOKING_DATA_INPUT = {
             "code_departement": 78,
         }
     ],
-    "offerer": [
+    "applicative_database_offerer": [
         {
             "offerer_id": "2",
             "offerer_name": "Ma structure",

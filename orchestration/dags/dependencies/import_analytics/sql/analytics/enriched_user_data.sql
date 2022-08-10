@@ -535,7 +535,6 @@ SELECT
         WHEN user.user_civility IN ("Mme") THEN "Mme"
         ELSE user.user_civility
     END AS user_civility,
-    user.user_subscription_state,
     user.user_school_type,
     activation_dates.user_activation_date,
     user_agg_deposit_data.user_first_deposit_creation_date AS user_deposit_creation_date,

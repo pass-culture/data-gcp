@@ -144,7 +144,6 @@ def define_import_query(
             CAST("notificationSubscriptions" -> \\'marketing_push\\' AS BOOLEAN) AS user_has_enabled_marketing_push,
             CAST("notificationSubscriptions" -> \\'marketing_email\\' AS BOOLEAN) AS user_has_enabled_marketing_email,
             "user"."dateOfBirth" AS user_birth_date,
-            "user"."subscriptionState" AS user_subscription_state,
             CASE
             WHEN "user"."schoolType" = \\'PUBLIC_SECONDARY_SCHOOL\\' THEN \\'Collège public\\'
             WHEN "user"."schoolType" = \\'PUBLIC_HIGH_SCHOOL\\' THEN \\'Lycée public\\'

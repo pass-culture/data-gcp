@@ -1,9 +1,10 @@
 from typing import Optional, Union
 import datetime
 import decimal
+from google.cloud.bigquery.table import Row
 
 JsonType = Optional[
-    Union[dict, list, str, float, int, bool, datetime.datetime, decimal.Decimal]
+    Union[Row, dict, list, str, float, int, bool, datetime.datetime, decimal.Decimal]
 ]
 
 
@@ -19,6 +20,8 @@ def approx_equal(js: JsonType, precision: int) -> bool:
         if type(js) is dict:
             if any([type(key) is not str for key in js.keys()]):
                 raise TypeError("One of key types is not 'str'.")
+            return {key: _float_to_str_in_json(val) for key, val in js.items()}
+        if type(js) is Row:
             return {key: _float_to_str_in_json(val) for key, val in js.items()}
         raise TypeError(f"Value of type '{type(js)}' is not a valid json object.")
 

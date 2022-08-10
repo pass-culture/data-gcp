@@ -3,9 +3,8 @@ import uuid
 TEST_DATASET = f"test_{uuid.uuid1().hex}"
 GCP_REGION = "europe-west1"
 GCP_PROJECT = "passculture-data-ehp"
-TEST_TABLE_PREFIX = ""
 BIGQUERY_SCHEMAS = {
-    "booking": {
+    "applicative_database_booking": {
         "booking_is_active": "BOOLEAN",
         "booking_id": "STRING",
         "individual_booking_id": "STRING",
@@ -25,16 +24,16 @@ BIGQUERY_SCHEMAS = {
         "educational_booking_id": "STRING",
         "booking_reimbursement_date": "DATETIME",
     },
-    "individual_booking": {
+    "applicative_database_individual_booking": {
         "individual_booking_id": "STRING",
         "user_id": "STRING",
         "deposit_id": "STRING",
     },
-    "educational_institution": {
+    "applicative_database_educational_institution": {
         "educational_institution_id": "STRING",
         "educational_institution_institution_id": "STRING",
     },
-    "user_suspension": {
+    "applicative_database_user_suspension": {
         "id": "STRING",
         "userId": "STRING",
         "eventType": "STRING",
@@ -42,7 +41,7 @@ BIGQUERY_SCHEMAS = {
         "actorUserId": "STRING",
         "reasonCode": "STRING",
     },
-    "favorite": {
+    "applicative_database_favorite": {
         "id": "STRING",
         "userId": "STRING",
         "offerId": "STRING",
@@ -50,7 +49,7 @@ BIGQUERY_SCHEMAS = {
         "lastupdate": "DATETIME",
         "dateCreated": "DATETIME",
     },
-    "offer": {
+    "applicative_database_offer": {
         "offer_id_at_providers": "STRING",
         "offer_modified_at_last_provider_date": "DATETIME",
         "offer_id": "STRING",
@@ -105,7 +104,7 @@ BIGQUERY_SCHEMAS = {
         "offer_id": "STRING",
         "tag": "STRING",
     },
-    "offerer": {
+    "applicative_database_offerer": {
         "offerer_is_active": "BOOLEAN",
         "offerer_thumb_count": "INT64",
         "offerer_first_thumb_dominant_color": "BYTES",
@@ -123,7 +122,7 @@ BIGQUERY_SCHEMAS = {
         "offerer_last_provider_id": "STRING",
         "offerer_fields_updated": "STRING",
     },
-    "payment": {
+    "applicative_database_payment": {
         "id": "STRING",
         "author": "STRING",
         "comment": "STRING",
@@ -139,14 +138,14 @@ BIGQUERY_SCHEMAS = {
         "transactionLabel": "STRING",
         "paymentMessageId": "INT64",
     },
-    "payment_status": {
+    "applicative_database_payment_status": {
         "id": "STRING",
         "paymentId": "STRING",
         "date": "DATETIME",
         "status": "STRING",
         "detail": "STRING",
     },
-    "product": {
+    "applicative_database_product": {
         "thumbCount": "INT64",
         "idAtProviders": "STRING",
         "dateModifiedAtLastProvider": "DATETIME",
@@ -167,7 +166,7 @@ BIGQUERY_SCHEMAS = {
         "fieldsUpdated": "STRING",
         "isGcuCompatible": "BOOLEAN",
     },
-    "stock": {
+    "applicative_database_stock": {
         "stock_id_at_providers": "STRING",
         "stock_modified_at_last_provider_date": "DATETIME",
         "stock_id": "STRING",
@@ -184,6 +183,16 @@ BIGQUERY_SCHEMAS = {
         "stock_has_been_migrated": "BOOLEAN",
         "number_of_tickets": "INT64",
         "educational_price_detail": "STRING",
+    },
+    "stock_booking_information": {
+        "stock_id": "STRING",
+        "booking_quantity": "INTEGER",
+        "bookings_cancelled": "INTEGER",
+        "bookings_paid": "INTEGER",
+    },
+    "available_stock_information": {
+        "stock_id": "STRING",
+        "available_stock_information": "INTEGER",
     },
     "enriched_stock_data": {
         "stock_id": "STRING",
@@ -247,7 +256,7 @@ BIGQUERY_SCHEMAS = {
         "type": "STRING",
         "subType": "STRING",
     },
-    "user": {
+    "applicative_database_user": {
         "user_id": "STRING",
         "user_validation_token": "STRING",
         "user_email": "STRING",
@@ -281,10 +290,9 @@ BIGQUERY_SCHEMAS = {
         "user_has_enabled_marketing_email": "BOOLEAN",
         "user_birth_date": "DATETIME",
         "user_role": "STRING",
-        "user_subscription_state": "STRING",
         "user_school_type": "STRING",
     },
-    "venue": {
+    "applicative_database_venue": {
         "venue_thumb_count": "INT64",
         "venue_first_thumb_dominant_color": "BYTES",
         "venue_id_at_providers": "STRING",
@@ -313,12 +321,12 @@ BIGQUERY_SCHEMAS = {
         "venue_type_code": "STRING",
         "business_unit_id": "STRING",
     },
-    "venue_label": {
+    "applicative_database_venue_label": {
         "id": "STRING",
         "label": "STRING",
         "lastupdate": "DATETIME",
     },
-    "venue_type": {
+    "applicative_database_venue_type": {
         "id": "STRING",
         "label": "STRING",
         "lastupdate": "DATETIME",
@@ -328,7 +336,7 @@ BIGQUERY_SCHEMAS = {
         "dep_name": "STRING",
         "region_name": "STRING",
     },
-    "deposit": {
+    "applicative_database_deposit": {
         "id": "STRING",
         "userId": "STRING",
         "amount": "NUMERIC",
@@ -337,7 +345,7 @@ BIGQUERY_SCHEMAS = {
         "dateCreated": "DATETIME",
         "type": "STRING",
     },
-    "offer_report": {
+    "applicative_database_offer_report": {
         "offer_report_id": "STRING",
         "offer_report_user_id": "STRING",
         "offer_report_offer_id": "STRING",
@@ -363,7 +371,7 @@ BIGQUERY_SCHEMAS = {
         "libelle_academie": "STRING",
         "libelle_region": "STRING",
     },
-    "collective_booking": {
+    "applicative_database_collective_booking": {
         "collective_booking_id": "STRING",
         "booking_id": "STRING",
         "collective_booking_creation_date": "DATETIME",
@@ -382,7 +390,7 @@ BIGQUERY_SCHEMAS = {
         "collective_booking_confirmation_limit_date": "DATETIME",
         "educational_redactor_id": "STRING",
     },
-    "collective_offer": {
+    "applicative_database_collective_offer": {
         "collective_offer_audio_disability_compliant": "BOOLEAN",
         "collective_offer_mental_disability_compliant": "BOOLEAN",
         "collective_offer_motor_disability_compliant": "BOOLEAN",
@@ -406,7 +414,7 @@ BIGQUERY_SCHEMAS = {
         "collective_offer_contact_phone": "STRING",
         "collective_offer_offer_venue": "STRING",
     },
-    "collective_offer_template": {
+    "applicative_database_collective_offer_template": {
         "collective_offer_audio_disability_compliant": "BOOLEAN",
         "collective_offer_mental_disability_compliant": "BOOLEAN",
         "collective_offer_motor_disability_compliant": "BOOLEAN",
@@ -431,7 +439,7 @@ BIGQUERY_SCHEMAS = {
         "collective_offer_offer_venue": "STRING",
         "collective_offer_las_validation_type": "STRING",
     },
-    "collective_stock": {
+    "applicative_database_collective_stock": {
         "collective_stock_id": "STRING",
         "stock_id": "STRING",
         "collective_stock_creation_date": "DATETIME",
@@ -443,7 +451,7 @@ BIGQUERY_SCHEMAS = {
         "collective_stock_number_of_tickets": "INT64",
         "collective_stock_price_detail": "STRING",
     },
-    "venue_contact": {
+    "applicative_database_venue_contact": {
         "venue_contact_id": "STRING",
         "venue_contact_venue_id": "STRING",
         "venue_contact_email": "STRING",

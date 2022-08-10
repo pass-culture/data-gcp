@@ -113,6 +113,7 @@ class Scoring:
             self.recommendation_in_filters = scoring.recommendation_in_filters
             self.model_name = scoring.model_name
             self.model_display_name = None
+            self.model_version = None
             self.recommendable_offers = self.get_recommendable_offers()
 
         def get_scored_offers(self) -> List[Dict[str, Any]]:

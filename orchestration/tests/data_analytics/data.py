@@ -785,7 +785,6 @@ ENRICHED_USER_DATA_INPUT = {
             "user_birth_date": datetime.now().replace(microsecond=0),
             "user_role": "BENEFICIARY",
             "user_school_type": "Lycée agricole",
-            "user_subscription_state": "account_created",
         }
     ],
     "applicative_database_user_suspension": [
@@ -903,7 +902,6 @@ ENRICHED_USER_DATA_EXPECTED = [
         "user_age": 18,
         "user_birth_date": datetime.now().replace(microsecond=0),
         "user_school_type": "Lycée agricole",
-        "user_subscription_state": "account_created",
     }
 ]
 

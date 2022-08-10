@@ -290,7 +290,6 @@ BIGQUERY_SCHEMAS = {
         "user_has_enabled_marketing_email": "BOOLEAN",
         "user_birth_date": "DATETIME",
         "user_role": "STRING",
-        "user_subscription_state": "STRING",
         "user_school_type": "STRING",
     },
     "applicative_database_venue": {

@@ -12,6 +12,7 @@ BIGQUERY_RAW_DATASET = os.environ.get("BIGQUERY_RAW_DATASET")
 ENVIRONMENT_SHORT_NAME = os.environ.get("ENVIRONMENT_SHORT_NAME")
 BUCKET_NAME = os.environ.get("BUCKET_NAME")
 
+
 def access_secret_data(project_id, secret_id, version_id=1, default=None):
     try:
         client = secretmanager.SecretManagerServiceClient()

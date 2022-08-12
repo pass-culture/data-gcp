@@ -10,7 +10,7 @@ ISSUER_ID = "591abf9a-10b5-4c9e-a70b-62bf336008d4"
 PROJECT_NAME = os.environ.get("PROJECT_NAME")
 BIGQUERY_RAW_DATASET = os.environ.get("BIGQUERY_RAW_DATASET")
 ENVIRONMENT_SHORT_NAME = os.environ.get("ENVIRONMENT_SHORT_NAME")
-
+BUCKET_NAME = os.environ.get("BUCKET_NAME")
 
 def access_secret_data(project_id, secret_id, version_id=1, default=None):
     try:

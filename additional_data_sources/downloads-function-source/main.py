@@ -9,6 +9,7 @@ from utils import (
     ISSUER_ID,
     PRIVATE_KEY,
     BIGQUERY_RAW_DATASET,
+    BUCKET_NAME,
     get_last_month,
 )
 
@@ -45,7 +46,7 @@ def get_apple(execution_date):
 def get_google(execution_date):
     current_month = execution_date.strftime("%Y-%m")
     last_month = get_last_month(execution_date).strftime("%Y-%m")
-    google_client = GoogleClient(report_bucket_name="pubsite_prod_8102412585126803216")
+    google_client = GoogleClient(report_bucket_name=BUCKET_NAME)
     df = google_client.get_downloads(last_month)
     try:
         current_month_google_downloads = google_client.get_downloads(current_month)

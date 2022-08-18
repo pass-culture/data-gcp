@@ -1,6 +1,7 @@
 # rename to specific api route , and put in models dir
 class RecommendationIn:
     def __init__(self, json):
+        self.input_json = json
         self.start_date = json.get("start_date", None)
         self.end_date = json.get("end_date", None)
         self.is_event = json.get("isEvent", None)

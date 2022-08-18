@@ -1,5 +1,6 @@
 import pandas as pd
-from utils import ENV_SHORT_NAME,GCP_PROJECT_ID
+from utils import ENV_SHORT_NAME, GCP_PROJECT_ID
+
 
 def get_data(data_type):
     query = f"""

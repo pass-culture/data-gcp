@@ -9,9 +9,6 @@ WITH base AS (
         device.mobile_brand_name,
         device.operating_system,
         device.operating_system_version,
-        traffic_source.name,
-        traffic_source.medium,
-        traffic_source.source,
         (
             select
                 event_params.value.int_value
@@ -28,6 +25,30 @@ WITH base AS (
             where
                 event_params.key = 'ga_session_number'
         ) as session_number,
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'traffic_campaign'
+        ) as traffic_campaign,
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'traffic_medium'
+        ) as traffic_medium,
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'traffic_source'
+        ) as traffic_source,
     FROM
         `{{ bigquery_clean_dataset }}.firebase_events_*`
     WHERE
@@ -50,12 +71,13 @@ SELECT
     ANY_VALUE(operating_system_version) AS operating_system_version,
     ANY_VALUE(user_id) AS user_id,
     TIMESTAMP_SECONDS(CAST(MIN(event_timestamp) / 1000000 as INT64)) AS first_event_timestamp,
-    ANY_VALUE(name) AS name,
-    ANY_VALUE(medium) AS medium,
-    ANY_VALUE(source) AS source,
+    ANY_VALUE(traffic_campaign) AS traffic_campaign,
+    ANY_VALUE(traffic_medium) AS traffic_medium,
+    ANY_VALUE(traffic_source) AS traffic_source,
     TIMESTAMP_SECONDS(CAST(MAX(event_timestamp) / 1000000 as INT64)) AS last_event_timestamp,
     COUNTIF(event_name = "ConsultOffer") AS nb_consult_offer,
     COUNTIF(event_name = "BookingConfirmation") AS nb_booking_confirmation,
+    COUNTIF(event_name = "HasAddedOfferToFavorites") AS nb_add_to_favorites,
     DATE_DIFF(
         TIMESTAMP_SECONDS(CAST(MAX(event_timestamp) / 1000000 as INT64)),
         TIMESTAMP_SECONDS(CAST(MIN(event_timestamp) / 1000000 as INT64)),

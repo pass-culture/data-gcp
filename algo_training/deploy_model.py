@@ -44,7 +44,10 @@ def upload_model_and_deploy_to_endpoint(
 
     print("Undeploy old versions..")
     endpoint_dict = endpoint.to_dict()
-    previous_version_model_id = endpoint_dict["deployedModels"][1]["id"]
+    deployed_models_sorted_by_date = sorted(
+        endpoint_dict["deployedModels"], key=lambda d: d["createTime"]
+    )
+    previous_version_model_id = deployed_models_sorted_by_date[0]["id"]
     endpoint.undeploy(previous_version_model_id)
 
 

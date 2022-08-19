@@ -17,7 +17,5 @@ def preprocess(storage_path: str):
             "nb_bookings": int,
         },
     )
-    bookings.rename(
-        columns={"offer_id": "item_id", "nb_bookings": "rating"}, inplace=True
-    )
+    bookings.rename(columns={"offer_id": "item_id", "count": "rating"}, inplace=True)
     bookings.to_csv(f"{storage_path}/clean_data.csv")

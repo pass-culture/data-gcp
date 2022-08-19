@@ -18,7 +18,7 @@ class RecommendationIn:
         else:
             self.has_conditions = False
 
-        self.input_json = json if self.has_conditions else None
+        self.input_json = json if self.has_conditions else ""
 
     def _get_conditions(self) -> str:
         condition = ""

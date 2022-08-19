@@ -715,6 +715,7 @@ def define_import_query(
                 ,"offerVenue" AS collective_offer_offer_venue
                 ,CAST("lastValidationType" AS VARCHAR) AS collective_offer_last_validation_type
                 ,CAST("institutionId" AS varchar(255)) AS institution_id
+                ,BTRIM(array_to_string("interventionArea", \\',\\'), \\'{\\') AS intervention_area
             FROM public.collective_offer
         """
 

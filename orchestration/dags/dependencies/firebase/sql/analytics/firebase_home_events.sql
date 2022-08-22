@@ -47,7 +47,7 @@ firebase_events AS (
             origin = 'home'
             OR origin IS NULL
         )
-        AND event_date >= "2022-07-01" -- no logs before
+        AND event_date >= DATE('{{ add_days(ds, -3) }}')
 ),
 firebase_module_events AS (
     SELECT
@@ -141,7 +141,7 @@ firebase_conversion_step AS (
             'HasAddedOfferToFavorites'
         )
         AND conv.event_timestamp > event.event_timestamp
-        AND conv.event_date >= "2022-07-01" -- no logs before
+        AND conv.event_date >= DATE('{{ add_days(ds, -3) }}')
 ),
 event_union AS (
     SELECT
@@ -202,3 +202,9 @@ LEFT JOIN diversification_booking db
     ON db.user_id = e.user_id
     AND db.offer_id = e.offer_id
     AND db.date = e.event_date
+WHERE 
+    {% if params.dag_type == 'intraday' %}
+    e.event_date = DATE('{{ ds }}')
+    {% else %}
+    e.event_date = DATE('{{ add_days(ds, -1) }}')
+    {% endif %}

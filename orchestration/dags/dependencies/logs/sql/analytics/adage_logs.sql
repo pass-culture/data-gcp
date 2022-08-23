@@ -7,14 +7,16 @@ SELECT
     END as log_source,
     timestamp,
     jsonPayload.extra.path AS path,
+    jsonPayload.message,
+    jsonPayload.technical_message_id,
     jsonPayload.extra.statuscode AS status_code,
     jsonPayload.extra.method AS method,
     jsonPayload.extra.sourceip AS source_ip,
     jsonPayload.extra.duration AS duration,
     jsonPayload.extra.source as source,
     jsonPayload.extra.userId as user_id,
-    jsonPayload.extra.stockId as stock_id,
-    coalesce(jsonPayload.extra.bookingId, jsonPayload.extra.booking_id) as booking_id,
+    cast(jsonPayload.extra.stockId as int) as stock_id,
+    CAST(coalesce(jsonPayload.extra.bookingId, jsonPayload.extra.booking_id) as int) as booking_id,
 FROM
     `{{ bigquery_raw_dataset }}.stdout`
 WHERE

@@ -44,7 +44,7 @@ class User:
                 SELECT 
                     FLOOR(DATE_PART('DAY',user_deposit_creation_date - user_birth_date)/365) as age,
                     user_deposit_initial_amount
-                    FROM public.enriched_user
+                    FROM public.enriched_user_mv
                     WHERE user_id = '{str(self.id)}' 
                 """
             )

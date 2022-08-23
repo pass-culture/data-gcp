@@ -28,7 +28,6 @@ import datetime
 import time
 import pytz
 from typing import List, Dict, Any
-import uuid
 
 
 class Scoring:
@@ -86,7 +85,7 @@ class Scoring:
             start = time.time()
             date = datetime.datetime.now(pytz.utc)
             rows = []
-            recos_unique_id = uuid.uuid4()
+
             for offer_id in recommendations:
                 rows.append(
                     {
@@ -98,7 +97,7 @@ class Scoring:
                         "model_name": self.scoring.model_display_name,
                         "model_version": self.scoring.model_version,
                         "reco_filters": self.json_input,
-                        "unique_id_api_call": recos_unique_id,
+                        "call_id": self.user.call_id,
                         "lat": self.user.latitude,
                         "long": self.user.longitude,
                     }
@@ -108,8 +107,8 @@ class Scoring:
             connection.execute(
                 text(
                     """
-                    INSERT INTO public.past_recommended_offers (userid, offerid, date, group_id, reco_origin, model_name, model_version, reco_filters, unique_id_api_call, lat, long)
-                    VALUES (:user_id, :offer_id, :date, :group_id, :reco_origin, :model_name, :model_version, :reco_filters, :unique_id_api_call, :lat, :long)
+                    INSERT INTO public.past_recommended_offers (userid, offerid, date, group_id, reco_origin, model_name, model_version, reco_filters, call_id, lat, long)
+                    VALUES (:user_id, :offer_id, :date, :group_id, :reco_origin, :model_name, :model_version, :reco_filters, :call_id, :lat, :long)
                     """
                 ),
                 rows,

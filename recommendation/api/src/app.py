@@ -11,6 +11,7 @@ from pcreco.core.scoring import Scoring
 from pcreco.models.reco.recommendation import RecommendationIn
 
 from pcreco.utils.env_vars import AB_TESTING, log_duration
+import uuid
 import time
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
@@ -113,6 +114,8 @@ def recommendation(user_id: int):
 
 @app.route("/playlist_recommendation/<user_id>", methods=["GET", "POST"])
 def playlist_recommendation(user_id: int):
+    # unique id build for each call
+    call_id = uuid.uuid4()
     if request.args.get("token", None) != API_TOKEN:
         return "Forbidden", 403
 
@@ -124,7 +127,7 @@ def playlist_recommendation(user_id: int):
     else:
         geo_located = False
     post_args_json = request.get_json() if request.method == "POST" else None
-    user = User(user_id, longitude, latitude)
+    user = User(user_id, call_id, longitude, latitude)
     input_reco = None
     applied_filters = False
     if post_args_json:
@@ -144,6 +147,7 @@ def playlist_recommendation(user_id: int):
                 "ab_test": user.group_id if AB_TESTING else "default",
                 "geo_located": geo_located,
                 "filtered": applied_filters,
+                "call_id": call_id,
             },
         }
     )

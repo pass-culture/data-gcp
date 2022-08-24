@@ -1,4 +1,5 @@
 # pylint: disable=invalid-name
+import json
 import random
 from sqlalchemy import text
 from pcreco.core.user import User
@@ -33,7 +34,7 @@ from typing import List, Dict, Any
 class Scoring:
     def __init__(self, user: User, recommendation_in: RecommendationIn = None):
         self.user = user
-        self.json_input = recommendation_in.json_input if recommendation_in else ""
+        self.json_input = recommendation_in.json_input if recommendation_in else None
         self.recommendation_in_filters = (
             recommendation_in._get_conditions() if recommendation_in else ""
         )
@@ -96,7 +97,7 @@ class Scoring:
                         "reco_origin": "cold-start" if self.iscoldstart else "algo",
                         "model_name": self.scoring.model_display_name,
                         "model_version": self.scoring.model_version,
-                        "reco_filters": self.json_input,
+                        "reco_filters": json.dumps(self.json_input),
                         "call_id": self.user.call_id,
                         "lat": self.user.latitude,
                         "long": self.user.longitude,

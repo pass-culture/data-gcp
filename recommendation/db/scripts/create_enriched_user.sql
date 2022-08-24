@@ -28,7 +28,9 @@ SELECT
 from
     get_enriched_user() WITH NO DATA;
 
+CREATE UNIQUE INDEX IF NOT EXISTS idx_enriched_user_mv ON public.enriched_user_mv USING btree (user_id);
+
 REFRESH MATERIALIZED VIEW enriched_user_mv;
 
+
 ! -- Creating an index for faster queries.
-CREATE INDEX IF NOT EXISTS idx_enriched_user_mc ON public.enriched_user_mv USING btree ("user_id");

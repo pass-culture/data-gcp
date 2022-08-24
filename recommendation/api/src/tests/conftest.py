@@ -149,7 +149,9 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
         }
     )
     enriched_user.to_sql("enriched_user", con=engine, if_exists="replace")
-
+    engine.execute(
+        "CREATE MATERIALIZED VIEW enriched_user_mv AS SELECT * FROM enriched_user;"
+    )
     qpi_answers = pd.DataFrame(
         {
             "user_id": ["111", "112", "113", "114"],
@@ -319,10 +321,13 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
         "DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_eac_16_17 CASCADE;"
     )
     engine.execute("DROP MATERIALIZED VIEW IF EXISTS non_recommendable_offers CASCADE;")
+
     engine.execute("DROP TABLE IF EXISTS recommendable_offers_temporary_table CASCADE;")
     engine.execute(
         "DROP TABLE IF EXISTS non_recommendable_offers_temporary_table CASCADE;"
     )
+    engine.execute("DROP TABLE IF EXISTS enriched_user CASCADE;")
+    engine.execute("DROP MATERIALIZED VIEW IF EXISTS enriched_user_mv CASCADE;")
     engine.execute("DROP TABLE IF EXISTS iris_venues;")
     engine.execute(f"DROP TABLE IF EXISTS {app_config['AB_TESTING_TABLE']} ;")
     engine.execute("DROP TABLE IF EXISTS past_recommended_offers ;")
@@ -330,4 +335,5 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
     engine.execute("DROP TABLE IF EXISTS number_of_clicks_per_user ;")
     engine.execute("DROP TABLE IF EXISTS number_of_favorites_per_user ;")
     engine.execute("DROP TABLE IF EXISTS iris_france;")
+
     connection.close()

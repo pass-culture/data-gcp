@@ -13,8 +13,9 @@ from pcreco.utils.env_vars import (
 
 
 class User:
-    def __init__(self, user_id, longitude=None, latitude=None):
+    def __init__(self, user_id, call_id=None, longitude=None, latitude=None):
         self.id = user_id
+        self.call_id = call_id
         self.longitude = False if longitude is None else longitude
         self.latitude = False if latitude is None else latitude
         self.iris_id = get_iris_from_coordinates(longitude, latitude)

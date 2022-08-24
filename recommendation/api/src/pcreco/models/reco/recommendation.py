@@ -15,8 +15,10 @@ class RecommendationIn:
             or self.price_max is not None
         ):
             self.has_conditions = True
+            self.json_input = json
         else:
             self.has_conditions = False
+            self.json_input = None
 
     def _get_conditions(self) -> str:
         condition = ""

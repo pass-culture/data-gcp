@@ -1,10 +1,11 @@
 WITH venues_to_link AS (
-        SELECT venue_id, venue_longitude, venue_latitude
+        SELECT 
+            venue_id, 
+            venue_longitude,
+            venue_latitude
         FROM `{{ bigquery_clean_dataset }}.applicative_database_venue` as venue
         JOIN  `{{ bigquery_clean_dataset }}.applicative_database_offerer` as offerer ON venue_managing_offerer_id=offerer_id
-        LEFT JOIN `{{ bigquery_clean_dataset }}.iris_venues` as iv on venue.venue_id = iv.venueId
-        WHERE iv.venueId is null
-        AND venue_is_virtual is false
+        WHERE venue_is_virtual is false
         AND venue_validation_token is null
         AND offerer_validation_token is null
     )

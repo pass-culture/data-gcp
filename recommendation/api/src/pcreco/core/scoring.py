@@ -1,4 +1,5 @@
 # pylint: disable=invalid-name
+import json
 import random
 from sqlalchemy import text
 from pcreco.core.user import User
@@ -33,6 +34,7 @@ from typing import List, Dict, Any
 class Scoring:
     def __init__(self, user: User, recommendation_in: RecommendationIn = None):
         self.user = user
+        self.json_input = recommendation_in.json_input if recommendation_in else None
         self.recommendation_in_filters = (
             recommendation_in._get_conditions() if recommendation_in else ""
         )
@@ -84,6 +86,7 @@ class Scoring:
             start = time.time()
             date = datetime.datetime.now(pytz.utc)
             rows = []
+
             for offer_id in recommendations:
                 rows.append(
                     {
@@ -92,6 +95,12 @@ class Scoring:
                         "date": date,
                         "group_id": self.user.group_id,
                         "reco_origin": "cold-start" if self.iscoldstart else "algo",
+                        "model_name": self.scoring.model_display_name,
+                        "model_version": self.scoring.model_version,
+                        "reco_filters": json.dumps(self.json_input),
+                        "call_id": self.user.call_id,
+                        "lat": self.user.latitude,
+                        "long": self.user.longitude,
                     }
                 )
 
@@ -99,8 +108,8 @@ class Scoring:
             connection.execute(
                 text(
                     """
-                    INSERT INTO public.past_recommended_offers (userid, offerid, date, group_id, reco_origin)
-                    VALUES (:user_id, :offer_id, :date, :group_id, :reco_origin)
+                    INSERT INTO public.past_recommended_offers (userid, offerid, date, group_id, reco_origin, model_name, model_version, reco_filters, call_id, lat, long)
+                    VALUES (:user_id, :offer_id, :date, :group_id, :reco_origin, :model_name, :model_version, :reco_filters, :call_id, :lat, :long)
                     """
                 ),
                 rows,

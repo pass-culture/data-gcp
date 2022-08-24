@@ -266,6 +266,7 @@ with DAG(
         CREATE UNIQUE INDEX IF NOT EXISTS idx_nb_favorites_unique         ON public.number_of_favorites_per_user USING btree ("user_id",favorites_count);
         CREATE INDEX IF NOT EXISTS qpi_answers_user_id                    ON public.qpi_answers                 USING btree (user_id);
         CREATE INDEX IF NOT EXISTS trained_users_mf_reco_user_id          ON public.trained_users_mf_reco       USING btree (user_id);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_enriched_user_mv            ON public.enriched_user_mv            USING btree (user_id);
     """
 
     recreate_indexes_task = CloudSQLExecuteQueryOperator(
@@ -284,6 +285,7 @@ with DAG(
         "number_of_bookings_per_user",
         "number_of_clicks_per_user",
         "number_of_favorites_per_user",
+        "enriched_user_mv",
     ]
 
     refresh_materialized_view_tasks = []

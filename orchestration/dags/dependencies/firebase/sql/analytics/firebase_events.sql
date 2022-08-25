@@ -156,7 +156,7 @@ WITH temp_firebase_events AS (
                 where
                     event_params.key = 'entryId'
             ),
-(
+            (
                 select
                     event_params.value.string_value
                 from
@@ -187,6 +187,7 @@ WITH temp_firebase_events AS (
             ) IS NULL THEN NULL
             ELSE "marketing"
         END AS home_type,
+        -- recommendation
         (
             select
                 event_params.value.string_value
@@ -201,8 +202,33 @@ WITH temp_firebase_events AS (
             from
                 unnest(event_params) event_params
             where
-                event_params.key = 'AB_test'
-        ) as ab_test,
+                event_params.key = 'ab_test'
+        ) as reco_ab_test,
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'call_id'
+        ) as reco_call_id,
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'model_version'
+        ) as reco_model_version,
+        (
+            select
+                event_params.value.int_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'geo_located'
+        ) as reco_geo_located,
+        -- ?
         (
             select
                 event_params.value.int_value

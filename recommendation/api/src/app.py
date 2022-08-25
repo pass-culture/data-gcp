@@ -122,7 +122,7 @@ def playlist_recommendation(user_id: int):
     longitude = request.args.get("longitude", None)
     latitude = request.args.get("latitude", None)
     try:
-        internal = bool(request.args.get("internal", False))
+        internal = int(request.args.get("internal", 0)) == 1
     except:
         internal = False
 

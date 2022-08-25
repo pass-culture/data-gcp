@@ -20,7 +20,7 @@ WITH favorites as (
         AND offer.offer_is_bookable = True
 )
 SELECT
-    '{{ ds }}' as partition_date,
+    CAST('{{ ds }}' AS DATETIME) as partition_date,
     user_id,
     ARRAY_AGG(
         STRUCT(offer_id,offer_name, subcategory, user_bookings_for_this_subcat)

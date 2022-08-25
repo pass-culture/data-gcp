@@ -15,12 +15,12 @@ WITH favorites as (
         ON favorite.userId = booking.user_id AND favorite.offerId = booking.offer_id
     JOIN `{{ bigquery_analytics_dataset }}.enriched_offer_data` as offer
         ON favorite.offerId = offer.offer_id
-    WHERE dateCreated < DATE_SUB(CURRENT_DATE(), INTERVAL 3 DAY)
+    WHERE dateCreated = DATE_SUB('{{ ds }}', INTERVAL 3 DAY)
         AND booking.offer_id IS NULL AND booking.user_id IS NULL
         AND offer.offer_is_bookable = True
 )
 SELECT
-    CURRENT_DATE() as table_creation_day,
+    '{{ ds }}' as partition_date,
     user_id,
     ARRAY_AGG(
         STRUCT(offer_id,offer_name, subcategory, user_bookings_for_this_subcat)

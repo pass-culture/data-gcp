@@ -121,6 +121,10 @@ def playlist_recommendation(user_id: int):
 
     longitude = request.args.get("longitude", None)
     latitude = request.args.get("latitude", None)
+    try:
+        internal = int(request.args.get("internal", 0)) == 1
+    except:
+        internal = False
 
     if longitude is not None and latitude is not None:
         geo_located = True
@@ -136,7 +140,9 @@ def playlist_recommendation(user_id: int):
 
     scoring = Scoring(user, recommendation_in=input_reco)
     user_recommendations = scoring.get_recommendation()
-    scoring.save_recommendation(user_recommendations)
+    if not internal:
+        scoring.save_recommendation(user_recommendations)
+
     return jsonify(
         {
             "playlist_recommended_offers": user_recommendations,

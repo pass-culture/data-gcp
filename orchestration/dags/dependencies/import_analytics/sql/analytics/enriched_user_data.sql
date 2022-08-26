@@ -29,11 +29,14 @@ experimentation_sessions AS (
             booking_is_used DESC
     )
     SELECT
+        user.user_id,
+        MAX(
         CASE
             WHEN experimentation_session.booking_is_used THEN 1
             ELSE 2
-        END AS vague_experimentation,
-        user.user_id
+        END
+        ) as vague_experimentation
+        
     FROM
         `{{ bigquery_analytics_dataset }}`.applicative_database_user AS user
         LEFT JOIN experimentation_session ON experimentation_session.user_id = user.user_id
@@ -43,6 +46,7 @@ experimentation_sessions AS (
             rank = 1
             OR rank is NULL
         )
+    GROUP BY user.user_id
 ),
 activation_dates AS (
     WITH ranked_bookings AS (
@@ -510,7 +514,7 @@ user_agg_deposit_data AS (
 user_suspension_history AS (
     SELECT
         *,
-        RANK() OVER (
+        ROW_NUMBER() OVER (
             PARTITION BY "userId"
             ORDER BY
                 CAST(id AS INTEGER) DESC
@@ -519,6 +523,7 @@ user_suspension_history AS (
         `{{ bigquery_analytics_dataset }}`.applicative_database_user_suspension
 )
 SELECT
+    DISTINCT
     user.user_id,
     experimentation_sessions.vague_experimentation AS experimentation_session,
     user.user_department_code,

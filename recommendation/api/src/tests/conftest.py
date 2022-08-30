@@ -224,7 +224,7 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
             "OEUVRE_ART": [True, True, False, False],
         }
     )
-    qpi_answers.to_sql("qpi_answers", con=engine, if_exists="replace")
+    qpi_answers.to_sql("qpi_answers_mv", con=engine, if_exists="replace")
 
     iris_venues_mv = pd.DataFrame(
         {"iris_id": ["1", "1", "1", "2"], "venue_id": ["11", "22", "33", "44"]}

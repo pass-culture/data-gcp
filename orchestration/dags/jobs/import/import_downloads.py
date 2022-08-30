@@ -63,7 +63,7 @@ import_downloads_data_to_bigquery = SimpleHttpOperator(
     log_response=True,
     dag=dag,
 )
-
+# only downloads included here
 create_enriched_app_downloads_stats = BigQueryExecuteQueryOperator(
     task_id="create_enriched_app_downloads_stats",
     sql=f"""
@@ -72,6 +72,8 @@ create_enriched_app_downloads_stats = BigQueryExecuteQueryOperator(
         'apple' as provider, 
         sum(units) as total_downloads
     FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.apple_download_stats` 
+
+    WHERE product_type_identifier in ("1F") 
     GROUP BY date
     UNION ALL
     SELECT 

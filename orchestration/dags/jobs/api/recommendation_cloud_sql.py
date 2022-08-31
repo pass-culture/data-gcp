@@ -287,7 +287,7 @@ with DAG(
         "number_of_clicks_per_user",
         "number_of_favorites_per_user",
         "enriched_user_mv",
-        "qpi_answers_mv"
+        "qpi_answers_mv",
     ]
 
     refresh_materialized_view_tasks = []

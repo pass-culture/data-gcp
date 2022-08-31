@@ -96,6 +96,19 @@ last_stock AS (
         ) c
     WHERE
         c.rang_stock = 1
+),
+mediation AS (
+    SELECT 
+        offer_id, 
+        humanize_id(id) as mediation_humanized_id
+    FROM (
+        SELECT
+            id,
+            offerId as offer_id,
+            ROW_NUMBER() OVER (PARTITION BY offerId ORDER BY dateModifiedAtLastProvider DESC) as rnk
+        FROM `{{ bigquery_analytics_dataset }}.applicative_database_mediation`
+        ) inn
+    WHERE rnk = 1
 )
 SELECT
     offerer.offerer_id,
@@ -181,6 +194,7 @@ SELECT
         '/edition'
     ) AS passculture_pro_url,
     CONCAT('https://passculture.app/offre/', offer.offer_id) AS webapp_url,
+    mediation.mediation_humanized_id,
     count_first_booking_view.first_booking_cnt,
     offer_tags.tag as offer_tag,
     offer_extracted_data.author,
@@ -225,5 +239,6 @@ FROM
     LEFT JOIN last_stock ON last_stock.offer_id = offer.offer_id
     LEFT JOIN `{{ bigquery_clean_dataset }}`.offer_extracted_data offer_extracted_data ON offer_extracted_data.offer_id = offer.offer_id
     LEFT JOIN `{{ bigquery_clean_dataset }}`.offer_tags offer_tags ON offer_tags.offer_id = offer.offer_id
+    LEFT JOIN mediation ON offer.offer_id = mediation.offer_id
 WHERE
     offer.offer_validation = 'APPROVED'

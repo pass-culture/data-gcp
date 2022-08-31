@@ -4,7 +4,6 @@ from google.cloud import bigquery
 from contentful_client import ContentfulClient
 from utils import (
     BIGQUERY_RAW_DATASET,
-    BIGQUERY_ANALYTICS_DATASET,
     GCP_PROJECT,
     ENV_SHORT_NAME,
 )
@@ -41,7 +40,7 @@ def run(request):
     """
     contentful_envs = {
         "prod": ["production"],
-        "stg": ["production", "testing"],
+        "stg": ["testing"],
         "dev": ["testing"],
     }
     modules_dfs, links_dfs, tags_dfs = [], [], []

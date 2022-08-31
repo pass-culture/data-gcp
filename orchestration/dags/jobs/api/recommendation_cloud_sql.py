@@ -128,7 +128,7 @@ with DAG(
         if table == "qpi_answers":
             filter_column_query = f"""
                 SELECT {select_columns}
-                FROM `{GCP_PROJECT}.{dataset}.{bigquery_table_name}_v3`
+                FROM `{GCP_PROJECT}.{dataset}.{bigquery_table_name}_v4`
             """
         elif table == "firebase_events":
             filter_column_query = f"""SELECT {select_columns}

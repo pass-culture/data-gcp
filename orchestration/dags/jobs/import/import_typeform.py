@@ -139,7 +139,9 @@ with DAG(
     enrich_qpi_answers = BigQueryExecuteQueryOperator(
         task_id="enrich_qpi_answers",
         sql=enrich_answers(
-            gcp_project=GCP_PROJECT, bigquery_clean_dataset=BIGQUERY_CLEAN_DATASET
+            gcp_project=GCP_PROJECT,
+            bigquery_clean_dataset=BIGQUERY_CLEAN_DATASET,
+            qpi_table=QPI_ANSWERS_TABLE,
         ),
         use_legacy_sql=False,
         destination_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_ANALYTICS_DATASET}.enriched_{QPI_ANSWERS_TABLE}_temp",
@@ -159,6 +161,21 @@ with DAG(
         trigger_rule="none_failed_or_skipped",
     )
 
+    clean_answers_duplicates = BigQueryExecuteQueryOperator(
+        task_id="clean_answers_duplicates",
+        sql=f"""
+            with base
+            select  raw_answers.user_id,
+            submitted_at, answers,
+            CAST(NULL AS STRING) AS catch_up_user_id
+            FROM `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_{QPI_ANSWERS_TABLE}` enriched_answers
+        """,
+        use_legacy_sql=False,
+        destination_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_CLEAN_DATASET}.temp_{QPI_ANSWERS_TABLE}",
+        write_disposition="WRITE_TRUNCATE",
+        trigger_rule="none_failed_or_skipped",
+    )
+
     end = DummyOperator(task_id="end")
 
     (
@@ -172,6 +189,7 @@ with DAG(
         >> delete_temp_answer_table_raw
         >> enrich_qpi_answers
         >> format_qpi_answers
+        >> clean_answers_duplicates
         >> end
     )
     (checking_folder_QPI >> empty >> end)

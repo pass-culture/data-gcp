@@ -296,17 +296,17 @@ ENRICHED_OFFER_DATA_INPUT = {
     ],
     "applicative_database_mediation": [
         {
-            "thumbCount" : 0,
-            "idAtProviders" : -1,
-            "dateModifiedAtLastProvider" : "2018-11-20",
-            "id" : "1234",
-            "dateCreated" :  "2018-11-20",
-            "authorId" : "-1",
-            "lastProviderId" : -1,
-            "offerId" : "3",
-            "credit" : "",
-            "isActive" : True,
-            "fieldsUpdated" :  "2018-11-20",
+            "thumbCount": 0,
+            "idAtProviders": -1,
+            "dateModifiedAtLastProvider": "2018-11-20",
+            "id": "1234",
+            "dateCreated": "2018-11-20",
+            "authorId": "-1",
+            "lastProviderId": -1,
+            "offerId": "3",
+            "credit": "",
+            "isActive": True,
+            "fieldsUpdated": "2018-11-20",
         }
     ],
 }

@@ -166,7 +166,7 @@ def create_condition(question_id, question_nb, qpi_form):
     )
 
 
-def enrich_answers(gcp_project, bigquery_clean_dataset,qpi_table):
+def enrich_answers(gcp_project, bigquery_clean_dataset, qpi_table):
     qpi_form = FORM.copy()
     if bigquery_clean_dataset == "clean_dev":
         qpi_form["QiK2FlxvTWtK"] = qpi_form["ge0Egr2m8V1T"]

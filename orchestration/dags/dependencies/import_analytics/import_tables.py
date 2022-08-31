@@ -46,6 +46,14 @@ def define_import_tables():
         "cashflow_batch": ["creationDate"],
         "cashflow_log": [""],
         "cashflow_pricing": [""],
+        "venue_pricing_point_link": [
+            "pricing_point_link_beginning_date",
+            "pricing_point_link_ending_date",
+        ],
+        "venue_reimbursement_point_link": [
+            "reimbursement_point_link_beginning_date",
+            "reimbursement_point_link_ending_date",
+        ],
         "pricing": ["creationDate", "valueDate"],
         "pricing_line": [""],
         "pricing_log": [""],
@@ -229,6 +237,24 @@ def define_import_query(
             CAST("id" AS varchar(255)), "name","siret",CAST("bankAccountId" AS varchar(255)), "cashflowFrequency"
             , "invoiceFrequency", "status"
         FROM public.business_unit
+    """
+    cloudsql_queries[
+        "venue_pricing_point_link"
+    ] = """
+        SELECT
+            CAST("id" AS varchar(255)), CAST("venueId" AS varchar(255)) AS venue_id, CAST("pricingPointId" AS varchar(255)) AS pricing_point_id
+            , TRIM(BOTH \\'[") \\' FROM SPLIT_PART("timespan" :: text, ',',1))  AS pricing_point_link_beginning_date
+            , TRIM(BOTH \\'[") \\' FROM SPLIT_PART("timespan" :: text, ',',2))  AS pricing_point_link_ending_date
+        FROM public.venue_pricing_point_link
+    """
+    cloudsql_queries[
+        "venue_reimbursement_point_link"
+    ] = """
+        SELECT
+            CAST("id" AS varchar(255)), CAST("venueId" AS varchar(255)) AS venue_id, CAST("reimbursementPointId" AS varchar(255)) AS reimbursement_point_id
+            , TRIM(BOTH \\'[") \\' FROM SPLIT_PART("timespan" :: text, ',',1))  AS reimbursement_point_link_beginning_date
+            , TRIM(BOTH \\'[") \\' FROM SPLIT_PART("timespan" :: text, ',',2))  AS reimbursement_point_link_ending_date
+        FROM public.venue_reimbursement_point_link
     """
     cloudsql_queries[
         "cashflow"

@@ -459,4 +459,17 @@ BIGQUERY_SCHEMAS = {
         "venue_contact_phone_number": "STRING",
         "venue_contact_social_medias": "STRING",
     },
+    "applicative_database_mediation": {
+        "thumbCount": "INTEGER",
+        "idAtProviders": "STRING",
+        "dateModifiedAtLastProvider": "DATETIME",
+        "id": "STRING",
+        "dateCreated": "DATETIME",
+        "authorId": "STRING",
+        "lastProviderId": "STRING",
+        "offerId": "STRING",
+        "credit": "STRING",
+        "isActive": "BOOLEAN",
+        "fieldsUpdated": "STRING",
+    },
 }

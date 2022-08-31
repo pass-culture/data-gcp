@@ -299,7 +299,6 @@ def define_import_query(
             CAST("lastValidationType" AS varchar(255)) as offer_last_validation_type,
             CAST("subcategoryId" AS varchar(255)) as offer_subcategoryId,
             "dateUpdated" as offer_date_updated,
-            "isEducational" AS offer_is_educational, 
             "withdrawalType" AS offer_withdrawal_type,
             "withdrawalDelay" AS offer_withdrawal_delay
         FROM public.offer

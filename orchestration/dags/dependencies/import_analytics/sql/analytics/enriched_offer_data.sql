@@ -107,6 +107,7 @@ mediation AS (
             offerId as offer_id,
             ROW_NUMBER() OVER (PARTITION BY offerId ORDER BY dateModifiedAtLastProvider DESC) as rnk
         FROM `{{ bigquery_analytics_dataset }}.applicative_database_mediation`
+        WHERE is_active
         ) inn
     WHERE rnk = 1
 )

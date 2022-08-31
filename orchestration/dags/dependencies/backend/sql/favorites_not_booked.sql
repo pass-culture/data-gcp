@@ -25,7 +25,7 @@ WITH favorites as (
         AND booking.offer_id IS NULL
         AND booking.user_id IS NULL
         AND offer.offer_is_bookable = True
-        AND stock.stock_beginning_date > {{ ds }}
+        AND ( stock.stock_beginning_date > {{ ds }} OR stock.stock_beginning_date is NULL)
         AND enruser.user_is_former_beneficiary = False
         AND enruser.user_is_current_beneficiary = True
         AND enruser.last_booking_date > DATE_SUB({{ ds }}, INTERVAL 7 DAY)

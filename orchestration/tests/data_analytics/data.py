@@ -294,6 +294,21 @@ ENRICHED_OFFER_DATA_INPUT = {
             "is_event": False,
         },
     ],
+    "applicative_database_mediation": [
+        {
+            "thumbCount": 0,
+            "idAtProviders": -1,
+            "dateModifiedAtLastProvider": "2018-11-20",
+            "id": "1234",
+            "dateCreated": "2018-11-20",
+            "authorId": "-1",
+            "lastProviderId": -1,
+            "offerId": "3",
+            "credit": "",
+            "isActive": True,
+            "fieldsUpdated": "2018-11-20",
+        }
+    ],
 }
 ENRICHED_OFFER_DATA_EXPECTED = [
     {
@@ -319,6 +334,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "offer_humanized_id": "AM",
         "passculture_pro_url": "https://passculture.pro/offres/AM/edition",
         "webapp_url": "https://passculture.app/offre/3",
+        "mediation_humanized_id": "ATJA",
         "first_booking_cnt": 1,
         "offer_tag": "none",
         "author": "Tarantino",
@@ -365,6 +381,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "offer_humanized_id": "AQ",
         "passculture_pro_url": "https://passculture.pro/offres/AQ/edition",
         "webapp_url": "https://passculture.app/offre/4",
+        "mediation_humanized_id": None,
         "first_booking_cnt": None,
         "offer_tag": "none",
         "author": "Kevin Francois",

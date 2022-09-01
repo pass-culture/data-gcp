@@ -130,7 +130,6 @@ BEGIN
       AND offer."offer_subcategoryId" <> 'JEU_SUPPORT_PHYSIQUE'
       AND offer."offer_subcategoryId" <> 'ABO_JEU_VIDEO'
       AND offer."offer_subcategoryId" <> 'ABO_LUDOTHEQUE'
-      AND NOT offer."offer_is_educational"
       AND enriched_offer.last_stock_price < 30
       AND (offer."offer_url" IS NULL
       OR enriched_offer.last_stock_price = 0

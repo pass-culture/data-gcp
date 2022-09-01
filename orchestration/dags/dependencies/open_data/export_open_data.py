@@ -4,7 +4,7 @@ SQL_PATH = f"dependencies/open_data/sql/open_data"
 aggregated_open_data_tables = {
     "aggregated_usage_and_intensity": {
         "sql": f"{SQL_PATH}/aggregated_usage_and_intensity.sql",
-        "destination_dataset_table": "{{ bigquery_open_data_project }}.{{ bigquery_open_data_public_dataset }}.aggregated_usage_and_intensity${{ yyyymmdd(current_month(ds)) }}",
+        "destination_dataset_table": "{{ bigquery_open_data_project }}.{{ bigquery_open_data_public_dataset }}.aggregated_usage_and_intensity${{ yyyymmdd(current_month(add_days(ds, 1))) }}",
         "time_partitioning": {"field": "calculation_month"},
         "cluster_fields": ["calculation_month"],
     },

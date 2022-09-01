@@ -23,9 +23,9 @@ default_dag_args = {
 dag = DAG(
     "export_backend_tables",
     default_args=default_dag_args,
-    description="Export daily tables for backend needs",
+    description="Export weekly tables for backend needs",
     on_failure_callback=task_fail_slack_alert,
-    schedule_interval="00 01 * * *",
+    schedule_interval="00 01 * * 1",
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,

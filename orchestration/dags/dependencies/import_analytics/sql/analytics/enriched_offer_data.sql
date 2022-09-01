@@ -123,16 +123,14 @@ SELECT
     last_stock.last_stock_price,
     offer.offer_creation_date,
     offer.offer_is_duo,
-    offer.offer_is_educational,
     CASE
         WHEN (
             offer.offer_subcategoryId <> 'JEU_EN_LIGNE'
             AND offer.offer_subcategoryId <> 'JEU_SUPPORT_PHYSIQUE'
             AND offer.offer_subcategoryId <> 'ABO_JEU_VIDEO'
             AND offer.offer_subcategoryId <> 'ABO_LUDOTHEQUE'
-            AND NOT offer.offer_is_educational
             AND (
-                offer.offer_url IS NULL
+                offer.offer_url IS NULL -- not numerical
                 OR last_stock.last_stock_price = 0
                 OR subcategories.id = 'LIVRE_NUMERIQUE'
                 OR subcategories.id = 'ABO_LIVRE_NUMERIQUE'

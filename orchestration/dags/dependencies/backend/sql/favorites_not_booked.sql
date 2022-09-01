@@ -21,20 +21,21 @@ WITH favorites as (
         JOIN `{{ bigquery_analytics_dataset }}.applicative_database_stock` as stock ON favorite.offerId = stock.offer_id
         JOIN `{{ bigquery_analytics_dataset }}.enriched_user_data` as enruser ON favorite.userId = enruser.user_id
     WHERE
-        dateCreated < DATE_SUB({{ ds }}, INTERVAL 7 DAY)
+        dateCreated <= DATE_SUB("{{ yesterday() }}", INTERVAL 7 DAY)
+        AND dateCreated > DATE_SUB("{{ yesterday() }}", INTERVAL 14 DAY)
         AND booking.offer_id IS NULL
         AND booking.user_id IS NULL
         AND offer.offer_is_bookable = True
-        AND ( stock.stock_beginning_date > {{ ds }} OR stock.stock_beginning_date is NULL)
+        AND ( stock.stock_beginning_date > "{{ yesterday() }}" OR stock.stock_beginning_date is NULL)
         AND enruser.user_is_former_beneficiary = False
         AND enruser.user_is_current_beneficiary = True
-        AND enruser.last_booking_date > DATE_SUB({{ ds }}, INTERVAL 7 DAY)
+        AND enruser.last_booking_date >= DATE_SUB("{{ yesterday() }}", INTERVAL 7 DAY)
         AND (
             enruser.user_total_deposit_amount - enruser.actual_amount_spent
         ) > stock.stock_price
 )
 SELECT
-    CAST({{ ds }} AS DATETIME) as partition_date,
+    CAST("{{ today() }}" AS DATETIME) as execution_date,
     user_id,
     ARRAY_AGG(
         STRUCT(

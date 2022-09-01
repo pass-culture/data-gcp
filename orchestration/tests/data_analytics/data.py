@@ -36,7 +36,6 @@ ENRICHED_OFFER_DATA_INPUT = {
             "offer_is_duo": False,
             "offer_fields_updated": "{}",
             "offer_validation": "APPROVED",
-            "offer_is_educational": False,
         },
         {
             "venue_id": "2",
@@ -52,7 +51,6 @@ ENRICHED_OFFER_DATA_INPUT = {
             "offer_is_duo": False,
             "offer_fields_updated": "{}",
             "offer_validation": "APPROVED",
-            "offer_is_educational": False,
         },
     ],
     "offer_extracted_data": [
@@ -354,7 +352,6 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "countries": '["usa"]',
         "casting": "[]",
         "isbn": None,
-        "offer_is_educational": False,
         "offer_is_underage_selectable": True,
         "offer_is_bookable": False,
     },
@@ -401,7 +398,6 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "countries": None,
         "casting": None,
         "isbn": None,
-        "offer_is_educational": False,
         "offer_is_underage_selectable": True,
         "offer_is_bookable": True,
     },

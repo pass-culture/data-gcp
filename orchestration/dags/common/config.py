@@ -40,3 +40,4 @@ APPLICATIVE_PREFIX = "applicative_database_"
 SURVEY_PREFIX = "survey_"
 
 TABLE_AB_TESTING = os.environ.get("TABLE_AB_TESTING", "abc_testing_20220322_v1v2")
+QPI_TABLE = "qpi_answers_v4"

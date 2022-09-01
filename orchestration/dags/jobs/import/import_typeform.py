@@ -16,7 +16,6 @@ from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
     GCSToBigQueryOperator,
 )
 
-
 from common.alerts import task_fail_slack_alert
 from dependencies.import_typeform import QPI_ANSWERS_SCHEMA
 from common.config import (
@@ -164,14 +163,16 @@ with DAG(
     clean_answers_duplicates = BigQueryExecuteQueryOperator(
         task_id="clean_answers_duplicates",
         sql=f"""
-            with base
-            select  raw_answers.user_id,
-            submitted_at, answers,
-            CAST(NULL AS STRING) AS catch_up_user_id
-            FROM `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_{QPI_ANSWERS_TABLE}` enriched_answers
-        """,
+            with base as (
+                SELECT *,
+                ROW_NUMBER() OVER (PARTITION BY user_id,"ABO_BIBLIOTHEQUE" order by submitted_at DESC) row_number
+                FROM `{GCP_PROJECT}:{BIGQUERY_CLEAN_DATASET}.enriched_{QPI_ANSWERS_TABLE}`
+            )
+            select * except(row_number) from base 
+            where row_number=1
+            """,
         use_legacy_sql=False,
-        destination_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_CLEAN_DATASET}.temp_{QPI_ANSWERS_TABLE}",
+        destination_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_CLEAN_DATASET}.enriched_{QPI_ANSWERS_TABLE}",
         write_disposition="WRITE_TRUNCATE",
         trigger_rule="none_failed_or_skipped",
     )

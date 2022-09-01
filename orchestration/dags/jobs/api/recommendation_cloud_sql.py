@@ -27,6 +27,7 @@ from common.config import (
     BIGQUERY_CLEAN_DATASET,
     BIGQUERY_ANALYTICS_DATASET,
     ENV_SHORT_NAME,
+    QPI_TABLE,
 )
 from common.alerts import task_fail_slack_alert
 
@@ -128,7 +129,7 @@ with DAG(
         if table == "qpi_answers":
             filter_column_query = f"""
                 SELECT {select_columns}
-                FROM `{GCP_PROJECT}.{dataset}.{bigquery_table_name}_v4`
+                FROM `{GCP_PROJECT}.{dataset}.{QPI_TABLE}`
             """
         elif table == "firebase_events":
             filter_column_query = f"""SELECT {select_columns}

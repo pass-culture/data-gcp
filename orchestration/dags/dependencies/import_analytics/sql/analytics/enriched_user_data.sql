@@ -9,45 +9,6 @@ WITH user_humanized_id AS (
     WHERE
         user_id is not NULL
 ),
-experimentation_sessions AS (
-    WITH experimentation_session AS (
-        SELECT
-            booking_is_used,
-            user_id,
-            ROW_NUMBER() OVER (
-                PARTITION BY booking_id
-                ORDER BY
-                    booking_is_used DESC
-            ) rank
-        FROM
-            `{{ bigquery_analytics_dataset }}`.applicative_database_booking AS booking
-            JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_stock AS stock ON stock.stock_id = booking.stock_id
-            JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offer AS offer ON offer.offer_id = stock.offer_id
-            AND offer.offer_subcategoryId = 'ACTIVATION_THING'
-        ORDER BY
-            user_id,
-            booking_is_used DESC
-    )
-    SELECT
-        user.user_id,
-        MAX(
-        CASE
-            WHEN experimentation_session.booking_is_used THEN 1
-            ELSE 2
-        END
-        ) as vague_experimentation
-        
-    FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_user AS user
-        LEFT JOIN experimentation_session ON experimentation_session.user_id = user.user_id
-    WHERE
-        user_role IN ('UNDERAGE_BENEFICIARY', 'BENEFICIARY')
-        AND (
-            rank = 1
-            OR rank is NULL
-        )
-    GROUP BY user.user_id
-),
 activation_dates AS (
     WITH ranked_bookings AS (
         SELECT
@@ -515,7 +476,7 @@ user_suspension_history AS (
     SELECT
         *,
         ROW_NUMBER() OVER (
-            PARTITION BY "userId"
+            PARTITION BY userId
             ORDER BY
                 CAST(id AS INTEGER) DESC
         ) AS rank
@@ -523,9 +484,7 @@ user_suspension_history AS (
         `{{ bigquery_analytics_dataset }}`.applicative_database_user_suspension
 )
 SELECT
-    DISTINCT
     user.user_id,
-    experimentation_sessions.vague_experimentation AS experimentation_session,
     user.user_department_code,
     user.user_postal_code,
     CASE
@@ -602,7 +561,6 @@ SELECT
     user.user_birth_date
 FROM
     `{{ bigquery_analytics_dataset }}`.applicative_database_user AS user
-    LEFT JOIN experimentation_sessions ON user.user_id = experimentation_sessions.user_id
     LEFT JOIN activation_dates ON user.user_id = activation_dates.user_id
     LEFT JOIN date_of_first_bookings ON user.user_id = date_of_first_bookings.user_id
     LEFT JOIN date_of_second_bookings ON user.user_id = date_of_second_bookings.user_id

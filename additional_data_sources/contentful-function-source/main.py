@@ -4,7 +4,6 @@ from google.cloud import bigquery
 from contentful_client import ContentfulClient
 from utils import (
     BIGQUERY_RAW_DATASET,
-    BIGQUERY_ANALYTICS_DATASET,
     GCP_PROJECT,
     ENV_SHORT_NAME,
 )
@@ -39,11 +38,30 @@ def run(request):
     Args:
         request (flask.Request): The request object.
     """
-    contentful_envs = {"prod": "production", "stg": "testing", "dev": "testing"}
-    contentful_client = ContentfulClient(env=contentful_envs[ENV_SHORT_NAME])
-    modules, links, tags = contentful_client.get_all_playlists()
-    save_raw_modules_to_bq(modules.drop_duplicates(), CONTENTFUL_ENTRIES_TABLE_NAME)
-    save_raw_modules_to_bq(links.drop_duplicates(), CONTENTFUL_RELATIONSHIPS_TABLE_NAME)
-    save_raw_modules_to_bq(tags.drop_duplicates(), CONTENTFUL_TAGS_TABLE_NAME)
+    contentful_envs = {
+        "prod": ["production"],
+        "stg": ["testing"],
+        "dev": ["testing"],
+    }
+    modules_dfs, links_dfs, tags_dfs = [], [], []
+    for contentful_env in contentful_envs[ENV_SHORT_NAME]:
+        contentful_client = ContentfulClient(env=contentful_env)
+        modules, links, tags = contentful_client.get_all_playlists()
+        modules_dfs.append(modules)
+        links_dfs.append(links)
+        tags_dfs.append(tags)
+
+    save_raw_modules_to_bq(
+        pd.concat(modules_dfs, ignore_index=True).drop_duplicates(),
+        CONTENTFUL_ENTRIES_TABLE_NAME,
+    )
+    save_raw_modules_to_bq(
+        pd.concat(links_dfs, ignore_index=True).drop_duplicates(),
+        CONTENTFUL_RELATIONSHIPS_TABLE_NAME,
+    )
+    save_raw_modules_to_bq(
+        pd.concat(tags_dfs, ignore_index=True).drop_duplicates(),
+        CONTENTFUL_TAGS_TABLE_NAME,
+    )
 
     return "Done"

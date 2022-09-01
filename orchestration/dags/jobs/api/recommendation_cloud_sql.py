@@ -27,6 +27,7 @@ from common.config import (
     BIGQUERY_CLEAN_DATASET,
     BIGQUERY_ANALYTICS_DATASET,
     ENV_SHORT_NAME,
+    QPI_TABLE,
 )
 from common.alerts import task_fail_slack_alert
 
@@ -128,7 +129,7 @@ with DAG(
         if table == "qpi_answers":
             filter_column_query = f"""
                 SELECT {select_columns}
-                FROM `{GCP_PROJECT}.{dataset}.{bigquery_table_name}_v3`
+                FROM `{GCP_PROJECT}.{dataset}.{QPI_TABLE}`
             """
         elif table == "firebase_events":
             filter_column_query = f"""SELECT {select_columns}
@@ -267,6 +268,7 @@ with DAG(
         CREATE INDEX IF NOT EXISTS qpi_answers_user_id                    ON public.qpi_answers                 USING btree (user_id);
         CREATE INDEX IF NOT EXISTS trained_users_mf_reco_user_id          ON public.trained_users_mf_reco       USING btree (user_id);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_enriched_user_mv            ON public.enriched_user_mv            USING btree (user_id);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_qpi_answers_mv              ON public.qpi_answers_mv              USING btree (user_id);
     """
 
     recreate_indexes_task = CloudSQLExecuteQueryOperator(
@@ -286,6 +288,7 @@ with DAG(
         "number_of_clicks_per_user",
         "number_of_favorites_per_user",
         "enriched_user_mv",
+        "qpi_answers_mv",
     ]
 
     refresh_materialized_view_tasks = []

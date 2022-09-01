@@ -96,6 +96,20 @@ last_stock AS (
         ) c
     WHERE
         c.rang_stock = 1
+),
+mediation AS (
+    SELECT 
+        offer_id, 
+        humanize_id(id) as mediation_humanized_id
+    FROM (
+        SELECT
+            id,
+            offerId as offer_id,
+            ROW_NUMBER() OVER (PARTITION BY offerId ORDER BY dateModifiedAtLastProvider DESC) as rnk
+        FROM `{{ bigquery_analytics_dataset }}.applicative_database_mediation`
+        WHERE isActive
+        ) inn
+    WHERE rnk = 1
 )
 SELECT
     offerer.offerer_id,
@@ -109,16 +123,14 @@ SELECT
     last_stock.last_stock_price,
     offer.offer_creation_date,
     offer.offer_is_duo,
-    offer.offer_is_educational,
     CASE
         WHEN (
             offer.offer_subcategoryId <> 'JEU_EN_LIGNE'
             AND offer.offer_subcategoryId <> 'JEU_SUPPORT_PHYSIQUE'
             AND offer.offer_subcategoryId <> 'ABO_JEU_VIDEO'
             AND offer.offer_subcategoryId <> 'ABO_LUDOTHEQUE'
-            AND NOT offer.offer_is_educational
             AND (
-                offer.offer_url IS NULL
+                offer.offer_url IS NULL -- not numerical
                 OR last_stock.last_stock_price = 0
                 OR subcategories.id = 'LIVRE_NUMERIQUE'
                 OR subcategories.id = 'ABO_LIVRE_NUMERIQUE'
@@ -181,6 +193,7 @@ SELECT
         '/edition'
     ) AS passculture_pro_url,
     CONCAT('https://passculture.app/offre/', offer.offer_id) AS webapp_url,
+    mediation.mediation_humanized_id,
     count_first_booking_view.first_booking_cnt,
     offer_tags.tag as offer_tag,
     offer_extracted_data.author,
@@ -225,5 +238,6 @@ FROM
     LEFT JOIN last_stock ON last_stock.offer_id = offer.offer_id
     LEFT JOIN `{{ bigquery_clean_dataset }}`.offer_extracted_data offer_extracted_data ON offer_extracted_data.offer_id = offer.offer_id
     LEFT JOIN `{{ bigquery_clean_dataset }}`.offer_tags offer_tags ON offer_tags.offer_id = offer.offer_id
+    LEFT JOIN mediation ON offer.offer_id = mediation.offer_id
 WHERE
     offer.offer_validation = 'APPROVED'

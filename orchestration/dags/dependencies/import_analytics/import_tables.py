@@ -46,6 +46,14 @@ def define_import_tables():
         "cashflow_batch": ["creationDate"],
         "cashflow_log": [""],
         "cashflow_pricing": [""],
+        "venue_pricing_point_link": [
+            "pricing_point_link_beginning_date",
+            "pricing_point_link_ending_date",
+        ],
+        "venue_reimbursement_point_link": [
+            "reimbursement_point_link_beginning_date",
+            "reimbursement_point_link_ending_date",
+        ],
         "pricing": ["creationDate", "valueDate"],
         "pricing_line": [""],
         "pricing_log": [""],
@@ -231,6 +239,24 @@ def define_import_query(
         FROM public.business_unit
     """
     cloudsql_queries[
+        "venue_pricing_point_link"
+    ] = """
+        SELECT
+            CAST("id" AS varchar(255)), CAST("venueId" AS varchar(255)) AS venue_id, CAST("pricingPointId" AS varchar(255)) AS pricing_point_id
+            , CAST(TRIM(BOTH \\'[") \\' FROM SPLIT_PART("timespan" :: text, \\',\\',1)) AS timestamp)  AS pricing_point_link_beginning_date
+            , CAST(NULLIF(TRIM(BOTH \\'[") \\' FROM SPLIT_PART("timespan" :: text, \\',\\',2)),\\'\\') AS timestamp)  AS pricing_point_link_ending_date
+        FROM public.venue_pricing_point_link
+    """
+    cloudsql_queries[
+        "venue_reimbursement_point_link"
+    ] = """
+        SELECT
+            CAST("id" AS varchar(255)), CAST("venueId" AS varchar(255)) AS venue_id, CAST("reimbursementPointId" AS varchar(255)) AS reimbursement_point_id
+            , CAST(TRIM(BOTH \\'[") \\' FROM SPLIT_PART("timespan" :: text, \\',\\',1)) AS timestamp)  AS reimbursement_point_link_beginning_date
+            , CAST(NULLIF(TRIM(BOTH \\'[") \\' FROM SPLIT_PART("timespan" :: text, \\',\\',2)),\\'\\') AS timestamp)  AS reimbursement_point_link_ending_date
+        FROM public.venue_reimbursement_point_link
+    """
+    cloudsql_queries[
         "cashflow"
     ] = """
         SELECT
@@ -299,7 +325,6 @@ def define_import_query(
             CAST("lastValidationType" AS varchar(255)) as offer_last_validation_type,
             CAST("subcategoryId" AS varchar(255)) as offer_subcategoryId,
             "dateUpdated" as offer_date_updated,
-            "isEducational" AS offer_is_educational, 
             "withdrawalType" AS offer_withdrawal_type,
             "withdrawalDelay" AS offer_withdrawal_delay
         FROM public.offer

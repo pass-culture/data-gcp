@@ -36,7 +36,6 @@ ENRICHED_OFFER_DATA_INPUT = {
             "offer_is_duo": False,
             "offer_fields_updated": "{}",
             "offer_validation": "APPROVED",
-            "offer_is_educational": False,
         },
         {
             "venue_id": "2",
@@ -52,7 +51,6 @@ ENRICHED_OFFER_DATA_INPUT = {
             "offer_is_duo": False,
             "offer_fields_updated": "{}",
             "offer_validation": "APPROVED",
-            "offer_is_educational": False,
         },
     ],
     "offer_extracted_data": [
@@ -294,6 +292,21 @@ ENRICHED_OFFER_DATA_INPUT = {
             "is_event": False,
         },
     ],
+    "applicative_database_mediation": [
+        {
+            "thumbCount": 0,
+            "idAtProviders": -1,
+            "dateModifiedAtLastProvider": "2018-11-20",
+            "id": "1234",
+            "dateCreated": "2018-11-20",
+            "authorId": "-1",
+            "lastProviderId": -1,
+            "offerId": "3",
+            "credit": "",
+            "isActive": True,
+            "fieldsUpdated": "2018-11-20",
+        }
+    ],
 }
 ENRICHED_OFFER_DATA_EXPECTED = [
     {
@@ -319,6 +332,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "offer_humanized_id": "AM",
         "passculture_pro_url": "https://passculture.pro/offres/AM/edition",
         "webapp_url": "https://passculture.app/offre/3",
+        "mediation_humanized_id": "ATJA",
         "first_booking_cnt": 1,
         "offer_tag": "none",
         "author": "Tarantino",
@@ -338,7 +352,6 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "countries": '["usa"]',
         "casting": "[]",
         "isbn": None,
-        "offer_is_educational": False,
         "offer_is_underage_selectable": True,
         "offer_is_bookable": False,
     },
@@ -365,6 +378,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "offer_humanized_id": "AQ",
         "passculture_pro_url": "https://passculture.pro/offres/AQ/edition",
         "webapp_url": "https://passculture.app/offre/4",
+        "mediation_humanized_id": None,
         "first_booking_cnt": None,
         "offer_tag": "none",
         "author": "Kevin Francois",
@@ -384,7 +398,6 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "countries": None,
         "casting": None,
         "isbn": None,
-        "offer_is_educational": False,
         "offer_is_underage_selectable": True,
         "offer_is_bookable": True,
     },
@@ -856,14 +869,12 @@ ENRICHED_USER_DATA_INPUT = {
     ],
 }
 
-# Test experimentation session should return 2 when user has unused activation booking
 # all date should return current date and seniority should return 0
 # booking_cnt and no_cancelled_booking should return 1 when user have only one booking and None or 0 for second or
 # third booking amount_spent_in_digital_goods should return the amount of the booking when the offer type is MUSIQUE
 ENRICHED_USER_DATA_EXPECTED = [
     {
         "user_id": "1",
-        "experimentation_session": 2,
         "user_department_code": "93",
         "user_postal_code": "93000",
         "user_activity": "Inactif (ni en emploi ni au chômage), En incapacité de travailler",

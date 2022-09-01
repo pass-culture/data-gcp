@@ -166,7 +166,7 @@ def create_condition(question_id, question_nb, qpi_form):
     )
 
 
-def enrich_answers(gcp_project, bigquery_clean_dataset):
+def enrich_answers(gcp_project, bigquery_clean_dataset, qpi_table):
     qpi_form = FORM.copy()
     if bigquery_clean_dataset == "clean_dev":
         qpi_form["QiK2FlxvTWtK"] = qpi_form["ge0Egr2m8V1T"]
@@ -192,7 +192,7 @@ def enrich_answers(gcp_project, bigquery_clean_dataset):
     return f"""
         WITH unrolled_answers as (
             SELECT * FROM (
-                select *, ROW_NUMBER() OVER() as row_id from `{gcp_project}.{bigquery_clean_dataset}.temp_qpi_answers_v3`
+                select *, ROW_NUMBER() OVER() as row_id from `{gcp_project}.{bigquery_clean_dataset}.temp_{qpi_table}`
             ) as qpi, qpi.answers as answers
         )
         SELECT max(user_id) as user_id, CAST(max(catch_up_user_id) AS STRING) as catch_up_user_id, max(submitted_at) as submitted_at,

@@ -19,7 +19,7 @@ ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
 
 API_URL = "https://www.demarches-simplifiees.fr/api/v2/graphql"
 demarches_jeunes = [47380, 47480]
-demarches_pro = [50362, 55475, 57081, 57189, 61589]
+demarches_pro = [50362, 55475, 57081, 57189, 61589, 62703]
 
 
 def access_secret_data(project_id, secret_id, version_id=1, default=None):

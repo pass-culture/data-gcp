@@ -74,13 +74,20 @@ firebase_module_events AS (
                 session_id
                 ORDER BY
                     event_timestamp RANGE BETWEEN UNBOUNDED PRECEDING
+                    AND CURRENT ROW
+            ),
+            FIRST_VALUE(e.entry_id IGNORE NULLS) OVER (
+                PARTITION BY user_id,
+                session_id
+                ORDER BY
+                    event_timestamp RANGE BETWEEN CURRENT ROW
                     AND UNBOUNDED FOLLOWING
             ),
             LAST_VALUE(e.entry_id IGNORE NULLS) OVER (
                 PARTITION BY module_id
                 ORDER BY
                     event_date RANGE BETWEEN UNBOUNDED PRECEDING
-                    AND UNBOUNDED FOLLOWING
+                    AND CURRENT ROW
             )
         ) AS home_id,
         -- take last seen module_id
@@ -92,13 +99,20 @@ firebase_module_events AS (
                 module_id
                 ORDER BY
                     event_timestamp RANGE BETWEEN UNBOUNDED PRECEDING
-                    AND UNBOUNDED FOLLOWING
+                    AND CURRENT ROW
+            ),
+            FIRST_VALUE(module_index IGNORE NULLS) OVER (
+                PARTITION BY user_id,
+                session_id,
+                module_id
+                ORDER BY
+                    event_timestamp RANGE BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING
             ),
             LAST_VALUE(module_index IGNORE NULLS) OVER (
                 PARTITION BY module_id
                 ORDER BY
                     event_date RANGE BETWEEN UNBOUNDED PRECEDING
-                    AND UNBOUNDED FOLLOWING
+                    AND CURRENT ROW
             )
         ) AS module_index
     FROM

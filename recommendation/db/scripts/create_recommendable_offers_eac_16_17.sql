@@ -77,6 +77,7 @@ RETURNS TABLE (offer_id varchar,
                 product_id varchar,
                 venue_id varchar,
                 subcategory_id VARCHAR,
+                search_group_name VARCHAR,
                 category VARCHAR,
                 name VARCHAR,
                 url VARCHAR,
@@ -95,6 +96,7 @@ BEGIN
             offer."venue_id"             AS venue_id,
             offer."offer_subcategoryId"  AS subcategory_id,
             subcategories.category_id    AS category,
+            subcategories.search_group_name AS search_group_name,
             offer.offer_name             AS name,
             offer.offer_url              AS url,
             offer."offer_is_national"    AS is_national,
@@ -152,9 +154,9 @@ WITH NO DATA;
 
 
 /* Populating the materialized view. */
-CREATE UNIQUE INDEX idx_offer_recommendable_16_17_id ON public.recommendable_offers_eac_16_17 USING btree (offer_id)
-CREATE INDEX idx_recommendable_offers_eac_16_17_venue_id ON public.recommendable_offers_eac_16_17 (venue_id);
-REFRESH MATERIALIZED VIEW recommendable_offers_eac_16_17;
+  CREATE UNIQUE INDEX idx_offer_recommendable_16_17_id ON public.recommendable_offers_eac_16_17 USING btree (offer_id)
+  CREATE INDEX idx_recommendable_offers_eac_16_17_venue_id ON public.recommendable_offers_eac_16_17 (venue_id);
+  REFRESH MATERIALIZED VIEW recommendable_offers_eac_16_17;
 /* Takes about 80 secondes with the indexes.*/
 
 

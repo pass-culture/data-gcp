@@ -188,7 +188,7 @@ def parse_result_pro(result, df_applications):
                 "instructors": "",
             }
 
-            if dossier["demandeur"]["siret"]:
+            if "siret" in dossier["demandeur"] and dossier["demandeur"]["siret"]:
                 dossier_line["demandeur_siret"] = dossier["demandeur"]["siret"]
                 dossier_line["demandeur_naf"] = dossier["demandeur"]["naf"]
                 dossier_line["demandeur_libelleNaf"] = dossier["demandeur"][

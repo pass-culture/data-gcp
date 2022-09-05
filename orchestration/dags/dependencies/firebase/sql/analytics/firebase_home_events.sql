@@ -48,6 +48,7 @@ firebase_events AS (
             OR origin IS NULL
         )
         AND event_date >= DATE('{{ add_days(ds, -3) }}')
+        AND event_date <= DATE('{{ add_days(ds, 3) }}')
 ),
 firebase_module_events AS (
     SELECT
@@ -75,6 +76,13 @@ firebase_module_events AS (
                     event_timestamp RANGE BETWEEN UNBOUNDED PRECEDING
                     AND CURRENT ROW
             ),
+            FIRST_VALUE(e.entry_id IGNORE NULLS) OVER (
+                PARTITION BY user_id,
+                session_id
+                ORDER BY
+                    event_timestamp RANGE BETWEEN CURRENT ROW
+                    AND UNBOUNDED FOLLOWING
+            ),
             LAST_VALUE(e.entry_id IGNORE NULLS) OVER (
                 PARTITION BY module_id
                 ORDER BY
@@ -92,6 +100,13 @@ firebase_module_events AS (
                 ORDER BY
                     event_timestamp RANGE BETWEEN UNBOUNDED PRECEDING
                     AND CURRENT ROW
+            ),
+            FIRST_VALUE(module_index IGNORE NULLS) OVER (
+                PARTITION BY user_id,
+                session_id,
+                module_id
+                ORDER BY
+                    event_timestamp RANGE BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING
             ),
             LAST_VALUE(module_index IGNORE NULLS) OVER (
                 PARTITION BY module_id
@@ -142,6 +157,7 @@ firebase_conversion_step AS (
         )
         AND conv.event_timestamp > event.event_timestamp
         AND conv.event_date >= DATE('{{ add_days(ds, -3) }}')
+        AND conv.event_date <= DATE('{{ add_days(ds, 3) }}')
 ),
 event_union AS (
     SELECT

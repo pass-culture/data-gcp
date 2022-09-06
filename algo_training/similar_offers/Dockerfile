@@ -14,8 +14,7 @@ COPY ./app /app
 COPY ./app/model/* /app/model/
 COPY ./app/model/sim_offers.ann ./app/model/
 COPY ./app/model/tf_reco/* /app/model/tf_reco/
-COPY ./app/model/tf_reco/model/* /app/model/tf_reco/model/
-COPY ./app/model/tf_reco/model/variables/* /app/model/tf_reco/model/variables/
+COPY ./app/model/tf_reco/variables/* /app/model/tf_reco/variables/
 # launch server with gunicorn
 WORKDIR /app
 EXPOSE 8080

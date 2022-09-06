@@ -114,12 +114,10 @@ def train(storage_path: str):
                     (best_eval - eval_result) / best_eval
                 ) < LOSS_CUTOFF and runned_epochs != 1:
                     mlflow.log_param("Exit Epoch", runned_epochs)
-                    tf.keras.models.save_model(
-                        match_model, f"{SIMILAR_OFFERS_DIR}/model/tf_reco"
-                    )
                     break
                 else:
                     best_eval = eval_result
+        tf.keras.models.save_model(match_model, f"{SIMILAR_OFFERS_DIR}/model/tf_reco")
         connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
         mlflow.log_artifacts(export_path, "model")
         remove_dir(export_path)

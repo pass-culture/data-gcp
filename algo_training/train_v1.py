@@ -19,9 +19,11 @@ from utils import (
     ENV_SHORT_NAME,
     BOOKING_DAY_NUMBER,
     EXPERIMENT_NAME,
+    TRAIN_DIR,
+    SIMILAR_OFFERS_DIR,
 )
 
-TRAIN_DIR = "/home/airflow/train"
+
 EMBEDDING_SIZE = 64
 L2_REG = 0
 N_EPOCHS = 20 if ENV_SHORT_NAME == "prod" else 10
@@ -112,6 +114,9 @@ def train(storage_path: str):
                     (best_eval - eval_result) / best_eval
                 ) < LOSS_CUTOFF and runned_epochs != 1:
                     mlflow.log_param("Exit Epoch", runned_epochs)
+                    tf.keras.models.save_model(
+                        match_model, f"{SIMILAR_OFFERS_DIR}/model/tf_reco/"
+                    )
                     break
                 else:
                     best_eval = eval_result

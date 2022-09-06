@@ -9,13 +9,13 @@ from pcreco.utils.db.db_connection import create_db_connection
 from pcreco.core.user import User
 from pcreco.core.scoring import Scoring
 from pcreco.models.reco.recommendation import RecommendationIn
-
+from pcreco.core.utils.vertex_ai import predict_custom_trained_model_sample
 from pcreco.utils.env_vars import AB_TESTING, log_duration
 import uuid
 import time
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
-
+ENDPOINT_ID_SIM_OFFERS = "295416848384"
 API_TOKEN_SECRET_ID = os.environ.get("API_TOKEN_SECRET_ID")
 API_TOKEN_SECRET_VERSION = os.environ.get("API_TOKEN_SECRET_VERSION")
 
@@ -155,6 +155,28 @@ def playlist_recommendation(user_id: int):
                 "filtered": applied_filters,
                 "call_id": call_id,
             },
+        }
+    )
+
+
+@app.route("/offres_similaires/", methods=["POST"])
+def offres_similaires(offer_id: int):
+    if request.args.get("token", None) != API_TOKEN:
+        return "Forbidden", 403
+    post_args_json = request.get_json() if request.method == "POST" else None
+
+    response = predict_custom_trained_model_sample(
+        project=GCP_PROJECT,
+        endpoint_id=ENDPOINT_ID_SIM_OFFERS,
+        location="europe-west1",
+        instances=post_args_json,
+    )
+    print(response)
+    return jsonify(
+        {
+            "offres_similaires": response["predictions"],
+            "model_version_id": response["model_version_id"],
+            "model_display_name": response["model_display_name"],
         }
     )
 

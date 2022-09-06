@@ -249,6 +249,38 @@ with DAG(
         dag=dag,
     )
 
+    TRAIN_SIM_OFFERS_COMMAND = f""" '{DEFAULT}
+    python train_similar_offers.py'
+    """
+
+    train_sim_offers = BashOperator(
+        task_id="train_sim_offers",
+        bash_command=f"""
+        gcloud compute ssh {GCE_INSTANCE} \
+        --zone {GCE_ZONE} \
+        --project {GCP_PROJECT_ID} \
+        --command {TRAIN_SIM_OFFERS_COMMAND}
+        """,
+        dag=dag,
+    )
+
+    DEPLOY_SIM_OFFERS_COMMAND = f""" '{DEFAULT}
+    cd ./similar_offers
+    export API_FOCKER_IMAGE=eu.gcr.io/{GCP_PROJECT_ID}/offres-similaires-api:{ENV_SHORT_NAME}-ready
+    source deploy_to_VertexAI.sh'
+    """
+
+    deploy_sim_offers = BashOperator(
+        task_id="deploy_sim_offers",
+        bash_command=f"""
+        gcloud compute ssh {GCE_INSTANCE} \
+        --zone {GCE_ZONE} \
+        --project {GCP_PROJECT_ID} \
+        --command {DEPLOY_SIM_OFFERS_COMMAND}
+        """,
+        dag=dag,
+    )
+
     """
     list_model_versions = BashOperator(
         task_id="list_model_versions",
@@ -343,6 +375,8 @@ with DAG(
         >> evaluate
         >> deploy_model
         >> clean_versions
+        >> train_sim_offers
+        >> deploy_sim_offers
         >> gce_instance_stop
         >> send_slack_notif_success
     )

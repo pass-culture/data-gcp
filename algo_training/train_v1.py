@@ -115,7 +115,7 @@ def train(storage_path: str):
                 ) < LOSS_CUTOFF and runned_epochs != 1:
                     mlflow.log_param("Exit Epoch", runned_epochs)
                     tf.keras.models.save_model(
-                        match_model, f"{SIMILAR_OFFERS_DIR}/model/tf_reco/"
+                        match_model, f"{SIMILAR_OFFERS_DIR}/model/tf_reco"
                     )
                     break
                 else:

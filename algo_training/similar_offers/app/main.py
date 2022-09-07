@@ -23,7 +23,7 @@ class AnnModel(Model):
     def _get_offer_ann_idx(self, input_offer_id):
         if input_offer_id in self.item_lookup:
             return self.item_lookup[input_offer_id]
-        else :
+        else:
             return None
 
     def predict(self, input_offer_id):

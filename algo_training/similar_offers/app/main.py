@@ -37,7 +37,7 @@ ann_path = "./model/sim_offers.ann"
 AnnIndex.load(ann_path)
 
 # Load item_ids
-tf_reco = tf.keras.models.load_model("./model/tf_reco/model")
+tf_reco = tf.keras.models.load_model("./model/tf_reco/")
 item_list_model = tf_reco.item_layer.layers[0].get_vocabulary()
 
 # Define AnnModel

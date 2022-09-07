@@ -289,7 +289,7 @@ class Scoring:
                 cold_start_query,
                 user_id=str(self.user.id),
             ).fetchall()
-            
+
             if len(query_result) == 0:
                 return []
             cold_start_categories = [res[0] for res in query_result]

@@ -1,6 +1,6 @@
 from annoy import AnnoyIndex
 import tensorflow as tf
-from utils import  SIMILAR_OFFERS_DIR
+from utils import SIMILAR_OFFERS_DIR
 
 model_A = tf.keras.models.load_model(f"{SIMILAR_OFFERS_DIR}/model/tf_reco")
 embedding_item_model = model_A.item_layer.layers[1].get_weights()
@@ -10,5 +10,5 @@ a = AnnoyIndex(64, "euclidean")
 for index, vector in enumerate(embedding_item_model[0].tolist()):
     a.add_item(index, vector)
 a.build(-1)
-ann_path=f"{SIMILAR_OFFERS_DIR}/model/sim_offers.ann"
+ann_path = f"{SIMILAR_OFFERS_DIR}/model/sim_offers.ann"
 a.save(ann_path)

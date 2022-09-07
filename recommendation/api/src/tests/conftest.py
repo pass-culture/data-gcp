@@ -162,7 +162,7 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
                 "LIVRE_PAPIER",
                 "LIVRE_PAPIER",
             ],
-            "catch_up_user_id": [None,None, None, None, None],
+            "catch_up_user_id": [None, None, None, None, None],
         }
     )
     qpi_answers.to_sql("qpi_answers_mv", con=engine, if_exists="replace")

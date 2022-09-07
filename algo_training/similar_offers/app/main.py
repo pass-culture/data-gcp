@@ -20,10 +20,18 @@ class AnnModel(Model):
         self.item_lookup = offer_dict
         self.ann = ann
 
+    def _get_offer_ann_idx(self, input_offer_id):
+        if input_offer_id in self.item_lookup:
+            return self.item_lookup[input_offer_id]
+        else :
+            return None
+
     def predict(self, input_offer_id):
-        offer_id_idx = self.item_lookup[input_offer_id]
-        nn_offer_ids = self._get_nn_offer_ids(offer_id_idx)
-        return nn_offer_ids
+        offer_id_idx = self._get_offer_ann_idx(input_offer_id)
+        if offer_id_idx:
+            return self._get_nn_offer_ids(offer_id_idx)
+        else:
+            return []
 
     def _get_nn_offer_ids(self, x):
         nn_idx = self.ann.get_nns_by_item(x, 10)

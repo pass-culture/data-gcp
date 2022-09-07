@@ -11,6 +11,7 @@ RUN mkdir /app
 
 # Copy local code to the container
 COPY ./app /app
+COPY ./app/utils.py /app/utils.py
 COPY ./app/model/* /app/model/
 COPY ./app/model/sim_offers.ann ./app/model/
 COPY ./app/model/tf_reco/* /app/model/tf_reco/

@@ -33,11 +33,11 @@ class AnnModel(Model):
 
 # Load model
 AnnIndex = AnnoyIndex(64, "euclidean")
-ann_path = f"{SIMILAR_OFFERS_DIR}/model/sim_offers.ann"
+ann_path = "./model/sim_offers.ann"
 AnnIndex.load(ann_path)
 
 # Load item_ids
-tf_reco = tf.keras.models.load_model(f"{SIMILAR_OFFERS_DIR}/model/tf_reco/model")
+tf_reco = tf.keras.models.load_model("./model/tf_reco/model")
 item_list_model = tf_reco.item_layer.layers[0].get_vocabulary()
 
 # Define AnnModel

@@ -11,4 +11,5 @@ for index, vector in enumerate(embedding_item_model[0].tolist()):
     a.add_item(index, vector)
 a.build(-1)
 ann_path = f"{SIMILAR_OFFERS_DIR}/model/sim_offers.ann"
+print("ann_path: ", ann_path)
 a.save(ann_path)

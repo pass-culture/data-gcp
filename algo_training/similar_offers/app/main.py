@@ -33,7 +33,8 @@ class AnnModel(Model):
 
 # Load model
 AnnIndex = AnnoyIndex(64, "euclidean")
-AnnIndex.load(f"{SIMILAR_OFFERS_DIR}/model/sim_offers.ann")
+ann_path = f"{SIMILAR_OFFERS_DIR}/model/sim_offers.ann"
+AnnIndex.load(ann_path)
 
 # Load item_ids
 tf_reco = tf.keras.models.load_model(f"{SIMILAR_OFFERS_DIR}/model/tf_reco/model")

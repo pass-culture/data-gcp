@@ -293,5 +293,5 @@ class Scoring:
             cold_start_categories = []
             if len(query_result) == 0:
                 return []
-            cold_start_categories.extend(query_result[0])
+            cold_start_categories.extend(query_result)
             return list(set(cold_start_categories))

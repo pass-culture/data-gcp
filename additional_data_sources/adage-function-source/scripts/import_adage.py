@@ -41,12 +41,12 @@ else:
     API_KEY = access_secret(project_name, "adage_import_api_key_prod")
 
 
-def get_partenaire_culturel(ENDPOINT, API_KEY):
+def get_request(ENDPOINT, API_KEY, route):
     try:
         headers = {"X-omogen-api-key": API_KEY}
 
         req = requests.get(
-            "{}/partenaire-culturel".format(ENDPOINT),
+            "{}/{}".format(ENDPOINT, route),
             headers=headers,
         )
         if req.status_code == 200:
@@ -55,25 +55,6 @@ def get_partenaire_culturel(ENDPOINT, API_KEY):
     except Exception as e:
         print("An unexpected error has happened {}".format(e))
     return None
-
-
-def get_data_adage():
-    datas = get_partenaire_culturel(ENDPOINT, API_KEY)
-    keys = ",".join(list(datas[0].keys()))
-    values = ", ".join(
-        [
-            "({})".format(
-                " , ".join(
-                    [
-                        "'{}'".format(d[k]) if d[k] is not None else "NULL"
-                        for k in list(d.keys())
-                    ]
-                )
-            )
-            for d in datas
-        ]
-    )
-    return keys, values
 
 
 def create_adage_table():

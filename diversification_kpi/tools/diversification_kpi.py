@@ -26,7 +26,9 @@ def calculate_diversification_per_feature(df_clean, features):
 
     for i in range(0, len(df_clean)):
         booking = df_clean.iloc[i]
-
+        user_qpi_subcategories = [
+            qpi["subcategories"] for qpi in df_clean.qpi_subcategories
+        ]
         for feature in features:
 
             feature_value = booking[feature]
@@ -101,7 +103,8 @@ def calculate_diversification_per_feature(df_clean, features):
         qpi_diversification = 0
         if not qpi_point_given:
             subcat = booking["subcategory"]
-            if subcat in df_clean.columns:
+
+            if subcat in user_qpi_subcategories:
                 if not pd.isna(booking[subcat]):
                     if not booking[subcat]:
                         qpi_point_given = True

@@ -3,11 +3,14 @@ from scripts.utils import (
     ENV_SHORT_NAME,
     BIGQUERY_ANALYTICS_DATASET,
     BUCKET_NAME,
+    save_to_raw_bq,
 )
+
 from google.cloud import secretmanager
 from google.auth.exceptions import DefaultCredentialsError
 import requests
 import os
+import pandas as pd
 
 
 def get_endpoint():
@@ -158,3 +161,36 @@ def adding_value():
                                  academieLibelle,
                                  regionLibelle,
                                  domaines)"""
+
+
+def get_adage_stats():
+    stats_dict = {
+        "departements": "departement",
+        "academies": "academie",
+        "regions": "region",
+    }
+    adage_ids = [7, 8]
+
+    export = []
+    for _id in adage_ids:
+
+        results = get_request(ENDPOINT, API_KEY, route=f"stats-pass-culture/{_id}")
+        for metric_name, rows in results.items():
+            for metric_id, v in rows.items():
+                export.append(
+                    dict(
+                        {
+                            "metric_name": metric_name,
+                            "metric_id": metric_id,
+                            "adage_id": _id,
+                            "metric_key": v[stats_dict[metric_name]],
+                            "student": v["eleves"],
+                            "institution": v["etabs"],
+                            "total_student": v["totalEleves"],
+                            "total_institution": v["totalEtabs"],
+                        },
+                    )
+                )
+
+    df = pd.DataFrame(export)
+    save_to_raw_bq(df, "adage_eple_stats")

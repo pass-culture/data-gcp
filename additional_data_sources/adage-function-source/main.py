@@ -1,13 +1,14 @@
 from scripts.import_adage import (
     create_adage_table,
     get_request,
+    get_adage_stats,
     adding_value,
     ENDPOINT,
     API_KEY,
 )
 from google.cloud import bigquery
 import pandas as pd
-from scripts.utils import GCP_PROJECT, BIGQUERY_ANALYTICS_DATASET, save_to_raw_bq
+from scripts.utils import GCP_PROJECT, BIGQUERY_ANALYTICS_DATASET
 from datetime import datetime
 
 
@@ -23,25 +24,6 @@ def run(request):
     )
     client.query(adding_value()).result()
 
-    adage_ids = [7, 8]
-
-    export = []
-    for _id in adage_ids:
-
-        results = get_request(ENDPOINT, API_KEY, route=f"stats-pass-culture/{_id}")
-
-        for k, v in results.items():
-            export.append(
-                dict(
-                    {
-                        "academie_id": k,
-                        "adage_id": _id,
-                    },
-                    **v,
-                )
-            )
-
-    df = pd.DataFrame(export)
-    save_to_raw_bq(df, "adage_eple_stats")
+    get_adage_stats()
 
     return "Success"

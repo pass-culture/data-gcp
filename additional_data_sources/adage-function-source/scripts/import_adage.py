@@ -182,15 +182,15 @@ def get_adage_stats():
                         {
                             "metric_name": metric_name,
                             "metric_id": metric_id,
-                            "adage_id": _id,
+                            "educational_year_adage_id": _id,
                             "metric_key": v[stats_dict[metric_name]],
-                            "student": v["eleves"],
-                            "institution": v["etabs"],
-                            "total_student": v["totalEleves"],
-                            "total_institution": v["totalEtabs"],
+                            "involved_students": v["eleves"],
+                            "institutions": v["etabs"],
+                            "total_involved_students": v["totalEleves"],
+                            "total_institutions": v["totalEtabs"],
                         },
                     )
                 )
 
     df = pd.DataFrame(export)
-    save_to_raw_bq(df, "adage_eple_stats")
+    save_to_raw_bq(df, "adage_involved_student")

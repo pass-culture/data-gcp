@@ -86,6 +86,7 @@ def get_rayon():
 
 
 def diversification_kpi(df):
+    print("Starting diversification kpi....")
     df_clean = df.rename(columns={"venue_id": "venue"})
     features = ["category", "subcategory", "format", "venue", "macro_rayon"]
     divers_per_feature = calculate_diversification_per_feature(df_clean, features)
@@ -103,6 +104,7 @@ def diversification_kpi(df):
     df_clean = pd.merge(
         df_clean, pd.DataFrame(divers_col), left_index=True, right_index=True
     )
+    print("END diversification kpi")
     return df_clean
 
 

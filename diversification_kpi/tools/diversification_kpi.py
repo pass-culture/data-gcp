@@ -24,14 +24,18 @@ def calculate_diversification_per_feature(df_clean, features):
         divers_per_feature[feature] = []
     divers_per_feature["qpi_diversification"] = []
     divers_per_feature["delta_diversification"] = []
-    print("len(df_clean): ",len(df_clean))
+    print("len(df_clean): ", len(df_clean))
     for i in range(0, len(df_clean)):
         booking = df_clean.iloc[i]
-        user_qpi_subcategories = [
-            qpi["subcategories"] for qpi in df_clean.qpi_subcategories
-        ]
+        if booking["qpi_subcategories"]:
+            user_qpi_subcategories = [
+                qpi["subcategories"] for qpi in booking["qpi_subcategories"]
+            ]
+        else:
+            print("No QPI subcategories")
+            user_qpi_subcategories = []
         for feature in features:
-            print(f'On going feature: {feature}')
+            print(f"On going feature: {feature}")
             feature_value = booking[feature]
             multiplicator = 1
 

@@ -5,7 +5,7 @@ def enrich_answers(gcp_project, bigquery_clean_dataset, qpi_table):
 
     return f"""
         with base as (
-            SELECT * FROM (select * from `{gcp_project}.{bigquery_clean_dataset}.temp_{qpi_table}`) as qpi, qpi.answers as answers
+            SELECT * FROM (select * from `{gcp_project}.{bigquery_clean_dataset}.{qpi_table}`) as qpi, qpi.answers as answers
         ),
         unnested_base as (
         SELECT user_id,unnested AS answer_ids

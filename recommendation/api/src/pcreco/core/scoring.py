@@ -280,9 +280,8 @@ class Scoring:
             return cold_start_recommendations
 
         def get_cold_start_categories(self) -> List[str]:
-            qpi_answers_categories = list(MACRO_CATEGORIES_TYPE_MAPPING.keys())
             cold_start_query = text(
-                f"""SELECT {'"' + '","'.join(qpi_answers_categories) + '"'} FROM qpi_answers_mv WHERE user_id = :user_id;"""
+                f"""SELECT subcategories FROM qpi_answers_mv WHERE user_id = :user_id;"""
             )
 
             connection = get_db()
@@ -291,14 +290,7 @@ class Scoring:
                 user_id=str(self.user.id),
             ).fetchall()
 
-            cold_start_categories = []
             if len(query_result) == 0:
                 return []
-            for category_index, category in enumerate(query_result[0]):
-                if category:
-                    cold_start_categories.extend(
-                        MACRO_CATEGORIES_TYPE_MAPPING[
-                            qpi_answers_categories[category_index]
-                        ]
-                    )
-            return list(set(cold_start_categories))
+            cold_start_categories = [res[0] for res in query_result]
+            return cold_start_categories

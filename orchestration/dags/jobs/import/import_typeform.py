@@ -26,9 +26,8 @@ from common.config import (
     BIGQUERY_ANALYTICS_DATASET,
     ENV_SHORT_NAME,
 )
-from dependencies.typeform.enriched_qpi_answers_v2 import (
+from dependencies.typeform.enriched_qpi_answers_v4 import (
     enrich_answers,
-    format_answers,
 )
 
 TYPEFORM_FUNCTION_NAME = "qpi_import_" + ENV_SHORT_NAME
@@ -143,20 +142,8 @@ with DAG(
             qpi_table=QPI_ANSWERS_TABLE,
         ),
         use_legacy_sql=False,
-        destination_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_ANALYTICS_DATASET}.enriched_{QPI_ANSWERS_TABLE}_temp",
+        destination_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_ANALYTICS_DATASET}.enriched_{QPI_ANSWERS_TABLE}",
         write_disposition="WRITE_TRUNCATE",
-        trigger_rule="none_failed_or_skipped",
-    )
-
-    format_qpi_answers = PythonOperator(
-        task_id="format_qpi_answers",
-        python_callable=format_answers,
-        op_kwargs={
-            "gcp_project": GCP_PROJECT,
-            "bigquery_analytics_dataset": BIGQUERY_ANALYTICS_DATASET,
-            "enriched_qpi_answer_table": f"enriched_{QPI_ANSWERS_TABLE}",
-        },
-        dag=dag,
         trigger_rule="none_failed_or_skipped",
     )
 
@@ -165,14 +152,16 @@ with DAG(
         sql=f"""
             with base as (
                 SELECT *,
-                ROW_NUMBER() OVER (PARTITION BY user_id,"ABO_BIBLIOTHEQUE" order by submitted_at DESC) row_number
-                FROM `{GCP_PROJECT}:{BIGQUERY_CLEAN_DATASET}.enriched_{QPI_ANSWERS_TABLE}`
+                ROW_NUMBER() OVER (PARTITION BY user_id,subcategories order by subcategories DESC) row_number
+                FROM `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_{QPI_ANSWERS_TABLE}`
             )
             select * except(row_number) from base 
             where row_number=1
+            and subcategories is not null 
+            and subcategories <> ""
             """,
         use_legacy_sql=False,
-        destination_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_CLEAN_DATASET}.enriched_{QPI_ANSWERS_TABLE}",
+        destination_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_ANALYTICS_DATASET}.enriched_{QPI_ANSWERS_TABLE}",
         write_disposition="WRITE_TRUNCATE",
         trigger_rule="none_failed_or_skipped",
     )
@@ -189,7 +178,6 @@ with DAG(
         >> add_temp_answers_to_clean
         >> delete_temp_answer_table_raw
         >> enrich_qpi_answers
-        >> format_qpi_answers
         >> clean_answers_duplicates
         >> end
     )

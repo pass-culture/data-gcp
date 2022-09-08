@@ -146,17 +146,17 @@ LANGUAGE plpgsql;
 
 
 /* Creation of the materialized view. */
-DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_eac_16_17_bckp;
-CREATE MATERIALIZED VIEW IF NOT EXISTS recommendable_offers_eac_16_17_bckp AS
+DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_eac_16_17;
+CREATE MATERIALIZED VIEW IF NOT EXISTS recommendable_offers_eac_16_17 AS
 SELECT * FROM get_recommendable_offers_eac_16_17()
 WITH NO DATA;
 
 
 
 /* Populating the materialized view. */
-  CREATE UNIQUE INDEX idx_offer_recommendable_16_17_id_bckp ON public.recommendable_offers_eac_16_17_bckp USING btree (offer_id);
-  CREATE INDEX idx_recommendable_offers_eac_16_17_venue_id_bckp ON public.recommendable_offers_eac_16_17_bckp (venue_id);
-  REFRESH MATERIALIZED VIEW recommendable_offers_eac_16_17_bckp;
+  CREATE UNIQUE INDEX idx_offer_recommendable_16_17_id ON public.recommendable_offers_eac_16_17 USING btree (offer_id);
+  CREATE INDEX idx_recommendable_offers_eac_16_17_venue_id ON public.recommendable_offers_eac_16_17 (venue_id);
+  REFRESH MATERIALIZED VIEW recommendable_offers_eac_16_17;
 /* Takes about 80 secondes with the indexes.*/
 
 

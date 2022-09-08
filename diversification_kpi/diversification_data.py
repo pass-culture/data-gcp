@@ -113,7 +113,9 @@ def process_diversification(batch_number):
     bookings_sorted = bookings_enriched.sort_values(
         by=["user_id", "booking_creation_date"], ignore_index=True
     )
+    print("len(bookings_sorted): ", len(bookings_sorted))
     df = diversification_kpi(bookings_sorted)
+    print("len(df): ", len(df))
     df = df[
         [
             "user_id",

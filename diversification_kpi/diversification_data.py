@@ -86,7 +86,6 @@ def get_rayon():
 
 
 def diversification_kpi(df):
-    print("Starting diversification kpi....")
     df_clean = df.rename(columns={"venue_id": "venue"})
     features = ["category", "subcategory", "format", "venue", "macro_rayon"]
     divers_per_feature = calculate_diversification_per_feature(df_clean, features)
@@ -104,7 +103,6 @@ def diversification_kpi(df):
     df_clean = pd.merge(
         df_clean, pd.DataFrame(divers_col), left_index=True, right_index=True
     )
-    print("END diversification kpi")
     return df_clean
 
 
@@ -115,9 +113,7 @@ def process_diversification(batch_number):
     bookings_sorted = bookings_enriched.sort_values(
         by=["user_id", "booking_creation_date"], ignore_index=True
     )
-    print("len(bookings_sorted): ", len(bookings_sorted))
     df = diversification_kpi(bookings_sorted)
-    print("len(df): ", len(df))
     df = df[
         [
             "user_id",

@@ -46,10 +46,12 @@ def get_data(batch, batch_size):
                 
                 
                 qpi_answers AS (
-                  SELECT * except(row_number)
-                  FROM ( select *, ROW_NUMBER() OVER (PARTITION BY user_id) as row_number
-                    FROM `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_qpi_answers_v3` ) 
-                  WHERE row_number=1)
+                    SELECT 
+                    user_id,
+                    ARRAY_AGG(STRUCT(subcategories) ORDER BY subcategories DESC) as qpi_subcategories  
+                    FROM `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_qpi_answers_v4` 
+                    group by user_id
+                    )
                 
                 
                 SELECT batch_users.user_id, bookings.booking_creation_date, bookings.booking_id, user_region_name, user_activity,
@@ -61,7 +63,7 @@ def get_data(batch, batch_size):
                   ) as format,
                   user_deposit_creation_date, user_total_deposit_amount, actual_amount_spent, offer.offer_id, booking_amount, user_department_code,
                   bookings.offer_category_id as category, bookings.offer_subcategoryId as subcategory, offer.genres, offer.rayon, offer.type, offer.venue_id, offer.venue_name,
-                  qpi_answers.*
+                  qpi_answers.qpi_subcategories as qpi_subcategories
                 FROM batch_users
                 INNER JOIN bookings
                 ON batch_users.user_id = bookings.user_id

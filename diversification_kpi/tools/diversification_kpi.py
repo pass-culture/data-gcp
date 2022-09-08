@@ -16,6 +16,7 @@ def add_feature_if_feature_not_booked(list_used, feature_value):
 
 
 def calculate_diversification_per_feature(df_clean, features):
+    print("Starting calculate_diversification_per_feature....")
     divers_per_feature = {}
     list_per_feature = {}
     list_per_feature_free = {}
@@ -23,14 +24,14 @@ def calculate_diversification_per_feature(df_clean, features):
         divers_per_feature[feature] = []
     divers_per_feature["qpi_diversification"] = []
     divers_per_feature["delta_diversification"] = []
-
+    print("len(df_clean): ",len(df_clean))
     for i in range(0, len(df_clean)):
         booking = df_clean.iloc[i]
         user_qpi_subcategories = [
             qpi["subcategories"] for qpi in df_clean.qpi_subcategories
         ]
         for feature in features:
-
+            print(f'On going feature: {feature}')
             feature_value = booking[feature]
             multiplicator = 1
 
@@ -98,7 +99,7 @@ def calculate_diversification_per_feature(df_clean, features):
                     )
 
             divers_per_feature[feature].append(div * multiplicator)
-
+        print("End loop on features")
         # QPI
         qpi_diversification = 0
         if not qpi_point_given:
@@ -121,5 +122,5 @@ def calculate_diversification_per_feature(df_clean, features):
                 + qpi_diversification
             )
         divers_per_feature["delta_diversification"].append(delta_div)
-
+    print("End calculate_diversification_per_feature")
     return divers_per_feature

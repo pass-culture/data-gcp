@@ -3,11 +3,14 @@ from scripts.utils import (
     ENV_SHORT_NAME,
     BIGQUERY_ANALYTICS_DATASET,
     BUCKET_NAME,
+    save_to_raw_bq,
 )
+
 from google.cloud import secretmanager
 from google.auth.exceptions import DefaultCredentialsError
 import requests
 import os
+import pandas as pd
 
 
 def get_endpoint():
@@ -41,12 +44,12 @@ else:
     API_KEY = access_secret(project_name, "adage_import_api_key_prod")
 
 
-def get_partenaire_culturel(ENDPOINT, API_KEY):
+def get_request(ENDPOINT, API_KEY, route):
     try:
         headers = {"X-omogen-api-key": API_KEY}
 
         req = requests.get(
-            "{}/partenaire-culturel".format(ENDPOINT),
+            "{}/{}".format(ENDPOINT, route),
             headers=headers,
         )
         if req.status_code == 200:
@@ -55,25 +58,6 @@ def get_partenaire_culturel(ENDPOINT, API_KEY):
     except Exception as e:
         print("An unexpected error has happened {}".format(e))
     return None
-
-
-def get_data_adage():
-    datas = get_partenaire_culturel(ENDPOINT, API_KEY)
-    keys = ",".join(list(datas[0].keys()))
-    values = ", ".join(
-        [
-            "({})".format(
-                " , ".join(
-                    [
-                        "'{}'".format(d[k]) if d[k] is not None else "NULL"
-                        for k in list(d.keys())
-                    ]
-                )
-            )
-            for d in datas
-        ]
-    )
-    return keys, values
 
 
 def create_adage_table():
@@ -177,3 +161,36 @@ def adding_value():
                                  academieLibelle,
                                  regionLibelle,
                                  domaines)"""
+
+
+def get_adage_stats():
+    stats_dict = {
+        "departements": "departement",
+        "academies": "academie",
+        "regions": "region",
+    }
+    adage_ids = [7, 8]
+
+    export = []
+    for _id in adage_ids:
+
+        results = get_request(ENDPOINT, API_KEY, route=f"stats-pass-culture/{_id}")
+        for metric_name, rows in results.items():
+            for metric_id, v in rows.items():
+                export.append(
+                    dict(
+                        {
+                            "metric_name": metric_name,
+                            "metric_id": metric_id,
+                            "educational_year_adage_id": _id,
+                            "metric_key": v[stats_dict[metric_name]],
+                            "involved_students": v["eleves"],
+                            "institutions": v["etabs"],
+                            "total_involved_students": v["totalEleves"],
+                            "total_institutions": v["totalEtabs"],
+                        },
+                    )
+                )
+
+    df = pd.DataFrame(export)
+    save_to_raw_bq(df, "adage_involved_student")

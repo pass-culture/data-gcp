@@ -13,7 +13,7 @@ from dependencies.contentful.import_contentful import contentful_tables
 
 
 from common.utils import depends_loop, getting_service_account_token
-
+from common.operator import bigquery_job_task
 from common.alerts import task_fail_slack_alert
 
 from common import macros
@@ -66,27 +66,7 @@ start = DummyOperator(task_id="start", dag=dag)
 
 table_jobs = {}
 for table, job_params in contentful_tables.items():
-
-    task = BigQueryInsertJobOperator(
-        task_id=table,
-        configuration={
-            "query": {
-                "query": "{% include '" + job_params["sql"] + "' %}",
-                "useLegacySql": False,
-                "destinationTable": {
-                    "projectId": GCP_PROJECT,
-                    "datasetId": job_params["destination_dataset"],
-                    "tableId": job_params["destination_table"],
-                },
-                "writeDisposition": "WRITE_TRUNCATE",
-                "timePartitioning": job_params.get("time_partitioning", None),
-                "clustering": job_params.get("clustering_fields", None),
-            },
-        },
-        trigger_rule=job_params.get("trigger_rule", "all_success"),
-        params=dict(job_params.get("params", {})),
-        dag=dag,
-    )
+    task = bigquery_job_task(dag, table, job_params)
     table_jobs[table] = {
         "operator": task,
         "depends": job_params.get("depends", []),

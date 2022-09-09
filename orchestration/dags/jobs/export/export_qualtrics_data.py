@@ -66,14 +66,13 @@ def get_and_send(**kwargs):
     WHERE t.calculation_month = '{ current_month }'
     """
     df = pd.read_gbq(sql)
-    s = StringIO()
-    df.to_csv(s)
+    export = df.to_csv(index=False)
     res = requests.post(
         f"{QUALTRICS_BASE_URL}{automation_id}/files",
         headers={"X-API-TOKEN": QUALTRICS_TOKEN},
-        files={"file": s.getvalue()},
+        files={"file": ("data.csv", export)},
     )
-    print(res)
+    print(res.json())
 
 
 start = DummyOperator(task_id="start", dag=dag)

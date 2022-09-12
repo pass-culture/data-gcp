@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from unittest import result
 from google.cloud import bigquery
 import pandas as pd
 import requests
@@ -7,20 +8,37 @@ from scripts.utils import GCP_PROJECT, BIGQUERY_CLEAN_DATASET, TOKEN
 
 
 MAX_SIREN_CALL = 100
+MAX_SIREN_TO_UPDATE = 5000
 
 
 def get_offerer_siren_list():
+    #
+    last_seven_days = datetime.now() - timedelta(days=7)
     siren_list = []
     client = bigquery.Client()
-    query_job = client.query(
-        f"""SELECT offerer_siren as siren
-        FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_offerer` 
-        WHERE offerer_siren is not null
+    query = f"""
+        WITH updated_recently AS (
+            
+            SELECT 
+                DISTINCT siren 
+            FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.siren_data`
+            WHERE date(update_date) >= date('{last_seven_days.strftime("%Y-%m-%d")}')
+        )
+        
+        SELECT ado.offerer_siren as siren
+        FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_offerer` ado
+        LEFT JOIN updated_recently ur on ur.siren = ado.offerer_siren
+        WHERE ado.offerer_siren is not null AND ur.siren is NULL
         """
-    )
+    print(query)
+    query_job = client.query(query)
     rows = query_job.result()
     for row in rows:
         siren_list.append(row.siren)
+    print(len(siren_list))
+    if len(siren_list) > MAX_SIREN_TO_UPDATE:
+        siren_list = siren_list[:MAX_SIREN_TO_UPDATE]
+    print(len(siren_list))
     return siren_list
 
 
@@ -122,37 +140,43 @@ def query_siren():
         "Authorization": f"""Bearer {TOKEN}""",
     }
     siren_list = get_offerer_siren_list()
-    nb_df_sub_divisions = len(siren_list) // MAX_SIREN_CALL
-    if (len(siren_list) - nb_df_sub_divisions * MAX_SIREN_CALL) == 0:
-        nb_df_sub_divisions -= 1
-    for k in range(nb_df_sub_divisions + 1):
-        query = get_siren_query(
-            siren_list[k * MAX_SIREN_CALL : (k + 1) * MAX_SIREN_CALL]
-        )
-        response = requests.get(
-            query,
-            headers=headers,
-        )
-        if response.status_code != 200:
-            raise ValueError(
-                f"Error API CALL {response.status_code} : {response.reason}"
+    if len(siren_list) > 0:
+        nb_df_sub_divisions = len(siren_list) // MAX_SIREN_CALL
+        if (len(siren_list) - nb_df_sub_divisions * MAX_SIREN_CALL) == 0:
+            nb_df_sub_divisions -= 1
+        for k in range(nb_df_sub_divisions + 1):
+            query = get_siren_query(
+                siren_list[k * MAX_SIREN_CALL : (k + 1) * MAX_SIREN_CALL]
             )
-        else:
-            result = response.json()
-            siren_info_list = append_info_siren_list(siren_info_list, result)
-        time.sleep(2.5)
-    return siren_info_list
+            response = requests.get(
+                query,
+                headers=headers,
+            )
+            if response.status_code != 200:
+                raise ValueError(
+                    f"Error API CALL {response.status_code} : {response.reason}"
+                )
+            else:
+                result = response.json()
+                siren_info_list = append_info_siren_list(siren_info_list, result)
+            time.sleep(2.5)
+        return siren_info_list
+    return None
 
 
 def siren_to_bq():
-    save_to_bq(query_siren())
+    results = query_siren()
+    if results is not None:
+        save_to_bq(results)
     return
 
 
 def save_to_bq(siren_list):
-    pd.DataFrame(siren_list).to_gbq(
+    df = pd.DataFrame(siren_list)
+    df["update_date"] = datetime.now().strftime("%Y-%m-%d")
+    df.to_gbq(
         f"""{BIGQUERY_CLEAN_DATASET}.siren_data""",
         project_id=GCP_PROJECT,
-        if_exists="replace",
+        if_exists="append",
     )
     return

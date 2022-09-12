@@ -774,6 +774,10 @@ def define_import_query(
                 ,"contactEmail" AS collective_offer_contact_email
                 , "contactPhone" AS collective_offer_contact_phone
                 ,"offerVenue" AS collective_offer_offer_venue
+                , "offerVenue" ->> \\'venueId\\' AS collective_offer_venue_humanized_id
+                , "offerVenue" ->> \\'addressType\\' AS collective_offer_venue_address_type
+                , "offerVenue" ->> \\'otherAddress\\' AS collective_offer_venue_other_address
+                ,BTRIM(array_to_string("interventionArea", \\',\\'), \\'{\\') AS intervention_area
                 ,CAST("lastValidationType" AS VARCHAR) AS collective_offer_last_validation_type
             FROM public.collective_offer_template
     """

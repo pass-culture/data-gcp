@@ -152,6 +152,7 @@ contentful_modules = [
                     "beginning_datetime",
                     "ending_datetime",
                     "categories",
+                    "subcategories",
                     "price_max",
                 ],
                 "type": "unique",

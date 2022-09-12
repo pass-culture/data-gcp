@@ -43,7 +43,7 @@ dag = DAG(
     default_args=default_dag_args,
     description="Import Siren from INSEE API",
     on_failure_callback=None,
-    schedule_interval="30 1 * * *" if ENV_SHORT_NAME == "prod" else "30 2 * * *",
+    schedule_interval="0 */6 * * *" if ENV_SHORT_NAME == "prod" else "30 */6 * * *",
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
 )
@@ -68,7 +68,14 @@ siren_to_bq = SimpleHttpOperator(
 
 import_siren_to_analytics = BigQueryExecuteQueryOperator(
     task_id="import_to_analytics_siren",
-    sql=f"SELECT * FROM {BIGQUERY_CLEAN_DATASET}.siren_data",
+    sql=f"""
+    SELECT * except(rnk) 
+    FROM (
+        SELECT *, ROW_NUMBER() OVER (PARTITION BY siren ORDER BY update_date DESC) as rnk
+        FROM {BIGQUERY_CLEAN_DATASET}.siren_data
+    ) inn
+    WHERE rnk = 1
+    """,
     write_disposition="WRITE_TRUNCATE",
     use_legacy_sql=False,
     destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.siren_data",

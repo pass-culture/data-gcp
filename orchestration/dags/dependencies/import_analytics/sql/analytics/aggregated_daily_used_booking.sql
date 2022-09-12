@@ -12,7 +12,7 @@ SELECT
     COUNT(booking_id) AS cnt_bookings,
     SUM(
         CASE
-            WHEN booking_used_date IS NOT NULL THEN booking_amount
+            WHEN booking_used_date IS NOT NULL THEN booking_intermediary_amount
             ELSE NULL
         END
     ) AS amount_spent,

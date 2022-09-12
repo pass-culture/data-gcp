@@ -44,7 +44,7 @@ aggregated_daily_user_used_bookings_history_1 AS (
             deposit_creation_date,
             MONTH
         ) AS months_since_deposit_created,
-        COALESCE(SUM(booking_amount), 0) AS amount_spent,
+        COALESCE(SUM(booking_intermediary_amount), 0) AS amount_spent,
         COUNT(booking_id) AS cnt_used_bookings
     FROM
         user_active_dates

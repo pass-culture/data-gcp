@@ -3,10 +3,15 @@ from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.http.operators.http import SimpleHttpOperator
 from airflow.operators.python import PythonOperator
+from dependencies.adage.import_adage import analytics_tables
 
 from google.auth.transport.requests import Request
 from google.oauth2 import id_token
 from common.alerts import task_fail_slack_alert
+from common.operator import bigquery_job_task
+from common.utils import depends_loop
+from common import macros
+from common.config import ENV_SHORT_NAME, GCP_PROJECT, DAG_FOLDER
 
 from common.config import (
     GCP_PROJECT,
@@ -40,6 +45,8 @@ dag = DAG(
     schedule_interval="0 6 * * *",
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
+    user_defined_macros=macros.default,
+    template_searchpath=DAG_FOLDER,
 )
 
 getting_service_account_token = PythonOperator(
@@ -63,6 +70,16 @@ adage_to_bq = SimpleHttpOperator(
 
 start = DummyOperator(task_id="start", dag=dag)
 
+table_jobs = {}
+for table, job_params in analytics_tables.items():
+    task = bigquery_job_task(dag, table, job_params)
+    table_jobs[table] = {
+        "operator": task,
+        "depends": job_params.get("depends", []),
+    }
+
+table_jobs = depends_loop(table_jobs, start)
 end = DummyOperator(task_id="end", dag=dag)
 
-(start >> getting_service_account_token >> adage_to_bq >> end)
+getting_service_account_token >> adage_to_bq >> start
+table_jobs >> end

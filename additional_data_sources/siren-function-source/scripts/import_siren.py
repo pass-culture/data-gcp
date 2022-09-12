@@ -16,13 +16,11 @@ def get_offerer_siren_list():
     last_seven_days = datetime.now() - timedelta(days=7)
     siren_list = []
     client = bigquery.Client()
-    query_job = client.query(
-        f"""
+    query = f"""
         WITH updated_recently AS (
             
             SELECT 
                 DISTINCT siren 
-                
             FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.siren_data`
             WHERE date(update_date) >= date('{last_seven_days.strftime("%Y-%m-%d")}')
         )
@@ -32,7 +30,8 @@ def get_offerer_siren_list():
         LEFT JOIN updated_recently ur on ur.siren = ado.offerer_siren
         WHERE ado.offerer_siren is not null AND ur.siren is NULL
         """
-    )
+    print(query)
+    query_job = client.query(query)
     rows = query_job.result()
     for row in rows:
         siren_list.append(row.siren)

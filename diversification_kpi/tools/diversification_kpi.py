@@ -25,9 +25,9 @@ def calculate_diversification_per_feature(df_clean, features):
     divers_per_feature["delta_diversification"] = []
     for i in range(0, len(df_clean)):
         booking = df_clean.iloc[i]
-        if booking["qpi_subcategories"]:
+        if len(booking["qpi_subcategories"]) > 0:
             user_qpi_subcategories = [
-                qpi["subcategories"] for qpi in booking["qpi_subcategories"]
+                qpi["subcategories"] for qpi in list(booking["qpi_subcategories"])
             ]
         else:
             user_qpi_subcategories = []
@@ -100,15 +100,13 @@ def calculate_diversification_per_feature(df_clean, features):
 
             divers_per_feature[feature].append(div * multiplicator)
         # QPI
+        # One point given if user did not declared the category in QPI.
         qpi_diversification = 0
         if not qpi_point_given:
             subcat = booking["subcategory"]
-
-            if subcat in user_qpi_subcategories:
-                if not pd.isna(booking[subcat]):
-                    if not booking[subcat]:
-                        qpi_point_given = True
-                        qpi_diversification = 1
+            if subcat not in user_qpi_subcategories:
+                qpi_point_given = True
+                qpi_diversification = 1
         divers_per_feature["qpi_diversification"].append(qpi_diversification)
 
         # Calculate delta div

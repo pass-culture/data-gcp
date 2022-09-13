@@ -1,8 +1,8 @@
 import pandas as pd
 import time
-import datetime
 from multiprocessing import cpu_count
 import concurrent
+import traceback
 
 BATCH_SIZE = 50000
 
@@ -107,6 +107,14 @@ def diversification_kpi(df):
 
 
 def process_diversification(batch_number):
+    try:
+        __process_diversification(batch_number)
+    except Exception as e:
+        print(e)
+        traceback.print_exc()
+
+
+def __process_diversification(batch_number):
     bookings = get_data(batch_number, BATCH_SIZE)
 
     bookings_enriched = pd.merge(bookings, macro_rayons, on="rayon", how="left")

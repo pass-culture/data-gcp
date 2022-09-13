@@ -21,7 +21,6 @@ BIGQUERY_SCHEMAS = {
         "booking_used_date": "DATETIME",
         "booking_cancellation_date": "DATETIME",
         "booking_cancellation_reason": "STRING",
-        "educational_booking_id": "STRING",
         "booking_reimbursement_date": "DATETIME",
     },
     "applicative_database_individual_booking": {

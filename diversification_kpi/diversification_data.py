@@ -108,10 +108,11 @@ def diversification_kpi(df):
 
 def process_diversification(batch_number):
     try:
-        __process_diversification(batch_number)
+        return __process_diversification(batch_number)
     except Exception as e:
         print(e)
         traceback.print_exc()
+        return False
 
 
 def __process_diversification(batch_number):

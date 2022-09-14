@@ -30,15 +30,12 @@ def get_offerer_siren_list():
         LEFT JOIN updated_recently ur on ur.siren = ado.offerer_siren
         WHERE ado.offerer_siren is not null AND ur.siren is NULL
         """
-    print(query)
     query_job = client.query(query)
     rows = query_job.result()
     for row in rows:
         siren_list.append(row.siren)
-    print(len(siren_list))
     if len(siren_list) > MAX_SIREN_TO_UPDATE:
         siren_list = siren_list[:MAX_SIREN_TO_UPDATE]
-    print(len(siren_list))
     return siren_list
 
 
@@ -152,13 +149,16 @@ def query_siren():
                 query,
                 headers=headers,
             )
-            if response.status_code != 200:
+            if response.status_code == 200:
+                result = response.json()
+                siren_info_list = append_info_siren_list(siren_info_list, result)
+            elif response.status_code == 404:
+                print("Error 404")
+                print(response.content)
+            else:
                 raise ValueError(
                     f"Error API CALL {response.status_code} : {response.reason}"
                 )
-            else:
-                result = response.json()
-                siren_info_list = append_info_siren_list(siren_info_list, result)
             time.sleep(2.5)
         return siren_info_list
     return None

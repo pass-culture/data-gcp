@@ -7,54 +7,64 @@ WITH user_visits AS (
     GROUP BY user_id
 ),
 
+previous_export AS (
+    SELECT 
+        DISTINCT user_id 
+    FROM  `{{ bigquery_clean_dataset }}.qualtrics_ir_jeunes`
+    WHERE calculation_month >= DATE_SUB(DATE("{{ current_month(ds) }}"), INTERVAL 1 MONTH)
+
+
+),
 ir_export AS (
-SELECT
- 
+    SELECT
+        user_data.user_id,
+        user_data.user_current_deposit_type as deposit_type,
+        user_data.user_civility,
+        no_cancelled_booking,
+        user_data.user_department_code,
+        user_data.user_region_name,
+        actual_amount_spent,
+        user_data.user_activity,
+        user_visits.total_visit_last_month,
+        geo_type,
+        code_qpv,
+        zrr,
+        user_seniority
 
-    user_data.user_id,
-    user_data.user_current_deposit_type as deposit_type,
-    user_data.user_civility,
-    no_cancelled_booking,
-    user_data.user_department_code,
-    user_data.user_region_name,
-    actual_amount_spent,
-    user_data.user_activity,
-    user_visits.total_visit_last_month,
-    geo_type,
-    code_qpv,
-    zrr,
-    user_seniority
-
-    FROM `{{ bigquery_analytics_dataset }}.enriched_user_data` user_data
-    INNER JOIN `{{ bigquery_analytics_dataset }}.applicative_database_user` applicative_database_user ON user_data.user_id = applicative_database_user.user_id
-    LEFT JOIN `{{ bigquery_analytics_dataset }}.user_locations` user_locations ON user_locations.user_id = user_data.user_id
-    LEFT JOIN `{{ bigquery_analytics_dataset }}.rural_city_type_data`  rural_city_type_data ON user_locations.city_code = rural_city_type_data.geo_code
-    LEFT JOIN user_visits ON user_data.user_id=user_visits.user_id
-    WHERE 
-        user_data.user_id is not null
-    AND user_data.user_current_deposit_type in ("GRANT_15_17", "GRANT_18")
-    AND user_is_current_beneficiary is true
-    AND user_data.user_is_active is true
-    and applicative_database_user.user_has_enabled_marketing_email is true
+        FROM `{{ bigquery_analytics_dataset }}.enriched_user_data` user_data
+        INNER JOIN `{{ bigquery_analytics_dataset }}.applicative_database_user` applicative_database_user ON user_data.user_id = applicative_database_user.user_id
+        LEFT JOIN `{{ bigquery_analytics_dataset }}.user_locations` user_locations ON user_locations.user_id = user_data.user_id
+        LEFT JOIN `{{ bigquery_analytics_dataset }}.rural_city_type_data`  rural_city_type_data ON user_locations.city_code = rural_city_type_data.geo_code
+        LEFT JOIN user_visits ON user_data.user_id=user_visits.user_id
+        WHERE 
+            user_data.user_id is not null
+        AND user_data.user_current_deposit_type in ("GRANT_15_17", "GRANT_18")
+        AND user_is_current_beneficiary is true
+        AND user_data.user_is_active is true
+        AND applicative_database_user.user_has_enabled_marketing_email is true
     
 ),
 
 grant_15_17 as (
     SELECT 
-        *
+        ir.*
 
-    FROM ir_export
-    WHERE deposit_type = "GRANT_15_17"
+    FROM ir_export ir
+    LEFT JOIN previous_export pe on pe.user_id = ir.user_id
+    
+    WHERE ir.deposit_type = "GRANT_15_17"
+    AND pe.user_id IS NULL
     ORDER BY rand()
     LIMIT {{ params.volume }}
 ),
 
 grant_18 as (
     SELECT 
-        *
-
-    FROM ir_export
+        ir.*
+    FROM ir_export ir
+    LEFT JOIN previous_export pe on pe.user_id = ir.user_id
     WHERE deposit_type = "GRANT_18"
+    AND pe.user_id IS NULL
     ORDER BY rand()
     LIMIT {{ params.volume }}
 )
@@ -63,10 +73,12 @@ grant_18 as (
 
 SELECT  
     DATE("{{ current_month(ds) }}") as calculation_month,
+    CURRENT_DATE as export_date,
     * 
 FROM grant_18
 UNION ALL 
 SELECT
     DATE("{{ current_month(ds) }}") as calculation_month,
+    CURRENT_DATE as export_date,
     * 
 FROM grant_15_17

@@ -165,7 +165,7 @@ def adding_value():
 
 
 def get_adage_stats():
-    _now = datetime.now()
+    _now = datetime.now().strftime('%Y-%m-%d')
     stats_dict = {
         "departements": "departement",
         "academies": "academie",
@@ -177,7 +177,7 @@ def get_adage_stats():
         9: ("2023-09-01", "2024-09-10"),
         10: ("2024-09-01", "2025-09-10"),
     }
-    ids = [k for k, v in adage_ids.items() if (_now > v[0] and _now < v[1])]
+    ids = [k for k, v in adage_ids.items() if (_now > v[0] and _now <= v[1])]
 
     export = []
     for _id in ids:

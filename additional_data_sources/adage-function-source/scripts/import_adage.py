@@ -1,3 +1,4 @@
+from datetime import datetime
 from scripts.utils import (
     GCP_PROJECT,
     ENV_SHORT_NAME,
@@ -164,15 +165,22 @@ def adding_value():
 
 
 def get_adage_stats():
+    _now = datetime.now().strftime("%Y-%m-%d")
     stats_dict = {
         "departements": "departement",
         "academies": "academie",
         "regions": "region",
     }
-    adage_ids = [7, 8]
+    adage_ids = {
+        7: ("2021-09-01", "2022-09-10"),
+        8: ("2022-09-01", "2023-09-10"),
+        9: ("2023-09-01", "2024-09-10"),
+        10: ("2024-09-01", "2025-09-10"),
+    }
+    ids = [k for k, v in adage_ids.items() if (_now > v[0] and _now <= v[1])]
 
     export = []
-    for _id in adage_ids:
+    for _id in ids:
 
         results = get_request(ENDPOINT, API_KEY, route=f"stats-pass-culture/{_id}")
         for metric_name, rows in results.items():

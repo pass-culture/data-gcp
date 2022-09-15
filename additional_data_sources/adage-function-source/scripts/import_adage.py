@@ -165,7 +165,7 @@ def adding_value():
 
 
 def get_adage_stats():
-    _now = datetime.now().strftime('%Y-%m-%d')
+    _now = datetime.now().strftime("%Y-%m-%d")
     stats_dict = {
         "departements": "departement",
         "academies": "academie",

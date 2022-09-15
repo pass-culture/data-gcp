@@ -519,6 +519,10 @@ SELECT
     theoretical_amount_spent_in_digital_goods.amount_spent_in_digital_goods,
     theoretical_amount_spent_in_physical_goods.amount_spent_in_physical_goods,
     theoretical_amount_spent_in_outings.amount_spent_in_outings,
+    last_deposit.deposit_theoretical_amount_spent AS last_deposit_theoretical_amount_spent,
+    last_deposit.deposit_theoretical_amount_spent_in_digital_goods AS last_deposit_theoretical_amount_spent_in_digital_goods,
+    last_deposit.deposit_actual_amount_spent AS last_deposit_actual_amount_spent,
+    user_last_deposit_amount - last_deposit.last_deposit_theoretical_amount_spent AS user_theoretical_remaining_credit,
     user_humanized_id.humanized_id AS user_humanized_id,
     last_booking_date.last_booking_date,
     region_department.region_name AS user_region_name,
@@ -581,7 +585,9 @@ FROM
     LEFT JOIN first_paid_booking_type ON user.user_id = first_paid_booking_type.user_id
     LEFT JOIN count_distinct_types ON user.user_id = count_distinct_types.user_id
     LEFT JOIN user_suspension_history ON user_suspension_history.userId = user.user_id
-    and rank = 1
+        AND rank = 1
+    LEFT JOIN  `{{ bigquery_analytics_dataset }}`.enriched_deposit_data AS last_deposit ON last_deposit.user_id = user.user_id
+        AND deposit_rank_desc = 1
     JOIN user_agg_deposit_data ON user.user_id = user_agg_deposit_data.userId
 WHERE
     user_role IN ('UNDERAGE_BENEFICIARY', 'BENEFICIARY')

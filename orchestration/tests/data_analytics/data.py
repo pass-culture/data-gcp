@@ -819,6 +819,17 @@ ENRICHED_USER_DATA_INPUT = {
             "dateCreated": datetime.now().replace(microsecond=0),
         }
     ],
+    "enriched_deposit_data": [
+        {
+            "deposit_id": "1",
+            "user_id": "1",
+            "deposit_amount": 500,
+            "deposit_theoretical_amount_spent": 20,
+            "deposit_actual_amount": 20,
+            "deposit_theoretical_amount_spent_in_digital_goods": 20,
+            "deposit_rank_desc": 1,
+        }
+    ],
     "applicative_database_offerer": [
         {
             "offerer_id": "1",
@@ -895,6 +906,10 @@ ENRICHED_USER_DATA_EXPECTED = [
         "amount_spent_in_digital_goods": 20.0,
         "amount_spent_in_physical_goods": 0.0,
         "amount_spent_in_outings": 0.0,
+        "last_deposit_theoretical_amount_spent": 20,
+        "last_deposit_theoretical_amount_spent_in_digital_goods": 20,
+        "last_deposit_actual_amount_spent": 20,
+        "user_theoretical_remaining_credit": 480,
         "user_humanized_id": "AE",
         "last_booking_date": datetime.now().replace(microsecond=0),
         "user_region_name": "Île-de-France",

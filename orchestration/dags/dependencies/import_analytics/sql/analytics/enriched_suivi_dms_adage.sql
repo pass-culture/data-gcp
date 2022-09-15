@@ -36,15 +36,16 @@ SELECT
         ) THEN TRUE
         ELSE FALSE
     END AS offerer_has_bank_information,
-    venue_id IN (
+    CASE WHEN venue_id IN (
         SELECT
             venueId
-        FROM `{{ bigquery_analytics_dataset }}`.adage ) AS lieu_in_adage,
-    venue_managing_offerer_id IN (
+        FROM `{{ bigquery_analytics_dataset }}`.adage ) THEN TRUE ELSE FALSE END AS lieu_in_adage,
+    CASE WHEN venue_managing_offerer_id IN (
         SELECT
             venue_managing_offerer_id
         FROM `{{ bigquery_analytics_dataset }}`.adage AS adage
-        JOIN `{{ bigquery_analytics_dataset }}`.enriched_venue_data AS enriched_venue_data ON enriched_venue_data.venue_id = adage.venueId ) AS structure_in_adage
+        JOIN `{{ bigquery_analytics_dataset }}`.enriched_venue_data AS enriched_venue_data ON enriched_venue_data.venue_id = adage.venueId )
+                                                        THEN TRUE ELSE FALSE END AS structure_in_adage
     , typeform.token AS typeform_token
     , typeform.vous_etes AS typeform_applicant_status
     , typeform.quels_sont_vos_domaines_d_intervention AS typeform_applicant_intervention_domain

@@ -63,11 +63,10 @@ first_booking_date AS (
 user_suspension_history AS (
     SELECT
         *,
-        RANK() OVER(
-            PARTITION BY "userId"
+        ROW_NUMBER() OVER (
+            PARTITION BY userId
             ORDER BY
-                "eventDate" DESC,
-                "id" DESC
+                CAST(id AS INTEGER) DESC
         ) AS rank
     FROM
         `{{ bigquery_analytics_dataset }}`.applicative_database_user_suspension
@@ -116,5 +115,5 @@ WHERE
     user_role IN ('UNDERAGE_BENEFICIARY', 'BENEFICIARY')
     AND (
         user.user_is_active
-        OR user_suspension_history.reasonCode = 'upon user request'
+        OR user_suspension_history.reasonCode = 'UPON_USER_REQUEST'
     )

@@ -42,7 +42,7 @@ dag = DAG(
     default_args=default_dag_args,
     description="Import Adage from API",
     on_failure_callback=None,
-    schedule_interval="0 6 * * *",
+    schedule_interval="0 3 * * *",
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,

@@ -214,7 +214,7 @@ BIGQUERY_SCHEMAS = {
         "user_id": "STRING",
         "deposit_amount": "INTEGER",
         "deposit_theoretical_amount_spent": "INTEGER",
-        "deposit_actual_amount": "INTEGER",
+        "deposit_actual_amount_spent": "INTEGER",
         "deposit_theoretical_amount_spent_in_digital_goods": "INTEGER",
         "deposit_rank_desc": "INTEGER",
     },

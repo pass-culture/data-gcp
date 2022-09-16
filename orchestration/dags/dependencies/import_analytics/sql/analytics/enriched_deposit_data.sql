@@ -63,11 +63,10 @@ first_booking_date AS (
 user_suspension_history AS (
     SELECT
         *,
-        RANK() OVER(
-            PARTITION BY "userId"
+        ROW_NUMBER() OVER (
+            PARTITION BY userId
             ORDER BY
-                "eventDate" DESC,
-                "id" DESC
+                CAST(id AS INTEGER) DESC
         ) AS rank
     FROM
         `{{ bigquery_analytics_dataset }}`.applicative_database_user_suspension
@@ -101,7 +100,8 @@ SELECT
         CAST(deposit.dateCreated AS DATE),
         CAST(user.user_creation_date AS DATE),
         DAY
-    ) AS days_between_user_creation_and_deposit_creation
+    ) AS days_between_user_creation_and_deposit_creation,
+    user.user_birth_date
 FROM
     `{{ bigquery_analytics_dataset }}`.applicative_database_deposit AS deposit
     JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_user AS user ON user.user_id = deposit.userId
@@ -116,5 +116,5 @@ WHERE
     user_role IN ('UNDERAGE_BENEFICIARY', 'BENEFICIARY')
     AND (
         user.user_is_active
-        OR user_suspension_history.reasonCode = 'upon user request'
+        OR user_suspension_history.reasonCode = 'UPON_USER_REQUEST'
     )

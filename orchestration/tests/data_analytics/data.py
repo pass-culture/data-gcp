@@ -825,7 +825,7 @@ ENRICHED_USER_DATA_INPUT = {
             "user_id": "1",
             "deposit_amount": 500,
             "deposit_theoretical_amount_spent": 20,
-            "deposit_actual_amount": 20,
+            "deposit_actual_amount_spent": 20,
             "deposit_theoretical_amount_spent_in_digital_goods": 20,
             "deposit_rank_desc": 1,
         }

@@ -102,8 +102,7 @@ user_suspension_history AS (
         ROW_NUMBER() OVER (
             PARTITION BY userId
             ORDER BY
-                eventDate DESC,
-                id DESC
+                CAST(id AS INTEGER) DESC
         ) AS rank
     FROM
         `{{ bigquery_analytics_dataset }}`.applicative_database_user_suspension

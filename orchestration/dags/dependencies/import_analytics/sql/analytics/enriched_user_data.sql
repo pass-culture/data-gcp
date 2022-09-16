@@ -522,7 +522,7 @@ SELECT
     last_deposit.deposit_theoretical_amount_spent AS last_deposit_theoretical_amount_spent,
     last_deposit.deposit_theoretical_amount_spent_in_digital_goods AS last_deposit_theoretical_amount_spent_in_digital_goods,
     last_deposit.deposit_actual_amount_spent AS last_deposit_actual_amount_spent,
-    user_last_deposit_amount - last_deposit.last_deposit_theoretical_amount_spent AS user_theoretical_remaining_credit,
+    user_last_deposit_amount - last_deposit.deposit_theoretical_amount_spent AS user_theoretical_remaining_credit,
     user_humanized_id.humanized_id AS user_humanized_id,
     last_booking_date.last_booking_date,
     region_department.region_name AS user_region_name,

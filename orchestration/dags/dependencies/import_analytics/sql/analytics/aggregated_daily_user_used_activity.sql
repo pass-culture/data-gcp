@@ -11,6 +11,7 @@ user_active_dates AS (
         user_id,
         user_department_code,
         user_region_name,
+        user_birth_date,
         deposit_id,
         deposit_amount,
         deposit_creation_date,
@@ -29,6 +30,9 @@ aggregated_daily_user_used_bookings_history_1 AS (
         user_active_dates.user_id,
         user_active_dates.user_department_code,
         user_active_dates.user_region_name,
+        IF(EXTRACT(DAYOFYEAR FROM user_active_dates.active_date) < EXTRACT(DAYOFYEAR FROM user_birth_date),
+            DATE_DIFF(user_active_dates.active_date, user_birth_date, YEAR) - 1,
+            DATE_DIFF(user_active_dates.active_date, user_birth_date, YEAR))  AS user_age,
         user_active_dates.deposit_id,
         user_active_dates.deposit_type,
         user_active_dates.deposit_amount AS initial_deposit_amount,
@@ -62,13 +66,15 @@ aggregated_daily_user_used_bookings_history_1 AS (
         8,
         9,
         10,
-        11
+        11,
+        12
 )
 SELECT
     active_date,
     user_id,
     user_department_code,
     user_region_name,
+    user_age,
     deposit_id,
     deposit_type,
     initial_deposit_amount,

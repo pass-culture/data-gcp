@@ -43,7 +43,7 @@ def get_siren_query(siren_list):
     query = "https://api.insee.fr/entreprises/sirene/V3/siren?q="
     for siren in siren_list:
         query += f"""siren:{siren} OR """
-    query += f"""siren:{siren_list[len(siren_list)-1]}&curseur=*&nombre=1000"""
+    query += f"""siren:{siren_list[len(siren_list)-1]}&nombre=1000"""
     return query
 
 

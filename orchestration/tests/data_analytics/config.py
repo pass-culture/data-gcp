@@ -209,6 +209,15 @@ BIGQUERY_SCHEMAS = {
         "booking_paid": "INTEGER",
         "stock_price": "NUMERIC",
     },
+    "enriched_deposit_data": {
+        "deposit_id": "STRING",
+        "user_id": "STRING",
+        "deposit_amount": "INTEGER",
+        "deposit_theoretical_amount_spent": "INTEGER",
+        "deposit_actual_amount_spent": "INTEGER",
+        "deposit_theoretical_amount_spent_in_digital_goods": "INTEGER",
+        "deposit_rank_desc": "INTEGER",
+    },
     "enriched_offer_data": {
         "offerer_id": "STRING",
         "offerer_name": "STRING",

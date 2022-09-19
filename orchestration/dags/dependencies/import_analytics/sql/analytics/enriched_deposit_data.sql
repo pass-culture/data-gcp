@@ -115,7 +115,7 @@ SELECT
     user.user_civility,
     user.user_department_code,
     user.user_birth_date,
-    user.user_age
+    user.user_age,
     region_department.region_name AS user_region_name,
     deposit.source AS deposit_source,
     user.user_creation_date AS user_creation_date,

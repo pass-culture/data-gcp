@@ -16,7 +16,11 @@ SELECT
     jsonPayload.extra.source as source,
     jsonPayload.extra.userId as user_id,
     cast(jsonPayload.extra.stockId as int) as stock_id,
+    cast(jsonPayload.extra.offerId as int) as offer_id,
     CAST(coalesce(jsonPayload.extra.bookingId, jsonPayload.extra.booking_id) as int) as booking_id,
+    ARRAY_TO_STRING(jsonPayload.extra.filters, ',') AS filters,
+    cast(jsonPayload.extra.resultscount as int) as results_count,
+
 FROM
     `{{ bigquery_raw_dataset }}.stdout`
 WHERE

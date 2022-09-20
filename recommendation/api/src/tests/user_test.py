@@ -1,11 +1,8 @@
 import os
 from unittest.mock import Mock, patch
 import pytest
-import random
 from typing import Any
 from pcreco.core.user import User
-from pcreco.core.scoring import Scoring
-from pcreco.models.reco.recommendation import RecommendationIn
 
 ENV_SHORT_NAME = os.getenv("ENV_SHORT_NAME")
 

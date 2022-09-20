@@ -2,7 +2,7 @@ from unittest.mock import patch
 import pytest
 from typing import Any
 from pcreco.core.user import User
-from pcreco.core.scoring import Scoring
+from pcreco.core.recommendation import Recommendation
 from pcreco.utils.env_vars import ENV_SHORT_NAME, AB_TESTING
 
 
@@ -40,7 +40,7 @@ class ABtestingTest:
         with patch("pcreco.utils.db.db_connection.__get_db") as connection_mock:
             connection_mock.return_value = setup_database
             user = User(user_id)
-            scoring = Scoring(user)
+            scoring = Recommendation(user)
 
             assert (
                 user.group_id == expected_group

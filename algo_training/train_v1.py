@@ -19,9 +19,10 @@ from utils import (
     ENV_SHORT_NAME,
     BOOKING_DAY_NUMBER,
     EXPERIMENT_NAME,
+    TRAIN_DIR,
 )
 
-TRAIN_DIR = "/home/airflow/train"
+
 EMBEDDING_SIZE = 64
 L2_REG = 0
 N_EPOCHS = 20 if ENV_SHORT_NAME == "prod" else 10
@@ -115,6 +116,9 @@ def train(storage_path: str):
                     break
                 else:
                     best_eval = eval_result
+        tf.keras.models.save_model(
+            match_model, f"{TRAIN_DIR}/{ENV_SHORT_NAME}/tf_reco/"
+        )
         connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
         mlflow.log_artifacts(export_path, "model")
         remove_dir(export_path)

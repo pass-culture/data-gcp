@@ -7,15 +7,15 @@ from pcreco.utils.secrets.access_gcp_secrets import access_secret
 from pcreco.utils.health_check_queries import get_materialized_view_status
 from pcreco.utils.db.db_connection import create_db_connection
 from pcreco.core.user import User
-from pcreco.core.scoring import Scoring
-from pcreco.models.reco.recommendation import RecommendationIn
-
-from pcreco.utils.env_vars import AB_TESTING, log_duration
+from pcreco.core.recommendation import Recommendation
+from pcreco.core.similar_offer import SimilarOffer
+from pcreco.models.reco.playlist_params import PlaylistParamsIn
+from pcreco.utils.env_vars import (
+    AB_TESTING,
+)
 import uuid
-import time
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
-
 API_TOKEN_SECRET_ID = os.environ.get("API_TOKEN_SECRET_ID")
 API_TOKEN_SECRET_VERSION = os.environ.get("API_TOKEN_SECRET_VERSION")
 
@@ -96,10 +96,10 @@ def recommendation(user_id: int):
     latitude = request.args.get("latitude", None)
     post_args_json = request.get_json() if request.method == "POST" else None
     user = User(user_id, longitude, latitude)
-    input_reco = RecommendationIn(post_args_json) if post_args_json else None
-    scoring = Scoring(user, recommendation_in=input_reco)
+    input_reco = PlaylistParamsIn(post_args_json) if post_args_json else None
+    scoring = Recommendation(user, params_in=input_reco)
 
-    user_recommendations = scoring.get_recommendation()
+    user_recommendations = scoring.get_scoring()
     scoring.save_recommendation(user_recommendations)
     return jsonify(
         {
@@ -112,6 +112,30 @@ def recommendation(user_id: int):
     )
 
 
+def parse_geolocation(request):
+    longitude = request.args.get("longitude", None)
+    latitude = request.args.get("latitude", None)
+    if longitude is not None and latitude is not None:
+        geo_located = True
+    else:
+        geo_located = False
+    return longitude, latitude, geo_located
+
+
+def parse_internal(request):
+    try:
+        internal = int(request.args.get("internal", 0)) == 1
+    except:
+        internal = False
+    return internal
+
+
+def parse_params(request):
+    if request.method == "POST":
+        return PlaylistParamsIn(request.get_json())
+    return None
+
+
 @app.route("/playlist_recommendation/<user_id>", methods=["GET", "POST"])
 def playlist_recommendation(user_id: int):
     # unique id build for each call
@@ -119,27 +143,14 @@ def playlist_recommendation(user_id: int):
     if request.args.get("token", None) != API_TOKEN:
         return "Forbidden", 403
 
-    longitude = request.args.get("longitude", None)
-    latitude = request.args.get("latitude", None)
-    try:
-        internal = int(request.args.get("internal", 0)) == 1
-    except:
-        internal = False
+    internal = parse_internal(request)
+    longitude, latitude, geo_located = parse_geolocation(request)
+    input_reco = parse_params(request)
 
-    if longitude is not None and latitude is not None:
-        geo_located = True
-    else:
-        geo_located = False
-    post_args_json = request.get_json() if request.method == "POST" else None
     user = User(user_id, call_id, longitude, latitude)
-    input_reco = None
-    applied_filters = False
-    if post_args_json:
-        input_reco = RecommendationIn(post_args_json)
-        applied_filters = input_reco.has_conditions
+    scoring = Recommendation(user, params_in=input_reco)
+    user_recommendations = scoring.get_scoring()
 
-    scoring = Scoring(user, recommendation_in=input_reco)
-    user_recommendations = scoring.get_recommendation()
     if not internal:
         scoring.save_recommendation(user_recommendations)
 
@@ -152,7 +163,38 @@ def playlist_recommendation(user_id: int):
                 "model_version": scoring.scoring.model_version,
                 "ab_test": user.group_id if AB_TESTING else "default",
                 "geo_located": geo_located,
-                "filtered": applied_filters,
+                "filtered": input_reco.has_conditions if input_reco else False,
+                "call_id": call_id,
+            },
+        }
+    )
+
+
+@app.route("/similar_offers/<offer_id>", methods=["GET", "POST"])
+def similar_offers(offer_id: str):
+    call_id = uuid.uuid4()
+    if request.args.get("token", None) != API_TOKEN:
+        return "Forbidden", 403
+
+    internal = parse_internal(request)
+    longitude, latitude, geo_located = parse_geolocation(request)
+    input_reco = parse_params(request)
+    user_id = request.args.get("user_id", -1)
+
+    user = User(user_id, call_id, longitude, latitude)
+
+    scoring = SimilarOffer(user, offer_id=offer_id, params_in=input_reco)
+    offer_recommendations = scoring.get_scoring()
+
+    return jsonify(
+        {
+            "results": offer_recommendations,
+            "params": {
+                "model_name": scoring.model_display_name,
+                "model_version": scoring.model_version,
+                "ab_test": "default",
+                "geo_located": geo_located,
+                "filtered": input_reco.has_conditions if input_reco else False,
                 "call_id": call_id,
             },
         }

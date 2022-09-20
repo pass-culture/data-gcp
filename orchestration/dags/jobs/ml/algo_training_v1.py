@@ -25,9 +25,22 @@ DATE = "{{ts_nodash}}"
 STORAGE_PATH = (
     f"gs://{MLFLOW_BUCKET_NAME}/algo_training_{ENV_SHORT_NAME}/algo_training_{DATE}"
 )
+TRAIN_DIR = "/home/airflow/train"
+
+# Algo reco
 MODEL_NAME = "v1"
 AI_MODEL_NAME = f"tf_model_reco_{ENV_SHORT_NAME}"
 END_POINT_NAME = f"vertex_ai_{ENV_SHORT_NAME}"
+SERVING_CONTAINER = "europe-docker.pkg.dev/vertex-ai/prediction/tf2-cpu.2-5:latest"
+
+# Algo offres similaires
+API_DOCKER_IMAGE = (
+    f"eu.gcr.io/{GCP_PROJECT_ID}/annoy-similar-offers:{ENV_SHORT_NAME}-latest"
+)
+SIMILAR_OFFER_MODEL_NAME = f"annoy_similar_offers_{ENV_SHORT_NAME}"
+SIMILAR_OFFER_END_POINT_NAME = f"vertex_ai_annoy_similar_offers_{ENV_SHORT_NAME}"
+
+
 MIN_NODES = 1
 MAX_NODES = 10 if ENV_SHORT_NAME == "prod" else 1
 SLACK_CONN_ID = "slack_analytics"
@@ -38,7 +51,9 @@ export PATH="/opt/conda/bin:/opt/conda/condabin:"+$PATH
 export STORAGE_PATH={STORAGE_PATH}
 export ENV_SHORT_NAME={ENV_SHORT_NAME}
 export GCP_PROJECT_ID={GCP_PROJECT_ID}
-export MODEL_NAME={MODEL_NAME}"""
+export MODEL_NAME={MODEL_NAME}
+export TRAIN_DIR={TRAIN_DIR}
+"""
 
 
 def branch_function(ti, **kwargs):
@@ -210,11 +225,13 @@ with DAG(
     DEPLOY_COMMAND = f""" '{DEFAULT}
     export REGION=europe-west1
     export MODEL_NAME={AI_MODEL_NAME}
+    export SERVING_CONTAINER={SERVING_CONTAINER} 
     export RECOMMENDATION_MODEL_DIR={{{{ ti.xcom_pull(task_ids='training') }}}}
     export VERSION_NAME=v_{{{{ ts_nodash }}}}
     export END_POINT_NAME={END_POINT_NAME}
     export MIN_NODES={MIN_NODES}
     export MAX_NODES={MAX_NODES}
+    export MODEL_DESCRIPTION="Recommendation Model v1"
     python deploy_model.py'
     """
 
@@ -249,43 +266,52 @@ with DAG(
         dag=dag,
     )
 
+    TRAIN_SIM_OFFERS_COMMAND = f""" '{DEFAULT}
+    python train_similar_offers.py'
     """
-    list_model_versions = BashOperator(
-        task_id="list_model_versions",
-        bash_command="gcloud ml-engine versions list "
-        "--model={{params.model}} "
-        "--region=europe-west1 "
-        "--project={{params.project}} "
-        "--sort-by=~NAME",
-        do_xcom_push=True,
-        params={
-            "model": AI_MODEL_NAME,
-            "project": GCP_PROJECT_ID,
-        },
+
+    train_sim_offers = BashOperator(
+        task_id="train_sim_offers",
+        bash_command=f"""
+        gcloud compute ssh {GCE_INSTANCE} \
+        --zone {GCE_ZONE} \
+        --project {GCP_PROJECT_ID} \
+        --command {TRAIN_SIM_OFFERS_COMMAND}
+        """,
         dag=dag,
     )
 
-    get_version_task = BashOperator(
-        task_id="get_version_task",
-        bash_command="echo '{{ ti.xcom_pull(task_ids='list_model_versions') }}' | awk '{print $1}'",
-        do_xcom_push=True,
-        dag=dag,
-    )
+    DEPLOY_SIM_OFFERS_COMMAND = f""" '{DEFAULT}
+    cd ./similar_offers
+    export API_DOCKER_IMAGE={API_DOCKER_IMAGE}
+    export TRAIN_DIR={TRAIN_DIR}
+    export ENV_SHORT_NAME={ENV_SHORT_NAME}
+    source deploy_to_vertex_ai.sh
+    cd ../
+    export REGION=europe-west1
 
-    delete_last_version = BashOperator(
-        task_id="delete_last_version",
-        bash_command="gcloud ml-engine versions delete {{ ti.xcom_pull(task_ids='get_version_task') }} "
-        "--model {{params.model}} "
-        "--region=europe-west1 "
-        "--project={{params.project}}",
-        do_xcom_push=True,
-        params={
-            "model": AI_MODEL_NAME,
-            "project": GCP_PROJECT_ID,
-        },
+    export SERVING_CONTAINER={API_DOCKER_IMAGE} 
+    export VERSION_NAME=v_{{{{ ts_nodash }}}}
+    export END_POINT_NAME={SIMILAR_OFFER_END_POINT_NAME}
+    export MODEL_NAME={SIMILAR_OFFER_MODEL_NAME}
+    export MIN_NODES={MIN_NODES}
+    export MAX_NODES={MAX_NODES}
+    export MODEL_TYPE="custom"
+    export MODEL_DESCRIPTION="Annoy Model for Similar Offer Recommendation"
+    python deploy_model.py
+    '
+    """
+
+    deploy_sim_offers = BashOperator(
+        task_id="deploy_sim_offers",
+        bash_command=f"""
+        gcloud compute ssh {GCE_INSTANCE} \
+        --zone {GCE_ZONE} \
+        --project {GCP_PROJECT_ID} \
+        --command {DEPLOY_SIM_OFFERS_COMMAND}
+        """,
         dag=dag,
     )
-    """
 
     SLACK_BLOCKS = [
         {
@@ -343,6 +369,8 @@ with DAG(
         >> evaluate
         >> deploy_model
         >> clean_versions
+        >> train_sim_offers
+        >> deploy_sim_offers
         >> gce_instance_stop
         >> send_slack_notif_success
     )

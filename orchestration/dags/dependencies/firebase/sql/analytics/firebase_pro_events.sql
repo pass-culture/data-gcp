@@ -155,23 +155,40 @@ WITH temp_firebase_events AS (
             where
                 event_params.key = 'traffic_source'
         ) as traffic_source,
-    FROM
+  FROM
         {% if params.dag_type == 'intraday' %}
         `{{ bigquery_clean_dataset }}.firebase_pro_events_{{ yyyymmdd(ds) }}`
         {% else %}
         `{{ bigquery_clean_dataset }}.firebase_pro_events_{{ yyyymmdd(add_days(ds, -1)) }}`
         {% endif %}
+),
 
+
+url_extract AS (
+    SELECT
+        * EXCEPT (double_offer_id, string_offer_id),
+        (
+            CASE
+                WHEN double_offer_id IS NULL THEN string_offer_id
+                ELSE double_offer_id
+            END
+        ) AS offer_id,
+        REGEXP_EXTRACT(page_location, r"""passculture\.pro\/(.*)$""", 1) as url_first_path,
+        REGEXP_EXTRACT(page_location, r"""passculture\.pro\/(.*?)[\/.*?\/.*?\/|\?]""", 1) as url_path_type,
+        REGEXP_EXTRACT(page_location, r"""passculture\.pro\/.*?\/.*?\/(.*?)\/|\?""", 1) as url_path_details,
+        REGEXP_EXTRACT(page_location, r"""passculture\.pro\/(.*?)\?""", 1) as url_path_before_params,
+        REGEXP_EXTRACT_ALL(page_location,r'(?:\?|&)(?:([^=]+)=(?:[^&]*))') as url_params_key,
+        REGEXP_EXTRACT_ALL(page_location,r'(?:\?|&)(?:(?:[^=]+)=([^&]*))') as url_params_value
+    FROM temp_firebase_events
 )
+
+
 SELECT
-    *
-EXCEPT
-(double_offer_id, string_offer_id),
-    (
-        CASE
-            WHEN double_offer_id IS NULL THEN string_offer_id
-            ELSE double_offer_id
-        END
-    ) AS offer_id
+    * EXCEPT(url_first_path, url_path_type, url_path_details, url_path_before_params),
+    CASE 
+        WHEN url_path_details is NULL THEN REPLACE(COALESCE(url_path_before_params, url_first_path), "/", "-")
+        WHEN url_path_details is NOT NULL THEN CONCAT(url_path_type, "-", url_path_details)
+        ELSE url_path_type 
+    END as url_path_extract
 FROM
-    temp_firebase_events
+    url_extract

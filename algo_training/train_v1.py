@@ -20,7 +20,6 @@ from utils import (
     BOOKING_DAY_NUMBER,
     EXPERIMENT_NAME,
     TRAIN_DIR,
-    SIMILAR_OFFERS_DIR,
 )
 
 
@@ -117,7 +116,9 @@ def train(storage_path: str):
                     break
                 else:
                     best_eval = eval_result
-        tf.keras.models.save_model(match_model, f"{SIMILAR_OFFERS_DIR}/model/tf_reco")
+        tf.keras.models.save_model(
+            match_model, f"{TRAIN_DIR}/{ENV_SHORT_NAME}/tf_reco/"
+        )
         connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
         mlflow.log_artifacts(export_path, "model")
         remove_dir(export_path)

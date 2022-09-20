@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch, MagicMock, call
 from typing import Any, List
 
 from pcreco.core.user import User
-from pcreco.core.scoring import Scoring
+from pcreco.core.recommendation import Recommendation
 from pcreco.core.utils.cold_start_status import get_cold_start_status
 
 
@@ -48,7 +48,7 @@ def test_get_cold_start_status(
         ),
     ],
 )
-@patch("pcreco.core.scoring.get_cold_start_status")
+@patch("pcreco.core.recommendation.get_cold_start_status")
 def test_get_cold_start_categories(
     cold_start_status_mock: Mock,
     setup_database: Any,
@@ -65,7 +65,7 @@ def test_get_cold_start_categories(
 
         user = User(user_id)
 
-        scoring = Scoring(user)
+        scoring = Recommendation(user)
         assert sorted(scoring.scoring.get_cold_start_categories()) == sorted(
             cold_start_categories
         )

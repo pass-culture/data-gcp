@@ -3,3 +3,4 @@ flask-cors
 gunicorn
 numpy
 tensorflow
+annoy

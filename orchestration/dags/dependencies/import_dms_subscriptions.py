@@ -197,15 +197,15 @@ def parse_result_pro(result, df_applications):
                         "libelleNaf"
                     ].replace("\n", " ")
                     if dossier["demandeur"]["entreprise"]:
-                        dossier_line["demandeur_entreprise_siren"] = dossier["demandeur"][
-                            "entreprise"
-                        ]["siren"]
+                        dossier_line["demandeur_entreprise_siren"] = dossier[
+                            "demandeur"
+                        ]["entreprise"]["siren"]
                         dossier_line["demandeur_entreprise_formeJuridique"] = dossier[
                             "demandeur"
                         ]["entreprise"]["formeJuridique"]
-                        dossier_line["demandeur_entreprise_formeJuridiqueCode"] = dossier[
-                            "demandeur"
-                        ]["entreprise"]["formeJuridiqueCode"]
+                        dossier_line[
+                            "demandeur_entreprise_formeJuridiqueCode"
+                        ] = dossier["demandeur"]["entreprise"]["formeJuridiqueCode"]
                         dossier_line[
                             "demandeur_entreprise_codeEffectifEntreprise"
                         ] = dossier["demandeur"]["entreprise"]["codeEffectifEntreprise"]

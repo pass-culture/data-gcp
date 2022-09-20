@@ -90,7 +90,8 @@ def fetch_result(demarches_ids, updated_since):
             resultTemp = run_query(query_body)
             for node in resultTemp["data"]["demarche"]["dossiers"]["edges"]:
                 dossier = node["node"]
-                dossier["demarche_id"] = demarche_id
+                if dossier is not None:
+                    dossier["demarche_id"] = demarche_id
             has_next_page = resultTemp["data"]["demarche"]["dossiers"]["pageInfo"][
                 "hasNextPage"
             ]

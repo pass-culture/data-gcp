@@ -211,6 +211,7 @@ SELECT
     offer_extracted_data.countries,
     offer_extracted_data.casting,
     offer_extracted_data.isbn,
+    isbn_editor.book_editor,
     CASE
         WHEN subcategories.category_id <> 'MUSIQUE_LIVE'
         AND offer_extracted_data.showType IS NOT NULL THEN offer_extracted_data.showType
@@ -236,8 +237,10 @@ FROM
     LEFT JOIN offer_humanized_id AS offer_humanized_id ON offer_humanized_id.offer_id = offer.offer_id
     LEFT JOIN count_first_booking_view ON count_first_booking_view.offer_id = offer.offer_id
     LEFT JOIN last_stock ON last_stock.offer_id = offer.offer_id
-    LEFT JOIN `{{ bigquery_clean_dataset }}`.offer_extracted_data offer_extracted_data ON offer_extracted_data.offer_id = offer.offer_id
+    LEFT JOIN `{{ bigquery_analytics_dataset }}`.offer_extracted_data offer_extracted_data ON offer_extracted_data.offer_id = offer.offer_id
     LEFT JOIN `{{ bigquery_clean_dataset }}`.offer_tags offer_tags ON offer_tags.offer_id = offer.offer_id
     LEFT JOIN mediation ON offer.offer_id = mediation.offer_id
+    LEFT JOIN `{{ bigquery_analytics_dataset }}`.isbn_editor AS isbn_editor ON offer_extracted_data.isbn = isbn_editor.isbn
+
 WHERE
     offer.offer_validation = 'APPROVED'

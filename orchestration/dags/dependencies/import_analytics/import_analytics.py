@@ -43,7 +43,7 @@ analytics_tables = {
     "enriched_offer_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_offer_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "depends": ["enriched_stock_data"],
+        "depends": ["enriched_stock_data", "isbn_editor", "offer_extracted_data"],
     },
     "enriched_offerer_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_offerer_data.sql",
@@ -77,6 +77,10 @@ analytics_tables = {
         "sql": f"{ANALYTICS_SQL_PATH}/iris_venues.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "depends": ["clean_iris_venues"],
+    },
+    "isbn_editor": {
+        "sql": f"{ANALYTICS_SQL_PATH}/isbn_editor.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
     },
     "offer_extracted_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/offer_extracted_data.sql",

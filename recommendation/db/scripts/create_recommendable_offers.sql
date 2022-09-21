@@ -14,7 +14,8 @@ RETURNS TABLE (offer_id varchar,
                 stock_beginning_date TIMESTAMP,
                 stock_price REAL,
                 booking_number BIGINT,
-                item_id text) AS
+                item_id text,
+                is_underage_recommendable BOOLEAN) AS
 $body$
 BEGIN
     RETURN QUERY 
@@ -30,7 +31,6 @@ DROP MATERIALIZED VIEW IF EXISTS recommendable_offers;
 CREATE MATERIALIZED VIEW IF NOT EXISTS recommendable_offers AS
 SELECT * FROM get_recommendable_offers()
 WITH NO DATA;
-
 
 
 /* Populating the materialized view. */

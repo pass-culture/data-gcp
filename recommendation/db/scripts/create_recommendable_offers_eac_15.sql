@@ -5,8 +5,8 @@ RETURNS TABLE (offer_id varchar,
                 product_id varchar,
                 venue_id varchar,
                 subcategory_id VARCHAR,
-                search_group_name VARCHAR,
                 category VARCHAR,
+                search_group_name VARCHAR,
                 name VARCHAR,
                 url VARCHAR,
                 is_national BOOLEAN,
@@ -14,12 +14,13 @@ RETURNS TABLE (offer_id varchar,
                 stock_beginning_date TIMESTAMP,
                 stock_price REAL,
                 booking_number BIGINT,
-                item_id text) AS
+                item_id text,
+                is_underage_recommendable BOOLEAN) AS
 $body$
 BEGIN
     RETURN QUERY
-    SELECT * from public.is_recommendable_offers_data
-    where is_underage_recommendable
+    SELECT * FROM public.recommendable_offers_data
+    where is_underage_recommendable 
     and stock_price < 20;
 END;
 $body$

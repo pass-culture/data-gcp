@@ -480,7 +480,7 @@ BIGQUERY_SCHEMAS = {
         "isActive": "BOOLEAN",
         "fieldsUpdated": "STRING",
     },
-    "isbn_editeur": {
+    "isbn_editor": {
         "isbn": "STRING",
         "editeur": "STRING",
     },

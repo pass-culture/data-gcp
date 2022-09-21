@@ -103,7 +103,7 @@ SELECT
         TRIM(JSON_EXTRACT(offer_extra_data, "$.cast"), " ")
     ) AS casting,
     LOWER(
-        TRIM(JSON_EXTRACT(offer_extra_data, "$.isbn"), " ")
+        TRIM(TRIM(JSON_EXTRACT(offer_extra_data, "$.isbn"), " "),'"')
     ) AS isbn,
 FROM
     `{{ bigquery_analytics_dataset }}.applicative_database_offer`

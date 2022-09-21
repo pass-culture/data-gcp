@@ -96,8 +96,14 @@ ENRICHED_OFFER_DATA_INPUT = {
             "companies": None,
             "countries": None,
             "casting": None,
-            "isbn": None,
+            "isbn": "156157",
         },
+    ],
+    "isbn_editor": [
+        {
+            "isbn": "156157",
+            "editeur": "Hachette",
+        }
     ],
     "offer_tags": [
         {
@@ -351,7 +357,8 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "companies": '[{"activity":"production","company":{"name":"universal pictures"}}]',
         "countries": '["usa"]',
         "casting": "[]",
-        "isbn": None,
+        "isbn": "156157",
+        "editeur": "Hachette",
         "offer_is_underage_selectable": True,
         "offer_is_bookable": False,
     },

@@ -262,7 +262,7 @@ BIGQUERY_SCHEMAS = {
         "type": "STRING",
         "subType": "STRING",
         "isbn": "STRING",
-        "editeur": "STRING",
+        "book_editor": "STRING",
     },
     "applicative_database_user": {
         "user_id": "STRING",
@@ -482,6 +482,6 @@ BIGQUERY_SCHEMAS = {
     },
     "isbn_editor": {
         "isbn": "STRING",
-        "editeur": "STRING",
+        "book_editor": "STRING",
     },
 }

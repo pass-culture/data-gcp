@@ -22,6 +22,6 @@ FROM matching_isbn_with_editor
 
 SELECT
     TRIM(isbn, '"') AS isbn
-    , TRIM(editeur, '"') AS editeur
+    , TRIM(editeur, '"') AS book_editor
 FROM editeur_per_isbn
 WHERE rank_nb_offer = 1

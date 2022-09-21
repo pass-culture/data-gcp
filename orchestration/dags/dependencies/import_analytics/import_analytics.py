@@ -43,7 +43,7 @@ analytics_tables = {
     "enriched_offer_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_offer_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "depends": ["enriched_stock_data", "isbn_editor"],
+        "depends": ["enriched_stock_data", "isbn_editor", "offer_extracted_data"],
     },
     "enriched_offerer_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_offerer_data.sql",

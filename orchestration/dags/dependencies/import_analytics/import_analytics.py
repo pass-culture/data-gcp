@@ -12,6 +12,11 @@ clean_tables = {
         "destination_table": "iris_venues",
         "params": {"iris_distance": 50000 if ENV_SHORT_NAME != "dev" else 10000},
     },
+    "recommendable_offers_data": {
+        "sql": f"{CLEAN_SQL_PATH}/recommendable_offers_data.sql",
+        "destination_dataset": "{{ bigquery_clean_dataset }}",
+        "destination_table": "recommendable_offers_data",
+    },
 }
 
 analytics_tables = {

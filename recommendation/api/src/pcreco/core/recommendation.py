@@ -7,18 +7,13 @@ from pcreco.core.utils.cold_start_status import get_cold_start_status
 from pcreco.core.utils.diversification import (
     order_offers_by_score_and_diversify_categories,
 )
-from pcreco.utils.ai_platform.service import ai_platform_service
-
-from pcreco.models.reco.recommendation import RecommendationIn
+from pcreco.models.reco.playlist_params import PlaylistParamsIn
 from pcreco.utils.db.db_connection import get_db
-from pcreco.core.utils.vertex_ai import predict_custom_trained_model_sample
+from pcreco.core.utils.vertex_ai import predict_model
 from pcreco.utils.env_vars import (
-    GCP_PROJECT,
-    PROJECT_NUMBER,
-    MACRO_CATEGORIES_TYPE_MAPPING,
     NUMBER_OF_PRESELECTED_OFFERS,
     ACTIVE_MODEL,
-    ENDPOINT_ID,
+    RECO_ENDPOINT_NAME,
     AB_TESTING,
     AB_TEST_MODEL_DICT,
     RECOMMENDABLE_OFFER_LIMIT,
@@ -31,16 +26,12 @@ import pytz
 from typing import List, Dict, Any
 
 
-class Scoring:
-    def __init__(self, user: User, recommendation_in: RecommendationIn = None):
+class Recommendation:
+    def __init__(self, user: User, params_in: PlaylistParamsIn = None):
         self.user = user
-        self.json_input = recommendation_in.json_input if recommendation_in else None
-        self.recommendation_in_filters = (
-            recommendation_in._get_conditions() if recommendation_in else ""
-        )
-        self.recommendation_in_model_name = (
-            recommendation_in.model_name if recommendation_in else None
-        )
+        self.json_input = params_in.json_input if params_in else None
+        self.params_in_filters = params_in._get_conditions() if params_in else ""
+        self.params_in_model_name = params_in.model_name if params_in else None
         self.iscoldstart = (
             False if self.force_model else get_cold_start_status(self.user)
         )
@@ -50,14 +41,14 @@ class Scoring:
     # rename force model
     @property
     def force_model(self) -> bool:
-        if self.recommendation_in_model_name:
+        if self.params_in_model_name:
             return True
         else:
             return False
 
     def get_model_name(self) -> str:
         if self.force_model:
-            return self.recommendation_in_model_name
+            return self.params_in_model_name
         elif AB_TESTING:
             return AB_TEST_MODEL_DICT[f"{self.user.group_id}"]
         else:
@@ -70,7 +61,7 @@ class Scoring:
             scoring_method = self.Algo(self)
         return scoring_method
 
-    def get_recommendation(self) -> List[str]:
+    def get_scoring(self) -> List[str]:
         # score the offers
         final_recommendations = order_offers_by_score_and_diversify_categories(
             sorted(
@@ -119,7 +110,7 @@ class Scoring:
     class Algo:
         def __init__(self, scoring):
             self.user = scoring.user
-            self.recommendation_in_filters = scoring.recommendation_in_filters
+            self.params_in_filters = scoring.params_in_filters
             self.model_name = scoring.model_name
             self.model_display_name = None
             self.model_version = None
@@ -200,7 +191,7 @@ class Scoring:
                     FROM non_recommendable_offers
                     WHERE user_id = :user_id
                     )   
-                {self.recommendation_in_filters}
+                {self.params_in_filters}
                 ORDER BY is_numerical ASC,booking_number DESC
                 LIMIT {RECOMMENDABLE_OFFER_LIMIT}; 
                 """
@@ -208,10 +199,8 @@ class Scoring:
 
         def _predict_score(self, instances) -> List[List[float]]:
             start = time.time()
-            """Calls Vertex AI endpoint for the given model and instances and retrieves the scores."""
-            response = predict_custom_trained_model_sample(
-                project=PROJECT_NUMBER,
-                endpoint_id=ENDPOINT_ID,
+            response = predict_model(
+                endpoint_name=RECO_ENDPOINT_NAME,
                 location="europe-west1",
                 instances=instances,
             )
@@ -223,7 +212,7 @@ class Scoring:
     class ColdStart:
         def __init__(self, scoring):
             self.user = scoring.user
-            self.recommendation_in_filters = scoring.recommendation_in_filters
+            self.params_in_filters = scoring.params_in_filters
             self.cold_start_categories = self.get_cold_start_categories()
             self.model_version = None
             self.model_display_name = None
@@ -250,7 +239,7 @@ class Scoring:
                         FROM non_recommendable_offers
                         WHERE user_id = :user_id
                     )
-                {self.recommendation_in_filters}
+                {self.params_in_filters}
                 AND {where_clause}
                 {order_query}
                 LIMIT :number_of_preselected_offers;

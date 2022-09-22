@@ -1,18 +1,22 @@
 import os
 from google.cloud import aiplatform
 
-SERVING_CONTAINER = "europe-docker.pkg.dev/vertex-ai/prediction/tf2-cpu.2-5:latest"
-
 
 def upload_model_and_deploy_to_endpoint(
     region,
     project_name,
+    serving_container,
     model_name,
+    model_description,
     version_name,
     recommendation_model_dir,
     end_point_name,
     min_nodes,
     max_nodes,
+    machine_type,
+    serving_container_predict_route,
+    serving_container_health_route,
+    serving_container_ports,
 ):
 
     print("Uploading model to Vertex AI model registery...")
@@ -24,8 +28,12 @@ def upload_model_and_deploy_to_endpoint(
         display_name=version_name,
         project=project_name,
         artifact_uri=recommendation_model_dir,
-        serving_container_image_uri=SERVING_CONTAINER,
+        serving_container_image_uri=serving_container,
         parent_model=parent_model_id,
+        serving_container_predict_route=serving_container_predict_route,
+        serving_container_health_route=serving_container_health_route,
+        serving_container_ports=serving_container_ports,
+        description=model_description,
         location="europe-west1",
     )
 
@@ -38,6 +46,7 @@ def upload_model_and_deploy_to_endpoint(
         deployed_model_display_name=version_name,
         min_replica_count=min_nodes,
         max_replica_count=max_nodes,
+        machine_type=machine_type,
         traffic_percentage=100,
     )
     model.wait()
@@ -52,25 +61,46 @@ def upload_model_and_deploy_to_endpoint(
 
 
 if __name__ == "__main__":
-    REGION = os.environ.get("REGION", "")
-    PROJECT_NAME = os.environ.get("PROJECT_NAME", "")
-    MODEL_NAME = os.environ.get("MODEL_NAME", "")
-    VERSION_NAME = os.environ.get("VERSION_NAME", "")
-    RECOMMENDATION_MODEL_DIR = os.environ.get("RECOMMENDATION_MODEL_DIR", "")
-    END_POINT_NAME = os.environ.get("END_POINT_NAME", "")
+    region = os.environ.get("REGION", "")
+    project_name = os.environ.get("PROJECT_NAME", "")
+    model_name = os.environ.get("MODEL_NAME", "")
+    model_type = os.environ.get("MODEL_TYPE", "tensorflow")
+    model_description = os.environ.get("MODEL_DESCRIPTION", "")
+
+    version_name = os.environ.get("VERSION_NAME", "")
+    serving_container = os.environ.get("SERVING_CONTAINER", "")
+    recommendation_model_dir = os.environ.get("RECOMMENDATION_MODEL_DIR", None)
+    end_point_name = os.environ.get("END_POINT_NAME", "")
+    machine_type = os.environ.get("MACHINE_TYPE", "n1-standard-2")
+
+    if model_type == "custom":
+        serving_container_predict_route = "/predict"
+        serving_container_health_route = "/isalive"
+        serving_container_ports = [8080]
+    else:
+        serving_container_predict_route = None
+        serving_container_health_route = None
+        serving_container_ports = None
+
     try:
-        MIN_NODES = int(os.environ.get("MIN_NODES", ""))
-        MAX_NODES = int(os.environ.get("MAX_NODES", ""))
+        min_nodes = int(os.environ.get("MIN_NODES", ""))
+        max_nodes = int(os.environ.get("MAX_NODES", ""))
     except:
-        MIN_NODES = 1
-        MAX_NODES = 1
+        min_nodes = 1
+        max_nodes = 1
     upload_model_and_deploy_to_endpoint(
-        REGION,
-        PROJECT_NAME,
-        MODEL_NAME,
-        VERSION_NAME,
-        RECOMMENDATION_MODEL_DIR,
-        END_POINT_NAME,
-        MIN_NODES,
-        MAX_NODES,
+        region,
+        project_name,
+        serving_container,
+        model_name,
+        model_description,
+        version_name,
+        recommendation_model_dir,
+        end_point_name,
+        min_nodes,
+        max_nodes,
+        machine_type,
+        serving_container_predict_route,
+        serving_container_health_route,
+        serving_container_ports,
     )

@@ -35,9 +35,26 @@ SELECT
                 `{{ bigquery_analytics_dataset }}`.applicative_database_bank_information
         ) THEN TRUE
         ELSE FALSE
-    END AS offerer_has_bank_information
+    END AS offerer_has_bank_information,
+    CASE WHEN venue_id IN (
+        SELECT
+            venueId
+        FROM `{{ bigquery_analytics_dataset }}`.adage ) THEN TRUE ELSE FALSE END AS lieu_in_adage,
+    CASE WHEN venue_managing_offerer_id IN (
+        SELECT
+            venue_managing_offerer_id
+        FROM `{{ bigquery_analytics_dataset }}`.adage AS adage
+        JOIN `{{ bigquery_analytics_dataset }}`.enriched_venue_data AS enriched_venue_data ON enriched_venue_data.venue_id = adage.venueId )
+                                                        THEN TRUE ELSE FALSE END AS structure_in_adage
+    , typeform.token AS typeform_token
+    , typeform.vous_etes AS typeform_applicant_status
+    , typeform.quels_sont_vos_domaines_d_intervention AS typeform_applicant_intervention_domain
+    , typeform.quel_est_votre_type_de_structure AS typeform_applicant_type
 FROM
     `{{ bigquery_analytics_dataset }}`.dms_pro AS dms_pro
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_offerer_data AS enriched_offerer ON dms_pro.demandeur_entreprise_siren = enriched_offerer.offerer_siren
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_venue_data AS enriched_venue ON enriched_venue.venue_managing_offerer_id = enriched_offerer.offerer_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.adage AS adage ON adage.siret = dms_pro.demandeur_siret
+    LEFT JOIN `{{ bigquery_analytics_dataset }}`.typeform_adage_reference_request typeform ON typeform.quel_est_le_numero_de_siret_de_votre_structure = dms_pro.demandeur_siret
+WHERE dms_pro.application_status = 'accepte'
+Qualify ROW_NUMBER() OVER (PARTITION BY typeform.quel_est_le_numero_de_siret_de_votre_structure ORDER BY SAFE.PARSE_DATETIME("%d/%m/%Y %H:%M:%S", typeform.submitted_at) DESC) = 1

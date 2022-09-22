@@ -1,0 +1,7 @@
+flask
+flask-cors
+gunicorn
+numpy
+tensorflow
+faiss-cpu==1.7.2
+loguru==0.5.3

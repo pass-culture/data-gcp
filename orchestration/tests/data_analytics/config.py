@@ -261,6 +261,8 @@ BIGQUERY_SCHEMAS = {
         "casting": "STRING",
         "type": "STRING",
         "subType": "STRING",
+        "isbn": "STRING",
+        "book_editor": "STRING",
     },
     "applicative_database_user": {
         "user_id": "STRING",
@@ -477,5 +479,9 @@ BIGQUERY_SCHEMAS = {
         "credit": "STRING",
         "isActive": "BOOLEAN",
         "fieldsUpdated": "STRING",
+    },
+    "isbn_editor": {
+        "isbn": "STRING",
+        "book_editor": "STRING",
     },
 }

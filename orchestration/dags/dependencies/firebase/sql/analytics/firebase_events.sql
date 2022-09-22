@@ -97,6 +97,30 @@ WITH temp_firebase_events AS (
             from
                 unnest(event_params) event_params
             where
+                event_params.key = 'categoryName'
+        ) as category_name,
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'type'
+        ) as filter_type,
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'venueId'
+        ) as venue_id,
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
                 event_params.key = 'filter'
         ) as filter,
         (

@@ -3,9 +3,6 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryExecuteQueryOperator,
 )
-
-from airflow.providers.http.operators.http import SimpleHttpOperator
-from airflow.operators.python import PythonOperator
 import datetime
 from common.alerts import analytics_fail_slack_alert
 from common import macros
@@ -13,10 +10,8 @@ from common.config import DAG_FOLDER
 
 IMPORT_TRAINING_SQL_PATH = f"dependencies/training_data/sql/"
 from common.config import (
-    BIGQUERY_ANALYTICS_DATASET,
     BIGQUERY_CLEAN_DATASET,
     BIGQUERY_RAW_DATASET,
-    ENV_SHORT_NAME,
     GCP_PROJECT,
 )
 

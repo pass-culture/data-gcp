@@ -96,8 +96,14 @@ ENRICHED_OFFER_DATA_INPUT = {
             "companies": None,
             "countries": None,
             "casting": None,
-            "isbn": None,
+            "isbn": "156157",
         },
+    ],
+    "isbn_editor": [
+        {
+            "isbn": "156157",
+            "book_editor": "Hachette",
+        }
     ],
     "offer_tags": [
         {
@@ -352,6 +358,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "countries": '["usa"]',
         "casting": "[]",
         "isbn": None,
+        "book_editor": None,
         "offer_is_underage_selectable": True,
         "offer_is_bookable": False,
     },
@@ -397,7 +404,8 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "companies": None,
         "countries": None,
         "casting": None,
-        "isbn": None,
+        "isbn": "156157",
+        "book_editor": "Hachette",
         "offer_is_underage_selectable": True,
         "offer_is_bookable": True,
     },

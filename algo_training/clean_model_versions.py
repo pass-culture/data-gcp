@@ -26,10 +26,10 @@ def clean_model_versions(project_name, region, model_name, max_model_versions):
 
 
 if __name__ == "__main__":
-    PROJECT_NAME = os.environ.get("GCP_PROJECT_ID", "")
-    REGION = os.environ.get("REGION", "")
-    MODEL_NAME = os.environ.get("MODEL_NAME", "")
-    ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "")
-    MAX_MODEL_VERSIONS = 5 if ENV_SHORT_NAME == "prod" else 1
+    project_name = os.environ.get("GCP_PROJECT_ID", "")
+    region = os.environ.get("REGION", "")
+    model_name = os.environ.get("MODEL_NAME", "")
+    env_short_name = os.environ.get("ENV_SHORT_NAME", "")
+    max_model_versions = 5 if env_short_name == "prod" else 1
 
-    clean_model_versions(PROJECT_NAME, REGION, MODEL_NAME, MAX_MODEL_VERSIONS)
+    clean_model_versions(project_name, region, model_name, max_model_versions)

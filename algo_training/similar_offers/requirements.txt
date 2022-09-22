@@ -4,3 +4,4 @@ gunicorn
 numpy
 tensorflow
 annoy
+loguru==0.5.3

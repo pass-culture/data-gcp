@@ -6,7 +6,7 @@ from pathlib import Path
 
 def save(model):
     dir = f"{TRAIN_DIR}/{ENV_SHORT_NAME}/sim_offers/"
-    Path("dir").mkdir(parents=True, exist_ok=True)
+    Path(dir).mkdir(parents=True, exist_ok=True)
     print("ann_path: ", dir)
     model.save(f"{dir}/sim_offers.ann")
 

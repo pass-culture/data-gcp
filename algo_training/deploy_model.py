@@ -13,6 +13,7 @@ def upload_model_and_deploy_to_endpoint(
     end_point_name,
     min_nodes,
     max_nodes,
+    machine_type,
     serving_container_predict_route,
     serving_container_health_route,
     serving_container_ports,
@@ -45,6 +46,7 @@ def upload_model_and_deploy_to_endpoint(
         deployed_model_display_name=version_name,
         min_replica_count=min_nodes,
         max_replica_count=max_nodes,
+        machine_type=machine_type,
         traffic_percentage=100,
     )
     model.wait()
@@ -69,6 +71,7 @@ if __name__ == "__main__":
     serving_container = os.environ.get("SERVING_CONTAINER", "")
     recommendation_model_dir = os.environ.get("RECOMMENDATION_MODEL_DIR", None)
     end_point_name = os.environ.get("END_POINT_NAME", "")
+    machine_type = os.environ.get("MACHINE_TYPE", "n1-standard-2")
 
     if model_type == "custom":
         serving_container_predict_route = "/predict"
@@ -96,6 +99,7 @@ if __name__ == "__main__":
         end_point_name,
         min_nodes,
         max_nodes,
+        machine_type,
         serving_container_predict_route,
         serving_container_health_route,
         serving_container_ports,

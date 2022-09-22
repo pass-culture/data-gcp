@@ -13,15 +13,15 @@ RETURNS TABLE (offer_id varchar,
                 offer_creation_date TIMESTAMP,
                 stock_beginning_date TIMESTAMP,
                 stock_price REAL,
-                booking_number BIGINT,
-                item_id text,
+                booking_number INTEGER,
+                item_id VARCHAR,
                 is_underage_recommendable BOOLEAN) AS
 $body$
 BEGIN
     RETURN QUERY
-    SELECT * FROM public.recommendable_offers_data
-    where is_underage_recommendable 
-    and stock_price < 20;
+    SELECT * FROM public.recommendable_offers_data reco
+    where reco.is_underage_recommendable 
+    and reco.stock_price < 20;
 END;
 $body$
 LANGUAGE plpgsql;
@@ -38,8 +38,7 @@ WITH NO DATA;
 
 /* Populating the materialized view. */
 
-CREATE UNIQUE INDEX idx_offer_recommendable_15_id ON public.recommendable_offers_eac_15 USING btree (offer_id)
-CREATE INDEX idx_recommendable_offers_eac_15_venue_id ON public.recommendable_offers_eac_15 (venue_id);
+CREATE UNIQUE INDEX idx_offer_recommendable_15_id ON public.recommendable_offers_eac_15 USING btree (offer_id,stock_beginning_date);
 REFRESH MATERIALIZED VIEW recommendable_offers_eac_15;
 /* Takes about 80 secondes with the indexes.*/
 

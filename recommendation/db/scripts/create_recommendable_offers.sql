@@ -13,8 +13,8 @@ RETURNS TABLE (offer_id varchar,
                 offer_creation_date TIMESTAMP,
                 stock_beginning_date TIMESTAMP,
                 stock_price REAL,
-                booking_number BIGINT,
-                item_id text,
+                booking_number INTEGER,
+                item_id VARCHAR,
                 is_underage_recommendable BOOLEAN) AS
 $body$
 BEGIN
@@ -34,6 +34,7 @@ WITH NO DATA;
 
 
 /* Populating the materialized view. */
+CREATE UNIQUE INDEX idx_offer_recommendable_id ON public.recommendable_offers USING btree (offer_id, stock_beginning_date);
 REFRESH MATERIALIZED VIEW recommendable_offers;
 /* Takes about 80 secondes with the indexes.*/
 

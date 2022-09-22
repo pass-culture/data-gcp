@@ -1,81 +1,89 @@
 from flask import Flask, request, Response, jsonify
 from flask_cors import CORS
-from annoy import AnnoyIndex
 from loguru import logger
 import tensorflow as tf
+
+import numpy as np
+import faiss
 
 app = Flask(__name__)
 CORS(app)
 
 
-def get_ann_model():
-    # Load model
-    ann_index = AnnoyIndex(64, "euclidean")
-    ann_path = "./model/sim_offers/sim_offers.ann"
-    ann_index.load(ann_path)
-
-    # Load item_ids
+def load_model():
     tf_reco = tf.keras.models.load_model("./model/tf_reco/")
-    item_list_model = tf_reco.item_layer.layers[0].get_vocabulary()
-    tf.keras.backend.clear_session()
+    offer_item_model = tf_reco.item_layer.layers[0].get_vocabulary()
+    embedding_item_model = tf_reco.item_layer.layers[1].get_weights()
+    model_weights = embedding_item_model[0]
+    distance = len(model_weights[0])
+    index = faiss.IndexFlatL2(distance)
+    index.add(model_weights)
+    return index, model_weights, offer_item_model
 
-    # Define AnnModel
-    return AnnModel(item_list_model, ann_index)
+
+def compute_distance_subset(index, xq, subset):
+    n, _ = xq.shape
+    _, k = subset.shape
+    distances = np.empty((n, k), dtype=np.float32)
+    index.compute_distance_subset(
+        n, faiss.swig_ptr(xq), k, faiss.swig_ptr(distances), faiss.swig_ptr(subset)
+    )
+    return distances
 
 
-class AnnModel:
-    def __init__(self, item_ids, ann: AnnoyIndex):
-        self.item_ids = item_ids
-        offer_dict = {}
-        for index, offer_id in enumerate(item_ids):
-            offer_dict[offer_id] = index
-        self.item_lookup = offer_dict
-        self.ann = ann
+class FaissModel:
+    def __init__(self, faiss_index, model_weights, offer_list):
+        self.faiss_index = faiss_index
+        self.item_dict = {}
+        self.offer_list = offer_list
+        for idx, (x, y) in enumerate(zip(offer_list, model_weights)):
+            self.item_dict[x] = {"embeddings": y, "idx": idx}
 
-    def _get_offer_ann_idx(self, input_offer_id):
-        if input_offer_id in self.item_lookup:
-            return self.item_lookup[input_offer_id]
+    def get_offer_emb(self, offer_id):
+        embs = self.item_dict.get(offer_id, None)
+        if embs is not None:
+            return np.array([embs["embeddings"]])
         else:
             return None
 
-    def similar(self, input_offer_id, n=10):
-        """
-        Returns list of most similar items from indexes
-        """
-        offer_id_idx = self._get_offer_ann_idx(input_offer_id)
-        if offer_id_idx:
-            return self._get_nn_offer_ids(offer_id_idx, n)
+    def get_offer_idx(self, offer_id):
+        embs = self.item_dict.get(offer_id, None)
+        if embs is not None:
+            return embs["idx"]
         else:
-            return []
+            return None
 
-    def sort(self, input_offer_id, selected_offers, n=10):
-        """
-        Sort the list of given items
-        """
-        offer_id_idx = self._get_offer_ann_idx(input_offer_id)
-        if offer_id_idx:
-            nn_idx = []
-            logger.info(f" sort: {len(selected_offers)}")
-            for y in selected_offers:
-                y_idx = self._get_offer_ann_idx(y)
-                if y_idx:
-                    nn_idx.append((y_idx, self.ann.get_distance(offer_id_idx, y_idx)))
+    def selected_to_idx(self, selected_offers):
+        arr = []
+        for offer_id in selected_offers:
+            idx = self.get_offer_idx(offer_id)
+            if idx is not None:
+                arr.append(idx)
+        return np.array([arr])
 
-            nn_idx = sorted(nn_idx, key=lambda tup: tup[1])
-            if len(nn_idx) > n:
-                nn_idx = nn_idx[:n]
-            logger.info(f" done for: {len(selected_offers)}, out size {len(nn_idx)}")
-            return [self.item_ids[index] for (index, _) in nn_idx]
-        else:
-            return []
+    def distances_to_offer(self, nn_idx, n=10):
+        if len(nn_idx) > n:
+            nn_idx = nn_idx[:n]
+        return [self.offer_list[index] for (index, _) in nn_idx]
 
-    def _get_nn_offer_ids(self, x, n):
-        nn_idx = self.ann.get_nns_by_item(x, n)
-        nn_offer_ids = [self.item_ids[index] for index in nn_idx]
-        return nn_offer_ids
+    def compute_distance(self, offer_id, selected_offers, n=10):
+        offer_emb = self.get_offer_emb(offer_id)
+        subset_offer_indexes = self.selected_to_idx(selected_offers)
+        if offer_emb is not None and subset_offer_indexes is not None:
+            distances = compute_distance_subset(
+                self.faiss_index, offer_emb, subset_offer_indexes
+            ).tolist()[0]
+            nn_idx = sorted(
+                zip(subset_offer_indexes.tolist()[0], distances), key=lambda tup: tup[1]
+            )
+
+            return self.distances_to_offer(nn_idx, n)
+        return []
 
 
-Ann = get_ann_model()
+faiss_index, model_weights, offer_list = load_model()
+faiss_model = FaissModel(faiss_index, model_weights, offer_list)
+
 logger.info("Loaded model")
 
 
@@ -99,14 +107,9 @@ def predict():
         n = 10
     try:
         if selected_offers is None:
-            logger.info(f"similar:{offer_id}")
-
-            sim_offers = Ann.similar(input_offer_id=offer_id, n=n)
-        else:
-            logger.info(f"sort:{offer_id} on {len(selected_offers)}")
-            sim_offers = Ann.sort(
-                input_offer_id=offer_id, selected_offers=selected_offers, n=n
-            )
+            # TODO
+            selected_offers = offer_list
+        sim_offers = faiss_model.compute_distance(offer_id, selected_offers, n=n)
         logger.info(f"out {len(sim_offers)}")
         return jsonify({"predictions": sim_offers})
     except Exception as e:

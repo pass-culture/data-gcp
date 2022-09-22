@@ -34,11 +34,9 @@ END_POINT_NAME = f"vertex_ai_{ENV_SHORT_NAME}"
 SERVING_CONTAINER = "europe-docker.pkg.dev/vertex-ai/prediction/tf2-cpu.2-5:latest"
 
 # Algo offres similaires
-API_DOCKER_IMAGE = (
-    f"eu.gcr.io/{GCP_PROJECT_ID}/annoy-similar-offers:{ENV_SHORT_NAME}-latest"
-)
-SIMILAR_OFFER_MODEL_NAME = f"annoy_similar_offers_{ENV_SHORT_NAME}"
-SIMILAR_OFFER_END_POINT_NAME = f"vertex_ai_annoy_similar_offers_{ENV_SHORT_NAME}"
+API_DOCKER_IMAGE = f"eu.gcr.io/{GCP_PROJECT_ID}/similar-offers:{ENV_SHORT_NAME}-latest"
+SIMILAR_OFFER_MODEL_NAME = f"similar_offers_{ENV_SHORT_NAME}"
+SIMILAR_OFFER_END_POINT_NAME = f"vertex_ai_similar_offers_{ENV_SHORT_NAME}"
 
 
 MIN_NODES = 1
@@ -266,21 +264,6 @@ with DAG(
         dag=dag,
     )
 
-    TRAIN_SIM_OFFERS_COMMAND = f""" '{DEFAULT}
-    python train_similar_offers.py'
-    """
-
-    train_sim_offers = BashOperator(
-        task_id="train_sim_offers",
-        bash_command=f"""
-        gcloud compute ssh {GCE_INSTANCE} \
-        --zone {GCE_ZONE} \
-        --project {GCP_PROJECT_ID} \
-        --command {TRAIN_SIM_OFFERS_COMMAND}
-        """,
-        dag=dag,
-    )
-
     DEPLOY_SIM_OFFERS_COMMAND = f""" '{DEFAULT}
     cd ./similar_offers
     export API_DOCKER_IMAGE={API_DOCKER_IMAGE}
@@ -297,7 +280,7 @@ with DAG(
     export MIN_NODES={MIN_NODES}
     export MAX_NODES={MAX_NODES}
     export MODEL_TYPE="custom"
-    export MODEL_DESCRIPTION="Annoy Model for Similar Offer Recommendation"
+    export MODEL_DESCRIPTION="Model for Similar Offer Recommendation"
     python deploy_model.py
     '
     """
@@ -369,7 +352,6 @@ with DAG(
         >> evaluate
         >> deploy_model
         >> clean_versions
-        >> train_sim_offers
         >> deploy_sim_offers
         >> gce_instance_stop
         >> send_slack_notif_success

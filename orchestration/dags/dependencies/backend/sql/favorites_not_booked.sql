@@ -20,6 +20,8 @@ WITH favorites as (
         JOIN `{{ bigquery_analytics_dataset }}.enriched_offer_data` as offer ON favorite.offerId = offer.offer_id
         JOIN `{{ bigquery_analytics_dataset }}.applicative_database_stock` as stock ON favorite.offerId = stock.offer_id
         JOIN `{{ bigquery_analytics_dataset }}.enriched_user_data` as enruser ON favorite.userId = enruser.user_id
+        JOIN `{{ bigquery_analytics_dataset }}.subcategories` AS subcategories ON subcategories.id = offer.offer_subcategoryId
+
     WHERE
         dateCreated <= DATE_SUB("{{ yesterday() }}", INTERVAL 7 DAY)
         AND dateCreated > DATE_SUB("{{ yesterday() }}", INTERVAL 14 DAY)
@@ -31,8 +33,12 @@ WITH favorites as (
         AND enruser.user_is_current_beneficiary = True
         AND enruser.last_booking_date >= DATE_SUB("{{ yesterday() }}", INTERVAL 7 DAY)
         AND (
-            enruser.user_total_deposit_amount - enruser.actual_amount_spent
+            enruser.user_theoretical_remaining_credit
         ) > stock.stock_price
+        AND (
+                (subcategories.is_digital_deposit AND (100 - enruser.last_deposit_theoretical_amount_spent_in_digital_goods) > stock.stock_price)
+                OR NOT subcategories.is_digital_deposit
+            )
 )
 SELECT
     CAST("{{ today() }}" AS DATETIME) as execution_date,

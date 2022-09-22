@@ -2,7 +2,6 @@ flask
 flask-cors
 gunicorn
 numpy
-tensorflow==2.6.3
-#annoy==1.0.3
+tensorflow
+faiss-cpu==1.7.2
 loguru==0.5.3
-faiss

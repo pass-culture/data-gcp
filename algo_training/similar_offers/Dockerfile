@@ -1,11 +1,9 @@
 
-FROM python:3.7
+FROM python:3.9
 
-ARG TRAIN_DIR
-ARG ENV_SHORT_NAME
 # Install libraries
 COPY ./requirements.txt ./
-RUN pip install -r requirements.txt 
+RUN pip3 install -r requirements.txt 
 
 # Setup container directories
 RUN mkdir /app
@@ -21,5 +19,5 @@ COPY ./model/sim_offers /app/model/sim_offers
 
 WORKDIR /app
 EXPOSE 8080
-CMD ["gunicorn", "main:app", "--timeout=0", "--preload", "--workers=1", "--threads=2", "--bind=0.0.0.0:8080"]
+CMD ["gunicorn", "main:app", "--preload", "--timeout=60", "--workers=4", "--threads=2", "--bind=0.0.0.0:8080"]
 

@@ -21,7 +21,7 @@ SQL_BASE_PASSWORD = os.environ.get(
 # Vertex ai attributes
 PROJECT_NUMBER = os.environ.get("PROJECT_NUMBER")
 RECO_ENDPOINT_NAME = f"vertex_ai_{ENV_SHORT_NAME}"
-SIM_OFFERS_ENDPOINT_NAME = f"vertex_ai_annoy_similar_offers_{ENV_SHORT_NAME}"
+SIM_OFFERS_ENDPOINT_NAME = f"vertex_ai_similar_offers_{ENV_SHORT_NAME}"
 
 
 # Attributes on API output and recommendation

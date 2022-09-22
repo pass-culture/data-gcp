@@ -1,75 +1,90 @@
 from flask import Flask, request, Response, jsonify
 from flask_cors import CORS
-
+from loguru import logger
 import tensorflow as tf
-from tensorflow.keras.models import Model
-from annoy import AnnoyIndex
-import logging
+
+import numpy as np
+import faiss
 
 app = Flask(__name__)
 CORS(app)
 
 
-class AnnModel(Model):
-    def __init__(self, item_ids, ann):
-        super().__init__(name="AnnModel")
-        self.item_ids = item_ids
-        offer_dict = {}
-        for index, offer_id in enumerate(item_ids):
-            offer_dict[offer_id] = index
-        self.item_lookup = offer_dict
-        self.ann = ann
+def load_model():
+    tf_reco = tf.keras.models.load_model("./model/tf_reco/")
+    offer_item_model = tf_reco.item_layer.layers[0].get_vocabulary()
+    embedding_item_model = tf_reco.item_layer.layers[1].get_weights()
+    model_weights = embedding_item_model[0]
+    distance = len(model_weights[0])
+    index = faiss.IndexFlatL2(distance)
+    index.add(model_weights)
+    return index, model_weights, offer_item_model
 
-    def _get_offer_ann_idx(self, input_offer_id):
-        if input_offer_id in self.item_lookup:
-            return self.item_lookup[input_offer_id]
+
+def compute_distance_subset(index, xq, subset):
+    n, _ = xq.shape
+    _, k = subset.shape
+    distances = np.empty((n, k), dtype=np.float32)
+    index.compute_distance_subset(
+        n, faiss.swig_ptr(xq), k, faiss.swig_ptr(distances), faiss.swig_ptr(subset)
+    )
+    return distances
+
+
+class FaissModel:
+    def __init__(self, faiss_index, model_weights, offer_list):
+        self.faiss_index = faiss_index
+        self.item_dict = {}
+        self.offer_list = offer_list
+        for idx, (x, y) in enumerate(zip(offer_list, model_weights)):
+            self.item_dict[x] = {"embeddings": y, "idx": idx}
+
+    def get_offer_emb(self, offer_id):
+        embs = self.item_dict.get(offer_id, None)
+        if embs is not None:
+            return np.array([embs["embeddings"]])
         else:
             return None
 
-    def similar(self, input_offer_id, n=10):
-        """
-        Returns list of most similar items from indexes
-        """
-        offer_id_idx = self._get_offer_ann_idx(input_offer_id)
-        if offer_id_idx:
-            return self._get_nn_offer_ids(offer_id_idx, n)
+    def get_offer_idx(self, offer_id):
+        embs = self.item_dict.get(offer_id, None)
+        if embs is not None:
+            return embs["idx"]
         else:
-            return []
+            return None
 
-    def sort(self, input_offer_id, selected_offers, n=10):
-        """
-        Sort the list of given items
-        """
-        offer_id_idx = self._get_offer_ann_idx(input_offer_id)
-        if offer_id_idx:
-            nn_idx = []
-            for y in selected_offers:
-                y_idx = self._get_offer_ann_idx(y)
-                if y_idx:
-                    nn_idx.append((y_idx, self.ann.get_distance(offer_id_idx, y_idx)))
-            nn_idx = sorted(nn_idx, key=lambda tup: tup[1])[:n]
-            return [self.item_ids[index] for (index, _) in nn_idx]
-        else:
-            return []
+    def selected_to_idx(self, selected_offers):
+        arr = []
+        for offer_id in selected_offers:
+            idx = self.get_offer_idx(offer_id)
+            if idx is not None:
+                arr.append(idx)
+        return np.array([arr])
 
-    def _get_nn_offer_ids(self, x, n):
-        nn_idx = self.ann.get_nns_by_item(x, n)
-        nn_offer_ids = [self.item_ids[index] for index in nn_idx]
-        return nn_offer_ids
+    def distances_to_offer(self, nn_idx, n=10):
+        if len(nn_idx) > n:
+            nn_idx = nn_idx[:n]
+        return [self.offer_list[index] for (index, _) in nn_idx]
+
+    def compute_distance(self, offer_id, selected_offers, n=10):
+        offer_emb = self.get_offer_emb(offer_id)
+        subset_offer_indexes = self.selected_to_idx(selected_offers)
+        if offer_emb is not None and subset_offer_indexes is not None:
+            distances = compute_distance_subset(
+                self.faiss_index, offer_emb, subset_offer_indexes
+            ).tolist()[0]
+            nn_idx = sorted(
+                zip(subset_offer_indexes.tolist()[0], distances), key=lambda tup: tup[1]
+            )
+
+            return self.distances_to_offer(nn_idx, n)
+        return []
 
 
-# Load model
-AnnIndex = AnnoyIndex(64, "euclidean")
-ann_path = "./model/sim_offers/sim_offers.ann"
-AnnIndex.load(ann_path)
+faiss_index, model_weights, offer_list = load_model()
+faiss_model = FaissModel(faiss_index, model_weights, offer_list)
 
-# Load item_ids
-tf_reco = tf.keras.models.load_model("./model/tf_reco/")
-item_list_model = tf_reco.item_layer.layers[0].get_vocabulary()
-
-# Define AnnModel
-Ann = AnnModel(item_list_model, AnnIndex)
-logging.info("Loaded model")
+logger.info("Loaded model")
 
 
 @app.route("/isalive")
@@ -80,22 +95,28 @@ def is_alive():
 
 @app.route("/predict", methods=["POST"])
 def predict():
+    logger.info("/predict!")
 
     req_json = request.get_json()
     input_json = req_json["instances"]
     offer_id = input_json[0]["offer_id"]
     selected_offers = input_json[0].get("selected_offers", None)
-    n = input_json[0].get("size", 10)
-    if selected_offers is None:
-        logging.info(f"similar:{offer_id}")
-        sim_offers = Ann.similar(input_offer_id=offer_id, n=n)
-    else:
-        logging.info(f"sort:{offer_id} on {len(selected_offers)}")
-        sim_offers = Ann.sort(
-            input_offer_id=offer_id, selected_offers=selected_offers, n=n
-        )
-    return jsonify({"predictions": sim_offers})
+    try:
+        n = int(input_json[0].get("size", 10))
+    except:
+        n = 10
+    try:
+        if selected_offers is None:
+            # TODO
+            selected_offers = offer_list
+        sim_offers = faiss_model.compute_distance(offer_id, selected_offers, n=n)
+        logger.info(f"out {len(sim_offers)}")
+        return jsonify({"predictions": sim_offers})
+    except Exception as e:
+        logger.info(e)
+        logger.info("error")
+        return jsonify({"predictions": []})
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=8080)
+    app.run(debug=False, host="0.0.0.0", port=8080)

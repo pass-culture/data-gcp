@@ -48,7 +48,7 @@ class SimilarOffer:
             return {
                 "offer_id": self.item_id,
                 "selected_offers": selected_offers,
-                "n": self.n,
+                "size": self.n,
             }
         else:
             logger.info(f"_get_instances:all")

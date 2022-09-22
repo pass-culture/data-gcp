@@ -115,9 +115,6 @@ workflows:
       - build_and_deploy_api:
           name: build_and_deploy_api_staging
           api-instance-name: apireco-stg
-          requires:
-            #- recommendation-api-tests
-            #- recommendation-db-tests
           filters:
             branches:
               only:

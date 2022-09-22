@@ -57,3 +57,4 @@ FROM
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.adage AS adage ON adage.siret = dms_pro.demandeur_siret
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.typeform_adage_reference_request typeform ON typeform.quel_est_le_numero_de_siret_de_votre_structure = dms_pro.demandeur_siret
 WHERE dms_pro.application_status = 'accepte'
+Qualify ROW_NUMBER() OVER (PARTITION BY typeform.quel_est_le_numero_de_siret_de_votre_structure ORDER BY SAFE.PARSE_DATETIME("%d/%m/%Y %H:%M:%S", typeform.submitted_at) DESC) = 1

@@ -67,19 +67,19 @@ workflows:
       # Recommendation jobs
       # -------------------
 
-      - recommendation-db-install:
-          requires:
-            - linter
-          context:
-            - Slack
-          <<: *slack-fail-post-step
-
-      - recommendation-db-tests:
-          requires:
-            - recommendation-db-install
-          context:
-            - Slack
-          <<: *slack-fail-post-step
+      #- recommendation-db-install:
+      #    requires:
+      #      - linter
+      #    context:
+      #      - Slack
+      #    <<: *slack-fail-post-step
+      #
+      #- recommendation-db-tests:
+      #    requires:
+      #      - recommendation-db-install
+      #    context:
+      #      - Slack
+      #    <<: *slack-fail-post-step
 
       - recommendation-api-build:
           requires:
@@ -819,29 +819,29 @@ jobs:
             airflow db init
             pytest tests
 
-  recommendation-db-install:
-    executor: python
-    working_directory: ~/data-gcp/recommendation/db
-    steps:
-      - checkout:
-          path: ~/data-gcp
-      - restore_cache:
-          key: dependencies-{{ checksum "db-requirements.txt" }}
-      - run:
-          name: Install Python deps in a venv
-          command: |
-            python3 -m venv venv-db
-            . venv-db/bin/activate
-            pip install -r db-requirements.txt
-      - save_cache:
-          key: dependencies-{{ checksum "db-requirements.txt" }}
-          paths:
-            - "venv-db"
-      - persist_to_workspace:
-          root: .
-          paths:
-            - .
-
+  #recommendation-db-install:
+  #  executor: python
+  #  working_directory: ~/data-gcp/recommendation/db
+  #  steps:
+  #    - checkout:
+  #        path: ~/data-gcp
+  #    - restore_cache:
+  #        key: dependencies-{{ checksum "db-requirements.txt" }}
+  #    - run:
+  #        name: Install Python deps in a venv
+  #        command: |
+  #          python3 -m venv venv-db
+  #          . venv-db/bin/activate
+  #          pip install -r db-requirements.txt
+  #    - save_cache:
+  #        key: dependencies-{{ checksum "db-requirements.txt" }}
+  #        paths:
+  #          - "venv-db"
+  #    - persist_to_workspace:
+  #        root: .
+  #        paths:
+  #          - .
+#
 #  recommendation-db-tests:
 #    docker:
 #      - image: circleci/python:3.7

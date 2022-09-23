@@ -252,7 +252,6 @@ with DAG(
         CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_id      ON public.recommendable_offers        USING btree (offer_id, stock_beginning_date);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_15_id   ON public.recommendable_offers_eac_15 USING btree (offer_id,stock_beginning_date);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_16_17_id ON public.recommendable_offers_eac_16_17 USING btree (offer_id,stock_beginning_date);
-        CREATE INDEX IF NOT EXISTS trained_users_mf_reco_user_id          ON public.trained_users_mf_reco       USING btree (user_id);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_enriched_user_mv            ON public.enriched_user_mv            USING btree (user_id);
     """
 

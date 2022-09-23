@@ -191,11 +191,6 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
         "past_recommended_offers", con=engine, if_exists="replace"
     )
 
-    trained_users_mf_reco = pd.DataFrame({"user_id": ["111", "113"]})
-    trained_users_mf_reco.to_sql(
-        "trained_users_mf_reco", con=engine, if_exists="replace"
-    )
-
     iris_france = pd.read_csv("./src/tests/iris_france_tests.csv")
     iris_france.to_sql("iris_france", con=engine, if_exists="replace", index=False)
 

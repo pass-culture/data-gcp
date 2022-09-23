@@ -7,5 +7,5 @@ SELECT
     au.consult_offer,
     au.has_added_offer_to_favorites,
 FROM
-    `{ { bigquery_analytics_dataset } }.enriched_user_data` eu
-    JOIN `{ { bigquery_analytics_dataset } }.firebase_aggregated_users` au on eu.user_id = au.user_id
+    `{{ bigquery_analytics_dataset }}.enriched_user_data` eu
+    JOIN `{{ bigquery_analytics_dataset }}.firebase_aggregated_users` au on eu.user_id = au.user_id

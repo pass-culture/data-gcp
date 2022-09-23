@@ -144,8 +144,8 @@ WITH get_recommendable_offers AS(
         AND offerer.offerer_is_active = TRUE
         AND offer.offer_validation = 'APPROVED'
         AND offer.offer_subcategoryId NOT IN ('ACTIVATION_THING', 'ACTIVATION_EVENT')
-        AND NOT (offer.offer_subcategoryId = 'ACHAT_INSTRUMENT' AND REGEXP_CONTAINS(LOWER(offer.offer_name),r 'bon d’achat|bons d’achat'))
-        AND NOT (offer.offer_subcategoryId = 'MATERIEL_ART_CREATIF' AND REGEXP_CONTAINS(LOWER(offer.offer_name), r 'stabilo|surligneurs'))
+        AND NOT (offer.offer_subcategoryId = 'ACHAT_INSTRUMENT' AND REGEXP_CONTAINS(LOWER(offer.offer_name), r'bon d’achat|bons d’achat'))
+        AND NOT (offer.offer_subcategoryId = 'MATERIEL_ART_CREATIF' AND REGEXP_CONTAINS(LOWER(offer.offer_name), r'stabilo|surligneurs'))
         AND offer.offer_product_id NOT IN (
             '1839851',
             '3091285',

@@ -8,9 +8,9 @@ RETURNS TABLE (
     user_deposit_creation_date TIMESTAMP,
     user_birth_date TIMESTAMP,
     user_deposit_initial_amount REAL,
-    booking_cnt varchar,
-    consult_offer varchar,
-    has_added_offer_to_favorites varchar,
+    booking_cnt INTEGER,
+    consult_offer INTEGER,
+    has_added_offer_to_favorites INTEGER
 ) AS 
 $body$ 
 BEGIN 

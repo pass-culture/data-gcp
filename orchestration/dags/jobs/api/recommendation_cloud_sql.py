@@ -108,7 +108,7 @@ with DAG(
             sql=params["sql"],
             dag=dag,
         )
-        monitoring_tables.append(task)
+        monitor_tables_task.append(task)
 
     for table in TABLES:
 

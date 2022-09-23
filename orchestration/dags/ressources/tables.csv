@@ -3,9 +3,9 @@ enriched_user,user_id,character varying,aggregated_user_stats_reco,clean
 enriched_user,user_deposit_creation_date,timestamp without time zone,aggregated_user_stats_reco,clean
 enriched_user,user_birth_date,timestamp without time zone,aggregated_user_stats_reco,clean
 enriched_user,user_deposit_initial_amount,real,aggregated_user_stats_reco,clean
-enriched_user,booking_cnt,real,aggregated_user_stats_reco,clean
-enriched_user,consult_offer,timestamp without time zone,aggregated_user_stats_reco,clean
-enriched_user,has_added_offer_to_favorites,timestamp without time zone,aggregated_user_stats_reco,clean
+enriched_user,booking_cnt,integer,aggregated_user_stats_reco,clean
+enriched_user,consult_offer,integer,aggregated_user_stats_reco,clean
+enriched_user,has_added_offer_to_favorites,integer,aggregated_user_stats_reco,clean
 iris_venues,irisId,character varying,iris_venues,clean
 iris_venues,venueId,character varying,iris_venues,clean
 qpi_answers,user_id,character varying,enriched_qpi_answers,analytics

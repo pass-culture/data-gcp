@@ -19,32 +19,21 @@ def get_cold_start_status(User) -> bool:
 
 
 def _get_user_app_interaction(User) -> int:
-    app_interaction_type = ["bookings", "clicks", "favorites"]
-    app_interaction_count = []
     connection = get_db()
-    for app_interaction in app_interaction_type:
-        app_interaction_count.append(
-            _get_app_interaction_count(User, connection, app_interaction)
-        )
-    bookings_count = app_interaction_count[0]
-    clicks_count = app_interaction_count[1]
-    favorites_count = app_interaction_count[2]
-    return bookings_count, clicks_count, favorites_count
-
-
-def _get_app_interaction_count(User, connection, app_interaction) -> int:
     app_interaction_query = text(
         f"""
-            SELECT {app_interaction}_count
-            FROM number_of_{app_interaction}_per_user
+            SELECT booking_cnt,consult_offer,has_added_offer_to_favorites
+            FROM public.enriched_user_mv
             WHERE user_id= :user_id;
             """
     )
     query_result = connection.execute(
         app_interaction_query, user_id=str(User.id)
     ).fetchone()
-    result = query_result[0] if query_result is not None else 0
-    return result
+    bookings_count = query_result[0] if query_result is not None else 0
+    clicks_count = query_result[1] if query_result is not None else 0
+    favorites_count = query_result[2] if query_result is not None else 0
+    return bookings_count, clicks_count, favorites_count
 
 
 def _is_trained_user(User) -> bool:

@@ -7,7 +7,10 @@ RETURNS TABLE (
     user_id varchar,
     user_deposit_creation_date TIMESTAMP,
     user_birth_date TIMESTAMP,
-    user_deposit_initial_amount REAL
+    user_deposit_initial_amount REAL,
+    booking_cnt varchar,
+    consult_offer varchar,
+    has_added_offer_to_favorites varchar,
 ) AS 
 $body$ 
 BEGIN 

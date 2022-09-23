@@ -17,6 +17,11 @@ clean_tables = {
         "destination_dataset": "{{ bigquery_clean_dataset }}",
         "destination_table": "recommendable_offers_data",
     },
+    "non_recommendable_offers_data": {
+        "sql": f"{CLEAN_SQL_PATH}/non_recommendable_offers_data.sql",
+        "destination_dataset": "{{ bigquery_clean_dataset }}",
+        "destination_table": "non_recommendable_offers_data",
+    },
 }
 
 analytics_tables = {
@@ -119,6 +124,12 @@ aggregated_tables = {
         "sql": f"{ANALYTICS_SQL_PATH}/aggregated_monthly_user_used_booking_activity.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "depends": ["aggregated_daily_user_used_activity"],
+    },
+    #Aggragation for reco purpose -> destination table = clean 
+    "aggregated_user_stats_reco": {
+        "sql": f"{CLEAN_SQL_PATH}/aggregated_user_stats_reco.sql",
+        "destination_dataset": "{{ bigquery_clean_dataset }}",
+        "depends": ["enriched_user_data"],
     },
 }
 

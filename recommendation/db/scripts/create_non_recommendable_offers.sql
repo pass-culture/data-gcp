@@ -7,10 +7,7 @@ RETURNS TABLE (user_id varchar,
 $body$
 BEGIN
     RETURN QUERY
-    SELECT DISTINCT b."user_id" AS user_id, s."offer_id" AS offer_id
-      FROM public.booking b
-INNER JOIN public.stock s ON b."stock_id" = s.stock_id
-     WHERE b."booking_is_cancelled" = false;
+    SELECT * from public.recommendable_offers_data;
 END;
 $body$
 LANGUAGE plpgsql;

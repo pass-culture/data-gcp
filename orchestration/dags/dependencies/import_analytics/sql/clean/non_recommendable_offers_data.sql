@@ -6,5 +6,3 @@ FROM
     INNER JOIN `{{ bigquery_clean_dataset }}.applicative_database_stock` s ON b.stock_id = s.stock_id
 WHERE
     b.booking_is_cancelled = false
-LIMIT
-    100

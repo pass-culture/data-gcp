@@ -29,6 +29,7 @@ from common.config import (
     ENV_SHORT_NAME,
     QPI_TABLE,
 )
+from dependencies.import_recommendation_cloudsql.monitor_tables import monitoring_tables
 from common.alerts import task_fail_slack_alert
 
 LOCATION = os.environ.get("REGION")
@@ -100,10 +101,15 @@ with DAG(
     start_drop_restore = DummyOperator(task_id="start_drop_restore")
     end_data_prep = DummyOperator(task_id="end_data_prep")
 
-    firebase_start_date = (
-        datetime.now() - timedelta(days=FIREBASE_PERIOD_DAYS)
-    ).strftime("%Y-%m-%d")
-    firebase_end_date = datetime.now().strftime("%Y-%m-%d")
+    monitor_tables_task = []
+    for table, params in monitoring_tables.items():
+        task = BigQueryExecuteQueryOperator(
+            task_id=f"monitor_{table}",
+            sql=params["sql"],
+            dag=dag,
+        )
+        monitoring_tables.append(task)
+
     for table in TABLES:
 
         dataset_type = TABLES[table]["dataset_type"]
@@ -131,15 +137,6 @@ with DAG(
                 SELECT {select_columns}
                 FROM `{GCP_PROJECT}.{dataset}.enriched_{QPI_TABLE}`
             """
-        elif table == "firebase_events":
-            filter_column_query = f"""SELECT {select_columns}
-                FROM `{GCP_PROJECT}.{dataset}.{bigquery_table_name}`
-                WHERE (event_name='ConsultOffer' OR event_name='HasAddedOfferToFavorites')
-                AND (event_date > '{firebase_start_date}' AND event_date < '{firebase_end_date}')
-                AND user_id is not null
-                AND offer_id is not null
-                AND offer_id != 'NaN'
-                """
         else:
             filter_column_query = f"""
                 SELECT {select_columns}
@@ -284,5 +281,5 @@ with DAG(
 
     end = DummyOperator(task_id="end")
 
-    start >> start_drop_restore
+    start >> monitoring_tables >> start_drop_restore
     end_drop_restore >> recreate_indexes_task >> refresh_materialized_view_tasks >> end

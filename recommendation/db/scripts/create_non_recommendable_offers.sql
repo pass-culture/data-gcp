@@ -7,7 +7,7 @@ RETURNS TABLE (user_id varchar,
 $body$
 BEGIN
     RETURN QUERY
-    SELECT * from public.recommendable_offers_data;
+    SELECT * from public.non_recommendable_offers_data;
 END;
 $body$
 LANGUAGE plpgsql;
@@ -18,7 +18,7 @@ AS
     SELECT * from get_non_recommendable_offers()
 WITH NO DATA;
 
-
+CREATE UNIQUE INDEX idx_non_recommendable_userid ON public.non_recommendable_offers USING btree (user_id,offer_id);
 REFRESH MATERIALIZED VIEW non_recommendable_offers;
 
 

@@ -141,7 +141,7 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
                 (datetime.now() - timedelta(days=18 * 366)),
             ],
             "user_deposit_initial_amount": [300, 300, 300, 300, 20, 30, 30, 300],
-            "booking_cnt": [1, 2, 2, 3, 3, 4, 4, 4],
+            "booking_cnt": [1, 3, 3, 3, 3, 4, 4, 4],
             "consult_offer": [1, 2, 2, 3, 3, 4, 4, 4],
             "has_added_offer_to_favorites": [1, 2, 2, 3, 3, 4, 4, 4],
         }

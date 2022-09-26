@@ -84,6 +84,8 @@ def define_import_tables():
         ],
         "educational_domain": [""],
         "educational_domain_venue": [""],
+        "collective_offer_domain": [""],
+        "collective_offer_template_domain": [""],
         "venue_educational_status": [""],
         "collective_booking": [
             "collective_booking_creation_date",
@@ -672,6 +674,22 @@ def define_import_query(
                 ,CAST("educationalDomainId" AS varchar(255)) AS educational_domain_id
                 ,CAST("venueId" AS varchar(255)) AS venue_id
             FROM educational_domain_venue
+        """
+    cloudsql_queries[
+        "collective_offer_domain"
+    ] = """
+            SELECT
+                CAST("collectiveOfferId" AS varchar(255)) AS collective_offer_id
+                ,CAST("educationalDomainId" AS varchar(255)) AS educational_domain_id
+            FROM collective_offer_domain
+        """
+    cloudsql_queries[
+        "collective_offer_template_domain"
+    ] = """
+            SELECT
+                CAST("collectiveOfferTemplateId" AS varchar(255)) AS collective_offer_template_id
+                ,CAST("educationalDomainId" AS varchar(255)) AS educational_domain_id
+            FROM collective_offer_template_domain
         """
     cloudsql_queries[
         "venue_educational_status"

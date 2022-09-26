@@ -27,6 +27,7 @@ from common.config import (
     BIGQUERY_CLEAN_DATASET,
     BIGQUERY_ANALYTICS_DATASET,
     ENV_SHORT_NAME,
+    DAG_FOLDER,
     QPI_TABLE,
 )
 from dependencies.import_recommendation_cloudsql.monitor_tables import monitoring_tables
@@ -94,19 +95,25 @@ with DAG(
     schedule_interval="30 3 * * *",
     catchup=False,
     dagrun_timeout=timedelta(minutes=240),
+    user_defined_macros=macros.default,
+    template_searchpath=DAG_FOLDER,
 ) as dag:
 
     start = DummyOperator(task_id="start")
-
+    start_monitoring = DummyOperator(task_id="start_monitoring")
     start_drop_restore = DummyOperator(task_id="start_drop_restore")
+
+    end_monitoring = DummyOperator(task_id="end_monitoring")
     end_data_prep = DummyOperator(task_id="end_data_prep")
 
     monitor_tables_task = []
     for table, params in monitoring_tables.items():
+        dataset = params["destination_dataset"]
         task = BigQueryExecuteQueryOperator(
             task_id=f"monitor_{table}",
             sql=params["sql"],
-            dag=dag,
+            destination_dataset_table=f"{GCP_PROJECT}.{dataset}.monitor_{table}",
+            write_disposition="WRITE_APPAND",
         )
         monitor_tables_task.append(task)
 
@@ -281,5 +288,11 @@ with DAG(
 
     end = DummyOperator(task_id="end")
 
-    start >> monitoring_tables >> start_drop_restore
+    (
+        start
+        >> start_monitoring
+        >> monitor_tables_task
+        >> end_monitoring
+        >> start_drop_restore
+    )
     end_drop_restore >> recreate_indexes_task >> refresh_materialized_view_tasks >> end

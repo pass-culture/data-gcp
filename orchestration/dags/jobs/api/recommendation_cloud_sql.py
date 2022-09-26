@@ -32,6 +32,7 @@ from common.config import (
 )
 from dependencies.import_recommendation_cloudsql.monitor_tables import monitoring_tables
 from common.alerts import task_fail_slack_alert
+from common import macros
 
 LOCATION = os.environ.get("REGION")
 
@@ -113,7 +114,8 @@ with DAG(
             task_id=f"monitor_{table}",
             sql=params["sql"],
             destination_dataset_table=f"{GCP_PROJECT}.{dataset}.monitor_{table}",
-            write_disposition="WRITE_APPAND",
+            use_legacy_sql=False,
+            write_disposition="WRITE_APPEND",
         )
         monitor_tables_task.append(task)
 

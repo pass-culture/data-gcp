@@ -17,6 +17,7 @@ SELECT
         WHEN offer_category_name = "CONFERENCE" THEN "Conférence"
         WHEN offer_category_name = "CARTE_JEUNES" THEN "Carte jeunes"
         WHEN offer_category_name = "MEDIA" THEN "Média"
+    ELSE offer_category_name 
     END as offer_category_name
 FROM  `{{ bigquery_analytics_dataset }}.aggregated_daily_used_booking`
 )

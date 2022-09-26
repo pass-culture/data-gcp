@@ -1,4 +1,6 @@
 from datetime import datetime, timedelta
+from base64 import b32decode
+import binascii
 import os
 from common.config import (
     BIGQUERY_OPEN_DATA_PUBLIC_DATASET,
@@ -62,6 +64,23 @@ def create_humanize_id_function():
     with open(os.path.join(PATH_TO_DIR, "js", "humanize_id.js")) as js_file:
         js_code = "\t\t\t".join(js_file.readlines())
         return f"""{humanize_id_definition_query} \t\t {js_code} \"\"\";"""
+
+
+class NonDehumanizableId(Exception):
+    pass
+
+
+def dehumanize(public_id: str | None) -> int | None:
+    if public_id is None:
+        return None
+    missing_padding = len(public_id) % 8
+    if missing_padding != 0:
+        public_id += "=" * (8 - missing_padding)
+    try:
+        xbytes = b32decode(public_id.replace("8", "O").replace("9", "I"))
+    except binascii.Error:
+        raise NonDehumanizableId("id non dehumanizable")
+    return int_from_bytes(xbytes)
 
 
 default = {

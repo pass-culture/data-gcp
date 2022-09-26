@@ -17,15 +17,10 @@ from common.config import (
     BIGQUERY_CLEAN_DATASET,
 )
 
-AB_TESTING_TABLE = os.environ.get("TABLE_AB_TESTING", "abc_testing_20220322_v1v2")
 yesterday = (datetime.datetime.now() + datetime.timedelta(days=-1)).strftime(
     "%Y-%m-%d"
 ) + " 00:00:00"
 TABLES = {
-    f"{AB_TESTING_TABLE}": {
-        "query": None,
-        "write_disposition": "WRITE_TRUNCATE",
-    },
     "past_recommended_offers": {
         "query": f"SELECT * FROM public.past_recommended_offers where date <= '{yesterday}'",
         "write_disposition": "WRITE_APPEND",

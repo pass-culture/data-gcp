@@ -127,7 +127,7 @@ aggregated_tables = {
     },
     # Aggragation for reco purpose -> destination table = clean
     "aggregated_user_stats_reco": {
-        "sql": f"{CLEAN_SQL_PATH}/aggregated_user_stats_reco.sql",
+        "sql": f"{ANALYTICS_SQL_PATH}/aggregated_user_stats_reco.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "depends": ["enriched_user_data"],
     },

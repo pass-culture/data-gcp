@@ -103,25 +103,6 @@ copy_to_analytics_past_recommended_offers = BigQueryExecuteQueryOperator(
     dag=dag,
 )
 
-copy_to_clean_ab_testing = BigQueryExecuteQueryOperator(
-    task_id="copy_to_clean_ab_testing",
-    sql=f"SELECT * FROM {BIGQUERY_RAW_DATASET}.{AB_TESTING_TABLE}",
-    write_disposition="WRITE_TRUNCATE",
-    use_legacy_sql=False,
-    destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.{AB_TESTING_TABLE}",
-    dag=dag,
-)
-
-copy_to_analytics_ab_testing = BigQueryExecuteQueryOperator(
-    task_id="copy_to_analytics_ab_testing",
-    sql=f"SELECT * FROM {BIGQUERY_CLEAN_DATASET}.{AB_TESTING_TABLE}",
-    write_disposition="WRITE_TRUNCATE",
-    use_legacy_sql=False,
-    destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.{AB_TESTING_TABLE}",
-    dag=dag,
-)
-
-
 end = DummyOperator(task_id="end", dag=dag)
 
 (
@@ -132,4 +113,4 @@ end = DummyOperator(task_id="end", dag=dag)
     >> copy_to_analytics_past_recommended_offers
     >> end
 )
-(delete_rows_task >> copy_to_clean_ab_testing >> copy_to_analytics_ab_testing >> end)
+(delete_rows_task >> end)

@@ -12,6 +12,16 @@ clean_tables = {
         "destination_table": "iris_venues",
         "params": {"iris_distance": 50000 if ENV_SHORT_NAME != "dev" else 10000},
     },
+    "recommendable_offers_data": {
+        "sql": f"{CLEAN_SQL_PATH}/recommendable_offers_data.sql",
+        "destination_dataset": "{{ bigquery_clean_dataset }}",
+        "destination_table": "recommendable_offers_data",
+    },
+    "non_recommendable_offers_data": {
+        "sql": f"{CLEAN_SQL_PATH}/non_recommendable_offers_data.sql",
+        "destination_dataset": "{{ bigquery_clean_dataset }}",
+        "destination_table": "non_recommendable_offers_data",
+    },
 }
 
 analytics_tables = {
@@ -118,6 +128,11 @@ aggregated_tables = {
         "sql": f"{ANALYTICS_SQL_PATH}/aggregated_monthly_user_used_booking_activity.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "depends": ["aggregated_daily_user_used_activity"],
+    },
+    "aggregated_user_stats_reco": {
+        "sql": f"{ANALYTICS_SQL_PATH}/aggregated_user_stats_reco.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "depends": ["enriched_user_data"],
     },
 }
 

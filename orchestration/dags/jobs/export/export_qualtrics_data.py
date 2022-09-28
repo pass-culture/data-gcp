@@ -50,21 +50,32 @@ def get_and_send(**kwargs):
     table_name = kwargs["table_name"]
     dataset_id = kwargs["dataset_id"]
     automation_id = kwargs["automation_id"]
+    include_email = kwargs['include_email']
     current_month = ds.replace(day=1).strftime("%Y-%m-%d")
-    sql = f"""
-        WITH user_email AS (
-            SELECT * FROM EXTERNAL_QUERY(
-                        '{APPLICATIVE_EXTERNAL_CONNECTION_ID}',
-                        ' SELECT CAST("id" AS varchar(255)) AS user_id, email FROM public.user '
-                    )
-        )
-    SELECT 
-        ue.email, 
-        t.* except(calculation_month)
-    FROM `{dataset_id}.{table_name}` t
-    LEFT JOIN user_email ue on ue.user_id = t.user_id
-    WHERE t.calculation_month = '{ current_month }'
-    """
+    if include_email:
+        sql = f"""
+            WITH user_email AS (
+                SELECT * FROM EXTERNAL_QUERY(
+                            '{APPLICATIVE_EXTERNAL_CONNECTION_ID}',
+                            ' SELECT CAST("id" AS varchar(255)) AS user_id, email FROM public.user '
+                        )
+            )
+        SELECT 
+            ue.email, 
+            UNIX_DATE(DATE(t.export_date)) as export_date,
+            t.* except(calculation_month, export_date)
+        FROM `{dataset_id}.{table_name}` t
+        LEFT JOIN user_email ue on ue.user_id = t.user_id
+        WHERE t.calculation_month = '{ current_month }'
+        """
+    else:
+        sql = f"""
+        SELECT 
+            UNIX_DATE(DATE(t.export_date)) as export_date,
+            t.* except(calculation_month, export_date)
+        FROM `{dataset_id}.{table_name}` t
+        WHERE t.calculation_month = '{ current_month }'
+        """
     df = pd.read_gbq(sql)
     export = df.to_csv(index=False)
     res = requests.post(
@@ -73,6 +84,7 @@ def get_and_send(**kwargs):
         files={"file": ("data.csv", export)},
     )
     print(res.json())
+    return 1
 
 
 start = DummyOperator(task_id="start", dag=dag)
@@ -91,6 +103,7 @@ for table, job_params in export_tables.items():
             "table_name": table,
             "dataset_id": BIGQUERY_CLEAN_DATASET,
             "automation_id": job_params["qualtrics_automation_id"],
+            "include_email": job_params["include_email"],
         },
         dag=dag,
     )

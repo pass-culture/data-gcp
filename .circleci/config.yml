@@ -299,9 +299,41 @@ workflows:
           <<: *slack-fail-post-step
 
       - cloud-function-deploy:
+          name: qualtrics-cloud-function-deploy-stg
+          cloud-function-name: qualtrics_stg
+          cloud-function-folder: qualtrics-function-source
+          requires:
+            - linter
+          filters:
+            branches:
+              only:
+                - master
+          context:
+            - DATA_GCP
+            - DATA_GCP_EHP
+            - Slack
+          <<: *slack-fail-post-step
+
+      - cloud-function-deploy:
           name: downloads-cloud-function-deploy-prod
           cloud-function-name: downloads_prod
           cloud-function-folder: downloads-function-source
+          requires:
+            - linter
+          filters:
+            branches:
+              only:
+                - production
+          context:
+            - DATA_GCP
+            - DATA_GCP_PROD
+            - Slack
+          <<: *slack-fail-post-step
+
+      - cloud-function-deploy:
+          name: qualtrics-cloud-function-deploy-prod
+          cloud-function-name: qualtrics_prod
+          cloud-function-folder: qualtrics-function-source
           requires:
             - linter
           filters:
@@ -524,6 +556,7 @@ workflows:
             - addresses-cloud-function-deploy-prod
             - typeform-webhook-cloud-function-deploy-prod
             - downloads-cloud-function-deploy-prod
+            - qualtrics-cloud-function-deploy-prod
             - contentful-cloud-function-deploy-prod
             - siren-cloud-function-deploy-prod
             - dms-cloud-function-deploy-prod
@@ -545,6 +578,7 @@ workflows:
             - addresses-cloud-function-deploy-stg
             - typeform-webhook-cloud-function-deploy-stg
             - downloads-cloud-function-deploy-stg
+            - qualtrics-cloud-function-deploy-stg
             - contentful-cloud-function-deploy-stg
             - siren-cloud-function-deploy-stg
             - dms-cloud-function-deploy-stg
@@ -579,6 +613,11 @@ workflows:
           name: downloads-cloud-function-deploy-dev
           cloud-function-name: downloads_dev
           cloud-function-folder: downloads-function-source
+          <<: *deploy_on_dev_commons
+       - cloud-function-deploy:
+          name: qualtrics-cloud-function-deploy-dev
+          cloud-function-name: qualtrics_dev
+          cloud-function-folder: qualtrics-function-source
           <<: *deploy_on_dev_commons
       - cloud-function-deploy:
           name: contentful-cloud-function-deploy-dev
@@ -637,6 +676,7 @@ workflows:
             - typeform-cloud-function-deploy-dev
             - addresses-cloud-function-deploy-dev
             - downloads-cloud-function-deploy-dev
+            - qualtrics-cloud-function-deploy-dev
             - contentful-cloud-function-deploy-dev
             - siren-cloud-function-deploy-dev
             - dms-cloud-function-deploy-dev

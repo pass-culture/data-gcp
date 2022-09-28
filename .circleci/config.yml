@@ -614,7 +614,7 @@ workflows:
           cloud-function-name: downloads_dev
           cloud-function-folder: downloads-function-source
           <<: *deploy_on_dev_commons
-       - cloud-function-deploy:
+      - cloud-function-deploy:
           name: qualtrics-cloud-function-deploy-dev
           cloud-function-name: qualtrics_dev
           cloud-function-folder: qualtrics-function-source

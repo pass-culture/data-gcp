@@ -50,7 +50,7 @@ def get_and_send(**kwargs):
     table_name = kwargs["table_name"]
     dataset_id = kwargs["dataset_id"]
     automation_id = kwargs["automation_id"]
-    include_email = kwargs['include_email']
+    include_email = kwargs["include_email"]
     current_month = ds.replace(day=1).strftime("%Y-%m-%d")
     if include_email:
         sql = f"""

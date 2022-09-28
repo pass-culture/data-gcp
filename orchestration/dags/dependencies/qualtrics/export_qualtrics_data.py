@@ -17,7 +17,7 @@ export_tables = {
         "qualtrics_automation_id": access_secret_data(
             GCP_PROJECT, f"qualtrics_ir_jeunes_automation_id_{ENV_SHORT_NAME}"
         ),
-        "include_email": True
+        "include_email": True,
     },
     "qualtrics_ac": {
         "sql": f"{SQL_PATH}/qualtrics_ac.sql",
@@ -29,6 +29,6 @@ export_tables = {
         "qualtrics_automation_id": access_secret_data(
             GCP_PROJECT, f"qualtrics_ir_ac_automation_id_{ENV_SHORT_NAME}"
         ),
-        "include_email": False
+        "include_email": False,
     },
 }

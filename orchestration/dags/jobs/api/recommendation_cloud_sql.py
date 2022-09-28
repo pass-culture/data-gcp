@@ -27,9 +27,12 @@ from common.config import (
     BIGQUERY_CLEAN_DATASET,
     BIGQUERY_ANALYTICS_DATASET,
     ENV_SHORT_NAME,
+    DAG_FOLDER,
     QPI_TABLE,
 )
+from dependencies.import_recommendation_cloudsql.monitor_tables import monitoring_tables
 from common.alerts import task_fail_slack_alert
+from common import macros
 
 LOCATION = os.environ.get("REGION")
 
@@ -93,17 +96,29 @@ with DAG(
     schedule_interval="30 3 * * *",
     catchup=False,
     dagrun_timeout=timedelta(minutes=240),
+    user_defined_macros=macros.default,
+    template_searchpath=DAG_FOLDER,
 ) as dag:
 
     start = DummyOperator(task_id="start")
-
+    start_monitoring = DummyOperator(task_id="start_monitoring")
     start_drop_restore = DummyOperator(task_id="start_drop_restore")
+
+    end_monitoring = DummyOperator(task_id="end_monitoring")
     end_data_prep = DummyOperator(task_id="end_data_prep")
 
-    firebase_start_date = (
-        datetime.now() - timedelta(days=FIREBASE_PERIOD_DAYS)
-    ).strftime("%Y-%m-%d")
-    firebase_end_date = datetime.now().strftime("%Y-%m-%d")
+    monitor_tables_task = []
+    for table, params in monitoring_tables.items():
+        dataset = params["destination_dataset"]
+        task = BigQueryExecuteQueryOperator(
+            task_id=f"monitor_{table}",
+            sql=params["sql"],
+            destination_dataset_table=f"{GCP_PROJECT}.{dataset}.monitor_{table}",
+            use_legacy_sql=False,
+            write_disposition="WRITE_APPEND",
+        )
+        monitor_tables_task.append(task)
+
     for table in TABLES:
 
         dataset_type = TABLES[table]["dataset_type"]
@@ -131,15 +146,6 @@ with DAG(
                 SELECT {select_columns}
                 FROM `{GCP_PROJECT}.{dataset}.enriched_{QPI_TABLE}`
             """
-        elif table == "firebase_events":
-            filter_column_query = f"""SELECT {select_columns}
-                FROM `{GCP_PROJECT}.{dataset}.{bigquery_table_name}`
-                WHERE (event_name='ConsultOffer' OR event_name='HasAddedOfferToFavorites')
-                AND (event_date > '{firebase_start_date}' AND event_date < '{firebase_end_date}')
-                AND user_id is not null
-                AND offer_id is not null
-                AND offer_id != 'NaN'
-                """
         else:
             filter_column_query = f"""
                 SELECT {select_columns}
@@ -246,26 +252,12 @@ with DAG(
     restore_tasks[-1] >> end_drop_restore
 
     recreate_indexes_query = """
-        CREATE INDEX IF NOT EXISTS idx_stock_id                           ON public.stock                       USING btree (stock_id);
-        CREATE INDEX IF NOT EXISTS idx_stock_offerid                      ON public.stock                       USING btree ("offer_id");
-        CREATE INDEX IF NOT EXISTS idx_booking_stockid                    ON public.booking                     USING btree ("stock_id");
-        CREATE INDEX IF NOT EXISTS idx_mediation_offerid                  ON public.mediation                   USING btree ("offerId");
-        CREATE INDEX IF NOT EXISTS idx_offer_id                           ON public.offer                       USING btree (offer_id);
         CREATE INDEX IF NOT EXISTS idx_user_id                            ON public.enriched_user               USING btree (user_id);
-        CREATE INDEX IF NOT EXISTS idx_offer_subcategoryid                ON public.offer                       USING btree ("offer_subcategoryId");
-        CREATE INDEX IF NOT EXISTS idx_offer_venueid                      ON public.offer                       USING btree ("venue_id");
-        CREATE INDEX IF NOT EXISTS idx_venue_id                           ON public.venue                       USING btree (venue_id);
-        CREATE INDEX IF NOT EXISTS idx_venue_managingoffererid            ON public.venue                       USING btree ("venue_managing_offerer_id");
-        CREATE INDEX IF NOT EXISTS idx_offerer_id                         ON public.offerer                     USING btree (offerer_id);
-        CREATE INDEX IF NOT EXISTS idx_firebase_event_id                  ON public.firebase_events             USING btree (user_id);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_iris_venues_mv_unique       ON public.iris_venues_mv              USING btree (iris_id,venue_id);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_non_recommendable_id        ON public.non_recommendable_offers    USING btree (user_id,offer_id);
-        CREATE INDEX IF NOT EXISTS idx_offer_recommendable_venue_id       ON public.recommendable_offers        USING btree (venue_id);
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_id      ON public.recommendable_offers        USING btree (offer_id);
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_nb_bookings_unique          ON public.number_of_bookings_per_user USING btree ("user_id",bookings_count);
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_nb_clicks_unique            ON public.number_of_clicks_per_user   USING btree ("user_id",clicks_count);
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_nb_favorites_unique         ON public.number_of_favorites_per_user USING btree ("user_id",favorites_count);
-        CREATE INDEX IF NOT EXISTS trained_users_mf_reco_user_id          ON public.trained_users_mf_reco       USING btree (user_id);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_id      ON public.recommendable_offers        USING btree (offer_id, stock_beginning_date);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_15_id   ON public.recommendable_offers_eac_15 USING btree (offer_id,stock_beginning_date);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_16_17_id ON public.recommendable_offers_eac_16_17 USING btree (offer_id,stock_beginning_date);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_enriched_user_mv            ON public.enriched_user_mv            USING btree (user_id);
     """
 
@@ -282,9 +274,6 @@ with DAG(
         "recommendable_offers_eac_16_17",
         "non_recommendable_offers",
         "iris_venues_mv",
-        "number_of_bookings_per_user",
-        "number_of_clicks_per_user",
-        "number_of_favorites_per_user",
         "enriched_user_mv",
         "qpi_answers_mv",
     ]
@@ -301,5 +290,11 @@ with DAG(
 
     end = DummyOperator(task_id="end")
 
-    start >> start_drop_restore
+    (
+        start
+        >> start_monitoring
+        >> monitor_tables_task
+        >> end_monitoring
+        >> start_drop_restore
+    )
     end_drop_restore >> recreate_indexes_task >> refresh_materialized_view_tasks >> end

@@ -7,4 +7,10 @@ CREATE TABLE past_recommended_offers (
 
 ALTER TABLE past_recommended_offers
 ADD COLUMN  group_id       varchar,
-ADD COLUMN  reco_origin    varchar;
+ADD COLUMN  reco_origin    varchar,
+ADD COLUMN  model_name     varchar,
+ADD COLUMN model_version   varchar,
+ADD COLUMN call_id         varchar,
+ADD COLUMN lat             varchar,
+ADD COLUMN long            varchar,
+ADD COLUMN reco_filters    json;

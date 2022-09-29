@@ -74,7 +74,7 @@ ENRICHED_OFFER_DATA_INPUT = {
             "companies": '[{"activity":"production","company":{"name":"universal pictures"}}]',
             "countries": '["usa"]',
             "casting": "[]",
-            "isbn": None,
+            "isbn": "333",
         },
         {
             "offer_id": "4",
@@ -317,11 +317,17 @@ ENRICHED_OFFER_DATA_INPUT = {
 ENRICHED_OFFER_DATA_EXPECTED = [
     {
         "offer_id": "3",
+        "offer_product_id":"3",
+        "item_id":"product-333",
         "offerer_id": "3",
         "offerer_name": "Test Offerer",
         "venue_id": "1",
         "venue_name": "Test Venue",
         "venue_department_code": "93",
+        "URL": None,
+        "is_national":False,
+        "is_active":True,
+        "offer_validation":"APPROVED",
         "offer_name": "Test",
         "offer_subcategoryId": "SEANCE_CINE",
         "last_stock_price": 0.0,

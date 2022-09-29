@@ -300,7 +300,7 @@ workflows:
 
       - cloud-function-deploy:
           name: qualtrics-cloud-function-deploy-stg
-          cloud-function-name: qualtrics_stg
+          cloud-function-name: qualtrics_import_stg
           cloud-function-folder: qualtrics-function-source
           requires:
             - linter
@@ -316,7 +316,7 @@ workflows:
 
       - cloud-function-deploy:
           name: appsflyer-cloud-function-deploy-stg
-          cloud-function-name: appsflyer
+          cloud-function-name: appsflyer_import_stg
           cloud-function-folder: appsflyer-function-source
           requires:
             - linter
@@ -348,7 +348,7 @@ workflows:
 
       - cloud-function-deploy:
           name: qualtrics-cloud-function-deploy-prod
-          cloud-function-name: qualtrics_prod
+          cloud-function-name: qualtrics_import_prod
           cloud-function-folder: qualtrics-function-source
           requires:
             - linter
@@ -364,7 +364,7 @@ workflows:
 
       - cloud-function-deploy:
           name: appsflyer-cloud-function-deploy-prod
-          cloud-function-name: appsflyer_prod
+          cloud-function-name: appsflyer_import_prod
           cloud-function-folder: appsflyer-function-source
           requires:
             - linter
@@ -650,12 +650,12 @@ workflows:
           <<: *deploy_on_dev_commons
       - cloud-function-deploy:
           name: qualtrics-cloud-function-deploy-dev
-          cloud-function-name: qualtrics_dev
+          cloud-function-name: qualtrics_import_dev
           cloud-function-folder: qualtrics-function-source
           <<: *deploy_on_dev_commons
       - cloud-function-deploy:
           name: appsflyer-cloud-function-deploy-dev
-          cloud-function-name: appsflyer_dev
+          cloud-function-name: appsflyer_import_dev
           cloud-function-folder: appsflyer-function-source
           <<: *deploy_on_dev_commons
       - cloud-function-deploy:

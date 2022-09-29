@@ -14,4 +14,10 @@ import_tables = {
         "time_partitioning": {"field": "partition_date"},
         "cluster_fields": ["partition_date"],
     },
+    "app_native_logs": {
+        "sql": f"{SQL_PATH}/app_native_logs.sql",
+        "destination_dataset_table": "{{ bigquery_analytics_dataset }}.app_native_logs${{ yyyymmdd(ds) }}",
+        "time_partitioning": {"field": "partition_date"},
+        "cluster_fields": ["partition_date"],
+    },
 }

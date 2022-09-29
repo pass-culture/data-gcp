@@ -1,8 +1,10 @@
+{{ create_dehumanize_id_function() }}
+
 WITH temp_firebase_events AS (
     SELECT
         event_name,
         user_pseudo_id,
-        user_id,
+        CASE WHEN REGEXP_CONTAINS(user_id, r"\D") THEN dehumanize_id(user_id) ELSE user_id END AS user_id,
         platform,
         PARSE_DATE("%Y%m%d", event_date) AS event_date,
         TIMESTAMP_SECONDS(

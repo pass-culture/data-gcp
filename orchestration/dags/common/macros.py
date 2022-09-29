@@ -45,11 +45,11 @@ def add_days(ds, days):
     return ds + timedelta(days=days)
 
 
-def create_humanize_id_function():
+def create_js_function(name, filename):
     PATH_TO_DIR = os.path.dirname(os.path.realpath(__file__))
     # Define function humanize_id(int) -> str
-    humanize_id_definition_query = f"""
-        CREATE TEMPORARY FUNCTION humanize_id(id STRING)
+    query = f"""
+        CREATE TEMPORARY FUNCTION {name}(id STRING)
         RETURNS STRING
         LANGUAGE js
         OPTIONS (
@@ -59,9 +59,17 @@ def create_humanize_id_function():
     """
 
     # open js file and copy code
-    with open(os.path.join(PATH_TO_DIR, "js", "humanize_id.js")) as js_file:
+    with open(os.path.join(PATH_TO_DIR, "js", filename)) as js_file:
         js_code = "\t\t\t".join(js_file.readlines())
-        return f"""{humanize_id_definition_query} \t\t {js_code} \"\"\";"""
+        return f"""{query} \t\t {js_code} \"\"\";"""
+
+
+def create_humanize_id_function():
+    return create_js_function("humanize_id", "humanize_id.js")
+
+
+def create_dehumanize_id_function():
+    return create_js_function("dehumanize_id", "dehumanize_id.js")
 
 
 default = {
@@ -79,4 +87,5 @@ default = {
     "yesterday": yesterday,
     "add_days": add_days,
     "create_humanize_id_function": create_humanize_id_function,
+    "create_dehumanize_id_function": create_dehumanize_id_function,
 }

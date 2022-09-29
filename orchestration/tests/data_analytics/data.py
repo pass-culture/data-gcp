@@ -24,7 +24,7 @@ ENRICHED_OFFER_DATA_INPUT = {
     "applicative_database_offer": [
         {
             "venue_id": "1",
-            "product_id": "1",
+            "offer_product_id": "1",
             "offer_id": "3",
             "offer_subcategoryId": "SEANCE_CINE",
             "offer_name": "Test",
@@ -39,7 +39,7 @@ ENRICHED_OFFER_DATA_INPUT = {
         },
         {
             "venue_id": "2",
-            "product_id": "2",
+            "offer_product_id": "2",
             "offer_id": "4",
             "offer_subcategoryId": "LIVRE_PAPIER",
             "offer_name": "RIP Dylan Rieder",
@@ -317,7 +317,7 @@ ENRICHED_OFFER_DATA_INPUT = {
 ENRICHED_OFFER_DATA_EXPECTED = [
     {
         "offer_id": "3",
-        "offer_product_id": "3",
+        "offer_product_id": "1",
         "item_id": "product-333",
         "offerer_id": "3",
         "offerer_name": "Test Offerer",

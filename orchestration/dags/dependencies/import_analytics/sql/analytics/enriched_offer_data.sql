@@ -3,7 +3,7 @@
 WITH offer_humanized_id AS (
     SELECT
         offer_id,
-        humanize_id(offer_id) AS humanized_id
+        humanize_id(offer_id) AS humanized_id,
     FROM
         `{{ bigquery_analytics_dataset }}`.applicative_database_offer
     WHERE
@@ -118,11 +118,17 @@ SELECT
     venue.venue_name,
     venue.venue_department_code,
     offer.offer_id,
+    offer.offer_product_id,
     offer.offer_name,
     offer.offer_subcategoryId,
     last_stock.last_stock_price,
     offer.offer_creation_date,
     offer.offer_is_duo,
+    CASE
+        WHEN offer.offer_subcategoryId IN ('LIVRE_PAPIER') THEN CONCAT('product-', offer_extracted_data.isbn)
+        WHEN offer.offer_subcategoryId IN ('SEANCE_CINE') THEN CONCAT('product-', offer_extracted_data.visa)
+        ELSE CONCAT('offer-', offer.offer_id)
+    END AS item_id,
     CASE
         WHEN (
             offer.offer_subcategoryId <> 'JEU_EN_LIGNE'
@@ -130,7 +136,7 @@ SELECT
             AND offer.offer_subcategoryId <> 'ABO_JEU_VIDEO'
             AND offer.offer_subcategoryId <> 'ABO_LUDOTHEQUE'
             AND (
-                offer.offer_url IS NULL -- not numerical
+                offer.URL IS NULL -- not numerical
                 OR last_stock.last_stock_price = 0
                 OR subcategories.id = 'LIVRE_NUMERIQUE'
                 OR subcategories.id = 'ABO_LIVRE_NUMERIQUE'
@@ -193,6 +199,10 @@ SELECT
         '/edition'
     ) AS passculture_pro_url,
     CONCAT('https://passculture.app/offre/', offer.offer_id) AS webapp_url,
+    offer.offer_url as URL,
+    offer.offer_is_national as is_national,
+    offer.offer_is_active as is_active,
+    offer.offer_validation as offer_validation,
     mediation.mediation_humanized_id,
     count_first_booking_view.first_booking_cnt,
     offer_tags.tag as offer_tag,

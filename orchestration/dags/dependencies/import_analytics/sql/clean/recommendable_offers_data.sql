@@ -49,29 +49,23 @@ CREATE TEMP FUNCTION offer_has_at_least_one_active_mediation(var_offer_id STRING
 WITH get_recommendable_offers AS(
     SELECT
         DISTINCT (offer.offer_id) AS offer_id,
-        offer.offer_product_id AS product_id,
+        offer.item_id AS item_id,
         offer.venue_id AS venue_id,
         offer.offer_subcategoryId AS subcategory_id,
         subcategories.category_id AS category,
         subcategories.search_group_name AS search_group_name,
         offer.offer_name AS name,
-        offer.offer_url AS url,
-        offer.offer_is_national AS is_national,
+        offer.URL AS url,
+        offer.is_national AS is_national,
         offer.offer_creation_date AS offer_creation_date,
         stock.stock_beginning_date AS stock_beginning_date,
-        enriched_offer.last_stock_price AS stock_price,
+        offer.last_stock_price AS stock_price,
         (
             CASE
                 WHEN booking_numbers.booking_number IS NOT NULL THEN booking_numbers.booking_number
                 ELSE 0
             END
         ) AS booking_number,
-        (
-            CASE
-                WHEN offer.offer_subcategoryId IN ('LIVRE_PAPIER', 'SEANCE_CINE') THEN CONCAT('product-', offer.offer_product_id)
-                ELSE CONCAT('offer-', offer.offer_id)
-            END
-        ) AS item_id,
         (
             CASE
                 WHEN (
@@ -81,8 +75,8 @@ WITH get_recommendable_offers AS(
                     AND offer.offer_subcategoryId <> 'ABO_JEU_VIDEO'
                     AND offer.offer_subcategoryId <> 'ABO_LUDOTHEQUE'
                     AND (
-                        offer.offer_url IS NULL
-                        OR enriched_offer.last_stock_price = 0
+                        offer.URL IS NULL
+                        OR offer.last_stock_price = 0
                         OR subcategories.id = 'LIVRE_NUMERIQUE'
                         OR subcategories.id = 'ABO_LIVRE_NUMERIQUE'
                         OR subcategories.id = 'TELECHARGEMENT_LIVRE_AUDIO'
@@ -93,9 +87,8 @@ WITH get_recommendable_offers AS(
             END
         ) AS is_underage_recommendable,
     FROM
-        `{{ bigquery_clean_dataset }}.applicative_database_offer` offer
+        `{{ bigquery_analytics_dataset }}.enriched_offer_data` offer
         JOIN `{{ bigquery_clean_dataset }}.subcategories` subcategories ON offer.offer_subcategoryId = subcategories.id
-        JOIN `{{ bigquery_analytics_dataset }}.enriched_offer_data` enriched_offer ON offer.offer_id = enriched_offer.offer_id
         JOIN (
             SELECT
                 *
@@ -116,19 +109,19 @@ WITH get_recommendable_offers AS(
         LEFT JOIN (
             SELECT
                 COUNT(*) AS booking_number,
-                offer.offer_product_id
+                offer.item_id as item_id
             FROM
                 `{{ bigquery_clean_dataset }}.applicative_database_booking` booking
                 LEFT JOIN `{{ bigquery_clean_dataset }}.applicative_database_stock` stock ON booking.stock_id = stock.stock_id
-                LEFT JOIN `{{ bigquery_clean_dataset }}.applicative_database_offer` offer ON stock.offer_id = offer.offer_id
+                LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_offer_data` offer ON stock.offer_id = offer.offer_id
             WHERE
                 booking.booking_creation_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 14 DAY)
                 AND NOT booking.booking_is_cancelled
             GROUP BY
-                offer.offer_product_id
-        ) booking_numbers ON booking_numbers.offer_product_id = offer.offer_product_id
+                offer.item_id
+        ) booking_numbers ON booking_numbers.item_id = offer.item_id
     WHERE
-        offer.offer_is_active = TRUE
+        offer.is_active = TRUE
         AND (
             (
                 SELECT

@@ -25,9 +25,9 @@ default_dag_args = {
 }
 
 dag = DAG(
-    "import_qualtrics",
+    "import_appsflyer",
     default_args=default_dag_args,
-    description="Import qualtrics tables",
+    description="Import Appsflyer tables",
     schedule_interval="00 01 * * *",
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
@@ -39,13 +39,13 @@ service_account_token = PythonOperator(
     task_id="getting_downloads_service_account_token",
     python_callable=getting_service_account_token,
     op_kwargs={
-        "function_name": f"qualtrics_{ENV_SHORT_NAME}",
+        "function_name": f"appsflyer_{ENV_SHORT_NAME}",
     },
     dag=dag,
 )
 
 import_data_to_bigquery = SimpleHttpOperator(
-    task_id="import_qualtrics_data_to_bigquery",
+    task_id="import_appsflyer_data_to_bigquery",
     method="POST",
     http_conn_id="http_gcp_cloud_function",
     endpoint=f"downloads_{ENV_SHORT_NAME}",

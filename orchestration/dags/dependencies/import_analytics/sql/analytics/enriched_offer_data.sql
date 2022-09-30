@@ -124,11 +124,7 @@ SELECT
     last_stock.last_stock_price,
     offer.offer_creation_date,
     offer.offer_is_duo,
-    CASE
-        WHEN offer.offer_subcategoryId IN ('LIVRE_PAPIER') THEN CONCAT('product-', offer_extracted_data.isbn)
-        WHEN offer.offer_subcategoryId IN ('SEANCE_CINE') THEN CONCAT('product-', offer_extracted_data.visa)
-        ELSE CONCAT('offer-', offer.offer_id)
-    END AS item_id,
+    offer_ids.item_id,
     CASE
         WHEN (
             offer.offer_subcategoryId <> 'JEU_EN_LIGNE'
@@ -241,6 +237,7 @@ FROM
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.subcategories subcategories ON offer.offer_subcategoryId = subcategories.id
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_venue AS venue ON offer.venue_id = venue.venue_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offerer AS offerer ON venue.venue_managing_offerer_id = offerer.offerer_id
+    LEFT JOIN `{{ bigquery_analytics_dataset }}`.offer_item_ids AS offer_ids on offer.offer_id=offer_ids.offer_id
     LEFT JOIN offer_booking_information_view ON offer_booking_information_view.offer_id = offer.offer_id
     LEFT JOIN count_favorites_view ON count_favorites_view.offerId = offer.offer_id
     LEFT JOIN sum_stock_view ON sum_stock_view.offer_id = offer.offer_id

@@ -51,7 +51,7 @@ import_data_to_bigquery = SimpleHttpOperator(
     endpoint=f"qualtrics_import_{ENV_SHORT_NAME}",
     headers={
         "Content-Type": "application/json",
-        "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='service_account_token', key='return_value')}}",
+        "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_qualtrics_service_account_token', key='return_value')}}",
     },
     log_response=True,
     dag=dag,

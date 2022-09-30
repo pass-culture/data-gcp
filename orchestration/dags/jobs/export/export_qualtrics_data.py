@@ -62,7 +62,7 @@ def get_and_send(**kwargs):
             )
         SELECT 
             ue.email, 
-            UNIX_DATE(DATE(t.export_date)) as export_date,
+            CURRENT_TIMESTAMP() as export_date,
             t.* except(calculation_month, export_date)
         FROM `{dataset_id}.{table_name}` t
         LEFT JOIN user_email ue on ue.user_id = t.user_id
@@ -71,7 +71,7 @@ def get_and_send(**kwargs):
     else:
         sql = f"""
         SELECT 
-            UNIX_DATE(DATE(t.export_date)) as export_date,
+            CURRENT_TIMESTAMP() as export_date,
             t.* except(calculation_month, export_date)
         FROM `{dataset_id}.{table_name}` t
         WHERE t.calculation_month = '{ current_month }'

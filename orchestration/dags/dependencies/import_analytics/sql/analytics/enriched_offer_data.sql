@@ -136,7 +136,7 @@ SELECT
             AND offer.offer_subcategoryId <> 'ABO_JEU_VIDEO'
             AND offer.offer_subcategoryId <> 'ABO_LUDOTHEQUE'
             AND (
-                offer.URL IS NULL -- not numerical
+                offer.offer_url IS NULL -- not numerical
                 OR last_stock.last_stock_price = 0
                 OR subcategories.id = 'LIVRE_NUMERIQUE'
                 OR subcategories.id = 'ABO_LIVRE_NUMERIQUE'

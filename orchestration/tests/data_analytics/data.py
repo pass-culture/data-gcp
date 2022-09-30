@@ -74,7 +74,7 @@ ENRICHED_OFFER_DATA_INPUT = {
             "companies": '[{"activity":"production","company":{"name":"universal pictures"}}]',
             "countries": '["usa"]',
             "casting": "[]",
-            "isbn": "333",
+            "isbn": None,
         },
         {
             "offer_id": "4",
@@ -318,7 +318,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
     {
         "offer_id": "3",
         "offer_product_id": "1",
-        "item_id": "product-333",
+        "item_id": "product-154181",
         "offerer_id": "3",
         "offerer_name": "Test Offerer",
         "venue_id": "1",

@@ -313,6 +313,16 @@ ENRICHED_OFFER_DATA_INPUT = {
             "fieldsUpdated": "2018-11-20",
         }
     ],
+    "offer_item_ids": [
+        {
+            "offer_id": "3",
+            "item_id": "product-154181",
+        },
+        {
+            "offer_id": "4",
+            "item_id": "product-156157",
+        },
+    ],
 }
 ENRICHED_OFFER_DATA_EXPECTED = [
     {

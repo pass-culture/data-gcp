@@ -490,4 +490,8 @@ BIGQUERY_SCHEMAS = {
         "isbn": "STRING",
         "book_editor": "STRING",
     },
+    "isbn_editor": {
+        "offer_id": "STRING",
+        "item_id": "STRING",
+    },
 }

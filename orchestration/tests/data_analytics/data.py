@@ -583,7 +583,7 @@ ENRICHED_STOCK_DATA_INPUT = {
     "applicative_database_offer": [
         {
             "venue_id": "1",
-            "product_id": "1",
+            "offer_product_id": "1",
             "offer_id": "3",
             "offer_subcategoryId": "SEANCE_CINE",
             "offer_name": "Test",
@@ -597,7 +597,7 @@ ENRICHED_STOCK_DATA_INPUT = {
         },
         {
             "venue_id": "1",
-            "product_id": "2",
+            "offer_product_id": "2",
             "offer_id": "2",
             "offer_subcategoryId": "LIVRE_PAPIER",
             "offer_name": "Test bis",
@@ -870,7 +870,7 @@ ENRICHED_USER_DATA_INPUT = {
             "offer_id": "1",
             "offer_subcategoryId": "TELECHARGEMENT_MUSIQUE",
             "venue_id": "1",
-            "product_id": "1",
+            "offer_product_id": "1",
             "offer_url": "url",
         },
     ],

@@ -23,7 +23,6 @@ recommendable_offers_data,offer_creation_date,timestamp without time zone,recomm
 recommendable_offers_data,stock_beginning_date,timestamp without time zone,recommendable_offers_data,analytics			
 recommendable_offers_data,stock_price,real,recommendable_offers_data,analytics			
 recommendable_offers_data,booking_number,integer,recommendable_offers_data,analytics			
-recommendable_offers_data,item_id,character varying,recommendable_offers_data,analytics			
 recommendable_offers_data,is_underage_recommendable,boolean,recommendable_offers_data,analytics
 non_recommendable_offers_data,user_id,character varying,non_recommendable_offers_data,analytics
 non_recommendable_offers_data,offer_id,character varying,non_recommendable_offers_data,analytics

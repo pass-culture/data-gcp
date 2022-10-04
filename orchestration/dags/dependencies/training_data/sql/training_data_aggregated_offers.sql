@@ -1,25 +1,25 @@
 with base as(
-select
-    *
-from
-    `{{ bigquery_raw_dataset }}`.`training_data_bookings`
-UNION
-ALL
-select
-    *
-from
-    `{{ bigquery_raw_dataset }}`.`training_data_clicks`
-UNION
-ALL
-select
-    *
-from
-    `{{ bigquery_raw_dataset }}`.`training_data_favorites`
-order by
-    offer_id
+    select
+        *
+    from
+        `{{ bigquery_raw_dataset }}`.`training_data_bookings`
+    UNION
+    ALL
+    select
+        *
+    from
+        `{{ bigquery_raw_dataset }}`.`training_data_clicks`
+    UNION
+    ALL
+    select
+        *
+    from
+        `{{ bigquery_raw_dataset }}`.`training_data_favorites`
+    order by
+        item_id
 )
 select
-    offer_id,
+    item_id,
     user_id,
     event_type,
     offer_subcategoryid,
@@ -28,7 +28,7 @@ select
 from
     base
 group by
-    offer_id,
+    item_id,
     user_id,
     event_type,
     offer_subcategoryid,

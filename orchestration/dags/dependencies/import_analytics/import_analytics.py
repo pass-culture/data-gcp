@@ -11,12 +11,7 @@ clean_tables = {
         "destination_dataset": "{{ bigquery_clean_dataset }}",
         "destination_table": "iris_venues",
         "params": {"iris_distance": 50000 if ENV_SHORT_NAME != "dev" else 10000},
-    },
-    "non_recommendable_offers_data": {
-        "sql": f"{CLEAN_SQL_PATH}/non_recommendable_offers_data.sql",
-        "destination_dataset": "{{ bigquery_clean_dataset }}",
-        "destination_table": "non_recommendable_offers_data",
-    },
+    }
 }
 
 analytics_tables = {
@@ -115,6 +110,11 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "recommendable_offers_data",
         "depends": ["enriched_offer_data"],
+    },
+    "non_recommendable_offers_data": {
+        "sql": f"{ANALYTICS_SQL_PATH}/non_recommendable_offers_data.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "non_recommendable_offers_data",
     },
 }
 

@@ -11,7 +11,7 @@ iris_venues,venueId,character varying,iris_venues,clean
 qpi_answers,user_id,character varying,enriched_qpi_answers,analytics
 qpi_answers,subcategories,character varying,enriched_qpi_answers,analytics
 recommendable_offers_data,offer_id,character varying,recommendable_offers_data,analytics			
-recommendable_offers_data,product_id,character varying,recommendable_offers_data,analytics			
+recommendable_offers_data,item_id,character varying,recommendable_offers_data,analytics			
 recommendable_offers_data,venue_id,character varying,recommendable_offers_data,analytics			
 recommendable_offers_data,subcategory_id,character varying,recommendable_offers_data,analytics			
 recommendable_offers_data,category,character varying,recommendable_offers_data,analytics			
@@ -23,7 +23,6 @@ recommendable_offers_data,offer_creation_date,timestamp without time zone,recomm
 recommendable_offers_data,stock_beginning_date,timestamp without time zone,recommendable_offers_data,analytics			
 recommendable_offers_data,stock_price,real,recommendable_offers_data,analytics			
 recommendable_offers_data,booking_number,integer,recommendable_offers_data,analytics			
-recommendable_offers_data,item_id,character varying,recommendable_offers_data,analytics			
 recommendable_offers_data,is_underage_recommendable,boolean,recommendable_offers_data,analytics
 non_recommendable_offers_data,user_id,character varying,non_recommendable_offers_data,analytics
 non_recommendable_offers_data,offer_id,character varying,non_recommendable_offers_data,analytics

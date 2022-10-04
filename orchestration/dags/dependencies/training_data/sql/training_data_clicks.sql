@@ -22,7 +22,7 @@ SELECT
     user_id,
     "CLICK" as event_type,
     event_date,
-    item_offer_ids.item_id as item_id,
+    offer_item_ids.item_id as item_id,
     offer.offer_subcategoryId as offer_subcategoryid,
     subcategories.category_id as offer_categoryId,
     enroffer.genres,

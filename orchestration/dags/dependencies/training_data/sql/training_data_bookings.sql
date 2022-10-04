@@ -2,7 +2,7 @@ SELECT
     booking.user_id,
     "BOOKING" as event_type,
     booking_creation_date as event_date,
-    item_offer_ids.item_id as item_id,
+    offer_item_ids.item_id as item_id,
     offer.offer_subcategoryId as offer_subcategoryid,
     subcategories.category_id as offer_categoryId,
     enroffer.genres,
@@ -24,8 +24,7 @@ where
     and user_id is not null
 group by
     booking.user_id,
-    offer.offer_id,
-    offer_product_id,
+    item_id,
     event_type,
     booking_creation_date,
     offer_categoryId,

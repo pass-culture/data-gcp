@@ -22,7 +22,7 @@ SELECT
     user_id,
     "FAVORITE" as event_type,
     event_date,
-    item_offer_ids.item_id as item_id,
+    offer_item_ids.item_id as item_id,
     offer.offer_subcategoryId as offer_subcategoryid,
     subcategories.category_id as offer_categoryId,
     enroffer.genres,
@@ -40,7 +40,6 @@ FROM
 group by
     user_id,
     item_id,
-    offer_product_id,
     event_type,
     event_date,
     offer_categoryId,

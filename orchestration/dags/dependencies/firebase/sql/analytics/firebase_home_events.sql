@@ -62,7 +62,7 @@ firebase_module_events AS (
         --events
         e.event_name,
         e.offer_id,
-        CASE WHEN entries.title IN {{ reco_module_name }} THEN e.reco_call_id ELSE NULL END AS call_id,
+        CASE WHEN entries.content_type = 'recommendation' THEN e.reco_call_id ELSE NULL END AS call_id,
         -- modules
         entries.title as module_name,
         entries.content_type,

@@ -88,5 +88,4 @@ default = {
     "add_days": add_days,
     "create_humanize_id_function": create_humanize_id_function,
     "create_dehumanize_id_function": create_dehumanize_id_function,
-    "reco_module_name": ("Nos recommandations pour toi : Algo !"),
 }

@@ -39,10 +39,9 @@ FROM
     inner join `{{ bigquery_analytics_dataset }}`.`offer_item_ids` offer_item_ids on offer_item_ids.offer_id = offer.offer_id
 group by
     user_id,
-    item_id,
+    item_id, 
     event_type,
     event_date,
-    offer_product_id,
     offer_categoryId,
     offer.offer_subcategoryid,
     enroffer.genres,

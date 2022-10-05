@@ -1,38 +1,3 @@
-CREATE TEMP FUNCTION offer_has_at_least_one_bookable_stock(var_offer_id STRING) RETURNS INT64 AS (
-    (
-        SELECT
-            COUNT(1),
-        FROM
-            `{{ bigquery_clean_dataset }}.applicative_database_stock` stock
-        WHERE
-            stock.offer_id = var_offer_id
-            AND stock.stock_is_soft_deleted = FALSE
-            AND (
-                stock.stock_beginning_date > CURRENT_DATE()
-                OR stock.stock_beginning_date IS NULL
-            )
-            AND (
-                stock.stock_booking_limit_date > CURRENT_DATE()
-                OR stock.stock_booking_limit_date IS NULL
-            )
-            AND (
-                stock.stock_quantity IS NULL
-                OR (
-                    SELECT
-                        GREATEST(
-                            stock.stock_quantity - COALESCE(SUM(booking.booking_quantity), 0),
-                            0
-                        )
-                    FROM
-                        `{{ bigquery_clean_dataset }}.applicative_database_booking` booking
-                    WHERE
-                        booking.stock_id = stock.stock_id
-                        AND booking.booking_is_cancelled = FALSE
-                ) > 0
-            )
-    )
-);
-
 CREATE TEMP FUNCTION offer_has_at_least_one_active_mediation(var_offer_id STRING) RETURNS INT64 AS (
     (
         SELECT
@@ -122,18 +87,7 @@ WITH get_recommendable_offers AS(
         ) booking_numbers ON booking_numbers.item_id = offer.item_id
     WHERE
         offer.is_active = TRUE
-        AND (
-            (
-                SELECT
-                    offer_has_at_least_one_active_mediation(offer.offer_id)
-            ) = 1
-        )
-        AND (
-            (
-                SELECT
-                    offer_has_at_least_one_bookable_stock(offer.offer_id)
-            ) = 1
-        )
+        AND offer.offer_is_bookable = TRUE
         AND offerer.offerer_is_active = TRUE
         AND offer.offer_validation = 'APPROVED'
         AND offer.offer_subcategoryId NOT IN ('ACTIVATION_THING', 'ACTIVATION_EVENT')

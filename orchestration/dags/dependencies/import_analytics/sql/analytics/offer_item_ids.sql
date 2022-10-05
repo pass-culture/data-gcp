@@ -7,8 +7,8 @@ select
         ) THEN CONCAT('isbn-', offer_extracted_data.isbn)
         WHEN (
             offer.offer_subcategoryId IN ('SEANCE_CINE')
-            AND offer_extracted_data.visa IS not null
-        ) THEN CONCAT('visa-', offer_extracted_data.visa)
+            AND offer_extracted_data.theater_movie_id IS not null
+        ) THEN CONCAT('movie_id-', offer_extracted_data.theater_movie_id)
         ELSE CONCAT('product-', offer.offer_product_id)
     END AS item_id,
 FROM

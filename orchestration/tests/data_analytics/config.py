@@ -53,7 +53,7 @@ BIGQUERY_SCHEMAS = {
         "offer_modified_at_last_provider_date": "DATETIME",
         "offer_id": "STRING",
         "offer_creation_date": "DATETIME",
-        "product_id": "STRING",
+        "offer_product_id": "STRING",
         "venue_id": "STRING",
         "offer_last_provider_id": "STRING",
         "booking_email": "STRING",
@@ -225,7 +225,13 @@ BIGQUERY_SCHEMAS = {
         "venue_name": "STRING",
         "venue_department_code": "STRING",
         "offer_id": "STRING",
+        "offer_product_id": "STRING",
+        "item_id": "STRING",
         "offer_name": "STRING",
+        "URL": "STRING",
+        "is_national": "STRING",
+        "is_active": "STRING",
+        "offer_validation": "STRING",
         "offer_subcategoryId": "STRING",
         "last_stock_price": "NUMERIC",
         "offer_creation_date": "DATETIME",
@@ -483,5 +489,9 @@ BIGQUERY_SCHEMAS = {
     "isbn_editor": {
         "isbn": "STRING",
         "book_editor": "STRING",
+    },
+    "offer_item_ids": {
+        "offer_id": "STRING",
+        "item_id": "STRING",
     },
 }

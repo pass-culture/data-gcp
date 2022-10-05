@@ -24,7 +24,7 @@ ENRICHED_OFFER_DATA_INPUT = {
     "applicative_database_offer": [
         {
             "venue_id": "1",
-            "product_id": "1",
+            "offer_product_id": "1",
             "offer_id": "3",
             "offer_subcategoryId": "SEANCE_CINE",
             "offer_name": "Test",
@@ -39,7 +39,7 @@ ENRICHED_OFFER_DATA_INPUT = {
         },
         {
             "venue_id": "2",
-            "product_id": "2",
+            "offer_product_id": "2",
             "offer_id": "4",
             "offer_subcategoryId": "LIVRE_PAPIER",
             "offer_name": "RIP Dylan Rieder",
@@ -313,15 +313,31 @@ ENRICHED_OFFER_DATA_INPUT = {
             "fieldsUpdated": "2018-11-20",
         }
     ],
+    "offer_item_ids": [
+        {
+            "offer_id": "3",
+            "item_id": "product-154181",
+        },
+        {
+            "offer_id": "4",
+            "item_id": "product-156157",
+        },
+    ],
 }
 ENRICHED_OFFER_DATA_EXPECTED = [
     {
         "offer_id": "3",
+        "offer_product_id": "1",
+        "item_id": "product-154181",
         "offerer_id": "3",
         "offerer_name": "Test Offerer",
         "venue_id": "1",
         "venue_name": "Test Venue",
         "venue_department_code": "93",
+        "URL": None,
+        "is_national": False,
+        "is_active": True,
+        "offer_validation": "APPROVED",
         "offer_name": "Test",
         "offer_subcategoryId": "SEANCE_CINE",
         "last_stock_price": 0.0,
@@ -364,11 +380,17 @@ ENRICHED_OFFER_DATA_EXPECTED = [
     },
     {
         "offer_id": "4",
+        "offer_product_id": "2",
+        "item_id": "product-156157",
         "offerer_id": "4",
         "offerer_name": "Test Offerer",
         "venue_id": "2",
         "venue_name": "Test Venue",
         "venue_department_code": "93",
+        "URL": None,
+        "is_national": False,
+        "is_active": True,
+        "offer_validation": "APPROVED",
         "offer_name": "RIP Dylan Rieder",
         "offer_subcategoryId": "LIVRE_PAPIER",
         "last_stock_price": 0.0,
@@ -577,7 +599,7 @@ ENRICHED_STOCK_DATA_INPUT = {
     "applicative_database_offer": [
         {
             "venue_id": "1",
-            "product_id": "1",
+            "offer_product_id": "1",
             "offer_id": "3",
             "offer_subcategoryId": "SEANCE_CINE",
             "offer_name": "Test",
@@ -591,7 +613,7 @@ ENRICHED_STOCK_DATA_INPUT = {
         },
         {
             "venue_id": "1",
-            "product_id": "2",
+            "offer_product_id": "2",
             "offer_id": "2",
             "offer_subcategoryId": "LIVRE_PAPIER",
             "offer_name": "Test bis",
@@ -864,7 +886,7 @@ ENRICHED_USER_DATA_INPUT = {
             "offer_id": "1",
             "offer_subcategoryId": "TELECHARGEMENT_MUSIQUE",
             "venue_id": "1",
-            "product_id": "1",
+            "offer_product_id": "1",
             "offer_url": "url",
         },
     ],

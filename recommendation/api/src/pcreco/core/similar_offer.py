@@ -72,7 +72,6 @@ class SimilarOffer:
                 "url": row[4],
                 "is_numerical": row[5],
                 "item_id": row[6],
-                "product_id": row[7],
             }
             for row in query_result
         }
@@ -103,7 +102,7 @@ class SimilarOffer:
             else "(is_national = True or url IS NOT NULL)"
         )
         query = f"""
-            SELECT offer_id, category, subcategory_id,search_group_name, url, url IS NOT NULL as is_numerical, item_id, product_id
+            SELECT offer_id, category, subcategory_id,search_group_name, url, url IS NOT NULL as is_numerical, item_id
             FROM {self.user.recommendable_offer_table}
             WHERE {geoloc_filter}
             AND offer_id NOT IN

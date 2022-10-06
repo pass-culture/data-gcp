@@ -56,7 +56,7 @@ SELECT
     deposit_type,
     offer_category_name,
     COUNT(DISTINCT user_id) AS cnt_users,
-    count(booking_id) as cnt_bookings,
+    count(DISTINCT booking_id) as cnt_bookings,
     SUM(amount_spent) AS amount_spent
 FROM
     table_format

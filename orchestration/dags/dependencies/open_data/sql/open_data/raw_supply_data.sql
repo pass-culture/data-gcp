@@ -87,13 +87,13 @@ lieux_permanents AS (
                 WHEN stock_price > 0 THEN 1
                 ELSE NULL
             END
-        ) / COUNT(DISTINCT offer_id) AS prct_chargeable_offers,
+        ) AS cnt_chargeable_offers,
         COUNT(
             DISTINCT CASE
                 WHEN physical_goods THEN 1
                 ELSE NULL
             END
-        ) / COUNT(DISTINCT offer_id) AS prct_physical_goods,
+        ) AS cnt_physical_goods,
         COUNT(
             DISTINCT CASE
                 WHEN category_id = 'FILM' THEN offer_id
@@ -226,13 +226,13 @@ lieux_non_permanents AS (
                 WHEN stock_price > 0 THEN 1
                 ELSE NULL
             END
-        ) / COUNT(DISTINCT offer_id) AS prct_chargeable_offers,
+        ) AS cnt_chargeable_offers,
         COUNT(
             DISTINCT CASE
                 WHEN physical_goods THEN 1
                 ELSE NULL
             END
-        ) / COUNT(DISTINCT offer_id) AS prct_physical_goods,
+        ) AS cnt_physical_goods,
         COUNT(
             DISTINCT CASE
                 WHEN category_id = 'FILM' THEN offer_id
@@ -364,13 +364,13 @@ lieux_virtuels AS (
                 WHEN stock_price > 0 THEN 1
                 ELSE NULL
             END
-        ) / COUNT(DISTINCT offer_id) AS prct_chargeable_offers,
+        ) cnt_chargeable_offers,
         COUNT(
             DISTINCT CASE
                 WHEN physical_goods THEN 1
                 ELSE NULL
             END
-        ) / COUNT(DISTINCT offer_id) AS prct_physical_goods,
+        ) cnt_physical_goods,
         COUNT(
             DISTINCT CASE
                 WHEN category_id = 'FILM' THEN offer_id

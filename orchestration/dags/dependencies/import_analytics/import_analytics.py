@@ -105,6 +105,11 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "offer_item_ids",
     },
+    "offer_with_mediation": {
+        "sql": f"{ANALYTICS_SQL_PATH}/offer_with_mediation.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "offer_with_mediation",
+    },
     "recommendable_offers_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/recommendable_offers_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",

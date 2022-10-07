@@ -19,6 +19,7 @@ def define_import_tables():
             "offer_creation_date",
             "offer_date_updated",
         ],
+        "product": [""],
         "bank_information": ["dateModified"],
         "booking": [
             "booking_creation_date",
@@ -327,6 +328,14 @@ def define_import_query(
             "withdrawalType" AS offer_withdrawal_type,
             "withdrawalDelay" AS offer_withdrawal_delay
         FROM public.offer
+    """
+
+    cloudsql_queries[
+        "product"
+    ] = """
+        SELECT
+            "id" as id,"name" as name,"thumbCount" as thumbCount
+        FROM public.product
     """
 
     cloudsql_queries[

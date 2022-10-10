@@ -8,6 +8,8 @@ enriched_user,consult_offer,integer,aggregated_user_stats_reco,analytics
 enriched_user,has_added_offer_to_favorites,integer,aggregated_user_stats_reco,analytics
 iris_venues,irisId,character varying,iris_venues,clean
 iris_venues,venueId,character varying,iris_venues,clean
+iris_venues,venue_longitude,decimal,iris_venues,clean
+iris_venues,venue_latitude,decimal,iris_venues,clean
 qpi_answers,user_id,character varying,enriched_qpi_answers,analytics
 qpi_answers,subcategories,character varying,enriched_qpi_answers,analytics
 recommendable_offers_data,offer_id,character varying,recommendable_offers_data,analytics			

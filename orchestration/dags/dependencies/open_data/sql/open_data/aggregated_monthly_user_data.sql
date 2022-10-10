@@ -4,6 +4,7 @@ WITH region_format AS (
         IF(user_department_code = "99", "Étranger", user_region_name) as user_region_name
 
     FROM  `{{ bigquery_analytics_dataset }}.aggregated_daily_user_data`
+    WHERE day >= DATE("2019-02-01")
 )
 
 SELECT

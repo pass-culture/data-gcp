@@ -44,6 +44,7 @@ WITH table_format AS (
       `{{ bigquery_analytics_dataset }}.enriched_booking_data` booking_data
     JOIN `{{ bigquery_analytics_dataset }}.enriched_user_data` user_data ON booking_data.user_id = user_data.user_id
     WHERE booking_data.booking_is_used
+    AND DATE(booking_data.booking_used_date) >= DATE("2019-02-01")
 )
 
 

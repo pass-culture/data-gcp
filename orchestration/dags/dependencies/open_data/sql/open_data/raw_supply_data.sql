@@ -476,3 +476,25 @@ SELECT
     DATE("{{ current_month(ds) }}") as calculation_month,
     *
 FROM union_lieux
+WHERE venue_type in (
+    "Spectacle vivant",
+    "Patrimoine et tourisme",
+    "Offre numérique",
+    "Musique - Salle de concerts",
+    "Musique - Magasin d’instruments",
+    "Musique - Disquaire",
+    "Musée",
+    "Magasin arts créatifs",
+    "Lieu administratif",
+    "Librairie",
+    "Jeux / Jeux vidéos",
+    "Festival",
+    "Culture scientifique",
+    "Cours et pratique artistiques",
+    "Cinéma - Salle de projections",
+    "Centre culturel",
+    "Bibliothèque ou médiathèque",
+    "Autre",
+    "Arts visuels, arts plastiques et galeries",
+    "_"
+)

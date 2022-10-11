@@ -746,7 +746,7 @@ def define_import_query(
                 , "isActive" AS collective_offer_is_active
                 , CAST("venueId" AS varchar(255)) AS venue_id
                 , "name" AS collective_offer_name
-                ,"bookingEmail" AS collective_offer_booking_email
+                ,BTRIM(array_to_string("bookingEmails", \\',\\'), \\'{\\') AS collective_offer_booking_email
                 ,"description" AS collective_offer_description
                 ,"durationMinutes" AS collective_offer_duration_minutes
                 ,"dateCreated" AS collective_offer_creation_date
@@ -787,7 +787,7 @@ def define_import_query(
                 ,"dateUpdated" AS collective_offer_date_updated
                 ,BTRIM(array_to_string("students", \\',\\'), \\'{\\') AS collective_offer_students
                 ,"priceDetail" AS collective_offer_price_detail
-                ,"bookingEmail" AS collective_offer_booking_email
+                ,BTRIM(array_to_string("bookingEmails", \\',\\'), \\'{\\') AS collective_offer_booking_email
                 ,"contactEmail" AS collective_offer_contact_email
                 , "contactPhone" AS collective_offer_contact_phone
                 ,"offerVenue" AS collective_offer_offer_venue

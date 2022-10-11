@@ -36,10 +36,10 @@ dag = DAG(
 )
 
 service_account_token = PythonOperator(
-    task_id="getting_downloads_service_account_token",
+    task_id="getting_appsflyer_service_account_token",
     python_callable=getting_service_account_token,
     op_kwargs={
-        "function_name": f"appsflyer_{ENV_SHORT_NAME}",
+        "function_name": f"appsflyer_import_{ENV_SHORT_NAME}",
     },
     dag=dag,
 )
@@ -48,10 +48,10 @@ import_data_to_bigquery = SimpleHttpOperator(
     task_id="import_appsflyer_data_to_bigquery",
     method="POST",
     http_conn_id="http_gcp_cloud_function",
-    endpoint=f"downloads_{ENV_SHORT_NAME}",
+    endpoint=f"appsflyer_import_{ENV_SHORT_NAME}",
     headers={
         "Content-Type": "application/json",
-        "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='service_account_token', key='return_value')}}",
+        "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_appsflyer_service_account_token', key='return_value')}}",
     },
     log_response=True,
     dag=dag,

@@ -3,7 +3,7 @@
 WITH offer_humanized_id AS (
     SELECT
         offer_id,
-        humanize_id(offer_id) AS humanized_id
+        humanize_id(offer_id) AS humanized_id,
     FROM
         `{{ bigquery_analytics_dataset }}`.applicative_database_offer
     WHERE
@@ -118,11 +118,13 @@ SELECT
     venue.venue_name,
     venue.venue_department_code,
     offer.offer_id,
+    offer.offer_product_id,
     offer.offer_name,
     offer.offer_subcategoryId,
     last_stock.last_stock_price,
     offer.offer_creation_date,
     offer.offer_is_duo,
+    offer_ids.item_id,
     CASE
         WHEN (
             offer.offer_subcategoryId <> 'JEU_EN_LIGNE'
@@ -193,6 +195,10 @@ SELECT
         '/edition'
     ) AS passculture_pro_url,
     CONCAT('https://passculture.app/offre/', offer.offer_id) AS webapp_url,
+    offer.offer_url as URL,
+    offer.offer_is_national as is_national,
+    offer.offer_is_active as is_active,
+    offer.offer_validation as offer_validation,
     mediation.mediation_humanized_id,
     count_first_booking_view.first_booking_cnt,
     offer_tags.tag as offer_tag,
@@ -231,6 +237,7 @@ FROM
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.subcategories subcategories ON offer.offer_subcategoryId = subcategories.id
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_venue AS venue ON offer.venue_id = venue.venue_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offerer AS offerer ON venue.venue_managing_offerer_id = offerer.offerer_id
+    LEFT JOIN `{{ bigquery_analytics_dataset }}`.offer_item_ids AS offer_ids on offer.offer_id=offer_ids.offer_id
     LEFT JOIN offer_booking_information_view ON offer_booking_information_view.offer_id = offer.offer_id
     LEFT JOIN count_favorites_view ON count_favorites_view.offerId = offer.offer_id
     LEFT JOIN sum_stock_view ON sum_stock_view.offer_id = offer.offer_id

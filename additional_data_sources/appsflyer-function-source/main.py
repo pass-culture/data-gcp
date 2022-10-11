@@ -30,10 +30,10 @@ class ImportAppsFlyer:
             dfs.append(df_installs)
             dfs.append(df_uninstalls)
         df = pd.concat(dfs, ignore_index=True)
-        df = df.replace(columns=INSTALLS_REPORT)
+        df = df.rename(columns=INSTALLS_REPORT)
         for k, v in INSTALLS_REPORT_MAPPING.items():
             df[k] = df[k].astype(v)
-        return df[list(INSTALLS_REPORT.values())]
+        return df[list(INSTALLS_REPORT.values()) + ["app"]]
 
     def get_daily_report(self):
         dfs = []
@@ -42,10 +42,10 @@ class ImportAppsFlyer:
             df["app"] = app
             dfs.append(df)
         df = pd.concat(dfs, ignore_index=True)
-        df = df.replace(columns=DAILY_REPORT)
+        df = df.rename(columns=DAILY_REPORT)
         for k, v in DAILY_REPORT_TYPE.items():
             df[k] = df[k].astype(v)
-        return df[list(DAILY_REPORT.values())]
+        return df[list(DAILY_REPORT.values()) + ["app"]]
 
     def get_in_app_events_report(self):
         dfs = []
@@ -53,10 +53,10 @@ class ImportAppsFlyer:
             df = api.in_app_events_report(self._from, self._to, True)
             df["app"] = app
             dfs.append(df)
-        df = df.replace(columns=APP_REPORT)
+        df = df.rename(columns=APP_REPORT)
         for k, v in APP_REPORT_MAPPING.items():
             df[k] = df[k].astype(v)
-        return df[list(APP_REPORT.values())]
+        return df[list(APP_REPORT.values()) + ["app"]]
 
 
 def default_date():

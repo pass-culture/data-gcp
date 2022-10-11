@@ -300,8 +300,24 @@ workflows:
 
       - cloud-function-deploy:
           name: qualtrics-cloud-function-deploy-stg
-          cloud-function-name: qualtrics_stg
+          cloud-function-name: qualtrics_import_stg
           cloud-function-folder: qualtrics-function-source
+          requires:
+            - linter
+          filters:
+            branches:
+              only:
+                - master
+          context:
+            - DATA_GCP
+            - DATA_GCP_EHP
+            - Slack
+          <<: *slack-fail-post-step
+
+      - cloud-function-deploy:
+          name: appsflyer-cloud-function-deploy-stg
+          cloud-function-name: appsflyer_import_stg
+          cloud-function-folder: appsflyer-function-source
           requires:
             - linter
           filters:
@@ -332,8 +348,24 @@ workflows:
 
       - cloud-function-deploy:
           name: qualtrics-cloud-function-deploy-prod
-          cloud-function-name: qualtrics_prod
+          cloud-function-name: qualtrics_import_prod
           cloud-function-folder: qualtrics-function-source
+          requires:
+            - linter
+          filters:
+            branches:
+              only:
+                - production
+          context:
+            - DATA_GCP
+            - DATA_GCP_PROD
+            - Slack
+          <<: *slack-fail-post-step
+
+      - cloud-function-deploy:
+          name: appsflyer-cloud-function-deploy-prod
+          cloud-function-name: appsflyer_import_prod
+          cloud-function-folder: appsflyer-function-source
           requires:
             - linter
           filters:
@@ -557,6 +589,7 @@ workflows:
             - typeform-webhook-cloud-function-deploy-prod
             - downloads-cloud-function-deploy-prod
             - qualtrics-cloud-function-deploy-prod
+            - appsflyer-cloud-function-deploy-prod
             - contentful-cloud-function-deploy-prod
             - siren-cloud-function-deploy-prod
             - dms-cloud-function-deploy-prod
@@ -579,6 +612,7 @@ workflows:
             - typeform-webhook-cloud-function-deploy-stg
             - downloads-cloud-function-deploy-stg
             - qualtrics-cloud-function-deploy-stg
+            - appsflyer-cloud-function-deploy-stg
             - contentful-cloud-function-deploy-stg
             - siren-cloud-function-deploy-stg
             - dms-cloud-function-deploy-stg
@@ -616,8 +650,13 @@ workflows:
           <<: *deploy_on_dev_commons
       - cloud-function-deploy:
           name: qualtrics-cloud-function-deploy-dev
-          cloud-function-name: qualtrics_dev
+          cloud-function-name: qualtrics_import_dev
           cloud-function-folder: qualtrics-function-source
+          <<: *deploy_on_dev_commons
+      - cloud-function-deploy:
+          name: appsflyer-cloud-function-deploy-dev
+          cloud-function-name: appsflyer_import_dev
+          cloud-function-folder: appsflyer-function-source
           <<: *deploy_on_dev_commons
       - cloud-function-deploy:
           name: contentful-cloud-function-deploy-dev
@@ -677,6 +716,7 @@ workflows:
             - addresses-cloud-function-deploy-dev
             - downloads-cloud-function-deploy-dev
             - qualtrics-cloud-function-deploy-dev
+            - appsflyer-cloud-function-deploy-dev
             - contentful-cloud-function-deploy-dev
             - siren-cloud-function-deploy-dev
             - dms-cloud-function-deploy-dev

@@ -39,7 +39,6 @@ def import_qualtrics_opt_out():
             "contact_id",
             "email",
             "ext_ref",
-            "directory_unsubscribe_date",
         ]
     ].to_gbq(f"{BIGQUERY_RAW_DATASET}.qualtrics_opt_out_users", if_exists="replace")
 

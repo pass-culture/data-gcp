@@ -158,7 +158,12 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
     qpi_answers.to_sql("qpi_answers_mv", con=engine, if_exists="replace")
 
     iris_venues_mv = pd.DataFrame(
-        {"iris_id": ["1", "1", "1", "2"], "venue_id": ["11", "22", "33", "44"]}
+        {
+            "iris_id": ["1", "1", "1", "2"],
+            "venue_id": ["11", "22", "33", "44"],
+            "venue_latitude": [2.43, 2.46, 2.46, 2.49],
+            "venue_longitude": [48.810, 48.820, 48.830, 48.840],
+        }
     )
     iris_venues_mv.to_sql("iris_venues_mv", con=engine, if_exists="replace")
 

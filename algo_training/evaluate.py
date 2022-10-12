@@ -26,7 +26,6 @@ def evaluate(model, storage_path: str, model_name):
         f"{storage_path}/raw_data.csv",
         dtype={
             "user_id": str,
-            "offer_id": str,
             "offer_subcategoryid": str,
             "offer_categoryId": str,
             "genres": str,

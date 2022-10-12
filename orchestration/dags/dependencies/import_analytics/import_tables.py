@@ -85,6 +85,8 @@ def define_import_tables():
         ],
         "educational_domain": [""],
         "educational_domain_venue": [""],
+        "collective_offer_domain": [""],
+        "collective_offer_template_domain": [""],
         "venue_educational_status": [""],
         "collective_booking": [
             "collective_booking_creation_date",
@@ -683,6 +685,22 @@ def define_import_query(
             FROM educational_domain_venue
         """
     cloudsql_queries[
+        "collective_offer_domain"
+    ] = """
+            SELECT
+                CAST("collectiveOfferId" AS varchar(255)) AS collective_offer_id
+                ,CAST("educationalDomainId" AS varchar(255)) AS educational_domain_id
+            FROM collective_offer_domain
+        """
+    cloudsql_queries[
+        "collective_offer_template_domain"
+    ] = """
+            SELECT
+                CAST("collectiveOfferTemplateId" AS varchar(255)) AS collective_offer_template_id
+                ,CAST("educationalDomainId" AS varchar(255)) AS educational_domain_id
+            FROM collective_offer_template_domain
+        """
+    cloudsql_queries[
         "venue_educational_status"
     ] = """
             SELECT
@@ -737,7 +755,7 @@ def define_import_query(
                 , "isActive" AS collective_offer_is_active
                 , CAST("venueId" AS varchar(255)) AS venue_id
                 , "name" AS collective_offer_name
-                ,"bookingEmail" AS collective_offer_booking_email
+                ,BTRIM(array_to_string("bookingEmails", \\',\\'), \\'{\\') AS collective_offer_booking_email
                 ,"description" AS collective_offer_description
                 ,"durationMinutes" AS collective_offer_duration_minutes
                 ,"dateCreated" AS collective_offer_creation_date
@@ -778,7 +796,7 @@ def define_import_query(
                 ,"dateUpdated" AS collective_offer_date_updated
                 ,BTRIM(array_to_string("students", \\',\\'), \\'{\\') AS collective_offer_students
                 ,"priceDetail" AS collective_offer_price_detail
-                ,"bookingEmail" AS collective_offer_booking_email
+                ,BTRIM(array_to_string("bookingEmails", \\',\\'), \\'{\\') AS collective_offer_booking_email
                 ,"contactEmail" AS collective_offer_contact_email
                 , "contactPhone" AS collective_offer_contact_phone
                 ,"offerVenue" AS collective_offer_offer_venue

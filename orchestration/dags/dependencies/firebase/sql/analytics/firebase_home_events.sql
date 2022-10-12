@@ -214,7 +214,10 @@ SELECT
     e.module_id,
     e.home_id,
     e.module_index,
-    db.delta_diversification,
+    CASE WHEN 
+        event_name = "BookingConfirmation" THEN db.delta_diversification
+    ELSE NULL
+    END AS  delta_diversification
 FROM
     event_union e
 LEFT JOIN diversification_booking db 

@@ -6,13 +6,9 @@ SELECT
         ELSE 'adage'
     END as log_source,
     timestamp,
-    jsonPayload.extra.path AS path,
+
     jsonPayload.message,
     jsonPayload.technical_message_id,
-    jsonPayload.extra.statuscode AS status_code,
-    jsonPayload.extra.method AS method,
-    jsonPayload.extra.sourceip AS source_ip,
-    jsonPayload.extra.duration AS duration,
     jsonPayload.extra.source as source,
     jsonPayload.extra.userId as user_id,
     cast(jsonPayload.extra.stockId as int) as stock_id,

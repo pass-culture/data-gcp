@@ -150,12 +150,15 @@ class Recommendation:
             return instances
 
         def get_recommendable_offers(self) -> List[Dict[str, Any]]:
+            start = time.time()
             query = text(self._get_intermediate_query())
             connection = get_db()
             query_result = connection.execute(
                 query,
                 user_id=str(self.user.id),
                 user_iris_id=str(self.user.iris_id),
+                user_longitude=float(self.user.longitude),
+                user_latitude=float(self.user.latitude),
             ).fetchall()
 
             user_recommendation = [
@@ -170,7 +173,7 @@ class Recommendation:
                 }
                 for row in query_result
             ]
-
+            log_duration("get_recommendable_offers", start)
             return user_recommendation
 
         def _get_intermediate_query(self) -> str:
@@ -180,18 +183,39 @@ class Recommendation:
                 else "(is_national = True or url IS NOT NULL)"
             )
             query = f"""
-                SELECT offer_id, category, subcategory_id,search_group_name, url, url IS NOT NULL as is_numerical, item_id
-                FROM {self.user.recommendable_offer_table}
-                WHERE {geoloc_filter}
-                AND offer_id NOT IN
-                    (
-                    SELECT offer_id
-                    FROM non_recommendable_offers
-                    WHERE user_id = :user_id
-                    )   
-                {self.params_in_filters}
+                with reco_offers as(
+                    SELECT offer_id,category, subcategory_id,search_group_name, url, url IS NOT NULL as is_numerical, item_id,venue_id,booking_number
+                    FROM {self.user.recommendable_offer_table}
+                    WHERE {geoloc_filter}
+                    AND booking_number > 0
+                    AND offer_id NOT IN
+                        (
+                        SELECT offer_id
+                        FROM non_recommendable_offers
+                        WHERE user_id = :user_id
+                        )   
+                    {self.params_in_filters}
+                ), 
+                reco_offers_with_distance_to_user as(
+                    SELECT ro.offer_id, ro.category, ro.subcategory_id, ro.search_group_name, ro.url, ro.is_numerical, ro.item_id, ro.venue_id, v.venue_latitude, v.venue_longitude,ro.booking_number,
+                    CASE WHEN (venue_latitude is not null and :user_latitude is not null) THEN ST_Distance(ST_Point(:user_longitude,:user_latitude), ST_Point(venue_longitude, venue_latitude)) ELSE null END as user_distance
+                    FROM reco_offers ro
+                    LEFT JOIN (select venue_id,venue_latitude,venue_longitude from iris_venues_mv where iris_id=:user_iris_id) v ON ro.venue_id = v.venue_id
+                ),
+                reco_offers_ranked_by_distance as(
+                    SELECT ro.offer_id, ro.category, ro.subcategory_id, ro.search_group_name, ro.url, ro.is_numerical, ro.item_id,ro.booking_number,
+                    RANK() OVER (
+                            PARTITION BY item_id
+                            ORDER BY
+                                user_distance ASC
+                            ) as rank
+                    FROM reco_offers_with_distance_to_user ro
+                )
+                SELECT  ro.offer_id, ro.category, ro.subcategory_id, ro.search_group_name, ro.url, ro.is_numerical, ro.item_id
+                FROM reco_offers_ranked_by_distance ro
+                WHERE ro.rank=1
                 ORDER BY is_numerical ASC,booking_number DESC
-                LIMIT {RECOMMENDABLE_OFFER_LIMIT}; 
+                LIMIT {RECOMMENDABLE_OFFER_LIMIT};
                 """
             return query
 
@@ -217,7 +241,7 @@ class Recommendation:
 
         def get_scored_offers(self) -> List[Dict[str, Any]]:
             order_query = (
-                f"""ORDER BY (category in ({', '.join([f"'{category}'" for category in self.cold_start_categories])})) DESC, booking_number DESC"""
+                f"""ORDER BY (subcategory_id in ({', '.join([f"'{category}'" for category in self.cold_start_categories])})) DESC, booking_number DESC"""
                 if self.cold_start_categories
                 else "ORDER BY booking_number DESC"
             )
@@ -229,7 +253,8 @@ class Recommendation:
             )
             recommendations_query = text(
                 f"""
-                SELECT offer_id, category,subcategory_id,search_group_name, url, item_id
+                with reco_offers as(
+                SELECT offer_id, category,subcategory_id,search_group_name, url, item_id,venue_id, booking_number
                 FROM {self.user.recommendable_offer_table}
                 WHERE offer_id NOT IN
                     (
@@ -239,6 +264,26 @@ class Recommendation:
                     )
                 {self.params_in_filters}
                 AND {where_clause}
+                AND booking_number > 0
+                ),
+                reco_offers_with_distance_to_user as(
+                    SELECT ro.offer_id, ro.category, ro.subcategory_id, ro.search_group_name, ro.url, ro.item_id, ro.venue_id, v.venue_latitude, v.venue_longitude,ro.booking_number,
+                    CASE WHEN (venue_latitude is not null and venue_latitude is not null) THEN ST_Distance(ST_Point(:user_longitude,:user_latitude), ST_Point(venue_longitude, venue_latitude)) ELSE null END as user_distance
+                    FROM reco_offers ro
+                    LEFT JOIN (select venue_id,venue_latitude,venue_longitude from iris_venues_mv where iris_id=:user_iris_id) v ON ro.venue_id = v.venue_id
+                ),
+                reco_offers_ranked_by_distance as(
+                    SELECT ro.offer_id, ro.category, ro.subcategory_id, ro.search_group_name, ro.url, ro.item_id,ro.booking_number,
+                    RANK() OVER (
+                            PARTITION BY item_id
+                            ORDER BY
+                                user_distance ASC
+                            ) as rank
+                    FROM reco_offers_with_distance_to_user ro
+                )
+                SELECT  ro.offer_id, ro.category, ro.subcategory_id, ro.search_group_name, ro.url, ro.item_id
+                FROM reco_offers_ranked_by_distance ro
+                WHERE ro.rank=1
                 {order_query}
                 LIMIT :number_of_preselected_offers;
                 """
@@ -248,6 +293,8 @@ class Recommendation:
                 recommendations_query,
                 user_iris_id=str(self.user.iris_id),
                 user_id=str(self.user.id),
+                user_longitude=float(self.user.longitude),
+                user_latitude=float(self.user.latitude),
                 number_of_preselected_offers=NUMBER_OF_PRESELECTED_OFFERS,
             ).fetchall()
 

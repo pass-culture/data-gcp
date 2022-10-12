@@ -252,13 +252,14 @@ with DAG(
     restore_tasks[-1] >> end_drop_restore
 
     recreate_indexes_query = """
-        CREATE INDEX IF NOT EXISTS idx_user_id                            ON public.enriched_user               USING btree (user_id);
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_iris_venues_mv_unique       ON public.iris_venues_mv              USING btree (iris_id,venue_id);
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_non_recommendable_id        ON public.non_recommendable_offers    USING btree (user_id,offer_id);
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_id      ON public.recommendable_offers        USING btree (offer_id, stock_beginning_date);
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_15_id   ON public.recommendable_offers_eac_15 USING btree (offer_id,stock_beginning_date);
+        CREATE INDEX IF NOT EXISTS idx_user_id                             ON public.enriched_user                  USING btree (user_id);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_iris_venues_mv_unique        ON public.iris_venues_mv                 USING btree (iris_id,venue_id);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_non_recommendable_id         ON public.non_recommendable_offers       USING btree (user_id,offer_id);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_id       ON public.recommendable_offers           USING btree (offer_id, stock_beginning_date);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_15_id    ON public.recommendable_offers_eac_15    USING btree (offer_id,stock_beginning_date);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_16_17_id ON public.recommendable_offers_eac_16_17 USING btree (offer_id,stock_beginning_date);
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_enriched_user_mv            ON public.enriched_user_mv            USING btree (user_id);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_enriched_user_mv             ON public.enriched_user_mv               USING btree (user_id);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_qpi_answers_mv               ON public.qpi_answers_mv                 USING btree (user_id,subcategories);  
     """
 
     recreate_indexes_task = CloudSQLExecuteQueryOperator(

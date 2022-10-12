@@ -11,6 +11,8 @@ WITH venues_to_link AS (
     )
 SELECT 
     iris_france.id as irisId, 
-    venue_id as venueId 
+    venue_id as venueId ,
+    venue_longitude,
+    venue_latitude,
 FROM `{{ bigquery_clean_dataset }}.iris_france` iris_france, venues_to_link
 WHERE ST_DISTANCE(centroid, ST_GEOGPOINT(venue_longitude, venue_latitude)) < {{ params.iris_distance }}

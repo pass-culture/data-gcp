@@ -199,7 +199,7 @@ class Recommendation:
                 ), 
                 reco_offers_with_distance_to_user as(
                     SELECT ro.offer_id, ro.category, ro.subcategory_id, ro.search_group_name, ro.url, ro.is_numerical, ro.item_id, ro.venue_id, v.venue_latitude, v.venue_longitude,ro.booking_number,
-                    CASE WHEN (venue_latitude is not null and venue_latitude is not null) THEN ST_Distance(ST_Point(:user_longitude,:user_latitude), ST_Point(venue_longitude, venue_latitude)) ELSE null END as user_distance
+                    CASE WHEN (venue_latitude is not null and :user_latitude is not null) THEN ST_Distance(ST_Point(:user_longitude,:user_latitude), ST_Point(venue_longitude, venue_latitude)) ELSE null END as user_distance
                     FROM reco_offers ro
                     LEFT JOIN (select venue_id,venue_latitude,venue_longitude from iris_venues_mv where iris_id=:user_iris_id) v ON ro.venue_id = v.venue_id
                 ),

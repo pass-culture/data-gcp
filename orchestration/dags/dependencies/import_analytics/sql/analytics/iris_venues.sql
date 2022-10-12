@@ -1,1 +1,1 @@
-SELECT * FROM `{{ bigquery_clean_dataset }}.iris_venues_{ { params.radius } }`
+SELECT * FROM `{{ bigquery_clean_dataset }}.iris_venues_{{ params.radius }}`

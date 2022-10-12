@@ -10,6 +10,18 @@ iris_venues,irisId,character varying,iris_venues,clean
 iris_venues,venueId,character varying,iris_venues,clean
 iris_venues,venue_longitude,decimal,iris_venues,clean
 iris_venues,venue_latitude,decimal,iris_venues,clean
+iris_venues_50km,irisId,character varying,iris_venues_50km,clean
+iris_venues_50km,venueId,character varying,iris_venues_50km,clean
+iris_venues_50km,venue_longitude,decimal,iris_venues_50km,clean
+iris_venues_50km,venue_latitude,decimal,iris_venues_50km,clean
+iris_venues_100km,irisId,character varying,iris_venues_100km,clean
+iris_venues_100km,venueId,character varying,iris_venues_100km,clean
+iris_venues_100km,venue_longitude,decimal,iris_venues_100km,clean
+iris_venues_100km,venue_latitude,decimal,iris_venues_100km,clean
+iris_venues_150km,irisId,character varying,iris_venues_150km,clean
+iris_venues_150km,venueId,character varying,iris_venues_150km,clean
+iris_venues_150km,venue_longitude,decimal,iris_venues_150km,clean
+iris_venues_150km,venue_latitude,decimal,iris_venues_150km,clean
 qpi_answers,user_id,character varying,enriched_qpi_answers,analytics
 qpi_answers,subcategories,character varying,enriched_qpi_answers,analytics
 recommendable_offers_data,offer_id,character varying,recommendable_offers_data,analytics			

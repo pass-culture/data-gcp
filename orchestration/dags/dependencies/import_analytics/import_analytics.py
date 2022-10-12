@@ -11,7 +11,25 @@ clean_tables = {
         "destination_dataset": "{{ bigquery_clean_dataset }}",
         "destination_table": "iris_venues",
         "params": {"iris_distance": 50000 if ENV_SHORT_NAME != "dev" else 10000},
-    }
+    },
+    "clean_iris_venues_50km": {
+        "sql": f"{CLEAN_SQL_PATH}/iris_venues.sql",
+        "destination_dataset": "{{ bigquery_clean_dataset }}",
+        "destination_table": "iris_venues_50km",
+        "params": {"iris_distance": 50000 if ENV_SHORT_NAME != "dev" else 10000},
+    },
+    "clean_iris_venues_100km": {
+        "sql": f"{CLEAN_SQL_PATH}/iris_venues.sql",
+        "destination_dataset": "{{ bigquery_clean_dataset }}",
+        "destination_table": "iris_venues_100km",
+        "params": {"iris_distance": 100000 if ENV_SHORT_NAME != "dev" else 15000},
+    },
+    "clean_iris_venues_150km": {
+        "sql": f"{CLEAN_SQL_PATH}/iris_venues.sql",
+        "destination_dataset": "{{ bigquery_clean_dataset }}",
+        "destination_table": "iris_venues_150km",
+        "params": {"iris_distance": 150000 if ENV_SHORT_NAME != "dev" else 20000},
+    },
 }
 
 analytics_tables = {
@@ -82,6 +100,25 @@ analytics_tables = {
         "sql": f"{ANALYTICS_SQL_PATH}/iris_venues.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "depends": ["clean_iris_venues"],
+        "params": {"radius": "50km"},
+    },
+    "iris_venues_50km": {
+        "sql": f"{ANALYTICS_SQL_PATH}/iris_venues.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "depends": ["clean_iris_venues_50km"],
+        "params": {"radius": "50km"},
+    },
+    "iris_venues_100km": {
+        "sql": f"{ANALYTICS_SQL_PATH}/iris_venues.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "depends": ["clean_iris_venues_100km"],
+        "params": {"radius": "100km"},
+    },
+    "iris_venues_150km": {
+        "sql": f"{ANALYTICS_SQL_PATH}/iris_venues.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "depends": ["clean_iris_venues_150km"],
+        "params": {"radius": "150km"},
     },
     "isbn_editor": {
         "sql": f"{ANALYTICS_SQL_PATH}/isbn_editor.sql",

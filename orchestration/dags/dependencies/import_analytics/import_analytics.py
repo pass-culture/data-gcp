@@ -128,6 +128,7 @@ analytics_tables = {
             "enriched_venue_data",
             "enriched_offerer_data",
         ],
+        "clustering_fields": {"fields": ["offerer_siren", "venue_id"]},
     },
 }
 

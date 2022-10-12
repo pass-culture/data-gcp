@@ -18,7 +18,8 @@ RETURNS TABLE (offer_id varchar,
 $body$
 BEGIN
     RETURN QUERY 
-    SELECT * from public.recommendable_offers_data;
+    SELECT * from public.recommendable_offers_data
+    where booking_number >0;
 END;
 $body$
 LANGUAGE plpgsql;

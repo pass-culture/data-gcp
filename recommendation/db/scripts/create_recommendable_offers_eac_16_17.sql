@@ -20,7 +20,8 @@ BEGIN
     RETURN QUERY
     SELECT * FROM public.recommendable_offers_data reco
     where reco.is_underage_recommendable 
-    and reco.stock_price < 30;
+    and reco.stock_price < 30
+    and booking_number>0;
 END;
 $body$
 LANGUAGE plpgsql;

@@ -90,8 +90,7 @@ class Recommendation:
                         "model_version": self.scoring.model_version,
                         "reco_filters": json.dumps(self.json_input),
                         "call_id": self.user.call_id,
-                        "lat": self.user.latitude,
-                        "long": self.user.longitude,
+                        "user_iris_id": self.user.iris_id,
                     }
                 )
 
@@ -99,8 +98,8 @@ class Recommendation:
             connection.execute(
                 text(
                     """
-                    INSERT INTO public.past_recommended_offers (userid, offerid, date, group_id, reco_origin, model_name, model_version, reco_filters, call_id, lat, long)
-                    VALUES (:user_id, :offer_id, :date, :group_id, :reco_origin, :model_name, :model_version, :reco_filters, :call_id, :lat, :long)
+                    INSERT INTO public.past_recommended_offers (userid, offerid, date, group_id, reco_origin, model_name, model_version, reco_filters, call_id, user_iris_id)
+                    VALUES (:user_id, :offer_id, :date, :group_id, :reco_origin, :model_name, :model_version, :reco_filters, :call_id, :user_iris_id)
                     """
                 ),
                 rows,

@@ -27,6 +27,7 @@ EXPECTED_HEADERS = [
     "Votre structure bénéficie-t-elle d'un conventionnement ou d'un soutien avec les Ministères de la Culture ou de l'Education nationale ?",
     "Submitted At",
     "Token",
+    "Siret",
 ]
 
 

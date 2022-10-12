@@ -2,12 +2,11 @@ import datetime
 
 from airflow import DAG
 from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryDeleteTableOperator,
     BigQueryExecuteQueryOperator,
 )
 from airflow.operators.dummy_operator import DummyOperator
 
-from common.config import GCP_PROJECT
+from common.config import GCP_PROJECT, ENV_SHORT_NAME
 from common.alerts import task_fail_slack_alert
 from dependencies.backend.create_tables import create_tables
 from common import macros
@@ -25,7 +24,7 @@ dag = DAG(
     default_args=default_dag_args,
     description="Export weekly tables for backend needs",
     on_failure_callback=task_fail_slack_alert,
-    schedule_interval="00 01 * * 1",
+    schedule_interval="00 03 * * 1" if ENV_SHORT_NAME == "prod" else "00 03 * * *",
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,

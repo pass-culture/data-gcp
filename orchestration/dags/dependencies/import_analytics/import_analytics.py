@@ -158,6 +158,20 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "non_recommendable_offers_data",
     },
+    "venue_siren_offers": {
+        "sql": f"{ANALYTICS_SQL_PATH}/venue_siren_offers.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "venue_siren_offers",
+        "depends": [
+            "enriched_offer_data",
+            "enriched_collective_offer_data",
+            "enriched_booking_data",
+            "enriched_collective_booking_data",
+            "enriched_venue_data",
+            "enriched_offerer_data",
+        ],
+        "clustering_fields": {"fields": ["offerer_siren", "venue_id"]},
+    },
 }
 
 

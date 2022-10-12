@@ -17,7 +17,7 @@ from common import macros
 
 
 default_dag_args = {
-    "start_date": datetime.datetime(2020, 12, 21),
+    "start_date": datetime.datetime(2022, 1, 1),
     "retries": 1,
     "on_failure_callback": task_fail_slack_alert,
     "retry_delay": datetime.timedelta(minutes=5),
@@ -25,11 +25,11 @@ default_dag_args = {
 }
 
 dag = DAG(
-    "import_appsflyer",
+    "import_appsflyer_v1",
     default_args=default_dag_args,
     description="Import Appsflyer tables",
     schedule_interval="00 01 * * *",
-    catchup=False,
+    catchup=True,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,

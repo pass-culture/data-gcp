@@ -87,13 +87,13 @@ lieux_permanents AS (
                 WHEN stock_price > 0 THEN 1
                 ELSE NULL
             END
-        ) / COUNT(DISTINCT offer_id) AS prct_chargeable_offers,
+        ) AS cnt_chargeable_offers,
         COUNT(
             DISTINCT CASE
                 WHEN physical_goods THEN 1
                 ELSE NULL
             END
-        ) / COUNT(DISTINCT offer_id) AS prct_physical_goods,
+        ) AS cnt_physical_goods,
         COUNT(
             DISTINCT CASE
                 WHEN category_id = 'FILM' THEN offer_id
@@ -226,13 +226,13 @@ lieux_non_permanents AS (
                 WHEN stock_price > 0 THEN 1
                 ELSE NULL
             END
-        ) / COUNT(DISTINCT offer_id) AS prct_chargeable_offers,
+        ) AS cnt_chargeable_offers,
         COUNT(
             DISTINCT CASE
                 WHEN physical_goods THEN 1
                 ELSE NULL
             END
-        ) / COUNT(DISTINCT offer_id) AS prct_physical_goods,
+        ) AS cnt_physical_goods,
         COUNT(
             DISTINCT CASE
                 WHEN category_id = 'FILM' THEN offer_id
@@ -364,13 +364,13 @@ lieux_virtuels AS (
                 WHEN stock_price > 0 THEN 1
                 ELSE NULL
             END
-        ) / COUNT(DISTINCT offer_id) AS prct_chargeable_offers,
+        ) cnt_chargeable_offers,
         COUNT(
             DISTINCT CASE
                 WHEN physical_goods THEN 1
                 ELSE NULL
             END
-        ) / COUNT(DISTINCT offer_id) AS prct_physical_goods,
+        ) cnt_physical_goods,
         COUNT(
             DISTINCT CASE
                 WHEN category_id = 'FILM' THEN offer_id
@@ -476,3 +476,25 @@ SELECT
     DATE("{{ current_month(ds) }}") as calculation_month,
     *
 FROM union_lieux
+WHERE venue_type in (
+    "Spectacle vivant",
+    "Patrimoine et tourisme",
+    "Offre numérique",
+    "Musique - Salle de concerts",
+    "Musique - Magasin d’instruments",
+    "Musique - Disquaire",
+    "Musée",
+    "Magasin arts créatifs",
+    "Lieu administratif",
+    "Librairie",
+    "Jeux / Jeux vidéos",
+    "Festival",
+    "Culture scientifique",
+    "Cours et pratique artistiques",
+    "Cinéma - Salle de projections",
+    "Centre culturel",
+    "Bibliothèque ou médiathèque",
+    "Autre",
+    "Arts visuels, arts plastiques et galeries",
+    "_"
+)

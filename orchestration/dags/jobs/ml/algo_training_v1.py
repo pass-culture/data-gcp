@@ -247,9 +247,6 @@ with DAG(
     CLEAN_VERSIONS_COMMAND = f""" '{DEFAULT}
     export REGION=europe-west1
     export MODEL_NAME={AI_MODEL_NAME}
-    export RECOMMENDATION_MODEL_DIR={{{{ ti.xcom_pull(task_ids='training') }}}}
-    export VERSION_NAME=v_{{{{ ts_nodash }}}}
-    export END_POINT_NAME={END_POINT_NAME}
     python clean_model_versions.py'
     """
 
@@ -292,6 +289,23 @@ with DAG(
         --zone {GCE_ZONE} \
         --project {GCP_PROJECT_ID} \
         --command {DEPLOY_SIM_OFFERS_COMMAND}
+        """,
+        dag=dag,
+    )
+
+    CLEAN_VERSIONS_SIM_OFFERS_COMMAND = f""" '{DEFAULT}
+    export REGION=europe-west1
+    export MODEL_NAME={SIMILAR_OFFER_MODEL_NAME}
+    python clean_model_versions.py'
+    """
+
+    clean_versions_sim_offers = BashOperator(
+        task_id="clean_versions_sim_offers",
+        bash_command=f"""
+        gcloud compute ssh {GCE_INSTANCE} \
+        --zone {GCE_ZONE} \
+        --project {GCP_PROJECT_ID} \
+        --command {CLEAN_VERSIONS_SIM_OFFERS_COMMAND}
         """,
         dag=dag,
     )
@@ -353,6 +367,7 @@ with DAG(
         >> deploy_model
         >> clean_versions
         >> deploy_sim_offers
+        >> clean_versions_sim_offers
         >> gce_instance_stop
         >> send_slack_notif_success
     )

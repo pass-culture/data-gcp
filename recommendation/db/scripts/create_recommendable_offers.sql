@@ -3,6 +3,7 @@ DROP FUNCTION IF EXISTS get_recommendable_offers CASCADE;
 CREATE OR REPLACE FUNCTION get_recommendable_offers()
 RETURNS TABLE (offer_id varchar,
                 item_id varchar,
+                product_id varchar,
                 venue_id varchar,
                 subcategory_id VARCHAR,
                 category VARCHAR,
@@ -18,8 +19,7 @@ RETURNS TABLE (offer_id varchar,
 $body$
 BEGIN
     RETURN QUERY 
-    SELECT * from public.recommendable_offers_data
-    where booking_number >0;
+    SELECT * from public.recommendable_offers_data ro;
 END;
 $body$
 LANGUAGE plpgsql;

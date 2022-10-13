@@ -146,6 +146,12 @@ with DAG(
                 SELECT {select_columns}
                 FROM `{GCP_PROJECT}.{dataset}.enriched_{QPI_TABLE}`
             """
+        elif table == "recommendable_offers_data":
+            filter_column_query = f"""
+                SELECT {select_columns}
+                FROM `{GCP_PROJECT}.{dataset}.{bigquery_table_name}` ro
+                WHERE ro.booking_number>0
+            """
         else:
             filter_column_query = f"""
                 SELECT {select_columns}

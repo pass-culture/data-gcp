@@ -2,6 +2,7 @@ WITH get_recommendable_offers AS(
     SELECT
         DISTINCT (offer.offer_id) AS offer_id,
         offer.item_id AS item_id,
+        offer.offer_product_id AS product_id,
         offer.venue_id AS venue_id,
         offer.offer_subcategoryId AS subcategory_id,
         subcategories.category_id AS category,

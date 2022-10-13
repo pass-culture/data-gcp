@@ -180,7 +180,8 @@ url_extract AS (
         REGEXP_EXTRACT(page_location, r"""passculture\.pro\/.*?\/.*?\/(.*?)\/|\?""", 1) as url_path_details,
         REGEXP_EXTRACT(page_location, r"""passculture\.pro\/(.*?)\?""", 1) as url_path_before_params,
         REGEXP_EXTRACT_ALL(page_location,r'(?:\?|&)(?:([^=]+)=(?:[^&]*))') as url_params_key,
-        REGEXP_EXTRACT_ALL(page_location,r'(?:\?|&)(?:(?:[^=]+)=([^&]*))') as url_params_value
+        REGEXP_EXTRACT_ALL(page_location,r'(?:\?|&)(?:(?:[^=]+)=([^&]*))') as url_params_value,
+        REGEXP_REPLACE(REGEXP_REPLACE(page_location , "[A-Z \\d]+[\\?\\/\\&]?", ""), "https://passculture.pro/", "") as url_path_agg
     FROM temp_firebase_events
 )
 

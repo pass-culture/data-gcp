@@ -187,7 +187,6 @@ class Recommendation:
                     SELECT offer_id,category, subcategory_id,search_group_name, url, url IS NOT NULL as is_numerical, item_id,venue_id,booking_number
                     FROM {self.user.recommendable_offer_table}
                     WHERE {geoloc_filter}
-                    AND booking_number > 0
                     AND offer_id NOT IN
                         (
                         SELECT offer_id
@@ -264,7 +263,6 @@ class Recommendation:
                     )
                 {self.params_in_filters}
                 AND {where_clause}
-                AND booking_number > 0
                 ),
                 reco_offers_with_distance_to_user as(
                     SELECT ro.offer_id, ro.category, ro.subcategory_id, ro.search_group_name, ro.url, ro.item_id, ro.venue_id, v.venue_latitude, v.venue_longitude,ro.booking_number,

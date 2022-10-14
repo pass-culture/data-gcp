@@ -8,6 +8,11 @@ class PlaylistParamsIn:
         self.subcategories_id = json.get("subcategories", None)
         self.price_max = json.get("price_max", None)
         self.model_name = json.get("model_name", None)
+        self.offer_is_duo = json.get("offer_is_duo", None)
+        self.movie_type = json.get("movie_type", None)
+        self.offer_type_label = json.get("offer_type_label", None)
+        self.offer_sub_type_label = json.get("offer_sub_type_label", None)
+        self.macro_rayon = json.get("macro_rayon", None)
         if (
             self.is_event is not None
             or self.search_group_names is not None
@@ -52,5 +57,46 @@ class PlaylistParamsIn:
             )
         if self.price_max is not None and self.price_max >= 0:
             condition += f"AND stock_price<={self.price_max} \n"
+
+        if self.offer_is_duo is not None:
+            condition += (
+                f"AND ( offer_is_duo={self.offer_is_duo}) \n"
+            )
+
+        if self.movie_type is not None and len(self.movie_type) > 0:
+            condition += (
+                "AND ("
+                + " OR ".join(
+                    [f"movie_type='{cat}'" for cat in self.movie_type]
+                )
+                + ")\n"
+            )
+
+        if self.offer_type_label is not None and len(self.offer_type_label) > 0:
+            condition += (
+                "AND ("
+                + " OR ".join(
+                    [f"offer_type_label='{cat}'" for cat in self.offer_type_label]
+                )
+                + ")\n"
+            )
+        
+        if self.offer_sub_type_label is not None and len(self.offer_sub_type_label) > 0:
+            condition += (
+                "AND ("
+                + " OR ".join(
+                    [f"offer_sub_type_label='{cat}'" for cat in self.offer_sub_type_label]
+                )
+                + ")\n"
+            )
+        
+        if self.macro_rayon is not None and len(self.macro_rayon) > 0:
+            condition += (
+                "AND ("
+                + " OR ".join(
+                    [f"macro_rayon='{cat}'" for cat in self.macro_rayon]
+                )
+                + ")\n"
+            )
 
         return condition

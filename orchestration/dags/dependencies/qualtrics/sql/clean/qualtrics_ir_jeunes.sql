@@ -35,13 +35,15 @@ ir_export AS (
         INNER JOIN `{{ bigquery_analytics_dataset }}.applicative_database_user` applicative_database_user ON user_data.user_id = applicative_database_user.user_id
         LEFT JOIN `{{ bigquery_analytics_dataset }}.user_locations` user_locations ON user_locations.user_id = user_data.user_id
         LEFT JOIN `{{ bigquery_analytics_dataset }}.rural_city_type_data`  rural_city_type_data ON user_locations.city_code = rural_city_type_data.geo_code
-        LEFT JOIN user_visits ON user_data.user_id=user_visits.user_id
+        LEFT JOIN `{{ bigquery_raw_dataset }}.qualtrics_opt_out_users` opt_out on opt_out.ext_ref = user_data.user_id
+        LEFT JOIN user_visits ON user_data.user_id = user_visits.user_id
         WHERE 
             user_data.user_id is not null
         AND user_data.user_current_deposit_type in ("GRANT_15_17", "GRANT_18")
         AND user_is_current_beneficiary is true
         AND user_data.user_is_active is true
         AND applicative_database_user.user_has_enabled_marketing_email is true
+        AND opt_out.contact_id IS NULL
     
 ),
 

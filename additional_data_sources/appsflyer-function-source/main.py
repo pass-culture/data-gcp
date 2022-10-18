@@ -4,7 +4,7 @@ from utils import IOS_APP_ID, ANDROID_APP_ID, TOKEN, save_to_bq
 from appsflyer import AppsFlyer
 from mapping import (
     DAILY_REPORT,
-    DAILY_REPORT_TYPE,
+    DAILY_REPORT_MAPPING,
     INSTALLS_REPORT_MAPPING,
     INSTALLS_REPORT,
     APP_REPORT,
@@ -20,7 +20,7 @@ class ImportAppsFlyer:
         self._to = _to
         self.apis = {app: AppsFlyer(TOKEN, _id) for app, _id in APPS.items()}
 
-    def get_activity_report(self):
+    def get_install_report(self):
         dfs = []
         for app, api in self.apis.items():
             df_installs = api.installs_report(self._from, self._to, True)
@@ -43,7 +43,7 @@ class ImportAppsFlyer:
             dfs.append(df)
         df = pd.concat(dfs, ignore_index=True)
         df = df.rename(columns=DAILY_REPORT)
-        for k, v in DAILY_REPORT_TYPE.items():
+        for k, v in DAILY_REPORT_MAPPING.items():
             df[k] = df[k].astype(v)
         return df[list(DAILY_REPORT.values()) + ["app"]]
 
@@ -74,13 +74,22 @@ def run(request):
 
     import_app = ImportAppsFlyer(execution_date, execution_date)
     save_to_bq(
-        import_app.get_activity_report(), "appsflyer_activity_report", execution_date
+        import_app.get_install_report(),
+        "appsflyer_activity_report",
+        execution_date,
+        INSTALLS_REPORT_MAPPING,
     )
-    save_to_bq(import_app.get_daily_report(), "appsflyer_daily_report", execution_date)
+    save_to_bq(
+        import_app.get_daily_report(),
+        "appsflyer_daily_report",
+        execution_date,
+        DAILY_REPORT_MAPPING,
+    )
     save_to_bq(
         import_app.get_in_app_events_report(),
         "appsflyer_in_app_event_report",
         execution_date,
+        APP_REPORT_MAPPING,
     )
 
     return "Success"

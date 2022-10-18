@@ -90,7 +90,7 @@ DAILY_REPORT = {
     "Average eCPI": "average_ecpi",
 }
 
-DAILY_REPORT_TYPE = {
+DAILY_REPORT_MAPPING = {
     "date": str,
     "agency": str,
     "media_source": str,

@@ -266,6 +266,7 @@ with DAG(
         CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_16_17_id ON public.recommendable_offers_eac_16_17 USING btree (offer_id,stock_beginning_date);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_enriched_user_mv             ON public.enriched_user_mv               USING btree (user_id);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_qpi_answers_mv               ON public.qpi_answers_mv                 USING btree (user_id,subcategories);  
+        CREATE UNIQUE INDEX idx_top_items_mv_irisid                        ON public.top_items_mv                   USING btree (item_id, iris_id);
     """
 
     recreate_indexes_task = CloudSQLExecuteQueryOperator(
@@ -283,6 +284,7 @@ with DAG(
         "iris_venues_mv",
         "enriched_user_mv",
         "qpi_answers_mv",
+        "top_items_mv",
     ]
 
     refresh_materialized_view_tasks = []

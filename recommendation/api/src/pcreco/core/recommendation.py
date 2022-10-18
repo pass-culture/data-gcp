@@ -183,21 +183,7 @@ class Recommendation:
                 else "(is_national = True or url IS NOT NULL)"
             )
             query = f"""
-                WITH top_items AS
-                (
-                    select  item_id,
-                            row_number() over ( partition by  subcategory_id order by is_numerical ASC, booking_number DESC ) as rnk
-                    FROM    (   SELECT  ro.item_id,
-                                ro.subcategory_id,
-                                max(cast(ro.url is not null as int)) as is_numerical,
-                                max(ro.booking_number) as booking_number
-                                FROM     {self.user.recommendable_offer_table} ro
-                                WHERE    {geoloc_filter}
-                                {self.params_in_filters}
-                                group by item_id, subcategory_id
-                            ) inn
-                ), 
-                reco_offers_with_distance_to_user AS
+                WITH reco_offers_with_distance_to_user AS
                 (
                 SELECT  ro.offer_id,
                         ro.category,
@@ -211,27 +197,29 @@ class Recommendation:
                         v.venue_longitude,
                         CASE
                                 WHEN (              venue_latitude IS NOT NULL
-                                            AND     :user_latitude IS NOT NULL ) THEN 
-                                            st_distance( st_point(:user_longitude,:user_latitude), v.venue_point, FALSE )
+                                            AND     :user_latitude IS NOT NULL 
+                                            AND     ro.item_count > 1 ) THEN 
+                                            st_distance(st_point(:user_longitude,:user_latitude)::geometry, v.venue_point::geometry, FALSE )
                                 ELSE NULL
                         END AS user_distance
                 FROM  {self.user.recommendable_offer_table} ro
-                INNER JOIN top_items ti on ti.rnk < 200 and ti.item_id = ro.item_id
                 left JOIN   (
-                                SELECT  imv.venue_id,
-                                        imv.venue_latitude,
-                                        imv.venue_longitude,
-                                        imv.venue_point
-                                FROM   iris_venues_mv imv
-                                WHERE  iris_id= :user_iris_id
-                            ) v ON     ro.venue_id = v.venue_id 
-                    
-                    WHERE offer_id NOT IN (
-                                SELECT offer_id
-                                FROM   non_recommendable_offers
-                                WHERE  user_id = :user_id
-                            )
-                    AND ST_DWithin( v.venue_point::geometry,st_point(:user_longitude,:user_latitude)::geometry,10000,false)
+                    SELECT  imv.venue_id,
+                            imv.venue_latitude,
+                            imv.venue_longitude,
+                            imv.venue_point,
+                            imv.iris_id
+                    FROM   iris_venues_mv imv
+                    WHERE  iris_id= :user_iris_id
+                ) v ON ro.venue_id = v.venue_id 
+                INNER JOIN top_items_mv ti on ti.item_id = ro.item_id and ti.iris_id=v.iris_id
+                AND {geoloc_filter}
+                WHERE offer_id NOT IN (
+                            SELECT offer_id
+                            FROM   non_recommendable_offers
+                            WHERE  user_id = :user_id
+                        )
+                AND ro.booking_number > 2
                 ),
                 reco_offers_ranked_by_distance AS
                 (

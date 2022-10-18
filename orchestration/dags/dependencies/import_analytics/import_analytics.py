@@ -116,6 +116,12 @@ analytics_tables = {
         "destination_table": "recommendable_offers_data",
         "depends": ["enriched_offer_data", "offer_with_mediation"],
     },
+    "top_items_data": {
+        "sql": f"{ANALYTICS_SQL_PATH}/top_items_data.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "top_items_data",
+        "depends": ["recommendable_offers_data", "iris_venues"],
+    },
     "non_recommendable_offers_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/non_recommendable_offers_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",

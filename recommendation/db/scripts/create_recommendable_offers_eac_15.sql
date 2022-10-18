@@ -15,6 +15,7 @@ RETURNS TABLE (offer_id varchar,
                 stock_beginning_date TIMESTAMP,
                 stock_price REAL,
                 booking_number INTEGER,
+                item_count INTEGER,
                 is_underage_recommendable BOOLEAN) AS
 $body$
 BEGIN

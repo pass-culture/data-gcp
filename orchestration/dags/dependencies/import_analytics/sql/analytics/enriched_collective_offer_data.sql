@@ -105,7 +105,7 @@ FROM
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_collective_stock AS collective_stock ON collective_stock.collective_offer_id = collective_offer.collective_offer_id
     JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offerer AS offerer ON offerer.offerer_id = venue.venue_managing_offerer_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.subcategories ON subcategories.id = collective_offer.collective_offer_subcategory_id
-    JOIN `{{ bigquery_analytics_dataset }}`.academie_dept ON academie_dept.code_dpt = venue.venue_department_code
+    LEFT JOIN `{{ bigquery_analytics_dataset }}`.academie_dept ON academie_dept.code_dpt = venue.venue_department_code
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.region_department venue_region ON venue_region.num_dep = venue.venue_department_code
     LEFT JOIN bookings_per_offer ON bookings_per_offer.collective_offer_id = collective_offer.collective_offer_id
 UNION
@@ -148,6 +148,6 @@ FROM
     JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offerer AS offerer ON offerer.offerer_id = venue.venue_managing_offerer_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.subcategories ON subcategories.id = template.collective_offer_subcategory_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_collective_stock AS collective_stock ON collective_stock.collective_offer_id = template.collective_offer_id
-    JOIN `{{ bigquery_analytics_dataset }}`.academie_dept ON academie_dept.code_dpt = venue.venue_department_code
+    LEFT JOIN `{{ bigquery_analytics_dataset }}`.academie_dept ON academie_dept.code_dpt = venue.venue_department_code
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.region_department venue_region ON venue_region.num_dep = venue.venue_department_code
     LEFT JOIN bookings_per_offer ON bookings_per_offer.collective_offer_id = template.collective_offer_id

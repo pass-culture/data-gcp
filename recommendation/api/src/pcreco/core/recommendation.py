@@ -12,6 +12,7 @@ from pcreco.utils.db.db_connection import get_db
 from pcreco.core.utils.vertex_ai import predict_model
 from pcreco.utils.env_vars import (
     NUMBER_OF_PRESELECTED_OFFERS,
+    NUMBER_OF_RECOMMENDATIONS,
     ACTIVE_MODEL,
     RECO_ENDPOINT_NAME,
     AB_TESTING,
@@ -37,6 +38,16 @@ class Recommendation:
         )
         self.model_name = self.get_model_name()
         self.scoring = self.get_scoring_method()
+        self.reco_is_shuffle = (
+            params_in.reco_is_shuffle
+            if params_in.reco_is_shuffle
+            else SHUFFLE_RECOMMENDATION
+        )
+        self.nb_reco_display = (
+            params_in.nb_reco_display
+            if params_in.nb_reco_display
+            else NUMBER_OF_RECOMMENDATIONS
+        )
 
     # rename force model
     @property
@@ -67,7 +78,8 @@ class Recommendation:
             sorted(
                 self.scoring.get_scored_offers(), key=lambda k: k["score"], reverse=True
             )[:NUMBER_OF_PRESELECTED_OFFERS],
-            SHUFFLE_RECOMMENDATION,
+            self.nb_reco_display,
+            self.reco_is_shuffle,
         )
 
         return final_recommendations

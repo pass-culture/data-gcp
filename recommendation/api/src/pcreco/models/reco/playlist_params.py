@@ -1,23 +1,36 @@
 # rename to specific api route , and put in models dir
 class PlaylistParamsIn:
     def __init__(self, json):
+        self.model_name = json.get("model_name", None)
         self.start_date = json.get("start_date", None)
         self.end_date = json.get("end_date", None)
         self.is_event = json.get("isEvent", None)
+        self.offer_is_duo = json.get("offer_is_duo", None)
+        self.reco_is_shuffle = json.get("reco_is_shuffle", None)
+        self.is_sort_by_distance = json.get("is_sort_by_distance", None)
         self.search_group_names = json.get("categories", None)
         self.subcategories_id = json.get("subcategories", None)
-        self.price_max = json.get("price_max", None)
-        self.model_name = json.get("model_name", None)
-        self.offer_is_duo = json.get("offer_is_duo", None)
         self.movie_type = json.get("movie_type", None)
         self.offer_type_label = json.get("offer_type_label", None)
         self.offer_sub_type_label = json.get("offer_sub_type_label", None)
         self.macro_rayon = json.get("macro_rayon", None)
+        self.price_max = json.get("price_max", None)
+        self.nb_reco_display = json.get("nb_reco_display", None)
+        self.iris_radius = json.get("iris_radius", None)
         if (
             self.is_event is not None
             or self.search_group_names is not None
             or self.subcategories_id is not None
             or self.price_max is not None
+            or self.offer_is_duo is not None
+            or self.movie_type is not None
+            or self.offer_type_label is not None
+            or self.offer_sub_type_label is not None
+            or self.macro_rayon is not None
+            or self.nb_reco_display is not None
+            or self.iris_radius is not None
+            or self.reco_is_shuffle is not None
+            or self.is_sort_by_distance is not None
         ):
             self.has_conditions = True
             self.json_input = json

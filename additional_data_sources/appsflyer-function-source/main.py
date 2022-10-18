@@ -66,10 +66,9 @@ def default_date():
 def run(request):
     try:
         execution_date = request.get_json().get("execution_date", None)
-        if execution_date is not None:
-            execution_date = execution_date.strftime("%Y-%m-%d")
-        else:
+        if execution_date is None:
             execution_date = default_date()
+
     except:
         execution_date = default_date()
 

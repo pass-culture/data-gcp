@@ -2,13 +2,13 @@ with recommendable_offers as (
     select
         *
     from
-        `{{ bigquery_clean_dataset }}.recommendable_offers_data`
+        `{{ bigquery_analytics_dataset }}.recommendable_offers_data`
 ),
 non_recommendable_offers as (
     select
         *
     from
-        `{{ bigquery_clean_dataset }}.recommendable_offers_data` offer
+        `{{ bigquery_analytics_dataset }}.recommendable_offers_data` offer
     Where
         offer.subcategory_id in ('ACTIVATION_THING', 'ACTIVATION_EVENT')
         OR (offer.subcategory_id = 'ACHAT_INSTRUMENT' and REGEXP_CONTAINS(LOWER(offer.name),r'bon d’achat|bons d’achat'))

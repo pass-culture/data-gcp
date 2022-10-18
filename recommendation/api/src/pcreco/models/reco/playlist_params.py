@@ -59,16 +59,12 @@ class PlaylistParamsIn:
             condition += f"AND stock_price<={self.price_max} \n"
 
         if self.offer_is_duo is not None:
-            condition += (
-                f"AND ( offer_is_duo={self.offer_is_duo}) \n"
-            )
+            condition += f"AND ( offer_is_duo={self.offer_is_duo}) \n"
 
         if self.movie_type is not None and len(self.movie_type) > 0:
             condition += (
                 "AND ("
-                + " OR ".join(
-                    [f"movie_type='{cat}'" for cat in self.movie_type]
-                )
+                + " OR ".join([f"movie_type='{cat}'" for cat in self.movie_type])
                 + ")\n"
             )
 
@@ -80,22 +76,23 @@ class PlaylistParamsIn:
                 )
                 + ")\n"
             )
-        
+
         if self.offer_sub_type_label is not None and len(self.offer_sub_type_label) > 0:
             condition += (
                 "AND ("
                 + " OR ".join(
-                    [f"offer_sub_type_label='{cat}'" for cat in self.offer_sub_type_label]
+                    [
+                        f"offer_sub_type_label='{cat}'"
+                        for cat in self.offer_sub_type_label
+                    ]
                 )
                 + ")\n"
             )
-        
+
         if self.macro_rayon is not None and len(self.macro_rayon) > 0:
             condition += (
                 "AND ("
-                + " OR ".join(
-                    [f"macro_rayon='{cat}'" for cat in self.macro_rayon]
-                )
+                + " OR ".join([f"macro_rayon='{cat}'" for cat in self.macro_rayon])
                 + ")\n"
             )
 

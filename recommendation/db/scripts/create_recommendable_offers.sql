@@ -26,7 +26,7 @@ RETURNS TABLE (offer_id varchar,
 $body$
 BEGIN
     RETURN QUERY 
-    SELECT * from public.recommendable_offers_data;
+    SELECT * from public.recommendable_offers_data ro;
 END;
 $body$
 LANGUAGE plpgsql;

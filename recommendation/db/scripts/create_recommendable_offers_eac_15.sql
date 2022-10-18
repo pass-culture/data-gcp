@@ -3,6 +3,7 @@ DROP FUNCTION IF EXISTS get_recommendable_offers_eac_15 CASCADE;
 CREATE OR REPLACE FUNCTION get_recommendable_offers_eac_15()
 RETURNS TABLE (offer_id varchar,
                 item_id varchar,
+                product_id varchar,
                 venue_id varchar,
                 subcategory_id VARCHAR,
                 category VARCHAR,

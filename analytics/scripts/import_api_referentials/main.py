@@ -28,9 +28,9 @@ CATEGORIES_DTYPES = {
 
 TYPES_DTYPES = {
     "domain": str,
-    "type": int,
+    "type": str,
     "label": str,
-    "sub_type": int,
+    "sub_type": str,
     "sub_label": str,
 }
 

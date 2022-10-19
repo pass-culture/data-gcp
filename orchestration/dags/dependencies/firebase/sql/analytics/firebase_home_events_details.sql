@@ -28,7 +28,7 @@ contentful_tags AS (
     GROUP BY entry_id
 ), 
 diversification_booking AS (
-    -- in case we have more than one reservation for the same offer in the same day, take average.
+    -- in case we have more than one reservation for the same offer in the same day, take average (this should not happen).
     SELECT
         DATE(booking_creation_date) as date,
         user_id,
@@ -50,7 +50,13 @@ SELECT
     eud.user_department_code,
     eud.user_region_name,
     eud.user_current_deposit_type,
-    eud.user_age
+    eud.user_age,
+    CASE 
+        WHEN eud.user_current_deposit_type = 'GRANT_18' THEN 'Bénéficiaire 18-20 ans'
+        WHEN eud.user_current_deposit_type = 'GRANT_15_17' THEN 'Bénéficiaire 15-17 ans'
+        WHEN e.user_id IS NOT NULL THEN 'Grand Public'
+    ELSE 'Non connecté' end as user_role
+
 FROM firebase_home_events e
 LEFT JOIN contentful_tags contentful_tags on contentful_tags.entry_id = e.module_id
 LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_user_data` eud ON e.user_id = eud.user_id

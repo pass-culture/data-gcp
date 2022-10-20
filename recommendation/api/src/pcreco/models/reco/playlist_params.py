@@ -30,10 +30,10 @@ class PlaylistParamsIn:
             or self.offer_type_label is not None
             or self.offer_sub_type_label is not None
             or self.macro_rayon is not None
-            or self.nb_reco_display is not None
+            or self.nb_reco_display is not NUMBER_OF_RECOMMENDATIONS
             or self.iris_radius is not None
-            or self.reco_is_shuffle is not None
-            or self.is_sort_by_distance is not None
+            or self.reco_is_shuffle is not SHUFFLE_RECOMMENDATION
+            or self.is_sort_by_distance is not False
         ):
             self.has_conditions = True
             self.json_input = json

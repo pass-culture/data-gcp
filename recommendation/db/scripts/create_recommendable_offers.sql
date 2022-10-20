@@ -1,13 +1,15 @@
 /* Function to get all recommendable offers ids. */
 DROP FUNCTION IF EXISTS get_recommendable_offers CASCADE;
 CREATE OR REPLACE FUNCTION get_recommendable_offers()
-RETURNS TABLE (offer_id varchar,
-                item_id varchar,
+RETURNS TABLE ( item_id varchar,
+                offer_id varchar,
                 product_id varchar,
-                venue_id varchar,
-                subcategory_id VARCHAR,
                 category VARCHAR,
+                subcategory_id VARCHAR,
                 search_group_name VARCHAR,
+                iris_id varchar,
+                venue_id varchar,
+                venue_distance_to_iris REAL,
                 name VARCHAR,
                 url VARCHAR,
                 is_national BOOLEAN,
@@ -15,7 +17,8 @@ RETURNS TABLE (offer_id varchar,
                 stock_beginning_date TIMESTAMP,
                 stock_price REAL,
                 booking_number INTEGER,
-                is_underage_recommendable BOOLEAN) AS
+                is_underage_recommendable BOOLEAN,
+                position VARCHAR) AS
 $body$
 BEGIN
     RETURN QUERY 

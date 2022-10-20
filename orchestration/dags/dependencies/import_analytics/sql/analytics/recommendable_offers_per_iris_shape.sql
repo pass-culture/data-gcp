@@ -34,6 +34,16 @@ select
 FROM
     selected_items si
     INNER JOIN `{{ bigquery_analytics_dataset }}.recommendable_offers_data` ro ON ro.offer_id = si.offer_id -- get distinct tables with distinct heuristics
+    GROUP by
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
     -- TODO: 
     -- assert,
     -- for each iris we should have the same number of items as top_items list

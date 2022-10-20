@@ -5,6 +5,7 @@ from typing import Any, List
 
 from pcreco.core.user import User
 from pcreco.core.recommendation import Recommendation
+from pcreco.models.reco.playlist_params import PlaylistParamsIn
 from pcreco.core.utils.cold_start_status import get_cold_start_status
 
 
@@ -64,8 +65,8 @@ def test_get_cold_start_categories(
         cold_start_status_mock.return_value = True
 
         user = User(user_id)
-
-        scoring = Recommendation(user)
+        input_reco = PlaylistParamsIn()
+        scoring = Recommendation(user, params_in=input_reco)
         assert sorted(scoring.scoring.get_cold_start_categories()) == sorted(
             cold_start_categories
         )

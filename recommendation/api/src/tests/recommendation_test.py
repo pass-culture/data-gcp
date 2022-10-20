@@ -101,8 +101,7 @@ class RecommendationTest:
 
             cold_start_status_mock.return_value = True
             user = User(user_id, longitude, latitude)
-            input_reco = PlaylistParamsIn()
-            scoring = Recommendation(user, params_in=input_reco)
+            scoring = Recommendation(user)
             user_recommendations = scoring.get_scoring()
             assert (
                 len(user_recommendations) > 0

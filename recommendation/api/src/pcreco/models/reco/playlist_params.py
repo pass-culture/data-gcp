@@ -1,4 +1,7 @@
 # rename to specific api route , and put in models dir
+from pcreco.utils.env_vars import NUMBER_OF_RECOMMENDATIONS, SHUFFLE_RECOMMENDATION
+
+
 class PlaylistParamsIn:
     def __init__(self, json):
         self.model_name = json.get("model_name", None)
@@ -6,8 +9,8 @@ class PlaylistParamsIn:
         self.end_date = json.get("end_date", None)
         self.is_event = json.get("isEvent", None)
         self.offer_is_duo = json.get("offer_is_duo", None)
-        self.reco_is_shuffle = json.get("reco_is_shuffle", None)
-        self.is_sort_by_distance = json.get("is_sort_by_distance", None)
+        self.reco_is_shuffle = json.get("reco_is_shuffle", SHUFFLE_RECOMMENDATION)
+        self.is_sort_by_distance = json.get("is_sort_by_distance", False)
         self.search_group_names = json.get("categories", None)
         self.subcategories_id = json.get("subcategories", None)
         self.movie_type = json.get("movie_type", None)
@@ -15,7 +18,7 @@ class PlaylistParamsIn:
         self.offer_sub_type_label = json.get("offer_sub_type_label", None)
         self.macro_rayon = json.get("macro_rayon", None)
         self.price_max = json.get("price_max", None)
-        self.nb_reco_display = json.get("nb_reco_display", None)
+        self.nb_reco_display = json.get("nb_reco_display", NUMBER_OF_RECOMMENDATIONS)
         self.iris_radius = json.get("iris_radius", None)
         if (
             self.is_event is not None

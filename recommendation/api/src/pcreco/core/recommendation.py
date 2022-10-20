@@ -39,14 +39,10 @@ class Recommendation:
         self.model_name = self.get_model_name()
         self.scoring = self.get_scoring_method()
         self.reco_is_shuffle = (
-            params_in.reco_is_shuffle
-            if params_in.reco_is_shuffle
-            else SHUFFLE_RECOMMENDATION
+            params_in.reco_is_shuffle if params_in else SHUFFLE_RECOMMENDATION
         )
         self.nb_reco_display = (
-            params_in.nb_reco_display
-            if params_in.nb_reco_display
-            else NUMBER_OF_RECOMMENDATIONS
+            params_in.nb_reco_display if params_in else NUMBER_OF_RECOMMENDATIONS
         )
 
     # rename force model

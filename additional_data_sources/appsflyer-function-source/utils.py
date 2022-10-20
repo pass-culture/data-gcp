@@ -9,6 +9,16 @@ BIGQUERY_RAW_DATASET = os.environ.get("BIGQUERY_RAW_DATASET")
 ENVIRONMENT_SHORT_NAME = os.environ.get("ENVIRONMENT_SHORT_NAME")
 
 
+def to_sql_type(_type):
+    _dict = {
+        str: bigquery.enums.SqlTypeNames.STRING,
+        float: bigquery.enums.SqlTypeNames.FLOAT64,
+        int: bigquery.enums.SqlTypeNames.INT64,
+        bool: bigquery.enums.SqlTypeNames.BOOL,
+    }
+    return _dict[_type]
+
+
 def access_secret_data(project_id, secret_id, version_id=1, default=None):
     try:
         client = secretmanager.SecretManagerServiceClient()
@@ -19,7 +29,7 @@ def access_secret_data(project_id, secret_id, version_id=1, default=None):
         return default
 
 
-def save_to_bq(df, table_name, execution_date):
+def save_to_bq(df, table_name, execution_date, schema_field):
     _now = datetime.strptime(execution_date, "%Y-%m-%d")
     yyyymmdd = _now.strftime("%Y%m%d")
     df["execution_date"] = _now
@@ -31,6 +41,10 @@ def save_to_bq(df, table_name, execution_date):
             type_=bigquery.TimePartitioningType.DAY,
             field="execution_date",
         ),
+        schema=[
+            bigquery.SchemaField(col, to_sql_type(_type))
+            for col, _type in schema_field.items()
+        ],
     )
     job = bigquery_client.load_table_from_dataframe(df, table_id, job_config=job_config)
     job.result()

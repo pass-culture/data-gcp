@@ -61,8 +61,8 @@ SELECT
 FROM
     `{{ bigquery_analytics_dataset }}`.dms_pro AS dms_pro
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_offerer_data AS enriched_offerer ON dms_pro.demandeur_entreprise_siren = enriched_offerer.offerer_siren
-    LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_venue_data AS enriched_venue ON enriched_venue.venue_managing_offerer_id = enriched_offerer.offerer_id AND venue_name != 'Offre numérique'
+    LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_venue_data AS enriched_venue ON enriched_venue.venue_managing_offerer_id = enriched_offerer.offerer_id AND venue_name != 'Offre numérique' AND enriched_venue.venue_is_permanent
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.adage AS adage ON adage.siret = dms_pro.demandeur_siret
-    LEFT JOIN typeform_ranked ON typeform_ranked.quel_est_le_numero_de_siret_de_votre_structure = dms_pro.demandeur_siret
+    LEFT JOIN typeform_ranked ON typeform_ranked.siret = dms_pro.demandeur_siret
 WHERE dms_pro.application_status = 'accepte'
-AND dms_pro.procedure_id IN ('57081', '57089','61589')
+AND dms_pro.procedure_id IN ('57081', '57189','61589')

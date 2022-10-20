@@ -10,15 +10,13 @@ top_items_out_shape as(
         ti.item_id,
         ti.iris_id
     FROM
-        top_items_iris ti -- take items that are not in iris shape
+        top_items_iris ti 
         LEFT JOIN `{{ bigquery_analytics_dataset }}.top_items_in_iris_shape` ti_in on ti.item_id = ti_in.item_id
         and ti.iris_id = ti_in.iris_id
     WHERE
         ti_in.item_id is null
 ),
 top_items_outshape_w_distance as(
-    -- for items that are not in current iris, calculate the distance of venue from iris centroid.
-    -- venue = get lat, long
     SELECT
         item_out.item_id,
         ro.offer_id,
@@ -32,9 +30,9 @@ top_items_outshape_w_distance as(
             ELSE null
         END as venue_distance_to_iris
     FROM
-        top_items_out_shape item_out -- iris_france = list of iris in order to get centroid
-        INNER JOIN `{{ bigquery_analytics_dataset }}.iris_france` irisf on item_out.iris_id = irisf.id -- get all items that are not in iris
-        INNER JOIN `{{ bigquery_analytics_dataset }}.recommendable_offers_data` ro ON item_out.item_id = ro.item_id -- for each item, take venue and offer
+        top_items_out_shape item_out 
+        INNER JOIN `{{ bigquery_analytics_dataset }}.iris_france` irisf on item_out.iris_id = irisf.id 
+        INNER JOIN `{{ bigquery_analytics_dataset }}.recommendable_offers_data` ro ON item_out.item_id = ro.item_id 
         INNER JOIN `{{ bigquery_analytics_dataset }}.applicative_database_venue` v on ro.venue_id = v.venue_id
 ),
 item_out_rank_by_distance as(

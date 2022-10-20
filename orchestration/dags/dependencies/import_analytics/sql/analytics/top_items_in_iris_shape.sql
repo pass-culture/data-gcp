@@ -1,6 +1,5 @@
 CREATE
 OR REPLACE TABLE `{{ bigquery_analytics_dataset }}.top_items_in_iris_shape` AS WITH top_items_iris as(
-    -- see how we calculate this --> TOP offers only ~ 5K offers per iris
     SELECT
         ti.item_id,
         ti.iris_id,
@@ -8,10 +7,6 @@ OR REPLACE TABLE `{{ bigquery_analytics_dataset }}.top_items_in_iris_shape` AS W
         `{{ bigquery_analytics_dataset }}.top_items_data` ti
 ),
 top_items_inshape as (
-    -- get all venues that are within current iris (in iris shape)
-    -- TODO : see how iris_venues_raw is calculated
-    -- TODO : get pre-calculated distance over iris centroid instead of setting default 0
-    -- take all associated offers in this range
     SELECT
         ti.item_id,
         ti.iris_id,

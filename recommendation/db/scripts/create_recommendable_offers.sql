@@ -17,7 +17,7 @@ RETURNS TABLE ( item_id varchar,
                 stock_beginning_date TIMESTAMP,
                 stock_price REAL,
                 booking_number INTEGER,
-                is_underage_recommendable BOOLEAN
+                is_underage_recommendable BOOLEAN,
                 position VARCHAR) AS
 $body$
 BEGIN

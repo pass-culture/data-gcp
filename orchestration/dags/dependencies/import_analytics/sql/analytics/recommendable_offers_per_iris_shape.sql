@@ -44,11 +44,3 @@ FROM
     7,
     8,
     9
-    -- TODO: 
-    -- assert,
-    -- for each iris we should have the same number of items as top_items list
-    -- for each iris, in 'out' we should have max one item = one offer
-    -- for each iris, in 'out' we should only items that are not in iris in
-    -- for each iris, in 'in' we can have more than one offer per iris.
-    -- Size assumptions:
-    --

@@ -143,7 +143,7 @@ analytics_tables = {
         "sql": f"{ANALYTICS_SQL_PATH}/recommendable_offers_per_iris_shape.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "recommendable_offers_per_iris_shape",
-        "depends": ["top_items_out_iris_shape"],
+        "depends": ["top_items_in_iris_shape", "top_items_out_iris_shape"],
     },
     "non_recommendable_offers_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/non_recommendable_offers_data.sql",

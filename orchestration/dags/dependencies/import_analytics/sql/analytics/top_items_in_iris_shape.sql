@@ -1,5 +1,4 @@
-CREATE
-OR REPLACE TABLE `{{ bigquery_analytics_dataset }}.top_items_in_iris_shape` AS WITH top_items_iris as(
+WITH top_items_iris as(
     SELECT
         ti.item_id,
         ti.iris_id,

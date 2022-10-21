@@ -203,15 +203,7 @@ class Recommendation:
                                 ELSE NULL
                         END AS user_distance
                 FROM  {self.user.recommendable_offer_table} ro
-                left JOIN   (
-                    SELECT  imv.venue_id,
-                            imv.venue_latitude,
-                            imv.venue_longitude,
-                            imv.venue_point,
-                            imv.iris_id
-                    FROM   iris_venues_mv imv
-                    WHERE  iris_id= :user_iris_id
-                ) v ON ro.venue_id = v.venue_id 
+                left JOIN  iris_venues_mv v ON ro.venue_id = v.venue_id 
                 WHERE offer_id NOT IN (
                             SELECT offer_id
                             FROM   non_recommendable_offers

@@ -1,5 +1,5 @@
 select
-    date(mqe.started_at) as execution_date,
+    date(mqe.execution_date) as execution_date,
     dashboard_id,
     card_id,
     mrc.card_name,

@@ -32,6 +32,10 @@ import_tables = {
         "sql": f"{SQL_PATH}/raw/report_dashboard.sql",
         "destination_dataset_table": "{{ bigquery_raw_dataset }}.metabase_report_dashboard",
     },
+    "collections": {
+        "sql": f"{SQL_PATH}/raw/collections.sql",
+        "destination_dataset_table": "{{ bigquery_raw_dataset }}.metabase_collections",
+    },
 }
 
 analytics_tables = {
@@ -42,6 +46,10 @@ analytics_tables = {
     "metabase_views": {
         "sql": f"{SQL_PATH}/analytics/metabase_views.sql",
         "destination_dataset_table": "{{ bigquery_analytics_dataset }}.metabase_views",
+    },
+    "metabase_activity": {
+        "sql": f"{SQL_PATH}/analytics/metabase_activity.sql",
+        "destination_dataset_table": "{{ bigquery_analytics_dataset }}.metabase_activity",
     },
 }
 

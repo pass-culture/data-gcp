@@ -118,7 +118,6 @@ def define_import_tables():
         ],
         "offerer_tag": [""],
         "offerer_tag_mapping": [""],
-        ],
     }
 
 

@@ -163,15 +163,15 @@ analytics_tables = {
             "enriched_offerer_data",
         ],
         "clustering_fields": {"fields": ["offerer_siren", "venue_id"]},
-    "user_penetration": {
-        "sql": f"{ANALYTICS_SQL_PATH}/user_penetration.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "user_penetration",
-        "depends": [
-            "enriched_user_data",
-            "aggregated_monthly_user_used_booking_activity",
-        ],
-    }
+        "user_penetration": {
+            "sql": f"{ANALYTICS_SQL_PATH}/user_penetration.sql",
+            "destination_dataset": "{{ bigquery_analytics_dataset }}",
+            "destination_table": "user_penetration",
+            "depends": [
+                "enriched_user_data",
+                "aggregated_monthly_user_used_booking_activity",
+            ],
+        },
     },
 }
 

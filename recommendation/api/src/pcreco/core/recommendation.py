@@ -178,7 +178,7 @@ class Recommendation:
 
         def _get_intermediate_query(self) -> str:
             geoloc_filter = (
-                f"""( ro.venue_id IN (SELECT "venue_id" FROM iris_venues_mv WHERE "iris_id" = :user_iris_id) OR is_national = True OR url IS NOT NULL)"""
+                f"""( (ro.iris_id = :user_iris_id) OR is_national = True OR url IS NOT NULL)"""
                 if self.user.iris_id
                 else "(is_national = True or url IS NOT NULL)"
             )
@@ -196,10 +196,10 @@ class Recommendation:
                         v.venue_latitude,
                         v.venue_longitude,
                         CASE
-                                WHEN (              venue_latitude IS NOT NULL
-                                            AND     :user_latitude IS NOT NULL 
-                                            AND     ro.item_count > 1 ) THEN 
-                                            st_distance(st_point(:user_longitude,:user_latitude)::geometry, v.venue_point::geometry, FALSE )
+                                WHEN (              v.venue_latitude IS NOT NULL
+                                            AND     "position" ='in' ) THEN st_distance(st_point(:user_longitude,:user_latitude)::geometry, st_point(v.venue_longitude,v.venue_latitude)::geometry, FALSE )
+                                WHEN (              v.venue_latitude IS NOT NULL
+                                            AND     "position" ='out' ) THEN ro.venue_distance_to_iris
                                 ELSE NULL
                         END AS user_distance
                 FROM  {self.user.recommendable_offer_table} ro
@@ -212,14 +212,12 @@ class Recommendation:
                     FROM   iris_venues_mv imv
                     WHERE  iris_id= :user_iris_id
                 ) v ON ro.venue_id = v.venue_id 
-                INNER JOIN top_items_mv ti on ti.item_id = ro.item_id and ti.iris_id=v.iris_id
-                AND {geoloc_filter}
                 WHERE offer_id NOT IN (
                             SELECT offer_id
                             FROM   non_recommendable_offers
                             WHERE  user_id = :user_id
                         )
-                AND ro.booking_number > 2
+                AND {geoloc_filter}
                 ),
                 reco_offers_ranked_by_distance AS
                 (
@@ -234,6 +232,7 @@ class Recommendation:
                     FROM    reco_offers_with_distance_to_user ro 
                 )
                 SELECT * from reco_offers_ranked_by_distance where rank = 1 
+                order by is_numerical ASC
                 limit {RECOMMENDABLE_OFFER_LIMIT};
                 """
             return query

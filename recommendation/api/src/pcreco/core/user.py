@@ -22,9 +22,9 @@ class User:
         self.get_user_profile()
         self.get_ab_testing_group()
         self.recommendable_offer_table = (
-            RECOMMENDABLE_OFFER_TABLE_PREFIX
+            f"{RECOMMENDABLE_OFFER_TABLE_PREFIX}_mv"
             if not self.is_eac
-            else f"{RECOMMENDABLE_OFFER_TABLE_PREFIX}_{RECOMMENDABLE_OFFER_TABLE_SUFFIX_DICT[self.age]}"
+            else f"{RECOMMENDABLE_OFFER_TABLE_PREFIX}_{RECOMMENDABLE_OFFER_TABLE_SUFFIX_DICT[self.age]}_mv"
         )
 
     @property

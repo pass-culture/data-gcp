@@ -118,9 +118,6 @@ def define_import_tables():
         ],
         "offerer_tag": [""],
         "offerer_tag_mapping": [""],
-        "user_penetration": [
-            "active_month",
-            "born_date",
         ],
     }
 

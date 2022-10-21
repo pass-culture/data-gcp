@@ -170,8 +170,6 @@ analytics_tables = {
         "depends": [
             "enriched_user_data",
             "aggregated_monthly_user_used_booking_activity",
-            "region_department",
-            "population_age_and_department_france_details",
         ],
     }
     },

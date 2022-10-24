@@ -178,12 +178,31 @@ class Recommendation:
 
         def _get_intermediate_query(self) -> str:
             geoloc_filter = (
-                f"""( ro.venue_id IN (SELECT "venue_id" FROM iris_venues_mv WHERE "iris_id" = :user_iris_id) OR is_national = True OR url IS NOT NULL """
+                f"""( ro.iris_id = :user_iris_id OR is_national = True OR url IS NOT NULL )"""
                 if self.user.iris_id
                 else "(is_national = True or url IS NOT NULL)"
             )
             query = f"""
-                WITH reco_offers_with_distance_to_user AS
+                WITH reco_offers as (
+                    SELECT  ro.offer_id,
+                        ro.category,
+                        ro.subcategory_id,
+                        ro.search_group_name,
+                        ro.url,
+                        ro.url is not null as is_numerical,
+                        ro.item_id,
+                        ro.venue_id,
+                        ro.venue_distance_to_iris,
+                        ro."position"
+                        FROM  {self.user.recommendable_offer_table} ro
+                        WHERE offer_id NOT IN (
+                            SELECT offer_id
+                            FROM   non_recommendable_offers
+                            WHERE  user_id = :user_id
+                        )
+                        AND {geoloc_filter}
+                        {self.params_in_filters}
+                ), reco_offers_with_distance_to_user AS
                 (
                 SELECT  ro.offer_id,
                         ro.category,
@@ -193,25 +212,17 @@ class Recommendation:
                         ro.url is not null as is_numerical,
                         ro.item_id,
                         ro.venue_id,
-                        v.venue_latitude,
-                        v.venue_longitude,
                         CASE
                                 WHEN (              v.venue_latitude IS NOT NULL
                                             AND     :user_longitude IS NOT NULL
-                                            AND     "position" ='in' ) THEN st_distance(st_point(:user_longitude,:user_latitude)::geometry, st_point(v.venue_longitude,v.venue_latitude)::geometry, FALSE )
+                                            AND     ro."position" ='in' ) THEN st_distance(st_point(:user_longitude,:user_latitude)::geometry, st_point(v.venue_longitude,v.venue_latitude)::geometry, FALSE )
                                 WHEN (              v.venue_latitude IS NOT NULL
                                             AND     :user_longitude IS NOT NULL
-                                            AND     "position" ='out' ) THEN ro.venue_distance_to_iris
+                                            AND     ro."position" ='out' ) THEN ro.venue_distance_to_iris
                                 ELSE NULL
                         END AS user_distance
-                FROM  {self.user.recommendable_offer_table} ro
+                FROM  reco_offers ro
                 left JOIN  iris_venues_mv v ON ro.venue_id = v.venue_id 
-                WHERE offer_id NOT IN (
-                            SELECT offer_id
-                            FROM   non_recommendable_offers
-                            WHERE  user_id = :user_id
-                        )
-                AND {geoloc_filter}
                 ),
                 reco_offers_ranked_by_distance AS
                 (
@@ -225,7 +236,8 @@ class Recommendation:
                             row_number() OVER ( partition BY item_id ORDER BY user_distance ASC ) AS rank
                     FROM    reco_offers_with_distance_to_user ro 
                 )
-                SELECT * from reco_offers_ranked_by_distance where rank = 1 
+                SELECT ro.offer_id, ro.category, ro.subcategory_id, ro.search_group_name, ro.url, ro.item_id
+                from reco_offers_ranked_by_distance where rank = 1 
                 order by is_numerical ASC
                 limit {RECOMMENDABLE_OFFER_LIMIT};
                 """
@@ -259,14 +271,23 @@ class Recommendation:
             )
 
             where_clause = (
-                f"""(venue_id IN (SELECT "venue_id" FROM iris_venues_mv WHERE "iris_id" = :user_iris_id) OR is_national = True OR url IS NOT NULL)"""
+                f"""( ro.iris_id = :user_iris_id OR is_national = True OR url IS NOT NULL)"""
                 if self.user.iris_id
                 else "(is_national = True or url IS NOT NULL)"
             )
             recommendations_query = text(
                 f"""
                 with reco_offers as(
-                SELECT ro.offer_id, ro.category, ro.subcategory_id, ro.search_group_name, ro.url, ro.item_id, ro.venue_id,ro.position, ro.booking_number
+                SELECT ro.offer_id,
+                ro.category, 
+                ro.subcategory_id,
+                ro.search_group_name, 
+                ro.url, 
+                ro.item_id, 
+                ro.venue_id,
+                venue_distance_to_iris,
+                ro."position", 
+                ro.booking_number
                 FROM {self.user.recommendable_offer_table} ro
                 WHERE offer_id NOT IN
                     (
@@ -278,14 +299,21 @@ class Recommendation:
                 AND {where_clause}
                 ),
                 reco_offers_with_distance_to_user as(
-                    SELECT ro.offer_id, ro.category, ro.subcategory_id, ro.search_group_name, ro.url, ro.item_id, ro.venue_id, v.venue_latitude, v.venue_longitude,ro.booking_number,
+                    SELECT ro.offer_id, 
+                    ro.category, 
+                    ro.subcategory_id, 
+                    ro.search_group_name, 
+                    ro.url, 
+                    ro.item_id, 
+                    ro.venue_id,
+                    ro.booking_number,
                     CASE
                                 WHEN (              v.venue_latitude IS NOT NULL
                                             AND     :user_longitude IS NOT NULL
-                                            AND     "position" ='in' ) THEN st_distance(st_point(:user_longitude,:user_latitude)::geometry, st_point(v.venue_longitude,v.venue_latitude)::geometry, FALSE )
+                                            AND     ro."position" ='in' ) THEN st_distance(st_point(:user_longitude,:user_latitude)::geometry, st_point(v.venue_longitude,v.venue_latitude)::geometry, FALSE )
                                 WHEN (              v.venue_latitude IS NOT NULL
                                             AND     :user_longitude IS NOT NULL
-                                            AND     "position" ='out' ) THEN ro.venue_distance_to_iris
+                                            AND     ro."position" ='out' ) THEN ro.venue_distance_to_iris
                                 ELSE NULL
                         END AS user_distance
                     FROM reco_offers ro

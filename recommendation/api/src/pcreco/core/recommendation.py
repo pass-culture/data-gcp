@@ -178,7 +178,7 @@ class Recommendation:
 
         def _get_intermediate_query(self) -> str:
             geoloc_filter = (
-                f"""( (ro.iris_id = :user_iris_id) OR is_national = True OR url IS NOT NULL)"""
+                f"""( ro.venue_id IN (SELECT "venue_id" FROM iris_venues_mv WHERE "iris_id" = :user_iris_id) OR is_national = True OR url IS NOT NULL """
                 if self.user.iris_id
                 else "(is_national = True or url IS NOT NULL)"
             )
@@ -197,8 +197,10 @@ class Recommendation:
                         v.venue_longitude,
                         CASE
                                 WHEN (              v.venue_latitude IS NOT NULL
+                                            AND     :user_longitude IS NOT NULL
                                             AND     "position" ='in' ) THEN st_distance(st_point(:user_longitude,:user_latitude)::geometry, st_point(v.venue_longitude,v.venue_latitude)::geometry, FALSE )
                                 WHEN (              v.venue_latitude IS NOT NULL
+                                            AND     :user_longitude IS NOT NULL
                                             AND     "position" ='out' ) THEN ro.venue_distance_to_iris
                                 ELSE NULL
                         END AS user_distance

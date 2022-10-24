@@ -178,43 +178,63 @@ class Recommendation:
 
         def _get_intermediate_query(self) -> str:
             geoloc_filter = (
-                f"""( venue_id IN (SELECT "venue_id" FROM iris_venues_mv WHERE "iris_id" = :user_iris_id) OR is_national = True OR url IS NOT NULL)"""
+                f"""( ro.venue_id IN (SELECT "venue_id" FROM iris_venues_mv WHERE "iris_id" = :user_iris_id) OR is_national = True OR url IS NOT NULL)"""
                 if self.user.iris_id
                 else "(is_national = True or url IS NOT NULL)"
             )
             query = f"""
-                with reco_offers as(
-                    SELECT offer_id,category, subcategory_id,search_group_name, url, url IS NOT NULL as is_numerical, item_id,venue_id,booking_number
-                    FROM {self.user.recommendable_offer_table}
-                    WHERE {geoloc_filter}
-                    AND offer_id NOT IN
-                        (
-                        SELECT offer_id
-                        FROM non_recommendable_offers
-                        WHERE user_id = :user_id
-                        )   
-                    {self.params_in_filters}
-                ), 
-                reco_offers_with_distance_to_user as(
-                    SELECT ro.offer_id, ro.category, ro.subcategory_id, ro.search_group_name, ro.url, ro.is_numerical, ro.item_id, ro.venue_id, v.venue_latitude, v.venue_longitude,ro.booking_number,
-                    CASE WHEN (venue_latitude is not null and :user_latitude is not null) THEN ST_Distance(ST_Point(:user_longitude,:user_latitude), ST_Point(venue_longitude, venue_latitude)) ELSE null END as user_distance
-                    FROM reco_offers ro
-                    LEFT JOIN (select venue_id,venue_latitude,venue_longitude from iris_venues_mv where iris_id=:user_iris_id) v ON ro.venue_id = v.venue_id
+                WITH reco_offers_with_distance_to_user AS
+                (
+                SELECT  ro.offer_id,
+                        ro.category,
+                        ro.subcategory_id,
+                        ro.search_group_name,
+                        ro.url,
+                        ro.url is not null as is_numerical,
+                        ro.item_id,
+                        ro.venue_id,
+                        v.venue_latitude,
+                        v.venue_longitude,
+                        CASE
+                                WHEN (              venue_latitude IS NOT NULL
+                                            AND     :user_latitude IS NOT NULL 
+                                            AND     ro.item_count > 1 ) THEN 
+                                            st_distance(st_point(:user_longitude,:user_latitude)::geometry, v.venue_point::geometry, FALSE )
+                                ELSE NULL
+                        END AS user_distance
+                FROM  {self.user.recommendable_offer_table} ro
+                left JOIN   (
+                    SELECT  imv.venue_id,
+                            imv.venue_latitude,
+                            imv.venue_longitude,
+                            imv.venue_point,
+                            imv.iris_id
+                    FROM   iris_venues_mv imv
+                    WHERE  iris_id= :user_iris_id
+                ) v ON ro.venue_id = v.venue_id 
+                INNER JOIN top_items_mv ti on ti.item_id = ro.item_id and ti.iris_id=v.iris_id
+                AND {geoloc_filter}
+                WHERE offer_id NOT IN (
+                            SELECT offer_id
+                            FROM   non_recommendable_offers
+                            WHERE  user_id = :user_id
+                        )
+                AND ro.booking_number > 2
                 ),
-                reco_offers_ranked_by_distance as(
-                    SELECT ro.offer_id, ro.category, ro.subcategory_id, ro.search_group_name, ro.url, ro.is_numerical, ro.item_id,ro.booking_number,
-                    RANK() OVER (
-                            PARTITION BY item_id
-                            ORDER BY
-                                user_distance ASC
-                            ) as rank
-                    FROM reco_offers_with_distance_to_user ro
+                reco_offers_ranked_by_distance AS
+                (
+                    SELECT  ro.offer_id,
+                            ro.category,
+                            ro.subcategory_id,
+                            ro.search_group_name,
+                            ro.url,
+                            ro.is_numerical,
+                            ro.item_id,
+                            row_number() OVER ( partition BY item_id ORDER BY user_distance ASC ) AS rank
+                    FROM    reco_offers_with_distance_to_user ro 
                 )
-                SELECT  ro.offer_id, ro.category, ro.subcategory_id, ro.search_group_name, ro.url, ro.is_numerical, ro.item_id
-                FROM reco_offers_ranked_by_distance ro
-                WHERE ro.rank=1
-                ORDER BY is_numerical ASC,booking_number DESC
-                LIMIT {RECOMMENDABLE_OFFER_LIMIT};
+                SELECT * from reco_offers_ranked_by_distance where rank = 1 
+                limit {RECOMMENDABLE_OFFER_LIMIT};
                 """
             return query
 
@@ -253,8 +273,8 @@ class Recommendation:
             recommendations_query = text(
                 f"""
                 with reco_offers as(
-                SELECT offer_id, category,subcategory_id,search_group_name, url, item_id,venue_id, booking_number
-                FROM {self.user.recommendable_offer_table}
+                SELECT ro.offer_id, ro.category, ro.subcategory_id, ro.search_group_name, ro.url, ro.item_id, ro.venue_id, ro.booking_number
+                FROM {self.user.recommendable_offer_table} ro
                 WHERE offer_id NOT IN
                     (
                         SELECT offer_id
@@ -266,12 +286,12 @@ class Recommendation:
                 ),
                 reco_offers_with_distance_to_user as(
                     SELECT ro.offer_id, ro.category, ro.subcategory_id, ro.search_group_name, ro.url, ro.item_id, ro.venue_id, v.venue_latitude, v.venue_longitude,ro.booking_number,
-                    CASE WHEN (venue_latitude is not null and venue_latitude is not null) THEN ST_Distance(ST_Point(:user_longitude,:user_latitude), ST_Point(venue_longitude, venue_latitude)) ELSE null END as user_distance
+                    CASE WHEN (v.venue_latitude is not null and :user_latitude is not null) THEN ST_Distance(ST_Point(:user_longitude,:user_latitude), ST_Point(v.venue_longitude, v.venue_latitude)) ELSE null END as user_distance
                     FROM reco_offers ro
-                    LEFT JOIN (select venue_id,venue_latitude,venue_longitude from iris_venues_mv where iris_id=:user_iris_id) v ON ro.venue_id = v.venue_id
+                    LEFT JOIN (select ivm.venue_id,ivm.venue_latitude,ivm.venue_longitude from iris_venues_mv ivm where iris_id=:user_iris_id) v ON ro.venue_id = v.venue_id
                 ),
                 reco_offers_ranked_by_distance as(
-                    SELECT ro.offer_id, ro.category, ro.subcategory_id, ro.search_group_name, ro.url, ro.item_id,ro.booking_number,
+                    SELECT ro.offer_id, ro.category, ro.subcategory_id, ro.search_group_name, ro.url, ro.item_id, ro.booking_number,
                     RANK() OVER (
                             PARTITION BY item_id
                             ORDER BY

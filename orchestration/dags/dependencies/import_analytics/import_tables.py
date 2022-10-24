@@ -390,7 +390,7 @@ def define_import_query(
             WHEN "venueTypeCode" = \\'SCIENTIFIC_CULTURE\\' THEN \\'Culture scientifique\\'
             else "venueTypeCode" END AS venue_type_code,
             CAST("venueLabelId" AS varchar(255)) AS venue_label_id, "dateCreated" AS venue_creation_date,
-            "isPermanent" AS venue_is_permanent, "validationToken" AS venue_validation_token, 
+            "isPermanent" AS venue_is_permanent,
             CAST("businessUnitId" AS varchar(255)) AS business_unit_id, "bannerUrl" as banner_url,
             "audioDisabilityCompliant" AS venue_audioDisabilityCompliant,
             "mentalDisabilityCompliant" AS venue_mentalDisabilityCompliant,

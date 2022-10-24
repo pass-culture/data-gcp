@@ -11,7 +11,12 @@ clean_tables = {
         "destination_dataset": "{{ bigquery_clean_dataset }}",
         "destination_table": "iris_venues",
         "params": {"iris_distance": 50000 if ENV_SHORT_NAME != "dev" else 10000},
-    }
+    },
+    "clean_iris_venues_raw": {
+        "sql": f"{CLEAN_SQL_PATH}/iris_venues_raw.sql",
+        "destination_dataset": "{{ bigquery_clean_dataset }}",
+        "destination_table": "iris_venues_raw",
+    },
 }
 
 analytics_tables = {
@@ -116,6 +121,30 @@ analytics_tables = {
         "destination_table": "recommendable_offers_data",
         "depends": ["enriched_offer_data", "offer_with_mediation"],
     },
+    "top_items_data": {
+        "sql": f"{ANALYTICS_SQL_PATH}/top_items_data.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "top_items_data",
+        "depends": ["recommendable_offers_data", "iris_venues"],
+    },
+    "top_items_in_iris_shape": {
+        "sql": f"{ANALYTICS_SQL_PATH}/top_items_in_iris_shape.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "top_items_in_iris_shape",
+        "depends": ["top_items_data", "clean_iris_venues_raw"],
+    },
+    "top_items_out_iris_shape": {
+        "sql": f"{ANALYTICS_SQL_PATH}/top_items_out_iris_shape.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "top_items_out_iris_shape",
+        "depends": ["top_items_in_iris_shape"],
+    },
+    "recommendable_offers_per_iris_shape": {
+        "sql": f"{ANALYTICS_SQL_PATH}/recommendable_offers_per_iris_shape.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "recommendable_offers_per_iris_shape",
+        "depends": ["top_items_in_iris_shape", "top_items_out_iris_shape"],
+    },
     "non_recommendable_offers_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/non_recommendable_offers_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
@@ -135,8 +164,16 @@ analytics_tables = {
         ],
         "clustering_fields": {"fields": ["offerer_siren", "venue_id"]},
     },
+    "user_penetration": {
+        "sql": f"{ANALYTICS_SQL_PATH}/user_penetration.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "user_penetration",
+        "depends": [
+            "enriched_user_data",
+            "aggregated_monthly_user_used_booking_activity",
+        ],
+    },
 }
-
 
 aggregated_tables = {
     "aggregated_daily_used_booking": {

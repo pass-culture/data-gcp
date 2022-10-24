@@ -172,7 +172,7 @@ analytics_tables = {
             "enriched_user_data",
             "aggregated_monthly_user_used_booking_activity",
         ],
-        },
+    },
 }
 
 aggregated_tables = {

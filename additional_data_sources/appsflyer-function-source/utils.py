@@ -44,7 +44,7 @@ def save_to_bq(df, table_name, start_date, end_date, schema_field, date_column):
 def __save_to_bq(df, event_date, table_name, schema_field):
     date_fmt = datetime.strptime(event_date, "%Y-%m-%d")
     yyyymmdd = date_fmt.strftime("%Y%m%d")
-    df["event_date"] = date_fmt.strftime("%Y-%m-%d")
+    df["event_date"] = date_fmt
     bigquery_client = bigquery.Client()
     table_id = f"{PROJECT_NAME}.{BIGQUERY_RAW_DATASET}.{table_name}${yyyymmdd}"
     job_config = bigquery.LoadJobConfig(

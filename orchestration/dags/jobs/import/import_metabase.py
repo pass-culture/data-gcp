@@ -80,10 +80,4 @@ analytics_table_tasks = depends_loop(analytics_table_jobs, end_raw)
 end = DummyOperator(task_id="end", dag=dag)
 
 
-(
-    start
-    >> import_tables_to_raw_tasks
-    >> end_raw
-    >> analytics_table_tasks
-    >> end
-)
+(start >> import_tables_to_raw_tasks >> end_raw >> analytics_table_tasks >> end)

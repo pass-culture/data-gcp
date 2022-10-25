@@ -47,10 +47,18 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
         f"postgresql+psycopg2://postgres:postgres@127.0.0.1:{DATA_GCP_TEST_POSTGRES_PORT}/{DB_NAME}"
     )
     connection = engine.connect().execution_options(autocommit=True)
-    recommendable_offers = pd.DataFrame(
+    recommendable_offers_per_iris_shape = pd.DataFrame(
         {
+            "item_id": [
+                "isbn-1",
+                "isbn-2",
+                "movie-3",
+                "movie-4",
+                "movie-5",
+                "product-6",
+            ],
             "offer_id": ["1", "2", "3", "4", "5", "6"],
-            "venue_id": ["11", "22", "33", "44", "55", "22"],
+            "product_id": ["1", "2", "3", "4", "5", "6"],
             "category": ["A", "B", "C", "D", "E", "B"],
             "subcategory_id": [
                 "EVENEMENT_CINE",
@@ -68,42 +76,59 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
                 "SPECTACLE",
                 "SPECTACLE",
             ],
+            "iris_id": ["11", "22", "33", "44", "55", "22"],
+            "venue_id": ["11", "22", "33", "44", "55", "22"],
+            "venue_distance_to_iris": [11, 22, 33, 44, 55, 22],
             "name": ["a", "b", "c", "d", "e", "f"],
-            "url": [None, None, "url", "url", None, None],
+            "is_numerical": [False, False, True, True, False, False],
             "is_national": [True, False, True, False, True, False],
+            "is_geolocated": [False, True, False, False, False, True],
             "booking_number": [3, 5, 10, 2, 1, 9],
-            "item_id": [
-                "offer-1",
-                "offer-2",
-                "offer-3",
-                "offer-4",
-                "offer-5",
-                "offer-6",
+            "offer_creation_date": [
+                "2020-01-01",
+                "2020-01-01",
+                "2020-01-01",
+                "2020-01-01",
+                "2020-01-01",
             ],
+            "stock_creation_date": [
+                "2020-01-01",
+                "2020-01-01",
+                "2020-01-01",
+                "2020-01-01",
+                "2020-01-01",
+            ],
+            "stock_price": [10, 20, 20, 30, 30, 30],
+            "booking_number": [1, 2, 3, 4, 5, 6],
+            "is_underage_recommendable": [True, True, True, False, False, False],
+            "position": ["in", "out", "in", "out", "in", "out"],
+            "unique_id": [1, 2, 3, 4, 5, 6],
         }
     )
 
-    engine.execute("DROP MATERIALIZED VIEW IF EXISTS recommendable_offers CASCADE;")
     engine.execute(
-        "DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_eac_15 CASCADE;"
+        "DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_per_iris_shape_mv CASCADE;"
     )
     engine.execute(
-        "DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_eac_16_17 CASCADE;"
+        "DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_per_iris_shape_eac_15_mv CASCADE;"
+    )
+    engine.execute(
+        "DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_per_iris_shape_eac_16_17_mv CASCADE;"
     )
 
-    recommendable_offers.to_sql(
+    recommendable_offers_per_iris_shape.to_sql(
         "recommendable_offers_temporary_table", con=engine, if_exists="replace"
     )
     engine.execute(
-        "CREATE MATERIALIZED VIEW recommendable_offers AS SELECT * FROM recommendable_offers_temporary_table WITH DATA;"
+        "CREATE MATERIALIZED VIEW recommendable_offers_per_iris_shape_mv AS SELECT * FROM recommendable_offers_temporary_table WITH DATA;"
     )
 
     engine.execute(
-        "CREATE MATERIALIZED VIEW recommendable_offers_eac_15 AS SELECT * FROM recommendable_offers_temporary_table WITH DATA;"
+        "CREATE MATERIALIZED VIEW recommendable_offers_per_iris_shape_eac_15_mv AS SELECT * FROM recommendable_offers_temporary_table WITH DATA;"
     )
 
     engine.execute(
-        "CREATE MATERIALIZED VIEW recommendable_offers_eac_16_17 AS SELECT * FROM recommendable_offers_temporary_table WITH DATA;"
+        "CREATE MATERIALIZED VIEW recommendable_offers_per_iris_shape_eac_16_17_mv AS SELECT * FROM recommendable_offers_temporary_table WITH DATA;"
     )
 
     non_recommendable_offers = pd.DataFrame(

@@ -47,9 +47,9 @@ WITH get_recommendable_offers AS(
             SELECT
                 *
             FROM
-                `{{ bigquery_clean_dataset }}`.applicative_database_venue venue
+                `{{ bigquery_analytics_dataset }}`.enriched_venue_data venue
             WHERE
-                venue_validation_token IS NULL
+                venue.offerer_validation_status = 'VALIDATED'
         ) venue ON offer.venue_id = venue.venue_id
         JOIN (
             SELECT

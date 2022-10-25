@@ -12,14 +12,17 @@ RETURNS TABLE (
                 venue_id varchar,
                 venue_distance_to_iris NUMERIC,
                 name VARCHAR,
-                url VARCHAR,
+                is_numerical BOOLEAN,
                 is_national BOOLEAN,
+                is_geolocated BOOLEAN,
                 offer_creation_date TIMESTAMP,
                 stock_beginning_date TIMESTAMP,
                 stock_price REAL,
                 booking_number INTEGER,
                 is_underage_recommendable BOOLEAN,
-                "position" VARCHAR) AS
+                "position" VARCHAR,
+                unique_id VARCHAR
+                ) AS
 $body$
 BEGIN
     RETURN QUERY 
@@ -38,8 +41,7 @@ WITH NO DATA;
 
 
 /* Populating the materialized view. */
-CREATE UNIQUE INDEX idx_offer_recommendable_id ON public.recommendable_offers_per_iris_shape_mv USING btree (offer_id, iris_id,stock_beginning_date);
-CREATE UNIQUE INDEX idx_offer_recommendable_id_iris_id ON public.recommendable_offers_per_iris_shape_mv USING btree (iris_id,item_id);
+CREATE UNIQUE INDEX idx_offer_recommendable_id ON public.recommendable_offers_per_iris_shape_mv USING btree (is_geolocated,iris_id,item_id,offer_id,unique_id);
 REFRESH MATERIALIZED VIEW recommendable_offers_per_iris_shape_mv;
 /* Takes about 80 secondes with the indexes.*/
 

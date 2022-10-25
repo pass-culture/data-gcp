@@ -2,7 +2,7 @@ import os
 from datetime import datetime
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import secretmanager, bigquery
-
+import pandas as pd
 
 PROJECT_NAME = os.environ.get("PROJECT_NAME")
 BIGQUERY_RAW_DATASET = os.environ.get("BIGQUERY_RAW_DATASET")
@@ -29,23 +29,36 @@ def access_secret_data(project_id, secret_id, version_id=1, default=None):
         return default
 
 
-def save_to_bq(df, table_name, execution_date, schema_field):
-    _now = datetime.strptime(execution_date, "%Y-%m-%d")
-    yyyymmdd = _now.strftime("%Y%m%d")
-    df["execution_date"] = _now
+def save_to_bq(df, table_name, start_date, end_date, schema_field, date_column):
+    df[date_column] = pd.to_datetime(df[date_column])
+    _dates = pd.date_range(start_date, end_date)
+    for event_date in _dates:
+        date_str = event_date.strftime("%Y-%m-%d")
+        tmp_df = df[df[date_column] == date_str]
+        tmp_df[date_column] = tmp_df[date_column].astype(str)
+        if tmp_df.shape[0] > 0:
+            print(f"Saving.. {table_name} -> {date_str}")
+            __save_to_bq(tmp_df, date_str, table_name, schema_field)
+
+
+def __save_to_bq(df, event_date, table_name, schema_field):
+    date_fmt = datetime.strptime(event_date, "%Y-%m-%d")
+    yyyymmdd = date_fmt.strftime("%Y%m%d")
+    df["event_date"] = date_fmt.strftime("%Y-%m-%d")
     bigquery_client = bigquery.Client()
     table_id = f"{PROJECT_NAME}.{BIGQUERY_RAW_DATASET}.{table_name}${yyyymmdd}"
     job_config = bigquery.LoadJobConfig(
         write_disposition="WRITE_TRUNCATE",
         time_partitioning=bigquery.TimePartitioning(
             type_=bigquery.TimePartitioningType.DAY,
-            field="execution_date",
+            field="event_date",
         ),
         schema=[
             bigquery.SchemaField(col, to_sql_type(_type))
             for col, _type in schema_field.items()
         ],
     )
+
     job = bigquery_client.load_table_from_dataframe(df, table_id, job_config=job_config)
     job.result()
 

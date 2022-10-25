@@ -78,7 +78,7 @@ mates_data as (
         mates.card_id
         , context
         , mates.dashboard_id
-        , count(distinct mate_card_id) over(partition by mates.card_id) as nbr_mates
+        , count(distinct mate_card_id) over(partition by mates.card_id, mates.dashboard_id) as nbr_mates
         , SUM(CASE 
             WHEN DATE_DIFF(CURRENT_DATE(), date(last_execution_date), day) > 100 
             THEN 1 
@@ -128,7 +128,10 @@ SELECT
         THEN 1
         ELSE 0
     END as card_contains_archive
+    , ref_archive.*
 FROM base
 LEFT JOIN inactivity_mates
     ON base.card_id = inactivity_mates.card_id
     AND base.context = inactivity_mates.context
+LEFT JOIN `{{ bigquery_analytics_dataset }}.metabase_ref_collections_archive` as ref_archive
+    ON base.card_collection_id = ref_archive.collection_id

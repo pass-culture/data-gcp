@@ -5,6 +5,7 @@ from airflow.providers.google.cloud.operators.bigquery import (
 )
 from airflow.operators.dummy_operator import DummyOperator
 from common import macros
+from common.utils import depends_loop
 from dependencies.metabase.import_metabase import (
     import_tables,
     from_external,
@@ -55,7 +56,8 @@ for name, params in import_tables.items():
 end_raw = DummyOperator(task_id="end_raw", dag=dag)
 
 
-import_tables_to_analytics_tasks = []
+# import_tables_to_analytics_tasks = []
+analytics_table_jobs = {}
 for name, params in analytics_tables.items():
 
     task = BigQueryExecuteQueryOperator(
@@ -66,15 +68,16 @@ for name, params in analytics_tables.items():
         destination_dataset_table=params["destination_dataset_table"],
         dag=dag,
     )
-    import_tables_to_analytics_tasks.append(task)
 
+    analytics_table_jobs[name] = {
+        "operator": task,
+        "depends": params.get("depends", []),
+    }
+
+    # import_tables_to_analytics_tasks.append(task)
+
+analytics_table_tasks = depends_loop(analytics_table_jobs, end_raw)
 end = DummyOperator(task_id="end", dag=dag)
 
 
-(
-    start
-    >> import_tables_to_raw_tasks
-    >> end_raw
-    >> import_tables_to_analytics_tasks
-    >> end
-)
+(start >> import_tables_to_raw_tasks >> end_raw >> analytics_table_tasks >> end)

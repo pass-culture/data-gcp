@@ -133,5 +133,5 @@ FROM base
 LEFT JOIN inactivity_mates
     ON base.card_id = inactivity_mates.card_id
     AND base.context = inactivity_mates.context
-LEFT JOIN `{{ bigquery_raw_dataset }}.metabase_ref_collections_archive` as ref_archive
+LEFT JOIN `{{ bigquery_analytics_dataset }}.metabase_ref_collections_archive` as ref_archive
     ON base.card_collection_id = ref_archive.collection_id

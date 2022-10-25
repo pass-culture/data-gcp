@@ -56,7 +56,7 @@ analytics_tables = {
     },
     "ref_collections_archive": {
         "sql": f"{SQL_PATH}/analytics/ref_collections_archive.sql",
-        "destination_dataset_table": "{{ bigquery_raw_dataset }}.metabase_ref_collections_archive",
+        "destination_dataset_table": "{{ bigquery_analytics_dataset }}.metabase_ref_collections_archive",
     },
 }
 

@@ -78,7 +78,7 @@ mates_data as (
         mates.card_id
         , context
         , mates.dashboard_id
-        , count(distinct mate_card_id) over(partition by mates.card_id) as nbr_mates
+        , count(distinct mate_card_id) over(partition by mates.card_id, mates.dashboard_id) as nbr_mates
         , SUM(CASE 
             WHEN DATE_DIFF(CURRENT_DATE(), date(last_execution_date), day) > 100 
             THEN 1 

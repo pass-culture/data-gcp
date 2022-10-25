@@ -176,15 +176,13 @@ class Recommendation:
 
         def _get_intermediate_query(self) -> str:
             geoloc_filter = (
-                f"""( ro.iris_id = :user_iris_id OR NOT ro.is_geolocated )"""
+                f"""( (ro.is_geolocated and ro.iris_id = :user_iris_id) OR NOT ro.is_geolocated )"""
                 if self.user.iris_id
                 else "(NOT ro.is_geolocated)"
             )
             query = f"""
-                WITH
-                reco_offers                         AS  (
-                    SELECT
-                        ro.offer_id
+                WITH reco_offers AS  (
+                    SELECT ro.offer_id
                     ,   ro.item_id
                     ,   ro.venue_id
                     ,   ro.venue_distance_to_iris
@@ -198,7 +196,7 @@ class Recommendation:
                     ,   v.venue_latitude
                     ,   v.venue_longitude
                     FROM
-                        {self.user.recommendable_offer_table}  ro
+                        {self.user.recommendable_offer_table} ro
                     LEFT JOIN
                         iris_venues_mv  v
                     ON
@@ -215,7 +213,7 @@ class Recommendation:
                         )
                     {self.params_in_filters}
                 )
-            ,   reco_offers_with_distance_to_user   AS  (
+            ,reco_offers_with_distance_to_user   AS  (
                     SELECT
                         *
                     ,   CASE
@@ -234,7 +232,7 @@ class Recommendation:
                     FROM
                         reco_offers ro
                 )
-            ,   reco_offers_ranked_by_distance      AS  (
+            ,reco_offers_ranked_by_distance      AS  (
                     SELECT
                         *
                     ,   row_number() OVER(
@@ -257,10 +255,8 @@ class Recommendation:
             WHERE
                 rank    =   1
             ORDER BY
-                booking_number  DESC
-            LIMIT {RECOMMENDABLE_OFFER_LIMIT}
-            ;
-                """
+                is_geolocated ASC,booking_number  DESC
+            LIMIT {RECOMMENDABLE_OFFER_LIMIT}"""
             return query
 
         def _predict_score(self, instances) -> List[List[float]]:
@@ -291,13 +287,12 @@ class Recommendation:
             )
 
             where_clause = (
-                f"""( ro.iris_id = :user_iris_id OR NOT ro.is_geolocated)"""
+                f"""( (ro.is_geolocated and ro.iris_id = :user_iris_id) OR NOT ro.is_geolocated )"""
                 if self.user.iris_id
                 else "(NOT ro.is_geolocated)"
             )
             recommendations_query = text(
                 f"""
-                
                 WITH
                 reco_offers                         AS  (
                     SELECT
@@ -351,7 +346,7 @@ class Recommendation:
                     FROM
                         reco_offers ro
                 )
-            ,   reco_offers_ranked_by_distance      AS  (
+            ,reco_offers_ranked_by_distance      AS  (
                     SELECT
                         *
                     ,   row_number() OVER(
@@ -395,8 +390,7 @@ class Recommendation:
                     "category": row[1],
                     "subcategory_id": row[2],
                     "search_group_name": row[3],
-                    "url": row[4],
-                    "item_id": row[5],
+                    "item_id": row[4],
                     "score": random.random(),
                 }
                 for row in query_result

@@ -63,8 +63,8 @@ def default_date():
     return date.today() - timedelta(days=1)
 
 
-def date_minus_31(current_date):
-    return current_date - timedelta(days=31)
+def date_minus_28(current_date):
+    return current_date - timedelta(days=28)
 
 
 def run(request):
@@ -74,15 +74,15 @@ def run(request):
         if end_date is None:
 
             end_date = _default.strftime("%Y-%m-%d")
-            start_date = date_minus_31(_default).strftime("%Y-%m-%d")
+            start_date = date_minus_28(_default).strftime("%Y-%m-%d")
         else:
-            start_date = date_minus_31(
+            start_date = date_minus_28(
                 datetime.strptime(end_date, "%Y-%m-%d")
             ).strftime("%Y-%m-%d")
 
     except:
         end_date = _default.strftime("%Y-%m-%d")
-        start_date = date_minus_31(_default).strftime("%Y-%m-%d")
+        start_date = date_minus_28(_default).strftime("%Y-%m-%d")
 
     import_app = ImportAppsFlyer(start_date, end_date)
     save_to_bq(

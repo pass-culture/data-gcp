@@ -419,7 +419,7 @@ def define_import_query(
             "dateCreated" AS offerer_creation_date, "name" AS offerer_name,
             "siren" AS offerer_siren, CAST("lastProviderId" AS varchar(255)) AS offerer_last_provider_id,
             "fieldsUpdated" AS offerer_fields_updated, "validationToken" AS offerer_validation_token,
-            "dateValidated" AS offerer_validation_date
+            CAST("validationStatus" as varchar(255)) as offerer_validation_status,"dateValidated" AS offerer_validation_date
         FROM public.offerer
     """
     cloudsql_queries[

@@ -119,7 +119,11 @@ analytics_tables = {
         "sql": f"{ANALYTICS_SQL_PATH}/recommendable_offers_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "recommendable_offers_data",
-        "depends": ["enriched_offer_data", "offer_with_mediation"],
+        "depends": [
+            "enriched_venue_data",
+            "enriched_offer_data",
+            "offer_with_mediation",
+        ],
     },
     "top_items_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/top_items_data.sql",

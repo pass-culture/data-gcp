@@ -176,17 +176,8 @@ event_union AS (
         firebase_conversion_step
     where
         rank = 1 -- only one conversion step per event_name
-),
-diversification_booking AS (
-    -- in case we have more than one reservation for the same offer in the same day, take average.
-    SELECT
-        DATE(booking_creation_date) as date,
-        user_id,
-        offer_id,
-        avg(delta_diversification) as delta_diversification 
-    FROM `{{ bigquery_analytics_dataset }}.diversification_booking` 
-    GROUP BY 1,2,3 
 )
+
 SELECT
     e.event_date,
     e.event_timestamp,
@@ -213,17 +204,9 @@ SELECT
     e.content_type,
     e.module_id,
     e.home_id,
-    e.module_index,
-    CASE WHEN 
-        event_name = "BookingConfirmation" THEN db.delta_diversification
-    ELSE NULL
-    END AS  delta_diversification
+    e.module_index
 FROM
     event_union e
-LEFT JOIN diversification_booking db 
-    ON db.user_id = e.user_id
-    AND db.offer_id = e.offer_id
-    AND db.date = e.event_date
 WHERE 
     {% if params.dag_type == 'intraday' %}
     e.event_date = DATE('{{ ds }}')

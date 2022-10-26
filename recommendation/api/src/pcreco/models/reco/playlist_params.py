@@ -12,6 +12,7 @@ class PlaylistParamsIn:
         self.price_max = json.get("price_max", None)
         self.model_name = json.get("model_name", None)
         self.is_reco_mixed = json.get("is_reco_mixed", MIXING_RECOMMENDATION)
+        self.mixing_features = json.get("is_reco_mixed", "subcategory_id")
         if (
             self.is_event is not None
             or self.search_group_names is not None

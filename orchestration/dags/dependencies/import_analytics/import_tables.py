@@ -148,13 +148,13 @@ def define_import_query(
             "address" as user_address, "city" as user_city,
             "lastConnectionDate" as user_last_connection_date, "isEmailValidated" as user_is_email_validated,
             "isActive" as user_is_active,
-            "hasSeenProTutorials" as user_has_seen_pro_tutorials, EXTRACT(YEAR FROM AGE("user"."dateOfBirth")) AS user_age,
+            "hasSeenProTutorials" as user_has_seen_pro_tutorials, EXTRACT(YEAR FROM AGE(COALESCE("user"."validatedBirthDate","user"."dateOfBirth"))) AS user_age,
             "hasCompletedIdCheck" AS user_has_completed_idCheck,
             "phoneValidationStatus" AS user_phone_validation_status,
             "isEmailValidated" AS user_has_validated_email,
             CAST("notificationSubscriptions" -> \\'marketing_push\\' AS BOOLEAN) AS user_has_enabled_marketing_push,
             CAST("notificationSubscriptions" -> \\'marketing_email\\' AS BOOLEAN) AS user_has_enabled_marketing_email,
-            "user"."dateOfBirth" AS user_birth_date,
+            COALESCE("user"."validatedBirthDate","user"."dateOfBirth") AS user_birth_date,
             CASE
             WHEN "user"."schoolType" = \\'PUBLIC_SECONDARY_SCHOOL\\' THEN \\'Collège public\\'
             WHEN "user"."schoolType" = \\'PUBLIC_HIGH_SCHOOL\\' THEN \\'Lycée public\\'
@@ -419,7 +419,7 @@ def define_import_query(
             "dateCreated" AS offerer_creation_date, "name" AS offerer_name,
             "siren" AS offerer_siren, CAST("lastProviderId" AS varchar(255)) AS offerer_last_provider_id,
             "fieldsUpdated" AS offerer_fields_updated, "validationToken" AS offerer_validation_token,
-            "dateValidated" AS offerer_validation_date
+            CAST("validationStatus" as varchar(255)) as offerer_validation_status,"dateValidated" AS offerer_validation_date
         FROM public.offerer
     """
     cloudsql_queries[

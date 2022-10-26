@@ -5,9 +5,8 @@ WITH venues_to_link AS (
             venue_latitude
         FROM `{{ bigquery_clean_dataset }}.applicative_database_venue` as venue
         JOIN  `{{ bigquery_clean_dataset }}.applicative_database_offerer` as offerer ON venue_managing_offerer_id=offerer_id
-        WHERE venue_is_virtual is false
-        AND venue_validation_token is null
-        AND offerer_validation_token is null
+        WHERE venue.venue_is_virtual is false
+        AND offerer.offerer_validation_status ='VALIDATED'
     )
 SELECT 
     iris_france.id as irisId, 

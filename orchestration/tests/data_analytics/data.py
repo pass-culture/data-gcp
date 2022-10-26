@@ -1006,7 +1006,12 @@ ENRICHED_VENUE_DATA_INPUT = {
         }
     ],
     "applicative_database_offerer": [
-        {"offerer_id": "1", "offerer_name": "An offerer", "offerer_is_active": True}
+        {
+            "offerer_id": "1",
+            "offerer_name": "An offerer",
+            "offerer_is_active": True,
+            "offerer_validation_status": "VALIDATED",
+        }
     ],
     "applicative_database_payment": [],
     "applicative_database_payment_status": [],
@@ -1062,6 +1067,7 @@ ENRICHED_VENUE_DATA_EXPECTED = [
         "venue_managing_offerer_id": "1",
         "venue_creation_date": datetime.now().replace(microsecond=0),
         "offerer_name": "An offerer",
+        "offerer_validation_status": "VALIDATED",
         "venue_type_label": "Librairie",
         "venue_label": "an other label",
         "total_bookings": 1,

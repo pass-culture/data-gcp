@@ -1,5 +1,5 @@
 SELECT 
-  date(r.execution_date) as date, 
+  date(r.event_date) as date, 
   CASE 
     WHEN r.media_source = "bytedanceglobal_int" THEN 'TikTok'
     WHEN r.media_source = "snapchat_int" THEN 'Snapchat'

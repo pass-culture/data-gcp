@@ -25,7 +25,7 @@ select
     ro.name,
     ro.url IS NOT NULL as is_numerical,
     ro.is_national,
-    (ro.url IS NULL OR NOT ro.is_national) as is_geolocated,
+    (ro.url IS NULL AND NOT ro.is_national) as is_geolocated,
     ro.offer_creation_date,
     ro.stock_beginning_date,
     ro.stock_price,

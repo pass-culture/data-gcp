@@ -44,6 +44,7 @@ destination_table_schema_pro = [
     {"name": "demandeur_entreprise_codeEffectifEntreprise", "type": "STRING"},
     {"name": "demandeur_entreprise_raisonSociale", "type": "STRING"},
     {"name": "demandeur_entreprise_siretSiegeSocial", "type": "STRING"},
+    {"name": "numero_identifiant_lieu", "type": "STRING"},
 ]
 
 
@@ -98,6 +99,7 @@ def parse_api_result(updated_since, dms_target):
                 "demandeur_entreprise_codeEffectifEntreprise",
                 "demandeur_entreprise_raisonSociale",
                 "demandeur_entreprise_siretSiegeSocial",
+                "numero_identifiant_lieu",
             ]
         )
         fs = gcsfs.GCSFileSystem(project=GCP_PROJECT_ID)
@@ -215,7 +217,12 @@ def parse_result_pro(result, df_applications):
                         dossier_line["demandeur_entreprise_siretSiegeSocial"] = dossier[
                             "demandeur"
                         ]["entreprise"]["siretSiegeSocial"]
-
+                if dossier["champs"]:
+                    for champs in dossier["champs"]:
+                        if champs["id"]=="Q2hhbXAtMjY3NDMyMQ==":
+                            dossier_line["numero_identifiant_lieu"]=champs["stringValue"]
+                else :
+                    dossier_line["numero_identifiant_lieu"]=None
                 instructeurs = []
                 for instructeur in dossier["instructeurs"]:
                     instructeurs.append(instructeur["email"])

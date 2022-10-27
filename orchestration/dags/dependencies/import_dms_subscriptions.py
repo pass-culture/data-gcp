@@ -219,10 +219,12 @@ def parse_result_pro(result, df_applications):
                         ]["entreprise"]["siretSiegeSocial"]
                 if dossier["champs"]:
                     for champs in dossier["champs"]:
-                        if champs["id"]=="Q2hhbXAtMjY3NDMyMQ==":
-                            dossier_line["numero_identifiant_lieu"]=champs["stringValue"]
-                else :
-                    dossier_line["numero_identifiant_lieu"]=None
+                        if champs["id"] == "Q2hhbXAtMjY3NDMyMQ==":
+                            dossier_line["numero_identifiant_lieu"] = champs[
+                                "stringValue"
+                            ]
+                else:
+                    dossier_line["numero_identifiant_lieu"] = None
                 instructeurs = []
                 for instructeur in dossier["instructeurs"]:
                     instructeurs.append(instructeur["email"])

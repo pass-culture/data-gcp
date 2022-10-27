@@ -34,6 +34,7 @@ import_firebase_pro_tables = {
         "destination_table": "events_pro",
         "partition_prefix": "_",
         "params": {
+            "table_type": "pro",
             "app_info_ids": app_info_id_list_pro,
             "gcp_project_native_env": GCP_PROJECT_PRO_ENV,
             "firebase_raw_dataset": FIREBASE_PRO_RAW_DATASET,
@@ -47,6 +48,10 @@ import_firebase_pro_tables = {
         "partition_prefix": "_",
         "params": {"table_name": "events_pro"},
         "depends": ["raw_firebase_pro_events"],
+        "params": {
+            "table_type": "pro",
+            "app_info_ids": app_info_id_list_pro,
+        },
     },
     # analytics
     "analytics_firebase_pro_events": {
@@ -60,13 +65,14 @@ import_firebase_pro_tables = {
     },
 }
 
-import_firebase_tables = {
+import_firebase_beneficiary_tables = {
     "raw_firebase_events": {
         "sql": f"{SQL_PATH}/raw/events.sql",
         "destination_dataset": "{{ bigquery_raw_dataset }}",
         "destination_table": "events",
         "partition_prefix": "_",
         "params": {
+            "table_type": "beneficiary",
             "app_info_ids": app_info_id_list,
             "gcp_project_native_env": GCP_PROJECT_NATIVE_ENV,
             "firebase_raw_dataset": FIREBASE_RAW_DATASET,
@@ -80,6 +86,10 @@ import_firebase_tables = {
         "partition_prefix": "_",
         "params": {"table_name": "events"},
         "depends": ["raw_firebase_events"],
+        "params": {
+            "table_type": "beneficiary",
+            "app_info_ids": app_info_id_list_pro,
+        },
     },
     # analytics
     "analytics_firebase_events": {

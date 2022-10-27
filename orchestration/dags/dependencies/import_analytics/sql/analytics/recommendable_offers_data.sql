@@ -2,6 +2,7 @@ WITH get_recommendable_offers AS(
     SELECT
         DISTINCT (offer.offer_id) AS offer_id,
         offer.item_id AS item_id,
+        offer.offer_product_id AS product_id,
         offer.venue_id AS venue_id,
         offer.offer_subcategoryId AS subcategory_id,
         subcategories.category_id AS category,
@@ -12,6 +13,7 @@ WITH get_recommendable_offers AS(
         offer.offer_creation_date AS offer_creation_date,
         stock.stock_beginning_date AS stock_beginning_date,
         offer.last_stock_price AS stock_price,
+        item_counts.item_count as item_count,
         (
             CASE
                 WHEN booking_numbers.booking_number IS NOT NULL THEN booking_numbers.booking_number
@@ -45,9 +47,9 @@ WITH get_recommendable_offers AS(
             SELECT
                 *
             FROM
-                `{{ bigquery_clean_dataset }}`.applicative_database_venue venue
+                `{{ bigquery_analytics_dataset }}`.enriched_venue_data venue
             WHERE
-                venue_validation_token IS NULL
+                venue.offerer_validation_status = 'VALIDATED'
         ) venue ON offer.venue_id = venue.venue_id
         JOIN (
             SELECT
@@ -72,6 +74,12 @@ WITH get_recommendable_offers AS(
             GROUP BY
                 offer.item_id
         ) booking_numbers ON booking_numbers.item_id = offer.item_id
+        LEFT JOIN (
+            SELECT count(*) as item_count,
+            offer.item_id as item_id,
+            FROM `{{ bigquery_analytics_dataset }}`.enriched_offer_data offer
+            GROUP BY item_id
+        ) item_counts on item_counts.item_id = offer.item_id
         JOIN `{{ bigquery_analytics_dataset }}`.offer_with_mediation om on offer.offer_id=om.offer_id
     WHERE
         offer.is_active = TRUE

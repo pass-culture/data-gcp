@@ -8,8 +8,8 @@ SELECT
     WHEN r.media_source = "restricted" THEN "Unknown"
   ELSE r.media_source END AS media_source,
   IF(r.campaign = 'nan', 'Unknown', r.campaign) as campaign,
-  ad,
-  ad_id,
+  r.ad,
+  r.ad_id,
   r.event_name,
   r.appsflyer_id,
   u.user_id,

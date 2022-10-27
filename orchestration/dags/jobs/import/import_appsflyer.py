@@ -10,6 +10,7 @@ from common.utils import depends_loop
 from common import macros
 from common.config import ENV_SHORT_NAME, GCP_PROJECT
 from common.config import DAG_FOLDER
+import json
 from common.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT,
@@ -51,18 +52,26 @@ service_account_token = PythonOperator(
     dag=dag,
 )
 
-import_data_to_bigquery = SimpleHttpOperator(
-    task_id="import_appsflyer_data_to_bigquery",
-    method="POST",
-    http_conn_id="http_gcp_cloud_function",
-    endpoint=f"appsflyer_import_{ENV_SHORT_NAME}",
-    headers={
-        "Content-Type": "application/json",
-        "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_appsflyer_service_account_token', key='return_value')}}",
-    },
-    log_response=True,
-    dag=dag,
-)
+table_defs = {"activity_report": 56, "daily_report": 56, "in_app_event_report": 28}
+
+http_ops = []
+
+for table_name, n_days in table_defs.items():
+    op = SimpleHttpOperator(
+        task_id=f"import_{table_name}_data_to_bigquery",
+        method="POST",
+        http_conn_id="http_gcp_cloud_function",
+        endpoint=f"appsflyer_import_{ENV_SHORT_NAME}",
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_appsflyer_service_account_token', key='return_value')}}",
+        },
+        log_response=True,
+        data=json.dumps({"table_name": table_name, "n_days": n_days}),
+        dag=dag,
+    )
+    http_ops.append(op)
+
 start = DummyOperator(task_id="start", dag=dag)
 
 table_jobs = {}
@@ -76,5 +85,5 @@ for table, job_params in analytics_tables.items():
 table_jobs = depends_loop(table_jobs, start)
 end = DummyOperator(task_id="end", dag=dag)
 
-service_account_token >> import_data_to_bigquery >> start
+service_account_token >> http_ops >> start
 table_jobs >> end

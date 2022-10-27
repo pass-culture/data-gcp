@@ -13,6 +13,18 @@ BIGQUERY_CLEAN_DATASET = os.environ.get(
 BUCKET_NAME = os.environ["BUCKET_NAME"]
 
 
+ADAGE_INVOLVED_STUDENTS_DTYPE = {
+    "metric_name": str,
+    "metric_id": str,
+    "educational_year_adage_id": int,
+    "metric_key": str,
+    "involved_students": str,
+    "institutions": str,
+    "total_involved_students": str,
+    "total_institutions": str,
+}
+
+
 def save_to_raw_bq(df, table_name):
     _now = datetime.today()
     yyyymmdd = _now.strftime("%Y%m%d")

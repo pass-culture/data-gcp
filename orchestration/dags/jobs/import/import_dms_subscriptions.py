@@ -153,6 +153,7 @@ with DAG(
             {"name": "demandeur_entreprise_codeEffectifEntreprise", "type": "STRING"},
             {"name": "demandeur_entreprise_raisonSociale", "type": "STRING"},
             {"name": "demandeur_entreprise_siretSiegeSocial", "type": "STRING"},
+            {"name": "numero_identifiant_lieu", "type": "STRING"},
         ],
         write_disposition="WRITE_APPEND",
     )

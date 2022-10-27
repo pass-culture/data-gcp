@@ -145,4 +145,4 @@ import_firebase_beneficiary_tables = {
 }
 
 
-import_tables = dict(import_firebase_tables, **import_firebase_pro_tables)
+import_tables = dict(import_firebase_beneficiary_tables, **import_firebase_pro_tables)

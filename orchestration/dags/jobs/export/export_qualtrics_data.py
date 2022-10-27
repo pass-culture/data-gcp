@@ -15,7 +15,6 @@ from common.operator import bigquery_job_task
 from common.utils import depends_loop
 from common.access_gcp_secrets import access_secret_data
 import pandas as pd
-from io import StringIO
 import requests
 from airflow.operators.python import PythonOperator
 
@@ -31,7 +30,7 @@ dag = DAG(
     "export_qualtrics_data",
     default_args=default_dag_args,
     description="Export user data for Qualtrics usages",
-    schedule_interval="00 06 01 * *",
+    schedule_interval="00 06 25 * *",
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,

@@ -65,4 +65,4 @@ FROM
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.adage AS adage ON adage.siret = dms_pro.demandeur_siret
     LEFT JOIN typeform_ranked ON typeform_ranked.siret = dms_pro.demandeur_siret
 WHERE dms_pro.application_status = 'accepte'
-AND dms_pro.procedure_id IN ('57081', '57189','61589')
+AND dms_pro.procedure_id IN ('57081', '57189','61589','65028')

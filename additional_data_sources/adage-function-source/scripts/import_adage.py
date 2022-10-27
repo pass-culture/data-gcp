@@ -4,6 +4,7 @@ from scripts.utils import (
     ENV_SHORT_NAME,
     BIGQUERY_ANALYTICS_DATASET,
     BUCKET_NAME,
+    ADAGE_INVOLVED_STUDENTS_DTYPE,
     save_to_raw_bq,
 )
 
@@ -201,4 +202,7 @@ def get_adage_stats():
                 )
 
     df = pd.DataFrame(export)
+    # force types
+    for k, v in ADAGE_INVOLVED_STUDENTS_DTYPE.items():
+        df[k] = df[k].astype(v)
     save_to_raw_bq(df, "adage_involved_student")

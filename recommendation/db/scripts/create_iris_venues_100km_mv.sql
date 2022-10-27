@@ -1,7 +1,7 @@
 /* Create the function to fetch the iris_venues from the source table.
 We use a function otherwise the materialized view is a dependency of the tables and blocks the drop operation. */
-DROP FUNCTION IF EXISTS get_iris_venues CASCADE;
-CREATE OR REPLACE FUNCTION get_iris_venues()
+DROP FUNCTION IF EXISTS get_iris_venues_100km CASCADE;
+CREATE OR REPLACE FUNCTION get_iris_venues_100km()
 RETURNS TABLE (iris_id varchar,
                venue_id varchar,
                venue_longitude decimal,
@@ -18,7 +18,7 @@ LANGUAGE plpgsql;
 
 CREATE MATERIALIZED VIEW IF NOT EXISTS iris_venues_100km_mv
 AS
-    SELECT * from get_iris_venues()
+    SELECT * from get_iris_venues_100km()
 WITH NO DATA;
 
 CREATE UNIQUE INDEX idx_iris_venues_100km_mv_irisid ON public.iris_venues_100km_mv USING btree (iris_id,venue_id);

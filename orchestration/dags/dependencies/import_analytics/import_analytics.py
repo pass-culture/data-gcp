@@ -95,11 +95,11 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "depends": ["enriched_offer_data"],
     },
-    "iris_venues": {
+    "iris_venues_raw": {
         "sql": f"{ANALYTICS_SQL_PATH}/iris_venues.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "depends": ["clean_iris_venues"],
-        "params": {"radius": "50km"},
+        "depends": ["clean_iris_venues_raw"],
+        "params": {"radius": "raw"},
     },
     "iris_venues_50km": {
         "sql": f"{ANALYTICS_SQL_PATH}/iris_venues.sql",

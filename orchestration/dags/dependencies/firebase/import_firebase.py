@@ -46,11 +46,11 @@ import_firebase_pro_tables = {
         "destination_dataset": "{{ bigquery_clean_dataset }}",
         "destination_table": "firebase_pro_events",
         "partition_prefix": "_",
-        "params": {"table_name": "events_pro"},
         "depends": ["raw_firebase_pro_events"],
         "params": {
             "table_type": "pro",
             "app_info_ids": app_info_id_list_pro,
+            "table_name": "events_pro"
         },
     },
     # analytics
@@ -84,11 +84,11 @@ import_firebase_beneficiary_tables = {
         "destination_dataset": "{{ bigquery_clean_dataset }}",
         "destination_table": "firebase_events",
         "partition_prefix": "_",
-        "params": {"table_name": "events"},
         "depends": ["raw_firebase_events"],
         "params": {
             "table_type": "beneficiary",
             "app_info_ids": app_info_id_list_pro,
+            "table_name": "events"
         },
     },
     # analytics

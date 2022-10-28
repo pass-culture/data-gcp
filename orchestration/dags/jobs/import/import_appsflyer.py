@@ -54,23 +54,51 @@ service_account_token = PythonOperator(
 
 table_defs = {"activity_report": 56, "daily_report": 56, "in_app_event_report": 28}
 
-http_ops = []
 
-for table_name, n_days in table_defs.items():
-    op = SimpleHttpOperator(
-        task_id=f"import_{table_name}_data_to_bigquery",
-        method="POST",
-        http_conn_id="http_gcp_cloud_function",
-        endpoint=f"appsflyer_import_{ENV_SHORT_NAME}",
-        headers={
-            "Content-Type": "application/json",
-            "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_appsflyer_service_account_token', key='return_value')}}",
-        },
-        log_response=True,
-        data=json.dumps({"table_name": table_name, "n_days": n_days}),
-        dag=dag,
-    )
-    http_ops.append(op)
+activity_report_op = SimpleHttpOperator(
+    task_id=f"import_activity_report_data_to_bigquery",
+    method="POST",
+    http_conn_id="http_gcp_cloud_function",
+    endpoint=f"appsflyer_import_{ENV_SHORT_NAME}",
+    headers={
+        "Content-Type": "application/json",
+        "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_appsflyer_service_account_token', key='return_value')}}",
+    },
+    log_response=True,
+    data=json.dumps({"table_name": "activity_report", "n_days": 56}),
+    dag=dag,
+)
+
+
+daily_report_op = SimpleHttpOperator(
+    task_id=f"import_daily_report_data_to_bigquery",
+    method="POST",
+    http_conn_id="http_gcp_cloud_function",
+    endpoint=f"appsflyer_import_{ENV_SHORT_NAME}",
+    headers={
+        "Content-Type": "application/json",
+        "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_appsflyer_service_account_token', key='return_value')}}",
+    },
+    log_response=True,
+    data=json.dumps({"table_name": "daily_report", "n_days": 56}),
+    dag=dag,
+)
+
+
+in_app_event_report_op = SimpleHttpOperator(
+    task_id=f"import_in_app_event_report_data_to_bigquery",
+    method="POST",
+    http_conn_id="http_gcp_cloud_function",
+    endpoint=f"appsflyer_import_{ENV_SHORT_NAME}",
+    headers={
+        "Content-Type": "application/json",
+        "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_appsflyer_service_account_token', key='return_value')}}",
+    },
+    log_response=True,
+    data=json.dumps({"table_name": "in_app_event_report", "n_days": 28}),
+    dag=dag,
+)
+
 
 start = DummyOperator(task_id="start", dag=dag)
 
@@ -85,5 +113,11 @@ for table, job_params in analytics_tables.items():
 table_jobs = depends_loop(table_jobs, start)
 end = DummyOperator(task_id="end", dag=dag)
 
-service_account_token >> http_ops >> start
+(
+    service_account_token
+    >> daily_report_op
+    >> activity_report_op
+    >> in_app_event_report_op
+    >> start
+)
 table_jobs >> end

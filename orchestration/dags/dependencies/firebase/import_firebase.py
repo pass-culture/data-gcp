@@ -50,7 +50,7 @@ import_firebase_pro_tables = {
         "params": {
             "table_type": "pro",
             "app_info_ids": app_info_id_list_pro,
-            "table_name": "events_pro"
+            "table_name": "events_pro",
         },
     },
     # analytics
@@ -88,7 +88,7 @@ import_firebase_beneficiary_tables = {
         "params": {
             "table_type": "beneficiary",
             "app_info_ids": app_info_id_list_pro,
-            "table_name": "events"
+            "table_name": "events",
         },
     },
     # analytics

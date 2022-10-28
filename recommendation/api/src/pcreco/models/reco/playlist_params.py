@@ -1,5 +1,9 @@
 # rename to specific api route , and put in models dir
-from pcreco.utils.env_vars import NUMBER_OF_RECOMMENDATIONS, SHUFFLE_RECOMMENDATION,MIXING_RECOMMENDATION
+from pcreco.utils.env_vars import (
+    NUMBER_OF_RECOMMENDATIONS,
+    SHUFFLE_RECOMMENDATION,
+    MIXING_RECOMMENDATION,
+)
 
 
 class PlaylistParamsIn:

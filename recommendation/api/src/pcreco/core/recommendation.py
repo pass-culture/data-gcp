@@ -86,14 +86,14 @@ class Recommendation:
                     self.scoring.get_scored_offers(),
                     key=lambda k: k["score"],
                     reverse=True,
-                )[:self.nb_reco_display],
+                )[: self.nb_reco_display],
                 shuffle_recommendation=self.reco_is_shuffle,
                 feature=self.mixing_features,
             )
         else:
             final_recommendations = sorted(
                 self.scoring.get_scored_offers(), key=lambda k: k["score"], reverse=True
-            )[:self.nb_reco_display]
+            )[: self.nb_reco_display]
 
         return final_recommendations
 

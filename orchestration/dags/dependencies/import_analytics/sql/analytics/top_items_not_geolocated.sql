@@ -27,13 +27,12 @@ WITH top_items AS(
                 ro.item_id,
                 ro.subcategory_id
         ) inn
-),
-
+)
 SELECT
     ti.item_id,
     ro.offer_id,
-    NULL as iris_id,
-    NULL as venue_id,
+    'None' as venue_id,
+    'None' as iris_id,
     0 as venue_distance_to_iris
 FROM top_items ti
 INNER JOIN `passculture-data-ehp.analytics_stg.recommendable_offers_data` ro ON ti.item_id = ro.item_id

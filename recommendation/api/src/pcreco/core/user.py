@@ -23,7 +23,6 @@ class User:
         self.get_ab_testing_group()
         self.recommendable_offer_table = f"{RECOMMENDABLE_OFFER_TABLE_PREFIX}_mv"
 
-    @property
     def get_user_profile(self) -> None:
         self.age = None
         self.user_deposit_remaining_credit = 0

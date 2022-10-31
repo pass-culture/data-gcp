@@ -43,7 +43,7 @@ class Recommendation:
         self.model_name = self.get_model_name()
         self.scoring = self.get_scoring_method()
 
-        seld.reco_radius == (
+        self.reco_radius = (
             params_in.reco_radius if params_in else DEFAULT_RECO_RADIUS
         )
         self.reco_is_shuffle = (
@@ -349,6 +349,7 @@ class Recommendation:
                         ro.venue_id =   v.venue_id
                     AND v.iris_id   =   ro.iris_id
                     WHERE {where_clause}
+                    AND venue_distance_to_iris <{self.reco_radius}
                     AND offer_id    NOT IN  (
                             SELECT
                                 offer_id

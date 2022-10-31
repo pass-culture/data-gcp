@@ -25,7 +25,7 @@ export_tables = {
         "destination_table": "qualtrics_ac${{ yyyymmdd(current_month(ds)) }}",
         "time_partitioning": {"field": "calculation_month"},
         "cluster_fields": ["calculation_month"],
-        "params": {"volume": 4000 if ENV_SHORT_NAME == "prod" else 10},
+        "params": {"volume": 10000 if ENV_SHORT_NAME == "prod" else 10},
         "qualtrics_automation_id": access_secret_data(
             GCP_PROJECT, f"qualtrics_ir_ac_automation_id_{ENV_SHORT_NAME}"
         ),

@@ -1,4 +1,11 @@
-WITH lieux_physique AS (
+WITH previous_export AS (
+    SELECT 
+        DISTINCT email 
+    FROM  `{{ bigquery_clean_dataset }}.qualtrics_ac`
+    WHERE calculation_month >= DATE_SUB(DATE("{{ current_month(ds) }}"), INTERVAL 3 MONTH)
+
+
+),lieux_physique AS (
     SELECT
         enriched_venue_data.venue_id,
         venue_booking_email as email,
@@ -36,6 +43,16 @@ WITH lieux_physique AS (
         12,
         13,
         14
+   
+),
+
+generate_export AS (
+    SELECT 
+        lp.*
+
+    FROM lieux_physique lp
+    LEFT JOIN previous_export pe on pe.email = lp.email
+    WHERE pe.email is null
     ORDER BY
         RAND()
     LIMIT
@@ -48,4 +65,4 @@ SELECT
     CURRENT_DATE as export_date,
     *
 FROM
-    lieux_physique
+    generate_export

@@ -22,6 +22,7 @@ from pcreco.utils.env_vars import (
     NUMBER_OF_RECOMMENDATIONS,
     SHUFFLE_RECOMMENDATION,
     MIXING_RECOMMENDATION,
+    DEFAULT_RECO_RADIUS,
     log_duration,
 )
 import datetime
@@ -42,6 +43,9 @@ class Recommendation:
         self.model_name = self.get_model_name()
         self.scoring = self.get_scoring_method()
 
+        seld.reco_radius == (
+            params_in.reco_radius if params_in else DEFAULT_RECO_RADIUS
+        )
         self.reco_is_shuffle = (
             params_in.reco_is_shuffle if params_in else SHUFFLE_RECOMMENDATION
         )
@@ -135,6 +139,7 @@ class Recommendation:
         def __init__(self, scoring):
             self.user = scoring.user
             self.params_in_filters = scoring.params_in_filters
+            self.reco_radius = scoring.reco_radius
             self.model_name = scoring.model_name
             self.model_display_name = None
             self.model_version = None
@@ -228,6 +233,7 @@ class Recommendation:
                         ro.venue_id =   v.venue_id
                     AND v.iris_id   =   ro.iris_id
                     WHERE {geoloc_filter}
+                    AND venue_distance_to_iris <{self.reco_radius}
                     AND offer_id    NOT IN  (
                             SELECT
                                 offer_id
@@ -300,6 +306,7 @@ class Recommendation:
         def __init__(self, scoring):
             self.user = scoring.user
             self.params_in_filters = scoring.params_in_filters
+            self.reco_radius = scoring.reco_radius
             self.cold_start_categories = self.get_cold_start_categories()
             self.model_version = None
             self.model_display_name = None

@@ -18,7 +18,8 @@ from utils import (
     access_secret_data,
     ENVIRONMENT_SHORT_NAME,
     METABASE_API_USERNAME,
-    METABASE_HOST
+    METABASE_HOST,
+    ANALYTICS_DATASET
 )
 
 sql_file = 'sql/archiving_query.sql'
@@ -31,7 +32,7 @@ def run():
     archives_dicts = preprocess_data_archiving(archives_df, object_type='card')
     
     for card in archives_dicts[:10]:
-        move_to_archive = move_to_archive(movement=card, metabase=metabase, gcp_project=PROJECT_NAME)
+        move_to_archive = move_to_archive(movement=card, metabase=metabase, gcp_project=PROJECT_NAME, analytics_dataset=ANALYTICS_DATASET)
         move_to_archive.move_object()
         move_to_archive.rename_archive_object()
         move_to_archive.save_logs_bq()

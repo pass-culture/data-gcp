@@ -140,14 +140,14 @@ def preprocess_data_archiving(_df, object_type):
     
     
 class move_to_archive:
-    def __init__(self, movement, metabase, gcp_project, destination_dataset):
+    def __init__(self, movement, metabase, gcp_project, analytics_dataset):
         self.movement = movement
         self.id = movement.get('id', None)
         self.name = movement.get('name', None)
         self.object_type = movement.get('object_type', None)
         self.destination_collection = movement.get('destination_collection_id', None)
         self.gcp_project = gcp_project
-        self.destination_dataset = destination_dataset
+        self.analytics_dataset = analytics_dataset
         
         self.metabase_connection = metabase
     
@@ -206,7 +206,7 @@ class move_to_archive:
         archived_logs_dict = self.move_object()
         archived_logs_df = pd.DataFrame(archived_logs_dict)
         archived_logs_df.to_gbq(
-            f"""{self.gcp_project}.{self.destination_dataset}.logs_metabase_archiving""",
+            f"""{self.gcp_project}.{self.analytics_dataset}.logs_metabase_archiving""",
             project_id=self.gcp_project,
             if_exists="append"
         )

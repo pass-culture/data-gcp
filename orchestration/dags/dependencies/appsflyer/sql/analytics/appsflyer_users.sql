@@ -17,7 +17,7 @@ WITH extracted_users AS (
     is_retargeting,
     is_primary_attribution
   FROM `{{ bigquery_raw_dataset }}.appsflyer_in_app_event_report` 
-  WHERE event_name = "af_complete_registration" 
+  WHERE event_name in ("af_complete_registration", "af_complete_beneficiary_registration")
 )
 
 SELECT 

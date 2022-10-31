@@ -43,9 +43,7 @@ class Recommendation:
         self.model_name = self.get_model_name()
         self.scoring = self.get_scoring_method()
 
-        self.reco_radius = (
-            params_in.reco_radius if params_in else DEFAULT_RECO_RADIUS
-        )
+        self.reco_radius = params_in.reco_radius if params_in else DEFAULT_RECO_RADIUS
         self.reco_is_shuffle = (
             params_in.reco_is_shuffle if params_in else SHUFFLE_RECOMMENDATION
         )

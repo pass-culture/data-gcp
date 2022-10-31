@@ -20,5 +20,5 @@ class UserTest:
             user = User(user_id)
             assert user.age == expected_age, f"age is right"
             assert (
-                user.user_theoretical_remaining_credit == expected_deposit
+                user.user_deposit_remaining_credit == expected_deposit
             ), f"remaining credit is right"

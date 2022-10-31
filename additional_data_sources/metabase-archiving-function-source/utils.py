@@ -7,8 +7,11 @@ import pandas as pd
 PROJECT_NAME = os.environ.get("PROJECT_NAME")
 ENVIRONMENT_SHORT_NAME = os.environ.get("ENVIRONMENT_SHORT_NAME")
 METABASE_API_USERNAME = os.environ.get("METABASE_API_USERNAME")
-METABASE_HOST = os.environ.get('METABASE_HOST') # METABASE_HOST = "https://data-analytics.internal-passculture.app"
-ANALYTICS_DATASET = os.environ.get('ANALYTICS_DATASET')
+METABASE_HOST = os.environ.get(
+    "METABASE_HOST"
+)  # METABASE_HOST = "https://data-analytics.internal-passculture.app"
+ANALYTICS_DATASET = os.environ.get("ANALYTICS_DATASET")
+
 
 def access_secret_data(project_id, secret_id, version_id=1, default=None):
     try:

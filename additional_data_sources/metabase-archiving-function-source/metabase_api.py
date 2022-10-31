@@ -5,7 +5,6 @@ from tqdm import tqdm
 from time import sleep
 
 
-
 class MetabaseAPI:
     def __init__(self, username, password, host):
         self.host = host
@@ -32,16 +31,14 @@ class MetabaseAPI:
             f"{self.host}/api/card/{_id}", data=json.dumps(_dict), headers=self.headers
         )
         return response.json()
-    
-    
+
     def update_card_collections(self, card_ids, collection_id):
-        params = {
-            "card_ids" : card_ids,
-            "collection_id" : collection_id
-        }
-        
+        params = {"card_ids": card_ids, "collection_id": collection_id}
+
         response = requests.post(
-            f"{self.host}/api/card/collections", data=json.dumps(params), headers=self.headers
+            f"{self.host}/api/card/collections",
+            data=json.dumps(params),
+            headers=self.headers,
         )
         return response.json()
 

@@ -137,6 +137,7 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "top_items_data",
         "depends": ["recommendable_offers_data", "iris_venues"],
+        "params": {"iris_radius": "150km"},
     },
     "top_items_in_iris_shape": {
         "sql": f"{ANALYTICS_SQL_PATH}/top_items_in_iris_shape.sql",

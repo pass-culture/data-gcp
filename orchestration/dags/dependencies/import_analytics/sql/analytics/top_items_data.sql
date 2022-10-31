@@ -20,7 +20,7 @@ WITH top_items AS(
                 MAX(ro.booking_number) AS booking_number
             FROM
                 `{{ bigquery_analytics_dataset }}`.recommendable_offers_data ro
-                LEFT JOIN `{{ bigquery_analytics_dataset }}`.iris_venues_150km iv ON ro.venue_id = iv.venueId
+                LEFT JOIN `{{ bigquery_analytics_dataset }}`.iris_venues_`{{ iris_radius }}` iv ON ro.venue_id = iv.venueId
             where
                 ro.booking_number > 0
             GROUP BY

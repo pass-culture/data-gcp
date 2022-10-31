@@ -40,8 +40,6 @@ class Recommendation:
         self.iscoldstart = (
             False if self.force_model else get_cold_start_status(self.user)
         )
-        self.model_name = self.get_model_name()
-        self.scoring = self.get_scoring_method()
 
         self.reco_radius = params_in.reco_radius if params_in else DEFAULT_RECO_RADIUS
         self.reco_is_shuffle = (
@@ -56,6 +54,9 @@ class Recommendation:
         self.mixing_features = (
             params_in.mixing_features if params_in else "subcategory_id"
         )
+
+        self.model_name = self.get_model_name()
+        self.scoring = self.get_scoring_method()
 
     # rename force model
     @property

@@ -11,6 +11,8 @@ from pcreco.models.reco.playlist_params import PlaylistParamsIn
 from pcreco.utils.db.db_connection import get_db
 from pcreco.core.utils.vertex_ai import predict_model
 from pcreco.utils.env_vars import (
+    NUMBER_OF_PRESELECTED_OFFERS,
+    NUMBER_OF_RECOMMENDATIONS,
     ACTIVE_MODEL,
     RECO_ENDPOINT_NAME,
     AB_TESTING,
@@ -39,6 +41,13 @@ class Recommendation:
         )
         self.model_name = self.get_model_name()
         self.scoring = self.get_scoring_method()
+
+        self.reco_is_shuffle = (
+            params_in.reco_is_shuffle if params_in else SHUFFLE_RECOMMENDATION
+        )
+        self.nb_reco_display = (
+            params_in.nb_reco_display if params_in else NUMBER_OF_RECOMMENDATIONS
+        )
         self.is_reco_mixed = (
             params_in.is_reco_mixed if params_in else MIXING_RECOMMENDATION
         )
@@ -77,14 +86,14 @@ class Recommendation:
                     self.scoring.get_scored_offers(),
                     key=lambda k: k["score"],
                     reverse=True,
-                )[:NUMBER_OF_PRESELECTED_OFFERS],
-                shuffle_recommendation=SHUFFLE_RECOMMENDATION,
+                )[: self.nb_reco_display],
+                shuffle_recommendation=self.reco_is_shuffle,
                 feature=self.mixing_features,
             )
         else:
             final_recommendations = sorted(
                 self.scoring.get_scored_offers(), key=lambda k: k["score"], reverse=True
-            )[:NUMBER_OF_RECOMMENDATIONS]
+            )[: self.nb_reco_display]
 
         return final_recommendations
 

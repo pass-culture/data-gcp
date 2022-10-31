@@ -11,7 +11,7 @@ clean_tables = {
         "destination_dataset": "{{ bigquery_clean_dataset }}",
         "destination_table": "iris_venues_raw",
     },
-    "clean_iris_venues_150km": {
+    "clean_iris_venues": {
         "sql": f"{CLEAN_SQL_PATH}/iris_venues.sql",
         "destination_dataset": "{{ bigquery_clean_dataset }}",
         "destination_table": "iris_venues",

@@ -242,7 +242,7 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
     )
     engine.execute("DROP TABLE IF EXISTS enriched_user CASCADE;")
     engine.execute("DROP MATERIALIZED VIEW IF EXISTS enriched_user_mv CASCADE;")
-    engine.execute("DROP TABLE IF EXISTS iris_venues;")
+    engine.execute("DROP TABLE IF EXISTS iris_venues_at_radius;")
     engine.execute(f"DROP TABLE IF EXISTS {app_config['AB_TESTING_TABLE']} ;")
     engine.execute("DROP TABLE IF EXISTS past_recommended_offers ;")
     engine.execute("DROP TABLE IF EXISTS iris_france;")

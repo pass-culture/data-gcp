@@ -11,6 +11,13 @@ SELECT
         'out' as position
     FROM
         `{{ bigquery_analytics_dataset }}.top_items_out_iris_shape`
+    UNION
+    ALL
+    SELECT
+    *,
+    'out' as position
+    FROM
+        `{{ bigquery_analytics_dataset }}.top_items_not_geolocated`
 )
 select
     si.item_id,

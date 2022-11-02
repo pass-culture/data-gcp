@@ -3,6 +3,7 @@ from pcreco.utils.env_vars import (
     NUMBER_OF_RECOMMENDATIONS,
     SHUFFLE_RECOMMENDATION,
     MIXING_RECOMMENDATION,
+    DEFAULT_RECO_RADIUS,
 )
 
 
@@ -23,7 +24,7 @@ class PlaylistParamsIn:
         self.macro_rayon = json.get("macro_rayon", None)
         self.price_max = json.get("price_max", None)
         self.nb_reco_display = json.get("nb_reco_display", NUMBER_OF_RECOMMENDATIONS)
-        self.iris_radius = json.get("iris_radius", None)
+        self.reco_radius = json.get("reco_radius", DEFAULT_RECO_RADIUS)
         self.is_reco_mixed = json.get("is_reco_mixed", MIXING_RECOMMENDATION)
         self.mixing_features = json.get("mixing_features", "subcategory_id")
 
@@ -38,7 +39,7 @@ class PlaylistParamsIn:
             or self.offer_sub_type_label is not None
             or self.macro_rayon is not None
             or self.nb_reco_display is not NUMBER_OF_RECOMMENDATIONS
-            or self.iris_radius is not None
+            or self.reco_radius is not DEFAULT_RECO_RADIUS
             or self.reco_is_shuffle is not SHUFFLE_RECOMMENDATION
             or self.is_sort_by_distance is not False
         ):

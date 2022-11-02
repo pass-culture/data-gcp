@@ -8,6 +8,7 @@ from sqlalchemy import text
 from pcreco.utils.env_vars import (
     RECOMMENDABLE_OFFER_TABLE_PREFIX,
     RECOMMENDABLE_OFFER_TABLE_SUFFIX_DICT,
+    ENV_SHORT_NAME,
     AB_TESTING,
 )
 
@@ -21,22 +22,11 @@ class User:
         self.iris_id = get_iris_from_coordinates(longitude, latitude)
         self.get_user_profile()
         self.get_ab_testing_group()
-        self.recommendable_offer_table = (
-            f"{RECOMMENDABLE_OFFER_TABLE_PREFIX}_mv"
-            if not self.is_eac
-            else f"{RECOMMENDABLE_OFFER_TABLE_PREFIX}_{RECOMMENDABLE_OFFER_TABLE_SUFFIX_DICT[self.age]}_mv"
-        )
-
-    @property
-    def is_eac(self) -> bool:
-        if self.age:
-            return self.age < 18 and self.user_deposit_initial_amount < 300
-        else:
-            return False
+        self.recommendable_offer_table = f"{RECOMMENDABLE_OFFER_TABLE_PREFIX}_mv"
 
     def get_user_profile(self) -> None:
         self.age = None
-        self.user_deposit_initial_amount = 0
+        self.user_deposit_remaining_credit = 0 if ENV_SHORT_NAME == "prod" else 300
         connection = get_db()
 
         request_response = connection.execute(
@@ -44,6 +34,7 @@ class User:
                 f"""
                 SELECT 
                     FLOOR(DATE_PART('DAY',user_deposit_creation_date - user_birth_date)/365) as age,
+                    user_theoretical_remaining_credit,
                     user_deposit_initial_amount
                     FROM public.enriched_user_mv
                     WHERE user_id = '{str(self.id)}' 
@@ -53,7 +44,11 @@ class User:
         if request_response is not None:
             try:
                 self.age = int(request_response[0])
-                self.user_deposit_initial_amount = request_response[1]
+                self.user_deposit_remaining_credit = (
+                    request_response[1]
+                    if request_response[1] is not None
+                    else request_response[2]
+                )
             except TypeError:
                 pass
 

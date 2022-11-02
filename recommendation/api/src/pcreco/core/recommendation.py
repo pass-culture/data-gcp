@@ -22,6 +22,7 @@ from pcreco.utils.env_vars import (
     NUMBER_OF_RECOMMENDATIONS,
     SHUFFLE_RECOMMENDATION,
     MIXING_RECOMMENDATION,
+    DEFAULT_RECO_RADIUS,
     log_duration,
 )
 import datetime
@@ -39,9 +40,8 @@ class Recommendation:
         self.iscoldstart = (
             False if self.force_model else get_cold_start_status(self.user)
         )
-        self.model_name = self.get_model_name()
-        self.scoring = self.get_scoring_method()
 
+        self.reco_radius = params_in.reco_radius if params_in else DEFAULT_RECO_RADIUS
         self.reco_is_shuffle = (
             params_in.reco_is_shuffle if params_in else SHUFFLE_RECOMMENDATION
         )
@@ -54,6 +54,9 @@ class Recommendation:
         self.mixing_features = (
             params_in.mixing_features if params_in else "subcategory_id"
         )
+
+        self.model_name = self.get_model_name()
+        self.scoring = self.get_scoring_method()
 
     # rename force model
     @property
@@ -86,9 +89,10 @@ class Recommendation:
                     self.scoring.get_scored_offers(),
                     key=lambda k: k["score"],
                     reverse=True,
-                )[: self.nb_reco_display],
+                )[:NUMBER_OF_PRESELECTED_OFFERS],
                 shuffle_recommendation=self.reco_is_shuffle,
                 feature=self.mixing_features,
+                nb_reco_display=self.nb_reco_display,
             )
         else:
             final_recommendations = sorted(
@@ -135,6 +139,7 @@ class Recommendation:
         def __init__(self, scoring):
             self.user = scoring.user
             self.params_in_filters = scoring.params_in_filters
+            self.reco_radius = scoring.reco_radius
             self.model_name = scoring.model_name
             self.model_display_name = None
             self.model_version = None
@@ -205,6 +210,11 @@ class Recommendation:
                 if self.user.iris_id
                 else "(NOT ro.is_geolocated)"
             )
+            user_profile_filter = (
+                "AND is_underage_recommendable"
+                if (self.user.age and self.user.age < 18)
+                else ""
+            )
             query = f"""
                 WITH reco_offers AS  (
                     SELECT ro.offer_id
@@ -228,6 +238,7 @@ class Recommendation:
                         ro.venue_id =   v.venue_id
                     AND v.iris_id   =   ro.iris_id
                     WHERE {geoloc_filter}
+                    AND venue_distance_to_iris <{self.reco_radius}
                     AND offer_id    NOT IN  (
                             SELECT
                                 offer_id
@@ -237,6 +248,8 @@ class Recommendation:
                                 user_id =   :user_id
                         )
                     {self.params_in_filters}
+                    {user_profile_filter}
+                    AND ro.stock_price <{self.user.user_deposit_remaining_credit}
                 )
             ,reco_offers_with_distance_to_user   AS  (
                     SELECT
@@ -300,6 +313,7 @@ class Recommendation:
         def __init__(self, scoring):
             self.user = scoring.user
             self.params_in_filters = scoring.params_in_filters
+            self.reco_radius = scoring.reco_radius
             self.cold_start_categories = self.get_cold_start_categories()
             self.model_version = None
             self.model_display_name = None
@@ -315,6 +329,12 @@ class Recommendation:
                 f"""( (ro.is_geolocated and ro.iris_id = :user_iris_id) OR NOT ro.is_geolocated )"""
                 if self.user.iris_id
                 else "(NOT ro.is_geolocated)"
+            )
+
+            user_profile_filter = (
+                "AND is_underage_recommendable"
+                if (self.user.age and self.user.age < 18)
+                else ""
             )
             recommendations_query = text(
                 f"""
@@ -342,6 +362,7 @@ class Recommendation:
                         ro.venue_id =   v.venue_id
                     AND v.iris_id   =   ro.iris_id
                     WHERE {where_clause}
+                    AND venue_distance_to_iris <{self.reco_radius}
                     AND offer_id    NOT IN  (
                             SELECT
                                 offer_id
@@ -351,6 +372,8 @@ class Recommendation:
                                 user_id =   :user_id
                         )
                     {self.params_in_filters}
+                    {user_profile_filter}
+                    AND ro.stock_price <{self.user.user_deposit_remaining_credit}
                 )
             ,   reco_offers_with_distance_to_user   AS  (
                     SELECT

@@ -256,8 +256,6 @@ with DAG(
         CREATE UNIQUE INDEX IF NOT EXISTS idx_iris_venues_mv_unique        ON public.iris_venues_mv                                   USING btree (iris_id,venue_id);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_non_recommendable_id         ON public.non_recommendable_offers                         USING btree (user_id,offer_id);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_id       ON public.recommendable_offers_per_iris_shape_mv           USING btree (is_geolocated,iris_id,item_id,offer_id,unique_id);
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_15_id    ON public.recommendable_offers_per_iris_shape_eac_15_mv    USING btree (is_geolocated,iris_id,item_id,offer_id,unique_id);
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_16_17_id ON public.recommendable_offers_per_iris_shape_eac_16_17_mv USING btree (is_geolocated,iris_id,item_id,offer_id,unique_id);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_enriched_user_mv             ON public.enriched_user_mv                                 USING btree (user_id);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_qpi_answers_mv               ON public.qpi_answers_mv                                   USING btree (user_id,subcategories);  
     """
@@ -271,8 +269,6 @@ with DAG(
 
     views_to_refresh = [
         "recommendable_offers_per_iris_shape_mv",
-        "recommendable_offers_per_iris_shape_eac_15_mv",
-        "recommendable_offers_per_iris_shape_eac_16_17_mv",
         "non_recommendable_offers",
         "iris_venues_mv",
         "enriched_user_mv",

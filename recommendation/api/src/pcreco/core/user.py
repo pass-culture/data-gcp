@@ -42,7 +42,9 @@ class User:
         if request_response is not None:
             try:
                 self.age = int(request_response[0])
-                self.user_deposit_remaining_credit = request_response[1]
+                self.user_deposit_remaining_credit = (
+                    request_response[1] if request_response[1] is not None else 0
+                )
             except TypeError:
                 pass
 

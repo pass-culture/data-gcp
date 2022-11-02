@@ -6,14 +6,30 @@ import time
 
 import pandas_gbq as pd_gbq
 
+from utils import(
+    RAW_DATASET
+    , ANALYTICS_DATASET
+)
 
 def get_data_archiving(sql_file):
-    """Run SQL query and save data in a dataframe."""
+    """Run SQL query and save data in a dataframe.
+    """
+    
+    params = {
+        '{{RAW_DATASET}}': RAW_DATASET
+        , '{{ANALYTICS_DATASET}}': ANALYTICS_DATASET
+    }
 
-    file = open(sql_file, "r")
+    file = open(sql_file, 'r')
     sql = file.read()
-    archives_df = pd.read_gbq(sql, dialect="standard")
-
+    
+    get_sql = sql
+    
+    for param, table_name in params.items():
+        get_sql = get_sql.replace(param, table_name)
+    
+    archives_df = pd.read_gbq(get_sql, dialect='standard')
+    
     return archives_df
 
 

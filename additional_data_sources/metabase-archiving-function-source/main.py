@@ -19,8 +19,12 @@ from utils import (
 )
 
 sql_file = "sql/archiving_query.sql"
+if ENVIRONMENT_SHORT_NAME == "dev" or ENVIRONMENT_SHORT_NAME == "stg":
+    version_id = 2
+else:
+    version_id = 1
 password = access_secret_data(
-    PROJECT_NAME, f"metabase-api-secret-{ENVIRONMENT_SHORT_NAME}"
+    PROJECT_NAME, f"metabase-api-secret-{ENVIRONMENT_SHORT_NAME}", version_id=version_id
 )
 metabase = MetabaseAPI(
     username=METABASE_API_USERNAME, password=password, host=METABASE_HOST

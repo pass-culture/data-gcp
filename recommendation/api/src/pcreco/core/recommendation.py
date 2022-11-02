@@ -210,6 +210,9 @@ class Recommendation:
                 if self.user.iris_id
                 else "(NOT ro.is_geolocated)"
             )
+            user_profile_filter = (
+                "AND is_underage_recommendable" if self.user.age < 18 else ""
+            )
             query = f"""
                 WITH reco_offers AS  (
                     SELECT ro.offer_id
@@ -243,6 +246,8 @@ class Recommendation:
                                 user_id =   :user_id
                         )
                     {self.params_in_filters}
+                    {user_profile_filter}
+                    AND ro.stock_price <{self.user.user_deposit_remaining_credit}
                 )
             ,reco_offers_with_distance_to_user   AS  (
                     SELECT
@@ -323,6 +328,10 @@ class Recommendation:
                 if self.user.iris_id
                 else "(NOT ro.is_geolocated)"
             )
+
+            user_profile_filter = (
+                "AND is_underage_recommendable" if self.user.age < 18 else ""
+            )
             recommendations_query = text(
                 f"""
                 WITH
@@ -359,6 +368,8 @@ class Recommendation:
                                 user_id =   :user_id
                         )
                     {self.params_in_filters}
+                    {user_profile_filter}
+                    AND ro.stock_price <{self.user.user_deposit_remaining_credit}
                 )
             ,   reco_offers_with_distance_to_user   AS  (
                     SELECT

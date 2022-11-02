@@ -137,6 +137,12 @@ analytics_tables = {
         "destination_table": "top_items_in_iris_shape",
         "depends": ["top_items_data", "clean_iris_venues_raw"],
     },
+    "top_items_not_geolocated": {
+        "sql": f"{ANALYTICS_SQL_PATH}/top_items_not_geolocated.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "top_items_not_geolocated",
+        "depends": ["top_items_data"],
+    },
     "top_items_out_iris_shape": {
         "sql": f"{ANALYTICS_SQL_PATH}/top_items_out_iris_shape.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
@@ -147,7 +153,11 @@ analytics_tables = {
         "sql": f"{ANALYTICS_SQL_PATH}/recommendable_offers_per_iris_shape.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "recommendable_offers_per_iris_shape",
-        "depends": ["top_items_in_iris_shape", "top_items_out_iris_shape"],
+        "depends": [
+            "top_items_in_iris_shape",
+            "top_items_out_iris_shape",
+            "top_items_not_geolocated",
+        ],
     },
     "non_recommendable_offers_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/non_recommendable_offers_data.sql",

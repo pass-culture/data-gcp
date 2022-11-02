@@ -330,7 +330,9 @@ class Recommendation:
             )
 
             user_profile_filter = (
-                "AND is_underage_recommendable" if self.user.age < 18 else ""
+                "AND is_underage_recommendable"
+                if (self.user.age and self.user.age < 18)
+                else ""
             )
             recommendations_query = text(
                 f"""

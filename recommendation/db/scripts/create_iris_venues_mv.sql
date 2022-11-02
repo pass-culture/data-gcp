@@ -1,4 +1,4 @@
-/* Create the function to fetch the iris_venues from the source table.
+/* Create the function to fetch the iris_venues_at_radius from the source table.
 We use a function otherwise the materialized view is a dependency of the tables and blocks the drop operation. */
 DROP FUNCTION IF EXISTS get_iris_venues CASCADE;
 CREATE OR REPLACE FUNCTION get_iris_venues()
@@ -11,7 +11,7 @@ $body$
 BEGIN
     RETURN QUERY
     SELECT DISTINCT v."irisId", v."venueId",v."venue_longitude",v."venue_latitude",ST_Point(v."venue_longitude",v."venue_latitude")
-    FROM public.iris_venues v;
+    FROM public.iris_venues_at_radius v;
 END;
 $body$
 LANGUAGE plpgsql;

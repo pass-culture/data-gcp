@@ -31,7 +31,7 @@
     "offerId": 138717,
     "isActive": "t"
   },
-  "iris_venues": {
+  "iris_venues_at_radius": {
     "id": 320058,
     "irisId": 142286,
     "venueId": 1801

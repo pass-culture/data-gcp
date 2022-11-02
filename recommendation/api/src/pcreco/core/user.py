@@ -8,6 +8,7 @@ from sqlalchemy import text
 from pcreco.utils.env_vars import (
     RECOMMENDABLE_OFFER_TABLE_PREFIX,
     RECOMMENDABLE_OFFER_TABLE_SUFFIX_DICT,
+    ENV_SHORT_NAME,
     AB_TESTING,
 )
 
@@ -25,7 +26,7 @@ class User:
 
     def get_user_profile(self) -> None:
         self.age = None
-        self.user_deposit_remaining_credit = 0
+        self.user_deposit_remaining_credit = 0 if ENV_SHORT_NAME == "prod" else 300
         connection = get_db()
 
         request_response = connection.execute(
@@ -33,7 +34,8 @@ class User:
                 f"""
                 SELECT 
                     FLOOR(DATE_PART('DAY',user_deposit_creation_date - user_birth_date)/365) as age,
-                    user_theoretical_remaining_credit
+                    user_theoretical_remaining_credit,
+                    user_deposit_initial_amount
                     FROM public.enriched_user_mv
                     WHERE user_id = '{str(self.id)}' 
                 """
@@ -43,7 +45,9 @@ class User:
             try:
                 self.age = int(request_response[0])
                 self.user_deposit_remaining_credit = (
-                    request_response[1] if request_response[1] is not None else 0
+                    request_response[1]
+                    if request_response[1] is not None
+                    else request_response[2]
                 )
             except TypeError:
                 pass

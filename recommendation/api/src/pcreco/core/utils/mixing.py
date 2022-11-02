@@ -11,7 +11,10 @@ from pcreco.utils.env_vars import (
 
 
 def order_offers_by_score_and_diversify_features(
-    offers: List[Dict[str, Any]], shuffle_recommendation=None, feature="subcategory_id"
+    offers: List[Dict[str, Any]],
+    shuffle_recommendation=None,
+    feature="subcategory_id",
+    nb_reco_display=NUMBER_OF_RECOMMENDATIONS,
 ) -> List[int]:
     """
     Group offers by feature.
@@ -57,11 +60,11 @@ def order_offers_by_score_and_diversify_features(
                 diversified_offers.append(
                     offers_by_feature_ordered_by_frequency[offer_feature].pop()
                 )
-        if len(diversified_offers) >= NUMBER_OF_RECOMMENDATIONS:
+        if len(diversified_offers) >= nb_reco_display:
             break
 
     ordered_and_diversified_offers = [offer["id"] for offer in diversified_offers][
-        :NUMBER_OF_RECOMMENDATIONS
+        :nb_reco_display
     ]
 
     log_duration("order_offers_by_score_and_diversify_features", start)

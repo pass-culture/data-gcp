@@ -33,11 +33,7 @@ NUMBER_OF_PRESELECTED_OFFERS = 50 if not os.environ.get("CI") else 3
 RECOMMENDABLE_OFFER_LIMIT = 5000
 DEFAULT_RECO_RADIUS = 50000
 RECOMMENDABLE_OFFER_TABLE_PREFIX = "recommendable_offers_per_iris_shape"
-RECOMMENDABLE_OFFER_TABLE_SUFFIX_DICT = {
-    15: "eac_15",
-    16: "eac_16_17",
-    17: "eac_16_17",
-}
+
 # AB TESTING
 AB_TESTING = False
 AB_TESTING_GROUPS = ["A", "B", "C"]

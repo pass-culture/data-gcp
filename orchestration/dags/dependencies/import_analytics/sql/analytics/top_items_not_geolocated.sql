@@ -5,7 +5,6 @@ WITH top_items AS(
         ROW_NUMBER() OVER (
             PARTITION BY inn.subcategory_id
             ORDER BY
-                is_numerical ASC,
                 booking_number DESC
         ) AS rank
     FROM

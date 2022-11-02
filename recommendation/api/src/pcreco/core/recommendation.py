@@ -211,7 +211,9 @@ class Recommendation:
                 else "(NOT ro.is_geolocated)"
             )
             user_profile_filter = (
-                "AND is_underage_recommendable" if self.user.age < 18 else ""
+                "AND is_underage_recommendable"
+                if (self.user.age and self.user.age < 18)
+                else ""
             )
             query = f"""
                 WITH reco_offers AS  (

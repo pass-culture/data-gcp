@@ -4,6 +4,7 @@ SELECT
     eu.user_birth_date,
     eu.user_deposit_initial_amount,
     eu.booking_cnt,
+    eu.user_theoretical_remaining_credit,
     au.consult_offer,
     au.has_added_offer_to_favorites,
 FROM

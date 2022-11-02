@@ -87,7 +87,7 @@ import_firebase_beneficiary_tables = {
         "depends": ["raw_firebase_events"],
         "params": {
             "table_type": "beneficiary",
-            "app_info_ids": app_info_id_list_pro,
+            "app_info_ids": app_info_id_list,
             "table_name": "events",
         },
     },

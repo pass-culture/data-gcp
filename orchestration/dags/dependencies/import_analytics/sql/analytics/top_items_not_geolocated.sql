@@ -15,7 +15,7 @@ WITH top_items AS(
                 MAX(CAST(ro.url IS NOT NULL AS int)) AS is_numerical,
                 MAX(ro.booking_number) AS booking_number
             FROM
-                `passculture-data-ehp.analytics_stg.recommendable_offers_data` ro
+                `{{ bigquery_analytics_dataset }}.recommendable_offers_data` ro
             where
                 ro.booking_number > 0
                 and (
@@ -34,5 +34,5 @@ SELECT
     'None' as iris_id,
     0 as venue_distance_to_iris
 FROM top_items ti
-INNER JOIN `passculture-data-ehp.analytics_stg.recommendable_offers_data` ro ON ti.item_id = ro.item_id
+INNER JOIN `{{ bigquery_analytics_dataset }}.recommendable_offers_data` ro ON ti.item_id = ro.item_id
 WHERE rank < 1000

@@ -30,8 +30,8 @@ def get_data_archiving(sql_file):
 def preprocess_data_archiving(
     _df,
     object_type,
-    parent_folder_to_archive=["interne", "operationnel"],
-    limit_inactivity_in_days=100,
+    parent_folder_to_archive,
+    limit_inactivity_in_days,
 ):
 
     # Compute the number of days since last activity of a card

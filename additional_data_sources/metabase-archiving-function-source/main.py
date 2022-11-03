@@ -11,14 +11,17 @@ from metabase_api import MetabaseAPI
 from archiving import get_data_archiving, preprocess_data_archiving, move_to_archive
 from utils import (
     PROJECT_NAME,
-    access_secret_data,
     ENVIRONMENT_SHORT_NAME,
     METABASE_API_USERNAME,
     METABASE_HOST,
     ANALYTICS_DATASET,
+    access_secret_data,
+    max_cards_to_archive,
+    sql_file,
+    parent_folder_to_archive,
+    limit_inactivity_in_days,
 )
 
-sql_file = "sql/archiving_query.sql"
 if ENVIRONMENT_SHORT_NAME == "dev" or ENVIRONMENT_SHORT_NAME == "stg":
     version_id = 2
 else:
@@ -34,9 +37,14 @@ metabase = MetabaseAPI(
 def run(request):
     archives_df = get_data_archiving(sql_file)
 
-    archives_dicts = preprocess_data_archiving(archives_df, object_type="card")
+    archives_dicts = preprocess_data_archiving(
+        archives_df,
+        object_type="card",
+        parent_folder_to_archive=parent_folder_to_archive,
+        limit_inactivity_in_days=limit_inactivity_in_days,
+    )
 
-    for card in archives_dicts[:5]:
+    for card in archives_dicts[:max_cards_to_archive]:
         archiving = move_to_archive(
             movement=card,
             metabase=metabase,

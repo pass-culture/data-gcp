@@ -36,7 +36,7 @@ kpis_list = [
         "question": 6,
         "effect": "Consommation moyenne du crédit pass Culture sur les 12 premiers mois d’utilisation (+18 ans)",
         "kpi": "montant_moyen_12mois",
-        "table_name": "mean_spent_3",
+        "table_name": "final_agg_mean_spent_beneficiary_18",
     },
     {
         "question": 7,
@@ -53,7 +53,7 @@ kpis_list = [
     {
         "question": 9,
         "effect": "Consommation moyenne des crédits individuels par jeune ayant activé son pass Culture (15-17 ans)",
-        "kpi": "montant_moyen_depense",
+        "kpi": "average_spent_amount",
         "table_name": "montant_moyen",
     },
     {
@@ -65,19 +65,19 @@ kpis_list = [
     {
         "question": 11,
         "effect": "Consommation moyenne des crédits de la part collective par classe et par année scolaire",
-        "kpi": "montant_collectif",
+        "kpi": "collective_average_spent_amount",
         "table_name": "conso_collective",
     },
     {
         "question": 12,
         "effect": "Proportion d’établissements ayant engagé au moins 1 action collective",
-        "kpi": "pct_eple_actifs",
+        "kpi": "percentage_active_eple",
         "table_name": "activation_eple",
     },
     {
         "question": 13,
         "effect": "Nombre total d'utilisateurs de 15 à 17 ans du pass Culture",
-        "kpi": "nb_inscrits_15_17",
+        "kpi": "total_registered_15_17",
         "table_name": "nb_registrations_agg",
     },
 ]

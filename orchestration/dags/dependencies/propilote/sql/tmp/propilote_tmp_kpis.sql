@@ -50,7 +50,7 @@ nb_registrations_agg AS (
     {% endif %}
         COUNT(
             DISTINCT CASE
-                WHEN type = 'GRANT_18' THEN `{{ bigquery_analytics_dataset }}.enriched_user_data`.user_id
+                WHEN type = 'GRANT_18' THEN eud.user_id
                 ELSE NULL
             END
         ) AS nb_inscrits_18,
@@ -69,13 +69,13 @@ nb_registrations_agg AS (
         ) AS inscrits_18_last_12,
         COUNT(
             DISTINCT CASE
-                WHEN type = 'GRANT_15_17' THEN `{{ bigquery_analytics_dataset }}.enriched_user_data`.user_id
+                WHEN type = 'GRANT_15_17' THEN eud.user_id
                 ELSE NULL
             END
-        ) AS nb_inscrits_15_17
+        ) AS total_registered_15_17
     FROM
-        `{{ bigquery_analytics_dataset }}.enriched_user_data`
-        JOIN `{{ bigquery_analytics_dataset }}.applicative_database_deposit` applicative_database_deposit ON `{{ bigquery_analytics_dataset }}.enriched_user_data`.user_id = applicative_database_deposit.userId
+        `{{ bigquery_analytics_dataset }}.enriched_user_data` eud
+        JOIN `{{ bigquery_analytics_dataset }}.applicative_database_deposit` applicative_database_deposit ON eud.user_id = applicative_database_deposit.userId
         AND DATE(applicative_database_deposit.datecreated) <= DATE("{{ ds }}")
     GROUP BY
         1,
@@ -189,7 +189,7 @@ intensity_15_17 AS (
         1,
         2
 ),
-mean_spent_1 AS (
+mean_spent_beneficiary_18 AS (
     SELECT
         DATE_TRUNC("{{ ds }}", MONTH) as month,
     {% if params.group_type == 'all' %}
@@ -213,7 +213,7 @@ mean_spent_1 AS (
         2,
         3
 ),
-mean_spent_2 AS (
+agg_mean_spent_beneficiary_18 AS (
     SELECT
         DATE_TRUNC("{{ ds }}", MONTH) as month,
     {% if params.group_type == 'all' %}
@@ -226,7 +226,7 @@ mean_spent_2 AS (
         SUM(booking_intermediary_amount) AS montant_depense_12mois
     FROM
         `{{ bigquery_analytics_dataset }}.enriched_booking_data` b
-        JOIN mean_spent_1 ON mean_spent_1.id_user = b.user_id
+        JOIN mean_spent_beneficiary_18 ON mean_spent_beneficiary_18.id_user = b.user_id
         JOIN `{{ bigquery_analytics_dataset }}.enriched_user_data` u ON b.user_id = u.user_id
         JOIN `{{ bigquery_analytics_dataset }}.applicative_database_deposit` applicative_database_deposit ON u.user_id = applicative_database_deposit.userId
     WHERE
@@ -242,7 +242,7 @@ mean_spent_2 AS (
         2,
         3
 ),
-mean_spent_3 AS (
+final_agg_mean_spent_beneficiary_18 AS (
     SELECT
         DATE_TRUNC("{{ ds }}", MONTH) as month,
     {% if params.group_type == 'all' %}
@@ -252,7 +252,7 @@ mean_spent_3 AS (
     {% endif %}
         AVG(montant_depense_12mois) AS montant_moyen_12mois
     FROM
-        mean_spent_2
+        agg_mean_spent_beneficiary_18
     GROUP BY
         1,
         2
@@ -266,7 +266,7 @@ nb_actives_15_17 AS (
         eud.{{ params.group_type_name }},
     {% endif %}
         ebd.user_id,
-        SUM(booking_intermediary_amount) AS montant_dep_par_jeune
+        SUM(booking_intermediary_amount) AS spent_amount_per_beneficiary
     FROM
         `{{ bigquery_analytics_dataset }}.enriched_booking_data` ebd
         JOIN `{{ bigquery_analytics_dataset }}.enriched_user_data` eud ON ebd.user_id = eud.user_id
@@ -296,7 +296,7 @@ montant_moyen AS (
     {% else %}
         {{ params.group_type_name }},
     {% endif %}
-        AVG(montant_dep_par_jeune) AS montant_moyen_depense
+        AVG(spent_amount_per_beneficiary) AS average_spent_amount
     FROM
         nb_actives_15_17
     GROUP BY
@@ -331,7 +331,6 @@ collective_students AS (
 conso_collective AS (
     SELECT
         DATE_TRUNC("{{ ds }}", MONTH) as month,
-        -- remplace name 
         {% if params.group_type == 'region' %}
             school_region_name as {{ params.group_type_name }},
         {% elif params.group_type == 'department'  %} 
@@ -340,7 +339,7 @@ conso_collective AS (
             'all' as all_dim,
         {% endif %}
         
-        SUM(booking_amount) AS montant_collectif
+        SUM(booking_amount) AS collective_average_spent_amount
     FROM
         `{{ bigquery_analytics_dataset }}.enriched_collective_booking_data` ecbd
         JOIN `{{ bigquery_analytics_dataset }}.applicative_database_educational_year` adey ON adey.adage_id = ecbd.educational_year_id
@@ -356,8 +355,6 @@ conso_collective AS (
 eple_infos AS (
     SELECT
         DATE_TRUNC("{{ ds }}", MONTH) as month,
-
-        -- remplace name 
         {% if params.group_type == 'region' %}
             venue_region_name as {{ params.group_type_name }},
         {% elif params.group_type == 'department'  %} 
@@ -391,7 +388,7 @@ activation_eple AS (
     {% else %}
         {{ params.group_type_name }},
     {% endif %}
-        ROUND((nb_eple_actifs / nb_total_eple) * 100) AS pct_eple_actifs
+        ROUND((nb_eple_actifs / nb_total_eple) * 100) AS percentage_active_eple
     FROM
         eple_infos
 ),

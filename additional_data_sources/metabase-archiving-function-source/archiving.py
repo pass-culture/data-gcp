@@ -6,9 +6,9 @@ import time
 
 import pandas_gbq as pd_gbq
 
-from utils import(
-    RAW_DATASET
-    , ANALYTICS_DATASET
+from utils import (
+    ANALYTICS_DATASET
+    , ENVIRONMENT_SHORT_NAME
 )
 
 def get_data_archiving(sql_file):
@@ -16,8 +16,7 @@ def get_data_archiving(sql_file):
     """
     
     params = {
-        '{{RAW_DATASET}}': RAW_DATASET
-        , '{{ANALYTICS_DATASET}}': ANALYTICS_DATASET
+        '{{ANALYTICS_DATASET}}': ANALYTICS_DATASET
     }
 
     file = open(sql_file, 'r')
@@ -33,161 +32,60 @@ def get_data_archiving(sql_file):
     return archives_df
 
 
-def get_dashboard_archiving_rules(row):
-    """Get rules to archive or not a dashboard."""
-
-    if (
-        row["question_context"] == 1 and row["dashboard_context"] == 1
-    ):  # if inactivity comes from inactivity in card AND inactivity in dashboard
-        return True  # => ARCHIVE dashboard
-    elif (
-        row["question_context"] == 1 and row["dashboard_context"] == 0
-    ):  # if inactivity comes from inactivity in card only
-        return False  # => DO NOT ARCHIVE dashboard
-    elif (
-        row["question_context"] == 0 and row["dashboard_context"] == 0
-    ):  # if inactivity does not comes from an inactivity in card neither an inactivity in dashboard
-        return False  # => DO NOT ARCHIVE dashboard
-    elif (
-        row["question_context"] == 0 and row["dashboard_context"] == 1
-    ):  # if inactivity comes from inactivity in dashboard only
-        return True  # => ARCHIVE dashboard
-    else:
-        return False
-
-
-def get_question_archiving_rules(row):
-    """Get rules to archive or not a question."""
-
-    if (
-        row["question_context"] == 1 and row["dashboard_context"] == 1
-    ):  # if inactivity comes from inactivity in card AND inactivity in dashboard
-        return True  # => ARCHIVE question
-    elif (
-        row["question_context"] == 1 and row["dashboard_context"] == 0
-    ):  # if inactivity comes from inactivity in card only
-        if row["nb_dashboards"] <= 1:
-            return True
-        else:
-            return False  # => DO NOT ARCHIVE question
-    elif (
-        row["question_context"] == 0 and row["dashboard_context"] == 0
-    ):  # if inactivity does not comes from an inactivity in card neither an inactivity in dashboard
-        return False  # => DO NOT ARCHIVE question
-    elif (
-        row["question_context"] == 0 and row["dashboard_context"] == 1
-    ):  # if inactivity comes from inactivity in dashboard only
-        return False  # => DO NOT ARCHIVE question
-    else:
-        return False
-
-
-def preprocess_data_archiving(_df, object_type):
-    """Preprocess the data to archive."""
-    print(f"{_df.shape[0]} - Start: card that might be removed...")
-    dashboard_count = (
-        _df.sort_values("card_id")
-        .groupby("card_id")["dashboard_id"]
-        .count()
-        .reset_index()
-        .rename(columns={"dashboard_id": "nb_dashboards"})
+def preprocess_data_archiving(_df, object_type, parent_folder_to_archive=['interne', 'operationnel'], limit_inactivity_in_days=100):
+    
+    
+    # Compute the number of days since last activity of a card
+    _df = (
+        _df
+        .assign(days_since_last_execution=lambda _df: pd.to_datetime('today') - _df['last_execution_date'].dt.tz_localize(None))
     )
-
-    _df = _df.merge(dashboard_count, how="left", on="card_id")
-    print(f"{_df.shape[0]} - Add the number of dashboards...")
-
-    _df = pd.concat(
-        [
-            _df[_df["nb_dashboards"] != 0].query(
-                "dashboard_id.notnull()"
-            ),  # remove rows where card are associated to dashboard but dashboard_id is null
-            _df[_df["nb_dashboards"] == 0],
-        ]
-    )
-    print(f"{_df.shape[0]} - Remove dashboard_id null...")
-
-    _df = _df[
-        ~_df["archive_location_level_2"].isna()
-    ]  # Remove elements for which destination collection is empty.
-    print(
-        f"{_df.shape[0]} - Remove elements for which destination collection is empty..."
-    )
-    _df["destination_collection_id"] = (  # Get the archive collection id
-        _df["archive_location_level_2"].dropna().str.split("/").apply(lambda x: x[-1])
-    )
-
-    _df_deduplicated = _df[
-        [  # Drop duplicates
-            "card_id",
-            "dashboard_id",
-            "dashboard_name",
-            "context",
-            "card_name",
-            "destination_collection_id",
-            "nb_dashboards",
-        ]
-    ].drop_duplicates()
-    print(f"{_df_deduplicated.shape[0]} - Drop duplicates...")
-
-    _df_deduplicated["question_context"] = (
-        _df_deduplicated["context"] == "question"
-    )  # Flag if context of inactivity is question
-    _df_deduplicated["dashboard_context"] = (
-        _df_deduplicated["context"] == "dashboard"
-    )  # Flag if context of inactivity is dashboard
-
-    _df_agregated = (  # Agregate context of incativity by card/dashboard pair
-        _df_deduplicated.groupby(
-            [
-                "card_id",
-                "dashboard_id",
-                "card_name",
-                "dashboard_name",
-                "destination_collection_id",
-                "nb_dashboards",
-            ],
-            dropna=False,
+    
+    
+   
+    if ENVIRONMENT_SHORT_NAME == 'prod':
+        _df['destination_collection_id'] = (                                                  # Get the archive collection id
+            _df['archive_location_level_2']
+            .dropna()
+            .str
+            .split('/')
+            .apply(lambda x: x[-1])
         )
-        .sum()
-        .reset_index()
-    )
-    print(f"{_df_agregated.shape[0]} - Aggregated...")
-    _df_agregated["archive_dashboard"] = _df_agregated.apply(
-        get_dashboard_archiving_rules, axis=1
-    )  # Get archiving rule for dashboard (depending on context)
-    _df_agregated["archive_question"] = _df_agregated.apply(
-        get_question_archiving_rules, axis=1
-    )  # Get archiving rule for question (depending on context)
-
-    _df_agregated.drop(["question_context", "dashboard_context"], axis=1, inplace=True)
-
+        _df = _df[~_df['archive_location_level_2'].isna()]                                    # Remove elements for which destination collection is empty.
+        # Filter the inactive cards in the folder we want to archive.
+        _df = _df[
+            (_df['days_since_last_execution'] >= pd.to_timedelta(limit_inactivity_in_days, unit='d'))
+            & (_df['parent_folder'].isin(parent_folder_to_archive))
+        ]
+    
+    if ENVIRONMENT_SHORT_NAME == 'dev' or ENVIRONMENT_SHORT_NAME == 'stg':
+        _df['destination_collection_id'] = 29
+        # In dev, we consider a card to be inactive after 1 day of inactivity.
+        _df = _df[(_df['days_since_last_execution'] >= pd.to_timedelta(1, unit='d'))]
+        
     if object_type == "card":
         _df_to_archive = (
-            _df_agregated.rename(columns={"card_id": "id", "card_name": "name"})
-            .assign(object_type=object_type)
-            .groupby(["id", "name", "object_type", "destination_collection_id"])[
-                "archive_question"
-            ]
-            .min()  # Take the min of the 'archive_question' boolean to be more restrictive
+            _df
+            .drop('collection_id', axis=1)
+            .rename(columns={
+                'card_id': 'id',
+                'card_name': 'name',
+                'card_collection_id': 'collection_id'
+            })
+            .assign(object_type=object_type)                                                                        # Take the min of the 'archive_question' boolean to be more restrictive
         )
-
-        _df_to_archive = _df_to_archive[
-            _df_to_archive == True
-        ].reset_index()  # Keep cards with archiving_flag = true
-
-        _dict_to_archive = (  # Stock data in a dict
-            _df_to_archive[["id", "name", "object_type", "destination_collection_id"]]
-            .assign(
-                destination_collection_id=lambda _df: _df[
-                    "destination_collection_id"
-                ].astype(int)
-            )
-            .sort_values("id")
+        
+        _dict_to_archive = (                                                                # Stock data in a dict
+            _df_to_archive
+            [['id', 'name', 'object_type', 'collection_id','destination_collection_id', 'total_users', 'total_views', 'nbr_dashboards', 'last_execution_date',
+       'last_execution_context', 'total_errors', 'parent_folder', 'days_since_last_execution']]            
+            .assign(destination_collection_id=lambda _df: _df['destination_collection_id'].astype(int))
+            .sort_values('id')
             .drop_duplicates()
-            .to_dict(orient="records")
+            .to_dict(orient='records')
         )
-
-        return _dict_to_archive
+        
+        return(_dict_to_archive)
 
     # if object_type == "dashboard":
 
@@ -199,6 +97,10 @@ class move_to_archive:
         self.name = movement.get("name", None)
         self.object_type = movement.get("object_type", None)
         self.destination_collection = movement.get("destination_collection_id", None)
+        self.collection_id = movement.get("collection_id", None)
+        self.last_execution_date = movement.get("last_execution_date", None)
+        self.last_execution_context = movement.get("last_execution_context", None)
+        self.parent_folder = movement.get("parent_folder", None)
         self.gcp_project = gcp_project
         self.analytics_dataset = analytics_dataset
 
@@ -239,7 +141,11 @@ class move_to_archive:
                     "object_type": self.object_type,
                     "status": "success",
                     "new_collection_id": self.destination_collection,
+                    "previous_collection_id": self.collection_id,
                     "archived_at": pd.Timestamp.now(),
+                    "last_execution_date": self.last_execution_date,
+                    "last_execution_context": self.last_execution_context,
+                    "parent_folder" : self.parent_folder,
                 }
             )
         else:
@@ -249,7 +155,11 @@ class move_to_archive:
                     "object_type": self.object_type,
                     "status": result.get("status"),
                     "new_collection_id": self.destination_collection,
+                    "previous_collection_id": self.collection_id,
                     "archived_at": pd.Timestamp.now(),
+                    "last_execution_date": self.last_execution_date,
+                    "last_execution_context": self.last_execution_context,
+                    "parent_folder" : self.parent_folder,
                 }
             )
         return archived_logs

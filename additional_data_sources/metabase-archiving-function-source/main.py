@@ -8,7 +8,11 @@ import pandas_gbq as pd_gbq
 from google.cloud import secretmanager
 
 from metabase_api import MetabaseAPI
-from archiving import get_data_archiving, preprocess_data_archiving, move_to_archive
+from archiving import (
+    get_data_archiving
+    , preprocess_data_archiving
+    , move_to_archive
+)
 from utils import (
     PROJECT_NAME,
     access_secret_data,
@@ -31,19 +35,21 @@ metabase = MetabaseAPI(
 )
 
 
-def run():
+def run(request):
     archives_df = get_data_archiving(sql_file)
 
     archives_dicts = preprocess_data_archiving(archives_df, object_type="card")
 
-    for card in archives_dicts[:10]:
-        move_to_archive = move_to_archive(
+    for card in archives_dicts[:5]:
+        archiving = move_to_archive(
             movement=card,
             metabase=metabase,
             gcp_project=PROJECT_NAME,
             analytics_dataset=ANALYTICS_DATASET,
         )
-        move_to_archive.move_object()
-        move_to_archive.rename_archive_object()
-        move_to_archive.save_logs_bq()
+        archiving.move_object()
+        archiving.rename_archive_object()
+        archiving.save_logs_bq()
         time.sleep(1)
+
+    return("success")

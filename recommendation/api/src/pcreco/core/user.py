@@ -7,8 +7,6 @@ from pcreco.utils.db.db_connection import get_db
 from sqlalchemy import text
 from pcreco.utils.env_vars import (
     RECOMMENDABLE_OFFER_TABLE_PREFIX,
-    RECOMMENDABLE_OFFER_TABLE_SUFFIX_DICT,
-    ENV_SHORT_NAME,
     AB_TESTING,
 )
 
@@ -26,7 +24,8 @@ class User:
 
     def get_user_profile(self) -> None:
         self.age = None
-        self.user_deposit_remaining_credit = 0 if ENV_SHORT_NAME == "prod" else 300
+        # default value
+        self.user_deposit_remaining_credit = 300
         connection = get_db()
 
         request_response = connection.execute(

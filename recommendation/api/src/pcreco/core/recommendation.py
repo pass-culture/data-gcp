@@ -261,9 +261,19 @@ class Recommendation:
                                 AND venue_longitude     IS  NOT NULL
                                 AND :user_latitude    IS  NOT NULL
                                 AND :user_longitude     IS  NOT NULL
+                                and ro."position" ='in'
                                 )
                             THEN
                                 st_distance(st_point(:user_longitude, :user_latitude)::geometry, st_point(venue_longitude, venue_latitude)::geometry, FALSE)
+                            WHEN(
+                                    venue_latitude    IS  NOT NULL
+                                AND venue_longitude     IS  NOT NULL
+                                AND :user_latitude    IS  NOT NULL
+                                AND :user_longitude     IS  NOT NULL
+                                and ro."position" ='out'
+                                )
+                            THEN 
+                                ro.venue_distance_to_iris
                             ELSE
                                 NULL
                         END     AS  user_distance
@@ -385,9 +395,19 @@ class Recommendation:
                                 AND venue_longitude     IS  NOT NULL
                                 AND :user_latitude    IS  NOT NULL
                                 AND :user_longitude     IS  NOT NULL
+                                and ro."position" ='in'
                                 )
                             THEN
                                 st_distance(st_point(:user_longitude, :user_latitude)::geometry, st_point(venue_longitude, venue_latitude)::geometry, FALSE)
+                            WHEN(
+                                    venue_latitude    IS  NOT NULL
+                                AND venue_longitude     IS  NOT NULL
+                                AND :user_latitude    IS  NOT NULL
+                                AND :user_longitude     IS  NOT NULL
+                                and ro."position" ='out'
+                                )
+                            THEN 
+                                ro.venue_distance_to_iris
                             ELSE
                                 NULL
                         END     AS  user_distance

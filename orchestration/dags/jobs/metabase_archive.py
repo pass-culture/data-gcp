@@ -22,10 +22,10 @@ from common import macros
 
 
 default_dag_args = {
-    "start_date": datetime.datetime(2022, 1, 1),
+    "start_date": datetime(2022, 1, 1),
     "retries": 1,
     "on_failure_callback": task_fail_slack_alert,
-    "retry_delay": datetime.timedelta(minutes=5),
+    "retry_delay": timedelta(minutes=5),
     "project_id": GCP_PROJECT,
 }
 
@@ -36,7 +36,7 @@ with DAG(
     description="Launch archiving script for Metabase cards",
     schedule_interval="0 0 * * *",
     catchup=False,
-    dagrun_timeout=datetime.timedelta(minutes=120),
+    dagrun_timeout=timedelta(minutes=120),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
 ) as dag:

@@ -3,6 +3,7 @@ import pandas as pd
 import requests
 from datetime import datetime
 import time
+import re
 
 import pandas_gbq as pd_gbq
 
@@ -17,12 +18,10 @@ def get_data_archiving(sql_file):
     file = open(sql_file, "r")
     sql = file.read()
 
-    get_sql = sql
-
     for param, table_name in params.items():
-        get_sql = get_sql.replace(param, table_name)
+        sql = sql.replace(param, table_name)
 
-    archives_df = pd.read_gbq(get_sql, dialect="standard")
+    archives_df = pd.read_gbq(sql, dialect="standard")
 
     return archives_df
 
@@ -109,8 +108,6 @@ def preprocess_data_archiving(
 
         return _dict_to_archive
 
-    # if object_type == "dashboard":
-
 
 class move_to_archive:
     def __init__(self, movement, metabase, gcp_project, analytics_dataset):
@@ -131,13 +128,12 @@ class move_to_archive:
     def rename_archive_object(self):
         """Rename the object to archive. Add ['Archive - '] prefix to object name."""
 
-        name_lower = self.name.lower()
+        if re.search("archive", self.name, re.IGNORECASE):
+            archive_name = self.name
+        else:
+            archive_name = "[Archive] - " + self.name
 
-        if "archive" in name_lower:
-            name_lower = name_lower.replace("archive", "").strip(" -[]")
-        name_archive = "[Archive] - " + name_lower
-
-        params = {"name": name_archive}
+        params = {"name": archive_name}
 
         if self.object_type == "card":
             result = self.metabase_connection.put_card(self.id, params)

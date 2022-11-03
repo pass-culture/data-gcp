@@ -1,16 +1,16 @@
 SELECT
     *
 FROM
-    `{{ bigquery_tmp_dataset }}.tmp_propilote_kpis_region`
+    `{{ bigquery_tmp_dataset }}.propilote_tmp_kpis_region`
 UNION
 ALL
 SELECT
     *
 FROM
-    `{{ bigquery_tmp_dataset }}.tmp_propilote_kpis_department`
+    `{{ bigquery_tmp_dataset }}.propilote_tmp_kpis_department`
 UNION
 ALL
 SELECT
     *
 FROM
-    `{{ bigquery_tmp_dataset }}.tmp_propilote_kpis_all`
+    `{{ bigquery_tmp_dataset }}.propilote_tmp_kpis_all`

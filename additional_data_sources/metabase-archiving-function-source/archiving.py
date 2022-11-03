@@ -6,86 +6,108 @@ import time
 
 import pandas_gbq as pd_gbq
 
-from utils import (
-    ANALYTICS_DATASET
-    , ENVIRONMENT_SHORT_NAME
-)
+from utils import ANALYTICS_DATASET, ENVIRONMENT_SHORT_NAME
+
 
 def get_data_archiving(sql_file):
-    """Run SQL query and save data in a dataframe.
-    """
-    
-    params = {
-        '{{ANALYTICS_DATASET}}': ANALYTICS_DATASET
-    }
+    """Run SQL query and save data in a dataframe."""
 
-    file = open(sql_file, 'r')
+    params = {"{{ANALYTICS_DATASET}}": ANALYTICS_DATASET}
+
+    file = open(sql_file, "r")
     sql = file.read()
-    
+
     get_sql = sql
-    
+
     for param, table_name in params.items():
         get_sql = get_sql.replace(param, table_name)
-    
-    archives_df = pd.read_gbq(get_sql, dialect='standard')
-    
+
+    archives_df = pd.read_gbq(get_sql, dialect="standard")
+
     return archives_df
 
 
-def preprocess_data_archiving(_df, object_type, parent_folder_to_archive=['interne', 'operationnel'], limit_inactivity_in_days=100):
-    
-    
+def preprocess_data_archiving(
+    _df,
+    object_type,
+    parent_folder_to_archive=["interne", "operationnel"],
+    limit_inactivity_in_days=100,
+):
+
     # Compute the number of days since last activity of a card
-    _df = (
-        _df
-        .assign(days_since_last_execution=lambda _df: pd.to_datetime('today') - _df['last_execution_date'].dt.tz_localize(None))
+    _df = _df.assign(
+        days_since_last_execution=lambda _df: pd.to_datetime("today")
+        - _df["last_execution_date"].dt.tz_localize(None)
     )
-    
-    
-   
-    if ENVIRONMENT_SHORT_NAME == 'prod':
-        _df['destination_collection_id'] = (                                                  # Get the archive collection id
-            _df['archive_location_level_2']
+
+    if ENVIRONMENT_SHORT_NAME == "prod":
+        _df["destination_collection_id"] = (  # Get the archive collection id
+            _df["archive_location_level_2"]
             .dropna()
-            .str
-            .split('/')
+            .str.split("/")
             .apply(lambda x: x[-1])
         )
-        _df = _df[~_df['archive_location_level_2'].isna()]                                    # Remove elements for which destination collection is empty.
+        _df = _df[
+            ~_df["archive_location_level_2"].isna()
+        ]  # Remove elements for which destination collection is empty.
         # Filter the inactive cards in the folder we want to archive.
         _df = _df[
-            (_df['days_since_last_execution'] >= pd.to_timedelta(limit_inactivity_in_days, unit='d'))
-            & (_df['parent_folder'].isin(parent_folder_to_archive))
+            (
+                _df["days_since_last_execution"]
+                >= pd.to_timedelta(limit_inactivity_in_days, unit="d")
+            )
+            & (_df["parent_folder"].isin(parent_folder_to_archive))
         ]
-    
-    if ENVIRONMENT_SHORT_NAME == 'dev' or ENVIRONMENT_SHORT_NAME == 'stg':
-        _df['destination_collection_id'] = 29
+
+    if ENVIRONMENT_SHORT_NAME == "dev" or ENVIRONMENT_SHORT_NAME == "stg":
+        _df["destination_collection_id"] = 29
         # In dev, we consider a card to be inactive after 1 day of inactivity.
-        _df = _df[(_df['days_since_last_execution'] >= pd.to_timedelta(1, unit='d'))]
-        
+        _df = _df[(_df["days_since_last_execution"] >= pd.to_timedelta(1, unit="d"))]
+
     if object_type == "card":
         _df_to_archive = (
-            _df
-            .drop('collection_id', axis=1)
-            .rename(columns={
-                'card_id': 'id',
-                'card_name': 'name',
-                'card_collection_id': 'collection_id'
-            })
-            .assign(object_type=object_type)                                                                        # Take the min of the 'archive_question' boolean to be more restrictive
+            _df.drop("collection_id", axis=1)
+            .rename(
+                columns={
+                    "card_id": "id",
+                    "card_name": "name",
+                    "card_collection_id": "collection_id",
+                }
+            )
+            .assign(
+                object_type=object_type
+            )  # Take the min of the 'archive_question' boolean to be more restrictive
         )
-        
-        _dict_to_archive = (                                                                # Stock data in a dict
-            _df_to_archive
-            [['id', 'name', 'object_type', 'collection_id','destination_collection_id', 'total_users', 'total_views', 'nbr_dashboards', 'last_execution_date',
-       'last_execution_context', 'total_errors', 'parent_folder', 'days_since_last_execution']]            
-            .assign(destination_collection_id=lambda _df: _df['destination_collection_id'].astype(int))
-            .sort_values('id')
+
+        _dict_to_archive = (  # Stock data in a dict
+            _df_to_archive[
+                [
+                    "id",
+                    "name",
+                    "object_type",
+                    "collection_id",
+                    "destination_collection_id",
+                    "total_users",
+                    "total_views",
+                    "nbr_dashboards",
+                    "last_execution_date",
+                    "last_execution_context",
+                    "total_errors",
+                    "parent_folder",
+                    "days_since_last_execution",
+                ]
+            ]
+            .assign(
+                destination_collection_id=lambda _df: _df[
+                    "destination_collection_id"
+                ].astype(int)
+            )
+            .sort_values("id")
             .drop_duplicates()
-            .to_dict(orient='records')
+            .to_dict(orient="records")
         )
-        
-        return(_dict_to_archive)
+
+        return _dict_to_archive
 
     # if object_type == "dashboard":
 
@@ -145,7 +167,7 @@ class move_to_archive:
                     "archived_at": pd.Timestamp.now(),
                     "last_execution_date": self.last_execution_date,
                     "last_execution_context": self.last_execution_context,
-                    "parent_folder" : self.parent_folder,
+                    "parent_folder": self.parent_folder,
                 }
             )
         else:
@@ -159,7 +181,7 @@ class move_to_archive:
                     "archived_at": pd.Timestamp.now(),
                     "last_execution_date": self.last_execution_date,
                     "last_execution_context": self.last_execution_context,
-                    "parent_folder" : self.parent_folder,
+                    "parent_folder": self.parent_folder,
                 }
             )
         return archived_logs

@@ -8,11 +8,7 @@ import pandas_gbq as pd_gbq
 from google.cloud import secretmanager
 
 from metabase_api import MetabaseAPI
-from archiving import (
-    get_data_archiving
-    , preprocess_data_archiving
-    , move_to_archive
-)
+from archiving import get_data_archiving, preprocess_data_archiving, move_to_archive
 from utils import (
     PROJECT_NAME,
     access_secret_data,
@@ -52,4 +48,4 @@ def run(request):
         archiving.save_logs_bq()
         time.sleep(1)
 
-    return("success")
+    return "success"

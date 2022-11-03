@@ -1,6 +1,6 @@
 WITH all_months AS (
     SELECT
-        DATE_TRUNC("{{ ds }}", MONTH) as month
+        DATE_TRUNC(DATE("{{ ds }}"), MONTH) as month
 ),
 region_dpt AS (
     SELECT 
@@ -42,7 +42,7 @@ all_dimension_month AS (
 
 nb_registrations_agg AS (
     SELECT
-        DATE_TRUNC("{{ ds }}", MONTH) as month,
+        DATE_TRUNC(DATE("{{ ds }}"), MONTH) as month,
     {% if params.group_type == 'all' %}
         'all' as all_dim,
     {% else %}
@@ -58,7 +58,7 @@ nb_registrations_agg AS (
             CASE
                 WHEN (
                     DATE_DIFF(
-                        DATE("{{ ds }}"),
+                        DATE_TRUNC(DATE("{{ ds }}"), MONTH),
                         DATE(user_deposit_creation_date),
                         DAY
                     ) <= 365
@@ -76,14 +76,14 @@ nb_registrations_agg AS (
     FROM
         `{{ bigquery_analytics_dataset }}.enriched_user_data` eud
         JOIN `{{ bigquery_analytics_dataset }}.applicative_database_deposit` applicative_database_deposit ON eud.user_id = applicative_database_deposit.userId
-        AND DATE(applicative_database_deposit.datecreated) <= DATE("{{ ds }}")
+        AND DATE(applicative_database_deposit.datecreated) <= DATE_TRUNC(DATE("{{ ds }}"), MONTH)
     GROUP BY
         1,
         2
 ),
 nb_reservations AS (
     SELECT
-        DATE_TRUNC("{{ ds }}", MONTH) as month,
+        DATE_TRUNC(DATE("{{ ds }}"), MONTH) as month,
     {% if params.group_type == 'all' %}
         'all' as all_dim,
     {% else %}
@@ -110,7 +110,7 @@ nb_reservations AS (
         booking_status IN ('USED', 'REIMBURSED')
         AND type = 'GRANT_18'
         AND applicative_database_deposit.datecreated < booking_creation_date
-        AND DATE(booking_creation_date) <= DATE("{{ ds }}")
+        AND DATE(booking_creation_date) <= DATE_TRUNC(DATE("{{ ds }}"), MONTH)
     GROUP BY
         1,
         2
@@ -118,7 +118,7 @@ nb_reservations AS (
 intensity_18 AS (
     SELECT
         ebd.user_id,
-        DATE_TRUNC("{{ ds }}", MONTH) as month,
+        DATE_TRUNC(DATE("{{ ds }}"), MONTH) as month,
     {% if params.group_type == 'all' %}
         'all' as all_dim,
     {% else %}
@@ -132,7 +132,7 @@ intensity_18 AS (
 
     WHERE
         DATE_DIFF(
-            DATE("{{ ds }}"),
+            DATE_TRUNC(DATE("{{ ds }}"), MONTH),
             DATE(booking_creation_date),
             DAY
         ) <= 365
@@ -146,7 +146,7 @@ intensity_18 AS (
 ),
 agg_intensity_18 AS (
     SELECT
-        DATE_TRUNC("{{ ds }}", MONTH) as month,
+        DATE_TRUNC(DATE("{{ ds }}"), MONTH) as month,
     {% if params.group_type == 'all' %}
         'all' as all_dim,
     {% else %}
@@ -166,7 +166,7 @@ agg_intensity_18 AS (
 ),
 intensity_15_17 AS (
     SELECT
-        DATE_TRUNC("{{ ds }}", MONTH) as month,
+        DATE_TRUNC(DATE("{{ ds }}"), MONTH) as month,
     {% if params.group_type == 'all' %}
         'all' as all_dim,
     {% else %}
@@ -181,7 +181,7 @@ intensity_15_17 AS (
         JOIN  `{{ bigquery_analytics_dataset }}.enriched_user_data` eud ON ebd.user_id = eud.user_id
 
     WHERE
-        DATE(booking_creation_date) > DATE("{{ ds }}")
+        DATE(booking_creation_date) < DATE_TRUNC(DATE("{{ ds }}"), MONTH)
         AND apd.datecreated < booking_creation_date
         AND booking_status IN ('USED', 'REIMBURSED')
         AND type = 'GRANT_15_17'
@@ -191,7 +191,7 @@ intensity_15_17 AS (
 ),
 mean_spent_beneficiary_18 AS (
     SELECT
-        DATE_TRUNC("{{ ds }}", MONTH) as month,
+        DATE_TRUNC(DATE("{{ ds }}"), MONTH) as month,
     {% if params.group_type == 'all' %}
         'all' as all_dim,
     {% else %}
@@ -203,7 +203,7 @@ mean_spent_beneficiary_18 AS (
         JOIN `{{ bigquery_analytics_dataset }}.applicative_database_deposit` applicative_database_deposit ON `{{ bigquery_analytics_dataset }}.enriched_user_data`.user_id = applicative_database_deposit.userId
     WHERE
         DATE_DIFF(
-            DATE("{{ ds }}"),
+            DATE_TRUNC(DATE("{{ ds }}"), MONTH),
             DATE(applicative_database_deposit.datecreated),
             DAY
         ) >= 365
@@ -215,7 +215,7 @@ mean_spent_beneficiary_18 AS (
 ),
 agg_mean_spent_beneficiary_18 AS (
     SELECT
-        DATE_TRUNC("{{ ds }}", MONTH) as month,
+        DATE_TRUNC(DATE("{{ ds }}"), MONTH) as month,
     {% if params.group_type == 'all' %}
         'all' as all_dim,
     {% else %}
@@ -244,7 +244,7 @@ agg_mean_spent_beneficiary_18 AS (
 ),
 final_agg_mean_spent_beneficiary_18 AS (
     SELECT
-        DATE_TRUNC("{{ ds }}", MONTH) as month,
+        DATE_TRUNC(DATE("{{ ds }}"), MONTH) as month,
     {% if params.group_type == 'all' %}
         'all' as all_dim,
     {% else %}
@@ -259,7 +259,7 @@ final_agg_mean_spent_beneficiary_18 AS (
 ),
 nb_actives_15_17 AS (
     SELECT
-        DATE_TRUNC("{{ ds }}", MONTH) as month,
+        DATE_TRUNC(DATE("{{ ds }}"), MONTH) as month,
     {% if params.group_type == 'all' %}
         'all' as all_dim,
     {% else %}
@@ -272,7 +272,7 @@ nb_actives_15_17 AS (
         JOIN `{{ bigquery_analytics_dataset }}.enriched_user_data` eud ON ebd.user_id = eud.user_id
     WHERE
         booking_is_used
-        AND DATE_TRUNC(ebd.booking_used_date, MONTH) = DATE_TRUNC("{{ ds }}", MONTH)
+        AND DATE_TRUNC(ebd.booking_used_date, MONTH) = DATE_TRUNC(DATE("{{ ds }}"), MONTH)
         AND ebd.user_id IN (
             SELECT
                 DISTINCT userId
@@ -290,7 +290,7 @@ nb_actives_15_17 AS (
 ),
 montant_moyen AS (
     SELECT
-        DATE_TRUNC("{{ ds }}", MONTH) as month,
+        DATE_TRUNC(DATE("{{ ds }}"), MONTH) as month,
     {% if params.group_type == 'all' %}
         'all' as all_dim,
     {% else %}
@@ -307,7 +307,7 @@ montant_moyen AS (
 
 collective_students AS (
     SELECT
-        DATE_TRUNC("{{ ds }}", MONTH) as month,
+        DATE_TRUNC(DATE("{{ ds }}"), MONTH) as month,
     {% if params.group_type == 'all' %}
         'all' as all_dim,
     {% else %}
@@ -330,7 +330,7 @@ collective_students AS (
 
 conso_collective AS (
     SELECT
-        DATE_TRUNC("{{ ds }}", MONTH) as month,
+        DATE_TRUNC(DATE("{{ ds }}"), MONTH) as month,
         {% if params.group_type == 'region' %}
             school_region_name as {{ params.group_type_name }},
         {% elif params.group_type == 'department'  %} 
@@ -343,18 +343,18 @@ conso_collective AS (
     FROM
         `{{ bigquery_analytics_dataset }}.enriched_collective_booking_data` ecbd
         JOIN `{{ bigquery_analytics_dataset }}.applicative_database_educational_year` adey ON adey.adage_id = ecbd.educational_year_id
-        AND DATE("{{ ds }}") BETWEEN educational_year_beginning_date
+        AND DATE_TRUNC(DATE("{{ ds }}"), MONTH) BETWEEN educational_year_beginning_date
         AND educational_year_expiration_date
     WHERE
         collective_booking_status IN ('USED', 'REIMBURSED')
-        AND collective_booking_used_date < DATE("{{ ds }}")
+        AND collective_booking_used_date <DATE_TRUNC(DATE("{{ ds }}"), MONTH)
     GROUP BY
         1,
         2
 ),
 eple_infos AS (
     SELECT
-        DATE_TRUNC("{{ ds }}", MONTH) as month,
+        DATE_TRUNC(DATE("{{ ds }}"), MONTH) as month,
         {% if params.group_type == 'region' %}
             venue_region_name as {{ params.group_type_name }},
         {% elif params.group_type == 'department'  %} 
@@ -374,15 +374,15 @@ eple_infos AS (
         `{{ bigquery_analytics_dataset }}.enriched_institution_data` enriched_institution_data
         LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_collective_booking_data` enriched_collective_booking_data ON enriched_collective_booking_data.educational_institution_id = enriched_institution_data.institution_id
     WHERE
-        DATE(first_deposit_creation_date) < DATE("{{ ds }}")
-        AND DATE(collective_booking_creation_date) < DATE("{{ ds }}")
+        DATE(first_deposit_creation_date) < DATE_TRUNC(DATE("{{ ds }}"), MONTH)
+        AND DATE(collective_booking_creation_date) < DATE_TRUNC(DATE("{{ ds }}"), MONTH)
     GROUP BY
         1,
         2
 ),
 activation_eple AS (
     SELECT
-        DATE_TRUNC("{{ ds }}", MONTH) as month,
+        DATE_TRUNC(DATE("{{ ds }}"), MONTH) as month,
     {% if params.group_type == 'all' %}
         'all' as all_dim,
     {% else %}
@@ -417,7 +417,7 @@ join_all_kpis AS (
     {% endfor %}
 )
 SELECT
-    DATE_TRUNC("{{ ds }}", MONTH) as calculation_month,
+    DATE_TRUNC(DATE("{{ ds }}"), MONTH) as calculation_month,
     *
 FROM
     join_all_kpis

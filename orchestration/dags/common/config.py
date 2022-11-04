@@ -26,6 +26,7 @@ BIGQUERY_ANALYTICS_DATASET = os.environ.get(
 BIGQUERY_BACKEND_DATASET = os.environ.get(
     "BIGQUERY_BACKEND_DATASET", f"backend_{ENV_SHORT_NAME}"
 )
+BIGQUERY_TMP_DATASET = os.environ.get("BIGQUERY_TMP_DATASET", f"tmp_{ENV_SHORT_NAME}")
 
 BIGQUERY_OPEN_DATA_PROJECT = (
     "passculture-opendata-prod"

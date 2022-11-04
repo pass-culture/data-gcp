@@ -2,7 +2,7 @@
 class RecommendableOffersQueryBuilder:
     def __init__(self, reco_model, recommendable_offer_limit):
         self.reco_model = reco_model
-        self.RECOMMENDABLE_OFFER_LIMIT = recommendable_offer_limit 
+        self.recommendable_offer_limit = recommendable_offer_limit 
 
     def _rank_by_distance(self, source_table_name, export_table_name):
         return f"""

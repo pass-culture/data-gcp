@@ -19,6 +19,7 @@ from pcreco.utils.env_vars import (
     AB_TESTING,
     AB_TEST_MODEL_DICT,
     RECOMMENDABLE_OFFER_LIMIT,
+    COLD_START_RECOMMENDABLE_OFFER_LIMIT,
     NUMBER_OF_PRESELECTED_OFFERS,
     NUMBER_OF_RECOMMENDATIONS,
     SHUFFLE_RECOMMENDATION,
@@ -242,7 +243,7 @@ class Recommendation:
             )
             recommendations_query = text(
                 RecommendableOffersQueryBuilder(
-                    self, RECOMMENDABLE_OFFER_LIMIT
+                    self, COLD_START_RECOMMENDABLE_OFFER_LIMIT
                 ).generate_query(order_query)
             )
 

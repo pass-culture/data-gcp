@@ -37,17 +37,13 @@ class RecommendableOffersQueryBuilder:
             ,reco_offers_ranked_by_distance      AS  (
                     SELECT
                         *
-                    ,   CASE
-                            WHEN ro."position" ='in'
-                            THEN 
-                                row_number() OVER(
+                    ,   row_number() OVER(
                                 partition BY
                                     item_id
                                 ORDER BY
-                                    user_distance   ASC
+                                    user_distance  ASC
                                 )
-                            ELSE 1
-                        END AS  rank
+                        AS  rank
                     FROM
                         reco_offers_with_distance_to_user   ro
                 )
@@ -65,9 +61,7 @@ class RecommendableOffersQueryBuilder:
                     reco_offers_ranked_by_distance
                 WHERE
                     rank    =   1
-
             )  
-
             """
 
     def _select_items(self, source_table_name, export_table_name):
@@ -117,7 +111,6 @@ class RecommendableOffersQueryBuilder:
         if self.reco_model.user.iris_id and self.reco_model.include_numericals:
             return f"""
                 WITH {reco_geolocated_offers_sql}, {filter_by_distance_sql}, {reco_non_geolocated_offers_sql}, {selected_offers_sql}
-
                 , tmp AS(
                     SELECT * FROM selected_non_geolocated_offers 
                     UNION ALL
@@ -131,7 +124,6 @@ class RecommendableOffersQueryBuilder:
         elif self.reco_model.user.iris_id:
             return f"""
                 WITH {reco_geolocated_offers_sql}, {filter_by_distance_sql}
-
                 SELECT * FROM selected_geolocated_offers 
                 ORDER BY {order_query}
                 LIMIT {self.recommendable_offer_limit}
@@ -139,7 +131,6 @@ class RecommendableOffersQueryBuilder:
         else:
             return f"""
                 WITH {reco_non_geolocated_offers_sql}, {selected_offers_sql}
-
                 SELECT * FROM selected_non_geolocated_offers 
                 ORDER BY {order_query}
                 LIMIT {self.recommendable_offer_limit}

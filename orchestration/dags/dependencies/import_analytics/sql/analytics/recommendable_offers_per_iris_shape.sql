@@ -1,5 +1,5 @@
 WITH selected_items AS (
-SELECT
+    SELECT
         *,
         'in' as position
     FROM
@@ -14,8 +14,8 @@ SELECT
     UNION
     ALL
     SELECT
-    *,
-    'out' as position
+        *,
+        'none' as position
     FROM
         `{{ bigquery_analytics_dataset }}.top_items_not_geolocated`
 )

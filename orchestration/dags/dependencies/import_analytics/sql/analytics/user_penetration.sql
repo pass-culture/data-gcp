@@ -31,6 +31,7 @@ SELECT
   pop.decimal_age,
   pop.department_code,
   ub.total_users,
+  case when decimal_age >= 15 and decimal_age<18 then "15_17" else "18_plus" end as tranche_age,
   population
 
 FROM population_dpt pop

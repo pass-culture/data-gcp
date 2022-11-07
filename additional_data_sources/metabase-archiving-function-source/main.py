@@ -22,7 +22,7 @@ from utils import (
     limit_inactivity_in_days,
 )
 
-if ENVIRONMENT_SHORT_NAME == "dev" or ENVIRONMENT_SHORT_NAME == "stg":
+if ENVIRONMENT_SHORT_NAME == "dev":
     version_id = 2
 else:
     version_id = 1

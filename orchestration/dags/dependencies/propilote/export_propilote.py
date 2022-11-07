@@ -125,7 +125,9 @@ analytics_tables = {
     "propilote_kpis": {
         "sql": f"{SQL_ANALYTICS_PATH}/propilote_kpis.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "propilote_kpis",
+        "destination_table": "propilote_kpis${{ yyyymmdd(current_month(ds)) }}", 
+        "time_partitioning": {"field": "calculation_month"},
+        "cluster_fields": ["calculation_month"],
         "depends": [
             "propilote_tmp_kpis_region",
             "propilote_tmp_kpis_department",

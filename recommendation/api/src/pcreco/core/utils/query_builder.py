@@ -37,17 +37,13 @@ class RecommendableOffersQueryBuilder:
             ,reco_offers_ranked_by_distance      AS  (
                     SELECT
                         *
-                    ,   CASE
-                            WHEN ro."position" ='in'
-                            THEN 
-                                row_number() OVER(
+                    , row_number() OVER(
                                 partition BY
                                     item_id
                                 ORDER BY
                                     user_distance   ASC
                                 )
-                            ELSE 1
-                        END AS  rank
+                        AS  rank
                     FROM
                         reco_offers_with_distance_to_user   ro
                 )

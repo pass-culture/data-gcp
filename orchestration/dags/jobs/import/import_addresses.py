@@ -123,7 +123,12 @@ with DAG(
 
     to_analytics = BigQueryExecuteQueryOperator(
         task_id="copy_to_analytics",
-        sql=f"SELECT * EXCEPT (user_address) FROM {BIGQUERY_CLEAN_DATASET}.{USER_LOCATIONS_TABLE}",
+        sql=f"""
+            SELECT * EXCEPT (user_address) 
+            FROM {BIGQUERY_CLEAN_DATASET}.{USER_LOCATIONS_TABLE}
+            QUALIFY ROW_NUMBER() over (PARTITION BY user_id ORDER BY date_updated DESC) = 1
+            
+        """,
         write_disposition="WRITE_TRUNCATE",
         use_legacy_sql=False,
         destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.{USER_LOCATIONS_TABLE}",

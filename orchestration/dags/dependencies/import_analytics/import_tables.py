@@ -405,7 +405,8 @@ def define_import_query(
             "collectiveInterventionArea" AS collective_intervention_area,
             "collectiveAccessInformation" AS collective_access_information,
             "collectivePhone" AS collective_phone,
-            "collectiveEmail" AS collective_email
+            "collectiveEmail" AS collective_email,
+            "dmsToken" AS dms_token
         FROM public.venue
     """
     cloudsql_queries[

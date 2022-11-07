@@ -11,8 +11,8 @@ enriched_user,user_id,character varying,enriched_user_data,analytics
 enriched_user,user_deposit_creation_date,timestamp without time zone,enriched_user_data,analytics
 enriched_user,user_birth_date,timestamp without time zone,enriched_user_data,analytics
 enriched_user,user_deposit_initial_amount,real,enriched_user_data,analytics
-iris_venues,irisId,character varying,iris_venues,clean
-iris_venues,venueId,character varying,iris_venues,clean
+iris_venues_at_radius,irisId,character varying,iris_venues_at_radius,clean
+iris_venues_at_radius,venueId,character varying,iris_venues_at_radius,clean
 mediation,thumbCount,integer,applicative_database_mediation,clean
 mediation,id,character varying,applicative_database_mediation,clean
 mediation,offerId,character varying,applicative_database_mediation,clean

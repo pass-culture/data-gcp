@@ -3,6 +3,7 @@ import pytest
 from typing import Any
 from pcreco.core.user import User
 from pcreco.core.recommendation import Recommendation
+from pcreco.models.reco.playlist_params import PlaylistParamsIn
 from pcreco.utils.env_vars import ENV_SHORT_NAME, AB_TESTING
 
 

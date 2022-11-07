@@ -160,6 +160,7 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
                 (datetime.now() - timedelta(days=18 * 366)),
             ],
             "user_deposit_initial_amount": [300, 300, 300, 300, 20, 30, 30, 300],
+            "user_theoretical_remaining_credit": [300, 300, 300, 300, 20, 30, 30, 300],
             "booking_cnt": [3, 1, 1, 3, 3, 4, 4, 4],
             "consult_offer": [1, 2, 2, 3, 3, 4, 4, 4],
             "has_added_offer_to_favorites": [1, 2, 2, 3, 3, 4, 4, 4],
@@ -242,7 +243,7 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
     )
     engine.execute("DROP TABLE IF EXISTS enriched_user CASCADE;")
     engine.execute("DROP MATERIALIZED VIEW IF EXISTS enriched_user_mv CASCADE;")
-    engine.execute("DROP TABLE IF EXISTS iris_venues;")
+    engine.execute("DROP TABLE IF EXISTS iris_venues_at_radius;")
     engine.execute(f"DROP TABLE IF EXISTS {app_config['AB_TESTING_TABLE']} ;")
     engine.execute("DROP TABLE IF EXISTS past_recommended_offers ;")
     engine.execute("DROP TABLE IF EXISTS iris_france;")

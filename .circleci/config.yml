@@ -571,7 +571,7 @@ workflows:
           <<: *slack-fail-post-step
       
       - cloud-function-deploy:
-          name: metabase-arcvhiving-stg
+          name: metabase-archiving-stg
           cloud-function-name: metabase_archiving_stg
           cloud-function-folder: metabase-archiving-function-source
           requires:

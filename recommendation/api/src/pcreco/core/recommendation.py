@@ -24,6 +24,7 @@ from pcreco.utils.env_vars import (
     NUMBER_OF_RECOMMENDATIONS,
     SHUFFLE_RECOMMENDATION,
     MIXING_RECOMMENDATION,
+    MIXING_FEATURE,
     DEFAULT_RECO_RADIUS,
     log_duration,
 )
@@ -54,7 +55,7 @@ class Recommendation:
             params_in.is_reco_mixed if params_in else MIXING_RECOMMENDATION
         )
         self.mixing_features = (
-            params_in.mixing_features if params_in else "subcategory_id"
+            params_in.mixing_features if params_in else MIXING_FEATURE
         )
         self.include_numericals = True
 
@@ -185,7 +186,7 @@ class Recommendation:
 
         def get_recommendable_offers(self) -> List[Dict[str, Any]]:
             start = time.time()
-            order_query = "is_geolocated ASC, booking_number DESC"
+            order_query = "is_geolocated DESC, booking_number DESC"
             query = text(
                 RecommendableOffersQueryBuilder(
                     self, RECOMMENDABLE_OFFER_LIMIT
@@ -238,8 +239,8 @@ class Recommendation:
         def get_scored_offers(self) -> List[Dict[str, Any]]:
             order_query = (
                 f"""(subcategory_id in ({', '.join([f"'{category}'" for category in self.cold_start_categories])})) DESC, booking_number DESC"""
-                if self.cold_start_categories
-                else "is_geolocated ASC, booking_number DESC"
+                if len(self.cold_start_categories) > 0
+                else "is_geolocated DESC, booking_number DESC"
             )
             recommendations_query = text(
                 RecommendableOffersQueryBuilder(

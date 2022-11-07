@@ -9,8 +9,6 @@ COPY api-requirements.txt ./
 
 COPY src/pcreco/ ./pcreco/
 
-# Install production dependencies.
 RUN pip install -r api-requirements.txt
 
-
-CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 app:app
+CMD exec gunicorn --bind :$PORT --workers 2 --threads 8 --preload --timeout 0 app:app

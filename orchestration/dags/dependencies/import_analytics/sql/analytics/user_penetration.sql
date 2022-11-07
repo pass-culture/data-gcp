@@ -9,7 +9,7 @@ with population_dpt as (
       sum(population) as population
     FROM `{{ bigquery_analytics_dataset }}.population_age_and_department_france_details` pop
     LEFT JOIN `{{ bigquery_analytics_dataset }}.region_department` dep	on dep.num_dep = pop.department_code
-    WHERE pop.current_year in (2020, 2021, 2022) and cast(age as int) BETWEEN 15 AND 20
+    WHERE pop.current_year in (2020, 2021, 2022) and cast(age as int) BETWEEN 15 AND 25
     GROUP BY 1,2,3,4,5,6
   ),
 
@@ -31,9 +31,12 @@ SELECT
   pop.decimal_age,
   pop.department_code,
   ub.total_users,
-  case when decimal_age >= 15 and decimal_age < 18 then "15_17" else "18_20" end as age_range,
+  CASE
+   WHEN decimal_age >= 15 AND decimal_age < 18 THEN "15_17" 
+   WHEN decimal_age >= 18 AND decimal_age < 20 THEN "18_19" 
+  ELSE "20_25"
+  END AS age_range,
   population
-
 FROM population_dpt pop
 LEFT JOIN user_booking ub on 
     pop.active_month = ub.active_month

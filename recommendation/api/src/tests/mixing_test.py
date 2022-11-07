@@ -6,8 +6,8 @@ from numpy.testing import assert_array_equal
 from typing import Any
 
 from sqlalchemy import false
-from pcreco.core.utils.diversification import (
-    order_offers_by_score_and_diversify_categories,
+from pcreco.core.utils.mixing import (
+    order_offers_by_score_and_diversify_features,
 )
 
 ENV_SHORT_NAME = os.getenv("ENV_SHORT_NAME")
@@ -32,5 +32,5 @@ class DiversificationTest:
     ):
         assert_array_equal(
             mock_expected_output,
-            order_offers_by_score_and_diversify_categories(mock_scored_offers),
+            order_offers_by_score_and_diversify_features(mock_scored_offers),
         )

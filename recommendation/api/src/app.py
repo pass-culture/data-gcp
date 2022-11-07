@@ -89,25 +89,33 @@ def health_check_iris_venues_mv_status():
 
 @app.route("/recommendation/<user_id>", methods=["GET", "POST"])
 def recommendation(user_id: int):
+    call_id = uuid.uuid4()
     if request.args.get("token", None) != API_TOKEN:
         return "Forbidden", 403
 
-    longitude = request.args.get("longitude", None)
-    latitude = request.args.get("latitude", None)
-    post_args_json = request.get_json() if request.method == "POST" else None
-    user = User(user_id, longitude, latitude)
-    input_reco = PlaylistParamsIn(post_args_json) if post_args_json else None
-    scoring = Recommendation(user, params_in=input_reco)
+    internal = parse_internal(request)
+    longitude, latitude, geo_located = parse_geolocation(request)
+    input_reco = parse_params(request)
 
+    user = User(user_id, call_id, longitude, latitude)
+    scoring = Recommendation(user, params_in=input_reco)
     user_recommendations = scoring.get_scoring()
-    scoring.save_recommendation(user_recommendations)
+
+    if not internal:
+        scoring.save_recommendation(user_recommendations)
+
     return jsonify(
         {
             "recommended_offers": user_recommendations,
-            "AB_test": user.group_id if AB_TESTING else "default",
-            "reco_origin": "cold_start" if scoring.iscoldstart else "algo",
-            "model_version": scoring.scoring.model_version,
-            "model_name": scoring.scoring.model_display_name,
+            "params": {
+                "reco_origin": "cold_start" if scoring.iscoldstart else "algo",
+                "model_name": scoring.scoring.model_display_name,
+                "model_version": scoring.scoring.model_version,
+                "ab_test": user.group_id if AB_TESTING else "default",
+                "geo_located": geo_located,
+                "filtered": input_reco.has_conditions if input_reco else False,
+                "call_id": call_id,
+            },
         }
     )
 
@@ -202,4 +210,4 @@ def similar_offers(offer_id: str):
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
+    app.run(debug=False, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))

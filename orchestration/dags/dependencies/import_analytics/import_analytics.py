@@ -6,16 +6,16 @@ ANALYTICS_SQL_PATH = f"dependencies/import_analytics/sql/analytics"
 CLEAN_SQL_PATH = f"dependencies/import_analytics/sql/clean"
 
 clean_tables = {
-    "clean_iris_venues": {
-        "sql": f"{CLEAN_SQL_PATH}/iris_venues.sql",
+    "clean_iris_venues_in_shape": {
+        "sql": f"{CLEAN_SQL_PATH}/iris_venues_in_shape.sql",
         "destination_dataset": "{{ bigquery_clean_dataset }}",
-        "destination_table": "iris_venues",
-        "params": {"iris_distance": 50000 if ENV_SHORT_NAME != "dev" else 10000},
+        "destination_table": "iris_venues_in_shape",
     },
-    "clean_iris_venues_raw": {
-        "sql": f"{CLEAN_SQL_PATH}/iris_venues_raw.sql",
+    "clean_iris_venues_at_radius": {
+        "sql": f"{CLEAN_SQL_PATH}/iris_venues_at_radius.sql",
         "destination_dataset": "{{ bigquery_clean_dataset }}",
-        "destination_table": "iris_venues_raw",
+        "destination_table": "iris_venues_at_radius",
+        "params": {"iris_distance": 150000 if ENV_SHORT_NAME != "dev" else 20000},
     },
 }
 
@@ -83,10 +83,15 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "depends": ["enriched_offer_data"],
     },
-    "iris_venues": {
-        "sql": f"{ANALYTICS_SQL_PATH}/iris_venues.sql",
+    "iris_venues_in_shape": {
+        "sql": f"{ANALYTICS_SQL_PATH}/iris_venues_in_shape.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "depends": ["clean_iris_venues"],
+        "depends": ["clean_iris_venues_in_shape"],
+    },
+    "iris_venues_at_radius": {
+        "sql": f"{ANALYTICS_SQL_PATH}/iris_venues_at_radius.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "depends": ["clean_iris_venues_at_radius"],
     },
     "isbn_editor": {
         "sql": f"{ANALYTICS_SQL_PATH}/isbn_editor.sql",
@@ -119,19 +124,29 @@ analytics_tables = {
         "sql": f"{ANALYTICS_SQL_PATH}/recommendable_offers_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "recommendable_offers_data",
-        "depends": ["enriched_offer_data", "offer_with_mediation"],
+        "depends": [
+            "enriched_venue_data",
+            "enriched_offer_data",
+            "offer_with_mediation",
+        ],
     },
     "top_items_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/top_items_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "top_items_data",
-        "depends": ["recommendable_offers_data", "iris_venues"],
+        "depends": ["recommendable_offers_data", "iris_venues_at_radius"],
     },
     "top_items_in_iris_shape": {
         "sql": f"{ANALYTICS_SQL_PATH}/top_items_in_iris_shape.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "top_items_in_iris_shape",
-        "depends": ["top_items_data", "clean_iris_venues_raw"],
+        "depends": ["top_items_data", "iris_venues_in_shape"],
+    },
+    "top_items_not_geolocated": {
+        "sql": f"{ANALYTICS_SQL_PATH}/top_items_not_geolocated.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "top_items_not_geolocated",
+        "depends": ["top_items_data"],
     },
     "top_items_out_iris_shape": {
         "sql": f"{ANALYTICS_SQL_PATH}/top_items_out_iris_shape.sql",
@@ -143,7 +158,11 @@ analytics_tables = {
         "sql": f"{ANALYTICS_SQL_PATH}/recommendable_offers_per_iris_shape.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "recommendable_offers_per_iris_shape",
-        "depends": ["top_items_in_iris_shape", "top_items_out_iris_shape"],
+        "depends": [
+            "top_items_in_iris_shape",
+            "top_items_out_iris_shape",
+            "top_items_not_geolocated",
+        ],
     },
     "non_recommendable_offers_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/non_recommendable_offers_data.sql",

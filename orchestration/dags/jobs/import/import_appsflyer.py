@@ -10,6 +10,7 @@ from common.utils import depends_loop
 from common import macros
 from common.config import ENV_SHORT_NAME, GCP_PROJECT
 from common.config import DAG_FOLDER
+import json
 from common.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT,
@@ -51,8 +52,11 @@ service_account_token = PythonOperator(
     dag=dag,
 )
 
-import_data_to_bigquery = SimpleHttpOperator(
-    task_id="import_appsflyer_data_to_bigquery",
+table_defs = {"activity_report": 56, "daily_report": 56, "in_app_event_report": 28}
+
+
+activity_report_op = SimpleHttpOperator(
+    task_id=f"import_activity_report_data_to_bigquery",
     method="POST",
     http_conn_id="http_gcp_cloud_function",
     endpoint=f"appsflyer_import_{ENV_SHORT_NAME}",
@@ -61,8 +65,41 @@ import_data_to_bigquery = SimpleHttpOperator(
         "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_appsflyer_service_account_token', key='return_value')}}",
     },
     log_response=True,
+    data=json.dumps({"table_name": "activity_report", "n_days": 56}),
     dag=dag,
 )
+
+
+daily_report_op = SimpleHttpOperator(
+    task_id=f"import_daily_report_data_to_bigquery",
+    method="POST",
+    http_conn_id="http_gcp_cloud_function",
+    endpoint=f"appsflyer_import_{ENV_SHORT_NAME}",
+    headers={
+        "Content-Type": "application/json",
+        "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_appsflyer_service_account_token', key='return_value')}}",
+    },
+    log_response=True,
+    data=json.dumps({"table_name": "daily_report", "n_days": 56}),
+    dag=dag,
+)
+
+
+in_app_event_report_op = SimpleHttpOperator(
+    task_id=f"import_in_app_event_report_data_to_bigquery",
+    method="POST",
+    http_conn_id="http_gcp_cloud_function",
+    endpoint=f"appsflyer_import_{ENV_SHORT_NAME}",
+    headers={
+        "Content-Type": "application/json",
+        "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_appsflyer_service_account_token', key='return_value')}}",
+    },
+    log_response=True,
+    data=json.dumps({"table_name": "in_app_event_report", "n_days": 28}),
+    dag=dag,
+)
+
+
 start = DummyOperator(task_id="start", dag=dag)
 
 table_jobs = {}
@@ -76,5 +113,11 @@ for table, job_params in analytics_tables.items():
 table_jobs = depends_loop(table_jobs, start)
 end = DummyOperator(task_id="end", dag=dag)
 
-service_account_token >> import_data_to_bigquery >> start
+(
+    service_account_token
+    >> daily_report_op
+    >> activity_report_op
+    >> in_app_event_report_op
+    >> start
+)
 table_jobs >> end

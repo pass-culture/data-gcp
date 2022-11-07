@@ -26,7 +26,7 @@ def main():
                 for table in [
                     "booking",
                     "offer",
-                    "iris_venues",
+                    "iris_venues_at_radius",
                     "stock",
                     "mediation",
                     "venue",

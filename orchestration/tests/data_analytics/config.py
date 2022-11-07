@@ -119,6 +119,7 @@ BIGQUERY_SCHEMAS = {
         "offerer_siren": "STRING",
         "offerer_last_provider_id": "STRING",
         "offerer_fields_updated": "STRING",
+        "offerer_validation_status": "STRING",
     },
     "applicative_database_payment": {
         "id": "STRING",

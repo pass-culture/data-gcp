@@ -1,5 +1,5 @@
 SELECT 
-  date(r.execution_date) as date, 
+  date(r.event_date) as date, 
   CASE 
     WHEN r.media_source = "bytedanceglobal_int" THEN 'TikTok'
     WHEN r.media_source = "snapchat_int" THEN 'Snapchat'
@@ -8,6 +8,8 @@ SELECT
     WHEN r.media_source = "restricted" THEN "Unknown"
   ELSE r.media_source END AS media_source,
   IF(r.campaign = 'nan', 'Unknown', r.campaign) as campaign,
+  r.ad,
+  r.ad_id,
   r.event_name,
   r.appsflyer_id,
   u.user_id,

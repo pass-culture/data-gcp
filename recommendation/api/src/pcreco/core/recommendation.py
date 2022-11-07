@@ -4,20 +4,28 @@ import random
 from sqlalchemy import text
 from pcreco.core.user import User
 from pcreco.core.utils.cold_start_status import get_cold_start_status
-from pcreco.core.utils.diversification import (
-    order_offers_by_score_and_diversify_categories,
+from pcreco.core.utils.mixing import (
+    order_offers_by_score_and_diversify_features,
 )
 from pcreco.models.reco.playlist_params import PlaylistParamsIn
+from pcreco.core.utils.query_builder import RecommendableOffersQueryBuilder
 from pcreco.utils.db.db_connection import get_db
 from pcreco.core.utils.vertex_ai import predict_model
 from pcreco.utils.env_vars import (
     NUMBER_OF_PRESELECTED_OFFERS,
+    NUMBER_OF_RECOMMENDATIONS,
     ACTIVE_MODEL,
     RECO_ENDPOINT_NAME,
     AB_TESTING,
     AB_TEST_MODEL_DICT,
     RECOMMENDABLE_OFFER_LIMIT,
+    COLD_START_RECOMMENDABLE_OFFER_LIMIT,
+    NUMBER_OF_PRESELECTED_OFFERS,
+    NUMBER_OF_RECOMMENDATIONS,
     SHUFFLE_RECOMMENDATION,
+    MIXING_RECOMMENDATION,
+    MIXING_FEATURE,
+    DEFAULT_RECO_RADIUS,
     log_duration,
 )
 import datetime
@@ -35,6 +43,22 @@ class Recommendation:
         self.iscoldstart = (
             False if self.force_model else get_cold_start_status(self.user)
         )
+
+        self.reco_radius = params_in.reco_radius if params_in else DEFAULT_RECO_RADIUS
+        self.reco_is_shuffle = (
+            params_in.reco_is_shuffle if params_in else SHUFFLE_RECOMMENDATION
+        )
+        self.nb_reco_display = (
+            params_in.nb_reco_display if params_in else NUMBER_OF_RECOMMENDATIONS
+        )
+        self.is_reco_mixed = (
+            params_in.is_reco_mixed if params_in else MIXING_RECOMMENDATION
+        )
+        self.mixing_features = (
+            params_in.mixing_features if params_in else MIXING_FEATURE
+        )
+        self.include_numericals = True
+
         self.model_name = self.get_model_name()
         self.scoring = self.get_scoring_method()
 
@@ -63,12 +87,21 @@ class Recommendation:
 
     def get_scoring(self) -> List[str]:
         # score the offers
-        final_recommendations = order_offers_by_score_and_diversify_categories(
-            sorted(
+        if self.is_reco_mixed:
+            final_recommendations = order_offers_by_score_and_diversify_features(
+                offers=sorted(
+                    self.scoring.get_scored_offers(),
+                    key=lambda k: k["score"],
+                    reverse=True,
+                )[:NUMBER_OF_PRESELECTED_OFFERS],
+                shuffle_recommendation=self.reco_is_shuffle,
+                feature=self.mixing_features,
+                nb_reco_display=self.nb_reco_display,
+            )
+        else:
+            final_recommendations = sorted(
                 self.scoring.get_scored_offers(), key=lambda k: k["score"], reverse=True
-            )[:NUMBER_OF_PRESELECTED_OFFERS],
-            SHUFFLE_RECOMMENDATION,
-        )
+            )[: self.nb_reco_display]
 
         return final_recommendations
 
@@ -110,9 +143,11 @@ class Recommendation:
         def __init__(self, scoring):
             self.user = scoring.user
             self.params_in_filters = scoring.params_in_filters
+            self.reco_radius = scoring.reco_radius
             self.model_name = scoring.model_name
             self.model_display_name = None
             self.model_version = None
+            self.include_numericals = scoring.include_numericals
             self.recommendable_offers = self.get_recommendable_offers()
 
         def get_scored_offers(self) -> List[Dict[str, Any]]:
@@ -151,7 +186,12 @@ class Recommendation:
 
         def get_recommendable_offers(self) -> List[Dict[str, Any]]:
             start = time.time()
-            query = text(self._get_intermediate_query())
+            order_query = "is_geolocated DESC, booking_number DESC"
+            query = text(
+                RecommendableOffersQueryBuilder(
+                    self, RECOMMENDABLE_OFFER_LIMIT
+                ).generate_query(order_query)
+            )
             connection = get_db()
             query_result = connection.execute(
                 query,
@@ -167,76 +207,12 @@ class Recommendation:
                     "category": row[1],
                     "subcategory_id": row[2],
                     "search_group_name": row[3],
-                    "url": row[4],
-                    "is_numerical": row[5],
-                    "item_id": row[6],
+                    "item_id": row[4],
                 }
                 for row in query_result
             ]
             log_duration("get_recommendable_offers", start)
             return user_recommendation
-
-        def _get_intermediate_query(self) -> str:
-            geoloc_filter = (
-                f"""( ro.venue_id IN (SELECT "venue_id" FROM iris_venues_mv WHERE "iris_id" = :user_iris_id) OR is_national = True OR url IS NOT NULL)"""
-                if self.user.iris_id
-                else "(is_national = True or url IS NOT NULL)"
-            )
-            query = f"""
-                WITH reco_offers_with_distance_to_user AS
-                (
-                SELECT  ro.offer_id,
-                        ro.category,
-                        ro.subcategory_id,
-                        ro.search_group_name,
-                        ro.url,
-                        ro.url is not null as is_numerical,
-                        ro.item_id,
-                        ro.venue_id,
-                        v.venue_latitude,
-                        v.venue_longitude,
-                        CASE
-                                WHEN (              venue_latitude IS NOT NULL
-                                            AND     :user_latitude IS NOT NULL 
-                                            AND     ro.item_count > 1 ) THEN 
-                                            st_distance(st_point(:user_longitude,:user_latitude)::geometry, v.venue_point::geometry, FALSE )
-                                ELSE NULL
-                        END AS user_distance
-                FROM  {self.user.recommendable_offer_table} ro
-                left JOIN   (
-                    SELECT  imv.venue_id,
-                            imv.venue_latitude,
-                            imv.venue_longitude,
-                            imv.venue_point,
-                            imv.iris_id
-                    FROM   iris_venues_mv imv
-                    WHERE  iris_id= :user_iris_id
-                ) v ON ro.venue_id = v.venue_id 
-                INNER JOIN top_items_mv ti on ti.item_id = ro.item_id and ti.iris_id=v.iris_id
-                AND {geoloc_filter}
-                WHERE offer_id NOT IN (
-                            SELECT offer_id
-                            FROM   non_recommendable_offers
-                            WHERE  user_id = :user_id
-                        )
-                AND ro.booking_number > 2
-                ),
-                reco_offers_ranked_by_distance AS
-                (
-                    SELECT  ro.offer_id,
-                            ro.category,
-                            ro.subcategory_id,
-                            ro.search_group_name,
-                            ro.url,
-                            ro.is_numerical,
-                            ro.item_id,
-                            row_number() OVER ( partition BY item_id ORDER BY user_distance ASC ) AS rank
-                    FROM    reco_offers_with_distance_to_user ro 
-                )
-                SELECT * from reco_offers_ranked_by_distance where rank = 1 
-                limit {RECOMMENDABLE_OFFER_LIMIT};
-                """
-            return query
 
         def _predict_score(self, instances) -> List[List[float]]:
             start = time.time()
@@ -254,58 +230,24 @@ class Recommendation:
         def __init__(self, scoring):
             self.user = scoring.user
             self.params_in_filters = scoring.params_in_filters
+            self.reco_radius = scoring.reco_radius
             self.cold_start_categories = self.get_cold_start_categories()
+            self.include_numericals = scoring.include_numericals
             self.model_version = None
             self.model_display_name = None
 
         def get_scored_offers(self) -> List[Dict[str, Any]]:
             order_query = (
-                f"""ORDER BY (subcategory_id in ({', '.join([f"'{category}'" for category in self.cold_start_categories])})) DESC, booking_number DESC"""
-                if self.cold_start_categories
-                else "ORDER BY booking_number DESC"
-            )
-
-            where_clause = (
-                f"""(venue_id IN (SELECT "venue_id" FROM iris_venues_mv WHERE "iris_id" = :user_iris_id) OR is_national = True OR url IS NOT NULL)"""
-                if self.user.iris_id
-                else "(is_national = True or url IS NOT NULL)"
+                f"""(subcategory_id in ({', '.join([f"'{category}'" for category in self.cold_start_categories])})) DESC, booking_number DESC"""
+                if len(self.cold_start_categories) > 0
+                else "is_geolocated DESC, booking_number DESC"
             )
             recommendations_query = text(
-                f"""
-                with reco_offers as(
-                SELECT ro.offer_id, ro.category, ro.subcategory_id, ro.search_group_name, ro.url, ro.item_id, ro.venue_id, ro.booking_number
-                FROM {self.user.recommendable_offer_table} ro
-                WHERE offer_id NOT IN
-                    (
-                        SELECT offer_id
-                        FROM non_recommendable_offers
-                        WHERE user_id = :user_id
-                    )
-                {self.params_in_filters}
-                AND {where_clause}
-                ),
-                reco_offers_with_distance_to_user as(
-                    SELECT ro.offer_id, ro.category, ro.subcategory_id, ro.search_group_name, ro.url, ro.item_id, ro.venue_id, v.venue_latitude, v.venue_longitude,ro.booking_number,
-                    CASE WHEN (v.venue_latitude is not null and :user_latitude is not null) THEN ST_Distance(ST_Point(:user_longitude,:user_latitude), ST_Point(v.venue_longitude, v.venue_latitude)) ELSE null END as user_distance
-                    FROM reco_offers ro
-                    LEFT JOIN (select ivm.venue_id,ivm.venue_latitude,ivm.venue_longitude from iris_venues_mv ivm where iris_id=:user_iris_id) v ON ro.venue_id = v.venue_id
-                ),
-                reco_offers_ranked_by_distance as(
-                    SELECT ro.offer_id, ro.category, ro.subcategory_id, ro.search_group_name, ro.url, ro.item_id, ro.booking_number,
-                    RANK() OVER (
-                            PARTITION BY item_id
-                            ORDER BY
-                                user_distance ASC
-                            ) as rank
-                    FROM reco_offers_with_distance_to_user ro
-                )
-                SELECT  ro.offer_id, ro.category, ro.subcategory_id, ro.search_group_name, ro.url, ro.item_id
-                FROM reco_offers_ranked_by_distance ro
-                WHERE ro.rank=1
-                {order_query}
-                LIMIT :number_of_preselected_offers;
-                """
+                RecommendableOffersQueryBuilder(
+                    self, COLD_START_RECOMMENDABLE_OFFER_LIMIT
+                ).generate_query(order_query)
             )
+
             connection = get_db()
             query_result = connection.execute(
                 recommendations_query,
@@ -322,8 +264,7 @@ class Recommendation:
                     "category": row[1],
                     "subcategory_id": row[2],
                     "search_group_name": row[3],
-                    "url": row[4],
-                    "item_id": row[5],
+                    "item_id": row[4],
                     "score": random.random(),
                 }
                 for row in query_result

@@ -35,7 +35,7 @@ metabase_costs AS (
 
 metabase_queries AS (
     SELECT 
-        date(started_at) as date,
+        date(execution_date) as date,
         TO_HEX(`hash`) as metabase_hash, 
         dashboard_id,
         card_id,

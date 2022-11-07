@@ -8,6 +8,13 @@ WITH get_recommendable_offers AS(
         subcategories.category_id AS category,
         subcategories.search_group_name AS search_group_name,
         offer.offer_name AS name,
+        offer.offer_is_duo AS offer_is_duo,
+        offer.movie_type AS movie_type,
+        offer.type AS offer_type_id,
+        type_ref.label as offer_type_label,
+        offer.subType AS offer_sub_type_id,
+        sub_type_ref.sub_label as offer_sub_type_label,
+        rayon_ref.macro_rayon as macro_rayon,
         offer.URL AS url,
         offer.is_national AS is_national,
         offer.offer_creation_date AS offer_creation_date,
@@ -47,9 +54,9 @@ WITH get_recommendable_offers AS(
             SELECT
                 *
             FROM
-                `{{ bigquery_clean_dataset }}`.applicative_database_venue venue
+                `{{ bigquery_analytics_dataset }}`.enriched_venue_data venue
             WHERE
-                venue_validation_token IS NULL
+                venue.offerer_validation_status = 'VALIDATED'
         ) venue ON offer.venue_id = venue.venue_id
         JOIN (
             SELECT
@@ -81,6 +88,12 @@ WITH get_recommendable_offers AS(
             GROUP BY item_id
         ) item_counts on item_counts.item_id = offer.item_id
         JOIN `{{ bigquery_analytics_dataset }}`.offer_with_mediation om on offer.offer_id=om.offer_id
+        LEFT JOIN (SELECT DISTINCT type, label FROM `{{ bigquery_analytics_dataset }}`.offer_types) type_ref
+            ON offer.type = cast(type_ref.type as string)
+        LEFT JOIN (SELECT DISTINCT sub_type, sub_label FROM `{{ bigquery_analytics_dataset }}`.offer_types) sub_type_ref
+            ON offer.subType = cast(sub_type_ref.sub_type as string)
+        LEFT JOIN `{{ bigquery_analytics_dataset }}`.macro_rayons AS rayon_ref
+            ON offer.rayon = rayon_ref.rayon
     WHERE
         offer.is_active = TRUE
         AND offer.offer_is_bookable = TRUE

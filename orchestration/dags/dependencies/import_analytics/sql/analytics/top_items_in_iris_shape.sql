@@ -1,5 +1,4 @@
-CREATE
-OR REPLACE TABLE `{{ bigquery_analytics_dataset }}.top_items_in_iris_shape` AS WITH top_items_iris as(
+WITH top_items_iris as(
     SELECT
         ti.item_id,
         ti.iris_id,
@@ -14,9 +13,10 @@ top_items_inshape as (
         ro.venue_id,
     FROM
         top_items_iris ti
-        INNER JOIN `{{ bigquery_clean_dataset }}.iris_venues_raw` ivr on ti.iris_id = ivr.irisId
+        INNER JOIN `{{ bigquery_clean_dataset }}.iris_venues_in_shape` ivr on ti.iris_id = ivr.irisId
         INNER JOIN `{{ bigquery_analytics_dataset }}.recommendable_offers_data` ro ON ti.item_id = ro.item_id
         and ivr.venueId = ro.venue_id
+        and not ro.is_national and ro.url IS NULL
     group by
         1,
         2,

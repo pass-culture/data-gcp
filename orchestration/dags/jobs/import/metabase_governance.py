@@ -14,7 +14,12 @@ from dependencies.metabase.import_metabase import (
     from_external,
     analytics_tables,
 )
-from common.config import GCP_PROJECT, DAG_FOLDER, METABASE_EXTERNAL_CONNECTION_ID, ENV_SHORT_NAME
+from common.config import (
+    GCP_PROJECT,
+    DAG_FOLDER,
+    METABASE_EXTERNAL_CONNECTION_ID,
+    ENV_SHORT_NAME,
+)
 from common.config import GCP_PROJECT, DAG_FOLDER
 from common.alerts import task_fail_slack_alert
 
@@ -105,10 +110,12 @@ archive_metabase_cards_op = SimpleHttpOperator(
 end = DummyOperator(task_id="end", dag=dag)
 
 
-(start 
->> import_tables_to_raw_tasks 
->> end_raw 
->> analytics_table_tasks 
->> service_account_token
->> archive_metabase_cards_op 
->> end)
+(
+    start
+    >> import_tables_to_raw_tasks
+    >> end_raw
+    >> analytics_table_tasks
+    >> service_account_token
+    >> archive_metabase_cards_op
+    >> end
+)

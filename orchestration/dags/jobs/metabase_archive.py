@@ -7,16 +7,10 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python import PythonOperator
 from airflow.providers.http.operators.http import SimpleHttpOperator
 
-from common.utils import (
-    getting_service_account_token
-)
+from common.utils import getting_service_account_token
 
 from common.alerts import task_fail_slack_alert
-from common.config import (
-    GCP_PROJECT,
-    DAG_FOLDER,
-    ENV_SHORT_NAME
-)
+from common.config import GCP_PROJECT, DAG_FOLDER, ENV_SHORT_NAME
 
 from common import macros
 
@@ -65,7 +59,7 @@ with DAG(
         # data=json.dumps({}),
         dag=dag,
     )
-    
+
     end = DummyOperator(task_id="end", dag=dag)
 
     start >> service_account_token >> archive_metabase_cards_op >> end

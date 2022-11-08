@@ -1,20 +1,27 @@
 import datetime
 from airflow import DAG
+from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.python import PythonOperator
+from airflow.providers.http.operators.http import SimpleHttpOperator
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryExecuteQueryOperator,
 )
-from airflow.operators.dummy_operator import DummyOperator
+
 from common import macros
-from common.utils import depends_loop
+from common.utils import depends_loop, getting_service_account_token
 from dependencies.metabase.import_metabase import (
     import_tables,
     from_external,
     analytics_tables,
 )
-from common.config import METABASE_EXTERNAL_CONNECTION_ID
+from common.config import (
+    GCP_PROJECT,
+    DAG_FOLDER,
+    METABASE_EXTERNAL_CONNECTION_ID,
+    ENV_SHORT_NAME,
+)
 from common.config import GCP_PROJECT, DAG_FOLDER
 from common.alerts import task_fail_slack_alert
-
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),
@@ -25,9 +32,9 @@ default_dag_args = {
 }
 
 dag = DAG(
-    "import_metabase",
+    "metabase_governance",
     default_args=default_dag_args,
-    description="Import metabase tables from CloudSQL",
+    description="Import metabase tables from CloudSQL & archive old cards",
     schedule_interval="00 01 * * *",
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
@@ -77,7 +84,38 @@ for name, params in analytics_tables.items():
     # import_tables_to_analytics_tasks.append(task)
 
 analytics_table_tasks = depends_loop(analytics_table_jobs, end_raw)
+
+service_account_token = PythonOperator(
+    task_id="getting_metabase_archiving_service_account_token",
+    python_callable=getting_service_account_token,
+    op_kwargs={
+        "function_name": f"metabase_archiving_{ENV_SHORT_NAME}",
+    },
+    dag=dag,
+)
+
+archive_metabase_cards_op = SimpleHttpOperator(
+    task_id=f"archive_metabase_cards",
+    method="POST",
+    http_conn_id="http_gcp_cloud_function",
+    endpoint=f"metabase_archiving_{ENV_SHORT_NAME}",
+    headers={
+        "Content-Type": "application/json",
+        "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_metabase_archiving_service_account_token', key='return_value')}}",
+    },
+    log_response=True,
+    dag=dag,
+)
+
 end = DummyOperator(task_id="end", dag=dag)
 
 
-(start >> import_tables_to_raw_tasks >> end_raw >> analytics_table_tasks >> end)
+(
+    start
+    >> import_tables_to_raw_tasks
+    >> end_raw
+    >> analytics_table_tasks
+    >> service_account_token
+    >> archive_metabase_cards_op
+    >> end
+)

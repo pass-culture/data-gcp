@@ -23,10 +23,11 @@ WITH selected_items AS (
 recommendable_offers_data AS (
     SELECT 
         *,
-        ROW_NUMBER() OVER (PARTITION BY offer_id, ORDER BY stock_price, stock_beginning_date ASC) as stock_rank,
+        ROW_NUMBER() OVER (PARTITION BY offer_id ORDER BY stock_price, stock_beginning_date ASC) as stock_rank,
     FROM (
         SELECT 
             offer_id,
+            product_id,
             offer_creation_date,
             DATE(stock_beginning_date) as stock_beginning_date,
             MAX(stock_price) as stock_price,
@@ -49,7 +50,7 @@ recommendable_offers_data AS (
         
         FROM `{{ bigquery_analytics_dataset }}.recommendable_offers_data` 
         WHERE (stock_beginning_date > CURRENT_DATE) OR (stock_beginning_date IS NULL)
-        GROUP BY 1,2,3
+        GROUP BY 1,2,3,4
     )
 )
 
@@ -96,11 +97,11 @@ INNER JOIN recommendable_offers_data ro ON ro.offer_id = si.offer_id AND stock_r
 LEFT JOIN
      `{{ bigquery_analytics_dataset }}.iris_venues_at_radius` v 
      ON
-        ro.iris_id   =   v.iris_id
-    AND ro.venue_id =   v.venue_id
+        si.iris_id   =  v.irisId
+    AND si.venue_id =   v.venueId
     
     
 GROUP by
-    1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28
+    1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29
 --- max volume per iris
 QUALIFY ROW_NUMBER() OVER (PARTITION BY iris_id ORDER BY si.venue_distance_to_iris) < 10000

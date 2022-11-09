@@ -23,10 +23,10 @@ def create_pool():
             database=SQL_BASE,
             query=query_string,
         ),
-        pool_size=20,
+        pool_size=2,
         max_overflow=2,
         pool_timeout=30,
-        pool_recycle=1800,
+        pool_recycle=90,
     )
 
 

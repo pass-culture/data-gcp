@@ -22,7 +22,7 @@ TEST_DATABASE_CONFIG = {
 
 def test_get_iris_from_coordinates(setup_database: Any):
     # Given
-    with patch("pcreco.utils.db.db_connection.__get_db") as connection_mock:
+    with patch("pcreco.utils.db.db_connection.__get_session") as connection_mock:
         connection_mock.return_value = setup_database
 
         # When
@@ -36,7 +36,7 @@ def test_get_iris_from_coordinates(setup_database: Any):
 
 def test_get_iris_from_coordinates_without_coordinates(setup_database: Any):
     # Given
-    with patch("pcreco.utils.db.db_connection.__get_db") as connection_mock:
+    with patch("pcreco.utils.db.db_connection.__get_session") as connection_mock:
         connection_mock.return_value = setup_database
 
         # When
@@ -50,7 +50,7 @@ def test_get_iris_from_coordinates_without_coordinates(setup_database: Any):
 
 def test_get_iris_from_coordinates_not_in_france(setup_database: Any):
     # Given
-    with patch("pcreco.utils.db.db_connection.__get_db") as connection_mock:
+    with patch("pcreco.utils.db.db_connection.__get_session") as connection_mock:
         connection_mock.return_value = setup_database
 
         # When

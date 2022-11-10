@@ -48,7 +48,7 @@ dag = DAG(
     description="Import tables from CloudSQL and enrich data for create dashboards with Metabase",
     schedule_interval="00 01 * * *",
     catchup=False,
-    dagrun_timeout=datetime.timedelta(minutes=120),
+    dagrun_timeout=datetime.timedelta(minutes=240),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
 )

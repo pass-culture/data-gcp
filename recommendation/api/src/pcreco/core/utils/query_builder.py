@@ -139,6 +139,18 @@ class RecommendableOffersQueryBuilder:
     def _get_reco_offers(
         self, geoloc_filter, user_profile_filter, export_table_name
     ) -> str:
+
+        iris_distance = (
+            "AND ("
+            + " OR ".join(
+                [
+                    f"venue_distance_to_iris_bucket='{iris_dist}'"
+                    for iris_dist in self.reco_model.reco_radius
+                ]
+            )
+            + ")\n"
+        )
+
         return f"""
                 {export_table_name} AS  (
                         SELECT ro.offer_id
@@ -152,17 +164,12 @@ class RecommendableOffersQueryBuilder:
                         ,   ro.subcategory_id
                         ,   ro.search_group_name
                         ,   ro.is_geolocated
-                        ,   v.venue_latitude
-                        ,   v.venue_longitude
+                        ,   ro.venue_latitude
+                        ,   ro.venue_longitude
                         FROM
                             {self.reco_model.user.recommendable_offer_table} ro
-                        LEFT JOIN
-                            iris_venues_mv  v
-                        ON
-                            ro.venue_id =   v.venue_id
-                        AND v.iris_id   =   ro.iris_id
                         WHERE {geoloc_filter}
-                        AND venue_distance_to_iris < {self.reco_model.reco_radius}
+                        {iris_distance}
                         AND offer_id    NOT IN  (
                                 SELECT
                                     offer_id
@@ -170,7 +177,7 @@ class RecommendableOffersQueryBuilder:
                                     non_recommendable_offers
                                 WHERE
                                     user_id =   :user_id
-                            )
+                        )
                         {self.reco_model.params_in_filters}
                         {user_profile_filter}
                         AND ro.stock_price < {self.reco_model.user.user_deposit_remaining_credit}

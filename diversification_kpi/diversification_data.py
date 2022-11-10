@@ -54,16 +54,32 @@ def get_data(batch, batch_size):
                     )
                 
                 
-                SELECT batch_users.user_id, bookings.booking_creation_date, bookings.booking_id, user_region_name, user_activity,
-                  REPLACE(REPLACE(user_civility, 'M.', 'M'),'Mme','F') as user_civility, 
-                  COALESCE(
-                    IF(bookings.physical_goods = True, 'physical', null),
-                    IF(bookings.digital_goods = True, 'digital', null),
-                    IF(bookings.event = True, 'event', null)
-                  ) as format,
-                  user_deposit_creation_date, user_total_deposit_amount, actual_amount_spent, offer.offer_id, booking_amount, user_department_code,
-                  bookings.offer_category_id as category, bookings.offer_subcategoryId as subcategory, offer.genres, offer.rayon, offer.type, offer.venue_id, offer.venue_name,
-                  qpi_answers.qpi_subcategories as qpi_subcategories
+                SELECT 
+                    batch_users.user_id
+                    , bookings.booking_creation_date
+                    , bookings.booking_id
+                    , user_region_name
+                    , user_activity
+                    , REPLACE(REPLACE(user_civility, 'M.', 'M'),'Mme','F') as user_civility
+                    , COALESCE(
+                        IF(bookings.physical_goods = True, 'physical', null),
+                        IF(bookings.digital_goods = True, 'digital', null),
+                        IF(bookings.event = True, 'event', null)
+                    ) as format
+                    , user_deposit_creation_date
+                    , user_total_deposit_amount
+                    , actual_amount_spent
+                    , offer.offer_id
+                    , booking_amount
+                    , user_department_code
+                    , bookings.offer_category_id as category
+                    , bookings.offer_subcategoryId as subcategory
+                    , offer.genres
+                    , offer.rayon
+                    , offer.type
+                    , offer.venue_id
+                    , offer.venue_name
+                    , qpi_answers.qpi_subcategories as qpi_subcategories
                 FROM batch_users
                 INNER JOIN bookings
                 ON batch_users.user_id = bookings.user_id

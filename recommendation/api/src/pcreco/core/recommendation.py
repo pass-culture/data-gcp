@@ -9,7 +9,7 @@ from pcreco.core.utils.mixing import (
 )
 from pcreco.models.reco.playlist_params import PlaylistParamsIn
 from pcreco.core.utils.query_builder import RecommendableOffersQueryBuilder
-from pcreco.utils.db.db_connection import get_db
+from pcreco.utils.db.db_connection import get_session
 from pcreco.core.utils.vertex_ai import predict_model
 from pcreco.utils.env_vars import (
     NUMBER_OF_PRESELECTED_OFFERS,
@@ -127,7 +127,7 @@ class Recommendation:
                     }
                 )
 
-            connection = get_db()
+            connection = get_session()
             connection.execute(
                 text(
                     """
@@ -192,7 +192,7 @@ class Recommendation:
                     self, RECOMMENDABLE_OFFER_LIMIT
                 ).generate_query(order_query)
             )
-            connection = get_db()
+            connection = get_session()
             query_result = connection.execute(
                 query,
                 user_id=str(self.user.id),
@@ -248,7 +248,7 @@ class Recommendation:
                 ).generate_query(order_query)
             )
 
-            connection = get_db()
+            connection = get_session()
             query_result = connection.execute(
                 recommendations_query,
                 user_iris_id=str(self.user.iris_id),
@@ -277,7 +277,7 @@ class Recommendation:
                 f"""SELECT subcategories FROM qpi_answers_mv WHERE user_id = :user_id;"""
             )
 
-            connection = get_db()
+            connection = get_session()
             query_result = connection.execute(
                 cold_start_query,
                 user_id=str(self.user.id),

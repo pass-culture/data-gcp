@@ -11,4 +11,4 @@ COPY src/pcreco/ ./pcreco/
 
 RUN pip install -r api-requirements.txt
 
-CMD exec gunicorn --bind :$PORT --workers 2 --threads 8 --preload --timeout 0 app:app
+CMD exec gunicorn --bind :$PORT --workers 1 --threads 10 --preload --timeout 0 app:app

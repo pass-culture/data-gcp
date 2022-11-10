@@ -1,15 +1,16 @@
 import os
 import re
 
-from flask import Flask, jsonify, make_response, request, g
+from flask import Flask, jsonify, make_response, request
 from flask_cors import CORS
 from pcreco.utils.secrets.access_gcp_secrets import access_secret
 from pcreco.utils.health_check_queries import get_materialized_view_status
-from pcreco.utils.db.db_connection import create_db_connection
+from pcreco.utils.db.engine import create_connection, close_connection
 from pcreco.core.user import User
 from pcreco.core.recommendation import Recommendation
 from pcreco.core.similar_offer import SimilarOffer
 from pcreco.models.reco.playlist_params import PlaylistParamsIn
+
 from pcreco.utils.env_vars import (
     AB_TESTING,
 )
@@ -33,15 +34,12 @@ CORS(
 
 @app.before_request
 def create_db_session():
-    g.db = create_db_connection()
+    create_connection()
 
 
 @app.teardown_request
 def close_db_session(exception):
-    try:
-        g.db.close()
-    except:
-        pass
+    close_connection()
 
 
 @app.route("/")

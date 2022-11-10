@@ -35,9 +35,9 @@ def calculate_diversification_per_feature(df_clean, features):
             feature_value = booking[feature]
             multiplicator = 1
 
-            # Use a unique venue for numerical bookings
-            if feature == "venue" and booking["format"] == "numerical":
-                feature_value = "numerical"
+            # Use a unique venue for digital bookings
+            if feature == "venue" and booking["format"] == "digital":
+                feature_value = "digital"
 
             # Calculate diversification for feature
             if df_clean.iloc[i - 1].user_id != booking.user_id or i == 0:

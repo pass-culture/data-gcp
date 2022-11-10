@@ -626,11 +626,6 @@ workflows:
           cloud-function-folder: contentful-function-source
           <<: *deploy_on_dev_commons
       - cloud-function-deploy:
-          name: typeform-webhook-cloud-function-deploy-dev
-          cloud-function-name: qpi_webhook_dev
-          cloud-function-folder: qpi-webhook-function-source
-          <<: *deploy_on_dev_commons
-      - cloud-function-deploy:
           name: siren-cloud-function-deploy-dev
           cloud-function-name: siren_import_dev
           cloud-function-folder: siren-function-source
@@ -678,7 +673,6 @@ workflows:
           context: Slack
           requires:
             - dev-composer-deploy
-            - typeform-cloud-function-deploy-dev
             - addresses-cloud-function-deploy-dev
             - downloads-cloud-function-deploy-dev
             - qualtrics-cloud-function-deploy-dev

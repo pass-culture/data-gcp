@@ -52,7 +52,7 @@ service_account_token = PythonOperator(
     dag=dag,
 )
 
-table_defs = {"activity_report": 56, "daily_report": 56, "in_app_event_report": 28}
+table_defs = {"activity_report": 28, "daily_report": 28, "in_app_event_report": 28}
 
 
 activity_report_op = SimpleHttpOperator(

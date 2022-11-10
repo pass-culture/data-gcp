@@ -214,7 +214,9 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
 
     yield connection
 
-    engine.execute("DROP MATERIALIZED VIEW IF EXISTS recommendable_offers CASCADE;")
+    engine.execute(
+        "DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_per_iris_shape_mv CASCADE;"
+    )
 
     engine.execute("DROP MATERIALIZED VIEW IF EXISTS non_recommendable_offers CASCADE;")
 

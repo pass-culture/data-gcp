@@ -17,7 +17,7 @@ from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
 )
 
 from common.alerts import task_fail_slack_alert
-from dependencies.import_typeform import QPI_ANSWERS_SCHEMA
+from dependencies.import_qpi import QPI_ANSWERS_SCHEMA, UNION_ALL_SQL
 from common.config import (
     GCP_PROJECT,
     DATA_GCS_BUCKET_NAME,
@@ -57,9 +57,9 @@ def verify_folder():
 
 
 with DAG(
-    "import_typeform_v1",
+    "import_qpi_answers_v1",
     default_args=default_args,
-    description="Importing new data from typeform every day.",
+    description="Importing new data from QPI every day.",
     schedule_interval="0 2 * * *",
     catchup=False,
     dagrun_timeout=timedelta(minutes=180),
@@ -166,6 +166,15 @@ with DAG(
         trigger_rule="none_failed_or_skipped",
     )
 
+    aggregated_past_qpi_answers = BigQueryExecuteQueryOperator(
+        task_id="aggregated_past_qpi_answers",
+        sql=UNION_ALL_SQL,
+        use_legacy_sql=False,
+        destination_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_ANALYTICS_DATASET}.enriched_aggregated_qpi_answers",
+        write_disposition="WRITE_TRUNCATE",
+        trigger_rule="none_failed_or_skipped",
+    )
+
     end = DummyOperator(task_id="end")
 
     (
@@ -179,6 +188,7 @@ with DAG(
         >> delete_temp_answer_table_raw
         >> enrich_qpi_answers
         >> clean_answers_duplicates
+        >> aggregated_past_qpi_answers
         >> end
     )
     (checking_folder_QPI >> empty >> end)

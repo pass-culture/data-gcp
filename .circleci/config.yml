@@ -218,37 +218,6 @@ workflows:
 
       # Cloud Function jobs
       # -------------------
-      - cloud-function-deploy:
-          name: typeform-cloud-function-deploy-stg
-          cloud-function-name: qpi_import_stg
-          cloud-function-folder: qpi-function-source
-          requires:
-            - linter
-          filters:
-            branches:
-              only:
-                - master
-          context:
-            - DATA_GCP
-            - DATA_GCP_EHP
-            - Slack
-          <<: *slack-fail-post-step
-
-      - cloud-function-deploy:
-          name: typeform-cloud-function-deploy-prod
-          cloud-function-name: qpi_import_prod
-          cloud-function-folder: qpi-function-source
-          requires:
-            - linter
-          filters:
-            branches:
-              only:
-                - production
-          context:
-            - DATA_GCP
-            - DATA_GCP_PROD
-            - Slack
-          <<: *slack-fail-post-step
 
       - cloud-function-deploy:
           name: addresses-cloud-function-deploy-stg
@@ -443,38 +412,6 @@ workflows:
           <<: *slack-fail-post-step
 
       - cloud-function-deploy:
-          name: typeform-webhook-cloud-function-deploy-stg
-          cloud-function-name: qpi_webhook_stg
-          cloud-function-folder: qpi-webhook-function-source
-          requires:
-            - linter
-          filters:
-            branches:
-              only:
-                - master
-          context:
-            - DATA_GCP
-            - DATA_GCP_EHP
-            - Slack
-          <<: *slack-fail-post-step
-
-      - cloud-function-deploy:
-          name: typeform-webhook-cloud-function-deploy-prod
-          cloud-function-name: qpi_webhook_prod
-          cloud-function-folder: qpi-webhook-function-source
-          requires:
-            - linter
-          filters:
-            branches:
-              only:
-                - production
-          context:
-            - DATA_GCP
-            - DATA_GCP_PROD
-            - Slack
-          <<: *slack-fail-post-step
-
-      - cloud-function-deploy:
           name: dms-cloud-function-deploy-stg
           cloud-function-name: dms_stg
           cloud-function-folder: dms-function-source
@@ -616,9 +553,7 @@ workflows:
           requires:
             - production-composer-deploy
             - api-integration-tests-prod
-            - typeform-cloud-function-deploy-prod
             - addresses-cloud-function-deploy-prod
-            - typeform-webhook-cloud-function-deploy-prod
             - downloads-cloud-function-deploy-prod
             - qualtrics-cloud-function-deploy-prod
             - appsflyer-cloud-function-deploy-prod
@@ -640,9 +575,7 @@ workflows:
           requires:
             - staging-composer-deploy
             - api-integration-tests-staging
-            - typeform-cloud-function-deploy-stg
             - addresses-cloud-function-deploy-stg
-            - typeform-webhook-cloud-function-deploy-stg
             - downloads-cloud-function-deploy-stg
             - qualtrics-cloud-function-deploy-stg
             - appsflyer-cloud-function-deploy-stg
@@ -661,11 +594,6 @@ workflows:
     jobs:
       - composer-deploy:
           name: dev-composer-deploy
-          <<: *deploy_on_dev_commons
-      - cloud-function-deploy:
-          name: typeform-cloud-function-deploy-dev
-          cloud-function-name: qpi_import_dev
-          cloud-function-folder: qpi-function-source
           <<: *deploy_on_dev_commons
       - cloud-function-deploy:
           name: adage-import-function-deploy-dev
@@ -733,7 +661,6 @@ workflows:
 #          name: api-integration-tests-dev
 #          requires:
 #            - dev-composer-deploy
-#            - typeform-cloud-function-deploy-dev
 #            - addresses-cloud-function-deploy-dev
 #            - downloads-cloud-function-deploy-dev
 #            - contentful-cloud-function-deploy-dev

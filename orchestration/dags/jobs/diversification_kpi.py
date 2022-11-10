@@ -44,6 +44,7 @@ with DAG(
     description="Measure the diversification",
     schedule_interval="0 4 * * *",
     catchup=False,
+    dagrun_timeout=timedelta(minutes=240),
 ) as dag:
 
     start = DummyOperator(task_id="start")

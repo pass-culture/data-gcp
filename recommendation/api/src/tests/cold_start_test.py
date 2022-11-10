@@ -22,7 +22,7 @@ def test_get_cold_start_status(
     user_id: str,
     cold_start_status: bool,
 ):
-    with patch("pcreco.utils.db.db_connection.__get_db") as connection_mock:
+    with patch("pcreco.utils.db.db_connection.__get_session") as connection_mock:
         # Given
         connection_mock.return_value = setup_database
         user = User(user_id)
@@ -57,7 +57,7 @@ def test_get_cold_start_categories(
     cold_start_categories: List[str],
 ):
     # Given
-    with patch("pcreco.utils.db.db_connection.__get_db") as connection_mock:
+    with patch("pcreco.utils.db.db_connection.__get_session") as connection_mock:
         # Given
         connection_mock.return_value = setup_database
 

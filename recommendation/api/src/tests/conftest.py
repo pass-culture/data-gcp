@@ -79,6 +79,14 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
             "iris_id": ["11", "22", "33", "44", "55", "22"],
             "venue_id": ["11", "22", "33", "44", "55", "22"],
             "venue_distance_to_iris": [11, 22, 33, 44, 55, 22],
+            "venue_distance_to_iris_bucket": [
+                "0_25",
+                "0_25",
+                "0_25",
+                "0_25",
+                "0_25",
+                "0_25",
+            ],
             "name": ["a", "b", "c", "d", "e", "f"],
             "is_numerical": [False, False, True, True, False, False],
             "is_national": [True, False, True, False, True, False],
@@ -105,17 +113,13 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
             "is_underage_recommendable": [True, True, True, False, False, False],
             "position": ["in", "out", "in", "out", "in", "out"],
             "unique_id": [1, 2, 3, 4, 5, 6],
+            "venue_latitude": [2.43, 2.46, 2.46, 2.49, 2.49, 2.46],
+            "venue_longitude": [48.810, 48.820, 48.830, 48.840, 48.840, 48.820],
         }
     )
 
     engine.execute(
         "DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_per_iris_shape_mv CASCADE;"
-    )
-    engine.execute(
-        "DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_per_iris_shape_eac_15_mv CASCADE;"
-    )
-    engine.execute(
-        "DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_per_iris_shape_eac_16_17_mv CASCADE;"
     )
 
     recommendable_offers_per_iris_shape.to_sql(
@@ -123,14 +127,6 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
     )
     engine.execute(
         "CREATE MATERIALIZED VIEW recommendable_offers_per_iris_shape_mv AS SELECT * FROM recommendable_offers_temporary_table WITH DATA;"
-    )
-
-    engine.execute(
-        "CREATE MATERIALIZED VIEW recommendable_offers_per_iris_shape_eac_15_mv AS SELECT * FROM recommendable_offers_temporary_table WITH DATA;"
-    )
-
-    engine.execute(
-        "CREATE MATERIALIZED VIEW recommendable_offers_per_iris_shape_eac_16_17_mv AS SELECT * FROM recommendable_offers_temporary_table WITH DATA;"
     )
 
     non_recommendable_offers = pd.DataFrame(
@@ -185,16 +181,6 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
     )
     qpi_answers.to_sql("qpi_answers_mv", con=engine, if_exists="replace")
 
-    iris_venues_mv = pd.DataFrame(
-        {
-            "iris_id": ["1", "1", "1", "2"],
-            "venue_id": ["11", "22", "33", "44"],
-            "venue_latitude": [2.43, 2.46, 2.46, 2.49],
-            "venue_longitude": [48.810, 48.820, 48.830, 48.840],
-        }
-    )
-    iris_venues_mv.to_sql("iris_venues_mv", con=engine, if_exists="replace")
-
     ab_testing = pd.DataFrame(
         {
             "userid": ["111", "112", "113", "114", "115", "116", "117", "118"],
@@ -228,13 +214,10 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
 
     yield connection
 
-    engine.execute("DROP MATERIALIZED VIEW IF EXISTS recommendable_offers CASCADE;")
     engine.execute(
-        "DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_eac_15 CASCADE;"
+        "DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_per_iris_shape_mv CASCADE;"
     )
-    engine.execute(
-        "DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_eac_16_17 CASCADE;"
-    )
+
     engine.execute("DROP MATERIALIZED VIEW IF EXISTS non_recommendable_offers CASCADE;")
 
     engine.execute("DROP TABLE IF EXISTS recommendable_offers_temporary_table CASCADE;")
@@ -243,7 +226,6 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
     )
     engine.execute("DROP TABLE IF EXISTS enriched_user CASCADE;")
     engine.execute("DROP MATERIALIZED VIEW IF EXISTS enriched_user_mv CASCADE;")
-    engine.execute("DROP TABLE IF EXISTS iris_venues_at_radius;")
     engine.execute(f"DROP TABLE IF EXISTS {app_config['AB_TESTING_TABLE']} ;")
     engine.execute("DROP TABLE IF EXISTS past_recommended_offers ;")
     engine.execute("DROP TABLE IF EXISTS iris_france;")

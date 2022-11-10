@@ -38,7 +38,7 @@ class ABtestingTest:
         expected_group,
         expected_model_name,
     ):
-        with patch("pcreco.utils.db.db_connection.__get_db") as connection_mock:
+        with patch("pcreco.utils.db.db_connection.__get_session") as connection_mock:
             connection_mock.return_value = setup_database
             user = User(user_id)
             scoring = Recommendation(user)

@@ -41,7 +41,7 @@ class RecommendationTest:
         geoloc,
         use_case,
     ):
-        with patch("pcreco.utils.db.db_connection.__get_db") as connection_mock:
+        with patch("pcreco.utils.db.db_connection.__get_session") as connection_mock:
             connection_mock.return_value = setup_database
             longitude = geoloc["longitude"]
             latitude = geoloc["latitude"]
@@ -94,7 +94,7 @@ class RecommendationTest:
         geoloc,
         use_case,
     ):
-        with patch("pcreco.utils.db.db_connection.__get_db") as connection_mock:
+        with patch("pcreco.utils.db.db_connection.__get_session") as connection_mock:
             connection_mock.return_value = setup_database
             longitude = geoloc["longitude"]
             latitude = geoloc["latitude"]
@@ -152,7 +152,7 @@ class RecommendationTest:
         is_event,
         use_case,
     ):
-        with patch("pcreco.utils.db.db_connection.__get_db") as connection_mock:
+        with patch("pcreco.utils.db.db_connection.__get_session") as connection_mock:
             connection_mock.return_value = setup_database
             longitude = geoloc["longitude"]
             latitude = geoloc["latitude"]
@@ -231,7 +231,7 @@ class RecommendationTest:
         is_event,
         use_case,
     ):
-        with patch("pcreco.utils.db.db_connection.__get_db") as connection_mock:
+        with patch("pcreco.utils.db.db_connection.__get_session") as connection_mock:
             connection_mock.return_value = setup_database
             longitude = geoloc["longitude"]
             latitude = geoloc["latitude"]
@@ -284,7 +284,7 @@ class RecommendationTest:
         subcategories,
         use_case,
     ):
-        with patch("pcreco.utils.db.db_connection.__get_db") as connection_mock:
+        with patch("pcreco.utils.db.db_connection.__get_session") as connection_mock:
             connection_mock.return_value = setup_database
             longitude = geoloc["longitude"]
             latitude = geoloc["latitude"]

@@ -1,4 +1,4 @@
-from pcreco.utils.db.db_connection import get_db
+from pcreco.utils.db.db_connection import get_session
 from sqlalchemy import text
 
 
@@ -9,7 +9,7 @@ def get_cold_start_status(User) -> bool:
 
 
 def _get_user_app_interaction(User) -> int:
-    connection = get_db()
+    connection = get_session()
     app_interaction_query = text(
         f"""
             SELECT booking_cnt,consult_offer,has_added_offer_to_favorites

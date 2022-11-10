@@ -3,7 +3,7 @@ from pcreco.core.utils.ab_testing import (
     ab_testing_assign_user,
 )
 from pcreco.utils.geolocalisation import get_iris_from_coordinates
-from pcreco.utils.db.db_connection import get_db
+from pcreco.utils.db.db_connection import get_session
 from sqlalchemy import text
 from pcreco.utils.env_vars import (
     RECOMMENDABLE_OFFER_TABLE_PREFIX,
@@ -26,7 +26,7 @@ class User:
         self.age = None
         # default value
         self.user_deposit_remaining_credit = 300
-        connection = get_db()
+        connection = get_session()
 
         request_response = connection.execute(
             text(

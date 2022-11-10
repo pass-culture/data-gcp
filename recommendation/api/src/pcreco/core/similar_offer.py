@@ -2,7 +2,7 @@
 from sqlalchemy import text
 from pcreco.core.user import User
 from pcreco.models.reco.playlist_params import PlaylistParamsIn
-from pcreco.utils.db.db_connection import get_db
+from pcreco.utils.db.db_connection import get_session
 from pcreco.core.utils.vertex_ai import predict_model
 from pcreco.utils.env_vars import (
     SIM_OFFERS_ENDPOINT_NAME,
@@ -56,7 +56,7 @@ class SimilarOffer:
 
     def get_recommendable_offers(self) -> Dict[str, Dict[str, Any]]:
         query = text(self._get_intermediate_query())
-        connection = get_db()
+        connection = get_session()
         query_result = connection.execute(
             query,
             user_id=str(self.user.id),
@@ -80,7 +80,7 @@ class SimilarOffer:
         return user_recommendation
 
     def get_item_id(self, offer_id) -> str:
-        connection = get_db()
+        connection = get_session()
         query_result = connection.execute(
             f"""
                 SELECT item_id 

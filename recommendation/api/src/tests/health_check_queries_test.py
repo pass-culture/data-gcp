@@ -56,7 +56,7 @@ def test_should_raise_exception_when_it_does_not_come_from_sql_alchemy(
     setup_database: Any,
 ):
     # Given
-    with patch("pcreco.utils.db.db_connection.__get_db") as connection_mock:
+    with patch("pcreco.utils.db.db_connection.__get_session") as connection_mock:
         does_materialized_view_exist_mock.return_value = True
         does_materialized_view_have_data_mock.return_value = False
         materialized_view_name = "materialized_view_name"

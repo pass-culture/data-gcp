@@ -23,6 +23,8 @@ from utils import (
 )
 
 if ENVIRONMENT_SHORT_NAME == "dev":
+    version_id = 3
+elif ENVIRONMENT_SHORT_NAME == "stg":
     version_id = 2
 else:
     version_id = 1

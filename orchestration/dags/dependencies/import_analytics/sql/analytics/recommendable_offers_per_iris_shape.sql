@@ -65,11 +65,11 @@ SELECT
     si.venue_id,
     si.venue_distance_to_iris,
     CASE 
-        WHEN si.venue_distance_to_iris < 25 THEN "0_25" 
-        WHEN si.venue_distance_to_iris < 50 THEN "20_50" 
-        WHEN si.venue_distance_to_iris < 100 THEN "50_100" 
-        WHEN si.venue_distance_to_iris < 150 THEN "100_150" 
-    ELSE  "150+"
+        WHEN si.venue_distance_to_iris < 25000 THEN "0_25KM" 
+        WHEN si.venue_distance_to_iris < 50000 THEN "25_50KM" 
+        WHEN si.venue_distance_to_iris < 100000 THEN "50_100KM" 
+        WHEN si.venue_distance_to_iris < 150000 THEN "100_150KM" 
+    ELSE  "150KM+"
     END AS venue_distance_to_iris_bucket,
     ro.name,
     ro.is_numerical,

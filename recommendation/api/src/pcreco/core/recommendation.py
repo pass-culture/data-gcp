@@ -2,6 +2,8 @@
 import json
 import random
 from sqlalchemy import text
+from google.cloud import storage
+from datetime import date
 from pcreco.core.user import User
 from pcreco.core.utils.cold_start_status import get_cold_start_status
 from pcreco.core.utils.mixing import (
@@ -283,7 +285,24 @@ class Recommendation:
                 user_id=str(self.user.id),
             ).fetchall()
 
-            if len(query_result) == 0:
-                return []
-            cold_start_categories = [res[0] for res in query_result]
+            if len(query_result) > 0:
+                cold_start_categories = [res[0] for res in query_result]
+            else:
+                client = storage.Client()
+                bucket = client.get_bucket("data-bucket-prod")
+                todays_date = date.today().strftime("%Y%m%d")
+                blob = bucket.get_blob(
+                    f"QPI_exports/qpi_answers_{todays_date}/user_id_{self.user.id}.jsonl"
+                )
+                with blob.open("r") as f:
+                    qpi_raw = json.load(f)
+                if qpi_raw:
+                    user_answer_ids = []
+                    for answers in qpi_raw["answers"]:
+                        for answers_id in answers["answer_ids"]:
+                            user_answer_ids.append(answers_id)
+                    cold_start_categories = user_answer_ids
+                else:
+                    cold_start_categories = []
+
             return cold_start_categories

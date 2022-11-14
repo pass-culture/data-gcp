@@ -603,8 +603,17 @@ def define_import_query(
     cloudsql_queries[
         "beneficiary_fraud_check"
     ] = r"""
-            SELECT id, datecreated, user_id, type, reason, reasonCodes, status, eligibility_type, thirdpartyid
-                ,regexp_replace(content, \'"(email|phone|lastName|birthDate|firstName|phoneNumber|reason_code|account_email|last_name|birth_date|first_name|phone_number|address|id_piece_number)": "[^"]*",\' ,\'"\\1":"XXX",\', \'g\') as result_content
+            SELECT 
+                id
+                , datecreated
+                , user_id
+                , type
+                , regexp_replace(reason, \'\\(.*?\\)\', \'(XXX)\') as reason
+                , reasonCodes
+                , status
+                , eligibility_type
+                , thirdpartyid
+                , regexp_replace(content, \'"(email|phone|lastName|birthDate|firstName|phoneNumber|reason_code|account_email|last_name|birth_date|first_name|phone_number|address|id_piece_number)": "[^"]*",\' ,\'"\\1":"XXX",\', \'g\') as result_content
                 FROM (
                 SELECT CAST("id" AS varchar(255)) AS id
                     ,"dateCreated" AS datecreated

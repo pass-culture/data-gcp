@@ -83,27 +83,31 @@ def fetch_dms_pro(updated_since):
 def fetch_result(demarches_ids, updated_since):
     result = {}
     for demarche_id in demarches_ids:
+        print(f"Demarche n° {demarche_id} on going...")
         end_cursor = ""
         query_body = get_query_body(demarche_id, "", updated_since)
         has_next_page = True
         while has_next_page:
             resultTemp = run_query(query_body)
-            for node in resultTemp["data"]["demarche"]["dossiers"]["edges"]:
-                dossier = node["node"]
-                if dossier is not None:
-                    dossier["demarche_id"] = demarche_id
-            has_next_page = resultTemp["data"]["demarche"]["dossiers"]["pageInfo"][
-                "hasNextPage"
-            ]
-            result = mergeDictionary(result, resultTemp)
-            if ENV_SHORT_NAME != "prod":
-                has_next_page = False
-
-            if has_next_page:
-                end_cursor = resultTemp["data"]["demarche"]["dossiers"]["pageInfo"][
-                    "endCursor"
+            if resultTemp["data"]:
+                for node in resultTemp["data"]["demarche"]["dossiers"]["edges"]:
+                    dossier = node["node"]
+                    if dossier is not None:
+                        dossier["demarche_id"] = demarche_id
+                has_next_page = resultTemp["data"]["demarche"]["dossiers"]["pageInfo"][
+                    "hasNextPage"
                 ]
-                query_body = get_query_body(demarche_id, end_cursor, updated_since)
+                result = mergeDictionary(result, resultTemp)
+                if ENV_SHORT_NAME != "prod":
+                    has_next_page = False
+
+                if has_next_page:
+                    end_cursor = resultTemp["data"]["demarche"]["dossiers"]["pageInfo"][
+                        "endCursor"
+                    ]
+                    query_body = get_query_body(demarche_id, end_cursor, updated_since)
+            else:
+                has_next_page = False
     if not isinstance(result["data"], list):
         result["data"] = [result["data"]]
     return result

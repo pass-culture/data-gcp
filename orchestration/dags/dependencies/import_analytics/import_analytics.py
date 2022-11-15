@@ -192,6 +192,16 @@ analytics_tables = {
             "aggregated_monthly_user_used_booking_activity",
         ],
     },
+    "diversification_booking_remastered": {
+        "sql": f"{ANALYTICS_SQL_PATH}/diversification_booking_remastered.sql",
+        "destination_dataset": "{{ bigquery_raw_dataset }}",
+        "destination_table": "diversification_booking_remastered",
+        "depends": [
+            "applicative_database_user",
+            "enriched_booking_data",
+            "enriched_offer_data",
+        ],
+    },
 }
 
 aggregated_tables = {

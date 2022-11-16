@@ -1341,6 +1341,15 @@ ENRICHED_COLLECTIVE_BOOKING_DATA_INPUT = {
             "educational_institution_institution_id": "14",
         }
     ],
+    "applicative_database_educational_year": [
+        {
+            "educational_year_id": "1",
+            "educational_year_beginning_date": "2O21-09-01",
+            "educational_year_expiration_date": "2022-08-01",
+            "adage_id": "7",
+            "scholar_year": "2021-2022",
+        }
+    ],
     "applicative_database_collective_offer": [
         {
             "offer_id": "11",
@@ -1411,6 +1420,7 @@ ENRICHED_COLLECTIVE_BOOKING_DATA_EXPECTED = [
         "number_of_tickets": 30,
         "educational_institution_id": "14",
         "educational_year_id": "1",
+        "scholar_year": "2021-2022",
         "educational_redactor_id": "1",
         "nom_etablissement": "Mon etablissement",
         "school_department_code": 78,

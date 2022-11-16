@@ -15,7 +15,7 @@ def get_iris_from_coordinates(longitude: float, latitude: float) -> int:
     iris_query = text(
         """
         SELECT id FROM iris_france
-        WHERE ST_CONTAINS(shape, ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326))
+        WHERE ST_CONTAINS(ST_SetSRID(shape, 4326), ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326))
         ORDER BY id;
         """
     )

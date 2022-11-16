@@ -36,7 +36,7 @@ BIGQUERY_RAW_DATASET = os.environ.get("BIGQUERY_RAW_DATASET")
 
 # Recreate proprely the connection url
 database_url = access_secret_data(
-    GCP_PROJECT, f"{RECOMMENDATION_SQL_BASE}-database-url",version_id=2, default=""
+    GCP_PROJECT, f"{RECOMMENDATION_SQL_BASE}-database-url", default=""
 )
 os.environ["AIRFLOW_CONN_PROXY_POSTGRES_TCP"] = (
     database_url.replace("postgresql://", "gcpcloudsql://")

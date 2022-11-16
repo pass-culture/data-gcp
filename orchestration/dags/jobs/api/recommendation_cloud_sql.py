@@ -40,7 +40,7 @@ RECOMMENDATION_SQL_INSTANCE = os.environ.get("RECOMMENDATION_SQL_INSTANCE")
 RECOMMENDATION_SQL_BASE = os.environ.get("RECOMMENDATION_SQL_BASE")
 
 database_url = access_secret_data(
-    GCP_PROJECT, f"{RECOMMENDATION_SQL_BASE}-database-url",version_id=2, default=""
+    GCP_PROJECT, f"{RECOMMENDATION_SQL_BASE}-database-url", default=""
 )
 os.environ["AIRFLOW_CONN_PROXY_POSTGRES_TCP"] = (
     database_url.replace("postgresql://", "gcpcloudsql://")

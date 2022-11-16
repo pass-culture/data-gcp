@@ -104,6 +104,8 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
             "booking_number": [1, 2, 3, 4, 5, 6],
             "is_underage_recommendable": [True, True, True, False, False, False],
             "position": ["in", "out", "in", "out", "in", "out"],
+            "venue_latitude":[48.87004,48.87004,48.87004,48.87004,48.87004,48.87004],
+            "venue_longitude":[2.3785,2.3785,2.3785,2.3785,2.3785,2.3785],
             "unique_id": [1, 2, 3, 4, 5, 6],
         }
     )

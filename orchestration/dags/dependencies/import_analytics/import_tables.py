@@ -675,7 +675,7 @@ def define_import_query(
                 ,"beginningDate" AS educational_year_beginning_date
                 ,"expirationDate" AS educational_year_expiration_date
                 ,CAST("adageId" AS varchar(255)) AS adage_id
-                ,CONCAT(extract(year from "beginningDate"), '-', extract(year from "expirationDate")) AS scholar_year
+                ,CONCAT(CAST(extract(year from "beginningDate") AS  varchar(255)), \\'-\\', CAST(extract(year from "expirationDate")AS varchar(255))) AS scholar_year
             FROM educational_year
         """
     cloudsql_queries[

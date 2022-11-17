@@ -17,7 +17,7 @@ from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
 )
 
 from common.alerts import task_fail_slack_alert
-from dependencies.import_qpi import QPI_ANSWERS_SCHEMA, UNION_ALL_SQL
+from dependencies.import_qpi import QPI_ANSWERS_SCHEMA, UNION_ALL_SQL, enrich_answers
 from common.config import (
     GCP_PROJECT,
     DATA_GCS_BUCKET_NAME,
@@ -25,9 +25,6 @@ from common.config import (
     BIGQUERY_CLEAN_DATASET,
     BIGQUERY_ANALYTICS_DATASET,
     ENV_SHORT_NAME,
-)
-from dependencies.import_qpi import (
-    enrich_answers,
 )
 
 TYPEFORM_FUNCTION_NAME = "qpi_import_" + ENV_SHORT_NAME

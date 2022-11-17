@@ -194,7 +194,7 @@ analytics_tables = {
     },
     "diversification_booking_remastered": {
         "sql": f"{ANALYTICS_SQL_PATH}/diversification_booking_remastered.sql",
-        "destination_dataset": "{{ bigquery_raw_dataset }}",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "diversification_booking_remastered",
         "depends": [
             "enriched_booking_data",

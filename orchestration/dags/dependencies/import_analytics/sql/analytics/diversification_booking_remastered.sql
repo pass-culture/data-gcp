@@ -33,8 +33,8 @@ offer AS (
 qpi_answers AS (
   SELECT 
     user_id,
-    ARRAY_AGG(STRUCT(subcategories) ORDER BY subcategories DESC) as qpi_subcategories  
-  FROM `{{ bigquery_analytics_dataset }}.enriched_qpi_answers_v4` 
+    ARRAY_AGG(STRUCT(subcategory_id) ORDER BY subcategory_id DESC) as qpi_subcategories  
+  FROM (SELECT user_id, subcategory_id FROM `{{ bigquery_analytics_dataset }}.enriched_aggregated_qpi_answers`) as qpi 
   GROUP BY user_id
   ),
 base_diversification as (
@@ -93,9 +93,9 @@ diversification_scores as (
   , format
   , macro_rayon
   , extra_category
-  , subcategories as qpi_subcategory
+  , subcategory_id as qpi_subcategory
   -- Pour attribuer les scores de diversification : comparer la date de booking avec la première date de booking sur la feature correspondante.
-  -- Lorsque ces 2 dates sont les mêmes, attribuer 1 si offre gratuite, 0.5 si offre gratuite.
+  -- Lorsque ces 2 dates sont les mêmes, attribuer 1 si offre payante, 0.5 si offre gratuite.
 	, CASE
       WHEN booking_creation_date = min(booking_creation_date) over(partition by user_id, category) AND booking_rank != 1
       THEN 
@@ -167,7 +167,7 @@ diversification_scores as (
           ELSE 0 END
     END as macro_rayon_diversification
   , CASE
-      WHEN subcategory = subcategories or subcategories is null
+      WHEN subcategory = subcategory_id or subcategory_id is null
       THEN 0
       ELSE 1
     END as is_diversified_booking_from_qpi

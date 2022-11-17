@@ -18,10 +18,7 @@ import uuid
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
 API_TOKEN_SECRET_ID = os.environ.get("API_TOKEN_SECRET_ID")
-API_TOKEN_SECRET_VERSION = os.environ.get("API_TOKEN_SECRET_VERSION")
-
-
-API_TOKEN = access_secret(GCP_PROJECT, API_TOKEN_SECRET_ID, API_TOKEN_SECRET_VERSION)
+API_TOKEN = access_secret(GCP_PROJECT, API_TOKEN_SECRET_ID)
 
 app = Flask(__name__)
 CORS(

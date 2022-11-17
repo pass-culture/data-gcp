@@ -11,7 +11,7 @@ DAG_ID_LIST = [
     "export_cloudsql_tables_to_bigquery_v1",
     "import_daily_firebase_data",
     "import_intraday_firebase_data",
-    "import_typeform_v1",
+    "import_qpi_answers_v1",
     "import_addresses_v1",
     "import_dms_subscriptions",
     "import_siren_v1",

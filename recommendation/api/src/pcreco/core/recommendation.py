@@ -14,6 +14,7 @@ from pcreco.core.utils.query_builder import RecommendableOffersQueryBuilder
 from pcreco.utils.db.db_connection import get_session
 from pcreco.core.utils.vertex_ai import predict_model
 from pcreco.utils.env_vars import (
+    ENV_SHORT_NAME,
     NUMBER_OF_PRESELECTED_OFFERS,
     NUMBER_OF_RECOMMENDATIONS,
     ACTIVE_MODEL,
@@ -34,7 +35,7 @@ import datetime
 import time
 import pytz
 from typing import List, Dict, Any
-
+from loguru import logger
 
 class Recommendation:
     def __init__(self, user: User, params_in: PlaylistParamsIn = None):
@@ -286,24 +287,27 @@ class Recommendation:
             ).fetchall()
 
             if len(query_result) > 0:
+                logger.info(f"get_cold_start_categories from db for user : {self.user.id}")
                 cold_start_categories = [res[0] for res in query_result]
             else:
-                try:
-                    client = storage.Client()
-                    bucket = client.get_bucket("data-bucket-prod")
-                    todays_date = date.today().strftime("%Y%m%d")
-                    blob = bucket.get_blob(
-                        f"QPI_exports/qpi_answers_{todays_date}/user_id_{self.user.id}.jsonl"
-                    )
-                    with blob.open("r") as f:
-                        qpi_raw = json.load(f)
-                    if qpi_raw:
-                        user_answer_ids = []
-                        for answers in qpi_raw["answers"]:
-                            for answers_id in answers["answer_ids"]:
-                                user_answer_ids.append(answers_id)
-                        cold_start_categories = user_answer_ids
-                except:
-                    cold_start_categories = []
-
+                logger.info(f"get_cold_start_categories from gcs : {self.user.id}")
+            
+                client = storage.Client()
+                bucket = client.get_bucket(f"data-bucket-{ENV_SHORT_NAME}")
+                todays_date = date.today().strftime("%Y%m%d")
+                blob = bucket.get_blob(
+                    f"QPI_exports/qpi_answers_{todays_date}/user_id_{self.user.id}.jsonl"
+                )
+                cold_start_categories=[]
+                with blob.open("r") as f:
+                    qpi_raw = json.load(f)
+                if qpi_raw:
+                    user_answer_ids = []
+                    for answers in qpi_raw["answers"]:
+                        for answers_id in answers["answer_ids"]:
+                            user_answer_ids.append(answers_id)
+                    cold_start_categories = user_answer_ids
+                logger.info(f"get_cold_start_categories from gcs: file found")
+#                except:
+#                    cold_start_categories = []
             return cold_start_categories

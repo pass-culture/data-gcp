@@ -26,7 +26,7 @@ from common.config import (
     BIGQUERY_ANALYTICS_DATASET,
     ENV_SHORT_NAME,
 )
-from dependencies.typeform.enriched_qpi_answers_v4 import (
+from dependencies.import_qpi import (
     enrich_answers,
 )
 

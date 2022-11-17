@@ -18,10 +18,7 @@ import uuid
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
 API_TOKEN_SECRET_ID = os.environ.get("API_TOKEN_SECRET_ID")
-API_TOKEN_SECRET_VERSION = os.environ.get("API_TOKEN_SECRET_VERSION")
-
-
-API_TOKEN = access_secret(GCP_PROJECT, API_TOKEN_SECRET_ID, API_TOKEN_SECRET_VERSION)
+API_TOKEN = access_secret(GCP_PROJECT, API_TOKEN_SECRET_ID)
 
 app = Flask(__name__)
 CORS(
@@ -66,7 +63,9 @@ def check():
 
 @app.route("/health/recommendable_offers")
 def health_check_recommendable_offers_status():
-    table_status = get_materialized_view_status("recommendable_offers")
+    table_status = get_materialized_view_status(
+        "recommendable_offers_per_iris_shape_mv"
+    )
 
     return jsonify(table_status), 200
 

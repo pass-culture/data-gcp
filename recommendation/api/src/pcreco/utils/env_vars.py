@@ -12,11 +12,9 @@ MODEL_END_POINT = f"https://{MODEL_REGION}-ml.googleapis.com"
 SQL_BASE = os.environ.get("SQL_BASE")
 SQL_BASE_USER = os.environ.get("SQL_BASE_USER")
 SQL_BASE_SECRET_ID = os.environ.get("SQL_BASE_SECRET_ID")
-SQL_BASE_SECRET_VERSION = os.environ.get("SQL_BASE_SECRET_VERSION")
 SQL_CONNECTION_NAME = os.environ.get("SQL_CONNECTION_NAME")
 SQL_BASE_PASSWORD = os.environ.get(
-    "SQL_BASE_PASSWORD",
-    access_secret(GCP_PROJECT, SQL_BASE_SECRET_ID, SQL_BASE_SECRET_VERSION),
+    "SQL_BASE_PASSWORD", access_secret(GCP_PROJECT, SQL_BASE_SECRET_ID)
 )
 # Vertex ai attributes
 PROJECT_NUMBER = os.environ.get("PROJECT_NUMBER")

@@ -5,12 +5,11 @@ CREATE OR REPLACE FUNCTION get_iris_venues()
 RETURNS TABLE (iris_id varchar,
                venue_id varchar,
                venue_longitude decimal,
-               venue_latitude decimal,
-               venue_point geometry) AS
+               venue_latitude decimal) AS
 $body$
 BEGIN
     RETURN QUERY
-    SELECT DISTINCT v."irisId", v."venueId",v."venue_longitude",v."venue_latitude",ST_Point(v."venue_longitude",v."venue_latitude")
+    SELECT DISTINCT v."irisId", v."venueId",v."venue_longitude",v."venue_latitude"
     FROM public.iris_venues_at_radius v;
 END;
 $body$

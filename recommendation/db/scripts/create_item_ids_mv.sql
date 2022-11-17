@@ -6,7 +6,7 @@ CREATE
 OR REPLACE FUNCTION get_item_ids() RETURNS TABLE (
     offer_id varchar,
     item_id varchar
-) AS $ body $ BEGIN RETURN QUERY
+) AS $body$ BEGIN RETURN QUERY
 SELECT
     distinct ro.offer_id
     ,ro.item_id
@@ -15,7 +15,7 @@ FROM
 
 END;
 
-$ body $ LANGUAGE plpgsql;
+$body$ LANGUAGE plpgsql;
 
 DROP MATERIALIZED VIEW IF EXISTS item_ids_mv;
 

@@ -11,6 +11,7 @@ WITH involved_students AS (
         ey.educational_year_beginning_date,
         ey.educational_year_expiration_date,
         ey.adage_id,
+        ey.scholar_year,
         sum(SAFE_CAST(involved_students as FLOAT64)) as involved_students,
         sum(SAFE_CAST(institutions as FLOAT64)) as institutions,
         sum(SAFE_CAST(total_involved_students as FLOAT64)) as total_involved_students,

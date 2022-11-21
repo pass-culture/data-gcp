@@ -5,6 +5,7 @@ WITH involved_students AS (
             WHEN metric_id = "02A" THEN "20"
             WHEN metric_id = "02B" THEN "20"
             WHEN upper(metric_id) = "TOTAL" THEN "-1"
+            WHEN upper(metric_id) LIKE "%97%" THEN RIGHT(metric_id, 3)
             ELSE RIGHT(metric_id, 2)
         END as department_code,
         ey.educational_year_id,

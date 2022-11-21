@@ -10,7 +10,7 @@ from google.cloud import bigquery
 from utils import ENV_SHORT_NAME
 
 
-class sendinblue_email_campaigns:
+class sendinblue_newsletters:
     def __init__(self, gcp_project, raw_dataset, api_key, destination_table_name):
 
         self.gcp_project = gcp_project
@@ -76,6 +76,11 @@ class sendinblue_email_campaigns:
             for camp in campaigns_list
             if camp.get("id") in campaigns_to_update_list
         ]
+        campaign_stats_by_domain["campaign_utm"] = [
+            camp.get("tag")
+            for camp in campaigns_list
+            if camp.get("id") in campaigns_to_update_list
+        ]
         campaign_stats_by_domain["campaign_name"] = [
             camp.get("name")
             for camp in campaigns_list
@@ -129,7 +134,13 @@ class sendinblue_email_campaigns:
         campaign_stats_by_domain_df = (
             pd.DataFrame(campaign_stats_by_domain)
             .set_index(
-                ["campaign_id", "campaign_name", "campaign_sent_date", "share_link"]
+                [
+                    "campaign_id",
+                    "campaign_utm",
+                    "campaign_name",
+                    "campaign_sent_date",
+                    "share_link",
+                ]
             )
             .explode("domain")
             .reset_index()
@@ -138,6 +149,7 @@ class sendinblue_email_campaigns:
             .assign(update_date=pd.to_datetime("today"))[
                 [
                     "campaign_id",
+                    "campaign_utm",
                     "campaign_name",
                     "campaign_sent_date",
                     "share_link",

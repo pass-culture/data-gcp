@@ -143,7 +143,7 @@ import_firebase_beneficiary_tables = {
         "depends": ["analytics_firebase_home_events"],
     },
     "analytics_firebase_session_origin": {
-        "sql": f"{SQL_PATH}/analytics/firebase_session_origin.txt",
+        "sql": f"{SQL_PATH}/analytics/firebase_session_origin.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "firebase_session_origin",
         "time_partitioning": {"field": "first_event_date"},

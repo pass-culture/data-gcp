@@ -32,6 +32,13 @@ BIGQUERY_SCHEMAS = {
         "educational_institution_id": "STRING",
         "educational_institution_institution_id": "STRING",
     },
+    "applicative_database_educational_year": {
+        "educational_year_id": "STRING",
+        "educational_year_beginning_date": "DATETIME",
+        "educational_year_expiration_date": "DATETIME",
+        "adage_id": "STRING",
+        "scholar_year": "STRING",
+    },
     "applicative_database_user_suspension": {
         "id": "STRING",
         "userId": "STRING",

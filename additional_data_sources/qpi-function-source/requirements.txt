@@ -1,6 +1,0 @@
-gcsfs==2021.9.0
-google-cloud-secret-manager==2.2.0
-pandas==1.1.4
-requests==2.25.0
-tqdm==4.58.0
-urllib3==1.26.5

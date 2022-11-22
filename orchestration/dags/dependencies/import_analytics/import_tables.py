@@ -173,7 +173,8 @@ def define_import_query(
     ] = """
         SELECT
             CAST("id" AS varchar(255)), CAST("userId" AS varchar(255)), CAST("offererId" AS varchar(255)), 
-            CAST(CAST("user_offerer"."validationToken" AS varchar(255)) IS NULL AS boolean) AS user_offerer_is_validated
+            CAST(CAST("user_offerer"."validationToken" AS varchar(255)) IS NULL AS boolean) AS user_offerer_is_validated,
+            "validationStatus" AS user_offerer_validation_status
         FROM public.user_offerer
     """
     cloudsql_queries[
@@ -675,6 +676,7 @@ def define_import_query(
                 ,"beginningDate" AS educational_year_beginning_date
                 ,"expirationDate" AS educational_year_expiration_date
                 ,CAST("adageId" AS varchar(255)) AS adage_id
+                ,CONCAT(CAST(extract(year from "beginningDate") AS  varchar(255)), \\'-\\', CAST(extract(year from "expirationDate")AS varchar(255))) AS scholar_year
             FROM educational_year
         """
     cloudsql_queries[
@@ -781,6 +783,7 @@ def define_import_query(
                 ,CAST("lastValidationType" AS VARCHAR) AS collective_offer_last_validation_type
                 ,CAST("institutionId" AS varchar(255)) AS institution_id
                 ,BTRIM(array_to_string("interventionArea", \\',\\'), \\'{\\') AS intervention_area
+                ,CAST("templateId" AS varchar(255)) AS template_id
             FROM public.collective_offer
         """
 

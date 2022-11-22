@@ -23,6 +23,7 @@ from common.access_gcp_secrets import access_secret_data
 from common.compose_gcs_files import compose_gcs_files
 from common.config import (
     GCP_PROJECT,
+    ENV_SHORT_NAME,
     DATA_GCS_BUCKET_NAME,
     BIGQUERY_CLEAN_DATASET,
     BIGQUERY_ANALYTICS_DATASET,
@@ -37,7 +38,11 @@ from common import macros
 LOCATION = os.environ.get("REGION")
 
 RECOMMENDATION_SQL_INSTANCE = os.environ.get("RECOMMENDATION_SQL_INSTANCE")
-RECOMMENDATION_SQL_BASE = os.environ.get("RECOMMENDATION_SQL_BASE")
+RECOMMENDATION_SQL_BASE = (
+    os.environ.get("RECOMMENDATION_SQL_BASE")
+    if ENV_SHORT_NAME != "prod"
+    else RECOMMENDATION_SQL_INSTANCE
+)
 
 database_url = access_secret_data(
     GCP_PROJECT, f"{RECOMMENDATION_SQL_BASE}-database-url", default=""

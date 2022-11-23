@@ -15,6 +15,9 @@ from common.alerts import task_fail_slack_alert
 from common.config import (
     BIGQUERY_ANALYTICS_DATASET,
     BIGQUERY_CLEAN_DATASET,
+    RECOMMENDATION_SQL_INSTANCE,
+    RECOMMENDATION_SQL_BASE,
+    CONNECTION_ID,
 )
 
 yesterday = (datetime.datetime.now() + datetime.timedelta(days=-1)).strftime(
@@ -29,9 +32,7 @@ TABLES = {
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
 LOCATION = os.environ.get("REGION")
 
-RECOMMENDATION_SQL_INSTANCE = os.environ.get("RECOMMENDATION_SQL_INSTANCE")
-RECOMMENDATION_SQL_BASE = os.environ.get("RECOMMENDATION_SQL_BASE")
-CONNECTION_ID = os.environ.get("BIGQUERY_CONNECTION_RECOMMENDATION")
+
 BIGQUERY_RAW_DATASET = os.environ.get("BIGQUERY_RAW_DATASET")
 
 # Recreate proprely the connection url

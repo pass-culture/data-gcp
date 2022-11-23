@@ -34,4 +34,4 @@ SELECT
 FROM
     top_items
 WHERE
-    rank < 1000
+    rank < 2000

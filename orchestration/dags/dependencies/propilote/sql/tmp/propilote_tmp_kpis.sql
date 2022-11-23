@@ -308,6 +308,7 @@ montant_moyen AS (
 collective_students AS (
     SELECT
         DATE_TRUNC(DATE("{{ ds }}"), MONTH) as month,
+        date,
     {% if params.group_type == 'all' %}
         'all' as all_dim,
     {% else %}
@@ -321,11 +322,12 @@ collective_students AS (
         `{{ bigquery_analytics_dataset }}.adage_involved_student` ais
         JOIN region_dpt ON ais.department_code = region_dpt.user_department_code
     WHERE
-        LAST_DAY(date) = date
-        AND DATE_TRUNC(DATE("{{ ds }}"), MONTH) = DATE_TRUNC(date, MONTH)
+        DATE_TRUNC(DATE("{{ ds }}"), MONTH) = DATE_TRUNC(date, MONTH)
     GROUP BY
         1,
-        2
+        2,
+        3
+    QUALIFY ROW_NUMBER() OVER (ORDER BY DATE DESC) = 1
 ),
 
 conso_collective AS (
@@ -376,6 +378,8 @@ eple_infos AS (
     WHERE
         DATE(first_deposit_creation_date) < DATE_TRUNC(DATE("{{ ds }}"), MONTH)
         AND DATE(collective_booking_creation_date) < DATE_TRUNC(DATE("{{ ds }}"), MONTH)
+        AND institution_current_deposit_amount > 0 
+        AND institution_current_deposit_amount IS NOT NULL
     GROUP BY
         1,
         2

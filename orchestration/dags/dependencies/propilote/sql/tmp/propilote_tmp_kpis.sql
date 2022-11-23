@@ -19,6 +19,14 @@ all_dimension_group AS (
        region_dpt
     {% endif %}
 ),
+school_year AS (
+
+    SELECT 
+        MAX(adage_id) AS annee_en_cours
+    
+    FROM 
+        `{{ bigquery_analytics_dataset }}.applicative_database_educational_year`
+),
 all_dimension_month AS (
     SELECT
         month,
@@ -368,7 +376,7 @@ eple_infos AS (
         COUNT(DISTINCT institution_id) AS nb_total_eple,
         COUNT(
             DISTINCT CASE
-                WHEN collective_booking_status IN ('USED', 'REIMBURSED') THEN institution_id
+                WHEN collective_booking_status IN ('USED', 'REIMBURSED') AND educational_year_id IN (SELECT annee_en_cours FROM school_year) THEN institution_id
                 ELSE NULL
             END
         ) AS nb_eple_actifs

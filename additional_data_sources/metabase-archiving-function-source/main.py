@@ -1,12 +1,4 @@
-import os
-import pandas as pd
-import requests
-from datetime import datetime
 import time
-
-import pandas_gbq as pd_gbq
-from google.cloud import secretmanager
-
 from metabase_api import MetabaseAPI
 from archiving import get_data_archiving, preprocess_data_archiving, move_to_archive
 from utils import (
@@ -22,21 +14,15 @@ from utils import (
     limit_inactivity_in_days,
 )
 
-if ENVIRONMENT_SHORT_NAME == "dev":
-    version_id = 3
-elif ENVIRONMENT_SHORT_NAME == "stg":
-    version_id = 2
-else:
-    version_id = 1
 password = access_secret_data(
-    PROJECT_NAME, f"metabase-api-secret-{ENVIRONMENT_SHORT_NAME}", version_id=version_id
-)
-metabase = MetabaseAPI(
-    username=METABASE_API_USERNAME, password=password, host=METABASE_HOST
+    PROJECT_NAME, f"metabase-api-secret-{ENVIRONMENT_SHORT_NAME}"
 )
 
 
 def run(request):
+    metabase = MetabaseAPI(
+        username=METABASE_API_USERNAME, password=password, host=METABASE_HOST
+    )
     archives_df = get_data_archiving(sql_file)
 
     archives_dicts = preprocess_data_archiving(

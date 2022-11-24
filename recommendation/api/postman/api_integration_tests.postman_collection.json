@@ -114,13 +114,13 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{api_url}}/health/recommendable_offers_per_iris_shape_mv",
+          "raw": "{{api_url}}/health/recommendable_offers",
           "host": [
             "{{api_url}}"
           ],
           "path": [
             "health",
-            "recommendable_offers_per_iris_shape_mv"
+            "recommendable_offers"
           ]
         }
       },

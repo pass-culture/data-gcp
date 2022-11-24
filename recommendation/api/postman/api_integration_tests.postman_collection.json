@@ -102,8 +102,8 @@
               "",
               "pm.test(\"Response must be healthy\", function () {",
               "  const jsonResponse = pm.response.json();",
-              "  pm.expect(jsonResponse.is_recommendable_offers_datasource_exists).to.be.true;",
-              "  pm.expect(jsonResponse.is_recommendable_offers_ok).to.be.true;",
+              "  pm.expect(jsonResponse.is_recommendable_offers_per_iris_shape_mv_datasource_exists).to.be.true;",
+              "  pm.expect(jsonResponse.is_recommendable_offers_per_iris_shape_mv_ok).to.be.true;",
               "});"
             ],
             "type": "text/javascript"

@@ -189,8 +189,8 @@ def similar_offers(offer_id: str):
     user = User(user_id, call_id, longitude, latitude)
 
     scoring = SimilarOffer(user, offer_id=offer_id, params_in=input_reco)
-    offer_recommendations = scoring.get_scoring()
-
+    #offer_recommendations = scoring.get_scoring()
+    offer_recommendations = ["5903","5948","5925"]
     return jsonify(
         {
             "results": offer_recommendations,

@@ -23,8 +23,9 @@ Repo pour la team data sur GCP
 ## INSTALL
 ### Analytics (BigQuery)
 **Prérequis** :
-- pyenv
-- poetry
+- [pyenv](https://github.com/pyenv/pyenv-installer)
+  - ⚠ Don't forget to [install the prerequisites](https://github.com/pyenv/pyenv/wiki/Common-build-problems#prerequisites)
+- [pyenv virtualenv](https://github.com/pyenv/pyenv-virtualenv#installation)
 - accès aux comptes de services GCP
 
 **1. Configure le projet**
@@ -32,9 +33,7 @@ Repo pour la team data sur GCP
 ```
 git clone git@github.com:pass-culture/data-gcp.git
 cd data-gcp
-pyenv install 3.7.7  # si nécessaire
-pyenv local 3.7.7
-poetry install
+make install
 ```
 
 **2. Configure le compte de service GCP**

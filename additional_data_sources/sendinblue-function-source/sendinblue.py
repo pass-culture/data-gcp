@@ -11,12 +11,14 @@ from utils import ENV_SHORT_NAME
 
 
 class sendinblue_newsletters:
-    def __init__(self, gcp_project, raw_dataset, api_key, destination_table_name):
+    def __init__(self, gcp_project, raw_dataset, api_key, destination_table_name, start_date, end_date):
 
         self.gcp_project = gcp_project
         self.raw_dataset = raw_dataset
         self.destination_table_name = destination_table_name
         self.api_key = api_key
+        self.start_date = start_date
+        self.end_date = end_date
 
     def create_instance_email_campaigns_api(self):
 
@@ -31,10 +33,13 @@ class sendinblue_newsletters:
 
     def get_email_campaigns(self):
 
-        api_instance = self.api_instance
-
         try:
-            campaigns = api_instance.get_email_campaigns(status="sent", limit=50)
+            campaigns = self.api_instance.get_email_campaigns(
+                status="sent", 
+                limit=50,
+                start_date=self.start_date,
+                end_date=self.end_date
+                )
             campaigns_list = campaigns.campaigns
         except ApiException as e:
             print(
@@ -44,69 +49,41 @@ class sendinblue_newsletters:
 
         return campaigns_list
 
-    def get_email_campaigns_to_update(self):
-        """Get emails camapaigns ids sent in the last 31 days."""
-
-        campaigns_list = self.get_email_campaigns()
-
-        if ENV_SHORT_NAME == "dev":
-            window = 500
-        else:
-            window = 31
-
-        campaigns_to_update_list = [
-            camp.get("id")
-            for camp in campaigns_list
-            if camp.get("sentDate") is not None
-            and datetime.strptime(camp.get("sentDate"), "%Y-%m-%dT%H:%M:%S.%f%z")
-            >= datetime.now(tz=timezone.utc) - timedelta(days=window)
-        ]
-
-        print("id campaign to update ---- ", campaigns_to_update_list)
-        return campaigns_to_update_list
-
     def get_data_by_domain(self):
 
         campaigns_list = self.get_email_campaigns()
-        campaigns_to_update_list = self.get_email_campaigns_to_update()
 
         campaign_stats_by_domain = {}
         campaign_stats_by_domain["campaign_id"] = [
             camp.get("id")
             for camp in campaigns_list
-            if camp.get("id") in campaigns_to_update_list
         ]
         campaign_stats_by_domain["campaign_utm"] = [
             camp.get("tag")
             for camp in campaigns_list
-            if camp.get("id") in campaigns_to_update_list
         ]
         campaign_stats_by_domain["campaign_name"] = [
             camp.get("name")
             for camp in campaigns_list
-            if camp.get("id") in campaigns_to_update_list
         ]
         campaign_stats_by_domain["campaign_sent_date"] = [
             camp.get("sentDate")
             for camp in campaigns_list
-            if camp.get("id") in campaigns_to_update_list
         ]
         campaign_stats_by_domain["share_link"] = [
             camp.get("shareLink")
             for camp in campaigns_list
-            if camp.get("id") in campaigns_to_update_list
         ]
         campaign_stats_by_domain["domain"] = [
             list(group.get("statsByDomain").keys())
             for group in [
                 camp.get("statistics")
                 for camp in campaigns_list
-                if camp.get("id") in campaigns_to_update_list
             ]
         ]
 
         domain_stats_df = pd.DataFrame()
-        for campaign_id in campaigns_to_update_list:
+        for campaign_id in campaigns_list:
             temp = (
                 pd.DataFrame(
                     [
@@ -163,14 +140,6 @@ class sendinblue_newsletters:
         )
 
         return campaign_stats_by_domain_df
-
-    def save_to_raw(self, df_to_save):
-
-        df_to_save.to_gbq(
-            destination_table=f"{self.gcp_project}.{self.raw_dataset}.{self.destination_table_name}",
-            project_id=self.gcp_project,
-            if_exists="replace",
-        )
 
     def save_to_historical(self, df_to_save):
 

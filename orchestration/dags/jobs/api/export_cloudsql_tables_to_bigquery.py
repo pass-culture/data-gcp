@@ -4,7 +4,7 @@ import os
 from airflow import DAG
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryExecuteQueryOperator,
-    BigQueryInsertJobOperator
+    BigQueryInsertJobOperator,
 )
 from airflow.providers.google.cloud.operators.cloud_sql import (
     CloudSQLExecuteQueryOperator,
@@ -23,7 +23,7 @@ from common.config import (
     BIGQUERY_CLEAN_DATASET,
 )
 from common.utils import from_external
-from common import macros 
+from common import macros
 
 yesterday = (datetime.datetime.now() + datetime.timedelta(days=-1)).strftime(
     "%Y-%m-%d"
@@ -72,11 +72,11 @@ export_raw_table_tasks = []
 for table, params in RAW_TABLES.items():
     query = params["sql"]
     if query is None:
-        query = f"SELECT * FROM public.{table}" 
+        query = f"SELECT * FROM public.{table}"
     task = BigQueryInsertJobOperator(
         task_id=table,
         configuration={
-            "query" : {
+            "query": {
                 "query": from_external(conn_id=CONNECTION_ID, sql_path=params["sql"]),
                 "useLegacySql": False,
                 "destinationTable": {
@@ -84,14 +84,12 @@ for table, params in RAW_TABLES.items():
                     "datasetId": BIGQUERY_RAW_DATASET,
                     "tableId": table,
                 },
-                "writeDisposition": params["write_disposition"]
+                "writeDisposition": params["write_disposition"],
             }
         },
-        params=dict(
-            params.get("params", {})
-        ),
+        params=dict(params.get("params", {})),
         dag=dag,
-        )
+    )
 
     export_raw_table_tasks.append(task)
 
@@ -104,7 +102,7 @@ delete_rows_task = drop_table_task = CloudSQLExecuteQueryOperator(
 )
 
 export_clean_table_tasks = []
-for table, params in CLEAN_TABLES.items():    
+for table, params in CLEAN_TABLES.items():
     task = BigQueryExecuteQueryOperator(
         task_id=f"import_{table}_in_clean",
         sql=params["sql"],

@@ -12,9 +12,7 @@ RAW_TABLES = {
     "past_recommended_offers": {
         "sql": f"{SQL_RAW_PATH}/past_recommended_offers.sql",
         "write_disposition": "WRITE_APPEND",
-        "params": {
-            'yesterday': yesterday
-        },
+        "params": {"yesterday": yesterday},
     },
 }
 
@@ -22,8 +20,8 @@ CLEAN_TABLES = {
     "past_recommended_offers": {
         "sql": f"{SQL_CLEAN_PATH}/past_recommended_offers.sql",
         "write_disposition": "WRITE_TRUNCATE",
-        "time_partitioning":  {"field": "date"},
-        "cluster_fields": ["date"]
+        "time_partitioning": {"field": "date"},
+        "cluster_fields": ["date"],
     },
 }
 
@@ -31,7 +29,7 @@ ANALYTICS_TABLES = {
     "past_recommended_offers": {
         "sql": f"{SQL_ANALYTICS_PATH}/past_recommended_offers.sql",
         "write_disposition": "WRITE_TRUNCATE",
-        "time_partitioning":  {"field": "date"},
-        "cluster_fields": ["date"]
+        "time_partitioning": {"field": "date"},
+        "cluster_fields": ["date"],
     },
 }

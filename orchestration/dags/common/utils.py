@@ -33,6 +33,12 @@ def depends_loop(jobs: dict, default_upstream_operator):
 
 
 def from_external(conn_id, sql_path):
-    return f"SELECT * FROM EXTERNAL_QUERY('{conn_id}', " + '"' + "{% include '" + sql_path + "' %}" + '"' + ");"
-
-
+    return (
+        f"SELECT * FROM EXTERNAL_QUERY('{conn_id}', "
+        + '"'
+        + "{% include '"
+        + sql_path
+        + "' %}"
+        + '"'
+        + ");"
+    )

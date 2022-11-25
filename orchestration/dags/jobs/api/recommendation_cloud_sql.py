@@ -95,7 +95,7 @@ with DAG(
     description="Export bigQuery tables to GCS to dump and restore Cloud SQL tables",
     schedule_interval="15 5 * * *",
     catchup=False,
-    dagrun_timeout=timedelta(minutes=240),
+    dagrun_timeout=timedelta(minutes=480),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
 ) as dag:

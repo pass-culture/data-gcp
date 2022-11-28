@@ -49,9 +49,9 @@ def get_data(batch, batch_size):
                     SELECT 
                     user_id,
                     ARRAY_AGG(STRUCT(subcategories) ORDER BY subcategories DESC) as qpi_subcategories  
-                    FROM `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_qpi_answers_v4` 
+                    FROM `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_aggregated_qpi_answers` 
                     group by user_id
-                    )
+                )
                 
                 
                 SELECT 

@@ -23,21 +23,21 @@ from common.access_gcp_secrets import access_secret_data
 from common.compose_gcs_files import compose_gcs_files
 from common.config import (
     GCP_PROJECT,
+    ENV_SHORT_NAME,
     DATA_GCS_BUCKET_NAME,
     BIGQUERY_CLEAN_DATASET,
     BIGQUERY_ANALYTICS_DATASET,
     ENV_SHORT_NAME,
     DAG_FOLDER,
     QPI_TABLE,
+    RECOMMENDATION_SQL_INSTANCE,
+    RECOMMENDATION_SQL_BASE,
 )
 from dependencies.import_recommendation_cloudsql.monitor_tables import monitoring_tables
 from common.alerts import task_fail_slack_alert
 from common import macros
 
 LOCATION = os.environ.get("REGION")
-
-RECOMMENDATION_SQL_INSTANCE = os.environ.get("RECOMMENDATION_SQL_INSTANCE")
-RECOMMENDATION_SQL_BASE = os.environ.get("RECOMMENDATION_SQL_BASE")
 
 database_url = access_secret_data(
     GCP_PROJECT, f"{RECOMMENDATION_SQL_BASE}-database-url", default=""
@@ -95,7 +95,7 @@ with DAG(
     description="Export bigQuery tables to GCS to dump and restore Cloud SQL tables",
     schedule_interval="15 5 * * *",
     catchup=False,
-    dagrun_timeout=timedelta(minutes=240),
+    dagrun_timeout=timedelta(minutes=480),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
 ) as dag:

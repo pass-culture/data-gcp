@@ -21,6 +21,9 @@ from common.alerts import task_fail_slack_alert
 from common.config import (
     BIGQUERY_ANALYTICS_DATASET,
     BIGQUERY_CLEAN_DATASET,
+    RECOMMENDATION_SQL_INSTANCE,
+    RECOMMENDATION_SQL_BASE,
+    CONNECTION_ID,
 )
 from common.utils import from_external
 from common import macros
@@ -33,9 +36,7 @@ GCP_PROJECT = os.environ.get("GCP_PROJECT")
 LOCATION = os.environ.get("REGION")
 DAG_FOLDER = os.environ.get("DAG_FOLDER")
 
-RECOMMENDATION_SQL_INSTANCE = os.environ.get("RECOMMENDATION_SQL_INSTANCE")
-RECOMMENDATION_SQL_BASE = os.environ.get("RECOMMENDATION_SQL_BASE")
-CONNECTION_ID = os.environ.get("BIGQUERY_CONNECTION_RECOMMENDATION")
+
 BIGQUERY_RAW_DATASET = os.environ.get("BIGQUERY_RAW_DATASET")
 
 # Recreate proprely the connection url

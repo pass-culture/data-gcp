@@ -42,3 +42,10 @@ SURVEY_PREFIX = "survey_"
 
 TABLE_AB_TESTING = os.environ.get("TABLE_AB_TESTING", "abc_testing_20220322_v1v2")
 QPI_TABLE = "qpi_answers_v4"
+RECOMMENDATION_SQL_INSTANCE = os.environ.get("RECOMMENDATION_SQL_INSTANCE")
+RECOMMENDATION_SQL_BASE = os.environ.get("RECOMMENDATION_SQL_BASE")
+CONNECTION_ID = (
+    os.environ.get("BIGQUERY_CONNECTION_RECOMMENDATION")
+    if ENV_SHORT_NAME != "prod"
+    else f"{GCP_PROJECT}.{GCP_REGION}.cloudsql-recommendation-production-bq-connection"
+)

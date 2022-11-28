@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "e5975335-9998-417d-b6b8-cb68e758258c",
+    "_postman_id": "daefbcdf-e9e1-4d0d-a1a8-0312061b83ee",
     "name": "API Integration Tests",
     "description": "Collection of integration tests for the reco api.\nMade with Postman",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
@@ -31,8 +31,12 @@
         "header": [],
         "url": {
           "raw": "{{api_url}}/check",
-          "host": ["{{api_url}}"],
-          "path": ["check"]
+          "host": [
+            "{{api_url}}"
+          ],
+          "path": [
+            "check"
+          ]
         }
       },
       "response": []
@@ -61,8 +65,12 @@
         "header": [],
         "url": {
           "raw": "{{api_url}}/",
-          "host": ["{{api_url}}"],
-          "path": [""]
+          "host": [
+            "{{api_url}}"
+          ],
+          "path": [
+            ""
+          ]
         }
       },
       "response": []
@@ -87,15 +95,15 @@
               "pm.test(\"Response must be a JSON with the right keys\", function () {",
               "  const jsonResponse = pm.response.json();",
               "  pm.expect(jsonResponse).to.be.an(\"object\");",
-              "  pm.expect(jsonResponse).to.have.property('is_recommendable_offers_ok')",
-              "  pm.expect(jsonResponse).to.have.property('is_recommendable_offers_datasource_exists')",
+              "  pm.expect(jsonResponse).to.have.property('is_recommendable_offers_per_iris_shape_mv_ok')",
+              "  pm.expect(jsonResponse).to.have.property('is_recommendable_offers_per_iris_shape_mv_datasource_exists')",
               "});",
               "",
               "",
               "pm.test(\"Response must be healthy\", function () {",
               "  const jsonResponse = pm.response.json();",
-              "  pm.expect(jsonResponse.is_recommendable_offers_datasource_exists).to.be.true;",
-              "  pm.expect(jsonResponse.is_recommendable_offers_ok).to.be.true;",
+              "  pm.expect(jsonResponse.is_recommendable_offers_per_iris_shape_mv_datasource_exists).to.be.true;",
+              "  pm.expect(jsonResponse.is_recommendable_offers_per_iris_shape_mv_ok).to.be.true;",
               "});"
             ],
             "type": "text/javascript"
@@ -107,8 +115,13 @@
         "header": [],
         "url": {
           "raw": "{{api_url}}/health/recommendable_offers",
-          "host": ["{{api_url}}"],
-          "path": ["health", "recommendable_offers"]
+          "host": [
+            "{{api_url}}"
+          ],
+          "path": [
+            "health",
+            "recommendable_offers"
+          ]
         }
       },
       "response": []
@@ -153,8 +166,13 @@
         "header": [],
         "url": {
           "raw": "{{api_url}}/health/non_recommendable_offers",
-          "host": ["{{api_url}}"],
-          "path": ["health", "non_recommendable_offers"]
+          "host": [
+            "{{api_url}}"
+          ],
+          "path": [
+            "health",
+            "non_recommendable_offers"
+          ]
         }
       },
       "response": []
@@ -199,8 +217,13 @@
         "header": [],
         "url": {
           "raw": "{{api_url}}/health/iris_venues_mv",
-          "host": ["{{api_url}}"],
-          "path": ["health", "iris_venues_mv"]
+          "host": [
+            "{{api_url}}"
+          ],
+          "path": [
+            "health",
+            "iris_venues_mv"
+          ]
         }
       },
       "response": []
@@ -244,21 +267,18 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{api_url}}/playlist_recommendation/{{user_id}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
-          "host": ["{{api_url}}"],
-          "path": ["playlist_recommendation", "{{user_id}}"],
+          "raw": "{{api_url}}/playlist_recommendation/{{user_id}}?token={{api_token}}",
+          "host": [
+            "{{api_url}}"
+          ],
+          "path": [
+            "playlist_recommendation",
+            "{{user_id}}"
+          ],
           "query": [
             {
               "key": "token",
               "value": "{{api_token}}"
-            },
-            {
-              "key": "longitude",
-              "value": "2.3688874"
-            },
-            {
-              "key": "latitude",
-              "value": "48.8632553"
             }
           ]
         }
@@ -337,8 +357,13 @@
         },
         "url": {
           "raw": "{{api_url}}/playlist_recommendation/{{user_id}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
-          "host": ["{{api_url}}"],
-          "path": ["playlist_recommendation", "{{user_id}}"],
+          "host": [
+            "{{api_url}}"
+          ],
+          "path": [
+            "playlist_recommendation",
+            "{{user_id}}"
+          ],
           "query": [
             {
               "key": "token",
@@ -402,7 +427,9 @@
         {
           "listen": "prerequest",
           "script": {
-            "exec": [""],
+            "exec": [
+              ""
+            ],
             "type": "text/javascript"
           }
         }
@@ -421,8 +448,13 @@
         },
         "url": {
           "raw": "{{api_url}}/playlist_recommendation/{{user_id}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
-          "host": ["{{api_url}}"],
-          "path": ["playlist_recommendation", "{{user_id}}"],
+          "host": [
+            "{{api_url}}"
+          ],
+          "path": [
+            "playlist_recommendation",
+            "{{user_id}}"
+          ],
           "query": [
             {
               "key": "token",
@@ -513,8 +545,13 @@
         },
         "url": {
           "raw": "{{api_url}}/playlist_recommendation/{{user_id}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
-          "host": ["{{api_url}}"],
-          "path": ["playlist_recommendation", "{{user_id}}"],
+          "host": [
+            "{{api_url}}"
+          ],
+          "path": [
+            "playlist_recommendation",
+            "{{user_id}}"
+          ],
           "query": [
             {
               "key": "token",
@@ -606,8 +643,13 @@
         },
         "url": {
           "raw": "{{api_url}}/playlist_recommendation/{{user_id}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
-          "host": ["{{api_url}}"],
-          "path": ["playlist_recommendation", "{{user_id}}"],
+          "host": [
+            "{{api_url}}"
+          ],
+          "path": [
+            "playlist_recommendation",
+            "{{user_id}}"
+          ],
           "query": [
             {
               "key": "token",
@@ -698,8 +740,13 @@
         },
         "url": {
           "raw": "{{api_url}}/playlist_recommendation/{{user_id}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
-          "host": ["{{api_url}}"],
-          "path": ["playlist_recommendation", "{{user_id}}"],
+          "host": [
+            "{{api_url}}"
+          ],
+          "path": [
+            "playlist_recommendation",
+            "{{user_id}}"
+          ],
           "query": [
             {
               "key": "token",
@@ -810,8 +857,13 @@
         },
         "url": {
           "raw": "{{api_url}}/playlist_recommendation/{{user_id}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
-          "host": ["{{api_url}}"],
-          "path": ["playlist_recommendation", "{{user_id}}"],
+          "host": [
+            "{{api_url}}"
+          ],
+          "path": [
+            "playlist_recommendation",
+            "{{user_id}}"
+          ],
           "query": [
             {
               "key": "token",
@@ -890,8 +942,13 @@
         },
         "url": {
           "raw": "{{api_url}}/recommendation/{{user_id}}?token={{api_token}}",
-          "host": ["{{api_url}}"],
-          "path": ["recommendation", "{{user_id}}"],
+          "host": [
+            "{{api_url}}"
+          ],
+          "path": [
+            "recommendation",
+            "{{user_id}}"
+          ],
           "query": [
             {
               "key": "token",
@@ -926,8 +983,13 @@
         "header": [],
         "url": {
           "raw": "{{api_url}}/recommendation/{{user_id}}",
-          "host": ["{{api_url}}"],
-          "path": ["recommendation", "{{user_id}}"]
+          "host": [
+            "{{api_url}}"
+          ],
+          "path": [
+            "recommendation",
+            "{{user_id}}"
+          ]
         }
       },
       "response": []
@@ -985,8 +1047,13 @@
         "header": [],
         "url": {
           "raw": "{{api_url}}/recommendation/{{user_id}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
-          "host": ["{{api_url}}"],
-          "path": ["recommendation", "{{user_id}}"],
+          "host": [
+            "{{api_url}}"
+          ],
+          "path": [
+            "recommendation",
+            "{{user_id}}"
+          ],
           "query": [
             {
               "key": "token",
@@ -1067,8 +1134,13 @@
         },
         "url": {
           "raw": "{{api_url}}/recommendation/{{user_id}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
-          "host": ["{{api_url}}"],
-          "path": ["recommendation", "{{user_id}}"],
+          "host": [
+            "{{api_url}}"
+          ],
+          "path": [
+            "recommendation",
+            "{{user_id}}"
+          ],
           "query": [
             {
               "key": "token",
@@ -1137,7 +1209,9 @@
         {
           "listen": "prerequest",
           "script": {
-            "exec": [""],
+            "exec": [
+              ""
+            ],
             "type": "text/javascript"
           }
         }
@@ -1156,8 +1230,13 @@
         },
         "url": {
           "raw": "{{api_url}}/recommendation/{{user_id}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
-          "host": ["{{api_url}}"],
-          "path": ["recommendation", "{{user_id}}"],
+          "host": [
+            "{{api_url}}"
+          ],
+          "path": [
+            "recommendation",
+            "{{user_id}}"
+          ],
           "query": [
             {
               "key": "token",
@@ -1248,8 +1327,13 @@
         },
         "url": {
           "raw": "{{api_url}}/recommendation/{{user_id}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
-          "host": ["{{api_url}}"],
-          "path": ["recommendation", "{{user_id}}"],
+          "host": [
+            "{{api_url}}"
+          ],
+          "path": [
+            "recommendation",
+            "{{user_id}}"
+          ],
           "query": [
             {
               "key": "token",
@@ -1341,8 +1425,13 @@
         },
         "url": {
           "raw": "{{api_url}}/recommendation/{{user_id}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
-          "host": ["{{api_url}}"],
-          "path": ["recommendation", "{{user_id}}"],
+          "host": [
+            "{{api_url}}"
+          ],
+          "path": [
+            "recommendation",
+            "{{user_id}}"
+          ],
           "query": [
             {
               "key": "token",
@@ -1434,8 +1523,13 @@
         },
         "url": {
           "raw": "{{api_url}}/recommendation/{{user_id}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
-          "host": ["{{api_url}}"],
-          "path": ["recommendation", "{{user_id}}"],
+          "host": [
+            "{{api_url}}"
+          ],
+          "path": [
+            "recommendation",
+            "{{user_id}}"
+          ],
           "query": [
             {
               "key": "token",
@@ -1548,8 +1642,13 @@
         },
         "url": {
           "raw": "{{api_url}}/recommendation/{{user_id}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
-          "host": ["{{api_url}}"],
-          "path": ["recommendation", "{{user_id}}"],
+          "host": [
+            "{{api_url}}"
+          ],
+          "path": [
+            "recommendation",
+            "{{user_id}}"
+          ],
           "query": [
             {
               "key": "token",
@@ -1630,8 +1729,13 @@
         },
         "url": {
           "raw": "{{api_url}}/recommendation/{{user_id}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
-          "host": ["{{api_url}}"],
-          "path": ["recommendation", "{{user_id}}"],
+          "host": [
+            "{{api_url}}"
+          ],
+          "path": [
+            "recommendation",
+            "{{user_id}}"
+          ],
           "query": [
             {
               "key": "token",
@@ -1656,14 +1760,18 @@
       "listen": "prerequest",
       "script": {
         "type": "text/javascript",
-        "exec": [""]
+        "exec": [
+          ""
+        ]
       }
     },
     {
       "listen": "test",
       "script": {
         "type": "text/javascript",
-        "exec": [""]
+        "exec": [
+          ""
+        ]
       }
     }
   ]

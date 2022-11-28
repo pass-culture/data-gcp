@@ -1,11 +1,5 @@
 import os
-from unittest.mock import Mock, patch
-import pytest
-import random
 from numpy.testing import assert_array_equal
-from typing import Any
-
-from sqlalchemy import false
 from pcreco.core.utils.mixing import (
     order_offers_by_score_and_diversify_features,
 )
@@ -30,7 +24,10 @@ class DiversificationTest:
     def test_diversification(
         self,
     ):
+
+        offers = order_offers_by_score_and_diversify_features(mock_scored_offers)
+        ids = [x["id"] for x in offers]
         assert_array_equal(
             mock_expected_output,
-            order_offers_by_score_and_diversify_features(mock_scored_offers),
+            ids,
         )

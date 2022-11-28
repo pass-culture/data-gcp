@@ -1,4 +1,3 @@
-import os
 from unittest.mock import Mock, patch
 import pytest
 import random
@@ -6,8 +5,7 @@ from typing import Any
 from pcreco.core.user import User
 from pcreco.core.recommendation import Recommendation
 from pcreco.models.reco.playlist_params import PlaylistParamsIn
-import pandas as pd
-from pcreco.utils.env_vars import ACTIVE_MODEL, ENV_SHORT_NAME
+from pcreco.utils.env_vars import ACTIVE_MODEL
 
 
 class RecommendationTest:
@@ -101,7 +99,8 @@ class RecommendationTest:
 
             cold_start_status_mock.return_value = True
             user = User(user_id, longitude, latitude)
-            scoring = Recommendation(user)
+            input_reco = PlaylistParamsIn()
+            scoring = Recommendation(user, input_reco)
             user_recommendations = scoring.get_scoring()
             assert (
                 len(user_recommendations) > 0
@@ -252,7 +251,9 @@ class RecommendationTest:
                 reco["search_group_name"] for reco in recommended_offers
             ]
             assert len(recommended_offers) > 0, f"{use_case}: playlist is not empty"
-            assert input_reco.has_conditions == True
+            assert (
+                input_reco.has_conditions == True
+            ), f"{input_reco.json} should contain params"
             assert set(recommendation_sgn) == set(
                 categories
             ), f"{use_case}: recommended categories are expected"
@@ -303,7 +304,9 @@ class RecommendationTest:
             recommendation_sgn = [reco["subcategory_id"] for reco in recommended_offers]
 
             assert len(recommended_offers) > 0, f"{use_case}: playlist is not empty"
-            assert input_reco.has_conditions == True
+            assert (
+                input_reco.has_conditions == True
+            ), f"{input_reco.json} should contain params"
             assert set(recommendation_sgn) == set(
                 subcategories
             ), f"{use_case}: recommended categories are expected"

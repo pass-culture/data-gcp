@@ -11,21 +11,15 @@ from pcreco.models.reco.playlist_params import PlaylistParamsIn
 from pcreco.core.utils.query_builder import RecommendableOffersQueryBuilder
 from pcreco.utils.db.db_connection import get_session
 from pcreco.core.utils.vertex_ai import predict_model
+
 from pcreco.utils.env_vars import (
     NUMBER_OF_PRESELECTED_OFFERS,
-    NUMBER_OF_RECOMMENDATIONS,
     ACTIVE_MODEL,
     RECO_ENDPOINT_NAME,
     AB_TESTING,
     AB_TEST_MODEL_DICT,
     RECOMMENDABLE_OFFER_LIMIT,
     COLD_START_RECOMMENDABLE_OFFER_LIMIT,
-    NUMBER_OF_PRESELECTED_OFFERS,
-    NUMBER_OF_RECOMMENDATIONS,
-    SHUFFLE_RECOMMENDATION,
-    MIXING_RECOMMENDATION,
-    MIXING_FEATURE,
-    DEFAULT_RECO_RADIUS,
     log_duration,
 )
 import datetime
@@ -35,30 +29,21 @@ from typing import List, Dict, Any
 
 
 class Recommendation:
-    def __init__(self, user: User, params_in: PlaylistParamsIn = None):
+    def __init__(self, user: User, params_in: PlaylistParamsIn):
         self.user = user
-        self.json_input = params_in.json_input if params_in else None
-        self.params_in_filters = params_in._get_conditions() if params_in else ""
-        self.params_in_model_name = params_in.model_name if params_in else None
+        self.json_input = params_in.json_input
+        self.params_in_filters = params_in._get_conditions()
+        self.params_in_model_name = params_in.model_name
         self.iscoldstart = (
             False if self.force_model else get_cold_start_status(self.user)
         )
-
-        self.reco_radius = params_in.reco_radius if params_in else DEFAULT_RECO_RADIUS
-        self.reco_is_shuffle = (
-            params_in.reco_is_shuffle if params_in else SHUFFLE_RECOMMENDATION
-        )
-        self.nb_reco_display = (
-            params_in.nb_reco_display if params_in else NUMBER_OF_RECOMMENDATIONS
-        )
-        self.is_reco_mixed = (
-            params_in.is_reco_mixed if params_in else MIXING_RECOMMENDATION
-        )
-        self.mixing_features = (
-            params_in.mixing_features if params_in else MIXING_FEATURE
-        )
-        self.include_numericals = True
-
+        self.reco_radius = params_in.reco_radius
+        self.is_reco_shuffled = params_in.is_reco_shuffled
+        self.nb_reco_display = params_in.nb_reco_display
+        self.is_reco_mixed = params_in.is_reco_mixed
+        self.mixing_features = params_in.mixing_features
+        self.include_numericals = params_in.include_numericals
+        self.is_sort_by_distance = params_in.is_sort_by_distance
         self.model_name = self.get_model_name()
         self.scoring = self.get_scoring_method()
 
@@ -86,24 +71,30 @@ class Recommendation:
         return scoring_method
 
     def get_scoring(self) -> List[str]:
-        # score the offers
+        # sort top offers per score and select 150 offers
+        sorted_recommendations = sorted(
+            self.scoring.get_scored_offers(),
+            key=lambda k: k["score"],
+            reverse=True,
+        )[:NUMBER_OF_PRESELECTED_OFFERS]
+
+        # apply diversification filter
         if self.is_reco_mixed:
-            final_recommendations = order_offers_by_score_and_diversify_features(
-                offers=sorted(
-                    self.scoring.get_scored_offers(),
-                    key=lambda k: k["score"],
-                    reverse=True,
-                )[:NUMBER_OF_PRESELECTED_OFFERS],
-                shuffle_recommendation=self.reco_is_shuffle,
+            sorted_recommendations = order_offers_by_score_and_diversify_features(
+                offers=sorted_recommendations,
+                shuffle_recommendation=self.is_reco_shuffled,
                 feature=self.mixing_features,
                 nb_reco_display=self.nb_reco_display,
             )
-        else:
-            final_recommendations = sorted(
-                self.scoring.get_scored_offers(), key=lambda k: k["score"], reverse=True
-            )[: self.nb_reco_display]
+        # order by distance if needed
+        if self.is_sort_by_distance:
+            sorted_recommendations = sorted(
+                sorted_recommendations,
+                key=lambda k: k["user_distance"],
+                reverse=False,
+            )
 
-        return final_recommendations
+        return [offer["id"] for offer in sorted_recommendations][: self.nb_reco_display]
 
     def save_recommendation(self, recommendations) -> None:
         if len(recommendations) > 0:
@@ -208,6 +199,8 @@ class Recommendation:
                     "subcategory_id": row[2],
                     "search_group_name": row[3],
                     "item_id": row[4],
+                    "user_distance": row[5],
+                    "booking_number": row[6],
                 }
                 for row in query_result
             ]
@@ -240,7 +233,7 @@ class Recommendation:
             order_query = (
                 f"""(subcategory_id in ({', '.join([f"'{category}'" for category in self.cold_start_categories])})) DESC, booking_number DESC"""
                 if len(self.cold_start_categories) > 0
-                else "is_geolocated DESC, booking_number DESC"
+                else "booking_number DESC"
             )
             recommendations_query = text(
                 RecommendableOffersQueryBuilder(
@@ -265,7 +258,9 @@ class Recommendation:
                     "subcategory_id": row[2],
                     "search_group_name": row[3],
                     "item_id": row[4],
-                    "score": random.random(),
+                    "user_distance": row[5],
+                    "booking_number": row[6],
+                    "score": row[6],  # random.random()
                 }
                 for row in query_result
             ]

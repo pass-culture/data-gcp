@@ -1,54 +1,112 @@
-# rename to specific api route , and put in models dir
 from pcreco.utils.env_vars import (
     NUMBER_OF_RECOMMENDATIONS,
     SHUFFLE_RECOMMENDATION,
     MIXING_RECOMMENDATION,
     MIXING_FEATURE,
+    MIXING_FEATURE_LIST,
     DEFAULT_RECO_RADIUS,
 )
+from pcreco.utils.geolocalisation import distance_to_radius_bucket
+
+INPUT_PARAMS = [
+    "modelName",
+    "startDate",
+    "endDate",
+    "isEvent",
+    "offerIsDuo",
+    "categories",
+    "subcategories",
+    "movieType",
+    "offerTypeLabel",
+    "offerSubTypeLabel",
+    "macroRayon",
+    "priceMax",
+    "nbRecoDisplay",
+    "recoRadius",
+    "isRecoMixed",
+    "isRecoShuffled",
+    "isSortByDistance",
+    "mixingFeatures",
+    "includeNumericals",
+]
+
+
+def parse_float(value):
+    try:
+        return float(value)
+    except ValueError:
+        return None
+
+
+def parse_int(value):
+    try:
+        return int(float(value))
+    except ValueError:
+        return None
+
+
+def parse_bool(value):
+    try:
+        return bool(value)
+    except ValueError:
+        return None
 
 
 class PlaylistParamsIn:
-    def __init__(self, json):
-        self.model_name = json.get("model_name", None)
-        self.start_date = json.get("start_date", None)
-        self.end_date = json.get("end_date", None)
-        self.is_event = json.get("isEvent", None)
-        self.offer_is_duo = json.get("offer_is_duo", None)
-        self.reco_is_shuffle = json.get("reco_is_shuffle", SHUFFLE_RECOMMENDATION)
-        self.is_sort_by_distance = json.get("is_sort_by_distance", False)
-        self.search_group_names = json.get("categories", None)
-        self.subcategories_id = json.get("subcategories", None)
-        self.movie_type = json.get("movie_type", None)
-        self.offer_type_label = json.get("offer_type_label", None)
-        self.offer_sub_type_label = json.get("offer_sub_type_label", None)
-        self.macro_rayon = json.get("macro_rayon", None)
-        self.price_max = json.get("price_max", None)
-        self.nb_reco_display = json.get("nb_reco_display", NUMBER_OF_RECOMMENDATIONS)
-        self.reco_radius = json.get("reco_radius", DEFAULT_RECO_RADIUS)
-        self.is_reco_mixed = json.get("is_reco_mixed", MIXING_RECOMMENDATION)
-        self.mixing_features = json.get("mixing_features", MIXING_FEATURE)
+    def __init__(self, json={}):
 
-        if (
-            self.is_event is not None
-            or self.search_group_names is not None
-            or self.subcategories_id is not None
-            or self.price_max is not None
-            or self.offer_is_duo is not None
-            or self.movie_type is not None
-            or self.offer_type_label is not None
-            or self.offer_sub_type_label is not None
-            or self.macro_rayon is not None
-            or self.nb_reco_display is not NUMBER_OF_RECOMMENDATIONS
-            or self.reco_radius is not DEFAULT_RECO_RADIUS
-            or self.reco_is_shuffle is not SHUFFLE_RECOMMENDATION
-            or self.is_sort_by_distance is not False
-        ):
+        json = {k: v for k, v in json.items() if k in INPUT_PARAMS}
+        self.json_input = json
+        self.has_conditions = False
+        # reco filters
+        self.model_name = json.get("modelName")
+        self.start_date = json.get("startDate")
+        self.end_date = json.get("endDate")
+        self.is_event = parse_bool(json.get("isEvent"))
+        self.offer_is_duo = parse_bool(json.get("offerIsDuo"))
+
+        self.search_group_names = json.get("categories")
+        self.subcategories_id = json.get("subcategories")
+        self.movie_type = json.get("movieType")
+        self.offer_type_label = json.get("offerTypeLabel")
+        self.offer_sub_type_label = json.get("offerSubTypeLabel")
+        self.macro_rayon = json.get("macroRayon")
+        self.price_max = parse_float(json.get("priceMax"))
+        self.include_numericals = parse_bool(json.get("includeNumericals"))
+        # reco params
+        self.nb_reco_display = parse_int(json.get("nbRecoDisplay"))
+        self.reco_radius = parse_int(json.get("recoRadius"))
+
+        self.is_reco_shuffled = parse_bool(json.get("isRecoShuffled"))
+        self.is_sort_by_distance = parse_bool(json.get("isSortByDistance"))
+        self.is_reco_mixed = parse_bool(json.get("isRecoMixed"))
+        self.mixing_features = json.get("mixingFeatures")
+
+        if len(self.json_input) > 0:
             self.has_conditions = True
-            self.json_input = json
+
+        self.setup_defaults()
+
+    def setup_defaults(self):
+        if self.is_reco_shuffled is None:
+            self.is_reco_shuffled = SHUFFLE_RECOMMENDATION
+        if self.is_sort_by_distance is None:
+            self.is_sort_by_distance = False
+        if self.nb_reco_display is None or self.nb_reco_display <= 0:
+            self.nb_reco_display = NUMBER_OF_RECOMMENDATIONS
+        if self.reco_radius is None or self.reco_radius < 1000:
+            self.reco_radius = DEFAULT_RECO_RADIUS
         else:
-            self.has_conditions = False
-            self.json_input = None
+            self.reco_radius = distance_to_radius_bucket(self.reco_radius)
+        if self.is_reco_mixed is None:
+            self.is_reco_mixed = MIXING_RECOMMENDATION
+        if (
+            self.mixing_features is None
+            or self.mixing_features not in MIXING_FEATURE_LIST
+        ):
+            self.mixing_features = MIXING_FEATURE
+        if self.include_numericals is None:
+            self.include_numericals = True
 
     def _get_conditions(self) -> str:
         condition = ""
@@ -84,7 +142,7 @@ class PlaylistParamsIn:
             condition += f"AND stock_price<={self.price_max} \n"
 
         if self.offer_is_duo is not None:
-            condition += f"AND ( offer_is_duo={self.offer_is_duo}) \n"
+            condition += f"AND (offer_is_duo={self.offer_is_duo}) \n"
 
         if self.movie_type is not None and len(self.movie_type) > 0:
             condition += (

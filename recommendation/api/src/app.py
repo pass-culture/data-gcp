@@ -9,7 +9,7 @@ from pcreco.utils.db.engine import create_connection, close_connection
 from pcreco.core.user import User
 from pcreco.core.recommendation import Recommendation
 from pcreco.core.similar_offer import SimilarOffer
-from pcreco.models.reco.playlist_params import PlaylistParamsIn
+from pcreco.models.reco.parser import parse_params, parse_geolocation, parse_internal
 
 from pcreco.utils.env_vars import (
     AB_TESTING,
@@ -117,30 +117,6 @@ def recommendation(user_id: int):
     )
 
 
-def parse_geolocation(request):
-    longitude = request.args.get("longitude", None)
-    latitude = request.args.get("latitude", None)
-    if longitude is not None and latitude is not None:
-        geo_located = True
-    else:
-        geo_located = False
-    return longitude, latitude, geo_located
-
-
-def parse_internal(request):
-    try:
-        internal = int(request.args.get("internal", 0)) == 1
-    except:
-        internal = False
-    return internal
-
-
-def parse_params(request):
-    if request.method == "POST":
-        return PlaylistParamsIn(request.get_json())
-    return None
-
-
 @app.route("/playlist_recommendation/<user_id>", methods=["GET", "POST"])
 def playlist_recommendation(user_id: int):
     # unique id build for each call
@@ -187,9 +163,11 @@ def similar_offers(offer_id: str):
     user_id = request.args.get("user_id", -1)
 
     user = User(user_id, call_id, longitude, latitude)
-
     scoring = SimilarOffer(user, offer_id=offer_id, params_in=input_reco)
     offer_recommendations = scoring.get_scoring()
+
+    if not internal:
+        scoring.save_recommendation(offer_recommendations)
 
     return jsonify(
         {

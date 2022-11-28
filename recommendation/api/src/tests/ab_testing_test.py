@@ -41,7 +41,8 @@ class ABtestingTest:
         with patch("pcreco.utils.db.db_connection.__get_session") as connection_mock:
             connection_mock.return_value = setup_database
             user = User(user_id)
-            scoring = Recommendation(user)
+            input_reco = PlaylistParamsIn()
+            scoring = Recommendation(user, input_reco)
 
             assert (
                 user.group_id == expected_group

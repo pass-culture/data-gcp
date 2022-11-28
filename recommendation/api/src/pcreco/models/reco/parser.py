@@ -1,0 +1,39 @@
+import re
+from pcreco.models.reco.playlist_params import PlaylistParamsIn
+
+under_pat = re.compile(r"_([a-z])")
+
+
+def underscore_to_camel(name):
+    return under_pat.sub(lambda x: x.group(1).upper(), name)
+
+
+def parse_geolocation(request):
+    longitude = request.args.get("longitude", None)
+    latitude = request.args.get("latitude", None)
+    if longitude is not None and latitude is not None:
+        geo_located = True
+    else:
+        geo_located = False
+    return longitude, latitude, geo_located
+
+
+def parse_internal(request):
+    try:
+        internal = int(request.args.get("internal", 0)) == 1
+    except:
+        internal = False
+    return internal
+
+
+def parse_params(request) -> PlaylistParamsIn:
+    if request.method == "POST":
+        params = request.get_json()
+
+    elif request.method == "GET":
+        params = request.args
+    if params is None:
+        params = {}
+    params = {underscore_to_camel(k): v for k, v in params.items()}
+
+    return PlaylistParamsIn(params)

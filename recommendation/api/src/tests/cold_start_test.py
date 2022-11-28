@@ -65,7 +65,8 @@ def test_get_cold_start_categories(
         cold_start_status_mock.return_value = True
 
         user = User(user_id)
-        scoring = Recommendation(user)
+        input_reco = PlaylistParamsIn()
+        scoring = Recommendation(user, input_reco)
         assert sorted(scoring.scoring.get_cold_start_categories()) == sorted(
             cold_start_categories
         )

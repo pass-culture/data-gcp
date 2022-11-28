@@ -10,9 +10,7 @@ RAW_TABLES = {
     "past_recommended_offers": {
         "sql": f"{SQL_RAW_PATH}/past_recommended_offers.sql",
         "write_disposition": "WRITE_APPEND",
-        "params": {
-            "yesterday": "{{ yesterday }}"
-            },
+        "params": {"yesterday": "{{ yesterday }}"},
     },
 }
 

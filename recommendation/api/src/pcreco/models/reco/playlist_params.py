@@ -32,6 +32,8 @@ INPUT_PARAMS = [
 
 
 def parse_float(value):
+    if value is None:
+        return None
     try:
         return float(value)
     except ValueError:
@@ -39,6 +41,8 @@ def parse_float(value):
 
 
 def parse_int(value):
+    if value is None:
+        return None
     try:
         return int(float(value))
     except ValueError:
@@ -46,6 +50,8 @@ def parse_int(value):
 
 
 def parse_bool(value):
+    if value is None:
+        return None
     try:
         return bool(value)
     except ValueError:

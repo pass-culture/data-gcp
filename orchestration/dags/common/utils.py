@@ -1,8 +1,6 @@
 from google.auth.transport.requests import Request
 from google.oauth2 import id_token
-from common.config import (
-    GCP_PROJECT,
-)
+from common.config import GCP_PROJECT
 
 
 def getting_service_account_token(function_name):
@@ -32,3 +30,15 @@ def depends_loop(jobs: dict, default_upstream_operator):
     return [
         x for x in default_downstream_operators if x not in has_downstream_dependencies
     ]
+
+
+def from_external(conn_id, sql_path):
+    return (
+        f"SELECT * FROM EXTERNAL_QUERY('{conn_id}', "
+        + '"'
+        + "{% include '"
+        + sql_path
+        + "' %}"
+        + '"'
+        + ");"
+    )

@@ -4,12 +4,18 @@ import os
 from airflow import DAG
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryExecuteQueryOperator,
+    BigQueryInsertJobOperator,
 )
 from airflow.providers.google.cloud.operators.cloud_sql import (
     CloudSQLExecuteQueryOperator,
 )
 from airflow.operators.dummy_operator import DummyOperator
 
+from dependencies.export_cloudsql_tables_to_bigquery.import_cloudsql import (
+    RAW_TABLES,
+    CLEAN_TABLES,
+    ANALYTICS_TABLES,
+)
 from common.access_gcp_secrets import access_secret_data
 from common.alerts import task_fail_slack_alert
 from common.config import (
@@ -19,18 +25,16 @@ from common.config import (
     RECOMMENDATION_SQL_BASE,
     CONNECTION_ID,
 )
+from common.utils import from_external
+from common import macros
 
 yesterday = (datetime.datetime.now() + datetime.timedelta(days=-1)).strftime(
     "%Y-%m-%d"
 ) + " 00:00:00"
-TABLES = {
-    "past_recommended_offers": {
-        "query": f"SELECT * FROM public.past_recommended_offers where date <= '{yesterday}'",
-        "write_disposition": "WRITE_APPEND",
-    },
-}
+
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
 LOCATION = os.environ.get("REGION")
+DAG_FOLDER = os.environ.get("DAG_FOLDER")
 
 
 BIGQUERY_RAW_DATASET = os.environ.get("BIGQUERY_RAW_DATASET")
@@ -59,24 +63,36 @@ dag = DAG(
     schedule_interval="0 3 * * *",
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=90),
+    user_defined_macros=macros.default,
+    template_searchpath=DAG_FOLDER,
 )
 
 start = DummyOperator(task_id="start", dag=dag)
 
-export_table_tasks = []
-for table in TABLES:
-    query = TABLES[table]["query"]
+export_raw_table_tasks = []
+for table, params in RAW_TABLES.items():
+    query = params["sql"]
     if query is None:
         query = f"SELECT * FROM public.{table}"
-    task = BigQueryExecuteQueryOperator(
-        task_id=f"import_{table}",
-        sql=f'SELECT * FROM EXTERNAL_QUERY("{CONNECTION_ID}", "{query}");',
-        write_disposition=TABLES[table]["write_disposition"],
-        use_legacy_sql=False,
-        destination_dataset_table=f"{BIGQUERY_RAW_DATASET}.{table}",
+    task = BigQueryInsertJobOperator(
+        task_id=table,
+        configuration={
+            "query": {
+                "query": from_external(conn_id=CONNECTION_ID, sql_path=params["sql"]),
+                "useLegacySql": False,
+                "destinationTable": {
+                    "projectId": GCP_PROJECT,
+                    "datasetId": BIGQUERY_RAW_DATASET,
+                    "tableId": table,
+                },
+                "writeDisposition": params["write_disposition"],
+            }
+        },
+        params=dict(params.get("params", {})),
         dag=dag,
     )
-    export_table_tasks.append(task)
+
+    export_raw_table_tasks.append(task)
 
 delete_rows_task = drop_table_task = CloudSQLExecuteQueryOperator(
     task_id="drop_yesterday_rows_past_recommended_offers",
@@ -86,32 +102,45 @@ delete_rows_task = drop_table_task = CloudSQLExecuteQueryOperator(
     dag=dag,
 )
 
-copy_to_clean_past_recommended_offers = BigQueryExecuteQueryOperator(
-    task_id="copy_to_clean_past_recommended_offers",
-    sql=f"SELECT * FROM {BIGQUERY_RAW_DATASET}.past_recommended_offers",
-    write_disposition="WRITE_TRUNCATE",
-    use_legacy_sql=False,
-    destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.past_recommended_offers",
-    dag=dag,
-)
+export_clean_table_tasks = []
+for table, params in CLEAN_TABLES.items():
+    task = BigQueryExecuteQueryOperator(
+        task_id=f"import_{table}_in_clean",
+        sql=params["sql"],
+        write_disposition=params["write_disposition"],
+        use_legacy_sql=False,
+        destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.{table}",
+        time_partitioning=params["time_partitioning"],
+        cluster_fields=params.get("cluster_fields", None),
+        dag=dag,
+    )
+    export_clean_table_tasks.append(task)
 
-copy_to_analytics_past_recommended_offers = BigQueryExecuteQueryOperator(
-    task_id="copy_to_analytics_past_recommended_offers",
-    sql=f"SELECT * FROM {BIGQUERY_CLEAN_DATASET}.past_recommended_offers",
-    write_disposition="WRITE_TRUNCATE",
-    use_legacy_sql=False,
-    destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.past_recommended_offers",
-    dag=dag,
-)
+end_clean = DummyOperator(task_id="end_clean", dag=dag)
+
+export_analytics_table_tasks = []
+for table, params in ANALYTICS_TABLES.items():
+    task = BigQueryExecuteQueryOperator(
+        task_id=f"import_{table}_in_analytics",
+        sql=params["sql"],
+        write_disposition=params["write_disposition"],
+        use_legacy_sql=False,
+        destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.{table}",
+        time_partitioning=params["time_partitioning"],
+        cluster_fields=params.get("cluster_fields", None),
+        dag=dag,
+    )
+    export_analytics_table_tasks.append(task)
 
 end = DummyOperator(task_id="end", dag=dag)
 
 (
     start
-    >> export_table_tasks
+    >> export_raw_table_tasks
     >> delete_rows_task
-    >> copy_to_clean_past_recommended_offers
-    >> copy_to_analytics_past_recommended_offers
+    >> export_clean_table_tasks
+    >> end_clean
+    >> export_analytics_table_tasks
     >> end
 )
 (delete_rows_task >> end)

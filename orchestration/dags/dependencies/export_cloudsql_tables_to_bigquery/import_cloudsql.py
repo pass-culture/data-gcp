@@ -1,8 +1,6 @@
 from common.macros import yesterday
 from common.config import BIGQUERY_RAW_DATASET, BIGQUERY_CLEAN_DATASET
 
-yesterday = yesterday() + " 00:00:00"
-
 SQL_RAW_PATH = f"dependencies/export_cloudsql_tables_to_bigquery/sql/raw"
 SQL_CLEAN_PATH = f"dependencies/export_cloudsql_tables_to_bigquery/sql/clean"
 SQL_ANALYTICS_PATH = f"dependencies/export_cloudsql_tables_to_bigquery/sql/analytics"
@@ -12,7 +10,9 @@ RAW_TABLES = {
     "past_recommended_offers": {
         "sql": f"{SQL_RAW_PATH}/past_recommended_offers.sql",
         "write_disposition": "WRITE_APPEND",
-        "params": {"yesterday": yesterday},
+        "params": {
+            "yesterday": "{{ yesterday }}"
+            },
     },
 }
 

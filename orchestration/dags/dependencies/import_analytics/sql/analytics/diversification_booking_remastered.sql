@@ -77,7 +77,6 @@ LEFT JOIN qpi_answers
   ON users.user_id = qpi_answers.user_id
 LEFT JOIN `{{ bigquery_analytics_dataset }}.macro_rayons` rayon
   ON offer.rayon = rayon.rayon
-ORDER BY users.user_id, booking_creation_date
 ),
 
 diversification_scores as (
@@ -173,7 +172,6 @@ diversification_scores as (
     END as is_diversified_booking_from_qpi
 FROM base_diversification
 LEFT JOIN unnest(qpi_subcategories) as qpi_subcategories
-ORDER BY booking_creation_date
 ), 
 
 diversification_scores_qpi as(
@@ -226,7 +224,6 @@ SELECT
       else 0 
     end as qpi_diversification
 FROM first_diversification_from_qpi
-ORDER BY user_id, booking_creation_date
 )
 
 SELECT

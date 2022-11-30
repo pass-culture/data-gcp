@@ -47,7 +47,7 @@ kpis_list = [
     {
         "question": 8,
         "effect": "Part des jeunes ayant fait au moins une réservation individuelle (15-17 ans)",
-        "kpi": "nb_15_17_actifs",
+        "kpi": "part_15_17_actifs",
         "table_name": "intensity_15_17",
     },
     {

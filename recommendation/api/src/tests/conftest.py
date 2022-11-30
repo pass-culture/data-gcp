@@ -222,21 +222,29 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
     connection.execute(sql)
 
     yield connection
+    try:
+        engine.execute(
+            "DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_per_iris_shape_mv CASCADE;"
+        )
 
-    engine.execute(
-        "DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_per_iris_shape_mv CASCADE;"
-    )
+        engine.execute(
+            "DROP MATERIALIZED VIEW IF EXISTS non_recommendable_offers CASCADE;"
+        )
 
-    engine.execute("DROP MATERIALIZED VIEW IF EXISTS non_recommendable_offers CASCADE;")
-
-    engine.execute("DROP TABLE IF EXISTS recommendable_offers_temporary_table CASCADE;")
-    engine.execute(
-        "DROP TABLE IF EXISTS non_recommendable_offers_temporary_table CASCADE;"
-    )
-    engine.execute("DROP TABLE IF EXISTS enriched_user CASCADE;")
-    engine.execute("DROP MATERIALIZED VIEW IF EXISTS enriched_user_mv CASCADE;")
-    engine.execute(f"DROP TABLE IF EXISTS {app_config['AB_TESTING_TABLE']} ;")
-    engine.execute("DROP TABLE IF EXISTS past_recommended_offers ;")
-    engine.execute("DROP TABLE IF EXISTS iris_france;")
-
-    connection.close()
+        engine.execute(
+            "DROP TABLE IF EXISTS recommendable_offers_temporary_table CASCADE;"
+        )
+        engine.execute(
+            "DROP TABLE IF EXISTS non_recommendable_offers_temporary_table CASCADE;"
+        )
+        engine.execute("DROP TABLE IF EXISTS enriched_user CASCADE;")
+        engine.execute("DROP MATERIALIZED VIEW IF EXISTS enriched_user_mv CASCADE;")
+        engine.execute(
+            f"DROP TABLE IF EXISTS {app_config['AB_TESTING_TABLE']} CASCADE ;"
+        )
+        engine.execute("DROP TABLE IF EXISTS past_recommended_offers CASCADE ;")
+        engine.execute("DROP TABLE IF EXISTS iris_france CASCADE;")
+    except:
+        pass
+    finally:
+        connection.close()

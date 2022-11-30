@@ -17,7 +17,7 @@ DATA_GCS_BUCKET_NAME = os.environ.get(
 )
 
 BIGQUERY_SANDBOX_DATASET = os.environ.get(
-    "BIGQUERY_RAW_DATASET", f"sandbox_{ENV_SHORT_NAME}"
+    "BIGQUERY_SANDBOX_DATASET", f"sandbox_{ENV_SHORT_NAME}"
 )
 BIGQUERY_RAW_DATASET = os.environ.get("BIGQUERY_RAW_DATASET", f"raw_{ENV_SHORT_NAME}")
 BIGQUERY_CLEAN_DATASET = os.environ.get(

@@ -87,11 +87,11 @@ with DAG(
     start = DummyOperator(task_id="start")
 
     task = BigQueryExecuteQueryOperator(
-        task_id="import_to_raw_training_data_bookings",
+        task_id="import_to_sandbox_training_data_bookings",
         sql=f"{IMPORT_TRAINING_SQL_PATH}/training_data_bookings.sql",
         write_disposition="WRITE_TRUNCATE",
         use_legacy_sql=False,
-        destination_dataset_table=f"{BIGQUERY_SANDBOX_DATASET}.training_data_bookings_r_and_d",
+        destination_dataset_table=f"{BIGQUERY_SANDBOX_DATASET}.training_data_bookings",
         dag=dag,
     )
 

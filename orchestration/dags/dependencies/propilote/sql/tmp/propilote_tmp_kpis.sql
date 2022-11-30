@@ -160,12 +160,12 @@ agg_intensity_18 AS (
     {% else %}
         {{ params.group_type_name }},
     {% endif %}
-        COUNT(
+        ROUND(SAFE_DIVIDE(COUNT(
             CASE
                 WHEN nb_reservations >= 3 THEN 1
                 ELSE NULL
             END
-        ) / COUNT(*) AS part_3_resas
+        ), COUNT(*))) * 100 AS part_3_resas
     FROM
         intensity_18
     GROUP BY
@@ -197,6 +197,23 @@ intensity_15_17 AS (
         1,
         2
 ),
+agg_intensity_15_17 AS (
+    SELECT
+        intensity_15_17.month,
+    {% if params.group_type == 'all' %}
+        'all' as all_dim,
+    {% else %}
+        intensity_15_17.{{ params.group_type_name }},
+    {% endif %}
+    ROUND(SAFE_DIVIDE(nb_15_17_actifs, total_registered_15_17)) AS part_15_17_actifs
+    FROM intensity_15_17
+    LEFT JOIN nb_registrations_agg on nb_registrations_agg.month = intensity_15_17.month
+    {% if params.group_type != 'all' %}
+        AND nb_registrations_agg.{{ params.group_type_name }} = intensity_15_17.{{ params.group_type_name }}
+    {% endif %}
+
+),
+
 mean_spent_beneficiary_18 AS (
     SELECT
         DATE_TRUNC(DATE("{{ ds }}"), MONTH) as month,
@@ -400,7 +417,7 @@ activation_eple AS (
     {% else %}
         {{ params.group_type_name }},
     {% endif %}
-        ROUND((nb_eple_actifs / nb_total_eple) * 100) AS percentage_active_eple
+        ROUND(SAFE_DIVIDE(nb_eple_actifs, nb_total_eple) * 100) AS percentage_active_eple
     FROM
         eple_infos
 ),

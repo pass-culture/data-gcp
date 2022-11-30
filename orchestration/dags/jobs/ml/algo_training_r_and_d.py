@@ -138,7 +138,7 @@ with DAG(
     )
 
     DATA_COLLECT = f""" '{DEFAULT}
-        python data_collect.py'
+        python data_collect.py' --dataset {BIGQUERY_SANDBOX_DATASET}
     """
 
     data_collect = BashOperator(

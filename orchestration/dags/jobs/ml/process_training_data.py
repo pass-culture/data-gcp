@@ -1,20 +1,20 @@
+import datetime
+
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryExecuteQueryOperator,
 )
-import datetime
-from common.alerts import analytics_fail_slack_alert
-from common import macros
-from common.config import DAG_FOLDER
 
-IMPORT_TRAINING_SQL_PATH = f"dependencies/training_data/sql/"
+from common import macros
+from common.alerts import analytics_fail_slack_alert
 from common.config import (
     BIGQUERY_CLEAN_DATASET,
     BIGQUERY_RAW_DATASET,
     GCP_PROJECT,
 )
-
+from common.config import DAG_FOLDER
+from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
 
 default_dag_args = {
     "start_date": datetime.datetime(2022, 7, 26),

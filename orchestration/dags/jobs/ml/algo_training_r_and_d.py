@@ -14,8 +14,14 @@ from airflow.providers.google.cloud.operators.compute import (
 from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
 
 from common.access_gcp_secrets import access_secret_data
-from common.config import GCP_PROJECT_ID, GCE_ZONE, ENV_SHORT_NAME, BIGQUERY_RAW_DATASET
-from jobs.ml.process_training_data import IMPORT_TRAINING_SQL_PATH
+from common.alerts import task_fail_slack_alert
+from common.config import (
+    GCP_PROJECT_ID,
+    GCE_ZONE,
+    ENV_SHORT_NAME,
+    BIGQUERY_SANDBOX_DATASET,
+)
+from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
 
 GCE_INSTANCE = os.environ.get("GCE_TRAINING_INSTANCE", "algo-training-dev")
 MLFLOW_BUCKET_NAME = os.environ.get("MLFLOW_BUCKET_NAME", "mlflow-bucket-ehp")

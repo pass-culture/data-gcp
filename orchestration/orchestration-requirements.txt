@@ -1,12 +1,12 @@
 --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.2.5/constraints-3.7.txt"
 apache-airflow[gcp]==2.2.5
-sshtunnel==0.3.2
-mysqlclient==2.0.1
-pytest==6.1.1
-pytest-cov==2.10.1
-psycopg2-binary==2.8.6
+sshtunnel~=0.3
+mysqlclient~=2.0
+pytest~=6.1
+pytest-cov==3.0.0
+psycopg2-binary~=2.8
 crcmod==1.7
-gcsfs==0.7.0
+gcsfs==2022.2.0
 google-cloud-secret-manager==1.0.0
 mock==4.0.2
 nltk==3.6.6

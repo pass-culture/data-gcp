@@ -26,11 +26,19 @@ Repo pour la team data sur GCP
 
 **1. Installation du projet**
 
-```
-git clone git@github.com:pass-culture/data-gcp.git
-cd data-gcp
-make install
-```
+- Cloner le projet
+  ```
+  git clone git@github.com:pass-culture/data-gcp.git
+  cd data-gcp
+  ```
+- [LINUX] Installation de quelques librairies nécessaires à l'install du projet
+  ```
+  make install_ubuntu_libs
+  ```
+- Installation du projet
+  ```
+  make install
+  ```
 
 **2. SA GCP**
 

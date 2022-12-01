@@ -1,1 +1,3 @@
-IMPORT_TRAINING_SQL_PATH = f"dependencies/training_data/sql"
+from pathlib import Path
+
+IMPORT_TRAINING_SQL_PATH = Path("dependencies/training_data/sql")

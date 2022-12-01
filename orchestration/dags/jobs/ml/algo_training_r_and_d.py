@@ -13,6 +13,7 @@ from airflow.providers.google.cloud.operators.compute import (
 )
 from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
 
+from common import macros
 from common.access_gcp_secrets import access_secret_data
 from common.alerts import task_fail_slack_alert
 from common.config import (
@@ -20,6 +21,7 @@ from common.config import (
     GCE_ZONE,
     ENV_SHORT_NAME,
     BIGQUERY_SANDBOX_DATASET,
+    DAG_FOLDER,
 )
 from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
 
@@ -83,12 +85,14 @@ with DAG(
     schedule_interval=None,
     catchup=False,
     dagrun_timeout=timedelta(minutes=1440),
+    user_defined_macros=macros.default,
+    template_searchpath=DAG_FOLDER,
 ) as dag:
-    start = DummyOperator(task_id="start")
+    start = DummyOperator(task_id="start", dag=dag)
 
     create_dataset_table = BigQueryExecuteQueryOperator(
         task_id="import_to_sandbox_training_data_bookings",
-        sql=f"{IMPORT_TRAINING_SQL_PATH}/training_data_bookings.sql",
+        sql=(IMPORT_TRAINING_SQL_PATH / "training_data_bookings.sql").as_posix(),
         write_disposition="WRITE_TRUNCATE",
         use_legacy_sql=False,
         destination_dataset_table=f"{BIGQUERY_SANDBOX_DATASET}.training_data_bookings",
@@ -100,6 +104,7 @@ with DAG(
         zone=GCE_ZONE,
         resource_id=GCE_INSTANCE,
         task_id="gce_start_task",
+        dag=dag,
     )
 
     if ENV_SHORT_NAME == "dev":
@@ -138,7 +143,7 @@ with DAG(
     )
 
     DATA_COLLECT = f""" '{DEFAULT}
-        python data_collect.py' --dataset {BIGQUERY_SANDBOX_DATASET}
+        python data_collect.py --dataset {BIGQUERY_SANDBOX_DATASET}'
     """
 
     data_collect = BashOperator(

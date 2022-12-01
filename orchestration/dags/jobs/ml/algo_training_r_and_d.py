@@ -103,7 +103,7 @@ with DAG(
     )
 
     if ENV_SHORT_NAME == "dev":
-        branch = "master"
+        branch = "PC-18997-add-dag-training-algo-r-and-d"
     if ENV_SHORT_NAME == "stg":
         branch = "master"
     if ENV_SHORT_NAME == "prod":

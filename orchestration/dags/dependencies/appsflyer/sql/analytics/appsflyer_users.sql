@@ -1,6 +1,6 @@
 WITH extracted_users AS (  
   SELECT 
-    JSON_EXTRACT_SCALAR(event_value , "$.af_user_id") as user_id,
+    REGEXP_EXTRACT(event_value, r"([0-9]+)") AS user_id,
     appsflyer_id, 
     advertising_id,
     attributed_touch_time, 
@@ -24,3 +24,4 @@ SELECT
 * 
 FROM extracted_users
 QUALIFY ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY install_time ASC ) = 1
+

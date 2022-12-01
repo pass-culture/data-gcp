@@ -9,6 +9,7 @@ def underscore_to_camel(name):
 
 
 def parse_geolocation(request):
+
     longitude = request.args.get("longitude", None)
     latitude = request.args.get("latitude", None)
     if longitude is not None and latitude is not None:
@@ -19,6 +20,10 @@ def parse_geolocation(request):
 
 
 def parse_internal(request):
+    """Get the internal flag. This flag is used when internal queries are 
+    sent for test purposes.
+    """
+
     try:
         internal = int(request.args.get("internal", 0)) == 1
     except:

@@ -2,6 +2,7 @@
 from sqlalchemy import text
 import json
 from pcreco.core.user import User
+from pcreco.core.offer import Offer
 from pcreco.models.reco.playlist_params import PlaylistParamsIn
 from pcreco.core.utils.query_builder import RecommendableOffersQueryBuilder
 from pcreco.utils.db.db_connection import get_session
@@ -15,24 +16,24 @@ import pytz
 
 
 class SimilarOffer:
-    def __init__(self, user: User, offer_id: int, params_in: PlaylistParamsIn):
+    def __init__(self, user: User, offer: Offer, params_in: PlaylistParamsIn):
         self.user = user
+        self.offer = offer
         self.n = 10
-        self.origin_offer_id = offer_id
         self.recommendable_offer_limit = 10_000
         self.params_in_filters = params_in._get_conditions()
         self.reco_radius = params_in.reco_radius
         self.json_input = params_in.json_input
         self.include_numericals = params_in.include_numericals
         self.has_conditions = params_in.has_conditions
-        self.item_id = self.get_item_id(offer_id)
 
         self.model_version = None
         self.model_display_name = None
 
     def get_scoring(self) -> List[str]:
+
         # item not found
-        if self.item_id is None:
+        if self.offer.item_id is None:
             return []
         # get recommendable_offers
         recommendable_offers = self.get_recommendable_offers()
@@ -41,7 +42,7 @@ class SimilarOffer:
             return []
 
         instances = {
-            "offer_id": self.item_id,
+            "offer_id": self.offer.item_id,
             "selected_offers": list(recommendable_offers.keys()),
             "size": self.n,
         }
@@ -49,6 +50,7 @@ class SimilarOffer:
         return [recommendable_offers[offer]["id"] for offer in predicted_offers]
 
     def get_recommendable_offers(self) -> Dict[str, Dict[str, Any]]:
+
         start = time.time()
         order_query = "booking_number DESC"
         query = text(
@@ -60,9 +62,9 @@ class SimilarOffer:
         query_result = connection.execute(
             query,
             user_id=str(self.user.id),
-            user_iris_id=str(self.user.iris_id),
-            user_longitude=float(self.user.longitude),
-            user_latitude=float(self.user.latitude),
+            user_iris_id=str(self.user.iris_id), # user or offer iris ?
+            user_longitude=float(self.user.longitude), # user or offer long ?
+            user_latitude=float(self.user.latitude), # user or offer lat ?
         ).fetchall()
 
         user_recommendation = {
@@ -74,31 +76,14 @@ class SimilarOffer:
                 "item_id": row[4],
             }
             for row in query_result
-            if row[4] != self.item_id
+            if row[4] != self.offer.item_id
         }
         logger.info(f"get_recommendable_offers: n: {len(user_recommendation)}")
         log_duration(f"get_recommendable_offers for {self.user.id}", start)
         return user_recommendation
 
-    def get_item_id(self, offer_id) -> str:
-        start = time.time()
-        connection = get_session()
-        query_result = connection.execute(
-            f"""
-                SELECT item_id 
-                FROM item_ids_mv
-                WHERE offer_id = '{offer_id}'
-            """
-        ).fetchone()
-        log_duration(f"get_item_id for offer_id: {offer_id}", start)
-        if query_result is not None:
-            logger.info("get_item_id:found id")
-            return query_result[0]
-        else:
-            logger.info("get_item_id:not_found_id")
-            return None
-
     def save_recommendation(self, recommendations) -> None:
+
         if len(recommendations) > 0:
             start = time.time()
             date = datetime.datetime.now(pytz.utc)
@@ -108,7 +93,7 @@ class SimilarOffer:
                 rows.append(
                     {
                         "user_id": self.user.id,
-                        "origin_offer_id": self.origin_offer_id,
+                        "origin_offer_id": self.offer.id,
                         "offer_id": offer_id,
                         "date": date,
                         "group_id": self.user.group_id,
@@ -116,7 +101,7 @@ class SimilarOffer:
                         "model_version": self.model_version,
                         "reco_filters": json.dumps(self.json_input),
                         "call_id": self.user.call_id,
-                        "venue_iris_id": self.user.iris_id,
+                        "venue_iris_id": self.offer.iris_id,
                     }
                 )
 
@@ -133,6 +118,7 @@ class SimilarOffer:
             log_duration(f"save_recommendations for {self.user.id}", start)
 
     def _predict_score(self, instances) -> List[List[str]]:
+
         logger.info(f"_predict_score: {instances}")
         start = time.time()
         response = predict_model(

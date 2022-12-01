@@ -23,6 +23,7 @@ Repo pour la team data sur GCP
   - ⚠ Don't forget to [install the prerequisites](https://github.com/pyenv/pyenv/wiki/Common-build-problems#prerequisites)
 - [pyenv virtualenv](https://github.com/pyenv/pyenv-virtualenv#installation)
 - accès aux comptes de services GCP
+- [Gcloud CLI](https://cloud.google.com/sdk/docs/install?hl=fr)
 
 **1. Installation du projet**
 
@@ -40,18 +41,9 @@ Repo pour la team data sur GCP
   make install
   ```
 
-**2. SA GCP**
-
-Crée un SA via GCP afin de configurer ton compte GCP en local. 
-
-**3. Config .env.local**
+**2. Config .env.local**
 
 Dans le fichier `.env.local`, renseigne les valeurs des variables manquantes en utilisant [cette page](https://www.notion.so/passcultureapp/Les-secrets-du-repo-data-gcp-085759e27a664a95a65a6886831bde54)
-```
-DATA_GCP_TEST_POSTGRES_PORT=
-GCP_PROJECT=
-ENV_SHORT_NAME=
-```
 
 
 ## Orchestration

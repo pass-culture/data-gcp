@@ -1,6 +1,6 @@
 install:
-	make get_gcp_credentials
 	make initiate_env
+	make get_gcp_credentials
 	pyenv install 3.7.13 -s
 	pyenv local 3.7.13
 	pip install --upgrade pip
@@ -17,7 +17,10 @@ initiate_env:
 	cp -n .env.template .env.local
 
 get_gcp_credentials:
+ifeq (,$(wildcard ${HOME}/.config/gcloud/application_default_credentials.json))
 	gcloud auth application-default login
+endif
+
 
 install_ubuntu_libs:
 	sudo apt-get update

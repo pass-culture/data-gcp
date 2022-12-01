@@ -10,7 +10,7 @@ WITH table_format AS (
             ELSE "Payant"
         END AS free_vs_paid_for,
         user_data.user_department_code,
-        IF(user_data.user_department_code = "99", "Étranger", user_region_name) as user_region_name,
+        IF(user_data.user_department_code = "99", null, user_region_name) as user_region_name,
         CASE 
             WHEN user_data.user_civility = 'M.' THEN "Homme"
             WHEN user_data.user_civility = 'Mme' THEN "Femme"

@@ -1,4 +1,6 @@
 install:
+	make get_gcp_credentials
+	make initiate_env
 	pyenv install 3.7.13 -s
 	pyenv local 3.7.13
 	pip install --upgrade pip
@@ -13,3 +15,6 @@ install_microservice:
 
 initiate_env:
 	cp -n .env.template .env.local
+
+get_gcp_credentials:
+	gcloud auth application-default login

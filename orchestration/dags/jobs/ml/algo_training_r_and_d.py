@@ -86,7 +86,7 @@ with DAG(
 ) as dag:
     start = DummyOperator(task_id="start")
 
-    task = BigQueryExecuteQueryOperator(
+    create_dataset_table = BigQueryExecuteQueryOperator(
         task_id="import_to_sandbox_training_data_bookings",
         sql=f"{IMPORT_TRAINING_SQL_PATH}/training_data_bookings.sql",
         write_disposition="WRITE_TRUNCATE",
@@ -280,6 +280,7 @@ with DAG(
 
     (
         start
+        >> create_dataset_table
         >> gce_instance_start
         >> fetch_code
         >> install_dependencies

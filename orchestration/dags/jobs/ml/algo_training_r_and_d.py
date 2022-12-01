@@ -77,9 +77,9 @@ default_args = {
 }
 
 with DAG(
-    "algo_training_v1",
+    "algo_training_r_and_d",
     default_args=default_args,
-    description="Continuous algorithm training",
+    description="Custom training job",
     schedule_interval=None,
     catchup=False,
     dagrun_timeout=timedelta(minutes=1440),

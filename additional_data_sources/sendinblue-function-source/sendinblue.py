@@ -11,7 +11,15 @@ from utils import ENV_SHORT_NAME
 
 
 class sendinblue_newsletters:
-    def __init__(self, gcp_project, raw_dataset, api_key, destination_table_name, start_date, end_date):
+    def __init__(
+        self,
+        gcp_project,
+        raw_dataset,
+        api_key,
+        destination_table_name,
+        start_date,
+        end_date,
+    ):
 
         self.gcp_project = gcp_project
         self.raw_dataset = raw_dataset
@@ -35,11 +43,11 @@ class sendinblue_newsletters:
 
         try:
             campaigns = self.api_instance.get_email_campaigns(
-                status="sent", 
+                status="sent",
                 limit=50,
                 start_date=self.start_date,
-                end_date=self.end_date
-                )
+                end_date=self.end_date,
+            )
             campaigns_list = campaigns.campaigns
         except ApiException as e:
             print(
@@ -55,31 +63,23 @@ class sendinblue_newsletters:
 
         campaign_stats_by_domain = {}
         campaign_stats_by_domain["campaign_id"] = [
-            camp.get("id")
-            for camp in campaigns_list
+            camp.get("id") for camp in campaigns_list
         ]
         campaign_stats_by_domain["campaign_utm"] = [
-            camp.get("tag")
-            for camp in campaigns_list
+            camp.get("tag") for camp in campaigns_list
         ]
         campaign_stats_by_domain["campaign_name"] = [
-            camp.get("name")
-            for camp in campaigns_list
+            camp.get("name") for camp in campaigns_list
         ]
         campaign_stats_by_domain["campaign_sent_date"] = [
-            camp.get("sentDate")
-            for camp in campaigns_list
+            camp.get("sentDate") for camp in campaigns_list
         ]
         campaign_stats_by_domain["share_link"] = [
-            camp.get("shareLink")
-            for camp in campaigns_list
+            camp.get("shareLink") for camp in campaigns_list
         ]
         campaign_stats_by_domain["domain"] = [
             list(group.get("statsByDomain").keys())
-            for group in [
-                camp.get("statistics")
-                for camp in campaigns_list
-            ]
+            for group in [camp.get("statistics") for camp in campaigns_list]
         ]
 
         domain_stats_df = pd.DataFrame()
@@ -145,7 +145,7 @@ class sendinblue_newsletters:
 
         bigquery_client = bigquery.Client()
 
-        _now = datetime.today()
+        _now = self.end_date
         yyyymmdd = _now.strftime("%Y%m%d")
         table_id = f"{self.gcp_project}.{self.raw_dataset}.{self.destination_table_name}_histo${yyyymmdd}"
         job_config = bigquery.LoadJobConfig(

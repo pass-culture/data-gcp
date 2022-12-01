@@ -2,6 +2,7 @@ import os
 from datetime import datetime, timedelta
 
 from airflow import DAG
+from airflow.models import Param
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.google.cloud.operators.bigquery import (
@@ -87,6 +88,12 @@ with DAG(
     dagrun_timeout=timedelta(minutes=1440),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
+    params={
+        "branch": Param(
+            default="production" if ENV_SHORT_NAME == "prod" else "master",
+            type="string",
+        ),
+    },
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)
 
@@ -107,23 +114,16 @@ with DAG(
         dag=dag,
     )
 
-    if ENV_SHORT_NAME == "dev":
-        branch = "PC-18997-add-dag-training-algo-r-and-d"
-    if ENV_SHORT_NAME == "stg":
-        branch = "master"
-    if ENV_SHORT_NAME == "prod":
-        branch = "production"
-
-    FETCH_CODE = f'"if cd data-gcp; then git checkout master && git pull && git checkout {branch} && git pull; else git clone git@github.com:pass-culture/data-gcp.git && cd data-gcp && git checkout {branch} && git pull; fi"'
+    FETCH_CODE = r'"if cd data-gcp; then git checkout master && git pull && git checkout {{ params.branch }} && git pull; else git clone git@github.com:pass-culture/data-gcp.git && cd data-gcp && git checkout {{ params.branch }} && git pull; fi"'
 
     fetch_code = BashOperator(
         task_id="fetch_code",
         bash_command=f"""
-        gcloud compute ssh {GCE_INSTANCE} \
-        --zone {GCE_ZONE} \
-        --project {GCP_PROJECT_ID} \
-        --command {FETCH_CODE}
-        """,
+            gcloud compute ssh {GCE_INSTANCE} \
+            --zone {GCE_ZONE} \
+            --project {GCP_PROJECT_ID} \
+            --command {FETCH_CODE}
+            """,
         dag=dag,
     )
 

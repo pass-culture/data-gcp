@@ -38,12 +38,9 @@ Crée un SA via GCP afin de configurer ton compte GCP en local.
 
 **3. Config .env.local**
 
-Copie le fichier `.env` en `.env.local`.
-
-Dans `.env.local`, renseigne le chemin vers ta clé (.JSON) 
-
-Variables à renseigner:
+Dans le fichier `.env.local`, renseigne les valeurs des variables manquantes en utilisant [cette page](https://www.notion.so/passcultureapp/Les-secrets-du-repo-data-gcp-085759e27a664a95a65a6886831bde54)
 ```
+DATA_GCP_TEST_POSTGRES_PORT=
 GCP_PROJECT=
 ENV_SHORT_NAME=
 ```

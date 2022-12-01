@@ -10,3 +10,6 @@ install:
 
 install_microservice:
 	cd $(MICROSERVICE_PATH) && (pyenv virtualenv $(VENV_NAME) || echo "pyenv-virtualenv $(VENV_NAME) already exists") && pyenv local $(VENV_NAME) && pip install --upgrade pip && pip install -r $(REQUIREMENTS_NAME)
+
+initiate_env:
+	cp -n .env.template .env.local

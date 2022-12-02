@@ -296,6 +296,7 @@ with DAG(
 
     (
         start
+        >> create_deduplicated_offers_table
         >> create_dataset_table
         >> gce_instance_start
         >> fetch_code

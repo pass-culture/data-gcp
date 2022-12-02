@@ -97,6 +97,15 @@ with DAG(
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)
 
+    create_deduplicated_offers_table = BigQueryExecuteQueryOperator(
+        task_id="deduplicate_offers",
+        sql=(IMPORT_TRAINING_SQL_PATH / "tmp" / "deduplicate_offers.sql").as_posix(),
+        write_disposition="WRITE_TRUNCATE",
+        use_legacy_sql=False,
+        destination_dataset_table=f"{BIGQUERY_SANDBOX_DATASET}.deduplicated_enriched_offers_data",
+        dag=dag,
+    )
+
     create_dataset_table = BigQueryExecuteQueryOperator(
         task_id="import_to_sandbox_training_data_bookings",
         sql=(IMPORT_TRAINING_SQL_PATH / "training_data_bookings.sql").as_posix(),

@@ -27,7 +27,7 @@ def calculate_diversification_per_feature(df_clean, features):
         booking = df_clean.iloc[i]
         if len(booking["qpi_subcategories"]) > 0:
             user_qpi_subcategories = [
-                qpi["subcategories"] for qpi in list(booking["qpi_subcategories"])
+                qpi["subcategory_id"] for qpi in list(booking["qpi_subcategories"])
             ]
         else:
             user_qpi_subcategories = []

@@ -11,3 +11,4 @@ tensorflow==2.6.3
 keras==2.6.0
 recmetrics==0.1.5
 google-cloud-aiplatform==1.16.0
+typer==0.7.0

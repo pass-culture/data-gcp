@@ -73,7 +73,14 @@ with DAG(
     "algo_training_v1",
     default_args=default_args,
     description="Continuous algorithm training",
-    schedule_interval="0 12 * * 5",  # Train every Friday at 12:00
+    # Train every Friday at 12:00 in prod
+    # Train every day at 00:00 in dev
+    # Train every Wednesday at 12:00 in stg
+    schedule_interval="0 12 * * 5"
+    if ENV_SHORT_NAME == "prod"
+    else "0 0 * * *"
+    if ENV_SHORT_NAME == "dev"
+    else "0 12 * * 3",
     catchup=False,
     dagrun_timeout=timedelta(minutes=1440),
 ) as dag:

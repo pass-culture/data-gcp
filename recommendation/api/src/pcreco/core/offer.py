@@ -4,6 +4,7 @@ from pcreco.utils.db.db_connection import get_session
 from loguru import logger
 import time
 
+
 class Offer:
     def __init__(self, offer_id, call_id=None, latitude=None, longitude=None) -> None:
         self.id = offer_id
@@ -13,8 +14,7 @@ class Offer:
         self.iris_id = get_iris_from_coordinates(longitude, latitude)
         self.item_id = self.get_item_id(offer_id)
         self.cnt_bookings = self.get_cnt_bookings()
-    
-    
+
     def get_item_id(self, offer_id) -> str:
         start = time.time()
         connection = get_session()

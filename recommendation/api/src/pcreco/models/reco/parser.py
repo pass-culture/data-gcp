@@ -20,7 +20,7 @@ def parse_geolocation(request):
 
 
 def parse_internal(request):
-    """Get the internal flag. This flag is used when internal queries are 
+    """Get the internal flag. This flag is used when internal queries are
     sent for test purposes.
     """
 

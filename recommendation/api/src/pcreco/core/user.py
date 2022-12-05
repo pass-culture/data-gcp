@@ -23,9 +23,8 @@ class User:
         self.recommendable_offer_table = f"{RECOMMENDABLE_OFFER_TABLE_PREFIX}_mv"
 
     def get_user_profile(self) -> None:
-        """Compute age & remaining credit amount.
-        """
-    
+        """Compute age & remaining credit amount."""
+
         self.age = None
         # default value
         self.user_deposit_remaining_credit = 300

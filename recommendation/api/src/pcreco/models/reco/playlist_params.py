@@ -7,13 +7,16 @@ from pcreco.utils.env_vars import (
     DEFAULT_RECO_RADIUS,
 )
 from pcreco.utils.geolocalisation import distance_to_radius_bucket
+from datetime import datetime
 
 INPUT_PARAMS = [
     "modelName",
     "startDate",
     "endDate",
+    "beginningDatetime",
+    "endingDatetime",
     "isEvent",
-    "offerIsDuo",
+    "isDuo",
     "categories",
     "subcategories",
     "movieType",
@@ -21,13 +24,14 @@ INPUT_PARAMS = [
     "offerSubTypeLabel",
     "macroRayon",
     "priceMax",
+    "priceMin",
     "nbRecoDisplay",
     "recoRadius",
     "isRecoMixed",
     "isRecoShuffled",
     "isSortByDistance",
+    "isDigital",
     "mixingFeatures",
-    "includeNumericals",
 ]
 
 
@@ -58,18 +62,36 @@ def parse_bool(value):
         return None
 
 
+def parse_date(value):
+    if value is None:
+        return None
+    try:
+        return datetime.strptime(value, "%Y-%m-%d")
+    except ValueError:
+        try:
+            return datetime.fromisoformat(value)
+        except ValueError:
+            return None
+
+
 class PlaylistParamsIn:
     def __init__(self, json={}):
 
         json = {k: v for k, v in json.items() if k in INPUT_PARAMS}
         self.json_input = json
         self.has_conditions = False
-        # reco filters
         self.model_name = json.get("modelName")
-        self.start_date = json.get("startDate")
-        self.end_date = json.get("endDate")
+
+        # deprecated
+        self.start_date = parse_date(json.get("startDate"))
+        self.end_date = parse_date(json.get("endDate"))
+        if self.start_date is None:
+            self.start_date = parse_date(json.get("beginningDatetime"))
+        if self.end_date is None:
+            self.end_date = parse_date(json.get("endingDatetime"))
+
         self.is_event = parse_bool(json.get("isEvent"))
-        self.offer_is_duo = parse_bool(json.get("offerIsDuo"))
+        self.offer_is_duo = parse_bool(json.get("isDuo"))
 
         self.search_group_names = json.get("categories")
         self.subcategories_id = json.get("subcategories")
@@ -77,8 +99,11 @@ class PlaylistParamsIn:
         self.offer_type_label = json.get("offerTypeLabel")
         self.offer_sub_type_label = json.get("offerSubTypeLabel")
         self.macro_rayon = json.get("macroRayon")
+
+        self.price_min = parse_float(json.get("priceMin"))
         self.price_max = parse_float(json.get("priceMax"))
-        self.include_numericals = parse_bool(json.get("includeNumericals"))
+
+        self.include_digital = parse_bool(json.get("isDigital"))
         # reco params
         self.nb_reco_display = parse_int(json.get("nbRecoDisplay"))
         self.reco_radius = parse_int(json.get("recoRadius"))
@@ -111,8 +136,8 @@ class PlaylistParamsIn:
             or self.mixing_features not in MIXING_FEATURE_LIST
         ):
             self.mixing_features = MIXING_FEATURE
-        if self.include_numericals is None:
-            self.include_numericals = True
+        if self.include_digital is None:
+            self.include_digital = True
 
     def _get_conditions(self) -> str:
         condition = ""
@@ -123,9 +148,9 @@ class PlaylistParamsIn:
                 column = "offer_creation_date"
             #
             if self.end_date:
-                condition += f"""AND ({column} > '{self.start_date}' AND {column} < '{self.end_date}') \n"""
+                condition += f"""AND ({column} > '{self.start_date.isoformat()}' AND {column} < '{self.end_date.isoformat()}') \n"""
             else:
-                condition += f"""AND ({column} > '{self.start_date}') \n"""
+                condition += f"""AND ({column} > '{self.start_date.isoformat()}') \n"""
         if self.search_group_names is not None and len(self.search_group_names) > 0:
             # we filter by search_group_name to be iso with contentful categories
             condition += (
@@ -146,6 +171,9 @@ class PlaylistParamsIn:
             )
         if self.price_max is not None and self.price_max >= 0:
             condition += f"AND stock_price<={self.price_max} \n"
+
+        if self.price_min is not None and self.price_min >= 0:
+            condition += f"AND stock_price>={self.price_min} \n"
 
         if self.offer_is_duo is not None:
             condition += f"AND (offer_is_duo={self.offer_is_duo}) \n"

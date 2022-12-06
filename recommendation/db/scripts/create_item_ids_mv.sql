@@ -6,7 +6,7 @@ CREATE
 OR REPLACE FUNCTION get_item_ids() RETURNS TABLE (
     offer_id varchar,
     item_id varchar,
-    booking_number varchar
+    booking_number int
 ) AS $body$ BEGIN RETURN QUERY
 SELECT
     distinct ro.offer_id

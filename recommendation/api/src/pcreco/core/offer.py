@@ -12,9 +12,11 @@ class Offer:
         self.longitude = False if longitude is None else longitude
         self.latitude = False if latitude is None else latitude
         self.iris_id = get_iris_from_coordinates(longitude, latitude)
-        self.item_id, self.cnt_bookings = self.get_item_id(offer_id)
+        self.item_id, self.cnt_bookings = self.get_offer_characteristics(offer_id)
 
-    def get_item_id(self, offer_id) -> str:
+    def get_offer_characteristics(self, offer_id) -> str:
+        """ Get item_id attached to an offer_id & get the number of bookings attached to an offer_id.
+        """
         start = time.time()
         connection = get_session()
         query_result = connection.execute(
@@ -24,12 +26,12 @@ class Offer:
                 WHERE offer_id = '{offer_id}'
             """
         ).fetchone()
-        log_duration(f"get_item_id for offer_id: {offer_id}", start)
+        log_duration(f"get_offer_characteristics for offer_id: {offer_id}", start)
         if query_result is not None:
-            logger.info("get_item_id:found id")
+            logger.info("get_offer_characteristics:found id")
             return query_result[0], query_result[1]
         else:
-            logger.info("get_item_id:not_found_id")
+            logger.info("get_offer_characteristics:not_found_id")
             return None
 
     # def get_cnt_bookings(self, offer_id) -> int:

@@ -54,6 +54,23 @@ export MODEL_NAME={MODEL_NAME}
 export TRAIN_DIR={TRAIN_DIR}
 """
 
+EVENT_SUBCATEGORIES = (
+    "FESTIVAL_CINE",
+    "SPECTACLE_VENTE_DISTANCE",
+    "SPECTACLE_REPRESENTATION",
+    "EVENEMENT_MUSIQUE",
+    "SEANCE_CINE",
+    "EVENEMENT_CINE",
+    "VISITE_GUIDEE",
+    "ABO_MUSEE",
+    "FESTIVAL_MUSIQUE",
+    "CONCERT",
+    "VISITE",
+    "CINE_VENTE_DISTANCE",
+    "EVENEMENT_PATRIMOINE",
+    "FESTIVAL_SPECTACLE",
+)
+
 
 def branch_function(ti, **kwargs):
     evaluate_ending = ti.xcom_pull(task_ids="evaluate")
@@ -95,22 +112,7 @@ with DAG(
         destination_dataset_table=f"{BIGQUERY_SANDBOX_DATASET}.deduplicated_enriched_offer_data",
         dag=dag,
         params={
-            "event_subcategories": (
-                "FESTIVAL_CINE",
-                "SPECTACLE_VENTE_DISTANCE",
-                "SPECTACLE_REPRESENTATION",
-                "EVENEMENT_MUSIQUE",
-                "SEANCE_CINE",
-                "EVENEMENT_CINE",
-                "VISITE_GUIDEE",
-                "ABO_MUSEE",
-                "FESTIVAL_MUSIQUE",
-                "CONCERT",
-                "VISITE",
-                "CINE_VENTE_DISTANCE",
-                "EVENEMENT_PATRIMOINE",
-                "FESTIVAL_SPECTACLE",
-            ),
+            "event_subcategories": EVENT_SUBCATEGORIES,
         },
     )
 

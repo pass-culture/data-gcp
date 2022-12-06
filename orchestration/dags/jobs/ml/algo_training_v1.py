@@ -68,12 +68,16 @@ default_args = {
     "retry_delay": timedelta(minutes=2),
 }
 
+schedule_dict = {"prod": "0 12 * * 5", "dev": "0 0 * * *", "stg": "0 12 * * 3"}
 
 with DAG(
     "algo_training_v1",
     default_args=default_args,
     description="Continuous algorithm training",
-    schedule_interval="0 12 * * 5",  # Train every Friday at 12:00
+    # Train every Friday at 12:00 in prod
+    # Train every day at 00:00 in dev
+    # Train every Wednesday at 12:00 in stg
+    schedule_interval=schedule_dict[ENV_SHORT_NAME],
     catchup=False,
     dagrun_timeout=timedelta(minutes=1440),
 ) as dag:

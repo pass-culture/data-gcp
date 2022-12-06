@@ -15,8 +15,7 @@ class Offer:
         self.item_id, self.cnt_bookings = self.get_offer_characteristics(offer_id)
 
     def get_offer_characteristics(self, offer_id) -> str:
-        """ Get item_id attached to an offer_id & get the number of bookings attached to an offer_id.
-        """
+        """Get item_id attached to an offer_id & get the number of bookings attached to an offer_id."""
         start = time.time()
         connection = get_session()
         query_result = connection.execute(

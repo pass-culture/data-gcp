@@ -97,6 +97,24 @@ with DAG(
         use_legacy_sql=False,
         destination_dataset_table=f"{BIGQUERY_SANDBOX_DATASET}.deduplicated_enriched_offer_data",
         dag=dag,
+        params={
+            "event_subcategories": (
+                "FESTIVAL_CINE",
+                "SPECTACLE_VENTE_DISTANCE",
+                "SPECTACLE_REPRESENTATION",
+                "EVENEMENT_MUSIQUE",
+                "SEANCE_CINE",
+                "EVENEMENT_CINE",
+                "VISITE_GUIDEE",
+                "ABO_MUSEE",
+                "FESTIVAL_MUSIQUE",
+                "CONCERT",
+                "VISITE",
+                "CINE_VENTE_DISTANCE",
+                "EVENEMENT_PATRIMOINE",
+                "FESTIVAL_SPECTACLE",
+            ),
+        },
     )
 
     create_dataset_table = BigQueryExecuteQueryOperator(

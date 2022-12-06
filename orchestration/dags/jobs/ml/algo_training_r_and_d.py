@@ -41,9 +41,6 @@ TRAIN_DIR = "/home/airflow/train"
 
 # Algo reco
 MODEL_NAME = "v1"
-AI_MODEL_NAME = f"tf_model_reco_{ENV_SHORT_NAME}"
-END_POINT_NAME = f"vertex_ai_{ENV_SHORT_NAME}"
-SERVING_CONTAINER = "europe-docker.pkg.dev/vertex-ai/prediction/tf2-cpu.2-5:latest"
 
 SLACK_CONN_ID = "slack_analytics"
 SLACK_CONN_PASSWORD = access_secret_data(GCP_PROJECT_ID, "slack-conn-password")

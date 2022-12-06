@@ -41,13 +41,16 @@ class SimilarOffer:
         if len(recommendable_offers) == 0:
             return []
 
-        instances = {
-            "offer_id": self.offer.item_id,
-            "selected_offers": list(recommendable_offers.keys()),
-            "size": self.n,
-        }
-        predicted_offers = self._predict_score(instances)
-        return [recommendable_offers[offer]["id"] for offer in predicted_offers]
+        if self.offer.cnt_bookings < 5:
+            return []
+        else:
+            instances = {
+                "offer_id": self.offer.item_id,
+                "selected_offers": list(recommendable_offers.keys()),
+                "size": self.n,
+            }
+            predicted_offers = self._predict_score(instances)
+            return [recommendable_offers[offer]["id"] for offer in predicted_offers]
 
     def get_recommendable_offers(self) -> Dict[str, Dict[str, Any]]:
 

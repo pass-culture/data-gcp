@@ -166,26 +166,25 @@ def similar_offers(offer_id: str):
     user = User(user_id, call_id, longitude, latitude)
     offer = Offer(offer_id, call_id, latitude, longitude)
 
-    if offer.get_cnt_bookings(offer_id) > 5:
-        scoring = SimilarOffer(user, offer, params_in=input_reco)
-        offer_recommendations = scoring.get_scoring()
+    scoring = SimilarOffer(user, offer, params_in=input_reco)
+    offer_recommendations = scoring.get_scoring()
 
-        if not internal:
-            scoring.save_recommendation(offer_recommendations)
+    if not internal:
+        scoring.save_recommendation(offer_recommendations)
 
-        return jsonify(
-            {
-                "results": offer_recommendations,
-                "params": {
-                    "model_name": scoring.model_display_name,
-                    "model_version": scoring.model_version,
-                    "ab_test": "default",
-                    "geo_located": geo_located,
-                    "filtered": input_reco.has_conditions if input_reco else False,
-                    "call_id": call_id,
-                },
-            }
-        )
+    return jsonify(
+        {
+            "results": offer_recommendations,
+            "params": {
+                "model_name": scoring.model_display_name,
+                "model_version": scoring.model_version,
+                "ab_test": "default",
+                "geo_located": geo_located,
+                "filtered": input_reco.has_conditions if input_reco else False,
+                "call_id": call_id,
+            },
+        }
+    )
 
 
 if __name__ == "__main__":

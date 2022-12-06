@@ -127,7 +127,7 @@ class RecommendableOffersQueryBuilder:
             export_table_name="selected_non_geolocated_offers",
         )
 
-        if self.reco_model.user.iris_id and self.reco_model.include_numericals:
+        if self.reco_model.user.iris_id and self.reco_model.include_digital:
             return f"""
                 WITH {reco_geolocated_offers_sql}, {filter_by_distance_sql}, {reco_non_geolocated_offers_sql}, {selected_offers_sql}
                 , tmp AS(

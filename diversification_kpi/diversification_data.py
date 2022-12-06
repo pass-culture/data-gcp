@@ -4,7 +4,7 @@ from multiprocessing import cpu_count
 import concurrent
 import traceback
 
-BATCH_SIZE = 50000
+BATCH_SIZE = 10000
 
 from tools.utils import (
     GCP_PROJECT,

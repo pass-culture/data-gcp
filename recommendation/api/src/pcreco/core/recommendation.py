@@ -42,7 +42,7 @@ class Recommendation:
         self.nb_reco_display = params_in.nb_reco_display
         self.is_reco_mixed = params_in.is_reco_mixed
         self.mixing_features = params_in.mixing_features
-        self.include_numericals = params_in.include_numericals
+        self.include_digital = params_in.include_digital
         self.is_sort_by_distance = params_in.is_sort_by_distance
         self.model_name = self.get_model_name()
         self.scoring = self.get_scoring_method()
@@ -138,7 +138,7 @@ class Recommendation:
             self.model_name = scoring.model_name
             self.model_display_name = None
             self.model_version = None
-            self.include_numericals = scoring.include_numericals
+            self.include_digital = scoring.include_digital
             self.recommendable_offers = self.get_recommendable_offers()
 
         def get_scored_offers(self) -> List[Dict[str, Any]]:
@@ -225,7 +225,7 @@ class Recommendation:
             self.params_in_filters = scoring.params_in_filters
             self.reco_radius = scoring.reco_radius
             self.cold_start_categories = self.get_cold_start_categories()
-            self.include_numericals = scoring.include_numericals
+            self.include_digital = scoring.include_digital
             self.model_version = None
             self.model_display_name = None
 

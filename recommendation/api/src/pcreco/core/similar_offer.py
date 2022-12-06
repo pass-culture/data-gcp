@@ -23,7 +23,7 @@ class SimilarOffer:
         self.params_in_filters = params_in._get_conditions()
         self.reco_radius = params_in.reco_radius
         self.json_input = params_in.json_input
-        self.include_numericals = params_in.include_numericals
+        self.include_digital = params_in.include_digital
         self.has_conditions = params_in.has_conditions
         self.item_id = self.get_item_id(offer_id)
 

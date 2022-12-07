@@ -157,8 +157,6 @@ def compute_diversification_score(data_model_dict, k):
 
 
 def get_avg_diversification_score(df_raw, recos, k):
-    if len(recos) == 0:
-        return 0
 
     diversification_count = 0
     for reco in recos:

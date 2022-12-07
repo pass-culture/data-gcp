@@ -11,7 +11,7 @@ def main(
     )
 ) -> None:
     bookings = get_data("bookings", dataset)
-    bookings.to_csv(f"{STORAGE_PATH}/raw_data.csv")
+    bookings.to_csv(f"{STORAGE_PATH}/raw_data.csv", index=False)
 
 
 if __name__ == "__main__":

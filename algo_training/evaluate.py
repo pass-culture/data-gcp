@@ -68,10 +68,9 @@ def evaluate(model, storage_path: str, model_name):
         users_to_test = random.sample(
             list(positive_data_test_clean.user_id), EVALUATION_USER_NUMBER
         )
-
-    positive_data_test_clean = positive_data_test_clean[
-        positive_data_test_clean.user_id.isin(users_to_test)
-    ]
+        positive_data_test_clean = positive_data_test_clean[
+            positive_data_test_clean.user_id.isin(users_to_test)
+        ]
 
     positive_data_test_clean = positive_data_test_clean[
         positive_data_test_clean.item_id.isin(positive_data_train.item_id)

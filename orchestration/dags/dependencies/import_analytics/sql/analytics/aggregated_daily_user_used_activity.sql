@@ -88,7 +88,7 @@ diversification_used as (
   SELECT 
     user_id
     , booking_used_date
-    , count(booking_id) as nb_bookings
+    , count(booking_id) as count
     , sum(delta_diversification) AS delta_diversification
   FROM diversification 
   GROUP BY 

@@ -34,7 +34,7 @@ def evaluate(model, storage_path: str, model_name):
             "type": str,
             "venue_id": str,
             "venue_name": str,
-            "nb_bookings": int,
+            "count": int,
         },
     )
 

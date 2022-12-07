@@ -9,7 +9,7 @@ SELECT booking.user_id,
        enroffer.type,
        enroffer.venue_id,
        enroffer.venue_name,
-       COUNT(*) AS COUNT,
+       COUNT(*) AS count,
 FROM
     `{{ bigquery_clean_dataset }}`.`applicative_database_booking` booking
     INNER JOIN `{{ bigquery_clean_dataset }}`.`applicative_database_stock` stock

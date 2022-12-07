@@ -482,7 +482,33 @@ user_suspension_history AS (
         ) AS rank
     FROM
         `{{ bigquery_analytics_dataset }}`.applicative_database_user_suspension
+),
+
+applicative_database_user AS (
+    SELECT 
+        user_id,
+        -- keep user_postal_code by default.
+        COALESCE(
+        CASE
+            SUBSTRING(user_postal_code, 0, 2)
+            WHEN '97' THEN SUBSTRING(user_postal_code, 0, 3)
+            WHEN '98' THEN SUBSTRING(user_postal_code, 0, 3)
+            ELSE SUBSTRING(user_postal_code, 0, 2)
+          END, 
+          user_department_code
+        ) AS user_department_code,
+        user_postal_code,
+        user_activity,
+        user_civility,
+        user_school_type,
+        user_is_active,
+        user_age,
+        user_role,
+        user_birth_date,
+        user_cultural_survey_filled_date
+    FROM  `{{ bigquery_analytics_dataset }}`.applicative_database_user
 )
+
 SELECT
     user.user_id,
     user.user_department_code,
@@ -564,7 +590,7 @@ SELECT
     user.user_age,
     user.user_birth_date
 FROM
-    `{{ bigquery_analytics_dataset }}`.applicative_database_user AS user
+    applicative_database_user AS user
     LEFT JOIN activation_dates ON user.user_id = activation_dates.user_id
     LEFT JOIN date_of_first_bookings ON user.user_id = date_of_first_bookings.user_id
     LEFT JOIN date_of_second_bookings ON user.user_id = date_of_second_bookings.user_id
@@ -590,7 +616,7 @@ FROM
         AND deposit_rank_desc = 1
     JOIN user_agg_deposit_data ON user.user_id = user_agg_deposit_data.userId
 WHERE
-    user_role IN ('UNDERAGE_BENEFICIARY', 'BENEFICIARY')
+    user.user_role IN ('UNDERAGE_BENEFICIARY', 'BENEFICIARY')
     AND (
         user.user_is_active
         OR user_suspension_history.reasonCode = 'UPON_USER_REQUEST'

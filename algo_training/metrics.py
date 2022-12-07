@@ -169,7 +169,9 @@ def get_avg_diversification_score(df_raw, recos, k):
         count_dist = np.array(df_clean.nunique())
         diversification = np.sum(count_dist)
         diversification_count += diversification
-    avg_diversification = diversification_count / len(recos)
+    avg_diversification = -1
+    if len(recos) > 0:
+        avg_diversification = diversification_count / len(recos)
     return avg_diversification
 
 

@@ -14,7 +14,7 @@ def preprocess(storage_path: str):
             "type": str,
             "venue_id": str,
             "venue_name": str,
-            "count": int,
+            "nb_bookings": int,
         },
     )
     bookings.rename(columns={"count": "rating"}, inplace=True)

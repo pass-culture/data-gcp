@@ -9,9 +9,12 @@ def main(
         f"raw_{ENV_SHORT_NAME}",
         help="BigQuery dataset in which the training table is located",
     ),
-    table: str = typer.Option("bookings"),
+    data_type: str = typer.Option(
+        "bookings",
+        help="BigQuery table containing the data we want to load",
+    ),
 ) -> None:
-    bookings = get_data(table, dataset)
+    bookings = get_data(dataset, data_type)
     bookings.to_csv(f"{STORAGE_PATH}/raw_data.csv")
 
 

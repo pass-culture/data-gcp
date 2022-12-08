@@ -19,11 +19,11 @@ def split_data(storage_path: str, model_name: str):
 
     # Split the remaining data in half
     positive_data_not_in_train = clean_data.loc[
-        ~clean_data.index.isin(list(positive_data_train.index))
+        lambda df: ~df.index.isin(list(positive_data_train.index))
     ]
     positive_data_eval = positive_data_not_in_train.sample(frac=0.5)
     positive_data_test = positive_data_not_in_train.loc[
-        ~positive_data_not_in_train.index.isin(list(positive_data_eval.index))
+        lambda df: ~df.index.isin(list(positive_data_eval.index))
     ]
 
     # Reassign the non evaluable data into train
@@ -32,15 +32,15 @@ def split_data(storage_path: str, model_name: str):
     positive_data_train = pd.concat(
         [
             positive_data_train,
-            positive_data_eval[~positive_data_eval["item_id"].isin(training_items)],
-            positive_data_test[~positive_data_test["item_id"].isin(training_items)],
+            positive_data_eval[lambda df: ~df["item_id"].isin(training_items)],
+            positive_data_test[lambda df: ~df["item_id"].isin(training_items)],
         ]
     )
     positive_data_eval = positive_data_eval[
-        positive_data_eval["item_id"].isin(training_items)
+        lambda df: df["item_id"].isin(training_items)
     ]
     positive_data_test = positive_data_test[
-        positive_data_test["item_id"].isin(training_items)
+        lambda df: df["item_id"].isin(training_items)
     ]
 
     # Store the datasets

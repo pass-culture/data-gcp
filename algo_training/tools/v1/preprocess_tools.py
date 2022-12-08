@@ -1,9 +1,9 @@
 import pandas as pd
 
 
-def preprocess(storage_path: str):
-    bookings = pd.read_csv(
-        f"{storage_path}/raw_data.csv",
+def preprocess(raw_data_path: str):
+    clean_data = pd.read_csv(
+        raw_data_path,
         dtype={
             "user_id": str,
             "item_id": str,
@@ -14,8 +14,7 @@ def preprocess(storage_path: str):
             "type": str,
             "venue_id": str,
             "venue_name": str,
-            "nb_bookings": int,
+            "count": int,
         },
-    )
-    bookings.rename(columns={"count": "rating"}, inplace=True)
-    bookings.to_csv(f"{storage_path}/clean_data.csv", index=False)
+    ).rename(columns={"count": "rating"}, inplace=True)
+    return clean_data

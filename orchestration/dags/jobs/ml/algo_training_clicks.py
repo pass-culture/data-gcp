@@ -133,7 +133,7 @@ with DAG(
     )
 
     DATA_COLLECT = f""" '{DEFAULT}
-        python data_collect.py --dataset {BIGQUERY_RAW_DATASET} --data_type clicks'
+        python data_collect.py --dataset {BIGQUERY_RAW_DATASET} --table_name training_data_clicks'
     """
 
     data_collect = BashOperator(

@@ -27,5 +27,5 @@ install_ubuntu_libs:
 	sudo apt-get install -y make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
 
 upload_dags_to_dev:
-	$(eval COMPOSER_BUCKET_PATH=$(shell sh -c "gcloud composer environments describe data-composer-dev --location europe-west1 --format='value(config.dagGcsPrefix)'"))
+	$(eval COMPOSER_BUCKET_PATH=$(shell gcloud composer environments describe data-composer-dev --location europe-west1 --format='value(config.dagGcsPrefix)'))
 	gsutil cp -r orchestration/dags/${path} $(COMPOSER_BUCKET_PATH)/${path}

@@ -136,7 +136,7 @@ with DAG(
         python data_collect.py --dataset {BIGQUERY_RAW_DATASET} --table_name training_data_clicks'
     """
 
-    data_collect = BashOperator(
+    clicks_data_collect = BashOperator(
         task_id="data_collect",
         bash_command=f"""
         gcloud compute ssh {GCE_INSTANCE} \
@@ -208,6 +208,36 @@ with DAG(
         dag=dag,
     )
 
+    DATA_COLLECT = f""" '{DEFAULT}
+        python data_collect.py --dataset {BIGQUERY_RAW_DATASET} --table_name training_data_bookings'
+    """
+
+    bookings_data_collect = BashOperator(
+        task_id="data_collect",
+        bash_command=f"""
+        gcloud compute ssh {GCE_INSTANCE} \
+        --zone {GCE_ZONE} \
+        --project {GCP_PROJECT_ID} \
+        --command {DATA_COLLECT}
+        """,
+        dag=dag,
+    )
+
+    EVALUATION = f""" '{DEFAULT}
+        python evaluate.py'
+    """
+
+    evaluate = BashOperator(
+        task_id="evaluate",
+        bash_command=f"""
+        gcloud compute ssh {GCE_INSTANCE} \
+        --zone {GCE_ZONE} \
+        --project {GCP_PROJECT_ID} \
+        --command {EVALUATION}
+        """,
+        dag=dag,
+    )
+
     gce_instance_stop = ComputeEngineStopInstanceOperator(
         project_id=GCP_PROJECT_ID,
         zone=GCE_ZONE,
@@ -263,11 +293,13 @@ with DAG(
         >> gce_instance_start
         >> fetch_code
         >> install_dependencies
-        >> data_collect
+        >> clicks_data_collect
         >> preprocess
         >> split_data
         >> training
         >> postprocess
+        >> bookings_data_collect
+        >> evaluate
         >> gce_instance_stop
         >> send_slack_notif_success
     )

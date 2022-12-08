@@ -496,7 +496,7 @@ applicative_database_user AS (
             THEN "99"
             -- if user_department is not in "experimentation" (2019_06 / 2021_05) phase but has created an account before, set 99.
             WHEN 
-                user_department_code not in ("22","25","35","56","58","71","08","84","94")
+                user_department_code not in ("29","34","67","93","973","22","25","35","56","58","71","08","84","94")
                 AND date(user_creation_date) < "2021-05-01"
             THEN "99"
             ELSE user_department_code 

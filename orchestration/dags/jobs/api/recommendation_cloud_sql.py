@@ -23,6 +23,7 @@ from common.access_gcp_secrets import access_secret_data
 from common.compose_gcs_files import compose_gcs_files
 from common.config import (
     GCP_PROJECT,
+    GCP_REGION,
     ENV_SHORT_NAME,
     DATA_GCS_BUCKET_NAME,
     BIGQUERY_CLEAN_DATASET,
@@ -37,18 +38,17 @@ from dependencies.import_recommendation_cloudsql.monitor_tables import monitorin
 from common.alerts import task_fail_slack_alert
 from common import macros
 
-LOCATION = os.environ.get("REGION")
 
 database_url = access_secret_data(
     GCP_PROJECT, f"{RECOMMENDATION_SQL_BASE}-database-url", default=""
 )
 os.environ["AIRFLOW_CONN_PROXY_POSTGRES_TCP"] = (
     database_url.replace("postgresql://", "gcpcloudsql://")
-    + f"?database_type=postgres&project_id={GCP_PROJECT}&location={LOCATION}&instance={RECOMMENDATION_SQL_INSTANCE}&use_proxy=True&sql_proxy_use_tcp=True"
+    + f"?database_type=postgres&project_id={GCP_PROJECT}&location={GCP_REGION}&instance={RECOMMENDATION_SQL_INSTANCE}&use_proxy=True&sql_proxy_use_tcp=True"
 )
 
 
-TABLES_DATA_PATH = f"{os.environ.get('DAG_FOLDER')}/ressources/tables.csv"
+TABLES_DATA_PATH = f"{DAG_FOLDER}/ressources/tables.csv"
 BUCKET_PATH = f"gs://{DATA_GCS_BUCKET_NAME}/bigquery_exports"
 
 default_args = {

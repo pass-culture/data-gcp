@@ -1,0 +1,71 @@
+version: "3.9"
+
+volumes:
+  postgres-db-volume:
+
+x-airflow-common:
+  &airflow-common
+  build: airflow/
+  environment:
+    &airflow-common-env
+    LOCAL_ENV: ${LOCAL_ENV:-1}
+    GOOGLE_APPLICATION_CREDENTIALS: /etc/sa.gcskey.json
+    AIRFLOW_CONN_GOOGLE_CLOUD_DEFAULT: 'google-cloud-platform://?key_path=%2Fetc%2Fsa.gcskey.json&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcloud-platform&project=passculture-data-ehp&num_retries=5'
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+    GOOGLE_CLOUD_PROJECT: 'passculture-data-ehp'
+  volumes:
+    - ./dags:/opt/airflow/dags
+    - ./airflow/config/airflow.cfg:/opt/airflow/airflow.cfg
+    - ./airflow/etc/sa.gcskey.json:/etc/sa.gcskey.json
+  user: "${AIRFLOW_UID:-50000}:0"
+  depends_on:
+    - postgres
+
+services:
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - postgres-db-volume:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 5s
+      retries: 5
+    restart: always
+
+  airflow-webserver:
+    <<: *airflow-common
+    command: webserver
+    ports:
+      - 8080:8080
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://airflow-webserver:8080/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+    
+
+  airflow-scheduler:
+    <<: *airflow-common
+    command: scheduler
+    healthcheck:
+      test: ["CMD-SHELL", 'airflow jobs check --job-type SchedulerJob --hostname "http://airflow-webserver:8080"']
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+
+  airflow-init:
+    <<: *airflow-common
+    command: version
+    environment:
+      <<: *airflow-common-env
+      _AIRFLOW_DB_UPGRADE: 'true'
+      _AIRFLOW_WWW_USER_CREATE: 'true'
+      _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
+      _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
+

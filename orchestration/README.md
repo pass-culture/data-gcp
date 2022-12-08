@@ -49,3 +49,63 @@ Pour voir, ajouter ou modifier les variables d'environement, il faut aller dans 
 https://cloud.google.com/composer/docs/how-to/using/installing-python-dependencies?hl=fr#install-package
 
 A partir de la console gcp, dans l'instance de composer, ajouter les dépendances avec leur version.
+
+# Local 
+
+## Installer Airflow localement:
+
+```sh
+make init-dev
+```
+
+### airflow.cfg
+
+Dans `airflow/config/airflow.cfg` vous devez modifier les <TODO> avec des secrets:
+
+- `fernet_key` > [how-to](https://airflow.apache.org/docs/apache-airflow/stable/security/secrets/fernet.html)
+- `secret_key` > 256-bit key 
+
+### .env
+
+Dans le fichier `.env`, il est necessaire de mettre à jour les configs
+
+```
+echo $UID
+```
+Set-up some airflow admin user & password.
+```sh
+AIRFLOW_UID=<your_uid>
+_AIRFLOW_WWW_USER_USERNAME=<user>
+_AIRFLOW_WWW_USER_PASSWORD=<password>
+```
+
+### sa.gcskey.json
+
+Mettre la clef gcs dans `/airflow/etc/sa.gcskey.json`
+
+#### 4. Build and run
+
+Build 
+
+```sh
+make build
+```
+
+(uniquement la première fois) :init airflow, création des tables par défaut.
+
+```sh
+docker-compose up airflow-init
+```
+
+Lancer les différents conteneurs
+```sh
+make dev
+```
+
+> `http://localhost:8080`
+
+#### Stop
+
+```sh
+make stop-dev
+```

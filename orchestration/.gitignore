@@ -1,0 +1,4 @@
+.env
+./airflow/config/airflow.cfg
+./airflow/etc/*.json
+./airflow/logs

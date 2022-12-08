@@ -487,15 +487,17 @@ user_suspension_history AS (
 applicative_database_user AS (
     SELECT * EXCEPT(user_department_code), 
         -- set 99 when user user_creation_date does not match opening phases.
-        -- this is due to Support changes in the past which mhigh lead to misunderstandings.
+        -- this is due to Support changes in the past which migh lead to misunderstandings.
         CASE 
+            -- if user_department is not in "pilote" (2019_02 / 2019_06) phase but has created an account before, set 99.
             WHEN 
-                user_department_code in ("22","25","35","56","58","71","08","84","94")
+                user_department_code not in ("29","34","67","93","973")
                 AND date(user_creation_date) < "2019-06-01"
             THEN "99"
+            -- if user_department is not in "experimentation" (2019_06 / 2021_05) phase but has created an account before, set 99.
             WHEN 
-                user_department_code in ("29","34","67","93","973")
-                AND date(user_creation_date) < "2019-02-01"
+                user_department_code not in ("22","25","35","56","58","71","08","84","94")
+                AND date(user_creation_date) < "2021-05-01"
             THEN "99"
             ELSE user_department_code 
         END AS user_department_code 
@@ -523,6 +525,8 @@ applicative_database_user AS (
         user_birth_date,
         user_cultural_survey_filled_date
     FROM  `{{ bigquery_analytics_dataset }}`.applicative_database_user
+    -- only BENEFICIARY
+    WHERE user_role IN ('UNDERAGE_BENEFICIARY', 'BENEFICIARY')
     ) inn
 )
 
@@ -633,8 +637,7 @@ FROM
         AND deposit_rank_desc = 1
     JOIN user_agg_deposit_data ON user.user_id = user_agg_deposit_data.userId
 WHERE
-    user.user_role IN ('UNDERAGE_BENEFICIARY', 'BENEFICIARY')
-    AND (
+    (
         user.user_is_active
         OR user_suspension_history.reasonCode = 'UPON_USER_REQUEST'
     )

@@ -485,8 +485,24 @@ user_suspension_history AS (
 ),
 
 applicative_database_user AS (
+    SELECT * EXCEPT(user_department_code), 
+        -- set 99 when user user_creation_date does not match opening phases.
+        -- this is due to Support changes in the past which mhigh lead to misunderstandings.
+        CASE 
+            WHEN 
+                user_department_code in ("22","25","35","56","58","71","08","84","94")
+                AND date(user_creation_date) < "2019-06-01"
+            THEN "99"
+            WHEN 
+                user_department_code in ("29","34","67","93","973")
+                AND date(user_creation_date) < "2019-02-01"
+            THEN "99"
+            ELSE user_department_code 
+        END AS user_department_code 
+    FROM (
     SELECT 
         user_id,
+        user_creation_date,
         -- keep user_postal_code by default.
         COALESCE(
         CASE
@@ -507,6 +523,7 @@ applicative_database_user AS (
         user_birth_date,
         user_cultural_survey_filled_date
     FROM  `{{ bigquery_analytics_dataset }}`.applicative_database_user
+    ) inn
 )
 
 SELECT

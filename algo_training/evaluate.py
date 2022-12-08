@@ -3,6 +3,8 @@ import pandas as pd
 import tensorflow as tf
 import mlflow.tensorflow
 import random
+
+from algo_training.tools.v1.preprocess_tools import preprocess
 from models.v1.match_model import MatchModel
 from utils import (
     get_secret,
@@ -22,21 +24,7 @@ k_list = [RECOMMENDATION_NUMBER, NUMBER_OF_PRESELECTED_OFFERS]
 
 def evaluate(model, storage_path: str, model_name):
 
-    raw_data = pd.read_csv(
-        f"{storage_path}/raw_data.csv",
-        dtype={
-            "user_id": str,
-            "item_id": str,
-            "offer_subcategoryid": str,
-            "offer_categoryId": str,
-            "genres": str,
-            "rayon": str,
-            "type": str,
-            "venue_id": str,
-            "venue_name": str,
-            "count": int,
-        },
-    )
+    raw_data = preprocess(f"{storage_path}/raw_data.csv")
 
     positive_data_train = pd.read_csv(f"{storage_path}/positive_data_train.csv",)[
         ["user_id", "item_id"]

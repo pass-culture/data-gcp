@@ -16,5 +16,5 @@ def preprocess(raw_data_path: str):
             "venue_name": str,
             "count": int,
         },
-    ).rename(columns={"count": "rating"}, inplace=True)
+    )
     return clean_data

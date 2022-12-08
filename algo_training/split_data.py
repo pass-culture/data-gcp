@@ -27,7 +27,7 @@ def split_data(storage_path: str, model_name: str):
     ]
 
     # Reassign the non evaluable data into train
-    training_items = positive_data_train["item_id"].values
+    training_items = positive_data_train["item_id"].unique()
 
     positive_data_train = pd.concat(
         [

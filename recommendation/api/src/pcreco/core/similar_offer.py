@@ -13,6 +13,7 @@ from loguru import logger
 import datetime
 import time
 import pytz
+import random
 
 
 class SimilarOffer:
@@ -37,16 +38,25 @@ class SimilarOffer:
             return []
         # get recommendable_offers
         recommendable_offers = self.get_recommendable_offers()
+        size_recommendable_offers = len(recommendable_offers)
         # nothing to score
-        if len(recommendable_offers) == 0:
+        if size_recommendable_offers == 0:
             return []
+
+        selected_offers = list(recommendable_offers.keys())
+        # TODO: fix waiting to have enough offers in dev.
+        if ENV_SHORT_NAME == "dev":
+            predicted_offers = random.sample(
+                selected_offers, k=min(self.n, size_recommendable_offers)
+            )
+            return [recommendable_offers[offer]["id"] for offer in predicted_offers]
 
         if self.offer.cnt_bookings < 5:
             return []
         else:
             instances = {
                 "offer_id": self.offer.item_id,
-                "selected_offers": list(recommendable_offers.keys()),
+                "selected_offers": selected_offers,
                 "size": self.n,
             }
             predicted_offers = self._predict_score(instances)

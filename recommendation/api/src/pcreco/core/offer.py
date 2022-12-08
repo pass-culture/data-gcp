@@ -31,22 +31,4 @@ class Offer:
             return query_result[0], query_result[1]
         else:
             logger.info("get_offer_characteristics:not_found_id")
-            return None
-
-    # def get_cnt_bookings(self, offer_id) -> int:
-    #     start = time.time()
-    #     connection = get_session()
-    #     query_result = connection.execute(
-    #         f"""
-    #             SELECT sum(booking_number) as cnt_bookings
-    #             FROM public.recommendable_offers_per_iris_shape_mv
-    #             WHERE offer_id = '{offer_id}'
-    #         """
-    #     ).fetchone()
-    #     log_duration(f"get_cnt_bookings for offer_id: {offer_id}", start)
-    #     if query_result is not None:
-    #         logger.info("get_cnt_bookings:found id")
-    #         return query_result[0]
-    #     else:
-    #         logger.info("get_cnt_bookings:not_found_id")
-    #         return None
+            return None, 0

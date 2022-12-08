@@ -9,9 +9,16 @@ def underscore_to_camel(name):
 
 
 def parse_geolocation(request):
+    def _parse(value):
+        if value is not None:
+            try:
+                return float(value)
+            except ValueError:
+                pass
+        return None
 
-    longitude = request.args.get("longitude", None)
-    latitude = request.args.get("latitude", None)
+    longitude = _parse(request.args.get("longitude", None))
+    latitude = _parse(request.args.get("latitude", None))
     if longitude is not None and latitude is not None:
         geo_located = True
     else:

@@ -26,7 +26,7 @@ from common.config import (
 )
 from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
 
-GCE_INSTANCE = os.environ.get("GCE_TRAINING_INSTANCE", "algo-training-dev")
+GCE_INSTANCE = os.environ.get("GCE_TRAINING_INSTANCE", "algo-training-dev-1")
 MLFLOW_BUCKET_NAME = os.environ.get("MLFLOW_BUCKET_NAME", "mlflow-bucket-ehp")
 if ENV_SHORT_NAME != "prod":
     MLFLOW_URL = "https://mlflow-ehp.internal-passculture.app/"

@@ -1,5 +1,5 @@
 SELECT
-    DATE(edd.eposit_creation_date) AS day,
+    DATE(edd.deposit_creation_date) AS day,
     eud.user_civility,
     eud.user_activity,
     eud.user_region_name,

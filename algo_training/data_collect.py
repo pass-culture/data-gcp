@@ -14,8 +14,8 @@ def main(
         help="BigQuery table containing the data we want to load",
     ),
 ) -> None:
-    bookings = get_data(dataset, table_name)
-    bookings.to_csv(f"{STORAGE_PATH}/raw_data.csv")
+    raw_data = get_data(dataset, table_name)
+    raw_data.to_csv(f"{STORAGE_PATH}/raw_data.csv", index=False)
 
 
 if __name__ == "__main__":

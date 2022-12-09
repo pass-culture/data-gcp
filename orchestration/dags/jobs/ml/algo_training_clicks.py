@@ -133,11 +133,11 @@ with DAG(
     )
 
     DATA_COLLECT = f""" '{DEFAULT}
-        python data_collect.py --dataset {BIGQUERY_RAW_DATASET} --table_name training_data_clicks'
+        python data_collect.py --dataset {BIGQUERY_RAW_DATASET} --table-name training_data_clicks'
     """
 
     clicks_data_collect = BashOperator(
-        task_id="data_collect",
+        task_id="clicks_data_collect",
         bash_command=f"""
         gcloud compute ssh {GCE_INSTANCE} \
         --zone {GCE_ZONE} \
@@ -213,7 +213,7 @@ with DAG(
     """
 
     bookings_data_collect = BashOperator(
-        task_id="data_collect",
+        task_id="bookings_data_collect",
         bash_command=f"""
         gcloud compute ssh {GCE_INSTANCE} \
         --zone {GCE_ZONE} \

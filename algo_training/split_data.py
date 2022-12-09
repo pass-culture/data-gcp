@@ -1,9 +1,36 @@
+from typing import Tuple
+
 import pandas as pd
-import pandas_gbq as gbq
-from utils import STORAGE_PATH, MODEL_NAME, GCP_PROJECT_ID, ENV_SHORT_NAME
+from utils import STORAGE_PATH
 
 
-def split_data(storage_path: str, model_name: str):
+def split_by_column_and_ratio(
+    df: pd.DataFrame, column_name: str, ratio: float
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    df_1 = df.groupby([column_name]).sample(frac=ratio)
+    df_2 = df.loc[~df.index.isin(list(df_1.index))]
+    return df_1, df_2
+
+
+def split_by_ratio(df: pd.DataFrame, ratio: float) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    df_1 = df.sample(frac=ratio)
+    df_2 = df.loc[~df.index.isin(list(df_1.index))]
+    return df_1, df_2
+
+
+def reassign_extra_data_to_target(
+    source_df: pd.DataFrame, target_df: pd.DataFrame, column_name: str
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    target_data = target_df[column_name].unique()
+    target_df = pd.concat(
+        [target_df, source_df[lambda df: ~df[column_name].isin(target_data)]]
+    )
+    if len(source_df[lambda df: df[column_name].isin(target_data)]) > 0:
+        source_df = source_df[lambda df: df[column_name].isin(target_data)]
+    return source_df, target_df
+
+
+def main(storage_path: str):
     """We want to split the dataset into train, eval & test datasets but we want each dataset to contain
     at least one information about every user & offer the model was trained with.
 
@@ -15,33 +42,26 @@ def split_data(storage_path: str, model_name: str):
     clean_data = pd.read_csv(f"{storage_path}/clean_data.csv")
 
     # Sample 80% of the clean data based on users
-    positive_data_train = clean_data.groupby(["user_id"]).sample(frac=0.8)
+    positive_data_train, positive_data_not_in_train = split_by_column_and_ratio(
+        df=clean_data, column_name="user_id", ratio=0.8
+    )
 
     # Split the remaining data in half
-    positive_data_not_in_train = clean_data.loc[
-        lambda df: ~df.index.isin(list(positive_data_train.index))
-    ]
-    positive_data_eval = positive_data_not_in_train.sample(frac=0.5)
-    positive_data_test = positive_data_not_in_train.loc[
-        lambda df: ~df.index.isin(list(positive_data_eval.index))
-    ]
+    positive_data_eval, positive_data_test = split_by_ratio(
+        df=positive_data_not_in_train, ratio=0.5
+    )
 
     # Reassign the non evaluable data into train
-    training_items = positive_data_train["item_id"].unique()
-
-    positive_data_train = pd.concat(
-        [
-            positive_data_train,
-            positive_data_eval[lambda df: ~df["item_id"].isin(training_items)],
-            positive_data_test[lambda df: ~df["item_id"].isin(training_items)],
-        ]
+    positive_data_eval, positive_data_train = reassign_extra_data_to_target(
+        source_df=positive_data_eval,
+        target_df=positive_data_train,
+        column_name="item_id",
     )
-    positive_data_eval = positive_data_eval[
-        lambda df: df["item_id"].isin(training_items)
-    ]
-    positive_data_test = positive_data_test[
-        lambda df: df["item_id"].isin(training_items)
-    ]
+    positive_data_test, positive_data_train = reassign_extra_data_to_target(
+        source_df=positive_data_eval,
+        target_df=positive_data_train,
+        column_name="item_id",
+    )
 
     # Store the datasets
     positive_data_train.to_csv(f"{storage_path}/positive_data_train.csv", index=False)
@@ -50,4 +70,4 @@ def split_data(storage_path: str, model_name: str):
 
 
 if __name__ == "__main__":
-    split_data(STORAGE_PATH, MODEL_NAME)
+    main(STORAGE_PATH)

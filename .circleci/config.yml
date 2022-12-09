@@ -539,6 +539,37 @@ workflows:
             - Slack
           <<: *slack-fail-post-step
       
+      - cloud-function-deploy:
+          name: cold-data-stg
+          cloud-function-name: cold_data_stg
+          cloud-function-folder: cold-data-function-source
+          requires:
+            - linter
+          filters:
+            branches:
+              only:
+                - master
+          context:
+            - DATA_GCP
+            - DATA_GCP_EHP
+            - Slack
+          <<: *slack-fail-post-step
+
+      - cloud-function-deploy:
+          name: cold-data-prod
+          cloud-function-name: cold_data_prod
+          cloud-function-folder: cold-data-function-source
+          requires:
+            - linter
+          filters:
+            branches:
+              only:
+                - production
+          context:
+            - DATA_GCP
+            - DATA_GCP_PROD
+            - Slack
+          <<: *slack-fail-post-step
 
       # Slack alerts jobs
       # ----------------
@@ -563,6 +594,7 @@ workflows:
             - import-adage-cloud-function-deploy-prod
             - import-typeform-adage-reference-request-prod
             - metabase-archiving-prod
+            - cold-data-prod
 
       - slack-alert:
           name: slack-alert-staging
@@ -585,6 +617,8 @@ workflows:
             - import-adage-cloud-function-deploy-stg
             - import-typeform-adage-reference-request-stg
             - metabase-archiving-stg
+            - cold-data-stg
+
 
   # ----------------
   # Workflow to deploy on dev
@@ -645,6 +679,11 @@ workflows:
           cloud-function-name: metabase_archiving_dev
           cloud-function-folder: metabase-archiving-function-source
           <<: *deploy_on_dev_commons
+      - cloud-function-deploy:
+          name: cold-data-dev
+          cloud-function-name: cold_data_dev
+          cloud-function-folder: cold-data-function-source
+          <<: *deploy_on_dev_commons
       - build_and_deploy_api:
           name: build_and_deploy_api_dev
           api-instance-name: apireco-dev
@@ -684,6 +723,7 @@ workflows:
             - adage-import-function-deploy-dev
             - typeform-adage-reference-request-dev
             - metabase-archiving-dev
+            - cold-data-dev
 ### temporarily removing api reco tests ###
 #          requires:
 #            - api-integration-tests-dev

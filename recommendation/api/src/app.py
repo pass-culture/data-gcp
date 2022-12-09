@@ -7,6 +7,7 @@ from pcreco.utils.secrets.access_gcp_secrets import access_secret
 from pcreco.utils.health_check_queries import get_materialized_view_status
 from pcreco.utils.db.engine import create_connection, close_connection
 from pcreco.core.user import User
+from pcreco.core.offer import Offer
 from pcreco.core.recommendation import Recommendation
 from pcreco.core.similar_offer import SimilarOffer
 from pcreco.models.reco.parser import parse_params, parse_geolocation, parse_internal
@@ -163,7 +164,9 @@ def similar_offers(offer_id: str):
     user_id = request.args.get("user_id", -1)
 
     user = User(user_id, call_id, longitude, latitude)
-    scoring = SimilarOffer(user, offer_id=offer_id, params_in=input_reco)
+    offer = Offer(offer_id, call_id, latitude, longitude)
+
+    scoring = SimilarOffer(user, offer, params_in=input_reco)
     offer_recommendations = scoring.get_scoring()
 
     if not internal:

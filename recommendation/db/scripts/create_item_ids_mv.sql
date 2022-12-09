@@ -5,11 +5,13 @@ DROP FUNCTION IF EXISTS get_item_ids CASCADE;
 CREATE
 OR REPLACE FUNCTION get_item_ids() RETURNS TABLE (
     offer_id varchar,
-    item_id varchar
+    item_id varchar,
+    booking_number int
 ) AS $body$ BEGIN RETURN QUERY
 SELECT
     distinct ro.offer_id
     ,ro.item_id
+    ,booking_number
 FROM
     public.recommendable_offers_per_iris_shape ro;
 

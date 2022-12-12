@@ -53,7 +53,7 @@ for type, params in dags.items():
         description="Import firebase data and dispatch it to each env",
         on_failure_callback=task_fail_slack_alert,
         schedule_interval=params["schedule_interval"],
-        catchup=True,
+        catchup=False,
         dagrun_timeout=datetime.timedelta(minutes=90),
         user_defined_macros=macros.default,
         template_searchpath=DAG_FOLDER,

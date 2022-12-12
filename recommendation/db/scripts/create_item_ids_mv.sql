@@ -11,7 +11,7 @@ OR REPLACE FUNCTION get_item_ids() RETURNS TABLE (
 SELECT
     distinct ro.offer_id
     ,ro.item_id
-    ,booking_number
+    ,ro.booking_number
 FROM
     public.recommendable_offers_per_iris_shape ro;
 
@@ -30,5 +30,3 @@ from
 CREATE UNIQUE INDEX IF NOT EXISTS idx_item_ids_mv ON public.item_ids_mv USING btree (offer_id);
 
 REFRESH MATERIALIZED VIEW item_ids_mv;
-
-! -- Creating an index for faster queries.

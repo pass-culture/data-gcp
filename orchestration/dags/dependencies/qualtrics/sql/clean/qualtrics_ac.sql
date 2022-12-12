@@ -8,6 +8,7 @@ WITH previous_export AS (
 ),lieux_physique AS (
     SELECT
         enriched_venue_data.venue_id,
+        enriched_venue_data.venue_siret,
         venue_booking_email as email,
         venue_name,
         venue_type_label,
@@ -42,7 +43,8 @@ WITH previous_export AS (
         11,
         12,
         13,
-        14
+        14,
+        15
    
 ),
 

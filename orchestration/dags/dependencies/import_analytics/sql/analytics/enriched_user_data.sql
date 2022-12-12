@@ -484,7 +484,7 @@ user_suspension_history AS (
         `{{ bigquery_analytics_dataset }}`.applicative_database_user_suspension
 ),
 
-applicative_database_user AS (
+clean_applicative_database_user AS (
     SELECT * EXCEPT(user_department_code), 
         -- set 99 when user user_creation_date does not match opening phases.
         -- this is due to Support changes in the past which migh lead to misunderstandings.
@@ -611,7 +611,7 @@ SELECT
     user.user_age,
     user.user_birth_date
 FROM
-    applicative_database_user AS user
+    clean_applicative_database_user AS user
     LEFT JOIN activation_dates ON user.user_id = activation_dates.user_id
     LEFT JOIN date_of_first_bookings ON user.user_id = date_of_first_bookings.user_id
     LEFT JOIN date_of_second_bookings ON user.user_id = date_of_second_bookings.user_id

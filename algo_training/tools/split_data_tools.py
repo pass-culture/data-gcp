@@ -11,7 +11,9 @@ def split_by_column_and_ratio(
     return df_1, df_2
 
 
-def split_by_ratio(df: pd.DataFrame, ratio: float, seed: int = None) -> Tuple[pd.DataFrame, pd.DataFrame]:
+def split_by_ratio(
+    df: pd.DataFrame, ratio: float, seed: int = None
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
     df_1 = df.sample(frac=ratio, random_state=seed)
     df_2 = df.loc[~df.index.isin(list(df_1.index))]
     return df_1, df_2

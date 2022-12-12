@@ -170,6 +170,23 @@ workflows:
             - Slack
           <<: *slack-fail-post-step
 
+      - algo-training-install:
+          requires:
+            - linter
+          context:
+            - Slack
+          <<: *slack-fail-post-step
+
+      - algo-training-tests:
+          requires:
+            - algo-training-install
+          context:
+            - Slack
+            - DATA_GCP
+            - DATA_GCP_EHP
+          <<: *slack-fail-post-step
+
+
       # Composer jobs
       # -------------
       - orchestration-install:
@@ -893,6 +910,41 @@ jobs:
             export GOOGLE_APPLICATION_CREDENTIALS="/tmp/service_account.json" 
             . venv-orchestration/bin/activate
             airflow db init
+            pytest tests
+
+  algo-training-install:
+    executor: python
+    working_directory: ~/data-gcp/algo_training
+    steps:
+      - checkout:
+          path: ~/data-gcp
+      - restore_cache:
+          key: deps-{{ checksum "requirements.txt" }}
+      - run:
+          name: Install Python requirements
+          command: |
+            python3 -m venv venv-algo-training
+            . venv-algo-training/bin/activate
+            pip install -r requirements.txt
+      - save_cache:
+          key: deps-{{ checksum "requirements.txt" }}
+          paths:
+            - "venv-algo-training"
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+
+  algo-training-tests:
+    executor: python
+    working_directory: ~/data-gcp/algo-training
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Run tests
+          command: |
+            . venv-algo-training/bin/activate
             pytest tests
 
   #recommendation-db-install:

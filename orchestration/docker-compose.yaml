@@ -9,14 +9,13 @@ x-airflow-common:
   environment:
     &airflow-common-env
     LOCAL_ENV: ${LOCAL_ENV:-1}
-    GOOGLE_APPLICATION_CREDENTIALS: /etc/sa.gcskey.json
-    AIRFLOW_CONN_GOOGLE_CLOUD_DEFAULT: 'google-cloud-platform://?key_path=%2Fetc%2Fsa.gcskey.json&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcloud-platform&project=passculture-data-ehp&num_retries=5'
-    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
-    GOOGLE_CLOUD_PROJECT: 'passculture-data-ehp'
+    GOOGLE_APPLICATION_CREDENTIALS:  ${GOOGLE_APPLICATION_CREDENTIALS:-}
+    #AIRFLOW_CONN_GOOGLE_CLOUD_DEFAULT: 'google-cloud-platform://?key_path=%2Fetc%2Fsa.gcpkey.json&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcloud-platform&project=passculture-data-ehp&num_retries=5'
+    GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT:-}
   volumes:
     - ./dags:/opt/airflow/dags
     - ./airflow/config/airflow.cfg:/opt/airflow/airflow.cfg
-    - ./airflow/etc/sa.gcskey.json:/etc/sa.gcskey.json
+    - ./airflow/logs:/opt/airflow/logs
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     - postgres

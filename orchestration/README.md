@@ -79,9 +79,9 @@ _AIRFLOW_WWW_USER_USERNAME=<user>
 _AIRFLOW_WWW_USER_PASSWORD=<password>
 ```
 
-### sa.gcskey.json
+### sa.gcpkey.json
 
-Mettre la clef gcs dans `/airflow/etc/sa.gcskey.json`
+Mettre la clef SA composer dans `/airflow/etc/sa.gcpkey.json`
 
 #### 4. Build and run
 
@@ -103,6 +103,12 @@ make dev
 ```
 
 > `http://localhost:8080`
+
+Rajouter les configurations de connexion:
+
+`http_gcp_cloud_function`
+`google_cloud_platform`
+
 
 #### Stop
 

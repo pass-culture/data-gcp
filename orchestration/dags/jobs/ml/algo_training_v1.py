@@ -14,7 +14,7 @@ from common.access_gcp_secrets import access_secret_data
 from common.config import GCP_PROJECT_ID, GCE_ZONE, ENV_SHORT_NAME
 
 
-GCE_INSTANCE = os.environ.get("GCE_TRAINING_INSTANCE", "algo-training-dev")
+GCE_INSTANCE = os.environ.get("GCE_TRAINING_INSTANCE", "airflow@algo-training-dev")
 MLFLOW_BUCKET_NAME = os.environ.get("MLFLOW_BUCKET_NAME", "mlflow-bucket-ehp")
 if ENV_SHORT_NAME != "prod":
     MLFLOW_URL = "https://mlflow-ehp.internal-passculture.app/"

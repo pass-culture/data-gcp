@@ -45,13 +45,6 @@ AI_MODEL_NAME = f"tf_model_reco_{ENV_SHORT_NAME}"
 END_POINT_NAME = f"vertex_ai_{ENV_SHORT_NAME}"
 SERVING_CONTAINER = "europe-docker.pkg.dev/vertex-ai/prediction/tf2-cpu.2-5:latest"
 
-# Algo offres similaires
-API_DOCKER_IMAGE = f"eu.gcr.io/{GCP_PROJECT_ID}/similar-offers:{ENV_SHORT_NAME}-latest"
-SIMILAR_OFFER_MODEL_NAME = f"similar_offers_{ENV_SHORT_NAME}"
-SIMILAR_OFFER_END_POINT_NAME = f"vertex_ai_similar_offers_{ENV_SHORT_NAME}"
-
-MIN_NODES = 1
-MAX_NODES = 10 if ENV_SHORT_NAME == "prod" else 1
 SLACK_CONN_ID = "slack_analytics"
 SLACK_CONN_PASSWORD = access_secret_data(GCP_PROJECT_ID, "slack-conn-password")
 

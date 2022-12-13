@@ -6,4 +6,8 @@ create_tables = {
         "destination_dataset_table": "{{ bigquery_backend_dataset }}.favorites_not_booked${{ yyyymmdd(today()) }}",
         "time_partitioning": {"field": "execution_date"},
     },
+    "users_that_landed_on_come_back_later": {
+        "sql": f"{BACKEND_SQL_PATH}/users_that_landed_on_come_back_later.sql",
+        "destination_dataset_table": "{{ bigquery_backend_dataset }}.users_that_landed_on_come_back_later",
+    },
 }

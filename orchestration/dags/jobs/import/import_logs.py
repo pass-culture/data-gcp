@@ -25,7 +25,7 @@ dag = DAG(
     default_args=default_dag_args,
     description="Import tables from log sink",
     schedule_interval="00 01 * * *",
-    catchup=True,
+    catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,

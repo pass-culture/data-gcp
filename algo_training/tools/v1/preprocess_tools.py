@@ -18,4 +18,4 @@ def preprocess(storage_path: str):
         },
     )
     bookings.rename(columns={"count": "rating"}, inplace=True)
-    bookings.to_csv(f"{storage_path}/clean_data.csv")
+    bookings.to_csv(f"{storage_path}/clean_data.csv", index=False)

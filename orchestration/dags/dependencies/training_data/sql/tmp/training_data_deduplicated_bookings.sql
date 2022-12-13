@@ -3,13 +3,13 @@ SELECT booking.user_id,
        booking_creation_date     AS event_date,
        enroffer.item_id    AS item_id,
        offer.offer_subcategoryid AS offer_subcategoryid,
-       subcategories.category_id AS offer_categoryid,
+       subcategories.category_id AS offer_categoryId,
        enroffer.genres,
        enroffer.rayon,
        enroffer.type,
        enroffer.venue_id,
        enroffer.venue_name,
-       COUNT(*) AS COUNT,
+       COUNT(*) AS count,
 FROM
     `{{ bigquery_clean_dataset }}`.`applicative_database_booking` booking
     INNER JOIN `{{ bigquery_clean_dataset }}`.`applicative_database_stock` stock

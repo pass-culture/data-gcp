@@ -21,10 +21,9 @@ from common.config import (
     GCP_PROJECT_ID,
     GCE_ZONE,
     ENV_SHORT_NAME,
-    BIGQUERY_SANDBOX_DATASET,
+    BIGQUERY_RAW_DATASET,
     DAG_FOLDER,
 )
-from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
 
 GCE_INSTANCE = os.environ.get("GCE_TRAINING_INSTANCE", "algo-training-dev-1")
 MLFLOW_BUCKET_NAME = os.environ.get("MLFLOW_BUCKET_NAME", "mlflow-bucket-ehp")
@@ -73,7 +72,7 @@ default_args = {
 }
 
 with DAG(
-    "algo_training_r_and_d",
+    "algo_training_clicks",
     default_args=default_args,
     description="Custom training job",
     schedule_interval=None,
@@ -90,26 +89,6 @@ with DAG(
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)
 
-    create_deduplicated_offers_table = BigQueryExecuteQueryOperator(
-        task_id="deduplicate_offers",
-        sql=(IMPORT_TRAINING_SQL_PATH / "tmp" / "deduplicate_offers.sql").as_posix(),
-        write_disposition="WRITE_TRUNCATE",
-        use_legacy_sql=False,
-        destination_dataset_table=f"{BIGQUERY_SANDBOX_DATASET}.deduplicated_enriched_offer_data",
-        dag=dag,
-    )
-
-    create_dataset_table = BigQueryExecuteQueryOperator(
-        task_id="import_to_sandbox_training_data_bookings",
-        sql=(
-            IMPORT_TRAINING_SQL_PATH / "tmp" / "training_data_deduplicated_bookings.sql"
-        ).as_posix(),
-        write_disposition="WRITE_TRUNCATE",
-        use_legacy_sql=False,
-        destination_dataset_table=f"{BIGQUERY_SANDBOX_DATASET}.training_data_bookings",
-        dag=dag,
-    )
-
     gce_instance_start = ComputeEngineStartInstanceOperator(
         project_id=GCP_PROJECT_ID,
         zone=GCE_ZONE,
@@ -118,7 +97,7 @@ with DAG(
         dag=dag,
     )
 
-    FETCH_CODE = r'"if cd data-gcp; then git checkout master && git pull && git checkout {{ params.branch }} && git pull; else git clone git@github.com:pass-culture/data-gcp.git && cd data-gcp && git checkout {{ params.branch }} && git pull; fi"'
+    FETCH_CODE = r'"if cd data-gcp; then git fetch origin {{ params.branch }} && git checkout {{ params.branch }}; else git clone git@github.com:pass-culture/data-gcp.git && cd data-gcp && git checkout {{ params.branch }}; fi"'
 
     fetch_code = BashOperator(
         task_id="fetch_code",
@@ -147,11 +126,11 @@ with DAG(
     )
 
     DATA_COLLECT = f""" '{DEFAULT}
-        python data_collect.py --dataset {BIGQUERY_SANDBOX_DATASET}'
+        python data_collect.py --dataset {BIGQUERY_RAW_DATASET} --table-name training_data_clicks'
     """
 
-    data_collect = BashOperator(
-        task_id="data_collect",
+    clicks_data_collect = BashOperator(
+        task_id="clicks_data_collect",
         bash_command=f"""
         gcloud compute ssh {GCE_INSTANCE} \
         --zone {GCE_ZONE} \
@@ -218,6 +197,21 @@ with DAG(
         --zone {GCE_ZONE} \
         --project {GCP_PROJECT_ID} \
         --command {POSTPROCESSING}
+        """,
+        dag=dag,
+    )
+
+    DATA_COLLECT = f""" '{DEFAULT}
+        python data_collect.py --dataset {BIGQUERY_RAW_DATASET} --table-name training_data_bookings'
+    """
+
+    bookings_data_collect = BashOperator(
+        task_id="bookings_data_collect",
+        bash_command=f"""
+        gcloud compute ssh {GCE_INSTANCE} \
+        --zone {GCE_ZONE} \
+        --project {GCP_PROJECT_ID} \
+        --command {DATA_COLLECT}
         """,
         dag=dag,
     )
@@ -289,16 +283,15 @@ with DAG(
 
     (
         start
-        >> create_deduplicated_offers_table
-        >> create_dataset_table
         >> gce_instance_start
         >> fetch_code
         >> install_dependencies
-        >> data_collect
+        >> clicks_data_collect
         >> preprocess
         >> split_data
         >> training
         >> postprocess
+        >> bookings_data_collect
         >> evaluate
         >> gce_instance_stop
         >> send_slack_notif_success

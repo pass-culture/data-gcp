@@ -1,11 +1,7 @@
-import numpy as np
 import pandas as pd
-import tensorflow as tf
-from tensorflow import keras
 from tqdm import tqdm
 import numpy as np
 import recmetrics
-import matplotlib.pyplot as plt
 from tools.diversification import order_offers_by_score_and_diversify_categories
 
 

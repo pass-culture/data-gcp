@@ -937,7 +937,7 @@ jobs:
 
   algo-training-tests:
     executor: python
-    working_directory: ~/data-gcp/algo-training
+    working_directory: ~/data-gcp/algo_training
     steps:
       - attach_workspace:
           at: .
@@ -945,7 +945,7 @@ jobs:
           name: Run tests
           command: |
             . venv-algo-training/bin/activate
-            pytest tests
+            PYTHONPATH=. pytest tests
 
   #recommendation-db-install:
   #  executor: python

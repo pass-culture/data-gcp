@@ -2,7 +2,7 @@ import datetime
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from common import macros
-from dependencies.qualtrics.export_qualtrics_data import clean_tables, analytics_tables
+from dependencies.qualtrics.export_qualtrics_data import clean_tables
 from common.config import (
     DAG_FOLDER,
     GCP_PROJECT,
@@ -112,14 +112,4 @@ clean_table_jobs = depends_loop(clean_table_jobs, start)
 
 end_raw = DummyOperator(task_id="end_raw", dag=dag)
 
-analytics_table_jobs = {}
-for table, job_params in analytics_tables.items():
-    task = bigquery_job_task(dag, table + "_to_analytics", job_params)
-    analytics_table_jobs[table] = {
-        "operator": task,
-        "depends": job_params.get("depends", []),
-    }
-
-analytics_table_jobs = depends_loop(analytics_table_jobs, end_raw)
-
-(start >> clean_table_jobs >> end_raw >> analytics_table_jobs)
+(start >> clean_table_jobs >> end_raw)

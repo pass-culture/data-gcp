@@ -32,14 +32,3 @@ clean_tables = {
         "include_email": False,
     },
 }
-
-
-analytics_tables = {
-    "qualtrics_ac": {
-        "sql": f"{SQL_PATH}/analytics/qualtrics_ac.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "qualtrics_ac",
-        "time_partitioning": {"field": "calculation_month"},
-        "cluster_fields": ["calculation_month"],
-    },
-}

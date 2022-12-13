@@ -540,6 +540,22 @@ workflows:
           <<: *slack-fail-post-step
       
       - cloud-function-deploy:
+          name: sendinblue-import-stg
+          cloud-function-name: sendinblue_import_stg
+          cloud-function-folder: sendinblue-function-source
+          requires:
+            - linter
+          filters:
+            branches:
+              only:
+                - master
+          context:
+            - DATA_GCP
+            - DATA_GCP_EHP
+            - Slack
+          <<: *slack-fail-post-step
+          
+      - cloud-function-deploy:
           name: cold-data-stg
           cloud-function-name: cold_data_stg
           cloud-function-folder: cold-data-function-source
@@ -556,9 +572,9 @@ workflows:
           <<: *slack-fail-post-step
 
       - cloud-function-deploy:
-          name: cold-data-prod
-          cloud-function-name: cold_data_prod
-          cloud-function-folder: cold-data-function-source
+          name: sendinblue-import-prod
+          cloud-function-name: sendinblue_import_prod
+          cloud-function-folder: metabase-archiving-function-source
           requires:
             - linter
           filters:
@@ -570,6 +586,22 @@ workflows:
             - DATA_GCP_PROD
             - Slack
           <<: *slack-fail-post-step
+          
+       - cloud-function-deploy:
+           name: cold-data-prod
+           cloud-function-name: cold_data_prod
+           cloud-function-folder: cold-data-function-source
+           requires:
+             - linter
+           filters:
+             branches:
+               only:
+                 - production
+           context:
+             - DATA_GCP
+             - DATA_GCP_PROD
+             - Slack
+           <<: *slack-fail-post-step
 
       # Slack alerts jobs
       # ----------------
@@ -595,6 +627,7 @@ workflows:
             - import-typeform-adage-reference-request-prod
             - metabase-archiving-prod
             - cold-data-prod
+            - sendinblue-import-prod
 
       - slack-alert:
           name: slack-alert-staging
@@ -618,7 +651,7 @@ workflows:
             - import-typeform-adage-reference-request-stg
             - metabase-archiving-stg
             - cold-data-stg
-
+            - sendinblue-import-stg
 
   # ----------------
   # Workflow to deploy on dev
@@ -680,6 +713,11 @@ workflows:
           cloud-function-folder: metabase-archiving-function-source
           <<: *deploy_on_dev_commons
       - cloud-function-deploy:
+          name: sendinblue-import-dev
+          cloud-function-name: sendinblue_import_dev
+          cloud-function-folder: sendinblue-function-source
+          <<: *deploy_on_dev_commons
+      - cloud-function-deploy:
           name: cold-data-dev
           cloud-function-name: cold_data_dev
           cloud-function-folder: cold-data-function-source
@@ -724,6 +762,7 @@ workflows:
             - typeform-adage-reference-request-dev
             - metabase-archiving-dev
             - cold-data-dev
+            - sendinblue-import-dev
 ### temporarily removing api reco tests ###
 #          requires:
 #            - api-integration-tests-dev

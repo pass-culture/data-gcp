@@ -7,12 +7,14 @@ from utils import STORAGE_PATH
 def split_by_column_and_ratio(
     df: pd.DataFrame, column_name: str, ratio: float
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """Sample the df by a ratio after grouping it by a column"""
     df_1 = df.groupby([column_name]).sample(frac=ratio)
     df_2 = df.loc[~df.index.isin(list(df_1.index))]
     return df_1, df_2
 
 
 def split_by_ratio(df: pd.DataFrame, ratio: float) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """Sample the df by a ratio"""
     df_1 = df.sample(frac=ratio)
     df_2 = df.loc[~df.index.isin(list(df_1.index))]
     return df_1, df_2
@@ -21,6 +23,7 @@ def split_by_ratio(df: pd.DataFrame, ratio: float) -> Tuple[pd.DataFrame, pd.Dat
 def reassign_extra_data_to_target(
     source_df: pd.DataFrame, target_df: pd.DataFrame, column_name: str
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """Reassign the values of column_name present in source_df and not in the target_df into the target_df"""
     target_data = target_df[column_name].unique()
     target_df = pd.concat(
         [target_df, source_df[lambda df: ~df[column_name].isin(target_data)]]

@@ -43,7 +43,7 @@ def evaluate(model, storage_path: str, model_name):
     )[["user_id", "item_id"]].merge(raw_data, on=["user_id", "item_id"], how="left")
 
     users_to_test = positive_data_test["user_id"].unique()[
-        : min(EVALUATION_USER_NUMBER, len(positive_data_test["user_id"].unique()))
+        : min(EVALUATION_USER_NUMBER, positive_data_test["user_id"].nunique())
     ]
     positive_data_test = positive_data_test.loc[
         lambda df: df["user_id"].isin(users_to_test)

@@ -68,11 +68,8 @@ Dans `airflow/config/airflow.cfg` vous devez modifier les <TODO> avec des secret
 ### .env
 
 Dans le fichier `.env`, il est necessaire de mettre à jour les configs
-
-```
-echo $UID
-```
-Set-up some airflow admin user & password.
+- Retrieve `<your_uid>` with `echo $UID`
+- Set-up some airflow admin user & password:
 ```sh
 AIRFLOW_UID=<your_uid>
 _AIRFLOW_WWW_USER_USERNAME=<user>
@@ -102,21 +99,22 @@ Lancer les différents conteneurs
 make dev
 ```
 
+Lancer le Airflow webserver
+```sh
 > `http://localhost:8080`
-
-Rajouter les configurations de connexion:
-
-`http_gcp_cloud_function`
-
 ```
+
+Rajouter les configurations de connexions
+- Aller dans `Admin > Connections` et rajouter les connexions suivantes:
+```
+Connection Id: http_gcp_cloud_function
 Connection Type: HTTP
-Key File Path: '/etc/sa.gcpkey.json'
-Project id: passculture-data-xx
+Host: 'https://europe-west1-passculture-data-ehp.cloudfunctions.net'
 ```
 
-`google_cloud_platform`
 
 ```
+Connection Id: google_cloud_default
 Connection Type: Google Cloud
 Key File Path: '/etc/sa.gcpkey.json'
 Project id: passculture-data-xx

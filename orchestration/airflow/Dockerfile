@@ -6,6 +6,7 @@ ARG GCLOUD_SERVICE_KEY=/etc/sa.gcpkey.json
 COPY ./etc/sa.gcpkey.json ${GCLOUD_SERVICE_KEY}
 
 USER root
+RUN sudo chown -R :${AIRFLOW_UID} /opt/
 
 # install gcloud
 RUN curl -LO https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/${GCLOUD_VERSION} && \
@@ -13,6 +14,7 @@ RUN curl -LO https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/${GCLOUD
     mv google-cloud-sdk /opt/google-cloud-sdk && \
     ln -s /opt/google-cloud-sdk/bin/* /bin/ && \
     rm ${GCLOUD_VERSION}
+
 
 USER ${AIRFLOW_UID}
 WORKDIR ${AIRFLOW_USER_HOME}

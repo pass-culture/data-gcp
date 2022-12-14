@@ -3,6 +3,7 @@ import networkx as nx
 import recordlinkage
 import pandas as pd
 import uuid
+import typer
 from tools.config import STORAGE_PATH, SUBCATEGORIES_WITH_PERFORMER
 
 
@@ -82,10 +83,15 @@ def _setup_matching(c_cl, featdict):
     return c_cl
 
 
-def main():
+def main(
+    storage_path: str = typer.Option(
+        STORAGE_PATH,
+        help="Storage path",
+    )
+) -> None:
     ####
     # Load preprocessed data
-    df_offers_to_link_clean = pd.read_csv(f"{STORAGE_PATH}/offers_to_link_clean.csv")
+    df_offers_to_link_clean = pd.read_csv(f"{storage_path}/offers_to_link_clean.csv")
 
     ####
     # Split offers between performer and non performer
@@ -129,8 +135,8 @@ def main():
             get_matched_df(data_and_hyperparams_dict[grp_smp])
         )
     df_offers_linked_full = pd.concat(df_offers_matched_list)
-    df_offers_linked_full.to_csv(f"{STORAGE_PATH}/offers_linked.csv")
+    df_offers_linked_full.to_csv(f"{storage_path}/offers_linked.csv")
 
 
 if __name__ == "__main__":
-    main()
+    typer.run(main)

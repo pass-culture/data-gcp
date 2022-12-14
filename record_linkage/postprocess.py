@@ -15,14 +15,6 @@ def build_item_id_from_linkage(df):
 
 
 def main(
-    gcp_project: str = typer.Option(
-        GCP_PROJECT_ID,
-        help="BigQuery Project in which the offers to link is located",
-    ),
-    env_short_name: str = typer.Option(
-        ENV_SHORT_NAME,
-        help="Environnement short name",
-    ),
     storage_path: str = typer.Option(
         STORAGE_PATH,
         help="Storage path",
@@ -35,13 +27,8 @@ def main(
     df_offers_linked_full["offer_id"] = df_offers_linked_full["offer_id"].values.astype(
         str
     )
-
-    df_offers_linked_full.to_gbq(
-        f"sandbox_{env_short_name}.linked_offers_v0",
-        project_id=gcp_project,
-        if_exists="replace",
-    )
+    df_offers_linked_full.to_csv(f"{storage_path}/offers_linked_export_ready.csv")
 
 
 if __name__ == "__main__":
-    main()
+    typer.run(main)

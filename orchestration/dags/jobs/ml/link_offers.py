@@ -21,7 +21,7 @@ from common.config import (
     GCP_PROJECT_ID,
     GCE_ZONE,
     ENV_SHORT_NAME,
-    BIGQUERY_RAW_DATASET,
+    MLFLOW_BUCKET_NAME,
     DAG_FOLDER,
 )
 
@@ -166,6 +166,8 @@ with DAG(
         dag=dag,
     )
 
+    end = DummyOperator(task_id="end", dag=dag)
+
     (
         start
         >> gce_instance_start
@@ -175,4 +177,5 @@ with DAG(
         >> preprocess
         >> record_linkage
         >> postprocess
+        >> end
     )

@@ -41,9 +41,6 @@ TRAIN_DIR = "/home/airflow/train"
 
 # Algo reco
 MODEL_NAME = "v1"
-AI_MODEL_NAME = f"tf_model_reco_{ENV_SHORT_NAME}"
-END_POINT_NAME = f"vertex_ai_{ENV_SHORT_NAME}"
-SERVING_CONTAINER = "europe-docker.pkg.dev/vertex-ai/prediction/tf2-cpu.2-5:latest"
 
 SLACK_CONN_ID = "slack_analytics"
 SLACK_CONN_PASSWORD = access_secret_data(GCP_PROJECT_ID, "slack-conn-password")
@@ -56,6 +53,23 @@ export GCP_PROJECT_ID={GCP_PROJECT_ID}
 export MODEL_NAME={MODEL_NAME}
 export TRAIN_DIR={TRAIN_DIR}
 """
+
+EVENT_SUBCATEGORIES = (
+    "FESTIVAL_CINE",
+    "SPECTACLE_VENTE_DISTANCE",
+    "SPECTACLE_REPRESENTATION",
+    "EVENEMENT_MUSIQUE",
+    "SEANCE_CINE",
+    "EVENEMENT_CINE",
+    "VISITE_GUIDEE",
+    "ABO_MUSEE",
+    "FESTIVAL_MUSIQUE",
+    "CONCERT",
+    "VISITE",
+    "CINE_VENTE_DISTANCE",
+    "EVENEMENT_PATRIMOINE",
+    "FESTIVAL_SPECTACLE",
+)
 
 
 def branch_function(ti, **kwargs):
@@ -97,6 +111,9 @@ with DAG(
         use_legacy_sql=False,
         destination_dataset_table=f"{BIGQUERY_SANDBOX_DATASET}.deduplicated_enriched_offer_data",
         dag=dag,
+        params={
+            "event_subcategories": EVENT_SUBCATEGORIES,
+        },
     )
 
     create_dataset_table = BigQueryExecuteQueryOperator(

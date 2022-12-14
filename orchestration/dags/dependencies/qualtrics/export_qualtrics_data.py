@@ -4,11 +4,11 @@ from common.config import (
 )
 from common.access_gcp_secrets import access_secret_data
 
-SQL_PATH = f"dependencies/qualtrics/sql/clean"
+SQL_PATH = f"dependencies/qualtrics/sql"
 
-export_tables = {
+clean_tables = {
     "qualtrics_ir_jeunes": {
-        "sql": f"{SQL_PATH}/qualtrics_ir_jeunes.sql",
+        "sql": f"{SQL_PATH}/clean/qualtrics_ir_jeunes.sql",
         "destination_dataset": "{{ bigquery_clean_dataset }}",
         "destination_table": "qualtrics_ir_jeunes${{ yyyymmdd(current_month(ds)) }}",
         "time_partitioning": {"field": "calculation_month"},
@@ -20,7 +20,7 @@ export_tables = {
         "include_email": True,
     },
     "qualtrics_ac": {
-        "sql": f"{SQL_PATH}/qualtrics_ac.sql",
+        "sql": f"{SQL_PATH}/clean/qualtrics_ac.sql",
         "destination_dataset": "{{ bigquery_clean_dataset }}",
         "destination_table": "qualtrics_ac${{ yyyymmdd(current_month(ds)) }}",
         "time_partitioning": {"field": "calculation_month"},

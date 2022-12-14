@@ -197,11 +197,22 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "user_iris",
     },
-    "diversification_booking_remastered": {
-        "sql": f"{ANALYTICS_SQL_PATH}/diversification_booking_remastered.sql",
+    "diversification_raw": {
+        "sql": f"{ANALYTICS_SQL_PATH}/diversification_raw.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "diversification_booking_remastered",
+        "destination_table": "diversification_raw",
         "depends": [
+            "enriched_booking_data",
+            "enriched_offer_data",
+        ],
+    },
+    "diversification_booking": {
+        "sql": f"{ANALYTICS_SQL_PATH}/diversification_booking.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "diversification_booking",
+        "depends": [
+            "diversification_raw",
+            "enriched_user_data",
             "enriched_booking_data",
             "enriched_offer_data",
         ],

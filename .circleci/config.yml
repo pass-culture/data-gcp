@@ -558,7 +558,7 @@ workflows:
       - cloud-function-deploy:
           name: sendinblue-import-prod
           cloud-function-name: sendinblue_import_prod
-          cloud-function-folder: metabase-archiving-function-source
+          cloud-function-folder: sendinblue-function-source
           requires:
             - linter
           filters:

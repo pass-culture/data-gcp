@@ -3,6 +3,8 @@ import pandas as pd
 import tensorflow as tf
 import mlflow.tensorflow
 import random
+
+from tools.v1.preprocess_tools import preprocess
 from models.v1.match_model import MatchModel
 from utils import (
     get_secret,
@@ -22,67 +24,37 @@ k_list = [RECOMMENDATION_NUMBER, NUMBER_OF_PRESELECTED_OFFERS]
 
 def evaluate(model, storage_path: str, model_name):
 
-    raw_data = pd.read_csv(
-        f"{storage_path}/raw_data.csv",
-        dtype={
-            "user_id": str,
-            "item_id": str,
-            "offer_subcategoryid": str,
-            "offer_categoryId": str,
-            "genres": str,
-            "rayon": str,
-            "type": str,
-            "venue_id": str,
-            "venue_name": str,
-            "nb_bookings": int,
-        },
-    )
+    raw_data = preprocess(f"{storage_path}/raw_data.csv")
 
     positive_data_train = pd.read_csv(
         f"{storage_path}/positive_data_train.csv",
         dtype={
             "user_id": str,
             "item_id": str,
-            "offer_subcategoryid": str,
-            "offer_categoryId": str,
         },
-    )
+    )[["user_id", "item_id"]].merge(raw_data, on=["user_id", "item_id"], how="left")
 
     positive_data_test = pd.read_csv(
         f"{storage_path}/positive_data_test.csv",
         dtype={
             "user_id": str,
             "item_id": str,
-            "offer_subcategoryid": str,
-            "offer_categoryId": str,
         },
-    )
+    )[["user_id", "item_id"]].merge(raw_data, on=["user_id", "item_id"], how="left")
 
-    positive_data_test_clean = positive_data_test[
-        positive_data_test.user_id.isin(positive_data_train.user_id)
+    users_to_test = positive_data_test["user_id"].unique()[
+        : min(EVALUATION_USER_NUMBER, positive_data_test["user_id"].nunique())
     ]
-
-    # Extract random sub sample if len(users_to_evaluate) > EVALUATION_USER_NUMBER
-    users_to_test = positive_data_test_clean.user_id
-    if len(users_to_test) > EVALUATION_USER_NUMBER:
-        users_to_test = random.sample(
-            list(positive_data_test_clean.user_id), EVALUATION_USER_NUMBER
-        )
-        positive_data_test_clean = positive_data_test_clean[
-            positive_data_test_clean.user_id.isin(users_to_test)
-        ]
-
-    positive_data_test_clean = positive_data_test_clean[
-        positive_data_test_clean.item_id.isin(positive_data_train.item_id)
+    positive_data_test = positive_data_test.loc[
+        lambda df: df["user_id"].isin(users_to_test)
     ]
-    positive_data_test_clean = positive_data_test_clean.drop_duplicates()
 
     data_model_dict = {
         "name": model_name,
         "data": {
             "raw": raw_data,
             "train": positive_data_train,
-            "test": positive_data_test_clean,
+            "test": positive_data_test,
         },
         "model": model,
     }

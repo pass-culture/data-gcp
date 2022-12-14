@@ -3,9 +3,12 @@ from tqdm import tqdm
 import numpy as np
 import recmetrics
 from tools.diversification import order_offers_by_score_and_diversify_categories
+from utils import SHUFFLE_RECOMMENDATION
 
 
-def get_actual_and_predicted(data_model_dict):
+def get_actual_and_predicted(
+    data_model_dict: dict, shuffle_recommendation: bool = SHUFFLE_RECOMMENDATION
+):
 
     data_test = data_model_dict["data"]["test"]
     data_test = data_test.sort_values(["user_id", "count"], ascending=False)
@@ -21,7 +24,8 @@ def get_actual_and_predicted(data_model_dict):
         deep_reco_prediction.append(list(df_predicted.item_id))
         # Compute diversification with score and prediction
         diversified_prediction = order_offers_by_score_and_diversify_categories(
-            df_predicted
+            df_predicted,
+            shuffle_recommendation,
         )
         predictions_diversified.append(diversified_prediction)
     df_actual_predicted = df_actual

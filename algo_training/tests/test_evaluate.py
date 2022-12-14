@@ -80,7 +80,9 @@ def expected_output_data_model_dict():
 class TestEvaluate:
     @staticmethod
     def test_get_actual_and_predicted(data_model_dict, expected_output_data_model_dict):
-        output_data_model_dict = get_actual_and_predicted(data_model_dict)
+        output_data_model_dict = get_actual_and_predicted(
+            data_model_dict, shuffle_recommendation=False
+        )
         pd.testing.assert_frame_equal(
             output_data_model_dict["top_offers"],
             expected_output_data_model_dict["top_offers"],

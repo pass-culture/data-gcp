@@ -10,7 +10,6 @@ x-airflow-common:
     &airflow-common-env
     LOCAL_ENV: ${LOCAL_ENV:-1}
     GOOGLE_APPLICATION_CREDENTIALS:  ${GOOGLE_APPLICATION_CREDENTIALS:-}
-    #AIRFLOW_CONN_GOOGLE_CLOUD_DEFAULT: 'google-cloud-platform://?key_path=%2Fetc%2Fsa.gcpkey.json&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcloud-platform&project=passculture-data-ehp&num_retries=5'
     GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT:-}
   volumes:
     - ./dags:/opt/airflow/dags

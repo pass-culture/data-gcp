@@ -107,7 +107,21 @@ make dev
 Rajouter les configurations de connexion:
 
 `http_gcp_cloud_function`
+
+```
+Connection Type: HTTP
+Key File Path: '/etc/sa.gcpkey.json'
+Project id: passculture-data-xx
+```
+
 `google_cloud_platform`
+
+```
+Connection Type: Google Cloud
+Key File Path: '/etc/sa.gcpkey.json'
+Project id: passculture-data-xx
+```
+
 
 
 #### Stop

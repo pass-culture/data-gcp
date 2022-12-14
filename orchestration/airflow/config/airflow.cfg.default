@@ -69,10 +69,10 @@ sql_alchemy_schema =
 # The amount of parallelism as a setting to the executor. This defines
 # the max number of task instances that should run simultaneously
 # on this airflow installation
-parallelism = 2
+parallelism = 8
 
 # The number of task instances allowed to run concurrently by the scheduler
-dag_concurrency = 2
+max_active_tasks_per_dag = 16
 
 # Are DAGs paused by default at creation
 dags_are_paused_at_creation = True
@@ -100,7 +100,7 @@ fernet_key = <TODO>
 donot_pickle = False
 
 # How long before timing out a python file import
-dagbag_import_timeout = 30
+dagbag_import_timeout = 90
 
 # How long before timing out a DagFileProcessor, which processes a dag file
 dag_file_processor_timeout = 50
@@ -245,7 +245,7 @@ auth_backend = airflow.api.auth.backend.basic_auth
 # what lineage backend to use
 backend =
 
-[atlas]
+[atlas] 
 sasl_enabled = False
 host =
 port = 21000
@@ -256,8 +256,8 @@ password =
 # The default owner assigned to each new operator, unless
 # provided explicitly or passed via ``default_args``
 default_owner = airflow
-default_cpus = 1
-default_ram = 512
+default_cpus = 4
+default_ram = 1024
 default_disk = 512
 default_gpus = 0
 
@@ -272,7 +272,7 @@ default_hive_mapred_queue =
 # The base url of your website as airflow cannot guess what domain or
 # cname you are using. This is used in automated emails that
 # airflow sends to point links to the right web server
-base_url = localhost
+base_url = http://localhost:8080/
 
 # Default timezone to display all dates in the RBAC UI, can be UTC, system, or
 # any IANA timezone string (e.g. Europe/Amsterdam). If left empty the
@@ -281,7 +281,7 @@ base_url = localhost
 default_ui_timezone = UTC
 
 # The ip specified when starting the web server
-web_server_host = localhost
+web_server_host = 0.0.0.0
 
 # The port on which to run the web server
 web_server_port = 8080
@@ -303,7 +303,7 @@ web_server_worker_timeout = 120
 # Number of workers to refresh at a time. When set to 0, worker refresh is
 # disabled. When nonzero, airflow periodically refreshes webserver workers by
 # bringing up new ones and killing old ones.
-worker_refresh_batch_size = 1
+worker_refresh_batch_size = 0
 
 # Number of seconds to wait before refreshing a batch of workers.
 worker_refresh_interval = 30
@@ -384,7 +384,7 @@ page_size = 100
 rbac = False
 
 # Define the color of navigation bar
-navbar_color = #007A87
+navbar_color = #fff
 
 # Default dagrun to show in UI
 default_dag_run_display_number = 25
@@ -436,7 +436,7 @@ email_backend = airflow.utils.email.send_email_smtp
 # If you want airflow to send emails on retries, failure, and you want to use
 # the airflow.utils.email.send_email_smtp function, you have to configure an
 # smtp server here
-smtp_host =
+smtp_host = 
 smtp_starttls = False
 smtp_ssl = False
 # Example: smtp_user = airflow
@@ -444,7 +444,7 @@ smtp_ssl = False
 # Example: smtp_password = airflow
 # smtp_password =
 smtp_port = 25
-smtp_mail_from =
+smtp_mail_from = 
 
 [sentry]
 
@@ -462,7 +462,7 @@ celery_app_name = airflow.executors.celery_executor
 # ``airflow celery worker`` command. This defines the number of task instances that
 # a worker will take, so size up your workers based on the resources on
 # your worker box and the nature of your tasks
-worker_concurrency = 16
+worker_concurrency = 2
 
 # The maximum and minimum concurrency that will be used when starting workers with the
 # ``airflow celery worker`` command (always keep minimum processes, but grow
@@ -556,7 +556,7 @@ operation_timeout = 2
 # This section only applies if you are using the DaskExecutor in
 # [core] section above
 # The IP address and port of the Dask cluster's scheduler.
-cluster_address = 127.0.0.1:8786
+cluster_address = 
 
 # TLS/ SSL settings to access a secured Dask scheduler.
 tls_ca =
@@ -583,7 +583,7 @@ run_duration = -1
 num_runs = -1
 
 # The number of seconds to wait between consecutive DAG file processing
-processor_poll_interval = 1
+scheduler_idle_sleep_time = 10
 
 # after how much time (seconds) a new DAGs should be picked up from the filesystem
 min_file_process_interval = 0
@@ -625,7 +625,7 @@ max_tis_per_query = 512
 
 # The scheduler can run multiple threads in parallel to schedule dags.
 # This defines how many threads will run.
-max_threads = 2
+parsing_processes = 4
 authenticate = False
 
 # Turn off scheduler use of cron intervals by setting this to False.
@@ -676,12 +676,12 @@ framework_name = Airflow
 # Number of cpu cores required for running one task instance using
 # 'airflow run <dag_id> <task_id> <execution_date> --local -p <pickle_id>'
 # command on a mesos slave
-task_cpu = 1
+task_cpu = 4
 
 # Memory in MB required for running one task instance using
 # 'airflow run <dag_id> <task_id> <execution_date> --local -p <pickle_id>'
 # command on a mesos slave
-task_memory = 256
+task_memory = 1024
 
 # Enable framework checkpointing for mesos
 # See http://mesos.apache.org/documentation/latest/slave-recovery/
@@ -798,7 +798,7 @@ airflow_local_settings_configmap =
 # For docker image already contains DAGs, this is set to ``True``, and the worker will
 # search for dags in dags_folder,
 # otherwise use git sync or dags volume claim to mount DAGs
-dags_in_image = False
+dags_in_image = True
 
 # For either git sync or volume mounted DAGs, the worker will look in this subpath for DAGs
 dags_volume_subpath =

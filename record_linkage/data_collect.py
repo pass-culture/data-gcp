@@ -1,9 +1,10 @@
-from tools.config import STORAGE_PATH, ENV_SHORT_NAME,GCP_PROJECT_ID
-import pandas as pd 
+from tools.config import STORAGE_PATH, ENV_SHORT_NAME, GCP_PROJECT_ID
+import pandas as pd
 import typer
 
+
 def get_data(gcp_project, env_short_name):
-    query=f"""
+    query = f"""
     SELECT 
     eod.offer_id,
     eod.item_id,
@@ -18,7 +19,8 @@ def get_data(gcp_project, env_short_name):
     QUALIFY ROW_NUMBER() OVER (PARTITION BY item_id) = 1
     """
     return pd.read_gbq(query)
-    
+
+
 def main(
     gcp_project: str = typer.Option(
         GCP_PROJECT_ID,

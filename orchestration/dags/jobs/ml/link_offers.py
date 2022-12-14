@@ -28,9 +28,7 @@ from common.config import (
 GCE_INSTANCE = os.environ.get("GCE_TRAINING_INSTANCE", "algo-training-dev-1")
 
 DATE = "{{ts_nodash}}"
-STORAGE_PATH = (
-    f"gs://{MLFLOW_BUCKET_NAME}/link_offers_{ENV_SHORT_NAME}/linkage_{DATE}"
-)
+STORAGE_PATH = f"gs://{MLFLOW_BUCKET_NAME}/link_offers_{ENV_SHORT_NAME}/linkage_{DATE}"
 # Algo reco
 DEFAULT = f"""cd data-gcp/record_linkage
 export PATH="/opt/conda/bin:/opt/conda/condabin:"+$PATH

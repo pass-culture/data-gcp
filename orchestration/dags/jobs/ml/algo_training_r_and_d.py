@@ -35,7 +35,7 @@ else:
 
 DATE = "{{ts_nodash}}"
 STORAGE_PATH = (
-    f"gs://{MLFLOW_BUCKET_NAME}/algo_training_{ENV_SHORT_NAME}/algo_training_r&d_{DATE}"
+    f"gs://{MLFLOW_BUCKET_NAME}/algo_training_{ENV_SHORT_NAME}/algo_training_{DATE}"
 )
 TRAIN_DIR = "/home/airflow/train"
 

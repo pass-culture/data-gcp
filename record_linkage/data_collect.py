@@ -1,0 +1,41 @@
+from tools.config import STORAGE_PATH, ENV_SHORT_NAME,GCP_PROJECT_ID
+import pandas as pd 
+import typer
+
+def get_data(gcp_project, env_short_name):
+    query=f"""
+    SELECT 
+    eod.offer_id,
+    eod.item_id,
+    eod.offer_subcategoryId,
+    eod.offer_name,
+    ado.offer_description,
+    eod.performer,
+    FROM `{gcp_project}.analytics_{env_short_name}.enriched_offer_data` eod
+    LEFT JOIN `{gcp_project}.analytics_{env_short_name}.applicative_database_offer` ado on ado.offer_id = eod.offer_id 
+    WHERE eod.offer_subcategoryId != 'LIVRE_PAPIER'
+
+    QUALIFY ROW_NUMBER() OVER (PARTITION BY item_id) = 1
+    """
+    return pd.read_gbq(query)
+    
+def main(
+    gcp_project: str = typer.Option(
+        GCP_PROJECT_ID,
+        help="BigQuery Project in which the offers to link is located",
+    ),
+    env_short_name: str = typer.Option(
+        ENV_SHORT_NAME,
+        help="Environnement short name",
+    ),
+    storage_path: str = typer.Option(
+        STORAGE_PATH,
+        help="Storage path",
+    ),
+) -> None:
+    offers_to_link = get_data(gcp_project, env_short_name)
+    offers_to_link.to_csv(f"{storage_path}/offers_to_link.csv", index=False)
+
+
+if __name__ == "__main__":
+    typer.run(main)

@@ -49,3 +49,22 @@ Pour voir, ajouter ou modifier les variables d'environement, il faut aller dans 
 https://cloud.google.com/composer/docs/how-to/using/installing-python-dependencies?hl=fr#install-package
 
 A partir de la console gcp, dans l'instance de composer, ajouter les dépendances avec leur version.
+
+## Créer un environnement Airflow en local
+
+Install the composer-dev package
+```
+make install-composer-dev
+```
+Create a local airflow environnement based on the remote dev composer
+```
+make create-airflow-local-dev
+```
+Start the local composer
+```
+make start-airflow-local-dev
+```
+Go to the local airflow environment
+```
+http://localhost:8080
+```

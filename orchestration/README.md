@@ -52,6 +52,8 @@ A partir de la console gcp, dans l'instance de composer, ajouter les dépendance
 
 ## Créer un environnement Airflow en local
 
+For more information, go to : https://cloud.google.com/composer/docs/composer-2/run-local-airflow-environments
+
 Install the composer-dev package
 ```
 make install-composer-dev

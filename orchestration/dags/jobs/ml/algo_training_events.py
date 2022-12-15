@@ -1,3 +1,4 @@
+import json
 import os
 from datetime import datetime, timedelta
 
@@ -5,9 +6,6 @@ from airflow import DAG
 from airflow.models import Param
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryExecuteQueryOperator,
-)
 from airflow.providers.google.cloud.operators.compute import (
     ComputeEngineStartInstanceOperator,
     ComputeEngineStopInstanceOperator,
@@ -55,6 +53,20 @@ export GCP_PROJECT_ID={GCP_PROJECT_ID}
 export MODEL_NAME={MODEL_NAME}
 export TRAIN_DIR={TRAIN_DIR}
 """
+
+subcategory_ids = [
+    "FESTIVAL_CINE",
+    "FESTIVAL_SPECTACLE",
+    "VISITE",
+    "CONCERT",
+    "FESTIVAL_MUSIQUE",
+    "ABO_MUSEE",
+    "VISITE_GUIDEE",
+    "EVENEMENT_CINE",
+    "SEANCE_CINE",
+    "EVENEMENT_MUSIQUE",
+    "SPECTACLE_REPRESENTATION",
+]
 
 
 def branch_function(ti, **kwargs):
@@ -126,11 +138,11 @@ with DAG(
     )
 
     DATA_COLLECT = f""" '{DEFAULT}
-        python data_collect.py --dataset {BIGQUERY_RAW_DATASET} --table-name training_data_clicks'
+        python data_collect.py --dataset {BIGQUERY_RAW_DATASET} --table-name training_data_bookings --subcategory_ids {json.dumps(subcategory_ids)}'
     """
 
     clicks_data_collect = BashOperator(
-        task_id="clicks_data_collect",
+        task_id="data_collect",
         bash_command=f"""
         gcloud compute ssh {GCE_INSTANCE} \
         --zone {GCE_ZONE} \
@@ -197,21 +209,6 @@ with DAG(
         --zone {GCE_ZONE} \
         --project {GCP_PROJECT_ID} \
         --command {POSTPROCESSING}
-        """,
-        dag=dag,
-    )
-
-    DATA_COLLECT = f""" '{DEFAULT}
-        python data_collect.py --dataset {BIGQUERY_RAW_DATASET} --table-name training_data_bookings'
-    """
-
-    bookings_data_collect = BashOperator(
-        task_id="bookings_data_collect",
-        bash_command=f"""
-        gcloud compute ssh {GCE_INSTANCE} \
-        --zone {GCE_ZONE} \
-        --project {GCP_PROJECT_ID} \
-        --command {DATA_COLLECT}
         """,
         dag=dag,
     )
@@ -291,7 +288,6 @@ with DAG(
         >> split_data
         >> training
         >> postprocess
-        >> bookings_data_collect
         >> evaluate
         >> gce_instance_stop
         >> send_slack_notif_success

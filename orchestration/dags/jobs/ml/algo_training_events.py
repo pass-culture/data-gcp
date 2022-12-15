@@ -38,9 +38,6 @@ TRAIN_DIR = "/home/airflow/train"
 
 # Algo reco
 MODEL_NAME = "v1"
-AI_MODEL_NAME = f"tf_model_reco_{ENV_SHORT_NAME}"
-END_POINT_NAME = f"vertex_ai_{ENV_SHORT_NAME}"
-SERVING_CONTAINER = "europe-docker.pkg.dev/vertex-ai/prediction/tf2-cpu.2-5:latest"
 
 SLACK_CONN_ID = "slack_analytics"
 SLACK_CONN_PASSWORD = access_secret_data(GCP_PROJECT_ID, "slack-conn-password")
@@ -54,7 +51,7 @@ export MODEL_NAME={MODEL_NAME}
 export TRAIN_DIR={TRAIN_DIR}
 """
 
-subcategory_ids = [
+EVENT_SUBCATEGORIES = (
     "FESTIVAL_CINE",
     "FESTIVAL_SPECTACLE",
     "VISITE",
@@ -66,7 +63,7 @@ subcategory_ids = [
     "SEANCE_CINE",
     "EVENEMENT_MUSIQUE",
     "SPECTACLE_REPRESENTATION",
-]
+)
 
 
 def branch_function(ti, **kwargs):
@@ -84,7 +81,7 @@ default_args = {
 }
 
 with DAG(
-    "algo_training_clicks",
+    "algo_training_events",
     default_args=default_args,
     description="Custom training job",
     schedule_interval=None,
@@ -137,11 +134,11 @@ with DAG(
         dag=dag,
     )
 
-    DATA_COLLECT = f""" '{DEFAULT}
-        python data_collect.py --dataset {BIGQUERY_RAW_DATASET} --table-name training_data_bookings --subcategory-ids {json.dumps(subcategory_ids)}'
+    DATA_COLLECT = f""" $'{DEFAULT}
+        python data_collect.py --dataset {BIGQUERY_RAW_DATASET} --table-name training_data_bookings --subcategory-ids \\'{json.dumps(EVENT_SUBCATEGORIES)}\\''
     """
 
-    clicks_data_collect = BashOperator(
+    data_collect = BashOperator(
         task_id="data_collect",
         bash_command=f"""
         gcloud compute ssh {GCE_INSTANCE} \
@@ -283,7 +280,7 @@ with DAG(
         >> gce_instance_start
         >> fetch_code
         >> install_dependencies
-        >> clicks_data_collect
+        >> data_collect
         >> preprocess
         >> split_data
         >> training

@@ -13,8 +13,12 @@ def main(
         "training_data_bookings",
         help="BigQuery table containing the data we want to load",
     ),
+    subcategory_ids: str = typer.Option(
+        None,
+        help="BigQuery table containing the data we want to load",
+    ),
 ) -> None:
-    raw_data = get_data(dataset, table_name)
+    raw_data = get_data(dataset, table_name, subcategory_ids)
     raw_data.to_csv(f"{STORAGE_PATH}/raw_data.csv", index=False)
 
 

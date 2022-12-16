@@ -1,5 +1,8 @@
 import mlflow
 import warnings
+
+from loguru import logger
+import psutil
 from pandas.errors import DtypeWarning
 
 warnings.simplefilter(action="ignore", category=DtypeWarning)
@@ -87,7 +90,7 @@ def train(storage_path: str):
                 shuffle=True,
                 batch_size=BATCH_SIZE,
                 epochs=1,
-                verbose=0,
+                verbose=1,
             )
             connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
             mlflow.log_metric(

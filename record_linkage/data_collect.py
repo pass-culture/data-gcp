@@ -3,7 +3,7 @@ import pandas as pd
 import typer
 
 
-def get_data(gcp_project, env_short_name, filters):
+def get_data(gcp_project, env_short_name):
     query = f"""
     SELECT
     ado.offer_id,
@@ -16,7 +16,6 @@ def get_data(gcp_project, env_short_name, filters):
     LEFT JOIN `{gcp_project}.analytics_{env_short_name}.offer_item_ids` oii on oii.offer_id = ado.offer_id 
     LEFT JOIN `{gcp_project}.analytics_{env_short_name}.offer_extracted_data` oed on oed.offer_id = ado.offer_id 
     WHERE ado.offer_subcategoryId != 'LIVRE_PAPIER'
-    {filters}
     QUALIFY ROW_NUMBER() OVER (PARTITION BY item_id) = 1
     """
     return pd.read_gbq(query)
@@ -35,12 +34,8 @@ def main(
         STORAGE_PATH,
         help="Storage path",
     ),
-    filters: str = typer.Option(
-        "",
-        help="Additional filter on offers to link",
-    ),
 ) -> None:
-    offers_to_link = get_data(gcp_project, env_short_name, filters)
+    offers_to_link = get_data(gcp_project, env_short_name)
     offers_to_link.to_csv(f"{storage_path}/offers_to_link.csv", index=False)
 
 

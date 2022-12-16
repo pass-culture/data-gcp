@@ -27,6 +27,18 @@ def main(
     df_offers_linked_full["offer_id"] = df_offers_linked_full["offer_id"].values.astype(
         str
     )
+    df_linked_full=df_linked_full[
+        [
+        "offer_id"
+        ,"item_id"
+        ,"offer_subcategoryId"
+        ,"offer_name"
+        ,"offer_description"
+        ,"performer"
+        ,"linked_id"
+        ,"new_item_id"
+        ]
+            ]
     df_offers_linked_full.to_csv(f"{storage_path}/offers_linked_export_ready.csv")
 
 

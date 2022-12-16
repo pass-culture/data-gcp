@@ -5,13 +5,13 @@ import typer
 
 def get_data(gcp_project, env_short_name, filters):
     query = f"""
-    SELECT 
+    SELECT
     ado.offer_id,
     oii.item_id,
     ado.offer_subcategoryId,
     ado.offer_name,
     ado.offer_description,
-    oed.performer,
+    oed.performer
     FROM `{gcp_project}.analytics_{env_short_name}.applicative_database_offer` ado
     LEFT JOIN `{gcp_project}.analytics_{env_short_name}.offer_item_ids` oii on oii.offer_id = ado.offer_id 
     LEFT JOIN `{gcp_project}.analytics_{env_short_name}.offer_extracted_data` oed on oed.offer_id = ado.offer_id 

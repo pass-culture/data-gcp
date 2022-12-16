@@ -122,7 +122,7 @@ def train(storage_path: str):
                 else:
                     best_eval = eval_result
 
-            if ENV_SHORT_NAME != "prod":
+            if VERBOSE:
                 logger.info(log_memory_info())
 
         tf.keras.models.save_model(

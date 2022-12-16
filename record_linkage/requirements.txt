@@ -1,0 +1,4 @@
+pandas==1.3.5
+typer==0.7.0
+recordlinkage
+networkx

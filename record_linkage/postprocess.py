@@ -27,7 +27,7 @@ def main(
     df_offers_linked_full["offer_id"] = df_offers_linked_full["offer_id"].values.astype(
         str
     )
-    df_linked_full=df_linked_full[
+    df_offers_linked_full=df_offers_linked_full[
         [
         "offer_id"
         ,"item_id"

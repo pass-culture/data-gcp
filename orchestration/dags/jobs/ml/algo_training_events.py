@@ -23,7 +23,7 @@ from common.config import (
     DAG_FOLDER,
 )
 
-GCE_INSTANCE = "algo-training-dev-1" # os.environ.get("GCE_TRAINING_INSTANCE", "algo-training-dev-1")
+GCE_INSTANCE = os.environ.get("GCE_TRAINING_INSTANCE", "algo-training-dev")
 MLFLOW_BUCKET_NAME = os.environ.get("MLFLOW_BUCKET_NAME", "mlflow-bucket-ehp")
 if ENV_SHORT_NAME != "prod":
     MLFLOW_URL = "https://mlflow-ehp.internal-passculture.app/"
@@ -287,4 +287,5 @@ with DAG(
         >> postprocess
         >> evaluate
         >> gce_instance_stop
+        >> send_slack_notif_success
     )

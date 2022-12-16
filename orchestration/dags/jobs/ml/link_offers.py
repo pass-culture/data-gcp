@@ -23,13 +23,13 @@ from common.config import (
 GCE_INSTANCE = os.environ.get("GCE_TRAINING_INSTANCE", "algo-training-dev")
 MLFLOW_BUCKET_NAME = os.environ.get("MLFLOW_BUCKET_NAME", "mlflow-bucket-ehp")
 DATE = "{{ts_nodash}}"
-STORAGE_PATH = f"gs://{MLFLOW_BUCKET_NAME}/link_offers_{ENV_SHORT_NAME}/linkage_{DATE}"
+STORAGE_PATH = "gs://mlflow-bucket-ehp/link_offers_dev/linkage_16122022"
 # Algo reco
 DEFAULT = f"""cd data-gcp/record_linkage
 export PATH="/opt/conda/bin:/opt/conda/condabin:"+$PATH
-export STORAGE_PATH={STORAGE_PATH}
-export ENV_SHORT_NAME={ENV_SHORT_NAME}
-export GCP_PROJECT_ID={GCP_PROJECT_ID}
+export STORAGE_PATH=gs://mlflow-bucket-ehp/link_offers_dev/linkage_16122022
+export ENV_SHORT_NAME=dev
+export GCP_PROJECT_ID=passculture-data-ehp
 """
 
 
@@ -75,7 +75,14 @@ with DAG(
         dag=dag,
     )
 
-    FETCH_CODE = r'"if cd data-gcp; then git checkout master && git pull && git checkout {{ params.branch }} && git pull; else git clone git@github.com:pass-culture/data-gcp.git && cd data-gcp && git checkout {{ params.branch }} && git pull; fi"'
+    if ENV_SHORT_NAME == "dev":
+        branch = "PC-19242-implement-item-clustering-via-record-linkage"
+    if ENV_SHORT_NAME == "stg":
+        branch = "master"
+    if ENV_SHORT_NAME == "prod":
+        branch = "production"
+
+    FETCH_CODE = f'"if cd data-gcp; then git checkout master && git pull && git checkout {branch} && git pull; else git clone git@github.com:pass-culture/data-gcp.git && cd data-gcp && git checkout {branch} && git pull; fi"'
     fetch_code = BashOperator(
         task_id="fetch_code",
         bash_command=f"""
@@ -104,10 +111,10 @@ with DAG(
 
     additional_filters = ""
     DATA_COLLECT = f""" '{DEFAULT}
-        python data_collect.py 
-        --gcp_project {GCP_PROJECT_ID} 
-        --env_short_name {ENV_SHORT_NAME} 
-        --storage_path {STORAGE_PATH}
+        python data_collect.py \
+        --gcp_project {GCP_PROJECT_ID} \
+        --env_short_name {ENV_SHORT_NAME} \
+        --storage_path {STORAGE_PATH} \
         --filters {additional_filters}
         '
     """

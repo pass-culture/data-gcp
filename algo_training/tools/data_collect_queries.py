@@ -1,7 +1,7 @@
 import json
 
 import pandas as pd
-from utils import ENV_SHORT_NAME, GCP_PROJECT_ID
+from utils import GCP_PROJECT_ID
 
 
 def get_data(dataset: str, table_name: str, subcategory_ids: str = None):

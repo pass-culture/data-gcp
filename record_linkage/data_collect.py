@@ -6,16 +6,16 @@ import typer
 def get_data(gcp_project, env_short_name):
     query = f"""
     SELECT 
-    eod.offer_id,
-    eod.item_id,
-    eod.offer_subcategoryId,
-    eod.offer_name,
+    ado.offer_id,
+    oii.item_id,
+    ado.offer_subcategoryId,
+    ado.offer_name,
     ado.offer_description,
-    eod.performer,
-    FROM `{gcp_project}.analytics_{env_short_name}.enriched_offer_data` eod
-    LEFT JOIN `{gcp_project}.analytics_{env_short_name}.applicative_database_offer` ado on ado.offer_id = eod.offer_id 
-    WHERE eod.offer_subcategoryId != 'LIVRE_PAPIER'
-
+    oed.performer,
+    FROM `{gcp_project}.analytics_{env_short_name}.applicative_database_offer` ado
+    LEFT JOIN `{gcp_project}.analytics_{env_short_name}.offer_item_ids` oii on oii.offer_id = ado.offer_id 
+    LEFT JOIN `{gcp_project}.analytics_{env_short_name}.offer_extracted_data` oed on oed.offer_id = ado.offer_id 
+    WHERE ado.offer_subcategoryId != 'LIVRE_PAPIER'
     QUALIFY ROW_NUMBER() OVER (PARTITION BY item_id) = 1
     """
     return pd.read_gbq(query)

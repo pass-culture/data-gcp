@@ -63,7 +63,9 @@ with DAG(
     template_searchpath=DAG_FOLDER,
     params={
         "branch": Param(
-            default="production" if ENV_SHORT_NAME == "prod" else "master",
+            default="production"
+            if ENV_SHORT_NAME == "prod"
+            else "PC-19242-implement-item-clustering-via-record-linkage",
             type="string",
         ),
     },

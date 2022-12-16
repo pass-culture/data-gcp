@@ -4,7 +4,7 @@ import recordlinkage
 import pandas as pd
 import uuid
 import typer
-from tools.config import STORAGE_PATH, SUBCATEGORIES_WITH_PERFORMER
+from tools.config import STORAGE_PATH, SUBCATEGORIES_WITH_PERFORMER, SUBSET_MAX_LENGTH
 
 
 def get_matched_df(data_and_hyperparams_dict):
@@ -21,7 +21,7 @@ def get_matched_df(data_and_hyperparams_dict):
             indexer.full()
 
             subset_matches_list = []
-            subset_k_division = len(df_source_tmp) // 1000
+            subset_k_division = len(df_source_tmp) // SUBSET_MAX_LENGTH
             subset_divisions = subset_k_division if subset_k_division > 0 else 1
             for df_source_tmp_subset in np.array_split(df_source_tmp, subset_divisions):
                 if len(df_source_tmp_subset) == 0:

@@ -1,9 +1,10 @@
 import mlflow
 import warnings
 
+from loguru import logger
 from pandas.errors import DtypeWarning
 
-warnings.simplefilter(action="ignore", category=DtypeWarning)
+from tools.logging_tools import log_memory_info
 
 import numpy as np
 import pandas as pd
@@ -22,6 +23,8 @@ from utils import (
     EXPERIMENT_NAME,
     TRAIN_DIR,
 )
+
+warnings.simplefilter(action="ignore", category=DtypeWarning)
 
 
 EMBEDDING_SIZE = 64
@@ -118,6 +121,10 @@ def train(storage_path: str):
                     break
                 else:
                     best_eval = eval_result
+
+            if ENV_SHORT_NAME != "prod":
+                logger.info(log_memory_info())
+
         tf.keras.models.save_model(
             match_model, f"{TRAIN_DIR}/{ENV_SHORT_NAME}/tf_reco/"
         )

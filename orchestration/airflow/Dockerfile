@@ -14,11 +14,12 @@ ENV PATH $PATH:$AIRFLOW_USER_HOME/google-cloud-sdk/bin
 
 WORKDIR ${AIRFLOW_USER_HOME}
 
-RUN gcloud auth activate-service-account --key-file=${GCLOUD_SERVICE_KEY}
-
 # install airflow deps
 COPY orchestration-requirements.txt /opt/requirements.txt
 RUN pip3 install --user --no-cache-dir -r /opt/requirements.txt
+
+USER root
+RUN gcloud auth activate-service-account --key-file=${GCLOUD_SERVICE_KEY}
 
 ENTRYPOINT ["/usr/bin/dumb-init", "--", "/entrypoint"]
 CMD []

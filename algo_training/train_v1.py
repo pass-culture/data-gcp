@@ -1,8 +1,10 @@
 import mlflow
 import warnings
+
+from loguru import logger
 from pandas.errors import DtypeWarning
 
-warnings.simplefilter(action="ignore", category=DtypeWarning)
+from tools.logging_tools import log_memory_info
 
 import numpy as np
 import pandas as pd
@@ -22,10 +24,13 @@ from utils import (
     TRAIN_DIR,
 )
 
+warnings.simplefilter(action="ignore", category=DtypeWarning)
+
 
 EMBEDDING_SIZE = 64
 L2_REG = 0
 N_EPOCHS = 20 if ENV_SHORT_NAME == "prod" else 10
+VERBOSE = 0 if ENV_SHORT_NAME == "prod" else 1
 BATCH_SIZE = 1024
 LOSS_CUTOFF = 0.005
 
@@ -87,7 +92,7 @@ def train(storage_path: str):
                 shuffle=True,
                 batch_size=BATCH_SIZE,
                 epochs=1,
-                verbose=0,
+                verbose=VERBOSE,
             )
             connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
             mlflow.log_metric(
@@ -116,6 +121,10 @@ def train(storage_path: str):
                     break
                 else:
                     best_eval = eval_result
+
+            if VERBOSE:
+                logger.info(log_memory_info())
+
         tf.keras.models.save_model(
             match_model, f"{TRAIN_DIR}/{ENV_SHORT_NAME}/tf_reco/"
         )

@@ -14,7 +14,6 @@ IMPORT_TABLES = [
             "email",
             "publicName",
             "password",
-            "validationToken",
             "resetPasswordToken",
         ],
     },

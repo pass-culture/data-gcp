@@ -176,7 +176,6 @@ def define_import_query(
             CAST("id" AS varchar(255))
             , CAST("userId" AS varchar(255))
             , CAST("offererId" AS varchar(255))
-            , CAST(CAST("user_offerer"."validationToken" AS varchar(255)) IS NULL AS boolean) AS user_offerer_is_validated
             , CAST("validationStatus" AS varchar(255))  AS user_offerer_validation_status
         FROM public.user_offerer
     """
@@ -423,8 +422,7 @@ def define_import_query(
             "postalCode" AS offerer_postal_code, "city" AS offerer_city, CAST("id" AS varchar(255)) AS offerer_id,
             "dateCreated" AS offerer_creation_date, "name" AS offerer_name,
             "siren" AS offerer_siren, CAST("lastProviderId" AS varchar(255)) AS offerer_last_provider_id,
-            "fieldsUpdated" AS offerer_fields_updated, "validationToken" AS offerer_validation_token,
-            CAST("validationStatus" as varchar(255)) as offerer_validation_status,"dateValidated" AS offerer_validation_date
+            "fieldsUpdated" AS offerer_fields_updated,CAST("validationStatus" as varchar(255)) as offerer_validation_status,"dateValidated" AS offerer_validation_date
         FROM public.offerer
     """
     cloudsql_queries[

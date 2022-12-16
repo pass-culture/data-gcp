@@ -5,14 +5,10 @@ from airflow import DAG
 from airflow.models import Param
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryExecuteQueryOperator,
-)
 from airflow.providers.google.cloud.operators.compute import (
     ComputeEngineStartInstanceOperator,
     ComputeEngineStopInstanceOperator,
 )
-from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
 
 from common import macros
 from common.access_gcp_secrets import access_secret_data
@@ -21,12 +17,11 @@ from common.config import (
     GCP_PROJECT_ID,
     GCE_ZONE,
     ENV_SHORT_NAME,
-    MLFLOW_BUCKET_NAME,
     DAG_FOLDER,
 )
 
-GCE_INSTANCE = os.environ.get("GCE_TRAINING_INSTANCE", "algo-training-dev-1")
-
+GCE_INSTANCE = os.environ.get("GCE_TRAINING_INSTANCE", "algo-training-dev")
+MLFLOW_BUCKET_NAME = os.environ.get("MLFLOW_BUCKET_NAME", "mlflow-bucket-ehp")
 DATE = "{{ts_nodash}}"
 STORAGE_PATH = f"gs://{MLFLOW_BUCKET_NAME}/link_offers_{ENV_SHORT_NAME}/linkage_{DATE}"
 # Algo reco
@@ -168,6 +163,27 @@ with DAG(
         dag=dag,
     )
 
+    EXPORT_LINKAGE = f""" '{DEFAULT}
+        python export_linkage.py --gcp_project {GCP_PROJECT_ID} --env_short_name {ENV_SHORT_NAME} --storage_path {STORAGE_PATH}'
+    """
+
+    export_linkage = BashOperator(
+        task_id="export_linkage",
+        bash_command=f"""
+        gcloud compute ssh {GCE_INSTANCE} \
+        --zone {GCE_ZONE} \
+        --project {GCP_PROJECT_ID} \
+        --command {EXPORT_LINKAGE}
+        """,
+        dag=dag,
+    )
+
+    gce_instance_stop = ComputeEngineStopInstanceOperator(
+        project_id=GCP_PROJECT_ID,
+        zone=GCE_ZONE,
+        resource_id=GCE_INSTANCE,
+        task_id="gce_stop_task",
+    )
     end = DummyOperator(task_id="end", dag=dag)
 
     (
@@ -179,5 +195,7 @@ with DAG(
         >> preprocess
         >> record_linkage
         >> postprocess
+        >> export_linkage
+        >> gce_instance_stop
         >> end
     )

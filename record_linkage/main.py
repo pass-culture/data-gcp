@@ -19,7 +19,7 @@ def get_matched_df(data_and_hyperparams_dict):
         else:
             indexer = recordlinkage.Index()
             indexer.full()
-            print("len df_source_tmp: ", len(df_source_tmp))
+
             subset_matches_list = []
             subset_k_division = len(df_source_tmp) // 1000
             subset_divisions = subset_k_division if subset_k_division > 0 else 1

@@ -4,15 +4,20 @@ import recordlinkage
 import pandas as pd
 import uuid
 import typer
+import time
+from loguru import logger
 from tools.config import STORAGE_PATH, SUBCATEGORIES_WITH_PERFORMER, SUBSET_MAX_LENGTH
+from tools.logging_tools import log_memory_info, log_duration
 
 
 def get_matched_df(data_and_hyperparams_dict):
-
+    start = time.time()
     df_source = data_and_hyperparams_dict["dataframe_to_link"].copy()
     df_matched_list = []
     for subcat in df_source.offer_subcategoryId.unique():
         print("subcat: ", subcat, " On going ..")
+        print("/!\ memory info: ", log_memory_info())
+        logger.info(log_memory_info())
         df_source_tmp = df_source.query(f"offer_subcategoryId=='{subcat}'")
         if len(df_source_tmp) == 0:
             print(f"empty subcat {subcat}")
@@ -27,6 +32,9 @@ def get_matched_df(data_and_hyperparams_dict):
                 if len(df_source_tmp_subset) == 0:
                     print("subset empty..")
                 else:
+                    print("Subset on going...")
+                    print("/!\ memory info: ", log_memory_info())
+                    logger.info(log_memory_info())
                     # a subset of record pairs
                     candidate_links = indexer.index(df_source_tmp, df_source_tmp_subset)
 
@@ -52,10 +60,12 @@ def get_matched_df(data_and_hyperparams_dict):
             df_matched_list.append(_get_linked_offers(df_source_tmp, matches))
 
     df_mtd = pd.concat(df_matched_list)
+    log_duration(f"get_matched_df: ", start)
     return df_mtd
 
 
 def _get_linked_offers(df_source, df_matches):
+    start = time.time()
     df_source_tmp = df_source.copy()
     FG = nx.from_pandas_edgelist(
         df_matches, source="index_1", target="index_2", edge_attr=True
@@ -66,6 +76,7 @@ def _get_linked_offers(df_source, df_matches):
         for index in connected_ids[clusters]:
             df_source_tmp.at[index, "linked_id"] = str(link_id)
     df_linked_offers = df_source_tmp.query("linked_id !='NC' ")
+    log_duration(f"_get_linked_offers: ", start)
     return df_linked_offers
 
 
@@ -92,7 +103,6 @@ def main(
     ####
     # Load preprocessed data
     df_offers_to_link_clean = pd.read_csv(f"{storage_path}/offers_to_link_clean.csv")
-
     ####
     # Split offers between performer and non performer
     subcat_all = df_offers_to_link_clean.offer_subcategoryId.drop_duplicates().to_list()

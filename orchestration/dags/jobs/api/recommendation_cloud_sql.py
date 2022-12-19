@@ -34,6 +34,9 @@ from common.config import (
     RECOMMENDATION_SQL_BASE,
 )
 from dependencies.import_recommendation_cloudsql.monitor_tables import monitoring_tables
+from dependencies.import_recommendation_cloudsql.sql.create_recommendable_offers_per_iris_shape_tmp_mv import (
+    SQL,
+)
 from common.alerts import task_fail_slack_alert
 from common import macros
 
@@ -50,6 +53,9 @@ os.environ["AIRFLOW_CONN_PROXY_POSTGRES_TCP"] = (
 
 TABLES_DATA_PATH = f"{os.environ.get('DAG_FOLDER')}/ressources/tables.csv"
 BUCKET_PATH = f"gs://{DATA_GCS_BUCKET_NAME}/bigquery_exports"
+SQL_PATH = (
+    f"{os.environ.get('DAG_FOLDER')}/dependencies/import_recommendation_cloudsql/sql/"
+)
 
 default_args = {
     "start_date": datetime(2020, 12, 1),
@@ -268,8 +274,28 @@ with DAG(
         autocommit=True,
     )
 
+    create_materialized_view = CloudSQLExecuteQueryOperator(
+        task_id="create_materialized_view_recommendable_offers_per_iris_shape_mv",
+        gcp_cloudsql_conn_id="proxy_postgres_tcp",
+        sql=SQL,
+        autocommit=True,
+    )
+
+    rename_current_materialized_view = CloudSQLExecuteQueryOperator(
+        task_id="rename_current_materialized_view",
+        gcp_cloudsql_conn_id="proxy_postgres_tcp",
+        sql=f"ALTER MATERIALIZED VIEW recommendable_offers_per_iris_shape_mv rename to recommendable_offers_per_iris_shape_mv_old",
+        autocommit=True,
+    )
+
+    rename_temp_materialized_view = CloudSQLExecuteQueryOperator(
+        task_id="rename_temp_materialized_view",
+        gcp_cloudsql_conn_id="proxy_postgres_tcp",
+        sql=f"ALTER MATERIALIZED VIEW recommendable_offers_per_iris_shape_tmp_mv rename to recommendable_offers_per_iris_shape_mv",
+        autocommit=True,
+    )
+
     views_to_refresh = [
-        "recommendable_offers_per_iris_shape_mv",
         "non_recommendable_offers",
         "iris_venues_mv",
         "enriched_user_mv",
@@ -296,4 +322,12 @@ with DAG(
         >> end_monitoring
         >> start_drop_restore
     )
-    end_drop_restore >> recreate_indexes_task >> refresh_materialized_view_tasks >> end
+    (
+        end_drop_restore
+        >> create_materialized_view
+        >> recreate_indexes_task
+        >> refresh_materialized_view_tasks
+        >> rename_current_materialized_view
+        >> rename_temp_materialized_view
+        >> end
+    )

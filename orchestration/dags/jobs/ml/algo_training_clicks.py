@@ -85,6 +85,10 @@ with DAG(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
+        "event_day_number": Param(
+            default="30" if ENV_SHORT_NAME == "prod" else "365",
+            type="string",
+        ),
     },
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)
@@ -126,7 +130,7 @@ with DAG(
     )
 
     DATA_COLLECT = f""" '{DEFAULT}
-        python data_collect.py --dataset {BIGQUERY_RAW_DATASET} --table-name training_data_clicks'
+        python data_collect.py --dataset {BIGQUERY_RAW_DATASET} --table-name training_data_clicks --event_day_number {{{{ params.event_day_number }}}} '
     """
 
     clicks_data_collect = BashOperator(

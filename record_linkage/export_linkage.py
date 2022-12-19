@@ -22,18 +22,18 @@ def main(
     df_offers_linked_export_ready = pd.read_csv(
         f"{storage_path}/offers_linked_export_ready.csv"
     )
-    df_offers_linked_export_ready=df_offers_linked_export_ready[
+    df_offers_linked_export_ready = df_offers_linked_export_ready[
         [
-        "offer_id"
-        ,"item_id"
-        ,"offer_subcategoryId"
-        ,"offer_name"
-        ,"offer_description"
-        ,"performer"
-        ,"linked_id"
-        ,"new_item_id"
+            "offer_id",
+            "item_id",
+            "offer_subcategoryId",
+            "offer_name",
+            "offer_description",
+            "performer",
+            "linked_id",
+            "new_item_id",
         ]
-            ]
+    ]
 
     df_offers_linked_export_ready.to_gbq(
         f"sandbox_{env_short_name}.linked_offers_v0",

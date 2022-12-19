@@ -1,5 +1,19 @@
-from common.config import APPLICATIVE_EXTERNAL_CONNECTION_ID, GCP_REGION
+import os
+from common.config import BIGQUERY_CLEAN_DATASET, DAG_FOLDER, APPLICATIVE_EXTERNAL_CONNECTION_ID, GCP_REGION
+RAW_SQL_PATH = f"dependencies/import_analytics/sql/raw"
 
+raw_tables = {}
+
+def get_raw_table_dict():
+    for file in os.listdir(DAG_FOLDER + '/' + RAW_SQL_PATH):
+        extension = file.split('.')[-1]
+        table_name = file.split('.')[0]
+        if extension == 'sql':
+            raw_tables[table_name] = {}
+            raw_tables[table_name]['sql'] = DAG_FOLDER + '/' + RAW_SQL_PATH + '/' + file
+            raw_tables[table_name]['destination_dataset'] =  f"{BIGQUERY_CLEAN_DATASET}"
+            raw_tables[table_name]['destination_table'] =  f"applicative_database_{table_name}"
+    return raw_tables
 
 def define_import_tables():
     return {

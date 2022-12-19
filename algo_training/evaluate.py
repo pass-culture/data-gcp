@@ -24,7 +24,8 @@ k_list = [RECOMMENDATION_NUMBER, NUMBER_OF_PRESELECTED_OFFERS]
 
 def evaluate(model, storage_path: str, model_name):
 
-    raw_data = preprocess(f"{storage_path}/raw_data.csv")
+    raw_data = pd.read_csv(f"{STORAGE_PATH}/raw_data.csv")
+    raw_data = preprocess(raw_data)
 
     positive_data_train = (
         pd.read_csv(

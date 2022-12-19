@@ -109,13 +109,11 @@ with DAG(
         dag=dag,
     )
 
-    additional_filters = ""
     DATA_COLLECT = f""" '{DEFAULT}
         python data_collect.py \
-        --gcp_project {GCP_PROJECT_ID} \
-        --env_short_name {ENV_SHORT_NAME} \
-        --storage_path {STORAGE_PATH} \
-        --filters {additional_filters}
+        --gcp-project {GCP_PROJECT_ID} \
+        --env-short-name {ENV_SHORT_NAME} \
+        --storage-path {STORAGE_PATH} \
         '
     """
 
@@ -131,7 +129,8 @@ with DAG(
     )
 
     PREPROCESS = f""" '{DEFAULT}
-        python preprocess.py --storage_path {STORAGE_PATH}'
+        python preprocess.py \
+        --storage-path {STORAGE_PATH}'
     """
 
     preprocess = BashOperator(
@@ -146,7 +145,8 @@ with DAG(
     )
 
     RECORD_LINKAGE = f""" '{DEFAULT}
-        python main.py --storage_path {STORAGE_PATH}'
+        python main.py \
+        --storage-path {STORAGE_PATH}'
     """
 
     record_linkage = BashOperator(
@@ -161,7 +161,8 @@ with DAG(
     )
 
     POSTPROCESS = f""" '{DEFAULT}
-        python postprocess.py --gcp_project {GCP_PROJECT_ID} --env_short_name {ENV_SHORT_NAME} --storage_path {STORAGE_PATH}'
+        python postprocess.py \
+        --storage-path {STORAGE_PATH}'
     """
 
     postprocess = BashOperator(
@@ -176,7 +177,10 @@ with DAG(
     )
 
     EXPORT_LINKAGE = f""" '{DEFAULT}
-        python export_linkage.py --gcp_project {GCP_PROJECT_ID} --env_short_name {ENV_SHORT_NAME} --storage_path {STORAGE_PATH}'
+        python export_linkage.py \
+        --gcp-project {GCP_PROJECT_ID} \
+        --env-short-name {ENV_SHORT_NAME} \
+        --storage-path {STORAGE_PATH}'
     """
 
     export_linkage = BashOperator(

@@ -35,7 +35,7 @@ def evaluate(model, storage_path: str, model_name):
                 "item_id": str,
             },
         )[["user_id", "item_id"]]
-        .merge(raw_data, on=["user_id", "item_id"], how="left")
+        .merge(raw_data, on=["user_id", "item_id"], how="inner")
         .drop_duplicates()
     )
 
@@ -47,7 +47,7 @@ def evaluate(model, storage_path: str, model_name):
                 "item_id": str,
             },
         )[["user_id", "item_id"]]
-        .merge(raw_data, on=["user_id", "item_id"], how="left")
+        .merge(raw_data, on=["user_id", "item_id"], how="inner")
         .drop_duplicates()
     )
 

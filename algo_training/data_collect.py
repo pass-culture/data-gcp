@@ -15,10 +15,14 @@ def main(
     ),
     subcategory_ids: str = typer.Option(
         None,
-        help="BigQuery table containing the data we want to load",
+        help="List of subcategory ids to filter in string format. If set to None, no filter is applied",
+    ),
+    event_day_number: str = typer.Option(
+        None,
+        help="Number of days to filter when querying the data. If set to None, no filter is applied",
     ),
 ) -> None:
-    raw_data = get_data(dataset, table_name, subcategory_ids)
+    raw_data = get_data(dataset, table_name, subcategory_ids, event_day_number)
     raw_data.to_csv(f"{STORAGE_PATH}/raw_data.csv", index=False)
 
 

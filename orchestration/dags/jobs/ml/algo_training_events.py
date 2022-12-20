@@ -181,7 +181,7 @@ with DAG(
     )
 
     TRAINING = f""" '{DEFAULT}
-        python train_{MODEL_NAME}.py'
+        python train_v1.py'
     """
 
     training = BashOperator(

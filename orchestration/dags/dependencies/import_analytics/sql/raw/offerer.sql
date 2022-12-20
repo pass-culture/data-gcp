@@ -12,7 +12,6 @@ SELECT
     , "siren" AS offerer_siren
     , CAST("lastProviderId" AS varchar(255)) AS offerer_last_provider_id
     , "fieldsUpdated" AS offerer_fields_updated
-    , "validationToken" AS offerer_validation_token
     , CAST("validationStatus" as varchar(255)) as offerer_validation_status
     , "dateValidated" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS offerer_validation_date
 FROM public.offerer

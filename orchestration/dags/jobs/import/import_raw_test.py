@@ -12,13 +12,14 @@ from airflow.providers.google.cloud.operators.bigquery import (
 )
 from dependencies.import_analytics.import_tables import get_raw_table_dict
 from common.alerts import analytics_fail_slack_alert
-# from common.utils import from_external 
+
+# from common.utils import from_external
 
 from common.config import (
     APPLICATIVE_EXTERNAL_CONNECTION_ID,
     APPLICATIVE_PREFIX,
     GCP_PROJECT,
-    DAG_FOLDER
+    DAG_FOLDER,
 )
 
 default_dag_args = {
@@ -31,9 +32,9 @@ default_dag_args = {
 
 
 def one_line_query(sql_path):
-    with open(f"{sql_path}", 'r') as fp:
+    with open(f"{sql_path}", "r") as fp:
         lines = " ".join([line.strip() for line in fp.readlines()])
-    return (lines)
+    return lines
 
 
 dag = DAG(
@@ -61,10 +62,10 @@ for table, params in raw_tables.items():
                 "useLegacySql": False,
                 "destinationTable": {
                     "projectId": GCP_PROJECT,
-                    "datasetId": params['destination_dataset'],
-                    "tableId": params['destination_table'],
+                    "datasetId": params["destination_dataset"],
+                    "tableId": params["destination_table"],
                 },
-                "writeDisposition": 'WRITE_TRUNCATE',
+                "writeDisposition": "WRITE_TRUNCATE",
             }
         },
         params=dict(params.get("params", {})),

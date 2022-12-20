@@ -1,6 +1,6 @@
 import os
 from common.config import (
-    BIGQUERY_CLEAN_DATASET,
+    BIGQUERY_RAW_DATASET,
     DAG_FOLDER,
     APPLICATIVE_EXTERNAL_CONNECTION_ID,
     GCP_REGION,
@@ -18,7 +18,7 @@ def get_raw_table_dict():
         if extension == "sql":
             raw_tables[table_name] = {}
             raw_tables[table_name]["sql"] = DAG_FOLDER + "/" + RAW_SQL_PATH + "/" + file
-            raw_tables[table_name]["destination_dataset"] = f"{BIGQUERY_CLEAN_DATASET}"
+            raw_tables[table_name]["destination_dataset"] = f"{BIGQUERY_RAW_DATASET}"
             raw_tables[table_name][
                 "destination_table"
             ] = f"applicative_database_{table_name}"

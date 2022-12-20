@@ -118,7 +118,6 @@ BIGQUERY_SCHEMAS = {
         "offerer_address": "STRING",
         "offerer_postal_code": "STRING",
         "offerer_city": "STRING",
-        "offerer_validation_token": "STRING",
         "offerer_id": "STRING",
         "offerer_creation_date": "DATETIME",
         "offerer_validation_date": "DATETIME",

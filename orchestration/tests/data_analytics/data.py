@@ -1126,6 +1126,7 @@ ENRICHED_OFFERER_DATA_INPUT = {
             "offerer_creation_date": datetime.now().replace(microsecond=0),
             "offerer_validation_date": datetime.now().replace(microsecond=0),
             "offerer_is_active": True,
+            "offerer_validation_status": "VALIDATED",
         }
     ],
     "applicative_database_stock": [

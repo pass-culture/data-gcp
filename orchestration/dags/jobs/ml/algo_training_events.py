@@ -136,7 +136,7 @@ with DAG(
     )
 
     DATA_COLLECT = f""" $'{DEFAULT}
-        python data_collect.py --dataset {BIGQUERY_RAW_DATASET} --table-name training_data_bookings --subcategory-ids \\'{json.dumps(EVENT_SUBCATEGORIES)}\\''
+        python data_collect.py --dataset {BIGQUERY_RAW_DATASET} --table-name training_data_clicks --subcategory-ids \\'{json.dumps(EVENT_SUBCATEGORIES)}\\''
     """
 
     data_collect = BashOperator(

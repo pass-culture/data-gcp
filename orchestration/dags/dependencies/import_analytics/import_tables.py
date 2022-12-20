@@ -119,6 +119,7 @@ def define_import_tables():
         "offerer_tag": [""],
         "offerer_tag_mapping": [""],
         "action_history": ["action_date"],
+        "cds_cinema_details": [""],
     }
 
 
@@ -899,6 +900,16 @@ def define_import_query(
                 ,CAST("venueId" AS VARCHAR(255)) AS venue_id
                 ,"comment" AS comment
              FROM action_history
+            """
+    cloudsql_queries[
+        "cds_cinema_details"
+    ] = """
+             SELECT
+                CAST("id" AS varchar(255)) AS cds_cinema_details_id
+                ,CAST("cinemaProviderPivotId" AS VARCHAR(255)) AS cinema_provider_pivot_id
+                ,"cinemaApiToken" AS cinema_api_token
+                ,"accountId" AS account_id
+             FROM cds_cinema_details
             """
 
     # Build specific federated queries

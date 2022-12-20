@@ -51,7 +51,7 @@ SELECT
     , "adageId" AS venue_adage_id
     , CAST("venueEducationalStatusId"AS varchar(255)) AS venue_educational_status_id
     , "collectiveDescription" AS collective_description
-    , BTRIM(array_to_string("collectiveStudents", \\',\\'), \\'{\\') AS collective_students
+    , BTRIM(array_to_string("collectiveStudents", \',\'), \'{\') AS collective_students
     , "collectiveWebsite" AS collective_website
     , "collectiveNetwork" AS collective_network
     , "collectiveInterventionArea" AS collective_intervention_area

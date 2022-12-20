@@ -15,15 +15,15 @@ SELECT
     , "dateCreated" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS collective_offer_creation_date
     , CAST("subcategoryId" AS varchar(255)) AS collective_offer_subcategory_id
     , "dateUpdated" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS collective_offer_date_updated
-    , BTRIM(array_to_string("students", \\',\\'), \\'{\\') AS collective_offer_students
+    , BTRIM(array_to_string("students", \',\'), \'{\') AS collective_offer_students
     , "priceDetail" AS collective_offer_price_detail
-    , BTRIM(array_to_string("bookingEmails", \\',\\'), \\'{\\') AS collective_offer_booking_email
+    , BTRIM(array_to_string("bookingEmails", \',\'), \'{\') AS collective_offer_booking_email
     , "contactEmail" AS collective_offer_contact_email
     , "contactPhone" AS collective_offer_contact_phone
     , "offerVenue" AS collective_offer_offer_venue
     , "offerVenue" ->> \'venueId\' AS collective_offer_venue_humanized_id
     , "offerVenue" ->> \'addressType\' AS collective_offer_venue_address_type
     , "offerVenue" ->> \'otherAddress\' AS collective_offer_venue_other_address
-    , BTRIM(array_to_string("interventionArea", \\',\\'), \\'{\\') AS intervention_area
+    , BTRIM(array_to_string("interventionArea", \',\'), \'{\') AS intervention_area
     , CAST("lastValidationType" AS VARCHAR) AS collective_offer_last_validation_type
 FROM public.collective_offer_template

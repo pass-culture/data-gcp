@@ -39,10 +39,7 @@ STORAGE_PATH = (
 TRAIN_DIR = "/home/airflow/train"
 
 # Algo reco
-MODEL_NAME = "v1"
-AI_MODEL_NAME = f"tf_model_reco_{ENV_SHORT_NAME}"
-END_POINT_NAME = f"vertex_ai_{ENV_SHORT_NAME}"
-SERVING_CONTAINER = "europe-docker.pkg.dev/vertex-ai/prediction/tf2-cpu.2-5:latest"
+MODEL_NAME = "clicks"
 
 SLACK_CONN_ID = "slack_analytics"
 SLACK_CONN_PASSWORD = access_secret_data(GCP_PROJECT_ID, "slack-conn-password")
@@ -54,6 +51,7 @@ export ENV_SHORT_NAME={ENV_SHORT_NAME}
 export GCP_PROJECT_ID={GCP_PROJECT_ID}
 export MODEL_NAME={MODEL_NAME}
 export TRAIN_DIR={TRAIN_DIR}
+export EXPERIMENT_NAME=algo_training_{MODEL_NAME}.1_{ENV_SHORT_NAME}
 """
 
 

@@ -26,6 +26,7 @@ ENRICHED_OFFER_DATA_INPUT = {
             "venue_id": "1",
             "offer_product_id": "1",
             "offer_id": "3",
+            "offer_id_at_providers": "7",
             "offer_subcategoryId": "SEANCE_CINE",
             "offer_name": "Test",
             "offer_is_active": True,
@@ -41,6 +42,7 @@ ENRICHED_OFFER_DATA_INPUT = {
             "venue_id": "2",
             "offer_product_id": "2",
             "offer_id": "4",
+            "offer_id_at_providers": "8",
             "offer_subcategoryId": "LIVRE_PAPIER",
             "offer_name": "RIP Dylan Rieder",
             "offer_is_active": True,
@@ -328,6 +330,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
     {
         "offer_id": "3",
         "offer_product_id": "1",
+        "offer_id_at_providers": "7",
         "item_id": "product-154181",
         "offerer_id": "3",
         "offerer_name": "Test Offerer",
@@ -381,6 +384,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
     {
         "offer_id": "4",
         "offer_product_id": "2",
+        "offer_id_at_providers": "8",
         "item_id": "product-156157",
         "offerer_id": "4",
         "offerer_name": "Test Offerer",

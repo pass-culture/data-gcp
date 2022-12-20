@@ -234,6 +234,7 @@ BIGQUERY_SCHEMAS = {
         "offer_id": "STRING",
         "offer_product_id": "STRING",
         "item_id": "STRING",
+        "offer_id_at_providers": "STRING",
         "offer_name": "STRING",
         "URL": "STRING",
         "is_national": "STRING",

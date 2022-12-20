@@ -5,7 +5,7 @@ from airflow.providers.google.cloud.operators.bigquery import (
 )
 from airflow.operators.dummy_operator import DummyOperator
 from common import macros
-from common.utils import depends_loop
+from common.utils import depends_loop, one_line_query
 
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryInsertJobOperator,
@@ -29,13 +29,6 @@ default_dag_args = {
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT,
 }
-
-
-def one_line_query(sql_path):
-    with open(f"{sql_path}", "r") as fp:
-        lines = " ".join([line.strip() for line in fp.readlines()])
-    return lines
-
 
 dag = DAG(
     "import_raw_test",

@@ -128,7 +128,7 @@ with DAG(
     )
 
     DATA_COLLECT = f""" '{DEFAULT}
-        python data_collect.py --dataset {BIGQUERY_RAW_DATASET} --table-name training_data_clicks --event_day_number {{{{ params.event_day_number }}}} '
+        python data_collect.py --dataset {BIGQUERY_RAW_DATASET} --table-name training_data_clicks --event-day-number {{{{ params.event_day_number }}}} '
     """
 
     clicks_data_collect = BashOperator(

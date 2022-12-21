@@ -66,10 +66,10 @@ with DAG(
     start = DummyOperator(task_id="start", dag=dag)
 
     gce_instance_start = ComputeEngineStartInstanceOperator(
+        task_id="gce_start_task",
         project_id=GCP_PROJECT_ID,
         zone=GCE_ZONE,
         resource_id=GCE_TRAINING_INSTANCE,
-        task_id="gce_start_task",
         dag=dag,
     )
 
@@ -82,47 +82,23 @@ with DAG(
     install_dependencies = GCloudComputeSSHOperator(
         task_id="install_dependencies",
         dag_config=DAG_CONFIG,
-        path_to_run_command="data_gcp/algo_training",
+        path_to_run_command="data-gcp/algo_training",
         command="pip install -r requirements.txt --user",
-        dag=dag,
-    )
-
-    data_collect = GCloudComputeSSHOperator(
-        task_id="data_collect",
-        dag_config=DAG_CONFIG,
-        path_to_run_command="data_gcp/algo_training",
-        command=f"python data_collect.py --dataset {BIGQUERY_RAW_DATASET} --table-name training_data_clicks",
-        dag=dag,
-    )
-
-    preprocess = GCloudComputeSSHOperator(
-        task_id="preprocess",
-        dag_config=DAG_CONFIG,
-        path_to_run_command="data_gcp/algo_training",
-        command=f"python preprocess.py",
-        dag=dag,
-    )
-
-    split_data = GCloudComputeSSHOperator(
-        task_id="split_data",
-        dag_config=DAG_CONFIG,
-        path_to_run_command="data_gcp/algo_training",
-        command=f"python split_data.py",
         dag=dag,
     )
 
     training = GCloudComputeSSHOperator(
         task_id="training",
         dag_config=DAG_CONFIG,
-        path_to_run_command="data_gcp/algo_training",
-        command=f"python train_v1.py",
+        path_to_run_command="data-gcp/algo_training",
+        command=f"python train_v1_1.py",
         dag=dag,
     )
 
     postprocess = GCloudComputeSSHOperator(
         task_id="postprocess",
         dag_config=DAG_CONFIG,
-        path_to_run_command="data_gcp/algo_training",
+        path_to_run_command="data-gcp/algo_training",
         command=f"python postprocess.py",
         dag=dag,
     )
@@ -130,16 +106,16 @@ with DAG(
     evaluate = GCloudComputeSSHOperator(
         task_id="evaluate",
         dag_config=DAG_CONFIG,
-        path_to_run_command="data_gcp/algo_training",
+        path_to_run_command="data-gcp/algo_training",
         command=f"python evaluate.py",
         dag=dag,
     )
 
     gce_instance_stop = ComputeEngineStopInstanceOperator(
+        task_id="gce_stop_task",
         project_id=GCP_PROJECT_ID,
         zone=GCE_ZONE,
         resource_id=GCE_TRAINING_INSTANCE,
-        task_id="gce_stop_task",
     )
 
     # send_slack_notif_success = SlackWebhookOperator(
@@ -156,11 +132,7 @@ with DAG(
         >> gce_instance_start
         >> fetch_code
         >> install_dependencies
-        >> data_collect
-        >> preprocess
-        >> split_data
         >> training
-        >> postprocess
         >> evaluate
         >> gce_instance_stop
         # >> send_slack_notif_success

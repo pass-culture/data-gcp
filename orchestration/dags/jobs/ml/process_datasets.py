@@ -29,7 +29,7 @@ with DAG(
     "process_training_data",
     default_args=default_dag_args,
     description="Import data for training and build aggregated tables",
-    schedule_interval="0 10 * * 5",
+    schedule_interval=None,
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,

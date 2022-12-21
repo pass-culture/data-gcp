@@ -820,15 +820,15 @@ jobs:
       - checkout:
           path: ~/data-gcp
       - restore_cache:
-          key: deps-{{ checksum "orchestration-requirements.txt" }}
+          key: deps-{{ checksum "airflow/orchestration-requirements.txt" }}
       - run:
           name: Install Python requirements
           command: |
             python3 -m venv venv-orchestration
             . venv-orchestration/bin/activate
-            pip install -r orchestration-requirements.txt
+            pip install -r airflow/orchestration-requirements.txt
       - save_cache:
-          key: deps-{{ checksum "orchestration-requirements.txt" }}
+          key: deps-{{ checksum "airflow/orchestration-requirements.txt" }}
           paths:
             - "venv-orchestration"
       - persist_to_workspace:

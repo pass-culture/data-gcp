@@ -8,6 +8,7 @@ from common.config import (
 
 RAW_SQL_PATH = f"dependencies/import_analytics/sql/raw"
 
+
 def get_tables_config_dict(PATH, BQ_DESTINATION_DATASET):
     tables_config = {}
     for file in os.listdir(PATH):
@@ -21,4 +22,3 @@ def get_tables_config_dict(PATH, BQ_DESTINATION_DATASET):
                 "destination_table"
             ] = f"applicative_database_{table_name}"
     return tables_config
-

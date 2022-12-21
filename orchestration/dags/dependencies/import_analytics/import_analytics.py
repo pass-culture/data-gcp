@@ -4,6 +4,7 @@ from common.config import (
 
 ANALYTICS_SQL_PATH = f"dependencies/import_analytics/sql/analytics"
 
+
 def define_import_tables():
     return [
         "user",
@@ -68,7 +69,7 @@ def define_import_tables():
         "invoice",
         "offerer_tag",
         "offerer_tag_mapping",
-        "action_history"
+        "action_history",
     ]
 
 

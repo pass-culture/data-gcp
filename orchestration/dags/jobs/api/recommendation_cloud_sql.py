@@ -279,14 +279,14 @@ with DAG(
     rename_current_materialized_view = CloudSQLExecuteQueryOperator(
         task_id="rename_current_materialized_view",
         gcp_cloudsql_conn_id="proxy_postgres_tcp",
-        sql=f"ALTER MATERIALIZED VIEW recommendable_offers_per_iris_shape_mv rename to recommendable_offers_per_iris_shape_mv_old",
+        sql=f"ALTER MATERIALIZED VIEW IF EXISTS recommendable_offers_per_iris_shape_mv rename to recommendable_offers_per_iris_shape_mv_old",
         autocommit=True,
     )
 
     rename_temp_materialized_view = CloudSQLExecuteQueryOperator(
         task_id="rename_temp_materialized_view",
         gcp_cloudsql_conn_id="proxy_postgres_tcp",
-        sql=f"ALTER MATERIALIZED VIEW recommendable_offers_per_iris_shape_{{ yyyymmdd(ds) }}_mv rename to recommendable_offers_per_iris_shape_mv",
+        sql=f"ALTER MATERIALIZED VIEW recommendable_offers_per_iris_shape_tmp_mv rename to recommendable_offers_per_iris_shape_mv",
         autocommit=True,
     )
     drop_old_materialized_view = CloudSQLExecuteQueryOperator(

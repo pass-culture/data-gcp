@@ -51,19 +51,19 @@ class GCloudComputeSSHOperator(BashOperator):
         **kwargs,
     ):
 
-        export_env_variables = " \\".join(
+        export_env_variables = "\n".join(
             [f"export {key}={value}" for key, value in dag_config.items()]
         )
         if path_to_run_command:
-            command = f"cd {path_to_run_command} " + command
+            command = f"cd {path_to_run_command} \n" + command
 
         super(GCloudComputeSSHOperator, self).__init__(
             bash_command=f"""
                 gcloud compute ssh {resource_id} \
                 --zone {zone} \
                 --project {project_id} \
-                --command {export_env_variables} \
-                {command}
+                --command $'{export_env_variables}
+                {command}'
                 """,
             *args,
             **kwargs,

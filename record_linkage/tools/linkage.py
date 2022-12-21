@@ -1,7 +1,9 @@
 import time
 import numpy as np
 import networkx as nx
+import pandas as pd
 import recordlinkage
+import uuid
 from loguru import logger
 from tools.config import SUBSET_MAX_LENGTH
 from tools.logging_tools import log_memory_info, log_duration
@@ -13,7 +15,6 @@ def get_matched_df(data_and_hyperparams_dict):
     df_matched_list = []
     for subcat in df_source.offer_subcategoryId.unique():
         print("subcat: ", subcat, " On going ..")
-        print("/!\ memory info: ", log_memory_info())
         logger.info(log_memory_info())
         df_source_tmp = df_source.query(f"offer_subcategoryId=='{subcat}'")
         if len(df_source_tmp) == 0:

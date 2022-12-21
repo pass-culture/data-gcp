@@ -64,6 +64,11 @@ _AIRFLOW_WWW_USER_USERNAME=<user>
 _AIRFLOW_WWW_USER_PASSWORD=<password>
 ```
 
+### airflow.cfg
+
+Il est necessaire de récuperer les configs de `airflow/config/airflow.cfg`
+
+
 ### sa.gcpkey.json
 
 Mettre la clef SA composer dans `/airflow/etc/sa.gcpkey.json`

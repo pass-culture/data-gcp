@@ -129,7 +129,6 @@ offerer = pd.DataFrame(
         "offerer_name": ["MUSEENATIONALDUSPORT"] * 20,
         "offerer_siren": [130002645] * 20,
         "offerer_last_provider_id": [None] * 20,
-        "offerer_validation_token": [None] * 20,
     }
 )
 offerer_dtype = {}

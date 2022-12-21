@@ -1,9 +1,10 @@
 {
 	"info": {
-		"_postman_id": "881b5acf-b7c2-4ca4-8551-13db84e5f174",
+		"_postman_id": "eac8858b-9f92-4926-beb0-edb35ae5b791",
 		"name": "API Integration Tests",
 		"description": "Collection of integration tests for the reco api.\nMade with Postman",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "20735314"
 	},
 	"item": [
 		{
@@ -1737,7 +1738,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"priceMin\": 0 \r\n}",
+					"raw": "{\r\n    \"priceMin\": 1\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"

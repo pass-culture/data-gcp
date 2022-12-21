@@ -10,10 +10,11 @@ def main(
         help="Storage path",
     )
 ) -> None:
-    ####
+    ###############
     # Load preprocessed data
     df_offers_to_link_clean = pd.read_csv(f"{storage_path}/offers_to_link_clean.csv")
-    ####
+
+    ###############
     # Split offers between performer and non performer
     subcat_all = df_offers_to_link_clean.offer_subcategoryId.drop_duplicates().to_list()
     subcat_wo_performer = [
@@ -26,7 +27,7 @@ def main(
         f"""offer_subcategoryId in {tuple(subcat_wo_performer)} """
     )
 
-    ####
+    ###############
     # Define hyperparameters for each group of offers to links
     data_and_hyperparams_dict = {
         "performer": {
@@ -47,7 +48,8 @@ def main(
             "matches_requiere": 1,
         },
     }
-    ####
+
+    ###############
     # Run linkage for each group, then with concat both dataframe to get linkage on full data
     df_offers_matched_list = []
     for grp_smp in data_and_hyperparams_dict.keys():

@@ -239,18 +239,26 @@ with DAG(
 
     table_names = get_table_names()
     restore_tasks = []
-
+    
     for index, table_name in enumerate(table_names):
         task = create_restore_task(table_name)
         restore_tasks.append(task)
 
-        if index:
-            restore_tasks[index - 1] >> restore_tasks[index]
+        #if index:
+        #    restore_tasks[index - 1] >> restore_tasks[index]
 
     end_drop_restore = DummyOperator(task_id="end_drop_restore")
 
-    end_data_prep >> restore_tasks[0]
-    restore_tasks[-1] >> end_drop_restore
+    end_data_prep >> restore_tasks >> end_drop_restore
+    #end_data_prep >> restore_tasks[0]
+    #restore_tasks[-1] >> end_drop_restore
+
+    create_materialized_view = CloudSQLExecuteQueryOperator(
+        task_id="create_materialized_view_recommendable_offers_per_iris_shape_mv",
+        gcp_cloudsql_conn_id="proxy_postgres_tcp",
+        sql=f"{SQL_PATH}/create_recommendable_offers_per_iris_shape_tmp_mv.sql",
+        autocommit=True,
+    )
 
     recreate_indexes_query = """
         CREATE INDEX IF NOT EXISTS idx_user_id                             ON public.enriched_user                        USING btree (user_id);
@@ -261,20 +269,30 @@ with DAG(
         CREATE UNIQUE INDEX IF NOT EXISTS idx_qpi_answers_mv               ON public.qpi_answers_mv                       USING btree (user_id,subcategories);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_item_ids_mv                  ON public.item_ids_mv                          USING btree (offer_id);
     """
-
     recreate_indexes_task = CloudSQLExecuteQueryOperator(
         task_id="recreate_indexes",
         gcp_cloudsql_conn_id="proxy_postgres_tcp",
         sql=recreate_indexes_query,
         autocommit=True,
     )
-    import_id = datetime.today().strftime("%Y%m%d")
-    create_materialized_view = CloudSQLExecuteQueryOperator(
-        task_id="create_materialized_view_recommendable_offers_per_iris_shape_mv",
-        gcp_cloudsql_conn_id="proxy_postgres_tcp",
-        sql=f"{SQL_PATH}/create_recommendable_offers_per_iris_shape_tmp_mv.sql",
-        autocommit=True,
-    )
+
+    views_to_refresh = [
+        "non_recommendable_offers",
+        "iris_venues_mv",
+        "enriched_user_mv",
+        "qpi_answers_mv",
+        "item_ids_mv",
+    ]
+
+    refresh_materialized_view_tasks = []
+    for materialized_view in views_to_refresh:
+        refresh_materialized_view_task = CloudSQLExecuteQueryOperator(
+            task_id=f"refresh_{materialized_view}",
+            gcp_cloudsql_conn_id="proxy_postgres_tcp",
+            sql=f"REFRESH MATERIALIZED VIEW CONCURRENTLY {materialized_view};",
+            autocommit=True,
+        )
+        refresh_materialized_view_tasks.append(refresh_materialized_view_task)
 
     rename_current_materialized_view = CloudSQLExecuteQueryOperator(
         task_id="rename_current_materialized_view",
@@ -295,23 +313,6 @@ with DAG(
         sql=f"DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_per_iris_shape_mv_old",
         autocommit=True,
     )
-    views_to_refresh = [
-        "non_recommendable_offers",
-        "iris_venues_mv",
-        "enriched_user_mv",
-        "qpi_answers_mv",
-        "item_ids_mv",
-    ]
-
-    refresh_materialized_view_tasks = []
-    for materialized_view in views_to_refresh:
-        refresh_materialized_view_task = CloudSQLExecuteQueryOperator(
-            task_id=f"refresh_{materialized_view}",
-            gcp_cloudsql_conn_id="proxy_postgres_tcp",
-            sql=f"REFRESH MATERIALIZED VIEW CONCURRENTLY {materialized_view};",
-            autocommit=True,
-        )
-        refresh_materialized_view_tasks.append(refresh_materialized_view_task)
 
     end = DummyOperator(task_id="end")
 

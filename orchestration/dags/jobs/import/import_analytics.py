@@ -30,19 +30,19 @@ from common.config import (
 
 from dependencies.import_analytics.import_raw import (
     get_tables_config_dict,
-    RAW_SQL_PATH
+    RAW_SQL_PATH,
 )
 from dependencies.import_analytics.import_clean import (
     clean_tables,
-    get_clean_tables_copy_dict
+    get_clean_tables_copy_dict,
 )
-from dependencies.import_analytics.import_analytics import (
-    define_import_tables
-)
+from dependencies.import_analytics.import_analytics import define_import_tables
 
 import_tables = define_import_tables()
 clean_tables_copy = get_clean_tables_copy_dict()
-raw_tables = get_tables_config_dict(PATH=DAG_FOLDER + "/" + RAW_SQL_PATH, BQ_DESTINATION_DATASET=BIGQUERY_RAW_DATASET)
+raw_tables = get_tables_config_dict(
+    PATH=DAG_FOLDER + "/" + RAW_SQL_PATH, BQ_DESTINATION_DATASET=BIGQUERY_RAW_DATASET
+)
 
 
 default_dag_args = {
@@ -120,7 +120,7 @@ for table, params in clean_tables_copy.items():
         task_id=f"import_to_clean_{table}",
         configuration={
             "query": {
-                "query": params['sql'],
+                "query": params["sql"],
                 "useLegacySql": False,
                 "destinationTable": {
                     "projectId": GCP_PROJECT,
@@ -239,11 +239,7 @@ end = DummyOperator(task_id="end", dag=dag)
     >> import_tables_to_analytics_tasks
     >> end_import
 )
-(
-    end_raw
-    >> import_tables_to_clean_copy_tasks
-    >> end_import_table_to_clean
-)
+(end_raw >> import_tables_to_clean_copy_tasks >> end_import_table_to_clean)
 (
     end_import_table_to_clean
     >> start_historical_data_applicative_tables_tasks

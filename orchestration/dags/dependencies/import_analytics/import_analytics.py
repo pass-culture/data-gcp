@@ -3,21 +3,74 @@ from common.config import (
 )
 
 ANALYTICS_SQL_PATH = f"dependencies/import_analytics/sql/analytics"
-CLEAN_SQL_PATH = f"dependencies/import_analytics/sql/clean"
 
-clean_tables = {
-    "clean_iris_venues_in_shape": {
-        "sql": f"{CLEAN_SQL_PATH}/iris_venues_in_shape.sql",
-        "destination_dataset": "{{ bigquery_clean_dataset }}",
-        "destination_table": "iris_venues_in_shape",
-    },
-    "clean_iris_venues_at_radius": {
-        "sql": f"{CLEAN_SQL_PATH}/iris_venues_at_radius.sql",
-        "destination_dataset": "{{ bigquery_clean_dataset }}",
-        "destination_table": "iris_venues_at_radius",
-        "params": {"iris_distance": 150000 if ENV_SHORT_NAME != "dev" else 20000},
-    },
-}
+def define_import_tables():
+    return [
+        "user",
+        "provider",
+        "offerer",
+        "offer",
+        "product",
+        "bank_information",
+        "booking",
+        "user_suspension",
+        "individual_booking",
+        "payment",
+        "venue",
+        "user_offerer",
+        "offer_report",
+        "stock",
+        "favorite",
+        "venue_type",
+        "venue_label",
+        "venue_contact",
+        "payment_status",
+        "cashflow",
+        "cashflow_batch",
+        "cashflow_log",
+        "cashflow_pricing",
+        "venue_pricing_point_link",
+        "venue_reimbursement_point_link",
+        "pricing",
+        "pricing_line",
+        "pricing_log",
+        "business_unit",
+        "transaction",
+        "local_provider_event",
+        "beneficiary_import_status",
+        "deposit",
+        "recredit",
+        "beneficiary_import",
+        "mediation",
+        "offer_criterion",
+        "allocine_pivot",
+        "venue_provider",
+        "allocine_venue_provider_price_rule",
+        "allocine_venue_provider",
+        "payment_message",
+        "feature",
+        "criterion",
+        "beneficiary_fraud_review",
+        "beneficiary_fraud_check",
+        "educational_deposit",
+        "educational_institution",
+        "educational_redactor",
+        "educational_year",
+        "educational_domain",
+        "educational_domain_venue",
+        "collective_offer_domain",
+        "collective_offer_template_domain",
+        "venue_educational_status",
+        "collective_booking",
+        "collective_offer",
+        "collective_offer_template",
+        "collective_stock",
+        "invoice",
+        "offerer_tag",
+        "offerer_tag_mapping",
+        "action_history"
+    ]
+
 
 analytics_tables = {
     "available_stock_information": {
@@ -86,12 +139,10 @@ analytics_tables = {
     "iris_venues_in_shape": {
         "sql": f"{ANALYTICS_SQL_PATH}/iris_venues_in_shape.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "depends": ["clean_iris_venues_in_shape"],
     },
     "iris_venues_at_radius": {
         "sql": f"{ANALYTICS_SQL_PATH}/iris_venues_at_radius.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "depends": ["clean_iris_venues_at_radius"],
     },
     "isbn_editor": {
         "sql": f"{ANALYTICS_SQL_PATH}/isbn_editor.sql",
@@ -248,4 +299,4 @@ aggregated_tables = {
 }
 
 
-export_tables = dict(clean_tables, **analytics_tables, **aggregated_tables)
+export_tables = dict(analytics_tables, **aggregated_tables)

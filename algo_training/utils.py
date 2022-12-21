@@ -14,7 +14,9 @@ MLFLOW_PROD_URI = "https://mlflow.internal-passculture.app/"
 TRAIN_DIR = os.environ.get("TRAIN_DIR", "/home/airflow/train")
 MODEL_NAME = os.environ.get("MODEL_NAME", "")
 
-EXPERIMENT_NAME = f"algo_training_v1.1_{ENV_SHORT_NAME}"
+EXPERIMENT_NAME = os.environ.get(
+    "EXPERIMENT_NAME", f"algo_training_v1.1_{ENV_SHORT_NAME}"
+)
 
 NUMBER_OF_PRESELECTED_OFFERS = 40
 RECOMMENDATION_NUMBER = 10

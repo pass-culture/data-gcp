@@ -1,5 +1,3 @@
-import os
-
 from airflow.operators.bash import BashOperator
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryInsertJobOperator,
@@ -41,8 +39,8 @@ class GCloudComputeSSHOperator(BashOperator):
     @apply_defaults
     def __init__(
         self,
-        dag_config: dict,
         command: str,
+        dag_config: dict = None,
         path_to_run_command: str = None,
         resource_id: str = GCE_TRAINING_INSTANCE,
         project_id: str = GCP_PROJECT_ID,
@@ -51,18 +49,20 @@ class GCloudComputeSSHOperator(BashOperator):
         **kwargs,
     ):
 
-        export_env_variables = "\n".join(
-            [f"export {key}={value}" for key, value in dag_config.items()]
-        )
+        default_command = ""
         if path_to_run_command:
-            command = f"cd {path_to_run_command} \n" + command
+            default_command += f"cd {path_to_run_command}\n"
+        if dag_config:
+            default_command += "\n".join(
+                [f"export {key}={value}" for key, value in dag_config.items()]
+            )
 
         super(GCloudComputeSSHOperator, self).__init__(
             bash_command=f"""
                 gcloud compute ssh {resource_id} \
                 --zone {zone} \
                 --project {project_id} \
-                --command $'{export_env_variables}
+                --command $'{default_command} 
                 {command}'
                 """,
             *args,

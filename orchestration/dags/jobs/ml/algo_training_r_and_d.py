@@ -12,18 +12,18 @@ from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import (
-    GCP_PROJECT_ID,
-    GCE_ZONE,
-    ENV_SHORT_NAME,
     BIGQUERY_RAW_DATASET,
     DAG_FOLDER,
+    ENV_SHORT_NAME,
+    GCP_PROJECT_ID,
     GCE_TRAINING_INSTANCE,
+    GCE_ZONE,
+    MLFLOW_BUCKET_NAME,
     SLACK_BLOCKS,
     SLACK_CONN_ID,
     SLACK_CONN_PASSWORD,
 )
 
-from common.config import MLFLOW_BUCKET_NAME
 from common.operator import GCloudComputeSSHOperator
 
 
@@ -75,9 +75,7 @@ with DAG(
 
     fetch_code = GCloudComputeSSHOperator(
         task_id="fetch_code",
-        dag_config=DAG_CONFIG,
-        path_to_run_command="data_gcp/algo_training",
-        command=r'"if cd data-gcp; then git checkout master && git pull && git checkout {{ params.branch }} && git pull; else git clone git@github.com:pass-culture/data-gcp.git && cd data-gcp && git checkout {{ params.branch }} && git pull; fi"',
+        command=r'if cd data-gcp; then git checkout master && git pull && git checkout {{ params.branch }} && git pull; else git clone git@github.com:pass-culture/data-gcp.git && cd data-gcp && git checkout {{ params.branch }} && git pull; fi',
         dag=dag,
     )
 
@@ -144,14 +142,14 @@ with DAG(
         task_id="gce_stop_task",
     )
 
-    send_slack_notif_success = SlackWebhookOperator(
-        task_id="send_slack_notif_success",
-        http_conn_id=SLACK_CONN_ID,
-        webhook_token=SLACK_CONN_PASSWORD,
-        blocks=SLACK_BLOCKS,
-        username=f"Algo trainer robot - {ENV_SHORT_NAME}",
-        icon_emoji=":robot_face:",
-    )
+    # send_slack_notif_success = SlackWebhookOperator(
+    #     task_id="send_slack_notif_success",
+    #     http_conn_id=SLACK_CONN_ID,
+    #     webhook_token=SLACK_CONN_PASSWORD,
+    #     blocks=SLACK_BLOCKS,
+    #     username=f"Algo trainer robot - {ENV_SHORT_NAME}",
+    #     icon_emoji=":robot_face:",
+    # )
 
     (
         start
@@ -165,5 +163,5 @@ with DAG(
         >> postprocess
         >> evaluate
         >> gce_instance_stop
-        >> send_slack_notif_success
+        # >> send_slack_notif_success
     )

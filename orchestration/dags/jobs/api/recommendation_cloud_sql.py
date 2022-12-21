@@ -34,9 +34,6 @@ from common.config import (
     RECOMMENDATION_SQL_BASE,
 )
 from dependencies.import_recommendation_cloudsql.monitor_tables import monitoring_tables
-from dependencies.import_recommendation_cloudsql.sql.create_recommendable_offers_per_iris_shape_tmp_mv import (
-    SQL,
-)
 from common.alerts import task_fail_slack_alert
 from common import macros
 
@@ -53,9 +50,7 @@ os.environ["AIRFLOW_CONN_PROXY_POSTGRES_TCP"] = (
 
 TABLES_DATA_PATH = f"{os.environ.get('DAG_FOLDER')}/ressources/tables.csv"
 BUCKET_PATH = f"gs://{DATA_GCS_BUCKET_NAME}/bigquery_exports"
-SQL_PATH = (
-    f"{os.environ.get('DAG_FOLDER')}/dependencies/import_recommendation_cloudsql/sql/"
-)
+SQL_PATH = "dependencies/import_recommendation_cloudsql/sql"
 
 default_args = {
     "start_date": datetime(2020, 12, 1),
@@ -258,13 +253,13 @@ with DAG(
     restore_tasks[-1] >> end_drop_restore
 
     recreate_indexes_query = """
-        CREATE INDEX IF NOT EXISTS idx_user_id                             ON public.enriched_user                                    USING btree (user_id);
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_iris_venues_mv_unique        ON public.iris_venues_mv                                   USING btree (iris_id,venue_id);
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_non_recommendable_id         ON public.non_recommendable_offers                         USING btree (user_id,offer_id);
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_id       ON public.recommendable_offers_per_iris_shape_mv           USING btree (is_geolocated,iris_id,venue_distance_to_iris_bucket,item_id,offer_id,unique_id);
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_enriched_user_mv             ON public.enriched_user_mv                                 USING btree (user_id);
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_qpi_answers_mv               ON public.qpi_answers_mv                                   USING btree (user_id,subcategories);
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_item_ids_mv                  ON public.item_ids_mv                                      USING btree (offer_id);
+        CREATE INDEX IF NOT EXISTS idx_user_id                             ON public.enriched_user                        USING btree (user_id);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_id       ON public.recommendable_offers_per_iris_shape  USING btree (is_geolocated,iris_id,venue_distance_to_iris_bucket,item_id,offer_id,unique_id);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_iris_venues_mv_unique        ON public.iris_venues_mv                       USING btree (iris_id,venue_id);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_non_recommendable_id         ON public.non_recommendable_offers             USING btree (user_id,offer_id);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_enriched_user_mv             ON public.enriched_user_mv                     USING btree (user_id);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_qpi_answers_mv               ON public.qpi_answers_mv                       USING btree (user_id,subcategories);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_item_ids_mv                  ON public.item_ids_mv                          USING btree (offer_id);
     """
 
     recreate_indexes_task = CloudSQLExecuteQueryOperator(
@@ -273,11 +268,11 @@ with DAG(
         sql=recreate_indexes_query,
         autocommit=True,
     )
-
+    import_id = datetime.today().strftime("%Y%m%d")
     create_materialized_view = CloudSQLExecuteQueryOperator(
         task_id="create_materialized_view_recommendable_offers_per_iris_shape_mv",
         gcp_cloudsql_conn_id="proxy_postgres_tcp",
-        sql=SQL,
+        sql=f"{SQL_PATH}/create_recommendable_offers_per_iris_shape_tmp_mv.sql",
         autocommit=True,
     )
 
@@ -291,10 +286,15 @@ with DAG(
     rename_temp_materialized_view = CloudSQLExecuteQueryOperator(
         task_id="rename_temp_materialized_view",
         gcp_cloudsql_conn_id="proxy_postgres_tcp",
-        sql=f"ALTER MATERIALIZED VIEW recommendable_offers_per_iris_shape_tmp_mv rename to recommendable_offers_per_iris_shape_mv",
+        sql=f"ALTER MATERIALIZED VIEW recommendable_offers_per_iris_shape_{{ yyyymmdd(ds) }}_mv rename to recommendable_offers_per_iris_shape_mv",
         autocommit=True,
     )
-
+    drop_old_materialized_view = CloudSQLExecuteQueryOperator(
+        task_id="drop_old_materialized_view",
+        gcp_cloudsql_conn_id="proxy_postgres_tcp",
+        sql=f"DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_per_iris_shape_mv_old",
+        autocommit=True,
+    )
     views_to_refresh = [
         "non_recommendable_offers",
         "iris_venues_mv",
@@ -329,5 +329,6 @@ with DAG(
         >> refresh_materialized_view_tasks
         >> rename_current_materialized_view
         >> rename_temp_materialized_view
+        >> drop_old_materialized_view
         >> end
     )

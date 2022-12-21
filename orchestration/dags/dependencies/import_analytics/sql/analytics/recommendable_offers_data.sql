@@ -50,6 +50,11 @@ WITH get_recommendable_offers AS(
     FROM
         `{{ bigquery_analytics_dataset }}`.enriched_offer_data offer
         JOIN `{{ bigquery_clean_dataset }}`.subcategories subcategories ON offer.offer_subcategoryId = subcategories.id
+        -- check only on production
+        {% if env_short_name != "dev" %}
+        JOIN `{{ bigquery_analytics_dataset }}`.offer_with_mediation om on offer.offer_id=om.offer_id
+        {% endif %}
+        -- ensure has VALIDATED venue and offerer
         JOIN (
             SELECT
                 *
@@ -87,7 +92,6 @@ WITH get_recommendable_offers AS(
             FROM `{{ bigquery_analytics_dataset }}`.enriched_offer_data offer
             GROUP BY item_id
         ) item_counts on item_counts.item_id = offer.item_id
-        JOIN `{{ bigquery_analytics_dataset }}`.offer_with_mediation om on offer.offer_id=om.offer_id
         LEFT JOIN (SELECT DISTINCT type, label FROM `{{ bigquery_analytics_dataset }}`.offer_types) type_ref
             ON offer.type = cast(type_ref.type as string)
         LEFT JOIN (SELECT DISTINCT sub_type, sub_label FROM `{{ bigquery_analytics_dataset }}`.offer_types) sub_type_ref

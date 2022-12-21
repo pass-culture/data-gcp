@@ -239,19 +239,19 @@ with DAG(
 
     table_names = get_table_names()
     restore_tasks = []
-    
+
     for index, table_name in enumerate(table_names):
         task = create_restore_task(table_name)
         restore_tasks.append(task)
 
-        #if index:
+        # if index:
         #    restore_tasks[index - 1] >> restore_tasks[index]
 
     end_drop_restore = DummyOperator(task_id="end_drop_restore")
 
     end_data_prep >> restore_tasks >> end_drop_restore
-    #end_data_prep >> restore_tasks[0]
-    #restore_tasks[-1] >> end_drop_restore
+    # end_data_prep >> restore_tasks[0]
+    # restore_tasks[-1] >> end_drop_restore
 
     create_materialized_view = CloudSQLExecuteQueryOperator(
         task_id="create_materialized_view_recommendable_offers_per_iris_shape_mv",
@@ -295,14 +295,14 @@ with DAG(
         refresh_materialized_view_tasks.append(refresh_materialized_view_task)
 
     rename_current_materialized_view = CloudSQLExecuteQueryOperator(
-        task_id="rename_current_materialized_view",
+        task_id="rename_current_materialized_view_to_old",
         gcp_cloudsql_conn_id="proxy_postgres_tcp",
         sql=f"ALTER MATERIALIZED VIEW IF EXISTS recommendable_offers_per_iris_shape_mv rename to recommendable_offers_per_iris_shape_mv_old",
         autocommit=True,
     )
 
     rename_temp_materialized_view = CloudSQLExecuteQueryOperator(
-        task_id="rename_temp_materialized_view",
+        task_id="rename_temp_materialized_view_to_current",
         gcp_cloudsql_conn_id="proxy_postgres_tcp",
         sql=f"ALTER MATERIALIZED VIEW recommendable_offers_per_iris_shape_tmp_mv rename to recommendable_offers_per_iris_shape_mv",
         autocommit=True,
@@ -315,7 +315,7 @@ with DAG(
     )
 
     end = DummyOperator(task_id="end")
-
+    end_refresh = DummyOperator(task_id="end_refresh")
     (
         start
         >> start_monitoring
@@ -328,6 +328,7 @@ with DAG(
         >> create_materialized_view
         >> recreate_indexes_task
         >> refresh_materialized_view_tasks
+        >> end_refresh
         >> rename_current_materialized_view
         >> rename_temp_materialized_view
         >> drop_old_materialized_view

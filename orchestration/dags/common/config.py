@@ -1,6 +1,9 @@
 import os
 
-GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
+from common.access_gcp_secrets import access_secret_data
+
+GCP_PROJECT_ID = os.environ.get("GCP_PROJECT", "passculture-data-ehp")
+GCP_PROJECT = os.environ.get("GCP_PROJECT", "passculture-data-ehp")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 DAG_FOLDER = os.environ.get("DAG_FOLDER", "dags/")
 
@@ -14,6 +17,13 @@ VM_SA = os.environ.get("VM_SA", f"algo-training-{ENV_SHORT_NAME}")
 
 
 BASE32_JS_LIB_PATH = f"gs://data-bucket-{ENV_SHORT_NAME}/base32-encode/base32.js"
+GCE_TRAINING_INSTANCE = os.environ.get("GCE_TRAINING_INSTANCE", "algo-training-dev")
+MLFLOW_BUCKET_NAME = os.environ.get("MLFLOW_BUCKET_NAME", "mlflow-bucket-ehp")
+if ENV_SHORT_NAME != "prod":
+    MLFLOW_URL = "https://mlflow-ehp.internal-passculture.app/"
+else:
+    MLFLOW_URL = "https://mlflow.internal-passculture.app/"
+
 APPLICATIVE_EXTERNAL_CONNECTION_ID = os.environ.get(
     "APPLICATIVE_EXTERNAL_CONNECTION_ID", ""
 )
@@ -57,3 +67,38 @@ CONNECTION_ID = (
     if ENV_SHORT_NAME != "prod"
     else f"{GCP_PROJECT_ID}.{GCP_REGION}.cloudsql-recommendation-production-bq-connection"
 )
+
+SLACK_CONN_ID = "slack_analytics"
+SLACK_CONN_PASSWORD = access_secret_data(GCP_PROJECT_ID, "slack-conn-password")
+
+SLACK_BLOCKS = [
+    {
+        "type": "section",
+        "text": {
+            "type": "mrkdwn",
+            "text": ":robot_face: Entraînement de l'algo terminé ! :rocket:",
+        },
+    },
+    {
+        "type": "actions",
+        "elements": [
+            {
+                "type": "button",
+                "text": {
+                    "type": "plain_text",
+                    "text": "Voir les métriques :chart_with_upwards_trend:",
+                    "emoji": True,
+                },
+                "url": MLFLOW_URL
+                + "#/experiments/"
+                + "{{ ti.xcom_pull(task_ids='training').split('/')[4] }}"
+                + "/runs/"
+                + "{{ ti.xcom_pull(task_ids='training').split('/')[5] }}",
+            },
+        ],
+    },
+    {
+        "type": "context",
+        "elements": [{"type": "mrkdwn", "text": f"Environnement: {ENV_SHORT_NAME}"}],
+    },
+]

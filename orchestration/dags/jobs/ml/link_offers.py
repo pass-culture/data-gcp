@@ -20,7 +20,7 @@ from common.config import (
     DAG_FOLDER,
 )
 
-GCE_INSTANCE = os.environ.get("GCE_TRAINING_INSTANCE", "algo-training-dev")
+GCE_INSTANCE = "algo-training-stg-tmp"
 MLFLOW_BUCKET_NAME = os.environ.get("MLFLOW_BUCKET_NAME", "mlflow-bucket-ehp")
 DATE = "{{ts_nodash}}"
 STORAGE_PATH = "gs://mlflow-bucket-ehp/link_offers_dev/linkage_16122022"
@@ -78,7 +78,7 @@ with DAG(
     if ENV_SHORT_NAME == "dev":
         branch = "PC-19242-implement-item-clustering-via-record-linkage"
     if ENV_SHORT_NAME == "stg":
-        branch = "master"
+        branch = "PC-19242-implement-item-clustering-via-record-linkage"
     if ENV_SHORT_NAME == "prod":
         branch = "production"
 

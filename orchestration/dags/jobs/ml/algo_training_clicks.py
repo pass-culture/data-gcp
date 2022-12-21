@@ -39,10 +39,7 @@ STORAGE_PATH = (
 TRAIN_DIR = "/home/airflow/train"
 
 # Algo reco
-MODEL_NAME = "v1"
-AI_MODEL_NAME = f"tf_model_reco_{ENV_SHORT_NAME}"
-END_POINT_NAME = f"vertex_ai_{ENV_SHORT_NAME}"
-SERVING_CONTAINER = "europe-docker.pkg.dev/vertex-ai/prediction/tf2-cpu.2-5:latest"
+MODEL_NAME = "clicks"
 
 SLACK_CONN_ID = "slack_analytics"
 SLACK_CONN_PASSWORD = access_secret_data(GCP_PROJECT_ID, "slack-conn-password")
@@ -54,6 +51,7 @@ export ENV_SHORT_NAME={ENV_SHORT_NAME}
 export GCP_PROJECT_ID={GCP_PROJECT_ID}
 export MODEL_NAME={MODEL_NAME}
 export TRAIN_DIR={TRAIN_DIR}
+export EXPERIMENT_NAME=algo_training_{MODEL_NAME}.1_{ENV_SHORT_NAME}
 """
 
 
@@ -85,6 +83,10 @@ with DAG(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
+        "event_day_number": Param(
+            default="30" if ENV_SHORT_NAME == "prod" else "365",
+            type="string",
+        ),
     },
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)
@@ -97,7 +99,7 @@ with DAG(
         dag=dag,
     )
 
-    FETCH_CODE = r'"if cd data-gcp; then git fetch origin {{ params.branch }} && git checkout {{ params.branch }}; else git clone git@github.com:pass-culture/data-gcp.git && cd data-gcp && git checkout {{ params.branch }}; fi"'
+    FETCH_CODE = r'"if cd data-gcp; then git checkout master && git pull && git checkout {{ params.branch }} && git pull; else git clone git@github.com:pass-culture/data-gcp.git && cd data-gcp && git checkout {{ params.branch }} && git pull; fi"'
 
     fetch_code = BashOperator(
         task_id="fetch_code",
@@ -126,7 +128,7 @@ with DAG(
     )
 
     DATA_COLLECT = f""" '{DEFAULT}
-        python data_collect.py --dataset {BIGQUERY_RAW_DATASET} --table-name training_data_clicks'
+        python data_collect.py --dataset {BIGQUERY_RAW_DATASET} --table-name training_data_clicks --event-day-number {{{{ params.event_day_number }}}} '
     """
 
     clicks_data_collect = BashOperator(
@@ -171,7 +173,7 @@ with DAG(
     )
 
     TRAINING = f""" '{DEFAULT}
-        python train_{MODEL_NAME}.py'
+        python train_v1.py'
     """
 
     training = BashOperator(

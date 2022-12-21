@@ -64,7 +64,7 @@ WITH get_recommendable_offers AS(
             FROM
                 `{{ bigquery_clean_dataset }}`.applicative_database_offerer offerer
             WHERE
-                offerer_validation_token IS NULL
+                offerer_validation_status='VALIDATED'
         ) offerer ON offerer.offerer_id = venue.venue_managing_offerer_id
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock stock ON offer.offer_id = stock.offer_id
         LEFT JOIN (

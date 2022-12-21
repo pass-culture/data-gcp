@@ -1,3 +1,4 @@
+import json
 import os
 from datetime import datetime, timedelta
 
@@ -5,9 +6,6 @@ from airflow import DAG
 from airflow.models import Param
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryExecuteQueryOperator,
-)
 from airflow.providers.google.cloud.operators.compute import (
     ComputeEngineStartInstanceOperator,
     ComputeEngineStopInstanceOperator,
@@ -21,12 +19,11 @@ from common.config import (
     GCP_PROJECT_ID,
     GCE_ZONE,
     ENV_SHORT_NAME,
-    BIGQUERY_SANDBOX_DATASET,
+    BIGQUERY_RAW_DATASET,
     DAG_FOLDER,
 )
-from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
 
-GCE_INSTANCE = os.environ.get("GCE_TRAINING_INSTANCE", "algo-training-dev-1")
+GCE_INSTANCE = os.environ.get("GCE_TRAINING_INSTANCE", "algo-training-dev")
 MLFLOW_BUCKET_NAME = os.environ.get("MLFLOW_BUCKET_NAME", "mlflow-bucket-ehp")
 if ENV_SHORT_NAME != "prod":
     MLFLOW_URL = "https://mlflow-ehp.internal-passculture.app/"
@@ -40,7 +37,7 @@ STORAGE_PATH = (
 TRAIN_DIR = "/home/airflow/train"
 
 # Algo reco
-MODEL_NAME = "v1"
+MODEL_NAME = "events"
 
 SLACK_CONN_ID = "slack_analytics"
 SLACK_CONN_PASSWORD = access_secret_data(GCP_PROJECT_ID, "slack-conn-password")
@@ -52,23 +49,21 @@ export ENV_SHORT_NAME={ENV_SHORT_NAME}
 export GCP_PROJECT_ID={GCP_PROJECT_ID}
 export MODEL_NAME={MODEL_NAME}
 export TRAIN_DIR={TRAIN_DIR}
+export EXPERIMENT_NAME=algo_training_{MODEL_NAME}.1_{ENV_SHORT_NAME}
 """
 
 EVENT_SUBCATEGORIES = (
     "FESTIVAL_CINE",
-    "SPECTACLE_VENTE_DISTANCE",
-    "SPECTACLE_REPRESENTATION",
-    "EVENEMENT_MUSIQUE",
-    "SEANCE_CINE",
-    "EVENEMENT_CINE",
-    "VISITE_GUIDEE",
-    "ABO_MUSEE",
-    "FESTIVAL_MUSIQUE",
-    "CONCERT",
-    "VISITE",
-    "CINE_VENTE_DISTANCE",
-    "EVENEMENT_PATRIMOINE",
     "FESTIVAL_SPECTACLE",
+    "VISITE",
+    "CONCERT",
+    "FESTIVAL_MUSIQUE",
+    "ABO_MUSEE",
+    "VISITE_GUIDEE",
+    "EVENEMENT_CINE",
+    "SEANCE_CINE",
+    "EVENEMENT_MUSIQUE",
+    "SPECTACLE_REPRESENTATION",
 )
 
 
@@ -87,7 +82,7 @@ default_args = {
 }
 
 with DAG(
-    "algo_training_r_and_d",
+    "algo_training_events",
     default_args=default_args,
     description="Custom training job",
     schedule_interval=None,
@@ -103,29 +98,6 @@ with DAG(
     },
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)
-
-    create_deduplicated_offers_table = BigQueryExecuteQueryOperator(
-        task_id="deduplicate_offers",
-        sql=(IMPORT_TRAINING_SQL_PATH / "tmp" / "deduplicate_offers.sql").as_posix(),
-        write_disposition="WRITE_TRUNCATE",
-        use_legacy_sql=False,
-        destination_dataset_table=f"{BIGQUERY_SANDBOX_DATASET}.deduplicated_enriched_offer_data",
-        dag=dag,
-        params={
-            "event_subcategories": EVENT_SUBCATEGORIES,
-        },
-    )
-
-    create_dataset_table = BigQueryExecuteQueryOperator(
-        task_id="import_to_sandbox_training_data_bookings",
-        sql=(
-            IMPORT_TRAINING_SQL_PATH / "tmp" / "training_data_deduplicated_bookings.sql"
-        ).as_posix(),
-        write_disposition="WRITE_TRUNCATE",
-        use_legacy_sql=False,
-        destination_dataset_table=f"{BIGQUERY_SANDBOX_DATASET}.training_data_bookings",
-        dag=dag,
-    )
 
     gce_instance_start = ComputeEngineStartInstanceOperator(
         project_id=GCP_PROJECT_ID,
@@ -163,8 +135,8 @@ with DAG(
         dag=dag,
     )
 
-    DATA_COLLECT = f""" '{DEFAULT}
-        python data_collect.py --dataset {BIGQUERY_SANDBOX_DATASET}'
+    DATA_COLLECT = f""" $'{DEFAULT}
+        python data_collect.py --dataset {BIGQUERY_RAW_DATASET} --table-name training_data_clicks --subcategory-ids \\'{json.dumps(EVENT_SUBCATEGORIES)}\\''
     """
 
     data_collect = BashOperator(
@@ -209,7 +181,7 @@ with DAG(
     )
 
     TRAINING = f""" '{DEFAULT}
-        python train_{MODEL_NAME}.py'
+        python train_v1.py'
     """
 
     training = BashOperator(
@@ -306,8 +278,6 @@ with DAG(
 
     (
         start
-        >> create_deduplicated_offers_table
-        >> create_dataset_table
         >> gce_instance_start
         >> fetch_code
         >> install_dependencies

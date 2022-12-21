@@ -2,6 +2,8 @@ import pandas as pd
 import typer
 from tools.config import STORAGE_PATH, SUBCATEGORIES_WITH_PERFORMER, SUBSET_MAX_LENGTH
 from tools.linkage import get_matched_df
+
+
 def main(
     storage_path: str = typer.Option(
         STORAGE_PATH,

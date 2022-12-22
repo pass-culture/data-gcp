@@ -31,19 +31,23 @@ def sample_triplets(positive_data, item_ids):
 
 
 def load_triplets_dataset(
-    dataset: pd.DataFrame, item_ids: list
-) -> Tuple[tf.data.Dataset, tf.data.Dataset]:
+    dataset: pd.DataFrame,
+    item_ids: list,
+    seed: int,
+) -> tf.data.Dataset:
 
-    dataset = dataset.sample(frac=1).reset_index(drop=True)
+    random.seed(seed)
+    dataset = dataset.sample(frac=1, random_state=seed).reset_index(drop=True)
 
-    anchor_dataset = tf.data.Dataset.from_tensor_slices(dataset["user_id"].values)
-    positive_dataset = tf.data.Dataset.from_tensor_slices(dataset["item_id"].values)
-    negative_dataset = tf.data.Dataset.from_tensor_slices(
-        random.choices(item_ids, k=len(dataset))
-    )
-    return (
-        tf.data.Dataset.zip((anchor_dataset, positive_dataset, negative_dataset)),
-        tf.data.Dataset.from_tensor_slices(np.ones((len(dataset)))),
+    anchor_data = dataset["user_id"].values
+    positive_data = dataset["item_id"].values
+    negative_data = random.choices(item_ids, k=len(dataset))
+
+    return tf.data.Dataset.from_tensor_slices(
+        (
+            np.column_stack((anchor_data, positive_data, negative_data)),
+            np.ones((len(dataset), 3)),
+        )
     )
 
 

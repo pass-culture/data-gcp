@@ -29,17 +29,9 @@ def evaluate(client_id, model, storage_path: str):
     raw_data = pd.read_csv(f"{STORAGE_PATH}/raw_data.csv")
     raw_data = preprocess(raw_data)
 
-    positive_data_train = (
-        pd.read_csv(
-            f"{storage_path}/positive_data_train.csv",
-            dtype={
-                "user_id": str,
-                "item_id": str,
-            },
-        )[["user_id", "item_id"]]
-        .merge(raw_data, on=["user_id", "item_id"], how="inner")
-        .drop_duplicates()
-    )
+    training_item_ids = pd.read_csv(f"{storage_path}/positive_data_train.csv")[
+        "item_id"
+    ].unique()
 
     positive_data_test = (
         pd.read_csv(
@@ -63,7 +55,7 @@ def evaluate(client_id, model, storage_path: str):
     data_model_dict = {
         "data": {
             "raw": raw_data,
-            "train": positive_data_train,
+            "training_item_ids": training_item_ids,
             "test": positive_data_test,
         },
         "model": model,

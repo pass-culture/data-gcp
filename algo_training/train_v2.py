@@ -1,8 +1,5 @@
 import mlflow
-import warnings
-
 import typer
-from pandas.errors import DtypeWarning
 
 from tools.data_collect_queries import get_data
 
@@ -20,15 +17,13 @@ from models.v1.utils import (
 from utils import (
     get_secret,
     connect_remote_mlflow,
-    STORAGE_PATH,
     ENV_SHORT_NAME,
-    EXPERIMENT_NAME,
     TRAIN_DIR,
 )
 
 
 L2_REG = 0
-N_EPOCHS = 20 if ENV_SHORT_NAME == "prod" else 10
+N_EPOCHS = 1  # 20 if ENV_SHORT_NAME == "prod" else 10
 VERBOSE = 0 if ENV_SHORT_NAME == "prod" else 1
 LOSS_CUTOFF = 0.005
 
@@ -46,22 +41,30 @@ def train(
         ...,
         help="Item & User embedding size",
     ),
+    seed: int = typer.Option(
+        None,
+        help="Seed to fix randomness in pipeline",
+    ),
 ):
+    tf.random.set_seed(seed)
+
     # TODO: training_data_clicks should be called data_clicks
-    train_data = get_data(dataset="raw_dev", table_name="training_data").astype(
-        dtype={"count": int}
-    )
-    validation_data = get_data(dataset="raw_dev", table_name="validation_data").astype(
-        dtype={"count": int}
-    )
+    train_data = get_data(
+        dataset="raw_dev", table_name="recommendation_training_data"
+    ).astype(dtype={"count": int})
+    validation_data = get_data(
+        dataset="raw_dev", table_name="recommendation_validation_data"
+    ).astype(dtype={"count": int})
 
     training_user_ids = train_data["user_id"].unique()
     training_item_ids = train_data["item_id"].unique()
 
     # Create tf datasets
-    train_dataset = load_triplets_dataset(train_data, item_ids=training_item_ids)
+    train_dataset = load_triplets_dataset(
+        train_data, item_ids=training_item_ids, seed=seed
+    )
     validation_dataset = load_triplets_dataset(
-        validation_data, item_ids=training_item_ids
+        validation_data, item_ids=training_item_ids, seed=seed
     )
 
     # Connect to MLFlow
@@ -97,7 +100,7 @@ def train(
         triplet_model.compile(loss=identity_loss, optimizer="adam")
 
         triplet_model.fit(
-            data=train_dataset,
+            train_dataset,
             epochs=N_EPOCHS,
             batch_size=batch_size,
             steps_per_epoch=len(train_data) // batch_size,

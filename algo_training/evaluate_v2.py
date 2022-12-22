@@ -32,12 +32,12 @@ def evaluate(
     )
 ):
     # TODO: training_data_clicks should be called data_clicks
-    raw_data = get_data(dataset="raw_dev", table_name="training_data_clicks")
+    raw_data = get_data(dataset="raw_dev", table_name="recommendation_data")
 
-    train_data = get_data(dataset="raw_dev", table_name="training_data")[
-        ["user_id", "item_id"]
-    ].merge(raw_data, on=["user_id", "item_id"], how="inner")
-    test_data = get_data(dataset="raw_dev", table_name="test_data")[
+    training_item_ids = get_data(
+        dataset="raw_dev", table_name="recommendation_training_data"
+    )["item_id"].unique()
+    test_data = get_data(dataset="raw_dev", table_name="recommendation_test_data")[
         ["user_id", "item_id"]
     ].merge(raw_data, on=["user_id", "item_id"], how="inner")
 
@@ -61,7 +61,7 @@ def evaluate(
             "name": experiment_name,
             "data": {
                 "raw": raw_data,
-                "train": train_data,
+                "training_item_ids": training_item_ids,
                 "test": test_data,
             },
             "model": loaded_model,

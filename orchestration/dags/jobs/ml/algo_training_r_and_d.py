@@ -34,13 +34,15 @@ DATE = "{{ts_nodash}}"
 
 # Environment variables to export before running commands
 DAG_CONFIG = {
+    "GCE_TRAINING_INSTANCE": "algo-training-dev-1",
     "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/algo_training_{ENV_SHORT_NAME}/algo_training_{DATE}",
     "ENV_SHORT_NAME": ENV_SHORT_NAME,
     "GCP_PROJECT_ID": GCP_PROJECT_ID,
     "TRAIN_DIR": "/home/airflow/train",
-    "EXPERIMENT_NAME": f"algo_training_events.1_{ENV_SHORT_NAME}",
+    "EXPERIMENT_NAME": f"algo_training_v2.1_{ENV_SHORT_NAME}",
     "BATCH_SIZE": 1024,
     "EMBEDDING_SIZE": 64,
+    "TRAIN_SET_SIZE": 0.8,
 }
 
 
@@ -65,12 +67,20 @@ with DAG(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
+        "gce_training_instance": Param(
+            default=str(DAG_CONFIG["GCE_TRAINING_INSTANCE"]),
+            type="string",
+        ),
         "batch_size": Param(
-            default=DAG_CONFIG["BATCH_SIZE"],
+            default=str(DAG_CONFIG["BATCH_SIZE"]),
             type="string",
         ),
         "embedding_size": Param(
-            default=DAG_CONFIG["EMBEDDING_SIZE"],
+            default=str(DAG_CONFIG["EMBEDDING_SIZE"]),
+            type="string",
+        ),
+        "train_set_size": Param(
+            default=str(DAG_CONFIG["TRAIN_SET_SIZE"]),
             type="string",
         ),
     },
@@ -78,7 +88,7 @@ with DAG(
     start = DummyOperator(task_id="start", dag=dag)
 
     import_recommendation_data = {}
-    for dataset in ["data", "train_data", "validation_data", "test_data"]:
+    for dataset in ["data", "training_data", "validation_data", "test_data"]:
         task = BigQueryExecuteQueryOperator(
             task_id=f"import_recommendation_{dataset}",
             sql=(IMPORT_TRAINING_SQL_PATH / f"recommendation_{dataset}.sql").as_posix(),
@@ -93,7 +103,7 @@ with DAG(
         task_id="gce_start_task",
         project_id=GCP_PROJECT_ID,
         zone=GCE_ZONE,
-        resource_id=GCE_TRAINING_INSTANCE,
+        resource_id=DAG_CONFIG["GCE_TRAINING_INSTANCE"],
         dag=dag,
     )
 
@@ -117,10 +127,11 @@ with DAG(
         task_id="training",
         dag_config=DAG_CONFIG,
         path_to_run_command="data-gcp/algo_training",
-        command=f"python train_v1_1.py "
+        command=f"python train_v2.py "
         f"--experiment-name {DAG_CONFIG['EXPERIMENT_NAME']} "
-        r"--batch-size {{{{ params.batch_size }}}}  "
-        r"--embedding-size {{{{ params.embedding_size }}}}",
+        r"--batch-size {{ params.batch_size }}  "
+        r"--embedding-size {{ params.embedding_size }} "
+        r"--seed {{ ds_nodash }}",
         dag=dag,
     )
 
@@ -136,7 +147,7 @@ with DAG(
         task_id="gce_stop_task",
         project_id=GCP_PROJECT_ID,
         zone=GCE_ZONE,
-        resource_id=GCE_TRAINING_INSTANCE,
+        resource_id=DAG_CONFIG["GCE_TRAINING_INSTANCE"],
     )
 
     # send_slack_notif_success = SlackWebhookOperator(
@@ -151,7 +162,7 @@ with DAG(
     (
         start
         >> import_recommendation_data["data"]
-        >> import_recommendation_data["train_data"]
+        >> import_recommendation_data["training_data"]
         >> import_recommendation_data["validation_data"]
         >> import_recommendation_data["test_data"]
         >> gce_instance_start

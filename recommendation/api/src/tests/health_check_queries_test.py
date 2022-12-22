@@ -5,7 +5,6 @@ import pytest
 
 from pcreco.utils.health_check_queries import (
     does_materialized_view_exist,
-    does_materialized_view_have_data,
     get_materialized_view_status,
 )
 

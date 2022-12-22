@@ -10,7 +10,7 @@ FROM (
     ROW_NUMBER() OVER(PARTITION BY user_id ORDER BY RAND()) AS row_index,
     COUNT(*) OVER(PARTITION BY user_id) as total
   FROM
-    `{{ bigquery_raw_dataset }}`.`training_data_clicks`
+    `{{ bigquery_raw_dataset }}`.`recommendation_data`
   GROUP BY
     user_id,
     item_id

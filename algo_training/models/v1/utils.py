@@ -1,7 +1,12 @@
 import random
+from typing import Tuple
 
+import mlflow
 import numpy as np
+import pandas as pd
 import tensorflow as tf
+
+from utils import connect_remote_mlflow, remove_dir
 
 
 def identity_loss(y_true, y_pred):
@@ -23,6 +28,56 @@ def sample_triplets(positive_data, item_ids):
     )
 
     return [user_ids, positive_item_ids, negative__item_ids]
+
+
+def load_triplets_dataset(
+    dataset: pd.DataFrame, item_ids: list
+) -> Tuple[tf.data.Dataset, tf.data.Dataset]:
+
+    dataset = dataset.sample(frac=1).reset_index(drop=True)
+
+    anchor_dataset = tf.data.Dataset.from_tensor_slices(dataset["user_id"].values)
+    positive_dataset = tf.data.Dataset.from_tensor_slices(dataset["item_id"].values)
+    negative_dataset = tf.data.Dataset.from_tensor_slices(
+        random.choices(item_ids, k=len(dataset))
+    )
+    return (
+        tf.data.Dataset.zip((anchor_dataset, positive_dataset, negative_dataset)),
+        tf.data.Dataset.from_tensor_slices(np.ones((len(dataset)))),
+    )
+
+
+class MatchModelCheckpoint(tf.keras.callbacks.Callback):
+    def __init__(self, match_model: tf.keras.models.Model, filepath: str):
+        super(MatchModelCheckpoint, self).__init__()
+        self.match_model = match_model
+        self.filepath = filepath
+
+    def on_epoch_end(self, epoch, logs=None):
+        tf.keras.models.save_model(self.match_model, self.filepath)
+
+
+class MLFlowLogging(tf.keras.callbacks.Callback):
+    def __init__(self, client_id: str, env: str, export_path: str):
+        super(MLFlowLogging, self).__init__()
+        self.client_id = client_id
+        self.env = env
+        self.export_path = export_path
+
+    def on_epoch_end(self, epoch, logs=None):
+        connect_remote_mlflow(self.client_id, env=self.env)
+        mlflow.log_metrics(
+            {
+                "Training Loss": logs["loss"],
+                "Evaluation Loss": logs["val_loss"],
+            },
+            step=epoch,
+        )
+
+    def on_train_end(self, epoch, logs=None):
+        connect_remote_mlflow(self.client_id, env=self.env)
+        mlflow.log_artifacts(self.export_path, "model")
+        remove_dir(self.export_path)
 
 
 def predict(match_model):

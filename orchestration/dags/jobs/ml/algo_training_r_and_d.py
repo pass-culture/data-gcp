@@ -3,6 +3,9 @@ from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryExecuteQueryOperator,
+)
 from airflow.providers.google.cloud.operators.compute import (
     ComputeEngineStartInstanceOperator,
     ComputeEngineStopInstanceOperator,
@@ -12,7 +15,6 @@ from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import (
-    BIGQUERY_RAW_DATASET,
     DAG_FOLDER,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
@@ -22,10 +24,11 @@ from common.config import (
     SLACK_BLOCKS,
     SLACK_CONN_ID,
     SLACK_CONN_PASSWORD,
+    BIGQUERY_RAW_DATASET,
 )
 
 from common.operator import GCloudComputeSSHOperator
-
+from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
 
 DATE = "{{ts_nodash}}"
 
@@ -34,9 +37,10 @@ DAG_CONFIG = {
     "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/algo_training_{ENV_SHORT_NAME}/algo_training_{DATE}",
     "ENV_SHORT_NAME": ENV_SHORT_NAME,
     "GCP_PROJECT_ID": GCP_PROJECT_ID,
-    "MODEL_NAME": "events",
     "TRAIN_DIR": "/home/airflow/train",
     "EXPERIMENT_NAME": f"algo_training_events.1_{ENV_SHORT_NAME}",
+    "BATCH_SIZE": 1024,
+    "EMBEDDING_SIZE": 64,
 }
 
 
@@ -61,9 +65,29 @@ with DAG(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
+        "batch_size": Param(
+            default=DAG_CONFIG["BATCH_SIZE"],
+            type="string",
+        ),
+        "embedding_size": Param(
+            default=DAG_CONFIG["EMBEDDING_SIZE"],
+            type="string",
+        ),
     },
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)
+
+    import_recommendation_data = {}
+    for dataset in ["data", "train_data", "validation_data", "test_data"]:
+        task = BigQueryExecuteQueryOperator(
+            task_id=f"import_recommendation_{dataset}",
+            sql=(IMPORT_TRAINING_SQL_PATH / f"recommendation_{dataset}.sql").as_posix(),
+            write_disposition="WRITE_TRUNCATE",
+            use_legacy_sql=False,
+            destination_dataset_table=f"{BIGQUERY_RAW_DATASET}.recommendation_{dataset}",
+            dag=dag,
+        )
+        import_recommendation_data[dataset] = task
 
     gce_instance_start = ComputeEngineStartInstanceOperator(
         task_id="gce_start_task",
@@ -75,7 +99,9 @@ with DAG(
 
     fetch_code = GCloudComputeSSHOperator(
         task_id="fetch_code",
-        command=r'if cd data-gcp; then git checkout master && git pull && git checkout {{ params.branch }} && git pull; else git clone git@github.com:pass-culture/data-gcp.git && cd data-gcp && git checkout {{ params.branch }} && git pull; fi',
+        command=r"if cd data-gcp; then git fetch --all && git reset --hard origin/{{ params.branch }}; "
+        r"else git clone git@github.com:pass-culture/data-gcp.git "
+        r"&& cd data-gcp && git checkout {{ params.branch }} && git pull; fi",
         dag=dag,
     )
 
@@ -91,15 +117,10 @@ with DAG(
         task_id="training",
         dag_config=DAG_CONFIG,
         path_to_run_command="data-gcp/algo_training",
-        command=f"python train_v1_1.py",
-        dag=dag,
-    )
-
-    postprocess = GCloudComputeSSHOperator(
-        task_id="postprocess",
-        dag_config=DAG_CONFIG,
-        path_to_run_command="data-gcp/algo_training",
-        command=f"python postprocess.py",
+        command=f"python train_v1_1.py "
+        f"--experiment-name {DAG_CONFIG['EXPERIMENT_NAME']} "
+        r"--batch-size {{{{ params.batch_size }}}}  "
+        r"--embedding-size {{{{ params.embedding_size }}}}",
         dag=dag,
     )
 
@@ -107,7 +128,7 @@ with DAG(
         task_id="evaluate",
         dag_config=DAG_CONFIG,
         path_to_run_command="data-gcp/algo_training",
-        command=f"python evaluate.py",
+        command=f"python evaluate_v2.py",
         dag=dag,
     )
 
@@ -129,6 +150,10 @@ with DAG(
 
     (
         start
+        >> import_recommendation_data["data"]
+        >> import_recommendation_data["train_data"]
+        >> import_recommendation_data["validation_data"]
+        >> import_recommendation_data["test_data"]
         >> gce_instance_start
         >> fetch_code
         >> install_dependencies

@@ -7,9 +7,9 @@ from utils import GCP_PROJECT_ID
 def get_data(
     dataset: str,
     table_name: str,
-    subcategory_ids: str,
-    event_day_number: str,
     max_limit: int,
+    subcategory_ids: str = None,
+    event_day_number: str = None,
 ):
     query_filter = ""
     limit_filter = ""

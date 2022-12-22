@@ -306,7 +306,7 @@ with DAG(
     drop_old_materialized_view = CloudSQLExecuteQueryOperator(
         task_id="drop_old_materialized_view",
         gcp_cloudsql_conn_id="proxy_postgres_tcp",
-        sql=f"DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_per_iris_shape_mv_old",
+        sql=f"DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_per_iris_shape_mv_old CASCADE",
         autocommit=True,
     )
 

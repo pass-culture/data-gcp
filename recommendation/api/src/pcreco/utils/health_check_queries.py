@@ -24,18 +24,7 @@ logger = logging.getLogger()
 
 def does_materialized_view_exist(connection: Any, materialized_view_name: str) -> bool:
     query = f"""SELECT EXISTS(SELECT FROM pg_matviews WHERE matviewname = '{materialized_view_name}');"""
-    is_data_present = connection.execute(query).scalar()
-    return is_data_present
-
-
-def does_materialized_view_have_data(
-    connection: Any, materialized_view_name: str
-) -> bool:
-    is_materialized_view_with_data = False
-    if does_materialized_view_exist(connection, materialized_view_name):
-        query = f"""SELECT EXISTS(SELECT * FROM { materialized_view_name} limit 1);"""
-        is_materialized_view_with_data = connection.execute(query).scalar()
-    return is_materialized_view_with_data
+    return connection.execute(query).scalar()
 
 
 def get_materialized_view_status(materialized_view_name: str) -> dict:
@@ -44,9 +33,6 @@ def get_materialized_view_status(materialized_view_name: str) -> dict:
     materialized_view_status = {
         f"is_{materialized_view_name}_datasource_exists": does_materialized_view_exist(
             connection, materialized_view_name
-        ),
-        f"is_{materialized_view_name}_ok": does_materialized_view_have_data(
-            connection, materialized_view_name
-        ),
+        )
     }
     return materialized_view_status

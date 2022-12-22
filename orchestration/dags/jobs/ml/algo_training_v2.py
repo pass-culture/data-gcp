@@ -141,7 +141,7 @@ with DAG(
         resource_id=GCE_TRAINING_INSTANCE,
         dag_config=DAG_CONFIG,
         path_to_run_command="data-gcp/algo_training",
-        command=f"python evaluate_v2.py",
+        command=f"python evaluate_v2.py --experiment-name {DAG_CONFIG['EXPERIMENT_NAME']}",
         dag=dag,
     )
 

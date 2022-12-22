@@ -269,8 +269,10 @@ WITH temp_firebase_events AS (
                 unnest(event_params) event_params
             where
                 event_params.key = 'age'
-        ) as age
-    FROM
+        ) as onboarding_user_selected_age
+FROM
+        (
+            select
         {% if params.dag_type == 'intraday' %}
         `{{ bigquery_clean_dataset }}.firebase_events_{{ yyyymmdd(ds) }}`
         {% else %}

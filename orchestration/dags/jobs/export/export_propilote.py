@@ -22,7 +22,7 @@ dag = DAG(
     "export_propilote_data",
     default_args=default_dag_args,
     description="Export propilote date",
-    schedule_interval="00 08 * * *",
+    schedule_interval="00 08 * * 1,3,5",
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,

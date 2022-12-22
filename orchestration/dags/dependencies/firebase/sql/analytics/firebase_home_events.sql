@@ -45,6 +45,7 @@ firebase_events AS (
         )
         AND (
             origin = 'home'
+            OR origin = 'exclusivity'
             OR origin IS NULL
         )
         AND event_date >= DATE('{{ add_days(ds, -3) }}')

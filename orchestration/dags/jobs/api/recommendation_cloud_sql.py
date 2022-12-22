@@ -243,11 +243,13 @@ with DAG(
     for index, table_name in enumerate(table_names):
         task = create_restore_task(table_name)
         restore_tasks.append(task)
-
+        if index:
+            restore_tasks[index - 1] >> restore_tasks[index]
     end_drop_restore = DummyOperator(task_id="end_drop_restore")
 
-    end_data_prep >> restore_tasks >> end_drop_restore
-
+    # end_data_prep >> restore_tasks >> end_drop_restore
+    end_data_prep >> restore_tasks[0]
+    restore_tasks[-1] >> end_drop_restore
     create_materialized_view = CloudSQLExecuteQueryOperator(
         task_id="create_materialized_view_recommendable_offers_per_iris_shape_mv",
         gcp_cloudsql_conn_id="proxy_postgres_tcp",

@@ -129,7 +129,7 @@ class ModelHandler:
         )
         # Undeploy oldies
         if len(deployed_models_sorted_by_date) > 1:
-            print(f"Found {len(previous_model)}")
+            print(f"Found {len(deployed_models_sorted_by_date)}")
             for previous_model in deployed_models_sorted_by_date[1:]:
                 previous_version_model_id = previous_model["id"]
                 print(f"Undeploying id : {previous_version_model_id}")

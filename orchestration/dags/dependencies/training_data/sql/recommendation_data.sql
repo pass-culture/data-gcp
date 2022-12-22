@@ -4,18 +4,18 @@ SELECT
     offer_item_ids.item_id as item_id,
     offer.offer_subcategoryId as offer_subcategoryId,
     subcategories.category_id as offer_categoryId,
-    count(*) as count
+    COUNT(*) as count
 from
-    `passculture-data-ehp.clean_stg`.`applicative_database_booking` booking
-    inner join `passculture-data-ehp.clean_stg`.`applicative_database_stock` stock on booking.stock_id = stock.stock_id
-    inner join `passculture-data-ehp.clean_stg`.`applicative_database_offer` offer on stock.offer_id = offer.offer_id
-    inner join `passculture-data-ehp.analytics_stg`.`subcategories` subcategories on offer.offer_subcategoryId = subcategories.id
-    inner join `passculture-data-ehp.analytics_stg`.`offer_item_ids` offer_item_ids on offer_item_ids.offer_id = offer.offer_id
-where
+    `{{ bigquery_clean_dataset }}`.`applicative_database_booking` booking
+    INNER JOIN `{{ bigquery_clean_dataset }}`.`applicative_database_stock` stock ON booking.stock_id = stock.stock_id
+    INNER JOIN `{{ bigquery_clean_dataset }}`.`applicative_database_offer` offer ON stock.offer_id = offer.offer_id
+    INNER JOIN `{{ bigquery_analytics_dataset }}`.`subcategories` subcategories ON offer.offer_subcategoryId = subcategories.id
+    INNER JOIN `{{ bigquery_analytics_dataset }}`.`offer_item_ids` offer_item_ids ON offer_item_ids.offer_id = offer.offer_id
+WHERE
     booking.booking_creation_date >= DATE_SUB(DATE("{{ ds }}"), INTERVAL 4 MONTH)
-    and booking.booking_creation_date <= DATE("{{ ds }}")
-    and user_id is not null
-group by
+    AND booking.booking_creation_date <= DATE("{{ ds }}")
+    AND user_id IS NOT NULL
+GROUP BY
     booking.user_id,
     item_id,
     event_type,

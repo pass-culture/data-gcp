@@ -35,6 +35,11 @@ def load_triplets_dataset(
     item_ids: list,
     seed: int,
 ) -> tf.data.Dataset:
+    """
+    Builds a tf Dataset of shape with:
+        - X = (user_id, the item_id associated to the user, a random item_id)
+        - y = fake data as we make no predictions
+    """
 
     random.seed(seed)
     dataset = dataset.sample(frac=1, random_state=seed).reset_index(drop=True)

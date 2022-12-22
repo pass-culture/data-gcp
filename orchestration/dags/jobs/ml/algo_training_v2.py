@@ -32,16 +32,17 @@ from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
 
 DATE = "{{ts_nodash}}"
 
+# GCE_TRAINING_INSTANCE = "algo_training_dev-1"
+
 # Environment variables to export before running commands
 DAG_CONFIG = {
-    "GCE_TRAINING_INSTANCE": "algo-training-dev-1",
     "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/algo_training_{ENV_SHORT_NAME}/algo_training_{DATE}",
     "ENV_SHORT_NAME": ENV_SHORT_NAME,
     "GCP_PROJECT_ID": GCP_PROJECT_ID,
     "TRAIN_DIR": "/home/airflow/train",
     "EXPERIMENT_NAME": f"algo_training_v2.1_{ENV_SHORT_NAME}",
-    "BATCH_SIZE": 1024,
-    "EMBEDDING_SIZE": 64,
+    "BATCH_SIZE": 4096,
+    "EMBEDDING_SIZE": 128,
     "TRAIN_SET_SIZE": 0.8,
 }
 
@@ -65,10 +66,6 @@ with DAG(
     params={
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
-            type="string",
-        ),
-        "gce_training_instance": Param(
-            default=str(DAG_CONFIG["GCE_TRAINING_INSTANCE"]),
             type="string",
         ),
         "batch_size": Param(
@@ -103,13 +100,15 @@ with DAG(
         task_id="gce_start_task",
         project_id=GCP_PROJECT_ID,
         zone=GCE_ZONE,
-        resource_id=DAG_CONFIG["GCE_TRAINING_INSTANCE"],
+        resource_id=GCE_TRAINING_INSTANCE,
         dag=dag,
     )
 
     fetch_code = GCloudComputeSSHOperator(
         task_id="fetch_code",
-        command=r"if cd data-gcp; then git fetch --all && git reset --hard origin/{{ params.branch }}; "
+        resource_id=GCE_TRAINING_INSTANCE,
+        command=r"if cd data-gcp; "
+        r"then git checkout master && git pull && git checkout {{ params.branch }} && git pull; "
         r"else git clone git@github.com:pass-culture/data-gcp.git "
         r"&& cd data-gcp && git checkout {{ params.branch }} && git pull; fi",
         dag=dag,
@@ -117,6 +116,7 @@ with DAG(
 
     install_dependencies = GCloudComputeSSHOperator(
         task_id="install_dependencies",
+        resource_id=GCE_TRAINING_INSTANCE,
         dag_config=DAG_CONFIG,
         path_to_run_command="data-gcp/algo_training",
         command="pip install -r requirements.txt --user",
@@ -125,6 +125,7 @@ with DAG(
 
     training = GCloudComputeSSHOperator(
         task_id="training",
+        resource_id=GCE_TRAINING_INSTANCE,
         dag_config=DAG_CONFIG,
         path_to_run_command="data-gcp/algo_training",
         command=f"python train_v2.py "
@@ -137,6 +138,7 @@ with DAG(
 
     evaluate = GCloudComputeSSHOperator(
         task_id="evaluate",
+        resource_id=GCE_TRAINING_INSTANCE,
         dag_config=DAG_CONFIG,
         path_to_run_command="data-gcp/algo_training",
         command=f"python evaluate_v2.py",
@@ -147,17 +149,17 @@ with DAG(
         task_id="gce_stop_task",
         project_id=GCP_PROJECT_ID,
         zone=GCE_ZONE,
-        resource_id=DAG_CONFIG["GCE_TRAINING_INSTANCE"],
+        resource_id=GCE_TRAINING_INSTANCE,
     )
 
-    # send_slack_notif_success = SlackWebhookOperator(
-    #     task_id="send_slack_notif_success",
-    #     http_conn_id=SLACK_CONN_ID,
-    #     webhook_token=SLACK_CONN_PASSWORD,
-    #     blocks=SLACK_BLOCKS,
-    #     username=f"Algo trainer robot - {ENV_SHORT_NAME}",
-    #     icon_emoji=":robot_face:",
-    # )
+    send_slack_notif_success = SlackWebhookOperator(
+        task_id="send_slack_notif_success",
+        http_conn_id=SLACK_CONN_ID,
+        webhook_token=SLACK_CONN_PASSWORD,
+        blocks=SLACK_BLOCKS,
+        username=f"Algo trainer robot - {ENV_SHORT_NAME}",
+        icon_emoji=":robot_face:",
+    )
 
     (
         start
@@ -171,5 +173,5 @@ with DAG(
         >> training
         >> evaluate
         >> gce_instance_stop
-        # >> send_slack_notif_success
+        >> send_slack_notif_success
     )

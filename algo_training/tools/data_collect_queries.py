@@ -30,3 +30,15 @@ def get_data(
     """
     data = pd.read_gbq(query)
     return data
+
+
+def get_column_data(
+    dataset: str,
+    table_name: str,
+    column_name: str,
+):
+    query = f"""
+        SELECT DISTINCT {column_name} FROM `{GCP_PROJECT_ID}.{dataset}.{table_name}`
+    """
+    data = pd.read_gbq(query)
+    return data

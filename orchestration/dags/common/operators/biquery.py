@@ -49,7 +49,7 @@ class GCloudComputeSSHOperator(BashOperator):
         **kwargs,
     ):
 
-        default_command = ""
+        default_command = 'export PATH="/opt/conda/bin:/opt/conda/condabin:"+$PATH\n'
         if path_to_run_command:
             default_command += f"cd {path_to_run_command}\n"
         if dag_config:
@@ -58,13 +58,10 @@ class GCloudComputeSSHOperator(BashOperator):
             )
 
         super(GCloudComputeSSHOperator, self).__init__(
-            bash_command=f"""
-                gcloud compute ssh {resource_id} \
-                --zone {zone} \
-                --project {project_id} \
-                --command $'{default_command} 
-                {command}'
-                """,
+            bash_command=f"gcloud compute ssh {resource_id} "
+            f"--zone {zone} "
+            f"--project {project_id} "
+            f"--command $'{default_command}\n{command}'",
             *args,
             **kwargs,
         )

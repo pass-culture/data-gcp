@@ -23,7 +23,7 @@ from utils import (
 
 
 L2_REG = 0
-N_EPOCHS = 1  # 20 if ENV_SHORT_NAME == "prod" else 10
+N_EPOCHS = 20 if ENV_SHORT_NAME == "prod" else 10
 VERBOSE = 0 if ENV_SHORT_NAME == "prod" else 1
 LOSS_CUTOFF = 0.005
 

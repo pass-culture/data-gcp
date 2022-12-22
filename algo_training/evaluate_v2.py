@@ -1,24 +1,17 @@
-import numpy as np
-import pandas as pd
 import tensorflow as tf
 import mlflow.tensorflow
-import random
 
 import typer
 
-from tools.data_collect_queries import get_data
-from tools.v1.preprocess_tools import preprocess
+from tools.data_collect_queries import get_data, get_column_data
 from models.v1.match_model import MatchModel
 from utils import (
     get_secret,
     connect_remote_mlflow,
-    STORAGE_PATH,
     ENV_SHORT_NAME,
-    MODEL_NAME,
     RECOMMENDATION_NUMBER,
     NUMBER_OF_PRESELECTED_OFFERS,
     EVALUATION_USER_NUMBER,
-    EXPERIMENT_NAME,
 )
 from metrics import compute_metrics, get_actual_and_predicted
 
@@ -31,16 +24,25 @@ def evaluate(
         help="MLFlow experiment name",
     )
 ):
-    # TODO: training_data_clicks should be called data_clicks
-    raw_data = get_data(dataset="raw_dev", table_name="recommendation_data")
 
-    training_item_ids = get_data(
-        dataset="raw_dev", table_name="recommendation_training_data"
-    )["item_id"].unique()
-    test_data = get_data(dataset="raw_dev", table_name="recommendation_test_data")[
-        ["user_id", "item_id"]
-    ].merge(raw_data, on=["user_id", "item_id"], how="inner")
+    booking_raw_data = get_data(
+        dataset=f"raw_{ENV_SHORT_NAME}", table_name="training_data_bookings"
+    )
 
+    training_item_ids = get_column_data(
+        dataset=f"raw_{ENV_SHORT_NAME}",
+        table_name="recommendation_training_data",
+        column_name="item_id",
+    ).values
+
+    # TODO: merge in BigQuery
+    test_data = get_data(
+        dataset=f"raw_{ENV_SHORT_NAME}", table_name="recommendation_test_data"
+    )[["user_id", "item_id"]].merge(
+        booking_raw_data, on=["user_id", "item_id"], how="inner"
+    )
+
+    # We test maximum EVALUATION_USER_NUMBER users
     users_to_test = test_data["user_id"].unique()[
         : min(EVALUATION_USER_NUMBER, test_data["user_id"].nunique())
     ]
@@ -60,7 +62,7 @@ def evaluate(
         data_model_dict = {
             "name": experiment_name,
             "data": {
-                "raw": raw_data,
+                "raw": booking_raw_data,
                 "training_item_ids": training_item_ids,
                 "test": test_data,
             },

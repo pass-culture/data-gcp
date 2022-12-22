@@ -110,7 +110,7 @@ with DAG(
             --region {{ params.default_region }} \
             --experiment-name {{ params.experiment_name }} \
             --endpoint-name {{ params.endpoint_name }} \
-            --version-name {{ params.version_name }}'
+            --version-name {{ params.version_name }}
     """
 
     deploy_model = BashOperator(

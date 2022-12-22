@@ -70,6 +70,7 @@ def define_import_tables():
         "offerer_tag",
         "offerer_tag_mapping",
         "action_history",
+        "cds_cinema_details",
     ]
 
 

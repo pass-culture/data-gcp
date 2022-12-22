@@ -163,6 +163,7 @@ with DAG(
     )
 
     TRAINING = f""" '{DEFAULT}
+        export EXPERIMENT_NAME={RECOMMENDATION_EXPERIMENT_NAME}
         python train_{MODEL_NAME}.py'
     """
 
@@ -179,6 +180,7 @@ with DAG(
     )
 
     POSTPROCESSING = f""" '{DEFAULT}
+        export EXPERIMENT_NAME={RECOMMENDATION_EXPERIMENT_NAME}
         python postprocess.py'
     """
 

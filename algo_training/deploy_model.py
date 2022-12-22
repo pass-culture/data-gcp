@@ -58,21 +58,22 @@ class ModelHandler:
 
     def upload_model(self):
         experiment_name = self.model_params.experiment_name
-        print("Uploading model to Vertex AI model registery...")
+        print(f"Uploading model to Vertex AI model registery...")
+        print(f"Search for existing model...  {experiment_name}")
         parent_model = aiplatform.Model.list(
-            filter=f"display_name='{experiment_name}'",
+            filter=f"display_name={experiment_name}",
             location=self.region,
             project=self.project_name,
         )
         # case no parent, then create a new one.
-        if len(parent_model) == 0:
-            print("Parent model not found, deploying new version..")
-            parent_model_id = None
-            version_name = experiment_name
-        else:
+        if len(parent_model) > 0:
             print("Parent found, deploying new version")
             parent_model_id = parent_model[0].name
             version_name = f"{experiment_name}_{self.model_params.version_name}"
+        else:
+            print("Parent model not found, deploying new version..")
+            parent_model_id = None
+            version_name = experiment_name
 
         model = aiplatform.Model.upload(
             display_name=version_name,
@@ -89,15 +90,18 @@ class ModelHandler:
         return model
 
     def deploy_model(self, model):
+        enpoint_name = self.endpoint_params.endpoint_name
+        print(f"Deploying model to endpoint...")
+        print(f"Search for existing endoipoint...  {enpoint_name}")
         endpoint = aiplatform.Endpoint.list(
-            filter=f"display_name='{self.endpoint_params.endpoint_name}'",
+            filter=f"display_name={enpoint_name}",
             location=self.region,
             project=self.project_name,
         )
         if len(endpoint) == 0:
             print("Endpoint not found, deploying new one..")
             endpoint = aiplatform.Endpoint.create(
-                display_name=self.endpoint_params.endpoint_name,
+                display_name=enpoint_name,
                 project=self.project_name,
                 location=self.region,
             )
@@ -105,7 +109,7 @@ class ModelHandler:
         version_name = (
             f"{self.model_params.experiment_name}_{self.model_params.version_name}"
         )
-        print("Deploy model to endpoint...")
+        print(f"Deploy model version {version_name} to endpoint {enpoint_name}...")
         model.deploy(
             endpoint=endpoint,
             deployed_model_display_name=version_name,
@@ -116,15 +120,17 @@ class ModelHandler:
         )
         model.wait()
 
-        print("Undeploy old version..")
+        print("Undeploy old versions..")
         endpoint_dict = endpoint.to_dict()
         deployed_models_sorted_by_date = sorted(
             endpoint_dict["deployedModels"], key=lambda d: d["createTime"]
         )
         # Undeploy oldies
         if len(deployed_models_sorted_by_date) > 1:
+            print(f"Found {len(previous_model)}")
             for previous_model in deployed_models_sorted_by_date[1:]:
                 previous_version_model_id = previous_model["id"]
+                print(f"Undeploying id : {previous_version_model_id}")
                 endpoint.undeploy(previous_version_model_id)
 
     def clean_model_versions(self, max_model_versions):
@@ -135,7 +141,7 @@ class ModelHandler:
         )
 
         if len(model) > 0:
-            print("Found model")
+            print(f"Found {len(model)} model(s)")
             model_id = model[0].name
 
             model = aiplatform.Model(
@@ -153,6 +159,7 @@ class ModelHandler:
             else:
                 versions_to_clean = versions[:-max_model_versions]
                 for versions in versions_to_clean:
+                    print(f"Removing {versions.version_id}")
                     ModelRegistry.delete_version(f"{versions.version_id}")
 
 

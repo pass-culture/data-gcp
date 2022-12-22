@@ -34,23 +34,23 @@ export GCP_PROJECT_ID={GCP_PROJECT_ID}
 models_to_deploy = [
     {
         "experiment_name": f"algo_training_v1.1_{ENV_SHORT_NAME}",
-        "endpoint_name": "recommendation_default_{ENV_SHORT_NAME}",
-        "version_name": "v_{{{{ ts_nodash }}}}",
+        "endpoint_name": f"recommendation_default_{ENV_SHORT_NAME}",
+        "version_name": "v_{{ ts_nodash }}",
     },
     {
         "experiment_name": f"similar_offers_v1.1_{ENV_SHORT_NAME}",
-        "endpoint_name": "similar_offers_default_{ENV_SHORT_NAME}",
-        "version_name": "v_{{{{ ts_nodash }}}}",
+        "endpoint_name": f"similar_offers_default_{ENV_SHORT_NAME}",
+        "version_name": "v_{{ ts_nodash }}",
     },
 ]
 schedule_dict = {"prod": "0 22 * * 5", "dev": "0 22 * * *", "stg": "0 22 * * 3"}
 
 
 with DAG(
-    "default_deployment",
+    "algo_default_deployment",
     default_args=default_args,
-    description="Default Deployment job",
-    schedule_interval=schedule_dict,
+    description="ML Default Deployment job",
+    schedule_interval=schedule_dict[ENV_SHORT_NAME],
     catchup=False,
     dagrun_timeout=timedelta(minutes=1440),
     user_defined_macros=macros.default,
@@ -70,13 +70,7 @@ with DAG(
         resource_id=GCE_INSTANCE,
         task_id="gce_start_task",
     )
-
-    if ENV_SHORT_NAME == "dev":
-        branch = "master"
-    if ENV_SHORT_NAME == "stg":
-        branch = "master"
-    if ENV_SHORT_NAME == "prod":
-        branch = "production"
+    gce_instance_start.set_upstream(start)
 
     FETCH_CODE = r'"if cd data-gcp; then git checkout master && git pull && git checkout {{ params.branch }} && git pull; else git clone git@github.com:pass-culture/data-gcp.git && cd data-gcp && git checkout  {{ params.branch }} && git pull; fi"'
 
@@ -90,6 +84,25 @@ with DAG(
         """,
         dag=dag,
     )
+    fetch_code.set_upstream(gce_instance_start)
+
+    INSTALL_DEPENDENCIES = f""" '{DEFAULT}
+        pip install -r requirements.txt --user'
+    """
+
+    install_dependencies = BashOperator(
+        task_id="install_dependencies",
+        bash_command=f"""
+            gcloud compute ssh {GCE_INSTANCE} \
+            --zone {GCE_ZONE} \
+            --project {GCP_PROJECT_ID} \
+            --command {INSTALL_DEPENDENCIES}
+            """,
+        dag=dag,
+    )
+
+    install_dependencies.set_upstream(fetch_code)
+
     tasks = []
     for model_params in models_to_deploy:
         experiment_name = model_params["experiment_name"]
@@ -114,7 +127,7 @@ with DAG(
             dag=dag,
         )
 
-        deploy_model.set_upstream(fetch_code)
+        deploy_model.set_upstream(install_dependencies)
         tasks.append(deploy_model)
 
     gce_instance_stop = ComputeEngineStopInstanceOperator(

@@ -143,26 +143,32 @@ class ModelHandler:
         )
 
         if len(model) > 0:
-            print(f"Found {len(model)} model(s)")
+            print(f"Found {len(model)} model")
             model_id = model[0].name
 
             model = aiplatform.Model(
                 model_name=f"projects/{self.project_name}/locations/{self.region}/models/{model_id}"
             )
-            ModelRegistry = aiplatform.models.ModelRegistry(
+            modelRegistry = aiplatform.models.ModelRegistry(
                 model,
                 self.region,
                 self.project_name,
             )
 
-            versions = ModelRegistry.list_versions()
+            versions = modelRegistry.list_versions()
             if len(versions) < max_model_versions:
                 print(f"Only {len(versions)}, pass.")
             else:
                 versions_to_clean = versions[:-max_model_versions]
                 for versions in versions_to_clean:
-                    print(f"Removing {versions.version_id}")
-                    ModelRegistry.delete_version(f"{versions.version_id}")
+                    try:
+                        print(f"Removing {versions.version_id}")
+                        modelRegistry.delete_version(f"{versions.version_id}")
+                    except:
+                        # TODO; Model might be used by another endpoint
+                        # Check if deployed or not before.
+                        print(f"Could not remove {versions.version_id}")
+                        pass
 
 
 def main(

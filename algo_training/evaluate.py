@@ -1,16 +1,20 @@
-import numpy as np
 import pandas as pd
 import tensorflow as tf
 import mlflow.tensorflow
-import random
+from datetime import datetime
+from tools.v1.preprocess_tools import preprocess
 from models.v1.match_model import MatchModel
 from utils import (
     get_secret,
     connect_remote_mlflow,
     STORAGE_PATH,
     ENV_SHORT_NAME,
-    MODEL_NAME,
+    BIGQUERY_CLEAN_DATASET,
+    MODELS_RESULTS_TABLE_NAME,
+    GCP_PROJECT_ID,
+    SERVING_CONTAINER,
     RECOMMENDATION_NUMBER,
+    MODEL_NAME,
     NUMBER_OF_PRESELECTED_OFFERS,
     EVALUATION_USER_NUMBER,
     EXPERIMENT_NAME,
@@ -20,70 +24,47 @@ from metrics import compute_metrics, get_actual_and_predicted
 k_list = [RECOMMENDATION_NUMBER, NUMBER_OF_PRESELECTED_OFFERS]
 
 
-def evaluate(model, storage_path: str, model_name):
+def evaluate(client_id, model, storage_path: str):
 
-    raw_data = pd.read_csv(
-        f"{storage_path}/raw_data.csv",
-        dtype={
-            "user_id": str,
-            "item_id": str,
-            "offer_subcategoryid": str,
-            "offer_categoryId": str,
-            "genres": str,
-            "rayon": str,
-            "type": str,
-            "venue_id": str,
-            "venue_name": str,
-            "nb_bookings": int,
-        },
+    raw_data = pd.read_csv(f"{STORAGE_PATH}/raw_data.csv")
+    raw_data = preprocess(raw_data)
+
+    positive_data_train = (
+        pd.read_csv(
+            f"{storage_path}/positive_data_train.csv",
+            dtype={
+                "user_id": str,
+                "item_id": str,
+            },
+        )[["user_id", "item_id"]]
+        .merge(raw_data, on=["user_id", "item_id"], how="inner")
+        .drop_duplicates()
     )
 
-    positive_data_train = pd.read_csv(
-        f"{storage_path}/positive_data_train.csv",
-        dtype={
-            "user_id": str,
-            "item_id": str,
-            "offer_subcategoryid": str,
-            "offer_categoryId": str,
-        },
+    positive_data_test = (
+        pd.read_csv(
+            f"{storage_path}/positive_data_test.csv",
+            dtype={
+                "user_id": str,
+                "item_id": str,
+            },
+        )[["user_id", "item_id"]]
+        .merge(raw_data, on=["user_id", "item_id"], how="inner")
+        .drop_duplicates()
     )
 
-    positive_data_test = pd.read_csv(
-        f"{storage_path}/positive_data_test.csv",
-        dtype={
-            "user_id": str,
-            "item_id": str,
-            "offer_subcategoryid": str,
-            "offer_categoryId": str,
-        },
-    )
-
-    positive_data_test_clean = positive_data_test[
-        positive_data_test.user_id.isin(positive_data_train.user_id)
+    users_to_test = positive_data_test["user_id"].unique()[
+        : min(EVALUATION_USER_NUMBER, positive_data_test["user_id"].nunique())
     ]
-
-    # Extract random sub sample if len(users_to_evaluate) > EVALUATION_USER_NUMBER
-    users_to_test = positive_data_test_clean.user_id
-    if len(users_to_test) > EVALUATION_USER_NUMBER:
-        users_to_test = random.sample(
-            list(positive_data_test_clean.user_id), EVALUATION_USER_NUMBER
-        )
-
-    positive_data_test_clean = positive_data_test_clean[
-        positive_data_test_clean.user_id.isin(users_to_test)
+    positive_data_test = positive_data_test.loc[
+        lambda df: df["user_id"].isin(users_to_test)
     ]
-
-    positive_data_test_clean = positive_data_test_clean[
-        positive_data_test_clean.item_id.isin(positive_data_train.item_id)
-    ]
-    positive_data_test_clean = positive_data_test_clean.drop_duplicates()
 
     data_model_dict = {
-        "name": model_name,
         "data": {
             "raw": raw_data,
             "train": positive_data_train,
-            "test": positive_data_test_clean,
+            "test": positive_data_test,
         },
         "model": model,
     }
@@ -133,37 +114,44 @@ def evaluate(model, storage_path: str, model_name):
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
     mlflow.log_metrics(metrics)
     print("------- EVALUATE DONE -------")
+    return metrics
 
 
-def check_before_deploy(metrics, k):
-    if (
-        metrics[f"recall_at_{k}"] > 20
-        and metrics[f"precision_at_{k}"] > 1
-        and metrics[f"maximal_precision_at_{k}"] > 4.5
-        and metrics[f"coverage_at_{k}"] > 10
-        and metrics[f"coverage_at_{k}"] < 70
-        and metrics[f"unexpectedness_at_{k}"] > 0.07
-        and metrics[f"new_types_ratio_at_{k}"] > 0.05
-        and metrics[f"serendipity_at_{k}"] > 1.5
-    ):
-        print("Metrics OK")
-    else:
-        print("Bad metrics")
-    if ENV_SHORT_NAME == "dev":
-        # INFO : metrics are never ok in dev so we force the deploy
-        print("Metrics OK")
-
-
-if __name__ == "__main__":
+def run(experiment_name: str, model_name: str):
     client_id = get_secret("mlflow_client_id")
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
-    experiment_name = EXPERIMENT_NAME
     experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
     run_id = mlflow.list_run_infos(experiment_id)[0].run_id
-    with mlflow.start_run(run_id=run_id):
+
+    with mlflow.start_run(run_id=run_id) as run:
+        artifact_uri = mlflow.get_artifact_uri("model")
         loaded_model = tf.keras.models.load_model(
-            mlflow.get_artifact_uri("model"),
+            artifact_uri,
             custom_objects={"MatchModel": MatchModel},
             compile=False,
         )
-        evaluate(loaded_model, STORAGE_PATH, MODEL_NAME)
+        metrics = evaluate(client_id, loaded_model, STORAGE_PATH)
+
+        log_results = {
+            "execution_date": datetime.now().isoformat(),
+            "experiment_name": experiment_name,
+            "model_name": model_name,
+            "model_type": "tensorflow",
+            "run_id": run_id,
+            "run_start_time": run.info.start_time,
+            "run_end_time": run.info.start_time,
+            "artifact_uri": artifact_uri,
+            "serving_container": SERVING_CONTAINER,
+            "precision_at_10": metrics["precision_at_10"],
+            "recall_at_10": metrics["recall_at_10"],
+            "coverage_at_10": metrics["coverage_at_10"],
+        }
+        pd.DataFrame.from_dict([log_results], orient="columns").to_gbq(
+            f"""{BIGQUERY_CLEAN_DATASET}.{MODELS_RESULTS_TABLE_NAME}""",
+            project_id=f"{GCP_PROJECT_ID}",
+            if_exists="append",
+        )
+
+
+if __name__ == "__main__":
+    run(experiment_name=EXPERIMENT_NAME, model_name=MODEL_NAME)

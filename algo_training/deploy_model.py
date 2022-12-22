@@ -93,18 +93,20 @@ class ModelHandler:
         enpoint_name = self.endpoint_params.endpoint_name
         print(f"Deploying model to endpoint...")
         print(f"Search for existing endoipoint...  {enpoint_name}")
-        endpoint = aiplatform.Endpoint.list(
+        found_endpoints = aiplatform.Endpoint.list(
             filter=f"display_name={enpoint_name}",
             location=self.region,
             project=self.project_name,
         )
-        if len(endpoint) == 0:
+        if len(found_endpoints) == 0:
             print("Endpoint not found, deploying new one..")
             endpoint = aiplatform.Endpoint.create(
                 display_name=enpoint_name,
                 project=self.project_name,
                 location=self.region,
             )
+        else:
+            endpoint = found_endpoints[0]
 
         version_name = (
             f"{self.model_params.experiment_name}_{self.model_params.version_name}"
@@ -188,7 +190,7 @@ def main(
         help="Total min nodes to deploy",
     ),
     max_nodes=typer.Option(
-        1,
+        5,
         help="Total max nodes to deploy",
     ),
 ) -> None:

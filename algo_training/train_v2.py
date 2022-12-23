@@ -23,7 +23,7 @@ from utils import (
 
 
 L2_REG = 0
-N_EPOCHS = 20 if ENV_SHORT_NAME == "prod" else 10
+N_EPOCHS = 200
 VERBOSE = 0 if ENV_SHORT_NAME == "prod" else 1
 LOSS_CUTOFF = 0.005
 
@@ -48,7 +48,7 @@ def train(
 ):
     tf.random.set_seed(seed)
 
-    # TODO: training_data_clicks should be called data_clicks
+    # Load BigQuery data
     train_data = get_data(
         dataset="raw_dev", table_name="recommendation_training_data"
     ).astype(dtype={"count": int})
@@ -70,7 +70,6 @@ def train(
     # Connect to MLFlow
     client_id = get_secret("mlflow_client_id")
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
-
     experiment = mlflow.get_experiment_by_name(experiment_name)
     with mlflow.start_run(experiment_id=experiment.experiment_id):
         run_uuid = mlflow.active_run().info.run_uuid

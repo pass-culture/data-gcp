@@ -1,10 +1,6 @@
 SELECT
-  user_id,
-  item_id,
-  offer_subcategoryId,
-  offer_categoryId,
-  count
-FROM `{{ bigquery_raw_dataset }}`.`recommendation_data`
+  *
+FROM `{{ bigquery_raw_dataset }}`.`training_data_bookings`
 WHERE (user_id, item_id) NOT IN (
   SELECT (user_id, item_id)
   FROM

@@ -35,11 +35,8 @@ def evaluate(
         column_name="item_id",
     ).values
 
-    # TODO: merge in BigQuery
     test_data = get_data(
         dataset=f"raw_{ENV_SHORT_NAME}", table_name="recommendation_test_data"
-    )[["user_id", "item_id"]].merge(
-        booking_raw_data, on=["user_id", "item_id"], how="inner"
     )
 
     # We test maximum EVALUATION_USER_NUMBER users

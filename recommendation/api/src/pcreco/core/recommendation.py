@@ -11,13 +11,9 @@ from pcreco.models.reco.playlist_params import PlaylistParamsIn
 from pcreco.core.utils.query_builder import RecommendableOffersQueryBuilder
 from pcreco.utils.db.db_connection import get_session
 from pcreco.core.utils.vertex_ai import predict_model
-
+from pcreco.core.model_selection import select_reco_model_params
 from pcreco.utils.env_vars import (
     NUMBER_OF_PRESELECTED_OFFERS,
-    ACTIVE_MODEL,
-    RECO_ENDPOINT_NAME,
-    AB_TESTING,
-    AB_TEST_MODEL_DICT,
     RECOMMENDABLE_OFFER_LIMIT,
     COLD_START_RECOMMENDABLE_OFFER_LIMIT,
     log_duration,
@@ -33,10 +29,8 @@ class Recommendation:
         self.user = user
         self.json_input = params_in.json_input
         self.params_in_filters = params_in._get_conditions()
-        self.params_in_model_name = params_in.model_name
-        self.iscoldstart = (
-            False if self.force_model else get_cold_start_status(self.user)
-        )
+        self.model_params = select_reco_model_params(params_in.model_endpoint)
+        # TODO migrate this params in RecommendationDefaultModel model
         self.reco_radius = params_in.reco_radius
         self.is_reco_shuffled = params_in.is_reco_shuffled
         self.nb_reco_display = params_in.nb_reco_display
@@ -44,31 +38,22 @@ class Recommendation:
         self.mixing_features = params_in.mixing_features
         self.include_digital = params_in.include_digital
         self.is_sort_by_distance = params_in.is_sort_by_distance
-        self.model_name = self.get_model_name()
+        self.reco_origin = "default"
         self.scoring = self.get_scoring_method()
 
-    # rename force model
-    @property
-    def force_model(self) -> bool:
-        if self.params_in_model_name:
-            return True
-        else:
-            return False
-
-    def get_model_name(self) -> str:
-        if self.force_model:
-            return self.params_in_model_name
-        elif AB_TESTING:
-            return AB_TEST_MODEL_DICT[f"{self.user.group_id}"]
-        else:
-            return ACTIVE_MODEL
-
     def get_scoring_method(self) -> object:
-        if self.iscoldstart:
-            scoring_method = self.ColdStart(self)
-        else:
-            scoring_method = self.Algo(self)
-        return scoring_method
+        # Force depending on model
+        if self.model_params.force_cold_start:
+            self.reco_origin = "cold_start"
+            return self.ColdStart(self)
+        if self.model_params.force_model:
+            self.reco_origin = "algo"
+            return self.Algo(self)
+        # Normal behaviour
+        if get_cold_start_status(self.user):
+            self.reco_origin = "cold_start"
+            return self.ColdStart(self)
+        return self.Algo(self)
 
     def get_scoring(self) -> List[str]:
         # sort top offers per score and select 150 offers
@@ -108,8 +93,8 @@ class Recommendation:
                         "user_id": self.user.id,
                         "offer_id": offer_id,
                         "date": date,
-                        "group_id": self.user.group_id,
-                        "reco_origin": "cold-start" if self.iscoldstart else "algo",
+                        "group_id": "default",
+                        "reco_origin": self.model_params.name,
                         "model_name": self.scoring.model_display_name,
                         "model_version": self.scoring.model_version,
                         "reco_filters": json.dumps(self.json_input),
@@ -135,7 +120,7 @@ class Recommendation:
             self.user = scoring.user
             self.params_in_filters = scoring.params_in_filters
             self.reco_radius = scoring.reco_radius
-            self.model_name = scoring.model_name
+            self.model_params = scoring.model_params
             self.model_display_name = None
             self.model_version = None
             self.include_digital = scoring.include_digital
@@ -145,7 +130,7 @@ class Recommendation:
             start = time.time()
             if not len(self.recommendable_offers) > 0:
                 log_duration(
-                    f"no offers to score for {self.user.id} - {self.model_name}",
+                    f"no offers to score for {self.user.id} - {self.model_params.name}",
                     start,
                 )
                 return []
@@ -160,7 +145,7 @@ class Recommendation:
                 ]
 
                 log_duration(
-                    f"scored {len(recommendations)} for {self.user.id} - {self.model_name}, ",
+                    f"scored {len(recommendations)} for {self.user.id} - {self.model_params.name}, ",
                     start,
                 )
             return recommendations
@@ -210,7 +195,7 @@ class Recommendation:
         def _predict_score(self, instances) -> List[List[float]]:
             start = time.time()
             response = predict_model(
-                endpoint_name=RECO_ENDPOINT_NAME,
+                endpoint_name=self.model_params.endpoint_name,
                 location="europe-west1",
                 instances=instances,
             )

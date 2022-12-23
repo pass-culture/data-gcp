@@ -5,7 +5,6 @@ from pcreco.core.utils.mixing import (
 )
 
 ENV_SHORT_NAME = os.getenv("ENV_SHORT_NAME")
-ACTIVE_MODEL = os.getenv("ACTIVE_MODEL")
 SHUFFLE_RECOMMENDATION = os.getenv("SHUFFLE_RECOMMENDATION", False)
 
 mock_scored_offers = [

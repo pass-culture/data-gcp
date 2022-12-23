@@ -5,7 +5,6 @@ from typing import Any
 from pcreco.core.user import User
 from pcreco.core.recommendation import Recommendation
 from pcreco.models.reco.playlist_params import PlaylistParamsIn
-from pcreco.utils.env_vars import ACTIVE_MODEL
 
 
 class RecommendationTest:
@@ -47,7 +46,7 @@ class RecommendationTest:
             user = User(user_id, longitude, latitude)
 
             # for this test the model is fixed as the active one
-            input_reco = PlaylistParamsIn({"model_name": ACTIVE_MODEL})
+            input_reco = PlaylistParamsIn({"modelEndpoint": "algo_default"})
 
             scoring = Recommendation(user, params_in=input_reco)
             recommendable_offers = scoring.scoring.recommendable_offers
@@ -162,7 +161,7 @@ class RecommendationTest:
                 {
                     "categories": categories,
                     "isEvent": is_event,
-                    "model_name": ACTIVE_MODEL,
+                    "modelEndpoint": "algo_default",
                 }
             )
 

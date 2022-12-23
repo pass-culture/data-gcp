@@ -1,6 +1,6 @@
 SELECT
   *
-FROM `raw_stg`.`training_data_bookings`
+FROM `{{ bigquery_raw_dataset }}`.`training_data_bookings`
 WHERE user_id IN (
   SELECT DISTINCT user_id FROM `{{ bigquery_raw_dataset }}`.`recommendation_training_data`
 )

@@ -88,7 +88,7 @@ def evaluate(
         save_pca_representation(
             loaded_model, training_item_categories, figure_path=pca_figure_path
         )
-        mlflow.log_artifact(pca_figure_path, "pca_representation.pdf")
+        mlflow.log_artifact(pca_figure_path, "pca_representation")
 
         # Save the experiment information in BigQuery
         log_results = {

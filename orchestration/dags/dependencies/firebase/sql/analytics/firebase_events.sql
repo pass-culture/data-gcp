@@ -261,8 +261,17 @@ WITH temp_firebase_events AS (
                 unnest(event_params) event_params
             where
                 event_params.key = 'enabled'
-        ) as enabled
-    FROM
+        ) as enabled,
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'age'
+        ) as onboarding_user_selected_age
+FROM
+
         {% if params.dag_type == 'intraday' %}
         `{{ bigquery_clean_dataset }}.firebase_events_{{ yyyymmdd(ds) }}`
         {% else %}

@@ -125,7 +125,7 @@ class ModelHandler:
         print("Undeploy old versions..")
         endpoint_dict = endpoint.to_dict()
         deployed_models_sorted_by_date = sorted(
-            endpoint_dict["deployedModels"], key=lambda d: d["createTime"]
+            endpoint_dict["deployedModels"], key=lambda d: d["createTime"], reverse=True
         )
         # Undeploy oldies
         if len(deployed_models_sorted_by_date) > 1:

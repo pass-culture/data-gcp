@@ -42,7 +42,7 @@ class MatchModelCheckpoint(tf.keras.callbacks.Callback):
         self.filepath = filepath
 
     def on_epoch_end(self, epoch, logs=None):
-        tf.keras.models.save_model(self.match_model, self.filepath + "/model")
+        tf.keras.models.save_model(self.match_model, self.filepath + "model")
 
 
 class MLFlowLogging(tf.keras.callbacks.Callback):

@@ -3,11 +3,9 @@ from datetime import datetime
 import tensorflow as tf
 import mlflow.tensorflow
 import pandas as pd
-from sklearn.decomposition import PCA
 
 import typer
 
-from common.config import BIGQUERY_CLEAN_DATASET
 from jobs.ml.algo_training_v1 import SERVING_CONTAINER
 from models.v2.utils import load_metrics, save_pca_representation
 from tools.data_collect_queries import get_data, get_column_data
@@ -18,12 +16,12 @@ from utils import (
     ENV_SHORT_NAME,
     RECOMMENDATION_NUMBER,
     NUMBER_OF_PRESELECTED_OFFERS,
-    MODELS_RESULTS_TABLE_NAME,
+    # MODELS_RESULTS_TABLE_NAME,
     EVALUATION_USER_NUMBER,
     TRAIN_DIR,
+    # BIGQUERY_CLEAN_DATASET,
     GCP_PROJECT_ID,
 )
-from metrics import compute_metrics, get_actual_and_predicted
 
 k_list = [RECOMMENDATION_NUMBER, NUMBER_OF_PRESELECTED_OFFERS]
 
@@ -91,26 +89,26 @@ def evaluate(
         )
         mlflow.log_artifact(pca_figure_path, "pca_representation.pdf")
 
-        # Save the experiment information in BigQuery
-        log_results = {
-            "execution_date": datetime.now().isoformat(),
-            "experiment_name": experiment_name,
-            "model_name": experiment_name,
-            "model_type": "tensorflow",
-            "run_id": run_id,
-            "run_start_time": run.info.start_time,
-            "run_end_time": run.info.start_time,
-            "artifact_uri": artifact_uri,
-            "serving_container": SERVING_CONTAINER,
-            "precision_at_10": metrics["precision_at_10"],
-            "recall_at_10": metrics["recall_at_10"],
-            "coverage_at_10": metrics["coverage_at_10"],
-        }
-        pd.DataFrame.from_dict([log_results], orient="columns").to_gbq(
-            f"""{BIGQUERY_CLEAN_DATASET}.{MODELS_RESULTS_TABLE_NAME}""",
-            project_id=f"{GCP_PROJECT_ID}",
-            if_exists="append",
-        )
+        # # Save the experiment information in BigQuery
+        # log_results = {
+        #     "execution_date": datetime.now().isoformat(),
+        #     "experiment_name": experiment_name,
+        #     "model_name": experiment_name,
+        #     "model_type": "tensorflow",
+        #     "run_id": run_id,
+        #     "run_start_time": run.info.start_time,
+        #     "run_end_time": run.info.start_time,
+        #     "artifact_uri": artifact_uri,
+        #     "serving_container": SERVING_CONTAINER,
+        #     "precision_at_10": metrics["precision_at_10"],
+        #     "recall_at_10": metrics["recall_at_10"],
+        #     "coverage_at_10": metrics["coverage_at_10"],
+        # }
+        # pd.DataFrame.from_dict([log_results], orient="columns").to_gbq(
+        #     f"""{BIGQUERY_CLEAN_DATASET}.{MODELS_RESULTS_TABLE_NAME}""",
+        #     project_id=f"{GCP_PROJECT_ID}",
+        #     if_exists="append",
+        # )
         print("------- EVALUATE DONE -------")
 
 

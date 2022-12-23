@@ -435,6 +435,7 @@ BIGQUERY_SCHEMAS = {
         "collective_offer_contact_email": "STRING",
         "collective_offer_contact_phone": "STRING",
         "collective_offer_offer_venue": "STRING",
+        "collective_offer_image_id": "STRING",
     },
     "applicative_database_collective_offer_template": {
         "collective_offer_audio_disability_compliant": "BOOLEAN",
@@ -460,6 +461,7 @@ BIGQUERY_SCHEMAS = {
         "collective_offer_contact_phone": "STRING",
         "collective_offer_offer_venue": "STRING",
         "collective_offer_las_validation_type": "STRING",
+        "collective_offer_image_id": "STRING",
     },
     "applicative_database_collective_stock": {
         "collective_stock_id": "STRING",

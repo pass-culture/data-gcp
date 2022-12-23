@@ -56,7 +56,7 @@ class RecommendationTest:
                 for i, recommendation in enumerate(recommendable_offers)
             ]
             user_recommendations = scoring.get_scoring()
-            assert input_reco.has_conditions == False
+            assert input_reco.has_conditions == True
             assert (
                 len(user_recommendations) > 0
             ), f"{use_case}: user_recommendations list is non empty"

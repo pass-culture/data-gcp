@@ -6,6 +6,7 @@ import tensorflow as tf
 import pandas as pd
 from sklearn.decomposition import PCA
 
+from metrics import get_actual_and_predicted, compute_metrics
 from utils import connect_remote_mlflow, remove_dir
 
 
@@ -46,14 +47,11 @@ class MatchModelCheckpoint(tf.keras.callbacks.Callback):
 
 
 class MLFlowLogging(tf.keras.callbacks.Callback):
-    def __init__(
-        self, client_id: str, env: str, export_path: str, item_categories: pd.DataFrame
-    ):
+    def __init__(self, client_id: str, env: str, export_path: str):
         super(MLFlowLogging, self).__init__()
         self.client_id = client_id
         self.env = env
         self.export_path = export_path
-        self.item_categories = item_categories
 
     def on_epoch_end(self, epoch, logs=None):
         connect_remote_mlflow(self.client_id, env=self.env)
@@ -68,29 +66,66 @@ class MLFlowLogging(tf.keras.callbacks.Callback):
     def on_train_end(self, epoch, logs=None):
         connect_remote_mlflow(self.client_id, env=self.env)
         mlflow.log_artifacts(self.export_path + "model", "model")
+        remove_dir(self.export_path)
 
-        # We remove the first element, the [UNK] token
-        item_ids = self.item_layer.layers[0].get_vocabulary()[1:]
-        embeddings = self.item_layer.layers[1].get_weights()[0][1:]
 
-        pca_out = PCA(n_components=2).fit_transform(embeddings)
+def load_metrics(data_model_dict: dict, k_list: list, recommendation_number: int):
+    data_model_dict_w_actual_and_predicted = get_actual_and_predicted(data_model_dict)
+    metrics = {}
+    for k in k_list:
+        metrics_at_k = compute_metrics(data_model_dict_w_actual_and_predicted, k)[
+            "metrics"
+        ]
 
-        item_representation = pd.DataFrame(
+        metrics.update(
             {
-                "item_id": item_ids,
-                "x": pca_out[:, 0],
-                "y": pca_out[:, 1],
-                "offer_categoryId": self.item_categories.loc[item_ids]["offer_categoryId"].values
+                f"precision_at_{k}": metrics_at_k["mapk"],
+                f"recall_at_{k}": metrics_at_k["mark"],
+                f"coverage_at_{k}": metrics_at_k["coverage"],
+                f"personalization_at_{k}": metrics_at_k["personalization_at_k"],
             }
         )
 
-        fig = item_representation.plot.scatter(
-            x="x", y="y", c="offer_categoryId", colormap="tab20"
-        ).get_figure()
-        fig.savefig(self.export_path + "embedding_representation.pdf")
-        mlflow.log_artifact(
-            self.export_path + "embedding_representation.pdf",
-            "embedding_representation.png",
-        )
+        # Here we track metrics relate to pcreco output
+        if k == recommendation_number:
+            metrics.update(
+                {
+                    f"precision_at_{k}_panachage": metrics_at_k["mapk_panachage"],
+                    f"recall_at_{k}_panachage": metrics_at_k["mark_panachage"],
+                    f"avg_diversification_score_at_{k}": metrics_at_k["avg_div_score"],
+                    f"avg_diversification_score_at_{k}_panachage": metrics_at_k[
+                        "avg_div_score_panachage"
+                    ],
+                    f"personalization_at_{k}_panachage": metrics_at_k[
+                        "personalization_at_k_panachage"
+                    ],
+                }
+            )
 
-        remove_dir(self.export_path)
+
+def save_pca_representation(
+    loaded_model: tf.keras.models.Model,
+    training_item_categories: pd.DataFrame,
+    figure_path: str,
+):
+    # We remove the first element, the [UNK] token
+    item_ids = loaded_model.item_layer.layers[0].get_vocabulary()[1:]
+    embeddings = loaded_model.item_layer.layers[1].get_weights()[0][1:]
+
+    pca_out = PCA(n_components=2).fit_transform(embeddings)
+
+    item_representation = pd.DataFrame(
+        {
+            "item_id": item_ids,
+            "x": pca_out[:, 0],
+            "y": pca_out[:, 1],
+            "offer_categoryId": training_item_categories.loc[item_ids][
+                "offer_categoryId"
+            ].values,
+        }
+    )
+
+    fig = item_representation.plot.scatter(
+        x="x", y="y", c="offer_categoryId", colormap="tab20"
+    ).get_figure()
+    fig.savefig()

@@ -120,7 +120,6 @@ def train(
                     client_id=client_id,
                     env=ENV_SHORT_NAME,
                     export_path=export_path,
-                    item_categories=train_data[["item_id", "offer_categoryId"]],
                 ),
             ],
         )

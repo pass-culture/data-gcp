@@ -70,35 +70,3 @@ CONNECTION_ID = (
 
 SLACK_CONN_ID = "slack_analytics"
 SLACK_CONN_PASSWORD = access_secret_data(GCP_PROJECT_ID, "slack-conn-password")
-
-SLACK_BLOCKS = [
-    {
-        "type": "section",
-        "text": {
-            "type": "mrkdwn",
-            "text": ":robot_face: Entraînement de l'algo terminé ! :rocket:",
-        },
-    },
-    {
-        "type": "actions",
-        "elements": [
-            {
-                "type": "button",
-                "text": {
-                    "type": "plain_text",
-                    "text": "Voir les métriques :chart_with_upwards_trend:",
-                    "emoji": True,
-                },
-                "url": MLFLOW_URL
-                + "#/experiments/"
-                + "{{ ti.xcom_pull(task_ids='training').split('/')[4] }}"
-                + "/runs/"
-                + "{{ ti.xcom_pull(task_ids='training').split('/')[5] }}",
-            },
-        ],
-    },
-    {
-        "type": "context",
-        "elements": [{"type": "mrkdwn", "text": f"Environnement: {ENV_SHORT_NAME}"}],
-    },
-]

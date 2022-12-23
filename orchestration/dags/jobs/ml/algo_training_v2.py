@@ -25,9 +25,11 @@ from common.config import (
     SLACK_CONN_ID,
     SLACK_CONN_PASSWORD,
     BIGQUERY_RAW_DATASET,
+    MLFLOW_URL,
 )
 
 from common.operator import GCloudComputeSSHOperator
+from common.utils import create_algo_training_slack_block
 from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
 
 DATE = "{{ts_nodash}}"
@@ -156,7 +158,7 @@ with DAG(
         task_id="send_slack_notif_success",
         http_conn_id=SLACK_CONN_ID,
         webhook_token=SLACK_CONN_PASSWORD,
-        blocks=SLACK_BLOCKS,
+        blocks=create_algo_training_slack_block(MLFLOW_URL, ENV_SHORT_NAME),
         username=f"Algo trainer robot - {ENV_SHORT_NAME}",
         icon_emoji=":robot_face:",
     )

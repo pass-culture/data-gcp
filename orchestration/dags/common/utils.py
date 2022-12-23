@@ -1,6 +1,6 @@
 from google.auth.transport.requests import Request
 from google.oauth2 import id_token
-from common.config import GCP_PROJECT_ID
+from common.config import GCP_PROJECT_ID, MLFLOW_URL, ENV_SHORT_NAME
 
 
 def getting_service_account_token(function_name):
@@ -48,3 +48,41 @@ def one_line_query(sql_path):
     with open(f"{sql_path}", "r") as fp:
         lines = " ".join([line.strip() for line in fp.readlines()])
     return lines
+
+
+def create_algo_training_slack_block(
+    mlflow_url: str = MLFLOW_URL, env_short_name: str = ENV_SHORT_NAME
+):
+    return [
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": ":robot_face: Entraînement de l'algo terminé ! :rocket:",
+            },
+        },
+        {
+            "type": "actions",
+            "elements": [
+                {
+                    "type": "button",
+                    "text": {
+                        "type": "plain_text",
+                        "text": "Voir les métriques :chart_with_upwards_trend:",
+                        "emoji": True,
+                    },
+                    "url": mlflow_url
+                    + "#/experiments/"
+                    + "{{ ti.xcom_pull(task_ids='training').split('/')[4] }}"
+                    + "/runs/"
+                    + "{{ ti.xcom_pull(task_ids='training').split('/')[5] }}",
+                },
+            ],
+        },
+        {
+            "type": "context",
+            "elements": [
+                {"type": "mrkdwn", "text": f"Environnement: {env_short_name}"}
+            ],
+        },
+    ]

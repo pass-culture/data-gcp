@@ -7,13 +7,12 @@ import pandas as pd
 from sklearn.decomposition import PCA
 
 from metrics import get_actual_and_predicted, compute_metrics
-from utils import connect_remote_mlflow, remove_dir
+from utils import connect_remote_mlflow
 
 
 def load_triplets_dataset(
-    dataset: pd.DataFrame,
+    input_data: pd.DataFrame,
     item_ids: list,
-    seed: int,
 ) -> tf.data.Dataset:
     """
     Builds a tf Dataset of shape with:
@@ -21,18 +20,19 @@ def load_triplets_dataset(
         - y = fake data as we make no predictions
     """
 
-    random.seed(seed)
-    dataset = dataset.sample(frac=1, random_state=seed).reset_index(drop=True)
+    anchor_data = input_data["user_id"].values
+    positive_data = input_data["item_id"].values
 
-    anchor_data = dataset["user_id"].values
-    positive_data = dataset["item_id"].values
-    negative_data = random.choices(item_ids, k=len(dataset))
+    anchor_dataset = tf.data.Dataset.from_tensor_slices(anchor_data)
+    positive_dataset = tf.data.Dataset.from_tensor_slices(positive_data)
+    negative_dataset = tf.data.Dataset.from_tensor_slices(item_ids).shuffle(
+        buffer_size=4096
+    )   # We shuffle the negative examples to get new random examples at each call
 
-    return tf.data.Dataset.from_tensor_slices(
-        (
-            np.column_stack((anchor_data, positive_data, negative_data)),
-            np.ones((len(dataset), 3)),
-        )
+    dataset = tf.data.Dataset.zip((anchor_dataset, positive_dataset, negative_dataset))
+
+    return tf.data.Dataset.zip(
+        (dataset, tf.data.Dataset.from_tensor_slices(np.ones((len(dataset), 3))))
     )
 
 
@@ -66,7 +66,6 @@ class MLFlowLogging(tf.keras.callbacks.Callback):
     def on_train_end(self, epoch, logs=None):
         connect_remote_mlflow(self.client_id, env=self.env)
         mlflow.log_artifacts(self.export_path + "model", "model")
-        remove_dir(self.export_path)
 
 
 def load_metrics(data_model_dict: dict, k_list: list, recommendation_number: int):
@@ -101,6 +100,7 @@ def load_metrics(data_model_dict: dict, k_list: list, recommendation_number: int
                     ],
                 }
             )
+    return metrics
 
 
 def save_pca_representation(
@@ -114,18 +114,24 @@ def save_pca_representation(
 
     pca_out = PCA(n_components=2).fit_transform(embeddings)
 
-    item_representation = pd.DataFrame(
-        {
-            "item_id": item_ids,
-            "x": pca_out[:, 0],
-            "y": pca_out[:, 1],
-            "offer_categoryId": training_item_categories.loc[item_ids][
-                "offer_categoryId"
-            ].values,
-        }
+    categories = training_item_categories["offer_categoryId"].unique().tolist()
+    item_representation = (
+        pd.DataFrame(
+            {
+                "item_id": item_ids,
+                "x": pca_out[:, 0],
+                "y": pca_out[:, 1],
+            }
+        )
+        .merge(training_item_categories, on=["item_id"], how="left")
+        .assign(
+            category_index=lambda df: df["offer_categoryId"].apply(
+                lambda x: categories.index(x)
+            )
+        )
     )
 
     fig = item_representation.plot.scatter(
-        x="x", y="y", c="offer_categoryId", colormap="tab20"
+        x="x", y="y", c="category_index", colormap="tab20"
     ).get_figure()
-    fig.savefig()
+    fig.savefig(figure_path)

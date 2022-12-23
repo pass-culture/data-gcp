@@ -19,7 +19,6 @@ from utils import (
     remove_dir,
     STORAGE_PATH,
     ENV_SHORT_NAME,
-    BOOKING_DAY_NUMBER,
     EXPERIMENT_NAME,
     TRAIN_DIR,
 )
@@ -64,7 +63,6 @@ def train(storage_path: str):
         predict(match_model)
 
         mlflow.log_param("environment", ENV_SHORT_NAME)
-        mlflow.log_param("booking_day_number", BOOKING_DAY_NUMBER)
         mlflow.log_param("embedding_size", EMBEDDING_SIZE)
         mlflow.log_param("batch_size", BATCH_SIZE)
         mlflow.log_param("l2_regularization", L2_REG)

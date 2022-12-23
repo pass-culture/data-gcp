@@ -10,6 +10,8 @@ from models.v1.triplet_model import TripletModel
 from models.v1.utils import (
     identity_loss,
     predict,
+)
+from models.v2.utils import (
     load_triplets_dataset,
     MatchModelCheckpoint,
     MLFlowLogging,
@@ -73,7 +75,7 @@ def train(
     experiment = mlflow.get_experiment_by_name(experiment_name)
     with mlflow.start_run(experiment_id=experiment.experiment_id):
         run_uuid = mlflow.active_run().info.run_uuid
-        export_path = f"{TRAIN_DIR}/{ENV_SHORT_NAME}/{run_uuid}/tf_reco/"
+        export_path = f"{TRAIN_DIR}/{ENV_SHORT_NAME}/{run_uuid}/"
 
         mlflow.log_params(
             params={
@@ -118,6 +120,7 @@ def train(
                     client_id=client_id,
                     env=ENV_SHORT_NAME,
                     export_path=export_path,
+                    item_categories=train_data[["item_id", "offer_categoryId"]],
                 ),
             ],
         )

@@ -34,14 +34,14 @@ DATE = "{{ts_nodash}}"
 
 # Environment variables to export before running commands
 dag_config = {
-    "storage_path": f"gs://{MLFLOW_BUCKET_NAME}/algo_training_{ENV_SHORT_NAME}/algo_training_{DATE}",
-    "env_short_name": ENV_SHORT_NAME,
-    "gcp_project_id": GCP_PROJECT_ID,
-    "train_dir": "/home/airflow/train",
-    "experiment_name": f"algo_training_v2.1_{ENV_SHORT_NAME}",
-    "batch_size": 4096,
-    "embedding_size": 128,
-    "train_set_size": 0.8,
+    "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/algo_training_{ENV_SHORT_NAME}/algo_training_{DATE}",
+    "ENV_SHORT_NAME": ENV_SHORT_NAME,
+    "GCP_PROJECT_ID": GCP_PROJECT_ID,
+    "TRAIN_DIR": "/home/airflow/train",
+    "EXPERIMENT_NAME": f"algo_training_v2.1_{ENV_SHORT_NAME}",
+    "BATCH_SIZE": 4096,
+    "EMBEDDING_SIZE": 128,
+    "TRAIN_SET_SIZE": 0.8,
 }
 
 # GCE_TRAINING_INSTANCE = "algo_training_dev-1"
@@ -68,15 +68,15 @@ with DAG(
             type="string",
         ),
         "batch_size": Param(
-            default=str(dag_config["batch_size"]),
+            default=str(dag_config["BATCH_SIZE"]),
             type="string",
         ),
         "embedding_size": Param(
-            default=str(dag_config["embedding_size"]),
+            default=str(dag_config["EMBEDDING_SIZE"]),
             type="string",
         ),
         "train_set_size": Param(
-            default=str(dag_config["train_set_size"]),
+            default=str(dag_config["TRAIN_SET_SIZE"]),
             type="string",
         ),
     },
@@ -129,7 +129,7 @@ with DAG(
         dag_config=dag_config,
         path_to_run_command="data-gcp/algo_training",
         command=f"python train_v2.py "
-        f"--experiment-name {dag_config['experiment_name']} "
+        f"--experiment-name {dag_config['EXPERIMENT_NAME']} "
         r"--batch-size {{ params.batch_size }} "
         r"--embedding-size {{ params.embedding_size }} "
         r"--seed {{ ds_nodash }}",
@@ -141,7 +141,7 @@ with DAG(
         resource_id=GCE_TRAINING_INSTANCE,
         dag_config=dag_config,
         path_to_run_command="data-gcp/algo_training",
-        command=f"python evaluate_v2.py --experiment-name {dag_config['experiment_name']}",
+        command=f"python evaluate_v2.py --experiment-name {dag_config['EXPERIMENT_NAME']}",
         dag=dag,
     )
 

@@ -111,7 +111,7 @@ class SimilarOffer:
                         "origin_offer_id": self.offer.id,
                         "offer_id": offer_id,
                         "date": date,
-                        "group_id": "default",
+                        "group_id": self.model_params.name,
                         "model_name": self.model_display_name,
                         "model_version": self.model_version,
                         "reco_filters": json.dumps(self.json_input),

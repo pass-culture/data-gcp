@@ -15,7 +15,7 @@ class User:
         self.latitude = False if latitude is None else latitude
         self.iris_id = get_iris_from_coordinates(longitude, latitude)
         self.get_user_profile()
-        self.recommendable_offer_table = f"{RECOMMENDABLE_OFFER_TABLE_PREFIX}_mv"
+        self.get_recommendable_offers_table()
 
     def get_user_profile(self) -> None:
         """Compute age & remaining credit amount."""

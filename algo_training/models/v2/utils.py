@@ -1,5 +1,4 @@
 import mlflow
-import random
 
 import numpy as np
 import tensorflow as tf
@@ -27,7 +26,7 @@ def load_triplets_dataset(
     positive_dataset = tf.data.Dataset.from_tensor_slices(positive_data)
     negative_dataset = tf.data.Dataset.from_tensor_slices(item_ids).shuffle(
         buffer_size=4096
-    )   # We shuffle the negative examples to get new random examples at each call
+    )  # We shuffle the negative examples to get new random examples at each call
 
     dataset = tf.data.Dataset.zip((anchor_dataset, positive_dataset, negative_dataset))
 
@@ -106,7 +105,7 @@ def load_metrics(data_model_dict: dict, k_list: list, recommendation_number: int
 def save_pca_representation(
     loaded_model: tf.keras.models.Model,
     training_item_categories: pd.DataFrame,
-    figure_path: str,
+    figures_folder: str,
 ):
     # We remove the first element, the [UNK] token
     item_ids = loaded_model.item_layer.layers[0].get_vocabulary()[1:]
@@ -131,7 +130,10 @@ def save_pca_representation(
         )
     )
 
-    fig = item_representation.plot.scatter(
-        x="x", y="y", c="category_index", colormap="tab20"
-    ).get_figure()
-    fig.savefig(figure_path)
+    for category in categories:
+        fig = (
+            item_representation.loc[lambda df: df["offer_categoryId"] == category]
+            .plot.scatter(x="x", y="y", c="category_index", colormap="tab20")
+            .get_figure()
+        )
+        fig.savefig(figures_folder + f"{category}.pdf")

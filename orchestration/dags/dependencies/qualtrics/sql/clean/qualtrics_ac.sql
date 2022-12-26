@@ -14,6 +14,8 @@ WITH previous_export AS (
         venue_type_label,
         DATE_DIFF(current_date, venue_creation_date, DAY) AS anciennete_en_jours,
         non_cancelled_bookings,
+        individual_offers_created,
+        collective_offers_created,
         individual_offers_created + collective_offers_created AS offers_created,
         theoretic_revenue,
         venue_is_permanent,
@@ -44,7 +46,9 @@ WITH previous_export AS (
         12,
         13,
         14,
-        15
+        15,
+        16,
+        17
    
 ),
 

@@ -9,6 +9,7 @@ from airflow.providers.google.cloud.operators.compute import (
     ComputeEngineStartInstanceOperator,
     ComputeEngineStopInstanceOperator,
 )
+from airflow.models import Param
 from common.alerts import task_fail_slack_alert
 from common.access_gcp_secrets import access_secret_data
 from common.config import GCP_PROJECT_ID, GCE_ZONE, ENV_SHORT_NAME
@@ -27,20 +28,11 @@ STORAGE_PATH = (
 )
 TRAIN_DIR = "/home/airflow/train"
 
-# Algo reco
+
 MODEL_NAME = "v1"
-AI_MODEL_NAME = f"tf_model_reco_{ENV_SHORT_NAME}"
-END_POINT_NAME = f"vertex_ai_{ENV_SHORT_NAME}"
-SERVING_CONTAINER = "europe-docker.pkg.dev/vertex-ai/prediction/tf2-cpu.2-5:latest"
+SIMILAR_OFFER_EXPERIMENT_NAME = f"similar_offers_v1.1_{ENV_SHORT_NAME}"
+RECOMMENDATION_EXPERIMENT_NAME = f"algo_training_v1.1_{ENV_SHORT_NAME}"
 
-# Algo offres similaires
-API_DOCKER_IMAGE = f"eu.gcr.io/{GCP_PROJECT_ID}/similar-offers:{ENV_SHORT_NAME}-latest"
-SIMILAR_OFFER_MODEL_NAME = f"similar_offers_{ENV_SHORT_NAME}"
-SIMILAR_OFFER_END_POINT_NAME = f"vertex_ai_similar_offers_{ENV_SHORT_NAME}"
-
-
-MIN_NODES = 1
-MAX_NODES = 10 if ENV_SHORT_NAME == "prod" else 1
 SLACK_CONN_ID = "slack_analytics"
 SLACK_CONN_PASSWORD = access_secret_data(GCP_PROJECT_ID, "slack-conn-password")
 
@@ -80,6 +72,12 @@ with DAG(
     schedule_interval=schedule_dict[ENV_SHORT_NAME],
     catchup=False,
     dagrun_timeout=timedelta(minutes=1440),
+    params={
+        "branch": Param(
+            default="production" if ENV_SHORT_NAME == "prod" else "master",
+            type="string",
+        ),
+    },
 ) as dag:
 
     start = DummyOperator(task_id="start")
@@ -91,14 +89,7 @@ with DAG(
         task_id="gce_start_task",
     )
 
-    if ENV_SHORT_NAME == "dev":
-        branch = "master"
-    if ENV_SHORT_NAME == "stg":
-        branch = "master"
-    if ENV_SHORT_NAME == "prod":
-        branch = "production"
-
-    FETCH_CODE = f'"if cd data-gcp; then git checkout master && git pull && git checkout {branch} && git pull; else git clone git@github.com:pass-culture/data-gcp.git && cd data-gcp && git checkout {branch} && git pull; fi"'
+    FETCH_CODE = r'"if cd data-gcp; then git checkout master && git pull && git checkout {{ params.branch }} && git pull; else git clone git@github.com:pass-culture/data-gcp.git && cd data-gcp && git checkout  {{ params.branch }} && git pull; fi"'
 
     fetch_code = BashOperator(
         task_id="fetch_code",
@@ -172,6 +163,7 @@ with DAG(
     )
 
     TRAINING = f""" '{DEFAULT}
+        export EXPERIMENT_NAME={RECOMMENDATION_EXPERIMENT_NAME}
         python train_{MODEL_NAME}.py'
     """
 
@@ -188,6 +180,7 @@ with DAG(
     )
 
     POSTPROCESSING = f""" '{DEFAULT}
+        export EXPERIMENT_NAME={RECOMMENDATION_EXPERIMENT_NAME}
         python postprocess.py'
     """
 
@@ -203,6 +196,7 @@ with DAG(
     )
 
     EVALUATION = f""" '{DEFAULT}
+        export EXPERIMENT_NAME={RECOMMENDATION_EXPERIMENT_NAME}
         python evaluate.py'
     """
 
@@ -217,6 +211,23 @@ with DAG(
         dag=dag,
     )
 
+    CONTAINERIZE_SIM_OFFERS_COMMAND = f""" '{DEFAULT}
+    cd similar_offers/
+    python main.py --experiment-name {SIMILAR_OFFER_EXPERIMENT_NAME} --model-name {MODEL_NAME}
+    '
+    """
+
+    train_sim_offers = BashOperator(
+        task_id="containerize_similar_offers",
+        bash_command=f"""
+        gcloud compute ssh {GCE_INSTANCE} \
+        --zone {GCE_ZONE} \
+        --project {GCP_PROJECT_ID} \
+        --command {CONTAINERIZE_SIM_OFFERS_COMMAND}
+        """,
+        dag=dag,
+    )
+
     gce_instance_stop = ComputeEngineStopInstanceOperator(
         project_id=GCP_PROJECT_ID,
         zone=GCE_ZONE,
@@ -224,102 +235,12 @@ with DAG(
         task_id="gce_stop_task",
     )
 
-    DEPLOY_COMMAND = f""" '{DEFAULT}
-    export REGION=europe-west1
-    export MODEL_NAME={AI_MODEL_NAME}
-    export SERVING_CONTAINER={SERVING_CONTAINER} 
-    export RECOMMENDATION_MODEL_DIR={{{{ ti.xcom_pull(task_ids='training') }}}}
-    export VERSION_NAME=v_{{{{ ts_nodash }}}}
-    export END_POINT_NAME={END_POINT_NAME}
-    export MIN_NODES={MIN_NODES}
-    export MAX_NODES={MAX_NODES}
-    export MODEL_DESCRIPTION="Recommendation Model v1"
-    python deploy_model.py'
-    """
-
-    deploy_model = BashOperator(
-        task_id="deploy_model",
-        bash_command=f"""
-        gcloud compute ssh {GCE_INSTANCE} \
-        --zone {GCE_ZONE} \
-        --project {GCP_PROJECT_ID} \
-        --command {DEPLOY_COMMAND}
-        """,
-        dag=dag,
-    )
-
-    CLEAN_VERSIONS_COMMAND = f""" '{DEFAULT}
-    export REGION=europe-west1
-    export MODEL_NAME={AI_MODEL_NAME}
-    python clean_model_versions.py'
-    """
-
-    clean_versions = BashOperator(
-        task_id="clean_versions",
-        bash_command=f"""
-        gcloud compute ssh {GCE_INSTANCE} \
-        --zone {GCE_ZONE} \
-        --project {GCP_PROJECT_ID} \
-        --command {CLEAN_VERSIONS_COMMAND}
-        """,
-        dag=dag,
-    )
-
-    DEPLOY_SIM_OFFERS_COMMAND = f""" '{DEFAULT}
-    cd ./similar_offers
-    export API_DOCKER_IMAGE={API_DOCKER_IMAGE}
-    export TRAIN_DIR={TRAIN_DIR}
-    export ENV_SHORT_NAME={ENV_SHORT_NAME}
-    source deploy_to_vertex_ai.sh
-    cd ../
-    export REGION=europe-west1
-
-    export SERVING_CONTAINER={API_DOCKER_IMAGE} 
-    export VERSION_NAME=v_{{{{ ts_nodash }}}}
-    export END_POINT_NAME={SIMILAR_OFFER_END_POINT_NAME}
-    export MODEL_NAME={SIMILAR_OFFER_MODEL_NAME}
-    export MIN_NODES={MIN_NODES}
-    export MAX_NODES={MAX_NODES}
-    export MODEL_TYPE="custom"
-    export MODEL_DESCRIPTION="Model for Similar Offer Recommendation"
-    python deploy_model.py
-    '
-    """
-
-    deploy_sim_offers = BashOperator(
-        task_id="deploy_sim_offers",
-        bash_command=f"""
-        gcloud compute ssh {GCE_INSTANCE} \
-        --zone {GCE_ZONE} \
-        --project {GCP_PROJECT_ID} \
-        --command {DEPLOY_SIM_OFFERS_COMMAND}
-        """,
-        dag=dag,
-    )
-
-    CLEAN_VERSIONS_SIM_OFFERS_COMMAND = f""" '{DEFAULT}
-    export REGION=europe-west1
-    export MODEL_NAME={SIMILAR_OFFER_MODEL_NAME}
-    python clean_model_versions.py'
-    """
-
-    clean_versions_sim_offers = BashOperator(
-        task_id="clean_versions_sim_offers",
-        bash_command=f"""
-        gcloud compute ssh {GCE_INSTANCE} \
-        --zone {GCE_ZONE} \
-        --project {GCP_PROJECT_ID} \
-        --command {CLEAN_VERSIONS_SIM_OFFERS_COMMAND}
-        """,
-        dag=dag,
-    )
-
     SLACK_BLOCKS = [
         {
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": ":robot_face: Nouvelle version de l'algo déployée ! :rocket:",
+                "text": ":robot_face: Nouvelle version de l'algo entrainée ! :rocket:",
             },
         },
         {
@@ -368,10 +289,7 @@ with DAG(
         >> training
         >> postprocess
         >> evaluate
-        >> deploy_model
-        >> clean_versions
-        >> deploy_sim_offers
-        >> clean_versions_sim_offers
+        >> train_sim_offers
         >> gce_instance_stop
         >> send_slack_notif_success
     )

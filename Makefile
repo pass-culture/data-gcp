@@ -9,7 +9,7 @@ install:
 	MICROSERVICE_PATH=algo_training VENV_NAME=data-gcp-algo-training REQUIREMENTS_NAME=requirements.txt make install_microservice
 	MICROSERVICE_PATH=record_linkage VENV_NAME=data-gcp-record-linkage REQUIREMENTS_NAME=requirements.txt make install_microservice
 	MICROSERVICE_PATH=diversification_kpi VENV_NAME=data-gcp-diversification-kpi REQUIREMENTS_NAME=requirements.txt make install_microservice
-	MICROSERVICE_PATH=orchestration VENV_NAME=data-gcp-orchestration REQUIREMENTS_NAME=orchestration-requirements.txt make install_microservice
+	MICROSERVICE_PATH=orchestration VENV_NAME=data-gcp-orchestration REQUIREMENTS_NAME=airflow/orchestration-requirements.txt make install_microservice
 
 install_microservice:
 	cd $(MICROSERVICE_PATH) && (pyenv virtualenv $(VENV_NAME) || echo "pyenv-virtualenv $(VENV_NAME) already exists") && pyenv local $(VENV_NAME) && pip install --upgrade pip && pip install -r $(REQUIREMENTS_NAME)
@@ -25,7 +25,7 @@ endif
 
 install_ubuntu_libs:
 	sudo apt-get update
-	sudo apt-get install -y make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
+	sudo apt-get install -y make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev gcc libpq-dev python3-dev
 
 upload_dags_to_dev:
 	$(eval COMPOSER_BUCKET_PATH=$(shell gcloud composer environments describe data-composer-dev --location europe-west1 --format='value(config.dagGcsPrefix)'))

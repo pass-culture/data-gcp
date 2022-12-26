@@ -5,7 +5,7 @@ GCP_PROJECT = os.environ.get("GCP_PROJECT", "passculture-data-ehp")
 GCP_REGION = "europe-west1"
 GCE_ZONE = "europe-west1-b"
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
-DAG_FOLDER = os.environ.get("DAG_FOLDER", "")
+DAG_FOLDER = os.environ.get("DAG_FOLDER", "dags/")
 BASE32_JS_LIB_PATH = f"gs://data-bucket-{ENV_SHORT_NAME}/base32-encode/base32.js"
 
 APPLICATIVE_EXTERNAL_CONNECTION_ID = os.environ.get(
@@ -45,8 +45,13 @@ SURVEY_PREFIX = "survey_"
 
 TABLE_AB_TESTING = os.environ.get("TABLE_AB_TESTING", "abc_testing_20220322_v1v2")
 QPI_TABLE = "qpi_answers_v4"
-RECOMMENDATION_SQL_INSTANCE = os.environ.get("RECOMMENDATION_SQL_INSTANCE")
-RECOMMENDATION_SQL_BASE = os.environ.get("RECOMMENDATION_SQL_BASE")
+RECOMMENDATION_SQL_INSTANCE = os.environ.get(
+    "RECOMMENDATION_SQL_INSTANCE", f"cloudsql-recommendation-{ENV_SHORT_NAME}"
+)
+RECOMMENDATION_SQL_BASE = os.environ.get(
+    "RECOMMENDATION_SQL_BASE", f"cloudsql-recommendation-{ENV_SHORT_NAME}"
+)
+
 CONNECTION_ID = (
     os.environ.get("BIGQUERY_CONNECTION_RECOMMENDATION")
     if ENV_SHORT_NAME != "prod"

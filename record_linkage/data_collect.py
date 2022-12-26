@@ -17,6 +17,7 @@ def get_data(gcp_project, env_short_name):
     LEFT JOIN `{gcp_project}.analytics_{env_short_name}.offer_extracted_data` oed on oed.offer_id = ado.offer_id 
     WHERE ado.offer_subcategoryId != 'LIVRE_PAPIER'
     QUALIFY ROW_NUMBER() OVER (PARTITION BY item_id) = 1
+    LIMIT 100000
     """
     return pd.read_gbq(query)
 

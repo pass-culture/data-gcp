@@ -4,14 +4,14 @@ from tools.config import STORAGE_PATH, GCP_PROJECT_ID, ENV_SHORT_NAME
 
 
 def build_item_id_from_linkage(df):
-    for link_ids in df.linked_id.unique():
-        df_tmp = df.query(f"linked_id=='{link_ids}'")
+    for link_id in df.linked_id.unique():
+        df_tmp = df.query(f"linked_id=='{link_id}'")
         product_ids = df_tmp.item_id.unique()
         item_ids = [item for item in product_ids if "movie" in item]
         if len(item_ids) > 0:
-            df.loc[df["linked_id"] == link_ids, "new_item_id"] = item_ids[0]
+            df.loc[df["linked_id"] == link_id, "new_item_id"] = item_ids[0]
         else:
-            df.loc[df["linked_id"] == link_ids, "new_item_id"] = link_ids
+            df.loc[df["linked_id"] == link_id, "new_item_id"] = f"link-{link_id}"
 
 
 def main(

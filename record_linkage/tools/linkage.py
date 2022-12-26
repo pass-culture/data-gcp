@@ -75,6 +75,7 @@ def _get_linked_offers(df_source, df_matches):
         for index in connected_ids[clusters]:
             df_source_tmp.at[index, "linked_id"] = str(link_id)
     df_linked_offers = df_source_tmp.query("linked_id !='NC' ")
+    df_linked_offers["offer_id"] = df_linked_offers["offer_id"].values.astype(int)
     log_duration(f"_get_linked_offers: ", start)
     return df_linked_offers
 

@@ -310,6 +310,14 @@ with DAG(
         autocommit=True,
     )
 
+    yesterday = (datetime.today() - timedelta(days=1)).strftime("%Y%m%d")
+    drop_old_function = CloudSQLExecuteQueryOperator(
+        task_id="drop_old_function",
+        gcp_cloudsql_conn_id="proxy_postgres_tcp",
+        sql=f"DROP FUNCTION IF EXISTS get_recommendable_offers_per_iris_shape_{yesterday} CASCADE",
+        autocommit=True,
+    )
+
     end = DummyOperator(task_id="end")
     end_refresh = DummyOperator(task_id="end_refresh")
     (
@@ -328,5 +336,6 @@ with DAG(
         >> rename_current_materialized_view
         >> rename_temp_materialized_view
         >> drop_old_materialized_view
+        >> drop_old_function
         >> end
     )

@@ -1,5 +1,5 @@
-DROP FUNCTION IF EXISTS get_recommendable_offers_per_iris_shape_{{ yyyymmdd(ds) }} CASCADE;
-CREATE OR REPLACE FUNCTION get_recommendable_offers_per_iris_shape_{{ yyyymmdd(ds) }}()
+DROP FUNCTION IF EXISTS get_recommendable_offers_per_iris_shape_{{ yyyymmdd(today()) }} CASCADE;
+CREATE OR REPLACE FUNCTION get_recommendable_offers_per_iris_shape_{{ yyyymmdd(today()) }}()
 RETURNS TABLE (   
                 item_id varchar,
                 offer_id varchar,
@@ -45,7 +45,7 @@ LANGUAGE plpgsql;
 
 DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_per_iris_shape_tmp_mv;
 CREATE MATERIALIZED VIEW IF NOT EXISTS recommendable_offers_per_iris_shape_tmp_mv AS
-SELECT * FROM get_recommendable_offers_per_iris_shape_{{ yyyymmdd(ds) }}()
+SELECT * FROM get_recommendable_offers_per_iris_shape_{{ yyyymmdd(today()) }}()
 WITH NO DATA;
 
 

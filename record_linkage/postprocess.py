@@ -27,10 +27,10 @@ def main(
     ####
     # Build new item_id from linkage
     # If pre-existent item (ex: movie-ABC) is in cluster
-    # then all offers in cluster get this item_id instead
+    # then all offers in cluster get this item_id 
     build_item_id_from_linkage(df_offers_linked_full)
     ####
-    # Convert offer_id back to string to be consititent with dataset
+    # Convert offer_id back to string to be consititent with dataset 
     df_offers_linked_full["offer_id"] = df_offers_linked_full["offer_id"].values.astype(
         str
     )

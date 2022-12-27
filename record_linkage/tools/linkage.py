@@ -9,7 +9,12 @@ from tools.config import SUBSET_MAX_LENGTH
 from tools.logging_tools import log_memory_info, log_duration
 
 
-def get_matched_df(data_and_hyperparams_dict):
+def get_linked_offers(data_and_hyperparams_dict):
+    """
+    Split linkage by offer_subcategoryId
+    Setup Comparaison for linkage
+    Run linkage
+    """
     start = time.time()
     df_source = data_and_hyperparams_dict["dataframe_to_link"].copy()
     df_matched_list = []
@@ -17,19 +22,14 @@ def get_matched_df(data_and_hyperparams_dict):
         print("subcat: ", subcat, " On going ..")
         logger.info(log_memory_info())
         df_source_tmp = df_source.query(f"offer_subcategoryId=='{subcat}'")
-        if len(df_source_tmp) == 0:
-            print(f"empty subcat {subcat}")
-        else:
+        if len(df_source_tmp) > 0:
             indexer = recordlinkage.Index()
             indexer.full()
-
             subset_matches_list = []
             subset_k_division = len(df_source_tmp) // SUBSET_MAX_LENGTH
             subset_divisions = subset_k_division if subset_k_division > 0 else 1
             for df_source_tmp_subset in np.array_split(df_source_tmp, subset_divisions):
-                if len(df_source_tmp_subset) == 0:
-                    print("subset empty..")
-                else:
+                if len(df_source_tmp_subset) > 0:
                     print("Subset on going...")
                     logger.info(log_memory_info())
                     # a subset of record pairs
@@ -56,14 +56,16 @@ def get_matched_df(data_and_hyperparams_dict):
                     subset_matches_list.append(mts)
 
             matches = pd.concat(subset_matches_list)
-            df_matched_list.append(_get_linked_offers(df_source_tmp, matches))
+            df_matched_list.append(
+                _get_linked_offers_from_graph(df_source_tmp, matches)
+            )
 
     df_mtd = pd.concat(df_matched_list)
-    log_duration(f"get_matched_df: ", start)
+    log_duration(f"get_linked_offers: ", start)
     return df_mtd
 
 
-def _get_linked_offers(df_source, df_matches):
+def _get_linked_offers_from_graph(df_source, df_matches):
     start = time.time()
     df_source_tmp = df_source.copy()
     FG = nx.from_pandas_edgelist(
@@ -74,10 +76,12 @@ def _get_linked_offers(df_source, df_matches):
         link_id = str(uuid.uuid4())
         for index in connected_ids[clusters]:
             df_source_tmp.at[index, "linked_id"] = str(link_id)
-    df_linked_offers = df_source_tmp.query("linked_id !='NC' ")
-    df_linked_offers["offer_id"] = df_linked_offers["offer_id"].values.astype(int)
-    log_duration(f"_get_linked_offers: ", start)
-    return df_linked_offers
+    df_linked_offers_from_graph = df_source_tmp.query("linked_id !='NC' ")
+    df_linked_offers_from_graph["offer_id"] = df_linked_offers_from_graph[
+        "offer_id"
+    ].values.astype(int)
+    log_duration(f"_get_linked_offers_from_graph: ", start)
+    return df_linked_offers_from_graph
 
 
 def _setup_matching(c_cl, featdict):

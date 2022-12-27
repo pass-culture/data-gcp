@@ -21,12 +21,21 @@ def main(
     ),
 ):
     ####
-    # Load preprocessed data
+    # Load linked offers
     df_offers_linked_full = pd.read_csv(f"{storage_path}/offers_linked.csv")
+
+    ####
+    # Build new item_id from linkage
+    # If pre-existent item (ex: movie-ABC) is in cluster
+    # then all offers in cluster get this item_id instead
     build_item_id_from_linkage(df_offers_linked_full)
+    ####
+    # Convert offer_id back to string to be consititent with dataset
     df_offers_linked_full["offer_id"] = df_offers_linked_full["offer_id"].values.astype(
         str
     )
+    ####
+    # Save linked offers with new item_id to be export to Big Query
     df_offers_linked_full.to_csv(f"{storage_path}/offers_linked_export_ready.csv")
 
 

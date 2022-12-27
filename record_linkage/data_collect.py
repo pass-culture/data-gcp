@@ -3,7 +3,11 @@ import pandas as pd
 import typer
 
 
-def get_data(gcp_project, env_short_name):
+def get_offers_to_link(gcp_project, env_short_name):
+    """
+    Extract offers to link via record linkage. Only ONE offer by item
+    NB: Books are excluded
+    """
     query = f"""
     SELECT
     ado.offer_id,
@@ -36,7 +40,7 @@ def main(
         help="Storage path",
     ),
 ) -> None:
-    offers_to_link = get_data(gcp_project, env_short_name)
+    offers_to_link = get_offers_to_link(gcp_project, env_short_name)
     offers_to_link.to_csv(f"{storage_path}/offers_to_link.csv", index=False)
 
 

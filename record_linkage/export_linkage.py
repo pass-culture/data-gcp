@@ -22,6 +22,8 @@ def main(
     df_offers_linked_export_ready = pd.read_csv(
         f"{storage_path}/offers_linked_export_ready.csv"
     )
+    ####
+    # Extract columns of interrest
     df_offers_linked_export_ready = df_offers_linked_export_ready[
         [
             "offer_id",
@@ -34,7 +36,8 @@ def main(
             "new_item_id",
         ]
     ]
-
+    ####
+    # Export to Big Query
     df_offers_linked_export_ready.to_gbq(
         f"sandbox_{env_short_name}.linked_offers_v0",
         project_id=gcp_project,

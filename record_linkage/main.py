@@ -1,7 +1,7 @@
 import pandas as pd
 import typer
 from tools.config import STORAGE_PATH, SUBCATEGORIES_WITH_PERFORMER, SUBSET_MAX_LENGTH
-from tools.linkage import get_matched_df
+from tools.linkage import get_linked_offers
 
 
 def main(
@@ -50,11 +50,11 @@ def main(
     }
 
     ###############
-    # Run linkage for each group, then with concat both dataframe to get linkage on full data
+    # Run linkage for each group (performer, non-performer) then concat both dataframe to get linkage on full data
     df_offers_matched_list = []
-    for grp_smp in data_and_hyperparams_dict.keys():
+    for group_sample in data_and_hyperparams_dict.keys():
         df_offers_matched_list.append(
-            get_matched_df(data_and_hyperparams_dict[grp_smp])
+            get_linked_offers(data_and_hyperparams_dict[group_sample])
         )
     df_offers_linked_full = pd.concat(df_offers_matched_list)
     df_offers_linked_full.to_csv(f"{storage_path}/offers_linked.csv")

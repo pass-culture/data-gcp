@@ -12,8 +12,8 @@ def main(
 ) -> None:
     ###############
     # Load preprocessed data
-    df_offers_to_link_clean = pd.read_csv(f"{storage_path}/offers_to_link_clean.csv")
-
+    #df_offers_to_link_clean = pd.read_csv(f"{storage_path}/offers_to_link_clean.csv")
+    df_offers_to_link_clean=pd.read_gbq("SELECT * FROM `passculture-data-prod.sandbox_prod.offers_to_link_clean`")
     ###############
     # Split offers between performer and non performer
     subcat_all = df_offers_to_link_clean.offer_subcategoryId.drop_duplicates().to_list()
@@ -57,8 +57,12 @@ def main(
             get_linked_offers(data_and_hyperparams_dict[group_sample])
         )
     df_offers_linked_full = pd.concat(df_offers_matched_list)
-    df_offers_linked_full.to_csv(f"{storage_path}/offers_linked.csv")
-
+    #df_offers_linked_full.to_csv(f"{storage_path}/offers_linked.csv")
+    df_offers_linked_full.to_gbq(
+        f"sandbox_prod.linked_offers_full",
+        project_id='passculture-data-prod',
+        if_exists="replace",
+    )
 
 if __name__ == "__main__":
     typer.run(main)

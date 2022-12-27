@@ -17,10 +17,15 @@ def main(
         help="Storage path",
     )
 ) -> None:
-    df_offers_to_link = pd.read_csv(f"{storage_path}/offers_to_link.csv")
+    #df_offers_to_link = pd.read_csv(f"{storage_path}/offers_to_link.csv")
+    df_offers_to_link =pd.read_gbq("SELECT * FROM `passculture-data-prod.sandbox_prod.offers_to_link`")
     df_offers_to_link_clean = preprocess(df_offers_to_link)
-    df_offers_to_link_clean.to_csv(f"{storage_path}/offers_to_link_clean.csv")
-
+    #df_offers_to_link_clean.to_csv(f"{storage_path}/offers_to_link_clean.csv")
+    df_offers_to_link_clean.to_gbq(
+        f"sandbox_prod.offers_to_link_clean",
+        project_id='passculture-data-prod',
+        if_exists="replace",
+    )
 
 if __name__ == "__main__":
     typer.run(main)

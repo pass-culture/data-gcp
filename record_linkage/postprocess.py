@@ -22,8 +22,8 @@ def main(
 ):
     ####
     # Load linked offers
-    df_offers_linked_full = pd.read_csv(f"{storage_path}/offers_linked.csv")
-
+    #df_offers_linked_full = pd.read_csv(f"{storage_path}/offers_linked.csv")
+    df_offers_linked_full =pd.read_gbq("SELECT * FROM `passculture-data-prod.sandbox_prod.offers_to_link_full`")
     ####
     # Build new item_id from linkage
     # If pre-existent item (ex: movie-ABC) is in cluster
@@ -36,8 +36,24 @@ def main(
     )
     ####
     # Save linked offers with new item_id to be export to Big Query
-    df_offers_linked_full.to_csv(f"{storage_path}/offers_linked_export_ready.csv")
-
+    #df_offers_linked_full.to_csv(f"{storage_path}/offers_linked_export_ready.csv")
+    df_offers_linked_export_ready = df_offers_linked_full[
+        [
+            "offer_id",
+            "item_id",
+            "offer_subcategoryId",
+            "offer_name",
+            "offer_description",
+            "performer",
+            "linked_id",
+            "new_item_id",
+        ]
+    ]
+    df_offers_linked_export_ready.to_gbq(
+        f"sandbox_prod.linked_offers",
+        project_id='passculture-data-prod',
+        if_exists="replace",
+    )
 
 if __name__ == "__main__":
     typer.run(main)

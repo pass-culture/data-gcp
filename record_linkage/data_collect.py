@@ -41,7 +41,12 @@ def main(
     ),
 ) -> None:
     offers_to_link = get_offers_to_link(gcp_project, env_short_name)
-    offers_to_link.to_csv(f"{storage_path}/offers_to_link.csv", index=False)
+    offers_to_link.to_gbq(
+        f"sandbox_{env_short_name}.offers_to_link",
+        project_id=gcp_project,
+        if_exists="replace",
+    )
+    #offers_to_link.to_csv(f"{storage_path}/offers_to_link.csv", index=False)
 
 
 if __name__ == "__main__":

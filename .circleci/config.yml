@@ -947,6 +947,40 @@ jobs:
             . venv-algo-training/bin/activate
             PYTHONPATH=. pytest tests
 
+  record-linkage-install:
+    executor: python
+    working_directory: ~/data-gcp/record_linkage
+    steps:
+      - checkout:
+          path: ~/data-gcp
+      - restore_cache:
+          key: deps-{{ checksum "requirements.txt" }}
+      - run:
+          name: Install Python requirements
+          command: |
+            python3 -m venv venv-record-linkage
+            . venv-record-linkage/bin/activate
+            pip install -r requirements.txt
+      - save_cache:
+          key: deps-{{ checksum "requirements.txt" }}
+          paths:
+            - "venv-record-linkage"
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+
+  algo-training-tests:
+    executor: python
+    working_directory: ~/data-gcp/record_linkage
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Run tests
+          command: |
+            . venv-record-linkage/bin/activate
+            PYTHONPATH=. pytest tests
   #recommendation-db-install:
   #  executor: python
   #  working_directory: ~/data-gcp/recommendation/db

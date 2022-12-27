@@ -20,16 +20,14 @@ from common.config import (
     DAG_FOLDER,
 )
 
-GCE_INSTANCE = "algo-training-prod"
-MLFLOW_BUCKET_NAME = os.environ.get("MLFLOW_BUCKET_NAME", "mlflow-bucket-ehp")
+GCE_INSTANCE = os.environ.get("GCE_TRAINING_INSTANCE", "algo-training-dev")
 DATE = "{{ts_nodash}}"
-STORAGE_PATH = "gs://mlflow-bucket-ehp/link_offers_dev/linkage_16122022"
-# Algo reco
-DEFAULT = f"""cd data-gcp/record_linkage
+
+DEFAULT = f"""
+cd data-gcp/record_linkage
 export PATH="/opt/conda/bin:/opt/conda/condabin:"+$PATH
-export STORAGE_PATH=gs://mlflow-bucket-ehp/link_offers_dev/linkage_16122022
-export ENV_SHORT_NAME=dev
-export GCP_PROJECT_ID=passculture-data-ehp
+export ENV_SHORT_NAME={ENV_SHORT_NAME}
+export GCP_PROJECT_ID={GCP_PROJECT_ID}
 """
 
 
@@ -41,7 +39,7 @@ def branch_function(ti, **kwargs):
 
 
 default_args = {
-    "start_date": datetime(2022, 12, 13),
+    "start_date": datetime(2022, 12, 30),
     "on_failure_callback": task_fail_slack_alert,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
@@ -78,9 +76,9 @@ with DAG(
     if ENV_SHORT_NAME == "dev":
         branch = "PC-19242-implement-item-clustering-via-record-linkage"
     if ENV_SHORT_NAME == "stg":
-        branch = "PC-19242-implement-item-clustering-via-record-linkage"
+        branch = "master"
     if ENV_SHORT_NAME == "prod":
-        branch = "PC-19242-implement-item-clustering-via-record-linkage"
+        branch = "production"
 
     FETCH_CODE = f'"if cd data-gcp; then git checkout master && git pull && git checkout {branch} && git pull; else git clone git@github.com:pass-culture/data-gcp.git && cd data-gcp && git checkout {branch} && git pull; fi"'
     fetch_code = BashOperator(
@@ -113,7 +111,6 @@ with DAG(
         python data_collect.py \
         --gcp-project {GCP_PROJECT_ID} \
         --env-short-name {ENV_SHORT_NAME} \
-        --storage-path {STORAGE_PATH} \
         '
     """
 
@@ -130,7 +127,9 @@ with DAG(
 
     PREPROCESS = f""" '{DEFAULT}
         python preprocess.py \
-        --storage-path {STORAGE_PATH}'
+        --gcp-project {GCP_PROJECT_ID} \
+        --env-short-name {ENV_SHORT_NAME} \
+        '
     """
 
     preprocess = BashOperator(
@@ -146,7 +145,9 @@ with DAG(
 
     RECORD_LINKAGE = f""" '{DEFAULT}
         python main.py \
-        --storage-path {STORAGE_PATH}'
+        --gcp-project {GCP_PROJECT_ID} \
+        --env-short-name {ENV_SHORT_NAME} \
+        '
     """
 
     record_linkage = BashOperator(
@@ -162,7 +163,9 @@ with DAG(
 
     POSTPROCESS = f""" '{DEFAULT}
         python postprocess.py \
-        --storage-path {STORAGE_PATH}'
+        --gcp-project {GCP_PROJECT_ID} \
+        --env-short-name {ENV_SHORT_NAME} \
+        '
     """
 
     postprocess = BashOperator(
@@ -172,24 +175,6 @@ with DAG(
         --zone {GCE_ZONE} \
         --project {GCP_PROJECT_ID} \
         --command {POSTPROCESS}
-        """,
-        dag=dag,
-    )
-
-    EXPORT_LINKAGE = f""" '{DEFAULT}
-        python export_linkage.py \
-        --gcp-project {GCP_PROJECT_ID} \
-        --env-short-name {ENV_SHORT_NAME} \
-        --storage-path {STORAGE_PATH}'
-    """
-
-    export_linkage = BashOperator(
-        task_id="export_linkage",
-        bash_command=f"""
-        gcloud compute ssh {GCE_INSTANCE} \
-        --zone {GCE_ZONE} \
-        --project {GCP_PROJECT_ID} \
-        --command {EXPORT_LINKAGE}
         """,
         dag=dag,
     )
@@ -211,7 +196,6 @@ with DAG(
         >> preprocess
         >> record_linkage
         >> postprocess
-        >> export_linkage
         >> gce_instance_stop
         >> end
     )

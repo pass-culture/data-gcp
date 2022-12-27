@@ -20,7 +20,7 @@ from common.config import (
     DAG_FOLDER,
 )
 
-GCE_INSTANCE = "algo-training-stg-tmp"
+GCE_INSTANCE = "algo-training-prod"
 MLFLOW_BUCKET_NAME = os.environ.get("MLFLOW_BUCKET_NAME", "mlflow-bucket-ehp")
 DATE = "{{ts_nodash}}"
 STORAGE_PATH = "gs://mlflow-bucket-ehp/link_offers_dev/linkage_16122022"
@@ -80,7 +80,7 @@ with DAG(
     if ENV_SHORT_NAME == "stg":
         branch = "PC-19242-implement-item-clustering-via-record-linkage"
     if ENV_SHORT_NAME == "prod":
-        branch = "production"
+        branch = "PC-19242-implement-item-clustering-via-record-linkage"
 
     FETCH_CODE = f'"if cd data-gcp; then git checkout master && git pull && git checkout {branch} && git pull; else git clone git@github.com:pass-culture/data-gcp.git && cd data-gcp && git checkout {branch} && git pull; fi"'
     fetch_code = BashOperator(

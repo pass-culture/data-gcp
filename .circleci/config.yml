@@ -186,6 +186,21 @@ workflows:
             - DATA_GCP_EHP
           <<: *slack-fail-post-step
 
+      - record-linkage-install:
+          requires:
+            - linter
+          context:
+            - Slack
+          <<: *slack-fail-post-step
+
+      - record-linkage-tests:
+          requires:
+            - record-linkage-install
+          context:
+            - Slack
+            - DATA_GCP
+            - DATA_GCP_EHP
+          <<: *slack-fail-post-step
 
       # Composer jobs
       # -------------
@@ -970,7 +985,7 @@ jobs:
           paths:
             - .
 
-  algo-training-tests:
+  record-linkage-tests:
     executor: python
     working_directory: ~/data-gcp/record_linkage
     steps:

@@ -1,19 +1,24 @@
 import pandas as pd
 import typer
-from tools.config import STORAGE_PATH, SUBCATEGORIES_WITH_PERFORMER, SUBSET_MAX_LENGTH
+from tools.config import ENV_SHORT_NAME, GCP_PROJECT_ID, SUBCATEGORIES_WITH_PERFORMER
 from tools.linkage import get_linked_offers
 
 
 def main(
-    storage_path: str = typer.Option(
-        STORAGE_PATH,
-        help="Storage path",
-    )
+    gcp_project: str = typer.Option(
+        GCP_PROJECT_ID,
+        help="BigQuery Project in which the offers to link is located",
+    ),
+    env_short_name: str = typer.Option(
+        ENV_SHORT_NAME,
+        help="Environnement short name",
+    ),
 ) -> None:
     ###############
     # Load preprocessed data
-    #df_offers_to_link_clean = pd.read_csv(f"{storage_path}/offers_to_link_clean.csv")
-    df_offers_to_link_clean=pd.read_gbq("SELECT * FROM `passculture-data-prod.sandbox_prod.offers_to_link_clean`")
+    df_offers_to_link_clean = pd.read_gbq(
+        f"SELECT * FROM `{gcp_project}.sandbox_{env_short_name}.offers_to_link_clean`"
+    )
     ###############
     # Split offers between performer and non performer
     subcat_all = df_offers_to_link_clean.offer_subcategoryId.drop_duplicates().to_list()
@@ -57,12 +62,12 @@ def main(
             get_linked_offers(data_and_hyperparams_dict[group_sample])
         )
     df_offers_linked_full = pd.concat(df_offers_matched_list)
-    #df_offers_linked_full.to_csv(f"{storage_path}/offers_linked.csv")
     df_offers_linked_full.to_gbq(
-        f"sandbox_prod.linked_offers_full",
-        project_id='passculture-data-prod',
+        f"sandbox_{env_short_name}.linked_offers_full",
+        project_id=gcp_project,
         if_exists="replace",
     )
+
 
 if __name__ == "__main__":
     typer.run(main)

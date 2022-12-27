@@ -1,4 +1,4 @@
-from tools.config import STORAGE_PATH, ENV_SHORT_NAME, GCP_PROJECT_ID
+from tools.config import ENV_SHORT_NAME, GCP_PROJECT_ID
 import pandas as pd
 import typer
 
@@ -35,10 +35,6 @@ def main(
         ENV_SHORT_NAME,
         help="Environnement short name",
     ),
-    storage_path: str = typer.Option(
-        STORAGE_PATH,
-        help="Storage path",
-    ),
 ) -> None:
     offers_to_link = get_offers_to_link(gcp_project, env_short_name)
     offers_to_link.to_gbq(
@@ -46,7 +42,6 @@ def main(
         project_id=gcp_project,
         if_exists="replace",
     )
-    #offers_to_link.to_csv(f"{storage_path}/offers_to_link.csv", index=False)
 
 
 if __name__ == "__main__":

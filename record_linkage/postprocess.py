@@ -1,6 +1,6 @@
 import pandas as pd
 import typer
-from tools.config import STORAGE_PATH, GCP_PROJECT_ID, ENV_SHORT_NAME
+from tools.config import GCP_PROJECT_ID, ENV_SHORT_NAME
 
 
 def build_item_id_from_linkage(df):
@@ -15,28 +15,33 @@ def build_item_id_from_linkage(df):
 
 
 def main(
-    storage_path: str = typer.Option(
-        STORAGE_PATH,
-        help="Storage path",
+    gcp_project: str = typer.Option(
+        GCP_PROJECT_ID,
+        help="BigQuery Project in which the offers to link is located",
+    ),
+    env_short_name: str = typer.Option(
+        ENV_SHORT_NAME,
+        help="Environnement short name",
     ),
 ):
     ####
     # Load linked offers
-    #df_offers_linked_full = pd.read_csv(f"{storage_path}/offers_linked.csv")
-    df_offers_linked_full =pd.read_gbq("SELECT * FROM `passculture-data-prod.sandbox_prod.offers_to_link_full`")
+    df_offers_linked_full = pd.read_gbq(
+        f"SELECT * FROM `{gcp_project}.sandbox_{env_short_name}.offers_to_link_full`"
+    )
     ####
     # Build new item_id from linkage
     # If pre-existent item (ex: movie-ABC) is in cluster
-    # then all offers in cluster get this item_id 
+    # then all offers in cluster get this item_id
     build_item_id_from_linkage(df_offers_linked_full)
     ####
-    # Convert offer_id back to string to be consititent with dataset 
+    # Convert offer_id back to string to be consititent with dataset
     df_offers_linked_full["offer_id"] = df_offers_linked_full["offer_id"].values.astype(
         str
     )
     ####
     # Save linked offers with new item_id to be export to Big Query
-    #df_offers_linked_full.to_csv(f"{storage_path}/offers_linked_export_ready.csv")
+    # df_offers_linked_full.to_csv(f"{storage_path}/offers_linked_export_ready.csv")
     df_offers_linked_export_ready = df_offers_linked_full[
         [
             "offer_id",
@@ -50,10 +55,11 @@ def main(
         ]
     ]
     df_offers_linked_export_ready.to_gbq(
-        f"sandbox_prod.linked_offers",
-        project_id='passculture-data-prod',
+        f"sandbox_{env_short_name}.linked_offers",
+        project_id={gcp_project},
         if_exists="replace",
     )
+
 
 if __name__ == "__main__":
     typer.run(main)

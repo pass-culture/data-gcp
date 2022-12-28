@@ -12,7 +12,7 @@ class TestPostprocess:
                 "offer_id": pd.Series(dtype="int"),
                 "item_id": pd.Series(dtype="str"),
                 "linked_id": pd.Series(dtype="str"),
-                "new_item_id": pd.Series(dtype="str"),
+                "item_linked_id": pd.Series(dtype="str"),
             }
         )
 
@@ -45,7 +45,7 @@ class TestPostprocess:
                             "product-5",
                         ],
                         "linked_id": ["a", "a", "a", "b", "b"],
-                        "new_item_id": [
+                        "item_linked_id": [
                             "movie-1",
                             "movie-1",
                             "movie-1",

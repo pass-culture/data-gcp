@@ -20,9 +20,9 @@ LEFT JOIN
 select 
     offer.offer_id,
     CASE 
-        WHEN offer_linked.item_linked_id is not null THEN offer_linked.item_linked_id 
+        WHEN linked_offers.item_linked_id is not null THEN linked_offers.item_linked_id 
         else offer.item_id 
     END as item_id
     from item_group_by_extra_data offer
 LEFT JOIN 
-    `{{ bigquery_analytics_dataset }}`.offer_linked offer_linked ON offer_linked.offer_id = offer.offer_id
+    `{{ bigquery_analytics_dataset }}`.linked_offers linked_offers ON linked_offers.offer_id = offer.offer_id

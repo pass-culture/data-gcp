@@ -7,7 +7,6 @@ install:
 	MICROSERVICE_PATH=. VENV_NAME=data-gcp REQUIREMENTS_NAME=linter-requirements.txt make install_microservice
 	MICROSERVICE_PATH=recommendation/api VENV_NAME=data-gcp-api REQUIREMENTS_NAME=api-dev-requirements.txt make install_microservice
 	MICROSERVICE_PATH=algo_training VENV_NAME=data-gcp-algo-training REQUIREMENTS_NAME=requirements.txt make install_microservice
-	MICROSERVICE_PATH=diversification_kpi VENV_NAME=data-gcp-diversification-kpi REQUIREMENTS_NAME=requirements.txt make install_microservice
 	MICROSERVICE_PATH=orchestration VENV_NAME=data-gcp-orchestration REQUIREMENTS_NAME=airflow/orchestration-requirements.txt make install_microservice
 
 install_microservice:

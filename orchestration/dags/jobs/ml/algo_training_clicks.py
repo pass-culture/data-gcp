@@ -89,7 +89,7 @@ with DAG(
         ),
         "limit_filter": Param(
             default=-1,
-            type="int",
+            type="integer",
         ),
     },
 ) as dag:

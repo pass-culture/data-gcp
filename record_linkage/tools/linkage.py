@@ -47,7 +47,7 @@ def get_linked_offers(data_and_hyperparams_dict):
                     # Classification step
                     mts = ftrs[
                         ftrs.sum(axis=1)
-                        >= data_and_hyperparams_dict["matches_requiere"]
+                        >= data_and_hyperparams_dict["matches_required"]
                     ]
                     mts = mts.reset_index()
                     mts = mts.rename(

@@ -42,7 +42,7 @@ def main(
                 "offer_description": {"method": "jarowinkler", "threshold": 0.95},
                 "performer": {"method": "exact"},
             },
-            "matches_requiere": 2,
+            "matches_required": 2,
         },
         "non_performer": {
             "dataframe_to_link": df_to_link_non_performer,
@@ -50,7 +50,7 @@ def main(
                 "offer_name": {"method": "jarowinkler", "threshold": 0.95},
                 "offer_description": {"method": "jarowinkler", "threshold": 0.95},
             },
-            "matches_requiere": 1,
+            "matches_required": 1,
         },
     }
 

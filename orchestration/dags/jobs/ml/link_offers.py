@@ -30,14 +30,6 @@ export ENV_SHORT_NAME={ENV_SHORT_NAME}
 export GCP_PROJECT_ID={GCP_PROJECT_ID}
 """
 
-
-def branch_function(ti, **kwargs):
-    evaluate_ending = ti.xcom_pull(task_ids="evaluate")
-    if evaluate_ending == "Metrics OK":
-        return "deploy_model"
-    return "send_slack_notif_fail"
-
-
 default_args = {
     "start_date": datetime(2022, 12, 30),
     "on_failure_callback": task_fail_slack_alert,
@@ -58,7 +50,7 @@ with DAG(
         "branch": Param(
             default="production"
             if ENV_SHORT_NAME == "prod"
-            else "PC-19242-implement-item-clustering-via-record-linkage",
+            else "master",
             type="string",
         ),
     },
@@ -73,14 +65,7 @@ with DAG(
         dag=dag,
     )
 
-    if ENV_SHORT_NAME == "dev":
-        branch = "PC-19242-implement-item-clustering-via-record-linkage"
-    if ENV_SHORT_NAME == "stg":
-        branch = "master"
-    if ENV_SHORT_NAME == "prod":
-        branch = "production"
-
-    FETCH_CODE = f'"if cd data-gcp; then git checkout master && git pull && git checkout {branch} && git pull; else git clone git@github.com:pass-culture/data-gcp.git && cd data-gcp && git checkout {branch} && git pull; fi"'
+    FETCH_CODE = r'"if cd data-gcp; then git checkout master && git pull && git checkout {{ params.branch }} && git pull; else git clone git@github.com:pass-culture/data-gcp.git && cd data-gcp && git checkout {{ params.branch }} && git pull; fi"'
     fetch_code = BashOperator(
         task_id="fetch_code",
         bash_command=f"""

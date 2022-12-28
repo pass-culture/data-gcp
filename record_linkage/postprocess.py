@@ -27,7 +27,7 @@ def main(
     ####
     # Load linked offers
     df_offers_linked_full = pd.read_gbq(
-        f"SELECT * FROM `{gcp_project}.sandbox_{env_short_name}.offers_to_link_full`"
+        f"SELECT * FROM `{gcp_project}.sandbox_{env_short_name}.linked_offers_full`"
     )
     ####
     # Build new item_id from linkage

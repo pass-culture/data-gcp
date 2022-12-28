@@ -30,7 +30,7 @@ def predict(match_model):
     items_to_rank = np.array(
         ["offer-7514002", "product-2987109", "offer-6406524", "toto", "tata"]
     )
-    repeated_user_id = np.empty_like(items_to_rank)
-    repeated_user_id.fill(user_id)
-    predicted = match_model.predict([repeated_user_id, items_to_rank], batch_size=4096)
+    # repeated_user_id = np.empty_like(items_to_rank)
+    # repeated_user_id.fill(user_id)
+    predicted = match_model.predict([user_id, items_to_rank], batch_size=4096)
     return predicted

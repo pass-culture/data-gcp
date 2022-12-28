@@ -44,13 +44,13 @@ def get_prediction(user_id, data_model_dict):
 
     nboffers = len(list(data.item_id))
     offer_to_score = np.reshape(np.array(list(data.item_id)), (nboffers, 1))
-    user_to_rank = np.reshape(
-        np.array([str(user_id)] * len(offer_to_score)), (nboffers, 1)
-    )
+    # user_to_rank = np.reshape(
+    #    np.array([str(user_id)] * len(offer_to_score)), (nboffers, 1)
+    # )
     offer_subcategoryid = np.reshape(
         np.array(list(data.offer_subcategoryid)), (nboffers, 1)
     )
-    pred_input = [user_to_rank, offer_to_score]
+    pred_input = [str(user_id), offer_to_score]
     prediction = model.predict(pred_input, verbose=0)
     df_predicted = pd.DataFrame(
         {

@@ -13,7 +13,10 @@ class MatchModel(Model):
         self.dot = Dot(axes=1, normalize=True)
 
     def call(self, inputs):
-        user_input = inputs[0]
+        if len(inputs[0]) != len(inputs[1]):
+            user_input[0] = inputs[0] * len(positive_item_input)
+        else:
+            user_input = inputs[0]
         positive_item_input = inputs[1]
 
         user_embedding = self.user_layer(user_input)

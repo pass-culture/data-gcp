@@ -87,6 +87,10 @@ with DAG(
             default="30" if ENV_SHORT_NAME == "prod" else "365",
             type="string",
         ),
+        "limit_filter": Param(
+            default=-1,
+            type="integer",
+        ),
     },
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)
@@ -99,7 +103,7 @@ with DAG(
         dag=dag,
     )
 
-    FETCH_CODE = r'"if cd data-gcp; then git checkout master && git pull && git checkout {{ params.branch }} && git pull; else git clone git@github.com:pass-culture/data-gcp.git && cd data-gcp && git checkout {{ params.branch }} && git pull; fi"'
+    FETCH_CODE = r'"if cd data-gcp; then git checkout master && git pull && git checkout {{ params.branch }} && git pull; else git clone https://github.com/pass-culture/data-gcp.git && cd data-gcp && git checkout {{ params.branch }} && git pull; fi"'
 
     fetch_code = BashOperator(
         task_id="fetch_code",
@@ -128,7 +132,7 @@ with DAG(
     )
 
     DATA_COLLECT = f""" '{DEFAULT}
-        python data_collect.py --dataset {BIGQUERY_RAW_DATASET} --table-name training_data_clicks --event-day-number {{{{ params.event_day_number }}}} '
+        python data_collect.py --dataset {BIGQUERY_RAW_DATASET} --table-name training_data_clicks --event-day-number {{{{ params.event_day_number }}}} --limit-filter {{{{ params.limit_filter }}}} '
     """
 
     clicks_data_collect = BashOperator(

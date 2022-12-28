@@ -9,9 +9,9 @@ def build_item_id_from_linkage(df):
         product_ids = df_tmp.item_id.unique()
         item_ids = [item for item in product_ids if "movie" in item]
         if len(item_ids) > 0:
-            df.loc[df["linked_id"] == link_id, "new_item_id"] = item_ids[0]
+            df.loc[df["linked_id"] == link_id, "item_linked_id"] = item_ids[0]
         else:
-            df.loc[df["linked_id"] == link_id, "new_item_id"] = f"link-{link_id}"
+            df.loc[df["linked_id"] == link_id, "item_linked_id"] = f"link-{link_id}"
 
 
 def main(
@@ -51,7 +51,7 @@ def main(
             "offer_description",
             "performer",
             "linked_id",
-            "new_item_id",
+            "item_linked_id",
         ]
     ]
     df_offers_linked_export_ready.to_gbq(

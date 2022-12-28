@@ -186,6 +186,21 @@ workflows:
             - DATA_GCP_EHP
           <<: *slack-fail-post-step
 
+      - record-linkage-install:
+          requires:
+            - linter
+          context:
+            - Slack
+          <<: *slack-fail-post-step
+
+      - record-linkage-tests:
+          requires:
+            - record-linkage-install
+          context:
+            - Slack
+            - DATA_GCP
+            - DATA_GCP_EHP
+          <<: *slack-fail-post-step
 
       # Composer jobs
       # -------------
@@ -947,6 +962,40 @@ jobs:
             . venv-algo-training/bin/activate
             PYTHONPATH=. pytest tests
 
+  record-linkage-install:
+    executor: python
+    working_directory: ~/data-gcp/record_linkage
+    steps:
+      - checkout:
+          path: ~/data-gcp
+      - restore_cache:
+          key: deps-{{ checksum "requirements.txt" }}
+      - run:
+          name: Install Python requirements
+          command: |
+            python3 -m venv venv-record-linkage
+            . venv-record-linkage/bin/activate
+            pip install -r requirements.txt
+      - save_cache:
+          key: deps-{{ checksum "requirements.txt" }}
+          paths:
+            - "venv-record-linkage"
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+
+  record-linkage-tests:
+    executor: python
+    working_directory: ~/data-gcp/record_linkage
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Run tests
+          command: |
+            . venv-record-linkage/bin/activate
+            PYTHONPATH=. pytest tests
   #recommendation-db-install:
   #  executor: python
   #  working_directory: ~/data-gcp/recommendation/db

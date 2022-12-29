@@ -33,5 +33,5 @@ def predict(match_model):
     user_to_rank = np.array([user_id])
     user_and_offers_to_rank = np.array([user_id])
     user_and_offers_to_rank = np.concatenate((user_to_rank, items_to_rank))
-    predicted = match_model.call(user_and_offers_to_rank)
+    predicted = match_model.predict(user_and_offers_to_rank)
     return predicted

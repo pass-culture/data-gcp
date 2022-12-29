@@ -14,7 +14,7 @@ class MatchModel(Model):
 
     def call(self, inputs):
         if len(inputs[0]) != len(inputs[1]):
-            user_input[0] = inputs[0] * len(positive_item_input)
+            user_input = np.full_like(inputs[1], inputs[0])
         else:
             user_input = inputs[0]
         positive_item_input = inputs[1]

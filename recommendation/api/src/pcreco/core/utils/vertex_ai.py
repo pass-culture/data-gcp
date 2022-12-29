@@ -8,13 +8,13 @@ from cachetools import cached, TTLCache
 
 
 @cached(cache=TTLCache(maxsize=1024, ttl=60))
-def get_model(end_point_name, location):
-    return __get_model(end_point_name, location)
+def get_model(endpoint_name, location):
+    return __get_model(endpoint_name, location)
 
 
-def __get_model(end_point_name, location):
+def __get_model(endpoint_name, location):
     endpoint = aiplatform.Endpoint.list(
-        filter=f"display_name={end_point_name}", location=location, project=GCP_PROJECT
+        filter=f"display_name={endpoint_name}", location=location, project=GCP_PROJECT
     )[0]
     endpoint_dict = endpoint.to_dict()
     return {

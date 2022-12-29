@@ -6,12 +6,10 @@ import pandas as pd
 import pytz
 from sqlalchemy import create_engine
 from typing import Any, Dict
-from pcreco.utils.env_vars import AB_TESTING_TABLE
 
 
 DATA_GCP_TEST_POSTGRES_PORT = os.getenv("DATA_GCP_TEST_POSTGRES_PORT")
 DB_NAME = os.getenv("DB_NAME", "db")
-ACTIVE_MODEL = os.environ.get("ACTIVE_MODEL")
 
 TEST_DATABASE_CONFIG = {
     "user": "postgres",
@@ -25,19 +23,9 @@ TEST_DATABASE_CONFIG = {
 @pytest.fixture
 def app_config() -> Dict[str, Any]:
     return {
-        "AB_TESTING_TABLE": AB_TESTING_TABLE,
         "NUMBER_OF_RECOMMENDATIONS": 10,
         "NUMBER_OF_PRESELECTED_OFFERS": 50,
         "MODEL_REGION": "model_region",
-        "MODEL_NAME_A": "model_name",
-        "MODEL_VERSION_A": "model_version",
-        "MODEL_INPUT_A": "model_input",
-        "MODEL_NAME_B": "model_name",
-        "MODEL_VERSION_B": "model_version",
-        "MODEL_INPUT_B": "model_input",
-        "MODEL_NAME_C": "mf_reco",
-        "MODEL_VERSION_C": "model_version",
-        "MODEL_INPUT_C": "model_input",
     }
 
 
@@ -190,20 +178,11 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
     )
     qpi_answers.to_sql("qpi_answers_mv", con=engine, if_exists="replace")
 
-    ab_testing = pd.DataFrame(
-        {
-            "userid": ["111", "112", "113", "114", "115", "116", "117", "118"],
-            "groupid": ["A", "B", "C", "B", "A", "B", "C", "B"],
-        }
-    )
-    ab_testing.to_sql(app_config["AB_TESTING_TABLE"], con=engine, if_exists="replace")
-
     past_recommended_offers = pd.DataFrame(
         {
             "userid": [1],
             "offerid": [1],
             "date": [datetime.now(pytz.utc)],
-            "group_id": "A",
             "reco_origin": "algo",
         }
     )
@@ -239,9 +218,6 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
         )
         engine.execute("DROP TABLE IF EXISTS enriched_user CASCADE;")
         engine.execute("DROP MATERIALIZED VIEW IF EXISTS enriched_user_mv CASCADE;")
-        engine.execute(
-            f"DROP TABLE IF EXISTS {app_config['AB_TESTING_TABLE']} CASCADE ;"
-        )
         engine.execute("DROP TABLE IF EXISTS past_recommended_offers CASCADE ;")
         engine.execute("DROP TABLE IF EXISTS iris_france CASCADE;")
     except:

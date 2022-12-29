@@ -7,7 +7,8 @@ from pcreco.models.reco.playlist_params import PlaylistParamsIn
 from pcreco.core.utils.query_builder import RecommendableOffersQueryBuilder
 from pcreco.utils.db.db_connection import get_session
 from pcreco.core.utils.vertex_ai import predict_model
-from pcreco.utils.env_vars import SIM_OFFERS_ENDPOINT_NAME, log_duration, ENV_SHORT_NAME
+from pcreco.core.model_selection import select_sim_model_params
+from pcreco.utils.env_vars import log_duration, ENV_SHORT_NAME
 from typing import List, Dict, Any
 from loguru import logger
 import datetime
@@ -21,13 +22,14 @@ class SimilarOffer:
         self.user = user
         self.offer = offer
         self.n = 10
+        self.model_params = select_sim_model_params(params_in.model_endpoint)
         self.recommendable_offer_limit = 10_000
         self.params_in_filters = params_in._get_conditions()
         self.reco_radius = params_in.reco_radius
         self.json_input = params_in.json_input
         self.include_digital = params_in.include_digital
         self.has_conditions = params_in.has_conditions
-
+        self.reco_origin = "default"
         self.model_version = None
         self.model_display_name = None
 
@@ -109,7 +111,7 @@ class SimilarOffer:
                         "origin_offer_id": self.offer.id,
                         "offer_id": offer_id,
                         "date": date,
-                        "group_id": self.user.group_id,
+                        "group_id": self.model_params.name,
                         "model_name": self.model_display_name,
                         "model_version": self.model_version,
                         "reco_filters": json.dumps(self.json_input),
@@ -135,7 +137,7 @@ class SimilarOffer:
         logger.info(f"_predict_score: {instances}")
         start = time.time()
         response = predict_model(
-            endpoint_name=SIM_OFFERS_ENDPOINT_NAME,
+            endpoint_name=self.model_params.endpoint_name,
             location="europe-west1",
             instances=instances,
         )

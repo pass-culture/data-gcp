@@ -42,3 +42,9 @@ def from_external(conn_id, sql_path):
         + '"'
         + ");"
     )
+
+
+def one_line_query(sql_path):
+    with open(f"{sql_path}", "r") as fp:
+        lines = " ".join([line.strip() for line in fp.readlines()])
+    return lines

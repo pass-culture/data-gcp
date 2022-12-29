@@ -6,7 +6,7 @@ WITH sendinblue_newsletter as (
     SELECT 
         *
         , row_number() over( partition by campaign_id order by update_date desc) as rank_update
-    FROM sendinblue_newsletters_histo
+    FROM `{{ bigquery_raw_dataset }}.sendinblue_newsletters_histo`
     QUALIFY rank_update = 1
 )
 
@@ -26,7 +26,7 @@ SELECT
 
 FROM sendinblue_newsletter
 LEFT JOIN `{{ bigquery_analytics_dataset }}.firebase_events` firebase
-ON sendinblue.campaign_utm = firebase.traffic_campaign
+ON sendinblue_newsletter.campaign_utm = firebase.traffic_campaign
 
 WHERE traffic_campaign IS NOT NULL
 GROUP BY 

@@ -1,14 +1,13 @@
 import pandas as pd
-import pandas_gbq as gbq
-import numpy as np
-from scipy.optimize import minimize, Bounds
 
 from utils import STORAGE_PATH
 from tools.v1.preprocess_tools import preprocess
 
 
 def main():
-    preprocess(STORAGE_PATH)
+    raw_data = pd.read_csv(f"{STORAGE_PATH}/raw_data.csv")
+    clean_data = preprocess(raw_data)
+    clean_data.to_csv(f"{STORAGE_PATH}/clean_data.csv", index=False)
 
 
 if __name__ == "__main__":

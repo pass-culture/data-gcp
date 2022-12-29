@@ -7,13 +7,17 @@ SQL_PATH = f"dependencies/firebase/sql"
 
 ENV_SHORT_NAME_APP_INFO_ID_MAPPING = {
     "dev": ["app.passculture.test", "app.passculture.testing"],
-    "stg": ["app.passculture.staging"],
+    "stg": ["app.passculture.staging", "app.passculture", "app.passculture.webapp"],
     "prod": ["app.passculture", "app.passculture.webapp"],
 }
 
 ENV_SHORT_NAME_APP_INFO_ID_MAPPING_PRO = {
     "dev": ["localhost", "pro.testing.passculture.team"],
-    "stg": ["pro.testing.passculture.team", "integration.passculture.pro"],
+    "stg": [
+        "pro.testing.passculture.team",
+        "integration.passculture.pro",
+        "passculture.pro",
+    ],
     "prod": ["passculture.pro"],
 }
 

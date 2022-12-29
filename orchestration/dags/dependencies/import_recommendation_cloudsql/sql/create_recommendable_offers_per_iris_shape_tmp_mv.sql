@@ -50,6 +50,6 @@ WITH NO DATA;
 
 
 
-CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_id_tmp ON public.recommendable_offers_per_iris_shape_tmp_mv USING btree (is_geolocated,iris_id,venue_distance_to_iris_bucket,item_id,offer_id,unique_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_mv_tmp_{{ yyyymmdd(today()) }} ON public.recommendable_offers_per_iris_shape_tmp_mv USING btree (is_geolocated,iris_id,venue_distance_to_iris_bucket,item_id,offer_id,unique_id);
 REFRESH MATERIALIZED VIEW recommendable_offers_per_iris_shape_tmp_mv;
 

@@ -11,10 +11,6 @@ from pcreco.core.offer import Offer
 from pcreco.core.recommendation import Recommendation
 from pcreco.core.similar_offer import SimilarOffer
 from pcreco.models.reco.parser import parse_params, parse_geolocation, parse_internal
-
-from pcreco.utils.env_vars import (
-    AB_TESTING,
-)
 import uuid
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
@@ -106,10 +102,10 @@ def recommendation(user_id: int):
         {
             "recommended_offers": user_recommendations,
             "params": {
-                "reco_origin": "cold_start" if scoring.iscoldstart else "algo",
+                "reco_origin": scoring.reco_origin,
+                "model_endpoint": scoring.model_params.name,
                 "model_name": scoring.scoring.model_display_name,
                 "model_version": scoring.scoring.model_version,
-                "ab_test": user.group_id if AB_TESTING else "default",
                 "geo_located": geo_located,
                 "filtered": input_reco.has_conditions if input_reco else False,
                 "call_id": call_id,
@@ -140,10 +136,10 @@ def playlist_recommendation(user_id: int):
         {
             "playlist_recommended_offers": user_recommendations,
             "params": {
-                "reco_origin": "cold_start" if scoring.iscoldstart else "algo",
+                "reco_origin": scoring.reco_origin,
+                "model_endpoint": scoring.model_params.name,
                 "model_name": scoring.scoring.model_display_name,
                 "model_version": scoring.scoring.model_version,
-                "ab_test": user.group_id if AB_TESTING else "default",
                 "geo_located": geo_located,
                 "filtered": input_reco.has_conditions if input_reco else False,
                 "call_id": call_id,
@@ -176,9 +172,10 @@ def similar_offers(offer_id: str):
         {
             "results": offer_recommendations,
             "params": {
+                "reco_origin": scoring.reco_origin,
+                "model_endpoint": scoring.model_params.name,
                 "model_name": scoring.model_display_name,
                 "model_version": scoring.model_version,
-                "ab_test": "default",
                 "geo_located": geo_located,
                 "filtered": input_reco.has_conditions if input_reco else False,
                 "call_id": call_id,

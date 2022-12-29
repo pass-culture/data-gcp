@@ -5,6 +5,11 @@ ref_tables = {
     },
     "eac_cash_in": {
         "file_type": "csv",
-        "schema": {"ministry": "STRING", "date_update": "DATE", "scholar_year": "STRING", "cash_in": "FLOAT"},
-    }
+        "schema": {
+            "ministry": "STRING",
+            "date_update": "DATE",
+            "scholar_year": "STRING",
+            "cash_in": "FLOAT",
+        },
+    },
 }

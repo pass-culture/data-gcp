@@ -1,4 +1,4 @@
-from sendinblue import sendinblue_newsletters
+from sendinblue import SendinblueNewsletters
 from datetime import datetime, timezone, timedelta
 from utils import GCP_PROJECT, BIGQUERY_RAW_DATASET, ENV_SHORT_NAME, access_secret_data
 
@@ -15,7 +15,7 @@ today = datetime.now(tz=timezone.utc)
 def run(request):
     # Statistics for email campaigns Sendinblue (by domain)
 
-    sendinblue_request = sendinblue_newsletters(
+    sendinblue_request = SendinblueNewsletters(
         gcp_project=GCP_PROJECT,
         raw_dataset=BIGQUERY_RAW_DATASET,
         api_key=API_KEY,

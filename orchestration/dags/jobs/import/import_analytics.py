@@ -5,7 +5,8 @@ from airflow.providers.google.cloud.operators.bigquery import (
 )
 from airflow.operators.dummy_operator import DummyOperator
 from common import macros
-from common.utils import depends_loop
+from common.utils import depends_loop, one_line_query
+
 
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryInsertJobOperator,
@@ -19,20 +20,30 @@ from common.alerts import analytics_fail_slack_alert
 from common.config import DAG_FOLDER
 
 from common.config import (
-    APPLICATIVE_EXTERNAL_CONNECTION_ID,
-    APPLICATIVE_PREFIX,
-    BIGQUERY_ANALYTICS_DATASET,
-    BIGQUERY_CLEAN_DATASET,
     GCP_PROJECT,
+    BIGQUERY_RAW_DATASET,
+    BIGQUERY_CLEAN_DATASET,
+    BIGQUERY_ANALYTICS_DATASET,
+    APPLICATIVE_PREFIX,
+    APPLICATIVE_EXTERNAL_CONNECTION_ID,
 )
 
-from dependencies.import_analytics.import_tables import (
-    define_import_query,
-    define_replace_query,
-    define_import_tables,
+from dependencies.import_analytics.import_raw import (
+    get_tables_config_dict,
+    RAW_SQL_PATH,
 )
+from dependencies.import_analytics.import_clean import (
+    clean_tables,
+    get_clean_tables_copy_dict,
+)
+from dependencies.import_analytics.import_analytics import define_import_tables
 
 import_tables = define_import_tables()
+clean_tables_copy = get_clean_tables_copy_dict()
+raw_tables = get_tables_config_dict(
+    PATH=DAG_FOLDER + "/" + RAW_SQL_PATH, BQ_DESTINATION_DATASET=BIGQUERY_RAW_DATASET
+)
+
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),
@@ -55,48 +66,81 @@ dag = DAG(
 
 start = DummyOperator(task_id="start", dag=dag)
 
-import_tables_to_clean_tasks = []
-for table in import_tables.keys():
-    task = BigQueryExecuteQueryOperator(
-        task_id=f"import_to_clean_{table}",
-        sql=define_import_query(
-            external_connection_id=APPLICATIVE_EXTERNAL_CONNECTION_ID,
-            table=table,
-        ),
-        write_disposition="WRITE_TRUNCATE",
-        use_legacy_sql=False,
-        destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.{APPLICATIVE_PREFIX}{table}",
+# RAW
+import_tables_to_raw_tasks = []
+
+for table, params in raw_tables.items():
+    task = BigQueryInsertJobOperator(
+        task_id=f"import_to_raw_{table}",
+        configuration={
+            "query": {
+                "query": f"""SELECT * FROM EXTERNAL_QUERY('{APPLICATIVE_EXTERNAL_CONNECTION_ID}', '{one_line_query(params['sql'])}')""",
+                "useLegacySql": False,
+                "destinationTable": {
+                    "projectId": GCP_PROJECT,
+                    "datasetId": params["destination_dataset"],
+                    "tableId": params["destination_table"],
+                },
+                "writeDisposition": "WRITE_TRUNCATE",
+            }
+        },
+        params=dict(params.get("params", {})),
         dag=dag,
     )
-    import_tables_to_clean_tasks.append(task)
+    import_tables_to_raw_tasks.append(task)
 
 
-offer_clean_duplicates = BigQueryExecuteQueryOperator(
-    task_id="offer_clean_duplicates",
-    sql=f"""
-    SELECT * except(row_number)
-    FROM (
-        SELECT
-        *,
-        ROW_NUMBER() OVER (PARTITION BY offer_id
-                                        ORDER BY offer_date_updated DESC
-                                    ) as row_number
-        FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.{APPLICATIVE_PREFIX}offer`
-        )
-    WHERE row_number=1
-    """,
-    write_disposition="WRITE_TRUNCATE",
-    use_legacy_sql=False,
-    destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.{APPLICATIVE_PREFIX}offer",
-    dag=dag,
-)
+end_raw = DummyOperator(task_id="end_raw", dag=dag)
 
+# CLEAN : Copier les tables Raw dans Clean sauf s'il y a une requete de transformation dans clean.
+import_tables_to_clean_transformation_tasks = []
+for table, params in clean_tables.items():
+    task = BigQueryInsertJobOperator(
+        task_id=f"import_to_clean_{table}",
+        configuration={
+            "query": {
+                "query": "{% include '" + params["sql"] + "' %}",
+                "useLegacySql": False,
+                "destinationTable": {
+                    "projectId": GCP_PROJECT,
+                    "datasetId": params["destination_dataset"],
+                    "tableId": params["destination_table"],
+                },
+                "writeDisposition": "WRITE_TRUNCATE",
+            }
+        },
+        params=dict(params.get("params", {})),
+        dag=dag,
+    )
+    import_tables_to_clean_transformation_tasks.append(task)
+
+import_tables_to_clean_copy_tasks = []
+for table, params in clean_tables_copy.items():
+    task = BigQueryInsertJobOperator(
+        task_id=f"import_to_clean_{table}",
+        configuration={
+            "query": {
+                "query": params["sql"],
+                "useLegacySql": False,
+                "destinationTable": {
+                    "projectId": GCP_PROJECT,
+                    "datasetId": params["destination_dataset"],
+                    "tableId": params["destination_table"],
+                },
+                "writeDisposition": "WRITE_TRUNCATE",
+            }
+        },
+        params=dict(params.get("params", {})),
+        dag=dag,
+    )
+    import_tables_to_clean_copy_tasks.append(task)
 
 end_import_table_to_clean = DummyOperator(task_id="end_import_table_to_clean", dag=dag)
 
 start_historical_data_applicative_tables_tasks = DummyOperator(
     task_id="start_historical_data_applicative_tables_tasks", dag=dag
 )
+
 historical_data_applicative_tables_tasks = []
 for table, params in historical_clean_applicative_database.items():
     task = BigQueryExecuteQueryOperator(
@@ -137,10 +181,10 @@ end_historical_analytics_table_tasks = DummyOperator(
 )
 
 import_tables_to_analytics_tasks = []
-for table in import_tables.keys():
+for table in import_tables:
     task = BigQueryExecuteQueryOperator(
         task_id=f"import_to_analytics_{table}",
-        sql=f"SELECT * {define_replace_query(import_tables[table])} FROM {BIGQUERY_CLEAN_DATASET}.{APPLICATIVE_PREFIX}{table}",
+        sql=f"SELECT * FROM {BIGQUERY_CLEAN_DATASET}.{APPLICATIVE_PREFIX}{table}",
         write_disposition="WRITE_TRUNCATE",
         use_legacy_sql=False,
         destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.{APPLICATIVE_PREFIX}{table}",
@@ -188,12 +232,14 @@ end = DummyOperator(task_id="end", dag=dag)
 
 (
     start
-    >> import_tables_to_clean_tasks
-    >> offer_clean_duplicates
+    >> import_tables_to_raw_tasks
+    >> end_raw
+    >> import_tables_to_clean_transformation_tasks
     >> end_import_table_to_clean
     >> import_tables_to_analytics_tasks
     >> end_import
 )
+(end_raw >> import_tables_to_clean_copy_tasks >> end_import_table_to_clean)
 (
     end_import_table_to_clean
     >> start_historical_data_applicative_tables_tasks

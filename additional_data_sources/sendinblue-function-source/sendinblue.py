@@ -10,7 +10,7 @@ from google.cloud import bigquery
 from utils import ENV_SHORT_NAME
 
 
-class sendinblue_newsletters:
+class SendinblueNewsletters:
     def __init__(
         self,
         gcp_project,
@@ -83,7 +83,7 @@ class sendinblue_newsletters:
         ]
 
         domain_stats_df = pd.DataFrame()
-        for campaign_id in campaigns_list:
+        for campaign_dict in campaigns_list:
             temp = (
                 pd.DataFrame(
                     [
@@ -91,7 +91,7 @@ class sendinblue_newsletters:
                         for group in [
                             camp.get("statistics")
                             for camp in campaigns_list
-                            if camp.get("id") == campaign_id
+                            if camp.get("id") == campaign_dict.get("id")
                         ]
                     ][0]
                 )
@@ -103,7 +103,7 @@ class sendinblue_newsletters:
             temp["campaign_id"] = [
                 camp.get("id")
                 for camp in campaigns_list
-                if camp.get("id") == campaign_id
+                if camp.get("id") == campaign_dict.get("id")
             ][0]
             domain_stats_df = pd.concat([temp, domain_stats_df])
 

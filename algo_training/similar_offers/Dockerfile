@@ -2,8 +2,8 @@
 FROM python:3.9
 
 # Install libraries
-COPY ./requirements.txt ./
-RUN pip3 install -r requirements.txt 
+COPY ./api-requirements.txt ./
+RUN pip3 install -r api-requirements.txt 
 
 # Setup container directories
 RUN mkdir /app

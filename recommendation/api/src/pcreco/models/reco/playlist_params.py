@@ -10,7 +10,7 @@ from pcreco.utils.geolocalisation import distance_to_radius_bucket
 from datetime import datetime
 
 INPUT_PARAMS = [
-    "modelName",
+    "modelEndpoint",
     "startDate",
     "endDate",
     "beginningDatetime",
@@ -80,7 +80,7 @@ class PlaylistParamsIn:
         json = {k: v for k, v in json.items() if k in INPUT_PARAMS}
         self.json_input = json
         self.has_conditions = False
-        self.model_name = json.get("modelName")
+        self.model_endpoint = json.get("modelEndpoint")
 
         # deprecated
         self.start_date = parse_date(json.get("startDate"))
@@ -119,6 +119,8 @@ class PlaylistParamsIn:
         self.setup_defaults()
 
     def setup_defaults(self):
+        if self.model_endpoint is None:
+            self.model_endpoint = "default"
         if self.is_reco_shuffled is None:
             self.is_reco_shuffled = SHUFFLE_RECOMMENDATION
         if self.is_sort_by_distance is None:

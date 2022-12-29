@@ -1,18 +1,16 @@
 import collections
-from typing import Any, Dict, List, Tuple
+import random
+from typing import Any, Dict, List, Tuple, Union
 
 import numpy as np
-import random
+import pandas as pd
 
-from utils import (
-    RECOMMENDATION_NUMBER,
-    NUMBER_OF_PRESELECTED_OFFERS,
-    SHUFFLE_RECOMMENDATION,
-)
+from utils import NUMBER_OF_PRESELECTED_OFFERS, RECOMMENDATION_NUMBER
 
 
 def order_offers_by_score_and_diversify_categories(
-    offers: List[Dict[str, Any]]
+    offers: Union[List[Dict[str, Any]], pd.DataFrame],
+    shuffle_recommendation: bool,
 ) -> List[int]:
     """
     Group offers by category.
@@ -23,7 +21,7 @@ def order_offers_by_score_and_diversify_categories(
     """
 
     offers = offers.to_dict("records")
-    if SHUFFLE_RECOMMENDATION:
+    if shuffle_recommendation:
         # select TOP NUMBER_OF_PRESELECTED_OFFERS to shuffle from
         offers = offers[:NUMBER_OF_PRESELECTED_OFFERS]
         for recommendation in offers:

@@ -1,5 +1,6 @@
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Embedding, Flatten, Input, Dense, Lambda, Dot
+import tensorflow as tf
 
 
 class MatchModel(Model):
@@ -13,11 +14,9 @@ class MatchModel(Model):
         self.dot = Dot(axes=1, normalize=True)
 
     def call(self, inputs):
-        if len(inputs[0]) != len(inputs[1]):
-            user_input = np.full_like(inputs[1], inputs[0])
-        else:
-            user_input = inputs[0]
-        positive_item_input = inputs[1]
+        tmp_user_input = [inputs[0]] * len(inputs[1:])
+        user_input = tf.reshape(tmp_user_input, [len(inputs[1:])])
+        positive_item_input = tf.reshape(inputs[1:], [len(inputs[1:])])
 
         user_embedding = self.user_layer(user_input)
         user_embedding = self.flatten(user_embedding)

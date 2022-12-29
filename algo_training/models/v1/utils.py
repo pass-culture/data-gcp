@@ -31,5 +31,7 @@ def predict(match_model):
         ["offer-7514002", "product-2987109", "offer-6406524", "toto", "tata"]
     )
     user_to_rank = np.array([user_id])
-    predicted = match_model.predict([user_to_rank, items_to_rank], batch_size=4096)
+    user_and_offers_to_rank = np.array([user_id])
+    user_and_offers_to_rank = np.concatenate((user_to_rank, items_to_rank))
+    predicted = match_model.call(user_and_offers_to_rank)
     return predicted

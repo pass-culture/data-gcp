@@ -1,6 +1,7 @@
 # pylint: disable=invalid-name
 import json
 import random
+import numpy as np
 from sqlalchemy import text
 from pcreco.core.user import User
 from pcreco.core.utils.cold_start_status import get_cold_start_status
@@ -151,13 +152,13 @@ class Recommendation:
             return recommendations
 
         def _get_instances(self) -> List[Dict[str, str]]:
-            user_to_rank = [self.user.id] * len(self.recommendable_offers)
+            user_to_rank = [self.user.id]
             offer_ids_to_rank = []
             for recommendation in self.recommendable_offers:
                 offer_ids_to_rank.append(
                     recommendation["item_id"] if recommendation["item_id"] else ""
                 )
-            instances = {"input_1": user_to_rank, "input_2": offer_ids_to_rank}
+            instances = {"input_1": user_to_rank+offer_ids_to_rank}
             return instances
 
         def get_recommendable_offers(self) -> List[Dict[str, Any]]:

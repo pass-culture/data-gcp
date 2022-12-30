@@ -634,22 +634,6 @@ workflows:
             - DATA_GCP_PROD
             - Slack
           <<: *slack-fail-post-step
-          
-      - cloud-function-deploy:
-          name: cold-data-prod
-          cloud-function-name: cold_data_prod
-          cloud-function-folder: cold-data-function-source
-          requires:
-            - linter
-          filters:
-            branches:
-              only:
-                - production
-          context:
-            - DATA_GCP
-            - DATA_GCP_PROD
-            - Slack
-          <<: *slack-fail-post-step
 
       # Slack alerts jobs
       # ----------------

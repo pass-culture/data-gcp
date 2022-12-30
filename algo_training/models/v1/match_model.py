@@ -14,9 +14,10 @@ class MatchModel(Model):
         self.dot = Dot(axes=1, normalize=True)
 
     def call(self, inputs):
-        tmp_user_input = [inputs[0]] * len(inputs[1:])
-        user_input = tf.reshape(tmp_user_input, [len(inputs[1:])])
-        positive_item_input = tf.reshape(inputs[1:], [len(inputs[1:])])
+        nb_offers = tf.size(inputs[1:])
+        user_input = tf.reshape([inputs[0]], (nb_offers, 1))
+        user_input = tf.cast(user_input, dtype=tf.string)
+        positive_item_input = tf.reshape(inputs[1:], (nb_offers, 1))
 
         user_embedding = self.user_layer(user_input)
         user_embedding = self.flatten(user_embedding)

@@ -510,7 +510,7 @@ BIGQUERY_SCHEMAS = {
         "user_civility": "STRING",
         "user_school_type": "STRING",
         "user_is_active": "BOOLEAN",
-        "user_age": "FLOAT",
+        "user_age": "FLOAT64",
         "user_role": "STRING",
         "user_birth_date": "DATETIME",
         "user_cultural_survey_filled_date": "DATETIME",

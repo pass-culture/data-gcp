@@ -815,8 +815,7 @@ ENRICHED_USER_DATA_INPUT = {
     "user_beneficiary": [
         {
             "user_id": "1",
-            "user_is_beneficiary": True,
-            "user_department_code": 93,
+            "user_department_code": "93",
             "user_postal_code": "93000",
             "user_activity": "Inactif (ni en emploi ni au chômage), En incapacité de travailler",
             "user_civility": "Mme",
@@ -824,11 +823,6 @@ ENRICHED_USER_DATA_INPUT = {
             "user_cultural_survey_filled_date": datetime.now().replace(microsecond=0),
             "user_is_active": True,
             "user_age": 18,
-            "user_has_completed_idCheck": True,
-            "user_phone_validation_status": True,
-            "user_has_validated_email": True,
-            "user_has_enabled_marketing_push": True,
-            "user_has_enabled_marketing_email": True,
             "user_birth_date": datetime.now().replace(microsecond=0),
             "user_role": "BENEFICIARY",
             "user_school_type": "Lycée agricole",

@@ -3,7 +3,7 @@ with population_dpt as (
       DATE(pop.current_date) active_month,
       pop.decimal_age,
       DATE(pop.born_date) as born_date,
-      case when pop.department_code in ("2A","2B") then "20" else pop.department_code end as department_code,
+      pop.department_code,
       pop.department_name,
       dep.region_name,
       sum(population) as population

@@ -7,4 +7,8 @@ analytics_tables = {
         "sql": f"{SQL_PATH}/analytics/macro_rayons.sql",
         "destination_dataset_table": "{{ bigquery_analytics_dataset }}.macro_rayons",
     },
+    "eac_cash_in": {
+        "sql": f"{SQL_PATH}/analytics/eac_cash_in.sql",
+        "destination_dataset_table": "{{ bigquery_analytics_dataset }}.eac_cash_in",
+    },
 }

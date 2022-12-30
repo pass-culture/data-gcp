@@ -21,10 +21,7 @@ SELECT
     question_number,
     group_type,
     dimension,
-    CASE 
-        WHEN dimension = '20' THEN 'DPC-D2A' 
-        ELSE CONCAT('DPC-D',dimension) 
-    END AS dimension_propilote,
+    CONCAT('DPC-D',dimension) as dimension_propilote,
     month,
     kpi
 FROM

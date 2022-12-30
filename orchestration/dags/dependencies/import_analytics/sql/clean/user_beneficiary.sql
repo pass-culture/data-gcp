@@ -14,8 +14,18 @@ WITH user_beneficiary as (
             user_department_code
         ) AS user_department_code,
         user_postal_code,
-        user_activity,
-        user_civility,
+        CASE
+            WHEN user_activity in ("Alternant", "Apprenti", "Volontaire") THEN "Apprenti, Alternant, Volontaire en service civique rémunéré"
+            WHEN user_activity in ("Inactif") THEN "Inactif (ni en emploi ni au chômage), En incapacité de travailler"
+            WHEN user_activity in ("Étudiant") THEN "Etudiant"
+            WHEN user_activity in ("Chômeur", "En recherche d'emploi ou chômeur") THEN "Chômeur, En recherche d'emploi"
+            ELSE user_activity
+        END AS user_activity,
+        CASE
+            WHEN user_civility in ("M", "M.") THEN "M."
+            WHEN user_civility IN ("Mme") THEN "Mme"
+            ELSE user_civility
+        END AS user_civility,
         user_school_type,
         user_is_active,
         user_age,

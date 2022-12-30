@@ -8,7 +8,8 @@ from metrics import get_actual_and_predicted
 class MockModel:
     @staticmethod
     def predict(input_list: list, verbose: int):
-        return np.arange((np.array(input_list).shape[1]))
+        offers_to_score = input_list[1:]
+        return np.arange((np.array(offers_to_score).shape[0]))
 
 
 @pytest.fixture

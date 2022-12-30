@@ -51,7 +51,7 @@ def get_prediction(user_id, data_model_dict):
     user_and_offers_to_rank = np.concatenate(
         (user_to_rank, np.array(list(data.item_id)))
     )
-    prediction = model.predict(user_and_offers_to_rank)
+    prediction = model.predict(user_and_offers_to_rank, verbose=0)
     print("prediction: ", prediction)
     df_predicted = pd.DataFrame(
         {

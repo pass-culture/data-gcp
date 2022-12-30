@@ -48,13 +48,15 @@ def get_prediction(user_id, data_model_dict):
     offer_subcategoryid = np.reshape(
         np.array(list(data.offer_subcategoryid)), (nboffers, 1)
     )
-    user_and_offers_to_rank = np.concatenate((user_to_rank, np.array(list(data.item_id))))
-    prediction = model.call(user_and_offers_to_rank)
-    print("prediction: ",prediction)
+    user_and_offers_to_rank = np.concatenate(
+        (user_to_rank, np.array(list(data.item_id)))
+    )
+    prediction = model.predict(user_and_offers_to_rank)
+    print("prediction: ", prediction)
     df_predicted = pd.DataFrame(
         {
             "item_id": offer_to_score.flatten().tolist(),
-            "score": prediction.tolist(),
+            "score": prediction.flatten().tolist(),
             "offer_subcategoryid": offer_subcategoryid.flatten().tolist(),
         }
     )

@@ -26,8 +26,8 @@ from common.config import (
     BIGQUERY_RAW_DATASET,
     MLFLOW_URL,
 )
+from common.operators.biquery import GCloudComputeSSHOperator
 
-from common.operator import GCloudComputeSSHOperator
 from dependencies.training_data.utils import create_algo_training_slack_block
 from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
 
@@ -45,7 +45,7 @@ dag_config = {
     "TRAIN_SET_SIZE": 0.8,
 }
 
-# GCE_TRAINING_INSTANCE = "algo_training_dev-1"
+GCE_TRAINING_INSTANCE = "algo-training-dev-1"
 
 default_args = {
     "start_date": datetime(2022, 11, 30),

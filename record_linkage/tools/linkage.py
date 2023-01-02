@@ -34,6 +34,7 @@ def run_linkage(
             with concurrent.futures.ProcessPoolExecutor(max_process) as executor:
                 futures = executor.map(
                     process_record_linkage,
+                    repeat(indexer),
                     repeat(data_and_hyperparams_dict),
                     repeat(df_source_tmp),
                     repeat(subset_divisions),
@@ -50,11 +51,15 @@ def run_linkage(
 
 
 def process_record_linkage(
-    data_and_hyperparams_dict, df_source_tmp, subset_divisions, batch_number
+    indexer, data_and_hyperparams_dict, df_source_tmp, subset_divisions, batch_number
 ):
     try:
         return get_linked_offers(
-            data_and_hyperparams_dict, df_source_tmp, subset_divisions, batch_number
+            indexer,
+            data_and_hyperparams_dict,
+            df_source_tmp,
+            subset_divisions,
+            batch_number,
         )
     except Exception as e:
         print(e)

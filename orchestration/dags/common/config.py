@@ -2,12 +2,18 @@ import os
 
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT", "passculture-data-ehp")
 GCP_PROJECT = os.environ.get("GCP_PROJECT", "passculture-data-ehp")
-GCP_REGION = "europe-west1"
-GCE_ZONE = "europe-west1-b"
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 DAG_FOLDER = os.environ.get("DAG_FOLDER", "dags/")
-BASE32_JS_LIB_PATH = f"gs://data-bucket-{ENV_SHORT_NAME}/base32-encode/base32.js"
 
+SSH_USER = os.environ.get("SSH_USER", "airflow")
+GCP_REGION = "europe-west1"
+GCE_ZONE = "europe-west1-b"
+VM_SUBNET = os.environ.get("VM_SUBNET", f"data-{ENV_SHORT_NAME}-public")
+VM_NETWORK = os.environ.get("VM_NETWORK", f"vpc-data-{ENV_SHORT_NAME}")
+VM_SA = os.environ.get("VM_SA", f"algo-training-{ENV_SHORT_NAME}")
+
+
+BASE32_JS_LIB_PATH = f"gs://data-bucket-{ENV_SHORT_NAME}/base32-encode/base32.js"
 APPLICATIVE_EXTERNAL_CONNECTION_ID = os.environ.get(
     "APPLICATIVE_EXTERNAL_CONNECTION_ID", ""
 )
@@ -41,9 +47,6 @@ BIGQUERY_OPEN_DATA_PUBLIC_DATASET = os.environ.get(
 )
 
 APPLICATIVE_PREFIX = "applicative_database_"
-SURVEY_PREFIX = "survey_"
-
-TABLE_AB_TESTING = os.environ.get("TABLE_AB_TESTING", "abc_testing_20220322_v1v2")
 QPI_TABLE = "qpi_answers_v4"
 RECOMMENDATION_SQL_INSTANCE = os.environ.get(
     "RECOMMENDATION_SQL_INSTANCE", f"cloudsql-recommendation-{ENV_SHORT_NAME}"

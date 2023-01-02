@@ -5,7 +5,7 @@ from airflow.operators.python import PythonOperator
 from airflow.operators.dummy_operator import DummyOperator
 from dependencies.appsflyer.import_appsflyer import analytics_tables
 from common.alerts import task_fail_slack_alert
-from common.operator import bigquery_job_task
+from common.operators.biquery import bigquery_job_task
 from common.utils import depends_loop
 from common import macros
 from common.config import ENV_SHORT_NAME, GCP_PROJECT

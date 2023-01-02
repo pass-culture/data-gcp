@@ -11,7 +11,7 @@ from common.config import (
     BIGQUERY_CLEAN_DATASET,
 )
 from common.alerts import task_fail_slack_alert
-from common.operator import bigquery_job_task
+from common.operators.biquery import bigquery_job_task
 from common.utils import depends_loop
 from common.access_gcp_secrets import access_secret_data
 import pandas as pd

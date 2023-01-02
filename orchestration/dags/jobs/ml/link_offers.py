@@ -1,34 +1,24 @@
-import os
 from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.models import Param
-from airflow.operators.bash_operator import BashOperator
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.providers.google.cloud.operators.compute import (
-    ComputeEngineStartInstanceOperator,
-    ComputeEngineStopInstanceOperator,
+from common.operators.gce import (
+    StartGCEOperator,
+    StopGCEOperator,
+    CloneRepositoryGCEOperator,
+    SSHGCEOperator,
 )
-
 from common import macros
-from common.access_gcp_secrets import access_secret_data
 from common.alerts import task_fail_slack_alert
 from common.config import (
     GCP_PROJECT_ID,
-    GCE_ZONE,
     ENV_SHORT_NAME,
     DAG_FOLDER,
 )
 
-GCE_INSTANCE = os.environ.get("GCE_TRAINING_INSTANCE", "algo-training-dev")
-DATE = "{{ts_nodash}}"
-
-DEFAULT = f"""
-cd data-gcp/record_linkage
-export PATH="/opt/conda/bin:/opt/conda/condabin:"+$PATH
-export ENV_SHORT_NAME={ENV_SHORT_NAME}
-export GCP_PROJECT_ID={GCP_PROJECT_ID}
-"""
+DEFAULT_REGION = "europe-west1"
+GCE_INSTANCE = f"link-offers-{ENV_SHORT_NAME}"
+BASE_DIR = f"data-gcp/record_linkage"
 
 default_args = {
     "start_date": datetime(2022, 12, 28),
@@ -51,128 +41,81 @@ with DAG(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
+        "machine_type": Param(
+            default="n1-standard-2" if ENV_SHORT_NAME == "dev" else "n1-standard-32",
+            type="string",
+        ),
     },
 ) as dag:
-    start = DummyOperator(task_id="start", dag=dag)
 
-    gce_instance_start = ComputeEngineStartInstanceOperator(
-        project_id=GCP_PROJECT_ID,
-        zone=GCE_ZONE,
-        resource_id=GCE_INSTANCE,
+    gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
-        dag=dag,
+        instance_name=GCE_INSTANCE,
+        machine_type="{{ params.machine_type }}",
     )
 
-    FETCH_CODE = r'"if cd data-gcp; then git checkout master && git pull && git checkout {{ params.branch }} && git pull; else git clone git@github.com:pass-culture/data-gcp.git && cd data-gcp && git checkout {{ params.branch }} && git pull; fi"'
-    fetch_code = BashOperator(
-        task_id="fetch_code",
-        bash_command=f"""
-            gcloud compute ssh {GCE_INSTANCE} \
-            --zone {GCE_ZONE} \
-            --project {GCP_PROJECT_ID} \
-            --command {FETCH_CODE}
-            """,
-        dag=dag,
+    fetch_code = CloneRepositoryGCEOperator(
+        task_id="fetch_code", instance_name=GCE_INSTANCE, branch="{{ params.branch }}"
     )
 
-    INSTALL_DEPENDENCIES = f""" '{DEFAULT}
-        pip install -r requirements.txt --user'
-    """
-
-    install_dependencies = BashOperator(
+    install_dependencies = SSHGCEOperator(
         task_id="install_dependencies",
-        bash_command=f"""
-            gcloud compute ssh {GCE_INSTANCE} \
-            --zone {GCE_ZONE} \
-            --project {GCP_PROJECT_ID} \
-            --command {INSTALL_DEPENDENCIES}
-            """,
-        dag=dag,
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_DIR,
+        command="""pip install -r requirements.txt --user""",
     )
 
-    DATA_COLLECT = f""" '{DEFAULT}
+    data_collect = SSHGCEOperator(
+        task_id="data_collect",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_DIR,
+        command=f"""
         python data_collect.py \
         --gcp-project {GCP_PROJECT_ID} \
-        --env-short-name {ENV_SHORT_NAME} \
-        '
-    """
-
-    data_collect = BashOperator(
-        task_id="data_collect",
-        bash_command=f"""
-        gcloud compute ssh {GCE_INSTANCE} \
-        --zone {GCE_ZONE} \
-        --project {GCP_PROJECT_ID} \
-        --command {DATA_COLLECT}
+        --env-short-name {ENV_SHORT_NAME}
         """,
-        dag=dag,
     )
 
-    PREPROCESS = f""" '{DEFAULT}
-        python preprocess.py \
-        --gcp-project {GCP_PROJECT_ID} \
-        --env-short-name {ENV_SHORT_NAME} \
-        '
-    """
-
-    preprocess = BashOperator(
+    preprocess = SSHGCEOperator(
         task_id="preprocess",
-        bash_command=f"""
-        gcloud compute ssh {GCE_INSTANCE} \
-        --zone {GCE_ZONE} \
-        --project {GCP_PROJECT_ID} \
-        --command {PREPROCESS}
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_DIR,
+        command=f"""
+         python preprocess.py \
+        --gcp-project {GCP_PROJECT_ID} \
+        --env-short-name {ENV_SHORT_NAME}
         """,
-        dag=dag,
     )
 
-    RECORD_LINKAGE = f""" '{DEFAULT}
-        python main.py \
-        --gcp-project {GCP_PROJECT_ID} \
-        --env-short-name {ENV_SHORT_NAME} \
-        '
-    """
-
-    record_linkage = BashOperator(
+    record_linkage = SSHGCEOperator(
         task_id="record_linkage",
-        bash_command=f"""
-        gcloud compute ssh {GCE_INSTANCE} \
-        --zone {GCE_ZONE} \
-        --project {GCP_PROJECT_ID} \
-        --command {RECORD_LINKAGE}
-        """,
-        dag=dag,
-    )
-
-    POSTPROCESS = f""" '{DEFAULT}
-        python postprocess.py \
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_DIR,
+        command=f"""
+         python main.py \
         --gcp-project {GCP_PROJECT_ID} \
-        --env-short-name {ENV_SHORT_NAME} \
-        '
-    """
-
-    postprocess = BashOperator(
-        task_id="postprocess",
-        bash_command=f"""
-        gcloud compute ssh {GCE_INSTANCE} \
-        --zone {GCE_ZONE} \
-        --project {GCP_PROJECT_ID} \
-        --command {POSTPROCESS}
+        --env-short-name {ENV_SHORT_NAME}
         """,
-        dag=dag,
     )
 
-    gce_instance_stop = ComputeEngineStopInstanceOperator(
-        project_id=GCP_PROJECT_ID,
-        zone=GCE_ZONE,
-        resource_id=GCE_INSTANCE,
-        task_id="gce_stop_task",
+    postprocess = SSHGCEOperator(
+        task_id="postprocess",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_DIR,
+        command=f"""
+         python postprocess.py \
+        --gcp-project {GCP_PROJECT_ID} \
+        --env-short-name {ENV_SHORT_NAME}
+        """,
     )
-    end = DummyOperator(task_id="end", dag=dag)
+
+    gce_instance_stop = StopGCEOperator(
+        task_id="gce_stop_task",
+        instance_name=GCE_INSTANCE,
+    )
 
     (
-        start
-        >> gce_instance_start
+        gce_instance_start
         >> fetch_code
         >> install_dependencies
         >> data_collect
@@ -180,5 +123,4 @@ with DAG(
         >> record_linkage
         >> postprocess
         >> gce_instance_stop
-        >> end
     )

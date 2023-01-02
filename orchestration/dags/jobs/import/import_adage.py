@@ -8,7 +8,7 @@ from dependencies.adage.import_adage import analytics_tables
 from google.auth.transport.requests import Request
 from google.oauth2 import id_token
 from common.alerts import task_fail_slack_alert
-from common.operator import bigquery_job_task
+from common.operators.biquery import bigquery_job_task
 from common.utils import depends_loop
 from common import macros
 from common.config import ENV_SHORT_NAME, GCP_PROJECT, DAG_FOLDER

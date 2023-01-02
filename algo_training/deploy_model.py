@@ -229,7 +229,11 @@ def main(
     )
 
     endpoint_params = EndpointParams(
-        endpoint_name, min_nodes, max_nodes, machine_type, traffic_percentage
+        endpoint_name,
+        min_nodes,
+        int(max_nodes),
+        int(machine_type),
+        float(traffic_percentage),
     )
     handler = ModelHandler(region, GCP_PROJECT_ID, model_params, endpoint_params)
     # Upload new model to registery

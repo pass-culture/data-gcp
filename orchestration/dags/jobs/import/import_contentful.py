@@ -13,7 +13,7 @@ from dependencies.contentful.import_contentful import contentful_tables
 
 
 from common.utils import depends_loop, getting_service_account_token
-from common.operator import bigquery_job_task
+from common.operators.biquery import bigquery_job_task
 from common.alerts import task_fail_slack_alert
 
 from common import macros

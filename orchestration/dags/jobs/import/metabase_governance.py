@@ -15,12 +15,12 @@ from dependencies.metabase.import_metabase import (
     analytics_tables,
 )
 from common.config import (
-    GCP_PROJECT,
+    GCP_PROJECT_ID,
     DAG_FOLDER,
     METABASE_EXTERNAL_CONNECTION_ID,
     ENV_SHORT_NAME,
 )
-from common.config import GCP_PROJECT, DAG_FOLDER
+from common.config import GCP_PROJECT_ID, DAG_FOLDER
 from common.alerts import task_fail_slack_alert
 
 default_dag_args = {
@@ -28,7 +28,7 @@ default_dag_args = {
     "retries": 1,
     "on_failure_callback": task_fail_slack_alert,
     "retry_delay": datetime.timedelta(minutes=5),
-    "project_id": GCP_PROJECT,
+    "project_id": GCP_PROJECT_ID,
 }
 
 dag = DAG(

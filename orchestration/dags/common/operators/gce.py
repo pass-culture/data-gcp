@@ -3,7 +3,7 @@ from airflow.utils.decorators import apply_defaults
 from airflow.providers.google.cloud.hooks.compute_ssh import ComputeEngineSSHHook
 from airflow.providers.ssh.operators.ssh import SSHOperator
 from airflow.operators.bash import BashOperator
-from common.config import GCE_ZONE, GCP_PROJECT, SSH_USER, ENV_SHORT_NAME
+from common.config import GCE_ZONE, GCP_PROJECT_ID, SSH_USER, ENV_SHORT_NAME
 from common.hooks.gce import GCEHook
 import typing as t
 
@@ -70,7 +70,7 @@ class CloneRepositoryGCEOperator(SSHOperator):
         hook = ComputeEngineSSHHook(
             instance_name=self.instance_name,
             zone=GCE_ZONE,
-            project_id=GCP_PROJECT,
+            project_id=GCP_PROJECT_ID,
             use_iap_tunnel=True,
             use_oslogin=False,
             user=SSH_USER,
@@ -106,7 +106,7 @@ class SSHGCEOperator(BashOperator):
     DEFAULT_EXPORT = {
         "PATH": "/opt/conda/bin:/opt/conda/condabin:+$PATH",
         "ENV_SHORT_NAME": ENV_SHORT_NAME,
-        "GCP_PROJECT_ID": GCP_PROJECT,
+        "GCP_PROJECT_ID": GCP_PROJECT_ID,
     }
     template_fields = ["instance_name", "bash_command"]
 
@@ -133,7 +133,7 @@ class SSHGCEOperator(BashOperator):
         super(SSHGCEOperator, self).__init__(
             bash_command=f"gcloud compute ssh {SSH_USER}@{self.instance_name} "
             f"--zone {GCE_ZONE} "
-            f"--project {GCP_PROJECT} "
+            f"--project {GCP_PROJECT_ID} "
             f"--command '{command}'",
             *args,
             **kwargs,

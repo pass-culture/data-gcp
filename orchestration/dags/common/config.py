@@ -1,11 +1,11 @@
 import os
 
-GCP_PROJECT_ID = os.environ.get("GCP_PROJECT", "passculture-data-ehp")
-GCP_PROJECT = os.environ.get("GCP_PROJECT", "passculture-data-ehp")
+GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 DAG_FOLDER = os.environ.get("DAG_FOLDER", "dags/")
 
 SSH_USER = os.environ.get("SSH_USER", "airflow")
+
 GCP_REGION = "europe-west1"
 GCE_ZONE = "europe-west1-b"
 VM_SUBNET = os.environ.get("VM_SUBNET", f"data-{ENV_SHORT_NAME}-public")
@@ -58,5 +58,5 @@ RECOMMENDATION_SQL_BASE = os.environ.get(
 CONNECTION_ID = (
     os.environ.get("BIGQUERY_CONNECTION_RECOMMENDATION")
     if ENV_SHORT_NAME != "prod"
-    else f"{GCP_PROJECT}.{GCP_REGION}.cloudsql-recommendation-production-bq-connection"
+    else f"{GCP_PROJECT_ID}.{GCP_REGION}.cloudsql-recommendation-production-bq-connection"
 )

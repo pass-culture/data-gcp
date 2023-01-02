@@ -5,7 +5,7 @@ from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
 
 from datetime import datetime
 from common.access_gcp_secrets import access_secret_data
-from common.config import GCP_PROJECT, ENV_SHORT_NAME
+from common.config import GCP_PROJECT_ID, ENV_SHORT_NAME
 
 SLACK_CONN_ID = "slack_analytics"
 
@@ -17,18 +17,18 @@ ENV_EMOJI = {
 
 JOB_TYPE = {
     "analytics": access_secret_data(
-        GCP_PROJECT,
+        GCP_PROJECT_ID,
         "slack-composer-analytics-webhook-token",
         default=None,
     ),
     "prod": access_secret_data(
-        GCP_PROJECT, "slack-composer-prod-webhook-token", default=None
+        GCP_PROJECT_ID, "slack-composer-prod-webhook-token", default=None
     ),
     "stg": access_secret_data(
-        GCP_PROJECT, "slack-composer-ehp-webhook-token", default=None
+        GCP_PROJECT_ID, "slack-composer-ehp-webhook-token", default=None
     ),
     "dev": access_secret_data(
-        GCP_PROJECT, "slack-composer-ehp-webhook-token", default=None
+        GCP_PROJECT_ID, "slack-composer-ehp-webhook-token", default=None
     ),
 }
 

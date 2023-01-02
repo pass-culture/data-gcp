@@ -8,7 +8,7 @@ from common.utils import depends_loop
 from airflow.operators.dummy_operator import DummyOperator
 from common.config import DAG_FOLDER
 from common.config import (
-    GCP_PROJECT,
+    GCP_PROJECT_ID,
 )
 from dependencies.firebase.import_firebase import import_tables
 from common.alerts import task_fail_slack_alert
@@ -24,7 +24,7 @@ dags = {
             "start_date": datetime.datetime(2022, 6, 9),
             "retries": 6,
             "retry_delay": datetime.timedelta(hours=6),
-            "project_id": GCP_PROJECT,
+            "project_id": GCP_PROJECT_ID,
         },
     },
     "intraday": {
@@ -36,7 +36,7 @@ dags = {
             "start_date": datetime.datetime(2022, 6, 9),
             "retries": 1,
             "retry_delay": datetime.timedelta(hours=6),
-            "project_id": GCP_PROJECT,
+            "project_id": GCP_PROJECT_ID,
         },
     },
 }
@@ -76,7 +76,7 @@ for type, params in dags.items():
                     "query": "{% include '" + job_params["sql"] + "' %}",
                     "useLegacySql": False,
                     "destinationTable": {
-                        "projectId": GCP_PROJECT,
+                        "projectId": GCP_PROJECT_ID,
                         "datasetId": job_params["destination_dataset"],
                         "tableId": destination_table,
                     },

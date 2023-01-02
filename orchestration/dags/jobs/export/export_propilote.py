@@ -7,7 +7,7 @@ from dependencies.propilote.export_propilote import (
 )
 from common.config import DAG_FOLDER, GCP_PROJECT
 from common.alerts import task_fail_slack_alert
-from common.operatorss.biquery import bigquery_job_task
+from common.operators.biquery import bigquery_job_task
 from common.utils import depends_loop
 
 default_dag_args = {

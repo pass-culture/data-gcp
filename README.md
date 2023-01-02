@@ -1,6 +1,6 @@
 # data-gcp
 
-Repo pour la team data sur GCP
+Repo pour la team data sur GCP.
 
 ## Organisation
 

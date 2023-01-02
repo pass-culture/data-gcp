@@ -27,7 +27,7 @@ from utils import (
 L2_REG = 0
 N_EPOCHS = 1000
 VERBOSE = 0 if ENV_SHORT_NAME == "prod" else 1
-LOSS_CUTOFF = 0.0005
+LOSS_CUTOFF = 0.005
 
 
 def train(
@@ -106,6 +106,12 @@ def train(
             validation_data=validation_dataset,
             verbose=VERBOSE,
             callbacks=[
+                tf.keras.callbacks.ReduceLROnPlateau(
+                    monitor="val_loss",
+                    factor=0.1,
+                    patience=2,
+                    min_delta=LOSS_CUTOFF,
+                ),
                 tf.keras.callbacks.EarlyStopping(
                     monitor="val_loss",
                     patience=3,

@@ -9,6 +9,9 @@ from common.operators.gce import (
     CloneRepositoryGCEOperator,
     SSHGCEOperator,
 )
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryExecuteQueryOperator,
+)
 from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
 
 from common import macros
@@ -18,29 +21,28 @@ from common.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     GCE_TRAINING_INSTANCE,
-    GCE_ZONE,
     MLFLOW_BUCKET_NAME,
     SLACK_CONN_ID,
     SLACK_CONN_PASSWORD,
     BIGQUERY_RAW_DATASET,
     MLFLOW_URL,
 )
-from common.operators.biquery import GCloudComputeSSHOperator
 
 from dependencies.training_data.utils import create_algo_training_slack_block
 from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
 
-DATE = "{{ts_nodash}}"
+DATE = "{{ ts_nodash }}"
 
 # Environment variables to export before running commands
 dag_config = {
     "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/algo_training_{ENV_SHORT_NAME}/algo_training_{DATE}",
     "ENV_SHORT_NAME": ENV_SHORT_NAME,
     "GCP_PROJECT_ID": GCP_PROJECT_ID,
+    "BASE_DIR": f"data-gcp/algo_training",
     "TRAIN_DIR": "/home/airflow/train",
     "EXPERIMENT_NAME": f"algo_training_v2.1_{ENV_SHORT_NAME}",
-    "BATCH_SIZE": 4096,
-    "EMBEDDING_SIZE": 128,
+    "BATCH_SIZE": 1024,
+    "EMBEDDING_SIZE": 64,
     "TRAIN_SET_SIZE": 0.8,
 }
 
@@ -98,25 +100,27 @@ with DAG(
         import_recommendation_data[dataset] = task
 
     gce_instance_start = StartGCEOperator(
-        task_id="gce_start_task", instance_name=GCE_INSTANCE
+        task_id="gce_start_task", instance_name=GCE_TRAINING_INSTANCE
     )
 
     fetch_code = CloneRepositoryGCEOperator(
-        task_id="fetch_code", instance_name=GCE_INSTANCE, branch="{{ params.branch }}"
+        task_id="fetch_code",
+        instance_name=GCE_TRAINING_INSTANCE,
+        branch="{{ params.branch }}",
     )
 
     install_dependencies = SSHGCEOperator(
         task_id="install_dependencies",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
+        instance_name=GCE_TRAINING_INSTANCE,
+        base_dir=dag_config["BASE_DIR"],
         command="pip install -r requirements.txt --user",
         dag=dag,
     )
 
     training = SSHGCEOperator(
         task_id="training",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
+        instance_name=GCE_TRAINING_INSTANCE,
+        base_dir=dag_config["BASE_DIR"],
         export_config=dag_config,
         command=f"python train_v2.py "
         f"--experiment-name {dag_config['EXPERIMENT_NAME']} "
@@ -128,8 +132,8 @@ with DAG(
 
     evaluate = SSHGCEOperator(
         task_id="evaluate",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
+        instance_name=GCE_TRAINING_INSTANCE,
+        base_dir=dag_config["BASE_DIR"],
         export_config=dag_config,
         command=f"python evaluate_v2.py --experiment-name {dag_config['EXPERIMENT_NAME']}",
         dag=dag,
@@ -137,7 +141,7 @@ with DAG(
 
     gce_instance_stop = StopGCEOperator(
         task_id="gce_stop_task",
-        instance_name=GCE_INSTANCE,
+        instance_name=GCE_TRAINING_INSTANCE,
     )
 
     send_slack_notif_success = SlackWebhookOperator(

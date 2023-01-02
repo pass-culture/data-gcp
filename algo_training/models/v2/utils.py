@@ -27,7 +27,7 @@ def load_triplets_dataset(
     positive_dataset = tf.data.Dataset.from_tensor_slices(positive_data)
     negative_dataset = (
         tf.data.Dataset.from_tensor_slices(item_ids)
-        .shuffle(buffer_size=len(item_ids) // 10)
+        .shuffle(buffer_size=len(item_ids))
         .repeat()
     )  # We shuffle the negative examples to get new random examples at each call
 

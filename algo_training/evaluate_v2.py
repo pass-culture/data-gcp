@@ -84,13 +84,13 @@ def evaluate(
         mlflow.log_metrics(metrics)
 
         # Export the PCA representations of the item embeddings
-        pca_representations_path = export_path + "pca_representations/"
+        pca_representations_path = export_path + "pca_plots/"
         save_pca_representation(
             loaded_model,
             training_item_categories,
             figures_folder=pca_representations_path,
         )
-        mlflow.log_artifact(pca_representations_path, "pca_representation")
+        mlflow.log_artifacts(pca_representations_path, "pca_plots")
 
         # Save the experiment information in BigQuery
         log_results = {

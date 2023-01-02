@@ -28,11 +28,10 @@ def load_triplets_dataset(
         buffer_size=4096
     )  # We shuffle the negative examples to get new random examples at each call
 
-    dataset = tf.data.Dataset.zip((anchor_dataset, positive_dataset, negative_dataset))
+    x = tf.data.Dataset.zip((anchor_dataset, positive_dataset, negative_dataset))
+    y = tf.data.Dataset.from_tensor_slices(np.ones((len(input_data), 3)))
 
-    return tf.data.Dataset.zip(
-        (dataset, tf.data.Dataset.from_tensor_slices(np.ones((len(dataset), 3))))
-    )
+    return tf.data.Dataset.zip(x, y)
 
 
 class MatchModelCheckpoint(tf.keras.callbacks.Callback):
@@ -130,6 +129,10 @@ def save_pca_representation(
         )
     )
 
+    fig = item_representation.plot.scatter(
+        x="x", y="y", c="category_index", colormap="tab20"
+    ).get_figure()
+    fig.savefig(figures_folder + f"ALL_CATEGORIES.pdf")
     for category in categories:
         fig = (
             item_representation.loc[lambda df: df["offer_categoryId"] == category]

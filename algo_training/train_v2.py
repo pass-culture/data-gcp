@@ -1,10 +1,10 @@
 import mlflow
 import typer
 
-from tools.data_collect_queries import get_data
-
 import tensorflow as tf
+from loguru import logger
 
+from tools.data_collect_queries import get_data
 from models.v1.match_model import MatchModel
 from models.v1.triplet_model import TripletModel
 from models.v1.utils import (
@@ -123,8 +123,8 @@ def train(
             ],
         )
 
-        print("------- TRAINING DONE -------")
-        print(mlflow.get_artifact_uri("model"))
+        logger.info("------- TRAINING DONE -------")
+        logger.info(mlflow.get_artifact_uri("model"))
 
 
 if __name__ == "__main__":

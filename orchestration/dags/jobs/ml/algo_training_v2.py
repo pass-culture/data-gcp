@@ -21,7 +21,6 @@ from common.config import (
     GCE_TRAINING_INSTANCE,
     GCE_ZONE,
     MLFLOW_BUCKET_NAME,
-    SLACK_BLOCKS,
     SLACK_CONN_ID,
     SLACK_CONN_PASSWORD,
     BIGQUERY_RAW_DATASET,
@@ -29,7 +28,7 @@ from common.config import (
 )
 
 from common.operator import GCloudComputeSSHOperator
-from common.utils import create_algo_training_slack_block
+from dependencies.training_data.utils import create_algo_training_slack_block
 from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
 
 DATE = "{{ts_nodash}}"

@@ -22,7 +22,6 @@ from common.config import (
     BIGQUERY_ANALYTICS_DATASET,
     BIGQUERY_CLEAN_DATASET,
     RECOMMENDATION_SQL_INSTANCE,
-    RECOMMENDATION_SQL_INSTANCE,
     CONNECTION_ID,
 )
 from common.utils import from_external

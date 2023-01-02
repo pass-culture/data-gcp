@@ -32,7 +32,6 @@ from common.config import (
     DAG_FOLDER,
     QPI_TABLE,
     RECOMMENDATION_SQL_INSTANCE,
-    RECOMMENDATION_SQL_INSTANCE,
 )
 from dependencies.import_recommendation_cloudsql.monitor_tables import monitoring_tables
 from common.alerts import task_fail_slack_alert

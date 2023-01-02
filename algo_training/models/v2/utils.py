@@ -12,6 +12,7 @@ from utils import connect_remote_mlflow
 def load_triplets_dataset(
     input_data: pd.DataFrame,
     item_ids: list,
+    batch_size: int,
 ) -> tf.data.Dataset:
     """
     Builds a tf Dataset of shape with:
@@ -24,14 +25,18 @@ def load_triplets_dataset(
 
     anchor_dataset = tf.data.Dataset.from_tensor_slices(anchor_data)
     positive_dataset = tf.data.Dataset.from_tensor_slices(positive_data)
-    negative_dataset = tf.data.Dataset.from_tensor_slices(item_ids).shuffle(
-        buffer_size=4096
+    negative_dataset = (
+        tf.data.Dataset.from_tensor_slices(item_ids)
+        .shuffle(buffer_size=batch_size)
+        .repeat()
     )  # We shuffle the negative examples to get new random examples at each call
 
     x = tf.data.Dataset.zip((anchor_dataset, positive_dataset, negative_dataset))
     y = tf.data.Dataset.from_tensor_slices(np.ones((len(input_data), 3)))
 
-    return tf.data.Dataset.zip(x, y)
+    return tf.data.Dataset.zip((x, y)).batch(
+        batch_size=batch_size, drop_remainder=False
+    )
 
 
 class MatchModelCheckpoint(tf.keras.callbacks.Callback):

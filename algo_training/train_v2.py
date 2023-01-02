@@ -62,12 +62,12 @@ def train(
     training_item_ids = train_data["item_id"].unique()
 
     # Create tf datasets
-    train_dataset = load_triplets_dataset(train_data, item_ids=training_item_ids).batch(
-        batch_size=batch_size, drop_remainder=False
+    train_dataset = load_triplets_dataset(
+        train_data, item_ids=training_item_ids, batch_size=batch_size
     )
     validation_dataset = load_triplets_dataset(
-        validation_data, item_ids=training_item_ids
-    ).batch(batch_size=batch_size, drop_remainder=False)
+        validation_data, item_ids=training_item_ids, batch_size=batch_size
+    )
 
     # Connect to MLFlow
     client_id = get_secret("mlflow_client_id")

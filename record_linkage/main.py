@@ -1,7 +1,7 @@
 import pandas as pd
 import typer
 from tools.config import ENV_SHORT_NAME, GCP_PROJECT_ID, SUBCATEGORIES_WITH_PERFORMER
-from tools.linkage import get_linked_offers
+from tools.linkage import run_linkage
 
 
 def main(
@@ -59,9 +59,10 @@ def main(
     df_offers_matched_list = []
     for group_sample in data_and_hyperparams_dict.keys():
         df_offers_matched_list.append(
-            get_linked_offers(data_and_hyperparams_dict[group_sample])
+            run_linkage(data_and_hyperparams_dict[group_sample])
         )
     df_offers_linked_full = pd.concat(df_offers_matched_list)
+
     df_offers_linked_full.to_gbq(
         f"sandbox_{env_short_name}.linked_offers_full",
         project_id=gcp_project,

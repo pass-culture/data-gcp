@@ -23,7 +23,7 @@ def get_data(
         query_filter += (
             f"event_date >= DATE_ADD(CURRENT_DATE(), INTERVAL -{event_day_number} DAY) "
         )
-    if max_limit > 0:
+    if max_limit:
         limit_filter = f"LIMIT {max_limit}"
     query = f"""
         SELECT * FROM `{GCP_PROJECT_ID}.{dataset}.{table_name}` {query_filter} {limit_filter}

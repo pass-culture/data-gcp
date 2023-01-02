@@ -3,12 +3,11 @@ from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryExecuteQueryOperator,
-)
-from airflow.providers.google.cloud.operators.compute import (
-    ComputeEngineStartInstanceOperator,
-    ComputeEngineStopInstanceOperator,
+from common.operators.gce import (
+    StartGCEOperator,
+    StopGCEOperator,
+    CloneRepositoryGCEOperator,
+    SSHGCEOperator,
 )
 from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
 
@@ -98,37 +97,27 @@ with DAG(
         )
         import_recommendation_data[dataset] = task
 
-    gce_instance_start = ComputeEngineStartInstanceOperator(
-        task_id="gce_start_task",
-        project_id=GCP_PROJECT_ID,
-        zone=GCE_ZONE,
-        resource_id=GCE_TRAINING_INSTANCE,
-        dag=dag,
+    gce_instance_start = StartGCEOperator(
+        task_id="gce_start_task", instance_name=GCE_INSTANCE
     )
 
-    fetch_code = GCloudComputeSSHOperator(
-        task_id="fetch_code",
-        resource_id=GCE_TRAINING_INSTANCE,
-        command=r"if cd data-gcp; then git fetch --all && git reset --hard origin/{{ params.branch }}; "
-        r"else git clone git@github.com:pass-culture/data-gcp.git "
-        r"&& cd data-gcp && git checkout {{ params.branch }} && git pull; fi",
-        dag=dag,
+    fetch_code = CloneRepositoryGCEOperator(
+        task_id="fetch_code", instance_name=GCE_INSTANCE, branch="{{ params.branch }}"
     )
 
-    install_dependencies = GCloudComputeSSHOperator(
+    install_dependencies = SSHGCEOperator(
         task_id="install_dependencies",
-        resource_id=GCE_TRAINING_INSTANCE,
-        dag_config=dag_config,
-        path_to_run_command="data-gcp/algo_training",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_DIR,
         command="pip install -r requirements.txt --user",
         dag=dag,
     )
 
-    training = GCloudComputeSSHOperator(
+    training = SSHGCEOperator(
         task_id="training",
-        resource_id=GCE_TRAINING_INSTANCE,
-        dag_config=dag_config,
-        path_to_run_command="data-gcp/algo_training",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_DIR,
+        export_config=dag_config,
         command=f"python train_v2.py "
         f"--experiment-name {dag_config['EXPERIMENT_NAME']} "
         r"--batch-size {{ params.batch_size }} "
@@ -137,20 +126,18 @@ with DAG(
         dag=dag,
     )
 
-    evaluate = GCloudComputeSSHOperator(
+    evaluate = SSHGCEOperator(
         task_id="evaluate",
-        resource_id=GCE_TRAINING_INSTANCE,
-        dag_config=dag_config,
-        path_to_run_command="data-gcp/algo_training",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_DIR,
+        export_config=dag_config,
         command=f"python evaluate_v2.py --experiment-name {dag_config['EXPERIMENT_NAME']}",
         dag=dag,
     )
 
-    gce_instance_stop = ComputeEngineStopInstanceOperator(
+    gce_instance_stop = StopGCEOperator(
         task_id="gce_stop_task",
-        project_id=GCP_PROJECT_ID,
-        zone=GCE_ZONE,
-        resource_id=GCE_TRAINING_INSTANCE,
+        instance_name=GCE_INSTANCE,
     )
 
     send_slack_notif_success = SlackWebhookOperator(

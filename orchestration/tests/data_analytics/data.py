@@ -492,6 +492,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_INPUT = {
             "institution_id": None,
             "collective_offer_subcategory_id": "CONCERT",
             "collective_offer_is_active": True,
+            "collective_offer_image_id": "27",
         }
     ],
     "applicative_database_collective_offer_template": [
@@ -502,6 +503,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_INPUT = {
             "collective_offer_creation_date": "2022-01-16",
             "collective_offer_subcategory_id": "CONCERT",
             "collective_offer_is_active": True,
+            "collective_offer_image_id": "28",
         }
     ],
     "subcategories": [
@@ -553,6 +555,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_EXPECTED = [
         "collective_offer_humanized_id": "AM",
         "passculture_pro_url": "https://passculture.pro/offre/AM/collectif/edition",
         "offer_is_template": False,
+        "collective_offer_image_id": "27",
     },
     {
         "collective_offer_id": "4",
@@ -581,6 +584,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_EXPECTED = [
         "collective_offer_humanized_id": "AQ",
         "passculture_pro_url": "https://passculture.pro/offre/T-AQ/collectif/edition",
         "offer_is_template": True,
+        "collective_offer_image_id": "28",
     },
 ]
 

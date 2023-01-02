@@ -32,7 +32,7 @@ from common.config import (
     DAG_FOLDER,
     QPI_TABLE,
     RECOMMENDATION_SQL_INSTANCE,
-    RECOMMENDATION_SQL_BASE,
+    RECOMMENDATION_SQL_INSTANCE,
 )
 from dependencies.import_recommendation_cloudsql.monitor_tables import monitoring_tables
 from common.alerts import task_fail_slack_alert
@@ -40,7 +40,7 @@ from common import macros
 
 
 database_url = access_secret_data(
-    GCP_PROJECT_ID, f"{RECOMMENDATION_SQL_BASE}-database-url", default=""
+    GCP_PROJECT_ID, f"{RECOMMENDATION_SQL_INSTANCE}-database-url", default=""
 )
 os.environ["AIRFLOW_CONN_PROXY_POSTGRES_TCP"] = (
     database_url.replace("postgresql://", "gcpcloudsql://")
@@ -225,7 +225,7 @@ with DAG(
                     "table": f"public.{table_name}",
                 },
                 "uri": f"{BUCKET_PATH}/{table_name}.csv",
-                "database": RECOMMENDATION_SQL_BASE,
+                "database": RECOMMENDATION_SQL_INSTANCE,
             }
         }
 

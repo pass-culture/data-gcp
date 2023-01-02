@@ -22,7 +22,7 @@ from common.config import (
     BIGQUERY_ANALYTICS_DATASET,
     BIGQUERY_CLEAN_DATASET,
     RECOMMENDATION_SQL_INSTANCE,
-    RECOMMENDATION_SQL_BASE,
+    RECOMMENDATION_SQL_INSTANCE,
     CONNECTION_ID,
 )
 from common.utils import from_external
@@ -41,7 +41,7 @@ BIGQUERY_RAW_DATASET = os.environ.get("BIGQUERY_RAW_DATASET")
 
 # Recreate proprely the connection url
 database_url = access_secret_data(
-    GCP_PROJECT_ID, f"{RECOMMENDATION_SQL_BASE}-database-url", default=""
+    GCP_PROJECT_ID, f"{RECOMMENDATION_SQL_INSTANCE}-database-url", default=""
 )
 os.environ["AIRFLOW_CONN_PROXY_POSTGRES_TCP"] = (
     database_url.replace("postgresql://", "gcpcloudsql://")

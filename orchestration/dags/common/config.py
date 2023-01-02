@@ -51,9 +51,6 @@ QPI_TABLE = "qpi_answers_v4"
 RECOMMENDATION_SQL_INSTANCE = os.environ.get(
     "RECOMMENDATION_SQL_INSTANCE", f"cloudsql-recommendation-{ENV_SHORT_NAME}"
 )
-RECOMMENDATION_SQL_BASE = os.environ.get(
-    "RECOMMENDATION_SQL_BASE", f"cloudsql-recommendation-{ENV_SHORT_NAME}"
-)
 
 CONNECTION_ID = (
     os.environ.get("BIGQUERY_CONNECTION_RECOMMENDATION")

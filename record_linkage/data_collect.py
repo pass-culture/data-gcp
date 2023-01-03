@@ -20,7 +20,9 @@ def get_offers_to_link(gcp_project, env_short_name):
     LEFT JOIN `{gcp_project}.analytics_{env_short_name}.offer_item_ids` oii on oii.offer_id = ado.offer_id 
     LEFT JOIN `{gcp_project}.analytics_{env_short_name}.offer_extracted_data` oed on oed.offer_id = ado.offer_id 
     WHERE ado.offer_subcategoryId != 'LIVRE_PAPIER'
+    AND ado.offer_id not in (SELECT offer_id from `{gcp_project}.analytics_{env_short_name}.offers_already_linked`)
     QUALIFY ROW_NUMBER() OVER (PARTITION BY item_id) = 1
+    LIMIT 100000
     """
     return pd.read_gbq(query)
 

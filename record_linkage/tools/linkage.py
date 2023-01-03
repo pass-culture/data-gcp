@@ -98,7 +98,7 @@ def get_linked_offers(
         ftrs = cpr_cl.compute(candidate_links, df_source_tmp)
 
         # Classification step
-        mts = ftrs[ftrs.sum(axis=1) >= data_and_hyperparams_dict["matches_requiere"]]
+        mts = ftrs[ftrs.sum(axis=1) >= data_and_hyperparams_dict["matches_required"]]
         mts = mts.reset_index()
         mts = mts.rename(columns={"level_0": "index_1", "level_1": "index_2"})
         subset_matches_list.append(mts)

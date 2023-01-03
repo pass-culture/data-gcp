@@ -1,3 +1,5 @@
+import os
+
 import mlflow
 
 import numpy as np
@@ -134,10 +136,11 @@ def save_pca_representation(
         )
     )
 
+    os.mkdir(figures_folder)
     fig = item_representation.plot.scatter(
         x="x", y="y", c="category_index", colormap="tab20"
     ).get_figure()
-    fig.savefig(figures_folder + f"ALL_CATEGORIES.pdf")
+    fig.savefig(figures_folder + "ALL_CATEGORIES.pdf")
     for category in categories:
         fig = (
             item_representation.loc[lambda df: df["offer_categoryId"] == category]

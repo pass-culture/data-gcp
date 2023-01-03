@@ -20,7 +20,6 @@ from common.config import (
     DAG_FOLDER,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
-    GCE_TRAINING_INSTANCE,
     MLFLOW_BUCKET_NAME,
     SLACK_CONN_ID,
     SLACK_CONN_PASSWORD,
@@ -28,7 +27,7 @@ from common.config import (
     MLFLOW_URL,
 )
 
-from dependencies.training_data.utils import create_algo_training_slack_block
+from dependencies.ml.utils import create_algo_training_slack_block
 from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
 
 DATE = "{{ ts_nodash }}"
@@ -46,7 +45,7 @@ dag_config = {
     "TRAIN_SET_SIZE": 0.8,
 }
 
-GCE_TRAINING_INSTANCE = "algo-training-dev-1"
+GCE_TRAINING_INSTANCE = f"algo_training_v2-{DATE}"
 
 default_args = {
     "start_date": datetime(2022, 11, 30),
@@ -100,7 +99,7 @@ with DAG(
         import_recommendation_data[dataset] = task
 
     gce_instance_start = StartGCEOperator(
-        task_id="gce_start_task", instance_name=GCE_TRAINING_INSTANCE
+        task_id="gce_start_task", instance_name=GCE_TRAINING_INSTANCE,
     )
 
     fetch_code = CloneRepositoryGCEOperator(

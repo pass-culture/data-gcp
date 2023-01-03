@@ -8,5 +8,5 @@ FROM (
   FROM
     `{{ bigquery_raw_dataset }}`.`training_data_bookings`
 )
-WHERE
-    row_index < {{ params.train_set_size }} * total
+WHERE row_index < {{ params.train_set_size }} * total
+OR total = 1

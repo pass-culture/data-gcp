@@ -22,11 +22,7 @@ def create_algo_training_slack_block(
                         "text": "Voir les métriques :chart_with_upwards_trend:",
                         "emoji": True,
                     },
-                    "url": mlflow_url
-                    + "#/experiments/"
-                    + "{{ ti.xcom_pull(task_ids='training').split('/')[4] }}"
-                    + "/runs/"
-                    + "{{ ti.xcom_pull(task_ids='training').split('/')[5] }}",
+                    "url": mlflow_url,
                 },
             ],
         },

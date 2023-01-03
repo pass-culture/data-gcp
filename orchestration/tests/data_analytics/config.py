@@ -435,6 +435,7 @@ BIGQUERY_SCHEMAS = {
         "collective_offer_contact_email": "STRING",
         "collective_offer_contact_phone": "STRING",
         "collective_offer_offer_venue": "STRING",
+        "collective_offer_image_id": "STRING",
     },
     "applicative_database_collective_offer_template": {
         "collective_offer_audio_disability_compliant": "BOOLEAN",
@@ -460,6 +461,7 @@ BIGQUERY_SCHEMAS = {
         "collective_offer_contact_phone": "STRING",
         "collective_offer_offer_venue": "STRING",
         "collective_offer_las_validation_type": "STRING",
+        "collective_offer_image_id": "STRING",
     },
     "applicative_database_collective_stock": {
         "collective_stock_id": "STRING",
@@ -501,5 +503,19 @@ BIGQUERY_SCHEMAS = {
     "offer_item_ids": {
         "offer_id": "STRING",
         "item_id": "STRING",
+    },
+    "user_beneficiary": {
+        "user_id": "STRING",
+        "user_creation_date": "DATETIME",
+        "user_postal_code": "STRING",
+        "user_activity": "STRING",
+        "user_civility": "STRING",
+        "user_school_type": "STRING",
+        "user_is_active": "BOOLEAN",
+        "user_age": "FLOAT64",
+        "user_role": "STRING",
+        "user_birth_date": "DATETIME",
+        "user_cultural_survey_filled_date": "DATETIME",
+        "user_department_code": "STRING",
     },
 }

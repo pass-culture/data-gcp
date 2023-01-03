@@ -5,16 +5,16 @@ from common import macros
 from dependencies.propilote.export_propilote import (
     propilote_tables,
 )
-from common.config import DAG_FOLDER, GCP_PROJECT
+from common.config import DAG_FOLDER, GCP_PROJECT_ID
 from common.alerts import task_fail_slack_alert
-from common.operator import bigquery_job_task
+from common.operators.biquery import bigquery_job_task
 from common.utils import depends_loop
 
 default_dag_args = {
     "start_date": datetime.datetime(2022, 6, 24),
     "retries": 1,
     "retry_delay": datetime.timedelta(minutes=5),
-    "project_id": GCP_PROJECT,
+    "project_id": GCP_PROJECT_ID,
     "on_failure_callback": task_fail_slack_alert,
 }
 

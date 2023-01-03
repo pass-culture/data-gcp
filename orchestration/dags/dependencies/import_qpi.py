@@ -1,4 +1,4 @@
-from common.config import GCP_PROJECT, ENV_SHORT_NAME
+from common.config import GCP_PROJECT_ID, ENV_SHORT_NAME
 
 import pandas as pd
 
@@ -47,29 +47,29 @@ QPI_ANSWERS_SCHEMA = [
 UNION_ALL_SQL = f"""
 with qpi_v1 as (
   with unpivot_qpi as(
-  SELECT * FROM `{GCP_PROJECT}.analytics_{ENV_SHORT_NAME}.enriched_qpi_answers_v1` 
+  SELECT * FROM `{GCP_PROJECT_ID}.analytics_{ENV_SHORT_NAME}.enriched_qpi_answers_v1` 
 UNPIVOT(answers FOR categories IN (cinema,audiovisuel,jeux_videos,livre,musees_patrimoine,musique,pratique_artistique,spectacle_vivant,instrument) ) 
 )
 select uqpi.user_id,subcat.category_id as category_id,'none' as subcategory_id from unpivot_qpi uqpi
-join `{GCP_PROJECT}.analytics_{ENV_SHORT_NAME}.subcategories` subcat ON lower(subcat.category_id)=uqpi.categories
+join `{GCP_PROJECT_ID}.analytics_{ENV_SHORT_NAME}.subcategories` subcat ON lower(subcat.category_id)=uqpi.categories
 where answers 
 and user_id is not null
 and uqpi.answers 
 ),
 qpi_v2 as (
   with unpivot_qpi as(
-  SELECT * FROM `{GCP_PROJECT}.analytics_{ENV_SHORT_NAME}.enriched_qpi_answers_v2` 
+  SELECT * FROM `{GCP_PROJECT_ID}.analytics_{ENV_SHORT_NAME}.enriched_qpi_answers_v2` 
 UNPIVOT(answers FOR categories IN (cinema,audiovisuel,jeux_videos,livre,musees_patrimoine,musique,pratique_artistique,spectacle_vivant,instrument) ) 
 )
 select uqpi.user_id,subcat.category_id as category_id,'none' as subcategory_id from unpivot_qpi uqpi
-join `{GCP_PROJECT}.analytics_{ENV_SHORT_NAME}.subcategories` subcat ON lower(subcat.category_id)=uqpi.categories
+join `{GCP_PROJECT_ID}.analytics_{ENV_SHORT_NAME}.subcategories` subcat ON lower(subcat.category_id)=uqpi.categories
 where answers 
 and user_id is not null
 and uqpi.answers 
 ),
 qpi_v3 as(
   with unpivot_qpi as(
-  SELECT * FROM `{GCP_PROJECT}.analytics_{ENV_SHORT_NAME}.enriched_qpi_answers_v3` 
+  SELECT * FROM `{GCP_PROJECT_ID}.analytics_{ENV_SHORT_NAME}.enriched_qpi_answers_v3` 
 UNPIVOT(answers FOR subcategory_id IN (	
 CARTE_CINE_MULTISEANCES	
 ,CARTE_MUSEE	
@@ -118,12 +118,12 @@ CARTE_CINE_MULTISEANCES
 ,VOD) ) 
 )
 select uqpi.user_id,subcat.category_id as category_id,uqpi.subcategory_id from unpivot_qpi uqpi
-join `{GCP_PROJECT}.analytics_{ENV_SHORT_NAME}.subcategories` subcat ON subcat.id=uqpi.subcategory_id
+join `{GCP_PROJECT_ID}.analytics_{ENV_SHORT_NAME}.subcategories` subcat ON subcat.id=uqpi.subcategory_id
 where uqpi.answers
 ),
 qpi_v4 as (
-  SELECT user_id,subcat.category_id,subcategories as subcategory_id, FROM `{GCP_PROJECT}.analytics_{ENV_SHORT_NAME}.enriched_qpi_answers_v4` uqpi
-join `{GCP_PROJECT}.analytics_{ENV_SHORT_NAME}.subcategories` subcat ON subcat.id=uqpi.subcategories
+  SELECT user_id,subcat.category_id,subcategories as subcategory_id, FROM `{GCP_PROJECT_ID}.analytics_{ENV_SHORT_NAME}.enriched_qpi_answers_v4` uqpi
+join `{GCP_PROJECT_ID}.analytics_{ENV_SHORT_NAME}.subcategories` subcat ON subcat.id=uqpi.subcategories
 )
 select * from qpi_v1
 UNION ALL

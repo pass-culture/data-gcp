@@ -12,7 +12,7 @@ from common.config import (
     BIGQUERY_ANALYTICS_DATASET,
     BIGQUERY_RAW_DATASET,
     ENV_SHORT_NAME,
-    GCP_PROJECT,
+    GCP_PROJECT_ID,
     DAG_FOLDER,
 )
 
@@ -28,7 +28,7 @@ default_dag_args = {
     "retries": 1,
     "on_failure_callback": task_fail_slack_alert,
     "retry_delay": datetime.timedelta(minutes=5),
-    "project_id": GCP_PROJECT,
+    "project_id": GCP_PROJECT_ID,
 }
 
 dag = DAG(
@@ -71,7 +71,7 @@ create_enriched_app_downloads_stats = BigQueryExecuteQueryOperator(
         date, 
         'apple' as provider, 
         sum(units) as total_downloads
-    FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.apple_download_stats` 
+    FROM `{GCP_PROJECT_ID}.{BIGQUERY_RAW_DATASET}.apple_download_stats` 
 
     WHERE product_type_identifier in ("1F") 
     GROUP BY date
@@ -80,7 +80,7 @@ create_enriched_app_downloads_stats = BigQueryExecuteQueryOperator(
         date, 
         'google' as provider, 
         sum(daily_device_installs) as total_downloads
-    FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.google_download_stats` 
+    FROM `{GCP_PROJECT_ID}.{BIGQUERY_RAW_DATASET}.google_download_stats` 
     GROUP BY date""",
     destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.app_downloads_stats",
     write_disposition="WRITE_TRUNCATE",

@@ -5,15 +5,15 @@ from airflow.operators.python import PythonOperator
 from airflow.operators.dummy_operator import DummyOperator
 from dependencies.appsflyer.import_appsflyer import analytics_tables
 from common.alerts import task_fail_slack_alert
-from common.operator import bigquery_job_task
+from common.operators.biquery import bigquery_job_task
 from common.utils import depends_loop
 from common import macros
-from common.config import ENV_SHORT_NAME, GCP_PROJECT
+from common.config import ENV_SHORT_NAME, GCP_PROJECT_ID
 from common.config import DAG_FOLDER
 import json
 from common.config import (
     ENV_SHORT_NAME,
-    GCP_PROJECT,
+    GCP_PROJECT_ID,
     DAG_FOLDER,
 )
 
@@ -29,7 +29,7 @@ default_dag_args = {
     "retries": 1,
     "on_failure_callback": task_fail_slack_alert,
     "retry_delay": datetime.timedelta(minutes=5),
-    "project_id": GCP_PROJECT,
+    "project_id": GCP_PROJECT_ID,
 }
 
 dag = DAG(

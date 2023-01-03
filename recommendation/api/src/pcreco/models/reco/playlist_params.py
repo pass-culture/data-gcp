@@ -5,6 +5,7 @@ from pcreco.utils.env_vars import (
     MIXING_FEATURE,
     MIXING_FEATURE_LIST,
     DEFAULT_RECO_RADIUS,
+    DEFAULT_RECO_MODEL,
 )
 from pcreco.utils.geolocalisation import distance_to_radius_bucket
 from datetime import datetime
@@ -120,7 +121,7 @@ class PlaylistParamsIn:
 
     def setup_defaults(self):
         if self.model_endpoint is None:
-            self.model_endpoint = "default"
+            self.model_endpoint = DEFAULT_RECO_MODEL
         if self.is_reco_shuffled is None:
             self.is_reco_shuffled = SHUFFLE_RECOMMENDATION
         if self.is_sort_by_distance is None:

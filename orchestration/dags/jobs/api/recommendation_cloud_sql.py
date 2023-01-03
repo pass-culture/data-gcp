@@ -22,7 +22,7 @@ from airflow.operators.python import PythonOperator
 from common.access_gcp_secrets import access_secret_data
 from common.compose_gcs_files import compose_gcs_files
 from common.config import (
-    GCP_PROJECT,
+    GCP_PROJECT_ID,
     GCP_REGION,
     ENV_SHORT_NAME,
     DATA_GCS_BUCKET_NAME,
@@ -32,7 +32,6 @@ from common.config import (
     DAG_FOLDER,
     QPI_TABLE,
     RECOMMENDATION_SQL_INSTANCE,
-    RECOMMENDATION_SQL_BASE,
 )
 from dependencies.import_recommendation_cloudsql.monitor_tables import monitoring_tables
 from common.alerts import task_fail_slack_alert
@@ -40,11 +39,11 @@ from common import macros
 
 
 database_url = access_secret_data(
-    GCP_PROJECT, f"{RECOMMENDATION_SQL_BASE}-database-url", default=""
+    GCP_PROJECT_ID, f"{RECOMMENDATION_SQL_INSTANCE}-database-url", default=""
 )
 os.environ["AIRFLOW_CONN_PROXY_POSTGRES_TCP"] = (
     database_url.replace("postgresql://", "gcpcloudsql://")
-    + f"?database_type=postgres&project_id={GCP_PROJECT}&location={GCP_REGION}&instance={RECOMMENDATION_SQL_INSTANCE}&use_proxy=True&sql_proxy_use_tcp=True"
+    + f"?database_type=postgres&project_id={GCP_PROJECT_ID}&location={GCP_REGION}&instance={RECOMMENDATION_SQL_INSTANCE}&use_proxy=True&sql_proxy_use_tcp=True"
 )
 
 
@@ -114,7 +113,7 @@ with DAG(
         task = BigQueryExecuteQueryOperator(
             task_id=f"monitor_{table}",
             sql=params["sql"],
-            destination_dataset_table=f"{GCP_PROJECT}.{dataset}.monitor_{table}",
+            destination_dataset_table=f"{GCP_PROJECT_ID}.{dataset}.monitor_{table}",
             use_legacy_sql=False,
             write_disposition="WRITE_APPEND",
         )
@@ -145,19 +144,19 @@ with DAG(
         if table == "qpi_answers":
             filter_column_query = f"""
                 SELECT {select_columns}
-                FROM `{GCP_PROJECT}.{dataset}.enriched_{QPI_TABLE}`
+                FROM `{GCP_PROJECT_ID}.{dataset}.enriched_{QPI_TABLE}`
             """
         else:
             filter_column_query = f"""
                 SELECT {select_columns}
-                FROM `{GCP_PROJECT}.{dataset}.{bigquery_table_name}`
+                FROM `{GCP_PROJECT_ID}.{dataset}.{bigquery_table_name}`
             """
 
         filter_column_task = BigQueryExecuteQueryOperator(
             task_id=f"filter_column_{table}",
             sql=filter_column_query,
             use_legacy_sql=False,
-            destination_dataset_table=f"{GCP_PROJECT}.{dataset}.temp_export_{table}",
+            destination_dataset_table=f"{GCP_PROJECT_ID}.{dataset}.temp_export_{table}",
             write_disposition="WRITE_TRUNCATE",
         )
 
@@ -171,7 +170,7 @@ with DAG(
 
         export_task = BigQueryToGCSOperator(
             task_id=f"export_{table}_to_gcs",
-            source_project_dataset_table=f"{GCP_PROJECT}.{dataset}.temp_export_{table}",
+            source_project_dataset_table=f"{GCP_PROJECT_ID}.{dataset}.temp_export_{table}",
             destination_cloud_storage_uris=[f"{BUCKET_PATH}/{table}-*.csv"],
             export_format="CSV",
             print_header=False,
@@ -179,7 +178,7 @@ with DAG(
 
         delete_temp_table_task = BigQueryDeleteTableOperator(
             task_id=f"delete_temp_export_{table}_in_bigquery",
-            deletion_dataset_table=f"{GCP_PROJECT}.{dataset}.temp_export_{table}",
+            deletion_dataset_table=f"{GCP_PROJECT_ID}.{dataset}.temp_export_{table}",
             ignore_if_missing=True,
         )
 
@@ -225,13 +224,13 @@ with DAG(
                     "table": f"public.{table_name}",
                 },
                 "uri": f"{BUCKET_PATH}/{table_name}.csv",
-                "database": RECOMMENDATION_SQL_BASE,
+                "database": RECOMMENDATION_SQL_INSTANCE,
             }
         }
 
         sql_restore_task = CloudSQLImportInstanceOperator(
             task_id=f"cloud_sql_restore_table_{table_name}",
-            project_id=GCP_PROJECT,
+            project_id=GCP_PROJECT_ID,
             body=import_body,
             instance=RECOMMENDATION_SQL_INSTANCE,
         )

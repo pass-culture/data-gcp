@@ -492,6 +492,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_INPUT = {
             "institution_id": None,
             "collective_offer_subcategory_id": "CONCERT",
             "collective_offer_is_active": True,
+            "collective_offer_image_id": "27",
         }
     ],
     "applicative_database_collective_offer_template": [
@@ -502,6 +503,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_INPUT = {
             "collective_offer_creation_date": "2022-01-16",
             "collective_offer_subcategory_id": "CONCERT",
             "collective_offer_is_active": True,
+            "collective_offer_image_id": "28",
         }
     ],
     "subcategories": [
@@ -553,6 +555,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_EXPECTED = [
         "collective_offer_humanized_id": "AM",
         "passculture_pro_url": "https://passculture.pro/offre/AM/collectif/edition",
         "offer_is_template": False,
+        "collective_offer_image_id": "27",
     },
     {
         "collective_offer_id": "4",
@@ -581,6 +584,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_EXPECTED = [
         "collective_offer_humanized_id": "AQ",
         "passculture_pro_url": "https://passculture.pro/offre/T-AQ/collectif/edition",
         "offer_is_template": True,
+        "collective_offer_image_id": "28",
     },
 ]
 
@@ -815,20 +819,19 @@ ENRICHED_USER_DATA_INPUT = {
     "applicative_database_user": [
         {
             "user_id": "1",
-            "user_is_beneficiary": True,
-            "user_department_code": 93,
+        }
+    ],
+    "user_beneficiary": [
+        {
+            "user_id": "1",
+            "user_department_code": "93",
             "user_postal_code": "93000",
-            "user_activity": "Inactif",
+            "user_activity": "Inactif (ni en emploi ni au chômage), En incapacité de travailler",
             "user_civility": "Mme",
             "user_creation_date": datetime.now().replace(microsecond=0),
             "user_cultural_survey_filled_date": datetime.now().replace(microsecond=0),
             "user_is_active": True,
             "user_age": 18,
-            "user_has_completed_idCheck": True,
-            "user_phone_validation_status": True,
-            "user_has_validated_email": True,
-            "user_has_enabled_marketing_push": True,
-            "user_has_enabled_marketing_email": True,
             "user_birth_date": datetime.now().replace(microsecond=0),
             "user_role": "BENEFICIARY",
             "user_school_type": "Lycée agricole",

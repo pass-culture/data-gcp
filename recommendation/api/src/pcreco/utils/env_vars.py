@@ -17,7 +17,6 @@ SQL_BASE_PASSWORD = os.environ.get(
     "SQL_BASE_PASSWORD", access_secret(GCP_PROJECT, SQL_BASE_SECRET_ID)
 )
 # Vertex ai attributes
-PROJECT_NUMBER = os.environ.get("PROJECT_NUMBER")
 DEFAULT_RECO_MODEL = os.environ.get("DEFAULT_RECO_MODEL", "default")
 DEFAULT_SIMILAR_OFFER_MODEL = os.environ.get("DEFAULT_SIMILAR_OFFER_MODEL", "default")
 

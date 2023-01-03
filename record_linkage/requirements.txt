@@ -5,3 +5,4 @@ loguru
 psutil
 recordlinkage
 networkx
+pandas-gbq

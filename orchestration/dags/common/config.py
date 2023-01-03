@@ -8,9 +8,9 @@ SSH_USER = os.environ.get("SSH_USER", "airflow")
 
 GCP_REGION = "europe-west1"
 GCE_ZONE = "europe-west1-b"
-VM_SUBNET = os.environ.get("VM_SUBNET", f"data-{ENV_SHORT_NAME}-public")
-VM_NETWORK = os.environ.get("VM_NETWORK", f"vpc-data-{ENV_SHORT_NAME}")
-VM_SA = os.environ.get("VM_SA", f"algo-training-{ENV_SHORT_NAME}")
+GCE_SUBNETWORK_ID = os.environ.get("GCE_SUBNETWORK_ID")
+GCE_NETWORK_ID = os.environ.get("GCE_NETWORK_ID")
+GCE_SA = os.environ.get("GCE_SA")
 
 
 BASE32_JS_LIB_PATH = f"gs://data-bucket-{ENV_SHORT_NAME}/base32-encode/base32.js"
@@ -37,11 +37,8 @@ BIGQUERY_BACKEND_DATASET = os.environ.get(
 )
 BIGQUERY_TMP_DATASET = os.environ.get("BIGQUERY_TMP_DATASET", f"tmp_{ENV_SHORT_NAME}")
 
-BIGQUERY_OPEN_DATA_PROJECT = (
-    "passculture-opendata-prod"
-    if GCP_PROJECT_ID == "passculture-data-prod"
-    else "passculture-opendata-ehp"
-)
+BIGQUERY_OPEN_DATA_PROJECT = os.environ.get("BIGQUERY_OPEN_DATA_PROJECT")
+
 BIGQUERY_OPEN_DATA_PUBLIC_DATASET = os.environ.get(
     "BIGQUERY_OPEN_DATA_PUBLIC_DATASET", f"public_{ENV_SHORT_NAME}"
 )

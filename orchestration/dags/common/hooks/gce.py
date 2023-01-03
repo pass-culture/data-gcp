@@ -9,9 +9,9 @@ from common.config import (
     GCP_REGION,
     GCE_ZONE,
     GCP_PROJECT_ID,
-    VM_SUBNET,
-    VM_NETWORK,
-    VM_SA,
+    GCE_SUBNETWORK_ID,
+    GCE_NETWORK_ID,
+    GCE_SA,
 )
 
 SOURCE_IMAGE = (
@@ -27,9 +27,9 @@ class GCEHook(GoogleBaseHook):
         gcp_project=GCP_PROJECT_ID,
         gcp_zone=GCE_ZONE,
         gcp_region=GCP_REGION,
-        vm_network=VM_NETWORK,
-        vm_subnetwork=VM_SUBNET,
-        vm_sa=VM_SA,
+        gce_network_id=GCE_NETWORK_ID,
+        gce_subnetwork_id=GCE_SUBNETWORK_ID,
+        gce_sa=GCE_SA,
         source_image=SOURCE_IMAGE,
         gcp_conn_id: str = "google_cloud_default",
         delegate_to: str = None,
@@ -38,9 +38,9 @@ class GCEHook(GoogleBaseHook):
         self.gcp_project = gcp_project
         self.gcp_zone = gcp_zone
         self.gcp_region = gcp_region
-        self.vm_network = vm_network
-        self.vm_subnetwork = vm_subnetwork
-        self.vm_sa = vm_sa
+        self.gce_network_id = gce_network_id
+        self.gce_subnetwork_id = gce_subnetwork_id
+        self.gce_sa = gce_sa
         self.source_image = source_image
         super().__init__(
             gcp_conn_id=gcp_conn_id,
@@ -144,14 +144,11 @@ class GCEHook(GoogleBaseHook):
             ],
             # Specify VPC network interface
             "networkInterfaces": [
-                {
-                    "network": f"projects/{self.gcp_project}/global/networks/{self.vm_network}",
-                    "subnetwork": f"regions/{self.gcp_region}/subnetworks/{self.vm_subnetwork}",
-                }
+                {"network": self.gce_network_id, "subnetwork": self.gce_subnetwork_id}
             ],
             "serviceAccounts": [
                 {
-                    "email": f"{self.vm_sa}@{self.gcp_project}.iam.gserviceaccount.com",
+                    "email": f"{self.gce_sa}@{self.gcp_project}.iam.gserviceaccount.com",
                     "scopes": ["https://www.googleapis.com/auth/cloud-platform"],
                 }
             ],

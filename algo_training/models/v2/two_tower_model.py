@@ -10,7 +10,13 @@ from tensorflow.keras.layers.experimental.preprocessing import (
 
 
 class TwoTowerModel(tf.keras.models.Model):
-    def __init__(self, user_data: pd.DataFrame, item_data: pd.DataFrame, embedding_size: int, l2_reg: int = None):
+    def __init__(
+        self,
+        user_data: pd.DataFrame,
+        item_data: pd.DataFrame,
+        embedding_size: int,
+        l2_reg: int = None,
+    ):
         super().__init__("TwoTowerModel")
 
         self.user_model = UserModel(user_data, embedding_size, l2_reg)
@@ -88,13 +94,16 @@ class UserModel(tf.keras.models.Model):
         )
 
     def call(self, user_id: str):
-        user_age = self.user_data[lambda df: df["user_id"] == user_id]["user_age"].values[0]
+        user_age = self.user_data[lambda df: df["user_id"] == user_id][
+            "user_age"
+        ].values[0]
 
         x = tf.concat(
             [
                 self.user_layer(user_id),
                 self.user_age_layer(user_age),
-            ], axis=1
+            ],
+            axis=1,
         )
         x = self._dense1(x)
         out = self._dense2(x)
@@ -157,7 +166,8 @@ class ItemModel(tf.keras.models.Model):
             [
                 self.item_layer(item_id),
                 self.category_layer(category_id),
-            ], axis=1
+            ],
+            axis=1,
         )
         x = self._dense1(x)
         out = self._dense2(x)

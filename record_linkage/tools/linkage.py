@@ -38,7 +38,8 @@ def run_linkage(
                     repeat(data_and_hyperparams_dict),
                     repeat(df_source_tmp),
                     repeat(subset_divisions),
-                    range(subset_divisions),
+                    repeat(max_process),
+                    range(max_process),
                 )
                 for future in futures:
                     df_matched_list.append(future)
@@ -51,7 +52,7 @@ def run_linkage(
 
 
 def process_record_linkage(
-    indexer, data_and_hyperparams_dict, df_source_tmp, subset_divisions, batch_number
+    indexer, data_and_hyperparams_dict, df_source_tmp, subset_divisions,max_process,batch_number
 ):
     try:
         return get_linked_offers(
@@ -59,6 +60,7 @@ def process_record_linkage(
             data_and_hyperparams_dict,
             df_source_tmp,
             subset_divisions,
+            max_process,
             batch_number,
         )
     except Exception as e:
@@ -68,7 +70,7 @@ def process_record_linkage(
 
 
 def get_linked_offers(
-    indexer, data_and_hyperparams_dict, df_source_tmp, subset_divisions, batch_number
+    indexer, data_and_hyperparams_dict, df_source_tmp, subset_divisions,max_process, batch_number
 ):
     """
     Split linkage by offer_subcategoryId
@@ -76,7 +78,7 @@ def get_linked_offers(
     Run linkage
     """
     subset_matches_list = []
-    if batch_number != (subset_divisions - 1):
+    if batch_number != (max_process - 1):
         df_source_tmp_subset = df_source_tmp[
             batch_number * subset_divisions : (batch_number + 1) * subset_divisions
         ]

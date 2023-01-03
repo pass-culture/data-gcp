@@ -70,7 +70,7 @@ def main(
     )
     # Save already linked offers
     df_offers_to_link_clean.to_gbq(
-        f"sandbox_{env_short_name}.offers_already_linked",
+        f"analytics_{env_short_name}.offers_already_linked",
         project_id=gcp_project,
         if_exists="append",
     )

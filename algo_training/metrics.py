@@ -112,7 +112,7 @@ def get_avg_recall_and_precision_at_k(actual, model_predictions, k):
 
 
 def get_coverage_at_k(data_model_dict, k):
-    catalog = data_model_dict["data"]["train"].item_id.unique().tolist()
+    catalog = data_model_dict["data"]["training_item_ids"].tolist()
     recos = data_model_dict["top_offers"].model_predicted.values.tolist()
     recos_at_k = []
     for reco in recos:

@@ -72,7 +72,7 @@ def main(
     df_offers_to_link_clean.to_gbq(
         f"sandbox_{env_short_name}.offers_already_linked",
         project_id=gcp_project,
-        if_exists="appendd",
+        if_exists="append",
     )
 
 

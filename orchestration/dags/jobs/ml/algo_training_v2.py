@@ -35,12 +35,12 @@ DATE = "{{ ts_nodash }}"
 # Environment variables to export before running commands
 dag_config = {
     "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/algo_training_{ENV_SHORT_NAME}/algo_training_{DATE}",
-    "ENV_SHORT_NAME": ENV_SHORT_NAME,
-    "GCP_PROJECT_ID": GCP_PROJECT_ID,
     "BASE_DIR": f"data-gcp/algo_training",
     "TRAIN_DIR": "/home/airflow/train",
     "EXPERIMENT_NAME": f"algo_training_v2.1_{ENV_SHORT_NAME}",
-    "BATCH_SIZE": 1024,
+}
+train_params = {
+    "BATCH_SIZE": 4096,
     "EMBEDDING_SIZE": 64,
     "TRAIN_SET_SIZE": 0.8,
 }
@@ -69,15 +69,15 @@ with DAG(
             type="string",
         ),
         "batch_size": Param(
-            default=str(dag_config["BATCH_SIZE"]),
+            default=str(train_params["BATCH_SIZE"]),
             type="string",
         ),
         "embedding_size": Param(
-            default=str(dag_config["EMBEDDING_SIZE"]),
+            default=str(train_params["EMBEDDING_SIZE"]),
             type="string",
         ),
         "train_set_size": Param(
-            default=str(dag_config["TRAIN_SET_SIZE"]),
+            default=str(train_params["TRAIN_SET_SIZE"]),
             type="string",
         ),
     },

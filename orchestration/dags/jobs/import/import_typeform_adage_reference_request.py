@@ -15,7 +15,7 @@ from common.config import (
     BIGQUERY_ANALYTICS_DATASET,
     BIGQUERY_RAW_DATASET,
     ENV_SHORT_NAME,
-    GCP_PROJECT,
+    GCP_PROJECT_ID,
 )
 
 FUNCTION_NAME = f"typeform_adage_reference_request_{ENV_SHORT_NAME}"
@@ -25,13 +25,13 @@ default_dag_args = {
     "start_date": datetime.datetime(2022, 2, 7),
     "on_failure_callback": task_fail_slack_alert,
     "retries": 1,
-    "project_id": GCP_PROJECT,
+    "project_id": GCP_PROJECT_ID,
 }
 
 
 def getting_service_account_token():
     function_url = (
-        f"https://europe-west1-{GCP_PROJECT}.cloudfunctions.net/{FUNCTION_NAME}"
+        f"https://europe-west1-{GCP_PROJECT_ID}.cloudfunctions.net/{FUNCTION_NAME}"
     )
     open_id_connect_token = id_token.fetch_id_token(Request(), function_url)
     return open_id_connect_token
@@ -73,7 +73,7 @@ create_analytics_table = BigQueryExecuteQueryOperator(
     sql=f"""
     SELECT 
         *
-    FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.typeform_adage_reference_request_sheet` 
+    FROM `{GCP_PROJECT_ID}.{BIGQUERY_RAW_DATASET}.typeform_adage_reference_request_sheet` 
     """,
     destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.typeform_adage_reference_request",
     write_disposition="WRITE_TRUNCATE",

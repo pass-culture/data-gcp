@@ -8,7 +8,7 @@ from common import macros
 from dependencies.logs.import_logs import (
     import_tables,
 )
-from common.config import DAG_FOLDER, GCP_PROJECT
+from common.config import DAG_FOLDER, GCP_PROJECT_ID
 from common.alerts import task_fail_slack_alert
 
 
@@ -17,7 +17,7 @@ default_dag_args = {
     "retries": 1,
     "on_failure_callback": task_fail_slack_alert,
     "retry_delay": datetime.timedelta(minutes=5),
-    "project_id": GCP_PROJECT,
+    "project_id": GCP_PROJECT_ID,
 }
 
 dag = DAG(

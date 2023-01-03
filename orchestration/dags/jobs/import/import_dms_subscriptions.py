@@ -22,7 +22,7 @@ from common.config import (
     BIGQUERY_CLEAN_DATASET,
     BIGQUERY_ANALYTICS_DATASET,
     ENV_SHORT_NAME,
-    GCP_PROJECT,
+    GCP_PROJECT_ID,
 )
 from dependencies.import_dms_subscriptions import parse_api_result
 
@@ -32,7 +32,7 @@ DMS_FUNCTION_NAME = "dms_" + ENV_SHORT_NAME
 def getting_service_account_token():
     function_url = (
         "https://europe-west1-"
-        + GCP_PROJECT
+        + GCP_PROJECT_ID
         + ".cloudfunctions.net/"
         + DMS_FUNCTION_NAME
     )

@@ -19,7 +19,7 @@ from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
 from common.alerts import task_fail_slack_alert
 from dependencies.import_qpi import QPI_ANSWERS_SCHEMA, UNION_ALL_SQL, enrich_answers
 from common.config import (
-    GCP_PROJECT,
+    GCP_PROJECT_ID,
     DATA_GCS_BUCKET_NAME,
     BIGQUERY_RAW_DATASET,
     BIGQUERY_CLEAN_DATASET,
@@ -87,10 +87,10 @@ with DAG(
         task_id="add_answers_to_raw",
         sql=f"""
             select *
-            FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.temp_{QPI_ANSWERS_TABLE}` 
+            FROM `{GCP_PROJECT_ID}.{BIGQUERY_RAW_DATASET}.temp_{QPI_ANSWERS_TABLE}` 
         """,
         use_legacy_sql=False,
-        destination_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_RAW_DATASET}.{QPI_ANSWERS_TABLE}",
+        destination_dataset_table=f"{GCP_PROJECT_ID}:{BIGQUERY_RAW_DATASET}.{QPI_ANSWERS_TABLE}",
         write_disposition="WRITE_APPEND",
         trigger_rule="none_failed_or_skipped",
     )
@@ -101,10 +101,10 @@ with DAG(
             select raw_answers.user_id,
             submitted_at, answers,
             CAST(NULL AS STRING) AS catch_up_user_id
-            FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.temp_{QPI_ANSWERS_TABLE}` raw_answers
+            FROM `{GCP_PROJECT_ID}.{BIGQUERY_RAW_DATASET}.temp_{QPI_ANSWERS_TABLE}` raw_answers
         """,
         use_legacy_sql=False,
-        destination_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_CLEAN_DATASET}.{QPI_ANSWERS_TABLE}",
+        destination_dataset_table=f"{GCP_PROJECT_ID}:{BIGQUERY_CLEAN_DATASET}.{QPI_ANSWERS_TABLE}",
         write_disposition="WRITE_APPEND",
         trigger_rule="none_failed_or_skipped",
     )
@@ -115,17 +115,17 @@ with DAG(
             select  raw_answers.user_id,
             submitted_at, answers,
             CAST(NULL AS STRING) AS catch_up_user_id
-            FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.temp_{QPI_ANSWERS_TABLE}` raw_answers
+            FROM `{GCP_PROJECT_ID}.{BIGQUERY_RAW_DATASET}.temp_{QPI_ANSWERS_TABLE}` raw_answers
         """,
         use_legacy_sql=False,
-        destination_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_CLEAN_DATASET}.temp_{QPI_ANSWERS_TABLE}",
+        destination_dataset_table=f"{GCP_PROJECT_ID}:{BIGQUERY_CLEAN_DATASET}.temp_{QPI_ANSWERS_TABLE}",
         write_disposition="WRITE_TRUNCATE",
         trigger_rule="none_failed_or_skipped",
     )
 
     delete_temp_answer_table_raw = BigQueryDeleteTableOperator(
         task_id="delete_temp_answer_table_raw",
-        deletion_dataset_table=f"{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.temp_{QPI_ANSWERS_TABLE}",
+        deletion_dataset_table=f"{GCP_PROJECT_ID}.{BIGQUERY_RAW_DATASET}.temp_{QPI_ANSWERS_TABLE}",
         ignore_if_missing=True,
         dag=dag,
         trigger_rule="none_failed_or_skipped",
@@ -134,12 +134,12 @@ with DAG(
     enrich_qpi_answers = BigQueryExecuteQueryOperator(
         task_id="enrich_qpi_answers",
         sql=enrich_answers(
-            gcp_project=GCP_PROJECT,
+            gcp_project=GCP_PROJECT_ID,
             bigquery_clean_dataset=BIGQUERY_CLEAN_DATASET,
             qpi_table=QPI_ANSWERS_TABLE,
         ),
         use_legacy_sql=False,
-        destination_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_ANALYTICS_DATASET}.enriched_{QPI_ANSWERS_TABLE}",
+        destination_dataset_table=f"{GCP_PROJECT_ID}:{BIGQUERY_ANALYTICS_DATASET}.enriched_{QPI_ANSWERS_TABLE}",
         write_disposition="WRITE_TRUNCATE",
         trigger_rule="none_failed_or_skipped",
     )
@@ -150,7 +150,7 @@ with DAG(
             with base as (
                 SELECT *,
                 ROW_NUMBER() OVER (PARTITION BY user_id,subcategories order by subcategories DESC) row_number
-                FROM `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.enriched_{QPI_ANSWERS_TABLE}`
+                FROM `{GCP_PROJECT_ID}.{BIGQUERY_ANALYTICS_DATASET}.enriched_{QPI_ANSWERS_TABLE}`
             )
             select * except(row_number) from base 
             where row_number=1
@@ -158,7 +158,7 @@ with DAG(
             and subcategories <> ""
             """,
         use_legacy_sql=False,
-        destination_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_ANALYTICS_DATASET}.enriched_{QPI_ANSWERS_TABLE}",
+        destination_dataset_table=f"{GCP_PROJECT_ID}:{BIGQUERY_ANALYTICS_DATASET}.enriched_{QPI_ANSWERS_TABLE}",
         write_disposition="WRITE_TRUNCATE",
         trigger_rule="none_failed_or_skipped",
     )
@@ -167,7 +167,7 @@ with DAG(
         task_id="aggregated_past_qpi_answers",
         sql=UNION_ALL_SQL,
         use_legacy_sql=False,
-        destination_dataset_table=f"{GCP_PROJECT}:{BIGQUERY_ANALYTICS_DATASET}.enriched_aggregated_qpi_answers",
+        destination_dataset_table=f"{GCP_PROJECT_ID}:{BIGQUERY_ANALYTICS_DATASET}.enriched_aggregated_qpi_answers",
         write_disposition="WRITE_TRUNCATE",
         trigger_rule="none_failed_or_skipped",
     )

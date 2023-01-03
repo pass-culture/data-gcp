@@ -6,7 +6,7 @@ from airflow.providers.google.cloud.operators.bigquery import (
 )
 from airflow.operators.dummy_operator import DummyOperator
 
-from common.config import GCP_PROJECT, ENV_SHORT_NAME
+from common.config import GCP_PROJECT_ID, ENV_SHORT_NAME
 from common.alerts import task_fail_slack_alert
 from dependencies.backend.create_tables import create_tables
 from common import macros
@@ -16,7 +16,7 @@ default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),
     "retries": 1,
     "retry_delay": datetime.timedelta(minutes=5),
-    "project_id": GCP_PROJECT,
+    "project_id": GCP_PROJECT_ID,
 }
 
 

@@ -1,15 +1,6 @@
-from airflow.operators.bash import BashOperator
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryInsertJobOperator,
-)
-from airflow.utils.decorators import apply_defaults
+from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 
-from common.config import (
-    GCP_PROJECT,
-    GCP_PROJECT_ID,
-    GCE_ZONE,
-    GCE_TRAINING_INSTANCE,
-)
+from common.config import GCP_PROJECT_ID
 
 
 def bigquery_job_task(dag, table, job_params):

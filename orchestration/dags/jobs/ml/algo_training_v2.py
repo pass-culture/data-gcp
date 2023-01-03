@@ -46,8 +46,8 @@ train_params = {
     "train_set_size": 0.8,
 }
 gce_params = {
-    "gce_instance_name": f"algo-training-v2-{ENV_SHORT_NAME}",
-    "gce_instance_type": {
+    "instance_name": f"algo-training-v2-{ENV_SHORT_NAME}",
+    "instance_type": {
         "dev": "n2-standard-2",
         "stg": "c2-standard-8",
         "prod": "c2-standard-16",
@@ -107,19 +107,19 @@ with DAG(
 
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
-        instance_name=gce_params["gce_instance_name"],
-        machine_type=gce_params["gce_instance_type"][ENV_SHORT_NAME],
+        instance_name=gce_params["instance_name"],
+        machine_type=gce_params["instance_type"][ENV_SHORT_NAME],
     )
 
     fetch_code = CloneRepositoryGCEOperator(
         task_id="fetch_code",
-        instance_name=gce_params["gce_instance_name"],
+        instance_name=gce_params["instance_name"],
         branch="{{ params.branch }}",
     )
 
     install_dependencies = SSHGCEOperator(
         task_id="install_dependencies",
-        instance_name=gce_params["gce_instance_name"],
+        instance_name=gce_params["instance_name"],
         base_dir=dag_config["BASE_DIR"],
         command="pip install -r requirements.txt --user",
         dag=dag,
@@ -127,7 +127,7 @@ with DAG(
 
     training = SSHGCEOperator(
         task_id="training",
-        instance_name=gce_params["gce_instance_name"],
+        instance_name=gce_params["instance_name"],
         base_dir=dag_config["BASE_DIR"],
         export_config=dag_config,
         command=f"python train_v2.py "
@@ -140,7 +140,7 @@ with DAG(
 
     evaluate = SSHGCEOperator(
         task_id="evaluate",
-        instance_name=gce_params["gce_instance_name"],
+        instance_name=gce_params["instance_name"],
         base_dir=dag_config["BASE_DIR"],
         export_config=dag_config,
         command=f"python evaluate_v2.py --experiment-name {dag_config['EXPERIMENT_NAME']}",
@@ -149,7 +149,7 @@ with DAG(
 
     gce_instance_stop = StopGCEOperator(
         task_id="gce_stop_task",
-        instance_name=gce_params["gce_instance_name"],
+        instance_name=gce_params["instance_name"],
     )
 
     send_slack_notif_success = SlackWebhookOperator(

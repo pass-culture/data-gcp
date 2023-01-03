@@ -27,9 +27,10 @@ def run_linkage(
         else:
             indexer = recordlinkage.Index()
             indexer.full()
-            if len(df_source_tmp) > max_process * SUBSET_MAX_LENGTH:
-                SUBSET_MAX_LENGTH = 10000
-            subset_k_division = len(df_source_tmp) // SUBSET_MAX_LENGTH
+            subset_max_len = SUBSET_MAX_LENGTH
+            if len(df_source_tmp) > (max_process * subset_max_len):
+                subset_max_len = 10000
+            subset_k_division = len(df_source_tmp) // subset_max_len
             subset_divisions = subset_k_division if subset_k_division > 0 else 1
             print(f"Starting process... with {max_process} CPUs")
             print("subset_divisions: ", subset_divisions)

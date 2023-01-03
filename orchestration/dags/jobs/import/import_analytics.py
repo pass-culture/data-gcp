@@ -22,7 +22,7 @@ from common.alerts import analytics_fail_slack_alert
 from common.config import DAG_FOLDER
 
 from common.config import (
-    GCP_PROJECT,
+    GCP_PROJECT_ID,
     BIGQUERY_RAW_DATASET,
     BIGQUERY_CLEAN_DATASET,
     BIGQUERY_ANALYTICS_DATASET,
@@ -52,7 +52,7 @@ default_dag_args = {
     "retries": 1,
     "on_failure_callback": analytics_fail_slack_alert,
     "retry_delay": datetime.timedelta(minutes=5),
-    "project_id": GCP_PROJECT,
+    "project_id": GCP_PROJECT_ID,
 }
 
 dag = DAG(
@@ -225,7 +225,7 @@ for table, job_params in export_tables.items():
                 "query": "{% include '" + job_params["sql"] + "' %}",
                 "useLegacySql": False,
                 "destinationTable": {
-                    "projectId": GCP_PROJECT,
+                    "projectId": GCP_PROJECT_ID,
                     "datasetId": job_params["destination_dataset"],
                     "tableId": destination_table,
                 },

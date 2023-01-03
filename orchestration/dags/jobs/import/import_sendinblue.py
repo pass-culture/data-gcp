@@ -6,7 +6,7 @@ from airflow.operators.python import PythonOperator
 from common.config import DAG_FOLDER
 from common.config import (
     ENV_SHORT_NAME,
-    GCP_PROJECT,
+    GCP_PROJECT_ID,
     DAG_FOLDER,
 )
 from airflow.providers.google.cloud.operators.bigquery import (
@@ -26,7 +26,7 @@ default_dag_args = {
     "retries": 1,
     "on_failure_callback": task_fail_slack_alert,
     "retry_delay": datetime.timedelta(minutes=5),
-    "project_id": GCP_PROJECT,
+    "project_id": GCP_PROJECT_ID,
 }
 
 dag = DAG(

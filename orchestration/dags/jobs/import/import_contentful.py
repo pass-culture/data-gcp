@@ -17,14 +17,14 @@ from common.operators.biquery import bigquery_job_task
 from common.alerts import task_fail_slack_alert
 
 from common import macros
-from common.config import ENV_SHORT_NAME, GCP_PROJECT, DAG_FOLDER
+from common.config import ENV_SHORT_NAME, GCP_PROJECT_ID, DAG_FOLDER
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),
     "retries": 1,
     "on_failure_callback": task_fail_slack_alert,
     "retry_delay": datetime.timedelta(minutes=5),
-    "project_id": GCP_PROJECT,
+    "project_id": GCP_PROJECT_ID,
 }
 
 dag = DAG(

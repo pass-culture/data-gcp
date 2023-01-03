@@ -80,7 +80,7 @@ with TaskGroup(group_id="raw_operations_group", dag=dag) as raw_operations_group
                     "query": f"""SELECT * FROM EXTERNAL_QUERY('{APPLICATIVE_EXTERNAL_CONNECTION_ID}', '{one_line_query(params['sql'])}')""",
                     "useLegacySql": False,
                     "destinationTable": {
-                        "projectId": GCP_PROJECT,
+                        "projectId": GCP_PROJECT_ID,
                         "datasetId": params["destination_dataset"],
                         "tableId": params["destination_table"],
                     },
@@ -110,7 +110,7 @@ with TaskGroup(
                     "query": "{% include '" + params["sql"] + "' %}",
                     "useLegacySql": False,
                     "destinationTable": {
-                        "projectId": GCP_PROJECT,
+                        "projectId": GCP_PROJECT_ID,
                         "datasetId": params["destination_dataset"],
                         "tableId": params["destination_table"],
                     },
@@ -133,7 +133,7 @@ with TaskGroup(group_id="clean_copy_group", dag=dag) as clean_copy:
                     "query": params["sql"],
                     "useLegacySql": False,
                     "destinationTable": {
-                        "projectId": GCP_PROJECT,
+                        "projectId": GCP_PROJECT_ID,
                         "datasetId": params["destination_dataset"],
                         "tableId": params["destination_table"],
                     },

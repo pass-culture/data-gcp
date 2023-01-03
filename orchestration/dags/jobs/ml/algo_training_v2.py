@@ -99,7 +99,8 @@ with DAG(
         import_recommendation_data[dataset] = task
 
     gce_instance_start = StartGCEOperator(
-        task_id="gce_start_task", instance_name=GCE_TRAINING_INSTANCE,
+        task_id="gce_start_task",
+        instance_name=GCE_TRAINING_INSTANCE,
     )
 
     fetch_code = CloneRepositoryGCEOperator(

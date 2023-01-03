@@ -19,7 +19,6 @@ from common.alerts import task_fail_slack_alert
 from common.config import (
     DAG_FOLDER,
     ENV_SHORT_NAME,
-    GCP_PROJECT_ID,
     MLFLOW_BUCKET_NAME,
     SLACK_CONN_ID,
     SLACK_CONN_PASSWORD,
@@ -34,18 +33,26 @@ DATE = "{{ ts_nodash }}"
 
 # Environment variables to export before running commands
 dag_config = {
-    "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/algo_training_{ENV_SHORT_NAME}/algo_training_{DATE}",
+    "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/algo_training_{ENV_SHORT_NAME}/algo_training_v2-{DATE}",
     "BASE_DIR": f"data-gcp/algo_training",
     "TRAIN_DIR": "/home/airflow/train",
     "EXPERIMENT_NAME": f"algo_training_v2.1_{ENV_SHORT_NAME}",
 }
-train_params = {
-    "BATCH_SIZE": 4096,
-    "EMBEDDING_SIZE": 64,
-    "TRAIN_SET_SIZE": 0.8,
-}
 
-GCE_TRAINING_INSTANCE = f"algo_training_v2-{DATE}"
+# Params
+train_params = {
+    "batch_size": 4096,
+    "embedding_size": 64,
+    "train_set_size": 0.8,
+}
+gce_params = {
+    "gce_instance_name": f"algo_training_v2",
+    "gce_instance_type": {
+        "dev": "n2-standard-2",
+        "stg": "c2-standard-8",
+        "prod": "c2-standard-16",
+    },
+}
 
 default_args = {
     "start_date": datetime(2022, 11, 30),
@@ -68,16 +75,24 @@ with DAG(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
+        "instance_name": Param(
+            default=str(gce_params["gce_instance_name"]),
+            type="string",
+        ),
+        "instance_type": Param(
+            default=str(gce_params["gce_instance_type"][ENV_SHORT_NAME]),
+            type="string",
+        ),
         "batch_size": Param(
-            default=str(train_params["BATCH_SIZE"]),
+            default=str(train_params["batch_size"]),
             type="string",
         ),
         "embedding_size": Param(
-            default=str(train_params["EMBEDDING_SIZE"]),
+            default=str(train_params["embedding_size"]),
             type="string",
         ),
         "train_set_size": Param(
-            default=str(train_params["TRAIN_SET_SIZE"]),
+            default=str(train_params["train_set_size"]),
             type="string",
         ),
     },
@@ -100,18 +115,19 @@ with DAG(
 
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
-        instance_name=GCE_TRAINING_INSTANCE,
+        instance_name="{{ params.instance_name }}",
+        machine_type="{{ params.instance_type }}",
     )
 
     fetch_code = CloneRepositoryGCEOperator(
         task_id="fetch_code",
-        instance_name=GCE_TRAINING_INSTANCE,
+        instance_name="{{ params.instance_name }}",
         branch="{{ params.branch }}",
     )
 
     install_dependencies = SSHGCEOperator(
         task_id="install_dependencies",
-        instance_name=GCE_TRAINING_INSTANCE,
+        instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         command="pip install -r requirements.txt --user",
         dag=dag,
@@ -119,20 +135,20 @@ with DAG(
 
     training = SSHGCEOperator(
         task_id="training",
-        instance_name=GCE_TRAINING_INSTANCE,
+        instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         export_config=dag_config,
         command=f"python train_v2.py "
         f"--experiment-name {dag_config['EXPERIMENT_NAME']} "
-        r"--batch-size {{ params.batch_size }} "
-        r"--embedding-size {{ params.embedding_size }} "
-        r"--seed {{ ds_nodash }}",
+        "--batch-size {{ params.batch_size }} "
+        "--embedding-size {{ params.embedding_size }} "
+        "--seed {{ ds_nodash }}",
         dag=dag,
     )
 
     evaluate = SSHGCEOperator(
         task_id="evaluate",
-        instance_name=GCE_TRAINING_INSTANCE,
+        instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         export_config=dag_config,
         command=f"python evaluate_v2.py --experiment-name {dag_config['EXPERIMENT_NAME']}",
@@ -141,7 +157,7 @@ with DAG(
 
     gce_instance_stop = StopGCEOperator(
         task_id="gce_stop_task",
-        instance_name=GCE_TRAINING_INSTANCE,
+        instance_name="{{ params.instance_name }}",
     )
 
     send_slack_notif_success = SlackWebhookOperator(

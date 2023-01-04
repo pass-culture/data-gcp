@@ -31,7 +31,7 @@ def run_linkage(
             subset_divisions = subset_k_division if subset_k_division > 0 else 1
             print(f"Starting process... with {max_process} CPUs")
             print("subset_divisions: ", subset_divisions)
-            batch_number=max_process if subset_divisions>1 else 1
+            batch_number = max_process if subset_divisions > 1 else 1
             with concurrent.futures.ProcessPoolExecutor(max_process) as executor:
                 futures = executor.map(
                     process_record_linkage,
@@ -44,16 +44,22 @@ def run_linkage(
                 )
                 for future in futures:
                     df_matched_list.append(future)
-                #time.sleep(1)
-                #executor.shutdown()
-    agg_matched_list = []
-    for dfs in df_matched_list:
-        agg_matched_list.append(dfs)
-    return pd.concat(agg_matched_list)
+                # time.sleep(1)
+                # executor.shutdown()
+    return pd.concat(df_matched_list)
+
+
+if __name__ == "__main__":
+    run_linkage()
 
 
 def process_record_linkage(
-    indexer, data_and_hyperparams_dict, df_source_tmp, subset_divisions,max_process,batch_number
+    indexer,
+    data_and_hyperparams_dict,
+    df_source_tmp,
+    subset_divisions,
+    max_process,
+    batch_number,
 ):
     try:
         return get_linked_offers(
@@ -71,7 +77,12 @@ def process_record_linkage(
 
 
 def get_linked_offers(
-    indexer, data_and_hyperparams_dict, df_source_tmp, subset_divisions,max_process, batch_number
+    indexer,
+    data_and_hyperparams_dict,
+    df_source_tmp,
+    subset_divisions,
+    max_process,
+    batch_number,
 ):
     """
     Split linkage by offer_subcategoryId
@@ -86,7 +97,7 @@ def get_linked_offers(
     else:
         df_source_tmp_subset = df_source_tmp[batch_number * subset_divisions :]
 
-    if len(df_source_tmp_subset) >0:
+    if len(df_source_tmp_subset) > 0:
         # a subset of record pairs
         candidate_links = indexer.index(df_source_tmp, df_source_tmp_subset)
 
@@ -96,12 +107,14 @@ def get_linked_offers(
         ftrs = cpr_cl.compute(candidate_links, df_source_tmp)
 
         # Classification step
-        matches = ftrs[ftrs.sum(axis=1) >= data_and_hyperparams_dict["matches_required"]]
+        matches = ftrs[
+            ftrs.sum(axis=1) >= data_and_hyperparams_dict["matches_required"]
+        ]
         matches = matches.reset_index()
         matches = matches.rename(columns={"level_0": "index_1", "level_1": "index_2"})
-        df_matched_list = _get_linked_offers_from_graph(df_source_tmp, matches)
+        df_matched = _get_linked_offers_from_graph(df_source_tmp, matches)
 
-    return df_matched_list
+    return df_matched
 
 
 def _get_linked_offers_from_graph(df_source, df_matches):

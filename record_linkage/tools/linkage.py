@@ -44,8 +44,8 @@ def run_linkage(
                 )
                 for future in futures:
                     df_matched_list.append(future)
-                time.sleep(1)
-                executor.shutdown()
+                #time.sleep(1)
+                #executor.shutdown()
     agg_matched_list = []
     for dfs in df_matched_list:
         agg_matched_list.append(dfs)
@@ -86,9 +86,7 @@ def get_linked_offers(
     else:
         df_source_tmp_subset = df_source_tmp[batch_number * subset_divisions :]
 
-    if len(df_source_tmp_subset) == 0:
-        print("subset empty..")
-    else:
+    if len(df_source_tmp_subset) >0:
         # a subset of record pairs
         candidate_links = indexer.index(df_source_tmp, df_source_tmp_subset)
 
@@ -98,14 +96,9 @@ def get_linked_offers(
         ftrs = cpr_cl.compute(candidate_links, df_source_tmp)
 
         # Classification step
-        mts = ftrs[ftrs.sum(axis=1) >= data_and_hyperparams_dict["matches_required"]]
-        mts = mts.reset_index()
-        mts = mts.rename(columns={"level_0": "index_1", "level_1": "index_2"})
-        subset_matches_list.append(mts)
-
-    df_matched_list=[]
-    if len(subset_matches_list)>0:
-        matches = pd.concat(subset_matches_list)
+        matches = ftrs[ftrs.sum(axis=1) >= data_and_hyperparams_dict["matches_required"]]
+        matches = matches.reset_index()
+        matches = matches.rename(columns={"level_0": "index_1", "level_1": "index_2"})
         df_matched_list = _get_linked_offers_from_graph(df_source_tmp, matches)
 
     return df_matched_list

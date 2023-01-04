@@ -184,9 +184,8 @@ def main(
                         repeat(batch_number),
                         range(batch_number),
                     )
-                time.sleep(10)
-                for future in futures:
-                    df_matched_list.append(future)
+                    for future in futures:
+                        df_matched_list.append(future)
 
         df_offers_matched_list.append(pd.concat(df_matched_list))
 

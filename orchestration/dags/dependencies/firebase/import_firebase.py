@@ -144,7 +144,7 @@ import_firebase_beneficiary_tables = {
         "destination_table": "firebase_home_events_details",
         "time_partitioning": {"field": "event_date"},
         "clustering_fields": {"fields": ["event_type"]},
-        "depends": ["analytics_firebase_home_events"], 
+        "depends": ["analytics_firebase_home_events"],
     },
     "analytics_firebase_session_origin": {
         "sql": f"{SQL_PATH}/analytics/firebase_session_origin.sql",
@@ -158,7 +158,9 @@ import_firebase_beneficiary_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "firebase_recommendation_events",
         "time_partitioning": {"field": "event_date"},
-        "depends": ["analytics_firebase_events"], # TODO dep: clean_past_recommended_offers
+        "depends": [
+            "analytics_firebase_events"
+        ],  # TODO dep: clean_past_recommended_offers
     },
 }
 

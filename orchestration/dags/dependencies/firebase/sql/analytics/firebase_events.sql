@@ -279,6 +279,22 @@ WITH temp_firebase_events AS (
         ) as reco_model_version,
         (
             select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'model_name'
+        ) as reco_model_name,
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'model_endpoint'
+        ) as reco_model_endpoint,
+        (
+            select
                 event_params.value.int_value
             from
                 unnest(event_params) event_params

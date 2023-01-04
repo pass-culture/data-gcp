@@ -53,6 +53,6 @@ SELECT
     pro.user_iris_id,
     pro.offers_id
 FROM
-    firebase_recommendation_details frd -- TODO fix this table has 1 day delay
+    firebase_recommendation_details frd
     LEFT JOIN past_recommended_offers pro on pro.reco_call_id = frd.reco_call_id
     AND pro.user_id = frd.user_id

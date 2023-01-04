@@ -31,6 +31,7 @@ def run_linkage(
             subset_divisions = subset_k_division if subset_k_division > 0 else 1
             print(f"Starting process... with {max_process} CPUs")
             print("subset_divisions: ", subset_divisions)
+            batch_number=max_process if subset_divisions>1 else 1
             with concurrent.futures.ProcessPoolExecutor(max_process) as executor:
                 futures = executor.map(
                     process_record_linkage,
@@ -38,8 +39,8 @@ def run_linkage(
                     repeat(data_and_hyperparams_dict),
                     repeat(df_source_tmp),
                     repeat(subset_divisions),
-                    repeat(max_process),
-                    range(max_process),
+                    repeat(batch_number),
+                    range(batch_number),
                 )
                 for future in futures:
                     df_matched_list.append(future)
@@ -102,8 +103,11 @@ def get_linked_offers(
         mts = mts.rename(columns={"level_0": "index_1", "level_1": "index_2"})
         subset_matches_list.append(mts)
 
-    matches = pd.concat(subset_matches_list)
-    df_matched_list = _get_linked_offers_from_graph(df_source_tmp, matches)
+    df_matched_list=[]
+    if len(subset_matches_list)>0:
+        matches = pd.concat(subset_matches_list)
+        df_matched_list = _get_linked_offers_from_graph(df_source_tmp, matches)
+
     return df_matched_list
 
 

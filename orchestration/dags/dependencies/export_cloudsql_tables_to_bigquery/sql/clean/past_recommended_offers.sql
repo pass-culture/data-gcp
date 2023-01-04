@@ -11,7 +11,7 @@ WITH export_table AS (
         , call_id
         , reco_filters
         , user_iris_id
-        , ROW_NUMBER() OVER (PARTITION BY id, user_id, call_id ORDER BY date DESC) as row_number
+        , ROW_NUMBER() OVER (PARTITION BY id, userid, call_id ORDER BY date DESC) as row_number
 
     FROM `{{ bigquery_raw_dataset }}.past_recommended_offers`
 )

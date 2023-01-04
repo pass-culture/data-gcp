@@ -112,14 +112,8 @@ def process_record_linkage(
 
 
 def main(
-    gcp_project: str = typer.Option(
-        GCP_PROJECT_ID,
-        help="BigQuery Project in which the offers to link is located",
-    ),
-    env_short_name: str = typer.Option(
-        ENV_SHORT_NAME,
-        help="Environnement short name",
-    ),
+    gcp_project,
+    env_short_name,
 ) -> None:
     ###############
     # Load preprocessed data
@@ -210,4 +204,4 @@ def main(
 
 
 if __name__ == "__main__":
-    typer.run(main)
+    main(GCP_PROJECT_ID, ENV_SHORT_NAME)

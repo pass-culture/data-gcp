@@ -14,12 +14,10 @@ from airflow.operators.dummy_operator import DummyOperator
 from dependencies.export_cloudsql_tables_to_bigquery.import_cloudsql import (
     RAW_TABLES,
     CLEAN_TABLES,
-    ANALYTICS_TABLES,
 )
 from common.access_gcp_secrets import access_secret_data
 from common.alerts import task_fail_slack_alert
 from common.config import (
-    BIGQUERY_ANALYTICS_DATASET,
     BIGQUERY_CLEAN_DATASET,
     RECOMMENDATION_SQL_INSTANCE,
     CONNECTION_ID,
@@ -117,20 +115,6 @@ for table, params in CLEAN_TABLES.items():
 
 end_clean = DummyOperator(task_id="end_clean", dag=dag)
 
-export_analytics_table_tasks = []
-for table, params in ANALYTICS_TABLES.items():
-    task = BigQueryExecuteQueryOperator(
-        task_id=f"import_{table}_in_analytics",
-        sql=params["sql"],
-        write_disposition=params["write_disposition"],
-        use_legacy_sql=False,
-        destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.{table}",
-        time_partitioning=params["time_partitioning"],
-        cluster_fields=params.get("cluster_fields", None),
-        dag=dag,
-    )
-    export_analytics_table_tasks.append(task)
-
 end = DummyOperator(task_id="end", dag=dag)
 
 (
@@ -139,7 +123,6 @@ end = DummyOperator(task_id="end", dag=dag)
     >> delete_rows_task
     >> export_clean_table_tasks
     >> end_clean
-    >> export_analytics_table_tasks
     >> end
 )
 (delete_rows_task >> end)

@@ -83,9 +83,7 @@ def get_linked_offers(
         ]
         matches = matches.reset_index()
         matches = matches.rename(columns={"level_0": "index_1", "level_1": "index_2"})
-        df_matched = _get_linked_offers_from_graph(df_source_tmp, matches)
-
-    return df_matched
+    return matches
 
 
 def process_record_linkage(
@@ -164,7 +162,7 @@ def main(
         df_source = data_and_hyperparams_dict_tmp["dataframe_to_link"].copy()
         agg_subcat_df_matched = []
         for subcat in df_source.offer_subcategoryId.unique():
-            df_matched_list = []
+            df_matches_list = []
             print("subcat: ", subcat, " On going ..")
             df_source_tmp = df_source.query(f"offer_subcategoryId=='{subcat}'")
             if len(df_source_tmp) > 0:
@@ -186,8 +184,11 @@ def main(
                         range(batch_number),
                     )
                     for future in futures:
-                        df_matched_list.append(future)
-                agg_subcat_df_matched.append(pd.concat(df_matched_list))
+                        df_matches_list.append(future)
+                df_matched = _get_linked_offers_from_graph(
+                    df_source_tmp, pd.concat(df_matches_list)
+                )
+                agg_subcat_df_matched.append(df_matched)
         df_offers_matched_list.append(pd.concat(agg_subcat_df_matched))
     print("Multiprocessing done! ")
     df_offers_linked_full = pd.concat(df_offers_matched_list)

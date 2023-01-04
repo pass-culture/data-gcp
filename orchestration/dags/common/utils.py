@@ -1,6 +1,6 @@
 from google.auth.transport.requests import Request
 from google.oauth2 import id_token
-from common.config import GCP_PROJECT_ID
+from common.config import GCP_PROJECT_ID, MLFLOW_URL, ENV_SHORT_NAME
 
 
 def getting_service_account_token(function_name):

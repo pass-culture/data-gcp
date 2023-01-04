@@ -1,6 +1,5 @@
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryInsertJobOperator,
-)
+from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
+
 from common.config import GCP_PROJECT_ID
 
 

@@ -22,9 +22,7 @@ def run_linkage(
     for subcat in df_source.offer_subcategoryId.unique():
         print("subcat: ", subcat, " On going ..")
         df_source_tmp = df_source.query(f"offer_subcategoryId=='{subcat}'")
-        if len(df_source_tmp) == 0:
-            print(f"empty subcat {subcat}")
-        else:
+        if len(df_source_tmp) > 0:
             indexer = recordlinkage.Index()
             indexer.full()
             subset_k_division = len(df_source_tmp) // max_process
@@ -44,8 +42,6 @@ def run_linkage(
                 )
                 for future in futures:
                     df_matched_list.append(future)
-                # time.sleep(1)
-                # executor.shutdown()
     return pd.concat(df_matched_list)
 
 

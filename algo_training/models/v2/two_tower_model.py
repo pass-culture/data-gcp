@@ -28,9 +28,9 @@ class TwoTowerModel(tf.keras.models.Model):
         if training:
             anchor_data, positive_data, negative_data = inputs
 
-            user_embedding = self.user_model.predict(anchor_data)
-            positive_item_embedding = self.item_model.predict(positive_data)
-            negative_item_embedding = self.item_model.predict(negative_data)
+            user_embedding = self.user_model(anchor_data)
+            positive_item_embedding = self.item_model(positive_data)
+            negative_item_embedding = self.item_model(negative_data)
 
             positive_similarity = self.dot([user_embedding, positive_item_embedding])
             negative_similarity = self.dot([user_embedding, negative_item_embedding])
@@ -57,7 +57,7 @@ class UserModel(tf.keras.models.Model):
 
         self.user_data = user_data
 
-        user_ids = self.user_data["item_id"].unique()
+        user_ids = self.user_data["user_id"].unique()
         self.user_layer = tf.keras.Sequential(
             [
                 StringLookup(vocabulary=user_ids),
@@ -65,7 +65,7 @@ class UserModel(tf.keras.models.Model):
                 Embedding(
                     input_dim=len(user_ids) + 1,
                     output_dim=feature_latent_dim,
-                    name="item_embedding",
+                    name="user_embedding",
                 ),
             ]
         )

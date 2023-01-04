@@ -92,27 +92,15 @@ with DAG(
     start = DummyOperator(task_id="start", dag=dag)
 
     import_recommendation_data = {}
-    task = BigQueryExecuteQueryOperator(
-        task_id=f"import_recommendation_training",
-        sql=(
-                IMPORT_TRAINING_SQL_PATH / f"recommendation_training_data_clicks.sql"
-        ).as_posix(),
-        write_disposition="WRITE_TRUNCATE",
-        use_legacy_sql=False,
-        destination_dataset_table=f"{BIGQUERY_RAW_DATASET}.recommendation_training_data",
-        dag=dag,
-    )
-    import_recommendation_data["training"] = task
-
-    for dataset in ["validation", "test"]:
+    for dataset in ["training", "validation", "test"]:
         task = BigQueryExecuteQueryOperator(
             task_id=f"import_recommendation_{dataset}",
             sql=(
-                IMPORT_TRAINING_SQL_PATH / f"recommendation_{dataset}_data.sql"
+                IMPORT_TRAINING_SQL_PATH / f"recommendation_{dataset}_data_clicks.sql"
             ).as_posix(),
             write_disposition="WRITE_TRUNCATE",
             use_legacy_sql=False,
-            destination_dataset_table=f"{BIGQUERY_RAW_DATASET}.recommendation_{dataset}_data",
+            destination_dataset_table=f"{BIGQUERY_RAW_DATASET}.recommendation_{dataset}_data_clicks",
             dag=dag,
         )
         import_recommendation_data[dataset] = task

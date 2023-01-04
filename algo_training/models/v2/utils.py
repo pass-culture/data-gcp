@@ -128,7 +128,7 @@ def save_pca_representation(
                 "y": pca_out[:, 1],
             }
         )
-        .merge(training_item_categories, on=["item_id"], how="left")
+        .merge(training_item_categories, on=["item_id"], how="inner")
         .assign(
             category_index=lambda df: df["offer_categoryId"].apply(
                 lambda x: categories.index(x)

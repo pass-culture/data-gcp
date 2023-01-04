@@ -161,9 +161,10 @@ def main(
     for group_sample in data_and_hyperparams_dict.keys():
         data_and_hyperparams_dict_tmp = data_and_hyperparams_dict[group_sample]
         max_process = cpu_count() - 1
-        df_matched_list = []
         df_source = data_and_hyperparams_dict_tmp["dataframe_to_link"].copy()
+        agg_subcat_df_matched = []
         for subcat in df_source.offer_subcategoryId.unique():
+            df_matched_list = []
             print("subcat: ", subcat, " On going ..")
             df_source_tmp = df_source.query(f"offer_subcategoryId=='{subcat}'")
             if len(df_source_tmp) > 0:
@@ -186,9 +187,9 @@ def main(
                     )
                     for future in futures:
                         df_matched_list.append(future)
-
-        df_offers_matched_list.append(pd.concat(df_matched_list))
-
+                agg_subcat_df_matched.append(pd.concat(df_matched_list))
+        df_offers_matched_list.append(pd.concat(agg_subcat_df_matched))
+    print("Multiprocessing done! ")
     df_offers_linked_full = pd.concat(df_offers_matched_list)
 
     df_offers_linked_full.to_gbq(

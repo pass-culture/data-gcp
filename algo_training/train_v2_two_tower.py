@@ -24,7 +24,6 @@ from utils import (
 )
 
 
-L2_REG = 0
 N_EPOCHS = 1000
 VERBOSE = 0 if ENV_SHORT_NAME == "prod" else 1
 LOSS_CUTOFF = 0.005
@@ -51,12 +50,10 @@ def train(
     tf.random.set_seed(seed)
 
     # Load BigQuery data
-    train_data = get_data(
-        dataset="raw_dev", table_name="recommendation_training_data"
-    ).astype(dtype={"count": int})
+    train_data = get_data(dataset="raw_dev", table_name="recommendation_training_data")
     validation_data = get_data(
         dataset="raw_dev", table_name="recommendation_validation_data"
-    ).astype(dtype={"count": int})
+    )
 
     training_user_ids = train_data["user_id"].unique()
     training_item_ids = train_data["item_id"].unique()
@@ -82,7 +79,6 @@ def train(
                 "environment": ENV_SHORT_NAME,
                 "embedding_size": embedding_size,
                 "batch_size": batch_size,
-                "l2_regularization": L2_REG,
                 "epoch_number": N_EPOCHS,
                 "user_count": len(training_user_ids),
                 "item_count": len(training_item_ids),
@@ -93,8 +89,8 @@ def train(
             user_data=train_data[["user_id", "user_age"]],
             item_data=train_data[["item_id", "offer_categoryId"]],
             embedding_size=embedding_size,
-            l2_reg=L2_REG,
         )
+
         match_model = MatchModel(two_tower_model.user_layer, two_tower_model.item_layer)
         predict(match_model)
 

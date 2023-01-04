@@ -153,6 +153,15 @@ import_firebase_beneficiary_tables = {
         "time_partitioning": {"field": "first_event_date"},
         "depends": ["analytics_firebase_events"],
     },
+    "analytics_firebase_recommendation_events": {
+        "sql": f"{SQL_PATH}/analytics/firebase_recommendation_events.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "firebase_recommendation_events",
+        "time_partitioning": {"field": "event_date"},
+        "depends": [
+            "analytics_firebase_events"
+        ],  # TODO dep: clean_past_recommended_offers
+    },
 }
 
 

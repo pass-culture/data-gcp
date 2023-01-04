@@ -159,10 +159,10 @@ def main(
     # Run linkage for each group (performer, non-performer) then concat both dataframe to get linkage on full data
     df_offers_matched_list = []
     for group_sample in data_and_hyperparams_dict.keys():
-        data_and_hyperparams_dict = data_and_hyperparams_dict[group_sample]
+        data_and_hyperparams_dict_tmp = data_and_hyperparams_dict[group_sample]
         max_process = cpu_count() - 1
         df_matched_list = []
-        df_source = data_and_hyperparams_dict["dataframe_to_link"].copy()
+        df_source = data_and_hyperparams_dict_tmp["dataframe_to_link"].copy()
         for subcat in df_source.offer_subcategoryId.unique():
             print("subcat: ", subcat, " On going ..")
             df_source_tmp = df_source.query(f"offer_subcategoryId=='{subcat}'")
@@ -178,7 +178,7 @@ def main(
                     futures = executor.map(
                         process_record_linkage,
                         repeat(indexer),
-                        repeat(data_and_hyperparams_dict),
+                        repeat(data_and_hyperparams_dict_tmp),
                         repeat(df_source_tmp),
                         repeat(subset_divisions),
                         repeat(batch_number),

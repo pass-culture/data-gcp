@@ -199,6 +199,8 @@ def main(
         if_exists="replace",
     )
     # Save already linked offers
+    # Cast offer_id back to string 
+    df_offers_to_link_clean["offer_id"]=df_offers_to_link_clean["offer_id"].astype(str)
     df_offers_to_link_clean.to_gbq(
         f"analytics_{env_short_name}.offers_already_linked",
         project_id=gcp_project,

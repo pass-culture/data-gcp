@@ -42,7 +42,8 @@ dag = DAG(
     default_args=default_dag_args,
     description="Import Adage from API",
     on_failure_callback=None,
-    schedule_interval="0 0 * * *",
+    # Cannot Schedule before 5AM UTC+2 as data from API is not available.
+    schedule_interval="0 3 * * *",
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,

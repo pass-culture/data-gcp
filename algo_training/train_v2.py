@@ -52,10 +52,10 @@ def train(
 
     # Load BigQuery data
     train_data = get_data(
-        dataset="raw_dev", table_name="recommendation_training_data"
+        dataset=f"raw_{ENV_SHORT_NAME}", table_name="recommendation_training_data"
     ).astype(dtype={"count": int})
     validation_data = get_data(
-        dataset="raw_dev", table_name="recommendation_validation_data"
+        dataset=f"raw_{ENV_SHORT_NAME}", table_name="recommendation_validation_data"
     ).astype(dtype={"count": int})
 
     training_user_ids = train_data["user_id"].unique()

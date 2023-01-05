@@ -161,7 +161,9 @@ with DAG(
         task_id="send_slack_notif_success",
         http_conn_id=SLACK_CONN_ID,
         webhook_token=SLACK_CONN_PASSWORD,
-        blocks=create_algo_training_slack_block(dag_config["EXPERIMENT_NAME"], MLFLOW_URL, ENV_SHORT_NAME),
+        blocks=create_algo_training_slack_block(
+            dag_config["EXPERIMENT_NAME"], MLFLOW_URL, ENV_SHORT_NAME
+        ),
         username=f"Algo trainer robot - {ENV_SHORT_NAME}",
         icon_emoji=":robot_face:",
     )

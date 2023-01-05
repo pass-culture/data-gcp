@@ -2,7 +2,9 @@ from common.config import MLFLOW_URL, ENV_SHORT_NAME
 
 
 def create_algo_training_slack_block(
-    experiment_name: str, mlflow_url: str = MLFLOW_URL, env_short_name: str = ENV_SHORT_NAME
+    experiment_name: str,
+    mlflow_url: str = MLFLOW_URL,
+    env_short_name: str = ENV_SHORT_NAME,
 ):
     return [
         {

@@ -1,7 +1,9 @@
 SELECT
   *
 FROM `{{ bigquery_raw_dataset }}`.`training_data_clicks`
-WHERE user_id IN (
+WHERE
+  event_date >= DATE_SUB(DATE("{{ ds }}"), INTERVAL {{ params.event_day_number }} DAY)
+AND user_id IN (
   SELECT DISTINCT user_id FROM `{{ bigquery_raw_dataset }}`.`recommendation_training_data_clicks`
 )
 AND item_id IN (

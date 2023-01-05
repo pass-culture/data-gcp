@@ -44,6 +44,7 @@ train_params = {
     "batch_size": 4096,
     "embedding_size": 64,
     "train_set_size": 0.8,
+    "event_day_number": 120 if ENV_SHORT_NAME == "prod" else 20,
 }
 gce_params = {
     "instance_name": f"algo-training-v2-{ENV_SHORT_NAME}",
@@ -84,6 +85,10 @@ with DAG(
             type="string",
         ),
         "train_set_size": Param(
+            default=str(train_params["train_set_size"]),
+            type="string",
+        ),
+        "event_day_number": Param(
             default=str(train_params["train_set_size"]),
             type="string",
         ),

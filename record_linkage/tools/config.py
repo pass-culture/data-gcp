@@ -15,4 +15,21 @@ SUBCATEGORIES_WITH_PERFORMER = [
     "SPECTACLE_VENTE_DISTANCE",
     "SUPPORT_PHYSIQUE_MUSIQUE",
 ]
-SUBSET_MAX_LENGTH = 10
+
+data_and_hyperparams_dict = {
+    "performer": {
+        "features": {
+            "offer_name": {"method": "jarowinkler", "threshold": 0.95},
+            "offer_description": {"method": "jarowinkler", "threshold": 0.95},
+            "performer": {"method": "exact"},
+        },
+        "matches_required": 2,
+    },
+    "non_performer": {
+        "features": {
+            "offer_name": {"method": "jarowinkler", "threshold": 0.95},
+            "offer_description": {"method": "jarowinkler", "threshold": 0.95},
+        },
+        "matches_required": 1,
+    },
+}

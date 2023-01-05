@@ -1,97 +1,30 @@
 import time
-import numpy as np
-import networkx as nx
-import pandas as pd
-import recordlinkage
 import uuid
-from loguru import logger
-from tools.config import SUBSET_MAX_LENGTH
-from tools.logging_tools import log_memory_info, log_duration
-from multiprocessing import cpu_count
-import concurrent
-import traceback
-from itertools import repeat
 
-
-def run_linkage(
-    data_and_hyperparams_dict,
-):
-    max_process = cpu_count() - 1
-    df_matched_list = []
-    df_source = data_and_hyperparams_dict["dataframe_to_link"].copy()
-    for subcat in df_source.offer_subcategoryId.unique():
-        print("subcat: ", subcat, " On going ..")
-        df_source_tmp = df_source.query(f"offer_subcategoryId=='{subcat}'")
-        if len(df_source_tmp) > 0:
-            indexer = recordlinkage.Index()
-            indexer.full()
-            subset_k_division = len(df_source_tmp) // max_process
-            subset_divisions = subset_k_division if subset_k_division > 0 else 1
-            print(f"Starting process... with {max_process} CPUs")
-            print("subset_divisions: ", subset_divisions)
-            batch_number = max_process if subset_divisions > 1 else 1
-            with concurrent.futures.ProcessPoolExecutor(max_process) as executor:
-                futures = executor.map(
-                    process_record_linkage,
-                    repeat(indexer),
-                    repeat(data_and_hyperparams_dict),
-                    repeat(df_source_tmp),
-                    repeat(subset_divisions),
-                    repeat(batch_number),
-                    range(batch_number),
-                )
-                for future in futures:
-                    df_matched_list.append(future)
-    return pd.concat(df_matched_list)
-
-
-if __name__ == "__main__":
-    run_linkage()
-
-
-def process_record_linkage(
-    indexer,
-    data_and_hyperparams_dict,
-    df_source_tmp,
-    subset_divisions,
-    max_process,
-    batch_number,
-):
-    try:
-        return get_linked_offers(
-            indexer,
-            data_and_hyperparams_dict,
-            df_source_tmp,
-            subset_divisions,
-            max_process,
-            batch_number,
-        )
-    except Exception as e:
-        print(e)
-        traceback.print_exc()
-        return False
+import networkx as nx
+import recordlinkage
+from tools.logging_tools import log_duration
 
 
 def get_linked_offers(
     indexer,
     data_and_hyperparams_dict,
     df_source_tmp,
-    subset_divisions,
-    max_process,
+    subset_length,
     batch_number,
+    batch_id,
 ):
     """
     Split linkage by offer_subcategoryId
     Setup Comparaison for linkage
     Run linkage
     """
-    subset_matches_list = []
-    if batch_number != (max_process - 1):
+    if batch_id != (batch_number - 1):
         df_source_tmp_subset = df_source_tmp[
-            batch_number * subset_divisions : (batch_number + 1) * subset_divisions
+            batch_id * subset_length : (batch_id + 1) * subset_length
         ]
     else:
-        df_source_tmp_subset = df_source_tmp[batch_number * subset_divisions :]
+        df_source_tmp_subset = df_source_tmp[batch_id * subset_length :]
 
     if len(df_source_tmp_subset) > 0:
         # a subset of record pairs
@@ -108,12 +41,10 @@ def get_linked_offers(
         ]
         matches = matches.reset_index()
         matches = matches.rename(columns={"level_0": "index_1", "level_1": "index_2"})
-        df_matched = _get_linked_offers_from_graph(df_source_tmp, matches)
-
-    return df_matched
+    return matches
 
 
-def _get_linked_offers_from_graph(df_source, df_matches):
+def get_linked_offers_from_graph(df_source, df_matches):
     start = time.time()
     df_source_tmp = df_source.copy()
     FG = nx.from_pandas_edgelist(

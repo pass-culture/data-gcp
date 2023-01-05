@@ -44,6 +44,7 @@ train_params = {
     "batch_size": 4096,
     "embedding_size": 64,
     "train_set_size": 0.8,
+    "event_day_number": 120 if ENV_SHORT_NAME == "prod" else 20,
 }
 gce_params = {
     "instance_name": f"algo-training-v2-{ENV_SHORT_NAME}",
@@ -85,6 +86,10 @@ with DAG(
         ),
         "train_set_size": Param(
             default=str(train_params["train_set_size"]),
+            type="string",
+        ),
+        "event_day_number": Param(
+            default=str(train_params["event_day_number"]),
             type="string",
         ),
     },
@@ -156,7 +161,9 @@ with DAG(
         task_id="send_slack_notif_success",
         http_conn_id=SLACK_CONN_ID,
         webhook_token=SLACK_CONN_PASSWORD,
-        blocks=create_algo_training_slack_block(MLFLOW_URL, ENV_SHORT_NAME),
+        blocks=create_algo_training_slack_block(
+            dag_config["EXPERIMENT_NAME"], MLFLOW_URL, ENV_SHORT_NAME
+        ),
         username=f"Algo trainer robot - {ENV_SHORT_NAME}",
         icon_emoji=":robot_face:",
     )

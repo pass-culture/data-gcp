@@ -1,4 +1,4 @@
-from tools.config import ENV_SHORT_NAME, GCP_PROJECT_ID
+from tools.config import ENV_SHORT_NAME, GCP_PROJECT_ID, MAX_OFFER_PER_BATCH
 import pandas as pd
 import typer
 
@@ -22,7 +22,7 @@ def get_offers_to_link(gcp_project, env_short_name):
     WHERE ado.offer_subcategoryId != 'LIVRE_PAPIER'
     AND ado.offer_id not in (SELECT offer_id from `{gcp_project}.analytics_{env_short_name}.offers_already_linked`)
     QUALIFY ROW_NUMBER() OVER (PARTITION BY item_id) = 1
-    LIMIT 50000
+    LIMIT {MAX_OFFER_PER_BATCH}
     """
     return pd.read_gbq(query)
 

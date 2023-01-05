@@ -78,7 +78,7 @@ def main(
         offers_matched_by_subcat_df_list = []
         for subcat in df_source.offer_subcategoryId.unique():
             offers_matched_df_list = []
-            print("subcat: ", subcat, " On going ..")
+            print("subcat: ", subcat, " On going ...")
             df_source_tmp = df_source.query(f"offer_subcategoryId=='{subcat}'")
             indexer = recordlinkage.Index()
             indexer.full()
@@ -100,7 +100,7 @@ def main(
                 )
                 for future in futures:
                     offers_matched_df_list.append(future)
-            print("Multiprocessing done! ")
+            print("Multiprocessing done")
             df_offers_matched = get_linked_offers_from_graph(
                 df_source_tmp, pd.concat(offers_matched_df_list)
             )

@@ -19,6 +19,7 @@ def get_linked_offers(
     Setup Comparaison for linkage
     Run linkage
     """
+    start = time.time()
     if batch_id != (batch_number - 1):
         df_source_tmp_subset = df_source_tmp[
             batch_id * subset_length : (batch_id + 1) * subset_length
@@ -41,6 +42,7 @@ def get_linked_offers(
         ]
         matches = matches.reset_index()
         matches = matches.rename(columns={"level_0": "index_1", "level_1": "index_2"})
+    log_duration(f"get_linked_offers: ", start)
     return matches
 
 

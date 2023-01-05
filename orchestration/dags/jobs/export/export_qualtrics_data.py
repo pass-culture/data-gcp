@@ -5,13 +5,13 @@ from common import macros
 from dependencies.qualtrics.export_qualtrics_data import clean_tables
 from common.config import (
     DAG_FOLDER,
-    GCP_PROJECT,
+    GCP_PROJECT_ID,
     ENV_SHORT_NAME,
     APPLICATIVE_EXTERNAL_CONNECTION_ID,
     BIGQUERY_CLEAN_DATASET,
 )
 from common.alerts import task_fail_slack_alert
-from common.operator import bigquery_job_task
+from common.operators.biquery import bigquery_job_task
 from common.utils import depends_loop
 from common.access_gcp_secrets import access_secret_data
 import pandas as pd
@@ -22,7 +22,7 @@ default_dag_args = {
     "start_date": datetime.datetime(2022, 6, 24),
     "retries": 1,
     "retry_delay": datetime.timedelta(minutes=5),
-    "project_id": GCP_PROJECT,
+    "project_id": GCP_PROJECT_ID,
     "on_failure_callback": task_fail_slack_alert,
 }
 
@@ -37,9 +37,11 @@ dag = DAG(
     template_searchpath=DAG_FOLDER,
 )
 
-QUALTRICS_TOKEN = access_secret_data(GCP_PROJECT, f"qualtrics_token_{ENV_SHORT_NAME}")
+QUALTRICS_TOKEN = access_secret_data(
+    GCP_PROJECT_ID, f"qualtrics_token_{ENV_SHORT_NAME}"
+)
 QUALTRICS_DATA_CENTER = access_secret_data(
-    GCP_PROJECT, f"qualtrics_data_center_{ENV_SHORT_NAME}"
+    GCP_PROJECT_ID, f"qualtrics_data_center_{ENV_SHORT_NAME}"
 )
 QUALTRICS_BASE_URL = f"https://{QUALTRICS_DATA_CENTER}.qualtrics.com/automations-file-service/automations/"
 

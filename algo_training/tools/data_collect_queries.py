@@ -7,9 +7,9 @@ from utils import GCP_PROJECT_ID
 def get_data(
     dataset: str,
     table_name: str,
-    subcategory_ids: str,
-    event_day_number: str,
-    max_limit: int,
+    max_limit: int = None,
+    subcategory_ids: str = None,
+    event_day_number: str = None,
 ):
     query_filter = ""
     limit_filter = ""
@@ -23,10 +23,22 @@ def get_data(
         query_filter += (
             f"event_date >= DATE_ADD(CURRENT_DATE(), INTERVAL -{event_day_number} DAY) "
         )
-    if max_limit > 0:
+    if max_limit:
         limit_filter = f"LIMIT {max_limit}"
     query = f"""
         SELECT * FROM `{GCP_PROJECT_ID}.{dataset}.{table_name}` {query_filter} {limit_filter}
+    """
+    data = pd.read_gbq(query)
+    return data
+
+
+def get_column_data(
+    dataset: str,
+    table_name: str,
+    column_name: str,
+):
+    query = f"""
+        SELECT DISTINCT {column_name} FROM `{GCP_PROJECT_ID}.{dataset}.{table_name}`
     """
     data = pd.read_gbq(query)
     return data

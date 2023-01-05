@@ -27,4 +27,5 @@ SELECT
     , CAST("institutionId" AS varchar(255)) AS institution_id
     , BTRIM(array_to_string("interventionArea", \',\'), \'{\') AS intervention_area
     , CAST("templateId" AS varchar(255)) AS template_id
+    , CAST("imageId" AS varchar(255)) AS collective_offer_image_id
 FROM public.collective_offer

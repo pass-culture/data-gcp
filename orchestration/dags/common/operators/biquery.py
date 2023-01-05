@@ -1,9 +1,6 @@
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryInsertJobOperator,
-)
+from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 
-
-from common.config import GCP_PROJECT
+from common.config import GCP_PROJECT_ID
 
 
 def bigquery_job_task(dag, table, job_params):
@@ -14,7 +11,7 @@ def bigquery_job_task(dag, table, job_params):
                 "query": "{% include '" + job_params["sql"] + "' %}",
                 "useLegacySql": False,
                 "destinationTable": {
-                    "projectId": GCP_PROJECT,
+                    "projectId": GCP_PROJECT_ID,
                     "datasetId": job_params["destination_dataset"],
                     "tableId": job_params["destination_table"],
                 },

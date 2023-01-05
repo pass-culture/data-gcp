@@ -20,7 +20,7 @@ from common.config import (
     BIGQUERY_ANALYTICS_DATASET,
     DATA_GCS_BUCKET_NAME,
     ENV_SHORT_NAME,
-    GCP_PROJECT,
+    GCP_PROJECT_ID,
 )
 from common.alerts import task_fail_slack_alert
 from dependencies.import_addresses import USER_LOCATIONS_SCHEMA
@@ -39,7 +39,7 @@ default_args = {
 
 def getting_service_account_token():
     function_url = (
-        f"https://europe-west1-{GCP_PROJECT}.cloudfunctions.net/{FUNCTION_NAME}"
+        f"https://europe-west1-{GCP_PROJECT_ID}.cloudfunctions.net/{FUNCTION_NAME}"
     )
     open_id_connect_token = id_token.fetch_id_token(Request(), function_url)
     return open_id_connect_token

@@ -9,8 +9,11 @@ SELECT
     ,subcategories.id AS subcategory
     ,offer.offer_id
     ,offer.offer_name
-    ,COUNT(CASE WHEN booking.booking_status IN ('USED', 'REIMBURSED') THEN booking.booking_id ELSE NULL END) AS count_bookings
-    ,COUNT(CASE WHEN booking.booking_status IN ('CONFIRMED') THEN booking.booking_id ELSE NULL END) AS count_pending_bookings
+    ,COUNT(DISTINCT CASE WHEN booking.booking_status IN ('USED', 'REIMBURSED') THEN booking.booking_id ELSE NULL END) AS count_bookings -- will be deleted
+    ,COUNT(DISTINCT CASE WHEN booking.booking_status IN ('USED', 'REIMBURSED') THEN booking.booking_id ELSE NULL END) AS count_used_bookings
+    ,SUM(CASE WHEN booking.booking_status IN ('USED', 'REIMBURSED') THEN booking.booking_quantity ELSE NULL END) AS count_used_tickets_booked
+    ,SUM(CASE WHEN booking.booking_status IN ('CONFIRMED') THEN booking.booking_quantity ELSE NULL END) AS count_pending_tickets_booked
+    ,COUNT(DISTINCT CASE WHEN booking.booking_status IN ('CONFIRMED') THEN booking.booking_id ELSE NULL END) AS count_pending_bookings
     ,SUM(CASE WHEN booking.booking_status IN ('USED', 'REIMBURSED') THEN booking.booking_intermediary_amount ELSE NULL END) AS real_amount_booked
     ,SUM(CASE WHEN booking.booking_status IN ('CONFIRMED') THEN booking.booking_intermediary_amount ELSE NULL END) AS pending_amount_booked
 FROM `{{ bigquery_analytics_dataset }}.enriched_venue_data` venue
@@ -32,10 +35,13 @@ SELECT
     ,offer.collective_offer_subcategory_id
     ,offer.collective_offer_id
     ,offer.collective_offer_name
-    ,COUNT(CASE WHEN booking.collective_booking_status IN ('USED', 'REIMBURSED') THEN booking.collective_booking_id ELSE NULL END) AS count_bookings
-    ,COUNT(CASE WHEN booking.collective_booking_status IN ('CONFIRMED', 'PENDING') THEN booking.collective_booking_id ELSE NULL END) AS count_pending_bookings
-    ,SUM(CASE WHEN booking.collective_booking_status IN ('USED', 'REIMBURSED') THEN booking.booking_amount ELSE NULL END) AS real_amount_booked
-    ,SUM(CASE WHEN booking.collective_booking_status IN ('CONFIRMED', 'PENDING') THEN booking.booking_amount ELSE NULL END) AS pending_amount_booked
+    ,COUNT(DISTINCT CASE WHEN booking.collective_booking_status IN ('USED', 'REIMBURSED','CONFIRMED') THEN booking.collective_booking_id ELSE NULL END) AS count_bookings -- will be deleted
+    ,COUNT(DISTINCT CASE WHEN booking.collective_booking_status IN ('USED', 'REIMBURSED','CONFIRMED') THEN booking.collective_booking_id ELSE NULL END) AS count_used_bookings
+    ,COUNT(DISTINCT CASE WHEN booking.collective_booking_status IN ('PENDING') THEN booking.collective_booking_id ELSE NULL END) AS count_pending_bookingst
+    ,COUNT(DISTINCT CASE WHEN booking.collective_booking_status IN ('USED', 'REIMBURSED','CONFIRMED') THEN booking.collective_booking_id ELSE NULL END) AS count_used_tickets_booked -- 1 offer = 1 ticket, just to match format
+    ,COUNT(DISTINCT CASE WHEN booking.collective_booking_status IN ('PENDING') THEN booking.collective_booking_id ELSE NULL END) AS count_pending_tickets_booked -- same
+    ,SUM(CASE WHEN booking.collective_booking_status IN ('USED', 'REIMBURSED','CONFIRMED') THEN booking.booking_amount ELSE NULL END) AS real_amount_booked
+    ,SUM(CASE WHEN booking.collective_booking_status IN ('PENDING') THEN booking.booking_amount ELSE NULL END) AS pending_amount_booked
 FROM `{{ bigquery_analytics_dataset }}.enriched_venue_data` venue
 JOIN `{{ bigquery_analytics_dataset }}.enriched_offerer_data` offerer ON venue.venue_managing_offerer_id = offerer.offerer_id
 LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_collective_offer_data` offer ON venue.venue_id = offer.venue_id

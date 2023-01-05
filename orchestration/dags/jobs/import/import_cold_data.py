@@ -11,11 +11,11 @@ from common import macros
 from common.utils import getting_service_account_token, depends_loop
 
 from common.config import (
-    GCP_PROJECT,
+    GCP_PROJECT_ID,
     DAG_FOLDER,
     ENV_SHORT_NAME,
 )
-from common.config import GCP_PROJECT, DAG_FOLDER
+from common.config import GCP_PROJECT_ID, DAG_FOLDER
 from common.alerts import task_fail_slack_alert
 from dependencies.cold_data.import_cold_data import analytics_tables
 
@@ -24,7 +24,7 @@ default_dag_args = {
     "retries": 1,
     "on_failure_callback": task_fail_slack_alert,
     "retry_delay": datetime.timedelta(minutes=5),
-    "project_id": GCP_PROJECT,
+    "project_id": GCP_PROJECT_ID,
 }
 
 dag = DAG(

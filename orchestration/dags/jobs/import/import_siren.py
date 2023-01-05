@@ -12,7 +12,7 @@ from google.auth.transport.requests import Request
 from google.oauth2 import id_token
 
 from common.config import (
-    GCP_PROJECT,
+    GCP_PROJECT_ID,
     ENV_SHORT_NAME,
     BIGQUERY_CLEAN_DATASET,
     BIGQUERY_ANALYTICS_DATASET,
@@ -26,13 +26,13 @@ default_dag_args = {
     "start_date": datetime.datetime(2021, 8, 25),
     "retries": 1,
     "on_failure_callback": task_fail_slack_alert,
-    "project_id": GCP_PROJECT,
+    "project_id": GCP_PROJECT_ID,
 }
 
 
 def getting_service_account_token():
     function_url = (
-        f"https://europe-west1-{GCP_PROJECT}.cloudfunctions.net/{FUNCTION_NAME}"
+        f"https://europe-west1-{GCP_PROJECT_ID}.cloudfunctions.net/{FUNCTION_NAME}"
     )
     open_id_connect_token = id_token.fetch_id_token(Request(), function_url)
     return open_id_connect_token

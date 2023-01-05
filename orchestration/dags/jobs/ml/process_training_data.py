@@ -11,7 +11,7 @@ from common.alerts import analytics_fail_slack_alert
 from common.config import (
     BIGQUERY_CLEAN_DATASET,
     BIGQUERY_RAW_DATASET,
-    GCP_PROJECT,
+    GCP_PROJECT_ID,
 )
 from common.config import DAG_FOLDER
 from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
@@ -21,7 +21,7 @@ default_dag_args = {
     "retries": 1,
     "on_failure_callback": analytics_fail_slack_alert,
     "retry_delay": datetime.timedelta(minutes=5),
-    "project_id": GCP_PROJECT,
+    "project_id": GCP_PROJECT_ID,
 }
 
 dag = DAG(

@@ -1,5 +1,5 @@
 from common.config import (
-    GCP_PROJECT,
+    GCP_PROJECT_ID,
     ENV_SHORT_NAME,
 )
 from common.access_gcp_secrets import access_secret_data
@@ -15,7 +15,7 @@ clean_tables = {
         "cluster_fields": ["calculation_month"],
         "params": {"volume": 8000 if ENV_SHORT_NAME == "prod" else 10},
         "qualtrics_automation_id": access_secret_data(
-            GCP_PROJECT, f"qualtrics_ir_jeunes_automation_id_{ENV_SHORT_NAME}"
+            GCP_PROJECT_ID, f"qualtrics_ir_jeunes_automation_id_{ENV_SHORT_NAME}"
         ),
         "include_email": True,
     },
@@ -27,7 +27,7 @@ clean_tables = {
         "cluster_fields": ["calculation_month"],
         "params": {"volume": 10000 if ENV_SHORT_NAME == "prod" else 10},
         "qualtrics_automation_id": access_secret_data(
-            GCP_PROJECT, f"qualtrics_ir_ac_automation_id_{ENV_SHORT_NAME}"
+            GCP_PROJECT_ID, f"qualtrics_ir_ac_automation_id_{ENV_SHORT_NAME}"
         ),
         "include_email": False,
     },

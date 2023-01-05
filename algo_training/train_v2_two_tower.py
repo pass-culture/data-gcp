@@ -50,20 +50,27 @@ def train(
     tf.random.set_seed(seed)
 
     # Load BigQuery data
-    train_data = get_data(dataset="raw_dev", table_name="recommendation_training_data")
+    train_data = get_data(
+        dataset=f"raw_{ENV_SHORT_NAME}", table_name="recommendation_training_data"
+    )
     validation_data = get_data(
-        dataset="raw_dev", table_name="recommendation_validation_data"
+        dataset=f"raw_{ENV_SHORT_NAME}", table_name="recommendation_validation_data"
     )
 
-    training_user_ids = train_data["user_id"].unique()
-    training_item_ids = train_data["item_id"].unique()
-
+    user_columns = ["user_id", "user_age"]
+    item_columns = ["item_id", "offer_categoryId", "offer_subcategoryid"]
     # Create tf datasets
     train_dataset = load_triplets_dataset(
-        train_data, item_ids=training_item_ids, batch_size=batch_size
+        train_data,
+        user_columns=user_columns,
+        item_columns=item_columns,
+        batch_size=batch_size,
     )
     validation_dataset = load_triplets_dataset(
-        validation_data, item_ids=training_item_ids, batch_size=batch_size
+        validation_data,
+        user_columns=user_columns,
+        item_columns=item_columns,
+        batch_size=batch_size,
     )
 
     # Connect to MLFlow
@@ -80,19 +87,17 @@ def train(
                 "embedding_size": embedding_size,
                 "batch_size": batch_size,
                 "epoch_number": N_EPOCHS,
-                "user_count": len(training_user_ids),
-                "item_count": len(training_item_ids),
+                "user_count": train_data["user_id"].nunique(),
+                "item_count": train_data["item_id"].nunique(),
             }
         )
 
         two_tower_model = TwoTowerModel(
-            user_data=train_data[["user_id", "user_age"]],
-            item_data=train_data[["item_id", "offer_categoryId"]],
+            user_data=train_data[user_columns].drop_duplicates(),
+            item_data=train_data[item_columns].drop_duplicates(),
             embedding_size=embedding_size,
         )
-
         match_model = MatchModel(two_tower_model.user_layer, two_tower_model.item_layer)
-        predict(match_model)
 
         two_tower_model.compile(loss=identity_loss, optimizer="adam")
 

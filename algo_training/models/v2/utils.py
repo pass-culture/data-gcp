@@ -13,7 +13,8 @@ from utils import connect_remote_mlflow
 
 def load_triplets_dataset(
     input_data: pd.DataFrame,
-    item_ids: list,
+    user_columns,
+    item_columns,
     batch_size: int,
 ) -> tf.data.Dataset:
     """
@@ -22,14 +23,16 @@ def load_triplets_dataset(
         - y = fake data as we make no predictions
     """
 
-    anchor_data = input_data["user_id"].values
-    positive_data = input_data["item_id"].values
+    anchor_data = list(zip(*[input_data[col] for col in user_columns]))
+    positive_data = list(zip(*[input_data[col] for col in item_columns]))
+    input_data = input_data.sample(frac=1)
+    negative_data = list(zip(*[input_data[col] for col in item_columns]))
 
     anchor_dataset = tf.data.Dataset.from_tensor_slices(anchor_data)
     positive_dataset = tf.data.Dataset.from_tensor_slices(positive_data)
     negative_dataset = (
-        tf.data.Dataset.from_tensor_slices(item_ids)
-        .shuffle(buffer_size=len(item_ids))
+        tf.data.Dataset.from_tensor_slices(negative_data)
+        .shuffle(buffer_size=len(positive_data))
         .repeat()
     )  # We shuffle the negative examples to get new random examples at each call
 

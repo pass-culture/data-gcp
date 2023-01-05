@@ -33,10 +33,10 @@ DATE = "{{ ts_nodash }}"
 
 # Environment variables to export before running commands
 dag_config = {
-    "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/algo_training_{ENV_SHORT_NAME}/algo_training_v2-{DATE}",
+    "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/algo_training_{ENV_SHORT_NAME}/algo_training_clicks_v2_{DATE}",
     "BASE_DIR": f"data-gcp/algo_training",
     "TRAIN_DIR": "/home/airflow/train",
-    "EXPERIMENT_NAME": f"algo_training_v2.1_{ENV_SHORT_NAME}",
+    "EXPERIMENT_NAME": f"algo_training_clicks_v2.1_{ENV_SHORT_NAME}",
 }
 
 # Params
@@ -63,7 +63,7 @@ default_args = {
 }
 
 with DAG(
-    "algo_training_clicks",
+    "algo_training_clicks_v2",
     default_args=default_args,
     description="Custom training job",
     schedule_interval=None,
@@ -89,7 +89,7 @@ with DAG(
             type="string",
         ),
         "event_day_number": Param(
-            default=str(train_params["train_set_size"]),
+            default=str(train_params["event_day_number"]),
             type="string",
         ),
     },
@@ -161,7 +161,7 @@ with DAG(
         task_id="send_slack_notif_success",
         http_conn_id=SLACK_CONN_ID,
         webhook_token=SLACK_CONN_PASSWORD,
-        blocks=create_algo_training_slack_block(MLFLOW_URL, ENV_SHORT_NAME),
+        blocks=create_algo_training_slack_block(dag_config["EXPERIMENT_NAME"], MLFLOW_URL, ENV_SHORT_NAME),
         username=f"Algo trainer robot - {ENV_SHORT_NAME}",
         icon_emoji=":robot_face:",
     )

@@ -33,7 +33,7 @@ DATE = "{{ ts_nodash }}"
 
 # Environment variables to export before running commands
 dag_config = {
-    "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/algo_training_{ENV_SHORT_NAME}/algo_training_v2-{DATE}",
+    "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/algo_training_{ENV_SHORT_NAME}/algo_training_v2_{DATE}",
     "BASE_DIR": f"data-gcp/algo_training",
     "TRAIN_DIR": "/home/airflow/train",
     "EXPERIMENT_NAME": f"algo_training_v2.1_{ENV_SHORT_NAME}",
@@ -96,20 +96,6 @@ with DAG(
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)
 
-    import_recommendation_data = {}
-    for dataset in ["training", "validation", "test"]:
-        task = BigQueryExecuteQueryOperator(
-            task_id=f"import_recommendation_{dataset}",
-            sql=(
-                IMPORT_TRAINING_SQL_PATH / f"recommendation_{dataset}_data.sql"
-            ).as_posix(),
-            write_disposition="WRITE_TRUNCATE",
-            use_legacy_sql=False,
-            destination_dataset_table=f"{BIGQUERY_RAW_DATASET}.recommendation_{dataset}_data",
-            dag=dag,
-        )
-        import_recommendation_data[dataset] = task
-
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
         instance_name=gce_params["instance_name"],
@@ -127,6 +113,22 @@ with DAG(
         instance_name=gce_params["instance_name"],
         base_dir=dag_config["BASE_DIR"],
         command="pip install -r requirements.txt --user",
+        dag=dag,
+    )
+
+    data_collect = SSHGCEOperator(
+        task_id="data_collect",
+        instance_name=gce_params["instance_name"],
+        base_dir=dag_config["BASE_DIR"],
+        command="python data_collect.py --event-day-number {{ params.event_day_number }}",
+        dag=dag,
+    )
+
+    split_data = SSHGCEOperator(
+        task_id="split_data",
+        instance_name=gce_params["instance_name"],
+        base_dir=dag_config["BASE_DIR"],
+        command="python split_data.py",
         dag=dag,
     )
 
@@ -148,7 +150,7 @@ with DAG(
         instance_name=gce_params["instance_name"],
         base_dir=dag_config["BASE_DIR"],
         export_config=dag_config,
-        command=f"python evaluate_v2.py --experiment-name {dag_config['EXPERIMENT_NAME']}",
+        command=f"python evaluate.py",
         dag=dag,
     )
 

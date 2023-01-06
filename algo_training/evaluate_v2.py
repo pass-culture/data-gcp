@@ -52,6 +52,25 @@ def evaluate(
     ]
     test_data = test_data.loc[lambda df: df["user_id"].isin(users_to_test)]
 
+    loaded_model = tf.keras.models.load_model(
+        mlflow.get_artifact_uri("model"),
+        custom_objects={"MatchModel": MatchModel},
+        compile=False,
+    )
+
+    data_model_dict = {
+        "name": experiment_name,
+        "data": {
+            "raw": booking_raw_data,
+            "training_item_ids": training_item_categories["item_id"].unique(),
+            "test": test_data,
+        },
+        "model": loaded_model,
+    }
+
+    # Compute metrics
+    metrics = load_metrics(data_model_dict, k_list, RECOMMENDATION_NUMBER)
+
     # Connect to current MLFlow experiment
     client_id = get_secret("mlflow_client_id")
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
@@ -63,24 +82,7 @@ def evaluate(
         run_uuid = mlflow.active_run().info.run_uuid
         export_path = f"{TRAIN_DIR}/{ENV_SHORT_NAME}/{run_uuid}/"
 
-        loaded_model = tf.keras.models.load_model(
-            mlflow.get_artifact_uri("model"),
-            custom_objects={"MatchModel": MatchModel},
-            compile=False,
-        )
-
-        data_model_dict = {
-            "name": experiment_name,
-            "data": {
-                "raw": booking_raw_data,
-                "training_item_ids": training_item_categories["item_id"].unique(),
-                "test": test_data,
-            },
-            "model": loaded_model,
-        }
-
         # Export metrics to MLFlow
-        metrics = load_metrics(data_model_dict, k_list, RECOMMENDATION_NUMBER)
         mlflow.log_metrics(metrics)
 
         # Export the PCA representations of the item embeddings

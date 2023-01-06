@@ -162,6 +162,13 @@ import_firebase_beneficiary_tables = {
             "analytics_firebase_events"
         ],  # TODO dep: clean_past_recommended_offers
     },
+    "analytics_firebase_booking_origin": {
+        "sql": f"{SQL_PATH}/analytics/firebase_booking_origin.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "firebase_booking_origin",
+        "time_partitioning": {"field": "booking_date"},
+        "depends": ["analytics_firebase_events"],
+    },
 }
 
 

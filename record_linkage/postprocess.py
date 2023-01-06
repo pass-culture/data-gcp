@@ -57,7 +57,7 @@ def main(
     df_offers_linked_export_ready.to_gbq(
         f"analytics_{env_short_name}.linked_offers",
         project_id=gcp_project,
-        if_exists="replace",
+        if_exists="append",
     )
 
 

@@ -158,7 +158,7 @@ with DAG(
         instance_name=gce_params["instance_name"],
         base_dir=dag_config["BASE_DIR"],
         export_config=dag_config,
-        command=f"python evaluate_v2.py --experiment-name {dag_config['EXPERIMENT_NAME']}",
+        command=f"python evaluate.py",
         dag=dag,
     )
 

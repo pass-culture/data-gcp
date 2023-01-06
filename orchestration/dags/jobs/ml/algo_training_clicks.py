@@ -45,8 +45,8 @@ gce_params = {
     "instance_name": f"algo-training-clicks-{ENV_SHORT_NAME}",
     "instance_type": {
         "dev": "n2-standard-2",
-        "stg": "c2-standard-8",
-        "prod": "c2-standard-16",
+        "stg": "c2-standard-16",
+        "prod": "c2-standard-30",
     },
 }
 

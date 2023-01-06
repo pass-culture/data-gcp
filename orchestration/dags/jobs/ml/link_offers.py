@@ -21,7 +21,7 @@ GCE_INSTANCE = f"link-offers-{ENV_SHORT_NAME}"
 BASE_DIR = f"data-gcp/record_linkage"
 
 default_args = {
-    "start_date": datetime(2022, 12, 28),
+    "start_date": datetime(2022, 1, 5),
     "on_failure_callback": task_fail_slack_alert,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
@@ -31,9 +31,9 @@ with DAG(
     "link_offers",
     default_args=default_args,
     description="Link offers via recordLinkage",
-    schedule_interval=None,
+    schedule_interval="0 0 * * *",
     catchup=False,
-    dagrun_timeout=timedelta(minutes=1440),
+    dagrun_timeout=timedelta(minutes=180),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
     params={

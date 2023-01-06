@@ -1,6 +1,6 @@
 import pandas as pd
 import pytest
-from tools.linkage import _get_linked_offers_from_graph
+from tools.linkage import get_linked_offers_from_graph
 
 
 class TestPostprocess:
@@ -78,7 +78,7 @@ class TestPostprocess:
     def test_postprocess(
         test_offer_cluster, df_source, df_matches, expected_linked_data
     ):
-        df_linked_data = _get_linked_offers_from_graph(df_source, df_matches)
+        df_linked_data = get_linked_offers_from_graph(df_source, df_matches)
 
         assert (
             df_linked_data.linked_id.nunique()

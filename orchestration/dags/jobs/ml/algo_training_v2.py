@@ -22,12 +22,10 @@ from common.config import (
     MLFLOW_BUCKET_NAME,
     SLACK_CONN_ID,
     SLACK_CONN_PASSWORD,
-    BIGQUERY_RAW_DATASET,
     MLFLOW_URL,
 )
 
 from dependencies.ml.utils import create_algo_training_slack_block
-from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
 
 DATE = "{{ ts_nodash }}"
 
@@ -172,12 +170,11 @@ with DAG(
 
     (
         start
-        >> import_recommendation_data["training"]
-        >> import_recommendation_data["validation"]
-        >> import_recommendation_data["test"]
         >> gce_instance_start
         >> fetch_code
         >> install_dependencies
+        >> data_collect
+        >> split_data
         >> training
         >> evaluate
         >> gce_instance_stop

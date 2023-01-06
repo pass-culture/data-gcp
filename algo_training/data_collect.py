@@ -27,7 +27,11 @@ def main(
     ),
 ) -> None:
     raw_data = get_data(
-        dataset, table_name, subcategory_ids, event_day_number, limit_filter
+        dataset=dataset,
+        table_name=table_name,
+        subcategory_ids=subcategory_ids,
+        event_day_number=event_day_number,
+        max_limit=limit_filter,
     )
     raw_data.to_csv(f"{STORAGE_PATH}/raw_data.csv", index=False)
 

@@ -21,7 +21,8 @@ from utils import (
     get_secret,
     connect_remote_mlflow,
     ENV_SHORT_NAME,
-    TRAIN_DIR, STORAGE_PATH,
+    TRAIN_DIR,
+    STORAGE_PATH,
 )
 
 

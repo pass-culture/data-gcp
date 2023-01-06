@@ -118,6 +118,7 @@ with DAG(
         task_id="data_collect",
         instance_name=gce_params["instance_name"],
         base_dir=dag_config["BASE_DIR"],
+        export_config=dag_config,
         command="python data_collect.py --event-day-number {{ params.event_day_number }}",
         dag=dag,
     )
@@ -126,7 +127,17 @@ with DAG(
         task_id="split_data",
         instance_name=gce_params["instance_name"],
         base_dir=dag_config["BASE_DIR"],
+        export_config=dag_config,
         command="python split_data.py",
+        dag=dag,
+    )
+
+    preprocess = SSHGCEOperator(
+        task_id="preprocess",
+        instance_name=gce_params["instance_name"],
+        base_dir=dag_config["BASE_DIR"],
+        export_config=dag_config,
+        command="python preprocess.py",
         dag=dag,
     )
 
@@ -174,6 +185,7 @@ with DAG(
         >> fetch_code
         >> install_dependencies
         >> data_collect
+        >> preprocess
         >> split_data
         >> training
         >> evaluate

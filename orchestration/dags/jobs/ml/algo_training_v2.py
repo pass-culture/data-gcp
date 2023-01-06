@@ -9,9 +9,6 @@ from common.operators.gce import (
     CloneRepositoryGCEOperator,
     SSHGCEOperator,
 )
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryExecuteQueryOperator,
-)
 from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
 
 from common import macros

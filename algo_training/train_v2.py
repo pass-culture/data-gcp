@@ -1,6 +1,7 @@
 import mlflow
 import typer
 
+import pandas as pd
 import tensorflow as tf
 from loguru import logger
 
@@ -21,6 +22,7 @@ from utils import (
     connect_remote_mlflow,
     ENV_SHORT_NAME,
     TRAIN_DIR,
+    STORAGE_PATH,
 )
 
 
@@ -51,12 +53,14 @@ def train(
     tf.random.set_seed(seed)
 
     # Load BigQuery data
-    train_data = get_data(
-        dataset=f"raw_{ENV_SHORT_NAME}", table_name="recommendation_training_data"
-    ).astype(dtype={"count": int})
-    validation_data = get_data(
-        dataset=f"raw_{ENV_SHORT_NAME}", table_name="recommendation_validation_data"
-    ).astype(dtype={"count": int})
+    train_data = pd.read_csv(
+        f"{STORAGE_PATH}/positive_data_train.csv",
+        dtype={"user_id": str, "item_id": str},
+    )
+    validation_data = pd.read_csv(
+        f"{STORAGE_PATH}/positive_data_eval.csv",
+        dtype={"user_id": str, "item_id": str},
+    )
 
     training_user_ids = train_data["user_id"].unique()
     training_item_ids = train_data["item_id"].unique()

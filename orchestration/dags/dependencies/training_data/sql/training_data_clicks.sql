@@ -31,7 +31,7 @@ SELECT
     enroffer.type,
     enroffer.venue_id,
     enroffer.venue_name,
-    SUM(clicks_count) as count,
+    SUM(clicks_count) as count
 FROM
     events
     JOIN `{{ bigquery_clean_dataset }}`.`applicative_database_offer` offer ON offer.offer_id = events.offer_id
@@ -40,7 +40,7 @@ FROM
     inner join `{{ bigquery_analytics_dataset }}`.`offer_item_ids` offer_item_ids on offer_item_ids.offer_id = offer.offer_id
     left join `{{ bigquery_analytics_dataset }}`.`enriched_user_data` enruser on enruser.user_id = events.user_id
 group by
-    user_id,
+    events.user_id,
     user_age,
     item_id, 
     event_type,

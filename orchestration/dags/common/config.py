@@ -66,3 +66,6 @@ CONNECTION_ID = (
 
 SLACK_CONN_ID = "slack_analytics"
 SLACK_CONN_PASSWORD = access_secret_data(GCP_PROJECT_ID, "slack-conn-password")
+
+FAILED_STATES = ["failed", "upstream_failed", "skipped"]
+ALLOWED_STATES = ["success"]

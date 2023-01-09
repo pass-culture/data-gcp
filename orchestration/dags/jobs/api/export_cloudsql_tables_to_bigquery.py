@@ -45,8 +45,9 @@ os.environ["AIRFLOW_CONN_PROXY_POSTGRES_TCP"] = (
     + f"?database_type=postgres&project_id={GCP_PROJECT_ID}&location={LOCATION}&instance={RECOMMENDATION_SQL_INSTANCE}&use_proxy=True&sql_proxy_use_tcp=True"
 )
 
+
 default_dag_args = {
-    "start_date": datetime.datetime(2021, 2, 2),
+    "start_date": datetime.datetime(2020, 12, 1),
     "retries": 1,
     "on_failure_callback": task_fail_slack_alert,
     "retry_delay": datetime.timedelta(minutes=5),
@@ -57,7 +58,7 @@ dag = DAG(
     "export_cloudsql_tables_to_bigquery_v1",
     default_args=default_dag_args,
     description="Export tables from recommendation CloudSQL to BigQuery",
-    schedule_interval="0 3 * * *",
+    schedule_interval="0 1 * * *",
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=90),
     user_defined_macros=macros.default,

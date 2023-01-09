@@ -5,14 +5,16 @@ from airflow.providers.google.cloud.operators.bigquery import (
 )
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.utils.task_group import TaskGroup
+from airflow.sensors.external_task import ExternalTaskSensor
 
 from common import macros
 from common.utils import depends_loop, one_line_query
-
+from common.config import FAILED_STATES, ALLOWED_STATES
 
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryInsertJobOperator,
 )
+from airflow.models import DagRun
 from dependencies.import_analytics.import_analytics import export_tables
 from dependencies.import_analytics.import_historical import (
     historical_clean_applicative_database,
@@ -46,9 +48,8 @@ raw_tables = get_tables_config_dict(
     PATH=DAG_FOLDER + "/" + RAW_SQL_PATH, BQ_DESTINATION_DATASET=BIGQUERY_RAW_DATASET
 )
 
-
 default_dag_args = {
-    "start_date": datetime.datetime(2020, 12, 21),
+    "start_date": datetime.datetime(2020, 12, 1),
     "retries": 1,
     "on_failure_callback": analytics_fail_slack_alert,
     "retry_delay": datetime.timedelta(minutes=5),
@@ -59,7 +60,7 @@ dag = DAG(
     "import_analytics_v7",
     default_args=default_dag_args,
     description="Import tables from CloudSQL and enrich data for create dashboards with Metabase",
-    schedule_interval="00 01 * * *",
+    schedule_interval="0 1 * * *",
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=240),
     user_defined_macros=macros.default,
@@ -247,10 +248,35 @@ for table, job_params in export_tables.items():
 analytics_table_tasks = depends_loop(analytics_table_jobs, start_analytics_table_tasks)
 end_analytics_table_tasks = DummyOperator(task_id="end_analytics_table_tasks", dag=dag)
 
+wait_for_cloudsql_tables = ExternalTaskSensor(
+    task_id="wait_for_cloudsql_tables",
+    external_dag_id="export_cloudsql_tables_to_bigquery_v1",
+    external_task_id="end",
+    check_existence=True,
+    mode="reschedule",
+    allowed_states=ALLOWED_STATES,
+    failed_states=FAILED_STATES,
+    email_on_retry=False,
+    dag=dag,
+)
+
+wait_for_reco = ExternalTaskSensor(
+    task_id="wait_for_reco",
+    external_dag_id="recommendation_cloud_sql_v1",
+    external_task_id="end",
+    check_existence=True,
+    mode="reschedule",
+    allowed_states=ALLOWED_STATES,
+    failed_states=FAILED_STATES,
+    email_on_retry=False,
+    dag=dag,
+)
+
 end = DummyOperator(task_id="end", dag=dag)
 
 (
     start
+    >> wait_for_reco
     >> raw_operations_group
     >> end_raw
     >> clean_transformations
@@ -271,5 +297,5 @@ end = DummyOperator(task_id="end", dag=dag)
     >> historical_analytics_group
     >> end_historical_analytics_table_tasks
 )
-(end_import >> start_analytics_table_tasks)
+(end_import >> wait_for_cloudsql_tables >> start_analytics_table_tasks)
 (analytics_table_tasks >> end_analytics_table_tasks >> end)

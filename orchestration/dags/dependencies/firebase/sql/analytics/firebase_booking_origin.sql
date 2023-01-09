@@ -56,6 +56,7 @@ WITH firebase_bookings AS (
   AND consult_date >= DATE_SUB(booking_date, INTERVAL 7 DAY)
   AND consult_timestamp < booking_timestamp
   QUALIFY ROW_NUMBER() OVER(PARTITION BY firebase_consult.user_id, firebase_consult.offer_id ORDER BY consult_timestamp ) = 1 
+)
 
 
 , bookings_origin_last_touch AS (

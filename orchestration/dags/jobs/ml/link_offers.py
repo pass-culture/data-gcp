@@ -6,7 +6,7 @@ from common.operators.gce import (
     StartGCEOperator,
     StopGCEOperator,
     CloneRepositoryGCEOperator,
-    SSHGCEOperator,
+    GCloudSSHGCEOperator,
 )
 from common import macros
 from common.alerts import task_fail_slack_alert
@@ -41,7 +41,7 @@ with DAG(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
-        "machine_type": Param(
+        "instance_type": Param(
             default="n1-standard-2" if ENV_SHORT_NAME == "dev" else "n1-standard-32",
             type="string",
         ),
@@ -51,21 +51,21 @@ with DAG(
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
         instance_name=GCE_INSTANCE,
-        machine_type="{{ params.machine_type }}",
+        instance_type="{{ params.instance_type }}",
     )
 
     fetch_code = CloneRepositoryGCEOperator(
-        task_id="fetch_code", instance_name=GCE_INSTANCE, branch="{{ params.branch }}"
+        task_id="fetch_code", instance_name=GCE_INSTANCE, command="{{ params.branch }}"
     )
 
-    install_dependencies = SSHGCEOperator(
+    install_dependencies = GCloudSSHGCEOperator(
         task_id="install_dependencies",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command="""pip install -r requirements.txt --user""",
     )
 
-    data_collect = SSHGCEOperator(
+    data_collect = GCloudSSHGCEOperator(
         task_id="data_collect",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
@@ -76,7 +76,7 @@ with DAG(
         """,
     )
 
-    preprocess = SSHGCEOperator(
+    preprocess = GCloudSSHGCEOperator(
         task_id="preprocess",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
@@ -87,7 +87,7 @@ with DAG(
         """,
     )
 
-    record_linkage = SSHGCEOperator(
+    record_linkage = GCloudSSHGCEOperator(
         task_id="record_linkage",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
@@ -98,7 +98,7 @@ with DAG(
         """,
     )
 
-    postprocess = SSHGCEOperator(
+    postprocess = GCloudSSHGCEOperator(
         task_id="postprocess",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,

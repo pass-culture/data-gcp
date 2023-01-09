@@ -14,9 +14,17 @@ from common.config import (
     GCE_SA,
 )
 
-SOURCE_IMAGE = (
-    "projects/deeplearning-platform-release/global/images/tf2-latest-cpu-v20211202"
-)
+SOURCE_IMAGE = {
+    "CPU": "projects/deeplearning-platform-release/global/images/tf2-latest-cpu-v20211202",
+    "GPU": "projects/deeplearning-platform-release/global/images/tf2-latest-gpu-v20211202",
+}
+
+STARTUP_SCRIPT = """
+    #!/bin/bash
+    curl -sSO https://dl.google.com/cloudagents/add-google-cloud-ops-agent-repo.sh
+    sudo bash add-google-cloud-ops-agent-repo.sh --also-install
+    sudo /opt/deeplearning/install-driver.sh
+"""
 
 
 class GCEHook(GoogleBaseHook):
@@ -30,7 +38,7 @@ class GCEHook(GoogleBaseHook):
         gce_network_id=GCE_NETWORK_ID,
         gce_subnetwork_id=GCE_SUBNETWORK_ID,
         gce_sa=GCE_SA,
-        source_image=SOURCE_IMAGE,
+        source_image=SOURCE_IMAGE["CPU"],
         gcp_conn_id: str = "google_cloud_default",
         delegate_to: str = None,
         impersonation_chain: str = None,
@@ -57,7 +65,14 @@ class GCEHook(GoogleBaseHook):
             )
         return self._conn
 
-    def start_vm(self, instance_name, machine_type, preemptible):
+    def start_vm(
+        self,
+        instance_name,
+        instance_type,
+        preemptible,
+        accelerator_types=[],
+        startup_script=None,
+    ):
         instances = self.list_instances()
         instances = [x["name"] for x in instances if x["status"] == "RUNNING"]
         if instance_name in instances:
@@ -65,13 +80,15 @@ class GCEHook(GoogleBaseHook):
             return
 
         self.log.info(
-            f"Launching {instance_name} on compute engine (instance: {machine_type})"
+            f"Launching {instance_name} on compute engine (instance: {instance_type})"
         )
         self.__create_instance(
-            machine_type,
+            instance_type,
             instance_name,
             wait=True,
             preemptible=preemptible,
+            accelerator_types=accelerator_types,
+            startup_script=startup_script,
         )
 
     def delete_vm(self, instance_name):
@@ -103,7 +120,7 @@ class GCEHook(GoogleBaseHook):
 
     def __create_instance(
         self,
-        machine_type,
+        instance_type,
         name,
         startup_script=None,
         metadata=None,
@@ -111,7 +128,7 @@ class GCEHook(GoogleBaseHook):
         accelerator_types=[],
         preemptible=False,
     ):
-        machine_type = "zones/%s/machineTypes/%s" % (self.gcp_zone, machine_type)
+        instance_type = "zones/%s/machineTypes/%s" % (self.gcp_zone, instance_type)
         accelerator_type = [
             {
                 "acceleratorCount": [a_t["count"]],
@@ -130,7 +147,7 @@ class GCEHook(GoogleBaseHook):
 
         config = {
             "name": name,
-            "machineType": machine_type,
+            "machineType": instance_type,
             # Specify the boot disk and the image to use as a source.
             "disks": [
                 {
@@ -138,7 +155,7 @@ class GCEHook(GoogleBaseHook):
                     "autoDelete": True,
                     "initialize_params": {
                         "disk_size_gb": "50",
-                        "sourceImage": SOURCE_IMAGE,
+                        "sourceImage": self.source_image,
                     },
                 }
             ],

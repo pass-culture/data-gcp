@@ -3,17 +3,15 @@ import typer
 
 import tensorflow as tf
 from loguru import logger
+import pandas as pd
 
+from models.v2.match_model_v2 import MatchModelV2
 from models.v2.two_tower_model import TwoTowerModel
-from tools.data_collect_queries import get_data
-from models.v1.match_model import MatchModel
 from models.v1.utils import (
     identity_loss,
-    predict,
 )
 from models.v2.utils import (
     load_triplets_dataset,
-    MatchModelCheckpoint,
     MLFlowLogging,
 )
 from utils import (
@@ -21,6 +19,7 @@ from utils import (
     connect_remote_mlflow,
     ENV_SHORT_NAME,
     TRAIN_DIR,
+    STORAGE_PATH,
 )
 
 
@@ -50,11 +49,13 @@ def train(
     tf.random.set_seed(seed)
 
     # Load BigQuery data
-    train_data = get_data(
-        dataset=f"raw_{ENV_SHORT_NAME}", table_name="recommendation_training_data"
+    train_data = pd.read_csv(
+        f"{STORAGE_PATH}/positive_data_train.csv",
+        dtype={"user_id": str, "item_id": str},
     )
-    validation_data = get_data(
-        dataset=f"raw_{ENV_SHORT_NAME}", table_name="recommendation_validation_data"
+    validation_data = pd.read_csv(
+        f"{STORAGE_PATH}/positive_data_eval.csv",
+        dtype={"user_id": str, "item_id": str},
     )
 
     user_columns = ["user_id", "user_age"]
@@ -97,7 +98,6 @@ def train(
             item_data=train_data[item_columns].drop_duplicates(),
             embedding_size=embedding_size,
         )
-        match_model = MatchModel(two_tower_model.user_layer, two_tower_model.item_layer)
 
         two_tower_model.compile(loss=identity_loss, optimizer="adam")
 
@@ -118,10 +118,6 @@ def train(
                     patience=3,
                     min_delta=LOSS_CUTOFF,
                 ),
-                MatchModelCheckpoint(
-                    match_model=match_model,
-                    filepath=export_path,
-                ),
                 MLFlowLogging(
                     client_id=client_id,
                     env=ENV_SHORT_NAME,
@@ -129,6 +125,23 @@ def train(
                 ),
             ],
         )
+
+        logger.info("Building and saving the MatchModelV2")
+
+        user_data = two_tower_model.user_model.user_data.values
+        item_data = two_tower_model.item_model.item_data.values
+
+        user_embeddings = two_tower_model.user_model([user_data])
+        item_embeddings = two_tower_model.item_model([item_data])
+
+        match_model = MatchModelV2(
+            user_ids=user_data[:, 0],
+            user_embeddings=user_embeddings,
+            item_ids=item_data[:, 0],
+            item_embeddings=item_embeddings,
+            embedding_size=embedding_size,
+        )
+        tf.keras.models.save_model(match_model, export_path + "model")
 
         logger.info("------- TRAINING DONE -------")
         logger.info(mlflow.get_artifact_uri("model"))

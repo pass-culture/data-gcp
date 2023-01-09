@@ -62,12 +62,20 @@ def train(
     training_user_ids = train_data["user_id"].unique()
     training_item_ids = train_data["item_id"].unique()
 
+    user_columns = ["user_id"]
+    item_columns = ["item_id"]
     # Create tf datasets
     train_dataset = load_triplets_dataset(
-        train_data, item_ids=training_item_ids, batch_size=batch_size
+        train_data,
+        user_columns=user_columns,
+        item_columns=item_columns,
+        batch_size=batch_size,
     )
     validation_dataset = load_triplets_dataset(
-        validation_data, item_ids=training_item_ids, batch_size=batch_size
+        validation_data,
+        user_columns=user_columns,
+        item_columns=item_columns,
+        batch_size=batch_size,
     )
 
     # Connect to MLFlow

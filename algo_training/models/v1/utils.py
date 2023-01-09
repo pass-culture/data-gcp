@@ -18,11 +18,17 @@ def sample_triplets(positive_data, item_ids):
 
     user_ids = positive_data["user_id"].values
     positive_item_ids = positive_data["item_id"].values
-    negative__item_ids = np.array(
-        random.choices(item_ids, k=len(user_ids)), dtype=object
-    )
+    negative__item_ids = []
+    for user_id in user_ids:
+        user_booked_items = positive_data[positive_data["user_id"] == user_id]["item_id"].values
+        negative_pool = [
+            item_id
+            for item_id in item_ids
+            if item_id not in set(user_booked_items)
+        ]
+        negative__item_ids.append(random.choice(negative_pool))
 
-    return [user_ids, positive_item_ids, negative__item_ids]
+    return [user_ids, positive_item_ids, np.array(negative__item_ids)]
 
 
 def predict(match_model):

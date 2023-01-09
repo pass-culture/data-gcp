@@ -1,4 +1,5 @@
 import os
+import random
 
 import mlflow
 
@@ -33,12 +34,27 @@ def load_triplets_dataset(
         .repeat()
     )  # We shuffle the negative examples to get new random examples at each call
 
-    x = tf.data.Dataset.zip((anchor_dataset, positive_dataset, negative_dataset))
+    x = tf.data.Dataset.zip((anchor_dataset, positive_dataset, negative_dataset)).map(
+        lambda a, p, n: tf.py_function(func=verify_negative_sample, inp=[a, p, n, input_data], Tout=tf.int64)
+    )
     y = tf.data.Dataset.from_tensor_slices(np.ones((len(input_data), 3)))
 
     return tf.data.Dataset.zip((x, y)).batch(
         batch_size=batch_size, drop_remainder=False
     )
+
+
+def verify_negative_sample(anchor, positive, negative, input_data):
+    user_booked_items = input_data[input_data["user_id"] == str(anchor)]["item_id"].values
+
+    if negative not in user_booked_items:
+        return anchor, positive, negative
+    negative_pool = [
+        item_id
+        for item_id in set(input_data["item_id"].values)
+        if item_id not in set(user_booked_items)
+    ]
+    return anchor, positive, random.choice(negative_pool)
 
 
 class MatchModelCheckpoint(tf.keras.callbacks.Callback):

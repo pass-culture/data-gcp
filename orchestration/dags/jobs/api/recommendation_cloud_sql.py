@@ -93,7 +93,7 @@ with DAG(
     "recommendation_cloud_sql_v1",
     default_args=default_args,
     description="Export bigQuery tables to GCS to dump and restore Cloud SQL tables",
-    schedule_interval="0 1 * * *",
+    schedule_interval="15 5 * * *",
     catchup=False,
     dagrun_timeout=timedelta(minutes=480),
     user_defined_macros=macros.default,

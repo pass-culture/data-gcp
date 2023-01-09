@@ -31,7 +31,7 @@ TYPEFORM_FUNCTION_NAME = "qpi_import_" + ENV_SHORT_NAME
 QPI_ANSWERS_TABLE = "qpi_answers_v4"
 
 default_args = {
-    "start_date": datetime(2021, 3, 10),
+    "start_date": datetime(2020, 12, 1),
     "on_failure_callback": task_fail_slack_alert,
     "retries": 1,
     "retry_delay": timedelta(minutes=2),
@@ -57,7 +57,7 @@ with DAG(
     "import_qpi_answers_v1",
     default_args=default_args,
     description="Importing new data from QPI every day.",
-    schedule_interval="0 2 * * *",
+    schedule_interval="0 1 * * *",
     catchup=False,
     dagrun_timeout=timedelta(minutes=180),
 ) as dag:

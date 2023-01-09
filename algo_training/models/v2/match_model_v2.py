@@ -70,7 +70,10 @@ class MatchModelV2(tf.keras.models.Model):
         user_id, item_id = inputs
 
         user_embedding = self.user_layer(user_id)
+        user_embedding = self.flatten(user_embedding)
+
         item_embedding = self.item_layer(item_id)
+        item_embedding = self.flatten(item_embedding)
 
         return self.dot([user_embedding, item_embedding])
 

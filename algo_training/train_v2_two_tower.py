@@ -1,3 +1,5 @@
+import os
+
 import mlflow
 import typer
 
@@ -13,6 +15,7 @@ from models.v1.utils import (
 from models.v2.utils import (
     load_triplets_dataset,
     MLFlowLogging,
+    save_pca_representation,
 )
 from utils import (
     get_secret,
@@ -51,11 +54,11 @@ def train(
     # Load BigQuery data
     train_data = pd.read_csv(
         f"{STORAGE_PATH}/positive_data_train.csv",
-        dtype={"user_id": str, "item_id": str},
+        dtype={"user_id": str, "item_id": str, "user_age": str},
     )
     validation_data = pd.read_csv(
         f"{STORAGE_PATH}/positive_data_eval.csv",
-        dtype={"user_id": str, "item_id": str},
+        dtype={"user_id": str, "item_id": str, "user_age": str},
     )
 
     user_columns = ["user_id", "user_age"]
@@ -142,6 +145,16 @@ def train(
             embedding_size=embedding_size,
         )
         tf.keras.models.save_model(match_model, export_path + "model")
+
+        # Export the PCA representations of the item embeddings
+        os.mkdir(export_path + "pca_plots")
+        pca_representations_path = export_path + "pca_plots/"
+        save_pca_representation(
+            loaded_model=match_model,
+            item_data=two_tower_model.item_model.item_data,
+            figures_folder=pca_representations_path,
+        )
+        mlflow.log_artifacts("pca_plots", export_path + "pca_plots")
 
         logger.info("------- TRAINING DONE -------")
         logger.info(mlflow.get_artifact_uri("model"))

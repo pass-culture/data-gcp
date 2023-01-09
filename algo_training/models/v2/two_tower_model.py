@@ -21,10 +21,7 @@ class TwoTowerModel(tf.keras.models.Model):
         super().__init__("TwoTowerModel")
 
         self.user_model = UserModel(user_data, embedding_size)
-        self.user_layer = self.user_model.user_layer
-
         self.item_model = ItemModel(item_data, embedding_size)
-        self.item_layer = self.item_model.item_layer
 
         self.dot = Dot(axes=1, normalize=True)
         self.margin_loss = MarginLoss(margin)
@@ -145,7 +142,7 @@ class ItemModel(tf.keras.models.Model):
                 Embedding(
                     input_dim=len(subcategories) + 1,
                     output_dim=feature_latent_dim,
-                    name="category_embedding",
+                    name="subcategory_embedding",
                 ),
             ]
         )

@@ -255,7 +255,7 @@ analytics_tables = {
         "sql": f"{ANALYTICS_SQL_PATH}/user_iris.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "user_iris",
-        "dag_depends": ["export_cloudsql_tables_to_bigquery_v1"]
+        "dag_depends": ["export_cloudsql_tables_to_bigquery_v1"],
     },
     "diversification_raw": {
         "sql": f"{ANALYTICS_SQL_PATH}/diversification_raw.sql",

@@ -1,11 +1,8 @@
 import mlflow
 import typer
-
 import pandas as pd
 import tensorflow as tf
 from loguru import logger
-
-from tools.data_collect_queries import get_data
 from models.v1.match_model import MatchModel
 from models.v1.triplet_model import TripletModel
 from models.v1.utils import (

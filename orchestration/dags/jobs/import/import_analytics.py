@@ -222,6 +222,7 @@ start_analytics_table_tasks = DummyOperator(task_id="start_analytics_tasks", dag
 analytics_table_jobs = {}
 for table, job_params in export_tables.items():
     destination_table = job_params.get("destination_table", table)
+
     task = BigQueryInsertJobOperator(
         task_id=table,
         configuration={
@@ -246,27 +247,31 @@ for table, job_params in export_tables.items():
     analytics_table_jobs[table] = {
         "operator": task,
         "depends": job_params.get("depends", []),
+        "dag_depends": job_params.get("dag_depends", []),  # liste de dag_id
     }
 
-analytics_table_tasks = depends_loop(analytics_table_jobs, start_analytics_table_tasks)
+
+analytics_table_tasks = depends_loop(
+    analytics_table_jobs, start_analytics_table_tasks, dag
+)
 end_analytics_table_tasks = DummyOperator(task_id="end_analytics_table_tasks", dag=dag)
 
-dag_list = get_dag_dependencies(export_tables)
+# dag_list = get_dag_dependencies(export_tables)
 
-dag_dependencies_task = []
-for dag_id in dag_list:
-    task = ExternalTaskSensor(
-        task_id=f"wait_for_{dag_id}",
-        external_dag_id=dag_id,
-        external_task_id="end",
-        check_existence=True,
-        mode="reschedule",
-        allowed_states=ALLOWED_STATES,
-        failed_states=FAILED_STATES,
-        email_on_retry=False,
-        dag=dag,
-    )
-    dag_dependencies_task.append(task)
+# dag_dependencies_task = []
+# for dag_id in dag_list:
+#     task = ExternalTaskSensor(
+#         task_id=f"wait_for_{dag_id}",
+#         external_dag_id=dag_id,
+#         external_task_id="end",
+#         check_existence=True,
+#         mode="reschedule",
+#         allowed_states=ALLOWED_STATES,
+#         failed_states=FAILED_STATES,
+#         email_on_retry=False,
+#         dag=dag,
+#     )
+#     dag_dependencies_task.append(task)
 
 end = DummyOperator(task_id="end", dag=dag)
 
@@ -292,5 +297,5 @@ end = DummyOperator(task_id="end", dag=dag)
     >> historical_analytics_group
     >> end_historical_analytics_table_tasks
 )
-(end_import >> dag_dependencies_task >> start_analytics_table_tasks)
+(end_import >> start_analytics_table_tasks)
 (analytics_table_tasks >> end_analytics_table_tasks >> end)

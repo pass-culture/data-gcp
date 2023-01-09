@@ -313,10 +313,14 @@ export_tables = dict(analytics_tables, **aggregated_tables)
 
 
 def get_dag_dependencies(table_config):
-    dags_id_list = []
-    for table, params in table_config.items():
-        for dag in params.get("dag_depends", ""):
-            if dag is not "":
-                dags_id_list.append(dag)
+    dags_id_list = [
+        dag
+        for dag_lists in [
+            params.get("dag_depends", None)
+            for table, params in analytics_tables.items()
+            if params.get("dag_depends", None) is not None
+        ]
+        for dag in dag_lists
+    ]
 
     return list(set(dags_id_list))

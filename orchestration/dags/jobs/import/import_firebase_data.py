@@ -96,6 +96,6 @@ for type, params in dags.items():
             "depends": job_params.get("depends", []),
         }
 
-    table_jobs = depends_loop(table_jobs, start)
+    table_jobs = depends_loop(table_jobs, start, dag=dag)
     end = DummyOperator(task_id="end", dag=dag)
     table_jobs >> end

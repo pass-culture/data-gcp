@@ -110,7 +110,7 @@ for table, job_params in analytics_tables.items():
         "depends": job_params.get("depends", []),
     }
 
-table_jobs = depends_loop(table_jobs, start)
+table_jobs = depends_loop(table_jobs, start, dag=dag)
 end = DummyOperator(task_id="end", dag=dag)
 
 (

@@ -83,7 +83,7 @@ for name, params in analytics_tables.items():
 
     # import_tables_to_analytics_tasks.append(task)
 
-analytics_table_tasks = depends_loop(analytics_table_jobs, end_raw)
+analytics_table_tasks = depends_loop(analytics_table_jobs, end_raw, dag=dag)
 
 service_account_token = PythonOperator(
     task_id="getting_metabase_archiving_service_account_token",

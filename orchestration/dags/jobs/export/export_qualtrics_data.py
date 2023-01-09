@@ -110,7 +110,7 @@ for table, job_params in clean_tables.items():
     )
     export_task.set_upstream(task)
 
-clean_table_jobs = depends_loop(clean_table_jobs, start)
+clean_table_jobs = depends_loop(clean_table_jobs, start, dag=dag)
 
 end_raw = DummyOperator(task_id="end_raw", dag=dag)
 

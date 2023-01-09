@@ -81,7 +81,7 @@ for name, params in analytics_tables.items():
         "depends": params.get("depends", []),
     }
 
-analytics_table_tasks = depends_loop(analytics_table_jobs, end_raw)
+analytics_table_tasks = depends_loop(analytics_table_jobs, end_raw, dag=dag)
 
 end = DummyOperator(task_id="end", dag=dag)
 

@@ -3,9 +3,11 @@ from airflow.utils.decorators import apply_defaults
 from airflow.providers.google.cloud.hooks.compute_ssh import ComputeEngineSSHHook
 from airflow.exceptions import AirflowException
 from airflow.operators.bash import BashOperator
+from airflow.configuration import conf
 from common.config import GCE_ZONE, GCP_PROJECT_ID, SSH_USER, ENV_SHORT_NAME
 from common.hooks.gce import GCEHook, SOURCE_IMAGE, STARTUP_SCRIPT
 import typing as t
+from base64 import b64encode
 
 
 class StartGCEOperator(BaseOperator):
@@ -79,9 +81,27 @@ class BaseSSHGCEOperator(BaseOperator):
     ):
 
         self.instance_name = instance_name
-        self.branch = command
+        self.command = command
         self.environment = environment
         super(BaseSSHGCEOperator, self).__init__(*args, **kwargs)
+
+    def run_ssh_client_command(self, hook, context):
+        with hook.get_conn() as ssh_client:
+            exit_status, agg_stdout, agg_stderr = hook.exec_ssh_client_command(
+                ssh_client,
+                self.command,
+                timeout=1000,
+                environment=self.environment,
+                get_pty=False,
+            )
+            if context and self.do_xcom_push:
+                ti = context.get("task_instance")
+                ti.xcom_push(key="ssh_exit", value=exit_status)
+            if exit_status != 0:
+                raise AirflowException(
+                    f"SSH operator error: exit status = {exit_status}"
+                )
+            return agg_stdout
 
     def execute(self, context):
         hook = ComputeEngineSSHHook(
@@ -93,20 +113,12 @@ class BaseSSHGCEOperator(BaseOperator):
             user=SSH_USER,
             gcp_conn_id="google_cloud_default",
         )
-        with hook.get_conn() as ssh_client:
-            exit_status, agg_stdout, agg_stderr = hook.exec_ssh_client_command(
-                ssh_client,
-                self.command,
-                timeout=1000,
-                environment=self.environment,
-                get_pty=False,
-            )
-            if exit_status != 0:
-                raise AirflowException(
-                    f"SSH operator error: exit status = {exit_status}"
-                )
 
-        return agg_stdout
+        result = self.run_ssh_client_command(hook, context)
+        enable_pickling = conf.getboolean("core", "enable_xcom_pickling")
+        if not enable_pickling:
+            result = b64encode(result).decode("utf-8")
+        return result
 
 
 class CloneRepositoryGCEOperator(BaseSSHGCEOperator):

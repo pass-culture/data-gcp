@@ -25,7 +25,7 @@ from utils import (
 
 L2_REG = 0
 N_EPOCHS = 1000
-VERBOSE = 0 if ENV_SHORT_NAME == "prod" else 1
+VERBOSE = 2
 LOSS_CUTOFF = 0.005
 
 
@@ -112,11 +112,10 @@ def train(
                     factor=0.1,
                     patience=2,
                     min_delta=LOSS_CUTOFF,
+                    verbose=1,
                 ),
                 tf.keras.callbacks.EarlyStopping(
-                    monitor="val_loss",
-                    patience=3,
-                    min_delta=LOSS_CUTOFF,
+                    monitor="val_loss", patience=3, min_delta=LOSS_CUTOFF, verbose=1
                 ),
                 MatchModelCheckpoint(
                     match_model=match_model,

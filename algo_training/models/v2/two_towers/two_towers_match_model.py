@@ -63,6 +63,7 @@ class TwoTowersMatchModel(tf.keras.models.Model):
         )
 
         self.dot = Dot(axes=1, normalize=True)
+        self.flatten = tf.keras.layers.Flatten()
 
         self.initialize_weights()
 

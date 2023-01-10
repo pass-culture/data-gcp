@@ -145,6 +145,7 @@ def train(
             embedding_size=embedding_size,
         )
         tf.keras.models.save_model(match_model, export_path + "model")
+        mlflow.log_artifacts(export_path + "model", "model")
 
         # Export the PCA representations of the item embeddings
         os.mkdir(export_path + "pca_plots")
@@ -154,7 +155,7 @@ def train(
             item_data=two_tower_model.item_model.item_data,
             figures_folder=pca_representations_path,
         )
-        mlflow.log_artifacts("pca_plots", export_path + "pca_plots")
+        mlflow.log_artifacts(export_path + "pca_plots", "pca_plots")
 
         logger.info("------- TRAINING DONE -------")
         logger.info(mlflow.get_artifact_uri("model"))

@@ -5,7 +5,7 @@ from tensorflow.keras.layers import Embedding, Flatten, Input, Dense, Lambda, Do
 from tensorflow.keras.layers.experimental.preprocessing import StringLookup
 
 
-class MatchModelV2(tf.keras.models.Model):
+class TwoTowersMatchModel(tf.keras.models.Model):
     def __init__(
         self,
         user_ids: list,

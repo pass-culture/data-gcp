@@ -10,7 +10,7 @@ from tensorflow.keras.layers.experimental.preprocessing import (
 from models.v1.margin_loss import MarginLoss
 
 
-class TwoTowerModel(tf.keras.models.Model):
+class TwoTowersModel(tf.keras.models.Model):
     def __init__(
         self,
         user_data: pd.DataFrame,

@@ -20,7 +20,7 @@ WITH events AS (
 )
 SELECT
     events.user_id,
-    enruser.user_age,
+    CAST(enruser.user_age AS INT64) AS user_age,
     "FAVORITE" as event_type,
     event_date,
     offer_item_ids.item_id as item_id,
@@ -38,7 +38,7 @@ FROM
     inner join `{{ bigquery_analytics_dataset }}`.`subcategories` subcategories on offer.offer_subcategoryId = subcategories.id
     inner join `{{ bigquery_analytics_dataset }}`.`enriched_offer_data` enroffer on enroffer.offer_id = offer.offer_id
     inner join `{{ bigquery_analytics_dataset }}`.`offer_item_ids` offer_item_ids on offer_item_ids.offer_id = offer.offer_id
-    left join `{{ bigquery_analytics_dataset }}`.`enriched_user_data` enruser on enruser.user_id = events.user_id
+    inner join `{{ bigquery_analytics_dataset }}`.`enriched_user_data` enruser on enruser.user_id = events.user_id
 group by
     events.user_id,
     user_age,

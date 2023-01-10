@@ -7,8 +7,8 @@ import tensorflow as tf
 from loguru import logger
 import pandas as pd
 
-from models.v2.match_model_v2 import MatchModelV2
-from models.v2.two_tower_model import TwoTowerModel
+from models.v2.two_towers.two_towers_match_model import TwoTowersMatchModel
+from models.v2.two_towers.two_towers_model import TwoTowersModel
 from models.v1.utils import (
     identity_loss,
 )
@@ -96,7 +96,7 @@ def train(
             }
         )
 
-        two_tower_model = TwoTowerModel(
+        two_tower_model = TwoTowersModel(
             user_data=train_data[user_columns].drop_duplicates(),
             item_data=train_data[item_columns].drop_duplicates(),
             embedding_size=embedding_size,
@@ -137,7 +137,7 @@ def train(
         user_embeddings = two_tower_model.user_model([user_data])
         item_embeddings = two_tower_model.item_model([item_data])
 
-        match_model = MatchModelV2(
+        match_model = TwoTowersMatchModel(
             user_ids=user_data[:, 0],
             user_embeddings=user_embeddings,
             item_ids=item_data[:, 0],

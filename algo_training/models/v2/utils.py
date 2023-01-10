@@ -16,13 +16,18 @@ from utils import connect_remote_mlflow
 
 def load_triplets_dataset(
     input_data: pd.DataFrame,
-    user_columns,
-    item_columns,
+    user_columns: list,
+    item_columns: list,
     batch_size: int,
 ) -> tf.data.Dataset:
     """
-    Builds a tf Dataset of shape with:
-        - X = (user_id, the item_id associated to the user, a random item_id)
+    Params:
+        - input_data: DataFrame containing user, item pairs with their corresponding features
+        - user_columns: list of columns containing users' features
+        - item_columns: list of columns containing items' features
+        - batch_size: Size of dataset's batch
+    Returns: A tf Dataset containing:
+        - x = triplet containing (user_id, the item_id associated to the user, a random item_id)
         - y = fake data as we make no predictions
     """
 
@@ -35,7 +40,7 @@ def load_triplets_dataset(
     positive_dataset = tf.data.Dataset.from_tensor_slices(positive_data)
     negative_dataset = (
         tf.data.Dataset.from_tensor_slices(negative_data)
-        .shuffle(buffer_size=len(positive_data))
+        .shuffle(buffer_size=10 * batch_size)
         .repeat()
     )  # We shuffle the negative examples to get new random examples at each call
 

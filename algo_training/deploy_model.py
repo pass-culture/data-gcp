@@ -117,7 +117,7 @@ class ModelHandler:
             deployed_model_display_name=version_name,
             min_replica_count=self.endpoint_params.min_nodes,
             max_replica_count=self.endpoint_params.max_nodes,
-            instance_type=self.endpoint_params.instance_type,
+            machine_type=self.endpoint_params.instance_type,
             traffic_percentage=self.endpoint_params.traffic_percentage,
         )
         model.wait()

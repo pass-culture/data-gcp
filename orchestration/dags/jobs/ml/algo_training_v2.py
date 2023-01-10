@@ -44,9 +44,9 @@ train_params = {
 gce_params = {
     "instance_name": f"algo-training-v2-{ENV_SHORT_NAME}",
     "instance_type": {
-        "dev": "n2-standard-2",
-        "stg": "c2-standard-8",
-        "prod": "c2-standard-16",
+        "dev": "n1-standard-2",
+        "stg": "n1-standard-4",
+        "prod": "n1-standard-16",
     },
 }
 
@@ -87,25 +87,34 @@ with DAG(
             default=str(train_params["event_day_number"]),
             type="string",
         ),
+        "instance_type": Param(
+            default=gce_params["instance_type"][ENV_SHORT_NAME],
+            type="string",
+        ),
+        "instance_name": Param(
+            default=gce_params["instance_name"],
+            type="string",
+        ),
     },
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)
 
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
-        instance_name=gce_params["instance_name"],
-        machine_type=gce_params["instance_type"][ENV_SHORT_NAME],
+        instance_name="{{ params.instance_name }}",
+        instance_type="{{ params.instance_type }}",
+        accelerator_types=[{"name": "nvidia-tesla-t4", "count": 1}],
     )
 
     fetch_code = CloneRepositoryGCEOperator(
         task_id="fetch_code",
-        instance_name=gce_params["instance_name"],
-        branch="{{ params.branch }}",
+        instance_name="{{ params.instance_name }}",
+        command="{{ params.branch }}",
     )
 
     install_dependencies = SSHGCEOperator(
         task_id="install_dependencies",
-        instance_name=gce_params["instance_name"],
+        instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         command="pip install -r requirements.txt --user",
         dag=dag,
@@ -113,36 +122,36 @@ with DAG(
 
     data_collect = SSHGCEOperator(
         task_id="data_collect",
-        instance_name=gce_params["instance_name"],
+        instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
-        export_config=dag_config,
+        environment=dag_config,
         command="python data_collect.py --event-day-number {{ params.event_day_number }}",
         dag=dag,
     )
 
     split_data = SSHGCEOperator(
         task_id="split_data",
-        instance_name=gce_params["instance_name"],
+        instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
-        export_config=dag_config,
+        environment=dag_config,
         command="python split_data.py",
         dag=dag,
     )
 
     preprocess = SSHGCEOperator(
         task_id="preprocess",
-        instance_name=gce_params["instance_name"],
+        instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
-        export_config=dag_config,
+        environment=dag_config,
         command="python preprocess.py",
         dag=dag,
     )
 
     training = SSHGCEOperator(
         task_id="training",
-        instance_name=gce_params["instance_name"],
+        instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
-        export_config=dag_config,
+        environment=dag_config,
         command=f"python train_v2.py "
         f"--experiment-name {dag_config['EXPERIMENT_NAME']} "
         "--batch-size {{ params.batch_size }} "
@@ -153,16 +162,16 @@ with DAG(
 
     evaluate = SSHGCEOperator(
         task_id="evaluate",
-        instance_name=gce_params["instance_name"],
+        instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
-        export_config=dag_config,
+        environment=dag_config,
         command=f"python evaluate.py",
         dag=dag,
     )
 
     gce_instance_stop = StopGCEOperator(
         task_id="gce_stop_task",
-        instance_name=gce_params["instance_name"],
+        instance_name="{{ params.instance_name }}",
     )
 
     send_slack_notif_success = SlackWebhookOperator(

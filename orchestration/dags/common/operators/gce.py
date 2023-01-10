@@ -1,36 +1,50 @@
 from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
 from airflow.providers.google.cloud.hooks.compute_ssh import ComputeEngineSSHHook
-from airflow.providers.ssh.operators.ssh import SSHOperator
+from airflow.exceptions import AirflowException
 from airflow.operators.bash import BashOperator
+from airflow.configuration import conf
 from common.config import GCE_ZONE, GCP_PROJECT_ID, SSH_USER, ENV_SHORT_NAME
-from common.hooks.gce import GCEHook
+from common.hooks.gce import GCEHook, SOURCE_IMAGE, STARTUP_SCRIPT
 import typing as t
+from base64 import b64encode
 
 
 class StartGCEOperator(BaseOperator):
-    template_fields = ["instance_name", "machine_type", "preemptible"]
+    template_fields = ["instance_name", "instance_type", "preemptible"]
 
     @apply_defaults
     def __init__(
         self,
         instance_name: str,
-        machine_type: str = "n1-standard-1",
+        instance_type: str = "n1-standard-1",
         preemptible: bool = True,
+        accelerator_types=[],
         *args,
         **kwargs,
     ):
         super(StartGCEOperator, self).__init__(*args, **kwargs)
         self.instance_name = instance_name
-        self.machine_type = machine_type
+        self.instance_type = instance_type
         self.preemptible = preemptible
+        self.accelerator_types = accelerator_types
 
     def execute(self, context) -> None:
-        hook = GCEHook()
+
+        source_image = (
+            SOURCE_IMAGE["GPU"]
+            if len(self.accelerator_types) > 0
+            else SOURCE_IMAGE["CPU"]
+        )
+        startup_script = STARTUP_SCRIPT if len(self.accelerator_types) > 0 else None
+
+        hook = GCEHook(source_image=source_image)
         hook.start_vm(
             self.instance_name,
-            self.machine_type,
+            self.instance_type,
             preemptible=self.preemptible,
+            accelerator_types=self.accelerator_types,
+            startup_script=startup_script,
         )
 
 
@@ -53,20 +67,43 @@ class StopGCEOperator(BaseOperator):
         hook.delete_vm(self.instance_name)
 
 
-class CloneRepositoryGCEOperator(SSHOperator):
-    REPO = "https://github.com/pass-culture/data-gcp.git"
-    template_fields = ["instance_name", "command"]
+class BaseSSHGCEOperator(BaseOperator):
+    template_fields = ["instance_name", "command", "environment"]
 
     @apply_defaults
     def __init__(
         self,
         instance_name: str,
-        branch: str,
+        command: str,
+        environment: t.Dict[str, str] = {},
         *args,
         **kwargs,
     ):
+
         self.instance_name = instance_name
-        self.branch = branch
+        self.command = command
+        self.environment = environment
+        super(BaseSSHGCEOperator, self).__init__(*args, **kwargs)
+
+    def run_ssh_client_command(self, hook, context):
+        with hook.get_conn() as ssh_client:
+            exit_status, agg_stdout, agg_stderr = hook.exec_ssh_client_command(
+                ssh_client,
+                self.command,
+                timeout=1000,
+                environment=self.environment,
+                get_pty=False,
+            )
+            if context and self.do_xcom_push:
+                ti = context.get("task_instance")
+                ti.xcom_push(key="ssh_exit", value=exit_status)
+            if exit_status != 0:
+                raise AirflowException(
+                    f"SSH operator error: exit status = {exit_status}"
+                )
+            return agg_stdout
+
+    def execute(self, context):
         hook = ComputeEngineSSHHook(
             instance_name=self.instance_name,
             zone=GCE_ZONE,
@@ -76,12 +113,38 @@ class CloneRepositoryGCEOperator(SSHOperator):
             user=SSH_USER,
             gcp_conn_id="google_cloud_default",
         )
+
+        result = self.run_ssh_client_command(hook, context)
+        enable_pickling = conf.getboolean("core", "enable_xcom_pickling")
+        if not enable_pickling:
+            result = b64encode(result).decode("utf-8")
+        return result
+
+
+class CloneRepositoryGCEOperator(BaseSSHGCEOperator):
+    REPO = "https://github.com/pass-culture/data-gcp.git"
+
+    @apply_defaults
+    def __init__(
+        self,
+        instance_name: str,
+        command: str,
+        environment: t.Dict[str, str] = {},
+        *args,
+        **kwargs,
+    ):
+        self.command = self.script(command)
+        self.instance_name = instance_name
+        self.environment = environment
         super(CloneRepositoryGCEOperator, self).__init__(
-            ssh_hook=hook, command=self.script, *args, **kwargs
+            instance_name=self.instance_name,
+            command=self.command,
+            environment=self.environment,
+            *args,
+            **kwargs,
         )
 
-    @property
-    def script(self) -> str:
+    def script(self, branch) -> str:
         return """
         DIR=data-gcp &&
         if [ -d "$DIR" ]; then 
@@ -98,11 +161,11 @@ class CloneRepositoryGCEOperator(SSHOperator):
         git pull
         """ % (
             self.REPO,
-            self.branch,
+            branch,
         )
 
 
-class SSHGCEOperator(BashOperator):
+class GCloudSSHGCEOperator(BashOperator):
     DEFAULT_EXPORT = {
         "PATH": "/opt/conda/bin:/opt/conda/condabin:+$PATH",
         "ENV_SHORT_NAME": ENV_SHORT_NAME,
@@ -130,11 +193,48 @@ class SSHGCEOperator(BashOperator):
         )
         default_path = f"cd {base_dir}"
         command = "\n".join([default_command, default_path, self.command])
-        super(SSHGCEOperator, self).__init__(
+        super(GCloudSSHGCEOperator, self).__init__(
             bash_command=f"gcloud compute ssh {SSH_USER}@{self.instance_name} "
             f"--zone {GCE_ZONE} "
             f"--project {GCP_PROJECT_ID} "
             f"--command '{command}'",
+            *args,
+            **kwargs,
+        )
+
+
+class SSHGCEOperator(BaseSSHGCEOperator):
+    DEFAULT_EXPORT = {
+        "PATH": "/opt/conda/bin:/opt/conda/condabin:+$PATH",
+        "ENV_SHORT_NAME": ENV_SHORT_NAME,
+        "GCP_PROJECT_ID": GCP_PROJECT_ID,
+    }
+
+    @apply_defaults
+    def __init__(
+        self,
+        instance_name: str,
+        base_dir: str,
+        command: str,
+        environment: t.Dict[str, str] = {},
+        *args,
+        **kwargs,
+    ):
+        self.environment = dict(self.DEFAULT_EXPORT, **environment)
+        default_command = "\n".join(
+            [
+                f"export {key}={value}"
+                for key, value in dict(self.DEFAULT_EXPORT, **environment).items()
+            ]
+        )
+
+        default_path = f"cd {base_dir}"
+        self.command = "\n".join([default_command, default_path, command])
+        self.instance_name = instance_name
+        super(SSHGCEOperator, self).__init__(
+            instance_name=self.instance_name,
+            command=self.command,
+            environment=self.environment,
             *args,
             **kwargs,
         )

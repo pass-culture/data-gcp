@@ -3,7 +3,7 @@ from common.operators.gce import (
     StartGCEOperator,
     StopGCEOperator,
     CloneRepositoryGCEOperator,
-    SSHGCEOperator,
+    GCloudSSHGCEOperator,
 )
 from airflow.models import Param
 from datetime import datetime, timedelta
@@ -62,12 +62,12 @@ with DAG(
     )
 
     fetch_code = CloneRepositoryGCEOperator(
-        task_id="fetch_code", instance_name=GCE_INSTANCE, branch="{{ params.branch }}"
+        task_id="fetch_code", instance_name=GCE_INSTANCE, command="{{ params.branch }}"
     )
 
     fetch_code.set_upstream(gce_instance_start)
 
-    install_dependencies = SSHGCEOperator(
+    install_dependencies = GCloudSSHGCEOperator(
         task_id="install_dependencies",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
@@ -90,7 +90,7 @@ with DAG(
                 --version-name {version_name}
         """
 
-        deploy_model = SSHGCEOperator(
+        deploy_model = GCloudSSHGCEOperator(
             task_id=f"deploy_model_{experiment_name}",
             instance_name=GCE_INSTANCE,
             base_dir=BASE_DIR,

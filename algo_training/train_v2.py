@@ -1,11 +1,8 @@
 import mlflow
 import typer
-
 import pandas as pd
 import tensorflow as tf
 from loguru import logger
-
-from tools.data_collect_queries import get_data
 from models.v1.match_model import MatchModel
 from models.v1.triplet_model import TripletModel
 from models.v1.utils import (
@@ -28,7 +25,7 @@ from utils import (
 
 L2_REG = 0
 N_EPOCHS = 1000
-VERBOSE = 0 if ENV_SHORT_NAME == "prod" else 1
+VERBOSE = 2
 LOSS_CUTOFF = 0.005
 
 
@@ -115,11 +112,10 @@ def train(
                     factor=0.1,
                     patience=2,
                     min_delta=LOSS_CUTOFF,
+                    verbose=1,
                 ),
                 tf.keras.callbacks.EarlyStopping(
-                    monitor="val_loss",
-                    patience=3,
-                    min_delta=LOSS_CUTOFF,
+                    monitor="val_loss", patience=3, min_delta=LOSS_CUTOFF, verbose=1
                 ),
                 MatchModelCheckpoint(
                     match_model=match_model,

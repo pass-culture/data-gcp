@@ -165,7 +165,7 @@ agg_intensity_18 AS (
                 WHEN nb_reservations >= 3 THEN 1
                 ELSE NULL
             END
-        ), COUNT(*))) * 100 AS part_3_resas
+        ), COUNT(*)) * 100 )  AS part_3_resas
     FROM
         intensity_18
     GROUP BY
@@ -205,7 +205,7 @@ agg_intensity_15_17 AS (
     {% else %}
         intensity_15_17.{{ params.group_type_name }},
     {% endif %}
-    ROUND(SAFE_DIVIDE(nb_15_17_actifs, total_registered_15_17)) AS part_15_17_actifs
+    ROUND(SAFE_DIVIDE(nb_15_17_actifs, total_registered_15_17)* 100) AS part_15_17_actifs
     FROM intensity_15_17
     LEFT JOIN nb_registrations_agg on nb_registrations_agg.month = intensity_15_17.month
     {% if params.group_type != 'all' %}

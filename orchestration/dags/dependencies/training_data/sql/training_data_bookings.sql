@@ -1,5 +1,6 @@
 SELECT
     booking.user_id,
+    CAST(enruser.user_age AS INT64) AS user_age,
     "BOOKING" as event_type,
     booking_creation_date as event_date,
     offer_item_ids.item_id as item_id,
@@ -10,7 +11,7 @@ SELECT
     enroffer.type,
     enroffer.venue_id,
     enroffer.venue_name,
-    count(*) as count,
+    count(*) as count
 from
     `{{ bigquery_clean_dataset }}`.`applicative_database_booking` booking
     inner join `{{ bigquery_clean_dataset }}`.`applicative_database_stock` stock on booking.stock_id = stock.stock_id
@@ -18,14 +19,16 @@ from
     inner join `{{ bigquery_analytics_dataset }}`.`subcategories` subcategories on offer.offer_subcategoryId = subcategories.id
     inner join `{{ bigquery_analytics_dataset }}`.`enriched_offer_data` enroffer on enroffer.offer_id = offer.offer_id
     inner join `{{ bigquery_analytics_dataset }}`.`offer_item_ids` offer_item_ids on offer_item_ids.offer_id = offer.offer_id
+    inner join `{{ bigquery_analytics_dataset }}`.`enriched_user_data` enruser on enruser.user_id = booking.user_id
 where
-    booking.booking_creation_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 4 MONTH)
-    and booking.booking_creation_date <= CURRENT_DATE()
-    and user_id is not null
+    booking.booking_creation_date >= DATE_SUB(DATE("{{ ds }}"), INTERVAL 4 MONTH)
+    and booking.booking_creation_date <= DATE("{{ ds }}")
+    and booking.user_id is not null
 group by
     booking.user_id,
     item_id,
     event_type,
+    enruser.user_age,
     booking_creation_date,
     offer_categoryId,
     offer_subcategoryid,

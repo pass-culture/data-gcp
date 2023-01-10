@@ -11,7 +11,7 @@ workflows:
   build:
     jobs:
       - build:
-          context: GCP_PROD
+          context: GCP
 
 jobs:
   build:

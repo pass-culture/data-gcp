@@ -13,16 +13,21 @@ def identity_loss(y_true, y_pred):
     return tf.reduce_mean(y_pred)
 
 
-def sample_triplets(positive_data, item_ids):
+def sample_triplets(positive_data, item_ids, users_booked_items, max_iterations=5):
     """Sample negatives at random"""
 
     user_ids = positive_data["user_id"].values
     positive_item_ids = positive_data["item_id"].values
-    negative__item_ids = np.array(
-        random.choices(item_ids, k=len(user_ids)), dtype=object
-    )
+    negative__item_ids = []
+    for user_id in user_ids:
+        negative = random.choice(item_ids)
+        iteration = 0
+        while negative in users_booked_items[user_id] and iteration < max_iterations:
+            negative = random.choice(item_ids)
+            iteration += 1
+        negative__item_ids.append(negative)
 
-    return [user_ids, positive_item_ids, negative__item_ids]
+    return [user_ids, positive_item_ids, np.array(negative__item_ids)]
 
 
 def predict(match_model):

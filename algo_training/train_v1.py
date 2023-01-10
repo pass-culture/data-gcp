@@ -76,12 +76,22 @@ def train(storage_path: str):
         )
         triplet_model.compile(loss=identity_loss, optimizer="adam")
 
-        best_eval = 1
+        users_booked_items_train = (
+            positive_data_train.groupby("user_id")["item_id"].apply(list).to_dict()
+        )
+        users_booked_items_eval = (
+            positive_data_eval.groupby("user_id")["item_id"].apply(list).to_dict()
+        )
 
+        best_eval = 1
         runned_epochs = 0
         for i in range(N_EPOCHS):
-            triplet_inputs = sample_triplets(positive_data_train, item_ids)
-            evaluation_triplet_inputs = sample_triplets(positive_data_eval, item_ids)
+            triplet_inputs = sample_triplets(
+                positive_data_train, item_ids, users_booked_items_train
+            )
+            evaluation_triplet_inputs = sample_triplets(
+                positive_data_eval, item_ids, users_booked_items_eval
+            )
 
             print(f"Training epoch {i}")
             train_result = triplet_model.fit(

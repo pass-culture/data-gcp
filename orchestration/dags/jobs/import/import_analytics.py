@@ -15,10 +15,7 @@ from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryInsertJobOperator,
 )
 from airflow.models import DagRun
-from dependencies.import_analytics.import_analytics import (
-    export_tables,
-    get_dag_dependencies,
-)
+from dependencies.import_analytics.import_analytics import export_tables
 from dependencies.import_analytics.import_historical import (
     historical_clean_applicative_database,
     historical_analytics,
@@ -255,23 +252,6 @@ analytics_table_tasks = depends_loop(
     analytics_table_jobs, start_analytics_table_tasks, dag
 )
 end_analytics_table_tasks = DummyOperator(task_id="end_analytics_table_tasks", dag=dag)
-
-# dag_list = get_dag_dependencies(export_tables)
-
-# dag_dependencies_task = []
-# for dag_id in dag_list:
-#     task = ExternalTaskSensor(
-#         task_id=f"wait_for_{dag_id}",
-#         external_dag_id=dag_id,
-#         external_task_id="end",
-#         check_existence=True,
-#         mode="reschedule",
-#         allowed_states=ALLOWED_STATES,
-#         failed_states=FAILED_STATES,
-#         email_on_retry=False,
-#         dag=dag,
-#     )
-#     dag_dependencies_task.append(task)
 
 end = DummyOperator(task_id="end", dag=dag)
 

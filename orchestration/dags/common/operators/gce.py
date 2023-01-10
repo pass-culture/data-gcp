@@ -150,16 +150,16 @@ class CloneRepositoryGCEOperator(BaseSSHGCEOperator):
         if [ -d "$DIR" ]; then 
             echo "Update and Checkout repo..." &&
             cd ${DIR} && 
-            git checkout master &&
-            git pull
+            git fetch --all &&
+            git reset --hard origin/%s
         else
             echo "Clone and checkout repo..." &&
             git clone %s &&
-            cd ${DIR}
-        fi  &&
-        git checkout %s &&
-        git pull
+            cd ${DIR} &&
+            git checkout %s
+        fi
         """ % (
+            branch,
             self.REPO,
             branch,
         )

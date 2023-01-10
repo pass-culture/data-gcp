@@ -25,9 +25,6 @@ def save_experiment(experiment_name, model_name, serving_container, run_id):
         "run_end_time": int(time.time() * 1000.0),
         "artifact_uri": None,
         "serving_container": serving_container,
-        "precision_at_10": 0.0,
-        "recall_at_10": 0.0,
-        "coverage_at_10": 0.0,
     }
     pd.DataFrame.from_dict([log_results], orient="columns").to_gbq(
         f"""{BIGQUERY_CLEAN_DATASET}.{MODELS_RESULTS_TABLE_NAME}""",

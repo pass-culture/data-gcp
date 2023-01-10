@@ -122,8 +122,6 @@ def run(experiment_name: str, model_name: str):
             custom_objects={"MatchModel": MatchModel},
             compile=False,
         )
-        metrics = evaluate(client_id, loaded_model, STORAGE_PATH)
-
         log_results = {
             "execution_date": datetime.now().isoformat(),
             "experiment_name": experiment_name,
@@ -134,15 +132,14 @@ def run(experiment_name: str, model_name: str):
             "run_end_time": run.info.start_time,
             "artifact_uri": artifact_uri,
             "serving_container": SERVING_CONTAINER,
-            "precision_at_10": metrics["precision_at_10"],
-            "recall_at_10": metrics["recall_at_10"],
-            "coverage_at_10": metrics["coverage_at_10"],
         }
+
         pd.DataFrame.from_dict([log_results], orient="columns").to_gbq(
             f"""{BIGQUERY_CLEAN_DATASET}.{MODELS_RESULTS_TABLE_NAME}""",
             project_id=f"{GCP_PROJECT_ID}",
             if_exists="append",
         )
+        metrics = evaluate(client_id, loaded_model, STORAGE_PATH)
 
 
 if __name__ == "__main__":

@@ -77,6 +77,7 @@ for table, job_params in analytics_tables.items():
     table_jobs[table] = {
         "operator": task,
         "depends": job_params.get("depends", []),
+        "dag_depends": job_params.get("dag_depends", []),
     }
 
 table_jobs = depends_loop(table_jobs, start, dag=dag)

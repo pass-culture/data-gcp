@@ -79,6 +79,7 @@ for name, params in analytics_tables.items():
     analytics_table_jobs[name] = {
         "operator": task,
         "depends": params.get("depends", []),
+        "dag_depends": params.get("dag_depends", []),
     }
 
     # import_tables_to_analytics_tasks.append(task)

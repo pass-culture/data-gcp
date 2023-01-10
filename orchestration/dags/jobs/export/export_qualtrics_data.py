@@ -95,6 +95,7 @@ for table, job_params in clean_tables.items():
     clean_table_jobs[table] = {
         "operator": task,
         "depends": job_params.get("depends", []),
+        "dag_depends": job_params.get("dag_depends", []),
     }
     export_task = PythonOperator(
         task_id=f"export_to_qualtrics_{table}",

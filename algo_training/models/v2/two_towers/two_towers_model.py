@@ -80,7 +80,7 @@ class UserModel(tf.keras.models.Model):
         self._dense2 = tf.keras.layers.Dense(embedding_size, activation="relu")
 
     def call(self, inputs: str):
-        inputs = tf.transpose(inputs)
+        inputs = tf.unstack(tf.transpose(inputs))
 
         user_id = inputs[0]
         user_age = tf.strings.to_number(inputs[1], tf.int32)
@@ -151,7 +151,7 @@ class ItemModel(tf.keras.models.Model):
         self._dense2 = tf.keras.layers.Dense(embedding_size, activation="relu")
 
     def call(self, inputs: str):
-        inputs = tf.transpose(inputs)
+        inputs = tf.unstack(tf.transpose(inputs))
 
         item_id, category_id, subcategory_id = inputs
 

@@ -819,6 +819,7 @@ ENRICHED_USER_DATA_INPUT = {
     "applicative_database_user": [
         {
             "user_id": "1",
+            "user_has_enabled_marketing_email": False,
         }
     ],
     "user_beneficiary": [
@@ -923,6 +924,7 @@ ENRICHED_USER_DATA_INPUT = {
 ENRICHED_USER_DATA_EXPECTED = [
     {
         "user_id": "1",
+        "user_has_enabled_marketing_email": False,
         "user_department_code": "93",
         "user_postal_code": "93000",
         "user_activity": "Inactif (ni en emploi ni au chômage), En incapacité de travailler",

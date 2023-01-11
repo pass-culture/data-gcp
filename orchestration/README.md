@@ -52,13 +52,15 @@ A partir de la console gcp, dans l'instance de composer, ajouter les dépendance
 
 # Local 
 
-## Installer Airflow localement:
+## Installer Airflow localement
+
+Pour remplir les trois fichiers de config, demander à un membre de l'équipe.
 
 ### .env
 
-Dans le fichier `.env`, il est necessaire de mettre à jour les configs
+Créer un fichier `.env` à la racine du dossier `orchestration`. 
+Dans le fichier `.env`, définir un nom d'utilisateur et un mot de passe :
 
-- Set-up some airflow admin user & password:
 ```sh
 _AIRFLOW_WWW_USER_USERNAME=<user>
 _AIRFLOW_WWW_USER_PASSWORD=<password>
@@ -66,7 +68,7 @@ _AIRFLOW_WWW_USER_PASSWORD=<password>
 
 ### airflow.cfg
 
-Il est necessaire de récuperer les configs de `airflow/config/airflow.cfg`
+Il est necessaire de récupérer les configs de `airflow/config/airflow.cfg`
 
 
 ### sa.gcpkey.json
@@ -99,6 +101,7 @@ Lancer le Airflow webserver
 
 #### Stop
 
+Pour éteindre les conteneurs :
 ```sh
 make stop
 ```

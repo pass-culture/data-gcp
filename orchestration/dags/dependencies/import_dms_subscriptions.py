@@ -45,6 +45,11 @@ destination_table_schema_pro = [
     {"name": "demandeur_entreprise_raisonSociale", "type": "STRING"},
     {"name": "demandeur_entreprise_siretSiegeSocial", "type": "STRING"},
     {"name": "numero_identifiant_lieu", "type": "STRING"},
+    {"name": "statut", "type": "STRING"},
+    {"name": "typologie", "type": "STRING"},
+    {"name": "académie_instructeur", "type": "STRING"},
+    {"name": "académie_groupe_instructeur", "type": "STRING"},
+
 ]
 
 
@@ -160,12 +165,23 @@ def parse_result_jeunes(result, df_applications):
                         dossier_line["applicant_department"] = champ["stringValue"]
                     elif champ["id"] == "Q2hhbXAtNTgyMjIx":
                         dossier_line["applicant_postal_code"] = champ["stringValue"]
+                    elif champ["id"] == "Q2hhbXAtMjQzODcyMA==":
+                        dossier_line["statut"] = champ["stringValue"]
+                    elif champ["id"] == "Q2hhbXAtMjQzMTg1OA==":
+                        dossier_line["typologie"] = champ["stringValue"]
+                    elif champ["id"] == "Q2hhbXAtMjQzMjIxMg==":
+                        dossier_line["académie_instructeur"] = champ["stringValue"]
 
                 instructeurs = []
                 for instructeur in dossier["instructeurs"]:
                     instructeurs.append(instructeur["email"])
                 if instructeurs != []:
                     dossier_line["instructors"] = "; ".join(instructeurs)
+
+                if dossier["groupeInstructeur"]:
+                    dossier_line["académie_groupe_instructeur"] = dossier[
+                        "groupeInstructeur"
+                    ]["number"]
 
                 df_applications.loc[len(df_applications)] = dossier_line
     return

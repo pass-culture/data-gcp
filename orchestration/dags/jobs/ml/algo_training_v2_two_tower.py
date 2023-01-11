@@ -128,7 +128,7 @@ with DAG(
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
         command="python data_collect.py "
-        "--table-name training_data_clicks "
+        "--table-name training_data_bookings "
         "--event-day-number {{ params.event_day_number }}",
         dag=dag,
     )

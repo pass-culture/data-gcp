@@ -3,7 +3,8 @@
 WITH user_humanized_id AS (
     SELECT
         user_id,
-        humanize_id(user_id) AS humanized_id
+        humanize_id(user_id) AS humanized_id,
+        user_has_enabled_marketing_email
     FROM
         `{{ bigquery_analytics_dataset }}`.applicative_database_user
     WHERE
@@ -539,7 +540,8 @@ SELECT
         ELSE FALSE
     END AS user_is_current_beneficiary,
     user.user_age,
-    user.user_birth_date
+    user.user_birth_date,
+    user_humanized_id.user_has_enabled_marketing_email,
 FROM
     `{{ bigquery_clean_dataset }}`.user_beneficiary AS user
     LEFT JOIN activation_dates ON user.user_id = activation_dates.user_id

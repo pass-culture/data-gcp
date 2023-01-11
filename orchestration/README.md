@@ -100,5 +100,5 @@ Lancer le Airflow webserver
 #### Stop
 
 ```sh
-make stop-dev
+make stop
 ```

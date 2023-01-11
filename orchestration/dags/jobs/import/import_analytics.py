@@ -85,7 +85,7 @@ with TaskGroup(group_id="raw_operations_group", dag=dag) as raw_operations_group
                         "datasetId": params["destination_dataset"],
                         "tableId": params["destination_table"],
                     },
-                    "writeDisposition": "WRITE_TRUNCATE",
+                    "writeDisposition": params.get("write_disposition", "WRITE_TRUNCATE"),
                 }
             },
             params=dict(params.get("params", {})),
@@ -122,7 +122,7 @@ with TaskGroup(group_id="clean_copy_group", dag=dag) as clean_copy:
                         "datasetId": params["destination_dataset"],
                         "tableId": params["destination_table"],
                     },
-                    "writeDisposition": "WRITE_TRUNCATE",
+                    "writeDisposition": params.get("write_disposition", "WRITE_TRUNCATE"),
                 }
             },
             params=dict(params.get("params", {})),
@@ -144,7 +144,7 @@ with TaskGroup(
         task = BigQueryExecuteQueryOperator(
             task_id=f"historical_{table}",
             sql=params["sql"],
-            write_disposition="WRITE_TRUNCATE",
+            write_disposition=params.get("write_disposition", "WRITE_TRUNCATE"),
             use_legacy_sql=False,
             destination_dataset_table=params["destination_dataset_table"],
             time_partitioning=params.get("time_partitioning", None),
@@ -169,7 +169,7 @@ with TaskGroup(
         task = BigQueryExecuteQueryOperator(
             task_id=f"historical_{table}",
             sql=params["sql"],
-            write_disposition="WRITE_TRUNCATE",
+            write_disposition=params.get("write_disposition", "WRITE_TRUNCATE"),
             use_legacy_sql=False,
             destination_dataset_table=params["destination_dataset_table"],
             time_partitioning=params.get("time_partitioning", None),
@@ -189,7 +189,7 @@ with TaskGroup(group_id="analytics_copy_group", dag=dag) as analytics_copy:
         task = BigQueryExecuteQueryOperator(
             task_id=f"import_to_analytics_{table}",
             sql=f"SELECT * FROM {BIGQUERY_CLEAN_DATASET}.{APPLICATIVE_PREFIX}{table}",
-            write_disposition="WRITE_TRUNCATE",
+            write_disposition=params.get("write_disposition", "WRITE_TRUNCATE"),
             use_legacy_sql=False,
             destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.{APPLICATIVE_PREFIX}{table}",
             dag=dag,

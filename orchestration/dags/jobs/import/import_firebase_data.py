@@ -5,6 +5,7 @@ from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryInsertJobOperator,
 )
 from common.utils import depends_loop
+from common.operators.biquery import bigquery_job_task
 from airflow.operators.dummy_operator import DummyOperator
 from common.config import DAG_FOLDER
 from common.config import (
@@ -66,31 +67,16 @@ for type, params in dags.items():
     for table, job_params in import_tables.items():
         # force this to include custom yyyymmdd
         if job_params.get("partition_prefix", None) is not None:
-            destination_table = f"{job_params['destination_table']}{job_params['partition_prefix']}{yyyymmdd}"
-        else:
-            destination_table = job_params["destination_table"]
-        task = BigQueryInsertJobOperator(
-            task_id=table,
-            configuration={
-                "query": {
-                    "query": "{% include '" + job_params["sql"] + "' %}",
-                    "useLegacySql": False,
-                    "destinationTable": {
-                        "projectId": GCP_PROJECT_ID,
-                        "datasetId": job_params["destination_dataset"],
-                        "tableId": destination_table,
-                    },
-                    "writeDisposition": "WRITE_TRUNCATE",
-                    "timePartitioning": job_params.get("time_partitioning", None),
-                    "clustering": job_params.get("clustering_fields", None),
-                },
-            },
-            trigger_rule=job_params.get("trigger_rule", "all_success"),
-            params=dict(
-                job_params.get("params", {}), **{"prefix": prefix, "dag_type": type}
-            ),
+            job_params[
+                "destination_table"
+            ] = f"{job_params['destination_table']}{job_params['partition_prefix']}{yyyymmdd}"
+        task = bigquery_job_task(
             dag=dag,
+            table=table,
+            job_params=job_params,
+            extra_params={"prefix": prefix, "dag_type": type},
         )
+
         table_jobs[table] = {
             "operator": task,
             "depends": job_params.get("depends", []),

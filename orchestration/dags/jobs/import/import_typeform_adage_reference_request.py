@@ -17,6 +17,7 @@ from common.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
 )
+from common.utils import getting_service_account_token
 
 FUNCTION_NAME = f"typeform_adage_reference_request_{ENV_SHORT_NAME}"
 
@@ -27,14 +28,6 @@ default_dag_args = {
     "retries": 1,
     "project_id": GCP_PROJECT_ID,
 }
-
-
-def getting_service_account_token():
-    function_url = (
-        f"https://europe-west1-{GCP_PROJECT_ID}.cloudfunctions.net/{FUNCTION_NAME}"
-    )
-    open_id_connect_token = id_token.fetch_id_token(Request(), function_url)
-    return open_id_connect_token
 
 
 dag = DAG(
@@ -52,6 +45,9 @@ start = DummyOperator(task_id="start", dag=dag)
 getting_service_account_token = PythonOperator(
     task_id="getting_service_account_token",
     python_callable=getting_service_account_token,
+    op_kwargs={
+        "function_name": f"{FUNCTION_NAME}",
+    },
     dag=dag,
 )
 

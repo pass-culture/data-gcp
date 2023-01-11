@@ -3,7 +3,7 @@ from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobO
 from common.config import GCP_PROJECT_ID
 
 
-def bigquery_job_task(dag, table, job_params):
+def bigquery_job_task(dag, table, job_params, extra_params={}):
     return BigQueryInsertJobOperator(
         task_id=table,
         configuration={
@@ -21,6 +21,6 @@ def bigquery_job_task(dag, table, job_params):
             },
         },
         trigger_rule=job_params.get("trigger_rule", "all_success"),
-        params=dict(job_params.get("params", {})),
+        params=dict(job_params.get("params", {}), **extra_params),
         dag=dag,
     )

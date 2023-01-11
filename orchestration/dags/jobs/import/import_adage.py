@@ -9,7 +9,7 @@ from google.auth.transport.requests import Request
 from google.oauth2 import id_token
 from common.alerts import task_fail_slack_alert
 from common.operators.biquery import bigquery_job_task
-from common.utils import depends_loop
+from common.utils import depends_loop, getting_service_account_token
 from common import macros
 from common.config import ENV_SHORT_NAME, GCP_PROJECT_ID, DAG_FOLDER
 
@@ -29,14 +29,6 @@ default_dag_args = {
 }
 
 
-def getting_service_account_token():
-    function_url = (
-        f"https://europe-west1-{GCP_PROJECT_ID}.cloudfunctions.net/{FUNCTION_NAME}"
-    )
-    open_id_connect_token = id_token.fetch_id_token(Request(), function_url)
-    return open_id_connect_token
-
-
 dag = DAG(
     "import_adage_v1",
     default_args=default_dag_args,
@@ -53,6 +45,9 @@ dag = DAG(
 getting_service_account_token = PythonOperator(
     task_id="getting_service_account_token",
     python_callable=getting_service_account_token,
+    op_kwargs={
+        "function_name": FUNCTION_NAME,
+    },
     dag=dag,
 )
 

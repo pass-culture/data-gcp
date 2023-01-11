@@ -18,6 +18,7 @@ from common.config import (
     BIGQUERY_ANALYTICS_DATASET,
 )
 from common.alerts import task_fail_slack_alert
+from common.utils import getting_service_account_token
 
 FUNCTION_NAME = f"siren_import_{ENV_SHORT_NAME}"
 SIREN_FILENAME = "siren_data.csv"
@@ -28,15 +29,6 @@ default_dag_args = {
     "on_failure_callback": task_fail_slack_alert,
     "project_id": GCP_PROJECT_ID,
 }
-
-
-def getting_service_account_token():
-    function_url = (
-        f"https://europe-west1-{GCP_PROJECT_ID}.cloudfunctions.net/{FUNCTION_NAME}"
-    )
-    open_id_connect_token = id_token.fetch_id_token(Request(), function_url)
-    return open_id_connect_token
-
 
 dag = DAG(
     "import_siren_v1",
@@ -51,6 +43,9 @@ dag = DAG(
 getting_service_account_token = PythonOperator(
     task_id="getting_service_account_token",
     python_callable=getting_service_account_token,
+    op_kwargs={
+        "function_name": f"{FUNCTION_NAME}",
+    },
     dag=dag,
 )
 

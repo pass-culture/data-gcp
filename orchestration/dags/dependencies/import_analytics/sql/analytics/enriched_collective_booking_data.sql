@@ -27,6 +27,7 @@ SELECT
     offerer.offerer_name,
     collective_stock.collective_stock_price AS booking_amount,
     collective_stock.collective_stock_number_of_tickets AS number_of_tickets,
+    collective_stock.collective_stock_beginning_date_time,
     collective_booking.educational_institution_id AS educational_institution_id,
     collective_booking.educational_year_id AS educational_year_id,
     educational_year.scholar_year,
@@ -43,7 +44,8 @@ SELECT
     collective_booking.collective_booking_confirmation_limit_date,
     collective_booking.collective_booking_used_date,
     collective_booking.collective_booking_reimbursement_date,
-    collective_booking_ranking_view.collective_booking_rank
+    collective_booking_ranking_view.collective_booking_rank,
+    collective_offer.collective_offer_image_id,
 FROM
     `{{ bigquery_analytics_dataset }}`.applicative_database_collective_booking AS collective_booking
     INNER JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_collective_stock AS collective_stock ON collective_stock.collective_stock_id = collective_booking.collective_stock_id

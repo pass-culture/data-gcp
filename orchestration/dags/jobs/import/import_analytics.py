@@ -11,9 +11,7 @@ from common.utils import depends_loop, one_line_query
 from common.operators.biquery import bigquery_job_task
 
 
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryInsertJobOperator,
-)
+from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 from dependencies.import_analytics.import_analytics import export_tables
 from dependencies.import_analytics.import_historical import (
     historical_clean_applicative_database,
@@ -85,7 +83,9 @@ with TaskGroup(group_id="raw_operations_group", dag=dag) as raw_operations_group
                         "datasetId": params["destination_dataset"],
                         "tableId": params["destination_table"],
                     },
-                    "writeDisposition": params.get("write_disposition", "WRITE_TRUNCATE"),
+                    "writeDisposition": params.get(
+                        "write_disposition", "WRITE_TRUNCATE"
+                    ),
                 }
             },
             params=dict(params.get("params", {})),
@@ -122,7 +122,9 @@ with TaskGroup(group_id="clean_copy_group", dag=dag) as clean_copy:
                         "datasetId": params["destination_dataset"],
                         "tableId": params["destination_table"],
                     },
-                    "writeDisposition": params.get("write_disposition", "WRITE_TRUNCATE"),
+                    "writeDisposition": params.get(
+                        "write_disposition", "WRITE_TRUNCATE"
+                    ),
                 }
             },
             params=dict(params.get("params", {})),

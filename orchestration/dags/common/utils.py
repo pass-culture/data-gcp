@@ -75,8 +75,10 @@ def depends_loop(jobs: dict, default_upstream_operator, dag):
 
         operator = jobs_def["operator"]
         default_downstream_operators.append(operator)
+        operator.set_upstream(default_upstream_operator)
 
-        for dependency in dependencies:
+        for dependency in [dependency_task for dependency_task in dependencies if dependency_task['task_id'] == _]:
+
             if dependency["dependency_type"] == "dag":
                 depend_job = waiting_operator(
                     dag, dependency["depends_on"], task_id=dependency["task_id"]

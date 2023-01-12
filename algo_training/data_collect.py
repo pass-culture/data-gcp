@@ -22,16 +22,12 @@ def main(
         help="Number of days to filter when querying the data. If set to None, no filter is applied",
     ),
     limit_filter: int = typer.Option(
-        None,
+        -1,
         help="Max number of rows",
     ),
 ) -> None:
     raw_data = get_data(
-        dataset=dataset,
-        table_name=table_name,
-        subcategory_ids=subcategory_ids,
-        event_day_number=event_day_number,
-        max_limit=limit_filter,
+        dataset, table_name, subcategory_ids, event_day_number, limit_filter
     )
     raw_data.to_csv(f"{STORAGE_PATH}/raw_data.csv", index=False)
 

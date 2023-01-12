@@ -1,8 +1,8 @@
 import mlflow
-import typer
-import pandas as pd
 import tensorflow as tf
+import typer
 from loguru import logger
+
 from models.v1.match_model import MatchModel
 from models.v1.triplet_model import TripletModel
 from models.v1.utils import (
@@ -14,14 +14,13 @@ from models.v2.utils import (
     MatchModelCheckpoint,
     MLFlowLogging,
 )
+from tools.data_collect_queries import get_data
 from utils import (
     get_secret,
     connect_remote_mlflow,
     ENV_SHORT_NAME,
     TRAIN_DIR,
-    STORAGE_PATH,
 )
-
 
 L2_REG = 0
 N_EPOCHS = 1000
@@ -50,14 +49,12 @@ def train(
     tf.random.set_seed(seed)
 
     # Load BigQuery data
-    train_data = pd.read_csv(
-        f"{STORAGE_PATH}/positive_data_train.csv",
-        dtype={"user_id": str, "item_id": str},
-    )
-    validation_data = pd.read_csv(
-        f"{STORAGE_PATH}/positive_data_eval.csv",
-        dtype={"user_id": str, "item_id": str},
-    )
+    train_data = get_data(
+        dataset=f"raw_{ENV_SHORT_NAME}", table_name="recommendation_training_data"
+    ).astype(dtype={"count": int})
+    validation_data = get_data(
+        dataset=f"raw_{ENV_SHORT_NAME}", table_name="recommendation_validation_data"
+    ).astype(dtype={"count": int})
 
     training_user_ids = train_data["user_id"].unique()
     training_item_ids = train_data["item_id"].unique()

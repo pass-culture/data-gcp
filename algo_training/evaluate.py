@@ -1,12 +1,13 @@
-import pandas as pd
-import tensorflow as tf
-import mlflow.tensorflow
 from datetime import datetime
 
+import mlflow.tensorflow
+import pandas as pd
+import tensorflow as tf
 from loguru import logger
 
-from tools.v1.preprocess_tools import preprocess
+from metrics import compute_metrics, get_actual_and_predicted
 from models.v1.match_model import MatchModel
+from tools.v1.preprocess_tools import preprocess
 from utils import (
     get_secret,
     connect_remote_mlflow,
@@ -22,7 +23,6 @@ from utils import (
     EVALUATION_USER_NUMBER,
     EXPERIMENT_NAME,
 )
-from metrics import compute_metrics, get_actual_and_predicted
 
 k_list = [RECOMMENDATION_NUMBER, NUMBER_OF_PRESELECTED_OFFERS]
 

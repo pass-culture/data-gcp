@@ -1,8 +1,9 @@
+import numpy as np
 import pandas as pd
+import recmetrics
 from loguru import logger
 from tqdm import tqdm
-import numpy as np
-import recmetrics
+
 from tools.diversification import order_offers_by_score_and_diversify_categories
 from utils import SHUFFLE_RECOMMENDATION
 

@@ -61,8 +61,44 @@ def train(
         dtype={"user_id": str, "item_id": str, "user_age": str},
     )
 
-    user_columns = ["user_id", "user_age"]
-    item_columns = ["item_id", "offer_categoryId", "offer_subcategoryid"]
+    user_layer_infos = {
+        "user_id": {"type": "string", "feature_latent_dim": 32},
+        "user_age": {"type": "int", "feature_latent_dim": 16},
+        "user_postal_code": {"type": "int", "feature_latent_dim": 8},
+        "user_activity": {"type": "string", "feature_latent_dim": 8},
+        "user_booking_cnt": {"type": "int", "feature_latent_dim": 16},
+        "user_theoretical_amount_spent": {"type": "int", "feature_latent_dim": 16},
+        "user_theoretical_remaining_credit": {
+            "type": "int",
+            "feature_latent_dim": 16,
+        },
+        "user_distinct_type_booking_cnt": {"type": "int", "feature_latent_dim": 16},
+    }
+    user_columns = list(user_layer_infos.keys())
+
+    item_layer_infos = {
+        "item_id": {"type": "string", "feature_latent_dim": 32},
+        "offer_categoryId": {"type": "string", "feature_latent_dim": 16},
+        "offer_subcategoryid": {"type": "string", "feature_latent_dim": 16},
+        "item_names": {"type": "text", "feature_latent_dim": 16},
+        "item_rayons": {
+            "type": "text",
+            "feature_latent_dim": 16,
+        },
+        "item_author": {
+            "type": "text",
+            "feature_latent_dim": 16,
+        },
+        "item_performer": {
+            "type": "text",
+            "feature_latent_dim": 16,
+        },
+        "item_mean_stock_price": {"type": "int", "feature_latent_dim": 8},
+        "item_booking_cnt": {"type": "int", "feature_latent_dim": 8},
+        "item_favourite_cnt": {"type": "int", "feature_latent_dim": 8},
+    }
+    item_columns = list(item_layer_infos.keys())
+
     # Create tf datasets
     train_dataset = load_triplets_dataset(
         train_data,
@@ -98,7 +134,9 @@ def train(
 
         two_tower_model = TwoTowersModel(
             user_data=train_data[user_columns].drop_duplicates(),
+            user_layer_infos=user_layer_infos,
             item_data=train_data[item_columns].drop_duplicates(),
+            item_layer_infos=item_layer_infos,
             embedding_size=embedding_size,
         )
 

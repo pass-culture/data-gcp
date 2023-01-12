@@ -5,7 +5,7 @@ from airflow.exceptions import AirflowException
 from airflow.operators.bash import BashOperator
 from airflow.configuration import conf
 from common.config import GCE_ZONE, GCP_PROJECT_ID, SSH_USER, ENV_SHORT_NAME
-from common.hooks.gce import GCEHook, SOURCE_IMAGE, STARTUP_SCRIPT
+from common.hooks.gce import GCEHook, GPUImage, CPUImage
 import typing as t
 from base64 import b64encode
 
@@ -31,20 +31,16 @@ class StartGCEOperator(BaseOperator):
 
     def execute(self, context) -> None:
 
-        source_image = (
-            SOURCE_IMAGE["GPU"]
-            if len(self.accelerator_types) > 0
-            else SOURCE_IMAGE["CPU"]
+        source_image_type = (
+            GPUImage() if len(self.accelerator_types) > 0 else CPUImage()
         )
-        startup_script = STARTUP_SCRIPT if len(self.accelerator_types) > 0 else None
 
-        hook = GCEHook(source_image=source_image)
+        hook = GCEHook(source_image_type=source_image_type)
         hook.start_vm(
             self.instance_name,
             self.instance_type,
             preemptible=self.preemptible,
             accelerator_types=self.accelerator_types,
-            startup_script=startup_script,
         )
 
 
@@ -214,8 +210,8 @@ class SSHGCEOperator(BaseSSHGCEOperator):
     def __init__(
         self,
         instance_name: str,
-        base_dir: str,
         command: str,
+        base_dir: str = None,
         environment: t.Dict[str, str] = {},
         *args,
         **kwargs,
@@ -227,8 +223,7 @@ class SSHGCEOperator(BaseSSHGCEOperator):
                 for key, value in dict(self.DEFAULT_EXPORT, **environment).items()
             ]
         )
-
-        default_path = f"cd {base_dir}"
+        default_path = f"cd {base_dir}" if base_dir is not None else ""
         self.command = "\n".join([default_command, default_path, command])
         self.instance_name = instance_name
         super(SSHGCEOperator, self).__init__(

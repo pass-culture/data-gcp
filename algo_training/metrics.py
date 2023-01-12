@@ -1,4 +1,5 @@
 import pandas as pd
+from loguru import logger
 from tqdm import tqdm
 import numpy as np
 import recmetrics
@@ -65,13 +66,17 @@ def get_prediction(user_id, data_model_dict):
 
 
 def compute_metrics(data_model_dict, k):
+    logger.info("Compute recall and precision")
     mark, mapk, mark_panachage, mapk_panachage = compute_recall_and_precision_at_k(
         data_model_dict, k
     )
+    logger.info("Compute coverage")
     coverage = get_coverage_at_k(data_model_dict, k)
+    logger.info("Compute diversification score")
     avg_div_score, avg_div_score_panachage = compute_diversification_score(
         data_model_dict, k
     )
+    logger.info("Compute personalization score")
     personalization_at_k, personalization_at_k_panachage = compute_personalization(
         data_model_dict, k
     )

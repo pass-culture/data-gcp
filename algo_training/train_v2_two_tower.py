@@ -54,17 +54,15 @@ def train(
     # Load BigQuery data
     train_data = pd.read_csv(
         f"{STORAGE_PATH}/positive_data_train.csv",
-        dtype={"user_id": str, "item_id": str, "user_age": str},
-    )
+    ).astype(str)
     validation_data = pd.read_csv(
         f"{STORAGE_PATH}/positive_data_eval.csv",
-        dtype={"user_id": str, "item_id": str, "user_age": str},
-    )
+    ).astype(str)
 
     user_layer_infos = {
         "user_id": {"type": "string", "feature_latent_dim": 32},
         "user_age": {"type": "int", "feature_latent_dim": 16},
-        "user_postal_code": {"type": "int", "feature_latent_dim": 8},
+        "user_postal_code": {"type": "string", "feature_latent_dim": 8},
         "user_activity": {"type": "string", "feature_latent_dim": 8},
         "user_booking_cnt": {"type": "int", "feature_latent_dim": 16},
         "user_theoretical_amount_spent": {"type": "int", "feature_latent_dim": 16},
@@ -74,8 +72,6 @@ def train(
         },
         "user_distinct_type_booking_cnt": {"type": "int", "feature_latent_dim": 16},
     }
-    user_columns = list(user_layer_infos.keys())
-
     item_layer_infos = {
         "item_id": {"type": "string", "feature_latent_dim": 32},
         "offer_categoryId": {"type": "string", "feature_latent_dim": 16},
@@ -97,7 +93,12 @@ def train(
         "item_booking_cnt": {"type": "int", "feature_latent_dim": 8},
         "item_favourite_cnt": {"type": "int", "feature_latent_dim": 8},
     }
+
+    user_columns = list(user_layer_infos.keys())
     item_columns = list(item_layer_infos.keys())
+
+    user_data = train_data[user_columns].drop_duplicates()
+    item_data = train_data[item_columns].drop_duplicates()
 
     # Create tf datasets
     train_dataset = load_triplets_dataset(
@@ -169,16 +170,13 @@ def train(
 
         logger.info("Building and saving the MatchModelV2")
 
-        user_data = two_tower_model.user_model.user_data.values
-        item_data = two_tower_model.item_model.item_data.values
-
-        user_embeddings = two_tower_model.user_model([user_data])
-        item_embeddings = two_tower_model.item_model([item_data])
+        user_embeddings = two_tower_model.user_model([user_data.values])
+        item_embeddings = two_tower_model.item_model([item_data.values])
 
         match_model = TwoTowersMatchModel(
-            user_ids=user_data[:, 0],
+            user_ids=user_data["user_id"].drop_duplicates(),
             user_embeddings=user_embeddings,
-            item_ids=item_data[:, 0],
+            item_ids=item_data["item_id"].drop_duplicates(),
             item_embeddings=item_embeddings,
             embedding_size=embedding_size,
         )

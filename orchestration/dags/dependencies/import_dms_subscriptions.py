@@ -47,8 +47,8 @@ destination_table_schema_pro = [
     {"name": "numero_identifiant_lieu", "type": "STRING"},
     {"name": "statut", "type": "STRING"},
     {"name": "typologie", "type": "STRING"},
-    {"name": "académie_instructeur", "type": "STRING"},
-    {"name": "académie_groupe_instructeur", "type": "STRING"},
+    {"name": "academie_instructeur", "type": "STRING"},
+    {"name": "academie_groupe_instructeur", "type": "STRING"},
 ]
 
 
@@ -106,8 +106,8 @@ def parse_api_result(updated_since, dms_target):
                 "numero_identifiant_lieu",
                 "statut",
                 "typologie",
-                "académie_instructeur",
-                "académie_groupe_instructeur",
+                "academie_instructeur",
+                "academie_groupe_instructeur",
             ]
         )
         fs = gcsfs.GCSFileSystem(project=GCP_PROJECT_ID)
@@ -236,7 +236,7 @@ def parse_result_pro(result, df_applications):
                         elif champs["id"] == "Q2hhbXAtMjQzMTg1OA==":
                             dossier_line["typologie"] = champs["stringValue"]
                         elif champs["id"] == "Q2hhbXAtMjQzMjIxMg==":
-                            dossier_line["académie_instructeur"] = champs["stringValue"]
+                            dossier_line["academie_instructeur"] = champs["stringValue"]
                 else:
                     dossier_line["numero_identifiant_lieu"] = None
                 instructeurs = []
@@ -246,7 +246,7 @@ def parse_result_pro(result, df_applications):
                     dossier_line["instructors"] = "; ".join(instructeurs)
 
                 if dossier["groupeInstructeur"]:
-                    dossier_line["académie_groupe_instructeur"] = dossier[
+                    dossier_line["academie_groupe_instructeur"] = dossier[
                         "groupeInstructeur"
                     ]["number"]
 

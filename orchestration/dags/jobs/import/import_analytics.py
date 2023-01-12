@@ -15,6 +15,7 @@ from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryInsertJobOperator,
 )
 from airflow.models import DagRun
+from common.operators.biquery import bigquery_job_task
 from dependencies.import_analytics.import_analytics import export_tables
 from dependencies.import_analytics.import_historical import (
     historical_clean_applicative_database,
@@ -85,7 +86,9 @@ with TaskGroup(group_id="raw_operations_group", dag=dag) as raw_operations_group
                         "datasetId": params["destination_dataset"],
                         "tableId": params["destination_table"],
                     },
-                    "writeDisposition": "WRITE_TRUNCATE",
+                    "writeDisposition": params.get(
+                        "write_disposition", "WRITE_TRUNCATE"
+                    ),
                 }
             },
             params=dict(params.get("params", {})),
@@ -104,23 +107,7 @@ with TaskGroup(
 
     import_tables_to_clean_transformation_tasks = []
     for table, params in clean_tables.items():
-        task = BigQueryInsertJobOperator(
-            task_id=f"import_to_clean_{table}",
-            configuration={
-                "query": {
-                    "query": "{% include '" + params["sql"] + "' %}",
-                    "useLegacySql": False,
-                    "destinationTable": {
-                        "projectId": GCP_PROJECT_ID,
-                        "datasetId": params["destination_dataset"],
-                        "tableId": params["destination_table"],
-                    },
-                    "writeDisposition": "WRITE_TRUNCATE",
-                }
-            },
-            params=dict(params.get("params", {})),
-            dag=dag,
-        )
+        task = bigquery_job_task(dag=dag, table=table, job_params=params)
         import_tables_to_clean_transformation_tasks.append(task)
 
 
@@ -138,7 +125,9 @@ with TaskGroup(group_id="clean_copy_group", dag=dag) as clean_copy:
                         "datasetId": params["destination_dataset"],
                         "tableId": params["destination_table"],
                     },
-                    "writeDisposition": "WRITE_TRUNCATE",
+                    "writeDisposition": params.get(
+                        "write_disposition", "WRITE_TRUNCATE"
+                    ),
                 }
             },
             params=dict(params.get("params", {})),
@@ -160,7 +149,7 @@ with TaskGroup(
         task = BigQueryExecuteQueryOperator(
             task_id=f"historical_{table}",
             sql=params["sql"],
-            write_disposition="WRITE_TRUNCATE",
+            write_disposition=params.get("write_disposition", "WRITE_TRUNCATE"),
             use_legacy_sql=False,
             destination_dataset_table=params["destination_dataset_table"],
             time_partitioning=params.get("time_partitioning", None),
@@ -185,7 +174,7 @@ with TaskGroup(
         task = BigQueryExecuteQueryOperator(
             task_id=f"historical_{table}",
             sql=params["sql"],
-            write_disposition="WRITE_TRUNCATE",
+            write_disposition=params.get("write_disposition", "WRITE_TRUNCATE"),
             use_legacy_sql=False,
             destination_dataset_table=params["destination_dataset_table"],
             time_partitioning=params.get("time_partitioning", None),
@@ -205,7 +194,7 @@ with TaskGroup(group_id="analytics_copy_group", dag=dag) as analytics_copy:
         task = BigQueryExecuteQueryOperator(
             task_id=f"import_to_analytics_{table}",
             sql=f"SELECT * FROM {BIGQUERY_CLEAN_DATASET}.{APPLICATIVE_PREFIX}{table}",
-            write_disposition="WRITE_TRUNCATE",
+            write_disposition=params.get("write_disposition", "WRITE_TRUNCATE"),
             use_legacy_sql=False,
             destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.{APPLICATIVE_PREFIX}{table}",
             dag=dag,
@@ -218,29 +207,8 @@ end_import = DummyOperator(task_id="end_import", dag=dag)
 start_analytics_table_tasks = DummyOperator(task_id="start_analytics_tasks", dag=dag)
 analytics_table_jobs = {}
 for table, job_params in export_tables.items():
-    destination_table = job_params.get("destination_table", table)
-
-    task = BigQueryInsertJobOperator(
-        task_id=table,
-        configuration={
-            "query": {
-                "query": "{% include '" + job_params["sql"] + "' %}",
-                "useLegacySql": False,
-                "destinationTable": {
-                    "projectId": GCP_PROJECT_ID,
-                    "datasetId": job_params["destination_dataset"],
-                    "tableId": destination_table,
-                },
-                "writeDisposition": "WRITE_TRUNCATE",
-                "timePartitioning": job_params.get("time_partitioning", None),
-                "clustering": job_params.get("clustering_fields", None),
-            },
-        },
-        trigger_rule=job_params.get("trigger_rule", "all_success"),
-        params=dict(job_params.get("params", {})),
-        dag=dag,
-    )
-
+    job_params["destination_table"] = job_params.get("destination_table", table)
+    task = bigquery_job_task(dag=dag, table=table, job_params=job_params)
     analytics_table_jobs[table] = {
         "operator": task,
         "depends": job_params.get("depends", []),

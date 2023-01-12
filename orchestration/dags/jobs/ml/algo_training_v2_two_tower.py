@@ -29,10 +29,10 @@ DATE = "{{ ts_nodash }}"
 
 # Environment variables to export before running commands
 dag_config = {
-    "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/algo_training_{ENV_SHORT_NAME}/algo_training_clicks_v2_{DATE}",
+    "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/algo_training_{ENV_SHORT_NAME}/algo_training_v2_two_tower_{DATE}",
     "BASE_DIR": f"data-gcp/algo_training",
     "TRAIN_DIR": "/home/airflow/train",
-    "EXPERIMENT_NAME": f"algo_training_clicks_v2.1_{ENV_SHORT_NAME}",
+    "EXPERIMENT_NAME": f"algo_training_v2_two_tower.1_{ENV_SHORT_NAME}",
 }
 
 # Params
@@ -43,7 +43,7 @@ train_params = {
     "event_day_number": 120 if ENV_SHORT_NAME == "prod" else 20,
 }
 gce_params = {
-    "instance_name": f"algo-training-clicks-v2-{ENV_SHORT_NAME}",
+    "instance_name": f"algo-training-v2-two-tower-{ENV_SHORT_NAME}",
     "instance_type": {
         "dev": "n1-standard-2",
         "stg": "n1-standard-8",
@@ -59,7 +59,7 @@ default_args = {
 }
 
 with DAG(
-    "algo_training_clicks_v2",
+    "algo_training_v2_two_tower",
     default_args=default_args,
     description="Custom training job",
     schedule_interval=None,
@@ -156,7 +156,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
-        command=f"python train_v2.py "
+        command=f"python train_v2_two_tower.py "
         f"--experiment-name {dag_config['EXPERIMENT_NAME']} "
         "--batch-size {{ params.batch_size }} "
         "--embedding-size {{ params.embedding_size }} "

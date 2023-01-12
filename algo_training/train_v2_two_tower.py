@@ -1,18 +1,21 @@
+import os
+
 import mlflow
 import typer
-import pandas as pd
+
 import tensorflow as tf
 from loguru import logger
-from models.v1.match_model import MatchModel
-from models.v1.triplet_model import TripletModel
+import pandas as pd
+
+from models.v2.two_towers.two_towers_match_model import TwoTowersMatchModel
+from models.v2.two_towers.two_towers_model import TwoTowersModel
 from models.v1.utils import (
     identity_loss,
-    predict,
 )
 from models.v2.utils import (
     load_triplets_dataset,
-    MatchModelCheckpoint,
     MLFlowLogging,
+    save_pca_representation,
 )
 from utils import (
     get_secret,
@@ -23,9 +26,8 @@ from utils import (
 )
 
 
-L2_REG = 0
 N_EPOCHS = 1000
-VERBOSE = 2
+VERBOSE = 0 if ENV_SHORT_NAME == "prod" else 1
 LOSS_CUTOFF = 0.005
 
 
@@ -52,18 +54,15 @@ def train(
     # Load BigQuery data
     train_data = pd.read_csv(
         f"{STORAGE_PATH}/positive_data_train.csv",
-        dtype={"user_id": str, "item_id": str},
+        dtype={"user_id": str, "item_id": str, "user_age": str},
     )
     validation_data = pd.read_csv(
         f"{STORAGE_PATH}/positive_data_eval.csv",
-        dtype={"user_id": str, "item_id": str},
+        dtype={"user_id": str, "item_id": str, "user_age": str},
     )
 
-    training_user_ids = train_data["user_id"].unique()
-    training_item_ids = train_data["item_id"].unique()
-
-    user_columns = ["user_id"]
-    item_columns = ["item_id"]
+    user_columns = ["user_id", "user_age"]
+    item_columns = ["item_id", "offer_categoryId", "offer_subcategoryid"]
     # Create tf datasets
     train_dataset = load_triplets_dataset(
         train_data,
@@ -91,25 +90,21 @@ def train(
                 "environment": ENV_SHORT_NAME,
                 "embedding_size": embedding_size,
                 "batch_size": batch_size,
-                "l2_regularization": L2_REG,
                 "epoch_number": N_EPOCHS,
-                "user_count": len(training_user_ids),
-                "item_count": len(training_item_ids),
+                "user_count": train_data["user_id"].nunique(),
+                "item_count": train_data["item_id"].nunique(),
             }
         )
 
-        triplet_model = TripletModel(
-            user_ids=training_user_ids,
-            item_ids=training_item_ids,
-            latent_dim=embedding_size,
-            l2_reg=L2_REG,
+        two_tower_model = TwoTowersModel(
+            user_data=train_data[user_columns].drop_duplicates(),
+            item_data=train_data[item_columns].drop_duplicates(),
+            embedding_size=embedding_size,
         )
-        match_model = MatchModel(triplet_model.user_layer, triplet_model.item_layer)
-        predict(match_model)
 
-        triplet_model.compile(loss=identity_loss, optimizer="adam")
+        two_tower_model.compile(loss=identity_loss, optimizer="adam")
 
-        triplet_model.fit(
+        two_tower_model.fit(
             train_dataset,
             epochs=N_EPOCHS,
             validation_data=validation_dataset,
@@ -120,14 +115,11 @@ def train(
                     factor=0.1,
                     patience=2,
                     min_delta=LOSS_CUTOFF,
-                    verbose=1,
                 ),
                 tf.keras.callbacks.EarlyStopping(
-                    monitor="val_loss", patience=3, min_delta=LOSS_CUTOFF, verbose=1
-                ),
-                MatchModelCheckpoint(
-                    match_model=match_model,
-                    filepath=export_path,
+                    monitor="val_loss",
+                    patience=3,
+                    min_delta=LOSS_CUTOFF,
                 ),
                 MLFlowLogging(
                     client_id=client_id,
@@ -136,6 +128,34 @@ def train(
                 ),
             ],
         )
+
+        logger.info("Building and saving the MatchModelV2")
+
+        user_data = two_tower_model.user_model.user_data.values
+        item_data = two_tower_model.item_model.item_data.values
+
+        user_embeddings = two_tower_model.user_model([user_data])
+        item_embeddings = two_tower_model.item_model([item_data])
+
+        match_model = TwoTowersMatchModel(
+            user_ids=user_data[:, 0],
+            user_embeddings=user_embeddings,
+            item_ids=item_data[:, 0],
+            item_embeddings=item_embeddings,
+            embedding_size=embedding_size,
+        )
+        tf.keras.models.save_model(match_model, export_path + "model")
+        mlflow.log_artifacts(export_path + "model", "model")
+
+        # Export the PCA representations of the item embeddings
+        os.mkdir(export_path + "pca_plots")
+        pca_representations_path = export_path + "pca_plots/"
+        save_pca_representation(
+            loaded_model=match_model,
+            item_data=two_tower_model.item_model.item_data,
+            figures_folder=pca_representations_path,
+        )
+        mlflow.log_artifacts(export_path + "pca_plots", "pca_plots")
 
         logger.info("------- TRAINING DONE -------")
         logger.info(mlflow.get_artifact_uri("model"))

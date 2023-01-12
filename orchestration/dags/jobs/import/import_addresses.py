@@ -23,6 +23,7 @@ from common.config import (
     GCP_PROJECT_ID,
 )
 from common.alerts import task_fail_slack_alert
+from common.utils import getting_service_account_token
 from dependencies.import_addresses import USER_LOCATIONS_SCHEMA
 
 
@@ -35,14 +36,6 @@ default_args = {
     "retries": 1,
     "retry_delay": timedelta(minutes=2),
 }
-
-
-def getting_service_account_token():
-    function_url = (
-        f"https://europe-west1-{GCP_PROJECT_ID}.cloudfunctions.net/{FUNCTION_NAME}"
-    )
-    open_id_connect_token = id_token.fetch_id_token(Request(), function_url)
-    return open_id_connect_token
 
 
 def branch_function(ti, **kwargs):
@@ -68,6 +61,9 @@ with DAG(
     getting_service_account_token = PythonOperator(
         task_id="getting_service_account_token",
         python_callable=getting_service_account_token,
+        op_kwargs={
+            "function_name": FUNCTION_NAME,
+        },
     )
 
     addresses_to_gcs = SimpleHttpOperator(

@@ -39,7 +39,7 @@ class EndpointParams:
     endpoint_name: str
     min_nodes: int
     max_nodes: int
-    machine_type: str = "n1-standard-2"
+    instance_type: str = "n1-standard-2"
     traffic_percentage: int = 100
 
 
@@ -117,7 +117,7 @@ class ModelHandler:
             deployed_model_display_name=version_name,
             min_replica_count=self.endpoint_params.min_nodes,
             max_replica_count=self.endpoint_params.max_nodes,
-            machine_type=self.endpoint_params.machine_type,
+            machine_type=self.endpoint_params.instance_type,
             traffic_percentage=self.endpoint_params.traffic_percentage,
         )
         model.wait()
@@ -183,7 +183,7 @@ def main(
         "tensorflow",
         help="Model Type (tenforflow|custom)",
     ),
-    machine_type: str = typer.Option(
+    instance_type: str = typer.Option(
         "n1-standard-2",
         help="Machine type to deploy",
     ),
@@ -232,7 +232,7 @@ def main(
         endpoint_name=endpoint_name,
         min_nodes=int(min_nodes),
         max_nodes=int(max_nodes),
-        machine_type=machine_type,
+        instance_type=instance_type,
         traffic_percentage=int(traffic_percentage),
     )
     handler = ModelHandler(region, GCP_PROJECT_ID, model_params, endpoint_params)

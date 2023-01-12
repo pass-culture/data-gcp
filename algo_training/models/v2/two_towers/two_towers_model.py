@@ -1,7 +1,7 @@
 import tensorflow as tf
 import pandas as pd
 
-from tensorflow.keras.layers import Embedding, Flatten, Input, Dense, Lambda, Dot
+from tensorflow.keras.layers import Embedding, TextVectorization, Dot
 from tensorflow.keras.layers.experimental.preprocessing import (
     StringLookup,
     IntegerLookup,
@@ -10,18 +10,68 @@ from tensorflow.keras.layers.experimental.preprocessing import (
 from models.v1.margin_loss import MarginLoss
 
 
+def create_lookup_layer(
+    data: pd.DataFrame,
+    column_name: str,
+    lookup_type: str,
+    feature_latent_dim: int,
+):
+    vocabulary = data[column_name].unique()
+    if lookup_type == "string":
+        return tf.keras.Sequential(
+            [
+                StringLookup(vocabulary=vocabulary),
+                Embedding(
+                    input_dim=len(vocabulary) + 1,
+                    output_dim=feature_latent_dim,
+                ),
+            ]
+        )
+    elif lookup_type == "int":
+        return tf.keras.Sequential(
+            [
+                IntegerLookup(vocabulary=vocabulary),
+                Embedding(
+                    input_dim=len(vocabulary) + 1,
+                    output_dim=feature_latent_dim,
+                ),
+            ]
+        )
+    elif lookup_type == "text":
+        text_dataset = tf.data.Dataset.from_tensor_slices(vocabulary)
+        max_tokens = 5000
+        text_vectorization_layer = TextVectorization(
+            max_tokens=max_tokens,
+        )
+        text_vectorization_layer.adapt(text_dataset.batch(64))
+        return tf.keras.Sequential(
+            [
+                text_vectorization_layer,
+                Embedding(
+                    input_dim=max_tokens,
+                    output_dim=feature_latent_dim,
+                ),
+            ]
+        )
+    raise ValueError(
+        "lookup_type passed in create_lookup_layer must be integer, text or string"
+    )
+
+
 class TwoTowersModel(tf.keras.models.Model):
     def __init__(
         self,
         user_data: pd.DataFrame,
+        user_layer_infos: dict,
         item_data: pd.DataFrame,
+        item_layer_infos: dict,
         embedding_size: int,
         margin: int = 1,
     ):
         super().__init__("TwoTowerModel")
 
-        self.user_model = UserModel(user_data, embedding_size)
-        self.item_model = ItemModel(item_data, embedding_size)
+        self.user_model = SingleTowerModel(user_data, embedding_size, user_layer_infos)
+        self.item_model = SingleTowerModel(item_data, embedding_size, item_layer_infos)
 
         self.dot = Dot(axes=1, normalize=True)
         self.margin_loss = MarginLoss(margin)
@@ -39,42 +89,28 @@ class TwoTowersModel(tf.keras.models.Model):
         return self.margin_loss([positive_similarity, negative_similarity])
 
 
-class UserModel(tf.keras.models.Model):
+class SingleTowerModel(tf.keras.models.Model):
     def __init__(
         self,
         user_data: pd.DataFrame,
         embedding_size: int,
-        feature_latent_dim: int = 64,
+        layer_infos: dict,
     ):
-        super().__init__(name="UserModel")
+        super().__init__(name="SingleTowerModel")
 
         self.user_data = user_data
 
-        user_ids = self.user_data["user_id"].unique()
-        self.user_layer = tf.keras.Sequential(
-            [
-                StringLookup(vocabulary=user_ids),
-                # We add an additional embedding to account for unknown tokens.
-                Embedding(
-                    input_dim=len(user_ids) + 1,
-                    output_dim=feature_latent_dim,
-                    name="user_embedding",
-                ),
-            ]
-        )
-
-        user_ages = self.user_data["user_age"].unique()
-        self.user_age_layer = tf.keras.Sequential(
-            [
-                IntegerLookup(vocabulary=user_ages),
-                # We add an additional embedding to account for unknown tokens.
-                Embedding(
-                    input_dim=len(user_ages) + 1,
-                    output_dim=feature_latent_dim,
-                    name="category_embedding",
-                ),
-            ]
-        )
+        self.layer_infos = layer_infos
+        self.layers = []
+        for key, value in self.layer_infos.items():
+            self.layers.append(
+                create_lookup_layer(
+                    data=user_data,
+                    column_name=key,
+                    lookup_type=value["type"],
+                    feature_latent_dim=value["feature_latent_dim"],
+                )
+            )
 
         self._dense1 = tf.keras.layers.Dense(embedding_size * 2, activation="relu")
         self._dense2 = tf.keras.layers.Dense(embedding_size, activation="relu")
@@ -82,85 +118,14 @@ class UserModel(tf.keras.models.Model):
     def call(self, inputs: str):
         inputs = tf.unstack(tf.transpose(inputs))
 
-        user_id = inputs[0]
-        user_age = tf.strings.to_number(inputs[1], tf.int32)
+        input_data = []
+        for idx, value in enumerate(self.layer_infos.values()):
+            if value["type"] == "int":
+                inputs[idx] = tf.strings.to_number(inputs[idx], tf.int32)
+            input_data.append(inputs[idx])
 
         x = tf.concat(
-            [
-                self.user_layer(user_id),
-                self.user_age_layer(user_age),
-            ],
-            axis=1,
-        )
-        x = self._dense1(x)
-        out = self._dense2(x)
-        return out
-
-
-class ItemModel(tf.keras.models.Model):
-    def __init__(
-        self,
-        item_data: pd.DataFrame,
-        embedding_size: int,
-        feature_latent_dim: int = 64,
-    ):
-        super().__init__(name="ItemModel")
-
-        self.item_data = item_data
-
-        item_ids = self.item_data["item_id"].unique()
-        self.item_layer = tf.keras.Sequential(
-            [
-                StringLookup(vocabulary=item_ids),
-                # We add an additional embedding to account for unknown tokens.
-                Embedding(
-                    input_dim=len(item_ids) + 1,
-                    output_dim=feature_latent_dim,
-                    name="item_embedding",
-                ),
-            ]
-        )
-
-        categories = self.item_data["offer_categoryId"].unique()
-        self.category_layer = tf.keras.Sequential(
-            [
-                StringLookup(vocabulary=categories),
-                # We add an additional embedding to account for unknown tokens.
-                Embedding(
-                    input_dim=len(categories) + 1,
-                    output_dim=feature_latent_dim,
-                    name="category_embedding",
-                ),
-            ]
-        )
-
-        subcategories = self.item_data["offer_subcategoryid"].unique()
-        self.subcategory_layer = tf.keras.Sequential(
-            [
-                StringLookup(vocabulary=subcategories),
-                # We add an additional embedding to account for unknown tokens.
-                Embedding(
-                    input_dim=len(subcategories) + 1,
-                    output_dim=feature_latent_dim,
-                    name="subcategory_embedding",
-                ),
-            ]
-        )
-
-        self._dense1 = tf.keras.layers.Dense(embedding_size * 2, activation="relu")
-        self._dense2 = tf.keras.layers.Dense(embedding_size, activation="relu")
-
-    def call(self, inputs: str):
-        inputs = tf.unstack(tf.transpose(inputs))
-
-        item_id, category_id, subcategory_id = inputs
-
-        x = tf.concat(
-            [
-                self.item_layer(item_id),
-                self.category_layer(category_id),
-                self.subcategory_layer(subcategory_id),
-            ],
+            [layer(input_layer_data) for layer, input_layer_data in zip(self.layers, input_data)],
             axis=1,
         )
         x = self._dense1(x)

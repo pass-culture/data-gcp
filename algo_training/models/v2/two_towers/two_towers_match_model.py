@@ -14,7 +14,7 @@ class TwoTowersMatchModel(tf.keras.models.Model):
         item_embeddings: np.ndarray,
         embedding_size: int,
     ):
-        super().__init__(name="MatchModelV2")
+        super().__init__(name="TwoTowersMatchModel")
 
         self.user_layer = tf.keras.Sequential(
             [

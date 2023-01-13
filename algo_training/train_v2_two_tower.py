@@ -60,35 +60,23 @@ def train(
     ).astype(str)
 
     user_layer_infos = {
-        "user_id": {"type": "string", "feature_latent_dim": 32},
+        "user_id": {"type": "string", "feature_latent_dim": 128},
         "user_age": {"type": "int", "feature_latent_dim": 16},
         "user_postal_code": {"type": "string", "feature_latent_dim": 8},
         "user_activity": {"type": "string", "feature_latent_dim": 8},
         "user_booking_cnt": {"type": "int", "feature_latent_dim": 16},
         "user_theoretical_amount_spent": {"type": "int", "feature_latent_dim": 16},
-        "user_theoretical_remaining_credit": {
-            "type": "int",
-            "feature_latent_dim": 16,
-        },
+        "user_theoretical_remaining_credit": {"type": "int", "feature_latent_dim": 16},
         "user_distinct_type_booking_cnt": {"type": "int", "feature_latent_dim": 16},
     }
     item_layer_infos = {
-        "item_id": {"type": "string", "feature_latent_dim": 32},
+        "item_id": {"type": "string", "feature_latent_dim": 128},
         "offer_categoryId": {"type": "string", "feature_latent_dim": 16},
         "offer_subcategoryid": {"type": "string", "feature_latent_dim": 16},
         "item_names": {"type": "text", "feature_latent_dim": 16},
-        "item_rayons": {
-            "type": "text",
-            "feature_latent_dim": 16,
-        },
-        "item_author": {
-            "type": "text",
-            "feature_latent_dim": 16,
-        },
-        "item_performer": {
-            "type": "text",
-            "feature_latent_dim": 16,
-        },
+        "item_rayons": {"type": "text", "feature_latent_dim": 16},
+        "item_author": {"type": "text", "feature_latent_dim": 16},
+        "item_performer": {"type": "text", "feature_latent_dim": 16},
         "item_mean_stock_price": {"type": "int", "feature_latent_dim": 8},
         "item_booking_cnt": {"type": "int", "feature_latent_dim": 8},
         "item_favourite_cnt": {"type": "int", "feature_latent_dim": 8},
@@ -97,8 +85,8 @@ def train(
     user_columns = list(user_layer_infos.keys())
     item_columns = list(item_layer_infos.keys())
 
-    user_data = train_data[user_columns].drop_duplicates()
-    item_data = train_data[item_columns].drop_duplicates()
+    user_data = train_data[user_columns].drop_duplicates(subset=["user_id"])
+    item_data = train_data[item_columns].drop_duplicates(subset=["item_id"])
 
     # Create tf datasets
     train_dataset = load_triplets_dataset(
@@ -134,9 +122,9 @@ def train(
         )
 
         two_tower_model = TwoTowersModel(
-            user_data=train_data[user_columns].drop_duplicates(),
+            user_data=user_data,
             user_layer_infos=user_layer_infos,
-            item_data=train_data[item_columns].drop_duplicates(),
+            item_data=item_data,
             item_layer_infos=item_layer_infos,
             embedding_size=embedding_size,
         )
@@ -168,15 +156,15 @@ def train(
             ],
         )
 
-        logger.info("Building and saving the MatchModelV2")
+        logger.info("Building and saving the TwoTowersMatchModel")
 
         user_embeddings = two_tower_model.user_model([user_data.values])
         item_embeddings = two_tower_model.item_model([item_data.values])
 
         match_model = TwoTowersMatchModel(
-            user_ids=user_data["user_id"].drop_duplicates(),
+            user_ids=user_data["user_id"].unique(),
             user_embeddings=user_embeddings,
-            item_ids=item_data["item_id"].drop_duplicates(),
+            item_ids=item_data["item_id"].unique(),
             item_embeddings=item_embeddings,
             embedding_size=embedding_size,
         )
@@ -188,7 +176,7 @@ def train(
         pca_representations_path = export_path + "pca_plots/"
         save_pca_representation(
             loaded_model=match_model,
-            item_data=two_tower_model.item_model.item_data,
+            item_data=item_data,
             figures_folder=pca_representations_path,
         )
         mlflow.log_artifacts(export_path + "pca_plots", "pca_plots")

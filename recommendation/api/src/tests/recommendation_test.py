@@ -8,6 +8,7 @@ from pcreco.models.reco.playlist_params import PlaylistParamsIn
 
 
 class RecommendationTest:
+
     # test_recommendation_algo
     @pytest.mark.parametrize(
         ["user_id", "geoloc", "use_case"],
@@ -56,6 +57,7 @@ class RecommendationTest:
                 for i, recommendation in enumerate(recommendable_offers)
             ]
             user_recommendations = scoring.get_scoring()
+
             assert input_reco.has_conditions == True
             assert (
                 len(user_recommendations) > 0
@@ -177,12 +179,25 @@ class RecommendationTest:
                 {**recommendation, "score": mock_predictions[i]}
                 for i, recommendation in enumerate(recommendable_offers)
             ]
-            assert len(recommendable_offers) > 0, f"{use_case}: playlist is not empty"
-            assert input_reco.has_conditions == True
 
-            assert set(recommendation_sgn) == set(
-                categories
-            ), f"{use_case}: recommended categories are expected"
+            if latitude is not None and longitude is not None:
+
+                assert (
+                    len(recommendable_offers) > 0
+                ), f"{use_case}: playlist should not be empty"
+                assert set(recommendation_sgn) == set(
+                    categories
+                ), f"{use_case}: recommended categories are expected"
+            elif input_reco.is_event == True:
+                assert (
+                    len(recommendable_offers) == 0
+                ), f"{use_case}: playlist should be empty"
+            else:
+                assert (
+                    len(recommendable_offers) > 0
+                ), f"{use_case}: playlist should not be empty"
+
+            assert input_reco.has_conditions == True
 
     # test_recommendation_playlist_cold_start
     @pytest.mark.parametrize(
@@ -194,6 +209,13 @@ class RecommendationTest:
                 ["CINEMA"],
                 True,
                 "18_nogeoloc_CINEMA",
+            ),
+            (
+                "118",
+                {"longitude": None, "latitude": None},
+                None,
+                True,
+                "18_nogeoloc_ALL",
             ),
             (
                 "118",
@@ -249,13 +271,27 @@ class RecommendationTest:
             recommendation_sgn = [
                 reco["search_group_name"] for reco in recommended_offers
             ]
-            assert len(recommended_offers) > 0, f"{use_case}: playlist is not empty"
+
+            if latitude is not None and longitude is not None:
+
+                assert (
+                    len(recommended_offers) > 0
+                ), f"{use_case}: playlist should not be empty"
+                assert set(recommendation_sgn) == set(
+                    categories
+                ), f"{use_case}: recommended categories are expected"
+            elif input_reco.is_event == True:
+                assert (
+                    len(recommended_offers) == 0
+                ), f"{use_case}: (elif) playlist should be empty"
+            else:
+                assert (
+                    len(recommended_offers) > 0
+                ), f"{use_case}: (end) playlist should not be empty"
+
             assert (
                 input_reco.has_conditions == True
             ), f"{input_reco.json} should contain params"
-            assert set(recommendation_sgn) == set(
-                categories
-            ), f"{use_case}: recommended categories are expected"
 
     @pytest.mark.parametrize(
         ["user_id", "geoloc", "subcategories", "use_case"],
@@ -302,10 +338,23 @@ class RecommendationTest:
             recommended_offers = scoring.scoring.get_scored_offers()
             recommendation_sgn = [reco["subcategory_id"] for reco in recommended_offers]
 
-            assert len(recommended_offers) > 0, f"{use_case}: playlist is not empty"
+            if latitude is not None and longitude is not None:
+
+                assert (
+                    len(recommended_offers) > 0
+                ), f"{use_case}: playlist should not be empty"
+                assert set(recommendation_sgn) == set(
+                    subcategories
+                ), f"{use_case}: recommended subcategories are expected"
+            elif input_reco.is_event == True:
+                assert (
+                    len(recommended_offers) == 0
+                ), f"{use_case}: playlist should be empty"
+            else:
+                assert (
+                    len(recommended_offers) > 0
+                ), f"{use_case}: playlist should not be empty"
+
             assert (
                 input_reco.has_conditions == True
             ), f"{input_reco.json} should contain params"
-            assert set(recommendation_sgn) == set(
-                subcategories
-            ), f"{use_case}: recommended categories are expected"

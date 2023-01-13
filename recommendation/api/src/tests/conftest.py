@@ -10,6 +10,7 @@ from typing import Any, Dict
 
 DATA_GCP_TEST_POSTGRES_PORT = os.getenv("DATA_GCP_TEST_POSTGRES_PORT")
 DB_NAME = os.getenv("DB_NAME", "db")
+DEFAULT_IRIS_ID = "45327"
 
 TEST_DATABASE_CONFIG = {
     "user": "postgres",
@@ -64,7 +65,14 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
                 "SPECTACLE",
                 "SPECTACLE",
             ],
-            "iris_id": ["11", "22", "33", "44", "55", "22"],
+            "iris_id": [
+                DEFAULT_IRIS_ID,
+                DEFAULT_IRIS_ID,
+                DEFAULT_IRIS_ID,
+                DEFAULT_IRIS_ID,
+                DEFAULT_IRIS_ID,
+                DEFAULT_IRIS_ID,
+            ],
             "venue_id": ["11", "22", "33", "44", "55", "22"],
             "venue_distance_to_iris": [11, 22, 33, 44, 55, 22],
             "venue_distance_to_iris_bucket": [

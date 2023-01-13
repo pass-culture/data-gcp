@@ -86,6 +86,8 @@ class PlaylistParamsTest:
             ({}, True),
             ({"isDigital": True}, True),
             ({"isDigital": False}, False),
+            ({"isEvent": True}, False),
+            ({"isEvent": True, "isDigital": True}, False),
         ],
     )
     def test_include_digital(self, input_params, include_digital):

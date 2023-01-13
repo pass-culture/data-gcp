@@ -147,6 +147,10 @@ with DAG(
             {"name": "demandeur_entreprise_raisonSociale", "type": "STRING"},
             {"name": "demandeur_entreprise_siretSiegeSocial", "type": "STRING"},
             {"name": "numero_identifiant_lieu", "type": "STRING"},
+            {"name": "statut", "type": "STRING"},
+            {"name": "typologie", "type": "STRING"},
+            {"name": "academie_instructeur", "type": "STRING"},
+            {"name": "academie_groupe_instructeur", "type": "STRING"},
         ],
         write_disposition="WRITE_APPEND",
     )

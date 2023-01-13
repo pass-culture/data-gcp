@@ -7,7 +7,7 @@ Api créée en suivant : https://cloud.google.com/run/docs/quickstarts/build-and
 
 
 ## Routes
-- Recommandation : /recommendation/<user_id>?\<token>
+- Recommandation : /playlist_recommendation/<user_id>?\<token>
   - token : dans le 1password
 
 - Route de check : /check

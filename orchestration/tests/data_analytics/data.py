@@ -816,7 +816,6 @@ ENRICHED_STOCK_DATA_EXPECTED = [
 # Enriched_user_data => user 1 is beneficiary and its department has to exist in region_department, has one used booking
 # on digital goods. This booking is corresponding to an offer, with an offered, stock and venue
 ENRICHED_USER_DATA_INPUT = {
-
     "user_beneficiary": [
         {
             "user_id": "1",

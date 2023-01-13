@@ -4,7 +4,7 @@ from sqlalchemy import text
 
 def get_cold_start_status(User) -> bool:
     bookings_count, clicks_count, favorites_count = _get_user_app_interaction(User)
-    user_cold_start_status = bookings_count < 2
+    user_cold_start_status = clicks_count < 10
     return user_cold_start_status
 
 

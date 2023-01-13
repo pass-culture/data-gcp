@@ -1,9 +1,13 @@
+from datetime import datetime
+
+import mlflow.tensorflow
 import pandas as pd
 import tensorflow as tf
-import mlflow.tensorflow
-from datetime import datetime
-from tools.v1.preprocess_tools import preprocess
+from loguru import logger
+
+from metrics import compute_metrics, get_actual_and_predicted
 from models.v1.match_model import MatchModel
+from tools.v1.preprocess_tools import preprocess
 from utils import (
     get_secret,
     connect_remote_mlflow,
@@ -19,13 +23,12 @@ from utils import (
     EVALUATION_USER_NUMBER,
     EXPERIMENT_NAME,
 )
-from metrics import compute_metrics, get_actual_and_predicted
 
 k_list = [RECOMMENDATION_NUMBER, NUMBER_OF_PRESELECTED_OFFERS]
 
 
 def evaluate(client_id, model, storage_path: str):
-
+    logger.info("Read Raw dataset")
     raw_data = pd.read_csv(f"{STORAGE_PATH}/raw_data.csv")
     raw_data = preprocess(raw_data)
 
@@ -60,9 +63,12 @@ def evaluate(client_id, model, storage_path: str):
         },
         "model": model,
     }
+
+    logger.info("Get predictions")
     data_model_dict_w_actual_and_predicted = get_actual_and_predicted(data_model_dict)
     metrics = {}
     for k in k_list:
+        logger.info(f"Computing metrics for k={k}")
         data_model_dict_w_metrics_at_k = compute_metrics(
             data_model_dict_w_actual_and_predicted, k
         )
@@ -72,7 +78,6 @@ def evaluate(client_id, model, storage_path: str):
 
         # Here we track metrics relate to pcreco output
         if k == RECOMMENDATION_NUMBER:
-
             metrics[f"recall_at_{k}_panachage"] = data_model_dict_w_metrics_at_k[
                 "metrics"
             ]["mark_panachage"]
@@ -110,6 +115,7 @@ def evaluate(client_id, model, storage_path: str):
 
 
 def run(experiment_name: str, model_name: str):
+    logger.info("-------EVALUATE START------- ")
     client_id = get_secret("mlflow_client_id")
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
     experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id

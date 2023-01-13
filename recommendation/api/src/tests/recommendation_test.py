@@ -122,7 +122,7 @@ class RecommendationTest:
                 "118",
                 {"longitude": 2.331289, "latitude": 48.830719},
                 ["CINEMA"],
-                True,
+                False,
                 "18_geoloc_CINEMA",
             ),
             (
@@ -136,7 +136,7 @@ class RecommendationTest:
                 "118",
                 {"longitude": 2.331289, "latitude": 48.830719},
                 ["SPECTACLE"],
-                True,
+                False,
                 "18_geoloc_SPECTACLE",
             ),
         ],

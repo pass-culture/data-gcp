@@ -816,15 +816,12 @@ ENRICHED_STOCK_DATA_EXPECTED = [
 # Enriched_user_data => user 1 is beneficiary and its department has to exist in region_department, has one used booking
 # on digital goods. This booking is corresponding to an offer, with an offered, stock and venue
 ENRICHED_USER_DATA_INPUT = {
-    "applicative_database_user": [
-        {
-            "user_id": "1",
-            "user_has_enabled_marketing_email": False,
-        }
-    ],
+
     "user_beneficiary": [
         {
             "user_id": "1",
+            "user_has_enabled_marketing_email": False,
+            "user_humanized_id": "AE",
             "user_department_code": "93",
             "user_postal_code": "93000",
             "user_activity": "Inactif (ni en emploi ni au chômage), En incapacité de travailler",

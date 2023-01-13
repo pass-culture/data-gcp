@@ -1,16 +1,4 @@
-{{ create_humanize_id_function() }} 
-
-WITH user_humanized_id AS (
-    SELECT
-        user_id,
-        humanize_id(user_id) AS humanized_id,
-        user_has_enabled_marketing_email
-    FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_user
-    WHERE
-        user_id is not NULL
-),
-activation_dates AS (
+WITH activation_dates AS (
     WITH ranked_bookings AS (
         SELECT
             booking.user_id,
@@ -501,7 +489,7 @@ SELECT
     last_deposit.deposit_theoretical_amount_spent_in_digital_goods AS last_deposit_theoretical_amount_spent_in_digital_goods,
     last_deposit.deposit_actual_amount_spent AS last_deposit_actual_amount_spent,
     user_last_deposit_amount - last_deposit.deposit_theoretical_amount_spent AS user_theoretical_remaining_credit,
-    user_humanized_id.humanized_id AS user_humanized_id,
+    user.user_humanized_id,
     last_booking_date.last_booking_date,
     region_department.region_name AS user_region_name,
     first_paid_booking_date.booking_creation_date_first,
@@ -541,7 +529,7 @@ SELECT
     END AS user_is_current_beneficiary,
     user.user_age,
     user.user_birth_date,
-    user_humanized_id.user_has_enabled_marketing_email,
+    user.user_has_enabled_marketing_email,
 FROM
     `{{ bigquery_clean_dataset }}`.user_beneficiary AS user
     LEFT JOIN activation_dates ON user.user_id = activation_dates.user_id
@@ -557,7 +545,6 @@ FROM
     LEFT JOIN theoretical_amount_spent_in_physical_goods ON user.user_id = theoretical_amount_spent_in_physical_goods.user_id
     LEFT JOIN theoretical_amount_spent_in_outings ON user.user_id = theoretical_amount_spent_in_outings.user_id
     LEFT JOIN last_booking_date ON last_booking_date.user_id = user.user_id
-    LEFT JOIN user_humanized_id AS user_humanized_id ON user_humanized_id.user_id = user.user_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.region_department ON user.user_department_code = region_department.num_dep
     LEFT JOIN first_paid_booking_date ON user.user_id = first_paid_booking_date.user_id
     LEFT JOIN first_booking_type ON user.user_id = first_booking_type.user_id

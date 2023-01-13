@@ -22,7 +22,7 @@ FUNCTION_NAME = f"adage_import_{ENV_SHORT_NAME}"
 SIREN_FILENAME = "adage_data.csv"
 
 default_dag_args = {
-    "start_date": datetime.datetime(2022, 2, 7),
+    "start_date": datetime.datetime(2020, 12, 1),
     "on_failure_callback": task_fail_slack_alert,
     "retries": 1,
     "project_id": GCP_PROJECT_ID,
@@ -35,7 +35,7 @@ dag = DAG(
     description="Import Adage from API",
     on_failure_callback=None,
     # Cannot Schedule before 5AM UTC+2 as data from API is not available.
-    schedule_interval="0 3 * * *",
+    schedule_interval="0 1 * * *",
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,
@@ -72,9 +72,10 @@ for table, job_params in analytics_tables.items():
     table_jobs[table] = {
         "operator": task,
         "depends": job_params.get("depends", []),
+        "dag_depends": job_params.get("dag_depends", []),
     }
 
-table_jobs = depends_loop(table_jobs, start)
+table_jobs = depends_loop(table_jobs, start, dag=dag)
 end = DummyOperator(task_id="end", dag=dag)
 
 getting_service_account_token >> adage_to_bq >> start

@@ -31,7 +31,7 @@ from dependencies.import_dms_subscriptions import parse_api_result
 DMS_FUNCTION_NAME = "dms_" + ENV_SHORT_NAME
 
 default_args = {
-    "start_date": datetime(2021, 8, 29),
+    "start_date": datetime(2020, 12, 1),
     "on_failure_callback": task_fail_slack_alert,
     "retries": 2,
     "retry_delay": timedelta(minutes=5),

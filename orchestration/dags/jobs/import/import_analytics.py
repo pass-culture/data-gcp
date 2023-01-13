@@ -5,13 +5,17 @@ from airflow.providers.google.cloud.operators.bigquery import (
 )
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.utils.task_group import TaskGroup
+from airflow.sensors.external_task import ExternalTaskSensor
 
 from common import macros
 from common.utils import depends_loop, one_line_query
+from common.config import FAILED_STATES, ALLOWED_STATES
+
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryInsertJobOperator,
+)
+from airflow.models import DagRun
 from common.operators.biquery import bigquery_job_task
-
-
-from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 from dependencies.import_analytics.import_analytics import export_tables
 from dependencies.import_analytics.import_historical import (
     historical_clean_applicative_database,
@@ -45,9 +49,8 @@ raw_tables = get_tables_config_dict(
     PATH=DAG_FOLDER + "/" + RAW_SQL_PATH, BQ_DESTINATION_DATASET=BIGQUERY_RAW_DATASET
 )
 
-
 default_dag_args = {
-    "start_date": datetime.datetime(2020, 12, 21),
+    "start_date": datetime.datetime(2020, 12, 1),
     "retries": 1,
     "on_failure_callback": analytics_fail_slack_alert,
     "retry_delay": datetime.timedelta(minutes=5),
@@ -58,7 +61,7 @@ dag = DAG(
     "import_analytics_v7",
     default_args=default_dag_args,
     description="Import tables from CloudSQL and enrich data for create dashboards with Metabase",
-    schedule_interval="00 01 * * *",
+    schedule_interval="0 1 * * *",
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=240),
     user_defined_macros=macros.default,
@@ -209,9 +212,13 @@ for table, job_params in export_tables.items():
     analytics_table_jobs[table] = {
         "operator": task,
         "depends": job_params.get("depends", []),
+        "dag_depends": job_params.get("dag_depends", []),  # liste de dag_id
     }
 
-analytics_table_tasks = depends_loop(analytics_table_jobs, start_analytics_table_tasks)
+
+analytics_table_tasks = depends_loop(
+    analytics_table_jobs, start_analytics_table_tasks, dag
+)
 end_analytics_table_tasks = DummyOperator(task_id="end_analytics_table_tasks", dag=dag)
 
 end = DummyOperator(task_id="end", dag=dag)

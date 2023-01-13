@@ -23,7 +23,7 @@ FUNCTION_NAME = f"typeform_adage_reference_request_{ENV_SHORT_NAME}"
 
 
 default_dag_args = {
-    "start_date": datetime.datetime(2022, 2, 7),
+    "start_date": datetime.datetime(2020, 12, 1),
     "on_failure_callback": task_fail_slack_alert,
     "retries": 1,
     "project_id": GCP_PROJECT_ID,
@@ -35,7 +35,7 @@ dag = DAG(
     default_args=default_dag_args,
     description="Import Typeform Adage Reference Request from API",
     on_failure_callback=None,
-    schedule_interval="0 2 * * *",
+    schedule_interval="0 1 * * *",
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
 )

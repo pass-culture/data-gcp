@@ -109,6 +109,7 @@ analytics_tables = {
             "offer_extracted_data",
             "offer_item_ids",
         ],
+        # "dag_depends": ["link_offers"]
     },
     "enriched_offerer_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_offerer_data.sql",
@@ -127,6 +128,11 @@ analytics_tables = {
             "enriched_offerer_data",
             "enriched_venue_data",
         ],  # add adage; dms_pro (?)
+        "dag_depends": [
+            "import_typeform_adage_reference_request",
+            "import_adage_v1",
+            "import_dms_subscriptions",
+        ],
     },
     "enriched_user_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_user_data.sql",
@@ -249,6 +255,7 @@ analytics_tables = {
         "sql": f"{ANALYTICS_SQL_PATH}/user_iris.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "user_iris",
+        "dag_depends": ["export_cloudsql_tables_to_bigquery_v1"],
     },
     "diversification_raw": {
         "sql": f"{ANALYTICS_SQL_PATH}/diversification_raw.sql",
@@ -258,6 +265,7 @@ analytics_tables = {
             "enriched_booking_data",
             "enriched_offer_data",
         ],
+        "dag_depends": ["import_qpi_answers_v1"],
     },
     "diversification_booking": {
         "sql": f"{ANALYTICS_SQL_PATH}/diversification_booking.sql",

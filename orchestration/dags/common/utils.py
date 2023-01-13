@@ -71,16 +71,17 @@ def depends_loop(jobs: dict, default_upstream_operator, dag):
 
     dependencies = table_dependencies + dag_dependencies
 
-    for _, jobs_def in jobs.items():
+    for table, jobs_def in jobs.items():
 
         operator = jobs_def["operator"]
         default_downstream_operators.append(operator)
         operator.set_upstream(default_upstream_operator)
 
+        # keep dependencies of the current table only
         for dependency in [
             dependency_task
             for dependency_task in dependencies
-            if dependency_task["task_id"] == _
+            if dependency_task["task_id"] == table
         ]:
 
             if dependency["dependency_type"] == "dag":

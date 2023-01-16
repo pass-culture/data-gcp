@@ -22,8 +22,8 @@ from common.config import (
     MLFLOW_BUCKET_NAME,
     SLACK_CONN_ID,
     SLACK_CONN_PASSWORD,
-    BIGQUERY_RAW_DATASET,
     MLFLOW_URL,
+    BIGQUERY_TMP_DATASET,
 )
 
 from dependencies.ml.utils import create_algo_training_slack_block

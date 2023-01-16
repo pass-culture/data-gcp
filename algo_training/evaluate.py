@@ -27,18 +27,24 @@ from utils import (
 k_list = [RECOMMENDATION_NUMBER, NUMBER_OF_PRESELECTED_OFFERS]
 
 
-def evaluate(client_id, model, storage_path: str):
+def evaluate(
+    client_id,
+    model,
+    storage_path: str,
+    training_dataset_name: str = "positive_data_train",
+    test_dataset_name: str = "positive_data_test",
+):
     logger.info("Read Raw dataset")
     raw_data = pd.read_csv(f"{STORAGE_PATH}/raw_data.csv")
     raw_data = preprocess(raw_data)
 
-    training_item_ids = pd.read_csv(f"{storage_path}/positive_data_train.csv")[
+    training_item_ids = pd.read_csv(f"{storage_path}/{training_dataset_name}.csv")[
         "item_id"
     ].unique()
 
     positive_data_test = (
         pd.read_csv(
-            f"{storage_path}/positive_data_test.csv",
+            f"{storage_path}/{test_dataset_name}.csv",
             dtype={
                 "user_id": str,
                 "item_id": str,

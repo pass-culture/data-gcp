@@ -62,16 +62,16 @@ def get_types(gcp_project_id, env_short_name):
     export_types = []
     for k, types_list in types.items():
         for _t in types_list:
-            code = str(_t["code"])
-            label = str(_t["label"])
-            for _c in _t["children"]:
+            code = _t.code
+            label = _t.label
+            for _c in _t.children:
                 export_types.append(
                     {
                         "domain": k,
                         "type": code,
                         "label": label,
-                        "sub_type": _c["code"],
-                        "sub_label": _c["label"],
+                        "sub_type": _c.code,
+                        "sub_label": _c.label,
                     }
                 )
     df = pd.DataFrame(export_types)

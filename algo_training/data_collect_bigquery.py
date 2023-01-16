@@ -10,7 +10,7 @@ def main(
         f"tmp_{ENV_SHORT_NAME}",
         help="BigQuery dataset in which the training table is located",
     ),
-    date: str = typer.Option(None, help="Date of the run of the pipeline"),
+    date: str = typer.Option(..., help="Date of the run of the pipeline"),
     split: str = typer.Option(
         "training",
         help="BigQuery table containing the data we want to load",

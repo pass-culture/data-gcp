@@ -1,0 +1,11 @@
+fsspec==2022.11.0
+gcsfs==2022.11.0
+google-cloud-secret-manager==2.4.0
+keras==2.11.0
+loguru==0.6.0
+mlflow==2.1.1
+protobuf==3.19.6
+recmetrics==0.1.5
+# TFRS installs tensorflow==2.11.0
+tensorflow-recommenders==0.7.2
+typer==0.7.0

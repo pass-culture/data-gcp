@@ -118,7 +118,7 @@ with DAG(
         task_id="install_dependencies",
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
-        command="pip install -r requirements.txt --user",
+        command="pip install --upgrade pip && pip install -r requirements.txt --user",
         dag=dag,
     )
 

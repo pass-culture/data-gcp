@@ -9,6 +9,7 @@ from airflow.providers.http.operators.http import SimpleHttpOperator
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
     GCSToBigQueryOperator,
 )
+from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 from airflow.operators.python import BranchPythonOperator, PythonOperator
 
 from google.auth.transport.requests import Request
@@ -24,7 +25,12 @@ from common.config import (
 )
 from common.alerts import task_fail_slack_alert
 from common.utils import getting_service_account_token
-from dependencies.import_addresses import USER_LOCATIONS_SCHEMA
+from common.operators.biquery import bigquery_job_task
+from dependencies.addresses.import_addresses import (
+    USER_LOCATIONS_SCHEMA,
+    CLEAN_TABLES,
+    ANALYTICS_TABLES,
+)
 
 
 FUNCTION_NAME = f"addresses_import_{ENV_SHORT_NAME}"
@@ -61,9 +67,7 @@ with DAG(
     getting_service_account_token = PythonOperator(
         task_id="getting_service_account_token",
         python_callable=getting_service_account_token,
-        op_kwargs={
-            "function_name": FUNCTION_NAME,
-        },
+        op_kwargs={"function_name": FUNCTION_NAME},
     )
 
     addresses_to_gcs = SimpleHttpOperator(
@@ -102,37 +106,27 @@ with DAG(
         field_delimiter="|",
     )
 
-    to_clean = BigQueryExecuteQueryOperator(
-        task_id="copy_to_clean",
-        sql=f"""
-            SELECT * EXCEPT(id, irisCode, centroid, shape), iris_france.id AS iris_id
-            FROM {BIGQUERY_RAW_DATASET}.{USER_LOCATIONS_TABLE}
-            LEFT JOIN `{BIGQUERY_CLEAN_DATASET}.iris_france` iris_france
-            ON 1 = 1
-            WHERE ST_CONTAINS(shape, ST_GEOGPOINT(longitude, latitude))
-        """,
-        write_disposition="WRITE_TRUNCATE",
-        use_legacy_sql=False,
-        destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.{USER_LOCATIONS_TABLE}",
-        dag=dag,
-    )
+    clean_tasks = []
 
-    to_analytics = BigQueryExecuteQueryOperator(
-        task_id="copy_to_analytics",
-        sql=f"""
-            SELECT * EXCEPT (user_address) 
-            FROM {BIGQUERY_CLEAN_DATASET}.{USER_LOCATIONS_TABLE}
-            QUALIFY ROW_NUMBER() over (PARTITION BY user_id ORDER BY date_updated DESC) = 1
-            
-        """,
-        write_disposition="WRITE_TRUNCATE",
-        use_legacy_sql=False,
-        destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.{USER_LOCATIONS_TABLE}",
-        dag=dag,
-    )
+    for table, params in CLEAN_TABLES.items():
+
+        to_clean = bigquery_job_task(
+            dag=dag, table=f"copy_to_clean_{table}", job_params=params
+        )
+        clean_tasks.append(to_clean)
+
+    end_clean = DummyOperator(task_id="end_clean")
+
+    analytics_tasks = []
+    for table, params in ANALYTICS_TABLES.items():
+
+        to_analytics = bigquery_job_task(
+            dag=dag, table=f"copy_to_analytics_{table}", job_params=params
+        )
+        analytics_tasks.append(to_analytics)
 
     end = DummyOperator(task_id="end", trigger_rule="one_success")
 
     start >> getting_service_account_token >> addresses_to_gcs >> branch_op
-    branch_op >> import_addresses_to_bigquery >> to_clean >> to_analytics >> end
+    branch_op >> import_addresses_to_bigquery >> clean_tasks >> end_clean >> analytics_tasks >> end
     branch_op >> end

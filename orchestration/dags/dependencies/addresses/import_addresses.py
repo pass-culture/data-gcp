@@ -16,3 +16,24 @@ USER_LOCATIONS_SCHEMA = [
     {"name": "zrr", "type": "STRING", "mode": "NULLABLE"},
     {"name": "date_updated", "type": "DATETIME", "mode": "NULLABLE"},
 ]
+
+SQL_CLEAN_PATH = f"dependencies/addresses/sql/clean"
+SQL_ANALYTICS_PATH = f"dependencies/addresses/sql/analytics"
+
+CLEAN_TABLES = {
+    "user_locations": {
+        "sql": f"{SQL_CLEAN_PATH}/user_locations.sql",
+        "write_disposition": "WRITE_TRUNCATE",
+        "destination_dataset": "{{ bigquery_clean_dataset }}",
+        "destination_table": "user_locations",
+    }
+}
+
+ANALYTICS_TABLES = {
+    "user_locations": {
+        "sql": f"{SQL_ANALYTICS_PATH}/user_locations.sql",
+        "write_disposition": "WRITE_TRUNCATE",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "user_locations",
+    }
+}

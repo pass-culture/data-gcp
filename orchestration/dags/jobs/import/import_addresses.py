@@ -32,7 +32,6 @@ from dependencies.addresses.import_addresses import (
     ANALYTICS_TABLES,
 )
 
-
 FUNCTION_NAME = f"addresses_import_{ENV_SHORT_NAME}"
 USER_LOCATIONS_TABLE = "user_locations"
 
@@ -128,5 +127,12 @@ with DAG(
     end = DummyOperator(task_id="end", trigger_rule="one_success")
 
     start >> getting_service_account_token >> addresses_to_gcs >> branch_op
-    branch_op >> import_addresses_to_bigquery >> clean_tasks >> end_clean >> analytics_tasks >> end
+    (
+        branch_op
+        >> import_addresses_to_bigquery
+        >> clean_tasks
+        >> end_clean
+        >> analytics_tasks
+        >> end
+    )
     branch_op >> end

@@ -146,7 +146,7 @@ with DAG(
             base_dir=dag_config["BASE_DIR"],
             environment=dag_config,
             command=f"python data_collect.py --dataset {BIGQUERY_TMP_DATASET} "
-            f"--table-name {DATE}_recommendation_{split}_data"
+            f"--table-name {DATE}_recommendation_{split}_data "
             f"--output-name recommendation_{split}_data",
             dag=dag,
         )
@@ -161,7 +161,7 @@ with DAG(
         f"--experiment-name {dag_config['EXPERIMENT_NAME']} "
         "--batch-size {{ params.batch_size }} "
         "--embedding-size {{ params.embedding_size }} "
-        "--seed {{ ds_nodash }}"
+        "--seed {{ ds_nodash }} "
         f"--dataset {BIGQUERY_TMP_DATASET}",
         dag=dag,
     )
@@ -172,7 +172,7 @@ with DAG(
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
         command="python evaluate.py "
-        "--training_dataset_name recommendation_training_data"
+        "--training_dataset_name recommendation_training_data "
         "--test_dataset_name recommendation_test_data",
         dag=dag,
     )

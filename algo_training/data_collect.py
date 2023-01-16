@@ -23,7 +23,7 @@ def main(
         help="Number of days to filter when querying the data. If set to None, no filter is applied",
     ),
     limit_filter: int = typer.Option(
-        -1,
+        None,
         help="Max number of rows",
     ),
     output_name: str = typer.Option(

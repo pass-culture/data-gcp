@@ -1,8 +1,5 @@
 import datetime
 from airflow import DAG
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryInsertJobOperator,
-)
 
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.http.operators.http import SimpleHttpOperator
@@ -42,9 +39,7 @@ dag = DAG(
 getting_contentful_service_account_token = PythonOperator(
     task_id="getting_contentful_service_account_token",
     python_callable=getting_service_account_token,
-    op_kwargs={
-        "function_name": f"contentful_{ENV_SHORT_NAME}",
-    },
+    op_kwargs={"function_name": f"contentful_{ENV_SHORT_NAME}"},
     dag=dag,
 )
 

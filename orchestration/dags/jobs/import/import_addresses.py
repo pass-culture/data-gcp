@@ -1,15 +1,11 @@
 from datetime import datetime, timedelta
 
 from airflow import DAG
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryExecuteQueryOperator,
-)
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.http.operators.http import SimpleHttpOperator
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
     GCSToBigQueryOperator,
 )
-from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 from airflow.operators.python import BranchPythonOperator, PythonOperator
 
 from google.auth.transport.requests import Request

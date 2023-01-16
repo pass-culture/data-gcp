@@ -5,9 +5,6 @@ from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.http.operators.http import SimpleHttpOperator
 from airflow.operators.python import PythonOperator
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryExecuteQueryOperator,
-)
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
     GCSToBigQueryOperator,
 )
@@ -16,6 +13,7 @@ from google.auth.transport.requests import Request
 from google.oauth2 import id_token
 
 from common.alerts import task_fail_slack_alert
+from common.operators.biquery import bigquery_job_task
 
 from common.config import (
     DATA_GCS_BUCKET_NAME,
@@ -26,7 +24,10 @@ from common.config import (
 )
 
 from common.utils import getting_service_account_token
-from dependencies.import_dms_subscriptions import parse_api_result
+from dependencies.dms_subscriptions.import_dms_subscriptions import (
+    parse_api_result,
+    ANALYTICS_TABLES,
+)
 
 DMS_FUNCTION_NAME = "dms_" + ENV_SHORT_NAME
 
@@ -52,9 +53,7 @@ with DAG(
     getting_service_account_token = PythonOperator(
         task_id="getting_service_account_token",
         python_callable=getting_service_account_token,
-        op_kwargs={
-            "function_name": f"{DMS_FUNCTION_NAME}",
-        },
+        op_kwargs={"function_name": f"{DMS_FUNCTION_NAME}"},
     )
 
     dms_to_gcs = SimpleHttpOperator(
@@ -155,37 +154,10 @@ with DAG(
         write_disposition="WRITE_APPEND",
     )
 
-    def deduplicate_query(target):
-        return f"""
-        SELECT * except(row_number)
-        FROM (
-            SELECT
-            *,
-            ROW_NUMBER() OVER (PARTITION BY application_number
-                                            ORDER BY last_update_at DESC
-                                        ) as row_number
-            FROM `{BIGQUERY_CLEAN_DATASET}.dms_{target}`
-            )
-        WHERE row_number=1
-        """
-
-    copy_dms_jeunes_to_analytics = BigQueryExecuteQueryOperator(
-        task_id="copy_dms_jeunes_to_analytics",
-        sql=deduplicate_query("jeunes"),
-        destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.dms_jeunes",
-        write_disposition="WRITE_TRUNCATE",
-        use_legacy_sql=False,
-        dag=dag,
-    )
-
-    copy_dms_pro_to_analytics = BigQueryExecuteQueryOperator(
-        task_id="copy_dms_pro_to_analytics",
-        sql=deduplicate_query("pro"),
-        destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.dms_pro",
-        write_disposition="WRITE_TRUNCATE",
-        use_legacy_sql=False,
-        dag=dag,
-    )
+    analytics_tasks = []
+    for table, params in ANALYTICS_TABLES.items():
+        task = bigquery_job_task(table=table, dag=dag, job_params=params)
+        analytics_tasks.append(task)
 
     end = DummyOperator(task_id="end")
 
@@ -197,7 +169,5 @@ with DAG(
     >> [parse_api_result_jeunes, parse_api_result_pro]
 )
 
-parse_api_result_jeunes >> import_dms_jeunes_to_bq >> copy_dms_jeunes_to_analytics
-parse_api_result_pro >> import_dms_pro_to_bq >> copy_dms_pro_to_analytics
-
-[copy_dms_jeunes_to_analytics, copy_dms_pro_to_analytics] >> end
+parse_api_result_jeunes >> import_dms_jeunes_to_bq >> analytics_tasks[0] >> end
+parse_api_result_pro >> import_dms_pro_to_bq >> analytics_tasks[1] >> end

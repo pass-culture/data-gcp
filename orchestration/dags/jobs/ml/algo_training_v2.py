@@ -113,7 +113,7 @@ with DAG(
             ).as_posix(),
             write_disposition="WRITE_TRUNCATE",
             use_legacy_sql=False,
-            destination_dataset_table=f"{BIGQUERY_RAW_DATASET}.recommendation_{dataset}_data",
+            destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DATE}_recommendation_{dataset}_data",
             dag=dag,
         )
         import_recommendation_data[dataset] = task
@@ -139,6 +139,18 @@ with DAG(
         dag=dag,
     )
 
+    store_recommendation_data = {}
+    for dataset in ["training", "validation", "test"]:
+        task = SSHGCEOperator(
+            task_id=f"store_recommendation_{dataset}",
+            instance_name="{{ params.instance_name }}",
+            base_dir=dag_config["BASE_DIR"],
+            environment=dag_config,
+            command=f"python data_collect_bigquery.py --dataset {BIGQUERY_TMP_DATASET} --date {DATE} --split {dataset}",
+            dag=dag,
+        )
+        store_recommendation_data[dataset] = task
+
     training = SSHGCEOperator(
         task_id="training",
         instance_name="{{ params.instance_name }}",
@@ -157,7 +169,9 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
-        command=f"python evaluate_v2.py --experiment-name {dag_config['EXPERIMENT_NAME']}",
+        command="python evaluate.py "
+        "--training_dataset_name recommendation_training_data"
+        "--test_dataset_name recommendation_test_data",
         dag=dag,
     )
 
@@ -185,6 +199,9 @@ with DAG(
         >> gce_instance_start
         >> fetch_code
         >> install_dependencies
+        >> store_recommendation_data["training"]
+        >> store_recommendation_data["validation"]
+        >> store_recommendation_data["test"]
         >> training
         >> evaluate
         >> gce_instance_stop

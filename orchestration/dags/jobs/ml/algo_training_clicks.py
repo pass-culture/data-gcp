@@ -1,7 +1,6 @@
 from datetime import datetime
 from datetime import timedelta
 
-from airflow import DAG
 from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.google.cloud.operators.bigquery import (
@@ -9,6 +8,7 @@ from airflow.providers.google.cloud.operators.bigquery import (
 )
 from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
 
+from airflow import DAG
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import (
@@ -17,8 +17,8 @@ from common.config import (
     MLFLOW_BUCKET_NAME,
     SLACK_CONN_ID,
     SLACK_CONN_PASSWORD,
-    BIGQUERY_RAW_DATASET,
     MLFLOW_URL,
+    BIGQUERY_TMP_DATASET,
 )
 from common.operators.gce import (
     StartGCEOperator,
@@ -113,7 +113,7 @@ with DAG(
             ).as_posix(),
             write_disposition="WRITE_TRUNCATE",
             use_legacy_sql=False,
-            destination_dataset_table=f"{BIGQUERY_RAW_DATASET}.recommendation_{dataset}_data_clicks",
+            destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DATE}_recommendation_{dataset}_data_clicks",
             dag=dag,
         )
         import_recommendation_data[dataset] = task
@@ -139,6 +139,21 @@ with DAG(
         command="pip install -r requirements.txt --user",
         dag=dag,
     )
+
+    store_recommendation_data = {}
+    for split in ["training", "validation", "test"]:
+        task = SSHGCEOperator(
+            task_id=f"store_recommendation_{split}",
+            instance_name="{{ params.instance_name }}",
+            base_dir=dag_config["BASE_DIR"],
+            environment=dag_config,
+            command=f"python data_collect.py --dataset {BIGQUERY_TMP_DATASET} "
+            f"--table-name {DATE}_recommendation_{split}_data "
+            f"--output-name recommendation_{split}_data",
+            dag=dag,
+        )
+        store_recommendation_data[split] = task
+
     training = SSHGCEOperator(
         task_id="training",
         instance_name="{{ params.instance_name }}",
@@ -157,7 +172,9 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         export_config=dag_config,
-        command=f"python evaluate_v2.py --experiment-name {dag_config['EXPERIMENT_NAME']}",
+        command="python evaluate.py "
+        "--training_dataset_name recommendation_training_data_clicks "
+        "--test_dataset_name recommendation_test_data_clicks",
         dag=dag,
     )
 
@@ -185,6 +202,9 @@ with DAG(
         >> gce_instance_start
         >> fetch_code
         >> install_dependencies
+        >> store_recommendation_data["training"]
+        >> store_recommendation_data["validation"]
+        >> store_recommendation_data["test"]
         >> training
         >> evaluate
         >> gce_instance_stop

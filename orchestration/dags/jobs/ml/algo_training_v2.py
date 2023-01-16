@@ -1,19 +1,13 @@
 from datetime import datetime, timedelta
 
-from airflow import DAG
 from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
-from common.operators.gce import (
-    StartGCEOperator,
-    StopGCEOperator,
-    CloneRepositoryGCEOperator,
-    SSHGCEOperator,
-)
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryExecuteQueryOperator,
 )
 from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
 
+from airflow import DAG
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import (
@@ -25,7 +19,12 @@ from common.config import (
     MLFLOW_URL,
     BIGQUERY_TMP_DATASET,
 )
-
+from common.operators.gce import (
+    StartGCEOperator,
+    StopGCEOperator,
+    CloneRepositoryGCEOperator,
+    SSHGCEOperator,
+)
 from dependencies.ml.utils import create_algo_training_slack_block
 from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
 

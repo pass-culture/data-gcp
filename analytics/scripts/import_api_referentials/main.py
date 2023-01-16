@@ -43,8 +43,10 @@ def get_subcategories(gcp_project_id, env_short_name):
     for subcats in subcategories:
         export_subcat.append(subcats.__dict__)
     df = pd.DataFrame(export_subcat)
+    dtype_list = list(df.columns)
     for k, v in CATEGORIES_DTYPES.items():
-        df[k] = df[k].astype(v)
+        if k in dtype_list:
+            df[k] = df[k].astype(v)
     df.to_gbq(
         f"""analytics_{env_short_name}.subcategories""",
         project_id=gcp_project_id,
@@ -60,8 +62,8 @@ def get_types(gcp_project_id, env_short_name):
     export_types = []
     for k, types_list in types.items():
         for _t in types_list:
-            code = _t["code"]
-            label = _t["label"]
+            code = str(_t["code"])
+            label = str(_t["label"])
             for _c in _t["children"]:
                 export_types.append(
                     {
@@ -73,8 +75,10 @@ def get_types(gcp_project_id, env_short_name):
                     }
                 )
     df = pd.DataFrame(export_types)
+    dtype_list = list(df.columns)
     for k, v in TYPES_DTYPES.items():
-        df[k] = df[k].astype(v)
+        if k in dtype_list:
+            df[k] = df[k].astype(v)
     df.to_gbq(
         f"""analytics_{env_short_name}.offer_types""",
         project_id=gcp_project_id,

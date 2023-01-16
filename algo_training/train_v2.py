@@ -45,15 +45,19 @@ def train(
         None,
         help="Seed to fix randomness in pipeline",
     ),
+    dataset: str = typer.Option(
+        f"raw_{ENV_SHORT_NAME}",
+        help="BigQuery dataset in which the training and validation tables are located",
+    ),
 ):
     tf.random.set_seed(seed)
 
     # Load BigQuery data
     train_data = get_data(
-        dataset=f"raw_{ENV_SHORT_NAME}", table_name="recommendation_training_data"
+        dataset=dataset, table_name="recommendation_training_data"
     ).astype(dtype={"count": int})
     validation_data = get_data(
-        dataset=f"raw_{ENV_SHORT_NAME}", table_name="recommendation_validation_data"
+        dataset=dataset, table_name="recommendation_validation_data"
     ).astype(dtype={"count": int})
 
     training_user_ids = train_data["user_id"].unique()

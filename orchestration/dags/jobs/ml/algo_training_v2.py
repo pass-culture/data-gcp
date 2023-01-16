@@ -161,7 +161,8 @@ with DAG(
         f"--experiment-name {dag_config['EXPERIMENT_NAME']} "
         "--batch-size {{ params.batch_size }} "
         "--embedding-size {{ params.embedding_size }} "
-        "--seed {{ ds_nodash }}",
+        "--seed {{ ds_nodash }}"
+        f"--dataset {BIGQUERY_TMP_DATASET}",
         dag=dag,
     )
 

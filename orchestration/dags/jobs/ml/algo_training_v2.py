@@ -139,16 +139,16 @@ with DAG(
     )
 
     store_recommendation_data = {}
-    for dataset in ["training", "validation", "test"]:
+    for split in ["training", "validation", "test"]:
         task = SSHGCEOperator(
-            task_id=f"store_recommendation_{dataset}",
+            task_id=f"store_recommendation_{split}",
             instance_name="{{ params.instance_name }}",
             base_dir=dag_config["BASE_DIR"],
             environment=dag_config,
-            command=f"python data_collect_bigquery.py --dataset {BIGQUERY_TMP_DATASET} --date {DATE} --split {dataset}",
+            command=f"python data_collect_bigquery.py --dataset {BIGQUERY_TMP_DATASET} --date {DATE} --split {split}",
             dag=dag,
         )
-        store_recommendation_data[dataset] = task
+        store_recommendation_data[split] = task
 
     training = SSHGCEOperator(
         task_id="training",

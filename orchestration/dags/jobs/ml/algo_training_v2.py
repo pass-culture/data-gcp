@@ -145,7 +145,9 @@ with DAG(
             instance_name="{{ params.instance_name }}",
             base_dir=dag_config["BASE_DIR"],
             environment=dag_config,
-            command=f"python data_collect_bigquery.py --dataset {BIGQUERY_TMP_DATASET} --date {DATE} --split {split}",
+            command=f"python data_collect.py --dataset {BIGQUERY_TMP_DATASET} "
+            f"--table-name {DATE}_recommendation_{split}_data"
+            f"--output-name recommendation_{split}_data",
             dag=dag,
         )
         store_recommendation_data[split] = task

@@ -6,57 +6,67 @@ SQL_PATH = f"dependencies/metabase/sql"
 import_tables = {
     "core_session": {
         "sql": f"{SQL_PATH}/raw/core_session.sql",
-        "destination_dataset_table": "{{ bigquery_raw_dataset }}.metabase_core_session",
+        "destination_dataset": "{{ bigquery_raw_dataset }}",
+        "destination_table": "metabase_core_session",
     },
     "core_user": {
         "sql": f"{SQL_PATH}/raw/core_user.sql",
-        "destination_dataset_table": "{{ bigquery_raw_dataset }}.metabase_core_user",
+        "destination_dataset": "{{ bigquery_raw_dataset }}",
+        "destination_table": "metabase_core_user",
     },
     "login_history": {
         "sql": f"{SQL_PATH}/raw/login_history.sql",
-        "destination_dataset_table": "{{ bigquery_raw_dataset }}.metabase_login_history",
+        "destination_dataset": "{{ bigquery_raw_dataset }}",
+        "destination_table": "metabase_login_history",
     },
     "query_execution": {
         "sql": f"{SQL_PATH}/raw/query_execution.sql",
-        "destination_dataset_table": "{{ bigquery_raw_dataset }}.metabase_query_execution",
+        "destination_dataset": "{{ bigquery_raw_dataset }}",
+        "destination_table": "metabase_query_execution",
     },
     "query": {
         "sql": f"{SQL_PATH}/raw/query.sql",
-        "destination_dataset_table": "{{ bigquery_raw_dataset }}.metabase_query",
+        "destination_dataset": "{{ bigquery_raw_dataset }}",
+        "destination_table": "metabase_query",
     },
     "report_card": {
         "sql": f"{SQL_PATH}/raw/report_card.sql",
-        "destination_dataset_table": "{{ bigquery_raw_dataset }}.metabase_report_card",
+        "destination_dataset": "{{ bigquery_raw_dataset }}",
+        "destination_table": "metabase_report_card",
     },
     "report_dashboard": {
         "sql": f"{SQL_PATH}/raw/report_dashboard.sql",
-        "destination_dataset_table": "{{ bigquery_raw_dataset }}.metabase_report_dashboard",
+        "destination_dataset": "{{ bigquery_raw_dataset }}",
+        "destination_table": "metabase_report_dashboard",
     },
     "collections": {
         "sql": f"{SQL_PATH}/raw/collections.sql",
-        "destination_dataset_table": "{{ bigquery_raw_dataset }}.metabase_collections",
+        "destination_dataset": "{{ bigquery_raw_dataset }}",
+        "destination_table": "metabase_collections",
     },
 }
 
 analytics_tables = {
     "metabase_costs": {
         "sql": f"{SQL_PATH}/analytics/metabase_costs.sql",
-        "destination_dataset_table": "{{ bigquery_analytics_dataset }}.metabase_costs",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "metabase_costs",
     },
     "metabase_views": {
         "sql": f"{SQL_PATH}/analytics/metabase_views.sql",
-        "destination_dataset_table": "{{ bigquery_analytics_dataset }}.metabase_views",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "metabase_views",
     },
     "metabase_activity": {
         "sql": f"{SQL_PATH}/analytics/metabase_activity.sql",
-        "destination_dataset_table": "{{ bigquery_analytics_dataset }}.metabase_activity",
-        "depends": [
-            "ref_collections_archive",
-        ],
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "metabase_activity",
+        "depends": ["ref_collections_archive"],
     },
     "ref_collections_archive": {
         "sql": f"{SQL_PATH}/analytics/ref_collections_archive.sql",
-        "destination_dataset_table": "{{ bigquery_analytics_dataset }}.metabase_ref_collections_archive",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "metabase_ref_collections_archive",
     },
 }
 

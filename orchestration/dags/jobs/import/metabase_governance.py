@@ -3,10 +3,7 @@ from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python import PythonOperator
 from airflow.providers.http.operators.http import SimpleHttpOperator
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryExecuteQueryOperator,
-)
-
+from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 from common import macros
 from common.utils import depends_loop, getting_service_account_token
 from dependencies.metabase.import_metabase import (
@@ -22,6 +19,7 @@ from common.config import (
 )
 from common.config import GCP_PROJECT_ID, DAG_FOLDER
 from common.alerts import task_fail_slack_alert
+from common.operators.biquery import bigquery_job_task
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),
@@ -46,16 +44,23 @@ start = DummyOperator(task_id="start", dag=dag)
 
 import_tables_to_raw_tasks = []
 for name, params in import_tables.items():
-
-    task = BigQueryExecuteQueryOperator(
+    task = BigQueryInsertJobOperator(
         task_id=f"import_metabase_{name}_to_raw",
-        sql=from_external(
-            conn_id=METABASE_EXTERNAL_CONNECTION_ID,
-            params=params,
-        ),
-        write_disposition="WRITE_TRUNCATE",
-        use_legacy_sql=False,
-        destination_dataset_table=params["destination_dataset_table"],
+        configuration={
+            "query": {
+                "query": from_external(
+                    conn_id=METABASE_EXTERNAL_CONNECTION_ID, params=params
+                ),
+                "useLegacySql": False,
+                "destinationTable": {
+                    "projectId": GCP_PROJECT_ID,
+                    "datasetId": params["destination_dataset"],
+                    "tableId": params["destination_table"],
+                },
+                "writeDisposition": params.get("write_disposition", "WRITE_TRUNCATE"),
+            }
+        },
+        params=dict(params.get("params", {})),
         dag=dag,
     )
     import_tables_to_raw_tasks.append(task)
@@ -63,35 +68,21 @@ for name, params in import_tables.items():
 end_raw = DummyOperator(task_id="end_raw", dag=dag)
 
 
-# import_tables_to_analytics_tasks = []
 analytics_table_jobs = {}
 for name, params in analytics_tables.items():
-
-    task = BigQueryExecuteQueryOperator(
-        task_id=f"{name}",
-        sql=params["sql"],
-        write_disposition="WRITE_TRUNCATE",
-        use_legacy_sql=False,
-        destination_dataset_table=params["destination_dataset_table"],
-        dag=dag,
-    )
-
+    task = bigquery_job_task(dag, name, params)
     analytics_table_jobs[name] = {
         "operator": task,
         "depends": params.get("depends", []),
         "dag_depends": params.get("dag_depends", []),
     }
 
-    # import_tables_to_analytics_tasks.append(task)
-
 analytics_table_tasks = depends_loop(analytics_table_jobs, end_raw, dag=dag)
 
 service_account_token = PythonOperator(
     task_id="getting_metabase_archiving_service_account_token",
     python_callable=getting_service_account_token,
-    op_kwargs={
-        "function_name": f"metabase_archiving_{ENV_SHORT_NAME}",
-    },
+    op_kwargs={"function_name": f"metabase_archiving_{ENV_SHORT_NAME}"},
     dag=dag,
 )
 

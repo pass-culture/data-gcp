@@ -176,6 +176,7 @@ with DAG(
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
         command="python evaluate.py "
+        f"--experiment-name {dag_config['EXPERIMENT_NAME']} "
         "--input-type clicks "
         "--training-dataset-name recommendation_training_data_clicks "
         "--test-dataset-name recommendation_test_data_clicks",

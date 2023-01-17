@@ -20,7 +20,6 @@ from common.config import (
     BIGQUERY_ANALYTICS_DATASET,
     DATA_GCS_BUCKET_NAME,
     ENV_SHORT_NAME,
-    GCP_PROJECT_ID,
 )
 from common.alerts import task_fail_slack_alert
 from common.utils import getting_service_account_token

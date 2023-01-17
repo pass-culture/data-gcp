@@ -174,6 +174,7 @@ with DAG(
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
         command="python evaluate.py "
+        "--input-type bookings "
         "--training-dataset-name recommendation_training_data "
         "--test-dataset-name recommendation_test_data",
         dag=dag,

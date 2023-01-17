@@ -7,7 +7,7 @@ from loguru import logger
 
 from metrics import compute_metrics, get_actual_and_predicted
 from models.v1.match_model import MatchModel
-from tools.v1.preprocess_tools import preprocess
+from tools.data_collect_queries import get_data
 from utils import (
     get_secret,
     connect_remote_mlflow,
@@ -31,12 +31,13 @@ def evaluate(
     client_id,
     model,
     storage_path: str,
+    input_type: str = "bookings",
     training_dataset_name: str = "positive_data_train",
     test_dataset_name: str = "positive_data_test",
 ):
-    logger.info("Read Raw dataset")
-    raw_data = pd.read_csv(f"{STORAGE_PATH}/raw_data.csv")
-    raw_data = preprocess(raw_data)
+    booking_raw_data = get_data(
+        dataset=f"raw_{ENV_SHORT_NAME}", table_name=f"training_data_{input_type}"
+    )
 
     training_item_ids = pd.read_csv(f"{storage_path}/{training_dataset_name}.csv")[
         "item_id"
@@ -50,7 +51,7 @@ def evaluate(
                 "item_id": str,
             },
         )[["user_id", "item_id"]]
-        .merge(raw_data, on=["user_id", "item_id"], how="inner")
+        .merge(booking_raw_data, on=["user_id", "item_id"], how="inner")
         .drop_duplicates()
     )
 
@@ -63,7 +64,7 @@ def evaluate(
 
     data_model_dict = {
         "data": {
-            "raw": raw_data,
+            "raw": booking_raw_data,
             "training_item_ids": training_item_ids,
             "test": positive_data_test,
         },

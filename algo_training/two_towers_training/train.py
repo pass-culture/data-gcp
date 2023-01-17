@@ -1,3 +1,4 @@
+import json
 import os
 
 import mlflow
@@ -7,61 +8,33 @@ import tensorflow as tf
 from loguru import logger
 import pandas as pd
 
-from models.two_towers.match_model import TwoTowersMatchModel
-from models.two_towers.models import TwoTowersModel
-from models.two_towers.layers import (
-    StringEmbeddingLayer,
-    IntegerEmbeddingLayer,
-    TextEmbeddingLayer,
-)
-from models.two_towers.utils import build_dict_dataset
-from models.v2.utils import (
-    MLFlowLogging,
-    save_pca_representation,
-)
-from utils import (
+from models.match_model import TwoTowersMatchModel
+from models.models import TwoTowersModel
+from utils.utils import build_dict_dataset, MLFlowLogging
+from models.v2.utils import save_pca_representation
+from utils.utils import (
     get_secret,
     connect_remote_mlflow,
     ENV_SHORT_NAME,
     TRAIN_DIR,
     STORAGE_PATH,
 )
+from utils.constants import CONFIG_FEATURES_PATH
 
-
-N_EPOCHS = 1000
-TRAINING_STEPS = 100
-VALIDATION_STEPS = 20
+N_EPOCHS = 20
+MIN_DELTA = 0.002  # Minimum change in the accuracy before a callback is called
 LEARNING_RATE = 0.1
 VERBOSE = 2
-
-user_embedding_layers = {
-    "user_id": StringEmbeddingLayer(embedding_size=64),
-    "user_age": IntegerEmbeddingLayer(embedding_size=8),
-    "user_postal_code": StringEmbeddingLayer(embedding_size=8),
-    "user_activity": StringEmbeddingLayer(embedding_size=8),
-    "user_booking_cnt": IntegerEmbeddingLayer(embedding_size=8),
-    "user_theoretical_amount_spent": IntegerEmbeddingLayer(embedding_size=8),
-    "user_theoretical_remaining_credit": IntegerEmbeddingLayer(embedding_size=8),
-    "user_distinct_type_booking_cnt": IntegerEmbeddingLayer(embedding_size=8),
-}
-item_embedding_layers = {
-    "item_id": StringEmbeddingLayer(embedding_size=64),
-    "offer_categoryId": StringEmbeddingLayer(embedding_size=16),
-    "offer_subcategoryid": StringEmbeddingLayer(embedding_size=16),
-    "item_names": TextEmbeddingLayer(embedding_size=8),
-    "item_rayons": TextEmbeddingLayer(embedding_size=8),
-    "item_author": TextEmbeddingLayer(embedding_size=8),
-    "item_performer": TextEmbeddingLayer(embedding_size=8),
-    "item_mean_stock_price": IntegerEmbeddingLayer(embedding_size=8),
-    "item_booking_cnt": IntegerEmbeddingLayer(embedding_size=8),
-    "item_favourite_cnt": IntegerEmbeddingLayer(embedding_size=8),
-}
 
 
 def train(
     experiment_name: str = typer.Option(
         ...,
         help="MLFlow experiment name",
+    ),
+    config_file_name: str = typer.Option(
+        ...,
+        help="Name of the config file containing feature informations",
     ),
     batch_size: int = typer.Option(
         ...,
@@ -88,24 +61,43 @@ def train(
         f"{STORAGE_PATH}/positive_data_eval.csv",
     ).astype(str)
 
-    user_columns = list(user_embedding_layers.keys())
-    item_columns = list(item_embedding_layers.keys())
+    with open(
+        CONFIG_FEATURES_PATH + f"/{config_file_name}.json", mode="r", encoding="utf-8"
+    ) as config_file:
+        features = json.load(config_file)
+        user_features_config, item_features_config = (
+            features["user_embedding_layers"],
+            features["item_embedding_layers"],
+        )
+
+    user_columns = list(user_features_config.keys())
+    item_columns = list(item_features_config.keys())
     user_data = train_data[user_columns].drop_duplicates(subset=["user_id"])
     item_data = train_data[item_columns].drop_duplicates(subset=["item_id"])
 
     # Build tf datasets
-    train_dataset = build_dict_dataset(train_data, batch_size=batch_size, seed=seed)
+    train_dataset = build_dict_dataset(
+        data=train_data,
+        feature_names=user_columns + item_columns,
+        batch_size=batch_size,
+        seed=seed,
+    )
     validation_dataset = build_dict_dataset(
-        validation_data, batch_size=batch_size, seed=seed
+        validation_data,
+        feature_names=user_columns + item_columns,
+        batch_size=batch_size,
+        seed=seed,
     )
 
     user_dataset = build_dict_dataset(
         user_data,
+        feature_names=user_columns,
         batch_size=batch_size,
         seed=seed,
     )
     item_dataset = build_dict_dataset(
         item_data,
+        feature_names=item_columns,
         batch_size=batch_size,
         seed=seed,
     )
@@ -125,48 +117,53 @@ def train(
                 "batch_size": batch_size,
                 "epoch_number": N_EPOCHS,
                 "user_count": len(user_data),
+                "user_feature_count": len(user_features_config.keys()),
                 "item_count": len(item_data),
+                "item_feature_count": len(item_features_config.keys()),
             }
         )
 
         two_tower_model = TwoTowersModel(
             data=train_data,
-            user_embedding_layers=user_embedding_layers,
-            item_embedding_layers=item_embedding_layers,
+            user_features_config=user_features_config,
+            item_features_config=item_features_config,
             items_dataset=item_dataset,
             embedding_size=embedding_size,
         )
 
         two_tower_model.compile(
-            loss=tf.keras.optimizers.Adagrad(learning_rate=LEARNING_RATE),
-            optimizer="adam",
+            optimizer=tf.keras.optimizers.Adagrad(learning_rate=LEARNING_RATE),
         )
 
         two_tower_model.fit(
             train_dataset,
             epochs=N_EPOCHS,
-            steps_per_epoch=TRAINING_STEPS,
             validation_data=validation_dataset,
-            validation_steps=VALIDATION_STEPS,
             verbose=VERBOSE,
             callbacks=[
                 tf.keras.callbacks.ReduceLROnPlateau(
                     monitor="val_factorized_top_k/top_100_categorical_accuracy",
                     factor=0.1,
                     patience=2,
-                    min_delta=0,
+                    min_delta=MIN_DELTA,
                     verbose=1,
                 ),
                 tf.keras.callbacks.EarlyStopping(
                     monitor="val_factorized_top_k/top_100_categorical_accuracy",
                     patience=3,
-                    min_delta=0,
+                    min_delta=MIN_DELTA,
                     verbose=1,
                 ),
                 MLFlowLogging(
                     client_id=client_id,
                     env=ENV_SHORT_NAME,
                     export_path=export_path,
+                ),
+                tf.keras.callbacks.ModelCheckpoint(
+                    export_path,
+                    monitor="val_factorized_top_k/top_100_categorical_accuracy",
+                    verbose=0,
+                    save_best_only=True,
                 ),
             ],
         )

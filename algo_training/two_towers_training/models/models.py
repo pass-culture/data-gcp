@@ -2,31 +2,58 @@ import tensorflow as tf
 import tensorflow_recommenders as tfrs
 import pandas as pd
 
+from models.layers import (
+    StringEmbeddingLayer,
+    IntegerEmbeddingLayer,
+    TextEmbeddingLayer,
+)
+
 
 class TwoTowersModel(tfrs.models.Model):
     def __init__(
         self,
         data: pd.DataFrame,
-        user_embedding_layers: dict,
-        item_embedding_layers: dict,
+        user_features_config: dict,
+        item_features_config: dict,
         items_dataset: tf.data.Dataset,
         embedding_size: int,
     ):
         """
         data: DataFrame of user-item interactions along with their corresponding features
-        user_embedding_layers: dict of preprocessing layers for each user feature
-        item_embedding_layers: dict of preprocessing layers for each item feature
+        user_features_config: dict containing the information about the user input embedding layers
+        item_features_config: dict containing the information about the item input embedding layers
+        items_dataset: TF dataset containing the features for each item
+        embedding_size: Final embedding size for the items & the users
         """
         super().__init__("TwoTowerModel")
 
-        self._user_feature_names = user_embedding_layers.keys()
-        self._item_feature_names = item_embedding_layers.keys()
+        # dict of preprocessing layers for each user feature
+        user_embedding_layers = {
+            name: self.load_embedding_layer(
+                layer_type=layer["type"], embedding_size=layer["embedding_size"]
+            )
+            for name, layer in user_features_config.items()
+        }
+        self._user_feature_names = user_features_config.keys()
+
+        # dict of preprocessing layers for each item feature
+        item_embedding_layers = {
+            name: self.load_embedding_layer(
+                layer_type=layer["type"], embedding_size=layer["embedding_size"]
+            )
+            for name, layer in item_features_config.items()
+        }
+        self._item_feature_names = item_features_config.keys()
 
         self.user_model = SingleTowerModel(
-            data=data, layer_infos=user_embedding_layers, embedding_size=embedding_size
+            data=data,
+            input_embedding_layers=user_embedding_layers,
+            embedding_size=embedding_size,
         )
         self.item_model = SingleTowerModel(
-            data=data, layer_infos=item_embedding_layers, embedding_size=embedding_size
+            data=data,
+            input_embedding_layers=item_embedding_layers,
+            embedding_size=embedding_size,
         )
 
         self.task = tfrs.tasks.Retrieval(
@@ -45,21 +72,29 @@ class TwoTowersModel(tfrs.models.Model):
 
         return self.task(user_embedding, item_embedding, compute_metrics=not training)
 
+    @staticmethod
+    def load_embedding_layer(layer_type: str, embedding_size: int):
+        return {
+            "string": StringEmbeddingLayer(embedding_size=embedding_size),
+            "int": IntegerEmbeddingLayer(embedding_size=embedding_size),
+            "text": TextEmbeddingLayer(embedding_size=embedding_size),
+        }[layer_type]
+
 
 class SingleTowerModel(tf.keras.models.Model):
     def __init__(
         self,
         data: pd.DataFrame,
-        layer_infos: dict,
+        input_embedding_layers: dict,
         embedding_size: int,
     ):
         super().__init__()
 
         self.data = data
-        self.layer_infos = layer_infos
+        self.input_embedding_layers = input_embedding_layers
 
         self._embedding_layers = {}
-        for layer_name, layer_class in self.layer_infos.items():
+        for layer_name, layer_class in self.input_embedding_layers.items():
             self._embedding_layers[layer_name] = layer_class.build_sequential_layer(
                 vocabulary=self.data[layer_name].unique()
             )

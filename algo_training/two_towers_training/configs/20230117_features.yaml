@@ -1,0 +1,59 @@
+
+user_layer_infos:
+    user_id:
+      type: string
+      feature_latent_dim: 128
+    user_age:
+      type: int
+      feature_latent_dim: 16
+    user_postal_code:
+      type: string
+      feature_latent_dim: 8
+    user_activity:
+      type: string
+      feature_latent_dim: 8
+    user_booking_cnt:
+      type: int
+      feature_latent_dim: 16
+    user_theoretical_amount_spent:
+      type: int
+      feature_latent_dim: 16
+    user_theoretical_remaining_credit:
+      type: int
+      feature_latent_dim: 16
+    user_distinct_type_booking_cnt:
+      type: int
+      feature_latent_dim: 16
+
+item_layer_infos:
+    item_id:
+      type: string
+      feature_latent_dim: 128
+    offer_categoryId:
+      type: string
+      feature_latent_dim: 16
+    offer_subcategoryid:
+      type: string
+      feature_latent_dim: 16
+    item_names:
+      type: text
+      feature_latent_dim: 16
+    item_rayons:
+      type: text
+      feature_latent_dim: 16
+    item_author:
+      type: text
+      feature_latent_dim: 16
+    item_performer:
+      type: text
+      feature_latent_dim: 16
+    item_mean_stock_price:
+      type: int
+      feature_latent_dim: 8
+    item_booking_cnt:
+      type: int
+      feature_latent_dim: 8
+    item_favourite_cnt:
+      type: int
+      feature_latent_dim: 8
+

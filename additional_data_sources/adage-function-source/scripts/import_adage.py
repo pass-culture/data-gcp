@@ -63,6 +63,7 @@ def get_request(ENDPOINT, API_KEY, route):
                 if k not in _cols:
                     df[k] = None
                 df[k] = df[k].astype(str)
+            return df
     except Exception as e:
         print("An unexpected error has happened {}".format(e))
     return None
@@ -166,20 +167,28 @@ def get_adage_stats():
         results = get_request(ENDPOINT, API_KEY, route=f"stats-pass-culture/{_id}")
         for metric_name, rows in results.items():
             for metric_id, v in rows.items():
-                export.append(
-                    dict(
-                        {
-                            "metric_name": metric_name,
-                            "metric_id": metric_id,
-                            "educational_year_adage_id": _id,
-                            "metric_key": v[stats_dict[metric_name]],
-                            "involved_students": v["eleves"],
-                            "institutions": v["etabs"],
-                            "total_involved_students": v["totalEleves"],
-                            "total_institutions": v["totalEtabs"],
-                        },
+                try:
+                    _stats_dict = str(stats_dict.get(metric_name, ""))
+                    _metric_key = str(v.get(_stats_dict, ""))
+                    export.append(
+                        dict(
+                            {
+                                "metric_name": metric_name,
+                                "metric_id": metric_id,
+                                "educational_year_adage_id": _id,
+                                "metric_key": _metric_key,
+                                "involved_students": v["eleves"],
+                                "institutions": v["etabs"],
+                                "total_involved_students": v["totalEleves"],
+                                "total_institutions": v["totalEtabs"],
+                            },
+                        )
                     )
-                )
+                except:
+                    print(_stats_dict)
+                    print(_metric_key)
+                    print(stats_dict)
+                    raise
 
     df = pd.DataFrame(export)
     # force types

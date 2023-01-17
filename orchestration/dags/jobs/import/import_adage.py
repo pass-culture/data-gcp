@@ -29,7 +29,6 @@ default_dag_args = {
 
 dag = DAG(
     "import_adage_v1",
-    start_date=datetime.datetime(2020, 12, 1),
     default_args=default_dag_args,
     description="Import Adage from API",
     on_failure_callback=None,

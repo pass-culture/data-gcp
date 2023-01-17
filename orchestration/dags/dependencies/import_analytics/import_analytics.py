@@ -1,6 +1,4 @@
-from common.config import (
-    ENV_SHORT_NAME,
-)
+from common.config import ENV_SHORT_NAME
 
 ANALYTICS_SQL_PATH = f"dependencies/import_analytics/sql/analytics"
 
@@ -262,11 +260,14 @@ analytics_tables = {
         "sql": f"{ANALYTICS_SQL_PATH}/diversification_raw.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "diversification_raw",
-        "depends": [
-            "enriched_booking_data",
-            "enriched_offer_data",
-        ],
+        "depends": ["enriched_booking_data", "enriched_offer_data"],
         "dag_depends": ["import_qpi_answers_v1"],
+    },
+    "diversification_raw_v2": {
+        "sql": f"{ANALYTICS_SQL_PATH}/diversification_raw_v2.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "diversification_raw_v2",
+        "depends": ["enriched_booking_data", "enriched_offer_data"],
     },
     "diversification_booking": {
         "sql": f"{ANALYTICS_SQL_PATH}/diversification_booking.sql",
@@ -274,6 +275,17 @@ analytics_tables = {
         "destination_table": "diversification_booking",
         "depends": [
             "diversification_raw",
+            "enriched_user_data",
+            "enriched_booking_data",
+            "enriched_offer_data",
+        ],
+    },
+    "diversification_booking_v2": {
+        "sql": f"{ANALYTICS_SQL_PATH}/diversification_booking_v2.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "diversification_booking_v2",
+        "depends": [
+            "diversification_raw_v2",
             "enriched_user_data",
             "enriched_booking_data",
             "enriched_offer_data",

@@ -1,6 +1,6 @@
 SELECT DISTINCT
-  clicks.user_id,
-  clicks.item_id,
+  clicks.event_date,
+  clicks.count,
   user_features.*,
   item_features.*
 FROM

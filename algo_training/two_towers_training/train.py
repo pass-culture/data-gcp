@@ -10,16 +10,15 @@ import pandas as pd
 
 from models.match_model import TwoTowersMatchModel
 from models.models import TwoTowersModel
-from utils.utils import build_dict_dataset, MLFlowLogging
-from models.v2.utils import save_pca_representation
-from utils.utils import (
-    get_secret,
-    connect_remote_mlflow,
+from tools.constants import (
+    CONFIG_FEATURES_PATH,
     ENV_SHORT_NAME,
     TRAIN_DIR,
     STORAGE_PATH,
 )
-from utils.constants import CONFIG_FEATURES_PATH
+from tools.dataset_tools import build_dict_dataset
+from tools.mlflow_tools import get_secret, connect_remote_mlflow, MLFlowLogging
+from tools.utils import save_pca_representation
 
 N_EPOCHS = 20
 MIN_DELTA = 0.002  # Minimum change in the accuracy before a callback is called
@@ -159,16 +158,10 @@ def train(
                     env=ENV_SHORT_NAME,
                     export_path=export_path,
                 ),
-                tf.keras.callbacks.ModelCheckpoint(
-                    export_path,
-                    monitor="val_factorized_top_k/top_100_categorical_accuracy",
-                    verbose=0,
-                    save_best_only=True,
-                ),
             ],
         )
 
-        logger.info("Building and saving the TwoTowersMatchModel")
+        logger.info("Building and saving the MatchModel")
 
         user_embeddings = two_tower_model.user_model.predict(user_dataset)
         item_embeddings = two_tower_model.item_model.predict(item_dataset)

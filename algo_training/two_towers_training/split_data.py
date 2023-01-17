@@ -1,12 +1,13 @@
 import pandas as pd
+
+from loguru import logger
+
 from tools.split_data_tools import (
     split_by_column_and_ratio,
     split_by_ratio,
     reassign_extra_data_to_target,
 )
-from loguru import logger
-
-from utils.utils import STORAGE_PATH
+from tools.constants import STORAGE_PATH
 
 
 def main(storage_path: str):

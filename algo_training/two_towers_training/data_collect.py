@@ -1,9 +1,8 @@
 import typer
 import json
 
-from utils.queries import get_data
-from utils.constants import CONFIG_FEATURES_PATH
-from utils.utils import STORAGE_PATH, ENV_SHORT_NAME
+from tools.data_collect_tools import get_data
+from tools.constants import CONFIG_FEATURES_PATH, STORAGE_PATH, ENV_SHORT_NAME
 
 
 def main(
@@ -45,6 +44,24 @@ def main(
         max_limit=limit_filter,
     )
     raw_data.to_csv(f"{STORAGE_PATH}/raw_data.csv", index=False)
+
+    bookings_data = get_data(
+        dataset=dataset,
+        table_name="training_data_bookings",
+        columns_selected=[
+            "user_id",
+            "item_id",
+            "count",
+            "offer_categoryId",
+            "offer_subcategoryid",
+            "genres",
+            "rayon",
+            "type",
+        ],
+        event_day_number=event_day_number,
+        max_limit=limit_filter,
+    )
+    bookings_data.to_csv(f"{STORAGE_PATH}/bookings_data.csv", index=False)
 
 
 if __name__ == "__main__":

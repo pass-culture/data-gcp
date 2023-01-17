@@ -1,31 +1,13 @@
-from typing import Any
-
-import tensorflow as tf
-import pandas as pd
-import mlflow
 import os
-import shutil
+
+import mlflow
+import tensorflow as tf
 
 from google.auth.transport.requests import Request
 from google.cloud import secretmanager
 from google.oauth2 import id_token
 
-from utils.constants import GCP_PROJECT_ID, MLFLOW_PROD_URI, MLFLOW_EHP_URI
-
-
-def build_dict_dataset(
-    data: pd.DataFrame, feature_names: list, batch_size: int, seed: int = None
-):
-    return (
-        tf.data.Dataset.from_tensor_slices(data.values)
-        .map(lambda x: {column: x[idx] for idx, column in enumerate(feature_names)})
-        .batch(batch_size=batch_size, drop_remainder=False)
-        .shuffle(buffer_size=10 * batch_size, seed=seed, reshuffle_each_iteration=False)
-    )
-
-
-def fill_na_by_feature_type(df: pd.DataFrame, columns_to_fill: list, fill_value: Any):
-    return df.fillna({col: fill_value for col in columns_to_fill})
+from tools.constants import GCP_PROJECT_ID, MLFLOW_EHP_URI, MLFLOW_PROD_URI
 
 
 def get_secret(secret_id: str):
@@ -44,10 +26,6 @@ def connect_remote_mlflow(client_id, env="ehp"):
     os.environ["MLFLOW_TRACKING_TOKEN"] = id_token.fetch_id_token(Request(), client_id)
     uri = MLFLOW_PROD_URI if env == "prod" else MLFLOW_EHP_URI
     mlflow.set_tracking_uri(uri)
-
-
-def remove_dir(path):
-    shutil.rmtree(path)
 
 
 class MLFlowLogging(tf.keras.callbacks.Callback):

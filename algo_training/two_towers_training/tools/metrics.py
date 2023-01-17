@@ -1,9 +1,12 @@
-import pandas as pd
 from tqdm import tqdm
+
+import pandas as pd
 import numpy as np
 import recmetrics
+from loguru import logger
+
 from tools.diversification import order_offers_by_score_and_diversify_categories
-from utils import SHUFFLE_RECOMMENDATION
+from tools.constants import SHUFFLE_RECOMMENDATION
 
 
 def get_actual_and_predicted(
@@ -65,12 +68,17 @@ def get_prediction(user_id, data_model_dict):
 
 
 def compute_metrics(data_model_dict, k):
+    logger.info("Compute recall and precision")
     mark, mapk, mark_panachage, mapk_panachage = compute_recall_and_precision_at_k(
         data_model_dict, k
     )
-
+    logger.info("Compute coverage")
     coverage = get_coverage_at_k(data_model_dict, k)
-
+    logger.info("Compute diversification score")
+    avg_div_score, avg_div_score_panachage = compute_diversification_score(
+        data_model_dict, k
+    )
+    logger.info("Compute personalization score")
     personalization_at_k, personalization_at_k_panachage = compute_personalization(
         data_model_dict, k
     )
@@ -82,6 +90,8 @@ def compute_metrics(data_model_dict, k):
         "mapk_panachage": mapk_panachage,
         "personalization_at_k": personalization_at_k,
         "personalization_at_k_panachage": personalization_at_k_panachage,
+        "avg_div_score": avg_div_score,
+        "avg_div_score_panachage": avg_div_score_panachage,
     }
     return data_model_dict
 
@@ -138,6 +148,38 @@ def get_personalization(model_predictions, k):
     model_predictions_at_k = [predictions[:k] for predictions in model_predictions]
     personalization = recmetrics.personalization(predicted=model_predictions_at_k)
     return personalization
+
+
+def compute_diversification_score(data_model_dict, k):
+    df_raw = data_model_dict["data"]["raw"]
+    recos = data_model_dict["top_offers"].model_predicted.values.tolist()
+    recos_panachage = data_model_dict[
+        "top_offers"
+    ].predictions_diversified.values.tolist()
+    avg_diversification = get_avg_diversification_score(df_raw, recos, k)
+    avg_diversification_panachage = get_avg_diversification_score(
+        df_raw, recos_panachage, k
+    )
+    return avg_diversification, avg_diversification_panachage
+
+
+def get_avg_diversification_score(df_raw, recos, k):
+
+    diversification_count = 0
+    for reco in recos:
+        df_enriched_recos = df_raw.query(f"item_id in {tuple(reco[:k])}")
+        df_clean = df_enriched_recos[
+            ["offer_categoryId", "offer_subcategoryid", "genres", "rayon", "type"]
+        ]
+        df_clean = df_clean.drop_duplicates()
+        df_clean = df_clean.fillna("NA", inplace=False)
+        count_dist = np.array(df_clean.nunique())
+        diversification = np.sum(count_dist)
+        diversification_count += diversification
+    avg_diversification = -1
+    if len(recos) > 0:
+        avg_diversification = diversification_count / len(recos)
+    return avg_diversification
 
 
 def apk(actual, predicted, k=10):

@@ -2,8 +2,8 @@ import json
 import typer
 import pandas as pd
 
-from utils.constants import CONFIG_FEATURES_PATH, STORAGE_PATH
-from utils.utils import fill_na_by_feature_type
+from tools.constants import CONFIG_FEATURES_PATH, STORAGE_PATH
+from tools.preprocess_tools import fill_na_by_feature_type, get_features_by_type
 
 
 def preprocess(
@@ -24,23 +24,18 @@ def preprocess(
         CONFIG_FEATURES_PATH + f"/{config_file_name}.json", mode="r", encoding="utf-8"
     ) as config_file:
         features = json.load(config_file)
-        user_embedding_layers, item_embedding_layers = (
-            features["user_embedding_layers"],
-            features["item_embedding_layers"],
-        )
 
-    integer_features = [
-        col for col in user_embedding_layers.keys() if features[col]["type"] == "int"
-    ] + [col for col in item_embedding_layers.keys() if features[col]["type"] == "int"]
-    string_features = [
-        col
-        for col in user_embedding_layers.keys()
-        if features[col]["type"] in ["string", "text"]
-    ] + [
-        col
-        for col in item_embedding_layers.keys()
-        if features[col]["type"] in ["string", "text"]
-    ]
+    integer_features = get_features_by_type(
+        feature_layers=features["user_embedding_layers"], layer_types=["int"]
+    ) + get_features_by_type(
+        feature_layers=features["item_embedding_layers"], layer_types=["int"]
+    )
+
+    string_features = get_features_by_type(
+        feature_layers=features["user_embedding_layers"], layer_types=["string", "text"]
+    ) + get_features_by_type(
+        feature_layers=features["item_embedding_layers"], layer_types=["string", "text"]
+    )
 
     clean_data = (
         raw_data.pipe(

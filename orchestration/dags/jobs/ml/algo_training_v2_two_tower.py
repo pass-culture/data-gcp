@@ -43,7 +43,7 @@ dag_config = {
 
 # Params
 train_params = {
-    "config_file_name": "20230117_features",
+    "config_file_name": "20230117-features",
     "batch_size": 4096,
     "embedding_size": 64,
     "train_set_size": 0.8,
@@ -155,6 +155,7 @@ with DAG(
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
         command="python data_collect.py "
+        "--config-file-name {{ params.config_file_name }} "
         "--table-name recommendation_data_clicks "
         "--event-day-number {{ params.event_day_number }}",
         dag=dag,
@@ -174,7 +175,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
-        command="python preprocess.py --config-file-name {{ config_file_name }}",
+        command="python preprocess.py --config-file-name {{ params.config_file_name }}",
         dag=dag,
     )
 
@@ -183,7 +184,8 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
-        command=f"python train_v2_two_tower.py "
+        command=f"python train.py "
+        "--config-file-name {{ params.config_file_name }} "
         f"--experiment-name {dag_config['EXPERIMENT_NAME']} "
         "--batch-size {{ params.batch_size }} "
         "--embedding-size {{ params.embedding_size }} "

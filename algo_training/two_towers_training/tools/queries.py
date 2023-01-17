@@ -2,7 +2,7 @@ import json
 
 import pandas as pd
 
-from utils.constants import GCP_PROJECT_ID
+from tools.constants import GCP_PROJECT_ID
 
 
 def get_data(

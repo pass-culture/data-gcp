@@ -1,14 +1,16 @@
 import pandas as pd
 import tensorflow as tf
 import mlflow.tensorflow
+
+from loguru import logger
 from datetime import datetime
-from tools.v1.preprocess_tools import preprocess
-from models.v1.match_model import MatchModel
-from utils.utils import (
+
+from models.match_model import TwoTowersMatchModel
+from tools.mlflow_tools import (
     get_secret,
     connect_remote_mlflow,
 )
-from utils.constants import (
+from tools.constants import (
     STORAGE_PATH,
     ENV_SHORT_NAME,
     BIGQUERY_CLEAN_DATASET,
@@ -21,15 +23,16 @@ from utils.constants import (
     EVALUATION_USER_NUMBER,
     EXPERIMENT_NAME,
 )
-from utils.metrics import compute_metrics, get_actual_and_predicted
+from tools.metrics import compute_metrics, get_actual_and_predicted
 
 k_list = [RECOMMENDATION_NUMBER, NUMBER_OF_PRESELECTED_OFFERS]
 
 
 def evaluate(client_id, model, storage_path: str):
 
-    raw_data = pd.read_csv(f"{STORAGE_PATH}/raw_data.csv")
-    raw_data = preprocess(raw_data)
+    raw_data = pd.read_csv(f"{storage_path}/bookings_data.csv").astype(
+        {"user_id": "str", "item_id": "str", "count": "int"}
+    )
 
     training_item_ids = pd.read_csv(f"{storage_path}/positive_data_train.csv")[
         "item_id"
@@ -62,9 +65,12 @@ def evaluate(client_id, model, storage_path: str):
         },
         "model": model,
     }
+
+    logger.info("Get predictions")
     data_model_dict_w_actual_and_predicted = get_actual_and_predicted(data_model_dict)
     metrics = {}
     for k in k_list:
+        logger.info(f"Computing metrics for k={k}")
         data_model_dict_w_metrics_at_k = compute_metrics(
             data_model_dict_w_actual_and_predicted, k
         )
@@ -74,13 +80,21 @@ def evaluate(client_id, model, storage_path: str):
 
         # Here we track metrics relate to pcreco output
         if k == RECOMMENDATION_NUMBER:
-
             metrics[f"recall_at_{k}_panachage"] = data_model_dict_w_metrics_at_k[
                 "metrics"
             ]["mark_panachage"]
             metrics[f"precision_at_{k}_panachage"] = data_model_dict_w_metrics_at_k[
                 "metrics"
             ]["mapk_panachage"]
+
+            # AVG diverisification score is only calculate at k=RECOMMENDATION_NUMBER to match pcreco output
+            metrics[
+                f"avg_diversification_score_at_{k}"
+            ] = data_model_dict_w_metrics_at_k["metrics"]["avg_div_score"]
+
+            metrics[
+                f"avg_diversification_score_at_{k}_panachage"
+            ] = data_model_dict_w_metrics_at_k["metrics"]["avg_div_score_panachage"]
 
             metrics[
                 f"personalization_at_{k}_panachage"
@@ -103,6 +117,7 @@ def evaluate(client_id, model, storage_path: str):
 
 
 def run(experiment_name: str, model_name: str):
+    logger.info("-------EVALUATE START------- ")
     client_id = get_secret("mlflow_client_id")
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
     experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
@@ -112,7 +127,7 @@ def run(experiment_name: str, model_name: str):
         artifact_uri = mlflow.get_artifact_uri("model")
         loaded_model = tf.keras.models.load_model(
             artifact_uri,
-            custom_objects={"MatchModel": MatchModel},
+            custom_objects={"TwoTowersMatchModel": TwoTowersMatchModel},
             compile=False,
         )
         log_results = {

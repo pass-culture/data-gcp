@@ -148,7 +148,7 @@ with DAG(
             base_dir=dag_config["BASE_DIR"],
             environment=dag_config,
             command=f"python data_collect.py --dataset {BIGQUERY_TMP_DATASET} "
-            f"--table-name {DATE}_recommendation_{split}_data "
+            f"--table-name {DATE}_recommendation_{split}_data_clicks "
             f"--output-name recommendation_{split}_data",
             dag=dag,
         )
@@ -178,8 +178,8 @@ with DAG(
         command="python evaluate.py "
         f"--experiment-name {dag_config['EXPERIMENT_NAME']} "
         "--input-type clicks "
-        "--training-dataset-name recommendation_training_data_clicks "
-        "--test-dataset-name recommendation_test_data_clicks",
+        "--training-dataset-name recommendation_training_data "
+        "--test-dataset-name recommendation_test_data",
         dag=dag,
     )
 

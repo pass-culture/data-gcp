@@ -1,6 +1,8 @@
 import typer
+import json
 
-from tools.data_collect_queries import get_data
+from utils.queries import get_data
+from utils.constants import CONFIG_FEATURES_PATH
 from utils.utils import STORAGE_PATH, ENV_SHORT_NAME
 
 
@@ -13,9 +15,9 @@ def main(
         "training_data_bookings",
         help="BigQuery table containing the data we want to load",
     ),
-    subcategory_ids: str = typer.Option(
+    config_file_name: str = typer.Option(
         None,
-        help="List of subcategory ids to filter in string format. If set to None, no filter is applied",
+        help="Name of the config file containing feature informations",
     ),
     event_day_number: str = typer.Option(
         None,
@@ -26,10 +28,20 @@ def main(
         help="Max number of rows",
     ),
 ) -> None:
+
+    with open(
+        CONFIG_FEATURES_PATH + f"/{config_file_name}.json", mode="r", encoding="utf-8"
+    ) as config_file:
+        features = json.load(config_file)
+        columns_selected = (
+            list(features["user_embedding_layers"].keys())
+            + list(features["item_embedding_layers"].keys())
+        )
+
     raw_data = get_data(
         dataset=dataset,
         table_name=table_name,
-        subcategory_ids=subcategory_ids,
+        columns_selected=columns_selected,
         event_day_number=event_day_number,
         max_limit=limit_filter,
     )

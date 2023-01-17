@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from airflow import DAG
 from airflow.models import Param
@@ -80,7 +80,7 @@ with DAG(
             type="string",
         ),
         "config_file_name": Param(
-            default=str(train_params["config_file_name"]),
+            default=train_params["config_file_name"],
             type="string",
         ),
         "batch_size": Param(
@@ -104,45 +104,25 @@ with DAG(
             type="string",
         ),
         "instance_name": Param(
-            default=gce_params["instance_name"],
+            default=gce_params["instance_name"] + "-" + train_params["config_file_name"],
             type="string",
         ),
     },
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)
 
-    import_user_features = BigQueryExecuteQueryOperator(
-        task_id=f"import_recommendation_user_features",
-        sql=(
-            IMPORT_TRAINING_SQL_PATH / f"two_towers/recommendation_user_features.sql"
-        ).as_posix(),
-        write_disposition="WRITE_TRUNCATE",
-        use_legacy_sql=False,
-        destination_dataset_table=f"{BIGQUERY_RAW_DATASET}.recommendation_user_features",
-        dag=dag,
-    )
-
-    import_item_features = BigQueryExecuteQueryOperator(
-        task_id=f"import_recommendation_item_features",
-        sql=(
-            IMPORT_TRAINING_SQL_PATH / f"two_towers/recommendation_item_features.sql"
-        ).as_posix(),
-        write_disposition="WRITE_TRUNCATE",
-        use_legacy_sql=False,
-        destination_dataset_table=f"{BIGQUERY_RAW_DATASET}.recommendation_item_features",
-        dag=dag,
-    )
-
-    import_data_clicks = BigQueryExecuteQueryOperator(
-        task_id=f"import_recommendation_data_clicks",
-        sql=(
-            IMPORT_TRAINING_SQL_PATH / f"two_towers/recommendation_data_clicks.sql"
-        ).as_posix(),
-        write_disposition="WRITE_TRUNCATE",
-        use_legacy_sql=False,
-        destination_dataset_table=f"{BIGQUERY_RAW_DATASET}.recommendation_data_clicks",
-        dag=dag,
-    )
+    import_tables = {}
+    for table in ["user_features", "item_features", "data_clicks"]:
+        import_tables[table] = BigQueryExecuteQueryOperator(
+            task_id=f"import_recommendation_{table}",
+            sql=(
+                IMPORT_TRAINING_SQL_PATH / f"two_towers/recommendation_{table}.sql"
+            ).as_posix(),
+            write_disposition="WRITE_TRUNCATE",
+            use_legacy_sql=False,
+            destination_dataset_table=f"{BIGQUERY_RAW_DATASET}.recommendation_{table}",
+            dag=dag,
+        )
 
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
@@ -162,7 +142,8 @@ with DAG(
         task_id="install_dependencies",
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
-        command="pip install --upgrade pip && pip install -r requirements.txt --user",
+        command="pip3 install --upgrade pip && "
+        "pip install --no-cache-dir -r requirements.txt --user",
         dag=dag,
     )
 
@@ -235,8 +216,8 @@ with DAG(
 
     (
         start
-        >> [import_user_features, import_item_features]
-        >> import_data_clicks
+        >> [import_tables["user_features"], import_tables["item_features"]]
+        >> import_tables["data_clicks"]
         >> gce_instance_start
         >> fetch_code
         >> install_dependencies

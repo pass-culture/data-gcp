@@ -9,7 +9,7 @@ from utils.utils import fill_na_by_feature_type
 def preprocess(
     config_file_name: str = typer.Option(
         ...,
-        help="MLFlow experiment name",
+        help="Name of the config file containing feature informations",
     ),
 ):
     """

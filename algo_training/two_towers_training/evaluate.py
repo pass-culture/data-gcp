@@ -132,7 +132,7 @@ def run(experiment_name: str, model_name: str):
             project_id=f"{GCP_PROJECT_ID}",
             if_exists="append",
         )
-        metrics = evaluate(client_id, loaded_model, STORAGE_PATH)
+        evaluate(client_id, loaded_model, STORAGE_PATH)
 
 
 if __name__ == "__main__":

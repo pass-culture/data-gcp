@@ -355,7 +355,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "favourite_cnt": 2.0,
         "stock": 10.0,
         "offer_humanized_id": "AM",
-        "passculture_pro_url": "https://passculture.pro/offres/AM/edition",
+        "passculture_pro_url": "https://passculture.pro/offre/individuelle/AM/informations",
         "webapp_url": "https://passculture.app/offre/3",
         "mediation_humanized_id": "ATJA",
         "first_booking_cnt": 1,

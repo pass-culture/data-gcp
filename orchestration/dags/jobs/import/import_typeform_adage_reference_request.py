@@ -1,7 +1,7 @@
 import datetime
 from airflow import DAG
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryExecuteQueryOperator,
+from airflow.providers.google.cloud.transfers.bigquery_to_bigquery import (
+    BigQueryToBigQueryOperator,
 )
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.http.operators.http import SimpleHttpOperator
@@ -45,9 +45,7 @@ start = DummyOperator(task_id="start", dag=dag)
 getting_service_account_token = PythonOperator(
     task_id="getting_service_account_token",
     python_callable=getting_service_account_token,
-    op_kwargs={
-        "function_name": f"{FUNCTION_NAME}",
-    },
+    op_kwargs={"function_name": f"{FUNCTION_NAME}"},
     dag=dag,
 )
 
@@ -64,19 +62,13 @@ typeform_adage_reference_request_to_bq = SimpleHttpOperator(
 )
 
 
-create_analytics_table = BigQueryExecuteQueryOperator(
+create_analytics_table = BigQueryToBigQueryOperator(
     task_id="create_enriched_app_downloads_stats",
-    sql=f"""
-    SELECT 
-        *
-    FROM `{GCP_PROJECT_ID}.{BIGQUERY_RAW_DATASET}.typeform_adage_reference_request_sheet` 
-    """,
-    destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.typeform_adage_reference_request",
+    source_project_dataset_tables=f"{GCP_PROJECT_ID}.{BIGQUERY_RAW_DATASET}.typeform_adage_reference_request_sheet",
+    destination_project_dataset_table=f"{GCP_PROJECT_ID}.{BIGQUERY_ANALYTICS_DATASET}.typeform_adage_reference_request",
     write_disposition="WRITE_TRUNCATE",
-    use_legacy_sql=False,
     dag=dag,
 )
-
 
 end = DummyOperator(task_id="end", dag=dag)
 

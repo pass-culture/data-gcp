@@ -2,10 +2,7 @@ import datetime
 import os
 
 from airflow import DAG
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryExecuteQueryOperator,
-    BigQueryInsertJobOperator,
-)
+from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 from airflow.providers.google.cloud.operators.cloud_sql import (
     CloudSQLExecuteQueryOperator,
 )
@@ -24,6 +21,7 @@ from common.config import (
 )
 from common.utils import from_external
 from common import macros
+from common.operators.biquery import bigquery_job_task
 
 yesterday = (datetime.datetime.now() + datetime.timedelta(days=-1)).strftime(
     "%Y-%m-%d"
@@ -102,16 +100,7 @@ delete_rows_task = drop_table_task = CloudSQLExecuteQueryOperator(
 
 export_clean_table_tasks = []
 for table, params in CLEAN_TABLES.items():
-    task = BigQueryExecuteQueryOperator(
-        task_id=f"import_{table}_in_clean",
-        sql=params["sql"],
-        write_disposition=params["write_disposition"],
-        use_legacy_sql=False,
-        destination_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.{table}",
-        time_partitioning=params["time_partitioning"],
-        cluster_fields=params.get("cluster_fields", None),
-        dag=dag,
-    )
+    task = bigquery_job_task(dag, f"import_{table}_in_clean", params)
     export_clean_table_tasks.append(task)
 
 end_clean = DummyOperator(task_id="end_clean", dag=dag)

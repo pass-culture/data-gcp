@@ -9,10 +9,7 @@ from common.config import (
     GCP_PROJECT_ID,
     DAG_FOLDER,
 )
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryExecuteQueryOperator,
-)
-
+from common.operators.biquery import bigquery_job_task
 from common.utils import getting_service_account_token, depends_loop
 
 from common.alerts import task_fail_slack_alert
@@ -66,16 +63,7 @@ end_raw = DummyOperator(task_id="end_raw", dag=dag)
 
 analytics_table_jobs = {}
 for name, params in analytics_tables.items():
-
-    task = BigQueryExecuteQueryOperator(
-        task_id=f"{name}",
-        sql=params["sql"],
-        write_disposition="WRITE_TRUNCATE",
-        use_legacy_sql=False,
-        destination_dataset_table=params["destination_dataset_table"],
-        dag=dag,
-    )
-
+    task = bigquery_job_task(dag=dag, table=name, job_params=params)
     analytics_table_jobs[name] = {
         "operator": task,
         "depends": params.get("depends", []),

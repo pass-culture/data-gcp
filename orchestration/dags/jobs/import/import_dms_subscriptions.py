@@ -21,6 +21,7 @@ from common.config import (
     BIGQUERY_ANALYTICS_DATASET,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
+    DAG_FOLDER,
 )
 
 from common.utils import getting_service_account_token
@@ -28,6 +29,8 @@ from dependencies.dms_subscriptions.import_dms_subscriptions import (
     parse_api_result,
     ANALYTICS_TABLES,
 )
+
+from common import macros
 
 DMS_FUNCTION_NAME = "dms_" + ENV_SHORT_NAME
 
@@ -46,6 +49,8 @@ with DAG(
     schedule_interval="0 1 * * *",
     catchup=False,
     dagrun_timeout=timedelta(minutes=180),
+    user_defined_macros=macros.default,
+    template_searchpath=DAG_FOLDER,
 ) as dag:
 
     start = DummyOperator(task_id="start")

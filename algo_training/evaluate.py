@@ -3,6 +3,7 @@ from datetime import datetime
 import mlflow.tensorflow
 import pandas as pd
 import tensorflow as tf
+import typer
 from loguru import logger
 
 from metrics import compute_metrics, get_actual_and_predicted
@@ -121,7 +122,22 @@ def evaluate(
     return metrics
 
 
-def run(experiment_name: str, model_name: str):
+def run(
+    experiment_name: str = typer.Option(
+        EXPERIMENT_NAME, help="Name of the experiment on MLflow"
+    ),
+    model_name: str = typer.Option(MODEL_NAME, help="Name of the model to evaluate"),
+    input_type: str = typer.Option(
+        "bookings",
+        help="Data type used for training. Handled values are bookings and clicks",
+    ),
+    training_dataset_name: str = typer.Option(
+        "positive_data_train", help="Name of the training dataset in storage"
+    ),
+    test_dataset_name: str = typer.Option(
+        "positive_data_test", help="Name of the test dataset in storage"
+    ),
+):
     logger.info("-------EVALUATE START------- ")
     client_id = get_secret("mlflow_client_id")
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
@@ -152,8 +168,15 @@ def run(experiment_name: str, model_name: str):
             project_id=f"{GCP_PROJECT_ID}",
             if_exists="append",
         )
-        metrics = evaluate(client_id, loaded_model, STORAGE_PATH)
+        metrics = evaluate(
+            client_id,
+            loaded_model,
+            STORAGE_PATH,
+            input_type,
+            training_dataset_name,
+            test_dataset_name,
+        )
 
 
 if __name__ == "__main__":
-    run(experiment_name=EXPERIMENT_NAME, model_name=MODEL_NAME)
+    typer.run(run)

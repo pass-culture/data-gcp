@@ -126,7 +126,7 @@ class RecommendableOffersQueryBuilder:
             source_table_name="reco_non_geolocated_offers",
             export_table_name="selected_non_geolocated_offers",
         )
-
+        # Default
         if self.reco_model.user.iris_id and self.reco_model.include_digital:
             return f"""
                 WITH {reco_geolocated_offers_sql}, {filter_by_distance_sql}, {reco_non_geolocated_offers_sql}, {selected_offers_sql}
@@ -139,7 +139,7 @@ class RecommendableOffersQueryBuilder:
                 ORDER BY {order_query}
                 LIMIT {self.recommendable_offer_limit}
             """
-
+        # No digital offer (case filtered by events)
         elif self.reco_model.user.iris_id:
             return f"""
                 WITH {reco_geolocated_offers_sql}, {filter_by_distance_sql}
@@ -147,13 +147,17 @@ class RecommendableOffersQueryBuilder:
                 ORDER BY {order_query}
                 LIMIT {self.recommendable_offer_limit}
             """
-        else:
+        # No geoloc
+        elif self.reco_model.include_digital:
             return f"""
                 WITH {reco_non_geolocated_offers_sql}, {selected_offers_sql}
                 SELECT * FROM selected_non_geolocated_offers 
                 ORDER BY {order_query}
                 LIMIT {self.recommendable_offer_limit}
             """
+        # No reco
+        else:
+            return None
 
     def _get_reco_offers(
         self,

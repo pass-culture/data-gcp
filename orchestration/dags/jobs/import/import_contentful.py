@@ -70,9 +70,10 @@ for table, job_params in contentful_tables.items():
     table_jobs[table] = {
         "operator": task,
         "depends": job_params.get("depends", []),
+        "dag_depends": job_params.get("dag_depends", []),
     }
 
-table_jobs = depends_loop(table_jobs, start)
+table_jobs = depends_loop(table_jobs, start, dag=dag)
 end = DummyOperator(task_id="end", dag=dag)
 
 getting_contentful_service_account_token >> import_contentful_data_to_bigquery >> start

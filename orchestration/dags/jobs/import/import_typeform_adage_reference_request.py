@@ -17,24 +17,17 @@ from common.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
 )
+from common.utils import getting_service_account_token
 
 FUNCTION_NAME = f"typeform_adage_reference_request_{ENV_SHORT_NAME}"
 
 
 default_dag_args = {
-    "start_date": datetime.datetime(2022, 2, 7),
+    "start_date": datetime.datetime(2020, 12, 1),
     "on_failure_callback": task_fail_slack_alert,
     "retries": 1,
     "project_id": GCP_PROJECT_ID,
 }
-
-
-def getting_service_account_token():
-    function_url = (
-        f"https://europe-west1-{GCP_PROJECT_ID}.cloudfunctions.net/{FUNCTION_NAME}"
-    )
-    open_id_connect_token = id_token.fetch_id_token(Request(), function_url)
-    return open_id_connect_token
 
 
 dag = DAG(
@@ -42,7 +35,7 @@ dag = DAG(
     default_args=default_dag_args,
     description="Import Typeform Adage Reference Request from API",
     on_failure_callback=None,
-    schedule_interval="0 2 * * *",
+    schedule_interval="0 1 * * *",
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
 )
@@ -52,6 +45,9 @@ start = DummyOperator(task_id="start", dag=dag)
 getting_service_account_token = PythonOperator(
     task_id="getting_service_account_token",
     python_callable=getting_service_account_token,
+    op_kwargs={
+        "function_name": f"{FUNCTION_NAME}",
+    },
     dag=dag,
 )
 

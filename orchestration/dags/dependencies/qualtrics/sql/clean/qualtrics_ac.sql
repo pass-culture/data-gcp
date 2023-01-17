@@ -2,7 +2,7 @@ WITH previous_export AS (
     SELECT 
         DISTINCT email 
     FROM  `{{ bigquery_clean_dataset }}.qualtrics_ac`
-    WHERE calculation_month >= DATE_SUB(DATE("{{ current_month(ds) }}"), INTERVAL 3 MONTH)
+    WHERE calculation_month >= DATE_SUB(DATE("{{ current_month(ds) }}"), INTERVAL 1 MONTH)
 
 
 ),lieux_physique AS (

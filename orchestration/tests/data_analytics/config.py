@@ -507,6 +507,8 @@ BIGQUERY_SCHEMAS = {
     "user_beneficiary": {
         "user_id": "STRING",
         "user_creation_date": "DATETIME",
+        "user_has_enabled_marketing_email": "BOOLEAN",
+        "user_humanized_id": "STRING",
         "user_postal_code": "STRING",
         "user_activity": "STRING",
         "user_civility": "STRING",

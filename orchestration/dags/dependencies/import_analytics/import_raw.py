@@ -1,10 +1,4 @@
 import os
-from common.config import (
-    BIGQUERY_RAW_DATASET,
-    DAG_FOLDER,
-    APPLICATIVE_EXTERNAL_CONNECTION_ID,
-    GCP_REGION,
-)
 
 RAW_SQL_PATH = f"dependencies/import_analytics/sql/raw"
 

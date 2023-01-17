@@ -1,7 +1,11 @@
+{{ create_humanize_id_function() }}
+
 WITH user_beneficiary as (
     SELECT 
         user_id,
         user_creation_date,
+        humanize_id(user_id) AS user_humanized_id,
+        user_has_enabled_marketing_email,
         -- keep user_postal_code by default.
         COALESCE(
         CASE

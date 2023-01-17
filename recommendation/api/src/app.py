@@ -81,39 +81,6 @@ def health_check_iris_venues_mv_status():
     return jsonify(table_status), 200
 
 
-@app.route("/recommendation/<user_id>", methods=["GET", "POST"])
-def recommendation(user_id: int):
-    call_id = uuid.uuid4()
-    if request.args.get("token", None) != API_TOKEN:
-        return "Forbidden", 403
-
-    internal = parse_internal(request)
-    longitude, latitude, geo_located = parse_geolocation(request)
-    input_reco = parse_params(request)
-
-    user = User(user_id, call_id, longitude, latitude)
-    scoring = Recommendation(user, params_in=input_reco)
-    user_recommendations = scoring.get_scoring()
-
-    if not internal:
-        scoring.save_recommendation(user_recommendations)
-
-    return jsonify(
-        {
-            "recommended_offers": user_recommendations,
-            "params": {
-                "reco_origin": scoring.reco_origin,
-                "model_endpoint": scoring.model_params.name,
-                "model_name": scoring.scoring.model_display_name,
-                "model_version": scoring.scoring.model_version,
-                "geo_located": geo_located,
-                "filtered": input_reco.has_conditions if input_reco else False,
-                "call_id": call_id,
-            },
-        }
-    )
-
-
 @app.route("/playlist_recommendation/<user_id>", methods=["GET", "POST"])
 def playlist_recommendation(user_id: int):
     # unique id build for each call

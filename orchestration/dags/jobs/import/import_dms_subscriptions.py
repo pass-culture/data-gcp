@@ -24,24 +24,14 @@ from common.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
 )
+
+from common.utils import getting_service_account_token
 from dependencies.import_dms_subscriptions import parse_api_result
 
 DMS_FUNCTION_NAME = "dms_" + ENV_SHORT_NAME
 
-
-def getting_service_account_token():
-    function_url = (
-        "https://europe-west1-"
-        + GCP_PROJECT_ID
-        + ".cloudfunctions.net/"
-        + DMS_FUNCTION_NAME
-    )
-    open_id_connect_token = id_token.fetch_id_token(Request(), function_url)
-    return open_id_connect_token
-
-
 default_args = {
-    "start_date": datetime(2021, 8, 29),
+    "start_date": datetime(2020, 12, 1),
     "on_failure_callback": task_fail_slack_alert,
     "retries": 2,
     "retry_delay": timedelta(minutes=5),
@@ -62,6 +52,9 @@ with DAG(
     getting_service_account_token = PythonOperator(
         task_id="getting_service_account_token",
         python_callable=getting_service_account_token,
+        op_kwargs={
+            "function_name": f"{DMS_FUNCTION_NAME}",
+        },
     )
 
     dms_to_gcs = SimpleHttpOperator(
@@ -154,6 +147,10 @@ with DAG(
             {"name": "demandeur_entreprise_raisonSociale", "type": "STRING"},
             {"name": "demandeur_entreprise_siretSiegeSocial", "type": "STRING"},
             {"name": "numero_identifiant_lieu", "type": "STRING"},
+            {"name": "statut", "type": "STRING"},
+            {"name": "typologie", "type": "STRING"},
+            {"name": "academie_instructeur", "type": "STRING"},
+            {"name": "academie_groupe_instructeur", "type": "STRING"},
         ],
         write_disposition="WRITE_APPEND",
     )

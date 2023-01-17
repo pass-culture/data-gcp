@@ -409,7 +409,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "favourite_cnt": 1.0,
         "stock": 12.0,
         "offer_humanized_id": "AQ",
-        "passculture_pro_url": "https://passculture.pro/offres/AQ/edition",
+        "passculture_pro_url": "https://passculture.pro/offre/individuelle/AQ/informations",
         "webapp_url": "https://passculture.app/offre/4",
         "mediation_humanized_id": None,
         "first_booking_cnt": None,

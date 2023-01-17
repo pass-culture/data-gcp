@@ -163,7 +163,10 @@ with DAG(
         f"--experiment-name {dag_config['EXPERIMENT_NAME']} "
         "--batch-size {{ params.batch_size }} "
         "--embedding-size {{ params.embedding_size }} "
-        "--seed {{ ds_nodash }}",
+        "--seed {{ ds_nodash }} "
+        f"--dataset {BIGQUERY_TMP_DATASET} "
+        f"--training-table-name {DATE}_recommendation_training_data_clicks "
+        f"--validation-table-name {DATE}_recommendation_validation_data_clicks",
         dag=dag,
     )
 

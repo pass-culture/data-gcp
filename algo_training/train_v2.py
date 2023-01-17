@@ -49,15 +49,22 @@ def train(
         f"raw_{ENV_SHORT_NAME}",
         help="BigQuery dataset in which the training and validation tables are located",
     ),
+    training_table_name: str = typer.Option(
+        "recommendation_training_data", help="BigQuery table containing training data"
+    ),
+    validation_table_name: str = typer.Option(
+        "recommendation_validation_data",
+        help="BigQuery table containing validation data",
+    ),
 ):
     tf.random.set_seed(seed)
 
     # Load BigQuery data
-    train_data = get_data(
-        dataset=dataset, table_name="recommendation_training_data"
-    ).astype(dtype={"count": int})
+    train_data = get_data(dataset=dataset, table_name=training_table_name).astype(
+        dtype={"count": int}
+    )
     validation_data = get_data(
-        dataset=dataset, table_name="recommendation_validation_data"
+        dataset=dataset, table_name=validation_table_name
     ).astype(dtype={"count": int})
 
     training_user_ids = train_data["user_id"].unique()

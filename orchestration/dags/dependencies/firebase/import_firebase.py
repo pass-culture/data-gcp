@@ -17,6 +17,7 @@ ENV_SHORT_NAME_APP_INFO_ID_MAPPING_PRO = {
         "pro.testing.passculture.team",
         "integration.passculture.pro",
         "passculture.pro",
+        "pro.staging.passculture.team",
     ],
     "prod": ["passculture.pro"],
 }

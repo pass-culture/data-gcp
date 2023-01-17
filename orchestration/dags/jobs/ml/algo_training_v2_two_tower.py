@@ -104,7 +104,9 @@ with DAG(
             type="string",
         ),
         "instance_name": Param(
-            default=gce_params["instance_name"] + "-" + train_params["config_file_name"],
+            default=gce_params["instance_name"]
+            + "-"
+            + train_params["config_file_name"],
             type="string",
         ),
     },

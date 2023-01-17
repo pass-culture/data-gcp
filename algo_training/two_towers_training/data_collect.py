@@ -33,9 +33,8 @@ def main(
         CONFIG_FEATURES_PATH + f"/{config_file_name}.json", mode="r", encoding="utf-8"
     ) as config_file:
         features = json.load(config_file)
-        columns_selected = (
-            list(features["user_embedding_layers"].keys())
-            + list(features["item_embedding_layers"].keys())
+        columns_selected = list(features["user_embedding_layers"].keys()) + list(
+            features["item_embedding_layers"].keys()
         )
 
     raw_data = get_data(

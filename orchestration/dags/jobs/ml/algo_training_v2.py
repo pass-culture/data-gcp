@@ -172,8 +172,8 @@ with DAG(
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
         command="python evaluate.py "
-        "--training_dataset_name recommendation_training_data "
-        "--test_dataset_name recommendation_test_data",
+        "--training-dataset-name recommendation_training_data "
+        "--test-dataset-name recommendation_test_data",
         dag=dag,
     )
 

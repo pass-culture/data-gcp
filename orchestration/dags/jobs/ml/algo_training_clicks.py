@@ -152,8 +152,8 @@ with DAG(
             base_dir=dag_config["BASE_DIR"],
             environment=dag_config,
             command=f"python data_collect.py --dataset {BIGQUERY_TMP_DATASET} "
-            f"--table-name {DATE}_recommendation_{split}_data_clicks "
-            f"--output-name recommendation_{split}_data",
+            f"--table-name {DATE}_recommendation_{split}_data "
+            f"--output-name recommendation_{split}_data_clicks",
             dag=dag,
         )
         store_recommendation_data[split] = task

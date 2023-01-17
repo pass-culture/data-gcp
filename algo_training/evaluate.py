@@ -36,7 +36,7 @@ def evaluate(
     training_dataset_name: str = "positive_data_train",
     test_dataset_name: str = "positive_data_test",
 ):
-    booking_raw_data = get_data(
+    raw_data = get_data(
         dataset=f"raw_{ENV_SHORT_NAME}", table_name=f"training_data_{input_type}"
     )
 
@@ -52,7 +52,7 @@ def evaluate(
                 "item_id": str,
             },
         )[["user_id", "item_id"]]
-        .merge(booking_raw_data, on=["user_id", "item_id"], how="inner")
+        .merge(raw_data, on=["user_id", "item_id"], how="inner")
         .drop_duplicates()
     )
 
@@ -65,7 +65,7 @@ def evaluate(
 
     data_model_dict = {
         "data": {
-            "raw": booking_raw_data,
+            "raw": raw_data,
             "training_item_ids": training_item_ids,
             "test": positive_data_test,
         },

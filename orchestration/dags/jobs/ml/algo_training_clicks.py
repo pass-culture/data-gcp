@@ -171,7 +171,7 @@ with DAG(
         task_id="evaluate",
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
-        export_config=dag_config,
+        environment=dag_config,
         command="python evaluate.py "
         "--training-dataset-name recommendation_training_data_clicks "
         "--test-dataset-name recommendation_test_data_clicks",

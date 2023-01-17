@@ -31,7 +31,11 @@ def main(
     ),
 ) -> None:
     dataset = get_data(
-        dataset, table_name, limit_filter, subcategory_ids, event_day_number
+        dataset,
+        table_name,
+        max_limit=limit_filter,
+        subcategory_ids=subcategory_ids,
+        event_day_number=event_day_number,
     )
     logger.info(f"Dataset size: {dataset.shape[0]}")
     dataset.to_csv(f"{STORAGE_PATH}/{output_name}.csv", index=False)

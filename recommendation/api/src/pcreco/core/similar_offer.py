@@ -68,19 +68,21 @@ class SimilarOffer:
 
         start = time.time()
         order_query = "booking_number DESC"
-        query = text(
-            RecommendableOffersQueryBuilder(
-                self, self.recommendable_offer_limit
-            ).generate_query(order_query)
-        )
-        connection = get_session()
-        query_result = connection.execute(
-            query,
-            user_id=str(self.user.id),
-            user_iris_id=str(self.offer.iris_id),
-            user_longitude=float(self.offer.longitude),
-            user_latitude=float(self.offer.latitude),
-        ).fetchall()
+
+        recommendable_offers_query = RecommendableOffersQueryBuilder(
+            self, self.recommendable_offer_limit
+        ).generate_query(order_query)
+
+        query_result = []
+        if recommendable_offers_query is not None:
+            connection = get_session()
+            query_result = connection.execute(
+                text(recommendable_offers_query),
+                user_id=str(self.user.id),
+                user_iris_id=str(self.offer.iris_id),
+                user_longitude=float(self.offer.longitude),
+                user_latitude=float(self.offer.latitude),
+            ).fetchall()
 
         user_recommendation = {
             row[4]: {

@@ -141,6 +141,9 @@ class PlaylistParamsIn:
             self.mixing_features = MIXING_FEATURE
         if self.include_digital is None:
             self.include_digital = True
+        # no digital offers when is_event=True
+        if self.is_event == True:
+            self.include_digital = False
 
     def _get_conditions(self) -> str:
         condition = ""

@@ -73,10 +73,6 @@ def compute_metrics(data_model_dict, k):
     )
     logger.info("Compute coverage")
     coverage = get_coverage_at_k(data_model_dict, k)
-    logger.info("Compute diversification score")
-    avg_div_score, avg_div_score_panachage = compute_diversification_score(
-        data_model_dict, k
-    )
     logger.info("Compute personalization score")
     personalization_at_k, personalization_at_k_panachage = compute_personalization(
         data_model_dict, k
@@ -89,8 +85,6 @@ def compute_metrics(data_model_dict, k):
         "mapk_panachage": mapk_panachage,
         "personalization_at_k": personalization_at_k,
         "personalization_at_k_panachage": personalization_at_k_panachage,
-        "avg_div_score": avg_div_score,
-        "avg_div_score_panachage": avg_div_score_panachage,
     }
     return data_model_dict
 
@@ -152,10 +146,11 @@ def get_personalization(model_predictions, k):
 def compute_diversification_score(data_model_dict, k):
     df_raw = data_model_dict["data"]["raw"]
     recos = data_model_dict["top_offers"].model_predicted.values.tolist()
+    avg_diversification = get_avg_diversification_score(df_raw, recos, k)
+
     recos_panachage = data_model_dict[
         "top_offers"
     ].predictions_diversified.values.tolist()
-    avg_diversification = get_avg_diversification_score(df_raw, recos, k)
     avg_diversification_panachage = get_avg_diversification_score(
         df_raw, recos_panachage, k
     )

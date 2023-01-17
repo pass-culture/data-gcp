@@ -6,7 +6,11 @@ import tensorflow as tf
 import typer
 from loguru import logger
 
-from metrics import compute_metrics, get_actual_and_predicted
+from metrics import (
+    compute_metrics,
+    get_actual_and_predicted,
+    compute_diversification_score,
+)
 from models.v1.match_model import MatchModel
 from tools.data_collect_queries import get_data
 from utils import (
@@ -23,6 +27,7 @@ from utils import (
     NUMBER_OF_PRESELECTED_OFFERS,
     EVALUATION_USER_NUMBER,
     EXPERIMENT_NAME,
+    EVALUATION_USER_NUMBER_DIVERSIFICATION,
 )
 
 k_list = [RECOMMENDATION_NUMBER, NUMBER_OF_PRESELECTED_OFFERS]
@@ -58,27 +63,57 @@ def evaluate(
     users_to_test = positive_data_test["user_id"].unique()[
         : min(EVALUATION_USER_NUMBER, positive_data_test["user_id"].nunique())
     ]
-    positive_data_test = positive_data_test.loc[
-        lambda df: df["user_id"].isin(users_to_test)
-    ]
-
     data_model_dict = {
         "data": {
             "raw": raw_data,
             "training_item_ids": training_item_ids,
-            "test": positive_data_test,
+            "test": positive_data_test.loc[
+                lambda df: df["user_id"].isin(users_to_test)
+            ],
+        },
+        "model": model,
+    }
+
+    diversification_users_to_test = users_to_test
+    if input_type == "clicks":
+        diversification_users_to_test = positive_data_test["user_id"].unique()[
+            : min(
+                EVALUATION_USER_NUMBER_DIVERSIFICATION,
+                positive_data_test["user_id"].nunique(),
+            )
+        ]
+
+    diversification_model_dict = {
+        "data": {
+            "raw": raw_data,
+            "training_item_ids": training_item_ids,
+            "test": positive_data_test.loc[
+                lambda df: df["user_id"].isin(diversification_users_to_test)
+            ],
         },
         "model": model,
     }
 
     logger.info("Get predictions")
     data_model_dict_w_actual_and_predicted = get_actual_and_predicted(data_model_dict)
+    diversification_model_dict["top_offers"] = data_model_dict_w_actual_and_predicted[
+        "top_offers"
+    ].loc[lambda df: df["user_id"].isin(diversification_users_to_test)]
+
     metrics = {}
     for k in k_list:
         logger.info(f"Computing metrics for k={k}")
         data_model_dict_w_metrics_at_k = compute_metrics(
             data_model_dict_w_actual_and_predicted, k
         )
+        logger.info("Compute diversification score")
+        avg_div_score, avg_div_score_panachage = compute_diversification_score(
+            diversification_model_dict, k
+        )
+        data_model_dict_w_metrics_at_k["metrics"]["avg_div_score"] = avg_div_score
+        data_model_dict_w_metrics_at_k["metrics"][
+            "avg_div_score_panachage"
+        ] = avg_div_score_panachage
 
         metrics[f"recall_at_{k}"] = data_model_dict_w_metrics_at_k["metrics"]["mark"]
         metrics[f"precision_at_{k}"] = data_model_dict_w_metrics_at_k["metrics"]["mapk"]

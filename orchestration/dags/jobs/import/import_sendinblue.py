@@ -4,16 +4,16 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.http.operators.http import SimpleHttpOperator
 from airflow.operators.python import PythonOperator
 from common.config import DAG_FOLDER
-from common.config import (
-    ENV_SHORT_NAME,
-    GCP_PROJECT_ID,
-    DAG_FOLDER,
-)
+from common.config import ENV_SHORT_NAME, GCP_PROJECT_ID, DAG_FOLDER
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryExecuteQueryOperator,
 )
 
-from common.utils import getting_service_account_token, depends_loop
+from common.utils import (
+    getting_service_account_token,
+    depends_loop,
+    get_airflow_schedule,
+)
 
 from common.alerts import task_fail_slack_alert
 
@@ -33,7 +33,7 @@ dag = DAG(
     "import_sendinblue",
     default_args=default_dag_args,
     description="Import sendinblue tables",
-    schedule_interval="00 01 * * *",
+    schedule_interval=get_airflow_schedule("00 01 * * *"),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,
@@ -43,9 +43,7 @@ dag = DAG(
 service_account_token = PythonOperator(
     task_id="getting_sendinblue_service_account_token",
     python_callable=getting_service_account_token,
-    op_kwargs={
-        "function_name": f"sendinblue_import_{ENV_SHORT_NAME}",
-    },
+    op_kwargs={"function_name": f"sendinblue_import_{ENV_SHORT_NAME}"},
     dag=dag,
 )
 

@@ -22,12 +22,12 @@ from common.config import (
     ENV_SHORT_NAME,
 )
 from common.alerts import task_fail_slack_alert
-from common.utils import getting_service_account_token
+from common.utils import getting_service_account_token, get_airflow_schedule
 from dependencies.import_addresses import USER_LOCATIONS_SCHEMA
-
 
 FUNCTION_NAME = f"addresses_import_{ENV_SHORT_NAME}"
 USER_LOCATIONS_TABLE = "user_locations"
+schedule_interval = ("*/10 * * * *" if ENV_SHORT_NAME == "prod" else "30 2 * * *",)
 
 default_args = {
     "start_date": datetime(2021, 3, 30),
@@ -50,7 +50,7 @@ with DAG(
     default_args=default_args,
     description="Importing new data from addresses api every day.",
     # every 10 minutes if prod once a day otherwise
-    schedule_interval="*/10 * * * *" if ENV_SHORT_NAME == "prod" else "30 2 * * *",
+    schedule_interval=get_airflow_schedule(schedule_interval),
     catchup=False,
     dagrun_timeout=timedelta(minutes=180),
 ) as dag:
@@ -60,9 +60,7 @@ with DAG(
     getting_service_account_token = PythonOperator(
         task_id="getting_service_account_token",
         python_callable=getting_service_account_token,
-        op_kwargs={
-            "function_name": FUNCTION_NAME,
-        },
+        op_kwargs={"function_name": FUNCTION_NAME},
     )
 
     addresses_to_gcs = SimpleHttpOperator(

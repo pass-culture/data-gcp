@@ -6,11 +6,11 @@ from airflow.providers.google.cloud.operators.bigquery import (
 )
 from airflow.operators.dummy_operator import DummyOperator
 
-from common.config import GCP_PROJECT_ID, ENV_SHORT_NAME
+from common.config import GCP_PROJECT_ID, ENV_SHORT_NAME, DAG_FOLDER
 from common.alerts import task_fail_slack_alert
 from dependencies.backend.create_tables import create_tables
 from common import macros
-from common.config import DAG_FOLDER
+from common.utils import get_airflow_schedule
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),
@@ -31,7 +31,7 @@ for schedule_type, schedule_cron in dag_schedule.items():
         default_args=default_dag_args,
         description=f"Export {schedule_type} tables for backend needs",
         on_failure_callback=task_fail_slack_alert,
-        schedule_interval=schedule_cron,
+        schedule_interval=get_airflow_schedule(schedule_cron),
         catchup=False,
         dagrun_timeout=datetime.timedelta(minutes=120),
         user_defined_macros=macros.default,

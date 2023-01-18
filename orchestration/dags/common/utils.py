@@ -10,6 +10,7 @@ from common.config import (
     ENV_SHORT_NAME,
     FAILED_STATES,
     ALLOWED_STATES,
+    LOCAL_ENV,
 )
 
 
@@ -118,3 +119,9 @@ def one_line_query(sql_path):
     with open(f"{sql_path}", "r") as fp:
         lines = " ".join([line.strip() for line in fp.readlines()])
     return lines
+
+def get_airflow_schedule(schedule_interval, local_env=LOCAL_ENV): 
+    if local_env == "1":
+        return None
+    else: 
+        return schedule_interval 

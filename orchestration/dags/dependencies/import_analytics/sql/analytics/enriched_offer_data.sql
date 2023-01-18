@@ -138,7 +138,7 @@ SELECT
                 OR subcategories.id = 'LIVRE_NUMERIQUE'
                 OR subcategories.id = 'ABO_LIVRE_NUMERIQUE'
                 OR subcategories.id = 'TELECHARGEMENT_LIVRE_AUDIO'
-                OR subcategories.category_id = 'MEDIA'
+                OR subcategories.category = 'MEDIA'
             )
         ) THEN TRUE
         ELSE FALSE
@@ -220,17 +220,17 @@ SELECT
     offer_extracted_data.isbn,
     isbn_editor.book_editor,
     CASE
-        WHEN subcategories.category_id <> 'MUSIQUE_LIVE'
+        WHEN subcategories.category <> 'MUSIQUE_LIVE'
         AND offer_extracted_data.showType IS NOT NULL THEN offer_extracted_data.showType
-        WHEN subcategories.category_id = 'MUSIQUE_LIVE' THEN offer_extracted_data.musicType
-        WHEN subcategories.category_id <> 'SPECTACLE'
+        WHEN subcategories.category = 'MUSIQUE_LIVE' THEN offer_extracted_data.musicType
+        WHEN subcategories.category <> 'SPECTACLE'
         AND offer_extracted_data.musicType IS NOT NULL THEN offer_extracted_data.musicType
     END AS type,
     CASE
-        WHEN subcategories.category_id <> 'MUSIQUE_LIVE'
+        WHEN subcategories.category <> 'MUSIQUE_LIVE'
         AND offer_extracted_data.showSubType IS NOT NULL THEN offer_extracted_data.showSubType
-        WHEN subcategories.category_id = 'MUSIQUE_LIVE' THEN offer_extracted_data.musicSubtype
-        WHEN subcategories.category_id <> 'SPECTACLE'
+        WHEN subcategories.category = 'MUSIQUE_LIVE' THEN offer_extracted_data.musicSubtype
+        WHEN subcategories.category <> 'SPECTACLE'
         AND offer_extracted_data.musicsubType IS NOT NULL THEN offer_extracted_data.musicSubtype
     END AS subType
 FROM

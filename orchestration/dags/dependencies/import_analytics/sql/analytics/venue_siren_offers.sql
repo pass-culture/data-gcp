@@ -5,7 +5,7 @@ SELECT
     ,venue.venue_id
     ,venue.venue_name
     ,venue.venue_public_name
-    ,subcategories.category_id
+    ,subcategories.category
     ,subcategories.id AS subcategory
     ,offer.offer_id
     ,offer.offer_name

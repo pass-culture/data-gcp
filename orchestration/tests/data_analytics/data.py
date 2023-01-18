@@ -289,13 +289,13 @@ ENRICHED_OFFER_DATA_INPUT = {
     "subcategories": [
         {
             "id": "SEANCE_CINE",
-            "category_id": "CINEMA",
+            "category": "CINEMA",
             "is_physical_deposit": False,
             "is_event": True,
         },
         {
             "id": "LIVRE_PAPIER",
-            "category_id": "LIVRE",
+            "category": "LIVRE",
             "is_physical_deposit": True,
             "is_event": False,
         },
@@ -509,7 +509,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_INPUT = {
     "subcategories": [
         {
             "id": "CONCERT",
-            "category_id": "MUSIQUE_LIVE",
+            "category": "MUSIQUE_LIVE",
         }
     ],
     "academie_dept": [
@@ -1251,7 +1251,7 @@ ENRICHED_BOOKING_DATA_INPUT = {
     "subcategories": [
         {
             "id": "ACHAT_INSTRUMENT",
-            "category_id": "INSTRUMENT",
+            "category": "INSTRUMENT",
             "is_physical_deposit": True,
             "is_digital_deposit": False,
             "is_event": False,

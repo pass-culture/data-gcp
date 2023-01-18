@@ -5,7 +5,7 @@ SELECT
     booking_creation_date as event_date,
     offer_item_ids.item_id as item_id,
     offer.offer_subcategoryId as offer_subcategoryid,
-    subcategories.category_id as offer_categoryId,
+    subcategories.category as offer_categoryId,
     enroffer.genres,
     enroffer.rayon,
     enroffer.type,

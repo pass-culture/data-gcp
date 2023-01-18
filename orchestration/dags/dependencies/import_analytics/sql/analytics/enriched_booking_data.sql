@@ -76,7 +76,7 @@ SELECT
     stock.stock_id,
     offer.offer_id,
     offer.offer_subcategoryId,
-    subcategories.category_id AS offer_category_id,
+    subcategories.category AS offer_category_id,
     offer.offer_name,
     venue.venue_name,
     venue_label.label as venue_label_name,

@@ -5,7 +5,7 @@ WITH get_recommendable_offers AS(
         offer.offer_product_id AS product_id,
         offer.venue_id AS venue_id,
         offer.offer_subcategoryId AS subcategory_id,
-        subcategories.category_id AS category,
+        subcategories.category AS category,
         subcategories.search_group_name AS search_group_name,
         offer.offer_name AS name,
         offer.offer_is_duo AS offer_is_duo,
@@ -41,7 +41,7 @@ WITH get_recommendable_offers AS(
                         OR subcategories.id = 'LIVRE_NUMERIQUE'
                         OR subcategories.id = 'ABO_LIVRE_NUMERIQUE'
                         OR subcategories.id = 'TELECHARGEMENT_LIVRE_AUDIO'
-                        OR subcategories.category_id = 'MEDIA'
+                        OR subcategories.category = 'MEDIA'
                     )
                 ) THEN TRUE
                 ELSE FALSE

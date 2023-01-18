@@ -56,7 +56,7 @@ SELECT
     collective_stock.collective_stock_booking_limit_date_time,
     collective_stock.collective_stock_number_of_tickets AS number_of_tickets,
     collective_offer.collective_offer_subcategory_id,
-    subcategories.category_id AS collective_offer_category_id,
+    subcategories.category AS collective_offer_category_id,
     collective_offer.collective_offer_is_active,
     CASE
         WHEN collective_offer.collective_offer_id IN (
@@ -129,7 +129,7 @@ SELECT
     collective_stock.collective_stock_booking_limit_date_time,
     collective_stock.collective_stock_number_of_tickets AS number_of_tickets,
     template.collective_offer_subcategory_id,
-    subcategories.category_id AS collective_offer_category_id,
+    subcategories.category AS collective_offer_category_id,
     template.collective_offer_is_active,
     FALSE AS collective_offer_is_bookable,
     COALESCE(collective_booking_cnt, 0.0) AS collective_booking_cnt,

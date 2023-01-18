@@ -377,7 +377,7 @@ BIGQUERY_SCHEMAS = {
     },
     "subcategories": {
         "id": "STRING",
-        "category_id": "STRING",
+        "category": "STRING",
         "is_event": "BOOLEAN",
         "is_physical_deposit": "BOOLEAN",
         "is_digital_deposit": "BOOLEAN",

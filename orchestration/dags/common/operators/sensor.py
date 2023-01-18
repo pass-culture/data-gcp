@@ -25,7 +25,7 @@ class TimeSleepSensor(BaseSensorOperator):
         run_id = context["dag_run"].run_id
         is_scheduled = run_id.startswith("scheduled__")
         if is_scheduled:
-            sensor_task_start_date = ti.start_date
+            sensor_task_start_date = ti.execution_date
             target_time = sensor_task_start_date + self.sleep_duration
 
             self.log.info(

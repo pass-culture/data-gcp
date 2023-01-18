@@ -7,7 +7,7 @@ from scripts.utils import (
     BQ_ADAGE_DTYPE,
     save_to_raw_bq,
 )
-
+from google.cloud import bigquery
 from google.cloud import secretmanager
 from google.auth.exceptions import DefaultCredentialsError
 import requests
@@ -56,17 +56,30 @@ def get_request(ENDPOINT, API_KEY, route):
             headers=headers,
         )
         if req.status_code == 200:
-            data = req.json()
-            df = pd.DataFrame(data)
-            _cols = list(df.columns)
-            for k, v in BQ_ADAGE_DTYPE.items():
-                if k not in _cols:
-                    df[k] = None
-                df[k] = df[k].astype(str)
-            return df
+            return req.json()
+
     except Exception as e:
         print("An unexpected error has happened {}".format(e))
     return None
+
+
+def import_adage():
+    client = bigquery.Client()
+    client.query(create_adage_table()).result()
+    data = get_request(ENDPOINT, API_KEY, route="partenaire-culturel")
+    df = pd.DataFrame(data)
+    _cols = list(df.columns)
+    for k, v in BQ_ADAGE_DTYPE.items():
+        if k not in _cols:
+            df[k] = None
+        df[k] = df[k].astype(str)
+
+    df.to_gbq(
+        f"""{BIGQUERY_TMP_DATASET}.adage_data_temp""",
+        project_id=GCP_PROJECT,
+        if_exists="replace",
+    )
+    client.query(adding_value()).result()
 
 
 def create_adage_table():

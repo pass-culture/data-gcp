@@ -106,20 +106,19 @@ def evaluate(
         data_model_dict_w_metrics_at_k = compute_metrics(
             data_model_dict_w_actual_and_predicted, k
         )
-        logger.info("Compute diversification score")
-        avg_div_score, avg_div_score_panachage = compute_diversification_score(
-            diversification_model_dict, k
-        )
-        data_model_dict_w_metrics_at_k["metrics"]["avg_div_score"] = avg_div_score
-        data_model_dict_w_metrics_at_k["metrics"][
-            "avg_div_score_panachage"
-        ] = avg_div_score_panachage
 
         metrics[f"recall_at_{k}"] = data_model_dict_w_metrics_at_k["metrics"]["mark"]
         metrics[f"precision_at_{k}"] = data_model_dict_w_metrics_at_k["metrics"]["mapk"]
 
         # Here we track metrics relate to pcreco output
         if k == RECOMMENDATION_NUMBER:
+            # AVG diverisification score is only calculate at k=RECOMMENDATION_NUMBER to match pcreco output
+            logger.info("Compute diversification score")
+            avg_div_score, avg_div_score_panachage = compute_diversification_score(
+                diversification_model_dict, k
+            )
+            logger.info("End of diverisification score computation")
+
             metrics[f"recall_at_{k}_panachage"] = data_model_dict_w_metrics_at_k[
                 "metrics"
             ]["mark_panachage"]
@@ -127,14 +126,11 @@ def evaluate(
                 "metrics"
             ]["mapk_panachage"]
 
-            # AVG diverisification score is only calculate at k=RECOMMENDATION_NUMBER to match pcreco output
-            metrics[
-                f"avg_diversification_score_at_{k}"
-            ] = data_model_dict_w_metrics_at_k["metrics"]["avg_div_score"]
+            metrics[f"avg_diversification_score_at_{k}"] = avg_div_score
 
             metrics[
                 f"avg_diversification_score_at_{k}_panachage"
-            ] = data_model_dict_w_metrics_at_k["metrics"]["avg_div_score_panachage"]
+            ] = avg_div_score_panachage
 
             metrics[
                 f"personalization_at_{k}_panachage"

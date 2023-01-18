@@ -27,7 +27,7 @@ from dependencies.import_addresses import USER_LOCATIONS_SCHEMA
 
 FUNCTION_NAME = f"addresses_import_{ENV_SHORT_NAME}"
 USER_LOCATIONS_TABLE = "user_locations"
-schedule_interval = ("*/10 * * * *" if ENV_SHORT_NAME == "prod" else "30 2 * * *",)
+schedule_interval = ("*/10 * * * *" if ENV_SHORT_NAME == "prod" else "30 2 * * *")
 
 default_args = {
     "start_date": datetime(2021, 3, 30),

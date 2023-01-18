@@ -51,10 +51,7 @@ def get_request(ENDPOINT, API_KEY, route):
     try:
         headers = {"X-omogen-api-key": API_KEY}
 
-        req = requests.get(
-            "{}/{}".format(ENDPOINT, route),
-            headers=headers,
-        )
+        req = requests.get("{}/{}".format(ENDPOINT, route), headers=headers)
         if req.status_code == 200:
             data = req.json()
             df = pd.DataFrame(data)
@@ -167,20 +164,21 @@ def get_adage_stats():
         results = get_request(ENDPOINT, API_KEY, route=f"stats-pass-culture/{_id}")
         for metric_name, rows in results.items():
             for metric_id, v in rows.items():
-                export.append(
-                    dict(
-                        {
-                            "metric_name": metric_name,
-                            "metric_id": metric_id,
-                            "educational_year_adage_id": _id,
-                            "metric_key": v[stats_dict[metric_name]],
-                            "involved_students": v["eleves"],
-                            "institutions": v["etabs"],
-                            "total_involved_students": v["totalEleves"],
-                            "total_institutions": v["totalEtabs"],
-                        },
+                if type(v) is dict:
+                    export.append(
+                        dict(
+                            {
+                                "metric_name": metric_name,
+                                "metric_id": metric_id,
+                                "educational_year_adage_id": _id,
+                                "metric_key": v[stats_dict[metric_name]],
+                                "involved_students": v["eleves"],
+                                "institutions": v["etabs"],
+                                "total_involved_students": v["totalEleves"],
+                                "total_institutions": v["totalEtabs"],
+                            }
+                        )
                     )
-                )
 
     df = pd.DataFrame(export)
     # force types

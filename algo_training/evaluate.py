@@ -193,7 +193,7 @@ def run(
             project_id=f"{GCP_PROJECT_ID}",
             if_exists="append",
         )
-        metrics = evaluate(
+        evaluate(
             client_id,
             loaded_model,
             STORAGE_PATH,

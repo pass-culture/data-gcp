@@ -107,8 +107,18 @@ def evaluate(
             data_model_dict_w_actual_and_predicted, k
         )
 
-        metrics[f"recall_at_{k}"] = data_model_dict_w_metrics_at_k["metrics"]["mark"]
-        metrics[f"precision_at_{k}"] = data_model_dict_w_metrics_at_k["metrics"]["mapk"]
+        metrics.update(
+            {
+                f"precision_at_{k}": data_model_dict_w_metrics_at_k["metrics"]["mapk"],
+                f"recall_at_{k}": data_model_dict_w_metrics_at_k["metrics"]["mark"],
+                f"coverage_at_{k}": data_model_dict_w_metrics_at_k["metrics"][
+                    "coverage"
+                ],
+                f"personalization_at_{k}": data_model_dict_w_metrics_at_k["metrics"][
+                    "personalization_at_k"
+                ],
+            }
+        )
 
         # Here we track metrics relate to pcreco output
         if k == RECOMMENDATION_NUMBER:
@@ -119,32 +129,21 @@ def evaluate(
             )
             logger.info("End of diverisification score computation")
 
-            metrics[f"recall_at_{k}_panachage"] = data_model_dict_w_metrics_at_k[
-                "metrics"
-            ]["mark_panachage"]
-            metrics[f"precision_at_{k}_panachage"] = data_model_dict_w_metrics_at_k[
-                "metrics"
-            ]["mapk_panachage"]
-
-            metrics[f"avg_diversification_score_at_{k}"] = avg_div_score
-
-            metrics[
-                f"avg_diversification_score_at_{k}_panachage"
-            ] = avg_div_score_panachage
-
-            metrics[
-                f"personalization_at_{k}_panachage"
-            ] = data_model_dict_w_metrics_at_k["metrics"][
-                "personalization_at_k_panachage"
-            ]
-
-        metrics[f"coverage_at_{k}"] = data_model_dict_w_metrics_at_k["metrics"][
-            "coverage"
-        ]
-
-        metrics[f"personalization_at_{k}"] = data_model_dict_w_metrics_at_k["metrics"][
-            "personalization_at_k"
-        ]
+            metrics.update(
+                {
+                    f"precision_at_{k}_panachage": data_model_dict_w_metrics_at_k[
+                        "metrics"
+                    ]["mapk_panachage"],
+                    f"recall_at_{k}_panachage": data_model_dict_w_metrics_at_k[
+                        "metrics"
+                    ]["mark_panachage"],
+                    f"avg_diversification_score_at_{k}": avg_div_score,
+                    f"avg_diversification_score_at_{k}_panachage": avg_div_score_panachage,
+                    f"personalization_at_{k}_panachage": data_model_dict_w_metrics_at_k[
+                        "metrics"
+                    ]["personalization_at_k_panachage"],
+                }
+            )
 
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
     mlflow.log_metrics(metrics)

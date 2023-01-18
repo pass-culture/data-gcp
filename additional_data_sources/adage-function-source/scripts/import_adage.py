@@ -7,16 +7,7 @@ from scripts.utils import (
     BQ_ADAGE_DTYPE,
     save_to_raw_bq,
 )
-from scripts.import_adage import (
-    create_adage_table,
-    get_request,
-    adding_value,
-    ENDPOINT,
-    API_KEY,
-)
 from google.cloud import bigquery
-from scripts.utils import GCP_PROJECT, BIGQUERY_TMP_DATASET
-
 from google.cloud import secretmanager
 from google.auth.exceptions import DefaultCredentialsError
 import requests

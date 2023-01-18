@@ -43,6 +43,7 @@ def get_subcategories(gcp_project_id, env_short_name):
     for subcats in subcategories:
         export_subcat.append(subcats.__dict__)
     df = pd.DataFrame(export_subcat)
+    df.rename(columns={"category": "category_id"})
     dtype_list = list(df.columns)
     for k, v in CATEGORIES_DTYPES.items():
         if k in dtype_list:

@@ -127,7 +127,7 @@ def run(experiment_name: str, model_name: str):
         artifact_uri = mlflow.get_artifact_uri("model")
         loaded_model = tf.keras.models.load_model(
             artifact_uri,
-            custom_objects={"TwoTowersMatchModel": TwoTowersMatchModel},
+            custom_objects={"MatchModel": TwoTowersMatchModel},
             compile=False,
         )
         log_results = {

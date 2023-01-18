@@ -16,7 +16,7 @@ from tools.constants import (
     TRAIN_DIR,
     STORAGE_PATH,
 )
-from tools.dataset_tools import build_dict_dataset
+from tools.tensorflow_tools import build_dict_dataset
 from tools.mlflow_tools import get_secret, connect_remote_mlflow, MLFlowLogging
 from tools.utils import save_pca_representation
 

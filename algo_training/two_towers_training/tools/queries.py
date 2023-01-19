@@ -12,18 +12,14 @@ def get_data(
     max_limit: int = None,
     event_day_number: str = None,
 ):
-    query_filter = ""
-    limit_filter = ""
+    filters = ""
     if event_day_number:
         # Filter the event date by the last 'event_day_number' days
-        query_filter += "WHERE " if len(query_filter) == 0 else " AND "
-        query_filter += (
-            f"event_date >= DATE_ADD(CURRENT_DATE(), INTERVAL -{event_day_number} DAY) "
-        )
+        filters += f"WHERE event_date >= DATE_ADD(CURRENT_DATE(), INTERVAL -{event_day_number} DAY) "
     if max_limit:
-        limit_filter = f"LIMIT {max_limit}"
+        filters += f" LIMIT {max_limit}"
     query = f"""
-        SELECT {", ".join(columns_selected)} FROM `{GCP_PROJECT_ID}.{dataset}.{table_name}` {query_filter} {limit_filter}
+        SELECT {", ".join(columns_selected)} FROM `{GCP_PROJECT_ID}.{dataset}.{table_name}` {filters}
     """
     data = pd.read_gbq(query)
     return data

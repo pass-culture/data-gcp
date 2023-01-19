@@ -60,7 +60,3 @@ def save_pca_representation(
     ax.legend()
     ax.grid(True)
     fig.savefig(figures_folder + "ALL_CATEGORIES.pdf")
-
-
-def remove_dir(path):
-    shutil.rmtree(path)

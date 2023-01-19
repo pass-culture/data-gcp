@@ -43,7 +43,7 @@ dag_config = {
 
 # Params
 train_params = {
-    "config_file_name": "20230117-features",
+    "config_file_name": "default-features",
     "batch_size": 4096,
     "embedding_size": 64,
     "train_set_size": 0.8,

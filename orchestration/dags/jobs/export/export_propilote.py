@@ -2,13 +2,11 @@ import datetime
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from common import macros
-from dependencies.propilote.export_propilote import (
-    propilote_tables,
-)
+from dependencies.propilote.export_propilote import propilote_tables
 from common.config import DAG_FOLDER, GCP_PROJECT_ID
 from common.alerts import task_fail_slack_alert
 from common.operators.biquery import bigquery_job_task
-from common.utils import depends_loop
+from common.utils import depends_loop, get_airflow_schedule
 
 default_dag_args = {
     "start_date": datetime.datetime(2022, 6, 24),
@@ -22,7 +20,7 @@ dag = DAG(
     "export_propilote_data",
     default_args=default_dag_args,
     description="Export propilote date",
-    schedule_interval="00 08 * * 1,3,5",
+    schedule_interval=get_airflow_schedule("00 08 * * 1,3,5"),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,

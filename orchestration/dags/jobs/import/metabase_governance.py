@@ -8,7 +8,11 @@ from airflow.providers.google.cloud.operators.bigquery import (
 )
 
 from common import macros
-from common.utils import depends_loop, getting_service_account_token
+from common.utils import (
+    depends_loop,
+    getting_service_account_token,
+    get_airflow_schedule,
+)
 from dependencies.metabase.import_metabase import (
     import_tables,
     from_external,
@@ -20,7 +24,6 @@ from common.config import (
     METABASE_EXTERNAL_CONNECTION_ID,
     ENV_SHORT_NAME,
 )
-from common.config import GCP_PROJECT_ID, DAG_FOLDER
 from common.alerts import task_fail_slack_alert
 
 default_dag_args = {
@@ -35,7 +38,7 @@ dag = DAG(
     "metabase_governance",
     default_args=default_dag_args,
     description="Import metabase tables from CloudSQL & archive old cards",
-    schedule_interval="00 01 * * *",
+    schedule_interval=get_airflow_schedule("00 01 * * *"),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,
@@ -49,10 +52,7 @@ for name, params in import_tables.items():
 
     task = BigQueryExecuteQueryOperator(
         task_id=f"import_metabase_{name}_to_raw",
-        sql=from_external(
-            conn_id=METABASE_EXTERNAL_CONNECTION_ID,
-            params=params,
-        ),
+        sql=from_external(conn_id=METABASE_EXTERNAL_CONNECTION_ID, params=params),
         write_disposition="WRITE_TRUNCATE",
         use_legacy_sql=False,
         destination_dataset_table=params["destination_dataset_table"],
@@ -89,9 +89,7 @@ analytics_table_tasks = depends_loop(analytics_table_jobs, end_raw, dag=dag)
 service_account_token = PythonOperator(
     task_id="getting_metabase_archiving_service_account_token",
     python_callable=getting_service_account_token,
-    op_kwargs={
-        "function_name": f"metabase_archiving_{ENV_SHORT_NAME}",
-    },
+    op_kwargs={"function_name": f"metabase_archiving_{ENV_SHORT_NAME}"},
     dag=dag,
 )
 

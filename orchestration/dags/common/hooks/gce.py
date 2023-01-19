@@ -22,6 +22,7 @@ class CPUImage:
         "projects/deeplearning-platform-release/global/images/tf2-latest-cpu-v20211202"
     )
     startup_script: str = None
+    startup_script_wait_time: int = 0
 
 
 @dataclass
@@ -33,6 +34,7 @@ class GPUImage:
         #!/bin/bash
         sudo /opt/deeplearning/install-driver.sh
     """
+    startup_script_wait_time: int = 90
 
 
 class GCEHook(GoogleBaseHook):
@@ -207,6 +209,9 @@ class GCEHook(GoogleBaseHook):
         )
 
         if wait:
+            # force some waiting time for startup script.
+            if self.source_image_type.startup_script_wait_time > 0:
+                time.sleep(self.source_image_type.startup_script_wait_time)
             self.wait_for_operation(operation["name"])
         else:
             return operation["name"]

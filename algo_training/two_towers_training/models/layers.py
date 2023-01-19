@@ -15,7 +15,7 @@ class StringEmbeddingLayer:
     """
     A preprocessing layer which maps string features into embeddings.
 
-    When output_mode is "int", input integers are converted to their index in the vocabulary (an integer).
+    When output_mode is "int", input strings are converted to their index in the vocabulary (an integer).
     When output_mode is "multi_hot", "count", or "tf_idf", input integers are encoded into an array where each dimension
     corresponds to an element in the vocabulary.
     """

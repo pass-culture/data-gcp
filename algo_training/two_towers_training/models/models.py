@@ -25,7 +25,7 @@ class TwoTowersModel(tfrs.models.Model):
         items_dataset: TF dataset containing the features for each item
         embedding_size: Final embedding size for the items & the users
         """
-        super().__init__("TwoTowerModel")
+        super().__init__()
 
         # dict of preprocessing layers for each user feature
         user_embedding_layers = {
@@ -82,7 +82,7 @@ class TwoTowersModel(tfrs.models.Model):
             }[layer_type]
         except KeyError:
             raise ValueError(
-                f"InvalidLayerTypeError: The features config file contains an invalid layer type `{layer_type}`"
+                f"InvalidLayerType: The features config file contains an invalid layer type `{layer_type}`"
             )
 
 

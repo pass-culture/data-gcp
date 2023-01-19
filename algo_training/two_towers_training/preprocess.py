@@ -30,7 +30,6 @@ def preprocess(
     ) + get_features_by_type(
         feature_layers=features["item_embedding_layers"], layer_types=["int"]
     )
-
     string_features = get_features_by_type(
         feature_layers=features["user_embedding_layers"], layer_types=["string", "text"]
     ) + get_features_by_type(
@@ -38,12 +37,8 @@ def preprocess(
     )
 
     clean_data = (
-        raw_data.pipe(
-            fill_na_by_feature_type, columns_to_fill=integer_features, fill_value=0
-        )
-        .pipe(
-            fill_na_by_feature_type, columns_to_fill=string_features, fill_value="none"
-        )
+        raw_data.fillna({col: "none" for col in string_features})
+        .fillna({col: 0 for col in integer_features})
         .astype({col: "int" for col in integer_features})
     )
 

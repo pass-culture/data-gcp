@@ -27,6 +27,10 @@ def main(
         help="Max number of rows",
     ),
 ) -> None:
+    """
+    Stores the data used for training & evaluation (clicks at 2023-01-19)
+    Stores the booking data which will be used for testing the model
+    """
 
     with open(
         CONFIG_FEATURES_PATH + f"/{config_file_name}.json", mode="r", encoding="utf-8"

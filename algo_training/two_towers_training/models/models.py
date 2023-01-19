@@ -74,11 +74,16 @@ class TwoTowersModel(tfrs.models.Model):
 
     @staticmethod
     def load_embedding_layer(layer_type: str, embedding_size: int):
-        return {
-            "string": StringEmbeddingLayer(embedding_size=embedding_size),
-            "int": IntegerEmbeddingLayer(embedding_size=embedding_size),
-            "text": TextEmbeddingLayer(embedding_size=embedding_size),
-        }[layer_type]
+        try:
+            return {
+                "string": StringEmbeddingLayer(embedding_size=embedding_size),
+                "int": IntegerEmbeddingLayer(embedding_size=embedding_size),
+                "text": TextEmbeddingLayer(embedding_size=embedding_size),
+            }[layer_type]
+        except KeyError:
+            raise ValueError(
+                f"InvalidLayerTypeError: The features config file contains an invalid layer type `{layer_type}`"
+            )
 
 
 class SingleTowerModel(tf.keras.models.Model):
@@ -102,7 +107,7 @@ class SingleTowerModel(tf.keras.models.Model):
         self._dense1 = tf.keras.layers.Dense(embedding_size * 2, activation="relu")
         self._dense2 = tf.keras.layers.Dense(embedding_size)
 
-    def call(self, features: str, training=False):
+    def call(self, features: dict, training=False):
         feature_embeddings = []
         for feature_name, feature_data in features.items():
             feature_embeddings.append(

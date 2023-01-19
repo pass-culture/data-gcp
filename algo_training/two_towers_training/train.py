@@ -51,9 +51,9 @@ def train(
 ):
     tf.random.set_seed(seed)
 
+    # Load data
     logger.info("Loading & processing datasets")
 
-    # Load BigQuery data
     train_data = pd.read_csv(
         f"{STORAGE_PATH}/positive_data_train.csv",
     ).astype(str)
@@ -72,10 +72,12 @@ def train(
 
     user_columns = list(user_features_config.keys())
     item_columns = list(item_features_config.keys())
-    user_data = train_data[user_columns].drop_duplicates(subset=["user_id"])
-    item_data = train_data[item_columns].drop_duplicates(subset=["item_id"])
+    train_user_data = train_data[user_columns].drop_duplicates(subset=["user_id"])
+    train_item_data = train_data[item_columns].drop_duplicates(subset=["item_id"])
 
     # Build tf datasets
+    logger.info("Building tf datasets")
+
     train_dataset = build_dict_dataset(
         train_data,
         feature_names=user_columns + item_columns,
@@ -90,13 +92,13 @@ def train(
     )
 
     user_dataset = build_dict_dataset(
-        user_data,
+        train_user_data,
         feature_names=user_columns,
         batch_size=batch_size,
         seed=seed,
     )
     item_dataset = build_dict_dataset(
-        item_data,
+        train_item_data,
         feature_names=item_columns,
         batch_size=batch_size,
         seed=seed,
@@ -107,6 +109,8 @@ def train(
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
     experiment = mlflow.get_experiment_by_name(experiment_name)
     with mlflow.start_run(experiment_id=experiment.experiment_id):
+        logger.info("Connected to MLFlow")
+
         run_uuid = mlflow.active_run().info.run_uuid
         export_path = f"{TRAIN_DIR}/{ENV_SHORT_NAME}/{run_uuid}/"
 
@@ -119,12 +123,14 @@ def train(
                 "embedding_size": embedding_size,
                 "batch_size": batch_size,
                 "epoch_number": N_EPOCHS,
-                "user_count": len(user_data),
+                "user_count": len(train_user_data),
                 "user_feature_count": len(user_features_config.keys()),
-                "item_count": len(item_data),
+                "item_count": len(train_item_data),
                 "item_feature_count": len(item_features_config.keys()),
             }
         )
+
+        logger.info("Building the TwoTowersModel")
 
         two_tower_model = TwoTowersModel(
             data=train_data,
@@ -171,9 +177,9 @@ def train(
         item_embeddings = two_tower_model.item_model.predict(item_dataset)
 
         match_model = TwoTowersMatchModel(
-            user_ids=user_data["user_id"].unique(),
+            user_ids=train_user_data["user_id"].unique(),
             user_embeddings=user_embeddings,
-            item_ids=item_data["item_id"].unique(),
+            item_ids=train_item_data["item_id"].unique(),
             item_embeddings=item_embeddings,
             embedding_size=embedding_size,
         )
@@ -185,7 +191,7 @@ def train(
         pca_representations_path = export_path + "pca_plots/"
         save_pca_representation(
             loaded_model=match_model,
-            item_data=item_data,
+            item_data=train_item_data,
             figures_folder=pca_representations_path,
         )
         mlflow.log_artifacts(export_path + "pca_plots", "pca_plots")

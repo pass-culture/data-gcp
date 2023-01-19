@@ -88,7 +88,7 @@ class TextEmbeddingLayer:
         text_dataset = tf.data.Dataset.from_tensor_slices(vocabulary)
         text_vectorization_layer = TextVectorization(
             max_tokens=self.max_tokens,
-            output_mode="tf_idf",
+            output_mode="multi_hot",
         )
         text_vectorization_layer.adapt(text_dataset.batch(64))
         return tf.keras.Sequential(

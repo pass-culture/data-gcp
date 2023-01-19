@@ -70,9 +70,12 @@ def train(
         )
 
     user_columns = list(user_features_config.keys())
+    # TODO: Remove ["offer_categoryId", "offer_subcategoryid"] when the PCA plot is created at the evaluation stage
     item_columns = list(item_features_config.keys())
     train_user_data = train_data[user_columns].drop_duplicates(subset=["user_id"])
-    train_item_data = train_data[item_columns].drop_duplicates(subset=["item_id"])
+    train_item_data = train_data[
+        item_columns + ["offer_categoryId", "offer_subcategoryid"]
+    ].drop_duplicates(subset=["item_id"])
 
     # Build tf datasets
     logger.info("Building tf datasets")
@@ -111,10 +114,11 @@ def train(
         logger.info("Connected to MLFlow")
 
         run_uuid = mlflow.active_run().info.run_uuid
-        export_path = f"{TRAIN_DIR}/{ENV_SHORT_NAME}/{run_uuid}/"
-        os.makedirs(export_path, exist_ok=True)
-        with open(f"{export_path}/{MLFLOW_RUN_ID_FILENAME}.txt", mode="w") as file:
+        # TODO: store the run_uuid in STORAGE_PATH (last try raised FileNotFoundError)
+        with open(f"{MLFLOW_RUN_ID_FILENAME}.txt", mode="w") as file:
             file.write(run_uuid)
+
+        export_path = f"{TRAIN_DIR}/{ENV_SHORT_NAME}/{run_uuid}/"
 
         mlflow.log_params(
             params={

@@ -43,7 +43,8 @@ def main(
     raw_data = get_data(
         dataset=dataset,
         table_name=table_name,
-        columns_selected=columns_selected,
+        # TODO: Remove ["offer_categoryId", "offer_subcategoryid"] when the PCA plot is created at the evaluation stage
+        columns_selected=columns_selected + ["offer_categoryId", "offer_subcategoryid"],
         event_day_number=event_day_number,
         max_limit=limit_filter,
     )

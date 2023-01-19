@@ -124,7 +124,7 @@ def main(experiment_name: str, model_name: str):
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
 
     experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
-    with open(f"{STORAGE_PATH}/{MLFLOW_RUN_ID_FILENAME}.txt", mode="w") as file:
+    with open(f"{MLFLOW_RUN_ID_FILENAME}.txt", mode="r") as file:
         run_id = file.read()
     with mlflow.start_run(experiment_id=experiment_id, run_id=run_id) as run:
         artifact_uri = mlflow.get_artifact_uri("model")

@@ -12,7 +12,7 @@ SELECT offer_item_ids.item_id                          AS item_id,
 FROM `{{ bigquery_analytics_dataset }}`.enriched_offer_data enroffer
          INNER JOIN `{{ bigquery_clean_dataset }}`.`applicative_database_offer` offer
                     ON enroffer.offer_id = offer.offer_id
-         INNER JOIN `{{ bigquery_clean_dataset }}`.`subcategories` subcategories
+         INNER JOIN `{{ bigquery_analytics_dataset }}`.`subcategories` subcategories
                     ON offer.offer_subcategoryId = subcategories.id
          INNER JOIN `{{ bigquery_analytics_dataset }}`.`offer_item_ids` offer_item_ids
                     ON offer_item_ids.offer_id = offer.offer_id

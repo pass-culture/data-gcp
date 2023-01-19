@@ -37,15 +37,15 @@ SELECT
     users.user_id
     , bookings.booking_creation_date
     , bookings.booking_id
-    , COALESCE(
-      IF(bookings.physical_goods = True, 'physical', null),
-      IF(bookings.digital_goods = True, 'digital', null),
-      IF(bookings.event = True, 'event', null)
-    ) as format
+    , CASE
+        WHEN subcategories.is_event = TRUE THEN "event"
+        WHEN subcategories.online_offline_platform = "ONLINE" AND subcategories.is_event = FALSE THEN "digital"
+        WHEN subcategories.online_offline_platform in ("OFFLINE", "ONLINE_OR_OFFLINE") AND subcategories.is_event = FALSE THEN "physical"
+    END as format 
     , offer.offer_id
     , is_free_offer
     , bookings.offer_category_id as category
-    , bookings.offer_subcategoryId as subcategory
+    , bookings.offer_subcategoryId as sub_category
     , offer.rayon
     , rayon.macro_rayon
     -- prendre une venue unique pour les offres digitales
@@ -59,7 +59,7 @@ SELECT
         WHEN bookings.offer_category_id = "LIVRE" THEN rayon.macro_rayon
         WHEN bookings.offer_subcategoryId = "SEANCE_CINE" THEN movie_type
         WHEN bookings.offer_category_id = "MUSIQUE_LIVE" THEN type -- music type
-        WHEN bookings.offer_category_id <> "MUSIQUE_LIVE" AND type IS NOT NULL then type -- show type
+        WHEN bookings.offer_category_id = 'SPECTACLE' then type -- show type
         ELSE venue_id
       END as extra_category
 	-- attribuer un numéro de réservation
@@ -71,6 +71,8 @@ INNER JOIN offer
   ON bookings.offer_id = offer.offer_id
 LEFT JOIN `{{ bigquery_analytics_dataset }}.macro_rayons` rayon
   ON offer.rayon = rayon.rayon
+LEFT JOIN `{{ bigquery_analytics_dataset }}.subcategories` subcategories
+  ON bookings.offer_subcategoryId = subcategories.id
 ),
 
 diversification_scores as (
@@ -81,37 +83,21 @@ diversification_scores as (
   , booking_creation_date
   , is_free_offer
   , category
-  , subcategory
+  , sub_category
   , format
   , macro_rayon
   , extra_category
-  -- Pour attribuer les scores de diversification : comparer la date de booking avec la première date de booking sur la feature correspondante.
+  -- Pour attribuer les scores de diversification : 
+  -- Comparer la date de booking avec la première date de booking sur chaque feature.
   -- Lorsque ces 2 dates sont les mêmes, attribuer 1 point.
-  , CASE
-        WHEN booking_creation_date = min(booking_creation_date) over(partition by user_id, category) AND booking_rank != 1
+  , {% for feature in params.diversification_features %} 
+  CASE
+        WHEN booking_creation_date = min(booking_creation_date) over(partition by user_id, '{{feature}}') AND booking_rank != 1
         THEN 1
         ELSE 0
-    END as category_diversification
-  , CASE
-        WHEN booking_creation_date = min(booking_creation_date) over(partition by user_id, subcategory) AND booking_rank != 1
-        THEN 1 
-        ELSE 0 
-    END as sub_category_diversification
-  , CASE
-        WHEN booking_creation_date = min(booking_creation_date) over(partition by user_id, format) AND booking_rank != 1
-        THEN 1
-        ELSE 0 END
-    END as format_diversification
-  , CASE
-        WHEN booking_creation_date = min(booking_creation_date) over(partition by user_id, venue_id) AND booking_rank != 1
-        THEN 1 
-        ELSE 0
-    END as venue_diversification
-  , CASE
-      WHEN booking_creation_date = min(booking_creation_date) over(partition by user_id, extra_category) AND booking_rank != 1
-      THEN 1 
-      ELSE 0
-    END as type_diversification
+  END as {{feature}}_diversification
+  {% if not loop.last -%} , {%- endif %}
+  {% endfor %}
 FROM base_diversification
 )
 
@@ -122,11 +108,11 @@ SELECT
   , category_diversification
   , sub_category_diversification
   , format_diversification
-  , venue_diversification
-  , type_diversification
+  , venue_id_diversification
+  , extra_category_diversification
   , case 
       when booking_rank = 1 
       then 1  -- 1 point d'office pour le premier booking
-      else category_diversification + sub_category_diversification + format_diversification + venue_diversification + type_diversification	
+      else category_diversification + sub_category_diversification + format_diversification + venue_id_diversification + extra_category_diversification	
     end as delta_diversification
 FROM diversification_scores

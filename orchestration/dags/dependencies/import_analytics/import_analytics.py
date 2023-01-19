@@ -268,6 +268,15 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "diversification_raw_v2",
         "depends": ["enriched_booking_data", "enriched_offer_data"],
+        "params": {
+            "diversification_features": [
+                "category",
+                "sub_category",
+                "format",
+                "venue_id",
+                "extra_category",
+            ]
+        },
     },
     "diversification_booking": {
         "sql": f"{ANALYTICS_SQL_PATH}/diversification_booking.sql",
@@ -290,6 +299,15 @@ analytics_tables = {
             "enriched_booking_data",
             "enriched_offer_data",
         ],
+        "params": {
+            "diversification_features": [
+                "category",
+                "sub_category",
+                "format",
+                "venue_id",
+                "extra_category",
+            ]
+        },
     },
 }
 

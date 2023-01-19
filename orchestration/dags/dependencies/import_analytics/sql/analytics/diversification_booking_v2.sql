@@ -20,11 +20,10 @@ SELECT
         IF(booking.event = True, 'event', null)
     ) as format
     , rayons.macro_rayon
-    , category_diversification
-    , sub_category_diversification as subcategory_diversification
-    , format_diversification
-    , venue_diversification
-    , type_diversification
+    , {% for feature in params.diversification_features %}
+        {{feature}}_diversification
+        {% if not loop.last -%} , {%- endif %}
+    {% endfor %}
     , delta_diversification
 FROM `{{ bigquery_analytics_dataset }}.diversification_raw_v2` as diversification_raw
 LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_booking_data` as booking

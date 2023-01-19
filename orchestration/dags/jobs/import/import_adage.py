@@ -41,10 +41,12 @@ dag = DAG(
 )
 
 # Cannot Schedule before 5AM UTC+2 as data from API is not available.
-# exec = day minus 1
+
 sleep_op = TimeSleepSensor(
     task_id="sleep_task",
-    sleep_duration=datetime.timedelta(days=1, minutes=120),  # 2H
+    execution_delay=datetime.timedelta(days=1),  # Execution Date = day minus 1
+    sleep_duration=datetime.timedelta(minutes=120),  # 2H
+    poke_interval=3600,  # check every hour
     mode="reschedule",
 )
 

@@ -2,11 +2,10 @@ import datetime
 from common import macros
 from airflow import DAG
 from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
-from common.utils import depends_loop
+from common.utils import depends_loop, get_airflow_schedule
 from common.operators.biquery import bigquery_job_task
 from airflow.operators.dummy_operator import DummyOperator
-from common.config import DAG_FOLDER
-from common.config import GCP_PROJECT_ID
+from common.config import DAG_FOLDER, GCP_PROJECT_ID
 from dependencies.firebase.import_firebase import import_tables
 from common.alerts import task_fail_slack_alert
 import copy
@@ -49,7 +48,7 @@ for type, params in dags.items():
         default_args=params["default_dag_args"],
         description="Import firebase data and dispatch it to each env",
         on_failure_callback=task_fail_slack_alert,
-        schedule_interval=params["schedule_interval"],
+        schedule_interval=get_airflow_schedule(params["schedule_interval"]),
         catchup=False,
         dagrun_timeout=datetime.timedelta(minutes=90),
         user_defined_macros=macros.default,

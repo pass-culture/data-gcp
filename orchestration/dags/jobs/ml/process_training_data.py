@@ -8,12 +8,9 @@ from airflow.providers.google.cloud.operators.bigquery import (
 
 from common import macros
 from common.alerts import analytics_fail_slack_alert
-from common.config import (
-    BIGQUERY_CLEAN_DATASET,
-    BIGQUERY_RAW_DATASET,
-    GCP_PROJECT_ID,
-)
+from common.config import BIGQUERY_CLEAN_DATASET, BIGQUERY_RAW_DATASET, GCP_PROJECT_ID
 from common.config import DAG_FOLDER
+from common.utils import get_airflow_schedule
 from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
 
 default_dag_args = {
@@ -28,7 +25,7 @@ dag = DAG(
     "process_training_data",
     default_args=default_dag_args,
     description="Import data for training and build aggregated tables",
-    schedule_interval="0 10 * * 5",
+    schedule_interval=get_airflow_schedule("0 10 * * 5"),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,

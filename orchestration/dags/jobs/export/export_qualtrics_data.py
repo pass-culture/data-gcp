@@ -12,7 +12,7 @@ from common.config import (
 )
 from common.alerts import task_fail_slack_alert
 from common.operators.biquery import bigquery_job_task
-from common.utils import depends_loop
+from common.utils import depends_loop, get_airflow_schedule
 from common.access_gcp_secrets import access_secret_data
 import pandas as pd
 import requests
@@ -30,7 +30,7 @@ dag = DAG(
     "export_qualtrics_data",
     default_args=default_dag_args,
     description="Export user data for Qualtrics usages",
-    schedule_interval="00 06 25 * *",
+    schedule_interval=get_airflow_schedule("00 06 25 * *"),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,

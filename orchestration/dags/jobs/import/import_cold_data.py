@@ -8,13 +8,13 @@ from airflow.providers.google.cloud.operators.bigquery import (
 )
 
 from common import macros
-from common.utils import getting_service_account_token, depends_loop
-
-from common.config import (
-    GCP_PROJECT_ID,
-    DAG_FOLDER,
-    ENV_SHORT_NAME,
+from common.utils import (
+    getting_service_account_token,
+    depends_loop,
+    get_airflow_schedule,
 )
+
+from common.config import GCP_PROJECT_ID, DAG_FOLDER, ENV_SHORT_NAME
 from common.config import GCP_PROJECT_ID, DAG_FOLDER
 from common.alerts import task_fail_slack_alert
 from dependencies.cold_data.import_cold_data import analytics_tables
@@ -31,7 +31,7 @@ dag = DAG(
     "import_cold_data",
     default_args=default_dag_args,
     description="Import cold data from GCS to BQ",
-    schedule_interval="00 01 * * *",
+    schedule_interval=get_airflow_schedule("00 01 * * *"),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,
@@ -43,9 +43,7 @@ start = DummyOperator(task_id="start", dag=dag)
 service_account_token = PythonOperator(
     task_id="getting_cold_data_service_account_token",
     python_callable=getting_service_account_token,
-    op_kwargs={
-        "function_name": f"cold_data_{ENV_SHORT_NAME}",
-    },
+    op_kwargs={"function_name": f"cold_data_{ENV_SHORT_NAME}"},
     dag=dag,
 )
 

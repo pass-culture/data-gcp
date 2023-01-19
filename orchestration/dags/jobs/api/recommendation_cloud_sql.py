@@ -36,6 +36,7 @@ from common.config import (
 from dependencies.import_recommendation_cloudsql.monitor_tables import monitoring_tables
 from common.alerts import task_fail_slack_alert
 from common import macros
+from common.utils import get_airflow_schedule
 
 
 database_url = access_secret_data(
@@ -69,8 +70,7 @@ def get_table_data():
         data[table_name]["columns"] = {
             column_name: data_type
             for column_name, data_type in zip(
-                list(table_data.column_name.values),
-                list(table_data.data_type.values),
+                list(table_data.column_name.values), list(table_data.data_type.values)
             )
         }
         for additional_data in ["dataset_type", "bigquery_table_name"]:
@@ -93,7 +93,7 @@ with DAG(
     "recommendation_cloud_sql_v1",
     default_args=default_args,
     description="Export bigQuery tables to GCS to dump and restore Cloud SQL tables",
-    schedule_interval="15 5 * * *",
+    schedule_interval=get_airflow_schedule("15 5 * * *"),
     catchup=False,
     dagrun_timeout=timedelta(minutes=480),
     user_defined_macros=macros.default,
@@ -220,9 +220,7 @@ with DAG(
         import_body = {
             "importContext": {
                 "fileType": "CSV",
-                "csvImportOptions": {
-                    "table": f"public.{table_name}",
-                },
+                "csvImportOptions": {"table": f"public.{table_name}"},
                 "uri": f"{BUCKET_PATH}/{table_name}.csv",
                 "database": RECOMMENDATION_SQL_INSTANCE,
             }

@@ -71,30 +71,20 @@ with DAG(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
-        "batch_size": Param(
-            default=str(train_params["batch_size"]),
-            type="string",
-        ),
+        "batch_size": Param(default=str(train_params["batch_size"]), type="string"),
         "embedding_size": Param(
-            default=str(train_params["embedding_size"]),
-            type="string",
+            default=str(train_params["embedding_size"]), type="string"
         ),
         "train_set_size": Param(
-            default=str(train_params["train_set_size"]),
-            type="string",
+            default=str(train_params["train_set_size"]), type="string"
         ),
         "event_day_number": Param(
-            default=str(train_params["event_day_number"]),
-            type="string",
+            default=str(train_params["event_day_number"]), type="string"
         ),
         "instance_type": Param(
-            default=gce_params["instance_type"][ENV_SHORT_NAME],
-            type="string",
+            default=gce_params["instance_type"][ENV_SHORT_NAME], type="string"
         ),
-        "instance_name": Param(
-            default=gce_params["instance_name"],
-            type="string",
-        ),
+        "instance_name": Param(default=gce_params["instance_name"], type="string"),
     },
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)
@@ -170,8 +160,7 @@ with DAG(
     )
 
     gce_instance_stop = StopGCEOperator(
-        task_id="gce_stop_task",
-        instance_name="{{ params.instance_name }}",
+        task_id="gce_stop_task", instance_name="{{ params.instance_name }}"
     )
 
     send_slack_notif_success = SlackWebhookOperator(

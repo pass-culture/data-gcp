@@ -15,7 +15,9 @@ FROM
 
 GROUP BY
   firebase_agg.user_id,
+  firebase_agg.user_engagement,
+  firebase_agg.consult_offer,
+  firebase_agg.click_book_offer,
   stats_reco.booking_cnt,
   stats_reco.user_theoretical_remaining_credit,
-  stats_reco.consult_offer,
   stats_reco.has_added_offer_to_favorites

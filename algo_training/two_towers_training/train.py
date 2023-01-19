@@ -9,7 +9,7 @@ from loguru import logger
 import pandas as pd
 
 from models.match_model import TwoTowersMatchModel
-from models.models import TwoTowersModel
+from models.two_towers_model import TwoTowersModel
 from tools.constants import (
     CONFIG_FEATURES_PATH,
     ENV_SHORT_NAME,

@@ -32,12 +32,11 @@ def evaluate(
     client_id,
     model,
     storage_path: str,
-    input_type: str = "bookings",
     training_dataset_name: str = "positive_data_train",
     test_dataset_name: str = "positive_data_test",
 ):
     raw_data = get_data(
-        dataset=f"raw_{ENV_SHORT_NAME}", table_name=f"training_data_{input_type}"
+        dataset=f"raw_{ENV_SHORT_NAME}", table_name="training_data_bookings"
     )
 
     training_item_ids = pd.read_csv(f"{storage_path}/{training_dataset_name}.csv")[
@@ -127,10 +126,6 @@ def run(
         EXPERIMENT_NAME, help="Name of the experiment on MLflow"
     ),
     model_name: str = typer.Option(MODEL_NAME, help="Name of the model to evaluate"),
-    input_type: str = typer.Option(
-        "bookings",
-        help="Data type used for training. Handled values are bookings and clicks",
-    ),
     training_dataset_name: str = typer.Option(
         "positive_data_train", help="Name of the training dataset in storage"
     ),
@@ -172,7 +167,6 @@ def run(
             client_id,
             loaded_model,
             STORAGE_PATH,
-            input_type,
             training_dataset_name,
             test_dataset_name,
         )

@@ -15,6 +15,7 @@ from tools.constants import (
     ENV_SHORT_NAME,
     TRAIN_DIR,
     STORAGE_PATH,
+    MLFLOW_RUN_ID_FILENAME,
 )
 from tools.tensorflow_tools import build_dict_dataset
 from tools.mlflow_tools import get_secret, connect_remote_mlflow, MLFlowLogging
@@ -76,7 +77,7 @@ def train(
 
     # Build tf datasets
     train_dataset = build_dict_dataset(
-        data=train_data,
+        train_data,
         feature_names=user_columns + item_columns,
         batch_size=batch_size,
         seed=seed,
@@ -108,6 +109,9 @@ def train(
     with mlflow.start_run(experiment_id=experiment.experiment_id):
         run_uuid = mlflow.active_run().info.run_uuid
         export_path = f"{TRAIN_DIR}/{ENV_SHORT_NAME}/{run_uuid}/"
+
+        with open(f"{STORAGE_PATH}/{MLFLOW_RUN_ID_FILENAME}.txt", mode="w") as file:
+            file.write(run_uuid)
 
         mlflow.log_params(
             params={

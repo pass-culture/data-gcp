@@ -22,6 +22,7 @@ from tools.constants import (
     NUMBER_OF_PRESELECTED_OFFERS,
     EVALUATION_USER_NUMBER,
     EXPERIMENT_NAME,
+    MLFLOW_RUN_ID_FILENAME,
 )
 from tools.metrics import compute_metrics, get_actual_and_predicted
 
@@ -116,14 +117,16 @@ def evaluate(client_id, model, storage_path: str):
     return metrics
 
 
-def run(experiment_name: str, model_name: str):
+def main(experiment_name: str, model_name: str):
     logger.info("-------EVALUATE START------- ")
+
     client_id = get_secret("mlflow_client_id")
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
-    experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
-    run_id = mlflow.list_run_infos(experiment_id)[0].run_id
 
-    with mlflow.start_run(run_id=run_id) as run:
+    experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
+    with open(f"{STORAGE_PATH}/{MLFLOW_RUN_ID_FILENAME}.txt", mode="w") as file:
+        run_id = file.read()
+    with mlflow.start_run(experiment_id=experiment_id, run_id=run_id) as run:
         artifact_uri = mlflow.get_artifact_uri("model")
         loaded_model = tf.keras.models.load_model(
             artifact_uri,
@@ -151,4 +154,4 @@ def run(experiment_name: str, model_name: str):
 
 
 if __name__ == "__main__":
-    run(experiment_name=EXPERIMENT_NAME, model_name=MODEL_NAME)
+    main(experiment_name=EXPERIMENT_NAME, model_name=MODEL_NAME)

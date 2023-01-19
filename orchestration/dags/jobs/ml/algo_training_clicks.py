@@ -92,6 +92,10 @@ with DAG(
             default=str(train_params["event_day_number"]),
             type="string",
         ),
+        "input_type": Param(
+            default="clicks",
+            type="string",
+        ),
         "instance_type": Param(
             default=gce_params["instance_type"][ENV_SHORT_NAME],
             type="string",
@@ -109,7 +113,7 @@ with DAG(
         task = BigQueryExecuteQueryOperator(
             task_id=f"import_recommendation_{dataset}",
             sql=(
-                IMPORT_TRAINING_SQL_PATH / f"recommendation_{dataset}_data_clicks.sql"
+                IMPORT_TRAINING_SQL_PATH / f"recommendation_{dataset}_data.sql"
             ).as_posix(),
             write_disposition="WRITE_TRUNCATE",
             use_legacy_sql=False,

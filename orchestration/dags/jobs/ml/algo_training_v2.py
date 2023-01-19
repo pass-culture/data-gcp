@@ -91,6 +91,10 @@ with DAG(
             default=str(train_params["event_day_number"]),
             type="string",
         ),
+        "input_type": Param(
+            default="bookings",
+            type="string",
+        ),
         "instance_type": Param(
             default=gce_params["instance_type"][ENV_SHORT_NAME],
             type="string",
@@ -112,7 +116,7 @@ with DAG(
             ).as_posix(),
             write_disposition="WRITE_TRUNCATE",
             use_legacy_sql=False,
-            destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DATE}_recommendation_{dataset}_data",
+            destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DATE}_recommendation_{dataset}_data_bookings",
             dag=dag,
         )
         import_recommendation_data[dataset] = task
@@ -146,7 +150,7 @@ with DAG(
             base_dir=dag_config["BASE_DIR"],
             environment=dag_config,
             command=f"python data_collect.py --dataset {BIGQUERY_TMP_DATASET} "
-            f"--table-name {DATE}_recommendation_{split}_data "
+            f"--table-name {DATE}_recommendation_{split}_data_bookings "
             f"--output-name recommendation_{split}_data",
             dag=dag,
         )
@@ -163,8 +167,8 @@ with DAG(
         "--embedding-size {{ params.embedding_size }} "
         "--seed {{ ds_nodash }} "
         f"--dataset {BIGQUERY_TMP_DATASET} "
-        f"--training-table-name {DATE}_recommendation_training_data "
-        f"--validation-table-name {DATE}_recommendation_validation_data",
+        f"--training-table-name {DATE}_recommendation_training_data_bookings "
+        f"--validation-table-name {DATE}_recommendation_validation_data_bookings",
         dag=dag,
     )
 

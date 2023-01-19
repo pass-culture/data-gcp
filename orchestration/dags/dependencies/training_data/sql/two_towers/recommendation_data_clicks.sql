@@ -1,6 +1,5 @@
 SELECT DISTINCT
   clicks.event_date,
-  clicks.count,
   user_features.*,
   item_features.*
 FROM

@@ -17,9 +17,8 @@ from tools.constants import (
     STORAGE_PATH,
     MLFLOW_RUN_ID_FILENAME,
 )
-from tools.tensorflow_tools import build_dict_dataset
-from tools.mlflow_tools import get_secret, connect_remote_mlflow, MLFlowLogging
-from tools.utils import save_pca_representation
+from tools.tensorflow_tools import build_dict_dataset, MLFlowLogging
+from tools.utils import save_pca_representation, get_secret, connect_remote_mlflow
 
 N_EPOCHS = 20
 MIN_DELTA = 0.002  # Minimum change in the accuracy before a callback is called
@@ -113,8 +112,8 @@ def train(
 
         run_uuid = mlflow.active_run().info.run_uuid
         export_path = f"{TRAIN_DIR}/{ENV_SHORT_NAME}/{run_uuid}/"
-
-        with open(f"{STORAGE_PATH}/{MLFLOW_RUN_ID_FILENAME}.txt", mode="w") as file:
+        os.makedirs(export_path, exist_ok=True)
+        with open(f"{export_path}/{MLFLOW_RUN_ID_FILENAME}.txt", mode="w") as file:
             file.write(run_uuid)
 
         mlflow.log_params(

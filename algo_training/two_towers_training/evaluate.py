@@ -6,7 +6,7 @@ from loguru import logger
 from datetime import datetime
 
 from models.match_model import TwoTowersMatchModel
-from tools.mlflow_tools import (
+from tools.utils import (
     get_secret,
     connect_remote_mlflow,
 )

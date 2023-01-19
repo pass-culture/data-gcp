@@ -3,7 +3,7 @@ import typer
 import pandas as pd
 
 from tools.constants import CONFIG_FEATURES_PATH, STORAGE_PATH
-from tools.preprocess_tools import fill_na_by_feature_type, get_features_by_type
+from tools.preprocess_tools import get_features_by_type
 
 
 def preprocess(

@@ -25,7 +25,7 @@ from common.config import (
     GCP_PROJECT_ID,
 )
 
-from common.utils import getting_service_account_token
+from common.utils import getting_service_account_token, get_airflow_schedule
 from dependencies.import_dms_subscriptions import parse_api_result
 
 DMS_FUNCTION_NAME = "dms_" + ENV_SHORT_NAME
@@ -42,7 +42,7 @@ with DAG(
     "import_dms_subscriptions",
     default_args=default_args,
     description="Import DMS subscriptions",
-    schedule_interval="0 1 * * *",
+    schedule_interval=get_airflow_schedule("0 1 * * *"),
     catchup=False,
     dagrun_timeout=timedelta(minutes=180),
 ) as dag:
@@ -52,9 +52,7 @@ with DAG(
     getting_service_account_token = PythonOperator(
         task_id="getting_service_account_token",
         python_callable=getting_service_account_token,
-        op_kwargs={
-            "function_name": f"{DMS_FUNCTION_NAME}",
-        },
+        op_kwargs={"function_name": f"{DMS_FUNCTION_NAME}"},
     )
 
     dms_to_gcs = SimpleHttpOperator(

@@ -10,11 +10,8 @@ from common.operators.gce import (
 )
 from common import macros
 from common.alerts import task_fail_slack_alert
-from common.config import (
-    GCP_PROJECT_ID,
-    ENV_SHORT_NAME,
-    DAG_FOLDER,
-)
+from common.config import GCP_PROJECT_ID, ENV_SHORT_NAME, DAG_FOLDER
+from common.utils import get_airflow_schedule
 
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"link-offers-{ENV_SHORT_NAME}"
@@ -31,7 +28,7 @@ with DAG(
     "link_offers",
     default_args=default_args,
     description="Link offers via recordLinkage",
-    schedule_interval="0 0 * * *",
+    schedule_interval=get_airflow_schedule("0 0 * * *"),
     catchup=False,
     dagrun_timeout=timedelta(minutes=180),
     user_defined_macros=macros.default,
@@ -110,8 +107,7 @@ with DAG(
     )
 
     gce_instance_stop = StopGCEOperator(
-        task_id="gce_stop_task",
-        instance_name=GCE_INSTANCE,
+        task_id="gce_stop_task", instance_name=GCE_INSTANCE
     )
 
     (

@@ -8,12 +8,10 @@ from airflow.utils.task_group import TaskGroup
 from airflow.sensors.external_task import ExternalTaskSensor
 
 from common import macros
-from common.utils import depends_loop, one_line_query
+from common.utils import depends_loop, one_line_query, get_airflow_schedule
 from common.config import FAILED_STATES, ALLOWED_STATES
 
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryInsertJobOperator,
-)
+from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 from airflow.models import DagRun
 from common.operators.biquery import bigquery_job_task
 from dependencies.import_analytics.import_analytics import export_tables
@@ -61,7 +59,7 @@ dag = DAG(
     "import_analytics_v7",
     default_args=default_dag_args,
     description="Import tables from CloudSQL and enrich data for create dashboards with Metabase",
-    schedule_interval="0 1 * * *",
+    schedule_interval=get_airflow_schedule("0 1 * * *"),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=240),
     user_defined_macros=macros.default,

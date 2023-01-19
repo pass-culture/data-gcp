@@ -13,7 +13,7 @@ from common.operators.gce import (
 )
 from common.alerts import task_fail_slack_alert
 from common.config import GCP_PROJECT_ID, GCE_ZONE, ENV_SHORT_NAME
-
+from common.utils import get_airflow_schedule
 
 GCE_INSTANCE = f"import-api-referentials-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/analytics/scripts/import_api_referentials"
@@ -30,28 +30,25 @@ with DAG(
     "import_api_referentials",
     default_args=default_args,
     description="Continuous update of api model to BQ",
-    schedule_interval="0 0 * * 1",  # import every monday at 00:00
+    schedule_interval=get_airflow_schedule("0 0 * * 1"),  # import every monday at 00:00
     catchup=False,
     dagrun_timeout=timedelta(minutes=300),
     params={
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
-        ),
+        )
     },
 ) as dag:
 
     start = DummyOperator(task_id="start")
 
     gce_instance_start = StartGCEOperator(
-        instance_name=GCE_INSTANCE,
-        task_id="gce_start_task",
+        instance_name=GCE_INSTANCE, task_id="gce_start_task"
     )
 
     fetch_code = CloneRepositoryGCEOperator(
-        task_id="fetch_code",
-        instance_name=GCE_INSTANCE,
-        command="{{ params.branch }}",
+        task_id="fetch_code", instance_name=GCE_INSTANCE, command="{{ params.branch }}"
     )
 
     INSTALL_DEPS = """
@@ -92,8 +89,7 @@ with DAG(
         tasks.append(import_job)
 
     gce_instance_stop = StopGCEOperator(
-        instance_name=GCE_INSTANCE,
-        task_id="gce_stop_task",
+        instance_name=GCE_INSTANCE, task_id="gce_stop_task"
     )
 
     (

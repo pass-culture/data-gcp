@@ -203,8 +203,7 @@ with DAG(
     )
 
     gce_instance_stop = StopGCEOperator(
-        task_id="gce_stop_task",
-        instance_name="{{ params.instance_name }}",
+        task_id="gce_stop_task", instance_name="{{ params.instance_name }}"
     )
 
     send_slack_notif_success = SlackWebhookOperator(

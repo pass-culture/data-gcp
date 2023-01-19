@@ -9,10 +9,7 @@ from airflow.models import Param
 from datetime import datetime, timedelta
 from common import macros
 from common.alerts import task_fail_slack_alert
-from common.config import (
-    ENV_SHORT_NAME,
-    DAG_FOLDER,
-)
+from common.config import ENV_SHORT_NAME, DAG_FOLDER
 
 default_args = {
     "start_date": datetime(2022, 11, 30),
@@ -40,21 +37,13 @@ with DAG(
             type="string",
         ),
         "experiment_name": Param(
-            default=f"algo_training_version_b_{ENV_SHORT_NAME}",
-            type="string",
+            default=f"algo_training_version_b_{ENV_SHORT_NAME}", type="string"
         ),
         "endpoint_name": Param(
-            default=f"recommendation_version_b_{ENV_SHORT_NAME}",
-            type="string",
+            default=f"recommendation_version_b_{ENV_SHORT_NAME}", type="string"
         ),
-        "version_name": Param(
-            default=f"v_YYYYMMDD",
-            type="string",
-        ),
-        "default_region": Param(
-            default=DEFAULT_REGION,
-            type="string",
-        ),
+        "version_name": Param(default=f"v_YYYYMMDD", type="string"),
+        "default_region": Param(default=DEFAULT_REGION, type="string"),
     },
 ) as dag:
     gce_instance_start = StartGCEOperator(
@@ -90,8 +79,7 @@ with DAG(
     )
 
     gce_instance_stop = StopGCEOperator(
-        task_id="gce_stop_task",
-        instance_name=GCE_INSTANCE,
+        task_id="gce_stop_task", instance_name=GCE_INSTANCE
     )
 
     (

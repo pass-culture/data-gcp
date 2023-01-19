@@ -27,6 +27,8 @@ from common.config import (
     ENV_SHORT_NAME,
 )
 
+from common.utils import get_airflow_schedule
+
 TYPEFORM_FUNCTION_NAME = "qpi_import_" + ENV_SHORT_NAME
 QPI_ANSWERS_TABLE = "qpi_answers_v4"
 
@@ -57,7 +59,7 @@ with DAG(
     "import_qpi_answers_v1",
     default_args=default_args,
     description="Importing new data from QPI every day.",
-    schedule_interval="0 1 * * *",
+    schedule_interval=get_airflow_schedule("0 1 * * *"),
     catchup=False,
     dagrun_timeout=timedelta(minutes=180),
 ) as dag:
@@ -65,8 +67,7 @@ with DAG(
     start = DummyOperator(task_id="start")
 
     checking_folder_QPI = BranchPythonOperator(
-        task_id="checking_folder_QPI",
-        python_callable=verify_folder,
+        task_id="checking_folder_QPI", python_callable=verify_folder
     )
     file = DummyOperator(task_id="Files")
     empty = DummyOperator(task_id="Empty")

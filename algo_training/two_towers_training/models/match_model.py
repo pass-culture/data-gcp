@@ -14,11 +14,12 @@ class TwoTowersMatchModel(tf.keras.models.Model):
         item_embeddings: np.ndarray,
         embedding_size: int,
     ):
-        super().__init__(name="MatchModelV2")
+        super().__init__()
 
         self.user_layer = tf.keras.Sequential(
             [
                 StringLookup(vocabulary=user_ids),
+                # We add an additional embedding to account for unknown tokens.
                 Embedding(
                     input_dim=len(user_ids) + 1,
                     input_shape=(1,),
@@ -42,6 +43,7 @@ class TwoTowersMatchModel(tf.keras.models.Model):
         self.item_layer = tf.keras.Sequential(
             [
                 StringLookup(vocabulary=item_ids),
+                # We add an additional embedding to account for unknown tokens.
                 Embedding(
                     input_dim=len(item_ids) + 1,
                     input_shape=(1,),

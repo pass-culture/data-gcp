@@ -74,14 +74,12 @@ def evaluate(
         "model": model,
     }
 
-    diversification_users_to_test = users_to_test
-    if input_type == "clicks":
-        diversification_users_to_test = positive_data_test["user_id"].unique()[
-            : min(
-                EVALUATION_USER_NUMBER_DIVERSIFICATION,
-                positive_data_test["user_id"].nunique(),
-            )
-        ]
+    diversification_users_to_test = positive_data_test["user_id"].unique()[
+        : min(
+            EVALUATION_USER_NUMBER_DIVERSIFICATION,
+            positive_data_test["user_id"].nunique(),
+        )
+    ]
 
     diversification_model_dict = {
         "data": {

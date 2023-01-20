@@ -1,6 +1,7 @@
 import mlflow
 import tensorflow as tf
 import typer
+import pandas as pd
 from loguru import logger
 
 from models.v1.match_model import MatchModel
@@ -14,12 +15,12 @@ from models.v2.utils import (
     MatchModelCheckpoint,
     MLFlowLogging,
 )
-from tools.data_collect_queries import get_data
 from utils import (
     get_secret,
     connect_remote_mlflow,
     ENV_SHORT_NAME,
     TRAIN_DIR,
+    STORAGE_PATH,
 )
 
 L2_REG = 0
@@ -45,10 +46,6 @@ def train(
         None,
         help="Seed to fix randomness in pipeline",
     ),
-    dataset: str = typer.Option(
-        f"raw_{ENV_SHORT_NAME}",
-        help="BigQuery dataset in which the training and validation tables are located",
-    ),
     training_table_name: str = typer.Option(
         "recommendation_training_data", help="BigQuery table containing training data"
     ),
@@ -59,13 +56,12 @@ def train(
 ):
     tf.random.set_seed(seed)
 
-    # Load BigQuery data
-    train_data = get_data(dataset=dataset, table_name=training_table_name).astype(
-        dtype={"count": int}
-    )
-    validation_data = get_data(
-        dataset=dataset, table_name=validation_table_name
-    ).astype(dtype={"count": int})
+    train_data = pd.read_csv(
+        f"{STORAGE_PATH}/{training_table_name}.csv",
+    ).astype(str)
+    validation_data = pd.read_csv(
+        f"{STORAGE_PATH}/{validation_table_name}.csv",
+    ).astype(str)
 
     training_user_ids = train_data["user_id"].unique()
     training_item_ids = train_data["item_id"].unique()

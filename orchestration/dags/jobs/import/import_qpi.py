@@ -173,7 +173,7 @@ with DAG(
         trigger_rule="none_failed_or_skipped",
     )
 
-    end = DummyOperator(task_id="end")
+    end = DummyOperator(task_id="end", trigger_rule="one_success")
 
     (
         start

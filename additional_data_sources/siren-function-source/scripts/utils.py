@@ -36,4 +36,3 @@ def get_api_token(consumer_key):
     return result_token["access_token"]
 
 
-TOKEN = get_api_token(access_secret_data(GCP_PROJECT, "siren-key"))

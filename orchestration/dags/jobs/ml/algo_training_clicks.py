@@ -158,9 +158,8 @@ with DAG(
         "--batch-size {{ params.batch_size }} "
         "--embedding-size {{ params.embedding_size }} "
         "--seed {{ ds_nodash }} "
-        f"--dataset {BIGQUERY_TMP_DATASET} "
-        f"--training-table-name {DATE}_recommendation_training_data_clicks "
-        f"--validation-table-name {DATE}_recommendation_validation_data_clicks",
+        f"--training-table-name recommendation_training_data "
+        f"--validation-table-name recommendation_validation_data",
         dag=dag,
     )
 
@@ -171,6 +170,7 @@ with DAG(
         environment=dag_config,
         command="python evaluate.py "
         f"--experiment-name {dag_config['EXPERIMENT_NAME']} "
+        "--event-day-number {{ params.event_day_number }} "
         "--training-dataset-name recommendation_training_data "
         "--test-dataset-name recommendation_test_data",
         dag=dag,

@@ -20,7 +20,7 @@ from tools.constants import (
 from tools.tensorflow_tools import build_dict_dataset, MLFlowLogging
 from tools.utils import save_pca_representation, get_secret, connect_remote_mlflow
 
-N_EPOCHS = 20
+N_EPOCHS = 200
 MIN_DELTA = 0.002  # Minimum change in the accuracy before a callback is called
 LEARNING_RATE = 0.1
 VERBOSE = 2

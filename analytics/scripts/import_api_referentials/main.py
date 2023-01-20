@@ -11,7 +11,6 @@ CATEGORIES_DTYPES = {
     "app_label": str,
     "search_group_name": str,
     "homepage_label_name": str,
-    "native_category": str,
     "is_event": bool,
     "conditional_fields": str,
     "can_expire": bool,

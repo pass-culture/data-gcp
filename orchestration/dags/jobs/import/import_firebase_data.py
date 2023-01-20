@@ -1,7 +1,7 @@
 import datetime
 from common import macros
 from airflow import DAG
-from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
+
 from common.utils import depends_loop, get_airflow_schedule
 from common.operators.biquery import bigquery_job_task
 from airflow.operators.dummy_operator import DummyOperator

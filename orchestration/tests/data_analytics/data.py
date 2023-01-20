@@ -355,7 +355,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "favourite_cnt": 2.0,
         "stock": 10.0,
         "offer_humanized_id": "AM",
-        "passculture_pro_url": "https://passculture.pro/offres/AM/edition",
+        "passculture_pro_url": "https://passculture.pro/offre/individuelle/AM/informations",
         "webapp_url": "https://passculture.app/offre/3",
         "mediation_humanized_id": "ATJA",
         "first_booking_cnt": 1,
@@ -409,7 +409,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "favourite_cnt": 1.0,
         "stock": 12.0,
         "offer_humanized_id": "AQ",
-        "passculture_pro_url": "https://passculture.pro/offres/AQ/edition",
+        "passculture_pro_url": "https://passculture.pro/offre/individuelle/AQ/informations",
         "webapp_url": "https://passculture.app/offre/4",
         "mediation_humanized_id": None,
         "first_booking_cnt": None,
@@ -816,14 +816,11 @@ ENRICHED_STOCK_DATA_EXPECTED = [
 # Enriched_user_data => user 1 is beneficiary and its department has to exist in region_department, has one used booking
 # on digital goods. This booking is corresponding to an offer, with an offered, stock and venue
 ENRICHED_USER_DATA_INPUT = {
-    "applicative_database_user": [
-        {
-            "user_id": "1",
-        }
-    ],
     "user_beneficiary": [
         {
             "user_id": "1",
+            "user_has_enabled_marketing_email": False,
+            "user_humanized_id": "AE",
             "user_department_code": "93",
             "user_postal_code": "93000",
             "user_activity": "Inactif (ni en emploi ni au chômage), En incapacité de travailler",
@@ -923,6 +920,7 @@ ENRICHED_USER_DATA_INPUT = {
 ENRICHED_USER_DATA_EXPECTED = [
     {
         "user_id": "1",
+        "user_has_enabled_marketing_email": False,
         "user_department_code": "93",
         "user_postal_code": "93000",
         "user_activity": "Inactif (ni en emploi ni au chômage), En incapacité de travailler",

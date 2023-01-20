@@ -15,12 +15,13 @@ from common.config import (
     BIGQUERY_ANALYTICS_DATASET,
 )
 from common.alerts import task_fail_slack_alert
-from common.utils import getting_service_account_token
 from common.operators.biquery import bigquery_job_task
 from dependencies.siren.import_siren import ANALYTICS_TABLES
+from common.utils import getting_service_account_token, get_airflow_schedule
 
 FUNCTION_NAME = f"siren_import_{ENV_SHORT_NAME}"
 SIREN_FILENAME = "siren_data.csv"
+schedule_interval = "0 */6 * * *" if ENV_SHORT_NAME == "prod" else "30 */6 * * *"
 
 default_dag_args = {
     "start_date": datetime.datetime(2021, 8, 25),
@@ -34,7 +35,7 @@ dag = DAG(
     default_args=default_dag_args,
     description="Import Siren from INSEE API",
     on_failure_callback=None,
-    schedule_interval="0 */6 * * *" if ENV_SHORT_NAME == "prod" else "30 */6 * * *",
+    schedule_interval=get_airflow_schedule(schedule_interval),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
 )

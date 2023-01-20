@@ -6,6 +6,8 @@ from dependencies.open_data.export_open_data import aggregated_open_data_tables
 from common.config import DAG_FOLDER, GCP_PROJECT_ID
 from common.alerts import task_fail_slack_alert
 from common.operators.biquery import bigquery_job_task
+from common.utils import get_airflow_schedule
+
 
 default_dag_args = {
     "start_date": datetime.datetime(2022, 6, 24),
@@ -19,7 +21,7 @@ dag = DAG(
     "export_open_data",
     default_args=default_dag_args,
     description="Export aggregated tables for open data",
-    schedule_interval="00 08 * * *",
+    schedule_interval=get_airflow_schedule("00 08 * * *"),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,

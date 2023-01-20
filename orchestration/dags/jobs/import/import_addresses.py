@@ -17,10 +17,9 @@ from common.config import (
     BIGQUERY_ANALYTICS_DATASET,
     DATA_GCS_BUCKET_NAME,
     ENV_SHORT_NAME,
-    GCP_PROJECT_ID,
 )
 from common.alerts import task_fail_slack_alert
-from common.utils import getting_service_account_token
+from common.utils import getting_service_account_token, get_airflow_schedule
 from common.operators.biquery import bigquery_job_task
 from dependencies.addresses.import_addresses import (
     USER_LOCATIONS_SCHEMA,
@@ -28,8 +27,10 @@ from dependencies.addresses.import_addresses import (
     ANALYTICS_TABLES,
 )
 
+
 FUNCTION_NAME = f"addresses_import_{ENV_SHORT_NAME}"
 USER_LOCATIONS_TABLE = "user_locations"
+schedule_interval = "*/10 * * * *" if ENV_SHORT_NAME == "prod" else "30 2 * * *"
 
 default_args = {
     "start_date": datetime(2021, 3, 30),
@@ -52,7 +53,7 @@ with DAG(
     default_args=default_args,
     description="Importing new data from addresses api every day.",
     # every 10 minutes if prod once a day otherwise
-    schedule_interval="*/10 * * * *" if ENV_SHORT_NAME == "prod" else "30 2 * * *",
+    schedule_interval=get_airflow_schedule(schedule_interval),
     catchup=False,
     dagrun_timeout=timedelta(minutes=180),
 ) as dag:

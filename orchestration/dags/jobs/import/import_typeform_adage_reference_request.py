@@ -17,7 +17,7 @@ from common.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
 )
-from common.utils import getting_service_account_token
+from common.utils import getting_service_account_token, get_airflow_schedule
 
 FUNCTION_NAME = f"typeform_adage_reference_request_{ENV_SHORT_NAME}"
 
@@ -35,7 +35,7 @@ dag = DAG(
     default_args=default_dag_args,
     description="Import Typeform Adage Reference Request from API",
     on_failure_callback=None,
-    schedule_interval="0 1 * * *",
+    schedule_interval=get_airflow_schedule("0 1 * * *"),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
 )

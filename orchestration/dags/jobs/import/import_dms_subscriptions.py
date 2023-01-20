@@ -24,13 +24,13 @@ from common.config import (
     DAG_FOLDER,
 )
 
-from common.utils import getting_service_account_token
 from dependencies.dms_subscriptions.import_dms_subscriptions import (
     parse_api_result,
     ANALYTICS_TABLES,
 )
-
 from common import macros
+from common.utils import getting_service_account_token, get_airflow_schedule
+
 
 DMS_FUNCTION_NAME = "dms_" + ENV_SHORT_NAME
 
@@ -46,7 +46,7 @@ with DAG(
     "import_dms_subscriptions",
     default_args=default_args,
     description="Import DMS subscriptions",
-    schedule_interval="0 1 * * *",
+    schedule_interval=get_airflow_schedule("0 1 * * *"),
     catchup=False,
     dagrun_timeout=timedelta(minutes=180),
     user_defined_macros=macros.default,

@@ -2,13 +2,12 @@ import datetime
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from common import macros
-from dependencies.logs.import_logs import (
-    import_tables,
-)
 from common.operators.biquery import bigquery_job_task
+from dependencies.logs.import_logs import import_tables
+
 from common.config import DAG_FOLDER, GCP_PROJECT_ID
 from common.alerts import task_fail_slack_alert
-
+from common.utils import get_airflow_schedule
 
 default_dag_args = {
     "start_date": datetime.datetime(2022, 6, 20),
@@ -22,7 +21,7 @@ dag = DAG(
     "import_logs",
     default_args=default_dag_args,
     description="Import tables from log sink",
-    schedule_interval="00 01 * * *",
+    schedule_interval=get_airflow_schedule("00 01 * * *"),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,

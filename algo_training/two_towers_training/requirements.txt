@@ -1,0 +1,14 @@
+datetime==4.3
+fsspec==2022.11.0
+gcsfs==2022.11.0
+google-cloud-secret-manager==2.4.0
+keras==2.6.0
+loguru==0.6.0
+mlflow==1.17.0
+numpy==1.19.4 # Python3.7 + TF 2.6.3
+pandas-gbq==0.15.0
+protobuf==3.20.*
+recmetrics==0.1.5
+tensorflow==2.6.3
+tensorflow-recommenders==0.6.0
+typer==0.7.0

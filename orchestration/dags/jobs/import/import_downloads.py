@@ -16,7 +16,7 @@ from common.config import (
     DAG_FOLDER,
 )
 
-from common.utils import getting_service_account_token
+from common.utils import getting_service_account_token, get_airflow_schedule
 
 from common.alerts import task_fail_slack_alert
 
@@ -37,7 +37,7 @@ dag = DAG(
     "import_downloads",
     default_args=default_dag_args,
     description="Import downloads tables",
-    schedule_interval="00 01 * * *",
+    schedule_interval=get_airflow_schedule("00 01 * * *"),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,

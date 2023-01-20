@@ -29,6 +29,9 @@ from data_analytics.utils.gcp import (
 )
 from common.macros import create_humanize_id_function
 from dependencies.import_analytics.import_analytics import export_tables
+import warnings
+
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
 @pytest.fixture(scope="module", autouse=True)

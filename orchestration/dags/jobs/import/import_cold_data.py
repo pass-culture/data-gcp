@@ -7,7 +7,11 @@ from common.operators.biquery import bigquery_job_task
 
 
 from common import macros
-from common.utils import getting_service_account_token, depends_loop
+from common.utils import (
+    getting_service_account_token,
+    depends_loop,
+    get_airflow_schedule,
+)
 
 from common.config import GCP_PROJECT_ID, DAG_FOLDER, ENV_SHORT_NAME
 from common.config import GCP_PROJECT_ID, DAG_FOLDER
@@ -26,7 +30,7 @@ dag = DAG(
     "import_cold_data",
     default_args=default_dag_args,
     description="Import cold data from GCS to BQ",
-    schedule_interval="00 01 * * *",
+    schedule_interval=get_airflow_schedule("00 01 * * *"),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,

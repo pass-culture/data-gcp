@@ -5,7 +5,11 @@ from airflow.operators.python import PythonOperator
 from airflow.providers.http.operators.http import SimpleHttpOperator
 from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 from common import macros
-from common.utils import depends_loop, getting_service_account_token
+from common.utils import (
+    depends_loop,
+    getting_service_account_token,
+    get_airflow_schedule,
+)
 from dependencies.metabase.import_metabase import (
     import_tables,
     from_external,
@@ -17,7 +21,6 @@ from common.config import (
     METABASE_EXTERNAL_CONNECTION_ID,
     ENV_SHORT_NAME,
 )
-from common.config import GCP_PROJECT_ID, DAG_FOLDER
 from common.alerts import task_fail_slack_alert
 from common.operators.biquery import bigquery_job_task
 
@@ -33,7 +36,7 @@ dag = DAG(
     "metabase_governance",
     default_args=default_dag_args,
     description="Import metabase tables from CloudSQL & archive old cards",
-    schedule_interval="00 01 * * *",
+    schedule_interval=get_airflow_schedule("00 01 * * *"),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,

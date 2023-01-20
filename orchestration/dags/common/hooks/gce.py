@@ -4,6 +4,7 @@ from googleapiclient.errors import HttpError
 import pytz, json, os, time
 import dateutil
 import datetime
+from dataclasses import dataclass
 from common.config import (
     ENV_SHORT_NAME,
     GCP_REGION,
@@ -14,17 +15,26 @@ from common.config import (
     GCE_SA,
 )
 
-SOURCE_IMAGE = {
-    "CPU": "projects/deeplearning-platform-release/global/images/tf2-latest-cpu-v20211202",
-    "GPU": "projects/deeplearning-platform-release/global/images/tf2-latest-gpu-v20211202",
-}
 
-STARTUP_SCRIPT = """
-    #!/bin/bash
-    curl -sSO https://dl.google.com/cloudagents/add-google-cloud-ops-agent-repo.sh
-    sudo bash add-google-cloud-ops-agent-repo.sh --also-install
-    sudo /opt/deeplearning/install-driver.sh
-"""
+@dataclass
+class CPUImage:
+    source_image: str = (
+        "projects/deeplearning-platform-release/global/images/tf2-latest-cpu-v20211202"
+    )
+    startup_script: str = None
+    startup_script_wait_time: int = 0
+
+
+@dataclass
+class GPUImage:
+    source_image: str = (
+        "projects/deeplearning-platform-release/global/images/tf2-latest-gpu-v20211202"
+    )
+    startup_script: str = """
+        #!/bin/bash
+        sudo /opt/deeplearning/install-driver.sh
+    """
+    startup_script_wait_time: int = 90
 
 
 class GCEHook(GoogleBaseHook):
@@ -38,7 +48,7 @@ class GCEHook(GoogleBaseHook):
         gce_network_id=GCE_NETWORK_ID,
         gce_subnetwork_id=GCE_SUBNETWORK_ID,
         gce_sa=GCE_SA,
-        source_image=SOURCE_IMAGE["CPU"],
+        source_image_type=CPUImage(),
         gcp_conn_id: str = "google_cloud_default",
         delegate_to: str = None,
         impersonation_chain: str = None,
@@ -49,7 +59,7 @@ class GCEHook(GoogleBaseHook):
         self.gce_network_id = gce_network_id
         self.gce_subnetwork_id = gce_subnetwork_id
         self.gce_sa = gce_sa
-        self.source_image = source_image
+        self.source_image_type = source_image_type
         super().__init__(
             gcp_conn_id=gcp_conn_id,
             delegate_to=delegate_to,
@@ -71,7 +81,6 @@ class GCEHook(GoogleBaseHook):
         instance_type,
         preemptible,
         accelerator_types=[],
-        startup_script=None,
     ):
         instances = self.list_instances()
         instances = [x["name"] for x in instances if x["status"] == "RUNNING"]
@@ -88,7 +97,6 @@ class GCEHook(GoogleBaseHook):
             wait=True,
             preemptible=preemptible,
             accelerator_types=accelerator_types,
-            startup_script=startup_script,
         )
 
     def delete_vm(self, instance_name):
@@ -122,7 +130,6 @@ class GCEHook(GoogleBaseHook):
         self,
         instance_type,
         name,
-        startup_script=None,
         metadata=None,
         wait=False,
         accelerator_types=[],
@@ -142,8 +149,13 @@ class GCEHook(GoogleBaseHook):
             if metadata
             else []
         )
-        if startup_script is not None:
-            metadata = metadata + [{"key": "startup-script", "value": startup_script}]
+        if self.source_image_type.startup_script is not None:
+            metadata = metadata + [
+                {
+                    "key": "startup-script",
+                    "value": self.source_image_type.startup_script,
+                }
+            ]
 
         config = {
             "name": name,
@@ -155,7 +167,7 @@ class GCEHook(GoogleBaseHook):
                     "autoDelete": True,
                     "initialize_params": {
                         "disk_size_gb": "50",
-                        "sourceImage": self.source_image,
+                        "sourceImage": self.source_image_type.source_image,
                     },
                 }
             ],
@@ -197,6 +209,9 @@ class GCEHook(GoogleBaseHook):
         )
 
         if wait:
+            # force some waiting time for startup script.
+            if self.source_image_type.startup_script_wait_time > 0:
+                time.sleep(self.source_image_type.startup_script_wait_time)
             self.wait_for_operation(operation["name"])
         else:
             return operation["name"]

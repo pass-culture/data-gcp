@@ -19,7 +19,7 @@ from common.config import (
     RECOMMENDATION_SQL_INSTANCE,
     CONNECTION_ID,
 )
-from common.utils import from_external
+from common.utils import from_external, get_airflow_schedule
 from common import macros
 from common.operators.biquery import bigquery_job_task
 
@@ -56,7 +56,7 @@ dag = DAG(
     "export_cloudsql_tables_to_bigquery_v1",
     default_args=default_dag_args,
     description="Export tables from recommendation CloudSQL to BigQuery",
-    schedule_interval="0 1 * * *",
+    schedule_interval=get_airflow_schedule("0 1 * * *"),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=90),
     user_defined_macros=macros.default,

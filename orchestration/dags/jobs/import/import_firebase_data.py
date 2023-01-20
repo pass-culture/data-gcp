@@ -1,16 +1,14 @@
 import datetime
 from common import macros
 from airflow import DAG
-from common.utils import depends_loop
+
+from common.utils import depends_loop, get_airflow_schedule
 from common.operators.biquery import bigquery_job_task
 from airflow.operators.dummy_operator import DummyOperator
-from common.config import DAG_FOLDER
-from common.config import (
-    GCP_PROJECT_ID,
-)
+from common.config import DAG_FOLDER, GCP_PROJECT_ID
 from dependencies.firebase.import_firebase import import_tables
 from common.alerts import task_fail_slack_alert
-
+import copy
 
 dags = {
     "daily": {
@@ -50,7 +48,7 @@ for type, params in dags.items():
         default_args=params["default_dag_args"],
         description="Import firebase data and dispatch it to each env",
         on_failure_callback=task_fail_slack_alert,
-        schedule_interval=params["schedule_interval"],
+        schedule_interval=get_airflow_schedule(params["schedule_interval"]),
         catchup=False,
         dagrun_timeout=datetime.timedelta(minutes=90),
         user_defined_macros=macros.default,
@@ -61,7 +59,8 @@ for type, params in dags.items():
 
     start = DummyOperator(task_id="start", dag=dag)
     table_jobs = {}
-    for table, job_params in import_tables.items():
+    import_tables_temp = copy.deepcopy(import_tables)
+    for table, job_params in import_tables_temp.items():
         # force this to include custom yyyymmdd
         if job_params.get("partition_prefix", None) is not None:
             job_params[
@@ -79,7 +78,6 @@ for type, params in dags.items():
             "depends": job_params.get("depends", []),
             "dag_depends": job_params.get("dag_depends", []),
         }
-
     table_jobs = depends_loop(table_jobs, start, dag=dag)
     end = DummyOperator(task_id="end", dag=dag)
     table_jobs >> end

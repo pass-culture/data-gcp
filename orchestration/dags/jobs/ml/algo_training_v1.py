@@ -13,7 +13,7 @@ from airflow.models import Param
 from common.alerts import task_fail_slack_alert
 from common.access_gcp_secrets import access_secret_data
 from common.config import GCP_PROJECT_ID, GCE_ZONE, ENV_SHORT_NAME
-
+from common.utils import get_airflow_schedule
 
 GCE_INSTANCE = os.environ.get("GCE_TRAINING_INSTANCE", "algo-training-dev")
 MLFLOW_BUCKET_NAME = os.environ.get("MLFLOW_BUCKET_NAME", "mlflow-bucket-ehp")
@@ -69,14 +69,14 @@ with DAG(
     # Train every Friday at 12:00 in prod
     # Train every day at 00:00 in dev
     # Train every Wednesday at 12:00 in stg
-    schedule_interval=schedule_dict[ENV_SHORT_NAME],
+    schedule_interval=get_airflow_schedule(schedule_dict[ENV_SHORT_NAME]),
     catchup=False,
     dagrun_timeout=timedelta(minutes=1440),
     params={
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
-        ),
+        )
     },
 ) as dag:
 
@@ -89,7 +89,7 @@ with DAG(
         task_id="gce_start_task",
     )
 
-    FETCH_CODE = r'"if cd data-gcp; then git checkout master && git pull && git checkout {{ params.branch }} && git pull; else git clone git@github.com:pass-culture/data-gcp.git && cd data-gcp && git checkout  {{ params.branch }} && git pull; fi"'
+    FETCH_CODE = r'"if cd data-gcp; then git checkout master && git pull && git checkout {{ params.branch }} && git pull; else git clone https://github.com/pass-culture/data-gcp.git && cd data-gcp && git checkout  {{ params.branch }} && git pull; fi"'
 
     fetch_code = BashOperator(
         task_id="fetch_code",
@@ -258,7 +258,7 @@ with DAG(
                     + "{{ ti.xcom_pull(task_ids='training').split('/')[4] }}"
                     + "/runs/"
                     + "{{ ti.xcom_pull(task_ids='training').split('/')[5] }}",
-                },
+                }
             ],
         },
         {

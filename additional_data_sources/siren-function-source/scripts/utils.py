@@ -34,5 +34,3 @@ def get_api_token(consumer_key):
     result_token = response.json()
 
     return result_token["access_token"]
-
-

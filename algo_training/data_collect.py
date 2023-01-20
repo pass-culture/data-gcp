@@ -1,4 +1,5 @@
 import typer
+from loguru import logger
 
 from tools.data_collect_queries import get_data
 from utils import STORAGE_PATH, ENV_SHORT_NAME
@@ -25,15 +26,19 @@ def main(
         None,
         help="Max number of rows",
     ),
+    output_name: str = typer.Option(
+        "raw_data", help="Name of the output csv file where to write collected data"
+    ),
 ) -> None:
-    raw_data = get_data(
-        dataset=dataset,
-        table_name=table_name,
+    dataset = get_data(
+        dataset,
+        table_name,
+        max_limit=limit_filter,
         subcategory_ids=subcategory_ids,
         event_day_number=event_day_number,
-        max_limit=limit_filter,
     )
-    raw_data.to_csv(f"{STORAGE_PATH}/raw_data.csv", index=False)
+    logger.info(f"Dataset size: {dataset.shape[0]}")
+    dataset.to_csv(f"{STORAGE_PATH}/{output_name}.csv", index=False)
 
 
 if __name__ == "__main__":

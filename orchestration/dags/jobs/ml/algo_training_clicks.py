@@ -1,16 +1,14 @@
-from datetime import datetime, timedelta
+from datetime import datetime
+from datetime import timedelta
 
-from airflow import DAG
 from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
-from common.operators.gce import (
-    StartGCEOperator,
-    StopGCEOperator,
-    CloneRepositoryGCEOperator,
-    SSHGCEOperator,
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryExecuteQueryOperator,
 )
 from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
 
+from airflow import DAG
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import (
@@ -20,17 +18,23 @@ from common.config import (
     SLACK_CONN_ID,
     SLACK_CONN_PASSWORD,
     MLFLOW_URL,
+    BIGQUERY_TMP_DATASET,
 )
-
+from common.operators.gce import (
+    StartGCEOperator,
+    StopGCEOperator,
+    CloneRepositoryGCEOperator,
+    SSHGCEOperator,
+)
 from dependencies.ml.utils import create_algo_training_slack_block
-from datetime import datetime
+from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
 
 DATE = "{{ ts_nodash }}"
 
 # Environment variables to export before running commands
 dag_config = {
     "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/algo_training_{ENV_SHORT_NAME}/algo_training_clicks_v2_{DATE}",
-    "BASE_DIR": f"data-gcp/algo_training",
+    "BASE_DIR": "data-gcp/algo_training",
     "TRAIN_DIR": "/home/airflow/train",
     "EXPERIMENT_NAME": f"algo_training_clicks_v2.1_{ENV_SHORT_NAME}",
 }
@@ -82,6 +86,10 @@ with DAG(
         "event_day_number": Param(
             default=str(train_params["event_day_number"]), type="string"
         ),
+        "input_type": Param(
+            default="clicks",
+            type="string",
+        ),
         "instance_type": Param(
             default=gce_params["instance_type"][ENV_SHORT_NAME], type="string"
         ),
@@ -89,6 +97,20 @@ with DAG(
     },
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)
+
+    import_recommendation_data = {}
+    for dataset in ["training", "validation", "test"]:
+        task = BigQueryExecuteQueryOperator(
+            task_id=f"import_recommendation_{dataset}",
+            sql=(
+                IMPORT_TRAINING_SQL_PATH / f"recommendation_{dataset}_data.sql"
+            ).as_posix(),
+            write_disposition="WRITE_TRUNCATE",
+            use_legacy_sql=False,
+            destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DATE}_recommendation_{dataset}_data_clicks",
+            dag=dag,
+        )
+        import_recommendation_data[dataset] = task
 
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
@@ -112,34 +134,19 @@ with DAG(
         dag=dag,
     )
 
-    data_collect = SSHGCEOperator(
-        task_id="data_collect",
-        instance_name="{{ params.instance_name }}",
-        base_dir=dag_config["BASE_DIR"],
-        environment=dag_config,
-        command="python data_collect.py "
-        "--table-name training_data_clicks "
-        "--event-day-number {{ params.event_day_number }}",
-        dag=dag,
-    )
-
-    split_data = SSHGCEOperator(
-        task_id="split_data",
-        instance_name="{{ params.instance_name }}",
-        base_dir=dag_config["BASE_DIR"],
-        environment=dag_config,
-        command="python split_data.py",
-        dag=dag,
-    )
-
-    preprocess = SSHGCEOperator(
-        task_id="preprocess",
-        instance_name="{{ params.instance_name }}",
-        base_dir=dag_config["BASE_DIR"],
-        environment=dag_config,
-        command="python preprocess.py",
-        dag=dag,
-    )
+    store_recommendation_data = {}
+    for split in ["training", "validation", "test"]:
+        task = SSHGCEOperator(
+            task_id=f"store_recommendation_{split}",
+            instance_name="{{ params.instance_name }}",
+            base_dir=dag_config["BASE_DIR"],
+            environment=dag_config,
+            command=f"python data_collect.py --dataset {BIGQUERY_TMP_DATASET} "
+            f"--table-name {DATE}_recommendation_{split}_data_clicks "
+            f"--output-name recommendation_{split}_data",
+            dag=dag,
+        )
+        store_recommendation_data[split] = task
 
     training = SSHGCEOperator(
         task_id="training",
@@ -150,7 +157,10 @@ with DAG(
         f"--experiment-name {dag_config['EXPERIMENT_NAME']} "
         "--batch-size {{ params.batch_size }} "
         "--embedding-size {{ params.embedding_size }} "
-        "--seed {{ ds_nodash }}",
+        "--seed {{ ds_nodash }} "
+        f"--dataset {BIGQUERY_TMP_DATASET} "
+        f"--training-table-name {DATE}_recommendation_training_data_clicks "
+        f"--validation-table-name {DATE}_recommendation_validation_data_clicks",
         dag=dag,
     )
 
@@ -159,7 +169,10 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
-        command=f"python evaluate.py",
+        command="python evaluate.py "
+        f"--experiment-name {dag_config['EXPERIMENT_NAME']} "
+        "--training-dataset-name recommendation_training_data "
+        "--test-dataset-name recommendation_test_data",
         dag=dag,
     )
 
@@ -180,12 +193,15 @@ with DAG(
 
     (
         start
+        >> import_recommendation_data["training"]
+        >> import_recommendation_data["validation"]
+        >> import_recommendation_data["test"]
         >> gce_instance_start
         >> fetch_code
         >> install_dependencies
-        >> data_collect
-        >> preprocess
-        >> split_data
+        >> store_recommendation_data["training"]
+        >> store_recommendation_data["validation"]
+        >> store_recommendation_data["test"]
         >> training
         >> evaluate
         >> gce_instance_stop

@@ -196,8 +196,7 @@ with DAG(
     )
 
     EVALUATION = f""" '{DEFAULT}
-        export EXPERIMENT_NAME={RECOMMENDATION_EXPERIMENT_NAME}
-        python evaluate.py'
+        python evaluate.py --experiment-name {RECOMMENDATION_EXPERIMENT_NAME}'
     """
 
     evaluate = BashOperator(

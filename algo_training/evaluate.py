@@ -3,11 +3,12 @@ from datetime import datetime
 import mlflow.tensorflow
 import pandas as pd
 import tensorflow as tf
+import typer
 from loguru import logger
 
 from metrics import compute_metrics, get_actual_and_predicted
 from models.v1.match_model import MatchModel
-from tools.v1.preprocess_tools import preprocess
+from tools.data_collect_queries import get_data
 from utils import (
     get_secret,
     connect_remote_mlflow,
@@ -27,18 +28,24 @@ from utils import (
 k_list = [RECOMMENDATION_NUMBER, NUMBER_OF_PRESELECTED_OFFERS]
 
 
-def evaluate(client_id, model, storage_path: str):
-    logger.info("Read Raw dataset")
-    raw_data = pd.read_csv(f"{STORAGE_PATH}/raw_data.csv")
-    raw_data = preprocess(raw_data)
+def evaluate(
+    client_id,
+    model,
+    storage_path: str,
+    training_dataset_name: str = "positive_data_train",
+    test_dataset_name: str = "positive_data_test",
+):
+    raw_data = get_data(
+        dataset=f"raw_{ENV_SHORT_NAME}", table_name="training_data_bookings"
+    )
 
-    training_item_ids = pd.read_csv(f"{storage_path}/positive_data_train.csv")[
+    training_item_ids = pd.read_csv(f"{storage_path}/{training_dataset_name}.csv")[
         "item_id"
     ].unique()
 
     positive_data_test = (
         pd.read_csv(
-            f"{storage_path}/positive_data_test.csv",
+            f"{storage_path}/{test_dataset_name}.csv",
             dtype={
                 "user_id": str,
                 "item_id": str,
@@ -114,7 +121,18 @@ def evaluate(client_id, model, storage_path: str):
     return metrics
 
 
-def run(experiment_name: str, model_name: str):
+def run(
+    experiment_name: str = typer.Option(
+        EXPERIMENT_NAME, help="Name of the experiment on MLflow"
+    ),
+    model_name: str = typer.Option(MODEL_NAME, help="Name of the model to evaluate"),
+    training_dataset_name: str = typer.Option(
+        "positive_data_train", help="Name of the training dataset in storage"
+    ),
+    test_dataset_name: str = typer.Option(
+        "positive_data_test", help="Name of the test dataset in storage"
+    ),
+):
     logger.info("-------EVALUATE START------- ")
     client_id = get_secret("mlflow_client_id")
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
@@ -145,8 +163,14 @@ def run(experiment_name: str, model_name: str):
             project_id=f"{GCP_PROJECT_ID}",
             if_exists="append",
         )
-        metrics = evaluate(client_id, loaded_model, STORAGE_PATH)
+        metrics = evaluate(
+            client_id,
+            loaded_model,
+            STORAGE_PATH,
+            training_dataset_name,
+            test_dataset_name,
+        )
 
 
 if __name__ == "__main__":
-    run(experiment_name=EXPERIMENT_NAME, model_name=MODEL_NAME)
+    typer.run(run)

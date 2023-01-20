@@ -70,23 +70,29 @@ with DAG(
         command=INSTALL_DEPS,
     )
 
-    tasks = []
-    for job_type in ["subcategories", "types"]:
+    subcategories_job = GCloudSSHGCEOperator(
+        task_id=f"import_subcategories",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_PATH,
+        command=f"""
+        conda init zsh
+        source ~/.zshrc
+        conda activate py310
+        python main.py --job_type=subcategories --gcp_project_id={GCP_PROJECT_ID} --env_short_name={ENV_SHORT_NAME}        
+    """,
+    )
 
-        PYTHON_CODE = f"""
-            conda init zsh
-            source ~/.zshrc
-            conda activate py310
-            python main.py --job_type={job_type} --gcp_project_id={GCP_PROJECT_ID} --env_short_name={ENV_SHORT_NAME}        
-        """
-
-        import_job = GCloudSSHGCEOperator(
-            task_id=f"import_{job_type}",
-            instance_name=GCE_INSTANCE,
-            base_dir=BASE_PATH,
-            command=PYTHON_CODE,
-        )
-        tasks.append(import_job)
+    types_job = GCloudSSHGCEOperator(
+        task_id=f"import_types",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_PATH,
+        command=f"""
+        conda init zsh
+        source ~/.zshrc
+        conda activate py310
+        python main.py --job_type=types --gcp_project_id={GCP_PROJECT_ID} --env_short_name={ENV_SHORT_NAME}        
+    """,
+    )
 
     gce_instance_stop = StopGCEOperator(
         instance_name=GCE_INSTANCE, task_id="gce_stop_task"
@@ -97,6 +103,7 @@ with DAG(
         >> gce_instance_start
         >> fetch_code
         >> install_dependencies
-        >> tasks
+        >> subcategories_job
+        >> types_job
         >> gce_instance_stop
     )

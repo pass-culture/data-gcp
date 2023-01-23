@@ -63,12 +63,13 @@ class TwoTowersModel(tfrs.models.Model):
         )
 
     def compute_loss(self, features, training=False):
-        user_embedding = self.user_model(
-            {name: features[name] for name in self._user_feature_names}
+        user_features, item_features = (
+            features[: len(self._user_feature_names)],
+            features[len(self._user_feature_names) :],
         )
-        item_embedding = self.item_model(
-            {name: features[name] for name in self._item_feature_names}
-        )
+
+        user_embedding = self.user_model(user_features)
+        item_embedding = self.item_model(item_features)
 
         return self.task(user_embedding, item_embedding, compute_metrics=not training)
 
@@ -109,10 +110,8 @@ class SingleTowerModel(tf.keras.models.Model):
 
     def call(self, features: dict, training=False):
         feature_embeddings = []
-        for feature_name, feature_data in features.items():
-            feature_embeddings.append(
-                self._embedding_layers[feature_name](feature_data)
-            )
+        for idx, embedding_layer in enumerate(self._embedding_layers.values()):
+            feature_embeddings.append(embedding_layer(features[idx]))
 
         x = tf.concat(
             feature_embeddings,

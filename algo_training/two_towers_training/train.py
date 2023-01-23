@@ -20,8 +20,8 @@ from tools.constants import (
 from tools.callbacks import MLFlowLogging
 from tools.utils import save_pca_representation, get_secret, connect_remote_mlflow
 
-N_EPOCHS = 200
-MIN_DELTA = 0.0005  # Minimum change in the accuracy before a callback is called
+N_EPOCHS = 100
+MIN_DELTA = 0.001  # Minimum change in the accuracy before a callback is called
 LEARNING_RATE = 0.1
 VERBOSE = 2 if ENV_SHORT_NAME == "prod" else 1
 
@@ -41,7 +41,7 @@ def train(
     ),
     validation_steps_ratio: float = typer.Option(
         ...,
-        help="Number to divide the total validation steps done per epoch",
+        help="Ratio of the total validation steps that will be processed at evaluation",
     ),
     embedding_size: int = typer.Option(
         ...,
@@ -147,15 +147,15 @@ def train(
         )
 
         # Divide the total validation steps by a ration to speed up training
-        validation_steps = int(
-            (len(validation_data) // batch_size) * validation_steps_ratio
+        validation_steps = max(
+            int((len(validation_data) // batch_size) * validation_steps_ratio), 1
         )
 
         two_tower_model.fit(
             train_dataset,
             epochs=N_EPOCHS,
             validation_data=validation_dataset,
-            validation_steps=validation_steps or 1,
+            validation_steps=validation_steps,
             callbacks=[
                 tf.keras.callbacks.ReduceLROnPlateau(
                     monitor="val_factorized_top_k/top_100_categorical_accuracy",
@@ -195,13 +195,17 @@ def train(
         mlflow.log_artifacts(export_path + "model", "model")
 
         # Export the PCA representations of the item embeddings
+        item_data = train_item_data.merge(
+            pd.read_csv(f"{STORAGE_PATH}/item_data.csv").astype(str),
+            on=["item_id"],
+            how="left",
+        )
+
         os.makedirs(export_path + "pca_plots", exist_ok=True)
         pca_representations_path = export_path + "pca_plots/"
         save_pca_representation(
             loaded_model=match_model,
-            item_data=train_data[
-                item_columns + ["offer_categoryId", "offer_subcategoryid"]
-            ].drop_duplicates(subset=["item_id"]),
+            item_data=item_data,
             figures_folder=pca_representations_path,
         )
         mlflow.log_artifacts(export_path + "pca_plots", "pca_plots")

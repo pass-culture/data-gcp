@@ -154,7 +154,7 @@ class CloneRepositoryGCEOperator(BaseSSHGCEOperator):
         **kwargs,
     ):
         self.command = self.script(command)
-        self.instance_name = f"{GCE_BASE_PREFIX}-{instance_name}"
+        self.instance_name = instance_name
         self.environment = environment
         super(CloneRepositoryGCEOperator, self).__init__(
             instance_name=self.instance_name,
@@ -249,7 +249,7 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         )
         default_path = f"cd {base_dir}" if base_dir is not None else ""
         self.command = "\n".join([default_command, default_path, command])
-        self.instance_name = f"{GCE_BASE_PREFIX}-{instance_name}"
+        self.instance_name = instance_name
         super(SSHGCEOperator, self).__init__(
             instance_name=self.instance_name,
             command=self.command,

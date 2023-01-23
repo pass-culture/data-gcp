@@ -78,18 +78,26 @@ def train(
     # Build tf datasets
     logger.info("Building tf datasets")
 
-    train_dataset = tf.data.Dataset.from_tensor_slices(train_data.T.values).batch(
-        batch_size=batch_size, drop_remainder=False
+    train_dataset = (
+        tf.data.Dataset.from_tensor_slices(train_data.values)
+        .batch(batch_size=batch_size)
+        .map(lambda x: tf.transpose(x))
     )
-    validation_dataset = tf.data.Dataset.from_tensor_slices(
-        validation_data.T.values
-    ).batch(batch_size=batch_size, drop_remainder=False)
+    validation_dataset = (
+        tf.data.Dataset.from_tensor_slices(validation_data.values)
+        .batch(batch_size=batch_size)
+        .map(lambda x: tf.transpose(x))
+    )
 
-    user_dataset = tf.data.Dataset.from_tensor_slices(train_user_data.T.values).batch(
-        batch_size=batch_size, drop_remainder=False
+    user_dataset = (
+        tf.data.Dataset.from_tensor_slices(train_user_data.values)
+        .batch(batch_size=batch_size, drop_remainder=False)
+        .map(lambda x: tf.transpose(x))
     )
-    item_dataset = tf.data.Dataset.from_tensor_slices(train_item_data.T.values).batch(
-        batch_size=batch_size, drop_remainder=False
+    item_dataset = (
+        tf.data.Dataset.from_tensor_slices(train_item_data.values)
+        .batch(batch_size=batch_size, drop_remainder=False)
+        .map(lambda x: tf.transpose(x))
     )
 
     # Connect to MLFlow

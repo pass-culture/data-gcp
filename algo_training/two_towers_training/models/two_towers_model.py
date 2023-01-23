@@ -110,8 +110,8 @@ class SingleTowerModel(tf.keras.models.Model):
 
     def call(self, features: dict, training=False):
         feature_embeddings = []
-        for idx, layer in enumerate(self._embedding_layers.values()):
-            feature_embeddings.append(layer(features[idx]))
+        for idx, embedding_layer in enumerate(self._embedding_layers.values()):
+            feature_embeddings.append(embedding_layer(features[idx]))
 
         x = tf.concat(
             feature_embeddings,

@@ -18,13 +18,13 @@ class MLFlowLogging(tf.keras.callbacks.Callback):
             {
                 "_train_loss": logs["loss"],
                 "_val_loss": logs["val_loss"],
-                "_val_top_5_categorical_accuracy": logs[
+                "_val_top_005_categorical_accuracy": logs[
                     "val_factorized_top_k/top_5_categorical_accuracy"
                 ],
-                "_val_top_10_categorical_accuracy": logs[
+                "_val_top_010_categorical_accuracy": logs[
                     "val_factorized_top_k/top_10_categorical_accuracy"
                 ],
-                "_val_top_50_categorical_accuracy": logs[
+                "_val_top_050_categorical_accuracy": logs[
                     "val_factorized_top_k/top_50_categorical_accuracy"
                 ],
                 "_val_top_100_categorical_accuracy": logs[

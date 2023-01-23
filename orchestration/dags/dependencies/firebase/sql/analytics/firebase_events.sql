@@ -190,7 +190,7 @@ WITH temp_firebase_events AS (
         ) as search_genre_types_filter,
         (
             select
-                event_params.value.int_value
+                CAST(event_params.value.int_value AS STRING)
             from
                 unnest(event_params) event_params
             where
@@ -214,7 +214,7 @@ WITH temp_firebase_events AS (
         ) as search_native_categories_filter,
         (
             select
-                event_params.value.int_value
+                CAST(event_params.value.int_value AS STRING)
             from
                 unnest(event_params) event_params
             where

@@ -5,6 +5,7 @@ from common.access_gcp_secrets import access_secret_data
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 DAG_FOLDER = os.environ.get("DAG_FOLDER", "dags/")
+LOCAL_ENV = os.environ.get("LOCAL_ENV", None)
 
 SSH_USER = os.environ.get("SSH_USER", "airflow")
 
@@ -13,7 +14,7 @@ GCE_ZONE = "europe-west1-b"
 GCE_SUBNETWORK_ID = os.environ.get("GCE_SUBNETWORK_ID")
 GCE_NETWORK_ID = os.environ.get("GCE_NETWORK_ID")
 GCE_SA = os.environ.get("GCE_SA", f"algo-training-{ENV_SHORT_NAME}")
-
+GCE_BASE_PREFIX = f"composer-{ENV_SHORT_NAME}"
 
 BASE32_JS_LIB_PATH = f"gs://data-bucket-{ENV_SHORT_NAME}/base32-encode/base32.js"
 GCE_TRAINING_INSTANCE = os.environ.get("GCE_TRAINING_INSTANCE", "algo-training-dev")

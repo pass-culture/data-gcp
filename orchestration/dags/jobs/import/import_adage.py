@@ -4,19 +4,18 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.http.operators.http import SimpleHttpOperator
 from airflow.operators.python import PythonOperator
 from dependencies.adage.import_adage import analytics_tables
-
-from google.auth.transport.requests import Request
-from google.oauth2 import id_token
 from common.alerts import task_fail_slack_alert
 from common.operators.biquery import bigquery_job_task
-from common.utils import depends_loop, getting_service_account_token
+from common.operators.sensor import TimeSleepSensor
+from common.utils import (
+    depends_loop,
+    getting_service_account_token,
+    get_airflow_schedule,
+)
 from common import macros
 from common.config import ENV_SHORT_NAME, GCP_PROJECT_ID, DAG_FOLDER
 
-from common.config import (
-    GCP_PROJECT_ID,
-    ENV_SHORT_NAME,
-)
+from common.config import GCP_PROJECT_ID, ENV_SHORT_NAME
 
 FUNCTION_NAME = f"adage_import_{ENV_SHORT_NAME}"
 SIREN_FILENAME = "adage_data.csv"
@@ -31,23 +30,31 @@ default_dag_args = {
 
 dag = DAG(
     "import_adage_v1",
+    start_date=datetime.datetime(2020, 12, 1),
     default_args=default_dag_args,
     description="Import Adage from API",
     on_failure_callback=None,
-    # Cannot Schedule before 5AM UTC+2 as data from API is not available.
-    schedule_interval="0 1 * * *",
+    schedule_interval=get_airflow_schedule("0 1 * * *"),
     catchup=False,
-    dagrun_timeout=datetime.timedelta(minutes=120),
+    dagrun_timeout=datetime.timedelta(minutes=240),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
 )
 
-getting_service_account_token = PythonOperator(
+# Cannot Schedule before 5AM UTC+2 as data from API is not available.
+
+sleep_op = TimeSleepSensor(
+    task_id="sleep_task",
+    execution_delay=datetime.timedelta(days=1),  # Execution Date = day minus 1
+    sleep_duration=datetime.timedelta(minutes=120),  # 2H
+    poke_interval=3600,  # check every hour
+    mode="reschedule",
+)
+
+sa_token_op = PythonOperator(
     task_id="getting_service_account_token",
     python_callable=getting_service_account_token,
-    op_kwargs={
-        "function_name": FUNCTION_NAME,
-    },
+    op_kwargs={"function_name": FUNCTION_NAME},
     dag=dag,
 )
 
@@ -78,5 +85,5 @@ for table, job_params in analytics_tables.items():
 table_jobs = depends_loop(table_jobs, start, dag=dag)
 end = DummyOperator(task_id="end", dag=dag)
 
-getting_service_account_token >> adage_to_bq >> start
+sleep_op >> sa_token_op >> adage_to_bq >> start
 table_jobs >> end

@@ -10,6 +10,8 @@ BIGQUERY_ANALYTICS_DATASET = os.environ.get(
 BIGQUERY_CLEAN_DATASET = os.environ.get(
     "BIGQUERY_CLEAN_DATASET", f"clean_{ENV_SHORT_NAME}"
 )
+
+BIGQUERY_TMP_DATASET = os.environ.get("BIGQUERY_TMP_DATASET", f"tmp_{ENV_SHORT_NAME}")
 BUCKET_NAME = os.environ["BUCKET_NAME"]
 
 
@@ -22,6 +24,34 @@ ADAGE_INVOLVED_STUDENTS_DTYPE = {
     "institutions": str,
     "total_involved_students": str,
     "total_institutions": str,
+}
+
+BQ_ADAGE_DTYPE = {
+    "id": "STRING",
+    "siret": "STRING",
+    "venueId": "STRING",
+    "regionId": "STRING",
+    "academieId": "STRING",
+    "statutId": "STRING",
+    "labelId": "STRING",
+    "typeId": "STRING",
+    "communeId": "STRING",
+    "libelle": "STRING",
+    "adresse": "STRING",
+    "siteWeb": "STRING",
+    "latitude": "STRING",
+    "longitude": "STRING",
+    "actif": "STRING",
+    "dateModification": "STRING",
+    "statutLibelle": "STRING",
+    "labelLibelle": "STRING",
+    "typeIcone": "STRING",
+    "typeLibelle": "STRING",
+    "communeLibelle": "STRING",
+    "communeDepartement": "STRING",
+    "academieLibelle": "STRING",
+    "regionLibelle": "STRING",
+    "domaines": "STRING",
 }
 
 

@@ -191,9 +191,9 @@ SELECT
     sum_stock_view.stock AS stock,
     offer_humanized_id.humanized_id AS offer_humanized_id,
     CONCAT(
-        'https://passculture.pro/offres/',
+        'https://passculture.pro/offre/individuelle/',
         offer_humanized_id.humanized_id,
-        '/edition'
+        '/informations'
     ) AS passculture_pro_url,
     CONCAT('https://passculture.app/offre/', offer.offer_id) AS webapp_url,
     offer.offer_url as URL,

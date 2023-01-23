@@ -163,19 +163,21 @@ class Recommendation:
         def get_recommendable_offers(self) -> List[Dict[str, Any]]:
             start = time.time()
             order_query = "is_geolocated DESC, booking_number DESC"
-            query = text(
-                RecommendableOffersQueryBuilder(
-                    self, RECOMMENDABLE_OFFER_LIMIT
-                ).generate_query(order_query)
-            )
-            connection = get_session()
-            query_result = connection.execute(
-                query,
-                user_id=str(self.user.id),
-                user_iris_id=str(self.user.iris_id),
-                user_longitude=float(self.user.longitude),
-                user_latitude=float(self.user.latitude),
-            ).fetchall()
+
+            recommendations_query = RecommendableOffersQueryBuilder(
+                self, RECOMMENDABLE_OFFER_LIMIT
+            ).generate_query(order_query)
+
+            query_result = []
+            if recommendations_query is not None:
+                connection = get_session()
+                query_result = connection.execute(
+                    text(recommendations_query),
+                    user_id=str(self.user.id),
+                    user_iris_id=str(self.user.iris_id),
+                    user_longitude=float(self.user.longitude),
+                    user_latitude=float(self.user.latitude),
+                ).fetchall()
 
             user_recommendation = [
                 {
@@ -220,21 +222,21 @@ class Recommendation:
                 if len(self.cold_start_categories) > 0
                 else "booking_number DESC"
             )
-            recommendations_query = text(
-                RecommendableOffersQueryBuilder(
-                    self, COLD_START_RECOMMENDABLE_OFFER_LIMIT
-                ).generate_query(order_query)
-            )
+            recommendations_query = RecommendableOffersQueryBuilder(
+                self, COLD_START_RECOMMENDABLE_OFFER_LIMIT
+            ).generate_query(order_query)
 
-            connection = get_session()
-            query_result = connection.execute(
-                recommendations_query,
-                user_iris_id=str(self.user.iris_id),
-                user_id=str(self.user.id),
-                user_longitude=float(self.user.longitude),
-                user_latitude=float(self.user.latitude),
-                number_of_preselected_offers=NUMBER_OF_PRESELECTED_OFFERS,
-            ).fetchall()
+            query_result = []
+            if recommendations_query is not None:
+                connection = get_session()
+                query_result = connection.execute(
+                    text(recommendations_query),
+                    user_iris_id=str(self.user.iris_id),
+                    user_id=str(self.user.id),
+                    user_longitude=float(self.user.longitude),
+                    user_latitude=float(self.user.latitude),
+                    number_of_preselected_offers=NUMBER_OF_PRESELECTED_OFFERS,
+                ).fetchall()
 
             cold_start_recommendations = [
                 {

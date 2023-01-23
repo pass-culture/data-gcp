@@ -1,9 +1,6 @@
 import datetime
 import airflow
 from airflow import DAG
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryExecuteQueryOperator,
-)
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.http.operators.http import SimpleHttpOperator
 from airflow.operators.python import PythonOperator
@@ -18,10 +15,13 @@ from common.config import (
     BIGQUERY_ANALYTICS_DATASET,
 )
 from common.alerts import task_fail_slack_alert
-from common.utils import getting_service_account_token
+from common.operators.biquery import bigquery_job_task
+from dependencies.siren.import_siren import ANALYTICS_TABLES
+from common.utils import getting_service_account_token, get_airflow_schedule
 
 FUNCTION_NAME = f"siren_import_{ENV_SHORT_NAME}"
 SIREN_FILENAME = "siren_data.csv"
+schedule_interval = "0 */6 * * *" if ENV_SHORT_NAME == "prod" else "30 */6 * * *"
 
 default_dag_args = {
     "start_date": datetime.datetime(2021, 8, 25),
@@ -35,7 +35,7 @@ dag = DAG(
     default_args=default_dag_args,
     description="Import Siren from INSEE API",
     on_failure_callback=None,
-    schedule_interval="0 */6 * * *" if ENV_SHORT_NAME == "prod" else "30 */6 * * *",
+    schedule_interval=get_airflow_schedule(schedule_interval),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
 )
@@ -43,9 +43,7 @@ dag = DAG(
 getting_service_account_token = PythonOperator(
     task_id="getting_service_account_token",
     python_callable=getting_service_account_token,
-    op_kwargs={
-        "function_name": f"{FUNCTION_NAME}",
-    },
+    op_kwargs={"function_name": f"{FUNCTION_NAME}"},
     dag=dag,
 )
 
@@ -61,30 +59,13 @@ siren_to_bq = SimpleHttpOperator(
     dag=dag,
 )
 
-import_siren_to_analytics = BigQueryExecuteQueryOperator(
-    task_id="import_to_analytics_siren",
-    sql=f"""
-    SELECT * except(rnk) 
-    FROM (
-        SELECT *, ROW_NUMBER() OVER (PARTITION BY siren ORDER BY update_date DESC) as rnk
-        FROM {BIGQUERY_CLEAN_DATASET}.siren_data
-    ) inn
-    WHERE rnk = 1
-    """,
-    write_disposition="WRITE_TRUNCATE",
-    use_legacy_sql=False,
-    destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.siren_data",
-    dag=dag,
-)
+analytics_tasks = []
+for table, params in ANALYTICS_TABLES.items():
+    task = bigquery_job_task(dag, table, params)
+    analytics_tasks.append(task)
 
 start = DummyOperator(task_id="start", dag=dag)
 
 end = DummyOperator(task_id="end", dag=dag)
 
-(
-    start
-    >> getting_service_account_token
-    >> siren_to_bq
-    >> import_siren_to_analytics
-    >> end
-)
+(start >> getting_service_account_token >> siren_to_bq >> analytics_tasks >> end)

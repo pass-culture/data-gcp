@@ -78,6 +78,7 @@ WITH firebase_bookings AS (
   ON firebase_bookings.user_id = firebase_consult.user_id
   AND firebase_bookings.offer_id = firebase_consult.offer_id
   AND consult_date >= DATE_SUB(booking_date, INTERVAL 7 DAY)
+  AND consult_timestamp < booking_timestamp
   QUALIFY ROW_NUMBER() OVER(PARTITION BY firebase_consult.user_id, firebase_consult.offer_id ORDER BY consult_timestamp DESC) = 1 
 )
 

@@ -15,24 +15,24 @@ from common.config import (
     GCE_SA,
 )
 
+DEFAULT_LABELS = {"env": ENV_SHORT_NAME, "terraform": "false", "airflow": "true"}
+
 
 @dataclass
 class CPUImage:
-    source_image: str = (
-        "projects/deeplearning-platform-release/global/images/tf2-latest-cpu-v20211202"
-    )
+    source_image: str = "projects/deeplearning-platform-release/global/images/tf2-latest-cpu-v20211202"  # tf-latest-cpu-v20221219
     startup_script: str = None
+    startup_script_wait_time: int = 0
 
 
 @dataclass
 class GPUImage:
-    source_image: str = (
-        "projects/deeplearning-platform-release/global/images/tf2-latest-gpu-v20211202"
-    )
+    source_image: str = "projects/deeplearning-platform-release/global/images/tf2-latest-gpu-v20211202"  # tf-latest-gpu-v20221219
     startup_script: str = """
         #!/bin/bash
         sudo /opt/deeplearning/install-driver.sh
     """
+    startup_script_wait_time: int = 90
 
 
 class GCEHook(GoogleBaseHook):
@@ -181,9 +181,7 @@ class GCEHook(GoogleBaseHook):
             ],
             "metadata": {"items": metadata},
             "tags": {"items": ["training"]},
-            "labels": [
-                {"env": ENV_SHORT_NAME, "terraform": "false", "airflow": "true"}
-            ],
+            "labels": DEFAULT_LABELS,
         }
         # GPUs
         if len(accelerator_type) > 0:
@@ -207,6 +205,9 @@ class GCEHook(GoogleBaseHook):
         )
 
         if wait:
+            # force some waiting time for startup script.
+            if self.source_image_type.startup_script_wait_time > 0:
+                time.sleep(self.source_image_type.startup_script_wait_time)
             self.wait_for_operation(operation["name"])
         else:
             return operation["name"]
@@ -230,13 +231,22 @@ class GCEHook(GoogleBaseHook):
             else:
                 raise
 
-    def delete_instances(self, name_pattern, ttl):
-        instances = self.list_instances(filter="(name=%s)" % name_pattern)
+    def delete_instances(self, timeout_in_minutes=60 * 12):
+        instances = self.list_instances()
+
+        instances = [
+            x
+            for x in instances
+            if x.get("labels", {}).get("airflow", "") == "true"
+            and x.get("labels", {}).get("env", "") == ENV_SHORT_NAME
+            and x["status"] == "RUNNING"
+        ]
+
         for instance in instances:
             creation = dateutil.parser.parse(instance["creationTimestamp"])
             now = datetime.datetime.now(pytz.utc)
             instance_life_minutes = (now - creation) / datetime.timedelta(minutes=1)
-            if instance_life_minutes > ttl:
+            if instance_life_minutes > timeout_in_minutes:
                 self.__delete_instance(instance["name"])
 
     def wait_for_operation(self, operation):

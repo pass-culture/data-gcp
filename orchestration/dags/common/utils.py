@@ -10,6 +10,7 @@ from common.config import (
     ENV_SHORT_NAME,
     FAILED_STATES,
     ALLOWED_STATES,
+    LOCAL_ENV,
 )
 
 
@@ -75,7 +76,9 @@ def depends_loop(jobs: dict, default_upstream_operator, dag):
 
         operator = jobs_def["operator"]
         default_downstream_operators.append(operator)
-        operator.set_upstream(default_upstream_operator)
+
+        if operator not in [dependency["task"] for dependency in dependencies]:
+            operator.set_upstream(default_upstream_operator)
 
         # keep dependencies of the current table only
         for dependency in [
@@ -118,3 +121,10 @@ def one_line_query(sql_path):
     with open(f"{sql_path}", "r") as fp:
         lines = " ".join([line.strip() for line in fp.readlines()])
     return lines
+
+
+def get_airflow_schedule(schedule_interval, local_env=LOCAL_ENV):
+    if local_env == "1":
+        return None
+    else:
+        return schedule_interval

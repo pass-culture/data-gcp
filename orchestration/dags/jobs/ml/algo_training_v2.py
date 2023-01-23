@@ -75,21 +75,15 @@ with DAG(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
-        "batch_size": Param(
-            default=str(train_params["batch_size"]),
-            type="string",
-        ),
+        "batch_size": Param(default=str(train_params["batch_size"]), type="string"),
         "embedding_size": Param(
-            default=str(train_params["embedding_size"]),
-            type="string",
+            default=str(train_params["embedding_size"]), type="string"
         ),
         "train_set_size": Param(
-            default=str(train_params["train_set_size"]),
-            type="string",
+            default=str(train_params["train_set_size"]), type="string"
         ),
         "event_day_number": Param(
-            default=str(train_params["event_day_number"]),
-            type="string",
+            default=str(train_params["event_day_number"]), type="string"
         ),
         "input_type": Param(
             default="bookings",
@@ -99,10 +93,7 @@ with DAG(
             default=gce_params["instance_type"][ENV_SHORT_NAME],
             type="string",
         ),
-        "instance_name": Param(
-            default=gce_params["instance_name"],
-            type="string",
-        ),
+        "instance_name": Param(default=gce_params["instance_name"], type="string"),
     },
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)
@@ -166,9 +157,8 @@ with DAG(
         "--batch-size {{ params.batch_size }} "
         "--embedding-size {{ params.embedding_size }} "
         "--seed {{ ds_nodash }} "
-        f"--dataset {BIGQUERY_TMP_DATASET} "
-        f"--training-table-name {DATE}_recommendation_training_data_bookings "
-        f"--validation-table-name {DATE}_recommendation_validation_data_bookings",
+        f"--training-table-name recommendation_training_data "
+        f"--validation-table-name recommendation_validation_data",
         dag=dag,
     )
 
@@ -179,14 +169,14 @@ with DAG(
         environment=dag_config,
         command="python evaluate.py "
         f"--experiment-name {dag_config['EXPERIMENT_NAME']} "
+        "--event-day-number {{ params.event_day_number }} "
         "--training-dataset-name recommendation_training_data "
         "--test-dataset-name recommendation_test_data",
         dag=dag,
     )
 
     gce_instance_stop = StopGCEOperator(
-        task_id="gce_stop_task",
-        instance_name="{{ params.instance_name }}",
+        task_id="gce_stop_task", instance_name="{{ params.instance_name }}"
     )
 
     send_slack_notif_success = SlackWebhookOperator(

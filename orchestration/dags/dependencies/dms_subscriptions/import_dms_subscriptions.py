@@ -46,6 +46,7 @@ destination_table_schema_pro = [
     {"name": "typologie", "type": "STRING"},
     {"name": "academie_instructeur", "type": "STRING"},
     {"name": "academie_groupe_instructeur", "type": "STRING"},
+    {"name": "domaines", "type": "STRING"},
 ]
 
 
@@ -105,6 +106,7 @@ def parse_api_result(updated_since, dms_target):
                 "typologie",
                 "academie_instructeur",
                 "academie_groupe_instructeur",
+                "domaines",
             ]
         )
         fs = gcsfs.GCSFileSystem(project=GCP_PROJECT_ID)
@@ -234,6 +236,8 @@ def parse_result_pro(result, df_applications):
                             dossier_line["typologie"] = champs["stringValue"]
                         elif champs["id"] == "Q2hhbXAtMjQzMjIxMg==":
                             dossier_line["academie_instructeur"] = champs["stringValue"]
+                        elif champs["id"] == "Q2hhbXAtMjQzMjM1Mw==":
+                            dossier_line["domaines"] = champs["stringValue"]
                 else:
                     dossier_line["numero_identifiant_lieu"] = None
                 instructeurs = []

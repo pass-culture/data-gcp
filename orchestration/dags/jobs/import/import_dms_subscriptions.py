@@ -155,6 +155,7 @@ with DAG(
             {"name": "typologie", "type": "STRING"},
             {"name": "academie_instructeur", "type": "STRING"},
             {"name": "academie_groupe_instructeur", "type": "STRING"},
+            {"name": "domaines", "type": "STRING"},
         ],
         write_disposition="WRITE_APPEND",
     )

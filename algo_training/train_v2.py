@@ -1,7 +1,7 @@
 import mlflow
+import pandas as pd
 import tensorflow as tf
 import typer
-import pandas as pd
 from loguru import logger
 
 from models.v1.match_model import MatchModel

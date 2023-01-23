@@ -90,7 +90,8 @@ with DAG(
             type="string",
         ),
         "instance_type": Param(
-            default=gce_params["instance_type"][ENV_SHORT_NAME], type="string"
+            default=gce_params["instance_type"][ENV_SHORT_NAME],
+            type="string",
         ),
         "instance_name": Param(default=gce_params["instance_name"], type="string"),
     },

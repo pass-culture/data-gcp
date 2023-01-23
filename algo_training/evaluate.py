@@ -6,7 +6,11 @@ import tensorflow as tf
 import typer
 from loguru import logger
 
-from metrics import compute_metrics, get_actual_and_predicted
+from metrics import (
+    compute_metrics,
+    get_actual_and_predicted,
+    compute_diversification_score,
+)
 from models.v1.match_model import MatchModel
 from tools.data_collect_queries import get_data
 from utils import (
@@ -23,6 +27,7 @@ from utils import (
     NUMBER_OF_PRESELECTED_OFFERS,
     EVALUATION_USER_NUMBER,
     EXPERIMENT_NAME,
+    EVALUATION_USER_NUMBER_DIVERSIFICATION,
 )
 
 k_list = [RECOMMENDATION_NUMBER, NUMBER_OF_PRESELECTED_OFFERS]
@@ -61,21 +66,41 @@ def evaluate(
     users_to_test = positive_data_test["user_id"].unique()[
         : min(EVALUATION_USER_NUMBER, positive_data_test["user_id"].nunique())
     ]
-    positive_data_test = positive_data_test.loc[
-        lambda df: df["user_id"].isin(users_to_test)
-    ]
-
     data_model_dict = {
         "data": {
             "raw": raw_data,
             "training_item_ids": training_item_ids,
-            "test": positive_data_test,
+            "test": positive_data_test.loc[
+                lambda df: df["user_id"].isin(users_to_test)
+            ],
+        },
+        "model": model,
+    }
+
+    diversification_users_to_test = positive_data_test["user_id"].unique()[
+        : min(
+            EVALUATION_USER_NUMBER_DIVERSIFICATION,
+            positive_data_test["user_id"].nunique(),
+        )
+    ]
+
+    diversification_model_dict = {
+        "data": {
+            "raw": raw_data,
+            "training_item_ids": training_item_ids,
+            "test": positive_data_test.loc[
+                lambda df: df["user_id"].isin(diversification_users_to_test)
+            ],
         },
         "model": model,
     }
 
     logger.info("Get predictions")
     data_model_dict_w_actual_and_predicted = get_actual_and_predicted(data_model_dict)
+    diversification_model_dict["top_offers"] = data_model_dict_w_actual_and_predicted[
+        "top_offers"
+    ].loc[lambda df: df["user_id"].isin(diversification_users_to_test)]
+
     metrics = {}
     for k in k_list:
         logger.info(f"Computing metrics for k={k}")
@@ -83,40 +108,43 @@ def evaluate(
             data_model_dict_w_actual_and_predicted, k
         )
 
-        metrics[f"recall_at_{k}"] = data_model_dict_w_metrics_at_k["metrics"]["mark"]
-        metrics[f"precision_at_{k}"] = data_model_dict_w_metrics_at_k["metrics"]["mapk"]
+        metrics.update(
+            {
+                f"precision_at_{k}": data_model_dict_w_metrics_at_k["metrics"]["mapk"],
+                f"recall_at_{k}": data_model_dict_w_metrics_at_k["metrics"]["mark"],
+                f"coverage_at_{k}": data_model_dict_w_metrics_at_k["metrics"][
+                    "coverage"
+                ],
+                f"personalization_at_{k}": data_model_dict_w_metrics_at_k["metrics"][
+                    "personalization_at_k"
+                ],
+            }
+        )
 
         # Here we track metrics relate to pcreco output
         if k == RECOMMENDATION_NUMBER:
-            metrics[f"recall_at_{k}_panachage"] = data_model_dict_w_metrics_at_k[
-                "metrics"
-            ]["mark_panachage"]
-            metrics[f"precision_at_{k}_panachage"] = data_model_dict_w_metrics_at_k[
-                "metrics"
-            ]["mapk_panachage"]
-
             # AVG diverisification score is only calculate at k=RECOMMENDATION_NUMBER to match pcreco output
-            metrics[
-                f"avg_diversification_score_at_{k}"
-            ] = data_model_dict_w_metrics_at_k["metrics"]["avg_div_score"]
+            logger.info("Compute diversification score")
+            avg_div_score, avg_div_score_panachage = compute_diversification_score(
+                diversification_model_dict, k
+            )
+            logger.info("End of diverisification score computation")
 
-            metrics[
-                f"avg_diversification_score_at_{k}_panachage"
-            ] = data_model_dict_w_metrics_at_k["metrics"]["avg_div_score_panachage"]
-
-            metrics[
-                f"personalization_at_{k}_panachage"
-            ] = data_model_dict_w_metrics_at_k["metrics"][
-                "personalization_at_k_panachage"
-            ]
-
-        metrics[f"coverage_at_{k}"] = data_model_dict_w_metrics_at_k["metrics"][
-            "coverage"
-        ]
-
-        metrics[f"personalization_at_{k}"] = data_model_dict_w_metrics_at_k["metrics"][
-            "personalization_at_k"
-        ]
+            metrics.update(
+                {
+                    f"precision_at_{k}_panachage": data_model_dict_w_metrics_at_k[
+                        "metrics"
+                    ]["mapk_panachage"],
+                    f"recall_at_{k}_panachage": data_model_dict_w_metrics_at_k[
+                        "metrics"
+                    ]["mark_panachage"],
+                    f"avg_diversification_score_at_{k}": avg_div_score,
+                    f"avg_diversification_score_at_{k}_panachage": avg_div_score_panachage,
+                    f"personalization_at_{k}_panachage": data_model_dict_w_metrics_at_k[
+                        "metrics"
+                    ]["personalization_at_k_panachage"],
+                }
+            )
 
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
     mlflow.log_metrics(metrics)
@@ -170,7 +198,8 @@ def run(
             project_id=f"{GCP_PROJECT_ID}",
             if_exists="append",
         )
-        metrics = evaluate(
+
+        evaluate(
             client_id,
             loaded_model,
             STORAGE_PATH,

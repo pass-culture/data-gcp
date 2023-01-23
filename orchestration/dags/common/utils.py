@@ -76,7 +76,9 @@ def depends_loop(jobs: dict, default_upstream_operator, dag):
 
         operator = jobs_def["operator"]
         default_downstream_operators.append(operator)
-        operator.set_upstream(default_upstream_operator)
+
+        if operator not in [dependency["task"] for dependency in dependencies]:
+            operator.set_upstream(default_upstream_operator)
 
         # keep dependencies of the current table only
         for dependency in [

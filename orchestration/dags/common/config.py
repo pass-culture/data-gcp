@@ -14,7 +14,7 @@ GCE_ZONE = "europe-west1-b"
 GCE_SUBNETWORK_ID = os.environ.get("GCE_SUBNETWORK_ID")
 GCE_NETWORK_ID = os.environ.get("GCE_NETWORK_ID")
 GCE_SA = os.environ.get("GCE_SA", f"algo-training-{ENV_SHORT_NAME}")
-
+GCE_BASE_PREFIX = "composer-compute"
 
 BASE32_JS_LIB_PATH = f"gs://data-bucket-{ENV_SHORT_NAME}/base32-encode/base32.js"
 GCE_TRAINING_INSTANCE = os.environ.get("GCE_TRAINING_INSTANCE", "algo-training-dev")

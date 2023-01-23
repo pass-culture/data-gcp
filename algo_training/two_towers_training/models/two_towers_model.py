@@ -63,7 +63,6 @@ class TwoTowersModel(tfrs.models.Model):
         )
 
     def compute_loss(self, features, training=False):
-        features = tf.transpose(features)
         user_features, item_features = (
             features[: len(self._user_feature_names)],
             features[len(self._user_feature_names) :],
@@ -110,8 +109,6 @@ class SingleTowerModel(tf.keras.models.Model):
         self._dense2 = tf.keras.layers.Dense(embedding_size)
 
     def call(self, features: dict, training=False):
-        features = tf.unstack(features)
-
         feature_embeddings = []
         for idx, layer in enumerate(self._embedding_layers.values()):
             feature_embeddings.append(layer(features[idx]))

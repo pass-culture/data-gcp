@@ -7,7 +7,6 @@ import typer
 import tensorflow as tf
 from loguru import logger
 import pandas as pd
-import numpy as np
 
 from models.match_model import TwoTowersMatchModel
 from models.two_towers_model import TwoTowersModel
@@ -79,19 +78,19 @@ def train(
     # Build tf datasets
     logger.info("Building tf datasets")
 
-    train_dataset = tf.data.Dataset.from_tensor_slices(train_data.values).batch(
+    train_dataset = tf.data.Dataset.from_tensor_slices(train_data.T.values).batch(
         batch_size=batch_size, drop_remainder=False
     )
     validation_dataset = tf.data.Dataset.from_tensor_slices(
-        validation_data.values
+        validation_data.T.values
     ).batch(batch_size=batch_size, drop_remainder=False)
 
-    user_dataset = tf.data.Dataset.from_tensor_slices(
-        np.transpose(train_user_data.values)
-    ).batch(batch_size=batch_size, drop_remainder=False)
-    item_dataset = tf.data.Dataset.from_tensor_slices(
-        np.transpose(train_item_data.values)
-    ).batch(batch_size=batch_size, drop_remainder=False)
+    user_dataset = tf.data.Dataset.from_tensor_slices(train_user_data.T.values).batch(
+        batch_size=batch_size, drop_remainder=False
+    )
+    item_dataset = tf.data.Dataset.from_tensor_slices(train_item_data.T.values).batch(
+        batch_size=batch_size, drop_remainder=False
+    )
 
     # Connect to MLFlow
     client_id = get_secret("mlflow_client_id")

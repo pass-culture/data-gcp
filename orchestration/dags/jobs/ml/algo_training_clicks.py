@@ -7,7 +7,7 @@ from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryExecuteQueryOperator,
 )
 from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
-
+from common.utils import get_airflow_schedule
 from airflow import DAG
 from common import macros
 from common.alerts import task_fail_slack_alert
@@ -33,7 +33,7 @@ DATE = "{{ ts_nodash }}"
 
 # Environment variables to export before running commands
 dag_config = {
-    "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/algo_training_{ENV_SHORT_NAME}/algo_training_clicks_v2_{DATE}",
+    "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/algo_training_{ENV_SHORT_NAME}/algo_training_clicks_v2.1_{DATE}",
     "BASE_DIR": "data-gcp/algo_training",
     "TRAIN_DIR": "/home/airflow/train",
     "EXPERIMENT_NAME": f"algo_training_clicks_v2.1_{ENV_SHORT_NAME}",
@@ -62,11 +62,14 @@ default_args = {
     "retry_delay": timedelta(minutes=2),
 }
 
+schedule_dict = {"prod": "0 12 * * 5", "dev": "0 0 * * *", "stg": "0 12 * * 3"}
+
+
 with DAG(
     "algo_training_clicks_v2",
     default_args=default_args,
     description="Custom training job",
-    schedule_interval=None,
+    schedule_interval=get_airflow_schedule(schedule_dict[ENV_SHORT_NAME]),
     catchup=False,
     dagrun_timeout=timedelta(minutes=1440),
     user_defined_macros=macros.default,
@@ -176,6 +179,17 @@ with DAG(
         dag=dag,
     )
 
+    train_sim_offers = SSHGCEOperator(
+        task_id="containerize_similar_offers",
+        instance_name="{{ params.instance_name }}",
+        base_dir=f"{dag_config['BASE_DIR']}/similar_offers",
+        environment=dag_config,
+        command="python main.py "
+        f"--experiment-name similar_offers_clicks_v2.1_{ENV_SHORT_NAME} "
+        "--model-name v2.1",
+        dag=dag,
+    )
+
     gce_instance_stop = StopGCEOperator(
         task_id="gce_stop_task", instance_name="{{ params.instance_name }}"
     )
@@ -204,6 +218,7 @@ with DAG(
         >> store_recommendation_data["test"]
         >> training
         >> evaluate
+        >> train_sim_offers
         >> gce_instance_stop
         >> send_slack_notif_success
     )

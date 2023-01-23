@@ -87,8 +87,8 @@ def train(
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
     experiment = mlflow.get_experiment_by_name(experiment_name)
     with mlflow.start_run(experiment_id=experiment.experiment_id):
-        run_uuid = mlflow.active_run().info.run_uuid
-        export_path = f"{TRAIN_DIR}/{ENV_SHORT_NAME}/{run_uuid}/"
+        # used by sim_offers model
+        export_path = f"{TRAIN_DIR}/{ENV_SHORT_NAME}/model/"
 
         mlflow.log_params(
             params={

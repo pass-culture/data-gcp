@@ -26,12 +26,12 @@ BASE_DIR = f"data-gcp/algo_training"
 
 models_to_deploy = [
     {
-        "experiment_name": f"algo_training_v1.1_{ENV_SHORT_NAME}",
+        "experiment_name": f"algo_training_clicks_v2.1_{ENV_SHORT_NAME}",
         "endpoint_name": f"recommendation_default_{ENV_SHORT_NAME}",
         "version_name": "v_{{ ts_nodash }}",
     },
     {
-        "experiment_name": f"similar_offers_v1.1_{ENV_SHORT_NAME}",
+        "experiment_name": f"similar_offers_clicks_v2.1_{ENV_SHORT_NAME}",
         "endpoint_name": f"similar_offers_default_{ENV_SHORT_NAME}",
         "version_name": "v_{{ ts_nodash }}",
     },

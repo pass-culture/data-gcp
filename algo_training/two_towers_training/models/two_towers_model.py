@@ -57,9 +57,9 @@ class TwoTowersModel(tfrs.models.Model):
         )
 
         self.task = tfrs.tasks.Retrieval(
-            #metrics=tfrs.metrics.FactorizedTopK(
-                #candidates=items_dataset.map(self.item_model),
-            #),
+            metrics=tfrs.metrics.FactorizedTopK(
+                candidates=items_dataset.map(self.item_model),
+            ),
         )
 
     def compute_loss(self, features, training=False):

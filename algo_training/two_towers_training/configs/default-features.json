@@ -1,0 +1,10 @@
+{
+  "user_embedding_layers": {
+      "user_id": {"type": "string", "embedding_size": 64},
+      "user_engagement": {"type": "int", "embedding_size": 8}
+  },
+  "item_embedding_layers": {
+      "item_id": {"type": "string", "embedding_size": 64},
+      "item_names": {"type":  "text", "embedding_size":  8}
+  }
+}

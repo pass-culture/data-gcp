@@ -1,0 +1,17 @@
+{
+  "user_embedding_layers": {
+      "user_id": {"type": "string", "embedding_size": 64},
+      "user_engagement": {"type": "int", "embedding_size": 8},
+      "user_queries": {"type":  "text", "embedding_size":  8},
+      "has_added_offer_to_favorites": {"type":  "int", "embedding_size":  4},
+      "user_theoretical_remaining_credit": {"type":  "int", "embedding_size":  4}
+  },
+  "item_embedding_layers": {
+      "item_id": {"type": "string", "embedding_size": 64},
+      "offer_subcategoryid": {"type": "string", "embedding_size": 4},
+      "item_names": {"type":  "text", "embedding_size":  4},
+      "item_mean_stock_price": {"type": "int", "embedding_size": 8},
+      "item_booking_cnt": {"type": "int", "embedding_size": 8},
+      "item_favourite_cnt": {"type": "int", "embedding_size": 8}
+  }
+}

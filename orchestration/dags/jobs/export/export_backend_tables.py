@@ -1,16 +1,15 @@
 import datetime
 
 from airflow import DAG
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryExecuteQueryOperator,
-)
 from airflow.operators.dummy_operator import DummyOperator
 
 from common.config import GCP_PROJECT_ID, ENV_SHORT_NAME, DAG_FOLDER
 from common.alerts import task_fail_slack_alert
 from dependencies.backend.create_tables import create_tables
 from common import macros
+from common.operators.biquery import bigquery_job_task
 from common.utils import get_airflow_schedule
+
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),
@@ -46,16 +45,7 @@ for schedule_type, schedule_cron in dag_schedule.items():
     export_table_tasks = []
     for table, params in create_tables.items():
         if params["schedule_type"] == schedule_type:
-            task = BigQueryExecuteQueryOperator(
-                task_id=f"export_{table}",
-                sql=params["sql"],
-                write_disposition="WRITE_APPEND",
-                use_legacy_sql=False,
-                destination_dataset_table=params["destination_dataset_table"],
-                time_partitioning=params.get("time_partitioning", None),
-                cluster_fields=params.get("cluster_fields", None),
-                dag=dag,
-            )
+            task = bigquery_job_task(dag, table, params)
             export_table_tasks.append(task)
 
     (start >> export_table_tasks >> end)

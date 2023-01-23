@@ -1,7 +1,7 @@
 import datetime
 from airflow import DAG
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryExecuteQueryOperator,
+from airflow.providers.google.cloud.transfers.bigquery_to_bigquery import (
+    BigQueryToBigQueryOperator,
 )
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.utils.task_group import TaskGroup
@@ -144,16 +144,7 @@ with TaskGroup(
 ) as historical_applicative:
     historical_data_applicative_tables_tasks = []
     for table, params in historical_clean_applicative_database.items():
-        task = BigQueryExecuteQueryOperator(
-            task_id=f"historical_{table}",
-            sql=params["sql"],
-            write_disposition=params.get("write_disposition", "WRITE_TRUNCATE"),
-            use_legacy_sql=False,
-            destination_dataset_table=params["destination_dataset_table"],
-            time_partitioning=params.get("time_partitioning", None),
-            cluster_fields=params.get("cluster_fields", None),
-            dag=dag,
-        )
+        task = bigquery_job_task(dag, table, params)
         historical_data_applicative_tables_tasks.append(task)
 
 end_historical_data_applicative_tables_tasks = DummyOperator(
@@ -169,16 +160,7 @@ with TaskGroup(
 ) as historical_analytics_group:
     historical_analytics_table_tasks = []
     for table, params in historical_analytics.items():
-        task = BigQueryExecuteQueryOperator(
-            task_id=f"historical_{table}",
-            sql=params["sql"],
-            write_disposition=params.get("write_disposition", "WRITE_TRUNCATE"),
-            use_legacy_sql=False,
-            destination_dataset_table=params["destination_dataset_table"],
-            time_partitioning=params.get("time_partitioning", None),
-            cluster_fields=params.get("cluster_fields", None),
-            dag=dag,
-        )
+        task = bigquery_job_task(dag, table, params)
         historical_analytics_table_tasks.append(task)
 
 end_historical_analytics_table_tasks = DummyOperator(
@@ -189,12 +171,11 @@ end_historical_analytics_table_tasks = DummyOperator(
 with TaskGroup(group_id="analytics_copy_group", dag=dag) as analytics_copy:
     import_tables_to_analytics_tasks = []
     for table in import_tables:
-        task = BigQueryExecuteQueryOperator(
+        task = BigQueryToBigQueryOperator(
             task_id=f"import_to_analytics_{table}",
-            sql=f"SELECT * FROM {BIGQUERY_CLEAN_DATASET}.{APPLICATIVE_PREFIX}{table}",
             write_disposition=params.get("write_disposition", "WRITE_TRUNCATE"),
-            use_legacy_sql=False,
-            destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.{APPLICATIVE_PREFIX}{table}",
+            source_project_dataset_tables=f"{GCP_PROJECT_ID}.{BIGQUERY_CLEAN_DATASET}.{APPLICATIVE_PREFIX}{table}",
+            destination_project_dataset_table=f"{GCP_PROJECT_ID}.{BIGQUERY_ANALYTICS_DATASET}.{APPLICATIVE_PREFIX}{table}",
             dag=dag,
         )
         import_tables_to_analytics_tasks.append(task)

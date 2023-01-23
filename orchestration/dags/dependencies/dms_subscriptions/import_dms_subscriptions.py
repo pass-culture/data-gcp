@@ -1,10 +1,7 @@
 import pandas as pd
 import json
 import gcsfs
-from common.config import (
-    DATA_GCS_BUCKET_NAME,
-    GCP_PROJECT_ID,
-)
+from common.config import DATA_GCS_BUCKET_NAME, GCP_PROJECT_ID
 
 # find and replace string to str
 destination_table_schema_jeunes = [
@@ -252,3 +249,22 @@ def parse_result_pro(result, df_applications):
 
                 df_applications.loc[len(df_applications)] = dossier_line
     return
+
+
+SQL_ANALYTICS_PATH = f"dependencies/dms_subscriptions/sql/analytics"
+ANALYTICS_TABLES = {
+    "dms_jeunes": {
+        "sql": f"{SQL_ANALYTICS_PATH}/dms_deduplicated.sql",
+        "write_disposition": "WRITE_TRUNCATE",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "dms_jeunes",
+        "params": {"target": "jeunes"},
+    },
+    "dms_pro": {
+        "sql": f"{SQL_ANALYTICS_PATH}/dms_deduplicated.sql",
+        "write_disposition": "WRITE_TRUNCATE",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "dms_pro",
+        "params": {"target": "pro"},
+    },
+}

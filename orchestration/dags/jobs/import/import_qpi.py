@@ -9,7 +9,6 @@ from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python import PythonOperator, BranchPythonOperator
 from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryExecuteQueryOperator,
     BigQueryDeleteTableOperator,
 )
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
@@ -17,15 +16,20 @@ from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
 )
 
 from common.alerts import task_fail_slack_alert
-from dependencies.import_qpi import QPI_ANSWERS_SCHEMA, UNION_ALL_SQL, enrich_answers
 from common.config import (
     GCP_PROJECT_ID,
     DATA_GCS_BUCKET_NAME,
     BIGQUERY_RAW_DATASET,
-    BIGQUERY_CLEAN_DATASET,
-    BIGQUERY_ANALYTICS_DATASET,
     ENV_SHORT_NAME,
 )
+from common.operators.biquery import bigquery_job_task
+from dependencies.qpi.import_qpi import (
+    QPI_ANSWERS_SCHEMA,
+    RAW_TABLES,
+    CLEAN_TABLES,
+    ANALYTICS_TABLES,
+)
+from common.utils import depends_loop
 
 from common.utils import get_airflow_schedule
 
@@ -84,45 +88,23 @@ with DAG(
         schema_fields=QPI_ANSWERS_SCHEMA,
     )
 
-    add_answers_to_raw = BigQueryExecuteQueryOperator(
-        task_id="add_answers_to_raw",
-        sql=f"""
-            select *
-            FROM `{GCP_PROJECT_ID}.{BIGQUERY_RAW_DATASET}.temp_{QPI_ANSWERS_TABLE}` 
-        """,
-        use_legacy_sql=False,
-        destination_dataset_table=f"{GCP_PROJECT_ID}:{BIGQUERY_RAW_DATASET}.{QPI_ANSWERS_TABLE}",
-        write_disposition="WRITE_APPEND",
-        trigger_rule="none_failed_or_skipped",
-    )
+    raw_tasks = []
+    for table, params in RAW_TABLES.items():
+        task = bigquery_job_task(
+            dag=dag, table=f"add_{table}_to_raw", job_params=params
+        )
+        raw_tasks.append(task)
 
-    add_answers_to_clean = BigQueryExecuteQueryOperator(
-        task_id="add_answers_to_clean",
-        sql=f"""
-            select raw_answers.user_id,
-            submitted_at, answers,
-            CAST(NULL AS STRING) AS catch_up_user_id
-            FROM `{GCP_PROJECT_ID}.{BIGQUERY_RAW_DATASET}.temp_{QPI_ANSWERS_TABLE}` raw_answers
-        """,
-        use_legacy_sql=False,
-        destination_dataset_table=f"{GCP_PROJECT_ID}:{BIGQUERY_CLEAN_DATASET}.{QPI_ANSWERS_TABLE}",
-        write_disposition="WRITE_APPEND",
-        trigger_rule="none_failed_or_skipped",
-    )
+    end_raw = DummyOperator(task_id="end_raw")
 
-    add_temp_answers_to_clean = BigQueryExecuteQueryOperator(
-        task_id="add_temp_answers_to_clean",
-        sql=f"""
-            select  raw_answers.user_id,
-            submitted_at, answers,
-            CAST(NULL AS STRING) AS catch_up_user_id
-            FROM `{GCP_PROJECT_ID}.{BIGQUERY_RAW_DATASET}.temp_{QPI_ANSWERS_TABLE}` raw_answers
-        """,
-        use_legacy_sql=False,
-        destination_dataset_table=f"{GCP_PROJECT_ID}:{BIGQUERY_CLEAN_DATASET}.temp_{QPI_ANSWERS_TABLE}",
-        write_disposition="WRITE_TRUNCATE",
-        trigger_rule="none_failed_or_skipped",
-    )
+    clean_tasks = []
+    for table, params in CLEAN_TABLES.items():
+        task = bigquery_job_task(
+            dag=dag, table=f"add_{table}_to_clean", job_params=params
+        )
+        clean_tasks.append(task)
+
+    end_clean = DummyOperator(task_id="end_clean")
 
     delete_temp_answer_table_raw = BigQueryDeleteTableOperator(
         task_id="delete_temp_answer_table_raw",
@@ -132,61 +114,34 @@ with DAG(
         trigger_rule="none_failed_or_skipped",
     )
 
-    enrich_qpi_answers = BigQueryExecuteQueryOperator(
-        task_id="enrich_qpi_answers",
-        sql=enrich_answers(
-            gcp_project=GCP_PROJECT_ID,
-            bigquery_clean_dataset=BIGQUERY_CLEAN_DATASET,
-            qpi_table=QPI_ANSWERS_TABLE,
-        ),
-        use_legacy_sql=False,
-        destination_dataset_table=f"{GCP_PROJECT_ID}:{BIGQUERY_ANALYTICS_DATASET}.enriched_{QPI_ANSWERS_TABLE}",
-        write_disposition="WRITE_TRUNCATE",
-        trigger_rule="none_failed_or_skipped",
+    start_analytics = DummyOperator(task_id="start_analytics")
+    analytics_tables_jobs = {}
+    for table, job_params in ANALYTICS_TABLES.items():
+        task = bigquery_job_task(dag=dag, table=table, job_params=params)
+        analytics_tables_jobs[table] = {
+            "operator": task,
+            "depends": job_params.get("depends", []),
+            "dag_depends": job_params.get("dag_depends", []),
+        }
+
+    analytics_tables_jobs = depends_loop(
+        analytics_tables_jobs, start_analytics, dag=dag
     )
 
-    clean_answers_duplicates = BigQueryExecuteQueryOperator(
-        task_id="clean_answers_duplicates",
-        sql=f"""
-            with base as (
-                SELECT *,
-                ROW_NUMBER() OVER (PARTITION BY user_id,subcategories order by subcategories DESC) row_number
-                FROM `{GCP_PROJECT_ID}.{BIGQUERY_ANALYTICS_DATASET}.enriched_{QPI_ANSWERS_TABLE}`
-            )
-            select * except(row_number) from base 
-            where row_number=1
-            and subcategories is not null 
-            and subcategories <> ""
-            """,
-        use_legacy_sql=False,
-        destination_dataset_table=f"{GCP_PROJECT_ID}:{BIGQUERY_ANALYTICS_DATASET}.enriched_{QPI_ANSWERS_TABLE}",
-        write_disposition="WRITE_TRUNCATE",
-        trigger_rule="none_failed_or_skipped",
-    )
-
-    aggregated_past_qpi_answers = BigQueryExecuteQueryOperator(
-        task_id="aggregated_past_qpi_answers",
-        sql=UNION_ALL_SQL,
-        use_legacy_sql=False,
-        destination_dataset_table=f"{GCP_PROJECT_ID}:{BIGQUERY_ANALYTICS_DATASET}.enriched_aggregated_qpi_answers",
-        write_disposition="WRITE_TRUNCATE",
-        trigger_rule="none_failed_or_skipped",
-    )
-
-    end = DummyOperator(task_id="end")
+    end = DummyOperator(task_id="end", trigger_rule="one_success")
 
     (
         start
         >> checking_folder_QPI
         >> file
         >> import_answers_to_bigquery
-        >> add_answers_to_raw
-        >> add_answers_to_clean
-        >> add_temp_answers_to_clean
+        >> raw_tasks
+        >> end_raw
+        >> clean_tasks
+        >> end_clean
         >> delete_temp_answer_table_raw
-        >> enrich_qpi_answers
-        >> clean_answers_duplicates
-        >> aggregated_past_qpi_answers
+        >> start_analytics
+        >> analytics_tables_jobs
         >> end
     )
     (checking_folder_QPI >> empty >> end)

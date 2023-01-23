@@ -1,14 +1,13 @@
 import datetime
 from airflow import DAG
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryExecuteQueryOperator,
-)
 from airflow.operators.dummy_operator import DummyOperator
 from common import macros
 from dependencies.open_data.export_open_data import aggregated_open_data_tables
 from common.config import DAG_FOLDER, GCP_PROJECT_ID
 from common.alerts import task_fail_slack_alert
+from common.operators.biquery import bigquery_job_task
 from common.utils import get_airflow_schedule
+
 
 default_dag_args = {
     "start_date": datetime.datetime(2022, 6, 24),
@@ -35,16 +34,7 @@ start_export_open_data_task = DummyOperator(
 )
 export_tasks = []
 for table, params in aggregated_open_data_tables.items():
-    task = BigQueryExecuteQueryOperator(
-        task_id=f"export_{table}",
-        sql=params["sql"],
-        write_disposition="WRITE_TRUNCATE",
-        use_legacy_sql=False,
-        destination_dataset_table=params["destination_dataset_table"],
-        time_partitioning=params.get("time_partitioning", None),
-        cluster_fields=params.get("cluster_fields", None),
-        dag=dag,
-    )
+    task = bigquery_job_task(dag, table, params)
     export_tasks.append(task)
 
 end_export_open_data_task = DummyOperator(task_id="end_export_open_data_task", dag=dag)

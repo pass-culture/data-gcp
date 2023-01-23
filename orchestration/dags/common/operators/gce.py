@@ -51,21 +51,21 @@ class StartGCEOperator(BaseOperator):
 
 
 class CleanGCEOperator(BaseOperator):
-    template_fields = ["ttl_min"]
+    template_fields = ["timeout_in_minutes"]
 
     @apply_defaults
     def __init__(
         self,
-        ttl_min: int,
+        timeout_in_minutes: int,
         *args,
         **kwargs,
     ):
         super(CleanGCEOperator, self).__init__(*args, **kwargs)
-        self.ttl_min = ttl_min
+        self.timeout_in_minutes = timeout_in_minutes
 
     def execute(self, context) -> None:
         hook = GCEHook()
-        hook.delete_instances(ttl_min=self.ttl_min)
+        hook.delete_instances(timeout_in_minutes=self.timeout_in_minutes)
 
 
 class StopGCEOperator(BaseOperator):

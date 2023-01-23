@@ -231,7 +231,7 @@ class GCEHook(GoogleBaseHook):
             else:
                 raise
 
-    def delete_instances(self, ttl_min=60 * 12):
+    def delete_instances(self, timeout_in_minutes=60 * 12):
         instances = self.list_instances()
 
         instances = [
@@ -246,7 +246,7 @@ class GCEHook(GoogleBaseHook):
             creation = dateutil.parser.parse(instance["creationTimestamp"])
             now = datetime.datetime.now(pytz.utc)
             instance_life_minutes = (now - creation) / datetime.timedelta(minutes=1)
-            if instance_life_minutes > ttl_min:
+            if instance_life_minutes > timeout_in_minutes:
                 self.__delete_instance(instance["name"])
 
     def wait_for_operation(self, operation):

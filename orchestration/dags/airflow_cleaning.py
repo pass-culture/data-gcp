@@ -17,4 +17,4 @@ dag = DAG(
     dagrun_timeout=timedelta(hours=1),
 )
 
-t1 = CleanGCEOperator(dag=dag, task_id="clean_gce_operator", ttl_min=60 * 24)
+t1 = CleanGCEOperator(dag=dag, task_id="clean_gce_operator", timeout_in_minutes=60 * 24)

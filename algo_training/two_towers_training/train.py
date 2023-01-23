@@ -39,6 +39,10 @@ def train(
         ...,
         help="Batch size of training",
     ),
+    validation_steps_ratio: int = typer.Option(
+        ...,
+        help="Number to divide the total validation steps done per epoch",
+    ),
     embedding_size: int = typer.Option(
         ...,
         help="Item & User embedding size",
@@ -65,6 +69,7 @@ def train(
     user_columns = list(user_features_config.keys())
     item_columns = list(item_features_config.keys())
 
+    # We ensure that the datasets contains the features in the correct order (user_id, ..., item_id, ...)
     train_data = pd.read_csv(f"{STORAGE_PATH}/positive_data_train.csv",)[
         user_columns + item_columns
     ].astype(str)
@@ -141,11 +146,16 @@ def train(
             optimizer=tf.keras.optimizers.Adagrad(learning_rate=LEARNING_RATE),
         )
 
+        # Divide the total validation steps by a ration to speed up training
+        validation_steps = (
+            len(validation_dataset) // batch_size
+        ) // validation_steps_ratio
+
         two_tower_model.fit(
             train_dataset,
             epochs=N_EPOCHS,
             validation_data=validation_dataset,
-            verbose=VERBOSE,
+            validation_steps=validation_steps,
             callbacks=[
                 tf.keras.callbacks.ReduceLROnPlateau(
                     monitor="val_factorized_top_k/top_100_categorical_accuracy",
@@ -166,6 +176,7 @@ def train(
                     export_path=export_path,
                 ),
             ],
+            verbose=VERBOSE,
         )
 
         logger.info("Building and saving the MatchModel")

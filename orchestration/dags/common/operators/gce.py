@@ -44,6 +44,24 @@ class StartGCEOperator(BaseOperator):
         )
 
 
+class CleanGCEOperator(BaseOperator):
+    template_fields = ["ttl_min"]
+
+    @apply_defaults
+    def __init__(
+        self,
+        ttl_min: int,
+        *args,
+        **kwargs,
+    ):
+        super(CleanGCEOperator, self).__init__(*args, **kwargs)
+        self.ttl_min = ttl_min
+
+    def execute(self, context) -> None:
+        hook = GCEHook()
+        hook.delete_instances(ttl_min=self.ttl_min)
+
+
 class StopGCEOperator(BaseOperator):
     template_fields = ["instance_name"]
 

@@ -45,7 +45,7 @@ dag_config = {
 train_params = {
     "config_file_name": "default-features",
     "batch_size": 4096,
-    "validation_steps_ratio": 5 if ENV_SHORT_NAME == "prod" else 3,
+    "validation_steps_ratio": 0.2 if ENV_SHORT_NAME == "prod" else 0.5,
     "embedding_size": 64,
     "train_set_size": 0.8,
     "event_day_number": 120 if ENV_SHORT_NAME == "prod" else 20,

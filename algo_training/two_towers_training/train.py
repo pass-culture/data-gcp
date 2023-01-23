@@ -21,6 +21,7 @@ from tools.callbacks import MLFlowLogging
 from tools.utils import save_pca_representation, get_secret, connect_remote_mlflow
 
 N_EPOCHS = 200
+VALIDATION_PER_EPOCH = 2
 MIN_DELTA = 0.002  # Minimum change in the accuracy before a callback is called
 LEARNING_RATE = 0.1
 VERBOSE = 2 if ENV_SHORT_NAME == "prod" else 1
@@ -39,7 +40,7 @@ def train(
         ...,
         help="Batch size of training",
     ),
-    validation_steps_ratio: int = typer.Option(
+    validation_steps_ratio: float = typer.Option(
         ...,
         help="Number to divide the total validation steps done per epoch",
     ),
@@ -147,15 +148,16 @@ def train(
         )
 
         # Divide the total validation steps by a ration to speed up training
-        validation_steps = (
-            len(validation_dataset) // batch_size
-        ) // validation_steps_ratio
+        validation_steps = int(
+            (len(validation_dataset) // batch_size) * validation_steps_ratio
+        )
 
         two_tower_model.fit(
             train_dataset,
             epochs=N_EPOCHS,
             validation_data=validation_dataset,
             validation_steps=validation_steps,
+            validation_per_epoch=VALIDATION_PER_EPOCH,
             callbacks=[
                 tf.keras.callbacks.ReduceLROnPlateau(
                     monitor="val_factorized_top_k/top_100_categorical_accuracy",

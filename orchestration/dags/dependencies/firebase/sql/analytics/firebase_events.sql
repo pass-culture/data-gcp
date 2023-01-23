@@ -162,6 +162,70 @@ WITH temp_firebase_events AS (
             from
                 unnest(event_params) event_params
             where
+                event_params.key = 'searchLocationFilter'
+        ) as search_location_filter,
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'searchCategories'
+        ) as search_categories_filter,
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'searchDate'
+        ) as search_date_filter,
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'searchGenreTypes'
+        ) as search_genre_types_filter,
+        (
+            select
+                event_params.value.int_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'searchIsAutocomplete'
+        ) as search_is_autocomplete,
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'searchMaxPrice'
+        ) as search_max_price_filter,
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'searchNativeCategories'
+        ) as search_native_categories_filter,
+        (
+            select
+                event_params.value.int_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'searchOfferIsDuo'
+        ) as search_offer_is_duo_filter,
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
                 event_params.key = 'moduleName'
         ) as module_name,
         (
@@ -172,6 +236,14 @@ WITH temp_firebase_events AS (
             where
                 event_params.key = 'moduleId'
         ) as module_id,
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'moduleListID'
+        ) as module_list_id,
         (
             select
                 event_params.value.string_value
@@ -222,6 +294,14 @@ WITH temp_firebase_events AS (
                     event_params.key = 'homeEntryId'
             )
         ) AS entry_id,
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'toEntryId'
+        ) as destination_entry_id,
         CASE
             WHEN (
                 select

@@ -4,7 +4,13 @@ from airflow.providers.google.cloud.hooks.compute_ssh import ComputeEngineSSHHoo
 from airflow.exceptions import AirflowException
 from airflow.operators.bash import BashOperator
 from airflow.configuration import conf
-from common.config import GCE_ZONE, GCP_PROJECT_ID, SSH_USER, ENV_SHORT_NAME
+from common.config import (
+    GCE_ZONE,
+    GCP_PROJECT_ID,
+    GCE_BASE_PREFIX,
+    SSH_USER,
+    ENV_SHORT_NAME,
+)
 from common.hooks.gce import GCEHook, GPUImage, CPUImage
 import typing as t
 from base64 import b64encode
@@ -24,7 +30,7 @@ class StartGCEOperator(BaseOperator):
         **kwargs,
     ):
         super(StartGCEOperator, self).__init__(*args, **kwargs)
-        self.instance_name = instance_name
+        self.instance_name = f"{GCE_BASE_PREFIX}-{instance_name}"
         self.instance_type = instance_type
         self.preemptible = preemptible
         self.accelerator_types = accelerator_types
@@ -74,7 +80,7 @@ class StopGCEOperator(BaseOperator):
     ):
 
         super(StopGCEOperator, self).__init__(*args, **kwargs)
-        self.instance_name = instance_name
+        self.instance_name = f"{GCE_BASE_PREFIX}-{instance_name}"
 
     def execute(self, context):
         hook = GCEHook()
@@ -94,7 +100,7 @@ class BaseSSHGCEOperator(BaseOperator):
         **kwargs,
     ):
 
-        self.instance_name = instance_name
+        self.instance_name = f"{GCE_BASE_PREFIX}-{instance_name}"
         self.command = command
         self.environment = environment
         super(BaseSSHGCEOperator, self).__init__(*args, **kwargs)
@@ -197,7 +203,7 @@ class GCloudSSHGCEOperator(BashOperator):
         *args,
         **kwargs,
     ):
-        self.instance_name = instance_name
+        self.instance_name = f"{GCE_BASE_PREFIX}-{instance_name}"
         self.command = command
         default_command = "\n".join(
             [

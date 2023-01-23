@@ -88,7 +88,7 @@ def train(
     experiment = mlflow.get_experiment_by_name(experiment_name)
     with mlflow.start_run(experiment_id=experiment.experiment_id):
         # used by sim_offers model
-        export_path = f"{TRAIN_DIR}/{ENV_SHORT_NAME}/model/"
+        export_path = f"{TRAIN_DIR}/{ENV_SHORT_NAME}/"
 
         mlflow.log_params(
             params={

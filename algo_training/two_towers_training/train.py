@@ -51,6 +51,7 @@ def train(
         None,
         help="Seed to fix randomness in pipeline",
     ),
+    run_name: str = typer.Option(None, help="Name of the MLflow run if set"),
 ):
     tf.random.set_seed(seed)
 
@@ -109,7 +110,7 @@ def train(
     client_id = get_secret("mlflow_client_id")
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
     experiment = mlflow.get_experiment_by_name(experiment_name)
-    with mlflow.start_run(experiment_id=experiment.experiment_id):
+    with mlflow.start_run(experiment_id=experiment.experiment_id, run_name=run_name):
         logger.info("Connected to MLFlow")
 
         run_uuid = mlflow.active_run().info.run_uuid

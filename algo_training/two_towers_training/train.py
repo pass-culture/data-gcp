@@ -7,6 +7,7 @@ import typer
 import tensorflow as tf
 from loguru import logger
 import pandas as pd
+import numpy as np
 
 from models.match_model import TwoTowersMatchModel
 from models.two_towers_model import TwoTowersModel
@@ -95,6 +96,11 @@ def train(
         .map(lambda x: tf.transpose(x))
     )
 
+    user_dataset = (
+        tf.data.Dataset.from_tensor_slices(train_user_data.values)
+        .batch(batch_size=batch_size, drop_remainder=False)
+        .map(lambda x: tf.transpose(x))
+    )
     item_dataset = (
         tf.data.Dataset.from_tensor_slices(train_item_data.values)
         .batch(batch_size=batch_size, drop_remainder=False)
@@ -176,25 +182,36 @@ def train(
         )
 
         logger.info("Freeing up memory")
-
-        del train_dataset
-        del train_data
-        del validation_dataset
-        del validation_data
-        del item_dataset
+        del train_dataset, train_data, validation_dataset, validation_data
 
         logger.info("Predicting final user_embeddings...")
-        user_embeddings = two_tower_model.user_model.predict(train_user_data)
+        user_embeddings = two_tower_model.user_model.predict(user_dataset)
         logger.info("Predicting final item_embeddings...")
-        item_embeddings = two_tower_model.item_model.predict(train_item_data)
+        item_embeddings = two_tower_model.item_model.predict(item_dataset)
 
         logger.info("Building and saving the MatchModel")
         match_model = TwoTowersMatchModel(
             user_ids=train_user_data["user_id"].unique(),
-            user_embeddings=user_embeddings,
             item_ids=train_item_data["item_id"].unique(),
-            item_embeddings=item_embeddings,
             embedding_size=embedding_size,
+        )
+        match_model.user_layer.layers[1].set_weights(
+            np.concatenate(
+                [
+                    np.zeros((2, embedding_size)),
+                    user_embeddings,
+                ],
+                axis=0,
+            )
+        )
+        match_model.item_layer.layers[1].set_weights(
+            np.concatenate(
+                [
+                    np.zeros((2, embedding_size)),
+                    item_embeddings,
+                ],
+                axis=0,
+            )
         )
         tf.keras.models.save_model(match_model, export_path + "model")
         mlflow.log_artifacts(export_path + "model", "model")

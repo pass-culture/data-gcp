@@ -41,7 +41,8 @@ firebase_events AS (
             'BusinessBlockClicked',
             'ExclusivityBlockClicked',
             "SeeMoreClicked",
-            'ModuleDisplayedOnHomePage'
+            'ModuleDisplayedOnHomePage',
+            "CategoryBlockClicked"
         )
         AND (
             origin = 'home'

@@ -17,7 +17,7 @@ CLEAN_TABLES = {
         "sql": f"{SQL_CLEAN_PATH}/past_recommended_offers.sql",
         "write_disposition": "WRITE_TRUNCATE",
         "time_partitioning": {"field": "date"},
-        "cluster_fields": ["date"],
+        "clustering_fields": {"fields": ["date"]},
         "destination_dataset": "{{ bigquery_clean_dataset }}",
         "destination_table": "past_recommended_offers",
     }

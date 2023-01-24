@@ -17,13 +17,13 @@ from tools.constants import (
     STORAGE_PATH,
     MLFLOW_RUN_ID_FILENAME,
 )
-from tools.tensorflow_tools import build_dict_dataset, MLFlowLogging
+from tools.callbacks import MLFlowLogging
 from tools.utils import save_pca_representation, get_secret, connect_remote_mlflow
 
-N_EPOCHS = 200
-MIN_DELTA = 0.002  # Minimum change in the accuracy before a callback is called
+N_EPOCHS = 100
+MIN_DELTA = 0.001  # Minimum change in the accuracy before a callback is called
 LEARNING_RATE = 0.1
-VERBOSE = 2
+VERBOSE = 2 if ENV_SHORT_NAME == "prod" else 1
 
 
 def train(
@@ -39,6 +39,10 @@ def train(
         ...,
         help="Batch size of training",
     ),
+    validation_steps_ratio: float = typer.Option(
+        ...,
+        help="Ratio of the total validation steps that will be processed at evaluation",
+    ),
     embedding_size: int = typer.Option(
         ...,
         help="Item & User embedding size",
@@ -50,16 +54,6 @@ def train(
 ):
     tf.random.set_seed(seed)
 
-    # Load data
-    logger.info("Loading & processing datasets")
-
-    train_data = pd.read_csv(
-        f"{STORAGE_PATH}/positive_data_train.csv",
-    ).astype(str)
-    validation_data = pd.read_csv(
-        f"{STORAGE_PATH}/positive_data_eval.csv",
-    ).astype(str)
-
     with open(
         CONFIG_FEATURES_PATH + f"/{config_file_name}.json", mode="r", encoding="utf-8"
     ) as config_file:
@@ -69,41 +63,46 @@ def train(
             features["item_embedding_layers"],
         )
 
+    # Load data
+    logger.info("Loading & processing datasets")
+
     user_columns = list(user_features_config.keys())
-    # TODO: Remove ["offer_categoryId", "offer_subcategoryid"] when the PCA plot is created at the evaluation stage
     item_columns = list(item_features_config.keys())
+
+    # We ensure that the datasets contains the features in the correct order (user_id, ..., item_id, ...)
+    train_data = pd.read_csv(f"{STORAGE_PATH}/positive_data_train.csv",)[
+        user_columns + item_columns
+    ].astype(str)
+    validation_data = pd.read_csv(f"{STORAGE_PATH}/positive_data_eval.csv",)[
+        user_columns + item_columns
+    ].astype(str)
+
     train_user_data = train_data[user_columns].drop_duplicates(subset=["user_id"])
-    train_item_data = train_data[
-        item_columns + ["offer_categoryId", "offer_subcategoryid"]
-    ].drop_duplicates(subset=["item_id"])
+    train_item_data = train_data[item_columns].drop_duplicates(subset=["item_id"])
 
     # Build tf datasets
     logger.info("Building tf datasets")
 
-    train_dataset = build_dict_dataset(
-        train_data,
-        feature_names=user_columns + item_columns,
-        batch_size=batch_size,
-        seed=seed,
+    train_dataset = (
+        tf.data.Dataset.from_tensor_slices(train_data.values)
+        .batch(batch_size=batch_size)
+        .map(lambda x: tf.transpose(x))
     )
-    validation_dataset = build_dict_dataset(
-        validation_data,
-        feature_names=user_columns + item_columns,
-        batch_size=batch_size,
-        seed=seed,
+    validation_dataset = (
+        tf.data.Dataset.from_tensor_slices(validation_data.values)
+        .batch(batch_size=batch_size)
+        .map(lambda x: tf.transpose(x))
     )
 
-    user_dataset = build_dict_dataset(
-        train_user_data,
-        feature_names=user_columns,
-        batch_size=batch_size,
-        seed=seed,
+    user_dataset = (
+        tf.data.Dataset.from_tensor_slices(train_user_data.values)
+        .batch(batch_size=batch_size, drop_remainder=False)
+        .map(lambda x: tf.transpose(x))
     )
-    item_dataset = build_dict_dataset(
-        train_item_data,
-        feature_names=item_columns,
-        batch_size=batch_size,
-        seed=seed,
+    item_dataset = (
+        tf.data.Dataset.from_tensor_slices(train_item_data.values)
+        .batch(batch_size=batch_size, drop_remainder=False)
+        .map(lambda x: tf.transpose(x))
     )
 
     # Connect to MLFlow
@@ -147,11 +146,16 @@ def train(
             optimizer=tf.keras.optimizers.Adagrad(learning_rate=LEARNING_RATE),
         )
 
+        # Divide the total validation steps by a ration to speed up training
+        validation_steps = max(
+            int((len(validation_data) // batch_size) * validation_steps_ratio), 1
+        )
+
         two_tower_model.fit(
             train_dataset,
             epochs=N_EPOCHS,
             validation_data=validation_dataset,
-            verbose=VERBOSE,
+            validation_steps=validation_steps,
             callbacks=[
                 tf.keras.callbacks.ReduceLROnPlateau(
                     monitor="val_factorized_top_k/top_100_categorical_accuracy",
@@ -172,6 +176,7 @@ def train(
                     export_path=export_path,
                 ),
             ],
+            verbose=VERBOSE,
         )
 
         logger.info("Building and saving the MatchModel")
@@ -190,11 +195,17 @@ def train(
         mlflow.log_artifacts(export_path + "model", "model")
 
         # Export the PCA representations of the item embeddings
+        item_data = train_item_data.merge(
+            pd.read_csv(f"{STORAGE_PATH}/item_data.csv").astype(str),
+            on=["item_id"],
+            how="left",
+        )
+
         os.makedirs(export_path + "pca_plots", exist_ok=True)
         pca_representations_path = export_path + "pca_plots/"
         save_pca_representation(
             loaded_model=match_model,
-            item_data=train_item_data,
+            item_data=item_data,
             figures_folder=pca_representations_path,
         )
         mlflow.log_artifacts(export_path + "pca_plots", "pca_plots")

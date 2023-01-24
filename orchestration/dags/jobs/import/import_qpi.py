@@ -1,20 +1,17 @@
-import json
-from datetime import datetime, timedelta, date
-import pandas as pd
+from datetime import datetime, timedelta
 import time
-import os
 from google.cloud import storage
-
+from common.config import DAG_FOLDER
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.python import PythonOperator, BranchPythonOperator
+from airflow.operators.python import BranchPythonOperator
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryDeleteTableOperator,
 )
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
     GCSToBigQueryOperator,
 )
-
+from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import (
     GCP_PROJECT_ID,
@@ -66,6 +63,8 @@ with DAG(
     schedule_interval=get_airflow_schedule("0 1 * * *"),
     catchup=False,
     dagrun_timeout=timedelta(minutes=180),
+    template_searchpath=DAG_FOLDER,
+    user_defined_macros=macros.default,
 ) as dag:
 
     start = DummyOperator(task_id="start")

@@ -1,23 +1,18 @@
 import datetime
-import airflow
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.http.operators.http import SimpleHttpOperator
 from airflow.operators.python import PythonOperator
-
-from google.auth.transport.requests import Request
-from google.oauth2 import id_token
-
+from common.config import DAG_FOLDER
 from common.config import (
     GCP_PROJECT_ID,
     ENV_SHORT_NAME,
-    BIGQUERY_CLEAN_DATASET,
-    BIGQUERY_ANALYTICS_DATASET,
 )
 from common.alerts import task_fail_slack_alert
 from common.operators.biquery import bigquery_job_task
 from dependencies.siren.import_siren import ANALYTICS_TABLES
 from common.utils import getting_service_account_token, get_airflow_schedule
+from common import macros
 
 FUNCTION_NAME = f"siren_import_{ENV_SHORT_NAME}"
 SIREN_FILENAME = "siren_data.csv"
@@ -38,6 +33,8 @@ dag = DAG(
     schedule_interval=get_airflow_schedule(schedule_interval),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
+    user_defined_macros=macros.default,
+    template_searchpath=DAG_FOLDER,
 )
 
 getting_service_account_token = PythonOperator(

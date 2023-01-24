@@ -68,6 +68,11 @@ def main(
     )
     bookings_data.to_csv(f"{STORAGE_PATH}/bookings_data.csv", index=False)
 
+    # Store item information to compute PCA plots
+    bookings_data[
+        ["item_id", "offer_categoryId", "offer_subcategoryid"]
+    ].drop_duplicates().to_csv(f"{STORAGE_PATH}/item_data.csv", index=False)
+
 
 if __name__ == "__main__":
     typer.run(main)

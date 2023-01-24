@@ -95,11 +95,6 @@ def train(
         .map(lambda x: tf.transpose(x))
     )
 
-    user_dataset = (
-        tf.data.Dataset.from_tensor_slices(train_user_data.values)
-        .batch(batch_size=batch_size, drop_remainder=False)
-        .map(lambda x: tf.transpose(x))
-    )
     item_dataset = (
         tf.data.Dataset.from_tensor_slices(train_item_data.values)
         .batch(batch_size=batch_size, drop_remainder=False)
@@ -180,11 +175,20 @@ def train(
             verbose=VERBOSE,
         )
 
+        logger.info("Freeing up memory")
+
+        del train_dataset
+        del train_data
+        del validation_dataset
+        del validation_data
+        del item_dataset
+
+        logger.info("Predicting final user_embeddings...")
+        user_embeddings = two_tower_model.user_model.predict(train_user_data)
+        logger.info("Predicting final item_embeddings...")
+        item_embeddings = two_tower_model.item_model.predict(train_item_data)
+
         logger.info("Building and saving the MatchModel")
-
-        user_embeddings = two_tower_model.user_model.predict(user_dataset)
-        item_embeddings = two_tower_model.item_model.predict(item_dataset)
-
         match_model = TwoTowersMatchModel(
             user_ids=train_user_data["user_id"].unique(),
             user_embeddings=user_embeddings,
@@ -196,7 +200,8 @@ def train(
         mlflow.log_artifacts(export_path + "model", "model")
 
         # Export the PCA representations of the item embeddings
-        item_data = train_item_data.merge(
+        logger.info("Exporting PCA representations")
+        train_item_data = train_item_data.merge(
             pd.read_csv(f"{STORAGE_PATH}/item_data.csv").astype(str),
             on=["item_id"],
             how="left",
@@ -206,7 +211,7 @@ def train(
         pca_representations_path = export_path + "pca_plots/"
         save_pca_representation(
             loaded_model=match_model,
-            item_data=item_data,
+            item_data=train_item_data,
             figures_folder=pca_representations_path,
         )
         mlflow.log_artifacts(export_path + "pca_plots", "pca_plots")

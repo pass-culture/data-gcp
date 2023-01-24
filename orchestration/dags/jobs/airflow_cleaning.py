@@ -18,6 +18,7 @@ clean_delay = {"prod": 60 * 24, "dev": 60 * 8, "stg": 60 * 8}
 dag = DAG(
     "airflow_cleaning",
     default_args=default_args,
+    catchup=False,
     description="Automatic cleaning of VMs",
     schedule_interval=get_airflow_schedule("0 * * * *"),
     dagrun_timeout=timedelta(hours=1),

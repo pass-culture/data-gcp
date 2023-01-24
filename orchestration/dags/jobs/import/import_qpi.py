@@ -11,7 +11,7 @@ from airflow.providers.google.cloud.operators.bigquery import (
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
     GCSToBigQueryOperator,
 )
-
+from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import (
     GCP_PROJECT_ID,
@@ -64,6 +64,7 @@ with DAG(
     catchup=False,
     dagrun_timeout=timedelta(minutes=180),
     template_searchpath=DAG_FOLDER,
+    user_defined_macros=macros.default,
 ) as dag:
 
     start = DummyOperator(task_id="start")

@@ -21,6 +21,7 @@ from utils import (
     ENV_SHORT_NAME,
     TRAIN_DIR,
     STORAGE_PATH,
+    get_mlflow_experiment,
 )
 
 L2_REG = 0
@@ -85,9 +86,7 @@ def train(
     # Connect to MLFlow
     client_id = get_secret("mlflow_client_id")
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
-    experiment = mlflow.get_experiment_by_name(experiment_name)
-    if experiment is None:
-        experiment = mlflow.create_experiment(name=experiment_name)
+    experiment = get_mlflow_experiment(experiment_name)
     with mlflow.start_run(experiment_id=experiment.experiment_id):
         # used by sim_offers model
         export_path = f"{TRAIN_DIR}/{ENV_SHORT_NAME}/"

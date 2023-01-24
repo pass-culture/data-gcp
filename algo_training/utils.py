@@ -55,5 +55,12 @@ def connect_remote_mlflow(client_id, env="ehp"):
     mlflow.set_tracking_uri(uri)
 
 
+def get_mlflow_experiment(experiment_name: str):
+    experiment = mlflow.get_experiment_by_name(experiment_name)
+    if experiment is None:
+        experiment = mlflow.create_experiment(name=experiment_name)
+    return experiment
+
+
 def remove_dir(path):
     shutil.rmtree(path)

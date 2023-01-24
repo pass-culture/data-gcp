@@ -1,7 +1,7 @@
 import tensorflow as tf
 import numpy as np
 
-from tensorflow.keras.layers import Embedding, Flatten, Input, Dense, Lambda, Dot
+from tensorflow.keras.layers import Embedding, Dot
 from tensorflow.keras.layers.experimental.preprocessing import StringLookup
 
 
@@ -9,9 +9,7 @@ class TwoTowersMatchModel(tf.keras.models.Model):
     def __init__(
         self,
         user_ids: list,
-        user_embeddings: np.ndarray,
         item_ids: list,
-        item_embeddings: np.ndarray,
         embedding_size: int,
     ):
         super().__init__()
@@ -19,21 +17,12 @@ class TwoTowersMatchModel(tf.keras.models.Model):
         self.user_layer = tf.keras.Sequential(
             [
                 StringLookup(vocabulary=user_ids),
-                # We add an additional embedding to account for unknown tokens.
+                # We add an additional embedding to account for [UNK] and '' tokens
                 Embedding(
-                    input_dim=len(user_ids) + 1,
+                    input_dim=len(user_ids) + 2,
                     input_shape=(1,),
                     input_length=1,
                     output_dim=embedding_size,
-                    embeddings_initializer=tf.keras.initializers.Constant(
-                        np.concatenate(
-                            [
-                                np.zeros((1, embedding_size)),
-                                user_embeddings,
-                            ],
-                            axis=0,
-                        )
-                    ),
                     trainable=False,
                     name="user_embedding",
                 ),
@@ -43,21 +32,12 @@ class TwoTowersMatchModel(tf.keras.models.Model):
         self.item_layer = tf.keras.Sequential(
             [
                 StringLookup(vocabulary=item_ids),
-                # We add an additional embedding to account for unknown tokens.
+                # We add an additional embedding to account for [UNK] and '' tokens
                 Embedding(
-                    input_dim=len(item_ids) + 1,
+                    input_dim=len(item_ids) + 2,
                     input_shape=(1,),
                     input_length=1,
                     output_dim=embedding_size,
-                    embeddings_initializer=tf.keras.initializers.Constant(
-                        np.concatenate(
-                            [
-                                np.zeros((1, embedding_size)),
-                                item_embeddings,
-                            ],
-                            axis=0,
-                        )
-                    ),
                     trainable=False,
                     name="item_embedding",
                 ),

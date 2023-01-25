@@ -111,7 +111,7 @@ with DAG(
             ).as_posix(),
             write_disposition="WRITE_TRUNCATE",
             use_legacy_sql=False,
-            destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DATE}_recommendation_{dataset}_data_clicks",
+            destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DATE}_recommendation_{dataset}_data",
             dag=dag,
         )
         import_recommendation_data[dataset] = task
@@ -146,7 +146,7 @@ with DAG(
             base_dir=dag_config["BASE_DIR"],
             environment=dag_config,
             command=f"python data_collect.py --dataset {BIGQUERY_TMP_DATASET} "
-            f"--table-name {DATE}_recommendation_{split}_data_clicks "
+            f"--table-name {DATE}_recommendation_{split}_data "
             f"--output-name recommendation_{split}_data",
             dag=dag,
         )
@@ -187,7 +187,7 @@ with DAG(
         base_dir=f"{dag_config['BASE_DIR']}/similar_offers",
         environment=dag_config,
         command="python main.py "
-        f"--experiment-name similar_offers_clicks_v2.1_{ENV_SHORT_NAME} "
+        "--experiment-name similar_offers_{{ params.input_type }}" + f"_v2.1_{ENV_SHORT_NAME} "
         "--model-name v2.1",
         dag=dag,
     )

@@ -8,7 +8,7 @@ WITH events AS (
         `{{ bigquery_analytics_dataset }}`.`firebase_events`
     WHERE
         event_name = "ConsultOffer"
-        AND event_date >= DATE_SUB(DATE("{{ ds }}"), INTERVAL 4 MONTH)
+        AND event_date >= DATE_SUB(DATE("{{ ds }}"), INTERVAL 6 MONTH)
         AND event_date < DATE("{{ ds }}")
         AND user_id is not null
         AND offer_id is not null
@@ -20,7 +20,7 @@ WITH events AS (
 )
 SELECT
     events.user_id,
-    CAST(enruser.user_age AS INT64) AS user_age,
+    COALESCE(CAST(enruser.user_age AS INT64), 0) AS user_age,
     "CLICK" as event_type,
     event_date,
     offer_item_ids.item_id as item_id,
@@ -38,7 +38,7 @@ FROM
     inner join `{{ bigquery_analytics_dataset }}`.`subcategories` subcategories on offer.offer_subcategoryId = subcategories.id
     inner join `{{ bigquery_analytics_dataset }}`.`enriched_offer_data` enroffer on enroffer.offer_id = offer.offer_id
     inner join `{{ bigquery_analytics_dataset }}`.`offer_item_ids` offer_item_ids on offer_item_ids.offer_id = offer.offer_id
-    inner join `{{ bigquery_analytics_dataset }}`.`enriched_user_data` enruser on enruser.user_id = events.user_id
+    left join `{{ bigquery_analytics_dataset }}`.`enriched_user_data` enruser on enruser.user_id = events.user_id
 group by
     events.user_id,
     user_age,

@@ -330,7 +330,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
     {
         "offer_id": "3",
         "offer_product_id": "1",
-        "offer_product_humanized_id": "AE",
+        "offer_product_humanized_id": "A9",
         "offer_id_at_providers": "7",
         "item_id": "product-154181",
         "offerer_id": "3",

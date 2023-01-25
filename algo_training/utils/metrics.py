@@ -4,8 +4,8 @@ import recmetrics
 from loguru import logger
 from tqdm import tqdm
 
+from utils.constants import SHUFFLE_RECOMMENDATION
 from utils.diversification import order_offers_by_score_and_diversify_categories
-from utils import SHUFFLE_RECOMMENDATION
 
 
 def get_actual_and_predicted(

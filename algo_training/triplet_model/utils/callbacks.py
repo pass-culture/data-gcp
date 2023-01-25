@@ -1,7 +1,7 @@
 import tensorflow as tf
 import mlflow
 
-from utils import connect_remote_mlflow
+from utils.mlflow_tools import connect_remote_mlflow
 
 
 class MatchModelCheckpoint(tf.keras.callbacks.Callback):

@@ -2,7 +2,7 @@ import typer
 from loguru import logger
 
 from utils.data_collect_queries import get_data_from_bigquery
-from utils import STORAGE_PATH, ENV_SHORT_NAME
+from utils.constants import STORAGE_PATH, ENV_SHORT_NAME
 
 
 def main(

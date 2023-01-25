@@ -4,25 +4,14 @@ import tensorflow as tf
 import typer
 from loguru import logger
 
-from models.v1.match_model import MatchModel
-from models.v1.triplet_model import TripletModel
-from models.v1.utils import (
-    identity_loss,
-    predict,
-)
-from models.v2.utils import (
-    load_triplets_dataset,
-    MatchModelCheckpoint,
-    MLFlowLogging,
-)
-from utils import (
-    get_secret,
-    connect_remote_mlflow,
-    ENV_SHORT_NAME,
-    TRAIN_DIR,
-    STORAGE_PATH,
-    get_mlflow_experiment,
-)
+from triplet_model.models.match_model import MatchModel
+from triplet_model.models.triplet_model import TripletModel
+from triplet_model.utils.callbacks import MatchModelCheckpoint, MLFlowLogging
+from triplet_model.utils.dataset_utils import load_triplets_dataset
+from triplet_model.utils.model_utils import predict, identity_loss
+from utils.constants import STORAGE_PATH, ENV_SHORT_NAME, TRAIN_DIR
+from utils.mlflow_tools import connect_remote_mlflow, get_mlflow_experiment
+from utils.secrets_utils import get_secret
 
 L2_REG = 0
 N_EPOCHS = 1000

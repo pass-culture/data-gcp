@@ -1,7 +1,7 @@
 import json
 
 import pandas as pd
-from utils import GCP_PROJECT_ID
+from utils.constants import GCP_PROJECT_ID
 
 
 def get_data_from_bigquery(

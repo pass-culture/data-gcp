@@ -1,7 +1,3 @@
-from common.config import GCP_PROJECT_ID, ENV_SHORT_NAME
-
-import pandas as pd
-
 QPI_ANSWERS_SCHEMA = [
     {"name": "user_id", "type": "STRING", "mode": "NULLABLE"},
     {"name": "submitted_at", "type": "TIMESTAMP", "mode": "NULLABLE"},

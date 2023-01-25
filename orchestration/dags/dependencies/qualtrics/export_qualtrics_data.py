@@ -12,7 +12,6 @@ clean_tables = {
         "destination_dataset": "{{ bigquery_clean_dataset }}",
         "destination_table": "qualtrics_ir_jeunes${{ yyyymmdd(current_month(ds)) }}",
         "time_partitioning": {"field": "calculation_month"},
-        "clustering_fields": {"fields": ["calculation_month"]},
         "params": {"volume": 8000 if ENV_SHORT_NAME == "prod" else 10},
         "qualtrics_automation_id": access_secret_data(
             GCP_PROJECT_ID, f"qualtrics_ir_jeunes_automation_id_{ENV_SHORT_NAME}"
@@ -24,7 +23,6 @@ clean_tables = {
         "destination_dataset": "{{ bigquery_clean_dataset }}",
         "destination_table": "qualtrics_ac${{ yyyymmdd(current_month(ds)) }}",
         "time_partitioning": {"field": "calculation_month"},
-        "clustering_fields": {"fields": ["calculation_month"]},
         "params": {"volume": 10000 if ENV_SHORT_NAME == "prod" else 10},
         "qualtrics_automation_id": access_secret_data(
             GCP_PROJECT_ID, f"qualtrics_ir_ac_automation_id_{ENV_SHORT_NAME}"

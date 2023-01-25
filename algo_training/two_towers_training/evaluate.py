@@ -28,7 +28,8 @@ from tools.constants import (
     EVALUATION_USER_NUMBER,
     EXPERIMENT_NAME,
     TRAIN_DIR,
-    EVALUATION_USER_NUMBER_DIVERSIFICATION, MLFLOW_RUN_ID_FILENAME,
+    EVALUATION_USER_NUMBER_DIVERSIFICATION,
+    MLFLOW_RUN_ID_FILENAME,
 )
 from tools.metrics import (
     compute_metrics,

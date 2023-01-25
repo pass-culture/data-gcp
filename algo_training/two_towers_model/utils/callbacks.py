@@ -1,7 +1,7 @@
 import tensorflow as tf
 import mlflow
 
-from utils.utils import connect_remote_mlflow
+from utils.mlflow_tools import connect_remote_mlflow
 
 
 class MLFlowLogging(tf.keras.callbacks.Callback):

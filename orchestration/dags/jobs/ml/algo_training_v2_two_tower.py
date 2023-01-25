@@ -24,6 +24,7 @@ from common.config import (
     SLACK_CONN_PASSWORD,
     MLFLOW_URL,
     BIGQUERY_RAW_DATASET,
+    BIGQUERY_TMP_DATASET,
 )
 
 from dependencies.ml.utils import create_algo_training_slack_block
@@ -104,6 +105,10 @@ with DAG(
             default=str(train_params["event_day_number"]),
             type="string",
         ),
+        "input_type": Param(
+            default="enriched_clicks",
+            type="string",
+        ),
         "instance_type": Param(
             default=gce_params["instance_type"][ENV_SHORT_NAME],
             type="string",
@@ -122,17 +127,32 @@ with DAG(
     start = DummyOperator(task_id="start", dag=dag)
 
     import_tables = {}
-    for table in ["user_features", "item_features", "data_clicks"]:
+    for table in [
+        "recommendation_user_features",
+        "recommendation_item_features",
+        "training_data_enriched_clicks",
+    ]:
         import_tables[table] = BigQueryExecuteQueryOperator(
-            task_id=f"import_recommendation_{table}",
+            task_id=f"import_{table}",
+            sql=(IMPORT_TRAINING_SQL_PATH / f"{table}.sql").as_posix(),
+            write_disposition="WRITE_TRUNCATE",
+            use_legacy_sql=False,
+            destination_dataset_table=f"{BIGQUERY_RAW_DATASET}.{table}",
+            dag=dag,
+        )
+
+    for dataset in ["training", "validation", "test"]:
+        task = BigQueryExecuteQueryOperator(
+            task_id=f"import_recommendation_{dataset}",
             sql=(
-                IMPORT_TRAINING_SQL_PATH / f"two_towers/recommendation_{table}.sql"
+                IMPORT_TRAINING_SQL_PATH / f"recommendation_{dataset}_data.sql"
             ).as_posix(),
             write_disposition="WRITE_TRUNCATE",
             use_legacy_sql=False,
-            destination_dataset_table=f"{BIGQUERY_RAW_DATASET}.recommendation_{table}",
+            destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DATE}_recommendation_{dataset}_data_enriched_clicks",
             dag=dag,
         )
+        import_tables[dataset] = task
 
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
@@ -156,26 +176,19 @@ with DAG(
         dag=dag,
     )
 
-    data_collect = SSHGCEOperator(
-        task_id="data_collect",
-        instance_name="{{ params.instance_name }}",
-        base_dir=dag_config["BASE_DIR"],
-        environment=dag_config,
-        command="python data_collect.py "
-        "--config-file-name {{ params.config_file_name }} "
-        "--table-name recommendation_data_clicks "
-        "--event-day-number {{ params.event_day_number }}",
-        dag=dag,
-    )
-
-    split_data = SSHGCEOperator(
-        task_id="split_data",
-        instance_name="{{ params.instance_name }}",
-        base_dir=dag_config["BASE_DIR"],
-        environment=dag_config,
-        command="python split_data.py",
-        dag=dag,
-    )
+    store_data = {}
+    for split in ["training", "validation", "test"]:
+        task = SSHGCEOperator(
+            task_id=f"get_{split}",
+            instance_name="{{ params.instance_name }}",
+            base_dir=dag_config["BASE_DIR"],
+            environment=dag_config,
+            command=f"python data_collect.py --dataset {BIGQUERY_TMP_DATASET} "
+                    f"--table-name {DATE}_recommendation_{split}_data_enriched_clicks "
+                    f"--output-name recommendation_{split}_data",
+            dag=dag,
+        )
+        store_data[split] = task
 
     preprocess = SSHGCEOperator(
         task_id="preprocess",
@@ -199,6 +212,17 @@ with DAG(
         "--embedding-size {{ params.embedding_size }} "
         "--seed {{ ds_nodash }} "
         "--run-name {{ params.run_name }}",
+        dag=dag,
+    )
+
+    store_data["bookings"] = SSHGCEOperator(
+        task_id=f"get_bookings",
+        instance_name="{{ params.instance_name }}",
+        base_dir=dag_config["BASE_DIR"],
+        environment=dag_config,
+        command=f"python data_collect.py --dataset {BIGQUERY_TMP_DATASET} "
+                f"--table-name {DATE}_recommendation_{split}_data_bookings "
+                f"--output-name recommendation_{split}_data",
         dag=dag,
     )
 
@@ -228,15 +252,19 @@ with DAG(
 
     (
         start
-        >> [import_tables["user_features"], import_tables["item_features"]]
-        >> import_tables["data_clicks"]
+        >> [import_tables["recommendation_user_features"], import_tables["recommendation_user_features"]]
+        >> import_tables["training_data_enriched_clicks"]
+        >> import_tables["training"]
+        >> [import_tables["evaluation"], import_tables["test"]]
         >> gce_instance_start
         >> fetch_code
         >> install_dependencies
-        >> data_collect
+        >> store_data["training"]
+        >> store_data["validation"]
+        >> store_data["test"]
         >> preprocess
-        >> split_data
         >> training
+        >> store_data["bookings"]
         >> evaluate
         >> gce_instance_stop
         >> send_slack_notif_success

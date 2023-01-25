@@ -185,8 +185,8 @@ with DAG(
             base_dir=dag_config["BASE_DIR"],
             environment=dag_config,
             command=f"python data_collect.py --dataset {BIGQUERY_TMP_DATASET} "
-                    f"--table-name {DATE}_recommendation_{split}_data_enriched_clicks "
-                    f"--output-name recommendation_{split}_data",
+            f"--table-name {DATE}_recommendation_{split}_data_enriched_clicks "
+            f"--output-name recommendation_{split}_data",
             dag=dag,
         )
         store_data[split] = task
@@ -199,7 +199,7 @@ with DAG(
             base_dir=dag_config["BASE_DIR"],
             environment=dag_config,
             command="python preprocess.py --config-file-name {{ params.config_file_name }} "
-                    f"dataframe-file-name recommendation_{split}_data",
+            f"dataframe-file-name recommendation_{split}_data",
             dag=dag,
         )
 
@@ -225,8 +225,8 @@ with DAG(
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
         command=f"python data_collect.py --dataset {BIGQUERY_TMP_DATASET} "
-                f"--table-name {DATE}_recommendation_{split}_data_bookings "
-                f"--output-name recommendation_{split}_data",
+        f"--table-name {DATE}_recommendation_{split}_data_bookings "
+        f"--output-name recommendation_{split}_data",
         dag=dag,
     )
 
@@ -256,7 +256,10 @@ with DAG(
 
     (
         start
-        >> [import_tables["recommendation_user_features"], import_tables["recommendation_user_features"]]
+        >> [
+            import_tables["recommendation_user_features"],
+            import_tables["recommendation_user_features"],
+        ]
         >> import_tables["training_data_enriched_clicks"]
         >> import_tables["training"]
         >> [import_tables["validation"], import_tables["test"]]
@@ -266,7 +269,11 @@ with DAG(
         >> store_data["training"]
         >> store_data["validation"]
         >> store_data["test"]
-        >> [preprocess_data["train"], preprocess_data["validation"], preprocess_data["test"]]
+        >> [
+            preprocess_data["train"],
+            preprocess_data["validation"],
+            preprocess_data["test"],
+        ]
         >> training
         >> store_data["bookings"]
         >> evaluate

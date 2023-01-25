@@ -20,5 +20,3 @@ def predict(match_model):
     repeated_user_id.fill(user_id)
     predicted = match_model.predict([repeated_user_id, items_to_rank], batch_size=4096)
     return predicted
-
-

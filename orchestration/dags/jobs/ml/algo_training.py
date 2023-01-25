@@ -209,7 +209,10 @@ with DAG(
     (
         start
         >> import_recommendation_data["training"]
-        >> [import_recommendation_data["validation"], import_recommendation_data["test"]]
+        >> [
+            import_recommendation_data["validation"],
+            import_recommendation_data["test"],
+        ]
         >> gce_instance_start
         >> fetch_code
         >> install_dependencies

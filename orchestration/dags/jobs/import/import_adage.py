@@ -3,7 +3,6 @@ from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.http.operators.http import SimpleHttpOperator
 from airflow.operators.python import PythonOperator
-from dependencies.adage.import_adage import analytics_tables
 from common.alerts import task_fail_slack_alert
 from common.operators.biquery import bigquery_job_task
 from common.operators.sensor import TimeSleepSensor
@@ -70,20 +69,6 @@ adage_to_bq = SimpleHttpOperator(
     dag=dag,
 )
 
-
-start = DummyOperator(task_id="start", dag=dag)
-
-table_jobs = {}
-for table, job_params in analytics_tables.items():
-    task = bigquery_job_task(dag, table, job_params)
-    table_jobs[table] = {
-        "operator": task,
-        "depends": job_params.get("depends", []),
-        "dag_depends": job_params.get("dag_depends", []),
-    }
-
-table_jobs = depends_loop(table_jobs, start, dag=dag)
 end = DummyOperator(task_id="end", dag=dag)
 
-sleep_op >> sa_token_op >> adage_to_bq >> start
-table_jobs >> end
+sleep_op >> sa_token_op >> adage_to_bq >> end

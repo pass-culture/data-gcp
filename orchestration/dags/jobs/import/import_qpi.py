@@ -116,7 +116,7 @@ with DAG(
     start_analytics = DummyOperator(task_id="start_analytics")
     analytics_tables_jobs = {}
     for table, job_params in ANALYTICS_TABLES.items():
-        task = bigquery_job_task(dag=dag, table=table, job_params=params)
+        task = bigquery_job_task(dag=dag, table=table, job_params=job_params)
         analytics_tables_jobs[table] = {
             "operator": task,
             "depends": job_params.get("depends", []),

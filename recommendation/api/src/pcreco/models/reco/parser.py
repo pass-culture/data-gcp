@@ -39,8 +39,9 @@ def parse_internal(request):
 
 
 def parse_params(request) -> PlaylistParamsIn:
+
     if request.method == "POST":
-        params = request.get_json()
+        params = dict(request.get_json(), **dict(request.args))
 
     elif request.method == "GET":
         params = request.args

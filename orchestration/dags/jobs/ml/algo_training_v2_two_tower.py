@@ -114,6 +114,9 @@ with DAG(
             + train_params["config_file_name"],
             type="string",
         ),
+        "run_name": Param(
+            default=train_params["config_file_name"], type=["string", "null"]
+        ),
     },
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)
@@ -194,7 +197,8 @@ with DAG(
         "--batch-size {{ params.batch_size }} "
         "--validation-steps-ratio {{ params.validation_steps_ratio }} "
         "--embedding-size {{ params.embedding_size }} "
-        "--seed {{ ds_nodash }}",
+        "--seed {{ ds_nodash }} "
+        "--run-name {{ params.run_name }}",
         dag=dag,
     )
 

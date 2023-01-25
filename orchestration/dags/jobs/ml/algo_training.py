@@ -1,4 +1,5 @@
-from datetime import datetime, timedelta
+from datetime import datetime
+from datetime import timedelta
 
 from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
@@ -6,7 +7,7 @@ from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryExecuteQueryOperator,
 )
 from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
-
+from common.utils import get_airflow_schedule
 from airflow import DAG
 from common import macros
 from common.alerts import task_fail_slack_alert
@@ -32,10 +33,10 @@ DATE = "{{ ts_nodash }}"
 
 # Environment variables to export before running commands
 dag_config = {
-    "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/algo_training_{ENV_SHORT_NAME}/algo_training_v2-{DATE}",
+    "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/algo_training_{ENV_SHORT_NAME}/algo_training_clicks_v2.1_{DATE}",
     "BASE_DIR": "data-gcp/algo_training",
     "TRAIN_DIR": "/home/airflow/train",
-    "EXPERIMENT_NAME": f"algo_training_v2.1_{ENV_SHORT_NAME}",
+    "EXPERIMENT_NAME": f"algo_training_clicks_v2.1_{ENV_SHORT_NAME}",
 }
 
 # Params
@@ -46,10 +47,10 @@ train_params = {
     "event_day_number": 120 if ENV_SHORT_NAME == "prod" else 20,
 }
 gce_params = {
-    "instance_name": f"algo-training-v2-{ENV_SHORT_NAME}",
+    "instance_name": f"algo-training-{ENV_SHORT_NAME}",
     "instance_type": {
         "dev": "n1-standard-2",
-        "stg": "n1-standard-4",
+        "stg": "n1-standard-8",
         "prod": "n1-standard-16",
     },
 }
@@ -61,11 +62,14 @@ default_args = {
     "retry_delay": timedelta(minutes=2),
 }
 
+schedule_dict = {"prod": "0 12 * * 5", "dev": "0 0 * * *", "stg": "0 12 * * 3"}
+
+
 with DAG(
-    "algo_training_v2",
+    "algo_training",
     default_args=default_args,
     description="Custom training job",
-    schedule_interval=None,
+    schedule_interval=get_airflow_schedule(schedule_dict[ENV_SHORT_NAME]),
     catchup=False,
     dagrun_timeout=timedelta(minutes=1440),
     user_defined_macros=macros.default,
@@ -86,14 +90,14 @@ with DAG(
             default=str(train_params["event_day_number"]), type="string"
         ),
         "input_type": Param(
-            default="bookings",
+            default="clicks",
             type="string",
         ),
         "instance_type": Param(
-            default=gce_params["instance_type"][ENV_SHORT_NAME],
-            type="string",
+            default=gce_params["instance_type"][ENV_SHORT_NAME], type="string"
         ),
         "instance_name": Param(default=gce_params["instance_name"], type="string"),
+        "run_name": Param(default=None, type=["string", "null"]),
     },
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)
@@ -107,13 +111,14 @@ with DAG(
             ).as_posix(),
             write_disposition="WRITE_TRUNCATE",
             use_legacy_sql=False,
-            destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DATE}_recommendation_{dataset}_data_bookings",
+            destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DATE}_recommendation_{dataset}_data",
             dag=dag,
         )
         import_recommendation_data[dataset] = task
 
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
+        preemptible=False,
         instance_name="{{ params.instance_name }}",
         instance_type="{{ params.instance_type }}",
         accelerator_types=[{"name": "nvidia-tesla-t4", "count": 1}],
@@ -141,7 +146,7 @@ with DAG(
             base_dir=dag_config["BASE_DIR"],
             environment=dag_config,
             command=f"python data_collect.py --dataset {BIGQUERY_TMP_DATASET} "
-            f"--table-name {DATE}_recommendation_{split}_data_bookings "
+            f"--table-name {DATE}_recommendation_{split}_data "
             f"--output-name recommendation_{split}_data",
             dag=dag,
         )
@@ -157,8 +162,9 @@ with DAG(
         "--batch-size {{ params.batch_size }} "
         "--embedding-size {{ params.embedding_size }} "
         "--seed {{ ds_nodash }} "
-        f"--training-table-name recommendation_training_data "
-        f"--validation-table-name recommendation_validation_data",
+        "--training-table-name recommendation_training_data "
+        "--validation-table-name recommendation_validation_data "
+        "--run-name {{ params.run_name }}",
         dag=dag,
     )
 
@@ -172,6 +178,18 @@ with DAG(
         "--event-day-number {{ params.event_day_number }} "
         "--training-dataset-name recommendation_training_data "
         "--test-dataset-name recommendation_test_data",
+        dag=dag,
+    )
+
+    train_sim_offers = SSHGCEOperator(
+        task_id="containerize_similar_offers",
+        instance_name="{{ params.instance_name }}",
+        base_dir=f"{dag_config['BASE_DIR']}/similar_offers",
+        environment=dag_config,
+        command="python main.py "
+        "--experiment-name similar_offers_{{ params.input_type }}"
+        + f"_v2.1_{ENV_SHORT_NAME} "
+        "--model-name v2.1",
         dag=dag,
     )
 
@@ -203,6 +221,7 @@ with DAG(
         >> store_recommendation_data["test"]
         >> training
         >> evaluate
+        >> train_sim_offers
         >> gce_instance_stop
         >> send_slack_notif_success
     )

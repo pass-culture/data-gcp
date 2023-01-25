@@ -97,6 +97,7 @@ with DAG(
             default=gce_params["instance_type"][ENV_SHORT_NAME], type="string"
         ),
         "instance_name": Param(default=gce_params["instance_name"], type="string"),
+        "run_name": Param(default=None, type=["string", "null"]),
     },
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)
@@ -161,8 +162,9 @@ with DAG(
         "--batch-size {{ params.batch_size }} "
         "--embedding-size {{ params.embedding_size }} "
         "--seed {{ ds_nodash }} "
-        f"--training-table-name recommendation_training_data "
-        f"--validation-table-name recommendation_validation_data",
+        "--training-table-name recommendation_training_data "
+        "--validation-table-name recommendation_validation_data "
+        "--run-name {{ params.run_name }}",
         dag=dag,
     )
 

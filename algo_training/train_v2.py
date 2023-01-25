@@ -21,6 +21,7 @@ from utils import (
     ENV_SHORT_NAME,
     TRAIN_DIR,
     STORAGE_PATH,
+    get_mlflow_experiment,
 )
 
 L2_REG = 0
@@ -53,6 +54,7 @@ def train(
         "recommendation_validation_data",
         help="BigQuery table containing validation data",
     ),
+    run_name: str = typer.Option(None, help="Name of the MLflow run if set"),
 ):
     tf.random.set_seed(seed)
 
@@ -85,8 +87,8 @@ def train(
     # Connect to MLFlow
     client_id = get_secret("mlflow_client_id")
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
-    experiment = mlflow.get_experiment_by_name(experiment_name)
-    with mlflow.start_run(experiment_id=experiment.experiment_id):
+    experiment = get_mlflow_experiment(experiment_name)
+    with mlflow.start_run(experiment_id=experiment.experiment_id, run_name=run_name):
         # used by sim_offers model
         export_path = f"{TRAIN_DIR}/{ENV_SHORT_NAME}/"
 

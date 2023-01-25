@@ -40,11 +40,17 @@ def save_pca_representation(
     item_data: pd.DataFrame,
     figures_folder: str,
 ):
-    # We remove the first element, the [UNK] token
+    # Remove the first element, the [UNK] token
     item_ids = loaded_model.item_layer.layers[0].get_vocabulary()[1:]
     embeddings = loaded_model.item_layer.layers[1].get_weights()[0][1:]
 
+    # Filter the items present in the model's vocabulary (i.e. training item ids)
+    item_data = item_data.loc[lambda df: df["item_id"].isin(item_ids)]
+
+    # Compute PCA
     pca_out = PCA(n_components=2).fit_transform(embeddings)
+
+    # Store results in a DataFrame
     categories = item_data["offer_categoryId"].unique().tolist()
     item_representation = pd.DataFrame(
         {
@@ -54,6 +60,7 @@ def save_pca_representation(
         }
     ).merge(item_data, on=["item_id"], how="inner")
 
+    # Plot & save results
     colormap = mpl.colormaps["tab20"].colors
     fig, ax = plt.subplots(1, 1, figsize=(15, 10))
     for idx, category in enumerate(categories):

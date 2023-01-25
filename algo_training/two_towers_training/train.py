@@ -1,5 +1,4 @@
 import json
-import os
 
 import mlflow
 import typer
@@ -7,7 +6,6 @@ import typer
 import tensorflow as tf
 from loguru import logger
 import pandas as pd
-import numpy as np
 
 from models.match_model import TwoTowersMatchModel
 from models.two_towers_model import TwoTowersModel
@@ -19,7 +17,7 @@ from tools.constants import (
     MLFLOW_RUN_ID_FILENAME,
 )
 from tools.callbacks import MLFlowLogging
-from tools.utils import save_pca_representation, get_secret, connect_remote_mlflow
+from tools.utils import get_secret, connect_remote_mlflow
 
 N_EPOCHS = 100
 MIN_DELTA = 0.001  # Minimum change in the accuracy before a callback is called
@@ -184,9 +182,9 @@ def train(
         logger.info("Freeing up memory")
         del train_dataset, train_data, validation_dataset, validation_data
 
-        logger.info("Predicting final user_embeddings...")
+        logger.info("Predicting final user embeddings")
         user_embeddings = two_tower_model.user_model.predict(user_dataset)
-        logger.info("Predicting final item_embeddings...")
+        logger.info("Predicting final item embeddings")
         item_embeddings = two_tower_model.item_model.predict(item_dataset)
 
         logger.info("Building and saving the MatchModel")
@@ -195,43 +193,12 @@ def train(
             item_ids=train_item_data["item_id"].unique(),
             embedding_size=embedding_size,
         )
-        match_model.user_layer.layers[1].set_weights(
-            np.concatenate(
-                [
-                    np.zeros((2, embedding_size)),
-                    user_embeddings,
-                ],
-                axis=0,
-            )
+        match_model.set_embeddings(
+            user_embeddings=user_embeddings, item_embeddings=item_embeddings
         )
-        match_model.item_layer.layers[1].set_weights(
-            np.concatenate(
-                [
-                    np.zeros((2, embedding_size)),
-                    item_embeddings,
-                ],
-                axis=0,
-            )
-        )
+
         tf.keras.models.save_model(match_model, export_path + "model")
         mlflow.log_artifacts(export_path + "model", "model")
-
-        # Export the PCA representations of the item embeddings
-        logger.info("Exporting PCA representations")
-        train_item_data = train_item_data.merge(
-            pd.read_csv(f"{STORAGE_PATH}/item_data.csv").astype(str),
-            on=["item_id"],
-            how="left",
-        )
-
-        os.makedirs(export_path + "pca_plots", exist_ok=True)
-        pca_representations_path = export_path + "pca_plots/"
-        save_pca_representation(
-            loaded_model=match_model,
-            item_data=train_item_data,
-            figures_folder=pca_representations_path,
-        )
-        mlflow.log_artifacts(export_path + "pca_plots", "pca_plots")
 
         logger.info("------- TRAINING DONE -------")
         logger.info(mlflow.get_artifact_uri("model"))

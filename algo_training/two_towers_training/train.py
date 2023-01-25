@@ -179,9 +179,6 @@ def train(
             verbose=VERBOSE,
         )
 
-        logger.info("Freeing up memory")
-        del train_dataset, train_data, validation_dataset, validation_data
-
         logger.info("Predicting final user embeddings")
         user_embeddings = two_tower_model.user_model.predict(user_dataset)
         logger.info("Predicting final item embeddings")

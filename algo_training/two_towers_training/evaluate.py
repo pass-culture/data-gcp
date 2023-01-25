@@ -28,7 +28,7 @@ from tools.constants import (
     EVALUATION_USER_NUMBER,
     EXPERIMENT_NAME,
     TRAIN_DIR,
-    EVALUATION_USER_NUMBER_DIVERSIFICATION,
+    EVALUATION_USER_NUMBER_DIVERSIFICATION, MLFLOW_RUN_ID_FILENAME,
 )
 from tools.metrics import (
     compute_metrics,
@@ -179,12 +179,10 @@ def run(
     client_id = get_secret("mlflow_client_id")
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
     experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
-    run_id = mlflow.list_run_infos(experiment_id)[0].run_id
-
-    with mlflow.start_run(run_id=run_id) as run:
+    with open(f"{MLFLOW_RUN_ID_FILENAME}.txt", mode="r") as file:
+        run_id = file.read()
+    with mlflow.start_run(experiment_id=experiment_id, run_id=run_id) as run:
         artifact_uri = mlflow.get_artifact_uri("model")
-        export_path = f"{TRAIN_DIR}/{ENV_SHORT_NAME}/{run_id}/"
-
         loaded_model = tf.keras.models.load_model(
             artifact_uri,
             custom_objects={"MatchModel": TwoTowersMatchModel},

@@ -8,7 +8,6 @@ aggregated_open_data_tables = {
         "destination_dataset": "{{ bigquery_open_data_public_dataset }}",
         "destination_table": "aggregated_usage_and_intensity${{ yyyymmdd(current_month(add_days(ds, 1))) }}",
         "time_partitioning": {"field": "calculation_month"},
-        "clustering_fields": {"fields": ["calculation_month"]},
     },
     "aggregated_monthly_user_data": {
         "sql": f"{SQL_PATH}/aggregated_monthly_user_data.sql",

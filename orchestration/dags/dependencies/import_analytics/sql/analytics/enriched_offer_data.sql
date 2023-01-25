@@ -119,6 +119,7 @@ SELECT
     venue.venue_department_code,
     offer.offer_id,
     offer.offer_product_id,
+    humanize_id(offer.offer_product_id) as offer_product_humanized_id,
     offer.offer_id_at_providers,
     offer.offer_name,
     offer.offer_subcategoryId,

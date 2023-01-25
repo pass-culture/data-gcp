@@ -1,7 +1,7 @@
 import typer
 from loguru import logger
 
-from tools.data_collect_queries import get_data
+from utils.data_collect_queries import get_data_from_bigquery
 from utils import STORAGE_PATH, ENV_SHORT_NAME
 
 
@@ -30,7 +30,7 @@ def main(
         "raw_data", help="Name of the output csv file where to write collected data"
     ),
 ) -> None:
-    dataset = get_data(
+    dataset = get_data_from_bigquery(
         dataset,
         table_name,
         max_limit=limit_filter,

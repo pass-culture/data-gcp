@@ -1,32 +1,16 @@
-from datetime import datetime
-
-import mlflow.tensorflow
 import pandas as pd
-import tensorflow as tf
-import typer
 from loguru import logger
+import tensorflow as tf
 
-from metrics import (
+from utils.metrics import (
     compute_metrics,
     get_actual_and_predicted,
     compute_diversification_score,
 )
-from models.v1.match_model import MatchModel
-from tools.data_collect_queries import get_data
-from utils import (
-    get_secret,
-    connect_remote_mlflow,
-    STORAGE_PATH,
-    ENV_SHORT_NAME,
-    BIGQUERY_CLEAN_DATASET,
-    MODELS_RESULTS_TABLE_NAME,
-    GCP_PROJECT_ID,
-    SERVING_CONTAINER,
+from utils.constants import (
     RECOMMENDATION_NUMBER,
-    MODEL_NAME,
     NUMBER_OF_PRESELECTED_OFFERS,
     EVALUATION_USER_NUMBER,
-    EXPERIMENT_NAME,
     EVALUATION_USER_NUMBER_DIVERSIFICATION,
 )
 
@@ -34,18 +18,12 @@ k_list = [RECOMMENDATION_NUMBER, NUMBER_OF_PRESELECTED_OFFERS]
 
 
 def evaluate(
-    client_id,
-    model,
+    model: tf.keras.models.Model,
     storage_path: str,
-    event_day_number: str,
-    training_dataset_name: str = "positive_data_train",
-    test_dataset_name: str = "positive_data_test",
+    training_dataset_name: str = "recommendation_training_data",
+    test_dataset_name: str = "recommendation_test_data",
 ):
-    raw_data = get_data(
-        dataset=f"raw_{ENV_SHORT_NAME}",
-        table_name="training_data_bookings",
-        event_day_number=event_day_number,
-    )
+    raw_data = pd.read_csv(f"{storage_path}/bookings.csv").astype({"count": int})
 
     training_item_ids = pd.read_csv(f"{storage_path}/{training_dataset_name}.csv")[
         "item_id"
@@ -145,69 +123,5 @@ def evaluate(
                     ]["personalization_at_k_panachage"],
                 }
             )
-
-    connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
-    mlflow.log_metrics(metrics)
-    print("------- EVALUATE DONE -------")
     return metrics
 
-
-def run(
-    experiment_name: str = typer.Option(
-        EXPERIMENT_NAME, help="Name of the experiment on MLflow"
-    ),
-    model_name: str = typer.Option(MODEL_NAME, help="Name of the model to evaluate"),
-    event_day_number: str = typer.Option(
-        None,
-        help="Number of days to filter when querying the data. If set to None, no filter is applied",
-    ),
-    training_dataset_name: str = typer.Option(
-        "positive_data_train", help="Name of the training dataset in storage"
-    ),
-    test_dataset_name: str = typer.Option(
-        "positive_data_test", help="Name of the test dataset in storage"
-    ),
-):
-    logger.info("-------EVALUATE START------- ")
-    client_id = get_secret("mlflow_client_id")
-    connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
-    experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
-    run_id = mlflow.list_run_infos(experiment_id)[0].run_id
-
-    with mlflow.start_run(run_id=run_id) as run:
-        artifact_uri = mlflow.get_artifact_uri("model")
-        loaded_model = tf.keras.models.load_model(
-            artifact_uri,
-            custom_objects={"MatchModel": MatchModel},
-            compile=False,
-        )
-        log_results = {
-            "execution_date": datetime.now().isoformat(),
-            "experiment_name": experiment_name,
-            "model_name": model_name,
-            "model_type": "tensorflow",
-            "run_id": run_id,
-            "run_start_time": run.info.start_time,
-            "run_end_time": run.info.start_time,
-            "artifact_uri": artifact_uri,
-            "serving_container": SERVING_CONTAINER,
-        }
-
-        pd.DataFrame.from_dict([log_results], orient="columns").to_gbq(
-            f"""{BIGQUERY_CLEAN_DATASET}.{MODELS_RESULTS_TABLE_NAME}""",
-            project_id=f"{GCP_PROJECT_ID}",
-            if_exists="append",
-        )
-
-        evaluate(
-            client_id,
-            loaded_model,
-            STORAGE_PATH,
-            event_day_number,
-            training_dataset_name,
-            test_dataset_name,
-        )
-
-
-if __name__ == "__main__":
-    typer.run(run)

@@ -7,17 +7,13 @@ import tensorflow as tf
 from loguru import logger
 import pandas as pd
 
-from models.match_model import TwoTowersMatchModel
-from models.two_towers_model import TwoTowersModel
-from tools.constants import (
-    CONFIG_FEATURES_PATH,
-    ENV_SHORT_NAME,
-    TRAIN_DIR,
-    STORAGE_PATH,
-    MLFLOW_RUN_ID_FILENAME,
-)
-from tools.callbacks import MLFlowLogging
-from tools.utils import get_secret, connect_remote_mlflow
+from triplet_model.utils.callbacks import MLFlowLogging
+from two_towers_model.models.match_model import MatchModel
+from two_towers_model.models.two_towers_model import TwoTowersModel
+from utils.constants import ENV_SHORT_NAME, BASE_DIR, STORAGE_PATH, TRAIN_DIR
+from two_towers_model.utils.constants import MLFLOW_RUN_ID_FILENAME, CONFIGS_PATH
+from utils.mlflow_tools import connect_remote_mlflow
+from utils.secrets_utils import get_secret
 
 N_EPOCHS = 100
 MIN_DELTA = 0.001  # Minimum change in the accuracy before a callback is called
@@ -55,7 +51,7 @@ def train(
     tf.random.set_seed(seed)
 
     with open(
-        CONFIG_FEATURES_PATH + f"/{config_file_name}.json", mode="r", encoding="utf-8"
+        f"{BASE_DIR}/{CONFIGS_PATH}/{config_file_name}.json", mode="r", encoding="utf-8"
     ) as config_file:
         features = json.load(config_file)
         user_features_config, item_features_config = (
@@ -185,7 +181,7 @@ def train(
         item_embeddings = two_tower_model.item_model.predict(item_dataset)
 
         logger.info("Building and saving the MatchModel")
-        match_model = TwoTowersMatchModel(
+        match_model = MatchModel(
             user_ids=train_user_data["user_id"].unique(),
             item_ids=train_item_data["item_id"].unique(),
             embedding_size=embedding_size,

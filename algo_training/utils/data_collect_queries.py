@@ -4,7 +4,7 @@ import pandas as pd
 from utils import GCP_PROJECT_ID
 
 
-def get_data(
+def get_data_from_bigquery(
     dataset: str,
     table_name: str,
     max_limit: int = None,
@@ -27,18 +27,6 @@ def get_data(
         limit_filter = f"LIMIT {max_limit}"
     query = f"""
         SELECT * FROM `{GCP_PROJECT_ID}.{dataset}.{table_name}` {query_filter} {limit_filter}
-    """
-    data = pd.read_gbq(query)
-    return data
-
-
-def get_column_data(
-    dataset: str,
-    table_name: str,
-    column_name: str,
-):
-    query = f"""
-        SELECT DISTINCT {column_name} FROM `{GCP_PROJECT_ID}.{dataset}.{table_name}`
     """
     data = pd.read_gbq(query)
     return data

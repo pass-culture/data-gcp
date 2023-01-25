@@ -4,7 +4,7 @@ import recmetrics
 from loguru import logger
 from tqdm import tqdm
 
-from tools.diversification import order_offers_by_score_and_diversify_categories
+from utils.diversification import order_offers_by_score_and_diversify_categories
 from utils import SHUFFLE_RECOMMENDATION
 
 

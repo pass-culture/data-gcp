@@ -5,7 +5,7 @@ from tensorflow.keras.layers import Embedding, Dot
 from tensorflow.keras.layers.experimental.preprocessing import StringLookup
 
 
-class TwoTowersMatchModel(tf.keras.models.Model):
+class MatchModel(tf.keras.models.Model):
     def __init__(
         self,
         user_ids: list,

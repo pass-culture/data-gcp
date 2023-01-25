@@ -1,6 +1,6 @@
 import pandas as pd
 import pytest
-from tools.linkage import get_linked_offers_from_graph
+from utils.linkage import get_linked_offers_from_graph
 
 
 class TestPostprocess:

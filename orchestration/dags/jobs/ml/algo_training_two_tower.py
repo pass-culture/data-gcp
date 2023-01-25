@@ -36,10 +36,10 @@ DATE = "{{ ts_nodash }}"
 
 # Environment variables to export before running commands
 dag_config = {
-    "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/algo_training_{ENV_SHORT_NAME}/algo_training_v2_two_tower_{DATE}",
-    "BASE_DIR": f"data-gcp/algo_training/two_towers_training",
+    "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/algo_training_{ENV_SHORT_NAME}/algo_training_two_tower_{DATE}",
+    "BASE_DIR": f"data-gcp/algo_training",
     "TRAIN_DIR": "/home/airflow/train",
-    "EXPERIMENT_NAME": f"algo_training_v2_two_tower.1_{ENV_SHORT_NAME}",
+    "EXPERIMENT_NAME": f"algo_training_two_tower_.1_{ENV_SHORT_NAME}",
 }
 
 # Params
@@ -52,7 +52,7 @@ train_params = {
     "event_day_number": 120 if ENV_SHORT_NAME == "prod" else 20,
 }
 gce_params = {
-    "instance_name": f"algo-training-v2-two-tower-{ENV_SHORT_NAME}",
+    "instance_name": f"algo-training-two-tower-{ENV_SHORT_NAME}",
     "instance_type": {
         "dev": "n1-standard-2",
         "stg": "n1-standard-8",
@@ -68,7 +68,7 @@ default_args = {
 }
 
 with DAG(
-    "algo_training_v2_two_tower",
+    "algo_training_two_tower_",
     default_args=default_args,
     description="Custom training job",
     schedule_interval=None,
@@ -141,6 +141,7 @@ with DAG(
             dag=dag,
         )
 
+    # The params.input_type tells the .sql files which
     for dataset in ["training", "validation", "test"]:
         task = BigQueryExecuteQueryOperator(
             task_id=f"import_recommendation_{dataset}",
@@ -190,14 +191,17 @@ with DAG(
         )
         store_data[split] = task
 
-    preprocess = SSHGCEOperator(
-        task_id="preprocess",
-        instance_name="{{ params.instance_name }}",
-        base_dir=dag_config["BASE_DIR"],
-        environment=dag_config,
-        command="python preprocess.py --config-file-name {{ params.config_file_name }}",
-        dag=dag,
-    )
+    preprocess_data = {}
+    for split in ["training", "validation", "test"]:
+        preprocess_data[split] = SSHGCEOperator(
+            task_id="preprocess",
+            instance_name="{{ params.instance_name }}",
+            base_dir=dag_config["BASE_DIR"],
+            environment=dag_config,
+            command="python preprocess.py --config-file-name {{ params.config_file_name }} "
+                    f"dataframe-file-name recommendation_{split}_data",
+            dag=dag,
+        )
 
     training = SSHGCEOperator(
         task_id="training",
@@ -255,14 +259,14 @@ with DAG(
         >> [import_tables["recommendation_user_features"], import_tables["recommendation_user_features"]]
         >> import_tables["training_data_enriched_clicks"]
         >> import_tables["training"]
-        >> [import_tables["evaluation"], import_tables["test"]]
+        >> [import_tables["validation"], import_tables["test"]]
         >> gce_instance_start
         >> fetch_code
         >> install_dependencies
         >> store_data["training"]
         >> store_data["validation"]
         >> store_data["test"]
-        >> preprocess
+        >> [preprocess_data["train"], preprocess_data["validation"], preprocess_data["test"]]
         >> training
         >> store_data["bookings"]
         >> evaluate

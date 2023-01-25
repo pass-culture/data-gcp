@@ -175,9 +175,7 @@ with DAG(
         environment=dag_config,
         command="python evaluate.py "
         f"--experiment-name {dag_config['EXPERIMENT_NAME']} "
-        "--event-day-number {{ params.event_day_number }} "
-        "--training-dataset-name recommendation_training_data "
-        "--test-dataset-name recommendation_test_data",
+        "--event-day-number {{ params.event_day_number }} ",
         dag=dag,
     )
 

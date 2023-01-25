@@ -1,0 +1,8 @@
+{
+  "user_embedding_layers": {
+      "user_id": {"type": "string", "embedding_size": 64}
+  },
+  "item_embedding_layers": {
+      "item_id": {"type": "string", "embedding_size": 64}
+  }
+}

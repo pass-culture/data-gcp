@@ -1,21 +1,21 @@
-from datetime import datetime
+import os
 
-import mlflow.tensorflow
+import typer
 import pandas as pd
 import tensorflow as tf
-import typer
-from loguru import logger
+import mlflow.tensorflow
 
-from metrics import (
-    compute_metrics,
-    get_actual_and_predicted,
-    compute_diversification_score,
-)
+from loguru import logger
+from datetime import datetime
+
 from models.match_model import TwoTowersMatchModel
-from tools.data_collect_queries import get_data
-from utils import (
+from tools.data_collect_tools import get_data
+from tools.utils import (
     get_secret,
     connect_remote_mlflow,
+    save_pca_representation,
+)
+from tools.constants import (
     STORAGE_PATH,
     ENV_SHORT_NAME,
     BIGQUERY_CLEAN_DATASET,
@@ -27,7 +27,13 @@ from utils import (
     NUMBER_OF_PRESELECTED_OFFERS,
     EVALUATION_USER_NUMBER,
     EXPERIMENT_NAME,
+    TRAIN_DIR,
     EVALUATION_USER_NUMBER_DIVERSIFICATION,
+)
+from tools.metrics import (
+    compute_metrics,
+    get_actual_and_predicted,
+    compute_diversification_score,
 )
 
 k_list = [RECOMMENDATION_NUMBER, NUMBER_OF_PRESELECTED_OFFERS]
@@ -37,14 +43,11 @@ def evaluate(
     client_id,
     model,
     storage_path: str,
-    event_day_number: str,
     training_dataset_name: str = "positive_data_train",
     test_dataset_name: str = "positive_data_test",
 ):
-    raw_data = get_data(
-        dataset=f"raw_{ENV_SHORT_NAME}",
-        table_name="training_data_bookings",
-        event_day_number=event_day_number,
+    raw_data = pd.read_csv(f"{storage_path}/bookings_data.csv").astype(
+        {"user_id": "str", "item_id": "str", "count": "int"}
     )
 
     training_item_ids = pd.read_csv(f"{storage_path}/{training_dataset_name}.csv")[
@@ -66,6 +69,10 @@ def evaluate(
     users_to_test = positive_data_test["user_id"].unique()[
         : min(EVALUATION_USER_NUMBER, positive_data_test["user_id"].nunique())
     ]
+    positive_data_test = positive_data_test.loc[
+        lambda df: df["user_id"].isin(users_to_test)
+    ]
+
     data_model_dict = {
         "data": {
             "raw": raw_data,
@@ -176,6 +183,8 @@ def run(
 
     with mlflow.start_run(run_id=run_id) as run:
         artifact_uri = mlflow.get_artifact_uri("model")
+        export_path = f"{TRAIN_DIR}/{ENV_SHORT_NAME}/{run_id}/"
+
         loaded_model = tf.keras.models.load_model(
             artifact_uri,
             custom_objects={"MatchModel": TwoTowersMatchModel},
@@ -203,7 +212,6 @@ def run(
             client_id,
             loaded_model,
             STORAGE_PATH,
-            event_day_number,
             training_dataset_name,
             test_dataset_name,
         )

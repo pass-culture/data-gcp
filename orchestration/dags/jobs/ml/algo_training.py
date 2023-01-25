@@ -47,7 +47,7 @@ train_params = {
     "event_day_number": 120 if ENV_SHORT_NAME == "prod" else 20,
 }
 gce_params = {
-    "instance_name": f"algo-training-clicks-v2-{ENV_SHORT_NAME}",
+    "instance_name": f"algo-training-{ENV_SHORT_NAME}",
     "instance_type": {
         "dev": "n1-standard-2",
         "stg": "n1-standard-8",
@@ -66,7 +66,7 @@ schedule_dict = {"prod": "0 12 * * 5", "dev": "0 0 * * *", "stg": "0 12 * * 3"}
 
 
 with DAG(
-    "algo_training_clicks_v2",
+    "algo_training",
     default_args=default_args,
     description="Custom training job",
     schedule_interval=get_airflow_schedule(schedule_dict[ENV_SHORT_NAME]),
@@ -187,7 +187,8 @@ with DAG(
         base_dir=f"{dag_config['BASE_DIR']}/similar_offers",
         environment=dag_config,
         command="python main.py "
-        "--experiment-name similar_offers_{{ params.input_type }}" + f"_v2.1_{ENV_SHORT_NAME} "
+        "--experiment-name similar_offers_{{ params.input_type }}"
+        + f"_v2.1_{ENV_SHORT_NAME} "
         "--model-name v2.1",
         dag=dag,
     )

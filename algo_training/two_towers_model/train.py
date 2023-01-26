@@ -7,11 +7,12 @@ import tensorflow as tf
 from loguru import logger
 import pandas as pd
 
-from triplet_model.utils.callbacks import MLFlowLogging
+from two_towers_model.utils.callbacks import MLFlowLogging
 from two_towers_model.models.match_model import MatchModel
 from two_towers_model.models.two_towers_model import TwoTowersModel
-from utils.constants import ENV_SHORT_NAME, MODEL_DIR, STORAGE_PATH, TRAIN_DIR
 from two_towers_model.utils.constants import MLFLOW_RUN_ID_FILENAME, CONFIGS_PATH
+
+from utils.constants import ENV_SHORT_NAME, MODEL_DIR, STORAGE_PATH, TRAIN_DIR
 from utils.mlflow_tools import connect_remote_mlflow
 from utils.secrets_utils import get_secret
 

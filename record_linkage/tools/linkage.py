@@ -3,7 +3,7 @@ import uuid
 
 import networkx as nx
 import recordlinkage
-from utils.logging_tools import log_duration
+from tools.logging_tools import log_duration
 
 
 def get_linked_offers(

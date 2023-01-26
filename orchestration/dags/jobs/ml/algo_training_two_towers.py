@@ -36,10 +36,10 @@ DATE = "{{ ts_nodash }}"
 
 # Environment variables to export before running commands
 dag_config = {
-    "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/algo_training_{ENV_SHORT_NAME}/algo_training_two_tower_{DATE}",
+    "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/algo_training_{ENV_SHORT_NAME}/algo_training_two_towers_{DATE}",
     "BASE_DIR": f"data-gcp/algo_training",
     "TRAIN_DIR": "/home/airflow/train",
-    "EXPERIMENT_NAME": f"algo_training_two_tower_.1_{ENV_SHORT_NAME}",
+    "EXPERIMENT_NAME": f"algo_training_two_towers_.1_{ENV_SHORT_NAME}",
 }
 
 # Params
@@ -52,7 +52,7 @@ train_params = {
     "event_day_number": 120 if ENV_SHORT_NAME == "prod" else 20,
 }
 gce_params = {
-    "instance_name": f"algo-training-two-tower-{ENV_SHORT_NAME}",
+    "instance_name": f"algo-training-two-towers-{ENV_SHORT_NAME}",
     "instance_type": {
         "dev": "n1-standard-2",
         "stg": "n1-standard-8",
@@ -68,7 +68,7 @@ default_args = {
 }
 
 with DAG(
-    "algo_training_two_tower_",
+    "algo_training_two_towers",
     default_args=default_args,
     description="Custom training job",
     schedule_interval=None,
@@ -194,7 +194,7 @@ with DAG(
     preprocess_data = {}
     for split in ["training", "validation", "test"]:
         preprocess_data[split] = SSHGCEOperator(
-            task_id="preprocess",
+            task_id=f"preprocess_{split}",
             instance_name="{{ params.instance_name }}",
             base_dir=dag_config["BASE_DIR"],
             environment=dag_config,
@@ -258,7 +258,7 @@ with DAG(
         start
         >> [
             import_tables["recommendation_user_features"],
-            import_tables["recommendation_user_features"],
+            import_tables["recommendation_item_features"],
         ]
         >> import_tables["training_data_enriched_clicks"]
         >> import_tables["training"]
@@ -266,16 +266,18 @@ with DAG(
         >> gce_instance_start
         >> fetch_code
         >> install_dependencies
-        >> store_data["training"]
-        >> store_data["validation"]
-        >> store_data["test"]
         >> [
-            preprocess_data["train"],
+            store_data["training"],
+            store_data["validation"],
+            store_data["test"],
+        ]
+        >> store_data["bookings"]
+        >> [
+            preprocess_data["training"],
             preprocess_data["validation"],
             preprocess_data["test"],
         ]
         >> training
-        >> store_data["bookings"]
         >> evaluate
         >> gce_instance_stop
         >> send_slack_notif_success

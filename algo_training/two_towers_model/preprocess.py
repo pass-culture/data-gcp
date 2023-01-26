@@ -47,7 +47,8 @@ def preprocess(
     )
 
     clean_data = (
-        raw_data.fillna({col: "none" for col in string_features})
+        raw_data[integer_features + string_features]
+        .fillna({col: "none" for col in string_features})
         .fillna({col: 0 for col in integer_features})
         .astype({col: "int" for col in integer_features})
     )

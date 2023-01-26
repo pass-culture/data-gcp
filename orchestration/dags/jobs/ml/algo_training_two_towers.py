@@ -142,7 +142,7 @@ with DAG(
             dag=dag,
         )
 
-    # The params.input_type tells the .sql files which
+    # The params.input_type tells the .sql files which table to take as input
     for dataset in ["training", "validation", "test"]:
         task = BigQueryExecuteQueryOperator(
             task_id=f"import_tmp_{dataset}_table",

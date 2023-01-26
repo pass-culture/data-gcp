@@ -104,6 +104,7 @@ with DAG(
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)
 
+    # The params.input_type tells the .sql files which table to take as input
     import_recommendation_data = {}
     for dataset in ["training", "validation", "test"]:
         task = BigQueryExecuteQueryOperator(

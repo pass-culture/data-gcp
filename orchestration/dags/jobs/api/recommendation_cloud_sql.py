@@ -32,19 +32,21 @@ from common.config import (
     DAG_FOLDER,
     QPI_TABLE,
     RECOMMENDATION_SQL_INSTANCE,
+    RECOMMENDATION_SQL_SUFFIX,
 )
 from dependencies.import_recommendation_cloudsql.monitor_tables import monitoring_tables
 from common.alerts import task_fail_slack_alert
 from common import macros
 from common.utils import get_airflow_schedule
-
-
+GCP_REGION='europe-west9'
 database_url = access_secret_data(
-    GCP_PROJECT_ID, f"{RECOMMENDATION_SQL_INSTANCE}-database-url", default=""
+    GCP_PROJECT_ID, f"{RECOMMENDATION_SQL_INSTANCE}_database_url", default=""
 )
+RECOMMENDATION_SQL_NAME=f"{RECOMMENDATION_SQL_INSTANCE}-{RECOMMENDATION_SQL_SUFFIX}"
+
 os.environ["AIRFLOW_CONN_PROXY_POSTGRES_TCP"] = (
     database_url.replace("postgresql://", "gcpcloudsql://")
-    + f"?database_type=postgres&project_id={GCP_PROJECT_ID}&location={GCP_REGION}&instance={RECOMMENDATION_SQL_INSTANCE}&use_proxy=True&sql_proxy_use_tcp=True"
+    + f"?database_type=postgres&project_id={GCP_PROJECT_ID}&location={GCP_REGION}&instance={RECOMMENDATION_SQL_NAME}&use_proxy=True&sql_proxy_use_tcp=True"
 )
 
 
@@ -230,7 +232,7 @@ with DAG(
             task_id=f"cloud_sql_restore_table_{table_name}",
             project_id=GCP_PROJECT_ID,
             body=import_body,
-            instance=RECOMMENDATION_SQL_INSTANCE,
+            instance= RECOMMENDATION_SQL_NAME,
         )
         return sql_restore_task
 

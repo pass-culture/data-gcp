@@ -28,10 +28,10 @@ def main(
     ),
     model_name: str = typer.Option(MODEL_NAME, help="Name of the model to evaluate"),
     training_dataset_name: str = typer.Option(
-        "positive_data_train", help="Name of the training dataset in storage"
+        "recommendation_train_data", help="Name of the training dataset in storage"
     ),
     test_dataset_name: str = typer.Option(
-        "positive_data_test", help="Name of the test dataset in storage"
+        "recommendation_test_data", help="Name of the test dataset in storage"
     ),
 ):
     logger.info("-------EVALUATE START------- ")

@@ -18,7 +18,7 @@ from common.config import (
     SLACK_CONN_ID,
     SLACK_CONN_PASSWORD,
     MLFLOW_URL,
-    BIGQUERY_TMP_DATASET,
+    BIGQUERY_TMP_DATASET, BIGQUERY_RAW_DATASET,
 )
 from common.operators.gce import (
     StartGCEOperator,
@@ -35,6 +35,7 @@ DATE = "{{ ts_nodash }}"
 dag_config = {
     "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/algo_training_{ENV_SHORT_NAME}/algo_training_clicks_v2.1_{DATE}",
     "BASE_DIR": "data-gcp/algo_training",
+    "MODEL_DIR": "triplet_model",
     "TRAIN_DIR": "/home/airflow/train",
     "EXPERIMENT_NAME": f"algo_training_clicks_v2.1_{ENV_SHORT_NAME}",
 }
@@ -138,7 +139,7 @@ with DAG(
         dag=dag,
     )
 
-    store_recommendation_data = {}
+    store_data = {}
     for split in ["training", "validation", "test"]:
         task = SSHGCEOperator(
             task_id=f"store_recommendation_{split}",
@@ -150,14 +151,25 @@ with DAG(
             f"--output-name recommendation_{split}_data",
             dag=dag,
         )
-        store_recommendation_data[split] = task
+        store_data[split] = task
 
-    training = SSHGCEOperator(
-        task_id="training",
+    store_data["bookings"] = SSHGCEOperator(
+        task_id=f"get_bookings",
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
-        command=f"python train_v2.py "
+        command=f"python data_collect.py --dataset {BIGQUERY_RAW_DATASET} "
+        f"--table-name training_data_bookings "
+        f"--output-name bookings",
+        dag=dag,
+    )
+
+    train = SSHGCEOperator(
+        task_id="train",
+        instance_name="{{ params.instance_name }}",
+        base_dir=dag_config["BASE_DIR"],
+        environment=dag_config,
+        command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/train.py "
         f"--experiment-name {dag_config['EXPERIMENT_NAME']} "
         "--batch-size {{ params.batch_size }} "
         "--embedding-size {{ params.embedding_size }} "
@@ -173,9 +185,8 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
-        command="python evaluate.py "
-        f"--experiment-name {dag_config['EXPERIMENT_NAME']} "
-        "--event-day-number {{ params.event_day_number }} ",
+        command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/evaluate.py "
+        f"--experiment-name {dag_config['EXPERIMENT_NAME']} ",
         dag=dag,
     )
 
@@ -216,10 +227,11 @@ with DAG(
         >> gce_instance_start
         >> fetch_code
         >> install_dependencies
-        >> store_recommendation_data["training"]
-        >> store_recommendation_data["validation"]
-        >> store_recommendation_data["test"]
-        >> training
+        >> store_data["training"]
+        >> store_data["validation"]
+        >> store_data["test"]
+        >> train
+        >> store_data["bookings"]
         >> evaluate
         >> train_sim_offers
         >> gce_instance_stop

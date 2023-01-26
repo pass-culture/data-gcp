@@ -38,6 +38,7 @@ DATE = "{{ ts_nodash }}"
 dag_config = {
     "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/algo_training_{ENV_SHORT_NAME}/algo_training_two_towers_{DATE}",
     "BASE_DIR": f"data-gcp/algo_training",
+    "MODEL_DIR": "two_towers_model",
     "TRAIN_DIR": "/home/airflow/train",
     "EXPERIMENT_NAME": f"algo_training_two_towers_.1_{ENV_SHORT_NAME}",
 }
@@ -150,7 +151,7 @@ with DAG(
             ).as_posix(),
             write_disposition="WRITE_TRUNCATE",
             use_legacy_sql=False,
-            destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DATE}_recommendation_{dataset}_data_enriched_clicks",
+            destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DATE}_recommendation_{dataset}_data",
             dag=dag,
         )
         import_tables[dataset] = task
@@ -185,11 +186,22 @@ with DAG(
             base_dir=dag_config["BASE_DIR"],
             environment=dag_config,
             command=f"python data_collect.py --dataset {BIGQUERY_TMP_DATASET} "
-            f"--table-name {DATE}_recommendation_{split}_data_enriched_clicks "
+            f"--table-name {DATE}_recommendation_{split}_data "
             f"--output-name recommendation_{split}_data",
             dag=dag,
         )
         store_data[split] = task
+
+    store_data["bookings"] = SSHGCEOperator(
+        task_id=f"get_bookings",
+        instance_name="{{ params.instance_name }}",
+        base_dir=dag_config["BASE_DIR"],
+        environment=dag_config,
+        command=f"python data_collect.py --dataset {BIGQUERY_RAW_DATASET} "
+        f"--table-name training_data_bookings "
+        f"--output-name bookings",
+        dag=dag,
+    )
 
     preprocess_data = {}
     for split in ["training", "validation", "test"]:
@@ -198,17 +210,18 @@ with DAG(
             instance_name="{{ params.instance_name }}",
             base_dir=dag_config["BASE_DIR"],
             environment=dag_config,
-            command="python preprocess.py --config-file-name {{ params.config_file_name }} "
-            f"dataframe-file-name recommendation_{split}_data",
+            command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/preprocess.py "
+            "--config-file-name {{ params.config_file_name }} "
+            f"--dataframe-file-name recommendation_{split}_data",
             dag=dag,
         )
 
-    training = SSHGCEOperator(
-        task_id="training",
+    train = SSHGCEOperator(
+        task_id="train",
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
-        command=f"python train.py "
+        command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/train.py "
         "--config-file-name {{ params.config_file_name }} "
         f"--experiment-name {dag_config['EXPERIMENT_NAME']} "
         "--batch-size {{ params.batch_size }} "
@@ -219,23 +232,13 @@ with DAG(
         dag=dag,
     )
 
-    store_data["bookings"] = SSHGCEOperator(
-        task_id=f"get_bookings",
-        instance_name="{{ params.instance_name }}",
-        base_dir=dag_config["BASE_DIR"],
-        environment=dag_config,
-        command=f"python data_collect.py --dataset {BIGQUERY_TMP_DATASET} "
-        f"--table-name {DATE}_recommendation_{split}_data_bookings "
-        f"--output-name recommendation_{split}_data",
-        dag=dag,
-    )
-
     evaluate = SSHGCEOperator(
         task_id="evaluate",
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
-        command=f"python evaluate.py",
+        command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/evaluate.py "
+        f"--experiment-name {dag_config['EXPERIMENT_NAME']} ",
         dag=dag,
     )
 
@@ -266,18 +269,14 @@ with DAG(
         >> gce_instance_start
         >> fetch_code
         >> install_dependencies
-        >> [
-            store_data["training"],
-            store_data["validation"],
-            store_data["test"],
-        ]
+        >> store_data["training"]
+        >> preprocess_data["training"]
+        >> store_data["validation"]
+        >> preprocess_data["validation"]
+        >> train
+        >> store_data["test"]
+        >> preprocess_data["test"]
         >> store_data["bookings"]
-        >> [
-            preprocess_data["training"],
-            preprocess_data["validation"],
-            preprocess_data["test"],
-        ]
-        >> training
         >> evaluate
         >> gce_instance_stop
         >> send_slack_notif_success

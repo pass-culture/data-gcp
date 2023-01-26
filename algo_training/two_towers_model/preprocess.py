@@ -2,7 +2,7 @@ import json
 import typer
 import pandas as pd
 
-from utils.constants import STORAGE_PATH, BASE_DIR
+from utils.constants import STORAGE_PATH, MODEL_DIR
 from two_towers_model.utils.constants import CONFIGS_PATH
 
 
@@ -31,7 +31,7 @@ def preprocess(
     raw_data = pd.read_csv(f"{STORAGE_PATH}/{dataframe_file_name}.csv")
 
     with open(
-        f"{BASE_DIR}/{CONFIGS_PATH}/{config_file_name}.json", mode="r", encoding="utf-8"
+        f"{MODEL_DIR}/{CONFIGS_PATH}/{config_file_name}.json", mode="r", encoding="utf-8"
     ) as config_file:
         features = json.load(config_file)
 

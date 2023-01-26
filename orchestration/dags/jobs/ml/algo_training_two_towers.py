@@ -187,7 +187,7 @@ with DAG(
             environment=dag_config,
             command=f"python data_collect.py --dataset {BIGQUERY_TMP_DATASET} "
             f"--table-name {DATE}_recommendation_{split}_data "
-            f"--output-name recommendation_{split}_data",
+            f"--output-name raw_recommendation_{split}_data",
             dag=dag,
         )
         store_data[split] = task
@@ -212,7 +212,8 @@ with DAG(
             environment=dag_config,
             command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/preprocess.py "
             "--config-file-name {{ params.config_file_name }} "
-            f"--dataframe-file-name recommendation_{split}_data",
+            f"--input-dataframe-file-name raw_recommendation_{split}_data "
+            f"--output-dataframe-file-name recommendation_{split}_data",
             dag=dag,
         )
 
@@ -237,7 +238,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
-        command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/evaluate.py "
+        command=f"PYTHONPATH=. python evaluate.py "
         f"--experiment-name {dag_config['EXPERIMENT_NAME']} ",
         dag=dag,
     )
@@ -273,10 +274,10 @@ with DAG(
         >> preprocess_data["training"]
         >> store_data["validation"]
         >> preprocess_data["validation"]
-        >> train
         >> store_data["test"]
         >> preprocess_data["test"]
         >> store_data["bookings"]
+        >> train
         >> evaluate
         >> gce_instance_stop
         >> send_slack_notif_success

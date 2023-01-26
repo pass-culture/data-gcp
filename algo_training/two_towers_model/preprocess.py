@@ -17,9 +17,13 @@ def preprocess(
         ...,
         help="Name of the config file containing feature informations",
     ),
-    dataframe_file_name: str = typer.Option(
+    input_dataframe_file_name: str = typer.Option(
         ...,
         help="Name of the dataframe we want to clean",
+    ),
+    output_dataframe_file_name: str = typer.Option(
+        ...,
+        help="Name of the cleaned dataframe",
     ),
 ):
     """
@@ -28,7 +32,7 @@ def preprocess(
         - Fill string null values with "none"
         - Convert numerical columns to int
     """
-    raw_data = pd.read_csv(f"{STORAGE_PATH}/{dataframe_file_name}.csv")
+    raw_data = pd.read_csv(f"{STORAGE_PATH}/{input_dataframe_file_name}.csv")
 
     with open(
         f"{MODEL_DIR}/{CONFIGS_PATH}/{config_file_name}.json",
@@ -55,7 +59,7 @@ def preprocess(
         .astype({col: "int" for col in integer_features})
     )
 
-    clean_data.to_csv(f"{STORAGE_PATH}/{dataframe_file_name}.csv", index=False)
+    clean_data.to_csv(f"{STORAGE_PATH}/{output_dataframe_file_name}.csv", index=False)
 
 
 if __name__ == "__main__":

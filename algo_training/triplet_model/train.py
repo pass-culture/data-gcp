@@ -9,7 +9,8 @@ from triplet_model.models.triplet_model import TripletModel
 from triplet_model.utils.callbacks import MatchModelCheckpoint, MLFlowLogging
 from triplet_model.utils.dataset_utils import load_triplets_dataset
 from triplet_model.utils.model_utils import predict, identity_loss
-from utils.constants import STORAGE_PATH, ENV_SHORT_NAME, TRAIN_DIR
+from two_towers_model.utils.constants import MLFLOW_RUN_ID_FILENAME
+from utils.constants import STORAGE_PATH, ENV_SHORT_NAME, TRAIN_DIR, MODEL_DIR
 from utils.mlflow_tools import connect_remote_mlflow, get_mlflow_experiment
 from utils.secrets_utils import get_secret
 
@@ -78,6 +79,13 @@ def train(
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
     experiment = get_mlflow_experiment(experiment_name)
     with mlflow.start_run(experiment_id=experiment.experiment_id, run_name=run_name):
+        logger.info("Connected to MLFlow")
+
+        run_uuid = mlflow.active_run().info.run_uuid
+        # TODO: store the run_uuid in STORAGE_PATH (last try raised FileNotFoundError)
+        with open(f"{MODEL_DIR}/{MLFLOW_RUN_ID_FILENAME}.txt", mode="w") as file:
+            file.write(run_uuid)
+
         # used by sim_offers model
         export_path = f"{TRAIN_DIR}/{ENV_SHORT_NAME}/"
 

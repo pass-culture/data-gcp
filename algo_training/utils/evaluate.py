@@ -23,7 +23,9 @@ def evaluate(
     training_dataset_name: str = "recommendation_training_data",
     test_dataset_name: str = "recommendation_test_data",
 ):
-    raw_data = pd.read_csv(f"{storage_path}/bookings.csv").astype({"count": int})
+    raw_data = pd.read_csv(f"{storage_path}/bookings.csv").astype(
+        {"user_id": str, "item_id": str, "count": int}
+    )
 
     training_item_ids = pd.read_csv(f"{storage_path}/{training_dataset_name}.csv")[
         "item_id"

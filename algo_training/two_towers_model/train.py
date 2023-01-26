@@ -120,7 +120,7 @@ def train(
 
         run_uuid = mlflow.active_run().info.run_uuid
         # TODO: store the run_uuid in STORAGE_PATH (last try raised FileNotFoundError)
-        with open(f"{MLFLOW_RUN_ID_FILENAME}.txt", mode="w") as file:
+        with open(f"{MODEL_DIR}/{MLFLOW_RUN_ID_FILENAME}.txt", mode="w") as file:
             file.write(run_uuid)
 
         export_path = f"{TRAIN_DIR}/{ENV_SHORT_NAME}/{run_uuid}/"

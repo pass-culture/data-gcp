@@ -6,7 +6,7 @@ import tensorflow as tf
 import typer
 from loguru import logger
 
-from two_towers_model.models.match_model import MatchModel
+from two_towers_model.utils.constants import MLFLOW_RUN_ID_FILENAME
 from utils.constants import (
     STORAGE_PATH,
     ENV_SHORT_NAME,
@@ -16,6 +16,7 @@ from utils.constants import (
     SERVING_CONTAINER,
     MODEL_NAME,
     EXPERIMENT_NAME,
+    MODEL_DIR,
 )
 from utils.evaluate import evaluate
 from utils.mlflow_tools import connect_remote_mlflow
@@ -28,7 +29,7 @@ def main(
     ),
     model_name: str = typer.Option(MODEL_NAME, help="Name of the model to evaluate"),
     training_dataset_name: str = typer.Option(
-        "recommendation_train_data", help="Name of the training dataset in storage"
+        "recommendation_training_data", help="Name of the training dataset in storage"
     ),
     test_dataset_name: str = typer.Option(
         "recommendation_test_data", help="Name of the test dataset in storage"
@@ -38,13 +39,12 @@ def main(
     client_id = get_secret("mlflow_client_id")
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
     experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
-    run_id = mlflow.list_run_infos(experiment_id)[0].run_id
-
-    with mlflow.start_run(run_id=run_id) as run:
+    with open(f"{MODEL_DIR}/{MLFLOW_RUN_ID_FILENAME}.txt", mode="r") as file:
+        run_id = file.read()
+    with mlflow.start_run(experiment_id=experiment_id, run_id=run_id) as run:
         artifact_uri = mlflow.get_artifact_uri("model")
         loaded_model = tf.keras.models.load_model(
             artifact_uri,
-            custom_objects={"MatchModel": MatchModel},
             compile=False,
         )
         log_results = {

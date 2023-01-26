@@ -187,7 +187,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
-        command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/evaluate.py "
+        command=f"PYTHONPATH=. python evaluate.py "
         f"--experiment-name {dag_config['EXPERIMENT_NAME']} ",
         dag=dag,
     )
@@ -231,9 +231,9 @@ with DAG(
         >> install_dependencies
         >> store_data["training"]
         >> store_data["validation"]
-        >> train
         >> store_data["test"]
         >> store_data["bookings"]
+        >> train
         >> evaluate
         >> train_sim_offers
         >> gce_instance_stop

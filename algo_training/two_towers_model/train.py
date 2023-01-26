@@ -46,12 +46,21 @@ def train(
         None,
         help="Seed to fix randomness in pipeline",
     ),
+    training_table_name: str = typer.Option(
+        "recommendation_training_data", help="BigQuery table containing training data"
+    ),
+    validation_table_name: str = typer.Option(
+        "recommendation_validation_data",
+        help="BigQuery table containing validation data",
+    ),
     run_name: str = typer.Option(None, help="Name of the MLflow run if set"),
 ):
     tf.random.set_seed(seed)
 
     with open(
-        f"{MODEL_DIR}/{CONFIGS_PATH}/{config_file_name}.json", mode="r", encoding="utf-8"
+        f"{MODEL_DIR}/{CONFIGS_PATH}/{config_file_name}.json",
+        mode="r",
+        encoding="utf-8",
     ) as config_file:
         features = json.load(config_file)
         user_features_config, item_features_config = (
@@ -66,10 +75,10 @@ def train(
     item_columns = list(item_features_config.keys())
 
     # We ensure that the datasets contains the features in the correct order (user_id, ..., item_id, ...)
-    train_data = pd.read_csv(f"{STORAGE_PATH}/positive_data_train.csv",)[
+    train_data = pd.read_csv(f"{STORAGE_PATH}/{training_table_name}.csv",)[
         user_columns + item_columns
     ].astype(str)
-    validation_data = pd.read_csv(f"{STORAGE_PATH}/positive_data_eval.csv",)[
+    validation_data = pd.read_csv(f"{STORAGE_PATH}/{validation_table_name}.csv",)[
         user_columns + item_columns
     ].astype(str)
 

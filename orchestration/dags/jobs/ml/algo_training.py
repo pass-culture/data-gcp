@@ -18,7 +18,8 @@ from common.config import (
     SLACK_CONN_ID,
     SLACK_CONN_PASSWORD,
     MLFLOW_URL,
-    BIGQUERY_TMP_DATASET, BIGQUERY_RAW_DATASET,
+    BIGQUERY_TMP_DATASET,
+    BIGQUERY_RAW_DATASET,
 )
 from common.operators.gce import (
     StartGCEOperator,
@@ -106,7 +107,7 @@ with DAG(
     import_recommendation_data = {}
     for dataset in ["training", "validation", "test"]:
         task = BigQueryExecuteQueryOperator(
-            task_id=f"import_recommendation_{dataset}",
+            task_id=f"import_tmp_{dataset}_table",
             sql=(
                 IMPORT_TRAINING_SQL_PATH / f"recommendation_{dataset}_data.sql"
             ).as_posix(),
@@ -142,7 +143,7 @@ with DAG(
     store_data = {}
     for split in ["training", "validation", "test"]:
         task = SSHGCEOperator(
-            task_id=f"store_recommendation_{split}",
+            task_id=f"store_{split}_data",
             instance_name="{{ params.instance_name }}",
             base_dir=dag_config["BASE_DIR"],
             environment=dag_config,
@@ -154,7 +155,7 @@ with DAG(
         store_data[split] = task
 
     store_data["bookings"] = SSHGCEOperator(
-        task_id=f"get_bookings",
+        task_id=f"store_bookings_data",
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
@@ -229,8 +230,8 @@ with DAG(
         >> install_dependencies
         >> store_data["training"]
         >> store_data["validation"]
-        >> store_data["test"]
         >> train
+        >> store_data["test"]
         >> store_data["bookings"]
         >> evaluate
         >> train_sim_offers

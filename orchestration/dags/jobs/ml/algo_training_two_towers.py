@@ -40,7 +40,7 @@ dag_config = {
     "BASE_DIR": f"data-gcp/algo_training",
     "MODEL_DIR": "two_towers_model",
     "TRAIN_DIR": "/home/airflow/train",
-    "EXPERIMENT_NAME": f"algo_training_two_towers_.1_{ENV_SHORT_NAME}",
+    "EXPERIMENT_NAME": f"algo_training_two_towers.1_{ENV_SHORT_NAME}",
 }
 
 # Params
@@ -145,7 +145,7 @@ with DAG(
     # The params.input_type tells the .sql files which
     for dataset in ["training", "validation", "test"]:
         task = BigQueryExecuteQueryOperator(
-            task_id=f"import_recommendation_{dataset}",
+            task_id=f"import_tmp_{dataset}_table",
             sql=(
                 IMPORT_TRAINING_SQL_PATH / f"recommendation_{dataset}_data.sql"
             ).as_posix(),
@@ -181,7 +181,7 @@ with DAG(
     store_data = {}
     for split in ["training", "validation", "test"]:
         task = SSHGCEOperator(
-            task_id=f"get_{split}",
+            task_id=f"store_{split}",
             instance_name="{{ params.instance_name }}",
             base_dir=dag_config["BASE_DIR"],
             environment=dag_config,
@@ -193,7 +193,7 @@ with DAG(
         store_data[split] = task
 
     store_data["bookings"] = SSHGCEOperator(
-        task_id=f"get_bookings",
+        task_id=f"store_bookings",
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,

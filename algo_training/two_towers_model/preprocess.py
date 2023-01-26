@@ -31,7 +31,9 @@ def preprocess(
     raw_data = pd.read_csv(f"{STORAGE_PATH}/{dataframe_file_name}.csv")
 
     with open(
-        f"{MODEL_DIR}/{CONFIGS_PATH}/{config_file_name}.json", mode="r", encoding="utf-8"
+        f"{MODEL_DIR}/{CONFIGS_PATH}/{config_file_name}.json",
+        mode="r",
+        encoding="utf-8",
     ) as config_file:
         features = json.load(config_file)
 

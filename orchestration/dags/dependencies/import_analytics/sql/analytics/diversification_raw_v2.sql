@@ -92,7 +92,7 @@ diversification_scores as (
   -- Lorsque ces 2 dates sont les mêmes, attribuer 1 point.
   , {% for feature in params.diversification_features %} 
   CASE
-        WHEN booking_creation_date = min(booking_creation_date) over(partition by user_id, '{{feature}}') AND booking_rank != 1
+        WHEN booking_creation_date = min(booking_creation_date) over(partition by user_id, {{feature}}) AND booking_rank != 1
         THEN 1
         ELSE 0
   END as {{feature}}_diversification

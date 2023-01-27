@@ -271,12 +271,12 @@ with DAG(
         >> fetch_code
         >> install_dependencies
         >> store_data["training"]
-        >> preprocess_data["training"]
         >> store_data["validation"]
-        >> preprocess_data["validation"]
         >> store_data["test"]
-        >> preprocess_data["test"]
         >> store_data["bookings"]
+        >> preprocess_data["training"]
+        >> preprocess_data["validation"]
+        >> preprocess_data["test"]
         >> train
         >> evaluate
         >> gce_instance_stop

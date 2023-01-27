@@ -183,19 +183,18 @@ with DAG(
 
     store_data = {}
     for split in ["training", "validation", "test"]:
-        task = BigQueryToGCSOperator(
+        store_data[split] = BigQueryToGCSOperator(
             task_id=f"store_{split}_data",
             source_project_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DATE}_recommendation_{split}_data",
             destination_cloud_storage_uris=f"{dag_config['STORAGE_PATH']}/raw_recommendation_{split}_data.csv",
             export_format="CSV",
             dag=dag,
         )
-        store_data[split] = task
 
     store_data["bookings"] = BigQueryToGCSOperator(
         task_id=f"store_bookings_data",
-        source_project_dataset_table=f"{BIGQUERY_RAW_DATASET}.training_data_bookings.csv",
-        destination_cloud_storage_uris=f"{dag_config['STORAGE_PATH']}/bookings",
+        source_project_dataset_table=f"{BIGQUERY_RAW_DATASET}.training_data_bookings",
+        destination_cloud_storage_uris=f"{dag_config['STORAGE_PATH']}/bookings.csv",
         export_format="CSV",
         dag=dag,
     )
@@ -267,7 +266,12 @@ with DAG(
         >> gce_instance_start
         >> fetch_code
         >> install_dependencies
-        >> [store_data["training"], store_data["validation"], store_data["test"], store_data["bookings"]]
+        >> [
+            store_data["training"],
+            store_data["validation"],
+            store_data["test"],
+            store_data["bookings"],
+        ]
         >> preprocess_data["training"]
         >> preprocess_data["validation"]
         >> preprocess_data["test"]

@@ -3,6 +3,9 @@ from datetime import timedelta
 
 from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
+from airflow.providers.google.cloud.transfers.bigquery_to_gcs import (
+    BigQueryToGCSOperator,
+)
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryExecuteQueryOperator,
 )
@@ -143,26 +146,19 @@ with DAG(
 
     store_data = {}
     for split in ["training", "validation", "test"]:
-        task = SSHGCEOperator(
+        store_data[split] = BigQueryToGCSOperator(
             task_id=f"store_{split}_data",
-            instance_name="{{ params.instance_name }}",
-            base_dir=dag_config["BASE_DIR"],
-            environment=dag_config,
-            command=f"python data_collect.py --dataset {BIGQUERY_TMP_DATASET} "
-            f"--table-name {DATE}_recommendation_{split}_data "
-            f"--output-name recommendation_{split}_data",
+            source_project_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DATE}_recommendation_{split}_data",
+            destination_cloud_storage_uris=f"{dag_config['STORAGE_PATH']}/recommendation_{split}_data.csv",
+            export_format="CSV",
             dag=dag,
         )
-        store_data[split] = task
 
-    store_data["bookings"] = SSHGCEOperator(
+    store_data["bookings"] = BigQueryToGCSOperator(
         task_id=f"store_bookings_data",
-        instance_name="{{ params.instance_name }}",
-        base_dir=dag_config["BASE_DIR"],
-        environment=dag_config,
-        command=f"python data_collect.py --dataset {BIGQUERY_RAW_DATASET} "
-        f"--table-name training_data_bookings "
-        f"--output-name bookings",
+        source_project_dataset_table=f"{BIGQUERY_RAW_DATASET}.training_data_bookings",
+        destination_cloud_storage_uris=f"{dag_config['STORAGE_PATH']}/bookings.csv",
+        export_format="CSV",
         dag=dag,
     )
 
@@ -229,10 +225,12 @@ with DAG(
         >> gce_instance_start
         >> fetch_code
         >> install_dependencies
-        >> store_data["training"]
-        >> store_data["validation"]
-        >> store_data["test"]
-        >> store_data["bookings"]
+        >> [
+            store_data["training"],
+            store_data["validation"],
+            store_data["test"],
+            store_data["bookings"],
+        ]
         >> train
         >> evaluate
         >> train_sim_offers

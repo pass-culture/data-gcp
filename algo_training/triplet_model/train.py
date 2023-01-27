@@ -9,8 +9,13 @@ from triplet_model.models.triplet_model import TripletModel
 from triplet_model.utils.callbacks import MatchModelCheckpoint, MLFlowLogging
 from triplet_model.utils.dataset_utils import load_triplets_dataset
 from triplet_model.utils.model_utils import predict, identity_loss
-from two_towers_model.utils.constants import MLFLOW_RUN_ID_FILENAME
-from utils.constants import STORAGE_PATH, ENV_SHORT_NAME, TRAIN_DIR, MODEL_DIR
+from utils.constants import (
+    STORAGE_PATH,
+    ENV_SHORT_NAME,
+    TRAIN_DIR,
+    MODEL_DIR,
+    MLFLOW_RUN_ID_FILENAME,
+)
 from utils.mlflow_tools import connect_remote_mlflow, get_mlflow_experiment
 from utils.secrets_utils import get_secret
 

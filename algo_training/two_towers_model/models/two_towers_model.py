@@ -2,7 +2,7 @@ import tensorflow as tf
 import tensorflow_recommenders as tfrs
 import pandas as pd
 
-from models.layers import (
+from utils.layers import (
     StringEmbeddingLayer,
     IntegerEmbeddingLayer,
     TextEmbeddingLayer,

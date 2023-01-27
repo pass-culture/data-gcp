@@ -1,7 +1,7 @@
 from google.cloud import aiplatform
 from dataclasses import dataclass
 import typer
-from utils import (
+from utils.constants import (
     GCP_PROJECT_ID,
     BIGQUERY_CLEAN_DATASET,
     MODELS_RESULTS_TABLE_NAME,

@@ -7,14 +7,10 @@ from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
     GCSToBigQueryOperator,
 )
 from airflow.operators.python import BranchPythonOperator, PythonOperator
-
-from google.auth.transport.requests import Request
-from google.oauth2 import id_token
-
+from common.config import DAG_FOLDER
+from common import macros
 from common.config import (
     BIGQUERY_RAW_DATASET,
-    BIGQUERY_CLEAN_DATASET,
-    BIGQUERY_ANALYTICS_DATASET,
     DATA_GCS_BUCKET_NAME,
     ENV_SHORT_NAME,
 )
@@ -30,7 +26,7 @@ from dependencies.addresses.import_addresses import (
 
 FUNCTION_NAME = f"addresses_import_{ENV_SHORT_NAME}"
 USER_LOCATIONS_TABLE = "user_locations"
-schedule_interval = "*/10 * * * *" if ENV_SHORT_NAME == "prod" else "30 2 * * *"
+schedule_interval = "0 * * * *" if ENV_SHORT_NAME == "prod" else "30 2 * * *"
 
 default_args = {
     "start_date": datetime(2021, 3, 30),
@@ -56,6 +52,8 @@ with DAG(
     schedule_interval=get_airflow_schedule(schedule_interval),
     catchup=False,
     dagrun_timeout=timedelta(minutes=180),
+    template_searchpath=DAG_FOLDER,
+    user_defined_macros=macros.default,
 ) as dag:
 
     start = DummyOperator(task_id="start")

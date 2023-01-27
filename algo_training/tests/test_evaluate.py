@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from metrics import get_actual_and_predicted
+from utils.metrics import get_actual_and_predicted
 
 
 class MockModel:

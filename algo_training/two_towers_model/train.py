@@ -13,7 +13,7 @@ from two_towers_model.models.two_towers_model import TwoTowersModel
 from two_towers_model.utils.constants import MLFLOW_RUN_ID_FILENAME, CONFIGS_PATH
 
 from utils.constants import ENV_SHORT_NAME, MODEL_DIR, STORAGE_PATH, TRAIN_DIR
-from utils.mlflow_tools import connect_remote_mlflow
+from utils.mlflow_tools import connect_remote_mlflow, get_mlflow_experiment
 from utils.secrets_utils import get_secret
 
 N_EPOCHS = 100
@@ -114,7 +114,7 @@ def train(
     # Connect to MLFlow
     client_id = get_secret("mlflow_client_id")
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
-    experiment = mlflow.get_experiment_by_name(experiment_name)
+    experiment = get_mlflow_experiment(experiment_name)
     with mlflow.start_run(experiment_id=experiment.experiment_id, run_name=run_name):
         logger.info("Connected to MLFlow")
 

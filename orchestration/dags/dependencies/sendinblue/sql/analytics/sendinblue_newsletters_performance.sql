@@ -6,7 +6,7 @@
 WITH sendinblue_newsletter as (
     SELECT 
         *
-        , row_number() over( partition by campaign_id order by update_date desc) as rank_update
+        , row_number() over( partition by campaign_id, domain order by update_date desc) as rank_update
     FROM `{{ bigquery_raw_dataset }}.sendinblue_newsletters_histo`
     QUALIFY rank_update = 1
 ),

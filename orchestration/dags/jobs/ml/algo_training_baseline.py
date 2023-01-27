@@ -84,25 +84,47 @@ with DAG(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
-        "batch_size": Param(default=str(train_params["batch_size"]), type="string"),
+        "config_file_name": Param(
+            default=train_params["config_file_name"],
+            type="string",
+        ),
+        "batch_size": Param(
+            default=str(train_params["batch_size"]),
+            type="string",
+        ),
+        "validation_steps_ratio": Param(
+            default=str(train_params["validation_steps_ratio"]),
+            type="string",
+        ),
         "embedding_size": Param(
-            default=str(train_params["embedding_size"]), type="string"
+            default=str(train_params["embedding_size"]),
+            type="string",
         ),
         "train_set_size": Param(
-            default=str(train_params["train_set_size"]), type="string"
+            default=str(train_params["train_set_size"]),
+            type="string",
         ),
         "event_day_number": Param(
-            default=str(train_params["event_day_number"]), type="string"
+            default=str(train_params["event_day_number"]),
+            type="string",
         ),
         "input_type": Param(
-            default="clicks",
+            default="enriched_clicks",
             type="string",
         ),
         "instance_type": Param(
-            default=gce_params["instance_type"][ENV_SHORT_NAME], type="string"
+            default=gce_params["instance_type"][ENV_SHORT_NAME],
+            type="string",
         ),
-        "instance_name": Param(default=gce_params["instance_name"], type="string"),
-        "run_name": Param(default=None, type=["string", "null"]),
+        "instance_name": Param(
+            default=gce_params["instance_name"]
+            + "-"
+            + train_params["config_file_name"],
+            type="string",
+        ),
+        "run_name": Param(
+            default=train_params["config_file_name"], type=["string", "null"]
+        ),
     },
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)
@@ -172,8 +194,7 @@ with DAG(
         "--batch-size {{ params.batch_size }} "
         "--embedding-size {{ params.embedding_size }} "
         "--seed {{ ds_nodash }} "
-        "--training-table-name recommendation_training_data "
-        "--validation-table-name recommendation_validation_data "
+        "--validation-steps-ratio {{ params.validation_steps_ratio }} "
         "--run-name {{ params.run_name }}",
         dag=dag,
     )

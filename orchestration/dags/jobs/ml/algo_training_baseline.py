@@ -117,9 +117,7 @@ with DAG(
             default=gce_params["instance_name"],
             type="string",
         ),
-        "run_name": Param(
-            default=None, type=["string", "null"]
-        ),
+        "run_name": Param(default=None, type=["string", "null"]),
     },
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)

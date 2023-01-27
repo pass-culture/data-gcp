@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 
 import mlflow.tensorflow
@@ -18,7 +19,7 @@ from utils.constants import (
     EXPERIMENT_NAME,
     MODEL_DIR,
 )
-from utils.evaluate import evaluate
+from utils.evaluate import evaluate, save_pca_representation
 from utils.mlflow_tools import connect_remote_mlflow
 from utils.secrets_utils import get_secret
 
@@ -72,6 +73,20 @@ def main(
             test_dataset_name,
         )
         mlflow.log_metrics(metrics)
+
+        # Export the PCA representations of the item embeddings
+        pca_plots_path = f"{MODEL_DIR}/pca_plots/"
+        os.makedirs(pca_plots_path, exist_ok=True)
+
+        item_data = pd.read_csv(f"{STORAGE_PATH}/bookings.csv")[
+            ["item_id", "offer_categoryId", "offer_subcategoryid"]
+        ]
+        save_pca_representation(
+            loaded_model=loaded_model,
+            item_data=item_data,
+            figures_folder=pca_plots_path,
+        )
+        mlflow.log_artifacts(pca_plots_path, "pca_plots")
 
         print("------- EVALUATE DONE -------")
 

@@ -12,6 +12,4 @@ AND item_id IN (
 AND (user_id, item_id) NOT IN (
   SELECT (user_id, item_id) FROM `{{ bigquery_tmp_dataset }}`.`{{ ts_nodash }}_recommendation_training_data`
 )
-AND (user_id, item_id) NOT IN (
-  SELECT (user_id, item_id) FROM `{{ bigquery_tmp_dataset }}`.`{{ ts_nodash }}_recommendation_validation_data`
-)
+AND MOD(ABS(FARM_FINGERPRINT(CONCAT(user_id, item_id, DATE("{{ ds }}")))), 2) = 1

@@ -181,7 +181,7 @@ with DAG(
     store_data = {}
     for split in ["training", "validation", "test"]:
         task = SSHGCEOperator(
-            task_id=f"store_{split}",
+            task_id=f"store_{split}_data",
             instance_name="{{ params.instance_name }}",
             base_dir=dag_config["BASE_DIR"],
             environment=dag_config,
@@ -193,7 +193,7 @@ with DAG(
         store_data[split] = task
 
     store_data["bookings"] = SSHGCEOperator(
-        task_id=f"store_bookings",
+        task_id=f"store_bookings_data",
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,

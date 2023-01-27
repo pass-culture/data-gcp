@@ -7,11 +7,9 @@ import tensorflow as tf
 from loguru import logger
 import pandas as pd
 
-from two_towers_model.models.match_model import MatchModel
-from two_towers_model.models.two_towers_model import TwoTowersModel
-from two_towers_model.utils.constants import CONFIGS_PATH
+from baseline_model.models.baseline_model import BaselineModel
+from baseline_model.models.match_model import MatchModel
 from utils.callbacks import MLFlowLogging
-
 from utils.constants import (
     ENV_SHORT_NAME,
     MODEL_DIR,
@@ -32,10 +30,6 @@ def train(
     experiment_name: str = typer.Option(
         ...,
         help="MLFlow experiment name",
-    ),
-    config_file_name: str = typer.Option(
-        ...,
-        help="Name of the config file containing feature informations",
     ),
     batch_size: int = typer.Option(
         ...,
@@ -64,33 +58,18 @@ def train(
 ):
     tf.random.set_seed(seed)
 
-    with open(
-        f"{MODEL_DIR}/{CONFIGS_PATH}/{config_file_name}.json",
-        mode="r",
-        encoding="utf-8",
-    ) as config_file:
-        features = json.load(config_file)
-        user_features_config, item_features_config = (
-            features["user_embedding_layers"],
-            features["item_embedding_layers"],
-        )
-
     # Load data
     logger.info("Loading & processing datasets")
-
-    user_columns = list(user_features_config.keys())
-    item_columns = list(item_features_config.keys())
-
     # We ensure that the datasets contains the features in the correct order (user_id, ..., item_id, ...)
     train_data = pd.read_csv(f"{STORAGE_PATH}/{training_table_name}.csv",)[
-        user_columns + item_columns
+        ["user_id", "item_id"]
     ].astype(str)
     validation_data = pd.read_csv(f"{STORAGE_PATH}/{validation_table_name}.csv",)[
-        user_columns + item_columns
+        ["user_id", "item_id"]
     ].astype(str)
 
-    train_user_data = train_data[user_columns].drop_duplicates(subset=["user_id"])
-    train_item_data = train_data[item_columns].drop_duplicates(subset=["item_id"])
+    train_user_ids = train_data["user_id"].unique()
+    train_item_ids = train_data["item_id"].unique()
 
     # Build tf datasets
     logger.info("Building tf datasets")
@@ -103,17 +82,6 @@ def train(
     validation_dataset = (
         tf.data.Dataset.from_tensor_slices(validation_data.values)
         .batch(batch_size=batch_size)
-        .map(lambda x: tf.transpose(x))
-    )
-
-    user_dataset = (
-        tf.data.Dataset.from_tensor_slices(train_user_data.values)
-        .batch(batch_size=batch_size, drop_remainder=False)
-        .map(lambda x: tf.transpose(x))
-    )
-    item_dataset = (
-        tf.data.Dataset.from_tensor_slices(train_item_data.values)
-        .batch(batch_size=batch_size, drop_remainder=False)
         .map(lambda x: tf.transpose(x))
     )
 
@@ -137,24 +105,20 @@ def train(
                 "embedding_size": embedding_size,
                 "batch_size": batch_size,
                 "epoch_number": N_EPOCHS,
-                "user_count": len(train_user_data),
-                "user_feature_count": len(user_features_config.keys()),
-                "item_count": len(train_item_data),
-                "item_feature_count": len(item_features_config.keys()),
+                "user_count": len(train_user_ids),
+                "item_count": len(train_item_ids),
             }
         )
 
-        logger.info("Building the TwoTowersModel")
+        logger.info("Building the BaselineModel")
 
-        two_tower_model = TwoTowersModel(
-            data=train_data,
-            user_features_config=user_features_config,
-            item_features_config=item_features_config,
-            items_dataset=item_dataset,
+        baseline_model = BaselineModel(
+            user_ids=train_user_ids,
+            item_ids=train_item_ids,
             embedding_size=embedding_size,
         )
 
-        two_tower_model.compile(
+        baseline_model.compile(
             optimizer=tf.keras.optimizers.Adagrad(learning_rate=LEARNING_RATE),
         )
 
@@ -163,7 +127,7 @@ def train(
             int((len(validation_data) // batch_size) * validation_steps_ratio), 1
         )
 
-        two_tower_model.fit(
+        baseline_model.fit(
             train_dataset,
             epochs=N_EPOCHS,
             validation_data=validation_dataset,
@@ -192,14 +156,14 @@ def train(
         )
 
         logger.info("Predicting final user embeddings")
-        user_embeddings = two_tower_model.user_model.predict(user_dataset)
+        user_embeddings = baseline_model.user_model.predict(train_user_ids)
         logger.info("Predicting final item embeddings")
-        item_embeddings = two_tower_model.item_model.predict(item_dataset)
+        item_embeddings = baseline_model.item_model.predict(train_item_ids)
 
         logger.info("Building and saving the MatchModel")
         match_model = MatchModel(
-            user_ids=train_user_data["user_id"].unique(),
-            item_ids=train_item_data["item_id"].unique(),
+            user_ids=train_user_ids.tolist(),
+            item_ids=train_item_ids.tolist(),
             embedding_size=embedding_size,
         )
         match_model.set_embeddings(

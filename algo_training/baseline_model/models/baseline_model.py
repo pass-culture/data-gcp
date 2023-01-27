@@ -40,7 +40,7 @@ class BaselineModel(tfrs.models.Model):
         )
 
     def compute_loss(self, inputs, training=False):
-        user_id, item_id = inputs
+        user_id, item_id = tf.unstack(inputs)
         user_embedding = self.user_model(user_id)
         item_embedding = self.item_model(item_id)
 

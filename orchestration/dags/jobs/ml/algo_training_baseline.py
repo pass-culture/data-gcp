@@ -46,7 +46,8 @@ dag_config = {
 
 # Params
 train_params = {
-    "batch_size": 4096,
+    "batch_size": 8192,
+    "validation_steps_ratio": 0.2 if ENV_SHORT_NAME == "prod" else 0.4,
     "embedding_size": 64,
     "train_set_size": 0.8,
     "event_day_number": 120 if ENV_SHORT_NAME == "prod" else 20,
@@ -84,10 +85,6 @@ with DAG(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
-        "config_file_name": Param(
-            default=train_params["config_file_name"],
-            type="string",
-        ),
         "batch_size": Param(
             default=str(train_params["batch_size"]),
             type="string",
@@ -117,13 +114,11 @@ with DAG(
             type="string",
         ),
         "instance_name": Param(
-            default=gce_params["instance_name"]
-            + "-"
-            + train_params["config_file_name"],
+            default=gce_params["instance_name"],
             type="string",
         ),
         "run_name": Param(
-            default=train_params["config_file_name"], type=["string", "null"]
+            default=None, type=["string", "null"]
         ),
     },
 ) as dag:

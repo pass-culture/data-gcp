@@ -21,6 +21,7 @@ from utils.constants import (
 )
 from utils.mlflow_tools import connect_remote_mlflow, get_mlflow_experiment
 from utils.secrets_utils import get_secret
+from utils.data_collect_queries import read_from_gcs
 
 N_EPOCHS = 100
 MIN_DELTA = 0.001  # Minimum change in the accuracy before a callback is called
@@ -82,12 +83,12 @@ def train(
     item_columns = list(item_features_config.keys())
 
     # We ensure that the datasets contains the features in the correct order (user_id, ..., item_id, ...)
-    train_data = pd.read_csv(f"{STORAGE_PATH}/{training_table_name}.csv",)[
-        user_columns + item_columns
-    ].astype(str)
-    validation_data = pd.read_csv(f"{STORAGE_PATH}/{validation_table_name}.csv",)[
-        user_columns + item_columns
-    ].astype(str)
+    train_data = read_from_gcs(
+        storage_path=STORAGE_PATH, table_name=training_table_name
+    )[user_columns + item_columns].astype(str)
+    validation_data = read_from_gcs(
+        storage_path=STORAGE_PATH, table_name=validation_table_name
+    )[user_columns + item_columns].astype(str)
 
     train_user_data = train_data[user_columns].drop_duplicates(subset=["user_id"])
     train_item_data = train_data[item_columns].drop_duplicates(subset=["item_id"])

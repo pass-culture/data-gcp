@@ -2,6 +2,7 @@ import json
 
 import pandas as pd
 from utils.constants import GCP_PROJECT_ID
+from google.cloud import storage
 
 
 def get_data_from_bigquery(
@@ -30,3 +31,15 @@ def get_data_from_bigquery(
     """
     data = pd.read_gbq(query)
     return data
+
+
+def read_from_gcs(storage_path, table_name, dtype=None):
+    storage_client = storage.Client()
+    bucket_name = f"{storage_path}/{table_name}/"
+
+    blobs = storage_client.list_blobs(bucket_name)
+
+    return pd.concat(
+        [pd.read_csv(f"gs://{storage_path}/{blob.name}", dtype=None) for blob in blobs],
+        ignore_index=True,
+    )

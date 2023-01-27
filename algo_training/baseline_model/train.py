@@ -60,7 +60,6 @@ def train(
 
     # Load data
     logger.info("Loading & processing datasets")
-    # We ensure that the datasets contains the features in the correct order (user_id, ..., item_id, ...)
     train_data = pd.read_csv(f"{STORAGE_PATH}/{training_table_name}.csv",)[
         ["user_id", "item_id"]
     ].astype(str)

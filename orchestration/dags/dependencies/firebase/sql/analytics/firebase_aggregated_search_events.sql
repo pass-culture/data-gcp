@@ -21,9 +21,9 @@ FROM consulted_from_search
 JOIN `{{ bigquery_analytics_dataset }}.firebase_events ON consulted_from_search.user_pseudo_id = firebase_events.user_pseudo_id
                                     AND consulted_from_search.session_id = firebase_events.session_id
                                     AND consulted_from_search.offer_id = firebase_events.offer_id
-                                    AND event_timestamp > consult_timestamp
                                     AND event_date > '2023-01-01'
                                     AND event_name = 'BookingConfirmation'
+                                    AND event_timestamp > consult_timestamp
 ),
 
 

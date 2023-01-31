@@ -37,28 +37,27 @@ GROUP BY 1
 ),
 
 agg_search_data AS (
-SELECT
+SELECT DISTINCT
     search_id
     , user_id
     , user_pseudo_id
     , app_version
-    , ANY_VALUE(session_id) AS session_id
-    , MAX(query) AS query_input
-    , MIN(event_date) AS first_date
-    , MIN(event_timestamp) AS first_timestamp
-    , MAX(search_date_filter ) search_date_filter
-    ,MAX(search_categories_filter) search_categories_filter
-    ,MAX(search_genre_types_filter) search_genre_types_filter
-    ,MAX(search_is_autocomplete) search_is_autocomplete
-    ,MAX(search_offer_is_duo_filter) search_offer_is_duo_filter
-    ,MAX(search_native_categories_filter) search_native_categories_filter
-    , COUNT(DISTINCT CASE WHEN event_name = 'ConsultOffer' THEN offer_id ELSE NULL END) AS nb_offers_consulted
-    , COUNT( CASE WHEN event_name = 'NoSearchResult' THEN 1 ELSE NULL END) AS nb_no_search_result
+    , LAST_VALUE(session_id) OVER (PARTITION BY search_id, user_id, user_pseudo_id ORDER BY event_timestamp) AS session_id
+    , LAST_VALUE(query IGNORE NULLS) OVER (PARTITION BY search_id, user_id, user_pseudo_id ORDER BY event_timestamp) AS query_input
+    , MIN(event_date) OVER (PARTITION BY search_id, user_id, user_pseudo_id) AS first_date
+    , MIN(event_timestamp)OVER (PARTITION BY search_id, user_id, user_pseudo_id) AS first_timestamp
+    , LAST_VALUE(search_date_filter IGNORE NULLS ) OVER (PARTITION BY search_id, user_id, user_pseudo_id ORDER BY event_timestamp) AS search_date_filter
+    ,LAST_VALUE(search_categories_filter IGNORE NULLS) OVER (PARTITION BY search_id, user_id, user_pseudo_id ORDER BY event_timestamp) AS  search_categories_filter
+    ,LAST_VALUE(search_genre_types_filter IGNORE NULLS) OVER (PARTITION BY search_id, user_id, user_pseudo_id ORDER BY event_timestamp) AS  search_genre_types_filter
+    ,LAST_VALUE(search_is_autocomplete IGNORE NULLS) OVER (PARTITION BY search_id, user_id, user_pseudo_id ORDER BY event_timestamp) AS  search_is_autocomplete
+    ,LAST_VALUE(search_offer_is_duo_filter IGNORE NULLS) OVER (PARTITION BY search_id, user_id, user_pseudo_id ORDER BY event_timestamp) search_offer_is_duo_filter
+    ,LAST_VALUE(search_native_categories_filter IGNORE NULLS) OVER(PARTITION BY search_id, user_id, user_pseudo_id ORDER BY event_timestamp) search_native_categories_filter
+    , COUNT(DISTINCT CASE WHEN event_name = 'ConsultOffer' THEN offer_id ELSE NULL END) OVER (PARTITION BY search_id, user_id, user_pseudo_id) AS nb_offers_consulted
+    , COUNT( CASE WHEN event_name = 'NoSearchResult' THEN 1 ELSE NULL END) OVER (PARTITION BY search_id, user_id, user_pseudo_id ) AS nb_no_search_result
 FROM `{{ bigquery_analytics_dataset }}.firebase_events
 WHERE event_name IN ('PerformSearch', 'NoSearchResult','ConsultOffer')
 AND event_date > '2023-01-01'
 AND search_id IS NOT NULL
-GROUP BY 1,2,3,4
 )
 
 SELECT

@@ -7,7 +7,6 @@ import tensorflow as tf
 import typer
 from loguru import logger
 
-from two_towers_model.utils.constants import MLFLOW_RUN_ID_FILENAME
 from utils.constants import (
     STORAGE_PATH,
     ENV_SHORT_NAME,
@@ -18,6 +17,7 @@ from utils.constants import (
     MODEL_NAME,
     EXPERIMENT_NAME,
     MODEL_DIR,
+    MLFLOW_RUN_ID_FILENAME,
 )
 from utils.evaluate import evaluate, save_pca_representation
 from utils.mlflow_tools import connect_remote_mlflow

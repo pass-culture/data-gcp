@@ -15,7 +15,7 @@ SERVING_CONTAINER = "europe-docker.pkg.dev/vertex-ai/prediction/tf2-cpu.2-5:late
 EXPERIMENT_NAME = os.environ.get(
     "EXPERIMENT_NAME", f"algo_training_v1.1_{ENV_SHORT_NAME}"
 )
-
+MLFLOW_RUN_ID_FILENAME = "mlflow_run_uuid"
 NUMBER_OF_PRESELECTED_OFFERS = 40
 RECOMMENDATION_NUMBER = 10
 SHUFFLE_RECOMMENDATION = True

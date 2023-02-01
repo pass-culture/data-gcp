@@ -43,7 +43,7 @@ SELECT DISTINCT
     , user_pseudo_id
     , app_version
     , LAST_VALUE(session_id) OVER (PARTITION BY search_id, user_id, user_pseudo_id ORDER BY event_timestamp) AS session_id
-    , LAST_VALUE(query IGNORE NULLS) OVER (PARTITION BY search_id, user_id, user_pseudo_id ORDER BY event_timestamp) AS query_input
+    , LAST_VALUE(query IGNORE NULLS) OVER (PARTITION BY search_id, user_id, user_pseudo_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS query_input
     , MIN(event_date) OVER (PARTITION BY search_id, user_id, user_pseudo_id) AS first_date
     , MIN(event_timestamp)OVER (PARTITION BY search_id, user_id, user_pseudo_id) AS first_timestamp
     , LAST_VALUE(search_date_filter IGNORE NULLS ) OVER (PARTITION BY search_id, user_id, user_pseudo_id ORDER BY event_timestamp) AS search_date_filter

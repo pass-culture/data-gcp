@@ -5,7 +5,7 @@ SELECT
     , offer_id
     , search_id
     , event_timestamp AS consult_timestamp
-FROM `{{ bigquery_analytics_dataset }}.firebase_events
+FROM `{{ bigquery_analytics_dataset }}`.firebase_events
 WHERE event_date > '2023-01-01'
 AND event_name = 'ConsultOffer'
 AND origin = 'search'),
@@ -18,7 +18,7 @@ SELECT
     , consulted_from_search.offer_id
     , consult_timestamp
 FROM consulted_from_search
-JOIN `{{ bigquery_analytics_dataset }}.firebase_events ON consulted_from_search.user_pseudo_id = firebase_events.user_pseudo_id
+JOIN `{{ bigquery_analytics_dataset }}`.firebase_events ON consulted_from_search.user_pseudo_id = firebase_events.user_pseudo_id
                                     AND consulted_from_search.session_id = firebase_events.session_id
                                     AND consulted_from_search.offer_id = firebase_events.offer_id
                                     AND event_date > '2023-01-01'
@@ -54,7 +54,7 @@ SELECT DISTINCT
     ,LAST_VALUE(search_native_categories_filter IGNORE NULLS) OVER(PARTITION BY search_id, user_id, user_pseudo_id ORDER BY event_timestamp) search_native_categories_filter
     , COUNT(DISTINCT CASE WHEN event_name = 'ConsultOffer' THEN offer_id ELSE NULL END) OVER (PARTITION BY search_id, user_id, user_pseudo_id) AS nb_offers_consulted
     , COUNT( CASE WHEN event_name = 'NoSearchResult' THEN 1 ELSE NULL END) OVER (PARTITION BY search_id, user_id, user_pseudo_id ) AS nb_no_search_result
-FROM `{{ bigquery_analytics_dataset }}.firebase_events
+FROM `{{ bigquery_analytics_dataset }}`.firebase_events
 WHERE event_name IN ('PerformSearch', 'NoSearchResult','ConsultOffer')
 AND event_date > '2023-01-01'
 AND search_id IS NOT NULL

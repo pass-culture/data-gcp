@@ -45,6 +45,7 @@ def parse_params(request) -> PlaylistParamsIn:
 
     elif request.method == "GET":
         params = request.args
+        print(params)
     if params is None:
         params = {}
     params = {underscore_to_camel(k): v for k, v in params.items()}

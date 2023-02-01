@@ -151,5 +151,33 @@ def similar_offers(offer_id: str):
     )
 
 
+under_pat = re.compile(r"_([a-z])")
+
+
+def underscore_to_camel(name):
+    return under_pat.sub(lambda x: x.group(1).upper(), name)
+
+
+@app.route("/test_pararms/<user_id>", methods=["GET", "POST"])
+def test_params(user_id: int):
+    if request.args.get("token", None) != API_TOKEN:
+        return "Forbidden", 403
+    params = None
+    if request.method == "POST":
+        params = dict(request.get_json(), **dict(request.args))
+    elif request.method == "GET":
+        params_args = request.args
+        print("params_args: ", params_args)
+        params_forms_to_dict = request.form.to_dict()
+        print("params_forms_to_dict :", params_forms_to_dict)
+    if params is None:
+        params = {}
+    else:
+        params = {underscore_to_camel(k): v for k, v in params.items()}
+    return jsonify(
+        {"params": params},
+    )
+
+
 if __name__ == "__main__":
     app.run(debug=False, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))

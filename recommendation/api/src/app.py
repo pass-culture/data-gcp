@@ -110,6 +110,9 @@ def playlist_recommendation(user_id: int):
                 "geo_located": geo_located,
                 "filtered": input_reco.has_conditions if input_reco else False,
                 "call_id": call_id,
+                "request_categories": input_reco.search_group_names
+                if input_reco
+                else None,
             },
         }
     )
@@ -146,36 +149,11 @@ def similar_offers(offer_id: str):
                 "geo_located": geo_located,
                 "filtered": input_reco.has_conditions if input_reco else False,
                 "call_id": call_id,
+                "request_categories": input_reco.search_group_names
+                if input_reco
+                else None,
             },
         }
-    )
-
-
-under_pat = re.compile(r"_([a-z])")
-
-
-def underscore_to_camel(name):
-    return under_pat.sub(lambda x: x.group(1).upper(), name)
-
-
-@app.route("/test_pararms/<user_id>", methods=["GET", "POST"])
-def test_params(user_id: int):
-    if request.args.get("token", None) != API_TOKEN:
-        return "Forbidden", 403
-    params = None
-    if request.method == "POST":
-        params = dict(request.get_json(), **dict(request.args))
-    elif request.method == "GET":
-        params_args = request.args
-        print("params_args: ", params_args)
-        params_forms_to_dict = request.form.to_dict()
-        print("params_forms_to_dict :", params_forms_to_dict)
-    if params is None:
-        params = {}
-    else:
-        params = {underscore_to_camel(k): v for k, v in params.items()}
-    return jsonify(
-        {"params": params},
     )
 
 

@@ -42,12 +42,9 @@ def parse_params(request) -> PlaylistParamsIn:
 
     if request.method == "POST":
         params = dict(request.get_json(), **dict(request.args))
-
     elif request.method == "GET":
-        params = request.args
-        print(params)
+        params = request.args.to_dict(flat=False)
     if params is None:
         params = {}
     params = {underscore_to_camel(k): v for k, v in params.items()}
-
     return PlaylistParamsIn(params)

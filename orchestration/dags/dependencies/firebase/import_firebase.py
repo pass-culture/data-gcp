@@ -1,6 +1,4 @@
-from common.config import (
-    ENV_SHORT_NAME,
-)
+from common.config import ENV_SHORT_NAME
 
 SQL_PATH = f"dependencies/firebase/sql"
 
@@ -138,6 +136,7 @@ import_firebase_beneficiary_tables = {
         "time_partitioning": {"field": "event_date"},
         "clustering_fields": {"fields": ["event_type"]},
         "depends": ["analytics_firebase_events"],
+        "dag_depends": [{"import_contenful": "contentful_entries"}],  # dag_id: task_id
     },
     "analytics_firebase_home_events_details": {
         "sql": f"{SQL_PATH}/analytics/firebase_home_events_details.sql",
@@ -169,6 +168,9 @@ import_firebase_beneficiary_tables = {
         "destination_table": "firebase_booking_origin",
         "time_partitioning": {"field": "booking_date"},
         "depends": ["analytics_firebase_events"],
+        "dag_depends": [
+            {"import_contenful": "contentful_homepages"}
+        ],  # dag_id: task_id
     },
     "analytics_firebase_aggregated_search_events": {
         "sql": f"{SQL_PATH}/analytics/firebase_aggregated_search_events.sql",

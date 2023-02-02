@@ -22,19 +22,19 @@ def getting_service_account_token(function_name):
     return open_id_connect_token
 
 
-def waiting_operator(dag, dag_id, task_id):
+def waiting_operator(dag, dag_id, task_id, external_task_id="end"):
 
     hasher = hashlib.sha1(task_id.encode("utf-8"))
-    hashed_dag_id = (
+    hashed_task_id = (
         str(base64.urlsafe_b64encode(hasher.digest()[:10]))
         .replace("=", "")
         .replace("'", "")
     )
 
     return ExternalTaskSensor(
-        task_id=f"wait_for_{dag_id}_{hashed_dag_id}",
+        task_id=f"wait_for_{dag_id}_{external_task_id}_{hashed_task_id}",
         external_dag_id=dag_id,
-        external_task_id="end",
+        external_task_id=external_task_id,
         check_existence=True,
         mode="reschedule",
         allowed_states=ALLOWED_STATES,
@@ -88,9 +88,20 @@ def depends_loop(jobs: dict, default_upstream_operator, dag):
         ]:
 
             if dependency["dependency_type"] == "dag":
-                depend_job = waiting_operator(
-                    dag, dependency["depends_on"], task_id=dependency["task_id"]
-                )
+                if type(dependency["depends_on"]) is str:
+                    depend_job = waiting_operator(
+                        dag,
+                        dependency["depends_on"],
+                        task_id=dependency["task_id"],
+                        external_task_id="end",
+                    )
+                elif type(dependency["depends_on"]) is dict:
+                    depend_job = waiting_operator(
+                        dag,
+                        list(dependency["depends_on"].keys())[0],
+                        task_id=dependency["task_id"],
+                        external_task_id=list(dependency["depends_on"].values())[0],
+                    )
                 has_downstream_dependencies.append(depend_job)
                 dependency["task"].set_upstream(depend_job)
                 depend_job.set_upstream(default_upstream_operator)

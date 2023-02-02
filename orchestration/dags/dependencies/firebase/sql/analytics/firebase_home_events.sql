@@ -19,7 +19,9 @@ WITH mapping_module_name_and_id AS (
                     "displayParameters",
                     "venuesSearchParameters",
                     "exclusivityDisplayParameters",
-                    "business"
+                    "business",
+                    "category_bloc",
+                    "category_list"
                 )
         )
     where

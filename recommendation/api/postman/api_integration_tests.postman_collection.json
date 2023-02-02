@@ -1,10 +1,10 @@
 {
 	"info": {
-		"_postman_id": "ffcd462e-c43b-487a-8436-957950d82ee5",
+		"_postman_id": "7e967940-b01e-4808-b172-089a7fe99936",
 		"name": "API Integration Tests",
 		"description": "Collection of integration tests for the reco api.\nMade with Postman",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "21927341"
+		"_exporter_id": "25420344"
 	},
 	"item": [
 		{
@@ -1440,6 +1440,101 @@
 						{
 							"key": "latitude",
 							"value": "48.8632553"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/playlist_recommendation/user_id categories",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"pm.test(\"Response time is less than 10s\", function () {\r",
+							"    pm.expect(pm.response.responseTime).to.be.below(10000);\r",
+							"});\r",
+							"pm.test(\"Response must be a JSON and have a body\", function () {\r",
+							"     pm.response.to.be.ok;\r",
+							"     pm.response.to.be.withBody;\r",
+							"     pm.response.to.be.json;\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response must contain an array playlist_recommended_offers\", function () {\r",
+							"  const jsonResponse = pm.response.json();\r",
+							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
+							"  pm.expect(jsonResponse).to.have.property('playlist_recommended_offers')\r",
+							"  pm.expect(jsonResponse.playlist_recommended_offers).to.be.an(\"array\");\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response must at least 1 offer\", function () {\r",
+							"  const jsonResponse = pm.response.json();\r",
+							"  pm.expect(jsonResponse.playlist_recommended_offers.length).to.be.above(0);\r",
+							"});\r",
+							"\r",
+							"function checkIfArrayIsUnique(array) {\r",
+							"  return array.length === new Set(array).size;\r",
+							"}\r",
+							"\r",
+							"pm.test('Check if Offer_ids are unique', () => {\r",
+							"    let ids = []\r",
+							"    _.each(pm.response.json().playlist_recommended_offers, (item) => {\r",
+							"        ids.push(item)\r",
+							"    })\r",
+							"\r",
+							"    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
+							"})\r",
+							"\r",
+							"pm.test(\"Response params must contain an array request_categories\", function () {\r",
+							"  const jsonResponse = pm.response.json();\r",
+							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
+							"  pm.expect(jsonResponse).to.have.property('params')\r",
+							"  pm.expect(jsonResponse.params).to.have.property(\"request_categories\");\r",
+							"});\r",
+							"\r",
+							"pm.test(\"request_categories must at least 1 category\", function () {\r",
+							"  const jsonResponse = pm.response.json();\r",
+							"  pm.expect(jsonResponse.params.request_categories.length).to.be.above(0);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{api_url}}/playlist_recommendation/{{user_id}}?token={{api_token}}&categories=LIVRE&categories=CINEMA&categories=SPECTACLE",
+					"host": [
+						"{{api_url}}"
+					],
+					"path": [
+						"playlist_recommendation",
+						"{{user_id}}"
+					],
+					"query": [
+						{
+							"key": "token",
+							"value": "{{api_token}}"
+						},
+						{
+							"key": "categories",
+							"value": "LIVRE"
+						},
+						{
+							"key": "categories",
+							"value": "CINEMA"
+						},
+						{
+							"key": "categories",
+							"value": "SPECTACLE"
 						}
 					]
 				}

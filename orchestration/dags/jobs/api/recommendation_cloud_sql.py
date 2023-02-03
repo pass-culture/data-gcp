@@ -39,7 +39,9 @@ from common.alerts import task_fail_slack_alert
 from common import macros
 from common.utils import get_airflow_schedule
 
-GCP_REGION = "europe-west9"
+GCP_REGION = "europe-west1"
+RECOMMENDATION_SQL_INSTANCE="recommendation-dev-test-ew1"
+RECOMMENDATION_SQL_SUFFIX="ee21a130"
 database_url = access_secret_data(
     GCP_PROJECT_ID, f"{RECOMMENDATION_SQL_INSTANCE}_database_url", default=""
 )

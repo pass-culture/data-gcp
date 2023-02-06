@@ -62,8 +62,8 @@ def preprocess(
         .astype({col: "int" for col in integer_features})
     )
 
-    clean_data.to_csv(
-        f"{STORAGE_PATH}/{output_dataframe_file_name}/data.csv", index=False
+    clean_data.to_parquet(
+        f"{STORAGE_PATH}/{output_dataframe_file_name}/data.parquet"
     )
 
 

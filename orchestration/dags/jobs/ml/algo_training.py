@@ -157,7 +157,7 @@ with DAG(
     store_data["bookings"] = BigQueryToGCSOperator(
         task_id=f"store_bookings_data",
         source_project_dataset_table=f"{BIGQUERY_RAW_DATASET}.training_data_bookings",
-        destination_cloud_storage_uris=f"{dag_config['STORAGE_PATH']}/bookings.parquet",
+        destination_cloud_storage_uris=f"{dag_config['STORAGE_PATH']}/bookings/data-*.parquet",
         export_format="PARQUET",
         dag=dag,
     )

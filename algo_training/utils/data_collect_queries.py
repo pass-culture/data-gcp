@@ -35,7 +35,7 @@ def get_data_from_bigquery(
 
 def read_from_gcs(storage_path, table_name, dtype=None):
 
-    bucket_name = f"{storage_path}/{table_name}/*.csv"
+    bucket_name = f"{storage_path}/{table_name}/*.parquet"
     result = subprocess.run(["gsutil", "ls", bucket_name], stdout=subprocess.PIPE)
     return pd.concat(
         [

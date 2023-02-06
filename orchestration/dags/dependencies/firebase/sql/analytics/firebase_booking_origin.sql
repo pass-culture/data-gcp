@@ -13,7 +13,7 @@ WITH firebase_bookings AS (
   WHERE
       event_name = 'BookingConfirmation'
   -- Calculer sur les 4 derniers mois
-  AND event_date >= DATE('{{ add_days(ds, -120) }}')
+  AND event_date >= DATE('2023-01-31')
 )
 
 , firebase_consult AS (
@@ -29,7 +29,7 @@ WITH firebase_bookings AS (
     , entry_id
   FROM `{{ bigquery_analytics_dataset }}.firebase_events`
   WHERE event_name = 'ConsultOffer'
-  AND event_date >= DATE('{{ add_days(ds, -127) }}')
+  AND event_date >= DATE('2023-01-31')
 )
 
 , bookings_origin_first_touch AS (
@@ -46,8 +46,8 @@ WITH firebase_bookings AS (
     , consult_origin AS consult_origin_first_touch
     , platform
     , search_id
-    , module_id
-    , module_name
+    , module_id AS module_id_first_touch
+    , module_name AS module_name_first_touch
     , entry_id
   FROM firebase_bookings
   LEFT JOIN firebase_consult
@@ -73,6 +73,8 @@ WITH firebase_bookings AS (
     , consult_origin AS consult_origin_last_touch
     , platform
     , search_id
+    , module_id AS module_id_last_touch
+    , module_name AS module_name_last_touch
   FROM firebase_bookings
   LEFT JOIN firebase_consult
   ON firebase_bookings.user_id = firebase_consult.user_id
@@ -97,8 +99,10 @@ WITH firebase_bookings AS (
   , consult_origin_last_touch
   , first_t.platform
   , first_t.search_id
-  , module_id
-  , module_name
+  , module_id_first_touch
+  , module_name_first_touch
+  , module_id_last_touch
+  , module_name_last_touch
   , entry_id
 FROM bookings_origin_first_touch AS first_t
 JOIN bookings_origin_last_touch AS last_t
@@ -126,12 +130,18 @@ SELECT
   , consult_origin_last_touch
   , platform
   , search_id
-  , booking_origin.module_id
-  , coalesce(booking_origin.module_name, map.module_name) AS module_name
-  , coalesce(entry_id, home_id) AS home_id
-  , content_type
+  , module_id_first_touch
+  , coalesce(booking_origin.module_name_first_touch, map.module_name) AS module_name_first_touch
+  , module_id_last_touch
+  , coalesce(booking_origin.module_name_last_touch, map2.module_name) AS module_name_last_touch
+  , coalesce(entry_id, map.home_id) AS home_id
+  , map.content_type
+
 FROM booking_origin
 LEFT JOIN mapping_module AS map
-ON booking_origin.module_id = map.module_id
+ON booking_origin.module_id_first_touch = map.module_id
 AND booking_origin.entry_id = map.home_id
 
+LEFT JOIN mapping_module AS map2
+ON booking_origin.module_id_last_touch = map2.module_id
+AND booking_origin.entry_id = map2.home_id

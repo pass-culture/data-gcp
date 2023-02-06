@@ -186,16 +186,16 @@ with DAG(
         store_data[split] = BigQueryToGCSOperator(
             task_id=f"store_{split}_data",
             source_project_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DATE}_recommendation_{split}_data",
-            destination_cloud_storage_uris=f"{dag_config['STORAGE_PATH']}/raw_recommendation_{split}_data/data-*.csv",
-            export_format="CSV",
+            destination_cloud_storage_uris=f"{dag_config['STORAGE_PATH']}/raw_recommendation_{split}_data/data-*.parquet",
+            export_format="PARQUET",
             dag=dag,
         )
 
     store_data["bookings"] = BigQueryToGCSOperator(
         task_id=f"store_bookings_data",
         source_project_dataset_table=f"{BIGQUERY_RAW_DATASET}.training_data_bookings",
-        destination_cloud_storage_uris=f"{dag_config['STORAGE_PATH']}/bookings.csv",
-        export_format="CSV",
+        destination_cloud_storage_uris=f"{dag_config['STORAGE_PATH']}/booking.parquet",
+        export_format="PARQUET",
         dag=dag,
     )
 

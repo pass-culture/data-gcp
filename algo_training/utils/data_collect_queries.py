@@ -39,7 +39,7 @@ def read_from_gcs(storage_path, table_name, dtype=None):
     result = subprocess.run(["gsutil", "ls", bucket_name], stdout=subprocess.PIPE)
     return pd.concat(
         [
-            pd.read_csv(file.strip().decode("utf-8"), dtype=dtype)
+            pd.read_parquet(file.strip().decode("utf-8"), dtype=dtype)
             for file in result.stdout.splitlines()
         ],
         ignore_index=True,

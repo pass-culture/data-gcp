@@ -66,7 +66,7 @@ with DAG(
         method="POST",
         http_conn_id="http_gcp_cloud_function",
         endpoint=DMS_FUNCTION_NAME,
-        data=json.dumps({"updated_since": "2023-01-01T08:36:19.853819+00:00"}),
+        data=json.dumps({"updated_since": "{{ prev_start_date_success.isoformat() }}"}),
         headers={
             "Content-Type": "application/json",
             "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_service_account_token', key='return_value')}}",

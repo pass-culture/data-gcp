@@ -7,7 +7,7 @@ WITH aggregated_reco as (SELECT
   , user_iris_id
   , count(offerid) as nb_recommended_offers
 FROM `{{ bigquery_clean_dataset }}.past_recommended_offers`
-WHERE user_iris_id is not null
+WHERE user_iris_id is not null AND user_iris_id != ""
 GROUP BY
   userid
   , call_id

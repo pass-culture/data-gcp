@@ -153,7 +153,7 @@ with DAG(
             {"name": "numero_identifiant_lieu", "type": "STRING"},
             {"name": "statut", "type": "STRING"},
             {"name": "typologie", "type": "STRING"},
-            {"name": "academie_instructeur", "type": "STRING"},
+            {"name": "academie_historique_intervention", "type": "STRING"},
             {"name": "academie_groupe_instructeur", "type": "STRING"},
             {"name": "domaines", "type": "STRING"},
         ],

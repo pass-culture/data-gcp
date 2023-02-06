@@ -2,6 +2,7 @@ import json
 
 import pandas as pd
 from utils.constants import GCP_PROJECT_ID
+import subprocess
 
 
 def get_data_from_bigquery(
@@ -30,3 +31,16 @@ def get_data_from_bigquery(
     """
     data = pd.read_gbq(query)
     return data
+
+
+def read_from_gcs(storage_path, table_name):
+
+    bucket_name = f"{storage_path}/{table_name}/*.parquet"
+    result = subprocess.run(["gsutil", "ls", bucket_name], stdout=subprocess.PIPE)
+    return pd.concat(
+        [
+            pd.read_parquet(file.strip().decode("utf-8"))
+            for file in result.stdout.splitlines()
+        ],
+        ignore_index=True,
+    )

@@ -13,6 +13,8 @@ from utils.constants import (
     EVALUATION_USER_NUMBER,
     EVALUATION_USER_NUMBER_DIVERSIFICATION,
 )
+from utils.data_collect_queries import read_from_gcs
+
 
 from sklearn.decomposition import PCA
 import matplotlib as mpl
@@ -28,21 +30,24 @@ def evaluate(
     training_dataset_name: str = "recommendation_training_data",
     test_dataset_name: str = "recommendation_test_data",
 ):
-    raw_data = pd.read_csv(f"{storage_path}/bookings.csv").astype(
+    raw_data = read_from_gcs(storage_path, "bookings").astype(
         {"user_id": str, "item_id": str, "count": int}
     )
 
-    training_item_ids = pd.read_csv(f"{storage_path}/{training_dataset_name}.csv")[
+    training_item_ids = read_from_gcs(storage_path, training_dataset_name)[
         "item_id"
     ].unique()
 
     positive_data_test = (
-        pd.read_csv(
-            f"{storage_path}/{test_dataset_name}.csv",
-            dtype={
+        read_from_gcs(
+            storage_path,
+            test_dataset_name,
+        )
+        .astype(
+            {
                 "user_id": str,
                 "item_id": str,
-            },
+            }
         )[["user_id", "item_id"]]
         .merge(raw_data, on=["user_id", "item_id"], how="inner")
         .drop_duplicates()

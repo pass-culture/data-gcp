@@ -18,6 +18,8 @@ from utils.constants import (
 )
 from utils.mlflow_tools import connect_remote_mlflow, get_mlflow_experiment
 from utils.secrets_utils import get_secret
+from utils.data_collect_queries import read_from_gcs
+
 
 L2_REG = 0
 N_EPOCHS = 1000
@@ -53,11 +55,11 @@ def train(
 ):
     tf.random.set_seed(seed)
 
-    train_data = pd.read_csv(
-        f"{STORAGE_PATH}/{training_table_name}.csv",
+    train_data = read_from_gcs(
+        storage_path=STORAGE_PATH, table_name=training_table_name
     ).astype(str)
-    validation_data = pd.read_csv(
-        f"{STORAGE_PATH}/{validation_table_name}.csv",
+    validation_data = read_from_gcs(
+        storage_path=STORAGE_PATH, table_name=validation_table_name
     ).astype(str)
 
     training_user_ids = train_data["user_id"].unique()

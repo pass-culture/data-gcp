@@ -1,7 +1,7 @@
 {
   "user_embedding_layers": {
       "user_id": {"type": "string", "embedding_size": 64},
-      "user_engagement": {"type": "int", "embedding_size": 8}
+      "user_theoretical_remaining_credit": {"type":  "int", "embedding_size":  4}
   },
   "item_embedding_layers": {
       "item_id": {"type": "string", "embedding_size": 64},

@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "7e967940-b01e-4808-b172-089a7fe99936",
+		"_postman_id": "5c850be1-c13e-4c52-b41d-5a3b3511bd68",
 		"name": "API Integration Tests",
 		"description": "Collection of integration tests for the reco api.\nMade with Postman",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
@@ -1489,18 +1489,6 @@
 							"\r",
 							"    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
 							"})\r",
-							"\r",
-							"pm.test(\"Response params must contain an array request_categories\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
-							"  pm.expect(jsonResponse).to.have.property('params')\r",
-							"  pm.expect(jsonResponse.params).to.have.property(\"request_categories\");\r",
-							"});\r",
-							"\r",
-							"pm.test(\"request_categories must at least 1 category\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse.params.request_categories.length).to.be.above(0);\r",
-							"});\r",
 							""
 						],
 						"type": "text/javascript"
@@ -1737,6 +1725,97 @@
 					"path": [
 						"similar_offers",
 						"{{offer_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/similar_offers/offer_id categories",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"pm.test(\"Response time is less than 10s\", function () {\r",
+							"    pm.expect(pm.response.responseTime).to.be.below(10000);\r",
+							"});\r",
+							"pm.test(\"Response must be a JSON and have a body\", function () {\r",
+							"     pm.response.to.be.ok;\r",
+							"     pm.response.to.be.withBody;\r",
+							"     pm.response.to.be.json;\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response must contain an array results\", function () {\r",
+							"  const jsonResponse = pm.response.json();\r",
+							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
+							"  pm.expect(jsonResponse).to.have.property('results')\r",
+							"  pm.expect(jsonResponse.results).to.be.an(\"array\");\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response must at least 1 offer\", function () {\r",
+							"  const jsonResponse = pm.response.json();\r",
+							"  pm.expect(jsonResponse.results.length).to.be.above(0);\r",
+							"});\r",
+							"\r",
+							"function checkIfArrayIsUnique(array) {\r",
+							"  return array.length === new Set(array).size;\r",
+							"}\r",
+							"\r",
+							"pm.test('Check if Offer_ids are unique', () => {\r",
+							"    let ids = []\r",
+							"    _.each(pm.response.json().results, (item) => {\r",
+							"        ids.push(item)\r",
+							"    })\r",
+							"\r",
+							"    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
+							"})\r",
+							"\r",
+							"\r",
+							"pm.test(\"Response must contain an array params with filtered = true\", function () {\r",
+							"  const jsonResponse = pm.response.json();\r",
+							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
+							"  pm.expect(jsonResponse).to.have.property('params')\r",
+							"  pm.expect(jsonResponse.params).to.have.property(\"filtered\");\r",
+							"  pm.expect(jsonResponse.params.filtered).to.be.true;\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{api_url}}/similar_offers/{{offer_id}}?token={{api_token}}&categories=LIVRE&categories=CINEMA&categories=SPECTACLE",
+					"host": [
+						"{{api_url}}"
+					],
+					"path": [
+						"similar_offers",
+						"{{offer_id}}"
+					],
+					"query": [
+						{
+							"key": "token",
+							"value": "{{api_token}}"
+						},
+						{
+							"key": "categories",
+							"value": "LIVRE"
+						},
+						{
+							"key": "categories",
+							"value": "CINEMA"
+						},
+						{
+							"key": "categories",
+							"value": "SPECTACLE"
+						}
 					]
 				}
 			},

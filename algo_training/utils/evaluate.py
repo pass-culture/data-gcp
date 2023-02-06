@@ -30,7 +30,7 @@ def evaluate(
     training_dataset_name: str = "recommendation_training_data",
     test_dataset_name: str = "recommendation_test_data",
 ):
-    raw_data = pd.read_csv(f"{storage_path}/bookings.csv").astype(
+    raw_data = read_from_gcs(storage_path, "bookings").astype(
         {"user_id": str, "item_id": str, "count": int}
     )
 
@@ -42,10 +42,12 @@ def evaluate(
         read_from_gcs(
             storage_path,
             test_dataset_name,
-            dtype={
+        )
+        .astype(
+            {
                 "user_id": str,
                 "item_id": str,
-            },
+            }
         )[["user_id", "item_id"]]
         .merge(raw_data, on=["user_id", "item_id"], how="inner")
         .drop_duplicates()

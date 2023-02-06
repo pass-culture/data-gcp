@@ -22,6 +22,7 @@ from utils.constants import (
 from utils.evaluate import evaluate, save_pca_representation
 from utils.mlflow_tools import connect_remote_mlflow
 from utils.secrets_utils import get_secret
+from utils.data_collect_queries import read_from_gcs
 
 
 def main(
@@ -78,7 +79,7 @@ def main(
         pca_plots_path = f"{MODEL_DIR}/pca_plots/"
         os.makedirs(pca_plots_path, exist_ok=True)
 
-        item_data = pd.read_csv(f"{STORAGE_PATH}/bookings.csv")[
+        item_data = read_from_gcs(STORAGE_PATH, "bookings")[
             ["item_id", "offer_categoryId", "offer_subcategoryid"]
         ]
         save_pca_representation(

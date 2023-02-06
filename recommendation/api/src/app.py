@@ -110,6 +110,9 @@ def playlist_recommendation(user_id: int):
                 "geo_located": geo_located,
                 "filtered": input_reco.has_conditions if input_reco else False,
                 "call_id": call_id,
+                "request_categories": input_reco.search_group_names
+                if input_reco
+                else None,
             },
         }
     )
@@ -146,6 +149,9 @@ def similar_offers(offer_id: str):
                 "geo_located": geo_located,
                 "filtered": input_reco.has_conditions if input_reco else False,
                 "call_id": call_id,
+                "request_categories": input_reco.search_group_names
+                if input_reco
+                else None,
             },
         }
     )

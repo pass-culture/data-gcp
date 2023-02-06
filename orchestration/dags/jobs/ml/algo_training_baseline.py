@@ -164,7 +164,7 @@ with DAG(
         store_data[split] = BigQueryToGCSOperator(
             task_id=f"store_{split}_data",
             source_project_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DATE}_recommendation_{split}_data",
-            destination_cloud_storage_uris=f"{dag_config['STORAGE_PATH']}/recommendation_{split}_data.csv",
+            destination_cloud_storage_uris=f"{dag_config['STORAGE_PATH']}/recommendation_{split}_data/data-*.csv",
             export_format="CSV",
             dag=dag,
         )

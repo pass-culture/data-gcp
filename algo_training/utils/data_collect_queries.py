@@ -2,6 +2,7 @@ import json
 
 import pandas as pd
 from utils.constants import GCP_PROJECT_ID
+import subprocess
 
 
 def get_data_from_bigquery(
@@ -30,3 +31,16 @@ def get_data_from_bigquery(
     """
     data = pd.read_gbq(query)
     return data
+
+
+def read_from_gcs(storage_path, table_name, dtype=None):
+
+    bucket_name = f"{storage_path}/{table_name}/*.csv"
+    result = subprocess.run(["gsutil", "ls", bucket_name], stdout=subprocess.PIPE)
+    return pd.concat(
+        [
+            pd.read_csv(file.strip().decode("utf-8"), dtype=dtype)
+            for file in result.stdout.splitlines()
+        ],
+        ignore_index=True,
+    )

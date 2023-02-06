@@ -10,7 +10,8 @@ MODEL_REGION = os.environ.get("MODEL_REGION")
 MODEL_END_POINT = f"https://{MODEL_REGION}-ml.googleapis.com"
 # SQL
 SQL_BASE = os.environ.get("SQL_BASE")
-SQL_BASE_USER = os.environ.get("SQL_BASE_USER")
+SQL_BASE_USER_SECRET_ID = os.environ.get("SQL_BASE_USER")
+SQL_BASE_USER = access_secret(GCP_PROJECT, SQL_BASE_USER_SECRET_ID)
 SQL_BASE_SECRET_ID = os.environ.get("SQL_BASE_SECRET_ID")
 SQL_CONNECTION_NAME = os.environ.get("SQL_CONNECTION_NAME")
 SQL_BASE_PASSWORD = os.environ.get(

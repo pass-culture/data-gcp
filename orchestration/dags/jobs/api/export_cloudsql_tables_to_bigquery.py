@@ -35,13 +35,15 @@ DAG_FOLDER = os.environ.get("DAG_FOLDER")
 BIGQUERY_RAW_DATASET = os.environ.get("BIGQUERY_RAW_DATASET")
 
 GCP_REGION = "europe-west1"
-RECOMMENDATION_SQL_INSTANCE="recommendation-dev-test-ew1"
-RECOMMENDATION_SQL_SUFFIX="ee21a130"
+RECOMMENDATION_SQL_INSTANCE = "recommendation-dev-test-ew1"
+RECOMMENDATION_SQL_SUFFIX = "ee21a130"
 database_url = access_secret_data(
     GCP_PROJECT_ID, f"{RECOMMENDATION_SQL_INSTANCE}_database_url", default=""
 )
 RECOMMENDATION_SQL_NAME = f"{RECOMMENDATION_SQL_INSTANCE}-{RECOMMENDATION_SQL_SUFFIX}"
-CONNECTION_ID="passculture-data-ehp.europe-west1.recommendation-dev-test-bq-connection"
+CONNECTION_ID = (
+    "passculture-data-ehp.europe-west1.recommendation-dev-test-bq-connection"
+)
 
 os.environ["AIRFLOW_CONN_PROXY_POSTGRES_TCP"] = (
     database_url.replace("postgresql://", "gcpcloudsql://")

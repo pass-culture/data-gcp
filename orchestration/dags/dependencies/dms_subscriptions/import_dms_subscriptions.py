@@ -44,7 +44,7 @@ destination_table_schema_pro = [
     {"name": "numero_identifiant_lieu", "type": "STRING"},
     {"name": "statut", "type": "STRING"},
     {"name": "typologie", "type": "STRING"},
-    {"name": "academie_instructeur", "type": "STRING"},
+    {"name": "academie_historique_intervention", "type": "STRING"},
     {"name": "academie_groupe_instructeur", "type": "STRING"},
     {"name": "domaines", "type": "STRING"},
 ]
@@ -104,7 +104,7 @@ def parse_api_result(updated_since, dms_target):
                 "numero_identifiant_lieu",
                 "statut",
                 "typologie",
-                "academie_instructeur",
+                "academie_historique_intervention",
                 "academie_groupe_instructeur",
                 "domaines",
             ]
@@ -235,7 +235,9 @@ def parse_result_pro(result, df_applications):
                         elif champs["id"] == "Q2hhbXAtMjQzMTg1OA==":
                             dossier_line["typologie"] = champs["stringValue"]
                         elif champs["id"] == "Q2hhbXAtMjQzMjIxMg==":
-                            dossier_line["academie_instructeur"] = champs["stringValue"]
+                            dossier_line["academie_historique_intervention"] = champs[
+                                "stringValue"
+                            ]
                         elif champs["id"] == "Q2hhbXAtMjQzMjM1Mw==":
                             dossier_line["domaines"] = champs["stringValue"]
                 else:
@@ -249,7 +251,7 @@ def parse_result_pro(result, df_applications):
                 if dossier["groupeInstructeur"]:
                     dossier_line["academie_groupe_instructeur"] = dossier[
                         "groupeInstructeur"
-                    ]["number"]
+                    ]["label"]
 
                 df_applications.loc[len(df_applications)] = dossier_line
     return

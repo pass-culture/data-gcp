@@ -8,6 +8,7 @@ WITH aggregated_reco as (SELECT
   , count(offerid) as nb_recommended_offers
 FROM `{{ bigquery_clean_dataset }}.past_recommended_offers`
 WHERE user_iris_id is not null AND user_iris_id != ""
+AND DATE(date) >= DATE_ADD(current_date(), INTERVAL - 6 MONTH)
 GROUP BY
   userid
   , call_id
@@ -20,11 +21,10 @@ count_iris as (SELECT
   , user_iris_id
   , count(user_iris_id) as iris_frequency_times
 FROM aggregated_reco
-WHERE DATE(reco_date) >= DATE_ADD(current_date(), INTERVAL - 6 MONTH)
 GROUP BY
   user_id
   , user_iris_id
-  ),
+),
 
 iris_frequency as (
 SELECT

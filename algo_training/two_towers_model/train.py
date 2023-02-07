@@ -25,7 +25,7 @@ from utils.data_collect_queries import read_from_gcs
 
 N_EPOCHS = 100
 MIN_DELTA = 0.001  # Minimum change in the accuracy before a callback is called
-LEARNING_RATE = 0.1
+LEARNING_RATE = 0.05
 VERBOSE = 2 if ENV_SHORT_NAME == "prod" else 1
 
 
@@ -105,6 +105,7 @@ def train(
         tf.data.Dataset.from_tensor_slices(validation_data.values)
         .batch(batch_size=batch_size)
         .map(lambda x: tf.transpose(x))
+        .cache()
     )
 
     user_dataset = (
@@ -116,6 +117,7 @@ def train(
         tf.data.Dataset.from_tensor_slices(train_item_data.values)
         .batch(batch_size=batch_size, drop_remainder=False)
         .map(lambda x: tf.transpose(x))
+        .cache()
     )
 
     # Connect to MLFlow
@@ -161,9 +163,9 @@ def train(
 
         # Divide the total validation steps by a ration to speed up training
         validation_steps = max(
-            int((len(validation_data) // batch_size) * validation_steps_ratio), 1
+            int((validation_data.shape[0] // batch_size) * validation_steps_ratio),
+            1,
         )
-
         two_tower_model.fit(
             train_dataset,
             epochs=N_EPOCHS,
@@ -171,14 +173,14 @@ def train(
             validation_steps=validation_steps,
             callbacks=[
                 tf.keras.callbacks.ReduceLROnPlateau(
-                    monitor="val_factorized_top_k/top_100_categorical_accuracy",
+                    monitor="val_factorized_top_k/top_50_categorical_accuracy",
                     factor=0.1,
                     patience=2,
                     min_delta=MIN_DELTA,
                     verbose=1,
                 ),
                 tf.keras.callbacks.EarlyStopping(
-                    monitor="val_factorized_top_k/top_100_categorical_accuracy",
+                    monitor="val_factorized_top_k/top_50_categorical_accuracy",
                     patience=3,
                     min_delta=MIN_DELTA,
                     verbose=1,

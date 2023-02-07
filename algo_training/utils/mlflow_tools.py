@@ -21,5 +21,6 @@ def connect_remote_mlflow(client_id, env="ehp"):
 def get_mlflow_experiment(experiment_name: str):
     experiment = mlflow.get_experiment_by_name(experiment_name)
     if experiment is None:
-        experiment = mlflow.create_experiment(name=experiment_name)
+        mlflow.create_experiment(name=experiment_name)
+        experiment = mlflow.get_experiment_by_name(experiment_name)
     return experiment

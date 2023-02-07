@@ -21,6 +21,7 @@ def define_import_tables():
         "cashflow_log",
         "cashflow_pricing",
         "cds_cinema_details",
+        "cinema_provider_pivot",
         "collective_booking",
         "collective_offer",
         "collective_offer_domain",

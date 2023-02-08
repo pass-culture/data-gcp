@@ -130,6 +130,20 @@ contentful_modules = [
         ],
     },
     {
+        "name": "categoryList",
+        "additional_fields": [
+            "title",
+            "category_block_list",
+        ],
+        "children": [
+            {
+                "name": "category_block_list",
+                "additional_fields": ["title", "image", "home_entry_id"],
+                "type": "list",
+            }
+        ],
+    },
+    {
         "name": "recommendation",
         "additional_fields": [
             "title",

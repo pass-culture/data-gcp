@@ -15,6 +15,7 @@ analytics_tables = {
     },
     "titelive_isbn_weight_20230208": {
         "sql": f"{SQL_PATH}/analytics/titelive_isbn_weight_20230208.sql",
-        "destination_dataset_table": "{{ bigquery_analytics_dataset }}.titelive_isbn_weight_20230208",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "titelive_isbn_weight_20230208",
     },
 }

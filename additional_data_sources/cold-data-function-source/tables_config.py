@@ -8,7 +8,6 @@ ref_tables = {
         "schema": {
             "ministry": "STRING",
             "date_update": "DATE",
-            "scholar_year": "STRING",
             "cash_in": "FLOAT",
         },
     },

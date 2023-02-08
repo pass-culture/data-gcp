@@ -39,7 +39,7 @@ actual_amount_spent AS (
     WHERE booking_is_used IS TRUE
     AND booking_is_cancelled IS FALSE
     GROUP BY
-        booking.deposit_id
+        deposit_id
 ),
 
 theoretical_amount_spent AS (

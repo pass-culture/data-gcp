@@ -11,7 +11,6 @@ SELECT
     booking_used_date,
     booking_cancellation_date,
     booking_cancellation_reason,
-    deposit_id,
     booking_reimbursement_date,
     DATE_ADD(CURRENT_DATE(), INTERVAL -1 DAY) as partition_date
 FROM `{{ bigquery_clean_dataset }}`.`applicative_database_booking`

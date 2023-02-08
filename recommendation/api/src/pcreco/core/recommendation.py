@@ -79,7 +79,9 @@ class Recommendation:
                 reverse=False,
             )
 
-        return [offer["id"] for offer in sorted_recommendations][: self.nb_reco_display]
+        return list(set([offer["id"] for offer in sorted_recommendations]))[
+            : self.nb_reco_display
+        ]
 
     def save_recommendation(self, recommendations) -> None:
         if len(recommendations) > 0:

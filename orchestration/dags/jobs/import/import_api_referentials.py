@@ -13,7 +13,7 @@ from common.operators.gce import (
 )
 from common.alerts import task_fail_slack_alert
 from common.config import GCP_PROJECT_ID, GCE_ZONE, ENV_SHORT_NAME
-
+from common.utils import get_airflow_schedule
 
 GCE_INSTANCE = f"import-api-referentials-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/analytics/scripts/import_api_referentials"
@@ -30,28 +30,25 @@ with DAG(
     "import_api_referentials",
     default_args=default_args,
     description="Continuous update of api model to BQ",
-    schedule_interval="0 0 * * 1",  # import every monday at 00:00
+    schedule_interval=get_airflow_schedule("0 0 * * 1"),  # import every monday at 00:00
     catchup=False,
     dagrun_timeout=timedelta(minutes=300),
     params={
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
-        ),
+        )
     },
 ) as dag:
 
     start = DummyOperator(task_id="start")
 
     gce_instance_start = StartGCEOperator(
-        instance_name=GCE_INSTANCE,
-        task_id="gce_start_task",
+        instance_name=GCE_INSTANCE, task_id="gce_start_task"
     )
 
     fetch_code = CloneRepositoryGCEOperator(
-        task_id="fetch_code",
-        instance_name=GCE_INSTANCE,
-        command="{{ params.branch }}",
+        task_id="fetch_code", instance_name=GCE_INSTANCE, command="{{ params.branch }}"
     )
 
     INSTALL_DEPS = """
@@ -73,27 +70,32 @@ with DAG(
         command=INSTALL_DEPS,
     )
 
-    tasks = []
-    for job_type in ["subcategories", "types"]:
+    subcategories_job = GCloudSSHGCEOperator(
+        task_id=f"import_subcategories",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_PATH,
+        command=f"""
+        conda init zsh
+        source ~/.zshrc
+        conda activate py310
+        python main.py --job_type=subcategories --gcp_project_id={GCP_PROJECT_ID} --env_short_name={ENV_SHORT_NAME}        
+    """,
+    )
 
-        PYTHON_CODE = f"""
-            conda init zsh
-            source ~/.zshrc
-            conda activate py310
-            python main.py --job_type={job_type} --gcp_project_id={GCP_PROJECT_ID} --env_short_name={ENV_SHORT_NAME}        
-        """
-
-        import_job = GCloudSSHGCEOperator(
-            task_id=f"import_{job_type}",
-            instance_name=GCE_INSTANCE,
-            base_dir=BASE_PATH,
-            command=PYTHON_CODE,
-        )
-        tasks.append(import_job)
+    types_job = GCloudSSHGCEOperator(
+        task_id=f"import_types",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_PATH,
+        command=f"""
+        conda init zsh
+        source ~/.zshrc
+        conda activate py310
+        python main.py --job_type=types --gcp_project_id={GCP_PROJECT_ID} --env_short_name={ENV_SHORT_NAME}        
+    """,
+    )
 
     gce_instance_stop = StopGCEOperator(
-        instance_name=GCE_INSTANCE,
-        task_id="gce_stop_task",
+        instance_name=GCE_INSTANCE, task_id="gce_stop_task"
     )
 
     (
@@ -101,6 +103,7 @@ with DAG(
         >> gce_instance_start
         >> fetch_code
         >> install_dependencies
-        >> tasks
+        >> subcategories_job
+        >> types_job
         >> gce_instance_stop
     )

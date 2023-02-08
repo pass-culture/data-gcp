@@ -119,6 +119,7 @@ SELECT
     venue.venue_department_code,
     offer.offer_id,
     offer.offer_product_id,
+    humanize_id(offer.offer_product_id) as offer_product_humanized_id,
     offer.offer_id_at_providers,
     offer.offer_name,
     offer.offer_subcategoryId,
@@ -191,9 +192,9 @@ SELECT
     sum_stock_view.stock AS stock,
     offer_humanized_id.humanized_id AS offer_humanized_id,
     CONCAT(
-        'https://passculture.pro/offres/',
+        'https://passculture.pro/offre/individuelle/',
         offer_humanized_id.humanized_id,
-        '/edition'
+        '/informations'
     ) AS passculture_pro_url,
     CONCAT('https://passculture.app/offre/', offer.offer_id) AS webapp_url,
     offer.offer_url as URL,

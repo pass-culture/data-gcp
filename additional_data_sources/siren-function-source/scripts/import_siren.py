@@ -1,10 +1,14 @@
 from datetime import datetime, timedelta
-from unittest import result
 from google.cloud import bigquery
 import pandas as pd
 import requests
 import time
-from scripts.utils import GCP_PROJECT, BIGQUERY_CLEAN_DATASET, TOKEN
+from scripts.utils import (
+    GCP_PROJECT,
+    BIGQUERY_CLEAN_DATASET,
+    get_api_token,
+    access_secret_data,
+)
 
 
 MAX_SIREN_CALL = 100
@@ -131,10 +135,12 @@ def append_info_siren_list(siren_info_list, result):
 
 # put token secrets
 def query_siren():
+    token = get_api_token(access_secret_data(GCP_PROJECT, "siren-key"))
+
     siren_info_list = []
     headers = {
         "Accept": "application/json",
-        "Authorization": f"""Bearer {TOKEN}""",
+        "Authorization": f"""Bearer {token}""",
     }
     siren_list = get_offerer_siren_list()
     if len(siren_list) > 0:

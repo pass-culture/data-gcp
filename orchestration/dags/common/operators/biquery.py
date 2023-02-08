@@ -11,7 +11,7 @@ def bigquery_job_task(dag, table, job_params, extra_params={}):
                 "query": "{% include '" + job_params["sql"] + "' %}",
                 "useLegacySql": False,
                 "destinationTable": {
-                    "projectId": GCP_PROJECT_ID,
+                    "projectId": job_params.get("destination_project", GCP_PROJECT_ID),
                     "datasetId": job_params["destination_dataset"],
                     "tableId": job_params["destination_table"],
                 },

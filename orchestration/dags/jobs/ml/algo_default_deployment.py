@@ -9,10 +9,8 @@ from airflow.models import Param
 from datetime import datetime, timedelta
 from common import macros
 from common.alerts import task_fail_slack_alert
-from common.config import (
-    ENV_SHORT_NAME,
-    DAG_FOLDER,
-)
+from common.config import ENV_SHORT_NAME, DAG_FOLDER
+from common.utils import get_airflow_schedule
 
 default_args = {
     "start_date": datetime(2022, 11, 30),
@@ -28,12 +26,12 @@ BASE_DIR = f"data-gcp/algo_training"
 
 models_to_deploy = [
     {
-        "experiment_name": f"algo_training_v1.1_{ENV_SHORT_NAME}",
+        "experiment_name": f"algo_training_clicks_v2.1_{ENV_SHORT_NAME}",
         "endpoint_name": f"recommendation_default_{ENV_SHORT_NAME}",
         "version_name": "v_{{ ts_nodash }}",
     },
     {
-        "experiment_name": f"similar_offers_v1.1_{ENV_SHORT_NAME}",
+        "experiment_name": f"similar_offers_clicks_v2.1_{ENV_SHORT_NAME}",
         "endpoint_name": f"similar_offers_default_{ENV_SHORT_NAME}",
         "version_name": "v_{{ ts_nodash }}",
     },
@@ -45,7 +43,7 @@ with DAG(
     "algo_default_deployment",
     default_args=default_args,
     description="ML Default Deployment job",
-    schedule_interval=schedule_dict[ENV_SHORT_NAME],
+    schedule_interval=get_airflow_schedule(schedule_dict[ENV_SHORT_NAME]),
     catchup=False,
     dagrun_timeout=timedelta(minutes=1440),
     user_defined_macros=macros.default,
@@ -54,7 +52,7 @@ with DAG(
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
-        ),
+        )
     },
 ) as dag:
     gce_instance_start = StartGCEOperator(
@@ -102,8 +100,7 @@ with DAG(
         tasks.append(deploy_model)
 
     gce_instance_stop = StopGCEOperator(
-        task_id="gce_stop_task",
-        instance_name=GCE_INSTANCE,
+        task_id="gce_stop_task", instance_name=GCE_INSTANCE
     )
 
     gce_instance_stop.set_upstream(tasks)

@@ -3,17 +3,17 @@ from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.http.operators.http import SimpleHttpOperator
 from airflow.operators.python import PythonOperator
-from common.config import DAG_FOLDER
 from common.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     DAG_FOLDER,
 )
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryExecuteQueryOperator,
+from common.operators.biquery import bigquery_job_task
+from common.utils import (
+    getting_service_account_token,
+    depends_loop,
+    get_airflow_schedule,
 )
-
-from common.utils import getting_service_account_token, depends_loop
 
 from common.alerts import task_fail_slack_alert
 
@@ -33,7 +33,7 @@ dag = DAG(
     "import_sendinblue",
     default_args=default_dag_args,
     description="Import sendinblue tables",
-    schedule_interval="00 01 * * *",
+    schedule_interval=get_airflow_schedule("00 01 * * *"),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,
@@ -43,9 +43,7 @@ dag = DAG(
 service_account_token = PythonOperator(
     task_id="getting_sendinblue_service_account_token",
     python_callable=getting_service_account_token,
-    op_kwargs={
-        "function_name": f"sendinblue_import_{ENV_SHORT_NAME}",
-    },
+    op_kwargs={"function_name": f"sendinblue_import_{ENV_SHORT_NAME}"},
     dag=dag,
 )
 
@@ -66,16 +64,7 @@ end_raw = DummyOperator(task_id="end_raw", dag=dag)
 
 analytics_table_jobs = {}
 for name, params in analytics_tables.items():
-
-    task = BigQueryExecuteQueryOperator(
-        task_id=f"{name}",
-        sql=params["sql"],
-        write_disposition="WRITE_TRUNCATE",
-        use_legacy_sql=False,
-        destination_dataset_table=params["destination_dataset_table"],
-        dag=dag,
-    )
-
+    task = bigquery_job_task(dag=dag, table=name, job_params=params)
     analytics_table_jobs[name] = {
         "operator": task,
         "depends": params.get("depends", []),

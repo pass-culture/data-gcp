@@ -19,7 +19,9 @@ WITH mapping_module_name_and_id AS (
                     "displayParameters",
                     "venuesSearchParameters",
                     "exclusivityDisplayParameters",
-                    "business"
+                    "business",
+                    "category_bloc",
+                    "category_list"
                 )
         )
     where
@@ -41,7 +43,8 @@ firebase_events AS (
             'BusinessBlockClicked',
             'ExclusivityBlockClicked',
             "SeeMoreClicked",
-            'ModuleDisplayedOnHomePage'
+            'ModuleDisplayedOnHomePage',
+            "CategoryBlockClicked"
         )
         AND (
             origin = 'home'

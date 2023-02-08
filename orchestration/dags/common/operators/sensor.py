@@ -12,8 +12,9 @@ class TimeSleepSensor(BaseSensorOperator):
     """
 
     @apply_defaults
-    def __init__(self, sleep_duration, *args, **kwargs):
+    def __init__(self, execution_delay, sleep_duration, *args, **kwargs):
         super(TimeSleepSensor, self).__init__(*args, **kwargs)
+        self.execution_delay = execution_delay
         self.sleep_duration = sleep_duration
         self.poke_interval = kwargs.get(
             "poke_interval", int(sleep_duration.total_seconds())
@@ -25,20 +26,17 @@ class TimeSleepSensor(BaseSensorOperator):
         run_id = context["dag_run"].run_id
         is_scheduled = run_id.startswith("scheduled__")
         if is_scheduled:
-            sensor_task_start_date = ti.start_date
+            sensor_task_start_date = ti.execution_date + self.execution_delay
             target_time = sensor_task_start_date + self.sleep_duration
-
+            target_result = timezone.utcnow() > target_time
             self.log.info(
-                "Checking if the target time ({} - check:{}) has come - time to go: {}, start: {}, initial sleep_duration: {}".format(
-                    target_time,
-                    (timezone.utcnow() > target_time),
-                    (target_time - timezone.utcnow()),
-                    sensor_task_start_date,
-                    self.sleep_duration,
-                )
+                f"Task start: {sensor_task_start_date}, target time: {target_time}"
+            )
+            self.log.info(
+                f"Checking time... {timezone.utcnow()}, Result : {target_result}"
             )
 
-            return timezone.utcnow() > target_time
+            return target_result
         else:
             self.log.info("Task not scheduled ! Pass.")
             return True

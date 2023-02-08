@@ -6,7 +6,7 @@ FROM (
     ROW_NUMBER() OVER(PARTITION BY user_id ORDER BY event_date) AS row_index,
     COUNT(*) OVER(PARTITION BY user_id) as total
   FROM
-    `{{ bigquery_raw_dataset }}`.`training_data_bookings`
+    `{{ bigquery_raw_dataset }}`.`training_data_{{ params.input_type }}`
   WHERE
     event_date >= DATE_SUB(DATE("{{ ds }}"), INTERVAL {{ params.event_day_number }} DAY)
 )

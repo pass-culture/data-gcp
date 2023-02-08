@@ -330,6 +330,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
     {
         "offer_id": "3",
         "offer_product_id": "1",
+        "offer_product_humanized_id": "AE",
         "offer_id_at_providers": "7",
         "item_id": "product-154181",
         "offerer_id": "3",
@@ -355,7 +356,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "favourite_cnt": 2.0,
         "stock": 10.0,
         "offer_humanized_id": "AM",
-        "passculture_pro_url": "https://passculture.pro/offres/AM/edition",
+        "passculture_pro_url": "https://passculture.pro/offre/individuelle/AM/informations",
         "webapp_url": "https://passculture.app/offre/3",
         "mediation_humanized_id": "ATJA",
         "first_booking_cnt": 1,
@@ -384,6 +385,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
     {
         "offer_id": "4",
         "offer_product_id": "2",
+        "offer_product_humanized_id": "A9",
         "offer_id_at_providers": "8",
         "item_id": "product-156157",
         "offerer_id": "4",
@@ -409,7 +411,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "favourite_cnt": 1.0,
         "stock": 12.0,
         "offer_humanized_id": "AQ",
-        "passculture_pro_url": "https://passculture.pro/offres/AQ/edition",
+        "passculture_pro_url": "https://passculture.pro/offre/individuelle/AQ/informations",
         "webapp_url": "https://passculture.app/offre/4",
         "mediation_humanized_id": None,
         "first_booking_cnt": None,

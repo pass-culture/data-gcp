@@ -155,6 +155,14 @@ WITH temp_firebase_events AS (
             from
                 unnest(event_params) event_params
             where
+                event_params.key = 'BETTER_OFFER_CREATION'
+        ) as is_new_offer_creation_path,
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
                 event_params.key = 'traffic_campaign'
         ) as traffic_campaign,
         (

@@ -2,9 +2,9 @@ import datetime
 from airflow import DAG
 from airflow.providers.http.operators.http import SimpleHttpOperator
 from airflow.operators.python import PythonOperator
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryExecuteQueryOperator,
-)
+from airflow.operators.dummy_operator import DummyOperator
+
+from common.operators.biquery import bigquery_job_task
 
 from common.config import DAG_FOLDER
 
@@ -16,11 +16,13 @@ from common.config import (
     DAG_FOLDER,
 )
 
-from common.utils import getting_service_account_token
+from common.utils import getting_service_account_token, get_airflow_schedule
 
 from common.alerts import task_fail_slack_alert
 
 from common import macros
+
+from dependencies.downloads.import_downloads import ANALYTICS_TABLES
 
 
 default_dag_args = {
@@ -35,7 +37,7 @@ dag = DAG(
     "import_downloads",
     default_args=default_dag_args,
     description="Import downloads tables",
-    schedule_interval="00 01 * * *",
+    schedule_interval=get_airflow_schedule("00 01 * * *"),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,
@@ -45,9 +47,7 @@ dag = DAG(
 getting_downloads_service_account_token = PythonOperator(
     task_id="getting_downloads_service_account_token",
     python_callable=getting_service_account_token,
-    op_kwargs={
-        "function_name": f"downloads_{ENV_SHORT_NAME}",
-    },
+    op_kwargs={"function_name": f"downloads_{ENV_SHORT_NAME}"},
     dag=dag,
 )
 
@@ -64,32 +64,15 @@ import_downloads_data_to_bigquery = SimpleHttpOperator(
     dag=dag,
 )
 # only downloads included here
-create_enriched_app_downloads_stats = BigQueryExecuteQueryOperator(
-    task_id="create_enriched_app_downloads_stats",
-    sql=f"""
-    SELECT 
-        date, 
-        'apple' as provider, 
-        sum(units) as total_downloads
-    FROM `{GCP_PROJECT_ID}.{BIGQUERY_RAW_DATASET}.apple_download_stats` 
+analytics_tasks = []
+for table, params in ANALYTICS_TABLES.items():
+    task = bigquery_job_task(table=table, dag=dag, job_params=params)
+    analytics_tasks.append(task)
 
-    WHERE product_type_identifier in ("1F") 
-    GROUP BY date
-    UNION ALL
-    SELECT 
-        date, 
-        'google' as provider, 
-        sum(daily_device_installs) as total_downloads
-    FROM `{GCP_PROJECT_ID}.{BIGQUERY_RAW_DATASET}.google_download_stats` 
-    GROUP BY date""",
-    destination_dataset_table=f"{BIGQUERY_ANALYTICS_DATASET}.app_downloads_stats",
-    write_disposition="WRITE_TRUNCATE",
-    use_legacy_sql=False,
-    dag=dag,
-)
-
+end = DummyOperator(task_id="end", dag=dag)
 (
     getting_downloads_service_account_token
     >> import_downloads_data_to_bigquery
-    >> create_enriched_app_downloads_stats
+    >> analytics_tasks
+    >> end
 )

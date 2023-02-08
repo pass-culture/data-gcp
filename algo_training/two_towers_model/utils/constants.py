@@ -1,0 +1,1 @@
+CONFIGS_PATH = "configs"

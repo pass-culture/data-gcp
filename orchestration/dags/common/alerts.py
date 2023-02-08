@@ -5,9 +5,8 @@ from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
 
 from datetime import datetime
 from common.access_gcp_secrets import access_secret_data
-from common.config import GCP_PROJECT_ID, ENV_SHORT_NAME
+from common.config import GCP_PROJECT_ID, ENV_SHORT_NAME, SLACK_CONN_ID
 
-SLACK_CONN_ID = "slack_analytics"
 
 ENV_EMOJI = {
     "prod": ":volcano: *PROD* :volcano:",

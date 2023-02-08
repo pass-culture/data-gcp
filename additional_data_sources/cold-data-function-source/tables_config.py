@@ -18,7 +18,7 @@ ref_tables = {
             "EAN13": "STRING",
             "POIDS": "INTEGER",
             "LONGUEUR": "INTEGER",
-            "LARGEUR": "INTEGER",       
+            "LARGEUR": "INTEGER",
         },
     },
 }

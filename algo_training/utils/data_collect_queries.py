@@ -44,4 +44,8 @@ def read_from_gcs(storage_path, table_name):
     max_process = cpu_count() - 1
     files = [file.strip().decode("utf-8") for file in result.stdout.splitlines()]
     with Pool(processes=max_process) as pool:
-        return pd.concat(pool.map(read_parquet, files), ignore_index=True).sample(frac=1).reset_index(drop=True)
+        return (
+            pd.concat(pool.map(read_parquet, files), ignore_index=True)
+            .sample(frac=1)
+            .reset_index(drop=True)
+        )

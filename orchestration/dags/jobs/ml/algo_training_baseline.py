@@ -47,10 +47,10 @@ dag_config = {
 # Params
 train_params = {
     "batch_size": 8192,
-    "validation_steps_ratio": 0.2 if ENV_SHORT_NAME == "prod" else 0.4,
+    "validation_steps_ratio": 0.1 if ENV_SHORT_NAME == "prod" else 0.4,
     "embedding_size": 64,
-    "train_set_size": 0.8,
-    "event_day_number": 120 if ENV_SHORT_NAME == "prod" else 20,
+    "train_set_size": 0.9 if ENV_SHORT_NAME == "prod" else 0.8,
+    "event_day_number": 90 if ENV_SHORT_NAME == "prod" else 20,
 }
 gce_params = {
     "instance_name": f"algo-training-baseline-{ENV_SHORT_NAME}",

@@ -108,7 +108,6 @@ analytics_tables = {
             "offer_extracted_data",
             "offer_item_ids",
         ],
-        # "dag_depends": ["link_offers"]
     },
     "enriched_offerer_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_offerer_data.sql",
@@ -123,10 +122,7 @@ analytics_tables = {
     "enriched_suivi_dms_adage": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_suivi_dms_adage.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "depends": [
-            "enriched_offerer_data",
-            "enriched_venue_data",
-        ],  # add adage; dms_pro (?)
+        "depends": ["enriched_offerer_data", "enriched_venue_data"],
         "dag_depends": [
             "import_typeform_adage_reference_request",
             "import_adage_v1",
@@ -309,6 +305,34 @@ analytics_tables = {
             ]
         },
     },
+    "analytics_firebase_home_events_details": {
+        "sql": f"{ANALYTICS_SQL_PATH}/firebase_home_events_details.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "firebase_home_events_details",
+        "time_partitioning": {"field": "event_date"},
+        "clustering_fields": {"fields": ["event_type"]},
+        "depends": ["diversification_booking", "enriched_user_data"],
+        "dag_depends": [
+            "import_daily_firebase_data",
+            "import_contentful",
+        ],  # computed once a day
+    },
+    "adage_involved_student": {
+        "sql": f"{ANALYTICS_SQL_PATH}/adage_involved_student.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "adage_involved_student",
+        "dag_depends": ["import_adage_v1"],
+    },
+    "analytics_firebase_recommendation_events": {
+        "sql": f"{ANALYTICS_SQL_PATH}/firebase_recommendation_events.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "firebase_recommendation_events",
+        "time_partitioning": {"field": "event_date"},
+        "dag_depends": [
+            "export_cloudsql_tables_to_bigquery_v1",
+            "import_daily_firebase_data",
+        ],  # computed once a day
+    },
 }
 
 aggregated_tables = {
@@ -336,6 +360,13 @@ aggregated_tables = {
         "sql": f"{ANALYTICS_SQL_PATH}/aggregated_user_stats_reco.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "depends": ["enriched_user_data"],
+    },
+    "aggregated_daily_offer_consultation_data": {
+        "sql": f"{ANALYTICS_SQL_PATH}/aggregated_daily_offer_consultation_data.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "aggregated_daily_offer_consultation_data",
+        "depends": ["enriched_user_data", "enriched_offer_data"],
+        "dag_depends": ["import_daily_firebase_data"],  # computed once a day
     },
 }
 

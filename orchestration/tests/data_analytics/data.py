@@ -1100,6 +1100,7 @@ ENRICHED_BOOKING_DATA_INPUT = {
     "applicative_database_booking": [
         {
             "booking_id": "1",
+            "user_id": "13",
             "deposit_id": "18",
             "booking_amount": 3,
             "booking_quantity": 1,

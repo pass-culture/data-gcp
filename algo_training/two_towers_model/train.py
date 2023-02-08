@@ -25,7 +25,7 @@ from utils.data_collect_queries import read_from_gcs
 
 N_EPOCHS = 100
 MIN_DELTA = 0.001  # Minimum change in the accuracy before a callback is called
-LEARNING_RATE = 0.05
+LEARNING_RATE = 0.1
 VERBOSE = 1 if ENV_SHORT_NAME == "prod" else 1
 
 
@@ -83,12 +83,20 @@ def train(
     item_columns = list(item_features_config.keys())
 
     # We ensure that the datasets contains the features in the correct order (user_id, ..., item_id, ...)
-    train_data = read_from_gcs(
-        storage_path=STORAGE_PATH, table_name=training_table_name
-    )[user_columns + item_columns].astype(str).sample(frac=1, ignore_index=True)
-    validation_data = read_from_gcs(
-        storage_path=STORAGE_PATH, table_name=validation_table_name
-    )[user_columns + item_columns].astype(str).sample(frac=1, ignore_index=True)
+    train_data = (
+        read_from_gcs(storage_path=STORAGE_PATH, table_name=training_table_name)[
+            user_columns + item_columns
+        ]
+        .astype(str)
+        .sample(frac=1, ignore_index=True)
+    )
+    validation_data = (
+        read_from_gcs(storage_path=STORAGE_PATH, table_name=validation_table_name)[
+            user_columns + item_columns
+        ]
+        .astype(str)
+        .sample(frac=1, ignore_index=True)
+    )
 
     train_user_data = train_data[user_columns].drop_duplicates(subset=["user_id"])
     train_item_data = train_data[item_columns].drop_duplicates(subset=["item_id"])
@@ -170,7 +178,7 @@ def train(
             ),
             10,
         )
-
+        # TODO https://github.com/tensorflow/recommenders/issues/388
         logger.info(f"Validation steps {validation_steps}")
         two_tower_model.fit(
             train_dataset,

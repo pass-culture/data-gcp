@@ -4,7 +4,8 @@
       "user_engagement": {"type": "int", "embedding_size": 8},
       "user_queries": {"type":  "text", "embedding_size":  8},
       "has_added_offer_to_favorites": {"type":  "int", "embedding_size":  4},
-      "user_theoretical_remaining_credit": {"type":  "int", "embedding_size":  4}
+      "user_theoretical_remaining_credit": {"type":  "int", "embedding_size":  4},
+      "consult_offer": {"type":  "int", "embedding_size":  4}
   },
   "item_embedding_layers": {
       "item_id": {"type": "string", "embedding_size": 64},

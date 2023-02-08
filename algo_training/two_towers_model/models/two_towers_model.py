@@ -79,7 +79,8 @@ class TwoTowersModel(tfrs.models.Model):
 
         user_embedding = self.user_model(user_features)
         item_embedding = self.item_model(item_features)
-
+        # TODO add implicit_weights = features["click"]
+        # sample_weight=implicit_weights
         return self.task(user_embedding, item_embedding, compute_metrics=not training)
 
     @staticmethod
@@ -113,7 +114,7 @@ class SingleTowerModel(tf.keras.models.Model):
             self._embedding_layers[layer_name] = layer_class.build_sequential_layer(
                 vocabulary=self.data[layer_name].unique()
             )
-        self._dense1 = tf.keras.layers.Dense(embedding_size*2, activation="relu")
+        self._dense1 = tf.keras.layers.Dense(embedding_size * 2, activation="relu")
         self._dense2 = tf.keras.layers.Dense(embedding_size)
 
     def call(self, features: dict, training=False):

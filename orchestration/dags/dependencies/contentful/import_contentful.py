@@ -21,11 +21,15 @@ contentful_tables = {
         "sql": f"{SQL_PATH}/contentful_homepages.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "contentful_homepages",
+        "dag_depends": [
+            {"import_daily_firebase_data": "analytics_firebase_events"}
+        ],  # dag_id: task_id
     },
     "contentful_algolia_modules_criterion": {
         "sql": f"{SQL_PATH}/contentful_algolia_modules_criterion.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "contentful_algolia_modules_criterion",
         "depends": ["contentful_entries", "contentful_relationships"],
+        "dag_depends": [{"import_analytics_v7": "end_import"}],  # dag_id: task_id
     },
 }

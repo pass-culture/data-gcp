@@ -57,13 +57,16 @@ class TwoTowersModel(tfrs.models.Model):
         )
 
         self.task = tfrs.tasks.Retrieval(
+            loss=tf.keras.losses.CategoricalCrossentropy(
+                from_logits=True, reduction=tf.keras.losses.Reduction.SUM
+            ),
             metrics=tfrs.metrics.FactorizedTopK(
                 candidates=items_dataset.map(self.item_model),
                 metrics=[
                     tf.keras.metrics.TopKCategoricalAccuracy(
                         k=x, name=f"factorized_top_k/top_{x}_categorical_accuracy"
                     )
-                    for x in [10, 50]
+                    for x in [50]
                 ],
             ),
         )
@@ -110,8 +113,7 @@ class SingleTowerModel(tf.keras.models.Model):
             self._embedding_layers[layer_name] = layer_class.build_sequential_layer(
                 vocabulary=self.data[layer_name].unique()
             )
-
-        self._dense1 = tf.keras.layers.Dense(embedding_size * 2, activation="relu")
+        self._dense1 = tf.keras.layers.Dense(embedding_size*2, activation="relu")
         self._dense2 = tf.keras.layers.Dense(embedding_size)
 
     def call(self, features: dict, training=False):
@@ -123,6 +125,7 @@ class SingleTowerModel(tf.keras.models.Model):
             feature_embeddings,
             axis=1,
         )
+
         x = self._dense1(x)
-        out = self._dense2(x)
-        return out
+        x = self._dense2(x)
+        return x

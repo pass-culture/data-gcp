@@ -26,7 +26,7 @@ from utils.data_collect_queries import read_from_gcs
 N_EPOCHS = 100
 MIN_DELTA = 0.001  # Minimum change in the accuracy before a callback is called
 LEARNING_RATE = 0.05
-VERBOSE = 2 if ENV_SHORT_NAME == "prod" else 1
+VERBOSE = 1 if ENV_SHORT_NAME == "prod" else 1
 
 
 def train(
@@ -85,10 +85,10 @@ def train(
     # We ensure that the datasets contains the features in the correct order (user_id, ..., item_id, ...)
     train_data = read_from_gcs(
         storage_path=STORAGE_PATH, table_name=training_table_name
-    )[user_columns + item_columns].astype(str)
+    )[user_columns + item_columns].astype(str).sample(frac=1, ignore_index=True)
     validation_data = read_from_gcs(
         storage_path=STORAGE_PATH, table_name=validation_table_name
-    )[user_columns + item_columns].astype(str)
+    )[user_columns + item_columns].astype(str).sample(frac=1, ignore_index=True)
 
     train_user_data = train_data[user_columns].drop_duplicates(subset=["user_id"])
     train_item_data = train_data[item_columns].drop_duplicates(subset=["item_id"])
@@ -105,14 +105,15 @@ def train(
         tf.data.Dataset.from_tensor_slices(validation_data.values)
         .batch(batch_size=batch_size)
         .map(lambda x: tf.transpose(x))
-        .cache()
     )
 
     user_dataset = (
         tf.data.Dataset.from_tensor_slices(train_user_data.values)
         .batch(batch_size=batch_size, drop_remainder=False)
         .map(lambda x: tf.transpose(x))
+        .cache()
     )
+
     item_dataset = (
         tf.data.Dataset.from_tensor_slices(train_item_data.values)
         .batch(batch_size=batch_size, drop_remainder=False)
@@ -162,10 +163,15 @@ def train(
         )
 
         # Divide the total validation steps by a ration to speed up training
-        validation_steps = max(
-            int((validation_data.shape[0] // batch_size) * validation_steps_ratio),
-            1,
+        validation_steps = min(
+            max(
+                int((validation_data.shape[0] // batch_size) * validation_steps_ratio),
+                1,
+            ),
+            10,
         )
+
+        logger.info(f"Validation steps {validation_steps}")
         two_tower_model.fit(
             train_dataset,
             epochs=N_EPOCHS,
@@ -175,13 +181,13 @@ def train(
                 tf.keras.callbacks.ReduceLROnPlateau(
                     monitor="val_factorized_top_k/top_50_categorical_accuracy",
                     factor=0.1,
-                    patience=2,
+                    patience=5,
                     min_delta=MIN_DELTA,
                     verbose=1,
                 ),
                 tf.keras.callbacks.EarlyStopping(
                     monitor="val_factorized_top_k/top_50_categorical_accuracy",
-                    patience=3,
+                    patience=10,
                     min_delta=MIN_DELTA,
                     verbose=1,
                 ),
@@ -198,7 +204,6 @@ def train(
         user_embeddings = two_tower_model.user_model.predict(user_dataset)
         logger.info("Predicting final item embeddings")
         item_embeddings = two_tower_model.item_model.predict(item_dataset)
-
         logger.info("Building and saving the MatchModel")
         match_model = MatchModel(
             user_ids=train_user_data["user_id"].unique(),

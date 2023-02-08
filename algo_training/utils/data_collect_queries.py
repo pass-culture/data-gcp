@@ -35,7 +35,6 @@ def get_data_from_bigquery(
 
 
 def read_parquet(file):
-    print(file)
     return pd.read_parquet(file)
 
 

@@ -1100,7 +1100,7 @@ ENRICHED_BOOKING_DATA_INPUT = {
     "applicative_database_booking": [
         {
             "booking_id": "1",
-            "desposit_id": "18",
+            "deposit_id": "18",
             "booking_amount": 3,
             "booking_quantity": 1,
             "booking_creation_date": datetime.now().replace(microsecond=0),

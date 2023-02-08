@@ -14,7 +14,7 @@ ENRICHED_OFFER_DATA_INPUT = {
             "booking_is_cancelled": False,
             "booking_is_used": False,
             "booking_used_date": "2019-11-22",
-        },
+        }
     ],
     "applicative_database_favorite": [
         {"id": "1", "offerId": "3", "userId": "1"},
@@ -101,22 +101,8 @@ ENRICHED_OFFER_DATA_INPUT = {
             "isbn": "156157",
         },
     ],
-    "isbn_editor": [
-        {
-            "isbn": "156157",
-            "book_editor": "Hachette",
-        }
-    ],
-    "offer_tags": [
-        {
-            "offer_id": "3",
-            "tag": "none",
-        },
-        {
-            "offer_id": "4",
-            "tag": "none",
-        },
-    ],
+    "isbn_editor": [{"isbn": "156157", "book_editor": "Hachette"}],
+    "offer_tags": [{"offer_id": "3", "tag": "none"}, {"offer_id": "4", "tag": "none"}],
     "applicative_database_offerer": [
         {
             "offerer_id": "3",
@@ -151,10 +137,10 @@ ENRICHED_OFFER_DATA_INPUT = {
             "recipientName": "Toto",
             "recipientSiren": "123456789",
             "author": "test",
-        },
+        }
     ],
     "applicative_database_payment_status": [
-        {"paymentId": "1", "id": "1", "date": "2019-01-01", "status": "PENDING"},
+        {"paymentId": "1", "id": "1", "date": "2019-01-01", "status": "PENDING"}
     ],
     "applicative_database_product": [
         {
@@ -316,14 +302,8 @@ ENRICHED_OFFER_DATA_INPUT = {
         }
     ],
     "offer_item_ids": [
-        {
-            "offer_id": "3",
-            "item_id": "product-154181",
-        },
-        {
-            "offer_id": "4",
-            "item_id": "product-156157",
-        },
+        {"offer_id": "3", "item_id": "product-154181"},
+        {"offer_id": "4", "item_id": "product-156157"},
     ],
 }
 ENRICHED_OFFER_DATA_EXPECTED = [
@@ -480,10 +460,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_INPUT = {
         }
     ],
     "applicative_database_offerer": [
-        {
-            "offerer_id": "22",
-            "offerer_name": "Ma structure",
-        }
+        {"offerer_id": "22", "offerer_name": "Ma structure"}
     ],
     "applicative_database_collective_offer": [
         {
@@ -508,24 +485,10 @@ ENRICHED_COLLECTIVE_OFFER_DATA_INPUT = {
             "collective_offer_image_id": "28",
         }
     ],
-    "subcategories": [
-        {
-            "id": "CONCERT",
-            "category_id": "MUSIQUE_LIVE",
-        }
-    ],
-    "academie_dept": [
-        {
-            "code_dpt": "35",
-            "libelle_academie": "Rennes",
-        }
-    ],
+    "subcategories": [{"id": "CONCERT", "category_id": "MUSIQUE_LIVE"}],
+    "academie_dept": [{"code_dpt": "35", "libelle_academie": "Rennes"}],
     "region_department": [
-        {
-            "num_dep": 35,
-            "dep_name": "Ile-et-Vilaine",
-            "region_name": "Bretagne",
-        }
+        {"num_dep": 35, "dep_name": "Ile-et-Vilaine", "region_name": "Bretagne"}
     ],
 }
 
@@ -687,14 +650,8 @@ ENRICHED_STOCK_DATA_INPUT = {
         },
     ],
     "available_stock_information": [
-        {
-            "stock_id": "1",
-            "available_stock_information": 8,
-        },
-        {
-            "stock_id": "2",
-            "available_stock_information": 12,
-        },
+        {"stock_id": "1", "available_stock_information": 8},
+        {"stock_id": "2", "available_stock_information": 12},
     ],
     "stock_booking_information": [
         {
@@ -866,14 +823,7 @@ ENRICHED_USER_DATA_INPUT = {
             "deposit_rank_desc": 1,
         }
     ],
-    "applicative_database_offerer": [
-        {
-            "offerer_id": "1",
-        },
-        {
-            "offerer_id": "1",
-        },
-    ],
+    "applicative_database_offerer": [{"offerer_id": "1"}, {"offerer_id": "1"}],
     "applicative_database_venue": [{"venue_id": "1", "venue_managing_offerer_id": "1"}],
     "applicative_database_booking": [
         {
@@ -885,7 +835,7 @@ ENRICHED_USER_DATA_INPUT = {
             "booking_amount": 10,
             "booking_quantity": 2,
             "booking_creation_date": datetime.now().replace(microsecond=0),
-        },
+        }
     ],
     "applicative_database_offer": [
         {
@@ -894,17 +844,11 @@ ENRICHED_USER_DATA_INPUT = {
             "venue_id": "1",
             "offer_product_id": "1",
             "offer_url": "url",
-        },
-    ],
-    "applicative_database_stock": [
-        {"stock_id": "1", "offer_id": "1"},
-    ],
-    "region_department": [
-        {
-            "num_dep": 93,
-            "dep_name": "Seine-Saint-Denis",
-            "region_name": "Île-de-France",
         }
+    ],
+    "applicative_database_stock": [{"stock_id": "1", "offer_id": "1"}],
+    "region_department": [
+        {"num_dep": 93, "dep_name": "Seine-Saint-Denis", "region_name": "Île-de-France"}
     ],
     "subcategories": [
         {
@@ -993,16 +937,10 @@ ENRICHED_VENUE_DATA_INPUT = {
         }
     ],
     "applicative_database_collective_offer": [
-        {
-            "collective_offer_id": "1",
-            "venue_id": "1",
-        }
+        {"collective_offer_id": "1", "venue_id": "1"}
     ],
     "applicative_database_collective_offer_template": [
-        {
-            "collective_offer_id": "1",
-            "venue_id": "1",
-        }
+        {"collective_offer_id": "1", "venue_id": "1"}
     ],
     "enriched_offer_data": [
         {
@@ -1022,12 +960,7 @@ ENRICHED_VENUE_DATA_INPUT = {
     ],
     "applicative_database_payment": [],
     "applicative_database_payment_status": [],
-    "applicative_database_stock": [
-        {
-            "stock_id": "1",
-            "offer_id": "1",
-        }
-    ],
+    "applicative_database_stock": [{"stock_id": "1", "offer_id": "1"}],
     "applicative_database_venue": [
         {
             "venue_id": "1",
@@ -1110,19 +1043,9 @@ ENRICHED_OFFERER_DATA_INPUT = {
             "booking_amount": 2,
         }
     ],
-    "applicative_database_offer": [
-        {
-            "offer_id": "1",
-            "venue_id": "1",
-        }
-    ],
+    "applicative_database_offer": [{"offer_id": "1", "venue_id": "1"}],
     "enriched_offer_data": [
-        {
-            "offer_id": "1",
-            "offerer_id": "1",
-            "venue_id": "1",
-            "offer_is_bookable": True,
-        }
+        {"offer_id": "1", "offerer_id": "1", "venue_id": "1", "offer_is_bookable": True}
     ],
     "applicative_database_offerer": [
         {
@@ -1143,12 +1066,7 @@ ENRICHED_OFFERER_DATA_INPUT = {
             "stock_creation_date": datetime.now().replace(microsecond=0),
         }
     ],
-    "applicative_database_venue": [
-        {
-            "venue_id": "1",
-            "venue_managing_offerer_id": "1",
-        }
-    ],
+    "applicative_database_venue": [{"venue_id": "1", "venue_managing_offerer_id": "1"}],
     "applicative_database_venue_label": [],
     "applicative_database_venue_type": [],
     "region_department": [{"num_dep": "973", "region_name": "Guyane"}],
@@ -1182,7 +1100,7 @@ ENRICHED_BOOKING_DATA_INPUT = {
     "applicative_database_booking": [
         {
             "booking_id": "1",
-            "individual_booking_id": "1",
+            "desposit_id": "18",
             "booking_amount": 3,
             "booking_quantity": 1,
             "booking_creation_date": datetime.now().replace(microsecond=0),
@@ -1192,13 +1110,6 @@ ENRICHED_BOOKING_DATA_INPUT = {
             "booking_is_used": True,
             "booking_cancellation_date": None,
             "booking_used_date": datetime.now().replace(microsecond=0),
-        }
-    ],
-    "applicative_database_individual_booking": [
-        {
-            "individual_booking_id": "1",
-            "user_id": "13",
-            "deposit_id": "18",
         }
     ],
     "applicative_database_deposit": [
@@ -1272,7 +1183,6 @@ ENRICHED_BOOKING_DATA_EXPECTED = [
         "booking_cancellation_reason": None,
         "booking_creation_date": datetime.now().replace(microsecond=0),
         "booking_id": "1",
-        "individual_booking_id": "1",
         "booking_intermediary_amount": 3,
         "booking_status": "USED",
         "booking_is_cancelled": False,
@@ -1387,11 +1297,7 @@ ENRICHED_COLLECTIVE_BOOKING_DATA_INPUT = {
         }
     ],
     "region_department": [
-        {
-            "num_dep": 78,
-            "dep_name": "Yvelines",
-            "region_name": "Île-de-France",
-        }
+        {"num_dep": 78, "dep_name": "Yvelines", "region_name": "Île-de-France"}
     ],
     "eple": [
         {
@@ -1402,10 +1308,7 @@ ENRICHED_COLLECTIVE_BOOKING_DATA_INPUT = {
         }
     ],
     "applicative_database_offerer": [
-        {
-            "offerer_id": "2",
-            "offerer_name": "Ma structure",
-        }
+        {"offerer_id": "2", "offerer_name": "Ma structure"}
     ],
 }
 

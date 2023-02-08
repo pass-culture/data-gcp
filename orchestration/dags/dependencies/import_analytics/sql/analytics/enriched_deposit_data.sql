@@ -27,41 +27,39 @@ ranked_deposit_desc AS (
 ),
 actual_amount_spent AS (
     SELECT
-        individual_booking.deposit_id,
+        deposit_id,
         COALESCE(
             SUM(
-                booking.booking_amount * booking.booking_quantity
+                booking_amount * booking_quantity
             ),
             0
         ) AS deposit_actual_amount_spent
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_individual_booking AS individual_booking
-        JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_booking AS booking ON booking.individual_booking_id = individual_booking.individual_booking_id
-        AND booking.booking_is_used IS TRUE
-        AND booking.booking_is_cancelled IS FALSE
+        `{{ bigquery_analytics_dataset }}`.applicative_database_booking
+    WHERE booking_is_used IS TRUE
+    AND booking_is_cancelled IS FALSE
     GROUP BY
-        individual_booking.deposit_id
+        booking.deposit_id
 ),
 
 theoretical_amount_spent AS (
     SELECT
-        individual_booking.deposit_id,
+        deposit_id,
         COALESCE(
             SUM(
-                booking.booking_amount * booking.booking_quantity
+                booking_amount * booking_quantity
             ),
             0
         ) AS deposit_theoretical_amount_spent
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_individual_booking AS individual_booking
-        JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_booking AS booking ON booking.individual_booking_id = individual_booking.individual_booking_id
-        AND booking.booking_is_cancelled IS FALSE
+        `{{ bigquery_analytics_dataset }}`.applicative_database_booking
+    WHERE booking_is_cancelled IS FALSE
     GROUP BY
-        individual_booking.deposit_id
+        deposit_id
 ),
 theoretical_amount_spent_in_digital_goods AS (
     SELECT
-        individual_booking.deposit_id,
+        booking.deposit_id,
         COALESCE(
             SUM(
                 booking.booking_amount * booking.booking_quantity
@@ -69,8 +67,7 @@ theoretical_amount_spent_in_digital_goods AS (
             0
         ) AS deposit_theoretical_amount_spent_in_digital_goods
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_individual_booking AS individual_booking
-        JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_booking AS booking ON booking.individual_booking_id = individual_booking.individual_booking_id
+        `{{ bigquery_analytics_dataset }}`.applicative_database_booking AS booking
         LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_stock AS stock ON booking.stock_id = stock.stock_id
         LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offer AS offer ON stock.offer_id = offer.offer_id
         INNER JOIN `{{ bigquery_analytics_dataset }}`.subcategories AS subcategories ON offer.offer_subcategoryId = subcategories.id
@@ -79,21 +76,20 @@ theoretical_amount_spent_in_digital_goods AS (
         AND offer.offer_url IS NOT NULL
         AND booking.booking_is_cancelled IS FALSE
     GROUP BY
-        individual_booking.deposit_id
+        booking.deposit_id
 ),
 
 first_booking_date AS (
     SELECT
-        individual_booking.deposit_id,
-        MIN(booking.booking_creation_date) AS deposit_first_booking_date,
-        MAX(booking.booking_creation_date) AS deposit_last_booking_date,
-        COUNT(DISTINCT booking.booking_id) AS deposit_no_cancelled_bookings
+        deposit_id,
+        MIN(booking_creation_date) AS deposit_first_booking_date,
+        MAX(booking_creation_date) AS deposit_last_booking_date,
+        COUNT(DISTINCT booking_id) AS deposit_no_cancelled_bookings
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_individual_booking AS individual_booking
-        JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_booking AS booking ON booking.individual_booking_id = individual_booking.individual_booking_id
-        AND booking.booking_is_cancelled IS FALSE
+        `{{ bigquery_analytics_dataset }}`.applicative_database_booking 
+    WHERE booking_is_cancelled IS FALSE
     GROUP BY
-        individual_booking.deposit_id
+        deposit_id
 ),
 
 user_suspension_history AS (

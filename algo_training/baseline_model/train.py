@@ -1,17 +1,11 @@
-import json
-
 import mlflow
-import typer
-
 import tensorflow as tf
+import typer
 from loguru import logger
-import pandas as pd
 
-from two_towers_model.models.match_model import MatchModel
-from two_towers_model.models.two_towers_model import TwoTowersModel
-from two_towers_model.utils.constants import CONFIGS_PATH
+from baseline_model.models.baseline_model import BaselineModel
+from baseline_model.models.match_model import MatchModel
 from utils.callbacks import MLFlowLogging
-
 from utils.constants import (
     ENV_SHORT_NAME,
     MODEL_DIR,
@@ -19,24 +13,20 @@ from utils.constants import (
     TRAIN_DIR,
     MLFLOW_RUN_ID_FILENAME,
 )
+from utils.data_collect_queries import read_from_gcs
 from utils.mlflow_tools import connect_remote_mlflow, get_mlflow_experiment
 from utils.secrets_utils import get_secret
-from utils.data_collect_queries import read_from_gcs
 
 N_EPOCHS = 100
 MIN_DELTA = 0.001  # Minimum change in the accuracy before a callback is called
 LEARNING_RATE = 0.1
-VERBOSE = 1 if ENV_SHORT_NAME == "prod" else 1
+VERBOSE = 2 if ENV_SHORT_NAME == "prod" else 1
 
 
 def train(
     experiment_name: str = typer.Option(
         ...,
         help="MLFlow experiment name",
-    ),
-    config_file_name: str = typer.Option(
-        ...,
-        help="Name of the config file containing feature informations",
     ),
     batch_size: int = typer.Option(
         ...,
@@ -65,40 +55,27 @@ def train(
 ):
     tf.random.set_seed(seed)
 
-    with open(
-        f"{MODEL_DIR}/{CONFIGS_PATH}/{config_file_name}.json",
-        mode="r",
-        encoding="utf-8",
-    ) as config_file:
-        features = json.load(config_file)
-        user_features_config, item_features_config = (
-            features["user_embedding_layers"],
-            features["item_embedding_layers"],
-        )
-
     # Load data
     logger.info("Loading & processing datasets")
-
-    user_columns = list(user_features_config.keys())
-    item_columns = list(item_features_config.keys())
-
-    # We ensure that the datasets contains the features in the correct order (user_id, ..., item_id, ...)
     train_data = read_from_gcs(
         storage_path=STORAGE_PATH, table_name=training_table_name
-    )[user_columns + item_columns].astype(str)
+    )[["user_id", "item_id"]].astype(str)
+    logger.info(f"Train shape {train_data.shape[0]}")
+
     validation_data = read_from_gcs(
         storage_path=STORAGE_PATH, table_name=validation_table_name
-    )[user_columns + item_columns].astype(str)
+    )[["user_id", "item_id"]].astype(str)
 
-    train_user_data = train_data[user_columns].drop_duplicates(subset=["user_id"])
-    train_item_data = train_data[item_columns].drop_duplicates(subset=["item_id"])
+    logger.info(f"Train shape {validation_data.shape[0]}")
+
+    train_user_ids = train_data["user_id"].unique()
+    train_item_ids = train_data["item_id"].unique()
 
     # Build tf datasets
     logger.info("Building tf datasets")
 
     train_dataset = (
         tf.data.Dataset.from_tensor_slices(train_data.values)
-        .shuffle(buffer_size=10 * batch_size)
         .batch(batch_size=batch_size)
         .map(lambda x: tf.transpose(x))
     )
@@ -106,24 +83,13 @@ def train(
         tf.data.Dataset.from_tensor_slices(validation_data.values)
         .batch(batch_size=batch_size)
         .map(lambda x: tf.transpose(x))
-    ).cache()
-
-    user_dataset = (
-        tf.data.Dataset.from_tensor_slices(train_user_data.values)
-        .batch(batch_size=batch_size, drop_remainder=False)
-        .map(lambda x: tf.transpose(x))
-    ).cache()
-
-    item_dataset = (
-        tf.data.Dataset.from_tensor_slices(train_item_data.values)
-        .batch(batch_size=batch_size, drop_remainder=False)
-        .map(lambda x: tf.transpose(x))
-    ).cache()
+    )
 
     # Connect to MLFlow
     client_id = get_secret("mlflow_client_id")
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
     experiment = get_mlflow_experiment(experiment_name)
+
     with mlflow.start_run(experiment_id=experiment.experiment_id, run_name=run_name):
         logger.info("Connected to MLFlow")
 
@@ -140,53 +106,47 @@ def train(
                 "embedding_size": embedding_size,
                 "batch_size": batch_size,
                 "epoch_number": N_EPOCHS,
-                "user_count": len(train_user_data),
-                "user_feature_count": len(user_features_config.keys()),
-                "item_count": len(train_item_data),
-                "item_feature_count": len(item_features_config.keys()),
+                "user_count": len(train_user_ids),
+                "item_count": len(train_item_ids),
             }
         )
 
-        logger.info("Building the TwoTowersModel")
+        logger.info("Building the BaselineModel")
 
-        two_tower_model = TwoTowersModel(
-            data=train_data,
-            user_features_config=user_features_config,
-            item_features_config=item_features_config,
-            items_dataset=item_dataset,
+        baseline_model = BaselineModel(
+            user_ids=train_user_ids,
+            item_ids=train_item_ids,
             embedding_size=embedding_size,
         )
 
-        two_tower_model.compile(
+        baseline_model.compile(
             optimizer=tf.keras.optimizers.Adagrad(learning_rate=LEARNING_RATE),
         )
 
-        # Divide the total validation steps by a ration to speed up training
-        validation_steps = min(
-            max(
-                int((validation_data.shape[0] // batch_size) * validation_steps_ratio),
-                1,
-            ),
-            10,
+        # Divide the total validation steps by a ratio to speed up training
+        validation_steps = max(
+            int((validation_data.shape[0] // batch_size) * validation_steps_ratio), 1
         )
+        logger.info(f"Total validation steps {validation_steps}")
 
-        logger.info(f"Validation steps {validation_steps}")
-        two_tower_model.fit(
+        logger.info("Fit")
+
+        baseline_model.fit(
             train_dataset,
             epochs=N_EPOCHS,
             validation_data=validation_dataset,
             validation_steps=validation_steps,
             callbacks=[
                 tf.keras.callbacks.ReduceLROnPlateau(
-                    monitor="val_loss",
+                    monitor="val_factorized_top_k/top_50_categorical_accuracy",
                     factor=0.1,
-                    patience=5,
+                    patience=2,
                     min_delta=MIN_DELTA,
                     verbose=1,
                 ),
                 tf.keras.callbacks.EarlyStopping(
-                    monitor="val_loss",
-                    patience=10,
+                    monitor="val_factorized_top_k/top_50_categorical_accuracy",
+                    patience=3,
                     min_delta=MIN_DELTA,
                     verbose=1,
                 ),
@@ -200,13 +160,14 @@ def train(
         )
 
         logger.info("Predicting final user embeddings")
-        user_embeddings = two_tower_model.user_model.predict(user_dataset)
+        user_embeddings = baseline_model.user_model.predict(train_user_ids)
         logger.info("Predicting final item embeddings")
-        item_embeddings = two_tower_model.item_model.predict(item_dataset)
+        item_embeddings = baseline_model.item_model.predict(train_item_ids)
+
         logger.info("Building and saving the MatchModel")
         match_model = MatchModel(
-            user_ids=train_user_data["user_id"].unique(),
-            item_ids=train_item_data["item_id"].unique(),
+            user_ids=train_user_ids.tolist(),
+            item_ids=train_item_ids.tolist(),
             embedding_size=embedding_size,
         )
         match_model.set_embeddings(

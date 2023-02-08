@@ -88,14 +88,13 @@ def train(
             user_columns + item_columns
         ]
         .astype(str)
-        .sample(frac=1, ignore_index=True)
+        
     )
     validation_data = (
         read_from_gcs(storage_path=STORAGE_PATH, table_name=validation_table_name)[
             user_columns + item_columns
         ]
-        .astype(str)
-        .sample(frac=1, ignore_index=True)
+        .astype(str)   
     )
 
     train_user_data = train_data[user_columns].drop_duplicates(subset=["user_id"])

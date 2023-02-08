@@ -42,7 +42,7 @@ class BaselineModel(tfrs.models.Model):
                     tf.keras.metrics.TopKCategoricalAccuracy(
                         k=x, name=f"factorized_top_k/top_{x}_categorical_accuracy"
                     )
-                    for x in [10, 50]
+                    for x in [50]
                 ],
             ),
         )

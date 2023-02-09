@@ -22,7 +22,7 @@ contentful_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "contentful_homepages",
         "dag_depends": [
-            {"import_daily_firebase_data": "analytics_firebase_events"}
+            {"import_intraday_firebase_data": "analytics_firebase_events"}
         ],  # dag_id: task_id
     },
     "contentful_algolia_modules_criterion": {

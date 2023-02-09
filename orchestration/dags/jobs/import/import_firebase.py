@@ -14,8 +14,8 @@ import copy
 dags = {
     "daily": {
         "prefix": "_",
-        "schedule_interval": "00 13 * * *",
-        "wait_time": 720,  # plus two hours
+        "schedule_interval": "00 01 * * *",
+        "wait_time": 720,  # plus twelve hours
         # two days ago
         "yyyymmdd": "{{ yyyymmdd(add_days(ds, -1)) }}",
         "default_dag_args": {

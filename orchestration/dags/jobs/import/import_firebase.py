@@ -5,6 +5,7 @@ from airflow import DAG
 from common.utils import depends_loop, get_airflow_schedule
 from common.operators.biquery import bigquery_job_task
 from airflow.operators.dummy_operator import DummyOperator
+from common.operators.sensor import TimeSleepSensor
 from common.config import DAG_FOLDER, GCP_PROJECT_ID
 from dependencies.firebase.import_firebase import import_tables
 from common.alerts import task_fail_slack_alert
@@ -14,6 +15,7 @@ dags = {
     "daily": {
         "prefix": "_",
         "schedule_interval": "00 13 * * *",
+        "wait_time": 720,  # plus two hours
         # two days ago
         "yyyymmdd": "{{ yyyymmdd(add_days(ds, -1)) }}",
         "default_dag_args": {
@@ -25,7 +27,8 @@ dags = {
     },
     "intraday": {
         "prefix": "_intraday_",
-        "schedule_interval": "00 03 * * *",
+        "schedule_interval": "00 01 * * *",
+        "wait_time": 120,  # plus two hours
         # one day ago
         "yyyymmdd": "{{ yyyymmdd(ds) }}",
         "default_dag_args": {
@@ -56,8 +59,16 @@ for type, params in dags.items():
     )
 
     globals()[dag_id] = dag
-
+    # Cannot Schedule before 3UTC for intraday and 13UTC for daily
+    sleep_op = TimeSleepSensor(
+        task_id="sleep_task",
+        execution_delay=datetime.timedelta(days=1),  # Execution Date = day minus 1
+        sleep_duration=datetime.timedelta(minutes=params["wait_time"]),
+        poke_interval=3600,  # check every hour
+        mode="reschedule",
+    )
     start = DummyOperator(task_id="start", dag=dag)
+
     table_jobs = {}
     import_tables_temp = copy.deepcopy(import_tables)
     for table, job_params in import_tables_temp.items():
@@ -80,4 +91,5 @@ for type, params in dags.items():
         }
     table_jobs = depends_loop(table_jobs, start, dag=dag)
     end = DummyOperator(task_id="end", dag=dag)
+    sleep_op > start
     table_jobs >> end

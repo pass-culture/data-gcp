@@ -314,7 +314,7 @@ analytics_tables = {
         "clustering_fields": {"fields": ["event_type"]},
         "depends": ["diversification_booking", "enriched_user_data"],
         "dag_depends": [
-            "import_daily_firebase_data",
+            "import_intraday_firebase_data",
             "import_contentful",
         ],  # computed once a day
     },
@@ -331,7 +331,7 @@ analytics_tables = {
         "time_partitioning": {"field": "event_date"},
         "dag_depends": [
             "export_cloudsql_tables_to_bigquery_v1",
-            "import_daily_firebase_data",
+            "import_intraday_firebase_data",
         ],  # computed once a day
     },
 }
@@ -367,7 +367,7 @@ aggregated_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "aggregated_daily_offer_consultation_data",
         "depends": ["enriched_user_data", "enriched_offer_data"],
-        "dag_depends": ["import_daily_firebase_data"],  # computed once a day
+        "dag_depends": ["import_intraday_firebase_data"],  # computed once a day
     },
 }
 

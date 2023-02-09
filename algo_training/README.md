@@ -21,8 +21,8 @@ On peut les tester de la façon suivante (les commandes sont écrites pour l'env
 - on se place sur la branche où les nouvelles features sont en développement : `git checkout <nom-de-ma-branche>`
 - on exécute les scripts exécutés par Airflow : `python data_collect.py`, `python preprocess.py`
 - on vérifie les logs sur MLflow :
-  - pour le projet ehp : [mlflow-ehp.internal-passculture.app](https://mlflow-ehp.internal-passculture.app)
-  - pour le projet prod : [mlflow.internal-passculture.app](https://mlflow.internal-passculture.app)
+  - pour le projet ehp : [mlflow.staging.passculture.team](https://mlflow.staging.passculture.team)
+  - pour le projet prod : [mlflow.passculture.teamp](https://mlflow.passculture.teamp)
   - [Notion](https://www.notion.so/passcultureapp/Mlflow-1dbb2d3ec71e43cb871a5c389b79e753#bfa1e789cfd245e79bd6f2cecd11deda)
 
 ## Test du DAG algo_training en dev

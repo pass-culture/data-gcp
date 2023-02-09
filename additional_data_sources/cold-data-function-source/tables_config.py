@@ -8,8 +8,16 @@ ref_tables = {
         "schema": {
             "ministry": "STRING",
             "date_update": "DATE",
-            "scholar_year": "STRING",
             "cash_in": "FLOAT",
+        },
+    },
+    "titelive_isbn_weight": {
+        "file_type": "csv",
+        "schema": {
+            "EAN13": "STRING",
+            "POIDS": "INTEGER",
+            "LONGUEUR": "INTEGER",
+            "LARGEUR": "INTEGER",
         },
     },
 }

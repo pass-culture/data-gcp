@@ -32,5 +32,5 @@ SELECT
     au.consult_offer,
     au.has_added_offer_to_favorites,
 FROM selected_users eu
-JOIN `{{ bigquery_analytics_dataset }}.firebase_aggregated_users` au on eu.user_id = au.user_id
+LEFT JOIN `{{ bigquery_analytics_dataset }}.firebase_aggregated_users` au on eu.user_id = au.user_id
 QUALIFY ROW_NUMBER() over (PARTITION BY eu.user_id ORDER BY eu.booking_cnt DESC) = 1

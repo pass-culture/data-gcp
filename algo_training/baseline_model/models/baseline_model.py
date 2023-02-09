@@ -29,13 +29,21 @@ class BaselineModel(tfrs.models.Model):
             embedding_size=embedding_size
         ).build_sequential_layer(vocabulary=item_ids)
 
-        item_ids_dataset = tf.data.Dataset.from_tensor_slices(item_ids).batch(
-            batch_size=1024, drop_remainder=False
+        item_ids_dataset = (
+            tf.data.Dataset.from_tensor_slices(item_ids)
+            .batch(batch_size=1024, drop_remainder=False)
+            .cache()
         )
 
         self.task = tfrs.tasks.Retrieval(
             metrics=tfrs.metrics.FactorizedTopK(
                 candidates=item_ids_dataset.map(self.item_model),
+                metrics=[
+                    tf.keras.metrics.TopKCategoricalAccuracy(
+                        k=x, name=f"factorized_top_k/top_{x}_categorical_accuracy"
+                    )
+                    for x in [50]
+                ],
             ),
         )
 

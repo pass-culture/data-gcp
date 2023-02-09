@@ -5,5 +5,6 @@ ANALYTICS_TABLES = {
         "sql": f"{SQL_ANALYTICS_PATH}/siren_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "siren_data",
+        "dag_depends": ["import_analytis_v7"],
     }
 }

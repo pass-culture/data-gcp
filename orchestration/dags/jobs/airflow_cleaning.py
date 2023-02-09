@@ -12,7 +12,7 @@ default_args = {
 }
 
 
-clean_delay = {"prod": 60 * 24, "dev": 60 * 8, "stg": 60 * 8}
+clean_delay = {"prod": 60 * 12, "dev": 60 * 3, "stg": 60 * 6}
 
 
 dag = DAG(

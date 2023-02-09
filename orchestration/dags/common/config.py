@@ -20,9 +20,9 @@ BASE32_JS_LIB_PATH = f"gs://data-bucket-{ENV_SHORT_NAME}/base32-encode/base32.js
 GCE_TRAINING_INSTANCE = os.environ.get("GCE_TRAINING_INSTANCE", "algo-training-dev")
 MLFLOW_BUCKET_NAME = os.environ.get("MLFLOW_BUCKET_NAME", "mlflow-bucket-ehp")
 if ENV_SHORT_NAME != "prod":
-    MLFLOW_URL = "https://mlflow-ehp.internal-passculture.app/"
+    MLFLOW_URL = "https://mlflow.staging.passculture.team/"
 else:
-    MLFLOW_URL = "https://mlflow.internal-passculture.app/"
+    MLFLOW_URL = "https://mlflow.passculture.teamp/"
 
 APPLICATIVE_EXTERNAL_CONNECTION_ID = os.environ.get(
     "APPLICATIVE_EXTERNAL_CONNECTION_ID", ""

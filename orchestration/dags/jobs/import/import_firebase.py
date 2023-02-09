@@ -69,7 +69,7 @@ for type, params in dags.items():
         mode="reschedule",
     )
     start = DummyOperator(task_id="start", dag=dag)
-    sleep_op.set_upstream(start)
+    start.set_upstream(sleep_op)
 
     table_jobs = {}
     import_tables_temp = copy.deepcopy(import_tables)

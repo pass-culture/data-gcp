@@ -4,7 +4,7 @@ Repo contenant le code source pour les scripts python (ssh) pour la partie analy
 
 ## Scripts 
 
-### import_subcategories_model
+### import_api_referentials
 
 - Recupère les sous_categories `api.src.pcapi.core.categories.subcategories_v2`
 - Export `analytics_{env}.subcategories`

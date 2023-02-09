@@ -11,7 +11,7 @@ ref_tables = {
             "cash_in": "FLOAT",
         },
     },
-    "titelive_isbn_weight_20230208": {
+    "titelive_isbn_weight": {
         "file_type": "csv",
         "schema": {
             "EAN13": "STRING",

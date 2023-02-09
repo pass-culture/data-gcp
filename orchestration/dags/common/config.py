@@ -22,7 +22,7 @@ MLFLOW_BUCKET_NAME = os.environ.get("MLFLOW_BUCKET_NAME", "mlflow-bucket-ehp")
 if ENV_SHORT_NAME != "prod":
     MLFLOW_URL = "https://mlflow.staging.passculture.team/"
 else:
-    MLFLOW_URL = "https://mlflow.passculture.teamp/"
+    MLFLOW_URL = "https://mlflow.passculture.team/"
 
 APPLICATIVE_EXTERNAL_CONNECTION_ID = os.environ.get(
     "APPLICATIVE_EXTERNAL_CONNECTION_ID", ""

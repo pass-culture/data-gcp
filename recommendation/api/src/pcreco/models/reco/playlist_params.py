@@ -23,7 +23,7 @@ INPUT_PARAMS = [
     "movieType",
     "offerTypeLabel",
     "offerSubTypeLabel",
-    "macroRayon",
+    "macroBookSection",
     "priceMax",
     "priceMin",
     "nbRecoDisplay",
@@ -99,7 +99,7 @@ class PlaylistParamsIn:
         self.movie_type = json.get("movieType")
         self.offer_type_label = json.get("offerTypeLabel")
         self.offer_sub_type_label = json.get("offerSubTypeLabel")
-        self.macro_rayon = json.get("macroRayon")
+        self.macro_rayon = json.get("macroBookSection")
 
         self.price_min = parse_float(json.get("priceMin"))
         self.price_max = parse_float(json.get("priceMax"))

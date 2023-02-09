@@ -2,6 +2,7 @@ import json
 from datetime import datetime, timedelta
 
 from airflow import DAG
+from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.http.operators.http import SimpleHttpOperator
 from airflow.operators.python import PythonOperator
@@ -51,6 +52,11 @@ with DAG(
     dagrun_timeout=timedelta(minutes=180),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
+    params={
+        "updated_since": Param(
+            default="2023-01-01" if ENV_SHORT_NAME == "dev" else "2019-01-01"
+        )
+    },
 ) as dag:
 
     start = DummyOperator(task_id="start")
@@ -66,7 +72,7 @@ with DAG(
         method="POST",
         http_conn_id="http_gcp_cloud_function",
         endpoint=DMS_FUNCTION_NAME,
-        data=json.dumps({"updated_since": "{{ prev_start_date_success.isoformat() }}"}),
+        data=json.dumps({"updated_since": "{{ params.updated_since }}"}),
         headers={
             "Content-Type": "application/json",
             "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_service_account_token', key='return_value')}}",

@@ -13,4 +13,9 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "eac_cash_in",
     },
+    "titelive_isbn_weight": {
+        "sql": f"{SQL_PATH}/analytics/titelive_isbn_weight.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "titelive_isbn_weight",
+    },
 }

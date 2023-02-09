@@ -42,16 +42,18 @@ SELECT DISTINCT
     , user_id
     , user_pseudo_id
     , app_version
-    , LAST_VALUE(session_id) OVER (PARTITION BY search_id, user_id, user_pseudo_id ORDER BY event_timestamp) AS session_id
+    , LAST_VALUE(session_id) OVER (PARTITION BY search_id, user_id, user_pseudo_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS session_id
     , LAST_VALUE(query IGNORE NULLS) OVER (PARTITION BY search_id, user_id, user_pseudo_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS query_input
     , MIN(event_date) OVER (PARTITION BY search_id, user_id, user_pseudo_id) AS first_date
     , MIN(event_timestamp)OVER (PARTITION BY search_id, user_id, user_pseudo_id) AS first_timestamp
-    , LAST_VALUE(search_date_filter IGNORE NULLS ) OVER (PARTITION BY search_id, user_id, user_pseudo_id ORDER BY event_timestamp) AS search_date_filter
-    ,LAST_VALUE(search_categories_filter IGNORE NULLS) OVER (PARTITION BY search_id, user_id, user_pseudo_id ORDER BY event_timestamp) AS  search_categories_filter
-    ,LAST_VALUE(search_genre_types_filter IGNORE NULLS) OVER (PARTITION BY search_id, user_id, user_pseudo_id ORDER BY event_timestamp) AS  search_genre_types_filter
-    ,LAST_VALUE(search_is_autocomplete IGNORE NULLS) OVER (PARTITION BY search_id, user_id, user_pseudo_id ORDER BY event_timestamp) AS  search_is_autocomplete
-    ,LAST_VALUE(search_offer_is_duo_filter IGNORE NULLS) OVER (PARTITION BY search_id, user_id, user_pseudo_id ORDER BY event_timestamp) search_offer_is_duo_filter
-    ,LAST_VALUE(search_native_categories_filter IGNORE NULLS) OVER(PARTITION BY search_id, user_id, user_pseudo_id ORDER BY event_timestamp) search_native_categories_filter
+    , LAST_VALUE(search_date_filter IGNORE NULLS ) OVER (PARTITION BY search_id, user_id, user_pseudo_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS search_date_filter
+    , LAST_VALUE(search_location_filter IGNORE NULLS ) OVER (PARTITION BY search_id, user_id, user_pseudo_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS search_location_filter
+    ,LAST_VALUE(search_categories_filter IGNORE NULLS) OVER (PARTITION BY search_id, user_id, user_pseudo_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS  search_categories_filter
+    ,LAST_VALUE(search_genre_types_filter IGNORE NULLS) OVER (PARTITION BY search_id, user_id, user_pseudo_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS  search_genre_types_filter
+    ,LAST_VALUE(search_max_price_filter IGNORE NULLS) OVER (PARTITION BY search_id, user_id, user_pseudo_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS  search_max_price_filter
+    ,LAST_VALUE(search_is_autocomplete IGNORE NULLS) OVER (PARTITION BY search_id, user_id, user_pseudo_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS  search_is_autocomplete
+    ,LAST_VALUE(search_offer_is_duo_filter IGNORE NULLS) OVER (PARTITION BY search_id, user_id, user_pseudo_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) search_offer_is_duo_filter
+    ,LAST_VALUE(search_native_categories_filter IGNORE NULLS) OVER(PARTITION BY search_id, user_id, user_pseudo_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) search_native_categories_filter
     , COUNT(DISTINCT CASE WHEN event_name = 'ConsultOffer' THEN offer_id ELSE NULL END) OVER (PARTITION BY search_id, user_id, user_pseudo_id) AS nb_offers_consulted
     , COUNT( CASE WHEN event_name = 'NoSearchResult' THEN 1 ELSE NULL END) OVER (PARTITION BY search_id, user_id, user_pseudo_id ) AS nb_no_search_result
 FROM `{{ bigquery_analytics_dataset }}`.firebase_events

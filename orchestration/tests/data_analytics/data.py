@@ -495,6 +495,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_INPUT = {
             "collective_offer_subcategory_id": "CONCERT",
             "collective_offer_is_active": True,
             "collective_offer_image_id": "27",
+            "is_public_api": False,
         }
     ],
     "applicative_database_collective_offer_template": [
@@ -558,6 +559,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_EXPECTED = [
         "passculture_pro_url": "https://passculture.pro/offre/AM/collectif/edition",
         "offer_is_template": False,
         "collective_offer_image_id": "27",
+        "is_public_api": False,
     },
     {
         "collective_offer_id": "4",
@@ -587,6 +589,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_EXPECTED = [
         "passculture_pro_url": "https://passculture.pro/offre/T-AQ/collectif/edition",
         "offer_is_template": True,
         "collective_offer_image_id": "28",
+        "is_public_api": False,
     },
 ]
 

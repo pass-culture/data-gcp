@@ -437,6 +437,7 @@ BIGQUERY_SCHEMAS = {
         "collective_offer_contact_phone": "STRING",
         "collective_offer_offer_venue": "STRING",
         "collective_offer_image_id": "STRING",
+        "is_public_api": "BOOLEAN",
     },
     "applicative_database_collective_offer_template": {
         "collective_offer_audio_disability_compliant": "BOOLEAN",

@@ -60,9 +60,13 @@ def train(
     train_data = read_from_gcs(
         storage_path=STORAGE_PATH, table_name=training_table_name
     )[["user_id", "item_id"]].astype(str)
+    logger.info(f"Train shape {train_data.shape[0]}")
+
     validation_data = read_from_gcs(
         storage_path=STORAGE_PATH, table_name=validation_table_name
     )[["user_id", "item_id"]].astype(str)
+
+    logger.info(f"Train shape {validation_data.shape[0]}")
 
     train_user_ids = train_data["user_id"].unique()
     train_item_ids = train_data["item_id"].unique()
@@ -85,6 +89,7 @@ def train(
     client_id = get_secret("mlflow_client_id")
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
     experiment = get_mlflow_experiment(experiment_name)
+
     with mlflow.start_run(experiment_id=experiment.experiment_id, run_name=run_name):
         logger.info("Connected to MLFlow")
 
@@ -118,10 +123,13 @@ def train(
             optimizer=tf.keras.optimizers.Adagrad(learning_rate=LEARNING_RATE),
         )
 
-        # Divide the total validation steps by a ration to speed up training
+        # Divide the total validation steps by a ratio to speed up training
         validation_steps = max(
-            int((len(validation_data) // batch_size) * validation_steps_ratio), 1
+            int((validation_data.shape[0] // batch_size) * validation_steps_ratio), 1
         )
+        logger.info(f"Total validation steps {validation_steps}")
+
+        logger.info("Fit")
 
         baseline_model.fit(
             train_dataset,
@@ -130,14 +138,14 @@ def train(
             validation_steps=validation_steps,
             callbacks=[
                 tf.keras.callbacks.ReduceLROnPlateau(
-                    monitor="val_factorized_top_k/top_100_categorical_accuracy",
+                    monitor="val_factorized_top_k/top_50_categorical_accuracy",
                     factor=0.1,
                     patience=2,
                     min_delta=MIN_DELTA,
                     verbose=1,
                 ),
                 tf.keras.callbacks.EarlyStopping(
-                    monitor="val_factorized_top_k/top_100_categorical_accuracy",
+                    monitor="val_factorized_top_k/top_50_categorical_accuracy",
                     patience=3,
                     min_delta=MIN_DELTA,
                     verbose=1,

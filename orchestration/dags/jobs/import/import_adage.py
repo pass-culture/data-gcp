@@ -4,10 +4,8 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.http.operators.http import SimpleHttpOperator
 from airflow.operators.python import PythonOperator
 from common.alerts import task_fail_slack_alert
-from common.operators.biquery import bigquery_job_task
 from common.operators.sensor import TimeSleepSensor
 from common.utils import (
-    depends_loop,
     getting_service_account_token,
     get_airflow_schedule,
 )
@@ -41,7 +39,6 @@ dag = DAG(
 )
 
 # Cannot Schedule before 5AM UTC+2 as data from API is not available.
-
 sleep_op = TimeSleepSensor(
     task_id="sleep_task",
     execution_delay=datetime.timedelta(days=1),  # Execution Date = day minus 1

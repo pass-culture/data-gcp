@@ -130,7 +130,7 @@ import_firebase_beneficiary_tables = {
         "time_partitioning": {"field": "event_date"},
         "clustering_fields": {"fields": ["event_type"]},
         "depends": ["analytics_firebase_events"],
-        "dag_depends": [{"import_contenful": "contentful_entries"}],  # dag_id: task_id
+        "dag_depends": [{"import_contentful": "contentful_entries"}],  # dag_id: task_id
     },
     "analytics_firebase_session_origin": {
         "sql": f"{SQL_PATH}/analytics/firebase_session_origin.sql",
@@ -146,7 +146,7 @@ import_firebase_beneficiary_tables = {
         "time_partitioning": {"field": "booking_date"},
         "depends": ["analytics_firebase_events"],
         "dag_depends": [
-            {"import_contenful": "contentful_homepages"}
+            {"import_contentful": "contentful_homepages"}
         ],  # dag_id: task_id
     },
     "analytics_firebase_aggregated_search_events": {

@@ -122,7 +122,7 @@ class SendinblueNewsletters:
             .explode("domain")
             .reset_index()
             .merge(domain_stats_df, on=["campaign_id", "domain"])
-            .rename(columns={"sent": "audience_size", "uniqueViews": "open_number"})
+            .rename(columns={"sent": "audience_size", "estimatedViews": "open_number"})
             .assign(update_date=pd.to_datetime("today"))[
                 [
                     "campaign_id",
@@ -151,8 +151,7 @@ class SendinblueNewsletters:
         job_config = bigquery.LoadJobConfig(
             write_disposition="WRITE_TRUNCATE",
             time_partitioning=bigquery.TimePartitioning(
-                type_=bigquery.TimePartitioningType.DAY,
-                field="update_date",
+                type_=bigquery.TimePartitioningType.DAY, field="update_date"
             ),
         )
         job = bigquery_client.load_table_from_dataframe(

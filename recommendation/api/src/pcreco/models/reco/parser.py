@@ -5,7 +5,21 @@ under_pat = re.compile(r"_([a-z])")
 
 
 def underscore_to_camel(name):
+    """
+    Parse key into camelCase format
+    """
     return under_pat.sub(lambda x: x.group(1).upper(), name)
+
+
+def key_from_list(input):
+    """
+    Returns When single element present in list
+    Else returns the list
+    """
+    if isinstance(input, list):
+        if len(input) == 1:
+            return input[0]
+    return input
 
 
 def parse_geolocation(request):
@@ -46,5 +60,5 @@ def parse_params(request) -> PlaylistParamsIn:
         params = request.args.to_dict(flat=False)
     if params is None:
         params = {}
-    params = {underscore_to_camel(k): v for k, v in params.items()}
+    params = {underscore_to_camel(k): key_from_list(v) for k, v in params.items()}
     return PlaylistParamsIn(params)

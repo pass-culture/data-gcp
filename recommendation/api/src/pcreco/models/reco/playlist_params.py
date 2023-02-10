@@ -75,6 +75,15 @@ def parse_date(value):
             return None
 
 
+def parse_to_list(value):
+    if value is None:
+        return None
+    if isinstance(value, list):
+        return value if len(value) > 0 else None
+    else:
+        return [value]
+
+
 class PlaylistParamsIn:
     def __init__(self, json={}):
 
@@ -83,7 +92,7 @@ class PlaylistParamsIn:
         self.has_conditions = False
         self.model_endpoint = json.get("modelEndpoint")
 
-        # deprecated
+        # TODO : deprecated
         self.start_date = parse_date(json.get("startDate"))
         self.end_date = parse_date(json.get("endDate"))
         if self.start_date is None:
@@ -94,8 +103,9 @@ class PlaylistParamsIn:
         self.is_event = parse_bool(json.get("isEvent"))
         self.offer_is_duo = parse_bool(json.get("isDuo"))
 
-        self.search_group_names = json.get("categories")
-        self.subcategories_id = json.get("subcategories")
+        self.search_group_names = parse_to_list(json.get("categories"))
+        self.subcategories_id = parse_to_list(json.get("subcategories"))
+        # TODO: deprecated
         self.movie_type = json.get("movieType")
         self.offer_type_label = json.get("offerTypeLabel")
         self.offer_sub_type_label = json.get("offerSubTypeLabel")

@@ -80,8 +80,8 @@ def get_subcategories(gcp_project_id, env_short_name):
 def get_types(gcp_project_id, env_short_name):
     show_types = importlib.import_module("pcapi.domain.show_types").show_types
     music_types = importlib.import_module("pcapi.domain.music_types").music_types
-    book_types = importlib.import_module("pcapi.domain.book_types").book_types
-    movie_types = importlib.import_module("pcapi.domain.movie_types").movie_types
+    book_types = importlib.import_module("pcapi.domain.book_types").BOOK_MACRO_SECTIONS
+    movie_types = importlib.import_module("pcapi.domain.movie_types").MOVIE_TYPES
 
     types = {
         "show": show_types,

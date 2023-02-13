@@ -66,6 +66,7 @@ firebase_module_events AS (
         --events
         e.event_name,
         e.offer_id,
+        e.booking_id,
         CASE WHEN entries.content_type = "recommendation" THEN e.reco_call_id ELSE NULL END AS call_id,
         -- modules
         entries.title as module_name,
@@ -131,6 +132,7 @@ firebase_conversion_step AS (
         conv.event_timestamp,
         conv.session_id,
         conv.user_id,
+        conv.booking_id,
         conv.user_pseudo_id,
         conv.platform,
         --events

@@ -12,14 +12,14 @@ except
         price_max,
         min_offers
     ),
-    TIMESTAMP(ending_datetime) AS ending_datetime,
-    TIMESTAMP(beginning_datetime) AS beginning_datetime,
-    CAST(is_geolocated AS bool) AS is_geolocated,
-    CAST(is_duo AS bool) AS is_duo,
-    CAST(is_event AS bool) AS is_event,
-    CAST(is_thing AS bool) AS is_thing,
-    CAST(price_max AS FLOAT64) AS price_max,
-    CAST(min_offers AS INT64) AS min_offers
+    SAFE_CAST(ending_datetime AS TIMESTAMP) AS ending_datetime,
+    SAFE_CAST(beginning_datetime as TIMESTAMP) AS beginning_datetime,
+    SAFE_CAST(is_geolocated AS bool) AS is_geolocated,
+    SAFE_CAST(is_duo AS bool) AS is_duo,
+    SAFE_CAST(is_event AS bool) AS is_event,
+    SAFE_CAST(is_thing AS bool) AS is_thing,
+    SAFE_CAST(price_max AS FLOAT64) AS price_max,
+    SAFE_CAST(min_offers AS INT64) AS min_offers
 FROM
     (
         SELECT

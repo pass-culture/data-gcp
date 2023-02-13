@@ -2,11 +2,7 @@ import pandas as pd
 from google.cloud import bigquery
 
 from contentful_client import ContentfulClient
-from utils import (
-    BIGQUERY_RAW_DATASET,
-    GCP_PROJECT,
-    ENV_SHORT_NAME,
-)
+from utils import BIGQUERY_RAW_DATASET, GCP_PROJECT, ENV_SHORT_NAME, ENTRIES_DTYPE
 from datetime import datetime
 
 CONTENTFUL_ENTRIES_TABLE_NAME = "contentful_entries"
@@ -51,8 +47,13 @@ def run(request):
         links_dfs.append(links)
         tags_dfs.append(tags)
 
+    df_modules = pd.concat(modules_dfs, ignore_index=True)
+    for k, v in ENTRIES_DTYPE.items():
+        if k in df_modules.columns:
+            df_modules[k] = df_modules[k].astype(v)
+
     save_raw_modules_to_bq(
-        pd.concat(modules_dfs, ignore_index=True).drop_duplicates(),
+        df_modules.drop_duplicates(),
         CONTENTFUL_ENTRIES_TABLE_NAME,
     )
     save_raw_modules_to_bq(

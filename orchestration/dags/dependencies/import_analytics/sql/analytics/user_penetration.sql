@@ -11,20 +11,18 @@ with population_dpt as (
     LEFT JOIN `{{ bigquery_analytics_dataset }}.region_department` dep	on dep.num_dep = pop.department_code
     WHERE pop.current_year in (2020, 2021, 2022, 2023) and cast(age as int) BETWEEN 15 AND 25
     GROUP BY 1,2,3,4,5,6
-  ),
+  )
 
-user_booking AS ( 
+,user_booking AS ( 
   SELECT
     aa.active_month,
     aa.user_department_code as department_code,
-    DATE(DATE_TRUNC(ud.user_birth_date , MONTH)) as born_date,
-    user_age + MOD(date_diff(active_month, DATE_TRUNC(ud.user_birth_date , MONTH), month),12)/12 decimal_age,      
+    DATE(DATE_TRUNC(ud.user_birth_date , MONTH)) as born_date,   
     COUNT(distinct ud.user_id) as total_users,
     FROM  `{{ bigquery_analytics_dataset }}.aggregated_monthly_user_used_booking_activity` aa
     INNER JOIN `{{ bigquery_analytics_dataset }}.enriched_user_data` ud on ud.user_id = aa.user_id
-  GROUP BY 1,2,3,4
+  GROUP BY 1,2,3
 )
-
 
 SELECT 
   pop.active_month,
@@ -41,5 +39,5 @@ SELECT
 FROM population_dpt pop
 LEFT JOIN user_booking ub on 
     pop.active_month = ub.active_month
-    AND pop.decimal_age = ub.decimal_age
+    AND pop.born_date = ub.born_date
     AND pop.department_code = ub.department_code

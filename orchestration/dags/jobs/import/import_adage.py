@@ -40,6 +40,7 @@ dag = DAG(
 
 # Cannot Schedule before 5AM UTC+2 as data from API is not available.
 sleep_op = TimeSleepSensor(
+    dag=dag,
     task_id="sleep_task",
     execution_delay=datetime.timedelta(days=1),  # Execution Date = day minus 1
     sleep_duration=datetime.timedelta(minutes=120),  # 2H

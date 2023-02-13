@@ -7,8 +7,8 @@ with population_dpt as (
       pop.department_name,
       dep.region_name,
       sum(population) as population
-    FROM `analytics_prod.population_age_and_department_france_details` pop
-    LEFT JOIN `analytics_prod.region_department` dep	on dep.num_dep = pop.department_code
+    FROM `{{ bigquery_analytics_dataset }}.population_age_and_department_france_details` pop
+    LEFT JOIN `{{ bigquery_analytics_dataset }}.region_department` dep	on dep.num_dep = pop.department_code
     WHERE pop.current_year in (2020, 2021, 2022, 2023) and cast(age as int) BETWEEN 15 AND 25
     GROUP BY 1,2,3,4,5,6
   )
@@ -19,8 +19,8 @@ with population_dpt as (
     aa.user_department_code as department_code,
     DATE(DATE_TRUNC(ud.user_birth_date , MONTH)) as born_date,   
     COUNT(distinct ud.user_id) as total_users,
-    FROM  `analytics_prod.aggregated_monthly_user_used_booking_activity` aa
-    INNER JOIN `analytics_prod.enriched_user_data` ud on ud.user_id = aa.user_id
+    FROM  `{{ bigquery_analytics_dataset }}.aggregated_monthly_user_used_booking_activity` aa
+    INNER JOIN `{{ bigquery_analytics_dataset }}.enriched_user_data` ud on ud.user_id = aa.user_id
   GROUP BY 1,2,3
 )
 

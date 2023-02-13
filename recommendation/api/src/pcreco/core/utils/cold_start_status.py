@@ -12,7 +12,10 @@ def _get_user_app_interaction(User) -> int:
     connection = get_session()
     app_interaction_query = text(
         f"""
-            SELECT booking_cnt,consult_offer,has_added_offer_to_favorites
+            SELECT 
+                COALESCE(booking_cnt, 0) as booking_cnt,
+                COALESCE(consult_offer, 0) as consult_offer,
+                COALESCE(has_added_offer_to_favorites, 0) as has_added_offer_to_favorites
             FROM public.enriched_user_mv
             WHERE user_id= :user_id;
             """

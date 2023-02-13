@@ -11,6 +11,6 @@ SELECT
     , "dateUsed" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' as booking_used_date
     , "cancellationDate" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' as booking_cancellation_date
     , CAST("cancellationReason" AS VARCHAR) AS booking_cancellation_reason
-    , CAST("individualBookingId" AS varchar(255)) as individual_booking_id
+    , CAST("depositId" AS varchar(255)) as deposit_id
     , "reimbursementDate" AS booking_reimbursement_date
 FROM public.booking

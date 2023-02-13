@@ -10,6 +10,7 @@ WITH firebase_home_events AS (
         event_name,
         event_type,
         offer_id,
+        booking_id,
         module_name,
         content_type,
         module_id,
@@ -43,6 +44,7 @@ diversification_booking AS (
 SELECT
     e.*,
     coalesce(contentful_tags.playlist_type, 'temporaire') as playlist_type,
+    ebd.booking_is_cancelled,
     CASE WHEN 
         event_type = "booking" THEN db.delta_diversification
     ELSE NULL
@@ -62,7 +64,8 @@ SELECT
 FROM firebase_home_events e
 LEFT JOIN contentful_tags contentful_tags on contentful_tags.entry_id = e.module_id
 LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_user_data` eud ON e.user_id = eud.user_id
-LEFT JOIN diversification_booking db 
+LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_booking_data` ebd ON e.booking_id = ebd.booking_id
+LEFT JOIN diversification_booking db
     ON db.user_id = e.user_id
     AND db.offer_id = e.offer_id
     AND db.date = e.event_date

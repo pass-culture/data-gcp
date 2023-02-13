@@ -38,7 +38,6 @@ def define_import_tables():
         "educational_year",
         "favorite",
         "feature",
-        "individual_booking",
         "internal_user",
         "invoice",
         "local_provider_event",

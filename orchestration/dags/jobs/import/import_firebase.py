@@ -60,16 +60,18 @@ for type, params in dags.items():
 
     globals()[dag_id] = dag
     # Cannot Schedule before 3UTC for intraday and 13UTC for daily
+    start = DummyOperator(task_id="start", dag=dag)
     sleep_op = TimeSleepSensor(
         dag=dag,
         task_id="sleep_task",
         execution_delay=datetime.timedelta(days=1),  # Execution Date = day minus 1
         sleep_duration=datetime.timedelta(minutes=params["wait_time"]),
-        poke_interval=3600,  # check every hour
+        poke_interval=params["wait_time"] * 60,  # check every hour
         mode="reschedule",
+        soft_fail=False,
     )
-    start = DummyOperator(task_id="start", dag=dag)
-    start.set_upstream(sleep_op)
+
+    sleep_op.set_upstream(start)
 
     table_jobs = {}
     import_tables_temp = copy.deepcopy(import_tables)
@@ -91,6 +93,6 @@ for type, params in dags.items():
             "depends": job_params.get("depends", []),
             "dag_depends": job_params.get("dag_depends", []),
         }
-    table_jobs = depends_loop(table_jobs, start, dag=dag)
+    table_jobs = depends_loop(table_jobs, sleep_op, dag=dag)
     end = DummyOperator(task_id="end", dag=dag)
     table_jobs >> end

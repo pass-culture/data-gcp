@@ -206,6 +206,7 @@ SELECT
         WHEN event_name = "BookingConfirmation" THEN "booking"
     END as event_type,
     e.offer_id,
+    e.booking_id,
     e.module_name,
     e.content_type,
     e.module_id,

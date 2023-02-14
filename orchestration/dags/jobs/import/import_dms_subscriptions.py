@@ -197,9 +197,17 @@ with DAG(
 
 (start >> getting_service_account_token >> [dms_to_gcs_pro, dms_to_gcs_jeunes])
 
-dms_to_gcs_jeunes >> parse_api_result_jeunes >> import_dms_jeunes_to_bq >> analytics_tasks[
-    0
-] >> end
-dms_to_gcs_pro >> parse_api_result_pro >> import_dms_pro_to_bq >> analytics_tasks[
-    1
-] >> end
+(
+    dms_to_gcs_jeunes
+    >> parse_api_result_jeunes
+    >> import_dms_jeunes_to_bq
+    >> analytics_tasks[0]
+    >> end
+)
+(
+    dms_to_gcs_pro
+    >> parse_api_result_pro
+    >> import_dms_pro_to_bq
+    >> analytics_tasks[1]
+    >> end
+)

@@ -42,7 +42,6 @@ import_firebase_pro_tables = {
             "gcp_project_native_env": GCP_PROJECT_PRO_ENV,
             "firebase_raw_dataset": FIREBASE_PRO_RAW_DATASET,
         },
-        "trigger_rule": "none_failed",
     },
     "clean_firebase_pro_events": {
         "sql": f"{SQL_PATH}/clean/events.sql",
@@ -80,7 +79,6 @@ import_firebase_beneficiary_tables = {
             "gcp_project_native_env": GCP_PROJECT_NATIVE_ENV,
             "firebase_raw_dataset": FIREBASE_RAW_DATASET,
         },
-        "trigger_rule": "none_failed",
     },
     "clean_firebase_events": {
         "sql": f"{SQL_PATH}/clean/events.sql",

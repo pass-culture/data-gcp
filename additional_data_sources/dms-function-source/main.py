@@ -54,18 +54,25 @@ def run(request):
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
     print("updated_since", updated_since)
-    fetch_dms_jeunes(updated_since)
 
-    fetch_dms_pro(updated_since)
+    if request_json and "target" in request_json:
+        target = request_json["target"]
+    elif request_args and "target" in request_args:
+        target = request_args["target"]
+    else:
+        raise RuntimeError("You need to provide a target argument.")
 
-    return updated_since
+    if target == "jeunes":
+        fetch_dms_jeunes(updated_since)
+        return updated_since
+
+    if target == "pro":
+        fetch_dms_pro(updated_since)
+        return updated_since
 
 
 def fetch_dms_jeunes(updated_since):
-    result = fetch_result(
-        demarches_jeunes,
-        updated_since=updated_since,
-    )
+    result = fetch_result(demarches_jeunes, updated_since=updated_since)
     save_json(
         result,
         f"gs://{DATA_GCS_BUCKET_NAME}/dms_export/unsorted_dms_jeunes_{updated_since}.json",
@@ -123,10 +130,7 @@ def run_query(query_body):
     time.sleep(0.2)
     headers = {"Authorization": "Bearer " + DMS_TOKEN}
     request = requests.post(
-        API_URL,
-        json=query_body,
-        headers=headers,
-        verify=False,
+        API_URL, json=query_body, headers=headers, verify=False
     )  # warn: SSL verification disabled
     if request.status_code == 200:
         return request.json()

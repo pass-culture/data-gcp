@@ -36,6 +36,7 @@ contentful_entries AS (
     FROM
         `{{ bigquery_raw_dataset }}.contentful_entries`
 ),
+-- Legacy purposes
 firebase_modules AS (
     SELECT
         event_date AS date,

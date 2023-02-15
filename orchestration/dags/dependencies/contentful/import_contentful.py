@@ -21,9 +21,6 @@ contentful_tables = {
         "sql": f"{SQL_PATH}/contentful_homepages.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "contentful_homepages",
-        "dag_depends": [
-            {"import_intraday_firebase_data": "analytics_firebase_events"}
-        ],  # dag_id: task_id
     },
     "contentful_algolia_modules_criterion": {
         "sql": f"{SQL_PATH}/contentful_algolia_modules_criterion.sql",

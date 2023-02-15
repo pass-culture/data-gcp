@@ -78,7 +78,7 @@ for type, params in dags.items():
         table_jobs[table] = {
             "operator": task,
             "depends": job_params.get("depends", []),
-            "dag_depends": job_params.get("dag_depends", []),
+            "dag_depends": job_params.get("dag_depends", []) if type == "intraday" else []
         }
     table_jobs = depends_loop(table_jobs, start, dag=dag)
     end = DummyOperator(task_id="end", dag=dag)

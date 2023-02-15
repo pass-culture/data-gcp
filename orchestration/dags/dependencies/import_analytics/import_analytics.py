@@ -104,7 +104,7 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "depends": [
             "enriched_stock_data",
-            "isbn_editor",
+            "isbn_rayon_editor",
             "offer_extracted_data",
             "offer_item_ids",
         ],
@@ -147,8 +147,8 @@ analytics_tables = {
         "sql": f"{ANALYTICS_SQL_PATH}/iris_venues_at_radius.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
     },
-    "isbn_editor": {
-        "sql": f"{ANALYTICS_SQL_PATH}/isbn_editor.sql",
+    "isbn_rayon_editor": {
+        "sql": f"{ANALYTICS_SQL_PATH}/isbn_rayon_editor.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
     },
     "offer_extracted_data": {

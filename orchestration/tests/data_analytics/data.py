@@ -58,6 +58,7 @@ ENRICHED_OFFER_DATA_INPUT = {
     "offer_extracted_data": [
         {
             "offer_id": "3",
+            "offer_subcategoryid": "SEANCE_CINE",
             "author": "Tarantino",
             "performer": "Uma Turman",
             "musicType": None,
@@ -77,6 +78,7 @@ ENRICHED_OFFER_DATA_INPUT = {
             "countries": '["usa"]',
             "casting": "[]",
             "isbn": None,
+            "book_editor": None,
         },
         {
             "offer_id": "4",
@@ -101,7 +103,9 @@ ENRICHED_OFFER_DATA_INPUT = {
             "isbn": "156157",
         },
     ],
-    "isbn_editor": [{"isbn": "156157", "book_editor": "Hachette"}],
+    "isbn_rayon_editor": [
+        {"isbn": "156157", "rayon": "roman poche", "book_editor": "Hachette"}
+    ],
     "offer_tags": [{"offer_id": "3", "tag": "none"}, {"offer_id": "4", "tag": "none"}],
     "applicative_database_offerer": [
         {

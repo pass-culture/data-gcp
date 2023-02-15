@@ -106,10 +106,8 @@ class PlaylistParamsIn:
         self.search_group_names = parse_to_list(json.get("categories"))
         self.subcategories_id = parse_to_list(json.get("subcategories"))
         # TODO: deprecated
-        self.movie_type = json.get("movieType")
         self.offer_type_label = json.get("offerTypeLabel")
         self.offer_sub_type_label = json.get("offerSubTypeLabel")
-        self.macro_rayon = json.get("macroBookSection")
 
         self.price_min = parse_float(json.get("priceMin"))
         self.price_max = parse_float(json.get("priceMax"))

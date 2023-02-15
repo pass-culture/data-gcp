@@ -1,32 +1,32 @@
-WITH get_recommendable_offers AS(
+WITH get_recommendable_offers AS (
     SELECT
         DISTINCT (offer.offer_id) AS offer_id,
         offer.item_id AS item_id,
         offer.offer_product_id AS product_id,
         offer.venue_id AS venue_id,
-        offer.offer_subcategoryId AS subcategory_id,
-        subcategories.category_id AS category,
-        subcategories.search_group_name AS search_group_name,
+        
         offer.offer_name AS name,
         offer.offer_is_duo AS offer_is_duo,
-        offer.movie_type AS movie_type,
-        offer.type AS offer_type_id,
-        type_ref.label as offer_type_label,
-        offer.subType AS offer_sub_type_id,
-        sub_type_ref.sub_label as offer_sub_type_label,
-        rayon_ref.macro_rayon as macro_rayon,
+        offer.offer_subcategoryId AS subcategory_id,
+
+
+        enriched_offer_type.category,
+        enriched_offer_type.search_group_name,
+
+        enriched_offer_type.offer_type_id,
+        enriched_offer_type.offer_sub_type_id,
+        -- TODO add this
+        enriched_offer_type.offer_type_domain,
+        enriched_offer_type.offer_type_label,
+        enriched_offer_type.offer_sub_type_label,
+
         offer.URL AS url,
         offer.is_national AS is_national,
         offer.offer_creation_date AS offer_creation_date,
         stock.stock_beginning_date AS stock_beginning_date,
         offer.last_stock_price AS stock_price,
         item_counts.item_count as item_count,
-        (
-            CASE
-                WHEN booking_numbers.booking_number IS NOT NULL THEN booking_numbers.booking_number
-                ELSE 0
-            END
-        ) AS booking_number,
+        COALESCE(booking_numbers.booking_number, 0) AS booking_number,
         (
             CASE
                 WHEN (
@@ -49,7 +49,6 @@ WITH get_recommendable_offers AS(
         ) AS is_underage_recommendable,
     FROM
         `{{ bigquery_analytics_dataset }}`.enriched_offer_data offer
-        JOIN `{{ bigquery_clean_dataset }}`.subcategories subcategories ON offer.offer_subcategoryId = subcategories.id
         JOIN (
             SELECT
                 *
@@ -88,12 +87,7 @@ WITH get_recommendable_offers AS(
             GROUP BY item_id
         ) item_counts on item_counts.item_id = offer.item_id
         JOIN `{{ bigquery_analytics_dataset }}`.offer_with_mediation om on offer.offer_id=om.offer_id
-        LEFT JOIN (SELECT DISTINCT type, label FROM `{{ bigquery_analytics_dataset }}`.offer_types) type_ref
-            ON offer.type = cast(type_ref.type as string)
-        LEFT JOIN (SELECT DISTINCT sub_type, sub_label FROM `{{ bigquery_analytics_dataset }}`.offer_types) sub_type_ref
-            ON offer.subType = cast(sub_type_ref.sub_type as string)
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.macro_rayons AS rayon_ref
-            ON offer.rayon = rayon_ref.rayon
+        LEFT JOIN  `{{ bigquery_analytics_dataset }}`.enriched_offer_type enriched_offer_type on offer.offer_id = enriched_offer_type.item_id
     WHERE
         offer.is_active = TRUE
         AND offer.offer_is_bookable = TRUE

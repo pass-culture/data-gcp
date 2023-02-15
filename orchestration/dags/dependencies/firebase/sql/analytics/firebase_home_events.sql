@@ -132,12 +132,12 @@ firebase_conversion_step AS (
         conv.event_timestamp,
         conv.session_id,
         conv.user_id,
-        conv.booking_id,
         conv.user_pseudo_id,
         conv.platform,
         --events
         conv.event_name,
         conv.offer_id,
+        conv.booking_id,
         event.call_id,
         event.module_name,
         event.content_type,

@@ -20,7 +20,7 @@ RETURNS TABLE (
                 stock_beginning_date TIMESTAMP,
                 stock_price REAL,
                 offer_is_duo BOOLEAN,
-                offer_type_id VARCHAR,
+                offer_type_domain VARCHAR,
                 offer_type_label VARCHAR,
                 booking_number INTEGER,
                 is_underage_recommendable BOOLEAN,

@@ -7,19 +7,18 @@ WITH get_recommendable_offers AS (
         
         offer.offer_name AS name,
         offer.offer_is_duo AS offer_is_duo,
-        offer.offer_subcategoryId AS subcategory_id,
+        enriched_item_metadata.subcategory_id AS subcategory_id,
 
 
-        enriched_offer_type.category,
-        enriched_offer_type.search_group_name,
-
-        enriched_offer_type.offer_type_id,
-        enriched_offer_type.offer_sub_type_id,
-        -- TODO add this
-        enriched_offer_type.offer_type_domain,
-        enriched_offer_type.offer_type_label,
-        enriched_offer_type.offer_sub_type_label,
-
+        enriched_item_metadata.category_id as category,
+        
+        enriched_item_metadata.search_group_name,
+        enriched_item_metadata.offer_type_domain,
+        enriched_item_metadata.offer_type_id,
+        enriched_item_metadata.offer_type_label,
+        enriched_item_metadata.offer_sub_type_id,
+        enriched_item_metadata.offer_sub_type_label,
+        
         offer.URL AS url,
         offer.is_national AS is_national,
         offer.offer_creation_date AS offer_creation_date,
@@ -31,17 +30,17 @@ WITH get_recommendable_offers AS (
             CASE
                 WHEN (
                     offer.offer_product_id NOT IN ('3469240')
-                    AND offer.offer_subcategoryId <> 'JEU_EN_LIGNE'
-                    AND offer.offer_subcategoryId <> 'JEU_SUPPORT_PHYSIQUE'
-                    AND offer.offer_subcategoryId <> 'ABO_JEU_VIDEO'
-                    AND offer.offer_subcategoryId <> 'ABO_LUDOTHEQUE'
+                    AND enriched_item_metadata.subcategory_id <> 'JEU_EN_LIGNE'
+                    AND enriched_item_metadata.subcategory_id <> 'JEU_SUPPORT_PHYSIQUE'
+                    AND enriched_item_metadata.subcategory_id <> 'ABO_JEU_VIDEO'
+                    AND enriched_item_metadata.subcategory_id <> 'ABO_LUDOTHEQUE'
                     AND (
                         offer.URL IS NULL
                         OR offer.last_stock_price = 0
-                        OR subcategories.id = 'LIVRE_NUMERIQUE'
-                        OR subcategories.id = 'ABO_LIVRE_NUMERIQUE'
-                        OR subcategories.id = 'TELECHARGEMENT_LIVRE_AUDIO'
-                        OR subcategories.category_id = 'MEDIA'
+                        OR enriched_item_metadata.subcategory_id = 'LIVRE_NUMERIQUE'
+                        OR enriched_item_metadata.subcategory_id = 'ABO_LIVRE_NUMERIQUE'
+                        OR enriched_item_metadata.subcategory_id = 'TELECHARGEMENT_LIVRE_AUDIO'
+                        OR enriched_item_metadata.category_id = 'MEDIA'
                     )
                 ) THEN TRUE
                 ELSE FALSE
@@ -87,15 +86,15 @@ WITH get_recommendable_offers AS (
             GROUP BY item_id
         ) item_counts on item_counts.item_id = offer.item_id
         JOIN `{{ bigquery_analytics_dataset }}`.offer_with_mediation om on offer.offer_id=om.offer_id
-        LEFT JOIN  `{{ bigquery_analytics_dataset }}`.enriched_offer_type enriched_offer_type on offer.offer_id = enriched_offer_type.item_id
+        LEFT JOIN  `{{ bigquery_analytics_dataset }}`.enriched_item_metadata enriched_item_metadata on offer.item_id = enriched_item_metadata.item_id
     WHERE
         offer.is_active = TRUE
         AND offer.offer_is_bookable = TRUE
         AND offerer.offerer_is_active = TRUE
         AND offer.offer_validation = 'APPROVED'
-        AND offer.offer_subcategoryId NOT IN ('ACTIVATION_THING', 'ACTIVATION_EVENT')
-        AND NOT (offer.offer_subcategoryId = 'ACHAT_INSTRUMENT' AND REGEXP_CONTAINS(LOWER(offer.offer_name), r'bon d’achat|bons d’achat'))
-        AND NOT (offer.offer_subcategoryId = 'MATERIEL_ART_CREATIF' AND REGEXP_CONTAINS(LOWER(offer.offer_name), r'stabilo|surligneurs'))
+        AND enriched_item_metadata.subcategory_id NOT IN ('ACTIVATION_THING', 'ACTIVATION_EVENT')
+        AND NOT (enriched_item_metadata.subcategory_id = 'ACHAT_INSTRUMENT' AND REGEXP_CONTAINS(LOWER(offer.offer_name), r'bon d’achat|bons d’achat'))
+        AND NOT (enriched_item_metadata.subcategory_id = 'MATERIEL_ART_CREATIF' AND REGEXP_CONTAINS(LOWER(offer.offer_name), r'stabilo|surligneurs'))
         AND offer.offer_product_id NOT IN (SELECT * FROM `{{ bigquery_clean_dataset }}`.forbiden_offers_recommendation)
 )
 SELECT  * FROM get_recommendable_offers

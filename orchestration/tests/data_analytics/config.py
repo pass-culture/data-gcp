@@ -100,7 +100,6 @@ BIGQUERY_SCHEMAS = {
         "casting": "STRING",
         "isbn": "STRING",
     },
-    "offer_tags": {"offer_id": "STRING", "tag": "STRING"},
     "applicative_database_offerer": {
         "offerer_is_active": "BOOLEAN",
         "offerer_thumb_count": "INT64",

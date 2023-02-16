@@ -19,5 +19,18 @@ ref_tables = {
             "LONGUEUR": "INTEGER",
             "LARGEUR": "INTEGER",
         },
+
+    },
+    "institutional_partners": {
+        "file_type": "csv",
+        "schema": {
+            "institutional_offerer_id": "STRING",
+            "zendesk_id": "STRING",
+            "institutional_offerer_name": "STRING",
+            "city": "STRING",
+            "region_name": "STRING",
+            "institutional_offerer_type": "STRING",
+            "related_team_pass": "STRING",
+        },
     },
 }

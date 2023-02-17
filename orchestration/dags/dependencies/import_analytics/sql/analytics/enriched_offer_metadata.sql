@@ -3,7 +3,7 @@ WITH enriched_items AS (
     SELECT 
         offer.offer_id ,
         offer.offer_subcategoryId AS subcategory_id,
-        subcategories.category_id AS category,
+        subcategories.category_id AS category_id,
         subcategories.search_group_name AS search_group_name,
         CASE
             WHEN subcategories.category_id = 'MUSIQUE_LIVE' THEN "MUSIC"
@@ -20,7 +20,7 @@ offer_types AS (
     SELECT
       DISTINCT
         upper(domain) as offer_type_domain, 
-        type as offer_type_id,
+         CAST(type AS STRING) as offer_type_id,
         label as offer_type_label
     FROM `{{ bigquery_analytics_dataset }}`.offer_types offer
 ),
@@ -29,7 +29,7 @@ offer_sub_types AS (
     SELECT
       DISTINCT
         upper(domain) as offer_type_domain, 
-        type as offer_type_id,
+         CAST(type AS STRING) as offer_type_id,
         label as offer_type_label,
         SAFE_CAST(SAFE_CAST(sub_type AS FLOAT64) AS STRING) as offer_sub_type_id,
         sub_label as offer_sub_type_label,
@@ -65,14 +65,14 @@ offer_metadata AS (
             WHEN omi.offer_type_domain = "MUSIC" THEN offer_types.offer_type_label
             WHEN omi.offer_type_domain = "SHOW"  THEN offer_types.offer_type_label -- 
             WHEN omi.offer_type_domain = "MOVIE" THEN REGEXP_EXTRACT_ALL(UPPER(genres), r'[0-9a-zA-Z][^"]+')[safe_offset(0)] -- array of string, take first
-            WHEN omi.offer_type_domain = "BOOK"  THEN rayon.macro_rayon
+            WHEN omi.offer_type_domain = "BOOK"  THEN macro_rayons.macro_rayon
         END AS offer_type_label,
 
         CASE
             WHEN omi.offer_type_domain = "MUSIC" THEN if(offer_types.offer_type_label is null, NULL, [offer_types.offer_type_label])
             WHEN omi.offer_type_domain = "SHOW"  THEN if(offer_types.offer_type_label is null, NULL, [offer_types.offer_type_label])
             WHEN omi.offer_type_domain = "MOVIE" THEN REGEXP_EXTRACT_ALL(UPPER(genres), r'[0-9a-zA-Z][^"]+') -- array of string, 
-            WHEN omi.offer_type_domain = "BOOK"  THEN if(rayon.macro_rayon is null, NULL, [rayon.macro_rayon])
+            WHEN omi.offer_type_domain = "BOOK"  THEN if(macro_rayons.macro_rayon is null, NULL, [macro_rayons.macro_rayon])
         END AS offer_type_labels,
 
         CASE
@@ -91,7 +91,7 @@ offer_metadata AS (
         ON offer_sub_types.offer_type_domain = omi.offer_type_domain 
         AND  offer_sub_types.offer_type_id = omi.offer_type_id
         AND  offer_sub_types.offer_sub_type_id = omi.offer_sub_type_id
-    LEFT JOIN `{{ bigquery_analytics_dataset }}` rayon ON omi.rayon = rayon.rayon
+    LEFT JOIN `{{ bigquery_analytics_dataset }}`.macro_rayons ON omi.rayon = macro_rayons.rayon
 )
 
 SELECT 

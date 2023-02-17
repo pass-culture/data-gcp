@@ -4,21 +4,16 @@ WITH get_recommendable_offers AS (
         offer.item_id AS item_id,
         offer.offer_product_id AS product_id,
         offer.venue_id AS venue_id,
-        
         offer.offer_name AS name,
         offer.offer_is_duo AS offer_is_duo,
         enriched_item_metadata.subcategory_id AS subcategory_id,
-
-
         enriched_item_metadata.category_id as category,
-        
         enriched_item_metadata.search_group_name,
         enriched_item_metadata.offer_type_domain,
         enriched_item_metadata.offer_type_id,
         enriched_item_metadata.offer_type_label,
         enriched_item_metadata.offer_sub_type_id,
         enriched_item_metadata.offer_sub_type_label,
-        
         offer.URL AS url,
         offer.is_national AS is_national,
         offer.offer_creation_date AS offer_creation_date,

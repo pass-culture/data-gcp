@@ -196,7 +196,7 @@ class PlaylistParamsIn:
                 "AND ("
                 + " OR ".join(
                     [
-                        f"( offer_type_domain='{offer_domain}' AND offer_type_label='{offer_label}'"
+                        f"( offer_type_domain='{offer_domain}' AND offer_type_label='{offer_label}' ) "
                         for offer_domain, offer_label in self.offer_type_list.items()
                     ]
                 )

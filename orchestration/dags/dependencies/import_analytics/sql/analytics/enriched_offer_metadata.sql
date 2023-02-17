@@ -7,7 +7,7 @@ WITH enriched_items AS (
         subcategories.search_group_name AS search_group_name,
         CASE
             WHEN subcategories.category_id = 'MUSIQUE_LIVE' THEN "MUSIC"
-            WHEN subcategories.category_id = 'MUSIQUE_ENREGISTREE'  THEN "MUSIC" -- musicType
+            WHEN subcategories.category_id = 'MUSIQUE_ENREGISTREE'  THEN "MUSIC" 
             WHEN subcategories.category_id = 'SPECTACLE' THEN "SHOW"
             WHEN subcategories.category_id = 'CINEMA' THEN "MOVIE"
             WHEN subcategories.category_id = 'LIVRE' THEN "BOOK"
@@ -63,15 +63,15 @@ offer_metadata AS (
         omi.* except(genres, rayon), 
         CASE
             WHEN omi.offer_type_domain = "MUSIC" THEN offer_types.offer_type_label
-            WHEN omi.offer_type_domain = "SHOW"  THEN offer_types.offer_type_label -- 
-            WHEN omi.offer_type_domain = "MOVIE" THEN REGEXP_EXTRACT_ALL(UPPER(genres), r'[0-9a-zA-Z][^"]+')[safe_offset(0)] -- array of string, take first
+            WHEN omi.offer_type_domain = "SHOW"  THEN offer_types.offer_type_label 
+            WHEN omi.offer_type_domain = "MOVIE" THEN REGEXP_EXTRACT_ALL(UPPER(genres), r'[0-9a-zA-Z][^"]+')[safe_offset(0)] -- array of string, take first only
             WHEN omi.offer_type_domain = "BOOK"  THEN macro_rayons.macro_rayon
         END AS offer_type_label,
 
         CASE
             WHEN omi.offer_type_domain = "MUSIC" THEN if(offer_types.offer_type_label is null, NULL, [offer_types.offer_type_label])
             WHEN omi.offer_type_domain = "SHOW"  THEN if(offer_types.offer_type_label is null, NULL, [offer_types.offer_type_label])
-            WHEN omi.offer_type_domain = "MOVIE" THEN REGEXP_EXTRACT_ALL(UPPER(genres), r'[0-9a-zA-Z][^"]+') -- array of string, 
+            WHEN omi.offer_type_domain = "MOVIE" THEN REGEXP_EXTRACT_ALL(UPPER(genres), r'[0-9a-zA-Z][^"]+') -- array of string convert to list
             WHEN omi.offer_type_domain = "BOOK"  THEN if(macro_rayons.macro_rayon is null, NULL, [macro_rayons.macro_rayon])
         END AS offer_type_labels,
 

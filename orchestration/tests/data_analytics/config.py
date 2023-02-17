@@ -250,7 +250,6 @@ BIGQUERY_SCHEMAS = {
         "passculture_pro_url": "STRING",
         "webapp_url": "STRING",
         "first_booking_cnt": "INTEGER",
-        "offer_tag": "STRING",
         "author": "STRING",
         "performer": "STRING",
         "stageDirector": "STRING",

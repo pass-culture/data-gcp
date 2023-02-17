@@ -203,7 +203,6 @@ SELECT
     offer.offer_validation as offer_validation,
     mediation.mediation_humanized_id,
     count_first_booking_view.first_booking_cnt,
-    offer_tags.tag as offer_tag,
     offer_extracted_data.author,
     offer_extracted_data.performer,
     offer_extracted_data.stageDirector,
@@ -247,7 +246,6 @@ FROM
     LEFT JOIN count_first_booking_view ON count_first_booking_view.offer_id = offer.offer_id
     LEFT JOIN last_stock ON last_stock.offer_id = offer.offer_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.offer_extracted_data offer_extracted_data ON offer_extracted_data.offer_id = offer.offer_id
-    LEFT JOIN `{{ bigquery_clean_dataset }}`.offer_tags offer_tags ON offer_tags.offer_id = offer.offer_id
     LEFT JOIN mediation ON offer.offer_id = mediation.offer_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.isbn_editor AS isbn_editor ON offer_extracted_data.isbn = isbn_editor.isbn
 

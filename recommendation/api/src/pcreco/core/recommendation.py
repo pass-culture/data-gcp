@@ -280,9 +280,10 @@ class Recommendation:
                 bucket = client.get_bucket(f"data-bucket-{ENV_SHORT_NAME}")
                 todays_date = date.today().strftime("%Y%m%d")
                 blob = bucket.get_blob(
-                    f"QPI_exports/qpi_answers_{todays_date}/user_id_{self.user.id}.jsonl"
+                    f"QPI_exports/qpi_answers_20230210/user_id_6525.jsonl"
                 )
                 cold_start_categories=[]
+                
                 with blob.open("r") as f:
                     qpi_raw = json.load(f)
                 if qpi_raw:

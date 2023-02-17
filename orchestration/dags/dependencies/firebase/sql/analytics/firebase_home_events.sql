@@ -19,7 +19,9 @@ WITH mapping_module_name_and_id AS (
                     "displayParameters",
                     "venuesSearchParameters",
                     "exclusivityDisplayParameters",
-                    "business"
+                    "business",
+                    "category_bloc",
+                    "category_list"
                 )
         )
     where
@@ -41,10 +43,12 @@ firebase_events AS (
             'BusinessBlockClicked',
             'ExclusivityBlockClicked',
             "SeeMoreClicked",
-            'ModuleDisplayedOnHomePage'
+            'ModuleDisplayedOnHomePage',
+            "CategoryBlockClicked"
         )
         AND (
             origin = 'home'
+            OR origin = 'exclusivity'
             OR origin IS NULL
         )
         AND event_date >= DATE('{{ add_days(ds, -3) }}')
@@ -62,6 +66,7 @@ firebase_module_events AS (
         --events
         e.event_name,
         e.offer_id,
+        e.booking_id,
         CASE WHEN entries.content_type = "recommendation" THEN e.reco_call_id ELSE NULL END AS call_id,
         -- modules
         entries.title as module_name,
@@ -132,6 +137,7 @@ firebase_conversion_step AS (
         --events
         conv.event_name,
         conv.offer_id,
+        conv.booking_id,
         event.call_id,
         event.module_name,
         event.content_type,
@@ -200,6 +206,7 @@ SELECT
         WHEN event_name = "BookingConfirmation" THEN "booking"
     END as event_type,
     e.offer_id,
+    e.booking_id,
     e.module_name,
     e.content_type,
     e.module_id,

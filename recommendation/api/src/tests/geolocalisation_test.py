@@ -1,12 +1,13 @@
 import os
-from typing import Any
-
-import pandas as pd
+from typing import Any, List
 import pytest
-from sqlalchemy import create_engine
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
-from pcreco.utils.geolocalisation import get_iris_from_coordinates
+
+from pcreco.utils.geolocalisation import (
+    get_iris_from_coordinates,
+    distance_to_radius_bucket,
+)
 
 DATA_GCP_TEST_POSTGRES_PORT = os.getenv("DATA_GCP_TEST_POSTGRES_PORT")
 DB_NAME = os.getenv("DB_NAME")
@@ -18,6 +19,26 @@ TEST_DATABASE_CONFIG = {
     "port": DATA_GCP_TEST_POSTGRES_PORT,
     "database": DB_NAME,
 }
+
+
+@pytest.mark.parametrize(
+    ["distance_meters", "expected_radius_buckets"],
+    [
+        (10_000, ["0_25KM"]),
+        (100_000, ["0_25KM", "25_50KM", "50_100KM"]),
+        (200_000, ["0_25KM", "25_50KM", "50_100KM", "100_150KM", "150KM+"]),
+    ],
+)
+def test_distance_to_radius_bucket(
+    setup_database: Any, distance_meters: int, expected_radius_buckets: List[str]
+):
+    # Given
+    with patch("pcreco.utils.db.db_connection.__get_session") as connection_mock:
+        connection_mock.return_value = setup_database
+
+        radius_buckets = distance_to_radius_bucket(distance_meters)
+        # Then
+        assert radius_buckets == expected_radius_buckets
 
 
 def test_get_iris_from_coordinates(setup_database: Any):

@@ -1,18 +1,18 @@
 SELECT
-    DATE(deposit_creation_date) AS day,
+    DATE(edd.deposit_creation_date) AS day,
     eud.user_civility,
     eud.user_activity,
-    edd.user_region_name,
-    edd.user_department_code,
+    eud.user_region_name,
+    eud.user_department_code,
     COUNT(
         DISTINCT CASE
-            WHEN deposit_type = 'GRANT_18' THEN edd.user_id
+            WHEN edd.deposit_type = 'GRANT_18' THEN edd.user_id
             ELSE NULL
         END
     ) AS cnt_18_users_created,
     COUNT(
         DISTINCT CASE
-            WHEN deposit_type = 'GRANT_15_17' THEN edd.user_id
+            WHEN edd.deposit_type = 'GRANT_15_17' THEN edd.user_id
             ELSE NULL
         END
     ) AS cnt_15_17_users_created
@@ -23,5 +23,5 @@ GROUP BY
     day,
     eud.user_civility,
     eud.user_activity,
-    edd.user_region_name,
-    edd.user_department_code
+    eud.user_region_name,
+    eud.user_department_code

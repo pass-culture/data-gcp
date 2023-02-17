@@ -29,7 +29,6 @@ offer,offer_validation,character varying,applicative_database_offer,clean
 offer,offer_creation_date,timestamp without time zone,applicative_database_offer,clean
 offerer,offerer_is_active,boolean,applicative_database_offerer,clean
 offerer,offerer_id,character varying,applicative_database_offerer,clean
-offerer,offerer_validation_token,character varying,applicative_database_offerer,clean
 venue,venue_id,character varying,applicative_database_venue,clean
 venue,venue_managing_offerer_id,character varying,applicative_database_venue,clean
 venue,venue_validation_token,character varying,applicative_database_venue,clean

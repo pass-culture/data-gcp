@@ -2,17 +2,16 @@
 FROM python:3.9
 
 # Install libraries
-COPY ./requirements.txt ./
-RUN pip3 install -r requirements.txt 
+COPY ./api-requirements.txt ./
+RUN pip3 install -r api-requirements.txt 
 
 # Setup container directories
 RUN mkdir /app
-RUN mkdir -p /app/model/tf_reco
 
 # Copy local code to the container
 COPY ./app /app
 
-COPY ./model/tf_reco /app/model/tf_reco
+COPY ./model /app/model
 
 
 WORKDIR /app

@@ -5,17 +5,13 @@ from airflow.operators.python import PythonOperator
 from airflow.operators.dummy_operator import DummyOperator
 from dependencies.appsflyer.import_appsflyer import analytics_tables
 from common.alerts import task_fail_slack_alert
-from common.operator import bigquery_job_task
-from common.utils import depends_loop
+from common.operators.biquery import bigquery_job_task
+from common.utils import depends_loop, get_airflow_schedule
 from common import macros
-from common.config import ENV_SHORT_NAME, GCP_PROJECT
+from common.config import ENV_SHORT_NAME, GCP_PROJECT_ID
 from common.config import DAG_FOLDER
 import json
-from common.config import (
-    ENV_SHORT_NAME,
-    GCP_PROJECT,
-    DAG_FOLDER,
-)
+from common.config import ENV_SHORT_NAME, GCP_PROJECT_ID, DAG_FOLDER
 
 from common.utils import getting_service_account_token
 
@@ -29,14 +25,14 @@ default_dag_args = {
     "retries": 1,
     "on_failure_callback": task_fail_slack_alert,
     "retry_delay": datetime.timedelta(minutes=5),
-    "project_id": GCP_PROJECT,
+    "project_id": GCP_PROJECT_ID,
 }
 
 dag = DAG(
     "import_appsflyer",
     default_args=default_dag_args,
     description="Import Appsflyer tables",
-    schedule_interval="00 01 * * *",
+    schedule_interval=get_airflow_schedule("00 01 * * *"),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,
@@ -46,9 +42,7 @@ dag = DAG(
 service_account_token = PythonOperator(
     task_id="getting_appsflyer_service_account_token",
     python_callable=getting_service_account_token,
-    op_kwargs={
-        "function_name": f"appsflyer_import_{ENV_SHORT_NAME}",
-    },
+    op_kwargs={"function_name": f"appsflyer_import_{ENV_SHORT_NAME}"},
     dag=dag,
 )
 
@@ -108,9 +102,10 @@ for table, job_params in analytics_tables.items():
     table_jobs[table] = {
         "operator": task,
         "depends": job_params.get("depends", []),
+        "dag_depends": job_params.get("dag_depends", []),
     }
 
-table_jobs = depends_loop(table_jobs, start)
+table_jobs = depends_loop(table_jobs, start, dag=dag)
 end = DummyOperator(task_id="end", dag=dag)
 
 (

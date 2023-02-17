@@ -1,12 +1,5 @@
-import os
 import pandas as pd
-import requests
-from datetime import datetime
-import time
 import re
-
-import pandas_gbq as pd_gbq
-
 from utils import ANALYTICS_DATASET, ENVIRONMENT_SHORT_NAME
 
 

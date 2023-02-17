@@ -1,7 +1,10 @@
 import unittest
 
-from dependencies.import_analytics.import_tables import define_import_query
-
+from dependencies.import_analytics.import_raw import (
+    get_tables_config_dict,
+    RAW_SQL_PATH,
+)
+from common.config import DAG_FOLDER
 
 IMPORT_TABLES = [
     {"table_name": "provider", "excluded_fields": ["apiKey"]},
@@ -29,13 +32,14 @@ class TestImportTables(unittest.TestCase):
         for params in IMPORT_TABLES:
             table_name = params["table_name"]
             excluded_fields = params["excluded_fields"]
-            result = define_import_query(
-                table_name,
-                region="GCP_REGION",
-                external_connection_id="EXTERNAL_CONNECTION_ID",
-            )
+
+            result_path = get_tables_config_dict(
+                DAG_FOLDER + "/" + RAW_SQL_PATH, "BIGQUERY_DATASET"
+            )[table_name]["sql"]
+            with open(result_path, "r") as file:
+                result_query = file.readlines()
             for f in excluded_fields:
                 self.assertFalse(
-                    f'"{f}"' in result,
+                    f'"{f}"' in result_query,
                     f"Error in import_tables. Field {f} found in {table_name}",
                 )

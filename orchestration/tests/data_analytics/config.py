@@ -7,7 +7,7 @@ BIGQUERY_SCHEMAS = {
     "applicative_database_booking": {
         "booking_is_active": "BOOLEAN",
         "booking_id": "STRING",
-        "individual_booking_id": "STRING",
+        "deposit_id": "STRING",
         "booking_creation_date": "DATETIME",
         "recommendation_id": "STRING",
         "stock_id": "STRING",
@@ -23,14 +23,16 @@ BIGQUERY_SCHEMAS = {
         "booking_cancellation_reason": "STRING",
         "booking_reimbursement_date": "DATETIME",
     },
-    "applicative_database_individual_booking": {
-        "individual_booking_id": "STRING",
-        "user_id": "STRING",
-        "deposit_id": "STRING",
-    },
     "applicative_database_educational_institution": {
         "educational_institution_id": "STRING",
         "educational_institution_institution_id": "STRING",
+    },
+    "applicative_database_educational_year": {
+        "educational_year_id": "STRING",
+        "educational_year_beginning_date": "DATETIME",
+        "educational_year_expiration_date": "DATETIME",
+        "adage_id": "STRING",
+        "scholar_year": "STRING",
     },
     "applicative_database_user_suspension": {
         "id": "STRING",
@@ -98,10 +100,7 @@ BIGQUERY_SCHEMAS = {
         "casting": "STRING",
         "isbn": "STRING",
     },
-    "offer_tags": {
-        "offer_id": "STRING",
-        "tag": "STRING",
-    },
+    "offer_tags": {"offer_id": "STRING", "tag": "STRING"},
     "applicative_database_offerer": {
         "offerer_is_active": "BOOLEAN",
         "offerer_thumb_count": "INT64",
@@ -111,7 +110,6 @@ BIGQUERY_SCHEMAS = {
         "offerer_address": "STRING",
         "offerer_postal_code": "STRING",
         "offerer_city": "STRING",
-        "offerer_validation_token": "STRING",
         "offerer_id": "STRING",
         "offerer_creation_date": "DATETIME",
         "offerer_validation_date": "DATETIME",
@@ -227,7 +225,9 @@ BIGQUERY_SCHEMAS = {
         "venue_department_code": "STRING",
         "offer_id": "STRING",
         "offer_product_id": "STRING",
+        "offer_product_humanized_id": "STRING",
         "item_id": "STRING",
+        "offer_id_at_providers": "STRING",
         "offer_name": "STRING",
         "URL": "STRING",
         "is_national": "STRING",
@@ -428,6 +428,8 @@ BIGQUERY_SCHEMAS = {
         "collective_offer_contact_email": "STRING",
         "collective_offer_contact_phone": "STRING",
         "collective_offer_offer_venue": "STRING",
+        "collective_offer_image_id": "STRING",
+        "is_public_api": "BOOLEAN",
     },
     "applicative_database_collective_offer_template": {
         "collective_offer_audio_disability_compliant": "BOOLEAN",
@@ -453,6 +455,7 @@ BIGQUERY_SCHEMAS = {
         "collective_offer_contact_phone": "STRING",
         "collective_offer_offer_venue": "STRING",
         "collective_offer_las_validation_type": "STRING",
+        "collective_offer_image_id": "STRING",
     },
     "applicative_database_collective_stock": {
         "collective_stock_id": "STRING",
@@ -487,12 +490,22 @@ BIGQUERY_SCHEMAS = {
         "isActive": "BOOLEAN",
         "fieldsUpdated": "STRING",
     },
-    "isbn_editor": {
-        "isbn": "STRING",
-        "book_editor": "STRING",
-    },
-    "offer_item_ids": {
-        "offer_id": "STRING",
-        "item_id": "STRING",
+    "isbn_editor": {"isbn": "STRING", "book_editor": "STRING"},
+    "offer_item_ids": {"offer_id": "STRING", "item_id": "STRING"},
+    "user_beneficiary": {
+        "user_id": "STRING",
+        "user_creation_date": "DATETIME",
+        "user_has_enabled_marketing_email": "BOOLEAN",
+        "user_humanized_id": "STRING",
+        "user_postal_code": "STRING",
+        "user_activity": "STRING",
+        "user_civility": "STRING",
+        "user_school_type": "STRING",
+        "user_is_active": "BOOLEAN",
+        "user_age": "FLOAT64",
+        "user_role": "STRING",
+        "user_birth_date": "DATETIME",
+        "user_cultural_survey_filled_date": "DATETIME",
+        "user_department_code": "STRING",
     },
 }

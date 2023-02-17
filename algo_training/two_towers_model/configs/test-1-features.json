@@ -1,0 +1,16 @@
+{
+  "user_embedding_layers": {
+      "user_id": {"type": "string", "embedding_size": 64},
+      "user_engagement": {"type": "int", "embedding_size": 2},
+      "user_queries": {"type": "text", "embedding_size": 4}
+  },
+  "item_embedding_layers": {
+      "item_id": {"type": "string", "embedding_size": 64},
+      "offer_categoryId": {"type": "string", "embedding_size": 4},
+      "offer_subcategoryid": {"type": "string", "embedding_size": 4},
+      "item_names": {"type":  "text", "embedding_size":  4},
+      "item_rayons": {"type":  "text", "embedding_size":  4},
+      "item_booking_cnt": {"type": "int", "embedding_size": 2},
+      "item_favourite_cnt": {"type": "int", "embedding_size": 2}
+  }
+}

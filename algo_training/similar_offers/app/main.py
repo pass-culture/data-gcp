@@ -11,7 +11,7 @@ CORS(app)
 
 
 def load_model():
-    tf_reco = tf.keras.models.load_model("./model/tf_reco/")
+    tf_reco = tf.keras.models.load_model("./model/")
     offer_item_model = tf_reco.item_layer.layers[0].get_vocabulary()
     embedding_item_model = tf_reco.item_layer.layers[1].get_weights()
     model_weights = embedding_item_model[0]

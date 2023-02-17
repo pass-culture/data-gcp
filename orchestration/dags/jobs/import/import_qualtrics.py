@@ -3,13 +3,9 @@ from airflow import DAG
 from airflow.providers.http.operators.http import SimpleHttpOperator
 from airflow.operators.python import PythonOperator
 from common.config import DAG_FOLDER
-from common.config import (
-    ENV_SHORT_NAME,
-    GCP_PROJECT,
-    DAG_FOLDER,
-)
+from common.config import ENV_SHORT_NAME, GCP_PROJECT_ID, DAG_FOLDER
 
-from common.utils import getting_service_account_token
+from common.utils import getting_service_account_token, get_airflow_schedule
 
 from common.alerts import task_fail_slack_alert
 
@@ -21,14 +17,14 @@ default_dag_args = {
     "retries": 1,
     "on_failure_callback": task_fail_slack_alert,
     "retry_delay": datetime.timedelta(minutes=5),
-    "project_id": GCP_PROJECT,
+    "project_id": GCP_PROJECT_ID,
 }
 
 dag = DAG(
     "import_qualtrics",
     default_args=default_dag_args,
     description="Import qualtrics tables",
-    schedule_interval="00 01 * * *",
+    schedule_interval=get_airflow_schedule("00 01 * * *"),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,
@@ -38,9 +34,7 @@ dag = DAG(
 service_account_token = PythonOperator(
     task_id="getting_qualtrics_service_account_token",
     python_callable=getting_service_account_token,
-    op_kwargs={
-        "function_name": f"qualtrics_import_{ENV_SHORT_NAME}",
-    },
+    op_kwargs={"function_name": f"qualtrics_import_{ENV_SHORT_NAME}"},
     dag=dag,
 )
 

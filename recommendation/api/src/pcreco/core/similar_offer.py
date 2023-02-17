@@ -1,82 +1,88 @@
 # pylint: disable=invalid-name
 from sqlalchemy import text
+import json
 from pcreco.core.user import User
+from pcreco.core.offer import Offer
 from pcreco.models.reco.playlist_params import PlaylistParamsIn
 from pcreco.core.utils.query_builder import RecommendableOffersQueryBuilder
 from pcreco.utils.db.db_connection import get_session
 from pcreco.core.utils.vertex_ai import predict_model
-from pcreco.utils.env_vars import (
-    SIM_OFFERS_ENDPOINT_NAME,
-    RECOMMENDABLE_OFFER_LIMIT,
-    DEFAULT_RECO_RADIUS,
-    log_duration,
-)
+from pcreco.core.model_selection import select_sim_model_params
+from pcreco.utils.env_vars import log_duration, ENV_SHORT_NAME
 from typing import List, Dict, Any
-import time
 from loguru import logger
+import datetime
+import time
+import pytz
+import random
 
 
 class SimilarOffer:
-    def __init__(self, user: User, offer_id: int, params_in: PlaylistParamsIn = None):
+    def __init__(self, user: User, offer: Offer, params_in: PlaylistParamsIn):
         self.user = user
+        self.offer = offer
         self.n = 10
-        self.recommendable_offer_limit = 5000
-        self.params_in_filters = params_in._get_conditions() if params_in else ""
-        self.reco_radius = params_in.reco_radius if params_in else DEFAULT_RECO_RADIUS
-        self.include_numericals = True
-        # TODO move this in exec
-        self.item_id = self.get_item_id(offer_id)
-        self.recommendable_offers = self.get_recommendable_offers()
-
+        self.model_params = select_sim_model_params(params_in.model_endpoint)
+        self.recommendable_offer_limit = 10_000
+        self.params_in_filters = params_in._get_conditions()
+        self.reco_radius = params_in.reco_radius
+        self.json_input = params_in.json_input
+        self.include_digital = params_in.include_digital
+        self.has_conditions = params_in.has_conditions
+        self.reco_origin = "default"
         self.model_version = None
         self.model_display_name = None
 
-    def get_scored_offers(self) -> List[Dict[str, Any]]:
-        instances = self._get_instances()
-        if instances is None:
+    def get_scoring(self) -> List[str]:
+
+        # item not found
+        if self.offer.item_id is None:
             return []
-        predicted_offers = self._predict_score(instances)
-        recommendations = []
-        for offer in predicted_offers:
-            recommendations.append(self.recommendable_offers[offer])
-        return recommendations
+        # get recommendable_offers
+        recommendable_offers = self.get_recommendable_offers()
+        size_recommendable_offers = len(recommendable_offers)
+        # nothing to score
+        if size_recommendable_offers == 0:
+            return []
 
-    def get_scoring(self) -> List[Dict[str, Any]]:
-        offers = self.get_scored_offers()
-        return [offer["id"] for offer in offers]
+        selected_offers = list(recommendable_offers.keys())
+        # TODO: fix waiting to have enough offers in dev.
+        if ENV_SHORT_NAME == "dev":
+            predicted_offers = random.sample(
+                selected_offers, k=min(self.n, size_recommendable_offers)
+            )
+            return [recommendable_offers[offer]["id"] for offer in predicted_offers]
 
-    def _get_instances(self) -> List[Dict[str, str]]:
-        if self.item_id is None:
-            logger.info(f"_get_instances:offer_not_found")
-            return None
-        if len(self.recommendable_offers) > 0:
-            selected_offers = list(self.recommendable_offers.keys())
-            logger.info(f"_get_instances:{','.join(selected_offers)}")
-            return {
-                "offer_id": self.item_id,
+        if self.offer.cnt_bookings < 5:
+            return []
+        else:
+            instances = {
+                "offer_id": self.offer.item_id,
                 "selected_offers": selected_offers,
                 "size": self.n,
             }
-        else:
-            logger.info(f"_get_instances:all")
-            return {"offer_id": self.item_id, "n": self.n}
+            predicted_offers = self._predict_score(instances)
+            return [recommendable_offers[offer]["id"] for offer in predicted_offers]
 
     def get_recommendable_offers(self) -> Dict[str, Dict[str, Any]]:
+
         start = time.time()
-        order_query = "is_geolocated DESC, booking_number DESC"
-        query = text(
-            RecommendableOffersQueryBuilder(
-                self, RECOMMENDABLE_OFFER_LIMIT
-            ).generate_query(order_query)
-        )
-        connection = get_session()
-        query_result = connection.execute(
-            query,
-            user_id=str(self.user.id),
-            user_iris_id=str(self.user.iris_id),
-            user_longitude=float(self.user.longitude),
-            user_latitude=float(self.user.latitude),
-        ).fetchall()
+        order_query = "booking_number DESC"
+
+        recommendable_offers_query = RecommendableOffersQueryBuilder(
+            self, self.recommendable_offer_limit
+        ).generate_query(order_query)
+
+        query_result = []
+        if recommendable_offers_query is not None:
+            connection = get_session()
+            query_result = connection.execute(
+                text(recommendable_offers_query),
+                user_id=str(self.user.id),
+                user_iris_id=str(self.offer.iris_id),
+                user_longitude=float(self.offer.longitude),
+                user_latitude=float(self.offer.latitude),
+            ).fetchall()
 
         user_recommendation = {
             row[4]: {
@@ -87,34 +93,53 @@ class SimilarOffer:
                 "item_id": row[4],
             }
             for row in query_result
+            if row[4] != self.offer.item_id
         }
         logger.info(f"get_recommendable_offers: n: {len(user_recommendation)}")
         log_duration(f"get_recommendable_offers for {self.user.id}", start)
         return user_recommendation
 
-    def get_item_id(self, offer_id) -> str:
-        start = time.time()
-        connection = get_session()
-        query_result = connection.execute(
-            f"""
-                SELECT item_id 
-                FROM item_ids_mv
-                WHERE offer_id = '{offer_id}'
-            """
-        ).fetchone()
-        log_duration(f"get_item_id for offer_id: {offer_id}", start)
-        if query_result is not None:
-            logger.info("get_item_id:found id")
-            return query_result[0]
-        else:
-            logger.info("get_item_id:not_found_id")
-            return None
+    def save_recommendation(self, recommendations) -> None:
 
-    def _predict_score(self, instances) -> List[List[float]]:
+        if len(recommendations) > 0:
+            start = time.time()
+            date = datetime.datetime.now(pytz.utc)
+            rows = []
+
+            for offer_id in recommendations:
+                rows.append(
+                    {
+                        "user_id": self.user.id,
+                        "origin_offer_id": self.offer.id,
+                        "offer_id": offer_id,
+                        "date": date,
+                        "group_id": self.model_params.name,
+                        "model_name": self.model_display_name,
+                        "model_version": self.model_version,
+                        "reco_filters": json.dumps(self.json_input),
+                        "call_id": self.user.call_id,
+                        "venue_iris_id": self.offer.iris_id,
+                    }
+                )
+
+            connection = get_session()
+            connection.execute(
+                text(
+                    """
+                    INSERT INTO public.past_similar_offers (user_id, origin_offer_id, offer_id, date, group_id, model_name, model_version, reco_filters, call_id, venue_iris_id)
+                    VALUES (:user_id, :origin_offer_id, :offer_id, :date, :group_id, :model_name, :model_version, :reco_filters, :call_id, :venue_iris_id)
+                    """
+                ),
+                rows,
+            )
+            log_duration(f"save_recommendations for {self.user.id}", start)
+
+    def _predict_score(self, instances) -> List[List[str]]:
+
         logger.info(f"_predict_score: {instances}")
         start = time.time()
         response = predict_model(
-            endpoint_name=SIM_OFFERS_ENDPOINT_NAME,
+            endpoint_name=self.model_params.endpoint_name,
             location="europe-west1",
             instances=instances,
         )

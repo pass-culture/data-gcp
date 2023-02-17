@@ -13,22 +13,12 @@ from pcreco.models.reco.playlist_params import PlaylistParamsIn
 from pcreco.core.utils.query_builder import RecommendableOffersQueryBuilder
 from pcreco.utils.db.db_connection import get_session
 from pcreco.core.utils.vertex_ai import predict_model
+from pcreco.core.model_selection import select_reco_model_params
 from pcreco.utils.env_vars import (
     ENV_SHORT_NAME,
     NUMBER_OF_PRESELECTED_OFFERS,
-    NUMBER_OF_RECOMMENDATIONS,
-    ACTIVE_MODEL,
-    RECO_ENDPOINT_NAME,
-    AB_TESTING,
-    AB_TEST_MODEL_DICT,
     RECOMMENDABLE_OFFER_LIMIT,
     COLD_START_RECOMMENDABLE_OFFER_LIMIT,
-    NUMBER_OF_PRESELECTED_OFFERS,
-    NUMBER_OF_RECOMMENDATIONS,
-    SHUFFLE_RECOMMENDATION,
-    MIXING_RECOMMENDATION,
-    MIXING_FEATURE,
-    DEFAULT_RECO_RADIUS,
     log_duration,
 )
 import datetime
@@ -38,75 +28,63 @@ from typing import List, Dict, Any
 from loguru import logger
 
 class Recommendation:
-    def __init__(self, user: User, params_in: PlaylistParamsIn = None):
+    def __init__(self, user: User, params_in: PlaylistParamsIn):
         self.user = user
-        self.json_input = params_in.json_input if params_in else None
-        self.params_in_filters = params_in._get_conditions() if params_in else ""
-        self.params_in_model_name = params_in.model_name if params_in else None
-        self.iscoldstart = (
-            False if self.force_model else get_cold_start_status(self.user)
-        )
-
-        self.reco_radius = params_in.reco_radius if params_in else DEFAULT_RECO_RADIUS
-        self.reco_is_shuffle = (
-            params_in.reco_is_shuffle if params_in else SHUFFLE_RECOMMENDATION
-        )
-        self.nb_reco_display = (
-            params_in.nb_reco_display if params_in else NUMBER_OF_RECOMMENDATIONS
-        )
-        self.is_reco_mixed = (
-            params_in.is_reco_mixed if params_in else MIXING_RECOMMENDATION
-        )
-        self.mixing_features = (
-            params_in.mixing_features if params_in else MIXING_FEATURE
-        )
-        self.include_numericals = True
-
-        self.model_name = self.get_model_name()
+        self.json_input = params_in.json_input
+        self.params_in_filters = params_in._get_conditions()
+        self.model_params = select_reco_model_params(params_in.model_endpoint)
+        # TODO migrate this params in RecommendationDefaultModel model
+        self.reco_radius = params_in.reco_radius
+        self.is_reco_shuffled = params_in.is_reco_shuffled
+        self.nb_reco_display = params_in.nb_reco_display
+        self.is_reco_mixed = params_in.is_reco_mixed
+        self.mixing_features = params_in.mixing_features
+        self.include_digital = params_in.include_digital
+        self.is_sort_by_distance = params_in.is_sort_by_distance
+        self.reco_origin = "default"
         self.scoring = self.get_scoring_method()
 
-    # rename force model
-    @property
-    def force_model(self) -> bool:
-        if self.params_in_model_name:
-            return True
-        else:
-            return False
-
-    def get_model_name(self) -> str:
-        if self.force_model:
-            return self.params_in_model_name
-        elif AB_TESTING:
-            return AB_TEST_MODEL_DICT[f"{self.user.group_id}"]
-        else:
-            return ACTIVE_MODEL
-
     def get_scoring_method(self) -> object:
-        if self.iscoldstart:
-            scoring_method = self.ColdStart(self)
-        else:
-            scoring_method = self.Algo(self)
-        return scoring_method
+        # Force depending on model
+        if self.model_params.force_cold_start:
+            self.reco_origin = "cold_start"
+            return self.ColdStart(self)
+        if self.model_params.force_model:
+            self.reco_origin = "algo"
+            return self.Algo(self)
+        # Normal behaviour
+        if get_cold_start_status(self.user):
+            self.reco_origin = "cold_start"
+            return self.ColdStart(self)
+        return self.Algo(self)
 
     def get_scoring(self) -> List[str]:
-        # score the offers
+        # sort top offers per score and select 150 offers
+        sorted_recommendations = sorted(
+            self.scoring.get_scored_offers(),
+            key=lambda k: k["score"],
+            reverse=True,
+        )[:NUMBER_OF_PRESELECTED_OFFERS]
+
+        # apply diversification filter
         if self.is_reco_mixed:
-            final_recommendations = order_offers_by_score_and_diversify_features(
-                offers=sorted(
-                    self.scoring.get_scored_offers(),
-                    key=lambda k: k["score"],
-                    reverse=True,
-                )[:NUMBER_OF_PRESELECTED_OFFERS],
-                shuffle_recommendation=self.reco_is_shuffle,
+            sorted_recommendations = order_offers_by_score_and_diversify_features(
+                offers=sorted_recommendations,
+                shuffle_recommendation=self.is_reco_shuffled,
                 feature=self.mixing_features,
                 nb_reco_display=self.nb_reco_display,
             )
-        else:
-            final_recommendations = sorted(
-                self.scoring.get_scored_offers(), key=lambda k: k["score"], reverse=True
-            )[: self.nb_reco_display]
+        # order by distance if needed
+        if self.is_sort_by_distance:
+            sorted_recommendations = sorted(
+                sorted_recommendations,
+                key=lambda k: k["user_distance"],
+                reverse=False,
+            )
 
-        return final_recommendations
+        return list(set([offer["id"] for offer in sorted_recommendations]))[
+            : self.nb_reco_display
+        ]
 
     def save_recommendation(self, recommendations) -> None:
         if len(recommendations) > 0:
@@ -120,8 +98,8 @@ class Recommendation:
                         "user_id": self.user.id,
                         "offer_id": offer_id,
                         "date": date,
-                        "group_id": self.user.group_id,
-                        "reco_origin": "cold-start" if self.iscoldstart else "algo",
+                        "group_id": self.model_params.name,
+                        "reco_origin": self.reco_origin,
                         "model_name": self.scoring.model_display_name,
                         "model_version": self.scoring.model_version,
                         "reco_filters": json.dumps(self.json_input),
@@ -147,17 +125,17 @@ class Recommendation:
             self.user = scoring.user
             self.params_in_filters = scoring.params_in_filters
             self.reco_radius = scoring.reco_radius
-            self.model_name = scoring.model_name
+            self.model_params = scoring.model_params
             self.model_display_name = None
             self.model_version = None
-            self.include_numericals = scoring.include_numericals
+            self.include_digital = scoring.include_digital
             self.recommendable_offers = self.get_recommendable_offers()
 
         def get_scored_offers(self) -> List[Dict[str, Any]]:
             start = time.time()
             if not len(self.recommendable_offers) > 0:
                 log_duration(
-                    f"no offers to score for {self.user.id} - {self.model_name}",
+                    f"no offers to score for {self.user.id} - {self.model_params.name}",
                     start,
                 )
                 return []
@@ -172,7 +150,7 @@ class Recommendation:
                 ]
 
                 log_duration(
-                    f"scored {len(recommendations)} for {self.user.id} - {self.model_name}, ",
+                    f"scored {len(recommendations)} for {self.user.id} - {self.model_params.name}, ",
                     start,
                 )
             return recommendations
@@ -190,19 +168,21 @@ class Recommendation:
         def get_recommendable_offers(self) -> List[Dict[str, Any]]:
             start = time.time()
             order_query = "is_geolocated DESC, booking_number DESC"
-            query = text(
-                RecommendableOffersQueryBuilder(
-                    self, RECOMMENDABLE_OFFER_LIMIT
-                ).generate_query(order_query)
-            )
-            connection = get_session()
-            query_result = connection.execute(
-                query,
-                user_id=str(self.user.id),
-                user_iris_id=str(self.user.iris_id),
-                user_longitude=float(self.user.longitude),
-                user_latitude=float(self.user.latitude),
-            ).fetchall()
+
+            recommendations_query = RecommendableOffersQueryBuilder(
+                self, RECOMMENDABLE_OFFER_LIMIT
+            ).generate_query(order_query)
+
+            query_result = []
+            if recommendations_query is not None:
+                connection = get_session()
+                query_result = connection.execute(
+                    text(recommendations_query),
+                    user_id=str(self.user.id),
+                    user_iris_id=str(self.user.iris_id),
+                    user_longitude=float(self.user.longitude),
+                    user_latitude=float(self.user.latitude),
+                ).fetchall()
 
             user_recommendation = [
                 {
@@ -211,6 +191,8 @@ class Recommendation:
                     "subcategory_id": row[2],
                     "search_group_name": row[3],
                     "item_id": row[4],
+                    "user_distance": row[5],
+                    "booking_number": row[6],
                 }
                 for row in query_result
             ]
@@ -220,7 +202,7 @@ class Recommendation:
         def _predict_score(self, instances) -> List[List[float]]:
             start = time.time()
             response = predict_model(
-                endpoint_name=RECO_ENDPOINT_NAME,
+                endpoint_name=self.model_params.endpoint_name,
                 location="europe-west1",
                 instances=instances,
             )
@@ -235,7 +217,7 @@ class Recommendation:
             self.params_in_filters = scoring.params_in_filters
             self.reco_radius = scoring.reco_radius
             self.cold_start_categories = self.get_cold_start_categories()
-            self.include_numericals = scoring.include_numericals
+            self.include_digital = scoring.include_digital
             self.model_version = None
             self.model_display_name = None
 
@@ -243,23 +225,23 @@ class Recommendation:
             order_query = (
                 f"""(subcategory_id in ({', '.join([f"'{category}'" for category in self.cold_start_categories])})) DESC, booking_number DESC"""
                 if len(self.cold_start_categories) > 0
-                else "is_geolocated DESC, booking_number DESC"
+                else "booking_number DESC"
             )
-            recommendations_query = text(
-                RecommendableOffersQueryBuilder(
-                    self, COLD_START_RECOMMENDABLE_OFFER_LIMIT
-                ).generate_query(order_query)
-            )
+            recommendations_query = RecommendableOffersQueryBuilder(
+                self, COLD_START_RECOMMENDABLE_OFFER_LIMIT
+            ).generate_query(order_query)
 
-            connection = get_session()
-            query_result = connection.execute(
-                recommendations_query,
-                user_iris_id=str(self.user.iris_id),
-                user_id=str(self.user.id),
-                user_longitude=float(self.user.longitude),
-                user_latitude=float(self.user.latitude),
-                number_of_preselected_offers=NUMBER_OF_PRESELECTED_OFFERS,
-            ).fetchall()
+            query_result = []
+            if recommendations_query is not None:
+                connection = get_session()
+                query_result = connection.execute(
+                    text(recommendations_query),
+                    user_iris_id=str(self.user.iris_id),
+                    user_id=str(self.user.id),
+                    user_longitude=float(self.user.longitude),
+                    user_latitude=float(self.user.latitude),
+                    number_of_preselected_offers=NUMBER_OF_PRESELECTED_OFFERS,
+                ).fetchall()
 
             cold_start_recommendations = [
                 {
@@ -268,7 +250,9 @@ class Recommendation:
                     "subcategory_id": row[2],
                     "search_group_name": row[3],
                     "item_id": row[4],
-                    "score": random.random(),
+                    "user_distance": row[5],
+                    "booking_number": row[6],
+                    "score": row[6],  # random.random()
                 }
                 for row in query_result
             ]

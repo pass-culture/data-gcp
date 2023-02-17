@@ -16,8 +16,6 @@ def set_single_env_var(string_definition):
 def set_env_vars():
     if os.path.isfile(os.path.join(PATH_TO_ENV_DIR, ".env.local")):
         path_to_env_file = os.path.join(PATH_TO_ENV_DIR, ".env.local")
-    elif os.path.isfile(os.path.join(PATH_TO_ENV_DIR, ".env")):
-        path_to_env_file = os.path.join(PATH_TO_ENV_DIR, ".env")
     else:
         return
     with open(path_to_env_file) as env_file:

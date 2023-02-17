@@ -7,13 +7,10 @@ from pcreco.utils.secrets.access_gcp_secrets import access_secret
 from pcreco.utils.health_check_queries import get_materialized_view_status
 from pcreco.utils.db.engine import create_connection, close_connection
 from pcreco.core.user import User
+from pcreco.core.offer import Offer
 from pcreco.core.recommendation import Recommendation
 from pcreco.core.similar_offer import SimilarOffer
-from pcreco.models.reco.playlist_params import PlaylistParamsIn
-
-from pcreco.utils.env_vars import (
-    AB_TESTING,
-)
+from pcreco.models.reco.parser import parse_params, parse_geolocation, parse_internal
 import uuid
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
@@ -84,63 +81,6 @@ def health_check_iris_venues_mv_status():
     return jsonify(table_status), 200
 
 
-@app.route("/recommendation/<user_id>", methods=["GET", "POST"])
-def recommendation(user_id: int):
-    call_id = uuid.uuid4()
-    if request.args.get("token", None) != API_TOKEN:
-        return "Forbidden", 403
-
-    internal = parse_internal(request)
-    longitude, latitude, geo_located = parse_geolocation(request)
-    input_reco = parse_params(request)
-
-    user = User(user_id, call_id, longitude, latitude)
-    scoring = Recommendation(user, params_in=input_reco)
-    user_recommendations = scoring.get_scoring()
-
-    if not internal:
-        scoring.save_recommendation(user_recommendations)
-
-    return jsonify(
-        {
-            "recommended_offers": user_recommendations,
-            "params": {
-                "reco_origin": "cold_start" if scoring.iscoldstart else "algo",
-                "model_name": scoring.scoring.model_display_name,
-                "model_version": scoring.scoring.model_version,
-                "ab_test": user.group_id if AB_TESTING else "default",
-                "geo_located": geo_located,
-                "filtered": input_reco.has_conditions if input_reco else False,
-                "call_id": call_id,
-            },
-        }
-    )
-
-
-def parse_geolocation(request):
-    longitude = request.args.get("longitude", None)
-    latitude = request.args.get("latitude", None)
-    if longitude is not None and latitude is not None:
-        geo_located = True
-    else:
-        geo_located = False
-    return longitude, latitude, geo_located
-
-
-def parse_internal(request):
-    try:
-        internal = int(request.args.get("internal", 0)) == 1
-    except:
-        internal = False
-    return internal
-
-
-def parse_params(request):
-    if request.method == "POST":
-        return PlaylistParamsIn(request.get_json())
-    return None
-
-
 @app.route("/playlist_recommendation/<user_id>", methods=["GET", "POST"])
 def playlist_recommendation(user_id: int):
     # unique id build for each call
@@ -163,10 +103,10 @@ def playlist_recommendation(user_id: int):
         {
             "playlist_recommended_offers": user_recommendations,
             "params": {
-                "reco_origin": "cold_start" if scoring.iscoldstart else "algo",
+                "reco_origin": scoring.reco_origin,
+                "model_endpoint": scoring.model_params.name,
                 "model_name": scoring.scoring.model_display_name,
                 "model_version": scoring.scoring.model_version,
-                "ab_test": user.group_id if AB_TESTING else "default",
                 "geo_located": geo_located,
                 "filtered": input_reco.has_conditions if input_reco else False,
                 "call_id": call_id,
@@ -187,17 +127,22 @@ def similar_offers(offer_id: str):
     user_id = request.args.get("user_id", -1)
 
     user = User(user_id, call_id, longitude, latitude)
+    offer = Offer(offer_id, call_id, latitude, longitude)
 
-    scoring = SimilarOffer(user, offer_id=offer_id, params_in=input_reco)
+    scoring = SimilarOffer(user, offer, params_in=input_reco)
     offer_recommendations = scoring.get_scoring()
+
+    if not internal:
+        scoring.save_recommendation(offer_recommendations)
 
     return jsonify(
         {
             "results": offer_recommendations,
             "params": {
+                "reco_origin": scoring.reco_origin,
+                "model_endpoint": scoring.model_params.name,
                 "model_name": scoring.model_display_name,
                 "model_version": scoring.model_version,
-                "ab_test": "default",
                 "geo_located": geo_located,
                 "filtered": input_reco.has_conditions if input_reco else False,
                 "call_id": call_id,

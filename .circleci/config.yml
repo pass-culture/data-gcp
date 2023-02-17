@@ -170,6 +170,38 @@ workflows:
             - Slack
           <<: *slack-fail-post-step
 
+      - algo-training-install:
+          requires:
+            - linter
+          context:
+            - Slack
+          <<: *slack-fail-post-step
+
+      - algo-training-tests:
+          requires:
+            - algo-training-install
+          context:
+            - Slack
+            - DATA_GCP
+            - DATA_GCP_EHP
+          <<: *slack-fail-post-step
+
+      - record-linkage-install:
+          requires:
+            - linter
+          context:
+            - Slack
+          <<: *slack-fail-post-step
+
+      - record-linkage-tests:
+          requires:
+            - record-linkage-install
+          context:
+            - Slack
+            - DATA_GCP
+            - DATA_GCP_EHP
+          <<: *slack-fail-post-step
+
       # Composer jobs
       # -------------
       - orchestration-install:
@@ -539,6 +571,69 @@ workflows:
             - Slack
           <<: *slack-fail-post-step
       
+      - cloud-function-deploy:
+          name: sendinblue-import-stg
+          cloud-function-name: sendinblue_import_stg
+          cloud-function-folder: sendinblue-function-source
+          requires:
+            - linter
+          filters:
+            branches:
+              only:
+                - master
+          context:
+            - DATA_GCP
+            - DATA_GCP_EHP
+            - Slack
+          <<: *slack-fail-post-step
+          
+      - cloud-function-deploy:
+          name: cold-data-stg
+          cloud-function-name: cold_data_stg
+          cloud-function-folder: cold-data-function-source
+          requires:
+            - linter
+          filters:
+            branches:
+              only:
+                - master
+          context:
+            - DATA_GCP
+            - DATA_GCP_EHP
+            - Slack
+          <<: *slack-fail-post-step
+
+      - cloud-function-deploy:
+          name: sendinblue-import-prod
+          cloud-function-name: sendinblue_import_prod
+          cloud-function-folder: sendinblue-function-source
+          requires:
+            - linter
+          filters:
+            branches:
+              only:
+                - production
+          context:
+            - DATA_GCP
+            - DATA_GCP_PROD
+            - Slack
+          <<: *slack-fail-post-step
+          
+      - cloud-function-deploy:
+          name: cold-data-prod
+          cloud-function-name: cold_data_prod
+          cloud-function-folder: cold-data-function-source
+          requires:
+            - linter
+          filters:
+            branches:
+              only:
+                - production
+          context:
+            - DATA_GCP
+            - DATA_GCP_PROD
+            - Slack
+          <<: *slack-fail-post-step
 
       # Slack alerts jobs
       # ----------------
@@ -563,6 +658,8 @@ workflows:
             - import-adage-cloud-function-deploy-prod
             - import-typeform-adage-reference-request-prod
             - metabase-archiving-prod
+            - cold-data-prod
+            - sendinblue-import-prod
 
       - slack-alert:
           name: slack-alert-staging
@@ -585,6 +682,8 @@ workflows:
             - import-adage-cloud-function-deploy-stg
             - import-typeform-adage-reference-request-stg
             - metabase-archiving-stg
+            - cold-data-stg
+            - sendinblue-import-stg
 
   # ----------------
   # Workflow to deploy on dev
@@ -645,6 +744,16 @@ workflows:
           cloud-function-name: metabase_archiving_dev
           cloud-function-folder: metabase-archiving-function-source
           <<: *deploy_on_dev_commons
+      - cloud-function-deploy:
+          name: sendinblue-import-dev
+          cloud-function-name: sendinblue_import_dev
+          cloud-function-folder: sendinblue-function-source
+          <<: *deploy_on_dev_commons
+      - cloud-function-deploy:
+          name: cold-data-dev
+          cloud-function-name: cold_data_dev
+          cloud-function-folder: cold-data-function-source
+          <<: *deploy_on_dev_commons
       - build_and_deploy_api:
           name: build_and_deploy_api_dev
           api-instance-name: apireco-dev
@@ -684,6 +793,8 @@ workflows:
             - adage-import-function-deploy-dev
             - typeform-adage-reference-request-dev
             - metabase-archiving-dev
+            - cold-data-dev
+            - sendinblue-import-dev
 ### temporarily removing api reco tests ###
 #          requires:
 #            - api-integration-tests-dev
@@ -820,15 +931,15 @@ jobs:
       - checkout:
           path: ~/data-gcp
       - restore_cache:
-          key: deps-{{ checksum "orchestration-requirements.txt" }}
+          key: deps-{{ checksum "airflow/orchestration-requirements.txt" }}
       - run:
           name: Install Python requirements
           command: |
             python3 -m venv venv-orchestration
             . venv-orchestration/bin/activate
-            pip install -r orchestration-requirements.txt
+            pip install -r airflow/orchestration-requirements.txt
       - save_cache:
-          key: deps-{{ checksum "orchestration-requirements.txt" }}
+          key: deps-{{ checksum "airflow/orchestration-requirements.txt" }}
           paths:
             - "venv-orchestration"
       - persist_to_workspace:
@@ -856,6 +967,75 @@ jobs:
             airflow db init
             pytest tests
 
+  algo-training-install:
+    executor: python
+    working_directory: ~/data-gcp/algo_training
+    steps:
+      - checkout:
+          path: ~/data-gcp
+      - restore_cache:
+          key: deps-{{ checksum "requirements.txt" }}
+      - run:
+          name: Install Python requirements
+          command: |
+            python3 -m venv venv-algo-training
+            . venv-algo-training/bin/activate
+            pip install -r requirements.txt
+      - save_cache:
+          key: deps-{{ checksum "requirements.txt" }}
+          paths:
+            - "venv-algo-training"
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+
+  algo-training-tests:
+    executor: python
+    working_directory: ~/data-gcp/algo_training
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Run tests
+          command: |
+            . venv-algo-training/bin/activate
+            PYTHONPATH=. pytest tests
+
+  record-linkage-install:
+    executor: python
+    working_directory: ~/data-gcp/record_linkage
+    steps:
+      - checkout:
+          path: ~/data-gcp
+      - restore_cache:
+          key: deps-{{ checksum "requirements.txt" }}
+      - run:
+          name: Install Python requirements
+          command: |
+            python3 -m venv venv-record-linkage
+            . venv-record-linkage/bin/activate
+            pip install -r requirements.txt
+      - save_cache:
+          key: deps-{{ checksum "requirements.txt" }}
+          paths:
+            - "venv-record-linkage"
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+
+  record-linkage-tests:
+    executor: python
+    working_directory: ~/data-gcp/record_linkage
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Run tests
+          command: |
+            . venv-record-linkage/bin/activate
+            PYTHONPATH=. pytest tests
   #recommendation-db-install:
   #  executor: python
   #  working_directory: ~/data-gcp/recommendation/db

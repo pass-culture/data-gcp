@@ -6,12 +6,11 @@ import pandas as pd
 import pytz
 from sqlalchemy import create_engine
 from typing import Any, Dict
-from pcreco.utils.env_vars import AB_TESTING_TABLE
 
 
 DATA_GCP_TEST_POSTGRES_PORT = os.getenv("DATA_GCP_TEST_POSTGRES_PORT")
 DB_NAME = os.getenv("DB_NAME", "db")
-ACTIVE_MODEL = os.environ.get("ACTIVE_MODEL")
+DEFAULT_IRIS_ID = "45327"
 
 TEST_DATABASE_CONFIG = {
     "user": "postgres",
@@ -25,19 +24,9 @@ TEST_DATABASE_CONFIG = {
 @pytest.fixture
 def app_config() -> Dict[str, Any]:
     return {
-        "AB_TESTING_TABLE": AB_TESTING_TABLE,
         "NUMBER_OF_RECOMMENDATIONS": 10,
         "NUMBER_OF_PRESELECTED_OFFERS": 50,
         "MODEL_REGION": "model_region",
-        "MODEL_NAME_A": "model_name",
-        "MODEL_VERSION_A": "model_version",
-        "MODEL_INPUT_A": "model_input",
-        "MODEL_NAME_B": "model_name",
-        "MODEL_VERSION_B": "model_version",
-        "MODEL_INPUT_B": "model_input",
-        "MODEL_NAME_C": "mf_reco",
-        "MODEL_VERSION_C": "model_version",
-        "MODEL_INPUT_C": "model_input",
     }
 
 
@@ -56,10 +45,12 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
                 "movie-4",
                 "movie-5",
                 "product-6",
+                "product-7",
+                "product-8",
             ],
-            "offer_id": ["1", "2", "3", "4", "5", "6"],
-            "product_id": ["1", "2", "3", "4", "5", "6"],
-            "category": ["A", "B", "C", "D", "E", "B"],
+            "offer_id": ["1", "2", "3", "4", "5", "6", "7", "8"],
+            "product_id": ["1", "2", "3", "4", "5", "6", "7", "8"],
+            "category": ["A", "B", "C", "D", "E", "B", "A", "A"],
             "subcategory_id": [
                 "EVENEMENT_CINE",
                 "EVENEMENT_CINE",
@@ -67,6 +58,8 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
                 "EVENEMENT_CINE",
                 "SPECTACLE_REPRESENTATION",
                 "SPECTACLE_REPRESENTATION",
+                "SPECTACLE_REPRESENTATION",
+                "EVENEMENT_CINE",
             ],
             "search_group_name": [
                 "CINEMA",
@@ -75,10 +68,21 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
                 "CINEMA",
                 "SPECTACLE",
                 "SPECTACLE",
+                "SPECTACLE",
+                "CINEMA",
             ],
-            "iris_id": ["11", "22", "33", "44", "55", "22"],
-            "venue_id": ["11", "22", "33", "44", "55", "22"],
-            "venue_distance_to_iris": [11, 22, 33, 44, 55, 22],
+            "iris_id": [
+                DEFAULT_IRIS_ID,
+                DEFAULT_IRIS_ID,
+                DEFAULT_IRIS_ID,
+                DEFAULT_IRIS_ID,
+                DEFAULT_IRIS_ID,
+                DEFAULT_IRIS_ID,
+                DEFAULT_IRIS_ID,
+                DEFAULT_IRIS_ID,
+            ],
+            "venue_id": ["11", "22", "33", "44", "55", "22", "22", "22"],
+            "venue_distance_to_iris": [11, 22, 33, 44, 55, 22, 1, 1],
             "venue_distance_to_iris_bucket": [
                 "0_25KM",
                 "0_25KM",
@@ -86,13 +90,17 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
                 "0_25KM",
                 "0_25KM",
                 "0_25KM",
+                "0_25KM",
+                "0_25KM",
             ],
-            "name": ["a", "b", "c", "d", "e", "f"],
-            "is_numerical": [False, False, True, True, False, False],
-            "is_national": [True, False, True, False, True, False],
-            "is_geolocated": [False, True, False, False, False, True],
-            "booking_number": [3, 5, 10, 2, 1, 9],
+            "name": ["a", "b", "c", "d", "e", "f", "g", "h"],
+            "is_numerical": [False, False, True, True, False, False, False, False],
+            "is_national": [True, False, True, False, True, False, False, False],
+            "is_geolocated": [False, True, False, False, False, True, True, True],
+            "booking_number": [3, 5, 10, 2, 1, 9, 5, 5],
             "offer_creation_date": [
+                "2020-01-01",
+                "2020-01-01",
                 "2020-01-01",
                 "2020-01-01",
                 "2020-01-01",
@@ -107,11 +115,22 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
                 "2020-01-01",
                 "2020-01-01",
                 "2020-01-01",
+                "2020-01-01",
+                "2020-01-01",
             ],
-            "stock_price": [10, 20, 20, 30, 30, 30],
-            "booking_number": [1, 2, 3, 4, 5, 6],
-            "is_underage_recommendable": [True, True, True, False, False, False],
-            "position": ["in", "out", "in", "out", "in", "out"],
+            "stock_price": [10, 20, 20, 30, 30, 30, 30, 30],
+            "booking_number": [1, 2, 3, 4, 5, 6, 7, 8],
+            "is_underage_recommendable": [
+                True,
+                True,
+                True,
+                False,
+                False,
+                False,
+                False,
+                False,
+            ],
+            "position": ["in", "out", "in", "out", "in", "out", "in", "in"],
             "venue_latitude": [
                 48.87004,
                 48.87004,
@@ -119,11 +138,20 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
                 48.87004,
                 48.87004,
                 48.87004,
+                48.830719,
+                48.830719,
             ],
-            "venue_longitude": [2.3785, 2.3785, 2.3785, 2.3785, 2.3785, 2.3785],
-            "unique_id": [1, 2, 3, 4, 5, 6],
-            "venue_latitude": [2.43, 2.46, 2.46, 2.49, 2.49, 2.46],
-            "venue_longitude": [48.810, 48.820, 48.830, 48.840, 48.840, 48.820],
+            "venue_longitude": [
+                2.3785,
+                2.3785,
+                2.3785,
+                2.3785,
+                2.3785,
+                2.3785,
+                2.331289,
+                2.331289,
+            ],
+            "unique_id": [1, 2, 3, 4, 5, 6, 7, 8],
         }
     )
 
@@ -190,20 +218,11 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
     )
     qpi_answers.to_sql("qpi_answers_mv", con=engine, if_exists="replace")
 
-    ab_testing = pd.DataFrame(
-        {
-            "userid": ["111", "112", "113", "114", "115", "116", "117", "118"],
-            "groupid": ["A", "B", "C", "B", "A", "B", "C", "B"],
-        }
-    )
-    ab_testing.to_sql(app_config["AB_TESTING_TABLE"], con=engine, if_exists="replace")
-
     past_recommended_offers = pd.DataFrame(
         {
             "userid": [1],
             "offerid": [1],
             "date": [datetime.now(pytz.utc)],
-            "group_id": "A",
             "reco_origin": "algo",
         }
     )
@@ -222,21 +241,26 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
     connection.execute(sql)
 
     yield connection
+    try:
+        engine.execute(
+            "DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_per_iris_shape_mv CASCADE;"
+        )
 
-    engine.execute(
-        "DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_per_iris_shape_mv CASCADE;"
-    )
+        engine.execute(
+            "DROP MATERIALIZED VIEW IF EXISTS non_recommendable_offers CASCADE;"
+        )
 
-    engine.execute("DROP MATERIALIZED VIEW IF EXISTS non_recommendable_offers CASCADE;")
-
-    engine.execute("DROP TABLE IF EXISTS recommendable_offers_temporary_table CASCADE;")
-    engine.execute(
-        "DROP TABLE IF EXISTS non_recommendable_offers_temporary_table CASCADE;"
-    )
-    engine.execute("DROP TABLE IF EXISTS enriched_user CASCADE;")
-    engine.execute("DROP MATERIALIZED VIEW IF EXISTS enriched_user_mv CASCADE;")
-    engine.execute(f"DROP TABLE IF EXISTS {app_config['AB_TESTING_TABLE']} ;")
-    engine.execute("DROP TABLE IF EXISTS past_recommended_offers ;")
-    engine.execute("DROP TABLE IF EXISTS iris_france;")
-
-    connection.close()
+        engine.execute(
+            "DROP TABLE IF EXISTS recommendable_offers_temporary_table CASCADE;"
+        )
+        engine.execute(
+            "DROP TABLE IF EXISTS non_recommendable_offers_temporary_table CASCADE;"
+        )
+        engine.execute("DROP TABLE IF EXISTS enriched_user CASCADE;")
+        engine.execute("DROP MATERIALIZED VIEW IF EXISTS enriched_user_mv CASCADE;")
+        engine.execute("DROP TABLE IF EXISTS past_recommended_offers CASCADE ;")
+        engine.execute("DROP TABLE IF EXISTS iris_france CASCADE;")
+    except:
+        pass
+    finally:
+        connection.close()

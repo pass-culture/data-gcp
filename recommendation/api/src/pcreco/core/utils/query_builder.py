@@ -7,7 +7,13 @@ class RecommendableOffersQueryBuilder:
         return f"""
             reco_offers_with_distance_to_user   AS  (
                     SELECT
-                        *
+                        offer_id
+                    ,   category
+                    ,   subcategory_id
+                    ,   search_group_name
+                    ,   item_id
+                    ,   booking_number
+                    ,   is_geolocated
                     ,   CASE
                             WHEN
                                 (
@@ -27,9 +33,9 @@ class RecommendableOffersQueryBuilder:
                                 and ro."position" ='out'
                                 )
                             THEN 
-                                ro.venue_distance_to_iris
+                                ro.user_distance
                             ELSE
-                                NULL
+                                -1
                         END     AS  user_distance
                     FROM
                         {source_table_name} ro
@@ -55,6 +61,7 @@ class RecommendableOffersQueryBuilder:
                     ,   subcategory_id
                     ,   search_group_name
                     ,   item_id
+                    ,   user_distance
                     ,   booking_number
                     ,   is_geolocated
                 FROM
@@ -74,8 +81,10 @@ class RecommendableOffersQueryBuilder:
                     ,   subcategory_id
                     ,   search_group_name
                     ,   item_id
+                    ,   user_distance
                     ,   booking_number
                     ,   is_geolocated
+
                 FROM
                     {source_table_name} 
             )  
@@ -87,9 +96,19 @@ class RecommendableOffersQueryBuilder:
             if (self.reco_model.user.age and self.reco_model.user.age < 18)
             else ""
         )
+        iris_distance = (
+            " AND ("
+            + " OR ".join(
+                [
+                    f"venue_distance_to_iris_bucket='{iris_dist}'"
+                    for iris_dist in self.reco_model.reco_radius
+                ]
+            )
+            + ")\n"
+        )
 
         reco_geolocated_offers_sql = self._get_reco_offers(
-            "(ro.is_geolocated and ro.iris_id = :user_iris_id)",
+            "(ro.is_geolocated and ro.iris_id = :user_iris_id)" + iris_distance,
             user_profile_filter,
             export_table_name="reco_geolocated_offers",
         )
@@ -107,8 +126,8 @@ class RecommendableOffersQueryBuilder:
             source_table_name="reco_non_geolocated_offers",
             export_table_name="selected_non_geolocated_offers",
         )
-
-        if self.reco_model.user.iris_id and self.reco_model.include_numericals:
+        # Default
+        if self.reco_model.user.iris_id and self.reco_model.include_digital:
             return f"""
                 WITH {reco_geolocated_offers_sql}, {filter_by_distance_sql}, {reco_non_geolocated_offers_sql}, {selected_offers_sql}
                 , tmp AS(
@@ -120,7 +139,7 @@ class RecommendableOffersQueryBuilder:
                 ORDER BY {order_query}
                 LIMIT {self.recommendable_offer_limit}
             """
-
+        # No digital offer (case filtered by events)
         elif self.reco_model.user.iris_id:
             return f"""
                 WITH {reco_geolocated_offers_sql}, {filter_by_distance_sql}
@@ -128,35 +147,31 @@ class RecommendableOffersQueryBuilder:
                 ORDER BY {order_query}
                 LIMIT {self.recommendable_offer_limit}
             """
-        else:
+        # No geoloc
+        elif self.reco_model.include_digital:
             return f"""
                 WITH {reco_non_geolocated_offers_sql}, {selected_offers_sql}
                 SELECT * FROM selected_non_geolocated_offers 
                 ORDER BY {order_query}
                 LIMIT {self.recommendable_offer_limit}
             """
+        # No reco
+        else:
+            return None
 
     def _get_reco_offers(
-        self, geoloc_filter, user_profile_filter, export_table_name
+        self,
+        geoloc_filter,
+        user_profile_filter,
+        export_table_name,
     ) -> str:
-
-        iris_distance = (
-            "AND ("
-            + " OR ".join(
-                [
-                    f"venue_distance_to_iris_bucket='{iris_dist}'"
-                    for iris_dist in self.reco_model.reco_radius
-                ]
-            )
-            + ")\n"
-        )
 
         return f"""
                 {export_table_name} AS  (
                         SELECT ro.offer_id
                         ,   ro.item_id
                         ,   ro.venue_id
-                        ,   ro.venue_distance_to_iris
+                        ,   ro.venue_distance_to_iris as user_distance
                         ,   ro."position"
                         ,   ro.iris_id
                         ,   ro.booking_number
@@ -169,7 +184,6 @@ class RecommendableOffersQueryBuilder:
                         FROM
                             {self.reco_model.user.recommendable_offer_table} ro
                         WHERE {geoloc_filter}
-                        {iris_distance}
                         AND offer_id    NOT IN  (
                                 SELECT
                                     offer_id

@@ -27,8 +27,10 @@ SELECT
     offerer.offerer_name,
     collective_stock.collective_stock_price AS booking_amount,
     collective_stock.collective_stock_number_of_tickets AS number_of_tickets,
+    collective_stock.collective_stock_beginning_date_time,
     collective_booking.educational_institution_id AS educational_institution_id,
     collective_booking.educational_year_id AS educational_year_id,
+    educational_year.scholar_year,
     collective_booking.educational_redactor_id AS educational_redactor_id,
     eple.nom_etablissement,
     eple.code_departement AS school_department_code,
@@ -42,7 +44,8 @@ SELECT
     collective_booking.collective_booking_confirmation_limit_date,
     collective_booking.collective_booking_used_date,
     collective_booking.collective_booking_reimbursement_date,
-    collective_booking_ranking_view.collective_booking_rank
+    collective_booking_ranking_view.collective_booking_rank,
+    collective_offer.collective_offer_image_id,
 FROM
     `{{ bigquery_analytics_dataset }}`.applicative_database_collective_booking AS collective_booking
     INNER JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_collective_stock AS collective_stock ON collective_stock.collective_stock_id = collective_booking.collective_stock_id
@@ -50,6 +53,7 @@ FROM
     INNER JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_venue AS venue ON collective_booking.venue_id = venue.venue_id
     INNER JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offerer AS offerer ON offerer.offerer_id = venue.venue_managing_offerer_id
     INNER JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_educational_institution AS educational_institution ON educational_institution.educational_institution_id = collective_booking.educational_institution_id
+    INNER JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_educational_year AS educational_year ON educational_year.adage_id = collective_booking.educational_year_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.eple AS eple ON eple.id_etablissement = educational_institution.institution_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.region_department AS venue_region_departement ON venue.venue_department_code = venue_region_departement.num_dep
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.region_department AS school_region_departement ON eple.code_departement = school_region_departement.num_dep

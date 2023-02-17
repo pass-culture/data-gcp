@@ -1,13 +1,12 @@
 from datetime import datetime
 from scripts.utils import (
     GCP_PROJECT,
-    ENV_SHORT_NAME,
     BIGQUERY_ANALYTICS_DATASET,
-    BUCKET_NAME,
     ADAGE_INVOLVED_STUDENTS_DTYPE,
+    BQ_ADAGE_DTYPE,
     save_to_raw_bq,
 )
-
+from google.cloud import bigquery
 from google.cloud import secretmanager
 from google.auth.exceptions import DefaultCredentialsError
 import requests
@@ -38,6 +37,7 @@ def access_secret(project_id, secret_id, version_id=1, default=None):
 ENDPOINT = get_endpoint()
 project_name = os.environ["PROJECT_NAME"]
 
+
 if os.environ["ENV_SHORT_NAME"] == "dev":
     API_KEY = access_secret(project_name, "adage_import_api_key")
 elif os.environ["ENV_SHORT_NAME"] == "stg":
@@ -50,52 +50,42 @@ def get_request(ENDPOINT, API_KEY, route):
     try:
         headers = {"X-omogen-api-key": API_KEY}
 
-        req = requests.get(
-            "{}/{}".format(ENDPOINT, route),
-            headers=headers,
-        )
+        req = requests.get("{}/{}".format(ENDPOINT, route), headers=headers)
         if req.status_code == 200:
-            data = req.json()
-            return data
+            return req.json()
+
     except Exception as e:
         print("An unexpected error has happened {}".format(e))
     return None
 
 
-def create_adage_table():
-    return f"""
-    CREATE TABLE IF NOT EXISTS `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.adage`(
-        id STRING,
-        siret STRING,
-        venueId STRING,  
-        regionId STRING, 
-        academieId STRING, 
-        statutId STRING, 
-        labelId STRING,
-        typeId STRING, 
-        communeId STRING, 
-        libelle STRING, 
-        adresse STRING, 
-        siteWeb STRING, 
-        latitude STRING,
-        longitude STRING, 
-        actif STRING, 
-        dateModification STRING, 
-        statutLibelle STRING,
-        labelLibelle STRING, 
-        typeIcone STRING, 
-        typeLibelle STRING, 
-        communeLibelle STRING,
-        communeDepartement STRING, 
-        academieLibelle STRING, 
-        regionLibelle STRING, 
-        domaines STRING);
-        """
+def import_adage():
+    client = bigquery.Client()
+    client.query(create_adage_historical_table()).result()
+    data = get_request(ENDPOINT, API_KEY, route="partenaire-culturel")
+    df = pd.DataFrame(data)
+    _cols = list(df.columns)
+    for k, v in BQ_ADAGE_DTYPE.items():
+        if k not in _cols:
+            df[k] = None
+        df[k] = df[k].astype(str)
+
+    df.to_gbq(
+        f"""{BIGQUERY_ANALYTICS_DATASET}.adage""",
+        project_id=GCP_PROJECT,
+        if_exists="replace",
+    )
+    client.query(adding_value()).result()
+
+
+def create_adage_historical_table():
+    str_dtype = ",".join([f"{k} {v}" for k, v in BQ_ADAGE_DTYPE.items()])
+    return f"""CREATE TABLE IF NOT EXISTS `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.adage_historical`({str_dtype});"""
 
 
 def adding_value():
-    return f"""MERGE `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.adage` A
-        USING `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.adage_data_temp` B
+    return f"""MERGE `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.adage_historical` A
+        USING `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.adage` B
         ON B.id = A.id
         WHEN MATCHED THEN
             UPDATE SET 
@@ -197,7 +187,7 @@ def get_adage_stats():
                             "institutions": v["etabs"],
                             "total_involved_students": v["totalEleves"],
                             "total_institutions": v["totalEtabs"],
-                        },
+                        }
                     )
                 )
 

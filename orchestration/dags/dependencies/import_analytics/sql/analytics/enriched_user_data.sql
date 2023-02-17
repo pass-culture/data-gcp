@@ -1,15 +1,4 @@
-{{ create_humanize_id_function() }} 
-
-WITH user_humanized_id AS (
-    SELECT
-        user_id,
-        humanize_id(user_id) AS humanized_id
-    FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_user
-    WHERE
-        user_id is not NULL
-),
-activation_dates AS (
+WITH activation_dates AS (
     WITH ranked_bookings AS (
         SELECT
             booking.user_id,
@@ -35,11 +24,9 @@ activation_dates AS (
             ELSE user_creation_date
         END AS user_activation_date
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_user AS user
+        `{{ bigquery_clean_dataset }}`.user_beneficiary AS user
         LEFT JOIN ranked_bookings ON user.user_id = ranked_bookings.user_id
         AND rank_ = 1
-    WHERE
-        user_role IN ('BENEFICIARY', 'UNDERAGE_BENEFICIARY')
 ),
 date_of_first_bookings AS (
     SELECT
@@ -189,10 +176,8 @@ users_seniority_activation_date AS (
         END AS activation_date,
         user.user_id
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_user AS user
+        `{{ bigquery_clean_dataset }}`.user_beneficiary AS user
         LEFT JOIN users_seniority_validated_activation_booking validated_activation_booking ON validated_activation_booking.user_id = user.user_id
-    WHERE
-        user_role IN ('BENEFICIARY', 'UNDERAGE_BENEFICIARY')
 ),
 users_seniority AS (
     SELECT
@@ -203,7 +188,7 @@ users_seniority AS (
         ) AS user_seniority,
         user.user_id
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_user AS user
+        `{{ bigquery_clean_dataset }}`.user_beneficiary AS user
         LEFT JOIN users_seniority_activation_date activation_date ON user.user_id = activation_date.user_id
 ),
 actual_amount_spent AS (
@@ -216,12 +201,10 @@ actual_amount_spent AS (
             0
         ) AS actual_amount_spent
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_user AS user
+        `{{ bigquery_clean_dataset }}`.user_beneficiary AS user
         LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_booking AS booking ON user.user_id = booking.user_id
         AND booking.booking_is_used IS TRUE
         AND booking.booking_is_cancelled IS FALSE
-    WHERE
-        user_role IN ('BENEFICIARY', 'UNDERAGE_BENEFICIARY')
     GROUP BY
         user.user_id
 ),
@@ -235,11 +218,9 @@ theoretical_amount_spent AS (
             0
         ) AS theoretical_amount_spent
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_user AS user
+        `{{ bigquery_clean_dataset }}`.user_beneficiary AS user
         LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_booking AS booking ON user.user_id = booking.user_id
         AND booking.booking_is_cancelled IS FALSE
-    WHERE
-        user_role IN ('BENEFICIARY', 'UNDERAGE_BENEFICIARY')
     GROUP BY
         user.user_id
 ),
@@ -268,10 +249,8 @@ theoretical_amount_spent_in_digital_goods AS (
             0.
         ) AS amount_spent_in_digital_goods
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_user AS user
+        `{{ bigquery_clean_dataset }}`.user_beneficiary AS user
         LEFT JOIN theoretical_amount_spent_in_digital_goods_eligible_booking eligible_booking ON user.user_id = eligible_booking.user_id
-    WHERE
-        user_role IN ('BENEFICIARY', 'UNDERAGE_BENEFICIARY')
     GROUP BY
         user.user_id
 ),
@@ -300,10 +279,8 @@ theoretical_amount_spent_in_physical_goods AS (
             0.
         ) AS amount_spent_in_physical_goods
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_user AS user
+        `{{ bigquery_clean_dataset }}`.user_beneficiary AS user
         LEFT JOIN theoretical_amount_spent_in_physical_goods_eligible_booking eligible_booking ON user.user_id = eligible_booking.user_id
-    WHERE
-        user_role IN ('BENEFICIARY', 'UNDERAGE_BENEFICIARY')
     GROUP BY
         user.user_id
 ),
@@ -332,10 +309,8 @@ theoretical_amount_spent_in_outings AS (
             0.
         ) AS amount_spent_in_outings
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_user AS user
+        `{{ bigquery_clean_dataset }}`.user_beneficiary AS user
         LEFT JOIN theoretical_amount_spent_in_outings_eligible_booking eligible_booking ON user.user_id = eligible_booking.user_id
-    WHERE
-        user_role IN ('BENEFICIARY', 'UNDERAGE_BENEFICIARY')
     GROUP BY
         user.user_id
 ),
@@ -483,22 +458,13 @@ user_suspension_history AS (
     FROM
         `{{ bigquery_analytics_dataset }}`.applicative_database_user_suspension
 )
+
 SELECT
     user.user_id,
     user.user_department_code,
     user.user_postal_code,
-    CASE
-        WHEN user.user_activity in ("Alternant", "Apprenti", "Volontaire") THEN "Apprenti, Alternant, Volontaire en service civique rémunéré"
-        WHEN user.user_activity in ("Inactif") THEN "Inactif (ni en emploi ni au chômage), En incapacité de travailler"
-        WHEN user.user_activity in ("Étudiant") THEN "Etudiant"
-        WHEN user.user_activity in ("Chômeur", "En recherche d'emploi ou chômeur") THEN "Chômeur, En recherche d'emploi"
-        ELSE user.user_activity
-    END AS user_activity,
-    CASE
-        WHEN user.user_civility in ("M", "M.") THEN "M."
-        WHEN user.user_civility IN ("Mme") THEN "Mme"
-        ELSE user.user_civility
-    END AS user_civility,
+    user.user_activity,
+    user.user_civility,
     user.user_school_type,
     activation_dates.user_activation_date,
     user_agg_deposit_data.user_first_deposit_creation_date AS user_deposit_creation_date,
@@ -523,7 +489,7 @@ SELECT
     last_deposit.deposit_theoretical_amount_spent_in_digital_goods AS last_deposit_theoretical_amount_spent_in_digital_goods,
     last_deposit.deposit_actual_amount_spent AS last_deposit_actual_amount_spent,
     user_last_deposit_amount - last_deposit.deposit_theoretical_amount_spent AS user_theoretical_remaining_credit,
-    user_humanized_id.humanized_id AS user_humanized_id,
+    user.user_humanized_id,
     last_booking_date.last_booking_date,
     region_department.region_name AS user_region_name,
     first_paid_booking_date.booking_creation_date_first,
@@ -562,9 +528,10 @@ SELECT
         ELSE FALSE
     END AS user_is_current_beneficiary,
     user.user_age,
-    user.user_birth_date
+    user.user_birth_date,
+    user.user_has_enabled_marketing_email,
 FROM
-    `{{ bigquery_analytics_dataset }}`.applicative_database_user AS user
+    `{{ bigquery_clean_dataset }}`.user_beneficiary AS user
     LEFT JOIN activation_dates ON user.user_id = activation_dates.user_id
     LEFT JOIN date_of_first_bookings ON user.user_id = date_of_first_bookings.user_id
     LEFT JOIN date_of_second_bookings ON user.user_id = date_of_second_bookings.user_id
@@ -578,7 +545,6 @@ FROM
     LEFT JOIN theoretical_amount_spent_in_physical_goods ON user.user_id = theoretical_amount_spent_in_physical_goods.user_id
     LEFT JOIN theoretical_amount_spent_in_outings ON user.user_id = theoretical_amount_spent_in_outings.user_id
     LEFT JOIN last_booking_date ON last_booking_date.user_id = user.user_id
-    LEFT JOIN user_humanized_id AS user_humanized_id ON user_humanized_id.user_id = user.user_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.region_department ON user.user_department_code = region_department.num_dep
     LEFT JOIN first_paid_booking_date ON user.user_id = first_paid_booking_date.user_id
     LEFT JOIN first_booking_type ON user.user_id = first_booking_type.user_id
@@ -590,8 +556,7 @@ FROM
         AND deposit_rank_desc = 1
     JOIN user_agg_deposit_data ON user.user_id = user_agg_deposit_data.userId
 WHERE
-    user_role IN ('UNDERAGE_BENEFICIARY', 'BENEFICIARY')
-    AND (
+    (
         user.user_is_active
         OR user_suspension_history.reasonCode = 'UPON_USER_REQUEST'
     )

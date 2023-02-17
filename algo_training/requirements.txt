@@ -8,7 +8,12 @@ pandas-gbq==0.15.0
 scipy==1.5.4
 # Si problème, passer tensorflow en 2.7.0
 tensorflow==2.6.3
+tensorflow-recommenders==0.6.0
 keras==2.6.0
-implicit==0.4.8
 recmetrics==0.1.5
 google-cloud-aiplatform==1.16.0
+typer==0.7.0
+pytest==6.1.1
+tqdm==4.64.1
+protobuf==3.20.*
+loguru==0.6.0

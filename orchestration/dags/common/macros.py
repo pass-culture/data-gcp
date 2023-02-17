@@ -9,8 +9,9 @@ from common.config import (
     BIGQUERY_BACKEND_DATASET,
     BIGQUERY_TMP_DATASET,
     ENV_SHORT_NAME,
-    GCP_PROJECT,
+    GCP_PROJECT_ID,
     BASE32_JS_LIB_PATH,
+    BIGQUERY_SANDBOX_DATASET,
 )
 
 
@@ -80,9 +81,10 @@ default = {
     "bigquery_tmp_dataset": BIGQUERY_TMP_DATASET,
     "bigquery_clean_dataset": BIGQUERY_CLEAN_DATASET,
     "bigquery_raw_dataset": BIGQUERY_RAW_DATASET,
+    "bigquery_sandbox_dataset": BIGQUERY_SANDBOX_DATASET,
     "bigquery_backend_dataset": BIGQUERY_BACKEND_DATASET,
     "env_short_name": ENV_SHORT_NAME,
-    "gcp_project": GCP_PROJECT,
+    "gcp_project": GCP_PROJECT_ID,
     "yyyymmdd": yyyymmdd,
     "today": today,
     "current_month": current_month,

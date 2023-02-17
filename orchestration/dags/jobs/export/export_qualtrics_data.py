@@ -2,17 +2,17 @@ import datetime
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from common import macros
-from dependencies.qualtrics.export_qualtrics_data import export_tables
+from dependencies.qualtrics.export_qualtrics_data import clean_tables
 from common.config import (
     DAG_FOLDER,
-    GCP_PROJECT,
+    GCP_PROJECT_ID,
     ENV_SHORT_NAME,
     APPLICATIVE_EXTERNAL_CONNECTION_ID,
     BIGQUERY_CLEAN_DATASET,
 )
 from common.alerts import task_fail_slack_alert
-from common.operator import bigquery_job_task
-from common.utils import depends_loop
+from common.operators.biquery import bigquery_job_task
+from common.utils import depends_loop, get_airflow_schedule
 from common.access_gcp_secrets import access_secret_data
 import pandas as pd
 import requests
@@ -22,7 +22,7 @@ default_dag_args = {
     "start_date": datetime.datetime(2022, 6, 24),
     "retries": 1,
     "retry_delay": datetime.timedelta(minutes=5),
-    "project_id": GCP_PROJECT,
+    "project_id": GCP_PROJECT_ID,
     "on_failure_callback": task_fail_slack_alert,
 }
 
@@ -30,16 +30,18 @@ dag = DAG(
     "export_qualtrics_data",
     default_args=default_dag_args,
     description="Export user data for Qualtrics usages",
-    schedule_interval="00 06 25 * *",
+    schedule_interval=get_airflow_schedule("00 06 25 * *"),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
 )
 
-QUALTRICS_TOKEN = access_secret_data(GCP_PROJECT, f"qualtrics_token_{ENV_SHORT_NAME}")
+QUALTRICS_TOKEN = access_secret_data(
+    GCP_PROJECT_ID, f"qualtrics_token_{ENV_SHORT_NAME}"
+)
 QUALTRICS_DATA_CENTER = access_secret_data(
-    GCP_PROJECT, f"qualtrics_data_center_{ENV_SHORT_NAME}"
+    GCP_PROJECT_ID, f"qualtrics_data_center_{ENV_SHORT_NAME}"
 )
 QUALTRICS_BASE_URL = f"https://{QUALTRICS_DATA_CENTER}.qualtrics.com/automations-file-service/automations/"
 
@@ -87,12 +89,13 @@ def get_and_send(**kwargs):
 
 
 start = DummyOperator(task_id="start", dag=dag)
-table_jobs = {}
-for table, job_params in export_tables.items():
+clean_table_jobs = {}
+for table, job_params in clean_tables.items():
     task = bigquery_job_task(dag, table, job_params)
-    table_jobs[table] = {
+    clean_table_jobs[table] = {
         "operator": task,
         "depends": job_params.get("depends", []),
+        "dag_depends": job_params.get("dag_depends", []),
     }
     export_task = PythonOperator(
         task_id=f"export_to_qualtrics_{table}",
@@ -108,4 +111,8 @@ for table, job_params in export_tables.items():
     )
     export_task.set_upstream(task)
 
-table_jobs = depends_loop(table_jobs, start)
+clean_table_jobs = depends_loop(clean_table_jobs, start, dag=dag)
+
+end_raw = DummyOperator(task_id="end_raw", dag=dag)
+
+(start >> clean_table_jobs >> end_raw)

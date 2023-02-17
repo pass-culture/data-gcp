@@ -27,7 +27,10 @@ def create_and_fill_tables(connection):
         typed_columns = ", ".join(
             [f'"{column_name}" {schema[column_name]}' for column_name in schema]
         )
-        connection.execute(f"DROP TABLE IF EXISTS public.{table}")
+        try:
+            connection.execute(f"DROP TABLE IF EXISTS public.{table} CASCADE;")
+        except:
+            pass
         connection.execute(
             f"CREATE TABLE IF NOT EXISTS public.{table} ({typed_columns})"
         )

@@ -17,40 +17,23 @@ SQL_BASE_PASSWORD = os.environ.get(
     "SQL_BASE_PASSWORD", access_secret(GCP_PROJECT, SQL_BASE_SECRET_ID)
 )
 # Vertex ai attributes
-PROJECT_NUMBER = os.environ.get("PROJECT_NUMBER")
-RECO_ENDPOINT_NAME = f"vertex_ai_{ENV_SHORT_NAME}"
-SIM_OFFERS_ENDPOINT_NAME = f"vertex_ai_similar_offers_{ENV_SHORT_NAME}"
+DEFAULT_RECO_MODEL = os.environ.get("DEFAULT_RECO_MODEL", "default")
+DEFAULT_SIMILAR_OFFER_MODEL = os.environ.get("DEFAULT_SIMILAR_OFFER_MODEL", "default")
 
 
 # Attributes on API output and recommendation
-ACTIVE_MODEL = f"tf_model_reco_{ENV_SHORT_NAME}"
 NUMBER_OF_RECOMMENDATIONS = 20
 SHUFFLE_RECOMMENDATION = False
 MIXING_RECOMMENDATION = True
 MIXING_FEATURE = "subcategory_id"
-NUMBER_OF_PRESELECTED_OFFERS = 50 if not os.environ.get("CI") else 3
+MIXING_FEATURE_LIST = ["subcategory_id", "search_group_name", "category"]
+NUMBER_OF_PRESELECTED_OFFERS = 150 if not os.environ.get("CI") else 3
 RECOMMENDABLE_OFFER_LIMIT = 5000
 COLD_START_RECOMMENDABLE_OFFER_LIMIT = 500
-# KM ["0_25KM", "25_50KM", "50_100KM", "100_150KM", "150KM+"]
 DEFAULT_RECO_RADIUS = ["0_25KM", "25_50KM", "50_100KM"]
 
 RECOMMENDABLE_OFFER_TABLE_PREFIX = "recommendable_offers_per_iris_shape"
 
-# AB TESTING
-AB_TESTING = False
-AB_TESTING_GROUPS = ["A", "B", "C"]
-AB_TESTING_TABLE = os.environ.get(
-    "AB_TESTING_TABLE", "ab_testing"
-)  # "ab_testing" for tests in circle ci
-AB_TESTING_TABLE_EAC = os.environ.get("AB_TESTING_TABLE_EAC")
-MODEL_NAME_A = os.environ.get("MODEL_NAME_A")
-MODEL_NAME_B = os.environ.get("MODEL_NAME_B")
-MODEL_NAME_C = os.environ.get("MODEL_NAME_C")
-AB_TEST_MODEL_DICT = {
-    "A": MODEL_NAME_A,
-    "B": MODEL_NAME_B,
-    "C": MODEL_NAME_C,
-}
 # QPI
 MACRO_CATEGORIES_TYPE_MAPPING = {
     "SUPPORT_PHYSIQUE_FILM": ["FILM"],

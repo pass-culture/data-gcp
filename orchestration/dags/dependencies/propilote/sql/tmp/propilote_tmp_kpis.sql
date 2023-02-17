@@ -19,6 +19,14 @@ all_dimension_group AS (
        region_dpt
     {% endif %}
 ),
+school_year AS (
+
+    SELECT 
+        MAX(adage_id) AS annee_en_cours
+    
+    FROM 
+        `{{ bigquery_analytics_dataset }}.applicative_database_educational_year`
+),
 all_dimension_month AS (
     SELECT
         month,
@@ -152,12 +160,12 @@ agg_intensity_18 AS (
     {% else %}
         {{ params.group_type_name }},
     {% endif %}
-        COUNT(
+        ROUND(SAFE_DIVIDE(COUNT(
             CASE
                 WHEN nb_reservations >= 3 THEN 1
                 ELSE NULL
             END
-        ) / COUNT(*) AS part_3_resas
+        ), COUNT(*)) * 100 )  AS part_3_resas
     FROM
         intensity_18
     GROUP BY
@@ -189,6 +197,23 @@ intensity_15_17 AS (
         1,
         2
 ),
+agg_intensity_15_17 AS (
+    SELECT
+        intensity_15_17.month,
+    {% if params.group_type == 'all' %}
+        'all' as all_dim,
+    {% else %}
+        intensity_15_17.{{ params.group_type_name }},
+    {% endif %}
+    ROUND(SAFE_DIVIDE(nb_15_17_actifs, total_registered_15_17)* 100) AS part_15_17_actifs
+    FROM intensity_15_17
+    LEFT JOIN nb_registrations_agg on nb_registrations_agg.month = intensity_15_17.month
+    {% if params.group_type != 'all' %}
+        AND nb_registrations_agg.{{ params.group_type_name }} = intensity_15_17.{{ params.group_type_name }}
+    {% endif %}
+
+),
+
 mean_spent_beneficiary_18 AS (
     SELECT
         DATE_TRUNC(DATE("{{ ds }}"), MONTH) as month,
@@ -308,6 +333,7 @@ montant_moyen AS (
 collective_students AS (
     SELECT
         DATE_TRUNC(DATE("{{ ds }}"), MONTH) as month,
+        date,
     {% if params.group_type == 'all' %}
         'all' as all_dim,
     {% else %}
@@ -321,11 +347,12 @@ collective_students AS (
         `{{ bigquery_analytics_dataset }}.adage_involved_student` ais
         JOIN region_dpt ON ais.department_code = region_dpt.user_department_code
     WHERE
-        LAST_DAY(date) = date
-        AND DATE_TRUNC(DATE("{{ ds }}"), MONTH) = DATE_TRUNC(date, MONTH)
+        DATE_TRUNC(DATE("{{ ds }}"), MONTH) = DATE_TRUNC(date, MONTH)
     GROUP BY
         1,
-        2
+        2,
+        3
+    QUALIFY ROW_NUMBER() OVER (ORDER BY DATE DESC) = 1
 ),
 
 conso_collective AS (
@@ -366,7 +393,7 @@ eple_infos AS (
         COUNT(DISTINCT institution_id) AS nb_total_eple,
         COUNT(
             DISTINCT CASE
-                WHEN collective_booking_status IN ('USED', 'REIMBURSED') THEN institution_id
+                WHEN collective_booking_status IN ('USED', 'REIMBURSED') AND educational_year_id IN (SELECT annee_en_cours FROM school_year) THEN institution_id
                 ELSE NULL
             END
         ) AS nb_eple_actifs
@@ -376,6 +403,8 @@ eple_infos AS (
     WHERE
         DATE(first_deposit_creation_date) < DATE_TRUNC(DATE("{{ ds }}"), MONTH)
         AND DATE(collective_booking_creation_date) < DATE_TRUNC(DATE("{{ ds }}"), MONTH)
+        AND institution_current_deposit_amount > 0 
+        AND institution_current_deposit_amount IS NOT NULL
     GROUP BY
         1,
         2
@@ -388,7 +417,7 @@ activation_eple AS (
     {% else %}
         {{ params.group_type_name }},
     {% endif %}
-        ROUND((nb_eple_actifs / nb_total_eple) * 100) AS percentage_active_eple
+        ROUND(SAFE_DIVIDE(nb_eple_actifs, nb_total_eple) * 100) AS percentage_active_eple
     FROM
         eple_infos
 ),

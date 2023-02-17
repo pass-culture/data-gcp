@@ -67,7 +67,6 @@ contentful_modules = [
                     "is_event",
                     "is_duo",
                     "is_digital",
-                    "is_free",
                     "newest_only",
                     "price_max",
                     "price_min",
@@ -91,7 +90,6 @@ contentful_modules = [
                     "is_event",
                     "is_duo",
                     "is_digital",
-                    "is_free",
                     "newest_only",
                     "price_max",
                     "price_min",
@@ -128,6 +126,20 @@ contentful_modules = [
                 "name": "display_parameters",
                 "additional_fields": ["title", "is_geolocated", "around_radius"],
                 "type": "unique",
+            }
+        ],
+    },
+    {
+        "name": "categoryList",
+        "additional_fields": [
+            "title",
+            "category_block_list",
+        ],
+        "children": [
+            {
+                "name": "category_block_list",
+                "additional_fields": ["title", "image", "home_entry_id"],
+                "type": "list",
             }
         ],
     },

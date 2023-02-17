@@ -47,8 +47,8 @@ kpis_list = [
     {
         "question": 8,
         "effect": "Part des jeunes ayant fait au moins une réservation individuelle (15-17 ans)",
-        "kpi": "nb_15_17_actifs",
-        "table_name": "intensity_15_17",
+        "kpi": "part_15_17_actifs",
+        "table_name": "agg_intensity_15_17",
     },
     {
         "question": 9,
@@ -86,9 +86,7 @@ tmp_tables = {
     "propilote_tmp_kpis_region": {
         "sql": f"{SQL_TMP_PATH}/propilote_tmp_kpis.sql",
         "destination_dataset": "{{ bigquery_tmp_dataset }}",
-        "destination_table": "propilote_tmp_kpis_region${{ yyyymmdd(current_month(ds)) }}",
-        "time_partitioning": {"field": "calculation_month"},
-        "cluster_fields": ["calculation_month"],
+        "destination_table": "propilote_tmp_kpis_region",
         "params": {
             "group_type": "region",
             "group_type_name": "user_region_name",
@@ -98,9 +96,7 @@ tmp_tables = {
     "propilote_tmp_kpis_department": {
         "sql": f"{SQL_TMP_PATH}/propilote_tmp_kpis.sql",
         "destination_dataset": "{{ bigquery_tmp_dataset }}",
-        "destination_table": "propilote_tmp_kpis_department${{ yyyymmdd(current_month(ds)) }}",
-        "time_partitioning": {"field": "calculation_month"},
-        "cluster_fields": ["calculation_month"],
+        "destination_table": "propilote_tmp_kpis_department",
         "params": {
             "group_type": "department",
             "group_type_name": "user_department_code",
@@ -110,9 +106,7 @@ tmp_tables = {
     "propilote_tmp_kpis_all": {
         "sql": f"{SQL_TMP_PATH}/propilote_tmp_kpis.sql",
         "destination_dataset": "{{ bigquery_tmp_dataset }}",
-        "destination_table": "propilote_tmp_kpis_all${{ yyyymmdd(current_month(ds)) }}",
-        "time_partitioning": {"field": "calculation_month"},
-        "cluster_fields": ["calculation_month"],
+        "destination_table": "propilote_tmp_kpis_all",
         "params": {
             "group_type": "all",
             "group_type_name": "all_dim",

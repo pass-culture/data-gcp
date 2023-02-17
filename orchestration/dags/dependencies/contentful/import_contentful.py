@@ -27,5 +27,6 @@ contentful_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "contentful_algolia_modules_criterion",
         "depends": ["contentful_entries", "contentful_relationships"],
+        "dag_depends": [{"import_analytics_v7": "end_import"}],  # dag_id: task_id
     },
 }

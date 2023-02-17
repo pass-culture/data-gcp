@@ -24,7 +24,6 @@ def order_offers_by_score_and_diversify_features(
     Return only the ids of these sorted offers.
     """
 
-    start = time.time()
     if shuffle_recommendation:
         for recommendation in offers:
             recommendation["score"] = random.random()
@@ -32,6 +31,7 @@ def order_offers_by_score_and_diversify_features(
     offers_by_feature = _get_offers_grouped_by_feature(
         offers, feature
     )  # here we group offers by cat (and score)
+    offers_by_feature_length = np.sum([len(l) for l in offers_by_feature.values()])
 
     offers_by_feature_ordered_by_frequency = collections.OrderedDict(
         sorted(
@@ -48,14 +48,9 @@ def order_offers_by_score_and_diversify_features(
         )
 
     diversified_offers = []
-    while len(diversified_offers) != np.sum(
-        [len(l) for l in offers_by_feature.values()]
-    ):
-        for (
-            offer_feature
-        ) in (
-            offers_by_feature_ordered_by_frequency.keys()
-        ):  ## here we pop one offer of eachsubcat
+    while len(diversified_offers) != offers_by_feature_length:
+        # here we pop one offer of eachsubcat
+        for offer_feature in offers_by_feature_ordered_by_frequency.keys():
             if offers_by_feature_ordered_by_frequency[offer_feature]:
                 diversified_offers.append(
                     offers_by_feature_ordered_by_frequency[offer_feature].pop()
@@ -63,12 +58,7 @@ def order_offers_by_score_and_diversify_features(
         if len(diversified_offers) >= nb_reco_display:
             break
 
-    ordered_and_diversified_offers = [offer["id"] for offer in diversified_offers][
-        :nb_reco_display
-    ]
-
-    log_duration("order_offers_by_score_and_diversify_features", start)
-    return ordered_and_diversified_offers
+    return diversified_offers
 
 
 def _get_offers_grouped_by_feature(

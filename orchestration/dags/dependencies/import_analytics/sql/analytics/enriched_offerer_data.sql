@@ -185,5 +185,5 @@ FROM
     LEFT JOIN current_year_revenue ON current_year_revenue.offerer_id = offerer.offerer_id
     LEFT JOIN bookable_offer_cnt_offerer ON bookable_offer_cnt_offerer.offerer_id = offerer.offerer_id
 WHERE
-    offerer.offerer_validation_token IS NULL
+    offerer.offerer_validation_status='VALIDATED'
     AND offerer.offerer_is_active;

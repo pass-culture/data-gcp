@@ -1,13 +1,9 @@
-from pcreco.core.utils.ab_testing import (
-    query_ab_testing_table,
-    ab_testing_assign_user,
-)
 from pcreco.utils.geolocalisation import get_iris_from_coordinates
 from pcreco.utils.db.db_connection import get_session
+from pcreco.utils.health_check_queries import get_materialized_view_status
 from sqlalchemy import text
 from pcreco.utils.env_vars import (
     RECOMMENDABLE_OFFER_TABLE_PREFIX,
-    AB_TESTING,
 )
 
 
@@ -19,10 +15,11 @@ class User:
         self.latitude = False if latitude is None else latitude
         self.iris_id = get_iris_from_coordinates(longitude, latitude)
         self.get_user_profile()
-        self.get_ab_testing_group()
-        self.recommendable_offer_table = f"{RECOMMENDABLE_OFFER_TABLE_PREFIX}_mv"
+        self.get_recommendable_offers_table()
 
     def get_user_profile(self) -> None:
+        """Compute age & remaining credit amount."""
+
         self.age = None
         # default value
         self.user_deposit_remaining_credit = 300
@@ -51,12 +48,9 @@ class User:
             except TypeError:
                 pass
 
-    def get_ab_testing_group(self) -> None:
-        if AB_TESTING:
-            ab_testing = query_ab_testing_table(self.id)
-            if ab_testing:
-                self.group_id = ab_testing[0]
-            else:
-                self.group_id = ab_testing_assign_user(self.id)
+    def get_recommendable_offers_table(self):
+        view_name = f"{RECOMMENDABLE_OFFER_TABLE_PREFIX}_mv"
+        if get_materialized_view_status(view_name)[f"is_{view_name}_datasource_exists"]:
+            self.recommendable_offer_table = view_name
         else:
-            self.group_id = None
+            self.recommendable_offer_table = RECOMMENDABLE_OFFER_TABLE_PREFIX

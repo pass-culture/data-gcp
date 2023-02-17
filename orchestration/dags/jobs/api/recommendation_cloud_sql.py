@@ -22,34 +22,35 @@ from airflow.operators.python import PythonOperator
 from common.access_gcp_secrets import access_secret_data
 from common.compose_gcs_files import compose_gcs_files
 from common.config import (
-    GCP_PROJECT,
+    GCP_PROJECT_ID,
+    GCP_REGION,
+    ENV_SHORT_NAME,
     DATA_GCS_BUCKET_NAME,
     BIGQUERY_CLEAN_DATASET,
     BIGQUERY_ANALYTICS_DATASET,
     ENV_SHORT_NAME,
     DAG_FOLDER,
     QPI_TABLE,
+    RECOMMENDATION_SQL_INSTANCE,
 )
 from dependencies.import_recommendation_cloudsql.monitor_tables import monitoring_tables
 from common.alerts import task_fail_slack_alert
 from common import macros
+from common.utils import get_airflow_schedule
 
-LOCATION = os.environ.get("REGION")
-
-RECOMMENDATION_SQL_INSTANCE = os.environ.get("RECOMMENDATION_SQL_INSTANCE")
-RECOMMENDATION_SQL_BASE = os.environ.get("RECOMMENDATION_SQL_BASE")
 
 database_url = access_secret_data(
-    GCP_PROJECT, f"{RECOMMENDATION_SQL_BASE}-database-url", default=""
+    GCP_PROJECT_ID, f"{RECOMMENDATION_SQL_INSTANCE}-database-url", default=""
 )
 os.environ["AIRFLOW_CONN_PROXY_POSTGRES_TCP"] = (
     database_url.replace("postgresql://", "gcpcloudsql://")
-    + f"?database_type=postgres&project_id={GCP_PROJECT}&location={LOCATION}&instance={RECOMMENDATION_SQL_INSTANCE}&use_proxy=True&sql_proxy_use_tcp=True"
+    + f"?database_type=postgres&project_id={GCP_PROJECT_ID}&location={GCP_REGION}&instance={RECOMMENDATION_SQL_INSTANCE}&use_proxy=True&sql_proxy_use_tcp=True"
 )
 
 
-TABLES_DATA_PATH = f"{os.environ.get('DAG_FOLDER')}/ressources/tables.csv"
+TABLES_DATA_PATH = f"{DAG_FOLDER}/ressources/tables.csv"
 BUCKET_PATH = f"gs://{DATA_GCS_BUCKET_NAME}/bigquery_exports"
+SQL_PATH = "dependencies/import_recommendation_cloudsql/sql"
 
 default_args = {
     "start_date": datetime(2020, 12, 1),
@@ -69,8 +70,7 @@ def get_table_data():
         data[table_name]["columns"] = {
             column_name: data_type
             for column_name, data_type in zip(
-                list(table_data.column_name.values),
-                list(table_data.data_type.values),
+                list(table_data.column_name.values), list(table_data.data_type.values)
             )
         }
         for additional_data in ["dataset_type", "bigquery_table_name"]:
@@ -93,9 +93,9 @@ with DAG(
     "recommendation_cloud_sql_v1",
     default_args=default_args,
     description="Export bigQuery tables to GCS to dump and restore Cloud SQL tables",
-    schedule_interval="15 5 * * *",
+    schedule_interval=get_airflow_schedule("15 5 * * *"),
     catchup=False,
-    dagrun_timeout=timedelta(minutes=240),
+    dagrun_timeout=timedelta(minutes=480),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
 ) as dag:
@@ -113,7 +113,7 @@ with DAG(
         task = BigQueryExecuteQueryOperator(
             task_id=f"monitor_{table}",
             sql=params["sql"],
-            destination_dataset_table=f"{GCP_PROJECT}.{dataset}.monitor_{table}",
+            destination_dataset_table=f"{GCP_PROJECT_ID}.{dataset}.monitor_{table}",
             use_legacy_sql=False,
             write_disposition="WRITE_APPEND",
         )
@@ -144,19 +144,19 @@ with DAG(
         if table == "qpi_answers":
             filter_column_query = f"""
                 SELECT {select_columns}
-                FROM `{GCP_PROJECT}.{dataset}.enriched_{QPI_TABLE}`
+                FROM `{GCP_PROJECT_ID}.{dataset}.enriched_{QPI_TABLE}`
             """
         else:
             filter_column_query = f"""
                 SELECT {select_columns}
-                FROM `{GCP_PROJECT}.{dataset}.{bigquery_table_name}`
+                FROM `{GCP_PROJECT_ID}.{dataset}.{bigquery_table_name}`
             """
 
         filter_column_task = BigQueryExecuteQueryOperator(
             task_id=f"filter_column_{table}",
             sql=filter_column_query,
             use_legacy_sql=False,
-            destination_dataset_table=f"{GCP_PROJECT}.{dataset}.temp_export_{table}",
+            destination_dataset_table=f"{GCP_PROJECT_ID}.{dataset}.temp_export_{table}",
             write_disposition="WRITE_TRUNCATE",
         )
 
@@ -170,7 +170,7 @@ with DAG(
 
         export_task = BigQueryToGCSOperator(
             task_id=f"export_{table}_to_gcs",
-            source_project_dataset_table=f"{GCP_PROJECT}.{dataset}.temp_export_{table}",
+            source_project_dataset_table=f"{GCP_PROJECT_ID}.{dataset}.temp_export_{table}",
             destination_cloud_storage_uris=[f"{BUCKET_PATH}/{table}-*.csv"],
             export_format="CSV",
             print_header=False,
@@ -178,7 +178,7 @@ with DAG(
 
         delete_temp_table_task = BigQueryDeleteTableOperator(
             task_id=f"delete_temp_export_{table}_in_bigquery",
-            deletion_dataset_table=f"{GCP_PROJECT}.{dataset}.temp_export_{table}",
+            deletion_dataset_table=f"{GCP_PROJECT_ID}.{dataset}.temp_export_{table}",
             ignore_if_missing=True,
         )
 
@@ -220,17 +220,15 @@ with DAG(
         import_body = {
             "importContext": {
                 "fileType": "CSV",
-                "csvImportOptions": {
-                    "table": f"public.{table_name}",
-                },
+                "csvImportOptions": {"table": f"public.{table_name}"},
                 "uri": f"{BUCKET_PATH}/{table_name}.csv",
-                "database": RECOMMENDATION_SQL_BASE,
+                "database": RECOMMENDATION_SQL_INSTANCE,
             }
         }
 
         sql_restore_task = CloudSQLImportInstanceOperator(
             task_id=f"cloud_sql_restore_table_{table_name}",
-            project_id=GCP_PROJECT,
+            project_id=GCP_PROJECT_ID,
             body=import_body,
             instance=RECOMMENDATION_SQL_INSTANCE,
         )
@@ -242,25 +240,28 @@ with DAG(
     for index, table_name in enumerate(table_names):
         task = create_restore_task(table_name)
         restore_tasks.append(task)
-
         if index:
             restore_tasks[index - 1] >> restore_tasks[index]
-
     end_drop_restore = DummyOperator(task_id="end_drop_restore")
 
     end_data_prep >> restore_tasks[0]
     restore_tasks[-1] >> end_drop_restore
+    create_materialized_view = CloudSQLExecuteQueryOperator(
+        task_id="create_materialized_view_recommendable_offers_per_iris_shape_mv",
+        gcp_cloudsql_conn_id="proxy_postgres_tcp",
+        sql=f"{SQL_PATH}/create_recommendable_offers_per_iris_shape_tmp_mv.sql",
+        autocommit=True,
+    )
 
     recreate_indexes_query = """
-        CREATE INDEX IF NOT EXISTS idx_user_id                             ON public.enriched_user                                    USING btree (user_id);
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_iris_venues_mv_unique        ON public.iris_venues_mv                                   USING btree (iris_id,venue_id);
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_non_recommendable_id         ON public.non_recommendable_offers                         USING btree (user_id,offer_id);
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_id       ON public.recommendable_offers_per_iris_shape_mv           USING btree (is_geolocated,iris_id,venue_distance_to_iris_bucket,item_id,offer_id,unique_id);
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_enriched_user_mv             ON public.enriched_user_mv                                 USING btree (user_id);
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_qpi_answers_mv               ON public.qpi_answers_mv                                   USING btree (user_id,subcategories);
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_item_ids_mv                  ON public.item_ids_mv                                      USING btree (offer_id);
+        CREATE INDEX IF NOT EXISTS idx_user_id                             ON public.enriched_user                        USING btree (user_id);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_id       ON public.recommendable_offers_per_iris_shape  USING btree (is_geolocated,iris_id,venue_distance_to_iris_bucket,item_id,offer_id,unique_id);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_iris_venues_mv_unique        ON public.iris_venues_mv                       USING btree (iris_id,venue_id);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_non_recommendable_id         ON public.non_recommendable_offers             USING btree (user_id,offer_id);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_enriched_user_mv             ON public.enriched_user_mv                     USING btree (user_id);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_qpi_answers_mv               ON public.qpi_answers_mv                       USING btree (user_id,subcategories);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_item_ids_mv                  ON public.item_ids_mv                          USING btree (offer_id);
     """
-
     recreate_indexes_task = CloudSQLExecuteQueryOperator(
         task_id="recreate_indexes",
         gcp_cloudsql_conn_id="proxy_postgres_tcp",
@@ -269,7 +270,6 @@ with DAG(
     )
 
     views_to_refresh = [
-        "recommendable_offers_per_iris_shape_mv",
         "non_recommendable_offers",
         "iris_venues_mv",
         "enriched_user_mv",
@@ -287,8 +287,36 @@ with DAG(
         )
         refresh_materialized_view_tasks.append(refresh_materialized_view_task)
 
-    end = DummyOperator(task_id="end")
+    rename_current_materialized_view = CloudSQLExecuteQueryOperator(
+        task_id="rename_current_materialized_view_to_old",
+        gcp_cloudsql_conn_id="proxy_postgres_tcp",
+        sql=f"ALTER MATERIALIZED VIEW IF EXISTS recommendable_offers_per_iris_shape_mv rename to recommendable_offers_per_iris_shape_mv_old",
+        autocommit=True,
+    )
 
+    rename_temp_materialized_view = CloudSQLExecuteQueryOperator(
+        task_id="rename_temp_materialized_view_to_current",
+        gcp_cloudsql_conn_id="proxy_postgres_tcp",
+        sql=f"ALTER MATERIALIZED VIEW recommendable_offers_per_iris_shape_tmp_mv rename to recommendable_offers_per_iris_shape_mv",
+        autocommit=True,
+    )
+    drop_old_materialized_view = CloudSQLExecuteQueryOperator(
+        task_id="drop_old_materialized_view",
+        gcp_cloudsql_conn_id="proxy_postgres_tcp",
+        sql=f"DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_per_iris_shape_mv_old CASCADE",
+        autocommit=True,
+    )
+
+    yesterday = (datetime.today() - timedelta(days=1)).strftime("%Y%m%d")
+    drop_old_function = CloudSQLExecuteQueryOperator(
+        task_id="drop_old_function",
+        gcp_cloudsql_conn_id="proxy_postgres_tcp",
+        sql=f"DROP FUNCTION IF EXISTS get_recommendable_offers_per_iris_shape_{yesterday} CASCADE",
+        autocommit=True,
+    )
+
+    end = DummyOperator(task_id="end")
+    end_refresh = DummyOperator(task_id="end_refresh")
     (
         start
         >> start_monitoring
@@ -296,4 +324,15 @@ with DAG(
         >> end_monitoring
         >> start_drop_restore
     )
-    end_drop_restore >> recreate_indexes_task >> refresh_materialized_view_tasks >> end
+    (
+        end_drop_restore
+        >> create_materialized_view
+        >> recreate_indexes_task
+        >> refresh_materialized_view_tasks
+        >> end_refresh
+        >> rename_current_materialized_view
+        >> rename_temp_materialized_view
+        >> drop_old_materialized_view
+        >> drop_old_function
+        >> end
+    )

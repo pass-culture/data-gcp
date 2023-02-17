@@ -1,7 +1,7 @@
 WITH aggregated_monthly_user_used_booking_activity AS (
     SELECT
         * except(user_region_name),
-     IF(user_department_code = "99", "Étranger", user_region_name) as user_region_name
+     IF(user_department_code = "99", null, user_region_name) as user_region_name
     FROM
         `{{ bigquery_analytics_dataset }}.aggregated_monthly_user_used_booking_activity`
     WHERE

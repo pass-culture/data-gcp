@@ -27,6 +27,7 @@ import pytz
 from typing import List, Dict, Any
 from loguru import logger
 
+
 class Recommendation:
     def __init__(self, user: User, params_in: PlaylistParamsIn):
         self.user = user
@@ -271,28 +272,35 @@ class Recommendation:
             ).fetchall()
 
             if len(query_result) > 0:
-                logger.info(f"get_cold_start_categories from db for user : {self.user.id}")
+                logger.info(
+                    f"get_cold_start_categories from db for user : {self.user.id}"
+                )
                 cold_start_categories = [res[0] for res in query_result]
             else:
+                start = time.time()
                 logger.info(f"get_cold_start_categories from gcs : {self.user.id}")
-            
+
                 client = storage.Client()
                 bucket = client.get_bucket(f"data-bucket-{ENV_SHORT_NAME}")
                 todays_date = date.today().strftime("%Y%m%d")
-                blob = bucket.get_blob(
-                    f"QPI_exports/qpi_answers_20230210/user_id_6525.jsonl"
-                )
-                cold_start_categories=[]
-                
-                with blob.open("r") as f:
-                    qpi_raw = json.load(f)
-                if qpi_raw:
-                    user_answer_ids = []
-                    for answers in qpi_raw["answers"]:
-                        for answers_id in answers["answer_ids"]:
-                            user_answer_ids.append(answers_id)
-                    cold_start_categories = user_answer_ids
-                logger.info(f"get_cold_start_categories from gcs: file found")
-#                except:
-#                    cold_start_categories = []
+                cold_start_categories = []
+                try:
+                    blob = bucket.get_blob(
+                        f"QPI_exports/qpi_answers_{todays_date}/user_id_{self.user.id}.jsonl"
+                    )
+                    with blob.open("r") as f:
+                        qpi_raw = json.load(f)
+                    if qpi_raw:
+                        user_answer_ids = []
+                        for answers in qpi_raw["answers"]:
+                            for answers_id in answers["answer_ids"]:
+                                user_answer_ids.append(answers_id)
+                        cold_start_categories = user_answer_ids
+                    logger.info(
+                        f"get_cold_start_categories from gcs: file found with {cold_start_categories}"
+                    )
+                    log_duration("get_cold_start_categories from gcs", start)
+                except:
+                    logger.info(f"get_cold_start_categories: not found ")
+                    cold_start_categories = []
             return cold_start_categories

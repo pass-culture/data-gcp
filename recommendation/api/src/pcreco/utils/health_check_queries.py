@@ -10,14 +10,12 @@ from pcreco.utils.secrets.access_gcp_secrets import access_secret
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
 
 SQL_BASE = os.environ.get("SQL_BASE")
-#SQL_BASE_USER = os.environ.get("SQL_BASE_USER")
-SQL_BASE_USER_SECRET_ID= os.environ.get("SQL_BASE_USER_SECRET_ID")
-SQL_BASE_USER=access_secret(GCP_PROJECT, SQL_BASE_USER_SECRET_ID)
-#SQL_BASE_SECRET_ID = os.environ.get("SQL_BASE_SECRET_ID")
+SQL_BASE_USER = os.environ.get("SQL_BASE_USER")
+SQL_BASE_SECRET_ID = os.environ.get("SQL_BASE_SECRET_ID")
 SQL_CONNECTION_NAME = os.environ.get("SQL_CONNECTION_NAME")
 
 
-SQL_BASE_PASSWORD = access_secret(GCP_PROJECT, f"{SQL_BASE}_database_credentials_password")
+SQL_BASE_PASSWORD = access_secret(GCP_PROJECT, f"{SQL_BASE}-database-password")
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 

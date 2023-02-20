@@ -19,7 +19,6 @@ ref_tables = {
             "LONGUEUR": "INTEGER",
             "LARGEUR": "INTEGER",
         },
-
     },
     "institutional_partners": {
         "file_type": "csv",

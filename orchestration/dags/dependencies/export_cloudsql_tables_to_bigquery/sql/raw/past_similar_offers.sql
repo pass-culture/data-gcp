@@ -1,0 +1,1 @@
+SELECT * FROM public.past_similar_offers

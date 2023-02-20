@@ -71,7 +71,6 @@ Le dossier contient:
 cd recommendation/api
 gcloud builds submit \
   --tag eu.gcr.io/<PROJECT-ID>/data-gcp/<IMAGE-NAME> \
-  --gcs-source-staging-dir=GCS_SOURCE_STAGING_DIR
 
 ```
 - PROJECT-ID : L'id du projet (passculture-data-\<env>)

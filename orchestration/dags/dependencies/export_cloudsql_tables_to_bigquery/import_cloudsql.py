@@ -1,7 +1,5 @@
 SQL_RAW_PATH = f"dependencies/export_cloudsql_tables_to_bigquery/sql/raw"
 SQL_CLEAN_PATH = f"dependencies/export_cloudsql_tables_to_bigquery/sql/clean"
-SQL_ANALYTICS_PATH = f"dependencies/export_cloudsql_tables_to_bigquery/sql/analytics"
-
 
 RAW_TABLES = {
     "past_recommended_offers": {

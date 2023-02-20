@@ -102,7 +102,6 @@ ENRICHED_OFFER_DATA_INPUT = {
         },
     ],
     "isbn_editor": [{"isbn": "156157", "book_editor": "Hachette"}],
-    "offer_tags": [{"offer_id": "3", "tag": "none"}, {"offer_id": "4", "tag": "none"}],
     "applicative_database_offerer": [
         {
             "offerer_id": "3",
@@ -340,7 +339,6 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "webapp_url": "https://passculture.app/offre/3",
         "mediation_humanized_id": "ATJA",
         "first_booking_cnt": 1,
-        "offer_tag": "none",
         "author": "Tarantino",
         "performer": "Uma Turman",
         "stageDirector": None,
@@ -395,7 +393,6 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "webapp_url": "https://passculture.app/offre/4",
         "mediation_humanized_id": None,
         "first_booking_cnt": None,
-        "offer_tag": "none",
         "author": "Kevin Francois",
         "performer": None,
         "stageDirector": None,

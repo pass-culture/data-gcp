@@ -15,3 +15,16 @@ def access_secret_data(project_id, secret_id, version_id="latest", default=None)
         return response.payload.data.decode("UTF-8")
     except DefaultCredentialsError:
         return default
+
+
+histo_schema = {
+    "campaign_id": "INTEGER",
+    "campaign_utm": "STRING",
+    "campaign_name": "STRING",
+    "campaign_sent_date": "STRING",
+    "share_link": "STRING",
+    "update_date": "DATETIME",
+    "audience_size": "INTEGER",
+    "open_number": "INTEGER",
+    "unsubscriptions": "INTEGER",
+}

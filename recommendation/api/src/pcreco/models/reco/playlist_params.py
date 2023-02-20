@@ -8,7 +8,8 @@ from pcreco.utils.env_vars import (
     DEFAULT_RECO_MODEL,
 )
 from pcreco.utils.geolocalisation import distance_to_radius_bucket
-from datetime import datetime
+import pcreco.models.reco.input_params as input_params
+
 
 INPUT_PARAMS = [
     "modelEndpoint",
@@ -20,10 +21,7 @@ INPUT_PARAMS = [
     "isDuo",
     "categories",
     "subcategories",
-    "movieType",
-    "offerTypeLabel",
-    "offerSubTypeLabel",
-    "macroBookSection",
+    "offerTypeList",
     "priceMax",
     "priceMin",
     "nbRecoDisplay",
@@ -36,54 +34,6 @@ INPUT_PARAMS = [
 ]
 
 
-def parse_float(value):
-    if value is None:
-        return None
-    try:
-        return float(value)
-    except ValueError:
-        return None
-
-
-def parse_int(value):
-    if value is None:
-        return None
-    try:
-        return int(float(value))
-    except ValueError:
-        return None
-
-
-def parse_bool(value):
-    if value is None:
-        return None
-    try:
-        return bool(value)
-    except ValueError:
-        return None
-
-
-def parse_date(value):
-    if value is None:
-        return None
-    try:
-        return datetime.strptime(value, "%Y-%m-%d")
-    except ValueError:
-        try:
-            return datetime.fromisoformat(value)
-        except ValueError:
-            return None
-
-
-def parse_to_list(value):
-    if value is None:
-        return None
-    if isinstance(value, list):
-        return value if len(value) > 0 else None
-    else:
-        return [value]
-
-
 class PlaylistParamsIn:
     def __init__(self, json={}):
 
@@ -93,32 +43,33 @@ class PlaylistParamsIn:
         self.model_endpoint = json.get("modelEndpoint")
 
         # TODO : deprecated
-        self.start_date = parse_date(json.get("startDate"))
-        self.end_date = parse_date(json.get("endDate"))
+        self.start_date = input_params.parse_date(json.get("startDate"))
+        self.end_date = input_params.parse_date(json.get("endDate"))
         if self.start_date is None:
-            self.start_date = parse_date(json.get("beginningDatetime"))
+            self.start_date = input_params.parse_date(json.get("beginningDatetime"))
         if self.end_date is None:
-            self.end_date = parse_date(json.get("endingDatetime"))
+            self.end_date = input_params.parse_date(json.get("endingDatetime"))
 
-        self.is_event = parse_bool(json.get("isEvent"))
-        self.offer_is_duo = parse_bool(json.get("isDuo"))
+        self.is_event = input_params.parse_bool(json.get("isEvent"))
+        self.offer_is_duo = input_params.parse_bool(json.get("isDuo"))
 
-        self.search_group_names = parse_to_list(json.get("categories"))
-        self.subcategories_id = parse_to_list(json.get("subcategories"))
-        # TODO: deprecated
-        self.offer_type_list = parse_to_list(json.get("offerTypeList"))
+        self.search_group_names = input_params.parse_to_list(json.get("categories"))
+        self.subcategories_id = input_params.parse_to_list(json.get("subcategories"))
+        self.offer_type_list = input_params.parse_to_list_of_dict(
+            json.get("offerTypeList")
+        )
 
-        self.price_min = parse_float(json.get("priceMin"))
-        self.price_max = parse_float(json.get("priceMax"))
+        self.price_min = input_params.parse_float(json.get("priceMin"))
+        self.price_max = input_params.parse_float(json.get("priceMax"))
 
-        self.include_digital = parse_bool(json.get("isDigital"))
+        self.include_digital = input_params.parse_bool(json.get("isDigital"))
         # reco params
-        self.nb_reco_display = parse_int(json.get("nbRecoDisplay"))
-        self.reco_radius = parse_int(json.get("recoRadius"))
+        self.nb_reco_display = input_params.parse_int(json.get("nbRecoDisplay"))
+        self.reco_radius = input_params.parse_int(json.get("recoRadius"))
 
-        self.is_reco_shuffled = parse_bool(json.get("isRecoShuffled"))
-        self.is_sort_by_distance = parse_bool(json.get("isSortByDistance"))
-        self.is_reco_mixed = parse_bool(json.get("isRecoMixed"))
+        self.is_reco_shuffled = input_params.parse_bool(json.get("isRecoShuffled"))
+        self.is_sort_by_distance = input_params.parse_bool(json.get("isSortByDistance"))
+        self.is_reco_mixed = input_params.parse_bool(json.get("isRecoMixed"))
         self.mixing_features = json.get("mixingFeatures")
 
         if len(self.json_input) > 0:
@@ -196,8 +147,8 @@ class PlaylistParamsIn:
                 "AND ("
                 + " OR ".join(
                     [
-                        f"( offer_type_domain='{offer_domain}' AND offer_type_label='{offer_label}' ) "
-                        for offer_domain, offer_label in self.offer_type_list.items()
+                        f"( offer_type_domain='{offer_type.key}' AND offer_type_label='{offer_type.value}' ) "
+                        for offer_type in self.offer_type_list
                     ]
                 )
                 + ")\n"

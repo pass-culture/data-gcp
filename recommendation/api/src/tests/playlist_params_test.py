@@ -8,6 +8,7 @@ from pcreco.utils.env_vars import (
     MIXING_FEATURE_LIST,
     DEFAULT_RECO_RADIUS,
 )
+from pcreco.models.reco.input_params import KeyValueInput
 
 ENV_SHORT_NAME = os.getenv("ENV_SHORT_NAME")
 
@@ -153,3 +154,49 @@ class PlaylistParamsTest:
             assert input_params.start_date.isoformat() == start_date
         else:
             assert input_params.start_date == start_date
+
+    @pytest.mark.parametrize(
+        ["input_params", "output_params"],
+        [
+            (
+                {
+                    "offerTypeList": [
+                        {"key": "MOVIE", "value": "BOOLYWOOD"},
+                        {"key": "BOOK", "value": "Art"},
+                        {"key": "BOOK", "value": "Droit"},
+                        {"key": "SHOW", "value": "Danse"},
+                        {"key": "MUSIC", "value": "Blues"},
+                    ]
+                },
+                [
+                    KeyValueInput(key="MOVIE", value="BOOLYWOOD"),
+                    KeyValueInput(key="BOOK", value="Art"),
+                    KeyValueInput(key="BOOK", value="Droit"),
+                    KeyValueInput(key="SHOW", value="Danse"),
+                    KeyValueInput(key="MUSIC", value="Blues"),
+                ],
+            ),
+            (
+                {
+                    "offerTypeList": [
+                        {"key": "NOT_A_MOVIE", "value": 123},
+                        {"not_a_key": "BOOK", "value": "Art"},
+                        {"key": "BOOK", "not_a_value": "Droit"},
+                    ]
+                },
+                None,
+            ),
+            (
+                {
+                    "offerTypeList": [
+                        {"key": "MOVIE", "value": "BOOLYWOOD"},
+                        {"not_a_key": "", "not_a_value": ""},
+                    ]
+                },
+                None,
+            ),
+        ],
+    )
+    def test_offer_type_list(self, input_params, output_params):
+        input_params = PlaylistParamsIn(input_params)
+        assert input_params.offer_type_list == output_params

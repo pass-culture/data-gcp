@@ -69,20 +69,23 @@ Le dossier contient:
 
 ```
 cd recommendation/api
-gcloud builds submit --tag eu.gcr.io/<PROJECT-ID>/data-gcp/<IMAGE-NAME>
+gcloud builds submit \
+  --tag eu.gcr.io/<PROJECT-ID>/data-gcp/<IMAGE-NAME> \
+  --gcs-source-staging-dir=GCS_SOURCE_STAGING_DIR
+
 ```
 - PROJECT-ID : L'id du projet (passculture-data-\<env>)
 - IMAGE-NAME : Le nom de l'image (apireco-\<env>)
 
 En dev ça donne:
 ```
-gcloud builds submit --tag eu.gcr.io/passculture-data-ehp/data-gcp/apireco-dev
+gcloud builds submit --tag eu.gcr.io/passculture-data-ehp/data-gcp/apireco-dev --gcs-source-staging-dir=gs://passculture-data-ehp-cloud-build/
 ```
 
 
 En stg ça donne:
 ```
-gcloud builds submit --tag eu.gcr.io/passculture-data-ehp/data-gcp/apireco-stg
+gcloud builds submit --tag eu.gcr.io/passculture-data-ehp/data-gcp/apireco-stg --gcs-source-staging-dir=gs://passculture-data-ehp-cloud-build/
 ```
 
 -------

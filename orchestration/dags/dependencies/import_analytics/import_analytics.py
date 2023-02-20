@@ -41,7 +41,7 @@ def define_import_tables():
         "internal_user",
         "invoice",
         "invoice_cashflow",
-        'invoice_line',
+        "invoice_line",
         "local_provider_event",
         "mediation",
         "offer",

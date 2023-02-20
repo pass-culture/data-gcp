@@ -79,13 +79,13 @@ gcloud builds submit \
 
 En dev ça donne:
 ```
-gcloud builds submit --tag eu.gcr.io/passculture-data-ehp/data-gcp/apireco-dev --gcs-source-staging-dir=gs://passculture-data-ehp-cloud-build/
+gcloud builds submit --tag eu.gcr.io/passculture-data-ehp/data-gcp/apireco-dev
 ```
 
 
 En stg ça donne:
 ```
-gcloud builds submit --tag eu.gcr.io/passculture-data-ehp/data-gcp/apireco-stg --gcs-source-staging-dir=gs://passculture-data-ehp-cloud-build/
+gcloud builds submit --tag eu.gcr.io/passculture-data-ehp/data-gcp/apireco-stg
 ```
 
 -------

@@ -1,8 +1,9 @@
 from google.cloud import storage
-import os 
+import os
 
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "")
 DATA_GCS_BUCKET_NAME = f"data-bucket-{ENV_SHORT_NAME}"
+
 
 def get_update_since_param(dms_target):
 
@@ -27,7 +28,6 @@ def get_update_since_param(dms_target):
         blob[1] for blob in blobs if blob[1] == max([blob[1] for blob in blobs])
     ][0][0:10]
 
-    updated_since = datetime.strptime(updated_since, "%Y-%m-%d").date()
     if dms_target == "jeunes":
         return updated_since
     else:

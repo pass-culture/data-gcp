@@ -10,7 +10,7 @@ from google.cloud import secretmanager
 from google.cloud import storage
 from dms_query import DMS_QUERY
 import gcsfs
-from utils import get_update_since_param 
+from utils import get_update_since_param
 
 
 storage_client = storage.Client()
@@ -44,7 +44,7 @@ def run(request):
 
     request_json = request.get_json(silent=True)
     request_args = request.args
-    
+
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
     if request_json and "target" in request_json:

@@ -3,7 +3,6 @@ import json
 import gcsfs
 from common.config import DATA_GCS_BUCKET_NAME, GCP_PROJECT_ID
 import logging
-from datetime import datetime
 
 # find and replace string to str
 destination_table_schema_jeunes = [

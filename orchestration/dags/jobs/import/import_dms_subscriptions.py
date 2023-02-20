@@ -25,8 +25,6 @@ from common.config import (
     DAG_FOLDER,
 )
 
-import logging
-
 from dependencies.dms_subscriptions.import_dms_subscriptions import (
     parse_api_result,
     ANALYTICS_TABLES,

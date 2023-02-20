@@ -3,7 +3,6 @@ import json
 import gcsfs
 from common.config import DATA_GCS_BUCKET_NAME, GCP_PROJECT_ID
 import logging
-from google.cloud import storage
 from datetime import datetime
 
 # find and replace string to str
@@ -260,36 +259,6 @@ def parse_result_pro(result, df_applications):
 
                 df_applications.loc[len(df_applications)] = dossier_line
     return
-
-
-def get_update_since_param(dms_target):
-
-    bucket_name = DATA_GCS_BUCKET_NAME
-    prefix = "dms_export"
-    storage_client = storage.Client()
-    blobs = [
-        (
-            blob.name,
-            blob.name.replace(f"{prefix}/unsorted_dms_{dms_target}_", "").replace(
-                ".json", ""
-            ),
-        )
-        for blob in storage_client.list_blobs(
-            bucket_name,
-            prefix=prefix,
-        )
-        if blob.name.startswith(f"{prefix}/unsorted_dms_{dms_target}")
-    ]
-
-    updated_since = [
-        blob[1] for blob in blobs if blob[1] == max([blob[1] for blob in blobs])
-    ][0][0:10]
-
-    updated_since = datetime.strptime(updated_since, "%Y-%m-%d").date()
-    if dms_target == "jeunes":
-        return updated_since
-    else:
-        return "2019-01-01"
 
 
 SQL_ANALYTICS_PATH = f"dependencies/dms_subscriptions/sql/analytics"

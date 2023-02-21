@@ -127,13 +127,11 @@ class SendinblueTransactional:
                     "count": "sum",
                 },
             )
-            .reset_index()
-            .assign(update_date=self.start_date)
         )
 
         df.columns = df.columns.map("_".join)
 
-        df = df.reset_index()
+        df = df.reset_index().assign(update_date=pd.to_datetime(self.start_date))
 
         columns = [
             "template",
@@ -150,6 +148,7 @@ class SendinblueTransactional:
             "first_date_unsubscribed",
             "last_date_unsubscribed",
             "unique_unsubscribed",
+            "update_date",
         ]
 
         for column in columns:
@@ -160,21 +159,20 @@ class SendinblueTransactional:
 
         return df
 
-    def save_to_historical(self, df_to_save, schema):
+    def save_to_historical(self, df_to_save):
 
         bigquery_client = bigquery.Client()
 
-        _now = self.end_date
-        yyyymmdd = _now.strftime("%Y%m%d")
+        yyyymmdd = self.start_date.replace("-", "")
         table_id = f"{self.gcp_project}.{self.raw_dataset}.{self.destination_table_name}_histo${yyyymmdd}"
         job_config = bigquery.LoadJobConfig(
             write_disposition="WRITE_APPEND",
             time_partitioning=bigquery.TimePartitioning(
                 type_=bigquery.TimePartitioningType.DAY, field="update_date"
             ),
-            schema=[
-                bigquery.SchemaField(column, _type) for column, _type in schema.items()
-            ],
+            # schema=[
+            #     bigquery.SchemaField(column, _type) for column, _type in schema.items()
+            # ],
         )
         job = bigquery_client.load_table_from_dataframe(
             df_to_save, table_id, job_config=job_config

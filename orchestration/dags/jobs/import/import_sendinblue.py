@@ -47,11 +47,12 @@ service_account_token = PythonOperator(
     dag=dag,
 )
 
-import_data_to_bigquery_raw = SimpleHttpOperator(
-    task_id="import_sendinblue_data_to_bigquery_raw",
+import_transactional_data_to_raw = SimpleHttpOperator(
+    task_id="import_transactional_data_to_raw",
     method="POST",
     http_conn_id="http_gcp_cloud_function",
     endpoint=f"sendinblue_import_{ENV_SHORT_NAME}",
+    data=json.dumps({"target": "transactional"}),
     headers={
         "Content-Type": "application/json",
         "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_sendinblue_service_account_token', key='return_value')}}",
@@ -59,6 +60,21 @@ import_data_to_bigquery_raw = SimpleHttpOperator(
     log_response=True,
     dag=dag,
 )
+
+import_newsletter_data_to_raw = SimpleHttpOperator(
+    task_id="import_newsletter_data_to_raw",
+    method="POST",
+    http_conn_id="http_gcp_cloud_function",
+    endpoint=f"sendinblue_import_{ENV_SHORT_NAME}",
+    data=json.dumps({"target": "newsletter"}),
+    headers={
+        "Content-Type": "application/json",
+        "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_sendinblue_service_account_token', key='return_value')}}",
+    },
+    log_response=True,
+    dag=dag,
+)
+
 
 end_raw = DummyOperator(task_id="end_raw", dag=dag)
 
@@ -77,7 +93,9 @@ analytics_table_tasks = depends_loop(analytics_table_jobs, end_raw, dag=dag)
 
 (
     service_account_token
-    >> import_data_to_bigquery_raw
+    >> import_newsletter_data_to_raw
     >> end_raw
     >> analytics_table_tasks
 )
+
+service_account_token >> import_transactional_data_to_raw

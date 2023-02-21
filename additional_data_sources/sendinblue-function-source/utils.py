@@ -17,7 +17,7 @@ def access_secret_data(project_id, secret_id, version_id="latest", default=None)
         return default
 
 
-histo_schema = {
+campaigns_histo_schema = {
     "campaign_id": "INTEGER",
     "campaign_utm": "STRING",
     "campaign_name": "STRING",
@@ -27,4 +27,22 @@ histo_schema = {
     "audience_size": "INTEGER",
     "open_number": "INTEGER",
     "unsubscriptions": "INTEGER",
+}
+
+transactional_histo_schema = {
+    "template": "INTEGER",
+    "tag": "STRING",
+    "count_delivered": "INTEGER",
+    "first_date_delivered": "DATETIME",
+    "last_date_delivered": "DATETIME",
+    "unique_delivered": "INTEGER",
+    "count_opened": "INTEGER",
+    "first_date_opened": "DATETIME",
+    "last_date_opened": "DATETIME",
+    "unique_opened": "INTEGER",
+    "count_unsubscribed": "INTEGER",
+    "first_date_unsubscribed": "DATETIME",
+    "last_date_unsubscribed": "DATETIME",
+    "unique_unsubscribed": "INTEGER",
+    "update_date": "DATETIME",
 }

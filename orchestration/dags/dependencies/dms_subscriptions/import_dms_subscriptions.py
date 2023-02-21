@@ -2,6 +2,7 @@ import pandas as pd
 import json
 import gcsfs
 from common.config import DATA_GCS_BUCKET_NAME, GCP_PROJECT_ID
+import logging
 
 # find and replace string to str
 destination_table_schema_jeunes = [
@@ -51,8 +52,9 @@ destination_table_schema_pro = [
 
 
 def parse_api_result(updated_since, dms_target):
-    print("updated_since:", updated_since)
-    print("dms_target:", dms_target)
+    logging.info("Start parsing api result")
+    logging.info(f"updated_since: {updated_since}")
+    logging.info(f"dms_target: {dms_target}")
     if dms_target == "jeunes":
         df_applications = pd.DataFrame(
             columns=[
@@ -179,6 +181,7 @@ def parse_result_jeunes(result, df_applications):
 
 
 def parse_result_pro(result, df_applications):
+    logging.info(f"Size of json to parse: {len(result['data'])}")
     for data in result["data"]:
         for node in data["demarche"]["dossiers"]["edges"]:
             dossier = node["node"]

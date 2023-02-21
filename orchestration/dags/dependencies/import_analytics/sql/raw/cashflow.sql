@@ -6,4 +6,5 @@ SELECT
     , CAST("batchId" AS varchar(255))
     , "amount"
     , CAST("transactionId" AS varchar(255))
+    ,CAST("reimbursementPointId" AS varchar(255)) AS reimbursement_point_id
 FROM public.cashflow

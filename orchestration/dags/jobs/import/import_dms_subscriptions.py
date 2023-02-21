@@ -42,7 +42,6 @@ default_args = {
     "retry_delay": timedelta(minutes=5),
 }
 
-
 with DAG(
     "import_dms_subscriptions",
     default_args=default_args,
@@ -52,11 +51,6 @@ with DAG(
     dagrun_timeout=timedelta(minutes=180),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
-    params={
-        "updated_since": Param(
-            default="2023-01-01" if ENV_SHORT_NAME == "dev" else "2019-01-10"
-        )
-    },
 ) as dag:
 
     start = DummyOperator(task_id="start")
@@ -72,9 +66,7 @@ with DAG(
         method="POST",
         http_conn_id="http_gcp_cloud_function",
         endpoint=DMS_FUNCTION_NAME,
-        data=json.dumps(
-            {"updated_since": "{{ params.updated_since }}", "target": "pro"}
-        ),
+        data=json.dumps({"target": "pro"}),
         headers={
             "Content-Type": "application/json",
             "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_service_account_token', key='return_value')}}",
@@ -90,7 +82,6 @@ with DAG(
         endpoint=DMS_FUNCTION_NAME,
         data=json.dumps(
             {
-                "updated_since": "{{ prev_start_date_success.isoformat() }}",
                 "target": "jeunes",
             }
         ),
@@ -106,7 +97,7 @@ with DAG(
         task_id="parse_api_result_jeunes",
         python_callable=parse_api_result,
         op_args=[
-            "{{task_instance.xcom_pull(task_ids='dms_to_gcs_jeunes', key='return_value')}}",
+            "{{ task_instance.xcom_pull(task_ids='dms_to_gcs_jeunes', key='return_value') }}",
             "jeunes",
         ],
         dag=dag,
@@ -116,7 +107,7 @@ with DAG(
         task_id="parse_api_result_pro",
         python_callable=parse_api_result,
         op_args=[
-            "{{task_instance.xcom_pull(task_ids='dms_to_gcs_pro', key='return_value')}}",
+            "{{ task_instance.xcom_pull(task_ids='dms_to_gcs_pro', key='return_value') }}",
             "pro",
         ],
         dag=dag,
@@ -126,7 +117,7 @@ with DAG(
         task_id="import_dms_jeunes_to_bq",
         bucket=DATA_GCS_BUCKET_NAME,
         source_objects=[
-            "dms_export/dms_jeunes_{{task_instance.xcom_pull(task_ids='dms_to_gcs_jeunes', key='return_value')}}.parquet"
+            "dms_export/dms_jeunes_{{ task_instance.xcom_pull(task_ids='dms_to_gcs_jeunes', key='return_value') }}.parquet"
         ],
         source_format="PARQUET",
         destination_project_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.dms_jeunes",
@@ -152,7 +143,7 @@ with DAG(
         task_id="import_dms_pro_to_bq",
         bucket=DATA_GCS_BUCKET_NAME,
         source_objects=[
-            "dms_export/dms_pro_{{task_instance.xcom_pull(task_ids='dms_to_gcs_pro', key='return_value')}}.parquet"
+            "dms_export/dms_pro_{{ task_instance.xcom_pull(task_ids='dms_to_gcs_pro', key='return_value') }}.parquet"
         ],
         source_format="PARQUET",
         destination_project_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.dms_pro",

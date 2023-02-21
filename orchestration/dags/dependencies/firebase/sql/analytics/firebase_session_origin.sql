@@ -1,11 +1,18 @@
 
-SELECT
+SELECT DISTINCT
     user_pseudo_id
     , session_id
-    , MIN(event_date) AS first_event_date
-    , MAX(traffic_campaign) AS traffic_campaign
-    , MAX(traffic_source) AS traffic_source
-    , MAX(traffic_medium) AS traffic_medium
-FROM `{{ bigquery_analytics_dataset }}`.firebase_events AS firebase_events
-WHERE session_id IS NOT NULL
-GROUP BY 1,2
+    , FIRST_VALUE(event_date)OVER(PARTITION BY user_pseudo_id, session_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS first_event_date
+    , LAST_VALUE(traffic_campaign) OVER(PARTITION BY user_pseudo_id, session_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS traffic_campaign
+    , LAST_VALUE(traffic_source) OVER(PARTITION BY user_pseudo_id, session_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS traffic_source
+    , LAST_VALUE(traffic_medium) OVER(PARTITION BY user_pseudo_id, session_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS traffic_medium
+FROM `{{ bigquery_analytics_dataset }}.firebase_events` AS firebase_events
+WHERE  session_id IS NOT NULL
+AND event_name NOT IN (
+            'app_remove',
+            'os_update',
+            'batch_notification_open',
+            'batch_notification_display',
+            'batch_notification_dismiss',
+            'app_update'
+        )

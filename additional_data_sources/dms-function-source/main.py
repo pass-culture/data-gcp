@@ -10,6 +10,7 @@ from google.cloud import secretmanager
 from google.cloud import storage
 from dms_query import DMS_QUERY
 import gcsfs
+from utils import get_update_since_param
 
 
 storage_client = storage.Client()
@@ -44,16 +45,7 @@ def run(request):
     request_json = request.get_json(silent=True)
     request_args = request.args
 
-    if request_json and "updated_since" in request_json:
-        updated_since = request_json["updated_since"]
-    elif request_args and "updated_since" in request_args:
-        updated_since = request_args["updated_since"]
-    else:
-        raise RuntimeError("You need to provide an updated_since argument.")
-
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-    print("updated_since", updated_since)
 
     if request_json and "target" in request_json:
         target = request_json["target"]
@@ -61,6 +53,15 @@ def run(request):
         target = request_args["target"]
     else:
         raise RuntimeError("You need to provide a target argument.")
+
+    if request_json and "updated_since" in request_json:
+        updated_since = request_json["updated_since"]
+    elif request_args and "updated_since" in request_args:
+        updated_since = request_args["updated_since"]
+    else:
+        updated_since = get_update_since_param(target)
+
+    print("updated_since", updated_since)
 
     if target == "jeunes":
         fetch_dms_jeunes(updated_since)

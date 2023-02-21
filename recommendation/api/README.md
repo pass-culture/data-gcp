@@ -69,7 +69,9 @@ Le dossier contient:
 
 ```
 cd recommendation/api
-gcloud builds submit --tag eu.gcr.io/<PROJECT-ID>/data-gcp/<IMAGE-NAME>
+gcloud builds submit \
+  --tag eu.gcr.io/<PROJECT-ID>/data-gcp/<IMAGE-NAME> \
+
 ```
 - PROJECT-ID : L'id du projet (passculture-data-\<env>)
 - IMAGE-NAME : Le nom de l'image (apireco-\<env>)

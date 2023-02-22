@@ -1,8 +1,11 @@
 from google.cloud import storage
 import os
+import logging
 
-ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "")
-DATA_GCS_BUCKET_NAME = f"data-bucket-{ENV_SHORT_NAME}"
+ENV_SHORT_NAME = os.environ.get("ENVIRONMENT_SHORT_NAME", "")
+DATA_GCS_BUCKET_NAME = os.environ.get(
+    "DATA_GCS_BUCKET_NAME", f"data-bucket-{ENV_SHORT_NAME}"
+)
 
 
 def get_update_since_param(dms_target):
@@ -10,6 +13,10 @@ def get_update_since_param(dms_target):
     bucket_name = DATA_GCS_BUCKET_NAME
     prefix = "dms_export"
     storage_client = storage.Client()
+
+    print(bucket_name)
+    logging.info(f"Bucket : {bucket_name}")
+
     blobs = [
         (
             blob.name,

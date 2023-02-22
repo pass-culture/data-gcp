@@ -75,6 +75,11 @@ def get_subcategories(gcp_project_id, env_short_name):
         project_id=gcp_project_id,
         if_exists="replace",
     )
+    df.to_gbq(
+        f"""clean_{env_short_name}.subcategories""",
+        project_id=gcp_project_id,
+        if_exists="replace",
+    )
 
 
 def get_types(gcp_project_id, env_short_name):

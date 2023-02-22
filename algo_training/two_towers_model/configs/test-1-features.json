@@ -15,7 +15,6 @@
       "item_rayons": {"type":  "text", "embedding_size":  4},
       "item_booking_cnt": {"type": "int", "embedding_size": 2},
       "item_favourite_cnt": {"type": "int", "embedding_size": 2},
-      "item_mean_stock_price": {"type": "int", "embedding_size": 2},
-
+      "item_mean_stock_price": {"type": "int", "embedding_size": 2}
   }
 }

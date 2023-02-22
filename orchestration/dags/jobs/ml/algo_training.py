@@ -9,6 +9,7 @@ from airflow.providers.google.cloud.transfers.bigquery_to_gcs import (
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryExecuteQueryOperator,
 )
+from common.hooks.gce import GPUImage310
 from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
 from common.utils import get_airflow_schedule
 from airflow import DAG
@@ -128,6 +129,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         instance_type="{{ params.instance_type }}",
         accelerator_types=[{"name": "nvidia-tesla-t4", "count": 1}],
+        source_image_type=GPUImage310(),
     )
 
     fetch_code = CloneRepositoryGCEOperator(

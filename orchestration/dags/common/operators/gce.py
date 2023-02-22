@@ -4,6 +4,8 @@ from airflow.providers.google.cloud.hooks.compute_ssh import ComputeEngineSSHHoo
 from airflow.exceptions import AirflowException
 from airflow.operators.bash import BashOperator
 from airflow.configuration import conf
+from time import sleep
+from paramiko.ssh_exception import ProxyCommandFailure
 from common.config import (
     GCE_ZONE,
     GCP_PROJECT_ID,
@@ -26,6 +28,7 @@ class StartGCEOperator(BaseOperator):
         instance_type: str = "n1-standard-1",
         preemptible: bool = True,
         accelerator_types=[],
+        source_image_type=None,
         *args,
         **kwargs,
     ):
@@ -34,14 +37,15 @@ class StartGCEOperator(BaseOperator):
         self.instance_type = instance_type
         self.preemptible = preemptible
         self.accelerator_types = accelerator_types
+        if source_image_type is None:
+            source_image_type = (
+                GPUImage() if len(self.accelerator_types) > 0 else CPUImage()
+            )
+
+        self.source_image_type = source_image_type
 
     def execute(self, context) -> None:
-
-        source_image_type = (
-            GPUImage() if len(self.accelerator_types) > 0 else CPUImage()
-        )
-
-        hook = GCEHook(source_image_type=source_image_type)
+        hook = GCEHook(source_image_type=self.source_image_type)
         hook.start_vm(
             self.instance_name,
             self.instance_type,
@@ -88,6 +92,8 @@ class StopGCEOperator(BaseOperator):
 
 
 class BaseSSHGCEOperator(BaseOperator):
+    MAX_RETRY = 3
+    SSH_TIMEOUT = 10
     template_fields = ["instance_name", "command", "environment"]
 
     @apply_defaults
@@ -105,23 +111,29 @@ class BaseSSHGCEOperator(BaseOperator):
         self.environment = environment
         super(BaseSSHGCEOperator, self).__init__(*args, **kwargs)
 
-    def run_ssh_client_command(self, hook, context):
-        with hook.get_conn() as ssh_client:
-            exit_status, agg_stdout, agg_stderr = hook.exec_ssh_client_command(
-                ssh_client,
-                self.command,
-                timeout=1000,
-                environment=self.environment,
-                get_pty=False,
-            )
-            if context and self.do_xcom_push:
-                ti = context.get("task_instance")
-                ti.xcom_push(key="ssh_exit", value=exit_status)
-            if exit_status != 0:
-                raise AirflowException(
-                    f"SSH operator error: exit status = {exit_status}"
+    def run_ssh_client_command(self, hook, context, retry=1):
+        try:
+            with hook.get_conn() as ssh_client:
+                exit_status, agg_stdout, agg_stderr = hook.exec_ssh_client_command(
+                    ssh_client,
+                    self.command,
+                    timeout=1000,
+                    environment=self.environment,
+                    get_pty=False,
                 )
-            return agg_stdout
+                if context and self.do_xcom_push:
+                    ti = context.get("task_instance")
+                    ti.xcom_push(key="ssh_exit", value=exit_status)
+                if exit_status != 0:
+                    raise AirflowException(
+                        f"SSH operator error: exit status = {exit_status}"
+                    )
+                return agg_stdout
+        except ProxyCommandFailure as e:
+            if retry > self.MAX_RETRY:
+                raise e
+            sleep(retry * self.SSH_TIMEOUT)
+            self.run_ssh_client_command(self, hook, context, retry=retry + 1)
 
     def execute(self, context):
         hook = ComputeEngineSSHHook(
@@ -132,6 +144,7 @@ class BaseSSHGCEOperator(BaseOperator):
             use_oslogin=False,
             user=SSH_USER,
             gcp_conn_id="google_cloud_default",
+            expire_time=300,
         )
 
         result = self.run_ssh_client_command(hook, context)
@@ -150,12 +163,14 @@ class CloneRepositoryGCEOperator(BaseSSHGCEOperator):
         instance_name: str,
         command: str,
         environment: t.Dict[str, str] = {},
+        python_version: str = "3.10",
         *args,
         **kwargs,
     ):
-        self.command = self.script(command)
+        self.command = self.script(command, python_version)
         self.instance_name = instance_name
         self.environment = environment
+        self.python_version = python_version
         super(CloneRepositoryGCEOperator, self).__init__(
             instance_name=self.instance_name,
             command=self.command,
@@ -164,8 +179,14 @@ class CloneRepositoryGCEOperator(BaseSSHGCEOperator):
             **kwargs,
         )
 
-    def script(self, branch) -> str:
+    def script(self, branch, python_version) -> str:
         return """
+        export PATH=/opt/conda/bin:/opt/conda/condabin:+$PATH
+        conda create --name data-gcp python=%s
+        conda init zsh
+        source ~/.zshrc
+        conda activate data-gcp
+
         DIR=data-gcp &&
         if [ -d "$DIR" ]; then 
             echo "Update and Checkout repo..." &&
@@ -179,6 +200,7 @@ class CloneRepositoryGCEOperator(BaseSSHGCEOperator):
             git checkout %s
         fi
         """ % (
+            python_version,
             branch,
             self.REPO,
             branch,
@@ -211,8 +233,9 @@ class GCloudSSHGCEOperator(BashOperator):
                 for key, value in dict(self.DEFAULT_EXPORT, **export_config).items()
             ]
         )
+        activate_env = "conda init zsh && source ~/.zshrc && conda activate data-gcp"
         default_path = f"cd {base_dir}"
-        command = "\n".join([default_command, default_path, self.command])
+        command = "\n".join([default_command, activate_env, default_path, self.command])
         super(GCloudSSHGCEOperator, self).__init__(
             bash_command=f"gcloud compute ssh {SSH_USER}@{self.instance_name} "
             f"--zone {GCE_ZONE} "
@@ -247,8 +270,9 @@ class SSHGCEOperator(BaseSSHGCEOperator):
                 for key, value in dict(self.DEFAULT_EXPORT, **environment).items()
             ]
         )
+        activate_env = "conda init zsh && source ~/.zshrc && conda activate data-gcp"
         default_path = f"cd {base_dir}" if base_dir is not None else ""
-        self.command = "\n".join([default_command, default_path, command])
+        self.command = "\n".join([default_command, activate_env, default_path, command])
         self.instance_name = instance_name
         super(SSHGCEOperator, self).__init__(
             instance_name=self.instance_name,

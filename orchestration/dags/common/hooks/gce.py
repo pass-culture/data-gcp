@@ -20,17 +20,42 @@ DEFAULT_LABELS = {"env": ENV_SHORT_NAME, "terraform": "false", "airflow": "true"
 
 @dataclass
 class CPUImage:
-    source_image: str = "projects/deeplearning-platform-release/global/images/tf2-latest-cpu-v20211202"  # tf-latest-cpu-v20221219
+    source_image: str = (
+        "projects/deeplearning-platform-release/global/images/tf-latest-cpu-v20221219"
+    )
     startup_script: str = None
     startup_script_wait_time: int = 0
 
 
 @dataclass
+class CPUImage310:
+    source_image: str = (
+        "projects/deeplearning-platform-release/global/images/tf-latest-cpu-v20221219"
+    )
+    startup_script: str = None
+    startup_script_wait_time: int = 90
+
+
+@dataclass
 class GPUImage:
-    source_image: str = "projects/deeplearning-platform-release/global/images/tf2-latest-gpu-v20211202"  # tf-latest-gpu-v20221219
+    source_image: str = (
+        "projects/deeplearning-platform-release/global/images/tf-latest-gpu-v20221219"
+    )
     startup_script: str = """
         #!/bin/bash
         sudo /opt/deeplearning/install-driver.sh
+    """
+    startup_script_wait_time: int = 180
+
+
+@dataclass
+class GPUImage310:
+    source_image: str = (
+        "projects/deeplearning-platform-release/global/images/tf-latest-gpu-v20221219"
+    )
+    startup_script: str = """
+        #!/bin/bash
+        sudo /opt/deeplearning/install-driver.sh        
     """
     startup_script_wait_time: int = 90
 

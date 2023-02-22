@@ -5,11 +5,10 @@ mlflow==1.17.0
 numpy==1.22.0
 pandas==1.3.3
 pandas-gbq==0.15.0
-scipy==1.5.4
 # Si problème, passer tensorflow en 2.7.0
-tensorflow==2.6.3
-tensorflow-recommenders==0.6.0
-keras==2.6.0
+tensorflow==2.11.0
+tensorflow-recommenders==0.7.3
+keras==2.11.0
 recmetrics==0.1.5
 google-cloud-aiplatform==1.16.0
 typer==0.7.0

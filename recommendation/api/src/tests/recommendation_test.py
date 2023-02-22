@@ -84,10 +84,12 @@ class RecommendationTest:
             ),
         ],
     )
+    @patch("pcreco.core.recommendation.get_cold_start_categories")
     @patch("pcreco.core.recommendation.get_cold_start_status")
     def test_recommendation_cold_start(
         self,
         cold_start_status_mock: Mock,
+        cold_start_categories_mock: Mock,
         setup_database: Any,
         user_id,
         geoloc,
@@ -99,6 +101,7 @@ class RecommendationTest:
             latitude = geoloc["latitude"]
 
             cold_start_status_mock.return_value = True
+            cold_start_categories_mock.return_value = ["SEANCE_CINE"]
             user = User(user_id, longitude, latitude)
             input_reco = PlaylistParamsIn()
             scoring = Recommendation(user, input_reco)
@@ -313,10 +316,12 @@ class RecommendationTest:
             ),
         ],
     )
+    @patch("pcreco.core.recommendation.get_cold_start_categories")
     @patch("pcreco.core.recommendation.get_cold_start_status")
     def test_recommendation_playlist_cold_start(
         self,
         cold_start_status_mock: Mock,
+        cold_start_categories_mock: Mock,
         setup_database: Any,
         user_id,
         geoloc,
@@ -330,6 +335,7 @@ class RecommendationTest:
 
             user = User(user_id, longitude, latitude)
             cold_start_status_mock.return_value = True
+            cold_start_categories_mock.return_value = ["SEANCE_CINE"]
             input_reco = PlaylistParamsIn(
                 {
                     "subcategories": subcategories,

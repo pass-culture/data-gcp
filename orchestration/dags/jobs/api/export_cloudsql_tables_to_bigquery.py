@@ -90,7 +90,7 @@ for table, params in RAW_TABLES.items():
 
     export_raw_table_tasks.append(task)
 
-delete_rows_task = drop_table_task = CloudSQLExecuteQueryOperator(
+delete_rows_past_recommended_offers = drop_table_task = CloudSQLExecuteQueryOperator(
     task_id="drop_yesterday_rows_past_recommended_offers",
     gcp_cloudsql_conn_id="proxy_postgres_tcp",
     sql=f"DELETE FROM public.past_recommended_offers where date <= '{yesterday}'",
@@ -98,6 +98,13 @@ delete_rows_task = drop_table_task = CloudSQLExecuteQueryOperator(
     dag=dag,
 )
 
+delete_rows_past_similar_offers = drop_table_task = CloudSQLExecuteQueryOperator(
+    task_id="drop_yesterday_rows_past_similar_offers",
+    gcp_cloudsql_conn_id="proxy_postgres_tcp",
+    sql=f"DELETE FROM public.past_similar_offers where date <= '{yesterday}'",
+    autocommit=True,
+    dag=dag,
+)
 export_clean_table_tasks = []
 for table, params in CLEAN_TABLES.items():
     task = bigquery_job_task(dag, f"import_{table}_in_clean", params)
@@ -110,9 +117,10 @@ end = DummyOperator(task_id="end", dag=dag)
 (
     start
     >> export_raw_table_tasks
-    >> delete_rows_task
+    >> delete_rows_past_recommended_offers
+    >> delete_rows_past_similar_offers
     >> export_clean_table_tasks
     >> end_clean
     >> end
 )
-(delete_rows_task >> end)
+(end_clean >> end)

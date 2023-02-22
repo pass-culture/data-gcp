@@ -102,7 +102,6 @@ BIGQUERY_SCHEMAS = {
         "isbn": "STRING",
         "book_editor": "STRING",
     },
-    "offer_tags": {"offer_id": "STRING", "tag": "STRING"},
     "applicative_database_offerer": {
         "offerer_is_active": "BOOLEAN",
         "offerer_thumb_count": "INT64",
@@ -253,7 +252,6 @@ BIGQUERY_SCHEMAS = {
         "passculture_pro_url": "STRING",
         "webapp_url": "STRING",
         "first_booking_cnt": "INTEGER",
-        "offer_tag": "STRING",
         "author": "STRING",
         "performer": "STRING",
         "stageDirector": "STRING",

@@ -1,15 +1,10 @@
 import datetime
 from airflow import DAG
-from airflow.providers.google.cloud.transfers.bigquery_to_bigquery import (
-    BigQueryToBigQueryOperator,
-)
+from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.http.operators.http import SimpleHttpOperator
 from airflow.operators.python import PythonOperator
-from google.auth.transport.requests import Request
-from google.oauth2 import id_token
 from common.alerts import task_fail_slack_alert
-
 
 from common.config import (
     BIGQUERY_ANALYTICS_DATASET,
@@ -58,16 +53,26 @@ typeform_adage_reference_request_to_bq = SimpleHttpOperator(
         "Content-Type": "application/json",
         "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_service_account_token', key='return_value')}}",
     },
+    log_response=True,
     dag=dag,
 )
 
 
-create_analytics_table = BigQueryToBigQueryOperator(
-    task_id="create_enriched_app_downloads_stats",
-    source_project_dataset_tables=f"{GCP_PROJECT_ID}.{BIGQUERY_RAW_DATASET}.typeform_adage_reference_request_sheet",
-    destination_project_dataset_table=f"{GCP_PROJECT_ID}.{BIGQUERY_ANALYTICS_DATASET}.typeform_adage_reference_request",
-    write_disposition="WRITE_TRUNCATE",
+create_analytics_table = BigQueryInsertJobOperator(
     dag=dag,
+    task_id="typeform_adage_reference_request_to_analytics",
+    configuration={
+        "query": {
+            "query": f"SELECT * FROM `{GCP_PROJECT_ID}.{BIGQUERY_RAW_DATASET}.typeform_adage_reference_request_sheet`",
+            "useLegacySql": False,
+            "destinationTable": {
+                "projectId": GCP_PROJECT_ID,
+                "datasetId": BIGQUERY_ANALYTICS_DATASET,
+                "tableId": "typeform_adage_reference_request",
+            },
+            "writeDisposition": "WRITE_TRUNCATE",
+        }
+    },
 )
 
 end = DummyOperator(task_id="end", dag=dag)

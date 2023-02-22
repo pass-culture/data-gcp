@@ -40,6 +40,8 @@ def define_import_tables():
         "feature",
         "internal_user",
         "invoice",
+        "invoice_cashflow",
+        "invoice_line",
         "local_provider_event",
         "mediation",
         "offer",
@@ -108,6 +110,15 @@ analytics_tables = {
             "offer_extracted_data",
             "offer_item_ids",
         ],
+    },
+    "enriched_offer_metadata": {
+        "sql": f"{ANALYTICS_SQL_PATH}/enriched_offer_metadata.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+    },
+    "enriched_item_metadata": {
+        "sql": f"{ANALYTICS_SQL_PATH}/enriched_item_metadata.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "depends": ["enriched_offer_metadata", "offer_item_ids"],
     },
     "enriched_offerer_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_offerer_data.sql",
@@ -182,6 +193,7 @@ analytics_tables = {
             "enriched_venue_data",
             "enriched_offer_data",
             "offer_with_mediation",
+            "enriched_item_metadata",
         ],
     },
     "top_items_data": {

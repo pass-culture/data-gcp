@@ -18,4 +18,9 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "titelive_isbn_weight",
     },
+    "institutional_partners": {
+        "sql": f"{SQL_PATH}/analytics/institutional_partners.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "institutional_partners",
+    },
 }

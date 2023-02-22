@@ -32,12 +32,8 @@ recommendable_offers_data AS (
             DATE(stock_beginning_date) as stock_beginning_date,
             MAX(stock_price) as stock_price,
             MAX(category) as category,
-            MAX(movie_type) as movie_type,
-            MAX(offer_type_id) as offer_type_id,
+            MAX(offer_type_domain) as offer_type_domain,
             MAX(offer_type_label) as offer_type_label,
-            MAX(offer_sub_type_id) as offer_sub_type_id,
-            MAX(offer_sub_type_label) as offer_sub_type_label,
-            MAX(macro_rayon) as macro_rayon,
             MAX(booking_number) as booking_number,
             MAX(is_underage_recommendable) as is_underage_recommendable,
             MAX(subcategory_id) as subcategory_id,
@@ -79,12 +75,8 @@ SELECT
     ro.stock_beginning_date,
     ro.stock_price,
     ro.offer_is_duo,
-    ro.movie_type,
-    ro.offer_type_id,
+    ro.offer_type_domain,
     ro.offer_type_label,
-    ro.offer_sub_type_id,
-    ro.offer_sub_type_label,
-    ro.macro_rayon,
     ro.booking_number,
     ro.is_underage_recommendable,
     si.position,
@@ -102,6 +94,6 @@ LEFT JOIN
     
     
 GROUP by
-    1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29
+    1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25
 --- max volume per iris
 QUALIFY ROW_NUMBER() OVER (PARTITION BY iris_id ORDER BY si.venue_distance_to_iris) < 10000

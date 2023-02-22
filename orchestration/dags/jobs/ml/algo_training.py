@@ -48,7 +48,7 @@ dag_config = {
 train_params = {
     "batch_size": 4096,
     "embedding_size": 64,
-    "train_set_size": 0.9 if ENV_SHORT_NAME == "prod" else 0.8,
+    "train_set_size": 0.95 if ENV_SHORT_NAME == "prod" else 0.8,
     "event_day_number": 90 if ENV_SHORT_NAME == "prod" else 20,
 }
 gce_params = {

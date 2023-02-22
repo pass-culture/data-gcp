@@ -8,14 +8,7 @@ WHERE offer_subcategoryId IN ('LIVRE_PAPIER', 'LIVRE_NUMERIQUE', 'LIVRE_AUDIO_PH
 AND rayon IS NOT NULL
 AND isbn IS NOT NULL
 GROUP BY 1,2
-),
-
-rayon_per_isbn AS (
-SELECT 
-    isbn
-    , rayon
-FROM matching_isbn_with_rayon
-WHERE rank_rayon = 1
+QUALIFY ROW_NUMBER() OVER (PARTITION BY isbn ORDER BY COUNT(DISTINCT offer_id) DESC) = 1
 ),
 
 matching_isbn_with_editor AS (
@@ -28,19 +21,12 @@ WHERE offer_subcategoryId IN ('LIVRE_PAPIER', 'LIVRE_NUMERIQUE', 'LIVRE_AUDIO_PH
 AND book_editor IS NOT NULL
 AND isbn IS NOT NULL
 GROUP BY 1,2
-),
-
-editeur_per_isbn AS (
-SELECT
-    isbn
-    , book_editor
-FROM matching_isbn_with_editor
-WHERE rank_editor = 1
-),
+QUALIFY ROW_NUMBER() OVER (PARTITION BY isbn ORDER BY COUNT(DISTINCT offer_id) DESC) = 1
+)
 
 SELECT DISTINCT
     isbn
     , rayon
     , book_editor
-FROM rayon_per_isbn
-FULL OUTER JOIN editor_per_isbn USING(isbn)
+FROM matching_isbn_with_rayon
+LEFT JOIN matching_isbn_with_editor USING(isbn)

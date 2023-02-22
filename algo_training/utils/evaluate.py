@@ -31,13 +31,13 @@ def evaluate(
     test_dataset_name: str = "recommendation_test_data",
 ):
     logger.info("Load raw")
-    raw_data = read_from_gcs(storage_path, "bookings", read_from_gcs=False).astype(
+    raw_data = read_from_gcs(storage_path, "bookings", parallel=False).astype(
         {"user_id": str, "item_id": str, "count": int}
     )
     logger.info(f"raw_data : {raw_data.shape[0]}")
 
     training_item_ids = read_from_gcs(
-        storage_path, training_dataset_name, read_from_gcs=False
+        storage_path, training_dataset_name, parallel=False
     )["item_id"].unique()
     logger.info(f"training_item_ids : {training_item_ids.shape[0]}")
 

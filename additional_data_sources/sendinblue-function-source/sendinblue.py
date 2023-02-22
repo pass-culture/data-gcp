@@ -57,59 +57,35 @@ class SendinblueNewsletters:
 
         return campaigns_list
 
-    def get_data_by_domain(self):
+    def get_data(self):
 
         campaigns_list = self.get_email_campaigns()
 
-        campaign_stats_by_domain = {}
-        campaign_stats_by_domain["campaign_id"] = [
-            camp.get("id") for camp in campaigns_list
-        ]
-        campaign_stats_by_domain["campaign_utm"] = [
-            camp.get("tag") for camp in campaigns_list
-        ]
-        campaign_stats_by_domain["campaign_name"] = [
-            camp.get("name") for camp in campaigns_list
-        ]
-        campaign_stats_by_domain["campaign_sent_date"] = [
+        campaign_stats = {}
+        campaign_stats["campaign_id"] = [camp.get("id") for camp in campaigns_list]
+        campaign_stats["campaign_utm"] = [camp.get("tag") for camp in campaigns_list]
+        campaign_stats["campaign_name"] = [camp.get("name") for camp in campaigns_list]
+        campaign_stats["campaign_sent_date"] = [
             camp.get("sentDate") for camp in campaigns_list
         ]
-        campaign_stats_by_domain["share_link"] = [
+        campaign_stats["share_link"] = [
             camp.get("shareLink") for camp in campaigns_list
         ]
-        campaign_stats_by_domain["domain"] = [
-            list(group.get("statsByDomain").keys())
+        campaign_stats["audience_size"] = [
+            group.get("campaignStats")[0].get("sent")
+            for group in [camp.get("statistics") for camp in campaigns_list]
+        ]
+        campaign_stats["unsubscriptions"] = [
+            group.get("campaignStats")[0].get("unsubscriptions")
+            for group in [camp.get("statistics") for camp in campaigns_list]
+        ]
+        campaign_stats["open_number"] = [
+            group.get("campaignStats")[0].get("viewed")
             for group in [camp.get("statistics") for camp in campaigns_list]
         ]
 
-        domain_stats_df = pd.DataFrame()
-        for campaign_dict in campaigns_list:
-            temp = (
-                pd.DataFrame(
-                    [
-                        group.get("statsByDomain")
-                        for group in [
-                            camp.get("statistics")
-                            for camp in campaigns_list
-                            if camp.get("id") == campaign_dict.get("id")
-                        ]
-                    ][0]
-                )
-                .transpose()
-                .reset_index()
-                .rename(columns={"index": "domain"})
-            )
-
-            temp["campaign_id"] = [
-                camp.get("id")
-                for camp in campaigns_list
-                if camp.get("id") == campaign_dict.get("id")
-            ][0]
-            domain_stats_df = pd.concat([temp, domain_stats_df])
-
-        print("print dict ----", campaign_stats_by_domain)
-        campaign_stats_by_domain_df = (
-            pd.DataFrame(campaign_stats_by_domain)
+        campaign_stats_df = (
+            pd.DataFrame(campaign_stats)
             .set_index(
                 [
                     "campaign_id",
@@ -119,18 +95,14 @@ class SendinblueNewsletters:
                     "share_link",
                 ]
             )
-            .explode("domain")
             .reset_index()
-            .merge(domain_stats_df, on=["campaign_id", "domain"])
-            .rename(columns={"sent": "audience_size", "estimatedViews": "open_number"})
-            .assign(update_date=pd.to_datetime("today"))[
+            .assign(update_date=pd.to_datetime("today"),)[
                 [
                     "campaign_id",
                     "campaign_utm",
                     "campaign_name",
                     "campaign_sent_date",
                     "share_link",
-                    "domain",
                     "audience_size",
                     "open_number",
                     "unsubscriptions",
@@ -139,9 +111,9 @@ class SendinblueNewsletters:
             ]
         )
 
-        return campaign_stats_by_domain_df
+        return campaign_stats_df
 
-    def save_to_historical(self, df_to_save):
+    def save_to_historical(self, df_to_save, schema):
 
         bigquery_client = bigquery.Client()
 
@@ -153,6 +125,9 @@ class SendinblueNewsletters:
             time_partitioning=bigquery.TimePartitioning(
                 type_=bigquery.TimePartitioningType.DAY, field="update_date"
             ),
+            schema=[
+                bigquery.SchemaField(column, _type) for column, _type in schema.items()
+            ],
         )
         job = bigquery_client.load_table_from_dataframe(
             df_to_save, table_id, job_config=job_config

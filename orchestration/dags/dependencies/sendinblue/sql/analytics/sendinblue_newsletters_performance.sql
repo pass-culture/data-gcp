@@ -6,7 +6,7 @@
 WITH sendinblue_newsletter as (
     SELECT 
         *
-        , row_number() over( partition by campaign_id, domain order by update_date desc) as rank_update
+        , row_number() over( partition by campaign_id order by update_date desc) as rank_update
     FROM `{{ bigquery_raw_dataset }}.sendinblue_newsletters_histo`
     QUALIFY rank_update = 1
 ),
@@ -26,7 +26,6 @@ SELECT
     , campaign_name
     , campaign_sent_date
     , share_link
-    , domain
     , sum(audience_size) as audience_size
     , sum(open_number) as open_number
     , sum(unsubscriptions) as unsubscriptions
@@ -42,6 +41,5 @@ GROUP BY
     , campaign_name
     , campaign_sent_date
     , share_link
-    , domain
     , update_date
     , session_number

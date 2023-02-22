@@ -9,6 +9,7 @@ from common.utils import (
     depends_loop,
     getting_service_account_token,
     get_airflow_schedule,
+    ENV_SHORT_NAME,
 )
 from dependencies.metabase.import_metabase import (
     import_tables,
@@ -82,35 +83,27 @@ for name, params in analytics_tables.items():
 
 analytics_table_tasks = depends_loop(analytics_table_jobs, end_raw, dag=dag)
 
-service_account_token = PythonOperator(
-    task_id="getting_metabase_archiving_service_account_token",
-    python_callable=getting_service_account_token,
-    op_kwargs={"function_name": f"metabase_archiving_{ENV_SHORT_NAME}"},
-    dag=dag,
-)
+if ENV_SHORT_NAME == "prod":
+    service_account_token = PythonOperator(
+        task_id="getting_metabase_archiving_service_account_token",
+        python_callable=getting_service_account_token,
+        op_kwargs={"function_name": f"metabase_archiving_{ENV_SHORT_NAME}"},
+        dag=dag,
+    )
+    archive_metabase_cards_op = SimpleHttpOperator(
+        task_id=f"archive_metabase_cards",
+        method="POST",
+        http_conn_id="http_gcp_cloud_function",
+        endpoint=f"metabase_archiving_{ENV_SHORT_NAME}",
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_metabase_archiving_service_account_token', key='return_value')}}",
+        },
+        log_response=True,
+        dag=dag,
+    )
 
-archive_metabase_cards_op = SimpleHttpOperator(
-    task_id=f"archive_metabase_cards",
-    method="POST",
-    http_conn_id="http_gcp_cloud_function",
-    endpoint=f"metabase_archiving_{ENV_SHORT_NAME}",
-    headers={
-        "Content-Type": "application/json",
-        "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_metabase_archiving_service_account_token', key='return_value')}}",
-    },
-    log_response=True,
-    dag=dag,
-)
-
-end = DummyOperator(task_id="end", dag=dag)
+    (analytics_table_tasks >> service_account_token >> archive_metabase_cards_op)
 
 
-(
-    start
-    >> import_tables_to_raw_tasks
-    >> end_raw
-    >> analytics_table_tasks
-    >> service_account_token
-    >> archive_metabase_cards_op
-    >> end
-)
+(start >> import_tables_to_raw_tasks >> end_raw >> analytics_table_tasks)

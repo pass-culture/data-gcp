@@ -1,18 +1,10 @@
 import datetime
 from airflow import DAG
-from airflow.providers.google.cloud.transfers.bigquery_to_bigquery import (
-    BigQueryToBigQueryOperator,
-)
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.utils.task_group import TaskGroup
-from airflow.sensors.external_task import ExternalTaskSensor
-
 from common import macros
 from common.utils import depends_loop, one_line_query, get_airflow_schedule
-from common.config import FAILED_STATES, ALLOWED_STATES
-
 from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
-from airflow.models import DagRun
 from common.operators.biquery import bigquery_job_task
 from dependencies.import_analytics.import_analytics import export_tables
 from dependencies.import_analytics.import_historical import (
@@ -171,12 +163,23 @@ end_historical_analytics_table_tasks = DummyOperator(
 with TaskGroup(group_id="analytics_copy_group", dag=dag) as analytics_copy:
     import_tables_to_analytics_tasks = []
     for table in import_tables:
-        task = BigQueryToBigQueryOperator(
-            task_id=f"import_to_analytics_{table}",
-            write_disposition=params.get("write_disposition", "WRITE_TRUNCATE"),
-            source_project_dataset_tables=f"{GCP_PROJECT_ID}.{BIGQUERY_CLEAN_DATASET}.{APPLICATIVE_PREFIX}{table}",
-            destination_project_dataset_table=f"{GCP_PROJECT_ID}.{BIGQUERY_ANALYTICS_DATASET}.{APPLICATIVE_PREFIX}{table}",
+        task = BigQueryInsertJobOperator(
             dag=dag,
+            task_id=f"import_to_analytics_{table}",
+            configuration={
+                "query": {
+                    "query": f"SELECT * FROM `{GCP_PROJECT_ID}.{BIGQUERY_CLEAN_DATASET}.{APPLICATIVE_PREFIX}{table}`",
+                    "useLegacySql": False,
+                    "destinationTable": {
+                        "projectId": GCP_PROJECT_ID,
+                        "datasetId": BIGQUERY_ANALYTICS_DATASET,
+                        "tableId": f"{APPLICATIVE_PREFIX}{table}",
+                    },
+                    "writeDisposition": params.get(
+                        "write_disposition", "WRITE_TRUNCATE"
+                    ),
+                }
+            },
         )
         import_tables_to_analytics_tasks.append(task)
 

@@ -2,8 +2,6 @@
 import json
 import random
 from sqlalchemy import text
-from google.cloud import storage
-from datetime import date
 from pcreco.core.user import User
 from pcreco.core.utils.cold_start_status import get_cold_start_status
 from pcreco.core.utils.mixing import (
@@ -14,8 +12,8 @@ from pcreco.core.utils.query_builder import RecommendableOffersQueryBuilder
 from pcreco.utils.db.db_connection import get_session
 from pcreco.core.utils.vertex_ai import predict_model
 from pcreco.core.model_selection import select_reco_model_params
+from pcreco.core.utils.qpi_live_ingestion import get_cold_start_categories_from_gcs
 from pcreco.utils.env_vars import (
-    ENV_SHORT_NAME,
     NUMBER_OF_PRESELECTED_OFFERS,
     RECOMMENDABLE_OFFER_LIMIT,
     COLD_START_RECOMMENDABLE_OFFER_LIMIT,
@@ -277,30 +275,6 @@ class Recommendation:
                 )
                 cold_start_categories = [res[0] for res in query_result]
             else:
-                start = time.time()
-                logger.info(f"get_cold_start_categories from gcs : {self.user.id}")
+                cold_start_categories = get_cold_start_categories_from_gcs(self.user.id)
 
-                client = storage.Client()
-                bucket = client.get_bucket(f"data-bucket-{ENV_SHORT_NAME}")
-                todays_date = date.today().strftime("%Y%m%d")
-                cold_start_categories = []
-                try:
-                    blob = bucket.get_blob(
-                        f"QPI_exports/qpi_answers_{todays_date}/user_id_{self.user.id}.jsonl"
-                    )
-                    with blob.open("r") as f:
-                        qpi_raw = json.load(f)
-                    if qpi_raw:
-                        user_answer_ids = []
-                        for answers in qpi_raw["answers"]:
-                            for answers_id in answers["answer_ids"]:
-                                user_answer_ids.append(answers_id)
-                        cold_start_categories = user_answer_ids
-                    logger.info(
-                        f"get_cold_start_categories from gcs: file found with {cold_start_categories}"
-                    )
-                    log_duration("get_cold_start_categories from gcs", start)
-                except:
-                    logger.info(f"get_cold_start_categories: not found ")
-                    cold_start_categories = []
             return cold_start_categories

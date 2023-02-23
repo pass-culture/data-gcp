@@ -84,7 +84,9 @@ class RecommendationTest:
             ),
         ],
     )
-    @patch("pcreco.core.recommendation.get_cold_start_categories")
+    @patch(
+        "pcreco.core.recommendation.Recommendation.ColdStart.get_cold_start_categories"
+    )
     @patch("pcreco.core.recommendation.get_cold_start_status")
     def test_recommendation_cold_start(
         self,
@@ -243,7 +245,9 @@ class RecommendationTest:
             ),
         ],
     )
-    @patch("pcreco.core.recommendation.get_cold_start_categories")
+    @patch(
+        "pcreco.core.recommendation.Recommendation.ColdStart.get_cold_start_categories"
+    )
     @patch("pcreco.core.recommendation.get_cold_start_status")
     def test_recommendation_playlist_cold_start(
         self,
@@ -316,7 +320,9 @@ class RecommendationTest:
             ),
         ],
     )
-    @patch("pcreco.core.recommendation.get_cold_start_categories")
+    @patch(
+        "pcreco.core.recommendation.Recommendation.ColdStart.get_cold_start_categories"
+    )
     @patch("pcreco.core.recommendation.get_cold_start_status")
     def test_recommendation_playlist_cold_start(
         self,

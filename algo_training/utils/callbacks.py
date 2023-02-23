@@ -17,8 +17,8 @@ class MLFlowLogging(tf.keras.callbacks.Callback):
 
         mlflow.log_metrics(
             {
-                "loss": logs["loss"],
-                "val_loss": logs["val_loss"],
+                "loss": logs.get("loss", 0),
+                "val_loss": logs.get("val_loss", 0),
                 "val_top_010_categorical_accuracy": logs.get(
                     "val_factorized_top_k/top_10_categorical_accuracy", 0
                 ),

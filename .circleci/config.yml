@@ -811,6 +811,13 @@ executors:
         auth:
           username: $DOCKERHUB_USER
           password: $DOCKERHUB_PASSWORD
+
+  python310:
+    docker:
+      - image: circleci/python:3.10
+        auth:
+          username: $DOCKERHUB_USER
+          password: $DOCKERHUB_PASSWORD
   gcp-sdk:
     docker:
       - image: google/cloud-sdk:381.0.0
@@ -968,7 +975,7 @@ jobs:
             pytest tests
 
   algo-training-install:
-    executor: python
+    executor: python310
     working_directory: ~/data-gcp/algo_training
     steps:
       - checkout:
@@ -991,7 +998,7 @@ jobs:
             - .
 
   algo-training-tests:
-    executor: python
+    executor: python310
     working_directory: ~/data-gcp/algo_training
     steps:
       - attach_workspace:

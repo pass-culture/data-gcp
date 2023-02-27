@@ -148,6 +148,7 @@ with DAG(
     fetch_code = CloneRepositoryGCEOperator(
         task_id="fetch_code",
         instance_name="{{ params.instance_name }}",
+        python_version="3.10",
         command="{{ params.branch }}",
     )
 

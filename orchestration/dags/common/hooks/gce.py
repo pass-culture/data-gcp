@@ -24,16 +24,7 @@ class CPUImage:
         "projects/deeplearning-platform-release/global/images/tf-latest-cpu-v20221219"
     )
     startup_script: str = None
-    startup_script_wait_time: int = 0
-
-
-@dataclass
-class CPUImage310:
-    source_image: str = (
-        "projects/deeplearning-platform-release/global/images/tf-latest-cpu-v20221219"
-    )
-    startup_script: str = None
-    startup_script_wait_time: int = 90
+    startup_script_wait_time: int = 30
 
 
 @dataclass
@@ -46,18 +37,6 @@ class GPUImage:
         sudo /opt/deeplearning/install-driver.sh
     """
     startup_script_wait_time: int = 180
-
-
-@dataclass
-class GPUImage310:
-    source_image: str = (
-        "projects/deeplearning-platform-release/global/images/tf-latest-gpu-v20221219"
-    )
-    startup_script: str = """
-        #!/bin/bash
-        sudo /opt/deeplearning/install-driver.sh        
-    """
-    startup_script_wait_time: int = 90
 
 
 class GCEHook(GoogleBaseHook):

@@ -108,7 +108,6 @@ ENRICHED_OFFER_DATA_INPUT = {
     "isbn_rayon_editor": [
         {"isbn": "156157", "rayon": "roman poche", "book_editor": "Hachette"}
     ],
-    "offer_tags": [{"offer_id": "3", "tag": "none"}, {"offer_id": "4", "tag": "none"}],
     "applicative_database_offerer": [
         {
             "offerer_id": "3",

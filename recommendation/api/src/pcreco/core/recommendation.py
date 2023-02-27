@@ -23,7 +23,6 @@ import datetime
 import time
 import pytz
 from typing import List, Dict, Any
-from loguru import logger
 
 
 class Recommendation:
@@ -270,9 +269,6 @@ class Recommendation:
             ).fetchall()
 
             if len(query_result) > 0:
-                logger.info(
-                    f"get_cold_start_categories from db for user : {self.user.id}"
-                )
                 cold_start_categories = [res[0] for res in query_result]
             else:
                 cold_start_categories = get_cold_start_categories_from_gcs(self.user.id)

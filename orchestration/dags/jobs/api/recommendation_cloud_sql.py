@@ -8,9 +8,7 @@ from airflow.providers.google.cloud.operators.bigquery import (
 )
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryDeleteTableOperator,
-)
-from airflow.providers.google.cloud.transfers.bigquery_to_gcs import (
-    BigQueryToGCSOperator,
+    BigQueryInsertJobOperator,
 )
 from airflow.providers.google.cloud.operators.cloud_sql import (
     CloudSQLImportInstanceOperator,
@@ -168,12 +166,22 @@ with DAG(
             ]
         )
 
-        export_task = BigQueryToGCSOperator(
+        export_task = BigQueryInsertJobOperator(
             task_id=f"export_{table}_to_gcs",
-            source_project_dataset_table=f"{GCP_PROJECT_ID}.{dataset}.temp_export_{table}",
-            destination_cloud_storage_uris=[f"{BUCKET_PATH}/{table}-*.csv"],
-            export_format="CSV",
-            print_header=False,
+            configuration={
+                "extract": {
+                    "sourceTable": {
+                        "projectId": GCP_PROJECT_ID,
+                        "datasetId": dataset,
+                        "tableId": f"temp_export_{table}",
+                    },
+                    "compression": None,
+                    "destinationUris": f"{BUCKET_PATH}/{table}-*.csv",
+                    "destinationFormat": "CSV",
+                    "printHeader": False,
+                }
+            },
+            dag=dag,
         )
 
         delete_temp_table_task = BigQueryDeleteTableOperator(

@@ -53,6 +53,8 @@ def define_import_tables():
         "payment",
         "payment_message",
         "payment_status",
+        "price_category",
+        "price_category_label",
         "pricing",
         "pricing_line",
         "pricing_log",

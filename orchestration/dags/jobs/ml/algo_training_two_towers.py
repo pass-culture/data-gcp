@@ -9,17 +9,16 @@ from common.operators.gce import (
     CloneRepositoryGCEOperator,
     SSHGCEOperator,
 )
-from airflow.providers.google.cloud.transfers.bigquery_to_gcs import (
-    BigQueryToGCSOperator,
-)
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryExecuteQueryOperator,
+    BigQueryInsertJobOperator,
 )
 from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
 
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import (
+    GCP_PROJECT_ID,
     DAG_FOLDER,
     ENV_SHORT_NAME,
     MLFLOW_BUCKET_NAME,
@@ -184,19 +183,37 @@ with DAG(
 
     store_data = {}
     for split in ["training", "validation", "test"]:
-        store_data[split] = BigQueryToGCSOperator(
+        store_data[split] = BigQueryInsertJobOperator(
             task_id=f"store_{split}_data",
-            source_project_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DATE}_recommendation_{split}_data",
-            destination_cloud_storage_uris=f"{dag_config['STORAGE_PATH']}/raw_recommendation_{split}_data/data-*.parquet",
-            export_format="PARQUET",
+            configuration={
+                "extract": {
+                    "sourceTable": {
+                        "projectId": GCP_PROJECT_ID,
+                        "datasetId": BIGQUERY_TMP_DATASET,
+                        "tableId": f"{DATE}_recommendation_{split}_data",
+                    },
+                    "compression": None,
+                    "destinationUris": f"{dag_config['STORAGE_PATH']}/raw_recommendation_{split}_data/data-*.parquet",
+                    "destinationFormat": "PARQUET",
+                }
+            },
             dag=dag,
         )
 
-    store_data["bookings"] = BigQueryToGCSOperator(
+    store_data["bookings"] = BigQueryInsertJobOperator(
         task_id=f"store_bookings_data",
-        source_project_dataset_table=f"{BIGQUERY_RAW_DATASET}.training_data_bookings",
-        destination_cloud_storage_uris=f"{dag_config['STORAGE_PATH']}/bookings/data-*.parquet",
-        export_format="PARQUET",
+        configuration={
+            "extract": {
+                "sourceTable": {
+                    "projectId": GCP_PROJECT_ID,
+                    "datasetId": BIGQUERY_RAW_DATASET,
+                    "tableId": f"training_data_bookings",
+                },
+                "compression": None,
+                "destinationUris": f"{dag_config['STORAGE_PATH']}/bookings/data-*.parquet",
+                "destinationFormat": "PARQUET",
+            }
+        },
         dag=dag,
     )
 

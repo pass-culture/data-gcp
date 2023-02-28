@@ -1420,7 +1420,7 @@ OFFER_MODERATION_INPUT = {
             "venue_managing_offerer_id": "4",
             "venue_type_code": "Librairie",
             "venue_type_id": "1",
-            "venue_booking_email": "mybookingemail@fmail.com",
+            "venue_booking_email": "venue@example.com",
         }
     ],
     "applicative_database_venue_label": [
@@ -1496,7 +1496,7 @@ OFFER_MODERATION_EXPECTED = [
         "is_dgca": True,
         "venue_label": "Scène nationale",
         "venue_humanized_id": "AM"
-        "venue_booking_email": "mybookingemail@fmail.com",
+        "venue_booking_email": "venue@example.com",
         "venue_contact_phone_number": "0303456",
         "is_collectivity": True,
         "offer_humanized_id": "AE",

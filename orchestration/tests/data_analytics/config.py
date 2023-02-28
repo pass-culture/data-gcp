@@ -77,7 +77,7 @@ BIGQUERY_SCHEMAS = {
         "offer_withdrawal_details": "STRING",
         "offer_withdrawalDelay": "INT64",
         "offer_withdrawal_type": "STRING",
-        "offer_external_ticket_office_url": "STRING"
+        "offer_external_ticket_office_url": "STRING",
     },
     "offer_extracted_data": {
         "offer_id": "STRING",
@@ -490,7 +490,7 @@ BIGQUERY_SCHEMAS = {
         "fieldsUpdated": "STRING",
     },
     "isbn_editor": {"isbn": "STRING", "book_editor": "STRING"},
-    "offer_item_ids": {"offer_id": "STRING", "item_id": "STRING"},    
+    "offer_item_ids": {"offer_id": "STRING", "item_id": "STRING"},
     "user_beneficiary": {
         "user_id": "STRING",
         "user_creation_date": "DATETIME",

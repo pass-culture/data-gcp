@@ -32,7 +32,7 @@ def evaluate(
     storage_path: str,
     training_dataset_name: str = "recommendation_training_data",
     test_dataset_name: str = "recommendation_test_data",
-    config_file_name: str = "user-qpi-features"
+    config_file_name: str = "user-qpi-features",
 ):
     logger.info("Load raw")
     raw_data = read_from_gcs(storage_path, "bookings", parallel=False).astype(
@@ -81,7 +81,7 @@ def evaluate(
             ],
         },
         "model": model,
-        "prediction_input_features": prediction_input_features
+        "prediction_input_features": prediction_input_features,
     }
 
     diversification_users_to_test = positive_data_test["user_id"].unique()[

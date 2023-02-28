@@ -78,7 +78,7 @@ def main(
             STORAGE_PATH,
             training_dataset_name,
             test_dataset_name,
-            config_file_name
+            config_file_name,
         )
         mlflow.log_metrics(metrics)
 

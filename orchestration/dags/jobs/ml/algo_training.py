@@ -48,7 +48,7 @@ dag_config = {
 train_params = {
     "batch_size": 4096,
     "embedding_size": 64,
-    "train_set_size": 0.95 if ENV_SHORT_NAME == "prod" else 0.8,
+    "train_set_size": {"prod": 0.95, "dev": 0.8, "stg": 0.9}[ENV_SHORT_NAME],
     "event_day_number": {"prod": 90, "dev": 365, "stg": 20}[ENV_SHORT_NAME],
     "input_type": {"prod": "clicks", "dev": "bookings", "stg": "clicks"}[
         ENV_SHORT_NAME
@@ -58,8 +58,8 @@ gce_params = {
     "instance_name": f"algo-training-{ENV_SHORT_NAME}",
     "instance_type": {
         "dev": "n1-standard-2",
-        "stg": "n1-standard-8",
-        "prod": "n1-standard-32",
+        "stg": "n1-highmem-8",
+        "prod": "n1-highmem-32",
     },
 }
 

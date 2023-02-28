@@ -38,7 +38,7 @@ def main(
     ),
     config_file_name: str = typer.Option(
         "config_file_name", help="List of input features for prediction"
-    ),
+    )
 ):
     logger.info("-------EVALUATE START------- ")
     client_id = get_secret("mlflow_client_id")

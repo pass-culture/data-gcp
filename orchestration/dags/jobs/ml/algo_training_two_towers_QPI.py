@@ -237,7 +237,7 @@ with DAG(
         environment=dag_config,
         command=f"PYTHONPATH=. python evaluate.py "
         f"--experiment-name {dag_config['EXPERIMENT_NAME']} "
-        f"--config-file-name {{ params.config_file_name }}",
+        "--config-file-name {{ params.config_file_name }}",
         dag=dag,
     )
 

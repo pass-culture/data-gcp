@@ -72,7 +72,7 @@ default_args = {
 }
 
 with DAG(
-    "algo_training_two_towers",
+    "algo_training_two_towers_QPI",
     default_args=default_args,
     description="Custom training job",
     schedule_interval=None,

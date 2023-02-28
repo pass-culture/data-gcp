@@ -25,8 +25,8 @@ class MLFlowLogging(tf.keras.callbacks.Callback):
         connect_remote_mlflow(self.client_id, env=self.env)
         mlflow.log_metrics(
             {
-                "Training Loss": logs["loss"],
-                "Evaluation Loss": logs["val_loss"],
+                "Training Loss": logs.get("loss"),
+                "Evaluation Loss": logs.get("val_loss"),
             },
             step=epoch,
         )

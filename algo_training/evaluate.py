@@ -36,6 +36,12 @@ def main(
     test_dataset_name: str = typer.Option(
         "recommendation_test_data", help="Name of the test dataset in storage"
     ),
+    test_dataset_name: str = typer.Option(
+        "recommendation_test_data", help="Name of the test dataset in storage"
+    ),
+    config_file_name: str = typer.Option(
+        "config_file_name", help="List of input features for prediction"
+    ),
 ):
     logger.info("-------EVALUATE START------- ")
     client_id = get_secret("mlflow_client_id")
@@ -72,6 +78,7 @@ def main(
             STORAGE_PATH,
             training_dataset_name,
             test_dataset_name,
+            config_file_name
         )
         mlflow.log_metrics(metrics)
 

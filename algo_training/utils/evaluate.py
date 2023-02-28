@@ -1,3 +1,4 @@
+import json
 import pandas as pd
 from loguru import logger
 import tensorflow as tf
@@ -12,7 +13,9 @@ from utils.constants import (
     NUMBER_OF_PRESELECTED_OFFERS,
     EVALUATION_USER_NUMBER,
     EVALUATION_USER_NUMBER_DIVERSIFICATION,
+    MODEL_DIR,
 )
+from two_towers_model.utils.constants import CONFIGS_PATH
 from utils.data_collect_queries import read_from_gcs
 
 
@@ -29,6 +32,7 @@ def evaluate(
     storage_path: str,
     training_dataset_name: str = "recommendation_training_data",
     test_dataset_name: str = "recommendation_test_data",
+    config_file_name: str = "user-qpi-features"
 ):
     logger.info("Load raw")
     raw_data = read_from_gcs(storage_path, "bookings", parallel=False).astype(
@@ -61,6 +65,13 @@ def evaluate(
     users_to_test = positive_data_test["user_id"].unique()[
         : min(EVALUATION_USER_NUMBER, positive_data_test["user_id"].nunique())
     ]
+    with open(
+        f"{MODEL_DIR}/{CONFIGS_PATH}/{config_file_name}.json",
+        mode="r",
+        encoding="utf-8",
+    ) as config_file:
+        features = json.load(config_file)
+        prediction_input_features = features["input_prediction_features"]
     data_model_dict = {
         "data": {
             "raw": raw_data,
@@ -70,6 +81,7 @@ def evaluate(
             ],
         },
         "model": model,
+        "prediction_input_features": prediction_input_features
     }
 
     diversification_users_to_test = positive_data_test["user_id"].unique()[

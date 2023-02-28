@@ -3,7 +3,12 @@
       "user_id": {"type": "string", "embedding_size": 64},
       "consult_offer": {"type":  "int", "embedding_size":  2},
       "has_added_offer_to_favorites": {"type":  "int", "embedding_size":  2},
-      "user_theoretical_remaining_credit": {"type":  "int", "embedding_size": 2}
+      "user_theoretical_remaining_credit": {"type":  "int", "embedding_size": 2},
+      "qpi_subcategory_ids": {
+        "type": "string",
+        "embedding_size": 64
+      }
+
   },
   "item_embedding_layers": {
       "item_id": {"type": "string", "embedding_size": 64},
@@ -11,5 +16,5 @@
       "item_booking_cnt": {"type": "int", "embedding_size": 2},
       "item_favourite_cnt": {"type": "int", "embedding_size": 2}
   },
-  "input_prediction_features": ["user_id"]
+  "input_prediction_features": ["user_id","qpi_subcategory_ids"]
 }

@@ -82,7 +82,7 @@ with DAG(
     template_searchpath=DAG_FOLDER,
     params={
         "branch": Param(
-            default="production" if ENV_SHORT_NAME == "prod" else "master",
+            default="production" if ENV_SHORT_NAME == "prod" else "PC-20796-Add-QPI-to-Two-Towers-user-features",
             type="string",
         ),
         "config_file_name": Param(

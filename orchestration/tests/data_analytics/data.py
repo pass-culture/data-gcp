@@ -1245,12 +1245,8 @@ ENRICHED_COLLECTIVE_BOOKING_DATA_INPUT = {
             "educational_year_id": "1",
             "venue_id": "8",
             "collective_booking_status": "USED_BY_INSTITUTE",
-            "collective_booking_confirmation_date": datetime.now().replace(
-                microsecond=0
-            ),
-            "collective_booking_confirmation_limit_date": datetime.now().replace(
-                microsecond=0
-            ),
+            "collective_booking_confirmation_date": datetime.now().replace(microsecond=0),
+            "collective_booking_confirmation_limit_date": datetime.now().replace(microsecond=0),
             "educational_redactor_id": "1",
         }
     ],
@@ -1342,7 +1338,9 @@ ENRICHED_COLLECTIVE_BOOKING_DATA_EXPECTED = [
         "collective_booking_cancellation_date": None,
         "collective_booking_cancellation_reason": None,
         "collective_booking_confirmation_date": datetime.now().replace(microsecond=0),
-        "collective_booking_confirmation_limit_date": datetime.now().replace(microsecond=0),
+        "collective_booking_confirmation_limit_date": datetime.now().replace(
+            microsecond=0
+        ),
         "collective_booking_used_date": datetime.now().replace(microsecond=0),
         "collective_booking_reimbursement_date": None,
         "collective_booking_rank": 1,

@@ -1361,8 +1361,8 @@ OFFER_MODERATION_INPUT = {
             "offer_external_ticket_office_url": "https://www.cab.fa/",
             "offer_id_at_providers": "9782369563235",
             "offer_is_duo": False,
-            "offer_is_active" : True,
-            "offer_validation" : "APPROVED",
+            "offer_is_active": True,
+            "offer_validation": "APPROVED",
         }
     ],
     "applicative_database_stock": [
@@ -1495,7 +1495,7 @@ OFFER_MODERATION_EXPECTED = [
         "venue_type_label": "Librairie",
         "is_dgca": True,
         "venue_label": "Scène nationale",
-        "venue_humanized_id": "AM"
+        "venue_humanized_id": "AM",
         "venue_booking_email": "venue@example.com",
         "venue_contact_phone_number": "0303456",
         "is_collectivity": True,
@@ -1512,7 +1512,7 @@ OFFER_MODERATION_EXPECTED = [
         "first_stock_beginning_date": None,
         "last_booking_limit_date": None,
         "offer_stock_quantity": 2,
-        "available_stock_quantity": 1, 
+        "available_stock_quantity": 1,
         "fill_rate": 0.5,
         "last_stock_price": 10.00,
         "playlist_tags": "livre_tag",

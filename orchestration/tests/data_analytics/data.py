@@ -985,7 +985,6 @@ ENRICHED_VENUE_DATA_INPUT = {
         }
     ],
     "applicative_database_venue_label": [{"id": "1", "label": "an other label"}],
-    "applicative_database_venue_type": [{"id": "1", "label": "a label"}],
     "region_department": [{"num_dep": "92", "region_name": "IDF"}],
 }
 
@@ -1068,7 +1067,6 @@ ENRICHED_OFFERER_DATA_INPUT = {
     ],
     "applicative_database_venue": [{"venue_id": "1", "venue_managing_offerer_id": "1"}],
     "applicative_database_venue_label": [],
-    "applicative_database_venue_type": [],
     "region_department": [{"num_dep": "973", "region_name": "Guyane"}],
 }
 
@@ -1160,7 +1158,6 @@ ENRICHED_BOOKING_DATA_INPUT = {
             "user_activity": "Lycéen",
         }
     ],
-    "applicative_database_venue_type": [{"id": "1", "label": "label"}],
     "applicative_database_venue_label": [{"id": "15", "label": "label"}],
     "subcategories": [
         {

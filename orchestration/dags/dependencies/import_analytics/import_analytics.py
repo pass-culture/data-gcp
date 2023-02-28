@@ -180,6 +180,19 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "offer_item_ids",
     },
+    "offer_moderation": {
+        "sql": f"{ANALYTICS_SQL_PATH}/offer_moderation.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "offer_moderation",
+        "depends": [
+            "available_stock_information",
+            "region_department",
+            "applicative_database_venue_label",
+            "siren_data",
+            "applicative_database_venue_contact",
+            "subcategories",
+        ],
+    },
     "offer_with_mediation": {
         "sql": f"{ANALYTICS_SQL_PATH}/offer_with_mediation.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",

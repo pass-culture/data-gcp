@@ -77,6 +77,7 @@ BIGQUERY_SCHEMAS = {
         "offer_withdrawal_details": "STRING",
         "offer_withdrawalDelay": "INT64",
         "offer_withdrawal_type": "STRING",
+        "offer_external_ticket_office_url": "STRING"
     },
     "offer_extracted_data": {
         "offer_id": "STRING",
@@ -469,7 +470,7 @@ BIGQUERY_SCHEMAS = {
     },
     "applicative_database_venue_contact": {
         "venue_contact_id": "STRING",
-        "venue_contact_venue_id": "STRING",
+        "venue_id": "STRING",
         "venue_contact_email": "STRING",
         "venue_contact_website": "STRING",
         "venue_contact_phone_number": "STRING",
@@ -489,7 +490,7 @@ BIGQUERY_SCHEMAS = {
         "fieldsUpdated": "STRING",
     },
     "isbn_editor": {"isbn": "STRING", "book_editor": "STRING"},
-    "offer_item_ids": {"offer_id": "STRING", "item_id": "STRING"},
+    "offer_item_ids": {"offer_id": "STRING", "item_id": "STRING"},    
     "user_beneficiary": {
         "user_id": "STRING",
         "user_creation_date": "DATETIME",
@@ -505,5 +506,25 @@ BIGQUERY_SCHEMAS = {
         "user_birth_date": "DATETIME",
         "user_cultural_survey_filled_date": "DATETIME",
         "user_department_code": "STRING",
+    },
+    "applicative_database_offer_criterion": {
+        "offerid": "STRING",
+        "criterionId": "STRING",
+    },
+    "applicative_database_criterion": {
+        "id": "STRING",
+        "name": "STRING",
+    },
+    "siren_data": {
+        "siren": "STRING",
+        "activitePrincipaleUniteLegale": "STRING",
+    },
+    "applicative_database_offerer_tag_mapping": {
+        "offerer_id": "STRING",
+        "tag_id": "STRING",
+    },
+    "applicative_database_offerer_tag": {
+        "offerer_tag_id": "STRING",
+        "offerer_tag_label": "STRING",
     },
 }

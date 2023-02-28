@@ -186,11 +186,6 @@ analytics_tables = {
         "destination_table": "offer_moderation",
         "depends": [
             "available_stock_information",
-            "region_department",
-            "applicative_database_venue_label",
-            "siren_data",
-            "applicative_database_venue_contact",
-            "subcategories",
         ],
     },
     "offer_with_mediation": {

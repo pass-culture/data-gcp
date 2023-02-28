@@ -1,16 +1,17 @@
 with user_qpi as (
   SELECT
     user_id,
-    ARRAY_AGG(
+    STRING_AGG(
       DISTINCT subcategory_id
       order by
         subcategory_id
     ) as qpi_subcategory_ids
   FROM
     `{{ bigquery_analytics_dataset }}`.enriched_aggregated_qpi_answers
+  where subcategory_id <> 'none'
   group by
     user_id
-),
+)
 SELECT
   firebase_agg.user_id,
   firebase_agg.user_engagement,
@@ -26,7 +27,7 @@ FROM
   `{{ bigquery_analytics_dataset }}`.firebase_aggregated_users firebase_agg
   JOIN `{{ bigquery_analytics_dataset }}`.aggregated_user_stats_reco stats_reco ON stats_reco.user_id = firebase_agg.user_id
   JOIN `{{ bigquery_analytics_dataset }}`.firebase_events firebase ON firebase.user_id = firebase_agg.user_id
-  JOIN user_qpi uqpi on uqpi.user_id=firebase_agg.user_id
+  LEFT JOIN user_qpi uqpi on uqpi.user_id=firebase_agg.user_id
 GROUP BY
   firebase_agg.user_id,
   firebase_agg.user_engagement,

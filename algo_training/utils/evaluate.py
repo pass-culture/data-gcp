@@ -30,14 +30,18 @@ def evaluate(
     training_dataset_name: str = "recommendation_training_data",
     test_dataset_name: str = "recommendation_test_data",
 ):
-    raw_data = read_from_gcs(storage_path, "bookings").astype(
+    logger.info("Load raw")
+    raw_data = read_from_gcs(storage_path, "bookings", parallel=False).astype(
         {"user_id": str, "item_id": str, "count": int}
     )
+    logger.info(f"raw_data : {raw_data.shape[0]}")
 
-    training_item_ids = read_from_gcs(storage_path, training_dataset_name)[
-        "item_id"
-    ].unique()
+    training_item_ids = read_from_gcs(
+        storage_path, training_dataset_name, parallel=False
+    )["item_id"].unique()
+    logger.info(f"training_item_ids : {training_item_ids.shape[0]}")
 
+    logger.info("Load training")
     positive_data_test = (
         read_from_gcs(
             storage_path,
@@ -52,6 +56,7 @@ def evaluate(
         .merge(raw_data, on=["user_id", "item_id"], how="inner")
         .drop_duplicates()
     )
+    logger.info(f"positive_data_test : {training_item_ids.shape[0]}")
 
     users_to_test = positive_data_test["user_id"].unique()[
         : min(EVALUATION_USER_NUMBER, positive_data_test["user_id"].nunique())

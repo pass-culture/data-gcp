@@ -37,13 +37,7 @@ class BaselineModel(tfrs.models.Model):
 
         self.task = tfrs.tasks.Retrieval(
             metrics=tfrs.metrics.FactorizedTopK(
-                candidates=item_ids_dataset.map(self.item_model),
-                metrics=[
-                    tf.keras.metrics.TopKCategoricalAccuracy(
-                        k=x, name=f"factorized_top_k/top_{x}_categorical_accuracy"
-                    )
-                    for x in [50]
-                ],
+                candidates=item_ids_dataset.map(self.item_model), ks=[50]
             ),
         )
 

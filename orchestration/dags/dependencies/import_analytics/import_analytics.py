@@ -71,7 +71,6 @@ def define_import_tables():
         "venue_pricing_point_link",
         "venue_provider",
         "venue_reimbursement_point_link",
-        "venue_type",
     ]
 
 

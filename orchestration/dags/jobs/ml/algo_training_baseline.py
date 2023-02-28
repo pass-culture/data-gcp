@@ -56,8 +56,8 @@ gce_params = {
     "instance_name": f"algo-training-baseline-{ENV_SHORT_NAME}",
     "instance_type": {
         "dev": "n1-standard-2",
-        "stg": "n1-standard-8",
-        "prod": "n1-standard-32",
+        "stg": "n1-highmem-8",
+        "prod": "n1-highmem-32",
     },
 }
 

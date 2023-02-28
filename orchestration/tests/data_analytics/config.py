@@ -339,11 +339,6 @@ BIGQUERY_SCHEMAS = {
         "label": "STRING",
         "lastupdate": "DATETIME",
     },
-    "applicative_database_venue_type": {
-        "id": "STRING",
-        "label": "STRING",
-        "lastupdate": "DATETIME",
-    },
     "region_department": {
         "num_dep": "STRING",
         "dep_name": "STRING",

@@ -36,9 +36,6 @@ def main(
     test_dataset_name: str = typer.Option(
         "recommendation_test_data", help="Name of the test dataset in storage"
     ),
-    test_dataset_name: str = typer.Option(
-        "recommendation_test_data", help="Name of the test dataset in storage"
-    ),
     config_file_name: str = typer.Option(
         "config_file_name", help="List of input features for prediction"
     ),

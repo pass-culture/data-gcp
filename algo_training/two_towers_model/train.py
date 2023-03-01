@@ -80,8 +80,9 @@ def train(
     logger.info("Loading & processing datasets")
 
     user_columns = list(user_features_config.keys())
+    logger.info(f"user_columns: {user_columns}")
     item_columns = list(item_features_config.keys())
-
+    logger.info(f"item_columns: {item_columns}")
     # We ensure that the datasets contains the features in the correct order (user_id, ..., item_id, ...)
     train_data = read_from_gcs(
         storage_path=STORAGE_PATH, table_name=training_table_name

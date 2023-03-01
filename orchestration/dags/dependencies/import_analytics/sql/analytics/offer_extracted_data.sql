@@ -1,5 +1,6 @@
 SELECT
     offer_id,
+    offer_subcategoryid,
     LOWER(
         TRIM(
             JSON_EXTRACT_SCALAR(offer_extra_data, "$.author"),
@@ -100,10 +101,20 @@ SELECT
         )
     ) AS countries,
     LOWER(
-        TRIM(JSON_EXTRACT(offer_extra_data, "$.cast"), " ")
+        TRIM(
+          JSON_EXTRACT(offer_extra_data, "$.cast"),
+          " "
+        )
     ) AS casting,
     LOWER(
-        TRIM(TRIM(JSON_EXTRACT(offer_extra_data, "$.isbn"), " "),'"')
+        TRIM(TRIM(
+          JSON_EXTRACT(offer_extra_data, "$.isbn"), " "),
+          '"')
     ) AS isbn,
+    LOWER(
+        TRIM(TRIM(
+          JSON_EXTRACT(offer_extra_data, "$.editeur"), " "),
+          '"')
+    ) AS book_editor,
 FROM
     `{{ bigquery_analytics_dataset }}.applicative_database_offer`

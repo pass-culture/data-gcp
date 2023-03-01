@@ -12,6 +12,7 @@ from pcreco.core.utils.query_builder import RecommendableOffersQueryBuilder
 from pcreco.utils.db.db_connection import get_session
 from pcreco.core.utils.vertex_ai import predict_model
 from pcreco.core.model_selection import select_reco_model_params
+from pcreco.core.utils.qpi_live_ingestion import get_cold_start_categories_from_gcs
 from pcreco.utils.env_vars import (
     NUMBER_OF_PRESELECTED_OFFERS,
     RECOMMENDABLE_OFFER_LIMIT,
@@ -267,7 +268,9 @@ class Recommendation:
                 user_id=str(self.user.id),
             ).fetchall()
 
-            if len(query_result) == 0:
-                return []
-            cold_start_categories = [res[0] for res in query_result]
+            if len(query_result) > 0:
+                cold_start_categories = [res[0] for res in query_result]
+            else:
+                cold_start_categories = get_cold_start_categories_from_gcs(self.user.id)
+
             return cold_start_categories

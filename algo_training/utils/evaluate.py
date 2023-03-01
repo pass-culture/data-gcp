@@ -41,22 +41,23 @@ def evaluate(
     )["item_id"].unique()
     logger.info(f"training_item_ids : {training_item_ids.shape[0]}")
 
-    logger.info("Load training")
-    positive_data_test = (
-        read_from_gcs(
-            storage_path,
-            test_dataset_name,
-        )
-        .astype(
-            {
-                "user_id": str,
-                "item_id": str,
-            }
-        )[["user_id", "item_id"]]
-        .merge(raw_data, on=["user_id", "item_id"], how="inner")
-        .drop_duplicates()
-    )
-    logger.info(f"positive_data_test : {training_item_ids.shape[0]}")
+    logger.info("Load test data...")
+    positive_data_test = read_from_gcs(
+        storage_path, test_dataset_name, parallel=False
+    ).astype(
+        {
+            "user_id": str,
+            "item_id": str,
+        }
+    )[
+        ["user_id", "item_id"]
+    ]
+    logger.info("Merge all...")
+    positive_data_test = positive_data_test.merge(
+        raw_data, on=["user_id", "item_id"], how="inner"
+    ).drop_duplicates()
+
+    logger.info(f"positive_data_test : {positive_data_test.shape[0]}")
 
     users_to_test = positive_data_test["user_id"].unique()[
         : min(EVALUATION_USER_NUMBER, positive_data_test["user_id"].nunique())
@@ -166,6 +167,8 @@ def save_pca_representation(
     fig, ax = plt.subplots(1, 1, figsize=(15, 10))
     for idx, category in enumerate(categories):
         data = item_representation.loc[lambda df: df["offer_categoryId"] == category]
+        max_plots = min(data.shape[0], 10000)
+        data = data.sample(n=max_plots)
         ax.scatter(
             data["x"].values,
             data["y"].values,

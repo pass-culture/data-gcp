@@ -67,16 +67,26 @@ def get_prediction(user_id, data_model_dict):
 
 
 def compute_metrics(data_model_dict, k):
-    logger.info("Compute recall and precision")
-    mark, mapk, mark_panachage, mapk_panachage = compute_recall_and_precision_at_k(
-        data_model_dict, k
-    )
-    logger.info("Compute coverage")
-    coverage = get_coverage_at_k(data_model_dict, k)
-    logger.info("Compute personalization score")
-    personalization_at_k, personalization_at_k_panachage = compute_personalization(
-        data_model_dict, k
-    )
+
+    try:
+        logger.info("Compute recall and precision")
+        mark, mapk, mark_panachage, mapk_panachage = compute_recall_and_precision_at_k(
+            data_model_dict, k
+        )
+    except ValueError:
+        mark, mapk, mark_panachage, mapk_panachage = -1, -1, -1, -1
+    try:
+        logger.info("Compute coverage")
+        coverage = get_coverage_at_k(data_model_dict, k)
+    except ValueError:
+        coverage = -1
+    try:
+        logger.info("Compute personalization score")
+        personalization_at_k, personalization_at_k_panachage = compute_personalization(
+            data_model_dict, k
+        )
+    except ValueError:
+        personalization_at_k, personalization_at_k_panachage = -1, -1
     data_model_dict["metrics"] = {
         "mark": mark,
         "mapk": mapk,

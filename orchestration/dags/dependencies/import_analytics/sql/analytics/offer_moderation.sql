@@ -1,4 +1,4 @@
-{{ create_humanize_id_function() }} 
+{{ create_humanize_id_function() }}
 
 WITH offer_humanized_id AS (
     SELECT
@@ -90,13 +90,13 @@ offer_tags AS (
         `{{ bigquery_clean_dataset }}`.applicative_database_offer_criterion offer_criterion
         JOIN `{{ bigquery_clean_dataset }}`.applicative_database_criterion criterion ON criterion.id = offer_criterion.criterionId
     GROUP BY
-        offerId 
+        offerId
 ),
 
 offer_status AS (
     SELECT DISTINCT
         offer.offer_id,
-        CASE 
+        CASE
             WHEN offer.offer_is_active = FALSE THEN "INACTIVE"
             WHEN (offer.offer_validation LIKE "%APPROVED%" AND (SUM(available_stock_information.available_stock_information) OVER (PARTITION BY offer.offer_id)) <= 0) THEN "SOLD_OUT"
             WHEN (offer.offer_validation LIKE "%APPROVED%" AND (MAX(EXTRACT(DATE FROM stock.stock_booking_limit_date)) OVER (PARTITION BY offer.offer_id) < CURRENT_DATE())) THEN "EXPIRED"
@@ -140,7 +140,6 @@ SELECT DISTINCT
                 JOIN `{{ bigquery_analytics_dataset }}`.available_stock_information ON available_stock_information.stock_id = stock.stock_id
             WHERE NOT stock_is_soft_deleted
             AND
-
                 (
                     (
                         DATE(stock.stock_booking_limit_date) > CURRENT_DATE
@@ -192,7 +191,7 @@ SELECT DISTINCT
     offer_stock_ids.last_booking_limit_date,
     offer_stock_ids.offer_stock_quantity,
     offer_stock_ids.available_stock_quantity,
-    SAFE_DIVIDE((offer_stock_ids.offer_stock_quantity - offer_stock_ids.available_stock_quantity), offer_stock_ids.offer_stock_quantity) AS fill_rate,    
+    SAFE_DIVIDE((offer_stock_ids.offer_stock_quantity - offer_stock_ids.available_stock_quantity), offer_stock_ids.offer_stock_quantity) AS fill_rate,
     last_stock.last_stock_price,
     offer_tags.playlist_tags,
     offerer_tags.structure_tags,

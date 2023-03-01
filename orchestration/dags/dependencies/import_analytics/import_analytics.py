@@ -53,6 +53,8 @@ def define_import_tables():
         "payment",
         "payment_message",
         "payment_status",
+        "price_category",
+        "price_category_label",
         "pricing",
         "pricing_line",
         "pricing_log",
@@ -71,7 +73,6 @@ def define_import_tables():
         "venue_pricing_point_link",
         "venue_provider",
         "venue_reimbursement_point_link",
-        "venue_type",
     ]
 
 
@@ -180,6 +181,14 @@ analytics_tables = {
         "sql": f"{ANALYTICS_SQL_PATH}/offer_item_ids.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "offer_item_ids",
+    },
+    "offer_moderation": {
+        "sql": f"{ANALYTICS_SQL_PATH}/offer_moderation.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "offer_moderation",
+        "depends": [
+            "available_stock_information",
+        ],
     },
     "offer_with_mediation": {
         "sql": f"{ANALYTICS_SQL_PATH}/offer_with_mediation.sql",

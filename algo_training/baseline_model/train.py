@@ -140,13 +140,13 @@ def train(
                 tf.keras.callbacks.ReduceLROnPlateau(
                     monitor="val_factorized_top_k/top_50_categorical_accuracy",
                     factor=0.1,
-                    patience=2,
+                    patience=5,
                     min_delta=MIN_DELTA,
                     verbose=1,
                 ),
                 tf.keras.callbacks.EarlyStopping(
                     monitor="val_factorized_top_k/top_50_categorical_accuracy",
-                    patience=3,
+                    patience=10,
                     min_delta=MIN_DELTA,
                     verbose=1,
                 ),

@@ -49,6 +49,8 @@ def define_import_tables():
         "offer_report",
         "offerer",
         "offerer_tag",
+        "offerer_tag_category",
+        "offerer_tag_category_mapping"
         "offerer_tag_mapping",
         "payment",
         "payment_message",
@@ -71,7 +73,6 @@ def define_import_tables():
         "venue_pricing_point_link",
         "venue_provider",
         "venue_reimbursement_point_link",
-        "venue_type",
     ]
 
 

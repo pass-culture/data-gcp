@@ -58,6 +58,7 @@ ENRICHED_OFFER_DATA_INPUT = {
     "offer_extracted_data": [
         {
             "offer_id": "3",
+            "offer_subcategoryid": "SEANCE_CINE",
             "author": "Tarantino",
             "performer": "Uma Turman",
             "musicType": None,
@@ -77,9 +78,11 @@ ENRICHED_OFFER_DATA_INPUT = {
             "countries": '["usa"]',
             "casting": "[]",
             "isbn": None,
+            "book_editor": None,
         },
         {
             "offer_id": "4",
+            "offer_subcategoryid": "LIVRE_PAPIER",
             "author": "Kevin Francois",
             "performer": None,
             "musicType": None,
@@ -90,7 +93,7 @@ ENRICHED_OFFER_DATA_INPUT = {
             "showType": "Polar",
             "showSubType": None,
             "speaker": None,
-            "rayon": None,
+            "rayon": "roman poche",
             "movie_type": None,
             "visa": None,
             "releaseDate": None,
@@ -99,9 +102,12 @@ ENRICHED_OFFER_DATA_INPUT = {
             "countries": None,
             "casting": None,
             "isbn": "156157",
+            "book_editor": "Hachette",
         },
     ],
-    "isbn_editor": [{"isbn": "156157", "book_editor": "Hachette"}],
+    "isbn_rayon_editor": [
+        {"isbn": "156157", "rayon": "roman poche", "book_editor": "Hachette"}
+    ],
     "applicative_database_offerer": [
         {
             "offerer_id": "3",
@@ -397,7 +403,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "performer": None,
         "stageDirector": None,
         "speaker": None,
-        "rayon": None,
+        "rayon": "roman poche",
         "type": "Polar",
         "subType": None,
         "theater_movie_id": None,

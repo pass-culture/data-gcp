@@ -81,6 +81,7 @@ BIGQUERY_SCHEMAS = {
     },
     "offer_extracted_data": {
         "offer_id": "STRING",
+        "offer_subcategoryid": "STRING",
         "author": "STRING",
         "performer": "STRING",
         "musicType": "STRING",
@@ -100,6 +101,7 @@ BIGQUERY_SCHEMAS = {
         "countries": "STRING",
         "casting": "STRING",
         "isbn": "STRING",
+        "book_editor": "STRING",
     },
     "applicative_database_offerer": {
         "offerer_is_active": "BOOLEAN",
@@ -484,7 +486,7 @@ BIGQUERY_SCHEMAS = {
         "isActive": "BOOLEAN",
         "fieldsUpdated": "STRING",
     },
-    "isbn_editor": {"isbn": "STRING", "book_editor": "STRING"},
+    "isbn_rayon_editor": {"isbn": "STRING", "rayon": "STRING", "book_editor": "STRING"},
     "offer_item_ids": {"offer_id": "STRING", "item_id": "STRING"},
     "user_beneficiary": {
         "user_id": "STRING",

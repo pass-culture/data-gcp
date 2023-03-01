@@ -140,7 +140,6 @@ SELECT DISTINCT
                 JOIN `{{ bigquery_analytics_dataset }}`.available_stock_information ON available_stock_information.stock_id = stock.stock_id
             WHERE NOT stock_is_soft_deleted
             AND
-
                 (
                     (
                         DATE(stock.stock_booking_limit_date) > CURRENT_DATE

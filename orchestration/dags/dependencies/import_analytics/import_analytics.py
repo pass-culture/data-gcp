@@ -50,7 +50,7 @@ def define_import_tables():
         "offerer",
         "offerer_tag",
         "offerer_tag_category",
-        "offerer_tag_category_mapping"
+        "offerer_tag_category_mapping",
         "offerer_tag_mapping",
         "payment",
         "payment_message",

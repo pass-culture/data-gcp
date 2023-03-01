@@ -6,7 +6,8 @@ from loguru import logger
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 MODEL_REGION = os.environ.get("MODEL_REGION")
-
+DATA_BUCKET = os.environ.get("DATA_BUCKET")
+QPI_FOLDER = os.environ.get("QPI_FOLDER", "src/tests/qpi_export_test")
 MODEL_END_POINT = f"https://{MODEL_REGION}-ml.googleapis.com"
 # SQL
 SQL_BASE = os.environ.get("SQL_BASE")

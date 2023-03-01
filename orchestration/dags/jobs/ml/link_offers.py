@@ -28,7 +28,7 @@ with DAG(
     "link_offers",
     default_args=default_args,
     description="Link offers via recordLinkage",
-    schedule_interval=get_airflow_schedule("0 0 * * *"),
+    schedule_interval=get_airflow_schedule("0 0 * * 0"),
     catchup=False,
     dagrun_timeout=timedelta(minutes=180),
     user_defined_macros=macros.default,

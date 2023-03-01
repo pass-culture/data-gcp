@@ -22,11 +22,6 @@ bookings AS (
 FROM `{{ bigquery_analytics_dataset }}.enriched_booking_data`
 WHERE booking_status != 'CANCELLED'
 ),
-offer as (
-  SELECT distinct 
-    offer_id
-  FROM `{{ bigquery_analytics_dataset }}.enriched_offer_data`
-),
 offer_metadata as (
   SELECT distinct
     offer_id
@@ -66,8 +61,6 @@ SELECT
 FROM users
 INNER JOIN bookings
   ON users.user_id = bookings.user_id
-INNER JOIN offer
-  ON bookings.offer_id = offer.offer_id
 LEFT JOIN offer_metadata
   ON bookings.offer_id = offer_metadata.offer_id
 LEFT JOIN `{{ bigquery_analytics_dataset }}.subcategories` subcategories

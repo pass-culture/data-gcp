@@ -1,6 +1,7 @@
 import tensorflow as tf
 import tensorflow_recommenders as tfrs
 import pandas as pd
+from loguru import logger
 
 from utils.layers import (
     StringEmbeddingLayer,
@@ -105,10 +106,10 @@ class SingleTowerModel(tf.keras.models.Model):
 
         self._embedding_layers = {}
         for layer_name, layer_class in self.input_embedding_layers.items():
-            print(f"layer_name: {layer_name}")
-            print(f"layer_class: {layer_class}")
-            print(f"vocab size: {self.data[layer_name].nunique()}")
-            print(f"Vocab preview: {self.data[layer_name].unique()[:2]}")
+            logger.info(f"layer_name: {layer_name}")
+            logger.info(f"layer_class: {layer_class}")
+            logger.info(f"vocab size: {self.data[layer_name].nunique()}")
+            logger.info(f"Vocab preview: {self.data[layer_name].unique()[:2]}")
             self._embedding_layers[layer_name] = layer_class.build_sequential_layer(
                 vocabulary=self.data[layer_name].unique()
             )

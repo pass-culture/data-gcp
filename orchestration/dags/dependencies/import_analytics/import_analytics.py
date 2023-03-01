@@ -161,6 +161,7 @@ analytics_tables = {
     "isbn_rayon_editor": {
         "sql": f"{ANALYTICS_SQL_PATH}/isbn_rayon_editor.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "depends": ["offer_extracted_data"],
     },
     "offer_extracted_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/offer_extracted_data.sql",

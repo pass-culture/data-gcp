@@ -48,7 +48,10 @@ with DAG(
     )
 
     fetch_code = CloneRepositoryGCEOperator(
-        task_id="fetch_code", instance_name=GCE_INSTANCE, command="{{ params.branch }}"
+        task_id="fetch_code",
+        instance_name=GCE_INSTANCE,
+        command="{{ params.branch }}",
+        python_version="3.10",
     )
 
     INSTALL_DEPS = """
@@ -56,10 +59,6 @@ with DAG(
         cd pass-culture-main
         cp -r api/src/pcapi ..
         cd ..
-        conda create -n py310 python=3.10
-        conda init zsh
-        source ~/.zshrc
-        conda activate py310
         pip install -r requirements.txt --user
     """
 
@@ -75,9 +74,6 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         command=f"""
-        conda init zsh
-        source ~/.zshrc
-        conda activate py310
         python main.py --job_type=subcategories --gcp_project_id={GCP_PROJECT_ID} --env_short_name={ENV_SHORT_NAME}        
     """,
     )
@@ -87,9 +83,6 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         command=f"""
-        conda init zsh
-        source ~/.zshrc
-        conda activate py310
         python main.py --job_type=types --gcp_project_id={GCP_PROJECT_ID} --env_short_name={ENV_SHORT_NAME}        
     """,
     )

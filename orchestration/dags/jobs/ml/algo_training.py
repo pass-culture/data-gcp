@@ -3,11 +3,9 @@ from datetime import timedelta
 
 from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.providers.google.cloud.transfers.bigquery_to_gcs import (
-    BigQueryToGCSOperator,
-)
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryExecuteQueryOperator,
+    BigQueryInsertJobOperator,
 )
 from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
 from common.utils import get_airflow_schedule
@@ -15,6 +13,7 @@ from airflow import DAG
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import (
+    GCP_PROJECT_ID,
     DAG_FOLDER,
     ENV_SHORT_NAME,
     MLFLOW_BUCKET_NAME,
@@ -48,15 +47,18 @@ dag_config = {
 train_params = {
     "batch_size": 4096,
     "embedding_size": 64,
-    "train_set_size": 0.9 if ENV_SHORT_NAME == "prod" else 0.8,
-    "event_day_number": 90 if ENV_SHORT_NAME == "prod" else 20,
+    "train_set_size": {"prod": 0.95, "dev": 0.8, "stg": 0.9}[ENV_SHORT_NAME],
+    "event_day_number": {"prod": 90, "dev": 365, "stg": 20}[ENV_SHORT_NAME],
+    "input_type": {"prod": "clicks", "dev": "bookings", "stg": "clicks"}[
+        ENV_SHORT_NAME
+    ],
 }
 gce_params = {
     "instance_name": f"algo-training-{ENV_SHORT_NAME}",
     "instance_type": {
         "dev": "n1-standard-2",
-        "stg": "n1-standard-8",
-        "prod": "n1-standard-32",
+        "stg": "n1-highmem-8",
+        "prod": "n1-highmem-32",
     },
 }
 
@@ -95,7 +97,7 @@ with DAG(
             default=str(train_params["event_day_number"]), type="string"
         ),
         "input_type": Param(
-            default="clicks",
+            default=str(train_params["input_type"]),
             type="string",
         ),
         "instance_type": Param(
@@ -133,6 +135,7 @@ with DAG(
     fetch_code = CloneRepositoryGCEOperator(
         task_id="fetch_code",
         instance_name="{{ params.instance_name }}",
+        python_version="3.10",
         command="{{ params.branch }}",
     )
 
@@ -146,19 +149,37 @@ with DAG(
 
     store_data = {}
     for split in ["training", "validation", "test"]:
-        store_data[split] = BigQueryToGCSOperator(
+        store_data[split] = BigQueryInsertJobOperator(
             task_id=f"store_{split}_data",
-            source_project_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DATE}_recommendation_{split}_data",
-            destination_cloud_storage_uris=f"{dag_config['STORAGE_PATH']}/recommendation_{split}_data/data-*.parquet",
-            export_format="PARQUET",
+            configuration={
+                "extract": {
+                    "sourceTable": {
+                        "projectId": GCP_PROJECT_ID,
+                        "datasetId": BIGQUERY_TMP_DATASET,
+                        "tableId": f"{DATE}_recommendation_{split}_data",
+                    },
+                    "compression": None,
+                    "destinationUris": f"{dag_config['STORAGE_PATH']}/recommendation_{split}_data/data-*.parquet",
+                    "destinationFormat": "PARQUET",
+                }
+            },
             dag=dag,
         )
 
-    store_data["bookings"] = BigQueryToGCSOperator(
+    store_data["bookings"] = BigQueryInsertJobOperator(
         task_id=f"store_bookings_data",
-        source_project_dataset_table=f"{BIGQUERY_RAW_DATASET}.training_data_bookings",
-        destination_cloud_storage_uris=f"{dag_config['STORAGE_PATH']}/bookings/data-*.parquet",
-        export_format="PARQUET",
+        configuration={
+            "extract": {
+                "sourceTable": {
+                    "projectId": GCP_PROJECT_ID,
+                    "datasetId": BIGQUERY_RAW_DATASET,
+                    "tableId": f"training_data_bookings",
+                },
+                "compression": None,
+                "destinationUris": f"{dag_config['STORAGE_PATH']}/bookings/data-*.parquet",
+                "destinationFormat": "PARQUET",
+            }
+        },
         dag=dag,
     )
 

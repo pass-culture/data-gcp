@@ -11,13 +11,19 @@ WITH sendinblue_newsletter as (
     QUALIFY rank_update = 1
 ),
 
-traffic as (
+user_traffic as (
     SELECT
         traffic_campaign
+        , user_current_deposit_type
         , count(distinct session_id) as session_number
+        , count(distinct case when event_name = 'ConsultOffer' then offer_id else null end) as offer_consultation_number
+        , count(distinct case when event_name = 'BookingConfirmation' then booking_id else null end) as booking_number
+        , count(distinct case when event_name = 'HasAddedOfferToFavorites' then offer_id else null end) as favorites_number
     FROM `{{ bigquery_analytics_dataset }}.firebase_events` firebase
-    WHERE traffic_campaign IS NOT NULL
-    GROUP BY 1
+    LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_user_data` user
+    ON firebase.user_id = user.user_id
+    WHERE traffic_campaign is not null
+    GROUP BY 1, 2
 )
 
 SELECT 
@@ -26,20 +32,16 @@ SELECT
     , campaign_name
     , campaign_sent_date
     , share_link
-    , sum(audience_size) as audience_size
-    , sum(open_number) as open_number
-    , sum(unsubscriptions) as unsubscriptions
-    , date(update_date) as update_date
+    , audience_size
+    , open_number
+    , unsubscriptions
+    , user_current_deposit_type
     , session_number
+    , offer_consultation_number
+    , booking_number
+    , favorites_number
+    , date(update_date) as update_date
 
 FROM sendinblue_newsletter
-LEFT JOIN traffic
-ON sendinblue_newsletter.campaign_utm = traffic.traffic_campaign
-GROUP BY     
-    campaign_id
-    , campaign_utm
-    , campaign_name
-    , campaign_sent_date
-    , share_link
-    , update_date
-    , session_number
+LEFT JOIN user_traffic
+ON sendinblue_newsletter.campaign_utm = user_traffic.traffic_campaign

@@ -4,6 +4,7 @@ import pandas as pd
 from utils.constants import GCP_PROJECT_ID
 import subprocess
 from multiprocessing import Pool, cpu_count
+from loguru import logger
 
 
 def get_data_from_bigquery(
@@ -35,17 +36,26 @@ def get_data_from_bigquery(
 
 
 def read_parquet(file):
+    logger.info(f"Read.. {file}")
     return pd.read_parquet(file)
 
 
-def read_from_gcs(storage_path, table_name):
+def read_from_gcs(storage_path, table_name, parallel=True):
     bucket_name = f"{storage_path}/{table_name}/*.parquet"
     result = subprocess.run(["gsutil", "ls", bucket_name], stdout=subprocess.PIPE)
-    max_process = cpu_count() - 1
     files = [file.strip().decode("utf-8") for file in result.stdout.splitlines()]
-    with Pool(processes=max_process) as pool:
+    max_process = cpu_count() - 1
+    if parallel and len(files) > max_process // 2:
+        logger.info(f"Will load {len(files)} with {max_process} processes...")
+        with Pool(processes=max_process) as pool:
+            return (
+                pd.concat(pool.map(read_parquet, files), ignore_index=True)
+                .sample(frac=1)
+                .reset_index(drop=True)
+            )
+    else:
         return (
-            pd.concat(pool.map(read_parquet, files), ignore_index=True)
+            pd.concat([pd.read_parquet(file) for file in files], ignore_index=True)
             .sample(frac=1)
             .reset_index(drop=True)
         )

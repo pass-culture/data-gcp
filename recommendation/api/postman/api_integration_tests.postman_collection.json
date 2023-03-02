@@ -1,10 +1,10 @@
 {
 	"info": {
-		"_postman_id": "5c850be1-c13e-4c52-b41d-5a3b3511bd68",
+		"_postman_id": "7e99452d-c97c-49a4-8a2b-107900b8f901",
 		"name": "API Integration Tests",
 		"description": "Collection of integration tests for the reco api.\nMade with Postman",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "25420344"
+		"_exporter_id": "20735314"
 	},
 	"item": [
 		{
@@ -828,7 +828,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"beginningDatetime\": \"{{thirtyDaysBack}}\",\r\n    \"endingDatetime\": \"{{todayDate}}\",\r\n    \"categories\":[\"SPECTACLE\"],\r\n    \"subcategories\":[\"SPECTACLE_REPRESENTATION\"]\r\n}",
+					"raw": "{\r\n    \"beginningDatetime\": \"{{thirtyDaysBack}}\",\r\n    \"endingDatetime\": \"{{todayDate}}\",\r\n    \"categories\":[\"SPECTACLES\"],\r\n    \"subcategories\":[\"SPECTACLE_REPRESENTATION\"]\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -924,7 +924,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"beginningDatetime\": \"{{thirtyDaysBack}}\",\r\n    \"endingDatetime\": \"{{todayDate}}\",\r\n    \"category\":[\"CINEMA\"]\r\n}",
+					"raw": "{\r\n    \"beginningDatetime\": \"{{thirtyDaysBack}}\",\r\n    \"endingDatetime\": \"{{todayDate}}\",\r\n    \"category\":[\"FILMS_SERIES_CINEMA\"]\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -1499,7 +1499,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{api_url}}/playlist_recommendation/{{user_id}}?token={{api_token}}&categories=LIVRE&categories=CINEMA&categories=SPECTACLE",
+					"raw": "{{api_url}}/playlist_recommendation/{{user_id}}?token={{api_token}}&categories=LIVRES&categories=FILMS_SERIES_CINEMA&categories=SPECTACLES",
 					"host": [
 						"{{api_url}}"
 					],
@@ -1514,15 +1514,15 @@
 						},
 						{
 							"key": "categories",
-							"value": "LIVRE"
+							"value": "LIVRES"
 						},
 						{
 							"key": "categories",
-							"value": "CINEMA"
+							"value": "FILMS_SERIES_CINEMA"
 						},
 						{
 							"key": "categories",
-							"value": "SPECTACLE"
+							"value": "SPECTACLES"
 						}
 					]
 				}
@@ -1791,7 +1791,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{api_url}}/similar_offers/{{offer_id}}?token={{api_token}}&categories=LIVRE&categories=CINEMA&categories=SPECTACLE",
+					"raw": "{{api_url}}/similar_offers/{{offer_id}}?token={{api_token}}&categories=LIVRES&categories=FILMS_SERIES_CINEMA&categories=SPECTACLES",
 					"host": [
 						"{{api_url}}"
 					],
@@ -1806,15 +1806,15 @@
 						},
 						{
 							"key": "categories",
-							"value": "LIVRE"
+							"value": "LIVRES"
 						},
 						{
 							"key": "categories",
-							"value": "CINEMA"
+							"value": "FILMS_SERIES_CINEMA"
 						},
 						{
 							"key": "categories",
-							"value": "SPECTACLE"
+							"value": "SPECTACLES"
 						}
 					]
 				}

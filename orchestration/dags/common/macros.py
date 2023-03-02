@@ -22,10 +22,17 @@ def yyyymmdd(ds):
         ds = datetime.strptime(ds, "%Y-%m-%d")
     return ds.strftime("%Y%m%d")
 
-
+def yyyymmddHHMM(ds):
+    if ds is None:
+        return datetime.today().strftime("%Y%m%d%h")
+    if isinstance(ds, str):
+        ds = datetime.strptime(ds, "%Y-%m-%d-%H-%M")
+    return ds.strftime("%Y%m%d%H%M")
 def today():
     return datetime.today().strftime("%Y-%m-%d")
 
+def now():
+    return datetime.now().strftime("%Y-%m-%d-%H-%M")
 
 def current_month(ds):
     if ds is None:
@@ -86,7 +93,9 @@ default = {
     "env_short_name": ENV_SHORT_NAME,
     "gcp_project": GCP_PROJECT_ID,
     "yyyymmdd": yyyymmdd,
+    "yyyymmddHHMM":yyyymmddHHMM,
     "today": today,
+    "now":now,
     "current_month": current_month,
     "yesterday": yesterday,
     "add_days": add_days,

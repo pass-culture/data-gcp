@@ -71,9 +71,10 @@ def train(
         encoding="utf-8",
     ) as config_file:
         features = json.load(config_file)
-        user_features_config, item_features_config = (
+        user_features_config, item_features_config,input_prediction_feature = (
             features["user_embedding_layers"],
             features["item_embedding_layers"],
+            features["input_prediction_feature"]
         )
 
     # Load data
@@ -206,8 +207,9 @@ def train(
         logger.info("Predicting final item embeddings")
         item_embeddings = two_tower_model.item_model.predict(item_dataset)
         logger.info("Building and saving the MatchModel")
+        user_input=features["input_prediction_feature"]
         match_model = MatchModel(
-            user_ids=train_user_data["user_id"].unique(),
+            user_input=train_user_data[user_input].unique(),
             item_ids=train_item_data["item_id"].unique(),
             embedding_size=embedding_size,
         )

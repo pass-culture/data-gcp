@@ -11,5 +11,5 @@
       "item_booking_cnt": {"type": "int", "embedding_size": 2},
       "item_favourite_cnt": {"type": "int", "embedding_size": 2}
   },
-  "input_prediction_features": ["user_id"]
+  "input_prediction_feature": "user_id"
 }

@@ -71,7 +71,7 @@ def evaluate(
         encoding="utf-8",
     ) as config_file:
         features = json.load(config_file)
-        prediction_input_features = features["input_prediction_features"]
+        prediction_input_feature = features["input_prediction_feature"]
     data_model_dict = {
         "data": {
             "raw": raw_data,
@@ -81,7 +81,7 @@ def evaluate(
             ],
         },
         "model": model,
-        "prediction_input_features": prediction_input_features,
+        "prediction_input_feature": prediction_input_feature,
     }
 
     diversification_users_to_test = positive_data_test["user_id"].unique()[

@@ -8,7 +8,7 @@ from tensorflow.keras.layers.experimental.preprocessing import StringLookup
 class MatchModel(tf.keras.models.Model):
     def __init__(
         self,
-        user_ids: list,
+        user_input: list,
         item_ids: list,
         embedding_size: int,
     ):
@@ -18,10 +18,10 @@ class MatchModel(tf.keras.models.Model):
 
         self.user_layer = tf.keras.Sequential(
             [
-                StringLookup(vocabulary=user_ids),
+                StringLookup(vocabulary=user_input),
                 # We add an additional embedding to account for unknown tokens.
                 Embedding(
-                    input_dim=len(user_ids) + 1,
+                    input_dim=len(user_input) + 1,
                     input_shape=(1,),
                     input_length=1,
                     output_dim=self.embedding_size,
@@ -52,9 +52,9 @@ class MatchModel(tf.keras.models.Model):
         self.initialize_weights()
 
     def call(self, inputs):
-        user_id, item_id = inputs
+        user_input, item_id = inputs
 
-        user_embedding = self.user_layer(user_id)
+        user_embedding = self.user_layer(user_input)
         user_embedding = self.flatten(user_embedding)
 
         item_embedding = self.item_layer(item_id)
@@ -63,7 +63,7 @@ class MatchModel(tf.keras.models.Model):
         return self.dot([user_embedding, item_embedding])
 
     def initialize_weights(self):
-        return self.predict([np.array(["fake_user_id"]), np.array(["fake_item_id"])])
+        return self.predict([np.array(["fake_user_input"]), np.array(["fake_item_id"])])
 
     def set_embeddings(self, user_embeddings: np.ndarray, item_embeddings: np.ndarray):
         """

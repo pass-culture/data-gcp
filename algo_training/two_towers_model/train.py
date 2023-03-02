@@ -209,7 +209,7 @@ def train(
         logger.info("Building and saving the MatchModel")
         user_input=features["input_prediction_feature"]
         match_model = MatchModel(
-            user_input=train_user_data[user_input].unique(),
+            user_input=train_user_data[user_input], 
             item_ids=train_item_data["item_id"].unique(),
             embedding_size=embedding_size,
         )

@@ -35,7 +35,4 @@ def get_update_since_param(dms_target):
         blob[1] for blob in blobs if blob[1] == max([blob[1] for blob in blobs])
     ][0][0:10]
 
-    if dms_target == "jeunes":
-        return updated_since
-    else:
-        return "2019-01-01"
+    return updated_since

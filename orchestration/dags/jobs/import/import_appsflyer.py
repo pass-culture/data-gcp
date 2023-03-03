@@ -59,7 +59,7 @@ activity_report_op = SimpleHttpOperator(
         "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_appsflyer_service_account_token', key='return_value')}}",
     },
     log_response=True,
-    data=json.dumps({"table_name": "activity_report", "n_days": 56}),
+    data=json.dumps({"table_name": "activity_report", "n_days": 28}),
     dag=dag,
 )
 
@@ -74,7 +74,7 @@ daily_report_op = SimpleHttpOperator(
         "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_appsflyer_service_account_token', key='return_value')}}",
     },
     log_response=True,
-    data=json.dumps({"table_name": "daily_report", "n_days": 56}),
+    data=json.dumps({"table_name": "daily_report", "n_days": 28}),
     dag=dag,
 )
 

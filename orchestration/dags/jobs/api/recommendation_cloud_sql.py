@@ -57,6 +57,7 @@ default_args = {
     "retry_delay": timedelta(minutes=5),
 }
 FIREBASE_PERIOD_DAYS = 4 * 30 if ENV_SHORT_NAME == "prod" else 10
+NOW_YYMMDDHHMM=datetime.now().strftime("%Y%m%d%H%M")
 
 
 def get_table_data():
@@ -255,8 +256,6 @@ with DAG(
     end_data_prep >> restore_tasks[0]
     restore_tasks[-1] >> end_drop_restore
     #keep creation time in the format yymmddHHMM for the deletion step 
-    now_at_mv_creation=datetime.now().strftime("%Y%m%d%H%M")
-    print("now_at_mv_creation: ",now_at_mv_creation)
     create_materialized_view = CloudSQLExecuteQueryOperator(
         task_id="create_materialized_view_recommendable_offers_per_iris_shape_mv",
         gcp_cloudsql_conn_id="proxy_postgres_tcp",
@@ -322,7 +321,7 @@ with DAG(
     drop_old_function = CloudSQLExecuteQueryOperator(
         task_id="drop_old_function",
         gcp_cloudsql_conn_id="proxy_postgres_tcp",
-        sql=f"DROP FUNCTION IF EXISTS get_recommendable_offers_per_iris_shape_{now_at_mv_creation} CASCADE",
+        sql="DROP FUNCTION IF EXISTS get_recommendable_offers_per_iris_shape_{{ ts_nodash }} CASCADE",
         autocommit=True,
     )
 

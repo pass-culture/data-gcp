@@ -1,5 +1,5 @@
-DROP FUNCTION IF EXISTS get_recommendable_offers_per_iris_shape_{{ yyyymmddHHMM(now()) }} CASCADE;
-CREATE OR REPLACE FUNCTION get_recommendable_offers_per_iris_shape_{{ yyyymmddHHMM(now()) }}()
+DROP FUNCTION IF EXISTS get_recommendable_offers_per_iris_shape_{{ ts_nodash  }} CASCADE;
+CREATE OR REPLACE FUNCTION get_recommendable_offers_per_iris_shape_{{ ts_nodash  }}()
 RETURNS TABLE (   
                 item_id varchar,
                 offer_id varchar,
@@ -41,11 +41,11 @@ LANGUAGE plpgsql;
 
 DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_per_iris_shape_tmp_mv;
 CREATE MATERIALIZED VIEW IF NOT EXISTS recommendable_offers_per_iris_shape_tmp_mv AS
-SELECT * FROM get_recommendable_offers_per_iris_shape_{{ yyyymmddHHMM(now()) }}()
+SELECT * FROM get_recommendable_offers_per_iris_shape_{{ ts_nodash  }}()
 WITH NO DATA;
 
 
 
-CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_mv_tmp_{{ yyyymmddHHMM(now()) }} ON public.recommendable_offers_per_iris_shape_tmp_mv USING btree (is_geolocated,iris_id,venue_distance_to_iris_bucket,item_id,offer_id,unique_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_mv_tmp_{{ ts_nodash  }} ON public.recommendable_offers_per_iris_shape_tmp_mv USING btree (is_geolocated,iris_id,venue_distance_to_iris_bucket,item_id,offer_id,unique_id);
 REFRESH MATERIALIZED VIEW recommendable_offers_per_iris_shape_tmp_mv;
 

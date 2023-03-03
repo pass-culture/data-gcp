@@ -22,8 +22,10 @@ def yyyymmdd(ds):
         ds = datetime.strptime(ds, "%Y-%m-%d")
     return ds.strftime("%Y%m%d")
 
+
 def today():
     return datetime.today().strftime("%Y-%m-%d")
+
 
 def current_month(ds):
     if ds is None:

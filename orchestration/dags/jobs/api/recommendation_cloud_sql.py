@@ -57,7 +57,7 @@ default_args = {
     "retry_delay": timedelta(minutes=5),
 }
 FIREBASE_PERIOD_DAYS = 4 * 30 if ENV_SHORT_NAME == "prod" else 10
-NOW_YYMMDDHHMM=datetime.now().strftime("%Y%m%d%H%M")
+NOW_YYMMDDHHMM = datetime.now().strftime("%Y%m%d%H%M")
 
 
 def get_table_data():
@@ -255,7 +255,7 @@ with DAG(
 
     end_data_prep >> restore_tasks[0]
     restore_tasks[-1] >> end_drop_restore
-    #keep creation time in the format yymmddHHMM for the deletion step 
+    # keep creation time in the format yymmddHHMM for the deletion step
     create_materialized_view = CloudSQLExecuteQueryOperator(
         task_id="create_materialized_view_recommendable_offers_per_iris_shape_mv",
         gcp_cloudsql_conn_id="proxy_postgres_tcp",

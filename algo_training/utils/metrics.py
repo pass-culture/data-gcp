@@ -21,7 +21,7 @@ def get_actual_and_predicted(
     )
     deep_reco_prediction = []
     predictions_diversified = []
-    user_input=data_model_dict["prediction_input_features"]
+    user_input=data_model_dict["prediction_input_feature"]
     for id in tqdm(range(len(df_actual))):
         prediction_input_feature = [
             df_actual.iloc[id][user_input]

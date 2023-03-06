@@ -39,15 +39,23 @@ class SendinblueTransactional:
     def get_active_templates_id(self):
 
         try:
-            api_response = self.api_instance.get_smtp_templates()
-            active_templates = [
-                template.id
-                for template in api_response.templates
-                if template.is_active == True
-            ]
-            logging.info("Number of actives templates : ", len(active_templates))
+            offset = 0
+            response = emails_transac_api_instance.get_smtp_templates(
+                template_status="true", offset=offset
+            )
+            api_responses = response.templates
+            while response is not None and len(response.templates) == 50:
+                offset = offset + 50
+                response = emails_transac_api_instance.get_smtp_templates(
+                    template_status="true", offset=offset
+                )
+                for temp in response.templates:
+                    api_responses.append(temp)
+
+            active_templates = [template.id for template in api_responses]
+            logging.info("Number of active templates : ", len(active_templates))
         except ApiException as e:
-            print(
+            logging.info(
                 "Exception when calling TransactionalEmailsApi->get_smtp_templates: %s\n"
                 % e
             )

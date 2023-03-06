@@ -209,7 +209,6 @@ SELECT
     offer_extracted_data.theater_movie_id,
     offer_extracted_data.theater_room_id,
     offer_extracted_data.speaker,
-    offer_extracted_data.rayon,
     offer_extracted_data.movie_type,
     offer_extracted_data.visa,
     offer_extracted_data.releaseDate,
@@ -218,7 +217,8 @@ SELECT
     offer_extracted_data.countries,
     offer_extracted_data.casting,
     offer_extracted_data.isbn,
-    isbn_editor.book_editor,
+    isbn_rayon_editor.rayon,
+    isbn_rayon_editor.book_editor,
     CASE
         WHEN subcategories.category_id <> 'MUSIQUE_LIVE'
         AND offer_extracted_data.showType IS NOT NULL THEN offer_extracted_data.showType
@@ -247,7 +247,7 @@ FROM
     LEFT JOIN last_stock ON last_stock.offer_id = offer.offer_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.offer_extracted_data offer_extracted_data ON offer_extracted_data.offer_id = offer.offer_id
     LEFT JOIN mediation ON offer.offer_id = mediation.offer_id
-    LEFT JOIN `{{ bigquery_analytics_dataset }}`.isbn_editor AS isbn_editor ON offer_extracted_data.isbn = isbn_editor.isbn
+    LEFT JOIN `{{ bigquery_analytics_dataset }}`.isbn_rayon_editor AS isbn_rayon_editor ON offer_extracted_data.isbn = isbn_rayon_editor.isbn
 
 WHERE
     offer.offer_validation = 'APPROVED'

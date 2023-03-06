@@ -21,7 +21,7 @@ class SimilarOffer:
     def __init__(self, user: User, offer: Offer, params_in: PlaylistParamsIn):
         self.user = user
         self.offer = offer
-        self.n = 10
+        self.n = 20
         self.model_params = select_sim_model_params(params_in.model_endpoint)
         self.recommendable_offer_limit = 10_000
         self.params_in_filters = params_in._get_conditions()
@@ -53,16 +53,13 @@ class SimilarOffer:
             )
             return [recommendable_offers[offer]["id"] for offer in predicted_offers]
 
-        if self.offer.cnt_bookings < 5:
-            return []
-        else:
-            instances = {
-                "offer_id": self.offer.item_id,
-                "selected_offers": selected_offers,
-                "size": self.n,
-            }
-            predicted_offers = self._predict_score(instances)
-            return [recommendable_offers[offer]["id"] for offer in predicted_offers]
+        instances = {
+            "offer_id": self.offer.item_id,
+            "selected_offers": selected_offers,
+            "size": self.n,
+        }
+        predicted_offers = self._predict_score(instances)
+        return [recommendable_offers[offer]["id"] for offer in predicted_offers]
 
     def get_recommendable_offers(self) -> Dict[str, Dict[str, Any]]:
 

@@ -83,7 +83,7 @@ def main(
         pca_plots_path = f"{MODEL_DIR}/pca_plots/"
         os.makedirs(pca_plots_path, exist_ok=True)
 
-        item_data = read_from_gcs(STORAGE_PATH, "bookings")[
+        item_data = read_from_gcs(STORAGE_PATH, "bookings", parallel=False)[
             ["item_id", "offer_categoryId", "offer_subcategoryid"]
         ]
         save_pca_representation(

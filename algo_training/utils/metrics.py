@@ -48,7 +48,7 @@ def get_prediction(prediction_input_feature, data_model_dict):
     nboffers = len(list(data.item_id))
     offer_to_score = np.reshape(np.array(list(data.item_id)), (nboffers, 1))
     offer_subcategoryid = np.reshape(
-        np.array(list(data.offer_subcategoryid)), (nboffers, 1)
+        np.array(list(data.offer_subcategoryid)), (nboffers,)
     )
     user_input = np.reshape(
         np.array([prediction_input_feature] * len(offer_to_score)), (nboffers, 1)
@@ -170,9 +170,11 @@ def compute_diversification_score(data_model_dict, k):
 
 def get_avg_diversification_score(df_raw, recos, k):
 
+    max_recos = min(10_000, len(recos))
+
     diversification_count = 0
     logger.info("Compute average diversification")
-    for reco in tqdm(recos):
+    for reco in tqdm(recos[:max_recos]):
         df_clean = (
             df_raw.query(f"item_id in {tuple(reco[:k])}")[
                 ["offer_categoryId", "offer_subcategoryid", "genres", "rayon", "type"]
@@ -184,8 +186,8 @@ def get_avg_diversification_score(df_raw, recos, k):
         diversification = np.sum(count_dist)
         diversification_count += diversification
     avg_diversification = -1
-    if len(recos) > 0:
-        avg_diversification = diversification_count / len(recos)
+    if max_recos > 0:
+        avg_diversification = diversification_count / max_recos
     return avg_diversification
 
 

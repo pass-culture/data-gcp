@@ -14,4 +14,5 @@ SELECT
     , "fieldsUpdated" AS stock_fields_updated
     , "numberOfTickets" AS number_of_tickets
     , "educationalPriceDetail" AS educational_price_detail
+    , CAST("priceCategoryId" AS varchar(255)) AS price_category_id
 FROM public.stock

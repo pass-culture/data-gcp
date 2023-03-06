@@ -49,10 +49,14 @@ def define_import_tables():
         "offer_report",
         "offerer",
         "offerer_tag",
+        "offerer_tag_category",
+        "offerer_tag_category_mapping",
         "offerer_tag_mapping",
         "payment",
         "payment_message",
         "payment_status",
+        "price_category",
+        "price_category_label",
         "pricing",
         "pricing_line",
         "pricing_log",
@@ -105,7 +109,7 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "depends": [
             "enriched_stock_data",
-            "isbn_editor",
+            "isbn_rayon_editor",
             "offer_extracted_data",
             "offer_item_ids",
         ],
@@ -157,9 +161,10 @@ analytics_tables = {
         "sql": f"{ANALYTICS_SQL_PATH}/iris_venues_at_radius.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
     },
-    "isbn_editor": {
-        "sql": f"{ANALYTICS_SQL_PATH}/isbn_editor.sql",
+    "isbn_rayon_editor": {
+        "sql": f"{ANALYTICS_SQL_PATH}/isbn_rayon_editor.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "depends": ["offer_extracted_data"],
     },
     "offer_extracted_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/offer_extracted_data.sql",
@@ -178,6 +183,14 @@ analytics_tables = {
         "sql": f"{ANALYTICS_SQL_PATH}/offer_item_ids.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "offer_item_ids",
+    },
+    "offer_moderation": {
+        "sql": f"{ANALYTICS_SQL_PATH}/offer_moderation.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "offer_moderation",
+        "depends": [
+            "available_stock_information",
+        ],
     },
     "offer_with_mediation": {
         "sql": f"{ANALYTICS_SQL_PATH}/offer_with_mediation.sql",

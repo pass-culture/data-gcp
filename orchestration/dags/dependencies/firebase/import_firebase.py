@@ -120,37 +120,11 @@ import_firebase_beneficiary_tables = {
         "destination_table": "firebase_visits",
         "depends": ["clean_firebase_events"],
     },
-    "analytics_firebase_home_events": {
-        "sql": f"{SQL_PATH}/analytics/firebase_home_events.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "firebase_home_events",
-        "partition_prefix": "$",
-        "time_partitioning": {"field": "event_date"},
-        "clustering_fields": {"fields": ["event_type"]},
-        "depends": ["analytics_firebase_events"],
-    },
     "analytics_firebase_session_origin": {
         "sql": f"{SQL_PATH}/analytics/firebase_session_origin.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "firebase_session_origin",
         "time_partitioning": {"field": "first_event_date"},
-        "depends": ["analytics_firebase_events"],
-    },
-    "analytics_firebase_booking_origin": {
-        "sql": f"{SQL_PATH}/analytics/firebase_booking_origin.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "firebase_booking_origin",
-        "time_partitioning": {"field": "booking_date"},
-        "depends": ["analytics_firebase_events"],
-        "dag_depends": [
-            {"import_contentful": "contentful_homepages"}
-        ],  # dag_id: task_id
-    },
-    "analytics_firebase_aggregated_search_events": {
-        "sql": f"{SQL_PATH}/analytics/firebase_aggregated_search_events.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "firebase_aggregated_search_events",
-        "time_partitioning": {"field": "first_date"},
         "depends": ["analytics_firebase_events"],
     },
 }

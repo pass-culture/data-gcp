@@ -1,47 +1,45 @@
 WITH consulted_from_search AS (
-SELECT
-    user_pseudo_id
-    ,user_id
-    , session_id
-    , offer_id
-    , search_id
-    , event_timestamp AS consult_timestamp
-    , event_date AS consult_date
-FROM `{{ bigquery_analytics_dataset }}`.firebase_events
-WHERE event_date > '2023-01-01'
-AND event_name = 'ConsultOffer'
-AND origin = 'search'),
-
+    SELECT
+        user_pseudo_id
+        , user_id
+        , session_id
+        , offer_id
+        , search_id
+        , event_timestamp AS consult_timestamp
+        , event_date AS consult_date
+    FROM `{{ bigquery_analytics_dataset }}`.firebase_events
+    WHERE event_date > '2023-01-01'
+    AND event_name = 'ConsultOffer'
+    AND origin = 'search'
+),
 booked_from_search AS (
-SELECT
-    consulted_from_search.user_pseudo_id
-    ,consulted_from_search.session_id
-    , consulted_from_search.search_id
-    , consulted_from_search.offer_id
-    , consult_timestamp
-    , delta_diversification
-FROM consulted_from_search
-JOIN `{{ bigquery_analytics_dataset }}`.firebase_events ON consulted_from_search.user_pseudo_id = firebase_events.user_pseudo_id
-                                    AND consulted_from_search.session_id = firebase_events.session_id
-                                    AND consulted_from_search.offer_id = firebase_events.offer_id
-                                    AND event_date > '2023-01-01'
-                                    AND event_name = 'BookingConfirmation'
-                                    AND event_timestamp > consult_timestamp
-LEFT JOIN `{{ bigquery_analytics_dataset }}`.diversification_booking ON diversification_booking.user_id = consulted_from_search.user_id
-                                                  AND diversification_booking.offer_id = consulted_from_search.offer_id
-                                                  AND DATE(consult_timestamp) = DATE(booking_creation_date)
-),
-
-
-
+    SELECT
+        consulted_from_search.user_pseudo_id
+        , consulted_from_search.session_id
+        , consulted_from_search.search_id
+        , consulted_from_search.offer_id
+        , consult_timestamp
+        , delta_diversification
+    FROM consulted_from_search
+    JOIN `{{ bigquery_analytics_dataset }}`.firebase_events 
+        ON consulted_from_search.user_pseudo_id = firebase_events.user_pseudo_id
+        AND consulted_from_search.session_id = firebase_events.session_id
+        AND consulted_from_search.offer_id = firebase_events.offer_id
+        AND event_date > '2023-01-01'
+        AND event_name = 'BookingConfirmation'
+        AND event_timestamp > consult_timestamp
+    LEFT JOIN `{{ bigquery_analytics_dataset }}`.diversification_booking 
+        ON diversification_booking.user_id = consulted_from_search.user_id
+        AND diversification_booking.offer_id = consulted_from_search.offer_id
+        AND DATE(consult_timestamp) = DATE(booking_creation_date)
+    ),
 bookings_per_search_id AS (
-SELECT DISTINCT
-    search_id
-    , COUNT(DISTINCT offer_id) OVER(PARTITION BY search_id) AS nb_offers_booked
-    , SUM(delta_diversification) OVER(PARTITION BY search_id) AS total_diversification
-FROM booked_from_search
+    SELECT DISTINCT
+        search_id
+        , COUNT(DISTINCT offer_id) OVER(PARTITION BY search_id) AS nb_offers_booked
+        , SUM(delta_diversification) OVER(PARTITION BY search_id) AS total_diversification
+    FROM booked_from_search
 ),
-
 agg_search_data AS (
 SELECT DISTINCT
     search_id

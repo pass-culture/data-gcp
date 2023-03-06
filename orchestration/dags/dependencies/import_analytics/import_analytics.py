@@ -357,6 +357,30 @@ analytics_tables = {
             "import_intraday_firebase_data",
         ],  # computed once a day
     },
+    "analytics_firebase_aggregated_search_events": {
+        "sql": f"{ANALYTICS_SQL_PATH}/firebase_aggregated_search_events.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "firebase_aggregated_search_events",
+        "time_partitioning": {"field": "first_date"},
+        "depends": ["diversification_booking"],
+        "dag_depends": ["import_intraday_firebase_data"],
+    },
+    "analytics_firebase_booking_origin": {
+        "sql": f"{ANALYTICS_SQL_PATH}/firebase_booking_origin.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "firebase_booking_origin",
+        "time_partitioning": {"field": "booking_date"},
+        "dag_depends": ["import_contentful", "import_intraday_firebase_data"],
+    },
+    "analytics_firebase_home_events": {
+        "sql": f"{ANALYTICS_SQL_PATH}/firebase_home_events.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "firebase_home_events",
+        "partition_prefix": "$",
+        "time_partitioning": {"field": "event_date"},
+        "clustering_fields": {"fields": ["event_type"]},
+        "dag_depends": ["import_contentful", "import_intraday_firebase_data"],
+    },
 }
 
 aggregated_tables = {

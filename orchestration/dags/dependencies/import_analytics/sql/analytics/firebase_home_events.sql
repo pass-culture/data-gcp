@@ -215,8 +215,4 @@ SELECT
 FROM
     event_union e
 WHERE 
-    {% if params.dag_type == 'intraday' %}
     e.event_date = DATE('{{ ds }}')
-    {% else %}
-    e.event_date = DATE('{{ add_days(ds, -1) }}')
-    {% endif %}

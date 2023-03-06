@@ -4,3 +4,5 @@ typer==0.7.0
 pytest==6.1.1
 loguru
 pandas-gbq
+sentence_transformers
+PIL

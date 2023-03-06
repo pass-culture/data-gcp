@@ -2,33 +2,28 @@ import concurrent
 import traceback
 from itertools import repeat
 from multiprocessing import cpu_count
-
 import pandas as pd
-import recordlinkage
+
 from tools.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
-    SUBCATEGORIES_WITH_PERFORMER,
-    data_and_hyperparams_dict,
+    CONFIGS_PATH,
 )
-from tools.linkage import get_linked_offers, get_linked_offers_from_graph
+from tools.embedding_extraction import extract_embedding
 
 
-def embedding_extraction(
-    df_source_tmp,
-    subset_divisions,
-    batch_number,
-    batch_id,
-):
+def embedding_extraction(data, params, batch_number, batch_id):
+
     try:
-        return get_linked_offers(
-            indexer,
-            data_and_hyperparams_dict,
-            df_source_tmp,
-            subset_divisions,
-            batch_number,
-            batch_id,
+        df_data_to_extract_embedding_current_batch = data[
+            batch_id * batch_number : (batch_id + 1) * batch_number
+        ]
+        df_data_with_embedding = extract_embedding(
+            df_data_to_extract_embedding_current_batch,
+            params,
         )
+        df_data_with_embedding.to_gbq()
+        return True
     except Exception as e:
         print(e)
         traceback.print_exc()
@@ -38,88 +33,59 @@ def embedding_extraction(
 def main(
     gcp_project,
     env_short_name,
+    config_file_name,
 ) -> None:
+    ###############
+    # Load config
+    with open(
+        f"{CONFIGS_PATH}/{config_file_name}.json",
+        mode="r",
+        encoding="utf-8",
+    ) as config_file:
+        params = json.load(config_file)
 
     ###############
     # Load preprocessed data
-    df_offers_to_link_clean = pd.read_gbq(
+    df_data_to_extract_embedding = pd.read_gbq(
         f"SELECT * FROM `{gcp_project}.sandbox_{env_short_name}.offers_to_link_clean`"
     )
 
     ###############
-    # Split offers between performer and non performer
-    subcat_all = df_offers_to_link_clean.offer_subcategoryId.drop_duplicates().to_list()
-    subcat_wo_performer = [
-        x for x in subcat_all if x not in SUBCATEGORIES_WITH_PERFORMER
-    ]
-
-    df_to_link_performer = df_offers_to_link_clean.query(
-        f"""offer_subcategoryId in {tuple(SUBCATEGORIES_WITH_PERFORMER)} """
-    )
-    df_to_link_non_performer = df_offers_to_link_clean.query(
-        f"""offer_subcategoryId in {tuple(subcat_wo_performer)} """
-    )
-
-    ###############
-    # Add dataframe to link to analysis congig dict
-    data_and_hyperparams_dict["performer"]["dataframe_to_link"] = df_to_link_performer
-    data_and_hyperparams_dict["non_performer"][
-        "dataframe_to_link"
-    ] = df_to_link_non_performer
-    ###############
-    # Run linkage for each group (performer, non-performer) then concat both dataframe to get linkage on full data
+    # Run embedding extraction
     max_process = cpu_count() - 1
-    offers_matched_by_group_df_list = []
-    for group_sample in data_and_hyperparams_dict.keys():
-        data_and_hyperparams_dict_tmp = data_and_hyperparams_dict[group_sample]
-        df_source = data_and_hyperparams_dict_tmp["dataframe_to_link"].copy()
-        offers_matched_by_subcat_df_list = []
-        for subcat in df_source.offer_subcategoryId.unique():
-            offers_matched_df_list = []
-            print("subcat: ", subcat, " On going ...")
-            df_source_tmp = df_source.query(f"offer_subcategoryId=='{subcat}'")
-            indexer = recordlinkage.Index()
-            indexer.full()
-            subset_length = len(df_source_tmp) // max_process
-            subset_length = subset_length if subset_length > 0 else 1
-            batch_number = max_process if subset_length > 1 else 1
-            print(
-                f"Starting process... with {batch_number} CPUs, subset length: {subset_length} "
-            )
-            with concurrent.futures.ProcessPoolExecutor(max_process) as executor:
-                futures = executor.map(
-                    embedding_extraction,
-                    repeat(indexer),
-                    repeat(data_and_hyperparams_dict_tmp),
-                    repeat(df_source_tmp),
-                    repeat(subset_length),
-                    repeat(batch_number),
-                    range(batch_number),
-                )
-                for future in futures:
-                    offers_matched_df_list.append(future)
-            print("Multiprocessing done")
-            df_offers_matched = get_linked_offers_from_graph(
-                df_source_tmp, pd.concat(offers_matched_df_list)
-            )
-            offers_matched_by_subcat_df_list.append(df_offers_matched)
-        offers_matched_by_group_df_list.append(
-            pd.concat(offers_matched_by_subcat_df_list)
-        )
-    df_offers_linked_full = pd.concat(offers_matched_by_group_df_list)
 
-    df_offers_linked_full.to_gbq(
+    df_data_with_embedding_df_list = []
+    subset_length = len(df_data_to_extract_embedding) // max_process
+    subset_length = subset_length if subset_length > 0 else 1
+    batch_number = max_process if subset_length > 1 else 1
+    print(
+        f"Starting process... with {batch_number} CPUs, subset length: {subset_length} "
+    )
+    with concurrent.futures.ProcessPoolExecutor(max_process) as executor:
+        futures = executor.map(
+            embedding_extraction,
+            repeat(df_data_to_extract_embedding),
+            repeat(config_file_name),
+            repeat(batch_number),
+            range(batch_number),
+        )
+        for future in futures:
+            df_data_with_embedding_df_list.append(future)
+    print("Multiprocessing done")
+    df_data_w_embedding = pd.concat(df_data_with_embedding_df_list)
+    df_data_w_embedding.to_gbq(
         f"sandbox_{env_short_name}.linked_offers_full",
         project_id=gcp_project,
         if_exists="replace",
     )
-    # Save already linked offers
+    # Save already extracted data
+
     # Cast offer_id back to string
-    df_offers_to_link_clean["offer_id"] = df_offers_to_link_clean["offer_id"].astype(
-        str
-    )
-    df_offers_to_link_clean.to_gbq(
-        f"analytics_{env_short_name}.offers_already_linked",
+    df_data_to_extract_embedding["offer_id"] = df_data_to_extract_embedding[
+        "offer_id"
+    ].astype(str)
+    df_data_to_extract_embedding.to_gbq(
+        f"analytics_{env_short_name}.offers_already_embedded",
         project_id=gcp_project,
         if_exists="append",
     )

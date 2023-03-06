@@ -15,6 +15,7 @@ from common.alerts import task_fail_slack_alert
 from common.config import GCP_PROJECT_ID, ENV_SHORT_NAME, DAG_FOLDER
 from common.utils import get_airflow_schedule
 from dependencies.ml.embeddings import offer_to_extract_embedding
+
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"extract-offers-embeddings-{ENV_SHORT_NAME}"
 BASE_DIR = f"data-gcp/embeddings"
@@ -37,7 +38,9 @@ with DAG(
     template_searchpath=DAG_FOLDER,
     params={
         "branch": Param(
-            default="production" if ENV_SHORT_NAME == "prod" else "PC-20771-extract-and-import-offers-metadata-emb-to-BQ",
+            default="production"
+            if ENV_SHORT_NAME == "prod"
+            else "PC-20771-extract-and-import-offers-metadata-emb-to-BQ",
             type="string",
         ),
         "instance_type": Param(
@@ -46,23 +49,23 @@ with DAG(
         ),
     },
 ) as dag:
-    
-    data_collect_task=BigQueryInsertJobOperator(
-            task_id=f"import_batch_to_clean",
-            configuration={
-                "query": {
-                    "query": '/dependencies/ml/embeddings/offer_to_extract_embeddings.sql',
-                    "useLegacySql": False,
-                    "destinationTable": {
-                        "projectId": GCP_PROJECT_ID,
-                        "tableId": "sandbox_dev.offer_to_extract_embeddings",
-                    },
-                    "writeDisposition": "WRITE_TRUNCATE"
-                }
-            },
-            params=dict("gcp_project":GCP_PROJECT_ID,"env_short_name":ENV_SHORT_NAME),
-            dag=dag,
-        )
+
+    data_collect_task = BigQueryInsertJobOperator(
+        task_id=f"import_batch_to_clean",
+        configuration={
+            "query": {
+                "query": "/dependencies/ml/embeddings/offer_to_extract_embeddings.sql",
+                "useLegacySql": False,
+                "destinationTable": {
+                    "projectId": GCP_PROJECT_ID,
+                    "tableId": "sandbox_dev.offer_to_extract_embeddings",
+                },
+                "writeDisposition": "WRITE_TRUNCATE",
+            }
+        },
+        params=dict({"gcp_project": GCP_PROJECT_ID, "env_short_name": ENV_SHORT_NAME}),
+        dag=dag,
+    )
 
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
@@ -131,7 +134,7 @@ with DAG(
 
     (
         data_collect_task
-        >>gce_instance_start
+        >> gce_instance_start
         >> fetch_code
         >> install_dependencies
         >> data_collect

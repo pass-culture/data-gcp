@@ -1,79 +1,60 @@
+import json 
 import time
-import uuid
-
-import networkx as nx
-import recordlinkage
+from sentence_transformers import SentenceTransformer
+import urllib.request
 from tools.logging_tools import log_duration
+from PIL import Image
 
-
-def get_linked_offers(
-    indexer,
-    data_and_hyperparams_dict,
-    df_source_tmp,
-    subset_length,
-    batch_number,
-    batch_id,
+def extract_embedding(    
+    df_data,
+    params,
 ):
     """
-    Split linkage by offer_subcategoryId
-    Setup Comparaison for linkage
-    Run linkage
+    Extarct embedding with pretrained models 
+    Two types available:
+    - image : 
+        - Input: list of urls 
+    - text  : 
+        - Input: list of string
     """
     start = time.time()
-    if batch_id != (batch_number - 1):
-        df_source_tmp_subset = df_source_tmp[
-            batch_id * subset_length : (batch_id + 1) * subset_length
-        ]
-    else:
-        df_source_tmp_subset = df_source_tmp[batch_id * subset_length :]
+    
+    for feature in params['features']:
+        if feature["type"]=="image":
+            model=SentenceTransformer('clip-ViT-B-32')
+            urls=df_data.url
+            df_data[f"{feature["name"]}_embedding"]=encode_img_from_urls(model,urls)
+        if feature["type"]=="text":
+            model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+            embeddings = model.encode(df_data[f"{feature["name"]}"])
+            df_data[f"{feature["name"]}_embedding"]=embeddings
+    log_duration(f"Embedding extraction: ", start)
+    return df_data
+    
 
-    if len(df_source_tmp_subset) > 0:
-        # a subset of record pairs
-        candidate_links = indexer.index(df_source_tmp, df_source_tmp_subset)
+def encode_img_from_urls(model,urls):
+        index=0
+        offer_img_embs=[]
+        offer_wO_img=0
+        for url in tqdm(urls):
+            STORAGE_PATH_IMG=f'./img/{index}'
+            _download_img_from_url(url,STORAGE_PATH_IMG)
+            try :
+                img_emb = model.encode(Image.open(f"{STORAGE_PATH_IMG}.jpeg"))
+                offer_img_embs.append(list(img_emb))
+                os.remove(f"{STORAGE_PATH_IMG}.jpeg")
+                index+=1
+            except: 
+                offer_img_embs.append([0]*512)
+                index+=1
+                offer_wO_img+=1
+        print(f"{(offer_wO_img*100)/len(urls)}% offers dont have image")
+        return offer_img_embs
 
-        # Comparison step
-        cpr_cl = recordlinkage.Compare()
-        cpr_cl = _setup_matching(cpr_cl, data_and_hyperparams_dict["features"])
-        ftrs = cpr_cl.compute(candidate_links, df_source_tmp)
-
-        # Classification step
-        matches = ftrs[
-            ftrs.sum(axis=1) >= data_and_hyperparams_dict["matches_required"]
-        ]
-        matches = matches.reset_index()
-        matches = matches.rename(columns={"level_0": "index_1", "level_1": "index_2"})
-    log_duration(f"get_linked_offers: ", start)
-    return matches
-
-
-def get_linked_offers_from_graph(df_source, df_matches):
-    start = time.time()
-    df_source_tmp = df_source.copy()
-    FG = nx.from_pandas_edgelist(
-        df_matches, source="index_1", target="index_2", edge_attr=True
-    )
-    connected_ids = list(nx.connected_components(FG))
-    for clusters in range(nx.number_connected_components(FG)):
-        link_id = str(uuid.uuid4())
-        for index in connected_ids[clusters]:
-            df_source_tmp.at[index, "linked_id"] = str(link_id)
-    df_linked_offers_from_graph = df_source_tmp.query("linked_id !='NC' ")
-    df_linked_offers_from_graph["offer_id"] = df_linked_offers_from_graph[
-        "offer_id"
-    ].values.astype(int)
-    log_duration(f"_get_linked_offers_from_graph: ", start)
-    return df_linked_offers_from_graph
+def _download_img_from_url(url,storage_path):
+            try:
+                urllib.request.urlretrieve(url,f"{storage_path}.jpeg")
+            except:        
+                return None 
 
 
-def _setup_matching(c_cl, featdict):
-    for feature in featdict.keys():
-        feature_dict = featdict[feature]
-        if feature_dict["method"] == "exact":
-            c_cl.exact(feature, feature, label=feature)
-        else:
-            method = feature_dict["method"]
-            threshold = feature_dict["threshold"]
-            c_cl.string(
-                feature, feature, method=method, threshold=threshold, label=feature
-            )
-    return c_cl

@@ -1,0 +1,15 @@
+{
+    "features":[{
+        "name": "offer_name",
+        "type": "text"
+    },
+    {
+        "name": "offer_description",
+        "type": "text"
+    },
+    {
+        "name": "offer_image",
+        "type": "text"
+    },
+    ]
+}

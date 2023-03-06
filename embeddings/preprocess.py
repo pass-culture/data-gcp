@@ -1,13 +1,12 @@
-from tools.config import ENV_SHORT_NAME, GCP_PROJECT_ID
+import json import
+from tools.config import ENV_SHORT_NAME, GCP_PROJECT_ID, CONFIGS_PATH
 import pandas as pd
 import typer
 
 
-def preprocess(df):
-    df["offer_id"] = df["offer_id"].values.astype(int)
-    df["offer_name"] = df["offer_name"].str.lower()
-    df["offer_description"] = df["offer_description"].str.lower()
-    df["linked_id"] = ["NC"] * len(df)
+def preprocess(df,feature_list):
+    for feature in feature_list:
+        df[feature] = df[feature].str.lower()
     return df
 
 
@@ -20,14 +19,24 @@ def main(
         ENV_SHORT_NAME,
         help="Environnement short name",
     ),
+    config_file_name: str = typer.Option(
+        'default-config-offer',
+        help="Config file name",
+    ),
 ) -> None:
-
-    df_offers = pd.read_gbq(
-        f"SELECT * FROM `{gcp_project}.sandbox_{env_short_name}.offers_to_extract_embeddings`"
+    with open(
+        f"{CONFIGS_PATH}/{config_file_name}.json",
+        mode="r",
+        encoding="utf-8",
+    ) as config_file:
+        params = json.load(config_file)
+    data_type=params["embedding_extract_from"]
+    df_data = pd.read_gbq(
+        f"SELECT * FROM `{gcp_project}.sandbox_{env_short_name}.{data_type}_to_extract_embeddings`"
     )
-    df_offers_clean = preprocess(df_offers)
-    df_offers_clean.to_gbq(
-        f"sandbox_{env_short_name}.offers_to_extract_embeddings_clean",
+    df_data_clean = preprocess(df_data,[features["name"] for features in params["features"] if features["type"]=='text'])
+    df_data_clean.to_gbq(
+        f"sandbox_{env_short_name}.{data_type}_to_extract_embeddings_clean",
         project_id=gcp_project,
         if_exists="replace",
     )

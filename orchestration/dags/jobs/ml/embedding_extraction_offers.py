@@ -28,7 +28,7 @@ default_args = {
 }
 
 with DAG(
-    "extract_offers_embeddings",
+    "embeddings_extraction_offers",
     default_args=default_args,
     description="Extact offer metadata embeddings",
     schedule_interval=get_airflow_schedule("0 0 * * 0"),
@@ -47,6 +47,10 @@ with DAG(
             default="n1-standard-2" if ENV_SHORT_NAME == "dev" else "n1-standard-32",
             type="string",
         ),
+        "config_file_name": Param(
+            default="default-config-offer",
+            type="string",
+        ),
     },
 ) as dag:
 
@@ -58,7 +62,7 @@ with DAG(
                 "useLegacySql": False,
                 "destinationTable": {
                     "projectId": GCP_PROJECT_ID,
-                    "tableId": "sandbox_dev.offer_to_extract_embeddings",
+                    "tableId": f"sandbox_{ENV_SHORT_NAME}.offer_to_extract_embeddings",
                 },
                 "writeDisposition": "WRITE_TRUNCATE",
             }
@@ -84,36 +88,27 @@ with DAG(
         command="""pip install -r requirements.txt --user""",
     )
 
-    data_collect = GCloudSSHGCEOperator(
-        task_id="data_collect",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        command=f"""
-        python data_collect.py \
-        --gcp-project {GCP_PROJECT_ID} \
-        --env-short-name {ENV_SHORT_NAME}
-        """,
-    )
-
     preprocess = GCloudSSHGCEOperator(
         task_id="preprocess",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command=f"""
-         python preprocess.py \
+        python preprocess.py \
         --gcp-project {GCP_PROJECT_ID} \
         --env-short-name {ENV_SHORT_NAME}
+        --config-file-name {{ params.config_file_name }}
         """,
     )
 
-    record_linkage = GCloudSSHGCEOperator(
+    extract_embedding = GCloudSSHGCEOperator(
         task_id="record_linkage",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command=f"""
-         python main.py \
+        python main.py \
         --gcp-project {GCP_PROJECT_ID} \
         --env-short-name {ENV_SHORT_NAME}
+        --config-file-name {{ params.config_file_name }}
         """,
     )
 
@@ -122,7 +117,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command=f"""
-         python postprocess.py \
+        python postprocess.py \
         --gcp-project {GCP_PROJECT_ID} \
         --env-short-name {ENV_SHORT_NAME}
         """,
@@ -137,9 +132,7 @@ with DAG(
         >> gce_instance_start
         >> fetch_code
         >> install_dependencies
-        >> data_collect
         >> preprocess
-        >> record_linkage
-        >> postprocess
+        >> extract_embedding
         >> gce_instance_stop
     )

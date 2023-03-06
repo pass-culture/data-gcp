@@ -44,10 +44,11 @@ def main(
     ) as config_file:
         params = json.load(config_file)
 
+    data_type=params["embedding_extract_from"]
     ###############
     # Load preprocessed data
     df_data_to_extract_embedding = pd.read_gbq(
-        f"SELECT * FROM `{gcp_project}.sandbox_{env_short_name}.offers_to_link_clean`"
+        f"SELECT * FROM `{gcp_project}.sandbox_{env_short_name}.{data_type}_to_extract_embeddings_clean`"
     )
 
     ###############
@@ -73,19 +74,31 @@ def main(
             df_data_with_embedding_df_list.append(future)
     print("Multiprocessing done")
     df_data_w_embedding = pd.concat(df_data_with_embedding_df_list)
-    df_data_w_embedding.to_gbq(
-        f"sandbox_{env_short_name}.linked_offers_full",
+    df_data_w_embedding_export_ready = df_data_w_embedding[
+        [
+            "offer_id",
+            "item_id",
+            "offer_subcategoryId",
+            "offer_name",
+            "offer_description",
+            "performer",
+            "linked_id",
+            "item_linked_id",
+        ]
+    ]
+    df_data_w_embedding_export_ready.to_gbq(
+        f"analytics_{env_short_name}.{data_type}_extracted_embedding",
         project_id=gcp_project,
-        if_exists="replace",
+        if_exists="append",
     )
     # Save already extracted data
-
     # Cast offer_id back to string
-    df_data_to_extract_embedding["offer_id"] = df_data_to_extract_embedding[
-        "offer_id"
+    df_data_to_extract_embedding[f"{data_type}_id"] = df_data_to_extract_embedding[
+        f"{data_type}_id"
     ].astype(str)
+
     df_data_to_extract_embedding.to_gbq(
-        f"analytics_{env_short_name}.offers_already_embedded",
+        f"analytics_{env_short_name}.{data_type}_already_embedded",
         project_id=gcp_project,
         if_exists="append",
     )

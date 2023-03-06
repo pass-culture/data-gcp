@@ -21,11 +21,9 @@ def get_actual_and_predicted(
     )
     deep_reco_prediction = []
     predictions_diversified = []
-    user_input=data_model_dict["prediction_input_feature"]
+    user_input = data_model_dict["prediction_input_feature"]
     for id in tqdm(range(len(df_actual))):
-        prediction_input_feature = [
-            df_actual.iloc[id][user_input]
-        ]
+        prediction_input_feature = [df_actual.iloc[id][user_input]]
         df_predicted = get_prediction(prediction_input_feature, data_model_dict)
         deep_reco_prediction.append(list(df_predicted.item_id))
         # Compute diversification with score and prediction
@@ -52,8 +50,10 @@ def get_prediction(prediction_input_feature, data_model_dict):
     offer_subcategoryid = np.reshape(
         np.array(list(data.offer_subcategoryid)), (nboffers, 1)
     )
-    user_input=np.reshape(np.array([prediction_input_feature] * len(offer_to_score)), (nboffers, 1))
-    prediction_input = [user_input,offer_to_score]
+    user_input = np.reshape(
+        np.array([prediction_input_feature] * len(offer_to_score)), (nboffers, 1)
+    )
+    prediction_input = [user_input, offer_to_score]
     prediction = model.predict(prediction_input, verbose=0)
     df_predicted = pd.DataFrame(
         {

@@ -25,7 +25,7 @@ def get_actual_and_predicted(
     for id in tqdm(range(len(df_actual))):
         current_user = df_actual.iloc[id]["user_id"]
         prediction_input_feature = (
-            data_test.query(f"user_id=={current_user}")[user_input]
+            data_test.query(f"user_id=='{current_user}'")[user_input]
             .drop_duplicates()
             .tolist()[0]
         )

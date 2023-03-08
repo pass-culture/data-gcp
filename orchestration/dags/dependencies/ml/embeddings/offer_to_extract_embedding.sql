@@ -23,7 +23,7 @@ WITH offer_humanized_id AS (
         offer_id,
         humanize_id(offer_id) AS humanized_id,
     FROM
-        `{gcp_project}.analytics_{env_short_name}.`.applicative_database_offer
+        `{{ gcp_project }}.analytics_{{ env_short_name }}.`.applicative_database_offer
     WHERE
         offer_id is not NULL
 ),
@@ -42,7 +42,7 @@ mediation AS (
                         dateModifiedAtLastProvider DESC
                 ) as rnk
             FROM
-                `{gcp_project}.analytics_{env_short_name}`.applicative_database_mediation
+                `{{ gcp_project }}.analytics_{{ env_short_name }}`.applicative_database_mediation
             WHERE
                 isActive
         ) inn
@@ -78,22 +78,9 @@ CASE
             )
         END AS image_url,
     FROM
-        `{gcp_project}.raw_{env_short_name}`.applicative_database_offer o
-        LEFT JOIN `{gcp_project}.raw_{env_short_name}`.applicative_database_stock s on s.offer_id = o.offer_id
-        LEFT JOIN `{gcp_project}.analytics_{env_short_name}`.offer_extracted_data oed ON oed.offer_id = o.offer_id
-        LEFT JOIN `{gcp_project}.analytics_{env_short_name}`.subcategories subcat ON subcat.id = o.offer_subcategoryid
-        LEFT join `{gcp_project}.analytics_{env_short_name}`applicative_database_venue v on v.venue_id = o.venue_id
-        LEFT JOIN `{gcp_project}.analytics_{env_short_name}`.macro_rayons AS rayon_ref ON oed.rayon = rayon_ref.rayon
+        `{{ gcp_project }}.raw_{{ env_short_name }}`.applicative_database_offer o
         LEFT JOIN mediation ON o.offer_id = mediation.offer_id
-    where
-        o.offer_validation <> 'DRAFT'
-        and o.offer_last_validation_type = 'MANUAL'
-        and (
-            (
-                o.offer_name is not null
-                or o.offer_name <> 'NaN'
-            )
-        )
+    LIMIT 5000
 )
 select
     *

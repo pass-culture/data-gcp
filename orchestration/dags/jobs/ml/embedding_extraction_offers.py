@@ -14,7 +14,6 @@ from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import GCP_PROJECT_ID, ENV_SHORT_NAME, DAG_FOLDER
 from common.utils import get_airflow_schedule
-from dependencies.ml.embeddings import offer_to_extract_embedding
 
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"extract-offers-embeddings-{ENV_SHORT_NAME}"
@@ -58,16 +57,16 @@ with DAG(
         task_id=f"import_batch_to_clean",
         configuration={
             "query": {
-                "query": "/dependencies/ml/embeddings/offer_to_extract_embeddings.sql",
+                "query":"{% include '/dependencies/ml/embeddings/offer_to_extract_embedding.sql' %}",
                 "useLegacySql": False,
                 "destinationTable": {
                     "projectId": GCP_PROJECT_ID,
-                    "tableId": f"sandbox_{ENV_SHORT_NAME}.offer_to_extract_embeddings",
+                    "datasetId":f"sandbox_{ENV_SHORT_NAME}",
+                    "tableId": "offer_to_extract_embeddings",
                 },
                 "writeDisposition": "WRITE_TRUNCATE",
             }
         },
-        params=dict({"gcp_project": GCP_PROJECT_ID, "env_short_name": ENV_SHORT_NAME}),
         dag=dag,
     )
 
@@ -109,17 +108,6 @@ with DAG(
         --gcp-project {GCP_PROJECT_ID} \
         --env-short-name {ENV_SHORT_NAME}
         --config-file-name {{ params.config_file_name }}
-        """,
-    )
-
-    postprocess = GCloudSSHGCEOperator(
-        task_id="postprocess",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        command=f"""
-        python postprocess.py \
-        --gcp-project {GCP_PROJECT_ID} \
-        --env-short-name {ENV_SHORT_NAME}
         """,
     )
 

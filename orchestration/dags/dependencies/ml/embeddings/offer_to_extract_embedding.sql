@@ -1,5 +1,5 @@
 CREATE TEMPORARY FUNCTION humanize_id(id STRING) RETURNS STRING LANGUAGE js OPTIONS (
-    library = "gs://data-bucket-prod/base32-encode/base32.js"
+    library = "gs://data-bucket-{{ env_short_name }}/base32-encode/base32.js"
 ) AS """
      		 // turn int into bytes array
 			var byteArray = [];

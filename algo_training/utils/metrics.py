@@ -59,7 +59,7 @@ def get_prediction(prediction_input_feature, data_model_dict):
     user_input = np.reshape(
         np.array([prediction_input_feature] * len(offer_to_score)), (nboffers, 1)
     )
-    prediction_input = [user_input, offer_to_score]
+    prediction_input = [np.array([prediction_input_feature] * len(offer_to_score)), np.array(list(data.item_id)]
     prediction = model.predict(prediction_input, verbose=0)
     df_predicted = pd.DataFrame(
         {

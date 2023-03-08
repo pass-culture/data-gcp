@@ -1,5 +1,6 @@
 import concurrent
 import traceback
+import typer
 from itertools import repeat
 from multiprocessing import cpu_count
 import pandas as pd
@@ -105,4 +106,4 @@ def main(
 
 
 if __name__ == "__main__":
-    main(GCP_PROJECT_ID, ENV_SHORT_NAME)
+    typer.run(main)

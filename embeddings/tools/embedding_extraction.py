@@ -27,7 +27,7 @@ def extract_embedding(
             df_data[f"{feature_name}_embedding"]=encode_img_from_urls(model,urls)
         if feature["type"]=="text":
             model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
-            embeddings = model.encode(df_data[f"{feature_name}"])
+            embeddings = model.encode(df_data[feature_name])
             df_data[f"{feature_name}_embedding"]=embeddings
     log_duration(f"Embedding extraction: ", start)
     return df_data

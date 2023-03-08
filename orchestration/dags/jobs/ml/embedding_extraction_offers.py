@@ -91,20 +91,20 @@ with DAG(
         task_id="preprocess",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
-        command="PYTHONPATH=. python preprocess.py"
-        f"--gcp-project {GCP_PROJECT_ID}"
-        f"--env-short-name {ENV_SHORT_NAME}"
-        "--config-file-name {{ params.config_file_name }}",
+        command="PYTHONPATH=. python preprocess.py "
+        f"--gcp-project {GCP_PROJECT_ID} "
+        f"--env-short-name {ENV_SHORT_NAME} "
+        "--config-file-name {{ params.config_file_name }} ",
     )
 
     extract_embedding = GCloudSSHGCEOperator(
         task_id="record_linkage",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
-        command="PYTHONPATH=. python main.py"
-        f"--gcp-project {GCP_PROJECT_ID}"
-        f"--env-short-name {ENV_SHORT_NAME}"
-        "--config-file-name {{ params.config_file_name }}",
+        command="PYTHONPATH=. python main.py "
+        f"--gcp-project {GCP_PROJECT_ID} "
+        f"--env-short-name {ENV_SHORT_NAME} "
+        "--config-file-name {{ params.config_file_name }} ",
     )
 
     gce_instance_stop = StopGCEOperator(

@@ -1,4 +1,4 @@
-import json import
+import json 
 from tools.config import ENV_SHORT_NAME, GCP_PROJECT_ID, CONFIGS_PATH
 import pandas as pd
 import typer

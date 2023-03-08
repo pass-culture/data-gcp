@@ -49,12 +49,12 @@ def evaluate(
     positive_data_test = read_from_gcs(
         storage_path, test_dataset_name, parallel=False
     ).astype(
-        {
+        {   
             "user_id": str,
             "item_id": str,
         }
     )[
-        ["user_id", "item_id"]
+        ["user_id", "item_id","qpi_subcategory_ids"]
     ]
     logger.info("Merge all...")
     positive_data_test = positive_data_test.merge(

@@ -94,7 +94,7 @@ with DAG(
         command=f"""
         python preprocess.py \
         --gcp-project {GCP_PROJECT_ID} \
-        --env-short-name {ENV_SHORT_NAME}
+        --env-short-name {ENV_SHORT_NAME} \
         --config-file-name {{ params.config_file_name }}
         """,
     )
@@ -106,7 +106,7 @@ with DAG(
         command=f"""
         python main.py \
         --gcp-project {GCP_PROJECT_ID} \
-        --env-short-name {ENV_SHORT_NAME}
+        --env-short-name {ENV_SHORT_NAME} \
         --config-file-name {{ params.config_file_name }}
         """,
     )

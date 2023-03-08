@@ -62,7 +62,7 @@ with DAG(
                 "destinationTable": {
                     "projectId": GCP_PROJECT_ID,
                     "datasetId":f"sandbox_{ENV_SHORT_NAME}",
-                    "tableId": "offer_to_extract_embeddings",
+                    "tableId": "offers_to_extract_embeddings",
                 },
                 "writeDisposition": "WRITE_TRUNCATE",
             }

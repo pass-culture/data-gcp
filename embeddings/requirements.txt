@@ -5,4 +5,4 @@ pytest==6.1.1
 loguru
 pandas-gbq
 sentence_transformers
-PIL==9.4.0
+Pillow

@@ -32,9 +32,15 @@ def embedding_extraction(data, params, batch_number, batch_id):
 
 
 def main(
-    gcp_project,
-    env_short_name,
-    config_file_name,
+    gcp_project: str = typer.Option(
+        GCP_PROJECT_ID, help="GCP project ID"
+    ),
+    env_short_name: str = typer.Option(
+        ENV_SHORT_NAME, help="Env short name"
+    ),
+    config_file_name: str = typer.Option(
+        'default-config-offer', help="Config file name"
+    )
 ) -> None:
     ###############
     # Load config

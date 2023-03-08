@@ -74,7 +74,7 @@ def main(
         futures = executor.map(
             embedding_extraction,
             repeat(df_data_to_extract_embedding),
-            repeat(config_file_name),
+            repeat(params),
             repeat(batch_number),
             range(batch_number),
         )

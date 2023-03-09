@@ -14,11 +14,11 @@ from tools.config import (
 from tools.embedding_extraction import extract_embedding
 
 
-def embedding_extraction(data, params, batch_number, batch_id):
+def embedding_extraction(data, params, subset_length, batch_id):
 
     try:
         df_data_to_extract_embedding_current_batch = data[
-            batch_id * batch_number : (batch_id + 1) * batch_number
+            batch_id * subset_length : (batch_id + 1) * subset_length
         ]
         df_data_with_embedding = extract_embedding(
             df_data_to_extract_embedding_current_batch,
@@ -74,7 +74,7 @@ def main(
             embedding_extraction,
             repeat(df_data_to_extract_embedding),
             repeat(params),
-            repeat(batch_number),
+            repeat(subset_length),
             range(batch_number),
         )
         for future in futures:

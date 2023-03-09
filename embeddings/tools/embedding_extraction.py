@@ -25,10 +25,12 @@ def extract_embedding(
             model=SentenceTransformer('clip-ViT-B-32')
             urls=df_analysis.image_url
             df_analysis[f"{feature_name}_embedding"]=encode_img_from_urls(model,urls)
+            df_analysis[f"{feature_name}_embedding"]=df_analysis[f"{feature_name}_embedding"].astype(str)
         if feature["type"]=="text":
             model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
             embeddings = model.encode(df_analysis[feature_name])
             df_analysis[f"{feature_name}_embedding"]=[list(embedding) for embedding in embeddings]
+            df_analysis[f"{feature_name}_embedding"]=df_analysis[f"{feature_name}_embedding"].astype(str)
     log_duration(f"Embedding extraction: ", start)
     return df_analysis
     

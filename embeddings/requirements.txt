@@ -8,3 +8,4 @@ sentence_transformers
 Pillow
 loguru==0.6.0
 psutil
+tqdm

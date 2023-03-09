@@ -24,8 +24,7 @@ def embedding_extraction(data, params, batch_number, batch_id):
             df_data_to_extract_embedding_current_batch,
             params,
         )
-        df_data_with_embedding.to_gbq()
-        return True
+        return df_data_with_embedding
     except Exception as e:
         print(e)
         traceback.print_exc()
@@ -97,7 +96,7 @@ def main(
     df_data_w_embedding_export_ready.to_gbq(
         f"analytics_{env_short_name}.{data_type}_extracted_embedding",
         project_id=gcp_project,
-        if_exists="append",
+        if_exists="replace",
     )
     # Save already extracted data
     # Cast offer_id back to string

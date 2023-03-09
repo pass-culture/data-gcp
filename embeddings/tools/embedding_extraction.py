@@ -18,19 +18,19 @@ def extract_embedding(
         - Input: list of string
     """
     start = time.time()
-    
+    df_analysis=df_data.copy()
     for feature in params['features']:
         feature_name=feature["name"]
         if feature["type"]=="image":
             model=SentenceTransformer('clip-ViT-B-32')
-            urls=df_data.url
-            df_data[f"{feature_name}_embedding"]=encode_img_from_urls(model,urls)
+            urls=df_analysis.url
+            df_analysis[f"{feature_name}_embedding"]=encode_img_from_urls(model,urls)
         if feature["type"]=="text":
             model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
-            embeddings = model.encode(df_data[feature_name])
-            df_data[f"{feature_name}_embedding"]=embeddings
+            embeddings = model.encode(df_analysis[feature_name])
+            df_analysis[f"{feature_name}_embedding"]=[embedding for embedding in embeddings]
     log_duration(f"Embedding extraction: ", start)
-    return df_data
+    return df_analysis
     
 
 def encode_img_from_urls(model,urls):

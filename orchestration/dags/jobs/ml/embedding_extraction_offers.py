@@ -62,7 +62,7 @@ with DAG(
                 "destinationTable": {
                     "projectId": GCP_PROJECT_ID,
                     "datasetId":f"sandbox_{ENV_SHORT_NAME}",
-                    "tableId": "offers_to_extract_embeddings",
+                    "tableId": "offer_to_extract_embeddings",
                 },
                 "writeDisposition": "WRITE_TRUNCATE",
             }
@@ -98,7 +98,7 @@ with DAG(
     )
 
     extract_embedding = GCloudSSHGCEOperator(
-        task_id="record_linkage",
+        task_id="extract_embedding",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command="PYTHONPATH=. python main.py "

@@ -1,5 +1,5 @@
 {
-    "embedding_extract_from" : "offers" , 
+    "embedding_extract_from" : "offer" , 
     "features":[{
         "name": "offer_name",
         "type": "text"

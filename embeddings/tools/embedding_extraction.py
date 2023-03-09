@@ -4,7 +4,7 @@ from sentence_transformers import SentenceTransformer
 import urllib.request
 from tools.logging_tools import log_duration
 from PIL import Image
-
+from tqdm import tqdm
 def extract_embedding(    
     df_data,
     params,

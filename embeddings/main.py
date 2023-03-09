@@ -81,19 +81,19 @@ def main(
             df_data_with_embedding_df_list.append(future)
     print("Multiprocessing done")
     df_data_w_embedding = pd.concat(df_data_with_embedding_df_list)
-    df_data_w_embedding_export_ready = df_data_w_embedding[
-        [
-            "offer_id",
-            "item_id",
-            "offer_subcategoryId",
-            "offer_name",
-            "offer_description",
-            "performer",
-            "linked_id",
-            "item_linked_id",
-        ]
-    ]
-    df_data_w_embedding_export_ready.to_gbq(
+    # df_data_w_embedding_export_ready = df_data_w_embedding[
+    #     [
+    #         "offer_id",
+    #         "item_id",
+    #         "offer_subcategoryId",
+    #         "offer_name",
+    #         "offer_description",
+    #         "performer",
+    #         "linked_id",
+    #         "item_linked_id",
+    #     ]
+    # ]
+    df_data_w_embedding.to_gbq(
         f"analytics_{env_short_name}.{data_type}_extracted_embedding",
         project_id=gcp_project,
         if_exists="replace",

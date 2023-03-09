@@ -52,7 +52,7 @@ mediation AS (
 base as (
     SELECT
         o.offer_id,
-        oii.item_id
+        oii.item_id,
 CASE
             when (
                 o.offer_name is null
@@ -81,7 +81,7 @@ CASE
     FROM
         `{{ gcp_project }}.raw_{{ env_short_name }}`.applicative_database_offer o
         LEFT JOIN mediation ON o.offer_id = mediation.offer_id
-        LEFT JOIN `{{ gcp_project }}.analytics_{{ env_short_name }}`.offer_items_ids oii
+        LEFT JOIN `{{ gcp_project }}.analytics_{{ env_short_name }}`.offer_item_ids oii
         on o.offer_id=oii.offer_id
     LIMIT 5000
 )

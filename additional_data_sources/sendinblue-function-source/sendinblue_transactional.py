@@ -40,13 +40,13 @@ class SendinblueTransactional:
 
         try:
             offset = 0
-            response = emails_transac_api_instance.get_smtp_templates(
+            response = self.api_instance.get_smtp_templates(
                 template_status="true", offset=offset
             )
             api_responses = response.templates
             while response is not None and len(response.templates) == 50:
                 offset = offset + 50
-                response = emails_transac_api_instance.get_smtp_templates(
+                response = self.api_instance.get_smtp_templates(
                     template_status="true", offset=offset
                 )
                 for temp in response.templates:

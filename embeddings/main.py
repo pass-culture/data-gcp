@@ -94,7 +94,7 @@ def main(
     #     ]
     # ]
     # df_data_w_embedding
-    
+
     df_data_w_embedding.to_gbq(
         f"analytics_{env_short_name}.{data_type}_extracted_embedding",
         project_id=gcp_project,
@@ -102,9 +102,9 @@ def main(
     )
     # Save already extracted data
     # Cast offer_id back to string
-    df_data_to_extract_embedding[f"{data_type}_id"] = df_data_to_extract_embedding[
-        f"{data_type}_id"
-    ].astype(str)
+    # df_data_to_extract_embedding[f"{data_type}_id"] = df_data_to_extract_embedding[
+    #     f"{data_type}_id"
+    # ].astype(str)
 
     df_data_to_extract_embedding.to_gbq(
         f"analytics_{env_short_name}.{data_type}_already_embedded",

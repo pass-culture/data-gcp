@@ -156,6 +156,7 @@ class Recommendation:
                     f"user_input: {user_input}",
                     start,
                 )
+
                 instances = self._get_instances(user_input)
 
                 predicted_scores = self._predict_score(instances)

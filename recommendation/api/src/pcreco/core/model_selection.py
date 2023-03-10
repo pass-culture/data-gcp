@@ -11,12 +11,18 @@ class RecommendationDefaultModel:
     name: str
     force_cold_start: bool = False
     force_model: bool = False
+    force_cold_start_model: bool = False
     endpoint_name: str = f"recommendation_default_{ENV_SHORT_NAME}"
 
 
 @dataclass
 class RecommendationVersionBModel(RecommendationDefaultModel):
     endpoint_name: str = f"recommendation_version_b_{ENV_SHORT_NAME}"
+
+
+@dataclass
+class RecommendationColdStartModel(RecommendationDefaultModel):
+    endpoint_name: str = f"recommendation_cold_start_model_{ENV_SHORT_NAME}"
 
 
 @dataclass
@@ -29,6 +35,9 @@ RECOMMENDATION_ENDPOINTS = {
     "default": RecommendationDefaultModel("default"),
     "algo_default": RecommendationDefaultModel("algo_default", force_model=True),
     "cold_start": RecommendationDefaultModel("cold_start", force_cold_start=True),
+    "cold_start_model": RecommendationColdStartModel(
+        "cold_start_model", force_cold_start_model=True
+    ),
     "version_b": RecommendationVersionBModel("version_b"),
     "algo_version_b": RecommendationVersionBModel("algo_version_b", force_model=True),
 }

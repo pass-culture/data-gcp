@@ -91,7 +91,6 @@ def playlist_recommendation(user_id: int):
     internal = parse_internal(request)
     longitude, latitude, geo_located = parse_geolocation(request)
     input_reco = parse_params(request)
-
     user = User(user_id, call_id, longitude, latitude)
     scoring = Recommendation(user, params_in=input_reco)
     user_recommendations = scoring.get_scoring()

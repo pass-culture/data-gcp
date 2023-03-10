@@ -84,10 +84,8 @@ class RecommendationTest:
             ),
         ],
     )
-    @patch(
-        "pcreco.core.recommendation.Recommendation.ColdStart.get_cold_start_categories"
-    )
-    @patch("pcreco.core.recommendation.get_cold_start_status")
+    @patch("pcreco.core.utils.cold_start.get_cold_start_categories")
+    @patch("pcreco.core.utils.cold_start.get_cold_start_status")
     def test_recommendation_cold_start(
         self,
         cold_start_status_mock: Mock,
@@ -245,10 +243,8 @@ class RecommendationTest:
             ),
         ],
     )
-    @patch(
-        "pcreco.core.recommendation.Recommendation.ColdStart.get_cold_start_categories"
-    )
-    @patch("pcreco.core.recommendation.get_cold_start_status")
+    @patch("pcreco.core.utils.cold_start.get_cold_start_categories")
+    @patch("pcreco.core.utils.cold_start.get_cold_start_status")
     def test_recommendation_playlist_cold_start(
         self,
         cold_start_status_mock: Mock,
@@ -320,10 +316,8 @@ class RecommendationTest:
             ),
         ],
     )
-    @patch(
-        "pcreco.core.recommendation.Recommendation.ColdStart.get_cold_start_categories"
-    )
-    @patch("pcreco.core.recommendation.get_cold_start_status")
+    @patch("pcreco.core.utils.cold_start.get_cold_start_categories")
+    @patch("pcreco.core.utils.cold_start.get_cold_start_status")
     def test_recommendation_playlist_cold_start(
         self,
         cold_start_status_mock: Mock,
@@ -401,7 +395,7 @@ class RecommendationTest:
             ),
         ],
     )
-    @patch("pcreco.core.recommendation.get_cold_start_status")
+    @patch("pcreco.core.utils.cold_start.get_cold_start_status")
     def test_recommendation_offer_type_list_cold_start(
         self,
         cold_start_status_mock: Mock,

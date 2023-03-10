@@ -3,7 +3,10 @@ import json
 import random
 from sqlalchemy import text
 from pcreco.core.user import User
-from pcreco.core.utils.cold_start_status import get_cold_start_status
+from pcreco.core.utils.cold_start import (
+    get_cold_start_status,
+    get_cold_start_categories,
+)
 from pcreco.core.utils.mixing import (
     order_offers_by_score_and_diversify_features,
 )
@@ -12,7 +15,6 @@ from pcreco.core.utils.query_builder import RecommendableOffersQueryBuilder
 from pcreco.utils.db.db_connection import get_session
 from pcreco.core.utils.vertex_ai import predict_model
 from pcreco.core.model_selection import select_reco_model_params
-from pcreco.core.utils.qpi_live_ingestion import get_cold_start_categories_from_gcs
 from pcreco.utils.env_vars import (
     NUMBER_OF_PRESELECTED_OFFERS,
     RECOMMENDABLE_OFFER_LIMIT,
@@ -30,7 +32,7 @@ class Recommendation:
         self.user = user
         self.json_input = params_in.json_input
         self.params_in_filters = params_in._get_conditions()
-        self.model_params = select_reco_model_params(params_in.model_endpoint)
+        self.model_params = select_reco_model_params("cold_start_model")
         # TODO migrate this params in RecommendationDefaultModel model
         self.reco_radius = params_in.reco_radius
         self.is_reco_shuffled = params_in.is_reco_shuffled
@@ -49,6 +51,9 @@ class Recommendation:
             return self.ColdStart(self)
         if self.model_params.force_model:
             self.reco_origin = "algo"
+            return self.Algo(self)
+        if self.model_params.force_cold_start_model:
+            self.reco_origin = "CS_algo"
             return self.Algo(self)
         # Normal behaviour
         if get_cold_start_status(self.user):
@@ -128,6 +133,7 @@ class Recommendation:
             self.model_version = None
             self.include_digital = scoring.include_digital
             self.recommendable_offers = self.get_recommendable_offers()
+            self.cold_start_categories = get_cold_start_categories(self.user.id)
 
         def get_scored_offers(self) -> List[Dict[str, Any]]:
             start = time.time()
@@ -138,7 +144,15 @@ class Recommendation:
                 )
                 return []
             else:
-                instances = self._get_instances()
+                if self.model_params.force_cold_start_model:
+                    user_input = self.cold_start_categories
+                else:
+                    user_input = self.user.id
+                log_duration(
+                    f"user_input: {user_input}",
+                    start,
+                )
+                instances = self._get_instances(user_input)
 
                 predicted_scores = self._predict_score(instances)
 
@@ -153,8 +167,8 @@ class Recommendation:
                 )
             return recommendations
 
-        def _get_instances(self) -> List[Dict[str, str]]:
-            user_to_rank = [self.user.id] * len(self.recommendable_offers)
+        def _get_instances(self, user_input) -> List[Dict[str, str]]:
+            user_to_rank = [user_input] * len(self.recommendable_offers)
             offer_ids_to_rank = []
             for recommendation in self.recommendable_offers:
                 offer_ids_to_rank.append(
@@ -214,7 +228,7 @@ class Recommendation:
             self.user = scoring.user
             self.params_in_filters = scoring.params_in_filters
             self.reco_radius = scoring.reco_radius
-            self.cold_start_categories = self.get_cold_start_categories()
+            self.cold_start_categories = get_cold_start_categories(self.user.id)
             self.include_digital = scoring.include_digital
             self.model_version = None
             self.model_display_name = None
@@ -225,6 +239,7 @@ class Recommendation:
                 if len(self.cold_start_categories) > 0
                 else "booking_number DESC"
             )
+
             recommendations_query = RecommendableOffersQueryBuilder(
                 self, COLD_START_RECOMMENDABLE_OFFER_LIMIT
             ).generate_query(order_query)
@@ -256,21 +271,3 @@ class Recommendation:
             ]
 
             return cold_start_recommendations
-
-        def get_cold_start_categories(self) -> List[str]:
-            cold_start_query = text(
-                f"""SELECT subcategories FROM qpi_answers_mv WHERE user_id = :user_id;"""
-            )
-
-            connection = get_session()
-            query_result = connection.execute(
-                cold_start_query,
-                user_id=str(self.user.id),
-            ).fetchall()
-
-            if len(query_result) > 0:
-                cold_start_categories = [res[0] for res in query_result]
-            else:
-                cold_start_categories = get_cold_start_categories_from_gcs(self.user.id)
-
-            return cold_start_categories

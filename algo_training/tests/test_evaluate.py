@@ -35,6 +35,7 @@ def data_model_dict():
             ),
         },
         "model": MockModel,
+        "prediction_input_feature": "user_id",
     }
 
 

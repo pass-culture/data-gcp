@@ -106,10 +106,6 @@ class SingleTowerModel(tf.keras.models.Model):
 
         self._embedding_layers = {}
         for layer_name, layer_class in self.input_embedding_layers.items():
-            logger.info(f"layer_name: {layer_name}")
-            logger.info(f"layer_class: {layer_class}")
-            logger.info(f"vocab size: {self.data[layer_name].nunique()}")
-            logger.info(f"Vocab preview: {self.data[layer_name].unique()[:2]}")
             self._embedding_layers[layer_name] = layer_class.build_sequential_layer(
                 vocabulary=self.data[layer_name].unique()
             )

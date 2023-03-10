@@ -81,9 +81,7 @@ def train(
     logger.info("Loading & processing datasets")
 
     user_columns = list(user_features_config.keys())
-    logger.info(f"user_columns: {user_columns}")
     item_columns = list(item_features_config.keys())
-    logger.info(f"item_columns: {item_columns}")
     # We ensure that the datasets contains the features in the correct order (user_id, ..., item_id, ...)
     train_data = read_from_gcs(
         storage_path=STORAGE_PATH, table_name=training_table_name
@@ -207,7 +205,7 @@ def train(
         logger.info("Predicting final item embeddings")
         item_embeddings = two_tower_model.item_model.predict(item_dataset)
         logger.info("Building and saving the MatchModel")
-        user_input = features["input_prediction_feature"]
+        user_input = input_prediction_feature
         match_model = MatchModel(
             user_input=train_user_data[user_input],
             item_ids=train_item_data["item_id"].unique(),

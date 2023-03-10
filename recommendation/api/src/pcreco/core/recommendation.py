@@ -7,6 +7,10 @@ from pcreco.core.utils.cold_start import (
     get_cold_start_status,
     get_cold_start_categories,
 )
+from pcreco.core.utils.cold_start import (
+    get_cold_start_status,
+    get_cold_start_categories,
+)
 from pcreco.core.utils.mixing import (
     order_offers_by_score_and_diversify_features,
 )

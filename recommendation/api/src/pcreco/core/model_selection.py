@@ -26,6 +26,11 @@ class RecommendationColdStartModel(RecommendationDefaultModel):
 
 
 @dataclass
+class RecommendationColdStartModel(RecommendationDefaultModel):
+    endpoint_name: str = f"recommendation_cold_start_model_{ENV_SHORT_NAME}"
+
+
+@dataclass
 class SimilarOfferDefaultModel:
     name: str
     endpoint_name: str = f"similar_offers_default_{ENV_SHORT_NAME}"

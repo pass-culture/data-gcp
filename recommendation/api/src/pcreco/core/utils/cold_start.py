@@ -2,6 +2,8 @@ from pcreco.utils.db.db_connection import get_session
 from sqlalchemy import text
 from pcreco.core.utils.qpi_live_ingestion import get_cold_start_categories_from_gcs
 from typing import List, Dict, Any
+from typing import List, Dict, Any
+
 
 
 def get_cold_start_status(User) -> bool:

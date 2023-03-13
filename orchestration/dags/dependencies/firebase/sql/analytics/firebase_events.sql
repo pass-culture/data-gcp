@@ -397,7 +397,23 @@ WITH temp_firebase_events AS (
                 unnest(event_params) event_params
             where
                 event_params.key = 'age'
-        ) as onboarding_user_selected_age
+        ) as onboarding_user_selected_age,
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'social'
+        ) as selected_social_media,
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'searchView'
+        ) as search_type
 FROM
 
         {% if params.dag_type == 'intraday' %}

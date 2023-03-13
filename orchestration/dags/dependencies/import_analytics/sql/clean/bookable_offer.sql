@@ -1,6 +1,5 @@
 SELECT
-    stock.offer_id
-    , offer.*
+    offer.*
 FROM `{{ bigquery_raw_dataset }}`.applicative_database_stock AS stock
 JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer 
     ON stock.offer_id = offer.offer_id

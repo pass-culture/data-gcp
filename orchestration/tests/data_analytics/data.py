@@ -3,7 +3,6 @@ from datetime import datetime
 # Enriched_offer_data
 ENRICHED_OFFER_DATA_INPUT = {
     "bookable_offer": [
-        {"offer_id": 3},
         {"offer_id": 4},
     ],
     "applicative_database_booking": [

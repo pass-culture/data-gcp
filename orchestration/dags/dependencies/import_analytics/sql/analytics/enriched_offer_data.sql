@@ -83,7 +83,7 @@ last_stock AS (
         (
             SELECT
                 offer.offer_id,
-                stock.stock_price,
+                COALESCE(stock.stock_price, price_category.price) AS stock_price,
                 rank() OVER (
                     PARTITION BY stock.offer_id
                     ORDER BY
@@ -93,6 +93,7 @@ last_stock AS (
             FROM
                 `{{ bigquery_analytics_dataset }}`.applicative_database_offer AS offer
                 JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_stock AS stock on stock.offer_id = offer.offer_id
+                LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_price_category AS price_category ON price_category.price_category_id = stock.price_category_id
         ) c
     WHERE
         c.rang_stock = 1

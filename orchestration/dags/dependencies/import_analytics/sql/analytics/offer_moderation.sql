@@ -75,10 +75,11 @@ offer_stock_ids AS (
 last_stock AS (
     SELECT
         offer.offer_id,
-        stock.stock_price AS last_stock_price
+        COALESCE(stock.stock_price, price_category.price) AS last_stock_price
     FROM
         `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer
         JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock on stock.offer_id = offer.offer_id
+        LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_price_category AS price_category ON price_category.price_category_id = stock.price_category_id
     QUALIFY ROW_NUMBER() OVER (PARTITION BY stock.offer_id ORDER BY stock.stock_creation_date DESC, stock.stock_id DESC) = 1
 ),
 

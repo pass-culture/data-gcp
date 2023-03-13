@@ -1,10 +1,15 @@
 SELECT
     offer.*
+    , offerer.offerer_id
 FROM `{{ bigquery_raw_dataset }}`.applicative_database_stock AS stock
 JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer 
     ON stock.offer_id = offer.offer_id
 LEFT JOIN `{{ bigquery_clean_dataset }}`.available_stock_information AS av_stock
     ON stock.stock_id = av_stock.stock_id
+LEFT JOIN `{{ bigquery_raw_dataset }}`.applicative_database_venue AS venue
+    ON offer.venue_id = venue.venue_id
+LEFT JOIN `{{ bigquery_raw_dataset }}`.applicative_database_offerer AS offerer
+    ON venue.venue_managing_offerer_id = offerer.offerer_id
 WHERE (
     DATE(stock.stock_booking_limit_date) > CURRENT_DATE
     OR stock.stock_booking_limit_date IS NULL

@@ -46,7 +46,7 @@ def extract_embedding(
 def encode_img_from_urls(model, urls):
     index = 0
     offer_img_embs = []
-    offer_wO_img = 0
+    offer_wo_img = 0
     for url in tqdm(urls):
         STORAGE_PATH_IMG = f"./img/{index}"
         _download_img_from_url(url, STORAGE_PATH_IMG)
@@ -58,8 +58,8 @@ def encode_img_from_urls(model, urls):
         except:
             offer_img_embs.append([0] * 512)
             index += 1
-            offer_wO_img += 1
-    print(f"{(offer_wO_img*100)/len(urls)}% offers dont have image")
+            offer_wo_img += 1
+    print(f"{(offer_wo_img*100)/len(urls)}% offers dont have image")
     return offer_img_embs
 
 

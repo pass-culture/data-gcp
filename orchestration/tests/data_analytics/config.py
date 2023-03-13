@@ -552,5 +552,6 @@ BIGQUERY_SCHEMAS = {
         "offer_withdrawalDelay": "INT64",
         "offer_withdrawal_type": "STRING",
         "offer_external_ticket_office_url": "STRING",
+        "offerer_id": "STRING",
     },
 }

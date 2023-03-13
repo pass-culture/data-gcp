@@ -52,6 +52,7 @@ SELECT DISTINCT
     , LAST_VALUE(query IGNORE NULLS) OVER (PARTITION BY search_id, user_id, user_pseudo_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS query_input
     , MIN(event_date) OVER (PARTITION BY search_id, user_id, user_pseudo_id) AS first_date
     , MIN(event_timestamp)OVER (PARTITION BY search_id, user_id, user_pseudo_id) AS first_timestamp
+    , LAST_VALUE(search_type IGNORE NULLS ) OVER (PARTITION BY search_id, user_id, user_pseudo_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS search_type
     , LAST_VALUE(search_date_filter IGNORE NULLS ) OVER (PARTITION BY search_id, user_id, user_pseudo_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS search_date_filter
     , LAST_VALUE(search_location_filter IGNORE NULLS ) OVER (PARTITION BY search_id, user_id, user_pseudo_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS search_location_filter
     ,LAST_VALUE(search_categories_filter IGNORE NULLS) OVER (PARTITION BY search_id, user_id, user_pseudo_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS  search_categories_filter

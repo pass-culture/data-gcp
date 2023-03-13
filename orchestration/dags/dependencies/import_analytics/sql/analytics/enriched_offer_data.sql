@@ -145,7 +145,7 @@ SELECT
         ELSE FALSE
     END AS offer_is_underage_selectable,
     CASE
-        WHEN offer_id IN (
+        WHEN offer.offer_id IN (
             SELECT
                 offer_id
             FROM

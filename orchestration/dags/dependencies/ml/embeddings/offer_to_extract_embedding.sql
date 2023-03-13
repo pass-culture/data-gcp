@@ -83,7 +83,8 @@ CASE
         LEFT JOIN mediation ON o.offer_id = mediation.offer_id
         LEFT JOIN `{{ gcp_project }}.analytics_{{ env_short_name }}`.offer_item_ids oii
         on o.offer_id=oii.offer_id
-    LIMIT 5000
+    where offer_id not in (select id from `{{ gcp_project }}.analytics_{{ env_short_name }}`.offer_already_embedded)
+    LIMIT 50000
 )
 select
     *

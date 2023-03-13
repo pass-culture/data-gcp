@@ -32,15 +32,11 @@ def embedding_extraction(data, params, subset_length, batch_id):
 
 
 def main(
-    gcp_project: str = typer.Option(
-        GCP_PROJECT_ID, help="GCP project ID"
-    ),
-    env_short_name: str = typer.Option(
-        ENV_SHORT_NAME, help="Env short name"
-    ),
+    gcp_project: str = typer.Option(GCP_PROJECT_ID, help="GCP project ID"),
+    env_short_name: str = typer.Option(ENV_SHORT_NAME, help="Env short name"),
     config_file_name: str = typer.Option(
-        'default-config-offer', help="Config file name"
-    )
+        "default-config-offer", help="Config file name"
+    ),
 ) -> None:
     ###############
     # Load config
@@ -51,11 +47,11 @@ def main(
     ) as config_file:
         params = json.load(config_file)
 
-    data_type=params["embedding_extract_from"]
+    data_type = params["embedding_extract_from"]
     ###############
     # Load preprocessed data
     df_data_to_extract_embedding = pd.read_gbq(
-        f"SELECT * FROM `{gcp_project}.sandbox_{env_short_name}.{data_type}_to_extract_embeddings_clean`"
+        f"SELECT * FROM `{gcp_project}.clean_{env_short_name}.{data_type}_to_extract_embeddings_clean`"
     )
 
     ###############
@@ -96,7 +92,7 @@ def main(
     # df_data_w_embedding
 
     df_data_w_embedding.to_gbq(
-        f"analytics_{env_short_name}.{data_type}_extracted_embedding",
+        f"clean_{env_short_name}.{data_type}_extracted_embedding",
         project_id=gcp_project,
         if_exists="replace",
     )
@@ -107,9 +103,8 @@ def main(
         f"{data_type}_id"
     ].astype(str)
 
-
     df_data_to_extract_embedding[["id"]].to_gbq(
-        f"analytics_{env_short_name}.{data_type}_already_embedded",
+        f"clean_{env_short_name}.{data_type}_already_embedded",
         project_id=gcp_project,
         if_exists="append",
     )

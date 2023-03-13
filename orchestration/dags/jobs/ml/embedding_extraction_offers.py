@@ -57,11 +57,11 @@ with DAG(
         task_id=f"import_batch_to_clean",
         configuration={
             "query": {
-                "query":"{% include '/dependencies/ml/embeddings/offer_to_extract_embedding.sql' %}",
+                "query": "{% include '/dependencies/ml/embeddings/offer_to_extract_embedding.sql' %}",
                 "useLegacySql": False,
                 "destinationTable": {
                     "projectId": GCP_PROJECT_ID,
-                    "datasetId":f"sandbox_{ENV_SHORT_NAME}",
+                    "datasetId": f"clean_{ENV_SHORT_NAME}",
                     "tableId": "offer_to_extract_embeddings",
                 },
                 "writeDisposition": "WRITE_TRUNCATE",

@@ -3,8 +3,6 @@ from sqlalchemy import text
 from pcreco.core.utils.qpi_live_ingestion import get_cold_start_categories_from_gcs
 from typing import List, Dict, Any
 
-
-
 def get_cold_start_status(User) -> bool:
     bookings_count, clicks_count, favorites_count = _get_user_app_interaction(User)
     user_cold_start_status = not (bookings_count >= 2 or clicks_count >= 25)

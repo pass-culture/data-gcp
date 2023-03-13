@@ -34,6 +34,12 @@ clean_tables = {
         "destination_dataset": "{{ bigquery_clean_dataset }}",
         "destination_table": "user_beneficiary",
     },
+    "bookable_offer": {
+        "sql": f"{CLEAN_SQL_PATH}/bookable_offer.sql",
+        "destination_dataset": "{{ bigquery_clean_dataset }}",
+        "destination_table": "bookable_offer",
+        "depends": ["offer"],
+    },
 }
 
 

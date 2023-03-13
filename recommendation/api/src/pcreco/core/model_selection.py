@@ -21,7 +21,7 @@ class RecommendationVersionBModel(RecommendationDefaultModel):
 
 @dataclass
 class RecommendationColdStartModel(RecommendationDefaultModel):
-    endpoint_name: str = f"cold_start_model_{ENV_SHORT_NAME}"
+    endpoint_name: str = f"recommendation_cold_start_model_{ENV_SHORT_NAME}"
 
 
 

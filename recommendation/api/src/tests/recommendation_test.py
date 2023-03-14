@@ -84,6 +84,7 @@ class RecommendationTest:
             ),
         ],
     )
+    
     @patch("pcreco.core.utils.cold_start.get_cold_start_categories")
     @patch("pcreco.core.utils.cold_start.get_cold_start_status")
     def test_recommendation_cold_start(

@@ -92,7 +92,7 @@ last_stock AS (
                 ) AS rang_stock
             FROM
                 `{{ bigquery_analytics_dataset }}`.applicative_database_offer AS offer
-                JOIN `{{ bigquery_clean_dataset }}`.clenaed_stock AS stock on stock.offer_id = offer.offer_id
+                JOIN `{{ bigquery_clean_dataset }}`.cleaned_stock AS stock on stock.offer_id = offer.offer_id
         ) c
     WHERE
         c.rang_stock = 1

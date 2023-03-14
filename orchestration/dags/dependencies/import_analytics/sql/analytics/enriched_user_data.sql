@@ -496,7 +496,7 @@ SELECT
     first_paid_booking_type.first_paid_booking_type,
     count_distinct_types.cnt_distinct_types AS cnt_distinct_type_booking,
     user.user_is_active,
-    user_suspension_history.reasonCode AS user_suspension_reason,
+    user_suspension.reasonCode AS user_suspension_reason,
     user_agg_deposit_data.user_first_deposit_amount AS user_deposit_initial_amount,
     user_agg_deposit_data.user_last_deposit_expiration_date AS user_deposit_expiration_date,
     CASE

@@ -818,17 +818,6 @@ ENRICHED_USER_DATA_INPUT = {
             "dateCreated": datetime.now().replace(microsecond=0),
         }
     ],
-    "enriched_deposit_data": [
-        {
-            "deposit_id": "1",
-            "user_id": "1",
-            "deposit_amount": 500,
-            "deposit_theoretical_amount_spent": 20,
-            "deposit_actual_amount_spent": 20,
-            "deposit_theoretical_amount_spent_in_digital_goods": 20,
-            "deposit_rank_desc": 1,
-        }
-    ],
     "applicative_database_offerer": [{"offerer_id": "1"}, {"offerer_id": "1"}],
     "applicative_database_venue": [{"venue_id": "1", "venue_managing_offerer_id": "1"}],
     "applicative_database_booking": [
@@ -836,6 +825,7 @@ ENRICHED_USER_DATA_INPUT = {
             "user_id": "1",
             "stock_id": "1",
             "booking_id": "1",
+            "deposit_id": "1",
             "booking_is_used": True,
             "booking_is_cancelled": False,
             "booking_amount": 10,

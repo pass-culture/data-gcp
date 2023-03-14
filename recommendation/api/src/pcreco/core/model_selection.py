@@ -19,10 +19,10 @@ class RecommendationDefaultModel:
 class RecommendationVersionBModel(RecommendationDefaultModel):
     endpoint_name: str = f"recommendation_version_b_{ENV_SHORT_NAME}"
 
+
 @dataclass
 class RecommendationColdStartModel(RecommendationDefaultModel):
     endpoint_name: str = f"recommendation_cold_start_model_{ENV_SHORT_NAME}"
-
 
 
 @dataclass

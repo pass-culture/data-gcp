@@ -104,7 +104,6 @@ analytics_tables = {
     "enriched_institution_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_institution_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "depends": ["enriched_user_data"],
     },
     "enriched_offer_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_offer_data.sql",

@@ -446,17 +446,6 @@ user_agg_deposit_data AS (
         END AS user_current_deposit_type
     FROM
         user_agg_deposit_data_user_deposit_agg user_deposit_agg
-),
-user_suspension_history AS (
-    SELECT
-        *,
-        ROW_NUMBER() OVER (
-            PARTITION BY userId
-            ORDER BY
-                CAST(id AS INTEGER) DESC
-        ) AS rank
-    FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_user_suspension
 )
 
 SELECT
@@ -550,7 +539,7 @@ FROM
     LEFT JOIN first_booking_type ON user.user_id = first_booking_type.user_id
     LEFT JOIN first_paid_booking_type ON user.user_id = first_paid_booking_type.user_id
     LEFT JOIN count_distinct_types ON user.user_id = count_distinct_types.user_id
-    LEFT JOIN user_suspension_history ON user_suspension_history.userId = user.user_id
+    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_user_suspension AS user_suspension ON user_suspension.userId = user.user_id
         AND rank = 1
     LEFT JOIN  `{{ bigquery_analytics_dataset }}`.enriched_deposit_data AS last_deposit ON last_deposit.user_id = user.user_id
         AND deposit_rank_desc = 1
@@ -558,5 +547,5 @@ FROM
 WHERE
     (
         user.user_is_active
-        OR user_suspension_history.reasonCode = 'UPON_USER_REQUEST'
+        OR user_suspension.reasonCode = 'UPON_USER_REQUEST'
     )

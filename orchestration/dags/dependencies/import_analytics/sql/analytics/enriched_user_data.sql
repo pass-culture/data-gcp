@@ -469,7 +469,7 @@ last_deposit as (
 amount_spent_last_deposit AS (
     SELECT
         booking.deposit_id
-        , deposit.user_id
+        , last_deposit.user_id
         , COALESCE(
             SUM(booking_amount * booking_quantity),
             0
@@ -497,7 +497,7 @@ amount_spent_last_deposit AS (
     WHERE booking_is_cancelled IS FALSE
     GROUP BY
         deposit_id
-        , deposit.user_id
+        , last_deposit.user_id
 )
 
 SELECT

@@ -690,7 +690,7 @@ ENRICHED_STOCK_DATA_INPUT = {
             "bookings_paid": 0,
         },
     ],
-    "applicative_database_stock": [
+    "cleaned_stock": [
         {
             "stock_id": "1",
             "offer_id": "3",
@@ -703,6 +703,8 @@ ENRICHED_STOCK_DATA_INPUT = {
             "stock_price": "0",
             "stock_fields_updated": "{}",
             "price_category_id": None,
+            "price_category_label_id": None,
+            "price_category_label": None,
         },
         {
             "stock_id": "2",
@@ -716,10 +718,10 @@ ENRICHED_STOCK_DATA_INPUT = {
             "stock_price": "0",
             "stock_fields_updated": "{}",
             "price_category_id": None,
+            "price_category_label_id": None,
+            "price_category_label": None,
         },
     ],
-    "applicative_database_price_category": [],
-    "applicative_database_price_category_label": [],
     "applicative_database_user": [
         {
             "user_id": "1",

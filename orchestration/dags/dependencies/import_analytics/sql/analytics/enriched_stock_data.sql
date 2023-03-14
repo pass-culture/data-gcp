@@ -26,16 +26,14 @@ SELECT
     stock_booking_information.booking_quantity,
     stock_booking_information.bookings_cancelled AS booking_cancelled,
     stock_booking_information.bookings_paid AS booking_paid,
-    COALESCE(stock.stock_price, price_category.price) AS stock_price,
+    stock.stock_price,
     stock.price_category_id,
-    price_category.price_category_label_id,
-    price_category_label.label AS price_category_label
+    stock.price_category_label_id,
+    stock.label AS price_category_label
 FROM
-    `{{ bigquery_analytics_dataset }}`.applicative_database_stock AS stock
+    `{{ bigquery_clean_dataset }}`.cleaned_stock AS stock
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offer AS offer ON stock.offer_id = offer.offer_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_venue AS venue ON venue.venue_id = offer.venue_id
-    LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_price_category AS price_category ON price_category.price_category_id = stock.price_category_id
-    LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_price_category_label AS price_category_label ON price_category.price_category_label_id = price_category_label.price_category_label_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.stock_booking_information ON stock.stock_id = stock_booking_information.stock_id
     LEFT JOIN stock_humanized_id AS stock_humanized_id ON stock_humanized_id.stock_id = stock.stock_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.available_stock_information ON stock_booking_information.stock_id = available_stock_information.stock_id

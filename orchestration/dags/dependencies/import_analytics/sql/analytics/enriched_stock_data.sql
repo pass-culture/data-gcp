@@ -6,7 +6,7 @@ SELECT
     stock_id,
     humanize_id(stock_id) AS humanized_id
 FROM
-    `{{ bigquery_analytics_dataset }}`.applicative_database_stock
+    `{{ bigquery_clean_dataset }}`.cleaned_stock
 WHERE
     stock_id is not NULL
 )

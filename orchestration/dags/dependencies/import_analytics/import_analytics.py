@@ -148,7 +148,6 @@ analytics_tables = {
     "enriched_user_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_user_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "depends": ["enriched_deposit_data"],
     },
     "enriched_venue_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_venue_data.sql",

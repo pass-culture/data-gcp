@@ -41,6 +41,7 @@ BIGQUERY_SCHEMAS = {
         "eventDate": "DATETIME",
         "actorUserId": "STRING",
         "reasonCode": "STRING",
+        "rank": "INTEGER",
     },
     "applicative_database_favorite": {
         "id": "STRING",

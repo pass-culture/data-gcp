@@ -32,4 +32,12 @@ ref_tables = {
             "related_team_pass": "STRING",
         },
     },
+    "festival_increments": {
+            "file_type": "csv",
+            "schema": {
+                "offerer_id": "STRING",
+                "festival_cnt": "INTEGER",
+                "offerer_tag" : "STRING",
+            },
+    },
 }

@@ -807,6 +807,7 @@ ENRICHED_USER_DATA_INPUT = {
             "eventDate": datetime.now().replace(microsecond=0),
             "actorUserId": "1388409",
             "reasonCode": None,
+            "rank": 1,
         }
     ],
     "applicative_database_deposit": [

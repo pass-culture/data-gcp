@@ -7,7 +7,7 @@ from utils import (
     ENV_SHORT_NAME,
     access_secret_data,
     campaigns_histo_schema,
-    # transactional_histo_schema,
+    transactional_histo_schema,
 )
 
 
@@ -67,7 +67,7 @@ def run(request):
             all_events.append(sendinblue_transactional.get_events(event_type))
         all_events = sum(all_events, [])
         df = sendinblue_transactional.parse_to_df(all_events)
-        sendinblue_transactional.save_to_historical(df)
+        sendinblue_transactional.save_to_historical(df, transactional_histo_schema)
 
         return "success"
 

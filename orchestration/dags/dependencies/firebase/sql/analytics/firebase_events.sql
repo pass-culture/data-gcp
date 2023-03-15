@@ -138,6 +138,30 @@ WITH temp_firebase_events AS (
             from
                 unnest(event_params) event_params
             where
+                event_params.key = 'playlistType'
+        ) as similar_offer_playlist_type,
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'step'
+        ) as booking_cancellation_step,
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'shouldUseAlgoliaRecommend'
+        ) as is_algolia_recommend,
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
                 event_params.key = 'filterTypes'
         ) as search_filter_types,
         (

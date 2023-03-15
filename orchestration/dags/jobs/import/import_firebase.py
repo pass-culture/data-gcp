@@ -1,6 +1,7 @@
 import datetime
 from common import macros
 from airflow import DAG
+from airflow.models import Param
 
 from common.utils import depends_loop, get_airflow_schedule
 from common.operators.biquery import bigquery_job_task
@@ -54,6 +55,12 @@ for type, params in dags.items():
         dagrun_timeout=datetime.timedelta(minutes=90),
         user_defined_macros=macros.default,
         template_searchpath=DAG_FOLDER,
+        params={
+            "run_all_historic": Param(
+                default="false",
+                type="string",
+            )
+        },
     )
 
     globals()[dag_id] = dag
@@ -68,6 +75,13 @@ for type, params in dags.items():
             job_params[
                 "destination_table"
             ] = f"{job_params['destination_table']}{job_params['partition_prefix']}{yyyymmdd}"
+        elif "{{ params.run_all_historic }}" == "false":
+            job_params[
+                "destination_table"
+            ] = f"{job_params['destination_table']}${yyyymmdd}"
+        else:
+            job_params["destination_table"] = f"{job_params['destination_table']}"
+
         task = bigquery_job_task(
             dag=dag,
             table=table,

@@ -1,34 +1,30 @@
 # pylint: disable=invalid-name
+import datetime
 import json
 import random
-from sqlalchemy import text
+import time
+from typing import Any, Dict, List
+
+import numpy as np
+import pytz
+from pcreco.core.model_selection import select_reco_model_params
 from pcreco.core.user import User
 from pcreco.core.utils.cold_start import (
-    get_cold_start_status,
     get_cold_start_categories,
-)
-from pcreco.core.utils.cold_start import (
     get_cold_start_status,
-    get_cold_start_categories,
 )
-from pcreco.core.utils.mixing import (
-    order_offers_by_score_and_diversify_features,
-)
-from pcreco.models.reco.playlist_params import PlaylistParamsIn
+from pcreco.core.utils.mixing import order_offers_by_score_and_diversify_features
 from pcreco.core.utils.query_builder import RecommendableOffersQueryBuilder
-from pcreco.utils.db.db_connection import get_session
 from pcreco.core.utils.vertex_ai import predict_model
-from pcreco.core.model_selection import select_reco_model_params
+from pcreco.models.reco.playlist_params import PlaylistParamsIn
+from pcreco.utils.db.db_connection import get_session
 from pcreco.utils.env_vars import (
+    COLD_START_RECOMMENDABLE_OFFER_LIMIT,
     NUMBER_OF_PRESELECTED_OFFERS,
     RECOMMENDABLE_OFFER_LIMIT,
-    COLD_START_RECOMMENDABLE_OFFER_LIMIT,
     log_duration,
 )
-import datetime
-import time
-import pytz
-from typing import List, Dict, Any
+from sqlalchemy import text
 
 
 class Recommendation:
@@ -149,7 +145,7 @@ class Recommendation:
                 return []
             else:
                 if self.model_params.force_cold_start_model:
-                    user_input = self.cold_start_categories
+                    user_input = "-".join(self.cold_start_categories)
                 else:
                     user_input = self.user.id
                 log_duration(
@@ -173,6 +169,7 @@ class Recommendation:
             return recommendations
 
         def _get_instances(self, user_input) -> List[Dict[str, str]]:
+            start = time.time()
             user_to_rank = [user_input] * len(self.recommendable_offers)
             offer_ids_to_rank = []
             for recommendation in self.recommendable_offers:

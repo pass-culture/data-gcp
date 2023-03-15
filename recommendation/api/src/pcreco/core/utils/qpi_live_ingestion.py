@@ -30,7 +30,7 @@ def get_cold_start_categories_from_gcs(user_id):
         log_duration("get_cold_start_categories from gcs", start)
     except:
         logger.info(f"get_cold_start_categories: not found ")
-        cold_start_categories = []
+        cold_start_categories = ["UKN"]
     log_duration(f"get_cold_start_categories from gcs : {user_id} ", start)
     return cold_start_categories
 

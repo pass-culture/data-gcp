@@ -53,6 +53,7 @@ class ImportAppsFlyer:
             df = api.in_app_events_report(self._from, self._to, True)
             df["app"] = app
             dfs.append(df)
+        df = pd.concat(dfs, ignore_index=True)
         df = df.rename(columns=APP_REPORT)
         for k, v in APP_REPORT_MAPPING.items():
             df[k] = df[k].astype(v)

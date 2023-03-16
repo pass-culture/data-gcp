@@ -321,7 +321,7 @@ with DAG(
     drop_old_function = CloudSQLExecuteQueryOperator(
         task_id="drop_old_function",
         gcp_cloudsql_conn_id="proxy_postgres_tcp",
-        sql="DROP FUNCTION IF EXISTS get_recommendable_offers_per_iris_shape_{{ ts_nodash }} CASCADE",
+        sql="DROP FUNCTION IF EXISTS get_recommendable_offers_per_iris_shape_{{ prev_execution_date_success | ts_nodash }} CASCADE",
         autocommit=True,
     )
 

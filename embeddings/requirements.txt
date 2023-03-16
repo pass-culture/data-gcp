@@ -9,3 +9,4 @@ Pillow
 loguru==0.6.0
 psutil
 tqdm
+datetime

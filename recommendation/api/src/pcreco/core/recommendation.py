@@ -32,7 +32,7 @@ class Recommendation:
         self.user = user
         self.json_input = params_in.json_input
         self.params_in_filters = params_in._get_conditions()
-        self.model_params = select_reco_model_params("cold_start_model")
+        self.model_params = select_reco_model_params(params_in.model_endpoint)
         # TODO migrate this params in RecommendationDefaultModel model
         self.reco_radius = params_in.reco_radius
         self.is_reco_shuffled = params_in.is_reco_shuffled

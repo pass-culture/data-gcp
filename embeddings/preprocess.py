@@ -32,7 +32,7 @@ def main(
         params = json.load(config_file)
     data_type = params["embedding_extract_from"]
     df_data = pd.read_gbq(
-        f"SELECT * FROM `{gcp_project}.clean_{env_short_name}.{data_type}_to_extract_embeddings`"
+        f"SELECT * FROM `{gcp_project}.tmp_{env_short_name}.{data_type}_to_extract_embeddings`"
     )
     df_data_clean = preprocess(
         df_data,
@@ -43,7 +43,7 @@ def main(
         ],
     )
     df_data_clean.to_gbq(
-        f"clean_{env_short_name}.{data_type}_to_extract_embeddings_clean",
+        f"tmp_{env_short_name}.{data_type}_to_extract_embeddings_clean",
         project_id=gcp_project,
         if_exists="replace",
     )

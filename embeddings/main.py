@@ -51,7 +51,7 @@ def main(
     ###############
     # Load preprocessed data
     df_data_to_extract_embedding = pd.read_gbq(
-        f"SELECT * FROM `{gcp_project}.clean_{env_short_name}.{data_type}_to_extract_embeddings_clean`"
+        f"SELECT * FROM `{gcp_project}.tmp_{env_short_name}.{data_type}_to_extract_embeddings_clean`"
     )
 
     ###############
@@ -79,21 +79,9 @@ def main(
     df_data_w_embedding = pd.concat(df_data_with_embedding_df_list)
 
     df_data_w_embedding.to_gbq(
-        f"clean_{env_short_name}.{data_type}_extracted_embedding",
+        f"clean_{env_short_name}.{data_type}_embeddings",
         project_id=gcp_project,
         if_exists="replace",
-    )
-    # Save already extracted data
-    # Cast offer_id back to string
-
-    df_data_to_extract_embedding["id"] = df_data_to_extract_embedding[
-        f"{data_type}_id"
-    ].astype(str)
-
-    df_data_to_extract_embedding[["id"]].to_gbq(
-        f"clean_{env_short_name}.{data_type}_already_embedded",
-        project_id=gcp_project,
-        if_exists="append",
     )
 
 

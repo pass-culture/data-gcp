@@ -462,6 +462,83 @@ class RecommendationTest:
             ),
         ],
     )
+    @patch("pcreco.core.utils.cold_start.get_cold_start_categories")
+    @patch("pcreco.core.utils.cold_start.get_cold_start_status")
+    def test_recommendation_playlist_cold_start_model(
+        self,
+        cold_start_status_mock: Mock,
+        cold_start_categories_mock: Mock,
+        setup_database: Any,
+        user_id,
+        geoloc,
+        subcategories,
+        use_case,
+    ):
+        with patch("pcreco.utils.db.db_connection.__get_session") as connection_mock:
+            connection_mock.return_value = setup_database
+            longitude = geoloc["longitude"]
+            latitude = geoloc["latitude"]
+
+            user = User(user_id, longitude, latitude)
+            cold_start_status_mock.return_value = True
+            cold_start_categories_mock.return_value = ["SEANCE_CINE"]
+            input_reco = PlaylistParamsIn(
+                {"subcategories": subcategories, "modelEndpoint": "cold_start_model"}
+            )
+
+            scoring = Recommendation(user, params_in=input_reco)
+
+            recommended_offers = scoring.scoring.get_scored_offers()
+            recommendation_sgn = [reco["subcategory_id"] for reco in recommended_offers]
+
+            if latitude is not None and longitude is not None:
+
+                assert (
+                    len(recommended_offers) > 0
+                ), f"{use_case}: playlist should not be empty"
+                assert set(recommendation_sgn) == set(
+                    subcategories
+                ), f"{use_case}: recommended subcategories are expected"
+            elif input_reco.is_event == True:
+                assert (
+                    len(recommended_offers) == 0
+                ), f"{use_case}: playlist should be empty"
+            else:
+                assert (
+                    len(recommended_offers) > 0
+                ), f"{use_case}: playlist should not be empty"
+
+            assert (
+                input_reco.has_conditions == True
+            ), f"{input_reco.json} should contain params"
+
+    @pytest.mark.parametrize(
+        ["user_id", "geoloc", "sub_cat", "params_in", "use_case"],
+        [
+            (
+                "118",
+                {"longitude": 2.331289, "latitude": 48.830719},
+                ["EVENEMENT_CINE"],
+                {
+                    "offerTypeList": [
+                        {"key": "MOVIE", "value": "BOOLYWOOD"},
+                    ]
+                },
+                "18_geoloc_EVENEMENT_CINE_MOVIE",
+            ),
+            (
+                "118",
+                {"longitude": None, "latitude": None},
+                ["LIVRE_PAPIER"],
+                {
+                    "offerTypeList": [
+                        {"key": "BOOK", "value": "Histoire"},
+                    ]
+                },
+                "18_geoloc_LIVRE_PAPIER_MOVIE",
+            ),
+        ],
+    )
     @patch("pcreco.core.utils.cold_start.get_cold_start_status")
     def test_recommendation_offer_type_list_cold_start(
         self,

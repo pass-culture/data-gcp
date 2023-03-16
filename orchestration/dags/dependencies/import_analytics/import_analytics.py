@@ -379,7 +379,7 @@ analytics_tables = {
         "partition_prefix": "$",
         "time_partitioning": {"field": "event_date"},
         "clustering_fields": {"fields": ["event_type"]},
-        "dag_depends": ["import_contentful", "import_intraday_firebase_data"],
+        "dag_depends": ["import_contentful", "import_daily_firebase_data"],
     },
 }
 

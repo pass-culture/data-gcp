@@ -215,4 +215,4 @@ SELECT
 FROM
     event_union e
 WHERE 
-    e.event_date = DATE('{{ ds }}')
+    e.event_date = DATE('{{ add_days(ds, -1) }}')

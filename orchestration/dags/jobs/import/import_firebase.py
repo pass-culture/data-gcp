@@ -68,6 +68,7 @@ for type, params in dags.items():
             job_params[
                 "destination_table"
             ] = f"{job_params['destination_table']}{job_params['partition_prefix']}{yyyymmdd}"
+
         task = bigquery_job_task(
             dag=dag,
             table=table,

@@ -12,8 +12,7 @@ WITH firebase_bookings AS (
       `{{ bigquery_analytics_dataset }}.firebase_events` f_events
   WHERE
       event_name = 'BookingConfirmation'
-  -- Calculer sur les 4 derniers mois
-  AND event_date >= DATE('{{ add_days(ds, -120) }}')
+  AND event_date = DATE('{{ ds }}')
 )
 
 , firebase_consult AS (
@@ -29,7 +28,7 @@ WITH firebase_bookings AS (
     , entry_id
   FROM `{{ bigquery_analytics_dataset }}.firebase_events`
   WHERE event_name = 'ConsultOffer'
-  AND event_date >= DATE('{{ add_days(ds, -127) }}')
+  AND event_date BETWEEN DATE('{{ add_days(ds, -7) }}') AND DATE('{{ ds }}')
 )
 
 , bookings_origin_first_touch AS (

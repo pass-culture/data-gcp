@@ -5,7 +5,7 @@ import typer
 from itertools import repeat
 from multiprocessing import cpu_count
 import pandas as pd
-from datetime import datetime 
+from datetime import datetime
 from tools.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
@@ -78,7 +78,9 @@ def main(
     print("Multiprocessing done")
     df_data_w_embedding = pd.concat(df_data_with_embedding_df_list)
 
-    df_data_w_embedding["extraction_date"]=[datetime.now().strftime("%Y-%m-%d")]*len(df_data_w_embedding) 
+    df_data_w_embedding["extraction_date"] = [
+        datetime.now().strftime("%Y-%m-%d")
+    ] * len(df_data_w_embedding)
     df_data_w_embedding.to_gbq(
         f"clean_{env_short_name}.{data_type}_embeddings",
         project_id=gcp_project,

@@ -893,7 +893,7 @@ ENRICHED_USER_DATA_EXPECTED = [
         "amount_spent_in_digital_goods": 20.0,
         "amount_spent_in_physical_goods": 0.0,
         "amount_spent_in_outings": 0.0,
-        "user_last_deposit_amount,": 500,
+        "user_last_deposit_amount": 500,
         "last_deposit_theoretical_amount_spent": 20,
         "last_deposit_theoretical_amount_spent_in_digital_goods": 20,
         "last_deposit_actual_amount_spent": 20,

@@ -8,8 +8,9 @@ from common.operators.gce import (
     CloneRepositoryGCEOperator,
     GCloudSSHGCEOperator,
 )
+from common.operators.biquery import bigquery_job_task
 from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
-
+from dependencies.ml.embeddings.import_offers import params
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import GCP_PROJECT_ID, ENV_SHORT_NAME, DAG_FOLDER
@@ -37,9 +38,7 @@ with DAG(
     template_searchpath=DAG_FOLDER,
     params={
         "branch": Param(
-            default="production"
-            if ENV_SHORT_NAME == "prod"
-            else "PC-20771-extract-and-import-offers-metadata-emb-to-BQ",
+            default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
         "instance_type": Param(
@@ -52,22 +51,8 @@ with DAG(
         ),
     },
 ) as dag:
-
-    data_collect_task = BigQueryInsertJobOperator(
-        task_id=f"import_batch_to_clean",
-        configuration={
-            "query": {
-                "query": "{% include '/dependencies/ml/embeddings/offer_to_extract_embedding.sql' %}",
-                "useLegacySql": False,
-                "destinationTable": {
-                    "projectId": GCP_PROJECT_ID,
-                    "datasetId": f"clean_{ENV_SHORT_NAME}",
-                    "tableId": "offer_to_extract_embeddings",
-                },
-                "writeDisposition": "WRITE_TRUNCATE",
-            }
-        },
-        dag=dag,
+    data_collect_task = bigquery_job_task(
+        dag, "import_offer_batch", params, extra_params={}
     )
 
     gce_instance_start = StartGCEOperator(
@@ -77,7 +62,10 @@ with DAG(
     )
 
     fetch_code = CloneRepositoryGCEOperator(
-        task_id="fetch_code", instance_name=GCE_INSTANCE, command="{{ params.branch }}"
+        task_id="fetch_code",
+        instance_name=GCE_INSTANCE,
+        python_version="3.10",
+        command="{{ params.branch }}",
     )
 
     install_dependencies = GCloudSSHGCEOperator(

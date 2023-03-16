@@ -1,23 +1,4 @@
-CREATE TEMPORARY FUNCTION humanize_id(id STRING) RETURNS STRING LANGUAGE js OPTIONS (
-    library = "gs://data-bucket-{{ env_short_name }}/base32-encode/base32.js"
-) AS """
-     		 // turn int into bytes array
-			var byteArray = [];
-			var updated_id = id;
-			while (updated_id != 0) {
-			    var byte = updated_id & 0xff;
-			    byteArray.push(byte);
-			    updated_id = (updated_id - byte) / 256;
-			}
-			var reversedByteArray = byteArray.reverse();
-			
-			// apply base32 encoding
-			var raw_b32 = base32Encode(new Uint8Array(reversedByteArray), 'RFC4648', { padding: false });
-			
-			// replace " O " with " 8 " and " I " with " 9 "
-			return raw_b32.replace(/O/g, '8').replace(/I/g, '9');
- """;
-
+{{ create_humanize_id_function() }}
 WITH offer_humanized_id AS (
     SELECT
         offer_id,
@@ -83,7 +64,7 @@ CASE
         LEFT JOIN mediation ON o.offer_id = mediation.offer_id
         LEFT JOIN `{{ gcp_project }}.analytics_{{ env_short_name }}`.offer_item_ids oii
         on o.offer_id=oii.offer_id
-    where offer_id not in (select id from `{{ gcp_project }}.analytics_{{ env_short_name }}`.offer_already_embedded)
+    where o.offer_id not in (select offer_id from `{{ gcp_project }}.clean_{{ env_short_name }}`.offer_embeddings)
     LIMIT 50000
 )
 select

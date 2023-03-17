@@ -74,7 +74,7 @@ def train(
         user_features_config, item_features_config, input_prediction_feature = (
             features["user_embedding_layers"],
             features["item_embedding_layers"],
-            features["input_prediction_feature"],
+            features.get("input_prediction_feature","user_id")
         )
 
     # Load data

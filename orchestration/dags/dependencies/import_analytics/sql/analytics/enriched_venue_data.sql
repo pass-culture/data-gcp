@@ -192,9 +192,7 @@ bookable_offer_cnt AS (
         venue_id,
         COUNT(DISTINCT offer_id) AS venue_bookable_offer_cnt
     FROM
-        `{{ bigquery_analytics_dataset }}`.enriched_offer_data
-    WHERE
-        offer_is_bookable
+        `{{ bigquery_clean_dataset }}`.bookable_offer
     GROUP BY
         1
 ),

@@ -65,7 +65,7 @@ gce_params = {
 }
 
 default_args = {
-    "start_date": datetime(2022, 11, 30),
+    "start_date": datetime(2023, 3, 17),
     "on_failure_callback": task_fail_slack_alert,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
@@ -82,9 +82,7 @@ with DAG(
     template_searchpath=DAG_FOLDER,
     params={
         "branch": Param(
-            default="production"
-            if ENV_SHORT_NAME == "prod"
-            else "PC-20796-Add-QPI-to-Two-Towers-user-features",
+            default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
         "config_file_name": Param(

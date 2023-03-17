@@ -69,6 +69,7 @@ bookings_infos AS (
         collective_booking_status AS booking_status,
         collective_booking_confirmation_date,
         collective_booking_confirmation_limit_date,
+        collective_booking.educational_year_id,
         RANK() OVER(
             PARTITION BY educational_institution.educational_institution_id
             ORDER BY
@@ -78,12 +79,21 @@ bookings_infos AS (
             PARTITION BY educational_institution.educational_institution_id
             ORDER BY
                 collective_booking.collective_booking_creation_date DESC
-        ) AS booking_rank_desc
+        ) AS booking_rank_desc,
+        CASE
+            WHEN (
+                CAST(educational_year_beginning_date AS DATE) <= CURRENT_DATE
+                AND CAST(educational_year_expiration_date AS DATE) >= CURRENT_DATE
+            ) THEN TRUE
+            ELSE FALSE
+        END AS is_current_year_booking,
     FROM
         `{{ bigquery_analytics_dataset }}`.applicative_database_educational_institution AS educational_institution
         JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_collective_booking AS collective_booking ON educational_institution.educational_institution_id = collective_booking.educational_institution_id
         AND collective_booking_status != 'CANCELLED'
+        JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_educational_year AS educational_year ON educational_year.adage_id = collective_booking.educational_year_id
 ),
+
 first_booking AS (
     SELECT
         institution_id,
@@ -109,20 +119,37 @@ bookings_per_institution AS (
     SELECT
         bookings_infos.institution_id,
         COUNT(DISTINCT booking_id) AS nb_non_cancelled_bookings,
+        COUNT(DISTINCT CASE WHEN is_current_year_booking THEN booking_id END) AS nb_non_cancelled_bookings_current_year,    
         SUM(collective_stock_price) AS theoric_amount_spent,
+        SUM(CASE WHEN is_current_year_booking THEN collective_stock_price END) AS theoric_amount_spent_current_year,
         COUNT(
             CASE
+
                 WHEN booking_status IN ('USED', 'REIMBURSED') THEN 1
                 ELSE NULL
             END
         ) AS nb_used_bookings,
+        COUNT(
+            CASE
+
+                WHEN (booking_status IN ('USED', 'REIMBURSED') AND is_current_year_booking) THEN 1
+                ELSE NULL
+            END
+        ) AS nb_used_bookings_current_year,
         SUM(
             CASE
                 WHEN booking_status IN ('USED', 'REIMBURSED') THEN collective_stock_price
                 ELSE NULL
             END
         ) AS real_amount_spent,
+        SUM(
+            CASE
+                WHEN (booking_status IN ('USED', 'REIMBURSED') AND is_current_year_booking) THEN collective_stock_price
+                ELSE NULL
+            END
+        ) AS real_amount_spent_current_year,
         SUM(collective_stock_number_of_tickets) AS total_eleves_concernes,
+        SUM(CASE WHEN is_current_year_booking THEN collective_stock_number_of_tickets END) AS total_eleves_concernes_current_year,
         COUNT(DISTINCT collective_offer_subcategory_id) AS nb_distinct_categories_booked
     FROM
         bookings_infos
@@ -162,7 +189,7 @@ SELECT
     institution_name AS institution_name,
     current_deposit.ministry AS ministry,
     educational_institution.institution_type,
-    academie_dept.libelle_academie AS institution_academie,
+    region_department.academy_name AS institution_academie,
     region_department.region_name AS institution_region_name,
     educational_institution.institution_departement_code,
     institution_postal_code,
@@ -176,14 +203,19 @@ SELECT
     last_booking.last_booking_date,
     last_booking.last_category_booked,
     bookings_per_institution.nb_non_cancelled_bookings AS nb_non_cancelled_bookings,
+    bookings_per_institution.nb_non_cancelled_bookings_current_year AS nb_non_cancelled_bookings_current_year,
     bookings_per_institution.theoric_amount_spent,
+    bookings_per_institution.theoric_amount_spent_current_year AS theoric_amount_spent_current_year,
     bookings_per_institution.nb_used_bookings,
+    bookings_per_institution.nb_used_bookings_current_year AS nb_used_bookings_current_year,
     bookings_per_institution.real_amount_spent,
+    bookings_per_institution.real_amount_spent_current_year AS real_amount_spent_current_year,
     SAFE_DIVIDE(
-        bookings_per_institution.real_amount_spent,
+        bookings_per_institution.real_amount_spent_current_year,
         current_deposit.institution_current_deposit_amount
     ) AS part_credit_actuel_depense_reel,
     bookings_per_institution.total_eleves_concernes AS total_nb_of_tickets,
+    bookings_per_institution.total_eleves_concernes_current_year AS total_nb_of_tickets_current_year,
     students_per_institution.nb_of_students AS total_nb_of_students_in_institution,
     students_educonnectes.nb_jeunes_credited AS nb_eleves_beneficiaires,
     SAFE_DIVIDE(
@@ -200,5 +232,4 @@ FROM
     LEFT JOIN last_booking ON educational_institution.educational_institution_id = last_booking.institution_id
     LEFT JOIN bookings_per_institution ON educational_institution.educational_institution_id = bookings_per_institution.institution_id
     LEFT JOIN students_per_institution ON educational_institution.institution_id = students_per_institution.institution_id
-    LEFT JOIN `{{ bigquery_analytics_dataset }}`.academie_dept AS academie_dept ON educational_institution.institution_departement_code = academie_dept.code_dpt
     LEFT JOIN students_educonnectes ON educational_institution.institution_id = students_educonnectes.institution_external_id

@@ -2,6 +2,9 @@ from datetime import datetime
 
 # Enriched_offer_data
 ENRICHED_OFFER_DATA_INPUT = {
+    "bookable_offer": [
+        {"offer_id": 4},
+    ],
     "applicative_database_booking": [
         {
             "user_id": "1",
@@ -193,24 +196,6 @@ ENRICHED_OFFER_DATA_INPUT = {
             "stock_booking_limit_date": None,
             "stock_beginning_date": None,
             "stock_fields_updated": "{}",
-        },
-    ],
-    "enriched_stock_data": [
-        {
-            "stock_id": "1",
-            "offer_id": "3",
-            "available_stock_information": "8",
-            "stock_booking_limit_date": "2019-11-23",
-            "stock_beginning_date": "2019-11-24",
-            "stock_price": "0",
-        },
-        {
-            "stock_id": "2",
-            "offer_id": "4",
-            "available_stock_information": "12",
-            "stock_booking_limit_date": None,
-            "stock_beginning_date": None,
-            "stock_price": "0",
         },
     ],
     "applicative_database_user": [
@@ -894,6 +879,7 @@ ENRICHED_USER_DATA_EXPECTED = [
         "amount_spent_in_digital_goods": 20.0,
         "amount_spent_in_physical_goods": 0.0,
         "amount_spent_in_outings": 0.0,
+        "user_last_deposit_amount": 500,
         "last_deposit_theoretical_amount_spent": 20,
         "last_deposit_theoretical_amount_spent_in_digital_goods": 20,
         "last_deposit_actual_amount_spent": 20,
@@ -949,12 +935,11 @@ ENRICHED_VENUE_DATA_INPUT = {
     "applicative_database_collective_offer_template": [
         {"collective_offer_id": "1", "venue_id": "1"}
     ],
-    "enriched_offer_data": [
+    "bookable_offer": [
         {
             "offer_id": "1",
             "venue_id": "1",
             "offer_subcategoryId": "SEANCE_CINE",
-            "offer_is_bookable": True,
         }
     ],
     "applicative_database_offerer": [
@@ -1050,9 +1035,6 @@ ENRICHED_OFFERER_DATA_INPUT = {
         }
     ],
     "applicative_database_offer": [{"offer_id": "1", "venue_id": "1"}],
-    "enriched_offer_data": [
-        {"offer_id": "1", "offerer_id": "1", "venue_id": "1", "offer_is_bookable": True}
-    ],
     "applicative_database_offerer": [
         {
             "offerer_id": "1",
@@ -1075,6 +1057,7 @@ ENRICHED_OFFERER_DATA_INPUT = {
     "applicative_database_venue": [{"venue_id": "1", "venue_managing_offerer_id": "1"}],
     "applicative_database_venue_label": [],
     "region_department": [{"num_dep": "973", "region_name": "Guyane"}],
+    "bookable_offer": [{"offer_id": 1, "offerer_id": 1}],
 }
 
 ENRICHED_OFFERER_DATA_EXPECTED = [

@@ -46,9 +46,6 @@ service_account_token = PythonOperator(
     dag=dag,
 )
 
-table_defs = {"activity_report": 28, "daily_report": 28, "in_app_event_report": 28}
-
-
 activity_report_op = SimpleHttpOperator(
     task_id=f"import_activity_report_data_to_bigquery",
     method="POST",

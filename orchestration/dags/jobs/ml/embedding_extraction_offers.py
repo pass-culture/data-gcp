@@ -8,26 +8,29 @@ from common.operators.gce import (
     CloneRepositoryGCEOperator,
     GCloudSSHGCEOperator,
 )
+from common.operators.biquery import bigquery_job_task
+from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
+from dependencies.ml.embeddings.import_offers import params
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import GCP_PROJECT_ID, ENV_SHORT_NAME, DAG_FOLDER
 from common.utils import get_airflow_schedule
 
 DEFAULT_REGION = "europe-west1"
-GCE_INSTANCE = f"link-offers-{ENV_SHORT_NAME}"
-BASE_DIR = f"data-gcp/record_linkage"
+GCE_INSTANCE = f"extract-offers-embeddings-{ENV_SHORT_NAME}"
+BASE_DIR = f"data-gcp/embeddings"
 
 default_args = {
-    "start_date": datetime(2022, 1, 5),
+    "start_date": datetime(2023, 3, 6),
     "on_failure_callback": task_fail_slack_alert,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }
 
 with DAG(
-    "link_offers",
+    "embeddings_extraction_offers",
     default_args=default_args,
-    description="Link offers via recordLinkage",
+    description="Extact offer metadata embeddings",
     schedule_interval=get_airflow_schedule("0 0 * * 0"),
     catchup=False,
     dagrun_timeout=timedelta(minutes=180),
@@ -42,8 +45,15 @@ with DAG(
             default="n1-standard-2" if ENV_SHORT_NAME == "dev" else "n1-standard-32",
             type="string",
         ),
+        "config_file_name": Param(
+            default="default-config-offer",
+            type="string",
+        ),
     },
 ) as dag:
+    data_collect_task = bigquery_job_task(
+        dag, "import_offer_batch", params, extra_params={}
+    )
 
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
@@ -65,48 +75,24 @@ with DAG(
         command="""pip install -r requirements.txt --user""",
     )
 
-    data_collect = GCloudSSHGCEOperator(
-        task_id="data_collect",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        command=f"""
-        python data_collect.py \
-        --gcp-project {GCP_PROJECT_ID} \
-        --env-short-name {ENV_SHORT_NAME}
-        """,
-    )
-
     preprocess = GCloudSSHGCEOperator(
         task_id="preprocess",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
-        command=f"""
-         python preprocess.py \
-        --gcp-project {GCP_PROJECT_ID} \
-        --env-short-name {ENV_SHORT_NAME}
-        """,
+        command="PYTHONPATH=. python preprocess.py "
+        f"--gcp-project {GCP_PROJECT_ID} "
+        f"--env-short-name {ENV_SHORT_NAME} "
+        "--config-file-name {{ params.config_file_name }} ",
     )
 
-    record_linkage = GCloudSSHGCEOperator(
-        task_id="record_linkage",
+    extract_embedding = GCloudSSHGCEOperator(
+        task_id="extract_embedding",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
-        command=f"""
-         python main.py \
-        --gcp-project {GCP_PROJECT_ID} \
-        --env-short-name {ENV_SHORT_NAME}
-        """,
-    )
-
-    postprocess = GCloudSSHGCEOperator(
-        task_id="postprocess",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        command=f"""
-         python postprocess.py \
-        --gcp-project {GCP_PROJECT_ID} \
-        --env-short-name {ENV_SHORT_NAME}
-        """,
+        command="PYTHONPATH=. python main.py "
+        f"--gcp-project {GCP_PROJECT_ID} "
+        f"--env-short-name {ENV_SHORT_NAME} "
+        "--config-file-name {{ params.config_file_name }} ",
     )
 
     gce_instance_stop = StopGCEOperator(
@@ -114,12 +100,11 @@ with DAG(
     )
 
     (
-        gce_instance_start
+        data_collect_task
+        >> gce_instance_start
         >> fetch_code
         >> install_dependencies
-        >> data_collect
         >> preprocess
-        >> record_linkage
-        >> postprocess
+        >> extract_embedding
         >> gce_instance_stop
     )

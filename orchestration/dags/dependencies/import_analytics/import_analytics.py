@@ -109,7 +109,6 @@ analytics_tables = {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_offer_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "depends": [
-            "enriched_stock_data",
             "isbn_rayon_editor",
             "offer_extracted_data",
             "offer_item_ids",
@@ -127,7 +126,6 @@ analytics_tables = {
     "enriched_offerer_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_offerer_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "depends": ["enriched_offer_data"],
     },
     "enriched_stock_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_stock_data.sql",
@@ -152,7 +150,6 @@ analytics_tables = {
     "enriched_venue_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_venue_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "depends": ["enriched_offer_data"],
     },
     "iris_venues_in_shape": {
         "sql": f"{ANALYTICS_SQL_PATH}/iris_venues_in_shape.sql",

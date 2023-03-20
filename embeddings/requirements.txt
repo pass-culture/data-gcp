@@ -1,0 +1,12 @@
+pandas==1.3.5
+pandas-gbq
+typer==0.7.0
+pytest==6.1.1
+loguru
+pandas-gbq
+sentence_transformers
+Pillow
+loguru==0.6.0
+psutil
+tqdm
+datetime

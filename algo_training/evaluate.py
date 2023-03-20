@@ -78,7 +78,7 @@ def main(
         config_file_name,
     )
     mlflow.log_metrics(metrics)
-        
+
     # Export the PCA representations of the item embeddings
     pca_plots_path = f"{MODEL_DIR}/pca_plots/"
     os.makedirs(pca_plots_path, exist_ok=True)

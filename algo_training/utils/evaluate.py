@@ -40,7 +40,7 @@ def evaluate(
         encoding="utf-8",
     ) as config_file:
         features = json.load(config_file)
-        prediction_input_feature = features["input_prediction_feature"]
+        prediction_input_feature = features.get("input_prediction_feature", "user_id")
     logger.info("Load raw")
     raw_data = read_from_gcs(storage_path, "bookings", parallel=False).astype(
         {"user_id": str, "item_id": str, "count": int}

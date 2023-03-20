@@ -23,4 +23,9 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "institutional_partners",
     },
+    "festival_increments": {
+        "sql": f"{SQL_PATH}/analytics/festival_increments.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "festival_increments",
+    },
 }

@@ -1,6 +1,7 @@
 import tensorflow as tf
 import tensorflow_recommenders as tfrs
 import pandas as pd
+from loguru import logger
 
 from utils.layers import (
     StringEmbeddingLayer,

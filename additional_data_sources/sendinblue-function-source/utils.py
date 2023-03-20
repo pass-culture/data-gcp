@@ -29,20 +29,20 @@ campaigns_histo_schema = {
     "unsubscriptions": "INTEGER",
 }
 
-# transactional_histo_schema = {
-#     "template": "INTEGER",
-#     "tag": "STRING",
-#     "count_delivered": "INTEGER",
-#     "first_date_delivered": "DATETIME",
-#     "last_date_delivered": "DATETIME",
-#     "unique_delivered": "INTEGER",
-#     "count_opened": "INTEGER",
-#     "first_date_opened": "DATETIME",
-#     "last_date_opened": "DATETIME",
-#     "unique_opened": "INTEGER",
-#     "count_unsubscribed": "INTEGER",
-#     "first_date_unsubscribed": "DATETIME",
-#     "last_date_unsubscribed": "DATETIME",
-#     "unique_unsubscribed": "INTEGER",
-#     "update_date": "DATETIME",
-# }
+transactional_histo_schema = {
+    "template": "INTEGER",
+    "tag": "STRING",
+    "count_delivered": "INTEGER",
+    "first_date_delivered": "TIMESTAMP",
+    "last_date_delivered": "TIMESTAMP",
+    "unique_delivered": "INTEGER",
+    "count_opened": "INTEGER",
+    "first_date_opened": "TIMESTAMP",
+    "last_date_opened": "TIMESTAMP",
+    "unique_opened": "INTEGER",
+    "count_unsubscribed": "INTEGER",
+    "first_date_unsubscribed": "TIMESTAMP",
+    "last_date_unsubscribed": "TIMESTAMP",
+    "unique_unsubscribed": "INTEGER",
+    "update_date": "DATETIME",
+}

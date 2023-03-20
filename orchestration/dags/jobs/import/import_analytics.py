@@ -95,10 +95,18 @@ with TaskGroup(
     group_id="clean_transformations_group", dag=dag
 ) as clean_transformations:
 
-    import_tables_to_clean_transformation_tasks = []
+    import_tables_to_clean_transformation_jobs = {}
     for table, params in clean_tables.items():
         task = bigquery_job_task(dag=dag, table=table, job_params=params)
-        import_tables_to_clean_transformation_tasks.append(task)
+        import_tables_to_clean_transformation_jobs[table] = {
+            "operator": task,
+            "depends": params.get("depends", []),
+            "dag_depends": params.get("dag_depends", []),  # liste de dag_id
+        }
+
+    import_tables_to_clean_transformation_tasks = depends_loop(
+        import_tables_to_clean_transformation_jobs, end_raw, dag
+    )
 
 
 with TaskGroup(group_id="clean_copy_group", dag=dag) as clean_copy:

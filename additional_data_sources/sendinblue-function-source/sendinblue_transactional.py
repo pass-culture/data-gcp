@@ -165,9 +165,25 @@ class SendinblueTransactional:
 
         df = df[columns]
 
+        # convert to datetime
+        df = df.assign(
+            first_date_delivered=lambda _df: pd.to_datetime(
+                _df["first_date_delivered"]
+            ),
+            last_date_delivered=lambda _df: pd.to_datetime(_df["last_date_delivered"]),
+            first_date_opened=lambda _df: pd.to_datetime(_df["first_date_opened"]),
+            last_date_opened=lambda _df: pd.to_datetime(_df["last_date_opened"]),
+            first_date_unsubscribed=lambda _df: pd.to_datetime(
+                _df["first_date_unsubscribed"]
+            ),
+            last_date_unsubscribed=lambda _df: pd.to_datetime(
+                _df["last_date_unsubscribed"]
+            ),
+        )
+
         return df
 
-    def save_to_historical(self, df_to_save):
+    def save_to_historical(self, df_to_save, schema):
 
         bigquery_client = bigquery.Client()
 
@@ -178,9 +194,9 @@ class SendinblueTransactional:
             time_partitioning=bigquery.TimePartitioning(
                 type_=bigquery.TimePartitioningType.DAY, field="update_date"
             ),
-            # schema=[
-            #     bigquery.SchemaField(column, _type) for column, _type in schema.items()
-            # ],
+            schema=[
+                bigquery.SchemaField(column, _type) for column, _type in schema.items()
+            ],
         )
         job = bigquery_client.load_table_from_dataframe(
             df_to_save, table_id, job_config=job_config

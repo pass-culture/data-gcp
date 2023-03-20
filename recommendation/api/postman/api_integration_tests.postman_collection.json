@@ -959,6 +959,390 @@
 			"response": []
 		},
 		{
+			"name": "/playlist_recommendation/user_id Geoloc OfferTypeList: MOVIES",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"pm.test(\"Response time is less than 10s\", function () {\r",
+							"    pm.expect(pm.response.responseTime).to.be.below(10000);\r",
+							"});\r",
+							"pm.test(\"Response must be a JSON and have a body\", function () {\r",
+							"     pm.response.to.be.ok;\r",
+							"     pm.response.to.be.withBody;\r",
+							"     pm.response.to.be.json;\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response must contain an array playlist_recommended_offers\", function () {\r",
+							"  const jsonResponse = pm.response.json();\r",
+							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
+							"  pm.expect(jsonResponse).to.have.property('playlist_recommended_offers')\r",
+							"  pm.expect(jsonResponse.playlist_recommended_offers).to.be.an(\"array\");\r",
+							"});\r",
+							"\r",
+							"function checkIfArrayIsUnique(array) {\r",
+							"  return array.length === new Set(array).size;\r",
+							"}\r",
+							"\r",
+							"pm.test('Check if Offer_ids are unique', () => {\r",
+							"    let ids = []\r",
+							"    _.each(pm.response.json().playlist_recommended_offers, (item) => {\r",
+							"        ids.push(item)\r",
+							"    })\r",
+							"\r",
+							"    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
+							"})"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"const moment = require('moment'); \r",
+							"const today = moment();\r",
+							"var todayDate = today.format('YYYY-MM-DD'); \r",
+							"pm.globals.set(\"todayDate\", todayDate); \r",
+							"var FifteenDaysBack = moment().subtract(15, 'days'); \r",
+							"pm.globals.set(\"FifteenDaysBack\", FifteenDaysBack.format('YYYY-MM-DD'));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"offerTypeList\":[{\"MOVIE\":\"SCIENCE_FICTION\"},\r\n                     {\"MOVIE\":\"DETECTIVE\"},\r\n                     {\"MOVIE\":\"DRAMA\"}\r\n                     ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{api_url}}/playlist_recommendation/{{user_id}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
+					"host": [
+						"{{api_url}}"
+					],
+					"path": [
+						"playlist_recommendation",
+						"{{user_id}}"
+					],
+					"query": [
+						{
+							"key": "token",
+							"value": "{{api_token}}"
+						},
+						{
+							"key": "longitude",
+							"value": "2.3688874"
+						},
+						{
+							"key": "latitude",
+							"value": "48.8632553"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/playlist_recommendation/user_id Geoloc OfferTypeList: BOOK",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"pm.test(\"Response time is less than 10s\", function () {\r",
+							"    pm.expect(pm.response.responseTime).to.be.below(10000);\r",
+							"});\r",
+							"pm.test(\"Response must be a JSON and have a body\", function () {\r",
+							"     pm.response.to.be.ok;\r",
+							"     pm.response.to.be.withBody;\r",
+							"     pm.response.to.be.json;\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response must contain an array playlist_recommended_offers\", function () {\r",
+							"  const jsonResponse = pm.response.json();\r",
+							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
+							"  pm.expect(jsonResponse).to.have.property('playlist_recommended_offers')\r",
+							"  pm.expect(jsonResponse.playlist_recommended_offers).to.be.an(\"array\");\r",
+							"});\r",
+							"\r",
+							"function checkIfArrayIsUnique(array) {\r",
+							"  return array.length === new Set(array).size;\r",
+							"}\r",
+							"\r",
+							"pm.test('Check if Offer_ids are unique', () => {\r",
+							"    let ids = []\r",
+							"    _.each(pm.response.json().playlist_recommended_offers, (item) => {\r",
+							"        ids.push(item)\r",
+							"    })\r",
+							"\r",
+							"    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
+							"})"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"const moment = require('moment'); \r",
+							"const today = moment();\r",
+							"var todayDate = today.format('YYYY-MM-DD'); \r",
+							"pm.globals.set(\"todayDate\", todayDate); \r",
+							"var FifteenDaysBack = moment().subtract(15, 'days'); \r",
+							"pm.globals.set(\"FifteenDaysBack\", FifteenDaysBack.format('YYYY-MM-DD'));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"offerTypeList\":[{\"BOOK\":\"Manga\"},\r\n                    {\"BOOK\":\"Droit\"}\r\n                     ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{api_url}}/playlist_recommendation/{{user_id}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
+					"host": [
+						"{{api_url}}"
+					],
+					"path": [
+						"playlist_recommendation",
+						"{{user_id}}"
+					],
+					"query": [
+						{
+							"key": "token",
+							"value": "{{api_token}}"
+						},
+						{
+							"key": "longitude",
+							"value": "2.3688874"
+						},
+						{
+							"key": "latitude",
+							"value": "48.8632553"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/playlist_recommendation/user_id Geoloc OfferTypeList: MUSIC",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"pm.test(\"Response time is less than 10s\", function () {\r",
+							"    pm.expect(pm.response.responseTime).to.be.below(10000);\r",
+							"});\r",
+							"pm.test(\"Response must be a JSON and have a body\", function () {\r",
+							"     pm.response.to.be.ok;\r",
+							"     pm.response.to.be.withBody;\r",
+							"     pm.response.to.be.json;\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response must contain an array playlist_recommended_offers\", function () {\r",
+							"  const jsonResponse = pm.response.json();\r",
+							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
+							"  pm.expect(jsonResponse).to.have.property('playlist_recommended_offers')\r",
+							"  pm.expect(jsonResponse.playlist_recommended_offers).to.be.an(\"array\");\r",
+							"});\r",
+							"\r",
+							"function checkIfArrayIsUnique(array) {\r",
+							"  return array.length === new Set(array).size;\r",
+							"}\r",
+							"\r",
+							"pm.test('Check if Offer_ids are unique', () => {\r",
+							"    let ids = []\r",
+							"    _.each(pm.response.json().playlist_recommended_offers, (item) => {\r",
+							"        ids.push(item)\r",
+							"    })\r",
+							"\r",
+							"    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
+							"})"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"const moment = require('moment'); \r",
+							"const today = moment();\r",
+							"var todayDate = today.format('YYYY-MM-DD'); \r",
+							"pm.globals.set(\"todayDate\", todayDate); \r",
+							"var FifteenDaysBack = moment().subtract(15, 'days'); \r",
+							"pm.globals.set(\"FifteenDaysBack\", FifteenDaysBack.format('YYYY-MM-DD'));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"offerTypeList\":[{\"BOOK\":\"Manga\"},\r\n                    {\"BOOK\":\"Droit\"}\r\n                     ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{api_url}}/playlist_recommendation/{{user_id}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
+					"host": [
+						"{{api_url}}"
+					],
+					"path": [
+						"playlist_recommendation",
+						"{{user_id}}"
+					],
+					"query": [
+						{
+							"key": "token",
+							"value": "{{api_token}}"
+						},
+						{
+							"key": "longitude",
+							"value": "2.3688874"
+						},
+						{
+							"key": "latitude",
+							"value": "48.8632553"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/playlist_recommendation/user_id Geoloc OfferTypeList: SHOW",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"pm.test(\"Response time is less than 10s\", function () {\r",
+							"    pm.expect(pm.response.responseTime).to.be.below(10000);\r",
+							"});\r",
+							"pm.test(\"Response must be a JSON and have a body\", function () {\r",
+							"     pm.response.to.be.ok;\r",
+							"     pm.response.to.be.withBody;\r",
+							"     pm.response.to.be.json;\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response must contain an array playlist_recommended_offers\", function () {\r",
+							"  const jsonResponse = pm.response.json();\r",
+							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
+							"  pm.expect(jsonResponse).to.have.property('playlist_recommended_offers')\r",
+							"  pm.expect(jsonResponse.playlist_recommended_offers).to.be.an(\"array\");\r",
+							"});\r",
+							"\r",
+							"function checkIfArrayIsUnique(array) {\r",
+							"  return array.length === new Set(array).size;\r",
+							"}\r",
+							"\r",
+							"pm.test('Check if Offer_ids are unique', () => {\r",
+							"    let ids = []\r",
+							"    _.each(pm.response.json().playlist_recommended_offers, (item) => {\r",
+							"        ids.push(item)\r",
+							"    })\r",
+							"\r",
+							"    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
+							"})"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"const moment = require('moment'); \r",
+							"const today = moment();\r",
+							"var todayDate = today.format('YYYY-MM-DD'); \r",
+							"pm.globals.set(\"todayDate\", todayDate); \r",
+							"var FifteenDaysBack = moment().subtract(15, 'days'); \r",
+							"pm.globals.set(\"FifteenDaysBack\", FifteenDaysBack.format('YYYY-MM-DD'));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"offerTypeList\":[{\"SHOW\":\"Humour / Café-théâtre\"},\r\n                    {\"SHOW\":\"Théâtre\"}\r\n                     ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{api_url}}/playlist_recommendation/{{user_id}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
+					"host": [
+						"{{api_url}}"
+					],
+					"path": [
+						"playlist_recommendation",
+						"{{user_id}}"
+					],
+					"query": [
+						{
+							"key": "token",
+							"value": "{{api_token}}"
+						},
+						{
+							"key": "longitude",
+							"value": "2.3688874"
+						},
+						{
+							"key": "latitude",
+							"value": "48.8632553"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "/playlist_recommendation/user_id Geoloc Tonight is_event",
 			"event": [
 				{

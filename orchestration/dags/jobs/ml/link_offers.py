@@ -52,7 +52,10 @@ with DAG(
     )
 
     fetch_code = CloneRepositoryGCEOperator(
-        task_id="fetch_code", instance_name=GCE_INSTANCE, command="{{ params.branch }}"
+        task_id="fetch_code",
+        instance_name=GCE_INSTANCE,
+        python_version="3.10",
+        command="{{ params.branch }}",
     )
 
     install_dependencies = GCloudSSHGCEOperator(

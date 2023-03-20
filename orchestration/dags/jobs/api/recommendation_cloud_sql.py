@@ -38,7 +38,7 @@ from common.utils import get_airflow_schedule
 
 
 database_url = access_secret_data(
-    GCP_PROJECT_ID, f"{RECOMMENDATION_SQL_INSTANCE}-database-url", default=""
+    GCP_PROJECT_ID, f"{RECOMMENDATION_SQL_INSTANCE}_database_url", default=""
 )
 os.environ["AIRFLOW_CONN_PROXY_POSTGRES_TCP"] = (
     database_url.replace("postgresql://", "gcpcloudsql://")
@@ -57,6 +57,7 @@ default_args = {
     "retry_delay": timedelta(minutes=5),
 }
 FIREBASE_PERIOD_DAYS = 4 * 30 if ENV_SHORT_NAME == "prod" else 10
+NOW_YYMMDDHHMM = datetime.now().strftime("%Y%m%d%H%M")
 
 
 def get_table_data():
@@ -254,6 +255,7 @@ with DAG(
 
     end_data_prep >> restore_tasks[0]
     restore_tasks[-1] >> end_drop_restore
+    # keep creation time in the format yymmddHHMM for the deletion step
     create_materialized_view = CloudSQLExecuteQueryOperator(
         task_id="create_materialized_view_recommendable_offers_per_iris_shape_mv",
         gcp_cloudsql_conn_id="proxy_postgres_tcp",
@@ -315,11 +317,11 @@ with DAG(
         autocommit=True,
     )
 
-    yesterday = (datetime.today() - timedelta(days=1)).strftime("%Y%m%d")
+    # yesterday = (datetime.today() - timedelta(days=1)).strftime("%Y%m%d")
     drop_old_function = CloudSQLExecuteQueryOperator(
         task_id="drop_old_function",
         gcp_cloudsql_conn_id="proxy_postgres_tcp",
-        sql=f"DROP FUNCTION IF EXISTS get_recommendable_offers_per_iris_shape_{yesterday} CASCADE",
+        sql="DROP FUNCTION IF EXISTS get_recommendable_offers_per_iris_shape_{{ prev_execution_date_success | ts_nodash }} CASCADE",
         autocommit=True,
     )
 

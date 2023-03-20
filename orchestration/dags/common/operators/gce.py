@@ -133,7 +133,7 @@ class BaseSSHGCEOperator(BaseOperator):
             if retry > self.MAX_RETRY:
                 raise e
             sleep(retry * self.SSH_TIMEOUT)
-            self.run_ssh_client_command(self, hook, context, retry=retry + 1)
+            self.run_ssh_client_command(hook, context, retry=retry + 1)
 
     def execute(self, context):
         hook = ComputeEngineSSHHook(

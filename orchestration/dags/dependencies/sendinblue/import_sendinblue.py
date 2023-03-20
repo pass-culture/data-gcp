@@ -7,4 +7,9 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "sendinblue_newsletters_performance",
     },
+    "sendinblue_transactional_performance": {
+        "sql": f"{SQL_PATH}/analytics/sendinblue_transactional_performance.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "sendinblue_transactional_performance",
+    },
 }

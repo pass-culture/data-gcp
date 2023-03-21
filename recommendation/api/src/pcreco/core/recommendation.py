@@ -58,7 +58,7 @@ class Recommendation:
             self.reco_origin = "cold_start"
             return (
                 self.ColdStart(self)
-                if self.model_params.name == "cold_start"
+                if self.model_params.name == "default"
                 else self.Algo(self)
             )
         return self.Algo(self)

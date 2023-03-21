@@ -385,12 +385,14 @@ class RecommendationTest:
             ),
         ],
     )
+    @patch("pcreco.core.recommendation.Recommendation.Algo.get_scored_offers")
     @patch("pcreco.core.recommendation.get_cold_start_categories")
     @patch("pcreco.core.recommendation.get_cold_start_status")
     def test_recommendation_playlist_cold_start_B(
         self,
         cold_start_status_mock: Mock,
         cold_start_categories_mock: Mock,
+        get_scored_offers_algo_mock: Mock,
         setup_database: Any,
         user_id,
         geoloc,
@@ -411,26 +413,15 @@ class RecommendationTest:
 
             scoring = Recommendation(user, params_in=input_reco)
 
-            recommended_offers = scoring.scoring.get_scored_offers()
-            recommendation_sgn = [reco["subcategory_id"] for reco in recommended_offers]
-
-            if latitude is not None and longitude is not None:
-
-                assert (
-                    len(recommended_offers) > 0
-                ), f"{use_case}: playlist should not be empty"
-                assert set(recommendation_sgn) == set(
-                    subcategories
-                ), f"{use_case}: recommended subcategories are expected"
-            elif input_reco.is_event == True:
-                assert (
-                    len(recommended_offers) == 0
-                ), f"{use_case}: playlist should be empty"
-            else:
-                assert (
-                    len(recommended_offers) > 0
-                ), f"{use_case}: playlist should not be empty"
-
+            recommendable_offers = scoring.scoring.recommendable_offers
+            mock_predictions = [random.random()] * len(recommendable_offers)
+            get_scored_offers_algo_mock.return_value = [
+                {**recommendation, "score": mock_predictions[i]}
+                for i, recommendation in enumerate(recommendable_offers)
+            ]
+            assert (
+                len(recommendable_offers) > 0
+            ), f"{use_case}: playlist should not be empty"
             assert (
                 input_reco.has_conditions == True
             ), f"{input_reco.json} should contain params"

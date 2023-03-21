@@ -2,8 +2,8 @@ WITH involved_students AS (
     SELECT
         date(execution_date) as date,
         CASE
-            WHEN metric_id = "02A" THEN "20"
-            WHEN metric_id = "02B" THEN "20"
+            WHEN metric_id = "02A" THEN "2A"
+            WHEN metric_id = "02B" THEN "2B"
             WHEN upper(metric_id) = "TOTAL" THEN "-1"
             WHEN upper(metric_id) LIKE "%97%" THEN RIGHT(metric_id, 3)
             ELSE RIGHT(metric_id, 2)

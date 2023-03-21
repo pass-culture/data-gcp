@@ -84,8 +84,8 @@ class RecommendationTest:
             ),
         ],
     )
-    @patch("pcreco.core.recommendation.Recommendation.ColdStart.cold_start_categories")
-    @patch("pcreco.core.utils.cold_start.get_cold_start_status")
+    @patch("pcreco.core.recommendation.get_cold_start_categories")
+    @patch("pcreco.core.recommendation.get_cold_start_status")
     def test_recommendation_cold_start(
         self,
         cold_start_status_mock: Mock,
@@ -243,8 +243,8 @@ class RecommendationTest:
             ),
         ],
     )
-    @patch("pcreco.core.utils.cold_start.get_cold_start_categories")
-    @patch("pcreco.core.utils.cold_start.get_cold_start_status")
+    @patch("pcreco.core.recommendation.get_cold_start_categories")
+    @patch("pcreco.core.recommendation.get_cold_start_status")
     def test_recommendation_playlist_cold_start(
         self,
         cold_start_status_mock: Mock,
@@ -316,8 +316,8 @@ class RecommendationTest:
             ),
         ],
     )
-    @patch("pcreco.core.utils.cold_start.get_cold_start_categories")
-    @patch("pcreco.core.utils.cold_start.get_cold_start_status")
+    @patch("pcreco.core.recommendation.get_cold_start_categories")
+    @patch("pcreco.core.recommendation.get_cold_start_status")
     def test_recommendation_playlist_cold_start(
         self,
         cold_start_status_mock: Mock,
@@ -385,9 +385,9 @@ class RecommendationTest:
             ),
         ],
     )
-    @patch("pcreco.core.utils.cold_start.get_cold_start_categories")
-    @patch("pcreco.core.utils.cold_start.get_cold_start_status")
-    def test_recommendation_playlist_cold_start_model(
+    @patch("pcreco.core.recommendation.get_cold_start_categories")
+    @patch("pcreco.core.recommendation.get_cold_start_status")
+    def test_recommendation_playlist_cold_start_B(
         self,
         cold_start_status_mock: Mock,
         cold_start_categories_mock: Mock,
@@ -406,7 +406,7 @@ class RecommendationTest:
             cold_start_status_mock.return_value = True
             cold_start_categories_mock.return_value = ["SEANCE_CINE"]
             input_reco = PlaylistParamsIn(
-                {"subcategories": subcategories, "modelEndpoint": "cold_start_model"}
+                {"subcategories": subcategories, "modelEndpoint": "cold_start_b"}
             )
 
             scoring = Recommendation(user, params_in=input_reco)
@@ -462,6 +462,7 @@ class RecommendationTest:
             ),
         ],
     )
+
     @patch("pcreco.core.utils.cold_start.get_cold_start_categories")
     @patch("pcreco.core.utils.cold_start.get_cold_start_status")
     def test_recommendation_playlist_cold_start_model(

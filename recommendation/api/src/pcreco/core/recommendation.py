@@ -53,15 +53,14 @@ class Recommendation:
         if self.model_params.force_model:
             self.reco_origin = "algo"
             return self.Algo(self)
-        if self.model_params.force_cold_start_model:
-            self.reco_origin = "CS_algo"
-            return self.Algo(self)
         # Normal behaviour
         if get_cold_start_status(self.user):
             self.reco_origin = "cold_start"
-            log_duration(f"get_scoring_method = {self.reco_origin}", start)
-            return self.ColdStart(self)
-        log_duration(f"get_scoring_method = algo default", start)
+            return (
+                self.ColdStart(self)
+                if self.model_params.name == "cold_start"
+                else self.Algo(self)
+            )
         return self.Algo(self)
 
     def get_scoring(self) -> List[str]:
@@ -147,7 +146,7 @@ class Recommendation:
                 )
                 return []
             else:
-                if self.model_params.force_cold_start_model:
+                if self.model_params.name == "cold_start_b":
                     user_input = "-".join(self.cold_start_categories)
                 else:
                     user_input = self.user.id

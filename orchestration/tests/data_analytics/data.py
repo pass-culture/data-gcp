@@ -475,9 +475,8 @@ ENRICHED_COLLECTIVE_OFFER_DATA_INPUT = {
         }
     ],
     "subcategories": [{"id": "CONCERT", "category_id": "MUSIQUE_LIVE"}],
-    "academie_dept": [{"code_dpt": "35", "libelle_academie": "Rennes"}],
     "region_department": [
-        {"num_dep": 35, "dep_name": "Ile-et-Vilaine", "region_name": "Bretagne"}
+        {"num_dep": 35, "dep_name": "Ile-et-Vilaine", "region_name": "Bretagne", "academy_name": "Rennes"}
     ],
 }
 

@@ -34,8 +34,8 @@ FROM display_data
 LEFT JOIN convert_data ON display_data.session_id = convert_data.session_id
                         AND display_data.user_id = convert_data.user_id
                         AND display_data.offer_id = convert_data.similar_offer_id
-LEFT JOIN `{{ bigquery_analytics_dataset }}.diversification_booking` ON diversification_booking.booking_id = convert_data.booking_id
-JOIN `{{ bigquery_analytics_dataset }}.enriched_user_data` ON enriched_user_data.user_id = display_data.user_id
+LEFT JOIN `{{ bigquery_analytics_dataset }}.diversification_booking` AS diversification_booking ON diversification_booking.booking_id = convert_data.booking_id
+JOIN `{{ bigquery_analytics_dataset }}.enriched_user_data` AS enriched_user_data ON enriched_user_data.user_id = display_data.user_id
 GROUP BY 1,2,3,4,5,6,7,8,9,10,11
 ),
 

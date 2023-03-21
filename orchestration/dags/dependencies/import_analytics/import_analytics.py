@@ -322,6 +322,16 @@ analytics_tables = {
             "import_contentful",
         ],  # computed once a day
     },
+    "analytics_firebase_aggregated_similar_offer_events": {
+        "sql": f"{ANALYTICS_SQL_PATH}/firebase_aggregated_similar_offer_events.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "firebase_aggregated_similar_offer_events",
+        "time_partitioning": {"field": "event_date"},
+        "depends": ["diversification_booking", "enriched_user_data"],
+        "dag_depends": [
+            "import_intraday_firebase_data",
+        ],
+    },
     "adage_involved_student": {
         "sql": f"{ANALYTICS_SQL_PATH}/adage_involved_student.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",

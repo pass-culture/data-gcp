@@ -32,7 +32,7 @@ def extract_embedding(
             ].astype(str)
         if feature["type"] == "text":
             model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
-            embeddings = model.encode(df_analysis[feature_name])
+            embeddings = model.encode(df_analysis[feature_name].tolist())
             df_analysis[f"{feature_name}_embedding"] = [
                 list(embedding) for embedding in embeddings
             ]

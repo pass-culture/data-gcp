@@ -45,6 +45,7 @@ class Recommendation:
         self.scoring = self.get_scoring_method()
 
     def get_scoring_method(self) -> object:
+        start = time.time()
         # Force depending on model
         if self.model_params.force_cold_start:
             self.reco_origin = "cold_start"
@@ -58,7 +59,9 @@ class Recommendation:
         # Normal behaviour
         if get_cold_start_status(self.user):
             self.reco_origin = "cold_start"
+            log_duration(f"get_scoring_method = {self.reco_origin}", start)
             return self.ColdStart(self)
+        log_duration(f"get_scoring_method = algo default", start)
         return self.Algo(self)
 
     def get_scoring(self) -> List[str]:

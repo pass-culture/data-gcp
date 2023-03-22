@@ -41,7 +41,7 @@ service_account_token = PythonOperator(
 )
 
 import_opt_out_to_bigquery = SimpleHttpOperator(
-    task_id="import_qualtrics_data_to_bigquery",
+    task_id="import_opt_out_to_bigquery",
     method="POST",
     http_conn_id="http_gcp_cloud_function",
     endpoint=f"qualtrics_import_{ENV_SHORT_NAME}",
@@ -55,7 +55,7 @@ import_opt_out_to_bigquery = SimpleHttpOperator(
 )
 
 import_ir_answers_to_bigquery = SimpleHttpOperator(
-    task_id="import_qualtrics_data_to_bigquery",
+    task_id="import_ir_answers_to_bigquery",
     method="POST",
     http_conn_id="http_gcp_cloud_function",
     endpoint=f"qualtrics_import_{ENV_SHORT_NAME}",

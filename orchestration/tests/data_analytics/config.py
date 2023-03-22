@@ -346,6 +346,7 @@ BIGQUERY_SCHEMAS = {
         "num_dep": "STRING",
         "dep_name": "STRING",
         "region_name": "STRING",
+        "academy_name": "STING",
     },
     "applicative_database_deposit": {
         "id": "STRING",

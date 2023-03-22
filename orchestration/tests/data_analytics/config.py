@@ -378,11 +378,6 @@ BIGQUERY_SCHEMAS = {
         "libelle_academie": "STRING",
         "code_departement": "STRING",
     },
-    "academie_dept": {
-        "code_dpt": "STRING",
-        "libelle_academie": "STRING",
-        "libelle_region": "STRING",
-    },
     "applicative_database_collective_booking": {
         "collective_booking_id": "STRING",
         "booking_id": "STRING",

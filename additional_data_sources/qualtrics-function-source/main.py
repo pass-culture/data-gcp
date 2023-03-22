@@ -11,9 +11,9 @@ from qualtrics_opt_out import import_qualtrics_opt_out
 from qualtrics_survey_answers import QualtricsSurvey
 
 ir_surveys_mapping = {
-    "jeunes_15_17": "SV_3IdnHqrnsuS17oy",
-    "jeunes_18": "SV_cBV3xaZ92BoW5sW",
-    "ac": "SV_eOOPuFjgZo1emR8",
+    "GRANT_15_17": "SV_3IdnHqrnsuS17oy",
+    "GRANT_18": "SV_cBV3xaZ92BoW5sW",
+    "pro": "SV_eOOPuFjgZo1emR8",
 }
 
 

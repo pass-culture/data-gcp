@@ -65,9 +65,9 @@ class QualtricsSurvey:
 
         response_df = self.get_survey_answers()
 
-        if target == "jeunes_18":
+        if target == "GRANT_18":
             questions_columns = ["Q1", "Q3"]
-        elif target == "jeunes_15_17":
+        elif target == "GRANT_15_17":
             questions_columns = ["Q1", "Q2"]
         else:
             questions_columns = ["Q1", "Q2", "Q3"]

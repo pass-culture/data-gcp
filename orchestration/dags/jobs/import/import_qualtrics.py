@@ -2,6 +2,8 @@ import datetime
 from airflow import DAG
 from airflow.providers.http.operators.http import SimpleHttpOperator
 from airflow.operators.python import PythonOperator
+import json
+
 from common.config import DAG_FOLDER
 from common.config import ENV_SHORT_NAME, GCP_PROJECT_ID, DAG_FOLDER
 

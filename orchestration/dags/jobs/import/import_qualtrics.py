@@ -38,11 +38,12 @@ service_account_token = PythonOperator(
     dag=dag,
 )
 
-import_data_to_bigquery = SimpleHttpOperator(
+import_opt_out_to_bigquery = SimpleHttpOperator(
     task_id="import_qualtrics_data_to_bigquery",
     method="POST",
     http_conn_id="http_gcp_cloud_function",
     endpoint=f"qualtrics_import_{ENV_SHORT_NAME}",
+    data=json.dumps({"task": "import_opt_out_users"}),
     headers={
         "Content-Type": "application/json",
         "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_qualtrics_service_account_token', key='return_value')}}",
@@ -51,4 +52,19 @@ import_data_to_bigquery = SimpleHttpOperator(
     dag=dag,
 )
 
-(service_account_token >> import_data_to_bigquery)
+import_ir_answers_to_bigquery = SimpleHttpOperator(
+    task_id="import_qualtrics_data_to_bigquery",
+    method="POST",
+    http_conn_id="http_gcp_cloud_function",
+    endpoint=f"qualtrics_import_{ENV_SHORT_NAME}",
+    data=json.dumps({"task": "import_ir_survey_answers"}),
+    headers={
+        "Content-Type": "application/json",
+        "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_qualtrics_service_account_token', key='return_value')}}",
+    },
+    log_response=True,
+    dag=dag,
+)
+
+(service_account_token >> import_opt_out_to_bigquery)
+(service_account_token >> import_ir_answers_to_bigquery)

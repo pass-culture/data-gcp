@@ -12,6 +12,7 @@ from common.config import (
     GCP_PROJECT_ID,
     BASE32_JS_LIB_PATH,
     BIGQUERY_SANDBOX_DATASET,
+    MEDIATION_URL,
 )
 
 
@@ -92,4 +93,5 @@ default = {
     "add_days": add_days,
     "create_humanize_id_function": create_humanize_id_function,
     "create_dehumanize_id_function": create_dehumanize_id_function,
+    "mediation_url": MEDIATION_URL,
 }

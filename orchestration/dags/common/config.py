@@ -59,11 +59,7 @@ RECOMMENDATION_SQL_INSTANCE = os.environ.get(
     "RECOMMENDATION_SQL_INSTANCE", f"cloudsql-recommendation-{ENV_SHORT_NAME}"
 )
 
-CONNECTION_ID = (
-    os.environ.get("BIGQUERY_CONNECTION_RECOMMENDATION")
-    if ENV_SHORT_NAME != "prod"
-    else f"{GCP_PROJECT_ID}.{GCP_REGION}.cloudsql-recommendation-production-bq-connection"
-)
+CONNECTION_ID = os.environ.get("BIGQUERY_CONNECTION_RECOMMENDATION")
 
 SLACK_CONN_ID = "slack_analytics"
 SLACK_CONN_PASSWORD = access_secret_data(GCP_PROJECT_ID, "slack-conn-password")

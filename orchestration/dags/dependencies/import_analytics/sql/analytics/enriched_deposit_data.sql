@@ -23,7 +23,7 @@ ranked_deposit_desc AS (
                 id DESC
         ) AS deposit_rank_desc
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_deposit AS deposit
+        `{{ bigquery_clean_dataset }}`.applicative_database_deposit AS deposit
 ),
 actual_amount_spent AS (
     SELECT
@@ -35,7 +35,7 @@ actual_amount_spent AS (
             0
         ) AS deposit_actual_amount_spent
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_booking
+        `{{ bigquery_clean_dataset }}`.applicative_database_booking
     WHERE booking_is_used IS TRUE
     AND booking_is_cancelled IS FALSE
     GROUP BY
@@ -52,7 +52,7 @@ theoretical_amount_spent AS (
             0
         ) AS deposit_theoretical_amount_spent
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_booking
+        `{{ bigquery_clean_dataset }}`.applicative_database_booking
     WHERE booking_is_cancelled IS FALSE
     GROUP BY
         deposit_id
@@ -67,9 +67,9 @@ theoretical_amount_spent_in_digital_goods AS (
             0
         ) AS deposit_theoretical_amount_spent_in_digital_goods
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_booking AS booking
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_stock AS stock ON booking.stock_id = stock.stock_id
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offer AS offer ON stock.offer_id = offer.offer_id
+        `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON booking.stock_id = stock.stock_id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON stock.offer_id = offer.offer_id
         INNER JOIN `{{ bigquery_analytics_dataset }}`.subcategories AS subcategories ON offer.offer_subcategoryId = subcategories.id
     WHERE
         subcategories.is_digital_deposit = true
@@ -86,7 +86,7 @@ first_booking_date AS (
         MAX(booking_creation_date) AS deposit_last_booking_date,
         COUNT(DISTINCT booking_id) AS deposit_no_cancelled_bookings
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_booking 
+        `{{ bigquery_clean_dataset }}`.applicative_database_booking 
     WHERE booking_is_cancelled IS FALSE
     GROUP BY
         deposit_id
@@ -101,7 +101,7 @@ user_suspension_history AS (
                 CAST(id AS INTEGER) DESC
         ) AS rank
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_user_suspension
+        `{{ bigquery_clean_dataset }}`.applicative_database_user_suspension
 ) 
 
 SELECT
@@ -138,7 +138,7 @@ SELECT
     ) AS days_between_user_creation_and_deposit_creation,
     user.user_birth_date
 FROM
-    `{{ bigquery_analytics_dataset }}`.applicative_database_deposit AS deposit
+    `{{ bigquery_clean_dataset }}`.applicative_database_deposit AS deposit
     JOIN `{{ bigquery_clean_dataset }}`.user_beneficiary AS user ON user.user_id = deposit.userId
     JOIN ranked_deposit_asc ON ranked_deposit_asc.deposit_id = deposit.id
     JOIN ranked_deposit_desc ON ranked_deposit_desc.deposit_id = deposit.id

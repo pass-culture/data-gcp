@@ -34,13 +34,20 @@ def evaluate(
     test_dataset_name: str = "recommendation_test_data",
     config_file_name: str = "user-qpi-features",
 ):
-    with open(
-        f"{MODEL_DIR}/{CONFIGS_PATH}/{config_file_name}.json",
-        mode="r",
-        encoding="utf-8",
-    ) as config_file:
-        features = json.load(config_file)
-        prediction_input_feature = features.get("input_prediction_feature", "user_id")
+    try:
+        with open(
+            f"{MODEL_DIR}/{CONFIGS_PATH}/{config_file_name}.json",
+            mode="r",
+            encoding="utf-8",
+        ) as config_file:
+            features = json.load(config_file)
+            prediction_input_feature = features.get(
+                "input_prediction_feature", "user_id"
+            )
+    except:
+        logger.info("Config file not found: setting default configuration")
+        prediction_input_feature = "user_id"
+
     logger.info("Load raw")
     raw_data = read_from_gcs(storage_path, "bookings", parallel=False).astype(
         {"user_id": str, "item_id": str, "count": int}

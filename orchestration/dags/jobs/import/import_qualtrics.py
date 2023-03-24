@@ -2,6 +2,8 @@ import datetime
 from airflow import DAG
 from airflow.providers.http.operators.http import SimpleHttpOperator
 from airflow.operators.python import PythonOperator
+import json
+
 from common.config import DAG_FOLDER
 from common.config import ENV_SHORT_NAME, GCP_PROJECT_ID, DAG_FOLDER
 
@@ -24,7 +26,9 @@ dag = DAG(
     "import_qualtrics",
     default_args=default_dag_args,
     description="Import qualtrics tables",
-    schedule_interval=get_airflow_schedule("00 01 * * *"),
+    schedule_interval=get_airflow_schedule(
+        "0 0 * * 1"
+    ),  # execute each Monday at midnight
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,
@@ -38,11 +42,12 @@ service_account_token = PythonOperator(
     dag=dag,
 )
 
-import_data_to_bigquery = SimpleHttpOperator(
-    task_id="import_qualtrics_data_to_bigquery",
+import_opt_out_to_bigquery = SimpleHttpOperator(
+    task_id="import_opt_out_to_bigquery",
     method="POST",
     http_conn_id="http_gcp_cloud_function",
     endpoint=f"qualtrics_import_{ENV_SHORT_NAME}",
+    data=json.dumps({"task": "import_opt_out_users"}),
     headers={
         "Content-Type": "application/json",
         "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_qualtrics_service_account_token', key='return_value')}}",
@@ -51,4 +56,19 @@ import_data_to_bigquery = SimpleHttpOperator(
     dag=dag,
 )
 
-(service_account_token >> import_data_to_bigquery)
+import_ir_answers_to_bigquery = SimpleHttpOperator(
+    task_id="import_ir_answers_to_bigquery",
+    method="POST",
+    http_conn_id="http_gcp_cloud_function",
+    endpoint=f"qualtrics_import_{ENV_SHORT_NAME}",
+    data=json.dumps({"task": "import_ir_survey_answers"}),
+    headers={
+        "Content-Type": "application/json",
+        "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_qualtrics_service_account_token', key='return_value')}}",
+    },
+    log_response=True,
+    dag=dag,
+)
+
+(service_account_token >> import_opt_out_to_bigquery)
+(service_account_token >> import_ir_answers_to_bigquery)

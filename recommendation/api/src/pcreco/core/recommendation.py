@@ -57,9 +57,9 @@ class Recommendation:
         if get_cold_start_status(self.user):
             self.reco_origin = "cold_start"
             return (
-                self.ColdStart(self)
-                if self.model_params.name == "default"
-                else self.Algo(self)
+                self.Algo(self)
+                if self.model_params.name == "cold_start_b"
+                else self.ColdStart(self)
             )
         return self.Algo(self)
 

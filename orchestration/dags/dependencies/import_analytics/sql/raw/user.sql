@@ -16,7 +16,6 @@ SELECT
 	, "isActive" as user_is_active
 	, "hasSeenProTutorials" as user_has_seen_pro_tutorials
 	, EXTRACT(YEAR FROM AGE(COALESCE("user"."validatedBirthDate","user"."dateOfBirth"))) AS user_age
-	, "hasCompletedIdCheck" AS user_has_completed_idCheck
 	, "phoneValidationStatus" AS user_phone_validation_status
 	, "isEmailValidated" AS user_has_validated_email
 	, CAST("notificationSubscriptions" -> \'marketing_push\' AS BOOLEAN) AS user_has_enabled_marketing_push

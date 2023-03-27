@@ -176,7 +176,7 @@ students_educonnectes AS (
     FROM `{{ bigquery_clean_dataset }}`.applicative_database_beneficiary_fraud_check AS beneficiary_fraud_check
     LEFT JOIN `{{ bigquery_clean_dataset }}`.user_beneficiary AS user 
         ON beneficiary_fraud_check.user_id = user.user_id 
-    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_user_suspension as user_suspension
+    LEFT JOIN `{{ bigquery_clean_dataset }}`.user_suspension as user_suspension
         ON user_suspension.userId = user.user_id
         AND rank = 1
     WHERE

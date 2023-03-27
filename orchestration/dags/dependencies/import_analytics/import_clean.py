@@ -37,7 +37,7 @@ clean_tables = {
     "user_suspension": {
         "sql": f"{CLEAN_SQL_PATH}/user_suspension.sql",
         "destination_dataset": "{{ bigquery_clean_dataset }}",
-        "destination_table": "applicative_database_user_suspension",
+        "destination_table": "user_suspension",
     },
     "bookable_offer": {
         "sql": f"{CLEAN_SQL_PATH}/bookable_offer.sql",

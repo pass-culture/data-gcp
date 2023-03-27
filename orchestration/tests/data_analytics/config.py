@@ -34,7 +34,7 @@ BIGQUERY_SCHEMAS = {
         "adage_id": "STRING",
         "scholar_year": "STRING",
     },
-    "applicative_database_user_suspension": {
+    "user_suspension": {
         "id": "STRING",
         "userId": "STRING",
         "eventType": "STRING",

@@ -135,7 +135,7 @@ FROM
     LEFT JOIN theoretical_amount_spent ON deposit.id = theoretical_amount_spent.deposit_id
     LEFT JOIN theoretical_amount_spent_in_digital_goods ON deposit.id = theoretical_amount_spent_in_digital_goods.deposit_id
     LEFT JOIN first_booking_date ON deposit.id = first_booking_date.deposit_id
-    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_user_suspension AS user_suspension ON user_suspension.userId = user.user_id
+    LEFT JOIN `{{ bigquery_clean_dataset }}`.user_suspension AS user_suspension ON user_suspension.userId = user.user_id
     AND rank = 1
 WHERE
     (

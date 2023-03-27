@@ -90,18 +90,6 @@ first_booking_date AS (
     WHERE booking_is_cancelled IS FALSE
     GROUP BY
         deposit_id
-),
-
-user_suspension_history AS (
-    SELECT
-        *,
-        ROW_NUMBER() OVER (
-            PARTITION BY userId
-            ORDER BY
-                CAST(id AS INTEGER) DESC
-        ) AS rank
-    FROM
-        `{{ bigquery_clean_dataset }}`.applicative_database_user_suspension
 ) 
 
 SELECT
@@ -147,10 +135,10 @@ FROM
     LEFT JOIN theoretical_amount_spent ON deposit.id = theoretical_amount_spent.deposit_id
     LEFT JOIN theoretical_amount_spent_in_digital_goods ON deposit.id = theoretical_amount_spent_in_digital_goods.deposit_id
     LEFT JOIN first_booking_date ON deposit.id = first_booking_date.deposit_id
-    LEFT JOIN user_suspension_history ON user_suspension_history.userId = user.user_id
-    and rank = 1
+    LEFT JOIN `{{ bigquery_clean_dataset }}`.user_suspension AS user_suspension ON user_suspension.userId = user.user_id
+    AND rank = 1
 WHERE
     (
         user.user_is_active
-        OR user_suspension_history.reasonCode = 'UPON_USER_REQUEST'
+        OR user_suspension.reasonCode = 'UPON_USER_REQUEST'
     )

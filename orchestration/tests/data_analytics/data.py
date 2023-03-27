@@ -784,7 +784,7 @@ ENRICHED_USER_DATA_INPUT = {
             "user_school_type": "Lycée agricole",
         }
     ],
-    "applicative_database_user_suspension": [
+    "user_suspension": [
         {
             "id": "1",
             "userId": "1",
@@ -792,6 +792,7 @@ ENRICHED_USER_DATA_INPUT = {
             "eventDate": datetime.now().replace(microsecond=0),
             "actorUserId": "1388409",
             "reasonCode": None,
+            "rank": 1,
         }
     ],
     "applicative_database_deposit": [

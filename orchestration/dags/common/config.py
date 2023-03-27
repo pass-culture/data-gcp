@@ -75,5 +75,5 @@ if ENV_SHORT_NAME == "prod":
     MEDIATION_URL = "passculture-metier-prod-production"
 elif ENV_SHORT_NAME == "stg":
     MEDIATION_URL = "passculture-metier-ehp-staging"
-else: 
+else:
     MEDIATION_URL = "passculture-metier-ehp-testing"

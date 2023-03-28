@@ -1,3 +1,4 @@
+import json
 import pandas as pd
 from loguru import logger
 import tensorflow as tf
@@ -12,7 +13,9 @@ from utils.constants import (
     NUMBER_OF_PRESELECTED_OFFERS,
     EVALUATION_USER_NUMBER,
     EVALUATION_USER_NUMBER_DIVERSIFICATION,
+    MODEL_DIR,
 )
+from two_towers_model.utils.constants import CONFIGS_PATH
 from utils.data_collect_queries import read_from_gcs
 
 
@@ -29,7 +32,22 @@ def evaluate(
     storage_path: str,
     training_dataset_name: str = "recommendation_training_data",
     test_dataset_name: str = "recommendation_test_data",
+    config_file_name: str = "user-qpi-features",
 ):
+    try:
+        with open(
+            f"{MODEL_DIR}/{CONFIGS_PATH}/{config_file_name}.json",
+            mode="r",
+            encoding="utf-8",
+        ) as config_file:
+            features = json.load(config_file)
+            prediction_input_feature = features.get(
+                "input_prediction_feature", "user_id"
+            )
+    except:
+        logger.info("Config file not found: setting default configuration")
+        prediction_input_feature = "user_id"
+
     logger.info("Load raw")
     raw_data = read_from_gcs(storage_path, "bookings", parallel=False).astype(
         {"user_id": str, "item_id": str, "count": int}
@@ -42,6 +60,9 @@ def evaluate(
     logger.info(f"training_item_ids : {training_item_ids.shape[0]}")
 
     logger.info("Load test data...")
+    test_columns = ["user_id", "item_id"]
+    if prediction_input_feature not in test_columns:
+        test_columns.append(prediction_input_feature)
     positive_data_test = read_from_gcs(
         storage_path, test_dataset_name, parallel=False
     ).astype(
@@ -50,7 +71,7 @@ def evaluate(
             "item_id": str,
         }
     )[
-        ["user_id", "item_id"]
+        test_columns
     ]
     logger.info("Merge all...")
     positive_data_test = positive_data_test.merge(
@@ -62,6 +83,7 @@ def evaluate(
     users_to_test = positive_data_test["user_id"].unique()[
         : min(EVALUATION_USER_NUMBER, positive_data_test["user_id"].nunique())
     ]
+
     data_model_dict = {
         "data": {
             "raw": raw_data,
@@ -71,6 +93,7 @@ def evaluate(
             ],
         },
         "model": model,
+        "prediction_input_feature": prediction_input_feature,
     }
 
     diversification_users_to_test = positive_data_test["user_id"].unique()[

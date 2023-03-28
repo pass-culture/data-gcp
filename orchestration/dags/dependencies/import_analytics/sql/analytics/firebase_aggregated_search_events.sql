@@ -50,6 +50,7 @@ SELECT DISTINCT
     , LAST_VALUE(query IGNORE NULLS) OVER (PARTITION BY search_id, user_id, user_pseudo_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS query_input
     , MIN(event_date) OVER (PARTITION BY search_id, user_id, user_pseudo_id) AS first_date
     , MIN(event_timestamp)OVER (PARTITION BY search_id, user_id, user_pseudo_id) AS first_timestamp
+    , LAST_VALUE(search_type IGNORE NULLS ) OVER (PARTITION BY search_id, user_id, user_pseudo_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS search_type
     , LAST_VALUE(search_date_filter IGNORE NULLS ) OVER (PARTITION BY search_id, user_id, user_pseudo_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS search_date_filter
     , LAST_VALUE(search_location_filter IGNORE NULLS ) OVER (PARTITION BY search_id, user_id, user_pseudo_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS search_location_filter
     ,LAST_VALUE(search_categories_filter IGNORE NULLS) OVER (PARTITION BY search_id, user_id, user_pseudo_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS  search_categories_filter
@@ -59,10 +60,11 @@ SELECT DISTINCT
     ,LAST_VALUE(search_offer_is_duo_filter IGNORE NULLS) OVER (PARTITION BY search_id, user_id, user_pseudo_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) search_offer_is_duo_filter
     ,LAST_VALUE(search_native_categories_filter IGNORE NULLS) OVER(PARTITION BY search_id, user_id, user_pseudo_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) search_native_categories_filter
     , COUNT(DISTINCT CASE WHEN event_name = 'ConsultOffer' THEN offer_id ELSE NULL END) OVER (PARTITION BY search_id, user_id, user_pseudo_id) AS nb_offers_consulted
+    , COUNT(DISTINCT CASE WHEN event_name = 'HasAddedOfferToFavorites' THEN offer_id ELSE NULL END) OVER (PARTITION BY search_id, user_id, user_pseudo_id) AS nb_offers_added_to_favorites
     , COUNT( CASE WHEN event_name = 'NoSearchResult' THEN 1 ELSE NULL END) OVER (PARTITION BY search_id, user_id, user_pseudo_id ) AS nb_no_search_result
     , COUNT( CASE WHEN event_name = 'PerformSearch' THEN 1 ELSE NULL END) OVER (PARTITION BY search_id, user_id, user_pseudo_id ) AS nb_iterations_search
 FROM `{{ bigquery_analytics_dataset }}`.firebase_events
-WHERE event_name IN ('PerformSearch', 'NoSearchResult','ConsultOffer')
+WHERE event_name IN ('PerformSearch', 'NoSearchResult','ConsultOffer','HasAddedOfferToFavorites')
 AND event_date > '2023-01-01'
 AND search_id IS NOT NULL
 )

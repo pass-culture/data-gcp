@@ -12,7 +12,7 @@ SELECT
   r.ad_id,
   r.event_name,
   r.appsflyer_id,
-  u.user_id,
+  u.firebase_id
 
 FROM `{{ bigquery_raw_dataset }}.appsflyer_activity_report` r
 LEFT JOIN `{{ bigquery_analytics_dataset }}.appsflyer_users` u on u.appsflyer_id = r.appsflyer_id

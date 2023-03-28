@@ -192,9 +192,7 @@ bookable_offer_cnt AS (
         venue_id,
         COUNT(DISTINCT offer_id) AS venue_bookable_offer_cnt
     FROM
-        `{{ bigquery_analytics_dataset }}`.enriched_offer_data
-    WHERE
-        offer_is_bookable
+        `{{ bigquery_clean_dataset }}`.bookable_offer
     GROUP BY
         1
 ),
@@ -250,6 +248,10 @@ SELECT
         venue.venue_id,
         "&url=%2Fpc%2Fback-office%2Fvenue%2F"
     ) AS venue_flaskadmin_link,
+    CONCAT(
+        "https://backend.passculture.team/backofficev3/pro/venue/",
+        venue.venue_id
+    ) AS venue_backofficev3_link,
     venue_region_departement.region_name AS venue_region_name,
     CONCAT(
         'https://passculture.pro/structures/',

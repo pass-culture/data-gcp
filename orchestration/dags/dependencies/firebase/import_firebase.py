@@ -120,13 +120,6 @@ import_firebase_beneficiary_tables = {
         "destination_table": "firebase_visits",
         "depends": ["clean_firebase_events"],
     },
-    "analytics_firebase_session_origin": {
-        "sql": f"{SQL_PATH}/analytics/firebase_session_origin.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "firebase_session_origin",
-        "time_partitioning": {"field": "first_event_date"},
-        "depends": ["analytics_firebase_events"],
-    },
     "analytics_firebase_home_events": {
         "sql": f"{SQL_PATH}/analytics/firebase_home_events.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
@@ -136,7 +129,20 @@ import_firebase_beneficiary_tables = {
         "clustering_fields": {"fields": ["event_type"]},
         "depends": ["analytics_firebase_events"],
     },
+    "analytics_firebase_session_origin": {
+        "sql": f"{SQL_PATH}/analytics/firebase_session_origin.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "firebase_session_origin",
+        "time_partitioning": {"field": "first_event_date"},
+        "depends": ["analytics_firebase_events"],
+    },    
+    "analytics_firebase_similar_offer_events": {
+        "sql": f"{SQL_PATH}/analytics/firebase_similar_offer_events.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "firebase_similar_offer_events",
+        "time_partitioning": {"field": "event_date"},
+        "depends": ["analytics_firebase_events"],
+    },
 }
-
 
 import_tables = dict(import_firebase_beneficiary_tables, **import_firebase_pro_tables)

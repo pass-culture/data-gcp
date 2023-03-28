@@ -34,6 +34,22 @@ clean_tables = {
         "destination_dataset": "{{ bigquery_clean_dataset }}",
         "destination_table": "user_beneficiary",
     },
+    "user_suspension": {
+        "sql": f"{CLEAN_SQL_PATH}/user_suspension.sql",
+        "destination_dataset": "{{ bigquery_clean_dataset }}",
+        "destination_table": "user_suspension",
+    },
+    "bookable_offer": {
+        "sql": f"{CLEAN_SQL_PATH}/bookable_offer.sql",
+        "destination_dataset": "{{ bigquery_clean_dataset }}",
+        "destination_table": "bookable_offer",
+        "depends": ["offer", "available_stock_information"],
+    },
+    "available_stock_information": {
+        "sql": f"{CLEAN_SQL_PATH}/available_stock_information.sql",
+        "destination_dataset": "{{ bigquery_clean_dataset }}",
+        "destination_table": "available_stock_information",
+    },
 }
 
 

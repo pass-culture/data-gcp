@@ -372,15 +372,6 @@ analytics_tables = {
         "time_partitioning": {"field": "booking_date"},
         "dag_depends": ["import_contentful", "import_intraday_firebase_data"],
     },
-    "analytics_firebase_home_events": {
-        "sql": f"{ANALYTICS_SQL_PATH}/firebase_home_events.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "firebase_home_events",
-        "partition_prefix": "$",
-        "time_partitioning": {"field": "event_date"},
-        "clustering_fields": {"fields": ["event_type"]},
-        "dag_depends": ["import_contentful", "import_daily_firebase_data"],
-    },
 }
 
 aggregated_tables = {

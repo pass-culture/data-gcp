@@ -127,6 +127,15 @@ import_firebase_beneficiary_tables = {
         "time_partitioning": {"field": "first_event_date"},
         "depends": ["analytics_firebase_events"],
     },
+    "analytics_firebase_home_events": {
+        "sql": f"{SQL_PATH}/analytics/firebase_home_events.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "firebase_home_events",
+        "partition_prefix": "$",
+        "time_partitioning": {"field": "event_date"},
+        "clustering_fields": {"fields": ["event_type"]},
+        "depends": ["analytics_firebase_events"],
+    },
 }
 
 

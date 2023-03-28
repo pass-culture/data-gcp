@@ -20,6 +20,11 @@ class RecommendationVersionBModel(RecommendationDefaultModel):
 
 
 @dataclass
+class RecommendationColdStartVersionB(RecommendationDefaultModel):
+    endpoint_name: str = f"recommendation_cold_start_model_{ENV_SHORT_NAME}"
+
+
+@dataclass
 class SimilarOfferDefaultModel:
     name: str
     endpoint_name: str = f"similar_offers_default_{ENV_SHORT_NAME}"
@@ -31,6 +36,7 @@ RECOMMENDATION_ENDPOINTS = {
     "cold_start": RecommendationDefaultModel("cold_start", force_cold_start=True),
     "version_b": RecommendationVersionBModel("version_b"),
     "algo_version_b": RecommendationVersionBModel("algo_version_b", force_model=True),
+    "cold_start_b": RecommendationColdStartVersionB("cold_start_b"),
 }
 
 SIMILAR_OFFER_ENDPOINTS = {"default": SimilarOfferDefaultModel("default")}

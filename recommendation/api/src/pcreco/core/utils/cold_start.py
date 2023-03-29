@@ -33,7 +33,10 @@ def _get_user_app_interaction(User) -> int:
 
 def get_cold_start_categories(user_id) -> List[str]:
     cold_start_query = text(
-        f"""SELECT subcategories FROM qpi_answers_mv WHERE user_id = :user_id;"""
+        f"""SELECT DISTINCT subcategories
+            FROM qpi_answers_mv WHERE user_id = :user_id
+            order by subcategories 
+            ;"""
     )
 
     connection = get_session()

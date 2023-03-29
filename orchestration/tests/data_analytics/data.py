@@ -475,9 +475,13 @@ ENRICHED_COLLECTIVE_OFFER_DATA_INPUT = {
         }
     ],
     "subcategories": [{"id": "CONCERT", "category_id": "MUSIQUE_LIVE"}],
-    "academie_dept": [{"code_dpt": "35", "libelle_academie": "Rennes"}],
     "region_department": [
-        {"num_dep": 35, "dep_name": "Ile-et-Vilaine", "region_name": "Bretagne"}
+        {
+            "num_dep": "35",
+            "dep_name": "Ile-et-Vilaine",
+            "region_name": "Bretagne",
+            "academy_name": "Rennes",
+        }
     ],
 }
 
@@ -784,7 +788,7 @@ ENRICHED_USER_DATA_INPUT = {
             "user_school_type": "Lycée agricole",
         }
     ],
-    "applicative_database_user_suspension": [
+    "user_suspension": [
         {
             "id": "1",
             "userId": "1",
@@ -792,6 +796,7 @@ ENRICHED_USER_DATA_INPUT = {
             "eventDate": datetime.now().replace(microsecond=0),
             "actorUserId": "1388409",
             "reasonCode": None,
+            "rank": 1,
         }
     ],
     "applicative_database_deposit": [
@@ -803,17 +808,6 @@ ENRICHED_USER_DATA_INPUT = {
             "dateCreated": datetime.now().replace(microsecond=0),
         }
     ],
-    "enriched_deposit_data": [
-        {
-            "deposit_id": "1",
-            "user_id": "1",
-            "deposit_amount": 500,
-            "deposit_theoretical_amount_spent": 20,
-            "deposit_actual_amount_spent": 20,
-            "deposit_theoretical_amount_spent_in_digital_goods": 20,
-            "deposit_rank_desc": 1,
-        }
-    ],
     "applicative_database_offerer": [{"offerer_id": "1"}, {"offerer_id": "1"}],
     "applicative_database_venue": [{"venue_id": "1", "venue_managing_offerer_id": "1"}],
     "applicative_database_booking": [
@@ -821,6 +815,7 @@ ENRICHED_USER_DATA_INPUT = {
             "user_id": "1",
             "stock_id": "1",
             "booking_id": "1",
+            "deposit_id": "1",
             "booking_is_used": True,
             "booking_is_cancelled": False,
             "booking_amount": 10,
@@ -1014,6 +1009,7 @@ ENRICHED_VENUE_DATA_EXPECTED = [
         "real_revenue": 2,
         "venue_humanized_id": "AE",
         "venue_flaskadmin_link": "https://backend.passculture.pro/pc/back-office/venue/edit/?id=1&url=%2Fpc%2Fback-office%2Fvenue%2F",
+        "venue_backofficev3_link": "https://backend.passculture.team/backofficev3/pro/venue/1",
         "venue_region_name": "IDF",
         "venue_pc_pro_link": "https://passculture.pro/structures/AE/lieux/AE",
         "business_unit_id": "1234",

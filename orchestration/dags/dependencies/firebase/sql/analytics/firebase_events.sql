@@ -84,6 +84,7 @@ WITH temp_firebase_events AS (
             where
                 event_params.key = 'from'
         ) as origin,
+        COALESCE(
         (
             select
                 event_params.value.string_value
@@ -91,7 +92,16 @@ WITH temp_firebase_events AS (
                 unnest(event_params) event_params
             where
                 event_params.key = 'query'
-        ) as query,
+        ),
+         (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'searchQuery'
+        )
+        )as query,
         (
             select
                 event_params.value.string_value

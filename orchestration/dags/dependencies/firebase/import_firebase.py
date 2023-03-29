@@ -136,24 +136,6 @@ import_firebase_beneficiary_tables = {
         "time_partitioning": {"field": "first_event_date"},
         "depends": ["analytics_firebase_events"],
     },
-    "analytics_firebase_booking_origin": {
-        "sql": f"{SQL_PATH}/analytics/firebase_booking_origin.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "firebase_booking_origin",
-        "partition_prefix": "$",
-        "time_partitioning": {"field": "booking_date"},
-        "depends": ["analytics_firebase_events"],
-        "dag_depends": [
-            {"import_contentful": "contentful_homepages"}
-        ],  # dag_id: task_id
-    },
-    "analytics_firebase_aggregated_search_events": {
-        "sql": f"{SQL_PATH}/analytics/firebase_aggregated_search_events.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "firebase_aggregated_search_events",
-        "time_partitioning": {"field": "first_date"},
-        "depends": ["analytics_firebase_events"],
-    },
     "analytics_firebase_similar_offer_events": {
         "sql": f"{SQL_PATH}/analytics/firebase_similar_offer_events.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
@@ -161,7 +143,13 @@ import_firebase_beneficiary_tables = {
         "time_partitioning": {"field": "event_date"},
         "depends": ["analytics_firebase_events"],
     },
+    "analytics_firebase_booking_origin": {
+        "sql": f"{SQL_PATH}/analytics/firebase_booking_origin.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "firebase_booking_origin",
+        "time_partitioning": {"field": "booking_date"},
+        "dag_depends": ["import_contentful"],
+    },
 }
-
 
 import_tables = dict(import_firebase_beneficiary_tables, **import_firebase_pro_tables)

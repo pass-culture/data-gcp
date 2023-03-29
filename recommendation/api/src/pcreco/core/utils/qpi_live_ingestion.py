@@ -23,14 +23,14 @@ def get_cold_start_categories_from_gcs(user_id):
             for answers in qpi_raw["answers"]:
                 for answers_id in answers["answer_ids"]:
                     user_answer_ids.append(answers_id)
-            cold_start_categories = user_answer_ids
+            cold_start_categories = sorted(user_answer_ids)
         logger.info(
             f"get_cold_start_categories from gcs: file found with {cold_start_categories}"
         )
         log_duration("get_cold_start_categories from gcs", start)
     except:
         logger.info(f"get_cold_start_categories: not found ")
-        cold_start_categories = []
+        cold_start_categories = ["UKN"]
     log_duration(f"get_cold_start_categories from gcs : {user_id} ", start)
     return cold_start_categories
 

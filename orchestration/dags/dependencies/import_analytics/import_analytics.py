@@ -104,7 +104,6 @@ analytics_tables = {
     "enriched_institution_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_institution_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "depends": ["enriched_user_data"],
     },
     "enriched_offer_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_offer_data.sql",
@@ -136,7 +135,6 @@ analytics_tables = {
     "enriched_suivi_dms_adage": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_suivi_dms_adage.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "depends": ["enriched_offerer_data", "enriched_venue_data"],
         "dag_depends": [
             "import_typeform_adage_reference_request",
             "import_adage_v1",
@@ -146,7 +144,6 @@ analytics_tables = {
     "enriched_user_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_user_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "depends": ["enriched_deposit_data"],
     },
     "enriched_venue_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_venue_data.sql",
@@ -347,6 +344,14 @@ analytics_tables = {
             "export_cloudsql_tables_to_bigquery_v1",
             "import_intraday_firebase_data",
         ],  # computed once a day
+    },
+    "analytics_firebase_aggregated_search_events": {
+        "sql": f"{ANALYTICS_SQL_PATH}/firebase_aggregated_search_events.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "firebase_aggregated_search_events",
+        "time_partitioning": {"field": "first_date"},
+        "depends": ["diversification_booking"],
+        "dag_depends": ["import_intraday_firebase_data"],
     },
 }
 

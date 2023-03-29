@@ -51,11 +51,11 @@ CASE
         o.offer_subcategoryid,
 CASE
             WHEN mediation.mediation_humanized_id is not null THEN CONCAT(
-                "https://storage.googleapis.com/passculture-metier-prod-production-assets-fine-grained/thumbs/mediations/",
+                "https://storage.googleapis.com/{{ mediation_url }}-assets-fine-grained/thumbs/mediations/",
                 mediation.mediation_humanized_id
             )
             ELSE CONCAT(
-                "https://storage.googleapis.com/passculture-metier-prod-production-assets-fine-grained/thumbs/products/",
+                "https://storage.googleapis.com/{{ mediation_url }}-assets-fine-grained/thumbs/products/",
                 humanize_id(o.offer_product_id)
             )
         END AS image_url,

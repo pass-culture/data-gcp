@@ -248,6 +248,10 @@ SELECT
         venue.venue_id,
         "&url=%2Fpc%2Fback-office%2Fvenue%2F"
     ) AS venue_flaskadmin_link,
+    CONCAT(
+        "https://backend.passculture.team/backofficev3/pro/venue/",
+        venue.venue_id
+    ) AS venue_backofficev3_link,
     venue_region_departement.region_name AS venue_region_name,
     CONCAT(
         'https://passculture.pro/structures/',

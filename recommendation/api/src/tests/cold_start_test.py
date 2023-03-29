@@ -7,7 +7,7 @@ from typing import Any, List
 from pcreco.core.user import User
 from pcreco.core.recommendation import Recommendation
 from pcreco.models.reco.playlist_params import PlaylistParamsIn
-from pcreco.core.utils.cold_start_status import get_cold_start_status
+from pcreco.core.utils.cold_start import get_cold_start_status
 from pcreco.utils.env_vars import QPI_FOLDER
 
 
@@ -51,7 +51,7 @@ def test_get_cold_start_status(
         ),
     ],
 )
-@patch("pcreco.core.recommendation.get_cold_start_status")
+@patch("pcreco.core.utils.cold_start.get_cold_start_status")
 def test_get_cold_start_categories(
     cold_start_status_mock: Mock,
     setup_database: Any,
@@ -69,7 +69,7 @@ def test_get_cold_start_categories(
         user = User(user_id)
         input_reco = PlaylistParamsIn()
         scoring = Recommendation(user, input_reco)
-        assert sorted(scoring.scoring.get_cold_start_categories()) == sorted(
+        assert sorted(scoring.scoring.cold_start_categories) == sorted(
             cold_start_categories
         )
 
@@ -84,7 +84,7 @@ def test_get_cold_start_categories(
     ],
 )
 @patch("pcreco.core.utils.qpi_live_ingestion._get_qpi_file_from_gcs")
-@patch("pcreco.core.recommendation.get_cold_start_status")
+@patch("pcreco.core.utils.cold_start.get_cold_start_status")
 def test_get_cold_start_categories_from_gcs(
     cold_start_status_mock: Mock,
     cold_start_categories_from_file_mock: Mock,
@@ -108,6 +108,6 @@ def test_get_cold_start_categories_from_gcs(
         user = User(user_id)
         input_reco = PlaylistParamsIn()
         scoring = Recommendation(user, input_reco)
-        assert sorted(scoring.scoring.get_cold_start_categories()) == sorted(
+        assert sorted(scoring.scoring.cold_start_categories) == sorted(
             cold_start_categories
         )

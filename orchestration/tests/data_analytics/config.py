@@ -34,13 +34,14 @@ BIGQUERY_SCHEMAS = {
         "adage_id": "STRING",
         "scholar_year": "STRING",
     },
-    "applicative_database_user_suspension": {
+    "user_suspension": {
         "id": "STRING",
         "userId": "STRING",
         "eventType": "STRING",
         "eventDate": "DATETIME",
         "actorUserId": "STRING",
         "reasonCode": "STRING",
+        "rank": "INTEGER",
     },
     "applicative_database_favorite": {
         "id": "STRING",
@@ -346,6 +347,7 @@ BIGQUERY_SCHEMAS = {
         "num_dep": "STRING",
         "dep_name": "STRING",
         "region_name": "STRING",
+        "academy_name": "STRING",
     },
     "applicative_database_deposit": {
         "id": "STRING",
@@ -376,11 +378,6 @@ BIGQUERY_SCHEMAS = {
         "nom_etablissement": "STRING",
         "libelle_academie": "STRING",
         "code_departement": "STRING",
-    },
-    "academie_dept": {
-        "code_dpt": "STRING",
-        "libelle_academie": "STRING",
-        "libelle_region": "STRING",
     },
     "applicative_database_collective_booking": {
         "collective_booking_id": "STRING",

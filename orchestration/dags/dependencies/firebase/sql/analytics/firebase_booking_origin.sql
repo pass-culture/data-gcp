@@ -65,7 +65,6 @@ WITH firebase_bookings AS (
   QUALIFY ROW_NUMBER() OVER(PARTITION BY firebase_consult.user_id, firebase_consult.offer_id ORDER BY consult_timestamp ) = 1 
 )
 
-
 , bookings_origin_last_touch AS (
   SELECT 
       firebase_bookings.user_id
@@ -148,7 +147,6 @@ FROM booking_origin
 LEFT JOIN mapping_module AS map
 ON booking_origin.module_id_first_touch = map.module_id
 AND booking_origin.entry_id = map.home_id
-
 LEFT JOIN mapping_module AS map2
 ON booking_origin.module_id_last_touch = map2.module_id
 AND booking_origin.entry_id = map2.home_id

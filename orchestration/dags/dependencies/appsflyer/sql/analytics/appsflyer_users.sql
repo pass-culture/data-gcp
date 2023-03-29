@@ -1,11 +1,23 @@
 WITH extracted_users AS (  
   SELECT 
-    REGEXP_EXTRACT(event_value, r"([0-9]+)") AS user_id,
+    JSON_EXTRACT_SCALAR(event_value, "$.af_firebase_pseudo_id") AS firebase_id, 
     appsflyer_id, 
     advertising_id,
-    attributed_touch_time, 
+    idfa,
+    app_id,
+    --
     install_time,
-    event_time,
+    attributed_touch_time, 
+    attributed_touch_type,
+    attribution_lookback,
+    --
+    platform,
+    device_type,
+    os_version,
+    app_version,
+    sdk_version,
+    
+    --
     media_source,
     channel,
     keywords,
@@ -15,13 +27,15 @@ WITH extracted_users AS (
     adset_id,
     ad,
     is_retargeting,
-    is_primary_attribution
+    is_primary_attribution,
+    event_time,
+    app
   FROM `{{ bigquery_raw_dataset }}.appsflyer_in_app_event_report` 
-  WHERE event_name in ("af_complete_registration", "af_complete_beneficiary_registration")
+  WHERE event_name in ("af_open_app")
 )
 
 SELECT 
 * 
 FROM extracted_users
-QUALIFY ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY install_time ASC ) = 1
+QUALIFY ROW_NUMBER() OVER (PARTITION BY firebase_id ORDER BY install_time ASC ) = 1
 

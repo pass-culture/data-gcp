@@ -66,3 +66,10 @@ SLACK_CONN_PASSWORD = access_secret_data(GCP_PROJECT_ID, "slack-conn-password")
 
 FAILED_STATES = ["failed", "upstream_failed", "skipped"]
 ALLOWED_STATES = ["success"]
+
+if ENV_SHORT_NAME == "prod":
+    MEDIATION_URL = "passculture-metier-prod-production"
+elif ENV_SHORT_NAME == "stg":
+    MEDIATION_URL = "passculture-metier-ehp-staging"
+else:
+    MEDIATION_URL = "passculture-metier-ehp-testing"

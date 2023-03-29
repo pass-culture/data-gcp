@@ -353,13 +353,6 @@ analytics_tables = {
         "depends": ["diversification_booking"],
         "dag_depends": ["import_intraday_firebase_data"],
     },
-    "analytics_firebase_booking_origin": {
-        "sql": f"{ANALYTICS_SQL_PATH}/firebase_booking_origin.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "firebase_booking_origin",
-        "time_partitioning": {"field": "booking_date"},
-        "dag_depends": ["import_contentful", "import_intraday_firebase_data"],
-    },
 }
 
 aggregated_tables = {

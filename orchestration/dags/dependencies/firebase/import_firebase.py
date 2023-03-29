@@ -143,6 +143,13 @@ import_firebase_beneficiary_tables = {
         "time_partitioning": {"field": "event_date"},
         "depends": ["analytics_firebase_events"],
     },
+    "analytics_firebase_booking_origin": {
+        "sql": f"{SQL_PATH}/analytics/firebase_booking_origin.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "firebase_booking_origin",
+        "time_partitioning": {"field": "booking_date"},
+        "dag_depends": ["import_contentful"],
+    },
 }
 
 import_tables = dict(import_firebase_beneficiary_tables, **import_firebase_pro_tables)

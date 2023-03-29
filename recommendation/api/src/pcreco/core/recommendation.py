@@ -147,7 +147,7 @@ class Recommendation:
                 return []
             else:
                 if self.model_params.name == "cold_start_b":
-                    user_input = "-".join(self.cold_start_categories)
+                    user_input = ",".join(self.cold_start_categories)
                 else:
                     user_input = self.user.id
                 log_duration(

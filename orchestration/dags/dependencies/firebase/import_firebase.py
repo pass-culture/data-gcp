@@ -20,11 +20,21 @@ ENV_SHORT_NAME_APP_INFO_ID_MAPPING_PRO = {
     "prod": ["passculture.pro"],
 }
 
-GCP_PROJECT_NATIVE_ENV = "passculture-native"
-FIREBASE_RAW_DATASET = "analytics_267263535"
+GCP_PROJECT_NATIVE_ENV = {
+    "dev": ["passculture-native.analytics_267263535"],
+    "stg": ["passculture-native.analytics_267263535"],
+    "prod": ["passculture-native.analytics_267263535"],
+}
 
-GCP_PROJECT_PRO_ENV = "passculture-pro"
-FIREBASE_PRO_RAW_DATASET = "analytics_301948526"
+
+GCP_PROJECT_PRO_ENV = {
+    "dev": [
+        "passculture-pro.analytics_301948526",
+        "pc-pro-testing.analytics_355536579",
+    ],
+    "stg": ["passculture-pro.analytics_301948526"],
+    "prod": ["passculture-pro.analytics_301948526"],
+}
 
 app_info_id_list = ENV_SHORT_NAME_APP_INFO_ID_MAPPING[ENV_SHORT_NAME]
 app_info_id_list_pro = ENV_SHORT_NAME_APP_INFO_ID_MAPPING_PRO[ENV_SHORT_NAME]
@@ -40,7 +50,6 @@ import_firebase_pro_tables = {
             "table_type": "pro",
             "app_info_ids": app_info_id_list_pro,
             "gcp_project_native_env": GCP_PROJECT_PRO_ENV,
-            "firebase_raw_dataset": FIREBASE_PRO_RAW_DATASET,
         },
     },
     "clean_firebase_pro_events": {
@@ -77,7 +86,6 @@ import_firebase_beneficiary_tables = {
             "table_type": "beneficiary",
             "app_info_ids": app_info_id_list,
             "gcp_project_native_env": GCP_PROJECT_NATIVE_ENV,
-            "firebase_raw_dataset": FIREBASE_RAW_DATASET,
         },
     },
     "clean_firebase_events": {

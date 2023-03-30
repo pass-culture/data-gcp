@@ -40,4 +40,14 @@ ref_tables = {
             "offerer_tag": "STRING",
         },
     },
+    "propilote_zones_ref": {
+        "file_type": "csv",
+        "schema": {
+            "zone_id": "STRING",
+            "nom": "STRING",
+            "zone_code": "STRING",
+            "zone_type": "STRING",
+            "zone_parent": "STRING"
+        },
+    },
 }

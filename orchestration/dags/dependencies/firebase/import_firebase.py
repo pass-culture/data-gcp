@@ -7,7 +7,7 @@ ENV_SHORT_NAME_APP_INFO_ID_MAPPING = {
     "dev": ["app.passculture.test", "app.passculture.testing"],
     "stg": ["app.passculture.staging", "app.passculture", "app.passculture.webapp"],
     "prod": ["app.passculture", "app.passculture.webapp"],
-}
+}[ENV_SHORT_NAME]
 
 ENV_SHORT_NAME_APP_INFO_ID_MAPPING_PRO = {
     "dev": ["localhost", "pro.testing.passculture.team"],
@@ -18,13 +18,13 @@ ENV_SHORT_NAME_APP_INFO_ID_MAPPING_PRO = {
         "pro.staging.passculture.team",
     ],
     "prod": ["passculture.pro"],
-}
+}[ENV_SHORT_NAME]
 
 GCP_PROJECT_NATIVE_ENV = {
     "dev": ["passculture-native.analytics_267263535"],
     "stg": ["passculture-native.analytics_267263535"],
     "prod": ["passculture-native.analytics_267263535"],
-}
+}[ENV_SHORT_NAME]
 
 
 GCP_PROJECT_PRO_ENV = {
@@ -34,10 +34,7 @@ GCP_PROJECT_PRO_ENV = {
     ],
     "stg": ["passculture-pro.analytics_301948526"],
     "prod": ["passculture-pro.analytics_301948526"],
-}
-
-app_info_id_list = ENV_SHORT_NAME_APP_INFO_ID_MAPPING[ENV_SHORT_NAME]
-app_info_id_list_pro = ENV_SHORT_NAME_APP_INFO_ID_MAPPING_PRO[ENV_SHORT_NAME]
+}[ENV_SHORT_NAME]
 
 
 import_firebase_pro_tables = {
@@ -48,7 +45,7 @@ import_firebase_pro_tables = {
         "partition_prefix": "_",
         "params": {
             "table_type": "pro",
-            "app_info_ids": app_info_id_list_pro,
+            "app_info_ids": ENV_SHORT_NAME_APP_INFO_ID_MAPPING_PRO,
             "gcp_project_native_env": GCP_PROJECT_PRO_ENV,
         },
     },
@@ -60,7 +57,7 @@ import_firebase_pro_tables = {
         "depends": ["raw_firebase_pro_events"],
         "params": {
             "table_type": "pro",
-            "app_info_ids": app_info_id_list_pro,
+            "app_info_ids": ENV_SHORT_NAME_APP_INFO_ID_MAPPING_PRO,
             "table_name": "events_pro",
         },
     },
@@ -84,7 +81,7 @@ import_firebase_beneficiary_tables = {
         "partition_prefix": "_",
         "params": {
             "table_type": "beneficiary",
-            "app_info_ids": app_info_id_list,
+            "app_info_ids": ENV_SHORT_NAME_APP_INFO_ID_MAPPING,
             "gcp_project_native_env": GCP_PROJECT_NATIVE_ENV,
         },
     },
@@ -96,7 +93,7 @@ import_firebase_beneficiary_tables = {
         "depends": ["raw_firebase_events"],
         "params": {
             "table_type": "beneficiary",
-            "app_info_ids": app_info_id_list,
+            "app_info_ids": ENV_SHORT_NAME_APP_INFO_ID_MAPPING,
             "table_name": "events",
         },
     },

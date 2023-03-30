@@ -47,7 +47,7 @@ ref_tables = {
             "nom": "STRING",
             "zone_code": "STRING",
             "zone_type": "STRING",
-            "zone_parent": "STRING"
+            "zone_parent": "STRING",
         },
     },
 }

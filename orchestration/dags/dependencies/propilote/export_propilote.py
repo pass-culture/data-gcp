@@ -4,130 +4,262 @@ SQL_TMP_PATH = f"dependencies/propilote/sql/tmp"
 kpis_list = [
     {
         "question": 1,
-        "effect": "Nombre d'inscrits total du pass Culture (+18 ans)",
-        "kpi": "nb_inscrits_18",
-        "table_name": "nb_registrations_agg",
+        "effect": "Taux de couverture",
+        "kpi": "taux_couverture",
+        "table_name": "propilote_tmp_couverture",
     },
     {
         "question": 2,
-        "effect": "Nombre d'inscrits du pass Culture sur les 12 derniers mois (+18 ans)",
-        "kpi": "inscrits_18_last_12",
-        "table_name": "nb_registrations_agg",
+        "effect": "Taux d'utilisation à 3 mois",
+        "kpi": "taux_utilisation",
+        "table_name": "propilote_tmp_utilisation",
     },
     {
         "question": 3,
-        "effect": "Nombre de réservations de produits culturels (+18 ans)",
-        "kpi": "nb_reservations_total",
-        "table_name": "nb_reservations",
+        "effect": "Montant dépensé moyen après 24 mois",
+        "kpi": "montant_depense_24_mois",
+        "table_name": "propilote_tmp_montant_24_mois",
     },
     {
         "question": 4,
-        "effect": "Nombre de réservations de produits culturels : biens et services",
-        "kpi": "dont_physique",
-        "table_name": "nb_reservations",
+        "effect": "Part des élèves ayant participé à une offre EAC",
+        "kpi": "taux_participation_eac_jeunes",
+        "table_name": "propilote_tmp_taux_participation_eac_jeunes",
     },
     {
         "question": 5,
-        "effect": "Nombre de réservations de produits culturels : produits numériques",
-        "kpi": "dont_numerique",
-        "table_name": "nb_reservations",
+        "effect": "Taux d'activation des structures",
+        "kpi": "taux_activation_structure",
+        "table_name": "propilote_tmp_taux_activation_structure",
     },
     {
         "question": 6,
-        "effect": "Consommation moyenne du crédit pass Culture sur les 12 premiers mois d’utilisation (+18 ans)",
-        "kpi": "montant_moyen_12mois",
-        "table_name": "final_agg_mean_spent_beneficiary_18",
+        "effect": "Part des établissements actifs",
+        "kpi": "taux_participation_eac_ecoles",
+        "table_name": "propilote_tmp_taux_participation_eac_ecoles",
     },
     {
         "question": 7,
-        "effect": "Part d’utilisateurs ayant effectué 3 réservations ou plus sur 12 mois / nombre de comptes ayant réservé (+18 ans)",
-        "kpi": "part_3_resas",
-        "table_name": "agg_intensity_18",
-    },
-    {
-        "question": 8,
-        "effect": "Part des jeunes ayant fait au moins une réservation individuelle (15-17 ans)",
-        "kpi": "part_15_17_actifs",
-        "table_name": "agg_intensity_15_17",
-    },
-    {
-        "question": 9,
-        "effect": "Consommation moyenne des crédits individuels par jeune ayant activé son pass Culture (15-17 ans)",
-        "kpi": "average_spent_amount",
-        "table_name": "montant_moyen",
-    },
-    {
-        "question": 10,
-        "effect": "Part d'élèves ayant participé à au moins une offre collective collège ou lycée (15-17 ans)",
-        "kpi": "involved_collective_students",
-        "table_name": "collective_students",
-    },
-    {
-        "question": 11,
-        "effect": "Consommation moyenne des crédits de la part collective par classe et par année scolaire",
-        "kpi": "collective_average_spent_amount",
-        "table_name": "conso_collective",
-    },
-    {
-        "question": 12,
-        "effect": "Proportion d’établissements ayant engagé au moins 1 action collective",
-        "kpi": "percentage_active_eple",
-        "table_name": "activation_eple",
-    },
-    {
-        "question": 13,
-        "effect": "Nombre total d'utilisateurs de 15 à 17 ans du pass Culture",
-        "kpi": "total_registered_15_17",
-        "table_name": "nb_registrations_agg",
+        "effect": "Score de diversification médian",
+        "kpi": "diversification_median",
+        "table_name": "propilote_tmp_diversification",
     },
 ]
 
-tmp_tables = {
-    "propilote_tmp_kpis_region": {
-        "sql": f"{SQL_TMP_PATH}/propilote_tmp_kpis.sql",
+tmp_tables_detailed = {
+    # Taux de couverture
+    "propilote_taux_couverture_region": {
+        "sql": f"{SQL_TMP_PATH}/taux_couverture/propilote_tmp_couverture.sql",
         "destination_dataset": "{{ bigquery_tmp_dataset }}",
-        "destination_table": "propilote_tmp_kpis_region",
+        "destination_table": "propilote_tmp_couverture_region",
         "params": {
-            "group_type": "region",
-            "group_type_name": "user_region_name",
-            "kpis_list": kpis_list,
+            "group_type": "REG",
+            "group_type_name": "region_name",
         },
     },
-    "propilote_tmp_kpis_department": {
-        "sql": f"{SQL_TMP_PATH}/propilote_tmp_kpis.sql",
+    "propilote_taux_couverture_departement": {
+        "sql": f"{SQL_TMP_PATH}/taux_couverture/propilote_tmp_couverture.sql",
         "destination_dataset": "{{ bigquery_tmp_dataset }}",
-        "destination_table": "propilote_tmp_kpis_department",
+        "destination_table": "propilote_tmp_couverture_departement",
         "params": {
-            "group_type": "department",
-            "group_type_name": "user_department_code",
-            "kpis_list": kpis_list,
+            "group_type": "DEPT",
+            "group_type_name": "department_code",
         },
     },
-    "propilote_tmp_kpis_all": {
-        "sql": f"{SQL_TMP_PATH}/propilote_tmp_kpis.sql",
+    "propilote_taux_couverture_all": {
+        "sql": f"{SQL_TMP_PATH}/taux_couverture/propilote_tmp_couverture.sql",
         "destination_dataset": "{{ bigquery_tmp_dataset }}",
-        "destination_table": "propilote_tmp_kpis_all",
+        "destination_table": "propilote_tmp_couverture_all",
         "params": {
-            "group_type": "all",
+            "group_type": "NAT",
             "group_type_name": "all_dim",
-            "kpis_list": kpis_list,
+        },
+    },
+    # Taux d'utilisation à X mois (3 mois par défaut)
+    "propilote_taux_utilisation_region": {
+        "sql": f"{SQL_TMP_PATH}/taux_utilisation/propilote_tmp_utilisation.sql",
+        "destination_dataset": "{{ bigquery_tmp_dataset }}",
+        "destination_table": "propilote_tmp_utilisation_region",
+        "params": {
+            "group_type": "REG",
+            "group_type_name": "user_region_name",
+            "months_threshold": 90,
+        },
+    },
+    "propilote_taux_utilisation_departement": {
+        "sql": f"{SQL_TMP_PATH}/taux_utilisation/propilote_tmp_utilisation.sql",
+        "destination_dataset": "{{ bigquery_tmp_dataset }}",
+        "destination_table": "propilote_tmp_utilisation_departement",
+        "params": {
+            "group_type": "DEPT",
+            "group_type_name": "user_department_code",
+            "months_threshold": 90,
+        },
+    },
+    "propilote_taux_utilisation_all": {
+        "sql": f"{SQL_TMP_PATH}/taux_utilisation/propilote_tmp_utilisation.sql",
+        "destination_dataset": "{{ bigquery_tmp_dataset }}",
+        "destination_table": "propilote_tmp_utilisation_all",
+        "params": {
+            "group_type": "NAT",
+            "group_type_name": "all_dim",
+            "months_threshold": 90,
+        },
+    },
+    # Montant moyen dépensé par bénéficiaire après 24 mois
+    "propilote_montant_24_mois_region": {
+        "sql": f"{SQL_TMP_PATH}/montant_24_mois/propilote_tmp_montant_24_mois.sql",
+        "destination_dataset": "{{ bigquery_tmp_dataset }}",
+        "destination_table": "propilote_tmp_montant_24_mois_region",
+        "params": {
+            "group_type": "REG",
+            "group_type_name": "user_region_name",
+        },
+    },
+    "propilote_montant_24_mois_departement": {
+        "sql": f"{SQL_TMP_PATH}/montant_24_mois/propilote_tmp_montant_24_mois.sql",
+        "destination_dataset": "{{ bigquery_tmp_dataset }}",
+        "destination_table": "propilote_tmp_montant_24_mois_departement",
+        "params": {
+            "group_type": "DEPT",
+            "group_type_name": "user_department_code",
+        },
+    },
+    "propilote_montant_24_mois_all": {
+        "sql": f"{SQL_TMP_PATH}/montant_24_mois/propilote_tmp_montant_24_mois.sql",
+        "destination_dataset": "{{ bigquery_tmp_dataset }}",
+        "destination_table": "propilote_tmp_montant_24_mois_all",
+        "params": {
+            "group_type": "NAT",
+            "group_type_name": "all_dim",
+        },
+    },
+    # Part des élèves ayant participé à une offre EAC
+    "propilote_taux_participation_eac_jeunes_region": {
+        "sql": f"{SQL_TMP_PATH}/taux_participation_eac_jeunes/propilote_tmp_participation_eac_jeunes.sql",
+        "destination_dataset": "{{ bigquery_tmp_dataset }}",
+        "destination_table": "propilote_tmp_taux_participation_eac_jeunes_region",
+        "params": {
+            "group_type": "REG",
+            "group_type_name": "region_name",
+        },
+    },
+    "propilote_taux_participation_eac_jeunes_departement": {
+        "sql": f"{SQL_TMP_PATH}/taux_participation_eac_jeunes/propilote_tmp_participation_eac_jeunes.sql",
+        "destination_dataset": "{{ bigquery_tmp_dataset }}",
+        "destination_table": "propilote_tmp_taux_participation_eac_jeunes_departement",
+        "params": {
+            "group_type": "DEPT",
+            "group_type_name": "department_code",
+        },
+    },
+    "propilote_taux_participation_eac_jeunes_all": {
+        "sql": f"{SQL_TMP_PATH}/taux_participation_eac_jeunes/propilote_tmp_participation_eac_jeunes.sql",
+        "destination_dataset": "{{ bigquery_tmp_dataset }}",
+        "destination_table": "propilote_tmp_taux_participation_eac_jeunes_all",
+        "params": {
+            "group_type": "NAT",
+            "group_type_name": "all_dim",
+        },
+    },
+    # Taux d'activation des structures
+    "propilote_taux_activation_structure_region": {
+        "sql": f"{SQL_TMP_PATH}/taux_activation_structure/propilote_tmp_activation_structure.sql",
+        "destination_dataset": "{{ bigquery_tmp_dataset }}",
+        "destination_table": "propilote_tmp_taux_activation_structure_region",
+        "params": {
+            "group_type": "REG",
+            "group_type_name": "venue_region_name",
+        },
+    },
+    "propilote_taux_activation_structure_departement": {
+        "sql": f"{SQL_TMP_PATH}/taux_activation_structure/propilote_tmp_activation_structure.sql",
+        "destination_dataset": "{{ bigquery_tmp_dataset }}",
+        "destination_table": "propilote_tmp_taux_activation_structure_departement",
+        "params": {
+            "group_type": "DEPT",
+            "group_type_name": "venue_department_code",
+        },
+    },
+    "propilote_taux_activation_structure_all": {
+        "sql": f"{SQL_TMP_PATH}/taux_activation_structure/propilote_tmp_activation_structure.sql",
+        "destination_dataset": "{{ bigquery_tmp_dataset }}",
+        "destination_table": "propilote_tmp_taux_activation_structure_all",
+        "params": {
+            "group_type": "NAT",
+            "group_type_name": "all_dim",
+        },
+    },
+    # Part des établissements actifs 
+    "propilote_taux_participation_eac_ecoles_region": {
+        "sql": f"{SQL_TMP_PATH}/taux_participation_eac_ecoles/propilote_tmp_participation_eac_ecoles.sql",
+        "destination_dataset": "{{ bigquery_tmp_dataset }}",
+        "destination_table": "propilote_tmp_taux_participation_eac_ecoles_region",
+        "params": {
+            "group_type": "REG",
+            "group_type_name": "institution_region_name",
+        },
+    },
+    "propilote_taux_participation_eac_ecoles_departement": {
+        "sql": f"{SQL_TMP_PATH}/taux_participation_eac_ecoles/propilote_tmp_participation_eac_ecoles.sql",
+        "destination_dataset": "{{ bigquery_tmp_dataset }}",
+        "destination_table": "propilote_tmp_taux_participation_eac_ecoles_departement",
+        "params": {
+            "group_type": "DEPT",
+            "group_type_name": "institution_departement_code",
+        },
+    },
+    "propilote_taux_participation_eac_ecoles_all": {
+        "sql": f"{SQL_TMP_PATH}/taux_participation_eac_ecoles/propilote_tmp_participation_eac_ecoles.sql",
+        "destination_dataset": "{{ bigquery_tmp_dataset }}",
+        "destination_table": "propilote_tmp_taux_participation_eac_ecoles_all",
+        "params": {
+            "group_type": "NAT",
+            "group_type_name": "all_dim",
+        },
+    },
+    # Diversification
+    "propilote_diversification_region": {
+        "sql": f"{SQL_TMP_PATH}/diversification/propilote_tmp_diversification.sql",
+        "destination_dataset": "{{ bigquery_tmp_dataset }}",
+        "destination_table": "propilote_tmp_diversification_region",
+        "params": {
+            "group_type": "REG",
+            "group_type_name": "user_region_name",
+        },
+    },
+    "propilote_diversification_departement": {
+        "sql": f"{SQL_TMP_PATH}/diversification/propilote_tmp_diversification.sql",
+        "destination_dataset": "{{ bigquery_tmp_dataset }}",
+        "destination_table": "propilote_tmp_diversification_departement",
+        "params": {
+            "group_type": "DEPT",
+            "group_type_name": "user_department_code",
+        },
+    },
+    "propilote_diversification_all": {
+        "sql": f"{SQL_TMP_PATH}/diversification/propilote_tmp_diversification.sql",
+        "destination_dataset": "{{ bigquery_tmp_dataset }}",
+        "destination_table": "propilote_tmp_diversification_all",
+        "params": {
+            "group_type": "NAT",
+            "group_type_name": "all_dim",
         },
     },
 }
 
 analytics_tables = {
     "propilote_kpis": {
-        "sql": f"{SQL_ANALYTICS_PATH}/propilote_kpis.sql",
+        "sql": f"{SQL_ANALYTICS_PATH}/propilote_kpis_v2.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "propilote_kpis${{ yyyymmdd(current_month(ds)) }}",
-        "time_partitioning": {"field": "calculation_month"},
-        "cluster_fields": ["calculation_month"],
-        "depends": [
-            "propilote_tmp_kpis_region",
-            "propilote_tmp_kpis_department",
-            "propilote_tmp_kpis_all",
-        ],
+        "destination_table": "propilote_kpis_v2",
+        "time_partitioning": {"field": "mois"},
+        "cluster_fields": ["mois"],
+        "depends": list(tmp_tables_detailed.keys()),
+        "params": {
+            "kpis_list": kpis_list,
+        },
     },
 }
 
-propilote_tables = dict(tmp_tables, **analytics_tables)
+propilote_tables = dict(tmp_tables_detailed, **analytics_tables)

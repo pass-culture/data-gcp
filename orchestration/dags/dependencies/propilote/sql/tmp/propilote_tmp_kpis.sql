@@ -426,7 +426,7 @@ join_all_kpis AS (
     SELECT
         "{{ kpi_details.effect }}" as effect,
         {{ kpi_details.question }} as question_number,
-        "{{ params.group_type }}" as group_type,
+        ""{{ params.group_type }}"" as group_type,
     {% if params.group_type == 'all' %}
         'all' as dimension,
     {% else %}

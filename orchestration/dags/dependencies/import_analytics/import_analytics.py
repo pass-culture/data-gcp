@@ -149,8 +149,8 @@ analytics_tables = {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_venue_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
     },
-    "enriched_reimbursment_data": {
-        "sql": f"{ANALYTICS_SQL_PATH}/enriched_reimbursment_data.sql",
+    "enriched_reimbursement_data": {
+        "sql": f"{ANALYTICS_SQL_PATH}/enriched_reimbursement_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
     },
     "iris_venues_in_shape": {

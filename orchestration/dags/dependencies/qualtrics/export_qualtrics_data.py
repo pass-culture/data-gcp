@@ -30,3 +30,16 @@ clean_tables = {
         "include_email": False,
     },
 }
+
+analytics_tables = {
+    "qualtrics_answers_ir_jeunes": {
+        "sql": f"{SQL_PATH}/analytics/qualtrics_answers_ir_jeunes.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "qualtrics_answers_ir_jeunes",
+    },
+    "qualtrics_answers_ir_pro": {
+        "sql": f"{SQL_PATH}/analytics/qualtrics_answers_ir_pro.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "qualtrics_answers_ir_pro",
+    },
+}

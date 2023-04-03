@@ -36,12 +36,21 @@ def run(request):
     elif task == "import_ir_survey_answers":
         dfs = []
         for target, survey_id in ir_surveys_mapping.items():
-            qualtrics_survey = QualtricsSurvey(
-                api_token=API_TOKEN, survey_id=survey_id, data_center=DATA_CENTER
-            )
-            dfs.append(qualtrics_survey.process_qualtrics_data(target))
-        processed_df = pd.concat(dfs)
-        save_to_raw_bq(processed_df, "qualtrics_answers_ir_survey")
+            if target == "pro":
+                qualtrics_survey = QualtricsSurvey(
+                    api_token=API_TOKEN, survey_id=survey_id, data_center=DATA_CENTER
+                )
+                processed_df = qualtrics_survey.process_qualtrics_data(target)
+                save_to_raw_bq(processed_df, f"qualtrics_answers_ir_survey_{target}")
+            else:
+                qualtrics_survey = QualtricsSurvey(
+                    api_token=API_TOKEN, survey_id=survey_id, data_center=DATA_CENTER
+                )
+                processed_df = qualtrics_survey.process_qualtrics_data(target)
+                dfs.append(processed_df)
+        jeunes_df = pd.concat(dfs)
+        save_to_raw_bq(jeunes_df, f"qualtrics_answers_ir_survey_jeunes")
+
     else:
         raise RuntimeError(
             "Task argument must be one of import_opt_out_users or import_ir_survey_answers."

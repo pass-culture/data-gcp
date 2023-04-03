@@ -150,7 +150,7 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
     },
     "enriched_reimbursment_data": {
-         "sql": f"{ANALYTICS_SQL_PATH}/enriched_reimbursment_data.sql",
+        "sql": f"{ANALYTICS_SQL_PATH}/enriched_reimbursment_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
     },
     "iris_venues_in_shape": {

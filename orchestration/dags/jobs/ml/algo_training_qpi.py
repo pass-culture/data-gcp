@@ -9,6 +9,7 @@ from common.operators.gce import (
     CloneRepositoryGCEOperator,
     SSHGCEOperator,
 )
+from common.utils import get_airflow_schedule
 from airflow.providers.google.cloud.transfers.bigquery_to_gcs import (
     BigQueryToGCSOperator,
 )
@@ -43,7 +44,7 @@ dag_config = {
     "BASE_DIR": f"data-gcp/algo_training",
     "MODEL_DIR": "two_towers_model",
     "TRAIN_DIR": "/home/airflow/train",
-    "EXPERIMENT_NAME": f"algo_training_two_towers.1_{ENV_SHORT_NAME}",
+    "EXPERIMENT_NAME": f"algo_training_qpi_v1.1_{ENV_SHORT_NAME}",
 }
 
 # Params
@@ -56,13 +57,15 @@ train_params = {
     "event_day_number": {"prod": 90, "dev": 365, "stg": 20}[ENV_SHORT_NAME],
 }
 gce_params = {
-    "instance_name": f"algo-training-two-towers-{ENV_SHORT_NAME}",
+    "instance_name": f"algo-training-qpi-{ENV_SHORT_NAME}",
     "instance_type": {
         "dev": "n1-standard-2",
         "stg": "n1-standard-8",
         "prod": "n1-standard-32",
     },
 }
+
+schedule_dict = {"prod": "0 12 * * 4", "dev": None, "stg": "0 12 * * 3"}
 
 default_args = {
     "start_date": datetime(2023, 3, 17),
@@ -72,10 +75,10 @@ default_args = {
 }
 
 with DAG(
-    "algo_training_two_towers_QPI",
+    "algo_training_two_towers_qpi",
     default_args=default_args,
     description="Custom training job",
-    schedule_interval=None,
+    schedule_interval=get_airflow_schedule(schedule_dict[ENV_SHORT_NAME]),
     catchup=False,
     dagrun_timeout=timedelta(minutes=1440),
     user_defined_macros=macros.default,

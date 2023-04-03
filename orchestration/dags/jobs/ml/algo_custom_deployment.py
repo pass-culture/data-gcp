@@ -39,6 +39,7 @@ with DAG(
         "experiment_name": Param(
             default=f"algo_training_version_b_{ENV_SHORT_NAME}", type="string"
         ),
+        "run_id": Param(default=None, type="string"),
         "endpoint_name": Param(
             default=f"recommendation_version_b_{ENV_SHORT_NAME}", type="string"
         ),
@@ -69,6 +70,7 @@ with DAG(
         python deploy_model.py \
             --region {{ params.default_region }} \
             --experiment-name {{ params.experiment_name }} \
+            --run-id {{ params.run_id }} \
             --endpoint-name {{ params.endpoint_name }} \
             --version-name {{ params.version_name }}
     """

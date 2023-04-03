@@ -174,6 +174,7 @@ class ModelHandler:
 def main(
     region: str = typer.Option(None, help="Region to deploy"),
     experiment_name: str = typer.Option(None, help="Experiment of the Model"),
+    run_id: str = typer.Option(None, help="RUN ID of the Model"),
     endpoint_name: str = typer.Option(None, help="Endpoint of the Model"),
     version_name: str = typer.Option(None, help="Version of the Model"),
     model_description: str = typer.Option(None, help="Description of the Model"),
@@ -203,9 +204,14 @@ def main(
     MODEL_TYPE_CONFIG = {"tensorflow": TFContainer, "custom": CustomContainer}
     # Load model stats from BQ
     if artifact_uri is None or serving_container is None:
-        results_array = pd.read_gbq(
-            f"""SELECT * FROM `{BIGQUERY_CLEAN_DATASET}.{MODELS_RESULTS_TABLE_NAME}` WHERE experiment_name = '{experiment_name}' ORDER BY execution_date DESC LIMIT 1"""
-        ).to_dict("records")
+        if run_id is None or len(run_id) == 0:
+            results_array = pd.read_gbq(
+                f"""SELECT * FROM `{BIGQUERY_CLEAN_DATASET}.{MODELS_RESULTS_TABLE_NAME}` WHERE experiment_name = '{experiment_name}' ORDER BY execution_date DESC LIMIT 1"""
+            ).to_dict("records")
+        else:
+            results_array = pd.read_gbq(
+                f"""SELECT * FROM `{BIGQUERY_CLEAN_DATASET}.{MODELS_RESULTS_TABLE_NAME}` WHERE experiment_name = '{experiment_name}' AND run_id = '{run_id}' ORDER BY execution_date DESC LIMIT 1"""
+            ).to_dict("records")
         if len(results_array) == 0:
             raise Exception(
                 f"Model {experiment_name} not found into BQ {MODELS_RESULTS_TABLE_NAME}. Failing."

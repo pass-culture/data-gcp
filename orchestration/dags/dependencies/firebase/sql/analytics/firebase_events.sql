@@ -160,7 +160,7 @@ WITH temp_firebase_events AS (
         ) as booking_cancellation_step,
         (
             select
-                event_params.value.string_value
+                CAST(event_params.value.int_value AS STRING)
             from
                 unnest(event_params) event_params
             where

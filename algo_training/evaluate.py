@@ -93,7 +93,9 @@ def main(
     )
 
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
-    with mlflow.start_run(experiment_id=experiment_id, run_id=run_id) as run:
+    with mlflow.start_run(
+        experiment_id=experiment_id, run_id=run_id, nested=True
+    ) as run:
         mlflow.log_metrics(metrics)
         mlflow.log_artifacts(pca_plots_path, "pca_plots")
 

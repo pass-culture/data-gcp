@@ -3,7 +3,7 @@ from common.operators.gce import (
     StartGCEOperator,
     StopGCEOperator,
     CloneRepositoryGCEOperator,
-    GCloudSSHGCEOperator,
+    SSHGCEOperator,
 )
 from airflow.models import Param
 from datetime import datetime, timedelta
@@ -48,7 +48,7 @@ with DAG(
     },
 ) as dag:
     gce_instance_start = StartGCEOperator(
-        task_id="gce_start_task", instance_name=GCE_INSTANCE
+        task_id="gce_start_task", instance_name=GCE_INSTANCE, retries=2
     )
 
     fetch_code = CloneRepositoryGCEOperator(
@@ -56,14 +56,16 @@ with DAG(
         instance_name=GCE_INSTANCE,
         command="{{ params.branch }}",
         python_version="3.10",
+        retries=2,
     )
 
-    install_dependencies = GCloudSSHGCEOperator(
+    install_dependencies = SSHGCEOperator(
         task_id="install_dependencies",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command="""pip install -r requirements.txt --user""",
         dag=dag,
+        retries=2,
     )
 
     template_command = r"""
@@ -75,7 +77,7 @@ with DAG(
             --version-name {{ params.version_name }}
     """
 
-    deploy_model = GCloudSSHGCEOperator(
+    deploy_model = SSHGCEOperator(
         task_id="deploy_custom_model",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,

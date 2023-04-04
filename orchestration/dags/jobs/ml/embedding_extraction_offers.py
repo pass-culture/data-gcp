@@ -6,7 +6,7 @@ from common.operators.gce import (
     StartGCEOperator,
     StopGCEOperator,
     CloneRepositoryGCEOperator,
-    GCloudSSHGCEOperator,
+    SSHGCEOperator,
 )
 from common.operators.biquery import bigquery_job_task
 from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
@@ -59,6 +59,7 @@ with DAG(
         task_id="gce_start_task",
         instance_name=GCE_INSTANCE,
         instance_type="{{ params.instance_type }}",
+        retries=2,
     )
 
     fetch_code = CloneRepositoryGCEOperator(
@@ -66,16 +67,17 @@ with DAG(
         instance_name=GCE_INSTANCE,
         python_version="3.10",
         command="{{ params.branch }}",
+        retries=2,
     )
 
-    install_dependencies = GCloudSSHGCEOperator(
+    install_dependencies = SSHGCEOperator(
         task_id="install_dependencies",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command="""pip install -r requirements.txt --user""",
     )
 
-    preprocess = GCloudSSHGCEOperator(
+    preprocess = SSHGCEOperator(
         task_id="preprocess",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
@@ -85,7 +87,7 @@ with DAG(
         "--config-file-name {{ params.config_file_name }} ",
     )
 
-    extract_embedding = GCloudSSHGCEOperator(
+    extract_embedding = SSHGCEOperator(
         task_id="extract_embedding",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,

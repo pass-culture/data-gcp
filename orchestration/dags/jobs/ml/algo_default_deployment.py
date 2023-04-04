@@ -3,6 +3,7 @@ from common.operators.gce import (
     StartGCEOperator,
     StopGCEOperator,
     CloneRepositoryGCEOperator,
+    SSHGCEOperator,
     GCloudSSHGCEOperator,
 )
 from airflow.models import Param
@@ -56,7 +57,7 @@ with DAG(
     },
 ) as dag:
     gce_instance_start = StartGCEOperator(
-        task_id="gce_start_task", instance_name=GCE_INSTANCE
+        task_id="gce_start_task", instance_name=GCE_INSTANCE, retries=2
     )
 
     fetch_code = CloneRepositoryGCEOperator(
@@ -64,11 +65,12 @@ with DAG(
         instance_name=GCE_INSTANCE,
         command="{{ params.branch }}",
         python_version="3.10",
+        retries=2,
     )
 
     fetch_code.set_upstream(gce_instance_start)
 
-    install_dependencies = GCloudSSHGCEOperator(
+    install_dependencies = SSHGCEOperator(
         task_id="install_dependencies",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,

@@ -43,8 +43,8 @@ def analytics_fail_slack_alert(context):
 def __task_fail_slack_alert(context, job_type):
     run_id = context["dag_run"].run_id
     is_scheduled = run_id.startswith("scheduled__")
-    # alerts only for scheduled task or prod.
-    if is_scheduled or ENV_SHORT_NAME == "prod":
+    # alerts only for scheduled task.
+    if is_scheduled:
         webhook_token = JOB_TYPE.get(job_type)
         dag_url = (
             "{base_url}/graph?dag_id={dag_id}&root=&execution_date={exec_date}".format(

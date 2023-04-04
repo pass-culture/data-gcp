@@ -30,6 +30,13 @@ mediation AS (
     WHERE
         rnk = 1
 ),
+emb_offers AS (
+    select 
+        distinct offer_id
+    from `{{ gcp_project }}.clean_{{ env_short_name }}`.offer_embeddings
+    WHERE date(extraction_date) > DATE_SUB(CURRENT_DATE, INTERVAL 60 DAY)
+)
+
 base as (
     SELECT
         o.offer_id,
@@ -64,8 +71,9 @@ CASE
         LEFT JOIN mediation ON o.offer_id = mediation.offer_id
         LEFT JOIN `{{ gcp_project }}.analytics_{{ env_short_name }}`.offer_item_ids oii
         on o.offer_id=oii.offer_id
-    where o.offer_id not in (select offer_id from `{{ gcp_project }}.clean_{{ env_short_name }}`.offer_embeddings)
-    LIMIT 50000
+    where o.offer_id not in (emb_offers)
+    ORDER BY rand()
+    LIMIT 150000
 )
 select
     *

@@ -5,6 +5,7 @@ import urllib.request
 from tools.logging_tools import log_duration
 from PIL import Image
 from tqdm import tqdm
+import os
 
 
 def extract_embedding(

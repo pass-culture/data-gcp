@@ -163,7 +163,7 @@ class CloneRepositoryGCEOperator(BaseSSHGCEOperator):
         instance_name: str,
         command: str,
         environment: t.Dict[str, str] = {},
-        python_version: str = "3.7",
+        python_version: str = "3.10",
         *args,
         **kwargs,
     ):

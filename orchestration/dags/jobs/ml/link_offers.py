@@ -6,7 +6,7 @@ from common.operators.gce import (
     StartGCEOperator,
     StopGCEOperator,
     CloneRepositoryGCEOperator,
-    GCloudSSHGCEOperator,
+    SSHGCEOperator,
 )
 from common import macros
 from common.alerts import task_fail_slack_alert
@@ -58,14 +58,14 @@ with DAG(
         command="{{ params.branch }}",
     )
 
-    install_dependencies = GCloudSSHGCEOperator(
+    install_dependencies = SSHGCEOperator(
         task_id="install_dependencies",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command="""pip install -r requirements.txt --user""",
     )
 
-    data_collect = GCloudSSHGCEOperator(
+    data_collect = SSHGCEOperator(
         task_id="data_collect",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
@@ -76,7 +76,7 @@ with DAG(
         """,
     )
 
-    preprocess = GCloudSSHGCEOperator(
+    preprocess = SSHGCEOperator(
         task_id="preprocess",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
@@ -87,7 +87,7 @@ with DAG(
         """,
     )
 
-    record_linkage = GCloudSSHGCEOperator(
+    record_linkage = SSHGCEOperator(
         task_id="record_linkage",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
@@ -98,7 +98,7 @@ with DAG(
         """,
     )
 
-    postprocess = GCloudSSHGCEOperator(
+    postprocess = SSHGCEOperator(
         task_id="postprocess",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,

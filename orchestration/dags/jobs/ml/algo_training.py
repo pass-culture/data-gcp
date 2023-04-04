@@ -48,7 +48,7 @@ train_params = {
     "batch_size": 4096,
     "embedding_size": 64,
     "train_set_size": {"prod": 0.95, "dev": 0.8, "stg": 0.9}[ENV_SHORT_NAME],
-    "event_day_number": {"prod": 90, "dev": 365, "stg": 20}[ENV_SHORT_NAME],
+    "event_day_number": {"prod": 60, "dev": 365, "stg": 20}[ENV_SHORT_NAME],
     "input_type": {"prod": "clicks", "dev": "bookings", "stg": "clicks"}[
         ENV_SHORT_NAME
     ],
@@ -137,6 +137,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         python_version="3.10",
         command="{{ params.branch }}",
+        retries=2,
     )
 
     install_dependencies = SSHGCEOperator(
@@ -145,6 +146,7 @@ with DAG(
         base_dir=dag_config["BASE_DIR"],
         command="pip install -r requirements.txt --user",
         dag=dag,
+        retries=2,
     )
 
     store_data = {}

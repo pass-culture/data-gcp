@@ -62,7 +62,8 @@ class TwoTowersModel(tfrs.models.Model):
                 from_logits=True, reduction=tf.keras.losses.Reduction.SUM
             ),
             metrics=tfrs.metrics.FactorizedTopK(
-                candidates=items_dataset.map(self.item_model), ks=[50]
+                candidates=items_dataset.map(self.item_model),
+                ks=[50],
             ),
         )
 

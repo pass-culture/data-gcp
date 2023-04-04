@@ -54,7 +54,7 @@ train_params = {
     "validation_steps_ratio": 0.1 if ENV_SHORT_NAME == "prod" else 0.4,
     "embedding_size": 64,
     "train_set_size": 0.95 if ENV_SHORT_NAME == "prod" else 0.8,
-    "event_day_number": {"prod": 90, "dev": 365, "stg": 20}[ENV_SHORT_NAME],
+    "event_day_number": {"prod": 14, "dev": 365, "stg": 14}[ENV_SHORT_NAME],
 }
 gce_params = {
     "instance_name": f"algo-training-qpi-{ENV_SHORT_NAME}",
@@ -168,6 +168,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         instance_type="{{ params.instance_type }}",
         accelerator_types=[{"name": "nvidia-tesla-t4", "count": 1}],
+        retries=2,
     )
 
     fetch_code = CloneRepositoryGCEOperator(
@@ -175,6 +176,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         python_version="3.10",
         command="{{ params.branch }}",
+        retries=2,
     )
 
     install_dependencies = SSHGCEOperator(

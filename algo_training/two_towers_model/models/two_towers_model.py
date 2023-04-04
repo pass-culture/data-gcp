@@ -64,7 +64,6 @@ class TwoTowersModel(tfrs.models.Model):
             metrics=tfrs.metrics.FactorizedTopK(
                 candidates=items_dataset.map(self.item_model),
                 ks=[50],
-                remove_accidental_hits=True,
             ),
         )
 

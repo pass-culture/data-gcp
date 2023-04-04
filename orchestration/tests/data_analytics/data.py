@@ -184,6 +184,7 @@ ENRICHED_OFFER_DATA_INPUT = {
             "stock_modified_date": "2019-11-20",
             "stock_price": "0",
             "stock_fields_updated": "{}",
+            "price_category_id": None,
         },
         {
             "stock_id": "2",
@@ -196,6 +197,33 @@ ENRICHED_OFFER_DATA_INPUT = {
             "stock_booking_limit_date": None,
             "stock_beginning_date": None,
             "stock_fields_updated": "{}",
+            "price_category_id": None,
+        },
+    ],
+    "applicative_database_price_category": [],
+    "applicative_database_price_category_label": [],
+    "enriched_stock_data": [
+        {
+            "stock_id": "1",
+            "offer_id": "3",
+            "available_stock_information": "8",
+            "stock_booking_limit_date": "2019-11-23",
+            "stock_beginning_date": "2019-11-24",
+            "stock_price": "0",
+            "price_category_id": None,
+            "price_category_label_id": None,
+            "price_category_label": None,
+        },
+        {
+            "stock_id": "2",
+            "offer_id": "4",
+            "available_stock_information": "12",
+            "stock_booking_limit_date": None,
+            "stock_beginning_date": None,
+            "stock_price": "0",
+            "price_category_id": None,
+            "price_category_label_id": None,
+            "price_category_label": None,
         },
     ],
     "applicative_database_user": [
@@ -674,6 +702,7 @@ ENRICHED_STOCK_DATA_INPUT = {
             "stock_modified_date": "2019-11-20",
             "stock_price": "0",
             "stock_fields_updated": "{}",
+            "price_category_id": None,
         },
         {
             "stock_id": "2",
@@ -686,8 +715,11 @@ ENRICHED_STOCK_DATA_INPUT = {
             "stock_modified_date": "2019-11-20",
             "stock_price": "0",
             "stock_fields_updated": "{}",
+            "price_category_id": None,
         },
     ],
+    "applicative_database_price_category": [],
+    "applicative_database_price_category_label": [],
     "applicative_database_user": [
         {
             "user_id": "1",
@@ -747,6 +779,9 @@ ENRICHED_STOCK_DATA_EXPECTED = [
         "booking_cancelled": 0,
         "booking_paid": 2,
         "stock_price": 0,
+        "price_category_id": None,
+        "price_category_label_id": None,
+        "price_category_label": None,
     },
     {
         "stock_id": "2",
@@ -764,6 +799,9 @@ ENRICHED_STOCK_DATA_EXPECTED = [
         "booking_cancelled": 0,
         "booking_paid": 0,
         "stock_price": 0,
+        "price_category_id": None,
+        "price_category_label_id": None,
+        "price_category_label": None,
     },
 ]
 

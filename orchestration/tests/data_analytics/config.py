@@ -183,6 +183,18 @@ BIGQUERY_SCHEMAS = {
         "stock_has_been_migrated": "BOOLEAN",
         "number_of_tickets": "INT64",
         "educational_price_detail": "STRING",
+        "price_category_id": "STRING",
+    },
+    "applicative_database_price_category": {
+        "price_category_id": "STRING",
+        "offer_id": "STRING",
+        "price": "INTEGER",
+        "price_category_label_id": "STRING",
+    },
+    "applicative_database_price_category_label": {
+        "price_category_label_id": "STRING",
+        "label": "STRING",
+        "venue_id": "STRING",
     },
     "stock_booking_information": {
         "stock_id": "STRING",
@@ -210,6 +222,9 @@ BIGQUERY_SCHEMAS = {
         "booking_cancelled": "INTEGER",
         "booking_paid": "INTEGER",
         "stock_price": "NUMERIC",
+        "price_category_id": "STRING",
+        "price_category_label_id": "STRING",
+        "price_category_label": "STRING",
     },
     "enriched_deposit_data": {
         "deposit_id": "STRING",

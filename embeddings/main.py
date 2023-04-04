@@ -84,7 +84,7 @@ def main(
     df_data_w_embedding.to_gbq(
         f"clean_{env_short_name}.{data_type}_embeddings",
         project_id=gcp_project,
-        if_exists="replace",
+        if_exists="append",
     )
 
 

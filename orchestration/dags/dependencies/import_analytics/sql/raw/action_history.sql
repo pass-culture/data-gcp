@@ -21,4 +21,4 @@ SELECT
     , CAST(ah."venueId" AS VARCHAR(255)) AS venue_id
     , ah."comment" AS comment
 FROM public.action_history ah
-LEFT JOIN public.user u on ah."authorUserId" = u.id 
+LEFT JOIN public.user u on ah."authorUserId" = u.id

@@ -1,8 +1,11 @@
 SELECT
     *
+    , JSON_EXTRACT_SCALAR(action_history_json_data, "$.reason") AS action_history_reason
+
     , ROW_NUMBER() OVER (
-        PARTITION BY userId
+        PARTITION BY user_id
         ORDER BY
-            CAST(id AS INTEGER) DESC
+            CAST(action_history_id AS INTEGER) DESC
     ) AS rank
-FROM `{{ bigquery_raw_dataset }}`.applicative_database_user_suspension
+FROM `{{ bigquery_raw_dataset }}`.applicative_database_action_history
+WHERE action_type IN ('USER_SUSPENDED', 'USER_UNSUSPENDED')

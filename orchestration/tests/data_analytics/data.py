@@ -790,12 +790,12 @@ ENRICHED_USER_DATA_INPUT = {
     ],
     "user_suspension": [
         {
-            "id": "1",
-            "userId": "1",
-            "eventType": "UNSUSPENDED",
-            "eventDate": datetime.now().replace(microsecond=0),
-            "actorUserId": "1388409",
-            "reasonCode": None,
+            "action_history_id": "1",
+            "user_id": "1",
+            "action_history_reason": None,
+            "action_type": "UNSUSPENDED",
+            "action_date": datetime.now().replace(microsecond=0),
+            "author_user_id": "1388409",
             "rank": 1,
         }
     ],

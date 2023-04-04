@@ -538,7 +538,7 @@ SELECT
     first_paid_booking_type.first_paid_booking_type,
     count_distinct_types.cnt_distinct_types AS cnt_distinct_type_booking,
     user.user_is_active,
-    user_suspension.reasonCode AS user_suspension_reason,
+    user_suspension.action_history_reason AS user_suspension_reason,
     user_agg_deposit_data.user_first_deposit_amount AS user_deposit_initial_amount,
     user_agg_deposit_data.user_last_deposit_expiration_date AS user_deposit_expiration_date,
     CASE
@@ -581,12 +581,12 @@ FROM
     LEFT JOIN first_booking_type ON user.user_id = first_booking_type.user_id
     LEFT JOIN first_paid_booking_type ON user.user_id = first_paid_booking_type.user_id
     LEFT JOIN count_distinct_types ON user.user_id = count_distinct_types.user_id
-    LEFT JOIN `{{ bigquery_clean_dataset }}`.user_suspension AS user_suspension ON user_suspension.userId = user.user_id
+    LEFT JOIN `{{ bigquery_clean_dataset }}`.user_suspension AS user_suspension ON user_suspension.user_id = user.user_id
         AND rank = 1
     LEFT JOIN amount_spent_last_deposit ON amount_spent_last_deposit.user_id = user.user_id
     JOIN user_agg_deposit_data ON user.user_id = user_agg_deposit_data.userId
 WHERE
     (
         user.user_is_active
-        OR user_suspension.reasonCode = 'UPON_USER_REQUEST'
+        OR user_suspension.action_history_reason = 'upon user request'
     )

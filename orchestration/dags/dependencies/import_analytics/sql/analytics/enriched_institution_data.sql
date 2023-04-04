@@ -177,13 +177,13 @@ students_educonnectes AS (
     LEFT JOIN `{{ bigquery_clean_dataset }}`.user_beneficiary AS user 
         ON beneficiary_fraud_check.user_id = user.user_id 
     LEFT JOIN `{{ bigquery_clean_dataset }}`.user_suspension as user_suspension
-        ON user_suspension.userId = user.user_id
+        ON user_suspension.user_id = user.user_id
         AND rank = 1
     WHERE
         type = 'EDUCONNECT'
         AND REGEXP_EXTRACT(result_content, '"school_uai": \"(.*?)\",') IS NOT NULL
         AND (
-            user_is_active OR user_suspension.reasonCode = 'UPON_USER_REQUEST'
+            user_is_active OR user_suspension.action_history_reason = 'upon user request'
         )
     GROUP BY
         1

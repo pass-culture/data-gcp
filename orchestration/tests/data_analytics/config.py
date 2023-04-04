@@ -190,6 +190,7 @@ BIGQUERY_SCHEMAS = {
         "stock_id": "STRING",
         "booking_quantity": "INTEGER",
         "bookings_cancelled": "INTEGER",
+        "bookings_non_cancelled": "INTEGER",
         "bookings_paid": "INTEGER",
     },
     "available_stock_information": {

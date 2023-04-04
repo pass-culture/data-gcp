@@ -561,6 +561,7 @@ ENRICHED_STOCK_DATA_INPUT = {
             "booking_amount": "0",
             "booking_is_cancelled": False,
             "booking_is_used": False,
+            "booking_status": "REIMBURSED",
             "booking_used_date": "2019-11-22",
         }
     ],

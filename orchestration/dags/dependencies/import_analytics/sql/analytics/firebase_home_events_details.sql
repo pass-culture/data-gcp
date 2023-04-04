@@ -17,7 +17,7 @@ WITH firebase_home_events AS (
         home_id,
         module_index
     FROM `{{ bigquery_analytics_dataset }}.firebase_home_events`
-    WHERE date(event_date) >= DATE_SUB(date('{{ ds }}'), INTERVAL 6 MONTH)
+    WHERE date(event_date) >= DATE_SUB(date('{{ ds }}'), INTERVAL 12 MONTH)
 
 ), 
 contentful_tags AS (

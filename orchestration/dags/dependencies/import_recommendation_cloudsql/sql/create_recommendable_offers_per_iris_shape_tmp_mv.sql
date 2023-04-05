@@ -21,6 +21,7 @@ RETURNS TABLE (
                 offer_is_duo BOOLEAN,
                 offer_type_domain VARCHAR,
                 offer_type_label VARCHAR,
+                offer_type_labels VARCHAR,
                 booking_number INTEGER,
                 is_underage_recommendable BOOLEAN,
                 "position" VARCHAR,

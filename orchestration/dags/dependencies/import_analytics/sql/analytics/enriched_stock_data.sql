@@ -24,7 +24,7 @@ SELECT
     available_stock_information.available_stock_information,
     stock.stock_quantity,
     stock_booking_information.booking_quantity,
-    stock_booking_information.bookings_cancelled AS booking_cancelled,
+    stock_booking_information.booking_cancelled AS booking_cancelled,
     stock_booking_information.bookings_paid AS booking_paid,
     stock.stock_price,
     stock.price_category_id,

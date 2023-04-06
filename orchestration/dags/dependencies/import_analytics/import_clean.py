@@ -49,6 +49,7 @@ clean_tables = {
         "sql": f"{CLEAN_SQL_PATH}/available_stock_information.sql",
         "destination_dataset": "{{ bigquery_clean_dataset }}",
         "destination_table": "available_stock_information",
+    },
     "cleaned_stock": {
         "sql": f"{CLEAN_SQL_PATH}/cleaned_stock.sql",
         "destination_dataset": "{{ bigquery_clean_dataset }}",

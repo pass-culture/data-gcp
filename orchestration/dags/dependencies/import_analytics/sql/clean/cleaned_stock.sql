@@ -1,6 +1,6 @@
 SELECT
-    stock.* EXCEPT(stock.stock_price)
-    ,COALESCE(stock.stock_price, price_category.price) AS stock_price
+    stock.* EXCEPT(stock_price),
+    COALESCE(stock.stock_price, price_category.price) AS stock_price,
     price_category.price_category_label_id,
     price_category_label.label AS price_category_label
 FROM

@@ -711,13 +711,13 @@ ENRICHED_STOCK_DATA_INPUT = {
         {
             "stock_id": "1",
             "booking_quantity": 2,
-            "bookings_cancelled": 0,
+            "booking_cancelled": 0,
             "bookings_paid": 2,
         },
         {
             "stock_id": "2",
             "booking_quantity": 0,
-            "bookings_cancelled": 0,
+            "booking_cancelled": 0,
             "bookings_paid": 0,
         },
     ],

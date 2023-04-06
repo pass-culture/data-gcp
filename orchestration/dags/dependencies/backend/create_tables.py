@@ -9,11 +9,4 @@ create_tables = {
         "schedule_type": "weekly",
         "write_disposition": "WRITE_APPEND",
     },
-    "users_that_landed_on_come_back_later": {
-        "sql": f"{BACKEND_SQL_PATH}/users_that_landed_on_come_back_later.sql",
-        "destination_dataset": "{{ bigquery_backend_dataset }}",
-        "destination_table": "users_that_landed_on_come_back_later",
-        "schedule_type": "daily",
-        "write_disposition": "WRITE_APPEND",
-    },
 }

@@ -10,7 +10,11 @@ ENV_SHORT_NAME_APP_INFO_ID_MAPPING = {
 }[ENV_SHORT_NAME]
 
 ENV_SHORT_NAME_APP_INFO_ID_MAPPING_PRO = {
-    "dev": ["localhost", "pro.testing.passculture.team"],
+    "dev": [
+        "localhost",
+        "pro.testing.passculture.team",
+        "pro-test.testing.passculture.team",
+    ],
     "stg": [
         "pro.testing.passculture.team",
         "integration.passculture.pro",

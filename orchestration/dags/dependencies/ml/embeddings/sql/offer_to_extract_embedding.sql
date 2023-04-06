@@ -66,7 +66,7 @@ CASE
         LEFT JOIN `{{ gcp_project }}.analytics_{{ env_short_name }}`.offer_item_ids oii
         on o.offer_id=oii.offer_id
     WHERE o.offer_id not in (select distinct offer_id from `{{ gcp_project }}.clean_{{ env_short_name }}`.offer_embeddings WHERE date(extraction_date) > DATE_SUB(CURRENT_DATE, INTERVAL 60 DAY))
-    LIMIT 150000
+    LIMIT 50000
 )
 select
     *

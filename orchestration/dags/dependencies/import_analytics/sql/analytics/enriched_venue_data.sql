@@ -225,7 +225,6 @@ SELECT
     venue.venue_managing_offerer_id,
     venue.venue_creation_date,
     venue.venue_is_permanent,
-    venue.business_unit_id,
     offerer.offerer_name,
     offerer.offerer_validation_status,
     venue.venue_type_code AS venue_type_label,

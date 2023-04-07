@@ -968,7 +968,6 @@ ENRICHED_VENUE_DATA_INPUT = {
             "venue_creation_date": datetime.now().replace(microsecond=0),
             "venue_label_id": "1",
             "venue_type_id": "1",
-            "business_unit_id": "1234",
         }
     ],
     "applicative_database_venue_label": [{"id": "1", "label": "an other label"}],
@@ -1013,7 +1012,6 @@ ENRICHED_VENUE_DATA_EXPECTED = [
         "venue_backofficev3_link": "https://backend.passculture.team/backofficev3/pro/venue/1",
         "venue_region_name": "IDF",
         "venue_pc_pro_link": "https://passculture.pro/structures/AE/lieux/AE",
-        "business_unit_id": "1234",
     }
 ]
 

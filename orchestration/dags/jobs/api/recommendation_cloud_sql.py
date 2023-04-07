@@ -26,7 +26,6 @@ from common.config import (
     DATA_GCS_BUCKET_NAME,
     BIGQUERY_CLEAN_DATASET,
     BIGQUERY_ANALYTICS_DATASET,
-    ENV_SHORT_NAME,
     DAG_FOLDER,
     QPI_TABLE,
     RECOMMENDATION_SQL_INSTANCE,
@@ -177,8 +176,8 @@ with DAG(
                         "tableId": f"temp_export_{table}",
                     },
                     "compression": None,
-                    "destinationUris": f"{BUCKET_PATH}/{table}-*.csv",
-                    "destinationFormat": "CSV",
+                    "destinationUris": f"{BUCKET_PATH}/{table}-*.parquet",
+                    "destinationFormat": "PARQUET",
                     "printHeader": False,
                 }
             },
@@ -197,7 +196,7 @@ with DAG(
             op_kwargs={
                 "bucket_name": DATA_GCS_BUCKET_NAME,
                 "source_prefix": f"bigquery_exports/{table}-",
-                "destination_blob_name": f"bigquery_exports/{table}.csv",
+                "destination_blob_name": f"bigquery_exports/{table}.parquet",
             },
             dag=dag,
         )

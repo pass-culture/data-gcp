@@ -77,8 +77,8 @@ SELECT
     ro.stock_price,
     ro.offer_is_duo,
     ro.offer_type_domain,
-    ro.offer_type_label,    
-    ro.offer_type_labels_detailed,
+    ro.offer_type_label,   
+    ro.offer_type_labels, 
     ro.booking_number,
     ro.is_underage_recommendable,
     si.position,
@@ -86,8 +86,8 @@ SELECT
     v.venue_longitude,
     ROW_NUMBER() over() as unique_id
 FROM
-    selected_items si, 
-INNER JOIN recommendable_offers_data ro, UNNEST(offer_type_labels) AS offer_type_labels_detailed
+    selected_items si
+INNER JOIN recommendable_offers_data ro
     ON ro.offer_id = si.offer_id AND stock_rank < 30 -- get distinct tables with distinct heuristics
 LEFT JOIN
      `{{ bigquery_analytics_dataset }}.iris_venues_at_radius` v 

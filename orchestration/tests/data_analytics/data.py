@@ -184,6 +184,7 @@ ENRICHED_OFFER_DATA_INPUT = {
             "stock_modified_date": "2019-11-20",
             "stock_price": "0",
             "stock_fields_updated": "{}",
+            "price_category_id": None,
         },
         {
             "stock_id": "2",
@@ -196,6 +197,63 @@ ENRICHED_OFFER_DATA_INPUT = {
             "stock_booking_limit_date": None,
             "stock_beginning_date": None,
             "stock_fields_updated": "{}",
+            "price_category_id": None,
+        },
+    ],
+    "cleaned_stock": [
+        {
+            "stock_id": "1",
+            "offer_id": "3",
+            "stock_creation_date": "2019-11-01",
+            "stock_quantity": "10",
+            "stock_booking_limit_date": "2019-11-23",
+            "stock_beginning_date": "2019-11-24",
+            "stock_is_soft_deleted": False,
+            "stock_modified_date": "2019-11-20",
+            "stock_price": "0",
+            "stock_fields_updated": "{}",
+            "price_category_id": None,
+            "price_category_label_id": None,
+            "price_category_label": None,
+        },
+        {
+            "stock_id": "2",
+            "offer_id": "4",
+            "stock_creation_date": "2019-10-01",
+            "stock_quantity": "12",
+            "stock_is_soft_deleted": False,
+            "stock_modified_date": "2019-11-20",
+            "stock_price": "0",
+            "stock_booking_limit_date": None,
+            "stock_beginning_date": None,
+            "stock_fields_updated": "{}",
+            "price_category_id": None,
+            "price_category_label_id": None,
+            "price_category_label": None,
+        },
+    ],
+    "enriched_stock_data": [
+        {
+            "stock_id": "1",
+            "offer_id": "3",
+            "available_stock_information": "8",
+            "stock_booking_limit_date": "2019-11-23",
+            "stock_beginning_date": "2019-11-24",
+            "stock_price": "0",
+            "price_category_id": None,
+            "price_category_label_id": None,
+            "price_category_label": None,
+        },
+        {
+            "stock_id": "2",
+            "offer_id": "4",
+            "available_stock_information": "12",
+            "stock_booking_limit_date": None,
+            "stock_beginning_date": None,
+            "stock_price": "0",
+            "price_category_id": None,
+            "price_category_label_id": None,
+            "price_category_label": None,
         },
     ],
     "applicative_database_user": [
@@ -561,6 +619,7 @@ ENRICHED_STOCK_DATA_INPUT = {
             "booking_amount": "0",
             "booking_is_cancelled": False,
             "booking_is_used": False,
+            "booking_status": "REIMBURSED",
             "booking_used_date": "2019-11-22",
         }
     ],
@@ -652,17 +711,17 @@ ENRICHED_STOCK_DATA_INPUT = {
         {
             "stock_id": "1",
             "booking_quantity": 2,
-            "bookings_cancelled": 0,
+            "booking_cancelled": 0,
             "bookings_paid": 2,
         },
         {
             "stock_id": "2",
             "booking_quantity": 0,
-            "bookings_cancelled": 0,
+            "booking_cancelled": 0,
             "bookings_paid": 0,
         },
     ],
-    "applicative_database_stock": [
+    "cleaned_stock": [
         {
             "stock_id": "1",
             "offer_id": "3",
@@ -674,6 +733,9 @@ ENRICHED_STOCK_DATA_INPUT = {
             "stock_modified_date": "2019-11-20",
             "stock_price": "0",
             "stock_fields_updated": "{}",
+            "price_category_id": None,
+            "price_category_label_id": None,
+            "price_category_label": None,
         },
         {
             "stock_id": "2",
@@ -686,6 +748,9 @@ ENRICHED_STOCK_DATA_INPUT = {
             "stock_modified_date": "2019-11-20",
             "stock_price": "0",
             "stock_fields_updated": "{}",
+            "price_category_id": None,
+            "price_category_label_id": None,
+            "price_category_label": None,
         },
     ],
     "applicative_database_user": [
@@ -747,6 +812,9 @@ ENRICHED_STOCK_DATA_EXPECTED = [
         "booking_cancelled": 0,
         "booking_paid": 2,
         "stock_price": 0,
+        "price_category_id": None,
+        "price_category_label_id": None,
+        "price_category_label": None,
     },
     {
         "stock_id": "2",
@@ -764,6 +832,9 @@ ENRICHED_STOCK_DATA_EXPECTED = [
         "booking_cancelled": 0,
         "booking_paid": 0,
         "stock_price": 0,
+        "price_category_id": None,
+        "price_category_label_id": None,
+        "price_category_label": None,
     },
 ]
 
@@ -790,12 +861,12 @@ ENRICHED_USER_DATA_INPUT = {
     ],
     "user_suspension": [
         {
-            "id": "1",
-            "userId": "1",
-            "eventType": "UNSUSPENDED",
-            "eventDate": datetime.now().replace(microsecond=0),
-            "actorUserId": "1388409",
-            "reasonCode": None,
+            "action_history_id": "1",
+            "user_id": "1",
+            "action_history_reason": None,
+            "action_type": "UNSUSPENDED",
+            "action_date": datetime.now().replace(microsecond=0),
+            "author_user_id": "1388409",
             "rank": 1,
         }
     ],
@@ -967,7 +1038,6 @@ ENRICHED_VENUE_DATA_INPUT = {
             "venue_creation_date": datetime.now().replace(microsecond=0),
             "venue_label_id": "1",
             "venue_type_id": "1",
-            "business_unit_id": "1234",
         }
     ],
     "applicative_database_venue_label": [{"id": "1", "label": "an other label"}],
@@ -1012,7 +1082,6 @@ ENRICHED_VENUE_DATA_EXPECTED = [
         "venue_backofficev3_link": "https://backend.passculture.team/backofficev3/pro/venue/1",
         "venue_region_name": "IDF",
         "venue_pc_pro_link": "https://passculture.pro/structures/AE/lieux/AE",
-        "business_unit_id": "1234",
     }
 ]
 

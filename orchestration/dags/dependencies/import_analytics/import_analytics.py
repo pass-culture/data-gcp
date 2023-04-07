@@ -16,7 +16,6 @@ def define_import_tables():
         "beneficiary_import_status",
         "booking",
         "boost_cinema_details",
-        "business_unit",
         "cashflow",
         "cashflow_batch",
         "cashflow_log",

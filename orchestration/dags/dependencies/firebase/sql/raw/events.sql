@@ -1,10 +1,12 @@
+{% for input_table in params.gcp_project_native_env %}
+
 SELECT
     *
 FROM
     {% if params.dag_type == 'intraday' %}
-    `{{ params.gcp_project_native_env }}.{{ params.firebase_raw_dataset }}.events{{ params.prefix }}{{ yyyymmdd(ds) }}`
+    `{{ input_table }}.events{{ params.prefix }}{{ yyyymmdd(ds) }}`
     {% else %}
-    `{{ params.gcp_project_native_env }}.{{ params.firebase_raw_dataset }}.events{{ params.prefix }}{{ yyyymmdd(add_days(ds, -1)) }}`
+    `{{ input_table }}.events{{ params.prefix }}{{ yyyymmdd(add_days(ds, -1)) }}`
     {% endif %}
 WHERE
     {% if params.table_type == 'pro' %}
@@ -18,3 +20,5 @@ WHERE
         OR app_info.id is NULL
     {% endif %}
     
+{% if not loop.last -%} UNION ALL {%- endif %}
+{% endfor %}

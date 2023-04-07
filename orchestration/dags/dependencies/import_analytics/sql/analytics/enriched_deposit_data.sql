@@ -135,10 +135,10 @@ FROM
     LEFT JOIN theoretical_amount_spent ON deposit.id = theoretical_amount_spent.deposit_id
     LEFT JOIN theoretical_amount_spent_in_digital_goods ON deposit.id = theoretical_amount_spent_in_digital_goods.deposit_id
     LEFT JOIN first_booking_date ON deposit.id = first_booking_date.deposit_id
-    LEFT JOIN `{{ bigquery_clean_dataset }}`.user_suspension AS user_suspension ON user_suspension.userId = user.user_id
+    LEFT JOIN `{{ bigquery_clean_dataset }}`.user_suspension AS user_suspension ON user_suspension.user_id = user.user_id
     AND rank = 1
 WHERE
     (
         user.user_is_active
-        OR user_suspension.reasonCode = 'UPON_USER_REQUEST'
+        OR user_suspension.action_history_reason = 'upon user request'
     )

@@ -1,0 +1,53 @@
+{
+  "data_asset_type": null,
+  "expectation_suite_name": "expectations_action_history",
+  "expectations": [
+    {
+      "expectation_type": "expect_table_columns_to_match_set",
+      "kwargs": {
+        "column_set": [
+          "action_history_id",
+          "action_history_json_data",
+          "action_type",
+          "action_date",
+          "author_user_id",
+          "author_email",
+          "user_id",
+          "offerer_id",
+          "venue_id",
+          "comment"
+        ],
+        "exact_match": true
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_in_set",
+      "kwargs": {
+        "column": "action_type",
+        "value_set": [
+          "OFFERER_NEW",
+          "USER_CREATED",
+          "INFO_MODIFIED",
+          "USER_SUSPENDED",
+          "USER_UNSUSPENDED",
+          "OFFERER_PENDING"
+        ]
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_max_to_be_between",
+      "kwargs": {
+        "column": "action_date",
+        "max_value": "2023-04-11T15:35:00.252766",
+        "min_value": "2023-04-04T15:35:00.252766"
+      },
+      "meta": {}
+    }
+  ],
+  "ge_cloud_id": null,
+  "meta": {
+    "great_expectations_version": "0.15.41"
+  }
+}

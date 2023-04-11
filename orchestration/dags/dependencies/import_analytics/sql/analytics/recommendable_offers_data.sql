@@ -41,6 +41,8 @@ WITH get_recommendable_offers AS (
                 ELSE FALSE
             END
         ) AS is_underage_recommendable,
+        NOT (REGEXP_CONTAINS(LOWER(offer.offer_name) ,CONCAT(r'(?i)(\b', forbidden_query.query, r'\b)')) OR forbidden_offer.product_id is not null) as is_recommendable,
+
     FROM
         `{{ bigquery_analytics_dataset }}`.enriched_offer_data offer
         JOIN (
@@ -82,14 +84,19 @@ WITH get_recommendable_offers AS (
         ) item_counts on item_counts.item_id = offer.item_id
         JOIN `{{ bigquery_analytics_dataset }}`.offer_with_mediation om on offer.offer_id=om.offer_id
         LEFT JOIN  `{{ bigquery_analytics_dataset }}`.enriched_item_metadata enriched_item_metadata on offer.item_id = enriched_item_metadata.item_id
+        
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.forbidden_query_recommendation forbidden_query on 
+            enriched_item_metadata.subcategory_id = forbidden_query.subcategory_id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.forbidden_offers_recommendation forbidden_offer on 
+            offer.offer_product_id = forbidden_offer.product_id
     WHERE
         offer.is_active = TRUE
         AND offer.offer_is_bookable = TRUE
         AND offerer.offerer_is_active = TRUE
         AND offer.offer_validation = 'APPROVED'
         AND enriched_item_metadata.subcategory_id NOT IN ('ACTIVATION_THING', 'ACTIVATION_EVENT')
-        AND NOT (enriched_item_metadata.subcategory_id = 'ACHAT_INSTRUMENT' AND REGEXP_CONTAINS(LOWER(offer.offer_name), r'bon d’achat|bons d’achat'))
-        AND NOT (enriched_item_metadata.subcategory_id = 'MATERIEL_ART_CREATIF' AND REGEXP_CONTAINS(LOWER(offer.offer_name), r'stabilo|surligneurs'))
-        AND offer.offer_product_id NOT IN (SELECT * FROM `{{ bigquery_clean_dataset }}`.forbiden_offers_recommendation)
+
 )
-SELECT  * FROM get_recommendable_offers
+SELECT  * 
+FROM get_recommendable_offers 
+where is_recommendable 

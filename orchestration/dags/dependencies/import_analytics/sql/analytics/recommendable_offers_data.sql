@@ -85,9 +85,9 @@ WITH get_recommendable_offers AS (
         JOIN `{{ bigquery_analytics_dataset }}`.offer_with_mediation om on offer.offer_id=om.offer_id
         LEFT JOIN  `{{ bigquery_analytics_dataset }}`.enriched_item_metadata enriched_item_metadata on offer.item_id = enriched_item_metadata.item_id
         
-        LEFT JOIN `{{ bigquery_clean_dataset }}`.forbidden_query_recommendation forbidden_query on 
+        LEFT JOIN `{{ bigquery_raw_dataset }}`.forbidden_query_recommendation forbidden_query on 
             enriched_item_metadata.subcategory_id = forbidden_query.subcategory_id
-        LEFT JOIN `{{ bigquery_clean_dataset }}`.forbidden_offers_recommendation forbidden_offer on 
+        LEFT JOIN `{{ bigquery_raw_dataset }}`.forbidden_offers_recommendation forbidden_offer on 
             offer.offer_product_id = forbidden_offer.product_id
     WHERE
         offer.is_active = TRUE

@@ -5,7 +5,9 @@ from airflow.utils.task_group import TaskGroup
 from common import macros
 from common.utils import depends_loop, one_line_query, get_airflow_schedule
 from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
-from great_expectations_provider.operators.great_expectations import GreatExpectationsOperator
+from great_expectations_provider.operators.great_expectations import (
+    GreatExpectationsOperator,
+)
 from common.operators.biquery import bigquery_job_task
 from dependencies.import_analytics.import_analytics import export_tables
 from dependencies.import_analytics.import_historical import (
@@ -88,7 +90,7 @@ with TaskGroup(group_id="raw_operations_group", dag=dag) as raw_operations_group
     import_tables_to_raw_tasks.append(task)
 
 
-end_raw = DummyOperator(task_id="end_raw", trigger_rule='all_done', dag=dag)
+end_raw = DummyOperator(task_id="end_raw", trigger_rule="all_done", dag=dag)
 
 
 ge_action_history_checkpoint = GreatExpectationsOperator(

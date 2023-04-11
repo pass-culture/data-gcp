@@ -53,7 +53,7 @@ ref_tables = {
     "forbidden_query_recommendation": {
         "file_type": "csv",
         "schema": {
-            "subcategory_id	": "STRING",
+            "subcategory_id": "STRING",
             "query": "STRING",
         },
     },

@@ -310,6 +310,15 @@ analytics_tables = {
             ]
         },
     },
+    "user_monthly_diversification_retention": {
+        "sql": f"{ANALYTICS_SQL_PATH}/user_monthly_diversification_retention.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "user_monthly_diversification_retention",
+        "depends": [
+            "diversification_booking",
+            "enriched_user_data",
+        ],
+    },
     "analytics_firebase_home_events_details": {
         "sql": f"{ANALYTICS_SQL_PATH}/firebase_home_events_details.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",

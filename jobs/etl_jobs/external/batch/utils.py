@@ -18,7 +18,7 @@ def access_secret_data(project_id, secret_id, version_id="latest", default=None)
         return default
 
 
-def bigquery_load_job(df, partition_date, partitioning_field, gcp_project_id, dataset, table_name, schema)
+def bigquery_load_job(df, partition_date, partitioning_field, gcp_project_id, dataset, table_name, schema):
     # load in bigquery with partitioning
     yyyymmdd = partition_date.strftime("%Y%m%d")
     table_id = f"{gcp_project_id}.{dataset}.{table_name}${yyyymmdd}"

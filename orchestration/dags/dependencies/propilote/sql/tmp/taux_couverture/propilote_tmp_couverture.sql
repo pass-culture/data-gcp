@@ -1,5 +1,3 @@
--- TAUX DE COUVERTURES
-
 WITH couverture_18 as (
     SELECT 
         DATE_TRUNC(active_month, MONTH) AS mois

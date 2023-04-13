@@ -14,8 +14,8 @@ SELECT
     {% endif %} as dimension_value
     , deposit.deposit_type as user_type
     , "montant_depense_24_mois" as indicator
-    , AVG(deposit_actual_amount_spent) AS numerator -- montant_moyen_depense_par_beneficiaire
-    , 1 as denominator
+    , SUM(deposit_actual_amount_spent) AS numerator -- montant total dépensé
+    , count(distinct user.user_id) as denominator -- nombre de bénéficiaires
 FROM `{{ bigquery_analytics_dataset }}.enriched_deposit_data` as deposit
 JOIN `{{ bigquery_analytics_dataset }}.enriched_user_data` as user 
     ON deposit.user_id = user.user_id 

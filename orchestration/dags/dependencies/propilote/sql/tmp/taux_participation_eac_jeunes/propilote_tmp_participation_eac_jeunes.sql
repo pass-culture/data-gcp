@@ -1,5 +1,3 @@
--- Part des élèves ayant participé à une offre EAC
-
 SELECT
     DATE_TRUNC(date, MONTH) AS mois
     , "{{ params.group_type }}" as dimension_name
@@ -15,5 +13,10 @@ SELECT
 FROM `{{ bigquery_analytics_dataset }}.adage_involved_student` as involved
 LEFT JOIN `{{ bigquery_analytics_dataset }}.region_department` as rd
     ON involved.department_code = rd.num_dep
-WHERE NOT department_code = '-1' 
+WHERE
+{% if params.group_type == 'all' %}
+    department_code = '-1'
+{% else %}
+    NOT department_code = '-1'
+{% endif %}
 GROUP BY 1, 2, 3, 4, 5

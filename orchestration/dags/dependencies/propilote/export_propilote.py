@@ -190,7 +190,7 @@ tmp_tables_detailed = {
             "group_type_name": "all_dim",
         },
     },
-    # Part des établissements actifs 
+    # Part des établissements actifs
     "propilote_taux_participation_eac_ecoles_region": {
         "sql": f"{SQL_TMP_PATH}/taux_participation_eac_ecoles/propilote_tmp_participation_eac_ecoles.sql",
         "destination_dataset": "{{ bigquery_tmp_dataset }}",

@@ -1,5 +1,3 @@
--- TAUX D'UTILISATION
-
 WITH dates AS (
     SELECT 
         DISTINCT DATE_TRUNC(deposit_creation_date, MONTH) AS mois 
@@ -18,11 +16,6 @@ infos_users AS (
     FROM `{{ bigquery_analytics_dataset }}.enriched_deposit_data` as deposit
     JOIN `{{ bigquery_analytics_dataset }}.enriched_user_data` as user ON deposit.user_id = user.user_id
 )
-
--- Chaque mois on compte tous les jeunes qui sont bénéficiaires
--- On considère comme actifs ceux qui ont fait au moins une réservation dans les 3 premiers mois d'inscriptions.
--- Ex : en janvier 2023, il y a 2M bénéficiaires. Sur ces 2M bénéficiaires actuels (crédit n'est pas expiré),
--- 57% ont fait une réservation dans les 3 premiers mois d'inscription, qu'elle que soit la date à laquelle ils aient reçu leur crédit
 
 SELECT 
     mois -- tous les mois

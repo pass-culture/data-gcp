@@ -22,7 +22,7 @@ default_args = {
 
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"algo-default-deployment-{ENV_SHORT_NAME}"
-BASE_DIR = f"data-gcp/algo_training"
+BASE_DIR = "data-gcp/jobs/ml_jobs/algo_training"
 
 
 models_to_deploy = [

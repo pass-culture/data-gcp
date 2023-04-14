@@ -20,7 +20,7 @@ default_args = {
 
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"algo-custom-deployment-{ENV_SHORT_NAME}"
-BASE_DIR = f"data-gcp/algo_training"
+BASE_DIR = "data-gcp/jobs/ml_jobs/algo_training"
 
 with DAG(
     "algo_custom_deployment",

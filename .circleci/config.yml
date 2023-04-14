@@ -976,7 +976,7 @@ jobs:
 
   algo-training-install:
     executor: python310
-    working_directory: ~/data-gcp/algo_training
+    working_directory: ~/data-gcp/jobs/ml_jobs/algo_training
     steps:
       - checkout:
           path: ~/data-gcp
@@ -1000,7 +1000,7 @@ jobs:
 
   algo-training-tests:
     executor: python310
-    working_directory: ~/data-gcp/algo_training
+    working_directory: ~/data-gcp/jobs/ml_jobs/algo_training
     steps:
       - attach_workspace:
           at: .
@@ -1012,7 +1012,7 @@ jobs:
 
   record-linkage-install:
     executor: python
-    working_directory: ~/data-gcp/record_linkage
+    working_directory: ~/data-gcp/jobs/ml_jobs/record_linkage
     steps:
       - checkout:
           path: ~/data-gcp
@@ -1035,7 +1035,7 @@ jobs:
 
   record-linkage-tests:
     executor: python
-    working_directory: ~/data-gcp/record_linkage
+    working_directory: ~/data-gcp/jobs/ml_jobs/record_linkage
     steps:
       - attach_workspace:
           at: .

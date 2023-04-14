@@ -8,7 +8,7 @@ institutions AS (
     SELECT 
         dates.mois
         , "{{ params.group_type }}" as dimension_name
-        , {% if params.group_type == 'all' %}
+        , {% if params.group_type == 'NAT' %}
             'NAT'
         {% else %}
             {{ params.group_type_name }}
@@ -24,7 +24,7 @@ active_institutions AS (
     SELECT 
         dates.mois
         , "{{ params.group_type }}" as dimension_name
-        , {% if params.group_type == 'all' %}
+        , {% if params.group_type == 'NAT' %}
             'NAT'
         {% else %}
             {{ params.group_type_name }}

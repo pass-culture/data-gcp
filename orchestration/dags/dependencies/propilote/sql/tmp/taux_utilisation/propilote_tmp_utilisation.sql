@@ -20,7 +20,7 @@ infos_users AS (
 SELECT 
     mois -- tous les mois
     , "{{ params.group_type }}" as dimension_name
-    , {% if params.group_type == 'all' %}
+    , {% if params.group_type == 'NAT' %}
         'NAT'
     {% else %}
         {{ params.group_type_name }}

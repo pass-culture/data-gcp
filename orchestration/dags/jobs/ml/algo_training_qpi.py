@@ -65,7 +65,7 @@ gce_params = {
     },
 }
 
-schedule_dict = {"prod": "0 12 * * 4", "dev": None, "stg": "0 12 * * 3"}
+schedule_dict = {"prod": "0 12 * * 3", "dev": None, "stg": "0 12 * * 2"}
 
 default_args = {
     "start_date": datetime(2023, 3, 17),

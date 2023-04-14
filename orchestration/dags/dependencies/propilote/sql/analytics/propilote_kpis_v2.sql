@@ -1,5 +1,5 @@
 {% for kpi_details in params.kpis_list %}
-    {% for granularity in  ['REG', 'DEPT', 'NAT'] %}
+    {% for granularity in  ['region', 'departement', 'all'] %}
         SELECT
             cast(mois as date) as mois
             , cast(dimension_name as STRING) as dimension_name			

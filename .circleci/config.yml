@@ -286,7 +286,7 @@ workflows:
       - cloud-function-deploy:
           name: downloads-cloud-function-deploy-stg
           cloud-function-name: downloads_stg
-          cloud-function-folder: downloads-function-source
+          cloud-function-folder: jobs/etl_jobs/external/downloads
           requires:
             - linter
           filters:
@@ -302,7 +302,7 @@ workflows:
       - cloud-function-deploy:
           name: qualtrics-cloud-function-deploy-stg
           cloud-function-name: qualtrics_import_stg
-          cloud-function-folder: qualtrics-function-source
+          cloud-function-folder: jobs/etl_jobs/external/qualtrics
           requires:
             - linter
           filters:
@@ -334,7 +334,7 @@ workflows:
       - cloud-function-deploy:
           name: downloads-cloud-function-deploy-prod
           cloud-function-name: downloads_prod
-          cloud-function-folder: downloads-function-source
+          cloud-function-folder: jobs/etl_jobs/external/downloads
           requires:
             - linter
           filters:
@@ -350,7 +350,7 @@ workflows:
       - cloud-function-deploy:
           name: qualtrics-cloud-function-deploy-prod
           cloud-function-name: qualtrics_import_prod
-          cloud-function-folder: qualtrics-function-source
+          cloud-function-folder: jobs/etl_jobs/external/qualtrics
           requires:
             - linter
           filters:
@@ -382,7 +382,7 @@ workflows:
       - cloud-function-deploy:
           name: contentful-cloud-function-deploy-stg
           cloud-function-name: contentful_stg
-          cloud-function-folder: contentful-function-source
+          cloud-function-folder: jobs/etl_jobs/external/contentful
           requires:
             - linter
           filters:
@@ -398,7 +398,7 @@ workflows:
       - cloud-function-deploy:
           name: contentful-cloud-function-deploy-prod
           cloud-function-name: contentful_prod
-          cloud-function-folder: contentful-function-source
+          cloud-function-folder: jobs/etl_jobs/external/contentful
           requires:
             - linter
           filters:
@@ -414,7 +414,7 @@ workflows:
       - cloud-function-deploy:
           name: siren-cloud-function-deploy-stg
           cloud-function-name: siren_import_stg
-          cloud-function-folder: siren-function-source
+          cloud-function-folder: jobs/etl_jobs/external/siren
           requires:
             - linter
           filters:
@@ -430,7 +430,7 @@ workflows:
       - cloud-function-deploy:
           name: siren-cloud-function-deploy-prod
           cloud-function-name: siren_import_prod
-          cloud-function-folder: siren-function-source
+          cloud-function-folder: jobs/etl_jobs/external/siren
           requires:
             - linter
           filters:
@@ -446,7 +446,7 @@ workflows:
       - cloud-function-deploy:
           name: dms-cloud-function-deploy-stg
           cloud-function-name: dms_stg
-          cloud-function-folder: dms-function-source
+          cloud-function-folder: jobs/etl_jobs/external/dms
           requires:
             - linter
           filters:
@@ -462,7 +462,7 @@ workflows:
       - cloud-function-deploy:
           name: dms-cloud-function-deploy-prod
           cloud-function-name: dms_prod
-          cloud-function-folder: dms-function-source
+          cloud-function-folder: jobs/etl_jobs/external/dms
           requires:
             - linter
           filters:
@@ -510,7 +510,7 @@ workflows:
       - cloud-function-deploy:
           name: import-typeform-adage-reference-request-stg
           cloud-function-name: typeform_adage_reference_request_stg
-          cloud-function-folder: typeform-adage-reference-request-source
+          cloud-function-folder: jobs/etl_jobs/external/typeform-adage-reference-request
           requires:
             - linter
           filters:
@@ -526,7 +526,7 @@ workflows:
       - cloud-function-deploy:
           name: import-typeform-adage-reference-request-prod
           cloud-function-name: typeform_adage_reference_request_prod
-          cloud-function-folder: typeform-adage-reference-request-source
+          cloud-function-folder: jobs/etl_jobs/external/typeform-adage-reference-request
           requires:
             - linter
           filters:
@@ -542,7 +542,7 @@ workflows:
       - cloud-function-deploy:
           name: metabase-archiving-stg
           cloud-function-name: metabase_archiving_stg
-          cloud-function-folder: metabase-archiving-function-source
+          cloud-function-folder: jobs/etl_jobs/external/metabase-archiving
           requires:
             - linter
           filters:
@@ -558,7 +558,7 @@ workflows:
       - cloud-function-deploy:
           name: metabase-archiving-prod
           cloud-function-name: metabase_archiving_prod
-          cloud-function-folder: metabase-archiving-function-source
+          cloud-function-folder: jobs/etl_jobs/external/metabase-archiving
           requires:
             - linter
           filters:
@@ -574,7 +574,7 @@ workflows:
       - cloud-function-deploy:
           name: sendinblue-import-stg
           cloud-function-name: sendinblue_import_stg
-          cloud-function-folder: sendinblue-function-source
+          cloud-function-folder: jobs/etl_jobs/external/sendinblue
           requires:
             - linter
           filters:
@@ -590,7 +590,7 @@ workflows:
       - cloud-function-deploy:
           name: cold-data-stg
           cloud-function-name: cold_data_stg
-          cloud-function-folder: cold-data-function-source
+          cloud-function-folder: jobs/etl_jobs/internal/cold-data
           requires:
             - linter
           filters:
@@ -606,7 +606,7 @@ workflows:
       - cloud-function-deploy:
           name: sendinblue-import-prod
           cloud-function-name: sendinblue_import_prod
-          cloud-function-folder: sendinblue-function-source
+          cloud-function-folder: jobs/etl_jobs/external/sendinblue
           requires:
             - linter
           filters:
@@ -622,7 +622,7 @@ workflows:
       - cloud-function-deploy:
           name: cold-data-prod
           cloud-function-name: cold_data_prod
-          cloud-function-folder: cold-data-function-source
+          cloud-function-folder: jobs/etl_jobs/internal/cold-data
           requires:
             - linter
           filters:
@@ -707,12 +707,12 @@ workflows:
       - cloud-function-deploy:
           name: downloads-cloud-function-deploy-dev
           cloud-function-name: downloads_dev
-          cloud-function-folder: downloads-function-source
+          cloud-function-folder: jobs/etl_jobs/external/downloads
           <<: *deploy_on_dev_commons
       - cloud-function-deploy:
           name: qualtrics-cloud-function-deploy-dev
           cloud-function-name: qualtrics_import_dev
-          cloud-function-folder: qualtrics-function-source
+          cloud-function-folder: jobs/etl_jobs/external/qualtrics
           <<: *deploy_on_dev_commons
       - cloud-function-deploy:
           name: appsflyer-cloud-function-deploy-dev
@@ -722,37 +722,37 @@ workflows:
       - cloud-function-deploy:
           name: contentful-cloud-function-deploy-dev
           cloud-function-name: contentful_dev
-          cloud-function-folder: contentful-function-source
+          cloud-function-folder: jobs/etl_jobs/external/contentful
           <<: *deploy_on_dev_commons
       - cloud-function-deploy:
           name: siren-cloud-function-deploy-dev
           cloud-function-name: siren_import_dev
-          cloud-function-folder: siren-function-source
+          cloud-function-folder: jobs/etl_jobs/external/siren
           <<: *deploy_on_dev_commons
       - cloud-function-deploy:
           name: dms-cloud-function-deploy-dev
           cloud-function-name: dms_dev
-          cloud-function-folder: dms-function-source
+          cloud-function-folder: jobs/etl_jobs/external/dms
           <<: *deploy_on_dev_commons
       - cloud-function-deploy:
           name: typeform-adage-reference-request-dev
           cloud-function-name: typeform_adage_reference_request_dev
-          cloud-function-folder: typeform-adage-reference-request-source
+          cloud-function-folder: jobs/etl_jobs/external/typeform-adage-reference-request
           <<: *deploy_on_dev_commons
       - cloud-function-deploy:
           name: metabase-archiving-dev
           cloud-function-name: metabase_archiving_dev
-          cloud-function-folder: metabase-archiving-function-source
+          cloud-function-folder: jobs/etl_jobs/external/metabase-archiving
           <<: *deploy_on_dev_commons
       - cloud-function-deploy:
           name: sendinblue-import-dev
           cloud-function-name: sendinblue_import_dev
-          cloud-function-folder: sendinblue-function-source
+          cloud-function-folder: jobs/etl_jobs/external/sendinblue
           <<: *deploy_on_dev_commons
       - cloud-function-deploy:
           name: cold-data-dev
           cloud-function-name: cold_data_dev
-          cloud-function-folder: cold-data-function-source
+          cloud-function-folder: jobs/etl_jobs/internal/cold-data
           <<: *deploy_on_dev_commons
       - build_and_deploy_api:
           name: build_and_deploy_api_dev

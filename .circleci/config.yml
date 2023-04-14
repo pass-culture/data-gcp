@@ -254,7 +254,7 @@ workflows:
       - cloud-function-deploy:
           name: addresses-cloud-function-deploy-stg
           cloud-function-name: addresses_import_stg
-          cloud-function-folder: addresses-function-source
+          cloud-function-folder: jobs/etl_jobs/external/addresses
           requires:
             - linter
           filters:
@@ -270,7 +270,7 @@ workflows:
       - cloud-function-deploy:
           name: addresses-cloud-function-deploy-prod
           cloud-function-name: addresses_import_prod
-          cloud-function-folder: addresses-function-source
+          cloud-function-folder: jobs/etl_jobs/external/addresses
           requires:
             - linter
           filters:
@@ -318,7 +318,7 @@ workflows:
       - cloud-function-deploy:
           name: appsflyer-cloud-function-deploy-stg
           cloud-function-name: appsflyer_import_stg
-          cloud-function-folder: appsflyer-function-source
+          cloud-function-folder: jobs/etl_jobs/external/appsflyer
           requires:
             - linter
           filters:
@@ -366,7 +366,7 @@ workflows:
       - cloud-function-deploy:
           name: appsflyer-cloud-function-deploy-prod
           cloud-function-name: appsflyer_import_prod
-          cloud-function-folder: appsflyer-function-source
+          cloud-function-folder: jobs/etl_jobs/external/appsflyer
           requires:
             - linter
           filters:
@@ -702,7 +702,7 @@ workflows:
       - cloud-function-deploy:
           name: addresses-cloud-function-deploy-dev
           cloud-function-name: addresses_import_dev
-          cloud-function-folder: addresses-function-source
+          cloud-function-folder: jobs/etl_jobs/external/addresses
           <<: *deploy_on_dev_commons
       - cloud-function-deploy:
           name: downloads-cloud-function-deploy-dev
@@ -717,7 +717,7 @@ workflows:
       - cloud-function-deploy:
           name: appsflyer-cloud-function-deploy-dev
           cloud-function-name: appsflyer_import_dev
-          cloud-function-folder: appsflyer-function-source
+          cloud-function-folder: jobs/etl_jobs/external/appsflyer
           <<: *deploy_on_dev_commons
       - cloud-function-deploy:
           name: contentful-cloud-function-deploy-dev
@@ -1213,5 +1213,5 @@ jobs:
       - run:
           name: Deploy the function
           command: |
-            cd additional_data_sources/<<parameters.cloud-function-folder>>
+            cd <<parameters.cloud-function-folder>>
             gcloud functions deploy << parameters.cloud-function-name >> --region "europe-west1"  --entry-point run --source .

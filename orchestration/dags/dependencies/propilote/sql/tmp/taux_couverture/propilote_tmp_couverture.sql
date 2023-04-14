@@ -2,7 +2,7 @@ WITH couverture_18 as (
     SELECT 
         DATE_TRUNC(active_month, MONTH) AS mois
         , "{{ params.group_type }}" as dimension_name
-        , {% if params.group_type == 'all' %}
+        , {% if params.group_type == 'NAT' %}
             'NAT'
         {% else %}
             {{ params.group_type_name }}
@@ -23,7 +23,7 @@ couverture_16 as (
     SELECT 
         DATE_TRUNC(active_month,MONTH) AS mois
         , "{{ params.group_type }}" as dimension_name
-        , {% if params.group_type == 'all' %}
+        , {% if params.group_type == 'NAT' %}
             'NAT' 
         {% else %}
             {{ params.group_type_name }}
@@ -45,7 +45,7 @@ couverture_15_17 as (
     SELECT 
         DATE_TRUNC(active_month,MONTH) AS mois
         , "{{ params.group_type }}" as dimension_name
-        , {% if params.group_type == 'all' %}
+        , {% if params.group_type == 'NAT' %}
             'NAT'
         {% else %}
             {{ params.group_type_name }}

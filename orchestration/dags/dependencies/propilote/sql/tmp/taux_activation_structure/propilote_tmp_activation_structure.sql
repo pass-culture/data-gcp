@@ -9,7 +9,7 @@ structures AS (
     SELECT DISTINCT
         venue_managing_offerer_id AS offerer_id
         , "{{ params.group_type }}" as dimension_name
-        , {% if params.group_type == 'all' %}
+        , {% if params.group_type == 'NAT' %}
             'NAT'
         {% else %}
             venue.{{ params.group_type_name }}
@@ -49,7 +49,7 @@ active_individuel AS (
     SELECT DISTINCT 
         mois
         , "{{ params.group_type }}" as dimension_name
-        , {% if params.group_type == 'all' %}
+        , {% if params.group_type == 'NAT' %}
             'NAT'
         {% else %}
             venue.{{ params.group_type_name }}
@@ -69,7 +69,7 @@ active_collectif AS (
     SELECT DISTINCT 
         mois
         , "{{ params.group_type }}" as dimension_name
-        , {% if params.group_type == 'all' %}
+        , {% if params.group_type == 'NAT' %}
             'NAT'
         {% else %}
             collective_offer.{{ params.group_type_name }}

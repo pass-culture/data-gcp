@@ -8,7 +8,7 @@ WITH dates AS (
     SELECT 
         div.user_id
         , "{{ params.group_type }}" as dimension_name
-        , {% if params.group_type == 'all' %}
+        , {% if params.group_type == 'NAT' %}
             'NAT'
         {% else %}
             user.{{ params.group_type_name }}

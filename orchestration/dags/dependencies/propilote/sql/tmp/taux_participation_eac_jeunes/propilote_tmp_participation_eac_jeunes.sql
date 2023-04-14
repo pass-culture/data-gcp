@@ -1,7 +1,7 @@
 SELECT
     DATE_TRUNC(date, MONTH) AS mois
     , "{{ params.group_type }}" as dimension_name
-    , {% if params.group_type == 'all' %}
+    , {% if params.group_type == 'NAT' %}
         'NAT'
     {% else %}
         {{ params.group_type_name }}
@@ -14,7 +14,7 @@ FROM `{{ bigquery_analytics_dataset }}.adage_involved_student` as involved
 LEFT JOIN `{{ bigquery_analytics_dataset }}.region_department` as rd
     ON involved.department_code = rd.num_dep
 WHERE
-{% if params.group_type == 'all' %}
+{% if params.group_type == 'NAT' %}
     department_code = '-1'
 {% else %}
     NOT department_code = '-1'

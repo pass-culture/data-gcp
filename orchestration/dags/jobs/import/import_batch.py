@@ -35,7 +35,7 @@ with DAG(
     dagrun_timeout=timedelta(minutes=300),
     params={
         "branch": Param(
-            default="production" if ENV_SHORT_NAME == "prod" else "master",
+            default="production" if ENV_SHORT_NAME == "prod" else "PC-18869-data-import-donnees-batch",
             type="string",
         )
     },
@@ -67,7 +67,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         command=f"""
-        python main.py --operating_system=ios --gcp_project_id={GCP_PROJECT_ID} --env_short_name={ENV_SHORT_NAME}        
+        python main.py --gcp-project-id={GCP_PROJECT_ID} --env-short-name={ENV_SHORT_NAME} --operating-system=ios      
         """,
     )
 
@@ -76,7 +76,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         command=f"""
-        python main.py --operating_system=android --gcp_project_id={GCP_PROJECT_ID} --env_short_name={ENV_SHORT_NAME}        
+        python main.py --gcp-project-id={GCP_PROJECT_ID} --env-short-name={ENV_SHORT_NAME} --operating-system=android      
         """,
     )
 

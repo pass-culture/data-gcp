@@ -2,22 +2,17 @@ import requests
 import typer
 import pandas as pd
 from google.cloud import bigquery
+import argparse
 
-from utils import access_secret_data, bigquery_load_job
+from utils import access_secret_data, bigquery_load_job, GCP_PROJECT_ID, ENV_SHORT_NAME
 from batch_client import BatchClient
 
 
 def main(
-    gcp_project_id: str = typer.Option(
-        GCP_PROJECT_ID, help="Google Cloud Platform project ID"
-    ),
-    env_short_name: str = typer.Option(
-        ENV_SHORT_NAME, help="Environment short name : dev|stg|prod"
-    ),
-    operating_system: str = typer.Option(
-        ENV_SHORT_NAME, help="Operating system of users : ios|android"
-    ),
-) -> None:
+    gcp_project_id,
+    env_short_name,
+    operating_system,
+):
 
     if operating_system == "android":
         API_KEY = access_secret_data(
@@ -92,3 +87,6 @@ def main(
             "operating_system": "STRING",
         },
     )
+
+if __name__ == "__main__":
+    typer.run(main)

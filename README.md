@@ -13,7 +13,7 @@ Repo pour la team data sur GCP
 | +-- dags
 | +-- tests
 |
-+-- datasources_jobs (ou jobs / data / scripts )
++-- jobs
 | +-- etl_jobs
 |   +-- external (spécifier dans le readme du job comment est éxécuté le job (cloudfn ou vm ou airflow))
 |     +-- adage

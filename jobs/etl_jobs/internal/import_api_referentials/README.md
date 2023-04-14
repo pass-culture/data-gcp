@@ -1,7 +1,3 @@
-# Analytics
-
-Repo contenant le code source pour les scripts python (ssh) pour la partie analytics du projet.
-
 ## Scripts 
 
 ### import_api_referentials
@@ -14,8 +10,3 @@ Repo contenant le code source pour les scripts python (ssh) pour la partie analy
     - movie types `api.src.pcapi.domain.movie_types`
     - book types `api.src.pcapi.domain.book_types`
 - Export `analytics_{env}.offer_types`
-
-
-### human_ids
-
-Legacy script.

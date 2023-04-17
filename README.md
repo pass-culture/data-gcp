@@ -5,18 +5,6 @@ Repo pour la team data sur GCP
 ## Organisation
 
 ```
-+-- recommendation: API Recommandation (Cloud Run)
-|
-+-- orchestration : DAGS Airflow (Cloud Composer)
-|
-+-- additional_data_sources
-| +-- cloud_fn :  Cloud Functions gérés via les dags Airflow
-| +-- jobs :  Jobs ML ou Scripts python gérés via les dags Airflow
-
-```
-# Proposition organisation 
-
-```
 +-- api
 | +-- recommandation
 |
@@ -25,7 +13,7 @@ Repo pour la team data sur GCP
 | +-- dags
 | +-- tests
 |
-+-- datasources_jobs (ou jobs / data / scripts )
++-- jobs
 | +-- etl_jobs
 |   +-- external (spécifier dans le readme du job comment est éxécuté le job (cloudfn ou vm ou airflow))
 |     +-- adage

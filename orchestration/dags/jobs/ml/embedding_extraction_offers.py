@@ -18,7 +18,7 @@ from common.utils import get_airflow_schedule
 
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"extract-offers-embeddings-{ENV_SHORT_NAME}"
-BASE_DIR = f"data-gcp/embeddings"
+BASE_DIR = "data-gcp/jobs/ml_jobs/embeddings"
 
 default_args = {
     "start_date": datetime(2023, 3, 6),

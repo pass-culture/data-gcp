@@ -20,7 +20,7 @@ dag = DAG(
     "export_propilote_data",
     default_args=default_dag_args,
     description="Export propilote date",
-    schedule_interval=get_airflow_schedule("00 08 * * 1,3,5"),
+    schedule_interval=get_airflow_schedule("00 08 * * *"),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,

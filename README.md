@@ -5,13 +5,39 @@ Repo pour la team data sur GCP
 ## Organisation
 
 ```
-+-- recommendation: API Recommandation (Cloud Run)
++-- api
+| +-- recommandation
 |
 +-- orchestration : DAGS Airflow (Cloud Composer)
+| +-- airflow
+| +-- dags
+| +-- tests
 |
-+-- additional_data_sources
-| +-- cloud_fn :  Cloud Functions gérés via les dags Airflow
-| +-- jobs :  Jobs ML ou Scripts python gérés via les dags Airflow
++-- jobs
+| +-- etl_jobs
+|   +-- external (spécifier dans le readme du job comment est éxécuté le job (cloudfn ou vm ou airflow))
+|     +-- adage
+|     +-- addresses
+|     +-- appsflyer
+|     +-- contentful
+|     +-- dms
+|     +-- downloads
+|     +-- metabase-archiving
+|     +-- qualtrics
+|     +-- sendinblue
+|     +-- siren
+|     +-- typeform-adage-reference-request
+|     +-- batch
+|
+|   +-- internal
+|     +-- cold-data
+|     +-- human_ids
+|     +-- import_api_referentials
+|
+| +-- ml_jobs
+|   +-- algo_training
+|   +-- embeddings
+|   +-- record_linkage
 
 ```
 

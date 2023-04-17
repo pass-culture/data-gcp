@@ -15,7 +15,7 @@ from common.utils import get_airflow_schedule
 
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"link-offers-{ENV_SHORT_NAME}"
-BASE_DIR = f"data-gcp/record_linkage"
+BASE_DIR = "data-gcp/jobs/ml_jobs/record_linkage"
 
 default_args = {
     "start_date": datetime(2022, 1, 5),

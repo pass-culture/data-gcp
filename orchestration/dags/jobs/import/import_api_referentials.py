@@ -16,7 +16,7 @@ from common.config import GCP_PROJECT_ID, GCE_ZONE, ENV_SHORT_NAME
 from common.utils import get_airflow_schedule
 
 GCE_INSTANCE = f"import-api-referentials-{ENV_SHORT_NAME}"
-BASE_PATH = "data-gcp/analytics/scripts/import_api_referentials"
+BASE_PATH = "data-gcp/jobs/etl_jobs/internal/import_api_referentials"
 
 default_args = {
     "start_date": datetime(2022, 4, 13),

@@ -12,7 +12,7 @@ SELECT
     , booking.user_department_code
     , booking.user_activity
     , user.user_civility
-    , booking.booking_amount
+    , booking.booking_intermediary_amount as booking_amount
     , user.user_deposit_creation_date
     , COALESCE(
         IF(booking.physical_goods = True, 'physical', null),

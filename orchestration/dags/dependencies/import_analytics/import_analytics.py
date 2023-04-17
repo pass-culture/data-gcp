@@ -16,7 +16,6 @@ def define_import_tables():
         "beneficiary_import_status",
         "booking",
         "boost_cinema_details",
-        "business_unit",
         "cashflow",
         "cashflow_batch",
         "cashflow_log",
@@ -310,6 +309,15 @@ analytics_tables = {
                 "extra_category",
             ]
         },
+    },
+    "user_monthly_diversification_retention": {
+        "sql": f"{ANALYTICS_SQL_PATH}/user_monthly_diversification_retention.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "user_monthly_diversification_retention",
+        "depends": [
+            "diversification_booking",
+            "enriched_user_data",
+        ],
     },
     "analytics_firebase_home_events_details": {
         "sql": f"{ANALYTICS_SQL_PATH}/firebase_home_events_details.sql",

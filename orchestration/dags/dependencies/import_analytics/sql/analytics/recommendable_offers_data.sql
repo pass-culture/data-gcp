@@ -34,6 +34,10 @@ item_counts as (
     FROM `{{ bigquery_analytics_dataset }}`.enriched_offer_data offer
     GROUP BY item_id
 ),
+enriched_item_metadata as (
+  select * except(offer_type_labels)
+  from  `{{ bigquery_analytics_dataset }}.enriched_item_metadata`, UNNEST(offer_type_labels) AS offer_type_labels_detailed
+),
 get_recommendable_offers AS (
     SELECT
         DISTINCT (offer.offer_id) AS offer_id,
@@ -48,6 +52,7 @@ get_recommendable_offers AS (
         enriched_item_metadata.offer_type_domain,
         enriched_item_metadata.offer_type_id,
         enriched_item_metadata.offer_type_label,
+        enriched_item_metadata.offer_type_labels_detailed as offer_type_labels,
         enriched_item_metadata.offer_sub_type_id,
         enriched_item_metadata.offer_sub_type_label,
         offer.URL AS url,
@@ -87,7 +92,7 @@ get_recommendable_offers AS (
         LEFT JOIN booking_numbers ON booking_numbers.item_id = offer.item_id
         LEFT JOIN item_counts on item_counts.item_id = offer.item_id
         JOIN `{{ bigquery_analytics_dataset }}`.offer_with_mediation om on offer.offer_id=om.offer_id
-        LEFT JOIN  `{{ bigquery_analytics_dataset }}`.enriched_item_metadata enriched_item_metadata on offer.item_id = enriched_item_metadata.item_id
+        LEFT JOIN  enriched_item_metadata  on offer.item_id = enriched_item_metadata.item_id
         LEFT JOIN `{{ bigquery_raw_dataset }}`.forbidden_query_recommendation forbidden_query on 
             enriched_item_metadata.subcategory_id = forbidden_query.subcategory_id
         LEFT JOIN `{{ bigquery_raw_dataset }}`.forbidden_offers_recommendation forbidden_offer on 

@@ -57,7 +57,7 @@ class Recommendation:
         if get_cold_start_status(self.user):
             self.reco_origin = "cold_start"
             return (
-                self.Algo(self)
+                self.Algo(self, endpoint=model_params.cold_start_model_endpoint_name)
                 if self.model_params.name == "cold_start_b"
                 else self.ColdStart(self)
             )
@@ -126,11 +126,16 @@ class Recommendation:
             log_duration(f"save_recommendations for {self.user.id}", start)
 
     class Algo:
-        def __init__(self, scoring):
+        def __init__(self, scoring, endpoint="DEFAULT"):
             self.user = scoring.user
             self.params_in_filters = scoring.params_in_filters
             self.reco_radius = scoring.reco_radius
-            self.model_params = scoring.model_params
+            self.model_name = scoring.model_params.name
+            self.model_endpoint_name = (
+                scoring.model_params.endpoint_name
+                if endpoint == "DEFAULT"
+                else endpoint
+            )
             self.model_display_name = None
             self.model_version = None
             self.include_digital = scoring.include_digital
@@ -141,12 +146,12 @@ class Recommendation:
             start = time.time()
             if not len(self.recommendable_offers) > 0:
                 log_duration(
-                    f"no offers to score for {self.user.id} - {self.model_params.name}",
+                    f"no offers to score for {self.user.id} - {self.model_name}",
                     start,
                 )
                 return []
             else:
-                if self.model_params.name == "cold_start_b":
+                if self.model_name == "cold_start_b":
                     user_input = ",".join(self.cold_start_categories)
                 else:
                     user_input = self.user.id
@@ -165,7 +170,7 @@ class Recommendation:
                 ]
 
                 log_duration(
-                    f"scored {len(recommendations)} for {self.user.id} - {self.model_params.name}, ",
+                    f"scored {len(recommendations)} for {self.user.id} - {self.model_name}, ",
                     start,
                 )
             return recommendations
@@ -218,7 +223,7 @@ class Recommendation:
         def _predict_score(self, instances) -> List[List[float]]:
             start = time.time()
             response = predict_model(
-                endpoint_name=self.model_params.endpoint_name,
+                endpoint_name=self.model_endpoint_name,
                 location="europe-west1",
                 instances=instances,
             )

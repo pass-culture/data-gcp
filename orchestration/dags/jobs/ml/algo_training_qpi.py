@@ -41,7 +41,7 @@ DATE = "{{ ts_nodash }}"
 # Environment variables to export before running commands
 dag_config = {
     "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/algo_training_{ENV_SHORT_NAME}/algo_training_two_towers_{DATE}",
-    "BASE_DIR": f"data-gcp/algo_training",
+    "BASE_DIR": "data-gcp/jobs/ml_jobs/algo_training",
     "MODEL_DIR": "two_towers_model",
     "TRAIN_DIR": "/home/airflow/train",
     "EXPERIMENT_NAME": f"algo_training_qpi_v1.1_{ENV_SHORT_NAME}",
@@ -65,7 +65,7 @@ gce_params = {
     },
 }
 
-schedule_dict = {"prod": "0 12 * * 4", "dev": None, "stg": "0 12 * * 3"}
+schedule_dict = {"prod": "0 12 * * 3", "dev": None, "stg": "0 12 * * 2"}
 
 default_args = {
     "start_date": datetime(2023, 3, 17),

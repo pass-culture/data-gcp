@@ -103,13 +103,16 @@ count_actives AS (
     GROUP BY 1, 2, 3
 )
 
+
 SELECT 
-    mois
-    , all_structures.dimension_name
-    , all_structures.dimension_value
+    count_actives.mois
+    , count_actives.dimension_name
+    , count_actives.dimension_value
     , NULL as user_type
     , "taux_activation_structure" as indicator
-    , active_offerers as numerator
+    , count_actives.active_offerers as numerator
     , all_structures.nb_structures AS denominator
-FROM all_structures 
-CROSS JOIN count_actives 
+FROM count_actives 
+LEFT JOIN all_structures 
+  on all_structures.dimension_name = count_actives.dimension_name
+  AND all_structures.dimension_value = count_actives.dimension_value

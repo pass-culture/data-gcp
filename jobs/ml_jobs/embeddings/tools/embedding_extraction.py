@@ -51,16 +51,20 @@ def encode_img_from_urls(model, urls):
     for url in tqdm(urls):
         STORAGE_PATH_IMG = f"./img/{index}"
         _download_img_from_url(url, STORAGE_PATH_IMG)
+    for index in range(len(urls)):
         try:
-            img_emb = model.encode(Image.open(f"{STORAGE_PATH_IMG}.jpeg"))
+            img_emb = model.encode(Image.open(f"./img/{index}.jpeg"))
             offer_img_embs.append(list(img_emb))
-            os.remove(f"{STORAGE_PATH_IMG}.jpeg")
-            index += 1
         except:
             offer_img_embs.append([0] * 512)
-            index += 1
             offer_wo_img += 1
     print(f"{(offer_wo_img*100)/len(urls)}% offers dont have image")
+    print("Removing image on local disk...")
+    for index in range(len(urls)):
+        try:
+            os.remove(f"./img/{index}.jpeg")
+        except:
+            continue
     return offer_img_embs
 
 

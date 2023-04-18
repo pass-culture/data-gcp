@@ -1,5 +1,5 @@
 {
-    "embedding_extract_from": "offer",
+    "embedding_extract_from": "item",
     "features": [
         {
             "name": "offer_name",

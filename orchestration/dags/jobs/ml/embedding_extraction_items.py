@@ -10,14 +10,14 @@ from common.operators.gce import (
 )
 from common.operators.biquery import bigquery_job_task
 from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
-from dependencies.ml.embeddings.import_offers import params
+from dependencies.ml.embeddings.import_items import params
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import GCP_PROJECT_ID, ENV_SHORT_NAME, DAG_FOLDER
 from common.utils import get_airflow_schedule
 
 DEFAULT_REGION = "europe-west1"
-GCE_INSTANCE = f"extract-offers-embeddings-{ENV_SHORT_NAME}"
+GCE_INSTANCE = f"extract-items-embeddings-{ENV_SHORT_NAME}"
 BASE_DIR = "data-gcp/jobs/ml_jobs/embeddings"
 
 default_args = {
@@ -28,9 +28,9 @@ default_args = {
 }
 
 with DAG(
-    "embeddings_extraction_offers",
+    "embeddings_extraction_items",
     default_args=default_args,
-    description="Extact offer metadata embeddings",
+    description="Extact items metadata embeddings",
     schedule_interval=get_airflow_schedule("0 0 * * 0"),
     catchup=False,
     dagrun_timeout=timedelta(minutes=180),
@@ -46,13 +46,13 @@ with DAG(
             type="string",
         ),
         "config_file_name": Param(
-            default="default-config-offer",
+            default="default-config-item",
             type="string",
         ),
     },
 ) as dag:
     data_collect_task = bigquery_job_task(
-        dag, "import_offer_batch", params, extra_params={}
+        dag, "import_item_batch", params, extra_params={}
     )
 
     gce_instance_start = StartGCEOperator(

@@ -5,7 +5,7 @@ from google.cloud import bigquery
 import argparse
 from datetime import datetime, timedelta
 
-from utils import access_secret_data, bigquery_load_job, GCP_PROJECT_ID, ENV_SHORT_NAME, BIGQUERY_RAW_DATASET
+from utils import access_secret_data, bigquery_load_job, GCP_PROJECT_ID, ENV_SHORT_NAME
 from batch_client import BatchClient
 
 
@@ -19,19 +19,17 @@ def main(
         API_KEY = access_secret_data(
             gcp_project_id, f"batch-android-api-key-{env_short_name}", version_id=1
         )
-        REST_API_KEY = access_secret_data(
-            gcp_project_id, f"batch-android-rest-api-key-{env_short_name}", version_id=1
-        )
     elif operating_system == "ios":
         API_KEY = access_secret_data(
             gcp_project_id, f"batch-ios-api-key-{env_short_name}", version_id=1
         )
-        REST_API_KEY = access_secret_data(
-            gcp_project_id, f"batch-ios-rest-api-key-{env_short_name}", version_id=1
-        )
     else:
         raise RuntimeError(
             "You need to provide an operating system supported by Batch: ios|android."
+        )
+
+    REST_API_KEY = access_secret_data(
+            gcp_project_id, f"batch-rest-api-key-{env_short_name}", version_id=1
         )
 
     batch_client = BatchClient(API_KEY, REST_API_KEY)
@@ -40,7 +38,7 @@ def main(
     # Campaigns
     metadata = batch_client.get_campaigns_metadata()
     metadata.to_gbq(
-        destination_table=f"{BIGQUERY_RAW_DATASET}.batch_campaigns_ref",
+        destination_table=f"raw_{env_short_name}.batch_campaigns_ref",
         if_exists="append",
     )
 
@@ -52,7 +50,7 @@ def main(
         stats = campaigns_stats_df
     stats = stats.assign(operating_system=operating_system)
     stats.to_gbq(
-        destination_table=f"{BIGQUERY_RAW_DATASET}.batch_campaigns_stats",
+        destination_table=f"raw_{env_short_name}.batch_campaigns_stats",
         if_exists="append",
     )
 
@@ -94,15 +92,17 @@ def main(
 
     transac_df = pd.concat(transac_dfs).assign(operating_system=operating_system)
 
+    print(transac_df.head())
+
     bigquery_load_job(
         df=transac_df,
-        partition_date=end_date,
+        partition_date=datetime.strptime(end_date, "%Y-%m-%d"),
         partitioning_field="update_date",
         gcp_project_id=gcp_project_id,
-        dataset=BIGQUERY_RAW_DATASET,
+        dataset=f"raw_{env_short_name}",
         table_name="batch_transac",
         schema={
-            "date": "DATE",
+            "date": "STRING",
             "sent": "INTEGER",
             "direct_open": "INTEGER",
             "influenced_open": "INTEGER",

@@ -1,6 +1,6 @@
 import os
 from google.auth.exceptions import DefaultCredentialsError
-from google.cloud import secretmanager
+from google.cloud import secretmanager, bigquery
 
 import time
 
@@ -20,6 +20,7 @@ def access_secret_data(project_id, secret_id, version_id="latest", default=None)
 
 def bigquery_load_job(df, partition_date, partitioning_field, gcp_project_id, dataset, table_name, schema):
     # load in bigquery with partitioning
+    bigquery_client = bigquery.Client()
     yyyymmdd = partition_date.strftime("%Y%m%d")
     table_id = f"{gcp_project_id}.{dataset}.{table_name}${yyyymmdd}"
     job_config = bigquery.LoadJobConfig(
@@ -30,8 +31,9 @@ def bigquery_load_job(df, partition_date, partitioning_field, gcp_project_id, da
         schema=[
             bigquery.SchemaField(column, _type) for column, _type in schema.items()
         ],
+        autodetect=False
     )
     job = bigquery_client.load_table_from_dataframe(
-        transac_df, table_id, job_config=job_config
+        df, table_id, job_config=job_config
     )
     job.result()

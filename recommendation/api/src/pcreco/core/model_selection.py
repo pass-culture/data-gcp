@@ -24,6 +24,7 @@ class RecommendationColdStartVersionB(RecommendationDefaultModel):
     cold_start_model_endpoint_name: str = (
         f"recommendation_cold_start_model_{ENV_SHORT_NAME}"
     )
+    offer_limit: int = 500
 
 
 @dataclass

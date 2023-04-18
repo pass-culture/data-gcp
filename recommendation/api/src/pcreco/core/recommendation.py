@@ -57,7 +57,9 @@ class Recommendation:
         if get_cold_start_status(self.user):
             self.reco_origin = "cold_start"
             return (
-                self.Algo(self, endpoint=self.model_params.cold_start_model_endpoint_name)
+                self.Algo(
+                    self, endpoint=self.model_params.cold_start_model_endpoint_name
+                )
                 if self.model_params.name == "cold_start_b"
                 else self.ColdStart(self)
             )
@@ -139,7 +141,13 @@ class Recommendation:
             self.model_display_name = None
             self.model_version = None
             self.include_digital = scoring.include_digital
-            self.recommendable_offers = self.get_recommendable_offers()
+            self.recommendable_offers = (
+                self.get_recommendable_offers()
+                if endpoint == "DEFAULT"
+                else self.get_recommendable_offers(
+                    offer_limit=scoring.model_params.offer_limit
+                )
+            )
             self.cold_start_categories = get_cold_start_categories(self.user.id)
 
         def get_scored_offers(self) -> List[Dict[str, Any]]:
@@ -186,12 +194,14 @@ class Recommendation:
             instances = {"input_1": user_to_rank, "input_2": offer_ids_to_rank}
             return instances
 
-        def get_recommendable_offers(self) -> List[Dict[str, Any]]:
+        def get_recommendable_offers(
+            self, offer_limit=RECOMMENDABLE_OFFER_LIMIT
+        ) -> List[Dict[str, Any]]:
             start = time.time()
             order_query = "is_geolocated DESC, booking_number DESC"
 
             recommendations_query = RecommendableOffersQueryBuilder(
-                self, RECOMMENDABLE_OFFER_LIMIT
+                self, offer_limit
             ).generate_query(order_query)
 
             query_result = []
@@ -217,7 +227,10 @@ class Recommendation:
                 }
                 for row in query_result
             ]
-            log_duration("get_recommendable_offers", start)
+            log_duration(
+                f"get_recommendable_offers for {self.user.id}: {len(user_recommendation)}",
+                start,
+            )
             return user_recommendation
 
         def _predict_score(self, instances) -> List[List[float]]:

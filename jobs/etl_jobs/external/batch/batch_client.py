@@ -35,7 +35,8 @@ class BatchClient:
                 campaigns_list.append(campaign)
 
         campaigns_df = pd.DataFrame.from_records(campaigns_list).assign(
-            created_date=lambda _df: pd.to_datetime(_df["created_date"])
+            created_date=lambda _df: pd.to_datetime(_df["created_date"]),
+            operating_system=operating_system
         )[["campaign_token","dev_only","created_date", "name", "live", "from_api"]]
 
         return campaigns_df

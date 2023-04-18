@@ -76,6 +76,7 @@ def define_import_tables():
         "venue_pricing_point_link",
         "venue_provider",
         "venue_reimbursement_point_link",
+
     ]
 
 
@@ -400,6 +401,13 @@ aggregated_tables = {
         "depends": ["enriched_user_data", "enriched_offer_data"],
         "dag_depends": ["import_intraday_firebase_data"],  # computed once a day
     },
+    "enriched_cultural_partners_data": {
+            "sql": f"{ANALYTICS_SQL_PATH}/enriched_cultural_partners_data.sql",
+            "destination_dataset": "{{ bigquery_analytics_dataset }}",
+            "depends": ["enriched_offerer_data","enriched_venue_data",
+                        "enriched_collective_offer_data","enriched_offer_data"],
+    },
+
 }
 
 

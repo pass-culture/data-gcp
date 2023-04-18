@@ -3,6 +3,7 @@ import typer
 import pandas as pd
 from google.cloud import bigquery
 import argparse
+from datetime import datetime, timedelta
 
 from utils import access_secret_data, bigquery_load_job, GCP_PROJECT_ID, ENV_SHORT_NAME, BIGQUERY_RAW_DATASET
 from batch_client import BatchClient
@@ -56,16 +57,38 @@ def main(
     )
 
     # Transactional
-    transactional_group_ids = [
-        "Cancel_booking",
-        "Offer_link",
-        "Soon_expiring_bookings",
-        "Today_stock",
-        "Favorites_not_booked",
-    ]
+    if env_short_name == "prod":     
+        transactional_group_ids = [
+            "Cancel_booking",
+            "Offer_link",
+            "Soon_expiring_bookings",
+            "Today_stock",
+            "Favorites_not_booked",
+        ]
+        start_date = (datetime.today() - timedelta(days=7)).strftime("%Y-%m-%d")
+        end_date = datetime.today().strftime("%Y-%m-%d")
+    elif env_short_name == "dev":
+        transactional_group_ids = [
+            "Offer_link",
+            "Cancel_booking",
+            "Today_stock",
+        ]
+        start_date = (datetime.today() - timedelta(days=30)).strftime("%Y-%m-%d")
+        end_date = datetime.today().strftime("%Y-%m-%d")
+    else:
+        transactional_group_ids = [
+            "Cancel_booking",
+            "Soon_expiring_bookings",
+            "Today_stock",
+            "Offer_link",
+        ]
+        start_date = (datetime.today() - timedelta(days=30)).strftime("%Y-%m-%d")
+        end_date = datetime.today().strftime("%Y-%m-%d")
+
     transac_dfs = []
 
     for group_id in transactional_group_ids:
+        print(group_id)
         df = batch_client.get_transactional_stats(group_id, start_date, end_date)
         transac_dfs.append(df)
 

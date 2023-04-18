@@ -130,6 +130,7 @@ class BatchClient:
             f"{url}/{group_id}?since={start_date}&until={end_date}",
             headers=self.headers,
         )
+        print("response: ", response.json())
         stats_df = pd.DataFrame.from_records(response.json()["detail"]).assign(
             group_id=group_id, update_date=pd.to_datetime("today")
         )

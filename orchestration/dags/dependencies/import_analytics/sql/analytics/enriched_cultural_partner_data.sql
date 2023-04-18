@@ -7,7 +7,7 @@ WITH individual_bookings AS (
         ,offerer_id
         ,COUNT(*) AS non_cancelled_individual_bookings
         ,COUNT(CASE WHEN booking_is_used THEN 1 ELSE NULL END) AS used_individual_bookings
-        ,SUM(CASE WHEN booking_is_used THEN booking_intermediary_amount ELSE NULL END) AS real_individual_CA
+        ,SUM(CASE WHEN booking_is_used THEN booking_intermediary_amount ELSE NULL END) AS real_individual_revenue
     FROM `{{ bigquery_analytics_dataset }}`.enriched_booking_data
     WHERE NOT booking_is_cancelled 
     GROUP BY 1,2 )
@@ -61,7 +61,7 @@ WITH individual_bookings AS (
         ,offerer_id 
         ,COUNT(*) AS confirmed_collective_bookings 
         ,COUNT(CASE WHEN collective_booking_status IN ('USED','REIMBURSED') THEN 1 ELSE NULL END) AS used_collective_bookings  
-        ,SUM(CASE WHEN collective_booking_status IN ('USED','REIMBURSED') THEN booking_amount ELSE NULL END) AS real_collective_CA
+        ,SUM(CASE WHEN collective_booking_status IN ('USED','REIMBURSED') THEN booking_amount ELSE NULL END) AS real_collective_revenue
     FROM `{{ bigquery_analytics_dataset }}`.enriched_collective_booking_data
     WHERE collective_booking_status IN ('CONFIRMED','USED','REIMBURSED')
     GROUP BY 1,2)
@@ -78,7 +78,7 @@ WITH individual_bookings AS (
     ,'venue' AS partner_status 
     ,venue_type_label AS partner_type 
     ,venue_creation_date AS partner_creation_date 
-    ,1 AS comptage
+    ,1 AS partner_count
     ,collective_offers.collective_offers_created
     ,individual_offers.individual_offers_created
     ,(collective_offers.collective_offers_created+individual_offers.individual_offers_created) AS total_offers_created
@@ -88,9 +88,9 @@ WITH individual_bookings AS (
     ,used_individual_bookings
     ,confirmed_collective_bookings
     ,used_collective_bookings
-    ,real_individual_CA
-    ,real_collective_CA
-    ,(real_collective_CA+real_individual_CA) AS total_real_CA
+    ,real_individual_revenue
+    ,real_collective_revenue
+    ,(real_individual_revenue+real_collective_revenue) AS total_real_revenue
 FROM `{{ bigquery_analytics_dataset }}`.enriched_venue_data AS enriched_venue_data
 LEFT JOIN `{{ bigquery_analytics_dataset }}`.region_department AS region_department
     ON enriched_venue_data.venue_department_code = region_department.num_dep
@@ -106,7 +106,7 @@ AND venue_is_permanent IS TRUE)
 SELECT DISTINCT
     enriched_offer_data.offerer_id 
     ,STRING_AGG(DISTINCT CONCAT(' ',CASE WHEN offerer_tag_label IS NOT NULL THEN offerer_tag_label ELSE NULL END)) AS partner_type
-    ,CASE WHEN festival_increments.festival_cnt IS NULL THEN 1 ELSE CAST(festival_cnt AS INT) END AS comptage
+    ,CASE WHEN festival_increments.festival_cnt IS NULL THEN 1 ELSE CAST(festival_cnt AS INT) END AS partner_count
 FROM `{{ bigquery_analytics_dataset }}`.enriched_offer_data AS enriched_offer_data
 JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offerer_tag_mapping AS applicative_database_offerer_tag_mapping
     ON enriched_offer_data.offerer_id = applicative_database_offerer_tag_mapping.offerer_id
@@ -132,19 +132,19 @@ SELECT DISTINCT
     ,applicative_database_offerer.offerer_postal_code AS partner_postal_code
     ,'offerer' AS partner_status 
     ,partner_type
-    ,comptage
-    ,SUM(IFNULL(individual_offers_created,0)) AS individual_offers_created
-    ,SUM(IFNULL(collective_offers_created,0)) AS collective_offers_created
-    ,(SUM(IFNULL(individual_offers_created,0))+SUM(IFNULL(collective_offers_created,0))) AS total_offers_created
+    ,partner_count
+    ,SUM(COALESCE(individual_offers_created,0)) AS individual_offers_created
+    ,SUM(COALESCE(collective_offers_created,0)) AS collective_offers_created
+    ,(SUM(COALESCE(individual_offers_created,0))+SUM(IFNULL(collective_offers_created,0))) AS total_offers_created
     ,MAX(last_bookable_individual_offer) AS last_bookable_individual_offer
     ,MAX(last_bookable_collective_offer) AS last_bookable_collective_offer
-    ,SUM(IFNULL(non_cancelled_individual_bookings,0)) AS non_cancelled_individual_bookings
-    ,SUM(IFNULL(used_individual_bookings,0)) AS used_individual_bookings
-    ,SUM(IFNULL(confirmed_collective_bookings,0)) AS confirmed_collective_bookings
-    ,SUM(IFNULL(used_collective_bookings,0)) AS used_collective_bookings
-    ,SUM(IFNULL(real_individual_CA,0)) AS real_individual_CA
-    ,SUM(IFNULL(real_collective_CA,0)) AS real_collective_CA
-    ,(SUM(IFNULL(real_collective_CA,0))+SUM(IFNULL(real_individual_CA,0))) AS total_real_CA
+    ,SUM(COALESCE(non_cancelled_individual_bookings,0)) AS non_cancelled_individual_bookings
+    ,SUM(COALESCE(used_individual_bookings,0)) AS used_individual_bookings
+    ,SUM(COALESCE(confirmed_collective_bookings,0)) AS confirmed_collective_bookings
+    ,SUM(COALESCE(used_collective_bookings,0)) AS used_collective_bookings
+    ,SUM(COALESCE(real_individual_revenue,0)) AS real_individual_revenue
+    ,SUM(COALESCE(real_individual_revenue,0)) AS real_collective_revenue
+    ,(SUM(COALESCE(real_individual_revenue,0))+SUM(COALESCE(real_individual_revenue,0))) AS total_real_revenue
 FROM `{{ bigquery_analytics_dataset }}`.enriched_offerer_data AS enriched_offerer_data
 LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offerer AS applicative_database_offerer
     ON enriched_offerer_data.offerer_id = applicative_database_offerer.offerer_id

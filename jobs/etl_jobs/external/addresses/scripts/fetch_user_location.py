@@ -31,7 +31,7 @@ class AdressesDownloader:
             du.user_postal_code,
             du.user_city,
             du.user_department_code
-        FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_user` du
+        FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.applicative_database_user` du
         LEFT JOIN  `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.user_locations` ul on ul.user_id = du.user_id
         WHERE 
             du.user_address is not NULL

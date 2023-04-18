@@ -4,7 +4,7 @@ import pandas as pd
 from google.cloud import bigquery
 import argparse
 
-from utils import access_secret_data, bigquery_load_job, GCP_PROJECT_ID, ENV_SHORT_NAME
+from utils import access_secret_data, bigquery_load_job, GCP_PROJECT_ID, ENV_SHORT_NAME, BIGQUERY_RAW_DATASET
 from batch_client import BatchClient
 
 
@@ -39,7 +39,7 @@ def main(
     # Campaigns
     metadata = batch_client.get_campaigns_metadata()
     metadata.to_gbq(
-        destination_table="{{bigquery_raw_dataset}}.batch_campaigns_ref",
+        destination_table=f"{BIGQUERY_RAW_DATASET}.batch_campaigns_ref",
         if_exists="append",
     )
 
@@ -48,7 +48,7 @@ def main(
     stats = batch_client.get_campaigns_stats_detailed(campaigns_stats_df, ab_testing_df)
     stats = stats.assign(operating_system=operating_system)
     stats.to_gbq(
-        destination_table="{{bigquery_raw_dataset}}.batch_campaigns_stats",
+        destination_table=f"{BIGQUERY_RAW_DATASET}.batch_campaigns_stats",
         if_exists="append",
     )
 
@@ -73,7 +73,7 @@ def main(
         partition_date=end_date,
         partitioning_field="update_date",
         gcp_project_id=gcp_project_id,
-        dataset=bq_raw_dataset,
+        dataset=BIGQUERY_RAW_DATASET,
         table_name="batch_transac",
         schema={
             "date": "DATE",

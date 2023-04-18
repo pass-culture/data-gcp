@@ -9,7 +9,6 @@ SELECT
     , "standardRule"
     , CAST("customRuleId" AS varchar(255)) as customRuleId
     , "revenue"
-    , "siret"
     , CAST("pricingPointId" AS varchar(255)) as pricing_point_id
     , CAST("venueId" AS varchar(255)) as venue_id
 FROM public.pricing

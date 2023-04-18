@@ -44,8 +44,11 @@ def main(
     )
 
     campaigns_stats_df = batch_client.get_campaigns_stats()
-    ab_testing_df = batch_client.get_ab_testing_details(campaigns_stats_df)
-    stats = batch_client.get_campaigns_stats_detailed(campaigns_stats_df, ab_testing_df)
+    if 'versions' in campaigns_stats_df.columns:
+        ab_testing_df = batch_client.get_ab_testing_details(campaigns_stats_df)
+        stats = batch_client.get_campaigns_stats_detailed(campaigns_stats_df, ab_testing_df)
+    else: 
+        stats = campaigns_stats_df
     stats = stats.assign(operating_system=operating_system)
     stats.to_gbq(
         destination_table=f"{BIGQUERY_RAW_DATASET}.batch_campaigns_stats",

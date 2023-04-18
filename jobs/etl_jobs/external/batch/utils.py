@@ -4,7 +4,7 @@ from google.cloud import secretmanager
 
 import time
 
-BIGQUERY_RAW_DATASET = os.environ.get("RAW_DATASET")
+BIGQUERY_RAW_DATASET = os.environ.get("BIGQUERY_RAW_DATASET")
 ENV_SHORT_NAME = os.environ.get("ENVIRONMENT_SHORT_NAME")
 GCP_PROJECT_ID = os.environ.get("PROJECT_NAME")
 

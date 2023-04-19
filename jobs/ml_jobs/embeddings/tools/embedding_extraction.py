@@ -26,7 +26,7 @@ def extract_embedding(
         feature_name = feature["name"]
         if feature["type"] == "image":
             model = SentenceTransformer("clip-ViT-B-32")
-            urls = df_analysis.image_url
+            urls = df_analysis.image_url.tolist()
             df_analysis[f"{feature_name}_embedding"] = encode_img_from_urls(model, urls)
             df_analysis[f"{feature_name}_embedding"] = df_analysis[
                 f"{feature_name}_embedding"
@@ -51,6 +51,7 @@ def encode_img_from_urls(model, urls):
     for url in tqdm(urls):
         STORAGE_PATH_IMG = f"./img/{index}"
         _download_img_from_url(url, STORAGE_PATH_IMG)
+        index += 1
     for index in range(len(urls)):
         try:
             img_emb = model.encode(Image.open(f"./img/{index}.jpeg"))

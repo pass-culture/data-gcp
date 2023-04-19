@@ -365,6 +365,16 @@ analytics_tables = {
         "depends": ["diversification_booking"],
         "dag_depends": ["import_intraday_firebase_data"],
     },
+    "enriched_cultural_partner_data": {
+        "sql": f"{ANALYTICS_SQL_PATH}/enriched_cultural_partner_data.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "depends": [
+            "enriched_offerer_data",
+            "enriched_venue_data",
+            "enriched_collective_offer_data",
+            "enriched_offer_data",
+        ],
+    },
 }
 
 aggregated_tables = {

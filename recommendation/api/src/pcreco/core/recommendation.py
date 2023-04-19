@@ -128,25 +128,19 @@ class Recommendation:
             log_duration(f"save_recommendations for {self.user.id}", start)
 
     class Algo:
-        def __init__(self, scoring, endpoint="DEFAULT"):
+        def __init__(self, scoring, endpoint=None):
             self.user = scoring.user
             self.params_in_filters = scoring.params_in_filters
             self.reco_radius = scoring.reco_radius
             self.model_name = scoring.model_params.name
             self.model_endpoint_name = (
-                scoring.model_params.endpoint_name
-                if endpoint == "DEFAULT"
-                else endpoint
+                endpoint if endpoint else scoring.model_params.endpoint_name
             )
             self.model_display_name = None
             self.model_version = None
             self.include_digital = scoring.include_digital
-            self.recommendable_offers = (
-                self.get_recommendable_offers()
-                if endpoint == "DEFAULT"
-                else self.get_recommendable_offers(
-                    offer_limit=scoring.model_params.offer_limit
-                )
+            self.recommendable_offers = self.get_recommendable_offers(
+                scoring.model_params
             )
             self.cold_start_categories = get_cold_start_categories(self.user.id)
 
@@ -194,15 +188,11 @@ class Recommendation:
             instances = {"input_1": user_to_rank, "input_2": offer_ids_to_rank}
             return instances
 
-        def get_recommendable_offers(
-            self, offer_limit=RECOMMENDABLE_OFFER_LIMIT
-        ) -> List[Dict[str, Any]]:
+        def get_recommendable_offers(self, params) -> List[Dict[str, Any]]:
             start = time.time()
-            order_query = "is_geolocated DESC, booking_number DESC"
-
             recommendations_query = RecommendableOffersQueryBuilder(
-                self, offer_limit
-            ).generate_query(order_query)
+                self, params.offer_limit
+            ).generate_query(params.order_query)
 
             query_result = []
             if recommendations_query is not None:

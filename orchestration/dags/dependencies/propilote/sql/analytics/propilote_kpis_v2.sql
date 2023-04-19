@@ -9,7 +9,7 @@
             , cast(numerator as INTEGER) as numerator
             , cast(denominator as INTEGER) as denominator
         FROM
-            `{{ bigquery_tmp_dataset }}.{{ kpi_details.table_name }}_{{ granularity }}`
+            `{{ bigquery_tmp_dataset }}.{{ yyyymmdd(ds) }}_{{ kpi_details.table_name }}_{{ granularity }}`
     {% if not loop.last %}
         UNION ALL 
     {% endif %}

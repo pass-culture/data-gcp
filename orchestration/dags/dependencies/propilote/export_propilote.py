@@ -51,7 +51,7 @@ tmp_tables_detailed = {
     "propilote_taux_couverture_region": {
         "sql": f"{SQL_TMP_PATH}/taux_couverture/propilote_tmp_couverture.sql",
         "destination_dataset": "{{ bigquery_tmp_dataset }}",
-        "destination_table": "propilote_tmp_couverture_region",
+        "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_couverture_region",
         "params": {
             "group_type": "REG",
             "group_type_name": "region_name",
@@ -60,7 +60,7 @@ tmp_tables_detailed = {
     "propilote_taux_couverture_departement": {
         "sql": f"{SQL_TMP_PATH}/taux_couverture/propilote_tmp_couverture.sql",
         "destination_dataset": "{{ bigquery_tmp_dataset }}",
-        "destination_table": "propilote_tmp_couverture_departement",
+        "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_couverture_departement",
         "params": {
             "group_type": "DEPT",
             "group_type_name": "department_code",
@@ -69,7 +69,7 @@ tmp_tables_detailed = {
     "propilote_taux_couverture_all": {
         "sql": f"{SQL_TMP_PATH}/taux_couverture/propilote_tmp_couverture.sql",
         "destination_dataset": "{{ bigquery_tmp_dataset }}",
-        "destination_table": "propilote_tmp_couverture_all",
+        "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_couverture_all",
         "params": {
             "group_type": "NAT",
             "group_type_name": "all_dim",
@@ -79,7 +79,7 @@ tmp_tables_detailed = {
     "propilote_taux_utilisation_region": {
         "sql": f"{SQL_TMP_PATH}/taux_utilisation/propilote_tmp_utilisation.sql",
         "destination_dataset": "{{ bigquery_tmp_dataset }}",
-        "destination_table": "propilote_tmp_utilisation_region",
+        "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_utilisation_region",
         "params": {
             "group_type": "REG",
             "group_type_name": "user_region_name",
@@ -89,7 +89,7 @@ tmp_tables_detailed = {
     "propilote_taux_utilisation_departement": {
         "sql": f"{SQL_TMP_PATH}/taux_utilisation/propilote_tmp_utilisation.sql",
         "destination_dataset": "{{ bigquery_tmp_dataset }}",
-        "destination_table": "propilote_tmp_utilisation_departement",
+        "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_utilisation_departement",
         "params": {
             "group_type": "DEPT",
             "group_type_name": "user_department_code",
@@ -99,7 +99,7 @@ tmp_tables_detailed = {
     "propilote_taux_utilisation_all": {
         "sql": f"{SQL_TMP_PATH}/taux_utilisation/propilote_tmp_utilisation.sql",
         "destination_dataset": "{{ bigquery_tmp_dataset }}",
-        "destination_table": "propilote_tmp_utilisation_all",
+        "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_utilisation_all",
         "params": {
             "group_type": "NAT",
             "group_type_name": "all_dim",
@@ -110,7 +110,7 @@ tmp_tables_detailed = {
     "propilote_montant_24_mois_region": {
         "sql": f"{SQL_TMP_PATH}/montant_24_mois/propilote_tmp_montant_24_mois.sql",
         "destination_dataset": "{{ bigquery_tmp_dataset }}",
-        "destination_table": "propilote_tmp_montant_24_mois_region",
+        "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_montant_24_mois_region",
         "params": {
             "group_type": "REG",
             "group_type_name": "user_region_name",
@@ -119,7 +119,7 @@ tmp_tables_detailed = {
     "propilote_montant_24_mois_departement": {
         "sql": f"{SQL_TMP_PATH}/montant_24_mois/propilote_tmp_montant_24_mois.sql",
         "destination_dataset": "{{ bigquery_tmp_dataset }}",
-        "destination_table": "propilote_tmp_montant_24_mois_departement",
+        "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_montant_24_mois_departement",
         "params": {
             "group_type": "DEPT",
             "group_type_name": "user_department_code",
@@ -128,7 +128,7 @@ tmp_tables_detailed = {
     "propilote_montant_24_mois_all": {
         "sql": f"{SQL_TMP_PATH}/montant_24_mois/propilote_tmp_montant_24_mois.sql",
         "destination_dataset": "{{ bigquery_tmp_dataset }}",
-        "destination_table": "propilote_tmp_montant_24_mois_all",
+        "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_montant_24_mois_all",
         "params": {
             "group_type": "NAT",
             "group_type_name": "all_dim",
@@ -138,7 +138,7 @@ tmp_tables_detailed = {
     "propilote_taux_participation_eac_jeunes_region": {
         "sql": f"{SQL_TMP_PATH}/taux_participation_eac_jeunes/propilote_tmp_participation_eac_jeunes.sql",
         "destination_dataset": "{{ bigquery_tmp_dataset }}",
-        "destination_table": "propilote_tmp_taux_participation_eac_jeunes_region",
+        "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_taux_participation_eac_jeunes_region",
         "params": {
             "group_type": "REG",
             "group_type_name": "region_name",
@@ -147,7 +147,7 @@ tmp_tables_detailed = {
     "propilote_taux_participation_eac_jeunes_departement": {
         "sql": f"{SQL_TMP_PATH}/taux_participation_eac_jeunes/propilote_tmp_participation_eac_jeunes.sql",
         "destination_dataset": "{{ bigquery_tmp_dataset }}",
-        "destination_table": "propilote_tmp_taux_participation_eac_jeunes_departement",
+        "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_taux_participation_eac_jeunes_departement",
         "params": {
             "group_type": "DEPT",
             "group_type_name": "department_code",
@@ -156,7 +156,7 @@ tmp_tables_detailed = {
     "propilote_taux_participation_eac_jeunes_all": {
         "sql": f"{SQL_TMP_PATH}/taux_participation_eac_jeunes/propilote_tmp_participation_eac_jeunes.sql",
         "destination_dataset": "{{ bigquery_tmp_dataset }}",
-        "destination_table": "propilote_tmp_taux_participation_eac_jeunes_all",
+        "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_taux_participation_eac_jeunes_all",
         "params": {
             "group_type": "NAT",
             "group_type_name": "all_dim",
@@ -166,7 +166,7 @@ tmp_tables_detailed = {
     "propilote_taux_activation_structure_region": {
         "sql": f"{SQL_TMP_PATH}/taux_activation_structure/propilote_tmp_activation_structure.sql",
         "destination_dataset": "{{ bigquery_tmp_dataset }}",
-        "destination_table": "propilote_tmp_taux_activation_structure_region",
+        "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_taux_activation_structure_region",
         "params": {
             "group_type": "REG",
             "group_type_name": "venue_region_name",
@@ -175,7 +175,7 @@ tmp_tables_detailed = {
     "propilote_taux_activation_structure_departement": {
         "sql": f"{SQL_TMP_PATH}/taux_activation_structure/propilote_tmp_activation_structure.sql",
         "destination_dataset": "{{ bigquery_tmp_dataset }}",
-        "destination_table": "propilote_tmp_taux_activation_structure_departement",
+        "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_taux_activation_structure_departement",
         "params": {
             "group_type": "DEPT",
             "group_type_name": "venue_department_code",
@@ -184,7 +184,7 @@ tmp_tables_detailed = {
     "propilote_taux_activation_structure_all": {
         "sql": f"{SQL_TMP_PATH}/taux_activation_structure/propilote_tmp_activation_structure.sql",
         "destination_dataset": "{{ bigquery_tmp_dataset }}",
-        "destination_table": "propilote_tmp_taux_activation_structure_all",
+        "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_taux_activation_structure_all",
         "params": {
             "group_type": "NAT",
             "group_type_name": "all_dim",
@@ -194,7 +194,7 @@ tmp_tables_detailed = {
     "propilote_taux_participation_eac_ecoles_region": {
         "sql": f"{SQL_TMP_PATH}/taux_participation_eac_ecoles/propilote_tmp_participation_eac_ecoles.sql",
         "destination_dataset": "{{ bigquery_tmp_dataset }}",
-        "destination_table": "propilote_tmp_taux_participation_eac_ecoles_region",
+        "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_taux_participation_eac_ecoles_region",
         "params": {
             "group_type": "REG",
             "group_type_name": "institution_region_name",
@@ -203,7 +203,7 @@ tmp_tables_detailed = {
     "propilote_taux_participation_eac_ecoles_departement": {
         "sql": f"{SQL_TMP_PATH}/taux_participation_eac_ecoles/propilote_tmp_participation_eac_ecoles.sql",
         "destination_dataset": "{{ bigquery_tmp_dataset }}",
-        "destination_table": "propilote_tmp_taux_participation_eac_ecoles_departement",
+        "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_taux_participation_eac_ecoles_departement",
         "params": {
             "group_type": "DEPT",
             "group_type_name": "institution_departement_code",
@@ -212,7 +212,7 @@ tmp_tables_detailed = {
     "propilote_taux_participation_eac_ecoles_all": {
         "sql": f"{SQL_TMP_PATH}/taux_participation_eac_ecoles/propilote_tmp_participation_eac_ecoles.sql",
         "destination_dataset": "{{ bigquery_tmp_dataset }}",
-        "destination_table": "propilote_tmp_taux_participation_eac_ecoles_all",
+        "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_taux_participation_eac_ecoles_all",
         "params": {
             "group_type": "NAT",
             "group_type_name": "all_dim",
@@ -222,7 +222,7 @@ tmp_tables_detailed = {
     "propilote_diversification_region": {
         "sql": f"{SQL_TMP_PATH}/diversification/propilote_tmp_diversification.sql",
         "destination_dataset": "{{ bigquery_tmp_dataset }}",
-        "destination_table": "propilote_tmp_diversification_region",
+        "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_diversification_region",
         "params": {
             "group_type": "REG",
             "group_type_name": "user_region_name",
@@ -231,7 +231,7 @@ tmp_tables_detailed = {
     "propilote_diversification_departement": {
         "sql": f"{SQL_TMP_PATH}/diversification/propilote_tmp_diversification.sql",
         "destination_dataset": "{{ bigquery_tmp_dataset }}",
-        "destination_table": "propilote_tmp_diversification_departement",
+        "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_diversification_departement",
         "params": {
             "group_type": "DEPT",
             "group_type_name": "user_department_code",
@@ -240,7 +240,7 @@ tmp_tables_detailed = {
     "propilote_diversification_all": {
         "sql": f"{SQL_TMP_PATH}/diversification/propilote_tmp_diversification.sql",
         "destination_dataset": "{{ bigquery_tmp_dataset }}",
-        "destination_table": "propilote_tmp_diversification_all",
+        "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_diversification_all",
         "params": {
             "group_type": "NAT",
             "group_type_name": "all_dim",

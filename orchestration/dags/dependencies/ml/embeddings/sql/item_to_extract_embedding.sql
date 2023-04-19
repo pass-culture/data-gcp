@@ -29,8 +29,7 @@ mediation AS (
         ) inn
     WHERE
         rnk = 1
-),
-
+)
 SELECT
     o.offer_id,
     oii.item_id,
@@ -63,9 +62,9 @@ FROM
     `{{ gcp_project }}.raw_prod`.applicative_database_offer o
     LEFT JOIN mediation ON o.offer_id = mediation.offer_id
     LEFT JOIN `{{ gcp_project }}.analytics_prod`.offer_item_ids oii on o.offer_id = oii.offer_id
-    LEFT join `{{ gcp_project }}.analytics_prod`.enriched_offer_data eod using(offer_id)
+    LEFT join `{{ gcp_project }}.analytics_prod`.enriched_offer_data eod on eod.offer_id = o.offer_id
 WHERE
-o.item_id not in (
+oii.item_id not in (
     select
         distinct item_id
     from

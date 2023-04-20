@@ -76,7 +76,7 @@ WITH individual_bookings AS (
     ,enriched_venue_data.venue_postal_code AS partner_postal_code
     ,'venue' AS partner_status 
     ,venue_type_label AS partner_type 
-    ,FALSE AS is_collectivite
+    ,FALSE AS is_territorial_authorities
     ,1 AS partner_count
     ,CASE WHEN (DATE_DIFF(CURRENT_DATE,last_bookable_individual_offer,DAY) <= 30 OR DATE_DIFF(CURRENT_DATE,last_bookable_collective_offer,DAY) <= 30) 
         THEN TRUE ELSE FALSE END AS is_active_partner
@@ -158,7 +158,7 @@ GROUP BY 1 )
     ,applicative_database_offerer.offerer_postal_code AS partner_postal_code
     ,'offerer' AS partner_status 
     ,partner_type
-    ,CASE WHEN partner_type LIKE '%Collectivité%' THEN TRUE ELSE FALSE END AS is_collectivite
+    ,CASE WHEN partner_type LIKE '%Collectivité%' THEN TRUE ELSE FALSE END AS is_territorial_authorities
     ,partner_count
     ,CASE WHEN (DATE_DIFF(CURRENT_DATE,last_bookable_individual_offer,DAY) <= 30 OR DATE_DIFF(CURRENT_DATE,last_bookable_collective_offer,DAY) <= 30) 
         THEN TRUE ELSE FALSE END AS is_active_partner

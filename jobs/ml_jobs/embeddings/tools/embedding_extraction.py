@@ -6,6 +6,7 @@ from tools.logging_tools import log_duration
 from PIL import Image
 from tqdm import tqdm
 import os
+from multiprocessing import cpu_count
 
 
 def extract_embedding(
@@ -48,10 +49,7 @@ def encode_img_from_urls(model, urls):
     index = 0
     offer_img_embs = []
     offer_wo_img = 0
-    for url in tqdm(urls):
-        STORAGE_PATH_IMG = f"./img/{index}"
-        _download_img_from_url(url, STORAGE_PATH_IMG)
-        index += 1
+    download_img_multiprocess(urls)
     for index in range(len(urls)):
         try:
             img_emb = model.encode(Image.open(f"./img/{index}.jpeg"))
@@ -69,7 +67,40 @@ def encode_img_from_urls(model, urls):
     return offer_img_embs
 
 
-def _download_img_from_url(url, storage_path):
+def download_img_multiprocess(urls):
+    max_process = cpu_count() - 1
+    subset_length = len(urls) // max_process
+    subset_length = subset_length if subset_length > 0 else 1
+    batch_number = max_process if subset_length > 1 else 1
+    print(
+        f"Starting process... with {batch_number} CPUs, subset length: {subset_length} "
+    )
+    with concurrent.futures.ProcessPoolExecutor(max_process) as executor:
+        futures = executor.map(
+            _download_img_from_url_list,
+            repeat(urls),
+            repeat(subset_length),
+            repeat(batch_number),
+            range(batch_number),
+        )
+    print("Multiprocessing done")
+    return
+
+
+def _download_img_from_url_list(urls, subset_length, batch_number, batch_id):
+    try:
+        temp_urls = urls[batch_id * subset_length : (batch_id + 1) * subset_length]
+        index = (batch_id * subset_length) + 1
+        for url in temp_urls:
+            STORAGE_PATH_IMG = f"./img/{index}"
+            __download_img_from_url(url, STORAGE_PATH_IMG)
+            index = +1
+        return
+    except:
+        return
+
+
+def __download_img_from_url(url, storage_path):
     try:
         urllib.request.urlretrieve(url, f"{storage_path}.jpeg")
     except:

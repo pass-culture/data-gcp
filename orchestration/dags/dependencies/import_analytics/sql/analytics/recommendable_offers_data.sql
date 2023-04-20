@@ -41,7 +41,7 @@ WITH get_recommendable_offers AS (
                 ELSE FALSE
             END
         ) AS is_underage_recommendable,
-        NOT (REGEXP_CONTAINS(LOWER(offer.offer_name) ,CONCAT(r'(?i)(\b', forbidden_query.query, r'\b)')) OR forbidden_offer.product_id is not null) as is_recommendable,
+        NOT (REGEXP_CONTAINS(LOWER(offer.offer_name) ,CONCAT(r'(?i)(\b', forbidden_query.query, r'\b)')) OR forbidden_offer.product_id is not null OR forbidden_query.subcategory_id is null) as is_recommendable,
 
     FROM
         `{{ bigquery_analytics_dataset }}`.enriched_offer_data offer

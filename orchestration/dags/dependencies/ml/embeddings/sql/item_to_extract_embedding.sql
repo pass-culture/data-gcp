@@ -1,5 +1,4 @@
-{{ create_humanize_id_function() }}
-WITH offer_humanized_id AS (
+{{ create_humanize_id_function() }} WITH offer_humanized_id AS (
     SELECT
         offer_id,
         humanize_id(offer_id) AS humanized_id,
@@ -64,19 +63,18 @@ FROM
     LEFT JOIN `{{ gcp_project }}.analytics_prod`.offer_item_ids oii on o.offer_id = oii.offer_id
     LEFT join `{{ gcp_project }}.analytics_prod`.enriched_offer_data eod on eod.offer_id = o.offer_id
 WHERE
-oii.item_id not in (
-    select
-        distinct item_id
-    from
-        `{{ gcp_project }}.clean_{{ env_short_name }}`.item_embeddings
-    WHERE
-        date(extraction_date) > DATE_SUB(CURRENT_DATE, INTERVAL 60 DAY)
-)
-QUALIFY ROW_NUMBER() OVER (
-    PARTITION BY item_id,
-    offer_id
-    ORDER BY
-        eod.booking_cnt DESC
-) = 1
-LIMIT 100000
-    
+    oii.item_id not in (
+        select
+            distinct item_id
+        from
+            `{{ gcp_project }}.clean_{{ env_short_name }}`.item_embeddings
+        WHERE
+            date(extraction_date) > DATE_SUB(CURRENT_DATE, INTERVAL 60 DAY)
+    ) QUALIFY ROW_NUMBER() OVER (
+        PARTITION BY item_id,
+        offer_id
+        ORDER BY
+            eod.booking_cnt DESC
+    ) = 1
+LIMIT
+    100000

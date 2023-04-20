@@ -1,5 +1,4 @@
-
-{{ create_humanize_id_function() }}
+{{create_humanize_id_function() }}
 
 WITH individual_bookings AS (
     SELECT 
@@ -77,8 +76,10 @@ WITH individual_bookings AS (
     ,enriched_venue_data.venue_postal_code AS partner_postal_code
     ,'venue' AS partner_status 
     ,venue_type_label AS partner_type 
-    ,venue_creation_date AS partner_creation_date 
+    ,FALSE AS is_collectivite
     ,1 AS partner_count
+    ,CASE WHEN (DATE_DIFF(CURRENT_DATE,last_bookable_individual_offer,DAY) <= 30 OR DATE_DIFF(CURRENT_DATE,last_bookable_collective_offer,DAY) <= 30) 
+        THEN TRUE ELSE FALSE END AS is_active_partner
     ,collective_offers.collective_offers_created
     ,individual_offers.individual_offers_created
     ,(collective_offers.collective_offers_created+individual_offers.individual_offers_created) AS total_offers_created
@@ -100,16 +101,16 @@ LEFT JOIN bookable_individual_offer ON enriched_venue_data.venue_id = bookable_i
 LEFT JOIN bookable_collective_offer ON enriched_venue_data.venue_id =bookable_collective_offer.venue_id 
 LEFT JOIN individual_offers ON individual_offers.venue_id = enriched_venue_data.venue_id 
 LEFT JOIN collective_offers ON collective_offers.venue_id = enriched_venue_data.venue_id 
-AND venue_is_permanent IS TRUE)
+WHERE venue_is_permanent IS TRUE)
 
-,infos_tags  AS (
+,infos_tags1  AS (
 SELECT DISTINCT
-    enriched_offer_data.offerer_id 
-    ,STRING_AGG(DISTINCT CONCAT(' ',CASE WHEN offerer_tag_label IS NOT NULL THEN offerer_tag_label ELSE NULL END)) AS partner_type
-    ,CASE WHEN festival_increments.festival_cnt IS NULL THEN 1 ELSE CAST(festival_cnt AS INT) END AS partner_count
-FROM `{{ bigquery_analytics_dataset }}`.enriched_offer_data AS enriched_offer_data
+    enriched_offerer_data.offerer_id 
+    ,COALESCE(festival_cnt,0) AS festival_cnt 
+    ,COUNT(CASE WHEN offerer_tag_label NOT IN ('Festival','Collectivité') THEN 1 ELSE NULL END) AS nb_tags
+FROM `{{ bigquery_analytics_dataset }}`.enriched_offerer_data AS enriched_offerer_data
 JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offerer_tag_mapping AS applicative_database_offerer_tag_mapping
-    ON enriched_offer_data.offerer_id = applicative_database_offerer_tag_mapping.offerer_id
+    ON enriched_offerer_data.offerer_id = applicative_database_offerer_tag_mapping.offerer_id
 JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offerer_tag AS applicative_database_offerer_tag
     ON applicative_database_offerer_tag.offerer_tag_id = applicative_database_offerer_tag_mapping.tag_id
 JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offerer_tag_category_mapping AS applicative_database_offerer_tag_category_mapping
@@ -117,11 +118,36 @@ JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offerer_tag_categor
 JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offerer_tag_category AS applicative_database_offerer_tag_category
     ON applicative_database_offerer_tag_category_mapping.offerer_tag_category_id = applicative_database_offerer_tag_category.offerer_tag_category_id
 LEFT JOIN `{{ bigquery_analytics_dataset }}`.festival_increments AS festival_increments
-    ON enriched_offer_data.offerer_id = festival_increments.offerer_id
-GROUP BY 1,3)
+    ON enriched_offerer_data.offerer_id = festival_increments.offerer_id
+WHERE offerer_tag_name IS NOT NULL
+AND offerer_tag_category_name = 'comptage'
+GROUP BY 1,2)
 
+,infos_tags2 AS (
+    SELECT 
+        offerer_id 
+        ,festival_cnt + nb_tags AS partner_count
+    FROM infos_tags1)
 
-SELECT DISTINCT
+,types AS (SELECT DISTINCT
+    enriched_offerer_data.offerer_id 
+    ,STRING_AGG(DISTINCT CONCAT(' ',CASE WHEN offerer_tag_label IS NOT NULL THEN offerer_tag_label ELSE NULL END)) AS partner_type
+FROM `{{ bigquery_analytics_dataset }}`.enriched_offerer_data AS enriched_offerer_data
+JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offerer_tag_mapping AS applicative_database_offerer_tag_mapping
+    ON enriched_offerer_data.offerer_id = applicative_database_offerer_tag_mapping.offerer_id
+JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offerer_tag AS applicative_database_offerer_tag
+    ON applicative_database_offerer_tag.offerer_tag_id = applicative_database_offerer_tag_mapping.tag_id
+JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offerer_tag_category_mapping AS applicative_database_offerer_tag_category_mapping
+    ON applicative_database_offerer_tag.offerer_tag_id = applicative_database_offerer_tag_category_mapping.offerer_tag_id
+JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offerer_tag_category AS applicative_database_offerer_tag_category
+    ON applicative_database_offerer_tag_category_mapping.offerer_tag_category_id = applicative_database_offerer_tag_category.offerer_tag_category_id
+LEFT JOIN `{{ bigquery_analytics_dataset }}`.festival_increments AS festival_increments
+    ON enriched_offerer_data.offerer_id = festival_increments.offerer_id
+WHERE offerer_tag_name IS NOT NULL
+AND offerer_tag_category_name = 'comptage'
+GROUP BY 1 )
+
+,offerers AS (SELECT DISTINCT
     '' AS venue_id
     ,enriched_offerer_data.offerer_id AS offerer_id 
     ,enriched_offerer_data.offerer_creation_date AS partner_creation_date
@@ -132,7 +158,10 @@ SELECT DISTINCT
     ,applicative_database_offerer.offerer_postal_code AS partner_postal_code
     ,'offerer' AS partner_status 
     ,partner_type
+    ,CASE WHEN partner_type LIKE '%Collectivité%' THEN TRUE ELSE FALSE END AS is_collectivite
     ,partner_count
+    ,CASE WHEN (DATE_DIFF(CURRENT_DATE,last_bookable_individual_offer,DAY) <= 30 OR DATE_DIFF(CURRENT_DATE,last_bookable_collective_offer,DAY) <= 30) 
+        THEN TRUE ELSE FALSE END AS is_active_partner
     ,SUM(COALESCE(individual_offers_created,0)) AS individual_offers_created
     ,SUM(COALESCE(collective_offers_created,0)) AS collective_offers_created
     ,(SUM(COALESCE(individual_offers_created,0))+SUM(IFNULL(collective_offers_created,0))) AS total_offers_created
@@ -145,10 +174,11 @@ SELECT DISTINCT
     ,SUM(COALESCE(real_individual_revenue,0)) AS real_individual_revenue
     ,SUM(COALESCE(real_individual_revenue,0)) AS real_collective_revenue
     ,(SUM(COALESCE(real_individual_revenue,0))+SUM(COALESCE(real_individual_revenue,0))) AS total_real_revenue
-FROM `{{ bigquery_analytics_dataset }}`.enriched_offerer_data AS enriched_offerer_data
+FROM infos_tags2
+LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_offerer_data AS enriched_offerer_data
+    ON infos_tags2.offerer_id = enriched_offerer_data.offerer_id
 LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offerer AS applicative_database_offerer
     ON enriched_offerer_data.offerer_id = applicative_database_offerer.offerer_id
-LEFT JOIN infos_tags ON enriched_offerer_data.offerer_id = infos_tags.offerer_id 
 LEFT JOIN `{{ bigquery_analytics_dataset }}`.region_department AS region_department
     ON enriched_offerer_data.offerer_department_code = region_department.num_dep
 LEFT JOIN individual_bookings ON enriched_offerer_data.offerer_id = individual_bookings.offerer_id 
@@ -157,4 +187,11 @@ LEFT JOIN bookable_individual_offer ON enriched_offerer_data.offerer_id = bookab
 LEFT JOIN bookable_collective_offer ON enriched_offerer_data.offerer_id = bookable_collective_offer.offerer_id 
 LEFT JOIN individual_offers ON enriched_offerer_data.offerer_id = individual_offers.offerer_id 
 LEFT JOIN collective_offers ON enriched_offerer_data.offerer_id = collective_offers.offerer_id 
-GROUP BY 1,2,3,4,5,6,7,8,9,10,11
+LEFT JOIN types ON enriched_offerer_data.offerer_id = types.offerer_id 
+GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13)
+
+SELECT *
+FROM venues 
+UNION ALL 
+SELECT *
+FROM offerers

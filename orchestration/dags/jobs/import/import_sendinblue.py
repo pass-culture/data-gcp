@@ -95,8 +95,7 @@ analytics_table_tasks = depends_loop(analytics_table_jobs, end_raw, dag=dag)
 (
     service_account_token
     >> import_newsletter_data_to_raw
+    >> import_transactional_data_to_raw
     >> end_raw
     >> analytics_table_tasks
 )
-
-service_account_token >> import_transactional_data_to_raw >> end_raw

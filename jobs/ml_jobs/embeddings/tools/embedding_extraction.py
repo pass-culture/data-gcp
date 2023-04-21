@@ -1,12 +1,14 @@
-import json
-import time
-from sentence_transformers import SentenceTransformer
-import urllib.request
-from tools.logging_tools import log_duration
-from PIL import Image
-from tqdm import tqdm
+import concurrent
 import os
+import time
+import urllib.request
+from itertools import repeat
 from multiprocessing import cpu_count
+
+from PIL import Image
+from sentence_transformers import SentenceTransformer
+from tools.logging_tools import log_duration
+from tqdm import tqdm
 
 
 def extract_embedding(
@@ -59,11 +61,7 @@ def encode_img_from_urls(model, urls):
             offer_wo_img += 1
     print(f"{(offer_wo_img*100)/len(urls)}% offers dont have image")
     print("Removing image on local disk...")
-    for index in range(len(urls)):
-        try:
-            os.remove(f"./img/{index}.jpeg")
-        except:
-            continue
+    os.remove(f"./img")
     return offer_img_embs
 
 
@@ -80,17 +78,16 @@ def download_img_multiprocess(urls):
             _download_img_from_url_list,
             repeat(urls),
             repeat(subset_length),
-            repeat(batch_number),
             range(batch_number),
         )
     print("Multiprocessing done")
     return
 
 
-def _download_img_from_url_list(urls, subset_length, batch_number, batch_id):
+def _download_img_from_url_list(urls, subset_length, batch_id):
     try:
         temp_urls = urls[batch_id * subset_length : (batch_id + 1) * subset_length]
-        index = (batch_id * subset_length) + 1
+        index = batch_id if batch_id == 0 else (batch_id * subset_length) + 1
         for url in temp_urls:
             STORAGE_PATH_IMG = f"./img/{index}"
             __download_img_from_url(url, STORAGE_PATH_IMG)

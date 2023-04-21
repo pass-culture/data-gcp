@@ -34,7 +34,9 @@ dag = DAG(
     "import_sendinblue",
     default_args=default_dag_args,
     description="Import sendinblue tables",
-    schedule_interval=get_airflow_schedule("00 04 * * *"),
+    schedule_interval=get_airflow_schedule("00 04 * * *")
+    if ENV_SHORT_NAME in ["prod", "stg"]
+    else get_airflow_schedule("00 07 * * *"),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,
@@ -75,7 +77,6 @@ import_newsletter_data_to_raw = SimpleHttpOperator(
     log_response=True,
     dag=dag,
 )
-
 
 end_raw = DummyOperator(task_id="end_raw", dag=dag)
 

@@ -1,4 +1,12 @@
 import pandas as pd
+import os
+from datetime import datetime, timedelta
+
+ge_root_dir = "dags/great_expectations/"
+
+today = datetime.now().strftime("%Y-%m-%d")
+yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+last_week = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
 
 
 def get_table_volume_bounds(partition_field, dataset_name, table_name, nb_days):
@@ -22,21 +30,10 @@ def get_table_volume_bounds(partition_field, dataset_name, table_name, nb_days):
     return [df["avg_volume"][0] * 0.9, df["avg_volume"][0] * 1.1]
 
 
-def get_date_fields(dataset_name, table_name):
-    """Function to get the names of date fields from a bigquery table."""
+def clear_directory(path, directory_name):
+    full_path = path + directory_name
+    for file in os.listdir(full_path):
+        os.remove(os.path.join(full_path, file))
 
-    query = f"""
-    SELECT
-      table_catalog
-      , table_schema
-      , table_name
-      , array_agg(column_name) as date_fields
-    FROM `{dataset_name}.INFORMATION_SCHEMA.COLUMNS`
-    where data_type in ('DATETIME', 'DATE', 'TIMESTAMP')
-    and table_name = "{table_name}"
-    group by 1,2,3
-    """
-    df = pd.read_gbq(query)
-    date_fields = list(df["date_fields"][0])
-
-    return date_fields
+    print(f"Checkpoint: {os.listdir(full_path)}")
+    return os.listdir(path)

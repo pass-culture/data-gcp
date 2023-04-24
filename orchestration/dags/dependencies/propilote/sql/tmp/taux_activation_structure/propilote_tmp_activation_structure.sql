@@ -38,12 +38,15 @@ structures AS (
 
 all_structures AS (
     SELECT 
-        dimension_name
+        mois
+        , dimension_name
         , dimension_value
         , COUNT(DISTINCT offerer_id) AS nb_structures 
     FROM structures 
-    GROUP BY 1, 2
+    CROSS JOIN dates
+    GROUP BY 1, 2, 3
 ),
+
 
 active_individuel AS (
     SELECT DISTINCT 
@@ -60,9 +63,8 @@ active_individuel AS (
         ON dates.mois >= DATE_TRUNC(bookable_offer_history.partition_date, MONTH)
     JOIN `{{ bigquery_analytics_dataset }}.enriched_offer_data` as offer
         ON offer.offer_id = bookable_offer_history.offer_id
-    LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_venue_data` as venue
+    JOIN `{{ bigquery_analytics_dataset }}.enriched_venue_data` as venue
         ON venue.venue_id = offer.venue_id 
-    WHERE offerer_id IN (SELECT DISTINCT offerer_id FROM structures)
 ),
 
 active_collectif AS (
@@ -72,7 +74,7 @@ active_collectif AS (
         , {% if params.group_type == 'NAT' %}
             'NAT'
         {% else %}
-            collective_offer.{{ params.group_type_name }}
+            venue.{{ params.group_type_name }}
         {% endif %} as dimension_value
         , offerer_id AS active_offerers
     FROM dates 
@@ -80,9 +82,8 @@ active_collectif AS (
         ON dates.mois >= DATE_TRUNC(bcoh.partition_date, MONTH)
     JOIN `{{ bigquery_analytics_dataset }}.enriched_collective_offer_data` as collective_offer
         ON collective_offer.collective_offer_id = bcoh.collective_offer_id
-    LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_venue_data` as venue
+    JOIN `{{ bigquery_analytics_dataset }}.enriched_venue_data` as venue
         ON venue.venue_id = collective_offer.venue_id 
-    WHERE offerer_id IN (SELECT DISTINCT offerer_id FROM structures)
 ),
 
 all_actives AS (
@@ -95,24 +96,30 @@ all_actives AS (
 
 count_actives AS (
     SELECT 
-        mois
-        , dimension_name
-        , dimension_value
-        , COUNT(DISTINCT active_offerers) AS active_offerers
+       all_actives.mois
+        , all_actives.dimension_name
+        , all_actives.dimension_value
+        , COUNT(DISTINCT all_actives.active_offerers) AS active_offerers
     FROM all_actives 
+    -- and already in past structures
+    JOIN structures on 
+    structures.offerer_id = all_actives.active_offerers
+    AND structures.dimension_name = all_actives.dimension_name 
+    AND structures.dimension_value = all_actives.dimension_value 
     GROUP BY 1, 2, 3
 )
 
 
 SELECT 
-    count_actives.mois
-    , count_actives.dimension_name
-    , count_actives.dimension_value
+    all_structures.mois
+    , all_structures.dimension_name
+    , all_structures.dimension_value
     , NULL as user_type
     , "taux_activation_structure" as indicator
-    , count_actives.active_offerers as numerator
-    , all_structures.nb_structures AS denominator
-FROM count_actives 
-LEFT JOIN all_structures 
+    , COALESCE(count_actives.active_offerers, 0) as numerator
+    , COALESCE(all_structures.nb_structures, 0) AS denominator
+FROM all_structures  
+LEFT JOIN count_actives 
   on all_structures.dimension_name = count_actives.dimension_name
   AND all_structures.dimension_value = count_actives.dimension_value
+  AND all_structures.mois = count_actives.mois

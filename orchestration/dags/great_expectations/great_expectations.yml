@@ -1,18 +1,8 @@
-# Welcome to Great Expectations! Always know what to expect from your data.
-#
-# Here you can define datasources, batch kwargs generators, integrations and
-# more. This file is intended to be committed to your repo. For help with
-# configuration please:
-#   - Read our docs: https://docs.greatexpectations.io/docs/guides/connecting_to_your_data/connect_to_data_overview/#2-configure-your-datasource
-#   - Join our slack channel: http://greatexpectations.io/slack
-
 # config_version refers to the syntactic version of this config file, and is used in maintaining backwards compatibility
 # It is auto-generated and usually does not need to be changed.
 config_version: 3.0
 
 # Datasources tell Great Expectations where your data lives and how to get it.
-# You can use the CLI command `great_expectations datasource new` to help you
-# add a new datasource. Read more at https://docs.greatexpectations.io/docs/guides/connecting_to_your_data/connect_to_data_overview
 datasources:
   bigquery_clean:
     execution_engine:
@@ -85,12 +75,7 @@ plugins_directory: plugins/
 
 stores:
 # Stores are configurable places to store things like Expectations, Validations
-# Data Docs, and more. These are for advanced users only - most users can simply
-# leave this section alone.
-#
-# Three stores are required: expectations, validations, and
-# evaluation_parameters, and must exist with a valid store entry. Additional
-# stores can be configured for uses such as data_docs, etc.
+# Data Docs, and more.
   expectations_store:
     class_name: ExpectationsStore
     store_backend:
@@ -125,10 +110,6 @@ evaluation_parameter_store_name: evaluation_parameter_store
 checkpoint_store_name: checkpoint_store
 
 data_docs_sites:
-  # Data Docs make it simple to visualize data quality in your project. These
-  # include Expectations, Validations & Profiles. The are built for all
-  # Datasources from JSON artifacts in the local repo including validations &
-  # profiles from the uncommitted directory. Read more at https://docs.greatexpectations.io/docs/terms/data_docs
   local_site:
     class_name: SiteBuilder
     show_how_to_buttons: true

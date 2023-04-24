@@ -89,6 +89,7 @@ with TaskGroup(group_id="raw_operations_group", dag=dag) as raw_operations_group
 
 end_raw = DummyOperator(task_id="end_raw", dag=dag)
 
+
 # CLEAN : Copier les tables Raw dans Clean sauf s'il y a une requete de transformation dans clean.
 
 with TaskGroup(

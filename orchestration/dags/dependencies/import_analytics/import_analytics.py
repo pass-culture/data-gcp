@@ -68,7 +68,6 @@ def define_import_tables():
         "transaction",
         "user",
         "user_offerer",
-        "user_suspension",
         "venue",
         "venue_contact",
         "venue_educational_status",

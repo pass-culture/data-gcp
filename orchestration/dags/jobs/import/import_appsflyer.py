@@ -27,12 +27,13 @@ default_dag_args = {
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT_ID,
 }
+schedule_dict = {"prod": "00 01 * * *", "dev": None, "stg": "00 02 * * *"}
 
 dag = DAG(
     "import_appsflyer",
     default_args=default_dag_args,
     description="Import Appsflyer tables",
-    schedule_interval=get_airflow_schedule("00 01 * * *"),
+    schedule_interval=get_airflow_schedule(schedule_dict[ENV_SHORT_NAME]),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,

@@ -13,4 +13,5 @@ apache-airflow-providers-slack==6.0.0
 apache-airflow-providers-mysql==3.2.1
 apache-airflow-providers-postgres==5.2.2
 apache-airflow-providers-ssh==3.2.0
+airflow-provider-great-expectations==0.2.6
 pendulum==2.1.2

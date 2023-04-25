@@ -4,7 +4,6 @@ from common.operators.gce import (
     StopGCEOperator,
     CloneRepositoryGCEOperator,
     SSHGCEOperator,
-    GCloudSSHGCEOperator,
 )
 from airflow.models import Param
 from datetime import datetime, timedelta
@@ -81,6 +80,7 @@ with DAG(
     install_dependencies.set_upstream(fetch_code)
 
     tasks = []
+    seq_task = install_dependencies
     for model_params in models_to_deploy:
         experiment_name = model_params["experiment_name"]
         endpoint_name = model_params["endpoint_name"]
@@ -93,7 +93,7 @@ with DAG(
                 --version-name {version_name}
         """
 
-        deploy_model = GCloudSSHGCEOperator(
+        deploy_model = SSHGCEOperator(
             task_id=f"deploy_model_{experiment_name}",
             instance_name=GCE_INSTANCE,
             base_dir=BASE_DIR,
@@ -101,11 +101,11 @@ with DAG(
             dag=dag,
         )
 
-        deploy_model.set_upstream(install_dependencies)
-        tasks.append(deploy_model)
+        deploy_model.set_upstream(seq_task)
+        seq_task = deploy_model
 
     gce_instance_stop = StopGCEOperator(
         task_id="gce_stop_task", instance_name=GCE_INSTANCE
     )
 
-    gce_instance_stop.set_upstream(tasks)
+    gce_instance_stop.set_upstream(seq_task)

@@ -8,7 +8,6 @@ from common.operators.gce import (
     StartGCEOperator,
     StopGCEOperator,
     CloneRepositoryGCEOperator,
-    GCloudSSHGCEOperator,
     SSHGCEOperator,
 )
 from common.alerts import task_fail_slack_alert
@@ -69,7 +68,7 @@ with DAG(
         command=INSTALL_DEPS,
     )
 
-    subcategories_job = GCloudSSHGCEOperator(
+    subcategories_job = SSHGCEOperator(
         task_id=f"import_subcategories",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
@@ -78,7 +77,7 @@ with DAG(
     """,
     )
 
-    types_job = GCloudSSHGCEOperator(
+    types_job = SSHGCEOperator(
         task_id=f"import_types",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,

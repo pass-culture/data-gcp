@@ -114,7 +114,7 @@ class GreatExpectationsContext:
 
             print(self.validator.batches)
 
-    def create_checkpoint(
+    def create_and_run_checkpoint(
         self, data_asset_name, checkpoint_name, datasource_name, expectation_suite_name
     ):
         yaml = YAML()
@@ -166,3 +166,4 @@ class GreatExpectationsContext:
         print(my_checkpoint)
 
         self.ge_context.add_or_update_checkpoint(**yaml.load(yaml_config))
+        self.ge_context.run_checkpoint(checkpoint_name=checkpoint_name)

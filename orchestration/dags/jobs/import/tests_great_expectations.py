@@ -21,7 +21,7 @@ from dependencies.great_expectations.config_historical import (
 from dependencies.great_expectations.config_enriched import (
     enriched_tables_test_config,
 )
-from dependencies.great_expectations.utils import clear_directory
+from dependencies.great_expectations.utils import clear_directory, ge_root_dir
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 1),
@@ -47,58 +47,46 @@ start = DummyOperator(task_id="start", dag=dag)
 clear_directory_checkpoint = PythonOperator(
     task_id="clear_directory_checkpoint",
     python_callable=clear_directory,
-    op_kwargs={"path": "dags/great_expectations/", "directory_name": "checkpoints"},
+    op_kwargs={"path": f"{ge_root_dir}", "directory_name": "checkpoints"},
     dag=dag,
 )
 
 clear_directory_expectations = PythonOperator(
     task_id="clear_directory_expectations",
     python_callable=clear_directory,
-    op_kwargs={"path": "dags/great_expectations/", "directory_name": "expectations"},
-    dag=dag,
-)
-
-
-create_context_applicative_history_tests = PythonOperator(
-    task_id="create_context_applicative_history_tests",
-    python_callable=run_applicative_history_tests,
-    dag=dag,
-)
-
-create_context_enriched_tests = PythonOperator(
-    task_id="create_context_enriched_tests",
-    python_callable=run_enriched_tests,
+    op_kwargs={"path": f"{ge_root_dir}", "directory_name": "expectations"},
     dag=dag,
 )
 
 ge_tasks_history = []
-for table in historical_applicative_test_config.keys():
-    ge_task = GreatExpectationsOperator(
-        task_id=f"checkpoint_{table}",
-        data_context_root_dir="dags/great_expectations/",
-        checkpoint_name=f"volume_checkpoint_for_{table}",
+for table_name, config in historical_applicative_test_config.items():
+    ge_task = PythonOperator(
+        task_id=f"run_applicative_history_tests_{table_name}",
+        python_callable=run_applicative_history_tests,
+        op_kwargs={"table_name": f"{table_name}", "config": config},
         dag=dag,
     )
 
     ge_tasks_history.append(ge_task)
 
+end_test_history = DummyOperator(task_id="end_test_history", dag=dag)
+
 ge_tasks_enriched = []
-for table in enriched_tables_test_config.keys():
-    ge_task = GreatExpectationsOperator(
-        task_id=f"checkpoint_{table}",
-        data_context_root_dir="dags/great_expectations/",
-        checkpoint_name=f"freshness_checkpoint_for_{table}",
+for table_name, config in enriched_tables_test_config.items():
+    ge_task = PythonOperator(
+        task_id=f"run_enriched_tests_{table_name}",
+        python_callable=run_enriched_tests,
+        op_kwargs={"table_name": f"{table_name}", "config": config},
         dag=dag,
     )
 
     ge_tasks_enriched.append(ge_task)
 
-
 (
     start
     >> clear_directory_checkpoint
     >> clear_directory_expectations
-    >> create_context_applicative_history_tests
     >> ge_tasks_history
+    >> end_test_history
+    >> ge_tasks_enriched
 )
-clear_directory_expectations >> create_context_enriched_tests >> ge_tasks_enriched

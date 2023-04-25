@@ -32,8 +32,9 @@ def get_table_volume_bounds(partition_field, dataset_name, table_name, nb_days):
 
 def clear_directory(path, directory_name):
     full_path = path + directory_name
-    for file in os.listdir(full_path):
-        os.remove(os.path.join(full_path, file))
-
-    print(f"Checkpoint: {os.listdir(full_path)}")
+    if os.path.exists(full_path):
+        for file in os.listdir(full_path):
+            os.remove(os.path.join(full_path, file))
+    else:
+        os.makedirs(full_path)
     return os.listdir(path)

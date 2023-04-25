@@ -1,5 +1,6 @@
 import concurrent
-import os
+import shutil
+import socket
 import time
 import urllib.request
 from itertools import repeat
@@ -8,8 +9,9 @@ from multiprocessing import cpu_count
 from PIL import Image
 from sentence_transformers import SentenceTransformer
 from tools.logging_tools import log_duration
-from tqdm import tqdm
-import shutil 
+
+socket.setdefaulttimeout(30)
+
 
 def extract_embedding(
     df_data,
@@ -61,7 +63,7 @@ def encode_img_from_urls(model, urls):
             offer_wo_img += 1
     print(f"{(offer_wo_img*100)/len(urls)}% offers dont have image")
     print("Removing image on local disk...")
-    shutil.rmtree(f"./img")
+    shutil.rmtree("./img")
     return offer_img_embs
 
 
@@ -74,7 +76,7 @@ def download_img_multiprocess(urls):
         f"Starting process... with {batch_number} CPUs, subset length: {subset_length} "
     )
     with concurrent.futures.ProcessPoolExecutor(batch_number) as executor:
-        futures=executor.map(
+        futures = executor.map(
             _download_img_from_url_list,
             repeat(urls),
             repeat(subset_length),

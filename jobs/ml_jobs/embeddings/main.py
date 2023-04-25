@@ -1,16 +1,13 @@
 import concurrent
 import json
 import traceback
-import typer
+from datetime import datetime
 from itertools import repeat
 from multiprocessing import cpu_count
+
 import pandas as pd
-from datetime import datetime
-from tools.config import (
-    ENV_SHORT_NAME,
-    GCP_PROJECT_ID,
-    CONFIGS_PATH,
-)
+import typer
+from tools.config import CONFIGS_PATH, ENV_SHORT_NAME, GCP_PROJECT_ID
 from tools.embedding_extraction import extract_embedding
 
 

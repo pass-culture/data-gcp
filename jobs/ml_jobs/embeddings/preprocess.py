@@ -1,7 +1,8 @@
 import json
-from tools.config import ENV_SHORT_NAME, GCP_PROJECT_ID, CONFIGS_PATH
+
 import pandas as pd
 import typer
+from tools.config import CONFIGS_PATH, ENV_SHORT_NAME, GCP_PROJECT_ID
 
 
 def preprocess(df, feature_list):

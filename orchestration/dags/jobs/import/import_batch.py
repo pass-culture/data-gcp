@@ -8,7 +8,6 @@ from common.operators.gce import (
     StartGCEOperator,
     StopGCEOperator,
     CloneRepositoryGCEOperator,
-    GCloudSSHGCEOperator,
     SSHGCEOperator,
 )
 from common.alerts import task_fail_slack_alert

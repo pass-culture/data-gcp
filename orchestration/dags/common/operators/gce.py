@@ -207,45 +207,6 @@ class CloneRepositoryGCEOperator(BaseSSHGCEOperator):
         )
 
 
-class GCloudSSHGCEOperator(BashOperator):
-    DEFAULT_EXPORT = {
-        "PATH": "/opt/conda/bin:/opt/conda/condabin:+$PATH",
-        "ENV_SHORT_NAME": ENV_SHORT_NAME,
-        "GCP_PROJECT_ID": GCP_PROJECT_ID,
-    }
-    template_fields = ["instance_name", "bash_command"]
-
-    @apply_defaults
-    def __init__(
-        self,
-        instance_name: str,
-        base_dir: str,
-        command: str,
-        export_config: t.Dict[str, str] = {},
-        *args,
-        **kwargs,
-    ):
-        self.instance_name = f"{GCE_BASE_PREFIX}-{instance_name}"
-        self.command = command
-        default_command = "\n".join(
-            [
-                f"export {key}={value}"
-                for key, value in dict(self.DEFAULT_EXPORT, **export_config).items()
-            ]
-        )
-        activate_env = "conda init zsh && source ~/.zshrc && conda activate data-gcp"
-        default_path = f"cd {base_dir}"
-        command = "\n".join([default_command, activate_env, default_path, self.command])
-        super(GCloudSSHGCEOperator, self).__init__(
-            bash_command=f"gcloud compute ssh {SSH_USER}@{self.instance_name} "
-            f"--zone {GCE_ZONE} "
-            f"--project {GCP_PROJECT_ID} "
-            f"--command '{command}'",
-            *args,
-            **kwargs,
-        )
-
-
 class SSHGCEOperator(BaseSSHGCEOperator):
     DEFAULT_EXPORT = {
         "PATH": "/opt/conda/bin:/opt/conda/condabin:+$PATH",

@@ -11,7 +11,7 @@ __pycache__/
 .venv/
 venv/
 venv-lint/
-
+*.cbm
 # ignore .json credential files
 # *.json
 # !recommendation/db/tests/tables/data.json

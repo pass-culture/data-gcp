@@ -1,20 +1,34 @@
-with home_ref as (
-    SELECT *
-    from `{{ bigquery_analytics_dataset }}.contentful_entries`
-    where content_type = "homepageNatif"
+with child_home as (
+ -- Home qui proviennent d'un category block
+  SELECT DISTINCT
+    e1.home_entry_id
+    , e2.title
+  FROM `{{ bigquery_analytics_dataset }}.contentful_entries` e1
+  JOIN `{{ bigquery_analytics_dataset }}.contentful_entries` e2
+  ON e1.home_entry_id = e2.id
+  WHERE e1.content_type = "categoryBlock"
 )
-, category_block_ref as (
-    SELECT *
-    from `{{ bigquery_analytics_dataset }}.contentful_entries`
-    where content_type = "categoryBlock"
+, home_ref as (
+    SELECT 
+      home.id
+      , home.title
+    from `{{ bigquery_analytics_dataset }}.contentful_entries` home
+    LEFT JOIN child_home
+    ON home.id = child_home.home_entry_id
+    WHERE child_home.home_entry_id is null -- retirer les homes qui sont spécifiques
+    AND home.content_type = "homepageNatif"
 )
-, category_list_ref as (  
+, parents_ref as (  
     SELECT *
     from `{{ bigquery_analytics_dataset }}.contentful_entries`
-    where content_type = "categoryList"
+    where content_type in ("categoryList", "thematicHighlight")
+)
+, children_ref as (
+    SELECT *
+    from `{{ bigquery_analytics_dataset }}.contentful_entries`
+    where content_type in ("categoryBlock", "thematic_highlight_info")
 )
 , displayed as (
-  ---- modules displayed
   SELECT 
     user_id
   , session_id
@@ -28,44 +42,38 @@ with home_ref as (
   FROM `{{ bigquery_analytics_dataset }}.firebase_events` events
   LEFT JOIN `{{ bigquery_analytics_dataset }}.contentful_entries` as ref
   on events.module_id = ref.id
-  LEFT JOIN home_ref
+  JOIN home_ref
   on events.entry_id = home_ref.id
   WHERE event_name = 'ModuleDisplayedOnHomePage'
   and user_id is not null
-  -- and user_id = "2141130"
   and session_id is not null
-  -- and session_id = 1682437822
 )
 , clicked as (
     SELECT
-        user_id
-        , session_id
-        , entry_id
-        , home_ref.title as entry_name
-        -- , event_name
-        , destination_entry_id
-        , home_ref2.title as destination_entry_name
-        , module_list_id
-        , category_list_ref.title as module_list_name -- category list
-        , module_id
-        , category_block_ref.title as module_name -- category block
-        , event_timestamp as module_clicked_timestamp
+      user_id
+      , session_id
+      , entry_id
+      , home_ref.title as entry_name
+      , destination_entry_id
+      , e.title as destination_entry_name
+      , module_list_id
+      , parents_ref.title as module_list_name -- category list / highlight name
+      , module_id
+      , children_ref.title as module_name -- category block / highlight name
+      , event_timestamp as module_clicked_timestamp
     FROM `{{ bigquery_analytics_dataset }}.firebase_events` events
-    LEFT JOIN category_list_ref
-    ON events.module_list_id = category_list_ref.id
-    LEFT JOIN category_block_ref
-    ON events.module_id = category_block_ref.id
+    LEFT JOIN parents_ref
+    ON events.module_list_id = parents_ref.id
+    LEFT JOIN children_ref
+    ON events.module_id = children_ref.id
     LEFT JOIN home_ref
     ON events.entry_id = home_ref.id
-    LEFT JOIN home_ref as home_ref2
-    ON events.destination_entry_id = home_ref2.id
-    -- WHERE event_name in ("BusinessBlockClicked", "ExclusivityBlockClicked", "SeeMoreClicked", "CategoryBlockClicked", "HighlightBlockClicked")
-    WHERE event_name = "CategoryBlockClicked"
-    -- entry_id param is missing for event HighlightBlockClicked
+    LEFT JOIN `{{ bigquery_analytics_dataset }}.contentful_entries` as e
+    ON events.destination_entry_id = e.id
+    WHERE event_name in ("CategoryBlockClicked", "HighlightBlockClicked")
+    -- entry_id param is missing for event HighlightBlockClicked because it is available in a prior version of the app. 
     and user_id is not null
-    -- and user_id = "2141130"
     and session_id is not null
-    -- and session_id = 1682437822
 )
 , consult_offer as (
     WITH relationships as (
@@ -121,12 +129,12 @@ SELECT
   , displayed.session_id
   , displayed.entry_id -- first touch
   , displayed.entry_name
-  , displayed.module_id as transitional_module_id -- Can be category list block, highlight etc / second touch
-  , displayed.module_name as transitional_module_name 
+  , displayed.module_id as parent_module_id -- Can be category list block, highlight etc / second touch
+  , displayed.module_name as parent_module_name 
   , destination_entry_id --  2nd home id in case of redirection to an home_id
   , destination_entry_name
-  , clicked.module_id as transitional_block_id -- category block id
-  , clicked.module_name as transitional_block_name
+  , clicked.module_id as child_module_id -- category block id
+  , clicked.module_name as child_module_name
   , playlist_id 
   , playlist_name
   , origin
@@ -148,7 +156,7 @@ LEFT JOIN clicked
 LEFT JOIN consult_offer
   ON displayed.user_id = consult_offer.user_id
   AND displayed.session_id =  consult_offer.session_id
-  AND coalesce(clicked.destination_entry_id, displayed.entry_id) = consult_offer.thematic_home_id -- coalesce pour ne pas exclure les consultations d'offres "directes"
+  AND coalesce(clicked.destination_entry_id, displayed.entry_id) = consult_offer.home_id -- coalesce pour ne pas exclure les consultations d'offres "directes"
   AND coalesce(clicked.module_clicked_timestamp, displayed.module_displayed_timestamp) <= consult_offer.consult_offer_timestamp
 LEFT JOIN bookings
   ON displayed.user_id = bookings.user_id

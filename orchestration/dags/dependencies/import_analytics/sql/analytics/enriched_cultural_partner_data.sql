@@ -84,17 +84,17 @@ WITH individual_bookings AS (
         THEN TRUE ELSE FALSE END AS is_active_last_30days
     ,CASE WHEN (DATE_DIFF(CURRENT_DATE,last_individual_offer_creation_date,YEAR) = 0 OR DATE_DIFF(CURRENT_DATE,last_bookable_collective_offer,YEAR) = 0)
         THEN TRUE ELSE FALSE END AS is_active_last_this_year
-    ,collective_offers.collective_offers_created
-    ,individual_offers.individual_offers_created
-    ,(collective_offers.collective_offers_created+individual_offers.individual_offers_created) AS total_offers_created
+    ,COALESCE(collective_offers.collective_offers_created,0) AS collective_offers_created
+    ,COALESCE(individual_offers.individual_offers_created,0) AS individual_offers_created
+    ,(COALESCE(collective_offers.collective_offers_created,0) + COALESCE(individual_offers.individual_offers_created,0)) AS total_offers_created
     ,last_bookable_individual_offer
     ,last_bookable_collective_offer
-    ,non_cancelled_individual_bookings
-    ,used_individual_bookings
-    ,confirmed_collective_bookings
-    ,used_collective_bookings
-    ,real_individual_revenue
-    ,real_collective_revenue
+    ,COALESCE(non_cancelled_individual_bookings,0) AS non_cancelled_individual_bookings
+    ,COALESCE(used_individual_bookings,0) AS used_individual_bookings
+    ,COALESCE(confirmed_collective_bookings,0) AS confirmed_collective_bookings
+    ,COALESCE(used_collective_bookings,0) AS used_collective_bookings
+    ,COALESCE(real_individual_revenue,0) AS real_individual_revenue
+    ,COALESCE(real_collective_revenue,0) AS real_collective_revenue
     ,(real_individual_revenue+real_collective_revenue) AS total_real_revenue
 FROM `{{ bigquery_analytics_dataset }}`.enriched_venue_data AS enriched_venue_data
 LEFT JOIN `{{ bigquery_analytics_dataset }}`.region_department AS region_department
@@ -210,18 +210,18 @@ GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12)
         THEN TRUE ELSE FALSE END AS is_active_last_30days
     ,CASE WHEN (DATE_DIFF(CURRENT_DATE,last_bookable_collective_offer,YEAR) = 0 OR DATE_DIFF(CURRENT_DATE,last_bookable_collective_offer,YEAR) = 0)
         THEN TRUE ELSE FALSE END AS is_active_last_this_year
-    ,individual_offers_created
-    ,collective_offers_created
-    ,total_offers_created
+    ,COALESCE(individual_offers_created,0) AS individual_offers_created
+    ,COALESCE(collective_offers_created,0) AS collective_offers_created
+    ,COALESCE(total_offers_created,0) AS total_offers_created
     ,last_bookable_individual_offer
     ,last_bookable_collective_offer
-    ,non_cancelled_individual_bookings
-    ,used_individual_bookings
-    ,confirmed_collective_bookings
-    ,used_collective_bookings
-    ,real_individual_revenue
-    ,real_collective_revenue
-    ,total_real_revenue
+    ,COALESCE(non_cancelled_individual_bookings,0) AS non_cancelled_individual_bookings
+    ,COALESCE(used_individual_bookings,0) AS used_individual_bookings
+    ,COALESCE(confirmed_collective_bookings,0) AS confirmed_collective_bookings
+    ,COALESCE(used_collective_bookings,0) AS used_collective_bookings
+    ,COALESCE(real_individual_revenue,0) AS real_individual_revenue
+    ,COALESCE(real_collective_revenue,0) AS real_collective_revenue
+    ,COALESCE(total_real_revenue,0) AS total_real_revenue
 FROM offerers1 )
 
 

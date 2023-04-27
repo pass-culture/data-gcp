@@ -1,34 +1,29 @@
 import json
 import sys
 import time
-
-
+from datetime import timedelta
 import pandas as pd
 from catboost import CatBoostClassifier
-from extract_embedding import extract_embedding
-from fastapi import FastAPI, Security, Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, Security, status
 from fastapi.security import OAuth2PasswordRequestForm
-from typing_extensions import Annotated
-
 from fastapi_cloud_logging import FastAPILoggingHandler, RequestLoggingMiddleware
 from fastapi_versioning import VersionedFastAPI, version
 from google.cloud.logging import Client
 from google.cloud.logging_v2.handlers import setup_logging
 from loguru import logger
-from predict import get_main_contribution, get_prediction
-from preprocess import convert_dataframe_to_catboost_pool, preprocess
-
-from utils.tools import download_blob, get_api_key
-
-from utils.security import (
-    fake_hash_password,
-    get_user,
-    fake_decode_token,
-    get_current_user,
-    get_current_active_user,
+from pcvalidation.core.extract_embedding import extract_embedding
+from pcvalidation.core.predict import get_main_contribution, get_prediction
+from pcvalidation.core.preprocess import convert_dataframe_to_catboost_pool, preprocess
+from pcvalidation.utils.data_model import Token, Item, model_params
+from pcvalidation.utils.env_vars import fake_users_db
+from pcvalidation.utils.security import (
+    authenticate_user,
+    create_access_token,
+    get_api_key,
 )
-from utils.data_model import UserInDB, Item, model_params
-from utils.env_vars import fake_users_db
+from pcvalidation.utils.tools import download_blob
+from typing_extensions import Annotated
+
 
 logger.add(
     sys.stdout,
@@ -37,43 +32,42 @@ logger.add(
     serialize=True,
     level="INFO",
 )
-# logger.add(sys.stdout, format="{time} - {level} - {extra[model_version]} - {message}",serialize=True,level="INFO")
 
 app = FastAPI(title="Passculture offer validation API")
+
 # Add middleware
 app.add_middleware(RequestLoggingMiddleware)
-
 # Use manual handler
 handler = FastAPILoggingHandler(Client(), structured=True)
 setup_logging(handler)
 
+SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
 
 @app.get("/")
-def read_root(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
-    user_dict = fake_users_db.get(form_data.username)
-    if not user_dict:
-        raise HTTPException(status_code=400, detail="Incorrect username or password")
-    user = UserInDB(**user_dict)
-    hashed_password = fake_hash_password(form_data.password)
-    if not hashed_password == user.hashed_password:
-        raise HTTPException(status_code=400, detail="Incorrect username or password")
-    context_logger = logger.bind(model_version="default_model")
-    context_logger.info("Auth user welcome to : Validation API test")
-    return "PassCulture - offer Validation API"
+def read_root():
+    logger.info("Auth user welcome to : Validation API test")
+    return "Auth user welcome to : Validation API test"
 
 
-@app.get("/token")
-def read_root(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
-    user_dict = fake_users_db.get(form_data.username)
-    if not user_dict:
-        raise HTTPException(status_code=400, detail="Incorrect username or password")
-    user = UserInDB(**user_dict)
-    hashed_password = fake_hash_password(form_data.password)
-    if not hashed_password == user.hashed_password:
-        raise HTTPException(status_code=400, detail="Incorrect username or password")
-    context_logger = logger.bind(model_version="default_model")
-    context_logger.info("Auth user welcome to : Validation API test")
-    return "9d207bf0"
+@app.post("/token", response_model=Token)
+async def login_for_access_token(
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
+):
+    user = authenticate_user(fake_users_db, form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.username}, expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
 
 
 @app.post("/validation")
@@ -100,7 +94,7 @@ def get_item_validation_score(item: Item, api_key: str = Security(get_api_key)):
     pool = convert_dataframe_to_catboost_pool(df_wEmb, params["features_types"])
 
     model = CatBoostClassifier(one_hot_max_size=65)
-    model_loaded = model.load_model("./model/validation_model", format="cbm")
+    model_loaded = model.load_model("./model/validation_model.cbm", format="cbm")
 
     proba_val, proba_rej = get_prediction(model_loaded, pool)
     top_val, top_rej = get_main_contribution(model_loaded, df_wEmb, pool)

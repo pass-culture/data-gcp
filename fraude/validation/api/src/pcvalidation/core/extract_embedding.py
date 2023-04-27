@@ -1,13 +1,14 @@
-import numpy as np
-import time
-from sentence_transformers import SentenceTransformer
-import shutil
+import concurrent
 import os
+import shutil
+import time
 import urllib.request
 from itertools import repeat
 from multiprocessing import cpu_count
-import concurrent
+
+import numpy as np
 from PIL import Image
+from sentence_transformers import SentenceTransformer
 
 
 def extract_embedding(

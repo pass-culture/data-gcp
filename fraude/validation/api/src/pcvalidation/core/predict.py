@@ -1,5 +1,6 @@
-import shap
 from heapq import nlargest, nsmallest
+
+import shap
 
 
 def get_prediction(model, pool):

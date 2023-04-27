@@ -1,5 +1,4 @@
 from catboost import Pool
-import pandas as pd
 
 UNUSED_COLS = ["outing", "physical_goods"]
 

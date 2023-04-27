@@ -1,7 +1,4 @@
-from fastapi import Security, HTTPException, status
-from fastapi.security import APIKeyHeader, APIKeyQuery
 from google.cloud import storage
-from utils.env_vars import API_KEYS
 
 
 def download_blob(model_params):
@@ -33,30 +30,4 @@ def download_blob(model_params):
         "Downloaded storage object {} from bucket {} to local file {}.".format(
             source_blob_name, bucket_name, destination_file_name
         )
-    )
-
-
-# Define the name of query param to retrieve an API key from
-api_key_query = APIKeyQuery(name="api-key", auto_error=False)
-# Define the name of HTTP header to retrieve an API key from
-api_key_header = APIKeyHeader(name="x-api-key", auto_error=False)
-
-
-def get_api_key(
-    api_key_query: str = Security(api_key_query),
-    api_key_header: str = Security(api_key_header),
-):
-    """Retrieve & validate an API key from the query parameters or HTTP header"""
-    # If the API Key is present as a query param & is valid, return it
-    if api_key_query in API_KEYS:
-        return api_key_query
-
-    # If the API Key is present in the header of the request & is valid, return it
-    if api_key_header in API_KEYS:
-        return api_key_header
-
-    # Otherwise, we can raise a 401
-    raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Invalid or missing API Key",
     )

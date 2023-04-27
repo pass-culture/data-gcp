@@ -1,6 +1,7 @@
-from pydantic import BaseModel
 from typing import Union
-from utils.env_vars import GCS_BUCKET
+
+from pcvalidation.utils.env_vars import GCS_BUCKET
+from pydantic import BaseModel
 
 
 class User(BaseModel):
@@ -12,6 +13,11 @@ class User(BaseModel):
 
 class UserInDB(User):
     hashed_password: str
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
 
 
 class Item(BaseModel):

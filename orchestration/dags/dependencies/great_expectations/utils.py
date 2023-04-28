@@ -2,7 +2,9 @@ import pandas as pd
 import os
 from datetime import datetime, timedelta
 
-ge_root_dir = "dags/great_expectations/"
+DAG_FOLDER = os.environ.get("DAG_FOLDER", "dags/")
+
+ge_root_dir = f"{DAG_FOLDER}/great_expectations/"
 
 today = datetime.now().strftime("%Y-%m-%d")
 yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")

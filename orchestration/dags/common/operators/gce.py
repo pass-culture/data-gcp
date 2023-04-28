@@ -150,7 +150,8 @@ class BaseSSHGCEOperator(BaseOperator):
         result = self.run_ssh_client_command(hook, context)
         enable_pickling = conf.getboolean("core", "enable_xcom_pickling")
         if not enable_pickling:
-            result = b64encode(result).decode("utf-8")
+            if result is not None:
+                result = b64encode(result).decode("utf-8")
         return result
 
 
@@ -182,7 +183,7 @@ class CloneRepositoryGCEOperator(BaseSSHGCEOperator):
     def script(self, branch, python_version) -> str:
         return """
         export PATH=/opt/conda/bin:/opt/conda/condabin:+$PATH
-        conda create --name data-gcp python=%s
+        conda create --name data-gcp python=%s -y -q
         conda init zsh
         source ~/.zshrc
         conda activate data-gcp

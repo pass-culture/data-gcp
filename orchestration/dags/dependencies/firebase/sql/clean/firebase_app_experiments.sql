@@ -1,6 +1,6 @@
 SELECT 
 DISTINCT 
-        event_date, 
+        PARSE_DATE("%Y%m%d", event_date) AS event_date,
         user_pseudo_id, 
         user_id, 
         user_properties.key as experiment_name,

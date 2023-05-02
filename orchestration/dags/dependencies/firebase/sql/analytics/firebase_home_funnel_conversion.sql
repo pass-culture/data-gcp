@@ -34,9 +34,9 @@ with child_home as (
   , session_id
   , entry_id
   , home_ref.title as entry_name
-  , module_id
-  , ref.title as module_name
-  , ref.content_type as module_content_type
+  , module_id as parent_module_id
+  , ref.title as parent_module_name
+  , ref.content_type as parent_module_type
   , event_date as module_displayed_date
   , event_timestamp as module_displayed_timestamp
   FROM `{{ bigquery_analytics_dataset }}.firebase_events` events
@@ -47,6 +47,7 @@ with child_home as (
   WHERE event_name = 'ModuleDisplayedOnHomePage'
   and user_id is not null
   and session_id is not null
+  and ref.content_type = 'venuesPlaylist'
 )
 , clicked as (
     SELECT
@@ -76,7 +77,7 @@ with child_home as (
     and user_id is not null
     and session_id is not null
 )
-, consult_offer as (
+, consultations as (
     WITH relationships as (
         SELECT DISTINCT 
             parent as home_id
@@ -85,34 +86,77 @@ with child_home as (
         FROM `{{ bigquery_analytics_dataset }}.contentful_relationships` r
         LEFT JOIN `{{ bigquery_analytics_dataset }}.contentful_entries` e
         ON r.child = e.id
-    )
+    ),
+    offer as (
     SELECT 
+      user_id
+      , session_id
+      , entry_id
+      , module_id
+      , origin
+      , events.offer_id
+      , events.venue_id
+      , event_timestamp as consult_offer_timestamp
+    FROM `{{ bigquery_analytics_dataset }}.firebase_events` events
+    WHERE event_name = 'ConsultOffer'
+    AND origin in ("home", "exclusivity", "venue")
+    AND user_id is not null
+    QUALIFY rank() over(partition by user_id, session_id, offer_id order by event_timestamp desc) = 1 -- get the last consultation
+    ),
+    venue as ( -- get the module_id for venue playlist
+      SELECT
         user_id
         , session_id
         , entry_id
-        , home_ref.title as entry_name
         , module_id
-        , ref.title as module_name
-        , ref.content_type
-        , origin
-        , events.offer_id
-        , event_timestamp as consult_offer_timestamp
-        , home_id
-        , playlist_id
-        , playlist_name
-    FROM `{{ bigquery_analytics_dataset }}.firebase_events` events
+        , offer_id
+        , venue_id
+        , event_timestamp as consult_venue_timestamp
+      FROM `passculture-data-prod.{{ bigquery_analytics_dataset }}.firebase_events`
+      WHERE event_name = "ConsultVenue"
+      AND origin = "home" 
+      and user_id is not null
+      QUALIFY rank() over(partition by user_id, session_id, venue_id order by event_timestamp desc) = 1 -- get the last consultation
+  )
+  SELECT 
+      offer.user_id
+      , offer.session_id
+      , coalesce(offer.entry_id, venue.entry_id) as entry_id
+      , home_ref.title as entry_name
+      , coalesce(offer.module_id, venue.module_id) as module_id
+      , ref.title as module_name
+      , ref.content_type
+      , offer.origin
+      , offer.offer_id
+      , venue.venue_id
+      , consult_offer_timestamp
+      , consult_venue_timestamp
+      , home_id
+      , playlist_id
+      , playlist_name
+    FROM offer
+    LEFT JOIN venue
+    ON offer.user_id = venue.user_id
+    AND offer.session_id = venue.session_id
+    AND offer.venue_id = venue.venue_id
+    AND offer.consult_offer_timestamp >= venue.consult_venue_timestamp
     LEFT JOIN home_ref
-    ON events.entry_id = home_ref.id
+    ON coalesce(offer.entry_id, venue.entry_id) = home_ref.id
     LEFT JOIN `{{ bigquery_analytics_dataset }}.contentful_entries` as ref
-    ON ref.id = events.module_id
+    ON ref.id =  coalesce(offer.module_id, venue.module_id)
     JOIN relationships -- inner join to get only known relationships between playlist and homepages.
-    ON relationships.playlist_id = events.module_id
-    AND relationships.home_id = events.entry_id
-    WHERE event_name = 'ConsultOffer'
-    AND origin in  ("home", "exclusivity", "venue")
-    AND user_id is not null
-    AND module_id is not null
-    QUALIFY rank() over(partition by user_id, session_id, offer_id order by event_timestamp desc) = 1 -- get the last consultation
+    ON relationships.playlist_id =  coalesce(offer.module_id, venue.module_id)
+    AND relationships.home_id = coalesce(offer.entry_id, venue.entry_id)
+)
+, bookings as (
+  SELECT 
+    user_id
+    , session_id
+    , offer_id
+    , booking_id
+    , event_timestamp as booking_timestamp
+  FROM `{{ bigquery_analytics_dataset }}.firebase_events`
+  WHERE event_name = "BookingConfirmation"
 )
 
 SELECT 
@@ -120,8 +164,9 @@ SELECT
   , displayed.session_id
   , displayed.entry_id -- first touch
   , displayed.entry_name
-  , displayed.module_id as parent_module_id -- Can be category list block, highlight etc / second touch
-  , displayed.module_name as parent_module_name 
+  , displayed.parent_module_id -- Can be category list block, highlight etc / second touch
+  , displayed.parent_module_name
+  , displayed.parent_module_type
   , destination_entry_id --  2nd home id in case of redirection to an home_id
   , destination_entry_name
   , click_type
@@ -131,11 +176,13 @@ SELECT
   , playlist_name
   , origin
   , content_type
-  , consult_offer.offer_id
+  , consultations.offer_id
+  , consultations.venue_id
   , booking_id
   , module_displayed_date
   , module_displayed_timestamp
   , module_clicked_timestamp
+  , consult_venue_timestamp
   , consult_offer_timestamp
   , booking_timestamp
 FROM displayed
@@ -143,15 +190,15 @@ LEFT JOIN clicked
   ON displayed.user_id = clicked.user_id 
   AND displayed.session_id = clicked.session_id
   AND displayed.entry_id = clicked.entry_id
-  AND displayed.module_id = coalesce(clicked.module_list_id, clicked.module_id)
+  AND displayed.parent_module_id = coalesce(clicked.module_list_id, clicked.module_id) -- coalesce pour ne pas exclure les blocs qui ne redirigent pas vers une home
   AND displayed.module_displayed_timestamp <= clicked.module_clicked_timestamp
-LEFT JOIN consult_offer
-  ON displayed.user_id = consult_offer.user_id
-  AND displayed.session_id =  consult_offer.session_id
-  AND coalesce(clicked.destination_entry_id, displayed.entry_id) = consult_offer.home_id -- coalesce pour ne pas exclure les consultations d'offres "directes"
-  AND coalesce(clicked.module_clicked_timestamp, displayed.module_displayed_timestamp) <= consult_offer.consult_offer_timestamp
+LEFT JOIN consultations
+  ON displayed.user_id = consultations.user_id
+  AND displayed.session_id =  consultations.session_id
+  AND coalesce(clicked.destination_entry_id, displayed.entry_id) = consultations.home_id -- coalesce pour ne pas exclure les consultations d'offres "directes"
+  AND coalesce(clicked.module_clicked_timestamp, displayed.module_displayed_timestamp) <= consultations.consult_offer_timestamp
 LEFT JOIN `{{ bigquery_analytics_dataset }}.firebase_bookings` as bookings
   ON displayed.user_id = bookings.user_id
   AND displayed.session_id = bookings.session_id
-  AND consult_offer.offer_id = bookings.offer_id
-  AND consult_offer.consult_offer_timestamp <= bookings.booking_timestamp
+  AND consultations.offer_id = bookings.offer_id
+  AND consultations.consult_offer_timestamp <= bookings.booking_timestamp

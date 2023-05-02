@@ -113,16 +113,6 @@ with child_home as (
     AND module_id is not null
     QUALIFY rank() over(partition by user_id, session_id, offer_id order by event_timestamp desc) = 1 -- get the last consultation
 )
-, bookings as (
-  SELECT 
-    user_id
-    , session_id
-    , offer_id
-    , booking_id
-    , event_timestamp as booking_timestamp
-  FROM `{{ bigquery_analytics_dataset }}.firebase_events`
-  WHERE event_name = "BookingConfirmation"
-)
 
 SELECT 
     displayed.user_id
@@ -158,7 +148,7 @@ LEFT JOIN consult_offer
   AND displayed.session_id =  consult_offer.session_id
   AND coalesce(clicked.destination_entry_id, displayed.entry_id) = consult_offer.home_id -- coalesce pour ne pas exclure les consultations d'offres "directes"
   AND coalesce(clicked.module_clicked_timestamp, displayed.module_displayed_timestamp) <= consult_offer.consult_offer_timestamp
-LEFT JOIN bookings
+LEFT JOIN `{{ bigquery_analytics_dataset }}.firebase_bookings` as  bookings
   ON displayed.user_id = bookings.user_id
   AND displayed.session_id = bookings.session_id
   AND consult_offer.offer_id = bookings.offer_id

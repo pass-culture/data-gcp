@@ -174,7 +174,7 @@ import_firebase_beneficiary_tables = {
         "destination_table": "analytics_firebase_bookings",
         "partition_prefix": "$",
         "time_partitioning": {"field": "booking_date"},
-    },    
+    },
 }
 
 import_tables = dict(import_firebase_beneficiary_tables, **import_firebase_pro_tables)

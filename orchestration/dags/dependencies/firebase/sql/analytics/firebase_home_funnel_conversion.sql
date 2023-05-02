@@ -54,6 +54,7 @@ with child_home as (
       , session_id
       , entry_id
       , home_ref.title as entry_name
+      , event_name as click_type
       , destination_entry_id
       , e.title as destination_entry_name
       , module_list_id
@@ -70,7 +71,7 @@ with child_home as (
     ON events.entry_id = home_ref.id
     LEFT JOIN `{{ bigquery_analytics_dataset }}.contentful_entries` as e
     ON events.destination_entry_id = e.id
-    WHERE event_name in ("CategoryBlockClicked", "HighlightBlockClicked")
+    WHERE event_name in ("ExclusivityBlockClicked", "CategoryBlockClicked", "HighlightBlockClicked")
     -- entry_id param is missing for event HighlightBlockClicked because it is available in a prior version of the app. 
     and user_id is not null
     and session_id is not null
@@ -123,6 +124,7 @@ SELECT
   , displayed.module_name as parent_module_name 
   , destination_entry_id --  2nd home id in case of redirection to an home_id
   , destination_entry_name
+  , click_type
   , clicked.module_id as child_module_id -- category block id
   , clicked.module_name as child_module_name
   , playlist_id 
@@ -141,14 +143,14 @@ LEFT JOIN clicked
   ON displayed.user_id = clicked.user_id 
   AND displayed.session_id = clicked.session_id
   AND displayed.entry_id = clicked.entry_id
-  AND displayed.module_id = clicked.module_list_id
+  AND displayed.module_id = coalesce(clicked.module_list_id, clicked.module_id)
   AND displayed.module_displayed_timestamp <= clicked.module_clicked_timestamp
 LEFT JOIN consult_offer
   ON displayed.user_id = consult_offer.user_id
   AND displayed.session_id =  consult_offer.session_id
   AND coalesce(clicked.destination_entry_id, displayed.entry_id) = consult_offer.home_id -- coalesce pour ne pas exclure les consultations d'offres "directes"
   AND coalesce(clicked.module_clicked_timestamp, displayed.module_displayed_timestamp) <= consult_offer.consult_offer_timestamp
-LEFT JOIN `{{ bigquery_analytics_dataset }}.firebase_bookings` as  bookings
+LEFT JOIN `{{ bigquery_analytics_dataset }}.firebase_bookings` as bookings
   ON displayed.user_id = bookings.user_id
   AND displayed.session_id = bookings.session_id
   AND consult_offer.offer_id = bookings.offer_id

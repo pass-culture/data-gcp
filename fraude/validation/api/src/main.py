@@ -16,6 +16,7 @@ from pcvalidation.core.predict import get_main_contribution, get_prediction
 from pcvalidation.core.preprocess import convert_dataframe_to_catboost_pool, preprocess
 from pcvalidation.utils.data_model import Item, Token, User, model_params
 from pcvalidation.utils.env_vars import LOGIN_TOKEN_EXPIRATION, fake_users_db
+from pcvalidation.utils.configs import default_config as params
 from pcvalidation.utils.security import (
     authenticate_user,
     create_access_token,
@@ -41,7 +42,7 @@ handler = FastAPILoggingHandler(Client(), structured=True)
 setup_logging(handler)
 download_blob(
     {
-        "model_local_path": "./models/validation_model_main.cbm",
+        "model_local_path": "./models/validation_model.cbm",
         "model_remote_path": "Validation_offres/model/validation_model",
         "model_bucket": "data-bucket-prod",
     }
@@ -84,12 +85,7 @@ def get_item_validation_score(
         model_version="default_model", offer_id=item.dict()["offer_id"]
     )
     context_logger.info("get_item_validation_score ")
-    with open(
-        "./configs/default_config.json",
-        mode="r",
-        encoding="utf-8",
-    ) as config_file:
-        params = json.load(config_file)
+
     # df = pd.DataFrame(item.dict(), index=[0])
     data = item.dict()
     # context_logger.bind(input=data).info("Input DATA ")

@@ -1,11 +1,9 @@
-import requests
 import typer
 import pandas as pd
 from google.cloud import bigquery
-import argparse
 from datetime import datetime, timedelta
 
-from utils import access_secret_data, bigquery_load_job, GCP_PROJECT_ID, ENV_SHORT_NAME
+from utils import access_secret_data, bigquery_load_job
 from batch_client import BatchClient
 
 
@@ -32,8 +30,7 @@ def main(
         gcp_project_id, f"batch-rest-api-key-{env_short_name}", version_id=1
     )
 
-    batch_client = BatchClient(API_KEY, REST_API_KEY)
-    bigquery_client = bigquery.Client()
+    batch_client = BatchClient(API_KEY, REST_API_KEY, operating_system=operating_system)
 
     # Campaigns
     metadata = batch_client.get_campaigns_metadata()
@@ -118,4 +115,5 @@ def main(
 
 
 if __name__ == "__main__":
+    print("Run Batch !")
     typer.run(main)

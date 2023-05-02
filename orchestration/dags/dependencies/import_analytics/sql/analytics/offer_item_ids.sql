@@ -6,14 +6,14 @@ with item_group_by_extra_data as(
                 offer.offer_subcategoryId IN ('LIVRE_PAPIER')
                 AND (
                     offer_extracted_data.isbn IS not null
-                    or offer_extracted_data.isbn <> ''
+                    AND offer_extracted_data.isbn <> ''
                 )
             ) THEN CONCAT('isbn-', offer_extracted_data.isbn)
             WHEN (
                 offer.offer_subcategoryId IN ('SEANCE_CINE')
                 AND (
                     offer_extracted_data.theater_movie_id IS not null
-                    or offer_extracted_data.theater_movie_id <> ''
+                    AND offer_extracted_data.theater_movie_id <> ''
                 )
             ) THEN CONCAT(
                 'movie_id-',

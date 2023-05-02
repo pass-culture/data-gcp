@@ -1,26 +1,40 @@
 from catboost import Pool
 
-UNUSED_COLS = ["outing", "physical_goods"]
+from pcvalidation.utils.env_vars import UNUSED_COLS
 
 
-def preprocess(df):
-    df = df.drop(columns=["offer_id"])
-    columns = df.columns.tolist()
-    for col in columns:
-        if df[col].dtype == int or df[col].dtype == float:
-            df[col] = df[col].fillna(0)
-            df[col] = df[col].astype(int)
-        elif df[col].dtype.name == "boolean":
-            df[col] = np.where(df[col] == True, 1, 0)
-        else:
-            df[col] = df[col].fillna("")
-            df[col] = df[col].astype(str)
-    return df
+def preprocess(data, params):
+    try:
+        del data["offer_id"]
+    except KeyError:
+        pass
+
+    for key in data.keys():
+        if key in params["text_features"]:
+            if data[key] is None:
+                data[key] = ""
+            else:
+                data[key] = str(data[key])
+        if key in params["numerical_features"]:
+            if data[key] is None:
+                data[key] = 0
+            else:
+                data[key] = int(data[key])
+        if key in params["boolean_features"]:
+            if data[key] is None:
+                data[key] = False
+            else:
+                data[key] = 1 if data[key] == True else 0
+    return data
 
 
-def convert_dataframe_to_catboost_pool(df, features_type_dict):
+def convert_dataframe_to_catboost_pool(data, features_type_dict):
+    data_input = [list(data.values())]
+    # print(f"keys:{list(data.keys())}")
+    # print(f"values:{list(data.values())}")
     pool = Pool(
-        df,
+        data_input,
+        feature_names=list(data.keys()),
         cat_features=features_type_dict["cat_features"],
         text_features=features_type_dict["text_features"],
         embedding_features=features_type_dict["embedding_features"],

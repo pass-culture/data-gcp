@@ -20,6 +20,10 @@ class Token(BaseModel):
     token_type: str
 
 
+class TokenData(BaseModel):
+    username: Union[str, None] = None
+
+
 class Item(BaseModel):
     offer_id: str
     offer_name: str
@@ -38,4 +42,4 @@ class Item(BaseModel):
 class model_params(BaseModel):
     model_bucket: str = GCS_BUCKET
     model_remote_path: str
-    model_local_path: str = "./model/validation_model.cbm"
+    model_local_path: str = "./models/validation_model.cbm"

@@ -14,3 +14,4 @@ gunicorn==20.0.4
 python-jose
 cryptography
 "passlib[bcrypt]"
+google-cloud-secret-manager==2.2.0

@@ -31,3 +31,8 @@ def download_blob(model_params):
             source_blob_name, bucket_name, destination_file_name
         )
     )
+
+def connect_remote_mlflow(client_id):
+    os.environ["MLFLOW_TRACKING_TOKEN"] = id_token.fetch_id_token(Request(), client_id)
+    uri = "https://mlflow.staging.passculture.team/"
+    mlflow.set_tracking_uri(uri)

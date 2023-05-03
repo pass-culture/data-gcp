@@ -43,6 +43,9 @@ fake_users_db = {
 }
 
 # Encoding models
-
 TEXT_MODEL = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 IMAGE_MODEL = SentenceTransformer("clip-ViT-B-32")
+
+#MLFlow
+#TODO acces via secret
+mlflow_client_id = "815655901630-icjofb5trdpv0i06qau45cglha94ud2g.apps.googleusercontent.com"

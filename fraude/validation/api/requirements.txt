@@ -8,7 +8,7 @@ sentence-transformers==2.2.2
 catboost
 shap
 oauth2client==4.1.3
-gcsfs==2021.9.0
+google-cloud-storage
 google-api-python-client==1.12.8
 loguru 
 gunicorn==20.0.4

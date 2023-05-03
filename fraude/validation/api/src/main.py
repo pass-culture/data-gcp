@@ -1,29 +1,33 @@
-import json
+import os
 import sys
 import time
 from datetime import timedelta
 
+import mlflow.pyfunc
 from catboost import CatBoostClassifier
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from fastapi_cloud_logging import FastAPILoggingHandler, RequestLoggingMiddleware
+from fastapi_cloud_logging import (FastAPILoggingHandler,
+                                   RequestLoggingMiddleware)
 from fastapi_versioning import VersionedFastAPI, version
 from google.cloud.logging import Client
 from google.cloud.logging_v2.handlers import setup_logging
 from loguru import logger
 from pcvalidation.core.extract_embedding import extract_embedding
 from pcvalidation.core.predict import get_main_contribution, get_prediction
-from pcvalidation.core.preprocess import convert_dataframe_to_catboost_pool, preprocess
-from pcvalidation.utils.data_model import Item, Token, User, model_params
-from pcvalidation.utils.env_vars import LOGIN_TOKEN_EXPIRATION, fake_users_db
+from pcvalidation.core.preprocess import (convert_dataframe_to_catboost_pool,
+                                          preprocess)
 from pcvalidation.utils.configs import default_config as params
-from pcvalidation.utils.security import (
-    authenticate_user,
-    create_access_token,
-    get_current_active_user,
-)
-from pcvalidation.utils.tools import download_blob
+from pcvalidation.utils.data_model import Item, Token, User, model_params
+from pcvalidation.utils.env_vars import LOGIN_TOKEN_EXPIRATION, fake_users_db,mlflow_client_id
+from pcvalidation.utils.security import (authenticate_user,
+                                         create_access_token,
+                                         get_current_active_user)
+from pcvalidation.utils.tools import download_blob,connect_remote_mlflow
 from typing_extensions import Annotated
+from google.auth.transport.requests import Request
+from google.oauth2 import id_token
+import mlflow
 
 logger.add(
     sys.stdout,
@@ -40,16 +44,15 @@ app.add_middleware(RequestLoggingMiddleware)
 # Use manual handler
 handler = FastAPILoggingHandler(Client(), structured=True)
 setup_logging(handler)
-download_blob(
-    {
-        "model_local_path": "./models/validation_model.cbm",
-        "model_remote_path": "Validation_offres/model/validation_model",
-        "model_bucket": "data-bucket-prod",
-    }
-)
+# download_blob(
+#     {
+#         "model_local_path": "./models/validation_model.cbm",
+#         "model_remote_path": "Validation_offres/model/validation_model",
+#         "model_bucket": "data-bucket-prod",
+#     }
+# )
 model = CatBoostClassifier(one_hot_max_size=65)
 model_loaded = model.load_model("./models/validation_model.cbm", format="cbm")
-
 
 @app.get("/")
 def read_root():
@@ -112,13 +115,12 @@ def get_item_validation_score(
     )
     return validation_response_dict
 
-
 @app.post("/load_new_model/")
-def load_model(model_params: model_params):
-    download_blob(model_params.dict())
-    model_loaded = model.load_model(
-        model_params.dict()["model_local_path"], format="cbm"
-    )
+def load_model(model_params: model_params,current_user: Annotated[User, Depends(get_current_active_user)]):
+    connect_remote_mlflow(mlflow_client_id)
+    logged_model = 'runs:/1f1b7e4555f14323b47a839a91230d86/test'
+    global model_loaded
+    model_loaded = mlflow.catboost.load_model(logged_model)
     return model_params
 
 

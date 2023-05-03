@@ -1,5 +1,5 @@
 black==22.3.0
-Flask==2.0.3
+Flask==2.2.5
 flask-cors==3.0.10
 google-api-python-client==1.12.8
 google-cloud-secret-manager==2.2.0

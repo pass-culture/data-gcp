@@ -101,6 +101,18 @@ import_firebase_beneficiary_tables = {
             "table_name": "events",
         },
     },
+    "clean_firebase_app_experiments": {
+        "sql": f"{SQL_PATH}/clean/firebase_app_experiments.sql",
+        "destination_dataset": "{{ bigquery_clean_dataset }}",
+        "destination_table": "firebase_app_experiments",
+        "partition_prefix": "$",
+        "time_partitioning": {"field": "event_date"},
+        "depends": ["raw_firebase_events"],
+        "params": {
+            "table_type": "beneficiary",
+            "table_name": "events",
+        },
+    },
     # analytics
     "analytics_firebase_events": {
         "sql": f"{SQL_PATH}/analytics/firebase_events.sql",
@@ -159,6 +171,12 @@ import_firebase_beneficiary_tables = {
         "partition_prefix": "$",
         "time_partitioning": {"field": "booking_date"},
         "dag_depends": ["import_contentful"],
+    },
+    "analytics_firebase_app_experiments": {
+        "sql": f"{SQL_PATH}/analytics/firebase_app_experiments.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "firebase_app_experiments",
+        "depends": ["clean_firebase_app_experiments"],
     },
 }
 

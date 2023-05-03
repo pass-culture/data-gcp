@@ -1,12 +1,21 @@
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 import json
 import time
-
 import pandas as pd
 
 
+session = requests.Session()
+retry = Retry(connect=3, backoff_factor=0.5)
+adapter = HTTPAdapter(max_retries=retry)
+session.mount("http://", adapter)
+session.mount("https://", adapter)
+
+
 class BatchClient:
-    def __init__(self, api_key, rest_api_key):
+    def __init__(self, api_key, rest_api_key, operating_system):
+        print(api_key, rest_api_key)
         self.api_key = api_key
         self.rest_api_key = rest_api_key
         self.headers = {
@@ -14,6 +23,7 @@ class BatchClient:
             "X-Authorization": f"{self.rest_api_key}",
         }
         self.base_url = "https://api.batch.com/1.1/"
+        self.operating_system = operating_system
 
     def get_campaigns_metadata(self):
         """Returns a dataframe with the list of Batch campaigns with their metadata."""
@@ -21,12 +31,16 @@ class BatchClient:
         offset = 0
         url = f"{self.base_url}{self.api_key}/campaigns/list?limit=100&from={offset}"
         api_responses = []
-
-        response = requests.request("GET", url, headers=self.headers)
+        print("Request...")
+        response = session.get(url, headers=self.headers)
         api_responses.append(response.json())
+        print("Loop...")
         while response is not None and len(response.json()) == 100:
             offset = offset + 100
-            response = requests.request("GET", url, headers=self.headers)
+            url = (
+                f"{self.base_url}{self.api_key}/campaigns/list?limit=100&from={offset}"
+            )
+            response = session.get(url, headers=self.headers)
             api_responses.append(response.json())
 
         campaigns_list = []
@@ -36,7 +50,7 @@ class BatchClient:
 
         campaigns_df = pd.DataFrame.from_records(campaigns_list).assign(
             created_date=lambda _df: pd.to_datetime(_df["created_date"]),
-            operating_system=operating_system,
+            operating_system=self.operating_system,
         )[["campaign_token", "dev_only", "created_date", "name", "live", "from_api"]]
 
         return campaigns_df
@@ -59,10 +73,8 @@ class BatchClient:
             print(
                 f"Retrieving stats of the {i}th campaign. Campaign token : {campaign_token}"
             )
-            response = requests.request(
-                "GET", f"{url}/{campaign_token}", headers=self.headers
-            )
-            i = +1
+            response = session.get(f"{url}/{campaign_token}", headers=self.headers)
+            i += 1
             if response.status_code == 200 and len(response.json()["detail"]) > 0:
                 response_df = pd.DataFrame.from_records(response.json()["detail"])
                 response_df["campaign_token"] = response.json()["campaign_token"]
@@ -126,8 +138,7 @@ class BatchClient:
     def get_transactional_stats(self, group_id, start_date, end_date):
 
         url = f"{self.base_url}{self.api_key}/transactional/stats"
-        response = requests.request(
-            "GET",
+        response = session.get(
             f"{url}/{group_id}?since={start_date}&until={end_date}",
             headers=self.headers,
         )

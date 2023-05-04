@@ -76,7 +76,6 @@ class SimilarOffer:
             query_result = connection.execute(
                 text(recommendable_offers_query),
                 user_id=str(self.user.id),
-                user_iris_id=str(self.offer.iris_id),
                 user_longitude=float(self.offer.longitude),
                 user_latitude=float(self.offer.latitude),
             ).fetchall()

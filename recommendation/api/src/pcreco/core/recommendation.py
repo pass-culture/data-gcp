@@ -195,7 +195,6 @@ class Recommendation:
                 query_result = connection.execute(
                     text(recommendations_query),
                     user_id=str(self.user.id),
-                    user_iris_id=str(self.user.iris_id),
                     user_longitude=float(self.user.longitude),
                     user_latitude=float(self.user.latitude),
                 ).fetchall()
@@ -253,11 +252,9 @@ class Recommendation:
                 connection = get_session()
                 query_result = connection.execute(
                     text(recommendations_query),
-                    user_iris_id=str(self.user.iris_id),
                     user_id=str(self.user.id),
                     user_longitude=float(self.user.longitude),
                     user_latitude=float(self.user.latitude),
-                    number_of_preselected_offers=NUMBER_OF_PRESELECTED_OFFERS,
                 ).fetchall()
 
             cold_start_recommendations = [

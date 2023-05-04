@@ -263,9 +263,21 @@ with DAG(
         autocommit=True,
     )
 
+    create_materialized_raw_view = CloudSQLExecuteQueryOperator(
+        task_id="create_materialized_raw_view_recommendable_offers_mv",
+        gcp_cloudsql_conn_id="proxy_postgres_tcp",
+        sql=f"{SQL_PATH}/create_recommendable_offers_raw_mv.sql",
+        autocommit=True,
+    )
+
     recreate_indexes_query = """
         CREATE INDEX IF NOT EXISTS idx_user_id                             ON public.enriched_user                        USING btree (user_id);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_id       ON public.recommendable_offers_per_iris_shape  USING btree (is_geolocated,iris_id,venue_distance_to_iris_bucket,item_id,offer_id,unique_id);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_raw      ON public.recommendable_offers_raw             USING btree (is_geolocated,item_id,offer_id,unique_id);
+        CREATE INDEX IF NOT EXISTS idx_offer_recommendable_raw             ON public.recommendable_offers_raw             USING btree (offer_id,unique_id);
+        CREATE INDEX ON locations_offer_recommendable_raw                  ON public.recommendable_offers_raw             USING gist (ll_to_earth(venue_latitude, venue_longitude));
+
+
         CREATE UNIQUE INDEX IF NOT EXISTS idx_iris_venues_mv_unique        ON public.iris_venues_mv                       USING btree (iris_id,venue_id);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_non_recommendable_id         ON public.non_recommendable_offers             USING btree (user_id,offer_id);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_enriched_user_mv             ON public.enriched_user_mv                     USING btree (user_id);
@@ -337,6 +349,7 @@ with DAG(
     (
         end_drop_restore
         >> create_materialized_view
+        >> create_materialized_raw_view
         >> recreate_indexes_task
         >> refresh_materialized_view_tasks
         >> end_refresh

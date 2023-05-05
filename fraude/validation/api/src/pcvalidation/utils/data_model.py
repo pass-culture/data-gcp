@@ -1,6 +1,6 @@
 from typing import Union
 
-from pcvalidation.utils.env_vars import GCS_BUCKET
+from pcvalidation.utils.env_vars import MODEL_DEFAULT,MODEL_STAGE
 from pydantic import BaseModel
 
 
@@ -9,7 +9,6 @@ class User(BaseModel):
     email: Union[str, None] = None
     full_name: Union[str, None] = None
     disabled: Union[bool, None] = None
-
 
 class UserInDB(User):
     hashed_password: str
@@ -37,9 +36,7 @@ class Item(BaseModel):
     subType: str
     rayon: str
     macro_rayon: str
-
-
+    
 class model_params(BaseModel):
-    model_bucket: str = GCS_BUCKET
-    model_remote_path: str
-    model_local_path: str = "./models/validation_model.cbm"
+    model_name: str = MODEL_DEFAULT
+    model_stage: str= MODEL_STAGE

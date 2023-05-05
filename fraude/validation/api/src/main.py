@@ -3,6 +3,7 @@ import sys
 import time
 from datetime import timedelta
 
+import mlflow
 import mlflow.pyfunc
 from catboost import CatBoostClassifier
 from fastapi import Depends, FastAPI, HTTPException, status
@@ -14,20 +15,18 @@ from google.cloud.logging import Client
 from google.cloud.logging_v2.handlers import setup_logging
 from loguru import logger
 from pcvalidation.core.extract_embedding import extract_embedding
-from pcvalidation.core.predict import get_main_contribution, get_prediction
-from pcvalidation.core.preprocess import (convert_dataframe_to_catboost_pool,
+from pcvalidation.core.predict import  get_prediction,get_prediction_main_contribution
+from pcvalidation.core.preprocess import (convert_data_to_catboost_pool,
                                           preprocess)
 from pcvalidation.utils.configs import default_config as params
 from pcvalidation.utils.data_model import Item, Token, User, model_params
-from pcvalidation.utils.env_vars import LOGIN_TOKEN_EXPIRATION, fake_users_db,mlflow_client_id
+from pcvalidation.utils.env_vars import (LOGIN_TOKEN_EXPIRATION,
+                                         MLFLOW_CLIENT_ID, users_db)
 from pcvalidation.utils.security import (authenticate_user,
                                          create_access_token,
                                          get_current_active_user)
-from pcvalidation.utils.tools import download_blob,connect_remote_mlflow
+from pcvalidation.utils.tools import connect_remote_mlflow
 from typing_extensions import Annotated
-from google.auth.transport.requests import Request
-from google.oauth2 import id_token
-import mlflow
 
 logger.add(
     sys.stdout,
@@ -44,41 +43,18 @@ app.add_middleware(RequestLoggingMiddleware)
 # Use manual handler
 handler = FastAPILoggingHandler(Client(), structured=True)
 setup_logging(handler)
-# download_blob(
-#     {
-#         "model_local_path": "./models/validation_model.cbm",
-#         "model_remote_path": "Validation_offres/model/validation_model",
-#         "model_bucket": "data-bucket-prod",
-#     }
-# )
+
+#Load latest model from MLFlow registery
+connect_remote_mlflow(MLFLOW_CLIENT_ID)
 model = CatBoostClassifier(one_hot_max_size=65)
-model_loaded = model.load_model("./models/validation_model.cbm", format="cbm")
+model_loaded = mlflow.catboost.load_model(model_uri=f"models:/validation_model_test/Staging")
 
 @app.get("/")
 def read_root():
     logger.info("Auth user welcome to : Validation API test")
     return "Auth user welcome to : Validation API test"
 
-
-@app.post("/token", response_model=Token)
-async def login_for_access_token(
-    form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
-):
-    user = authenticate_user(fake_users_db, form_data.username, form_data.password)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    access_token_expires = timedelta(minutes=LOGIN_TOKEN_EXPIRATION)
-    access_token = create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
-    )
-    return {"access_token": access_token, "token_type": "bearer"}
-
-
-@app.post("/validation")
+@app.post("/get_validation_score")
 @version(1, 0)
 def get_item_validation_score(
     item: Item, current_user: Annotated[User, Depends(get_current_active_user)]
@@ -96,12 +72,12 @@ def get_item_validation_score(
 
     data_w_emb = extract_embedding(data_clean, params["features_to_extract_embedding"])
 
-    pool = convert_dataframe_to_catboost_pool(
+    pool = convert_data_to_catboost_pool(
         data_w_emb, params["catboost_features_types"]
     )
 
     proba_val, proba_rej = get_prediction(model_loaded, pool)
-    top_val, top_rej = get_main_contribution(model_loaded, data_w_emb, pool)
+    top_val, top_rej = get_prediction_main_contribution(model_loaded, data_w_emb, pool)
 
     validation_response_dict = {
         "offer_id": item.dict()["offer_id"],
@@ -115,13 +91,35 @@ def get_item_validation_score(
     )
     return validation_response_dict
 
-@app.post("/load_new_model/")
+@app.post("/load_validation_model/")
 def load_model(model_params: model_params,current_user: Annotated[User, Depends(get_current_active_user)]):
-    connect_remote_mlflow(mlflow_client_id)
-    logged_model = 'runs:/1f1b7e4555f14323b47a839a91230d86/test'
+    logger.info("")
+    connect_remote_mlflow(MLFLOW_CLIENT_ID)
     global model_loaded
-    model_loaded = mlflow.catboost.load_model(logged_model)
+    model_loaded = mlflow.catboost.load_model(model_uri=f"models:/validation_model_test/Staging")
+    logger.info("Validation model updated")
     return model_params
 
+@app.post("/token", response_model=Token)
+async def login_for_access_token(
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
+):
+    context_logger = logger.bind(
+        username=form_data.username
+    )
+    context_logger.info("Requesting access token")
+    user = authenticate_user(users_db, form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token_expires = timedelta(minutes=LOGIN_TOKEN_EXPIRATION)
+    access_token = create_access_token(
+        data={"sub": user.username}, expires_delta=access_token_expires
+    )
+    
+    return {"access_token": access_token, "token_type": "bearer"}
 
 app = VersionedFastAPI(app, enable_latest=True)

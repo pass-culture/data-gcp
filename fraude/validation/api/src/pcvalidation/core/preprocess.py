@@ -4,6 +4,12 @@ from pcvalidation.utils.env_vars import UNUSED_COLS
 
 
 def preprocess(data, params):
+    """
+    Preprocessing steps:
+        - Fill integer null values with 0
+        - Fill string null values with "none"
+        - Convert boolean columns to int
+    """
     try:
         del data["offer_id"]
     except KeyError:
@@ -11,15 +17,9 @@ def preprocess(data, params):
 
     for key in data.keys():
         if key in params["text_features"]:
-            if data[key] is None:
-                data[key] = ""
-            else:
-                data[key] = str(data[key])
+            data[key] = "" if data[key] is None else str(data[key])
         if key in params["numerical_features"]:
-            if data[key] is None:
-                data[key] = 0
-            else:
-                data[key] = int(data[key])
+            data[key] = "" if data[key] is None else int(data[key])
         if key in params["boolean_features"]:
             if data[key] is None:
                 data[key] = False
@@ -28,10 +28,18 @@ def preprocess(data, params):
     return data
 
 
-def convert_dataframe_to_catboost_pool(data, features_type_dict):
+def convert_data_to_catboost_pool(data, features_type_dict):
+    """
+    Convert json data to catboost pool:
+        - inputs:
+            - Features names: List of features name (same order as list of features)
+            - cat_features: list of categorical features names
+            - text_features: list of text features names
+            - embedding_features: list of embedding features names
+        - output: 
+            - catboost pool
+    """
     data_input = [list(data.values())]
-    # print(f"keys:{list(data.keys())}")
-    # print(f"values:{list(data.values())}")
     pool = Pool(
         data_input,
         feature_names=list(data.keys()),

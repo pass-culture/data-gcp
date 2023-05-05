@@ -1,24 +1,14 @@
 import os
-
-from google.auth.exceptions import DefaultCredentialsError
-from google.cloud import secretmanager
 from sentence_transformers import SentenceTransformer
+from pcvalidation.utils.tools import access_secret
 
-
-def access_secret(project_id, secret_id, version_id=1, default=None):
-    try:
-        client = secretmanager.SecretManagerServiceClient()
-        name = f"projects/{project_id}/secrets/{secret_id}/versions/{version_id}"
-        response = client.access_secret_version(request={"name": name})
-        return response.payload.data.decode("UTF-8")
-    except DefaultCredentialsError:
-        return default
-
-
+#Project vars
 GCS_BUCKET = os.environ.get("GCS_BUCKET", "data-bucket-dev")
-UNUSED_COLS = ["outing", "physical_goods"]
 GCP_PROJECT = os.environ.get("GCP_PROJECT", "passculture-data-ehp")
 
+UNUSED_COLS = ["outing", "physical_goods"]
+
+#API
 API_SECRET_KET_SECRET_ID = os.environ.get(
     "API_SECRET_KET_SECRET_ID", "api_validation_secret_key"
 )
@@ -33,7 +23,7 @@ API_PWD_SECRET_ID = os.environ.get("API_PWD_SECRET_ID", "api_validation_pwd")
 API_PWD = access_secret(
     GCP_PROJECT, API_PWD_SECRET_ID, version_id="latest", default=None
 )
-fake_users_db = {
+users_db = {
     "testuser": {
         "username": API_USER,
         # Here the hash pswd is hashed from 'secret'
@@ -47,5 +37,12 @@ TEXT_MODEL = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 IMAGE_MODEL = SentenceTransformer("clip-ViT-B-32")
 
 #MLFlow
-#TODO acces via secret
-mlflow_client_id = "815655901630-icjofb5trdpv0i06qau45cglha94ud2g.apps.googleusercontent.com"
+MLFLOW_SECRET_ID=os.environ.get("MLFLOW_SECRET_ID", "mlflow_client_id")
+MLFLOW_CLIENT_ID=access_secret(
+    GCP_PROJECT, MLFLOW_SECRET_ID, version_id="latest", default=None
+)
+MLFLOW_URL=os.environ.get("MLFLOW_URL", "https://mlflow.staging.passculture.team/")
+
+#Model metadata
+MODEL_DEFAULT=os.environ.get("MLFLOW_SECRET_ID", "validation_model_test")
+MODEL_STAGE=os.environ.get("MODEL_STAGE", "Staging")

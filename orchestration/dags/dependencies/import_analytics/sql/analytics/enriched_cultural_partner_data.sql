@@ -135,7 +135,7 @@ GROUP BY 1,2)
 
 ,types AS (SELECT DISTINCT
     enriched_offerer_data.offerer_id
-    ,STRING_AGG(DISTINCT CONCAT(' ',CASE WHEN offerer_tag_label IS NOT NULL THEN offerer_tag_label ELSE NULL END)) AS partner_type
+    ,STRING_AGG(DISTINCT (CASE WHEN offerer_tag_label IS NOT NULL THEN offerer_tag_label ELSE NULL END) ORDER BY (CASE WHEN offerer_tag_label IS NOT NULL THEN offerer_tag_label ELSE NULL END)) AS partner_type
 FROM `{{ bigquery_analytics_dataset }}`.enriched_offerer_data AS enriched_offerer_data
 JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offerer_tag_mapping AS applicative_database_offerer_tag_mapping
     ON enriched_offerer_data.offerer_id = applicative_database_offerer_tag_mapping.offerer_id

@@ -14,3 +14,5 @@ SELECT
   , user_activity
   , user_civility
 FROM `{{ bigquery_raw_dataset }}.qualtrics_answers_ir_survey_jeunes`
+QUALIFY row_number() over(partition by response_id order by execution_date desc) = 1
+

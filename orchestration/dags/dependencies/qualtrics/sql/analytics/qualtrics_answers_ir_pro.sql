@@ -14,3 +14,4 @@ SELECT
   , non_cancelled_bookings
   , offers_created
 FROM `{{ bigquery_raw_dataset }}.qualtrics_answers_ir_survey_pro`
+QUALIFY row_number() over(partition by response_id order by execution_date desc) = 1

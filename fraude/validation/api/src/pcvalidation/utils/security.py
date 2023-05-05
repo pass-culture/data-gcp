@@ -6,7 +6,7 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pcvalidation.utils.data_model import TokenData, User, UserInDB
-from pcvalidation.utils.env_vars import HASH_ALGORITHM, SECRET_KEY, fake_users_db
+from pcvalidation.utils.env_vars import HASH_ALGORITHM, SECRET_KEY, users_db
 from typing_extensions import Annotated
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -57,7 +57,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
         token_data = TokenData(username=username)
     except JWTError:
         raise credentials_exception
-    user = get_user(fake_users_db, username=token_data.username)
+    user = get_user(users_db, username=token_data.username)
     if user is None:
         raise credentials_exception
     return user

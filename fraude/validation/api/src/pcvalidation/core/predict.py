@@ -6,12 +6,12 @@ import shap
 def get_prediction(model, pool):
     """
     Predict validation/rejection probability for a given input as catboost pool
-    
+
     inputs:
-        - pool: Catboost pool with offer features 
+        - pool: Catboost pool with offer features
         - model: Catboost custom trained model
     outputs:
-        proba_val: offer validition probability 
+        proba_val: offer validition probability
         proba_rej: offer rejection probability (=1-proba_val)
     """
     proba_predicted = model.predict(
@@ -29,8 +29,8 @@ def get_prediction(model, pool):
 
 def get_prediction_main_contribution(model, data, pool):
     """
-    Extract prediction main contribution features from shap values 
-    
+    Extract prediction main contribution features from shap values
+
     inputs:
         - model: Catboost custom trained model
         - data: json with offer features

@@ -36,7 +36,7 @@ def convert_data_to_catboost_pool(data, features_type_dict):
             - cat_features: list of categorical features names
             - text_features: list of text features names
             - embedding_features: list of embedding features names
-        - output: 
+        - output:
             - catboost pool
     """
     data_input = [list(data.values())]

@@ -19,7 +19,7 @@ def extract_embedding(
         - Input: list of urls
     - text  :
         - Input: list of string
-    Params template: 
+    Params template:
     [
         {"name": "offer_name", "type": "text"},
         {"name": "offer_description", "type": "text"},
@@ -55,10 +55,10 @@ def extract_embedding(
 def encode_img_from_url(model, url):
     """
     Encode image with pre-trained model from url
-    
+
     inputs:
         - model : HugginFaces pre-trained model using Sentence-Transformers
-        - url : string of image url 
+        - url : string of image url
     """
     index = 0
     offer_img_embs = []

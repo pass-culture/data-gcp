@@ -2,13 +2,12 @@ import pandas as pd
 import os
 import json
 import typer
-
+from fraud.offer_validation_model.utils.tools import preprocess, extract_embedding
 from utils.constants import (
     STORAGE_PATH,
     MODEL_DIR,
     CONFIGS_PATH,
 )
-from fraud.offer_validation_model.utils.tools import preprocess, extract_embedding
 
 
 def preprocess(

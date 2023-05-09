@@ -45,13 +45,7 @@ dag_config = {
 
 # Params
 train_params = {
-    "batch_size": 4096,
-    "embedding_size": 64,
-    "train_set_size": {"prod": 0.95, "dev": 0.8, "stg": 0.9}[ENV_SHORT_NAME],
-    "event_day_number": {"prod": 60, "dev": 365, "stg": 20}[ENV_SHORT_NAME],
-    "input_type": {"prod": "clicks", "dev": "bookings", "stg": "clicks"}[
-        ENV_SHORT_NAME
-    ],
+    "config_file_name": "default-features",
 }
 gce_params = {
     "instance_name": f"algo-training-{ENV_SHORT_NAME}",
@@ -84,6 +78,10 @@ with DAG(
     params={
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
+            type="string",
+        ),
+        "config_file_name": Param(
+            default=train_params["config_file_name"],
             type="string",
         ),
         "instance_type": Param(
@@ -170,6 +168,17 @@ with DAG(
     #     },
     #     dag=dag,
     # )
+
+    preprocess = SSHGCEOperator(
+        task_id="preprocess",
+        instance_name="{{ params.instance_name }}",
+        base_dir=dag_config["BASE_DIR"],
+        environment=dag_config,
+        command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/preprocess.py "
+        "--input_dataframe_file_name recommendation_training_data "
+        "--output_dataframe_file_name recommendation_validation_data ",
+        dag=dag,
+    )
 
     split_data = SSHGCEOperator(
         task_id="split_data",

@@ -1,5 +1,5 @@
 import json
-
+import typer
 import mlflow
 import pandas as pd
 from catboost import CatBoostClassifier

@@ -30,7 +30,10 @@ SECRET_KEY = access_secret(
 HASH_ALGORITHM = os.environ.get("VALIDATION_LOGIN_KEY", "HS256")
 LOGIN_TOKEN_EXPIRATION = os.environ.get("LOGIN_TOKEN_EXPIRATION", 30)
 
-API_USER = os.environ.get("API_USER", "testuser")
+API_USER_SECRET_ID = os.environ.get("API_USER_SECRET_ID", "api_validation_user")
+API_USER = access_secret(
+    GCP_PROJECT, API_USER_SECRET_ID, version_id="latest", default=None
+)
 API_PWD_SECRET_ID = os.environ.get("API_PWD_SECRET_ID", "api_validation_pwd")
 API_PWD = access_secret(
     GCP_PROJECT, API_PWD_SECRET_ID, version_id="latest", default=None
@@ -56,5 +59,5 @@ MLFLOW_CLIENT_ID = access_secret(
 MLFLOW_URL = os.environ.get("MLFLOW_URL", "https://mlflow.staging.passculture.team/")
 
 # Model metadata
-MODEL_DEFAULT = os.environ.get("MLFLOW_SECRET_ID", "validation_model_test")
+MODEL_DEFAULT = os.environ.get("MODEL_DEFAULT", "validation_model_test")
 MODEL_STAGE = os.environ.get("MODEL_STAGE", "Staging")

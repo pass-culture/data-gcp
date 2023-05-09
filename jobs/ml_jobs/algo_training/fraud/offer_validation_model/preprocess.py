@@ -8,7 +8,7 @@ from utils.constants import (
     MODEL_DIR,
     CONFIGS_PATH,
 )
-from fraud.offer_validation_model.tools import preprocess, extract_embedding
+from fraud.offer_validation_model.utils.tools import preprocess, extract_embedding
 
 
 def preprocess(

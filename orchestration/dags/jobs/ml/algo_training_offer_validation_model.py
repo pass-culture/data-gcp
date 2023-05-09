@@ -38,7 +38,7 @@ DATE = "{{ ts_nodash }}"
 dag_config = {
     "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/algo_training_{ENV_SHORT_NAME}/algo_training_offer_validation_model_v1.0_{DATE}",
     "BASE_DIR": "data-gcp/jobs/ml_jobs/algo_training",
-    "MODEL_DIR": "offer_validation_model",
+    "MODEL_DIR": "fraud/offer_validation_model",
     "TRAIN_DIR": "/home/airflow/train",
     "EXPERIMENT_NAME": f"algo_training_offer_validation_model_v1.0_{ENV_SHORT_NAME}",
 }
@@ -236,6 +236,7 @@ with DAG(
         >> gce_instance_start
         >> fetch_code
         >> install_dependencies
+        >> preprocess
         # >> [
         #     store_data["training"],
         #     store_data["validation"],

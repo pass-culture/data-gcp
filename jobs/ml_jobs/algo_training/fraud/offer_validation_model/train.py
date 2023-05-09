@@ -4,7 +4,10 @@ import mlflow
 import pandas as pd
 from catboost import CatBoostClassifier
 from utils.constants import CONFIGS_PATH, MLFLOW_CLIENT_ID, MODEL_DIR, STORAGE_PATH
-from utils.tools import connect_remote_mlflow, get_mlflow_experiment
+from fraud.offer_validation_model.utils.tools import (
+    connect_remote_mlflow,
+    get_mlflow_experiment,
+)
 
 
 def train(

@@ -2,11 +2,8 @@ import pandas as pd
 import mlflow
 import json
 from utils.constants import (
-    ENV_SHORT_NAME,
     MODEL_DIR,
     STORAGE_PATH,
-    TRAIN_DIR,
-    MLFLOW_RUN_ID_FILENAME,
     CONFIGS_PATH,
     MLFLOW_CLIENT_ID,
 )

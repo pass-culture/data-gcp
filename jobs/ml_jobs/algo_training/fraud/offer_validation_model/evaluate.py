@@ -4,7 +4,6 @@ import json
 from utils.constants import (
     MODEL_DIR,
     STORAGE_PATH,
-    CONFIGS_PATH,
     MLFLOW_CLIENT_ID,
 )
 from fraud.offer_validation_model.utils.tools import (
@@ -13,6 +12,7 @@ from fraud.offer_validation_model.utils.tools import (
     get_confusion_matrix,
     plot_matrix,
 )
+from fraud.offer_validation_model.utils.constants import CONFIGS_PATH
 
 
 def evaluate(

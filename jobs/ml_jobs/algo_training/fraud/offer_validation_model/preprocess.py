@@ -6,8 +6,8 @@ from fraud.offer_validation_model.utils.tools import prepare_features, extract_e
 from utils.constants import (
     STORAGE_PATH,
     MODEL_DIR,
-    CONFIGS_PATH,
 )
+from fraud.offer_validation_model.utils.constants import CONFIGS_PATH
 
 
 def preprocess(
@@ -25,9 +25,10 @@ def preprocess(
     ),
 ):
     with open(
-    f"{MODEL_DIR}/{CONFIGS_PATH}/{config_file_name}.json",
-    mode="r",
-    encoding="utf-8") as config_file:
+        f"{MODEL_DIR}/{CONFIGS_PATH}/{config_file_name}.json",
+        mode="r",
+        encoding="utf-8",
+    ) as config_file:
         features = json.load(config_file)
 
     offer_to_validate_raw = pd.read_gbq(
@@ -46,7 +47,7 @@ def preprocess(
     offer_to_validate_clean_w_emb.to_parquet(
         f"{STORAGE_PATH}/{output_dataframe_file_name}/data.parquet"
     )
-    
+
+
 if __name__ == "__main__":
     typer.run(preprocess)
-

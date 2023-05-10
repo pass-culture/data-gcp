@@ -3,11 +3,13 @@ import typer
 import mlflow
 import pandas as pd
 from catboost import CatBoostClassifier
-from utils.constants import CONFIGS_PATH, MLFLOW_CLIENT_ID, MODEL_DIR, STORAGE_PATH
+from utils.constants import MLFLOW_CLIENT_ID, MODEL_DIR, STORAGE_PATH
 from fraud.offer_validation_model.utils.tools import (
     connect_remote_mlflow,
     get_mlflow_experiment,
 )
+
+from fraud.offer_validation_model.utils.constants import CONFIGS_PATH
 
 
 def train(
@@ -68,6 +70,7 @@ def train(
             artifact_path="registry_dev",
             registered_model_name="validation_model_dev",
         )
+
 
 if __name__ == "__main__":
     typer.run(train)

@@ -45,7 +45,7 @@ dag_config = {
 
 # Params
 train_params = {
-    "config_file_name": "default-features",
+    "config_file_name": "default",
 }
 gce_params = {
     "instance_name": f"algo-training-{ENV_SHORT_NAME}",
@@ -175,8 +175,9 @@ with DAG(
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/preprocess.py "
-        "--input_dataframe_file_name recommendation_training_data "
-        "--output_dataframe_file_name recommendation_validation_data ",
+        "--config-file-name {{ params.config_file_name }} "
+        "--input-dataframe-file-name validation_raw_data "
+        "--output-dataframe-file-name validation_clean_data ",
         dag=dag,
     )
 
@@ -187,8 +188,8 @@ with DAG(
         environment=dag_config,
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/split_data.py "
         f"--experiment-name {dag_config['EXPERIMENT_NAME']} "
-        "--training-table-name recommendation_training_data "
-        "--validation-table-name recommendation_validation_data "
+        "--training-table-name offer_validation_training_data "
+        "--validation-table-name offer_validation_validation_data "
         "--run-name {{ params.run_name }}",
         dag=dag,
     )
@@ -201,8 +202,8 @@ with DAG(
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/train.py "
         f"--experiment-name {dag_config['EXPERIMENT_NAME']} "
         "--config-file-name {{ params.config_file_name }} "
-        "--training-table-name recommendation_training_data "
-        "--validation-table-name recommendation_validation_data "
+        "--training-table-name offer_validation_training_data "
+        "--validation-table-name offer_validation_validation_data "
         "--run-name {{ params.run_name }}",
         dag=dag,
     )
@@ -215,7 +216,7 @@ with DAG(
         command=f"PYTHONPATH=. python evaluate.py "
         f"--experiment-name {dag_config['EXPERIMENT_NAME']} "
         "--config-file-name {{ params.config_file_name }} "
-        "--validation-table-name recommendation_validation_data "
+        "--validation-table-name offer_validation_validation_data "
         "--run-name {{ params.run_name }}",
         dag=dag,
     )

@@ -2,7 +2,7 @@ import pandas as pd
 import os
 import json
 import typer
-from fraud.offer_validation_model.utils.tools import preprocess, extract_embedding
+from fraud.offer_validation_model.utils.tools import prepare_features, extract_embedding
 from utils.constants import (
     STORAGE_PATH,
     MODEL_DIR,
@@ -25,10 +25,9 @@ def preprocess(
     ),
 ):
     with open(
-        f"{MODEL_DIR}/{CONFIGS_PATH}/{config_file_name}.json",
-        mode="r",
-        encoding="utf-8",
-    ) as config_file:
+    f"{MODEL_DIR}/{CONFIGS_PATH}/{config_file_name}.json",
+    mode="r",
+    encoding="utf-8") as config_file:
         features = json.load(config_file)
 
     offer_to_validate_raw = pd.read_gbq(
@@ -38,7 +37,7 @@ def preprocess(
         columns={"image_url": "offer_image"}
     )
 
-    offer_to_validate_clean = preprocess(offer_to_validate_raw)
+    offer_to_validate_clean = prepare_features(offer_to_validate_raw)
     ## Extract emb
     offer_to_validate_clean_w_emb = extract_embedding(
         offer_to_validate_clean,
@@ -47,3 +46,7 @@ def preprocess(
     offer_to_validate_clean_w_emb.to_parquet(
         f"{STORAGE_PATH}/{output_dataframe_file_name}/data.parquet"
     )
+    
+if __name__ == "__main__":
+    typer.run(preprocess)
+

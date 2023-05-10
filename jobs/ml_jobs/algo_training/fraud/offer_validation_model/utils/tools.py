@@ -18,7 +18,8 @@ sns.set(font_scale=1)
 import os
 import time
 from multiprocessing import cpu_count
-
+import concurrent
+from itertools import repeat
 import mlflow
 from loguru import logger
 
@@ -47,7 +48,7 @@ def read_from_gcs(storage_path, table_name, parallel=True):
         )
 
 
-def preprocess(df):
+def prepare_features(df):
     columns = [col for col in df.columns.tolist() if col not in ("offer_validation")]
     for col in columns:
         if df[col].dtype == int or df[col].dtype == float:
@@ -90,7 +91,7 @@ def extract_embedding(
         - Input: list of string
     """
     df_analysis = df_data.copy()
-    for feature in params["features"]:
+    for feature in params:
         start = time.time()
         feature_name = feature["name"]
         print(f"Embedding extraction for {feature_name} on going...")

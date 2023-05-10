@@ -130,3 +130,6 @@ def evaluate(
 
 # eval_data.query("target==1").probability_validated.hist()
 # eval_data.query("target==0").probability_validated.hist()
+
+if __name__ == "__main__":
+    typer.run(evaluate)

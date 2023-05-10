@@ -68,3 +68,6 @@ def train(
             artifact_path="registry_dev",
             registered_model_name="validation_model_dev",
         )
+
+if __name__ == "__main__":
+    typer.run(train)

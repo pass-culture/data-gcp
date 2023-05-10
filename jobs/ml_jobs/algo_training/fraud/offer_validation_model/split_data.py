@@ -25,3 +25,6 @@ def split_data(
 
     train_data.to_parquet(f"{STORAGE_PATH}/{training_table_name}/data.parquet")
     eval_data.to_parquet(f"{STORAGE_PATH}/{validation_table_name}/data.parquet")
+
+if __name__ == "__main__":
+    typer.run(split_data)

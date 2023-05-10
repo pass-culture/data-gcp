@@ -7,8 +7,11 @@ from great_expectations_provider.operators.great_expectations import (
     GreatExpectationsOperator,
 )
 from common.alerts import analytics_fail_slack_alert
-from common.config import DAG_FOLDER, GCP_PROJECT_ID
+from common.config import DAG_FOLDER, GCP_PROJECT_ID, ENV_SHORT_NAME
 from airflow.operators.python import PythonOperator
+from airflow.providers.google.cloud.transfers.local_to_gcs import (
+    LocalFilesystemToGCSOperator,
+)
 
 from dependencies.great_expectations.run_tests import (
     run_applicative_history_tests,
@@ -58,6 +61,7 @@ clear_directory_expectations = PythonOperator(
     dag=dag,
 )
 
+end_test_history = DummyOperator(task_id="end_test_history", dag=dag)
 ge_tasks_history = []
 for table_name, config in historical_applicative_test_config.items():
     ge_task = PythonOperator(
@@ -67,9 +71,17 @@ for table_name, config in historical_applicative_test_config.items():
         dag=dag,
     )
 
+    gcs_task = LocalFilesystemToGCSOperator(
+        task_id=f"upload_files_{table_name}",
+        src=f"{ge_root_dir}/uncommitted/validations/volume_expectation_for_{table_name}/*/*/*",
+        dst=f"validations/volume_expectation_for_{table_name}/",
+        bucket=f"data-bucket-{ENV_SHORT_NAME}",
+        dag=dag,
+    )
+    ge_task >> gcs_task >> end_test_history
     ge_tasks_history.append(ge_task)
 
-end_test_history = DummyOperator(task_id="end_test_history", dag=dag)
+end_tests = DummyOperator(task_id="end_tests", dag=dag)
 
 ge_tasks_enriched = []
 for table_name, config in enriched_tables_test_config.items():
@@ -80,6 +92,15 @@ for table_name, config in enriched_tables_test_config.items():
         dag=dag,
     )
 
+    gcs_task = LocalFilesystemToGCSOperator(
+        task_id=f"upload_files_{table_name}",
+        src=f"{ge_root_dir}/uncommitted/validations/freshness_expectation_for_{table_name}/*/*/*",
+        dst=f"validations/freshness_expectation_for_{table_name}/",
+        bucket=f"data-bucket-{ENV_SHORT_NAME}",
+        dag=dag,
+    )
+
+    ge_task >> gcs_task >> end_tests
     ge_tasks_enriched.append(ge_task)
 
 (
@@ -87,6 +108,5 @@ for table_name, config in enriched_tables_test_config.items():
     >> clear_directory_checkpoint
     >> clear_directory_expectations
     >> ge_tasks_history
-    >> end_test_history
-    >> ge_tasks_enriched
 )
+(end_test_history >> ge_tasks_enriched)

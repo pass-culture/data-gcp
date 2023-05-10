@@ -2,9 +2,9 @@ import pandas as pd
 import os
 from datetime import datetime, timedelta
 
-DAG_FOLDER = os.environ.get("DAG_FOLDER", "dags/")
+DAG_FOLDER = os.environ.get("DAG_FOLDER", "dags")
 
-ge_root_dir = f"{DAG_FOLDER}/great_expectations/"
+ge_root_dir = f"{DAG_FOLDER}/great_expectations"
 
 today = datetime.now().strftime("%Y-%m-%d")
 yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
@@ -33,7 +33,7 @@ def get_table_volume_bounds(partition_field, dataset_name, table_name, nb_days):
 
 
 def clear_directory(path, directory_name):
-    full_path = path + directory_name
+    full_path = path + "/" + directory_name
     if os.path.exists(full_path):
         for file in os.listdir(full_path):
             os.remove(os.path.join(full_path, file))

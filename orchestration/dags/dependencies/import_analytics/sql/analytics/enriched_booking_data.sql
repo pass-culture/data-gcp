@@ -114,7 +114,7 @@ FROM
     AND offer.offer_subcategoryId NOT IN ('ACTIVATION_THING', 'ACTIVATION_EVENT')
     INNER JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_venue AS venue ON venue.venue_id = offer.venue_id
     INNER JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offerer AS offerer ON venue.venue_managing_offerer_id = offerer.offerer_id
-    INNER JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_user AS user ON user.user_id = booking.user_id
+    INNER JOIN `{{ bigquery_clean_dataset }}`.user_beneficiary AS user ON user.user_id = booking.user_id
     INNER JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_deposit AS deposit ON deposit.id = booking.deposit_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_venue_label AS venue_label ON venue.venue_label_id = venue_label.id
     INNER JOIN `{{ bigquery_analytics_dataset }}`.subcategories subcategories ON offer.offer_subcategoryId = subcategories.id

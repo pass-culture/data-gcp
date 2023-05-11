@@ -13,7 +13,6 @@ WITH user_beneficiary as (
             WHEN SUBSTRING(user_postal_code, 0, 2) = '98' THEN SUBSTRING(user_postal_code, 0, 3)
             WHEN SUBSTRING(user_postal_code, 0, 3) in ('200', '201', '209', '205') THEN '2A'
             WHEN SUBSTRING(user_postal_code, 0, 3) in ('202', '206') THEN '2B'
-            WHEN SUBSTRING(user_postal_code, 0, 2) = '20' THEN '2A'
             ELSE SUBSTRING(user_postal_code, 0, 2)
             END, 
             user_department_code

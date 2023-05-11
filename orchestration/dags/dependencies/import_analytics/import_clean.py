@@ -39,7 +39,7 @@ clean_tables = {
     "educational_institution": {
         "sql": f"{CLEAN_SQL_PATH}/educational_institution.sql",
         "destination_dataset": "{{ bigquery_clean_dataset }}",
-        "destination_table": "educational_institution",
+        "destination_table": "applicative_database_educational_institution",
     },
     "user_beneficiary": {
         "sql": f"{CLEAN_SQL_PATH}/user_beneficiary.sql",

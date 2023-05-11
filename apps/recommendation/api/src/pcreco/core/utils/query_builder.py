@@ -1,4 +1,3 @@
-
 class RecommendableOffersQueryBuilder:
     def __init__(self, reco_model, recommendable_offer_limit):
         self.reco_model = reco_model
@@ -59,4 +58,10 @@ class RecommendableOffersQueryBuilder:
             AND ro.stock_price < {self.reco_model.user.user_deposit_remaining_credit}
             ORDER BY {order_query}
             LIMIT {self.recommendable_offer_limit}
+<<<<<<< HEAD
             """
+=======
+
+                
+        """
+>>>>>>> 8d096fb9 (WIP)

@@ -1,14 +1,14 @@
-FROM python:3.9.1
+FROM python:3.9-slim
 
 ENV PYTHONUNBUFFERED True
 
 ENV APP_HOME /app
-ENV PORT=8080
 WORKDIR $APP_HOME
 # Install libraries
 COPY ./requirements.txt ./
-RUN pip install -r requirements.txt
-
+COPY ./requirements_no_deps.txt ./
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir --no-deps -r requirements_no_deps.txt 
 COPY ./src/main.py .
 COPY ./src .
 # Copy local code to the container

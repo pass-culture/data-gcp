@@ -79,7 +79,7 @@ LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue
     ON venue.venue_managing_offerer_id = offerer.offerer_id 
     AND venue_name != 'Offre numérique'
 LEFT JOIN `{{ bigquery_analytics_dataset }}`.adage AS adage 
-    ON adage.siret = dms_pro.demandeur_siret
+    ON left(adage.siret, 9) = dms_pro.demandeur_entreprise_siren
 LEFT JOIN typeform_ranked
     ON typeform_ranked.siret = dms_pro.demandeur_siret
 WHERE dms_pro.application_status = 'accepte'

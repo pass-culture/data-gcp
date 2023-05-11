@@ -78,6 +78,7 @@ class SimilarOffer:
                 user_id=str(self.user.id),
                 user_longitude=float(self.offer.longitude),
                 user_latitude=float(self.offer.latitude),
+                max_distance=int(100_000),
             ).fetchall()
 
         user_recommendation = {

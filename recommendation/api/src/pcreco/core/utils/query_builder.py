@@ -1,4 +1,3 @@
-
 class RecommendableOffersQueryBuilder:
     def __init__(self, reco_model, recommendable_offer_limit):
         self.reco_model = reco_model

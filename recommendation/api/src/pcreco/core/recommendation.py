@@ -21,6 +21,7 @@ from pcreco.utils.db.db_connection import get_session
 from pcreco.utils.env_vars import (
     COLD_START_RECOMMENDABLE_OFFER_LIMIT,
     NUMBER_OF_PRESELECTED_OFFERS,
+    MAX_PER_BATCH,
     RECOMMENDABLE_OFFER_LIMIT,
     log_duration,
 )
@@ -171,14 +172,18 @@ class Recommendation:
             return recommendations
 
         def _get_instances(self, user_input) -> List[Dict[str, str]]:
-            start = time.time()
             user_to_rank = [user_input] * len(self.recommendable_offers)
             offer_ids_to_rank = []
             for recommendation in self.recommendable_offers:
                 offer_ids_to_rank.append(
                     recommendation["item_id"] if recommendation["item_id"] else ""
                 )
-            instances = {"input_1": user_to_rank, "input_2": offer_ids_to_rank}
+            nb_split = len(offer_ids_to_rank) // MAX_PER_BATCH
+            offer_ids_to_rank = np.array_split(offer_ids_to_rank, nb_split)
+            # TODO :
+            instances = [
+                {"input_1": user_to_rank, "input_2": x} for x in offer_ids_to_rank
+            ]
             return instances
 
         def get_recommendable_offers(self) -> List[Dict[str, Any]]:
@@ -197,6 +202,7 @@ class Recommendation:
                     user_id=str(self.user.id),
                     user_longitude=float(self.user.longitude),
                     user_latitude=float(self.user.latitude),
+                    max_distance=None,
                 ).fetchall()
 
             user_recommendation = [
@@ -255,6 +261,7 @@ class Recommendation:
                     user_id=str(self.user.id),
                     user_longitude=float(self.user.longitude),
                     user_latitude=float(self.user.latitude),
+                    max_distance=None,
                 ).fetchall()
 
             cold_start_recommendations = [

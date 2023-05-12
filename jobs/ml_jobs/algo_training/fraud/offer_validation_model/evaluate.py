@@ -2,7 +2,13 @@ import pandas as pd
 import mlflow
 import json
 import typer
-from utils.constants import MODEL_DIR, STORAGE_PATH, EXPERIMENT_NAME, ENV_SHORT_NAME
+from utils.constants import (
+    MODEL_DIR,
+    STORAGE_PATH,
+    EXPERIMENT_NAME,
+    ENV_SHORT_NAME,
+    MLFLOW_RUN_ID_FILENAME,
+)
 from fraud.offer_validation_model.utils.constants import CONFIGS_PATH
 from utils.mlflow_tools import connect_remote_mlflow
 from utils.secrets_utils import get_secret
@@ -68,7 +74,9 @@ def evaluate(
         metrics[key] = metrics[key][0]
 
     experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
-    with mlflow.start_run(experiment_id=experiment_id, run_name=run_name):
+    with open(f"{MODEL_DIR}/{MLFLOW_RUN_ID_FILENAME}.txt", mode="r") as file:
+        run_id = file.read()
+    with mlflow.start_run(experiment_id=experiment_id, run_id=run_id) as run:
         mlflow.log_metrics(metrics)
 
 

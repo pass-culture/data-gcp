@@ -3,7 +3,12 @@ import typer
 import mlflow
 import pandas as pd
 from catboost import CatBoostClassifier
-from utils.constants import ENV_SHORT_NAME, MODEL_DIR, STORAGE_PATH
+from utils.constants import (
+    ENV_SHORT_NAME,
+    MODEL_DIR,
+    STORAGE_PATH,
+    MLFLOW_RUN_ID_FILENAME,
+)
 from utils.mlflow_tools import connect_remote_mlflow
 from fraud.offer_validation_model.utils.constants import CONFIGS_PATH
 from utils.secrets_utils import get_secret
@@ -56,6 +61,10 @@ def train(
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
     experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
     with mlflow.start_run(experiment_id=experiment_id, run_name=run_name):
+        run_uuid = mlflow.active_run().info.run_uuid
+        # TODO: store the run_uuid in STORAGE_PATH (last try raised FileNotFoundError)
+        with open(f"{MODEL_DIR}/{MLFLOW_RUN_ID_FILENAME}.txt", mode="w") as file:
+            file.write(run_uuid)
         mlflow.log_params(
             params={
                 "environment": "EHP",

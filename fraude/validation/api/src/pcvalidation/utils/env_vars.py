@@ -22,7 +22,7 @@ UNUSED_COLS = ["outing", "physical_goods"]
 
 # API
 API_SECRET_KET_SECRET_ID = os.environ.get(
-    "API_SECRET_KET_SECRET_ID", "api_validation_secret_key"
+    "API_SECRET_KET_SECRET_ID", "api-validation-auth-secret-key-dev"
 )
 SECRET_KEY = access_secret(
     GCP_PROJECT, API_SECRET_KET_SECRET_ID, version_id="latest", default=None
@@ -30,11 +30,11 @@ SECRET_KEY = access_secret(
 HASH_ALGORITHM = os.environ.get("VALIDATION_LOGIN_KEY", "HS256")
 LOGIN_TOKEN_EXPIRATION = os.environ.get("LOGIN_TOKEN_EXPIRATION", 30)
 
-API_USER_SECRET_ID = os.environ.get("API_USER_SECRET_ID", "api_validation_user")
+API_USER_SECRET_ID = os.environ.get("API_USER_SECRET_ID", "api-validation-user-dev")
 API_USER = access_secret(
     GCP_PROJECT, API_USER_SECRET_ID, version_id="latest", default=None
 )
-API_PWD_SECRET_ID = os.environ.get("API_PWD_SECRET_ID", "api_validation_pwd")
+API_PWD_SECRET_ID = os.environ.get("API_PWD_SECRET_ID", "api-validation-password-dev")
 API_PWD = access_secret(
     GCP_PROJECT, API_PWD_SECRET_ID, version_id="latest", default=None
 )

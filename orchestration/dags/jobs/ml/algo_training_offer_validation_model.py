@@ -93,20 +93,18 @@ with DAG(
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)
 
-    # The params.input_type tells the .sql files which table to take as input
-    # import_recommendation_data = {}
-    # for dataset in ["training", "validation", "test"]:
-    #     task = BigQueryExecuteQueryOperator(
-    #         task_id=f"import_tmp_{dataset}_table",
-    #         sql=(
-    #             IMPORT_TRAINING_SQL_PATH / f"recommendation_{dataset}_data.sql"
-    #         ).as_posix(),
-    #         write_disposition="WRITE_TRUNCATE",
-    #         use_legacy_sql=False,
-    #         destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DATE}_recommendation_{dataset}_data",
-    #         dag=dag,
-    #     )
-    #     import_recommendation_data[dataset] = task
+    import_tables = {}
+    for table in [
+        "validation_offers",
+    ]:
+        import_tables[table] = BigQueryExecuteQueryOperator(
+            task_id=f"import_{table}",
+            sql=(IMPORT_TRAINING_SQL_PATH / f"{table}.sql").as_posix(),
+            write_disposition="WRITE_TRUNCATE",
+            use_legacy_sql=False,
+            destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DATE}_{table}_raw_data",
+            dag=dag,
+        )
 
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
@@ -132,42 +130,23 @@ with DAG(
         dag=dag,
         retries=2,
     )
-
-    # store_data = {}
-    # for split in ["training", "validation", "test"]:
-    #     store_data[split] = BigQueryInsertJobOperator(
-    #         task_id=f"store_{split}_data",
-    #         configuration={
-    #             "extract": {
-    #                 "sourceTable": {
-    #                     "projectId": GCP_PROJECT_ID,
-    #                     "datasetId": BIGQUERY_TMP_DATASET,
-    #                     "tableId": f"{DATE}_recommendation_{split}_data",
-    #                 },
-    #                 "compression": None,
-    #                 "destinationUris": f"{dag_config['STORAGE_PATH']}/recommendation_{split}_data/data-*.parquet",
-    #                 "destinationFormat": "PARQUET",
-    #             }
-    #         },
-    #         dag=dag,
-    #     )
-
-    # store_data["bookings"] = BigQueryInsertJobOperator(
-    #     task_id=f"store_bookings_data",
-    #     configuration={
-    #         "extract": {
-    #             "sourceTable": {
-    #                 "projectId": GCP_PROJECT_ID,
-    #                 "datasetId": BIGQUERY_RAW_DATASET,
-    #                 "tableId": f"training_data_bookings",
-    #             },
-    #             "compression": None,
-    #             "destinationUris": f"{dag_config['STORAGE_PATH']}/bookings/data-*.parquet",
-    #             "destinationFormat": "PARQUET",
-    #         }
-    #     },
-    #     dag=dag,
-    # )
+    store_data={}
+    store_data["raw"] = BigQueryInsertJobOperator(
+        task_id=f"store_raw_data",
+        configuration={
+            "extract": {
+                "sourceTable": {
+                    "projectId": GCP_PROJECT_ID,
+                    "datasetId": BIGQUERY_TMP_DATASET,
+                    "tableId": f"{DATE}_validation_raw_data",
+                },
+                "compression": None,
+                "destinationUris": f"{dag_config['STORAGE_PATH']}/validation_raw_data/data-*.parquet",
+                "destinationFormat": "PARQUET",
+            }
+        },
+        dag=dag,
+    )
 
     preprocess = SSHGCEOperator(
         task_id="preprocess",
@@ -187,10 +166,9 @@ with DAG(
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/split_data.py "
-        f"--experiment-name {dag_config['EXPERIMENT_NAME']} "
-        "--training-table-name offer_validation_training_data "
-        "--validation-table-name offer_validation_validation_data "
-        "--run-name {{ params.run_name }}",
+        f"--clean-table-name validation_clean_data "
+        "--training-table-name validation_training_data "
+        "--validation-table-name validation_validation_data ",
         dag=dag,
     )
 
@@ -202,8 +180,7 @@ with DAG(
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/train.py "
         f"--experiment-name {dag_config['EXPERIMENT_NAME']} "
         "--config-file-name {{ params.config_file_name }} "
-        "--training-table-name offer_validation_training_data "
-        "--validation-table-name offer_validation_validation_data "
+        "--training-table-name validation_training_data "
         "--run-name {{ params.run_name }}",
         dag=dag,
     )
@@ -216,7 +193,7 @@ with DAG(
         command=f"PYTHONPATH=. python evaluate.py "
         f"--experiment-name {dag_config['EXPERIMENT_NAME']} "
         "--config-file-name {{ params.config_file_name }} "
-        "--validation-table-name offer_validation_validation_data "
+        "--validation-table-name validation_validation_data "
         "--run-name {{ params.run_name }}",
         dag=dag,
     )
@@ -238,21 +215,16 @@ with DAG(
 
     (
         start
-        # >> import_recommendation_data["training"]
-        # >> [
-        #     import_recommendation_data["validation"],
-        #     import_recommendation_data["test"],
-        # ]
+        >> [
+            import_tables["validation_offers"],
+        ]
+        >> [
+            store_data["raw"],
+        ]
         >> gce_instance_start
         >> fetch_code
         >> install_dependencies
         >> preprocess
-        # >> [
-        #     store_data["training"],
-        #     store_data["validation"],
-        #     store_data["test"],
-        #     store_data["bookings"],
-        # ]
         >> split_data
         >> train
         >> evaluate

@@ -27,27 +27,6 @@ STORAGE_PATH_IMG = "./img"
 UNUSED_COLS = ["outing", "physical_goods"]
 
 
-def read_from_gcs(storage_path, table_name, parallel=True):
-    bucket_name = f"{storage_path}/{table_name}/*.parquet"
-    result = subprocess.run(["gsutil", "ls", bucket_name], stdout=subprocess.PIPE)
-    files = [file.strip().decode("utf-8") for file in result.stdout.splitlines()]
-    max_process = cpu_count() - 1
-    if parallel and len(files) > max_process // 2:
-        logger.info(f"Will load {len(files)} with {max_process} processes...")
-        with Pool(processes=max_process) as pool:
-            return (
-                pd.concat(pool.map(read_parquet, files), ignore_index=True)
-                .sample(frac=1)
-                .reset_index(drop=True)
-            )
-    else:
-        return (
-            pd.concat([pd.read_parquet(file) for file in files], ignore_index=True)
-            .sample(frac=1)
-            .reset_index(drop=True)
-        )
-
-
 def prepare_features(df):
     columns = [col for col in df.columns.tolist() if col not in ("offer_validation")]
     for col in columns:
@@ -65,17 +44,6 @@ def prepare_features(df):
     UNUSED_COLS.append("offer_validation")
     df = df.drop(columns=UNUSED_COLS)
     return df
-
-
-def encode_features(model, features, return_mean_emb=False):
-    embeddings = model.encode(features)
-    feature_emb_list = []
-    for feature, embedding in tqdm(zip(features, embeddings)):
-        if return_mean_emb:
-            feature_emb_list.append(embedding.mean())
-        else:
-            feature_emb_list.append(embedding)
-    return feature_emb_list
 
 
 def extract_embedding(
@@ -208,17 +176,3 @@ def get_individual_contribution(shap_values, df_data):
 
 def log_duration(message, start):
     logger.info(f"{message}: {time.time() - start} seconds.")
-
-
-def get_mlflow_experiment(experiment_name: str):
-    experiment = mlflow.get_experiment_by_name(experiment_name)
-    if experiment is None:
-        mlflow.create_experiment(name=experiment_name)
-        experiment = mlflow.get_experiment_by_name(experiment_name)
-    return experiment
-
-
-def connect_remote_mlflow(client_id, env="ehp"):
-    os.environ["MLFLOW_TRACKING_TOKEN"] = id_token.fetch_id_token(Request(), client_id)
-    uri = "https://mlflow.passculture.team/"
-    mlflow.set_tracking_uri(uri)

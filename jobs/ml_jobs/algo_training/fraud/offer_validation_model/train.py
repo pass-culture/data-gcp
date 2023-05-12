@@ -3,13 +3,11 @@ import typer
 import mlflow
 import pandas as pd
 from catboost import CatBoostClassifier
-from utils.constants import MLFLOW_CLIENT_ID, MODEL_DIR, STORAGE_PATH
-from fraud.offer_validation_model.utils.tools import (
-    connect_remote_mlflow,
-    get_mlflow_experiment,
-)
-
+from utils.constants import ENV_SHORT_NAME, MODEL_DIR, STORAGE_PATH
+from utils.mlflow_tools import connect_remote_mlflow
 from fraud.offer_validation_model.utils.constants import CONFIGS_PATH
+from utils.secrets_utils import get_secret
+from utils.data_collect_queries import read_from_gcs
 
 
 def train(
@@ -54,9 +52,10 @@ def train(
         verbose=True,
     )
 
-    connect_remote_mlflow(MLFLOW_CLIENT_ID, env="ehp")
-    experiment = get_mlflow_experiment(experiment_name)
-    with mlflow.start_run(experiment_id=experiment, run_name=run_name):
+    client_id = get_secret("mlflow_client_id")
+    connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
+    experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
+    with mlflow.start_run(experiment_id=experiment_id, run_name=run_name):
         mlflow.log_params(
             params={
                 "environment": "EHP",

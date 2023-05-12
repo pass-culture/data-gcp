@@ -1,18 +1,13 @@
 import pandas as pd
 import mlflow
 import json
-from utils.constants import (
-    MODEL_DIR,
-    STORAGE_PATH,
-    MLFLOW_CLIENT_ID,
-)
-from fraud.offer_validation_model.utils.tools import (
-    read_from_gcs,
-    connect_remote_mlflow,
-    get_confusion_matrix,
-    plot_matrix,
-)
+import typer
+from utils.constants import MODEL_DIR, STORAGE_PATH, EXPERIMENT_NAME, ENV_SHORT_NAME
 from fraud.offer_validation_model.utils.constants import CONFIGS_PATH
+from utils.mlflow_tools import connect_remote_mlflow
+from utils.secrets_utils import get_secret
+from utils.data_collect_queries import read_from_gcs
+from catboost import Pool
 
 
 def evaluate(
@@ -23,7 +18,7 @@ def evaluate(
         ...,
         help="Name of the config file containing feature informations",
     ),
-    input_evaluation_table_name: str = typer.Option(
+    validation_table_name: str = typer.Option(
         ...,
         help="Name of the dataframe we want to clean",
     ),
@@ -43,7 +38,7 @@ def evaluate(
         features = json.load(config_file)
 
     eval_data = read_from_gcs(
-        storage_path=STORAGE_PATH, table_name=input_evaluation_table_name
+        storage_path=STORAGE_PATH, table_name=validation_table_name
     )
 
     eval_data_labels = eval_data.target.tolist()
@@ -55,8 +50,8 @@ def evaluate(
         text_features=features["catboost_features_types"]["text_features"],
         embedding_features=features["catboost_features_types"]["embedding_features"],
     )
-
-    connect_remote_mlflow(MLFLOW_CLIENT_ID)
+    client_id = get_secret("mlflow_client_id")
+    connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
     model = mlflow.catboost.load_model(
         model_uri=f"models:/validation_model_test/Staging"
     )
@@ -67,15 +62,13 @@ def evaluate(
         ntree_end=1,
         eval_period=1,
         thread_count=-1,
-        log_cout=sys.stdout,
-        log_cerr=sys.stderr,
     )
     # Format metrics for MLFlow
     for key in metrics.keys():
         metrics[key] = metrics[key][0]
 
-    experiment = get_mlflow_experiment(experiment_name)
-    with mlflow.start_run(experiment_id=experiment, run_name=run_name):
+    experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
+    with mlflow.start_run(experiment_id=experiment_id, run_name=run_name):
         mlflow.log_metrics(metrics)
 
 

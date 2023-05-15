@@ -1,13 +1,12 @@
-import pandas as pd
-import os
 import json
+import os
+
+import pandas as pd
 import typer
-from fraud.offer_validation_model.utils.tools import prepare_features, extract_embedding
-from utils.constants import (
-    STORAGE_PATH,
-    MODEL_DIR,
-)
 from fraud.offer_validation_model.utils.constants import CONFIGS_PATH
+from fraud.offer_validation_model.utils.tools import extract_embedding, prepare_features
+from utils.constants import MODEL_DIR, STORAGE_PATH
+from utils.data_collect_queries import read_from_gcs
 
 
 def preprocess(
@@ -31,8 +30,8 @@ def preprocess(
     ) as config_file:
         features = json.load(config_file)
 
-    offer_to_validate_raw = pd.read_gbq(
-        "SELECT * FROM `passculture-data-ehp.sandbox_dev.offers_validation_test_sample_1602_0103`"
+    offer_to_validate_raw = read_from_gcs(
+        storage_path=STORAGE_PATH, table_name=input_dataframe_file_name
     )
     offer_to_validate_raw = offer_to_validate_raw.rename(
         columns={"image_url": "offer_image"}

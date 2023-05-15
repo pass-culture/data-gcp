@@ -11,10 +11,11 @@ from common.operators.gce import (
     SSHGCEOperator,
 )
 from common.alerts import task_fail_slack_alert
-from common.config import GCP_PROJECT_ID, ENV_SHORT_NAME
+from common.config import GCP_PROJECT_ID, ENV_SHORT_NAME, DAG_FOLDER
 from common.utils import get_airflow_schedule, depends_loop
 from dependencies.batch.import_batch import import_batch_tables
 from common.operators.biquery import bigquery_job_task
+from common import macros
 
 
 GCE_INSTANCE = f"import-batch-{ENV_SHORT_NAME}"
@@ -43,6 +44,8 @@ with DAG(
             type="string",
         )
     },
+    template_searchpath=DAG_FOLDER,
+    user_defined_macros=macros.default,
 ) as dag:
 
     start = DummyOperator(task_id="start")

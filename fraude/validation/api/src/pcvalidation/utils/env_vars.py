@@ -1,5 +1,4 @@
 import os
-from sentence_transformers import SentenceTransformer
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import secretmanager
 
@@ -46,10 +45,6 @@ users_db = {
         "disabled": False,
     }
 }
-
-# Encoding models
-TEXT_MODEL = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
-IMAGE_MODEL = SentenceTransformer("clip-ViT-B-32")
 
 # MLFlow
 MLFLOW_SECRET_ID = os.environ.get("MLFLOW_SECRET_ID", "mlflow_client_id")

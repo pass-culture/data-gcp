@@ -6,14 +6,13 @@ from datetime import timedelta
 import mlflow
 import mlflow.pyfunc
 from catboost import CatBoostClassifier
-from google.cloud.logging import Client
-from google.cloud.logging_v2.handlers import setup_logging
-from loguru import logger
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi_cloud_logging import FastAPILoggingHandler, RequestLoggingMiddleware
 from fastapi_versioning import VersionedFastAPI, version
-
+from google.cloud.logging import Client
+from google.cloud.logging_v2.handlers import setup_logging
+from loguru import logger
 from pcvalidation.core.extract_embedding import extract_embedding
 from pcvalidation.core.predict import get_prediction, get_prediction_main_contribution
 from pcvalidation.core.preprocess import convert_data_to_catboost_pool, preprocess
@@ -30,6 +29,7 @@ from pcvalidation.utils.security import (
     get_current_active_user,
 )
 from pcvalidation.utils.tools import connect_remote_mlflow
+from sentence_transformers import SentenceTransformer
 from typing_extensions import Annotated
 
 logger.add(
@@ -54,6 +54,10 @@ model = CatBoostClassifier(one_hot_max_size=65)
 model_loaded = mlflow.catboost.load_model(
     model_uri=f"models:/validation_model_dev/Staging"
 )
+
+# Encoding models
+TEXT_MODEL = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+IMAGE_MODEL = SentenceTransformer("clip-ViT-B-32")
 
 
 @app.get("/")
@@ -80,7 +84,9 @@ def get_item_validation_score(
 
     data_clean = preprocess(data, params["preprocess_features_type"])
     # context_logger.info("Preprocess done")
-    data_w_emb = extract_embedding(data_clean, params["features_to_extract_embedding"])
+    data_w_emb = extract_embedding(
+        data_clean, params["features_to_extract_embedding"], TEXT_MODEL, IMAGE_MODEL
+    )
     # context_logger.info("Embedding extraction done")
     pool = convert_data_to_catboost_pool(data_w_emb, params["catboost_features_types"])
 

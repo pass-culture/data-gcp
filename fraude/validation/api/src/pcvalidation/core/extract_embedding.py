@@ -4,14 +4,10 @@ import urllib.request
 import uuid
 
 import numpy as np
-from pcvalidation.utils.env_vars import IMAGE_MODEL, TEXT_MODEL
 from PIL import Image
 
 
-def extract_embedding(
-    data,
-    params,
-):
+def extract_embedding(data, params, text_model, image_model):
     """
     Extarct embedding with pretrained models
     Two types available:
@@ -31,17 +27,17 @@ def extract_embedding(
         feature_name = feature["name"]
         print(f"Embedding extraction for {feature_name} on going...")
         if feature["type"] == "image":
-            model = IMAGE_MODEL
+            model = image_model
             url = data_analysis[feature_name]
             data_analysis[f"{feature_name}_embedding"] = _encode_img_from_url(
-                IMAGE_MODEL, url
+                model, url
             )
             try:
                 del data_analysis[feature_name]
             except KeyError:
                 pass
         if feature["type"] == "text":
-            model = TEXT_MODEL
+            model = text_model
             embedding = model.encode(data_analysis[feature_name])
             data_analysis[f"{feature_name}_embedding"] = embedding
             # TODO: Once offer_name and description out of training remove HERE

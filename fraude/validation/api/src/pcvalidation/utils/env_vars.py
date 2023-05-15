@@ -17,8 +17,6 @@ def access_secret(project_id, secret_id, version_id=1, default=None):
 GCS_BUCKET = os.environ.get("GCS_BUCKET", "data-bucket-dev")
 GCP_PROJECT = os.environ.get("GCP_PROJECT", "passculture-data-ehp")
 
-UNUSED_COLS = ["outing", "physical_goods"]
-
 # API
 API_SECRET_KET_SECRET_ID = os.environ.get(
     "API_SECRET_KET_SECRET_ID", "api-validation-auth-secret-key-dev"

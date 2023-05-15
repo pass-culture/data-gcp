@@ -37,9 +37,7 @@ logger.add(
     colorize=True,
     format="<green>{time}</green> - {level} - <blue>{message}</blue>",
     serialize=True,
-    level="INFO",
 )
-
 app = FastAPI(title="Passculture offer validation API")
 
 # Add middleware
@@ -52,7 +50,7 @@ setup_logging(handler)
 connect_remote_mlflow(MLFLOW_CLIENT_ID)
 model = CatBoostClassifier(one_hot_max_size=65)
 model_loaded = mlflow.catboost.load_model(
-    model_uri=f"models:/validation_model_dev/Staging"
+    model_uri="models:/validation_model_dev/Staging"
 )
 
 # Encoding models
@@ -78,22 +76,16 @@ def get_item_validation_score(
     context_logger.info("Requesting validation scores")
     context_logger = context_logger.bind(execution_time=time.time() - start)
 
-    # df = pd.DataFrame(item.dict(), index=[0])
     data = item.dict()
-    # context_logger.bind(input=data).info("Input DATA ")
 
     data_clean = preprocess(data, params["preprocess_features_type"])
-    # context_logger.info("Preprocess done")
     data_w_emb = extract_embedding(
         data_clean, params["features_to_extract_embedding"], TEXT_MODEL, IMAGE_MODEL
     )
-    # context_logger.info("Embedding extraction done")
     pool = convert_data_to_catboost_pool(data_w_emb, params["catboost_features_types"])
 
     proba_val, proba_rej = get_prediction(model_loaded, pool)
-    # context_logger.info("Get prediction done")
     top_val, top_rej = get_prediction_main_contribution(model_loaded, data_w_emb, pool)
-    # context_logger.info("Get main contributions done")
     validation_response_dict = {
         "offer_id": item.dict()["offer_id"],
         "probability_validated": proba_val,
@@ -101,9 +93,6 @@ def get_item_validation_score(
         "probability_rejected": proba_rej,
         "rejection_main_features": top_rej,
     }
-    context_logger.bind(execution_time=time.time() - start).info(
-        validation_response_dict
-    )
     context_logger.info(validation_response_dict)
     return validation_response_dict
 

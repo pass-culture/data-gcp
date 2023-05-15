@@ -25,7 +25,6 @@ def extract_embedding(data, params, text_model, image_model):
     data_analysis = data
     for feature in params:
         feature_name = feature["name"]
-        print(f"Embedding extraction for {feature_name} on going...")
         if feature["type"] == "image":
             model = image_model
             url = data_analysis[feature_name]
@@ -59,7 +58,7 @@ def _encode_img_from_url(model, url):
     index = 0
     offer_img_embs = []
     offer_wo_img = 0
-    unique_id = print(str(uuid.uuid4()))
+    unique_id = str(uuid.uuid4())
     os.makedirs(f"./img_{unique_id}", exist_ok=True)
     __download_img_from_url(url, f"./img_{unique_id}/{index}")
     try:

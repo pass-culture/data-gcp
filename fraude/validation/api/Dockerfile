@@ -6,7 +6,7 @@ ENV APP_HOME /app
 WORKDIR $APP_HOME
 # Install libraries
 COPY ./requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt && \
+RUN pip install --no-cache-dir -r requirements.txt
 COPY ./src/main.py .
 COPY ./src .
 # Copy local code to the container

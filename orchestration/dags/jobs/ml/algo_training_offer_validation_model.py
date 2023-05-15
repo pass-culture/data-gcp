@@ -1,4 +1,4 @@
-from datetime import datetime
+<from datetime import datetime
 from datetime import timedelta
 
 from airflow.models import Param
@@ -215,12 +215,8 @@ with DAG(
 
     (
         start
-        >> [
-            import_tables["validation_offers"],
-        ]
-        >> [
-            store_data["raw"],
-        ]
+        >> import_tables["validation_offers"]
+        >>store_data["raw"]
         >> gce_instance_start
         >> fetch_code
         >> install_dependencies

@@ -83,7 +83,9 @@ class BatchClient:
                 print("wait 1 min")
                 time.sleep(60)
 
-        campaigns_stats_df = pd.concat(dfs_list)
+        campaigns_stats_df = pd.concat(dfs_list).assign(
+            update_date=pd.to_datetime("today")
+        )
 
         return campaigns_stats_df
 

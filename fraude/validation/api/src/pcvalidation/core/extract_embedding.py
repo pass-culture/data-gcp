@@ -33,7 +33,7 @@ def extract_embedding(
         if feature["type"] == "image":
             model = IMAGE_MODEL
             url = data_analysis[feature_name]
-            data_analysis[f"{feature_name}_embedding"] = encode_img_from_url(
+            data_analysis[f"{feature_name}_embedding"] = _encode_img_from_url(
                 IMAGE_MODEL, url
             )
             try:
@@ -52,7 +52,7 @@ def extract_embedding(
     return data_analysis
 
 
-def encode_img_from_url(model, url):
+def _encode_img_from_url(model, url):
     """
     Encode image with pre-trained model from url
 
@@ -65,20 +65,18 @@ def encode_img_from_url(model, url):
     offer_wo_img = 0
     unique_id = print(str(uuid.uuid4()))
     os.makedirs(f"./img_{unique_id}", exist_ok=True)
-    _download_img_from_url(url, f"./img_{unique_id}/{index}")
+    __download_img_from_url(url, f"./img_{unique_id}/{index}")
     try:
         img_emb = model.encode(Image.open(f"./img_{unique_id}/{index}.jpeg"))
         offer_img_embs = img_emb
     except:
         offer_img_embs = np.array([0] * 512)
         offer_wo_img += 1
-    # print(f"{(offer_wo_img*100)/len(url)}% offers dont have image")
-    # print("Removing image on local disk...")
     shutil.rmtree(f"./img_{unique_id}")
     return offer_img_embs
 
 
-def _download_img_from_url(url, storage_path):
+def __download_img_from_url(url, storage_path):
     try:
         urllib.request.urlretrieve(url, f"{storage_path}.jpeg")
         return

@@ -1,5 +1,5 @@
 from catboost import Pool
-
+import numpy as np
 from pcvalidation.utils.env_vars import UNUSED_COLS
 
 
@@ -19,12 +19,12 @@ def preprocess(data, params):
         if key in params["text_features"]:
             data[key] = "" if data[key] is None else str(data[key])
         if key in params["numerical_features"]:
-            data[key] = "" if data[key] is None else int(data[key])
-        if key in params["boolean_features"]:
-            if data[key] is None:
-                data[key] = False
-            else:
-                data[key] = 1 if data[key] == True else 0
+            data[key] = 0 if data[key] is None else int(data[key])
+        # if key in params["boolean_features"]:
+        #     if data[key] is None:
+        #         data[key] = False
+        #     else:
+        #         data[key] = 1 if data[key] is True else 0
     return data
 
 
@@ -40,8 +40,10 @@ def convert_data_to_catboost_pool(data, features_type_dict):
             - catboost pool
     """
     data_input = [list(data.values())]
+    print("data_input: ", data_input)
+    print("feature_names: ", list(data.keys()))
     pool = Pool(
-        data_input,
+        data=data_input,
         feature_names=list(data.keys()),
         cat_features=features_type_dict["cat_features"],
         text_features=features_type_dict["text_features"],

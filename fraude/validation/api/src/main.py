@@ -6,13 +6,14 @@ from datetime import timedelta
 import mlflow
 import mlflow.pyfunc
 from catboost import CatBoostClassifier
+from google.cloud.logging import Client
+from google.cloud.logging_v2.handlers import setup_logging
+from loguru import logger
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi_cloud_logging import FastAPILoggingHandler, RequestLoggingMiddleware
 from fastapi_versioning import VersionedFastAPI, version
-from google.cloud.logging import Client
-from google.cloud.logging_v2.handlers import setup_logging
-from loguru import logger
+
 from pcvalidation.core.extract_embedding import extract_embedding
 from pcvalidation.core.predict import get_prediction, get_prediction_main_contribution
 from pcvalidation.core.preprocess import convert_data_to_catboost_pool, preprocess
@@ -67,27 +68,26 @@ def get_item_validation_score(
     item: Item, current_user: Annotated[User, Depends(get_current_active_user)]
 ):
     start = time.time()
-    execution_time=time()-start
     context_logger = logger.bind(
         model_version="default_model", offer_id=item.dict()["offer_id"]
     )
     context_logger.info("Requesting validation scores")
-    context_logger=context_logger.bind(execution_time=time()-start)
-    
+    context_logger = context_logger.bind(execution_time=time.time() - start)
+
     # df = pd.DataFrame(item.dict(), index=[0])
     data = item.dict()
     # context_logger.bind(input=data).info("Input DATA ")
-    
+
     data_clean = preprocess(data, params["preprocess_features_type"])
-    context_logger.info("Preprocess done")
+    # context_logger.info("Preprocess done")
     data_w_emb = extract_embedding(data_clean, params["features_to_extract_embedding"])
-    context_logger.info("Embedding extraction done")
+    # context_logger.info("Embedding extraction done")
     pool = convert_data_to_catboost_pool(data_w_emb, params["catboost_features_types"])
 
     proba_val, proba_rej = get_prediction(model_loaded, pool)
-    context_logger.info("Get prediction done")
+    # context_logger.info("Get prediction done")
     top_val, top_rej = get_prediction_main_contribution(model_loaded, data_w_emb, pool)
-    context_logger.info("Get main contributions done")
+    # context_logger.info("Get main contributions done")
     validation_response_dict = {
         "offer_id": item.dict()["offer_id"],
         "probability_validated": proba_val,
@@ -95,9 +95,9 @@ def get_item_validation_score(
         "probability_rejected": proba_rej,
         "rejection_main_features": top_rej,
     }
-    # context_logger.bind(execution_time=time.time() - start).info(
-    #     validation_response_dict
-    # )
+    context_logger.bind(execution_time=time.time() - start).info(
+        validation_response_dict
+    )
     context_logger.info(validation_response_dict)
     return validation_response_dict
 
@@ -113,7 +113,7 @@ def load_model(
     connect_remote_mlflow(MLFLOW_CLIENT_ID)
     global model_loaded
     model_loaded = mlflow.catboost.load_model(
-        model_uri=f"models:/validation_model_test/Staging"
+        model_uri=f"models:/validation_model_dev/Staging"
     )
     context_logger.info("Validation model updated")
     return model_params
@@ -127,12 +127,14 @@ async def login_for_access_token(
     context_logger.info("Requesting access token")
     user = authenticate_user(users_db, form_data.username, form_data.password)
     if not user:
-        exception=HTTPException(
+        exception = HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-        context_logger.bind(exception=form_data.username).info("Failed authentification:")
+        context_logger.bind(exception=form_data.username).info(
+            "Failed authentification"
+        )
         raise exception
     access_token_expires = timedelta(minutes=LOGIN_TOKEN_EXPIRATION)
     access_token = create_access_token(

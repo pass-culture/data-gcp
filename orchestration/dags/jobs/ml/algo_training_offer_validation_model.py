@@ -1,4 +1,4 @@
-<from datetime import datetime
+from datetime import datetime
 from datetime import timedelta
 
 from airflow.models import Param
@@ -77,7 +77,9 @@ with DAG(
     template_searchpath=DAG_FOLDER,
     params={
         "branch": Param(
-            default="production" if ENV_SHORT_NAME == "prod" else "master",
+            default="production"
+            if ENV_SHORT_NAME == "prod"
+            else "PC-22169-offer-validation-model-training",
             type="string",
         ),
         "config_file_name": Param(
@@ -106,6 +108,24 @@ with DAG(
             dag=dag,
         )
 
+        store_data = {}
+        store_data["raw"] = BigQueryInsertJobOperator(
+            task_id=f"store_raw_data",
+            configuration={
+                "extract": {
+                    "sourceTable": {
+                        "projectId": GCP_PROJECT_ID,
+                        "datasetId": BIGQUERY_TMP_DATASET,
+                        "tableId": f"{DATE}_{table}_raw_data",
+                    },
+                    "compression": None,
+                    "destinationUris": f"{dag_config['STORAGE_PATH']}/{table}_raw_data/data-*.parquet",
+                    "destinationFormat": "PARQUET",
+                }
+            },
+            dag=dag,
+        )
+
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
         preemptible=False,
@@ -129,23 +149,6 @@ with DAG(
         command="pip install -r requirements.txt --user",
         dag=dag,
         retries=2,
-    )
-    store_data={}
-    store_data["raw"] = BigQueryInsertJobOperator(
-        task_id=f"store_raw_data",
-        configuration={
-            "extract": {
-                "sourceTable": {
-                    "projectId": GCP_PROJECT_ID,
-                    "datasetId": BIGQUERY_TMP_DATASET,
-                    "tableId": f"{DATE}_validation_raw_data",
-                },
-                "compression": None,
-                "destinationUris": f"{dag_config['STORAGE_PATH']}/validation_raw_data/data-*.parquet",
-                "destinationFormat": "PARQUET",
-            }
-        },
-        dag=dag,
     )
 
     preprocess = SSHGCEOperator(
@@ -190,7 +193,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
-        command=f"PYTHONPATH=. python evaluate.py "
+        command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/evaluate.py "
         f"--experiment-name {dag_config['EXPERIMENT_NAME']} "
         "--config-file-name {{ params.config_file_name }} "
         "--validation-table-name validation_validation_data "
@@ -216,7 +219,7 @@ with DAG(
     (
         start
         >> import_tables["validation_offers"]
-        >>store_data["raw"]
+        >> store_data["raw"]
         >> gce_instance_start
         >> fetch_code
         >> install_dependencies

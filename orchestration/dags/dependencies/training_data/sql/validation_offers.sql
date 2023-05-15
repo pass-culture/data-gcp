@@ -1,28 +1,10 @@
-CREATE TEMPORARY FUNCTION humanize_id(id STRING) RETURNS STRING LANGUAGE js OPTIONS (
-    library = "gs://data-bucket-prod/base32-encode/base32.js"
-) AS """
-			var byteArray = [];
-			var updated_id = id;
-			while (updated_id != 0) {
-			    var byte = updated_id & 0xff;
-			    byteArray.push(byte);
-			    updated_id = (updated_id - byte) / 256;
-			}
-			var reversedByteArray = byteArray.reverse();
-			
-			// apply base32 encoding
-			var raw_b32 = base32Encode(new Uint8Array(reversedByteArray), 'RFC4648', { padding: false });
-			
-			// replace " O " with " 8 " and " I " with " 9 "
-			return raw_b32.replace(/O/g, '8').replace(/I/g, '9');
-""";
-
+{{ create_humanize_id_function() }}
 WITH offer_humanized_id AS (
     SELECT
         offer_id,
         humanize_id(offer_id) AS humanized_id,
     FROM
-        `{{ bigquery_raw_dataset }}`.`applicative_database_offer
+        `raw_dev`.`applicative_database_offer`
     WHERE
         offer_id is not NULL
 ),
@@ -41,7 +23,7 @@ mediation AS (
                         dateModifiedAtLastProvider DESC
                 ) as rnk
             FROM
-                `{{ bigquery_analytics_dataset }}`.`applicative_database_mediation`
+                `analytics_dev`.`applicative_database_mediation`
             WHERE
                 isActive
         ) inn
@@ -78,11 +60,11 @@ CASE
         END as stock,
 CASE
             WHEN mediation.mediation_humanized_id is not null THEN CONCAT(
-                "https://storage.googleapis.com/{{ mediation_url }}-assets-fine-grained/thumbs/mediations/",
+                "https://storage.googleapis.com/passculture-metier-prod-production-assets-fine-grained/thumbs/mediations/",
                 mediation.mediation_humanized_id
             )
             ELSE CONCAT(
-                "https://storage.googleapis.com/{{ mediation_url }}-assets-fine-grained/thumbs/products/",
+                "https://storage.googleapis.com/passculture-metier-prod-production-assets-fine-grained/thumbs/products/",
                 humanize_id(o.offer_product_id)
             )
         END AS offer_image,
@@ -108,12 +90,12 @@ CASE
             ELSE True
         END AS is_rule_up_to_date
     FROM
-        `{{ bigquery_raw_dataset }}`.`applicative_database_offer` o
-        LEFT JOIN `{{ bigquery_raw_dataset }}`.`applicative_database_stock` s on s.offer_id = o.offer_id 
+        `raw_dev`.`applicative_database_offer` o
+        LEFT JOIN `raw_dev`.`applicative_database_stock` s on s.offer_id = o.offer_id 
         --TODO:update join with offer_extra_data
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.`offer_extracted_data oed ON oed.offer_id = o.offer_id
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.`subcategories subcat ON subcat.id = o.offer_subcategoryid
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.`macro_rayons AS rayon_ref ON oed.rayon = rayon_ref.rayon
+        LEFT JOIN `analytics_dev`.`offer_extracted_data` oed ON oed.offer_id = o.offer_id
+        LEFT JOIN `analytics_dev`.`subcategories` subcat ON subcat.id = o.offer_subcategoryid
+        LEFT JOIN `analytics_dev`.`macro_rayons` AS rayon_ref ON oed.rayon = rayon_ref.rayon
         LEFT JOIN mediation ON o.offer_id = mediation.offer_id
     where
         o.offer_validation <> 'DRAFT'
@@ -123,8 +105,7 @@ CASE
                 o.offer_name is not null
                 or o.offer_name <> 'NaN'
             )
-        ) 
-        --and o.offer_creation_date>DATETIME '2022-09-01'
+        ) --and o.offer_creation_date>DATETIME '2022-09-01'
 
 )
 select

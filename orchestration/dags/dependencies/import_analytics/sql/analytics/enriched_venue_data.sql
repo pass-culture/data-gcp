@@ -277,7 +277,7 @@ FROM
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.region_department AS venue_region_departement ON venue.venue_department_code = venue_region_departement.num_dep
     LEFT JOIN offerer_humanized_id AS offerer_humanized_id ON offerer_humanized_id.offerer_id = venue.venue_managing_offerer_id
     LEFT JOIN bookable_offer_cnt ON bookable_offer_cnt.venue_id = venue.venue_id
-    LEFT JOIN `{{ bigquery_clean_dataset }}`.venue_registration ON venue.venue_id = venue_registration.venue_id
+    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue_registration AS venue_registration ON venue.venue_id = venue_registration.venue_id
 WHERE
     offerer.offerer_validation_status='VALIDATED'
     AND offerer.offerer_is_active;

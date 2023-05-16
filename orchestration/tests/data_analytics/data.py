@@ -1206,7 +1206,7 @@ ENRICHED_BOOKING_DATA_INPUT = {
         }
     ],
     "applicative_database_offerer": [{"offerer_id": "2", "offerer_name": "Offerer"}],
-    "applicative_database_user": [
+    "user_beneficiary": [
         {
             "user_id": "13",
             "user_department_code": 68,

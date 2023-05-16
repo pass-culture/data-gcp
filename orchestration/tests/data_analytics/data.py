@@ -1040,6 +1040,7 @@ ENRICHED_VENUE_DATA_INPUT = {
             "venue_type_id": "1",
         }
     ],
+    "applicative_database_venue_registration": [],
     "applicative_database_venue_label": [{"id": "1", "label": "an other label"}],
     "region_department": [{"num_dep": "92", "region_name": "IDF"}],
 }
@@ -1082,6 +1083,7 @@ ENRICHED_VENUE_DATA_EXPECTED = [
         "venue_backofficev3_link": "https://backend.passculture.team/backofficev3/pro/venue/1",
         "venue_region_name": "IDF",
         "venue_pc_pro_link": "https://passculture.pro/structures/AE/lieux/AE",
+        "venue_targeted_audience": None,
     }
 ]
 

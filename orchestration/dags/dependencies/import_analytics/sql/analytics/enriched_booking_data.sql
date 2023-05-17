@@ -89,13 +89,7 @@ SELECT
     deposit.type AS deposit_type,
     user.user_department_code,
     user.user_creation_date,
-    CASE
-        WHEN user.user_activity in ("Alternant", "Apprenti", "Volontaire") THEN "Apprenti, Alternant, Volontaire en service civique rémunéré"
-        WHEN user.user_activity in ("Inactif") THEN "Inactif (ni en emploi ni au chômage), En incapacité de travailler"
-        WHEN user.user_activity in ("Étudiant") THEN "Etudiant"
-        WHEN user.user_activity in ("Chômeur", "En recherche d'emploi ou chômeur") THEN "Chômeur, En recherche d'emploi"
-        ELSE user.user_activity
-    END AS user_activity,
+    user.user_activity,
     booking_intermediary_view.booking_intermediary_amount,
     CASE
         WHEN booking.booking_status = 'REIMBURSED' THEN True

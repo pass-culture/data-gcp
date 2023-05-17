@@ -17,8 +17,8 @@ WITH bookings_per_offer AS (
             END
         ) AS collective_booking_confirm_cnt
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_collective_booking AS collective_booking
-        JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_collective_stock AS collective_stock ON collective_stock.collective_stock_id = collective_booking.collective_stock_id
+        `{{ bigquery_clean_dataset }}`.applicative_database_collective_booking AS collective_booking
+        JOIN `{{ bigquery_clean_dataset }}`.applicative_database_collective_stock AS collective_stock ON collective_stock.collective_stock_id = collective_booking.collective_stock_id
     GROUP BY
         collective_offer_id
 ),
@@ -33,7 +33,7 @@ bookings_per_stock AS (
             END
         ) AS collective_booking_stock_no_cancelled_cnt
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_collective_booking AS collective_booking
+        `{{ bigquery_clean_dataset }}`.applicative_database_collective_booking AS collective_booking
     GROUP BY
         collective_stock_id
 )
@@ -63,8 +63,8 @@ SELECT
             SELECT
                 collective_stock.collective_offer_id
             FROM
-                `{{ bigquery_analytics_dataset }}`.applicative_database_collective_stock AS collective_stock
-                JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_collective_offer AS collective_offer ON collective_stock.collective_offer_id = collective_offer.collective_offer_id
+                `{{ bigquery_clean_dataset }}`.applicative_database_collective_stock AS collective_stock
+                JOIN `{{ bigquery_clean_dataset }}`.applicative_database_collective_offer AS collective_offer ON collective_stock.collective_offer_id = collective_offer.collective_offer_id
                 AND collective_offer.collective_offer_is_active
                 LEFT JOIN bookings_per_stock ON collective_stock.collective_stock_id = bookings_per_stock.collective_stock_id
             WHERE
@@ -102,10 +102,10 @@ SELECT
     collective_offer.collective_offer_image_id,
     collective_offer.is_public_api
 FROM
-    `{{ bigquery_analytics_dataset }}`.applicative_database_collective_offer AS collective_offer
-    JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_venue AS venue ON venue.venue_id = collective_offer.venue_id
-    LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_collective_stock AS collective_stock ON collective_stock.collective_offer_id = collective_offer.collective_offer_id
-    JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offerer AS offerer ON offerer.offerer_id = venue.venue_managing_offerer_id
+    `{{ bigquery_clean_dataset }}`.applicative_database_collective_offer AS collective_offer
+    JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue ON venue.venue_id = collective_offer.venue_id
+    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_collective_stock AS collective_stock ON collective_stock.collective_offer_id = collective_offer.collective_offer_id
+    JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offerer AS offerer ON offerer.offerer_id = venue.venue_managing_offerer_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.subcategories ON subcategories.id = collective_offer.collective_offer_subcategory_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.region_department venue_region ON venue_region.num_dep = venue.venue_department_code
     LEFT JOIN bookings_per_offer ON bookings_per_offer.collective_offer_id = collective_offer.collective_offer_id
@@ -146,10 +146,10 @@ SELECT
     template.collective_offer_image_id,
     FALSE AS is_public_api
 FROM
-    `{{ bigquery_analytics_dataset }}`.applicative_database_collective_offer_template AS template
-    JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_venue AS venue ON venue.venue_id = template.venue_id
-    JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offerer AS offerer ON offerer.offerer_id = venue.venue_managing_offerer_id
+    `{{ bigquery_clean_dataset }}`.applicative_database_collective_offer_template AS template
+    JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue ON venue.venue_id = template.venue_id
+    JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offerer AS offerer ON offerer.offerer_id = venue.venue_managing_offerer_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.subcategories ON subcategories.id = template.collective_offer_subcategory_id
-    LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_collective_stock AS collective_stock ON collective_stock.collective_offer_id = template.collective_offer_id
+    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_collective_stock AS collective_stock ON collective_stock.collective_offer_id = template.collective_offer_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.region_department venue_region ON venue_region.num_dep = venue.venue_department_code
     LEFT JOIN bookings_per_offer ON bookings_per_offer.collective_offer_id = template.collective_offer_id

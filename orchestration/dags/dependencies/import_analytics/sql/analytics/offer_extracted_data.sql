@@ -117,4 +117,4 @@ SELECT
           '"')
     ) AS book_editor,
 FROM
-    `{{ bigquery_analytics_dataset }}.applicative_database_offer`
+    `{{ bigquery_clean_dataset }}.applicative_database_offer`

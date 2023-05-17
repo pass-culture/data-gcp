@@ -3,8 +3,8 @@ WITH bookings_grouped_by_stock AS (
         booking.stock_id,
         SUM(booking.booking_quantity) as number_of_booking
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_booking AS booking
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_stock AS stock ON booking.stock_id = stock.stock_id
+        `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON booking.stock_id = stock.stock_id
     WHERE
         booking.booking_is_cancelled = False
     GROUP BY
@@ -20,5 +20,5 @@ SELECT
         )
     END AS available_stock_information
 FROM
-    `{{ bigquery_analytics_dataset }}`.applicative_database_stock AS stock
+    `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock
     LEFT JOIN bookings_grouped_by_stock ON bookings_grouped_by_stock.stock_id = stock.stock_id

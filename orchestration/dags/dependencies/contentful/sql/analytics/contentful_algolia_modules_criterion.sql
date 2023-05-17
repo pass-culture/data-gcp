@@ -23,9 +23,9 @@ criterion AS (
     ado.offer_name as offer_name
   FROM
     child_tags ct
-    LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_criterion adc on adc.name = ct.tag_name
-    LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offer_criterion adoc on adoc.criterionId = adc.id
-    LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offer ado on ado.offer_id = adoc.offerId
+    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_criterion adc on adc.name = ct.tag_name
+    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer_criterion adoc on adoc.criterionId = adc.id
+    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer ado on ado.offer_id = adoc.offerId
 ),
 module_ids AS (
   SELECT

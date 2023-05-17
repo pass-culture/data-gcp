@@ -2,7 +2,7 @@ with product_w_mediation as(
     SELECT
         cast(product.id as string) as id
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_product product
+        `{{ bigquery_clean_dataset }}`.applicative_database_product product
     where
         product.thumbCount > 0
 ),
@@ -18,7 +18,7 @@ offer_w_mediation as(
     select
         mediation.offerId as offer_id
     from
-        `{{ bigquery_analytics_dataset }}`.applicative_database_mediation mediation
+        `{{ bigquery_clean_dataset }}`.applicative_database_mediation mediation
     where
         mediation.isActive
         AND mediation.thumbCount > 0

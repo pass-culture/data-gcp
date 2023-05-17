@@ -91,7 +91,7 @@ bookings_infos AS (
         `{{ bigquery_clean_dataset }}`.applicative_database_educational_institution AS educational_institution
         JOIN `{{ bigquery_clean_dataset }}`.applicative_database_collective_booking AS collective_booking ON educational_institution.educational_institution_id = collective_booking.educational_institution_id
         AND collective_booking_status != 'CANCELLED'
-        JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_educational_year AS educational_year ON educational_year.adage_id = collective_booking.educational_year_id
+        JOIN `{{ bigquery_clean_dataset }}`.applicative_database_educational_year AS educational_year ON educational_year.adage_id = collective_booking.educational_year_id
 ),
 
 first_booking AS (

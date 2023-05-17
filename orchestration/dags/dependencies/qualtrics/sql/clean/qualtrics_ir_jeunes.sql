@@ -32,7 +32,7 @@ ir_export AS (
         user_seniority
 
         FROM `{{ bigquery_analytics_dataset }}.enriched_user_data` user_data
-        INNER JOIN `{{ bigquery_analytics_dataset }}.applicative_database_user` applicative_database_user ON user_data.user_id = applicative_database_user.user_id
+        INNER JOIN `{{ bigquery_clean_dataset }}.applicative_database_user` applicative_database_user ON user_data.user_id = applicative_database_user.user_id
         LEFT JOIN `{{ bigquery_analytics_dataset }}.user_locations` user_locations ON user_locations.user_id = user_data.user_id
         LEFT JOIN `{{ bigquery_analytics_dataset }}.rural_city_type_data`  rural_city_type_data ON user_locations.city_code = rural_city_type_data.geo_code
         LEFT JOIN `{{ bigquery_raw_dataset }}.qualtrics_opt_out_users` opt_out on opt_out.ext_ref = user_data.user_id

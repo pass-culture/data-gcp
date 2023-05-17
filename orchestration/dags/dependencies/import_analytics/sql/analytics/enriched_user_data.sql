@@ -443,7 +443,7 @@ user_agg_deposit_data AS (
         CASE
             WHEN user_last_deposit_amount < 300 THEN 'GRANT_15_17'
             ELSE 'GRANT_18'
-        END AS user_current_deposit_type
+        END AS user_current_deposit_type,
         CASE
             WHEN user_first_deposit_amount < 300 THEN 'GRANT_15_17'
             ELSE 'GRANT_18'

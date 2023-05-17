@@ -444,6 +444,10 @@ user_agg_deposit_data AS (
             WHEN user_last_deposit_amount < 300 THEN 'GRANT_15_17'
             ELSE 'GRANT_18'
         END AS user_current_deposit_type
+        CASE
+            WHEN user_first_deposit_amount < 300 THEN 'GRANT_15_17'
+            ELSE 'GRANT_18'
+        END AS user_first_deposit_type
     FROM
         user_agg_deposit_data_user_deposit_agg user_deposit_agg
 ),
@@ -498,6 +502,7 @@ SELECT
     user.user_school_type,
     activation_dates.user_activation_date,
     user_agg_deposit_data.user_first_deposit_creation_date AS user_deposit_creation_date,
+    user_agg_deposit_data.user_first_deposit_type AS user_first_deposit_type,
     user_agg_deposit_data.user_total_deposit_amount,
     user_agg_deposit_data.user_current_deposit_type,
     user.user_cultural_survey_filled_date AS first_connection_date,

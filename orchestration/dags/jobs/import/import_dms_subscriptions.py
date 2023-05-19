@@ -100,8 +100,8 @@ with DAG(
         task_id=f"dms_to_gcs_pro",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        command=f"""
-        python main.py {{ params.updated_since }} pro      
+        command="""
+        python main.py pro {{ params.updated_since }} 
         """,
     )
 
@@ -109,8 +109,8 @@ with DAG(
         task_id=f"dms_to_gcs_jeunes",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        command=f"""
-        python main.py {{ params.updated_since }} jeunes      
+        command="""
+        python main.py jeunes {{ params.updated_since }}       
         """,
     )
 

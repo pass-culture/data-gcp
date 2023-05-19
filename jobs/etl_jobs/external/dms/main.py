@@ -11,15 +11,10 @@ from google.cloud import secretmanager
 from google.cloud import storage
 from dms_query import DMS_QUERY
 import gcsfs
-from utils import get_update_since_param
-
+from utils import get_update_since_param, GCP_PROJECT_ID, DATA_GCS_BUCKET_NAME, ENV_SHORT_NAME, API_URL
 
 storage_client = storage.Client()
-GCP_PROJECT_ID = os.environ["GCP_PROJECT"]
-DATA_GCS_BUCKET_NAME = os.environ["DATA_GCS_BUCKET_NAME"]
-ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
 
-API_URL = "https://www.demarches-simplifiees.fr/api/v2/graphql"
 demarches_jeunes = [47380, 47480]
 demarches_pro = [50362, 55475, 57081, 57189, 61589, 62703, 65028]
 
@@ -33,9 +28,7 @@ def access_secret_data(project_id, secret_id, version_id=2, default=None):
     except DefaultCredentialsError:
         return default
 
-
 DMS_TOKEN = access_secret_data(GCP_PROJECT_ID, "token_dms")
-
 
 def run(target, updated_since):
 

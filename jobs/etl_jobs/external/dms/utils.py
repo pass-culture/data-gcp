@@ -6,7 +6,8 @@ ENV_SHORT_NAME = os.environ.get("ENVIRONMENT_SHORT_NAME", "")
 DATA_GCS_BUCKET_NAME = os.environ.get(
     "DATA_GCS_BUCKET_NAME", f"data-bucket-{ENV_SHORT_NAME}"
 )
-
+GCP_PROJECT_ID = os.environ.get("PROJECT_NAME")
+API_URL = "https://www.demarches-simplifiees.fr/api/v2/graphql"
 
 def get_update_since_param(dms_target):
 

@@ -3,6 +3,7 @@ import requests
 import urllib3
 import time
 import json
+import typer
 from datetime import datetime
 import pandas as pd
 from google.auth.exceptions import DefaultCredentialsError
@@ -36,30 +37,7 @@ def access_secret_data(project_id, secret_id, version_id=2, default=None):
 DMS_TOKEN = access_secret_data(GCP_PROJECT_ID, "token_dms")
 
 
-def run(request):
-    """The Cloud Function entrypoint.
-    Args:
-        request (flask.Request): The request object.
-    """
-
-    request_json = request.get_json(silent=True)
-    request_args = request.args
-
-    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-    if request_json and "target" in request_json:
-        target = request_json["target"]
-    elif request_args and "target" in request_args:
-        target = request_args["target"]
-    else:
-        raise RuntimeError("You need to provide a target argument.")
-
-    if request_json and "updated_since" in request_json:
-        updated_since = request_json["updated_since"]
-    elif request_args and "updated_since" in request_args:
-        updated_since = request_args["updated_since"]
-    else:
-        updated_since = get_update_since_param(target)
+def run(target, updated_since):
 
     print("updated_since", updated_since)
 
@@ -161,3 +139,8 @@ def save_json(json_object, filename):
         json_file.write(json.dumps(json_object))
     result = filename + " upload complete"
     return {"response": result}
+
+
+if __name__ == "__main__":
+    print("Run DMS !")
+    typer.run(run)

@@ -110,19 +110,16 @@ class PlaylistParamsIn:
                 column = "stock_beginning_date"
             else:
                 column = "offer_creation_date"
-            #
             if self.end_date:
                 condition += f"""AND ({column} > '{self.start_date.isoformat()}' AND {column} < '{self.end_date.isoformat()}') \n"""
             else:
                 condition += f"""AND ({column} > '{self.start_date.isoformat()}') \n"""
         if self.search_group_names is not None and len(self.search_group_names) > 0:
             # we filter by search_group_name to be iso with contentful categories
-            condition += (
-                f"AND ( search_group_name in {tuple(self.search_group_names)})\n"
-            )
+            condition += f"""AND ( search_group_name in ({', '.join([f"'{category}'" for category in self.search_group_names])}))\n"""
         if self.subcategories_id is not None and len(self.subcategories_id) > 0:
             # we filter by subcategory_id to be iso with contentful categories
-            condition += f"AND ( subcategory_id in {tuple(self.subcategories_id)})\n"
+            condition += f"""AND ( subcategory_id in ({', '.join([f"'{subcategory_id}'" for subcategory_id in self.subcategories_id])}))\n"""
         if self.price_max is not None and self.price_max >= 0:
             condition += f"AND stock_price<={self.price_max} \n"
 

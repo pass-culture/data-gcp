@@ -20,6 +20,6 @@ airflow.cfg
 unittests.cfg
 credentials/
 apps/recommendation/api/src/locustfile.py
-
+apps/fraud/validation/api/src/mlruns/
 # venv
 data-gcp-api

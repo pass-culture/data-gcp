@@ -122,9 +122,7 @@ class PlaylistParamsIn:
             )
         if self.subcategories_id is not None and len(self.subcategories_id) > 0:
             # we filter by subcategory_id to be iso with contentful categories
-            condition += (
-                f"AND ( subcategory_id in {tuple(self.subcategories_id)})\n"
-            )
+            condition += f"AND ( subcategory_id in {tuple(self.subcategories_id)})\n"
         if self.price_max is not None and self.price_max >= 0:
             condition += f"AND stock_price<={self.price_max} \n"
 

@@ -1,4 +1,3 @@
-import os
 import requests
 import urllib3
 import time
@@ -6,67 +5,53 @@ import json
 import typer
 from datetime import datetime
 import pandas as pd
-from google.auth.exceptions import DefaultCredentialsError
-from google.cloud import secretmanager
-from google.cloud import storage
 from dms_query import DMS_QUERY
 import gcsfs
-from utils import get_update_since_param, GCP_PROJECT_ID, DATA_GCS_BUCKET_NAME, ENV_SHORT_NAME, API_URL
-
-storage_client = storage.Client()
+from utils import API_URL, access_secret_data
 
 demarches_jeunes = [47380, 47480]
 demarches_pro = [50362, 55475, 57081, 57189, 61589, 62703, 65028]
 
 
-def access_secret_data(project_id, secret_id, version_id=2, default=None):
-    try:
-        client = secretmanager.SecretManagerServiceClient()
-        name = f"projects/{project_id}/secrets/{secret_id}/versions/{version_id}"
-        response = client.access_secret_version(request={"name": name})
-        return response.payload.data.decode("UTF-8")
-    except DefaultCredentialsError:
-        return default
-
-DMS_TOKEN = access_secret_data(GCP_PROJECT_ID, "token_dms")
-
-def run(target, updated_since):
+def run(target, updated_since, gcp_project_id, env_short_name):
 
     print("updated_since", updated_since)
 
     if target == "jeunes":
-        fetch_dms_jeunes(updated_since)
+        fetch_dms_jeunes(updated_since, env_short_name, gcp_project_id)
         return updated_since
 
     if target == "pro":
-        fetch_dms_pro(updated_since)
+        fetch_dms_pro(updated_since, env_short_name, gcp_project_id)
         return updated_since
 
 
-def fetch_dms_jeunes(updated_since):
-    result = fetch_result(demarches_jeunes, updated_since=updated_since)
+def fetch_dms_jeunes(updated_since, env_short_name, gcp_project_id):
+    result = fetch_result(demarches_jeunes, updated_since, env_short_name, gcp_project_id)
     save_json(
         result,
-        f"gs://{DATA_GCS_BUCKET_NAME}/dms_export/unsorted_dms_jeunes_{updated_since}.json",
+        f"gs://data-bucket-{env_short_name}/dms_export/unsorted_dms_jeunes_{updated_since}.json",
+        gcp_project_id,
     )
 
 
-def fetch_dms_pro(updated_since):
-    result = fetch_result(demarches_pro, updated_since=updated_since)
+def fetch_dms_pro(updated_since, env_short_name, gcp_project_id):
+    result = fetch_result(demarches_pro, updated_since, env_short_name, gcp_project_id)
     save_json(
         result,
-        f"gs://{DATA_GCS_BUCKET_NAME}/dms_export/unsorted_dms_pro_{updated_since}.json",
+        f"gs://data-bucket-{env_short_name}/dms_export/unsorted_dms_pro_{updated_since}.json",
+        gcp_project_id,
     )
 
 
-def fetch_result(demarches_ids, updated_since):
+def fetch_result(demarches_ids, updated_since, env_short_name, gcp_project_id):
     result = {}
     for demarche_id in demarches_ids:
         end_cursor = ""
         query_body = get_query_body(demarche_id, "", updated_since)
         has_next_page = True
         while has_next_page:
-            resultTemp = run_query(query_body)
+            resultTemp = run_query(query_body, gcp_project_id)
             for node in resultTemp["data"]["demarche"]["dossiers"]["edges"]:
                 dossier = node["node"]
                 if dossier is not None:
@@ -75,7 +60,7 @@ def fetch_result(demarches_ids, updated_since):
                 "hasNextPage"
             ]
             result = mergeDictionary(result, resultTemp)
-            if ENV_SHORT_NAME != "prod":
+            if env_short_name != "prod":
                 has_next_page = False
 
             if has_next_page:
@@ -98,8 +83,9 @@ def get_query_body(demarche_id, end_cursor, updated_since):
     return query_body
 
 
-def run_query(query_body):
+def run_query(query_body, gcp_project_id):
     time.sleep(0.2)
+    DMS_TOKEN = access_secret_data(gcp_project_id, "token_dms")
     headers = {"Authorization": "Bearer " + DMS_TOKEN}
     request = requests.post(
         API_URL, json=query_body, headers=headers, verify=False
@@ -126,8 +112,8 @@ def mergeDictionary(dict_1, dict_2):
     return dict_3
 
 
-def save_json(json_object, filename):
-    fs = gcsfs.GCSFileSystem(project=GCP_PROJECT_ID)
+def save_json(json_object, filename, gcp_project_id):
+    fs = gcsfs.GCSFileSystem(project=gcp_project_id)
     with fs.open(filename, "w") as json_file:
         json_file.write(json.dumps(json_object))
     result = filename + " upload complete"

@@ -9,6 +9,10 @@ from utils.constants import MODEL_DIR, STORAGE_PATH
 from utils.data_collect_queries import read_from_gcs
 
 
+IMAGE_MODEL = SentenceTransformer("clip-ViT-B-32")
+TEXT_MODEL = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+
+
 def preprocess(
     config_file_name: str = typer.Option(
         ...,
@@ -42,6 +46,8 @@ def preprocess(
     offer_to_validate_clean_w_emb = extract_embedding(
         offer_to_validate_clean,
         features["features_to_extract_embedding"],
+        IMAGE_MODEL,
+        TEXT_MODEL,
     )
     offer_to_validate_clean_w_emb.to_parquet(
         f"{STORAGE_PATH}/{output_dataframe_file_name}/data.parquet"

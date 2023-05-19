@@ -4,7 +4,7 @@ WITH offer_humanized_id AS (
         offer_id,
         humanize_id(offer_id) AS humanized_id,
     FROM
-        `raw_dev`.`applicative_database_offer`
+        `{{ bigquery_raw_dataset }}`.`applicative_database_offer`
     WHERE
         offer_id is not NULL
 ),
@@ -23,7 +23,7 @@ mediation AS (
                         dateModifiedAtLastProvider DESC
                 ) as rnk
             FROM
-                `analytics_dev`.`applicative_database_mediation`
+                `{{ bigquery_analytics_dataset }}`.`applicative_database_mediation`
             WHERE
                 isActive
         ) inn
@@ -90,12 +90,12 @@ CASE
             ELSE True
         END AS is_rule_up_to_date
     FROM
-        `raw_dev`.`applicative_database_offer` o
-        LEFT JOIN `raw_dev`.`applicative_database_stock` s on s.offer_id = o.offer_id 
+        `{{ bigquery_raw_dataset }}`.`applicative_database_offer` o
+        LEFT JOIN `{{ bigquery_raw_dataset }}`.`applicative_database_stock` s on s.offer_id = o.offer_id 
         --TODO:update join with offer_extra_data
-        LEFT JOIN `analytics_dev`.`offer_extracted_data` oed ON oed.offer_id = o.offer_id
-        LEFT JOIN `analytics_dev`.`subcategories` subcat ON subcat.id = o.offer_subcategoryid
-        LEFT JOIN `analytics_dev`.`macro_rayons` AS rayon_ref ON oed.rayon = rayon_ref.rayon
+        LEFT JOIN `{{ bigquery_analytics_dataset }}`.`offer_extracted_data` oed ON oed.offer_id = o.offer_id
+        LEFT JOIN `{{ bigquery_analytics_dataset }}`.`subcategories` subcat ON subcat.id = o.offer_subcategoryid
+        LEFT JOIN `{{ bigquery_analytics_dataset }}`.`macro_rayons` AS rayon_ref ON oed.rayon = rayon_ref.rayon
         LEFT JOIN mediation ON o.offer_id = mediation.offer_id
     where
         o.offer_validation <> 'DRAFT'

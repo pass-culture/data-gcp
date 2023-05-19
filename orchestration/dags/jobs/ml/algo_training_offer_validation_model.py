@@ -48,7 +48,7 @@ train_params = {
     "config_file_name": "default",
 }
 gce_params = {
-    "instance_name": f"algo-training-{ENV_SHORT_NAME}",
+    "instance_name": f"algo-training-offer-validation-{ENV_SHORT_NAME}",
     "instance_type": {
         "dev": "n1-standard-2",
         "stg": "n1-highmem-8",

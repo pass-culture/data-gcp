@@ -49,6 +49,8 @@ def prepare_features(df):
 def extract_embedding(
     df_data,
     params,
+    image_model,
+    text_model,
 ):
     """
     Extarct embedding with pretrained models
@@ -64,12 +66,12 @@ def extract_embedding(
         feature_name = feature["name"]
         print(f"Embedding extraction for {feature_name} on going...")
         if feature["type"] == "image":
-            model = SentenceTransformer("clip-ViT-B-32")
+            model = image_model
             urls = df_analysis[feature_name].tolist()
             df_analysis[f"{feature_name}_embedding"] = encode_img_from_urls(model, urls)
             df_analysis = df_analysis.drop(columns=[feature_name])
         if feature["type"] == "text":
-            model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+            model = text_model
             embeddings = model.encode(df_analysis[feature_name].tolist())
             df_analysis[f"{feature_name}_embedding"] = [
                 list(embedding) for embedding in embeddings

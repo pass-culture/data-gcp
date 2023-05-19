@@ -41,11 +41,6 @@ def train(
     )
     train_data_labels = train_data.target.tolist()
     train_data = train_data.drop(columns=["target"])
-    # train_pool = Pool(train_data,
-    #                 train_data_labels,
-    #                 cat_features=features["catboost_features_types"]["cat_features"],
-    #                 text_features=features["catboost_features_types"]["text_features"],
-    #                 embedding_features=features["catboost_features_types"]["embedding_features"])
     model = CatBoostClassifier(one_hot_max_size=65)
     ## Model Fit
     model.fit(
@@ -67,7 +62,7 @@ def train(
             file.write(run_uuid)
         mlflow.log_params(
             params={
-                "environment": "EHP",
+                "environment": ENV_SHORT_NAME,
                 "train_item_count": len(train_data),
                 "train_validated_count": train_data_labels.count(1),
                 "train_rejected_count": train_data_labels.count(0),

@@ -118,20 +118,12 @@ class PlaylistParamsIn:
         if self.search_group_names is not None and len(self.search_group_names) > 0:
             # we filter by search_group_name to be iso with contentful categories
             condition += (
-                "AND ("
-                + " OR ".join(
-                    [f"search_group_name='{cat}'" for cat in self.search_group_names]
-                )
-                + ")\n"
+                f"AND ( search_group_name in {tuple(self.search_group_names)})\n"
             )
         if self.subcategories_id is not None and len(self.subcategories_id) > 0:
             # we filter by subcategory_id to be iso with contentful categories
             condition += (
-                "AND ("
-                + " OR ".join(
-                    [f"subcategory_id='{cat}'" for cat in self.subcategories_id]
-                )
-                + ")\n"
+                f"AND ( subcategory_id in {tuple(self.subcategories_id)})\n"
             )
         if self.price_max is not None and self.price_max >= 0:
             condition += f"AND stock_price<={self.price_max} \n"
@@ -142,16 +134,16 @@ class PlaylistParamsIn:
         if self.offer_is_duo is not None:
             condition += f"AND (offer_is_duo={self.offer_is_duo}) \n"
 
-        if self.offer_type_list is not None and len(self.offer_type_list) > 0:
-            condition += (
-                "AND ("
-                + " OR ".join(
-                    [
-                        f"( offer_type_domain='{offer_type.key}' AND offer_type_label='{offer_type.value}' ) "
-                        for offer_type in self.offer_type_list
-                    ]
-                )
-                + ")\n"
-            )
+        # if self.offer_type_list is not None and len(self.offer_type_list) > 0:
+        #     condition += (
+        #         "AND ("
+        #         + " OR ".join(
+        #             [
+        #                 f"( offer_type_domain='{offer_type.key}' AND offer_type_label='{offer_type.value}' ) "
+        #                 for offer_type in self.offer_type_list
+        #             ]
+        #         )
+        #         + ")\n"
+        #     )
 
         return condition

@@ -3,14 +3,10 @@ import urllib3
 import time
 import json
 import typer
-from datetime import datetime
 import pandas as pd
 from dms_query import DMS_QUERY
 import gcsfs
-from utils import API_URL, access_secret_data
-
-demarches_jeunes = [47380, 47480]
-demarches_pro = [50362, 55475, 57081, 57189, 61589, 62703, 65028]
+from utils import API_URL, access_secret_data, demarches_jeunes, demarches_pro
 
 
 def run(target, updated_since, gcp_project_id, env_short_name):
@@ -27,7 +23,9 @@ def run(target, updated_since, gcp_project_id, env_short_name):
 
 
 def fetch_dms_jeunes(updated_since, env_short_name, gcp_project_id):
-    result = fetch_result(demarches_jeunes, updated_since, env_short_name, gcp_project_id)
+    result = fetch_result(
+        demarches_jeunes, updated_since, env_short_name, gcp_project_id
+    )
     save_json(
         result,
         f"gs://data-bucket-{env_short_name}/dms_export/unsorted_dms_jeunes_{updated_since}.json",

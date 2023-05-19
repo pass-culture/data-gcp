@@ -1,10 +1,8 @@
-import json
 from datetime import date, datetime, timedelta
 
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.providers.http.operators.http import SimpleHttpOperator
 from airflow.operators.python import PythonOperator
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
     GCSToBigQueryOperator,
@@ -19,7 +17,6 @@ from common.operators.biquery import bigquery_job_task
 from common.config import (
     DATA_GCS_BUCKET_NAME,
     BIGQUERY_CLEAN_DATASET,
-    BIGQUERY_ANALYTICS_DATASET,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     DAG_FOLDER,
@@ -37,7 +34,7 @@ from dependencies.dms_subscriptions.import_dms_subscriptions import (
     ANALYTICS_TABLES,
 )
 from common import macros
-from common.utils import getting_service_account_token, get_airflow_schedule
+from common.utils import get_airflow_schedule
 
 
 DMS_FUNCTION_NAME = "dms_" + ENV_SHORT_NAME
@@ -66,7 +63,11 @@ with DAG(
             else "PC-22284-problemes-dans-la-table-dms-pro",
             type="string",
         ),
-        "updated_since": Param(
+        "updated_since_jeunes": Param(
+            default=(date.today() - timedelta(days=1)).strftime("%Y-%m-%d"),
+            type="string",
+        ),
+        "updated_since_pro": Param(
             default=(date.today() - timedelta(days=1)).strftime("%Y-%m-%d"),
             type="string",
         ),
@@ -100,25 +101,25 @@ with DAG(
         task_id=f"dms_to_gcs_pro",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        command=f"""
-        python main.py pro {{ params.updated_since }} {GCP_PROJECT_ID} {ENV_SHORT_NAME}
-        """,
+        command="python main.py pro {{ params.updated_since_pro }} "
+        + f"{GCP_PROJECT_ID} {ENV_SHORT_NAME}",
+        do_xcom_push=True,
     )
 
     dms_to_gcs_jeunes = SSHGCEOperator(
         task_id=f"dms_to_gcs_jeunes",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        command=f"""
-        python main.py jeunes {{ params.updated_since }} {GCP_PROJECT_ID} {ENV_SHORT_NAME}
-        """,
+        command="python main.py jeunes {{ params.updated_since_jeunes }} "
+        + f"{GCP_PROJECT_ID} {ENV_SHORT_NAME}",
+        do_xcom_push=True,
     )
 
     parse_api_result_jeunes = PythonOperator(
         task_id="parse_api_result_jeunes",
         python_callable=parse_api_result,
         op_args=[
-            "{{ task_instance.xcom_pull(task_ids='dms_to_gcs_jeunes', key='return_value') }}",
+            "{{ params.updated_since_jeunes }}",
             "jeunes",
         ],
         dag=dag,
@@ -128,7 +129,7 @@ with DAG(
         task_id="parse_api_result_pro",
         python_callable=parse_api_result,
         op_args=[
-            "{{ task_instance.xcom_pull(task_ids='dms_to_gcs_pro', key='return_value') }}",
+            "{{ params.updated_since_pro }}",
             "pro",
         ],
         dag=dag,
@@ -138,7 +139,7 @@ with DAG(
         task_id="import_dms_jeunes_to_bq",
         bucket=DATA_GCS_BUCKET_NAME,
         source_objects=[
-            "dms_export/dms_jeunes_{{ task_instance.xcom_pull(task_ids='dms_to_gcs_jeunes', key='return_value') }}.parquet"
+            "dms_export/dms_jeunes_{{ params.updated_since_jeunes }}.parquet"
         ],
         source_format="PARQUET",
         destination_project_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.dms_jeunes",
@@ -163,9 +164,7 @@ with DAG(
     import_dms_pro_to_bq = GCSToBigQueryOperator(
         task_id="import_dms_pro_to_bq",
         bucket=DATA_GCS_BUCKET_NAME,
-        source_objects=[
-            "dms_export/dms_pro_{{ task_instance.xcom_pull(task_ids='dms_to_gcs_pro', key='return_value') }}.parquet"
-        ],
+        source_objects=["dms_export/dms_pro_{{ params.updated_since_pro }}.parquet"],
         source_format="PARQUET",
         destination_project_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.dms_pro",
         schema_fields=[
@@ -206,6 +205,9 @@ with DAG(
 
     end = DummyOperator(task_id="end")
 
+    gce_instance_stop = StopGCEOperator(
+        instance_name=GCE_INSTANCE, task_id="gce_stop_task", dag=dag
+    )
 
 (
     start
@@ -228,3 +230,4 @@ with DAG(
     >> analytics_tasks[1]
     >> end
 )
+(end >> gce_instance_stop)

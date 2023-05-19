@@ -57,7 +57,9 @@ class Recommendation:
         if get_cold_start_status(self.user):
             self.reco_origin = "cold_start"
             return (
-                self.Algo(self)
+                self.Algo(
+                    self, endpoint=self.model_params.cold_start_model_endpoint_name
+                )
                 if self.model_params.name == "cold_start_b"
                 else self.ColdStart(self)
             )
@@ -126,27 +128,32 @@ class Recommendation:
             log_duration(f"save_recommendations for {self.user.id}", start)
 
     class Algo:
-        def __init__(self, scoring):
+        def __init__(self, scoring, endpoint=None):
             self.user = scoring.user
             self.params_in_filters = scoring.params_in_filters
             self.reco_radius = scoring.reco_radius
-            self.model_params = scoring.model_params
+            self.model_name = scoring.model_params.name
+            self.model_endpoint_name = (
+                endpoint if endpoint else scoring.model_params.endpoint_name
+            )
             self.model_display_name = None
             self.model_version = None
             self.include_digital = scoring.include_digital
-            self.recommendable_offers = self.get_recommendable_offers()
+            self.recommendable_offers = self.get_recommendable_offers(
+                scoring.model_params
+            )
             self.cold_start_categories = get_cold_start_categories(self.user.id)
 
         def get_scored_offers(self) -> List[Dict[str, Any]]:
             start = time.time()
             if not len(self.recommendable_offers) > 0:
                 log_duration(
-                    f"no offers to score for {self.user.id} - {self.model_params.name}",
+                    f"no offers to score for {self.user.id} - {self.model_name}",
                     start,
                 )
                 return []
             else:
-                if self.model_params.name == "cold_start_b":
+                if self.model_name == "cold_start_b":
                     user_input = ",".join(self.cold_start_categories)
                 else:
                     user_input = self.user.id
@@ -165,7 +172,7 @@ class Recommendation:
                 ]
 
                 log_duration(
-                    f"scored {len(recommendations)} for {self.user.id} - {self.model_params.name}, ",
+                    f"scored {len(recommendations)} for {self.user.id} - {self.model_name}, ",
                     start,
                 )
             return recommendations
@@ -181,13 +188,11 @@ class Recommendation:
             instances = {"input_1": user_to_rank, "input_2": offer_ids_to_rank}
             return instances
 
-        def get_recommendable_offers(self) -> List[Dict[str, Any]]:
+        def get_recommendable_offers(self, params) -> List[Dict[str, Any]]:
             start = time.time()
-            order_query = "is_geolocated DESC, booking_number DESC"
-
             recommendations_query = RecommendableOffersQueryBuilder(
-                self, RECOMMENDABLE_OFFER_LIMIT
-            ).generate_query(order_query)
+                self, params.offer_limit
+            ).generate_query(params.order_query)
 
             query_result = []
             if recommendations_query is not None:
@@ -212,13 +217,16 @@ class Recommendation:
                 }
                 for row in query_result
             ]
-            log_duration("get_recommendable_offers", start)
+            log_duration(
+                f"get_recommendable_offers for {self.user.id}: {len(user_recommendation)}",
+                start,
+            )
             return user_recommendation
 
         def _predict_score(self, instances) -> List[List[float]]:
             start = time.time()
             response = predict_model(
-                endpoint_name=self.model_params.endpoint_name,
+                endpoint_name=self.model_endpoint_name,
                 location="europe-west1",
                 instances=instances,
             )

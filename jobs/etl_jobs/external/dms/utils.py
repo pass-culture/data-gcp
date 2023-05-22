@@ -1,38 +1,16 @@
-from google.cloud import storage
-import os
-import logging
+from google.auth.exceptions import DefaultCredentialsError
+from google.cloud import secretmanager
 
-ENV_SHORT_NAME = os.environ.get("ENVIRONMENT_SHORT_NAME", "")
-DATA_GCS_BUCKET_NAME = os.environ.get(
-    "DATA_GCS_BUCKET_NAME", f"data-bucket-{ENV_SHORT_NAME}"
-)
+API_URL = "https://www.demarches-simplifiees.fr/api/v2/graphql"
+demarches_jeunes = [47380, 47480]
+demarches_pro = [50362, 55475, 57081, 57189, 61589, 62703, 65028]
 
 
-def get_update_since_param(dms_target):
-
-    bucket_name = DATA_GCS_BUCKET_NAME
-    prefix = "dms_export"
-    storage_client = storage.Client()
-
-    print(bucket_name)
-    logging.info(f"Bucket : {bucket_name}")
-
-    blobs = [
-        (
-            blob.name,
-            blob.name.replace(f"{prefix}/unsorted_dms_{dms_target}_", "").replace(
-                ".json", ""
-            ),
-        )
-        for blob in storage_client.list_blobs(
-            bucket_name,
-            prefix=prefix,
-        )
-        if blob.name.startswith(f"{prefix}/unsorted_dms_{dms_target}")
-    ]
-
-    updated_since = [
-        blob[1] for blob in blobs if blob[1] == max([blob[1] for blob in blobs])
-    ][0][0:10]
-
-    return updated_since
+def access_secret_data(project_id, secret_id, version_id=2, default=None):
+    try:
+        client = secretmanager.SecretManagerServiceClient()
+        name = f"projects/{project_id}/secrets/{secret_id}/versions/{version_id}"
+        response = client.access_secret_version(request={"name": name})
+        return response.payload.data.decode("UTF-8")
+    except DefaultCredentialsError:
+        return default

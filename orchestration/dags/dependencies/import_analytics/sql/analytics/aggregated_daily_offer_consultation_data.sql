@@ -42,8 +42,8 @@ FROM
         'ConsultWholeOffer',
         'ConsultDescriptionDetails'
     )
-    LEFT JOIN `{{ bigquery_analytics_dataset }}.applicative_database_offer_criterion` oc ON oc.offerId = o.offer_id
-    LEFT JOIN `{{ bigquery_analytics_dataset }}.applicative_database_criterion` c ON oc.criterionId = c.id
+    LEFT JOIN `{{ bigquery_clean_dataset }}.applicative_database_offer_criterion` oc ON oc.offerId = o.offer_id
+    LEFT JOIN `{{ bigquery_clean_dataset }}.applicative_database_criterion` c ON oc.criterionId = c.id
     LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_user_data` eud ON fe.user_id = eud.user_id
 GROUP BY
     1,

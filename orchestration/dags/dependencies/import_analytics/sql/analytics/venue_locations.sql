@@ -4,7 +4,7 @@ with venue_epci AS (
         epci_code,
         epci_name
     FROM
-        `{{ bigquery_analytics_dataset }}.applicative_database_venue` venue
+        `{{ bigquery_clean_dataset }}.applicative_database_venue` venue
         JOIN (
             SELECT
                 epci.epci_code,
@@ -24,7 +24,7 @@ venue_qpv AS (
         qpv_name,
         qpv_communes
     FROM
-        `{{ bigquery_analytics_dataset }}.applicative_database_venue` venue
+        `{{ bigquery_clean_dataset }}.applicative_database_venue` venue
         JOIN (
             SELECT
                 code_quartier as code_qpv,
@@ -48,7 +48,7 @@ venue_zrr AS (
         Code_Postal,
         geo_shape_insee
     FROM
-        `{{ bigquery_analytics_dataset }}.applicative_database_venue` venue
+        `{{ bigquery_clean_dataset }}.applicative_database_venue` venue
         JOIN (
             SELECT
                 ZRR.CODGEO,
@@ -82,7 +82,7 @@ SELECT
     venue_zrr.ZONAGE_ZRR,
     venue_zrr.Code_Postal
 FROM
-    `{{ bigquery_analytics_dataset }}.applicative_database_venue` venue
+    `{{ bigquery_clean_dataset }}.applicative_database_venue` venue
     LEFT JOIN venue_epci ON venue.venue_id = venue_epci.venue_id
     LEFT JOIN venue_qpv ON venue.venue_id = venue_qpv.venue_id
     LEFT JOIN venue_zrr ON venue.venue_id = venue_zrr.venue_id

@@ -9,7 +9,7 @@ WITH ranked_deposit_asc AS (
                 id
         ) AS deposit_rank_asc
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_deposit AS deposit
+        `{{ bigquery_clean_dataset }}`.applicative_database_deposit AS deposit
 ),
 
 ranked_deposit_desc AS (

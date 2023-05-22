@@ -171,6 +171,21 @@ contentful_modules = [
             },
         ],
     },
+    {
+        "name": "thematicHighlight",
+        "additional_fields": [
+            "title",
+            "thematic_highlight_info",
+            "thematic_home_entry_id",
+        ],
+        "children": [
+            {
+                "name": "thematic_highlight_info",
+                "additional_fields": ["title", "beginning_datetime", "ending_datetime"],
+                "type": "unique",
+            }
+        ],
+    },
 ]
 
 

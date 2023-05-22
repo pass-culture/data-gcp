@@ -9,7 +9,7 @@ from utils.constants import (
     ENV_SHORT_NAME,
     MLFLOW_RUN_ID_FILENAME,
 )
-from fraud.offer_validation_model.utils.constants import CONFIGS_PATH
+from fraud.offer_compliance_model.utils.constants import CONFIGS_PATH
 from utils.mlflow_tools import connect_remote_mlflow
 from utils.secrets_utils import get_secret
 from utils.data_collect_queries import read_from_gcs
@@ -26,7 +26,7 @@ def evaluate(
     ),
     validation_table_name: str = typer.Option(
         ...,
-        help="Name of the dataframe we want to clean",
+        help="BigQuery table containing compliance validation data",
     ),
     run_name: str = typer.Option(None, help="Name of the MLflow run if set"),
 ):

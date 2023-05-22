@@ -36,11 +36,11 @@ DATE = "{{ ts_nodash }}"
 
 # Environment variables to export before running commands
 dag_config = {
-    "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/algo_training_{ENV_SHORT_NAME}/algo_training_offer_validation_model_v1.0_{DATE}",
+    "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/algo_training_{ENV_SHORT_NAME}/algo_training_offer_compliance_model_v1.0_{DATE}",
     "BASE_DIR": "data-gcp/jobs/ml_jobs/algo_training",
-    "MODEL_DIR": "fraud/offer_validation_model",
+    "MODEL_DIR": "fraud/offer_compliance_model",
     "TRAIN_DIR": "/home/airflow/train",
-    "EXPERIMENT_NAME": f"algo_training_offer_validation_model_v1.0_{ENV_SHORT_NAME}",
+    "EXPERIMENT_NAME": f"algo_training_offer_compliance_model_v1.0_{ENV_SHORT_NAME}",
 }
 
 # Params
@@ -48,7 +48,7 @@ train_params = {
     "config_file_name": "default",
 }
 gce_params = {
-    "instance_name": f"algo-training-offer-validation-{ENV_SHORT_NAME}",
+    "instance_name": f"algo-training-offer-compliance-{ENV_SHORT_NAME}",
     "instance_type": {
         "dev": "n1-standard-2",
         "stg": "n1-highmem-8",
@@ -67,7 +67,7 @@ schedule_dict = {"prod": "0 12 * * 5", "dev": "0 0 * * *", "stg": "0 12 * * 3"}
 
 
 with DAG(
-    "algo_training_offer_validation_model",
+    "algo_training_offer_compliance_model",
     default_args=default_args,
     description="Custom training job",
     schedule_interval=get_airflow_schedule(schedule_dict[ENV_SHORT_NAME]),
@@ -97,7 +97,7 @@ with DAG(
 
     import_tables = {}
     for table in [
-        "validation_offers",
+        "compliance_offers",
     ]:
         import_tables[table] = BigQueryExecuteQueryOperator(
             task_id=f"import_{table}",

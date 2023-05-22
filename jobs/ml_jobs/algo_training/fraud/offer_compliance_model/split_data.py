@@ -9,14 +9,15 @@ from utils.data_collect_queries import read_from_gcs
 
 def split_data(
     clean_table_name: str = typer.Option(
-        "recommendation_training_data", help="BigQuery table containing training data"
+        "compliance_clean_data", help="BigQuery table containing compliance clean data"
     ),
     training_table_name: str = typer.Option(
-        "recommendation_training_data", help="BigQuery table containing training data"
+        "compliance_training_data",
+        help="BigQuery table containing compliance training data",
     ),
     validation_table_name: str = typer.Option(
-        "recommendation_validation_data",
-        help="BigQuery table containing validation data",
+        "compliance_validation_data",
+        help="BigQuery table containing compliance validation data",
     ),
 ):
     clean_data = read_from_gcs(storage_path=STORAGE_PATH, table_name=clean_table_name)

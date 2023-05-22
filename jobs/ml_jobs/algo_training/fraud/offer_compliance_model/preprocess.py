@@ -3,8 +3,8 @@ import os
 
 import pandas as pd
 import typer
-from fraud.offer_validation_model.utils.constants import CONFIGS_PATH
-from fraud.offer_validation_model.utils.tools import extract_embedding, prepare_features
+from fraud.offer_compliance_model.utils.constants import CONFIGS_PATH
+from fraud.offer_compliance_model.utils.tools import extract_embedding, prepare_features
 from utils.constants import MODEL_DIR, STORAGE_PATH
 from utils.data_collect_queries import read_from_gcs
 
@@ -34,22 +34,22 @@ def preprocess(
     ) as config_file:
         features = json.load(config_file)
 
-    offer_to_validate_raw = read_from_gcs(
+    offer_compliance_raw = read_from_gcs(
         storage_path=STORAGE_PATH, table_name=input_dataframe_file_name
     )
-    offer_to_validate_raw = offer_to_validate_raw.rename(
+    offer_compliance_raw = offer_compliance_raw.rename(
         columns={"image_url": "offer_image"}
     )
 
-    offer_to_validate_clean = prepare_features(offer_to_validate_raw)
+    offer_compliance_clean = prepare_features(offer_compliance_raw)
     ## Extract emb
-    offer_to_validate_clean_w_emb = extract_embedding(
-        offer_to_validate_clean,
+    offer_compliance_clean_w_emb = extract_embedding(
+        offer_compliance_clean,
         features["features_to_extract_embedding"],
         IMAGE_MODEL,
         TEXT_MODEL,
     )
-    offer_to_validate_clean_w_emb.to_parquet(
+    offer_compliance_clean_w_emb.to_parquet(
         f"{STORAGE_PATH}/{output_dataframe_file_name}/data.parquet"
     )
 

@@ -10,7 +10,7 @@ from utils.constants import (
     MLFLOW_RUN_ID_FILENAME,
 )
 from utils.mlflow_tools import connect_remote_mlflow
-from fraud.offer_validation_model.utils.constants import CONFIGS_PATH
+from fraud.offer_compliance_model.utils.constants import CONFIGS_PATH
 from utils.secrets_utils import get_secret
 from utils.data_collect_queries import read_from_gcs
 
@@ -25,7 +25,8 @@ def train(
         help="Name of the config file containing feature informations",
     ),
     training_table_name: str = typer.Option(
-        "recommendation_training_data", help="BigQuery table containing training data"
+        "compliance_training_data",
+        help="BigQuery table containing compliance training data",
     ),
     run_name: str = typer.Option(None, help="Name of the MLflow run if set"),
 ):

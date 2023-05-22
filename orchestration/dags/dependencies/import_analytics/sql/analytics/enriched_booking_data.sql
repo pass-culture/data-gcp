@@ -105,7 +105,6 @@ FROM
     `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking
     INNER JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON booking.stock_id = stock.stock_id
     LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON offer.offer_id = stock.offer_id
-    AND offer.offer_subcategoryId NOT IN ('ACTIVATION_THING', 'ACTIVATION_EVENT')
     INNER JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue ON venue.venue_id = offer.venue_id
     INNER JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offerer AS offerer ON venue.venue_managing_offerer_id = offerer.offerer_id
     INNER JOIN `{{ bigquery_clean_dataset }}`.user_beneficiary AS user ON user.user_id = booking.user_id

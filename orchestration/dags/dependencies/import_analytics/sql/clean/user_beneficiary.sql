@@ -39,9 +39,30 @@ WITH user_beneficiary as (
     FROM  `{{ bigquery_raw_dataset }}`.applicative_database_user
     -- only BENEFICIARY
     WHERE user_role IN ('UNDERAGE_BENEFICIARY', 'BENEFICIARY')
+),
+ranked_bookings AS (
+    SELECT
+        booking.user_id,
+        offer.offer_subcategoryId,
+        booking_used_date,
+        RANK() OVER (
+            PARTITION BY booking.user_id
+            ORDER BY
+                booking.booking_creation_date ASC,
+                booking.booking_id ASC
+        ) AS rank_
+    FROM `{{ bigquery_raw_dataset }}`.applicative_database_booking AS booking
+    JOIN `{{ bigquery_raw_dataset }}`.applicative_database_stock AS stock 
+        ON booking.stock_id = stock.stock_id
+    JOIN `{{ bigquery_raw_dataset }}`.applicative_database_offer AS offer 
+        ON stock.offer_id = offer.offer_id
 )
 
-SELECT * EXCEPT(user_department_code), 
+SELECT 
+    user_id,
+    user_creation_date,
+    user_humanized_id,
+    user_has_enabled_marketing_email,
     -- set 99 when user user_creation_date does not match opening phases.
     -- this is due to Support changes in the past which migh lead to misunderstandings.
     CASE 
@@ -56,7 +77,24 @@ SELECT * EXCEPT(user_department_code),
             AND date(user_creation_date) < "2021-05-01"
         THEN "99"
         ELSE user_department_code 
-    END AS user_department_code 
+    END AS user_department_code,
+    user_postal_code,
+    user_activity,
+    user_civility,
+    user_school_type,
+    user_is_active,
+    user_age,
+    user_role,
+    user_birth_date,
+    user_cultural_survey_filled_date,
+    CASE
+        -- get user activation date with fictional offers (early 2019)
+        WHEN offer_subcategoryId = 'ACTIVATION_THING'
+        AND booking_used_date IS NOT NULL THEN booking_used_date
+        ELSE user_creation_date
+    END AS user_activation_date
 FROM user_beneficiary
-
+LEFT JOIN ranked_bookings 
+    ON user.user_id = ranked_bookings.user_id
+    AND rank_ = 1
 

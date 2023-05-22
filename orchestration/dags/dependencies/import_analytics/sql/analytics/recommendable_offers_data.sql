@@ -95,8 +95,6 @@ WITH get_recommendable_offers AS (
         AND offer.offer_is_bookable = TRUE
         AND offerer.offerer_is_active = TRUE
         AND offer.offer_validation = 'APPROVED'
-        AND enriched_item_metadata.subcategory_id NOT IN ('ACTIVATION_THING', 'ACTIVATION_EVENT')
-
 )
 SELECT  * 
 FROM get_recommendable_offers 

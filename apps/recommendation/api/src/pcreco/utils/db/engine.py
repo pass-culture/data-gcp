@@ -14,7 +14,6 @@ query_string = dict(
     {"unix_sock": "/cloudsql/{}/.s.PGSQL.5432".format(SQL_CONNECTION_NAME)}
 )
 
-
 db_engine = None
 
 
@@ -40,6 +39,7 @@ def create_connection():
         load_engine()
     connection = db_engine.connect()
     g.connection = connection
+    g.engine = db_engine
 
 
 def close_connection():

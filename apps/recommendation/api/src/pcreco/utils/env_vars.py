@@ -30,11 +30,8 @@ MIXING_FEATURE = "subcategory_id"
 MIXING_FEATURE_LIST = ["subcategory_id", "search_group_name", "category"]
 NUMBER_OF_PRESELECTED_OFFERS = 200 if not os.environ.get("CI") else 3
 RECOMMENDABLE_OFFER_LIMIT = 10_000
-MAX_PER_BATCH = 5000
+MAX_RECO_ITEM_PER_BATCH = os.environ.get("MAX_RECO_ITEM_PER_BATCH", 2500)
 COLD_START_RECOMMENDABLE_OFFER_LIMIT = 500
-DEFAULT_RECO_RADIUS = ["0_25KM", "25_50KM", "50_100KM"]
-
-RECOMMENDABLE_OFFER_TABLE_PREFIX = "recommendable_offers_per_iris_shape"
 
 
 def log_duration(message, start):

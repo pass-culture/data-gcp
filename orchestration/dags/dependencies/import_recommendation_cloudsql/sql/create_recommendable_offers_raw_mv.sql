@@ -23,37 +23,40 @@ RETURNS TABLE (
                 venue_latitude DECIMAL, 
                 venue_longitude DECIMAL,
                 default_max_distance INTEGER,
-                unique_id VARCHAR
+                unique_id VARCHAR,
+                venue_geo GEOGRAPHY
                 ) AS
 $body$
 BEGIN
     RETURN QUERY 
-    SELECT * from public.recommendable_offers_raw ro;
+    SELECT *, ST_MakePoint(venue_longitude, venue_latitude)::geography as venue_geo 
+    FROM public.recommendable_offers_raw ro;
 END;
 $body$
 LANGUAGE plpgsql;
 
 
-
-
-DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_raw_tmp_mv;
-CREATE MATERIALIZED VIEW IF NOT EXISTS recommendable_offers_raw_tmp_mv AS
+-- Create tmp Materialized view
+DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_raw_mv_tmp;
+CREATE MATERIALIZED VIEW IF NOT EXISTS recommendable_offers_raw_mv_tmp AS
 SELECT * FROM get_recommendable_offers_raw_{{ ts_nodash  }}()
 WITH NO DATA;
 
 
-
-CREATE UNIQUE INDEX IF NOT EXISTS idx_recommendable_offers_raw_tmp_mv_{{ ts_nodash  }} 
-ON public.recommendable_offers_raw_tmp_mv 
+-- Create indexes
+CREATE UNIQUE INDEX IF NOT EXISTS idx_recommendable_offers_raw_mv_tmp_{{ ts_nodash  }} 
+ON public.recommendable_offers_raw_mv_tmp 
 USING btree (is_geolocated,item_id,offer_id,unique_id);
 
-CREATE INDEX IF NOT EXISTS idx_offer_recommendable_raw
-ON public.recommendable_offers_raw_tmp_mv           
+CREATE INDEX IF NOT EXISTS idx_offer_recommendable_raw_{{ ts_nodash  }}
+ON public.recommendable_offers_raw_mv_tmp           
 USING btree (offer_id,unique_id);
 
-CREATE INDEX loc_idx_offer_recommendable_raw 
-ON public.recommendable_offers_raw_tmp_mv            
-USING gist (ll_to_earth(venue_latitude, venue_longitude));
+CREATE INDEX IF NOT EXISTS loc_idx_offer_recommendable_raw_{{ ts_nodash  }}
+ON public.recommendable_offers_raw_mv_tmp            
+USING gist(venue_geo);
 
-REFRESH MATERIALIZED VIEW recommendable_offers_raw_tmp_mv;
+-- Refresh state
+REFRESH MATERIALIZED VIEW recommendable_offers_raw_mv_tmp;
 
+VACUUM ANALYZE recommendable_offers_raw_mv_tmp;

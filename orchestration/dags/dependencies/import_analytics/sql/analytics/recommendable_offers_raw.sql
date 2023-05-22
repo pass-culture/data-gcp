@@ -4,10 +4,10 @@ WITH venues AS (
             venue_longitude,
             venue_latitude
         FROM `{{ bigquery_clean_dataset }}.applicative_database_venue` as venue
-        JOIN  `{{ bigquery_clean_dataset }}.applicative_database_offerer` as offerer ON venue_managing_offerer_id=offerer_id
+        JOIN `{{ bigquery_clean_dataset }}.applicative_database_offerer` as offerer ON venue_managing_offerer_id=offerer_id
         WHERE venue.venue_is_virtual is false
         AND offerer.offerer_validation_status ='VALIDATED'
-)
+),
 
 recommendable_offers_data AS (
     SELECT 
@@ -15,8 +15,10 @@ recommendable_offers_data AS (
         ROW_NUMBER() OVER (PARTITION BY offer_id ORDER BY stock_price, stock_beginning_date ASC) as stock_rank,
     FROM (
         SELECT 
+            item_id,
             offer_id,
             product_id,
+            venue_id,
             offer_creation_date,
             DATE(stock_beginning_date) as stock_beginning_date,
             MAX(stock_price) as stock_price,
@@ -35,7 +37,7 @@ recommendable_offers_data AS (
         
         FROM `{{ bigquery_analytics_dataset }}.recommendable_offers_data` 
         WHERE (stock_beginning_date > CURRENT_DATE) OR (stock_beginning_date IS NULL)
-        GROUP BY 1,2,3,4
+        GROUP BY 1,2,3,4,5,6
     )
 )
 
@@ -69,10 +71,10 @@ SELECT
         WHEN subcategories.category_id = 'LIVRE' THEN 50000
         ELSE 100000
     END as default_max_distance,
-    ROW_NUMBER() over() as unique_id,
+    ROW_NUMBER() over() as unique_id
 FROM
     recommendable_offers_data ro
 INNER JOIN `{{ bigquery_clean_dataset }}`.subcategories subcategories ON ro.subcategory_id = subcategories.id
-INNER JOIN venues v ON ro.venue_id =   v.venueId
+LEFT JOIN venues v ON ro.venue_id =   v.venue_id
 WHERE stock_rank < 30 -- only next 30 events
 AND booking_number > 0 -- at least one bookking in period

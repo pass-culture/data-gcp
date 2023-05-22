@@ -85,7 +85,9 @@ class RecommendableOffersQueryBuilder:
         )
         params_in_filter = self.reco_model.params_in_filters
         user_profile_filter = sql.SQL(
-            "AND is_underage_recommendable "
+            """
+            AND is_underage_recommendable 
+            """
             if (self.reco_model.user.age and self.reco_model.user.age < 18)
             else ""
         )

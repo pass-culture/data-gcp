@@ -932,6 +932,7 @@ ENRICHED_USER_DATA_EXPECTED = [
         "user_deposit_creation_date": datetime.now().replace(microsecond=0),
         "user_total_deposit_amount": 500,
         "user_current_deposit_type": "GRANT_18",
+        "user_first_deposit_type": "GRANT_18",
         "first_connection_date": datetime.now().replace(microsecond=0),
         "first_booking_date": datetime.now().replace(microsecond=0),
         "second_booking_date": None,

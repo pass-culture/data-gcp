@@ -98,41 +98,6 @@ number_of_non_cancelled_bookings AS (
     GROUP BY
         user_id
 ),
-users_seniority_validated_activation_booking AS (
-    SELECT
-        booking.booking_used_date,
-        booking.user_id,
-        booking.booking_is_used
-    FROM
-        `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking
-        JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON stock.stock_id = booking.stock_id
-        JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON stock.offer_id = offer.offer_id
-    WHERE
-        booking.booking_is_used
-),
-users_seniority_activation_date AS (
-    SELECT
-        CASE
-            WHEN validated_activation_booking.booking_is_used THEN validated_activation_booking.booking_used_date
-            ELSE user.user_creation_date
-        END AS activation_date,
-        user.user_id
-    FROM
-        `{{ bigquery_clean_dataset }}`.user_beneficiary AS user
-        LEFT JOIN users_seniority_validated_activation_booking validated_activation_booking ON validated_activation_booking.user_id = user.user_id
-),
-users_seniority AS (
-    SELECT
-        DATE_DIFF(
-            CURRENT_DATE(),
-            CAST(activation_date.activation_date AS DATE),
-            DAY
-        ) AS user_seniority,
-        user.user_id
-    FROM
-        `{{ bigquery_clean_dataset }}`.user_beneficiary AS user
-        LEFT JOIN users_seniority_activation_date activation_date ON user.user_id = activation_date.user_id
-),
 actual_amount_spent AS (
     SELECT
         user.user_id,
@@ -426,7 +391,7 @@ SELECT
         number_of_non_cancelled_bookings.number_of_bookings,
         0
     ) AS no_cancelled_booking,
-    users_seniority.user_seniority,
+    DATE_DIFF(CURRENT_DATE(), CAST(user.user_activation_date AS DATE), DAY) AS user_seniority,
     actual_amount_spent.actual_amount_spent,
     theoretical_amount_spent.theoretical_amount_spent,
     theoretical_amount_spent_in_digital_goods.amount_spent_in_digital_goods,

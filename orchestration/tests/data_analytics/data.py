@@ -857,6 +857,7 @@ ENRICHED_USER_DATA_INPUT = {
             "user_birth_date": datetime.now().replace(microsecond=0),
             "user_role": "BENEFICIARY",
             "user_school_type": "Lycée agricole",
+            "user_activation_date": datetime.now().replace(microsecond=0),
         }
     ],
     "user_suspension": [

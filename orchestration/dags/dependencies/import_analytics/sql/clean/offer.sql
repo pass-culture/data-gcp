@@ -6,7 +6,7 @@ WITH offer_rank as (
     WHERE offer_subcategoryid NOT IN ('ACTIVATION_THING', 'ACTIVATION_EVENT')
     AND (
         booking_email != 'jeux-concours@passculture.app'
-        booking_email IS NULL
+        OR booking_email IS NULL
     )
 )    
 SELECT * except(row_number)

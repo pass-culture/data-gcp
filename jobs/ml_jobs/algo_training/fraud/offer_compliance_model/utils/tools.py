@@ -24,7 +24,6 @@ import mlflow
 from loguru import logger
 
 STORAGE_PATH_IMG = "./img"
-UNUSED_COLS = ["outing", "physical_goods"]
 
 
 def prepare_features(df):
@@ -41,8 +40,7 @@ def prepare_features(df):
     # Set target
     df["target"] = np.where(df["offer_validation"] == "APPROVED", 1, 0)
     # Remove useless columns
-    UNUSED_COLS.append("offer_validation")
-    df = df.drop(columns=UNUSED_COLS)
+    df = df.drop(columns=["offer_validation"])
     return df
 
 

@@ -855,7 +855,7 @@ jobs:
 
   recommendation-api-build:
     executor: python
-    working_directory: ~/data-gcp/APIs/recommendation/api
+    working_directory: ~/data-gcp/apps/recommendation/api
     steps:
       - checkout:
           path: ~/data-gcp
@@ -887,7 +887,7 @@ jobs:
           POSTGRES_PASS: postgres
           POSTGRES_USER: postgres
           POSTGRES_DBNAME: db
-    working_directory: ~/data-gcp/APIs/recommendation/api
+    working_directory: ~/data-gcp/apps/recommendation/api
     steps:
       - attach_workspace:
           at: .
@@ -897,7 +897,7 @@ jobs:
       - run:
           name: Run tests
           command: |
-            export PYTHONPATH=$PYTHONPATH:~/data-gcp/APIs/recommendation/api
+            export PYTHONPATH=$PYTHONPATH:~/data-gcp/apps/recommendation/api
             . venv-api/bin/activate
             ./run_tests.sh
 
@@ -928,7 +928,7 @@ jobs:
       - run:
           name: Run tests collection
           command: |
-            cd APIs/recommendation/api/postman
+            cd apps/recommendation/api/postman
             newman run api_integration_tests.postman_collection.json --environment <<parameters.env>>.postman_environment.json --env-var "api_token=<<parameters.api_token>>"
 
   orchestration-install:
@@ -1119,7 +1119,7 @@ jobs:
       api-instance-name:
         description: "API instance name"
         type: string
-    working_directory: ~/data-gcp/APIs/recommendation/api
+    working_directory: ~/data-gcp/apps/recommendation/api
     steps:
       - checkout:
           path: ~/data-gcp

@@ -1,11 +1,8 @@
 # pylint: disable=invalid-name
 import datetime
 import json
-import random
 import time
 from typing import Any, Dict, List
-
-import numpy as np
 import pytz
 from pcreco.core.model_selection import select_reco_model_params
 from pcreco.core.user import User
@@ -13,6 +10,7 @@ from pcreco.core.utils.cold_start import (
     get_cold_start_categories,
     get_cold_start_status,
 )
+from sqlalchemy import text
 from pcreco.core.utils.mixing import order_offers_by_score_and_diversify_features
 from pcreco.core.utils.query_builder import RecommendableOffersQueryBuilder
 from pcreco.core.utils.vertex_ai import predict_model
@@ -21,6 +19,7 @@ from pcreco.utils.db.db_connection import get_session
 from pcreco.utils.env_vars import (
     COLD_START_RECOMMENDABLE_OFFER_LIMIT,
     NUMBER_OF_PRESELECTED_OFFERS,
+    MAX_RECO_ITEM_PER_BATCH,
     RECOMMENDABLE_OFFER_LIMIT,
     log_duration,
 )
@@ -34,7 +33,6 @@ class Recommendation:
         self.params_in_filters = params_in._get_conditions()
         self.model_params = select_reco_model_params(params_in.model_endpoint)
         # TODO migrate this params in RecommendationDefaultModel model
-        self.reco_radius = params_in.reco_radius
         self.is_reco_shuffled = params_in.is_reco_shuffled
         self.nb_reco_display = params_in.nb_reco_display
         self.is_reco_mixed = params_in.is_reco_mixed
@@ -57,9 +55,7 @@ class Recommendation:
         if get_cold_start_status(self.user):
             self.reco_origin = "cold_start"
             return (
-                self.Algo(
-                    self, endpoint=self.model_params.cold_start_model_endpoint_name
-                )
+                self.Algo(self)
                 if self.model_params.name == "cold_start_b"
                 else self.ColdStart(self)
             )
@@ -128,43 +124,47 @@ class Recommendation:
             log_duration(f"save_recommendations for {self.user.id}", start)
 
     class Algo:
-        def __init__(self, scoring, endpoint=None):
+        def __init__(self, scoring):
             self.user = scoring.user
             self.params_in_filters = scoring.params_in_filters
-            self.reco_radius = scoring.reco_radius
-            self.model_name = scoring.model_params.name
-            self.model_endpoint_name = (
-                endpoint if endpoint else scoring.model_params.endpoint_name
-            )
+            self.model_params = scoring.model_params
             self.model_display_name = None
             self.model_version = None
             self.include_digital = scoring.include_digital
-            self.recommendable_offers = self.get_recommendable_offers(
-                scoring.model_params
-            )
+            self.recommendable_offers = self.get_recommendable_offers()
             self.cold_start_categories = get_cold_start_categories(self.user.id)
 
         def get_scored_offers(self) -> List[Dict[str, Any]]:
             start = time.time()
             if not len(self.recommendable_offers) > 0:
                 log_duration(
-                    f"no offers to score for {self.user.id} - {self.model_name}",
+                    f"no offers to score for {self.user.id} - {self.model_params.name}",
                     start,
                 )
                 return []
             else:
-                if self.model_name == "cold_start_b":
+                if self.model_params.name == "cold_start_b":
                     user_input = ",".join(self.cold_start_categories)
                 else:
-                    user_input = self.user.id
+                    user_input = str(self.user.id)
                 log_duration(
                     f"user_input: {user_input}",
                     start,
                 )
 
                 instances = self._get_instances(user_input)
+                log_duration(
+                    f"batch to score {len(instances)} for {self.user.id} - {self.model_params.name}, ",
+                    start,
+                )
+                predicted_scores = []
+                for inst in instances:
+                    predicted_scores.extend(self._predict_score(inst))
 
-                predicted_scores = self._predict_score(instances)
+                log_duration(
+                    f"scored {len(predicted_scores)} batches for {self.user.id} - {self.model_params.name}, ",
+                    start,
+                )
 
                 recommendations = [
                     {**recommendation, "score": predicted_scores[i][0]}
@@ -172,61 +172,62 @@ class Recommendation:
                 ]
 
                 log_duration(
-                    f"scored {len(recommendations)} for {self.user.id} - {self.model_name}, ",
+                    f"scored {len(recommendations)} for {self.user.id} - {self.model_params.name}, ",
                     start,
                 )
             return recommendations
 
         def _get_instances(self, user_input) -> List[Dict[str, str]]:
-            start = time.time()
-            user_to_rank = [user_input] * len(self.recommendable_offers)
-            offer_ids_to_rank = []
-            for recommendation in self.recommendable_offers:
-                offer_ids_to_rank.append(
-                    recommendation["item_id"] if recommendation["item_id"] else ""
-                )
-            instances = {"input_1": user_to_rank, "input_2": offer_ids_to_rank}
-            return instances
+            def chunks(lst, n):
+                for i in range(0, len(lst), n):
+                    chunk = lst[i : i + n]
+                    yield {"input_1": [user_input] * len(chunk), "input_2": chunk}
 
-        def get_recommendable_offers(self, params) -> List[Dict[str, Any]]:
+            offer_ids_to_rank = [
+                str(x["item_id"]) if x["item_id"] else ""
+                for x in self.recommendable_offers
+            ]
+            return list(chunks(offer_ids_to_rank, MAX_RECO_ITEM_PER_BATCH))
+
+        def get_recommendable_offers(self) -> List[Dict[str, Any]]:
             start = time.time()
+            order_query = "is_geolocated DESC, booking_number DESC"
+
             recommendations_query = RecommendableOffersQueryBuilder(
-                self, params.offer_limit
-            ).generate_query(params.order_query)
+                self, RECOMMENDABLE_OFFER_LIMIT
+            ).generate_query(
+                order_query,
+                user_id=str(self.user.id),
+                user_longitude=float(self.user.longitude),
+                user_latitude=float(self.user.latitude),
+            )
 
             query_result = []
             if recommendations_query is not None:
                 connection = get_session()
-                query_result = connection.execute(
-                    text(recommendations_query),
-                    user_id=str(self.user.id),
-                    user_iris_id=str(self.user.iris_id),
-                    user_longitude=float(self.user.longitude),
-                    user_latitude=float(self.user.latitude),
-                ).fetchall()
+                query_result = connection.execute(recommendations_query).fetchall()
 
             user_recommendation = [
                 {
                     "id": row[0],
-                    "category": row[1],
-                    "subcategory_id": row[2],
-                    "search_group_name": row[3],
-                    "item_id": row[4],
-                    "user_distance": row[5],
-                    "booking_number": row[6],
+                    "item_id": row[1],
+                    "venue_id": row[2],
+                    "user_distance": row[3],
+                    "booking_number": row[4],
+                    "category": row[5],
+                    "subcategory_id": row[6],
+                    "search_group_name": row[7],
+                    "is_geolocated": row[8],
                 }
                 for row in query_result
             ]
-            log_duration(
-                f"get_recommendable_offers for {self.user.id}: {len(user_recommendation)}",
-                start,
-            )
+            log_duration("get_recommendable_offers", start)
             return user_recommendation
 
         def _predict_score(self, instances) -> List[List[float]]:
             start = time.time()
             response = predict_model(
-                endpoint_name=self.model_endpoint_name,
+                endpoint_name=self.model_params.endpoint_name,
                 location="europe-west1",
                 instances=instances,
             )
@@ -239,45 +240,39 @@ class Recommendation:
         def __init__(self, scoring):
             self.user = scoring.user
             self.params_in_filters = scoring.params_in_filters
-            self.reco_radius = scoring.reco_radius
             self.cold_start_categories = get_cold_start_categories(self.user.id)
             self.include_digital = scoring.include_digital
             self.model_version = None
             self.model_display_name = None
 
         def get_scored_offers(self) -> List[Dict[str, Any]]:
-            order_query = (
-                f"""(subcategory_id in ({', '.join([f"'{category}'" for category in self.cold_start_categories])})) DESC, booking_number DESC"""
-                if len(self.cold_start_categories) > 0
-                else "booking_number DESC"
-            )
+            order_query = "booking_number DESC"
 
             recommendations_query = RecommendableOffersQueryBuilder(
                 self, COLD_START_RECOMMENDABLE_OFFER_LIMIT
-            ).generate_query(order_query)
+            ).generate_query(
+                order_query,
+                user_id=str(self.user.id),
+                user_longitude=float(self.user.longitude),
+                user_latitude=float(self.user.latitude),
+            )
 
             query_result = []
             if recommendations_query is not None:
                 connection = get_session()
-                query_result = connection.execute(
-                    text(recommendations_query),
-                    user_iris_id=str(self.user.iris_id),
-                    user_id=str(self.user.id),
-                    user_longitude=float(self.user.longitude),
-                    user_latitude=float(self.user.latitude),
-                    number_of_preselected_offers=NUMBER_OF_PRESELECTED_OFFERS,
-                ).fetchall()
+                query_result = connection.execute(recommendations_query).fetchall()
 
             cold_start_recommendations = [
                 {
                     "id": row[0],
-                    "category": row[1],
-                    "subcategory_id": row[2],
-                    "search_group_name": row[3],
-                    "item_id": row[4],
-                    "user_distance": row[5],
-                    "booking_number": row[6],
-                    "score": row[6],  # random.random()
+                    "item_id": row[1],
+                    "venue_id": row[2],
+                    "user_distance": row[3],
+                    "score": row[4],
+                    "category": row[5],
+                    "subcategory_id": row[6],
+                    "search_group_name": row[7],
+                    "is_geolocated": row[8],
                 }
                 for row in query_result
             ]

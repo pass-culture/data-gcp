@@ -1,199 +1,96 @@
+from pcreco.utils.health_check_queries import get_materialized_view_status
+from psycopg2 import sql
+from pcreco.utils.db.db_connection import as_string
+
+
 class RecommendableOffersQueryBuilder:
     def __init__(self, reco_model, recommendable_offer_limit):
         self.reco_model = reco_model
         self.recommendable_offer_limit = recommendable_offer_limit
+        self.get_recommendable_offers_table()
 
-    def _rank_by_distance(self, source_table_name, export_table_name):
-        return f"""
-            reco_offers_with_distance_to_user   AS  (
-                    SELECT
-                        offer_id
-                    ,   category
-                    ,   subcategory_id
-                    ,   search_group_name
-                    ,   item_id
-                    ,   booking_number
-                    ,   is_geolocated
-                    ,   CASE
-                            WHEN
-                                (
-                                    venue_latitude    IS  NOT NULL
-                                AND venue_longitude     IS  NOT NULL
-                                AND :user_latitude    IS  NOT NULL
-                                AND :user_longitude     IS  NOT NULL
-                                and ro."position" ='in'
-                                )
-                            THEN
-                                st_distance(st_point(:user_longitude, :user_latitude)::geometry, st_point(venue_longitude, venue_latitude)::geometry, FALSE)
-                            WHEN(
-                                    venue_latitude    IS  NOT NULL
-                                AND venue_longitude     IS  NOT NULL
-                                AND :user_latitude    IS  NOT NULL
-                                AND :user_longitude     IS  NOT NULL
-                                and ro."position" ='out'
-                                )
-                            THEN 
-                                ro.user_distance
-                            ELSE
-                                -1
-                        END     AS  user_distance
-                    FROM
-                        {source_table_name} ro
-                )
-            ,reco_offers_ranked_by_distance      AS  (
-                    SELECT
-                        *
-                    , row_number() OVER(
-                                partition BY
-                                    item_id
-                                ORDER BY
-                                    user_distance   ASC
-                                )
-                        AS  rank
-                    FROM
-                        reco_offers_with_distance_to_user   ro
-                )
-            ,{export_table_name}                AS (
-                SELECT
-                    
-                    offer_id
-                    ,   category
-                    ,   subcategory_id
-                    ,   search_group_name
-                    ,   item_id
-                    ,   user_distance
-                    ,   booking_number
-                    ,   is_geolocated
-                FROM
-                    reco_offers_ranked_by_distance
-                WHERE
-                    rank    =   1
-            )  
+    def get_recommendable_offers_table(self):
+        view_name = "recommendable_offers_raw_mv"
+        if get_materialized_view_status(view_name)[f"is_{view_name}_datasource_exists"]:
+            self.recommendable_offer_table = view_name
+        else:
+            self.recommendable_offer_table = f"{view_name}_old"
+
+    def generate_query(
+        self,
+        order_query: str,
+        user_id: str,
+        user_longitude: float,
+        user_latitude: float,
+    ):
+        main_query = sql.SQL(
             """
+        
+        WITH distance_filter AS (
+            SELECT
+                *,
+                case
+	                when is_geolocated AND {user_longitude} is not null  AND {user_latitude} is not null 
+                    then st_distance(st_point({user_longitude}, {user_latitude})::geometry, venue_geo)
+	            else 0.0
+                end as user_distance
+            FROM
+                {table_name}
+            WHERE
 
-    def _select_items(self, source_table_name, export_table_name):
-        return f"""
-            {export_table_name}                AS (
+                (is_geolocated AND {user_longitude} is not null AND {user_latitude} is not null AND ST_DWITHIN(venue_geo, st_point({user_longitude}, {user_latitude})::geography, default_max_distance))
+                OR NOT is_geolocated
+        ),
+
+        rank_offers AS (
+            SELECT 
+                *, ROW_NUMBER() OVER(partition BY item_id ORDER BY user_distance ASC) AS rank
+            FROM distance_filter
+        )
+
+        SELECT 
+            ro.offer_id
+            ,   ro.item_id
+            ,   ro.venue_id
+            ,   ro.user_distance
+            ,   ro.booking_number
+            ,   ro.category
+            ,   ro.subcategory_id
+            ,   ro.search_group_name
+            ,   ro.is_geolocated
+            ,   ro.venue_latitude
+            ,   ro.venue_longitude
+            FROM
+                rank_offers ro
+            WHERE 
+            ro.rank = 1 
+            AND offer_id    NOT IN  (
                 SELECT
-                    
                     offer_id
-                    ,   category
-                    ,   subcategory_id
-                    ,   search_group_name
-                    ,   item_id
-                    ,   user_distance
-                    ,   booking_number
-                    ,   is_geolocated
-
                 FROM
-                    {source_table_name} 
-            )  
-        """
-
-    def generate_query(self, order_query) -> str:
-        user_profile_filter = (
+                    non_recommendable_offers
+                WHERE
+                    user_id = {user_id}
+            )
+            AND ro.stock_price < {remaining_credit}
+            """
+        ).format(
+            table_name=sql.SQL(self.recommendable_offer_table),
+            user_id=sql.Literal(user_id),
+            user_longitude=sql.Literal(user_longitude),
+            user_latitude=sql.Literal(user_latitude),
+            remaining_credit=sql.Literal(
+                self.reco_model.user.user_deposit_remaining_credit
+            ),
+        )
+        params_in_filter = self.reco_model.params_in_filters
+        user_profile_filter = sql.SQL(
             "AND is_underage_recommendable"
             if (self.reco_model.user.age and self.reco_model.user.age < 18)
             else ""
         )
-        iris_distance = (
-            " AND ("
-            + " OR ".join(
-                [
-                    f"venue_distance_to_iris_bucket='{iris_dist}'"
-                    for iris_dist in self.reco_model.reco_radius
-                ]
-            )
-            + ")\n"
+        order_by = sql.SQL(
+            f"""ORDER BY {order_query} LIMIT {self.recommendable_offer_limit}"""
         )
 
-        reco_geolocated_offers_sql = self._get_reco_offers(
-            "(ro.is_geolocated and ro.iris_id = :user_iris_id)" + iris_distance,
-            user_profile_filter,
-            export_table_name="reco_geolocated_offers",
-        )
-        filter_by_distance_sql = self._rank_by_distance(
-            source_table_name="reco_geolocated_offers",
-            export_table_name="selected_geolocated_offers",
-        )
-
-        reco_non_geolocated_offers_sql = self._get_reco_offers(
-            "(NOT ro.is_geolocated)",
-            user_profile_filter,
-            export_table_name="reco_non_geolocated_offers",
-        )
-        selected_offers_sql = self._select_items(
-            source_table_name="reco_non_geolocated_offers",
-            export_table_name="selected_non_geolocated_offers",
-        )
-        # Default
-        if self.reco_model.user.iris_id and self.reco_model.include_digital:
-            return f"""
-                WITH {reco_geolocated_offers_sql}, {filter_by_distance_sql}, {reco_non_geolocated_offers_sql}, {selected_offers_sql}
-                , tmp AS(
-                    SELECT * FROM selected_non_geolocated_offers 
-                    UNION ALL
-                    SELECT * FROM selected_geolocated_offers
-                )
-                SELECT * FROM tmp
-                ORDER BY {order_query}
-                LIMIT {self.recommendable_offer_limit}
-            """
-        # No digital offer (case filtered by events)
-        elif self.reco_model.user.iris_id:
-            return f"""
-                WITH {reco_geolocated_offers_sql}, {filter_by_distance_sql}
-                SELECT * FROM selected_geolocated_offers 
-                ORDER BY {order_query}
-                LIMIT {self.recommendable_offer_limit}
-            """
-        # No geoloc
-        elif self.reco_model.include_digital:
-            return f"""
-                WITH {reco_non_geolocated_offers_sql}, {selected_offers_sql}
-                SELECT * FROM selected_non_geolocated_offers 
-                ORDER BY {order_query}
-                LIMIT {self.recommendable_offer_limit}
-            """
-        # No reco
-        else:
-            return None
-
-    def _get_reco_offers(
-        self,
-        geoloc_filter,
-        user_profile_filter,
-        export_table_name,
-    ) -> str:
-
-        return f"""
-                {export_table_name} AS  (
-                        SELECT ro.offer_id
-                        ,   ro.item_id
-                        ,   ro.venue_id
-                        ,   ro.venue_distance_to_iris as user_distance
-                        ,   ro."position"
-                        ,   ro.iris_id
-                        ,   ro.booking_number
-                        ,   ro.category
-                        ,   ro.subcategory_id
-                        ,   ro.search_group_name
-                        ,   ro.is_geolocated
-                        ,   ro.venue_latitude
-                        ,   ro.venue_longitude
-                        FROM
-                            {self.reco_model.user.recommendable_offer_table} ro
-                        WHERE {geoloc_filter}
-                        AND offer_id    NOT IN  (
-                                SELECT
-                                    offer_id
-                                FROM
-                                    non_recommendable_offers
-                                WHERE
-                                    user_id =   :user_id
-                        )
-                        {self.reco_model.params_in_filters}
-                        {user_profile_filter}
-                        AND ro.stock_price < {self.reco_model.user.user_deposit_remaining_credit}
-                    )
-                    """
+        return as_string(main_query + params_in_filter + user_profile_filter + order_by)

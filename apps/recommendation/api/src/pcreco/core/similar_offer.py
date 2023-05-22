@@ -25,7 +25,6 @@ class SimilarOffer:
         self.model_params = select_sim_model_params(params_in.model_endpoint)
         self.recommendable_offer_limit = 10_000
         self.params_in_filters = params_in._get_conditions()
-        self.reco_radius = params_in.reco_radius
         self.json_input = params_in.json_input
         self.include_digital = params_in.include_digital
         self.has_conditions = params_in.has_conditions
@@ -68,26 +67,29 @@ class SimilarOffer:
 
         recommendable_offers_query = RecommendableOffersQueryBuilder(
             self, self.recommendable_offer_limit
-        ).generate_query(order_query)
+        ).generate_query(
+            order_query,
+            user_id=str(self.user.id),
+            user_longitude=float(self.user.longitude),
+            user_latitude=float(self.user.latitude),
+        )
 
         query_result = []
         if recommendable_offers_query is not None:
             connection = get_session()
-            query_result = connection.execute(
-                text(recommendable_offers_query),
-                user_id=str(self.user.id),
-                user_iris_id=str(self.offer.iris_id),
-                user_longitude=float(self.offer.longitude),
-                user_latitude=float(self.offer.latitude),
-            ).fetchall()
+            query_result = connection.execute(recommendable_offers_query).fetchall()
 
         user_recommendation = {
-            row[4]: {
+            row[1]: {
                 "id": row[0],
-                "category": row[1],
-                "subcategory_id": row[2],
-                "search_group_name": row[3],
-                "item_id": row[4],
+                "item_id": row[1],
+                "venue_id": row[2],
+                "user_distance": row[3],
+                "booking_number": row[4],
+                "category": row[5],
+                "subcategory_id": row[6],
+                "search_group_name": row[7],
+                "is_geolocated": row[8],
             }
             for row in query_result
             if row[4] != self.offer.item_id

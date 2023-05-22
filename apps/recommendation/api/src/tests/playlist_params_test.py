@@ -55,20 +55,6 @@ class PlaylistParamsTest:
         assert input_params.nb_reco_display == nb_reco_display
 
     @pytest.mark.parametrize(
-        ["input_params", "reco_radius"],
-        [
-            ({}, DEFAULT_RECO_RADIUS),
-            ({"recoRadius": 100}, DEFAULT_RECO_RADIUS),
-            ({"recoRadius": 10_000}, ["0_25KM"]),
-            ({"recoRadius": 100_000}, ["0_25KM", "25_50KM", "50_100KM"]),
-        ],
-    )
-    def test_reco_radius(self, input_params, reco_radius):
-
-        input_params = PlaylistParamsIn(input_params)
-        assert input_params.reco_radius == reco_radius
-
-    @pytest.mark.parametrize(
         ["input_params", "mixing_features"],
         [
             ({}, MIXING_FEATURE),

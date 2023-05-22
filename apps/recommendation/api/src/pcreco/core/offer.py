@@ -3,6 +3,7 @@ from pcreco.utils.env_vars import log_duration
 from pcreco.utils.db.db_connection import get_session
 from loguru import logger
 import time
+from sqlalchemy import text
 
 
 class Offer:
@@ -19,11 +20,14 @@ class Offer:
         start = time.time()
         connection = get_session()
         query_result = connection.execute(
-            f"""
+            text(
+                """
                 SELECT item_id, booking_number
                 FROM item_ids_mv
-                WHERE offer_id = '{offer_id}'
+                WHERE offer_id = :offer_id
             """
+            ),
+            offer_id=str(offer_id),
         ).fetchone()
         log_duration(f"get_offer_characteristics for offer_id: {offer_id}", start)
         if query_result is not None:

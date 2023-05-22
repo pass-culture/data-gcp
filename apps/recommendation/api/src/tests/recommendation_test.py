@@ -183,22 +183,12 @@ class RecommendationTest:
                 for i, recommendation in enumerate(recommendable_offers)
             ]
 
-            if latitude is not None and longitude is not None:
-
-                assert (
-                    len(recommendable_offers) > 0
-                ), f"{use_case}: playlist should not be empty"
-                assert set(recommendation_sgn) == set(
-                    categories
-                ), f"{use_case}: recommended categories are expected"
-            elif input_reco.is_event == True:
-                assert (
-                    len(recommendable_offers) == 0
-                ), f"{use_case}: playlist should be empty"
-            else:
-                assert (
-                    len(recommendable_offers) > 0
-                ), f"{use_case}: playlist should not be empty"
+            assert (
+                len(recommendable_offers) > 0
+            ), f"{use_case}: playlist should not be empty"
+            assert set(recommendation_sgn) == set(
+                categories
+            ), f"{use_case}: recommended categories are expected"
 
             assert input_reco.has_conditions == True
 
@@ -278,22 +268,12 @@ class RecommendationTest:
                 reco["search_group_name"] for reco in recommended_offers
             ]
 
-            if latitude is not None and longitude is not None:
-
-                assert (
-                    len(recommended_offers) > 0
-                ), f"{use_case}: playlist should not be empty"
-                assert set(recommendation_sgn) == set(
-                    categories
-                ), f"{use_case}: recommended categories are expected"
-            elif input_reco.is_event == True:
-                assert (
-                    len(recommended_offers) == 0
-                ), f"{use_case}: (elif) playlist should be empty"
-            else:
-                assert (
-                    len(recommended_offers) > 0
-                ), f"{use_case}: (end) playlist should not be empty"
+            assert (
+                len(recommended_offers) > 0
+            ), f"{use_case}: playlist should not be empty"
+            assert set(recommendation_sgn) == set(
+                categories
+            ), f"{use_case}: recommended categories are expected"
 
             assert (
                 input_reco.has_conditions == True

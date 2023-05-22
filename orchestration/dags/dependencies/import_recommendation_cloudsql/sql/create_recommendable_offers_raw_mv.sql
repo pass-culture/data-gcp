@@ -29,7 +29,7 @@ RETURNS TABLE (
 $body$
 BEGIN
     RETURN QUERY 
-    SELECT *, ST_MakePoint(venue_longitude, venue_latitude)::geography as venue_geo 
+    SELECT *, ST_MakePoint(ro.venue_longitude, ro.venue_latitude)::geography as venue_geo 
     FROM public.recommendable_offers_raw ro;
 END;
 $body$
@@ -58,5 +58,3 @@ USING gist(venue_geo);
 
 -- Refresh state
 REFRESH MATERIALIZED VIEW recommendable_offers_raw_mv_tmp;
-
-VACUUM ANALYZE recommendable_offers_raw_mv_tmp;

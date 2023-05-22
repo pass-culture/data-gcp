@@ -85,12 +85,14 @@ class RecommendableOffersQueryBuilder:
         )
         params_in_filter = self.reco_model.params_in_filters
         user_profile_filter = sql.SQL(
-            "AND is_underage_recommendable"
+            "AND is_underage_recommendable "
             if (self.reco_model.user.age and self.reco_model.user.age < 18)
             else ""
         )
         order_by = sql.SQL(
-            f"""ORDER BY {order_query} LIMIT {self.recommendable_offer_limit}"""
+            f"""
+            ORDER BY {order_query} LIMIT {self.recommendable_offer_limit}
+            """
         )
 
         return as_string(main_query + params_in_filter + user_profile_filter + order_by)

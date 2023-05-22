@@ -79,7 +79,7 @@ with DAG(
         "branch": Param(
             default="production"
             if ENV_SHORT_NAME == "prod"
-            else "PC-22169-offer-validation-model-training",
+            else "master",
             type="string",
         ),
         "config_file_name": Param(
@@ -158,8 +158,8 @@ with DAG(
         environment=dag_config,
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/preprocess.py "
         "--config-file-name {{ params.config_file_name }} "
-        "--input-dataframe-file-name validation_raw_data "
-        "--output-dataframe-file-name validation_clean_data ",
+        "--input-dataframe-file-name compliance_offers_raw_data "
+        "--output-dataframe-file-name compliance_clean_data ",
         dag=dag,
     )
 
@@ -169,9 +169,9 @@ with DAG(
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/split_data.py "
-        f"--clean-table-name validation_clean_data "
-        "--training-table-name validation_training_data "
-        "--validation-table-name validation_validation_data ",
+        f"--clean-table-name compliance_clean_data "
+        "--training-table-name compliance_training_data "
+        "--validation-table-name compliance_validation_data ",
         dag=dag,
     )
 
@@ -183,7 +183,7 @@ with DAG(
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/train.py "
         f"--experiment-name {dag_config['EXPERIMENT_NAME']} "
         "--config-file-name {{ params.config_file_name }} "
-        "--training-table-name validation_training_data "
+        "--training-table-name compliance_training_data "
         "--run-name {{ params.run_name }}",
         dag=dag,
     )
@@ -196,7 +196,7 @@ with DAG(
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/evaluate.py "
         f"--experiment-name {dag_config['EXPERIMENT_NAME']} "
         "--config-file-name {{ params.config_file_name }} "
-        "--validation-table-name validation_validation_data "
+        "--validation-table-name compliance_validation_data "
         "--run-name {{ params.run_name }}",
         dag=dag,
     )
@@ -218,7 +218,7 @@ with DAG(
 
     (
         start
-        >> import_tables["validation_offers"]
+        >> import_tables["compliance_offers"]
         >> store_data["raw"]
         >> gce_instance_start
         >> fetch_code

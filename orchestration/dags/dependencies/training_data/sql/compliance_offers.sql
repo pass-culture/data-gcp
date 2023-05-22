@@ -60,28 +60,28 @@ CASE
         END as stock,
 CASE
             WHEN mediation.mediation_humanized_id is not null THEN CONCAT(
-                "https://storage.googleapis.com/passculture-metier-prod-production-assets-fine-grained/thumbs/mediations/",
+                "https://storage.googleapis.com/{{ mediation_url }}-assets-fine-grained/thumbs/mediations/",
                 mediation.mediation_humanized_id
             )
             ELSE CONCAT(
-                "https://storage.googleapis.com/passculture-metier-prod-production-assets-fine-grained/thumbs/products/",
+                "https://storage.googleapis.com/{{ mediation_url }}-assets-fine-grained/thumbs/products/",
                 humanize_id(o.offer_product_id)
             )
         END AS offer_image,
-CASE
-            WHEN subcat.category_id <> 'MUSIQUE_LIVE'
-            AND oed.showType IS NOT NULL THEN oed.showType
-            WHEN subcat.category_id = 'MUSIQUE_LIVE' THEN oed.musicType
-            WHEN subcat.category_id <> 'SPECTACLE'
-            AND oed.musicType IS NOT NULL THEN oed.musicType
-        END AS type,
-CASE
-            WHEN subcat.category_id <> 'MUSIQUE_LIVE'
-            AND oed.showSubType IS NOT NULL THEN oed.showSubType
-            WHEN subcat.category_id = 'MUSIQUE_LIVE' THEN oed.musicSubtype
-            WHEN subcat.category_id <> 'SPECTACLE'
-            AND oed.musicsubType IS NOT NULL THEN oed.musicSubtype
-        END AS subType,
+-- CASE
+--             WHEN subcat.category_id <> 'MUSIQUE_LIVE'
+--             AND oed.showType IS NOT NULL THEN oed.showType
+--             WHEN subcat.category_id = 'MUSIQUE_LIVE' THEN oed.musicType
+--             WHEN subcat.category_id <> 'SPECTACLE'
+--             AND oed.musicType IS NOT NULL THEN oed.musicType
+--         END AS type,
+-- CASE
+--             WHEN subcat.category_id <> 'MUSIQUE_LIVE'
+--             AND oed.showSubType IS NOT NULL THEN oed.showSubType
+--             WHEN subcat.category_id = 'MUSIQUE_LIVE' THEN oed.musicSubtype
+--             WHEN subcat.category_id <> 'SPECTACLE'
+--             AND oed.musicsubType IS NOT NULL THEN oed.musicSubtype
+--         END AS subType,
 CASE
             WHEN subcat.id = 'ESCAPE_GAME'
             AND o.offer_creation_date < DATETIME '2022-02-01' THEN False

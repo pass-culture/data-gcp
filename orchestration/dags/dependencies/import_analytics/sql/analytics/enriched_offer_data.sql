@@ -5,7 +5,7 @@ WITH offer_humanized_id AS (
         offer_id,
         humanize_id(offer_id) AS humanized_id,
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_offer
+        `{{ bigquery_clean_dataset }}`.applicative_database_offer
     WHERE
         offer_id is not NULL
 ),
@@ -26,9 +26,9 @@ offer_booking_information_view AS (
             END
         ) AS count_booking_confirm
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_offer AS offer
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_stock AS stock ON stock.offer_id = offer.offer_id
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_booking AS booking ON stock.stock_id = booking.stock_id
+        `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON stock.offer_id = offer.offer_id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking ON stock.stock_id = booking.stock_id
     GROUP BY
         offer_id
 ),
@@ -37,7 +37,7 @@ count_favorites_view AS (
         offerId,
         COUNT(*) AS count_favorite
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_favorite AS favorite
+        `{{ bigquery_clean_dataset }}`.applicative_database_favorite AS favorite
     GROUP BY
         offerId
 ),
@@ -46,7 +46,7 @@ sum_stock_view AS (
         offer_id,
         SUM(stock_quantity) AS stock
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_stock AS stock
+        `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock
     GROUP BY
         offer_id
 ),
@@ -65,8 +65,8 @@ count_first_booking_view AS (
                         booking.booking_id
                 ) AS booking_rank
             FROM
-                `{{ bigquery_analytics_dataset }}`.applicative_database_booking AS booking
-                LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_stock AS stock on stock.stock_id = booking.stock_id
+                `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking
+                LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock on stock.stock_id = booking.stock_id
         ) c
     WHERE
         c.booking_rank = 1
@@ -91,7 +91,7 @@ last_stock AS (
                         stock.stock_id DESC
                 ) AS rang_stock
             FROM
-                `{{ bigquery_analytics_dataset }}`.applicative_database_offer AS offer
+                `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer
                 JOIN `{{ bigquery_clean_dataset }}`.cleaned_stock AS stock on stock.offer_id = offer.offer_id
         ) c
     WHERE
@@ -106,7 +106,7 @@ mediation AS (
             id,
             offerId as offer_id,
             ROW_NUMBER() OVER (PARTITION BY offerId ORDER BY dateModifiedAtLastProvider DESC) as rnk
-        FROM `{{ bigquery_analytics_dataset }}.applicative_database_mediation`
+        FROM `{{ bigquery_clean_dataset }}.applicative_database_mediation`
         WHERE isActive
         ) inn
     WHERE rnk = 1
@@ -214,10 +214,10 @@ SELECT
         AND offer_extracted_data.musicsubType IS NOT NULL THEN offer_extracted_data.musicSubtype
     END AS subType
 FROM
-    `{{ bigquery_analytics_dataset }}`.applicative_database_offer AS offer
+    `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.subcategories subcategories ON offer.offer_subcategoryId = subcategories.id
-    LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_venue AS venue ON offer.venue_id = venue.venue_id
-    LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offerer AS offerer ON venue.venue_managing_offerer_id = offerer.offerer_id
+    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue ON offer.venue_id = venue.venue_id
+    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offerer AS offerer ON venue.venue_managing_offerer_id = offerer.offerer_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.offer_item_ids AS offer_ids on offer.offer_id=offer_ids.offer_id
     LEFT JOIN offer_booking_information_view ON offer_booking_information_view.offer_id = offer.offer_id
     LEFT JOIN count_favorites_view ON count_favorites_view.offerId = offer.offer_id

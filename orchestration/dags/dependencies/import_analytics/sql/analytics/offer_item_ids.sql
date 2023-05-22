@@ -22,7 +22,7 @@ with item_group_by_extra_data as(
             ELSE CONCAT('product-', offer.offer_product_id)
         END AS item_id,
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_offer AS offer
+        `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer
         LEFT JOIN `{{ bigquery_analytics_dataset }}`.offer_extracted_data offer_extracted_data ON offer_extracted_data.offer_id = offer.offer_id
 )
 select

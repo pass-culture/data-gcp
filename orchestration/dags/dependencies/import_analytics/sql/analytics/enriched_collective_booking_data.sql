@@ -7,7 +7,7 @@ WITH collective_booking_ranking_view AS (
                 collective_booking.collective_booking_creation_date
         ) AS collective_booking_rank
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_collective_booking AS collective_booking
+        `{{ bigquery_clean_dataset }}`.applicative_database_collective_booking AS collective_booking
 )
 
 SELECT
@@ -47,13 +47,13 @@ SELECT
     collective_booking_ranking_view.collective_booking_rank,
     collective_offer.collective_offer_image_id,
 FROM
-    `{{ bigquery_analytics_dataset }}`.applicative_database_collective_booking AS collective_booking
-    INNER JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_collective_stock AS collective_stock ON collective_stock.collective_stock_id = collective_booking.collective_stock_id
-    INNER JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_collective_offer AS collective_offer ON collective_offer.collective_offer_id = collective_stock.collective_offer_id
-    INNER JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_venue AS venue ON collective_booking.venue_id = venue.venue_id
-    INNER JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offerer AS offerer ON offerer.offerer_id = venue.venue_managing_offerer_id
-    INNER JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_educational_institution AS educational_institution ON educational_institution.educational_institution_id = collective_booking.educational_institution_id
-    INNER JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_educational_year AS educational_year ON educational_year.adage_id = collective_booking.educational_year_id
+    `{{ bigquery_clean_dataset }}`.applicative_database_collective_booking AS collective_booking
+    INNER JOIN `{{ bigquery_clean_dataset }}`.applicative_database_collective_stock AS collective_stock ON collective_stock.collective_stock_id = collective_booking.collective_stock_id
+    INNER JOIN `{{ bigquery_clean_dataset }}`.applicative_database_collective_offer AS collective_offer ON collective_offer.collective_offer_id = collective_stock.collective_offer_id
+    INNER JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue ON collective_booking.venue_id = venue.venue_id
+    INNER JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offerer AS offerer ON offerer.offerer_id = venue.venue_managing_offerer_id
+    INNER JOIN `{{ bigquery_clean_dataset }}`.applicative_database_educational_institution AS educational_institution ON educational_institution.educational_institution_id = collective_booking.educational_institution_id
+    INNER JOIN `{{ bigquery_clean_dataset }}`.applicative_database_educational_year AS educational_year ON educational_year.adage_id = collective_booking.educational_year_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.eple AS eple ON eple.id_etablissement = educational_institution.institution_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.region_department AS venue_region_departement ON venue.venue_department_code = venue_region_departement.num_dep
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.region_department AS school_region_departement ON eple.code_departement = school_region_departement.num_dep

@@ -5,7 +5,7 @@ SELECT
     booking_id,
     humanize_id(booking_id) AS humanized_id
 FROM
-    `{{ bigquery_analytics_dataset }}`.applicative_database_booking
+    `{{ bigquery_clean_dataset }}`.applicative_database_booking
 WHERE
     booking_id is not NULL
 ),
@@ -15,7 +15,7 @@ booking_amount_view AS (
         booking.booking_id,
         coalesce(booking.booking_amount, 0) * coalesce(booking.booking_quantity, 0) AS booking_intermediary_amount
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_booking AS booking
+        `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking
 ),
 
 booking_ranking_view AS (
@@ -27,7 +27,7 @@ booking_ranking_view AS (
                 booking.booking_creation_date
         ) AS booking_rank
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_booking AS booking
+        `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking
 ),
 
 booking_ranking_in_category_view AS (
@@ -40,9 +40,9 @@ booking_ranking_in_category_view AS (
                 booking.booking_creation_date
         ) AS same_category_booking_rank
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_booking AS booking
-        INNER JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_stock AS stock ON booking.stock_id = stock.stock_id
-        INNER JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offer AS offer ON stock.offer_id = offer.offer_id
+        `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking
+        INNER JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON booking.stock_id = stock.stock_id
+        INNER JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON stock.offer_id = offer.offer_id
     ORDER BY
         booking.booking_id
 ),
@@ -54,7 +54,7 @@ booking_intermediary_view AS (
         booking_ranking_view.booking_rank,
         booking_ranking_in_category_view.same_category_booking_rank
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_booking AS booking
+        `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking
         LEFT JOIN booking_amount_view ON booking_amount_view.booking_id = booking.booking_id
         LEFT JOIN booking_ranking_view ON booking_ranking_view.booking_id = booking.booking_id
         LEFT JOIN booking_ranking_in_category_view ON booking_ranking_in_category_view.booking_id = booking.booking_id
@@ -102,15 +102,15 @@ SELECT
     booking_intermediary_view.same_category_booking_rank,
     booking_used_date
 FROM
-    `{{ bigquery_analytics_dataset }}`.applicative_database_booking AS booking
-    INNER JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_stock AS stock ON booking.stock_id = stock.stock_id
-    LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offer AS offer ON offer.offer_id = stock.offer_id
+    `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking
+    INNER JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON booking.stock_id = stock.stock_id
+    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON offer.offer_id = stock.offer_id
     AND offer.offer_subcategoryId NOT IN ('ACTIVATION_THING', 'ACTIVATION_EVENT')
-    INNER JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_venue AS venue ON venue.venue_id = offer.venue_id
-    INNER JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offerer AS offerer ON venue.venue_managing_offerer_id = offerer.offerer_id
+    INNER JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue ON venue.venue_id = offer.venue_id
+    INNER JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offerer AS offerer ON venue.venue_managing_offerer_id = offerer.offerer_id
     INNER JOIN `{{ bigquery_clean_dataset }}`.user_beneficiary AS user ON user.user_id = booking.user_id
-    INNER JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_deposit AS deposit ON deposit.id = booking.deposit_id
-    LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_venue_label AS venue_label ON venue.venue_label_id = venue_label.id
+    INNER JOIN `{{ bigquery_clean_dataset }}`.applicative_database_deposit AS deposit ON deposit.id = booking.deposit_id
+    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue_label AS venue_label ON venue.venue_label_id = venue_label.id
     INNER JOIN `{{ bigquery_analytics_dataset }}`.subcategories subcategories ON offer.offer_subcategoryId = subcategories.id
     LEFT JOIN booking_humanized_id AS booking_humanized_id ON booking_humanized_id.booking_id = booking.booking_id
     LEFT JOIN booking_intermediary_view ON booking_intermediary_view.booking_id = booking.booking_id

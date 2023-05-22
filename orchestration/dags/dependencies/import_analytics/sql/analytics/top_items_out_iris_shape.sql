@@ -33,7 +33,7 @@ top_items_outshape_w_distance as(
         top_items_out_shape item_out 
         INNER JOIN `{{ bigquery_analytics_dataset }}.iris_france` irisf on item_out.iris_id = irisf.id 
         INNER JOIN `{{ bigquery_analytics_dataset }}.recommendable_offers_data` ro ON item_out.item_id = ro.item_id 
-        INNER JOIN `{{ bigquery_analytics_dataset }}.applicative_database_venue` v on ro.venue_id = v.venue_id
+        INNER JOIN `{{ bigquery_clean_dataset }}.applicative_database_venue` v on ro.venue_id = v.venue_id
     WHERE not ro.is_national and ro.url IS NULL
 ),
 item_out_rank_by_distance as(

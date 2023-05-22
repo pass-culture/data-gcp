@@ -25,7 +25,7 @@ school_year AS (
         MAX(adage_id) AS annee_en_cours
     
     FROM 
-        `{{ bigquery_analytics_dataset }}.applicative_database_educational_year`
+        `{{ bigquery_clean_dataset }}.applicative_database_educational_year`
 ),
 all_dimension_month AS (
     SELECT
@@ -83,7 +83,7 @@ nb_registrations_agg AS (
         ) AS total_registered_15_17
     FROM
         `{{ bigquery_analytics_dataset }}.enriched_user_data` eud
-        JOIN `{{ bigquery_analytics_dataset }}.applicative_database_deposit` applicative_database_deposit ON eud.user_id = applicative_database_deposit.userId
+        JOIN `{{ bigquery_clean_dataset }}.applicative_database_deposit` applicative_database_deposit ON eud.user_id = applicative_database_deposit.userId
         AND DATE(applicative_database_deposit.datecreated) <= DATE_TRUNC(DATE("{{ ds }}"), MONTH)
     GROUP BY
         1,
@@ -112,7 +112,7 @@ nb_reservations AS (
         ) AS dont_numerique
     FROM
         `{{ bigquery_analytics_dataset }}.enriched_booking_data` ebd
-        JOIN `{{ bigquery_analytics_dataset }}.applicative_database_deposit` applicative_database_deposit ON ebd.user_id = applicative_database_deposit.userId
+        JOIN `{{ bigquery_clean_dataset }}.applicative_database_deposit` applicative_database_deposit ON ebd.user_id = applicative_database_deposit.userId
         JOIN  `{{ bigquery_analytics_dataset }}.enriched_user_data` eud ON ebd.user_id = eud.user_id
     WHERE
         booking_status IN ('USED', 'REIMBURSED')
@@ -135,7 +135,7 @@ intensity_18 AS (
         COUNT(DISTINCT booking_id) AS nb_reservations
     FROM
         `{{ bigquery_analytics_dataset }}.enriched_booking_data` ebd
-        JOIN `{{ bigquery_analytics_dataset }}.applicative_database_deposit` applicative_database_deposit ON ebd.user_id = applicative_database_deposit.userId
+        JOIN `{{ bigquery_clean_dataset }}.applicative_database_deposit` applicative_database_deposit ON ebd.user_id = applicative_database_deposit.userId
         JOIN  `{{ bigquery_analytics_dataset }}.enriched_user_data` eud ON ebd.user_id = eud.user_id
 
     WHERE
@@ -185,7 +185,7 @@ intensity_15_17 AS (
         ) AS nb_15_17_actifs
     FROM
         `{{ bigquery_analytics_dataset }}.enriched_booking_data` ebd
-        JOIN `{{ bigquery_analytics_dataset }}.applicative_database_deposit` apd ON ebd.user_id = apd.userId
+        JOIN `{{ bigquery_clean_dataset }}.applicative_database_deposit` apd ON ebd.user_id = apd.userId
         JOIN  `{{ bigquery_analytics_dataset }}.enriched_user_data` eud ON ebd.user_id = eud.user_id
 
     WHERE
@@ -225,7 +225,7 @@ mean_spent_beneficiary_18 AS (
         user_id AS id_user
     FROM
         `{{ bigquery_analytics_dataset }}.enriched_user_data`
-        JOIN `{{ bigquery_analytics_dataset }}.applicative_database_deposit` applicative_database_deposit ON `{{ bigquery_analytics_dataset }}.enriched_user_data`.user_id = applicative_database_deposit.userId
+        JOIN `{{ bigquery_clean_dataset }}.applicative_database_deposit` applicative_database_deposit ON `{{ bigquery_analytics_dataset }}.enriched_user_data`.user_id = applicative_database_deposit.userId
     WHERE
         DATE_DIFF(
             DATE_TRUNC(DATE("{{ ds }}"), MONTH),
@@ -253,7 +253,7 @@ agg_mean_spent_beneficiary_18 AS (
         `{{ bigquery_analytics_dataset }}.enriched_booking_data` b
         JOIN mean_spent_beneficiary_18 ON mean_spent_beneficiary_18.id_user = b.user_id
         JOIN `{{ bigquery_analytics_dataset }}.enriched_user_data` u ON b.user_id = u.user_id
-        JOIN `{{ bigquery_analytics_dataset }}.applicative_database_deposit` applicative_database_deposit ON u.user_id = applicative_database_deposit.userId
+        JOIN `{{ bigquery_clean_dataset }}.applicative_database_deposit` applicative_database_deposit ON u.user_id = applicative_database_deposit.userId
     WHERE
         DATE_DIFF(
             DATE(booking_creation_date),
@@ -302,7 +302,7 @@ nb_actives_15_17 AS (
             SELECT
                 DISTINCT userId
             FROM
-                `{{ bigquery_analytics_dataset }}.applicative_database_deposit` deposit
+                `{{ bigquery_clean_dataset }}.applicative_database_deposit` deposit
                 JOIN `{{ bigquery_analytics_dataset }}.enriched_user_data` eud ON deposit.userId = eud.user_id
             WHERE
                 deposit.type = 'GRANT_15_17'
@@ -369,7 +369,7 @@ conso_collective AS (
         SUM(booking_amount) AS collective_average_spent_amount
     FROM
         `{{ bigquery_analytics_dataset }}.enriched_collective_booking_data` ecbd
-        JOIN `{{ bigquery_analytics_dataset }}.applicative_database_educational_year` adey ON adey.adage_id = ecbd.educational_year_id
+        JOIN `{{ bigquery_clean_dataset }}.applicative_database_educational_year` adey ON adey.adage_id = ecbd.educational_year_id
         AND DATE_TRUNC(DATE("{{ ds }}"), MONTH) BETWEEN educational_year_beginning_date
         AND educational_year_expiration_date
     WHERE

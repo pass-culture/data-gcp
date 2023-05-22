@@ -6,7 +6,6 @@ from pcreco.utils.env_vars import (
     MIXING_RECOMMENDATION,
     MIXING_FEATURE,
     MIXING_FEATURE_LIST,
-    DEFAULT_RECO_RADIUS,
 )
 from pcreco.models.reco.input_params import KeyValueInput
 

@@ -229,6 +229,174 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
         "CREATE MATERIALIZED VIEW non_recommendable_offers AS SELECT * FROM non_recommendable_offers_temporary_table;"
     )
 
+    recommendable_offers_raw = pd.DataFrame(
+        {
+            "item_id": [
+                "isbn-1",
+                "isbn-2",
+                "movie-3",
+                "movie-4",
+                "movie-5",
+                "product-6",
+                "product-7",
+                "product-8",
+                "product-9",
+            ],
+            "offer_id": ["1", "2", "3", "4", "5", "6", "7", "8", "9"],
+            "product_id": ["1", "2", "3", "4", "5", "6", "7", "8", "9"],
+            "category": ["A", "B", "C", "D", "E", "B", "A", "A", "D"],
+            "subcategory_id": [
+                "EVENEMENT_CINE",
+                "EVENEMENT_CINE",
+                "EVENEMENT_CINE",
+                "EVENEMENT_CINE",
+                "SPECTACLE_REPRESENTATION",
+                "SPECTACLE_REPRESENTATION",
+                "SPECTACLE_REPRESENTATION",
+                "EVENEMENT_CINE",
+                "LIVRE_PAPIER",
+            ],
+            "search_group_name": [
+                "CINEMA",
+                "CINEMA",
+                "CINEMA",
+                "CINEMA",
+                "SPECTACLE",
+                "SPECTACLE",
+                "SPECTACLE",
+                "CINEMA",
+                "LIVRE_PAPIER",
+            ],
+            "offer_type_domain": [
+                "MOVIE",
+                "MOVIE",
+                "MOVIE",
+                "MOVIE",
+                "SHOW",
+                "SHOW",
+                "SHOW",
+                "MOVIE",
+                "BOOK",
+            ],
+            "offer_type_label": [
+                "BOOLYWOOD",
+                "BOOLYWOOD",
+                "BOOLYWOOD",
+                "BOOLYWOOD",
+                "Cirque",
+                "Cirque",
+                "Cirque",
+                "COMEDY",
+                "Histoire",
+            ],
+            "venue_id": ["11", "22", "33", "44", "55", "22", "22", "22", "23"],
+            "name": ["a", "b", "c", "d", "e", "f", "g", "h", "i"],
+            "is_numerical": [
+                False,
+                False,
+                True,
+                True,
+                False,
+                False,
+                False,
+                False,
+                False,
+            ],
+            "is_national": [True, False, True, False, True, False, False, False, True],
+            "is_geolocated": [
+                False,
+                True,
+                False,
+                False,
+                False,
+                True,
+                True,
+                True,
+                False,
+            ],
+            "booking_number": [3, 5, 10, 2, 1, 9, 5, 5, 10],
+            "offer_creation_date": [
+                "2020-01-01",
+                "2020-01-01",
+                "2020-01-01",
+                "2020-01-01",
+                "2020-01-01",
+                "2020-01-01",
+                "2020-01-01",
+                "2020-01-01",
+                "2020-01-01",
+            ],
+            "stock_creation_date": [
+                "2020-01-01",
+                "2020-01-01",
+                "2020-01-01",
+                "2020-01-01",
+                "2020-01-01",
+                "2020-01-01",
+                "2020-01-01",
+                "2020-01-01",
+                "2020-01-01",
+            ],
+            "stock_price": [10, 20, 20, 30, 30, 30, 30, 30, 10],
+            "is_underage_recommendable": [
+                True,
+                True,
+                True,
+                False,
+                False,
+                False,
+                False,
+                False,
+                True,
+            ],
+            "venue_latitude": [
+                48.87004,
+                48.87004,
+                48.87004,
+                48.87004,
+                48.87004,
+                48.87004,
+                48.830719,
+                48.830719,
+                48.87004,
+            ],
+            "venue_longitude": [
+                2.3785,
+                2.3785,
+                2.3785,
+                2.3785,
+                2.3785,
+                2.3785,
+                2.331289,
+                2.331289,
+                2.3785,
+            ],
+            "unique_id": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+            "default_max_distance": [
+                100000,
+                100000,
+                100000,
+                100000,
+                100000,
+                100000,
+                100000,
+                100000,
+                100000,
+            ],
+        }
+    )
+
+    engine.execute(
+        "DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_raw_mv CASCADE;"
+    )
+
+    recommendable_offers_raw.to_sql(
+        "recommendable_offers_raw", con=engine, if_exists="replace"
+    )
+    engine.execute(
+        "CREATE MATERIALIZED VIEW recommendable_offers_raw_mv AS SELECT *, ST_MakePoint(venue_longitude, venue_latitude)::geography as venue_geo FROM recommendable_offers_raw WITH DATA;"
+    )
+
     enriched_user = pd.DataFrame(
         {
             "user_id": ["111", "112", "113", "114", "115", "116", "117", "118"],
@@ -298,12 +466,17 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
         )
 
         engine.execute(
+            "DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_raw_mv CASCADE;"
+        )
+
+        engine.execute(
             "DROP MATERIALIZED VIEW IF EXISTS non_recommendable_offers CASCADE;"
         )
 
         engine.execute(
             "DROP TABLE IF EXISTS recommendable_offers_temporary_table CASCADE;"
         )
+        engine.execute("DROP TABLE IF EXISTS recommendable_offers_raw CASCADE;")
         engine.execute(
             "DROP TABLE IF EXISTS non_recommendable_offers_temporary_table CASCADE;"
         )

@@ -1,5 +1,6 @@
 import json
 import os
+from sentence_transformers import SentenceTransformer
 
 import pandas as pd
 import typer

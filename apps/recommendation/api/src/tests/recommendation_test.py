@@ -112,34 +112,30 @@ class RecommendationTest:
 
     # test_recommendation_playlist_algo
     @pytest.mark.parametrize(
-        ["user_id", "geoloc", "categories", "is_event", "use_case"],
+        ["user_id", "geoloc", "params_in", "use_case"],
         [
             (
                 "118",
                 {"longitude": None, "latitude": None},
-                ["CINEMA"],
-                True,
+                {"categories":["CINEMA"],"modelEndpoint": "algo_default"},
                 "18_nogeoloc_CINEMA",
             ),
             (
                 "118",
                 {"longitude": 2.331289, "latitude": 48.830719},
-                ["CINEMA"],
-                False,
+                {"categories":["CINEMA"],"modelEndpoint": "algo_default","isEvent":False},
                 "18_geoloc_CINEMA",
             ),
             (
                 "118",
                 {"longitude": None, "latitude": None},
-                ["SPECTACLE"],
-                True,
+                {"categories":["SPECTACLE"],"modelEndpoint": "algo_default","isEvent":True},
                 "18_nogeoloc_SPECTACLE",
             ),
             (
                 "118",
                 {"longitude": 2.331289, "latitude": 48.830719},
-                ["SPECTACLE"],
-                False,
+                {"categories":["SPECTACLE"],"modelEndpoint": "algo_default","isEvent":False},
                 "18_geoloc_SPECTACLE",
             ),
         ],
@@ -151,8 +147,7 @@ class RecommendationTest:
         setup_database: Any,
         user_id,
         geoloc,
-        categories,
-        is_event,
+        params_in,
         use_case,
     ):
         with patch("pcreco.utils.db.db_connection.__get_session") as connection_mock:
@@ -161,15 +156,7 @@ class RecommendationTest:
             latitude = geoloc["latitude"]
 
             user = User(user_id, longitude, latitude)
-
-            input_reco = PlaylistParamsIn(
-                {
-                    "categories": categories,
-                    "isEvent": is_event,
-                    "modelEndpoint": "algo_default",
-                }
-            )
-
+            input_reco = PlaylistParamsIn(params_in)
             scoring = Recommendation(user, params_in=input_reco)
 
             recommendable_offers = scoring.scoring.recommendable_offers
@@ -189,7 +176,7 @@ class RecommendationTest:
                     len(recommendable_offers) > 0
                 ), f"{use_case}: playlist should not be empty"
                 assert set(recommendation_sgn) == set(
-                    categories
+                    params_in["categories"]
                 ), f"{use_case}: recommended categories are expected"
             elif input_reco.is_event == True:
                 assert (
@@ -204,41 +191,36 @@ class RecommendationTest:
 
     # test_recommendation_playlist_cold_start
     @pytest.mark.parametrize(
-        ["user_id", "geoloc", "categories", "is_event", "use_case"],
+        ["user_id", "geoloc", "params_in", "use_case"],
         [
             (
                 "118",
                 {"longitude": None, "latitude": None},
-                ["CINEMA"],
-                True,
+                {"categories":["CINEMA"],"isEvent":True},
                 "18_nogeoloc_CINEMA",
             ),
             (
                 "118",
                 {"longitude": None, "latitude": None},
                 None,
-                True,
                 "18_nogeoloc_ALL",
             ),
             (
                 "118",
                 {"longitude": 2.331289, "latitude": 48.830719},
-                ["CINEMA"],
-                True,
+                {"categories":["CINEMA"],"isEvent":True},
                 "18_geoloc_CINEMA",
             ),
             (
                 "118",
                 {"longitude": None, "latitude": None},
-                ["SPECTACLE"],
-                True,
+                {"categories":["SPECTACLE"],"isEvent":True},
                 "18_nogeoloc_SPECTACLE",
             ),
             (
                 "118",
                 {"longitude": 2.331289, "latitude": 48.830719},
-                ["SPECTACLE"],
-                True,
+                {"categories":["SPECTACLE"],"isEvent":True},
                 "18_geoloc_SPECTACLE",
             ),
         ],
@@ -252,8 +234,7 @@ class RecommendationTest:
         setup_database: Any,
         user_id,
         geoloc,
-        categories,
-        is_event,
+        params_in,
         use_case,
     ):
         with patch("pcreco.utils.db.db_connection.__get_session") as connection_mock:
@@ -264,12 +245,7 @@ class RecommendationTest:
             user = User(user_id, longitude, latitude)
             cold_start_status_mock.return_value = True
             cold_start_categories_mock.return_value = ["SEANCE_CINE"]
-            input_reco = PlaylistParamsIn(
-                {
-                    "categories": categories,
-                    "isEvent": is_event,
-                }
-            )
+            input_reco = PlaylistParamsIn(params_in)
 
             scoring = Recommendation(user, params_in=input_reco)
 
@@ -284,7 +260,7 @@ class RecommendationTest:
                     len(recommended_offers) > 0
                 ), f"{use_case}: playlist should not be empty"
                 assert set(recommendation_sgn) == set(
-                    categories
+                    params_in["categories"]
                 ), f"{use_case}: recommended categories are expected"
             elif input_reco.is_event == True:
                 assert (
@@ -300,18 +276,18 @@ class RecommendationTest:
             ), f"{input_reco.json} should contain params"
 
     @pytest.mark.parametrize(
-        ["user_id", "geoloc", "subcategories", "use_case"],
+        ["user_id", "geoloc", "params_in", "use_case"],
         [
             (
                 "118",
                 {"longitude": None, "latitude": None},
-                ["SPECTACLE_REPRESENTATION"],
+                {"subcategories":["SPECTACLE_REPRESENTATION"],"isEvent":True},
                 "18_geoloc_SPECTACLE_REPRESENTATION",
             ),
             (
                 "118",
                 {"longitude": 2.331289, "latitude": 48.830719},
-                ["SPECTACLE_REPRESENTATION"],
+                {"subcategories":["SPECTACLE_REPRESENTATION"],"isEvent":True},
                 "18_no_geoloc_SPECTACLE_REPRESENTATION",
             ),
         ],
@@ -325,7 +301,7 @@ class RecommendationTest:
         setup_database: Any,
         user_id,
         geoloc,
-        subcategories,
+        params_in,
         use_case,
     ):
         with patch("pcreco.utils.db.db_connection.__get_session") as connection_mock:
@@ -336,12 +312,7 @@ class RecommendationTest:
             user = User(user_id, longitude, latitude)
             cold_start_status_mock.return_value = True
             cold_start_categories_mock.return_value = ["SEANCE_CINE"]
-            input_reco = PlaylistParamsIn(
-                {
-                    "subcategories": subcategories,
-                }
-            )
-
+            input_reco = PlaylistParamsIn(params_in)
             scoring = Recommendation(user, params_in=input_reco)
 
             recommended_offers = scoring.scoring.get_scored_offers()
@@ -353,7 +324,7 @@ class RecommendationTest:
                     len(recommended_offers) > 0
                 ), f"{use_case}: playlist should not be empty"
                 assert set(recommendation_sgn) == set(
-                    subcategories
+                    params_in["subcategories"]
                 ), f"{use_case}: recommended subcategories are expected"
             elif input_reco.is_event == True:
                 assert (
@@ -369,18 +340,18 @@ class RecommendationTest:
             ), f"{input_reco.json} should contain params"
 
     @pytest.mark.parametrize(
-        ["user_id", "geoloc", "subcategories", "use_case"],
+        ["user_id", "geoloc", "params_in", "use_case"],
         [
             (
                 "118",
                 {"longitude": None, "latitude": None},
-                ["SPECTACLE_REPRESENTATION"],
+                {"subcategories":["SPECTACLE_REPRESENTATION"],"isEvent":True},
                 "18_geoloc_SPECTACLE_REPRESENTATION",
             ),
             (
                 "118",
                 {"longitude": 2.331289, "latitude": 48.830719},
-                ["SPECTACLE_REPRESENTATION"],
+                {"subcategories":["SPECTACLE_REPRESENTATION"],"isEvent":True},
                 "18_no_geoloc_SPECTACLE_REPRESENTATION",
             ),
         ],
@@ -396,7 +367,7 @@ class RecommendationTest:
         setup_database: Any,
         user_id,
         geoloc,
-        subcategories,
+        params_in,
         use_case,
     ):
         with patch("pcreco.utils.db.db_connection.__get_session") as connection_mock:
@@ -407,10 +378,7 @@ class RecommendationTest:
             user = User(user_id, longitude, latitude)
             cold_start_status_mock.return_value = True
             cold_start_categories_mock.return_value = ["SEANCE_CINE"]
-            input_reco = PlaylistParamsIn(
-                {"subcategories": subcategories, "modelEndpoint": "cold_start_b"}
-            )
-
+            input_reco = PlaylistParamsIn(params_in)
             scoring = Recommendation(user, params_in=input_reco)
 
             recommendable_offers = scoring.scoring.recommendable_offers
@@ -485,24 +453,21 @@ class RecommendationTest:
             ), f"{use_case}: user_recommendations list is non empty"
 
     @pytest.mark.parametrize(
-        ["user_id", "geoloc", "sub_cat", "params_in", "use_case"],
+        ["user_id", "geoloc", "params_in", "use_case"],
         [
             (
                 "118",
                 {"longitude": 2.331289, "latitude": 48.830719},
-                ["EVENEMENT_CINE"],
                 {
-                    "offerTypeList": [
-                        {"key": "MOVIE", "value": "BOOLYWOOD"},
-                    ]
+                    "subcategories":["EVENEMENT_CINE"]
                 },
                 "18_geoloc_EVENEMENT_CINE_MOVIE",
             ),
             (
                 "118",
                 {"longitude": None, "latitude": None},
-                ["LIVRE_PAPIER"],
                 {
+                    "subcategories":["LIVRE_PAPIER"],
                     "offerTypeList": [
                         {"key": "BOOK", "value": "Histoire"},
                     ]
@@ -517,7 +482,6 @@ class RecommendationTest:
         cold_start_status_mock: Mock,
         setup_database: Any,
         user_id,
-        sub_cat,
         geoloc,
         params_in,
         use_case,
@@ -532,16 +496,17 @@ class RecommendationTest:
             input_reco = PlaylistParamsIn(params_in)
 
             scoring = Recommendation(user, params_in=input_reco)
+            
 
             recommended_offers = scoring.scoring.get_scored_offers()
             recommendation_sgn = [reco["subcategory_id"] for reco in recommended_offers]
-
+            
             assert (
                 len(recommended_offers) > 0
             ), f"{use_case}: playlist should not be empty"
 
             assert set(recommendation_sgn) == set(
-                sub_cat
+                params_in["subcategories"]
             ), f"{use_case}: recommended subcategories are expected"
 
             assert (

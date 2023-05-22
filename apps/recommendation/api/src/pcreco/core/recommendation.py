@@ -184,7 +184,6 @@ class Recommendation:
         def get_recommendable_offers(self) -> List[Dict[str, Any]]:
             start = time.time()
             order_query = "is_geolocated DESC, booking_number DESC"
-
             recommendations_query = RecommendableOffersQueryBuilder(
                 self, RECOMMENDABLE_OFFER_LIMIT
             ).generate_query(order_query)

@@ -450,7 +450,6 @@ FROM
     LEFT JOIN date_of_bookings_on_third_product ON user.user_id = date_of_bookings_on_third_product.user_id
     LEFT JOIN number_of_bookings ON user.user_id = number_of_bookings.user_id
     LEFT JOIN number_of_non_cancelled_bookings ON user.user_id = number_of_non_cancelled_bookings.user_id
-    LEFT JOIN users_seniority ON user.user_id = users_seniority.user_id
     LEFT JOIN actual_amount_spent ON user.user_id = actual_amount_spent.user_id
     LEFT JOIN theoretical_amount_spent ON user.user_id = theoretical_amount_spent.user_id
     LEFT JOIN theoretical_amount_spent_in_digital_goods ON user.user_id = theoretical_amount_spent_in_digital_goods.user_id

@@ -5,7 +5,7 @@ install:
 	pyenv local 3.7.13
 	pip install --upgrade pip
 	MICROSERVICE_PATH=. VENV_NAME=data-gcp REQUIREMENTS_NAME=linter-requirements.txt make install_microservice
-	MICROSERVICE_PATH=recommendation/api VENV_NAME=data-gcp-api REQUIREMENTS_NAME=api-dev-requirements.txt make install_microservice
+	MICROSERVICE_PATH=APIs/recommendation/api VENV_NAME=data-gcp-api REQUIREMENTS_NAME=api-dev-requirements.txt make install_microservice
 	MICROSERVICE_PATH=jobs/ml_jobs/algo_training VENV_NAME=data-gcp-algo-training REQUIREMENTS_NAME=requirements.txt make install_microservice
 	MICROSERVICE_PATH=jobs/ml_jobs/algo_training/two_towers_training VENV_NAME=data-gcp-algo-training-two-towers REQUIREMENTS_NAME=requirements.txt make install_microservice
 	MICROSERVICE_PATH=jobs/ml_jobs/record_linkage VENV_NAME=data-gcp-record-linkage REQUIREMENTS_NAME=requirements.txt make install_microservice

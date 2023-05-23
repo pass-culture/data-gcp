@@ -183,7 +183,7 @@ import_firebase_beneficiary_tables = {
     "analytics_firebase_bookings": {
         "sql": f"{SQL_PATH}/analytics/firebase_bookings.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "analytics_firebase_bookings",
+        "destination_table": "firebase_bookings",
         "partition_prefix": "$",
         "time_partitioning": {"field": "booking_date"},
     },

@@ -25,11 +25,6 @@ total_bookings_per_venue AS (
     FROM
         `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON venue.venue_id = offer.venue_id
-        AND (
-            offer.booking_email != 'jeux-concours@passculture.app'
-            or offer.booking_email is NULL
-        )
-        AND offer.offer_subcategoryId NOT IN ('ACTIVATION_EVENT', 'ACTIVATION_THING')
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON stock.offer_id = offer.offer_id
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking ON stock.stock_id = booking.stock_id
     GROUP BY
@@ -42,11 +37,6 @@ non_cancelled_bookings_per_venue AS (
     FROM
         `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON venue.venue_id = offer.venue_id
-        AND (
-            offer.booking_email != 'jeux-concours@passculture.app'
-            or offer.booking_email is NULL
-        )
-        AND offer.offer_subcategoryId NOT IN ('ACTIVATION_EVENT', 'ACTIVATION_THING')
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON stock.offer_id = offer.offer_id
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking ON stock.stock_id = booking.stock_id
         AND NOT booking.booking_is_cancelled
@@ -60,11 +50,6 @@ used_bookings_per_venue AS (
     FROM
         `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON venue.venue_id = offer.venue_id
-        AND (
-            offer.booking_email != 'jeux-concours@passculture.app'
-            or offer.booking_email is NULL
-        )
-        AND offer.offer_subcategoryId NOT IN ('ACTIVATION_EVENT', 'ACTIVATION_THING')
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON stock.offer_id = offer.offer_id
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking ON stock.stock_id = booking.stock_id
         AND booking.booking_is_used
@@ -78,11 +63,6 @@ first_offer_creation_date AS (
     FROM
         `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON venue.venue_id = offer.venue_id
-        AND (
-            offer.booking_email != 'jeux-concours@passculture.app'
-            or offer.booking_email is NULL
-        )
-        AND offer.offer_subcategoryId NOT IN ('ACTIVATION_EVENT', 'ACTIVATION_THING')
     GROUP BY
         venue.venue_id
 ),
@@ -93,11 +73,6 @@ last_offer_creation_date AS (
     FROM
         `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON venue.venue_id = offer.venue_id
-        AND (
-            offer.booking_email != 'jeux-concours@passculture.app'
-            or offer.booking_email is NULL
-        )
-        AND offer.offer_subcategoryId NOT IN ('ACTIVATION_EVENT', 'ACTIVATION_THING')
     GROUP BY
         venue.venue_id
 ),
@@ -108,11 +83,6 @@ individual_offers_created_per_venue AS (
     FROM
         `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON venue.venue_id = offer.venue_id
-        AND (
-            offer.booking_email != 'jeux-concours@passculture.app'
-            or offer.booking_email is NULL
-        )
-        AND offer.offer_subcategoryId NOT IN ('ACTIVATION_EVENT', 'ACTIVATION_THING')
     GROUP BY
         venue.venue_id
 ),
@@ -152,11 +122,6 @@ theoretic_revenue_per_venue AS (
     FROM
         `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON venue.venue_id = offer.venue_id
-        AND (
-            offer.booking_email != 'jeux-concours@passculture.app'
-            or offer.booking_email is NULL
-        )
-        AND offer.offer_subcategoryId NOT IN ('ACTIVATION_EVENT', 'ACTIVATION_THING')
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON offer.offer_id = stock.offer_id
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking ON booking.stock_id = stock.stock_id
         AND NOT booking.booking_is_cancelled
@@ -175,11 +140,6 @@ real_revenue_per_venue AS (
     FROM
         `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON venue.venue_id = offer.venue_id
-        AND (
-            offer.booking_email != 'jeux-concours@passculture.app'
-            or offer.booking_email is NULL
-        )
-        AND offer.offer_subcategoryId NOT IN ('ACTIVATION_EVENT', 'ACTIVATION_THING')
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON offer.offer_id = stock.offer_id
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking ON booking.stock_id = stock.stock_id
         AND NOT booking.booking_is_cancelled

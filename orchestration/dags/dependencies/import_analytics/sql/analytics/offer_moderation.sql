@@ -41,7 +41,6 @@ bookings_days AS (
         `{{ bigquery_clean_dataset }}`.applicative_database_booking booking
         JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock stock USING(stock_id)
         JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer offer ON offer.offer_id = stock.offer_id
-            AND offer.offer_subcategoryId NOT IN ('ACTIVATION_THING', 'ACTIVATION_EVENT')
 ),
 
 count_bookings AS (

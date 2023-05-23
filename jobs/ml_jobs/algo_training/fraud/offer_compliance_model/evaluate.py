@@ -59,9 +59,8 @@ def evaluate(
     )
     client_id = get_secret("mlflow_client_id")
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
-    model = mlflow.catboost.load_model(
-        model_uri=f"models:/compliance_model_{ENV_SHORT_NAME}/latest"
-    )
+    model_name = f"compliance_model_{ENV_SHORT_NAME}"
+    model = mlflow.catboost.load_model(model_uri=f"models:/{model_name}/latest")
     metrics = model.eval_metrics(
         eval_pool,
         ["Accuracy", "BalancedAccuracy", "Precision", "Recall", "BalancedErrorRate"],
@@ -81,8 +80,9 @@ def evaluate(
         mlflow.log_metrics(metrics)
 
     client = MlflowClient()
+    latest_version = client.get_latest_versions(model_name, stages=["None"])[0].version
     client.transition_model_version_stage(
-        name="compliance_model_{ENV_SHORT_NAME}", version=latest, stage="Production"
+        name=model_name, version=latest_version, stage="Production"
     )
 
 

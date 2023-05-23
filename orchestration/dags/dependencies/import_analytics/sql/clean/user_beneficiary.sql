@@ -59,7 +59,7 @@ ranked_bookings AS (
 )
 
 SELECT 
-    user_id,
+    user_beneficiary.user_id,
     user_creation_date,
     user_humanized_id,
     user_has_enabled_marketing_email,
@@ -95,6 +95,6 @@ SELECT
     END AS user_activation_date
 FROM user_beneficiary
 LEFT JOIN ranked_bookings 
-    ON user.user_id = ranked_bookings.user_id
+    ON user_beneficiary.user_id = ranked_bookings.user_id
     AND rank_ = 1
 

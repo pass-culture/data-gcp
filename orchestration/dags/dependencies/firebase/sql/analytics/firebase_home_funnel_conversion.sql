@@ -47,6 +47,11 @@ with child_home as (
   WHERE event_name = 'ModuleDisplayedOnHomePage'
   and user_pseudo_id is not null
   and session_id is not null
+  {% if params.dag_type == 'intraday' %}
+  AND event_date = DATE('{{ ds }}')        
+  {% else %}
+  AND event_date = DATE('{{ add_days(ds, -1) }}')
+  {% endif %}
 )
 , clicked as (
     SELECT

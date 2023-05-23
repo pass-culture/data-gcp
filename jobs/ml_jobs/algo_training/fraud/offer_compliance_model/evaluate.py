@@ -14,6 +14,7 @@ from utils.mlflow_tools import connect_remote_mlflow
 from utils.secrets_utils import get_secret
 from utils.data_collect_queries import read_from_gcs
 from catboost import Pool
+from mlflow import MlflowClient
 
 
 def evaluate(
@@ -59,7 +60,7 @@ def evaluate(
     client_id = get_secret("mlflow_client_id")
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
     model = mlflow.catboost.load_model(
-        model_uri=f"models:/validation_model_{ENV_SHORT_NAME}/latest"
+        model_uri=f"models:/compliance_model_{ENV_SHORT_NAME}/latest"
     )
     metrics = model.eval_metrics(
         eval_pool,
@@ -78,6 +79,11 @@ def evaluate(
         run_id = file.read()
     with mlflow.start_run(experiment_id=experiment_id, run_id=run_id) as run:
         mlflow.log_metrics(metrics)
+
+    client = MlflowClient()
+    client.transition_model_version_stage(
+        name="compliance_model_{ENV_SHORT_NAME}", version=latest, stage="Production"
+    )
 
 
 # TO ADD for extra evaluation plots

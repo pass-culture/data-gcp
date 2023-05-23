@@ -72,7 +72,7 @@ def train(
         mlflow.catboost.log_model(
             cb_model=model,
             artifact_path=f"registry_{ENV_SHORT_NAME}",
-            registered_model_name=f"validation_model_{ENV_SHORT_NAME}",
+            registered_model_name=f"compliance_model_{ENV_SHORT_NAME}",
         )
 
 

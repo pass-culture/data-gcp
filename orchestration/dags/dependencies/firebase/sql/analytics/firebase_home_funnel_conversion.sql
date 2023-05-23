@@ -111,7 +111,7 @@ with child_home as (
         , offer_id
         , venue_id
         , event_timestamp as consult_venue_timestamp
-      FROM `passculture-data-prod.{{ bigquery_analytics_dataset }}.firebase_events`
+      FROM `{{ bigquery_analytics_dataset }}.firebase_events`
       WHERE event_name = "ConsultVenue"
       AND origin = "home" 
       and user_pseudo_id is not null

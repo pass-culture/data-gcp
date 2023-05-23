@@ -109,7 +109,7 @@ CASE
 
 )
 select
-    *
+    * except(is_rule_up_to_date)
 from
     base
 where

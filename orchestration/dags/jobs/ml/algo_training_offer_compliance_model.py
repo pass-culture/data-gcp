@@ -77,9 +77,7 @@ with DAG(
     template_searchpath=DAG_FOLDER,
     params={
         "branch": Param(
-            default="production"
-            if ENV_SHORT_NAME == "prod"
-            else "master",
+            default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
         "config_file_name": Param(

@@ -59,7 +59,7 @@ def evaluate(
     client_id = get_secret("mlflow_client_id")
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
     model = mlflow.catboost.load_model(
-        model_uri=f"models:/validation_model_test/Staging"
+        model_uri=f"models:/validation_model_{ENV_SHORT_NAME}/latest"
     )
     metrics = model.eval_metrics(
         eval_pool,

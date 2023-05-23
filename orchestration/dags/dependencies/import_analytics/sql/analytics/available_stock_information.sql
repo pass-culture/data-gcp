@@ -3,7 +3,7 @@ WITH bookings_grouped_by_stock AS (
         booking.stock_id,
         SUM(booking.booking_quantity) as number_of_booking
     FROM
-        `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking
+        `{{ bigquery_clean_dataset }}`.booking AS booking
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON booking.stock_id = stock.stock_id
     WHERE
         booking.booking_is_cancelled = False

@@ -68,7 +68,7 @@ WITH get_recommendable_offers AS (
                 COUNT(*) AS booking_number,
                 offer.item_id as item_id
             FROM
-                `{{ bigquery_clean_dataset }}`.applicative_database_booking booking
+                `{{ bigquery_clean_dataset }}`.booking booking
                 LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock stock ON booking.stock_id = stock.stock_id
                 LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_offer_data offer ON stock.offer_id = offer.offer_id
             WHERE

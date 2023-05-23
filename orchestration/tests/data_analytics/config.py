@@ -544,6 +544,7 @@ BIGQUERY_SCHEMAS = {
         "user_birth_date": "DATETIME",
         "user_cultural_survey_filled_date": "DATETIME",
         "user_department_code": "STRING",
+        "user_activation_date": "DATETIME",
     },
     "applicative_database_offer_criterion": {
         "offerid": "STRING",

@@ -240,6 +240,14 @@ analytics_tables = {
             "top_items_not_geolocated",
         ],
     },
+    "recommendable_offers_raw": {
+        "sql": f"{ANALYTICS_SQL_PATH}/recommendable_offers_raw.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "recommendable_offers_raw",
+        "depends": [
+            "recommendable_offers_data",
+        ],
+    },
     "non_recommendable_offers_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/non_recommendable_offers_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",

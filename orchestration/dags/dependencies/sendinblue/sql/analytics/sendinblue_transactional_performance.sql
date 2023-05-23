@@ -6,7 +6,7 @@
 WITH sendinblue_transactional as (
     SELECT 
         *
-        , row_number() over( partition by template order by update_date desc) as rank_update
+        , row_number() over( partition by template, tag order by update_date desc) as rank_update
     FROM `{{ bigquery_raw_dataset }}.sendinblue_transactional_histo`
     QUALIFY rank_update = 1
 ),

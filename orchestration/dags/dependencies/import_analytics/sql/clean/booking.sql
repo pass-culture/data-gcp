@@ -18,9 +18,5 @@ SELECT
     , booking_reimbursement_date
     , coalesce(booking_amount, 0) * coalesce(booking_quantity, 0) AS booking_intermediary_amount
     , rank() OVER (PARTITION BY user_id ORDER BY booking_creation_date) AS booking_rank
-    , CASE
-        WHEN booking_status = 'REIMBURSED' 
-        THEN True
-        ELSE False
-    END AS reimbursed
+    , reimbursed
 FROM `{{ bigquery_raw_dataset }}.applicative_database_booking`

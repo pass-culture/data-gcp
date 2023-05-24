@@ -134,6 +134,7 @@ def save_results(df_applications, dms_target, updated_since):
             df_applications[f"{name}"] = pd.to_datetime(df_applications[f"{name}"])
         elif type == "STRING":
             df_applications[f"{name}"] = df_applications[f"{name}"].astype(str)
+    df_applications["update_date"] = pd.to_datetime("today")
     df_applications.to_parquet(
         f"gs://{DATA_GCS_BUCKET_NAME}/dms_export/dms_{dms_target}_{updated_since}.parquet",
         engine="pyarrow",

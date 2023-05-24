@@ -58,7 +58,7 @@ with DAG(
     dagrun_timeout=timedelta(minutes=300),
     params={
         "branch": Param(
-            default="production" if ENV_SHORT_NAME == "prod" else "master",
+            default="production" if ENV_SHORT_NAME == "prod" else "dms-pro-fix-partition",
             type="string",
         ),
         "updated_since_jeunes": Param(
@@ -155,6 +155,7 @@ with DAG(
             {"name": "instructors", "type": "STRING"},
             {"name": "applicant_department", "type": "STRING"},
             {"name": "applicant_postal_code", "type": "STRING"},
+            {"name": "update_date", "type": "TIMESTAMP"},
         ],
         write_disposition="WRITE_APPEND",
     )
@@ -192,6 +193,7 @@ with DAG(
             {"name": "academie_historique_intervention", "type": "STRING"},
             {"name": "academie_groupe_instructeur", "type": "STRING"},
             {"name": "domaines", "type": "STRING"},
+            {"name": "update_date", "type": "TIMESTAMP"},
         ],
         write_disposition="WRITE_APPEND",
     )

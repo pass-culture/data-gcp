@@ -27,11 +27,13 @@ RETURNS TABLE (
                 venue_latitude DECIMAL, 
                 venue_longitude DECIMAL,
                 unique_id VARCHAR
+                venue_geo GEOGRAPHY
                 ) AS
 $body$
 BEGIN
     RETURN QUERY 
-    SELECT * from public.recommendable_offers_per_iris_shape ro;
+    SELECT *, ST_MakePoint(ro.venue_longitude, ro.venue_latitude)::geography as venue_geo
+    FROM public.recommendable_offers_per_iris_shape ro;
 END;
 $body$
 LANGUAGE plpgsql;
@@ -46,6 +48,18 @@ WITH NO DATA;
 
 
 
-CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_mv_tmp_{{ ts_nodash  }} ON public.recommendable_offers_per_iris_shape_mv_tmp USING btree (is_geolocated,iris_id,venue_distance_to_iris_bucket,item_id,offer_id,unique_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_mv_tmp_{{ ts_nodash  }} 
+ON public.recommendable_offers_per_iris_shape_mv_tmp 
+USING btree (is_geolocated,iris_id,venue_distance_to_iris_bucket,item_id,offer_id,unique_id);
+
+CREATE INDEX IF NOT EXISTS loc_idx_offer_recommendable_mv_tmp_{{ ts_nodash  }}
+ON public.recommendable_offers_per_iris_shape_mv_tmp            
+USING gist(venue_geo);
+
+CREATE INDEX IF NOT EXISTS idx_offer_recommendable_mv_tmp_{{ ts_nodash  }}
+ON public.recommendable_offers_per_iris_shape_mv_tmp           
+USING btree (offer_id,unique_id);
+
+
 REFRESH MATERIALIZED VIEW recommendable_offers_per_iris_shape_mv_tmp;
 

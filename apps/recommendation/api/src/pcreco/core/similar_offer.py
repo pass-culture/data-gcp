@@ -4,7 +4,7 @@ import json
 from pcreco.core.user import User
 from pcreco.core.offer import Offer
 from pcreco.models.reco.playlist_params import PlaylistParamsIn
-from pcreco.core.utils.query_builder import RecommendableOffersQueryBuilder
+from pcreco.core.utils.query_builder import RecommendableIrisOffersQueryBuilder
 from pcreco.utils.db.db_connection import get_session
 from pcreco.core.utils.vertex_ai import predict_model
 from pcreco.core.model_selection import select_sim_model_params
@@ -65,13 +65,11 @@ class SimilarOffer:
         start = time.time()
         order_query = "booking_number DESC"
 
-        recommendable_offers_query = RecommendableOffersQueryBuilder(
+        recommendable_offers_query = RecommendableIrisOffersQueryBuilder(
             self, self.recommendable_offer_limit
         ).generate_query(
             order_query,
-            user_id=str(self.user.id),
-            user_longitude=float(self.user.longitude),
-            user_latitude=float(self.user.latitude),
+            user=self.user,
         )
 
         query_result = []

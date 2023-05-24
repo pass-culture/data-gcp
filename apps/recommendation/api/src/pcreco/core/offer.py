@@ -10,8 +10,6 @@ class Offer:
     def __init__(self, offer_id, call_id=None, latitude=None, longitude=None) -> None:
         self.id = offer_id
         self.call_id = call_id
-        self.longitude = False if longitude is None else longitude
-        self.latitude = False if latitude is None else latitude
         self.iris_id = get_iris_from_coordinates(longitude, latitude)
         self.item_id, self.cnt_bookings = self.get_offer_characteristics(offer_id)
 

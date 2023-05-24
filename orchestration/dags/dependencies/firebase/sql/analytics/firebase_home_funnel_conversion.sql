@@ -31,6 +31,7 @@ with child_home as (
 , displayed as (
   SELECT 
     user_pseudo_id
+  , user_id
   , session_id
   , entry_id
   , home_ref.title as entry_name
@@ -56,6 +57,7 @@ with child_home as (
 , clicked as (
     SELECT
       user_pseudo_id
+      , user_id
       , session_id
       , entry_id
       , home_ref.title as entry_name
@@ -94,6 +96,7 @@ with child_home as (
     offer as (
     SELECT 
       user_pseudo_id
+      , user_id
       , session_id
       , entry_id
       , module_id
@@ -110,6 +113,7 @@ with child_home as (
     venue as ( -- get the module_id for venue playlist
       SELECT
         user_pseudo_id
+        , user_id
         , session_id
         , entry_id
         , module_id
@@ -124,6 +128,7 @@ with child_home as (
   )
   SELECT 
       offer.user_pseudo_id
+      , offer.user_id
       , offer.session_id
       , coalesce(offer.entry_id, venue.entry_id) as entry_id
       , home_ref.title as entry_name
@@ -139,7 +144,7 @@ with child_home as (
       , playlist_id
       , playlist_name
     FROM venue
-    LEFT JOIN offer
+    FULL OUTER JOIN offer
     ON offer.user_pseudo_id = venue.user_pseudo_id
     AND offer.session_id = venue.session_id
     AND offer.venue_id = venue.venue_id
@@ -155,6 +160,7 @@ with child_home as (
 
 SELECT 
     displayed.user_pseudo_id
+  , displayed.user_id
   , displayed.session_id
   , displayed.entry_id -- first touch
   , displayed.entry_name

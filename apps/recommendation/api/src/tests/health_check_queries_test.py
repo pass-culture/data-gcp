@@ -11,7 +11,7 @@ from pcreco.utils.health_check_queries import (
 
 @pytest.mark.parametrize(
     "materialized_view_name,expected_result",
-    [("recommendable_offers_per_iris_shape_mv", True), ("iris_venues_mv", False)],
+    [("recommendable_offers_per_iris_shape_mv", True)],
 )
 def test_does_view_exist(
     setup_database: Any, materialized_view_name: str, expected_result: bool

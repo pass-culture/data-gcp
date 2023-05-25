@@ -50,52 +50,6 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
                 "product-9",
             ],
             "offer_id": ["1", "2", "3", "4", "5", "6", "7", "8", "9"],
-            "product_id": ["1", "2", "3", "4", "5", "6", "7", "8", "9"],
-            "category": ["A", "B", "C", "D", "E", "B", "A", "A", "D"],
-            "subcategory_id": [
-                "EVENEMENT_CINE",
-                "EVENEMENT_CINE",
-                "EVENEMENT_CINE",
-                "EVENEMENT_CINE",
-                "SPECTACLE_REPRESENTATION",
-                "SPECTACLE_REPRESENTATION",
-                "SPECTACLE_REPRESENTATION",
-                "EVENEMENT_CINE",
-                "LIVRE_PAPIER",
-            ],
-            "search_group_name": [
-                "CINEMA",
-                "CINEMA",
-                "CINEMA",
-                "CINEMA",
-                "SPECTACLE",
-                "SPECTACLE",
-                "SPECTACLE",
-                "CINEMA",
-                "LIVRE_PAPIER",
-            ],
-            "offer_type_domain": [
-                "MOVIE",
-                "MOVIE",
-                "MOVIE",
-                "MOVIE",
-                "SHOW",
-                "SHOW",
-                "SHOW",
-                "MOVIE",
-                "BOOK",
-            ],
-            "offer_type_label": [
-                "BOOLYWOOD",
-                "BOOLYWOOD",
-                "BOOLYWOOD",
-                "BOOLYWOOD",
-                "Cirque",
-                "Cirque",
-                "Cirque",
-                "COMEDY",
-                "Histoire",
-            ],
             "iris_id": [
                 DEFAULT_IRIS_ID,
                 DEFAULT_IRIS_ID,
@@ -107,32 +61,7 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
                 DEFAULT_IRIS_ID,
                 DEFAULT_IRIS_ID,
             ],
-            "venue_id": ["11", "22", "33", "44", "55", "22", "22", "22", "23"],
             "venue_distance_to_iris": [11, 22, 33, 44, 55, 22, 1, 1, 1],
-            "venue_distance_to_iris_bucket": [
-                "0_25KM",
-                "0_25KM",
-                "0_25KM",
-                "0_25KM",
-                "0_25KM",
-                "0_25KM",
-                "0_25KM",
-                "0_25KM",
-                "0_25KM",
-            ],
-            "name": ["a", "b", "c", "d", "e", "f", "g", "h", "i"],
-            "is_numerical": [
-                False,
-                False,
-                True,
-                True,
-                False,
-                False,
-                False,
-                False,
-                False,
-            ],
-            "is_national": [True, False, True, False, True, False, False, False, True],
             "is_geolocated": [
                 False,
                 True,
@@ -144,42 +73,6 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
                 True,
                 False,
             ],
-            "booking_number": [3, 5, 10, 2, 1, 9, 5, 5, 10],
-            "offer_creation_date": [
-                "2020-01-01",
-                "2020-01-01",
-                "2020-01-01",
-                "2020-01-01",
-                "2020-01-01",
-                "2020-01-01",
-                "2020-01-01",
-                "2020-01-01",
-                "2020-01-01",
-            ],
-            "stock_creation_date": [
-                "2020-01-01",
-                "2020-01-01",
-                "2020-01-01",
-                "2020-01-01",
-                "2020-01-01",
-                "2020-01-01",
-                "2020-01-01",
-                "2020-01-01",
-                "2020-01-01",
-            ],
-            "stock_price": [10, 20, 20, 30, 30, 30, 30, 30, 10],
-            "is_underage_recommendable": [
-                True,
-                True,
-                True,
-                False,
-                False,
-                False,
-                False,
-                False,
-                True,
-            ],
-            "position": ["in", "out", "in", "out", "in", "out", "in", "in", "in"],
             "venue_latitude": [
                 48.87004,
                 48.87004,
@@ -214,7 +107,21 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
         "recommendable_offers_temporary_table", con=engine, if_exists="replace"
     )
     engine.execute(
-        "CREATE MATERIALIZED VIEW recommendable_offers_per_iris_shape_mv AS SELECT * FROM recommendable_offers_temporary_table WITH DATA;"
+        """
+        CREATE MATERIALIZED VIEW recommendable_offers_per_iris_shape_mv AS 
+        SELECT 
+            ro.item_id,
+            ro.offer_id,
+            ro.iris_id,
+            ro.venue_distance_to_iris,
+            ro.is_geolocated,
+            ro.venue_latitude,
+            ro.venue_longitude,
+            ST_MakePoint(ro.venue_longitude, ro.venue_latitude)::geography as venue_geo,
+            ro.unique_id        
+        FROM recommendable_offers_temporary_table ro
+        WITH DATA;
+    """
     )
 
     non_recommendable_offers = pd.DataFrame(

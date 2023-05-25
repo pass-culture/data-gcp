@@ -13,7 +13,7 @@ SELECT
     ,ro.item_id
     ,ro.booking_number
 FROM
-    public.recommendable_offers_per_iris_shape ro;
+    public.recommendable_offers_raw ro;
 
 END;
 

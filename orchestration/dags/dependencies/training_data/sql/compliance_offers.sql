@@ -68,20 +68,6 @@ CASE
                 humanize_id(o.offer_product_id)
             )
         END AS offer_image,
--- CASE
---             WHEN subcat.category_id <> 'MUSIQUE_LIVE'
---             AND oed.showType IS NOT NULL THEN oed.showType
---             WHEN subcat.category_id = 'MUSIQUE_LIVE' THEN oed.musicType
---             WHEN subcat.category_id <> 'SPECTACLE'
---             AND oed.musicType IS NOT NULL THEN oed.musicType
---         END AS type,
--- CASE
---             WHEN subcat.category_id <> 'MUSIQUE_LIVE'
---             AND oed.showSubType IS NOT NULL THEN oed.showSubType
---             WHEN subcat.category_id = 'MUSIQUE_LIVE' THEN oed.musicSubtype
---             WHEN subcat.category_id <> 'SPECTACLE'
---             AND oed.musicsubType IS NOT NULL THEN oed.musicSubtype
---         END AS subType,
 CASE
             WHEN subcat.id = 'ESCAPE_GAME'
             AND o.offer_creation_date < DATETIME '2022-02-01' THEN False
@@ -105,7 +91,7 @@ CASE
                 o.offer_name is not null
                 or o.offer_name <> 'NaN'
             )
-        ) --and o.offer_creation_date>DATETIME '2022-09-01'
+        )
 
 )
 select

@@ -9,14 +9,24 @@ class RecommendableIrisOffersQueryBuilder:
     def __init__(self, reco_model, recommendable_offer_limit):
         self.reco_model = reco_model
         self.recommendable_offer_limit = recommendable_offer_limit
+
         self.get_recommendable_offers_table()
 
     def get_recommendable_offers_table(self):
-        view_name = "recommendable_offers_per_iris_shape_mv"
-        if get_materialized_view_status(view_name)[f"is_{view_name}_datasource_exists"]:
-            self.recommendable_offer_table = view_name
+        iris_view_name = "recommendable_offers_per_iris_shape_mv"
+        offer_view_name = "recommendable_offers_raw_mv"
+        if get_materialized_view_status(iris_view_name)[
+            f"is_{iris_view_name}_datasource_exists"
+        ]:
+            self.recommendable_offer_table = iris_view_name
         else:
-            self.recommendable_offer_table = f"{view_name}_old"
+            self.recommendable_offer_table = f"{iris_view_name}_old"
+        if get_materialized_view_status(offer_view_name)[
+            f"is_{offer_view_name}_datasource_exists"
+        ]:
+            self.recommendable_iris_table = offer_view_name
+        else:
+            self.recommendable_iris_table = f"{offer_view_name}_old"
 
     def generate_query(
         self,
@@ -35,7 +45,7 @@ class RecommendableIrisOffersQueryBuilder:
 	            else 0.0
                 end as user_distance
             FROM
-                {table_name}
+                {iris_table_name}
             WHERE
                 
                 (
@@ -59,17 +69,18 @@ class RecommendableIrisOffersQueryBuilder:
             ,   ro.venue_id
             ,   ro.user_distance
             ,   ro.booking_number
-            ,   ro.category
-            ,   ro.subcategory_id
-            ,   ro.search_group_name
+            ,   ot.category
+            ,   ot.subcategory_id
+            ,   ot.search_group_name
             ,   ro.is_geolocated
             ,   ro.venue_latitude
             ,   ro.venue_longitude
             FROM
                 rank_offers ro
+            INNER JOIN {offer_table_name} ot ON ot.offer_d = ro.offer_id
             WHERE 
             ro.rank = 1 
-            AND offer_id    NOT IN  (
+            AND ro.offer_id    NOT IN  (
                 SELECT
                     offer_id
                 FROM
@@ -77,10 +88,11 @@ class RecommendableIrisOffersQueryBuilder:
                 WHERE
                     user_id = {user_id}
             )
-            AND ro.stock_price < {remaining_credit}
+            AND ot.stock_price < {remaining_credit}
             """
         ).format(
-            table_name=sql.SQL(self.recommendable_offer_table),
+            iris_table_name=sql.SQL(self.recommendable_iris_table),
+            offer_table_name=sql.SQL(self.recommendable_offer_table),
             user_id=sql.Literal(str(user.id)),
             user_iris_id=sql.Literal(user.iris_id),
             user_geolocated=sql.Literal(

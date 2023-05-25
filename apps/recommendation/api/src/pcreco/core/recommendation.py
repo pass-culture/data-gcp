@@ -12,7 +12,7 @@ from pcreco.core.utils.cold_start import (
 )
 from sqlalchemy import text
 from pcreco.core.utils.mixing import order_offers_by_score_and_diversify_features
-from pcreco.core.utils.query_builder import RecommendableOffersQueryBuilder
+from pcreco.core.utils.query_builder import RecommendableIrisOffersQueryBuilder
 from pcreco.core.utils.vertex_ai import predict_model
 from pcreco.models.reco.playlist_params import PlaylistParamsIn
 from pcreco.utils.db.db_connection import get_session
@@ -198,13 +198,11 @@ class Recommendation:
         def get_recommendable_offers(self, params) -> List[Dict[str, Any]]:
             start = time.time()
 
-            recommendations_query = RecommendableOffersQueryBuilder(
+            recommendations_query = RecommendableIrisOffersQueryBuilder(
                 self, params.offer_limit
             ).generate_query(
                 params.order_query,
-                user_id=str(self.user.id),
-                user_longitude=float(self.user.longitude),
-                user_latitude=float(self.user.latitude),
+                user=self.user,
             )
 
             query_result = []
@@ -255,18 +253,16 @@ class Recommendation:
 
         def get_scored_offers(self) -> List[Dict[str, Any]]:
             order_query = (
-                f"""(subcategory_id in ({', '.join([f"'{category}'" for category in self.cold_start_categories])})) DESC, booking_number DESC"""
+                f"""(subcategory_id in ({', '.join([f"'{category}'" for category in self.cold_start_categories if category != 'UNK' ])})) DESC, booking_number DESC"""
                 if len(self.cold_start_categories) > 0
                 else "booking_number DESC"
             )
 
-            recommendations_query = RecommendableOffersQueryBuilder(
+            recommendations_query = RecommendableIrisOffersQueryBuilder(
                 self, COLD_START_RECOMMENDABLE_OFFER_LIMIT
             ).generate_query(
                 order_query,
-                user_id=str(self.user.id),
-                user_longitude=float(self.user.longitude),
-                user_latitude=float(self.user.latitude),
+                user=self.user,
             )
 
             query_result = []

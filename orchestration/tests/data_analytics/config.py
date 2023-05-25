@@ -4,7 +4,7 @@ TEST_DATASET = f"test_{uuid.uuid1().hex}"
 GCP_REGION = "europe-west1"
 GCP_PROJECT = "passculture-data-ehp"
 BIGQUERY_SCHEMAS = {
-    "applicative_database_booking": {
+    "booking": {
         "booking_is_active": "BOOLEAN",
         "booking_id": "STRING",
         "deposit_id": "STRING",
@@ -22,6 +22,9 @@ BIGQUERY_SCHEMAS = {
         "booking_cancellation_date": "DATETIME",
         "booking_cancellation_reason": "STRING",
         "booking_reimbursement_date": "DATETIME",
+        "booking_intermediary_amount": "NUMERIC",
+        "booking_rank": "INT64",
+        "reimbursed": "BOOLEAN",
     },
     "applicative_database_educational_institution": {
         "educational_institution_id": "STRING",

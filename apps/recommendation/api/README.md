@@ -15,7 +15,6 @@ Api créée en suivant : https://cloud.google.com/run/docs/quickstarts/build-and
 - Health check de la bdd :
   - /health/recommendable_offers
   - /health/non_recommendable_offers
-  - /health/iris_venues_mv
 
 
 ## Tests

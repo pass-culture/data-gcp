@@ -32,7 +32,7 @@ related_bookings AS (
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue ON venue.venue_managing_offerer_id = offerer.offerer_id
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON offer.venue_id = venue.venue_id
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON stock.offer_id = offer.offer_id
-        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking ON booking.stock_id = stock.stock_id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.booking AS booking ON booking.stock_id = stock.stock_id
     GROUP BY
         offerer_id
 ),
@@ -58,7 +58,7 @@ related_non_cancelled_bookings AS (
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue ON venue.venue_managing_offerer_id = offerer.offerer_id
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON offer.venue_id = venue.venue_id
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON stock.offer_id = offer.offer_id
-        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking ON booking.stock_id = stock.stock_id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.booking AS booking ON booking.stock_id = stock.stock_id
         AND booking.booking_is_cancelled IS FALSE
     GROUP BY 
         offerer_id
@@ -124,7 +124,7 @@ SELECT
         coalesce(booking.booking_quantity, 0) * coalesce(booking.booking_amount, 0)
     ) AS current_year_revenue
 FROM
-    `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking
+    `{{ bigquery_clean_dataset }}`.booking AS booking
     JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON booking.stock_id = stock.stock_id
     JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON stock.offer_id = offer.offer_id
     JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue ON offer.venue_id = venue.venue_id

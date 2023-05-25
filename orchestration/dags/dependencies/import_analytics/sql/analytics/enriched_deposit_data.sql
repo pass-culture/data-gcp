@@ -35,7 +35,7 @@ actual_amount_spent AS (
             0
         ) AS deposit_actual_amount_spent
     FROM
-        `{{ bigquery_clean_dataset }}`.applicative_database_booking
+        `{{ bigquery_clean_dataset }}`.booking
     WHERE booking_is_used IS TRUE
     AND booking_is_cancelled IS FALSE
     GROUP BY
@@ -52,7 +52,7 @@ theoretical_amount_spent AS (
             0
         ) AS deposit_theoretical_amount_spent
     FROM
-        `{{ bigquery_clean_dataset }}`.applicative_database_booking
+        `{{ bigquery_clean_dataset }}`.booking
     WHERE booking_is_cancelled IS FALSE
     GROUP BY
         deposit_id
@@ -67,7 +67,7 @@ theoretical_amount_spent_in_digital_goods AS (
             0
         ) AS deposit_theoretical_amount_spent_in_digital_goods
     FROM
-        `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking
+        `{{ bigquery_clean_dataset }}`.booking AS booking
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON booking.stock_id = stock.stock_id
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON stock.offer_id = offer.offer_id
         INNER JOIN `{{ bigquery_analytics_dataset }}`.subcategories AS subcategories ON offer.offer_subcategoryId = subcategories.id
@@ -86,7 +86,7 @@ first_booking_date AS (
         MAX(booking_creation_date) AS deposit_last_booking_date,
         COUNT(DISTINCT booking_id) AS deposit_no_cancelled_bookings
     FROM
-        `{{ bigquery_clean_dataset }}`.applicative_database_booking 
+        `{{ bigquery_clean_dataset }}`.booking 
     WHERE booking_is_cancelled IS FALSE
     GROUP BY
         deposit_id

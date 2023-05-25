@@ -3,35 +3,28 @@ CREATE OR REPLACE FUNCTION get_recommendable_offers_per_iris_shape_{{ ts_nodash 
 RETURNS TABLE (   
                 item_id varchar,
                 offer_id varchar,
-                product_id varchar,
-                category VARCHAR,
-                subcategory_id VARCHAR,
-                search_group_name VARCHAR,
                 iris_id varchar,
-                venue_id varchar,
                 venue_distance_to_iris NUMERIC,
-                venue_distance_to_iris_bucket VARCHAR,
-                name VARCHAR,
-                is_numerical BOOLEAN,
-                is_national BOOLEAN,
                 is_geolocated BOOLEAN,
-                offer_creation_date TIMESTAMP,
-                stock_beginning_date TIMESTAMP,
-                stock_price REAL,
-                offer_is_duo BOOLEAN,
-                offer_type_domain VARCHAR,
-                offer_type_label VARCHAR,
-                booking_number INTEGER,
-                is_underage_recommendable BOOLEAN,
-                "position" VARCHAR,
                 venue_latitude DECIMAL, 
                 venue_longitude DECIMAL,
+                venue_geo GEOGRAPHY,
                 unique_id VARCHAR
                 ) AS
 $body$
 BEGIN
     RETURN QUERY 
-    SELECT * from public.recommendable_offers_per_iris_shape ro;
+    SELECT
+        ro.item_id,
+        ro.offer_id,
+        ro.iris_id,
+        ro.venue_distance_to_iris,
+        ro.is_geolocated,
+        ro.venue_latitude,
+        ro.venue_longitude,
+        ST_MakePoint(ro.venue_longitude, ro.venue_latitude)::geography as venue_geo,
+        ro.unique_id
+    FROM public.recommendable_offers_per_iris_shape ro;
 END;
 $body$
 LANGUAGE plpgsql;
@@ -45,7 +38,21 @@ SELECT * FROM get_recommendable_offers_per_iris_shape_{{ ts_nodash  }}()
 WITH NO DATA;
 
 
+-- Create indexes
+CREATE UNIQUE INDEX IF NOT EXISTS unique_idx_recommendable_offers_per_iris_tmp_{{ ts_nodash  }} 
+ON public.recommendable_offers_per_iris_shape_mv_tmp 
+USING btree (is_geolocated,iris_id,item_id,offer_id,unique_id);
 
-CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_mv_tmp_{{ ts_nodash  }} ON public.recommendable_offers_per_iris_shape_mv_tmp USING btree (is_geolocated,iris_id,venue_distance_to_iris_bucket,item_id,offer_id,unique_id);
+CREATE INDEX IF NOT EXISTS venue_geo_idx_offer_recommendable_offers_per_iris_tmp_{{ ts_nodash  }}
+ON public.recommendable_offers_per_iris_shape_mv_tmp            
+USING gist(venue_geo);
+
+CREATE INDEX IF NOT EXISTS idx_offer_recommendable_offers_per_iris_tmp_{{ ts_nodash  }}
+ON public.recommendable_offers_per_iris_shape_mv_tmp(offer_id);
+
+CREATE INDEX IF NOT EXISTS item_offer_idx_recommendable_offers_per_iris_tmp_{{ ts_nodash  }} 
+ON public.recommendable_offers_per_iris_shape_mv_tmp 
+USING btree (item_id,offer_id);
+
 REFRESH MATERIALIZED VIEW recommendable_offers_per_iris_shape_mv_tmp;
 

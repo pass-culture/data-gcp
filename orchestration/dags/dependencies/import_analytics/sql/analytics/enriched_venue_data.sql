@@ -26,7 +26,7 @@ total_bookings_per_venue AS (
         `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON venue.venue_id = offer.venue_id
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON stock.offer_id = offer.offer_id
-        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking ON stock.stock_id = booking.stock_id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.booking AS booking ON stock.stock_id = booking.stock_id
     GROUP BY
         venue.venue_id
 ),
@@ -38,7 +38,7 @@ non_cancelled_bookings_per_venue AS (
         `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON venue.venue_id = offer.venue_id
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON stock.offer_id = offer.offer_id
-        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking ON stock.stock_id = booking.stock_id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.booking AS booking ON stock.stock_id = booking.stock_id
         AND NOT booking.booking_is_cancelled
     GROUP BY
         venue.venue_id
@@ -51,7 +51,7 @@ used_bookings_per_venue AS (
         `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON venue.venue_id = offer.venue_id
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON stock.offer_id = offer.offer_id
-        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking ON stock.stock_id = booking.stock_id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.booking AS booking ON stock.stock_id = booking.stock_id
         AND booking.booking_is_used
     GROUP BY
         venue.venue_id
@@ -123,7 +123,7 @@ theoretic_revenue_per_venue AS (
         `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON venue.venue_id = offer.venue_id
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON offer.offer_id = stock.offer_id
-        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking ON booking.stock_id = stock.stock_id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.booking AS booking ON booking.stock_id = stock.stock_id
         AND NOT booking.booking_is_cancelled
     GROUP BY
         venue.venue_id
@@ -141,7 +141,7 @@ real_revenue_per_venue AS (
         `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON venue.venue_id = offer.venue_id
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON offer.offer_id = stock.offer_id
-        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking ON booking.stock_id = stock.stock_id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.booking AS booking ON booking.stock_id = stock.stock_id
         AND NOT booking.booking_is_cancelled
         AND booking.booking_is_used
     GROUP BY
@@ -165,7 +165,7 @@ related_bookings AS (
         `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON offer.venue_id = venue.venue_id
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON stock.offer_id = offer.offer_id
-        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking ON booking.stock_id = stock.stock_id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.booking AS booking ON booking.stock_id = stock.stock_id
     GROUP BY
         venue_id
 )

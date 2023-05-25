@@ -174,55 +174,6 @@
 			"response": []
 		},
 		{
-			"name": "/health/iris_venues_mv",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Request is successful with a status code of 200\", function () {",
-							"  pm.response.to.have.status(200);",
-							"});",
-							"",
-							"pm.test(\"Response must be a JSON and have a body\", function () {",
-							"     pm.response.to.be.ok;",
-							"     pm.response.to.be.withBody;",
-							"     pm.response.to.be.json;",
-							"});",
-							"",
-							"pm.test(\"Response must be a JSON with the right keys\", function () {",
-							"  const jsonResponse = pm.response.json();",
-							"  pm.expect(jsonResponse).to.be.an(\"object\");",
-							"  pm.expect(jsonResponse).to.have.property('is_iris_venues_mv_datasource_exists')",
-							"});",
-							"",
-							"",
-							"pm.test(\"Response must be healthy\", function () {",
-							"  const jsonResponse = pm.response.json();",
-							"  pm.expect(jsonResponse.is_iris_venues_mv_datasource_exists).to.be.true;",
-							"});"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{api_url}}/health/iris_venues_mv",
-					"host": [
-						"{{api_url}}"
-					],
-					"path": [
-						"health",
-						"iris_venues_mv"
-					]
-				}
-			},
-			"response": []
-		},
-		{
 			"name": "/playlis_recommendation/user_id",
 			"event": [
 				{

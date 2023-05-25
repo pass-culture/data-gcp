@@ -74,13 +74,6 @@ def health_check_non_recommendable_offers_status():
     return jsonify(table_status), 200
 
 
-@app.route("/health/iris_venues_mv")
-def health_check_iris_venues_mv_status():
-    table_status = get_materialized_view_status("iris_venues_mv")
-
-    return jsonify(table_status), 200
-
-
 @app.route("/playlist_recommendation/<user_id>", methods=["GET", "POST"])
 def playlist_recommendation(user_id: int):
     # unique id build for each call

@@ -25,7 +25,6 @@ from common.config import (
     DATA_GCS_BUCKET_NAME,
     BIGQUERY_CLEAN_DATASET,
     BIGQUERY_ANALYTICS_DATASET,
-    ENV_SHORT_NAME,
     DAG_FOLDER,
     QPI_TABLE,
     RECOMMENDATION_SQL_INSTANCE,
@@ -46,7 +45,7 @@ os.environ["AIRFLOW_CONN_PROXY_POSTGRES_TCP"] = (
 
 
 TABLES_DATA_PATH = f"{DAG_FOLDER}/ressources/tables.csv"
-BUCKET_PATH = f"gs://{DATA_GCS_BUCKET_NAME}/bigquery_exports"
+BUCKET_PATH = f"gs://{DATA_GCS_BUCKET_NAME}/bigquery_exports/" + "{{ ds }}"
 SQL_PATH = "dependencies/import_recommendation_cloudsql/sql"
 
 default_args = {

@@ -62,7 +62,7 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
                 DEFAULT_IRIS_ID,
             ],
             "venue_id": ["11", "22", "33", "44", "55", "22", "22", "22", "23"],
-            "venue_distance_to_iris": [11, 22, 33, 44, 55, 22, 1, 1, 1],            
+            "venue_distance_to_iris": [11, 22, 33, 44, 55, 22, 1, 1, 1],
             "is_geolocated": [
                 False,
                 True,

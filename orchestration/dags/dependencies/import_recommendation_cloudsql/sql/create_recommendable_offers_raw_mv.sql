@@ -44,17 +44,21 @@ WITH NO DATA;
 
 
 -- Create indexes
-CREATE UNIQUE INDEX IF NOT EXISTS idx_recommendable_offers_raw_mv_tmp_{{ ts_nodash  }} 
+CREATE UNIQUE INDEX IF NOT EXISTS unique_idx_recommendable_offers_raw_mv_tmp_{{ ts_nodash  }} 
 ON public.recommendable_offers_raw_mv_tmp 
 USING btree (is_geolocated,item_id,offer_id,unique_id);
 
-CREATE INDEX IF NOT EXISTS idx_offer_recommendable_raw_{{ ts_nodash  }}
-ON public.recommendable_offers_raw_mv_tmp           
-USING btree (offer_id,unique_id);
+CREATE INDEX IF NOT EXISTS offer_idx_offer_recommendable_raw_{{ ts_nodash  }}
+ON public.recommendable_offers_raw_mv_tmp(offer_id);
 
-CREATE INDEX IF NOT EXISTS loc_idx_offer_recommendable_raw_{{ ts_nodash  }}
+CREATE INDEX IF NOT EXISTS offer_item_idx_recommendable_offers_raw_mv_tmp_{{ ts_nodash  }} 
+ON public.recommendable_offers_raw_mv_tmp 
+USING btree (item_id,offer_id);
+
+CREATE INDEX IF NOT EXISTS venue_geo_idx_offer_recommendable_raw_{{ ts_nodash  }}
 ON public.recommendable_offers_raw_mv_tmp            
 USING gist(venue_geo);
+
 
 -- Refresh state
 REFRESH MATERIALIZED VIEW recommendable_offers_raw_mv_tmp;

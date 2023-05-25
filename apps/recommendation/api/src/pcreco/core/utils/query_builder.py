@@ -18,15 +18,15 @@ class RecommendableIrisOffersQueryBuilder:
         if get_materialized_view_status(iris_view_name)[
             f"is_{iris_view_name}_datasource_exists"
         ]:
-            self.recommendable_offer_table = iris_view_name
+            self.recommendable_iris_table = iris_view_name
         else:
-            self.recommendable_offer_table = f"{iris_view_name}_old"
+            self.recommendable_iris_table = f"{iris_view_name}_old"
         if get_materialized_view_status(offer_view_name)[
             f"is_{offer_view_name}_datasource_exists"
         ]:
-            self.recommendable_iris_table = offer_view_name
+            self.recommendable_offer_table = offer_view_name
         else:
-            self.recommendable_iris_table = f"{offer_view_name}_old"
+            self.recommendable_offer_table = f"{offer_view_name}_old"
 
     def generate_query(
         self,
@@ -59,25 +59,28 @@ class RecommendableIrisOffersQueryBuilder:
 
         rank_offers AS (
             SELECT 
-                *, ROW_NUMBER() OVER(partition BY item_id ORDER BY user_distance ASC) AS rank
+                offer_id,
+                item_id,
+                user_distance,
+                ROW_NUMBER() OVER(partition BY item_id ORDER BY user_distance ASC) AS rank
             FROM distance_filter
-        )
+        ),
 
         SELECT 
             ro.offer_id
             ,   ro.item_id
-            ,   ro.venue_id
+            ,   ot.venue_id
             ,   ro.user_distance
-            ,   ro.booking_number
+            ,   ot.booking_number
             ,   ot.category
             ,   ot.subcategory_id
             ,   ot.search_group_name
-            ,   ro.is_geolocated
-            ,   ro.venue_latitude
-            ,   ro.venue_longitude
+            ,   ot.is_geolocated
+            ,   ot.venue_latitude
+            ,   ot.venue_longitude
             FROM
                 rank_offers ro
-            INNER JOIN {offer_table_name} ot ON ot.offer_d = ro.offer_id
+            INNER JOIN {offer_table_name} ot ON ot.offer_d = ro.offer_id AND ot.item_id = ro.item_id
             WHERE 
             ro.rank = 1 
             AND ro.offer_id    NOT IN  (
@@ -89,6 +92,9 @@ class RecommendableIrisOffersQueryBuilder:
                     user_id = {user_id}
             )
             AND ot.stock_price < {remaining_credit}
+            {params_in_filter}
+            {user_profile_filter}
+            {order_by}
             """
         ).format(
             iris_table_name=sql.SQL(self.recommendable_iris_table),
@@ -102,22 +108,21 @@ class RecommendableIrisOffersQueryBuilder:
             user_latitude=sql.Literal(user.latitude),
             remaining_credit=sql.Literal(user.user_deposit_remaining_credit),
             default_max_distance=sql.Literal(DEFAULT_MAX_DISTANCE),
-        )
-        params_in_filter = self.reco_model.params_in_filters
-        user_profile_filter = sql.SQL(
-            """
+            params_in_filter=self.reco_model.params_in_filters,
+            user_profile_filter=sql.SQL(
+                """
             AND is_underage_recommendable 
             """
-            if (user.age and user.age < 18)
-            else ""
-        )
-        order_by = sql.SQL(
-            f"""
+                if (user.age and user.age < 18)
+                else ""
+            ),
+            order_by=sql.SQL(
+                f"""
             ORDER BY {order_query} LIMIT {self.recommendable_offer_limit}
             """
+            ),
         )
-
-        return as_string(main_query + params_in_filter + user_profile_filter + order_by)
+        return as_string(main_query)
 
 
 class RecommendableOffersRawQueryBuilder:

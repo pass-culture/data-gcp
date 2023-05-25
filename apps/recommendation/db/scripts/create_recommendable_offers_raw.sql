@@ -71,15 +71,18 @@ WITH NO DATA;
 
 
 -- Create indexes
-CREATE UNIQUE INDEX IF NOT EXISTS idx_recommendable_offers_raw_mv
+CREATE UNIQUE INDEX IF NOT EXISTS unique_idx_recommendable_offers_raw_mv
 ON public.recommendable_offers_raw_mv
 USING btree (is_geolocated,item_id,offer_id,unique_id);
 
-CREATE INDEX IF NOT EXISTS idx_offer_recommendable_raw_mv
-ON public.recommendable_offers_raw_mv   
-USING btree (offer_id,unique_id);
+CREATE INDEX IF NOT EXISTS offer_idx_recommendable_offers_raw_mv
+ON public.recommendable_offers_raw_mv(offer_id);
 
-CREATE INDEX IF NOT EXISTS loc_idx_offer_recommendable_raw_mv
+CREATE INDEX IF NOT EXISTS item_offer_idx_recommendable_offers_raw_mv
+ON public.recommendable_offers_raw_mv
+USING btree (item_id, offer_id);
+
+CREATE INDEX IF NOT EXISTS venue_geo_idx_recommendable_offers_raw_mv
 ON public.recommendable_offers_raw_mv        
 USING gist(venue_geo);
 

@@ -61,7 +61,6 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
                 DEFAULT_IRIS_ID,
                 DEFAULT_IRIS_ID,
             ],
-            "venue_id": ["11", "22", "33", "44", "55", "22", "22", "22", "23"],
             "venue_distance_to_iris": [11, 22, 33, 44, 55, 22, 1, 1, 1],
             "is_geolocated": [
                 False,
@@ -74,7 +73,6 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
                 True,
                 False,
             ],
-            "booking_number": [3, 5, 10, 2, 1, 9, 5, 5, 10],
             "venue_latitude": [
                 48.87004,
                 48.87004,
@@ -109,7 +107,21 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
         "recommendable_offers_temporary_table", con=engine, if_exists="replace"
     )
     engine.execute(
-        "CREATE MATERIALIZED VIEW recommendable_offers_per_iris_shape_mv AS SELECT *, ST_MakePoint(venue_longitude, venue_latitude)::geography as venue_geo FROM recommendable_offers_temporary_table WITH DATA;"
+        """
+        CREATE MATERIALIZED VIEW recommendable_offers_per_iris_shape_mv AS 
+        SELECT 
+            ro.item_id,
+            ro.offer_id,
+            ro.iris_id,
+            ro.venue_distance_to_iris,
+            ro.is_geolocated,
+            ro.venue_latitude,
+            ro.venue_longitude,
+            ST_MakePoint(ro.venue_longitude, ro.venue_latitude)::geography as venue_geo,
+            ro.unique_id        
+        FROM recommendable_offers_temporary_table ro
+        WITH DATA;
+    """
     )
 
     non_recommendable_offers = pd.DataFrame(

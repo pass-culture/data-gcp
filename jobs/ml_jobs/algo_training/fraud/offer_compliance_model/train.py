@@ -58,7 +58,6 @@ def train(
     experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
     with mlflow.start_run(experiment_id=experiment_id, run_name=run_name):
         run_uuid = mlflow.active_run().info.run_uuid
-        # TODO: store the run_uuid in STORAGE_PATH (last try raised FileNotFoundError)
         with open(f"{MODEL_DIR}/{MLFLOW_RUN_ID_FILENAME}.txt", mode="w") as file:
             file.write(run_uuid)
         mlflow.log_params(

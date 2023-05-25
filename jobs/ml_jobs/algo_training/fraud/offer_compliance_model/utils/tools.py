@@ -139,19 +139,6 @@ def __download_img_from_url(url, storage_path):
     except:
         return None
 
-
-def plot_matrix(cm, classes, title):
-    ax = sns.heatmap(
-        cm,
-        cmap="Blues",
-        annot=True,
-        xticklabels=classes,
-        yticklabels=classes,
-        cbar=False,
-    )
-    ax.set(title=title, xlabel="predicted label", ylabel="true label")
-
-
 def get_individual_contribution(shap_values, df_data):
     topk_validation_factor = []
     topk_rejection_factor = []

@@ -85,58 +85,5 @@ def evaluate(
         name=model_name, version=latest_version, stage="Production"
     )
 
-
-# TO ADD for extra evaluation plots
-# ## Confusion matrix
-
-# cm=get_confusion_matrix(model_loaded, eval_pool)
-# cmn=[[0,0],[0,0]]
-# cmn[0][0]=cm[0][0]/(cm[0][0]+cm[0][1])
-# cmn[0][1]=cm[0][1]/(cm[0][0]+cm[0][1])
-# cmn[1][0]=cm[1][0]/(cm[1][0]+cm[1][1])
-# cmn[1][1]=cm[1][1]/(cm[1][0]+cm[1][1])
-
-
-# classes = ['Rejected', 'Validated']
-# title = "Offer Validation"
-# plot_matrix(cmn, classes, title)
-
-# ## Feature importance
-
-# feature_importance=model_loaded.get_feature_importance(data=train_pool,
-#                     reference_data=None,
-#                     prettified=False,
-#                     thread_count=-1,
-#                     verbose=False)
-# sorted_idx = np.argsort(feature_importance)
-# fig = plt.figure(figsize=(10, 4))
-# plt.barh(range(len(sorted_idx)), feature_importance[sorted_idx], align='center')
-# plt.yticks(range(len(sorted_idx)), np.array(train_data.columns)[sorted_idx])
-# plt.title('Feature Importance')
-
-# ## Shap Values
-# shap_values = model_loaded.get_feature_importance(test_pool, type="ShapValues")
-# shap_values = shap_values[:,:-1]
-# shap.summary_plot(shap_values, test_data,plot_size=(10,4))
-
-# ## Probability density
-
-# #Get prediction as PROBABILITY
-
-# predict_test_prod_proba=model_loaded.predict(eval_pool,
-#         prediction_type='Probability',
-#         ntree_start=0,
-#         ntree_end=0,
-#         thread_count=-1,
-#         verbose=None)
-# proba_rej=[prob[0] for prob in list(predict_test_prod_proba)]
-# proba_val=[prob[1] for prob in list(predict_test_prod_proba)]
-# eval_data["target"]=eval_data_labels
-# eval_data["probability_rejected"]=proba_rej
-# eval_data["probability_validated"]=proba_val
-
-# eval_data.query("target==1").probability_validated.hist()
-# eval_data.query("target==0").probability_validated.hist()
-
 if __name__ == "__main__":
     typer.run(evaluate)

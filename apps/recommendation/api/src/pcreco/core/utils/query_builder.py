@@ -64,7 +64,7 @@ class RecommendableIrisOffersQueryBuilder:
                 user_distance,
                 ROW_NUMBER() OVER(partition BY item_id ORDER BY user_distance ASC) AS rank
             FROM distance_filter
-        ),
+        )
 
         SELECT 
             ro.offer_id
@@ -80,7 +80,7 @@ class RecommendableIrisOffersQueryBuilder:
             ,   ot.venue_longitude
             FROM
                 rank_offers ro
-            INNER JOIN {offer_table_name} ot ON ot.offer_d = ro.offer_id AND ot.item_id = ro.item_id
+            INNER JOIN {offer_table_name} ot ON ot.offer_id = ro.offer_id AND ot.item_id = ro.item_id
             WHERE 
             ro.rank = 1 
             AND ro.offer_id    NOT IN  (

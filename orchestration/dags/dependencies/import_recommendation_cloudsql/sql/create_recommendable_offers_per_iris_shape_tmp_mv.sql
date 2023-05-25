@@ -50,7 +50,7 @@ USING gist(venue_geo);
 CREATE INDEX IF NOT EXISTS idx_offer_recommendable_offers_per_iris_tmp_{{ ts_nodash  }}
 ON public.recommendable_offers_per_iris_shape_mv_tmp(offer_id);
 
-CREATE UNIQUE INDEX IF NOT EXISTS item_offer_idx_recommendable_offers_per_iris_tmp_{{ ts_nodash  }} 
+CREATE INDEX IF NOT EXISTS item_offer_idx_recommendable_offers_per_iris_tmp_{{ ts_nodash  }} 
 ON public.recommendable_offers_per_iris_shape_mv_tmp 
 USING btree (item_id,offer_id);
 

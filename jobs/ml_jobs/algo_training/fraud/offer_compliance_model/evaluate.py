@@ -85,5 +85,6 @@ def evaluate(
         name=model_name, version=latest_version, stage="Production"
     )
 
+
 if __name__ == "__main__":
     typer.run(evaluate)

@@ -139,6 +139,7 @@ def __download_img_from_url(url, storage_path):
     except:
         return None
 
+
 def get_individual_contribution(shap_values, df_data):
     topk_validation_factor = []
     topk_rejection_factor = []

@@ -5,7 +5,7 @@ from airflow.exceptions import AirflowException
 from airflow.operators.bash import BashOperator
 from airflow.configuration import conf
 from time import sleep
-from paramiko.ssh_exception import ProxyCommandFailure
+from paramiko.ssh_exception import SSHException
 from common.config import (
     GCE_ZONE,
     GCP_PROJECT_ID,
@@ -129,8 +129,14 @@ class BaseSSHGCEOperator(BaseOperator):
                         f"SSH operator error: exit status = {exit_status}"
                     )
                 return agg_stdout
-        except ProxyCommandFailure as e:
+        except SSHException as e:
+            self.log.info(
+                f"Cannot connect to instance {self.instance_name}. Retry : {retry}."
+            )
             if retry > self.MAX_RETRY:
+                self.log.info(
+                    f"Could not connect to instance {self.instance_name}. After {retry} retries. Abort."
+                )
                 raise e
             sleep(retry * self.SSH_TIMEOUT)
             self.run_ssh_client_command(hook, context, retry=retry + 1)

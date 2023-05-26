@@ -243,7 +243,6 @@ class GCEHook(GoogleBaseHook):
             for x in instances
             if x.get("labels", {}).get("airflow", "") == "true"
             and x.get("labels", {}).get("env", "") == ENV_SHORT_NAME
-            and x["status"] == "RUNNING"
         ]
 
         for instance in instances:

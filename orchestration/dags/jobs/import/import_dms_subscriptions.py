@@ -77,7 +77,9 @@ with DAG(
     start = DummyOperator(task_id="start")
 
     gce_instance_start = StartGCEOperator(
-        instance_name=GCE_INSTANCE, task_id="gce_start_task"
+        instance_name=GCE_INSTANCE,
+        task_id="gce_start_task",
+        retries=2,
     )
 
     fetch_code = CloneRepositoryGCEOperator(
@@ -85,6 +87,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         command="{{ params.branch }}",
         python_version="3.10",
+        retries=2,
     )
 
     install_dependencies = SSHGCEOperator(
@@ -93,6 +96,7 @@ with DAG(
         base_dir=BASE_PATH,
         command="pip install -r requirements.txt --user",
         dag=dag,
+        retries=2,
     )
 
     dms_to_gcs_pro = SSHGCEOperator(

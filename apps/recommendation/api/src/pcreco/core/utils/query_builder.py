@@ -38,7 +38,8 @@ class RecommendableIrisOffersQueryBuilder:
         
         WITH distance_filter AS (
             SELECT
-                *,
+                offer_id,
+                item_id,
                 case
 	                when is_geolocated AND {user_geolocated}
                     then st_distance(st_point({user_longitude}::float, {user_latitude}::float)::geography, venue_geo)
@@ -47,14 +48,14 @@ class RecommendableIrisOffersQueryBuilder:
             FROM
                 {iris_table_name}
             WHERE
-                
                 (
                     {user_geolocated} 
                     AND is_geolocated
                     AND iris_id = {user_iris_id} 
                     AND ST_DWITHIN(st_point({user_longitude}::float, {user_latitude}::float)::geography, venue_geo,  {default_max_distance})
                 )
-                OR NOT is_geolocated
+                OR 
+                ( NOT {user_geolocated} AND NOT is_geolocated )
         ),
 
         rank_offers AS (
@@ -163,7 +164,8 @@ class RecommendableOffersRawQueryBuilder:
                     AND {user_geolocated}
                     AND ST_DWITHIN(venue_geo, st_point({user_longitude::float}, {user_latitude::float})::geography, {default_max_distance})
                 )
-                OR NOT is_geolocated
+                OR 
+                ( NOT {user_geolocated} AND NOT is_geolocated)
         ),
 
         rank_offers AS (

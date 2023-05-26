@@ -63,12 +63,10 @@ class SimilarOffer:
     def get_recommendable_offers(self) -> Dict[str, Dict[str, Any]]:
 
         start = time.time()
-        order_query = "booking_number DESC"
-
         recommendable_offers_query = RecommendableIrisOffersQueryBuilder(
             self, self.recommendable_offer_limit
         ).generate_query(
-            order_query,
+            order_query=self.model_params.order_query,
             user=self.user,
         )
 
@@ -90,7 +88,7 @@ class SimilarOffer:
                 "is_geolocated": row[8],
             }
             for row in query_result
-            if row[4] != self.offer.item_id
+            if row[1] != self.offer.item_id
         }
         logger.info(f"get_recommendable_offers: n: {len(user_recommendation)}")
         log_duration(f"get_recommendable_offers for {self.user.id}", start)
@@ -132,8 +130,6 @@ class SimilarOffer:
             log_duration(f"save_recommendations for {self.user.id}", start)
 
     def _predict_score(self, instances) -> List[List[str]]:
-
-        logger.info(f"_predict_score: {instances}")
         start = time.time()
         response = predict_model(
             endpoint_name=self.model_params.endpoint_name,

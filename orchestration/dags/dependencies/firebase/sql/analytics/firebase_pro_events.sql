@@ -159,6 +159,14 @@ WITH temp_firebase_events AS (
         ) as is_new_offer_creation_path,
         (
             select
+                event_params.value.int_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'categorieJuridiqueUniteLegale'
+        ) as onboarding_selected_legal_category,
+        (
+            select
                 event_params.value.string_value
             from
                 unnest(event_params) event_params

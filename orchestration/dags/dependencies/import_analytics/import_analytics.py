@@ -382,6 +382,16 @@ analytics_tables = {
             "enriched_offer_data",
         ],
     },
+    "bookable_venue_history": {
+        "sql": f"{ANALYTICS_SQL_PATH}/bookable_venue_history.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "depends": [
+            "enriched_offer_data",
+            "enriched_collective_offer_data",
+            "bookable_offer_history",
+            "bookable_collective_offer_history",
+        ],
+    },
 }
 
 aggregated_tables = {

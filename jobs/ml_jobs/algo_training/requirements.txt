@@ -1,6 +1,6 @@
 datetime==4.3
 google-cloud-secret-manager==2.4.0
-gcsfs==2021.9.0
+gcsfs== 2023.5.0
 mlflow==2.2.1
 numpy>=1.22.0
 pandas==1.5.3
@@ -15,3 +15,6 @@ pytest==6.2.5
 tqdm==4.64.1
 protobuf>=3.9.2
 loguru==0.6.0
+sentence-transformers==2.2.2
+catboost==1.2
+shap==0.41.0

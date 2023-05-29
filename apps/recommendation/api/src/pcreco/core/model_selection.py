@@ -34,6 +34,7 @@ class RecommendationColdStartVersionB(RecommendationDefaultModel):
 class SimilarOfferDefaultModel:
     name: str
     endpoint_name: str = f"similar_offers_default_{ENV_SHORT_NAME}"
+    order_query = "booking_number DESC"
 
 
 RECOMMENDATION_ENDPOINTS = {

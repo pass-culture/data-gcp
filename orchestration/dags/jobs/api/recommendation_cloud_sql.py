@@ -25,7 +25,6 @@ from common.config import (
     DATA_GCS_BUCKET_NAME,
     BIGQUERY_CLEAN_DATASET,
     BIGQUERY_ANALYTICS_DATASET,
-    ENV_SHORT_NAME,
     DAG_FOLDER,
     QPI_TABLE,
     RECOMMENDATION_SQL_INSTANCE,
@@ -46,7 +45,8 @@ os.environ["AIRFLOW_CONN_PROXY_POSTGRES_TCP"] = (
 
 
 TABLES_DATA_PATH = f"{DAG_FOLDER}/ressources/tables.csv"
-BUCKET_PATH = f"gs://{DATA_GCS_BUCKET_NAME}/bigquery_exports"
+BUCKET_NAME = "bigquery_exports/{{ ds }}"
+BUCKET_PATH = f"gs://{DATA_GCS_BUCKET_NAME}/{BUCKET_NAME}"
 SQL_PATH = "dependencies/import_recommendation_cloudsql/sql"
 
 default_args = {
@@ -193,8 +193,8 @@ with DAG(
             python_callable=compose_gcs_files,
             op_kwargs={
                 "bucket_name": DATA_GCS_BUCKET_NAME,
-                "source_prefix": f"bigquery_exports/{table}-",
-                "destination_blob_name": f"bigquery_exports/{table}.csv",
+                "source_prefix": f"{BUCKET_NAME}/{table}-",
+                "destination_blob_name": f"{BUCKET_NAME}/{table}.csv",
             },
             dag=dag,
         )
@@ -275,7 +275,6 @@ with DAG(
         CREATE UNIQUE INDEX IF NOT EXISTS idx_qpi_answers_mv               ON public.qpi_answers_mv                       USING btree (user_id,subcategories);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_item_ids_mv                  ON public.item_ids_mv                          USING btree (offer_id);
 
-        
     """
     recreate_indexes_task = CloudSQLExecuteQueryOperator(
         task_id="recreate_indexes",

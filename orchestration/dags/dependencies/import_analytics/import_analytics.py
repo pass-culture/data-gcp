@@ -388,8 +388,6 @@ analytics_tables = {
         "depends": [
             "enriched_offer_data",
             "enriched_collective_offer_data",
-            "bookable_offer_history",
-            "bookable_collective_offer_history",
         ],
     },
 }

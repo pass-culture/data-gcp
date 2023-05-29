@@ -31,6 +31,7 @@ with child_home as (
 , displayed as (
   SELECT 
     user_pseudo_id
+  , user_id
   , session_id
   , entry_id
   , home_ref.title as entry_name
@@ -52,10 +53,12 @@ with child_home as (
   {% else %}
   AND event_date = DATE('{{ add_days(ds, -1) }}')
   {% endif %}
+  QUALIFY rank() over(partition by user_pseudo_id, session_id, module_id order by event_timestamp) = 1 -- get the first display event
 )
 , clicked as (
     SELECT
       user_pseudo_id
+      , user_id
       , session_id
       , entry_id
       , home_ref.title as entry_name
@@ -80,6 +83,7 @@ with child_home as (
     -- entry_id param is missing for event HighlightBlockClicked because it is available in a prior version of the app. 
     and user_pseudo_id is not null
     and session_id is not null
+    QUALIFY rank() over(partition by user_pseudo_id, session_id, module_id order by event_timestamp) = 1 -- get the first click event
 )
 , consultations as (
     WITH relationships as (
@@ -94,6 +98,7 @@ with child_home as (
     offer as (
     SELECT 
       user_pseudo_id
+      , user_id
       , session_id
       , entry_id
       , module_id
@@ -110,6 +115,7 @@ with child_home as (
     venue as ( -- get the module_id for venue playlist
       SELECT
         user_pseudo_id
+        , user_id
         , session_id
         , entry_id
         , module_id
@@ -124,6 +130,7 @@ with child_home as (
   )
   SELECT 
       offer.user_pseudo_id
+      , offer.user_id
       , offer.session_id
       , coalesce(offer.entry_id, venue.entry_id) as entry_id
       , home_ref.title as entry_name
@@ -139,7 +146,7 @@ with child_home as (
       , playlist_id
       , playlist_name
     FROM venue
-    LEFT JOIN offer
+    FULL OUTER JOIN offer
     ON offer.user_pseudo_id = venue.user_pseudo_id
     AND offer.session_id = venue.session_id
     AND offer.venue_id = venue.venue_id
@@ -155,6 +162,7 @@ with child_home as (
 
 SELECT 
     displayed.user_pseudo_id
+  , displayed.user_id
   , displayed.session_id
   , displayed.entry_id -- first touch
   , displayed.entry_name
@@ -189,7 +197,8 @@ LEFT JOIN clicked
 LEFT JOIN consultations
   ON displayed.user_pseudo_id = consultations.user_pseudo_id
   AND displayed.session_id =  consultations.session_id
-  AND coalesce(clicked.destination_entry_id, displayed.entry_id) = consultations.home_id -- coalesce pour ne pas exclure les consultations d'offres "directes"
+  -- coalesce + conditional joining pour ne pas exclure les consultations d'offres "directes" => performance ?
+  AND coalesce(clicked.destination_entry_id, displayed.parent_module_id) = case when clicked.destination_entry_id is null then playlist_id else consultations.home_id end 
   AND coalesce(clicked.module_clicked_timestamp, displayed.module_displayed_timestamp) <= consultations.consult_offer_timestamp
 LEFT JOIN `{{ bigquery_analytics_dataset }}.firebase_bookings` as bookings
   ON displayed.user_pseudo_id = bookings.user_pseudo_id

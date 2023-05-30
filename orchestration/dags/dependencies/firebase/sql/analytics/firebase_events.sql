@@ -447,7 +447,15 @@ WITH temp_firebase_events AS (
                 unnest(event_params) event_params
             where
                 event_params.key = 'searchView'
-        ) as search_type
+        ) as search_type,
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'appsFlyerUserId'
+        ) as appsflyer_id
 FROM
 
         {% if params.dag_type == 'intraday' %}

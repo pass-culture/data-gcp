@@ -13,5 +13,6 @@
             "name": "offer_image",
             "type": "image"
         }
-    ]
+    ],
+    "batch_size_ehp": 10000
 }

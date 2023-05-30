@@ -276,6 +276,14 @@ analytics_tables = {
             "aggregated_monthly_user_used_booking_activity",
         ],
     },
+    "user_penetration_cohorts": {
+        "sql": f"{ANALYTICS_SQL_PATH}/user_penetration_cohorts.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "user_penetration_cohorts",
+        "depends": [
+            "user_penetration",
+        ],
+    },
     "user_iris": {
         "sql": f"{ANALYTICS_SQL_PATH}/user_iris.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",

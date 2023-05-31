@@ -168,7 +168,7 @@ class GCEHook(GoogleBaseHook):
                     "boot": True,
                     "autoDelete": True,
                     "initialize_params": {
-                        "disk_size_gb": "50",
+                        "disk_size_gb": "100",
                         "sourceImage": self.source_image_type.source_image,
                     },
                 }

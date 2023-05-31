@@ -41,6 +41,7 @@ dag_config = {
     "MODEL_DIR": "fraud/offer_compliance_model",
     "TRAIN_DIR": "/home/airflow/train",
     "EXPERIMENT_NAME": f"algo_training_offer_compliance_model_v1.0_{ENV_SHORT_NAME}",
+    "TOKENIZERS_PARALLELISM": "false",
 }
 
 # Params

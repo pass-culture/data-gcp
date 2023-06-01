@@ -76,5 +76,4 @@ WHERE
         ORDER BY
             eod.booking_cnt DESC
     ) = 1
-LIMIT
-    100000
+LIMIT {{ params.batch_size }}

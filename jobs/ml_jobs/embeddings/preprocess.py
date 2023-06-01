@@ -35,8 +35,6 @@ def main(
     df_data = pd.read_gbq(
         f"SELECT * FROM `{gcp_project}.tmp_{env_short_name}.{data_type}_to_extract_embeddings`"
     )
-    if env_short_name != "prod":
-        df_data = df_data[: params["batch_size_ehp"]]
 
     df_data_clean = preprocess(
         df_data,

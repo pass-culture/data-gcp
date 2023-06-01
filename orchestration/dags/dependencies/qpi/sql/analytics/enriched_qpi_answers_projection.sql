@@ -17,7 +17,7 @@ user_subcat as (
     from unnested_base b 
     JOIN `{{ bigquery_clean_dataset }}.QPI_mapping` map
     ON b.answer_ids = map.answer_id
-    WHERE b.answer_ids NOT like 'PROJECTION_%'
+    WHERE b.answer_ids like 'PROJECTION_%'
     order by user_id),
 clean as (
     select 

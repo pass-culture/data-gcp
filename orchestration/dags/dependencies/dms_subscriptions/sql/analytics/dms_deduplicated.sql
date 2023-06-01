@@ -1,8 +1,9 @@
 SELECT
     {% if params.target == 'pro' %}
-    * EXCEPT(numero_identifiant_lieu),
+    * EXCEPT(numero_identifiant_lieu, erreur_traitement_pass_culture),
     CASE WHEN numero_identifiant_lieu LIKE 'PRO-%' THEN TRIM(numero_identifiant_lieu, 'PRO-')
         ELSE numero_identifiant_lieu END AS numero_identifiant_lieu
+    , TRIM(erreur_traitement_pass_culture) as erreur_traitement_pass_culture
     {% else %}
     *
     {% endif %}

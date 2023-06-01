@@ -52,6 +52,13 @@ ANALYTICS_TABLES = {
         "destination_table": "enriched_qpi_answers_v4",
         "trigger_rule": "none_failed_or_skipped",
     },
+    "enriched_qpi_answers_projection": {
+        "sql": f"{SQL_ANALYTICS_PATH}/enriched_qpi_answers_projection.sql",
+        "write_disposition": "WRITE_TRUNCATE",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "enriched_qpi_answers_projection",
+        "trigger_rule": "none_failed_or_skipped",
+    },
     "enriched_aggregated_qpi_answers": {
         "sql": f"{SQL_ANALYTICS_PATH}/enriched_aggregated_qpi_answers.sql",
         "write_disposition": "WRITE_TRUNCATE",

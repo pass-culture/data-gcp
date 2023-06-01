@@ -35,6 +35,7 @@ def main(
     df_data = pd.read_gbq(
         f"SELECT * FROM `{gcp_project}.tmp_{env_short_name}.{data_type}_to_extract_embeddings`"
     )
+
     df_data_clean = preprocess(
         df_data,
         [

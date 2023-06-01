@@ -49,6 +49,10 @@ with DAG(
             default="default-config-item",
             type="string",
         ),
+        "batch_size": Param(
+            default=50000 if ENV_SHORT_NAME == "prod" else 10000,
+            type="int",
+        ),
     },
 ) as dag:
     data_collect_task = bigquery_job_task(

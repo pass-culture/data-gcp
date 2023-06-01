@@ -1,6 +1,3 @@
-{{create_humanize_id_function() }}
-
-
 WITH individual_bookings AS (
     SELECT
         venue_id
@@ -109,6 +106,7 @@ WHERE venue_is_permanent IS TRUE)
 SELECT DISTINCT
     enriched_offerer_data.offerer_id
     ,COALESCE(festival_cnt,0) AS festival_cnt
+    ,STRING_AGG(DISTINCT (CASE WHEN offerer_tag_label IS NOT NULL THEN offerer_tag_label ELSE NULL END) ORDER BY (CASE WHEN offerer_tag_label IS NOT NULL THEN offerer_tag_label ELSE NULL END)) AS partner_type
     ,COUNT(CASE WHEN offerer_tag_label NOT IN ('Festival','Collectivité') THEN 1 ELSE NULL END) AS nb_tags
 FROM `{{ bigquery_analytics_dataset }}`.enriched_offerer_data AS enriched_offerer_data
 JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offerer_tag_mapping AS applicative_database_offerer_tag_mapping
@@ -128,26 +126,9 @@ GROUP BY 1,2)
 ,infos_tags2 AS (
     SELECT
         offerer_id
+        ,partner_type
         ,festival_cnt + nb_tags AS partner_count
     FROM infos_tags1)
-
-,types AS (SELECT DISTINCT
-    enriched_offerer_data.offerer_id
-    ,STRING_AGG(DISTINCT (CASE WHEN offerer_tag_label IS NOT NULL THEN offerer_tag_label ELSE NULL END) ORDER BY (CASE WHEN offerer_tag_label IS NOT NULL THEN offerer_tag_label ELSE NULL END)) AS partner_type
-FROM `{{ bigquery_analytics_dataset }}`.enriched_offerer_data AS enriched_offerer_data
-JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offerer_tag_mapping AS applicative_database_offerer_tag_mapping
-    ON enriched_offerer_data.offerer_id = applicative_database_offerer_tag_mapping.offerer_id
-JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offerer_tag AS applicative_database_offerer_tag
-    ON applicative_database_offerer_tag.offerer_tag_id = applicative_database_offerer_tag_mapping.tag_id
-JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offerer_tag_category_mapping AS applicative_database_offerer_tag_category_mapping
-    ON applicative_database_offerer_tag.offerer_tag_id = applicative_database_offerer_tag_category_mapping.offerer_tag_id
-JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offerer_tag_category AS applicative_database_offerer_tag_category
-    ON applicative_database_offerer_tag_category_mapping.offerer_tag_category_id = applicative_database_offerer_tag_category.offerer_tag_category_id
-LEFT JOIN `{{ bigquery_analytics_dataset }}`.festival_increments AS festival_increments
-    ON enriched_offerer_data.offerer_id = festival_increments.offerer_id
-WHERE offerer_tag_name IS NOT NULL
-AND offerer_tag_category_name = 'comptage'
-GROUP BY 1 )
 
 
 ,infos_agg_by_offerer AS (
@@ -213,7 +194,6 @@ LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offerer AS applica
     ON enriched_offerer_data.offerer_id = applicative_database_offerer.offerer_id
 LEFT JOIN `{{ bigquery_analytics_dataset }}`.region_department AS region_department
     ON enriched_offerer_data.offerer_department_code = region_department.num_dep
-LEFT JOIN types ON enriched_offerer_data.offerer_id = types.offerer_id
 LEFT JOIN infos_agg_by_offerer
     ON infos_tags2.offerer_id = infos_agg_by_offerer.offerer_id)
 

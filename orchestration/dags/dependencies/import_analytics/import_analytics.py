@@ -163,7 +163,7 @@ analytics_tables = {
             "number_of_students_per_eple",
             "beneficiary_fraud_check",
             "enriched_deposit_data",
-            "enriched_booking_data"
+            "enriched_booking_data",
         ],
     },
     "iris_venues_in_shape": {

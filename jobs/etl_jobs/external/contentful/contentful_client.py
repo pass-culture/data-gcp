@@ -225,7 +225,10 @@ class ContentfulClient:
             "locale",
         ]
         module_infos = dict()
-        module_infos["title"] = module.title
+        if "title" in module.fields():
+            module_infos["title"] = module.title
+        else:
+            module_infos["title"] = None
         module_infos["date_imported"] = self.datetime
 
         contentful_tags_id = []

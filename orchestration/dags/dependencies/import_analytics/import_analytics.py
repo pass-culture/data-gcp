@@ -151,14 +151,12 @@ analytics_tables = {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_reimbursement_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
     },
-    "export_table_information_eple": {
+    "eple_aggregated": {
         "sql": f"{ANALYTICS_SQL_PATH}/export_table_information_eple.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "depends": [
             "enriched_institution_data",
-            "educational_deposit",
             "enriched_collective_booking_data",
-            "beneficiary_fraud_check",
             "enriched_deposit_data",
             "enriched_booking_data",
         ],

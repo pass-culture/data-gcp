@@ -13,8 +13,8 @@ SELECT DISTINCT
     ,institution_current_deposit_amount
 FROM `{{ bigquery_analytics_dataset }}.enriched_institution_data` eid
 LEFT JOIN `{{ bigquery_analytics_dataset }}.region_department` rd ON eid.institution_departement_code = rd.num_dep
-JOIN `{{ bigquery_analytics_dataset }}.applicative_database_educational_deposit` ed ON ed.educational_institution_id = eid.institution_id
-JOIN `{{ bigquery_analytics_dataset }}.applicative_database_educational_year` ey ON ey.adage_id = ed.educational_year_id
+JOIN `{{ bigquery_clean_dataset }}.applicative_database_educational_deposit` ed ON ed.educational_institution_id = eid.institution_id
+JOIN `{{ bigquery_clean_dataset }}.applicative_database_educational_year` ey ON ey.adage_id = ed.educational_year_id
 ), 
 
 eple_bookings AS (
@@ -25,7 +25,7 @@ SELECT
     ,SUM(CASE WHEN collective_booking_status IN ('USED','REIMBURSED') THEN booking_amount ELSE NULL END) AS montant_depense_reel
 FROM eple_infos
 JOIN `{{ bigquery_analytics_dataset }}.enriched_collective_booking_data` ecbd ON ecbd.educational_institution_id = eple_infos.institution_id
-JOIN `{{ bigquery_analytics_dataset }}.applicative_database_educational_year` ey ON ecbd.educational_year_id = ey.adage_id
+JOIN `{{ bigquery_clean_dataset }}.applicative_database_educational_year` ey ON ecbd.educational_year_id = ey.adage_id
 GROUP BY 1, 2)
 
 ,total_nb_of_students AS (
@@ -45,7 +45,7 @@ SELECT
     , AVG(COALESCE(deposit_theoretical_amount_spent,0)) AS avg_spent_per_user
     , SAFE_DIVIDE(SUM(deposit_theoretical_amount_spent), SUM(deposit_amount)) AS pct_spent
     , COUNT(DISTINCT ebd.user_id) AS nb_jeunes_credit_utilise
-FROM `{{ bigquery_analytics_dataset }}.applicative_database_beneficiary_fraud_check` bfc
+FROM `{{ bigquery_clean_dataset }}.applicative_database_beneficiary_fraud_check` bfc
 JOIN `{{ bigquery_analytics_dataset }}.enriched_deposit_data` edd ON edd.user_id = bfc.user_id
 LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_booking_data` ebd ON ebd.user_id = edd.user_id AND not booking_is_cancelled
 WHERE type = 'EDUCONNECT'

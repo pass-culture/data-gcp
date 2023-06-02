@@ -14,9 +14,8 @@ WITH individual_bookings AS (
         venue_id
         ,offerer_id
         ,MAX(partition_date) AS last_bookable_individual_offer
-    FROM `{{ bigquery_analytics_dataset }}`.bookable_offer_history AS bookable_offer_history
-    JOIN `{{ bigquery_analytics_dataset }}`.enriched_offer_data AS enriched_offer_data
-        ON bookable_offer_history.offer_id = enriched_offer_data.offer_id
+    FROM `{{ bigquery_analytics_dataset }}`.bookable_venue_history
+    WHERE individual_bookable_offers > 1
     GROUP BY 1,2)
 
 ,individual_offers AS (
@@ -44,9 +43,8 @@ WITH individual_bookings AS (
         venue_id
         ,offerer_id
         ,MAX(partition_date) AS last_bookable_collective_offer
-    FROM `{{ bigquery_analytics_dataset }}`.bookable_collective_offer_history AS bookable_collective_offer_history
-    JOIN `{{ bigquery_analytics_dataset }}`.enriched_collective_offer_data AS enriched_collective_offer_data
-        ON bookable_collective_offer_history.collective_offer_id = enriched_collective_offer_data.collective_offer_id
+    FROM `{{ bigquery_analytics_dataset }}`.bookable_venue_history
+    WHERE collective_bookable_offers > 1
     GROUP BY 1,2)
 
 
@@ -74,7 +72,6 @@ WITH individual_bookings AS (
     ,'venue' AS partner_status
     ,venue_type_label AS partner_type
     ,FALSE AS is_territorial_authorities
-    ,1 AS partner_count
     ,CASE WHEN (DATE_DIFF(CURRENT_DATE,last_bookable_individual_offer,DAY) <= 30 OR DATE_DIFF(CURRENT_DATE,last_bookable_collective_offer,DAY) <= 30)
         THEN TRUE ELSE FALSE END AS is_active_last_30days
     ,CASE WHEN (DATE_DIFF(CURRENT_DATE,last_individual_offer_creation_date,YEAR) = 0 OR DATE_DIFF(CURRENT_DATE,last_bookable_collective_offer,YEAR) = 0)
@@ -102,34 +99,23 @@ LEFT JOIN individual_offers ON individual_offers.venue_id = enriched_venue_data.
 LEFT JOIN collective_offers ON collective_offers.venue_id = enriched_venue_data.venue_id
 WHERE venue_is_permanent IS TRUE)
 
-,infos_tags1  AS (
+,infos_tags  AS (
 SELECT DISTINCT
     enriched_offerer_data.offerer_id
-    ,COALESCE(festival_cnt,0) AS festival_cnt
     ,STRING_AGG(DISTINCT (CASE WHEN offerer_tag_label IS NOT NULL THEN offerer_tag_label ELSE NULL END) ORDER BY (CASE WHEN offerer_tag_label IS NOT NULL THEN offerer_tag_label ELSE NULL END)) AS partner_type
-    ,COUNT(CASE WHEN offerer_tag_label NOT IN ('Festival','Collectivité') THEN 1 ELSE NULL END) AS nb_tags
+    ,COUNT(CASE WHEN offerer_tag_label NOT IN ('Collectivité') THEN 1 ELSE NULL END) AS nb_tags
 FROM `{{ bigquery_analytics_dataset }}`.enriched_offerer_data AS enriched_offerer_data
-JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offerer_tag_mapping AS applicative_database_offerer_tag_mapping
+JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offerer_tag_mapping AS applicative_database_offerer_tag_mapping
     ON enriched_offerer_data.offerer_id = applicative_database_offerer_tag_mapping.offerer_id
-JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offerer_tag AS applicative_database_offerer_tag
+JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offerer_tag AS applicative_database_offerer_tag
     ON applicative_database_offerer_tag.offerer_tag_id = applicative_database_offerer_tag_mapping.tag_id
-JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offerer_tag_category_mapping AS applicative_database_offerer_tag_category_mapping
+JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offerer_tag_category_mapping AS applicative_database_offerer_tag_category_mapping
     ON applicative_database_offerer_tag.offerer_tag_id = applicative_database_offerer_tag_category_mapping.offerer_tag_id
-JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offerer_tag_category AS applicative_database_offerer_tag_category
+JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offerer_tag_category AS applicative_database_offerer_tag_category
     ON applicative_database_offerer_tag_category_mapping.offerer_tag_category_id = applicative_database_offerer_tag_category.offerer_tag_category_id
-LEFT JOIN `{{ bigquery_analytics_dataset }}`.festival_increments AS festival_increments
-    ON enriched_offerer_data.offerer_id = festival_increments.offerer_id
 WHERE offerer_tag_name IS NOT NULL
 AND offerer_tag_category_name = 'comptage'
-GROUP BY 1,2)
-
-,infos_tags2 AS (
-    SELECT
-        offerer_id
-        ,partner_type
-        ,festival_cnt + nb_tags AS partner_count
-    FROM infos_tags1)
-
+GROUP BY 1)
 
 ,infos_agg_by_offerer AS (
 
@@ -170,7 +156,6 @@ GROUP BY 1 )
     ,'offerer' AS partner_status
     ,partner_type
     ,CASE WHEN partner_type LIKE '%Collectivité%' THEN TRUE ELSE FALSE END AS is_territorial_authorities
-    ,partner_count
     ,CASE WHEN (DATE_DIFF(CURRENT_DATE,last_bookable_individual_offer,DAY) <= 30 OR DATE_DIFF(CURRENT_DATE,last_bookable_collective_offer,DAY) <= 30)
         THEN TRUE ELSE FALSE END AS is_active_last_30days
     ,CASE WHEN (DATE_DIFF(CURRENT_DATE,last_bookable_collective_offer,YEAR) = 0 OR DATE_DIFF(CURRENT_DATE,last_bookable_collective_offer,YEAR) = 0)
@@ -187,16 +172,15 @@ GROUP BY 1 )
     ,real_individual_revenue
     ,real_collective_revenue
     ,total_real_revenue
-FROM infos_tags2
+FROM infos_tags
 LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_offerer_data AS enriched_offerer_data
-    ON infos_tags2.offerer_id = enriched_offerer_data.offerer_id
-LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offerer AS applicative_database_offerer
+    ON infos_tags.offerer_id = enriched_offerer_data.offerer_id
+LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offerer AS applicative_database_offerer
     ON enriched_offerer_data.offerer_id = applicative_database_offerer.offerer_id
 LEFT JOIN `{{ bigquery_analytics_dataset }}`.region_department AS region_department
     ON enriched_offerer_data.offerer_department_code = region_department.num_dep
 LEFT JOIN infos_agg_by_offerer
-    ON infos_tags2.offerer_id = infos_agg_by_offerer.offerer_id)
-
+    ON infos_tags.offerer_id = infos_agg_by_offerer.offerer_id)
 
 SELECT *
 FROM venues 

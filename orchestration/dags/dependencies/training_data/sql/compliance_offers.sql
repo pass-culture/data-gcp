@@ -92,6 +92,7 @@ CASE
                 or o.offer_name <> 'NaN'
             )
         )
+        and o.offer_creation_date > DATETIME '2022-09-01'
 
 )
 select

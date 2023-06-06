@@ -26,7 +26,6 @@ SELECT
     , partition_date
     , individual AS  individual_bookable_offers
     , collective AS collective_bookable_offers
-    , individual + collective AS total_bookable_offers
 FROM all_bookable_data
 PIVOT(SUM(nb_bookable_offers) FOR offer_type IN ('individual' , 'collective'))
 )
@@ -37,5 +36,5 @@ SELECT
     , partition_date
     , COALESCE(individual_bookable_offers, 0) AS individual_bookable_offers
     , COALESCE(collective_bookable_offers, 0) AS collective_bookable_offers
-    , COALESCE(total_bookable_offers, 0) AS total_bookable_offers
+     , COALESCE(individual_bookable_offers, 0) + COALESCE(collective_bookable_offers, 0) AS total_bookable_offers
 FROM pivoted_data

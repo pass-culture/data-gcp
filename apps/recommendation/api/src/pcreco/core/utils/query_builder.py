@@ -15,18 +15,30 @@ class RecommendableIrisOffersQueryBuilder:
     def get_recommendable_offers_table(self):
         iris_view_name = "recommendable_offers_per_iris_shape_mv"
         offer_view_name = "recommendable_offers_raw_mv"
+
+        # offer
         if get_materialized_view_status(iris_view_name)[
             f"is_{iris_view_name}_datasource_exists"
         ]:
             self.recommendable_iris_table = iris_view_name
-        else:
+        elif get_materialized_view_status(f"{iris_view_name}_old")[
+            f"is_{iris_view_name}_datasource_exists"
+        ]:
             self.recommendable_iris_table = f"{iris_view_name}_old"
+        else:
+            self.recommendable_iris_table = f"{iris_view_name}_tmp"
+
+        # raw
         if get_materialized_view_status(offer_view_name)[
             f"is_{offer_view_name}_datasource_exists"
         ]:
             self.recommendable_offer_table = offer_view_name
-        else:
+        elif get_materialized_view_status(f"{offer_view_name}_old")[
+            f"is_{iris_view_name}_datasource_exists"
+        ]:
             self.recommendable_offer_table = f"{offer_view_name}_old"
+        else:
+            self.recommendable_offer_table = f"{offer_view_name}_tmp"
 
     def generate_query(
         self,

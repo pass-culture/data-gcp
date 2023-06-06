@@ -29,7 +29,7 @@ def extract_embedding(data, params, prepoc_models):
                 pass
         if feature["type"] == "text":
             model = prepoc_models[feature["type"]]
-            embedding = model.encode(data[feature["name"]])
+            embedding = _encode_from_feature(model,data[feature["name"]])
             data[f"""{feature["name"]}_embedding"""] = embedding
     return data
 
@@ -49,3 +49,6 @@ def _encode_img_from_url(model, url):
     except:
         offer_img_embs = np.array([0] * 512)
     return offer_img_embs
+
+def _encode_from_feature(model,feature):
+    return model.encode(feature)

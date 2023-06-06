@@ -1,0 +1,143 @@
+{
+	"info": {
+		"_postman_id": "0f90d651-9f32-491a-9fb5-964c04031c9e",
+		"name": "API papillon integration tests",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "20735314"
+	},
+	"item": [
+		{
+			"name": "model/compliance/scoring",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Papillon tests: Response must be a JSON and have a body\", function () {\r",
+							"     pm.response.to.be.ok;\r",
+							"     pm.response.to.be.withBody;\r",
+							"     pm.response.to.be.json;\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Papillon tests: Response must contain proper output\", function () {\r",
+							"  const jsonResponse = pm.response.json();\r",
+							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
+							"\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "oauth2",
+					"oauth2": {
+						"tokenName": "compliance_api",
+						"addTokenTo": "header",
+						"headerPrefix": "Bearer"
+					}
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n\"offer_id\":\"420\",\r\n \"offer_name\": \"ninho 4 albums studio + poster\",\r\n \"offer_description\": \"ninho 4 albums studio + poster\\n190295189136\",\r\n \"offer_subcategoryid\": \"SUPPORT_PHYSIQUE_MUSIQUE\",\r\n  \"rayon\": \"\",\r\n \"macro_rayon\": \"\",\r\n  \"stock_price\": 20,\r\n  \"stock\": 3,\r\n \"offer_image\": \"https://storage.googleapis.com/passculture-metier-prod-production-assets-fine-grained/thumbs/products/9YKMS\"\r\n }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{api_url}}/latest/model/compliance/scoring"
+			},
+			"response": []
+		},
+		{
+			"name": "token",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "x-cloud-trace-context",
+						"value": "devtest/33445",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "username",
+							"value": "{{username}}",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "{{password}}",
+							"type": "text"
+						}
+					]
+				},
+				"url": "{{api_url}}/latest/token"
+			},
+			"response": []
+		},
+		{
+			"name": "root",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "{{api_url}}/latest/"
+			},
+			"response": []
+		},
+		{
+			"name": "load model",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Papillon tests: Response must be a JSON and have a body\", function () {\r",
+							"     pm.response.to.be.ok;\r",
+							"     pm.response.to.be.withBody;\r",
+							"     pm.response.to.be.json;\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Papillon tests: Response must contain proper output\", function () {\r",
+							"  const jsonResponse = pm.response.json();\r",
+							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
+							"\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "oauth2",
+					"oauth2": {
+						"addTokenTo": "header",
+						"headerPrefix": "Bearer"
+					}
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"model_stage\":\"Production\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{api_url}}/latest/model/compliance/load"
+			},
+			"response": []
+		}
+	]
+}

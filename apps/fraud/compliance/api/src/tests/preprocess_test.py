@@ -32,5 +32,5 @@ class PreprocessTest:
             )
         ],
     )
-    def test_underscore_to_camel(self, input_body, expected_preprocess):
+    def test_prepare_features(self, input_body, expected_preprocess):
         assert prepare_features(input_body) == expected_preprocess

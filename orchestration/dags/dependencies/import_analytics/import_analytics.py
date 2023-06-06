@@ -248,6 +248,14 @@ analytics_tables = {
             "recommendable_offers_data",
         ],
     },
+    "recommendable_items_raw": {
+        "sql": f"{ANALYTICS_SQL_PATH}/recommendable_items_raw.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "recommendable_items_raw",
+        "depends": [
+            "recommendable_offers_raw",
+        ],
+    },
     "non_recommendable_offers_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/non_recommendable_offers_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",

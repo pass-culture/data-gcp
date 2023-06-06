@@ -260,10 +260,17 @@ with DAG(
         autocommit=True,
     )
 
-    create_materialized_raw_view = CloudSQLExecuteQueryOperator(
+    create_materialized_offers_raw_view = CloudSQLExecuteQueryOperator(
         task_id="create_materialized_raw_view_recommendable_offers_raw_mv",
         gcp_cloudsql_conn_id="proxy_postgres_tcp",
         sql=f"{SQL_PATH}/create_recommendable_offers_raw_mv.sql",
+        autocommit=True,
+    )
+
+    create_materialized_items_raw_view = CloudSQLExecuteQueryOperator(
+        task_id="create_materialized_raw_view_recommendable_items_raw_mv",
+        gcp_cloudsql_conn_id="proxy_postgres_tcp",
+        sql=f"{SQL_PATH}/create_recommendable_items_raw_mv.sql",
         autocommit=True,
     )
 
@@ -306,6 +313,7 @@ with DAG(
     rename_materialized_view_tables = [
         "recommendable_offers_per_iris_shape_mv",
         "recommendable_offers_raw_mv",
+        "recommendable_items_raw_mv",
     ]
     rename_materialized_view_tasks = []
     for materialized_view in rename_materialized_view_tables:
@@ -355,7 +363,8 @@ with DAG(
     (
         end_drop_restore
         >> create_materialized_view
-        >> create_materialized_raw_view
+        >> create_materialized_offers_raw_view
+        >> create_materialized_items_raw_view
         >> recreate_indexes_task
         >> refresh_materialized_view_tasks
         >> end_refresh

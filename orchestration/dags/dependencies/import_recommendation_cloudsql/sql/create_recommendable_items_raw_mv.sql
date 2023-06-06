@@ -4,7 +4,7 @@ RETURNS TABLE (
                 item_id varchar,
                 category VARCHAR,
                 subcategory_id VARCHAR,
-                search_group_name VARCHAR,,
+                search_group_name VARCHAR,
                 is_numerical BOOLEAN,
                 is_national BOOLEAN,
                 is_geolocated BOOLEAN,

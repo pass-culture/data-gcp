@@ -12,7 +12,7 @@ structures AS (
         , {% if params.group_type == 'NAT' %}
             'NAT'
         {% else %}
-            venue.{{ params.group_type_name }}
+            rd.{{ params.group_type_name }}
         {% endif %} as dimension_value
         , MIN(
             CASE
@@ -32,6 +32,8 @@ structures AS (
     LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_offer_data` as offer
         ON venue.venue_id = offer.venue_id 
         AND offer.venue_is_virtual 
+    LEFT JOIN `{{ bigquery_analytics_dataset }}.region_department` as rd
+        on  venue.venue_department_code = rd.num_dep 
     GROUP BY 1, 2, 3
     HAVING (premier_lieu_permanent < '2023-01-01' OR offres_numeriques > 0)
 ),
@@ -55,7 +57,7 @@ active_individuel AS (
         , {% if params.group_type == 'NAT' %}
             'NAT'
         {% else %}
-            venue.{{ params.group_type_name }}
+            rd.{{ params.group_type_name }}
         {% endif %} as dimension_value
         , offerer_id AS active_offerers
     FROM dates 
@@ -65,6 +67,8 @@ active_individuel AS (
         ON offer.offer_id = bookable_offer_history.offer_id
     JOIN `{{ bigquery_analytics_dataset }}.enriched_venue_data` as venue
         ON venue.venue_id = offer.venue_id 
+    LEFT JOIN `{{ bigquery_analytics_dataset }}.region_department` as rd
+        on  venue.venue_department_code = rd.num_dep 
 ),
 
 active_collectif AS (
@@ -74,7 +78,7 @@ active_collectif AS (
         , {% if params.group_type == 'NAT' %}
             'NAT'
         {% else %}
-            venue.{{ params.group_type_name }}
+            rd.{{ params.group_type_name }}
         {% endif %} as dimension_value
         , offerer_id AS active_offerers
     FROM dates 
@@ -84,6 +88,8 @@ active_collectif AS (
         ON collective_offer.collective_offer_id = bcoh.collective_offer_id
     JOIN `{{ bigquery_analytics_dataset }}.enriched_venue_data` as venue
         ON venue.venue_id = collective_offer.venue_id 
+    LEFT JOIN `{{ bigquery_analytics_dataset }}.region_department` as rd
+        on  venue.venue_department_code = rd.num_dep 
 ),
 
 all_actives AS (

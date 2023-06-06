@@ -249,7 +249,7 @@ tmp_tables_detailed = {
         "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_taux_activation_structure_region",
         "params": {
             "group_type": "REG",
-            "group_type_name": "venue_region_name",
+            "group_type_name": "region_name",
         },
     },
     "propilote_taux_activation_structure_departement": {
@@ -258,7 +258,7 @@ tmp_tables_detailed = {
         "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_taux_activation_structure_departement",
         "params": {
             "group_type": "DEPT",
-            "group_type_name": "venue_department_code",
+            "group_type_name": "num_dep",
         },
     },
     "propilote_taux_activation_structure_academy": {

@@ -1,12 +1,12 @@
 WITH dates AS (
     SELECT DISTINCT 
-        DATE_TRUNC(user_activation_date,MONTH) AS mois 
+        DATE_TRUNC(user_activation_date,MONTH) AS month 
     FROM `{{ bigquery_analytics_dataset }}.enriched_user_data`
 ),
 
 institutions AS (
     SELECT 
-        dates.mois
+        dates.month
         , "{{ params.group_type }}" as dimension_name
         , {% if params.group_type == 'NAT' %}
             'NAT'
@@ -16,13 +16,13 @@ institutions AS (
         , COUNT(DISTINCT institution_id) AS total_institutions
     FROM dates
     LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_institution_data` institution
-        ON dates.mois >= DATE_TRUNC(institution.first_deposit_creation_date, MONTH)
+        ON dates.month >= DATE_TRUNC(institution.first_deposit_creation_date, MONTH)
     GROUP BY 1, 2, 3
 ), 
 
 active_institutions AS (
     SELECT 
-        dates.mois
+        dates.month
         , "{{ params.group_type }}" as dimension_name
         , {% if params.group_type == 'NAT' %}
             'NAT'
@@ -32,7 +32,7 @@ active_institutions AS (
         , COUNT(DISTINCT educational_institution_id) AS total_active_institutions
     FROM dates
     JOIN `{{ bigquery_analytics_dataset }}.enriched_collective_booking_data` as collective_booking
-        ON dates.mois >= DATE_TRUNC(collective_booking.collective_booking_creation_date, MONTH)
+        ON dates.month >= DATE_TRUNC(collective_booking.collective_booking_creation_date, MONTH)
         AND collective_booking_status IN ('USED','REIMBURSED','CONFIRMED')
         AND scholar_year = "2022-2023" 
     JOIN `{{ bigquery_analytics_dataset }}.enriched_institution_data` as institution
@@ -41,7 +41,7 @@ active_institutions AS (
     )
 
 SELECT 
-    institutions.mois 
+    institutions.month 
     , institutions.dimension_name
     , institutions.dimension_value
     , null as user_type 
@@ -51,5 +51,5 @@ SELECT
 
 FROM institutions
 LEFT JOIN active_institutions 
-    ON institutions.mois = active_institutions.mois 
+    ON institutions.month = active_institutions.month 
     AND institutions.dimension_value = active_institutions.dimension_value

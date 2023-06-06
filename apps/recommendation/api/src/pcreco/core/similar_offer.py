@@ -4,7 +4,7 @@ import json
 from pcreco.core.user import User
 from pcreco.core.offer import Offer
 from pcreco.models.reco.playlist_params import PlaylistParamsIn
-from pcreco.core.utils.query_builder import RecommendableOffersQueryBuilder
+from pcreco.core.utils.query_builder import RecommendableIrisOffersQueryBuilder
 from pcreco.utils.db.db_connection import get_session
 from pcreco.core.utils.vertex_ai import predict_model
 from pcreco.core.model_selection import select_sim_model_params
@@ -25,7 +25,6 @@ class SimilarOffer:
         self.model_params = select_sim_model_params(params_in.model_endpoint)
         self.recommendable_offer_limit = 10_000
         self.params_in_filters = params_in._get_conditions()
-        self.reco_radius = params_in.reco_radius
         self.json_input = params_in.json_input
         self.include_digital = params_in.include_digital
         self.has_conditions = params_in.has_conditions
@@ -64,33 +63,32 @@ class SimilarOffer:
     def get_recommendable_offers(self) -> Dict[str, Dict[str, Any]]:
 
         start = time.time()
-        order_query = "booking_number DESC"
-
-        recommendable_offers_query = RecommendableOffersQueryBuilder(
+        recommendable_offers_query = RecommendableIrisOffersQueryBuilder(
             self, self.recommendable_offer_limit
-        ).generate_query(order_query)
+        ).generate_query(
+            order_query=self.model_params.order_query,
+            user=self.user,
+        )
 
         query_result = []
         if recommendable_offers_query is not None:
             connection = get_session()
-            query_result = connection.execute(
-                text(recommendable_offers_query),
-                user_id=str(self.user.id),
-                user_iris_id=str(self.offer.iris_id),
-                user_longitude=float(self.offer.longitude),
-                user_latitude=float(self.offer.latitude),
-            ).fetchall()
+            query_result = connection.execute(recommendable_offers_query).fetchall()
 
         user_recommendation = {
-            row[4]: {
+            row[1]: {
                 "id": row[0],
-                "category": row[1],
-                "subcategory_id": row[2],
-                "search_group_name": row[3],
-                "item_id": row[4],
+                "item_id": row[1],
+                "venue_id": row[2],
+                "user_distance": row[3],
+                "booking_number": row[4],
+                "category": row[5],
+                "subcategory_id": row[6],
+                "search_group_name": row[7],
+                "is_geolocated": row[8],
             }
             for row in query_result
-            if row[4] != self.offer.item_id
+            if row[1] != self.offer.item_id
         }
         logger.info(f"get_recommendable_offers: n: {len(user_recommendation)}")
         log_duration(f"get_recommendable_offers for {self.user.id}", start)
@@ -132,8 +130,6 @@ class SimilarOffer:
             log_duration(f"save_recommendations for {self.user.id}", start)
 
     def _predict_score(self, instances) -> List[List[str]]:
-
-        logger.info(f"_predict_score: {instances}")
         start = time.time()
         response = predict_model(
             endpoint_name=self.model_params.endpoint_name,

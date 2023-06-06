@@ -3,7 +3,7 @@ WITH clean_payment_status AS (
         paymentId,
         MAX(date) AS last_status_date
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_payment_status payment_statuts
+        `{{ bigquery_clean_dataset }}`.applicative_database_payment_status payment_statuts
     GROUP BY
         1
 ),
@@ -18,8 +18,8 @@ CASE
         END AS offerer_contribution
     FROM
         `{{ bigquery_analytics_dataset }}`.enriched_booking_data booking
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_pricing pricing ON booking.booking_id = pricing.bookingId
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_pricing_line pricing_line ON pricing.id = pricing_line.pricingId
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_pricing pricing ON booking.booking_id = pricing.bookingId
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_pricing_line pricing_line ON pricing.id = pricing_line.pricingId
 ),
 clean_pricing_line2 AS (
     SELECT
@@ -61,17 +61,17 @@ individuel AS (
         invoice.invoice_creation_date,
         invoice.amount AS invoice_amount
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_booking booking
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_stock ON booking.stock_id = applicative_database_stock.stock_id
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_deposit ON booking.deposit_id = applicative_database_deposit.id
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_pricing pricing ON booking.booking_id = pricing.bookingId
+        `{{ bigquery_clean_dataset }}`.booking booking
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock ON booking.stock_id = applicative_database_stock.stock_id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_deposit ON booking.deposit_id = applicative_database_deposit.id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_pricing pricing ON booking.booking_id = pricing.bookingId
         LEFT JOIN clean_pricing_line2 ON booking.booking_id = clean_pricing_line2.booking_id
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_cashflow_pricing cashflow_pricing ON pricing.id = cashflow_pricing.pricingId
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_cashflow cashflow ON cashflow_pricing.cashflowId = cashflow.id
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_cashflow_batch cashflow_batch ON cashflow.batchId = cashflow_batch.id
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_invoice_cashflow invoice_cashflow ON cashflow.id = invoice_cashflow.cashflow_id
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_invoice invoice ON invoice_cashflow.invoice_id = invoice.invoice_id
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_invoice_line invoice_line ON invoice.invoice_id = invoice_line.invoice_id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_cashflow_pricing cashflow_pricing ON pricing.id = cashflow_pricing.pricingId
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_cashflow cashflow ON cashflow_pricing.cashflowId = cashflow.id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_cashflow_batch cashflow_batch ON cashflow.batchId = cashflow_batch.id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_invoice_cashflow invoice_cashflow ON cashflow.id = invoice_cashflow.cashflow_id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_invoice invoice ON invoice_cashflow.invoice_id = invoice.invoice_id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_invoice_line invoice_line ON invoice.invoice_id = invoice_line.invoice_id
     WHERE
         NOT invoice.invoice_reference LIKE '%.2'
 ),
@@ -86,8 +86,8 @@ CASE
         END AS offerer_contribution
     FROM
         `{{ bigquery_analytics_dataset }}`.enriched_collective_booking_data collective_booking
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_pricing pricing ON collective_booking.collective_booking_id = pricing.collective_booking_id
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_pricing_line pricing_line ON pricing.id = pricing_line.pricingId
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_pricing pricing ON collective_booking.collective_booking_id = pricing.collective_booking_id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_pricing_line pricing_line ON pricing.id = pricing_line.pricingId
 ),
 coll_clean_pricing_line2 AS (
     SELECT
@@ -129,16 +129,16 @@ collective AS (
         invoice.invoice_creation_date,
         invoice.amount AS invoice_amount
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_collective_booking collective_booking
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_pricing pricing ON collective_booking.collective_booking_id = pricing.collective_booking_id
+        `{{ bigquery_clean_dataset }}`.applicative_database_collective_booking collective_booking
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_pricing pricing ON collective_booking.collective_booking_id = pricing.collective_booking_id
         AND booking_id IS NULL
         LEFT JOIN coll_clean_pricing_line2 ON collective_booking.collective_booking_id = coll_clean_pricing_line2.collective_booking_id
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_cashflow_pricing cashflow_pricing ON pricing.id = cashflow_pricing.pricingId
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_cashflow cashflow ON cashflow_pricing.cashflowId = cashflow.id
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_cashflow_batch cashflow_batch ON cashflow.batchId = cashflow_batch.id
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_invoice_cashflow invoice_cashflow ON cashflow.id = invoice_cashflow.cashflow_id
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_invoice invoice ON invoice_cashflow.invoice_id = invoice.invoice_id
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_invoice_line invoice_line ON invoice.invoice_id = invoice_line.invoice_id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_cashflow_pricing cashflow_pricing ON pricing.id = cashflow_pricing.pricingId
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_cashflow cashflow ON cashflow_pricing.cashflowId = cashflow.id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_cashflow_batch cashflow_batch ON cashflow.batchId = cashflow_batch.id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_invoice_cashflow invoice_cashflow ON cashflow.id = invoice_cashflow.cashflow_id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_invoice invoice ON invoice_cashflow.invoice_id = invoice.invoice_id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_invoice_line invoice_line ON invoice.invoice_id = invoice_line.invoice_id
     WHERE
         NOT invoice.invoice_reference LIKE '%.2'
 )

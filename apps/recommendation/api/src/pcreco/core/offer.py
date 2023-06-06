@@ -3,14 +3,13 @@ from pcreco.utils.env_vars import log_duration
 from pcreco.utils.db.db_connection import get_session
 from loguru import logger
 import time
+from sqlalchemy import text
 
 
 class Offer:
     def __init__(self, offer_id, call_id=None, latitude=None, longitude=None) -> None:
         self.id = offer_id
         self.call_id = call_id
-        self.longitude = False if longitude is None else longitude
-        self.latitude = False if latitude is None else latitude
         self.iris_id = get_iris_from_coordinates(longitude, latitude)
         self.item_id, self.cnt_bookings = self.get_offer_characteristics(offer_id)
 
@@ -19,11 +18,14 @@ class Offer:
         start = time.time()
         connection = get_session()
         query_result = connection.execute(
-            f"""
+            text(
+                """
                 SELECT item_id, booking_number
                 FROM item_ids_mv
-                WHERE offer_id = '{offer_id}'
+                WHERE offer_id = :offer_id
             """
+            ),
+            offer_id=str(offer_id),
         ).fetchone()
         log_duration(f"get_offer_characteristics for offer_id: {offer_id}", start)
         if query_result is not None:

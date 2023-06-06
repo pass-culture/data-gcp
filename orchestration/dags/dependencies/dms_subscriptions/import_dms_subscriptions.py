@@ -48,6 +48,7 @@ destination_table_schema_pro = [
     {"name": "academie_historique_intervention", "type": "STRING"},
     {"name": "academie_groupe_instructeur", "type": "STRING"},
     {"name": "domaines", "type": "STRING"},
+    {"name": "erreur_traitement_pass_culture", "type": "STRING"},
 ]
 
 
@@ -109,6 +110,7 @@ def parse_api_result(updated_since, dms_target):
                 "academie_historique_intervention",
                 "academie_groupe_instructeur",
                 "domaines",
+                "erreur_traitement_pass_culture",
             ]
         )
         fs = gcsfs.GCSFileSystem(project=GCP_PROJECT_ID)
@@ -134,6 +136,7 @@ def save_results(df_applications, dms_target, updated_since):
             df_applications[f"{name}"] = pd.to_datetime(df_applications[f"{name}"])
         elif type == "STRING":
             df_applications[f"{name}"] = df_applications[f"{name}"].astype(str)
+    df_applications["update_date"] = pd.to_datetime("today")
     df_applications.to_parquet(
         f"gs://{DATA_GCS_BUCKET_NAME}/dms_export/dms_{dms_target}_{updated_since}.parquet",
         engine="pyarrow",
@@ -255,6 +258,15 @@ def parse_result_pro(result, df_applications):
                     dossier_line["academie_groupe_instructeur"] = dossier[
                         "groupeInstructeur"
                     ]["label"]
+
+                if dossier["annotations"]:
+                    for annotation in dossier["annotations"]:
+                        if annotation["label"] == "Erreur traitement pass Culture":
+                            dossier_line["erreur_traitement_pass_culture"] = annotation[
+                                "stringValue"
+                            ]
+                else:
+                    dossier_line["erreur_traitement_pass_culture"] = None
 
                 df_applications.loc[len(df_applications)] = dossier_line
     return

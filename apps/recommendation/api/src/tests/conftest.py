@@ -50,6 +50,106 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
                 "product-9",
             ],
             "offer_id": ["1", "2", "3", "4", "5", "6", "7", "8", "9"],
+            "iris_id": [
+                DEFAULT_IRIS_ID,
+                DEFAULT_IRIS_ID,
+                DEFAULT_IRIS_ID,
+                DEFAULT_IRIS_ID,
+                DEFAULT_IRIS_ID,
+                DEFAULT_IRIS_ID,
+                DEFAULT_IRIS_ID,
+                DEFAULT_IRIS_ID,
+                DEFAULT_IRIS_ID,
+            ],
+            "venue_distance_to_iris": [11, 22, 33, 44, 55, 22, 1, 1, 1],
+            "is_geolocated": [
+                False,
+                True,
+                False,
+                False,
+                False,
+                True,
+                True,
+                True,
+                False,
+            ],
+            "venue_latitude": [
+                48.87004,
+                48.87004,
+                48.87004,
+                48.87004,
+                48.87004,
+                48.87004,
+                48.830719,
+                48.830719,
+                48.87004,
+            ],
+            "venue_longitude": [
+                2.3785,
+                2.3785,
+                2.3785,
+                2.3785,
+                2.3785,
+                2.3785,
+                2.331289,
+                2.331289,
+                2.3785,
+            ],
+            "unique_id": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+        }
+    )
+
+    engine.execute(
+        "DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_per_iris_shape_mv CASCADE;"
+    )
+
+    recommendable_offers_per_iris_shape.to_sql(
+        "recommendable_offers_temporary_table", con=engine, if_exists="replace"
+    )
+    engine.execute(
+        """
+        CREATE MATERIALIZED VIEW recommendable_offers_per_iris_shape_mv AS 
+        SELECT 
+            ro.item_id,
+            ro.offer_id,
+            ro.iris_id,
+            ro.venue_distance_to_iris,
+            ro.is_geolocated,
+            ro.venue_latitude,
+            ro.venue_longitude,
+            ST_MakePoint(ro.venue_longitude, ro.venue_latitude)::geography as venue_geo,
+            ro.unique_id        
+        FROM recommendable_offers_temporary_table ro
+        WITH DATA;
+    """
+    )
+
+    non_recommendable_offers = pd.DataFrame(
+        {"user_id": ["111", "112"], "offer_id": ["1", "3"]}
+    )
+    engine.execute("DROP MATERIALIZED VIEW IF EXISTS non_recommendable_offers CASCADE;")
+
+    non_recommendable_offers.to_sql(
+        "non_recommendable_offers_temporary_table", con=engine, if_exists="replace"
+    )
+    engine.execute(
+        "CREATE MATERIALIZED VIEW non_recommendable_offers AS SELECT * FROM non_recommendable_offers_temporary_table;"
+    )
+
+    recommendable_offers_raw = pd.DataFrame(
+        {
+            "item_id": [
+                "isbn-1",
+                "isbn-2",
+                "movie-3",
+                "movie-4",
+                "movie-5",
+                "product-6",
+                "product-7",
+                "product-8",
+                "product-9",
+            ],
+            "offer_id": ["1", "2", "3", "4", "5", "6", "7", "8", "9"],
             "product_id": ["1", "2", "3", "4", "5", "6", "7", "8", "9"],
             "category": ["A", "B", "C", "D", "E", "B", "A", "A", "D"],
             "subcategory_id": [
@@ -96,30 +196,7 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
                 "COMEDY",
                 "Histoire",
             ],
-            "iris_id": [
-                DEFAULT_IRIS_ID,
-                DEFAULT_IRIS_ID,
-                DEFAULT_IRIS_ID,
-                DEFAULT_IRIS_ID,
-                DEFAULT_IRIS_ID,
-                DEFAULT_IRIS_ID,
-                DEFAULT_IRIS_ID,
-                DEFAULT_IRIS_ID,
-                DEFAULT_IRIS_ID,
-            ],
             "venue_id": ["11", "22", "33", "44", "55", "22", "22", "22", "23"],
-            "venue_distance_to_iris": [11, 22, 33, 44, 55, 22, 1, 1, 1],
-            "venue_distance_to_iris_bucket": [
-                "0_25KM",
-                "0_25KM",
-                "0_25KM",
-                "0_25KM",
-                "0_25KM",
-                "0_25KM",
-                "0_25KM",
-                "0_25KM",
-                "0_25KM",
-            ],
             "name": ["a", "b", "c", "d", "e", "f", "g", "h", "i"],
             "is_numerical": [
                 False,
@@ -132,7 +209,7 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
                 False,
                 False,
             ],
-            "is_national": [True, False, True, False, True, False, False, False, True],
+            "is_national": [True, False, True, True, True, False, False, False, True],
             "is_geolocated": [
                 False,
                 True,
@@ -169,7 +246,7 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
             ],
             "stock_price": [10, 20, 20, 30, 30, 30, 30, 30, 10],
             "is_underage_recommendable": [
-                True,
+                False,
                 True,
                 True,
                 False,
@@ -179,54 +256,52 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
                 False,
                 True,
             ],
-            "position": ["in", "out", "in", "out", "in", "out", "in", "in", "in"],
             "venue_latitude": [
+                None,
                 48.87004,
-                48.87004,
-                48.87004,
-                48.87004,
-                48.87004,
+                None,
+                None,
+                None,
                 48.87004,
                 48.830719,
                 48.830719,
-                48.87004,
+                None,
             ],
             "venue_longitude": [
+                None,
                 2.3785,
-                2.3785,
-                2.3785,
-                2.3785,
-                2.3785,
+                None,
+                None,
+                None,
                 2.3785,
                 2.331289,
                 2.331289,
-                2.3785,
+                None,
             ],
             "unique_id": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+            "default_max_distance": [
+                100000,
+                100000,
+                100000,
+                100000,
+                100000,
+                100000,
+                100000,
+                100000,
+                100000,
+            ],
         }
     )
 
     engine.execute(
-        "DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_per_iris_shape_mv CASCADE;"
+        "DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_raw_mv CASCADE;"
     )
 
-    recommendable_offers_per_iris_shape.to_sql(
-        "recommendable_offers_temporary_table", con=engine, if_exists="replace"
+    recommendable_offers_raw.to_sql(
+        "recommendable_offers_raw", con=engine, if_exists="replace"
     )
     engine.execute(
-        "CREATE MATERIALIZED VIEW recommendable_offers_per_iris_shape_mv AS SELECT * FROM recommendable_offers_temporary_table WITH DATA;"
-    )
-
-    non_recommendable_offers = pd.DataFrame(
-        {"user_id": ["111", "112"], "offer_id": ["1", "3"]}
-    )
-    engine.execute("DROP MATERIALIZED VIEW IF EXISTS non_recommendable_offers CASCADE;")
-
-    non_recommendable_offers.to_sql(
-        "non_recommendable_offers_temporary_table", con=engine, if_exists="replace"
-    )
-    engine.execute(
-        "CREATE MATERIALIZED VIEW non_recommendable_offers AS SELECT * FROM non_recommendable_offers_temporary_table;"
+        "CREATE MATERIALIZED VIEW recommendable_offers_raw_mv AS SELECT *, ST_MakePoint(venue_longitude, venue_latitude)::geography as venue_geo FROM recommendable_offers_raw WITH DATA;"
     )
 
     enriched_user = pd.DataFrame(
@@ -298,12 +373,17 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
         )
 
         engine.execute(
+            "DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_raw_mv CASCADE;"
+        )
+
+        engine.execute(
             "DROP MATERIALIZED VIEW IF EXISTS non_recommendable_offers CASCADE;"
         )
 
         engine.execute(
             "DROP TABLE IF EXISTS recommendable_offers_temporary_table CASCADE;"
         )
+        engine.execute("DROP TABLE IF EXISTS recommendable_offers_raw CASCADE;")
         engine.execute(
             "DROP TABLE IF EXISTS non_recommendable_offers_temporary_table CASCADE;"
         )

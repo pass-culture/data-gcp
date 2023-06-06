@@ -171,6 +171,21 @@ contentful_modules = [
             },
         ],
     },
+    {
+        "name": "thematicHighlight",
+        "additional_fields": [
+            "title",
+            "thematic_highlight_info",
+            "thematic_home_entry_id",
+        ],
+        "children": [
+            {
+                "name": "thematic_highlight_info",
+                "additional_fields": ["title", "beginning_datetime", "ending_datetime"],
+                "type": "unique",
+            }
+        ],
+    },
 ]
 
 
@@ -210,7 +225,10 @@ class ContentfulClient:
             "locale",
         ]
         module_infos = dict()
-        module_infos["title"] = module.title
+        if "title" in module.fields():
+            module_infos["title"] = module.title
+        else:
+            module_infos["title"] = None
         module_infos["date_imported"] = self.datetime
 
         contentful_tags_id = []

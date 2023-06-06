@@ -11,3 +11,4 @@ loguru==0.6.0
 psutil
 tqdm
 datetime
+requests==2.31.0

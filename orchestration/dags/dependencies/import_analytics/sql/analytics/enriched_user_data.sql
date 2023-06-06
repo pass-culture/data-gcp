@@ -1,46 +1,11 @@
-WITH activation_dates AS (
-    WITH ranked_bookings AS (
-        SELECT
-            booking.user_id,
-            offer.offer_subcategoryId,
-            booking_used_date,
-            booking_is_used,
-            RANK() OVER (
-                PARTITION BY booking.user_id
-                ORDER BY
-                    booking.booking_creation_date ASC,
-                    booking.booking_id ASC
-            ) AS rank_
-        FROM
-            `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking
-            JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON booking.stock_id = stock.stock_id
-            JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON stock.offer_id = offer.offer_id
-    )
-    SELECT
-        user.user_id,
-        CASE
-            WHEN "offer_subcategoryId" = 'ACTIVATION_THING'
-            AND booking_used_date IS NOT NULL THEN booking_used_date
-            ELSE user_creation_date
-        END AS user_activation_date
-    FROM
-        `{{ bigquery_clean_dataset }}`.user_beneficiary AS user
-        LEFT JOIN ranked_bookings ON user.user_id = ranked_bookings.user_id
-        AND rank_ = 1
-),
-date_of_first_bookings AS (
+WITH date_of_first_bookings AS (
     SELECT
         booking.user_id,
         MIN(booking.booking_creation_date) AS first_booking_date
     FROM
-        `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking
+        `{{ bigquery_clean_dataset }}`.booking AS booking
         JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON stock.stock_id = booking.stock_id
         JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON offer.offer_id = stock.offer_id
-        AND offer.offer_subcategoryId != 'ACTIVATION_THING'
-        AND (
-            offer.booking_email != 'jeux-concours@passculture.app'
-            OR offer.booking_email IS NULL
-        )
     WHERE
         booking.booking_is_cancelled IS FALSE
     GROUP BY
@@ -56,16 +21,10 @@ date_of_second_bookings_ranked_booking_data AS (
                 booking.booking_creation_date ASC
         ) AS rank_booking
     FROM
-        `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking
+        `{{ bigquery_clean_dataset }}`.booking AS booking
         JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON stock.stock_id = booking.stock_id
         JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON offer.offer_id = stock.offer_id
-    WHERE
-        offer.offer_subcategoryId != 'ACTIVATION_THING'
-        AND (
-            offer.booking_email != 'jeux-concours@passculture.app'
-            OR offer.booking_email IS NULL
-        )
-        AND booking.booking_is_cancelled IS FALSE
+    WHERE booking.booking_is_cancelled IS FALSE
 ),
 date_of_second_bookings AS (
     SELECT
@@ -89,16 +48,10 @@ date_of_bookings_on_third_product_tmp AS (
                 booking.booking_creation_date
         ) AS rank_booking_in_cat
     FROM
-        `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking
+        `{{ bigquery_clean_dataset }}`.booking AS booking
         JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON booking.stock_id = stock.stock_id
         JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON offer.offer_id = stock.offer_id
-    WHERE
-        offer.offer_subcategoryId NOT IN ('ACTIVATION_THING', 'ACTIVATION_THING')
-        AND (
-            offer.booking_email != 'jeux-concours@passculture.app'
-            OR offer.booking_email IS NULL
-        )
-        AND booking.booking_is_cancelled IS FALSE
+    WHERE booking.booking_is_cancelled IS FALSE
 ),
 date_of_bookings_on_third_product_ranked_data AS (
     SELECT
@@ -127,14 +80,9 @@ number_of_bookings AS (
         booking.user_id,
         COUNT(booking.booking_id) AS number_of_bookings
     FROM
-        `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking
+        `{{ bigquery_clean_dataset }}`.booking AS booking
         JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON stock.stock_id = booking.stock_id
         JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON offer.offer_id = stock.offer_id
-        AND offer.offer_subcategoryId != 'ACTIVATION_THING'
-        AND (
-            offer.booking_email != 'jeux-concours@passculture.app'
-            OR offer.booking_email IS NULL
-        )
     GROUP BY
         user_id
 ),
@@ -143,53 +91,12 @@ number_of_non_cancelled_bookings AS (
         booking.user_id,
         COUNT(booking.booking_id) AS number_of_bookings
     FROM
-        `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking
+        `{{ bigquery_clean_dataset }}`.booking AS booking
         JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON stock.stock_id = booking.stock_id
         JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON offer.offer_id = stock.offer_id
-        AND offer.offer_subcategoryId != 'ACTIVATION_THING'
-        AND (
-            offer.booking_email != 'jeux-concours@passculture.app'
-            OR offer.booking_email IS NULL
-        )
         AND NOT booking.booking_is_cancelled
     GROUP BY
         user_id
-),
-users_seniority_validated_activation_booking AS (
-    SELECT
-        booking.booking_used_date,
-        booking.user_id,
-        booking.booking_is_used
-    FROM
-        `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking
-        JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON stock.stock_id = booking.stock_id
-        JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON stock.offer_id = offer.offer_id
-        AND offer.offer_subcategoryId = 'ACTIVATION_THING'
-    WHERE
-        booking.booking_is_used
-),
-users_seniority_activation_date AS (
-    SELECT
-        CASE
-            WHEN validated_activation_booking.booking_is_used THEN validated_activation_booking.booking_used_date
-            ELSE user.user_creation_date
-        END AS activation_date,
-        user.user_id
-    FROM
-        `{{ bigquery_clean_dataset }}`.user_beneficiary AS user
-        LEFT JOIN users_seniority_validated_activation_booking validated_activation_booking ON validated_activation_booking.user_id = user.user_id
-),
-users_seniority AS (
-    SELECT
-        DATE_DIFF(
-            CURRENT_DATE(),
-            CAST(activation_date.activation_date AS DATE),
-            DAY
-        ) AS user_seniority,
-        user.user_id
-    FROM
-        `{{ bigquery_clean_dataset }}`.user_beneficiary AS user
-        LEFT JOIN users_seniority_activation_date activation_date ON user.user_id = activation_date.user_id
 ),
 actual_amount_spent AS (
     SELECT
@@ -202,7 +109,7 @@ actual_amount_spent AS (
         ) AS actual_amount_spent
     FROM
         `{{ bigquery_clean_dataset }}`.user_beneficiary AS user
-        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking ON user.user_id = booking.user_id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.booking AS booking ON user.user_id = booking.user_id
         AND booking.booking_is_used IS TRUE
         AND booking.booking_is_cancelled IS FALSE
     GROUP BY
@@ -219,7 +126,7 @@ theoretical_amount_spent AS (
         ) AS theoretical_amount_spent
     FROM
         `{{ bigquery_clean_dataset }}`.user_beneficiary AS user
-        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking ON user.user_id = booking.user_id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.booking AS booking ON user.user_id = booking.user_id
         AND booking.booking_is_cancelled IS FALSE
     GROUP BY
         user.user_id
@@ -230,7 +137,7 @@ theoretical_amount_spent_in_digital_goods_eligible_booking AS (
         booking.booking_amount,
         booking.booking_quantity
     FROM
-        `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking
+        `{{ bigquery_clean_dataset }}`.booking AS booking
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON booking.stock_id = stock.stock_id
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON stock.offer_id = offer.offer_id
         INNER JOIN `{{ bigquery_analytics_dataset }}`.subcategories AS subcategories ON offer.offer_subcategoryId = subcategories.id
@@ -260,7 +167,7 @@ theoretical_amount_spent_in_physical_goods_eligible_booking AS (
         booking.booking_amount,
         booking.booking_quantity
     FROM
-        `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking
+        `{{ bigquery_clean_dataset }}`.booking AS booking
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON booking.stock_id = stock.stock_id
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON stock.offer_id = offer.offer_id
         INNER JOIN `{{ bigquery_analytics_dataset }}`.subcategories AS subcategories ON offer.offer_subcategoryId = subcategories.id
@@ -291,7 +198,7 @@ theoretical_amount_spent_in_outings_eligible_booking AS (
         booking.booking_amount,
         booking.booking_quantity
     FROM
-        `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking
+        `{{ bigquery_clean_dataset }}`.booking AS booking
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON booking.stock_id = stock.stock_id
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON stock.offer_id = offer.offer_id
         INNER JOIN `{{ bigquery_analytics_dataset }}`.subcategories AS subcategories ON offer.offer_subcategoryId = subcategories.id
@@ -319,14 +226,9 @@ last_booking_date AS (
         booking.user_id,
         MAX(booking.booking_creation_date) AS last_booking_date
     FROM
-        `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking
+        `{{ bigquery_clean_dataset }}`.booking AS booking
         JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON stock.stock_id = booking.stock_id
         JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON offer.offer_id = stock.offer_id
-        AND offer.offer_subcategoryId != 'ACTIVATION_THING'
-        AND (
-            offer.booking_email != 'jeux-concours@passculture.app'
-            OR offer.booking_email IS NULL
-        )
     GROUP BY
         user_id
 ),
@@ -335,14 +237,9 @@ first_paid_booking_date AS (
         booking.user_id,
         min(booking.booking_creation_date) AS booking_creation_date_first
     FROM
-        `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking
+        `{{ bigquery_clean_dataset }}`.booking AS booking
         JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON stock.stock_id = booking.stock_id
         JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON offer.offer_id = stock.offer_id
-        AND offer.offer_subcategoryId != 'ACTIVATION_THING'
-        AND (
-            offer.booking_email != 'jeux-concours@passculture.app'
-            OR offer.booking_email IS NULL
-        )
         AND COALESCE(booking.booking_amount, 0) > 0
     GROUP BY
         user_id
@@ -359,14 +256,9 @@ first_booking_type_bookings_ranked AS (
                 booking.booking_id ASC
         ) AS rank_booking
     FROM
-        `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking
+        `{{ bigquery_clean_dataset }}`.booking AS booking
         JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON booking.stock_id = stock.stock_id
         JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON offer.offer_id = stock.offer_id
-        AND offer.offer_subcategoryId NOT IN ('ACTIVATION_THING', 'ACTIVATION_EVENT')
-        AND (
-            offer.booking_email != 'jeux-concours@passculture.app'
-            OR offer.booking_email IS NULL
-        )
 ),
 first_booking_type AS (
     SELECT
@@ -388,14 +280,9 @@ first_paid_booking_type_paid_bookings_ranked AS (
                 booking.booking_creation_date
         ) AS rank_booking
     FROM
-        `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking
+        `{{ bigquery_clean_dataset }}`.booking AS booking
         JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON booking.stock_id = stock.stock_id
         JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON offer.offer_id = stock.offer_id
-        AND offer.offer_subcategoryId NOT IN ('ACTIVATION_THING', 'ACTIVATION_EVENT')
-        AND (
-            offer.booking_email != 'jeux-concours@passculture.app'
-            OR offer.booking_email IS NULL
-        )
         AND booking.booking_amount > 0
 ),
 first_paid_booking_type AS (
@@ -412,14 +299,9 @@ count_distinct_types AS (
         booking.user_id,
         COUNT(DISTINCT offer.offer_subcategoryId) AS cnt_distinct_types
     FROM
-        `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking
+        `{{ bigquery_clean_dataset }}`.booking AS booking
         JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON booking.stock_id = stock.stock_id
         JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON offer.offer_id = stock.offer_id
-        AND offer.offer_subcategoryId NOT IN ('ACTIVATION_THING', 'ACTIVATION_EVENT')
-        AND (
-            offer.booking_email != 'jeux-concours@passculture.app'
-            OR offer.booking_email IS NULL
-        )
         AND NOT booking_is_cancelled
     GROUP BY
         user_id
@@ -443,7 +325,11 @@ user_agg_deposit_data AS (
         CASE
             WHEN user_last_deposit_amount < 300 THEN 'GRANT_15_17'
             ELSE 'GRANT_18'
-        END AS user_current_deposit_type
+        END AS user_current_deposit_type,
+        CASE
+            WHEN user_first_deposit_amount < 300 THEN 'GRANT_15_17'
+            ELSE 'GRANT_18'
+        END AS user_first_deposit_type
     FROM
         user_agg_deposit_data_user_deposit_agg user_deposit_agg
 ),
@@ -474,7 +360,7 @@ amount_spent_last_deposit AS (
             ELSE 0
         END) as deposit_theoretical_amount_spent_in_digital_goods
     FROM
-        `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking
+        `{{ bigquery_clean_dataset }}`.booking AS booking
     JOIN last_deposit
         ON last_deposit.deposit_id = booking.deposit_id
     LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock 
@@ -496,8 +382,9 @@ SELECT
     user.user_activity,
     user.user_civility,
     user.user_school_type,
-    activation_dates.user_activation_date,
+    user.user_activation_date,
     user_agg_deposit_data.user_first_deposit_creation_date AS user_deposit_creation_date,
+    user_agg_deposit_data.user_first_deposit_type AS user_first_deposit_type,
     user_agg_deposit_data.user_total_deposit_amount,
     user_agg_deposit_data.user_current_deposit_type,
     user.user_cultural_survey_filled_date AS first_connection_date,
@@ -509,7 +396,7 @@ SELECT
         number_of_non_cancelled_bookings.number_of_bookings,
         0
     ) AS no_cancelled_booking,
-    users_seniority.user_seniority,
+    DATE_DIFF(CURRENT_DATE(), CAST(user.user_activation_date AS DATE), DAY) AS user_seniority,
     actual_amount_spent.actual_amount_spent,
     theoretical_amount_spent.theoretical_amount_spent,
     theoretical_amount_spent_in_digital_goods.amount_spent_in_digital_goods,
@@ -563,13 +450,11 @@ SELECT
     user.user_has_enabled_marketing_email,
 FROM
     `{{ bigquery_clean_dataset }}`.user_beneficiary AS user
-    LEFT JOIN activation_dates ON user.user_id = activation_dates.user_id
     LEFT JOIN date_of_first_bookings ON user.user_id = date_of_first_bookings.user_id
     LEFT JOIN date_of_second_bookings ON user.user_id = date_of_second_bookings.user_id
     LEFT JOIN date_of_bookings_on_third_product ON user.user_id = date_of_bookings_on_third_product.user_id
     LEFT JOIN number_of_bookings ON user.user_id = number_of_bookings.user_id
     LEFT JOIN number_of_non_cancelled_bookings ON user.user_id = number_of_non_cancelled_bookings.user_id
-    LEFT JOIN users_seniority ON user.user_id = users_seniority.user_id
     LEFT JOIN actual_amount_spent ON user.user_id = actual_amount_spent.user_id
     LEFT JOIN theoretical_amount_spent ON user.user_id = theoretical_amount_spent.user_id
     LEFT JOIN theoretical_amount_spent_in_digital_goods ON user.user_id = theoretical_amount_spent_in_digital_goods.user_id

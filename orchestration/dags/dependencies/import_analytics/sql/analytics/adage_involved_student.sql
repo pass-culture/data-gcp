@@ -13,10 +13,10 @@ WITH involved_students AS (
         ey.educational_year_expiration_date,
         ey.adage_id,
         ey.scholar_year,
-        sum(SAFE_CAST(involved_students as FLOAT64)) as involved_students,
-        sum(SAFE_CAST(institutions as FLOAT64)) as institutions,
-        sum(SAFE_CAST(total_involved_students as FLOAT64)) as total_involved_students,
-        sum(SAFE_CAST(total_institutions as FLOAT64)) as total_institutions,
+        coalesce(sum(SAFE_CAST(involved_students as FLOAT64)), 0) as involved_students,
+        coalesce(sum(SAFE_CAST(institutions as FLOAT64)), 0) as institutions,
+        coalesce(sum(SAFE_CAST(total_involved_students as FLOAT64)), 0) as total_involved_students,
+        coalesce(sum(SAFE_CAST(total_institutions as FLOAT64)), 0) as total_institutions,
     FROM
         `{{ bigquery_clean_dataset }}.adage_involved_student` ais
         LEFT JOIN `{{ bigquery_clean_dataset }}.applicative_database_educational_year` ey on SAFE_CAST(ey.adage_id as int) = SAFE_CAST(ais.educational_year_adage_id as int)

@@ -50,7 +50,7 @@ BIGQUERY_TMP_DATASET = os.environ.get("BIGQUERY_TMP_DATASET", f"tmp_{ENV_SHORT_N
 APPLICATIVE_PREFIX = "applicative_database_"
 QPI_TABLE = "qpi_answers_v4"
 RECOMMENDATION_SQL_INSTANCE = os.environ.get(
-    "RECOMMENDATION_SQL_INSTANCE", f"cloudsql-recommendation-{ENV_SHORT_NAME}"
+    "RECOMMENDATION_SQL_INSTANCE", f"cloudsql-recommendation-{ENV_SHORT_NAME}-ew1"
 )
 
 CONNECTION_ID = os.environ.get("BIGQUERY_CONNECTION_RECOMMENDATION")

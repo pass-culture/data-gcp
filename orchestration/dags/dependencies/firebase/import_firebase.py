@@ -172,6 +172,21 @@ import_firebase_beneficiary_tables = {
         "time_partitioning": {"field": "booking_date"},
         "dag_depends": ["import_contentful"],
     },
+    "analytics_firebase_home_funnel_conversion": {
+        "sql": f"{SQL_PATH}/analytics/firebase_home_funnel_conversion.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "firebase_home_funnel_conversion",
+        "partition_prefix": "$",
+        "time_partitioning": {"field": "module_displayed_date"},
+        "dag_depends": ["import_contentful"],
+    },
+    "analytics_firebase_bookings": {
+        "sql": f"{SQL_PATH}/analytics/firebase_bookings.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "firebase_bookings",
+        "partition_prefix": "$",
+        "time_partitioning": {"field": "booking_date"},
+    },
     "analytics_firebase_app_experiments": {
         "sql": f"{SQL_PATH}/analytics/firebase_app_experiments.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",

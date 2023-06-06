@@ -38,10 +38,9 @@ bookings_days AS (
         IF(booking_is_cancelled, COUNT(DISTINCT booking_id) OVER (PARTITION BY offer.offer_id, DATE(booking_creation_date)), NULL) AS cnt_bookings_cancelled,
         IF(NOT booking_is_cancelled, COUNT(DISTINCT booking_id) OVER (PARTITION BY offer.offer_id, DATE(booking_creation_date)), NULL) AS cnt_bookings_confirm,
     FROM
-        `{{ bigquery_clean_dataset }}`.applicative_database_booking booking
+        `{{ bigquery_clean_dataset }}`.booking booking
         JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock stock USING(stock_id)
         JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer offer ON offer.offer_id = stock.offer_id
-            AND offer.offer_subcategoryId NOT IN ('ACTIVATION_THING', 'ACTIVATION_EVENT')
 ),
 
 count_bookings AS (
@@ -201,12 +200,12 @@ FROM
     LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue venue ON venue.venue_id = offer.venue_id
     LEFT JOIN venue_humanized_id ON venue_humanized_id.venue_id = venue.venue_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.region_department region_dept ON region_dept.num_dep = venue.venue_department_code
-    LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_venue_label venue_label ON venue_label.id = venue.venue_label_id
+    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue_label venue_label ON venue_label.id = venue.venue_label_id
     LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offerer offerer ON offerer.offerer_id = venue.venue_managing_offerer_id
     LEFT JOIN offerer_humanized_id ON offerer_humanized_id.offerer_id = offerer.offerer_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.siren_data siren_data ON  siren_data.siren = offerer.offerer_siren
     LEFT JOIN offerer_tags ON offerer_tags.offerer_id = offerer.offerer_id
-    LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_venue_contact venue_contact ON  venue_contact.venue_id = venue.venue_id
+    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue_contact venue_contact ON  venue_contact.venue_id = venue.venue_id
     LEFT JOIN offer_humanized_id AS offer_humanized_id ON offer_humanized_id.offer_id = offer.offer_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.subcategories subcategories ON subcategories.id = offer.offer_subcategoryid
     LEFT JOIN count_bookings ON count_bookings.offer_id = offer.offer_id

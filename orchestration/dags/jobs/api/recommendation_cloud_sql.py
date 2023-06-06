@@ -22,11 +22,9 @@ from common.compose_gcs_files import compose_gcs_files
 from common.config import (
     GCP_PROJECT_ID,
     GCP_REGION,
-    ENV_SHORT_NAME,
     DATA_GCS_BUCKET_NAME,
     BIGQUERY_CLEAN_DATASET,
     BIGQUERY_ANALYTICS_DATASET,
-    ENV_SHORT_NAME,
     DAG_FOLDER,
     QPI_TABLE,
     RECOMMENDATION_SQL_INSTANCE,
@@ -47,7 +45,8 @@ os.environ["AIRFLOW_CONN_PROXY_POSTGRES_TCP"] = (
 
 
 TABLES_DATA_PATH = f"{DAG_FOLDER}/ressources/tables.csv"
-BUCKET_PATH = f"gs://{DATA_GCS_BUCKET_NAME}/bigquery_exports"
+BUCKET_NAME = "bigquery_exports/{{ ds }}"
+BUCKET_PATH = f"gs://{DATA_GCS_BUCKET_NAME}/{BUCKET_NAME}"
 SQL_PATH = "dependencies/import_recommendation_cloudsql/sql"
 
 default_args = {
@@ -56,8 +55,6 @@ default_args = {
     "on_failure_callback": task_fail_slack_alert,
     "retry_delay": timedelta(minutes=5),
 }
-FIREBASE_PERIOD_DAYS = 4 * 30 if ENV_SHORT_NAME == "prod" else 10
-NOW_YYMMDDHHMM = datetime.now().strftime("%Y%m%d%H%M")
 
 
 def get_table_data():
@@ -196,8 +193,8 @@ with DAG(
             python_callable=compose_gcs_files,
             op_kwargs={
                 "bucket_name": DATA_GCS_BUCKET_NAME,
-                "source_prefix": f"bigquery_exports/{table}-",
-                "destination_blob_name": f"bigquery_exports/{table}.csv",
+                "source_prefix": f"{BUCKET_NAME}/{table}-",
+                "destination_blob_name": f"{BUCKET_NAME}/{table}.csv",
             },
             dag=dag,
         )
@@ -263,14 +260,28 @@ with DAG(
         autocommit=True,
     )
 
+    create_materialized_offers_raw_view = CloudSQLExecuteQueryOperator(
+        task_id="create_materialized_raw_view_recommendable_offers_raw_mv",
+        gcp_cloudsql_conn_id="proxy_postgres_tcp",
+        sql=f"{SQL_PATH}/create_recommendable_offers_raw_mv.sql",
+        autocommit=True,
+    )
+
+    create_materialized_items_raw_view = CloudSQLExecuteQueryOperator(
+        task_id="create_materialized_raw_view_recommendable_items_raw_mv",
+        gcp_cloudsql_conn_id="proxy_postgres_tcp",
+        sql=f"{SQL_PATH}/create_recommendable_items_raw_mv.sql",
+        autocommit=True,
+    )
+
     recreate_indexes_query = """
         CREATE INDEX IF NOT EXISTS idx_user_id                             ON public.enriched_user                        USING btree (user_id);
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_id       ON public.recommendable_offers_per_iris_shape  USING btree (is_geolocated,iris_id,venue_distance_to_iris_bucket,item_id,offer_id,unique_id);
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_iris_venues_mv_unique        ON public.iris_venues_mv                       USING btree (iris_id,venue_id);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_id       ON public.recommendable_offers_per_iris_shape  USING btree (is_geolocated,iris_id,item_id,offer_id,unique_id);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_non_recommendable_id         ON public.non_recommendable_offers             USING btree (user_id,offer_id);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_enriched_user_mv             ON public.enriched_user_mv                     USING btree (user_id);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_qpi_answers_mv               ON public.qpi_answers_mv                       USING btree (user_id,subcategories);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_item_ids_mv                  ON public.item_ids_mv                          USING btree (offer_id);
+
     """
     recreate_indexes_task = CloudSQLExecuteQueryOperator(
         task_id="recreate_indexes",
@@ -281,7 +292,6 @@ with DAG(
 
     views_to_refresh = [
         "non_recommendable_offers",
-        "iris_venues_mv",
         "enriched_user_mv",
         "qpi_answers_mv",
         "item_ids_mv",
@@ -297,36 +307,52 @@ with DAG(
         )
         refresh_materialized_view_tasks.append(refresh_materialized_view_task)
 
-    rename_current_materialized_view = CloudSQLExecuteQueryOperator(
-        task_id="rename_current_materialized_view_to_old",
-        gcp_cloudsql_conn_id="proxy_postgres_tcp",
-        sql=f"ALTER MATERIALIZED VIEW IF EXISTS recommendable_offers_per_iris_shape_mv rename to recommendable_offers_per_iris_shape_mv_old",
-        autocommit=True,
-    )
+    # update MV
+    end_refresh = DummyOperator(task_id="end_refresh")
 
-    rename_temp_materialized_view = CloudSQLExecuteQueryOperator(
-        task_id="rename_temp_materialized_view_to_current",
-        gcp_cloudsql_conn_id="proxy_postgres_tcp",
-        sql=f"ALTER MATERIALIZED VIEW recommendable_offers_per_iris_shape_tmp_mv rename to recommendable_offers_per_iris_shape_mv",
-        autocommit=True,
-    )
-    drop_old_materialized_view = CloudSQLExecuteQueryOperator(
-        task_id="drop_old_materialized_view",
-        gcp_cloudsql_conn_id="proxy_postgres_tcp",
-        sql=f"DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_per_iris_shape_mv_old CASCADE",
-        autocommit=True,
-    )
+    rename_materialized_view_tables = [
+        "recommendable_offers_per_iris_shape_mv",
+        "recommendable_offers_raw_mv",
+        "recommendable_items_raw_mv",
+    ]
+    rename_materialized_view_tasks = []
+    for materialized_view in rename_materialized_view_tables:
+        rename_current_materialized_view = CloudSQLExecuteQueryOperator(
+            task_id=f"rename_{materialized_view}_current_materialized_view_to_old",
+            gcp_cloudsql_conn_id="proxy_postgres_tcp",
+            sql=f"ALTER MATERIALIZED VIEW IF EXISTS {materialized_view} rename to {materialized_view}_old",
+            autocommit=True,
+        )
+        rename_current_materialized_view.set_upstream(end_refresh)
 
-    # yesterday = (datetime.today() - timedelta(days=1)).strftime("%Y%m%d")
-    drop_old_function = CloudSQLExecuteQueryOperator(
-        task_id="drop_old_function",
-        gcp_cloudsql_conn_id="proxy_postgres_tcp",
-        sql="DROP FUNCTION IF EXISTS get_recommendable_offers_per_iris_shape_{{ prev_execution_date_success | ts_nodash }} CASCADE",
-        autocommit=True,
-    )
+        rename_temp_materialized_view = CloudSQLExecuteQueryOperator(
+            task_id=f"rename_{materialized_view}_temp_materialized_view_to_current",
+            gcp_cloudsql_conn_id="proxy_postgres_tcp",
+            sql=f"ALTER MATERIALIZED VIEW {materialized_view}_tmp rename to {materialized_view}",
+            autocommit=True,
+        )
+        rename_temp_materialized_view.set_upstream(rename_current_materialized_view)
+        drop_old_materialized_view = CloudSQLExecuteQueryOperator(
+            task_id=f"drop_{materialized_view}_old_materialized_view",
+            gcp_cloudsql_conn_id="proxy_postgres_tcp",
+            sql=f"DROP MATERIALIZED VIEW IF EXISTS {materialized_view}_old CASCADE",
+            autocommit=True,
+        )
+        drop_old_materialized_view.set_upstream(rename_temp_materialized_view)
+
+        # yesterday = (datetime.today() - timedelta(days=1)).strftime("%Y%m%d")
+        drop_old_function = CloudSQLExecuteQueryOperator(
+            task_id=f"drop_{materialized_view}_old_function",
+            gcp_cloudsql_conn_id="proxy_postgres_tcp",
+            sql=f"DROP FUNCTION IF EXISTS get_{materialized_view}_"
+            + "{{ prev_execution_date_success | ts_nodash }} CASCADE",
+            autocommit=True,
+        )
+        drop_old_function.set_upstream(drop_old_materialized_view)
+        rename_materialized_view_tasks.append(drop_old_function)
 
     end = DummyOperator(task_id="end")
-    end_refresh = DummyOperator(task_id="end_refresh")
+
     (
         start
         >> start_monitoring
@@ -337,12 +363,10 @@ with DAG(
     (
         end_drop_restore
         >> create_materialized_view
+        >> create_materialized_offers_raw_view
+        >> create_materialized_items_raw_view
         >> recreate_indexes_task
         >> refresh_materialized_view_tasks
         >> end_refresh
-        >> rename_current_materialized_view
-        >> rename_temp_materialized_view
-        >> drop_old_materialized_view
-        >> drop_old_function
-        >> end
     )
+    (rename_materialized_view_tasks >> end)

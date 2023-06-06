@@ -3,6 +3,8 @@ from pcreco.utils.env_vars import (
     ENV_SHORT_NAME,
     DEFAULT_RECO_MODEL,
     DEFAULT_SIMILAR_OFFER_MODEL,
+    RECOMMENDABLE_OFFER_LIMIT,
+    COLD_START_RECOMMENDABLE_OFFER_LIMIT,
 )
 
 
@@ -12,6 +14,8 @@ class RecommendationDefaultModel:
     force_cold_start: bool = False
     force_model: bool = False
     endpoint_name: str = f"recommendation_default_{ENV_SHORT_NAME}"
+    order_query: str = "is_geolocated DESC, booking_number DESC"
+    offer_limit: int = RECOMMENDABLE_OFFER_LIMIT
 
 
 @dataclass
@@ -21,13 +25,16 @@ class RecommendationVersionBModel(RecommendationDefaultModel):
 
 @dataclass
 class RecommendationColdStartVersionB(RecommendationDefaultModel):
-    endpoint_name: str = f"recommendation_cold_start_model_{ENV_SHORT_NAME}"
+    cold_start_model_endpoint_name: str = (
+        f"recommendation_cold_start_model_{ENV_SHORT_NAME}"
+    )
 
 
 @dataclass
 class SimilarOfferDefaultModel:
     name: str
     endpoint_name: str = f"similar_offers_default_{ENV_SHORT_NAME}"
+    order_query = "booking_number DESC"
 
 
 RECOMMENDATION_ENDPOINTS = {
@@ -36,7 +43,9 @@ RECOMMENDATION_ENDPOINTS = {
     "cold_start": RecommendationDefaultModel("cold_start", force_cold_start=True),
     "version_b": RecommendationVersionBModel("version_b"),
     "algo_version_b": RecommendationVersionBModel("algo_version_b", force_model=True),
-    "cold_start_b": RecommendationColdStartVersionB("cold_start_b"),
+    "cold_start_b": RecommendationColdStartVersionB(
+        "cold_start_b", offer_limit=COLD_START_RECOMMENDABLE_OFFER_LIMIT
+    ),
 }
 
 SIMILAR_OFFER_ENDPOINTS = {"default": SimilarOfferDefaultModel("default")}

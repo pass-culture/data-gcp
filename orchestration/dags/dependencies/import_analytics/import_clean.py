@@ -17,17 +17,29 @@ clean_tables = {
         "sql": f"{CLEAN_SQL_PATH}/iris_venues_in_shape.sql",
         "destination_dataset": "{{ bigquery_clean_dataset }}",
         "destination_table": "iris_venues_in_shape",
+        "depends": ["venue"],
     },
     "clean_iris_venues_at_radius": {
         "sql": f"{CLEAN_SQL_PATH}/iris_venues_at_radius.sql",
         "destination_dataset": "{{ bigquery_clean_dataset }}",
         "destination_table": "iris_venues_at_radius",
         "params": {"iris_distance": 150000 if ENV_SHORT_NAME != "dev" else 20000},
+        "depends": ["venue"],
     },
     "offer": {
         "sql": f"{CLEAN_SQL_PATH}/offer.sql",
         "destination_dataset": "{{ bigquery_clean_dataset }}",
         "destination_table": "applicative_database_offer",
+    },
+    "venue": {
+        "sql": f"{CLEAN_SQL_PATH}/venue.sql",
+        "destination_dataset": "{{ bigquery_clean_dataset }}",
+        "destination_table": "applicative_database_venue",
+    },
+    "educational_institution": {
+        "sql": f"{CLEAN_SQL_PATH}/educational_institution.sql",
+        "destination_dataset": "{{ bigquery_clean_dataset }}",
+        "destination_table": "applicative_database_educational_institution",
     },
     "user_beneficiary": {
         "sql": f"{CLEAN_SQL_PATH}/user_beneficiary.sql",
@@ -54,6 +66,11 @@ clean_tables = {
         "sql": f"{CLEAN_SQL_PATH}/cleaned_stock.sql",
         "destination_dataset": "{{ bigquery_clean_dataset }}",
         "destination_table": "cleaned_stock",
+    },
+    "booking": {
+        "sql": f"{CLEAN_SQL_PATH}/booking.sql",
+        "destination_dataset": "{{ bigquery_clean_dataset }}",
+        "destination_table": "booking",
     },
 }
 

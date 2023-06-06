@@ -6,7 +6,7 @@ WITH offerer_humanized_id AS (
         offerer_id,
         humanize_id(offerer_id) AS humanized_id
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_offerer
+        `{{ bigquery_clean_dataset }}`.applicative_database_offerer
     WHERE
         offerer_id is not NULL
 ),
@@ -16,10 +16,10 @@ related_stocks AS (
         offerer.offerer_id,
         MIN(stock.stock_creation_date) AS first_stock_creation_date
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_offerer AS offerer
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_venue AS venue ON venue.venue_managing_offerer_id = offerer.offerer_id
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offer AS offer ON offer.venue_id = venue.venue_id
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_stock AS stock ON stock.offer_id = offer.offer_id
+        `{{ bigquery_clean_dataset }}`.applicative_database_offerer AS offerer
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue ON venue.venue_managing_offerer_id = offerer.offerer_id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON offer.venue_id = venue.venue_id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON stock.offer_id = offer.offer_id
     GROUP BY
         offerer_id
 ),
@@ -28,11 +28,11 @@ related_bookings AS (
         offerer.offerer_id,
         MIN(booking.booking_creation_date) AS first_booking_date
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_offerer AS offerer
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_venue AS venue ON venue.venue_managing_offerer_id = offerer.offerer_id
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offer AS offer ON offer.venue_id = venue.venue_id
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_stock AS stock ON stock.offer_id = offer.offer_id
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_booking AS booking ON booking.stock_id = stock.stock_id
+        `{{ bigquery_clean_dataset }}`.applicative_database_offerer AS offerer
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue ON venue.venue_managing_offerer_id = offerer.offerer_id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON offer.venue_id = venue.venue_id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON stock.offer_id = offer.offer_id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.booking AS booking ON booking.stock_id = stock.stock_id
     GROUP BY
         offerer_id
 ),
@@ -42,9 +42,9 @@ related_offers AS (
         offerer.offerer_id,
         COUNT(offer.offer_id) AS offer_cnt
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_offerer AS offerer
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_venue AS venue ON venue.venue_managing_offerer_id = offerer.offerer_id
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offer AS offer ON offer.venue_id = venue.venue_id
+        `{{ bigquery_clean_dataset }}`.applicative_database_offerer AS offerer
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue ON venue.venue_managing_offerer_id = offerer.offerer_id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON offer.venue_id = venue.venue_id
     GROUP BY
         offerer_id
 ),
@@ -54,11 +54,11 @@ related_non_cancelled_bookings AS (
         offerer.offerer_id,
         COUNT(booking.booking_id) AS no_cancelled_booking_cnt
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_offerer AS offerer
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_venue AS venue ON venue.venue_managing_offerer_id = offerer.offerer_id
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offer AS offer ON offer.venue_id = venue.venue_id
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_stock AS stock ON stock.offer_id = offer.offer_id
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_booking AS booking ON booking.stock_id = stock.stock_id
+        `{{ bigquery_clean_dataset }}`.applicative_database_offerer AS offerer
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue ON venue.venue_managing_offerer_id = offerer.offerer_id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON offer.venue_id = venue.venue_id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON stock.offer_id = offer.offer_id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.booking AS booking ON booking.stock_id = stock.stock_id
         AND booking.booking_is_cancelled IS FALSE
     GROUP BY 
         offerer_id
@@ -72,7 +72,7 @@ offerer_department_code AS (
             ELSE SUBSTRING(offerer_postal_code, 0, 2)
         END AS offerer_department_code
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_offerer AS offerer
+        `{{ bigquery_clean_dataset }}`.applicative_database_offerer AS offerer
     WHERE
         "offerer_postal_code" is not NULL
 ),
@@ -82,8 +82,8 @@ related_venues AS (
         offerer.offerer_id,
         COUNT(venue.venue_id) AS venue_cnt
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_offerer AS offerer
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_venue AS venue ON offerer.offerer_id = venue.venue_managing_offerer_id
+        `{{ bigquery_clean_dataset }}`.applicative_database_offerer AS offerer
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue ON offerer.offerer_id = venue.venue_managing_offerer_id
     GROUP BY
         1
 ),
@@ -94,9 +94,9 @@ venues_with_offers AS (
         venue.venue_id,
         count(offer.offer_id) AS count_offers
     FROM
-        `{{ bigquery_analytics_dataset }}`.applicative_database_offerer AS offerer
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_venue AS venue ON offerer.offerer_id = venue.venue_managing_offerer_id
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offer AS offer ON venue.venue_id = offer.venue_id
+        `{{ bigquery_clean_dataset }}`.applicative_database_offerer AS offerer
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue ON offerer.offerer_id = venue.venue_managing_offerer_id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON venue.venue_id = offer.venue_id
     GROUP BY
         offerer_id,
         venue_id
@@ -124,10 +124,10 @@ SELECT
         coalesce(booking.booking_quantity, 0) * coalesce(booking.booking_amount, 0)
     ) AS current_year_revenue
 FROM
-    `{{ bigquery_analytics_dataset }}`.applicative_database_booking AS booking
-    JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_stock AS stock ON booking.stock_id = stock.stock_id
-    JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offer AS offer ON stock.offer_id = offer.offer_id
-    JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_venue AS venue ON offer.venue_id = venue.venue_id
+    `{{ bigquery_clean_dataset }}`.booking AS booking
+    JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON booking.stock_id = stock.stock_id
+    JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON stock.offer_id = offer.offer_id
+    JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue ON offer.venue_id = venue.venue_id
     AND EXTRACT(
         YEAR
         FROM
@@ -170,7 +170,7 @@ SELECT
     offerer_humanized_id.humanized_id AS offerer_humanized_id,
     current_year_revenue.current_year_revenue
 FROM
-    `{{ bigquery_analytics_dataset }}`.applicative_database_offerer AS offerer
+    `{{ bigquery_clean_dataset }}`.applicative_database_offerer AS offerer
     LEFT JOIN related_stocks ON related_stocks.offerer_id = offerer.offerer_id
     LEFT JOIN related_bookings ON related_bookings.offerer_id = offerer.offerer_id
     LEFT JOIN related_offers ON related_offers.offerer_id = offerer.offerer_id

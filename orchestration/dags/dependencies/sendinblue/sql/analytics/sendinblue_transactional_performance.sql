@@ -6,7 +6,7 @@
 WITH sendinblue_transactional as (
     SELECT 
         *
-        , row_number() over( partition by template order by update_date desc) as rank_update
+        , row_number() over( partition by template, tag order by update_date desc) as rank_update
     FROM `{{ bigquery_raw_dataset }}.sendinblue_transactional_histo`
     QUALIFY rank_update = 1
 ),
@@ -23,6 +23,7 @@ user_traffic as (
     LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_user_data` user
     ON firebase.user_id = user.user_id
     WHERE traffic_campaign is not null
+    AND lower(traffic_medium) like "%email%"
     GROUP BY 1, 2
 )
 

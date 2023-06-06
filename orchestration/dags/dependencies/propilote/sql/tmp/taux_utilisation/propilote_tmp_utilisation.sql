@@ -1,6 +1,6 @@
 WITH dates AS (
     SELECT 
-        DISTINCT DATE_TRUNC(deposit_creation_date, MONTH) AS mois 
+        DISTINCT DATE_TRUNC(deposit_creation_date, MONTH) AS month 
     FROM `{{ bigquery_analytics_dataset }}.enriched_deposit_data`
 ),
 
@@ -13,12 +13,15 @@ infos_users AS (
         , first_booking_date 
         , user.user_department_code
         , user.user_region_name
+        , rd.academy_name
     FROM `{{ bigquery_analytics_dataset }}.enriched_deposit_data` as deposit
     JOIN `{{ bigquery_analytics_dataset }}.enriched_user_data` as user ON deposit.user_id = user.user_id
+    LEFT JOIN `{{ bigquery_analytics_dataset }}.region_department` as rd
+        on  user.user_department_code = rd.num_dep 
 )
 
 SELECT 
-    mois -- tous les mois
+    month -- tous les month
     , "{{ params.group_type }}" as dimension_name
     , {% if params.group_type == 'NAT' %}
         'NAT'
@@ -32,11 +35,11 @@ SELECT
             WHEN DATE_DIFF(first_booking_date, date_deposit, DAY) <= {{ params.months_threshold }} 
             THEN user_id 
             ELSE NULL 
-        END) as numerator -- ceux qui sont bénéficiaires actuels et qui ont fait 1 résa dans les 3 mois après inscription
+        END) as numerator -- ceux qui sont bénéficiaires actuels et qui ont fait 1 résa dans les 3 month après inscription
     , COUNT(DISTINCT user_id) as denominator -- ceux qui sont bénéficiaires actuels
 FROM dates
 LEFT JOIN infos_users
-    ON dates.mois >= infos_users.date_deposit -- ici pour prendre uniquement les bénéficiaires actuels
-    AND dates.mois <= infos_users.date_expiration -- idem
-    AND DATE_DIFF(CURRENT_DATE, date_deposit, DAY) >= {{ params.months_threshold }} -- Base = uniquement les jeunes inscrits depuis +3 mois
+    ON dates.month >= infos_users.date_deposit -- ici pour prendre uniquement les bénéficiaires actuels
+    AND dates.month <= infos_users.date_expiration -- idem
+    AND DATE_DIFF(CURRENT_DATE, date_deposit, DAY) >= {{ params.months_threshold }} -- Base = uniquement les jeunes inscrits depuis +3 month
 GROUP BY 1, 2, 3, 4, 5

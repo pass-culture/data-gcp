@@ -5,7 +5,7 @@ ENRICHED_OFFER_DATA_INPUT = {
     "bookable_offer": [
         {"offer_id": 4},
     ],
-    "applicative_database_booking": [
+    "booking": [
         {
             "user_id": "1",
             "stock_id": "1",
@@ -608,7 +608,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_EXPECTED = [
 
 # Enriched_stock_data
 ENRICHED_STOCK_DATA_INPUT = {
-    "applicative_database_booking": [
+    "booking": [
         {
             "user_id": "1",
             "stock_id": "1",
@@ -857,6 +857,7 @@ ENRICHED_USER_DATA_INPUT = {
             "user_birth_date": datetime.now().replace(microsecond=0),
             "user_role": "BENEFICIARY",
             "user_school_type": "Lycée agricole",
+            "user_activation_date": datetime.now().replace(microsecond=0),
         }
     ],
     "user_suspension": [
@@ -881,7 +882,7 @@ ENRICHED_USER_DATA_INPUT = {
     ],
     "applicative_database_offerer": [{"offerer_id": "1"}, {"offerer_id": "1"}],
     "applicative_database_venue": [{"venue_id": "1", "venue_managing_offerer_id": "1"}],
-    "applicative_database_booking": [
+    "booking": [
         {
             "user_id": "1",
             "stock_id": "1",
@@ -932,6 +933,7 @@ ENRICHED_USER_DATA_EXPECTED = [
         "user_deposit_creation_date": datetime.now().replace(microsecond=0),
         "user_total_deposit_amount": 500,
         "user_current_deposit_type": "GRANT_18",
+        "user_first_deposit_type": "GRANT_18",
         "first_connection_date": datetime.now().replace(microsecond=0),
         "first_booking_date": datetime.now().replace(microsecond=0),
         "second_booking_date": None,
@@ -972,7 +974,7 @@ ENRICHED_USER_DATA_EXPECTED = [
 
 # Enriched_venue_data => NO DATA (only structure can be tested)
 ENRICHED_VENUE_DATA_INPUT = {
-    "applicative_database_booking": [
+    "booking": [
         {
             "booking_id": "1",
             "stock_id": "1",
@@ -1040,6 +1042,7 @@ ENRICHED_VENUE_DATA_INPUT = {
             "venue_type_id": "1",
         }
     ],
+    "applicative_database_venue_registration": [],
     "applicative_database_venue_label": [{"id": "1", "label": "an other label"}],
     "region_department": [{"num_dep": "92", "region_name": "IDF"}],
 }
@@ -1082,12 +1085,13 @@ ENRICHED_VENUE_DATA_EXPECTED = [
         "venue_backofficev3_link": "https://backend.passculture.team/backofficev3/pro/venue/1",
         "venue_region_name": "IDF",
         "venue_pc_pro_link": "https://passculture.pro/structures/AE/lieux/AE",
+        "venue_targeted_audience": None,
     }
 ]
 
 # Enriched_offerer_data => NO DATA (only structure can be tested)
 ENRICHED_OFFERER_DATA_INPUT = {
-    "applicative_database_booking": [
+    "booking": [
         {
             "booking_id": "1",
             "booking_creation_date": datetime.now().replace(microsecond=0),
@@ -1149,7 +1153,7 @@ ENRICHED_OFFERER_DATA_EXPECTED = [
 # booking is linked with user, venue, offerer and paiement
 # venue is linked with venue label and type
 ENRICHED_BOOKING_DATA_INPUT = {
-    "applicative_database_booking": [
+    "booking": [
         {
             "booking_id": "1",
             "user_id": "13",
@@ -1163,6 +1167,9 @@ ENRICHED_BOOKING_DATA_INPUT = {
             "booking_is_used": True,
             "booking_cancellation_date": None,
             "booking_used_date": datetime.now().replace(microsecond=0),
+            "booking_intermediary_amount": 3,
+            "booking_rank": 1,
+            "reimbursed": False,
         }
     ],
     "applicative_database_deposit": [
@@ -1204,7 +1211,7 @@ ENRICHED_BOOKING_DATA_INPUT = {
         }
     ],
     "applicative_database_offerer": [{"offerer_id": "2", "offerer_name": "Offerer"}],
-    "applicative_database_user": [
+    "user_beneficiary": [
         {
             "user_id": "13",
             "user_department_code": 68,
@@ -1273,7 +1280,7 @@ ENRICHED_BOOKING_DATA_EXPECTED = [
 # Enriched_collective_booking =>
 # booking is linked with user, venue, collective_booking, educational_institution and eple
 ENRICHED_COLLECTIVE_BOOKING_DATA_INPUT = {
-    "applicative_database_booking": [
+    "booking": [
         {
             "booking_id": "8",
             "booking_amount": 50,
@@ -1435,7 +1442,7 @@ OFFER_MODERATION_INPUT = {
             "available_stock_information": 1,
         }
     ],
-    "applicative_database_booking": [
+    "booking": [
         {
             "booking_id": "888",
             "stock_id": "88",

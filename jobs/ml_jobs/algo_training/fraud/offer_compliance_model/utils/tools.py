@@ -79,14 +79,12 @@ def extract_embedding(
 
 
 def encode_img_from_urls(model, urls):
-    index = 0
     offer_img_embs = []
     offer_wo_img = 0
-    os.makedirs("./img", exist_ok=True)
     download_img_multiprocess(urls)
-    for index in range(len(urls)):
+    for url in urls:
         try:
-            img_emb = model.encode(Image.open(f"./img/{index}.jpeg"))
+            img_emb = model.encode(Image.open(f"./img/{str(url)}.jpeg"))
             offer_img_embs.append(list(img_emb))
         except:
             offer_img_embs.append([0] * 512)
@@ -98,46 +96,43 @@ def encode_img_from_urls(model, urls):
 
 
 def download_img_multiprocess(urls):
-    max_process = cpu_count() - 1
+    max_process = cpu_count() - 2
     subset_length = len(urls) // max_process
     subset_length = subset_length if subset_length > 0 else 1
     batch_number = max_process if subset_length > 1 else 1
     print(
         f"Starting process... with {batch_number} CPUs, subset length: {subset_length} "
     )
+    batch_urls = [list(chunk) for chunk in list(np.array_split(urls, batch_number))]
     with concurrent.futures.ProcessPoolExecutor(batch_number) as executor:
         futures = executor.map(
             _download_img_from_url_list,
-            repeat(urls),
-            repeat(subset_length),
-            repeat(batch_number),
-            range(batch_number),
+            batch_urls,
         )
     print("Multiprocessing done")
     return
 
 
-def _download_img_from_url_list(urls, subset_length, batch_number, batch_id):
+def _download_img_from_url_list(urls):
+    import requests
+
     try:
-        temp_urls = urls[batch_id * subset_length : (batch_id + 1) * subset_length]
-        index = batch_id if batch_id == 0 else (batch_id * subset_length)
-        if batch_id == (batch_number - 1):
-            temp_urls = urls[batch_id * subset_length :]
-        for url in temp_urls:
-            STORAGE_PATH_IMG = f"./img/{index}"
-            __download_img_from_url(url, STORAGE_PATH_IMG)
+        for url in urls:
+            filename = f"./img/{str(url)}.jpeg"
+            try:
+                response = requests.get(url, timeout=10)
+                if (
+                    response.status_code == 200
+                    and int(response.headers.get("Content-Length")) > 500
+                ):
+                    with open(filename, "wb") as f:
+                        f.write(response.content)
+            except:
+                pass
             index += 1
         return
     except:
         return
-
-
-def __download_img_from_url(url, storage_path):
-    try:
-        urllib.request.urlretrieve(url, f"{storage_path}.jpeg")
-        return
-    except:
-        return None
 
 
 def get_individual_contribution(shap_values, df_data):

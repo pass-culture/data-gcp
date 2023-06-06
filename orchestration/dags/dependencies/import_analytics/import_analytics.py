@@ -151,6 +151,16 @@ analytics_tables = {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_reimbursement_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
     },
+    "eple_aggregated": {
+        "sql": f"{ANALYTICS_SQL_PATH}/export_table_information_eple.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "depends": [
+            "enriched_institution_data",
+            "enriched_collective_booking_data",
+            "enriched_deposit_data",
+            "enriched_booking_data",
+        ],
+    },
     "iris_venues_in_shape": {
         "sql": f"{ANALYTICS_SQL_PATH}/iris_venues_in_shape.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
@@ -248,6 +258,14 @@ analytics_tables = {
             "recommendable_offers_data",
         ],
     },
+    "recommendable_items_raw": {
+        "sql": f"{ANALYTICS_SQL_PATH}/recommendable_items_raw.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "recommendable_items_raw",
+        "depends": [
+            "recommendable_offers_raw",
+        ],
+    },
     "non_recommendable_offers_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/non_recommendable_offers_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
@@ -274,6 +292,14 @@ analytics_tables = {
         "depends": [
             "enriched_user_data",
             "aggregated_monthly_user_used_booking_activity",
+        ],
+    },
+    "user_penetration_cohorts": {
+        "sql": f"{ANALYTICS_SQL_PATH}/user_penetration_cohorts.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "user_penetration_cohorts",
+        "depends": [
+            "user_penetration",
         ],
     },
     "user_iris": {

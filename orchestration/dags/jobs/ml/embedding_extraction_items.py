@@ -31,7 +31,7 @@ with DAG(
     "embeddings_extraction_items",
     default_args=default_args,
     description="Extact items metadata embeddings",
-    schedule_interval=get_airflow_schedule("0 0 * * 0"),
+    schedule_interval=get_airflow_schedule("0 0 * * *"),
     catchup=False,
     dagrun_timeout=timedelta(minutes=180),
     user_defined_macros=macros.default,
@@ -51,7 +51,7 @@ with DAG(
         ),
         "batch_size": Param(
             default=50000 if ENV_SHORT_NAME == "prod" else 10000,
-            type="int",
+            type="integer",
         ),
     },
 ) as dag:

@@ -105,7 +105,7 @@ SELECT DISTINCT
     ,STRING_AGG(DISTINCT (CASE WHEN offerer_tag_label IS NOT NULL THEN offerer_tag_label ELSE NULL END) ORDER BY (CASE WHEN offerer_tag_label IS NOT NULL THEN offerer_tag_label ELSE NULL END)) AS partner_type
     ,COUNT(CASE WHEN offerer_tag_label NOT IN ('Collectivité') THEN 1 ELSE NULL END) AS nb_tags
 FROM `{{ bigquery_analytics_dataset }}`.enriched_offerer_data AS enriched_offerer_data
-JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offerer_tag_mapping AS applicative_database_offerer_tag_mapping
+JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offerer_tag_mapping AS applicative_database_offerer_tag_mapping
     ON enriched_offerer_data.offerer_id = applicative_database_offerer_tag_mapping.offerer_id
 JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_offerer_tag AS applicative_database_offerer_tag
     ON applicative_database_offerer_tag.offerer_tag_id = applicative_database_offerer_tag_mapping.tag_id

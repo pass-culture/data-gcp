@@ -7,7 +7,7 @@ GROUP BY 1
 )
 
 SELECT
-    DATE_TRUNC(involved.date, MONTH) AS mois
+    DATE_TRUNC(involved.date, MONTH) AS month
     , "{{ params.group_type }}" as dimension_name
     , {% if params.group_type == 'NAT' %}
         'NAT'

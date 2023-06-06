@@ -1,6 +1,6 @@
 WITH dates AS (
     SELECT 
-        DISTINCT DATE_TRUNC(deposit_creation_date, MONTH) AS mois 
+        DISTINCT DATE_TRUNC(deposit_creation_date, MONTH) AS month 
     FROM `{{ bigquery_analytics_dataset }}.enriched_deposit_data`
     WHERE deposit_creation_date >= '2023-01-01'
 ),
@@ -38,7 +38,7 @@ structures AS (
 
 all_structures AS (
     SELECT 
-        mois
+        month
         , dimension_name
         , dimension_value
         , COUNT(DISTINCT offerer_id) AS nb_structures 
@@ -50,7 +50,7 @@ all_structures AS (
 
 active_individuel AS (
     SELECT DISTINCT 
-        mois
+        month
         , "{{ params.group_type }}" as dimension_name
         , {% if params.group_type == 'NAT' %}
             'NAT'
@@ -60,7 +60,7 @@ active_individuel AS (
         , offerer_id AS active_offerers
     FROM dates 
     JOIN `{{ bigquery_analytics_dataset }}.bookable_offer_history` as bookable_offer_history
-        ON dates.mois >= DATE_TRUNC(bookable_offer_history.partition_date, MONTH)
+        ON dates.month >= DATE_TRUNC(bookable_offer_history.partition_date, MONTH)
     JOIN `{{ bigquery_analytics_dataset }}.enriched_offer_data` as offer
         ON offer.offer_id = bookable_offer_history.offer_id
     JOIN `{{ bigquery_analytics_dataset }}.enriched_venue_data` as venue
@@ -69,7 +69,7 @@ active_individuel AS (
 
 active_collectif AS (
     SELECT DISTINCT 
-        mois
+        month
         , "{{ params.group_type }}" as dimension_name
         , {% if params.group_type == 'NAT' %}
             'NAT'
@@ -79,7 +79,7 @@ active_collectif AS (
         , offerer_id AS active_offerers
     FROM dates 
     JOIN `{{ bigquery_analytics_dataset }}.bookable_collective_offer_history` as bcoh
-        ON dates.mois >= DATE_TRUNC(bcoh.partition_date, MONTH)
+        ON dates.month >= DATE_TRUNC(bcoh.partition_date, MONTH)
     JOIN `{{ bigquery_analytics_dataset }}.enriched_collective_offer_data` as collective_offer
         ON collective_offer.collective_offer_id = bcoh.collective_offer_id
     JOIN `{{ bigquery_analytics_dataset }}.enriched_venue_data` as venue
@@ -96,7 +96,7 @@ all_actives AS (
 
 count_actives AS (
     SELECT 
-       all_actives.mois
+       all_actives.month
         , all_actives.dimension_name
         , all_actives.dimension_value
         , COUNT(DISTINCT all_actives.active_offerers) AS active_offerers
@@ -111,7 +111,7 @@ count_actives AS (
 
 
 SELECT 
-    all_structures.mois
+    all_structures.month
     , all_structures.dimension_name
     , all_structures.dimension_value
     , NULL as user_type
@@ -122,4 +122,4 @@ FROM all_structures
 LEFT JOIN count_actives 
   on all_structures.dimension_name = count_actives.dimension_name
   AND all_structures.dimension_value = count_actives.dimension_value
-  AND all_structures.mois = count_actives.mois
+  AND all_structures.month = count_actives.month

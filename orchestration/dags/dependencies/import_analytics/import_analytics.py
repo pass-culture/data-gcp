@@ -151,6 +151,16 @@ analytics_tables = {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_reimbursement_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
     },
+    "eple_aggregated": {
+        "sql": f"{ANALYTICS_SQL_PATH}/export_table_information_eple.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "depends": [
+            "enriched_institution_data",
+            "enriched_collective_booking_data",
+            "enriched_deposit_data",
+            "enriched_booking_data",
+        ],
+    },
     "iris_venues_in_shape": {
         "sql": f"{ANALYTICS_SQL_PATH}/iris_venues_in_shape.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",

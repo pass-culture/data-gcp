@@ -201,7 +201,7 @@ class Recommendation:
             recommendations_query = RecommendableIrisOffersQueryBuilder(
                 self, params.offer_limit
             ).generate_query(
-                params.order_query,
+                params.retrieval_order_query,
                 user=self.user,
             )
 
@@ -252,7 +252,7 @@ class Recommendation:
             self.model_display_name = None
 
         def get_scored_offers(self) -> List[Dict[str, Any]]:
-            order_query = (
+            retrieval_order_query = (
                 f"""(subcategory_id in ({', '.join([f"'{category}'" for category in self.cold_start_categories if category != 'UNK' ])})) DESC, booking_number DESC"""
                 if len(self.cold_start_categories) > 0
                 else "booking_number DESC"
@@ -261,7 +261,7 @@ class Recommendation:
             recommendations_query = RecommendableIrisOffersQueryBuilder(
                 self, COLD_START_RECOMMENDABLE_OFFER_LIMIT
             ).generate_query(
-                order_query,
+                retrieval_order_query,
                 user=self.user,
             )
 

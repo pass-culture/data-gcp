@@ -14,7 +14,7 @@ class RecommendationDefaultModel:
     force_cold_start: bool = False
     force_model: bool = False
     endpoint_name: str = f"recommendation_default_{ENV_SHORT_NAME}"
-    order_query: str = "is_geolocated DESC, booking_number DESC"
+    retrieval_order_query: str = "is_geolocated DESC, booking_number DESC"
     offer_limit: int = RECOMMENDABLE_OFFER_LIMIT
 
 
@@ -34,7 +34,10 @@ class RecommendationColdStartVersionB(RecommendationDefaultModel):
 class SimilarOfferDefaultModel:
     name: str
     endpoint_name: str = f"similar_offers_default_{ENV_SHORT_NAME}"
-    order_query = "booking_number DESC"
+    retrieval_order_query = "booking_number DESC"
+    retrieval_offer_limit: int = 50_000
+    ranking_order_query: str = "user_km_distance ASC, item_rank ASC"
+    ranking_offer_limit: int = 20
 
 
 RECOMMENDATION_ENDPOINTS = {

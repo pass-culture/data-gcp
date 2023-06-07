@@ -152,7 +152,7 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
     },
     "eple_aggregated": {
-        "sql": f"{ANALYTICS_SQL_PATH}/export_table_information_eple.sql",
+        "sql": f"{ANALYTICS_SQL_PATH}/eple_aggregated.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "depends": [
             "enriched_institution_data",

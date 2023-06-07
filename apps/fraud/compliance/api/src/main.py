@@ -8,7 +8,14 @@ from fastapi_versioning import VersionedFastAPI, version
 from pcpapillon.core.predict import get_prediction_and_main_contribution
 from pcpapillon.core.preprocess import preprocess
 from pcpapillon.utils.cloud_logging.setup import setup_logging
-from pcpapillon.utils.data_model import Config, Item, Token, User, model_params
+from pcpapillon.utils.data_model import (
+    Config,
+    Item,
+    Token,
+    User,
+    ModelParams,
+    ComplianceOutput,
+)
 from pcpapillon.utils.env_vars import (
     API_PARAMS,
     LOGIN_TOKEN_EXPIRATION,
@@ -49,7 +56,11 @@ def read_root():
     return "Auth user welcome to : Validation API test"
 
 
-@app.post("/model/compliance/scoring", dependencies=[Depends(setup_trace)])
+@app.post(
+    "/model/compliance/scoring",
+    response_model=ComplianceOutput,
+    dependencies=[Depends(setup_trace)],
+)
 @version(1, 0)
 def model_compliance_scoring(
     item: Item, current_user: Annotated[User, Depends(get_current_active_user)]
@@ -83,7 +94,7 @@ def model_compliance_scoring(
 @app.post("/model/compliance/load", dependencies=[Depends(setup_trace)])
 @version(1, 0)
 def model_compliance_load(
-    model_params: model_params,
+    model_params: ModelParams,
     current_user: Annotated[User, Depends(get_current_active_user)],
 ):
     log_extra_data = {"model_params": model_params.dict()}

@@ -421,7 +421,7 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "funnel_inscription_beneficiary",
         "depends": ["enriched_user_data"],
-        "dag_depends": ["import_intraday_firebase_data","import_appsflyer"], 
+        "dag_depends": ["import_intraday_firebase_data", "import_appsflyer"],
     },
 }
 

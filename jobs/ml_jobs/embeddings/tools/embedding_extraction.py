@@ -49,20 +49,21 @@ def encode_img_from_urls(model, urls):
     offer_wo_img = 0
     download_img_multiprocess(urls)
     for url in urls:
+        url = str(url).replace("/", "-")
         try:
-            img_emb = model.encode(Image.open(f"./img/{str(url)}.jpeg"))
+            img_emb = model.encode(Image.open(f"./img/{url}.jpeg"))
             offer_img_embs.append(list(img_emb))
         except:
             offer_img_embs.append([0] * 512)
             offer_wo_img += 1
     print(f"{(offer_wo_img*100)/len(urls)}% offers dont have image")
     print("Removing image on local disk...")
-    shutil.rmtree("./img")
+    shutil.rmtree("./img", ignore_errors=True)
     return offer_img_embs
 
 
 def download_img_multiprocess(urls):
-    max_process = cpu_count() - 1
+    max_process = cpu_count() - 2
     subset_length = len(urls) // max_process
     subset_length = subset_length if subset_length > 0 else 1
     batch_number = max_process if subset_length > 1 else 1
@@ -84,18 +85,18 @@ def _download_img_from_url_list(urls):
 
     try:
         for url in urls:
-            filename = f"./img/{str(url)}.jpeg"
             try:
                 response = requests.get(url, timeout=10)
                 if (
                     response.status_code == 200
                     and int(response.headers.get("Content-Length")) > 500
                 ):
+                    url = str(url).replace("/", "-")
+                    filename = f"./img/{url}.jpeg"
                     with open(filename, "wb") as f:
                         f.write(response.content)
             except:
-                pass
-            index += 1
+                continue
         return
     except:
         return

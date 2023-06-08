@@ -135,8 +135,8 @@ class RecommendableItemQueryBuilder:
             SELECT 
                 item_id
             FROM {table_name}
-            WHERE 
-            1 = 1
+            WHERE case when {user_geolocated} then true else NOT is_geolocated end
+
             {params_in_filter}
             {user_profile_filter}
             {order_query}
@@ -145,6 +145,9 @@ class RecommendableItemQueryBuilder:
         ).format(
             table_name=sql.SQL(self.recommendable_item_table),
             params_in_filter=self.reco_model.params_in_filters,
+            user_geolocated=sql.Literal(
+                user.longitude is not None and user.latitude is not None
+            ),
             user_profile_filter=sql.SQL(
                 """
                 AND is_underage_recommendable 
@@ -183,14 +186,17 @@ class RecommendableOfferQueryBuilder:
             select_offers as (
                 SELECT 
                     ro.*,
+                    coalesce(
                     case
-                        when is_geolocated AND {user_geolocated}
+                        when {user_geolocated}
                         then st_distance(st_point({user_longitude}::float, {user_latitude}::float)::geography, venue_geo)
                     else 0.0
-                    end as user_distance,
+                    end, 0.0) as user_distance,
                     ri.item_rank
                 FROM {table_name} ro
                 INNER JOIN ranked_items ri on ri.item_id = ro.item_id 
+                WHERE case when {user_geolocated} then true else NOT is_geolocated end
+
             ),
 
             rank_offers AS (
@@ -201,6 +207,16 @@ class RecommendableOfferQueryBuilder:
                     ROW_NUMBER() OVER (PARTITION BY item_id ORDER BY user_distance ASC) AS rank
                 FROM select_offers
                 WHERE user_distance < default_max_distance
+                AND offer_id NOT IN  (
+                    SELECT
+                        offer_id
+                    FROM
+                        non_recommendable_offers
+                    WHERE
+                        user_id = {user_id}
+                )
+                AND stock_price < {remaining_credit}
+                {user_profile_filter}
             )
             SELECT 
                 ro.offer_id,
@@ -218,16 +234,6 @@ class RecommendableOfferQueryBuilder:
                 rank_offers ro
             WHERE 
                 ro.rank = 1 
-            AND offer_id NOT IN  (
-                    SELECT
-                        offer_id
-                    FROM
-                        non_recommendable_offers
-                    WHERE
-                        user_id = {user_id}
-            )
-            AND ro.stock_price < {remaining_credit}
-            {user_profile_filter}
             {order_query}
             {offer_limit}        
         """

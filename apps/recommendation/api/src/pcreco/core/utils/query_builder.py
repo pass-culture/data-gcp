@@ -8,8 +8,8 @@ DEFAULT_MAX_DISTANCE = 50000
 
 
 class RecommendableIrisOffersQueryBuilder:
-    def __init__(self, reco_model, recommendable_offer_limit):
-        self.reco_model = reco_model
+    def __init__(self, params_in_filters: sql.SQL, recommendable_offer_limit):
+        self.params_in_filters = params_in_filters
         self.recommendable_offer_limit = recommendable_offer_limit
         self.recommendable_iris_table = get_available_materialized_view(
             "recommendable_offers_per_iris_shape"
@@ -20,7 +20,7 @@ class RecommendableIrisOffersQueryBuilder:
 
     def generate_query(
         self,
-        retrieval_order_query: str,
+        order_query: str,
         user: str,
     ):
         main_query = sql.SQL(
@@ -99,7 +99,7 @@ class RecommendableIrisOffersQueryBuilder:
             user_latitude=sql.Literal(user.latitude),
             remaining_credit=sql.Literal(user.user_deposit_remaining_credit),
             default_max_distance=sql.Literal(DEFAULT_MAX_DISTANCE),
-            params_in_filter=self.reco_model.params_in_filters,
+            params_in_filter=self.params_in_filters,
             user_profile_filter=sql.SQL(
                 """
             AND is_underage_recommendable 
@@ -109,7 +109,7 @@ class RecommendableIrisOffersQueryBuilder:
             ),
             order_by=sql.SQL(
                 f"""
-            ORDER BY {retrieval_order_query} LIMIT {self.recommendable_offer_limit}
+            ORDER BY {order_query} LIMIT {self.recommendable_offer_limit}
             """
             ),
         )
@@ -117,8 +117,8 @@ class RecommendableIrisOffersQueryBuilder:
 
 
 class RecommendableItemQueryBuilder:
-    def __init__(self, reco_model):
-        self.reco_model = reco_model
+    def __init__(self, params_in_filters):
+        self.params_in_filters = params_in_filters
         self.recommendable_item_table = get_available_materialized_view(
             "recommendable_items_raw"
         )
@@ -144,7 +144,7 @@ class RecommendableItemQueryBuilder:
         """
         ).format(
             table_name=sql.SQL(self.recommendable_item_table),
-            params_in_filter=self.reco_model.params_in_filters,
+            params_in_filter=self.params_in_filters,
             user_geolocated=sql.Literal(
                 user.longitude is not None and user.latitude is not None
             ),
@@ -162,8 +162,8 @@ class RecommendableItemQueryBuilder:
 
 
 class RecommendableOfferQueryBuilder:
-    def __init__(self, reco_model):
-        self.reco_model = reco_model
+    def __init__(self, params_in_filters):
+        self.params_in_filters = params_in_filters
         self.recommendable_offer_table = get_available_materialized_view(
             "recommendable_offers_raw"
         )

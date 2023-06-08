@@ -5,6 +5,14 @@ from google.protobuf import json_format
 from google.protobuf.struct_pb2 import Value
 from pcreco.utils.env_vars import GCP_PROJECT
 from cachetools import cached, TTLCache
+from dataclasses import dataclass
+
+
+@dataclass
+class PredictionResult:
+    predictions: List[str]
+    model_version: str
+    model_display_name: str
 
 
 @cached(cache=TTLCache(maxsize=1024, ttl=60))
@@ -30,7 +38,20 @@ def get_client(api_endpoint):
     return aiplatform.gapic.PredictionServiceClient(client_options=client_options)
 
 
-def predict_model(
+def endpoint_score(endpoint_name, instances) -> PredictionResult:
+    response = __predict_model(
+        endpoint_name=endpoint_name,
+        location="europe-west1",
+        instances=instances,
+    )
+    return PredictionResult(
+        predictions=response["predictions"],
+        model_display_name=response["model_display_name"],
+        model_version=response["model_version_id"],
+    )
+
+
+def __predict_model(
     endpoint_name: str,
     instances: Union[Dict, List[Dict]],
     location: str = "europe-west1",

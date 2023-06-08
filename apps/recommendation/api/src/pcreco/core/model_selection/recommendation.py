@@ -1,8 +1,6 @@
 from dataclasses import dataclass
 from pcreco.utils.env_vars import (
     ENV_SHORT_NAME,
-    DEFAULT_RECO_MODEL,
-    DEFAULT_SIMILAR_OFFER_MODEL,
     RECOMMENDABLE_OFFER_LIMIT,
     COLD_START_RECOMMENDABLE_OFFER_LIMIT,
 )
@@ -30,16 +28,6 @@ class RecommendationColdStartVersionB(RecommendationDefaultModel):
     )
 
 
-@dataclass
-class SimilarOfferDefaultModel:
-    name: str
-    endpoint_name: str = f"similar_offers_default_{ENV_SHORT_NAME}"
-    retrieval_order_query = "booking_number DESC"
-    retrieval_offer_limit: int = 50_000
-    ranking_order_query: str = "user_km_distance ASC, item_rank ASC"
-    ranking_offer_limit: int = 20
-
-
 RECOMMENDATION_ENDPOINTS = {
     "default": RecommendationDefaultModel("default"),
     "algo_default": RecommendationDefaultModel("algo_default", force_model=True),
@@ -50,19 +38,3 @@ RECOMMENDATION_ENDPOINTS = {
         "cold_start_b", offer_limit=COLD_START_RECOMMENDABLE_OFFER_LIMIT
     ),
 }
-
-SIMILAR_OFFER_ENDPOINTS = {"default": SimilarOfferDefaultModel("default")}
-
-
-def select_reco_model_params(model_endpoint: str) -> RecommendationDefaultModel:
-    """Choose the model to apply Recommendation"""
-    if model_endpoint not in list(RECOMMENDATION_ENDPOINTS.keys()):
-        model_endpoint = DEFAULT_RECO_MODEL
-    return RECOMMENDATION_ENDPOINTS[model_endpoint]
-
-
-def select_sim_model_params(model_endpoint: str) -> SimilarOfferDefaultModel:
-    """Choose the model to apply for Similar Offers"""
-    if model_endpoint not in list(SIMILAR_OFFER_ENDPOINTS.keys()):
-        model_endpoint = DEFAULT_SIMILAR_OFFER_MODEL
-    return SIMILAR_OFFER_ENDPOINTS[model_endpoint]

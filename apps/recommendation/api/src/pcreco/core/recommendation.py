@@ -13,7 +13,7 @@ from pcreco.core.utils.cold_start import (
 from sqlalchemy import text
 from pcreco.core.utils.mixing import order_offers_by_score_and_diversify_features
 from pcreco.core.utils.query_builder import RecommendableIrisOffersQueryBuilder
-from pcreco.core.utils.vertex_ai import predict_model
+from pcreco.core.utils.vertex_ai import endpoint_score
 from pcreco.models.reco.playlist_params import PlaylistParamsIn
 from pcreco.utils.db.db_connection import get_session
 from pcreco.utils.env_vars import (
@@ -199,7 +199,7 @@ class Recommendation:
             start = time.time()
 
             recommendations_query = RecommendableIrisOffersQueryBuilder(
-                self, params.offer_limit
+                self.params_in_filters, params.offer_limit
             ).generate_query(
                 params.retrieval_order_query,
                 user=self.user,
@@ -232,15 +232,11 @@ class Recommendation:
 
         def _predict_score(self, instances) -> List[List[float]]:
             start = time.time()
-            response = predict_model(
-                endpoint_name=self.model_endpoint_name,
-                location="europe-west1",
-                instances=instances,
-            )
-            self.model_version = response["model_version_id"]
-            self.model_display_name = response["model_display_name"]
-            log_duration("predict_score", start)
-            return response["predictions"]
+            prediction_result = endpoint_score(self.model_endpoint_name, instances)
+            self.model_version = prediction_result.model_version
+            self.model_display_name = prediction_result.model_display_name
+            log_duration("recommendation_predict_score", start)
+            return prediction_result.predictions
 
     class ColdStart:
         def __init__(self, scoring):
@@ -259,9 +255,9 @@ class Recommendation:
             )
 
             recommendations_query = RecommendableIrisOffersQueryBuilder(
-                self, COLD_START_RECOMMENDABLE_OFFER_LIMIT
+                self.params_in_filters, COLD_START_RECOMMENDABLE_OFFER_LIMIT
             ).generate_query(
-                retrieval_order_query,
+                order_query=retrieval_order_query,
                 user=self.user,
             )
 

@@ -95,7 +95,7 @@ class PlaylistParamsIn:
         if self.is_event == True:
             self.include_digital = False
 
-    def _get_conditions(self) -> str:
+    def _get_conditions(self) -> sql.SQL:
         condition = sql.SQL("")
         if self.start_date:
             if self.is_event:

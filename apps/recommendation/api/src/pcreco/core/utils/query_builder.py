@@ -25,7 +25,6 @@ class RecommendableIrisOffersQueryBuilder:
     ):
         main_query = sql.SQL(
             """
-        
         WITH distance_filter AS (
             SELECT
                 offer_id,
@@ -131,7 +130,6 @@ class RecommendableItemQueryBuilder:
     ):
         main_query = sql.SQL(
             """
-
             SELECT 
                 item_id
             FROM {table_name}
@@ -141,7 +139,7 @@ class RecommendableItemQueryBuilder:
             {user_profile_filter}
             {order_query}
             {offer_limit}        
-        """
+            """
         ).format(
             table_name=sql.SQL(self.recommendable_item_table),
             params_in_filter=self.params_in_filters,

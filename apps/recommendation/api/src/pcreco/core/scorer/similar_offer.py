@@ -146,17 +146,15 @@ class ItemRetrievalRanker(SimilarOfferScorer):
             list(recommendable_items), size=500
         )
         log_duration(
-            f"Retrieval: predicted_items for {self.user.id}: predicted_items -> {len(prediction_result.predictions)}",
+            f"Retrieval: predicted_items for {self.user.id}: predicted_items -> {len(prediction_result)}",
             start,
         )
         # nothing to score
-        if len(prediction_result.predictions) == 0:
+        if len(prediction_result) == 0:
             return []
 
         # Ranking Phase
-        recommendable_offers = self.get_recommendable_offers(
-            prediction_result.predictions
-        )
+        recommendable_offers = self.get_recommendable_offers(prediction_result)
         log_duration(
             f"Ranking: get_recommendable_offers for {self.user.id}: offers -> {len(recommendable_offers)}",
             start,
@@ -208,7 +206,7 @@ class ItemRetrievalRanker(SimilarOfferScorer):
 
         start = time.time()
         recommendable_offers_query = RecommendableItemQueryBuilder(
-            self,
+            self.params_in_filters
         ).generate_query(
             order_query=self.model_params.retrieval_order_query,
             offer_limit=self.model_params.retrieval_limit,

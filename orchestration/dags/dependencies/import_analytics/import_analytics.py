@@ -152,7 +152,7 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
     },
     "eple_aggregated": {
-        "sql": f"{ANALYTICS_SQL_PATH}/export_table_information_eple.sql",
+        "sql": f"{ANALYTICS_SQL_PATH}/eple_aggregated.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "depends": [
             "enriched_institution_data",
@@ -415,6 +415,13 @@ analytics_tables = {
             "enriched_offer_data",
             "enriched_collective_offer_data",
         ],
+    },
+    "funnel_inscription_beneficiary": {
+        "sql": f"{ANALYTICS_SQL_PATH}/funnel_inscription_beneficiary.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "funnel_inscription_beneficiary",
+        "depends": ["enriched_user_data"],
+        "dag_depends": ["import_intraday_firebase_data", "import_appsflyer"],
     },
 }
 

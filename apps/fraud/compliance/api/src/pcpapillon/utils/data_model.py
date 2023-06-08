@@ -47,6 +47,14 @@ class Item(BaseModel):
     offer_image: str
 
 
-class model_params(BaseModel):
+class ComplianceOutput(BaseModel):
+    offer_id: str
+    probability_validated: int
+    validation_main_features: list[str]
+    probability_rejected: int
+    rejection_main_features: list[str]
+
+
+class ModelParams(BaseModel):
     model_name: str = MODEL_DEFAULT
     model_stage: str = MODEL_STAGE

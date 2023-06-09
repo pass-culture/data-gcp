@@ -1082,7 +1082,7 @@ ENRICHED_VENUE_DATA_EXPECTED = [
         "real_revenue": 2,
         "venue_humanized_id": "AE",
         "venue_flaskadmin_link": "https://backend.passculture.pro/pc/back-office/venue/edit/?id=1&url=%2Fpc%2Fback-office%2Fvenue%2F",
-        "venue_backofficev3_link": "https://backend.passculture.team/backofficev3/pro/venue/1",
+        "venue_backofficev3_link": "https://backoffice.passculture.team/pro/venue/1",
         "venue_region_name": "IDF",
         "venue_pc_pro_link": "https://passculture.pro/structures/AE/lieux/AE",
         "venue_targeted_audience": None,

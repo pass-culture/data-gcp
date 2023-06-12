@@ -364,6 +364,39 @@ analytics_tables = {
             "import_contentful",
         ],  # computed once a day
     },
+    "analytics_firebase_home_macro_conversion": {
+        "sql": f"{ANALYTICS_SQL_PATH}/firebase_home_macro_conversion.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "firebase_home_macro_conversion",
+        "time_partitioning": {"field": "module_displayed_date"},
+        "depends": ["diversification_booking"],
+        "dag_depends": [
+            "import_intraday_firebase_data",
+            "import_contentful",
+        ],
+    },
+    "analytics_firebase_home_micro_conversion": {
+        "sql": f"{ANALYTICS_SQL_PATH}/firebase_home_micro_conversion.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "firebase_home_micro_conversion",
+        "time_partitioning": {"field": "module_displayed_date"},
+        "depends": ["diversification_booking"],
+        "dag_depends": [
+            "import_intraday_firebase_data",
+            "import_contentful",
+        ],
+    },
+    "analytics_firebase_home_whole_path_conversion": {
+        "sql": f"{ANALYTICS_SQL_PATH}/firebase_home_whole_path_conversion.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "firebase_home_whole_path_conversion",
+        "time_partitioning": {"field": "module_displayed_date"},
+        "depends": ["diversification_booking"],
+        "dag_depends": [
+            "import_intraday_firebase_data",
+            "import_contentful",
+        ],
+    },
     "analytics_firebase_aggregated_similar_offer_events": {
         "sql": f"{ANALYTICS_SQL_PATH}/firebase_aggregated_similar_offer_events.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",

@@ -97,7 +97,7 @@ tmp_tables_detailed = {
         "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_beneficiaires_region",
         "params": {
             "group_type": "REG",
-            "group_type_name": "user_region_name",
+            "group_type_name": "region_name",
         },
     },
     "propilote_beneficiaires_departement": {
@@ -106,7 +106,7 @@ tmp_tables_detailed = {
         "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_beneficiaires_departement",
         "params": {
             "group_type": "DEPT",
-            "group_type_name": "user_department_code",
+            "group_type_name": "num_dep",
         },
     },
     "propilote_beneficiaires_academie": {

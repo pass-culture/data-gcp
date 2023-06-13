@@ -134,7 +134,8 @@ theoretical_amount_spent_in_digital_goods_eligible_booking AS (
     SELECT
         booking.user_id,
         booking.booking_amount,
-        booking.booking_quantity
+        booking.booking_quantity,
+        booking.booking_intermediary_amount
     FROM
         `{{ bigquery_clean_dataset }}`.booking AS booking
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON booking.stock_id = stock.stock_id
@@ -164,7 +165,8 @@ theoretical_amount_spent_in_physical_goods_eligible_booking AS (
     SELECT
         booking.user_id,
         booking.booking_amount,
-        booking.booking_quantity
+        booking.booking_quantity,
+        booking.booking_intermediary_amount
     FROM
         `{{ bigquery_clean_dataset }}`.booking AS booking
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON booking.stock_id = stock.stock_id
@@ -195,7 +197,8 @@ theoretical_amount_spent_in_outings_eligible_booking AS (
     SELECT
         booking.user_id,
         booking.booking_amount,
-        booking.booking_quantity
+        booking.booking_quantity,
+        booking.booking_intermediary_amount
     FROM
         `{{ bigquery_clean_dataset }}`.booking AS booking
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON booking.stock_id = stock.stock_id

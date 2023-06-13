@@ -54,7 +54,7 @@ aggregated_total_beneficiairy AS (
 
 
 SELECT *
-FROM current_beneficiary 
+FROM aggregated_active_beneficiary 
 UNION ALL
 SELECT *
-FROM total_beneficiary
+FROM aggregated_total_beneficiairy

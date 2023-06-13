@@ -20,12 +20,11 @@ JOIN `{{ bigquery_clean_dataset }}.applicative_database_educational_year` ey ON 
 eple_bookings AS (
 SELECT 
     eple_infos.institution_id
-    ,ey.scholar_year
+    ,eple_infos.scholar_year
     ,SUM(CASE WHEN collective_booking_status != 'CANCELLED' THEN booking_amount ELSE NULL END) AS montant_depense_theorique
     ,SUM(CASE WHEN collective_booking_status IN ('USED','REIMBURSED') THEN booking_amount ELSE NULL END) AS montant_depense_reel
 FROM eple_infos
-JOIN `{{ bigquery_analytics_dataset }}.enriched_collective_booking_data` ecbd ON ecbd.educational_institution_id = eple_infos.institution_id
-JOIN `{{ bigquery_clean_dataset }}.applicative_database_educational_year` ey ON ecbd.educational_year_id = ey.adage_id
+JOIN `{{ bigquery_analytics_dataset }}.enriched_collective_booking_data` ecbd ON ecbd.educational_institution_id = eple_infos.institution_id AND ecbd.scholar_year = eple_infos.scholar_year
 GROUP BY 1, 2)
 
 ,total_nb_of_students AS (

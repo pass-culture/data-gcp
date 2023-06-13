@@ -74,8 +74,6 @@ class PlaylistParamsIn:
         self.setup_defaults()
 
     def setup_defaults(self):
-        if self.model_endpoint is None:
-            self.model_endpoint = DEFAULT_RECO_MODEL
         if self.is_reco_shuffled is None:
             self.is_reco_shuffled = SHUFFLE_RECOMMENDATION
         if self.is_sort_by_distance is None:
@@ -95,7 +93,7 @@ class PlaylistParamsIn:
         if self.is_event == True:
             self.include_digital = False
 
-    def _get_conditions(self) -> str:
+    def _get_conditions(self) -> sql.SQL:
         condition = sql.SQL("")
         if self.start_date:
             if self.is_event:

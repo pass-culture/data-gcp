@@ -103,7 +103,7 @@ actual_amount_spent AS (
         user.user_id,
         COALESCE(
             SUM(
-                booking.booking_amount * booking.booking_quantity
+                booking.booking_intermediary_amount
             ),
             0
         ) AS actual_amount_spent
@@ -111,7 +111,6 @@ actual_amount_spent AS (
         `{{ bigquery_clean_dataset }}`.user_beneficiary AS user
         LEFT JOIN `{{ bigquery_clean_dataset }}`.booking AS booking ON user.user_id = booking.user_id
         AND booking.booking_is_used IS TRUE
-        AND booking.booking_is_cancelled IS FALSE
     GROUP BY
         user.user_id
 ),
@@ -120,7 +119,7 @@ theoretical_amount_spent AS (
         user.user_id,
         COALESCE(
             SUM(
-                booking.booking_amount * booking.booking_quantity
+                 booking.booking_intermediary_amount
             ),
             0
         ) AS theoretical_amount_spent
@@ -151,7 +150,7 @@ theoretical_amount_spent_in_digital_goods AS (
         user.user_id,
         COALESCE(
             SUM(
-                eligible_booking.booking_amount * eligible_booking.booking_quantity
+                eligible_booking.booking_intermediary_amount
             ),
             0.
         ) AS amount_spent_in_digital_goods
@@ -181,7 +180,7 @@ theoretical_amount_spent_in_physical_goods AS (
         user.user_id,
         COALESCE(
             SUM(
-                eligible_booking.booking_amount * eligible_booking.booking_quantity
+                eligible_booking.booking_intermediary_amount
             ),
             0.
         ) AS amount_spent_in_physical_goods
@@ -211,7 +210,7 @@ theoretical_amount_spent_in_outings AS (
         user.user_id,
         COALESCE(
             SUM(
-                eligible_booking.booking_amount * eligible_booking.booking_quantity
+                eligible_booking.booking_intermediary_amount
             ),
             0.
         ) AS amount_spent_in_outings
@@ -346,17 +345,17 @@ amount_spent_last_deposit AS (
         booking.deposit_id
         , last_deposit.user_id
         , COALESCE(
-            SUM(booking_amount * booking_quantity),
+            SUM(booking_intermediary_amount),
             0
         ) AS deposit_theoretical_amount_spent
         , SUM(CASE 
             WHEN booking_is_used IS TRUE
-            THEN booking_amount * booking_quantity
+            THEN booking_intermediary_amount
             ELSE 0
         END) AS deposit_actual_amount_spent
         , SUM(CASE 
             WHEN subcategories.is_digital_deposit = true AND offer.offer_url IS NOT NULL
-            THEN booking_amount * booking_quantity
+            THEN booking_intermediary_amount
             ELSE 0
         END) as deposit_theoretical_amount_spent_in_digital_goods
     FROM
@@ -432,7 +431,9 @@ SELECT
         WHEN TIMESTAMP(
             user_agg_deposit_data.user_last_deposit_expiration_date
         ) < CURRENT_TIMESTAMP()
-        OR actual_amount_spent.actual_amount_spent >= user_agg_deposit_data.user_total_deposit_amount THEN TRUE
+        OR amount_spent_last_deposit.deposit_actual_amount_spent >= user_agg_deposit_data.user_last_deposit_amount 
+        OR NOT user_is_active 
+        THEN TRUE
         ELSE FALSE
     END AS user_is_former_beneficiary,
     CASE
@@ -440,7 +441,7 @@ SELECT
             TIMESTAMP(
                 user_agg_deposit_data.user_last_deposit_expiration_date
             ) >= CURRENT_TIMESTAMP()
-            AND actual_amount_spent.actual_amount_spent < user_agg_deposit_data.user_total_deposit_amount
+            AND amount_spent_last_deposit.deposit_actual_amount_spent < user_agg_deposit_data.user_last_deposit_amount
         )
         AND user_is_active THEN TRUE
         ELSE FALSE

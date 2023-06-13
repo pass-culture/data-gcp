@@ -1,27 +1,14 @@
-WITH dates AS (
-    SELECT 
-        DISTINCT DATE_TRUNC(deposit_creation_date, MONTH) AS month 
-    FROM `{{ bigquery_analytics_dataset }}.enriched_deposit_data`
+WITH last_day_of_month AS (
+  SELECT
+    date_trunc(active_date, MONTH) as month,
+    max(active_date) as last_active_date
+  FROM  `{{ bigquery_analytics_dataset }}.aggregated_daily_user_used_activity`
+  GROUP BY 1
 ),
 
-infos_users AS (
-    SELECT 
-        deposit.user_id
-        , deposit.deposit_type
-        , DATE_TRUNC(deposit_creation_date, MONTH) AS date_deposit
-        , DATE_TRUNC(deposit_expiration_date, MONTH) AS date_expiration
-        , user.user_department_code
-        , user.user_region_name
-        , rd.academy_name
-    FROM `{{ bigquery_analytics_dataset }}.enriched_deposit_data` as deposit
-    JOIN `{{ bigquery_analytics_dataset }}.enriched_user_data` as user ON deposit.user_id = user.user_id
-    LEFT JOIN `{{ bigquery_analytics_dataset }}.region_department` as rd
-        on  user.user_department_code = rd.num_dep 
-),
-
-current_beneficiary AS (
-    SELECT 
-        month -- tous les month
+aggregated_active_beneficiary AS (
+    SELECT
+        month
         , "{{ params.group_type }}" as dimension_name
         , {% if params.group_type == 'NAT' %}
             'NAT'
@@ -30,19 +17,24 @@ current_beneficiary AS (
         {% endif %} as dimension_value
         , deposit_type as user_type
         , "beneficiaire_actuel" as indicator
-        , COUNT(DISTINCT user_id) as numerator  -- ceux qui sont bénéficiaires actuels
-        , 1 as denominator
-    FROM dates
-    LEFT JOIN infos_users
-        ON dates.month >= infos_users.date_deposit -- ici pour prendre uniquement les bénéficiaires actuels
-        AND dates.month <= infos_users.date_expiration -- idem
-    GROUP BY 1, 2, 3, 4, 5
+        , COUNT(DISTINCT uua.user_id) as numerator 
+        , 1 as denominator      
+  FROM
+      `{{ bigquery_analytics_dataset }}.aggregated_daily_user_used_activity` uua
+  INNER JOIN last_day_of_month ldm on ldm.last_active_date = active_date 
+  -- active nor suspended
+  INNER JOIN `{{ bigquery_analytics_dataset }}.enriched_user_data` eud ON eud.user_id = uua.user_id 
+  LEFT JOIN `{{ bigquery_analytics_dataset }}.region_department` as rd
+        on  eud.user_department_code = rd.num_dep 
+  -- still have some credit at EOM
+  WHERE cumulative_amount_spent < initial_deposit_amount
+
+  GROUP BY  1, 2, 3, 4, 5
 ),
 
-
-total_beneficiary AS (
-    SELECT 
-        month -- tous les month
+aggregated_total_beneficiairy AS (
+    SELECT
+        month
         , "{{ params.group_type }}" as dimension_name
         , {% if params.group_type == 'NAT' %}
             'NAT'
@@ -51,15 +43,14 @@ total_beneficiary AS (
         {% endif %} as dimension_value
         , cast(null as string) as user_type
         , "beneficiaire_total" as indicator
-        , COUNT(DISTINCT user_id) as numerator  
+        , COUNT(DISTINCT  eud.user_id) as numerator  
         , 1 as denominator
-    FROM dates
-    LEFT JOIN infos_users
-        ON dates.month >= infos_users.date_deposit
-    GROUP BY 1, 2, 3, 4, 5
+  FROM last_day_of_month ldm
+  INNER JOIN `{{ bigquery_analytics_dataset }}.enriched_user_data` eud ON date(eud.user_deposit_creation_date) <= date(ldm.last_active_date) 
+  LEFT JOIN `{{ bigquery_analytics_dataset }}.region_department` as rd
+        on  eud.user_department_code = rd.num_dep 
+  GROUP BY  1, 2, 3, 4, 5
 )
-
-
 
 
 SELECT *

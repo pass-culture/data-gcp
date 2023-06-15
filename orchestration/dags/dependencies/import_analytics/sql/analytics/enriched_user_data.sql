@@ -431,15 +431,6 @@ SELECT
     user_agg_deposit_data.user_first_deposit_amount AS user_deposit_initial_amount,
     user_agg_deposit_data.user_last_deposit_expiration_date AS user_deposit_expiration_date,
     CASE
-        WHEN TIMESTAMP(
-            user_agg_deposit_data.user_last_deposit_expiration_date
-        ) < CURRENT_TIMESTAMP()
-        OR COALESCE(amount_spent_last_deposit.deposit_actual_amount_spent,0) >= user_agg_deposit_data.user_last_deposit_amount 
-        OR NOT user_is_active 
-        THEN TRUE
-        ELSE FALSE
-    END AS user_is_former_beneficiary,
-    CASE
         WHEN (
             TIMESTAMP(
                 user_agg_deposit_data.user_last_deposit_expiration_date

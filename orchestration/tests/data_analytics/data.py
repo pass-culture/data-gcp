@@ -892,6 +892,7 @@ ENRICHED_USER_DATA_INPUT = {
             "booking_is_cancelled": False,
             "booking_amount": 10,
             "booking_quantity": 2,
+            "booking_intermediary_amount": 20,
             "booking_creation_date": datetime.now().replace(microsecond=0),
         }
     ],

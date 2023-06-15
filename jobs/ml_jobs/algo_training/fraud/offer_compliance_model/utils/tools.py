@@ -83,8 +83,9 @@ def encode_img_from_urls(model, urls):
     offer_wo_img = 0
     download_img_multiprocess(urls)
     for url in urls:
+        url = str(url).replace("/", "-")
         try:
-            img_emb = model.encode(Image.open(f"./img/{str(url)}.jpeg"))
+            img_emb = model.encode(Image.open(f"""./img/{url}.jpeg"""))
             offer_img_embs.append(list(img_emb))
         except:
             offer_img_embs.append([0] * 512)
@@ -118,18 +119,18 @@ def _download_img_from_url_list(urls):
 
     try:
         for url in urls:
-            filename = f"./img/{str(url)}.jpeg"
             try:
                 response = requests.get(url, timeout=10)
                 if (
                     response.status_code == 200
                     and int(response.headers.get("Content-Length")) > 500
                 ):
+                    url = str(url).replace("/", "-")
+                    filename = f"./img/{url}.jpeg"
                     with open(filename, "wb") as f:
                         f.write(response.content)
             except:
-                pass
-            index += 1
+                continue
         return
     except:
         return

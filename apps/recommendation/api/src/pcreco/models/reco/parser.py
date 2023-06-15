@@ -40,6 +40,15 @@ def parse_geolocation(request):
     return longitude, latitude, geo_located
 
 
+def parse_user(request):
+    if "user_id" in request.args:
+        return request.args.get("user_id")
+    elif "userId" in request.args:
+        return request.args.get("userId")
+    else:
+        return -1
+
+
 def parse_internal(request):
     """Get the internal flag. This flag is used when internal queries are
     sent for test purposes.

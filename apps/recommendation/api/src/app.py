@@ -10,7 +10,12 @@ from pcreco.core.user import User
 from pcreco.core.offer import Offer
 from pcreco.core.recommendation import Recommendation
 from pcreco.core.similar_offer import SimilarOffer
-from pcreco.models.reco.parser import parse_params, parse_geolocation, parse_internal
+from pcreco.models.reco.parser import (
+    parse_params,
+    parse_geolocation,
+    parse_internal,
+    parse_user,
+)
 import uuid
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
@@ -116,7 +121,7 @@ def similar_offers(offer_id: str):
     internal = parse_internal(request)
     longitude, latitude, geo_located = parse_geolocation(request)
     input_reco = parse_params(request)
-    user_id = request.args.get("user_id", -1)
+    user_id = parse_user(request)
 
     user = User(user_id, call_id, longitude, latitude)
     offer = Offer(offer_id, call_id, latitude, longitude)

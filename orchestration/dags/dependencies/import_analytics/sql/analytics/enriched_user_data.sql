@@ -434,7 +434,7 @@ SELECT
         WHEN TIMESTAMP(
             user_agg_deposit_data.user_last_deposit_expiration_date
         ) < CURRENT_TIMESTAMP()
-        OR amount_spent_last_deposit.deposit_actual_amount_spent >= user_agg_deposit_data.user_last_deposit_amount 
+        OR COALESCE(amount_spent_last_deposit.deposit_actual_amount_spent,0) >= user_agg_deposit_data.user_last_deposit_amount 
         OR NOT user_is_active 
         THEN TRUE
         ELSE FALSE
@@ -444,7 +444,7 @@ SELECT
             TIMESTAMP(
                 user_agg_deposit_data.user_last_deposit_expiration_date
             ) >= CURRENT_TIMESTAMP()
-            AND amount_spent_last_deposit.deposit_actual_amount_spent < user_agg_deposit_data.user_last_deposit_amount
+            AND COALESCE(amount_spent_last_deposit.deposit_actual_amount_spent,0) < user_agg_deposit_data.user_last_deposit_amount
         )
         AND user_is_active THEN TRUE
         ELSE FALSE

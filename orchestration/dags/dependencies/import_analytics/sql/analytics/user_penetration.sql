@@ -29,13 +29,13 @@ SELECT
   pop.born_date,
   pop.decimal_age,
   pop.department_code,
-  ub.total_users,
+  coalesce(ub.total_users, 0) as total_users,
   CASE
    WHEN pop.decimal_age >= 15 AND pop.decimal_age < 18 THEN "15_17" 
    WHEN pop.decimal_age >= 18 AND pop.decimal_age < 20 THEN "18_19" 
   ELSE "20_25"
   END AS age_range,
-  population
+  coalesce(population, 0) as population
 FROM population_dpt pop
 LEFT JOIN user_booking ub on 
     pop.active_month = ub.active_month

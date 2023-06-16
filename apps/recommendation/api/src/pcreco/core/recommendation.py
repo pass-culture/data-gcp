@@ -201,7 +201,7 @@ class Recommendation:
             recommendations_query = RecommendableIrisOffersQueryBuilder(
                 self.params_in_filters, params.offer_limit
             ).generate_query(
-                params.retrieval_order_query,
+                order_query=params.retrieval_order_query,
                 user=self.user,
             )
 

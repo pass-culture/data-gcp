@@ -57,6 +57,11 @@ clean_tables = {
         "destination_table": "bookable_offer",
         "depends": ["offer", "available_stock_information"],
     },
+    "bookable_collective_offer": {
+        "sql": f"{CLEAN_SQL_PATH}/bookable_collective_offer.sql",
+        "destination_dataset": "{{ bigquery_clean_dataset }}",
+        "destination_table": "bookable_collective_offer",
+    },
     "available_stock_information": {
         "sql": f"{CLEAN_SQL_PATH}/available_stock_information.sql",
         "destination_dataset": "{{ bigquery_clean_dataset }}",

@@ -2,7 +2,6 @@ from pcreco.utils.health_check_queries import get_available_materialized_view
 from psycopg2 import sql
 from pcreco.utils.db.db_connection import as_string
 import typing as t
-from loguru import logger
 
 DEFAULT_MAX_DISTANCE = 50000
 

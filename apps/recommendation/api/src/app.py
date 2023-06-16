@@ -88,7 +88,7 @@ def playlist_recommendation(user_id: int):
 
     internal = parse_internal(request)
     longitude, latitude, geo_located = parse_geolocation(request)
-    input_reco = parse_params(request)
+    input_reco = parse_params(request, geo_located)
     user = User(user_id, call_id, longitude, latitude)
     scoring = Recommendation(user, params_in=input_reco)
     user_recommendations = scoring.get_scoring()
@@ -120,7 +120,7 @@ def similar_offers(offer_id: str):
 
     internal = parse_internal(request)
     longitude, latitude, geo_located = parse_geolocation(request)
-    input_reco = parse_params(request)
+    input_reco = parse_params(request, geo_located)
     user_id = parse_user(request)
 
     user = User(user_id, call_id, longitude, latitude)

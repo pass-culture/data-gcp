@@ -261,10 +261,10 @@ tmp_tables_detailed = {
             "group_type_name": "num_dep",
         },
     },
-    "propilote_taux_activation_structure_academy": {
+    "propilote_taux_activation_structure_academie": {
         "sql": f"{SQL_TMP_PATH}/taux_activation_structure/propilote_tmp_activation_structure.sql",
         "destination_dataset": "{{ bigquery_tmp_dataset }}",
-        "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_taux_activation_structure_academy",
+        "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_taux_activation_structure_academie",
         "params": {
             "group_type": "ACAD",
             "group_type_name": "academy_name",

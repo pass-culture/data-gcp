@@ -61,7 +61,7 @@ def parse_internal(request):
     return internal
 
 
-def parse_params(request) -> PlaylistParamsIn:
+def parse_params(request, geo_located) -> PlaylistParamsIn:
 
     if request.method == "POST":
         params = dict(request.get_json(), **dict(request.args))
@@ -70,4 +70,4 @@ def parse_params(request) -> PlaylistParamsIn:
     if params is None:
         params = {}
     params = {underscore_to_camel(k): key_from_list(v) for k, v in params.items()}
-    return PlaylistParamsIn(params)
+    return PlaylistParamsIn(params, geo_located)

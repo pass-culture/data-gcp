@@ -32,24 +32,28 @@ INPUT_PARAMS = [
 
 
 class PlaylistParamsIn:
-    def __init__(self, json={}):
+    def __init__(self, json={}, geo_located=True):
 
         json = {k: v for k, v in json.items() if k in INPUT_PARAMS}
         self.json_input = json
         self.has_conditions = False
         self.model_endpoint = json.get("modelEndpoint")
 
-        # TODO : deprecated
-        self.start_date = input_params.parse_date(json.get("startDate"))
-        self.end_date = input_params.parse_date(json.get("endDate"))
-        if self.start_date is None:
-            self.start_date = input_params.parse_date(json.get("beginningDatetime"))
-        if self.end_date is None:
-            self.end_date = input_params.parse_date(json.get("endingDatetime"))
+        if geo_located:
+            self.start_date = input_params.parse_date(json.get("startDate"))
+            self.end_date = input_params.parse_date(json.get("endDate"))
+            if self.start_date is None:
+                self.start_date = input_params.parse_date(json.get("beginningDatetime"))
+            if self.end_date is None:
+                self.end_date = input_params.parse_date(json.get("endingDatetime"))
 
-        self.is_event = input_params.parse_bool(json.get("isEvent"))
+            self.is_event = input_params.parse_bool(json.get("isEvent"))
+        else:
+            self.is_event = False
+            self.end_date = None
+            self.start_date = None
+
         self.offer_is_duo = input_params.parse_bool(json.get("isDuo"))
-
         self.search_group_names = input_params.parse_to_list(json.get("categories"))
         self.subcategories_id = input_params.parse_to_list(json.get("subcategories"))
         self.offer_type_list = input_params.parse_to_list_of_dict(

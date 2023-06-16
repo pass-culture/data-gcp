@@ -155,7 +155,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
-        command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/preprocess.py "
+        command=f"mkdir -p img && PYTHONPATH=. python {dag_config['MODEL_DIR']}/preprocess.py "
         "--config-file-name {{ params.config_file_name }} "
         "--input-dataframe-file-name compliance_offers_raw_data "
         "--output-dataframe-file-name compliance_clean_data ",

@@ -19,14 +19,16 @@ from common.utils import get_airflow_schedule
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"extract-items-embeddings-{ENV_SHORT_NAME}"
 BASE_DIR = "data-gcp/jobs/ml_jobs/embeddings"
-
+DATE = "{{ yyyymmdd(ds) }}"
 default_args = {
     "start_date": datetime(2023, 3, 6),
     "on_failure_callback": task_fail_slack_alert,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }
-
+dag_config = {
+    "TOKENIZERS_PARALLELISM": "false",
+}
 with DAG(
     "embeddings_extraction_items",
     default_args=default_args,
@@ -88,17 +90,22 @@ with DAG(
         command="PYTHONPATH=. python preprocess.py "
         f"--gcp-project {GCP_PROJECT_ID} "
         f"--env-short-name {ENV_SHORT_NAME} "
-        "--config-file-name {{ params.config_file_name }} ",
+        "--config-file-name {{ params.config_file_name }} "
+        f"--input-table-name {DATE}_item_to_extract_embeddings "
+        f"--output-table-name {DATE}_item_to_extract_embeddings_clean ",
     )
 
     extract_embedding = SSHGCEOperator(
         task_id="extract_embedding",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
+        environment=dag_config,
         command="mkdir -p img && PYTHONPATH=. python main.py "
         f"--gcp-project {GCP_PROJECT_ID} "
         f"--env-short-name {ENV_SHORT_NAME} "
-        "--config-file-name {{ params.config_file_name }} ",
+        "--config-file-name {{ params.config_file_name }} "
+        f"--input-table-name {DATE}_item_to_extract_embeddings_clean "
+        f"--output-table-name item_embeddings ",
     )
 
     gce_instance_stop = StopGCEOperator(

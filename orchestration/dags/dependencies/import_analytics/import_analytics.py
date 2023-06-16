@@ -449,10 +449,10 @@ analytics_tables = {
             "enriched_collective_offer_data",
         ],
     },
-    "funnel_inscription_beneficiary": {
-        "sql": f"{ANALYTICS_SQL_PATH}/funnel_inscription_beneficiary.sql",
+    "funnel_subscription_beneficiary": {
+        "sql": f"{ANALYTICS_SQL_PATH}/funnel_subscription_beneficiary.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "funnel_inscription_beneficiary",
+        "destination_table": "funnel_subscription_beneficiary",
         "depends": ["enriched_user_data"],
         "dag_depends": ["import_intraday_firebase_data", "import_appsflyer"],
     },

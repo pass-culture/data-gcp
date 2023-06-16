@@ -117,7 +117,7 @@ class BaseSSHGCEOperator(BaseOperator):
                 exit_status, agg_stdout, agg_stderr = hook.exec_ssh_client_command(
                     ssh_client,
                     self.command,
-                    timeout=1000,
+                    timeout=3600,
                     environment=self.environment,
                     get_pty=False,
                 )

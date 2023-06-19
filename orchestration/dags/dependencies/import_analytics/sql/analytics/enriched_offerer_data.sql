@@ -199,7 +199,7 @@ SELECT
     collective_bookings_per_offerer.last_collective_booking_date AS offerer_last_collective_booking_date,
     CASE WHEN first_individual_booking_date IS NOT NULL AND first_collective_booking_date IS NOT NULL THEN LEAST(first_collective_booking_date, first_individual_booking_date)
          WHEN first_individual_booking_date IS NOT NULL THEN first_individual_booking_date
-         ELSE first_collective_booking_date END AS offerer_first_booking_date,
+         ELSE first_collective_booking_date END AS first_booking_date,
     CASE WHEN last_individual_booking_date IS NOT NULL AND last_collective_booking_date IS NOT NULL THEN GREATEST(last_collective_booking_date, last_individual_booking_date)
          WHEN last_individual_booking_date IS NOT NULL THEN last_individual_booking_date
          ELSE last_collective_booking_date END AS offerer_last_booking_date,

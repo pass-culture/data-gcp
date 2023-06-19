@@ -26,7 +26,7 @@ individual_bookings_per_venue AS (
         ,COUNT(CASE WHEN  booking.booking_is_used THEN booking.booking_id ELSE NULL END) AS used_individual_bookings
         ,COALESCE(SUM(CASE WHEN NOT booking.booking_is_cancelled THEN booking.booking_intermediary_amount ELSE NULL END),0) AS individual_theoretic_revenue
         ,COALESCE(SUM(CASE WHEN booking.booking_is_used THEN booking.booking_intermediary_amount ELSE NULL END),0) AS individual_real_revenue
-        ,MIN(booking.booking_creation_date) AS first_individual_booking_date,
+        ,MIN(booking.booking_creation_date) AS first_individual_booking_date
         ,MAX(booking.booking_creation_date) AS last_individual_booking_date
     FROM
         `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue
@@ -39,13 +39,13 @@ individual_bookings_per_venue AS (
 
 collective_bookings_per_venue AS (
     SELECT
-        collective_booking.venue_id,
+        collective_booking.venue_id
         ,COUNT(collective_booking.collective_booking_id) AS total_collective_bookings
          ,COUNT(CASE WHEN collective_booking_status NOT IN ('CANCELLED')THEN collective_booking.collective_booking_id ELSE NULL END) AS non_cancelled_collective_bookings
         ,COUNT(CASE WHEN collective_booking_status IN ('USED','REIMBURSED')THEN collective_booking.collective_booking_id ELSE NULL END) AS used_collective_bookings
-        ,COALESCE(SUM(CASE WHEN collective_booking_status NOT IN ('CANCELLED')THEN collective_stock.collective_stock_price ELSE NULL END)),0) AS collective_theoretic_revenue
+        ,COALESCE(SUM(CASE WHEN collective_booking_status NOT IN ('CANCELLED')THEN collective_stock.collective_stock_price ELSE NULL END),0) AS collective_theoretic_revenue
         ,COALESCE(SUM(CASE WHEN collective_booking_status IN ('USED','REIMBURSED')THEN collective_stock.collective_stock_price ELSE NULL END),0) AS collective_real_revenue
-        ,MIN(collective_booking.collective_booking_creation_date) AS first_collective_booking_date,
+        ,MIN(collective_booking.collective_booking_creation_date) AS first_collective_booking_date
         ,MAX(collective_booking.collective_booking_creation_date) AS last_collective_booking_date
     FROM
         `{{ bigquery_clean_dataset }}`.applicative_database_collective_booking AS collective_booking
@@ -167,7 +167,7 @@ SELECT
     collective_offers_per_venue.first_collective_offer_creation_date,
     collective_offers_per_venue.last_collective_offer_creation_date,
     COALESCE(collective_offers_per_venue.collective_offers_created,0) AS collective_offers_created,
-    COALESCE(individual_offers_per_venue.individual_offers_created,0) + COALESCE(collective_offers_per_venue.collective_offers_created,0) AS total_offers_created
+    COALESCE(individual_offers_per_venue.individual_offers_created,0) + COALESCE(collective_offers_per_venue.collective_offers_created,0) AS total_offers_created,
     bookable_offer_history.venue_first_bookable_offer_date,
     bookable_offer_history.venue_last_bookable_offer_date,
     CASE WHEN first_individual_booking_date IS NOT NULL AND first_collective_booking_date IS NOT NULL THEN LEAST(first_collective_booking_date, first_individual_booking_date)

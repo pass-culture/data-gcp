@@ -124,6 +124,9 @@ analytics_tables = {
     "enriched_offerer_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_offerer_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "dag_depends": [
+            "import_siren_v1",
+        ],
     },
     "enriched_offerer_tags_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_offerer_tags_data.sql",

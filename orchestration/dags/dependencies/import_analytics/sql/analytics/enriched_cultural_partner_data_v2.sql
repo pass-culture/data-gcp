@@ -37,6 +37,7 @@ SELECT
 FROM `{{ bigquery_analytics_dataset }}`.enriched_offerer_tags_data
 WHERE tag_category_name = 'comptage'
 AND tag_label NOT IN ('Association', 'EPN','Collectivité','Pas de tag associé','Auto-Entrepreneur')
+GROUP BY 1
 )
 
 ,offerers AS (
@@ -51,7 +52,7 @@ SELECT
     ,enriched_offerer_data.offerer_department_code AS partner_department_code
     ,applicative_database_offerer.offerer_postal_code AS partner_postal_code
     ,'offerer' AS partner_status
-    ,COALESCE(tagged_partners.partner_type, 'Structure non tagguée' AS partner_type
+    ,COALESCE(tagged_partners.partner_type, 'Structure non tagguée') AS partner_type
     ,CASE WHEN DATE_DIFF(CURRENT_DATE,enriched_offerer_data.offerer_last_bookable_offer_date,DAY) <= 30 THEN TRUE ELSE FALSE END AS is_active_last_30days
     ,CASE WHEN DATE_DIFF(CURRENT_DATE,enriched_offerer_data.offerer_last_bookable_offer_date,YEAR) = 0 THEN TRUE ELSE FALSE END AS is_active_current_year
     ,COALESCE(enriched_offerer_data.offerer_individual_offers_created,0) AS individual_offers_created
@@ -59,7 +60,7 @@ SELECT
     ,COALESCE(enriched_offerer_data.offerer_individual_offers_created,0) + COALESCE(enriched_offerer_data.offerer_collective_offers_created,0) AS total_offers_created
     ,enriched_offerer_data.offerer_last_bookable_offer_date AS last_bookable_offer_date
     ,enriched_offerer_data.offerer_first_bookable_offer_date AS first_bookable_offer_date
-    , COALESCE(enriched_offerer_data.offere_non_cancelled_individual_bookings,0) AS non_cancelled_individual_bookings
+    , COALESCE(enriched_offerer_data.offerer_non_cancelled_individual_bookings,0) AS non_cancelled_individual_bookings
     , COALESCE(enriched_offerer_data.offerer_used_individual_bookings,0) AS used_individual_bookings
     , COALESCE(enriched_offerer_data.offerer_non_cancelled_collective_bookings,0) AS confirmed_collective_bookings
     , COALESCE(enriched_offerer_data.offerer_used_collective_bookings,0) AS used_collective_bookings
@@ -73,10 +74,8 @@ LEFT JOIN `{{ bigquery_analytics_dataset }}`.region_department AS region_departm
     ON enriched_offerer_data.offerer_department_code = region_department.num_dep
 LEFT JOIN tagged_partners ON tagged_partners.offerer_id = enriched_offerer_data.offerer_id
 LEFT JOIN permanent_venues ON permanent_venues.offerer_id = enriched_offerer_data.offerer_id
-LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_offerer_tags_data AS enriched_offerer_tags_data
-    ON enriched_offerer_tags_data.offerer_id = enriched_offerer_data.offerer_id
 WHERE permanent_venues.offerer_id IS NULL -- Pas déjà compté à l'échelle du lieu permanent
-AND (enriched_offerer_tags_data.tag_label IS NULL OR enriched_offerer_tags_data.tag_label != 'Collectivité') -- Pas de collectivité
+AND (enriched_offerer_data.legal_unit_business_activity_code IS NULL OR enriched_offerer_data.legal_unit_business_activity_code != '84.11Z') -- Pas de collectivité
 )
 
 SELECT *

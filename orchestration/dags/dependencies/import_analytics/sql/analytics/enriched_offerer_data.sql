@@ -20,7 +20,7 @@ individual_bookings_per_offerer AS (
         ,COALESCE(SUM(CASE WHEN NOT booking.booking_is_cancelled THEN booking.booking_intermediary_amount ELSE NULL END),0) AS individual_theoretic_revenue
         ,COALESCE(SUM(CASE WHEN booking.booking_is_used THEN booking.booking_intermediary_amount ELSE NULL END),0) AS individual_real_revenue
         ,COALESCE(SUM(CASE WHEN booking.booking_is_used AND EXTRACT(YEAR FROM booking.booking_creation_date) = EXTRACT(YEAR FROM current_date) THEN booking.booking_intermediary_amount ELSE NULL END),0) AS individual_current_year_real_revenue
-        ,MIN(booking.booking_creation_date) AS first_individual_booking_date,
+        ,MIN(booking.booking_creation_date) AS first_individual_booking_date
         ,MAX(booking.booking_creation_date) AS last_individual_booking_date
     FROM
         `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue
@@ -33,14 +33,14 @@ individual_bookings_per_offerer AS (
 
 collective_bookings_per_offerer AS (
     SELECT
-        collective_booking.offerer_id,
+        collective_booking.offerer_id
         ,COUNT(collective_booking.collective_booking_id) AS total_collective_bookings
          ,COUNT(CASE WHEN collective_booking_status NOT IN ('CANCELLED')THEN collective_booking.collective_booking_id ELSE NULL END) AS non_cancelled_collective_bookings
         ,COUNT(CASE WHEN collective_booking_status IN ('USED','REIMBURSED')THEN collective_booking.collective_booking_id ELSE NULL END) AS used_collective_bookings
-        ,COALESCE(SUM(CASE WHEN collective_booking_status NOT IN ('CANCELLED')THEN collective_stock.collective_stock_price ELSE NULL END)),0) AS collective_theoretic_revenue
+        ,COALESCE(SUM(CASE WHEN collective_booking_status NOT IN ('CANCELLED')THEN collective_stock.collective_stock_price ELSE NULL END),0) AS collective_theoretic_revenue
         ,COALESCE(SUM(CASE WHEN collective_booking_status IN ('USED','REIMBURSED') THEN collective_stock.collective_stock_price ELSE NULL END),0) AS collective_real_revenue
         ,COALESCE(SUM(CASE WHEN collective_booking_status IN ('USED','REIMBURSED') AND EXTRACT(YEAR FROM collective_booking.collective_booking_creation_date) = EXTRACT(YEAR FROM current_date) THEN collective_stock.collective_stock_price ELSE NULL END),0) AS collective_current_year_real_revenue
-        ,MIN(collective_booking.collective_booking_creation_date) AS first_collective_booking_date,
+        ,MIN(collective_booking.collective_booking_creation_date) AS first_collective_booking_date
         ,MAX(collective_booking.collective_booking_creation_date) AS last_collective_booking_date
     FROM
         `{{ bigquery_clean_dataset }}`.applicative_database_collective_booking AS collective_booking
@@ -123,7 +123,7 @@ bookable_individual_offer_cnt AS (
     , MAX(partition_date) AS offerer_last_bookable_offer_date
 FROM `{{ bigquery_analytics_dataset }}`.bookable_venue_history
 GROUP BY 1
-)
+),
 
 related_stocks AS (
     SELECT
@@ -173,7 +173,7 @@ venues_with_offers AS (
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON venue.venue_id = offer.venue_id
     GROUP BY
         offerer_id
-        ),
+        )
 
 SELECT
     offerer.offerer_id,
@@ -225,8 +225,12 @@ SELECT
     offerer_department_code.offerer_department_code,
     region_department.region_name AS offerer_region_name,
     offerer.offerer_siren,
+    siren_data.activitePrincipaleUniteLegale AS legal_unit_business_activity_code,
+    label_unite_legale AS legal_unit_business_activity_label,
+    siren_data.categorieJuridiqueUniteLegale AS legal_unit_legal_category_code,
+    label_categorie_juridique AS legal_unit_legal_category_label,
     COALESCE(related_venues.venue_cnt,0) AS venue_cnt,
-    COALESCE(venues_with_offer.nb_venue_with_offers,0) AS venue_with_offer,
+    COALESCE(venues_with_offers.nb_venue_with_offers,0) AS venue_with_offer,
     offerer_humanized_id.humanized_id AS offerer_humanized_id,
 FROM
     `{{ bigquery_clean_dataset }}`.applicative_database_offerer AS offerer
@@ -238,11 +242,14 @@ FROM
     LEFT JOIN offerer_department_code ON offerer_department_code.offerer_id = offerer.offerer_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.region_department AS region_department ON offerer_department_code.offerer_department_code = region_department.num_dep
     LEFT JOIN related_venues ON related_venues.offerer_id = offerer.offerer_id
-    LEFT JOIN venues_with_offer ON venues_with_offer.offerer_id = offerer.offerer_id
+    LEFT JOIN venues_with_offers ON venues_with_offers.offerer_id = offerer.offerer_id
     LEFT JOIN offerer_humanized_id ON offerer_humanized_id.offerer_id = offerer.offerer_id
     LEFT JOIN bookable_individual_offer_cnt ON bookable_individual_offer_cnt.offerer_id = offerer.offerer_id
     LEFT JOIN bookable_collective_offer_cnt ON bookable_collective_offer_cnt.offerer_id = offerer.offerer_id
     LEFT JOIN bookable_offer_history ON bookable_offer_history.offerer_id = offerer.offerer_id
+LEFT JOIN `{{ bigquery_analytics_dataset }}`.siren_data AS siren_data ON siren_data.siren = offerer.offerer_siren
+LEFT JOIN `{{ bigquery_analytics_dataset }}`.siren_data_labels AS siren_data_labels ON siren_data_labels.activitePrincipaleUniteLegale = siren_data.activitePrincipaleUniteLegale
+                                            AND CAST(siren_data_labels.categorieJuridiqueUniteLegale AS STRING) = CAST(siren_data.categorieJuridiqueUniteLegale AS STRING)
 WHERE
     offerer.offerer_validation_status='VALIDATED'
     AND offerer.offerer_is_active;

@@ -111,9 +111,11 @@ workflows:
       #      - Slack
       #    <<: *slack-fail-post-step
 
-      - build_and_deploy_api:
-          name: build_and_deploy_api_staging
+      - build_and_deploy_api_reco:
+          name: build_and_deploy_api_reco_staging
           api-instance-name: apireco-stg
+          requires:
+            - recommendation-api-tests
           filters:
             branches:
               only:
@@ -129,7 +131,7 @@ workflows:
           env: staging
           api_token: $API_TOKEN_STG
           requires:
-            - build_and_deploy_api_staging
+            - build_and_deploy_api_reco_staging
           filters:
             branches:
               only:
@@ -139,8 +141,34 @@ workflows:
             - Slack
           <<: *slack-fail-post-step
 
-      - build_and_deploy_api:
-          name: build_and_deploy_api_production
+      - build_and_deploy_api_papillon:
+          name: build_and_deploy_api_papillon_staging
+          api-instance-name: apipapillon-stg
+          filters:
+            branches:
+              only:
+                - master
+          context:
+            - DATA_GCP
+            - DATA_GCP_EHP
+            - Slack
+          <<: *slack-fail-post-step
+
+      - build_and_deploy_api_papillon:
+          name: build_and_deploy_api_papillon_production
+          api-instance-name: apipapillon-prod
+          filters:
+            branches:
+              only:
+                - production
+          context:
+            - DATA_GCP
+            - DATA_GCP_EHP
+            - Slack
+          <<: *slack-fail-post-step
+
+      - build_and_deploy_api_reco:
+          name: build_and_deploy_api_reco_production
           api-instance-name: apireco-prod
           requires:
             - recommendation-api-tests
@@ -160,7 +188,7 @@ workflows:
           env: production
           api_token: $API_TOKEN_PROD
           requires:
-            - build_and_deploy_api_production
+            - build_and_deploy_api_reco_production
           filters:
             branches:
               only:
@@ -201,7 +229,6 @@ workflows:
             - DATA_GCP
             - DATA_GCP_EHP
           <<: *slack-fail-post-step
-
       # Composer jobs
       # -------------
       - orchestration-install:
@@ -648,6 +675,7 @@ workflows:
           requires:
             - production-composer-deploy
             - api-integration-tests-prod
+            - build_and_deploy_api_papillon_production
             - addresses-cloud-function-deploy-prod
             - downloads-cloud-function-deploy-prod
             - qualtrics-cloud-function-deploy-prod
@@ -672,6 +700,7 @@ workflows:
           requires:
             - staging-composer-deploy
             - api-integration-tests-staging
+            - build_and_deploy_api_papillon_staging
             - addresses-cloud-function-deploy-stg
             - downloads-cloud-function-deploy-stg
             - qualtrics-cloud-function-deploy-stg
@@ -754,11 +783,15 @@ workflows:
           cloud-function-name: cold_data_dev
           cloud-function-folder: jobs/etl_jobs/internal/cold-data
           <<: *deploy_on_dev_commons
-      - build_and_deploy_api:
-          name: build_and_deploy_api_dev
+      - build_and_deploy_api_reco:
+          name: build_and_deploy_api_reco_dev
           api-instance-name: apireco-dev
           <<: *deploy_on_dev_commons
-         ### temporarily removing api reco tests ###
+      - build_and_deploy_api_papillon:
+          name: build_and_deploy_api_papillon_dev
+          api-instance-name: apipapillon-dev
+          <<: *deploy_on_dev_commons
+### temporarily removing api reco tests ###
 #      - api-integration-tests:
 #          env: dev
 #          api_token: $API_TOKEN_DEV
@@ -770,7 +803,7 @@ workflows:
 #            - contentful-cloud-function-deploy-dev
 #            - siren-cloud-function-deploy-dev
 #            - dms-cloud-function-deploy-dev
-#            - build_and_deploy_api_dev
+#            - build_and_deploy_api_reco_dev
 #            - adage-import-function-deploy-dev
 #          context:
 #            - DATA_GCP_DEV
@@ -789,7 +822,8 @@ workflows:
             - contentful-cloud-function-deploy-dev
             - siren-cloud-function-deploy-dev
             - dms-cloud-function-deploy-dev
-            - build_and_deploy_api_dev
+            - build_and_deploy_api_reco_dev
+            - build_and_deploy_api_papillon_dev
             - adage-import-function-deploy-dev
             - typeform-adage-reference-request-dev
             - metabase-archiving-dev
@@ -1112,12 +1146,12 @@ jobs:
             ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} airflow_monitoring 6 10
 
 
-  build_and_deploy_api:
+  build_and_deploy_api_reco:
     docker:
       - image: "cimg/base:stable"
     parameters:
       api-instance-name:
-        description: "API instance name"
+        description: "API recommendation"
         type: string
     working_directory: ~/data-gcp/apps/recommendation/api
     steps:
@@ -1128,6 +1162,34 @@ jobs:
           tag: "eu.gcr.io/${GOOGLE_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}/<< parameters.api-instance-name >>:${CIRCLE_SHA1}"
       - run:
           name: Apply latest tag
+          command: |
+            gcloud container images add-tag \
+            eu.gcr.io/${GOOGLE_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}/<< parameters.api-instance-name >>:${CIRCLE_SHA1} \
+            eu.gcr.io/${GOOGLE_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}/<< parameters.api-instance-name >>:latest
+      - cloudrun/deploy:
+          image: "eu.gcr.io/${GOOGLE_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}/<< parameters.api-instance-name >>:${CIRCLE_SHA1}"
+          platform: managed
+          region: europe-west1
+          service-name: << parameters.api-instance-name >>
+          unauthenticated: true
+
+  build_and_deploy_api_papillon:
+    docker:
+      - image: "cimg/base:stable"
+    parameters:
+      api-instance-name:
+        description: "API papillon"
+        type: string
+    working_directory: ~/data-gcp/apps/fraud/compliance/api
+    steps:
+      - checkout:
+          path: ~/data-gcp
+      - cloudrun/init
+      - cloudrun/build:
+          tag: "eu.gcr.io/${GOOGLE_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}/<< parameters.api-instance-name >>:${CIRCLE_SHA1}"
+      - run:
+          name: Apply latest tag
+          no_output_timeout: 30m
           command: |
             gcloud container images add-tag \
             eu.gcr.io/${GOOGLE_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}/<< parameters.api-instance-name >>:${CIRCLE_SHA1} \

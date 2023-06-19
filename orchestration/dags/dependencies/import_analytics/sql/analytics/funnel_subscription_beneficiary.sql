@@ -102,14 +102,15 @@ SELECT
   first_open.user_pseudo_id
   ,first_login.user_id
   ,uat.appsflyer_id
-  ,CASE WHEN first_open.user_pseudo_id IN (SELECT * FROM accepted_cookies) THEN 1 ELSE 0 END AS has_accepted_app_cookies
-  ,CASE WHEN uat.appsflyer_id IS NULL THEN 0 ELSE 1 END AS has_accepted_tracking
+  ,CASE WHEN first_open.user_pseudo_id IN (SELECT * FROM accepted_cookies) THEN true ELSE false END AS has_accepted_app_cookies
+  ,CASE WHEN uat.appsflyer_id IS NULL THEN false ELSE true END AS has_accepted_tracking
   ,user_first_deposit_type
   ,first_open.platform
 -- certains utilisateurs s'étant déjà inscrits téléchargent l'app sur un autre device et donc créent un nouveau user_pseudo_id, la query suivante permet d'identifier ceux qui se loguent pour la première fois 
-  ,CASE WHEN first_login.first_login_date IS NOT NULL AND signup_started.signup_started_date IS NULL THEN 0
-        WHEN signup_completed.signup_completed_date IS NOT NULL AND signup_started.signup_started_date IS NULL THEN 0
-        ELSE 1 END 
+  ,CASE WHEN first_login.first_login_date IS NOT NULL AND signup_started.signup_started_date IS NULL THEN false
+        WHEN signup_completed.signup_completed_date IS NOT NULL AND signup_started.signup_started_date IS NULL THEN false
+        WHEN u.user_deposit_creation_date < onboarding_started.onboarding_started_date THEN false
+        ELSE true END 
     AS is_first_device_connected
   ,first_open.first_open_date
   ,onboarding_started.onboarding_started_date

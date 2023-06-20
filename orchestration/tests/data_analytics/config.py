@@ -565,7 +565,7 @@ BIGQUERY_SCHEMAS = {
     "siren_data_labels": {
         "activitePrincipaleUniteLegale": "STRING",
         "label_unite_legale": "STRING",
-        "categorieJuridiqueUniteLegale": "FLOAT",
+        "categorieJuridiqueUniteLegale": "INT64",
         "label_categorie_juridique": "STRING",
     },
     "applicative_database_offerer_tag_mapping": {

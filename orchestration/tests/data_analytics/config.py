@@ -599,4 +599,9 @@ BIGQUERY_SCHEMAS = {
         "offer_external_ticket_office_url": "STRING",
         "offerer_id": "STRING",
     },
+    "bookable_collective_offer": {
+        "collective_offer_id": "STRING",
+        "venue_id": "STRING",
+        "offerer_id": "STRING",
+    },
 }

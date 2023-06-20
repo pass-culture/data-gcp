@@ -1008,8 +1008,6 @@ ENRICHED_VENUE_DATA_INPUT = {
         {
             "offer_id": "1",
             "stock_id": "1",
-            "offer_subcategoryId": "SEANCE_CINE",
-            "booking_email": "test@example.com",
             "stock_creation_date": datetime.now().replace(microsecond=0),
         }
     ],

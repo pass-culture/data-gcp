@@ -1009,10 +1009,11 @@ ENRICHED_VENUE_DATA_INPUT = {
         {"collective_offer_id": "1", "venue_id": "1"}
     ],
     "applicative_database_collective_stock": [
-        {"collective_offer_id": "1",
-         "collective_stock_id": "1",
-         "collective_stock_price": 5,
-         }
+        {
+            "collective_offer_id": "1",
+            "collective_stock_id": "1",
+            "collective_stock_price": 5,
+        }
     ],
     "applicative_database_collective_offer_template": [
         {"collective_offer_id": "1", "venue_id": "1"}
@@ -1169,16 +1170,18 @@ ENRICHED_OFFERER_DATA_INPUT = {
         }
     ],
     "applicative_database_collective_offer": [
-        {"collective_offer_id": "1",
-         "venue_id": "1",
-         "collective_offer_creation_date":datetime.now().replace(microsecond=0),}
+        {
+            "collective_offer_id": "1",
+            "venue_id": "1",
+            "collective_offer_creation_date": datetime.now().replace(microsecond=0),
+        }
     ],
     "applicative_database_collective_offer_template": [],
     "applicative_database_collective_stock": [
         {
             "collective_offer_id": "1",
-             "collective_stock_id": "1",
-             "collective_stock_price": 5,
+            "collective_stock_id": "1",
+            "collective_stock_price": 5,
         }
     ],
     "applicative_database_venue": [{"venue_id": "1", "venue_managing_offerer_id": "1"}],
@@ -1190,8 +1193,8 @@ ENRICHED_OFFERER_DATA_INPUT = {
     "siren_data": [
         {
             "siren": "123456789",
-             "activitePrincipaleUniteLegale": "84.11Z",
-             "categorieJuridiqueUniteLegale": "223.2",
+            "activitePrincipaleUniteLegale": "84.11Z",
+            "categorieJuridiqueUniteLegale": "223.2",
         }
     ],
     "siren_data_labels": [
@@ -1211,10 +1214,18 @@ ENRICHED_OFFERER_DATA_EXPECTED = [
         "offerer_creation_date": datetime.now().replace(microsecond=0),
         "offerer_validation_date": datetime.now().replace(microsecond=0),
         "first_stock_creation_date": datetime.now().replace(microsecond=0),
-        "offerer_first_individual_offer_creation_date": datetime.now().replace(microsecond=0),
-        "offerer_last_individual_offer_creation_date": datetime.now().replace(microsecond=0),
-        "offerer_first_collective_offer_creation_date": datetime.now().replace(microsecond=0),
-        "offerer_last_collective_offer_creation_date": datetime.now().replace(microsecond=0),
+        "offerer_first_individual_offer_creation_date": datetime.now().replace(
+            microsecond=0
+        ),
+        "offerer_last_individual_offer_creation_date": datetime.now().replace(
+            microsecond=0
+        ),
+        "offerer_first_collective_offer_creation_date": datetime.now().replace(
+            microsecond=0
+        ),
+        "offerer_last_collective_offer_creation_date": datetime.now().replace(
+            microsecond=0
+        ),
         "offerer_first_offer_creation_date": datetime.now().replace(microsecond=0),
         "offerer_last_offer_creation_date": datetime.now().replace(microsecond=0),
         "offerer_first_bookable_offer_date": None,

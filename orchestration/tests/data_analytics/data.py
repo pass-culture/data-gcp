@@ -1007,6 +1007,7 @@ ENRICHED_VENUE_DATA_INPUT = {
     "applicative_database_stock": [
         {
             "offer_id": "1",
+            "stock_id": "1",
             "venue_id": "1",
             "offer_subcategoryId": "SEANCE_CINE",
             "booking_email": "test@example.com",

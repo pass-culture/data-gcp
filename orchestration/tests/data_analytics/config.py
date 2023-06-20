@@ -560,6 +560,13 @@ BIGQUERY_SCHEMAS = {
     "siren_data": {
         "siren": "STRING",
         "activitePrincipaleUniteLegale": "STRING",
+        "categorieJuridiqueUniteLegale": "STRING",
+    },
+    "siren_data_labels": {
+        "activitePrincipaleUniteLegale": "STRING",
+        "label_unite_legale": "STRING",
+        "categorieJuridiqueUniteLegale": "FLOAT",
+        "label_categorie_juridique": "STRING",
     },
     "applicative_database_offerer_tag_mapping": {
         "offerer_id": "STRING",

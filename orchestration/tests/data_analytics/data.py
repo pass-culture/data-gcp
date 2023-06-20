@@ -999,6 +999,13 @@ ENRICHED_VENUE_DATA_INPUT = {
     "applicative_database_offer": [
         {
             "offer_id": "1",
+            "stock_id": "1",
+            "stock_creation_date": datetime.now().replace(microsecond=0),
+        }
+    ],
+    "applicative_database_stock": [
+        {
+            "offer_id": "1",
             "venue_id": "1",
             "offer_subcategoryId": "SEANCE_CINE",
             "booking_email": "test@example.com",
@@ -1006,7 +1013,11 @@ ENRICHED_VENUE_DATA_INPUT = {
         }
     ],
     "applicative_database_collective_offer": [
-        {"collective_offer_id": "1", "venue_id": "1"}
+        {
+            "collective_offer_id": "1",
+            "venue_id": "1",
+            "collective_offer_creation_date": datetime.now().replace(microsecond=0),
+        },
     ],
     "applicative_database_collective_stock": [
         {
@@ -1016,7 +1027,11 @@ ENRICHED_VENUE_DATA_INPUT = {
         }
     ],
     "applicative_database_collective_offer_template": [
-        {"collective_offer_id": "1", "venue_id": "1"}
+        {
+            "collective_offer_id": "2",
+            "venue_id": "1",
+            "collective_offer_creation_date": datetime.now().replace(microsecond=0),
+        }
     ],
     "bookable_collective_offer": [],
     "bookable_venue_history": [],
@@ -1149,7 +1164,13 @@ ENRICHED_OFFERER_DATA_INPUT = {
             "collective_booking_creation_date": datetime.now().replace(microsecond=0),
         }
     ],
-    "applicative_database_offer": [{"offer_id": "1", "venue_id": "1"}],
+    "applicative_database_offer": [
+        {
+            "offer_id": "1",
+            "venue_id": "1",
+            "offer_creation_date": datetime.now().replace(microsecond=0),
+        }
+    ],
     "applicative_database_offerer": [
         {
             "offerer_id": "1",

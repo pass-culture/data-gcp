@@ -986,7 +986,7 @@ ENRICHED_VENUE_DATA_INPUT = {
             "booking_creation_date": datetime.now().replace(microsecond=0),
         }
     ],
-    "collective_booking": [
+    "applicative_database_collective_booking": [
         {
             "collective_booking_id": "1",
             "collective_stock_id": "1",
@@ -1140,7 +1140,7 @@ ENRICHED_OFFERER_DATA_INPUT = {
             "booking_amount": 2,
         }
     ],
-    "collective_booking": [
+    "applicative_database_collective_booking": [
         {
             "collective_booking_id": "1",
             "collective_stock_id": "1",

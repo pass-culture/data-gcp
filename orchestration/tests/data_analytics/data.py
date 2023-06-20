@@ -1000,8 +1000,8 @@ ENRICHED_VENUE_DATA_INPUT = {
     "applicative_database_offer": [
         {
             "offer_id": "1",
-            "stock_id": "1",
             "stock_creation_date": datetime.now().replace(microsecond=0),
+            "venue_id": "1",
         }
     ],
     "applicative_database_stock": [

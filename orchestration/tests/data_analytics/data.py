@@ -986,26 +986,58 @@ ENRICHED_VENUE_DATA_INPUT = {
             "booking_is_used": True,
             "booking_amount": 2,
             "booking_quantity": 1,
+            "booking_intermediary_amount": 2,
             "booking_is_cancelled": False,
             "booking_creation_date": datetime.now().replace(microsecond=0),
+        }
+    ],
+    "applicative_database_collective_booking": [
+        {
+            "collective_booking_id": "1",
+            "collective_stock_id": "1",
+            "collective_booking_status": "USED",
+            "venue_id": "1",
+            "collective_booking_creation_date": datetime.now().replace(microsecond=0),
         }
     ],
     "applicative_database_favorite": [],
     "applicative_database_offer": [
         {
             "offer_id": "1",
-            "venue_id": "1",
-            "offer_subcategoryId": "SEANCE_CINE",
-            "booking_email": "test@example.com",
             "offer_creation_date": datetime.now().replace(microsecond=0),
+            "venue_id": "1",
+        }
+    ],
+    "applicative_database_stock": [
+        {
+            "offer_id": "1",
+            "stock_id": "1",
+            "stock_creation_date": datetime.now().replace(microsecond=0),
         }
     ],
     "applicative_database_collective_offer": [
-        {"collective_offer_id": "1", "venue_id": "1"}
+        {
+            "collective_offer_id": "1",
+            "venue_id": "1",
+            "collective_offer_creation_date": datetime.now().replace(microsecond=0),
+        },
+    ],
+    "applicative_database_collective_stock": [
+        {
+            "collective_offer_id": "1",
+            "collective_stock_id": "1",
+            "collective_stock_price": 5,
+        }
     ],
     "applicative_database_collective_offer_template": [
-        {"collective_offer_id": "1", "venue_id": "1"}
+        {
+            "collective_offer_id": "2",
+            "venue_id": "1",
+            "collective_offer_creation_date": datetime.now().replace(microsecond=0),
+        }
     ],
+    "bookable_collective_offer": [],
+    "bookable_venue_history": [],
     "bookable_offer": [
         {
             "offer_id": "1",
@@ -1023,7 +1055,6 @@ ENRICHED_VENUE_DATA_INPUT = {
     ],
     "applicative_database_payment": [],
     "applicative_database_payment_status": [],
-    "applicative_database_stock": [{"stock_id": "1", "offer_id": "1"}],
     "applicative_database_venue": [
         {
             "venue_id": "1",
@@ -1072,20 +1103,40 @@ ENRICHED_VENUE_DATA_EXPECTED = [
         "offerer_validation_status": "VALIDATED",
         "venue_type_label": "Librairie",
         "venue_label": "an other label",
-        "total_bookings": 1,
-        "non_cancelled_bookings": 1,
-        "used_bookings": 1,
+        "total_bookings": 2,
+        "non_cancelled_individual_bookings": 1,
+        "non_cancelled_collective_bookings": 1,
+        "first_individual_booking_date": datetime.now().replace(microsecond=0),
+        "last_individual_booking_date": datetime.now().replace(microsecond=0),
+        "first_collective_booking_date": datetime.now().replace(microsecond=0),
+        "last_collective_booking_date": datetime.now().replace(microsecond=0),
+        "non_cancelled_bookings": 2,
+        "used_bookings": 2,
+        "used_individual_bookings": 1,
+        "used_collective_bookings": 1,
+        "individual_theoretic_revenue": 2,
+        "individual_real_revenue": 2,
+        "collective_theoretic_revenue": 5,
+        "collective_real_revenue": 5,
+        "first_individual_offer_creation_date": datetime.now().replace(microsecond=0),
+        "last_individual_offer_creation_date": datetime.now().replace(microsecond=0),
+        "first_collective_offer_creation_date": datetime.now().replace(microsecond=0),
+        "last_collective_offer_creation_date": datetime.now().replace(microsecond=0),
         "first_offer_creation_date": datetime.now().replace(microsecond=0),
         "last_offer_creation_date": datetime.now().replace(microsecond=0),
         "first_booking_date": datetime.now().replace(microsecond=0),
         "last_booking_date": datetime.now().replace(microsecond=0),
         "individual_offers_created": 1,
         "collective_offers_created": 2,
+        "total_offers_created": 3,
+        "venue_first_bookable_offer_date": None,
+        "venue_last_bookable_offer_date": None,
+        "venue_bookable_individual_offer_cnt": 1,
+        "venue_bookable_collective_offer_cnt": 0,
         "venue_bookable_offer_cnt": 1,
-        "theoretic_revenue": 2,
-        "real_revenue": 2,
+        "theoretic_revenue": 7,
+        "real_revenue": 7,
         "venue_humanized_id": "AE",
-        "venue_flaskadmin_link": "https://backend.passculture.pro/pc/back-office/venue/edit/?id=1&url=%2Fpc%2Fback-office%2Fvenue%2F",
         "venue_backofficev3_link": "https://backoffice.passculture.team/pro/venue/1",
         "venue_region_name": "IDF",
         "venue_pc_pro_link": "https://passculture.pro/structures/AE/lieux/AE",
@@ -1104,9 +1155,25 @@ ENRICHED_OFFERER_DATA_INPUT = {
             "booking_is_used": True,
             "booking_quantity": 1,
             "booking_amount": 2,
+            "booking_intermediary_amount": 2,
         }
     ],
-    "applicative_database_offer": [{"offer_id": "1", "venue_id": "1"}],
+    "applicative_database_collective_booking": [
+        {
+            "collective_booking_id": "1",
+            "collective_stock_id": "1",
+            "collective_booking_status": "USED",
+            "offerer_id": "1",
+            "collective_booking_creation_date": datetime.now().replace(microsecond=0),
+        }
+    ],
+    "applicative_database_offer": [
+        {
+            "offer_id": "1",
+            "venue_id": "1",
+            "offer_creation_date": datetime.now().replace(microsecond=0),
+        }
+    ],
     "applicative_database_offerer": [
         {
             "offerer_id": "1",
@@ -1126,10 +1193,42 @@ ENRICHED_OFFERER_DATA_INPUT = {
             "stock_creation_date": datetime.now().replace(microsecond=0),
         }
     ],
+    "applicative_database_collective_offer": [
+        {
+            "collective_offer_id": "1",
+            "venue_id": "1",
+            "collective_offer_creation_date": datetime.now().replace(microsecond=0),
+        }
+    ],
+    "applicative_database_collective_offer_template": [],
+    "applicative_database_collective_stock": [
+        {
+            "collective_offer_id": "1",
+            "collective_stock_id": "1",
+            "collective_stock_price": 5,
+        }
+    ],
     "applicative_database_venue": [{"venue_id": "1", "venue_managing_offerer_id": "1"}],
     "applicative_database_venue_label": [],
     "region_department": [{"num_dep": "973", "region_name": "Guyane"}],
     "bookable_offer": [{"offer_id": 1, "offerer_id": 1}],
+    "bookable_collective_offer": [],
+    "bookable_venue_history": [],
+    "siren_data": [
+        {
+            "siren": "123456789",
+            "activitePrincipaleUniteLegale": "84.11Z",
+            "categorieJuridiqueUniteLegale": "2232",
+        }
+    ],
+    "siren_data_labels": [
+        {
+            "activitePrincipaleUniteLegale": "84.11Z",
+            "label_unite_legale": "Administration generale",
+            "categorieJuridiqueUniteLegale": 2232,
+            "label_categorie_juridique": "Collectivite",
+        }
+    ],
 }
 
 ENRICHED_OFFERER_DATA_EXPECTED = [
@@ -1139,17 +1238,57 @@ ENRICHED_OFFERER_DATA_EXPECTED = [
         "offerer_creation_date": datetime.now().replace(microsecond=0),
         "offerer_validation_date": datetime.now().replace(microsecond=0),
         "first_stock_creation_date": datetime.now().replace(microsecond=0),
+        "offerer_first_individual_offer_creation_date": datetime.now().replace(
+            microsecond=0
+        ),
+        "offerer_last_individual_offer_creation_date": datetime.now().replace(
+            microsecond=0
+        ),
+        "offerer_first_collective_offer_creation_date": datetime.now().replace(
+            microsecond=0
+        ),
+        "offerer_last_collective_offer_creation_date": datetime.now().replace(
+            microsecond=0
+        ),
+        "offerer_first_offer_creation_date": datetime.now().replace(microsecond=0),
+        "offerer_last_offer_creation_date": datetime.now().replace(microsecond=0),
+        "offerer_first_bookable_offer_date": None,
+        "offerer_last_bookable_offer_date": None,
+        "offerer_first_individual_booking_date": datetime.now().replace(microsecond=0),
+        "offerer_last_individual_booking_date": datetime.now().replace(microsecond=0),
+        "offerer_first_collective_booking_date": datetime.now().replace(microsecond=0),
+        "offerer_last_collective_booking_date": datetime.now().replace(microsecond=0),
         "first_booking_date": datetime.now().replace(microsecond=0),
-        "offer_cnt": 1,
+        "offerer_last_booking_date": datetime.now().replace(microsecond=0),
+        "offerer_individual_offers_created": 1,
+        "offerer_collective_offers_created": 1,
+        "offer_cnt": 2,
+        "offerer_bookable_individual_offer_cnt": 1,
+        "offerer_bookable_collective_offer_cnt": 0,
         "offerer_bookable_offer_cnt": 1,
-        "no_cancelled_booking_cnt": 1,
+        "offerer_non_cancelled_individual_bookings": 1,
+        "offerer_non_cancelled_collective_bookings": 1,
+        "no_cancelled_booking_cnt": 2,
+        "offerer_used_bookings": 2,
+        "offerer_used_individual_bookings": 1,
+        "offerer_used_collective_bookings": 1,
+        "offerer_individual_theoretic_revenue": 2,
+        "offerer_individual_real_revenue": 2,
+        "offerer_collective_theoretic_revenue": 5,
+        "offerer_collective_real_revenue": 5,
+        "offerer_theoretic_revenue": 7,
+        "offerer_real_revenue": 7,
         "offerer_department_code": "973",
         "offerer_region_name": "Guyane",
         "offerer_siren": "123456789",
+        "legal_unit_business_activity_code": "84.11Z",
+        "legal_unit_business_activity_label": "Administration generale",
+        "legal_unit_legal_category_code": "2232",
+        "legal_unit_legal_category_label": "Collectivite",
         "venue_cnt": 1,
         "venue_with_offer": 1,
         "offerer_humanized_id": "AE",
-        "current_year_revenue": 2,
+        "current_year_revenue": 7,
     }
 ]
 

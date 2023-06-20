@@ -560,6 +560,13 @@ BIGQUERY_SCHEMAS = {
     "siren_data": {
         "siren": "STRING",
         "activitePrincipaleUniteLegale": "STRING",
+        "categorieJuridiqueUniteLegale": "STRING",
+    },
+    "siren_data_labels": {
+        "activitePrincipaleUniteLegale": "STRING",
+        "label_unite_legale": "STRING",
+        "categorieJuridiqueUniteLegale": "INT64",
+        "label_categorie_juridique": "STRING",
     },
     "applicative_database_offerer_tag_mapping": {
         "offerer_id": "STRING",
@@ -598,5 +605,18 @@ BIGQUERY_SCHEMAS = {
         "offer_withdrawal_type": "STRING",
         "offer_external_ticket_office_url": "STRING",
         "offerer_id": "STRING",
+    },
+    "bookable_collective_offer": {
+        "collective_offer_id": "STRING",
+        "venue_id": "STRING",
+        "offerer_id": "STRING",
+    },
+    "bookable_venue_history": {
+        "venue_id": "STRING",
+        "offerer_id": "STRING",
+        "partition_date": "DATETIME",
+        "individual_bookable_offers": "INT64",
+        "collective_bookable_offers": "INT64",
+        "total_bookable_offers": "INT64",
     },
 }

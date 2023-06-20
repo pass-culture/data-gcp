@@ -77,20 +77,20 @@ WITH individual_bookings AS (
     ,1 AS partner_count
     ,CASE WHEN (DATE_DIFF(CURRENT_DATE,last_bookable_individual_offer,DAY) <= 30 OR DATE_DIFF(CURRENT_DATE,last_bookable_collective_offer,DAY) <= 30)
         THEN TRUE ELSE FALSE END AS is_active_last_30days
-    ,CASE WHEN (DATE_DIFF(CURRENT_DATE,last_individual_offer_creation_date,YEAR) = 0 OR DATE_DIFF(CURRENT_DATE,last_bookable_collective_offer,YEAR) = 0)
+    ,CASE WHEN (DATE_DIFF(CURRENT_DATE,enriched_venue_data.last_individual_offer_creation_date,YEAR) = 0 OR DATE_DIFF(CURRENT_DATE,last_bookable_collective_offer,YEAR) = 0)
         THEN TRUE ELSE FALSE END AS is_active_current_year
     ,COALESCE(collective_offers.collective_offers_created,0) AS collective_offers_created
     ,COALESCE(individual_offers.individual_offers_created,0) AS individual_offers_created
     ,(COALESCE(collective_offers.collective_offers_created,0) + COALESCE(individual_offers.individual_offers_created,0)) AS total_offers_created
     ,last_bookable_individual_offer
     ,last_bookable_collective_offer
-    ,COALESCE(non_cancelled_individual_bookings,0) AS non_cancelled_individual_bookings
-    ,COALESCE(used_individual_bookings,0) AS used_individual_bookings
-    ,COALESCE(confirmed_collective_bookings,0) AS confirmed_collective_bookings
-    ,COALESCE(used_collective_bookings,0) AS used_collective_bookings
-    ,COALESCE(real_individual_revenue,0) AS real_individual_revenue
-    ,COALESCE(real_collective_revenue,0) AS real_collective_revenue
-    ,(COALESCE(real_individual_revenue,0)+COALESCE(real_collective_revenue,0)) AS total_real_revenue
+    ,COALESCE(enriched_venue_data.non_cancelled_individual_bookings,0) AS non_cancelled_individual_bookings
+    ,COALESCE(enriched_venue_data.used_individual_bookings,0) AS used_individual_bookings
+    ,COALESCE(enriched_venue_data.non_cancelled_collective_bookings,0) AS confirmed_collective_bookings
+    ,COALESCE(enriched_venue_data.used_collective_bookings,0) AS used_collective_bookings
+    ,COALESCE(enriched_venue_data.individual_real_revenue,0) AS real_individual_revenue
+    ,COALESCE(enriched_venue_data.collective_real_revenue,0) AS real_collective_revenue
+    ,(COALESCE(enriched_venue_data.individual_real_revenue,0)+COALESCE(collective_real_revenue,0)) AS total_real_revenue
 FROM `{{ bigquery_analytics_dataset }}`.enriched_venue_data AS enriched_venue_data
 LEFT JOIN `{{ bigquery_analytics_dataset }}`.region_department AS region_department
     ON enriched_venue_data.venue_department_code = region_department.num_dep
@@ -140,10 +140,10 @@ SELECT
     ,(SUM(COALESCE(individual_offers.individual_offers_created,0))+SUM(COALESCE(collective_offers.collective_offers_created,0))) AS total_offers_created
     ,MAX(last_bookable_individual_offer) AS last_bookable_individual_offer
     ,MAX(last_bookable_collective_offer) AS last_bookable_collective_offer
-    ,SUM(COALESCE(non_cancelled_individual_bookings,0)) AS non_cancelled_individual_bookings
-    ,SUM(COALESCE(used_individual_bookings,0)) AS used_individual_bookings
-    ,SUM(COALESCE(confirmed_collective_bookings,0)) AS confirmed_collective_bookings
-    ,SUM(COALESCE(used_collective_bookings,0)) AS used_collective_bookings
+    ,SUM(COALESCE(enriched_venue_data.non_cancelled_individual_bookings,0)) AS non_cancelled_individual_bookings
+    ,SUM(COALESCE(enriched_venue_data.used_individual_bookings,0)) AS used_individual_bookings
+    ,SUM(COALESCE(enriched_venue_data.non_cancelled_collective_bookings,0)) AS confirmed_collective_bookings
+    ,SUM(COALESCE(enriched_venue_data.used_collective_bookings,0)) AS used_collective_bookings
     ,SUM(COALESCE(real_individual_revenue,0)) AS real_individual_revenue
     ,SUM(COALESCE(real_collective_revenue,0)) AS real_collective_revenue
     ,(SUM(COALESCE(real_individual_revenue,0))+SUM(COALESCE(real_individual_revenue,0))) AS total_real_revenue

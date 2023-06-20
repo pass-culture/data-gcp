@@ -1215,14 +1215,14 @@ ENRICHED_OFFERER_DATA_INPUT = {
         {
             "siren": "123456789",
             "activitePrincipaleUniteLegale": "84.11Z",
-            "categorieJuridiqueUniteLegale": "223.2",
+            "categorieJuridiqueUniteLegale": 2232,
         }
     ],
     "siren_data_labels": [
         {
             "activitePrincipaleUniteLegale": "84.11Z",
             "label_unite_legale": "Administration generale",
-            "categorieJuridiqueUniteLegale": 223.2,
+            "categorieJuridiqueUniteLegale": 2232,
             "label_categorie_juridique": "Collectivite",
         }
     ],

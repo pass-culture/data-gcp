@@ -1171,6 +1171,13 @@ ENRICHED_OFFERER_DATA_INPUT = {
             "offer_creation_date": datetime.now().replace(microsecond=0),
         }
     ],
+    "applicative_database_stock": [
+        {
+            "offer_id": "1",
+            "stock_id": "1",
+            "stock_creation_date": datetime.now().replace(microsecond=0),
+        }
+    ],
     "applicative_database_offerer": [
         {
             "offerer_id": "1",
@@ -1280,7 +1287,7 @@ ENRICHED_OFFERER_DATA_EXPECTED = [
         "offerer_siren": "123456789",
         "legal_unit_business_activity_code": "84.11Z",
         "legal_unit_business_activity_label": "Administration generale",
-        "legal_unit_legal_category_code": "223.2",
+        "legal_unit_legal_category_code": 2232,
         "legal_unit_legal_category_label": "Collectivite",
         "venue_cnt": 1,
         "venue_with_offer": 1,

@@ -1282,7 +1282,7 @@ ENRICHED_OFFERER_DATA_EXPECTED = [
         "offerer_siren": "123456789",
         "legal_unit_business_activity_code": "84.11Z",
         "legal_unit_business_activity_label": "Administration generale",
-        "legal_unit_legal_category_code": "2232"",
+        "legal_unit_legal_category_code": "2232",
         "legal_unit_legal_category_label": "Collectivite",
         "venue_cnt": 1,
         "venue_with_offer": 1,

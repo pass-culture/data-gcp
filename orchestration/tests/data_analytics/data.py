@@ -982,6 +982,7 @@ ENRICHED_VENUE_DATA_INPUT = {
             "booking_is_used": True,
             "booking_amount": 2,
             "booking_quantity": 1,
+            "booking_intermediary_amount": 2,
             "booking_is_cancelled": False,
             "booking_creation_date": datetime.now().replace(microsecond=0),
         }
@@ -1153,6 +1154,7 @@ ENRICHED_OFFERER_DATA_INPUT = {
             "booking_is_used": True,
             "booking_quantity": 1,
             "booking_amount": 2,
+            "booking_intermediary_amount": 2,
         }
     ],
     "applicative_database_collective_booking": [
@@ -1169,13 +1171,6 @@ ENRICHED_OFFERER_DATA_INPUT = {
             "offer_id": "1",
             "venue_id": "1",
             "offer_creation_date": datetime.now().replace(microsecond=0),
-        }
-    ],
-    "applicative_database_stock": [
-        {
-            "offer_id": "1",
-            "stock_id": "1",
-            "stock_creation_date": datetime.now().replace(microsecond=0),
         }
     ],
     "applicative_database_offerer": [
@@ -1222,7 +1217,7 @@ ENRICHED_OFFERER_DATA_INPUT = {
         {
             "siren": "123456789",
             "activitePrincipaleUniteLegale": "84.11Z",
-            "categorieJuridiqueUniteLegale": 2232,
+            "categorieJuridiqueUniteLegale": "2232",
         }
     ],
     "siren_data_labels": [
@@ -1287,7 +1282,7 @@ ENRICHED_OFFERER_DATA_EXPECTED = [
         "offerer_siren": "123456789",
         "legal_unit_business_activity_code": "84.11Z",
         "legal_unit_business_activity_label": "Administration generale",
-        "legal_unit_legal_category_code": 2232,
+        "legal_unit_legal_category_code": "2232"",
         "legal_unit_legal_category_label": "Collectivite",
         "venue_cnt": 1,
         "venue_with_offer": 1,

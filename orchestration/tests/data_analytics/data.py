@@ -1000,7 +1000,7 @@ ENRICHED_VENUE_DATA_INPUT = {
     "applicative_database_offer": [
         {
             "offer_id": "1",
-            "stock_creation_date": datetime.now().replace(microsecond=0),
+            "offer_creation_date": datetime.now().replace(microsecond=0),
             "venue_id": "1",
         }
     ],
@@ -1011,7 +1011,7 @@ ENRICHED_VENUE_DATA_INPUT = {
             "venue_id": "1",
             "offer_subcategoryId": "SEANCE_CINE",
             "booking_email": "test@example.com",
-            "offer_creation_date": datetime.now().replace(microsecond=0),
+            "stock_creation_date": datetime.now().replace(microsecond=0),
         }
     ],
     "applicative_database_collective_offer": [
@@ -1054,7 +1054,6 @@ ENRICHED_VENUE_DATA_INPUT = {
     ],
     "applicative_database_payment": [],
     "applicative_database_payment_status": [],
-    "applicative_database_stock": [{"stock_id": "1", "offer_id": "1"}],
     "applicative_database_venue": [
         {
             "venue_id": "1",

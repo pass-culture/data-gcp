@@ -109,7 +109,7 @@ SELECT
 -- certains utilisateurs s'étant déjà inscrits téléchargent l'app sur un autre device et donc créent un nouveau user_pseudo_id, la query suivante permet d'identifier ceux qui se loguent pour la première fois 
   ,CASE WHEN first_login.first_login_date IS NOT NULL AND signup_started.signup_started_date IS NULL THEN false
         WHEN signup_completed.signup_completed_date IS NOT NULL AND signup_started.signup_started_date IS NULL THEN false
-        WHEN u.user_deposit_creation_date < onboarding_started.onboarding_started_date THEN false
+        WHEN TIMESTAMP(u.user_deposit_creation_date) < onboarding_started.onboarding_started_date THEN false
         ELSE true END 
     AS is_first_device_connected
   ,first_open.first_open_date

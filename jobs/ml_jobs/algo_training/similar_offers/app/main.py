@@ -16,7 +16,9 @@ def load_model():
     embedding_item_model = tf_reco.item_layer.layers[1].get_weights()
     model_weights = embedding_item_model[0]
     distance = len(model_weights[0])
-    index = faiss.IndexFlatL2(distance)
+    quantizer = faiss.IndexFlatL2(distance)
+    index = faiss.IndexIVFPQ(quantizer, distance, 16, 8, 4)
+    index.train(model_weights)
     index.add(model_weights)
     return index, model_weights, offer_item_model
 

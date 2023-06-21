@@ -210,7 +210,7 @@ RECOMMENDATION_ENDPOINTS = {
     # ColdStart : top offers
     # Recommendation : version b endpoint, item based retrieval
     "version_b_item": DefaultModel(
-        model_name="default_item",
+        model_name="version_b_item",
         cold_start_name="top_offers",
         cold_start_rules=InteractionRules(),
     ),

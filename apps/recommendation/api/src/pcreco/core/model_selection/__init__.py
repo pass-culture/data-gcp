@@ -4,22 +4,24 @@ from pcreco.utils.env_vars import (
 )
 import pcreco.core.model_selection.recommendation as recommendation_endpoints
 import pcreco.core.model_selection.similar_offer as similar_offer_endpoints
+from pcreco.core.model_selection.model_configuration import ModelConfiguration
+from pcreco.core.user import User
 
 
-def select_reco_model_params(
-    model_endpoint: str,
-) -> recommendation_endpoints.RecommendationDefaultModel:
+def select_reco_model_params(model_endpoint: str, user: User) -> ModelConfiguration:
     """Choose the model to apply Recommendation"""
     if model_endpoint not in list(
         recommendation_endpoints.RECOMMENDATION_ENDPOINTS.keys()
     ):
         model_endpoint = DEFAULT_RECO_MODEL
-    return recommendation_endpoints.RECOMMENDATION_ENDPOINTS[model_endpoint]
+    return recommendation_endpoints.RECOMMENDATION_ENDPOINTS[model_endpoint].get_scorer(
+        user
+    )
 
 
 def select_sim_model_params(
     model_endpoint: str,
-) -> similar_offer_endpoints.SimilarOfferDefaultModel:
+) -> ModelConfiguration:
     """Choose the model to apply for Similar Offers"""
     if model_endpoint not in list(
         similar_offer_endpoints.SIMILAR_OFFER_ENDPOINTS.keys()

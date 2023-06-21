@@ -167,18 +167,26 @@ class RecommendableOfferQueryBuilder:
 
     def generate_query(
         self,
-        selected_items: t.List[str],
+        selected_items: t.Dict[str, float],
         user: str,
-        order_query: str = "user_km_distance ASC, item_rank ASC",
+        order_query: str = "user_km_distance ASC, item_score DESC",
         offer_limit: int = 20,
     ):
-        arr_item = ",".join(list(selected_items))
+
+        arr_sql = ",".join(
+            [f"('{k}'::VARCHAR, {v}::FLOAT)" for k, v in selected_items.items()]
+        )
+        ranked_items = f"""
+            ranked_items AS (
+                SELECT s.item_id, s.item_score    
+                FROM unnest(ARRAY[{arr_sql}]) 
+                AS s(item_id VARCHAR, item_score FLOAT)
+            )
+        """
+
         main_query = sql.SQL(
             """
-            WITH ranked_items AS (
-                SELECT a.item_id, a.item_rank
-                FROM  unnest(string_to_array({arr_item}, ',')) WITH ORDINALITY a(item_id, item_rank)
-            ),
+            WITH {ranked_items},
 
             select_offers as (
                 SELECT 
@@ -189,7 +197,7 @@ class RecommendableOfferQueryBuilder:
                         then st_distance(st_point({user_longitude}::float, {user_latitude}::float)::geography, venue_geo)
                     else 0.0
                     end, 0.0) as user_distance,
-                    ri.item_rank
+                    ri.item_score
                 FROM {table_name} ro
                 INNER JOIN ranked_items ri on ri.item_id = ro.item_id 
                 WHERE case when {user_geolocated} then true else NOT is_geolocated end
@@ -235,7 +243,7 @@ class RecommendableOfferQueryBuilder:
             {offer_limit}        
         """
         ).format(
-            arr_item=sql.Literal(arr_item),
+            ranked_items=sql.SQL(ranked_items),
             table_name=sql.SQL(self.recommendable_offer_table),
             user_id=sql.Literal(str(user.id)),
             user_geolocated=sql.Literal(

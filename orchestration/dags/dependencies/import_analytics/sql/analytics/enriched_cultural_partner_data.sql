@@ -79,8 +79,8 @@ WITH individual_bookings AS (
         THEN TRUE ELSE FALSE END AS is_active_last_30days
     ,CASE WHEN (DATE_DIFF(CURRENT_DATE,enriched_venue_data.last_individual_offer_creation_date,YEAR) = 0 OR DATE_DIFF(CURRENT_DATE,last_bookable_collective_offer,YEAR) = 0)
         THEN TRUE ELSE FALSE END AS is_active_current_year
-    ,COALESCE(collective_offers.collective_offers_created,0) AS collective_offers_created
     ,COALESCE(individual_offers.individual_offers_created,0) AS individual_offers_created
+    ,COALESCE(collective_offers.collective_offers_created,0) AS collective_offers_created
     ,(COALESCE(collective_offers.collective_offers_created,0) + COALESCE(individual_offers.individual_offers_created,0)) AS total_offers_created
     ,last_bookable_individual_offer
     ,last_bookable_collective_offer

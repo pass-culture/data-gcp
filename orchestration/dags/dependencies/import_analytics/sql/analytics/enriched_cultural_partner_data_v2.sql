@@ -13,8 +13,8 @@ permanent_venues AS (SELECT
     ,venue_type_label AS partner_type
     ,CASE WHEN DATE_DIFF(CURRENT_DATE,venue_last_bookable_offer_date,DAY) <= 30 THEN TRUE ELSE FALSE END AS is_active_last_30days
     ,CASE WHEN DATE_DIFF(CURRENT_DATE,venue_last_bookable_offer_date,YEAR) = 0 THEN TRUE ELSE FALSE END AS is_active_current_year
-    ,COALESCE(enriched_venue_data.collective_offers_created,0) AS collective_offers_created
     ,COALESCE(enriched_venue_data.individual_offers_created,0) AS individual_offers_created
+    ,COALESCE(enriched_venue_data.collective_offers_created,0) AS collective_offers_created
     ,(COALESCE(enriched_venue_data.collective_offers_created,0) + COALESCE(enriched_venue_data.individual_offers_created,0)) AS total_offers_created
     ,venue_last_bookable_offer_date AS last_bookable_offer_date
     , venue_first_bookable_offer_date AS first_bookable_offer_date

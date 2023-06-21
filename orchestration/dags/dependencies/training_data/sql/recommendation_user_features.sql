@@ -14,9 +14,9 @@ with user_qpi as (
 )
 SELECT
   firebase_agg.user_id,
-  firebase_agg.user_engagement,
+  -- firebase_agg.user_engagement,
   firebase_agg.consult_offer,
-  firebase_agg.click_book_offer,
+  -- firebase_agg.click_book_offer,
   stats_reco.booking_cnt,
   ROUND(stats_reco.user_theoretical_remaining_credit, 0) AS user_theoretical_remaining_credit,
   stats_reco.has_added_offer_to_favorites,
@@ -30,9 +30,9 @@ FROM
   LEFT JOIN user_qpi uqpi on uqpi.user_id=firebase_agg.user_id
 GROUP BY
   firebase_agg.user_id,
-  firebase_agg.user_engagement,
+  -- firebase_agg.user_engagement,
   firebase_agg.consult_offer,
-  firebase_agg.click_book_offer,
+  -- firebase_agg.click_book_offer,
   stats_reco.booking_cnt,
   stats_reco.user_theoretical_remaining_credit,
   stats_reco.has_added_offer_to_favorites,

@@ -32,8 +32,10 @@ structures AS (
     LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_offer_data` as offer
         ON venue.venue_id = offer.venue_id 
         AND offer.venue_is_virtual 
+    LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_offerer_data` as offerer 
+        ON venue.venue_managing_offerer_id = offerer.offerer_id 
     LEFT JOIN `{{ bigquery_analytics_dataset }}.region_department` as rd
-        on  venue.venue_department_code = rd.num_dep 
+        ON  offerer.offerer_department_code = rd.num_dep 
     GROUP BY 1, 2, 3
     HAVING (premier_lieu_permanent < '2023-01-01' OR offres_numeriques > 0)
 ),

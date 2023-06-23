@@ -3,7 +3,9 @@ import json
 from pcreco.core.user import User
 from pcreco.core.offer import Offer
 from pcreco.models.reco.playlist_params import PlaylistParamsIn
+from pcreco.core.model_selection.model_configuration import ModelConfiguration
 from pcreco.utils.db.db_connection import get_session
+from pcreco.core.model_engine import ModelEngine
 from pcreco.core.model_selection import (
     select_sim_model_params,
 )
@@ -14,20 +16,32 @@ import time
 import pytz
 
 
-class SimilarOffer:
+class SimilarOffer(ModelEngine):
     def __init__(self, user: User, offer: Offer, params_in: PlaylistParamsIn):
-        self.user = user
         self.offer = offer
-        self.model_params = select_sim_model_params(params_in.model_endpoint)
-        self.params_in = params_in
-        self.scorer = self.model_params.scorer(
-            user=user, offer=offer, params_in=params_in, model_params=self.model_params
+        super().__init__(user=user, params_in=params_in)
+
+    def get_scorer(self):
+        # init input
+        self.model_params.endpoint.init_input(self.offer)
+        return self.model_params.scorer(
+            user=self.user,
+            params_in=self.params_in,
+            model_params=self.model_params,
+            model_endpoint=self.model_params.endpoint,
         )
+
+    def get_model_configuration(
+        self, user: User, params_in: PlaylistParamsIn
+    ) -> ModelConfiguration:
+        model_params = select_sim_model_params(params_in.model_endpoint)
+        self.reco_origin = "default"
+        return model_params
 
     def get_scoring(self) -> List[str]:
         if self.offer.item_id is None:
             return []
-        return self.scorer.get_scoring()
+        return super().get_scoring()
 
     def save_recommendation(self, recommendations) -> None:
         if len(recommendations) > 0:
@@ -42,9 +56,9 @@ class SimilarOffer:
                         "origin_offer_id": self.offer.id,
                         "offer_id": offer_id,
                         "date": date,
-                        "group_id": self.scorer.model_params.name,
-                        "model_name": self.scorer.model_display_name,
-                        "model_version": self.scorer.model_version,
+                        "group_id": self.model_params.name,
+                        "model_name": self.scorer.model_endpoint.model_display_name,
+                        "model_version": self.scorer.model_endpoint.model_version,
                         "reco_filters": json.dumps(self.params_in.json_input),
                         "call_id": self.user.call_id,
                         "venue_iris_id": self.offer.iris_id,

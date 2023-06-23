@@ -1,42 +1,58 @@
-from dataclasses import dataclass
 from pcreco.utils.env_vars import ENV_SHORT_NAME
-import pcreco.core.scorer.similar_offer as similar_offer_scorer
 
-
-@dataclass
-class SimilarOfferDefaultModel:
-    name: str
-    scorer: similar_offer_scorer.SimilarOfferScorer
-    retrieval_order_query: str
-    retrieval_limit: int
-    ranking_order_query: str
-    ranking_limit: int
-    endpoint_name: str = f"similar_offers_default_{ENV_SHORT_NAME}"
-
+import pcreco.core.scorer.recommendable_offer as offer_scorer
+from pcreco.core.scorer.similar_offer import SimilarOfferEndpoint, DummyEndpoint
+from pcreco.core.model_selection.model_configuration import ModelConfiguration
 
 SIMILAR_OFFER_ENDPOINTS = {
-    "default": SimilarOfferDefaultModel(
+    "default": ModelConfiguration(
         name="default",
-        scorer=similar_offer_scorer.OfferIrisRetrieval,
+        description="""
+        Default model:
+        Takes the top {retrieval_limit} offers nearest the user iris (SQL)
+        Takes the top {ranking_limit} most similar ones (training based on clicks) (NN)
+        """,
+        scorer=offer_scorer.OfferIrisRetrieval,
+        scorer_order_columns="booking_number",
+        scorer_order_ascending=False,
+        endpoint=SimilarOfferEndpoint(f"similar_offers_default_{ENV_SHORT_NAME}"),
         retrieval_order_query="booking_number DESC",
         retrieval_limit=10_000,
         ranking_order_query="booking_number DESC",
         ranking_limit=20,
     ),
-    "random": SimilarOfferDefaultModel(
+    "random": ModelConfiguration(
         name="random",
-        scorer=similar_offer_scorer.OfferIrisRandomScorer,
+        description="""
+        Random model:
+        (mainly for testing purposes)
+        Takes top 1000 offers
+        Shuffle and takes 20 randomly
+        """,
+        scorer=offer_scorer.OfferIrisRetrieval,
+        scorer_order_columns="random",
+        scorer_order_ascending=True,
+        endpoint=DummyEndpoint(None),
         retrieval_order_query="booking_number DESC",
         retrieval_limit=1000,
         ranking_order_query="booking_number DESC",
         ranking_limit=20,
     ),
-    "item": SimilarOfferDefaultModel(
+    "item": ModelConfiguration(
         name="item",
-        scorer=similar_offer_scorer.ItemRetrievalRanker,
+        description="""
+        Item model:
+        Takes the top {retrieval_limit} items (SQL)  
+        Takes most similar ones (training based on clicks) (NN)
+        Sort top 500 most similar, by distance range and similarity score (SQL)
+        """,
+        scorer=offer_scorer.ItemRetrievalRanker,
+        scorer_order_columns="order",
+        scorer_order_ascending=True,
+        endpoint=SimilarOfferEndpoint(f"similar_offers_default_{ENV_SHORT_NAME}"),
         retrieval_order_query="booking_number DESC",
         retrieval_limit=50_000,
-        ranking_order_query="user_km_distance ASC, item_rank ASC",
+        ranking_order_query="user_km_distance ASC, item_score DESC",
         ranking_limit=20,
     ),
 }

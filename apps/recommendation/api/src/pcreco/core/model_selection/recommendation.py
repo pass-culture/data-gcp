@@ -235,11 +235,11 @@ RECOMMENDATION_ENDPOINTS = {
         cold_start_name="default",
         cold_start_rules=InteractionRules(0, 0, 0),
     ),
-    # ColdStart : qpi_algo
-    # Recommendation : qpi_algo
+    # ColdStart : top_offers
+    # Recommendation : top_offers
     "cold_start": DefaultModel(
-        model_name="qpi_endpoint",
-        cold_start_name="qpi_endpoint",
+        model_name="top_offers",
+        cold_start_name="top_offers",
         cold_start_rules=InteractionRules(None, None, None),
     ),
 }

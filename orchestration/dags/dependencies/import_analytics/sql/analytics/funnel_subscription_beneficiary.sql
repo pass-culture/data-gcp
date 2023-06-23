@@ -12,6 +12,15 @@ WHERE (event_name IN ('HasAcceptedAllCookies','login','OnboardingStarted','Consu
 OR firebase_screen IN ('SignupForm','ProfilSignUp', 'SignupConfirmationEmailSent', 'OnboardingWelcome','OnboardingGeolocation', 'FirstTutorial','BeneficiaryRequestSent','UnderageAccountCreated','BeneficiaryAccountCreated','FirstTutorial2','FirstTutorial3','FirstTutorial4','HasSkippedTutorial' )) 
 ),
 
+    -- cette requête permet d'assigner les user_pseudo_id inscrits à leur user_id respectif : c'est nécessaire pour joindre enriched_user_data, car firebase_events ne donnent pas toujours ces informations (expl : une ligne pour l'événement "login" mais NULL dans la colonne user_id)
+    all_users AS(
+SELECT 
+    DISTINCT user_pseudo_id
+    ,COALESCE(u.user_id) as user_id
+FROM `{{ bigquery_analytics_dataset }}`.firebase_events f
+LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_user_data u ON f.user_id=u.user_id
+),
+
     -- utilisateurs trackés par une campagne marketing --
     user_accepted_tracking AS (
     SELECT 
@@ -73,11 +82,10 @@ GROUP BY 1
     first_login AS (
 SELECT 
     user_pseudo_id
-    ,user_id
     ,MIN(event_timestamp) as first_login_date
 FROM logs
 WHERE event_name = 'login' 
-GROUP BY 1,2
+GROUP BY 1
 ),
 
     beneficiary_request_sent AS (
@@ -100,16 +108,15 @@ GROUP BY 1
 
 SELECT 
   first_open.user_pseudo_id
-  ,first_login.user_id
+  ,all_users.user_id
   ,uat.appsflyer_id
   ,CASE WHEN first_open.user_pseudo_id IN (SELECT * FROM accepted_cookies) THEN true ELSE false END AS has_accepted_app_cookies
   ,CASE WHEN uat.appsflyer_id IS NULL THEN false ELSE true END AS has_accepted_tracking
   ,user_first_deposit_type
   ,first_open.platform
 -- certains utilisateurs s'étant déjà inscrits téléchargent l'app sur un autre device et donc créent un nouveau user_pseudo_id, la query suivante permet d'identifier ceux qui se loguent pour la première fois 
-  ,CASE WHEN first_login.first_login_date IS NOT NULL AND signup_started.signup_started_date IS NULL THEN false
-        WHEN signup_completed.signup_completed_date IS NOT NULL AND signup_started.signup_started_date IS NULL THEN false
-        WHEN TIMESTAMP(u.user_deposit_creation_date) < onboarding_started.onboarding_started_date THEN false
+  ,CASE WHEN TIMESTAMP(u.user_deposit_creation_date) < first_open.first_open_date THEN false
+        WHEN TIMESTAMP(u.user_activation_date) < first_open.first_open_date THEN false
         ELSE true END 
     AS is_first_device_connected
   ,first_open.first_open_date
@@ -129,11 +136,12 @@ SELECT
    ,au.ad as paid_acquisition_ad
    ,au.install_time as appsflyer_install_time
 FROM first_open
+LEFT JOIN all_users ON first_open.user_pseudo_id=all_users.user_pseudo_id
 LEFT JOIN onboarding_started ON first_open.user_pseudo_id=onboarding_started.user_pseudo_id
 LEFT JOIN signup_started ON first_open.user_pseudo_id=signup_started.user_pseudo_id
 LEFT JOIN signup_completed ON first_open.user_pseudo_id=signup_completed.user_pseudo_id
 LEFT JOIN first_login ON first_open.user_pseudo_id=first_login.user_pseudo_id
 LEFT JOIN beneficiary_request_sent ON first_open.user_pseudo_id=beneficiary_request_sent.user_pseudo_id
-LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_user_data u ON first_login.user_id=u.user_id
+LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_user_data u ON all_users.user_id=u.user_id
 LEFT JOIN user_accepted_tracking uat ON first_open.user_pseudo_id = uat.user_pseudo_id
 LEFT JOIN `{{ bigquery_analytics_dataset }}`.appsflyer_users au ON uat.user_pseudo_id = au.firebase_id AND uat.appsflyer_id = au.appsflyer_id

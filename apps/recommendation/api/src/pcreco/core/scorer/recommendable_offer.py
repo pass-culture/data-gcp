@@ -117,6 +117,7 @@ class ItemRetrievalRanker(ScorerRetrieval):
             f"Retrieval: get_recommendable_items for {self.user.id}: items -> {len(recommendable_items)}",
             start,
         )
+        start = time.time()
         # nothing to score
         if len(recommendable_items) == 0:
             return []
@@ -128,6 +129,7 @@ class ItemRetrievalRanker(ScorerRetrieval):
             f"Retrieval: predicted_items for {self.user.id}: predicted_items -> {len(prediction_result)}",
             start,
         )
+        start = time.time()
         # nothing to score
         if len(prediction_result) == 0:
             return []

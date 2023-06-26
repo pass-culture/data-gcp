@@ -18,5 +18,5 @@ AS
     SELECT * from get_non_recommendable_items()
 WITH NO DATA;
 
-CREATE UNIQUE INDEX idx_non_recommendable_item_id ON public.non_recommendable_offers USING btree (user_id,item_id);
+CREATE UNIQUE INDEX idx_non_recommendable_item_id ON public.non_recommendable_items USING btree (user_id,item_id);
 REFRESH MATERIALIZED VIEW non_recommendable_items;

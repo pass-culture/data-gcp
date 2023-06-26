@@ -142,9 +142,12 @@ offerer_department_code AS (
     SELECT
         offerer.offerer_id,
         CASE
-            SUBSTRING(offerer_postal_code, 0, 2)
-            WHEN '97' THEN SUBSTRING(offerer_postal_code, 0, 3)
-            ELSE SUBSTRING(offerer_postal_code, 0, 2)
+            WHEN offerer_postal_code = '97150' THEN '978'
+            WHEN SUBSTRING(offerer_postal_code, 0, 2) = '97' THEN SUBSTRING(offerer_postal_code, 0, 3)
+            WHEN SUBSTRING(offerer_postal_code, 0, 2) = '98' THEN SUBSTRING(offerer_postal_code, 0, 3)
+            WHEN SUBSTRING(offerer_postal_code, 0, 3) in ('200', '201', '209', '205') THEN '2A'
+            WHEN SUBSTRING(offerer_postal_code, 0, 3) in ('202', '206') THEN '2B'
+        ELSE SUBSTRING(offerer_postal_code, 0, 2)
         END AS offerer_department_code
     FROM
         `{{ bigquery_clean_dataset }}`.applicative_database_offerer AS offerer

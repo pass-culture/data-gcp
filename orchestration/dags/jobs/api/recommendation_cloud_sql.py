@@ -278,6 +278,7 @@ with DAG(
         CREATE INDEX IF NOT EXISTS idx_user_id                             ON public.enriched_user                        USING btree (user_id);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_id       ON public.recommendable_offers_per_iris_shape  USING btree (is_geolocated,iris_id,item_id,offer_id,unique_id);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_non_recommendable_id         ON public.non_recommendable_offers             USING btree (user_id,offer_id);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_non_recommendable_item_id    ON public.non_recommendable_items              USING btree (user_id,item_id);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_enriched_user_mv             ON public.enriched_user_mv                     USING btree (user_id);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_qpi_answers_mv               ON public.qpi_answers_mv                       USING btree (user_id,subcategories);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_item_ids_mv                  ON public.item_ids_mv                          USING btree (offer_id);
@@ -292,6 +293,7 @@ with DAG(
 
     views_to_refresh = [
         "non_recommendable_offers",
+        "non_recommendable_items",
         "enriched_user_mv",
         "qpi_answers_mv",
         "item_ids_mv",

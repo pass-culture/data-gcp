@@ -68,7 +68,7 @@ SELECT
         WHEN subcategories.category_id = 'MUSIQUE_ENREGISTREE'  THEN 50000
         WHEN subcategories.category_id = 'SPECTACLE' THEN 150000
         WHEN subcategories.category_id = 'CINEMA' THEN 50000
-        WHEN subcategories.category_id = 'LIVRE' THEN 50000
+        WHEN subcategories.category_id = 'LIVRE' THEN 15000
         ELSE 100000
     END as default_max_distance,
     ROW_NUMBER() over() as unique_id

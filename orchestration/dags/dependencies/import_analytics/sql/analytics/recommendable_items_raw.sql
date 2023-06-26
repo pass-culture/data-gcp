@@ -10,7 +10,10 @@ SELECT
     MAX(ro.offer_type_domain) as offer_type_domain,
     MAX(ro.offer_type_label) as offer_type_label,
     MAX(ro.booking_number) as booking_number,
-    MAX(ro.is_underage_recommendable) as is_underage_recommendable
+    MAX(ro.is_underage_recommendable) as is_underage_recommendable,
+    MIN(ro.offer_creation_date) as offer_creation_date,
+    MIN(ro.stock_beginning_date) as stock_beginning_date,
+    AVG(ro.stock_price) as stock_price
 FROM
    `{{ bigquery_analytics_dataset }}`.recommendable_offers_raw ro
 GROUP BY 1

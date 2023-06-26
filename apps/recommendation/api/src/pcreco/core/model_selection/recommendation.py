@@ -41,7 +41,7 @@ class DefaultModel:
         """Defines which model (cold_start or model) to use depending of the context"""
         model_type = self.cold_start_rules.get_model_status(user=user)
         if model_type:
-            return MODEL_ENDPOINTS[self.model_name], "model"
+            return MODEL_ENDPOINTS[self.model_name], "algo"
         else:
             return MODEL_ENDPOINTS[self.cold_start_name], "cold_start"
 

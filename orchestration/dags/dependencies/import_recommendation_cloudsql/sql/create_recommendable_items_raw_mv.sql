@@ -12,7 +12,10 @@ RETURNS TABLE (
                 offer_type_domain VARCHAR,
                 offer_type_label VARCHAR,
                 booking_number INTEGER,
-                is_underage_recommendable BOOLEAN
+                is_underage_recommendable BOOLEAN,
+                offer_creation_date TIMESTAMP,
+                stock_beginning_date TIMESTAMP,
+                stock_price REAL
                 ) AS
 $body$
 BEGIN

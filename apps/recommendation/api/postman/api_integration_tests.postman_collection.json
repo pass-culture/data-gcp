@@ -1406,7 +1406,7 @@
 			"response": []
 		},
 		{
-			"name": "/playlist_recommendation/user_id Geoloc modelEndpoint : 'algo_default'",
+			"name": "/playlist_recommendation/user_id Geoloc modelEndpoint : 'default_algo'",
 			"event": [
 				{
 					"listen": "test",
@@ -1465,7 +1465,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"modelEndpoint\":\"algo_default\"\r\n}",
+					"raw": "{\r\n    \"modelEndpoint\":\"default_algo\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -1594,7 +1594,7 @@
 			"response": []
 		},
 		{
-			"name": "/playlist_recommendation/user_id Geoloc modelEndpoint : 'algo_default' , not digital",
+			"name": "/playlist_recommendation/user_id Geoloc modelEndpoint : 'default_algo' , not digital",
 			"event": [
 				{
 					"listen": "test",
@@ -1653,7 +1653,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"modelEndpoint\":\"algo_default\",\r\n    \"isDigital\": false\r\n}",
+					"raw": "{\r\n    \"modelEndpoint\":\"default_algo\",\r\n    \"isDigital\": false\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"

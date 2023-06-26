@@ -16,6 +16,9 @@ SELECT
         WHEN ah."actionType" = \'OFFERER_SUSPENDED\' THEN CAST(u."email" AS VARCHAR(255))
         WHEN ah."actionType" = \'OFFERER_UNSUSPENDED\' THEN CAST(u."email" AS VARCHAR(255))
     END AS author_email
+    , CASE
+        WHEN ah."actionType" = \'BLACKLIST_DOMAIN_NAME\' THEN CAST(ah."jsonData" -> \'domain\' AS VARCHAR(255))
+    END AS blacklisted_domain
     , CAST(ah."userId" AS VARCHAR(255)) AS user_id
     , CAST(ah."offererId" AS VARCHAR(255)) AS offerer_id
     , CAST(ah."venueId" AS VARCHAR(255)) AS venue_id

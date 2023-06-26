@@ -1,5 +1,5 @@
 from pcreco.core.user import User
-from pcreco.core.utils.vertex_ai import endpoint_score
+from pcreco.core.utils.vertex_ai import parallel_endpoint_score
 from pcreco.utils.env_vars import log_duration
 from typing import List, Dict, Any
 import time
@@ -8,6 +8,8 @@ from pcreco.core.utils.cold_start import (
 )
 import random
 import heapq
+
+
 from pcreco.utils.env_vars import (
     MAX_RECO_ITEM_PER_BATCH,
     log_duration,
@@ -41,11 +43,8 @@ class RecommendationEndpoint(ModelEndpoint):
             start,
         )
         predicted_scores = []
-        # batch scoring
-        for inst in instances:
-            prediction_result = endpoint_score(
-                instances=inst, endpoint_name=self.endpoint_name
-            )
+        start = time.time()
+        for prediction_result in parallel_endpoint_score(self.endpoint_name, instances):
             self.model_version = prediction_result.model_version
             self.model_display_name = prediction_result.model_display_name
             predicted_scores.extend(prediction_result.predictions)
@@ -54,6 +53,7 @@ class RecommendationEndpoint(ModelEndpoint):
             f"scored {len(predicted_scores)} batches for {self.user.id}",
             start,
         )
+        start = time.time()
 
         recommendations = {
             item_id: predicted_scores[i][0] for i, item_id in enumerate(item_input)
@@ -62,6 +62,11 @@ class RecommendationEndpoint(ModelEndpoint):
             recommendations = dict(
                 heapq.nlargest(size, recommendations.items(), key=lambda item: item[1])
             )
+
+        log_duration(
+            f"heapq {len(predicted_scores)} batches for {self.user.id}",
+            start,
+        )
 
         return recommendations
 

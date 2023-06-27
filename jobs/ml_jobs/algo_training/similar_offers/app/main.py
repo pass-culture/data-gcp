@@ -23,16 +23,6 @@ def load_model():
     return index, model_weights, offer_item_model
 
 
-def compute_distance_subset(index, xq, subset):
-    n, _ = xq.shape
-    _, k = subset.shape
-    distances = np.empty((n, k), dtype=np.float32)
-    index.compute_distance_subset(
-        n, faiss.swig_ptr(xq), k, faiss.swig_ptr(distances), faiss.swig_ptr(subset)
-    )
-    return distances
-
-
 class FaissModel:
     def __init__(self, faiss_index, model_weights, offer_list):
         self.faiss_index = faiss_index
@@ -61,26 +51,39 @@ class FaissModel:
             idx = self.get_offer_idx(offer_id)
             if idx is not None:
                 arr.append(idx)
-        return np.array([arr])
+        return np.array(arr)
 
-    def distances_to_offer(self, nn_idx, n=10):
-        if len(nn_idx) > n:
-            nn_idx = nn_idx[:n]
-        return [self.offer_list[index] for (index, _) in nn_idx]
+    def distances_to_offer(self, distances, indexes, n=10):
+        if len(indexes) > n:
+            distances = distances[:n]
+            indexes = indexes[:n]
+        out_preds, out_dist = [], []
+        for (distance, index) in zip(distances, indexes):
+            if index > 0:
+                out_preds.append(self.offer_list[index])
+                out_dist.append(distance)
 
-    def compute_distance(self, offer_id, selected_offers, n=10):
+        return {"predictions": out_preds, "distance": out_dist}
+
+    def compute_distance(self, offer_id, selected_offers=None, n=10):
         offer_emb = self.get_offer_emb(offer_id)
-        subset_offer_indexes = self.selected_to_idx(selected_offers)
-        if offer_emb is not None and subset_offer_indexes is not None:
-            distances = compute_distance_subset(
-                self.faiss_index, offer_emb, subset_offer_indexes
-            ).tolist()[0]
-            nn_idx = sorted(
-                zip(subset_offer_indexes.tolist()[0], distances), key=lambda tup: tup[1]
+        params = None
+        if selected_offers is not None:
+            subset_offer_indexes = self.selected_to_idx(selected_offers)
+            params = faiss.SearchParametersIVF(
+                sel=faiss.IDSelectorArray(subset_offer_indexes)
             )
 
-            return self.distances_to_offer(nn_idx, n)
-        return []
+        if offer_emb is not None:
+            results = faiss_index.search(
+                offer_emb,
+                k=n,
+                params=params,
+            )
+            return self.distances_to_offer(
+                distances=results[0][0], indexes=results[1][0], n=n
+            )
+        return {"predictions": [], "distance": []}
 
 
 faiss_index, model_weights, offer_list = load_model()
@@ -108,16 +111,15 @@ def predict():
     except:
         n = 10
     try:
-        if selected_offers is None:
-            # TODO
-            selected_offers = offer_list
         sim_offers = faiss_model.compute_distance(offer_id, selected_offers, n=n)
         logger.info(f"out {len(sim_offers)}")
-        return jsonify({"predictions": sim_offers})
+        return jsonify(sim_offers)
     except Exception as e:
         logger.info(e)
         logger.info("error")
-        return jsonify({"predictions": []})
+        return jsonify(
+            {"predictions": [], "distance": [], "error": f"An error occurred: {str(e)}"}
+        )
 
 
 if __name__ == "__main__":

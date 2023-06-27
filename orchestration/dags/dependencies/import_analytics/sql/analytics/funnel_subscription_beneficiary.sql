@@ -1,13 +1,13 @@
 WITH logs AS (
 SELECT
-    firebase_events.user_pseudo_id
-    , firebase_events.user_id
+    user_pseudo_id
+    , user_id
     , event_timestamp
     , event_date
     , event_name
     , firebase_screen
     , platform
-FROM `{{ bigquery_analytics_dataset }}`.firebase_events
+FROM `{{ bigquery_analytics_dataset }}`.firebase_events f
 WHERE (event_name IN ('HasAcceptedAllCookies','login','OnboardingStarted','ConsultOffer','BookingConfirmation','first_open','ConsultOffer','ContinueSetEmail','ContinueSetPassword','ContinueSetBirthday','SetEmail','SetPassword','SetBirthday')
 OR firebase_screen IN ('SignupForm','ProfilSignUp', 'SignupConfirmationEmailSent', 'OnboardingWelcome','OnboardingGeolocation', 'FirstTutorial','BeneficiaryRequestSent','UnderageAccountCreated','BeneficiaryAccountCreated','FirstTutorial2','FirstTutorial3','FirstTutorial4','HasSkippedTutorial' )) 
 ),
@@ -76,7 +76,7 @@ SELECT
     ,user_id
     ,MIN(event_timestamp) as first_login_date
 FROM logs
-WHERE event_name = 'login' 
+WHERE event_name = 'login' and user_id IS NOT NULL
 GROUP BY 1,2
 ),
 
@@ -107,9 +107,8 @@ SELECT
   ,user_first_deposit_type
   ,first_open.platform
 -- certains utilisateurs s'étant déjà inscrits téléchargent l'app sur un autre device et donc créent un nouveau user_pseudo_id, la query suivante permet d'identifier ceux qui se loguent pour la première fois 
-  ,CASE WHEN first_login.first_login_date IS NOT NULL AND signup_started.signup_started_date IS NULL THEN false
-        WHEN signup_completed.signup_completed_date IS NOT NULL AND signup_started.signup_started_date IS NULL THEN false
-        WHEN TIMESTAMP(u.user_deposit_creation_date) < onboarding_started.onboarding_started_date THEN false
+  ,CASE WHEN TIMESTAMP(u.user_deposit_creation_date) < first_open.first_open_date THEN false
+        WHEN TIMESTAMP(u.user_activation_date) < first_open.first_open_date THEN false
         ELSE true END 
     AS is_first_device_connected
   ,first_open.first_open_date

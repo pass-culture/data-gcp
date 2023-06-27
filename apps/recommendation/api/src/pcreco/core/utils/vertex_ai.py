@@ -6,6 +6,8 @@ from google.protobuf.struct_pb2 import Value
 from pcreco.utils.env_vars import GCP_PROJECT
 from cachetools import cached, TTLCache
 from dataclasses import dataclass
+import concurrent.futures
+from functools import partial
 
 
 @dataclass
@@ -36,6 +38,17 @@ def __get_model(endpoint_name, location):
 def get_client(api_endpoint):
     client_options = {"api_endpoint": api_endpoint}
     return aiplatform.gapic.PredictionServiceClient(client_options=client_options)
+
+
+def parallel_endpoint_score(endpoint_name, instances):
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        func = partial(endpoint_score, endpoint_name)
+        futures = [executor.submit(func, inst) for inst in instances]
+        results = [
+            future.result() for future in concurrent.futures.as_completed(futures)
+        ]
+
+    return results
 
 
 def endpoint_score(endpoint_name, instances) -> PredictionResult:

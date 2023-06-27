@@ -9,6 +9,8 @@ WITH user_beneficiary as (
         -- keep user_postal_code by default.
         COALESCE(
         CASE
+            
+            WHEN user_postal_code = '97150' THEN '978'
             WHEN SUBSTRING(user_postal_code, 0, 2) = '97' THEN SUBSTRING(user_postal_code, 0, 3)
             WHEN SUBSTRING(user_postal_code, 0, 2) = '98' THEN SUBSTRING(user_postal_code, 0, 3)
             WHEN SUBSTRING(user_postal_code, 0, 3) in ('200', '201', '209', '205') THEN '2A'

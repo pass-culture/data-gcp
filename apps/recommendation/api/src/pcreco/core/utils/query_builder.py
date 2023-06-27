@@ -2,6 +2,7 @@ from pcreco.utils.health_check_queries import get_available_materialized_view
 from psycopg2 import sql
 from pcreco.utils.db.db_connection import as_string
 import typing as t
+from pcreco.core.user import User
 
 DEFAULT_MAX_DISTANCE = 50000
 
@@ -123,7 +124,7 @@ class RecommendableItemQueryBuilder:
 
     def generate_query(
         self,
-        user: str,
+        user: User,
         order_query: str = "booking_number DESC",
         offer_limit: int = 50_000,
     ):
@@ -133,7 +134,15 @@ class RecommendableItemQueryBuilder:
                 item_id
             FROM {table_name}
             WHERE case when {user_geolocated} then true else NOT is_geolocated end
-
+            AND item_id NOT IN  (
+                    SELECT
+                        item_id
+                    FROM
+                        non_recommendable_items
+                    WHERE
+                        user_id = {user_id}
+            )
+            AND stock_price < {remaining_credit}
             {params_in_filter}
             {user_profile_filter}
             {order_query}
@@ -142,6 +151,8 @@ class RecommendableItemQueryBuilder:
         ).format(
             table_name=sql.SQL(self.recommendable_item_table),
             params_in_filter=self.params_in_filters,
+            user_id=sql.Literal(str(user.id)),
+            remaining_credit=sql.Literal(user.user_deposit_remaining_credit),
             user_geolocated=sql.Literal(
                 user.longitude is not None and user.latitude is not None
             ),
@@ -167,18 +178,26 @@ class RecommendableOfferQueryBuilder:
 
     def generate_query(
         self,
-        selected_items: t.List[str],
+        selected_items: t.Dict[str, float],
         user: str,
-        order_query: str = "user_km_distance ASC, item_rank ASC",
+        order_query: str = "user_km_distance ASC, item_score DESC",
         offer_limit: int = 20,
     ):
-        arr_item = ",".join(list(selected_items))
+
+        arr_sql = ",".join(
+            [f"('{k}'::VARCHAR, {v}::FLOAT)" for k, v in selected_items.items()]
+        )
+        ranked_items = f"""
+            ranked_items AS (
+                SELECT s.item_id, s.item_score    
+                FROM unnest(ARRAY[{arr_sql}]) 
+                AS s(item_id VARCHAR, item_score FLOAT)
+            )
+        """
+
         main_query = sql.SQL(
             """
-            WITH ranked_items AS (
-                SELECT a.item_id, a.item_rank
-                FROM  unnest(string_to_array({arr_item}, ',')) WITH ORDINALITY a(item_id, item_rank)
-            ),
+            WITH {ranked_items},
 
             select_offers as (
                 SELECT 
@@ -189,7 +208,7 @@ class RecommendableOfferQueryBuilder:
                         then st_distance(st_point({user_longitude}::float, {user_latitude}::float)::geography, venue_geo)
                     else 0.0
                     end, 0.0) as user_distance,
-                    ri.item_rank
+                    ri.item_score
                 FROM {table_name} ro
                 INNER JOIN ranked_items ri on ri.item_id = ro.item_id 
                 WHERE case when {user_geolocated} then true else NOT is_geolocated end
@@ -204,16 +223,6 @@ class RecommendableOfferQueryBuilder:
                     ROW_NUMBER() OVER (PARTITION BY item_id ORDER BY user_distance ASC) AS rank
                 FROM select_offers
                 WHERE user_distance < default_max_distance
-                AND offer_id NOT IN  (
-                    SELECT
-                        offer_id
-                    FROM
-                        non_recommendable_offers
-                    WHERE
-                        user_id = {user_id}
-                )
-                AND stock_price < {remaining_credit}
-                {user_profile_filter}
             )
             SELECT 
                 ro.offer_id,
@@ -235,23 +244,14 @@ class RecommendableOfferQueryBuilder:
             {offer_limit}        
         """
         ).format(
-            arr_item=sql.Literal(arr_item),
+            ranked_items=sql.SQL(ranked_items),
             table_name=sql.SQL(self.recommendable_offer_table),
-            user_id=sql.Literal(str(user.id)),
             user_geolocated=sql.Literal(
                 user.longitude is not None and user.latitude is not None
             ),
             user_longitude=sql.Literal(user.longitude),
             user_latitude=sql.Literal(user.latitude),
-            remaining_credit=sql.Literal(user.user_deposit_remaining_credit),
             order_query=sql.SQL(f"ORDER BY {order_query}"),
             offer_limit=sql.SQL(f"LIMIT {offer_limit}"),
-            user_profile_filter=sql.SQL(
-                """
-                AND is_underage_recommendable 
-                """
-                if (user.age and user.age < 18)
-                else ""
-            ),
         )
         return as_string(main_query)

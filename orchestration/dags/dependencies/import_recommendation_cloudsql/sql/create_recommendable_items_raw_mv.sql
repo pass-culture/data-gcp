@@ -12,7 +12,10 @@ RETURNS TABLE (
                 offer_type_domain VARCHAR,
                 offer_type_label VARCHAR,
                 booking_number INTEGER,
-                is_underage_recommendable BOOLEAN
+                is_underage_recommendable BOOLEAN,
+                offer_creation_date TIMESTAMP,
+                stock_beginning_date TIMESTAMP,
+                stock_price REAL
                 ) AS
 $body$
 BEGIN
@@ -42,6 +45,11 @@ ON public.recommendable_items_raw_mv_tmp(subcategory_id);
 
 CREATE INDEX IF NOT EXISTS search_group_name_idx_offer_recommendable_raw_{{ ts_nodash  }}
 ON public.recommendable_items_raw_mv_tmp(search_group_name);
+
+
+CREATE INDEX IF NOT EXISTS filters_idx_offer_recommendable_raw_{{ ts_nodash  }}
+ON public.recommendable_items_raw_mv_tmp 
+USING btree (stock_price,stock_beginning_date,offer_creation_date);
 
 -- Refresh state
 REFRESH MATERIALIZED VIEW recommendable_items_raw_mv_tmp;

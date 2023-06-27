@@ -1,10 +1,6 @@
 from pcreco.utils.env_vars import (
     NUMBER_OF_RECOMMENDATIONS,
-    SHUFFLE_RECOMMENDATION,
-    MIXING_RECOMMENDATION,
-    MIXING_FEATURE,
     MIXING_FEATURE_LIST,
-    DEFAULT_RECO_MODEL,
 )
 import pcreco.models.reco.input_params as input_params
 from psycopg2 import sql
@@ -25,7 +21,6 @@ INPUT_PARAMS = [
     "nbRecoDisplay",
     "isRecoMixed",
     "isRecoShuffled",
-    "isSortByDistance",
     "isDigital",
     "mixingFeatures",
 ]
@@ -68,7 +63,6 @@ class PlaylistParamsIn:
         self.nb_reco_display = input_params.parse_int(json.get("nbRecoDisplay"))
 
         self.is_reco_shuffled = input_params.parse_bool(json.get("isRecoShuffled"))
-        self.is_sort_by_distance = input_params.parse_bool(json.get("isSortByDistance"))
         self.is_reco_mixed = input_params.parse_bool(json.get("isRecoMixed"))
         self.mixing_features = json.get("mixingFeatures")
 
@@ -78,19 +72,13 @@ class PlaylistParamsIn:
         self.setup_defaults()
 
     def setup_defaults(self):
-        if self.is_reco_shuffled is None:
-            self.is_reco_shuffled = SHUFFLE_RECOMMENDATION
-        if self.is_sort_by_distance is None:
-            self.is_sort_by_distance = False
         if self.nb_reco_display is None or self.nb_reco_display <= 0:
             self.nb_reco_display = NUMBER_OF_RECOMMENDATIONS
-        if self.is_reco_mixed is None:
-            self.is_reco_mixed = MIXING_RECOMMENDATION
         if (
             self.mixing_features is None
             or self.mixing_features not in MIXING_FEATURE_LIST
         ):
-            self.mixing_features = MIXING_FEATURE
+            self.mixing_features = None
         if self.include_digital is None:
             self.include_digital = True
         # no digital offers when is_event=True

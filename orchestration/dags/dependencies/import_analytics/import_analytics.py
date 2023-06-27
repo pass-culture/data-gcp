@@ -278,6 +278,15 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "non_recommendable_offers_data",
     },
+    "non_recommendable_items_data": {
+        "sql": f"{ANALYTICS_SQL_PATH}/non_recommendable_items_data.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "non_recommendable_items_data",
+        "depends": [
+            "offer_item_ids",
+            "enriched_booking_data",
+        ],
+    },
     "venue_siren_offers": {
         "sql": f"{ANALYTICS_SQL_PATH}/venue_siren_offers.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",

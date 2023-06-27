@@ -63,7 +63,7 @@ class FaissModel:
                 out_preds.append(self.offer_list[index])
                 out_dist.append(distance)
 
-        return {"predictions": out_preds, "distance": out_dist}
+        return {"predictions": out_preds}
 
     def compute_distance(self, offer_id, selected_offers=None, n=10):
         offer_emb = self.get_offer_emb(offer_id)
@@ -83,7 +83,7 @@ class FaissModel:
             return self.distances_to_offer(
                 distances=results[0][0], indexes=results[1][0], n=n
             )
-        return {"predictions": [], "distance": []}
+        return {"predictions": []}
 
 
 faiss_index, model_weights, offer_list = load_model()
@@ -117,9 +117,7 @@ def predict():
     except Exception as e:
         logger.info(e)
         logger.info("error")
-        return jsonify(
-            {"predictions": [], "distance": [], "error": f"An error occurred: {str(e)}"}
-        )
+        return jsonify({"predictions": []})
 
 
 if __name__ == "__main__":

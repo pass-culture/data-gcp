@@ -1,8 +1,8 @@
 WITH logs AS (
 SELECT
-    f.user_pseudo_id
-    , f.user_id
-    , f.event_timestamp
+    user_pseudo_id
+    , user_id
+    , event_timestamp
     , event_date
     , event_name
     , firebase_screen

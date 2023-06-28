@@ -36,7 +36,7 @@ class SimilarOfferEndpoint(ModelEndpoint):
         return {
             item_id: size - i
             for i, item_id in enumerate(prediction_result.predictions)
-            if item_id != self.offer.item_id
+            if item_id != self.offer.item_id and " " not in item_id
         }
 
 

@@ -56,7 +56,9 @@ class RecommendationEndpoint(ModelEndpoint):
         start = time.time()
 
         recommendations = {
-            item_id: predicted_scores[i][0] for i, item_id in enumerate(item_input)
+            item_id: predicted_scores[i][0]
+            for i, item_id in enumerate(item_input)
+            if " " not in item_id
         }
         if size is not None:
             recommendations = dict(

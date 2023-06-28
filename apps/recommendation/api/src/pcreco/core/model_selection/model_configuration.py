@@ -2,6 +2,7 @@ import pcreco.core.scorer.recommendable_offer as offer_scorer
 from pcreco.core.scorer import ModelEndpoint
 from dataclasses import dataclass
 from pcreco.models.reco.playlist_params import PlaylistParamsIn
+from loguru import logger
 
 
 @dataclass
@@ -30,17 +31,18 @@ class ModelConfiguration:
     def get_diversification_params(
         self, params_in: PlaylistParamsIn
     ) -> DiversificationParams:
+
         if params_in.is_reco_mixed is not None:
             is_active = params_in.is_reco_mixed
         else:
             is_active = self.default_mixing_recommendation
 
-        if params_in.is_reco_mixed is not None:
+        if params_in.is_reco_shuffled is not None:
             is_reco_shuffled = params_in.is_reco_shuffled
         else:
             is_reco_shuffled = self.default_shuffle_recommendation
 
-        if params_in.is_reco_mixed is not None:
+        if params_in.mixing_features is not None:
             mixing_features = params_in.mixing_features
         else:
             mixing_features = self.default_mixing_feature

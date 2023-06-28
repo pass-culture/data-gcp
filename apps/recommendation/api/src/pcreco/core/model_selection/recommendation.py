@@ -10,6 +10,7 @@ from pcreco.core.scorer.recommendation import (
     DummyEndpoint,
 )
 from pcreco.core.model_selection.model_configuration import ModelConfiguration
+from loguru import logger
 
 
 @dataclass
@@ -19,12 +20,21 @@ class InteractionRules:
     favorites_count: int = None
 
     def get_model_status(self, user: User):
+        logger.info(
+            f"{user.id}: model_status -> favorites {self.favorites_count} vs {user.favorites_count}"
+        )
         if self.favorites_count is not None:
             if user.favorites_count >= self.favorites_count:
                 return True
+        logger.info(
+            f"{user.id}: model_status -> booking {self.bookings_count} vs {user.bookings_count}"
+        )
         if self.bookings_count is not None:
             if user.bookings_count >= self.bookings_count:
                 return True
+        logger.info(
+            f"{user.id}: model_status -> clicks {self.clicks_count} vs {user.clicks_count}"
+        )
         if self.clicks_count is not None:
             if user.clicks_count >= self.clicks_count:
                 return True
@@ -55,15 +65,15 @@ MODEL_ENDPOINTS = {
         Takes the top {ranking_limit} recommendable (default endpoint) (NN)
         Applies diversification filter
         """,
-        scorer=offer_scorer.OfferIrisRetrieval,
+        scorer=offer_scorer.ItemRetrievalRanker,
         scorer_order_columns="score",
         scorer_order_ascending=False,
         endpoint=RecommendationEndpoint(f"recommendation_default_{ENV_SHORT_NAME}"),
-        retrieval_order_query="booking_number DESC",
-        retrieval_limit=10_000,
-        ranking_order_query="is_geolocated DESC, booking_number DESC",
+        retrieval_order_query="RANDOM() ASC",
+        retrieval_limit=20_000,
+        ranking_order_query="is_geolocated DESC, item_score DESC",
         ranking_limit=50,
-        default_shuffle_recommendation=True,
+        default_shuffle_recommendation=False,
         default_mixing_recommendation=True,
         default_mixing_feature="search_group_name",
     ),
@@ -75,15 +85,15 @@ MODEL_ENDPOINTS = {
         Takes the top {ranking_limit} recommendable (version_b endpoint) (NN)
         Applies diversification filter
         """,
-        scorer=offer_scorer.OfferIrisRetrieval,
+        scorer=offer_scorer.ItemRetrievalRanker,
         scorer_order_columns="score",
         scorer_order_ascending=False,
         endpoint=RecommendationEndpoint(f"recommendation_version_b_{ENV_SHORT_NAME}"),
-        retrieval_order_query="booking_number DESC",
-        retrieval_limit=10_000,
-        ranking_order_query="is_geolocated DESC, booking_number DESC",
+        retrieval_order_query="RANDOM() ASC",
+        retrieval_limit=20_000,
+        ranking_order_query="is_geolocated DESC, item_score DESC",
         ranking_limit=50,
-        default_shuffle_recommendation=True,
+        default_shuffle_recommendation=False,
         default_mixing_recommendation=True,
         default_mixing_feature="search_group_name",
     ),
@@ -94,14 +104,14 @@ MODEL_ENDPOINTS = {
         Takes top 100 offers
         Apply diversification filter
         """,
-        scorer=offer_scorer.OfferIrisRetrieval,
+        scorer=offer_scorer.ItemRetrievalRanker,
         scorer_order_columns="booking_number",
         scorer_order_ascending=False,
         endpoint=DummyEndpoint(None),
         retrieval_order_query="booking_number DESC",
-        retrieval_limit=100,
+        retrieval_limit=200,
         ranking_order_query="booking_number DESC",
-        ranking_limit=100,
+        ranking_limit=200,
         default_shuffle_recommendation=True,
         default_mixing_recommendation=True,
         default_mixing_feature="search_group_name",
@@ -115,7 +125,7 @@ MODEL_ENDPOINTS = {
         Shuffle and takes 50 randomly
         Apply diversification filter
         """,
-        scorer=offer_scorer.OfferIrisRetrieval,
+        scorer=offer_scorer.ItemRetrievalRanker,
         scorer_order_columns="random",
         scorer_order_ascending=True,
         endpoint=DummyEndpoint(None),
@@ -139,11 +149,11 @@ MODEL_ENDPOINTS = {
         scorer_order_columns="order",
         scorer_order_ascending=True,
         endpoint=RecommendationEndpoint(f"recommendation_default_{ENV_SHORT_NAME}"),
-        retrieval_order_query="booking_number DESC",
-        retrieval_limit=50_000,
-        ranking_order_query="user_km_distance ASC, item_score DESC",
+        retrieval_order_query="RANDOM() ASC",
+        retrieval_limit=10_000,
+        ranking_order_query="item_score DESC",
         ranking_limit=50,
-        default_shuffle_recommendation=True,
+        default_shuffle_recommendation=False,
         default_mixing_recommendation=True,
         default_mixing_feature="search_group_name",
     ),
@@ -159,11 +169,11 @@ MODEL_ENDPOINTS = {
         scorer_order_columns="order",
         scorer_order_ascending=True,
         endpoint=RecommendationEndpoint(f"recommendation_version_b_{ENV_SHORT_NAME}"),
-        retrieval_order_query="booking_number DESC",
-        retrieval_limit=50_000,
-        ranking_order_query="user_km_distance ASC, item_score DESC",
+        retrieval_order_query="RANDOM() ASC",
+        retrieval_limit=10_000,
+        ranking_order_query="item_score DESC",
         ranking_limit=50,
-        default_shuffle_recommendation=True,
+        default_shuffle_recommendation=False,
         default_mixing_recommendation=True,
         default_mixing_feature="search_group_name",
     ),
@@ -179,8 +189,8 @@ MODEL_ENDPOINTS = {
         scorer_order_ascending=True,
         endpoint=QPIEndpoint(f"recommendation_cold_start_model_{ENV_SHORT_NAME}"),
         retrieval_order_query="booking_number DESC",
-        retrieval_limit=50_000,
-        ranking_order_query="user_km_distance ASC, item_score DESC",
+        retrieval_limit=10_000,
+        ranking_order_query="item_score DESC",
         ranking_limit=50,
     ),
 }

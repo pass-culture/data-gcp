@@ -123,7 +123,7 @@ class ItemRetrievalRanker(ScorerRetrieval):
             return []
 
         prediction_result = self.model_endpoint.model_score(
-            recommendable_items, size=500
+            recommendable_items, size=100
         )
         log_duration(
             f"Retrieval: predicted_items for {self.user.id}: predicted_items -> {len(prediction_result)}",
@@ -174,7 +174,7 @@ class ItemRetrievalRanker(ScorerRetrieval):
                 "venue_latitude": row[8],
                 "venue_longitude": row[9],
                 "item_score": row[10],
-                "order": i - self.model_params.ranking_limit,
+                "order": i,
                 "random": random.random(),
             }
             for i, row in enumerate(query_result)

@@ -1,6 +1,8 @@
 from pcreco.utils.geolocalisation import get_iris_from_coordinates
 from pcreco.utils.db.db_connection import get_session
 from sqlalchemy import text
+from loguru import logger
+from pcreco.models.reco.input_params import parse_float, parse_int
 
 
 class User:
@@ -32,8 +34,7 @@ class User:
                 f"""
                 SELECT 
                     FLOOR(DATE_PART('DAY',user_deposit_creation_date - user_birth_date)/365) as age,
-                    user_theoretical_remaining_credit,
-                    user_deposit_initial_amount,
+                    COALESCE(user_theoretical_remaining_credit, user_deposit_initial_amount) as user_theoretical_remaining_credit,
                     COALESCE(booking_cnt, 0) as booking_cnt,
                     COALESCE(consult_offer, 0) as consult_offer,
                     COALESCE(has_added_offer_to_favorites, 0) as has_added_offer_to_favorites
@@ -43,22 +44,13 @@ class User:
             ),
             user_id=str(self.id),
         ).fetchone()
+        logger.info(f"{self.id}: __get_user_profile {request_response}")
         if request_response is not None:
-            try:
-                self.age = int(request_response[0])
-                self.user_deposit_remaining_credit = (
-                    request_response[1]
-                    if request_response[1] is not None
-                    else request_response[2]
-                )
-                self.bookings_count = (
-                    request_response[3] if request_response[3] is not None else 0
-                )
-                self.clicks_count = (
-                    request_response[4] if request_response[4] is not None else 0
-                )
-                self.favorites_count = (
-                    request_response[5] if request_response[5] is not None else 0
-                )
-            except TypeError:
-                pass
+            self.age = parse_int(request_response[0])
+            self.user_deposit_remaining_credit = parse_float(request_response[1], 300)
+            self.bookings_count = parse_int(request_response[2], 0)
+            self.clicks_count = parse_int(request_response[3], 0)
+            self.favorites_count = parse_int(request_response[4], 0)
+            logger.info(
+                f"{self.id}: __get_user_profile {self.age}, {self.user_deposit_remaining_credit}, {self.bookings_count}, {self.clicks_count}, {self.favorites_count}"
+            )

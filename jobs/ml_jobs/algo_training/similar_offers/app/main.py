@@ -4,6 +4,7 @@ from loguru import logger
 import tensorflow as tf
 
 import numpy as np
+import pandas as pd
 import faiss
 
 app = Flask(__name__)
@@ -16,6 +17,7 @@ def load_model():
     embedding_item_model = tf_reco.item_layer.layers[1].get_weights()
     model_weights = embedding_item_model[0]
     distance = len(model_weights[0])
+
     quantizer = faiss.IndexFlatL2(distance)
     index = faiss.IndexIVFPQ(quantizer, distance, 16, 8, 4)
     index.train(model_weights)
@@ -24,31 +26,46 @@ def load_model():
 
 
 class FaissModel:
-    def __init__(self, faiss_index, model_weights, offer_list):
+    def __init__(self, faiss_index, model_weights, item_list):
         self.faiss_index = faiss_index
         self.item_dict = {}
-        self.offer_list = offer_list
-        for idx, (x, y) in enumerate(zip(offer_list, model_weights)):
+        self.categories = {}
+        self.item_list = item_list
+        for idx, (x, y) in enumerate(zip(item_list, model_weights)):
             self.item_dict[x] = {"embeddings": y, "idx": idx}
+        self.set_up_item_indexes()
 
-    def get_offer_emb(self, offer_id):
-        embs = self.item_dict.get(offer_id, None)
+    def set_up_item_indexes(self):
+        df = pd.read_parquet("./metadata/item_metadata.parquet")
+        for _, row in df.iterrows():
+            idx = self.get_item_idx(row["item_id"])
+            if idx is not None:
+                self.categories.setdefault(row["category"], []).append(idx)
+
+    def get_idx_from_categories(self, categories):
+        result = []
+        for cat in categories:
+            result.extend(self.categories[cat])
+        return result
+
+    def get_offer_emb(self, item_id):
+        embs = self.item_dict.get(item_id, None)
         if embs is not None:
             return np.array([embs["embeddings"]])
         else:
             return None
 
-    def get_offer_idx(self, offer_id):
-        embs = self.item_dict.get(offer_id, None)
+    def get_item_idx(self, item_id):
+        embs = self.item_dict.get(item_id, None)
         if embs is not None:
             return embs["idx"]
         else:
             return None
 
-    def selected_to_idx(self, selected_offers):
+    def selected_to_idx(self, selected_items):
         arr = []
-        for offer_id in selected_offers:
-            idx = self.get_offer_idx(offer_id)
+        for item_id in selected_items:
+            idx = self.get_item_idx(item_id)
             if idx is not None:
                 arr.append(idx)
         return np.array(arr)
@@ -60,19 +77,16 @@ class FaissModel:
         out_preds, out_dist = [], []
         for (distance, index) in zip(distances, indexes):
             if index > 0:
-                out_preds.append(self.offer_list[index])
+                out_preds.append(self.item_list[index])
                 out_dist.append(distance)
 
         return {"predictions": out_preds}
 
-    def compute_distance(self, offer_id, selected_offers=None, n=10):
-        offer_emb = self.get_offer_emb(offer_id)
+    def compute_distance(self, item_id, selected_idx=None, n=10):
+        offer_emb = self.get_offer_emb(item_id)
         params = None
-        if selected_offers is not None:
-            subset_offer_indexes = self.selected_to_idx(selected_offers)
-            params = faiss.SearchParametersIVF(
-                sel=faiss.IDSelectorArray(subset_offer_indexes)
-            )
+        if selected_idx is not None:
+            params = faiss.SearchParametersIVF(sel=faiss.IDSelectorBatch(selected_idx))
 
         if offer_emb is not None:
             results = faiss_index.search(
@@ -86,8 +100,10 @@ class FaissModel:
         return {"predictions": []}
 
 
-faiss_index, model_weights, offer_list = load_model()
-faiss_model = FaissModel(faiss_index, model_weights, offer_list)
+logger.info("Load app...")
+
+faiss_index, model_weights, item_list = load_model()
+faiss_model = FaissModel(faiss_index, model_weights, item_list)
 
 logger.info("Loaded model")
 
@@ -104,15 +120,22 @@ def predict():
 
     req_json = request.get_json()
     input_json = req_json["instances"]
-    offer_id = input_json[0]["offer_id"]
-    selected_offers = input_json[0].get("selected_offers", None)
+    item_id = input_json[0]["offer_id"]
+    selected_categories = input_json[0].get("selected_categories", [])
+    selected_idx = faiss_model.get_idx_from_categories(selected_categories)
+    selected_offers = input_json[0].get("selected_offers", [])
+    if len(selected_idx) == 0:
+        selected_idx = None
+    if len(selected_offers) > 0:
+        selected_idx = faiss_model.selected_to_idx(selected_offers)
     try:
         n = int(input_json[0].get("size", 10))
     except:
         n = 10
     try:
-        sim_offers = faiss_model.compute_distance(offer_id, selected_offers, n=n)
-        logger.info(f"out {len(sim_offers)}")
+        sim_offers = faiss_model.compute_distance(
+            item_id, selected_idx=selected_idx, n=n
+        )
         return jsonify(sim_offers)
     except Exception as e:
         logger.info(e)

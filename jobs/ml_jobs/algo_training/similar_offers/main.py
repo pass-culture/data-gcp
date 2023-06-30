@@ -43,6 +43,13 @@ def deploy_container(serving_container):
         print(line.rstrip().decode("utf-8"))
 
 
+def get_items_metadata():
+    sql = f"""
+    SELECT distinct category, item_id from `{GCP_PROJECT_ID}.analytics_{ENV_SHORT_NAME}.recommendable_items_raw`
+    """
+    pd.read_gbq(sql).to_parquet("./metadata/item_metadata.parquet")
+
+
 def main(
     experiment_name: str = typer.Option(
         None,
@@ -53,10 +60,17 @@ def main(
         help="Name of the model",
     ),
 ) -> None:
+
     yyyymmdd = datetime.now().strftime("%Y%m%d")
-    serving_container = f"eu.gcr.io/{GCP_PROJECT_ID}/{experiment_name.replace('.', '_')}:{ENV_SHORT_NAME}_v{yyyymmdd}"
+    if model_name is None:
+        model_name = "default"
+    run_id = f"{model_name}_{ENV_SHORT_NAME}_v{yyyymmdd}"
+    serving_container = (
+        f"eu.gcr.io/{GCP_PROJECT_ID}/{experiment_name.replace('.', '_')}:{run_id}"
+    )
+    get_items_metadata()
     deploy_container(serving_container)
-    save_experiment(experiment_name, model_name, serving_container, run_id=yyyymmdd)
+    save_experiment(experiment_name, model_name, serving_container, run_id=run_id)
 
 
 if __name__ == "__main__":

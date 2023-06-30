@@ -2,6 +2,8 @@ flask
 flask-cors
 gunicorn
 numpy
+pandas
+pyarrow
 tensorflow
 faiss-cpu==1.7.4
 loguru==0.5.3

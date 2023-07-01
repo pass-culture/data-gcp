@@ -1,7 +1,7 @@
 from pcreco.utils.env_vars import ENV_SHORT_NAME
 
 import pcreco.core.scorer.recommendable_offer as offer_scorer
-from pcreco.core.scorer.similar_offer import SimilarOfferEndpoint, DummyEndpoint
+from pcreco.core.scorer.similar_offer import SimilarOfferEndpoint, DummyEndpoint, SimilarOfferV2Endpoint
 from pcreco.core.model_selection.model_configuration import ModelConfiguration
 
 SIMILAR_OFFER_ENDPOINTS = {
@@ -52,6 +52,22 @@ SIMILAR_OFFER_ENDPOINTS = {
         endpoint=SimilarOfferEndpoint(f"similar_offers_default_{ENV_SHORT_NAME}"),
         retrieval_order_query="RANDOM() ASC",
         retrieval_limit=30_000,
+        ranking_order_query="item_score DESC",
+        ranking_limit=20,
+    ),
+    "item_v2": ModelConfiguration(
+        name="item_v2",
+        description="""
+        Item model:
+        Takes most similar ones (training based on clicks) (NN)
+        Sort top 500 most similar, by distance range and similarity score (SQL)
+        """,
+        scorer=offer_scorer.SimilarOfferItemRanker,
+        scorer_order_columns="order",
+        scorer_order_ascending=True,
+        endpoint=SimilarOfferV2Endpoint(f"similar_offers_default_{ENV_SHORT_NAME}"),
+        retrieval_order_query=None,
+        retrieval_limit=500,
         ranking_order_query="item_score DESC",
         ranking_limit=20,
     ),

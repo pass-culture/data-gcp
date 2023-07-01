@@ -45,7 +45,7 @@ def deploy_container(serving_container):
 
 def get_items_metadata():
     sql = f"""
-    SELECT distinct category, item_id from `{GCP_PROJECT_ID}.analytics_{ENV_SHORT_NAME}.recommendable_items_raw`
+    SELECT distinct search_group_name as category, item_id from `{GCP_PROJECT_ID}.analytics_{ENV_SHORT_NAME}.recommendable_items_raw`
     """
     pd.read_gbq(sql).to_parquet("./metadata/item_metadata.parquet")
 

@@ -45,7 +45,7 @@ class FaissModel:
     def get_idx_from_categories(self, categories):
         result = []
         for cat in categories:
-            result.extend(self.categories[cat])
+            result.extend(self.categories.get(cat, []))
         return result
 
     def get_offer_emb(self, item_id):

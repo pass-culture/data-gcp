@@ -48,13 +48,13 @@ def create_non_recommendable_items(engine):
     non_recommendable_offers = pd.DataFrame(
         {"user_id": ["111", "112"], "item_id": ["isbn-1", "isbn-3"]}
     )
-    engine.execute("DROP MATERIALIZED VIEW IF EXISTS non_recommendable_offers CASCADE;")
+    engine.execute("DROP MATERIALIZED VIEW IF EXISTS non_recommendable_items CASCADE;")
 
     non_recommendable_offers.to_sql(
-        "non_recommendable_offers_temporary_table", con=engine, if_exists="replace"
+        "non_recommendable_items_temporary_table", con=engine, if_exists="replace"
     )
     engine.execute(
-        "CREATE MATERIALIZED VIEW non_recommendable_offers AS SELECT * FROM non_recommendable_offers_temporary_table;"
+        "CREATE MATERIALIZED VIEW non_recommendable_items AS SELECT * FROM non_recommendable_items_temporary_table;"
     )
 
 

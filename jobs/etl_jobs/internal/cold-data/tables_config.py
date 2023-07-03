@@ -63,4 +63,13 @@ ref_tables = {
             "product_id": "STRING",
         },
     },
+    "departmental_objectives": {
+        "file_type": "csv",
+        "schema": {
+            "objective_name": "STRING",
+            "objective_type":"STRING",
+            "region_name": "STRING",
+            "departement_code": "STRING",
+            "cible": "INTEGER",
+        },
 }

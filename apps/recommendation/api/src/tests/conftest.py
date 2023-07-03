@@ -448,17 +448,7 @@ def create_recommendable_items_raw(engine):
     )
 
 
-@pytest.fixture
-def setup_database(app_config: Dict[str, Any]) -> Any:
-    engine = create_engine(
-        f"postgresql+psycopg2://postgres:postgres@127.0.0.1:{DATA_GCP_TEST_POSTGRES_PORT}/{DB_NAME}"
-    )
-    connection = engine.connect().execution_options(autocommit=True)
-    create_non_recommendable_items(engine)
-    create_non_recommendable_offers(engine)
-    create_recommendable_offers_per_iris_shape(engine)
-    create_recommendable_offers_raw(engine)
-
+def create_enriched_user(engine):
     enriched_user = pd.DataFrame(
         {
             "user_id": ["111", "112", "113", "114", "115", "116", "117", "118"],
@@ -484,6 +474,9 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
     engine.execute(
         "CREATE MATERIALIZED VIEW enriched_user_mv AS SELECT * FROM enriched_user;"
     )
+
+
+def create_qpi_answers(engine):
     qpi_answers = pd.DataFrame(
         {
             "user_id": ["111", "111", "112", "113", "114"],
@@ -499,6 +492,8 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
     )
     qpi_answers.to_sql("qpi_answers_mv", con=engine, if_exists="replace")
 
+
+def create_past_recommended_offers(engine):
     past_recommended_offers = pd.DataFrame(
         {
             "userid": [1],
@@ -511,15 +506,36 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
         "past_recommended_offers", con=engine, if_exists="replace"
     )
 
+
+def create_iris_france(engine, connection):
     iris_france = pd.read_csv("./src/tests/iris_france_tests.csv")
     iris_france.to_sql("iris_france", con=engine, if_exists="replace", index=False)
-
     sql = """ALTER TABLE public.iris_france
             ALTER COLUMN shape TYPE Geometry(GEOMETRY, 4326)
             USING ST_SetSRID(shape::Geometry, 4326);
         """
 
     connection.execute(sql)
+
+
+@pytest.fixture
+def setup_database(app_config: Dict[str, Any]) -> Any:
+    engine = create_engine(
+        f"postgresql+psycopg2://postgres:postgres@127.0.0.1:{DATA_GCP_TEST_POSTGRES_PORT}/{DB_NAME}"
+    )
+    connection = engine.connect().execution_options(autocommit=True)
+    create_recommendable_offers_per_iris_shape(engine)
+
+    create_recommendable_offers_raw(engine)
+    create_recommendable_items_raw(engine)
+
+    create_non_recommendable_offers(engine)
+    create_non_recommendable_items(engine)
+
+    create_enriched_user(engine)
+    create_qpi_answers(engine)
+    create_past_recommended_offers(engine)
+    create_iris_france(engine, connection)
 
     yield connection
     try:

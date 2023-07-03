@@ -212,6 +212,16 @@ class RecommendableOfferQueryBuilder:
                 FROM {table_name} ro
                 INNER JOIN ranked_items ri on ri.item_id = ro.item_id 
                 WHERE case when {user_geolocated} then true else NOT is_geolocated end
+                AND ro.item_id NOT IN  (
+                SELECT
+                    item_id
+                FROM
+                    non_recommendable_items
+                WHERE
+                    user_id = {user_id}
+            )
+            AND ro.stock_price < {remaining_credit}
+            {user_profile_filter}
 
             ),
 
@@ -240,16 +250,6 @@ class RecommendableOfferQueryBuilder:
                 rank_offers ro
             WHERE 
                 ro.rank = 1 
-            AND ro.offer_id    NOT IN  (
-                SELECT
-                    offer_id
-                FROM
-                    non_recommendable_offers
-                WHERE
-                    user_id = {user_id}
-            )
-            AND ot.stock_price < {remaining_credit}
-            {user_profile_filter}
             {order_query}
             {offer_limit}    
                 

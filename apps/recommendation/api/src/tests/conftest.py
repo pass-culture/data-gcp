@@ -441,7 +441,7 @@ def create_recommendable_items_raw(engine):
     )
 
     recommendable_items_raw.to_sql(
-        "recommendable_offers_raw", con=engine, if_exists="replace"
+        "recommendable_items_raw", con=engine, if_exists="replace"
     )
     engine.execute(
         "CREATE MATERIALIZED VIEW recommendable_items_raw_mv AS SELECT * FROM recommendable_items_raw WITH DATA;"
@@ -562,6 +562,8 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
             "DROP TABLE IF EXISTS recommendable_offers_temporary_table CASCADE;"
         )
         engine.execute("DROP TABLE IF EXISTS recommendable_offers_raw CASCADE;")
+        engine.execute("DROP TABLE IF EXISTS recommendable_items_raw CASCADE;")
+
         engine.execute(
             "DROP TABLE IF EXISTS non_recommendable_offers_temporary_table CASCADE;"
         )

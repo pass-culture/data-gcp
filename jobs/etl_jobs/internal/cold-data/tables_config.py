@@ -69,7 +69,7 @@ ref_tables = {
             "objective_name": "STRING",
             "objective_type":"STRING",
             "region_name": "STRING",
-            "departement_code": "STRING",
+            "department_code": "STRING",
             "cible": "INTEGER",
         },
 }

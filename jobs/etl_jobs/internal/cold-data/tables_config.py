@@ -70,6 +70,6 @@ ref_tables = {
             "objective_type":"STRING",
             "region_name": "STRING",
             "department_code": "STRING",
-            "cible": "INTEGER",
+            "objective": "INTEGER",
         },
 }

@@ -212,6 +212,16 @@ class RecommendableOfferQueryBuilder:
                 FROM {table_name} ro
                 INNER JOIN ranked_items ri on ri.item_id = ro.item_id 
                 WHERE case when {user_geolocated} then true else NOT is_geolocated end
+                AND ro.item_id NOT IN  (
+                SELECT
+                    item_id
+                FROM
+                    non_recommendable_items
+                WHERE
+                    user_id = {user_id}
+            )
+            AND ro.stock_price < {remaining_credit}
+            {user_profile_filter}
 
             ),
 
@@ -241,7 +251,8 @@ class RecommendableOfferQueryBuilder:
             WHERE 
                 ro.rank = 1 
             {order_query}
-            {offer_limit}        
+            {offer_limit}    
+                
         """
         ).format(
             ranked_items=sql.SQL(ranked_items),
@@ -251,6 +262,15 @@ class RecommendableOfferQueryBuilder:
             ),
             user_longitude=sql.Literal(user.longitude),
             user_latitude=sql.Literal(user.latitude),
+            remaining_credit=sql.Literal(user.user_deposit_remaining_credit),
+            user_id=sql.Literal(str(user.id)),
+            user_profile_filter=sql.SQL(
+                """
+                AND is_underage_recommendable 
+                """
+                if (user.age and user.age < 18)
+                else ""
+            ),
             order_query=sql.SQL(f"ORDER BY {order_query}"),
             offer_limit=sql.SQL(f"LIMIT {offer_limit}"),
         )

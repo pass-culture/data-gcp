@@ -23,34 +23,40 @@ DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"algo-default-deployment-{ENV_SHORT_NAME}"
 BASE_DIR = "data-gcp/jobs/ml_jobs/algo_training"
 
+instance_dict = {
+    "prod": "n1-standard-16",
+    "dev": "n1-standard-2",
+    "stg": "n1-standard-2",
+}
+schedule_dict = {"prod": "0 22 * * 5", "dev": "0 22 * * *", "stg": "0 22 * * 3"}
+
 
 models_to_deploy = [
     {
         "experiment_name": f"algo_training_clicks_v2.1_{ENV_SHORT_NAME}",
         "endpoint_name": f"recommendation_default_{ENV_SHORT_NAME}",
         "version_name": "v_{{ ts_nodash }}",
-        "instance_type": "n1-standard-4",
+        "instance_type": instance_dict[ENV_SHORT_NAME],
     },
     {
         "experiment_name": f"similar_offers_clicks_v2.1_{ENV_SHORT_NAME}",
         "endpoint_name": f"similar_offers_default_{ENV_SHORT_NAME}",
         "version_name": "v_{{ ts_nodash }}",
-        "instance_type": "n1-standard-4",
+        "instance_type": instance_dict[ENV_SHORT_NAME],
     },
     {
-        "experiment_name": f"algo_training_two_towers_{ENV_SHORT_NAME}",
+        "experiment_name": f"algo_training_two_towers_v1.1_{ENV_SHORT_NAME}",
         "endpoint_name": f"recommendation_version_b_{ENV_SHORT_NAME}",
         "version_name": "v_{{ ts_nodash }}",
-        "instance_type": "n1-standard-4",
+        "instance_type": instance_dict[ENV_SHORT_NAME],
     },
     {
-        "experiment_name": f"similar_offers_two_towers_{ENV_SHORT_NAME}",
+        "experiment_name": f"similar_offers_two_towers_v1.1_{ENV_SHORT_NAME}",
         "endpoint_name": f"similar_offers_version_b_{ENV_SHORT_NAME}",
         "version_name": "v_{{ ts_nodash }}",
-        "instance_type": "n1-standard-16",
+        "instance_type": instance_dict[ENV_SHORT_NAME],
     },
 ]
-schedule_dict = {"prod": "0 22 * * 5", "dev": "0 22 * * *", "stg": "0 22 * * 3"}
 
 
 with DAG(

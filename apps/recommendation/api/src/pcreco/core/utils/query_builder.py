@@ -240,8 +240,19 @@ class RecommendableOfferQueryBuilder:
                 rank_offers ro
             WHERE 
                 ro.rank = 1 
+            AND ro.offer_id    NOT IN  (
+                SELECT
+                    offer_id
+                FROM
+                    non_recommendable_offers
+                WHERE
+                    user_id = {user_id}
+            )
+            AND ot.stock_price < {remaining_credit}
+            {user_profile_filter}
             {order_query}
-            {offer_limit}        
+            {offer_limit}    
+                
         """
         ).format(
             ranked_items=sql.SQL(ranked_items),
@@ -251,6 +262,15 @@ class RecommendableOfferQueryBuilder:
             ),
             user_longitude=sql.Literal(user.longitude),
             user_latitude=sql.Literal(user.latitude),
+            remaining_credit=sql.Literal(user.user_deposit_remaining_credit),
+            user_id=sql.Literal(str(user.id)),
+            user_profile_filter=sql.SQL(
+                """
+                AND is_underage_recommendable 
+                """
+                if (user.age and user.age < 18)
+                else ""
+            ),
             order_query=sql.SQL(f"ORDER BY {order_query}"),
             offer_limit=sql.SQL(f"LIMIT {offer_limit}"),
         )

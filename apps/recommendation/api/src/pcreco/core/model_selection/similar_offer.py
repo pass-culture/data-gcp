@@ -1,7 +1,11 @@
 from pcreco.utils.env_vars import ENV_SHORT_NAME
 
 import pcreco.core.scorer.recommendable_offer as offer_scorer
-from pcreco.core.scorer.similar_offer import SimilarOfferEndpoint, DummyEndpoint, SimilarOfferV2Endpoint
+from pcreco.core.scorer.similar_offer import (
+    SimilarOfferEndpoint,
+    DummyEndpoint,
+    SimilarOfferV2Endpoint,
+)
 from pcreco.core.model_selection.model_configuration import ModelConfiguration
 
 SIMILAR_OFFER_ENDPOINTS = {

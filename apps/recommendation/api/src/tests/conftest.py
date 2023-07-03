@@ -30,12 +30,35 @@ def app_config() -> Dict[str, Any]:
     }
 
 
-@pytest.fixture
-def setup_database(app_config: Dict[str, Any]) -> Any:
-    engine = create_engine(
-        f"postgresql+psycopg2://postgres:postgres@127.0.0.1:{DATA_GCP_TEST_POSTGRES_PORT}/{DB_NAME}"
+def create_non_recommendable_offers(engine):
+    non_recommendable_offers = pd.DataFrame(
+        {"user_id": ["111", "112"], "offer_id": ["1", "3"]}
     )
-    connection = engine.connect().execution_options(autocommit=True)
+    engine.execute("DROP MATERIALIZED VIEW IF EXISTS non_recommendable_offers CASCADE;")
+
+    non_recommendable_offers.to_sql(
+        "non_recommendable_offers_temporary_table", con=engine, if_exists="replace"
+    )
+    engine.execute(
+        "CREATE MATERIALIZED VIEW non_recommendable_offers AS SELECT * FROM non_recommendable_offers_temporary_table;"
+    )
+
+
+def create_non_recommendable_items(engine):
+    non_recommendable_offers = pd.DataFrame(
+        {"user_id": ["111", "112"], "item_id": ["isbn-1", "isbn-3"]}
+    )
+    engine.execute("DROP MATERIALIZED VIEW IF EXISTS non_recommendable_offers CASCADE;")
+
+    non_recommendable_offers.to_sql(
+        "non_recommendable_offers_temporary_table", con=engine, if_exists="replace"
+    )
+    engine.execute(
+        "CREATE MATERIALIZED VIEW non_recommendable_offers AS SELECT * FROM non_recommendable_offers_temporary_table;"
+    )
+
+
+def create_recommendable_offers_per_iris_shape(engine):
     recommendable_offers_per_iris_shape = pd.DataFrame(
         {
             "item_id": [
@@ -124,18 +147,8 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
     """
     )
 
-    non_recommendable_offers = pd.DataFrame(
-        {"user_id": ["111", "112"], "offer_id": ["1", "3"]}
-    )
-    engine.execute("DROP MATERIALIZED VIEW IF EXISTS non_recommendable_offers CASCADE;")
 
-    non_recommendable_offers.to_sql(
-        "non_recommendable_offers_temporary_table", con=engine, if_exists="replace"
-    )
-    engine.execute(
-        "CREATE MATERIALIZED VIEW non_recommendable_offers AS SELECT * FROM non_recommendable_offers_temporary_table;"
-    )
-
+def create_recommendable_offers_raw(engine):
     recommendable_offers_raw = pd.DataFrame(
         {
             "item_id": [
@@ -292,7 +305,6 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
             ],
         }
     )
-
     engine.execute(
         "DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_raw_mv CASCADE;"
     )
@@ -303,6 +315,149 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
     engine.execute(
         "CREATE MATERIALIZED VIEW recommendable_offers_raw_mv AS SELECT *, ST_MakePoint(venue_longitude, venue_latitude)::geography as venue_geo FROM recommendable_offers_raw WITH DATA;"
     )
+
+
+def create_recommendable_items_raw(engine):
+    recommendable_items_raw = pd.DataFrame(
+        {
+            "item_id": [
+                "isbn-1",
+                "isbn-2",
+                "movie-3",
+                "movie-4",
+                "movie-5",
+                "product-6",
+                "product-7",
+                "product-8",
+                "product-9",
+            ],
+            "category": ["A", "B", "C", "D", "E", "B", "A", "A", "D"],
+            "subcategory_id": [
+                "EVENEMENT_CINE",
+                "EVENEMENT_CINE",
+                "EVENEMENT_CINE",
+                "EVENEMENT_CINE",
+                "SPECTACLE_REPRESENTATION",
+                "SPECTACLE_REPRESENTATION",
+                "SPECTACLE_REPRESENTATION",
+                "EVENEMENT_CINE",
+                "LIVRE_PAPIER",
+            ],
+            "search_group_name": [
+                "CINEMA",
+                "CINEMA",
+                "CINEMA",
+                "CINEMA",
+                "SPECTACLE",
+                "SPECTACLE",
+                "SPECTACLE",
+                "CINEMA",
+                "LIVRE_PAPIER",
+            ],
+            "is_numerical": [
+                False,
+                False,
+                True,
+                True,
+                False,
+                False,
+                False,
+                False,
+                False,
+            ],
+            "is_national": [True, False, True, True, True, False, False, False, True],
+            "is_geolocated": [
+                False,
+                True,
+                False,
+                False,
+                False,
+                True,
+                True,
+                True,
+                False,
+            ],
+            "offer_type_domain": [
+                "MOVIE",
+                "MOVIE",
+                "MOVIE",
+                "MOVIE",
+                "SHOW",
+                "SHOW",
+                "SHOW",
+                "MOVIE",
+                "BOOK",
+            ],
+            "offer_type_label": [
+                "BOOLYWOOD",
+                "BOOLYWOOD",
+                "BOOLYWOOD",
+                "BOOLYWOOD",
+                "Cirque",
+                "Cirque",
+                "Cirque",
+                "COMEDY",
+                "Histoire",
+            ],
+            "booking_number": [3, 5, 10, 2, 1, 9, 5, 5, 10],
+            "is_underage_recommendable": [
+                False,
+                True,
+                True,
+                False,
+                False,
+                False,
+                False,
+                False,
+                True,
+            ],
+            "offer_creation_date": [
+                "2020-01-01",
+                "2020-01-01",
+                "2020-01-01",
+                "2020-01-01",
+                "2020-01-01",
+                "2020-01-01",
+                "2020-01-01",
+                "2020-01-01",
+                "2020-01-01",
+            ],
+            "stock_creation_date": [
+                "2020-01-01",
+                "2020-01-01",
+                "2020-01-01",
+                "2020-01-01",
+                "2020-01-01",
+                "2020-01-01",
+                "2020-01-01",
+                "2020-01-01",
+                "2020-01-01",
+            ],
+            "stock_price": [10, 20, 20, 30, 30, 30, 30, 30, 10],
+        }
+    )
+    engine.execute(
+        "DROP MATERIALIZED VIEW IF EXISTS recommendable_items_raw_mv CASCADE;"
+    )
+
+    recommendable_items_raw.to_sql(
+        "recommendable_offers_raw", con=engine, if_exists="replace"
+    )
+    engine.execute(
+        "CREATE MATERIALIZED VIEW recommendable_items_raw_mv AS SELECT * FROM recommendable_items_raw WITH DATA;"
+    )
+
+
+@pytest.fixture
+def setup_database(app_config: Dict[str, Any]) -> Any:
+    engine = create_engine(
+        f"postgresql+psycopg2://postgres:postgres@127.0.0.1:{DATA_GCP_TEST_POSTGRES_PORT}/{DB_NAME}"
+    )
+    connection = engine.connect().execution_options(autocommit=True)
+    create_non_recommendable_items(engine)
+    create_non_recommendable_offers(engine)
+    create_recommendable_offers_per_iris_shape(engine)
+    create_recommendable_offers_raw(engine)
 
     enriched_user = pd.DataFrame(
         {
@@ -377,7 +532,14 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
         )
 
         engine.execute(
+            "DROP MATERIALIZED VIEW IF EXISTS recommendable_items_raw_mv CASCADE;"
+        )
+
+        engine.execute(
             "DROP MATERIALIZED VIEW IF EXISTS non_recommendable_offers CASCADE;"
+        )
+        engine.execute(
+            "DROP MATERIALIZED VIEW IF EXISTS non_recommendable_items CASCADE;"
         )
 
         engine.execute(

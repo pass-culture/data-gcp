@@ -39,6 +39,7 @@ class SimilarOfferEndpoint(ModelEndpoint):
             if item_id != self.offer.item_id and " " not in item_id
         }
 
+
 class SimilarOfferV2Endpoint(ModelEndpoint):
     def __init__(self, endpoint_name: str):
         self.endpoint_name = endpoint_name

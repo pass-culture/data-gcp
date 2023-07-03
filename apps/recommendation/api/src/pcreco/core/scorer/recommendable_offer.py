@@ -210,7 +210,6 @@ class ItemRetrievalRanker(ScorerRetrieval):
         return user_recommendation
 
 
-
 class SimilarOfferItemRanker(ScorerRetrieval):
     """
     Get most similar ones (model_based) and returns top n {ranking_limit} nearest offers and similar offers
@@ -218,7 +217,7 @@ class SimilarOfferItemRanker(ScorerRetrieval):
 
     def get_scoring(self) -> List[str]:
         start = time.time()
-       
+
         prediction_result = self.model_endpoint.model_score(
             self.params_in.search_group_names, size=self.model_params.retrieval_limit
         )

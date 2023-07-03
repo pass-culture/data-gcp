@@ -6,6 +6,7 @@ import pcreco.core.model_selection.recommendation as recommendation_endpoints
 import pcreco.core.model_selection.similar_offer as similar_offer_endpoints
 from pcreco.core.model_selection.model_configuration import ModelConfiguration
 from pcreco.core.user import User
+from loguru import logger
 
 
 def select_reco_model_params(model_endpoint: str, user: User) -> ModelConfiguration:
@@ -14,6 +15,7 @@ def select_reco_model_params(model_endpoint: str, user: User) -> ModelConfigurat
         recommendation_endpoints.RECOMMENDATION_ENDPOINTS.keys()
     ):
         model_endpoint = DEFAULT_RECO_MODEL
+    logger.info(f"{user.id}: reco_endpoint {model_endpoint}")
     return recommendation_endpoints.RECOMMENDATION_ENDPOINTS[model_endpoint].get_scorer(
         user
     )

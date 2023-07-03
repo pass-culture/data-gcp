@@ -1,2 +1,2 @@
-sim_offers/
-tf_reco/
+*.pb
+variables/

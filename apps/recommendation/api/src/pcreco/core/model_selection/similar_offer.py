@@ -50,9 +50,9 @@ SIMILAR_OFFER_ENDPOINTS = {
         scorer_order_columns="order",
         scorer_order_ascending=True,
         endpoint=SimilarOfferEndpoint(f"similar_offers_default_{ENV_SHORT_NAME}"),
-        retrieval_order_query="booking_number DESC",
-        retrieval_limit=50_000,
-        ranking_order_query="user_km_distance ASC, item_score DESC",
+        retrieval_order_query="RANDOM() ASC",
+        retrieval_limit=30_000,
+        ranking_order_query="item_score DESC",
         ranking_limit=20,
     ),
 }

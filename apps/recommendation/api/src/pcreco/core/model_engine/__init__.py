@@ -8,6 +8,7 @@ from pcreco.utils.env_vars import (
     NUMBER_OF_PRESELECTED_OFFERS,
     NUMBER_OF_RECOMMENDATIONS,
 )
+from loguru import logger
 
 
 class ModelEngine(ABC):
@@ -45,6 +46,9 @@ class ModelEngine(ABC):
         Depends of the scorer method.
         """
         scored_offers = self.scorer.get_scoring()
+        if len(scored_offers) == 0:
+            return []
+
         sorted_recommendations = sorted(
             scored_offers,
             key=lambda k: k[self.model_params.scorer_order_columns],
@@ -54,11 +58,15 @@ class ModelEngine(ABC):
         diversification_params = self.model_params.get_diversification_params(
             self.params_in
         )
+        logger.info(
+            f"{self.user.id}: get_scoring -> diversification active: {diversification_params.is_active}, shuffle: {diversification_params.is_reco_shuffled}, mixing key: {diversification_params.mixing_features}"
+        )
 
         # apply diversification filter
         if diversification_params.is_active:
             sorted_recommendations = order_offers_by_score_and_diversify_features(
                 offers=sorted_recommendations,
+                score_column=self.model_params.scorer_order_columns,
                 shuffle_recommendation=diversification_params.is_reco_shuffled,
                 feature=diversification_params.mixing_features,
                 nb_reco_display=NUMBER_OF_RECOMMENDATIONS,

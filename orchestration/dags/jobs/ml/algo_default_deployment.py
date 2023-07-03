@@ -23,20 +23,40 @@ DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"algo-default-deployment-{ENV_SHORT_NAME}"
 BASE_DIR = "data-gcp/jobs/ml_jobs/algo_training"
 
+instance_dict = {
+    "prod": "n1-standard-16",
+    "dev": "n1-standard-2",
+    "stg": "n1-standard-2",
+}
+schedule_dict = {"prod": "0 22 * * 5", "dev": "0 22 * * *", "stg": "0 22 * * 3"}
+
 
 models_to_deploy = [
     {
         "experiment_name": f"algo_training_clicks_v2.1_{ENV_SHORT_NAME}",
         "endpoint_name": f"recommendation_default_{ENV_SHORT_NAME}",
         "version_name": "v_{{ ts_nodash }}",
+        "instance_type": instance_dict[ENV_SHORT_NAME],
     },
     {
         "experiment_name": f"similar_offers_clicks_v2.1_{ENV_SHORT_NAME}",
         "endpoint_name": f"similar_offers_default_{ENV_SHORT_NAME}",
         "version_name": "v_{{ ts_nodash }}",
+        "instance_type": instance_dict[ENV_SHORT_NAME],
+    },
+    {
+        "experiment_name": f"algo_training_two_towers_v1.1_{ENV_SHORT_NAME}",
+        "endpoint_name": f"recommendation_version_b_{ENV_SHORT_NAME}",
+        "version_name": "v_{{ ts_nodash }}",
+        "instance_type": instance_dict[ENV_SHORT_NAME],
+    },
+    {
+        "experiment_name": f"similar_offers_two_towers_v1.1_{ENV_SHORT_NAME}",
+        "endpoint_name": f"similar_offers_version_b_{ENV_SHORT_NAME}",
+        "version_name": "v_{{ ts_nodash }}",
+        "instance_type": instance_dict[ENV_SHORT_NAME],
     },
 ]
-schedule_dict = {"prod": "0 22 * * 5", "dev": "0 22 * * *", "stg": "0 22 * * 3"}
 
 
 with DAG(
@@ -85,12 +105,14 @@ with DAG(
         experiment_name = model_params["experiment_name"]
         endpoint_name = model_params["endpoint_name"]
         version_name = model_params["version_name"]
+        instance_type = model_params["instance_type"]
         deploy_command = f"""
             python deploy_model.py \
                 --region {DEFAULT_REGION} \
                 --experiment-name {experiment_name} \
                 --endpoint-name {endpoint_name} \
-                --version-name {version_name}
+                --version-name {version_name} \
+                --instance-type {instance_type}
         """
 
         deploy_model = SSHGCEOperator(

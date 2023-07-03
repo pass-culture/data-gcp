@@ -43,7 +43,7 @@ dag_config = {
     "BASE_DIR": "data-gcp/jobs/ml_jobs/algo_training",
     "MODEL_DIR": "two_towers_model",
     "TRAIN_DIR": "/home/airflow/train",
-    "EXPERIMENT_NAME": f"algo_training_two_towers.1_{ENV_SHORT_NAME}",
+    "EXPERIMENT_NAME": f"algo_training_two_towers_v1.1_{ENV_SHORT_NAME}",
 }
 
 # Params
@@ -263,6 +263,17 @@ with DAG(
         dag=dag,
     )
 
+    train_sim_offers = SSHGCEOperator(
+        task_id="containerize_similar_offers",
+        instance_name="{{ params.instance_name }}",
+        base_dir=f"{dag_config['BASE_DIR']}/similar_offers",
+        environment=dag_config,
+        command="python main.py "
+        "--experiment-name similar_offers_two_towers_v1.1_" + f"{ENV_SHORT_NAME} "
+        "--model-name similar_offers_two_towers_v1.1",
+        dag=dag,
+    )
+
     gce_instance_stop = StopGCEOperator(
         task_id="gce_stop_task", instance_name="{{ params.instance_name }}"
     )
@@ -301,6 +312,7 @@ with DAG(
         >> preprocess_data["test"]
         >> train
         >> evaluate
+        >> train_sim_offers
         >> gce_instance_stop
         >> send_slack_notif_success
     )

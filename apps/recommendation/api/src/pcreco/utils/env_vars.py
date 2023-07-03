@@ -27,7 +27,7 @@ MIXING_FEATURE_LIST = ["subcategory_id", "search_group_name", "category"]
 NUMBER_OF_PRESELECTED_OFFERS = 50 if not os.environ.get("CI") else 3
 NUMBER_OF_RECOMMENDATIONS = 20
 
-MAX_RECO_ITEM_PER_BATCH = os.environ.get("MAX_RECO_ITEM_PER_BATCH", 2500)
+MAX_RECO_ITEM_PER_BATCH = os.environ.get("MAX_RECO_ITEM_PER_BATCH", 5000)
 
 
 def log_duration(message, start):

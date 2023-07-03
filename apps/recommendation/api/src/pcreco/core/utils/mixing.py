@@ -12,6 +12,7 @@ from pcreco.utils.env_vars import (
 
 def order_offers_by_score_and_diversify_features(
     offers: List[Dict[str, Any]],
+    score_column="score",
     shuffle_recommendation=None,
     feature="subcategory_id",
     nb_reco_display=NUMBER_OF_RECOMMENDATIONS,
@@ -26,7 +27,7 @@ def order_offers_by_score_and_diversify_features(
 
     if shuffle_recommendation:
         for recommendation in offers:
-            recommendation["score"] = random.random()
+            recommendation[score_column] = random.random()
 
     offers_by_feature = _get_offers_grouped_by_feature(
         offers, feature
@@ -36,14 +37,16 @@ def order_offers_by_score_and_diversify_features(
     offers_by_feature_ordered_by_frequency = collections.OrderedDict(
         sorted(
             offers_by_feature.items(),
-            key=_get_number_of_offers_and_max_score_by_feature,
+            key=lambda x: _get_number_of_offers_and_max_score_by_feature(
+                x, score_column=score_column
+            ),
             reverse=True,
         )
     )
     for offer_feature in offers_by_feature_ordered_by_frequency:
         offers_by_feature_ordered_by_frequency[offer_feature] = sorted(
             offers_by_feature_ordered_by_frequency[offer_feature],
-            key=lambda k: k["score"],
+            key=lambda k: k[score_column],
             reverse=False,
         )
 
@@ -82,9 +85,9 @@ def _get_offers_grouped_by_feature(
 
 
 def _get_number_of_offers_and_max_score_by_feature(
-    feature_and_offers: Tuple,
+    feature_and_offers: Tuple, score_column: str = "score"
 ) -> Tuple:
     return (
         len(feature_and_offers[1]),
-        max([offer["score"] for offer in feature_and_offers[1]]),
+        max([offer[score_column] for offer in feature_and_offers[1]]),
     )

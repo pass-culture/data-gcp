@@ -66,7 +66,7 @@ MODEL_ENDPOINTS = {
         Applies diversification filter
         """,
         scorer=offer_scorer.ItemRetrievalRanker,
-        scorer_order_columns="score",
+        scorer_order_columns="order",
         scorer_order_ascending=False,
         endpoint=RecommendationEndpoint(f"recommendation_default_{ENV_SHORT_NAME}"),
         retrieval_order_query="booking_number DESC",
@@ -86,7 +86,7 @@ MODEL_ENDPOINTS = {
         Applies diversification filter
         """,
         scorer=offer_scorer.ItemRetrievalRanker,
-        scorer_order_columns="score",
+        scorer_order_columns="order",
         scorer_order_ascending=False,
         endpoint=RecommendationEndpoint(f"recommendation_version_b_{ENV_SHORT_NAME}"),
         retrieval_order_query="booking_number DESC",

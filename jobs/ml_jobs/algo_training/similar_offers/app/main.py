@@ -43,6 +43,8 @@ class FaissModel:
                 self.categories.setdefault(row["category"], []).append(idx)
 
     def get_idx_from_categories(self, categories):
+        if categories is None:
+            return None
         result = []
         for cat in categories:
             result.extend(self.categories.get(cat, []))
@@ -63,6 +65,8 @@ class FaissModel:
             return None
 
     def selected_to_idx(self, selected_items):
+        if selected_items is None:
+            return None
         arr = []
         for item_id in selected_items:
             idx = self.get_item_idx(item_id)
@@ -122,12 +126,15 @@ def predict():
     input_json = req_json["instances"]
     item_id = input_json[0]["offer_id"]
     selected_categories = input_json[0].get("selected_categories", [])
-    selected_idx = faiss_model.get_idx_from_categories(selected_categories)
     selected_offers = input_json[0].get("selected_offers", [])
-    if len(selected_idx) == 0:
-        selected_idx = None
-    if len(selected_offers) > 0:
+
+    if selected_categories is not None and len(selected_categories) > 0:
+        selected_idx = faiss_model.get_idx_from_categories(selected_categories)
+    elif selected_offers is not None and len(selected_offers) > 0:
         selected_idx = faiss_model.selected_to_idx(selected_offers)
+    else:
+        selected_idx = None
+
     try:
         n = int(input_json[0].get("size", 10))
     except:

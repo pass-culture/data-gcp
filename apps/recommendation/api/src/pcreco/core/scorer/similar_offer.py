@@ -51,11 +51,17 @@ class SimilarOfferV2Endpoint(ModelEndpoint):
 
     def model_score(self, item_input, size):
         start = time.time()
-        instances = {
-            "offer_id": self.offer.item_id,
-            "selected_categories": item_input,
-            "size": size,
-        }
+        if item_input is not None and len(item_input) > 0:
+            instances = {
+                "offer_id": self.offer.item_id,
+                "selected_categories": item_input,
+                "size": size,
+            }
+        else:
+            instances = {
+                "offer_id": self.offer.item_id,
+                "size": size,
+            }
         prediction_result = endpoint_score(
             instances=instances, endpoint_name=self.endpoint_name
         )

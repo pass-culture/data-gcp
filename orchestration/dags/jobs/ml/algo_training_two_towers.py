@@ -270,7 +270,8 @@ with DAG(
         environment=dag_config,
         command="python main.py "
         "--experiment-name similar_offers_two_towers_v1.1_" + f"{ENV_SHORT_NAME} "
-        "--model-name similar_offers_two_towers_v1.1",
+        "--model-name similar_offers_two_towers_v1.1"
+        f"--source-experiment-name {dag_config['EXPERIMENT_NAME']}",
         dag=dag,
     )
 

@@ -132,7 +132,7 @@ SELECT
   ,u.user_deposit_creation_date as deposit_created_date
   ,u.first_booking_date as first_booking_date
   ,CASE WHEN uat.appsflyer_id is null THEN 'unknown'
-        WHEN au.appsflyer_id  is not null THEN 'paid' 
+        WHEN au.appsflyer_id  is not null THEN 'campaign' 
         ELSE 'organic' END
         AS acquisition_origin
    ,au.media_source as paid_acquisition_media_source

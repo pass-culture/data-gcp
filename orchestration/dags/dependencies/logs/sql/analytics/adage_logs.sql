@@ -12,7 +12,7 @@ SELECT
     jsonPayload.extra.source as source,
     jsonPayload.extra.userId as user_id,
     jsonPayload.extra.uai AS uai,
-    jsonPayload.extra.user_role AS user_role
+    jsonPayload.extra.user_role AS user_role,
     jsonPayload.extra.AdageHeaderFrom as origin,
     cast(jsonPayload.extra.stockId as int) as stock_id,
     cast(jsonPayload.extra.offerId as int) as offer_id,

@@ -75,4 +75,20 @@ SIMILAR_OFFER_ENDPOINTS = {
         ranking_order_query="item_score DESC",
         ranking_limit=20,
     ),
+    "item_v2_version_b": ModelConfiguration(
+        name="item_v2_version_b",
+        description="""
+        Item model:
+        Takes most similar ones (training based on clicks) (NN)
+        Sort top 500 most similar, by distance range and similarity score (SQL)
+        """,
+        scorer=offer_scorer.SimilarOfferItemRanker,
+        scorer_order_columns="order",
+        scorer_order_ascending=True,
+        endpoint=SimilarOfferV2Endpoint(f"similar_offers_version_b_{ENV_SHORT_NAME}"),
+        retrieval_order_query=None,
+        retrieval_limit=500,
+        ranking_order_query="item_score DESC",
+        ranking_limit=20,
+    ),
 }

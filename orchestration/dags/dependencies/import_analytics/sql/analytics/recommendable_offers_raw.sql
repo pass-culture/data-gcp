@@ -77,4 +77,3 @@ FROM
 INNER JOIN `{{ bigquery_clean_dataset }}`.subcategories subcategories ON ro.subcategory_id = subcategories.id
 LEFT JOIN venues v ON ro.venue_id =   v.venue_id
 WHERE stock_rank < 30 -- only next 30 events
-AND booking_number > 0 -- at least one bookking in period

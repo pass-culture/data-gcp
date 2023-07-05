@@ -18,9 +18,7 @@ def load_model():
     model_weights = embedding_item_model[0]
     distance = len(model_weights[0])
 
-    quantizer = faiss.IndexFlatL2(distance)
-    index = faiss.IndexIVFPQ(quantizer, distance, 16, 8, 4)
-    index.train(model_weights)
+    index = faiss.IndexFlatL2(distance)
     index.add(model_weights)
     return index, model_weights, offer_item_model
 
@@ -90,7 +88,7 @@ class FaissModel:
         offer_emb = self.get_offer_emb(item_id)
         params = None
         if selected_idx is not None:
-            params = faiss.SearchParametersIVF(sel=faiss.IDSelectorBatch(selected_idx))
+            params = faiss.SearchParameters(sel=faiss.IDSelectorBatch(selected_idx))
 
         if offer_emb is not None:
             results = faiss_index.search(

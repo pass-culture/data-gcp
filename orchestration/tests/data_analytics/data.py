@@ -1079,6 +1079,7 @@ ENRICHED_VENUE_DATA_INPUT = {
             "venue_creation_date": datetime.now().replace(microsecond=0),
             "venue_label_id": "1",
             "venue_type_id": "1",
+            "banner_url": "url",
         }
     ],
     "applicative_database_venue_registration": [],
@@ -1145,6 +1146,7 @@ ENRICHED_VENUE_DATA_EXPECTED = [
         "venue_region_name": "IDF",
         "venue_pc_pro_link": "https://passculture.pro/structures/AE/lieux/AE",
         "venue_targeted_audience": None,
+        "banner_url": "url",
     }
 ]
 

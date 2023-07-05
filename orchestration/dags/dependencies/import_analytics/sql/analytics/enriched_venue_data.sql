@@ -197,7 +197,9 @@ SELECT
         '/lieux/',
         venue_humanized_id.humanized_id
     ) AS venue_pc_pro_link,
-    venue_registration.venue_target AS venue_targeted_audience
+    venue_registration.venue_target AS venue_targeted_audience,
+    venue.banner_url 
+
 FROM
     `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue
     LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offerer AS offerer ON venue.venue_managing_offerer_id = offerer.offerer_id

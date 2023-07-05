@@ -28,4 +28,9 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "festival_increments",
     },
+    "departmental_objectives": {
+        "sql": f"{SQL_PATH}/analytics/departmental_objectives.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "departmental_objectives",
+    },
 }

@@ -34,7 +34,7 @@ def save_experiment(experiment_name, model_name, serving_container, run_id):
 
 
 def deploy_container(serving_container):
-    command = f"sh ./deploy_to_docker_registery.sh {TRAIN_DIR} {ENV_SHORT_NAME} {serving_container}"
+    command = f"sh ./deploy_to_docker_registery.sh {serving_container}"
     results = subprocess.Popen(
         command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
     )
@@ -74,6 +74,7 @@ def get_model_from_mlflow(
 
 def download_model(artifact_uri):
     command = f"gsutil -m cp -r {artifact_uri} ./"
+    print(command)
     results = subprocess.Popen(
         command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
     )
@@ -112,6 +113,7 @@ def main(
     serving_container = (
         f"eu.gcr.io/{GCP_PROJECT_ID}/{experiment_name.replace('.', '_')}:{run_id}"
     )
+    print("Get items metadata...")
     get_items_metadata()
     if source_artifact_uri is None or len(source_artifact_uri) < 1:
         source_artifact_uri = get_model_from_mlflow(
@@ -119,8 +121,10 @@ def main(
             run_id=source_run_id,
             artifact_uri=source_artifact_uri,
         )
-
+    print(f"Get from {source_artifact_uri} trained model")
+    print(f"Download...")
     download_model(source_artifact_uri)
+    print("Deploy...")
     deploy_container(serving_container)
     save_experiment(experiment_name, model_name, serving_container, run_id=run_id)
 

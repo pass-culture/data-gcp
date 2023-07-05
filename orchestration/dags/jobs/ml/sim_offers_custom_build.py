@@ -20,7 +20,7 @@ default_args = {
 
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"sim-offers-custom-build-{ENV_SHORT_NAME}"
-BASE_DIR = "data-gcp/jobs/ml_jobs/similar_offers"
+BASE_DIR = "data-gcp/jobs/ml_jobs/algo_training"
 
 with DAG(
     "sim_offers_custom_build",
@@ -71,14 +71,14 @@ with DAG(
 
     sim_offers = SSHGCEOperator(
         task_id="containerize_similar_offers",
-        instance_name="{{ params.instance_name }}",
-        base_dir=BASE_DIR,
+        instance_name=GCE_INSTANCE,
+        base_dir=f"{BASE_DIR}/similar_offers",
         command="python main.py "
-        "--experiment-name {{ params.experiment_name }}"
-        "--model-name {{ params.model_name }}"
-        "--source-experiment-name {{ params.source_experiment_name }}"
-        "--source-run-id {{ params.source_run_id }}"
-        "--source-artifact-uri {{  params.source_artifact_uri }}",
+        "--experiment-name {{ params.experiment_name }} "
+        "--model-name {{ params.model_name }} "
+        "--source-experiment-name {{ params.source_experiment_name }} "
+        "--source-run-id {{ params.source_run_id }} "
+        "--source-artifact-uri {{  params.source_artifact_uri }} ",
         dag=dag,
     )
 

@@ -520,6 +520,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_INPUT = {
             "collective_offer_students": "COLLEGE4",
             "collective_offer_is_active": True,
             "collective_offer_image_id": "27",
+            "collective_offer_validation": "APPROVED",
             "is_public_api": False,
         }
     ],
@@ -532,6 +533,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_INPUT = {
             "collective_offer_date_updated": "2022-01-16",
             "collective_offer_subcategory_id": "CONCERT",
             "collective_offer_students": "COLLEGE4",
+            "collective_offer_validation": "APPROVED",
             "collective_offer_is_active": True,
             "collective_offer_image_id": "28",
         }
@@ -1024,6 +1026,7 @@ ENRICHED_VENUE_DATA_INPUT = {
             "collective_offer_id": "1",
             "venue_id": "1",
             "collective_offer_creation_date": datetime.now().replace(microsecond=0),
+            "collective_offer_validation": "APPROVED",
         },
     ],
     "applicative_database_collective_stock": [
@@ -1204,6 +1207,7 @@ ENRICHED_OFFERER_DATA_INPUT = {
             "collective_offer_id": "1",
             "venue_id": "1",
             "collective_offer_creation_date": datetime.now().replace(microsecond=0),
+            "collective_offer_validation": "APPROVED",
         }
     ],
     "applicative_database_collective_offer_template": [],

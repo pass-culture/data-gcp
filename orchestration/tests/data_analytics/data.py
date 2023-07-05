@@ -1012,6 +1012,7 @@ ENRICHED_VENUE_DATA_INPUT = {
             "offer_id": "1",
             "offer_creation_date": datetime.now().replace(microsecond=0),
             "venue_id": "1",
+            "offer_validation": "APPROVED",
         }
     ],
     "applicative_database_stock": [
@@ -1181,6 +1182,7 @@ ENRICHED_OFFERER_DATA_INPUT = {
             "offer_id": "1",
             "venue_id": "1",
             "offer_creation_date": datetime.now().replace(microsecond=0),
+            "offerer_validation": "APPROVED",
         }
     ],
     "applicative_database_offerer": [

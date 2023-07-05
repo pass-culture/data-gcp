@@ -1042,6 +1042,7 @@ ENRICHED_VENUE_DATA_INPUT = {
             "collective_offer_id": "2",
             "venue_id": "1",
             "collective_offer_creation_date": datetime.now().replace(microsecond=0),
+            "collective_offer_validation": "APPROVED",
         }
     ],
     "bookable_collective_offer": [],

@@ -1909,12 +1909,12 @@
 							"})\r",
 							"\r",
 							"\r",
-							"pm.test(\"Response must contain an array params with filtered = false\", function () {\r",
+							"pm.test(\"Response must contain an array params with filtered = true\", function () {\r",
 							"  const jsonResponse = pm.response.json();\r",
 							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
 							"  pm.expect(jsonResponse).to.have.property('params')\r",
 							"  pm.expect(jsonResponse.params).to.have.property(\"filtered\");\r",
-							"  pm.expect(jsonResponse.params.filtered).to.be.false;\r",
+							"  pm.expect(jsonResponse.params.filtered).to.be.true;\r",
 							"});"
 						],
 						"type": "text/javascript"
@@ -1937,6 +1937,10 @@
 						{
 							"key": "token",
 							"value": "{{api_token}}"
+						},
+						{
+							"key" : "modelEndpoint",
+							"value" : "{{sim_offers_model_endpoint}}"
 						}
 					]
 				}
@@ -1988,12 +1992,12 @@
 							"})\r",
 							"\r",
 							"\r",
-							"pm.test(\"Response must contain an array params with filtered = false\", function () {\r",
+							"pm.test(\"Response must contain an array params with filtered = true\", function () {\r",
 							"  const jsonResponse = pm.response.json();\r",
 							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
 							"  pm.expect(jsonResponse).to.have.property('params')\r",
 							"  pm.expect(jsonResponse.params).to.have.property(\"filtered\");\r",
-							"  pm.expect(jsonResponse.params.filtered).to.be.false;\r",
+							"  pm.expect(jsonResponse.params.filtered).to.be.true;\r",
 							"});"
 						],
 						"type": "text/javascript"
@@ -2018,6 +2022,10 @@
 							"value": "{{api_token}}"
 						},
 						{
+							"key" : "modelEndpoint",
+							"value" : "{{sim_offers_model_endpoint}}"
+						},
+						{
 							"key": "longitude",
 							"value": "2.3688874"
 						},
@@ -2025,6 +2033,7 @@
 							"key": "latitude",
 							"value": "48.8632553"
 						}
+						
 					]
 				}
 			},
@@ -2140,6 +2149,10 @@
 							"value": "{{api_token}}"
 						},
 						{
+							"key" : "modelEndpoint",
+							"value" : "{{sim_offers_model_endpoint}}"
+						},
+						{
 							"key": "categories",
 							"value": "LIVRES"
 						},
@@ -2150,395 +2163,6 @@
 						{
 							"key": "categories",
 							"value": "SPECTACLES"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "/similar_offers/offer_id isEvent",
-			"event": [
-				{
-					"listen": "prerequest",
-					"script": {
-						"exec": [
-							""
-						],
-						"type": "text/javascript"
-					}
-				},
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});\r",
-							"pm.test(\"Response time is less than 10s\", function () {\r",
-							"    pm.expect(pm.response.responseTime).to.be.below(10000);\r",
-							"});\r",
-							"pm.test(\"Response must be a JSON and have a body\", function () {\r",
-							"     pm.response.to.be.ok;\r",
-							"     pm.response.to.be.withBody;\r",
-							"     pm.response.to.be.json;\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response must contain an array results with filtered = true\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
-							"  pm.expect(jsonResponse).to.have.property('results')\r",
-							"  pm.expect(jsonResponse.results).to.be.an(\"array\");\r",
-							"  pm.expect(jsonResponse.params).to.have.property(\"filtered\");\r",
-							"  pm.expect(jsonResponse.params.filtered).to.be.true\r",
-							"});\r",
-							"\r",
-							"function checkIfArrayIsUnique(array) {\r",
-							"  return array.length === new Set(array).size;\r",
-							"}\r",
-							"\r",
-							"pm.test('Check if Offer_ids are unique', () => {\r",
-							"    let ids = []\r",
-							"    _.each(pm.response.json().results, (item) => {\r",
-							"        ids.push(item)\r",
-							"    })\r",
-							"\r",
-							"    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
-							"})"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"isEvent\":true\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{api_url}}/similar_offers/{{offer_id}}?token={{api_token}}",
-					"host": [
-						"{{api_url}}"
-					],
-					"path": [
-						"similar_offers",
-						"{{offer_id}}"
-					],
-					"query": [
-						{
-							"key": "token",
-							"value": "{{api_token}}"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "/similar_offers/offer_id free offers",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});\r",
-							"pm.test(\"Response time is less than 10s\", function () {\r",
-							"    pm.expect(pm.response.responseTime).to.be.below(10000);\r",
-							"});\r",
-							"pm.test(\"Response must be a JSON and have a body\", function () {\r",
-							"     pm.response.to.be.ok;\r",
-							"     pm.response.to.be.withBody;\r",
-							"     pm.response.to.be.json;\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response must contain an array results with filtered = true\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
-							"  pm.expect(jsonResponse).to.have.property('results')\r",
-							"  pm.expect(jsonResponse.results).to.be.an(\"array\");\r",
-							"  pm.expect(jsonResponse.params).to.have.property(\"filtered\");\r",
-							"  pm.expect(jsonResponse.params.filtered).to.be.true\r",
-							"});\r",
-							"\r",
-							"function checkIfArrayIsUnique(array) {\r",
-							"  return array.length === new Set(array).size;\r",
-							"}\r",
-							"\r",
-							"pm.test('Check if Offer_ids are unique', () => {\r",
-							"    let ids = []\r",
-							"    _.each(pm.response.json().results, (item) => {\r",
-							"        ids.push(item)\r",
-							"    })\r",
-							"\r",
-							"    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
-							"})"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"priceMax\": 0\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{api_url}}/similar_offers/{{offer_id}}?token={{api_token}}",
-					"host": [
-						"{{api_url}}"
-					],
-					"path": [
-						"similar_offers",
-						"{{offer_id}}"
-					],
-					"query": [
-						{
-							"key": "token",
-							"value": "{{api_token}}"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "/similar_offers/offer_id digital offers",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});\r",
-							"pm.test(\"Response time is less than 10s\", function () {\r",
-							"    pm.expect(pm.response.responseTime).to.be.below(10000);\r",
-							"});\r",
-							"pm.test(\"Response must be a JSON and have a body\", function () {\r",
-							"     pm.response.to.be.ok;\r",
-							"     pm.response.to.be.withBody;\r",
-							"     pm.response.to.be.json;\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response must contain an array results with filtered = true\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
-							"  pm.expect(jsonResponse).to.have.property('results')\r",
-							"  pm.expect(jsonResponse.results).to.be.an(\"array\");\r",
-							"  pm.expect(jsonResponse.params).to.have.property(\"filtered\");\r",
-							"  pm.expect(jsonResponse.params.filtered).to.be.true\r",
-							"});\r",
-							"\r",
-							"function checkIfArrayIsUnique(array) {\r",
-							"  return array.length === new Set(array).size;\r",
-							"}\r",
-							"\r",
-							"pm.test('Check if Offer_ids are unique', () => {\r",
-							"    let ids = []\r",
-							"    _.each(pm.response.json().results, (item) => {\r",
-							"        ids.push(item)\r",
-							"    })\r",
-							"\r",
-							"    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
-							"})"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"isDigital\":true \r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{api_url}}/similar_offers/{{offer_id}}?token={{api_token}}",
-					"host": [
-						"{{api_url}}"
-					],
-					"path": [
-						"similar_offers",
-						"{{offer_id}}"
-					],
-					"query": [
-						{
-							"key": "token",
-							"value": "{{api_token}}"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "/similar_offers/offer_id paid offers",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});\r",
-							"pm.test(\"Response time is less than 10s\", function () {\r",
-							"    pm.expect(pm.response.responseTime).to.be.below(10000);\r",
-							"});\r",
-							"pm.test(\"Response must be a JSON and have a body\", function () {\r",
-							"     pm.response.to.be.ok;\r",
-							"     pm.response.to.be.withBody;\r",
-							"     pm.response.to.be.json;\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response must contain an array results with filtered = true\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
-							"  pm.expect(jsonResponse).to.have.property('results')\r",
-							"  pm.expect(jsonResponse.results).to.be.an(\"array\");\r",
-							"  pm.expect(jsonResponse.params).to.have.property(\"filtered\");\r",
-							"  pm.expect(jsonResponse.params.filtered).to.be.true\r",
-							"});\r",
-							"\r",
-							"function checkIfArrayIsUnique(array) {\r",
-							"  return array.length === new Set(array).size;\r",
-							"}\r",
-							"\r",
-							"pm.test('Check if Offer_ids are unique', () => {\r",
-							"    let ids = []\r",
-							"    _.each(pm.response.json().results, (item) => {\r",
-							"        ids.push(item)\r",
-							"    })\r",
-							"\r",
-							"    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
-							"})"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"priceMin\": 1\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{api_url}}/similar_offers/{{offer_id}}?token={{api_token}}",
-					"host": [
-						"{{api_url}}"
-					],
-					"path": [
-						"similar_offers",
-						"{{offer_id}}"
-					],
-					"query": [
-						{
-							"key": "token",
-							"value": "{{api_token}}"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "/similar_offers/offer_id not digital offers",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});\r",
-							"pm.test(\"Response time is less than 10s\", function () {\r",
-							"    pm.expect(pm.response.responseTime).to.be.below(10000);\r",
-							"});\r",
-							"pm.test(\"Response must be a JSON and have a body\", function () {\r",
-							"     pm.response.to.be.ok;\r",
-							"     pm.response.to.be.withBody;\r",
-							"     pm.response.to.be.json;\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response must contain an array results with filtered = true\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
-							"  pm.expect(jsonResponse).to.have.property('results')\r",
-							"  pm.expect(jsonResponse.results).to.be.an(\"array\");\r",
-							"  pm.expect(jsonResponse.params).to.have.property(\"filtered\");\r",
-							"  pm.expect(jsonResponse.params.filtered).to.be.true\r",
-							"});\r",
-							"\r",
-							"function checkIfArrayIsUnique(array) {\r",
-							"  return array.length === new Set(array).size;\r",
-							"}\r",
-							"\r",
-							"pm.test('Check if Offer_ids are unique', () => {\r",
-							"    let ids = []\r",
-							"    _.each(pm.response.json().results, (item) => {\r",
-							"        ids.push(item)\r",
-							"    })\r",
-							"\r",
-							"    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
-							"})"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"isDigital\":true \r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{api_url}}/similar_offers/{{offer_id}}?token={{api_token}}",
-					"host": [
-						"{{api_url}}"
-					],
-					"path": [
-						"similar_offers",
-						"{{offer_id}}"
-					],
-					"query": [
-						{
-							"key": "token",
-							"value": "{{api_token}}"
 						}
 					]
 				}

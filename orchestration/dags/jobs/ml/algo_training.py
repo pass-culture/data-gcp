@@ -219,8 +219,8 @@ with DAG(
         command="python main.py "
         "--experiment-name similar_offers_{{ params.input_type }}"
         + f"_v2.1_{ENV_SHORT_NAME} "
-        "--model-name v2.1"
-        f"--source-experiment-name {dag_config['EXPERIMENT_NAME']}",
+        "--model-name v2.1 "
+        f"--source-experiment-name {dag_config['EXPERIMENT_NAME']} ",
         dag=dag,
     )
 

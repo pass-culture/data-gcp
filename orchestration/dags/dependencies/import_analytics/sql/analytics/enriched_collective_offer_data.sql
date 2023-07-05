@@ -111,6 +111,7 @@ FROM
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.subcategories ON subcategories.id = collective_offer.collective_offer_subcategory_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.region_department venue_region ON venue_region.num_dep = venue.venue_department_code
     LEFT JOIN bookings_per_offer ON bookings_per_offer.collective_offer_id = collective_offer.collective_offer_id
+WHERE collective_offer.collective_offer_validation = 'APPROVED'
 UNION
 ALL
 SELECT
@@ -157,3 +158,4 @@ FROM
     LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_collective_stock AS collective_stock ON collective_stock.collective_offer_id = template.collective_offer_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.region_department venue_region ON venue_region.num_dep = venue.venue_department_code
     LEFT JOIN bookings_per_offer ON bookings_per_offer.collective_offer_id = template.collective_offer_id
+WHERE template.collective_offer_validation = 'APPROVED'

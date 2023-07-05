@@ -72,4 +72,5 @@ ref_tables = {
             "department_code": "STRING",
             "objective": "INTEGER",
         },
+    },
 }

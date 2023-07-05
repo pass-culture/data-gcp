@@ -67,7 +67,7 @@ ref_tables = {
         "file_type": "csv",
         "schema": {
             "objective_name": "STRING",
-            "objective_type":"STRING",
+            "objective_type": "STRING",
             "region_name": "STRING",
             "department_code": "STRING",
             "objective": "INTEGER",

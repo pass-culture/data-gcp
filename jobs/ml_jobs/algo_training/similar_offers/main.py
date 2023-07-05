@@ -54,7 +54,7 @@ def get_model_from_mlflow(
     experiment_name: str, run_id: str = None, artifact_uri: str = None
 ):
     # get artifact_uri from BQ
-    if source_artifact_uri is None or len(source_artifact_uri) <= 10:
+    if artifact_uri is None or len(artifact_uri) <= 10:
         if run_id is None or len(run_id) == 0:
             results_array = pd.read_gbq(
                 f"""SELECT * FROM `{BIGQUERY_CLEAN_DATASET}.{MODELS_RESULTS_TABLE_NAME}` WHERE experiment_name = '{experiment_name}' ORDER BY execution_date DESC LIMIT 1"""

@@ -2,6 +2,7 @@ WITH
 permanent_venues AS (SELECT
     enriched_venue_data.venue_id AS venue_id
     ,venue_managing_offerer_id AS offerer_id
+    ,enriched_venue_data.partner_id
     ,venue_creation_date AS partner_creation_date
     ,CASE WHEN DATE_TRUNC(venue_creation_date,YEAR) <= DATE_TRUNC(DATE_SUB(DATE('{{ ds }}'),INTERVAL 1 YEAR),YEAR) THEN TRUE ELSE NULL END AS was_registered_last_year
     ,enriched_venue_data.venue_name AS partner_name
@@ -58,6 +59,7 @@ QUALIFY ROW_NUMBER() OVER(PARTITION BY venue_managing_offerer_id ORDER BY theore
 SELECT
     '' AS venue_id
     ,enriched_offerer_data.offerer_id
+    ,enriched_offerer_data.partner_id
     ,enriched_offerer_data.offerer_creation_date AS partner_creation_date
     ,CASE WHEN DATE_TRUNC(enriched_offerer_data.offerer_creation_date,YEAR) <= DATE_TRUNC(DATE_SUB(DATE('{{ ds }}'),INTERVAL 1 YEAR),YEAR) THEN TRUE ELSE NULL END AS was_registered_last_year
      ,enriched_offerer_data.offerer_name AS partner_name
@@ -99,8 +101,64 @@ LEFT JOIN `{{ bigquery_analytics_dataset }}`.agg_partner_cultural_sector ON agg_
 WHERE NOT enriched_offerer_data.is_territorial_authorities  -- Pas déjà compté à l'échelle du lieu permanent
 )
 
-SELECT *
+SELECT
+    venue_id
+    , offerer_id
+    , partner_id
+    ,partner_creation_date
+    ,was_registered_last_year
+    ,partner_name
+    , partner_academy_name
+    ,partner_region_name
+    ,partner_department_code
+    ,partner_postal_code
+    ,partner_status
+    ,partner_type
+    ,partner_type_origin
+    , cultural_sector
+    ,is_active_last_30days
+    ,is_active_current_year
+    ,individual_offers_created
+    ,collective_offers_created
+    ,total_offers_created
+    ,last_bookable_offer_date
+    ,first_bookable_offer_date
+    ,non_cancelled_individual_bookings
+    ,used_individual_bookings
+    ,confirmed_collective_bookings
+    ,used_collective_bookings
+    ,real_individual_revenue
+    ,real_collective_revenue
+    ,total_real_revenue
 FROM permanent_venues
 UNION ALL
-SELECT *
+SELECT
+    venue_id
+    , offerer_id
+    , partner_id
+    ,partner_creation_date
+    ,was_registered_last_year
+    ,partner_name
+    , partner_academy_name
+    ,partner_region_name
+    ,partner_department_code
+    ,partner_postal_code
+    ,partner_status
+    ,partner_type
+    ,partner_type_origin
+    , cultural_sector
+    ,is_active_last_30days
+    ,is_active_current_year
+    ,individual_offers_created
+    ,collective_offers_created
+    ,total_offers_created
+    ,last_bookable_offer_date
+    ,first_bookable_offer_date
+    ,non_cancelled_individual_bookings
+    ,used_individual_bookings
+    ,confirmed_collective_bookings
+    ,used_collective_bookings
+    ,real_individual_revenue
+    ,real_collective_revenue
+    ,total_real_revenue
 FROM offerers

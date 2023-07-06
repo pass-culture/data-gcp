@@ -1095,6 +1095,7 @@ ENRICHED_VENUE_DATA_INPUT = {
 ENRICHED_VENUE_DATA_EXPECTED = [
     {
         "venue_id": "1",
+        "partner_id": "venue-1",
         "venue_public_name": "Venue public name",
         "venue_name": "venue name",
         "venue_booking_email": "venue@example.com",
@@ -1247,6 +1248,7 @@ ENRICHED_OFFERER_DATA_INPUT = {
 ENRICHED_OFFERER_DATA_EXPECTED = [
     {
         "offerer_id": "1",
+        "partner_id": "offerer-1",
         "offerer_name": "An offerer",
         "offerer_creation_date": datetime.now().replace(microsecond=0),
         "offerer_validation_date": datetime.now().replace(microsecond=0),

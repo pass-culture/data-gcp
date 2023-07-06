@@ -79,7 +79,7 @@ with child_home as (
     ON events.entry_id = home_ref.id
     LEFT JOIN `{{ bigquery_analytics_dataset }}.contentful_entries` as e
     ON events.destination_entry_id = e.id
-    WHERE event_name in ("ExclusivityBlockClicked", "CategoryBlockClicked", "HighlightBlockClicked")
+    WHERE event_name in ("ExclusivityBlockClicked", "CategoryBlockClicked", "HighlightBlockClicked","ConsultVideo")
     -- entry_id param is missing for event HighlightBlockClicked because it is available in a prior version of the app. 
     and user_pseudo_id is not null
     and session_id is not null

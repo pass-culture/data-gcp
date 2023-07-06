@@ -186,6 +186,47 @@ contentful_modules = [
             }
         ],
     },
+    {
+        "name": "video",
+        "additional_fields": [
+            "title",
+            "displayed_title",
+            "video_title",
+            "duration_in_minutes",
+            "video_publication_date",
+            "youtube_video_id",
+            "algolia_parameters",
+            "color",
+            "video_tag",
+            "offer_title",
+            "video_description",
+        ],
+        "children": [
+            {
+                "name": "algolia_parameters",
+                "additional_fields": [
+                    "title",
+                    "is_geolocated",
+                    "around_radius",
+                    "tags",
+                    "hits_per_page",
+                    "categories",
+                    "subcategories",
+                    "is_thing",
+                    "beginning_datetime",
+                    "ending_datetime",
+                    "is_event",
+                    "is_duo",
+                    "is_digital",
+                    "newest_only",
+                    "price_max",
+                    "price_min",
+                    "image_full_screen",
+                ],
+                "type": "unique",
+            },
+        ],
+    },
 ]
 
 
@@ -283,6 +324,10 @@ class ContentfulClient:
                 basic_fields[f"{field}"] = str(
                     [add_algo.id for add_algo in other_fields.get(field)]
                 )
+            elif field in ["duration_in_minutes"]:
+                basic_fields[f"{field}"] = float(other_fields.get(field))
+            elif field in ["video_publication_date"]:
+                basic_fields[f"{field}"] = other_fields.get(field)
             else:
                 basic_fields[f"{field}"] = str(other_fields.get(field))
         return basic_fields

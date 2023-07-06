@@ -192,7 +192,6 @@ contentful_modules = [
             "title",
             "displayed_title",
             "video_title",
-            "video_thumbnail",
             "duration_in_minutes",
             "video_publication_date",
             "youtube_video_id",

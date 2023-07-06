@@ -91,7 +91,7 @@ class FaissModel:
             params = faiss.SearchParameters(sel=faiss.IDSelectorBatch(selected_idx))
 
         if offer_emb is not None:
-            results = faiss_index.search(
+            results = self.faiss_index.search(
                 offer_emb,
                 k=n,
                 params=params,

@@ -1302,6 +1302,7 @@ ENRICHED_OFFERER_DATA_EXPECTED = [
         "venue_with_offer": 1,
         "offerer_humanized_id": "AE",
         "current_year_revenue": 7,
+        "is_territorial_authorities": True,
     }
 ]
 

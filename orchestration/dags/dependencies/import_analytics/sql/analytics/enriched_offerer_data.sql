@@ -235,6 +235,7 @@ SELECT
     label_unite_legale AS legal_unit_business_activity_label,
     siren_data.categorieJuridiqueUniteLegale AS legal_unit_legal_category_code,
     label_categorie_juridique AS legal_unit_legal_category_label,
+    siren_data.activitePrincipaleUniteLegale = '84.11Z' AS is_territorial_authorities,
     COALESCE(related_venues.venue_cnt,0) AS venue_cnt,
     COALESCE(venues_with_offers.nb_venue_with_offers,0) AS venue_with_offer,
     offerer_humanized_id.humanized_id AS offerer_humanized_id,

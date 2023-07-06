@@ -324,6 +324,10 @@ class ContentfulClient:
                 basic_fields[f"{field}"] = str(
                     [add_algo.id for add_algo in other_fields.get(field)]
                 )
+            elif field in ["duration_in_minutes"]:
+                basic_fields[f"{field}"] = float(other_fields.get(field))
+            elif field in ["video_publication_date"]:
+                basic_fields[f"{field}"] = other_fields.get(field)
             else:
                 basic_fields[f"{field}"] = str(other_fields.get(field))
         return basic_fields

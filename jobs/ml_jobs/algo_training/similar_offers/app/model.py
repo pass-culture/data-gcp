@@ -1,5 +1,7 @@
 import numpy as np
 import faiss
+
+
 def compute_distance_subset(index, xq, subset):
     n, _ = xq.shape
     _, k = subset.shape
@@ -11,24 +13,25 @@ def compute_distance_subset(index, xq, subset):
 
 
 class FaissModel:
-
-    def set_up_index(self):  
+    def set_up_index(self):
         self.index = faiss.IndexFlatL2(self.distance)
         self.index.add(self.model_weights)
 
     def set_up_model(self):
         import tensorflow as tf
+
         tf_reco = tf.keras.models.load_model("./model/")
         self.item_list = tf_reco.item_layer.layers[0].get_vocabulary()
-        self.model_weights =  tf_reco.item_layer.layers[1].get_weights()[0]
+        self.model_weights = tf_reco.item_layer.layers[1].get_weights()[0]
         self.distance = len(self.model_weights[0])
-        
+
         self.item_dict = {}
         for idx, (x, y) in enumerate(zip(self.item_list, self.model_weights)):
             self.item_dict[x] = {"embeddings": y, "idx": idx}
 
     def set_up_item_indexes(self):
         import pandas as pd
+
         self.categories = {}
         df = pd.read_parquet("./metadata/item_metadata.parquet")
         for _, row in df.iterrows():
@@ -68,14 +71,13 @@ class FaissModel:
                 arr.append(idx)
         return np.array(arr)
 
-
     def distances_to_offer(self, nn_idx, n=10):
         if len(nn_idx) > n:
             nn_idx = nn_idx[:n]
         return {"predictions": [self.item_list[index] for (index, _) in nn_idx]}
-    
+
     def compute_distance(self, item_id, selected_idx=None, n=10):
-        offer_emb = self.get_offer_emb(item_id)  
+        offer_emb = self.get_offer_emb(item_id)
         if offer_emb is not None:
             if selected_idx is not None:
                 distances = compute_distance_subset(
@@ -89,10 +91,11 @@ class FaissModel:
                     offer_emb,
                     k=n,
                 )
-                #indexes, distances
-                nn_idx = sorted(zip(list(results[1][0]), list(results[0][0])), key=lambda tup: tup[1])
-                
-            return self.distances_to_offer(
-                nn_idx=nn_idx, n=n
-            )
+                # indexes, distances
+                nn_idx = sorted(
+                    zip(list(results[1][0]), list(results[0][0])),
+                    key=lambda tup: tup[1],
+                )
+
+            return self.distances_to_offer(nn_idx=nn_idx, n=n)
         return {"predictions": []}

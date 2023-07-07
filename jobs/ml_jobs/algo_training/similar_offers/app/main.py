@@ -18,31 +18,23 @@ LOG_CONFIG = {
             "()": "flask_google_cloud_logger.FlaskGoogleCloudFormatter",
             "application_info": {
                 "type": "python-application",
-                "application_name": "[Data](similar_offers) API"
+                "application_name": "[Data](similar_offers) API",
             },
-            "format": "[%(asctime)s] %(levelname)s in %(module)s: %(message)s"
+            "format": "[%(asctime)s] %(levelname)s in %(module)s: %(message)s",
         }
     },
-    "handlers": {
-        "json": {
-            "class": "logging.StreamHandler",
-            "formatter": "json"
-        }
-    },
+    "handlers": {"json": {"class": "logging.StreamHandler", "formatter": "json"}},
     "loggers": {
-        "root": {
-            "level": "INFO",
-            "handlers": ["json"]
-        },
+        "root": {"level": "INFO", "handlers": ["json"]},
         "werkzeug": {
             "level": "WARN",  # Disable werkzeug hardcoded logger
-            "handlers": ["json"]
-        }
-    }
+            "handlers": ["json"],
+        },
+    },
 }
 
-config.dictConfig(LOG_CONFIG)  
-logger = logging.getLogger("root") 
+config.dictConfig(LOG_CONFIG)
+logger = logging.getLogger("root")
 
 app = Flask(__name__)
 CORS(app)
@@ -53,8 +45,10 @@ faiss_model.set_up_model()
 faiss_model.set_up_item_indexes()
 faiss_model.set_up_index()
 
+
 def flush_memory():
     gc.collect()
+
 
 @app.route("/isalive")
 def is_alive():

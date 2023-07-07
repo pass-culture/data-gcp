@@ -480,7 +480,7 @@ analytics_tables = {
             "enriched_offer_data",
             "bookable_venue_history",
             "enriched_venue_data",
-            "enriched_cultural_partner_data_v2"
+            "enriched_cultural_partner_data_v2",
         ],
     },
     "funnel_subscription_beneficiary": {

@@ -13,4 +13,4 @@ COPY ./metadata /app/metadata
 
 WORKDIR /app
 EXPOSE 8080
-CMD ["gunicorn", "main:app", "--preload", "--timeout=60", "--workers=4", "--bind=0.0.0.0:8080", "--max-requests=500"]
+CMD ["gunicorn", "main:app", "--preload", "--timeout=60", "--workers=4", "--bind=0.0.0.0:8080"]

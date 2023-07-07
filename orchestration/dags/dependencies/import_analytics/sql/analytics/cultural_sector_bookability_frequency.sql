@@ -45,3 +45,5 @@ SELECT
         WHEN median_bookability_frequency <= 6 THEN 1
         WHEN median_bookability_frequency >= 11 THEN 3
         ELSE 2 END AS cultural_sector_bookability_frequency_group
+FROM cultural_sector_crea_frequency
+LEFT JOIN cultural_sector_bookability_frequency USING(cultural_sector)

@@ -19,6 +19,7 @@ permanent_venues AS (SELECT
     ,COALESCE(enriched_venue_data.individual_offers_created,0) AS individual_offers_created
     ,COALESCE(enriched_venue_data.collective_offers_created,0) AS collective_offers_created
     ,(COALESCE(enriched_venue_data.collective_offers_created,0) + COALESCE(enriched_venue_data.individual_offers_created,0)) AS total_offers_created
+    ,enriched_venue_data.first_offer_creation_date AS first_offer_creation_date
     ,venue_last_bookable_offer_date AS last_bookable_offer_date
     , venue_first_bookable_offer_date AS first_bookable_offer_date
     ,COALESCE(enriched_venue_data.non_cancelled_individual_bookings,0) AS non_cancelled_individual_bookings
@@ -79,6 +80,7 @@ SELECT
     ,COALESCE(enriched_offerer_data.offerer_individual_offers_created,0) AS individual_offers_created
     ,COALESCE(enriched_offerer_data.offerer_collective_offers_created,0) AS collective_offers_created
     ,COALESCE(enriched_offerer_data.offerer_individual_offers_created,0) + COALESCE(enriched_offerer_data.offerer_collective_offers_created,0) AS total_offers_created
+    ,enriched_offerer_data.offerer_first_offer_creation_date AS first_offer_creation_date
     ,enriched_offerer_data.offerer_last_bookable_offer_date AS last_bookable_offer_date
     ,enriched_offerer_data.offerer_first_bookable_offer_date AS first_bookable_offer_date
     , COALESCE(enriched_offerer_data.offerer_non_cancelled_individual_bookings,0) AS non_cancelled_individual_bookings
@@ -121,6 +123,7 @@ SELECT
     ,individual_offers_created
     ,collective_offers_created
     ,total_offers_created
+    ,first_offer_creation_date
     ,last_bookable_offer_date
     ,first_bookable_offer_date
     ,non_cancelled_individual_bookings
@@ -152,6 +155,7 @@ SELECT
     ,individual_offers_created
     ,collective_offers_created
     ,total_offers_created
+    ,first_offer_creation_date
     ,last_bookable_offer_date
     ,first_bookable_offer_date
     ,non_cancelled_individual_bookings

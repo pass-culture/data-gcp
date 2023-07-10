@@ -100,7 +100,7 @@ LEFT JOIN permanent_venues ON permanent_venues.offerer_id = enriched_offerer_dat
                            AND permanent_venues.offerer_id IS NULL -- Pas déjà compté à l'échelle du lieu permanent
 LEFT JOIN top_venue_per_offerer ON top_venue_per_offerer.offerer_id = enriched_offerer_data.offerer_id
 LEFT JOIN `{{ bigquery_analytics_dataset }}`.agg_partner_cultural_sector ON agg_partner_cultural_sector.partner_type = COALESCE(tagged_partners.partner_type, top_venue_per_offerer.venue_type_label)
-WHERE NOT enriched_offerer_data.is_territorial_authorities  -- Pas déjà compté à l'échelle du lieu permanent
+WHERE NOT enriched_offerer_data.is_territorial_authorities  -- Collectivités à part
 )
 
 SELECT

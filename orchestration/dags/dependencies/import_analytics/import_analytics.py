@@ -473,6 +473,16 @@ analytics_tables = {
             "enriched_collective_offer_data",
         ],
     },
+    "bookable_partner_history": {
+        "sql": f"{ANALYTICS_SQL_PATH}/bookable_partner_history.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "depends": [
+            "enriched_offer_data",
+            "enriched_collective_offer_data",
+            "enriched_venue_data",
+            "enriched_offerer_data",
+        ],
+    },
     "cultural_sector_bookability_frequency": {
         "sql": f"{ANALYTICS_SQL_PATH}/cultural_sector_bookability_frequency.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",

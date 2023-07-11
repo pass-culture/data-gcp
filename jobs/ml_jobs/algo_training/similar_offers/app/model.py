@@ -1,5 +1,7 @@
 import numpy as np
 import faiss
+import tensorflow as tf
+import pandas as pd
 
 
 def compute_distance_subset(index, xq, subset):
@@ -18,19 +20,16 @@ class FaissModel:
         self.index.add(self.model_weights)
 
     def set_up_model(self):
-        import tensorflow as tf
-
-        tf_reco = tf.keras.models.load_model("./model/")
-        self.item_list = tf_reco.item_layer.layers[0].get_vocabulary()
-        self.model_weights = tf_reco.item_layer.layers[1].get_weights()[0]
+        self.item_list = np.load("./metadata/items.npy", allow_pickle=True)
+        self.model_weights = np.load(
+            "./metadata/weights.npy", allow_pickle=True
+        ).astype(np.float32)
         self.distance = len(self.model_weights[0])
-
         self.item_dict = {}
         for idx, (x, y) in enumerate(zip(self.item_list, self.model_weights)):
             self.item_dict[x] = {"embeddings": y, "idx": idx}
 
     def set_up_item_indexes(self):
-        import pandas as pd
 
         self.categories = {}
         df = pd.read_parquet("./metadata/item_metadata.parquet")

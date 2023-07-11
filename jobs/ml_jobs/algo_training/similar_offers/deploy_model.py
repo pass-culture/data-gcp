@@ -1,6 +1,5 @@
 import pandas as pd
 from datetime import datetime
-import time
 import subprocess
 import typer
 from utils import (
@@ -8,46 +7,12 @@ from utils import (
     MODELS_RESULTS_TABLE_NAME,
     GCP_PROJECT_ID,
     ENV_SHORT_NAME,
+    deploy_container,
+    get_items_metadata,
+    save_experiment,
 )
-
-TRAIN_DIR = "/home/airflow/train"
-
-
-def save_experiment(experiment_name, model_name, serving_container, run_id):
-
-    log_results = {
-        "execution_date": datetime.now().isoformat(),
-        "experiment_name": experiment_name,
-        "model_name": model_name,
-        "model_type": "custom",
-        "run_id": run_id,
-        "run_start_time": int(time.time() * 1000.0),
-        "run_end_time": int(time.time() * 1000.0),
-        "artifact_uri": None,
-        "serving_container": serving_container,
-    }
-    pd.DataFrame.from_dict([log_results], orient="columns").to_gbq(
-        f"""{BIGQUERY_CLEAN_DATASET}.{MODELS_RESULTS_TABLE_NAME}""",
-        project_id=f"{GCP_PROJECT_ID}",
-        if_exists="append",
-    )
-
-
-def deploy_container(serving_container):
-    command = f"sh ./deploy_to_docker_registery.sh {serving_container}"
-    results = subprocess.Popen(
-        command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
-    )
-    # TODO handle errors
-    for line in results.stdout:
-        print(line.rstrip().decode("utf-8"))
-
-
-def get_items_metadata():
-    sql = f"""
-    SELECT distinct search_group_name as category, item_id from `{GCP_PROJECT_ID}.analytics_{ENV_SHORT_NAME}.recommendable_items_raw`
-    """
-    pd.read_gbq(sql).to_parquet("./metadata/item_metadata.parquet")
+import tensorflow as tf
+import numpy as np
 
 
 def get_model_from_mlflow(
@@ -73,14 +38,22 @@ def get_model_from_mlflow(
 
 
 def download_model(artifact_uri):
+    # download model
     command = f"gsutil -m cp -r {artifact_uri} ./"
-    print(command)
     results = subprocess.Popen(
         command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
     )
     # TODO handle errors
     for line in results.stdout:
         print(line.rstrip().decode("utf-8"))
+    # export weights to npy format
+    tf_reco = tf.keras.models.load_model("./model/")
+    item_list = tf_reco.item_layer.layers[0].get_vocabulary()
+    model_weights = tf_reco.item_layer.layers[1].get_weights()[0]
+    np.save(
+        "./metadata/weights.npy", model_weights.astype(np.float32), allow_pickle=True
+    )
+    np.save("./metadata/items.npy", item_list, allow_pickle=True)
 
 
 def main(

@@ -7,7 +7,6 @@ RUN pip3 install -r api-requirements.txt
 
 RUN mkdir /app
 COPY ./app /app
-COPY ./model /app/model
 COPY ./metadata /app/metadata
 
 

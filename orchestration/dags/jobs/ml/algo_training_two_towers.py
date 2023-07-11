@@ -268,7 +268,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=f"{dag_config['BASE_DIR']}/similar_offers",
         environment=dag_config,
-        command="python main.py "
+        command="python deploy_model.py "
         "--experiment-name similar_offers_two_towers_v1.1_" + f"{ENV_SHORT_NAME} "
         "--model-name similar_offers_two_towers_v1.1 "
         f"--source-experiment-name {dag_config['EXPERIMENT_NAME']} ",

@@ -22,6 +22,7 @@ DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"sim-offers-custom-build-{ENV_SHORT_NAME}"
 BASE_DIR = "data-gcp/jobs/ml_jobs/algo_training"
 
+
 with DAG(
     "sim_offers_custom_model_build",
     default_args=default_args,

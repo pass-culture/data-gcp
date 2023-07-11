@@ -21,7 +21,9 @@ class FaissModel:
 
     def set_up_model(self):
         self.item_list = np.load("./metadata/items.npy", allow_pickle=True)
-        self.model_weights = np.load("./metadata/weights.npy", allow_pickle=True)
+        self.model_weights = np.load(
+            "./metadata/weights.npy", allow_pickle=True
+        ).astype(np.float32)
         self.distance = len(self.model_weights[0])
         self.item_dict = {}
         for idx, (x, y) in enumerate(zip(self.item_list, self.model_weights)):

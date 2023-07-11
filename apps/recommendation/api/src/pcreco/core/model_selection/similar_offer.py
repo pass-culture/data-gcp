@@ -9,6 +9,7 @@ from pcreco.core.scorer.similar_offer import (
 from pcreco.core.model_selection.model_configuration import ModelConfiguration
 
 SIMILAR_OFFER_ENDPOINTS = {
+    # Deprecated
     "default": ModelConfiguration(
         name="default",
         description="""
@@ -42,6 +43,7 @@ SIMILAR_OFFER_ENDPOINTS = {
         ranking_order_query="booking_number DESC",
         ranking_limit=20,
     ),
+    # Deprecated
     "item": ModelConfiguration(
         name="item",
         description="""
@@ -86,6 +88,22 @@ SIMILAR_OFFER_ENDPOINTS = {
         scorer_order_columns="order",
         scorer_order_ascending=True,
         endpoint=SimilarOfferV2Endpoint(f"similar_offers_version_b_{ENV_SHORT_NAME}"),
+        retrieval_order_query=None,
+        retrieval_limit=500,
+        ranking_order_query="item_score DESC",
+        ranking_limit=20,
+    ),
+    "cold_start": ModelConfiguration(
+        name="cold_start",
+        description="""
+        Item model:
+        Takes most similar ones
+        Sort top 500 most similar, by distance range and similarity score (SQL)
+        """,
+        scorer=offer_scorer.SimilarOfferItemRanker,
+        scorer_order_columns="order",
+        scorer_order_ascending=True,
+        endpoint=SimilarOfferV2Endpoint(f"similar_offers_version_c_{ENV_SHORT_NAME}"),
         retrieval_order_query=None,
         retrieval_limit=500,
         ranking_order_query="item_score DESC",

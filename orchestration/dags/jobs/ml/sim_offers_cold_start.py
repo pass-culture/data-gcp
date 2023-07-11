@@ -32,16 +32,17 @@ DATE = "{{ ts_nodash }}"
 
 # Environment variables to export before running commands
 dag_config = {
-    "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/sim_offers_{ENV_SHORT_NAME}/cold_start_{DATE}",
+    "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/sim_offers_{ENV_SHORT_NAME}/cold_start_{DATE}/{DATE}_item_embbedding_data",
     "BASE_DIR": "data-gcp/jobs/ml_jobs/algo_training/similar_offers",
-    "EXPERIMENT_NAME": f"similar_offers_cold_start_v1.1_{ENV_SHORT_NAME}",
+    "EXPERIMENT_NAME": f"similar_offers_cold_start_v0.1_{ENV_SHORT_NAME}",
+    "MODEL_NAME": f"v1.1_{ENV_SHORT_NAME}",
 }
 
 gce_params = {
     "instance_name": f"similar-offers-cold-start-{ENV_SHORT_NAME}",
     "instance_type": {
         "dev": "n1-standard-2",
-        "stg": "n1-highmem-8",
+        "stg": "n1-highmem-16",
         "prod": "n1-highmem-32",
     },
 }
@@ -76,6 +77,14 @@ with DAG(
         ),
         "instance_name": Param(
             default=gce_params["instance_name"],
+            type="string",
+        ),
+        "experiment_name": Param(
+            default=dag_config["EXPERIMENT_NAME"],
+            type="string",
+        ),
+        "model_name": Param(
+            default=dag_config["MODEL_NAME"],
             type="string",
         ),
     },
@@ -124,7 +133,7 @@ with DAG(
                     "tableId": f"{DATE}_similar_offers_cold_start_data",
                 },
                 "compression": None,
-                "destinationUris": f"{dag_config['STORAGE_PATH']}/{DATE}_item_embbedding_data/data-*.parquet",
+                "destinationUris": f"{dag_config['STORAGE_PATH']}/data-*.parquet",
                 "destinationFormat": "PARQUET",
             }
         },
@@ -138,7 +147,7 @@ with DAG(
         command="python deploy_cold_start.py "
         "--experiment-name {{ params.experiment_name }} "
         "--model-name {{ params.model_name }} "
-        f"--source-gs-path {dag_config['STORAGE_PATH']}/{DATE}_item_embbedding_data ",
+        f"--source-gs-path {dag_config['STORAGE_PATH']}",
         dag=dag,
     )
 

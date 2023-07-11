@@ -24,11 +24,11 @@ def download_embeddings(bucket_path):
     model_weights = np.vstack(np.vstack(ldf.select("embedding").collect())[0])
     # reduce
     trans = umap.UMAP(
-        n_neighbors=4, n_components=64, random_state=42, verbose=True
+        n_neighbors=15, n_components=64, random_state=42, verbose=True, unique=True
     ).fit(model_weights)
     umap_list = trans.embedding_
     # save
-    np.save("./metadata/weights.npy", umap_list, allow_pickle=True)
+    np.save("./metadata/weights.npy", umap_list.astype(np.float32), allow_pickle=True)
     np.save("./metadata/items.npy", item_list, allow_pickle=True)
 
 

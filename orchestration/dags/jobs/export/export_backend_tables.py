@@ -19,10 +19,7 @@ default_dag_args = {
 }
 
 
-dag_schedule = {
-    "daily": "00 03 * * *",
-    "weekly": "00 03 * * 1" if ENV_SHORT_NAME == "prod" else "00 03 * * *",
-}
+dag_schedule = {"daily": "00 03 * * *", "weekly": "00 03 * * 1"}
 for schedule_type, schedule_cron in dag_schedule.items():
     dag_id = f"export_backend_tables_{schedule_type}"
     dag = DAG(

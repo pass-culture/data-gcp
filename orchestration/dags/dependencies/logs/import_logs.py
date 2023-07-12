@@ -26,7 +26,7 @@ import_tables = {
     "app_pro_logs": {
         "sql": f"{SQL_PATH}/app_pro_logs.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "app_pro_logs{{ yyyymmdd(ds) }}",
+        "destination_table": "app_pro_logs${{ yyyymmdd(ds) }}",
         "time_partitioning": {"field": "partition_date"},
         "clustering_fields": {"fields": ["partition_date"]},
     },

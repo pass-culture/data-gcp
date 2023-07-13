@@ -8,6 +8,7 @@ from utils.env_vars import (
     NUMBER_OF_RECOMMENDATIONS,
 )
 from sqlalchemy.orm import Session
+
 # from loguru import logger
 
 

@@ -33,17 +33,22 @@ Base.metadata.create_all(engine)
 
 # custom_logger = setup_logging()
 
+
 @app.get("/")
 def read_root():
     # logger.info("Auth user welcome to : Refacto API test")
     return "Auth user welcome to : Refacto API test"
 
+
 @app.get("/check")
 def check():
     return "OK"
 
+
 @app.post("/similar_offers")
-def similar_offers(offer: OfferInput, user: UserInput, playlist_params: PlaylistParamsRequest):
+def similar_offers(
+    offer: OfferInput, user: UserInput, playlist_params: PlaylistParamsRequest
+):
 
     call_id = str(uuid.uuid4())
 
@@ -54,10 +59,10 @@ def similar_offers(offer: OfferInput, user: UserInput, playlist_params: Playlist
         call_id=call_id,
         longitude=user.longitude,
         latitude=user.latitude,
-        db=db
+        db=db,
     )
 
-    offer = Offer( 
+    offer = Offer(
         offer_id=offer.offer_id,
         call_id=call_id,
         latitude=offer.latitude,
@@ -71,16 +76,17 @@ def similar_offers(offer: OfferInput, user: UserInput, playlist_params: Playlist
     db.close()
     return offer_recommendations
 
+
 @app.post("/playlist_recommendation")
 def playlist_recommendation(user: UserInput, playlist_params: PlaylistParamsRequest):
 
     call_id = str(uuid.uuid4())
-    
+
     user = User(
         user_id=user.user_id,
         call_id=call_id,
         longitude=user.longitude,
-        latitude=user.latitude
+        latitude=user.latitude,
     )
 
     return user.user_profile, user.iris_id

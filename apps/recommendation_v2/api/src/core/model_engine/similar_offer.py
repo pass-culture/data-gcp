@@ -5,12 +5,14 @@ from schemas.offer import Offer
 from schemas.playlist_params import PlaylistParamsRequest
 from models.past_recommended_offers import PastSimilarOffers
 from core.model_selection.model_configuration import ModelConfiguration
+
 # from pcreco.utils.db.db_connection import get_session
 from core.model_engine import ModelEngine
 from core.model_selection import (
     select_sim_model_params,
 )
 from sqlalchemy.orm import Session
+
 # from pcreco.utils.env_vars import log_duration
 from typing import List
 import datetime
@@ -44,7 +46,7 @@ class SimilarOffer(ModelEngine):
         if self.offer.item_id is None:
             return []
         return super().get_scoring()
-    
+
     def save_recommendation(self, db: Session, recommendations) -> None:
         if len(recommendations) > 0:
             start = time.time()
@@ -53,15 +55,15 @@ class SimilarOffer(ModelEngine):
                 reco_offer = PastSimilarOffers(
                     call_id=self.user.call_id,
                     user_id=self.user.id,
-                    origin_offer_id=self.offer.id, 
+                    origin_offer_id=self.offer.id,
                     offer_id=offer_id,
                     date=date,
                     group_id=self.model_params.name,
                     model_name=self.scorer.model_endpoint.model_display_name,
                     model_version=self.scorer.model_endpoint.model_version,
                     reco_filters=self.params_in,
-                    venue_iris_id=self.offer.iris_id
-                    )
+                    venue_iris_id=self.offer.iris_id,
+                )
                 db.add(reco_offer)
             db.commit()
             # log_duration(f"save_recommendations for {self.user.id}", start)

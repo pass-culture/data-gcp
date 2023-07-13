@@ -1,4 +1,3 @@
-
 from typing import List, Dict
 from pydantic import BaseModel
 from datetime import datetime
@@ -7,12 +6,13 @@ from src.utils.env_vars import NUMBER_OF_RECOMMENDATIONS, MixingFeatures
 
 from psycopg2 import sql
 
+
 class PlaylistParamsRequest(BaseModel):
     """Acceptable input in a API request for playlist parameters"""
 
     model_endpoint: str = "default"
-    start_date: datetime = None # beginningDatetime when None ?
-    end_date: datetime = None # endingDatetime when None ?
+    start_date: datetime = None  # beginningDatetime when None ?
+    end_date: datetime = None  # endingDatetime when None ?
     search_group_names: List[str] = None
 
     def _get_conditions(self) -> sql.SQL:

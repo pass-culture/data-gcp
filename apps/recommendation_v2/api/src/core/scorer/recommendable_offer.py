@@ -3,6 +3,7 @@ from schemas.playlist_params import PlaylistParamsRequest
 from core.utils.query_builder import (
     RecommendableIrisOffersQueryBuilder,
 )
+
 # from core.utils.db.db_connection import get_session
 # from pcreco.utils.env_vars import log_duration
 from typing import List, Dict, Any
@@ -11,6 +12,7 @@ import random
 from core.scorer import ModelEndpoint
 from sqlalchemy.orm import Session
 from utils.database import Base, engine
+
 
 class ScorerRetrieval:
     def __init__(
@@ -74,7 +76,7 @@ class OfferIrisRetrieval(ScorerRetrieval):
             # FOR TEST ONLY
             "isbn-1": {
                 "id": 1,
-                "item_id": 'isbn-1',
+                "item_id": "isbn-1",
                 "venue_id": "11",
                 "user_distance": 10,
                 "booking_number": 3,
@@ -86,7 +88,7 @@ class OfferIrisRetrieval(ScorerRetrieval):
             },
             "movie-3": {
                 "id": 3,
-                "item_id": 'movie-3',
+                "item_id": "movie-3",
                 "venue_id": "33",
                 "user_distance": 20,
                 "booking_number": 10,
@@ -99,8 +101,3 @@ class OfferIrisRetrieval(ScorerRetrieval):
         }
         # log_duration(f"get_recommendable_offers for {self.user.id}", start)
         return user_recommendation
-
-
-
-
-

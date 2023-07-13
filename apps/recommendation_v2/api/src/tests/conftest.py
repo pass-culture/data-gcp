@@ -34,13 +34,17 @@ def create_non_recommendable_offers(engine):
     non_recommendable_offers = pd.DataFrame(
         {"user_id": ["111", "112"], "offer_id": ["1", "3"]}
     )
-    engine.connect().execute(text("DROP MATERIALIZED VIEW IF EXISTS non_recommendable_offers CASCADE;"))
+    engine.connect().execute(
+        text("DROP MATERIALIZED VIEW IF EXISTS non_recommendable_offers CASCADE;")
+    )
 
     non_recommendable_offers.to_sql(
         "non_recommendable_offers_temporary_table", con=engine, if_exists="replace"
     )
     engine.connect().execute(
-        text("CREATE MATERIALIZED VIEW non_recommendable_offers AS SELECT * FROM non_recommendable_offers_temporary_table;")
+        text(
+            "CREATE MATERIALIZED VIEW non_recommendable_offers AS SELECT * FROM non_recommendable_offers_temporary_table;"
+        )
     )
 
 
@@ -48,13 +52,17 @@ def create_non_recommendable_items(engine):
     non_recommendable_offers = pd.DataFrame(
         {"user_id": ["111", "112"], "item_id": ["isbn-1", "isbn-3"]}
     )
-    engine.connect().execute(text("DROP MATERIALIZED VIEW IF EXISTS non_recommendable_items CASCADE;"))
+    engine.connect().execute(
+        text("DROP MATERIALIZED VIEW IF EXISTS non_recommendable_items CASCADE;")
+    )
 
     non_recommendable_offers.to_sql(
         "non_recommendable_items_temporary_table", con=engine, if_exists="replace"
     )
     engine.connect().execute(
-        text("CREATE MATERIALIZED VIEW non_recommendable_items AS SELECT * FROM non_recommendable_items_temporary_table;")
+        text(
+            "CREATE MATERIALIZED VIEW non_recommendable_items AS SELECT * FROM non_recommendable_items_temporary_table;"
+        )
     )
 
 
@@ -123,14 +131,17 @@ def create_recommendable_offers_per_iris_shape(engine):
     )
 
     engine.connect().execute(
-        text("DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_per_iris_shape_mv CASCADE;")
+        text(
+            "DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_per_iris_shape_mv CASCADE;"
+        )
     )
 
     recommendable_offers_per_iris_shape.to_sql(
         "recommendable_offers_temporary_table", con=engine, if_exists="replace"
     )
     engine.connect().execute(
-        text("""
+        text(
+            """
         CREATE MATERIALIZED VIEW recommendable_offers_per_iris_shape_mv AS 
         SELECT 
             ro.item_id,
@@ -314,7 +325,9 @@ def create_recommendable_offers_raw(engine):
         "recommendable_offers_raw", con=engine, if_exists="replace"
     )
     engine.connect().execute(
-        text("CREATE MATERIALIZED VIEW recommendable_offers_raw_mv AS SELECT *, ST_MakePoint(venue_longitude, venue_latitude)::geography as venue_geo FROM recommendable_offers_raw WITH DATA;")
+        text(
+            "CREATE MATERIALIZED VIEW recommendable_offers_raw_mv AS SELECT *, ST_MakePoint(venue_longitude, venue_latitude)::geography as venue_geo FROM recommendable_offers_raw WITH DATA;"
+        )
     )
 
 
@@ -445,7 +458,9 @@ def create_recommendable_items_raw(engine):
         "recommendable_items_raw", con=engine, if_exists="replace"
     )
     engine.connect().execute(
-        text("CREATE MATERIALIZED VIEW recommendable_items_raw_mv AS SELECT * FROM recommendable_items_raw WITH DATA;")
+        text(
+            "CREATE MATERIALIZED VIEW recommendable_items_raw_mv AS SELECT * FROM recommendable_items_raw WITH DATA;"
+        )
     )
 
 
@@ -473,7 +488,9 @@ def create_enriched_user(engine):
     )
     enriched_user.to_sql("enriched_user", con=engine, if_exists="replace")
     engine.connect().execute(
-        text("CREATE MATERIALIZED VIEW enriched_user_mv AS SELECT * FROM enriched_user;")
+        text(
+            "CREATE MATERIALIZED VIEW enriched_user_mv AS SELECT * FROM enriched_user;"
+        )
     )
 
 
@@ -563,15 +580,23 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
         engine.connect().execute(
             "DROP TABLE IF EXISTS recommendable_offers_temporary_table CASCADE;"
         )
-        engine.connect().execute("DROP TABLE IF EXISTS recommendable_offers_raw CASCADE;")
-        engine.connect().execute("DROP TABLE IF EXISTS recommendable_items_raw CASCADE;")
+        engine.connect().execute(
+            "DROP TABLE IF EXISTS recommendable_offers_raw CASCADE;"
+        )
+        engine.connect().execute(
+            "DROP TABLE IF EXISTS recommendable_items_raw CASCADE;"
+        )
 
         engine.connect().execute(
             "DROP TABLE IF EXISTS non_recommendable_offers_temporary_table CASCADE;"
         )
         engine.connect().execute("DROP TABLE IF EXISTS enriched_user CASCADE;")
-        engine.connect().execute("DROP MATERIALIZED VIEW IF EXISTS enriched_user_mv CASCADE;")
-        engine.connect().execute("DROP TABLE IF EXISTS past_recommended_offers CASCADE ;")
+        engine.connect().execute(
+            "DROP MATERIALIZED VIEW IF EXISTS enriched_user_mv CASCADE;"
+        )
+        engine.connect().execute(
+            "DROP TABLE IF EXISTS past_recommended_offers CASCADE ;"
+        )
         engine.connect().execute("DROP TABLE IF EXISTS iris_france CASCADE;")
     except:
         pass

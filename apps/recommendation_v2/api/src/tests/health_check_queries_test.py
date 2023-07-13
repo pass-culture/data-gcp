@@ -2,11 +2,13 @@ import os
 from typing import Any
 from unittest.mock import patch, Mock
 import pytest
-from sqlalchemy import text 
+from sqlalchemy import text
+
 
 def does_materialized_view_exist(connection: Any, materialized_view_name: str) -> bool:
     query = f"""SELECT EXISTS(SELECT FROM pg_matviews WHERE matviewname = '{materialized_view_name}');"""
     return connection.execute(text(query)).scalar()
+
 
 @pytest.mark.parametrize(
     "materialized_view_name,expected_result",

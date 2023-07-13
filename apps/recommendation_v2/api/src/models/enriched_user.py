@@ -2,11 +2,12 @@ from sqlalchemy import Column, String, Integer, DateTime, Float
 
 from utils.database import Base
 
+
 class User(Base):
     """Database model of enriched_user table.
     This table is used to get informations about the user calling the API."""
-    
-    __tablename__ = 'enriched_user'
+
+    __tablename__ = "enriched_user"
     user_id = Column(String(256), primary_key=True)
     user_deposit_creation_date = Column(DateTime(timezone=True))
     user_birth_date = Column(DateTime(timezone=True))

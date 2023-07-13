@@ -3,8 +3,9 @@ from sqlalchemy.types import Boolean
 
 from utils.database import Base
 
+
 class RecommendableItem(Base):
-    __tablename__ = 'recommendable_items_raw'
+    __tablename__ = "recommendable_items_raw"
     item_id = Column(String(256), primary_key=True)
     category = Column(String(256))
     subcategory_id = Column(String(256))

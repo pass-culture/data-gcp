@@ -1,4 +1,5 @@
 from schemas.offer import Offer
+
 # from pcreco.core.utils.vertex_ai import endpoint_score
 # from pcreco.utils.env_vars import log_duration
 
@@ -35,6 +36,7 @@ class SimilarOfferEndpoint(ModelEndpoint):
         #     for i, item_id in enumerate(prediction_result.predictions)
         #     if item_id != self.offer.item_id and " " not in item_id
         # }
+
 
 class DummyEndpoint(SimilarOfferEndpoint):
     def model_score(self, item_input, size: int = None):

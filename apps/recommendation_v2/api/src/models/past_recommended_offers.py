@@ -3,11 +3,12 @@ from sqlalchemy.types import PickleType
 
 from utils.database import Base
 
+
 class PastRecommendedOffers(Base):
     """Database model of past_recommendable_offers table.
     This table is used to log the offers recommended to an user."""
 
-    __tablename__ = 'past_recommended_offers'
+    __tablename__ = "past_recommended_offers"
     call_id = Column(String(256), primary_key=True)
     user_id = Column(String(256), primary_key=True)
     offer_id = Column(String(256), primary_key=True)
@@ -19,11 +20,12 @@ class PastRecommendedOffers(Base):
     reco_filters = Column(PickleType)
     user_iris_id = Column(Integer)
 
+
 class PastSimilarOffers(Base):
     """Database model of past_recommendable_offers table.
     This table is used to log the offers recommended to an user."""
 
-    __tablename__ = 'past_similar_offers'
+    __tablename__ = "past_similar_offers"
     call_id = Column(String(256), primary_key=True)
     user_id = Column(String(256), primary_key=True)
     offer_id = Column(String(256), primary_key=True)

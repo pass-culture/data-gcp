@@ -1,5 +1,6 @@
 # from pcreco.utils.health_check_queries import get_available_materialized_view
 from psycopg2 import sql
+
 # from pcreco.utils.db.db_connection import as_string
 import typing as t
 from schemas.user import User
@@ -20,14 +21,10 @@ def as_string(composable, encoding="utf-8"):
             rv.encoding = encoding
         rv = rv.getquoted()
         return rv.decode(encoding) if isinstance(rv, bytes) else rv
-    
+
 
 class RecommendableIrisOffersQueryBuilder:
-    def __init__(
-            self, 
-            params_in_filters: sql.SQL,
-            recommendable_offer_limit
-        ):
+    def __init__(self, params_in_filters: sql.SQL, recommendable_offer_limit):
         self.params_in_filters = params_in_filters
         self.recommendable_offer_limit = recommendable_offer_limit
         self.recommendable_iris_table = "recommendable_offers_per_iris_shape_mv"
@@ -127,5 +124,5 @@ class RecommendableIrisOffersQueryBuilder:
             """
             ),
         )
-        
+
         return as_string(main_query)

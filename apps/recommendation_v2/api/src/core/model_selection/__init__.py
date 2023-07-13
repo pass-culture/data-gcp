@@ -5,7 +5,9 @@ from utils.env_vars import (
 import core.model_selection.similar_offer as similar_offer_endpoints
 from core.model_selection.model_configuration import ModelConfiguration
 from schemas.user import User
+
 # from loguru import logger
+
 
 def select_sim_model_params(
     model_endpoint: str,

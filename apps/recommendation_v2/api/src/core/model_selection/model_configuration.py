@@ -2,6 +2,7 @@ import core.scorer.recommendable_offer as offer_scorer
 from core.scorer import ModelEndpoint
 from dataclasses import dataclass
 from schemas.playlist_params import PlaylistParamsRequest
+
 # from loguru import logger
 
 

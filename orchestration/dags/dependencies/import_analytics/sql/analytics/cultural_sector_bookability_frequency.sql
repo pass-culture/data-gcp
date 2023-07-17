@@ -15,7 +15,7 @@ SELECT DISTINCT
     cultural_sector
     , PERCENTILE_DISC(nb_mois_crea_this_year, 0.5) OVER(PARTITION BY cultural_sector) AS median_crea_offer_frequency
 FROM partner_crea_frequency
-INNER JOIN `{{ bigquery_analytics_dataset }}`.enriched_cultural_partner_data_v2 USING (partner_id)
+INNER JOIN `{{ bigquery_analytics_dataset }}`.enriched_cultural_partner_data USING (partner_id)
 ),
 
 partner_bookability_frequency AS (
@@ -34,7 +34,7 @@ SELECT DISTINCT
     cultural_sector
     , PERCENTILE_DISC(nb_mois_bookable_this_year, 0.5) OVER(PARTITION BY cultural_sector) AS median_bookability_frequency
 FROM partner_bookability_frequency
-INNER JOIN `{{ bigquery_analytics_dataset }}`.enriched_cultural_partner_data_v2 USING (partner_id)
+INNER JOIN `{{ bigquery_analytics_dataset }}`.enriched_cultural_partner_data USING (partner_id)
 )
 
 SELECT

@@ -452,16 +452,6 @@ analytics_tables = {
             "enriched_venue_data",
             "enriched_collective_offer_data",
             "enriched_offer_data",
-        ],
-    },
-    "enriched_cultural_partner_data_v2": {
-        "sql": f"{ANALYTICS_SQL_PATH}/enriched_cultural_partner_data_v2.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "depends": [
-            "enriched_offerer_data",
-            "enriched_venue_data",
-            "enriched_collective_offer_data",
-            "enriched_offer_data",
             "enriched_offerer_tags_data",
         ],
     },
@@ -490,14 +480,14 @@ analytics_tables = {
             "enriched_offer_data",
             "bookable_venue_history",
             "enriched_venue_data",
-            "enriched_cultural_partner_data_v2",
+            "enriched_cultural_partner_data",
         ],
     },
     "retention_partner_history": {
         "sql": f"{ANALYTICS_SQL_PATH}/retention_partner_history.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "depends": [
-            "enriched_cultural_partner_data_v2",
+            "enriched_cultural_partner_data",
             "bookable_partner_history",
         ],
     },

@@ -10,6 +10,7 @@ from utils import (
     deploy_container,
     get_items_metadata,
     save_experiment,
+    set_up_index,
 )
 import tensorflow as tf
 import numpy as np
@@ -54,6 +55,7 @@ def download_model(artifact_uri):
         "./metadata/weights.npy", model_weights.astype(np.float32), allow_pickle=True
     )
     np.save("./metadata/items.npy", item_list, allow_pickle=True)
+    set_up_index(model_weights, path="./metadata/rii.pkl")
 
 
 def main(

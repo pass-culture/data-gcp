@@ -7,6 +7,8 @@ pandas==1.5.3
 pandas-gbq>=0.17.1
 tensorflow==2.11.1
 keras==2.11.0
+rii==0.2.9
+nanopq==0.1.11
 google-cloud-aiplatform==1.22.0
 typer==0.7.0
 tqdm==4.64.1

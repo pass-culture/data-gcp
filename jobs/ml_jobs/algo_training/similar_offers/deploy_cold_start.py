@@ -9,6 +9,7 @@ from utils import (
     deploy_container,
     get_items_metadata,
     save_experiment,
+    set_up_index,
 )
 import pyarrow.dataset as ds
 import polars as pl
@@ -30,6 +31,7 @@ def download_embeddings(bucket_path):
     # save
     np.save("./metadata/weights.npy", umap_list.astype(np.float32), allow_pickle=True)
     np.save("./metadata/items.npy", item_list, allow_pickle=True)
+    set_up_index(model_weights, path="./metadata/rii.pkl")
 
 
 def main(

@@ -73,4 +73,11 @@ ref_tables = {
             "objective": "INTEGER",
         },
     },
+    "agg_partner_cultural_sector": {
+        "file_type": "csv",
+        "schema": {
+            "partner_type": "STRING",
+            "cultural_sector": "STRING",
+        },
+    },
 }

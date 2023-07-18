@@ -8,6 +8,7 @@ create_tables = {
         "time_partitioning": {"field": "execution_date"},
         "schedule_type": "weekly",
         "write_disposition": "WRITE_APPEND",
+        "dag_depends": ["import_analytics_v7"],
     },
     "marketing_pro_email_churned_40_days_ago": {
         "sql": f"{BACKEND_SQL_PATH}/marketing_pro_email_churned_40_days_ago.sql",
@@ -16,6 +17,7 @@ create_tables = {
         "time_partitioning": {"field": "execution_date"},
         "schedule_type": "daily",
         "write_disposition": "WRITE_APPEND",
+        "dag_depends": ["import_analytics_v7"],
     },
     "marketing_pro_email_last_booking_40_days_ago": {
         "sql": f"{BACKEND_SQL_PATH}/marketing_pro_email_last_booking_40_days_ago.sql",
@@ -24,5 +26,6 @@ create_tables = {
         "time_partitioning": {"field": "execution_date"},
         "schedule_type": "daily",
         "write_disposition": "WRITE_APPEND",
+        "dag_depends": ["import_analytics_v7"],
     },
 }

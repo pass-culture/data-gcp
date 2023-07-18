@@ -115,6 +115,8 @@ SELECT
     offerer.offerer_id,
     offerer.offerer_name,
     venue.venue_id,
+    CASE WHEN venue.venue_is_permanent THEN CONCAT("venue-",venue.venue_id)
+         ELSE CONCAT("offerer-", offerer.offerer_id) END AS partner_id,
     venue.venue_name,
     venue.venue_department_code,
     offer.offer_id,

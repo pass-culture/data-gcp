@@ -71,9 +71,9 @@ WHERE
         WHERE
             date(extraction_date) > DATE_SUB(CURRENT_DATE, INTERVAL 60 DAY)
     ) QUALIFY ROW_NUMBER() OVER (
-        PARTITION BY item_id,
-        offer_id
+        PARTITION BY item_id
         ORDER BY
             eod.booking_cnt DESC
     ) = 1
+ORDER BY o.offer_creation_date DESC
 LIMIT {{ params.batch_size }}

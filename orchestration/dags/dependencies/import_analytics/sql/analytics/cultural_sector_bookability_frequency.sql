@@ -1,11 +1,8 @@
 WITH partner_crea_frequency AS (
 SELECT
-    CASE WHEN venue.venue_is_permanent THEN CONCAT("venue-", enriched_offer_data.venue_id)
-        ELSE CONCAT("offerer-",enriched_offer_data.offerer_id)
-        END AS partner_id
+    enriched_offer_data.partner_id
     , COUNT(DISTINCT DATE_TRUNC(offer_creation_date, MONTH)) AS nb_mois_crea_this_year
 FROM `{{ bigquery_analytics_dataset }}`.enriched_offer_data
-INNER JOIN `{{ bigquery_analytics_dataset }}`.enriched_venue_data venue USING(venue_id)
 WHERE DATE_DIFF(current_date, offer_creation_date, MONTH) <= 12
 GROUP BY 1
 ),
@@ -20,12 +17,9 @@ INNER JOIN `{{ bigquery_analytics_dataset }}`.enriched_cultural_partner_data USI
 
 partner_bookability_frequency AS (
 SELECT
-    CASE WHEN venue.venue_is_permanent THEN CONCAT("venue-", bookable_venue_history.venue_id)
-        ELSE CONCAT("offerer-",bookable_venue_history.offerer_id)
-        END AS partner_id
+    partner_id
     , COUNT(DISTINCT DATE_TRUNC(partition_date, MONTH)) AS nb_mois_bookable_this_year
-FROM `{{ bigquery_analytics_dataset }}`.bookable_venue_history
-INNER JOIN `{{ bigquery_analytics_dataset }}`.enriched_venue_data venue USING(venue_id)
+FROM `{{ bigquery_analytics_dataset }}`.bookable_partner_history
 WHERE DATE_DIFF(current_date, partition_date, MONTH) <= 12
 GROUP BY 1),
 

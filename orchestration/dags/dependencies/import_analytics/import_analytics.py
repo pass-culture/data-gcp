@@ -478,7 +478,7 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "depends": [
             "enriched_offer_data",
-            "bookable_venue_history",
+            "bookable_partner_history",
             "enriched_venue_data",
             "enriched_cultural_partner_data",
         ],

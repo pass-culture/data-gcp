@@ -306,6 +306,7 @@ ENRICHED_OFFER_DATA_INPUT = {
             "venue_department_code": "93",
             "venue_is_virtual": False,
             "venue_fields_updated": "{}",
+            "venue_is_permanent": True,
         },
         {
             "venue_managing_offerer_id": "4",
@@ -318,6 +319,7 @@ ENRICHED_OFFER_DATA_INPUT = {
             "venue_department_code": "93",
             "venue_is_virtual": False,
             "venue_fields_updated": "{}",
+            "venue_is_permanent": True,
         },
     ],
     "subcategories": [
@@ -364,6 +366,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "offerer_id": "3",
         "offerer_name": "Test Offerer",
         "venue_id": "1",
+        "partner_id": "venue-1",
         "venue_name": "Test Venue",
         "venue_department_code": "93",
         "URL": None,
@@ -418,6 +421,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "offerer_id": "4",
         "offerer_name": "Test Offerer",
         "venue_id": "2",
+        "partner_id": "venue-2",
         "venue_name": "Test Venue",
         "venue_department_code": "93",
         "URL": None,

@@ -1,9 +1,6 @@
 WITH all_bookable_data AS (
 SELECT
-    CASE
-        WHEN venue_is_permanent THEN CONCAT('venue-',enriched_offer_data.venue_id)
-        WHEN NOT is_territorial_authorities THEN CONCAT('offerer-', enriched_offer_data.offerer_id)
-         END AS partner_id
+    enriched_offer_data.partner_id
     , partition_date
     , 'individual' AS offer_type
     , COUNT(DISTINCT offer_id) AS nb_bookable_offers
@@ -14,10 +11,7 @@ INNER JOIN `{{ bigquery_analytics_dataset }}`.bookable_offer_history USING(offer
 GROUP BY 1,2,3
 UNION ALL
 SELECT
-    CASE
-        WHEN venue_is_permanent THEN CONCAT('venue-',enriched_offer_data.venue_id)
-        WHEN NOT is_territorial_authorities THEN CONCAT('offerer-', enriched_offer_data.offerer_id)
-         END AS partner_id
+    enriched_offer_data.partner_id
     , partition_date
     , 'collective' AS offer_type
     , COUNT(DISTINCT collective_offer_id) AS nb_bookable_offers

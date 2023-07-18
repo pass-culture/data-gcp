@@ -8,7 +8,7 @@ from common.alerts import task_fail_slack_alert
 from dependencies.backend.create_tables import create_tables
 from common import macros
 from common.operators.biquery import bigquery_job_task
-from common.utils import get_airflow_schedule
+from common.utils import get_airflow_schedule, depends_loop
 
 
 default_dag_args = {
@@ -19,7 +19,7 @@ default_dag_args = {
 }
 
 
-dag_schedule = {"daily": "00 03 * * *", "weekly": "00 03 * * 1"}
+dag_schedule = {"daily": "00 01 * * *", "weekly": "00 01 * * 1"}
 for schedule_type, schedule_cron in dag_schedule.items():
     dag_id = f"export_backend_tables_{schedule_type}"
     dag = DAG(
@@ -39,10 +39,16 @@ for schedule_type, schedule_cron in dag_schedule.items():
 
     end = DummyOperator(task_id="end", dag=dag)
 
-    export_table_tasks = []
+    export_table_jobs = {}
     for table, params in create_tables.items():
         if params["schedule_type"] == schedule_type:
             task = bigquery_job_task(dag, table, params)
-            export_table_tasks.append(task)
+            export_table_jobs[table] = {
+                "operator": task,
+                "depends": params.get("depends", []),
+                "dag_depends": params.get("dag_depends", []),
+            }
+
+    export_table_tasks = depends_loop(export_table_jobs, start, dag)
 
     (start >> export_table_tasks >> end)

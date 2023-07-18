@@ -266,6 +266,7 @@ BIGQUERY_SCHEMAS = {
         "offerer_id": "STRING",
         "offerer_name": "STRING",
         "venue_id": "STRING",
+        "partner_id": "STRING",
         "venue_name": "STRING",
         "venue_department_code": "STRING",
         "offer_id": "STRING",

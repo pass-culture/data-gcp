@@ -38,6 +38,8 @@ SELECT
         WHEN "venueTypeCode" = \'CREATIVE_ARTS_STORE\' THEN \'Magasin arts créatifs\'
         WHEN "venueTypeCode" = \'RECORD_STORE\' THEN \'Musique - Disquaire\'
         WHEN "venueTypeCode" = \'SCIENTIFIC_CULTURE\' THEN \'Culture scientifique\'
+        WHEN "venueTypeCode" = \'TRAVELING_CINEMA\' THEN \'Cinéma itinérant\'
+        WHEN "venueTypeCode" = \'DISTRIBUTION_STORE\' THEN \'Magasin de grande distribution\'
         ELSE "venueTypeCode" END AS venue_type_code
     , CAST("venueLabelId" AS varchar(255)) AS venue_label_id
     , "dateCreated" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS venue_creation_date

@@ -33,4 +33,9 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "departmental_objectives",
     },
+    "agg_partner_cultural_sector": {
+        "sql": f"{SQL_PATH}/analytics/agg_partner_cultural_sector.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "agg_partner_cultural_sector",
+    },
 }

@@ -507,6 +507,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_INPUT = {
             "venue_department_code": "35",
             "venue_is_virtual": False,
             "venue_managing_offerer_id": "22",
+            "venue_is_permanent": True,
         }
     ],
     "applicative_database_offerer": [
@@ -557,6 +558,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_EXPECTED = [
         "collective_offer_id": "3",
         "collective_offer_name": "Offre collective vraiment bien",
         "venue_id": "7",
+        "partner_id": "venue-7",
         "institution_id": None,
         "venue_name": "Lieu super",
         "venue_department_code": "35",
@@ -588,6 +590,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_EXPECTED = [
         "collective_offer_id": "4",
         "collective_offer_name": "Offre vitrine",
         "venue_id": "7",
+        "partner_id": "venue-7",
         "institution_id": None,
         "venue_name": "Lieu super",
         "venue_department_code": "35",

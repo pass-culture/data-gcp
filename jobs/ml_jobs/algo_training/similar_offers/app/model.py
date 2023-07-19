@@ -94,14 +94,3 @@ class RiiModel:
             )
             return self.distances_to_offer(nn_idx=ids, distances=dists, n=n)
         return {"predictions": []}
-
-
-if __name__ == "__main__":
-    import sys, os
-
-    rii_model = RiiModel()
-    rii_model.set_up_model()
-    rii_model.set_up_item_indexes()
-    rii_model.set_up_index()
-    rii_model.save("./metadata/rii.pkl")
-    sys.exit(os.EX_OK)

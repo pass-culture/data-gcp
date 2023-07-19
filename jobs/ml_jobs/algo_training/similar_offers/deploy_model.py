@@ -49,10 +49,8 @@ def download_model(artifact_uri):
     # export weights to npy format
     tf_reco = tf.keras.models.load_model("./model/")
     item_list = tf_reco.item_layer.layers[0].get_vocabulary()
-    model_weights = tf_reco.item_layer.layers[1].get_weights()[0]
-    np.save(
-        "./metadata/weights.npy", model_weights.astype(np.float32), allow_pickle=True
-    )
+    model_weights = tf_reco.item_layer.layers[1].get_weights()[0].astype(np.float32)
+    np.save("./metadata/weights.npy", model_weights, allow_pickle=True)
     np.save("./metadata/items.npy", item_list, allow_pickle=True)
 
 

@@ -1,10 +1,11 @@
 WITH k AS (
     SELECT 
-        item_id, 
-        offer_name_embedding,
-        offer_description_embedding,
-        offer_image_embedding
-    FROM `{{ bigquery_clean_dataset }}.item_embeddings`
+        ie.item_id, 
+        ie.offer_name_embedding,
+        ie.offer_description_embedding,
+        ie.offer_image_embedding
+    FROM `{{ bigquery_clean_dataset }}.item_embeddings` ie
+    INNER JOIN `{{ bigquery_clean_dataset }}.recommendable_items_raw` ri on ri.item_id = ie.item_id
     QUALIFY ROW_NUMBER() OVER (PARTITION BY item_id ORDER by extraction_date DESC  ) = 1
 ),
 

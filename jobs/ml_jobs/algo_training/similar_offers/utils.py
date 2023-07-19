@@ -3,25 +3,11 @@ import pandas as pd
 from datetime import datetime
 import time
 import subprocess
-import rii
-import nanopq
-import pickle
-import numpy as np
 
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 BIGQUERY_CLEAN_DATASET = f"clean_{ENV_SHORT_NAME}"
 MODELS_RESULTS_TABLE_NAME = "mlflow_training_results"
-
-
-def set_up_index(model_weights, path):
-    size = model_weights.shape[0]
-    train_vector = model_weights[np.random.choice(size, int(size * 0.3), replace=False)]
-    codec = nanopq.PQ(M=32, Ks=256, verbose=True).fit(vecs=train_vector)
-    index = rii.Rii(fine_quantizer=codec)
-    index.add_configure(vecs=model_weights, nlist=None, iter=5)
-    with open(path, "wb") as f:
-        pickle.dump(index, f)
 
 
 def save_experiment(experiment_name, model_name, serving_container, run_id):

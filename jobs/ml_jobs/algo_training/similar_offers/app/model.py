@@ -1,11 +1,20 @@
-import rii
-import nanopq
+from rii import Rii
+from nanopq import PQ
 import pandas as pd
 import numpy as np
 import pickle
 
 
 class RiiModel:
+    def set_up_index(self):
+        size = self.model_weights.shape[0]
+        train_vector = self.model_weights[
+            np.random.choice(size, int(size * 0.3), replace=False)
+        ]
+        codec = PQ(M=32, Ks=256, verbose=True).fit(vecs=train_vector)
+        self.index = Rii(fine_quantizer=codec)
+        self.index.add_configure(vecs=self.model_weights, nlist=None, iter=5)
+
     def set_up_model(self):
         self.item_list = np.load("./metadata/items.npy", allow_pickle=True)
         self.model_weights = np.load(
@@ -28,6 +37,10 @@ class RiiModel:
     def load(self, path):
         with open(path, "rb") as f:
             self.index = pickle.load(f)
+
+    def save(self, path):
+        with open(path, "wb") as f:
+            pickle.dump(self.index, f)
 
     def get_idx_from_categories(self, categories):
         if categories is None:
@@ -81,3 +94,14 @@ class RiiModel:
             )
             return self.distances_to_offer(nn_idx=ids, distances=dists, n=n)
         return {"predictions": []}
+
+
+if __name__ == "__main__":
+    import sys, os
+
+    rii_model = RiiModel()
+    rii_model.set_up_model()
+    rii_model.set_up_item_indexes()
+    rii_model.set_up_index()
+    rii_model.save("./metadata/rii.pkl")
+    sys.exit(os.EX_OK)

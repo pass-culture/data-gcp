@@ -1,15 +1,11 @@
-import pandas as pd
 from datetime import datetime
-import subprocess
 import typer
-import subprocess
 from utils import (
     GCP_PROJECT_ID,
     ENV_SHORT_NAME,
     deploy_container,
     get_items_metadata,
     save_experiment,
-    set_up_index,
 )
 import pyarrow.dataset as ds
 import polars as pl
@@ -22,7 +18,9 @@ def download_embeddings(bucket_path, reduce=True):
     dataset = ds.dataset(bucket_path, format="parquet")
     ldf = pl.scan_pyarrow_dataset(dataset)
     item_list = ldf.select("item_id").collect().to_numpy().flatten()
-    model_weights = np.vstack(np.vstack(ldf.select("embedding").collect())[0])
+    model_weights = np.vstack(np.vstack(ldf.select("embedding").collect())[0]).astype(
+        np.float32
+    )
     # reduce
     if reduce:
         trans = umap.UMAP(
@@ -32,7 +30,6 @@ def download_embeddings(bucket_path, reduce=True):
     # save
     np.save("./metadata/weights.npy", model_weights, allow_pickle=True)
     np.save("./metadata/items.npy", item_list, allow_pickle=True)
-    set_up_index(model_weights, path="./metadata/rii.pkl")
 
 
 def main(

@@ -28,5 +28,4 @@ SELECT
     , BTRIM(array_to_string("interventionArea", \',\'), \'{\') AS intervention_area
     , CAST("templateId" AS varchar(255)) AS template_id
     , CAST("imageId" AS varchar(255)) AS collective_offer_image_id
-    ,"isPublicApi" AS is_public_api
 FROM public.collective_offer

@@ -42,6 +42,8 @@ SELECT
     collective_offer.collective_offer_id,
     collective_offer.collective_offer_name,
     collective_offer.venue_id,
+    CASE WHEN venue.venue_is_permanent THEN CONCAT("venue-",venue.venue_id)
+         ELSE CONCAT("offerer-", offerer.offerer_id) END AS partner_id,
     collective_offer.institution_id,
     venue.venue_name,
     venue.venue_department_code,
@@ -101,8 +103,7 @@ SELECT
         '/collectif/edition'
     ) AS passculture_pro_url,
     FALSE AS offer_is_template,
-    collective_offer.collective_offer_image_id,
-    collective_offer.is_public_api
+    collective_offer.collective_offer_image_id
 FROM
     `{{ bigquery_clean_dataset }}`.applicative_database_collective_offer AS collective_offer
     JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue ON venue.venue_id = collective_offer.venue_id
@@ -118,6 +119,8 @@ SELECT
     template.collective_offer_id,
     template.collective_offer_name,
     template.venue_id,
+    CASE WHEN venue.venue_is_permanent THEN CONCAT("venue-",venue.venue_id)
+         ELSE CONCAT("offerer-", offerer.offerer_id) END AS partner_id,
     NULL AS institution_id,
     venue.venue_name,
     venue.venue_department_code,
@@ -148,8 +151,7 @@ SELECT
         '/collectif/edition'
     ) AS passculture_pro_url,
     TRUE AS offer_is_template,
-    template.collective_offer_image_id,
-    FALSE AS is_public_api
+    template.collective_offer_image_id
 FROM
     `{{ bigquery_clean_dataset }}`.applicative_database_collective_offer_template AS template
     JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue ON venue.venue_id = template.venue_id

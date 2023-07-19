@@ -53,7 +53,7 @@ SIMILAR_OFFER_ENDPOINTS = {
         endpoint=SimilarOfferEndpoint(f"similar_offers_version_c_{ENV_SHORT_NAME}"),
         retrieval_order_query=None,
         retrieval_limit=500,
-        ranking_order_query="user_km_distance ASC, item_score DESC",
+        ranking_order_query="item_score DESC",
         ranking_limit=20,
     ),
     "cold_start": ModelConfiguration(

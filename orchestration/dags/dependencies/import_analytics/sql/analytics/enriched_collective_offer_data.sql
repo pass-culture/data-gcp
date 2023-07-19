@@ -42,6 +42,8 @@ SELECT
     collective_offer.collective_offer_id,
     collective_offer.collective_offer_name,
     collective_offer.venue_id,
+    CASE WHEN venue.venue_is_permanent THEN CONCAT("venue-",venue.venue_id)
+         ELSE CONCAT("offerer-", offerer.offerer_id) END AS partner_id,
     collective_offer.institution_id,
     venue.venue_name,
     venue.venue_department_code,
@@ -118,6 +120,8 @@ SELECT
     template.collective_offer_id,
     template.collective_offer_name,
     template.venue_id,
+    CASE WHEN venue.venue_is_permanent THEN CONCAT("venue-",venue.venue_id)
+         ELSE CONCAT("offerer-", offerer.offerer_id) END AS partner_id,
     NULL AS institution_id,
     venue.venue_name,
     venue.venue_department_code,

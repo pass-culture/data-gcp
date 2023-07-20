@@ -1,11 +1,9 @@
 from flask import Flask, request, Response, jsonify
 from flask_cors import CORS
 from loguru import logger
-import tensorflow as tf
-
 import atexit
 from apscheduler.schedulers.background import BackgroundScheduler
-from model import FaissModel
+from model import RiiModel
 import gc
 from logging import config
 import logging
@@ -40,10 +38,10 @@ app = Flask(__name__)
 CORS(app)
 FlaskGoogleCloudLogger(app)
 
-faiss_model = FaissModel()
-faiss_model.set_up_model()
-faiss_model.set_up_item_indexes()
-faiss_model.set_up_index()
+rii_model = RiiModel()
+rii_model.set_up_model()
+rii_model.set_up_item_indexes()
+rii_model.load("./metadata/rii.pkl")
 
 
 def flush_memory():
@@ -65,9 +63,9 @@ def predict():
     selected_offers = input_json[0].get("selected_offers", [])
 
     if selected_categories is not None and len(selected_categories) > 0:
-        selected_idx = faiss_model.get_idx_from_categories(selected_categories)
+        selected_idx = rii_model.get_idx_from_categories(selected_categories)
     elif selected_offers is not None and len(selected_offers) > 0:
-        selected_idx = faiss_model.selected_to_idx(selected_offers)
+        selected_idx = rii_model.selected_to_idx(selected_offers)
     else:
         selected_idx = None
 
@@ -76,9 +74,7 @@ def predict():
     except:
         n = 10
     try:
-        sim_offers = faiss_model.compute_distance(
-            item_id, selected_idx=selected_idx, n=n
-        )
+        sim_offers = rii_model.compute_distance(item_id, selected_idx=selected_idx, n=n)
         return jsonify(sim_offers)
     except Exception as e:
         logger.info(e)

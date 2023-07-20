@@ -4,8 +4,8 @@ gunicorn
 numpy
 pandas
 pyarrow
-tensorflow
-faiss-cpu==1.7.4
+rii==0.2.9
+nanopq==0.1.11
 loguru==0.5.3
 APScheduler==3.9.0
 tzlocal==2.1

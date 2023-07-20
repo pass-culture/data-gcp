@@ -1,14 +1,14 @@
-import concurrent
 import json
-import traceback
 from datetime import datetime
-from itertools import repeat
-from multiprocessing import cpu_count
 
+import numpy as np
 import pandas as pd
 import typer
+import umap
+
 from tools.config import CONFIGS_PATH, ENV_SHORT_NAME, GCP_PROJECT_ID
 from tools.embedding_extraction import extract_embedding
+from tools.dimension_reduction import reduce_embedding_dimension
 
 
 def main(
@@ -26,6 +26,7 @@ def main(
         help="Name of the cleaned dataframe",
     ),
 ) -> None:
+    """ """
     ###############
     # Load config
     with open(
@@ -43,7 +44,7 @@ def main(
 
     ###############
     # Run embedding extraction
-    df_data_w_embedding = extract_embedding(
+    df_data_w_embedding, emb_size_dict = extract_embedding(
         df_data_to_extract_embedding,
         params,
     )
@@ -51,11 +52,22 @@ def main(
     df_data_w_embedding["extraction_date"] = [
         datetime.now().strftime("%Y-%m-%d")
     ] * len(df_data_w_embedding)
+
     df_data_w_embedding.to_gbq(
-        f"clean_{env_short_name}.{output_table_name}",
+        f"tmp_{env_short_name}.{output_table_name}_v2",
+        project_id=gcp_project,
+        if_exists="replace",
+    )
+
+    df_data_w_embedding.to_gbq(
+        f"clean_{env_short_name}.{output_table_name}_v2",
         project_id=gcp_project,
         if_exists="append",
     )
+
+    with open("./emb_size_dict.json", "w") as f:
+        json.dump(emb_size_dict, f)
+    return
 
 
 if __name__ == "__main__":

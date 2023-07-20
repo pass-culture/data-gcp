@@ -108,6 +108,18 @@ with DAG(
         f"--output-table-name item_embeddings ",
     )
 
+    reduce_dimension = SSHGCEOperator(
+        task_id="reduce_dimension",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_DIR,
+        environment=dag_config,
+        command="PYTHONPATH=. python dimension_reduction.py "
+        f"--gcp-project {GCP_PROJECT_ID} "
+        f"--env-short-name {ENV_SHORT_NAME} "
+        "--config-file-name {{ params.config_file_name }} "
+        f"--input-table-name item_embeddings ",
+    )
+
     gce_instance_stop = StopGCEOperator(
         task_id="gce_stop_task", instance_name=GCE_INSTANCE
     )
@@ -119,5 +131,6 @@ with DAG(
         >> install_dependencies
         >> preprocess
         >> extract_embedding
+        >> reduce_dimension
         >> gce_instance_stop
     )

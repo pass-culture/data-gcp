@@ -80,4 +80,11 @@ ref_tables = {
             "cultural_sector": "STRING",
         },
     },
+    "pilote_geographic_standards": {
+        "file_type": "csv",
+        "schema": {
+            "zone_id": "STRING",
+            "nom": "STRING",
+        },
+    },
 }

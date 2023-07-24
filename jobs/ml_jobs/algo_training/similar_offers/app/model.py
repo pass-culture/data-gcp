@@ -9,7 +9,7 @@ class RiiModel:
     def set_up_index(self):
         size = self.model_weights.shape[0]
         train_vector = self.model_weights[
-            np.random.choice(size, int(size * 0.3), replace=False)
+            np.random.choice(size, int(size * 0.66), replace=False)
         ]
         codec = PQ(M=32, Ks=256, verbose=True).fit(vecs=train_vector)
         self.index = Rii(fine_quantizer=codec)
@@ -90,7 +90,11 @@ class RiiModel:
             if selected_idx is not None:
                 selected_idx = np.array(selected_idx)
             ids, dists = self.index.query(
-                q=offer_emb, topk=n, target_ids=selected_idx, sort_target_ids=True
+                q=offer_emb,
+                topk=n,
+                target_ids=selected_idx,
+                sort_target_ids=True,
+                L=4 * self.index.L0,
             )
             return self.distances_to_offer(nn_idx=ids, distances=dists, n=n)
         return {"predictions": []}

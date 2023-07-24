@@ -5,7 +5,7 @@ WITH k AS (
         ie.offer_description_embedding,
         ie.offer_image_embedding
     FROM `{{ bigquery_clean_dataset }}.item_embeddings` ie
-    INNER JOIN `{{ bigquery_clean_dataset }}.recommendable_items_raw` ri on ri.item_id = ie.item_id
+    INNER JOIN `{{ bigquery_analytics_dataset }}.recommendable_items_raw` ri on ri.item_id = ie.item_id
     QUALIFY ROW_NUMBER() OVER (PARTITION BY item_id ORDER by extraction_date DESC  ) = 1
 ),
 

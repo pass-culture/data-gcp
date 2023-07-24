@@ -46,7 +46,7 @@ def main(
         help="GCS parquet path",
     ),
     reduce_embedding: bool = typer.Option(
-        False,
+        True,
         help="Reduce embedding",
     ),
 ) -> None:

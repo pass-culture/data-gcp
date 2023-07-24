@@ -11,7 +11,7 @@ class Offer:
         self.id = offer_id
         self.call_id = call_id
         self.iris_id = get_iris_from_coordinates(longitude, latitude)
-        self.item_id, self.cnt_bookings = self.get_offer_characteristics(offer_id)
+        self.item_id, self.bookings_count = self.get_offer_characteristics(offer_id)
 
     def get_offer_characteristics(self, offer_id) -> str:
         """Get item_id attached to an offer_id & get the number of bookings attached to an offer_id."""

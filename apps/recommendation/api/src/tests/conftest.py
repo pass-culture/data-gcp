@@ -58,96 +58,6 @@ def create_non_recommendable_items(engine):
     )
 
 
-def create_recommendable_offers_per_iris_shape(engine):
-    recommendable_offers_per_iris_shape = pd.DataFrame(
-        {
-            "item_id": [
-                "isbn-1",
-                "isbn-2",
-                "movie-3",
-                "movie-4",
-                "movie-5",
-                "product-6",
-                "product-7",
-                "product-8",
-                "product-9",
-            ],
-            "offer_id": ["1", "2", "3", "4", "5", "6", "7", "8", "9"],
-            "iris_id": [
-                DEFAULT_IRIS_ID,
-                DEFAULT_IRIS_ID,
-                DEFAULT_IRIS_ID,
-                DEFAULT_IRIS_ID,
-                DEFAULT_IRIS_ID,
-                DEFAULT_IRIS_ID,
-                DEFAULT_IRIS_ID,
-                DEFAULT_IRIS_ID,
-                DEFAULT_IRIS_ID,
-            ],
-            "venue_distance_to_iris": [11, 22, 33, 44, 55, 22, 1, 1, 1],
-            "is_geolocated": [
-                False,
-                True,
-                False,
-                False,
-                False,
-                True,
-                True,
-                True,
-                False,
-            ],
-            "venue_latitude": [
-                48.87004,
-                48.87004,
-                48.87004,
-                48.87004,
-                48.87004,
-                48.87004,
-                48.830719,
-                48.830719,
-                48.87004,
-            ],
-            "venue_longitude": [
-                2.3785,
-                2.3785,
-                2.3785,
-                2.3785,
-                2.3785,
-                2.3785,
-                2.331289,
-                2.331289,
-                2.3785,
-            ],
-            "unique_id": [1, 2, 3, 4, 5, 6, 7, 8, 9],
-        }
-    )
-
-    engine.execute(
-        "DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_per_iris_shape_mv CASCADE;"
-    )
-
-    recommendable_offers_per_iris_shape.to_sql(
-        "recommendable_offers_temporary_table", con=engine, if_exists="replace"
-    )
-    engine.execute(
-        """
-        CREATE MATERIALIZED VIEW recommendable_offers_per_iris_shape_mv AS 
-        SELECT 
-            ro.item_id,
-            ro.offer_id,
-            ro.iris_id,
-            ro.venue_distance_to_iris,
-            ro.is_geolocated,
-            ro.venue_latitude,
-            ro.venue_longitude,
-            ST_MakePoint(ro.venue_longitude, ro.venue_latitude)::geography as venue_geo,
-            ro.unique_id        
-        FROM recommendable_offers_temporary_table ro
-        WITH DATA;
-    """
-    )
-
-
 def create_recommendable_offers_raw(engine):
     recommendable_offers_raw = pd.DataFrame(
         {
@@ -524,7 +434,6 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
         f"postgresql+psycopg2://postgres:postgres@127.0.0.1:{DATA_GCP_TEST_POSTGRES_PORT}/{DB_NAME}"
     )
     connection = engine.connect().execution_options(autocommit=True)
-    create_recommendable_offers_per_iris_shape(engine)
 
     create_recommendable_offers_raw(engine)
     create_recommendable_items_raw(engine)
@@ -540,10 +449,6 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
     yield connection
     try:
         engine.execute(
-            "DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_per_iris_shape_mv CASCADE;"
-        )
-
-        engine.execute(
             "DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_raw_mv CASCADE;"
         )
 
@@ -558,9 +463,6 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
             "DROP MATERIALIZED VIEW IF EXISTS non_recommendable_items CASCADE;"
         )
 
-        engine.execute(
-            "DROP TABLE IF EXISTS recommendable_offers_temporary_table CASCADE;"
-        )
         engine.execute("DROP TABLE IF EXISTS recommendable_offers_raw CASCADE;")
         engine.execute("DROP TABLE IF EXISTS recommendable_items_raw CASCADE;")
 

@@ -1,16 +1,13 @@
 # pylint: disable=invalid-name
 import datetime
 import json
-import time
 import pytz
 from pcreco.core.model_selection.model_configuration import ModelConfiguration
 from pcreco.core.user import User
 from pcreco.models.reco.playlist_params import PlaylistParamsIn
 from pcreco.core.model_selection import select_reco_model_params
-from pcreco.core.user import User
 from sqlalchemy import text
 from pcreco.utils.db.db_connection import get_session
-from sqlalchemy import text
 from pcreco.core.model_engine import ModelEngine
 
 

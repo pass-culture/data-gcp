@@ -6,7 +6,6 @@ import pcreco.core.model_selection.recommendation as recommendation_endpoints
 import pcreco.core.model_selection.similar_offer as similar_offer_endpoints
 from pcreco.core.model_selection.model_configuration import (
     ModelConfiguration,
-    DefaultModel,
     ModelFork,
 )
 from pcreco.core.user import User

@@ -34,7 +34,7 @@ GCP_PROJECT_NATIVE_ENV = {
 GCP_PROJECT_PRO_ENV = {
     "dev": [
         "passculture-pro.analytics_301948526",
-        "pc-pro-testing.analytics_355536579",
+        "pc-pro-testing.analytics_397508951",
     ],
     "stg": ["passculture-pro.analytics_301948526"],
     "prod": ["passculture-pro.analytics_301948526"],

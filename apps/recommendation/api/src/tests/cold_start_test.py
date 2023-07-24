@@ -2,7 +2,7 @@ import pytest
 from typing import Any
 from unittest.mock import patch
 from pcreco.core.user import User
-from pcreco.core.model_selection.recommendation import ModelFork
+from pcreco.core.model_selection.model_configuration import ModelFork
 
 
 @pytest.mark.parametrize(
@@ -22,5 +22,5 @@ def test_get_cold_start_status(
         # Given
         connection_mock.return_value = setup_database
         user = User(user_id)
-        model_status = ModelFork().get_model_status(user)
+        model_status, _ = ModelFork().get_user_status(user)
         assert not model_status == cold_start_status

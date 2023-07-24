@@ -1,7 +1,6 @@
 from pcreco.utils.env_vars import (
     ENV_SHORT_NAME,
 )
-from pcreco.core.user import User
 import pcreco.core.scorer.recommendable_offer as offer_scorer
 from pcreco.core.scorer.recommendation import (
     RecommendationEndpoint,

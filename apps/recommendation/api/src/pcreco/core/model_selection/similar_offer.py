@@ -13,7 +13,7 @@ SIMILAR_OFFER_ENDPOINTS = {
         description="""
         Item model:
         Takes most similar ones (training based on clicks) (NN)
-        Sort top 500 most similar, by distance range and similarity score (SQL)
+        Sort top 500 most similar (SQL)
         """,
         scorer=offer_scorer.SimilarOfferItemRanker,
         scorer_order_columns="order",
@@ -25,11 +25,11 @@ SIMILAR_OFFER_ENDPOINTS = {
         ranking_limit=20,
     ),
     "version_b": ModelConfiguration(
-        name="item_v2_version_b",
+        name="version_b",
         description="""
         Item model:
-        Takes most similar ones (training based on clicks) (NN)
-        Sort top 500 most similar, by distance range and similarity score (SQL)
+        Takes most similar ones (training based on two-towers) (NN)
+        Sort top 500 most similar (SQL)
         """,
         scorer=offer_scorer.SimilarOfferItemRanker,
         scorer_order_columns="order",
@@ -53,15 +53,15 @@ SIMILAR_OFFER_ENDPOINTS = {
         endpoint=SimilarOfferEndpoint(f"similar_offers_version_c_{ENV_SHORT_NAME}"),
         retrieval_order_query=None,
         retrieval_limit=500,
-        ranking_order_query="item_score DESC",
+        ranking_order_query="user_km_distance ASC, item_score DESC",
         ranking_limit=20,
     ),
     "cold_start": ModelConfiguration(
         name="cold_start",
         description="""
         Item model:
-        Takes most similar ones
-        Sort top 500 most similar, by distance range and similarity score (SQL)
+        Takes most similar ones based on cold_start
+        Sort top 500 most similar (SQL)
         """,
         scorer=offer_scorer.SimilarOfferItemRanker,
         scorer_order_columns="order",

@@ -81,7 +81,7 @@ class RecommendableIrisOffersQueryBuilder:
                 WHERE
                     user_id = {user_id}
             )
-            AND ot.stock_price < {remaining_credit}
+            AND ot.stock_price <= {remaining_credit}
             {params_in_filter}
             {user_profile_filter}
             {order_by}

@@ -42,7 +42,9 @@ RECOMMENDATION_ENDPOINTS = {
     "default_algo": ModelFork(
         warm_start_model=recommendation_endpoints.default,
         cold_start_model=recommendation_endpoints.default,
-        cold_start_rules=ModelFork(0, 0, 0),
+        bookings_count=0,
+        clicks_count=0,
+        favorites_count=0,
     ),
     # Force cold start model based on top offers
     "cold_start": ModelFork(

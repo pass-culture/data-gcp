@@ -2,9 +2,13 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from models.item_ids_mv import ItemIdsMv
+from schemas.offer import Offer
+from crud.iris import get_iris_from_coordinates
 
 
-def get_offer_characteristics(db: Session, offer_id: str) -> dict:
+def get_offer_characteristics(
+    db: Session, offer_id: str, latitude: float, longitude: float
+) -> Offer:
     """Query the database in ORM mode to get characteristics of an offer.
     Return : List[item_id,  number of booking associated].
     """
@@ -14,10 +18,25 @@ def get_offer_characteristics(db: Session, offer_id: str) -> dict:
         .first()
     )
 
-    # log_duration(f"get_offer_characteristics for offer_id: {offer_id}", start)
-    if offer_characteristics is not None:
-        # logger.info("get_offer_characteristics:found id")
-        return offer_characteristics
+    if latitude and longitude:
+        iris_id = get_iris_from_coordinates(db, latitude, longitude)
     else:
-        # logger.info("get_offer_characteristics:not_found_id")
-        return None, 0
+        iris_id = None
+
+    if offer_characteristics:
+        offer = Offer(
+            offer_id=offer_id,
+            latitude=latitude,
+            longitude=longitude,
+            iris_id=iris_id,
+            item_id=offer_characteristics[0],
+            cnt_bookings=offer_characteristics[1],
+        )
+    else:
+        offer = Offer(
+            offer_id=offer_id,
+            latitude=latitude,
+            longitude=longitude,
+            iris_id=iris_id,
+        )
+    return offer

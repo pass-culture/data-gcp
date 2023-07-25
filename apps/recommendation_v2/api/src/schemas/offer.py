@@ -1,8 +1,5 @@
 from pydantic import BaseModel
-from crud.iris import get_iris_from_coordinates
-
-from sqlalchemy.orm import Session
-from crud.offer import get_offer_characteristics
+from dataclasses import dataclass
 
 
 class OfferInput(BaseModel):
@@ -13,15 +10,14 @@ class OfferInput(BaseModel):
     latitude: float = None
 
 
+@dataclass
 class Offer:
     """Characteristics of an offer"""
 
-    def __init__(
-        self, offer_id, call_id=None, latitude=None, longitude=None, db: Session = None
-    ) -> None:
-
-        self.id = offer_id
-        self.call_id = call_id
-        if latitude and longitude:
-            self.iris_id = get_iris_from_coordinates(db, longitude, latitude)
-        self.item_id, self.cnt_bookings = get_offer_characteristics(db, offer_id)
+    offer_id: str
+    call_id: str = None
+    latitude: float = None
+    longitude: float = None
+    iris_id: str = None
+    item_id: str = None
+    cnt_bookings: float = None

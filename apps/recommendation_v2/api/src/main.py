@@ -16,10 +16,11 @@ from sqlalchemy.orm import Session
 import uuid
 
 from schemas.user import UserInput, User
-from schemas.offer import OfferInput, Offer
+from schemas.offer import OfferInput
 
 from core.model_engine.similar_offer import SimilarOffer
-from crud.recommendable_offers import get_user_distance
+from crud.user import get_user_profile
+from crud.offer import get_offer_characteristics
 
 app = FastAPI(title="Passculture refacto reco API")
 
@@ -54,20 +55,10 @@ def similar_offers(
 
     db = Session(bind=engine, expire_on_commit=False)
 
-    user = User(
-        user_id=user.user_id,
-        call_id=call_id,
-        longitude=user.longitude,
-        latitude=user.latitude,
-        db=db,
-    )
+    user = get_user_profile(db, user.user_id, call_id, user.latitude, user.longitude)
 
-    offer = Offer(
-        offer_id=offer.offer_id,
-        call_id=call_id,
-        latitude=offer.latitude,
-        longitude=offer.longitude,
-        db=db,
+    offer = get_offer_characteristics(
+        db, offer.offer_id, offer.latitude, offer.longitude
     )
 
     scoring = SimilarOffer(user, offer, params_in=playlist_params)

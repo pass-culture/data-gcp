@@ -34,8 +34,10 @@ class SimilarOffer(ModelEngine):
     def get_model_configuration(
         self, user: User, params_in: PlaylistParamsIn
     ) -> ModelConfiguration:
-        model_params = select_sim_model_params(params_in.model_endpoint)
-        self.reco_origin = "default"
+        model_params, reco_origin = select_sim_model_params(
+            params_in.model_endpoint, offer=self.offer
+        )
+        self.reco_origin = reco_origin
         return model_params
 
     def get_scoring(self) -> List[str]:

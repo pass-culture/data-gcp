@@ -23,6 +23,7 @@ class User:
         self.clicks_count = 0
         self.favorites_count = 0
         self.user_deposit_remaining_credit = 300
+        self.found = False
         self.__get_user_profile()
 
     def __get_user_profile(self) -> None:
@@ -46,6 +47,7 @@ class User:
         ).fetchone()
         logger.info(f"{self.id}: __get_user_profile {request_response}")
         if request_response is not None:
+            self.found = True
             self.age = parse_int(request_response[0])
             self.user_deposit_remaining_credit = parse_float(request_response[1], 300)
             self.bookings_count = parse_int(request_response[2], 0)

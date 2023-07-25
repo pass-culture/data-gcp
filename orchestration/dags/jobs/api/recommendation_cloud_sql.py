@@ -252,13 +252,6 @@ with DAG(
 
     end_data_prep >> restore_tasks[0]
     restore_tasks[-1] >> end_drop_restore
-    # keep creation time in the format yymmddHHMM for the deletion step
-    create_materialized_view = CloudSQLExecuteQueryOperator(
-        task_id="create_materialized_view_recommendable_offers_per_iris_shape_mv",
-        gcp_cloudsql_conn_id="proxy_postgres_tcp",
-        sql=f"{SQL_PATH}/create_recommendable_offers_per_iris_shape_tmp_mv.sql",
-        autocommit=True,
-    )
 
     create_materialized_offers_raw_view = CloudSQLExecuteQueryOperator(
         task_id="create_materialized_raw_view_recommendable_offers_raw_mv",
@@ -276,7 +269,6 @@ with DAG(
 
     recreate_indexes_query = """
         CREATE INDEX IF NOT EXISTS idx_user_id                             ON public.enriched_user                        USING btree (user_id);
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_offer_recommendable_id       ON public.recommendable_offers_per_iris_shape  USING btree (is_geolocated,iris_id,item_id,offer_id,unique_id);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_non_recommendable_id         ON public.non_recommendable_offers             USING btree (user_id,offer_id);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_non_recommendable_item_id    ON public.non_recommendable_items              USING btree (user_id,item_id);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_enriched_user_mv             ON public.enriched_user_mv                     USING btree (user_id);
@@ -313,7 +305,6 @@ with DAG(
     end_refresh = DummyOperator(task_id="end_refresh")
 
     rename_materialized_view_tables = [
-        "recommendable_offers_per_iris_shape_mv",
         "recommendable_offers_raw_mv",
         "recommendable_items_raw_mv",
     ]
@@ -364,7 +355,6 @@ with DAG(
     )
     (
         end_drop_restore
-        >> create_materialized_view
         >> create_materialized_offers_raw_view
         >> create_materialized_items_raw_view
         >> recreate_indexes_task

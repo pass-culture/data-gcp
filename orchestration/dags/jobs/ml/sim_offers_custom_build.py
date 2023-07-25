@@ -19,8 +19,15 @@ default_args = {
 }
 
 DEFAULT_REGION = "europe-west1"
-GCE_INSTANCE = f"sim-offers-custom-build-{ENV_SHORT_NAME}"
 BASE_DIR = "data-gcp/jobs/ml_jobs/algo_training"
+gce_params = {
+    "instance_name": f"sim-offers-custom-build-{ENV_SHORT_NAME}",
+    "instance_type": {
+        "dev": "n1-standard-2",
+        "stg": "n1-highmem-16",
+        "prod": "n1-highmem-32",
+    },
+}
 
 
 with DAG(
@@ -37,6 +44,14 @@ with DAG(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
+        "instance_type": Param(
+            default=gce_params["instance_type"][ENV_SHORT_NAME],
+            type="string",
+        ),
+        "instance_name": Param(
+            default=gce_params["instance_name"],
+            type="string",
+        ),
         "experiment_name": Param(
             default=f"similar_offers_two_towers_v1.1_{ENV_SHORT_NAME}", type="string"
         ),
@@ -50,12 +65,15 @@ with DAG(
     },
 ) as dag:
     gce_instance_start = StartGCEOperator(
-        task_id="gce_start_task", instance_name=GCE_INSTANCE, retries=2
+        task_id="gce_start_task",
+        instance_name="{{ params.instance_name }}",
+        instance_type="{{ params.instance_type }}",
+        retries=2,
     )
 
     fetch_code = CloneRepositoryGCEOperator(
         task_id="fetch_code",
-        instance_name=GCE_INSTANCE,
+        instance_name="{{ params.instance_name }}",
         command="{{ params.branch }}",
         python_version="3.10",
         retries=2,
@@ -63,7 +81,7 @@ with DAG(
 
     install_dependencies = SSHGCEOperator(
         task_id="install_dependencies",
-        instance_name=GCE_INSTANCE,
+        instance_name="{{ params.instance_name }}",
         base_dir=BASE_DIR,
         command="""pip install -r requirements.txt --user""",
         dag=dag,
@@ -72,7 +90,7 @@ with DAG(
 
     sim_offers = SSHGCEOperator(
         task_id="containerize_similar_offers",
-        instance_name=GCE_INSTANCE,
+        instance_name="{{ params.instance_name }}",
         base_dir=f"{BASE_DIR}/similar_offers",
         command="python deploy_model.py "
         "--experiment-name {{ params.experiment_name }} "
@@ -84,7 +102,8 @@ with DAG(
     )
 
     gce_instance_stop = StopGCEOperator(
-        task_id="gce_stop_task", instance_name=GCE_INSTANCE
+        task_id="gce_stop_task",
+        instance_name="{{ params.instance_name }}",
     )
 
     (

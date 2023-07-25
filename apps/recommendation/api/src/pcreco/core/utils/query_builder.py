@@ -110,7 +110,7 @@ class RecommendableOfferQueryBuilder:
                 WHERE
                     user_id = {user_id}
             )
-            AND ro.stock_price < {remaining_credit}
+            AND ro.stock_price <= {remaining_credit}
             {user_profile_filter}
 
             ),
@@ -119,7 +119,8 @@ class RecommendableOfferQueryBuilder:
                 SELECT 
                     *,
                     -- percent over max distance
-                    floor(10 * user_distance / default_max_distance) as user_km_distance,
+                    ceil(10 * user_distance / default_max_distance) as user_km_distance_10,
+                    ceil(100 * user_distance / default_max_distance) as user_km_distance_100,
                     ROW_NUMBER() OVER (PARTITION BY item_id ORDER BY user_distance ASC) AS rank
                 FROM select_offers
                 WHERE user_distance < default_max_distance

@@ -21,8 +21,8 @@ default = ModelConfiguration(
     endpoint=SimilarOfferEndpoint(f"similar_offers_default_{ENV_SHORT_NAME}"),
     retrieval_order_query=None,
     retrieval_limit=500,
-    ranking_order_query="item_score DESC",
-    ranking_limit=20,
+    ranking_order_query="user_km_distance_100 ASC, item_score DESC",
+    ranking_limit=40,
 )
 version_b = ModelConfiguration(
     name="version_b",
@@ -38,7 +38,7 @@ version_b = ModelConfiguration(
     retrieval_order_query=None,
     retrieval_limit=500,
     ranking_order_query="item_score DESC",
-    ranking_limit=20,
+    ranking_limit=40,
 )
 version_c = ModelConfiguration(
     name="version_c",
@@ -53,8 +53,8 @@ version_c = ModelConfiguration(
     endpoint=SimilarOfferEndpoint(f"similar_offers_version_c_{ENV_SHORT_NAME}"),
     retrieval_order_query=None,
     retrieval_limit=500,
-    ranking_order_query="user_km_distance ASC, item_score DESC",
-    ranking_limit=20,
+    ranking_order_query="user_km_distance_10 ASC, item_score DESC",
+    ranking_limit=40,
 )
 cold_start = ModelConfiguration(
     name="cold_start",
@@ -70,7 +70,7 @@ cold_start = ModelConfiguration(
     retrieval_order_query=None,
     retrieval_limit=500,
     ranking_order_query="item_score DESC",
-    ranking_limit=20,
+    ranking_limit=40,
 )
 random = ModelConfiguration(
     name="random",
@@ -87,5 +87,5 @@ random = ModelConfiguration(
     retrieval_order_query="booking_number DESC",
     retrieval_limit=1000,
     ranking_order_query="booking_number DESC",
-    ranking_limit=20,
+    ranking_limit=40,
 )

@@ -54,6 +54,14 @@ RECOMMENDATION_ENDPOINTS = {
         clicks_count=None,
         favorites_count=None,
     ),
+    # Force cold start model based on top offers
+    "random": ModelFork(
+        warm_start_model=recommendation_endpoints.random,
+        cold_start_model=recommendation_endpoints.random,
+        bookings_count=None,
+        clicks_count=None,
+        favorites_count=None,
+    ),
 }
 
 SIMILAR_OFFER_ENDPOINTS = {
@@ -79,6 +87,11 @@ SIMILAR_OFFER_ENDPOINTS = {
     "cold_start": ModelFork(
         warm_start_model=similar_offer_endpoints.cold_start,
         cold_start_model=similar_offer_endpoints.cold_start,
+        bookings_count=None,
+    ),
+    "random": ModelFork(
+        warm_start_model=similar_offer_endpoints.random,
+        cold_start_model=similar_offer_endpoints.random,
         bookings_count=None,
     ),
 }

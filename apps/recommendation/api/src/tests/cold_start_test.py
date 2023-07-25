@@ -5,6 +5,7 @@ from pcreco.core.user import User
 from pcreco.core.model_selection.model_configuration import ModelFork
 from pcreco.core.model_selection import recommendation_endpoints
 
+
 @pytest.mark.parametrize(
     ["user_id", "expected_status"],
     [
@@ -24,6 +25,6 @@ def test_get_cold_start_status(
         user = User(user_id)
         _, model_status = ModelFork(
             cold_start_model=recommendation_endpoints.default,
-            warm_start_model=recommendation_endpoints.top_offers
+            warm_start_model=recommendation_endpoints.top_offers,
         ).get_user_status(user)
         assert not model_status == expected_status

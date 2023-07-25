@@ -29,7 +29,8 @@ SELECT
     stock.stock_price,
     stock.price_category_id,
     stock.price_category_label_id,
-    stock.price_category_label
+    stock.price_category_label,
+    stock.stock_features
 FROM
     `{{ bigquery_clean_dataset }}`.cleaned_stock AS stock
     LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON stock.offer_id = offer.offer_id

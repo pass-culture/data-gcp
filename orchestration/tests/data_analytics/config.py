@@ -252,6 +252,7 @@ BIGQUERY_SCHEMAS = {
         "price_category_id": "STRING",
         "price_category_label_id": "STRING",
         "price_category_label": "STRING",
+        "stock_features": "STRING",
     },
     "enriched_deposit_data": {
         "deposit_id": "STRING",

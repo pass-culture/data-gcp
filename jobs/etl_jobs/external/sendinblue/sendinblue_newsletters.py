@@ -73,14 +73,20 @@ class SendinblueNewsletters:
         ]
         campaign_stats["audience_size"] = [
             group.get("campaignStats")[0].get("sent")
+            if len(group.get("campaignStats")) > 0
+            else 0
             for group in [camp.get("statistics") for camp in campaigns_list]
         ]
         campaign_stats["unsubscriptions"] = [
             group.get("campaignStats")[0].get("unsubscriptions")
+            if len(group.get("campaignStats")) > 0
+            else 0
             for group in [camp.get("statistics") for camp in campaigns_list]
         ]
         campaign_stats["open_number"] = [
             group.get("campaignStats")[0].get("viewed")
+            if len(group.get("campaignStats")) > 0
+            else 0
             for group in [camp.get("statistics") for camp in campaigns_list]
         ]
 

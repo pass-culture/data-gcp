@@ -65,9 +65,7 @@ def check():
 
 @app.route("/health/recommendable_offers")
 def health_check_recommendable_offers_status():
-    table_status = get_materialized_view_status(
-        "recommendable_offers_per_iris_shape_mv"
-    )
+    table_status = get_materialized_view_status("recommendable_offers_raw")
 
     return jsonify(table_status), 200
 

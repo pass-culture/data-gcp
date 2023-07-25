@@ -67,7 +67,7 @@ Le dossier contient:
 **Etape 1:** Conteneuriser l'image
 
 ```
-cd recommendation/api
+cd apps/recommendation/api
 gcloud builds submit \
   --tag eu.gcr.io/<PROJECT-ID>/data-gcp/<IMAGE-NAME> \
 
@@ -96,7 +96,7 @@ gcloud builds submit --tag eu.gcr.io/passculture-data-ehp/data-gcp/apireco-stg
 
 
 ```
-cd recommendation/api
+cd apps/recommendation/api
 
 gcloud run deploy <SERVICE> \
 --image <IMAGE>:latest \

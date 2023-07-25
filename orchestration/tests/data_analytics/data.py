@@ -243,6 +243,7 @@ ENRICHED_OFFER_DATA_INPUT = {
             "price_category_id": None,
             "price_category_label_id": None,
             "price_category_label": None,
+            "stock_features": None,
         },
         {
             "stock_id": "2",
@@ -254,6 +255,7 @@ ENRICHED_OFFER_DATA_INPUT = {
             "price_category_id": None,
             "price_category_label_id": None,
             "price_category_label": None,
+            "stock_features": None,
         },
     ],
     "applicative_database_user": [
@@ -750,6 +752,7 @@ ENRICHED_STOCK_DATA_INPUT = {
             "price_category_id": None,
             "price_category_label_id": None,
             "price_category_label": None,
+            "stock_features": None,
         },
         {
             "stock_id": "2",
@@ -765,6 +768,7 @@ ENRICHED_STOCK_DATA_INPUT = {
             "price_category_id": None,
             "price_category_label_id": None,
             "price_category_label": None,
+            "stock_features": None,
         },
     ],
     "applicative_database_user": [
@@ -829,6 +833,7 @@ ENRICHED_STOCK_DATA_EXPECTED = [
         "price_category_id": None,
         "price_category_label_id": None,
         "price_category_label": None,
+        "stock_features": None,
     },
     {
         "stock_id": "2",
@@ -849,6 +854,7 @@ ENRICHED_STOCK_DATA_EXPECTED = [
         "price_category_id": None,
         "price_category_label_id": None,
         "price_category_label": None,
+        "stock_features": None,
     },
 ]
 

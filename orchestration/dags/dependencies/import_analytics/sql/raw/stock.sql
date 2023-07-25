@@ -15,4 +15,5 @@ SELECT
     , "numberOfTickets" AS number_of_tickets
     , "educationalPriceDetail" AS educational_price_detail
     , CAST("priceCategoryId" AS varchar(255)) AS price_category_id
+    , BTRIM(array_to_string("features", \',\'), \'{\') AS stock_features
 FROM public.stock

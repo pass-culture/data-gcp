@@ -104,7 +104,7 @@ SELECT
     ) AS passculture_pro_url,
     FALSE AS offer_is_template,
     collective_offer.collective_offer_image_id,
-    template.provider_id
+    collective_offer.provider_id
 FROM
     `{{ bigquery_clean_dataset }}`.applicative_database_collective_offer AS collective_offer
     JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue ON venue.venue_id = collective_offer.venue_id

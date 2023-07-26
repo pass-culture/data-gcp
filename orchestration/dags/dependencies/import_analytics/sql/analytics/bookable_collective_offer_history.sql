@@ -24,6 +24,7 @@ FROM
     JOIN `{{ bigquery_clean_dataset }}`.applicative_database_collective_offer_history AS collective_offer ON collective_stock.collective_offer_id = collective_offer.collective_offer_id
     AND collective_offer.collective_offer_is_active
     AND collective_offer.partition_date = collective_stock.partition_date
+    AND collective_offer_validation = "APPROVED"
     LEFT JOIN bookings_per_stock ON collective_stock.collective_stock_id = bookings_per_stock.collective_stock_id
     AND collective_stock.partition_date = bookings_per_stock.partition_date
 WHERE
@@ -54,3 +55,4 @@ SELECT
 FROM
         `{{ bigquery_clean_dataset }}`.applicative_database_collective_offer_template_history AS collective_offer_template
     WHERE partition_date = DATE("{{ ds }}")
+    AND collective_offer_validation = "APPROVED"

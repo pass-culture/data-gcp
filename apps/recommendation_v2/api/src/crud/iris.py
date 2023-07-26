@@ -2,7 +2,6 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 from geoalchemy2.elements import WKTElement
 
-from utils.database import Base, engine
 from models.iris_france import IrisFrance
 
 

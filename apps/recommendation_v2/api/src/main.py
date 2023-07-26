@@ -1,21 +1,15 @@
-import time
-from datetime import timedelta
-
 from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.logger import logger
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi_versioning import VersionedFastAPI, version
 from typing_extensions import Annotated
 
-from schemas.playlist_params import PlaylistParamsRequest
-
 from utils.database import Base, engine
 
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 import uuid
 
-from schemas.user import UserInput, User
+from schemas.user import UserInput
 from schemas.offer import OfferInput
 
 from core.model_engine.similar_offer import SimilarOffer
@@ -47,9 +41,7 @@ def check():
 
 
 @app.post("/similar_offers")
-def similar_offers(
-    offer: OfferInput, user: UserInput, playlist_params: PlaylistParamsRequest
-):
+def similar_offers(offer: OfferInput, user: UserInput):
 
     call_id = str(uuid.uuid4())
 
@@ -61,23 +53,27 @@ def similar_offers(
         db, offer.offer_id, offer.latitude, offer.longitude
     )
 
-    scoring = SimilarOffer(user, offer, params_in=playlist_params)
-    offer_recommendations = scoring.get_scoring()
+    scoring = SimilarOffer(user, offer)
+
+    offer_recommendations = scoring.get_scoring(db)
+
     scoring.save_recommendation(db, offer_recommendations)
+
     db.close()
+
     return offer_recommendations
 
 
-@app.post("/playlist_recommendation")
-def playlist_recommendation(user: UserInput, playlist_params: PlaylistParamsRequest):
+# @app.post("/playlist_recommendation")
+# def playlist_recommendation(user: UserInput):
 
-    call_id = str(uuid.uuid4())
+#     call_id = str(uuid.uuid4())
 
-    user = User(
-        user_id=user.user_id,
-        call_id=call_id,
-        longitude=user.longitude,
-        latitude=user.latitude,
-    )
+#     user = User(
+#         user_id=user.user_id,
+#         call_id=call_id,
+#         longitude=user.longitude,
+#         latitude=user.latitude,
+#     )
 
-    return user.user_profile, user.iris_id
+#     return user.user_profile, user.iris_id

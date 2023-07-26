@@ -1,9 +1,6 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import func, or_, and_
-from geoalchemy2.functions import ST_Distance, ST_DWithin
-from geoalchemy2.elements import WKTElement
+from sqlalchemy import func
 
-from models.recommendable_offer_per_iris_shape_mv import RecommendableOfferIrisShape
 from models import enriched_user
 from schemas.user import User
 from crud.iris import get_iris_from_coordinates

@@ -15,6 +15,7 @@ class Offer:
     """Characteristics of an offer"""
 
     offer_id: str
+    item_id: str = None
     call_id: str = None
     latitude: float = None
     longitude: float = None

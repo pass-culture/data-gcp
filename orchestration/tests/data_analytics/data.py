@@ -622,7 +622,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_EXPECTED = [
         "passculture_pro_url": "https://passculture.pro/offre/T-AQ/collectif/edition",
         "offer_is_template": True,
         "collective_offer_image_id": "28",
-        "provider_id": "65308",
+        "provider_id": "65378",
     },
 ]
 

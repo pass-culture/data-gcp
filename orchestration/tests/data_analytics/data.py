@@ -528,6 +528,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_INPUT = {
             "collective_offer_is_active": True,
             "collective_offer_image_id": "27",
             "collective_offer_validation": "APPROVED",
+            "provider_id": "65378",
         }
     ],
     "applicative_database_collective_offer_template": [
@@ -542,6 +543,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_INPUT = {
             "collective_offer_validation": "APPROVED",
             "collective_offer_is_active": True,
             "collective_offer_image_id": "28",
+            "provider_id": "65378",
         }
     ],
     "subcategories": [{"id": "CONCERT", "category_id": "MUSIQUE_LIVE"}],
@@ -587,6 +589,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_EXPECTED = [
         "passculture_pro_url": "https://passculture.pro/offre/AM/collectif/edition",
         "offer_is_template": False,
         "collective_offer_image_id": "27",
+        "provider_id": "65378",
     },
     {
         "collective_offer_id": "4",
@@ -619,6 +622,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_EXPECTED = [
         "passculture_pro_url": "https://passculture.pro/offre/T-AQ/collectif/edition",
         "offer_is_template": True,
         "collective_offer_image_id": "28",
+        "provider_id": "65378",
     },
 ]
 

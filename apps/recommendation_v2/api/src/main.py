@@ -13,6 +13,7 @@ from schemas.user import UserInput
 from schemas.offer import OfferInput
 
 from core.model_engine.similar_offer import SimilarOffer
+from core.model_engine.recommendation import Recommendation
 from crud.user import get_user_profile
 from crud.offer import get_offer_characteristics
 
@@ -31,7 +32,7 @@ Base.metadata.create_all(engine)
 
 @app.get("/")
 def read_root():
-    # logger.info("Auth user welcome to : Refacto API test")
+    logger.info("Auth user welcome to : Refacto API test")
     return "Auth user welcome to : Refacto API test"
 
 
@@ -64,16 +65,21 @@ def similar_offers(offer: OfferInput, user: UserInput):
     return offer_recommendations
 
 
-# @app.post("/playlist_recommendation")
-# def playlist_recommendation(user: UserInput):
+@app.post("/playlist_recommendation")
+def playlist_recommendation(user: UserInput):
 
-#     call_id = str(uuid.uuid4())
+    call_id = str(uuid.uuid4())
 
-#     user = User(
-#         user_id=user.user_id,
-#         call_id=call_id,
-#         longitude=user.longitude,
-#         latitude=user.latitude,
-#     )
+    db = Session(bind=engine, expire_on_commit=False)
 
-#     return user.user_profile, user.iris_id
+    user = get_user_profile(db, user.user_id, call_id, user.latitude, user.longitude)
+
+    scoring = Recommendation(user)
+
+    user_recommendations = scoring.get_scoring(db)
+
+    scoring.save_recommendation(db, user_recommendations)
+
+    db.close()
+
+    return user_recommendations

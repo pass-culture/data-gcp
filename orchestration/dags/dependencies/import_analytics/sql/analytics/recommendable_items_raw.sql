@@ -1,5 +1,7 @@
 SELECT
     ro.item_id,
+    ANY(name) as name,
+    COUNT(DISTINCT offer_id) as total_associated_offers,
     MAX(ro.category) as category,
     MAX(ro.subcategory_id) as subcategory_id,
     MAX(ro.search_group_name) as search_group_name,

@@ -17,7 +17,7 @@ class PredictionResult:
     model_display_name: str
 
 
-@cached(cache=TTLCache(maxsize=1024, ttl=60))
+@cached(cache=TTLCache(maxsize=1024, ttl=120))
 def get_model(endpoint_name, location):
     return __get_model(endpoint_name, location)
 

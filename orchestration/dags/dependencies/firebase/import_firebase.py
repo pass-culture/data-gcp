@@ -36,8 +36,14 @@ GCP_PROJECT_PRO_ENV = {
         "passculture-pro.analytics_301948526",
         "pc-pro-testing.analytics_397508951",
     ],
-    "stg": ["passculture-pro.analytics_301948526"],
-    "prod": ["passculture-pro.analytics_301948526"],
+    "stg": [
+        "passculture-pro.analytics_301948526",
+        "pc-pro-staging.analytics_397573615",
+    ],
+    "prod": [
+        "passculture-pro.analytics_301948526",
+        "pc-pro-production.analytics_397565568",
+    ],
 }[ENV_SHORT_NAME]
 
 

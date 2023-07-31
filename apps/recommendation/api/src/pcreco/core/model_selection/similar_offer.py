@@ -22,7 +22,7 @@ default = ModelConfiguration(
     endpoint=SimilarOfferEndpoint(f"similar_offers_version_b_{ENV_SHORT_NAME}"),
     retrieval_order_query=None,
     retrieval_limit=500,
-    ranking_order_query="user_km_distance_10 ASC, item_score DESC",
+    ranking_order_query="user_km_distance_10 ASC, item_score ASC",
     ranking_limit=40,
 )
 version_b = ModelConfiguration(
@@ -38,7 +38,7 @@ version_b = ModelConfiguration(
     endpoint=SimilarOfferEndpoint(f"similar_offers_version_b_{ENV_SHORT_NAME}"),
     retrieval_order_query=None,
     retrieval_limit=500,
-    ranking_order_query="user_km_distance_10 ASC, item_score DESC",
+    ranking_order_query="user_km_distance_10 ASC, item_score ASC",
     ranking_limit=40,
 )
 version_c = ModelConfiguration(
@@ -54,7 +54,7 @@ version_c = ModelConfiguration(
     endpoint=SimilarOfferEndpoint(f"similar_offers_version_c_{ENV_SHORT_NAME}"),
     retrieval_order_query=None,
     retrieval_limit=500,
-    ranking_order_query="user_km_distance_10 ASC, item_score DESC",
+    ranking_order_query="user_km_distance_10 ASC, item_score ASC",
     ranking_limit=40,
 )
 cold_start = ModelConfiguration(
@@ -70,7 +70,7 @@ cold_start = ModelConfiguration(
     endpoint=SimilarOfferEndpoint(f"similar_offers_cold_start_{ENV_SHORT_NAME}"),
     retrieval_order_query=None,
     retrieval_limit=500,
-    ranking_order_query="item_score DESC",
+    ranking_order_query="item_score ASC",
     ranking_limit=40,
 )
 random = ModelConfiguration(
@@ -105,6 +105,6 @@ retrieval_offer = ModelConfiguration(
     endpoint=OfferRetrievalEndpoint(f"recommendation_user_retrieval_{ENV_SHORT_NAME}"),
     retrieval_order_query=None,
     retrieval_limit=500,
-    ranking_order_query="user_km_distance_10 ASC, item_score DESC",
+    ranking_order_query="user_km_distance_10 ASC, item_score ASC",
     ranking_limit=40,
 )

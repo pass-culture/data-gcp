@@ -20,10 +20,9 @@ import numpy as np
 
 MODEL_TYPE = {
     "n_dim": 64,
-    "metric": "inner_product",
+    "metric": "cosine",
     "type": "recommendation",
     "default_token": "[UNK]",
-    "ascending": False,
 }
 
 
@@ -74,7 +73,7 @@ def prepare_docs(model_type):
     user_embedding_dict = {x: y for x, y in zip(user_list, user_weights)}
     item_embedding_dict = {x: y for x, y in zip(item_list, item_weights)}
 
-    user_docs = get_user_docs(user_embedding_dict)
+    user_docs = get_user_docs(user_embedding_dict, MODEL_TYPE["metric"])
     user_docs.save(
         "./metadata/user.docs"
     )  # .save_binary("./metadata/user.bin", protocol='protobuf', compress='lz4')

@@ -18,7 +18,7 @@ MODEL_TYPE = {
     "metric": "cosine",
     "type": "semantic",
     "default_token": None,
-    "ascending": True,
+    "transformer": "sentence-transformers/all-MiniLM-L6-v2",
 }
 
 

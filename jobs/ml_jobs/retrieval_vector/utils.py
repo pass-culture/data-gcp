@@ -52,14 +52,16 @@ def get_items_metadata():
                 item_id,
                 offer_id, 
                 offer_name,
-                booking_confirm_cnt
             FROM `passculture-data-prod.analytics_prod.enriched_offer_data` 
             QUALIFY ROW_NUMBER() OVER (PARTITION BY item_id ORDER BY booking_confirm_cnt DESC) = 1
             ) 
 
-        SELECT ri.*, od.name, od.booking_confirm_cnt, od.offer_id
+        SELECT 
+            ro.*, 
+            od.offer_name as example_offer_name, 
+            od.offer_id as example_offer_id
         FROM `{GCP_PROJECT_ID}.{BIGQUERY_ANALYTICS_DATASET}.recommendable_items_raw` ro
-        LEFT JOIN offer_details od on od.item_id = ri.item_id
+        LEFT JOIN offer_details od on od.item_id = ro.item_id
     """
     return pd.read_gbq(sql)
 
@@ -119,17 +121,19 @@ def get_item_docs(item_embedding_dict, items_df, n_dim, metric):
                 "stock_price": float(row.stock_price),
                 "offer_creation_date": to_ts(row.offer_creation_date),
                 "stock_beginning_date": to_ts(row.stock_beginning_date),
-                "total_associated_offers": row.total_associated_offers,
-                "name": row.name,
+                "example_offer_id": row.example_offer_id,
+                "example_offer_name": row.example_offer_name,
             }
             docs.append(Document(id=_item_id, tags=metadata, embedding=embedding_id))
     return docs
 
 
-def get_user_docs(user_dict):
+def get_user_docs(user_dict, metric):
     docs = DocumentArray()
 
     for k, v in user_dict.items():
-        # TODO : dot product / negative
-        docs.append(Document(id=k, embedding=np.negative(v)))
+        if metric == "inner_product":
+            docs.append(Document(id=k, embedding=np.negative(v)))
+        else:
+            docs.append(Document(id=k, embedding=v))
     return docs

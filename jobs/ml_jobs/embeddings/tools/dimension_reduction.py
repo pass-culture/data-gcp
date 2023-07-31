@@ -29,7 +29,6 @@ def reduce_embedding_dimension(
         emb_size=emb_size,
     )
 
-    logger.info(f"float_emb: {float_emb[0][:3]} ...")
     logger.info(f"reduction to {dimension} dimensions...")
     transformer = umap.UMAP(
         n_components=dimension,
@@ -39,5 +38,4 @@ def reduce_embedding_dimension(
         verbose=False,
     ).fit(float_emb)
     emb_reduced = transformer.embedding_.astype(np.float32)
-    logger.info(f"float_emb: {emb_reduced[0][0][:3]} ...")
     return emb_reduced.tolist()

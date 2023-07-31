@@ -36,8 +36,14 @@ GCP_PROJECT_PRO_ENV = {
         "passculture-pro.analytics_301948526",
         "pc-pro-testing.analytics_397508951",
     ],
-    "stg": ["passculture-pro.analytics_301948526"],
-    "prod": ["passculture-pro.analytics_301948526"],
+    "stg": [
+        "passculture-pro.analytics_301948526",
+        "pc-pro-staging.analytics_397573615",
+    ],
+    "prod": [
+        "passculture-pro.analytics_301948526",
+        "pc-pro-production.analytics_397565568",
+    ],
 }[ENV_SHORT_NAME]
 
 
@@ -171,6 +177,7 @@ import_firebase_beneficiary_tables = {
         "partition_prefix": "$",
         "time_partitioning": {"field": "booking_date"},
         "dag_depends": ["import_contentful"],
+        "depends": ["analytics_firebase_events"],
     },
     "analytics_firebase_home_funnel_conversion": {
         "sql": f"{SQL_PATH}/analytics/firebase_home_funnel_conversion.sql",
@@ -178,6 +185,7 @@ import_firebase_beneficiary_tables = {
         "destination_table": "firebase_home_funnel_conversion",
         "partition_prefix": "$",
         "time_partitioning": {"field": "module_displayed_date"},
+        "depends": ["analytics_firebase_events", "analytics_firebase_bookings"],
         "dag_depends": ["import_contentful"],
     },
     "analytics_firebase_bookings": {
@@ -186,6 +194,7 @@ import_firebase_beneficiary_tables = {
         "destination_table": "firebase_bookings",
         "partition_prefix": "$",
         "time_partitioning": {"field": "booking_date"},
+        "depends": ["analytics_firebase_events"],
     },
     "analytics_firebase_app_experiments": {
         "sql": f"{SQL_PATH}/analytics/firebase_app_experiments.sql",

@@ -2,7 +2,6 @@ import concurrent
 import numpy as np
 import shutil
 import time
-from itertools import repeat
 from multiprocessing import cpu_count
 
 from PIL import Image
@@ -22,33 +21,37 @@ def extract_embedding(
     - text  :
         - Input: list of string
     """
-    text_model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
-    image_model = SentenceTransformer("clip-ViT-B-32")
+    MODEL_DICT = {}
+    for model in params["models"]:
+        MODEL_DICT[model] = SentenceTransformer(params["models"][model])
     start = time.time()
+    emb_size_dict = {}
+    df_encoded = df_data[["item_id"]].astype(str)
+    download_img_multiprocess(df_data.image_url.tolist())
     for feature in params["features"]:
-        if feature["type"] == "image":
-            urls = df_data.image_url.tolist()
-            df_data[f"""{feature["name"]}_embedding"""] = encode_img_from_urls(
-                image_model, urls
-            )
-        if feature["type"] == "text":
-            df_data[f"""{feature["name"]}_embedding"""] = [
-                list(embedding)
-                for embedding in text_model.encode(df_data[feature["name"]].tolist())
-            ]
-
-        df_data[f"""{feature["name"]}_embedding"""] = df_data[
-            f"""{feature["name"]}_embedding"""
-        ].astype(str)
+        for model_type in feature["model"]:
+            model = MODEL_DICT[model_type]
+            emb_col_name = f"""{feature["name"]}_{model_type}"""
+            if feature["type"] == "image":
+                df_encoded[emb_col_name] = encode_img_from_path(
+                    model, df_data.image_url.tolist()
+                )
+                emb_size_dict[emb_col_name] = 512
+            if feature["type"] in ["text", "macro_text"]:
+                encode = model.encode(df_data[feature["name"]].tolist())
+                df_encoded[emb_col_name] = [list(embedding) for embedding in encode]
+                emb_size_dict[emb_col_name] = len(encode[0])
+            df_encoded[emb_col_name] = df_encoded[emb_col_name].astype(str)
+    print("Removing image on local disk...")
+    shutil.rmtree("./img", ignore_errors=True)
     log_duration(f"Embedding extraction: ", start)
-    return df_data
+    return df_encoded, emb_size_dict
 
 
-def encode_img_from_urls(model, urls):
+def encode_img_from_path(model, paths):
     offer_img_embs = []
     offer_wo_img = 0
-    download_img_multiprocess(urls)
-    for url in urls:
+    for url in paths:
         url = str(url).replace("/", "-")
         try:
             img_emb = model.encode(Image.open(f"./img/{url}.jpeg"))
@@ -56,9 +59,7 @@ def encode_img_from_urls(model, urls):
         except:
             offer_img_embs.append([0] * 512)
             offer_wo_img += 1
-    print(f"{(offer_wo_img*100)/len(urls)}% offers dont have image")
-    print("Removing image on local disk...")
-    shutil.rmtree("./img", ignore_errors=True)
+    print(f"{(offer_wo_img*100)/len(paths)}% offers dont have image")
     return offer_img_embs
 
 

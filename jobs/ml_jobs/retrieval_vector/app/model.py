@@ -56,7 +56,7 @@ class DefaultClient:
                 predictions.append(
                     {
                         "idx": idx,
-                        "score": row.scores[self.metric].value,
+                        "score": float(row.scores[self.metric].value),
                         "item_id": row.tags["item_id"],
                     }
                 )
@@ -65,7 +65,7 @@ class DefaultClient:
                     dict(
                         {
                             "idx": idx,
-                            "score": row.scores[self.metric].value,
+                            "score": float(row.scores[self.metric].value),
                         },
                         **row.tags,
                     )

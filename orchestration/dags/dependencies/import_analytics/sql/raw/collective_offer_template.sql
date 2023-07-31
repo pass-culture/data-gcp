@@ -26,5 +26,6 @@ SELECT
     , "offerVenue" ->> \'otherAddress\' AS collective_offer_venue_other_address
     , BTRIM(array_to_string("interventionArea", \',\'), \'{\') AS intervention_area
     , CAST("lastValidationType" AS VARCHAR) AS collective_offer_last_validation_type
-     ,CAST("imageId" AS varchar(255)) AS collective_offer_image_id
+    ,CAST("imageId" AS varchar(255)) AS collective_offer_image_id
+    , CAST("providerId" AS VARCHAR) AS provider_id
 FROM public.collective_offer_template

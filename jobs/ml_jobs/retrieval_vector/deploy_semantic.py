@@ -55,24 +55,19 @@ def main(
         None,
         help="GCS parquet path",
     ),
-    reduce_embedding: bool = typer.Option(
-        True,
-        help="Reduce embedding",
-    ),
 ) -> None:
 
     yyyymmdd = datetime.now().strftime("%Y%m%d")
     if model_name is None:
         model_name = "default"
-    if reduce_embedding:
-        model_name += "_reduced"
     run_id = f"{model_name}_{ENV_SHORT_NAME}_v{yyyymmdd}"
     serving_container = (
         f"eu.gcr.io/{GCP_PROJECT_ID}/{experiment_name.replace('.', '_')}:{run_id}"
     )
     print(f"Download...")
-    download_embeddings(source_gs_path, reduce=reduce_embedding)
     print("Deploy...")
+    prepare_docs(source_gs_path, model_type=MODEL_TYPE)
+
     save_model_type(model_type=MODEL_TYPE)
     deploy_container(serving_container)
     save_experiment(experiment_name, model_name, serving_container, run_id=run_id)

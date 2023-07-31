@@ -5,6 +5,7 @@ from pcreco.core.scorer.similar_offer import (
     DummyEndpoint,
     SimilarOfferEndpoint,
 )
+from pcreco.core.scorer.retrieval_endpoint import OfferRetrievalEndpoint
 from pcreco.core.model_selection.model_configuration import ModelConfiguration
 
 
@@ -18,10 +19,10 @@ default = ModelConfiguration(
     scorer=offer_scorer.SimilarOfferItemRanker,
     scorer_order_columns="order",
     scorer_order_ascending=True,
-    endpoint=SimilarOfferEndpoint(f"similar_offers_default_{ENV_SHORT_NAME}"),
+    endpoint=SimilarOfferEndpoint(f"similar_offers_version_b_{ENV_SHORT_NAME}"),
     retrieval_order_query=None,
     retrieval_limit=500,
-    ranking_order_query="user_km_distance_100 ASC, item_score DESC",
+    ranking_order_query="user_km_distance_10 ASC, item_score DESC",
     ranking_limit=40,
 )
 version_b = ModelConfiguration(
@@ -37,7 +38,7 @@ version_b = ModelConfiguration(
     endpoint=SimilarOfferEndpoint(f"similar_offers_version_b_{ENV_SHORT_NAME}"),
     retrieval_order_query=None,
     retrieval_limit=500,
-    ranking_order_query="item_score DESC",
+    ranking_order_query="user_km_distance_10 ASC, item_score DESC",
     ranking_limit=40,
 )
 version_c = ModelConfiguration(
@@ -87,5 +88,23 @@ random = ModelConfiguration(
     retrieval_order_query="booking_number DESC",
     retrieval_limit=1000,
     ranking_order_query="booking_number DESC",
+    ranking_limit=40,
+)
+
+
+retrieval_offer = ModelConfiguration(
+    name="retrieval_offer",
+    description="""
+    SIm offers retrieval model:
+    Takes 500 personnalized offers
+    Rank them by booking number
+    """,
+    scorer=offer_scorer.DefaultRetrieval,
+    scorer_order_columns="order",
+    scorer_order_ascending=True,
+    endpoint=OfferRetrievalEndpoint(f"recommendation_user_retrieval_{ENV_SHORT_NAME}"),
+    retrieval_order_query=None,
+    retrieval_limit=500,
+    ranking_order_query="user_km_distance_10 ASC, item_score DESC",
     ranking_limit=40,
 )

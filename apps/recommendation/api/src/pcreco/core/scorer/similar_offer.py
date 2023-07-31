@@ -39,8 +39,9 @@ class SimilarOfferEndpoint(ModelEndpoint):
         self.model_version = prediction_result.model_version
         self.model_display_name = prediction_result.model_display_name
         log_duration("similar_offer_model_score", start)
+        # smallest = better
         return {
-            item_id: size - i
+            item_id: i
             for i, item_id in enumerate(prediction_result.predictions)
             if item_id != self.offer.item_id and " " not in item_id
         }

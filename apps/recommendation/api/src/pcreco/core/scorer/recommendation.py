@@ -55,6 +55,7 @@ class RecommendationEndpoint(ModelEndpoint):
         )
         start = time.time()
 
+        # highest = better
         recommendations = {
             item_id: predicted_scores[i][0]
             for i, item_id in enumerate(item_input)

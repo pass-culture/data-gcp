@@ -87,12 +87,12 @@ WITH temp_firebase_events AS (
         ) as double_offer_id,
         (
             select
-                event_params.value.string_value
+                CAST(event_params.value.int_value AS STRING)
             from
                 unnest(event_params) event_params
             where
                 event_params.key = 'offerId'
-        ) as string_offer_id,
+        ) as int_offer_id,
         (
             select
                 event_params.value.string_value
@@ -208,10 +208,10 @@ WITH temp_firebase_events AS (
 
 url_extract AS (
     SELECT
-        * EXCEPT (double_offer_id, string_offer_id),
+        * EXCEPT (double_offer_id, int_offer_id),
         (
             CASE
-                WHEN double_offer_id IS NULL THEN string_offer_id
+                WHEN double_offer_id IS NULL THEN int_offer_id
                 ELSE double_offer_id
             END
         ) AS offer_id,

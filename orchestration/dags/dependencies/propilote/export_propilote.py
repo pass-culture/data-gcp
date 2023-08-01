@@ -367,7 +367,6 @@ analytics_tables = {
             "kpis_list": kpis_list,
         },
     },
-
     "pilote_export": {
         "sql": f"{SQL_ANALYTICS_PATH}/pilote_export.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",

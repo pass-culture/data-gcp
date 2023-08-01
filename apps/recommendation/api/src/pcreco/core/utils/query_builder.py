@@ -70,7 +70,7 @@ class RecommendableOfferQueryBuilder:
         self,
         selected_items: t.Dict[str, float],
         user: str,
-        order_query: str = "user_km_distance ASC, item_score DESC",
+        order_query: str = "user_km_distance ASC, item_score ASC",
         offer_limit: int = 20,
     ):
 

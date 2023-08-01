@@ -29,46 +29,6 @@ class ScorerRetrieval:
         self.params_in = params_in
         self.model_endpoint = model_endpoint
 
-
-class ItemRetrievalRanker(ScorerRetrieval):
-    """
-    Takes top k {retrieval_limit} items, (model_based) and returns top n {ranking_limit} nearest offers and similar offers
-    """
-
-    def get_scoring(self) -> List[str]:
-        start = time.time()
-        # Retrieval Phase
-        recommendable_items = self.get_recommendable_items()
-        log_duration(
-            f"Retrieval: get_recommendable_items for {self.user.id}: items -> {len(recommendable_items)}",
-            start,
-        )
-        start = time.time()
-        # nothing to score
-        if len(recommendable_items) == 0:
-            return []
-
-        prediction_result = self.model_endpoint.model_score(
-            recommendable_items, size=500
-        )
-        log_duration(
-            f"Retrieval: predicted_items for {self.user.id}: predicted_items -> {len(prediction_result)}",
-            start,
-        )
-        start = time.time()
-        # nothing to score
-        if len(prediction_result) == 0:
-            return []
-
-        # Ranking Phase
-        recommendable_offers = self.get_recommendable_offers(prediction_result)
-        log_duration(
-            f"Ranking: get_recommendable_offers for {self.user.id}: offers -> {len(recommendable_offers)}",
-            start,
-        )
-
-        return recommendable_offers.values()
-
     def get_recommendable_offers(
         self, selected_items_list
     ) -> Dict[str, Dict[str, Any]]:
@@ -110,6 +70,74 @@ class ItemRetrievalRanker(ScorerRetrieval):
             start,
         )
         return user_recommendation
+
+
+class DefaultRetrieval(ScorerRetrieval):
+    """
+    Default Retrieval method based on model endpoint
+    """
+
+    def get_scoring(self) -> List[str]:
+        start = time.time()
+        prediction_result = self.model_endpoint.model_score(
+            item_input=None, size=self.model_params.retrieval_limit
+        )
+        log_duration(
+            f"Retrieval: predicted_items for {self.user.id}: predicted_items -> {len(prediction_result)}",
+            start,
+        )
+        start = time.time()
+        # nothing to score
+        if len(prediction_result) == 0:
+            return []
+
+        # Ranking Phase
+        recommendable_offers = self.get_recommendable_offers(prediction_result)
+        log_duration(
+            f"Ranking: get_recommendable_offers for {self.user.id}: offers -> {len(recommendable_offers)}",
+            start,
+        )
+        return recommendable_offers.values()
+
+
+class ItemRetrievalRanker(ScorerRetrieval):
+    """
+    Takes top k {retrieval_limit} items, (model_based) and returns top n {ranking_limit} nearest offers and similar offers
+    """
+
+    def get_scoring(self) -> List[str]:
+        start = time.time()
+        # Retrieval Phase
+        recommendable_items = self.get_recommendable_items()
+        log_duration(
+            f"Retrieval: get_recommendable_items for {self.user.id}: items -> {len(recommendable_items)}",
+            start,
+        )
+        start = time.time()
+        # nothing to score
+        if len(recommendable_items) == 0:
+            return []
+
+        prediction_result = self.model_endpoint.model_score(
+            recommendable_items, size=500
+        )
+        log_duration(
+            f"Retrieval: predicted_items for {self.user.id}: predicted_items -> {len(prediction_result)}",
+            start,
+        )
+        start = time.time()
+        # nothing to score
+        if len(prediction_result) == 0:
+            return []
+
+        # Ranking Phase
+        recommendable_offers = self.get_recommendable_offers(prediction_result)
+        log_duration(
+            f"Ranking: get_recommendable_offers for {self.user.id}: offers -> {len(recommendable_offers)}",
+            start,
+        )
+
+        return recommendable_offers.values()
 
     def get_recommendable_items(self) -> List[str]:
 
@@ -163,45 +191,3 @@ class SimilarOfferItemRanker(ScorerRetrieval):
         )
 
         return recommendable_offers.values()
-
-    def get_recommendable_offers(
-        self, selected_items_list
-    ) -> Dict[str, Dict[str, Any]]:
-        start = time.time()
-        recommendable_offers_query = RecommendableOfferQueryBuilder(
-            self.params_in_filters
-        ).generate_query(
-            order_query=self.model_params.ranking_order_query,
-            offer_limit=self.model_params.ranking_limit,
-            selected_items=selected_items_list,
-            user=self.user,
-        )
-
-        query_result = []
-        if recommendable_offers_query is not None:
-            connection = get_session()
-            query_result = connection.execute(recommendable_offers_query).fetchall()
-
-        user_recommendation = {
-            row[1]: {
-                "id": row[0],
-                "item_id": row[1],
-                "venue_id": row[2],
-                "user_distance": row[3],
-                "booking_number": row[4],
-                "category": row[5],
-                "subcategory_id": row[6],
-                "search_group_name": row[7],
-                "venue_latitude": row[8],
-                "venue_longitude": row[9],
-                "item_score": row[10],
-                "order": i,
-                "random": random.random(),
-            }
-            for i, row in enumerate(query_result)
-        }
-        log_duration(
-            f"get_recommendable_offers for {self.user.id}: offers -> {len(user_recommendation)}",
-            start,
-        )
-        return user_recommendation

@@ -42,8 +42,8 @@ gce_params = {
     "instance_name": f"retrieval-semantic-vector-{ENV_SHORT_NAME}",
     "instance_type": {
         "dev": "n1-standard-2",
-        "stg": "n1-highmem-16",
-        "prod": "n1-highmem-32",
+        "stg": "n1-standard-8",
+        "prod": "n1-standard-8",
     },
 }
 
@@ -58,7 +58,7 @@ schedule_dict = {"prod": "0 12 * * 4", "dev": None, "stg": "0 12 * * 3"}
 
 
 with DAG(
-    "retrieval_semantic_vector",
+    "retrieval_semantic_vector_build",
     default_args=default_args,
     description="Custom training job",
     schedule_interval=get_airflow_schedule(schedule_dict[ENV_SHORT_NAME]),

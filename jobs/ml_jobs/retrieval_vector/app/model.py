@@ -130,6 +130,9 @@ class TextClient(DefaultClient):
 
     def text_vector(self, var: str):
         try:
-            return Document(embedding=self.encoder.encode(var))
+            return Document(
+                embedding=list(self.encoder.encode(var))
+                + list(self.encoder.encode(var))
+            )
         except:
             return None

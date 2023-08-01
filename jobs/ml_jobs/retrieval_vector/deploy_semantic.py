@@ -14,7 +14,7 @@ import polars as pl
 import numpy as np
 
 MODEL_TYPE = {
-    "n_dim": 382,
+    "n_dim": 384,
     "metric": "cosine",
     "type": "semantic",
     "default_token": None,

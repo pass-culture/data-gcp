@@ -27,8 +27,8 @@ gce_params = {
     "source_experiment_name": f"algo_training_two_towers_v1.1_{ENV_SHORT_NAME}",
     "instance_type": {
         "dev": "n1-standard-2",
-        "stg": "n1-highmem-16",
-        "prod": "n1-highmem-32",
+        "stg": "n1-standard-8",
+        "prod": "n1-standard-8",
     },
 }
 
@@ -61,7 +61,6 @@ with DAG(
         ),
         "experiment_name": Param(default=gce_params["experiment_name"], type="string"),
         "model_name": Param(default=gce_params["model_name"], type="string"),
-        "run_id": Param(default="", type="string"),
         "source_experiment_name": Param(
             default=gce_params["source_experiment_name"], type="string"
         ),

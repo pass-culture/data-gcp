@@ -10,6 +10,7 @@ class Offer:
         self.id = offer_id
         self.call_id = call_id
         self.iris_id = get_iris_from_coordinates(longitude, latitude)
+        self.is_geolocated = self.iris_id is not None
         self.item_id, self.bookings_count, self.found = self.get_offer_characteristics(
             offer_id
         )

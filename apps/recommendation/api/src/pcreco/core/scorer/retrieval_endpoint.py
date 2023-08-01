@@ -78,9 +78,13 @@ class RetrievalEndpoint(ModelEndpoint):
         self.user = user
         self.user_input = str(self.user.id)
         self.params_in = params_in
+        self.is_geolocated = self.user.is_geolocated
 
     def get_params(self):
         params = []
+        if not self.is_geolocated:
+            params.append(EqParams(label="is_geolocated", value=0))
+
         # dates filter
         if self.params_in.start_date is not None or self.params_in.end_date is not None:
             label = (
@@ -121,11 +125,16 @@ class RetrievalEndpoint(ModelEndpoint):
         )
         params.append(EqParams(label="offer_is_duo", value=self.params_in.offer_is_duo))
 
+        # TODO : offer_type_list
+        #
+        # TODO : is_underage_recommendable
+
         return {"$and": {k: v for d in params for k, v in d.filter().items()}}
 
     def model_score(self, item_input, size):
         start = time.time()
         instances = self.get_instance(size)
+        log_duration(f"retrieval_endpoint {instances}", start)
         prediction_result = endpoint_score(
             instances=instances, endpoint_name=self.endpoint_name
         )
@@ -159,12 +168,14 @@ class OfferRetrievalEndpoint(RetrievalEndpoint):
     def init_input(self, user: User, offer: Offer, params_in: PlaylistParamsIn):
         self.user = user
         self.offer = offer
-        self.item_id = str(self.offer.id)
+        self.item_id = str(self.offer.item_id)
         self.params_in = params_in
+        self.is_geolocated = self.offer.is_geolocated
 
     def model_score(self, item_input, size):
         start = time.time()
         instances = self.get_instance(size)
+        log_duration(f"retrieval_endpoint {instances}", start)
         prediction_result = endpoint_score(
             instances=instances, endpoint_name=self.endpoint_name
         )

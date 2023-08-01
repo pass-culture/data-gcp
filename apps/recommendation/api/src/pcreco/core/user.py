@@ -18,6 +18,7 @@ class User:
         self.longitude = longitude
         self.latitude = latitude
         self.iris_id = get_iris_from_coordinates(longitude, latitude)
+        self.is_geolocated = self.iris_id is not None
         self.age = None
         self.bookings_count = 0
         self.clicks_count = 0

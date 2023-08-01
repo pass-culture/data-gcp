@@ -23,7 +23,9 @@ class SimilarOffer(ModelEngine):
 
     def get_scorer(self):
         # init input
-        self.model_params.endpoint.init_input(self.offer)
+        self.model_params.endpoint.init_input(
+            user=self.user, offer=self.offer, params_in=self.params_in
+        )
         return self.model_params.scorer(
             user=self.user,
             params_in=self.params_in,

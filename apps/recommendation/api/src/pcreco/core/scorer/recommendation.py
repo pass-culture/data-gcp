@@ -6,6 +6,7 @@ import time
 from pcreco.core.utils.cold_start import (
     get_cold_start_categories,
 )
+from pcreco.models.reco.playlist_params import PlaylistParamsIn
 import random
 import heapq
 
@@ -23,9 +24,10 @@ class RecommendationEndpoint(ModelEndpoint):
         self.model_version = None
         self.model_display_name = None
 
-    def init_input(self, user: User):
+    def init_input(self, user: User, params_in: PlaylistParamsIn):
         self.user = user
         self.user_input = str(self.user.id)
+        self.params_in = params_in
 
     def __get_instances(self, user_input, item_input) -> List[Dict[str, str]]:
         def chunks(lst, n):
@@ -75,10 +77,11 @@ class RecommendationEndpoint(ModelEndpoint):
 
 
 class QPIEndpoint(RecommendationEndpoint):
-    def init_input(self, user: User):
+    def init_input(self, user: User, params_in: PlaylistParamsIn):
         self.user = user
         self.cold_start_categories = get_cold_start_categories(self.user.id)
         self.user_input = ",".join(self.cold_start_categories)
+        self.params_in = params_in
 
 
 class DummyEndpoint(RecommendationEndpoint):

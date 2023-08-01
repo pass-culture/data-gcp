@@ -1,11 +1,6 @@
 from pcreco.core.user import User
 from pcreco.utils.env_vars import log_duration
 import time
-from pcreco.core.utils.cold_start import (
-    get_cold_start_categories,
-)
-import random
-import heapq
 from pcreco.core.utils.vertex_ai import endpoint_score
 from pcreco.utils.env_vars import (
     log_duration,
@@ -41,7 +36,7 @@ class RangeParams:
         elif self.min_val is not None:
             return {self.label: {"$gte": self.min_val}}
         elif self.max_val is not None:
-            return {self.label: {"$lte": self.min_val}}
+            return {self.label: {"$lte": self.max_val}}
         else:
             return {}
 
@@ -137,8 +132,8 @@ class RetrievalEndpoint(ModelEndpoint):
         self.model_version = prediction_result.model_version
         self.model_display_name = prediction_result.model_display_name
         log_duration("retrieval_endpoint", start)
-        # smallest = better
-        results = {r["item_id"]: r["idx"] for r in results.predictions}
+        # smallest = better (indices)
+        return {r["item_id"]: r["idx"] for r in prediction_result.predictions}
 
     def get_instance(self, size):
         return {
@@ -177,9 +172,9 @@ class OfferRetrievalEndpoint(RetrievalEndpoint):
         self.model_display_name = prediction_result.model_display_name
         log_duration("retrieval_endpoint", start)
         # smallest = better
-        results = {
+        return {
             r["item_id"]: r["idx"]
-            for r in results.predictions
+            for r in prediction_result.predictions
             if r["item_id"] != self.item_id and " " not in r["item_id"]
         }
 

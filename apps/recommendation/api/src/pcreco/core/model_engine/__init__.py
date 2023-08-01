@@ -31,7 +31,7 @@ class ModelEngine(ABC):
 
     def get_scorer(self):
         # init user_input
-        self.model_params.endpoint.init_input(self.user)
+        self.model_params.endpoint.init_input(user=self.user, params_in=self.params_in)
         # get scorer
         return self.model_params.scorer(
             user=self.user,

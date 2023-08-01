@@ -367,6 +367,13 @@ analytics_tables = {
             "kpis_list": kpis_list,
         },
     },
+
+    "pilote_export": {
+        "sql": f"{SQL_ANALYTICS_PATH}/pilote_export.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "pilote_export",
+        "depends": ["propilote_kpis"],
+    },
 }
 
 propilote_tables = dict(tmp_tables_detailed, **analytics_tables)

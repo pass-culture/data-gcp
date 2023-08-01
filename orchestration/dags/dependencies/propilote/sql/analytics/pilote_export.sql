@@ -1,6 +1,5 @@
 WITH temp1 AS
   (SELECT FORMAT_DATE("%Y-%m-%d", MONTH) AS date_valeur ,
-          DATE_TRUNC(DATE_SUB(CURRENT_DATE, INTERVAL 15 DAY), MONTH) AS month_update ,
           CASE
               WHEN dimension_value = 'NAT' THEN 'FRANCE'
               ELSE dimension_value

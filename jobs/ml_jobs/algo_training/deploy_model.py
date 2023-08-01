@@ -204,7 +204,7 @@ def main(
     MODEL_TYPE_CONFIG = {"tensorflow": TFContainer, "custom": CustomContainer}
     # Load model stats from BQ
     if artifact_uri is None or serving_container is None:
-        if run_id is None or len(run_id) == 0:
+        if run_id is None or len(run_id) <= 2:
             results_array = pd.read_gbq(
                 f"""SELECT * FROM `{BIGQUERY_CLEAN_DATASET}.{MODELS_RESULTS_TABLE_NAME}` WHERE experiment_name = '{experiment_name}' ORDER BY execution_date DESC LIMIT 1"""
             ).to_dict("records")

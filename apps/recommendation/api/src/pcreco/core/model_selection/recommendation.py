@@ -7,6 +7,10 @@ from pcreco.core.scorer.recommendation import (
     QPIEndpoint,
     DummyEndpoint,
 )
+from pcreco.core.scorer.retrieval_endpoint import (
+    RetrievalEndpoint,
+    UserRetrievalEndpoint,
+)
 from pcreco.core.model_selection.model_configuration import ModelConfiguration
 
 default = ModelConfiguration(
@@ -19,11 +23,11 @@ default = ModelConfiguration(
     """,
     scorer=offer_scorer.ItemRetrievalRanker,
     scorer_order_columns="order",
-    scorer_order_ascending=False,
+    scorer_order_ascending=True,
     endpoint=RecommendationEndpoint(f"recommendation_default_{ENV_SHORT_NAME}"),
     retrieval_order_query="booking_number DESC",
     retrieval_limit=20_000,
-    ranking_order_query="item_score DESC",
+    ranking_order_query="item_score DESC",  # higher better
     ranking_limit=100,
     default_shuffle_recommendation=False,
     default_mixing_recommendation=True,
@@ -40,11 +44,11 @@ version_b = ModelConfiguration(
     """,
     scorer=offer_scorer.ItemRetrievalRanker,
     scorer_order_columns="order",
-    scorer_order_ascending=False,
+    scorer_order_ascending=True,
     endpoint=RecommendationEndpoint(f"recommendation_version_b_{ENV_SHORT_NAME}"),
     retrieval_order_query="booking_number DESC",
     retrieval_limit=20_000,
-    ranking_order_query="item_score DESC",
+    ranking_order_query="item_score DESC",  # higher better
     ranking_limit=100,
     default_shuffle_recommendation=False,
     default_mixing_recommendation=True,
@@ -59,8 +63,9 @@ top_offers = ModelConfiguration(
         Apply diversification filter
         """,
     scorer=offer_scorer.ItemRetrievalRanker,
-    scorer_order_columns="booking_number",
-    scorer_order_ascending=False,
+    # unused:
+    scorer_order_columns="order",
+    scorer_order_ascending=True,
     endpoint=DummyEndpoint(None),
     retrieval_order_query="booking_number DESC",
     retrieval_limit=500,
@@ -71,6 +76,23 @@ top_offers = ModelConfiguration(
     default_mixing_feature="search_group_name",
 )
 
+retrieval_filter = ModelConfiguration(
+    name="retrieval_filter",
+    description="""
+    Takes top 500 offers
+    """,
+    scorer=offer_scorer.DefaultRetrieval,
+    endpoint=RetrievalEndpoint(f"recommendation_user_retrieval_{ENV_SHORT_NAME}"),
+    retrieval_order_query=None,
+    retrieval_limit=500,
+    ranking_order_query="booking_number ASC",
+    ranking_limit=100,
+    scorer_order_columns="order",
+    scorer_order_ascending=True,
+    default_shuffle_recommendation=True,
+    default_mixing_recommendation=True,
+    default_mixing_feature="search_group_name",
+)
 
 random = ModelConfiguration(
     name="random",
@@ -82,13 +104,35 @@ random = ModelConfiguration(
     Apply diversification filter
     """,
     scorer=offer_scorer.ItemRetrievalRanker,
-    scorer_order_columns="random",
+    # unused:
+    scorer_order_columns="order",
     scorer_order_ascending=True,
     endpoint=DummyEndpoint(None),
     retrieval_order_query="booking_number DESC",
     retrieval_limit=500,
     ranking_order_query="booking_number DESC",
     ranking_limit=50,
+    default_shuffle_recommendation=True,
+    default_mixing_recommendation=True,
+    default_mixing_feature="search_group_name",
+)
+
+retrieval_reco = ModelConfiguration(
+    name="retrieval_reco",
+    description="""
+    Recommendation retrieval model:
+    Takes 500 personnalized offers
+    Rank them by booking number
+    """,
+    scorer=offer_scorer.DefaultRetrieval,
+    # unused:
+    scorer_order_columns="order",
+    scorer_order_ascending=True,
+    endpoint=UserRetrievalEndpoint(f"recommendation_user_retrieval_{ENV_SHORT_NAME}"),
+    retrieval_order_query=None,
+    retrieval_limit=500,
+    ranking_order_query="booking_number DESC",
+    ranking_limit=100,
     default_shuffle_recommendation=True,
     default_mixing_recommendation=True,
     default_mixing_feature="search_group_name",

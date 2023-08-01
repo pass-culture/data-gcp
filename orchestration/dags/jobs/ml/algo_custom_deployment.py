@@ -45,6 +45,7 @@ with DAG(
         ),
         "version_name": Param(default=f"v_YYYYMMDD", type="string"),
         "default_region": Param(default=DEFAULT_REGION, type="string"),
+        "instance_type": Param(default="n1-standard-2", type="string"),
     },
 ) as dag:
     gce_instance_start = StartGCEOperator(
@@ -74,7 +75,8 @@ with DAG(
             --experiment-name {{ params.experiment_name }} \
             --run-id {{ params.run_id }} \
             --endpoint-name {{ params.endpoint_name }} \
-            --version-name {{ params.version_name }}
+            --version-name {{ params.version_name }} \
+            --instance-type {{ params.instance_type }}
     """
 
     deploy_model = SSHGCEOperator(

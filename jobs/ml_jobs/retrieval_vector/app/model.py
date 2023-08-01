@@ -5,9 +5,8 @@ import uuid
 
 
 class DefaultClient:
-    def __init__(self, metric: str, default_token: str, n_dim: int) -> None:
+    def __init__(self, metric: str, n_dim: int) -> None:
         self.metric = metric
-        self.default_token = default_token
         self.n_dim = n_dim
 
     def load(self) -> None:
@@ -106,6 +105,10 @@ class DefaultClient:
 
 
 class RecoClient(DefaultClient):
+    def __init__(self, metric: str, n_dim: int, default_token: str) -> None:
+        super().__init__(metric, n_dim)
+        self.default_token = default_token
+
     def user_vector(self, var: str) -> Document:
         default_user_embbeding = self.user_docs[self.default_token]
         try:
@@ -119,10 +122,8 @@ class RecoClient(DefaultClient):
 
 
 class TextClient(DefaultClient):
-    def __init__(
-        self, metric: str, default_token: str, n_dim: int, transformer: str
-    ) -> None:
-        super().__init__(type, metric, default_token, n_dim)
+    def __init__(self, metric: str, n_dim: int, transformer: str) -> None:
+        super().__init__(metric, n_dim)
         # import only for custom model
         from sentence_transformers import SentenceTransformer
 

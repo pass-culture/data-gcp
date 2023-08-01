@@ -21,7 +21,6 @@ def load_model() -> DefaultClient:
         if desc["type"] == "semantic":
             return TextClient(
                 metric=desc["metric"],
-                default_token=desc["default_token"],
                 n_dim=desc["n_dim"],
                 transformer=desc["transformer"],
             )

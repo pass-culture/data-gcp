@@ -6,13 +6,13 @@ import numpy as np
 import random
 from pcreco.utils.env_vars import (
     NUMBER_OF_RECOMMENDATIONS,
-    log_duration,
 )
 
 
 def order_offers_by_score_and_diversify_features(
     offers: List[Dict[str, Any]],
     score_column="score",
+    score_order_ascending=False,
     shuffle_recommendation=None,
     feature="subcategory_id",
     nb_reco_display=NUMBER_OF_RECOMMENDATIONS,
@@ -23,6 +23,7 @@ def order_offers_by_score_and_diversify_features(
     Order each offers within a group by increasing score.
     Sort offers by taking the last offer of each group (maximum score), by decreasing size of group.
     Return only the ids of these sorted offers.
+    score_order_ascending is False, score = the higher the better
     """
 
     if shuffle_recommendation:
@@ -38,16 +39,19 @@ def order_offers_by_score_and_diversify_features(
         sorted(
             offers_by_feature.items(),
             key=lambda x: _get_number_of_offers_and_max_score_by_feature(
-                x, score_column=score_column
+                x,
+                score_column=score_column,
+                score_order_ascending=score_order_ascending,
             ),
-            reverse=True,
+            reverse=not score_order_ascending,
         )
     )
+
     for offer_feature in offers_by_feature_ordered_by_frequency:
         offers_by_feature_ordered_by_frequency[offer_feature] = sorted(
             offers_by_feature_ordered_by_frequency[offer_feature],
             key=lambda k: k[score_column],
-            reverse=False,
+            reverse=score_order_ascending,
         )
 
     diversified_offers = []
@@ -79,15 +83,16 @@ def _get_offers_grouped_by_feature(
                 product_ids.add(offer_product_id)
         else:
             offers_by_feature[offer_feature] = [offer]
-
-    log_duration(f"_get_offers_grouped_by_{feature}", start)
     return offers_by_feature
 
 
 def _get_number_of_offers_and_max_score_by_feature(
-    feature_and_offers: Tuple, score_column: str = "score"
+    feature_and_offers: Tuple,
+    score_column: str = "score",
+    score_order_ascending: bool = False,
 ) -> Tuple:
-    return (
-        len(feature_and_offers[1]),
-        max([offer[score_column] for offer in feature_and_offers[1]]),
-    )
+    if score_order_ascending:
+        sum_score = min([offer[score_column] for offer in feature_and_offers[1]])
+    else:
+        sum_score = max([offer[score_column] for offer in feature_and_offers[1]])
+    return sum_score

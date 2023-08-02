@@ -33,12 +33,10 @@ def download_embeddings(bucket_path):
     return {x: y for x, y in zip(item_list, item_weights)}
 
 
-def prepare_docs(bucket_path, model_type):
+def prepare_docs(bucket_path):
     items_df = get_items_metadata()
     item_embedding_dict = download_embeddings(bucket_path)
-    item_docs = get_item_docs(
-        item_embedding_dict, items_df, model_type["n_dim"], model_type["metric"]
-    )
+    item_docs = get_item_docs(item_embedding_dict, items_df)
     item_docs.save("./metadata/item.docs")
 
 
@@ -66,7 +64,7 @@ def main(
     )
     print(f"Download...")
     print("Deploy...")
-    prepare_docs(source_gs_path, model_type=MODEL_TYPE)
+    prepare_docs(source_gs_path)
 
     save_model_type(model_type=MODEL_TYPE)
     deploy_container(serving_container)

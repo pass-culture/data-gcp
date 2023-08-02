@@ -15,7 +15,7 @@ mock_scored_offers = [
     {"id": "item_5", "item_id": "item_5", "subcategory_id": "CINEMA", "score": 2},
 ]
 ## Reminder on diversification rule
-# output list is order by frequency of the category then by score , picking one in each category until reaching NbofRecommendations
+# output list is order by top score of the category, picking one in each category until reaching NbofRecommendations
 mock_expected_output = ["item_3", "item_5", "item_4", "item_2", "item_1"]
 
 

@@ -4,7 +4,6 @@ from datetime import datetime
 import time
 import subprocess
 from docarray import DocumentArray, Document
-import uuid
 import json
 import numpy as np
 
@@ -78,31 +77,8 @@ def save_model_type(model_type):
         json.dump(model_type, file)
 
 
-def get_item_docs(item_embedding_dict, items_df, n_dim, metric):
-    docs = DocumentArray(
-        storage="annlite",
-        config={
-            "n_dim": n_dim,
-            "metric": metric,
-            "data_path": f"./metadata/annlite_{str(uuid.uuid4())}",
-            "ef_construction": 200,  # default
-            "ef_search": 500,  # limit size
-            "max_connection": 48,  # higher better
-            "columns": {
-                "category": "str",
-                "subcategory_id": "str",
-                "search_group_name": "str",
-                "is_numerical": "int",
-                "is_national": "int",
-                "is_geolocated": "int",
-                "offer_is_duo": "int",
-                "booking_number": "float",
-                "stock_price": "float",
-                "offer_creation_date": "int",
-                "stock_beginning_date": "int",
-            },
-        },
-    )
+def get_item_docs(item_embedding_dict, items_df):
+    docs = DocumentArray()
 
     for row in items_df.itertuples():
         embedding_id = item_embedding_dict.get(row.item_id, None)

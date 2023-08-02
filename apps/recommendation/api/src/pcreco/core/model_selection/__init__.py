@@ -24,8 +24,8 @@ RECOMMENDATION_ENDPOINTS = {
     ),
     # Version b endpoint (TwoTowers)
     "version_b": ModelFork(
-        warm_start_model=recommendation_endpoints.version_b,
-        cold_start_model=recommendation_endpoints.top_offers,
+        warm_start_model=recommendation_endpoints.retrieval_reco,
+        cold_start_model=recommendation_endpoints.retrieval_filter,
         bookings_count=2,
         clicks_count=25,
         favorites_count=None,
@@ -73,7 +73,7 @@ SIMILAR_OFFER_ENDPOINTS = {
     ),
     # Default version b
     "version_b": ModelFork(
-        warm_start_model=similar_offer_endpoints.version_b,
+        warm_start_model=similar_offer_endpoints.retrieval_offer,
         cold_start_model=similar_offer_endpoints.cold_start,
         bookings_count=0,
     ),

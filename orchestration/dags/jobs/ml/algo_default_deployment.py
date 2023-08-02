@@ -24,9 +24,9 @@ GCE_INSTANCE = f"algo-default-deployment-{ENV_SHORT_NAME}"
 BASE_DIR = "data-gcp/jobs/ml_jobs/algo_training"
 
 instance_dict = {
-    "prod": "n1-standard-16",
+    "prod": "n1-standard-8",
     "dev": "n1-standard-2",
-    "stg": "n1-standard-2",
+    "stg": "n1-standard-4",
 }
 schedule_dict = {"prod": "0 22 * * 5", "dev": "0 22 * * *", "stg": "0 22 * * 3"}
 

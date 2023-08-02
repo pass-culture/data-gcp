@@ -19,21 +19,24 @@ default_args = {
 }
 
 DEFAULT_REGION = "europe-west1"
-BASE_DIR = "data-gcp/jobs/ml_jobs/algo_training"
 gce_params = {
+    "base_dir": "data-gcp/jobs/ml_jobs/algo_training/similar_offers",
     "instance_name": f"sim-offers-custom-build-{ENV_SHORT_NAME}",
+    "experiment_name": f"similar_offers_two_towers_v1.1_{ENV_SHORT_NAME}",
+    "model_name": f"v0.0_{ENV_SHORT_NAME}",
+    "source_experiment_name": f"algo_training_two_towers_v1.1_{ENV_SHORT_NAME}",
     "instance_type": {
         "dev": "n1-standard-2",
-        "stg": "n1-highmem-16",
-        "prod": "n1-highmem-32",
+        "stg": "n1-standard-8",
+        "prod": "n1-standard-8",
     },
 }
 
 
 with DAG(
-    "sim_offers_custom_model_build",
+    "retrieval_vector_build",
     default_args=default_args,
-    description="Similar Offers Custom Building job",
+    description="Custom Building job",
     schedule_interval=None,
     catchup=False,
     dagrun_timeout=timedelta(minutes=1440),
@@ -44,6 +47,10 @@ with DAG(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
+        "base_dir": Param(
+            default=gce_params["base_dir"],
+            type="string",
+        ),
         "instance_type": Param(
             default=gce_params["instance_type"][ENV_SHORT_NAME],
             type="string",
@@ -52,13 +59,10 @@ with DAG(
             default=gce_params["instance_name"],
             type="string",
         ),
-        "experiment_name": Param(
-            default=f"similar_offers_two_towers_v1.1_{ENV_SHORT_NAME}", type="string"
-        ),
-        "model_name": Param(default=f"v0.0_{ENV_SHORT_NAME}", type="string"),
-        "run_id": Param(default="", type="string"),
+        "experiment_name": Param(default=gce_params["experiment_name"], type="string"),
+        "model_name": Param(default=gce_params["model_name"], type="string"),
         "source_experiment_name": Param(
-            default=f"algo_training_two_towers_v1.1_{ENV_SHORT_NAME}", type="string"
+            default=gce_params["source_experiment_name"], type="string"
         ),
         "source_run_id": Param(default="", type="string"),
         "source_artifact_uri": Param(default="", type="string"),
@@ -82,7 +86,7 @@ with DAG(
     install_dependencies = SSHGCEOperator(
         task_id="install_dependencies",
         instance_name="{{ params.instance_name }}",
-        base_dir=BASE_DIR,
+        base_dir="{{ params.base_dir }}",
         command="""pip install -r requirements.txt --user""",
         dag=dag,
         retries=2,
@@ -91,7 +95,7 @@ with DAG(
     sim_offers = SSHGCEOperator(
         task_id="containerize_similar_offers",
         instance_name="{{ params.instance_name }}",
-        base_dir=f"{BASE_DIR}/similar_offers",
+        base_dir="{{ params.base_dir }}",
         command="python deploy_model.py "
         "--experiment-name {{ params.experiment_name }} "
         "--model-name {{ params.model_name }} "

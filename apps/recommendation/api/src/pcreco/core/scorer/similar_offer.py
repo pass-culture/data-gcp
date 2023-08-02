@@ -1,7 +1,8 @@
 from pcreco.core.offer import Offer
+from pcreco.core.user import User
 from pcreco.core.utils.vertex_ai import endpoint_score
 from pcreco.utils.env_vars import log_duration
-
+from pcreco.models.reco.playlist_params import PlaylistParamsIn
 import time
 import random
 import heapq
@@ -17,8 +18,9 @@ class SimilarOfferEndpoint(ModelEndpoint):
         self.model_version = None
         self.model_display_name = None
 
-    def init_input(self, offer: Offer):
+    def init_input(self, user: User, offer: Offer, params_in: PlaylistParamsIn):
         self.offer = offer
+        self.params_in = params_in
 
     def model_score(self, item_input, size):
         start = time.time()
@@ -39,8 +41,9 @@ class SimilarOfferEndpoint(ModelEndpoint):
         self.model_version = prediction_result.model_version
         self.model_display_name = prediction_result.model_display_name
         log_duration("similar_offer_model_score", start)
+        # smallest = better
         return {
-            item_id: size - i
+            item_id: i
             for i, item_id in enumerate(prediction_result.predictions)
             if item_id != self.offer.item_id and " " not in item_id
         }

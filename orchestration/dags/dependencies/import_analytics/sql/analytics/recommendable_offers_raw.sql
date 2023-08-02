@@ -33,8 +33,7 @@ recommendable_offers_data AS (
             MAX(is_national) as is_national,
             MIN(url IS NOT NULL) as is_numerical,
             MAX((url IS NULL AND NOT is_national)) as is_geolocated,
-            MAX(offer_is_duo) as offer_is_duo
-        
+            MAX(offer_is_duo) as offer_is_duo    
         FROM `{{ bigquery_analytics_dataset }}.recommendable_offers_data` 
         WHERE (stock_beginning_date > CURRENT_DATE) OR (stock_beginning_date IS NULL)
         GROUP BY 1,2,3,4,5,6

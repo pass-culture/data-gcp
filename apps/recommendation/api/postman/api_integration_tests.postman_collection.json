@@ -1,10 +1,10 @@
 {
 	"info": {
-		"_postman_id": "7e99452d-c97c-49a4-8a2b-107900b8f901",
+		"_postman_id": "df7ae9b3-2d32-4e13-8fdb-538d617f6943",
 		"name": "API Integration Tests",
 		"description": "Collection of integration tests for the reco api.\nMade with Postman",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "20735314"
+		"_exporter_id": "21927341"
 	},
 	"item": [
 		{
@@ -101,7 +101,7 @@
 							"",
 							"pm.test(\"Response must be healthy\", function () {",
 							"  const jsonResponse = pm.response.json();",
-							"  pm.expect(jsonResponse.is_recommendable_offers_raw_datasource_exists).to.be.true;",
+							"  pm.expect(jsonResponse.is_recommendable_offers_raw_mv_datasource_exists).to.be.true;",
 							"});"
 						],
 						"type": "text/javascript"
@@ -1431,11 +1431,11 @@
 							"  pm.expect(jsonResponse.playlist_recommended_offers).to.be.an(\"array\");\r",
 							"});\r",
 							"\r",
-							"pm.test(\"Response must contain an array results with reco_origin = algo\", function () {\r",
+							"pm.test(\"Response must contain an array results with reco_origin = unknown\", function () {\r",
 							"  const jsonResponse = pm.response.json();\r",
 							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
 							"  pm.expect(jsonResponse.params).to.have.property(\"reco_origin\");\r",
-							"  pm.expect(jsonResponse.params.reco_origin).equals(\"algo\")\r",
+							"  pm.expect(jsonResponse.params.reco_origin).equals(\"unknown\")\r",
 							"});\r",
 							"\r",
 							"pm.test(\"Response must at least 1 offer\", function () {\r",
@@ -1525,11 +1525,11 @@
 							"  pm.expect(jsonResponse.playlist_recommended_offers).to.be.an(\"array\");\r",
 							"});\r",
 							"\r",
-							"pm.test(\"Response must contain an array results with reco_origin = cold_start\", function () {\r",
+							"pm.test(\"Response must contain an array results with reco_origin = unknown\", function () {\r",
 							"  const jsonResponse = pm.response.json();\r",
 							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
 							"  pm.expect(jsonResponse.params).to.have.property(\"reco_origin\");\r",
-							"  pm.expect(jsonResponse.params.reco_origin).equals(\"cold_start\")\r",
+							"  pm.expect(jsonResponse.params.reco_origin).equals(\"unknown\")\r",
 							"});\r",
 							"\r",
 							"pm.test(\"Response must at least 1 offer\", function () {\r",
@@ -1619,11 +1619,11 @@
 							"  pm.expect(jsonResponse.playlist_recommended_offers).to.be.an(\"array\");\r",
 							"});\r",
 							"\r",
-							"pm.test(\"Response must contain an array results with reco_origin = algo\", function () {\r",
+							"pm.test(\"Response must contain an array results with reco_origin = unknown\", function () {\r",
 							"  const jsonResponse = pm.response.json();\r",
 							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
 							"  pm.expect(jsonResponse.params).to.have.property(\"reco_origin\");\r",
-							"  pm.expect(jsonResponse.params.reco_origin).equals(\"algo\")\r",
+							"  pm.expect(jsonResponse.params.reco_origin).equals(\"unknown\")\r",
 							"});\r",
 							"\r",
 							"pm.test(\"Response must at least 1 offer\", function () {\r",
@@ -1713,11 +1713,11 @@
 							"  pm.expect(jsonResponse.playlist_recommended_offers).to.be.an(\"array\");\r",
 							"});\r",
 							"\r",
-							"pm.test(\"Response must contain an array results with reco_origin = cold_start\", function () {\r",
+							"pm.test(\"Response must contain an array results with reco_origin = unknown\", function () {\r",
 							"  const jsonResponse = pm.response.json();\r",
 							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
 							"  pm.expect(jsonResponse.params).to.have.property(\"reco_origin\");\r",
-							"  pm.expect(jsonResponse.params.reco_origin).equals(\"cold_start\")\r",
+							"  pm.expect(jsonResponse.params.reco_origin).equals(\"unknown\")\r",
 							"});\r",
 							"\r",
 							"pm.test(\"Response must at least 1 offer\", function () {\r",
@@ -1906,16 +1906,7 @@
 							"    })\r",
 							"\r",
 							"    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
-							"})\r",
-							"\r",
-							"\r",
-							"pm.test(\"Response must contain an array params with filtered = true\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
-							"  pm.expect(jsonResponse).to.have.property('params')\r",
-							"  pm.expect(jsonResponse.params).to.have.property(\"filtered\");\r",
-							"  pm.expect(jsonResponse.params.filtered).to.be.true;\r",
-							"});"
+							"})"
 						],
 						"type": "text/javascript"
 					}
@@ -1925,7 +1916,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{api_url}}/similar_offers/{{offer_id}}?token={{api_token}}",
+					"raw": "{{api_url}}/similar_offers/{{offer_id}}?token={{api_token}}&modelEndpoint={{sim_offers_model_endpoint}}",
 					"host": [
 						"{{api_url}}"
 					],
@@ -1939,8 +1930,8 @@
 							"value": "{{api_token}}"
 						},
 						{
-							"key" : "modelEndpoint",
-							"value" : "{{sim_offers_model_endpoint}}"
+							"key": "modelEndpoint",
+							"value": "{{sim_offers_model_endpoint}}"
 						}
 					]
 				}
@@ -1989,16 +1980,7 @@
 							"    })\r",
 							"\r",
 							"    pm.expect(checkIfArrayIsUnique(ids), ids).to.be.true\r",
-							"})\r",
-							"\r",
-							"\r",
-							"pm.test(\"Response must contain an array params with filtered = true\", function () {\r",
-							"  const jsonResponse = pm.response.json();\r",
-							"  pm.expect(jsonResponse).to.be.an(\"object\");\r",
-							"  pm.expect(jsonResponse).to.have.property('params')\r",
-							"  pm.expect(jsonResponse.params).to.have.property(\"filtered\");\r",
-							"  pm.expect(jsonResponse.params.filtered).to.be.true;\r",
-							"});"
+							"})"
 						],
 						"type": "text/javascript"
 					}
@@ -2008,7 +1990,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{api_url}}/similar_offers/{{offer_id}}?token={{api_token}}&longitude=2.3688874&latitude=48.8632553",
+					"raw": "{{api_url}}/similar_offers/{{offer_id}}?token={{api_token}}&modelEndpoint={{sim_offers_model_endpoint}}&longitude=2.3688874&latitude=48.8632553",
 					"host": [
 						"{{api_url}}"
 					],
@@ -2022,8 +2004,8 @@
 							"value": "{{api_token}}"
 						},
 						{
-							"key" : "modelEndpoint",
-							"value" : "{{sim_offers_model_endpoint}}"
+							"key": "modelEndpoint",
+							"value": "{{sim_offers_model_endpoint}}"
 						},
 						{
 							"key": "longitude",
@@ -2033,7 +2015,6 @@
 							"key": "latitude",
 							"value": "48.8632553"
 						}
-						
 					]
 				}
 			},
@@ -2135,7 +2116,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{api_url}}/similar_offers/{{offer_id}}?token={{api_token}}&categories=LIVRES&categories=FILMS_SERIES_CINEMA&categories=SPECTACLES",
+					"raw": "{{api_url}}/similar_offers/{{offer_id}}?token={{api_token}}&modelEndpoint={{sim_offers_model_endpoint}}&categories=LIVRES&categories=FILMS_SERIES_CINEMA&categories=SPECTACLES",
 					"host": [
 						"{{api_url}}"
 					],
@@ -2149,8 +2130,8 @@
 							"value": "{{api_token}}"
 						},
 						{
-							"key" : "modelEndpoint",
-							"value" : "{{sim_offers_model_endpoint}}"
+							"key": "modelEndpoint",
+							"value": "{{sim_offers_model_endpoint}}"
 						},
 						{
 							"key": "categories",

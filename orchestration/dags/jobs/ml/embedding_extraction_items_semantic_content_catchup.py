@@ -10,14 +10,14 @@ from common.operators.gce import (
 )
 from common.operators.biquery import bigquery_job_task
 from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
-from dependencies.ml.embeddings.import_items import params
+from dependencies.ml.embeddings.import_items_catchup import params
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import GCP_PROJECT_ID, ENV_SHORT_NAME, DAG_FOLDER
 from common.utils import get_airflow_schedule
 
 DEFAULT_REGION = "europe-west1"
-GCE_INSTANCE = f"extract-items-embeddings-{ENV_SHORT_NAME}"
+GCE_INSTANCE = f"extract-items-semantic-content-embeddings-{ENV_SHORT_NAME}"
 BASE_DIR = "data-gcp/jobs/ml_jobs/embeddings"
 DATE = "{{ yyyymmdd(ds) }}"
 default_args = {
@@ -30,10 +30,10 @@ dag_config = {
     "TOKENIZERS_PARALLELISM": "false",
 }
 with DAG(
-    "embeddings_extraction_items",
+    "embeddings_extraction_items_semantic_content_catchup",
     default_args=default_args,
-    description="Extact items metadata embeddings",
-    schedule_interval=get_airflow_schedule("0 */6 * * *"),
+    description="Extact items semantic content embeddings",
+    schedule_interval=get_airflow_schedule("0 */2 * * *"),
     catchup=False,
     dagrun_timeout=timedelta(minutes=180),
     user_defined_macros=macros.default,
@@ -48,7 +48,7 @@ with DAG(
             type="string",
         ),
         "config_file_name": Param(
-            default="default-config-item",
+            default="catchup-semantic-content-config-item",
             type="string",
         ),
         "batch_size": Param(
@@ -91,8 +91,8 @@ with DAG(
         f"--gcp-project {GCP_PROJECT_ID} "
         f"--env-short-name {ENV_SHORT_NAME} "
         "--config-file-name {{ params.config_file_name }} "
-        f"--input-table-name {DATE}_item_to_extract_embeddings "
-        f"--output-table-name {DATE}_item_to_extract_embeddings_clean ",
+        f"--input-table-name {DATE}_item_to_extract_semantic_content_embeddings "
+        f"--output-table-name {DATE}_item_to_extract_semantic_content_embeddings_clean ",
     )
 
     extract_embedding = SSHGCEOperator(
@@ -104,8 +104,8 @@ with DAG(
         f"--gcp-project {GCP_PROJECT_ID} "
         f"--env-short-name {ENV_SHORT_NAME} "
         "--config-file-name {{ params.config_file_name }} "
-        f"--input-table-name {DATE}_item_to_extract_embeddings_clean "
-        f"--output-table-name item_embeddings_v2 ",
+        f"--input-table-name {DATE}_item_to_extract_semantic_content_embeddings_clean "
+        f"--output-table-name item_semantic_content_embeddings ",
     )
 
     reduce_dimension = SSHGCEOperator(
@@ -117,8 +117,8 @@ with DAG(
         f"--gcp-project {GCP_PROJECT_ID} "
         f"--env-short-name {ENV_SHORT_NAME} "
         "--config-file-name {{ params.config_file_name }} "
-        f"--input-table-name item_embeddings_v2 "
-        f"--output-table-name item_embeddings_reduced ",
+        f"--input-table-name item_semantic_content_embeddings "
+        f"--output-table-name item_embeddings_semantic_content_reduced ",
     )
 
     gce_instance_stop = StopGCEOperator(

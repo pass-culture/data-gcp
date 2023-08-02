@@ -49,12 +49,6 @@ class ModelEngine(ABC):
         if len(scored_offers) == 0:
             return []
 
-        sorted_recommendations = sorted(
-            scored_offers,
-            key=lambda k: k[self.model_params.scorer_order_columns],
-            reverse=not self.model_params.scorer_order_ascending,
-        )[:NUMBER_OF_PRESELECTED_OFFERS]
-
         diversification_params = self.model_params.get_diversification_params(
             self.params_in
         )
@@ -64,8 +58,8 @@ class ModelEngine(ABC):
 
         # apply diversification filter
         if diversification_params.is_active:
-            sorted_recommendations = order_offers_by_score_and_diversify_features(
-                offers=sorted_recommendations,
+            scored_offers = order_offers_by_score_and_diversify_features(
+                offers=scored_offers,
                 score_column=self.model_params.scorer_order_columns,
                 score_order_ascending=self.model_params.scorer_order_ascending,
                 shuffle_recommendation=diversification_params.is_reco_shuffled,
@@ -73,6 +67,6 @@ class ModelEngine(ABC):
                 nb_reco_display=NUMBER_OF_RECOMMENDATIONS,
             )
 
-        return list(set([offer["id"] for offer in sorted_recommendations]))[
-            :NUMBER_OF_RECOMMENDATIONS
-        ]
+        scoring_size = min(len(scored_offers), NUMBER_OF_RECOMMENDATIONS)
+
+        return [offer["id"] for offer in scored_offers][:scoring_size]

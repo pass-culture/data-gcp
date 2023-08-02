@@ -29,9 +29,7 @@ class ScorerRetrieval:
         self.params_in = params_in
         self.model_endpoint = model_endpoint
 
-    def get_recommendable_offers(
-        self, selected_items_list
-    ) -> Dict[str, Dict[str, Any]]:
+    def get_recommendable_offers(self, selected_items_list) -> List[Dict[str, Any]]:
         start = time.time()
         recommendable_offers_query = RecommendableOfferQueryBuilder(
             self.params_in_filters
@@ -47,8 +45,8 @@ class ScorerRetrieval:
             connection = get_session()
             query_result = connection.execute(recommendable_offers_query).fetchall()
 
-        user_recommendation = {
-            row[1]: {
+        user_recommendation = [
+            {
                 "id": row[0],
                 "item_id": row[1],
                 "venue_id": row[2],
@@ -64,7 +62,7 @@ class ScorerRetrieval:
                 "random": random.random(),
             }
             for i, row in enumerate(query_result)
-        }
+        ]
         log_duration(
             f"get_recommendable_offers for {self.user.id}: offers -> {len(user_recommendation)}",
             start,
@@ -97,7 +95,7 @@ class DefaultRetrieval(ScorerRetrieval):
             f"Ranking: get_recommendable_offers for {self.user.id}: offers -> {len(recommendable_offers)}",
             start,
         )
-        return recommendable_offers.values()
+        return recommendable_offers
 
 
 class ItemRetrievalRanker(ScorerRetrieval):
@@ -137,7 +135,7 @@ class ItemRetrievalRanker(ScorerRetrieval):
             start,
         )
 
-        return recommendable_offers.values()
+        return recommendable_offers
 
     def get_recommendable_items(self) -> List[str]:
 
@@ -190,4 +188,4 @@ class SimilarOfferItemRanker(ScorerRetrieval):
             start,
         )
 
-        return recommendable_offers.values()
+        return recommendable_offers

@@ -59,7 +59,7 @@ def download_model(artifact_uri):
     # export weights to npy format
 
 
-def prepare_docs(model_type):
+def prepare_docs():
     print("Get items...")
     items_df = get_items_metadata()
     # download model
@@ -74,12 +74,8 @@ def prepare_docs(model_type):
     item_embedding_dict = {x: y for x, y in zip(item_list, item_weights)}
 
     user_docs = get_user_docs(user_embedding_dict, MODEL_TYPE["metric"])
-    user_docs.save(
-        "./metadata/user.docs"
-    )  # .save_binary("./metadata/user.bin", protocol='protobuf', compress='lz4')
-    item_docs = get_item_docs(
-        item_embedding_dict, items_df, model_type["n_dim"], model_type["metric"]
-    )
+    user_docs.save("./metadata/user.docs")
+    item_docs = get_item_docs(item_embedding_dict, items_df)
     item_docs.save("./metadata/item.docs")
 
 
@@ -122,7 +118,7 @@ def main(
     print(f"Get from {source_artifact_uri} trained model")
     print(f"Download...")
     download_model(source_artifact_uri)
-    prepare_docs(model_type=MODEL_TYPE)
+    prepare_docs()
     print("Deploy...")
     save_model_type(model_type=MODEL_TYPE)
     deploy_container(serving_container)

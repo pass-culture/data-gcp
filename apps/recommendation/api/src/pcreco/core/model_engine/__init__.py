@@ -52,7 +52,7 @@ class ModelEngine(ABC):
         sorted_recommendations = sorted(
             scored_offers,
             key=lambda k: k[self.model_params.scorer_order_columns],
-            reverse=self.model_params.scorer_order_ascending,
+            reverse=not self.model_params.scorer_order_ascending,
         )[:NUMBER_OF_PRESELECTED_OFFERS]
 
         diversification_params = self.model_params.get_diversification_params(
@@ -67,6 +67,7 @@ class ModelEngine(ABC):
             sorted_recommendations = order_offers_by_score_and_diversify_features(
                 offers=sorted_recommendations,
                 score_column=self.model_params.scorer_order_columns,
+                score_order_ascending=self.model_params.scorer_order_ascending,
                 shuffle_recommendation=diversification_params.is_reco_shuffled,
                 feature=diversification_params.mixing_features,
                 nb_reco_display=NUMBER_OF_RECOMMENDATIONS,

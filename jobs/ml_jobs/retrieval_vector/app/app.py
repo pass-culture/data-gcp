@@ -110,7 +110,8 @@ def predict():
     except Exception as e:
         logger.info(e)
         logger.info("Wrong model")
-        return jsonify({"predictions": []})
+
+    return jsonify({"predictions": []})
 
 
 if __name__ == "__main__":

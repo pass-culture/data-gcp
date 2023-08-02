@@ -95,13 +95,13 @@
 							"pm.test(\"Response must be a JSON with the right keys\", function () {",
 							"  const jsonResponse = pm.response.json();",
 							"  pm.expect(jsonResponse).to.be.an(\"object\");",
-							"  pm.expect(jsonResponse).to.have.property('is_recommendable_offers_raw_datasource_exists')",
+							"  pm.expect(jsonResponse).to.have.property('is_recommendable_offers_raw_mv_datasource_exists')",
 							"});",
 							"",
 							"",
 							"pm.test(\"Response must be healthy\", function () {",
 							"  const jsonResponse = pm.response.json();",
-							"  pm.expect(jsonResponse.is_recommendable_offers_raw_datasource_exists).to.be.true;",
+							"  pm.expect(jsonResponse.is_recommendable_offers_raw_mv_datasource_exists).to.be.true;",
 							"});"
 						],
 						"type": "text/javascript"

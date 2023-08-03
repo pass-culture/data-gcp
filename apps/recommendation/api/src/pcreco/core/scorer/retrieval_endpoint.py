@@ -116,7 +116,7 @@ class RetrievalEndpoint(ModelEndpoint):
         # search_group_names
         params.append(
             ListParams(
-                label="search_group_names", values=self.params_in.search_group_names
+                label="search_group_name", values=self.params_in.search_group_names
             )
         )
         # subcategory_id

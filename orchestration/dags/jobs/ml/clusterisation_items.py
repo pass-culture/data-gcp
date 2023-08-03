@@ -2,6 +2,11 @@ from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.models import Param
+from airflow.operators.dummy_operator import DummyOperator
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryExecuteQueryOperator,
+    BigQueryInsertJobOperator,
+)
 from common.operators.gce import (
     StartGCEOperator,
     StopGCEOperator,
@@ -10,18 +15,32 @@ from common.operators.gce import (
 )
 from common.operators.biquery import bigquery_job_task
 from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
-from dependencies.ml.embeddings.import_items import params
+from dependencies.ml.clusterisation.import_data import raw_tables, CLEAN_SQL_PATH
 from common import macros
 from common.alerts import task_fail_slack_alert
-from common.config import GCP_PROJECT_ID, ENV_SHORT_NAME, DAG_FOLDER
+from common.config import (
+    GCP_PROJECT_ID,
+    DAG_FOLDER,
+    DATA_GCS_BUCKET_NAME,
+    ENV_SHORT_NAME,
+    SLACK_CONN_ID,
+    SLACK_CONN_PASSWORD,
+    BIGQUERY_CLEAN_DATASET,
+    BIGQUERY_TMP_DATASET,
+)
+from jobs.ml.constants import IMPORT_CLUSTERING_SQL_PATH
+
 from common.utils import get_airflow_schedule
 
 DEFAULT_REGION = "europe-west1"
-GCE_INSTANCE = f"extract-items-embeddings-{ENV_SHORT_NAME}"
-BASE_DIR = "data-gcp/jobs/ml_jobs/embeddings"
+GCE_INSTANCE = f"clusterisation-{ENV_SHORT_NAME}"
+BASE_DIR = "data-gcp/jobs/ml_jobs/clusterisation"
 DATE = "{{ yyyymmdd(ds) }}"
+STORAGE_PATH = (
+    f"gs://{DATA_GCS_BUCKET_NAME}/clusterisation_{ENV_SHORT_NAME}/clusterisation_{DATE}"
+)
 default_args = {
-    "start_date": datetime(2023, 3, 6),
+    "start_date": datetime(2023, 8, 2),
     "on_failure_callback": task_fail_slack_alert,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
@@ -30,10 +49,10 @@ dag_config = {
     "TOKENIZERS_PARALLELISM": "false",
 }
 with DAG(
-    "embeddings_extraction_items",
+    "clusterisation_item",
     default_args=default_args,
-    description="Extact items metadata embeddings",
-    schedule_interval=get_airflow_schedule("0 */6 * * *"),
+    description="Cluster offers from metadata embeddings",
+    schedule_interval=get_airflow_schedule("0 0 * * *"),
     catchup=False,
     dagrun_timeout=timedelta(minutes=180),
     user_defined_macros=macros.default,
@@ -48,18 +67,24 @@ with DAG(
             type="string",
         ),
         "config_file_name": Param(
-            default="default-config-item",
+            default="default-config",
             type="string",
-        ),
-        "batch_size": Param(
-            default=50000 if ENV_SHORT_NAME == "prod" else 10000,
-            type="integer",
         ),
     },
 ) as dag:
-    data_collect_task = bigquery_job_task(
-        dag, "import_item_batch", params, extra_params={}
-    )
+    start = DummyOperator(task_id="start", dag=dag)
+    end = DummyOperator(task_id="end", dag=dag)
+    import_tables_tasks = {}
+    store_tables_tasks = {}
+    for table, params in raw_tables.items():
+        import_tables_tasks[table] = BigQueryExecuteQueryOperator(
+            task_id=f"import_tmp_{table}_table",
+            sql=(IMPORT_CLUSTERING_SQL_PATH / f"import_{table}.sql").as_posix(),
+            write_disposition="WRITE_TRUNCATE",
+            use_legacy_sql=False,
+            destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DATE}_{table}_clusterisation_raw",
+            dag=dag,
+        )
 
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
@@ -88,37 +113,18 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command="PYTHONPATH=. python preprocess.py "
-        f"--gcp-project {GCP_PROJECT_ID} "
-        f"--env-short-name {ENV_SHORT_NAME} "
-        "--config-file-name {{ params.config_file_name }} "
-        f"--input-table-name {DATE}_item_to_extract_embeddings "
-        f"--output-table-name {DATE}_item_to_extract_embeddings_clean ",
+        f"--input-table {DATE}_items_clusterisation_raw --output-table {DATE}_item_full_encoding_enriched "
+        "--config-file-name {{ params.config_file_name }} ",
     )
 
-    extract_embedding = SSHGCEOperator(
-        task_id="extract_embedding",
+    clusterisation = SSHGCEOperator(
+        task_id="clusterisation",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         environment=dag_config,
-        command="mkdir -p img && PYTHONPATH=. python main.py "
-        f"--gcp-project {GCP_PROJECT_ID} "
-        f"--env-short-name {ENV_SHORT_NAME} "
-        "--config-file-name {{ params.config_file_name }} "
-        f"--input-table-name {DATE}_item_to_extract_embeddings_clean "
-        f"--output-table-name item_embeddings_v2 ",
-    )
-
-    reduce_dimension = SSHGCEOperator(
-        task_id="reduce_dimension",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        environment=dag_config,
-        command="PYTHONPATH=. python dimension_reduction.py "
-        f"--gcp-project {GCP_PROJECT_ID} "
-        f"--env-short-name {ENV_SHORT_NAME} "
-        "--config-file-name {{ params.config_file_name }} "
-        f"--input-table-name item_embeddings_v2 "
-        f"--output-table-name item_embeddings_reduced ",
+        command="PYTHONPATH=. python clusterisation.py "
+        f"--input-table {DATE}_item_full_encoding_enriched --output-table item_clusters "
+        "--config-file-name {{ params.config_file_name }} ",
     )
 
     gce_instance_stop = StopGCEOperator(
@@ -126,12 +132,13 @@ with DAG(
     )
 
     (
-        data_collect_task
+        start
+        >> import_tables_tasks["items"]
         >> gce_instance_start
         >> fetch_code
         >> install_dependencies
         >> preprocess
-        >> extract_embedding
-        >> reduce_dimension
+        >> clusterisation
         >> gce_instance_stop
+        >> end
     )

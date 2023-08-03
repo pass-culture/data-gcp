@@ -93,11 +93,13 @@ class RecommendableOfferQueryBuilder:
                 SELECT 
                     ro.*,
                     coalesce(
-                    case
-                        when {user_geolocated}
-                        then st_distance(st_point({user_longitude}::float, {user_latitude}::float)::geography, venue_geo)
-                    else 0.0
-                    end, 0.0) as user_distance,
+                        case
+                            when {user_geolocated} and is_geolocated
+                            then st_distance(st_point({user_longitude}::float, {user_latitude}::float)::geography, venue_geo)
+                        else 0.0
+                        end,
+                        0.0
+                    ) as user_distance,
                     ri.item_score
                 FROM {table_name} ro
                 INNER JOIN ranked_items ri on ri.item_id = ro.item_id 

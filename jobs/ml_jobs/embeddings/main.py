@@ -54,13 +54,13 @@ def main(
     ] * len(df_data_w_embedding)
 
     df_data_w_embedding.to_gbq(
-        f"tmp_{env_short_name}.{output_table_name}_v2",
+        f"tmp_{env_short_name}.{output_table_name}",
         project_id=gcp_project,
         if_exists="replace",
     )
 
     df_data_w_embedding.to_gbq(
-        f"clean_{env_short_name}.{output_table_name}_v2",
+        f"clean_{env_short_name}.{output_table_name}",
         project_id=gcp_project,
         if_exists="append",
     )

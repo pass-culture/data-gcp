@@ -77,23 +77,6 @@ SIMILAR_OFFER_ENDPOINTS = {
         cold_start_model=similar_offer_endpoints.cold_start,
         bookings_count=0,
     ),
-    # Default version c
-    "version_c": ModelFork(
-        warm_start_model=similar_offer_endpoints.version_c,
-        cold_start_model=similar_offer_endpoints.cold_start,
-        bookings_count=0,
-    ),
-    # Force cold start
-    "cold_start": ModelFork(
-        warm_start_model=similar_offer_endpoints.cold_start,
-        cold_start_model=similar_offer_endpoints.cold_start,
-        bookings_count=None,
-    ),
-    "random": ModelFork(
-        warm_start_model=similar_offer_endpoints.random,
-        cold_start_model=similar_offer_endpoints.random,
-        bookings_count=None,
-    ),
 }
 
 

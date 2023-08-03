@@ -1,0 +1,4 @@
+{
+    "pretained_embedding_name":"semantic_content",
+    "target_nbclusters":150
+}

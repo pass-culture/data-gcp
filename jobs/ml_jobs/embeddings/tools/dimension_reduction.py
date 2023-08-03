@@ -5,29 +5,20 @@ import json
 from loguru import logger
 
 
-def convert_str_emb_to_float(emb_list, emb_size=124):
+def convert_str_emb_to_float(emb_list):
     float_emb = []
     for str_emb in emb_list:
-        try:
-            emb = json.loads(str_emb)
-        except:
-            emb = [0] * emb_size
+        emb = json.loads(str_emb)
         float_emb.append(np.array(emb))
     return float_emb
 
 
 def reduce_embedding_dimension(
     data,
-    emb_size,
     dimension,
 ):
 
-    reduced_emb_df = {}
-    logger.info(f"Initial emb dimension: {emb_size}")
-    float_emb = convert_str_emb_to_float(
-        emb_list=data,
-        emb_size=emb_size,
-    )
+    float_emb = convert_str_emb_to_float(data)
 
     logger.info(f"reduction to {dimension} dimensions...")
     transformer = umap.UMAP(

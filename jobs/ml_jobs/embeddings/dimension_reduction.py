@@ -21,6 +21,10 @@ def dimension_reduction(
         ...,
         help="Name of the dataframe we want to clean",
     ),
+    output_table_name: str = typer.Option(
+        ...,
+        help="Name of the dataframe we want to clean",
+    ),
 ) -> None:
     """ """
     ###############
@@ -32,19 +36,12 @@ def dimension_reduction(
     ) as config_file:
         params = json.load(config_file)
 
-    emb_size_dict = {}
-    with open(
-        "./emb_size_dict.json",
-        mode="r",
-        encoding="utf-8",
-    ) as emb_size_file:
-        emb_size_dict = json.load(emb_size_file)
-    logger.info(f"emb_size_dict: {emb_size_dict}")
     ###############
     # Load preprocessed data
     df_data_w_embedding = pd.read_gbq(
-        f"SELECT * FROM `tmp_{env_short_name}.{input_table_name}_v2`"
+        f"SELECT * FROM `tmp_{env_short_name}.{input_table_name}`"
     )
+
     reduced_emb_df_init = df_data_w_embedding[["item_id", "extraction_date"]].astype(
         str
     )
@@ -59,14 +56,13 @@ def dimension_reduction(
             logger.info(f"Reducing {emb_col}...")
             reduced_emb_dict[emb_col] = reduce_embedding_dimension(
                 data=df_data_w_embedding[emb_col].tolist(),
-                emb_size=emb_size_dict[emb_col],
                 dimension=dim,
             )
         reduce_emb_df = pd.DataFrame(reduced_emb_dict)
         reduce_emb_df = reduce_emb_df.astype(str)
         final_reduced_emb = pd.concat([reduced_emb_df_init, reduce_emb_df], axis=1)
         final_reduced_emb.to_gbq(
-            f"clean_{env_short_name}.{input_table_name}_reduced_{dim}",
+            f"clean_{env_short_name}.{output_table_name}_{dim}",
             project_id=gcp_project,
             if_exists="append",
         )

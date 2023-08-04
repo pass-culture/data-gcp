@@ -28,8 +28,8 @@ CLEAN_TABLES = {
     "past_similar_offers": {
         "sql": f"{SQL_CLEAN_PATH}/past_similar_offers.sql",
         "write_disposition": "WRITE_TRUNCATE",
-        "time_partitioning": {"field": "date"},
-        "clustering_fields": {"fields": ["date"]},
+        "time_partitioning": {"field": "event_date"},
+        "clustering_fields": {"fields": ["event_date"]},
         "destination_dataset": "{{ bigquery_clean_dataset }}",
         "destination_table": "past_similar_offers",
     },

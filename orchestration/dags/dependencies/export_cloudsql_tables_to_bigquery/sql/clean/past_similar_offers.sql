@@ -12,7 +12,7 @@ WITH export_table AS (
         , i.centroid as venue_iris_centroid
         , ROW_NUMBER() OVER (PARTITION BY call_id, date(date), user_id, origin_offer_id ORDER BY pso.id ) as item_rank
     FROM `{{ bigquery_raw_dataset }}.past_similar_offers` pso
-    LEFT JOIN `{{ bigquery_anlytics_dataset }}.iris_france` i on i.id = pso.venue_iris_id
+    LEFT JOIN `{{ bigquery_analytics_dataset }}.iris_france` i on i.id = pso.venue_iris_id
     QUALIFY ROW_NUMBER() OVER (PARTITION BY origin_offer_id, user_id, call_id, offer_id ORDER BY date DESC) = 1
 
 )

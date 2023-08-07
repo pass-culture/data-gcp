@@ -17,14 +17,21 @@ WITH dates AS (
 FROM dates
 LEFT JOIN {{ bigquery_analytics_dataset }}.retention_partner_history ON dates.month >= DATE_TRUNC(retention_partner_history.day, MONTH)
 LEFT JOIN {{ bigquery_analytics_dataset }}.enriched_cultural_partner_data ON retention_partner_history.partner_id = enriched_cultural_partner_data.partner_id
-WHERE DATE_DIFF(CURRENT_DATE,last_bookable_date,YEAR) = 0
+WHERE DATE_DIFF(CURRENT_DATE,last_bookable_date,MONTH) < 12
 AND was_registered_last_year IS TRUE
 GROUP BY 1)
 
 ,all_partners AS (SELECT
+    "{{ params.group_type }}" as dimension_name
+        , {% if params.group_type == 'NAT' %}
+            'NAT'
+        {% else %}
+            rd.{{ params.group_type_name }}
+        {% endif %} as dimension_value
     COUNT(partner_id) AS nb_total_partners
 FROM {{ bigquery_analytics_dataset }}.enriched_cultural_partner_data
-WHERE was_registered_last_year IS TRUE)
+WHERE was_registered_last_year IS TRUE
+AND total_offers_created > 0)
 
 SELECT
     active.month AS mois

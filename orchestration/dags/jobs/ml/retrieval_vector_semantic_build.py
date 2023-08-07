@@ -54,8 +54,7 @@ default_args = {
     "retry_delay": timedelta(minutes=2),
 }
 
-schedule_dict = {"prod": "0 12 * * 4", "dev": None, "stg": "0 12 * * 3"}
-
+schedule_dict = {"prod": "0 20 * * 5", "dev": "0 20 * * *", "stg": "0 20 * * 3"}
 
 with DAG(
     "retrieval_semantic_vector_build",

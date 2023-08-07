@@ -14,6 +14,12 @@ RAW_TABLES = {
         "destination_dataset": "{{ bigquery_raw_dataset }}",
         "destination_table": "past_similar_offers",
     },
+    "past_offer_context": {
+        "sql": f"{SQL_RAW_PATH}/past_offer_context.sql",
+        "write_disposition": "WRITE_APPEND",
+        "destination_dataset": "{{ bigquery_raw_dataset }}",
+        "destination_table": "past_offer_context",
+    },
 }
 
 CLEAN_TABLES = {

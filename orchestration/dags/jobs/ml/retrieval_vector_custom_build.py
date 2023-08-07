@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import ENV_SHORT_NAME, DAG_FOLDER
+from common.utils import get_airflow_schedule
 
 default_args = {
     "start_date": datetime(2022, 11, 30),
@@ -20,11 +21,19 @@ default_args = {
 
 DEFAULT_REGION = "europe-west1"
 gce_params = {
-    "base_dir": "data-gcp/jobs/ml_jobs/algo_training/similar_offers",
-    "instance_name": f"sim-offers-custom-build-{ENV_SHORT_NAME}",
-    "experiment_name": f"similar_offers_two_towers_v1.1_{ENV_SHORT_NAME}",
-    "model_name": f"v0.0_{ENV_SHORT_NAME}",
-    "source_experiment_name": f"algo_training_two_towers_v1.1_{ENV_SHORT_NAME}",
+    "base_dir": "data-gcp/jobs/ml_jobs/retrieval_vector",
+    "instance_name": f"retrieval-recommendation-build-{ENV_SHORT_NAME}",
+    "experiment_name": f"retrieval_recommendation_v1.1_{ENV_SHORT_NAME}",
+    "model_name": {
+        "dev": f"dummy_user_recommendation",
+        "stg": f"two_towers_user_recommendation",
+        "prod": f"two_towers_user_recommendation",
+    },
+    "source_experiment_name": {
+        "dev": f"dummy_{ENV_SHORT_NAME}",
+        "stg": f"algo_training_two_towers_v1.1_{ENV_SHORT_NAME}",
+        "prod": f"algo_training_two_towers_v1.1_{ENV_SHORT_NAME}",
+    },
     "instance_type": {
         "dev": "n1-standard-2",
         "stg": "n1-standard-8",
@@ -32,12 +41,14 @@ gce_params = {
     },
 }
 
+schedule_dict = {"prod": "0 20 * * 5", "dev": "0 20 * * *", "stg": "0 20 * * 3"}
+
 
 with DAG(
     "retrieval_vector_build",
     default_args=default_args,
     description="Custom Building job",
-    schedule_interval=None,
+    schedule_interval=get_airflow_schedule(schedule_dict[ENV_SHORT_NAME]),
     catchup=False,
     dagrun_timeout=timedelta(minutes=1440),
     user_defined_macros=macros.default,
@@ -60,9 +71,11 @@ with DAG(
             type="string",
         ),
         "experiment_name": Param(default=gce_params["experiment_name"], type="string"),
-        "model_name": Param(default=gce_params["model_name"], type="string"),
+        "model_name": Param(
+            default=gce_params["model_name"][ENV_SHORT_NAME], type="string"
+        ),
         "source_experiment_name": Param(
-            default=gce_params["source_experiment_name"], type="string"
+            default=gce_params["source_experiment_name"][ENV_SHORT_NAME], type="string"
         ),
         "source_run_id": Param(default="", type="string"),
         "source_artifact_uri": Param(default="", type="string"),
@@ -92,18 +105,30 @@ with DAG(
         retries=2,
     )
 
-    sim_offers = SSHGCEOperator(
-        task_id="containerize_similar_offers",
-        instance_name="{{ params.instance_name }}",
-        base_dir="{{ params.base_dir }}",
-        command="python deploy_model.py "
-        "--experiment-name {{ params.experiment_name }} "
-        "--model-name {{ params.model_name }} "
-        "--source-experiment-name {{ params.source_experiment_name }} "
-        "--source-run-id {{ params.source_run_id }} "
-        "--source-artifact-uri {{  params.source_artifact_uri }} ",
-        dag=dag,
-    )
+    if ENV_SHORT_NAME == "dev":
+        # dummy deploy
+        retrieval = SSHGCEOperator(
+            task_id="containerize_retrieval_vector",
+            instance_name="{{ params.instance_name }}",
+            base_dir="{{ params.base_dir }}",
+            command="python deploy_dummy.py "
+            "--experiment-name {{ params.experiment_name }} "
+            "--model-name {{ params.model_name }} ",
+            dag=dag,
+        )
+    else:
+        retrieval = SSHGCEOperator(
+            task_id="containerize_retrieval_vector",
+            instance_name="{{ params.instance_name }}",
+            base_dir="{{ params.base_dir }}",
+            command="python deploy_model.py "
+            "--experiment-name {{ params.experiment_name }} "
+            "--model-name {{ params.model_name }} "
+            "--source-experiment-name {{ params.source_experiment_name }} "
+            "--source-run-id {{ params.source_run_id }} "
+            "--source-artifact-uri {{  params.source_artifact_uri }} ",
+            dag=dag,
+        )
 
     gce_instance_stop = StopGCEOperator(
         task_id="gce_stop_task",
@@ -114,6 +139,6 @@ with DAG(
         gce_instance_start
         >> fetch_code
         >> install_dependencies
-        >> sim_offers
+        >> retrieval
         >> gce_instance_stop
     )

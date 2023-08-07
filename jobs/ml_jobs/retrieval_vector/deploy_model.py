@@ -73,7 +73,7 @@ def prepare_docs():
     user_embedding_dict = {x: y for x, y in zip(user_list, user_weights)}
     item_embedding_dict = {x: y for x, y in zip(item_list, item_weights)}
 
-    user_docs = get_user_docs(user_embedding_dict, MODEL_TYPE["metric"])
+    user_docs = get_user_docs(user_embedding_dict)
     user_docs.save("./metadata/user.docs")
     item_docs = get_item_docs(item_embedding_dict, items_df)
     item_docs.save("./metadata/item.docs")

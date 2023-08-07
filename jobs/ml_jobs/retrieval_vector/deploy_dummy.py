@@ -27,6 +27,10 @@ def prepare_docs():
     print("Get items...")
     items_df = get_items_metadata()
     user_df = get_users_metadata()
+    # default
+    user_embedding_dict[MODEL_TYPE["default_token"]] = np.random.random(
+        (MODEL_TYPE["n_dim"],)
+    )
     user_embedding_dict = {
         row.user_id: np.random.random((MODEL_TYPE["n_dim"],))
         for row in user_df.itertuples()

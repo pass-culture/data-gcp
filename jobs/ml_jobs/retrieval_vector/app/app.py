@@ -102,6 +102,7 @@ def predict():
             input_str = str(input_json["offer_id"])
             vector = model.offer_vector(input_str)
             return search_vector(vector, size, selected_params, debug)
+
         if model_type == "filter":
             order_by = str(input_json["order_by"])
             ascending = bool(input_json["ascending"])

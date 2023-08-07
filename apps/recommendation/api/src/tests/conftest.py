@@ -227,137 +227,6 @@ def create_recommendable_offers_raw(engine):
     )
 
 
-def create_recommendable_items_raw(engine):
-    recommendable_items_raw = pd.DataFrame(
-        {
-            "item_id": [
-                "isbn-1",
-                "isbn-2",
-                "movie-3",
-                "movie-4",
-                "movie-5",
-                "product-6",
-                "product-7",
-                "product-8",
-                "product-9",
-            ],
-            "category": ["A", "B", "C", "D", "E", "B", "A", "A", "D"],
-            "subcategory_id": [
-                "EVENEMENT_CINE",
-                "EVENEMENT_CINE",
-                "EVENEMENT_CINE",
-                "EVENEMENT_CINE",
-                "SPECTACLE_REPRESENTATION",
-                "SPECTACLE_REPRESENTATION",
-                "SPECTACLE_REPRESENTATION",
-                "EVENEMENT_CINE",
-                "LIVRE_PAPIER",
-            ],
-            "search_group_name": [
-                "CINEMA",
-                "CINEMA",
-                "CINEMA",
-                "CINEMA",
-                "SPECTACLE",
-                "SPECTACLE",
-                "SPECTACLE",
-                "CINEMA",
-                "LIVRE_PAPIER",
-            ],
-            "is_numerical": [
-                False,
-                False,
-                True,
-                True,
-                False,
-                False,
-                False,
-                False,
-                False,
-            ],
-            "is_national": [True, False, True, True, True, False, False, False, True],
-            "is_geolocated": [
-                False,
-                True,
-                False,
-                False,
-                False,
-                True,
-                True,
-                True,
-                False,
-            ],
-            "offer_type_domain": [
-                "MOVIE",
-                "MOVIE",
-                "MOVIE",
-                "MOVIE",
-                "SHOW",
-                "SHOW",
-                "SHOW",
-                "MOVIE",
-                "BOOK",
-            ],
-            "offer_type_label": [
-                "BOOLYWOOD",
-                "BOOLYWOOD",
-                "BOOLYWOOD",
-                "BOOLYWOOD",
-                "Cirque",
-                "Cirque",
-                "Cirque",
-                "COMEDY",
-                "Histoire",
-            ],
-            "booking_number": [3, 5, 10, 2, 1, 9, 5, 5, 10],
-            "is_underage_recommendable": [
-                False,
-                True,
-                True,
-                False,
-                False,
-                False,
-                False,
-                False,
-                True,
-            ],
-            "offer_creation_date": [
-                "2020-01-01",
-                "2020-01-01",
-                "2020-01-01",
-                "2020-01-01",
-                "2020-01-01",
-                "2020-01-01",
-                "2020-01-01",
-                "2020-01-01",
-                "2020-01-01",
-            ],
-            "stock_creation_date": [
-                "2020-01-01",
-                "2020-01-01",
-                "2020-01-01",
-                "2020-01-01",
-                "2020-01-01",
-                "2020-01-01",
-                "2020-01-01",
-                "2020-01-01",
-                "2020-01-01",
-            ],
-            "stock_price": [10, 20, 20, 30, 30, 30, 30, 30, 10],
-        }
-    )
-    engine.execute(
-        "DROP MATERIALIZED VIEW IF EXISTS recommendable_items_raw_mv CASCADE;"
-    )
-
-    recommendable_items_raw.to_sql(
-        "recommendable_items_raw", con=engine, if_exists="replace"
-    )
-    engine.execute(
-        "CREATE MATERIALIZED VIEW recommendable_items_raw_mv AS SELECT * FROM recommendable_items_raw WITH DATA;"
-    )
-
-
 def create_enriched_user(engine):
     enriched_user = pd.DataFrame(
         {
@@ -436,7 +305,6 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
     connection = engine.connect().execution_options(autocommit=True)
 
     create_recommendable_offers_raw(engine)
-    create_recommendable_items_raw(engine)
 
     create_non_recommendable_offers(engine)
     create_non_recommendable_items(engine)
@@ -453,10 +321,6 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
         )
 
         engine.execute(
-            "DROP MATERIALIZED VIEW IF EXISTS recommendable_items_raw_mv CASCADE;"
-        )
-
-        engine.execute(
             "DROP MATERIALIZED VIEW IF EXISTS non_recommendable_offers CASCADE;"
         )
         engine.execute(
@@ -464,8 +328,6 @@ def setup_database(app_config: Dict[str, Any]) -> Any:
         )
 
         engine.execute("DROP TABLE IF EXISTS recommendable_offers_raw CASCADE;")
-        engine.execute("DROP TABLE IF EXISTS recommendable_items_raw CASCADE;")
-
         engine.execute(
             "DROP TABLE IF EXISTS non_recommendable_offers_temporary_table CASCADE;"
         )

@@ -14,16 +14,8 @@ from loguru import logger
 
 
 RECOMMENDATION_ENDPOINTS = {
-    # Default endpoint (Clicks)
+    # Default endpoint
     "default": ModelFork(
-        warm_start_model=recommendation_endpoints.default,
-        cold_start_model=recommendation_endpoints.top_offers,
-        bookings_count=2,
-        clicks_count=25,
-        favorites_count=None,
-    ),
-    # Version b endpoint (TwoTowers)
-    "version_b": ModelFork(
         warm_start_model=recommendation_endpoints.retrieval_reco,
         cold_start_model=recommendation_endpoints.retrieval_filter,
         bookings_count=2,
@@ -32,32 +24,24 @@ RECOMMENDATION_ENDPOINTS = {
     ),
     # Deprecated: Retrieve only top offers
     "top_offers": ModelFork(
-        warm_start_model=recommendation_endpoints.top_offers,
-        cold_start_model=recommendation_endpoints.top_offers,
+        warm_start_model=recommendation_endpoints.retrieval_filter,
+        cold_start_model=recommendation_endpoints.retrieval_filter,
         bookings_count=None,
         clicks_count=None,
         favorites_count=None,
     ),
     # Force model default enpoint
     "default_algo": ModelFork(
-        warm_start_model=recommendation_endpoints.default,
-        cold_start_model=recommendation_endpoints.default,
+        warm_start_model=recommendation_endpoints.retrieval_reco,
+        cold_start_model=recommendation_endpoints.retrieval_reco,
         bookings_count=0,
         clicks_count=0,
         favorites_count=0,
     ),
     # Force cold start model based on top offers
     "cold_start": ModelFork(
-        warm_start_model=recommendation_endpoints.top_offers,
-        cold_start_model=recommendation_endpoints.top_offers,
-        bookings_count=None,
-        clicks_count=None,
-        favorites_count=None,
-    ),
-    # Force cold start model based on top offers
-    "random": ModelFork(
-        warm_start_model=recommendation_endpoints.random,
-        cold_start_model=recommendation_endpoints.random,
+        warm_start_model=recommendation_endpoints.retrieval_filter,
+        cold_start_model=recommendation_endpoints.retrieval_filter,
         bookings_count=None,
         clicks_count=None,
         favorites_count=None,
@@ -67,14 +51,8 @@ RECOMMENDATION_ENDPOINTS = {
 SIMILAR_OFFER_ENDPOINTS = {
     # Default version a
     "default": ModelFork(
-        warm_start_model=similar_offer_endpoints.default,
-        cold_start_model=similar_offer_endpoints.cold_start,
-        bookings_count=0,
-    ),
-    # Default version b
-    "version_b": ModelFork(
         warm_start_model=similar_offer_endpoints.retrieval_offer,
-        cold_start_model=similar_offer_endpoints.cold_start,
+        cold_start_model=similar_offer_endpoints.retrieval_offer,
         bookings_count=0,
     ),
 }

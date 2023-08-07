@@ -5,7 +5,6 @@ import time
 import subprocess
 from docarray import DocumentArray, Document
 import json
-import numpy as np
 
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
@@ -51,9 +50,9 @@ def get_items_metadata():
                 item_id,
                 offer_id, 
                 offer_name,
-            FROM `passculture-data-prod.analytics_prod.enriched_offer_data` 
+            FROM `{GCP_PROJECT_ID}.{BIGQUERY_ANALYTICS_DATASET}.enriched_offer_data` 
             QUALIFY ROW_NUMBER() OVER (PARTITION BY item_id ORDER BY booking_confirm_cnt DESC) = 1
-            ) 
+        ) 
 
         SELECT 
             ro.*, 
@@ -61,6 +60,18 @@ def get_items_metadata():
             od.offer_id as example_offer_id
         FROM `{GCP_PROJECT_ID}.{BIGQUERY_ANALYTICS_DATASET}.recommendable_items_raw` ro
         LEFT JOIN offer_details od on od.item_id = ro.item_id
+    """
+    return pd.read_gbq(sql)
+
+
+def get_users_metadata():
+    sql = f"""
+        SELECT 
+            user_id,
+            user_total_deposit_amount,
+            user_current_deposit_type,
+            COALESCE(user_theoretical_remaining_credit, user_last_deposit_amount) as user_theoretical_remaining_credit
+        FROM `{GCP_PROJECT_ID}.{BIGQUERY_ANALYTICS_DATASET}.enriched_user_data` 
     """
     return pd.read_gbq(sql)
 
@@ -79,7 +90,6 @@ def save_model_type(model_type):
 
 def get_item_docs(item_embedding_dict, items_df):
     docs = DocumentArray()
-
     for row in items_df.itertuples():
         embedding_id = item_embedding_dict.get(row.item_id, None)
         if embedding_id is not None:
@@ -101,15 +111,15 @@ def get_item_docs(item_embedding_dict, items_df):
                 "example_offer_name": row.example_offer_name,
             }
             docs.append(Document(id=_item_id, tags=metadata, embedding=embedding_id))
+
+    if len(docs) == 0:
+        raise Exception("Item Document is empty. Does the model match the query ?")
+
     return docs
 
 
-def get_user_docs(user_dict, metric):
+def get_user_docs(user_dict):
     docs = DocumentArray()
-
     for k, v in user_dict.items():
-        if metric == "inner_product":
-            docs.append(Document(id=k, embedding=np.negative(v)))
-        else:
-            docs.append(Document(id=k, embedding=v))
+        docs.append(Document(id=k, embedding=v))
     return docs

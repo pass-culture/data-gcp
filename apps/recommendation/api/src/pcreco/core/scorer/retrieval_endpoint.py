@@ -1,5 +1,4 @@
 from pcreco.core.user import User
-from pcreco.utils.env_vars import log_duration
 import time
 from pcreco.core.utils.vertex_ai import endpoint_score
 from pcreco.utils.env_vars import (
@@ -69,11 +68,6 @@ class EqParams:
 
 
 class RetrievalEndpoint(ModelEndpoint):
-    def __init__(self, endpoint_name: str):
-        self.endpoint_name = endpoint_name
-        self.model_version = None
-        self.model_display_name = None
-
     def init_input(self, user: User, params_in: PlaylistParamsIn):
         self.user = user
         self.user_input = str(self.user.id)
@@ -84,6 +78,9 @@ class RetrievalEndpoint(ModelEndpoint):
         params = []
         if not self.is_geolocated:
             params.append(EqParams(label="is_geolocated", value=0))
+
+        if self.user.age and self.user.age < 18:
+            params.append(EqParams(label="is_underage_recommendable", value=1))
 
         # dates filter
         if self.params_in.start_date is not None or self.params_in.end_date is not None:
@@ -126,12 +123,10 @@ class RetrievalEndpoint(ModelEndpoint):
         params.append(EqParams(label="offer_is_duo", value=self.params_in.offer_is_duo))
 
         # TODO : offer_type_list
-        #
-        # TODO : is_underage_recommendable
 
         return {"$and": {k: v for d in params for k, v in d.filter().items()}}
 
-    def model_score(self, item_input, size):
+    def model_score(self, size: int):
         start = time.time()
         instances = self.get_instance(size)
         log_duration(f"retrieval_endpoint {instances}", start)
@@ -144,7 +139,9 @@ class RetrievalEndpoint(ModelEndpoint):
         # smallest = better (indices)
         return {r["item_id"]: r["idx"] for r in prediction_result.predictions}
 
-    def get_instance(self, size):
+
+class FilterRetrievalEndpoint(RetrievalEndpoint):
+    def get_instance(self, size: int):
         return {
             "model_type": "filter",
             "order_by": "booking_number",
@@ -155,7 +152,7 @@ class RetrievalEndpoint(ModelEndpoint):
 
 
 class UserRetrievalEndpoint(RetrievalEndpoint):
-    def get_instance(self, size):
+    def get_instance(self, size: int):
         return {
             "model_type": "recommendation",
             "user_id": str(self.user.id),
@@ -172,27 +169,21 @@ class OfferRetrievalEndpoint(RetrievalEndpoint):
         self.params_in = params_in
         self.is_geolocated = self.offer.is_geolocated
 
-    def model_score(self, item_input, size):
-        start = time.time()
-        instances = self.get_instance(size)
-        log_duration(f"retrieval_endpoint {instances}", start)
-        prediction_result = endpoint_score(
-            instances=instances, endpoint_name=self.endpoint_name
-        )
-        self.model_version = prediction_result.model_version
-        self.model_display_name = prediction_result.model_display_name
-        log_duration("retrieval_endpoint", start)
-        # smallest = better
-        return {
-            r["item_id"]: r["idx"]
-            for r in prediction_result.predictions
-            if r["item_id"] != self.item_id and " " not in r["item_id"]
-        }
-
     def get_instance(self, size):
         return {
             "model_type": "similar_offer",
             "offer_id": str(self.item_id),
+            "size": size,
+            "params": self.get_params(),
+        }
+
+
+class OfferFilterRetrievalEndpoint(OfferRetrievalEndpoint):
+    def get_instance(self, size):
+        return {
+            "model_type": "filter",
+            "order_by": "booking_number",
+            "ascending": False,
             "size": size,
             "params": self.get_params(),
         }

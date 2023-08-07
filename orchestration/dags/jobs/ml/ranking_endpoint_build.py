@@ -23,14 +23,14 @@ default_args = {
 }
 
 DEFAULT_REGION = "europe-west1"
+BASE_DIR = "data-gcp/jobs/ml_jobs/ranking_endpoint"
 gce_params = {
-    "base_dir": "data-gcp/jobs/ml_jobs/ranking_endpoint",
     "instance_name": f"ranking-endpoint-build-{ENV_SHORT_NAME}",
     "experiment_name": f"ranking_endpoint_v1.1_{ENV_SHORT_NAME}",
     "model_name": f"v0.0_{ENV_SHORT_NAME}",
     "instance_type": {
         "dev": "n1-standard-2",
-        "stg": "n1-standard-8",
+        "stg": "n1-standard-2",
         "prod": "n1-standard-8",
     },
 }
@@ -61,6 +61,7 @@ with DAG(
         "experiment_name": Param(default=gce_params["experiment_name"], type="string"),
         "model_name": Param(default=gce_params["model_name"], type="string"),
         "table_name": Param(default="training_ranking_data", type="string"),
+        "dataset_name": Param(default=f"tmp_{ENV_SHORT_NAME}", type="string"),
     },
 ) as dag:
 
@@ -71,7 +72,7 @@ with DAG(
         ).as_posix(),
         write_disposition="WRITE_TRUNCATE",
         use_legacy_sql=False,
-        destination_dataset_table=f"{BIGQUERY_TMP_DATASET}" + "{{ params.table_name }}",
+        destination_dataset_table="{{ params.dataset_name}}.{{ params.table_name }}",
         dag=dag,
     )
     gce_instance_start = StartGCEOperator(
@@ -92,19 +93,20 @@ with DAG(
     install_dependencies = SSHGCEOperator(
         task_id="install_dependencies",
         instance_name="{{ params.instance_name }}",
-        base_dir="{{ params.base_dir }}",
+        base_dir=BASE_DIR,
         command="""pip install -r requirements.txt --user""",
         dag=dag,
         retries=2,
     )
 
     deploy_model = SSHGCEOperator(
-        task_id="containerize_similar_offers",
+        task_id="containerize_model",
         instance_name="{{ params.instance_name }}",
-        base_dir="{{ params.base_dir }}",
+        base_dir=BASE_DIR,
         command="python deploy_model.py "
         "--experiment-name {{ params.experiment_name }} "
         "--model-name {{ params.model_name }} "
+        "--dataset-name {{ params.dataset_name }}"
         "--table-name {{ params.table_name }}",
         dag=dag,
     )

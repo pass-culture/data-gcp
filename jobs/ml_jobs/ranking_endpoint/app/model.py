@@ -33,7 +33,7 @@ class PredictPipeline:
 
 
 class TrainPipeline:
-    def __init__(self, verbose: bool = False) -> None:
+    def __init__(self, target: str, params: dict = None, verbose: bool = False) -> None:
         self.numeric_features = [
             "user_distance",
             "stock_price",
@@ -44,22 +44,27 @@ class TrainPipeline:
         self.categorical_features = ["subcategory_id"]
         self.preprocessor: ColumnTransformer = None
         self.train_size = 0.8
-        self.target = "consult"
-        self.params = {
-            "objective": "binary",
-            "metric": "binary_logloss",
-            "boosting_type": "gbdt",
-            "is_unbalance": True,
-            "num_leaves": 31,
-            "learning_rate": 0.05,
-            "feature_fraction": 0.9,
-            "bagging_fraction": 0.8,
-            "bagging_freq": 5,
-            "verbose": int(verbose),
-        }
+        self.target = target
+        if params is None:
+            self.params = {
+                "objective": "binary",
+                "metric": "binary_logloss",
+                "boosting_type": "gbdt",
+                "is_unbalance": True,
+                "num_leaves": 31,
+                "learning_rate": 0.05,
+                "feature_fraction": 0.9,
+                "bagging_fraction": 0.8,
+                "bagging_freq": 5,
+                "verbose": int(verbose),
+            }
+        else:
+            self.params = params
 
     def set_pipeline(self):
-        numeric_transformer = Pipeline(steps=[("imputer", SimpleImputer(fill_value=0))])
+        numeric_transformer = Pipeline(
+            steps=[("imputer", SimpleImputer(strategy="constant", fill_value=0))]
+        )
 
         categorical_transformer = Pipeline(
             steps=[
@@ -81,6 +86,8 @@ class TrainPipeline:
         )
 
     def fit_transform(self, df):
+        df[self.categorical_features] = df[self.categorical_features].fillna("UNKNOWN")
+        df[self.numeric_features] = df[self.numeric_features].fillna(0)
         return self.preprocessor.fit_transform(df)
 
     def transform(self, input_data):

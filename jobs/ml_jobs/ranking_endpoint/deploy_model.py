@@ -8,16 +8,29 @@ from utils import (
     deploy_container,
     save_experiment,
 )
+import numpy as np
 
 PARAMS = {"seen": 2_000_000, "consult": 2_000_000, "booking": 2_000_000}
 
+MODEL_PARAMS = {
+    "objective": "regression",
+    "metric": {"l2", "l1"},
+    "is_unbalance": True,
+    "num_leaves": 31,
+    "learning_rate": 0.05,
+    "feature_fraction": 0.9,
+    "bagging_fraction": 0.8,
+    "bagging_freq": 5,
+    "verbose": -1,
+}
 
-def load_data(table_name):
+
+def load_data(dataset_name, table_name):
     sql = f"""
     WITH seen AS (
       SELECT
           * 
-      FROM `{GCP_PROJECT_ID}.{table_name}` 
+      FROM `{GCP_PROJECT_ID}.{dataset_name}.{table_name}` 
       WHERE seen = True
       ORDER BY RAND()
       LIMIT {PARAMS['seen']}
@@ -25,7 +38,7 @@ def load_data(table_name):
     consult AS (
         SELECT
             * 
-        FROM `{GCP_PROJECT_ID}.{table_name}` 
+        FROM `{GCP_PROJECT_ID}.{dataset_name}.{table_name}` 
         WHERE consult = True
         ORDER BY RAND()
         LIMIT {PARAMS['consult']}
@@ -34,7 +47,7 @@ def load_data(table_name):
     booking AS (
       SELECT
             * 
-        FROM `{GCP_PROJECT_ID}.{table_name}` 
+        FROM `{GCP_PROJECT_ID}.{dataset_name}.{table_name}` 
         WHERE booking = True
         ORDER BY RAND()
         LIMIT {PARAMS['booking']}
@@ -49,9 +62,17 @@ def load_data(table_name):
     return pd.read_gbq(sql).sample(frac=1)
 
 
-def train_pipeline(table_name):
-    data = load_data(table_name)
-    pipeline = TrainPipeline()
+def train_pipeline(dataset_name, table_name):
+    data = load_data(dataset_name, table_name)
+    data["consult"] = data["consult"].astype(float).fillna(0)
+    data["booking"] = data["booking"].astype(float).fillna(0)
+    data["delta_diversification"] = (
+        data["delta_diversification"].astype(float).fillna(0)
+    )
+    data["target"] = data["consult"] + data["booking"] * (
+        1 + data["delta_diversification"]
+    )
+    pipeline = TrainPipeline(target="target", verbose=True, params=MODEL_PARAMS)
     pipeline.set_pipeline()
     pipeline.train(data)
     pipeline.save()
@@ -66,7 +87,11 @@ def main(
         None,
         help="Name of the model",
     ),
-    input_table: str = typer.Option(
+    dataset_name: str = typer.Option(
+        None,
+        help="Name input dataset with preproc data",
+    ),
+    table_name: str = typer.Option(
         None,
         help="Name input table with preproc data",
     ),
@@ -79,7 +104,7 @@ def main(
     serving_container = (
         f"eu.gcr.io/{GCP_PROJECT_ID}/{experiment_name.replace('.', '_')}:{run_id}"
     )
-    train_pipeline(table_name=input_table)
+    train_pipeline(dataset_name=dataset_name, table_name=table_name)
     print("Deploy...")
     deploy_container(serving_container)
     save_experiment(experiment_name, model_name, serving_container, run_id=run_id)

@@ -39,7 +39,7 @@ with DAG(
         "experiment_name": Param(
             default=f"algo_training_version_b_{ENV_SHORT_NAME}", type="string"
         ),
-        "run_id": Param(default="", type="string"),
+        "run_id": Param(default=".", type="string"),
         "endpoint_name": Param(
             default=f"recommendation_version_b_{ENV_SHORT_NAME}", type="string"
         ),

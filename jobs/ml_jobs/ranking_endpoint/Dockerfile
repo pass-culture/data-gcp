@@ -12,4 +12,6 @@ COPY ./metadata /app/metadata
 WORKDIR /app
 
 EXPOSE 8080
-CMD ["gunicorn", "app:app", "--preload", "--timeout=60", "--workers=4", "--bind=0.0.0.0:8080"]
+
+#CMD ["python" ,"-u","app.py"]
+CMD ["hypercorn", "--bind", "0.0.0.0:8080", "app:app"]

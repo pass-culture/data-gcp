@@ -8,7 +8,6 @@ from utils import (
     deploy_container,
     save_experiment,
 )
-import numpy as np
 
 PARAMS = {"seen": 2_000_000, "consult": 2_000_000, "booking": 2_000_000}
 

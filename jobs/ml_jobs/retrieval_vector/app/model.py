@@ -51,6 +51,10 @@ class DefaultClient:
         results = docs[0].matches
         predictions = []
         for idx, row in enumerate(results):
+            # don't retrieve same object.
+            if str(row.tags["item_id"]) == str(vector.id):
+                pass
+
             if not details:
                 predictions.append(
                     {
@@ -85,6 +89,7 @@ class DefaultClient:
         )
         predictions = []
         for idx, row in enumerate(results):
+
             if not details:
                 predictions.append(
                     {

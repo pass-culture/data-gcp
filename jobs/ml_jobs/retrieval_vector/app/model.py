@@ -89,6 +89,7 @@ class DefaultClient:
         )
         predictions = []
         for idx, row in enumerate(results):
+
             if not details:
                 predictions.append(
                     {

@@ -1,9 +1,23 @@
 from flask import Flask, request, Response, jsonify
 from flask_cors import CORS
-from loguru import logger
+from pythonjsonlogger import jsonlogger
+import logging
+import sys
 from model import DefaultClient, RecoClient, TextClient
 from docarray import Document
 import json
+
+
+logger = logging.getLogger(__name__)
+stdout = logging.StreamHandler(stream=sys.stdout)
+fmt = jsonlogger.JsonFormatter(
+    "%(name)s %(asctime)s %(levelname)s %(filename)s %(lineno)s %(process)d %(message)s",
+    rename_fields={"levelname": "severity", "asctime": "timestamp"},
+)
+
+stdout.setFormatter(fmt)
+logger.addHandler(stdout)
+logger.setLevel(logging.INFO)
 
 app = Flask(__name__)
 CORS(app)
@@ -28,9 +42,13 @@ def load_model() -> DefaultClient:
             raise Exception("Model desc not found.")
 
 
+log_data = {"event": "startup", "response": "load"}
+logger.info("startup", extra=log_data)
 model = load_model()
 model.load()
 model.index()
+log_data = {"event": "startup", "response": "ready"}
+logger.info("startup", extra=log_data)
 
 
 def input_size(size):
@@ -109,11 +127,7 @@ def predict():
             return filter(selected_params, order_by, ascending, size, debug)
 
     except Exception as e:
-        logger.info(e)
-        logger.info("Wrong model")
+        log_data = {"event": "error", "response": str(e)}
+        logger.info("error", extra=log_data)
 
     return jsonify({"predictions": []})
-
-
-if __name__ == "__main__":
-    app.run(debug=False, host="0.0.0.0", port=8080)

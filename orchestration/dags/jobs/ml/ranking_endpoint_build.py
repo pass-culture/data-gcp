@@ -106,7 +106,7 @@ with DAG(
         command="python deploy_model.py "
         "--experiment-name {{ params.experiment_name }} "
         "--model-name {{ params.model_name }} "
-        "--dataset-name {{ params.dataset_name }}"
+        "--dataset-name {{ params.dataset_name }} "
         "--table-name {{ params.table_name }}",
         dag=dag,
     )

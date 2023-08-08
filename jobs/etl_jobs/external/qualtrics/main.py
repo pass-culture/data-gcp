@@ -7,7 +7,7 @@ from utils import (
     OPT_OUT_EXPORT_COLUMNS,
     save_to_raw_bq,
     IR_PRO_TABLE_SCHEMA,
-    IR_JEUNES_TABLE_SHEMA,
+    IR_JEUNES_TABLE_SCHEMA,
 )
 from qualtrics_opt_out import import_qualtrics_opt_out
 from qualtrics_survey_answers import QualtricsSurvey
@@ -56,7 +56,7 @@ def run(request):
                 dfs.append(processed_df)
         jeunes_df = pd.concat(dfs)
         save_to_raw_bq(
-            jeunes_df, f"qualtrics_answers_ir_survey_jeunes", IR_JEUNES_TABLE_SHEMA
+            jeunes_df, f"qualtrics_answers_ir_survey_jeunes", IR_JEUNES_TABLE_SCHEMA
         )
 
     else:

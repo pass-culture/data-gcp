@@ -32,13 +32,19 @@ class ModelEngine(ABC):
 
     def get_scorer(self) -> ScorerRetrieval:
         # init user_input
-        self.model_params.endpoint.init_input(user=self.user, params_in=self.params_in)
+        self.model_params.retrieval_endpoint.init_input(
+            user=self.user, params_in=self.params_in
+        )
+        self.model_params.ranking_endpoint.init_input(
+            user=self.user, params_in=self.params_in
+        )
         # get scorer
         return self.model_params.scorer(
             user=self.user,
             params_in=self.params_in,
             model_params=self.model_params,
-            model_endpoint=self.model_params.endpoint,
+            retrieval_endpoint=self.model_params.retrieval_endpoint,
+            ranking_endpoint=self.model_params.ranking_endpoint,
         )
 
     def get_scoring(self) -> List[str]:
@@ -72,7 +78,7 @@ class ModelEngine(ABC):
         save_context(
             offers=scored_offers,
             call_id=self.user.call_id,
-            context=self.scorer.model_endpoint.endpoint_name,
+            context=self.model_params.name,
             user=self.user,
         )
 

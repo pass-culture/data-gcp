@@ -23,14 +23,18 @@ class SimilarOffer(ModelEngine):
 
     def get_scorer(self):
         # init input
-        self.model_params.endpoint.init_input(
+        self.model_params.retrieval_endpoint.init_input(
             user=self.user, offer=self.offer, params_in=self.params_in
+        )
+        self.model_params.ranking_endpoint.init_input(
+            user=self.user, params_in=self.params_in
         )
         return self.model_params.scorer(
             user=self.user,
             params_in=self.params_in,
             model_params=self.model_params,
-            model_endpoint=self.model_params.endpoint,
+            retrieval_endpoint=self.model_params.retrieval_endpoint,
+            ranking_endpoint=self.model_params.ranking_endpoint,
         )
 
     def get_model_configuration(
@@ -61,8 +65,8 @@ class SimilarOffer(ModelEngine):
                         "offer_id": offer_id,
                         "date": date,
                         "group_id": self.model_params.name,
-                        "model_name": self.scorer.model_endpoint.model_display_name,
-                        "model_version": self.scorer.model_endpoint.model_version,
+                        "model_name": self.scorer.retrieval_endpoint.model_display_name,
+                        "model_version": self.scorer.retrieval_endpoint.model_version,
                         "reco_filters": json.dumps(self.params_in.json_input),
                         "call_id": self.user.call_id,
                         "venue_iris_id": self.offer.iris_id,

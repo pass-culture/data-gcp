@@ -14,7 +14,7 @@ class RecommendableOfferQueryBuilder:
     def generate_query(
         self,
         selected_items: t.Dict[str, float],
-        user: str,
+        user: User,
         order_query: str = "user_km_distance ASC, item_score ASC",
         offer_limit: int = 20,
     ):

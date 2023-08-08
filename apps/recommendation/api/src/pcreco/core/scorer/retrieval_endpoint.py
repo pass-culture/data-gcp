@@ -5,11 +5,11 @@ from pcreco.utils.env_vars import (
     log_duration,
 )
 from pcreco.core.offer import Offer
-from pcreco.core.scorer import ModelEndpoint
 from pcreco.models.reco.playlist_params import PlaylistParamsIn
 from datetime import datetime
 from dataclasses import dataclass
 import typing as t
+from abc import ABC, abstractmethod
 
 
 @dataclass
@@ -67,12 +67,16 @@ class EqParams:
         return {}
 
 
-class RetrievalEndpoint(ModelEndpoint):
+class RetrievalEndpoint(ABC):
     def init_input(self, user: User, params_in: PlaylistParamsIn):
         self.user = user
         self.user_input = str(self.user.id)
         self.params_in = params_in
         self.is_geolocated = self.user.is_geolocated
+
+    @abstractmethod
+    def get_instance(self, size):
+        pass
 
     def get_params(self):
         params = []

@@ -1,5 +1,6 @@
 import pcreco.core.scorer.recommendable_offer as offer_scorer
-from pcreco.core.scorer import ModelEndpoint
+from pcreco.core.scorer.retrieval_endpoint import RetrievalEndpoint
+from pcreco.core.scorer.ranking_endpoint import RankingEndpoint
 from dataclasses import dataclass
 from pcreco.models.reco.playlist_params import PlaylistParamsIn
 from pcreco.core.offer import Offer
@@ -37,8 +38,9 @@ class ModelConfiguration:
     name: str
     description: str
     scorer: offer_scorer.ScorerRetrieval
-    endpoint: ModelEndpoint
+    retrieval_endpoint: RetrievalEndpoint
     retrieval_limit: int
+    ranking_endpoint: RankingEndpoint
     ranking_order_query: str
     ranking_limit: int
     diversification_params: DiversificationParams

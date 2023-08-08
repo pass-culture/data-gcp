@@ -5,10 +5,11 @@ from pcreco.core.utils.query_builder import (
 )
 from pcreco.utils.db.db_connection import get_session
 from pcreco.utils.env_vars import log_duration
-from typing import List, Dict, Any
+from typing import List
 import time
 import random
-from pcreco.core.scorer import ModelEndpoint
+from pcreco.core.scorer.retrieval_endpoint import RetrievalEndpoint
+from pcreco.core.scorer.ranking_endpoint import RankingEndpoint
 from dataclasses import dataclass
 
 
@@ -27,9 +28,10 @@ class RecommendableOffer:
     search_group_name: str
     venue_latitude: float
     venue_longitude: float
-    item_score: float
+    item_score: float  # lower = better
     order: int
     random: float
+    offer_score: float = None  # higher = better
 
 
 class ScorerRetrieval:
@@ -37,30 +39,36 @@ class ScorerRetrieval:
         self,
         user: User,
         params_in: PlaylistParamsIn,
-        model_endpoint: ModelEndpoint,
+        retrieval_endpoint: RetrievalEndpoint,
+        ranking_endpoint: RankingEndpoint,
         model_params,
     ):
         self.user = user
         self.model_params = model_params
         self.params_in = params_in
-        self.model_endpoint = model_endpoint
+        self.retrieval_endpoint = retrieval_endpoint
+        self.ranking_endpoint = ranking_endpoint
 
     def get_scoring(self) -> List[RecommendableOffer]:
         start = time.time()
-        prediction_result = self.model_endpoint.model_score(
+        prediction_items = self.retrieval_endpoint.model_score(
             size=self.model_params.retrieval_limit
         )
         log_duration(
-            f"Retrieval: predicted_items for {self.user.id}: predicted_items -> {len(prediction_result)}",
+            f"Retrieval: predicted_items for {self.user.id}: predicted_items -> {len(prediction_items)}",
             start,
         )
         start = time.time()
         # nothing to score
-        if len(prediction_result) == 0:
+        if len(prediction_items) == 0:
             return []
 
         # Ranking Phase
-        recommendable_offers = self.get_recommendable_offers(prediction_result)
+        recommendable_offers = self.get_recommendable_offers(prediction_items)
+
+        recommendable_offers = self.ranking_endpoint.model_score(
+            recommendable_offers=recommendable_offers
+        )
         log_duration(
             f"Ranking: get_recommendable_offers for {self.user.id}: offers -> {len(recommendable_offers)}",
             start,
@@ -99,6 +107,7 @@ class ScorerRetrieval:
                 item_score=row[13],
                 order=i,
                 random=random.random(),
+                offer_score=i,  # TODO
             )
             for i, row in enumerate(query_result)
         ]

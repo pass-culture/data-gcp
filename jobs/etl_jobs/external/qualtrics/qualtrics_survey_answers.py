@@ -66,10 +66,55 @@ class QualtricsSurvey:
 
         if target == "GRANT_18":
             questions_columns = ["Q1", "Q3"]
+            select_fields = [
+                "StartDate",
+                "EndDate",
+                "ResponseId",
+                "ExternalReference",
+                "user_type",
+                "question",
+                "question_id",
+                "question_str",
+                "answer",
+                "Q3_Topics",
+                "theoretical_amount_spent",
+                "user_activity",
+                "user_civility",
+            ]
         elif target == "GRANT_15_17":
             questions_columns = ["Q1", "Q2"]
+            select_fields = [
+                "StartDate",
+                "EndDate",
+                "ResponseId",
+                "ExternalReference",
+                "user_type",
+                "question",
+                "question_id",
+                "question_str",
+                "answer",
+                "Q3_Topics",
+                "theoretical_amount_spent",
+                "user_activity",
+                "user_civility",
+            ]
         else:
             questions_columns = ["Q1", "Q2", "Q3"]
+            select_fields = [
+                "StartDate",
+                "EndDate",
+                "ResponseId",
+                "ExternalReference",
+                "user_type",
+                "question",
+                "question_id",
+                "question_str",
+                "answer",
+                "Q1_Topics",
+                "anciennete_jours",
+                "non_cancelled_bookings",
+                "offers_created",
+            ]
 
         mapping_question = response_df[questions_columns][:2].to_dict(orient="records")
         mapping_question_str = mapping_question[0]
@@ -98,9 +143,14 @@ class QualtricsSurvey:
         )
 
         response_processed.columns = (
-            response_processed.columns.str.replace("[.,(,),-]", "")
+            response_processed.columns.str.normalize("NFKD")
+            .str.encode("ascii", errors="ignore")
+            .str.decode("utf-8")  # remove accents
+            .str.replace("[.,(,),-]", "")
             .str.replace("  ", " ")
             .str.replace(" ", "_")
         )
 
-        return response_processed
+        response_processed = response_processed.astype(str)
+
+        return response_processed[select_fields]

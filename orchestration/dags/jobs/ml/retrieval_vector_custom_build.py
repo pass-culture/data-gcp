@@ -77,8 +77,8 @@ with DAG(
         "source_experiment_name": Param(
             default=gce_params["source_experiment_name"][ENV_SHORT_NAME], type="string"
         ),
-        "source_run_id": Param(default="", type="string"),
-        "source_artifact_uri": Param(default="", type="string"),
+        "source_run_id": Param(default=".", type="string"),
+        "source_artifact_uri": Param(default=".", type="string"),
     },
 ) as dag:
     gce_instance_start = StartGCEOperator(

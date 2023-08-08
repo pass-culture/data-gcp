@@ -4,7 +4,6 @@ hypercorn
 numpy
 pandas
 pyarrow
-loguru==0.5.3
-docarray[annlite]==0.21.0
-sentence-transformers
+lightgbm==4.0.0
+scikit-learn==1.3.0
 python-json-logger

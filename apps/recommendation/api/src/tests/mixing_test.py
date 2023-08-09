@@ -25,8 +25,9 @@ mock_scored_offers = [
         venue_latitude=None,
         venue_longitude=None,
         item_score=1,
-        order=None,
+        query_order=None,
         random=None,
+        offer_score=None,
     ),
     RecommendableOffer(
         offer_id="item_2",
@@ -43,8 +44,9 @@ mock_scored_offers = [
         venue_latitude=None,
         venue_longitude=None,
         item_score=2,
-        order=None,
+        query_order=None,
         random=None,
+        offer_score=None,
     ),
     RecommendableOffer(
         offer_id="item_3",
@@ -61,8 +63,9 @@ mock_scored_offers = [
         venue_latitude=None,
         venue_longitude=None,
         item_score=3,
-        order=None,
+        query_order=None,
         random=None,
+        offer_score=None,
     ),
     RecommendableOffer(
         offer_id="item_4",
@@ -79,8 +82,9 @@ mock_scored_offers = [
         venue_latitude=None,
         venue_longitude=None,
         item_score=1,
-        order=None,
+        query_order=None,
         random=None,
+        offer_score=None,
     ),
     RecommendableOffer(
         offer_id="item_5",
@@ -97,8 +101,9 @@ mock_scored_offers = [
         venue_latitude=None,
         venue_longitude=None,
         item_score=2,
-        order=None,
+        query_order=None,
         random=None,
+        offer_score=None,
     ),
 ]
 ## Reminder on diversification rule

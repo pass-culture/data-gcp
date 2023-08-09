@@ -63,9 +63,7 @@ with DAG(
         "experiment_name": Param(default=gce_params["experiment_name"], type="string"),
         "model_name": Param(default=gce_params["model_name"], type="string"),
         "table_name": Param(default="training_ranking_data", type="string"),
-        "dataset_name": Param(
-            default=f"{BIGQUERY_TMP_DATASET}_{ENV_SHORT_NAME}", type="string"
-        ),
+        "dataset_name": Param(default=BIGQUERY_TMP_DATASET, type="string"),
     },
 ) as dag:
 

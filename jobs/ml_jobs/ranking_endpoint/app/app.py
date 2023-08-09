@@ -47,6 +47,8 @@ def predict():
 
     except Exception as e:
         log_data = {"event": "error", "exception": str(e)}
+        logger.info(log_data)
+        logger.exception(e)
 
     return jsonify({"predictions": []})
 

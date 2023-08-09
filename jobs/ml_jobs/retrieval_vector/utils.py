@@ -102,6 +102,7 @@ def get_item_docs(item_embedding_dict, items_df):
                 "is_numerical": int(row.is_numerical),
                 "is_national": int(row.is_national),
                 "is_geolocated": int(row.is_geolocated),
+                "is_underage_recommendable": int(row.is_underage_recommendable),
                 "offer_is_duo": int(row.offer_is_duo),
                 "booking_number": float(row.booking_number),
                 "stock_price": float(row.stock_price),

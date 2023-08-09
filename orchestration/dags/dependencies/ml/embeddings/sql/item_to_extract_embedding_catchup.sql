@@ -77,9 +77,9 @@ WHERE
         select
             distinct item_id
         from
-            `{{ bigquery_clean_dataset }}`.item_embeddings_v2
+            `{{ bigquery_clean_dataset }}`.item_semantic_content_embeddings
         WHERE
-            date(extraction_date) > DATE_SUB(CURRENT_DATE, INTERVAL 60 DAY)
+            date(extraction_date) > DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY)
     ) QUALIFY ROW_NUMBER() OVER (
         PARTITION BY item_id
         ORDER BY

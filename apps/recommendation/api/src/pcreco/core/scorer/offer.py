@@ -5,74 +5,64 @@ from pcreco.core.utils.query_builder import (
 )
 from pcreco.utils.db.db_connection import get_session
 from pcreco.utils.env_vars import log_duration
-from typing import List, Dict, Any
+from typing import List
 import time
 import random
-from pcreco.core.scorer import ModelEndpoint
-from dataclasses import dataclass
+from pcreco.core.endpoint.retrieval_endpoint import RetrievalEndpoint
+from pcreco.core.endpoint.ranking_endpoint import RankingEndpoint
+from pcreco.core.model.recommendable_offer import RecommendableOffer
+from pcreco.core.model.recommendable_item import RecommendableItem
 
 
-@dataclass
-class RecommendableOffer:
-    offer_id: str
-    item_id: str
-    venue_id: str
-    user_distance: float
-    booking_number: float
-    category: str
-    subcategory_id: str
-    stock_price: float
-    offer_creation_date: str
-    stock_beginning_date: str
-    search_group_name: str
-    venue_latitude: float
-    venue_longitude: float
-    item_score: float
-    order: int
-    random: float
-
-
-class ScorerRetrieval:
+class OfferScorer:
     def __init__(
         self,
         user: User,
         params_in: PlaylistParamsIn,
-        model_endpoint: ModelEndpoint,
+        retrieval_endpoint: RetrievalEndpoint,
+        ranking_endpoint: RankingEndpoint,
         model_params,
     ):
         self.user = user
         self.model_params = model_params
         self.params_in = params_in
-        self.model_endpoint = model_endpoint
+        self.retrieval_endpoint = retrieval_endpoint
+        self.ranking_endpoint = ranking_endpoint
 
     def get_scoring(self) -> List[RecommendableOffer]:
         start = time.time()
-        prediction_result = self.model_endpoint.model_score(
+        prediction_items = self.retrieval_endpoint.model_score(
             size=self.model_params.retrieval_limit
         )
         log_duration(
-            f"Retrieval: predicted_items for {self.user.id}: predicted_items -> {len(prediction_result)}",
+            f"Retrieval: predicted_items for {self.user.id}: predicted_items -> {len(prediction_items)}",
             start,
         )
         start = time.time()
         # nothing to score
-        if len(prediction_result) == 0:
+        if len(prediction_items) == 0:
             return []
 
         # Ranking Phase
-        recommendable_offers = self.get_recommendable_offers(prediction_result)
+        recommendable_offers = self.get_recommendable_offers(prediction_items)
+
+        recommendable_offers = self.ranking_endpoint.model_score(
+            recommendable_offers=recommendable_offers
+        )
         log_duration(
             f"Ranking: get_recommendable_offers for {self.user.id}: offers -> {len(recommendable_offers)}",
             start,
         )
         return recommendable_offers
 
-    def get_recommendable_offers(self, selected_items_list) -> List[RecommendableOffer]:
+    def get_recommendable_offers(
+        self, recommendable_items: List[RecommendableItem]
+    ) -> List[RecommendableOffer]:
         start = time.time()
         recommendable_offers_query = RecommendableOfferQueryBuilder().generate_query(
             order_query=self.model_params.ranking_order_query,
             offer_limit=self.model_params.ranking_limit,
-            selected_items=selected_items_list,
+            recommendable_items=recommendable_items,
             user=self.user,
         )
 
@@ -80,6 +70,8 @@ class ScorerRetrieval:
         if recommendable_offers_query is not None:
             connection = get_session()
             query_result = connection.execute(recommendable_offers_query).fetchall()
+
+        size = len(query_result)
 
         user_recommendation = [
             RecommendableOffer(
@@ -96,9 +88,10 @@ class ScorerRetrieval:
                 search_group_name=row[10],
                 venue_latitude=row[11],
                 venue_longitude=row[12],
-                item_score=row[13],
-                order=i,
+                item_score=row[13],  # lower is better
+                query_order=i,
                 random=random.random(),
+                offer_score=size - i,  # higher is better
             )
             for i, row in enumerate(query_result)
         ]

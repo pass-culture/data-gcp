@@ -14,6 +14,7 @@ from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryExecuteQueryOperator,
 )
 from common.config import ENV_SHORT_NAME, DAG_FOLDER, BIGQUERY_TMP_DATASET
+from common.utils import get_airflow_schedule
 
 default_args = {
     "start_date": datetime(2022, 11, 30),
@@ -34,13 +35,14 @@ gce_params = {
         "prod": "n1-standard-8",
     },
 }
+schedule_dict = {"prod": "0 20 * * 5", "dev": "0 20 * * *", "stg": "0 20 * * 3"}
 
 
 with DAG(
     "ranking_endpoint_build",
     default_args=default_args,
     description="Train and build Ranking Endpoint",
-    schedule_interval=None,
+    schedule_interval=get_airflow_schedule(schedule_dict[ENV_SHORT_NAME]),
     catchup=False,
     dagrun_timeout=timedelta(minutes=1440),
     user_defined_macros=macros.default,
@@ -61,7 +63,7 @@ with DAG(
         "experiment_name": Param(default=gce_params["experiment_name"], type="string"),
         "model_name": Param(default=gce_params["model_name"], type="string"),
         "table_name": Param(default="training_ranking_data", type="string"),
-        "dataset_name": Param(default=f"tmp_{ENV_SHORT_NAME}", type="string"),
+        "dataset_name": Param(default=BIGQUERY_TMP_DATASET, type="string"),
     },
 ) as dag:
 

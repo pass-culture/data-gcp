@@ -100,8 +100,8 @@ def playlist_recommendation(user_id: int):
             "params": {
                 "reco_origin": scoring.reco_origin,
                 "model_endpoint": scoring.model_params.name,
-                "model_name": scoring.scorer.model_endpoint.model_display_name,
-                "model_version": scoring.scorer.model_endpoint.model_version,
+                "model_name": scoring.scorer.retrieval_endpoint.model_display_name,
+                "model_version": scoring.scorer.retrieval_endpoint.model_version,
                 "geo_located": geo_located,
                 "filtered": input_reco.has_conditions if input_reco else False,
                 "call_id": call_id,
@@ -136,8 +136,8 @@ def similar_offers(offer_id: str):
             "params": {
                 "reco_origin": scoring.reco_origin,
                 "model_endpoint": scoring.model_params.name,
-                "model_name": scoring.scorer.model_endpoint.model_display_name,
-                "model_version": scoring.scorer.model_endpoint.model_version,
+                "model_name": scoring.scorer.retrieval_endpoint.model_display_name,
+                "model_version": scoring.scorer.retrieval_endpoint.model_version,
                 "geo_located": geo_located,
                 "filtered": input_reco.has_conditions if input_reco else False,
                 "call_id": call_id,

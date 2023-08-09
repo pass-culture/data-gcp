@@ -9,7 +9,7 @@ from pcreco.utils.env_vars import (
     NUMBER_OF_RECOMMENDATIONS,
 )
 from loguru import logger
-from pcreco.core.scorer.recommendable_offer import ScorerRetrieval
+from pcreco.core.scorer.offer import OfferScorer
 
 
 class ModelEngine(ABC):
@@ -30,15 +30,21 @@ class ModelEngine(ABC):
     def save_recommendation(self, recommendations: List[str]) -> None:
         pass
 
-    def get_scorer(self) -> ScorerRetrieval:
+    def get_scorer(self) -> OfferScorer:
         # init user_input
-        self.model_params.endpoint.init_input(user=self.user, params_in=self.params_in)
+        self.model_params.retrieval_endpoint.init_input(
+            user=self.user, params_in=self.params_in
+        )
+        self.model_params.ranking_endpoint.init_input(
+            user=self.user, params_in=self.params_in
+        )
         # get scorer
         return self.model_params.scorer(
             user=self.user,
             params_in=self.params_in,
             model_params=self.model_params,
-            model_endpoint=self.model_params.endpoint,
+            retrieval_endpoint=self.model_params.retrieval_endpoint,
+            ranking_endpoint=self.model_params.ranking_endpoint,
         )
 
     def get_scoring(self) -> List[str]:
@@ -72,7 +78,7 @@ class ModelEngine(ABC):
         save_context(
             offers=scored_offers,
             call_id=self.user.call_id,
-            context=self.scorer.model_endpoint.endpoint_name,
+            context=self.model_params.name,
             user=self.user,
         )
 

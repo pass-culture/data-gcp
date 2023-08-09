@@ -59,7 +59,7 @@ class DefaultClient:
         for idx, row in enumerate(results):
             # don't retrieve same object.
             if item_id is not None and str(row.tags["item_id"]) == item_id:
-                pass
+                continue
 
             if not details:
                 predictions.append(

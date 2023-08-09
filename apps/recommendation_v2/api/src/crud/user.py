@@ -38,7 +38,7 @@ def get_user_profile(
         longitude=longitude,
         latitude=latitude,
         iris_id=iris_id,
-        age=int(user_profile[0].days / 365),
+        age=int(user_profile[0].days / 365) if user_profile[0] else None,
         bookings_count=user_profile[1],
         clicks_count=user_profile[2],
         favorites_count=user_profile[3],

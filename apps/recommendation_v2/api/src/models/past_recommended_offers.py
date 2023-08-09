@@ -10,8 +10,8 @@ class PastRecommendedOffers(Base):
 
     __tablename__ = "past_recommended_offers"
     call_id = Column(String(256), primary_key=True)
-    user_id = Column(String(256), primary_key=True)
-    offer_id = Column(String(256), primary_key=True)
+    userid = Column(String(256), primary_key=True)
+    offerid = Column(String(256), primary_key=True)
     date = Column(DateTime(timezone=True))
     group_id = Column(String(256))
     reco_origin = Column(String(256))

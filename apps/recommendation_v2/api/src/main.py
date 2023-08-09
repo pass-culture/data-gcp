@@ -19,8 +19,6 @@ from crud.offer import get_offer_characteristics
 
 app = FastAPI(title="Passculture refacto reco API")
 
-Base.metadata.create_all(engine)
-
 # async def setup_trace(request: Request):
 #     custom_logger.info("Setting up trace..")
 #     if "x-cloud-trace-context" in request.headers:
@@ -29,20 +27,13 @@ Base.metadata.create_all(engine)
 
 # custom_logger = setup_logging()
 
+
 def get_db():
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
-
-@app.get("/")
-async def read_root(db: Session = Depends(get_db)):
-    # Vous pouvez utiliser la session "db" pour interagir avec la base de données ici
-    # Par exemple, db.query(VotreModele).all()
-    return {"message": "Hello, world!"}
-
-
 
 
 @app.get("/")

@@ -13,4 +13,5 @@ def get_iris_from_coordinates(db: Session, latitude, longitude) -> str:
         .filter(func.ST_Contains(IrisFrance.shape, point))
         .first()
     )
-    return iris_id[0]
+    if iris_id:
+        return iris_id[0]

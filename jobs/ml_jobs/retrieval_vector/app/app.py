@@ -69,23 +69,27 @@ def filter(selected_params, order_by: str, ascending: bool, size: int, debug: bo
         )
         return jsonify({"predictions": results})
     except Exception as e:
-        logger.info(e)
+        logger.exception(e)
         logger.info("error")
         return jsonify({"predictions": []})
 
 
-def search_vector(vector: Document, size: int, selected_params, debug):
+def search_vector(vector: Document, size: int, selected_params, debug, item_id=None):
     try:
         if vector is not None:
             results = model.search(
-                vector=vector, n=size, query_filter=selected_params, details=debug
+                vector=vector,
+                n=size,
+                query_filter=selected_params,
+                details=debug,
+                item_id=item_id,
             )
             return jsonify({"predictions": results})
         else:
             logger.info("item not found")
             return jsonify({"predictions": []})
     except Exception as e:
-        logger.info(e)
+        logger.exception(e)
         logger.info("error")
         return jsonify({"predictions": []})
 
@@ -119,7 +123,9 @@ def predict():
         if model_type == "similar_offer":
             input_str = str(input_json["offer_id"])
             vector = model.offer_vector(input_str)
-            return search_vector(vector, size, selected_params, debug)
+            return search_vector(
+                vector, size, selected_params, debug, item_id=input_str
+            )
 
         if model_type == "filter":
             order_by = str(input_json["order_by"])
@@ -129,5 +135,6 @@ def predict():
     except Exception as e:
         log_data = {"event": "error", "response": str(e)}
         logger.info("error", extra=log_data)
+        logger.exception(e)
 
     return jsonify({"predictions": []})

@@ -1,10 +1,10 @@
 from pcreco.utils.env_vars import ENV_SHORT_NAME
-import pcreco.core.scorer.recommendable_offer as offer_scorer
-from pcreco.core.scorer.retrieval_endpoint import (
+import pcreco.core.scorer.offer as offer_scorer
+from pcreco.core.endpoint.retrieval_endpoint import (
     OfferRetrievalEndpoint,
     OfferFilterRetrievalEndpoint,
 )
-from pcreco.core.scorer.ranking_endpoint import ModelRankingEndpoint
+from pcreco.core.endpoint.ranking_endpoint import ModelRankingEndpoint
 from pcreco.core.model_selection.model_configuration import (
     ModelConfiguration,
     diversification_off,
@@ -13,7 +13,7 @@ from pcreco.core.model_selection.model_configuration import (
 retrieval_offer = ModelConfiguration(
     name="similar_offer_model",
     description="""""",
-    scorer=offer_scorer.ScorerRetrieval,
+    scorer=offer_scorer.OfferScorer,
     retrieval_limit=200,
     ranking_order_query="item_score ASC",
     ranking_limit=100,
@@ -29,7 +29,7 @@ retrieval_offer = ModelConfiguration(
 retrieval_cs_offer = ModelConfiguration(
     name="similar_cold_start_offer_model",
     description="""""",
-    scorer=offer_scorer.ScorerRetrieval,
+    scorer=offer_scorer.OfferScorer,
     retrieval_limit=200,
     ranking_order_query="item_score ASC",
     ranking_limit=100,
@@ -45,7 +45,7 @@ retrieval_cs_offer = ModelConfiguration(
 retrieval_filter = ModelConfiguration(
     name="similar_offer_filter",
     description="""""",
-    scorer=offer_scorer.ScorerRetrieval,
+    scorer=offer_scorer.OfferScorer,
     retrieval_limit=200,
     ranking_order_query="item_score ASC",
     ranking_limit=100,

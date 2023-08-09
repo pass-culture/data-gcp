@@ -3,7 +3,7 @@ from numpy.testing import assert_array_equal
 from pcreco.core.utils.mixing import (
     order_offers_by_score_and_diversify_features,
 )
-from pcreco.core.scorer.recommendable_offer import RecommendableOffer
+from pcreco.core.model.recommendable_offer import RecommendableOffer
 
 
 ENV_SHORT_NAME = os.getenv("ENV_SHORT_NAME")

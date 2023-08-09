@@ -3,6 +3,7 @@ from psycopg2 import sql
 from pcreco.utils.db.db_connection import as_string
 import typing as t
 from pcreco.core.user import User
+from pcreco.core.model.recommendable_item import RecommendableItem
 
 
 class RecommendableOfferQueryBuilder:
@@ -13,14 +14,17 @@ class RecommendableOfferQueryBuilder:
 
     def generate_query(
         self,
-        selected_items: t.Dict[str, float],
+        recommendable_items: t.List[RecommendableItem],
         user: User,
         order_query: str = "user_km_distance ASC, item_score ASC",
         offer_limit: int = 20,
     ):
 
         arr_sql = ",".join(
-            [f"('{k}'::VARCHAR, {v}::FLOAT)" for k, v in selected_items.items()]
+            [
+                f"('{item.item_id}'::VARCHAR, {item.item_score}::FLOAT)"
+                for item in recommendable_items
+            ]
         )
         ranked_items = f"""
             ranked_items AS (

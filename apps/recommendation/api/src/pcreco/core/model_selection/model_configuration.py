@@ -1,6 +1,6 @@
-import pcreco.core.scorer.recommendable_offer as offer_scorer
-from pcreco.core.scorer.retrieval_endpoint import RetrievalEndpoint
-from pcreco.core.scorer.ranking_endpoint import RankingEndpoint
+import pcreco.core.scorer.offer as offer_scorer
+from pcreco.core.endpoint.retrieval_endpoint import RetrievalEndpoint
+from pcreco.core.endpoint.ranking_endpoint import RankingEndpoint
 from dataclasses import dataclass
 from pcreco.models.reco.playlist_params import PlaylistParamsIn
 from pcreco.core.offer import Offer
@@ -20,16 +20,16 @@ diversification_on = DiversificationParams(
     is_active=True,
     is_reco_shuffled=False,
     mixing_features="search_group_name",
-    order_column="order",
-    order_ascending=True,
+    order_column="offer_score",
+    order_ascending=False,
 )
 
 diversification_off = DiversificationParams(
     is_active=False,
     is_reco_shuffled=False,
     mixing_features="search_group_name",
-    order_column="order",
-    order_ascending=True,
+    order_column="offer_score",
+    order_ascending=False,
 )
 
 
@@ -37,7 +37,7 @@ diversification_off = DiversificationParams(
 class ModelConfiguration:
     name: str
     description: str
-    scorer: offer_scorer.ScorerRetrieval
+    scorer: offer_scorer.OfferScorer
     retrieval_endpoint: RetrievalEndpoint
     retrieval_limit: int
     ranking_endpoint: RankingEndpoint

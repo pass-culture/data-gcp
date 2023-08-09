@@ -8,33 +8,13 @@ from pcreco.utils.env_vars import log_duration
 from typing import List
 import time
 import random
-from pcreco.core.scorer.retrieval_endpoint import RetrievalEndpoint
-from pcreco.core.scorer.ranking_endpoint import RankingEndpoint
-from dataclasses import dataclass
+from pcreco.core.endpoint.retrieval_endpoint import RetrievalEndpoint
+from pcreco.core.endpoint.ranking_endpoint import RankingEndpoint
+from pcreco.core.model.recommendable_offer import RecommendableOffer
+from pcreco.core.model.recommendable_item import RecommendableItem
 
 
-@dataclass
-class RecommendableOffer:
-    offer_id: str
-    item_id: str
-    venue_id: str
-    user_distance: float
-    booking_number: float
-    category: str
-    subcategory_id: str
-    stock_price: float
-    offer_creation_date: str
-    stock_beginning_date: str
-    search_group_name: str
-    venue_latitude: float
-    venue_longitude: float
-    item_score: float  # lower = better
-    order: int
-    random: float
-    offer_score: float = None  # higher = better
-
-
-class ScorerRetrieval:
+class OfferScorer:
     def __init__(
         self,
         user: User,
@@ -75,12 +55,14 @@ class ScorerRetrieval:
         )
         return recommendable_offers
 
-    def get_recommendable_offers(self, selected_items_list) -> List[RecommendableOffer]:
+    def get_recommendable_offers(
+        self, recommendable_items: List[RecommendableItem]
+    ) -> List[RecommendableOffer]:
         start = time.time()
         recommendable_offers_query = RecommendableOfferQueryBuilder().generate_query(
             order_query=self.model_params.ranking_order_query,
             offer_limit=self.model_params.ranking_limit,
-            selected_items=selected_items_list,
+            recommendable_items=recommendable_items,
             user=self.user,
         )
 
@@ -88,6 +70,8 @@ class ScorerRetrieval:
         if recommendable_offers_query is not None:
             connection = get_session()
             query_result = connection.execute(recommendable_offers_query).fetchall()
+
+        size = len(query_result)
 
         user_recommendation = [
             RecommendableOffer(
@@ -104,10 +88,10 @@ class ScorerRetrieval:
                 search_group_name=row[10],
                 venue_latitude=row[11],
                 venue_longitude=row[12],
-                item_score=row[13],
-                order=i,
+                item_score=row[13],  # lower is better
+                query_order=i,
                 random=random.random(),
-                offer_score=i,  # TODO
+                offer_score=size - i,  # higher is better
             )
             for i, row in enumerate(query_result)
         ]

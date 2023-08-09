@@ -1,6 +1,6 @@
 import datetime
 import pytz
-from pcreco.core.scorer.recommendable_offer import RecommendableOffer
+from pcreco.core.model.recommendable_offer import RecommendableOffer
 from pcreco.core.user import User
 import typing as t
 from pcreco.utils.db.db_connection import get_session
@@ -37,7 +37,7 @@ def save_context(
                 "offer_category": o.category,
                 "offer_subcategory_id": o.subcategory_id,
                 "offer_item_score": o.item_score,
-                "offer_order": o.order,
+                "offer_order": o.offer_score,
                 "offer_venue_id": o.venue_id,
             }
 

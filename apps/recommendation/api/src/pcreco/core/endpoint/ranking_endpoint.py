@@ -5,10 +5,11 @@ from pcreco.utils.env_vars import (
     log_duration,
 )
 from pcreco.models.reco.playlist_params import PlaylistParamsIn
-from pcreco.core.scorer.recommendable_offer import RecommendableOffer
+from pcreco.core.model.recommendable_offer import RecommendableOffer
 from datetime import datetime
 import typing as t
-from abc import ABC, abstractmethod
+from abc import abstractmethod
+from pcreco.core.endpoint import AbstractEndpoint
 
 
 def to_days(str_ts):
@@ -19,7 +20,7 @@ def to_days(str_ts):
         return None
 
 
-class RankingEndpoint(ABC):
+class RankingEndpoint(AbstractEndpoint):
     def init_input(self, user: User, params_in: PlaylistParamsIn):
         self.user = user
         self.user_input = str(self.user.id)
@@ -33,7 +34,7 @@ class RankingEndpoint(ABC):
 
 
 class DummyRankingEndpoint(RankingEndpoint):
-    """Returns the same list"""
+    """Return the same list"""
 
     def model_score(
         self, recommendable_offers: t.List[RecommendableOffer]
@@ -67,20 +68,20 @@ class ModelRankingEndpoint(RankingEndpoint):
     ) -> t.List[RecommendableOffer]:
         start = time.time()
         instances = self.get_instance(recommendable_offers)
+        prediction_result = endpoint_score(
+            instances=instances, endpoint_name=self.endpoint_name
+        )
         log_duration(
             f"ranking_endpoint {str(self.user.id)} offers : {len(recommendable_offers)}",
             start,
         )
-        prediction_result = endpoint_score(
-            instances=instances, endpoint_name=self.endpoint_name
-        )
         self.model_version = prediction_result.model_version
         self.model_display_name = prediction_result.model_display_name
-        log_duration(f"ranking_endpoint {str(self.user.id)}", start)
         # smallest = better (indices)
         prediction_result = {
             r["offer_id"]: r["score"] for r in prediction_result.predictions
         }
         for row in recommendable_offers:
-            row.offer_score = prediction_result.get(row.offer_id, 0)
-        return sorted(recommendable_offers, lambda x: x.offer_score, reverse=True)
+            row.offer_score = prediction_result[row.offer_id]
+        log_duration(f"ranking_endpoint {str(self.user.id)}", start)
+        return sorted(recommendable_offers, key=lambda x: x.offer_score, reverse=True)

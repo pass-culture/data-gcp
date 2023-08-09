@@ -1,6 +1,7 @@
 import os
 from enum import Enum
 from utils.secrets import access_secret
+import contextvars
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT", "passculture-data-ehp")
 NUMBER_OF_RECOMMENDATIONS = 20
@@ -16,6 +17,11 @@ SQL_BASE_PASSWORD = os.environ.get(
 )
 SQL_PORT = os.environ.get("SQL_PORT")
 SQL_HOST = os.environ.get("SQL_HOST")
+
+API_LOCAL = os.environ.get("API_LOCAL", "True")
+# logger
+cloud_trace_context = contextvars.ContextVar("cloud_trace_context", default="")
+http_request_context = contextvars.ContextVar("http_request_context", default=dict({}))
 
 
 class MixingFeatures(Enum):

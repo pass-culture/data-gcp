@@ -16,16 +16,19 @@ from core.model_engine.similar_offer import SimilarOffer
 from core.model_engine.recommendation import Recommendation
 from crud.user import get_user_profile
 from crud.offer import get_offer_characteristics
+from utils.env_vars import cloud_trace_context
+from utils.cloud_logging.setup import setup_logging
 
 app = FastAPI(title="Passculture refacto reco API")
 
-# async def setup_trace(request: Request):
-#     custom_logger.info("Setting up trace..")
-#     if "x-cloud-trace-context" in request.headers:
-#         cloud_trace_context.set(request.headers.get("x-cloud-trace-context"))
+
+async def setup_trace(request: Request):
+    custom_logger.info("Setting up trace..")
+    if "x-cloud-trace-context" in request.headers:
+        cloud_trace_context.set(request.headers.get("x-cloud-trace-context"))
 
 
-# custom_logger = setup_logging()
+custom_logger = setup_logging()
 
 
 def get_db():
@@ -67,8 +70,11 @@ def similar_offers(offer: OfferInput, user: UserInput, db: Session = Depends(get
     return offer_recommendations
 
 
-@app.post("/playlist_recommendation")
+@app.post("/playlist_recommendation", dependencies=[Depends(setup_trace)])
 def playlist_recommendation(user: UserInput, db: Session = Depends(get_db)):
+
+    log_extra_data = {"user_id": user.user_id}
+    custom_logger.info("Compute recommendations for user", extra=log_extra_data)
 
     call_id = str(uuid.uuid4())
 

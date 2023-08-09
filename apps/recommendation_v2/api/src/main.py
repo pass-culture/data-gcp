@@ -4,7 +4,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from fastapi_versioning import VersionedFastAPI, version
 from typing_extensions import Annotated
 
-from utils.database import Base, engine
+from utils.database import Base, engine, SessionLocal
 
 from sqlalchemy.orm import Session
 import uuid
@@ -29,6 +29,21 @@ Base.metadata.create_all(engine)
 
 # custom_logger = setup_logging()
 
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+@app.get("/")
+async def read_root(db: Session = Depends(get_db)):
+    # Vous pouvez utiliser la session "db" pour interagir avec la base de données ici
+    # Par exemple, db.query(VotreModele).all()
+    return {"message": "Hello, world!"}
+
+
+
 
 @app.get("/")
 def read_root():
@@ -42,11 +57,9 @@ def check():
 
 
 @app.post("/similar_offers")
-def similar_offers(offer: OfferInput, user: UserInput):
+def similar_offers(offer: OfferInput, user: UserInput, db: Session = Depends(get_db)):
 
     call_id = str(uuid.uuid4())
-
-    db = Session(bind=engine, expire_on_commit=False)
 
     user = get_user_profile(db, user.user_id, call_id, user.latitude, user.longitude)
 
@@ -60,17 +73,13 @@ def similar_offers(offer: OfferInput, user: UserInput):
 
     scoring.save_recommendation(db, offer_recommendations)
 
-    db.close()
-
     return offer_recommendations
 
 
 @app.post("/playlist_recommendation")
-def playlist_recommendation(user: UserInput):
+def playlist_recommendation(user: UserInput, db: Session = Depends(get_db)):
 
     call_id = str(uuid.uuid4())
-
-    db = Session(bind=engine, expire_on_commit=False)
 
     user = get_user_profile(db, user.user_id, call_id, user.latitude, user.longitude)
 
@@ -79,7 +88,5 @@ def playlist_recommendation(user: UserInput):
     user_recommendations = scoring.get_scoring(db)
 
     scoring.save_recommendation(db, user_recommendations)
-
-    db.close()
 
     return user_recommendations

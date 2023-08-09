@@ -46,6 +46,10 @@ class OfferScorer:
         # Ranking Phase
         recommendable_offers = self.get_recommendable_offers(prediction_items)
 
+        # nothing to score
+        if len(recommendable_offers) == 0:
+            return []
+
         recommendable_offers = self.ranking_endpoint.model_score(
             recommendable_offers=recommendable_offers
         )

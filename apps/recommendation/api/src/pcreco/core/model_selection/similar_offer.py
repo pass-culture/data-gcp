@@ -14,12 +14,28 @@ retrieval_offer = ModelConfiguration(
     name="similar_offer_model",
     description="""""",
     scorer=offer_scorer.OfferScorer,
-    retrieval_limit=200,
+    retrieval_limit=500,
     ranking_order_query="item_score ASC",
     ranking_limit=100,
     diversification_params=diversification_off,
     retrieval_endpoint=OfferRetrievalEndpoint(
         f"recommendation_user_retrieval_{ENV_SHORT_NAME}"
+    ),
+    ranking_endpoint=ModelRankingEndpoint(
+        f"recommendation_user_ranking_{ENV_SHORT_NAME}"
+    ),
+)
+
+retrieval_offer_version_b = ModelConfiguration(
+    name="similar_offer_model",
+    description="""""",
+    scorer=offer_scorer.OfferScorer,
+    retrieval_limit=500,
+    ranking_order_query="item_score ASC",
+    ranking_limit=100,
+    diversification_params=diversification_off,
+    retrieval_endpoint=OfferRetrievalEndpoint(
+        f"recommendation_user_retrieval_version_b_{ENV_SHORT_NAME}"
     ),
     ranking_endpoint=ModelRankingEndpoint(
         f"recommendation_user_ranking_{ENV_SHORT_NAME}"

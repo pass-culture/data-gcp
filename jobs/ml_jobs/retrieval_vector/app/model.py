@@ -39,12 +39,18 @@ class DefaultClient:
                 "stock_price": "float",
                 "offer_creation_date": "int",
                 "stock_beginning_date": "int",
+                "is_underage_recommendable": "int",
             },
         )
         self.ann.index(self.item_docs)
 
     def search(
-        self, vector: Document, n=50, query_filter: t.Dict = None, details: bool = False
+        self,
+        vector: Document,
+        n=50,
+        query_filter: t.Dict = None,
+        details: bool = False,
+        item_id: str = None,
     ) -> t.List[t.Dict]:
         docs = DocumentArray(vector)
         self.ann.search(docs, filter=query_filter, limit=n)
@@ -52,7 +58,7 @@ class DefaultClient:
         predictions = []
         for idx, row in enumerate(results):
             # don't retrieve same object.
-            if str(row.tags["item_id"]) == str(vector.id):
+            if item_id is not None and str(row.tags["item_id"]) == item_id:
                 pass
 
             if not details:

@@ -35,7 +35,7 @@ class User:
             text(
                 f"""
                 SELECT 
-                    FLOOR(DATE_PART('DAY',user_deposit_creation_date - user_birth_date)/365) as age,
+                    DATE_PART('year',AGE(user_birth_date)) as age,
                     COALESCE(user_theoretical_remaining_credit, user_deposit_initial_amount) as user_theoretical_remaining_credit,
                     COALESCE(booking_cnt, 0) as booking_cnt,
                     COALESCE(consult_offer, 0) as consult_offer,

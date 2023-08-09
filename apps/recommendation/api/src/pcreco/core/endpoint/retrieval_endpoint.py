@@ -5,11 +5,13 @@ from pcreco.utils.env_vars import (
     log_duration,
 )
 from pcreco.core.offer import Offer
-from pcreco.core.scorer import ModelEndpoint
 from pcreco.models.reco.playlist_params import PlaylistParamsIn
 from datetime import datetime
 from dataclasses import dataclass
 import typing as t
+from abc import abstractmethod
+from pcreco.core.endpoint import AbstractEndpoint
+from pcreco.core.model.recommendable_item import RecommendableItem
 
 
 @dataclass
@@ -67,12 +69,16 @@ class EqParams:
         return {}
 
 
-class RetrievalEndpoint(ModelEndpoint):
+class RetrievalEndpoint(AbstractEndpoint):
     def init_input(self, user: User, params_in: PlaylistParamsIn):
         self.user = user
         self.user_input = str(self.user.id)
         self.params_in = params_in
         self.is_geolocated = self.user.is_geolocated
+
+    @abstractmethod
+    def get_instance(self, size):
+        pass
 
     def get_params(self):
         params = []
@@ -123,11 +129,11 @@ class RetrievalEndpoint(ModelEndpoint):
         )
         params.append(EqParams(label="offer_is_duo", value=self.params_in.offer_is_duo))
 
-        # TODO : offer_type_list
+        # TODO : Handle offer_type_list in reco
 
         return {"$and": {k: v for d in params for k, v in d.filter().items()}}
 
-    def model_score(self, size: int):
+    def model_score(self, size: int) -> t.List[RecommendableItem]:
         start = time.time()
         instances = self.get_instance(size)
         log_duration(f"retrieval_endpoint {instances}", start)
@@ -137,8 +143,11 @@ class RetrievalEndpoint(ModelEndpoint):
         self.model_version = prediction_result.model_version
         self.model_display_name = prediction_result.model_display_name
         log_duration("retrieval_endpoint", start)
-        # smallest = better (indices)
-        return {r["item_id"]: r["idx"] for r in prediction_result.predictions}
+        # smallest = better (cosine similarity or inner_product)
+        return [
+            RecommendableItem(item_id=r["item_id"], item_score=r["score"])
+            for r in prediction_result.predictions
+        ]
 
 
 class FilterRetrievalEndpoint(RetrievalEndpoint):

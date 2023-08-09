@@ -7,7 +7,7 @@ import random
 from pcreco.utils.env_vars import (
     NUMBER_OF_RECOMMENDATIONS,
 )
-from pcreco.core.scorer.recommendable_offer import RecommendableOffer
+from pcreco.core.model.recommendable_offer import RecommendableOffer
 
 
 def order_offers_by_score_and_diversify_features(

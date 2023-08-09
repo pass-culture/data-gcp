@@ -55,6 +55,14 @@ SIMILAR_OFFER_ENDPOINTS = {
         cold_start_model=similar_offer_endpoints.retrieval_offer,
         bookings_count=0,
     ),
+    # Force cold start mode
+    "cold_start": ModelFork(
+        warm_start_model=similar_offer_endpoints.retrieval_cs_offer,
+        cold_start_model=similar_offer_endpoints.retrieval_cs_offer,
+        bookings_count=None,
+        clicks_count=None,
+        favorites_count=None,
+    ),
 }
 
 

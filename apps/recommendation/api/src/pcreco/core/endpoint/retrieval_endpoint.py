@@ -145,7 +145,7 @@ class RetrievalEndpoint(AbstractEndpoint):
         log_duration("retrieval_endpoint", start)
         # smallest = better (cosine similarity or inner_product)
         return [
-            RecommendableItem(item_id=r["item_id"], item_score=r["score"])
+            RecommendableItem(item_id=r["item_id"], item_score=r.get("score", r["idx"]))
             for r in prediction_result.predictions
         ]
 

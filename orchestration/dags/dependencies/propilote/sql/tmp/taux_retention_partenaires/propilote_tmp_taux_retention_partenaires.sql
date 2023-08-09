@@ -22,8 +22,7 @@ WITH dates AS
    FROM dates
    LEFT JOIN {{ bigquery_analytics_dataset }}.enriched_cultural_partner_data ON dates.month >= DATE_TRUNC(partner_creation_date, MONTH)
    LEFT JOIN {{ bigquery_analytics_dataset }}.region_department ON enriched_cultural_partner_data.partner_department_code = region_department.num_dep
-   WHERE was_registered_last_year IS TRUE
-     AND total_offers_created > 0
+   WHERE enriched_cultural_partner_data.partner_id IN (SELECT partner_id FROM {{ bigquery_analytics_dataset }}.retention_partner_history WHERE last_bookable_date IS NOT NULL)
    GROUP BY 1,
             2,
             3)
@@ -31,8 +30,8 @@ SELECT active.month AS mois ,
        active.dimension_name ,
        active.dimension_value ,
        NULL AS user_type ,
-       "taux_activation_partenaires" AS
-INDICATOR ,
+       "taux_retention_partenaires" AS
+indicator ,
        nb_total_partners AS denominator ,
        nb_active_partners AS numerator
 FROM all_partners

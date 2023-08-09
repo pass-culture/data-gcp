@@ -1,9 +1,9 @@
 WITH dates AS
-  (SELECT DISTINCT DATE_TRUNC(deposit_creation_date, MONTH) AS MONTH
+  (SELECT DISTINCT DATE_TRUNC(deposit_creation_date, MONTH) AS month
    FROM `{{ bigquery_analytics_dataset }}.enriched_deposit_data`
    WHERE deposit_creation_date >= '2023-01-01' ) ,
      active AS
-  (SELECT DATE_TRUNC(retention_partner_history.day, MONTH) AS MONTH ,
+  (SELECT DATE_TRUNC(retention_partner_history.day, MONTH) AS month ,
           "{{ params.group_type }}" AS dimension_name , {% IF params.group_type == 'NAT' %} 'NAT' {% ELSE %} {{ params.group_type_name }} {% endif %} AS dimension_value ,
                                                                                                                                                     COUNT(DISTINCT retention_partner_history.partner_id) AS nb_active_partners
    FROM dates
@@ -16,7 +16,7 @@ WITH dates AS
             2,
             3) ,
      all_partners AS
-  (SELECT DATE_TRUNC(partner_creation_date, MONTH) AS MONTH ,
+  (SELECT DATE_TRUNC(partner_creation_date, MONTH) AS month ,
           "{{ params.group_type }}" AS dimension_name , {% IF params.group_type == 'NAT' %} 'NAT' {% ELSE %} {{ params.group_type_name }} {% endif %} AS dimension_value ,
                                                                                                                                                     COUNT(partner_id) AS nb_total_partners
    FROM dates
@@ -26,7 +26,7 @@ WITH dates AS
    GROUP BY 1,
             2,
             3)
-SELECT active.month AS mois ,
+SELECT active.month ,
        active.dimension_name ,
        active.dimension_value ,
        NULL AS user_type ,

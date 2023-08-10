@@ -23,16 +23,22 @@ DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"algo-default-deployment-{ENV_SHORT_NAME}"
 BASE_DIR = "data-gcp/jobs/ml_jobs/algo_training"
 
-standard_dict = {
-    "prod": "n1-standard-4",
-    "dev": "n1-standard-2",
+low_dict = {
+    "prod": "n1-standard-2",
     "stg": "n1-standard-2",
+    "dev": "n1-standard-2",
+}
+standard_dict = {
+    "prod": "n1-standard-8",
+    "stg": "n1-standard-4",
+    "dev": "n1-standard-2",
 }
 high_dict = {
-    "prod": "n1-standard-8",
-    "dev": "n1-standard-2",
+    "prod": "n1-highmem-8",
     "stg": "n1-standard-4",
+    "dev": "n1-standard-2",
 }
+min_nodes = {"prod": 1, "dev": 1, "stg": 1}
 schedule_dict = {"prod": "0 8 * * *", "dev": "0 7 * * *", "stg": "0 7 * * *"}
 
 
@@ -42,21 +48,31 @@ models_to_deploy = [
         "endpoint_name": f"recommendation_user_retrieval_{ENV_SHORT_NAME}",
         "version_name": "v_{{ ts_nodash }}",
         "instance_type": high_dict[ENV_SHORT_NAME],
-        "min_nodes": 2,
+        "min_nodes": min_nodes[ENV_SHORT_NAME],
     },
+    # fallback endpoint
+    {
+        "experiment_name": f"retrieval_recommendation_v1.1_{ENV_SHORT_NAME}",
+        "endpoint_name": f"recommendation_user_retrieval_version_b_{ENV_SHORT_NAME}",
+        "version_name": "v_{{ ts_nodash }}",
+        "instance_type": standard_dict[ENV_SHORT_NAME],
+        "min_nodes": min_nodes[ENV_SHORT_NAME],
+    },
+    # ranking endpoint
     {
         "experiment_name": f"ranking_endpoint_v1.1_{ENV_SHORT_NAME}",
         "endpoint_name": f"recommendation_user_ranking_{ENV_SHORT_NAME}",
         "version_name": "v_{{ ts_nodash }}",
         "instance_type": standard_dict[ENV_SHORT_NAME],
-        "min_nodes": 2,
+        "min_nodes": min_nodes[ENV_SHORT_NAME],
     },
+    # semantic endpoint
     {
         "experiment_name": f"retrieval_semantic_vector_v0.1_{ENV_SHORT_NAME}",
         "endpoint_name": f"recommendation_semantic_retrieval_{ENV_SHORT_NAME}",
         "version_name": "v_{{ ts_nodash }}",
         "instance_type": high_dict[ENV_SHORT_NAME],
-        "min_nodes": 1,
+        "min_nodes": min_nodes[ENV_SHORT_NAME],
     },
 ]
 
@@ -120,7 +136,7 @@ with DAG(
         """
 
         deploy_model = SSHGCEOperator(
-            task_id=f"deploy_model_{experiment_name}",
+            task_id=f"deploy_model_{experiment_name}_{endpoint_name}",
             instance_name=GCE_INSTANCE,
             base_dir=BASE_DIR,
             command=deploy_command,

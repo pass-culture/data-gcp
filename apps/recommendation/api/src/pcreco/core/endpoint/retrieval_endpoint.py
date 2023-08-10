@@ -88,7 +88,6 @@ class RetrievalEndpoint(AbstractEndpoint):
         if not self.is_geolocated:
             params.append(EqParams(label="is_geolocated", value=0))
 
-        # TODO : fix
         # if self.user.age and self.user.age < 18:
         #    params.append(EqParams(label="is_underage_recommendable", value=1))
 
@@ -141,7 +140,9 @@ class RetrievalEndpoint(AbstractEndpoint):
         instances = self.get_instance(size)
         log_duration(f"retrieval_endpoint {instances}", start)
         prediction_result = endpoint_score(
-            instances=instances, endpoint_name=self.endpoint_name
+            instances=instances,
+            endpoint_name=self.endpoint_name,
+            fallback_endpoints=self.fallback_endpoints,
         )
         self.model_version = prediction_result.model_version
         self.model_display_name = prediction_result.model_display_name

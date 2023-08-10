@@ -6,6 +6,7 @@ import sys
 from model import DefaultClient, RecoClient, TextClient
 from docarray import Document
 import json
+import uuid
 
 
 logger = logging.getLogger(__name__)
@@ -58,7 +59,9 @@ def input_size(size):
         return 10
 
 
-def filter(selected_params, order_by: str, ascending: bool, size: int, debug: bool):
+def filter(
+    selected_params, order_by: str, ascending: bool, size: int, debug: bool, call_id
+):
     try:
         results = model.filter(
             selected_params,
@@ -70,11 +73,20 @@ def filter(selected_params, order_by: str, ascending: bool, size: int, debug: bo
         return jsonify({"predictions": results})
     except Exception as e:
         logger.exception(e)
-        logger.info("error")
+        logger.error(
+            "error",
+            extra={
+                "uuid": call_id,
+                "params": selected_params,
+                "size": size,
+            },
+        )
         return jsonify({"predictions": []})
 
 
-def search_vector(vector: Document, size: int, selected_params, debug, item_id=None):
+def search_vector(
+    vector: Document, size: int, selected_params, debug, call_id, item_id=None
+):
     try:
         if vector is not None:
             results = model.search(
@@ -90,7 +102,14 @@ def search_vector(vector: Document, size: int, selected_params, debug, item_id=N
             return jsonify({"predictions": []})
     except Exception as e:
         logger.exception(e)
-        logger.info("error")
+        logger.error(
+            "error",
+            extra={
+                "uuid": call_id,
+                "params": selected_params,
+                "size": size,
+            },
+        )
         return jsonify({"predictions": []})
 
 
@@ -102,6 +121,7 @@ def is_alive():
 
 @app.route("/predict", methods=["POST"])
 def predict():
+    call_id = uuid.uuid4()
     input_json = request.get_json()["instances"][0]
     model_type = input_json["model_type"]
     debug = bool(input_json.get("debug", 0))
@@ -112,29 +132,73 @@ def predict():
         if isinstance(model, RecoClient):
             if model_type == "recommendation":
                 input_str = str(input_json["user_id"])
+                logger.info(
+                    f"recommendation",
+                    extra={
+                        "uuid": call_id,
+                        "user_id": input_str,
+                        "params": selected_params,
+                        "size": size,
+                    },
+                )
                 vector = model.user_vector(input_str)
-                return search_vector(vector, size, selected_params, debug)
+                return search_vector(
+                    vector, size, selected_params, debug, call_id=call_id
+                )
         if isinstance(model, TextClient):
             if model_type == "semantic":
                 input_str = str(input_json["text"])
+                logger.info(
+                    f"semantic",
+                    extra={
+                        "uuid": call_id,
+                        "text": input_str,
+                        "params": selected_params,
+                        "size": size,
+                    },
+                )
                 vector = model.text_vector(input_str)
-                return search_vector(vector, size, selected_params, debug)
+                return search_vector(
+                    vector, size, selected_params, debug, call_id=call_id
+                )
 
         if model_type == "similar_offer":
             input_str = str(input_json["offer_id"])
+            logger.info(
+                f"similar_offer",
+                extra={
+                    "uuid": call_id,
+                    "item_id": input_str,
+                    "params": selected_params,
+                    "size": size,
+                },
+            )
             vector = model.offer_vector(input_str)
             return search_vector(
-                vector, size, selected_params, debug, item_id=input_str
+                vector, size, selected_params, debug, item_id=input_str, call_id=call_id
             )
 
         if model_type == "filter":
             order_by = str(input_json["order_by"])
             ascending = bool(input_json["ascending"])
-            return filter(selected_params, order_by, ascending, size, debug)
+            logger.info(
+                f"filter",
+                extra={
+                    "uuid": call_id,
+                    "order_by": order_by,
+                    "params": selected_params,
+                    "size": size,
+                },
+            )
+            return filter(
+                selected_params, order_by, ascending, size, debug, call_id=call_id
+            )
 
     except Exception as e:
-        log_data = {"event": "error", "response": str(e)}
-        logger.info("error", extra=log_data)
         logger.exception(e)
 
     return jsonify({"predictions": []})
+
+
+if __name__ == "__main__":
+    app.run()

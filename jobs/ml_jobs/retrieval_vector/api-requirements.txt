@@ -6,5 +6,6 @@ pandas
 pyarrow
 loguru==0.5.3
 docarray[annlite]==0.21.0
+annlite==0.5.10
 sentence-transformers
 python-json-logger

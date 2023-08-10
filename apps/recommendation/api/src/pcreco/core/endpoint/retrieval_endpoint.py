@@ -33,11 +33,13 @@ class RangeParams:
 
     def filter(self):
         if self.min_val is not None and self.max_val is not None:
-            return {self.label: {"$gte": self.min_val, "$lte": self.max_val}}
+            return {
+                self.label: {"$gte": float(self.min_val), "$lte": float(self.max_val)}
+            }
         elif self.min_val is not None:
-            return {self.label: {"$gte": self.min_val}}
+            return {self.label: {"$gte": float(self.min_val)}}
         elif self.max_val is not None:
-            return {self.label: {"$lte": self.max_val}}
+            return {self.label: {"$lte": float(self.max_val)}}
         else:
             return {}
 
@@ -65,7 +67,7 @@ class EqParams:
 
     def filter(self):
         if self.value is not None:
-            return {self.label: {"$eq": self.value}}
+            return {self.label: {"$eq": float(self.value)}}
         return {}
 
 
@@ -82,10 +84,10 @@ class RetrievalEndpoint(AbstractEndpoint):
 
     def get_params(self):
         params = []
+
         if not self.is_geolocated:
             params.append(EqParams(label="is_geolocated", value=0))
 
-        # TODO : fix
         # if self.user.age and self.user.age < 18:
         #    params.append(EqParams(label="is_underage_recommendable", value=1))
 
@@ -138,7 +140,9 @@ class RetrievalEndpoint(AbstractEndpoint):
         instances = self.get_instance(size)
         log_duration(f"retrieval_endpoint {instances}", start)
         prediction_result = endpoint_score(
-            instances=instances, endpoint_name=self.endpoint_name
+            instances=instances,
+            endpoint_name=self.endpoint_name,
+            fallback_endpoints=self.fallback_endpoints,
         )
         self.model_version = prediction_result.model_version
         self.model_display_name = prediction_result.model_display_name

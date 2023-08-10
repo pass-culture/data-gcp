@@ -22,6 +22,11 @@ RECOMMENDATION_ENDPOINTS = {
         clicks_count=25,
         favorites_count=None,
     ),
+    "version_b": ModelFork(
+        warm_start_model=recommendation_endpoints.retrieval_reco_version_b,
+        cold_start_model=recommendation_endpoints.retrieval_filter_version_b,
+        bookings_count=0,
+    ),
     # Deprecated: Retrieve only top offers
     "top_offers": ModelFork(
         warm_start_model=recommendation_endpoints.retrieval_filter,
@@ -53,6 +58,11 @@ SIMILAR_OFFER_ENDPOINTS = {
     "default": ModelFork(
         warm_start_model=similar_offer_endpoints.retrieval_offer,
         cold_start_model=similar_offer_endpoints.retrieval_offer,
+        bookings_count=0,
+    ),
+    "version_b": ModelFork(
+        warm_start_model=similar_offer_endpoints.retrieval_offer_version_b,
+        cold_start_model=similar_offer_endpoints.retrieval_cs_offer,
         bookings_count=0,
     ),
     # Force cold start mode

@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 
-
 @dataclass
 class RecommendableOffer:
     offer_id: str

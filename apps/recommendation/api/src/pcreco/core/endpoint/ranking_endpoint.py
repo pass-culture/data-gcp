@@ -12,12 +12,13 @@ from abc import abstractmethod
 from pcreco.core.endpoint import AbstractEndpoint
 
 
-def to_days(str_ts):
-    date_format = "%Y-%m-%dT%H:%M:%S"
+def to_days(dt: datetime):
     try:
-        return int((datetime.strptime(str_ts, date_format) - datetime.now()).days)
-    except:
-        return None
+        if dt is not None:
+            return (dt - datetime.now()).days
+    except Exception as e:
+        pass
+    return None
 
 
 class RankingEndpoint(AbstractEndpoint):
@@ -49,13 +50,7 @@ class ModelRankingEndpoint(RankingEndpoint):
         self, recommendable_offers: t.List[RecommendableOffer]
     ) -> t.List[RecommendableOffer]:
         offers_list = []
-        start = time.time()
         for row in recommendable_offers:
-            log_duration(f"stock_beginning_days : {row.offer_creation_date}", start)
-            log_duration(
-                f"offer_creation_date : {row.stock_beginning_date}",
-                start,
-            )
             offers_list.append(
                 {
                     "offer_id": row.offer_id,

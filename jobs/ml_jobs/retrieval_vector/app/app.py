@@ -125,7 +125,7 @@ def predict():
     input_json = request.get_json()["instances"][0]
     model_type = input_json["model_type"]
     debug = bool(input_json.get("debug", 0))
-    selected_params = input_json.get("params", {})
+    selected_params = model.parse_params(input_json.get("params", {}))
     size = input_size(input_json.get("size", 500))
 
     try:

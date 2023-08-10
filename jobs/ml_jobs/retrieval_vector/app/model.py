@@ -23,6 +23,8 @@ filter_dtypes = {
     "$lte": "float",
     "$gte": "float",
 }
+
+
 class DefaultClient:
     def __init__(self, metric: str, n_dim: int) -> None:
         self.metric = metric
@@ -37,7 +39,7 @@ class DefaultClient:
             return self.item_docs[var]
         except:
             return None
-        
+
     def parse_params(self, params):
         result = {}
         for key, value in params.items():

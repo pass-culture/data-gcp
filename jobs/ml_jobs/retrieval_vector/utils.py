@@ -78,9 +78,9 @@ def get_users_metadata():
 
 def to_ts(f):
     try:
-        return int(f.timestamp())
+        return float(f.timestamp())
     except:
-        return None
+        return 0.0
 
 
 def save_model_type(model_type):
@@ -106,8 +106,8 @@ def get_item_docs(item_embedding_dict, items_df):
                 "offer_is_duo": float(row.offer_is_duo),
                 "booking_number": float(row.booking_number),
                 "stock_price": float(row.stock_price),
-                "offer_creation_date": float(to_ts(row.offer_creation_date)),
-                "stock_beginning_date": float(to_ts(row.stock_beginning_date)),
+                "offer_creation_date": to_ts(row.offer_creation_date),
+                "stock_beginning_date": to_ts(row.stock_beginning_date),
                 "example_offer_id": str(row.example_offer_id),
                 "example_offer_name": str(row.example_offer_name),
             }

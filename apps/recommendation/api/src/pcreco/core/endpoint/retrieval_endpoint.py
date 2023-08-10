@@ -117,8 +117,8 @@ class RetrievalEndpoint(AbstractEndpoint):
         params.append(
             RangeParams(
                 label="stock_price",
-                min_val=float(self.params_in.price_min),
-                max_val=float(price_max),
+                min_val=self.params_in.price_min,
+                max_val=price_max,
             )
         )
         # search_group_names
@@ -131,9 +131,7 @@ class RetrievalEndpoint(AbstractEndpoint):
         params.append(
             ListParams(label="subcategory_id", values=self.params_in.subcategories_id)
         )
-        params.append(
-            EqParams(label="offer_is_duo", value=float(self.params_in.offer_is_duo))
-        )
+        params.append(EqParams(label="offer_is_duo", value=self.params_in.offer_is_duo))
 
         # TODO : Handle offer_type_list in reco
 

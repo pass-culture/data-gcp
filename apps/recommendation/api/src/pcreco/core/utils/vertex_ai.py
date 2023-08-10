@@ -4,14 +4,17 @@ from google.cloud import aiplatform
 from google.protobuf import json_format
 from google.protobuf.struct_pb2 import Value
 from pcreco.utils.env_vars import GCP_PROJECT
+from google.api_core.exceptions import DeadlineExceeded
 from cachetools import cached, TTLCache
 from dataclasses import dataclass
 import concurrent.futures
 from functools import partial
+import grpc
 
 
 @dataclass
 class PredictionResult:
+    status: str
     predictions: List[str]
     model_version: str
     model_display_name: str
@@ -51,17 +54,24 @@ def parallel_endpoint_score(endpoint_name, instances):
     return results
 
 
-def endpoint_score(endpoint_name, instances) -> PredictionResult:
-    response = __predict_model(
-        endpoint_name=endpoint_name,
-        location="europe-west1",
-        instances=instances,
-    )
-    return PredictionResult(
-        predictions=response["predictions"],
-        model_display_name=response["model_display_name"],
-        model_version=response["model_version_id"],
-    )
+def endpoint_score(endpoint_name, instances, fallback_endpoints=[]) -> PredictionResult:
+    for endpoint in [endpoint_name] + fallback_endpoints:
+        response = __predict_model(
+            endpoint_name=endpoint,
+            location="europe-west1",
+            instances=instances,
+        )
+        prediction_result = PredictionResult(
+            status=response["status"],
+            predictions=response["predictions"],
+            model_display_name=response["model_display_name"],
+            model_version=response["model_version_id"],
+        )
+        # if we have results, return, else fallback_endpoints
+        if len(response["predictions"]) > 0:
+            return prediction_result
+    # default
+    return prediction_result
 
 
 def __predict_model(
@@ -74,29 +84,50 @@ def __predict_model(
     `instances` can be either single instance of type dict or a list
     of instances.
     """
-
-    client = get_client(api_endpoint)
-    try:
-        model_params = get_model(endpoint_name, location)
-    # TODO fix this
-    except:
-        model_params = __get_model(endpoint_name, location)
-
-    instances = instances if type(instances) == list else [instances]
-    instances = [
-        json_format.ParseDict(instance_dict, Value()) for instance_dict in instances
-    ]
-    parameters_dict = {}
-    parameters = json_format.ParseDict(parameters_dict, Value())
-    response = client.predict(
-        endpoint=model_params["endpoint_path"],
-        instances=instances,
-        parameters=parameters,
-    )
-
-    response_dict = {
-        "predictions": response.predictions,
-        "model_version_id": model_params["model_version_id"],
-        "model_display_name": model_params["model_name"],
+    default_error = {
+        "status": "success",
+        "predictions": [],
+        "model_version_id": "unknown",
+        "model_display_name": "unknown",
     }
+    try:
+        client = get_client(api_endpoint)
+        try:
+            model_params = get_model(endpoint_name, location)
+        # TODO fix this
+        except:
+            model_params = __get_model(endpoint_name, location)
+
+        instances = instances if type(instances) == list else [instances]
+        instances = [
+            json_format.ParseDict(instance_dict, Value()) for instance_dict in instances
+        ]
+        parameters_dict = {}
+        parameters = json_format.ParseDict(parameters_dict, Value())
+        try:
+            response = client.predict(
+                endpoint=model_params["endpoint_path"],
+                instances=instances,
+                parameters=parameters,
+                timeout=1,
+            )
+        except DeadlineExceeded:
+            return {
+                "status": "error",
+                "predictions": [],
+                "model_version_id": model_params["model_version_id"],
+                "model_display_name": model_params["model_name"],
+            }
+
+        response_dict = {
+            "status": "success",
+            "predictions": response.predictions,
+            "model_version_id": model_params["model_version_id"],
+            "model_display_name": model_params["model_name"],
+        }
+    except grpc._channel._InactiveRpcError as e:
+        return default_error
+    except Exception as e:
+        return default_error
+
     return response_dict

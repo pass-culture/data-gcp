@@ -14,16 +14,23 @@ from pcreco.core.endpoint.ranking_endpoint import (
 )
 import pcreco.core.scorer.offer as offer_scorer
 
+RETRIEVAL_LIMIT = 500
+RANKING_LIMIT = 200
+
 retrieval_filter = ModelConfiguration(
     name="recommendation_filter",
     description="""""",
     scorer=offer_scorer.OfferScorer,
-    retrieval_limit=200,
+    retrieval_limit=RETRIEVAL_LIMIT,
     ranking_order_query="booking_number DESC",
-    ranking_limit=100,
+    ranking_limit=RANKING_LIMIT,
     diversification_params=diversification_on,
     retrieval_endpoint=FilterRetrievalEndpoint(
-        f"recommendation_user_retrieval_{ENV_SHORT_NAME}"
+        endpoint_name=f"recommendation_user_retrieval_{ENV_SHORT_NAME}",
+        fallback_endpoints=[
+            f"recommendation_user_retrieval_version_b_{ENV_SHORT_NAME}",
+            f"recommendation_semantic_retrieval_{ENV_SHORT_NAME}",
+        ],
     ),
     ranking_endpoint=ModelRankingEndpoint(
         f"recommendation_user_ranking_{ENV_SHORT_NAME}"
@@ -35,12 +42,49 @@ retrieval_reco = ModelConfiguration(
     name="recommendation_user",
     description="""""",
     scorer=offer_scorer.OfferScorer,
-    retrieval_limit=200,
+    retrieval_limit=RETRIEVAL_LIMIT,
     ranking_order_query="booking_number DESC",
-    ranking_limit=100,
+    ranking_limit=RANKING_LIMIT,
     diversification_params=diversification_on,
     retrieval_endpoint=UserRetrievalEndpoint(
-        f"recommendation_user_retrieval_{ENV_SHORT_NAME}"
+        endpoint_name=f"recommendation_user_retrieval_{ENV_SHORT_NAME}",
+        fallback_endpoints=[
+            f"recommendation_user_retrieval_version_b_{ENV_SHORT_NAME}"
+        ],
+    ),
+    ranking_endpoint=ModelRankingEndpoint(
+        f"recommendation_user_ranking_{ENV_SHORT_NAME}"
+    ),
+)
+
+retrieval_filter_version_b = ModelConfiguration(
+    name="recommendation_filter",
+    description="""""",
+    scorer=offer_scorer.OfferScorer,
+    retrieval_limit=RETRIEVAL_LIMIT,
+    ranking_order_query="booking_number DESC",
+    ranking_limit=RANKING_LIMIT,
+    diversification_params=diversification_on,
+    retrieval_endpoint=FilterRetrievalEndpoint(
+        endpoint_name=f"recommendation_user_retrieval_version_b_{ENV_SHORT_NAME}",
+        fallback_endpoints=[f"recommendation_user_retrieval_{ENV_SHORT_NAME}"],
+    ),
+    ranking_endpoint=ModelRankingEndpoint(
+        f"recommendation_user_ranking_{ENV_SHORT_NAME}"
+    ),
+)
+
+retrieval_reco_version_b = ModelConfiguration(
+    name="recommendation_user",
+    description="""""",
+    scorer=offer_scorer.OfferScorer,
+    retrieval_limit=RETRIEVAL_LIMIT,
+    ranking_order_query="booking_number DESC",
+    ranking_limit=RANKING_LIMIT,
+    diversification_params=diversification_on,
+    retrieval_endpoint=UserRetrievalEndpoint(
+        endpoint_name=f"recommendation_user_retrieval_version_b_{ENV_SHORT_NAME}",
+        fallback_endpoints=[f"recommendation_user_retrieval_{ENV_SHORT_NAME}"],
     ),
     ranking_endpoint=ModelRankingEndpoint(
         f"recommendation_user_ranking_{ENV_SHORT_NAME}"

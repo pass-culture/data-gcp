@@ -44,7 +44,7 @@ class DefaultClient:
         result = {}
         for key, value in params.items():
             if isinstance(value, dict):
-                result[key] = self.parse_params(value, filter_dtypes)
+                result[key] = self.parse_params(value)
             else:
                 data_type = filter_dtypes.get(key)
                 if data_type == "str":

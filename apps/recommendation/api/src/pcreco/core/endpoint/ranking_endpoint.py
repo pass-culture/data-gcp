@@ -49,7 +49,10 @@ class ModelRankingEndpoint(RankingEndpoint):
         self, recommendable_offers: t.List[RecommendableOffer]
     ) -> t.List[RecommendableOffer]:
         offers_list = []
+
         for row in recommendable_offers:
+            log_duration(f"stock_beginning_days : {row.offer_creation_date}")
+            log_duration(f"offer_creation_date : {row.stock_beginning_date}")
             offers_list.append(
                 {
                     "offer_id": row.offer_id,

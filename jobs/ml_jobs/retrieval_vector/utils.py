@@ -95,10 +95,10 @@ def get_item_docs(item_embedding_dict, items_df):
         if embedding_id is not None:
             _item_id = row.item_id
             metadata = {
-                "item_id": _item_id,
-                "category": str(row.category),
-                "subcategory_id": str(row.subcategory_id),
-                "search_group_name": str(row.search_group_name),
+                "item_id": str(_item_id),
+                "category": str(row.category or ""),
+                "subcategory_id": str(row.subcategory_id or ""),
+                "search_group_name": str(row.search_group_name or ""),
                 "is_numerical": float(row.is_numerical),
                 "is_national": float(row.is_national),
                 "is_geolocated": float(row.is_geolocated),
@@ -106,10 +106,10 @@ def get_item_docs(item_embedding_dict, items_df):
                 "offer_is_duo": float(row.offer_is_duo),
                 "booking_number": float(row.booking_number),
                 "stock_price": float(row.stock_price),
-                "offer_creation_date": to_ts(row.offer_creation_date),
-                "stock_beginning_date": to_ts(row.stock_beginning_date),
-                "example_offer_id": row.example_offer_id,
-                "example_offer_name": row.example_offer_name,
+                "offer_creation_date": float(to_ts(row.offer_creation_date)),
+                "stock_beginning_date": float(to_ts(row.stock_beginning_date)),
+                "example_offer_id": str(row.example_offer_id),
+                "example_offer_name": str(row.example_offer_name),
             }
             docs.append(Document(id=_item_id, tags=metadata, embedding=embedding_id))
 

@@ -86,7 +86,7 @@ class RetrievalEndpoint(AbstractEndpoint):
         params = []
 
         if not self.is_geolocated:
-            params.append(EqParams(label="is_geolocated", value=0))
+            params.append(EqParams(label="is_geolocated", value=float(0.0)))
 
         # if self.user.age and self.user.age < 18:
         #    params.append(EqParams(label="is_underage_recommendable", value=1))
@@ -116,7 +116,9 @@ class RetrievalEndpoint(AbstractEndpoint):
 
         params.append(
             RangeParams(
-                label="stock_price", min_val=self.params_in.price_min, max_val=price_max
+                label="stock_price",
+                min_val=float(self.params_in.price_min),
+                max_val=float(price_max),
             )
         )
         # search_group_names
@@ -129,7 +131,9 @@ class RetrievalEndpoint(AbstractEndpoint):
         params.append(
             ListParams(label="subcategory_id", values=self.params_in.subcategories_id)
         )
-        params.append(EqParams(label="offer_is_duo", value=self.params_in.offer_is_duo))
+        params.append(
+            EqParams(label="offer_is_duo", value=float(self.params_in.offer_is_duo))
+        )
 
         # TODO : Handle offer_type_list in reco
 
@@ -149,7 +153,9 @@ class RetrievalEndpoint(AbstractEndpoint):
         log_duration("retrieval_endpoint", start)
         # smallest = better (cosine similarity or inner_product)
         return [
-            RecommendableItem(item_id=r["item_id"], item_score=r.get("score", r["idx"]))
+            RecommendableItem(
+                item_id=r["item_id"], item_score=float(r.get("score", r["idx"]))
+            )
             for r in prediction_result.predictions
         ]
 

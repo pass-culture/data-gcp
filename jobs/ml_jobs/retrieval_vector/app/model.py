@@ -3,7 +3,26 @@ from docarray import DocumentArray, Document
 from annlite import AnnLite
 import uuid
 
+dtypes = {
+    "category": "str",
+    "subcategory_id": "str",
+    "search_group_name": "str",
+    "is_numerical": "float",
+    "is_national": "float",
+    "is_geolocated": "float",
+    "offer_is_duo": "float",
+    "booking_number": "float",
+    "stock_price": "float",
+    "offer_creation_date": "float",
+    "stock_beginning_date": "float",
+    "is_underage_recommendable": "float",
+}
 
+filter_dtypes = {
+    "$eq": "float",
+    "$lte": "float",
+    "$gte": "float",
+}
 class DefaultClient:
     def __init__(self, metric: str, n_dim: int) -> None:
         self.metric = metric
@@ -18,6 +37,21 @@ class DefaultClient:
             return self.item_docs[var]
         except:
             return None
+        
+    def parse_params(self, params):
+        result = {}
+        for key, value in params.items():
+            if isinstance(value, dict):
+                result[key] = self.parse_params(value, filter_dtypes)
+            else:
+                data_type = filter_dtypes.get(key)
+                if data_type == "str":
+                    result[key] = str(value)
+                elif data_type == "float":
+                    result[key] = float(value)
+                else:
+                    result[key] = value
+        return result
 
     def index(self):
         self.ann = AnnLite(
@@ -27,20 +61,7 @@ class DefaultClient:
             ef_construction=200,  # default
             ef_search=500,  # limit size
             max_connection=48,  # higher better
-            columns={
-                "category": "str",
-                "subcategory_id": "str",
-                "search_group_name": "str",
-                "is_numerical": "float",
-                "is_national": "float",
-                "is_geolocated": "float",
-                "offer_is_duo": "float",
-                "booking_number": "float",
-                "stock_price": "float",
-                "offer_creation_date": "float",
-                "stock_beginning_date": "float",
-                "is_underage_recommendable": "float",
-            },
+            columns=dtypes,
         )
         self.ann.index(self.item_docs)
 

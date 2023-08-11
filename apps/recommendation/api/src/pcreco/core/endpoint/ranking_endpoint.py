@@ -12,12 +12,13 @@ from abc import abstractmethod
 from pcreco.core.endpoint import AbstractEndpoint
 
 
-def to_days(str_ts):
-    date_format = "%Y-%m-%dT%H:%M:%S"
+def to_days(dt: datetime):
     try:
-        return int((datetime.strptime(str_ts, date_format) - datetime.now()).days)
-    except:
-        return None
+        if dt is not None:
+            return (dt - datetime.now()).days
+    except Exception as e:
+        pass
+    return None
 
 
 class RankingEndpoint(AbstractEndpoint):

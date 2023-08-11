@@ -52,26 +52,26 @@ class RecommendableOfferQueryBuilder:
                     ri.item_score
                 FROM {table_name} ro
                 INNER JOIN ranked_items ri on ri.item_id = ro.item_id 
-                WHERE case when {user_geolocated} then true else NOT is_geolocated end
-                AND ro.item_id NOT IN  (
-                SELECT
-                    item_id
-                FROM
-                    non_recommendable_items
-                WHERE
-                    user_id = {user_id}
-            )
-            AND ro.stock_price <= {remaining_credit}
-            {user_profile_filter}
+                
+                WHERE 
+                    case when {user_geolocated} then true else NOT is_geolocated end
+                    
+                    AND ro.item_id NOT IN  (
+                        SELECT
+                            item_id
+                        FROM
+                            non_recommendable_items
+                        WHERE
+                            user_id = {user_id}
+                    )
+                AND ro.stock_price <= {remaining_credit}
+                {user_profile_filter}
 
             ),
 
             rank_offers AS (
                 SELECT 
                     *,
-                    -- percent over max distance
-                    ceil(10 * user_distance / default_max_distance) as user_km_distance_10,
-                    ceil(100 * user_distance / default_max_distance) as user_km_distance_100,
                     ROW_NUMBER() OVER (PARTITION BY item_id ORDER BY user_distance ASC) AS rank
                 FROM select_offers
                 WHERE user_distance < default_max_distance
@@ -88,7 +88,6 @@ class RecommendableOfferQueryBuilder:
                 ro.category,
                 ro.subcategory_id,
                 ro.search_group_name,
-                ro.is_geolocated,
                 ro.venue_latitude,
                 ro.venue_longitude,
                 ro.item_score

@@ -48,7 +48,7 @@ models_to_deploy = [
         "endpoint_name": f"recommendation_user_retrieval_{ENV_SHORT_NAME}",
         "version_name": "v_{{ ts_nodash }}",
         "instance_type": high_dict[ENV_SHORT_NAME],
-        "min_nodes": min_nodes[ENV_SHORT_NAME],
+        "min_nodes": {"prod": 2, "dev": 1, "stg": 1}[ENV_SHORT_NAME],
     },
     # fallback endpoint
     {

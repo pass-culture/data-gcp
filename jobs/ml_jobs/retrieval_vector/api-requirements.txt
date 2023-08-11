@@ -1,6 +1,6 @@
 flask
 flask-cors
-hypercorn
+gunicorn
 numpy
 pandas
 pyarrow

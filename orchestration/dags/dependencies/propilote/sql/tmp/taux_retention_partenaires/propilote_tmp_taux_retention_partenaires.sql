@@ -28,7 +28,6 @@ active AS (
       CURRENT_DATE, last_bookable_date,
       MONTH
     ) < 12
-    AND was_registered_last_year IS TRUE
   GROUP BY
     1,
     2,

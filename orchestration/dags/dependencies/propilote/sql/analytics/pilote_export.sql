@@ -21,7 +21,9 @@ WITH temp1 AS
               WHEN
                    INDICATOR = "taux_participation_eac_jeunes" THEN "IND-205"
               WHEN
-                   INDICATOR = "taux_activation_structure" THEN "IND-201"
+                   INDICATOR = "taux_retention_partenaires" THEN "IND-201"
+              WHEN
+                   INDICATOR = "taux_participation_eac_ecoles" THEN "IND-046"
           END AS identifiant_indic,
           numerator,
           denominator

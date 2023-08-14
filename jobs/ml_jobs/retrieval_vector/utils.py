@@ -111,7 +111,9 @@ def get_item_docs(item_embedding_dict, items_df):
                 "example_offer_id": str(row.example_offer_id),
                 "example_offer_name": str(row.example_offer_name),
             }
-            docs.append(Document(id=_item_id, tags=metadata, embedding=embedding_id))
+            docs.append(
+                Document(id=str(_item_id), tags=metadata, embedding=embedding_id)
+            )
 
     if len(docs) == 0:
         raise Exception("Item Document is empty. Does the model match the query ?")
@@ -122,5 +124,5 @@ def get_item_docs(item_embedding_dict, items_df):
 def get_user_docs(user_dict):
     docs = DocumentArray()
     for k, v in user_dict.items():
-        docs.append(Document(id=k, embedding=v))
+        docs.append(Document(id=str(k), embedding=v))
     return docs

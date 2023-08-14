@@ -39,7 +39,8 @@ high_dict = {
     "dev": "n1-standard-2",
 }
 min_nodes = {"prod": 1, "dev": 1, "stg": 1}
-schedule_dict = {"prod": "0 8 * * *", "dev": "0 7 * * *", "stg": "0 7 * * *"}
+
+schedule_dict = {"prod": "0 6 * * *", "dev": "0 7 * * *", "stg": "0 7 * * *"}
 
 
 models_to_deploy = [

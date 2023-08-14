@@ -79,10 +79,12 @@ class ModelRankingEndpoint(RankingEndpoint):
         self.model_version = prediction_result.model_version
         self.model_display_name = prediction_result.model_display_name
         # smallest = better (indices)
-        prediction_result = {
+        prediction_dict = {
             r["offer_id"]: r["score"] for r in prediction_result.predictions
         }
+
         for row in recommendable_offers:
-            row.offer_score = prediction_result[row.offer_id]
+            past_score = row.offer_score
+            row.offer_score = prediction_dict.get(row.offer_id, past_score)
         log_duration(f"ranking_endpoint {str(self.user.id)}", start)
         return sorted(recommendable_offers, key=lambda x: x.offer_score, reverse=True)

@@ -39,7 +39,7 @@ def get_db():
         db.close()
 
 
-@app.get("/")
+@app.get("/", dependencies=[Depends(setup_trace)])
 def read_root():
     logger.info("Auth user welcome to : Refacto API test")
     return "Auth user welcome to : Refacto API test"
@@ -73,12 +73,13 @@ def similar_offers(offer: OfferInput, user: UserInput, db: Session = Depends(get
 @app.post("/playlist_recommendation", dependencies=[Depends(setup_trace)])
 def playlist_recommendation(user: UserInput, db: Session = Depends(get_db)):
 
-    log_extra_data = {"user_id": user.user_id}
-    custom_logger.info("Compute recommendations for user", extra=log_extra_data)
-
     call_id = str(uuid.uuid4())
 
     user = get_user_profile(db, user.user_id, call_id, user.latitude, user.longitude)
+
+    log_extra_data = {"user_id": user.user_id, 'iris_id': user.iris_id}
+    
+    custom_logger.info("Get user profile", extra=log_extra_data)
 
     scoring = Recommendation(user)
 

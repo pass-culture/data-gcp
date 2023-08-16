@@ -18,7 +18,7 @@ SQL_BASE_PASSWORD = os.environ.get(
 SQL_PORT = os.environ.get("SQL_PORT")
 SQL_HOST = os.environ.get("SQL_HOST")
 
-API_LOCAL = os.environ.get("API_LOCAL", "True")
+API_LOCAL = os.environ.get("API_LOCAL", "False")
 # logger
 cloud_trace_context = contextvars.ContextVar("cloud_trace_context", default="")
 http_request_context = contextvars.ContextVar("http_request_context", default=dict({}))

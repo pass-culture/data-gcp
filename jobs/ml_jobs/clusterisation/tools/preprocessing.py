@@ -44,9 +44,9 @@ def prepare_categorical_fields(items):
     ).reset_index()
 
     item_category_encoded = item_category_encoded.fillna(0)
-    item_category_encoded = item_category_encoded.loc[
-        ~(item_category_encoded["offer_type_label "] > 1)
-    ]
+    # item_category_encoded = item_category_encoded.loc[
+    #     ~(item_category_encoded["offer_type_label "] > 1)
+    # ]
     item_category_encoded = pd.merge(
         item_category_encoded,
         item_by_category[["item_id"]],
@@ -54,10 +54,7 @@ def prepare_categorical_fields(items):
         on=["item_id"],
     )
 
-    item_category_encoded_matrix = item_category_encoded.drop(
-        columns=["item_id"]
-        # columns=["index", "item_id", "product_id_size"]
-    )
+    item_category_encoded_matrix = item_category_encoded.drop(columns=["item_id"])
     results = item_category_encoded_matrix.values.tolist()
     reduction = 2
     red = umap.UMAP(
@@ -81,7 +78,6 @@ def prepare_categorical_fields(items):
         ],
         axis=1,
     )
-    # categ_red = categ_red.rename(columns={'0': 'c0', '1': 'c1', '2': 'c2', '3': 'c3', '4': 'c4'})
     item_by_category_encoded_reduced = item_by_category_encoded_reduced.rename(
         columns={"0": "c0", "1": "c1"}
     )
@@ -93,17 +89,28 @@ def prepare_clusterisation(
     item_semantic_encoding, item_by_category_encoded_reduced, item_by_category
 ):
 
-    item_full_encoding = pd.merge(
-        item_by_category_encoded_reduced,
-        item_semantic_encoding,
-        how="right",
-        on=["item_id"],
+    logger.info(f"""item_semantic_encoding: {len(item_semantic_encoding)}""")
+    logger.info(
+        f"""item_by_category_encoded_reduced: {len(item_by_category_encoded_reduced)}"""
     )
-
+    item_semantic_encoding = item_semantic_encoding.drop_duplicates(
+        subset=["item_id"], keep="first"
+    )
+    item_by_category_encoded_reduced = item_by_category_encoded_reduced.drop_duplicates(
+        subset=["item_id"], keep="first"
+    )
+    item_full_encoding = pd.merge(
+        item_semantic_encoding,
+        item_by_category_encoded_reduced,
+        how="left",
+        on=["item_id"],
+        validate="one_to_one",
+    )
+    logger.info(f"""item_full_encoding 0.0: {len(item_full_encoding)}""")
     item_full_encoding[["c0", "c1"]] = item_full_encoding[["c0", "c1"]].fillna(
         item_full_encoding[["c0", "c1"]].mean()
     )
-
+    logger.info(f"""item_full_encoding 1.0: {len(item_full_encoding)}""")
     offers_categ_group = pd.DataFrame()
     item_by_macro_cat = (
         item_by_category.groupby(["categ"])
@@ -129,9 +136,12 @@ def prepare_clusterisation(
         offers_categ_group = pd.concat(
             [df_tmp, offers_categ_group], axis=0, ignore_index=True
         )
-
+    logger.info(f"""offers_categ_group: {len(offers_categ_group)}""")
+    logger.info(f"""item_full_encoding 2.0: {len(item_full_encoding)}""")
     item_full_encoding_w_cat_group = pd.merge(
         item_full_encoding, offers_categ_group, how="inner", on=["item_id"]
     )
-
+    logger.info(
+        f"""item_full_encoding_w_cat_group: {len(item_full_encoding_w_cat_group)}"""
+    )
     return item_full_encoding_w_cat_group

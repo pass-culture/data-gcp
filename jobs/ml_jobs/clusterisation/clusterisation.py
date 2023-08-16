@@ -26,9 +26,22 @@ def clusterization(
     )
     # Perform clusterisation
     logger.info("Perform clusterisation...")
-    clusterisation_from_prebuild_encoding(
-        item_full_encoding_enriched, params["target_nbclusters"], output_table
+    category_list = (
+        item_full_encoding_enriched.groupby(["category_group"])
+        .agg(item_id_size=("item_id", "size"))
+        .reset_index()["category_group"]
+        .values.tolist()
     )
+    for cat in category_list:
+        item_full_encoding_enriched_given_cat = item_full_encoding_enriched.loc[
+            item_full_encoding_enriched["category_group"].isin([cat])
+        ]
+        clusterisation_from_prebuild_encoding(
+            cat,
+            item_full_encoding_enriched_given_cat,
+            params["target_nbclusters"],
+            output_table,
+        )
 
     return
 

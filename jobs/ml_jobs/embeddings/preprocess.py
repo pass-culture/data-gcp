@@ -12,6 +12,7 @@ def preprocess(df, features):
             df[feature["name"]] = df[feature["name"]].str.lower()
         if feature["type"] == "macro_text":
             df[feature["name"]] = df[feature["content"]].agg(" ".join, axis=1)
+            df[feature["name"]] = df[feature["name"]].astype(str)
             df[feature["name"]] = df[feature["name"]].str.lower()
     return df
 

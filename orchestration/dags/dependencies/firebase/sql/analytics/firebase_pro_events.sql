@@ -123,6 +123,14 @@ WITH temp_firebase_events AS (
             from
                 unnest(event_params) event_params
             where
+                event_params.key = 'saved'
+        ) as saved,
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
                 event_params.key = 'hasOnly6eAnd5eStudents'
         ) as eac_wrong_student_modal_only6and5,
         (

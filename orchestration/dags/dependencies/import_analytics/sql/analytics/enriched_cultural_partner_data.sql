@@ -39,9 +39,10 @@ LEFT JOIN `{{ bigquery_analytics_dataset }}`.region_department AS region_departm
     ON enriched_venue_data.venue_department_code = region_department.num_dep
 LEFT JOIN `{{ bigquery_analytics_dataset }}`.agg_partner_cultural_sector ON agg_partner_cultural_sector.partner_type = enriched_venue_data.venue_type_label
 LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_venue_tags_data ON enriched_venue_data.venue_id = enriched_venue_tags_data.venue_id AND enriched_venue_tags_data.criterion_category_label = "Comptage partenaire label et appellation du MC"
-LEFT JOIN `{{ bigquery_analytics_dataset }}`.criterion ON enriched_venue_tags_data.criterion_id = criterion.id 
+LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_criterion criterion ON enriched_venue_tags_data.criterion_id = criterion.id 
 WHERE venue_is_permanent IS TRUE
 ),
+
 
 tagged_partners AS (
 SELECT
@@ -66,7 +67,7 @@ SELECT
     ,ROW_NUMBER() OVER(PARTITION BY venue_managing_offerer_id ORDER BY theoretic_revenue DESC, (COALESCE(enriched_venue_data.individual_offers_created,0) + COALESCE(enriched_venue_data.collective_offers_created,0)) DESC ) AS top_venue_type_this_offer
 FROM `{{ bigquery_analytics_dataset }}`.enriched_venue_data
 LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_venue_tags_data ON enriched_venue_data.venue_id = enriched_venue_tags_data.venue_id AND enriched_venue_tags_data.criterion_category_label = "Comptage partenaire label et appellation du MC"
-LEFT JOIN `{{ bigquery_analytics_dataset }}`.criterion ON enriched_venue_tags_data.criterion_id = criterion.id 
+LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_criterion criterion ON enriched_venue_tags_data.criterion_id = criterion.id 
 QUALIFY ROW_NUMBER() OVER(PARTITION BY venue_managing_offerer_id ORDER BY theoretic_revenue DESC, (COALESCE(enriched_venue_data.individual_offers_created,0) + COALESCE(enriched_venue_data.collective_offers_created,0)) DESC ) = 1
 ),
 
@@ -114,7 +115,7 @@ LEFT JOIN `{{ bigquery_analytics_dataset }}`.region_department AS region_departm
 LEFT JOIN tagged_partners ON tagged_partners.offerer_id = enriched_offerer_data.offerer_id
 LEFT JOIN permanent_venues ON permanent_venues.offerer_id = enriched_offerer_data.offerer_id
 LEFT JOIN top_venue_per_offerer ON top_venue_per_offerer.offerer_id = enriched_offerer_data.offerer_id
-LEFT JOIN `{{ bigquery_analytics_dataset }}`.agg_partner_cultural_sector ON agg_partner_cultural_sector.partner_type = COALESCE(tagged_partners.partner_type, top_venue_per_offerer.venue_type_label)
+LEFT JOIN `{{ bigquery_analytics_dataset }}`.agg_partner_cultural_sector ON agg_partner_cultural_sector.partner_type = COALESCE(tagged_partners.partner_type, top_venue_per_offerer.partner_type)
 WHERE NOT enriched_offerer_data.is_territorial_authorities  -- Collectivités à part
 AND permanent_venues.offerer_id IS NULL -- Pas déjà compté à l'échelle du lieu permanent
 

@@ -17,6 +17,7 @@ SELECT
     cast(jsonPayload.extra.stockId as string) as stock_id,
     cast(jsonPayload.extra.offerId as string) as offer_id,
     cast(jsonPayload.extra.collective_offer_template_id as string) as collective_offer_template_id,
+    cast(jsonPayload.extra.queryid as string) as query_id,
     jsonPayload.extra.comment as comment,
     jsonPayload.extra.requested_date as requested_date,
     cast(jsonPayload.extra.total_students as int) as total_students,

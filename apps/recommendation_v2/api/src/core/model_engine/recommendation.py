@@ -63,19 +63,23 @@ class Recommendation:
 
         # 2. score items
         predicted_items = [
-            Item(item_id="product-54666", recommendation_score=10),
-            # Item(item_id="isbn-2", recommendation_score=20),
-            # Item(item_id="movie-3", recommendation_score=12),
+            Item(item_id="product-54666", item_score=10),
+            # Item(item_id="isbn-2", item_score=20),
+            # Item(item_id="movie-3", item_score=12),
         ]  # -> List[Item]
 
         # 3. Ranking items and retrieve nearest offer
         output_list = []
         for item in predicted_items:
-            recommendable_items[item.item_id]["score"] = item.recommendation_score
+            recommendable_items[item.item_id]["score"] = item.item_score
             recommendable_items[item.item_id]["nearest_offer_id"] = get_nearest_offer(
                 db, self.user, item
             )[0].offer_id
             output_list.append(recommendable_items[item.item_id])
+
+        # 4. TODO : Add maximum distance filter
+        # 5. TODO : Add order query to sort recommended offers as wanted          order_query=sql.SQL(f"ORDER BY {order_query}"),
+        # 6. TODO : Add recommended offers limit             offer_limit=sql.SQL(f"LIMIT {offer_limit}"),
 
         return output_list
 

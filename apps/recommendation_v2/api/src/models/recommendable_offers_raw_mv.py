@@ -18,7 +18,7 @@ class RecommendableOffersRaw(Base):
     is_national = Column(Boolean)
     is_geolocated = Column(Boolean)
     offer_creation_date = Column(DateTime)
-    stock_beginning_date = Column(DateTime)
+    stock_creation_date = Column(DateTime)
     stock_price = Column(Float)
     offer_is_duo = Column(Boolean)
     offer_type_domain = Column(String(256))

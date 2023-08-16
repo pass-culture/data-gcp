@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from geoalchemy2.elements import WKTElement
+from typing import List
 
 from schemas.offer import Offer
 from schemas.user import User
@@ -8,6 +9,7 @@ from schemas.item import Item
 
 from models.item_ids_mv import ItemIdsMv
 from models.recommendable_offers_raw_mv import RecommendableOffersRaw
+from models.non_recommendable_items import NonRecommendableItems
 
 from crud.iris import get_iris_from_coordinates
 
@@ -47,6 +49,15 @@ def get_offer_characteristics(
         )
     return offer
 
+def get_non_recommendable_items(db: Session, user: User) -> List[Item]:
+
+    non_recommendable_items = (
+        db
+        .query(NonRecommendableItems.item_id.label('item_id'))
+        .filter(NonRecommendableItems.user_id == user.user_id)
+    )
+
+    return [Item(item_id=recommendable_item.item_id) for recommendable_item in non_recommendable_items]
 
 def get_nearest_offer(db: Session, user: User, item: Item) -> Offer:
     """Query the database to get the nearest offer from user given a recommendable item."""
@@ -57,12 +68,14 @@ def get_nearest_offer(db: Session, user: User, item: Item) -> Offer:
     else:
         user_geolocated = False
 
+
+    underage_query = []
+    if user.age and user.age < 18:
+        underage_query.append(RecommendableOffersRaw.is_underage_recommendable)
+    # TODO : add condition to check if offer is geolocated
+    
     if user_geolocated:
-        offers = (
-            db.query(RecommendableOffersRaw.offer_id, RecommendableOffersRaw.item_id)
-            .filter(RecommendableOffersRaw.item_id == item.item_id)
-            .order_by(
-                func.ST_Distance(
+        user_distance = func.ST_Distance(
                     user_point,
                     func.Geometry(
                         func.ST_MakePoint(
@@ -70,25 +83,58 @@ def get_nearest_offer(db: Session, user: User, item: Item) -> Offer:
                             RecommendableOffersRaw.venue_latitude,
                         )
                     ),
-                )
+                ).label("user_distance")
+
+        nearest_offer = (
+            db.query(
+                RecommendableOffersRaw.offer_id.label('offer_id'),
+                RecommendableOffersRaw.item_id.label('item_id'),
+                RecommendableOffersRaw.venue_id.label('venue_id'),
+                user_distance,
+                RecommendableOffersRaw.booking_number.label('booking_number'),
+                RecommendableOffersRaw.stock_price.label('stock_price'),
+                RecommendableOffersRaw.offer_creation_date.label('offer_creation_date'),
+                RecommendableOffersRaw.stock_creation_date.label('stock_creation_date'),
+                RecommendableOffersRaw.category.label('category'),
+                RecommendableOffersRaw.subcategory_id.label('subcategory_id'),
+                RecommendableOffersRaw.search_group_name.label('search_group_name'),
+                RecommendableOffersRaw.venue_latitude.label('venue_latitude'),
+                RecommendableOffersRaw.venue_longitude.label('venue_longitude')
             )
+            .filter(RecommendableOffersRaw.item_id == item.item_id)
+            # .filter(RecommendableOffersRaw.item_id.not_in(non_recommendable_offers))
+            .filter(RecommendableOffersRaw.stock_price <= user.user_deposit_remaining_credit)
+            .filter(RecommendableOffersRaw.default_max_distance >= user_distance)
+            .filter(*underage_query)
+            .order_by(user_distance)
             .limit(1)
             .all()
         )
     else:
-        offers = (
+        nearest_offer = (
             db.query(RecommendableOffersRaw.offer_id, RecommendableOffersRaw.item_id)
             .filter(RecommendableOffersRaw.item_id == item.item_id)
             .limit(1)
             .all()
         )
 
-    offer = [
+    nearest_offer = [
         Offer(
             offer_id=offer_id,
             item_id=item_id,
+            venue_id=venue_id,
+            user_distance=user_distance,
+            cnt_bookings=booking_number,
+            stock_price=stock_price,
+            offer_creation_date=offer_creation_date,
+            stock_creation_date=stock_creation_date,
+            category=category,
+            subcategory_id=subcategory_id,
+            search_group_name=search_group_name,
+            latitude=venue_latitude,
+            longitude=venue_longitude,
         )
-        for offer_id, item_id in offers
+        for offer_id, item_id, venue_id, user_distance, booking_number, stock_price, offer_creation_date, stock_creation_date, category, subcategory_id, search_group_name, venue_latitude, venue_longitude in nearest_offer
     ]
 
-    return offer
+    return nearest_offer

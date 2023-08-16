@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from typing import List
 import datetime
 import time
+import random
 import pytz
 
 from schemas.user import User
@@ -10,7 +11,7 @@ from schemas.item import Item
 
 from models.past_recommended_offers import PastSimilarOffers
 
-from crud.offer import get_nearest_offer
+from crud.offer import get_nearest_offer, get_non_recommendable_items
 
 
 class SimilarOffer:
@@ -24,8 +25,18 @@ class SimilarOffer:
 
         # 1. get recommendable items
         recommendable_items = {
-            "product-54666": {
-                "item_id": "product-54666",
+            # "product-54666": {
+            #     "item_id": "product-54666",
+            #     "user_distance": 10,
+            #     "booking_number": 3,
+            #     "category": "A",
+            #     "subcategory_id": "EVENEMENT_CINE",
+            #     "search_group_name": "CINEMA",
+            #     "random": 1,
+            # },
+            # FOR TEST ONLY
+            "isbn-1": {
+                "item_id": "isbn-1",
                 "user_distance": 10,
                 "booking_number": 3,
                 "category": "A",
@@ -33,55 +44,54 @@ class SimilarOffer:
                 "search_group_name": "CINEMA",
                 "random": 1,
             },
-            # FOR TEST ONLY
-            # "isbn-1": {
-            #     "item_id": "isbn-1",
-            #     "user_distance": 10,
-            #     "booking_number": 3,
-            #     "category": "A",
-            #     "subcategory_id": "EVENEMENT_CINE",
-            #     "search_group_name": "CINEMA",
-            #     "random": 1,
-            # },
-            # "isbn-2": {
-            #     "item_id": "isbn-2",
-            #     "user_distance": 10,
-            #     "booking_number": 3,
-            #     "category": "A",
-            #     "subcategory_id": "EVENEMENT_CINE",
-            #     "search_group_name": "CINEMA",
-            #     "random": 1,
-            # },
-            # "movie-3": {
-            #     "item_id": "movie-3",
-            #     "user_distance": 20,
-            #     "booking_number": 10,
-            #     "category": "C",
-            #     "subcategory_id": "EVENEMENT_CINE",
-            #     "search_group_name": "CINEMA",
-            #     "random": 3,
-            # },
+            "isbn-2": {
+                "item_id": "isbn-2",
+                "user_distance": 10,
+                "booking_number": 3,
+                "category": "A",
+                "subcategory_id": "EVENEMENT_CINE",
+                "search_group_name": "CINEMA",
+                "random": 1,
+            },
+            "movie-3": {
+                "item_id": "movie-3",
+                "user_distance": 20,
+                "booking_number": 10,
+                "category": "C",
+                "subcategory_id": "EVENEMENT_CINE",
+                "search_group_name": "CINEMA",
+                "random": 3,
+            },
         }
 
-        selected_items = list(recommendable_items.keys())
+        selected_items = [Item(item_id=item) for item in recommendable_items.keys()]
+        
+        non_recommendable_items = get_non_recommendable_items(db, self.user)
+        
+        selected_items = [item for item in selected_items if item not in non_recommendable_items] # Remove non recommendable items
 
-        # 2. score items
-        predicted_items = [
-            Item(item_id="product-54666", recommendation_score=10),
-            # Item(item_id="isbn-2", recommendation_score=20),
-            # Item(item_id="movie-3", recommendation_score=12),
-        ]  # -> List[Item]
+        # # 2. score items
+        predicted_items = [Item(item_id=item.item_id, item_score=random.random()) for item in selected_items]
 
-        # 3. Ranking items and retrieve nearest offer
+        # # 3. Ranking items and retrieve nearest offer
         output_list = []
         for item in predicted_items:
-            recommendable_items[item.item_id]["score"] = item.recommendation_score
-            recommendable_items[item.item_id]["nearest_offer_id"] = get_nearest_offer(
-                db, self.user, item
-            )[0].offer_id
-            output_list.append(recommendable_items[item.item_id])
+            output_items = {}
+            nearest_offer = get_nearest_offer(
+                db, self.user, Item(item.item_id, item.item_score)
+            )
+            if len(nearest_offer) > 0:
+                output_items["item_id"] = item.item_id
+                output_items["score"] = item.item_score
+                output_items["nearest_offer_id"] = nearest_offer[0].offer_id
+                output_items["user_distance"] = nearest_offer[0].user_distance
+                output_list.append(output_items)
+        
+        # Sort offers depending on a parameter 
+        # Limit displayed offers depended on a
 
         return output_list
+        
 
     def save_recommendation(self, db: Session, recommendations) -> None:
         if len(recommendations) > 0:

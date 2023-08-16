@@ -1,4 +1,4 @@
-docker build -t pcreco_orm --progress=plain .
+# docker build -t pcreco_orm --progress=plain .
 # docker run -it -p 8080:8080 pcreco_orm
 
 

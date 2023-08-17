@@ -99,6 +99,15 @@ WITH temp_firebase_events AS (
             from
                 unnest(event_params) event_params
             where
+                event_params.key = 'offerType'
+
+        ) as offer_type,
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
                 event_params.key = 'from'
         ) as origin,
         (

@@ -41,6 +41,8 @@ create_tables = {
         "sql": f"{BACKEND_SQL_PATH}/stats_display_cum_daily_consult_per_offerer_last_180_days.sql",
         "destination_dataset": "{{ bigquery_backend_dataset }}",
         "destination_table": "stats_display_cum_daily_consult_per_offerer_last_180_days",
+        "schedule_type": "daily",
+        "write_disposition": "WRITE_TRUNCATE",
         "dag_depends": [{"import_analytics_v7": "end_import"}],
     },
 }

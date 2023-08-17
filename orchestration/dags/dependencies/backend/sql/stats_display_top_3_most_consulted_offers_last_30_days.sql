@@ -1,18 +1,22 @@
-WITH consult_per_offer_last_3O_days AS (
-SELECT
-    offerer_id
-    , offer_id
-    , SUM(cnt_consult_offer) AS nb_consult_last_30_days
-FROM `{{ bigquery_analytics_dataset }}.aggregated_daily_offer_consultation_data`
-WHERE event_date >= DATE_SUB(current_date, INTERVAL 30 DAY)
-GROUP BY 1,2
-)
+WITH
+  consult_per_offer_last_3O_days AS (
+  SELECT
+    offerer_id,
+    offer_id,
+    SUM(cnt_consult_offer) AS nb_consult_last_30_days
+  FROM
+    `{{ bigquery_analytics_dataset }}.aggregated_daily_offer_consultation_data`
+  WHERE
+    event_date >= DATE_SUB(current_date, INTERVAL 30 DAY)
+  GROUP BY
+    1,
+    2 )
 
 SELECT
-    CAST("{{ today() }}" AS DATETIME) as execution_date
-    ,offerer_id
-    ,offer_id
-    , nb_consult_last_30_days
-    , ROW_NUMBER() OVER(PARTITION BY offerer_id ORDER BY nb_consult_last_30_days DESC) AS consult_rank
-FROM consult_per_offer_last_3O_days
-QUALIFY ROW_NUMBER() OVER(PARTITION BY offerer_id ORDER BY nb_consult_last_30_days DESC) <= 3
+  CAST("{{ today() }}" AS DATETIME) AS execution_date,
+  offerer_id,
+  offer_id,
+  nb_consult_last_30_days,
+  ROW_NUMBER() OVER(PARTITION BY offerer_id ORDER BY nb_consult_last_30_days DESC) AS consult_rank
+FROM
+  consult_per_offer_last_3O_days QUALIFY ROW_NUMBER() OVER(PARTITION BY offerer_id ORDER BY nb_consult_last_30_days DESC) <= 3

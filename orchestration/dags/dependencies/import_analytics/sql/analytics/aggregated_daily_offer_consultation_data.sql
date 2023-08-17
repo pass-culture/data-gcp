@@ -33,7 +33,8 @@ SELECT
         DATE_DIFF(fe.event_date, eud.user_birth_date, YEAR) - 1,
         DATE_DIFF(fe.event_date, eud.user_birth_date, YEAR)
     ) AS user_age,
-    COUNT(*) AS cnt_events
+    COUNT(*) AS cnt_events,
+    COUNT(CASE WHEN event_name = 'ConsultOffer' THEN 1 ELSE NULL END) AS cnt_consult_offer
 FROM
     `{{ bigquery_analytics_dataset }}.firebase_events` fe
     JOIN `{{ bigquery_analytics_dataset }}.enriched_offer_data` o ON fe.offer_id = o.offer_id

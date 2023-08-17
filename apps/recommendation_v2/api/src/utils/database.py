@@ -3,24 +3,25 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import os
 from utils.env_vars import API_LOCAL
-if not API_LOCAL: 
+
+if not API_LOCAL:
     from utils.env_vars import (
         SQL_BASE_USER,
         SQL_BASE_PASSWORD,
         SQL_BASE,
         SQL_HOST,
-        SQL_PORT
+        SQL_PORT,
     )
 
 DATA_GCP_TEST_POSTGRES_PORT = os.getenv("DATA_GCP_TEST_POSTGRES_PORT", 5432)
 
 query = {}
 
-if API_LOCAL: 
+if API_LOCAL:
     bind_engine = create_engine(
         f"postgresql+psycopg2://postgres:postgres@localhost:{DATA_GCP_TEST_POSTGRES_PORT}/postgres"
     )
-else: 
+else:
     bind_engine = create_engine(
         engine.url.URL(
             drivername="postgresql+psycopg2",

@@ -64,21 +64,21 @@ def similar_offers(offer: OfferInput, user: UserInput, db: Session = Depends(get
     scoring = SimilarOffer(user, offer)
 
     offer_recommendations = scoring.get_scoring(db)
-    
+
     log_extra_data = {
-            "user_id": user.user_id,
-            'iris_id': user.iris_id,
-            'call_id': call_id,
-            # 'reco_origin': scoring.reco_origin,
-            # 'filters': ,
-            # 'model_name': scoring.model_name,
-            # 'model_version': scoring.model_version,
-            # 'endpoint_name': scoring.endpoint_name ,
-            # 'nb_recommendable_items': len(scoring.recommendable_items), # retrieval
-            # 'nb_recommendable_offers': len(scoring.recommendable_offers), # ranking
-            # 'nb_recommended_offers': len(user_recommendations),
-            } 
-        # add nbr offres recommandables, nbr d'offres recommandées, endpoint appelé, model_name, param filters, call_id, temps de requête
+        "user_id": user.user_id,
+        "iris_id": user.iris_id,
+        "call_id": call_id,
+        # 'reco_origin': scoring.reco_origin,
+        # 'filters': ,
+        # 'model_name': scoring.model_name,
+        # 'model_version': scoring.model_version,
+        # 'endpoint_name': scoring.endpoint_name ,
+        # 'nb_recommendable_items': len(scoring.recommendable_items), # retrieval
+        # 'nb_recommendable_offers': len(scoring.recommendable_offers), # ranking
+        # 'nb_recommended_offers': len(user_recommendations),
+    }
+    # add nbr offres recommandables, nbr d'offres recommandées, endpoint appelé, model_name, param filters, call_id, temps de requête
 
     custom_logger.info("Get user profile", extra=log_extra_data)
 
@@ -94,8 +94,8 @@ def playlist_recommendation(user: UserInput, db: Session = Depends(get_db)):
 
     user = get_user_profile(db, user.user_id, call_id, user.latitude, user.longitude)
 
-    log_extra_data = {"user_id": user.user_id, 'iris_id': user.iris_id}
-    
+    log_extra_data = {"user_id": user.user_id, "iris_id": user.iris_id}
+
     custom_logger.info("Get user profile", extra=log_extra_data)
 
     scoring = Recommendation(user)

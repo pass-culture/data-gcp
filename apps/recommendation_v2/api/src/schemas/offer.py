@@ -16,11 +16,11 @@ class Offer:
 
     offer_id: str
     item_id: str = None
-    call_id: str = None
     latitude: float = None
     longitude: float = None
     iris_id: str = None
     item_id: str = None
+    item_score: float = None
     cnt_bookings: float = None
     user_distance: float = None
     venue_id: str = None

@@ -12,6 +12,7 @@ from schemas.item import Item
 from models.past_recommended_offers import PastSimilarOffers
 
 from crud.offer import get_nearest_offer, get_non_recommendable_items
+from utils.manage_output_offers import sort_offers, limit_offers
 
 
 class SimilarOffer:
@@ -19,11 +20,11 @@ class SimilarOffer:
         self.offer = offer
         self.user = user
 
-    def get_scoring(self, db: Session) -> List[dict]:
+    def get_scoring(self, db: Session) -> List[Offer]:
         if self.offer.item_id is None:
             return []
 
-        # 1. get recommendable items
+        # 1. Get recommendable items
         recommendable_items = {
             # "product-54666": {
             #     "item_id": "product-54666",
@@ -65,33 +66,50 @@ class SimilarOffer:
         }
 
         selected_items = [Item(item_id=item) for item in recommendable_items.keys()]
-        
+
+        # 2. Get Non recommendable items
         non_recommendable_items = get_non_recommendable_items(db, self.user)
-        
-        selected_items = [item for item in selected_items if item not in non_recommendable_items] # Remove non recommendable items
 
-        # # 2. score items
-        predicted_items = [Item(item_id=item.item_id, item_score=random.random()) for item in selected_items]
+        # 3. Remove non recommendable items
+        selected_items = [
+            item for item in selected_items if item not in non_recommendable_items
+        ]
 
-        # # 3. Ranking items and retrieve nearest offer
+        # 4. score items
+        predicted_items = [
+            Item(item_id=item.item_id, item_score=random.random())
+            for item in selected_items
+        ]
+
+        # 5. Retrieve nearest offer from the combination user/item
         output_list = []
         for item in predicted_items:
-            output_items = {}
             nearest_offer = get_nearest_offer(
                 db, self.user, Item(item.item_id, item.item_score)
             )
             if len(nearest_offer) > 0:
-                output_items["item_id"] = item.item_id
-                output_items["score"] = item.item_score
-                output_items["nearest_offer_id"] = nearest_offer[0].offer_id
-                output_items["user_distance"] = nearest_offer[0].user_distance
+                output_items = Offer(
+                    item_id=item.item_id,
+                    item_score=item.item_score,
+                    offer_id=nearest_offer[0].offer_id,
+                    user_distance=nearest_offer[0].user_distance,
+                )
                 output_list.append(output_items)
-        
-        # Sort offers depending on a parameter 
-        # Limit displayed offers depended on a
 
-        return output_list
-        
+        # 6. Sort offers
+        # TODO : include input parameter instead of default dict
+        output_list_sorted = sort_offers(
+            order_query={"user_distance": "ASC", "item_score": "ASC"},
+            list_offers=output_list,
+        )
+
+        # 7. Limit offers
+        # TODO : include input parameter instead of default dict
+        output_list_limited = limit_offers(
+            limit_offer=20, list_offers=output_list_sorted
+        )
+
+        return output_list_limited
 
     def save_recommendation(self, db: Session, recommendations) -> None:
         if len(recommendations) > 0:

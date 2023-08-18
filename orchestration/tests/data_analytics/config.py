@@ -474,6 +474,7 @@ BIGQUERY_SCHEMAS = {
         "collective_offer_offer_venue": "STRING",
         "collective_offer_image_id": "STRING",
         "provider_id": "STRING",
+        "national_program_id": "STRING",
     },
     "applicative_database_collective_offer_template": {
         "collective_offer_audio_disability_compliant": "BOOLEAN",
@@ -501,6 +502,7 @@ BIGQUERY_SCHEMAS = {
         "collective_offer_las_validation_type": "STRING",
         "collective_offer_image_id": "STRING",
         "provider_id": "STRING",
+        "national_program_id": "STRING",
     },
     "applicative_database_collective_stock": {
         "collective_stock_id": "STRING",
@@ -623,5 +625,10 @@ BIGQUERY_SCHEMAS = {
         "individual_bookable_offers": "INT64",
         "collective_bookable_offers": "INT64",
         "total_bookable_offers": "INT64",
+    },
+    "applicative_database_national_program": {
+        "national_program_id": "STRING",
+        "national_program_name": "STRING",
+        "national_program_creation_date": "DATETIME",
     },
 }

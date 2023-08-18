@@ -529,6 +529,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_INPUT = {
             "collective_offer_image_id": "27",
             "collective_offer_validation": "APPROVED",
             "provider_id": "65378",
+            "national_program_id": None,
         }
     ],
     "applicative_database_collective_offer_template": [
@@ -544,8 +545,10 @@ ENRICHED_COLLECTIVE_OFFER_DATA_INPUT = {
             "collective_offer_is_active": True,
             "collective_offer_image_id": "28",
             "provider_id": "65378",
+            "national_program_id": None,
         }
     ],
+    "applicative_database_national_program": [],
     "subcategories": [{"id": "CONCERT", "category_id": "MUSIQUE_LIVE"}],
     "region_department": [
         {
@@ -590,6 +593,8 @@ ENRICHED_COLLECTIVE_OFFER_DATA_EXPECTED = [
         "offer_is_template": False,
         "collective_offer_image_id": "27",
         "provider_id": "65378",
+        "national_program_id": None,
+        "national_program_name": None,
     },
     {
         "collective_offer_id": "4",
@@ -623,6 +628,8 @@ ENRICHED_COLLECTIVE_OFFER_DATA_EXPECTED = [
         "offer_is_template": True,
         "collective_offer_image_id": "28",
         "provider_id": "65378",
+        "national_program_id": None,
+        "national_program_name": None,
     },
 ]
 

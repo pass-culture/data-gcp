@@ -12,9 +12,9 @@ SELECT
     ,enriched_venue_data.venue_department_code AS partner_department_code
     ,enriched_venue_data.venue_postal_code AS partner_postal_code
     ,'venue' AS partner_status
-    ,COALESCE(criterion.name, venue_type_label) AS partner_type
+    ,COALESCE(criterion_name, venue_type_label) AS partner_type
     ,CASE WHEN 
-        criterion.name IS NOT NULL THEN "venue_tag"
+        criterion_name IS NOT NULL THEN "venue_tag"
         ELSE 'venue_type_label' 
         END
     AS partner_type_origin
@@ -39,7 +39,6 @@ LEFT JOIN `{{ bigquery_analytics_dataset }}`.region_department AS region_departm
     ON enriched_venue_data.venue_department_code = region_department.num_dep
 LEFT JOIN `{{ bigquery_analytics_dataset }}`.agg_partner_cultural_sector ON agg_partner_cultural_sector.partner_type = enriched_venue_data.venue_type_label
 LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_venue_tags_data ON enriched_venue_data.venue_id = enriched_venue_tags_data.venue_id AND enriched_venue_tags_data.criterion_category_label = "Comptage partenaire label et appellation du MC"
-LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_criterion criterion ON enriched_venue_tags_data.criterion_id = criterion.id 
 WHERE venue_is_permanent IS TRUE
 ),
 
@@ -58,16 +57,15 @@ top_venue_per_offerer AS (
 SELECT
     enriched_venue_data.venue_id
     ,venue_managing_offerer_id AS offerer_id
-    ,COALESCE(criterion.name, venue_type_label) AS partner_type
+    ,COALESCE(criterion_name, venue_type_label) AS partner_type
     ,CASE WHEN 
-        criterion.name IS NOT NULL THEN "venue_tag"
+        criterion_name IS NOT NULL THEN "venue_tag"
         ELSE 'venue_type_label' 
         END
     AS partner_type_origin
     ,ROW_NUMBER() OVER(PARTITION BY venue_managing_offerer_id ORDER BY theoretic_revenue DESC, (COALESCE(enriched_venue_data.individual_offers_created,0) + COALESCE(enriched_venue_data.collective_offers_created,0)) DESC ) AS top_venue_type_this_offer
 FROM `{{ bigquery_analytics_dataset }}`.enriched_venue_data
 LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_venue_tags_data ON enriched_venue_data.venue_id = enriched_venue_tags_data.venue_id AND enriched_venue_tags_data.criterion_category_label = "Comptage partenaire label et appellation du MC"
-LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_criterion criterion ON enriched_venue_tags_data.criterion_id = criterion.id 
 QUALIFY ROW_NUMBER() OVER(PARTITION BY venue_managing_offerer_id ORDER BY theoretic_revenue DESC, (COALESCE(enriched_venue_data.individual_offers_created,0) + COALESCE(enriched_venue_data.collective_offers_created,0)) DESC ) = 1
 ),
 

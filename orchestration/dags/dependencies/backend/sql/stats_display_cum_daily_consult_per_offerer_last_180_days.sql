@@ -4,9 +4,11 @@ WITH
     event_date,
     DATE_DIFF(current_date, event_date, DAY) AS day_seniority,
     offerer_id,
-    SUM(cnt_consult_offer) AS nb_daily_consult
+    SUM(cnt_events) AS nb_daily_consult
   FROM
     `{{ bigquery_analytics_dataset }}.aggregated_daily_offer_consultation_data`
+  WHERE
+    event_name = 'ConsultOffer'
   GROUP BY
     1,
     2,

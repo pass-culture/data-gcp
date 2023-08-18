@@ -501,7 +501,10 @@ aggregated_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "aggregated_daily_offer_consultation_data",
         "depends": ["enriched_user_data", "enriched_offer_data"],
-        "dag_depends": ["import_intraday_firebase_data"],  # computed once a day
+        "dag_depends": [
+            "import_intraday_firebase_data",
+            "import_contentful",
+        ],  # computed once a day
     },
 }
 

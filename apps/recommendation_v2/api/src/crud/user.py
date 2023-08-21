@@ -32,17 +32,20 @@ def get_user_profile(
     if latitude and longitude:
         iris_id = get_iris_from_coordinates(db, latitude, longitude)
 
-    user = User(
-        user_id=user_id,
-        call_id=call_id,
-        longitude=longitude,
-        latitude=latitude,
-        iris_id=iris_id,
-        age=int(user_profile[0].days / 365) if user_profile[0] else None,
-        bookings_count=user_profile[1],
-        clicks_count=user_profile[2],
-        favorites_count=user_profile[3],
-        user_deposit_remaining_credit=user_profile[4],
-    )
+    if user_profile:
 
-    return user
+        user = User(
+            user_id=user_id,
+            call_id=call_id,
+            longitude=longitude,
+            latitude=latitude,
+            found=True,
+            iris_id=iris_id,
+            age=int(user_profile[0].days / 365) if user_profile[0] else None,
+            bookings_count=user_profile[1],
+            clicks_count=user_profile[2],
+            favorites_count=user_profile[3],
+            user_deposit_remaining_credit=user_profile[4],
+        )
+
+        return user

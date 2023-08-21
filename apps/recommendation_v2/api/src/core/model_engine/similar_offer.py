@@ -8,108 +8,143 @@ import pytz
 from schemas.user import User
 from schemas.offer import Offer
 from schemas.item import Item
-
+from schemas.playlist_params import PlaylistParams
+from core.model_engine import ModelEngine
+from core.model_selection.model_configuration import ModelConfiguration
+from core.model_selection import (
+    select_sim_model_params,
+)
 from models.past_recommended_offers import PastSimilarOffers
 
 from crud.offer import get_nearest_offer, get_non_recommendable_items
 from utils.manage_output_offers import sort_offers, limit_offers
 
 
-class SimilarOffer:
-    def __init__(self, user: User, offer: Offer):
+class SimilarOffer(ModelEngine):
+    def __init__(self, user: User, offer: Offer, params_in: PlaylistParams):
         self.offer = offer
-        self.user = user
+        super().__init__(user=user, params_in=params_in)
 
-    def get_scoring(self, db: Session) -> List[Offer]:
+    def get_model_configuration(
+        self, user: User, params_in: PlaylistParams
+    ) -> ModelConfiguration:
+        model_params, reco_origin = select_sim_model_params(
+            params_in.model_endpoint, offer=self.offer
+        )
+        self.reco_origin = reco_origin
+        return model_params
+
+    def get_scorer(self):
+        # init input
+        self.model_params.retrieval_endpoint.init_input(
+            user=self.user, offer=self.offer, params_in=self.params_in
+        )
+        # self.model_params.ranking_endpoint.init_input(
+        #     user=self.user, params_in=self.params_in
+        # )
+        return self.model_params.scorer(
+            user=self.user,
+            params_in=self.params_in,
+            model_params=self.model_params,
+            retrieval_endpoint=self.model_params.retrieval_endpoint,
+            # ranking_endpoint=self.model_params.ranking_endpoint,
+        )
+
+    def get_scoring(self) -> List[str]:
         if self.offer.item_id is None:
             return []
+        return super().get_scoring()
 
-        # 1. Get recommendable items
-        recommendable_items = {
-            # "product-54666": {
-            #     "item_id": "product-54666",
-            #     "user_distance": 10,
-            #     "booking_number": 3,
-            #     "category": "A",
-            #     "subcategory_id": "EVENEMENT_CINE",
-            #     "search_group_name": "CINEMA",
-            #     "random": 1,
-            # },
-            # FOR TEST ONLY
-            "isbn-1": {
-                "item_id": "isbn-1",
-                "user_distance": 10,
-                "booking_number": 3,
-                "category": "A",
-                "subcategory_id": "EVENEMENT_CINE",
-                "search_group_name": "CINEMA",
-                "random": 1,
-            },
-            "isbn-2": {
-                "item_id": "isbn-2",
-                "user_distance": 10,
-                "booking_number": 3,
-                "category": "A",
-                "subcategory_id": "EVENEMENT_CINE",
-                "search_group_name": "CINEMA",
-                "random": 1,
-            },
-            "movie-3": {
-                "item_id": "movie-3",
-                "user_distance": 20,
-                "booking_number": 10,
-                "category": "C",
-                "subcategory_id": "EVENEMENT_CINE",
-                "search_group_name": "CINEMA",
-                "random": 3,
-            },
-        }
+    # def get_scoring(self, db: Session) -> List[Offer]:
+    #     if self.offer.item_id is None:
+    #         return []
 
-        selected_items = [Item(item_id=item) for item in recommendable_items.keys()]
+    #     # 1. Get recommendable items
+    #     recommendable_items = {
+    #         # "product-54666": {
+    #         #     "item_id": "product-54666",
+    #         #     "user_distance": 10,
+    #         #     "booking_number": 3,
+    #         #     "category": "A",
+    #         #     "subcategory_id": "EVENEMENT_CINE",
+    #         #     "search_group_name": "CINEMA",
+    #         #     "random": 1,
+    #         # },
+    #         # FOR TEST ONLY
+    #         "isbn-1": {
+    #             "item_id": "isbn-1",
+    #             "user_distance": 10,
+    #             "booking_number": 3,
+    #             "category": "A",
+    #             "subcategory_id": "EVENEMENT_CINE",
+    #             "search_group_name": "CINEMA",
+    #             "random": 1,
+    #         },
+    #         "isbn-2": {
+    #             "item_id": "isbn-2",
+    #             "user_distance": 10,
+    #             "booking_number": 3,
+    #             "category": "A",
+    #             "subcategory_id": "EVENEMENT_CINE",
+    #             "search_group_name": "CINEMA",
+    #             "random": 1,
+    #         },
+    #         "movie-3": {
+    #             "item_id": "movie-3",
+    #             "user_distance": 20,
+    #             "booking_number": 10,
+    #             "category": "C",
+    #             "subcategory_id": "EVENEMENT_CINE",
+    #             "search_group_name": "CINEMA",
+    #             "random": 3,
+    #         },
+    #     }
 
-        # 2. Get Non recommendable items
-        non_recommendable_items = get_non_recommendable_items(db, self.user)
+    #     selected_items = [Item(item_id=item) for item in recommendable_items.keys()]
 
-        # 3. Remove non recommendable items
-        selected_items = [
-            item for item in selected_items if item not in non_recommendable_items
-        ]
+    #     # 2. Get Non recommendable items
+    #     non_recommendable_items = get_non_recommendable_items(db, self.user)
 
-        # 4. score items
-        predicted_items = [
-            Item(item_id=item.item_id, item_score=random.random())
-            for item in selected_items
-        ]
+    #     # 3. Remove non recommendable items
+    #     selected_items = [
+    #         item for item in selected_items if item not in non_recommendable_items
+    #     ]
 
-        # 5. Retrieve nearest offer from the combination user/item
-        output_list = []
-        for item in predicted_items:
-            nearest_offer = get_nearest_offer(
-                db, self.user, Item(item.item_id, item.item_score)
-            )
-            if len(nearest_offer) > 0:
-                output_items = Offer(
-                    item_id=item.item_id,
-                    item_score=item.item_score,
-                    offer_id=nearest_offer[0].offer_id,
-                    user_distance=nearest_offer[0].user_distance,
-                )
-                output_list.append(output_items)
+    #     # 4. score items
+    #     predicted_items = [
+    #         Item(item_id=item.item_id, item_score=random.random())
+    #         for item in selected_items
+    #     ]
 
-        # 6. Sort offers
-        # TODO : include input parameter instead of default dict
-        output_list_sorted = sort_offers(
-            order_query={"user_distance": "ASC", "item_score": "ASC"},
-            list_offers=output_list,
-        )
+    #     # 5. Retrieve nearest offer from the combination user/item
+    #     output_list = []
+    #     for item in predicted_items:
+    #         nearest_offer = get_nearest_offer(
+    #             db, self.user, Item(item.item_id, item.item_score)
+    #         )
+    #         if len(nearest_offer) > 0:
+    #             output_items = Offer(
+    #                 item_id=item.item_id,
+    #                 item_score=item.item_score,
+    #                 offer_id=nearest_offer[0].offer_id,
+    #                 user_distance=nearest_offer[0].user_distance,
+    #             )
+    #             output_list.append(output_items)
 
-        # 7. Limit offers
-        # TODO : include input parameter instead of default dict
-        output_list_limited = limit_offers(
-            limit_offer=20, list_offers=output_list_sorted
-        )
+    #     # 6. Sort offers
+    #     # TODO : include input parameter instead of default dict
+    #     output_list_sorted = sort_offers(
+    #         order_query={"user_distance": "ASC", "item_score": "ASC"},
+    #         list_offers=output_list,
+    #     )
 
-        return output_list_limited
+    #     # 7. Limit offers
+    #     # TODO : include input parameter instead of default dict
+    #     output_list_limited = limit_offers(
+    #         limit_offer=20, list_offers=output_list_sorted
+    #     )
+
+    #     return output_list_limited
 
     def save_recommendation(self, db: Session, recommendations) -> None:
         if len(recommendations) > 0:

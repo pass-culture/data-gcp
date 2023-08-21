@@ -37,8 +37,10 @@ def get_offer_characteristics(
             latitude=latitude,
             longitude=longitude,
             iris_id=iris_id,
+            is_geolocated=True if iris_id else False,
             item_id=offer_characteristics[0],
             cnt_bookings=offer_characteristics[1],
+            found=True,
         )
     else:
         offer = Offer(
@@ -46,6 +48,8 @@ def get_offer_characteristics(
             latitude=latitude,
             longitude=longitude,
             iris_id=iris_id,
+            is_geolocated=True if iris_id else False,
+            found=False,
         )
     return offer
 

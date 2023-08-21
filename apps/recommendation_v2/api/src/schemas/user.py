@@ -24,3 +24,5 @@ class User:
     clicks_count: float = None
     favorites_count: float = None
     user_deposit_remaining_credit: float = None
+    found: bool = False
+    is_geolocated: bool = None

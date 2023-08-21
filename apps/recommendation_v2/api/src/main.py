@@ -11,6 +11,7 @@ import uuid
 
 from schemas.user import UserInput
 from schemas.offer import OfferInput
+from schemas.playlist_params import PlaylistParams
 
 from core.model_engine.similar_offer import SimilarOffer
 from core.model_engine.recommendation import Recommendation
@@ -51,7 +52,12 @@ def check():
 
 
 @app.post("/similar_offers")
-def similar_offers(offer: OfferInput, user: UserInput, db: Session = Depends(get_db)):
+def similar_offers(
+    offer: OfferInput,
+    user: UserInput,
+    playlist_params: PlaylistParams,
+    db: Session = Depends(get_db),
+):
 
     call_id = str(uuid.uuid4())
 
@@ -61,9 +67,9 @@ def similar_offers(offer: OfferInput, user: UserInput, db: Session = Depends(get
         db, offer.offer_id, offer.latitude, offer.longitude
     )
 
-    scoring = SimilarOffer(user, offer)
+    scoring = SimilarOffer(user, offer, playlist_params)
 
-    offer_recommendations = scoring.get_scoring(db)
+    offer_recommendations = scoring.get_scoring()
 
     log_extra_data = {
         "user_id": user.user_id,

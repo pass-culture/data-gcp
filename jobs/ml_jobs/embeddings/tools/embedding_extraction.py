@@ -7,6 +7,7 @@ from multiprocessing import cpu_count
 from PIL import Image
 from sentence_transformers import SentenceTransformer
 from tools.logging_tools import log_duration
+from tools.config import ENV_SHORT_NAME
 
 
 def extract_embedding(
@@ -64,7 +65,7 @@ def encode_img_from_path(model, paths):
 
 
 def download_img_multiprocess(urls):
-    max_process = cpu_count() - 2
+    max_process = 2 if ENV_SHORT_NAME == "dev" else cpu_count() - 2
     subset_length = len(urls) // max_process
     subset_length = subset_length if subset_length > 0 else 1
     batch_number = max_process if subset_length > 1 else 1

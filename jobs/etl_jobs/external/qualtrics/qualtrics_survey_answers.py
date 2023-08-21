@@ -99,7 +99,7 @@ class QualtricsSurvey:
                 "user_civility",
             ]
         else:
-            questions_columns = ["Q1", "Q2", "Q3"]
+            questions_columns = ["Q1", "Q2"]
             select_fields = [
                 "StartDate",
                 "EndDate",

@@ -6,7 +6,7 @@ SELECT
     o.venue_name,
     o.offer_id,
     o.offer_name,
-    c.name,
+    c.tag_name AS name,
     fe.event_name,
     fe.traffic_medium,
     fe.traffic_campaign,
@@ -34,7 +34,6 @@ SELECT
         DATE_DIFF(fe.event_date, eud.user_birth_date, YEAR)
     ) AS user_age,
     COUNT(*) AS cnt_events,
-    COUNT(CASE WHEN event_name = 'ConsultOffer' THEN 1 ELSE NULL END) AS cnt_consult_offer
 FROM
     `{{ bigquery_analytics_dataset }}.firebase_events` fe
     JOIN `{{ bigquery_analytics_dataset }}.enriched_offer_data` o ON fe.offer_id = o.offer_id
@@ -43,8 +42,8 @@ FROM
         'ConsultWholeOffer',
         'ConsultDescriptionDetails'
     )
-    LEFT JOIN `{{ bigquery_clean_dataset }}.applicative_database_offer_criterion` oc ON oc.offerId = o.offer_id
-    LEFT JOIN `{{ bigquery_clean_dataset }}.applicative_database_criterion` c ON oc.criterionId = c.id
+    LEFT JOIN `{{ bigquery_analytics_dataset }}.contentful_algolia_modules_criterion` c ON fe.module_id = c.module_id
+    AND fe.offer_id = c.offer_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_user_data` eud ON fe.user_id = eud.user_id
 GROUP BY
     1,

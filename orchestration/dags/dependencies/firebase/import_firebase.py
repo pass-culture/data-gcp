@@ -34,9 +34,11 @@ GCP_PROJECT_NATIVE_ENV = {
 GCP_PROJECT_PRO_ENV = {
     "dev": [
         "pc-pro-testing.analytics_397508951",
+        "pc-pro-production.analytics_397565568",
     ],
     "stg": [
         "pc-pro-staging.analytics_397573615",
+        "pc-pro-production.analytics_397565568",
     ],
     "prod": [
         "pc-pro-production.analytics_397565568",

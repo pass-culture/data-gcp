@@ -52,7 +52,7 @@ with DAG(
     "clusterisation_item",
     default_args=default_args,
     description="Cluster offers from metadata embeddings",
-    schedule_interval=get_airflow_schedule("0 0 * * *"),
+    schedule_interval=get_airflow_schedule("0 0 * * 0"),
     catchup=False,
     dagrun_timeout=timedelta(minutes=180),
     user_defined_macros=macros.default,

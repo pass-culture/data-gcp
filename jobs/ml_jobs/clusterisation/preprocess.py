@@ -8,6 +8,7 @@ from tools.preprocessing import (
     prepare_clusterisation,
 )
 from tools.utils import ENV_SHORT_NAME, CONFIGS_PATH
+import numpy as np
 
 
 def preprocess(
@@ -39,11 +40,12 @@ def preprocess(
     pretrained_embedding_df = prepare_pretrained_encoding(
         items[pretained_embedding_col].tolist()
     )
-
+    logger.info(f"""items[["item_id"]]: {len(items[["item_id"]])}""")
+    logger.info(f"pretrained_embedding_df: {len(pretrained_embedding_df)}")
     item_semantic_encoding = pd.concat(
         [items[["item_id"]], pretrained_embedding_df], axis=1
     )
-
+    logger.info(f"item_semantic_encoding: {len(item_semantic_encoding)}")
     # Prepare categorical encoding
     logger.info("Prepare categorical encoding...")
     items_tmp = items.drop(pretained_embedding_col, axis=1)
@@ -57,20 +59,21 @@ def preprocess(
         item_semantic_encoding, item_by_category_encoded_reduced, item_by_category
     )
 
-    item_full_encoding_enriched = pd.concat(
-        [
-            items[
-                [
-                    "category",
-                    "subcategory_id",
-                    "offer_sub_type_label",
-                    "offer_type_label",
-                ]
-            ],
-            item_full_encoding_w_cat_group,
+    item_full_encoding_enriched = pd.merge(
+        items[
+            [
+                "item_id",
+                "category",
+                "subcategory_id",
+                "offer_sub_type_label",
+                "offer_type_label",
+            ]
         ],
-        axis=1,
+        item_full_encoding_w_cat_group,
+        how="inner",
+        on=["item_id"],
     )
+
     item_full_encoding_enriched = item_full_encoding_enriched.astype(str)
 
     item_full_encoding_enriched.to_gbq(

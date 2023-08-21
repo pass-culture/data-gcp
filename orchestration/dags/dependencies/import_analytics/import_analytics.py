@@ -388,7 +388,6 @@ analytics_tables = {
         "depends": ["diversification_booking"],
         "dag_depends": [
             "import_intraday_firebase_data",
-            "import_contentful",
         ],
     },
     "analytics_firebase_aggregated_similar_offer_events": {

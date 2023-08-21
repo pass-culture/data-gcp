@@ -16,6 +16,6 @@ LEFT JOIN `{{ bigquery_clean_dataset }}.applicative_database_user` USING(user_id
 LEFT JOIN `{{ bigquery_analytics_dataset }}.diversification_booking`  USING(booking_id)
 GROUP BY
     module_displayed_date
-    , entry_id
+    ,entry_id
     ,entry_name
-    , user_role
+    ,user_role

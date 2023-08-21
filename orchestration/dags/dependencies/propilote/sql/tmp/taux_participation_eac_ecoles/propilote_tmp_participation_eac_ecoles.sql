@@ -1,7 +1,7 @@
 WITH dates AS (
-    SELECT DISTINCT 
-        DATE_TRUNC(user_activation_date,MONTH) AS month 
-    FROM `{{ bigquery_analytics_dataset }}.enriched_user_data`
+    select 
+        month as month
+    from unnest(generate_date_array('2020-01-01', current_date(), interval 1 month)) month
 ),
 
 institutions AS (

@@ -27,7 +27,6 @@ RECOMMENDATION_ENDPOINTS = {
         cold_start_model=recommendation_endpoints.retrieval_filter_version_b,
         bookings_count=0,
     ),
-    # Deprecated: Retrieve only top offers
     "top_offers": ModelFork(
         warm_start_model=recommendation_endpoints.retrieval_filter,
         cold_start_model=recommendation_endpoints.retrieval_filter,

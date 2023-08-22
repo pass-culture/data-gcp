@@ -455,7 +455,15 @@ WITH temp_firebase_events AS (
                 unnest(event_params) event_params
             where
                 event_params.key = 'type'
-        ) as share_type,       
+        ) as share_type,  
+        (
+            select
+                CAST(event_params.value.string_value AS FLOAT64) 
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'duration'
+        ) as duration,     
         (
             select
                 event_params.value.string_value

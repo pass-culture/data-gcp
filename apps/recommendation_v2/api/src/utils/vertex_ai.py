@@ -26,6 +26,9 @@ def get_model(endpoint_name, location):
 
 
 def __get_model(endpoint_name, location):
+    print(f"get_model - endpoint_name : {endpoint_name}")
+    print(f"get_model - location : {location}")
+    print(f"get_model - GCP_PROJECT : {GCP_PROJECT}")
     endpoint = aiplatform.Endpoint.list(
         filter=f"display_name={endpoint_name}", location=location, project=GCP_PROJECT
     )[0]
@@ -55,17 +58,22 @@ def parallel_endpoint_score(endpoint_name, instances):
 
 
 def endpoint_score(endpoint_name, instances, fallback_endpoints=[]) -> PredictionResult:
-    for endpoint in [endpoint_name] + fallback_endpoints:
+    for endpoint in [endpoint_name]:  # + fallback_endpoints
+        print(f"endpoint_score - endpoint : {endpoint}")
         response = __predict_model(
             endpoint_name=endpoint,
             location="europe-west1",
             instances=instances,
         )
+        print(f"endpoint_score - response : {response}")
         prediction_result = PredictionResult(
             status=response["status"],
             predictions=response["predictions"],
             model_display_name=response["model_display_name"],
             model_version=response["model_version_id"],
+        )
+        print(
+            f"endpoint_score - endpoint : {endpoint}, prediction_result : {prediction_result}"
         )
         # if we have results, return, else fallback_endpoints
         if len(response["predictions"]) > 0:
@@ -90,44 +98,47 @@ def __predict_model(
         "model_version_id": "unknown",
         "model_display_name": "unknown",
     }
+    # try:
+    client = get_client(api_endpoint)
+
     try:
-        client = get_client(api_endpoint)
-        try:
-            model_params = get_model(endpoint_name, location)
-        # TODO fix this
-        except:
-            model_params = __get_model(endpoint_name, location)
+        model_params = get_model(endpoint_name, location)
+    # TODO fix this
+    except:
+        model_params = __get_model(endpoint_name, location)
 
-        instances = instances if type(instances) == list else [instances]
-        instances = [
-            json_format.ParseDict(instance_dict, Value()) for instance_dict in instances
-        ]
-        parameters_dict = {}
-        parameters = json_format.ParseDict(parameters_dict, Value())
-        try:
-            response = client.predict(
-                endpoint=model_params["endpoint_path"],
-                instances=instances,
-                parameters=parameters,
-                timeout=1,
-            )
-        except DeadlineExceeded:
-            return {
-                "status": "error",
-                "predictions": [],
-                "model_version_id": model_params["model_version_id"],
-                "model_display_name": model_params["model_name"],
-            }
+    print(f"predict_model - model_params : {model_params}")
 
-        response_dict = {
-            "status": "success",
-            "predictions": response.predictions,
+    instances = instances if type(instances) == list else [instances]
+    instances = [
+        json_format.ParseDict(instance_dict, Value()) for instance_dict in instances
+    ]
+    parameters_dict = {}
+    parameters = json_format.ParseDict(parameters_dict, Value())
+    try:
+        response = client.predict(
+            endpoint=model_params["endpoint_path"],
+            instances=instances,
+            parameters=parameters,
+            timeout=1,
+        )
+    except DeadlineExceeded:
+        return {
+            "status": "error",
+            "predictions": [],
             "model_version_id": model_params["model_version_id"],
             "model_display_name": model_params["model_name"],
         }
-    except grpc._channel._InactiveRpcError as e:
-        return default_error
-    except Exception as e:
-        return default_error
+
+    response_dict = {
+        "status": "success",
+        "predictions": response.predictions,
+        "model_version_id": model_params["model_version_id"],
+        "model_display_name": model_params["model_name"],
+    }
+    # except grpc._channel._InactiveRpcError as e:
+    #     return default_error
+    # except Exception as e:
+    #     return default_error
 
     return response_dict

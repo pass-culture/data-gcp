@@ -22,5 +22,5 @@ def sort_offers(
         return list_offers
 
 
-def limit_offers(limit_offer: int = 20, list_offers: List[Offer] = None):
-    return list_offers[:limit_offer]
+def limit_offers(offer_limit: int = 20, list_offers: List[Offer] = None):
+    return list_offers[:offer_limit]

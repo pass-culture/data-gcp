@@ -50,10 +50,10 @@ class SimilarOffer(ModelEngine):
             # ranking_endpoint=self.model_params.ranking_endpoint,
         )
 
-    def get_scoring(self) -> List[str]:
+    def get_scoring(self, db: Session) -> List[str]:
         if self.offer.item_id is None:
             return []
-        return super().get_scoring()
+        return super().get_scoring(db)
 
     # def get_scoring(self, db: Session) -> List[Offer]:
     #     if self.offer.item_id is None:

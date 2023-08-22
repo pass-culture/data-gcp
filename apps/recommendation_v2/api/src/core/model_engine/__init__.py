@@ -8,6 +8,7 @@ from utils.env_vars import (
 )
 from loguru import logger
 from core.scorer.offer import OfferScorer
+from sqlalchemy.orm import Session
 
 
 class ModelEngine(ABC):
@@ -41,13 +42,13 @@ class ModelEngine(ABC):
             ranking_endpoint=self.model_params.ranking_endpoint,
         )
 
-    def get_scoring(self) -> List[str]:
+    def get_scoring(self, db: Session) -> List[str]:
         """
         Returns a list of offer_id to be send to the user
         Depends of the scorer method.
         """
-        scored_offers = self.scorer.get_scoring()
-        print(f"scored_offers; {scored_offers}")
+        scored_offers = self.scorer.get_scoring(db)
+        print(f"get_scoring - scored_offers : {scored_offers}")
         # if len(scored_offers) == 0:
         #     return []
 

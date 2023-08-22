@@ -140,6 +140,8 @@ class RetrievalEndpoint(AbstractEndpoint):
         start = time.time()
         instances = self.get_instance(size)
         print(f"model score - instances {instances}")
+        print(f"model_score - endpoint_name {self.endpoint_name}")
+        print(f"model_score - fallback_endpoints {self.fallback_endpoints}")
         # log_duration(f"retrieval_endpoint {instances}", start)
         prediction_result = endpoint_score(
             instances=instances,
@@ -147,7 +149,7 @@ class RetrievalEndpoint(AbstractEndpoint):
             fallback_endpoints=self.fallback_endpoints,
         )
 
-        print(f"prediction_result {prediction_result}")
+        print(f"model_score - prediction_result {prediction_result}")
         self.model_version = prediction_result.model_version
         self.model_display_name = prediction_result.model_display_name
         # log_duration("retrieval_endpoint", start)

@@ -32,9 +32,8 @@ class ModelEngine(ABC):
 
     def get_scorer(self) -> OfferScorer:
         # init user_input
-        self.model_params.retrieval_endpoint.init_input(
-            user=self.user, params_in=self.params_in
-        )
+        for endpoint in self.model_params.retrieval_endpoints:
+            endpoint.init_input(user=self.user, params_in=self.params_in)
         self.model_params.ranking_endpoint.init_input(
             user=self.user, params_in=self.params_in
         )
@@ -43,7 +42,7 @@ class ModelEngine(ABC):
             user=self.user,
             params_in=self.params_in,
             model_params=self.model_params,
-            retrieval_endpoint=self.model_params.retrieval_endpoint,
+            retrieval_endpoints=self.model_params.retrieval_endpoints,
             ranking_endpoint=self.model_params.ranking_endpoint,
         )
 

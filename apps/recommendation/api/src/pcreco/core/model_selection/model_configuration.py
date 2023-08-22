@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from pcreco.models.reco.playlist_params import PlaylistParamsIn
 from pcreco.core.offer import Offer
 from pcreco.core.user import User
+import typing as t
 
 
 @dataclass
@@ -38,11 +39,10 @@ class ModelConfiguration:
     name: str
     description: str
     scorer: offer_scorer.OfferScorer
-    retrieval_endpoint: RetrievalEndpoint
-    retrieval_limit: int
+    retrieval_endpoints: t.List[RetrievalEndpoint]
     ranking_endpoint: RankingEndpoint
     ranking_order_query: str
-    ranking_limit: int
+    ranking_limit_query: int
     diversification_params: DiversificationParams
 
     def get_diversification_params(

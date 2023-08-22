@@ -22,15 +22,15 @@ class RecommendableOfferQueryBuilder:
 
         arr_sql = ",".join(
             [
-                f"('{item.item_id}'::VARCHAR, {item.item_score}::FLOAT)"
+                f"('{item.item_id}'::VARCHAR, {item.item_score}::FLOAT, {item.item_rank}::INT)"
                 for item in recommendable_items
             ]
         )
         ranked_items = f"""
             ranked_items AS (
-                SELECT s.item_id, s.item_score    
+                SELECT s.item_id, s.item_score, s.item_rank    
                 FROM unnest(ARRAY[{arr_sql}]) 
-                AS s(item_id VARCHAR, item_score FLOAT)
+                AS s(item_id VARCHAR, item_score FLOAT, item_rank INT)
             )
         """
 
@@ -90,7 +90,8 @@ class RecommendableOfferQueryBuilder:
                 ro.search_group_name,
                 ro.venue_latitude,
                 ro.venue_longitude,
-                ro.item_score
+                ro.item_score,
+                ro.item_rank
             FROM
                 rank_offers ro
             WHERE 

@@ -1,28 +1,3 @@
-WITH events AS (
-    SELECT
-        event_name,
-        CAST(event_params.value.double_value AS STRING) AS double_offer_id,
-        event_params.value.string_value AS string_offer_id
-    FROM
-        `{{ bigquery_clean_dataset }}.firebase_events_*` AS events,
-        events.event_params AS event_params
-    WHERE
-        event_params.key = 'offerId'
-),
-cleaned_events AS (
-    SELECT
-        *
-    EXCEPT
-(double_offer_id, string_offer_id),
-        (
-            CASE
-                WHEN double_offer_id IS NULL THEN string_offer_id
-                ELSE double_offer_id
-            END
-        ) AS offer_id
-    FROM
-        events
-)
 SELECT
     offer_id,
     SUM(CAST(event_name = 'ConsultOffer' AS INT64)) AS consult_offer,
@@ -57,7 +32,7 @@ SELECT
         CAST(event_name = 'HasAddedOfferToFavorites' AS INT64)
     ) AS has_added_offer_to_favorites
 from
-    cleaned_events
+        `{{ bigquery_analytics_dataset }}.firebase_events`
 WHERE
     offer_id IS NOT NULL
 GROUP BY

@@ -132,19 +132,19 @@ import_firebase_beneficiary_tables = {
         "sql": f"{SQL_PATH}/analytics/firebase_aggregated_offers.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "firebase_aggregated_offers",
-        "depends": ["clean_firebase_events"],
-    },
-    "analytics_firebase_aggregated_users": {
-        "sql": f"{SQL_PATH}/analytics/firebase_aggregated_users.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "firebase_aggregated_users",
-        "depends": ["clean_firebase_events"],
+        "depends": ["analytics_firebase_events"],
     },
     "analytics_firebase_visits": {
         "sql": f"{SQL_PATH}/analytics/firebase_visits.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "firebase_visits",
-        "depends": ["clean_firebase_events"],
+        "depends": ["analytics_firebase_events"],
+    },
+    "analytics_firebase_aggregated_users": {
+        "sql": f"{SQL_PATH}/analytics/firebase_aggregated_users.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "firebase_aggregated_users",
+        "depends": ["analytics_firebase_visits"],
     },
     "analytics_firebase_home_events": {
         "sql": f"{SQL_PATH}/analytics/firebase_home_events.sql",

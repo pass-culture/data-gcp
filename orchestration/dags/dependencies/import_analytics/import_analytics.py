@@ -154,7 +154,9 @@ analytics_tables = {
     "enriched_venue_data_history": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_venue_data_history.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "depends": ["enriched_venue_data",]
+        "depends": [
+            "enriched_venue_data",
+        ],
     },
     "enriched_venue_tags_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_venue_tags_data.sql",
@@ -163,7 +165,9 @@ analytics_tables = {
     "enriched_venue_tags_data_history": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_venue_tags_data_history.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "depends": ["enriched_venue_tags_data",]
+        "depends": [
+            "enriched_venue_tags_data",
+        ],
     },
     "enriched_reimbursement_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_reimbursement_data.sql",

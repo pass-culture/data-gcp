@@ -189,7 +189,7 @@ class OfferRetrievalEndpoint(RetrievalEndpoint):
         self.params_in = params_in
         self.is_geolocated = self.offer.is_geolocated
 
-    def get_instance(self, size):
+    def get_instance(self, size: int):
         return {
             "model_type": "similar_offer",
             "offer_id": str(self.item_id),
@@ -199,7 +199,7 @@ class OfferRetrievalEndpoint(RetrievalEndpoint):
 
 
 class OfferFilterRetrievalEndpoint(OfferRetrievalEndpoint):
-    def get_instance(self, size):
+    def get_instance(self, size: int):
         return {
             "model_type": "filter",
             "order_by": "booking_number",

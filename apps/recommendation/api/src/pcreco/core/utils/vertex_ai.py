@@ -10,6 +10,7 @@ from dataclasses import dataclass
 import concurrent.futures
 from functools import partial
 import grpc
+from loguru import logger
 
 
 @dataclass
@@ -21,11 +22,11 @@ class PredictionResult:
 
 
 @cached(cache=TTLCache(maxsize=1024, ttl=120))
-def get_model(endpoint_name, location):
+def get_model(endpoint_name: str, location: str):
     return __get_model(endpoint_name, location)
 
 
-def __get_model(endpoint_name, location):
+def __get_model(endpoint_name: str, location: str):
     endpoint = aiplatform.Endpoint.list(
         filter=f"display_name={endpoint_name}", location=location, project=GCP_PROJECT
     )[0]
@@ -128,6 +129,9 @@ def __predict_model(
     except grpc._channel._InactiveRpcError as e:
         return default_error
     except Exception as e:
+        logger.warn(
+            f"__predict_model: error, something went wrong for {endpoint_name}, {model_params}, {parameters}"
+        )
         return default_error
 
     return response_dict

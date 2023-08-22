@@ -49,7 +49,8 @@ class RecommendableOfferQueryBuilder:
                         end,
                         0.0
                     ) as user_distance,
-                    ri.item_score
+                    ri.item_score,
+                    ri.item_rank
                 FROM {table_name} ro
                 INNER JOIN ranked_items ri on ri.item_id = ro.item_id 
                 

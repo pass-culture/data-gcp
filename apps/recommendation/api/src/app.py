@@ -126,10 +126,6 @@ def similar_offers(offer_id: str):
 
     scoring = SimilarOffer(user, offer, params_in=input_reco)
     offer_recommendations = scoring.get_scoring()
-    if len(offer_recommendations) == 0:
-        input_reco.model_endpoint = "cold_start"
-        scoring = Recommendation(user, params_in=input_reco)
-        offer_recommendations = scoring.get_scoring()
 
     if not internal:
         scoring.save_recommendation(offer_recommendations)

@@ -14,6 +14,7 @@ from typing import List
 import datetime
 import time
 import pytz
+from loguru import logger
 
 
 class SimilarOffer(ModelEngine):
@@ -49,6 +50,7 @@ class SimilarOffer(ModelEngine):
 
     def get_scoring(self) -> List[str]:
         if self.offer.item_id is None:
+            logger.info(f"item_id: {self.item_id} not found")
             return []
         return super().get_scoring()
 

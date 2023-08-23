@@ -56,7 +56,10 @@ class ImportAppsFlyer:
         df = pd.concat(dfs, ignore_index=True)
         df = df.rename(columns=APP_REPORT)
         for k, v in APP_REPORT_MAPPING.items():
+            if k not in df.columns:
+                df[k] = None
             df[k] = df[k].astype(v)
+
         return df[list(APP_REPORT.values()) + ["app"]]
 
 

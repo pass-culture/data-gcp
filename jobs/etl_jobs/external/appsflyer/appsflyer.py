@@ -6,7 +6,7 @@ from furl import furl
 
 
 class AppsFlyer:
-    DEFAULT_ENDPOINT = "https://hq.appsflyer.com" #https://hq1.appsflyer.com/api/raw-data/export/app/{_id}/installs_report/v5?
+    DEFAULT_ENDPOINT = "https://hq.appsflyer.com"  # https://hq1.appsflyer.com/api/raw-data/export/app/{_id}/installs_report/v5?
     RAW_DATA_REPORT_ADDITIONAL_FIELDS = ",".join(
         [
             "install_app_store",
@@ -87,7 +87,9 @@ class AppsFlyer:
 
     def daily_report(self, date_from, date_to, as_df=False, **kwargs):
         f = furl(self.DEFAULT_ENDPOINT)
-        f.path = "/api/agg-data/export/%s/daily_report/v5" % self.app_id #api/agg-data/export/app/
+        f.path = (
+            "/api/agg-data/export/%s/daily_report/v5" % self.app_id
+        )  # api/agg-data/export/app/
         f.args = self.__build_args(date_from, date_to, kwargs)
         resp = requests.get(f.url, headers=self.headers)
 

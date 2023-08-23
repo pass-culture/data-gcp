@@ -64,6 +64,7 @@ class DefaultClient:
             ef_search=128,
             max_connection=16,
             columns=dtypes,
+            filterable_attrs=list(dtypes.keys),
         )
         self.ann.index(self.item_docs)
 
@@ -75,11 +76,11 @@ class DefaultClient:
         details: bool = False,
         item_id: str = None,
     ) -> t.List[t.Dict]:
-        docs = DocumentArray(vector)
-        self.ann.search(docs, filter=query_filter, limit=n)
-        results = docs[0].matches
+        _, documents = self.ann.search_by_vectors(
+            vector.embedding, filter=query_filter, limit=n
+        )
         predictions = []
-        for idx, row in enumerate(results):
+        for idx, row in enumerate(documents):
             # don't retrieve same object.
             if item_id is not None and str(row.tags["item_id"]) == item_id:
                 continue

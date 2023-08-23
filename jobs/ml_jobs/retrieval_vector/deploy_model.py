@@ -20,7 +20,7 @@ import numpy as np
 
 MODEL_TYPE = {
     "n_dim": 64,
-    "metric": "cosine",
+    "metric": "inner_product",
     "type": "recommendation",
     "default_token": "[UNK]",
 }

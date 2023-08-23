@@ -12,7 +12,7 @@ SELECT
     , COUNT( CASE WHEN booking_id IS NOT NULL THEN 1 ELSE NULL END) AS nb_bookings_non_cancelled
     , SUM(delta_diversification) AS total_diversification
 FROM `{{ bigquery_analytics_dataset }}.firebase_home_funnel_conversion`
-LEFT JOIN `{{ bigquery_clean_dataset }}.applicative_database_user` USING(user_id)
+LEFT JOIN `{{ bigquery_clean_dataset }}.user_beneficiary` USING(user_id)
 LEFT JOIN `{{ bigquery_analytics_dataset }}.diversification_booking`  USING(booking_id)
 GROUP BY
     module_displayed_date

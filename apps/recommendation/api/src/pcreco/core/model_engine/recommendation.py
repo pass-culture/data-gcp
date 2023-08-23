@@ -34,8 +34,12 @@ class Recommendation(ModelEngine):
                         "date": date,
                         "group_id": self.model_params.name,
                         "reco_origin": self.reco_origin,
-                        "model_name": self.scorer.retrieval_endpoint.model_display_name,
-                        "model_version": self.scorer.retrieval_endpoint.model_version,
+                        "model_name": self.scorer.retrieval_endpoints[
+                            0
+                        ].model_display_name,
+                        "model_version": self.scorer.retrieval_endpoints[
+                            0
+                        ].model_version,
                         "reco_filters": json.dumps(self.params_in.json_input),
                         "call_id": self.user.call_id,
                         "user_iris_id": self.user.iris_id,

@@ -74,8 +74,8 @@ class EqParams:
 class RetrievalEndpoint(AbstractEndpoint):
     def init_input(self, user: User, params_in: PlaylistParamsIn):
         self.user = user
-        self.user_input = str(self.user.id)
         self.params_in = params_in
+        self.user_input = str(self.user.id)
         self.is_geolocated = self.user.is_geolocated
 
     @abstractmethod
@@ -137,9 +137,9 @@ class RetrievalEndpoint(AbstractEndpoint):
 
         return {"$and": {k: v for d in params for k, v in d.filter().items()}}
 
-    def model_score(self, size: int) -> t.List[RecommendableItem]:
+    def model_score(self) -> t.List[RecommendableItem]:
         start = time.time()
-        instances = self.get_instance(size)
+        instances = self.get_instance(self.size)
         log_duration(f"retrieval_endpoint {instances}", start)
         prediction_result = endpoint_score(
             instances=instances,
@@ -152,7 +152,9 @@ class RetrievalEndpoint(AbstractEndpoint):
         # smallest = better (cosine similarity or inner_product)
         return [
             RecommendableItem(
-                item_id=r["item_id"], item_score=float(r.get("score", r["idx"]))
+                item_id=r["item_id"],
+                item_score=float(r.get("score", r["idx"])),
+                item_rank=r["idx"],
             )
             for r in prediction_result.predictions
         ]
@@ -169,7 +171,7 @@ class FilterRetrievalEndpoint(RetrievalEndpoint):
         }
 
 
-class UserRetrievalEndpoint(RetrievalEndpoint):
+class RecommendationRetrievalEndpoint(RetrievalEndpoint):
     def get_instance(self, size: int):
         return {
             "model_type": "recommendation",
@@ -187,7 +189,7 @@ class OfferRetrievalEndpoint(RetrievalEndpoint):
         self.params_in = params_in
         self.is_geolocated = self.offer.is_geolocated
 
-    def get_instance(self, size):
+    def get_instance(self, size: int):
         return {
             "model_type": "similar_offer",
             "offer_id": str(self.item_id),
@@ -197,7 +199,7 @@ class OfferRetrievalEndpoint(RetrievalEndpoint):
 
 
 class OfferFilterRetrievalEndpoint(OfferRetrievalEndpoint):
-    def get_instance(self, size):
+    def get_instance(self, size: int):
         return {
             "model_type": "filter",
             "order_by": "booking_number",

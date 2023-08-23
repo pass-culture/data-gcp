@@ -19,21 +19,21 @@ class OfferScorer:
         self,
         user: User,
         params_in: PlaylistParamsIn,
-        retrieval_endpoint: RetrievalEndpoint,
+        retrieval_endpoints: List[RetrievalEndpoint],
         ranking_endpoint: RankingEndpoint,
         model_params,
     ):
         self.user = user
         self.model_params = model_params
         self.params_in = params_in
-        self.retrieval_endpoint = retrieval_endpoint
+        self.retrieval_endpoints = retrieval_endpoints
         self.ranking_endpoint = ranking_endpoint
 
     def get_scoring(self) -> List[RecommendableOffer]:
         start = time.time()
-        prediction_items = self.retrieval_endpoint.model_score(
-            size=self.model_params.retrieval_limit
-        )
+        prediction_items: List[RecommendableItem] = []
+        for endpoint in self.retrieval_endpoints:
+            prediction_items.extend(endpoint.model_score())
         log_duration(
             f"Retrieval: predicted_items for {self.user.id}: predicted_items -> {len(prediction_items)}",
             start,
@@ -44,7 +44,9 @@ class OfferScorer:
             return []
 
         # Ranking Phase
-        recommendable_offers = self.get_recommendable_offers(prediction_items)
+        recommendable_offers = self.get_recommendable_offers(
+            list({x.item_id: x for x in prediction_items}.values())
+        )
 
         # nothing to score
         if len(recommendable_offers) == 0:
@@ -65,7 +67,7 @@ class OfferScorer:
         start = time.time()
         recommendable_offers_query = RecommendableOfferQueryBuilder().generate_query(
             order_query=self.model_params.ranking_order_query,
-            offer_limit=self.model_params.ranking_limit,
+            offer_limit=self.model_params.ranking_limit_query,
             recommendable_items=recommendable_items,
             user=self.user,
         )
@@ -93,6 +95,7 @@ class OfferScorer:
                 venue_latitude=row[11],
                 venue_longitude=row[12],
                 item_score=row[13],  # lower is better
+                item_rank=row[14],
                 query_order=i,
                 random=random.random(),
                 offer_score=size - i,  # higher is better

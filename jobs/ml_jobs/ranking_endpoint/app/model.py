@@ -1,7 +1,7 @@
 import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
+from sklearn.preprocessing import OrdinalEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.impute import SimpleImputer
 import joblib
@@ -9,16 +9,29 @@ import lightgbm as lgb
 import typing as t
 
 
+numeric_features = [
+    "user_clicks_count",
+    "user_favorites_count",
+    "user_deposit_remaining_credit",
+    "offer_user_distance",
+    "offer_booking_number",
+    "offer_stock_price",
+    "offer_creation_days",
+    "offer_stock_beginning_days",
+    "is_geolocated",
+    "venue_latitude",
+    "venue_longitude",
+]
+
+categorical_features = [
+    "offer_subcategory_id",
+]
+
+
 class PredictPipeline:
     def __init__(self) -> None:
-        self.numeric_features = [
-            "user_distance",
-            "stock_price",
-            "booking_number",
-            "stock_beginning_days",
-            "offer_creation_days",
-        ]
-        self.categorical_features = ["subcategory_id"]
+        self.numeric_features = numeric_features
+        self.categorical_features = categorical_features
         self.model = lgb.Booster(model_file="./metadata/model.txt")
         self.preprocessor = joblib.load("./metadata/preproc.joblib")
 
@@ -34,14 +47,8 @@ class PredictPipeline:
 
 class TrainPipeline:
     def __init__(self, target: str, params: dict = None, verbose: bool = False) -> None:
-        self.numeric_features = [
-            "user_distance",
-            "stock_price",
-            "booking_number",
-            "stock_beginning_days",
-            "offer_creation_days",
-        ]
-        self.categorical_features = ["subcategory_id"]
+        self.numeric_features = numeric_features
+        self.categorical_features = categorical_features
         self.preprocessor: ColumnTransformer = None
         self.train_size = 0.8
         self.target = target
@@ -123,7 +130,7 @@ class TrainPipeline:
             train_data,
             num_boost_round=10000,
             valid_sets=[train_data, test_data],
-            callbacks=[lgb.early_stopping(stopping_rounds=10)],
+            callbacks=[lgb.early_stopping(stopping_rounds=100)],
         )
 
     def predict(self, df: pd.DataFrame):

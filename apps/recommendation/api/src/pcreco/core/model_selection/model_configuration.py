@@ -22,7 +22,7 @@ diversification_on = DiversificationParams(
     is_active=True,
     is_reco_shuffled=False,
     mixing_features="search_group_name",
-    order_column="offer_score",
+    order_column="offer_output",
     order_ascending=False,
 )
 
@@ -30,7 +30,7 @@ diversification_off = DiversificationParams(
     is_active=False,
     is_reco_shuffled=False,
     mixing_features="search_group_name",
-    order_column="offer_score",
+    order_column="offer_output",
     order_ascending=False,
 )
 

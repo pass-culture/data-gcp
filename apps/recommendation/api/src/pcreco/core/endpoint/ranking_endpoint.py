@@ -51,15 +51,22 @@ class ModelRankingEndpoint(RankingEndpoint):
     ) -> t.List[RecommendableOffer]:
         offers_list = []
         for row in recommendable_offers:
+
             offers_list.append(
                 {
                     "offer_id": row.offer_id,
-                    "subcategory_id": row.subcategory_id,
-                    "user_distance": float(row.user_distance),
-                    "stock_price": float(row.stock_price),
-                    "booking_number": float(row.booking_number),
-                    "stock_beginning_days": to_days(row.stock_beginning_date),
+                    "offer_subcategory_id": row.subcategory_id,
+                    "user_clicks_count": self.user.clicks_count,
+                    "user_favorites_count": self.user.favorites_count,
+                    "user_deposit_remaining_credit": self.user.user_deposit_remaining_credit,
+                    "offer_user_distance": float(row.user_distance),
+                    "offer_booking_number": float(row.booking_number),
+                    "offer_stock_price": float(row.stock_price),
                     "offer_creation_days": to_days(row.offer_creation_date),
+                    "offer_stock_beginning_days": to_days(row.stock_beginning_date),
+                    "is_geolocated": row.is_geolocated,
+                    "venue_latitude": row.venue_latitude,
+                    "venue_longitude": row.venue_longitude,
                 }
             )
         return offers_list
@@ -83,8 +90,15 @@ class ModelRankingEndpoint(RankingEndpoint):
             r["offer_id"]: r["score"] for r in prediction_result.predictions
         }
 
+        size = len(recommendable_offers)
+
         for row in recommendable_offers:
-            past_score = row.offer_score
-            row.offer_score = prediction_dict.get(row.offer_id, past_score)
+            current_score = prediction_dict.get(row.offer_id, None)
+            if current_score is not None:
+                row.offer_score = current_score
+                row.offer_output = current_score
+            else:
+                # higher better
+                row.offer_output = size - row.query_order
         log_duration(f"ranking_endpoint {str(self.user.id)}", start)
         return sorted(recommendable_offers, key=lambda x: x.offer_score, reverse=True)

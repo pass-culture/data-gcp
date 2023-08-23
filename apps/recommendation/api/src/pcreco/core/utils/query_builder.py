@@ -92,7 +92,8 @@ class RecommendableOfferQueryBuilder:
                 ro.venue_latitude,
                 ro.venue_longitude,
                 ro.item_score,
-                ro.item_rank
+                ro.item_rank,
+                ro.is_geolocated
             FROM
                 rank_offers ro
             WHERE 

@@ -506,6 +506,16 @@ aggregated_tables = {
             "import_contentful",
         ],  # computed once a day
     },
+    "aggregated_weekly_user_data": {
+        "sql": f"{ANALYTICS_SQL_PATH}/aggregated_weekly_user_data.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "depends": [
+            "enriched_deposit_data",
+            "enriched_booking_data",
+            "diversification_booking",
+        ],
+        "dag_depends": ["import_intraday_firebase_data"],
+    },
 }
 
 

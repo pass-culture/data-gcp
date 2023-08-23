@@ -15,7 +15,7 @@ from common.operators.gce import (
 )
 from common.operators.biquery import bigquery_job_task
 from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
-from dependencies.ml.clusterisation.import_data import raw_tables, CLEAN_SQL_PATH
+from dependencies.ml.clusterisation.import_data import params
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import (
@@ -70,22 +70,18 @@ with DAG(
             default="default-config",
             type="string",
         ),
+        "clusterisation_top_N_items": Param(
+            default=10000 if ENV_SHORT_NAME == "prod" else 1000,
+            type="integer",
+        ),
     },
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)
     end = DummyOperator(task_id="end", dag=dag)
-    import_tables_tasks = {}
-    store_tables_tasks = {}
-    for table, params in raw_tables.items():
-        import_tables_tasks[table] = BigQueryExecuteQueryOperator(
-            task_id=f"import_tmp_{table}_table",
-            sql=(IMPORT_CLUSTERING_SQL_PATH / f"import_{table}.sql").as_posix(),
-            write_disposition="WRITE_TRUNCATE",
-            use_legacy_sql=False,
-            destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DATE}_{table}_clusterisation_raw",
-            dag=dag,
-        )
 
+    data_collect_task = bigquery_job_task(
+        dag, "import_item_batch", params, extra_params={}
+    )
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
         instance_name=GCE_INSTANCE,
@@ -133,7 +129,7 @@ with DAG(
 
     (
         start
-        >> import_tables_tasks["items"]
+        >> data_collect_task
         >> gce_instance_start
         >> fetch_code
         >> install_dependencies

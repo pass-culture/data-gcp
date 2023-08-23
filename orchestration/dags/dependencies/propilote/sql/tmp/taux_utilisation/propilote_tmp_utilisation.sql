@@ -1,7 +1,7 @@
 WITH dates AS (
-    SELECT 
-        DISTINCT DATE_TRUNC(deposit_creation_date, MONTH) AS month 
-    FROM `{{ bigquery_analytics_dataset }}.enriched_deposit_data`
+    select 
+        month as month
+    from unnest(generate_date_array('2020-01-01', current_date(), interval 1 month)) month
 ),
 
 infos_users AS (

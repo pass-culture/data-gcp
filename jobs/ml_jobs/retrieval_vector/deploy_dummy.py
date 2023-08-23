@@ -11,7 +11,6 @@ from utils import (
     save_experiment,
     save_model_type,
 )
-import tensorflow as tf
 import numpy as np
 
 
@@ -28,13 +27,13 @@ def prepare_docs():
     items_df = get_items_metadata()
     user_df = get_users_metadata()
     # default
-    user_embedding_dict[MODEL_TYPE["default_token"]] = np.random.random(
-        (MODEL_TYPE["n_dim"],)
-    )
     user_embedding_dict = {
         row.user_id: np.random.random((MODEL_TYPE["n_dim"],))
         for row in user_df.itertuples()
     }
+    user_embedding_dict[MODEL_TYPE["default_token"]] = np.random.random(
+        (MODEL_TYPE["n_dim"],)
+    )
     item_embedding_dict = {
         row.item_id: np.random.random((MODEL_TYPE["n_dim"],))
         for row in items_df.itertuples()

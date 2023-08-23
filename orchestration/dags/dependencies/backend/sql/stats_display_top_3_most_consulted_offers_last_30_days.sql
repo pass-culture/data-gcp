@@ -3,11 +3,13 @@ WITH
   SELECT
     offerer_id,
     offer_id,
-    SUM(cnt_consult_offer) AS nb_consult_last_30_days
+    SUM(cnt_events) AS nb_consult_last_30_days
   FROM
     `{{ bigquery_analytics_dataset }}.aggregated_daily_offer_consultation_data`
   WHERE
     event_date >= DATE_SUB(current_date, INTERVAL 30 DAY)
+  AND
+    event_name = 'ConsultOffer'
   GROUP BY
     1,
     2 )

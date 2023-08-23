@@ -14,6 +14,7 @@ from typing import List
 import datetime
 import time
 import pytz
+from loguru import logger
 
 
 class SimilarOffer(ModelEngine):
@@ -23,9 +24,10 @@ class SimilarOffer(ModelEngine):
 
     def get_scorer(self):
         # init input
-        self.model_params.retrieval_endpoint.init_input(
-            user=self.user, offer=self.offer, params_in=self.params_in
-        )
+        for endpoint in self.model_params.retrieval_endpoints:
+            endpoint.init_input(
+                user=self.user, offer=self.offer, params_in=self.params_in
+            )
         self.model_params.ranking_endpoint.init_input(
             user=self.user, params_in=self.params_in
         )
@@ -33,7 +35,7 @@ class SimilarOffer(ModelEngine):
             user=self.user,
             params_in=self.params_in,
             model_params=self.model_params,
-            retrieval_endpoint=self.model_params.retrieval_endpoint,
+            retrieval_endpoints=self.model_params.retrieval_endpoints,
             ranking_endpoint=self.model_params.ranking_endpoint,
         )
 
@@ -48,6 +50,7 @@ class SimilarOffer(ModelEngine):
 
     def get_scoring(self) -> List[str]:
         if self.offer.item_id is None:
+            logger.info(f"item_id: {self.offer.item_id} not found")
             return []
         return super().get_scoring()
 
@@ -65,8 +68,12 @@ class SimilarOffer(ModelEngine):
                         "offer_id": offer_id,
                         "date": date,
                         "group_id": self.model_params.name,
-                        "model_name": self.scorer.retrieval_endpoint.model_display_name,
-                        "model_version": self.scorer.retrieval_endpoint.model_version,
+                        "model_name": self.scorer.retrieval_endpoints[
+                            0
+                        ].model_display_name,
+                        "model_version": self.scorer.retrieval_endpoints[
+                            0
+                        ].model_version,
                         "reco_filters": json.dumps(self.params_in.json_input),
                         "call_id": self.user.call_id,
                         "venue_iris_id": self.offer.iris_id,

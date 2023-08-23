@@ -100,8 +100,8 @@ def playlist_recommendation(user_id: int):
             "params": {
                 "reco_origin": scoring.reco_origin,
                 "model_endpoint": scoring.model_params.name,
-                "model_name": scoring.scorer.retrieval_endpoint.model_display_name,
-                "model_version": scoring.scorer.retrieval_endpoint.model_version,
+                "model_name": scoring.scorer.retrieval_endpoints[0].model_display_name,
+                "model_version": scoring.scorer.retrieval_endpoints[0].model_version,
                 "geo_located": geo_located,
                 "filtered": input_reco.has_conditions if input_reco else False,
                 "call_id": call_id,
@@ -127,6 +127,12 @@ def similar_offers(offer_id: str):
     scoring = SimilarOffer(user, offer, params_in=input_reco)
     offer_recommendations = scoring.get_scoring()
 
+    if len(offer_recommendations) == 0:
+        # retrieve top offers when we don't have any offer to show
+        input_reco.model_endpoint = "top_offers"
+        scoring = Recommendation(user, params_in=input_reco)
+        offer_recommendations = scoring.get_scoring()
+
     if not internal:
         scoring.save_recommendation(offer_recommendations)
 
@@ -136,8 +142,8 @@ def similar_offers(offer_id: str):
             "params": {
                 "reco_origin": scoring.reco_origin,
                 "model_endpoint": scoring.model_params.name,
-                "model_name": scoring.scorer.retrieval_endpoint.model_display_name,
-                "model_version": scoring.scorer.retrieval_endpoint.model_version,
+                "model_name": scoring.scorer.retrieval_endpoints[0].model_display_name,
+                "model_version": scoring.scorer.retrieval_endpoints[0].model_version,
                 "geo_located": geo_located,
                 "filtered": input_reco.has_conditions if input_reco else False,
                 "call_id": call_id,

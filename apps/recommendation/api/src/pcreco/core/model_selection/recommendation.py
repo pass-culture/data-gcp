@@ -1,40 +1,22 @@
-from pcreco.utils.env_vars import (
-    ENV_SHORT_NAME,
-)
-from pcreco.core.endpoint.retrieval_endpoint import (
-    UserRetrievalEndpoint,
-    FilterRetrievalEndpoint,
-)
 from pcreco.core.model_selection.model_configuration import (
     ModelConfiguration,
     diversification_on,
 )
-from pcreco.core.endpoint.ranking_endpoint import (
-    ModelRankingEndpoint,
-)
 import pcreco.core.scorer.offer as offer_scorer
+import pcreco.core.model_selection.endpoint.user_retrieval as user_retrieval
+import pcreco.core.model_selection.endpoint.user_ranking as user_ranking
 
-RETRIEVAL_LIMIT = 500
-RANKING_LIMIT = 200
+RANKING_LIMIT = 100
 
 retrieval_filter = ModelConfiguration(
     name="recommendation_filter",
     description="""""",
     scorer=offer_scorer.OfferScorer,
-    retrieval_limit=RETRIEVAL_LIMIT,
-    ranking_order_query="booking_number DESC",
-    ranking_limit=RANKING_LIMIT,
+    ranking_order_query="item_rank ASC",
+    ranking_limit_query=RANKING_LIMIT,
     diversification_params=diversification_on,
-    retrieval_endpoint=FilterRetrievalEndpoint(
-        endpoint_name=f"recommendation_user_retrieval_{ENV_SHORT_NAME}",
-        fallback_endpoints=[
-            f"recommendation_user_retrieval_version_b_{ENV_SHORT_NAME}",
-            f"recommendation_semantic_retrieval_{ENV_SHORT_NAME}",
-        ],
-    ),
-    ranking_endpoint=ModelRankingEndpoint(
-        f"recommendation_user_ranking_{ENV_SHORT_NAME}"
-    ),
+    retrieval_endpoints=[user_retrieval.filter_retrieval_endpoint],
+    ranking_endpoint=user_ranking.user_ranking_endpoint,
 )
 
 
@@ -42,51 +24,37 @@ retrieval_reco = ModelConfiguration(
     name="recommendation_user",
     description="""""",
     scorer=offer_scorer.OfferScorer,
-    retrieval_limit=RETRIEVAL_LIMIT,
-    ranking_order_query="booking_number DESC",
-    ranking_limit=RANKING_LIMIT,
+    ranking_order_query="item_rank ASC",
+    ranking_limit_query=RANKING_LIMIT,
     diversification_params=diversification_on,
-    retrieval_endpoint=UserRetrievalEndpoint(
-        endpoint_name=f"recommendation_user_retrieval_{ENV_SHORT_NAME}",
-        fallback_endpoints=[
-            f"recommendation_user_retrieval_version_b_{ENV_SHORT_NAME}"
-        ],
-    ),
-    ranking_endpoint=ModelRankingEndpoint(
-        f"recommendation_user_ranking_{ENV_SHORT_NAME}"
-    ),
+    retrieval_endpoints=[
+        user_retrieval.filter_retrieval_endpoint,
+        user_retrieval.recommendation_retrieval_endpoint,
+    ],
+    ranking_endpoint=user_ranking.user_ranking_endpoint,
 )
 
 retrieval_filter_version_b = ModelConfiguration(
     name="recommendation_filter",
     description="""""",
     scorer=offer_scorer.OfferScorer,
-    retrieval_limit=RETRIEVAL_LIMIT,
-    ranking_order_query="booking_number DESC",
-    ranking_limit=RANKING_LIMIT,
+    ranking_order_query="item_rank ASC",
+    ranking_limit_query=RANKING_LIMIT,
     diversification_params=diversification_on,
-    retrieval_endpoint=FilterRetrievalEndpoint(
-        endpoint_name=f"recommendation_user_retrieval_version_b_{ENV_SHORT_NAME}",
-        fallback_endpoints=[f"recommendation_user_retrieval_{ENV_SHORT_NAME}"],
-    ),
-    ranking_endpoint=ModelRankingEndpoint(
-        f"recommendation_user_ranking_{ENV_SHORT_NAME}"
-    ),
+    retrieval_endpoints=[user_retrieval.filter_retrieval_version_b_endpoint],
+    ranking_endpoint=user_ranking.user_ranking_endpoint,
 )
 
 retrieval_reco_version_b = ModelConfiguration(
     name="recommendation_user",
     description="""""",
     scorer=offer_scorer.OfferScorer,
-    retrieval_limit=RETRIEVAL_LIMIT,
-    ranking_order_query="booking_number DESC",
-    ranking_limit=RANKING_LIMIT,
+    ranking_order_query="item_rank ASC",
+    ranking_limit_query=RANKING_LIMIT,
     diversification_params=diversification_on,
-    retrieval_endpoint=UserRetrievalEndpoint(
-        endpoint_name=f"recommendation_user_retrieval_version_b_{ENV_SHORT_NAME}",
-        fallback_endpoints=[f"recommendation_user_retrieval_{ENV_SHORT_NAME}"],
-    ),
-    ranking_endpoint=ModelRankingEndpoint(
-        f"recommendation_user_ranking_{ENV_SHORT_NAME}"
-    ),
+    retrieval_endpoints=[
+        user_retrieval.filter_retrieval_version_b_endpoint,
+        user_retrieval.recommendation_retrieval_version_b_endpoint,
+    ],
+    ranking_endpoint=user_ranking.user_ranking_endpoint,
 )

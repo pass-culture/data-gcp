@@ -19,7 +19,7 @@ def to_sql_type(_type):
     return _dict[_type]
 
 
-def access_secret_data(project_id, secret_id, version_id=1, default=None):
+def access_secret_data(project_id, secret_id, version_id="latest", default=None):
     try:
         client = secretmanager.SecretManagerServiceClient()
         name = f"projects/{project_id}/secrets/{secret_id}/versions/{version_id}"

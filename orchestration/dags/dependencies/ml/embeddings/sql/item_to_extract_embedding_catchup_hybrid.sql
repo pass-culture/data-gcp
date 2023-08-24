@@ -78,7 +78,15 @@ WHERE
             distinct item_id
         from
             `{{ bigquery_clean_dataset }}`.item_embeddings_v2
-    ) QUALIFY ROW_NUMBER() OVER (
+    ) 
+AND
+    oii.item_id not in (
+        select
+            distinct item_id
+        from
+            `{{ bigquery_clean_dataset }}`.item_embeddings_v3
+    ) 
+QUALIFY ROW_NUMBER() OVER (
         PARTITION BY item_id
         ORDER BY
             eod.booking_cnt DESC

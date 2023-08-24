@@ -32,4 +32,5 @@ SELECT
     , "dateUpdated" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' as offer_date_updated
     , "withdrawalType" AS offer_withdrawal_type
     , "withdrawalDelay" AS offer_withdrawal_delay
+    , CAST("bookingContact" AS varchar(255)) as booking_contact
 FROM public.offer

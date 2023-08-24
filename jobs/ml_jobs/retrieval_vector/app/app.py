@@ -9,21 +9,6 @@ import json
 import uuid
 
 
-logger = logging.getLogger(__name__)
-stdout = logging.StreamHandler(stream=sys.stdout)
-fmt = jsonlogger.JsonFormatter(
-    "%(name)s %(asctime)s %(levelname)s %(filename)s %(lineno)s %(process)d %(message)s",
-    rename_fields={"levelname": "severity", "asctime": "timestamp"},
-)
-
-stdout.setFormatter(fmt)
-logger.addHandler(stdout)
-logger.setLevel(logging.INFO)
-
-app = Flask(__name__)
-CORS(app)
-
-
 def load_model() -> DefaultClient:
     with open("./metadata/model_type.json", "r") as file:
         desc = json.load(file)
@@ -43,11 +28,25 @@ def load_model() -> DefaultClient:
             raise Exception("Model desc not found.")
 
 
-log_data = {"event": "startup", "response": "load"}
-logger.info("startup", extra=log_data)
 model = load_model()
 model.load()
 model.index()
+
+
+logger = logging.getLogger(__name__)
+stdout = logging.StreamHandler(stream=sys.stdout)
+fmt = jsonlogger.JsonFormatter(
+    "%(name)s %(asctime)s %(levelname)s %(filename)s %(lineno)s %(process)d %(message)s",
+    rename_fields={"levelname": "severity", "asctime": "timestamp"},
+)
+
+stdout.setFormatter(fmt)
+logger.addHandler(stdout)
+logger.setLevel(logging.INFO)
+
+app = Flask(__name__)
+CORS(app)
+
 log_data = {"event": "startup", "response": "ready"}
 logger.info("startup", extra=log_data)
 

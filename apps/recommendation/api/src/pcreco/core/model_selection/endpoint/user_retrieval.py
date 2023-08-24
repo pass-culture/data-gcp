@@ -9,7 +9,6 @@ filter_retrieval_endpoint = FilterRetrievalEndpoint(
     size=500,
     fallback_endpoints=[
         RetrievalEndpointName.recommendation_user_retrieval_version_b,
-        RetrievalEndpointName.recommendation_semantic_retrieval,
     ],
 )
 
@@ -25,7 +24,6 @@ filter_retrieval_version_b_endpoint = FilterRetrievalEndpoint(
     size=500,
     fallback_endpoints=[
         RetrievalEndpointName.recommendation_user_retrieval,
-        RetrievalEndpointName.recommendation_semantic_retrieval,
     ],
 )
 

@@ -29,8 +29,8 @@ low_dict = {
     "dev": "n1-standard-2",
 }
 standard_dict = {
-    "prod": "n1-standard-8",
-    "stg": "n1-standard-4",
+    "prod": "n1-standard-16",
+    "stg": "n1-standard-8",
     "dev": "n1-standard-2",
 }
 high_dict = {

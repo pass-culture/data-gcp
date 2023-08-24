@@ -15,6 +15,7 @@ def define_import_tables():
         "beneficiary_import",
         "beneficiary_import_status",
         "booking",
+        "booking_finance_incident",
         "boost_cinema_details",
         "cashflow",
         "cashflow_batch",
@@ -39,6 +40,7 @@ def define_import_tables():
         "educational_year",
         "favorite",
         "feature",
+        "finance_incident",
         "internal_user",
         "invoice",
         "invoice_cashflow",
@@ -62,6 +64,7 @@ def define_import_tables():
         "pricing_line",
         "pricing_log",
         "product",
+        "product_whitlist",
         "provider",
         "recredit",
         "stock",
@@ -124,6 +127,7 @@ analytics_tables = {
     "enriched_offerer_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_offerer_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "depends": ["bookable_venue_history"],
     },
     "enriched_offerer_tags_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_offerer_tags_data.sql",
@@ -150,6 +154,7 @@ analytics_tables = {
     "enriched_venue_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_venue_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "depends": ["bookable_venue_history"],
     },
     "enriched_venue_tags_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_venue_tags_data.sql",
@@ -378,6 +383,16 @@ analytics_tables = {
         "dag_depends": [
             "import_intraday_firebase_data",
             "import_contentful",
+        ],
+    },
+    "analytics_firebase_whole_home_conversion": {
+        "sql": f"{ANALYTICS_SQL_PATH}/firebase_whole_home_conversion.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "firebase_whole_home_conversion",
+        "time_partitioning": {"field": "module_displayed_date"},
+        "depends": ["diversification_booking"],
+        "dag_depends": [
+            "import_intraday_firebase_data",
         ],
     },
     "analytics_firebase_aggregated_similar_offer_events": {

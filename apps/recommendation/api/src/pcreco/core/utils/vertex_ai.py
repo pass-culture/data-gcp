@@ -129,7 +129,7 @@ def __predict_model(
     except grpc._channel._InactiveRpcError as e:
         return default_error
     except Exception as e:
-        logger.warn(
+        logger.info(
             f"__predict_model: error, something went wrong for {endpoint_name}, {model_params}, {parameters}"
         )
         return default_error

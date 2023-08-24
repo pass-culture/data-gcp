@@ -2,6 +2,7 @@ import typing as t
 from docarray import DocumentArray, Document
 from annlite import AnnLite
 import uuid
+import numpy as np
 
 dtypes = {
     "category": "str",
@@ -60,12 +61,10 @@ class DefaultClient:
             self.n_dim,
             metric=self.metric,
             data_path=f"./metadata/annlite_{str(uuid.uuid4())}",
-            ef_construction=64,
-            ef_search=128,
-            max_connection=16,
             columns=dtypes,
         )
         self.ann.index(self.item_docs)
+        self.ann.read_only = True
 
     def search(
         self,
@@ -75,11 +74,11 @@ class DefaultClient:
         details: bool = False,
         item_id: str = None,
     ) -> t.List[t.Dict]:
-        docs = DocumentArray(vector)
-        self.ann.search(docs, filter=query_filter, limit=n)
-        results = docs[0].matches
+        _, documents = self.ann.search_by_vectors(
+            np.array([vector.embedding]), filter=query_filter, limit=n
+        )
         predictions = []
-        for idx, row in enumerate(results):
+        for idx, row in enumerate(documents[0]):
             # don't retrieve same object.
             if item_id is not None and str(row.tags["item_id"]) == item_id:
                 continue

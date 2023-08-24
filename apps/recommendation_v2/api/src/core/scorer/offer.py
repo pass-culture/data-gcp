@@ -1,15 +1,20 @@
-from schemas.user import User
-from schemas.playlist_params import PlaylistParams
+from sqlalchemy.orm import Session
 from typing import List
 import time
-from core.endpoint.retrieval_endpoint import RetrievalEndpoint
 import random
+
+from core.endpoint.retrieval_endpoint import RetrievalEndpoint
 from core.endpoint.ranking_endpoint import RankingEndpoint
+
+from schemas.user import User
+from schemas.playlist_params import PlaylistParams
 from schemas.offer import RecommendableOffer
 from schemas.item import RecommendableItem
+
 from crud.offer import get_nearest_offer, get_non_recommendable_items
-from sqlalchemy.orm import Session
+
 from utils.manage_output_offers import limit_offers
+from utils.env_vars import log_duration
 
 
 class OfferScorer:
@@ -38,10 +43,10 @@ class OfferScorer:
 
         for endpoint in self.retrieval_endpoints:
             prediction_items.extend(endpoint.model_score())
-        # log_duration(
-        #     f"Retrieval: predicted_items for {self.user.user_id}: predicted_items -> {len(prediction_items)}",
-        #     start,
-        # )
+        log_duration(
+            f"Retrieval: predicted_items for {self.user.user_id}: predicted_items -> {len(prediction_items)}",
+            start,
+        )
         start = time.time()
         # nothing to score
         if len(prediction_items) == 0:
@@ -57,10 +62,10 @@ class OfferScorer:
         recommendable_offers = self.ranking_endpoint.model_score(
             recommendable_offers=recommendable_offers
         )
-        # log_duration(
-        #     f"Ranking: get_recommendable_offers for {self.user.user_id}: offers -> {len(recommendable_offers)}",
-        #     start,
-        # )
+        log_duration(
+            f"Ranking: get_recommendable_offers for {self.user.user_id}: offers -> {len(recommendable_offers)}",
+            start,
+        )
 
         # Limit the display of offers recommendations
         user_recommendations = limit_offers(

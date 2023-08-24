@@ -1,16 +1,18 @@
-from schemas.user import User
 import time
-from utils.vertex_ai import endpoint_score
+from datetime import datetime
+from abc import abstractmethod
+import typing as t
 
-# from utils.env_vars import (
-#     log_duration,
-# )
+from schemas.user import User
 from schemas.playlist_params import PlaylistParams
 from schemas.offer import RecommendableOffer
-from datetime import datetime
-import typing as t
-from abc import abstractmethod
+
 from core.endpoint import AbstractEndpoint
+
+from utils.vertex_ai import endpoint_score
+from utils.env_vars import (
+    log_duration,
+)
 
 
 def to_days(dt: datetime):
@@ -75,10 +77,10 @@ class ModelRankingEndpoint(RankingEndpoint):
         prediction_result = endpoint_score(
             instances=instances, endpoint_name=self.endpoint_name
         )
-        # log_duration(
-        #     f"ranking_endpoint {str(self.user.user_id)} offers : {len(recommendable_offers)}",
-        #     start,
-        # )
+        log_duration(
+            f"ranking_endpoint {str(self.user.user_id)} offers : {len(recommendable_offers)}",
+            start,
+        )
         self.model_version = prediction_result.model_version
         self.model_display_name = prediction_result.model_display_name
         # smallest = better (indices)
@@ -89,5 +91,5 @@ class ModelRankingEndpoint(RankingEndpoint):
         for row in recommendable_offers:
             past_score = row.offer_score
             row.offer_score = prediction_dict.get(row.offer_id, past_score)
-        # log_duration(f"ranking_endpoint {str(self.user.user_id)}", start)
+        log_duration(f"ranking_endpoint {str(self.user.user_id)}", start)
         return sorted(recommendable_offers, key=lambda x: x.offer_score, reverse=True)

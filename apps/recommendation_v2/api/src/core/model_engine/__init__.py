@@ -49,6 +49,7 @@ class ModelEngine(ABC):
         Returns a list of offer_id to be send to the user
         Depends of the scorer method.
         """
+        scored_offers = self.scorer.get_scoring(db)
         if len(scored_offers) == 0:
             return []
 

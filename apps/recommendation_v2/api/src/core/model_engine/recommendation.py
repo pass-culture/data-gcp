@@ -1,5 +1,4 @@
 from sqlalchemy.orm import Session
-from typing import List
 import datetime
 import time
 import pytz
@@ -8,11 +7,14 @@ from schemas.user import User
 from schemas.playlist_params import PlaylistParams
 
 from models.past_recommended_offers import PastRecommendedOffers
+
 from core.model_engine import ModelEngine
 from core.model_selection.model_configuration import ModelConfiguration
 from core.model_selection import (
     select_reco_model_params,
 )
+
+from utils.env_vars import log_duration
 
 
 class Recommendation(ModelEngine):
@@ -44,4 +46,4 @@ class Recommendation(ModelEngine):
                 )
                 db.add(reco_offer)
             db.commit()
-            # log_duration(f"save_recommendations for {self.user.user_id}", start)
+            log_duration(f"save_recommendations for {self.user.user_id}", start)

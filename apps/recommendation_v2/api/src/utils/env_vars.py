@@ -1,7 +1,9 @@
 import os
+import time
 from enum import Enum
-from utils.secrets import access_secret
 import contextvars
+from loguru import logger
+from utils.secrets import access_secret
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT", "passculture-data-ehp")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
@@ -31,3 +33,7 @@ class MixingFeatures(Enum):
     subcategory_id = "subcategory_id"
     search_group_name = "search_group_name"
     category = "category"
+
+
+def log_duration(message, start):
+    logger.info(f"{message}: {time.time() - start} seconds.")

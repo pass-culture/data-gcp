@@ -1,11 +1,6 @@
-from fastapi import Depends, FastAPI, HTTPException, Request, status
+from fastapi import Depends, FastAPI, Request
 from fastapi.logger import logger
-from fastapi.security import OAuth2PasswordRequestForm
 from fastapi_versioning import VersionedFastAPI, version
-from typing_extensions import Annotated
-
-from utils.database import Base, engine, SessionLocal
-
 from sqlalchemy.orm import Session
 import uuid
 
@@ -15,8 +10,11 @@ from schemas.playlist_params import PlaylistParams
 
 from core.model_engine.similar_offer import SimilarOffer
 from core.model_engine.recommendation import Recommendation
+
 from crud.user import get_user_profile
 from crud.offer import get_offer_characteristics
+
+from utils.database import Base, engine, SessionLocal
 from utils.env_vars import cloud_trace_context
 from utils.cloud_logging.setup import setup_logging
 
@@ -73,22 +71,28 @@ def similar_offers(
 
     log_extra_data = {
         "user_id": user.user_id,
+        "offer_id": offer.offer_id,
         "iris_id": user.iris_id,
         "call_id": call_id,
-        # 'reco_origin': scoring.reco_origin,
-        # 'filters': ,
-        # 'model_name': scoring.model_name,
-        # 'model_version': scoring.model_version,
-        # 'endpoint_name': scoring.endpoint_name ,
-        # 'nb_recommendable_items': len(scoring.recommendable_items), # retrieval
-        # 'nb_recommendable_offers': len(scoring.recommendable_offers), # ranking
-        # 'nb_recommended_offers': len(user_recommendations),
+        "reco_origin": scoring.reco_origin,
+        # 'filters': playlist_params,
+        "retrieval_model_name": scoring.scorer.retrieval_endpoints[
+            0
+        ].model_display_name,
+        "retrieval_model_version": scoring.scorer.retrieval_endpoints[0].model_version,
+        "retrieval_endpoint_name": scoring.scorer.retrieval_endpoints[0].endpoint_name,
+        "ranking_model_name": scoring.scorer.ranking_endpoint.model_display_name,
+        "ranking_model_version": scoring.scorer.ranking_endpoint.model_version,
+        "ranking_endpoint_name": scoring.scorer.ranking_endpoint.endpoint_name,
+        "recommended_offers": offer_recommendations,
     }
-    # add nbr offres recommandables, nbr d'offres recommandées, endpoint appelé, model_name, param filters, call_id, temps de requête
 
-    custom_logger.info("Get user profile", extra=log_extra_data)
+    custom_logger.info(
+        f"Get similar offer of offer_id {offer.offer_id} for user {user.user_id}",
+        extra=log_extra_data,
+    )
 
-    # scoring.save_recommendation(db, offer_recommendations)
+    scoring.save_recommendation(db, offer_recommendations)
 
     return offer_recommendations
 
@@ -106,10 +110,27 @@ def playlist_recommendation(
 
     user_recommendations = scoring.get_scoring(db)
 
+    log_extra_data = {
+        "user_id": user.user_id,
+        "iris_id": user.iris_id,
+        "call_id": call_id,
+        "reco_origin": scoring.reco_origin,
+        # 'filters': playlist_params,
+        "retrieval_model_name": scoring.scorer.retrieval_endpoints[
+            0
+        ].model_display_name,
+        "retrieval_model_version": scoring.scorer.retrieval_endpoints[0].model_version,
+        "retrieval_endpoint_name": scoring.scorer.retrieval_endpoints[0].endpoint_name,
+        "ranking_model_name": scoring.scorer.ranking_endpoint.model_display_name,
+        "ranking_model_version": scoring.scorer.ranking_endpoint.model_version,
+        "ranking_endpoint_name": scoring.scorer.ranking_endpoint.endpoint_name,
+        "recommended_offers": user_recommendations,
+    }
+
+    custom_logger.info(
+        f"Get recommendations for user {user.user_id}", extra=log_extra_data
+    )
+
     scoring.save_recommendation(db, user_recommendations)
-
-    log_extra_data = {"user_id": user.user_id, "iris_id": user.iris_id}
-
-    custom_logger.info("Get user profile", extra=log_extra_data)
 
     return user_recommendations

@@ -7,12 +7,16 @@ import pytz
 from schemas.user import User
 from schemas.offer import Offer
 from schemas.playlist_params import PlaylistParams
+
 from core.model_engine import ModelEngine
 from core.model_selection.model_configuration import ModelConfiguration
 from core.model_selection import (
     select_sim_model_params,
 )
+
 from models.past_recommended_offers import PastSimilarOffers
+
+from utils.env_vars import log_duration
 
 
 class SimilarOffer(ModelEngine):
@@ -70,4 +74,4 @@ class SimilarOffer(ModelEngine):
                 )
                 db.add(reco_offer)
             db.commit()
-            # log_duration(f"save_recommendations for {self.user.user_id}", start)
+            log_duration(f"save_recommendations for {self.user.user_id}", start)

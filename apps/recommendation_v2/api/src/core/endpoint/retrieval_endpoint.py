@@ -1,14 +1,18 @@
-from schemas.user import User
-import time
-from utils.vertex_ai import endpoint_score
-from schemas.offer import Offer
-from schemas.playlist_params import PlaylistParams
 from datetime import datetime
+import time
 from dataclasses import dataclass
 import typing as t
 from abc import abstractmethod
-from core.endpoint import AbstractEndpoint
+
+from schemas.offer import Offer
+from schemas.playlist_params import PlaylistParams
+from schemas.user import User
 from schemas.item import RecommendableItem
+
+from core.endpoint import AbstractEndpoint
+
+from utils.vertex_ai import endpoint_score
+from utils.env_vars import log_duration
 
 
 @dataclass
@@ -135,7 +139,7 @@ class RetrievalEndpoint(AbstractEndpoint):
     def model_score(self) -> t.List[RecommendableItem]:
         start = time.time()
         instances = self.get_instance(self.size)
-        # log_duration(f"retrieval_endpoint {instances}", start)
+        log_duration(f"retrieval_endpoint {instances}", start)
         prediction_result = endpoint_score(
             instances=instances,
             endpoint_name=self.endpoint_name,
@@ -143,7 +147,7 @@ class RetrievalEndpoint(AbstractEndpoint):
         )
         self.model_version = prediction_result.model_version
         self.model_display_name = prediction_result.model_display_name
-        # log_duration("retrieval_endpoint", start)
+        log_duration("retrieval_endpoint", start)
         # smallest = better (cosine similarity or inner_product)
         return [
             RecommendableItem(

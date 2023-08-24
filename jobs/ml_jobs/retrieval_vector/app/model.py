@@ -82,7 +82,7 @@ class DefaultClient:
             np.array([vector.embedding]), filter=query_filter, limit=n
         )
         predictions = []
-        for idx, row in enumerate(documents):
+        for idx, row in enumerate(documents[0]):
             # don't retrieve same object.
             if item_id is not None and str(row.tags["item_id"]) == item_id:
                 continue

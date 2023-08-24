@@ -205,9 +205,4 @@ def clusterisation_from_prebuild_encoding(
     dfclusters_enriched = dfclusters_enriched.drop_duplicates(
         subset=["item_id"], keep="first"
     )
-
-    dfclusters_enriched.to_gbq(
-        f"clean_{ENV_SHORT_NAME}.{output_table}_{target_nbclusters}_{cat}",
-        if_exists="replace",
-    )
-    return
+    return dfclusters_enriched

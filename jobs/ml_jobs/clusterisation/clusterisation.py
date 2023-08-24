@@ -32,16 +32,29 @@ def clusterization(
         .reset_index()["category_group"]
         .values.tolist()
     )
+    df_clusters_enriched = pd.DataFrame()
     for cat in category_list:
         item_full_encoding_enriched_given_cat = item_full_encoding_enriched.loc[
             item_full_encoding_enriched["category_group"].isin([cat])
         ]
-        clusterisation_from_prebuild_encoding(
+        dfclusters_cat = clusterisation_from_prebuild_encoding(
             cat,
             item_full_encoding_enriched_given_cat,
             params["target_nbclusters"],
             output_table,
         )
+        dfclusters_cat["category"] = [cat] * len(dfclusters_cat)
+        dfclusters_cat["cluster_id"] = dfclusters_cat[["cluster", "category"]].agg(
+            "|".join, axis=1
+        )
+        dfclusters_cat["cluster_name"] = dfclusters_cat[["cluster_id", "label"]].agg(
+            "|".join, axis=1
+        )
+        df_clusters_enriched = pd.concat([df_clusters_enriched, dfclusters_cat])
+    df_clusters_enriched.to_gbq(
+        f"""clean_{ENV_SHORT_NAME}.{output_table}_{params["target_nbclusters"]}_ALL""",
+        if_exists="replace",
+    )
 
     return
 

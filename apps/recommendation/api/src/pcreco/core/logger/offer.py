@@ -14,7 +14,7 @@ def save_context(
         date = datetime.datetime.now(pytz.utc)
         rows = []
 
-        for o in offers:
+        for idx, o in enumerate(offers):
             db_row = {
                 "call_id": call_id,
                 "context": context,
@@ -36,8 +36,8 @@ def save_context(
                 "offer_stock_beginning_date": o.stock_beginning_date,
                 "offer_category": o.category,
                 "offer_subcategory_id": o.subcategory_id,
-                "offer_item_score": o.item_score,
-                "offer_order": o.offer_score,
+                "offer_item_score": o.item_rank,  # rank of the selected item (asc)
+                "offer_order": idx,  # rank of the selected offer (asc)
                 "offer_venue_id": o.venue_id,
             }
 

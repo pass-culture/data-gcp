@@ -15,6 +15,7 @@ numeric_features = [
     "user_deposit_remaining_credit",
     "offer_user_distance",
     "offer_booking_number",
+    "offer_item_score",
     "offer_stock_price",
     "offer_creation_days",
     "offer_stock_beginning_days",

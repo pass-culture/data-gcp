@@ -15,7 +15,7 @@ WITH offer_details AS (
         venue_latitude,
         venue_longitude
     FROM
-        `{{ bigquery_analytics_prod }}.recommendable_offers_raw`
+        `{{ bigquery_analytics_dataset }}.recommendable_offers_raw`
 ),
 
 diversification AS (
@@ -23,7 +23,7 @@ diversification AS (
         booking_id,
         delta_diversification
     FROM
-        `{{ bigquery_analytics_prod }}.diversification_booking`
+        `{{ bigquery_analytics_dataset }}.diversification_booking`
 ),
 
 events AS (
@@ -47,23 +47,23 @@ events AS (
       date_diff(poc.offer_stock_beginning_date, event_date, DAY ) as offer_stock_beginning_days,
       poc.offer_category,
       poc.offer_subcategory_id,
-      poc.offer_item_score,
-      poc.offer_order,
+      cast(poc.offer_item_score as FLOAT64) as offer_item_score,
+      cast(poc.offer_order as FLOAT64) as offer_order,
       poc.offer_venue_id,
       off.is_numerical,
       off.is_national,
       off.is_geolocated,
       off.venue_latitude,
       off.venue_longitude
-    FROM `{{ bigquery_raw_prod }}.past_offer_context` poc
-    INNER JOIN  `{{ bigquery_clean_prod }}.past_similar_offers` 
+    FROM `{{ bigquery_raw_dataset }}.past_offer_context` poc
+    INNER JOIN  `{{ bigquery_clean_dataset }}.past_similar_offers` 
       pso on 
       pso.event_date >= DATE_SUB(CURRENT_DATE, INTERVAL 14 DAY) 
       and pso.event_date = date(poc.date) 
       and pso.reco_call_id = poc.call_id
       and pso.offer_id = poc.offer_id
-    INNER JOIN  offer_details off on off.offer_id = poc.offer_id
-    WHERE offer_order > 0
+    INNER JOIN offer_details off on off.offer_id = poc.offer_id
+    WHERE offer_order is not null
         
 ),
 
@@ -75,7 +75,7 @@ seen AS (
         offer_id as origin_offer_id,
         sum(1) as seen
     FROM
-        `{{ bigquery_analytics_prod }}.firebase_similar_offer_events`
+        `{{ bigquery_analytics_dataset }}.firebase_similar_offer_events`
     WHERE
         event_date >= DATE_SUB(CURRENT_DATE, INTERVAL 14 DAY)
         AND event_name = 'PlaylistVerticalScroll'
@@ -94,7 +94,7 @@ interact AS (
         sum(if(event_name = "BookingConfirmation", 1, null)) as booking,
         sum(d.delta_diversification) as delta_diversification
     FROM
-        `{{ bigquery_analytics_prod }}.firebase_similar_offer_events` fsoe
+        `{{ bigquery_analytics_dataset }}.firebase_similar_offer_events` fsoe
     LEFT JOIN diversification d on d.booking_id = fsoe.booking_id
 
     WHERE
@@ -140,8 +140,8 @@ SELECT
     is_geolocated,
     venue_latitude,
     venue_longitude,
-    avg(offer_item_score) as offer_item_score,
-    avg(offer_order) as offer_order,
+    avg(offer_item_score) as offer_item_score, -- similarity score
+    avg(offer_order) as offer_order, -- ranking score 
     max(booking) as booking,
     max(consult) as consult,
     max(seen) as seen,

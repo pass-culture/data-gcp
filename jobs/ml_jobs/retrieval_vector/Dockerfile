@@ -1,5 +1,5 @@
 
-FROM tiangolo/meinheld-gunicorn-flask:python3.9
+FROM python3.10
 
 COPY ./api-requirements.txt ./
 RUN pip3 install -r api-requirements.txt 

@@ -383,6 +383,16 @@ analytics_tables = {
             "import_contentful",
         ],
     },
+    "analytics_firebase_whole_home_conversion": {
+        "sql": f"{ANALYTICS_SQL_PATH}/firebase_whole_home_conversion.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "firebase_whole_home_conversion",
+        "time_partitioning": {"field": "module_displayed_date"},
+        "depends": ["diversification_booking"],
+        "dag_depends": [
+            "import_intraday_firebase_data",
+        ],
+    },
     "analytics_firebase_aggregated_similar_offer_events": {
         "sql": f"{ANALYTICS_SQL_PATH}/firebase_aggregated_similar_offer_events.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",

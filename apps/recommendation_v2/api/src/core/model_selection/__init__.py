@@ -1,9 +1,9 @@
 from utils.env_vars import (
-    # DEFAULT_RECO_MODEL,
+    DEFAULT_RECO_MODEL,
     DEFAULT_SIMILAR_OFFER_MODEL,
 )
 
-# import core.model_selection.recommendation as recommendation_endpoints
+import core.model_selection.recommendation as recommendation_endpoints
 import core.model_selection.similar_offer as similar_offer_endpoints
 from core.model_selection.model_configuration import (
     ModelConfiguration,
@@ -13,6 +13,44 @@ from schemas.user import User
 from schemas.offer import Offer
 from loguru import logger
 
+RECOMMENDATION_ENDPOINTS = {
+    # Default endpoint
+    "default": ModelFork(
+        warm_start_model=recommendation_endpoints.retrieval_reco,
+        cold_start_model=recommendation_endpoints.retrieval_filter,
+        bookings_count=2,
+        clicks_count=25,
+        favorites_count=None,
+    ),
+    "version_b": ModelFork(
+        warm_start_model=recommendation_endpoints.retrieval_reco_version_b,
+        cold_start_model=recommendation_endpoints.retrieval_filter_version_b,
+        bookings_count=0,
+    ),
+    "top_offers": ModelFork(
+        warm_start_model=recommendation_endpoints.retrieval_filter,
+        cold_start_model=recommendation_endpoints.retrieval_filter,
+        bookings_count=None,
+        clicks_count=None,
+        favorites_count=None,
+    ),
+    # Force model default enpoint
+    "default_algo": ModelFork(
+        warm_start_model=recommendation_endpoints.retrieval_reco,
+        cold_start_model=recommendation_endpoints.retrieval_reco,
+        bookings_count=0,
+        clicks_count=0,
+        favorites_count=0,
+    ),
+    # Force cold start model based on top offers
+    "cold_start": ModelFork(
+        warm_start_model=recommendation_endpoints.retrieval_filter,
+        cold_start_model=recommendation_endpoints.retrieval_filter,
+        bookings_count=None,
+        clicks_count=None,
+        favorites_count=None,
+    ),
+}
 
 SIMILAR_OFFER_ENDPOINTS = {
     # Default version a
@@ -35,6 +73,15 @@ SIMILAR_OFFER_ENDPOINTS = {
         favorites_count=None,
     ),
 }
+
+
+def select_reco_model_params(model_endpoint: str, user: User) -> ModelConfiguration:
+    """Choose the model to apply Recommendation based on user interaction"""
+    if model_endpoint not in list(RECOMMENDATION_ENDPOINTS.keys()):
+        model_endpoint = DEFAULT_RECO_MODEL
+    logger.info(f"{user.user_id}: reco_endpoint {model_endpoint}")
+    model_fork = RECOMMENDATION_ENDPOINTS[model_endpoint]
+    return model_fork.get_user_status(user=user)
 
 
 def select_sim_model_params(model_endpoint: str, offer: Offer) -> ModelConfiguration:

@@ -1,4 +1,5 @@
 import core.scorer.offer as offer_scorer
+from typing import List
 from core.endpoint.retrieval_endpoint import RetrievalEndpoint
 
 # from endpoint.ranking_endpoint import RankingEndpoint
@@ -13,11 +14,10 @@ class ModelConfiguration:
     name: str
     description: str
     scorer: offer_scorer.OfferScorer
-    retrieval_endpoint: RetrievalEndpoint
-    retrieval_limit: int
+    retrieval_endpoints: List[RetrievalEndpoint]
     # ranking_endpoint: RankingEndpoint
     ranking_order_query: str
-    ranking_limit: int
+    ranking_limit_query: int
     # diversification_params: DiversificationParams
 
     # def get_diversification_params(

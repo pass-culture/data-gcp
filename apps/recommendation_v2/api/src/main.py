@@ -94,20 +94,22 @@ def similar_offers(
 
 
 @app.post("/playlist_recommendation", dependencies=[Depends(setup_trace)])
-def playlist_recommendation(user: UserInput, db: Session = Depends(get_db)):
+def playlist_recommendation(
+    user: UserInput, playlist_params: PlaylistParams, db: Session = Depends(get_db)
+):
 
     call_id = str(uuid.uuid4())
 
     user = get_user_profile(db, user.user_id, call_id, user.latitude, user.longitude)
 
-    log_extra_data = {"user_id": user.user_id, "iris_id": user.iris_id}
-
-    custom_logger.info("Get user profile", extra=log_extra_data)
-
-    scoring = Recommendation(user)
+    scoring = Recommendation(user, params_in=playlist_params)
 
     user_recommendations = scoring.get_scoring(db)
 
     scoring.save_recommendation(db, user_recommendations)
+
+    log_extra_data = {"user_id": user.user_id, "iris_id": user.iris_id}
+
+    custom_logger.info("Get user profile", extra=log_extra_data)
 
     return user_recommendations

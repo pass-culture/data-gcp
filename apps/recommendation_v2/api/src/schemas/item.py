@@ -11,3 +11,4 @@ class Item:
 class RecommendableItem:
     item_id: str
     item_score: float
+    item_rank: int

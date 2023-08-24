@@ -17,14 +17,14 @@ class OfferScorer:
         self,
         user: User,
         params_in: PlaylistParams,
-        retrieval_endpoint: RetrievalEndpoint,
+        retrieval_endpoints: List[RetrievalEndpoint],
         # ranking_endpoint: RankingEndpoint,
         model_params,
     ):
         self.user = user
         self.model_params = model_params
         self.params_in = params_in
-        self.retrieval_endpoint = retrieval_endpoint
+        self.retrieval_endpoints = retrieval_endpoints
         # self.ranking_endpoint = ranking_endpoint
 
     def get_scoring(
@@ -33,15 +33,16 @@ class OfferScorer:
         offer_limit: int = 20,
     ) -> List[RecommendableOffer]:
         start = time.time()
-        # 1. Score items
-        prediction_items = self.retrieval_endpoint.model_score(
-            size=self.model_params.retrieval_limit
-        )
+
+        prediction_items: List[RecommendableItem] = []
+
+        for endpoint in self.retrieval_endpoints:
+            prediction_items.extend(endpoint.model_score())
         print(
             f"OfferScorer - get_scoring - prediction_items: {prediction_items}"
         )  # Example output : RecommendableItem(item_id='product-57171', item_score=0.1650311350822449)
         # log_duration(
-        #     f"Retrieval: predicted_items for {self.user.id}: predicted_items -> {len(prediction_items)}",
+        #     f"Retrieval: predicted_items for {self.user.user_id}: predicted_items -> {len(prediction_items)}",
         #     start,
         # )
         start = time.time()
@@ -60,7 +61,7 @@ class OfferScorer:
         #     recommendable_offers=recommendable_offers
         # )
         # log_duration(
-        #     f"Ranking: get_recommendable_offers for {self.user.id}: offers -> {len(recommendable_offers)}",
+        #     f"Ranking: get_recommendable_offers for {self.user.user_id}: offers -> {len(recommendable_offers)}",
         #     start,
         # )
 
@@ -83,6 +84,7 @@ class OfferScorer:
 
         non_recommendable_items = get_non_recommendable_items(db, self.user)
         print(f"Nb non recommendable items : {len(non_recommendable_items)}")
+        print(f"Non recommendable items : {non_recommendable_items}")
 
         recommendable_offers = []
         for item in recommendable_items:

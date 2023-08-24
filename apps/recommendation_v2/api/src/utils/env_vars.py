@@ -8,6 +8,7 @@ ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 NUMBER_OF_RECOMMENDATIONS = 20
 NUMBER_OF_PRESELECTED_OFFERS = 50 if not os.environ.get("CI") else 3
 DEFAULT_SIMILAR_OFFER_MODEL = os.environ.get("DEFAULT_SIMILAR_OFFER_MODEL", "default")
+DEFAULT_RECO_MODEL = os.environ.get("DEFAULT_RECO_MODEL", "default")
 API_LOCAL = os.environ.get("API_LOCAL", "False")
 # SQL
 # if not API_LOCAL:

@@ -1,10 +1,6 @@
 from schemas.user import User
 import time
 from utils.vertex_ai import endpoint_score
-
-# from utils.env_vars import (
-#     log_duration,
-# )
 from schemas.offer import Offer
 from schemas.playlist_params import PlaylistParams
 from datetime import datetime
@@ -75,8 +71,8 @@ class EqParams:
 class RetrievalEndpoint(AbstractEndpoint):
     def init_input(self, user: User, params_in: PlaylistParams):
         self.user = user
-        self.user_input = str(self.user.id)
         self.params_in = params_in
+        self.user_input = str(self.user.user_id)
         self.is_geolocated = self.user.is_geolocated
 
     @abstractmethod
@@ -136,27 +132,24 @@ class RetrievalEndpoint(AbstractEndpoint):
 
         return {"$and": {k: v for d in params for k, v in d.filter().items()}}
 
-    def model_score(self, size: int) -> t.List[RecommendableItem]:
+    def model_score(self) -> t.List[RecommendableItem]:
         start = time.time()
-        instances = self.get_instance(size)
-        print(f"model score - instances {instances}")
-        print(f"model_score - endpoint_name {self.endpoint_name}")
-        print(f"model_score - fallback_endpoints {self.fallback_endpoints}")
+        instances = self.get_instance(self.size)
         # log_duration(f"retrieval_endpoint {instances}", start)
         prediction_result = endpoint_score(
             instances=instances,
             endpoint_name=self.endpoint_name,
             fallback_endpoints=self.fallback_endpoints,
         )
-
-        print(f"model_score - prediction_result {prediction_result}")
         self.model_version = prediction_result.model_version
         self.model_display_name = prediction_result.model_display_name
         # log_duration("retrieval_endpoint", start)
         # smallest = better (cosine similarity or inner_product)
         return [
             RecommendableItem(
-                item_id=r["item_id"], item_score=float(r.get("score", r["idx"]))
+                item_id=r["item_id"],
+                item_score=float(r.get("score", r["idx"])),
+                item_rank=r["idx"],
             )
             for r in prediction_result.predictions
         ]
@@ -173,11 +166,11 @@ class FilterRetrievalEndpoint(RetrievalEndpoint):
         }
 
 
-class UserRetrievalEndpoint(RetrievalEndpoint):
+class RecommendationRetrievalEndpoint(RetrievalEndpoint):
     def get_instance(self, size: int):
         return {
             "model_type": "recommendation",
-            "user_id": str(self.user.id),
+            "user_id": str(self.user.user_id),
             "size": size,
             "params": self.get_params(),
         }
@@ -191,7 +184,7 @@ class OfferRetrievalEndpoint(RetrievalEndpoint):
         self.params_in = params_in
         self.is_geolocated = self.offer.is_geolocated
 
-    def get_instance(self, size):
+    def get_instance(self, size: int):
         return {
             "model_type": "similar_offer",
             "offer_id": str(self.item_id),
@@ -201,7 +194,7 @@ class OfferRetrievalEndpoint(RetrievalEndpoint):
 
 
 class OfferFilterRetrievalEndpoint(OfferRetrievalEndpoint):
-    def get_instance(self, size):
+    def get_instance(self, size: int):
         return {
             "model_type": "filter",
             "order_by": "booking_number",

@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from geoalchemy2.elements import WKTElement
 from typing import List
 
@@ -113,7 +113,12 @@ def get_nearest_offer(db: Session, user: User, item: RecommendableItem) -> Offer
             .filter(
                 RecommendableOffersRaw.stock_price <= user.user_deposit_remaining_credit
             )
-            # .filter(RecommendableOffersRaw.default_max_distance >= user_distance)
+            .filter(
+                or_(
+                    RecommendableOffersRaw.default_max_distance >= user_distance,
+                    user_distance == None,
+                )
+            )
             .filter(*underage_condition)
             .order_by(user_distance)
             .limit(1)

@@ -1,9 +1,8 @@
 from utils.env_vars import ENV_SHORT_NAME
 import core.scorer.offer as offer_scorer
-from core.endpoint.retrieval_endpoint import (
-    OfferRetrievalEndpoint,
-    OfferFilterRetrievalEndpoint,
-)
+
+import core.model_selection.endpoint.offer_retrieval as offer_retrieval
+
 
 # from core.endpoint.ranking_endpoint import ModelRankingEndpoint
 from core.model_selection.model_configuration import (
@@ -11,24 +10,20 @@ from core.model_selection.model_configuration import (
     # diversification_off,
 )
 
-RETRIEVAL_LIMIT = 500
 RANKING_LIMIT = 200
 
 retrieval_offer = ModelConfiguration(
     name="similar_offer_model",
     description="""""",
     scorer=offer_scorer.OfferScorer,
-    retrieval_limit=RETRIEVAL_LIMIT,
     ranking_order_query="item_score ASC",
-    ranking_limit=RANKING_LIMIT,
+    ranking_limit_query=RANKING_LIMIT,
     # diversification_params=diversification_off,
-    retrieval_endpoint=OfferRetrievalEndpoint(
-        endpoint_name=f"recommendation_user_retrieval_{ENV_SHORT_NAME}",
-        fallback_endpoints=[
-            f"recommendation_semantic_retrieval_{ENV_SHORT_NAME}",
-            f"recommendation_user_retrieval_version_b_{ENV_SHORT_NAME}",
-        ],
-    ),
+    retrieval_endpoints=[
+        offer_retrieval.offer_retrieval_endpoint,
+        offer_retrieval.semantic_offer_retrieval_endpoint,
+        offer_retrieval.offer_filter_retrieval_endpoint,
+    ]
     # ranking_endpoint=ModelRankingEndpoint(
     #     f"recommendation_user_ranking_{ENV_SHORT_NAME}"
     # ),
@@ -38,37 +33,30 @@ retrieval_offer_version_b = ModelConfiguration(
     name="similar_offer_model",
     description="""""",
     scorer=offer_scorer.OfferScorer,
-    retrieval_limit=RETRIEVAL_LIMIT,
     ranking_order_query="item_score ASC",
-    ranking_limit=RANKING_LIMIT,
+    ranking_limit_query=RANKING_LIMIT,
     # diversification_params=diversification_off,
-    retrieval_endpoint=OfferRetrievalEndpoint(
-        endpoint_name=f"recommendation_user_retrieval_version_b_{ENV_SHORT_NAME}",
-        fallback_endpoints=[
-            f"recommendation_semantic_retrieval_{ENV_SHORT_NAME}",
-            f"recommendation_user_retrieval_{ENV_SHORT_NAME}",
-        ],
-    ),
+    retrieval_endpoints=[
+        offer_retrieval.offer_retrieval_version_b_endpoint,
+        offer_retrieval.semantic_offer_retrieval_endpoint,
+    ],
     # ranking_endpoint=ModelRankingEndpoint(
     #     f"recommendation_user_ranking_{ENV_SHORT_NAME}"
     # ),
 )
 
+
 retrieval_cs_offer = ModelConfiguration(
     name="similar_cold_start_offer_model",
     description="""""",
     scorer=offer_scorer.OfferScorer,
-    retrieval_limit=RETRIEVAL_LIMIT,
     ranking_order_query="item_score ASC",
-    ranking_limit=RANKING_LIMIT,
+    ranking_limit_query=RANKING_LIMIT,
     # diversification_params=diversification_off,
-    retrieval_endpoint=OfferRetrievalEndpoint(
-        endpoint_name=f"recommendation_semantic_retrieval_{ENV_SHORT_NAME}",
-        fallback_endpoints=[
-            f"recommendation_user_retrieval_{ENV_SHORT_NAME}",
-            f"recommendation_user_retrieval_version_b_{ENV_SHORT_NAME}",
-        ],
-    ),
+    retrieval_endpoints=[
+        offer_retrieval.semantic_offer_retrieval_endpoint,
+        offer_retrieval.offer_filter_retrieval_endpoint,
+    ],
     # ranking_endpoint=ModelRankingEndpoint(
     #     f"recommendation_user_ranking_{ENV_SHORT_NAME}"
     # ),
@@ -78,16 +66,12 @@ retrieval_filter = ModelConfiguration(
     name="similar_offer_filter",
     description="""""",
     scorer=offer_scorer.OfferScorer,
-    retrieval_limit=RETRIEVAL_LIMIT,
     ranking_order_query="item_score ASC",
-    ranking_limit=RANKING_LIMIT,
+    ranking_limit_query=RANKING_LIMIT,
     # diversification_params=diversification_off,
-    retrieval_endpoint=OfferFilterRetrievalEndpoint(
-        f"recommendation_user_retrieval_{ENV_SHORT_NAME}",
-        fallback_endpoints=[
-            f"recommendation_user_retrieval_version_b_{ENV_SHORT_NAME}"
-        ],
-    ),
+    retrieval_endpoints=[
+        offer_retrieval.offer_filter_retrieval_endpoint,
+    ],
     # ranking_endpoint=ModelRankingEndpoint(
     #     f"recommendation_user_ranking_{ENV_SHORT_NAME}"
     # ),

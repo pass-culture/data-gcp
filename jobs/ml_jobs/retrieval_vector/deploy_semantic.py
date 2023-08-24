@@ -15,7 +15,7 @@ import numpy as np
 
 MODEL_TYPE = {
     "n_dim": 384,
-    "metric": "inner_product",
+    "metric": "cosine",
     "type": "semantic",
     "default_token": None,
     "transformer": "sentence-transformers/all-MiniLM-L6-v2",

@@ -9,4 +9,4 @@ COPY ./metadata /app/metadata
 WORKDIR /app
 EXPOSE 8080
 
-CMD ["hypercorn", "--bind", "0.0.0.0:8080", "app:app",  "--workers=3"]
+CMD ["hypercorn", "--bind", "0.0.0.0:8080", "app:app",  "--workers=5"]

@@ -61,10 +61,6 @@ class DefaultClient:
             self.n_dim,
             metric=self.metric,
             data_path=f"./metadata/annlite_{str(uuid.uuid4())}",
-            n_probe=16,
-            ef_construction=64,
-            ef_search=128,
-            max_connection=16,
             columns=dtypes,
         )
         self.ann.index(self.item_docs)

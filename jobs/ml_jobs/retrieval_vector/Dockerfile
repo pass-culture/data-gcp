@@ -1,5 +1,5 @@
 
-FROM python3.10
+FROM python:3.10
 
 COPY ./api-requirements.txt ./
 RUN pip3 install -r api-requirements.txt 

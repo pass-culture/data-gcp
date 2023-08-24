@@ -127,6 +127,7 @@ analytics_tables = {
     "enriched_offerer_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_offerer_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "depends": ["bookable_venue_history"],
     },
     "enriched_offerer_tags_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_offerer_tags_data.sql",
@@ -153,6 +154,7 @@ analytics_tables = {
     "enriched_venue_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_venue_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "depends": ["bookable_venue_history"],
     },
     "enriched_venue_tags_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_venue_tags_data.sql",

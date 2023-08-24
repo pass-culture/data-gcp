@@ -3,7 +3,7 @@ from sqlalchemy import func, or_
 from geoalchemy2.elements import WKTElement
 from typing import List
 
-from schemas.offer import Offer
+from schemas.offer import Offer, RecommendableOffer
 from schemas.user import User
 from schemas.item import Item, RecommendableItem
 
@@ -39,7 +39,7 @@ def get_offer_characteristics(
             iris_id=iris_id,
             is_geolocated=True if iris_id else False,
             item_id=offer_characteristics[0],
-            cnt_bookings=offer_characteristics[1],
+            booking_number=offer_characteristics[1],
             found=True,
         )
     else:
@@ -100,7 +100,7 @@ def get_nearest_offer(db: Session, user: User, item: RecommendableItem) -> Offer
                 RecommendableOffersRaw.stock_price.label("stock_price"),
                 RecommendableOffersRaw.offer_creation_date.label("offer_creation_date"),
                 RecommendableOffersRaw.stock_beginning_date.label(
-                    "stock_creation_date"
+                    "stock_beginning_date"
                 ),
                 RecommendableOffersRaw.category.label("category"),
                 RecommendableOffersRaw.subcategory_id.label("subcategory_id"),
@@ -126,27 +126,23 @@ def get_nearest_offer(db: Session, user: User, item: RecommendableItem) -> Offer
         )
 
         nearest_offer = [
-            Offer(
+            RecommendableOffer(
                 offer_id=offer_id,
                 item_id=item_id,
                 venue_id=venue_id,
                 user_distance=user_distance,
-                cnt_bookings=booking_number,
+                booking_number=booking_number,
                 stock_price=stock_price,
                 offer_creation_date=offer_creation_date,
-                stock_creation_date=stock_creation_date,
+                stock_beginning_date=stock_beginning_date,
                 category=category,
                 subcategory_id=subcategory_id,
                 search_group_name=search_group_name,
-                latitude=venue_latitude,
-                longitude=venue_longitude,
+                venue_latitude=venue_latitude,
+                venue_longitude=venue_longitude,
                 item_score=item.item_score,
-                iris_id=get_iris_from_coordinates(db, venue_latitude, venue_longitude)
-                if venue_latitude and venue_longitude
-                else None,
-                is_geolocated=is_geolocated,
             )
-            for offer_id, item_id, venue_id, user_distance, booking_number, stock_price, offer_creation_date, stock_creation_date, category, subcategory_id, search_group_name, venue_latitude, venue_longitude, is_geolocated in nearest_offer
+            for offer_id, item_id, venue_id, user_distance, booking_number, stock_price, offer_creation_date, stock_beginning_date, category, subcategory_id, search_group_name, venue_latitude, venue_longitude, is_geolocated in nearest_offer
         ]
 
     else:
@@ -159,7 +155,7 @@ def get_nearest_offer(db: Session, user: User, item: RecommendableItem) -> Offer
                 RecommendableOffersRaw.stock_price.label("stock_price"),
                 RecommendableOffersRaw.offer_creation_date.label("offer_creation_date"),
                 RecommendableOffersRaw.stock_beginning_date.label(
-                    "stock_creation_date"
+                    "stock_beginning_date"
                 ),
                 RecommendableOffersRaw.category.label("category"),
                 RecommendableOffersRaw.subcategory_id.label("subcategory_id"),
@@ -172,21 +168,20 @@ def get_nearest_offer(db: Session, user: User, item: RecommendableItem) -> Offer
         )
 
         nearest_offer = [
-            Offer(
+            RecommendableOffer(
                 offer_id=offer_id,
                 item_id=item_id,
                 venue_id=venue_id,
-                cnt_bookings=booking_number,
+                booking_number=booking_number,
                 stock_price=stock_price,
                 offer_creation_date=offer_creation_date,
-                stock_creation_date=stock_creation_date,
+                stock_beginning_date=stock_beginning_date,
                 category=category,
                 subcategory_id=subcategory_id,
                 search_group_name=search_group_name,
                 item_score=item.item_score,
-                is_geolocated=is_geolocated,
             )
-            for offer_id, item_id, venue_id, booking_number, stock_price, offer_creation_date, stock_creation_date, category, subcategory_id, search_group_name, is_geolocated in nearest_offer
+            for offer_id, item_id, venue_id, booking_number, stock_price, offer_creation_date, stock_beginning_date, category, subcategory_id, search_group_name, is_geolocated in nearest_offer
         ]
 
     return nearest_offer

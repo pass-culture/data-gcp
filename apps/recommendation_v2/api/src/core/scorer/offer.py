@@ -3,8 +3,8 @@ from schemas.playlist_params import PlaylistParams
 from typing import List
 import time
 from core.endpoint.retrieval_endpoint import RetrievalEndpoint
-
-# from endpoint.ranking_endpoint import RankingEndpoint
+import random
+from core.endpoint.ranking_endpoint import RankingEndpoint
 from schemas.offer import RecommendableOffer
 from schemas.item import RecommendableItem
 from crud.offer import get_nearest_offer, get_non_recommendable_items
@@ -18,14 +18,14 @@ class OfferScorer:
         user: User,
         params_in: PlaylistParams,
         retrieval_endpoints: List[RetrievalEndpoint],
-        # ranking_endpoint: RankingEndpoint,
+        ranking_endpoint: RankingEndpoint,
         model_params,
     ):
         self.user = user
         self.model_params = model_params
         self.params_in = params_in
         self.retrieval_endpoints = retrieval_endpoints
-        # self.ranking_endpoint = ranking_endpoint
+        self.ranking_endpoint = ranking_endpoint
 
     def get_scoring(
         self,
@@ -38,9 +38,6 @@ class OfferScorer:
 
         for endpoint in self.retrieval_endpoints:
             prediction_items.extend(endpoint.model_score())
-        print(
-            f"OfferScorer - get_scoring - prediction_items: {prediction_items}"
-        )  # Example output : RecommendableItem(item_id='product-57171', item_score=0.1650311350822449)
         # log_duration(
         #     f"Retrieval: predicted_items for {self.user.user_id}: predicted_items -> {len(prediction_items)}",
         #     start,
@@ -57,9 +54,9 @@ class OfferScorer:
         if len(recommendable_offers) == 0:
             return []
 
-        # recommendable_offers = self.ranking_endpoint.model_score(
-        #     recommendable_offers=recommendable_offers
-        # )
+        recommendable_offers = self.ranking_endpoint.model_score(
+            recommendable_offers=recommendable_offers
+        )
         # log_duration(
         #     f"Ranking: get_recommendable_offers for {self.user.user_id}: offers -> {len(recommendable_offers)}",
         #     start,
@@ -69,8 +66,6 @@ class OfferScorer:
         user_recommendations = limit_offers(
             offer_limit=offer_limit, list_offers=recommendable_offers
         )
-
-        print(f"Nb recommendations : {len(user_recommendations)}")
 
         return user_recommendations
 
@@ -92,6 +87,13 @@ class OfferScorer:
                 recommendable_offer = get_nearest_offer(db, self.user, item)
                 if recommendable_offer:
                     recommendable_offers.append(recommendable_offer[0])
+
+        size = len(recommendable_offers)
+
+        for i, recommendable_offer in enumerate(recommendable_offers):
+            recommendable_offer.offer_score = size - i
+            recommendable_offer.query_order = i
+            recommendable_offer.random = random.random()
 
         print(f"Nb recommendable offers : {len(recommendable_offers)}")
 

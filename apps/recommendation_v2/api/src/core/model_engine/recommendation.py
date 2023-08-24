@@ -5,14 +5,11 @@ import time
 import pytz
 
 from schemas.user import User
-from schemas.item import Item
 from schemas.playlist_params import PlaylistParams
 
 from models.past_recommended_offers import PastRecommendedOffers
 from core.model_engine import ModelEngine
 from core.model_selection.model_configuration import ModelConfiguration
-
-from crud.offer import get_nearest_offer
 from core.model_selection import (
     select_reco_model_params,
 )
@@ -35,7 +32,7 @@ class Recommendation(ModelEngine):
             for reco in recommendations:
                 reco_offer = PastRecommendedOffers(
                     userid=self.user.user_id,
-                    offerid=reco.offer_id,
+                    offerid=reco,
                     date=date,
                     group_id=self.model_params.name,
                     reco_origin=self.reco_origin,

@@ -277,7 +277,7 @@ def create_recommendable_offers_raw(engine):
                 "2020-01-01",
                 "2020-01-01",
             ],
-            "stock_creation_date": [
+            "stock_beginning_date": [
                 "2020-01-01",
                 "2020-01-01",
                 "2020-01-01",
@@ -460,7 +460,7 @@ def create_recommendable_items_raw(engine):
                 "2020-01-01",
                 "2020-01-01",
             ],
-            "stock_creation_date": [
+            "stock_beginning_date": [
                 "2020-01-01",
                 "2020-01-01",
                 "2020-01-01",

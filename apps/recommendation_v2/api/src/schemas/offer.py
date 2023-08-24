@@ -21,12 +21,12 @@ class Offer:
     iris_id: str = None
     item_id: str = None
     item_score: float = None
-    cnt_bookings: float = None
+    booking_number: float = None
     user_distance: float = None
     venue_id: str = None
     stock_price: float = None
     offer_creation_date: str = None
-    stock_creation_date: str = None
+    stock_beginning_date: str = None
     category: str = None
     subcategory_id: str = None
     search_group_name: str = None
@@ -50,6 +50,6 @@ class RecommendableOffer:
     venue_latitude: float
     venue_longitude: float
     item_score: float  # lower = better
-    query_order: int  # SQL query order by (lower = better)
-    random: float
+    query_order: int = None  # SQL query order by (lower = better)
+    random: float = None
     offer_score: float = None  # higher = better

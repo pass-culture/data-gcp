@@ -2,11 +2,37 @@ import core.scorer.offer as offer_scorer
 from typing import List
 from core.endpoint.retrieval_endpoint import RetrievalEndpoint
 
-# from endpoint.ranking_endpoint import RankingEndpoint
+from core.endpoint.ranking_endpoint import RankingEndpoint
 from dataclasses import dataclass
 from schemas.playlist_params import PlaylistParams
 from schemas.offer import Offer
 from schemas.user import User
+
+
+@dataclass
+class DiversificationParams:
+    is_active: bool
+    is_reco_shuffled: bool
+    mixing_features: str
+    order_column: str
+    order_ascending: bool
+
+
+diversification_on = DiversificationParams(
+    is_active=True,
+    is_reco_shuffled=False,
+    mixing_features="search_group_name",
+    order_column="offer_score",
+    order_ascending=False,
+)
+
+diversification_off = DiversificationParams(
+    is_active=False,
+    is_reco_shuffled=False,
+    mixing_features="search_group_name",
+    order_column="offer_score",
+    order_ascending=False,
+)
 
 
 @dataclass
@@ -15,27 +41,27 @@ class ModelConfiguration:
     description: str
     scorer: offer_scorer.OfferScorer
     retrieval_endpoints: List[RetrievalEndpoint]
-    # ranking_endpoint: RankingEndpoint
+    ranking_endpoint: RankingEndpoint
     ranking_order_query: str
     ranking_limit_query: int
-    # diversification_params: DiversificationParams
+    diversification_params: DiversificationParams
 
-    # def get_diversification_params(
-    #     self, params_in: PlaylistParamsIn
-    # ) -> DiversificationParams:
-    #     """
-    #     Overwrite default params
-    #     """
-    #     if params_in.is_reco_mixed is not None:
-    #         self.diversification_params.is_active = params_in.is_reco_mixed
+    def get_diversification_params(
+        self, params_in: PlaylistParams
+    ) -> DiversificationParams:
+        """
+        Overwrite default params
+        """
+        if params_in.is_reco_mixed is not None:
+            self.diversification_params.is_active = params_in.is_reco_mixed
 
-    #     if params_in.is_reco_shuffled is not None:
-    #         self.diversification_params.is_reco_shuffled = params_in.is_reco_shuffled
+        if params_in.is_reco_shuffled is not None:
+            self.diversification_params.is_reco_shuffled = params_in.is_reco_shuffled
 
-    #     if params_in.mixing_features is not None:
-    #         self.diversification_params.mixing_features = params_in.mixing_features
+        if params_in.mixing_features is not None:
+            self.diversification_params.mixing_features = params_in.mixing_features
 
-    #     return self.diversification_params
+        return self.diversification_params
 
 
 @dataclass
@@ -69,6 +95,6 @@ class ModelFork:
         if not offer.found:
             return self.cold_start_model, "unknown"
         if self.bookings_count is not None:
-            if offer.cnt_bookings >= self.bookings_count:
+            if offer.booking_number >= self.bookings_count:
                 return self.warm_start_model, "algo"
         return self.cold_start_model, "cold_start"

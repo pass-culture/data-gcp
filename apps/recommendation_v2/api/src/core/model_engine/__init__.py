@@ -3,9 +3,12 @@ from abc import ABC, abstractmethod
 from schemas.user import User
 from schemas.playlist_params import PlaylistParams
 from core.model_selection.model_configuration import ModelConfiguration
+from utils.mixing import order_offers_by_score_and_diversify_features
 from utils.env_vars import (
     NUMBER_OF_RECOMMENDATIONS,
 )
+
+# from core.logger.offer import save_context
 from loguru import logger
 from core.scorer.offer import OfferScorer
 from sqlalchemy.orm import Session
@@ -29,16 +32,16 @@ class ModelEngine(ABC):
         # init user_input
         for endpoint in self.model_params.retrieval_endpoints:
             endpoint.init_input(user=self.user, params_in=self.params_in)
-        # self.model_params.ranking_endpoint.init_input(
-        #     user=self.user, params_in=self.params_in
-        # )
+        self.model_params.ranking_endpoint.init_input(
+            user=self.user, params_in=self.params_in
+        )
         # get scorer
         return self.model_params.scorer(
             user=self.user,
             params_in=self.params_in,
             model_params=self.model_params,
             retrieval_endpoints=self.model_params.retrieval_endpoints,
-            # ranking_endpoint=self.model_params.ranking_endpoint,
+            ranking_endpoint=self.model_params.ranking_endpoint,
         )
 
     def get_scoring(self, db: Session) -> List[str]:
@@ -46,30 +49,28 @@ class ModelEngine(ABC):
         Returns a list of offer_id to be send to the user
         Depends of the scorer method.
         """
-        scored_offers = self.scorer.get_scoring(db)
-        print(f"get_scoring - scored_offers : {scored_offers}")
-        # if len(scored_offers) == 0:
-        #     return []
+        if len(scored_offers) == 0:
+            return []
 
-        # diversification_params = self.model_params.get_diversification_params(
-        #     self.params_in
-        # )
-        # logger.info(
-        #     f"{self.user.user_id}: get_scoring -> diversification active: {diversification_params.is_active}, shuffle: {diversification_params.is_reco_shuffled}, mixing key: {diversification_params.mixing_features}"
-        # )
+        diversification_params = self.model_params.get_diversification_params(
+            self.params_in
+        )
+        logger.info(
+            f"{self.user.user_id}: get_scoring -> diversification active: {diversification_params.is_active}, shuffle: {diversification_params.is_reco_shuffled}, mixing key: {diversification_params.mixing_features}"
+        )
 
         # # apply diversification filter
-        # if diversification_params.is_active:
-        #     scored_offers = order_offers_by_score_and_diversify_features(
-        #         offers=scored_offers,
-        #         score_column=diversification_params.order_column,
-        #         score_order_ascending=diversification_params.order_ascending,
-        #         shuffle_recommendation=diversification_params.is_reco_shuffled,
-        #         feature=diversification_params.mixing_features,
-        #         nb_reco_display=NUMBER_OF_RECOMMENDATIONS,
-        #     )
+        if diversification_params.is_active:
+            scored_offers = order_offers_by_score_and_diversify_features(
+                offers=scored_offers,
+                score_column=diversification_params.order_column,
+                score_order_ascending=diversification_params.order_ascending,
+                shuffle_recommendation=diversification_params.is_reco_shuffled,
+                feature=diversification_params.mixing_features,
+                nb_reco_display=NUMBER_OF_RECOMMENDATIONS,
+            )
 
-        # scoring_size = min(len(scored_offers), NUMBER_OF_RECOMMENDATIONS)
+        scoring_size = min(len(scored_offers), NUMBER_OF_RECOMMENDATIONS)
         # save_context(
         #     offers=scored_offers,
         #     call_id=self.user.call_id,
@@ -77,5 +78,4 @@ class ModelEngine(ABC):
         #     user=self.user,
         # )
 
-        # return [offer.offer_id for offer in scored_offers][:scoring_size]
-        return scored_offers
+        return [offer.offer_id for offer in scored_offers][:scoring_size]

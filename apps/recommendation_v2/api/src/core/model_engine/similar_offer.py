@@ -35,15 +35,15 @@ class SimilarOffer(ModelEngine):
             endpoint.init_input(
                 user=self.user, offer=self.offer, params_in=self.params_in
             )
-        # self.model_params.ranking_endpoint.init_input(
-        #     user=self.user, params_in=self.params_in
-        # )
+        self.model_params.ranking_endpoint.init_input(
+            user=self.user, params_in=self.params_in
+        )
         return self.model_params.scorer(
             user=self.user,
             params_in=self.params_in,
             model_params=self.model_params,
             retrieval_endpoints=self.model_params.retrieval_endpoints,
-            # ranking_endpoint=self.model_params.ranking_endpoint,
+            ranking_endpoint=self.model_params.ranking_endpoint,
         )
 
     def get_scoring(self, db: Session) -> List[str]:
@@ -59,7 +59,7 @@ class SimilarOffer(ModelEngine):
                 reco_offer = PastSimilarOffers(
                     user_id=self.user.user_id,
                     origin_offer_id=self.offer.offer_id,
-                    offer_id=reco["nearest_offer_id"],
+                    offer_id=reco,
                     date=date,
                     group_id=self.model_params.name,
                     model_name=self.scorer.retrieval_endpoints[0].model_display_name,

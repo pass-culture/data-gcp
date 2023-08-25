@@ -67,7 +67,7 @@ def main(
     prepare_docs(source_gs_path)
 
     save_model_type(model_type=MODEL_TYPE)
-    deploy_container(serving_container)
+    deploy_container(serving_container, workers=3)
     save_experiment(experiment_name, model_name, serving_container, run_id=run_id)
 
 

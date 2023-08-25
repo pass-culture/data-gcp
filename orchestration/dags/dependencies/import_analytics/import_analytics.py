@@ -64,7 +64,7 @@ def define_import_tables():
         "pricing_line",
         "pricing_log",
         "product",
-        "product_whitlist",
+        "product_whitelist",
         "provider",
         "recredit",
         "stock",

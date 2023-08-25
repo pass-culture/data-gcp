@@ -1,3 +1,4 @@
+
 WITH offer_details AS (
     SELECT
         DISTINCT offer_id,
@@ -16,6 +17,7 @@ WITH offer_details AS (
     FROM
         `{{ bigquery_analytics_dataset }}.recommendable_offers_raw`
 ),
+
 diversification AS (
     SELECT
         booking_id,
@@ -23,19 +25,49 @@ diversification AS (
     FROM
         `{{ bigquery_analytics_dataset }}.diversification_booking`
 ),
+
 events AS (
     SELECT
-        user_id,
-        event_date,
-        offer_id,
-        origin_offer_id,
-        item_rank,
-        venue_iris_centroid
-    FROM
-        `{{ bigquery_clean_dataset }}.past_similar_offers`
-    WHERE
-        event_date >= DATE_SUB(CURRENT_DATE, INTERVAL 90 DAY)
+      call_id,
+      context,
+      date(date) as event_date,	
+      pso.origin_offer_id,
+      poc.user_id,
+      poc.user_bookings_count,
+      poc.user_clicks_count,
+      poc.user_favorites_count,
+      poc.user_deposit_remaining_credit,
+      poc.user_iris_id,
+      round(poc.offer_user_distance / 1000) as offer_user_distance,
+      poc.offer_id,
+      poc.offer_item_id,
+      poc.offer_booking_number,
+      poc.offer_stock_price,
+      date_diff(poc.offer_creation_date, event_date, DAY ) as offer_creation_days,
+      date_diff(poc.offer_stock_beginning_date, event_date, DAY ) as offer_stock_beginning_days,
+      poc.offer_category,
+      poc.offer_subcategory_id,
+      cast(poc.offer_item_score as FLOAT64) as offer_item_score,
+      cast(poc.offer_order as FLOAT64) as offer_order,
+      poc.offer_venue_id,
+      off.is_numerical,
+      off.is_national,
+      off.is_geolocated,
+      off.venue_latitude,
+      off.venue_longitude
+    FROM `{{ bigquery_raw_dataset }}.past_offer_context` poc
+    INNER JOIN  `{{ bigquery_clean_dataset }}.past_similar_offers` 
+      pso on 
+      pso.event_date >= DATE_SUB(CURRENT_DATE, INTERVAL 14 DAY) 
+      and pso.event_date = date(poc.date) 
+      and pso.reco_call_id = poc.call_id
+      and pso.offer_id = poc.offer_id
+    INNER JOIN offer_details off on off.offer_id = poc.offer_id
+    WHERE offer_order is not null
+        
 ),
+
+
 seen AS (
     SELECT
         user_id,
@@ -45,7 +77,7 @@ seen AS (
     FROM
         `{{ bigquery_analytics_dataset }}.firebase_similar_offer_events`
     WHERE
-        event_date >= DATE_SUB(CURRENT_DATE, INTERVAL 90 DAY)
+        event_date >= DATE_SUB(CURRENT_DATE, INTERVAL 14 DAY)
         AND event_name = 'PlaylistVerticalScroll'
     GROUP BY
         1,
@@ -54,16 +86,19 @@ seen AS (
 ),
 interact AS (
     SELECT
-        user_id AS user_id,
-        event_date,
-        offer_id,
-        booking_id,
-        sum(if(event_name = "ConsultOffer", 1, 0)) as consult,
-        sum(if(event_name = "BookingConfirmation", 1, 0)) as booking
+        fsoe.user_id AS user_id,
+        fsoe.event_date,
+        fsoe.offer_id,
+        fsoe.booking_id,
+        sum(if(event_name = "ConsultOffer", 1, null)) as consult,
+        sum(if(event_name = "BookingConfirmation", 1, null)) as booking,
+        sum(d.delta_diversification) as delta_diversification
     FROM
-        `{{ bigquery_analytics_dataset }}.firebase_similar_offer_events`
+        `{{ bigquery_analytics_dataset }}.firebase_similar_offer_events` fsoe
+    LEFT JOIN diversification d on d.booking_id = fsoe.booking_id
+
     WHERE
-        event_date >= DATE_SUB(CURRENT_DATE, INTERVAL 90 DAY)
+        event_date >= DATE_SUB(CURRENT_DATE, INTERVAL 14 DAY)
         AND event_name in ("ConsultOffer", "BookingConfirmation")
     GROUP BY
         1,
@@ -73,58 +108,45 @@ interact AS (
 ),
 transactions AS (
     SELECT
-        e.event_date,
-        e.user_id,
-        e.offer_id,
-        e.origin_offer_id,
+        e.*,
         i.booking_id,
-        any_value(venue_iris_centroid) as venue_iris_centroid,
-        avg(item_rank) as item_rank,
-        sum(i.booking) as booking,
-        sum(i.consult) as consult,
-        sum(s.seen) as seen
+        coalesce(i.booking, 0) > 0 as booking,
+        coalesce(i.booking, i.consult, 0 ) > 0 as consult,
+        coalesce(i.booking, i.consult, s.seen, 0) > 0 as seen,
+        coalesce(i.delta_diversification, 0) as delta_diversification
     FROM
         events e
-        LEFT JOIN seen s ON s.event_date = e.event_date
+    LEFT JOIN seen s ON s.event_date = e.event_date
         AND s.user_id = e.user_id
         AND s.origin_offer_id = e.origin_offer_id
-        LEFT JOIN interact i ON i.event_date = e.event_date
+    LEFT JOIN interact i ON i.event_date = e.event_date
         AND i.user_id = e.user_id
-        AND i.offer_id = e.offer_id
-    WHERE
-        s.seen > 0
-        OR i.booking > 0
-        OR i.consult > 0
-    GROUP BY
-        1,
-        2,
-        3,
-        4,
-        5
-),
-features AS (
-    SELECT
-        ul.* EXCEPT (booking, consult, seen),
-        coalesce(ul.booking > 0) as booking,
-        coalesce(
-            ul.consult > 0
-            or ul.booking > 0
-        ) as consult,
-        coalesce(ul.seen > 0) as seen,
-        d.delta_diversification,
-        od.* EXCEPT (offer_id),
-        ST_DISTANCE(
-            ul.venue_iris_centroid,
-            ST_GEOGPOINT(od.venue_longitude, od.venue_latitude)
-        ) as user_distance,
-        date_diff(offer_creation_date, event_date, DAY) as offer_creation_days,
-        date_diff(stock_beginning_date, event_date, DAY) as stock_beginning_days
-    FROM
-        transactions ul
-        JOIN offer_details od on od.offer_id = ul.offer_id
-        LEFT JOIN diversification d on d.booking_id = ul.booking_id
+        AND i.offer_id = e.offer_id 
 )
+
 SELECT
-    *
+    user_bookings_count,
+    user_clicks_count,
+    user_favorites_count,
+    user_deposit_remaining_credit,
+    offer_user_distance,
+    offer_booking_number,
+    offer_stock_price,
+    offer_creation_days,
+    offer_stock_beginning_days,
+    offer_subcategory_id,
+    is_numerical,
+    is_national,
+    is_geolocated,
+    venue_latitude,
+    venue_longitude,
+    avg(offer_item_score) as offer_item_score, -- similarity score
+    avg(offer_order) as offer_order, -- ranking score 
+    max(booking) as booking,
+    max(consult) as consult,
+    max(seen) as seen,
+    max(delta_diversification) as delta_diversification
 FROM
-    features
+    transactions ul
+WHERE seen -- at least seen in some context.
+GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15

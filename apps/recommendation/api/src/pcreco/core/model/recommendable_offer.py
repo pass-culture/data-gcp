@@ -18,6 +18,8 @@ class RecommendableOffer:
     venue_longitude: float
     item_score: float  # lower = better
     item_rank: int
+    is_geolocated: int
     query_order: int  # SQL query order by (lower = better)
     random: float
     offer_score: float = None  # higher = better
+    offer_output: float = None  # final output

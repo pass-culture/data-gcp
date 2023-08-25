@@ -1,4 +1,3 @@
-from utils.env_vars import ENV_SHORT_NAME
 import core.scorer.offer as offer_scorer
 
 import core.model_selection.endpoint.offer_retrieval as offer_retrieval
@@ -7,6 +6,8 @@ from core.model_selection.model_configuration import (
     ModelConfiguration,
     diversification_off,
 )
+
+from utils.env_vars import ENV_SHORT_NAME
 
 RANKING_LIMIT = 100
 

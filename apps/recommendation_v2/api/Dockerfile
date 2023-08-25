@@ -8,8 +8,7 @@ WORKDIR $APP_HOME
 COPY ./requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY ./src .
 # Copy local code to the container
-# COPY ./src/pcpapillon ./pcpapillon
+COPY ./src .
 EXPOSE 8000
 CMD exec gunicorn -k uvicorn.workers.UvicornWorker --bind :8000 --workers 1 --threads 10 --preload --timeout 0 main:app

@@ -1,8 +1,9 @@
+import core.scorer.offer as offer_scorer
+
 from core.model_selection.model_configuration import (
     ModelConfiguration,
     diversification_on,
 )
-import core.scorer.offer as offer_scorer
 import core.model_selection.endpoint.user_retrieval as user_retrieval
 import core.model_selection.endpoint.user_ranking as user_ranking
 

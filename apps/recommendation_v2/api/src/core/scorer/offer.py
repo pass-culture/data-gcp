@@ -80,11 +80,7 @@ class OfferScorer:
         recommendable_items: List[RecommendableItem],
     ) -> List[RecommendableOffer]:
 
-        print(f"Nb recommendable items : {len(recommendable_items)}")
-
         non_recommendable_items = get_non_recommendable_items(db, self.user)
-        print(f"Nb non recommendable items : {len(non_recommendable_items)}")
-        print(f"Non recommendable items : {non_recommendable_items}")
 
         recommendable_offers = []
         for item in recommendable_items:
@@ -99,7 +95,5 @@ class OfferScorer:
             recommendable_offer.offer_score = size - i
             recommendable_offer.query_order = i
             recommendable_offer.random = random.random()
-
-        print(f"Nb recommendable offers : {len(recommendable_offers)}")
 
         return recommendable_offers

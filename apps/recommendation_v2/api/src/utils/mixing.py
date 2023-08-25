@@ -1,12 +1,13 @@
 import collections
 from typing import Dict, List, Tuple
-
 import numpy as np
 import random
+
+from schemas.offer import RecommendableOffer
+
 from utils.env_vars import (
     NUMBER_OF_RECOMMENDATIONS,
 )
-from schemas.offer import RecommendableOffer
 
 
 def order_offers_by_score_and_diversify_features(
@@ -76,7 +77,7 @@ def _get_offers_grouped_by_feature(
     for offer in offers:
         offer_feature = getattr(offer, feature)
         offer_product_id = offer.item_id
-        if offer_feature in offers_by_feature.keys():  ## Here we filter subcat
+        if offer_feature in offers_by_feature.keys():  # Here we filter subcat
             if offer_product_id not in product_ids:
                 offers_by_feature[offer_feature].append(offer)
                 product_ids.add(offer_product_id)

@@ -3,6 +3,7 @@ import time
 from enum import Enum
 import contextvars
 from loguru import logger
+
 from utils.secrets import access_secret
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT", "passculture-data-ehp")
@@ -13,7 +14,6 @@ DEFAULT_SIMILAR_OFFER_MODEL = os.environ.get("DEFAULT_SIMILAR_OFFER_MODEL", "def
 DEFAULT_RECO_MODEL = os.environ.get("DEFAULT_RECO_MODEL", "default")
 API_LOCAL = os.environ.get("API_LOCAL", "False")
 # SQL
-# if not API_LOCAL:
 SQL_BASE = os.environ.get("SQL_BASE")
 SQL_BASE_SECRET_ID = os.environ.get("SQL_BASE_SECRET_ID")
 SQL_BASE_USER = os.environ.get("SQL_BASE_USER")

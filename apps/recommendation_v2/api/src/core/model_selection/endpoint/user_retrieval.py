@@ -1,4 +1,5 @@
 from core.model_selection.endpoint import RetrievalEndpointName
+
 from core.endpoint.retrieval_endpoint import (
     RecommendationRetrievalEndpoint,
     FilterRetrievalEndpoint,

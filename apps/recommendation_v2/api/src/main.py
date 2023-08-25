@@ -1,6 +1,5 @@
 from fastapi import Depends, FastAPI, Request
 from fastapi.logger import logger
-from fastapi_versioning import VersionedFastAPI, version
 from sqlalchemy.orm import Session
 import uuid
 
@@ -14,7 +13,7 @@ from core.model_engine.recommendation import Recommendation
 from crud.user import get_user_profile
 from crud.offer import get_offer_characteristics
 
-from utils.database import Base, engine, SessionLocal
+from utils.database import SessionLocal
 from utils.env_vars import cloud_trace_context
 from utils.cloud_logging.setup import setup_logging
 

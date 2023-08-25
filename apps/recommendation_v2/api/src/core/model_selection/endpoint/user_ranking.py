@@ -1,4 +1,5 @@
 from core.model_selection.endpoint import RankingEndpointName
+
 from core.endpoint.ranking_endpoint import (
     ModelRankingEndpoint,
 )

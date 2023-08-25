@@ -1,7 +1,4 @@
-from utils.env_vars import (
-    DEFAULT_RECO_MODEL,
-    DEFAULT_SIMILAR_OFFER_MODEL,
-)
+from loguru import logger
 
 import core.model_selection.recommendation as recommendation_endpoints
 import core.model_selection.similar_offer as similar_offer_endpoints
@@ -9,9 +6,14 @@ from core.model_selection.model_configuration import (
     ModelConfiguration,
     ModelFork,
 )
+
 from schemas.user import User
 from schemas.offer import Offer
-from loguru import logger
+
+from utils.env_vars import (
+    DEFAULT_RECO_MODEL,
+    DEFAULT_SIMILAR_OFFER_MODEL,
+)
 
 RECOMMENDATION_ENDPOINTS = {
     # Default endpoint

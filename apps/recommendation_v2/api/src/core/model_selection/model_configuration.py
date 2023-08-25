@@ -1,9 +1,10 @@
-import core.scorer.offer as offer_scorer
-from typing import List
-from core.endpoint.retrieval_endpoint import RetrievalEndpoint
-
-from core.endpoint.ranking_endpoint import RankingEndpoint
 from dataclasses import dataclass
+from typing import List
+
+import core.scorer.offer as offer_scorer
+from core.endpoint.retrieval_endpoint import RetrievalEndpoint
+from core.endpoint.ranking_endpoint import RankingEndpoint
+
 from schemas.playlist_params import PlaylistParams
 from schemas.offer import Offer
 from schemas.user import User

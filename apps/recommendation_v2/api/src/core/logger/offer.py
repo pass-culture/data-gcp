@@ -4,9 +4,6 @@ from schemas.offer import RecommendableOffer
 from schemas.user import User
 import typing as t
 
-# from utils.db.db_connection import get_session
-from sqlalchemy import text
-
 
 def save_context(
     offers: t.List[RecommendableOffer], call_id: str, context: str, user: User
@@ -45,16 +42,3 @@ def save_context(
             rows.append(db_row)
 
         DB_FIELDS = sorted(list(db_row.keys()))
-
-        # connection = get_session()
-        # fields = ",".join(DB_FIELDS)
-        # values = ":" + ", :".join(DB_FIELDS)
-        # connection.execute(
-        #     text(
-        #         f"""
-        #         INSERT INTO public.offer_context ({fields})
-        #         VALUES ({values})
-        #         """
-        #     ),
-        #     rows,
-        # )

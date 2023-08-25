@@ -1,9 +1,3 @@
-# docker build -t pcreco_orm --progress=plain .
-# docker run -it -p 8080:8080 pcreco_orm
-
-
-#!/bin/bash
-
 export PYTHONPATH=$PYTHONPATH:$(pwd)
 if [ "$CI" '=' true ]
 then
@@ -28,6 +22,6 @@ wait_for_container
 run
 status=$?
 
-# [ "$CI" '!=' true ] && docker-compose stop testdb && docker-compose rm -f testdb
+[ "$CI" '!=' true ] && docker-compose stop testdb && docker-compose rm -f testdb
 
-# exit $status
+exit $status

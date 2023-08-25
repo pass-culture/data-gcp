@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from datetime import datetime
 from typing import List, Dict
+
 from utils.env_vars import NUMBER_OF_RECOMMENDATIONS
 
 

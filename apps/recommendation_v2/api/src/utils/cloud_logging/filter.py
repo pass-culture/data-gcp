@@ -1,6 +1,6 @@
 import logging
-import re
 from google.cloud.logging_v2.handlers import CloudLoggingFilter
+
 from utils.env_vars import (
     http_request_context,
     cloud_trace_context,
@@ -15,9 +15,6 @@ class GoogleCloudLogFilter(CloudLoggingFilter):
         split_header = trace.split("/", 1)
 
         record.trace = f"projects/{self.project}/traces/{split_header[0]}"
-
-        # header_suffix = split_header[1]
-        # record.span_id = re.findall(r'^\w+', header_suffix)[0]
 
         super().filter(record)
 

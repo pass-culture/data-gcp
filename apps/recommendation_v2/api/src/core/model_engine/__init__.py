@@ -8,7 +8,6 @@ from utils.env_vars import (
     NUMBER_OF_RECOMMENDATIONS,
 )
 
-# from core.logger.offer import save_context
 from loguru import logger
 from core.scorer.offer import OfferScorer
 from sqlalchemy.orm import Session
@@ -60,7 +59,7 @@ class ModelEngine(ABC):
             f"{self.user.user_id}: get_scoring -> diversification active: {diversification_params.is_active}, shuffle: {diversification_params.is_reco_shuffled}, mixing key: {diversification_params.mixing_features}"
         )
 
-        # # apply diversification filter
+        # apply diversification filter
         if diversification_params.is_active:
             scored_offers = order_offers_by_score_and_diversify_features(
                 offers=scored_offers,

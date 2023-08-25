@@ -74,6 +74,7 @@ SELECT
     ,'venue_type_label'
     AS partner_type_origin
 FROM `{{ bigquery_analytics_dataset }}`.enriched_venue_data
+WHERE (total_offers_created > 0 OR venue_type_label != 'Offre numérique')
 QUALIFY ROW_NUMBER() OVER(PARTITION BY venue_managing_offerer_id ORDER BY theoretic_revenue DESC, (COALESCE(enriched_venue_data.individual_offers_created,0) + COALESCE(enriched_venue_data.collective_offers_created,0)) DESC ) = 1
 ),
 

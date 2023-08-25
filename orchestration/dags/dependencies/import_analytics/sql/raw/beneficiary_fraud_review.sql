@@ -5,5 +5,5 @@ SELECT
     , review AS review
     , "dateReviewed" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS datereviewed
     , reason AS reason
-    , CAST("EligibilityType", AS varchar(255)) AS eligibility_type
+    , CAST("EligibilityType" AS varchar(255)) AS eligibility_type
 FROM public.beneficiary_fraud_review

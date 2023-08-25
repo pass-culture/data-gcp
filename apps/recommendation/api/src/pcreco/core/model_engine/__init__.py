@@ -75,7 +75,7 @@ class ModelEngine(ABC):
 
         scoring_size = min(len(scored_offers), NUMBER_OF_RECOMMENDATIONS)
         save_context(
-            offers=scored_offers,
+            offers=scored_offers[:scoring_size],
             call_id=self.user.call_id,
             context=self.model_params.name,
             user=self.user,

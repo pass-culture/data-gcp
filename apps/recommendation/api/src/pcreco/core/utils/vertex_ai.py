@@ -130,7 +130,7 @@ def __predict_model(
         return default_error
     except Exception as e:
         logger.info(
-            f"__predict_model: error, something went wrong for {endpoint_name}, {model_params}, {parameters}"
+            f"__predict_model: error, something went wrong for {endpoint_name}, {model_params}"
         )
         return default_error
 

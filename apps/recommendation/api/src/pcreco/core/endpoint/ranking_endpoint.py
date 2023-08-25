@@ -21,6 +21,15 @@ def to_days(dt: datetime):
     return None
 
 
+def to_float(x: float = None):
+    try:
+        if x is not None:
+            return float(x)
+    except Exception as e:
+        pass
+    return None
+
+
 class RankingEndpoint(AbstractEndpoint):
     def init_input(self, user: User, params_in: PlaylistParamsIn):
         self.user = user
@@ -51,15 +60,25 @@ class ModelRankingEndpoint(RankingEndpoint):
     ) -> t.List[RecommendableOffer]:
         offers_list = []
         for row in recommendable_offers:
+
             offers_list.append(
                 {
                     "offer_id": row.offer_id,
-                    "subcategory_id": row.subcategory_id,
-                    "user_distance": float(row.user_distance),
-                    "stock_price": float(row.stock_price),
-                    "booking_number": float(row.booking_number),
-                    "stock_beginning_days": to_days(row.stock_beginning_date),
+                    "offer_subcategory_id": row.subcategory_id,
+                    "user_clicks_count": to_float(self.user.clicks_count),
+                    "user_favorites_count": to_float(self.user.favorites_count),
+                    "user_deposit_remaining_credit": to_float(
+                        self.user.user_deposit_remaining_credit
+                    ),
+                    "offer_user_distance": to_float(row.user_distance),
+                    "offer_booking_number": to_float(row.booking_number),
+                    "offer_item_score": to_float(row.item_rank),
+                    "offer_stock_price": to_float(row.stock_price),
                     "offer_creation_days": to_days(row.offer_creation_date),
+                    "offer_stock_beginning_days": to_days(row.stock_beginning_date),
+                    "is_geolocated": to_float(row.is_geolocated),
+                    "venue_latitude": to_float(row.venue_latitude),
+                    "venue_longitude": to_float(row.venue_longitude),
                 }
             )
         return offers_list
@@ -84,7 +103,9 @@ class ModelRankingEndpoint(RankingEndpoint):
         }
 
         for row in recommendable_offers:
-            past_score = row.offer_score
-            row.offer_score = prediction_dict.get(row.offer_id, past_score)
+            current_score = prediction_dict.get(row.offer_id, None)
+            if current_score is not None:
+                row.offer_score = current_score
+                row.offer_output = current_score
         log_duration(f"ranking_endpoint {str(self.user.id)}", start)
-        return sorted(recommendable_offers, key=lambda x: x.offer_score, reverse=True)
+        return sorted(recommendable_offers, key=lambda x: x.offer_output, reverse=True)

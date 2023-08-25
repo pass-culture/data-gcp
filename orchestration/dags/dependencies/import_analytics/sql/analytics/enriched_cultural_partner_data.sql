@@ -12,8 +12,12 @@ SELECT
     ,enriched_venue_data.venue_department_code AS partner_department_code
     ,enriched_venue_data.venue_postal_code AS partner_postal_code
     ,'venue' AS partner_status
-    ,venue_type_label AS partner_type
-    ,'venue_type_label' AS partner_type_origin
+    ,COALESCE(criterion_name, venue_type_label) AS partner_type
+    ,CASE WHEN 
+        criterion_name IS NOT NULL THEN "venue_tag"
+        ELSE 'venue_type_label' 
+        END
+    AS partner_type_origin
     ,agg_partner_cultural_sector.cultural_sector AS cultural_sector
     ,CASE WHEN DATE_DIFF(CURRENT_DATE,venue_last_bookable_offer_date,DAY) <= 30 THEN TRUE ELSE FALSE END AS is_active_last_30days
     ,CASE WHEN DATE_DIFF(CURRENT_DATE,venue_last_bookable_offer_date,YEAR) = 0 THEN TRUE ELSE FALSE END AS is_active_current_year
@@ -34,8 +38,10 @@ FROM `{{ bigquery_analytics_dataset }}`.enriched_venue_data AS enriched_venue_da
 LEFT JOIN `{{ bigquery_analytics_dataset }}`.region_department AS region_department
     ON enriched_venue_data.venue_department_code = region_department.num_dep
 LEFT JOIN `{{ bigquery_analytics_dataset }}`.agg_partner_cultural_sector ON agg_partner_cultural_sector.partner_type = enriched_venue_data.venue_type_label
+LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_venue_tags_data ON enriched_venue_data.venue_id = enriched_venue_tags_data.venue_id AND enriched_venue_tags_data.criterion_category_label = "Comptage partenaire label et appellation du MC"
 WHERE venue_is_permanent IS TRUE
 ),
+
 
 tagged_partners AS (
 SELECT
@@ -47,14 +53,39 @@ AND tag_label NOT IN ('Association', 'EPN','Collectivité','Pas de tag associé'
 GROUP BY 1
 ),
 
-top_venue_per_offerer AS (
+-- On récupère tous les lieux taggués et on remonte le tag du lieu le + actif de chaque structure
+top_venue_tag_per_offerer AS (
+SELECT 
+  enriched_venue_data.venue_id,
+  venue_managing_offerer_id AS offerer_id,
+  criterion_name AS partner_type,
+  'venue_tag' AS partner_type_origin
+FROM `{{ bigquery_analytics_dataset }}`.enriched_venue_data 
+JOIN `{{ bigquery_analytics_dataset }}`.enriched_venue_tags_data ON enriched_venue_data.venue_id = enriched_venue_tags_data.venue_id AND enriched_venue_tags_data.criterion_category_label = "Comptage partenaire label et appellation du MC"
+QUALIFY ROW_NUMBER() OVER(PARTITION BY venue_managing_offerer_id ORDER BY theoretic_revenue DESC, (COALESCE(enriched_venue_data.individual_offers_created,0) + COALESCE(enriched_venue_data.collective_offers_created,0)) DESC ) = 1
+),
+
+-- On récupère le label du lieu le + actif de chaque structure
+top_venue_type_per_offerer AS (
 SELECT
     enriched_venue_data.venue_id
     ,venue_managing_offerer_id AS offerer_id
-    ,venue_type_label
-    ,ROW_NUMBER() OVER(PARTITION BY venue_managing_offerer_id ORDER BY theoretic_revenue DESC, (COALESCE(enriched_venue_data.individual_offers_created,0) + COALESCE(enriched_venue_data.collective_offers_created,0)) DESC ) AS top_venue_type_this_offer
+    ,venue_type_label AS partner_type
+    ,'venue_type_label'
+    AS partner_type_origin
 FROM `{{ bigquery_analytics_dataset }}`.enriched_venue_data
+WHERE (total_offers_created > 0 OR venue_type_label != 'Offre numérique')
 QUALIFY ROW_NUMBER() OVER(PARTITION BY venue_managing_offerer_id ORDER BY theoretic_revenue DESC, (COALESCE(enriched_venue_data.individual_offers_created,0) + COALESCE(enriched_venue_data.collective_offers_created,0)) DESC ) = 1
+),
+
+top_venue_per_offerer AS (
+SELECT 
+    top_venue_type_per_offerer.offerer_id,
+    COALESCE(top_venue_tag_per_offerer.venue_id, top_venue_type_per_offerer.venue_id) venue_id,
+    COALESCE(top_venue_tag_per_offerer.partner_type, top_venue_type_per_offerer.partner_type) partner_type,
+    COALESCE(top_venue_tag_per_offerer.partner_type_origin, top_venue_type_per_offerer.partner_type_origin) partner_type_origin
+FROM top_venue_type_per_offerer 
+LEFT JOIN top_venue_tag_per_offerer on top_venue_type_per_offerer.offerer_id = top_venue_tag_per_offerer.offerer_id 
 ),
 
 
@@ -71,10 +102,11 @@ SELECT
     ,enriched_offerer_data.offerer_department_code AS partner_department_code
     ,applicative_database_offerer.offerer_postal_code AS partner_postal_code
     ,'offerer' AS partner_status
-    ,COALESCE(tagged_partners.partner_type,top_venue_per_offerer.venue_type_label, 'Structure non tagguée') AS partner_type
+    ,COALESCE(tagged_partners.partner_type,top_venue_per_offerer.partner_type, 'Structure non tagguée') AS partner_type
     ,CASE
         WHEN tagged_partners.partner_type IS NOT NULL THEN 'offerer_tag'
-        WHEN top_venue_per_offerer.venue_type_label IS NOT NULL THEN 'most_active_venue_type'
+        WHEN top_venue_per_offerer.partner_type_origin = "venue_tag" THEN 'most_active_venue_tag'
+        WHEN top_venue_per_offerer.partner_type_origin= "venue_type_label" THEN "most_active_venue_type"
         ELSE NULL END AS partner_type_origin
     ,agg_partner_cultural_sector.cultural_sector AS cultural_sector
     ,CASE WHEN DATE_DIFF(CURRENT_DATE,enriched_offerer_data.offerer_last_bookable_offer_date,DAY) <= 30 THEN TRUE ELSE FALSE END AS is_active_last_30days
@@ -100,10 +132,9 @@ LEFT JOIN `{{ bigquery_analytics_dataset }}`.region_department AS region_departm
 LEFT JOIN tagged_partners ON tagged_partners.offerer_id = enriched_offerer_data.offerer_id
 LEFT JOIN permanent_venues ON permanent_venues.offerer_id = enriched_offerer_data.offerer_id
 LEFT JOIN top_venue_per_offerer ON top_venue_per_offerer.offerer_id = enriched_offerer_data.offerer_id
-LEFT JOIN `{{ bigquery_analytics_dataset }}`.agg_partner_cultural_sector ON agg_partner_cultural_sector.partner_type = COALESCE(tagged_partners.partner_type, top_venue_per_offerer.venue_type_label)
+LEFT JOIN `{{ bigquery_analytics_dataset }}`.agg_partner_cultural_sector ON agg_partner_cultural_sector.partner_type = COALESCE(tagged_partners.partner_type, top_venue_per_offerer.partner_type)
 WHERE NOT enriched_offerer_data.is_territorial_authorities  -- Collectivités à part
 AND permanent_venues.offerer_id IS NULL -- Pas déjà compté à l'échelle du lieu permanent
-
 )
 
 SELECT

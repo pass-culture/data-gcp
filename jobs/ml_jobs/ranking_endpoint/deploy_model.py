@@ -31,7 +31,7 @@ def load_data(dataset_name, table_name):
           * 
       FROM `{GCP_PROJECT_ID}.{dataset_name}.{table_name}` 
       WHERE seen = True
-      ORDER BY RAND()
+      ORDER BY offer_order DESC
       LIMIT {PARAMS['seen']}
     ),
     consult AS (
@@ -39,7 +39,6 @@ def load_data(dataset_name, table_name):
             * 
         FROM `{GCP_PROJECT_ID}.{dataset_name}.{table_name}` 
         WHERE consult = True
-        ORDER BY RAND()
         LIMIT {PARAMS['consult']}
 
     ),
@@ -48,7 +47,6 @@ def load_data(dataset_name, table_name):
             * 
         FROM `{GCP_PROJECT_ID}.{dataset_name}.{table_name}` 
         WHERE booking = True
-        ORDER BY RAND()
         LIMIT {PARAMS['booking']}
     )
     

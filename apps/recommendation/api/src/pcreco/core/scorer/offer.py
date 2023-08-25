@@ -96,9 +96,11 @@ class OfferScorer:
                 venue_longitude=row[12],
                 item_score=row[13],  # lower is better
                 item_rank=row[14],
+                is_geolocated=int(row[15]),
                 query_order=i,
                 random=random.random(),
-                offer_score=size - i,  # higher is better
+                offer_score=None,  # score for ranking
+                offer_output=size - i,  # higher is better / default case
             )
             for i, row in enumerate(query_result)
         ]

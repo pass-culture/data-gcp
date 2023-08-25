@@ -438,6 +438,7 @@ analytics_tables = {
             "enriched_collective_offer_data",
             "enriched_offer_data",
             "enriched_offerer_tags_data",
+            "enriched_venue_tags_data",
         ],
     },
     "bookable_venue_history": {

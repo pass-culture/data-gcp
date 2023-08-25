@@ -63,7 +63,7 @@ SELECT
 FROM `{{ bigquery_analytics_dataset }}`.enriched_venue_data 
 JOIN `{{ bigquery_analytics_dataset }}`.enriched_venue_tags_data ON enriched_venue_data.venue_id = enriched_venue_tags_data.venue_id AND enriched_venue_tags_data.criterion_category_label = "Comptage partenaire label et appellation du MC"
 QUALIFY ROW_NUMBER() OVER(PARTITION BY venue_managing_offerer_id ORDER BY theoretic_revenue DESC, (COALESCE(enriched_venue_data.individual_offers_created,0) + COALESCE(enriched_venue_data.collective_offers_created,0)) DESC ) = 1
-)
+),
 
 -- On récupère le label du lieu le + actif de chaque structure
 top_venue_type_per_offerer AS (
@@ -85,8 +85,7 @@ SELECT
     COALESCE(top_venue_tag_per_offerer.partner_type_origin, top_venue_type_per_offerer.partner_type_origin) partner_type_origin
 FROM top_venue_type_per_offerer 
 LEFT JOIN top_venue_tag_per_offerer on top_venue_type_per_offerer.offerer_id = top_venue_tag_per_offerer.offerer_id 
-
-)
+),
 
 
 offerers AS (

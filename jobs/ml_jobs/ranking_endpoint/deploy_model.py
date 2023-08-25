@@ -31,7 +31,6 @@ def load_data(dataset_name, table_name):
           * 
       FROM `{GCP_PROJECT_ID}.{dataset_name}.{table_name}` 
       WHERE seen = True
-      AND MOD(CAST(RAND()*10 AS INT64),10)=0
       ORDER BY offer_order DESC
       LIMIT {PARAMS['seen']}
     ),

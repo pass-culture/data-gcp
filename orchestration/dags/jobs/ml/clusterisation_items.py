@@ -109,7 +109,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command="PYTHONPATH=. python preprocess.py "
-        f"--input-table {DATE}_items_clusterisation_raw --output-table {DATE}_item_full_encoding_enriched "
+        f"--input-table {DATE}_clusterisation_items_raw --output-table {DATE}_item_full_encoding_enriched "
         "--config-file-name {{ params.config_file_name }} ",
     )
 

@@ -12,4 +12,5 @@ COPY ./metadata /app/metadata
 WORKDIR /app
 EXPOSE 8080
 ENV WORKERS=${WORKERS}
-CMD ["hypercorn", "--bind", "0.0.0.0:8080", "app:app",  "--workers=${WORKERS}"]
+
+CMD hypercorn --bind 0.0.0.0:8080 app:app --workers=${WORKERS}

@@ -78,7 +78,6 @@ def get_nearest_offer(db: Session, user: User, item: RecommendableItem) -> Offer
     if user.age and user.age < 18:
         underage_condition.append(RecommendableOffersRaw.is_underage_recommendable)
 
-    # TODO : add condition to check if offer is geolocated
     if user_geolocated:
         user_distance = func.ST_Distance(
             user_point,

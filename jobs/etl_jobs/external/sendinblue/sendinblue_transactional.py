@@ -93,7 +93,8 @@ class SendinblueTransactional:
                         event=event_type,
                         offset=offset,
                     ).events
-                    api_responses.append(response)
+                    if response is not None:
+                        api_responses.append(response)
 
         api_responses = sum(
             api_responses, []

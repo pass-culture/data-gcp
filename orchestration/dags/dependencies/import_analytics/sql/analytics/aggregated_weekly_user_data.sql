@@ -3,7 +3,7 @@ WITH
   SELECT
     *
   FROM
-    UNNEST( GENERATE_DATE_ARRAY('2021-05-20', CURRENT_DATE, INTERVAL 1 WEEK) ) AS week ),
+    UNNEST( GENERATE_DATE_ARRAY('2021-05-17', CURRENT_DATE, INTERVAL 1 WEEK) ) AS week ),
   deposit_active_weeks AS (
   SELECT
     enriched_deposit_data.user_id,

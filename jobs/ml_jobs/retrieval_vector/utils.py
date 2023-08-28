@@ -33,8 +33,8 @@ def save_experiment(experiment_name, model_name, serving_container, run_id):
     )
 
 
-def deploy_container(serving_container):
-    command = f"sh ./deploy_to_docker_registery.sh {serving_container}"
+def deploy_container(serving_container, workers):
+    command = f"sh ./deploy_to_docker_registery.sh {serving_container} {workers}"
     results = subprocess.Popen(
         command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
     )

@@ -1,7 +1,39 @@
-WITH enriched_items AS (
+{{ create_humanize_id_function() }} 
+WITH offer_humanized_id AS (
+    SELECT
+        offer_id,
+        humanize_id(offer_id) AS humanized_id,
+    FROM
+        `{{ bigquery_analytics_dataset }}.`.applicative_database_offer
+    WHERE
+        offer_id is not NULL
+),
+mediation AS (
+    SELECT
+        offer_id,
+        humanize_id(id) as mediation_humanized_id
+    FROM
+        (
+            SELECT
+                id,
+                offerId as offer_id,
+                ROW_NUMBER() OVER (
+                    PARTITION BY offerId
+                    ORDER BY
+                        dateModifiedAtLastProvider DESC
+                ) as rnk
+            FROM
+                `{{ bigquery_analytics_dataset }}`.applicative_database_mediation
+            WHERE
+                isActive
+        ) inn
+    WHERE
+        rnk = 1
+),
+enriched_items AS (
 
     SELECT 
-        offer.offer_id ,
+        offer.offer_id,
         offer.offer_subcategoryId AS subcategory_id,
         subcategories.category_id AS category_id,
         subcategories.search_group_name AS search_group_name,
@@ -11,9 +43,35 @@ WITH enriched_items AS (
             WHEN subcategories.category_id = 'SPECTACLE' THEN "SHOW"
             WHEN subcategories.category_id = 'CINEMA' THEN "MOVIE"
             WHEN subcategories.category_id = 'LIVRE' THEN "BOOK"
-        END AS offer_type_domain
+        END AS offer_type_domain,
+        CASE
+            when (
+                o.offer_name is null
+                or o.offer_name = 'NaN'
+            ) then "None"
+            else safe_cast(o.offer_name as STRING)
+        END as offer_name,
+        CASE
+            when (
+                o.offer_description is null
+                or o.offer_description = 'NaN'
+            ) then "None"
+            else safe_cast(o.offer_description as STRING)
+        END as offer_description,
+        CASE
+            WHEN mediation.mediation_humanized_id is not null THEN CONCAT(
+                "https://storage.googleapis.com/{{ mediation_url }}-assets-fine-grained/thumbs/mediations/",
+                mediation.mediation_humanized_id
+            )
+            ELSE CONCAT(
+                "https://storage.googleapis.com/{{ mediation_url }}-assets-fine-grained/thumbs/products/",
+                humanize_id(o.offer_product_id)
+            )
+        END AS image_url
+
     FROM `{{ bigquery_clean_dataset }}`.applicative_database_offer offer
     JOIN `{{ bigquery_clean_dataset }}`.subcategories subcategories ON offer.offer_subcategoryId = subcategories.id
+    LEFT JOIN mediation ON o.offer_id = mediation.offer_id
 ),
 
 offer_types AS (
@@ -49,8 +107,9 @@ offer_metadata_id AS (
         END AS offer_sub_type_id,
 
         offer_extracted_data.rayon,
-        offer_extracted_data.genres
-
+        offer_extracted_data.genres,
+        offer_extracted_data.author,
+        offer_extracted_data.performer,
 
     FROM enriched_items
     
@@ -81,6 +140,7 @@ offer_metadata AS (
             WHEN omi.offer_type_domain = "MOVIE" THEN NULL -- no sub-genre here
             WHEN omi.offer_type_domain = "BOOK"  THEN omi.rayon
         END AS offer_sub_type_label
+    
     FROM offer_metadata_id omi
 
     LEFT JOIN offer_types 

@@ -122,7 +122,12 @@ WITH extracted_offers AS (
             JSON_EXTRACT(offer_extra_data, "$.editeur"), " "),
             '"')
         ) AS book_editor,
-    FROM        `{{ bigquery_clean_dataset }}.applicative_database_offer`
+        LOWER(
+            TRIM(TRIM(
+            JSON_EXTRACT(offer_extra_data, "$.titelive_regroup"), " "),
+            '"')
+        ) AS titelive_regroup,
+    FROM  `{{ bigquery_clean_dataset }}.applicative_database_offer`
 
 )
 

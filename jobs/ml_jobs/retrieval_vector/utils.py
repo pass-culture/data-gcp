@@ -45,21 +45,7 @@ def deploy_container(serving_container, workers):
 
 def get_items_metadata():
     sql = f"""
-        WITH offer_details AS (
-            SELECT 
-                item_id,
-                offer_id, 
-                offer_name,
-            FROM `{GCP_PROJECT_ID}.{BIGQUERY_ANALYTICS_DATASET}.enriched_offer_data` 
-            QUALIFY ROW_NUMBER() OVER (PARTITION BY item_id ORDER BY booking_confirm_cnt DESC) = 1
-        ) 
-
-        SELECT 
-            ro.*, 
-            od.offer_name as example_offer_name, 
-            od.offer_id as example_offer_id
-        FROM `{GCP_PROJECT_ID}.{BIGQUERY_ANALYTICS_DATASET}.recommendable_items_raw` ro
-        LEFT JOIN offer_details od on od.item_id = ro.item_id
+        SELECT * FROM `{GCP_PROJECT_ID}.{BIGQUERY_ANALYTICS_DATASET}.recommendable_items_raw`
     """
     return pd.read_gbq(sql)
 
@@ -99,12 +85,18 @@ def get_item_docs(item_embedding_dict, items_df):
                 "category": str(row.category or ""),
                 "subcategory_id": str(row.subcategory_id or ""),
                 "search_group_name": str(row.search_group_name or ""),
+                "offer_type_label": str(row.offer_type_label or ""),
+                "offer_type_labels": str(row.offer_type_labels or "").split(";"),
+                "offer_type_domain": str(row.offer_type_domain or ""),
                 "is_numerical": float(row.is_numerical),
                 "is_national": float(row.is_national),
                 "is_geolocated": float(row.is_geolocated),
                 "is_underage_recommendable": float(row.is_underage_recommendable),
                 "offer_is_duo": float(row.offer_is_duo),
                 "booking_number": float(row.booking_number),
+                "booking_number_last_7_days": float(row.booking_number_last_7_days),
+                "booking_number_last_14_days": float(row.booking_number_last_14_days),
+                "booking_number_last_28_days": float(row.booking_number_last_28_days),
                 "stock_price": float(row.stock_price),
                 "offer_creation_date": to_ts(row.offer_creation_date),
                 "stock_beginning_date": to_ts(row.stock_beginning_date),

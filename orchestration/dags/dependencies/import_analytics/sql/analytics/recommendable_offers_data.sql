@@ -1,4 +1,32 @@
-WITH get_recommendable_offers AS (
+WITH booking_numbers AS (
+    SELECT
+        SUM(IF(
+            booking.booking_creation_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 14 DAY), 1, 0
+        )) AS booking_number,
+        SUM(IF(
+            booking.booking_creation_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY), 1, 0
+        )) AS booking_number_last_7_days,
+        SUM(IF(
+            booking.booking_creation_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 14 DAY), 1, 0
+        )) AS booking_number_last_14_days,
+        SUM(IF(
+            booking.booking_creation_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 28 DAY), 1, 0
+        )) AS booking_number_last_28_days,
+        offer.item_id as item_id
+    FROM
+        `{{ bigquery_clean_dataset }}`.booking booking
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock stock ON booking.stock_id = stock.stock_id
+        LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_offer_data offer ON stock.offer_id = offer.offer_id
+    WHERE
+        booking.booking_creation_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 28 DAY)
+        AND NOT booking.booking_is_cancelled
+    GROUP BY
+        offer.item_id
+), 
+
+
+
+get_recommendable_offers AS (
     SELECT
         DISTINCT (offer.offer_id) AS offer_id,
         offer.item_id AS item_id,
@@ -14,6 +42,7 @@ WITH get_recommendable_offers AS (
         enriched_item_metadata.offer_type_label,
         enriched_item_metadata.offer_sub_type_id,
         enriched_item_metadata.offer_sub_type_label,
+        enriched_item_metadata.offer_type_labels,
         offer.URL AS url,
         offer.is_national AS is_national,
         offer.offer_creation_date AS offer_creation_date,
@@ -21,6 +50,9 @@ WITH get_recommendable_offers AS (
         offer.last_stock_price AS stock_price,
         item_counts.item_count as item_count,
         COALESCE(booking_numbers.booking_number, 0) AS booking_number,
+        COALESCE(booking_numbers.booking_number_last_7_days, 0) AS booking_number_last_7_days,
+        COALESCE(booking_numbers.booking_number_last_14_days, 0) AS booking_number_last_14_days,
+        COALESCE(booking_numbers.booking_number_last_28_days, 0) AS booking_number_last_28_days,
         (
             CASE
                 WHEN (
@@ -63,20 +95,7 @@ WITH get_recommendable_offers AS (
                 offerer_validation_status='VALIDATED'
         ) offerer ON offerer.offerer_id = venue.venue_managing_offerer_id
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock stock ON offer.offer_id = stock.offer_id
-        LEFT JOIN (
-            SELECT
-                COUNT(*) AS booking_number,
-                offer.item_id as item_id
-            FROM
-                `{{ bigquery_clean_dataset }}`.booking booking
-                LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock stock ON booking.stock_id = stock.stock_id
-                LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_offer_data offer ON stock.offer_id = offer.offer_id
-            WHERE
-                booking.booking_creation_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 14 DAY)
-                AND NOT booking.booking_is_cancelled
-            GROUP BY
-                offer.item_id
-        ) booking_numbers ON booking_numbers.item_id = offer.item_id
+        LEFT JOIN booking_numbers ON booking_numbers.item_id = offer.item_id
         LEFT JOIN (
             SELECT count(*) as item_count,
             offer.item_id as item_id,

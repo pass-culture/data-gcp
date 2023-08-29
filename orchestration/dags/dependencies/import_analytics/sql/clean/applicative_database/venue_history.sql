@@ -1,6 +1,5 @@
 SELECT 
     DATE_ADD(CURRENT_DATE(), INTERVAL -1 DAY) as active_date,
-    active_date,
     venue_id,
     venue_siret,
     venue_is_permanent,

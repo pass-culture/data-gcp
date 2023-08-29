@@ -75,6 +75,20 @@ historical_clean_applicative_database = {
         "time_partitioning": {"field": "partition_date"},
         "clustering_fields": {"fields": ["partition_date"]},
     },
+    "venue_history": {
+        "sql": f"{CLEAN_APPLICATIVE_DATABASE_SQL_PATH}/venue_history.sql",
+        "destination_dataset": "{{ bigquery_clean_dataset }}",
+        "destination_table": "applicative_database_venue_history${{ yyyymmdd(yesterday()) }}",
+        "time_partitioning": {"field": "active_date"},
+        "clustering_fields": {"fields": ["active_date"]},
+    },
+    "venue_criterion_history": {
+        "sql": f"{CLEAN_APPLICATIVE_DATABASE_SQL_PATH}/venue_criterion_history.sql",
+        "destination_dataset": "{{ bigquery_clean_dataset }}",
+        "destination_table": "applicative_database_venue_criterion_history${{ yyyymmdd(yesterday()) }}",
+        "time_partitioning": {"field": "partition_date"},
+        "clustering_fields": {"fields": ["partition_date"]},
+    },
 }
 
 historical_analytics = {

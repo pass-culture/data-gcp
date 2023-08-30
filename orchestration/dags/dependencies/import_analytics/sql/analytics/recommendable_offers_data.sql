@@ -28,7 +28,7 @@ WITH booking_numbers AS (
 
 get_recommendable_offers AS (
     SELECT
-        DISTINCT (offer.offer_id) AS offer_id,
+        offer.offer_id AS offer_id,
         offer.item_id AS item_id,
         offer.offer_product_id AS product_id,
         offer.venue_id AS venue_id,
@@ -37,23 +37,17 @@ get_recommendable_offers AS (
         enriched_item_metadata.subcategory_id AS subcategory_id,
         enriched_item_metadata.category_id as category,
         enriched_item_metadata.search_group_name,
-        enriched_item_metadata.offer_type_domain,
-        enriched_item_metadata.offer_type_id,
-        enriched_item_metadata.offer_type_label,
-        enriched_item_metadata.offer_sub_type_id,
-        enriched_item_metadata.offer_sub_type_label,
-        enriched_item_metadata.offer_type_labels,
         offer.URL AS url,
-        offer.is_national AS is_national,
         offer.offer_creation_date AS offer_creation_date,
         stock.stock_beginning_date AS stock_beginning_date,
         offer.last_stock_price AS stock_price,
-        item_counts.item_count as item_count,
-        COALESCE(booking_numbers.booking_number, 0) AS booking_number,
-        COALESCE(booking_numbers.booking_number_last_7_days, 0) AS booking_number_last_7_days,
-        COALESCE(booking_numbers.booking_number_last_14_days, 0) AS booking_number_last_14_days,
-        COALESCE(booking_numbers.booking_number_last_28_days, 0) AS booking_number_last_28_days,
-        (
+        MAX(item_counts.item_count) as item_count,
+        MAX(COALESCE(booking_numbers.booking_number, 0)) AS booking_number,
+        MAX(COALESCE(booking_numbers.booking_number_last_7_days, 0)) AS booking_number_last_7_days,
+        MAX(COALESCE(booking_numbers.booking_number_last_14_days, 0)) AS booking_number_last_14_days,
+        MAX(COALESCE(booking_numbers.booking_number_last_28_days, 0)) AS booking_number_last_28_days,
+        MIN(offer.is_national) AS is_national,
+        MAX(
             CASE
                 WHEN (
                     offer.offer_product_id NOT IN ('3469240')
@@ -74,7 +68,17 @@ get_recommendable_offers AS (
             END
         ) AS is_underage_recommendable,
         -- not in forbidden_query or forbidden_offer
-        forbidden_query.subcategory_id is null OR NOT (REGEXP_CONTAINS(LOWER(offer.offer_name) ,CONCAT(r'(?i)(\b', forbidden_query.query, r'\b)')))  OR forbidden_offer.product_id is null as is_recommendable,
+        MIN(
+            forbidden_query.subcategory_id is null OR 
+            NOT (REGEXP_CONTAINS(LOWER(offer.offer_name) ,CONCAT(r'(?i)(\b', forbidden_query.query, r'\b)')))
+            OR forbidden_offer.product_id is null
+        ) as is_recommendable,
+        ANY_VALUE(enriched_item_metadata.offer_type_labels) as offer_type_labels,
+        ANY_VALUE(enriched_item_metadata.offer_type_domain) as offer_type_domain,
+        ANY_VALUE(enriched_item_metadata.offer_type_id) as offer_type_id,
+        ANY_VALUE(enriched_item_metadata.offer_type_label) as offer_type_label,
+        ANY_VALUE(enriched_item_metadata.offer_sub_type_id) as offer_sub_type_id,
+        ANY_VALUE(enriched_item_metadata.offer_sub_type_label) as offer_sub_type_label,
 
     FROM
         `{{ bigquery_analytics_dataset }}`.enriched_offer_data offer
@@ -114,6 +118,7 @@ get_recommendable_offers AS (
         AND offer.offer_is_bookable = TRUE
         AND offerer.offerer_is_active = TRUE
         AND offer.offer_validation = 'APPROVED'
+    GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13
 )
 SELECT  * 
 FROM get_recommendable_offers 

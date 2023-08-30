@@ -46,17 +46,17 @@ enriched_items AS (
         END AS offer_type_domain,
         CASE
             when (
-                o.offer_name is null
-                or o.offer_name = 'NaN'
+                offer.offer_name is null
+                or offer.offer_name = 'NaN'
             ) then "None"
-            else safe_cast(o.offer_name as STRING)
+            else safe_cast(offer.offer_name as STRING)
         END as offer_name,
         CASE
             when (
-                o.offer_description is null
-                or o.offer_description = 'NaN'
+                offer.offer_description is null
+                or offer.offer_description = 'NaN'
             ) then "None"
-            else safe_cast(o.offer_description as STRING)
+            else safe_cast(offer.offer_description as STRING)
         END as offer_description,
         CASE
             WHEN mediation.mediation_humanized_id is not null THEN CONCAT(
@@ -65,13 +65,13 @@ enriched_items AS (
             )
             ELSE CONCAT(
                 "https://storage.googleapis.com/{{ mediation_url }}-assets-fine-grained/thumbs/products/",
-                humanize_id(o.offer_product_id)
+                humanize_id(offer.offer_product_id)
             )
         END AS image_url
 
     FROM `{{ bigquery_clean_dataset }}`.applicative_database_offer offer
     JOIN `{{ bigquery_clean_dataset }}`.subcategories subcategories ON offer.offer_subcategoryId = subcategories.id
-    LEFT JOIN mediation ON o.offer_id = mediation.offer_id
+    LEFT JOIN mediation ON offer.offer_id = mediation.offer_id
 ),
 
 offer_types AS (

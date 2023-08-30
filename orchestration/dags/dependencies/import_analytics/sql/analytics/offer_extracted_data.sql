@@ -122,16 +122,20 @@ WITH extracted_offers AS (
             JSON_EXTRACT(offer_extra_data, "$.editeur"), " "),
             '"')
         ) AS book_editor,
-        LOWER(
-            TRIM(TRIM(
-            JSON_EXTRACT(offer_extra_data, "$.titelive_regroup"), " "),
-            '"')
-        ) AS titelive_regroup,
+        TRIM(
+            TRIM(
+                JSON_EXTRACT(offer_extra_data, "$.gtl_id"), " "),
+            '"') AS titelive_gtl_id
     FROM  `{{ bigquery_clean_dataset }}.applicative_database_offer`
 
 )
 
 SELECT 
-    * EXCEPT(isbn), 
+    * EXCEPT(isbn, titelive_gtl_id), 
     if(length(ean) = 13, COALESCE(ean, isbn), isbn) as isbn,
+    CASE
+      WHEN LENGTH(cast(titelive_gtl_id as string) ) = 7 THEN CONCAT('0', cast(titelive_gtl_id as string) )
+      ELSE cast(titelive_gtl_id as string) 
+    END AS titelive_gtl_id
+
 FROM extracted_offers

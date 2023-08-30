@@ -200,6 +200,7 @@ SELECT
     offer_extracted_data.countries,
     offer_extracted_data.casting,
     offer_extracted_data.isbn,
+    offer_extracted_data.titelive_gtl_id,
     isbn_rayon_editor.rayon,
     isbn_rayon_editor.book_editor,
     CASE

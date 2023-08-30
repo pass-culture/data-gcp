@@ -12,6 +12,7 @@ SELECT
     , COUNT(DISTINCT CONCAT(session_id, user_pseudo_id)) AS nb_sesh_display
     , COUNT(DISTINCT CASE WHEN consult_offer_timestamp IS NOT NULL OR click_type IS NOT NULL OR consult_venue_timestamp IS NOT NULL THEN CONCAT(session_id, user_pseudo_id) ELSE NULL END) AS nb_sesh_click
     , COUNT(DISTINCT CASE WHEN consult_offer_timestamp IS NOT NULL THEN CONCAT(session_id, user_pseudo_id) ELSE NULL END) AS nb_sesh_consult_offer
+    , COUNT(DISTINCT CASE WHEN click_type = 'ConsultVideo' THEN CONCAT(session_id, user_pseudo_id) ELSE NULL END) AS nb_sesh_consult_video
     , COUNT( CASE WHEN consult_offer_timestamp IS NOT NULL THEN 1 ELSE NULL END) AS nb_consult_offer
     , COUNT(DISTINCT CASE WHEN booking_timestamp IS NOT NULL THEN CONCAT(session_id, user_pseudo_id) ELSE NULL END) AS nb_sesh_booking
     , COUNT( CASE WHEN booking_timestamp IS NOT NULL THEN 1 ELSE NULL END) AS nb_bookings

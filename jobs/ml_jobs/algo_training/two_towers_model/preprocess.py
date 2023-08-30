@@ -50,11 +50,16 @@ def preprocess(
         feature_layers=features["item_embedding_layers"], layer_types=["int"]
     )
     string_features = get_features_by_type(
-        feature_layers=features["user_embedding_layers"], layer_types=["string", "text"]
+        feature_layers=features["user_embedding_layers"],
+        layer_types=["string", "text", "pretrained"],
     ) + get_features_by_type(
-        feature_layers=features["item_embedding_layers"], layer_types=["string", "text"]
+        feature_layers=features["item_embedding_layers"],
+        layer_types=["string", "text", "pretrained"],
     )
-
+    # This cover the case were 'user_id' is not a features of the model
+    # Since we need user_id for evaluation purposes
+    if "user_id" not in integer_features + string_features:
+        string_features.append("user_id")
     clean_data = (
         raw_data[integer_features + string_features]
         .fillna({col: "none" for col in string_features})

@@ -43,7 +43,7 @@ dag_config = {
     "BASE_DIR": "data-gcp/jobs/ml_jobs/algo_training",
     "MODEL_DIR": "two_towers_model",
     "TRAIN_DIR": "/home/airflow/train",
-    "EXPERIMENT_NAME": f"algo_training_two_towers.1_{ENV_SHORT_NAME}",
+    "EXPERIMENT_NAME": f"algo_training_two_towers_v1.1_{ENV_SHORT_NAME}",
 }
 
 # Params
@@ -268,10 +268,10 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=f"{dag_config['BASE_DIR']}/similar_offers",
         environment=dag_config,
-        command="python main.py "
-        "--experiment-name similar_offers_{{ params.input_type }}"
-        + f"_v2.1_{ENV_SHORT_NAME} "
-        "--model-name v2.1",
+        command="python deploy_model.py "
+        "--experiment-name similar_offers_two_towers_v1.1_" + f"{ENV_SHORT_NAME} "
+        "--model-name similar_offers_two_towers_v1.1 "
+        f"--source-experiment-name {dag_config['EXPERIMENT_NAME']} ",
         dag=dag,
     )
 

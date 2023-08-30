@@ -1,42 +1,64 @@
-from dataclasses import dataclass
-from pcreco.utils.env_vars import ENV_SHORT_NAME
-import pcreco.core.scorer.similar_offer as similar_offer_scorer
+import pcreco.core.scorer.offer as offer_scorer
+from pcreco.core.model_selection.model_configuration import (
+    ModelConfiguration,
+    diversification_off,
+)
+import pcreco.core.model_selection.endpoint.offer_retrieval as offer_retrieval
+import pcreco.core.model_selection.endpoint.user_ranking as user_ranking
 
+RANKING_LIMIT = 100
 
-@dataclass
-class SimilarOfferDefaultModel:
-    name: str
-    scorer: similar_offer_scorer.SimilarOfferScorer
-    retrieval_order_query: str
-    retrieval_limit: int
-    ranking_order_query: str
-    ranking_limit: int
-    endpoint_name: str = f"similar_offers_default_{ENV_SHORT_NAME}"
+retrieval_offer = ModelConfiguration(
+    name="similar_offer_model",
+    description="""""",
+    scorer=offer_scorer.OfferScorer,
+    ranking_order_query="item_rank ASC",
+    ranking_limit_query=100,
+    diversification_params=diversification_off,
+    retrieval_endpoints=[
+        offer_retrieval.offer_retrieval_endpoint,
+        offer_retrieval.semantic_offer_retrieval_endpoint,
+    ],
+    ranking_endpoint=user_ranking.user_ranking_endpoint,
+)
 
+retrieval_offer_version_b = ModelConfiguration(
+    name="similar_offer_model",
+    description="""""",
+    scorer=offer_scorer.OfferScorer,
+    ranking_order_query="item_rank ASC",
+    ranking_limit_query=100,
+    diversification_params=diversification_off,
+    retrieval_endpoints=[
+        offer_retrieval.offer_retrieval_version_b_endpoint,
+        offer_retrieval.semantic_offer_retrieval_endpoint,
+    ],
+    ranking_endpoint=user_ranking.user_ranking_endpoint,
+)
 
-SIMILAR_OFFER_ENDPOINTS = {
-    "default": SimilarOfferDefaultModel(
-        name="default",
-        scorer=similar_offer_scorer.OfferIrisRetrieval,
-        retrieval_order_query="booking_number DESC",
-        retrieval_limit=10_000,
-        ranking_order_query="booking_number DESC",
-        ranking_limit=20,
-    ),
-    "random": SimilarOfferDefaultModel(
-        name="random",
-        scorer=similar_offer_scorer.OfferIrisRandomScorer,
-        retrieval_order_query="booking_number DESC",
-        retrieval_limit=1000,
-        ranking_order_query="booking_number DESC",
-        ranking_limit=20,
-    ),
-    "item": SimilarOfferDefaultModel(
-        name="item",
-        scorer=similar_offer_scorer.ItemRetrievalRanker,
-        retrieval_order_query="booking_number DESC",
-        retrieval_limit=50_000,
-        ranking_order_query="user_km_distance ASC, item_rank ASC",
-        ranking_limit=20,
-    ),
-}
+retrieval_cs_offer = ModelConfiguration(
+    name="similar_cold_start_offer_model",
+    description="""""",
+    scorer=offer_scorer.OfferScorer,
+    ranking_order_query="item_rank ASC",
+    ranking_limit_query=100,
+    diversification_params=diversification_off,
+    retrieval_endpoints=[
+        offer_retrieval.semantic_offer_retrieval_endpoint,
+        offer_retrieval.offer_filter_retrieval_endpoint,
+    ],
+    ranking_endpoint=user_ranking.user_ranking_endpoint,
+)
+
+retrieval_filter = ModelConfiguration(
+    name="similar_offer_filter",
+    description="""""",
+    scorer=offer_scorer.OfferScorer,
+    ranking_order_query="item_rank ASC",
+    ranking_limit_query=100,
+    diversification_params=diversification_off,
+    retrieval_endpoints=[
+        offer_retrieval.offer_filter_retrieval_endpoint,
+    ],
+    ranking_endpoint=user_ranking.user_ranking_endpoint,
+)

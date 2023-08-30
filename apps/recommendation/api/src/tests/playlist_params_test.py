@@ -3,8 +3,6 @@ import pytest
 from pcreco.models.reco.playlist_params import PlaylistParamsIn
 from pcreco.utils.env_vars import (
     NUMBER_OF_RECOMMENDATIONS,
-    MIXING_RECOMMENDATION,
-    MIXING_FEATURE,
     MIXING_FEATURE_LIST,
 )
 from pcreco.models.reco.input_params import KeyValueInput
@@ -30,7 +28,7 @@ class PlaylistParamsTest:
     @pytest.mark.parametrize(
         ["input_params", "is_reco_mixed"],
         [
-            ({}, MIXING_RECOMMENDATION),
+            ({}, None),
             ({"isRecoMixed": True}, True),
             ({"isRecoMixed": False}, False),
         ],
@@ -56,8 +54,8 @@ class PlaylistParamsTest:
     @pytest.mark.parametrize(
         ["input_params", "mixing_features"],
         [
-            ({}, MIXING_FEATURE),
-            ({"mixingFeatures": "other"}, MIXING_FEATURE),
+            ({}, None),
+            ({"mixingFeatures": "other"}, None),
             ({"mixingFeatures": MIXING_FEATURE_LIST[0]}, MIXING_FEATURE_LIST[0]),
             ({"mixingFeatures": MIXING_FEATURE_LIST[1]}, MIXING_FEATURE_LIST[1]),
         ],

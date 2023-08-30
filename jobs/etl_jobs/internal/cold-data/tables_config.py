@@ -63,4 +63,28 @@ ref_tables = {
             "product_id": "STRING",
         },
     },
+    "departmental_objectives": {
+        "file_type": "csv",
+        "schema": {
+            "objective_name": "STRING",
+            "objective_type": "STRING",
+            "region_name": "STRING",
+            "department_code": "STRING",
+            "objective": "INTEGER",
+        },
+    },
+    "agg_partner_cultural_sector": {
+        "file_type": "csv",
+        "schema": {
+            "partner_type": "STRING",
+            "cultural_sector": "STRING",
+        },
+    },
+    "pilote_geographic_standards": {
+        "file_type": "csv",
+        "schema": {
+            "zone_id": "STRING",
+            "nom": "STRING",
+        },
+    },
 }

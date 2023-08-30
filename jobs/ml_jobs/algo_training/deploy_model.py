@@ -119,6 +119,7 @@ class ModelHandler:
             max_replica_count=self.endpoint_params.max_nodes,
             machine_type=self.endpoint_params.instance_type,
             traffic_percentage=self.endpoint_params.traffic_percentage,
+            autoscaling_target_cpu_utilization=30,
         )
         model.wait()
 
@@ -197,14 +198,14 @@ def main(
         help="Total min nodes to deploy",
     ),
     max_nodes=typer.Option(
-        5,
+        10,
         help="Total max nodes to deploy",
     ),
 ) -> None:
     MODEL_TYPE_CONFIG = {"tensorflow": TFContainer, "custom": CustomContainer}
     # Load model stats from BQ
     if artifact_uri is None or serving_container is None:
-        if run_id is None or len(run_id) == 0:
+        if run_id is None or len(run_id) <= 2:
             results_array = pd.read_gbq(
                 f"""SELECT * FROM `{BIGQUERY_CLEAN_DATASET}.{MODELS_RESULTS_TABLE_NAME}` WHERE experiment_name = '{experiment_name}' ORDER BY execution_date DESC LIMIT 1"""
             ).to_dict("records")

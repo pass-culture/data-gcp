@@ -17,21 +17,17 @@ SQL_CONNECTION_NAME = os.environ.get("SQL_CONNECTION_NAME")
 SQL_BASE_PASSWORD = os.environ.get(
     "SQL_BASE_PASSWORD", access_secret(GCP_PROJECT, SQL_BASE_SECRET_ID)
 )
+
 # Vertex ai attributes
 DEFAULT_RECO_MODEL = os.environ.get("DEFAULT_RECO_MODEL", "default")
 DEFAULT_SIMILAR_OFFER_MODEL = os.environ.get("DEFAULT_SIMILAR_OFFER_MODEL", "default")
 
-
-# Attributes on API output and recommendation
-NUMBER_OF_RECOMMENDATIONS = 20
-SHUFFLE_RECOMMENDATION = True
-MIXING_RECOMMENDATION = True
-MIXING_FEATURE = "search_group_name"
 MIXING_FEATURE_LIST = ["subcategory_id", "search_group_name", "category"]
+
 NUMBER_OF_PRESELECTED_OFFERS = 50 if not os.environ.get("CI") else 3
-RECOMMENDABLE_OFFER_LIMIT = 50_000
-MAX_RECO_ITEM_PER_BATCH = os.environ.get("MAX_RECO_ITEM_PER_BATCH", 2500)
-COLD_START_RECOMMENDABLE_OFFER_LIMIT = 100
+NUMBER_OF_RECOMMENDATIONS = 20
+
+MAX_RECO_ITEM_PER_BATCH = os.environ.get("MAX_RECO_ITEM_PER_BATCH", 5000)
 
 
 def log_duration(message, start):

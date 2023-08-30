@@ -33,8 +33,7 @@ recommendable_offers_data AS (
             MAX(is_national) as is_national,
             MIN(url IS NOT NULL) as is_numerical,
             MAX((url IS NULL AND NOT is_national)) as is_geolocated,
-            MAX(offer_is_duo) as offer_is_duo
-        
+            MAX(offer_is_duo) as offer_is_duo    
         FROM `{{ bigquery_analytics_dataset }}.recommendable_offers_data` 
         WHERE (stock_beginning_date > CURRENT_DATE) OR (stock_beginning_date IS NULL)
         GROUP BY 1,2,3,4,5,6
@@ -68,7 +67,7 @@ SELECT
         WHEN subcategories.category_id = 'MUSIQUE_ENREGISTREE'  THEN 50000
         WHEN subcategories.category_id = 'SPECTACLE' THEN 150000
         WHEN subcategories.category_id = 'CINEMA' THEN 50000
-        WHEN subcategories.category_id = 'LIVRE' THEN 50000
+        WHEN subcategories.category_id = 'LIVRE' THEN 15000
         ELSE 100000
     END as default_max_distance,
     ROW_NUMBER() over() as unique_id
@@ -77,4 +76,3 @@ FROM
 INNER JOIN `{{ bigquery_clean_dataset }}`.subcategories subcategories ON ro.subcategory_id = subcategories.id
 LEFT JOIN venues v ON ro.venue_id =   v.venue_id
 WHERE stock_rank < 30 -- only next 30 events
-AND booking_number > 0 -- at least one bookking in period

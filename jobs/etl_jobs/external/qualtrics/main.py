@@ -6,6 +6,8 @@ from utils import (
     API_TOKEN,
     OPT_OUT_EXPORT_COLUMNS,
     save_to_raw_bq,
+    IR_PRO_TABLE_SCHEMA,
+    IR_JEUNES_TABLE_SCHEMA,
 )
 from qualtrics_opt_out import import_qualtrics_opt_out
 from qualtrics_survey_answers import QualtricsSurvey
@@ -41,7 +43,11 @@ def run(request):
                     api_token=API_TOKEN, survey_id=survey_id, data_center=DATA_CENTER
                 )
                 processed_df = qualtrics_survey.process_qualtrics_data(target)
-                save_to_raw_bq(processed_df, f"qualtrics_answers_ir_survey_{target}")
+                save_to_raw_bq(
+                    processed_df,
+                    f"qualtrics_answers_ir_survey_{target}",
+                    IR_PRO_TABLE_SCHEMA,
+                )
             else:
                 qualtrics_survey = QualtricsSurvey(
                     api_token=API_TOKEN, survey_id=survey_id, data_center=DATA_CENTER
@@ -49,7 +55,9 @@ def run(request):
                 processed_df = qualtrics_survey.process_qualtrics_data(target)
                 dfs.append(processed_df)
         jeunes_df = pd.concat(dfs)
-        save_to_raw_bq(jeunes_df, f"qualtrics_answers_ir_survey_jeunes")
+        save_to_raw_bq(
+            jeunes_df, f"qualtrics_answers_ir_survey_jeunes", IR_JEUNES_TABLE_SCHEMA
+        )
 
     else:
         raise RuntimeError(

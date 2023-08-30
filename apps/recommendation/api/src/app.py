@@ -8,8 +8,8 @@ from pcreco.utils.health_check_queries import get_materialized_view_status
 from pcreco.utils.db.engine import create_connection, close_connection
 from pcreco.core.user import User
 from pcreco.core.offer import Offer
-from pcreco.core.recommendation import Recommendation
-from pcreco.core.similar_offer import SimilarOffer
+from pcreco.core.model_engine.recommendation import Recommendation
+from pcreco.core.model_engine.similar_offer import SimilarOffer
 from pcreco.models.reco.parser import (
     parse_params,
     parse_geolocation,
@@ -65,9 +65,7 @@ def check():
 
 @app.route("/health/recommendable_offers")
 def health_check_recommendable_offers_status():
-    table_status = get_materialized_view_status(
-        "recommendable_offers_per_iris_shape_mv"
-    )
+    table_status = get_materialized_view_status("recommendable_offers_raw_mv")
 
     return jsonify(table_status), 200
 
@@ -102,8 +100,8 @@ def playlist_recommendation(user_id: int):
             "params": {
                 "reco_origin": scoring.reco_origin,
                 "model_endpoint": scoring.model_params.name,
-                "model_name": scoring.scoring.model_display_name,
-                "model_version": scoring.scoring.model_version,
+                "model_name": scoring.scorer.retrieval_endpoints[0].model_display_name,
+                "model_version": scoring.scorer.retrieval_endpoints[0].model_version,
                 "geo_located": geo_located,
                 "filtered": input_reco.has_conditions if input_reco else False,
                 "call_id": call_id,
@@ -129,6 +127,12 @@ def similar_offers(offer_id: str):
     scoring = SimilarOffer(user, offer, params_in=input_reco)
     offer_recommendations = scoring.get_scoring()
 
+    if len(offer_recommendations) == 0:
+        # retrieve top offers when we don't have any offer to show
+        input_reco.model_endpoint = "top_offers"
+        scoring = Recommendation(user, params_in=input_reco)
+        offer_recommendations = scoring.get_scoring()
+
     if not internal:
         scoring.save_recommendation(offer_recommendations)
 
@@ -136,10 +140,10 @@ def similar_offers(offer_id: str):
         {
             "results": offer_recommendations,
             "params": {
-                "reco_origin": scoring.scorer.reco_origin,
-                "model_endpoint": scoring.scorer.model_params.name,
-                "model_name": scoring.scorer.model_display_name,
-                "model_version": scoring.scorer.model_version,
+                "reco_origin": scoring.reco_origin,
+                "model_endpoint": scoring.model_params.name,
+                "model_name": scoring.scorer.retrieval_endpoints[0].model_display_name,
+                "model_version": scoring.scorer.retrieval_endpoints[0].model_version,
                 "geo_located": geo_located,
                 "filtered": input_reco.has_conditions if input_reco else False,
                 "call_id": call_id,

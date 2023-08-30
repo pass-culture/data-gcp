@@ -1,10 +1,10 @@
 WITH dates AS (
-    SELECT DISTINCT 
-        DATE_TRUNC(deposit_creation_date, MONTH) AS month 
-    FROM `{{ bigquery_analytics_dataset }}.enriched_deposit_data`
-)
+    select 
+        month as month
+    from unnest(generate_date_array('2020-01-01', current_date(), interval 1 month)) month
+),
 
-, diversification as ( 
+diversification as ( 
     SELECT 
         div.user_id
         , "{{ params.group_type }}" as dimension_name

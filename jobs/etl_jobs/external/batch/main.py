@@ -1,5 +1,6 @@
 import typer
 import pandas as pd
+import numpy as np
 from google.cloud import bigquery
 from datetime import datetime, timedelta
 
@@ -47,6 +48,7 @@ def main(
         )
     else:
         stats = campaigns_stats_df
+        stats["versions"] = np.nan
     stats = stats.assign(operating_system=operating_system)
     stats.to_gbq(
         destination_table=f"raw_{env_short_name}.batch_campaigns_stats",

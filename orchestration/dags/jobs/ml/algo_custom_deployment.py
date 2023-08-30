@@ -39,12 +39,13 @@ with DAG(
         "experiment_name": Param(
             default=f"algo_training_version_b_{ENV_SHORT_NAME}", type="string"
         ),
-        "run_id": Param(default="", type="string"),
+        "run_id": Param(default=".", type="string"),
         "endpoint_name": Param(
             default=f"recommendation_version_b_{ENV_SHORT_NAME}", type="string"
         ),
         "version_name": Param(default=f"v_YYYYMMDD", type="string"),
         "default_region": Param(default=DEFAULT_REGION, type="string"),
+        "instance_type": Param(default="n1-standard-2", type="string"),
     },
 ) as dag:
     gce_instance_start = StartGCEOperator(
@@ -74,7 +75,8 @@ with DAG(
             --experiment-name {{ params.experiment_name }} \
             --run-id {{ params.run_id }} \
             --endpoint-name {{ params.endpoint_name }} \
-            --version-name {{ params.version_name }}
+            --version-name {{ params.version_name }} \
+            --instance-type {{ params.instance_type }}
     """
 
     deploy_model = SSHGCEOperator(

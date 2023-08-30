@@ -33,7 +33,7 @@ with DAG(
     "embeddings_extraction_items",
     default_args=default_args,
     description="Extact items metadata embeddings",
-    schedule_interval=get_airflow_schedule("0 0 * * *"),
+    schedule_interval=get_airflow_schedule("0 */6 * * *"),
     catchup=False,
     dagrun_timeout=timedelta(minutes=180),
     user_defined_macros=macros.default,
@@ -105,7 +105,20 @@ with DAG(
         f"--env-short-name {ENV_SHORT_NAME} "
         "--config-file-name {{ params.config_file_name }} "
         f"--input-table-name {DATE}_item_to_extract_embeddings_clean "
-        f"--output-table-name item_embeddings ",
+        f"--output-table-name item_embeddings_v2 ",
+    )
+
+    reduce_dimension = SSHGCEOperator(
+        task_id="reduce_dimension",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_DIR,
+        environment=dag_config,
+        command="PYTHONPATH=. python dimension_reduction.py "
+        f"--gcp-project {GCP_PROJECT_ID} "
+        f"--env-short-name {ENV_SHORT_NAME} "
+        "--config-file-name {{ params.config_file_name }} "
+        f"--input-table-name item_embeddings_v2 "
+        f"--output-table-name item_embeddings_reduced ",
     )
 
     gce_instance_stop = StopGCEOperator(
@@ -119,5 +132,6 @@ with DAG(
         >> install_dependencies
         >> preprocess
         >> extract_embedding
+        >> reduce_dimension
         >> gce_instance_stop
     )

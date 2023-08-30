@@ -2,11 +2,9 @@
   "user_embedding_layers": {
       "user_id": {"type": "string", "embedding_size": 64},
       "user_theoretical_remaining_credit": {"type":  "int", "embedding_size":  2},
-      "user_engagement": {"type": "int", "embedding_size": 2},
       "has_added_offer_to_favorites": {"type":  "int", "embedding_size":  2},
       "consult_offer": {"type":  "int", "embedding_size":  2},
-      "booking_cnt": {"type":  "int", "embedding_size":  2},
-      "click_book_offer": {"type": "int", "embedding_size": 2}
+      "booking_cnt": {"type":  "int", "embedding_size":  2}
   },
   "item_embedding_layers": {
       "item_id": {"type": "string", "embedding_size": 64},

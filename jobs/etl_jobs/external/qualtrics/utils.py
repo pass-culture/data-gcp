@@ -21,18 +21,17 @@ def access_secret_data(project_id, secret_id, version_id=1, default=None):
         return default
 
 
-def save_to_raw_bq(df, table_name):
+def save_to_raw_bq(df, table_name, schema):
     _now = datetime.today()
     yyyymmdd = _now.strftime("%Y%m%d")
     df["execution_date"] = _now
     bigquery_client = bigquery.Client()
-    table_id = f"{PROJECT_NAME}.{BIGQUERY_RAW_DATASET}.{table_name}${yyyymmdd}"
+    table_id = f"{PROJECT_NAME}.{BIGQUERY_RAW_DATASET}.{table_name}"
     job_config = bigquery.LoadJobConfig(
         write_disposition="WRITE_TRUNCATE",
-        time_partitioning=bigquery.TimePartitioning(
-            type_=bigquery.TimePartitioningType.DAY,
-            field="execution_date",
-        ),
+        schema=[
+            bigquery.SchemaField(column, _type) for column, _type in schema.items()
+        ],
     )
     job = bigquery_client.load_table_from_dataframe(df, table_id, job_config=job_config)
     job.result()
@@ -58,4 +57,36 @@ OPT_OUT_EXPORT_COLUMNS = {
     "extRef": "ext_ref",
     "directoryUnsubscribed": "directory_unsubscribed",
     "directoryUnsubscribeDate": "directory_unsubscribe_date",
+}
+
+IR_JEUNES_TABLE_SCHEMA = {
+    "StartDate": "STRING",
+    "EndDate": "STRING",
+    "ResponseId": "STRING",
+    "ExternalReference": "STRING",
+    "theoretical_amount_spent": "STRING",
+    "user_activity": "STRING",
+    "user_civility": "STRING",
+    "Q3_Topics": "STRING",
+    "question": "STRING",
+    "answer": "STRING",
+    "question_str": "STRING",
+    "question_id": "STRING",
+    "user_type": "STRING",
+}
+
+IR_PRO_TABLE_SCHEMA = {
+    "StartDate": "STRING",
+    "EndDate": "STRING",
+    "ResponseId": "STRING",
+    "ExternalReference": "STRING",
+    "anciennete_jours": "STRING",
+    "non_cancelled_bookings": "STRING",
+    "offers_created": "STRING",
+    "Q1_Topics": "STRING",
+    "question": "STRING",
+    "answer": "STRING",
+    "question_str": "STRING",
+    "question_id": "STRING",
+    "user_type": "STRING",
 }

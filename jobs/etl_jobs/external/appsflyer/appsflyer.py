@@ -6,7 +6,7 @@ from furl import furl
 
 
 class AppsFlyer:
-    DEFAULT_ENDPOINT = "https://hq.appsflyer.com"
+    DEFAULT_ENDPOINT = "https://hq.appsflyer.com"  # https://hq1.appsflyer.com/api/raw-data/export/app/{_id}/installs_report/v5?
     RAW_DATA_REPORT_ADDITIONAL_FIELDS = ",".join(
         [
             "install_app_store",
@@ -29,12 +29,14 @@ class AppsFlyer:
     )
 
     def __init__(self, api_token, app_id):
-        self.api_token = api_token
-        self.app_id = app_id
+        self.app_id = f"app/{app_id}"
+        self.headers = {
+            "authorization": f"Bearer {api_token}",
+            "accept": "text/csv",
+        }
 
     def __build_args(self, date_from, date_to, kwargs):
         args = {
-            "api_token": self.api_token,
             "from": date_from,
             "to": date_to,
             "timezone": kwargs.get("timezone", "UTC"),
@@ -63,9 +65,9 @@ class AppsFlyer:
 
     def partners_report(self, date_from, date_to, as_df=False, **kwargs):
         f = furl(self.DEFAULT_ENDPOINT)
-        f.path = "/export/%s/partners_report/v5" % self.app_id
+        f.path = "/api/agg-data/export/%s/partners_report/v5" % self.app_id
         f.args = self.__build_args(date_from, date_to, kwargs)
-        resp = requests.get(f.url)
+        resp = requests.get(f.url, headers=self.headers)
 
         if as_df:
             return self.__to_df(resp)
@@ -74,9 +76,9 @@ class AppsFlyer:
 
     def partners_by_date_report(self, date_from, date_to, as_df=False, **kwargs):
         f = furl(self.DEFAULT_ENDPOINT)
-        f.path = "/export/%s/partners_by_date_report/v5" % self.app_id
+        f.path = "/api/agg-data/export/%s/partners_by_date_report/v5" % self.app_id
         f.args = self.__build_args(date_from, date_to, kwargs)
-        resp = requests.get(f.url)
+        resp = requests.get(f.url, headers=self.headers)
 
         if as_df:
             return self.__to_df(resp)
@@ -85,9 +87,11 @@ class AppsFlyer:
 
     def daily_report(self, date_from, date_to, as_df=False, **kwargs):
         f = furl(self.DEFAULT_ENDPOINT)
-        f.path = "/export/%s/daily_report/v5" % self.app_id
+        f.path = (
+            "/api/agg-data/export/%s/daily_report/v5" % self.app_id
+        )  # api/agg-data/export/app/
         f.args = self.__build_args(date_from, date_to, kwargs)
-        resp = requests.get(f.url)
+        resp = requests.get(f.url, headers=self.headers)
 
         if as_df:
             return self.__to_df(resp)
@@ -96,9 +100,9 @@ class AppsFlyer:
 
     def geo_by_date_report(self, date_from, date_to, as_df=False, **kwargs):
         f = furl(self.DEFAULT_ENDPOINT)
-        f.path = "/export/%s/geo_by_date_report/v5" % self.app_id
+        f.path = "/api/agg-data/export/%s/geo_by_date_report/v5" % self.app_id
         f.args = self.__build_args(date_from, date_to, kwargs)
-        resp = requests.get(f.url)
+        resp = requests.get(f.url, headers=self.headers)
 
         if as_df:
             return self.__to_df(resp)
@@ -111,9 +115,10 @@ class AppsFlyer:
         f = furl(self.DEFAULT_ENDPOINT)
         if additional_fields is None:
             kwargs["additional_fields"] = self.RAW_DATA_REPORT_ADDITIONAL_FIELDS
-        f.path = "/export/%s/installs_report/v5" % self.app_id
+        f.path = "/api/raw-data/export/%s/installs_report/v5" % self.app_id
         f.args = self.__build_args(date_from, date_to, kwargs)
-        resp = requests.get(f.url)
+        print(f.url)
+        resp = requests.get(f.url, headers=self.headers)
 
         if as_df:
             return self.__to_df(resp)
@@ -126,9 +131,9 @@ class AppsFlyer:
         f = furl(self.DEFAULT_ENDPOINT)
         if additional_fields is None:
             kwargs["additional_fields"] = self.RAW_DATA_REPORT_ADDITIONAL_FIELDS
-        f.path = "/export/%s/in_app_events_report/v5" % self.app_id
+        f.path = "/api/raw-data/export/%s/in_app_events_report/v5" % self.app_id
         f.args = self.__build_args(date_from, date_to, kwargs)
-        resp = requests.get(f.url)
+        resp = requests.get(f.url, headers=self.headers)
 
         if as_df:
             return self.__to_df(resp)
@@ -141,9 +146,9 @@ class AppsFlyer:
         f = furl(self.DEFAULT_ENDPOINT)
         if additional_fields is None:
             kwargs["additional_fields"] = self.UNINSTALL_REPORT_ADDITIONAL_FIELDS
-        f.path = "/export/%s/uninstall_events_report/v5" % self.app_id
+        f.path = "/api/raw-data/export/%s/uninstall_events_report/v5" % self.app_id
         f.args = self.__build_args(date_from, date_to, kwargs)
-        resp = requests.get(f.url)
+        resp = requests.get(f.url, headers=self.headers)
 
         if as_df:
             return self.__to_df(resp)

@@ -8,43 +8,43 @@ class KeyValueInput:
     value: str
 
 
-def parse_float(value):
+def parse_float(value, default_value=None):
     if value is None:
-        return None
+        return default_value
     try:
         return float(value)
     except ValueError:
-        return None
+        return default_value
 
 
-def parse_int(value):
+def parse_int(value, default_value=None):
     if value is None:
-        return None
+        return default_value
     try:
         return int(float(value))
     except ValueError:
-        return None
+        return default_value
 
 
-def parse_bool(value):
+def parse_bool(value, default_value=None):
     if value is None:
-        return None
+        return default_value
     try:
         return bool(value)
     except ValueError:
-        return None
+        return default_value
 
 
-def parse_date(value):
+def parse_date(value, default_value=None):
     if value is None:
-        return None
+        return default_value
     try:
         return datetime.strptime(value, "%Y-%m-%d")
     except ValueError:
         try:
             return datetime.fromisoformat(value)
         except ValueError:
-            return None
+            return default_value
 
 
 def parse_to_list(value):

@@ -1,0 +1,16 @@
+{
+    "features": [
+        {
+            "name": "offer_semantic_content",
+            "content":["offer_name","offer_description","offer_type_label","offer_sub_type_label","author","performer"],
+            "type": "macro_text",
+            "model":["optim_text"]
+        }
+    ],
+    "models":{
+        "optim_text": "sentence-transformers/all-MiniLM-L6-v2",
+        "optim_image": "clip-ViT-B-32",
+        "hybrid": "sentence-transformers/clip-ViT-B-32-multilingual-v1"
+    },
+    "reduction_dimensions":[5]
+}

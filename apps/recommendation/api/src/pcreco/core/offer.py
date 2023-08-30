@@ -1,7 +1,6 @@
 from pcreco.utils.geolocalisation import get_iris_from_coordinates
 from pcreco.utils.env_vars import log_duration
 from pcreco.utils.db.db_connection import get_session
-from loguru import logger
 import time
 from sqlalchemy import text
 
@@ -11,7 +10,10 @@ class Offer:
         self.id = offer_id
         self.call_id = call_id
         self.iris_id = get_iris_from_coordinates(longitude, latitude)
-        self.item_id, self.cnt_bookings = self.get_offer_characteristics(offer_id)
+        self.is_geolocated = self.iris_id is not None
+        self.item_id, self.bookings_count, self.found = self.get_offer_characteristics(
+            offer_id
+        )
 
     def get_offer_characteristics(self, offer_id) -> str:
         """Get item_id attached to an offer_id & get the number of bookings attached to an offer_id."""
@@ -29,8 +31,7 @@ class Offer:
         ).fetchone()
         log_duration(f"get_offer_characteristics for offer_id: {offer_id}", start)
         if query_result is not None:
-            logger.info("get_offer_characteristics:found id")
-            return query_result[0], query_result[1]
+            return query_result[0], query_result[1], True
         else:
-            logger.info("get_offer_characteristics:not_found_id")
-            return None, 0
+
+            return None, 0, False

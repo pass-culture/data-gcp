@@ -1,14 +1,15 @@
 WITH logs AS (
 SELECT
-    firebase_events.user_pseudo_id
-    , firebase_events.user_id
+    user_pseudo_id
+    , user_id
     , event_timestamp
     , event_date
     , event_name
     , firebase_screen
     , platform
-FROM `{{ bigquery_analytics_dataset }}`.firebase_events
-WHERE (event_name IN ('HasAcceptedAllCookies','login','OnboardingStarted','ConsultOffer','BookingConfirmation','first_open','ConsultOffer','ContinueSetEmail','ContinueSetPassword','ContinueSetBirthday','SetEmail','SetPassword','SetBirthday')
+    , onboarding_user_selected_age
+FROM `{{ bigquery_analytics_dataset }}`.firebase_events f
+WHERE (event_name IN ('SelectAge','HasAcceptedAllCookies','login','OnboardingStarted','ConsultOffer','BookingConfirmation','first_open','ConsultOffer','ContinueSetEmail','ContinueSetPassword','ContinueSetBirthday','SetEmail','SetPassword','SetBirthday')
 OR firebase_screen IN ('SignupForm','ProfilSignUp', 'SignupConfirmationEmailSent', 'OnboardingWelcome','OnboardingGeolocation', 'FirstTutorial','BeneficiaryRequestSent','UnderageAccountCreated','BeneficiaryAccountCreated','FirstTutorial2','FirstTutorial3','FirstTutorial4','HasSkippedTutorial' )) 
 ),
 
@@ -51,6 +52,16 @@ WHERE (firebase_screen IN ('OnboardingWelcome', 'FirstTutorial', 'OnboardingGeol
 GROUP BY 1
 ),
 
+    -- dernier âge selectionné pendant l'onboarding --
+    age_selected AS(
+SELECT
+   user_pseudo_id 
+   ,onboarding_user_selected_age
+   ,ROW_NUMBER()OVER (PARTITION BY user_pseudo_id ORDER BY event_timestamp DESC) AS rank_time_selected_age
+FROM logs
+WHERE event_name IN("SelectAge","SignUpTooYoung")
+),
+
     signup_started AS (
 SELECT 
     user_pseudo_id
@@ -76,7 +87,7 @@ SELECT
     ,user_id
     ,MIN(event_timestamp) as first_login_date
 FROM logs
-WHERE event_name = 'login' 
+WHERE event_name = 'login' and user_id IS NOT NULL
 GROUP BY 1,2
 ),
 
@@ -102,15 +113,16 @@ SELECT
   first_open.user_pseudo_id
   ,first_login.user_id
   ,uat.appsflyer_id
-  ,CASE WHEN first_open.user_pseudo_id IN (SELECT * FROM accepted_cookies) THEN 1 ELSE 0 END AS has_accepted_app_cookies
-  ,CASE WHEN uat.appsflyer_id IS NULL THEN 0 ELSE 1 END AS has_accepted_tracking
+  ,CASE WHEN first_open.user_pseudo_id IN (SELECT * FROM accepted_cookies) THEN true ELSE false END AS has_accepted_app_cookies
+  ,CASE WHEN uat.appsflyer_id IS NULL THEN false ELSE true END AS has_accepted_tracking
   ,user_first_deposit_type
   ,first_open.platform
 -- certains utilisateurs s'étant déjà inscrits téléchargent l'app sur un autre device et donc créent un nouveau user_pseudo_id, la query suivante permet d'identifier ceux qui se loguent pour la première fois 
-  ,CASE WHEN first_login.first_login_date IS NOT NULL AND signup_started.signup_started_date IS NULL THEN 0
-        WHEN signup_completed.signup_completed_date IS NOT NULL AND signup_started.signup_started_date IS NULL THEN 0
-        ELSE 1 END 
+  ,CASE WHEN TIMESTAMP(u.user_deposit_creation_date) < first_open.first_open_date THEN false
+        WHEN TIMESTAMP(u.user_activation_date) < first_open.first_open_date THEN false
+        ELSE true END 
     AS is_first_device_connected
+  ,age_selected.onboarding_user_selected_age
   ,first_open.first_open_date
   ,onboarding_started.onboarding_started_date
   ,signup_started.signup_started_date
@@ -120,7 +132,7 @@ SELECT
   ,u.user_deposit_creation_date as deposit_created_date
   ,u.first_booking_date as first_booking_date
   ,CASE WHEN uat.appsflyer_id is null THEN 'unknown'
-        WHEN au.appsflyer_id  is not null THEN 'paid' 
+        WHEN au.appsflyer_id  is not null THEN 'campaign' 
         ELSE 'organic' END
         AS acquisition_origin
    ,au.media_source as paid_acquisition_media_source
@@ -128,6 +140,7 @@ SELECT
    ,au.ad as paid_acquisition_ad
    ,au.install_time as appsflyer_install_time
 FROM first_open
+LEFT JOIN age_selected ON first_open.user_pseudo_id=age_selected.user_pseudo_id and rank_time_selected_age = 1
 LEFT JOIN onboarding_started ON first_open.user_pseudo_id=onboarding_started.user_pseudo_id
 LEFT JOIN signup_started ON first_open.user_pseudo_id=signup_started.user_pseudo_id
 LEFT JOIN signup_completed ON first_open.user_pseudo_id=signup_completed.user_pseudo_id

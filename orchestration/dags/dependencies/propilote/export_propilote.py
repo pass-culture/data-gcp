@@ -28,9 +28,9 @@ kpis_list = [
     },
     {
         "question": 5,
-        "effect": "Taux d'activation des structures",
-        "kpi": "taux_activation_structure",
-        "table_name": "propilote_tmp_taux_activation_structure",
+        "effect": "Taux de rétention des partenaires",
+        "kpi": "taux_retention_partenaires",
+        "table_name": "propilote_tmp_taux_retention_partenaires",
     },
     {
         "question": 6,
@@ -242,38 +242,38 @@ tmp_tables_detailed = {
             "group_type_name": "all_dim",
         },
     },
-    # Taux d'activation des structures
-    "propilote_taux_activation_structure_region": {
-        "sql": f"{SQL_TMP_PATH}/taux_activation_structure/propilote_tmp_activation_structure.sql",
+    # Taux de rétention des partenaires
+    "propilote_taux_retention_partenaires_region": {
+        "sql": f"{SQL_TMP_PATH}/taux_retention_partenaires/propilote_tmp_taux_retention_partenaires.sql",
         "destination_dataset": "{{ bigquery_tmp_dataset }}",
-        "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_taux_activation_structure_region",
+        "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_taux_retention_partenaires_region",
         "params": {
             "group_type": "REG",
             "group_type_name": "region_name",
         },
     },
-    "propilote_taux_activation_structure_departement": {
-        "sql": f"{SQL_TMP_PATH}/taux_activation_structure/propilote_tmp_activation_structure.sql",
+    "propilote_taux_retention_partenaires_departement": {
+        "sql": f"{SQL_TMP_PATH}/taux_retention_partenaires/propilote_tmp_taux_retention_partenaires.sql",
         "destination_dataset": "{{ bigquery_tmp_dataset }}",
-        "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_taux_activation_structure_departement",
+        "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_taux_retention_partenaires_departement",
         "params": {
             "group_type": "DEPT",
             "group_type_name": "num_dep",
         },
     },
-    "propilote_taux_activation_structure_academie": {
-        "sql": f"{SQL_TMP_PATH}/taux_activation_structure/propilote_tmp_activation_structure.sql",
+    "propilote_taux_retention_partenaires_academie": {
+        "sql": f"{SQL_TMP_PATH}/taux_retention_partenaires/propilote_tmp_taux_retention_partenaires.sql",
         "destination_dataset": "{{ bigquery_tmp_dataset }}",
-        "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_taux_activation_structure_academie",
+        "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_taux_retention_partenaires_academie",
         "params": {
             "group_type": "ACAD",
             "group_type_name": "academy_name",
         },
     },
-    "propilote_taux_activation_structure_all": {
-        "sql": f"{SQL_TMP_PATH}/taux_activation_structure/propilote_tmp_activation_structure.sql",
+    "propilote_taux_retention_partenaires_all": {
+        "sql": f"{SQL_TMP_PATH}/taux_retention_partenaires/propilote_tmp_taux_retention_partenaires.sql",
         "destination_dataset": "{{ bigquery_tmp_dataset }}",
-        "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_taux_activation_structure_all",
+        "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_taux_retention_partenaires_all",
         "params": {
             "group_type": "NAT",
             "group_type_name": "all_dim",
@@ -366,6 +366,12 @@ analytics_tables = {
         "params": {
             "kpis_list": kpis_list,
         },
+    },
+    "pilote_export": {
+        "sql": f"{SQL_ANALYTICS_PATH}/pilote_export.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "pilote_export",
+        "depends": ["propilote_kpis"],
     },
 }
 

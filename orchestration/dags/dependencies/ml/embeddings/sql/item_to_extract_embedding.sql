@@ -46,7 +46,14 @@ SELECT
         ) then "None"
         else safe_cast(o.offer_description as STRING)
     END as offer_description,
-    o.offer_subcategoryid,
+    enriched_item_metadata.subcategory_id AS subcategory_id,
+    enriched_item_metadata.category_id as category,
+    enriched_item_metadata.offer_type_id,
+    enriched_item_metadata.offer_type_label,
+    enriched_item_metadata.offer_sub_type_id,
+    enriched_item_metadata.offer_sub_type_label,
+    offer_extracted_data.author,
+    offer_extracted_data.performer,
     CASE
         WHEN mediation.mediation_humanized_id is not null THEN CONCAT(
             "https://storage.googleapis.com/{{ mediation_url }}-assets-fine-grained/thumbs/mediations/",
@@ -57,11 +64,14 @@ SELECT
             humanize_id(o.offer_product_id)
         )
     END AS image_url,
+
 FROM
     `{{ bigquery_raw_dataset }}`.applicative_database_offer o
+    LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_offer_data eod on o.offer_id=eod.offer_id
+    LEFT JOIN `{{ bigquery_analytics_dataset }}`.offer_item_ids oii on o.offer_id=oii.offer_id
+    LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_item_metadata enriched_item_metadata on oii.item_id = enriched_item_metadata.item_id
     LEFT JOIN mediation ON o.offer_id = mediation.offer_id
-    LEFT JOIN `{{ bigquery_analytics_dataset }}`.offer_item_ids oii on o.offer_id = oii.offer_id
-    LEFT join `{{ bigquery_analytics_dataset }}`.enriched_offer_data eod on eod.offer_id = o.offer_id
+    LEFT JOIN `{{ bigquery_analytics_dataset }}`.offer_extracted_data offer_extracted_data ON offer_extracted_data.offer_id = o.offer_id
 WHERE
     oii.item_id not in (
         select
@@ -71,9 +81,9 @@ WHERE
         WHERE
             date(extraction_date) > DATE_SUB(CURRENT_DATE, INTERVAL 60 DAY)
     ) QUALIFY ROW_NUMBER() OVER (
-        PARTITION BY item_id,
-        offer_id
+        PARTITION BY item_id
         ORDER BY
             eod.booking_cnt DESC
     ) = 1
+ORDER BY o.offer_creation_date DESC
 LIMIT {{ params.batch_size }}

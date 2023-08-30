@@ -210,6 +210,7 @@ BIGQUERY_SCHEMAS = {
         "price_category_id": "STRING",
         "price_category_label_id": "STRING",
         "price_category_label": "STRING",
+        "stock_features": "STRING",
     },
     "applicative_database_price_category": {
         "price_category_id": "STRING",
@@ -252,6 +253,7 @@ BIGQUERY_SCHEMAS = {
         "price_category_id": "STRING",
         "price_category_label_id": "STRING",
         "price_category_label": "STRING",
+        "stock_features": "STRING",
     },
     "enriched_deposit_data": {
         "deposit_id": "STRING",
@@ -266,6 +268,7 @@ BIGQUERY_SCHEMAS = {
         "offerer_id": "STRING",
         "offerer_name": "STRING",
         "venue_id": "STRING",
+        "partner_id": "STRING",
         "venue_name": "STRING",
         "venue_department_code": "STRING",
         "offer_id": "STRING",
@@ -378,6 +381,7 @@ BIGQUERY_SCHEMAS = {
         "venue_label_id": "STRING",
         "venue_creation_date": "DATETIME",
         "venue_type_code": "STRING",
+        "banner_url": "STRING",
     },
     "applicative_database_venue_registration": {
         "venue_registration_id": "STRING",
@@ -469,7 +473,8 @@ BIGQUERY_SCHEMAS = {
         "collective_offer_contact_phone": "STRING",
         "collective_offer_offer_venue": "STRING",
         "collective_offer_image_id": "STRING",
-        "is_public_api": "BOOLEAN",
+        "provider_id": "STRING",
+        "national_program_id": "STRING",
     },
     "applicative_database_collective_offer_template": {
         "collective_offer_audio_disability_compliant": "BOOLEAN",
@@ -496,6 +501,8 @@ BIGQUERY_SCHEMAS = {
         "collective_offer_offer_venue": "STRING",
         "collective_offer_las_validation_type": "STRING",
         "collective_offer_image_id": "STRING",
+        "provider_id": "STRING",
+        "national_program_id": "STRING",
     },
     "applicative_database_collective_stock": {
         "collective_stock_id": "STRING",
@@ -560,6 +567,13 @@ BIGQUERY_SCHEMAS = {
     "siren_data": {
         "siren": "STRING",
         "activitePrincipaleUniteLegale": "STRING",
+        "categorieJuridiqueUniteLegale": "STRING",
+    },
+    "siren_data_labels": {
+        "activitePrincipaleUniteLegale": "STRING",
+        "label_unite_legale": "STRING",
+        "categorieJuridiqueUniteLegale": "INT64",
+        "label_categorie_juridique": "STRING",
     },
     "applicative_database_offerer_tag_mapping": {
         "offerer_id": "STRING",
@@ -598,5 +612,23 @@ BIGQUERY_SCHEMAS = {
         "offer_withdrawal_type": "STRING",
         "offer_external_ticket_office_url": "STRING",
         "offerer_id": "STRING",
+    },
+    "bookable_collective_offer": {
+        "collective_offer_id": "STRING",
+        "venue_id": "STRING",
+        "offerer_id": "STRING",
+    },
+    "bookable_venue_history": {
+        "venue_id": "STRING",
+        "offerer_id": "STRING",
+        "partition_date": "DATETIME",
+        "individual_bookable_offers": "INT64",
+        "collective_bookable_offers": "INT64",
+        "total_bookable_offers": "INT64",
+    },
+    "applicative_database_national_program": {
+        "national_program_id": "STRING",
+        "national_program_name": "STRING",
+        "national_program_creation_date": "DATETIME",
     },
 }

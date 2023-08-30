@@ -1,0 +1,11 @@
+flask
+flask-cors
+hypercorn
+numpy
+pandas
+pyarrow
+loguru
+annlite
+docarray
+sentence-transformers
+python-json-logger

@@ -42,6 +42,8 @@ SELECT
     collective_offer.collective_offer_id,
     collective_offer.collective_offer_name,
     collective_offer.venue_id,
+    CASE WHEN venue.venue_is_permanent THEN CONCAT("venue-",venue.venue_id)
+         ELSE CONCAT("offerer-", offerer.offerer_id) END AS partner_id,
     collective_offer.institution_id,
     venue.venue_name,
     venue.venue_department_code,
@@ -51,12 +53,14 @@ SELECT
     venue.venue_managing_offerer_id AS offerer_id,
     offerer.offerer_name,
     collective_offer.collective_offer_creation_date,
+    collective_offer.collective_offer_date_updated,
     collective_stock.collective_stock_price,
     collective_stock.collective_stock_beginning_date_time,
     collective_stock.collective_stock_booking_limit_date_time,
     collective_stock.collective_stock_number_of_tickets AS number_of_tickets,
     collective_offer.collective_offer_subcategory_id,
     subcategories.category_id AS collective_offer_category_id,
+    collective_offer.collective_offer_students,
     collective_offer.collective_offer_is_active,
     CASE
         WHEN collective_offer.collective_offer_id IN (
@@ -100,7 +104,9 @@ SELECT
     ) AS passculture_pro_url,
     FALSE AS offer_is_template,
     collective_offer.collective_offer_image_id,
-    collective_offer.is_public_api
+    collective_offer.provider_id,
+    collective_offer.national_program_id,
+    national_program.national_program_name
 FROM
     `{{ bigquery_clean_dataset }}`.applicative_database_collective_offer AS collective_offer
     JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue ON venue.venue_id = collective_offer.venue_id
@@ -109,12 +115,16 @@ FROM
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.subcategories ON subcategories.id = collective_offer.collective_offer_subcategory_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.region_department venue_region ON venue_region.num_dep = venue.venue_department_code
     LEFT JOIN bookings_per_offer ON bookings_per_offer.collective_offer_id = collective_offer.collective_offer_id
+    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_national_program national_program USING(national_program_id)
+WHERE collective_offer.collective_offer_validation = 'APPROVED'
 UNION
 ALL
 SELECT
     template.collective_offer_id,
     template.collective_offer_name,
     template.venue_id,
+    CASE WHEN venue.venue_is_permanent THEN CONCAT("venue-",venue.venue_id)
+         ELSE CONCAT("offerer-", offerer.offerer_id) END AS partner_id,
     NULL AS institution_id,
     venue.venue_name,
     venue.venue_department_code,
@@ -124,12 +134,14 @@ SELECT
     venue.venue_managing_offerer_id AS offerer_id,
     offerer.offerer_name,
     template.collective_offer_creation_date,
+    template.collective_offer_date_updated,
     collective_stock.collective_stock_price,
     collective_stock.collective_stock_beginning_date_time,
     collective_stock.collective_stock_booking_limit_date_time,
     collective_stock.collective_stock_number_of_tickets AS number_of_tickets,
     template.collective_offer_subcategory_id,
     subcategories.category_id AS collective_offer_category_id,
+    template.collective_offer_students,
     template.collective_offer_is_active,
     FALSE AS collective_offer_is_bookable,
     COALESCE(collective_booking_cnt, 0.0) AS collective_booking_cnt,
@@ -144,7 +156,9 @@ SELECT
     ) AS passculture_pro_url,
     TRUE AS offer_is_template,
     template.collective_offer_image_id,
-    FALSE AS is_public_api
+    template.provider_id,
+    template.national_program_id,
+    national_program.national_program_name
 FROM
     `{{ bigquery_clean_dataset }}`.applicative_database_collective_offer_template AS template
     JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue ON venue.venue_id = template.venue_id
@@ -153,3 +167,5 @@ FROM
     LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_collective_stock AS collective_stock ON collective_stock.collective_offer_id = template.collective_offer_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.region_department venue_region ON venue_region.num_dep = venue.venue_department_code
     LEFT JOIN bookings_per_offer ON bookings_per_offer.collective_offer_id = template.collective_offer_id
+    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_national_program national_program USING(national_program_id)
+WHERE template.collective_offer_validation = 'APPROVED'

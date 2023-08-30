@@ -90,7 +90,9 @@ def train(
         storage_path=STORAGE_PATH, table_name=validation_table_name
     )[user_columns + item_columns].astype(str)
 
-    train_user_data = train_data[user_columns].drop_duplicates(subset=["user_id"])
+    train_user_data = train_data[user_columns].drop_duplicates(
+        subset=[input_prediction_feature]
+    )
     train_item_data = train_data[item_columns].drop_duplicates(subset=["item_id"])
 
     # Build tf datasets

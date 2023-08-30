@@ -23,14 +23,15 @@ with item_group_by_extra_data as(
         END AS item_id,
     FROM
         `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.offer_extracted_data offer_extracted_data ON offer_extracted_data.offer_id = offer.offer_id
+    LEFT JOIN `{{ bigquery_analytics_dataset }}`.offer_extracted_data offer_extracted_data ON offer_extracted_data.offer_id = offer.offer_id
 )
-select
+
+SELECT
     offer.offer_id,
     CASE
-        WHEN linked_offers.item_linked_id is not null THEN linked_offers.item_linked_id
-        else offer.item_id
+        WHEN linked_offers.item_linked_id is not null THEN REGEXP_REPLACE(linked_offers.item_linked_id, r'[^a-zA-Z0-9\-\_]', '') 
+        else REGEXP_REPLACE(offer.item_id, r'[^a-zA-Z0-9\-\_]', '') 
     END as item_id
-from
+FROM
     item_group_by_extra_data offer
-    LEFT JOIN `{{ bigquery_analytics_dataset }}`.linked_offers linked_offers ON linked_offers.offer_id = offer.offer_id
+LEFT JOIN `{{ bigquery_analytics_dataset }}`.linked_offers linked_offers ON linked_offers.offer_id = offer.offer_id

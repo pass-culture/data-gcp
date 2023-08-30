@@ -81,6 +81,7 @@ ENRICHED_OFFER_DATA_INPUT = {
             "countries": '["usa"]',
             "casting": "[]",
             "isbn": None,
+            "titelive_gtl_id": "123",
             "book_editor": None,
         },
         {
@@ -105,6 +106,7 @@ ENRICHED_OFFER_DATA_INPUT = {
             "countries": None,
             "casting": None,
             "isbn": "156157",
+            "titelive_gtl_id": "123",
             "book_editor": "Hachette",
         },
     ],
@@ -377,6 +379,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "offer_validation": "APPROVED",
         "offer_name": "Test",
         "offer_subcategoryId": "SEANCE_CINE",
+        "offer_category_id": "CINEMA",
         "last_stock_price": 0.0,
         "offer_creation_date": datetime(2019, 11, 20, 0, 0),
         "offer_is_duo": False,
@@ -410,6 +413,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "countries": '["usa"]',
         "casting": "[]",
         "isbn": None,
+        "titelive_gtl_id": "123",
         "book_editor": None,
         "offer_is_underage_selectable": True,
         "offer_is_bookable": False,
@@ -432,6 +436,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "offer_validation": "APPROVED",
         "offer_name": "RIP Dylan Rieder",
         "offer_subcategoryId": "LIVRE_PAPIER",
+        "offer_category_id": "LIVRE",
         "last_stock_price": 0.0,
         "offer_creation_date": datetime(2019, 11, 20, 0, 0),
         "offer_is_duo": False,
@@ -465,6 +470,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "countries": None,
         "casting": None,
         "isbn": "156157",
+        "titelive_gtl_id": "123",
         "book_editor": "Hachette",
         "offer_is_underage_selectable": True,
         "offer_is_bookable": True,
@@ -1546,6 +1552,12 @@ ENRICHED_COLLECTIVE_BOOKING_DATA_INPUT = {
             "code_departement": 78,
         }
     ],
+    "subcategories": [
+        {
+            "id": "CINE_PLEIN_AIR",
+            "category_id": "CINEMA",
+        }
+    ],
     "applicative_database_offerer": [
         {"offerer_id": "2", "offerer_name": "Ma structure"}
     ],
@@ -1561,6 +1573,7 @@ ENRICHED_COLLECTIVE_BOOKING_DATA_EXPECTED = [
         "collective_stock_id": "9",
         "collective_offer_name": "EAC sympa",
         "collective_offer_subcategory_id": "CINE_PLEIN_AIR",
+        "collective_offer_category_id": "CINEMA",
         "venue_id": "8",
         "venue_name": "My Wonderful Venue",
         "venue_department_code": 78,
@@ -1578,6 +1591,7 @@ ENRICHED_COLLECTIVE_BOOKING_DATA_EXPECTED = [
         "collective_booking_creation_date": datetime.now().replace(microsecond=0),
         "collective_booking_status": "USED_BY_INSTITUTE",
         "collective_booking_cancellation_date": None,
+        "collective_booking_is_cancelled": "False",
         "collective_booking_cancellation_reason": None,
         "collective_booking_confirmation_date": datetime.now().replace(microsecond=0),
         "collective_booking_confirmation_limit_date": datetime.now().replace(

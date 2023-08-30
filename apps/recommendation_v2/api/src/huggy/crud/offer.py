@@ -8,7 +8,7 @@ from huggy.schemas.user import User
 from huggy.schemas.item import Item, RecommendableItem
 
 from huggy.models.item_ids_mv import ItemIdsMv
-from huggy.models.recommendable_offers_raw_mv import RecommendableOffersRaw
+from huggy.models.recommendable_offers_raw import RecommendableOffersRaw
 from huggy.models.non_recommendable_items import NonRecommendableItems
 
 from huggy.crud.iris import get_iris_from_coordinates

@@ -1,11 +1,13 @@
 from sqlalchemy import Column, String, Integer, Float, DateTime
 from sqlalchemy.types import Boolean
 
-from huggy.utils.database import Base
+from huggy.utils.database import Base, bind_engine, get_available_materialized_view
 
 
 class RecommendableOffersRaw(Base):
-    __tablename__ = "recommendable_offers_raw_mv"
+    __tablename__ = get_available_materialized_view(
+        bind_engine, "recommendable_offers_raw"
+    )
     item_id = Column(String(256), primary_key=True)
     offer_id = Column(String(256), primary_key=True)
     product_id = Column(String(256))

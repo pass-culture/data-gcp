@@ -377,6 +377,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "offer_validation": "APPROVED",
         "offer_name": "Test",
         "offer_subcategoryId": "SEANCE_CINE",
+        "offer_category_id": "CINEMA",
         "last_stock_price": 0.0,
         "offer_creation_date": datetime(2019, 11, 20, 0, 0),
         "offer_is_duo": False,

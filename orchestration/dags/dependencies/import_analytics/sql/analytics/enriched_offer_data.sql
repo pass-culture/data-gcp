@@ -125,6 +125,7 @@ SELECT
     offer.offer_id_at_providers,
     offer.offer_name,
     offer.offer_subcategoryId,
+    subcategories.category_id offer_category_id,
     last_stock.last_stock_price,
     offer.offer_creation_date,
     offer.offer_is_duo,

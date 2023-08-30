@@ -46,6 +46,11 @@ clean_tables = {
         "destination_dataset": "{{ bigquery_clean_dataset }}",
         "destination_table": "user_beneficiary",
     },
+    "user_pro": {
+        "sql": f"{CLEAN_SQL_PATH}/user_pro.sql",
+        "destination_dataset": "{{ bigquery_clean_dataset }}",
+        "destination_table": "user_pro",
+    },
     "user_suspension": {
         "sql": f"{CLEAN_SQL_PATH}/user_suspension.sql",
         "destination_dataset": "{{ bigquery_clean_dataset }}",

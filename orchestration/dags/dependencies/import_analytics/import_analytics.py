@@ -151,6 +151,10 @@ analytics_tables = {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_user_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
     },
+    "enriched_user_offerer": {
+        "sql": f"{ANALYTICS_SQL_PATH}/enriched_user_offerer.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+    },
     "enriched_venue_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_venue_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",

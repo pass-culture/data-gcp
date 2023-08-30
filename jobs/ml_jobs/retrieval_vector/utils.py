@@ -86,7 +86,7 @@ def get_item_docs(item_embedding_dict, items_df):
                 "subcategory_id": str(row.subcategory_id or ""),
                 "search_group_name": str(row.search_group_name or ""),
                 "offer_type_label": str(row.offer_type_label or ""),
-                "offer_type_labels": str(row.offer_type_labels or "").split(";"),
+                # "offer_type_labels": str(row.offer_type_labels or "").split(";"),
                 "offer_type_domain": str(row.offer_type_domain or ""),
                 "is_numerical": float(row.is_numerical),
                 "is_national": float(row.is_national),

@@ -31,7 +31,7 @@ SELECT
     ,venue.venue_id
     ,venue.venue_name
     ,venue.venue_public_name
-    ,collective_offer_category_id
+    ,offer.collective_offer_category_id
     ,offer.collective_offer_subcategory_id
     ,offer.collective_offer_id
     ,offer.collective_offer_name

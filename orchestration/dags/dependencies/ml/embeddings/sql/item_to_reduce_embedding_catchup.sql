@@ -1,13 +1,13 @@
 SELECT
-    ie.item_id AS item_id,
-    ie.name AS name,
-    ie.description AS description,
-    ie.image AS image,
-    ie.semantic_content as semantic_content,
-    ie.semantic_content_hybrid as semantic_content_hybrid,
-    ie.extraction_date as extraction_date
+    ie.item_id,
+    ie.name_embedding,
+    ie.description_embedding,
+    ie.image_embedding,
+    ie.semantic_content_embedding,
+    ie.semantic_content_hybrid_embedding,
+    ie.extraction_date
 FROM
-    `{{ bigquery_clean_dataset }}`.item_embeddings_v4 ie
+    `{{ bigquery_clean_dataset }}`.item_embeddings ie
 WHERE
     ie.item_id not in (
         select

@@ -40,7 +40,6 @@ dag_config = {
     "BASE_DIR": "data-gcp/jobs/ml_jobs/algo_training",
     "MODEL_DIR": "fraud/offer_compliance_model",
     "TRAIN_DIR": "/home/airflow/train",
-    "EXPERIMENT_NAME": f"algo_training_offer_compliance_model_v1.0_{ENV_SHORT_NAME}",
     "TOKENIZERS_PARALLELISM": "false",
 }
 
@@ -81,6 +80,10 @@ with DAG(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
+        "model_name": Param(
+            default="compliance_default",
+            type="string",
+        ),
         "config_file_name": Param(
             default=train_params["config_file_name"],
             type="string",
@@ -89,7 +92,7 @@ with DAG(
             default=gce_params["instance_type"][ENV_SHORT_NAME], type="string"
         ),
         "instance_name": Param(default=gce_params["instance_name"], type="string"),
-        "run_name": Param(default=None, type=["string", "null"]),
+        "run_name": Param(default="default", type=["string", "null"]),
     },
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)
@@ -180,7 +183,7 @@ with DAG(
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/train.py "
-        f"--experiment-name {dag_config['EXPERIMENT_NAME']} "
+        "--model-name {{ params.model_name }} "
         "--config-file-name {{ params.config_file_name }} "
         "--training-table-name compliance_training_data "
         "--run-name {{ params.run_name }}",
@@ -193,7 +196,7 @@ with DAG(
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/evaluate.py "
-        f"--experiment-name {dag_config['EXPERIMENT_NAME']} "
+        "--model-name {{ params.model_name }} "
         "--config-file-name {{ params.config_file_name }} "
         "--validation-table-name compliance_validation_data "
         "--run-name {{ params.run_name }}",
@@ -209,7 +212,7 @@ with DAG(
         http_conn_id=SLACK_CONN_ID,
         webhook_token=SLACK_CONN_PASSWORD,
         blocks=create_algo_training_slack_block(
-            dag_config["EXPERIMENT_NAME"], MLFLOW_URL, ENV_SHORT_NAME
+            "{{ params.model_name }}", MLFLOW_URL, ENV_SHORT_NAME
         ),
         username=f"Algo trainer robot - {ENV_SHORT_NAME}",
         icon_emoji=":robot_face:",

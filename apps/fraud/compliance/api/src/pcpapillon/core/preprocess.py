@@ -1,13 +1,8 @@
 from catboost import Pool
-import numpy as np
-from pcpapillon.utils.env_vars import API_PARAMS
-from pcpapillon.utils.data_model import Config
 from pcpapillon.core.extract_embedding import extract_embedding
 
-api_config = Config.from_dict(API_PARAMS)
 
-
-def preprocess(data, prepoc_models):
+def preprocess(api_config, model_config, data, prepoc_models):
     """
     Preprocessing steps:
         - prepare features
@@ -17,7 +12,14 @@ def preprocess(data, prepoc_models):
     data_w_emb = extract_embedding(
         data_clean, api_config.features_to_extract_embedding, prepoc_models
     )
-    pool = convert_data_to_catboost_pool(data_w_emb, api_config.catboost_features_types)
+
+    scoring_features = sum(model_config.catboost_features_types.values(), [])
+    data_w_emb_clean = {}
+    for feature in scoring_features:
+        data_w_emb_clean[feature] = data_w_emb[feature]
+    pool = convert_data_to_catboost_pool(
+        data_w_emb_clean, model_config.catboost_features_types
+    )
     return pool, data_w_emb
 
 
@@ -38,6 +40,11 @@ def prepare_features(data, params):
             data[key] = "" if data[key] is None else str(data[key])
         if key in params["numerical_features"]:
             data[key] = 0 if data[key] is None else int(data[key])
+    if "macro_text" in params.keys():
+        semantic_content = " ".join(
+            [semantic_feature.lower() for semantic_feature in params["macro_text"]]
+        )
+        data["semantic_content"] = semantic_content
     return data
 
 

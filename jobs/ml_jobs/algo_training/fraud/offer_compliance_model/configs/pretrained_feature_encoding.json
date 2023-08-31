@@ -1,12 +1,18 @@
 {
     "preprocess_features_type": {
-        "text_features": ["rayon", "macro_rayon"],
-        "numerical_features": ["stock", "stock_price"],
-        "boolean_features": ["outling", "physical_goods"]
+        "text_features": ["rayon", "macro_rayon","offer_subcategoryid"],
+        "numerical_features": ["stock_price"],
+        "embedding_features": [
+            "image_embedding",
+            "semantic_content_embedding"
+        ]
     },
     "catboost_features_types": {
         "cat_features": ["offer_subcategoryid", "rayon", "macro_rayon"],
-        "text_features": null,
+        "text_features": [],
+        "numerical_features": [
+            "stock_price"
+        ],
         "embedding_features": [
             "image_embedding",
             "semantic_content_embedding"

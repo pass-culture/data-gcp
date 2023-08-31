@@ -6,7 +6,6 @@ import pandas as pd
 import numpy as np
 import typer
 from fraud.offer_compliance_model.utils.constants import CONFIGS_PATH
-from fraud.offer_compliance_model.utils.tools import extract_embedding, prepare_features
 from utils.constants import MODEL_DIR, STORAGE_PATH
 from utils.data_collect_queries import read_from_gcs
 
@@ -24,6 +23,28 @@ def convert_str_emb_to_float(emb_list, emb_size=124):
             emb = [0] * emb_size
         float_emb.append(np.array(emb))
     return float_emb
+
+
+def prepare_features(df, features):
+    for feature_types in features["preprocess_features_type"].keys():
+        for col in features["preprocess_features_type"][feature_types]:
+            if feature_types == "text_features":
+                df[col] = df[col].fillna("")
+                df[col] = df[col].astype(str)
+            if feature_types == "numerical_features":
+                df[col] = df[col].fillna(0)
+                df[col] = df[col].astype(int)
+            if feature_types == "embedding_features":
+                df[col] = convert_str_emb_to_float(df[col].tolist())
+                df[col] = df[col].astype("object")
+
+    scoring_features = sum(features["catboost_features_types"].values(), [])
+    # Set target
+    df["target"] = np.where(df["offer_validation"] == "APPROVED", 1, 0)
+    scoring_features.append("target")
+    # Only keep features used for scoring
+    df = df[scoring_features]
+    return df
 
 
 def preprocess(
@@ -50,33 +71,9 @@ def preprocess(
     offer_compliance_raw = read_from_gcs(
         storage_path=STORAGE_PATH, table_name=input_dataframe_file_name
     )
-    offer_compliance_raw = offer_compliance_raw.rename(
-        columns={"image_url": "offer_image"}
-    )
 
-    offer_compliance_clean = prepare_features(offer_compliance_raw)
-
-    offer_compliance_w_emb = offer_compliance_clean.loc[
-        offer_compliance_clean["image_embedding"] != ""
-    ]
-    for feature_name in features["catboost_features_types"]["embedding_features"]:
-        offer_compliance_w_emb[f"""{feature_name}"""] = convert_str_emb_to_float(
-            offer_compliance_w_emb[f"""{feature_name}"""].tolist()
-        )
-        offer_compliance_w_emb[f"""{feature_name}"""] = offer_compliance_w_emb[
-            f"""{feature_name}"""
-        ].astype("object")
-
-    offer_compliance_w_emb = offer_compliance_w_emb.drop(
-        [
-            "offer_name",
-            "offer_description",
-            "offer_image",
-        ],
-        axis=1,
-        errors="ignore",
-    )
-    offer_compliance_w_emb.to_parquet(
+    offer_compliance_clean = prepare_features(offer_compliance_raw, features)
+    offer_compliance_clean.to_parquet(
         f"{STORAGE_PATH}/{output_dataframe_file_name}/data.parquet"
     )
 

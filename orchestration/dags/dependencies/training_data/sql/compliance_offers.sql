@@ -1,74 +1,33 @@
-{{ create_humanize_id_function() }}
-WITH offer_humanized_id AS (
+with base as (
     SELECT
-        offer_id,
-        humanize_id(offer_id) AS humanized_id,
-    FROM
-        `{{ bigquery_raw_dataset }}`.`applicative_database_offer`
-    WHERE
-        offer_id is not NULL
-),
-mediation AS (
-    SELECT
-        offer_id,
-        humanize_id(id) as mediation_humanized_id
-    FROM
-        (
-            SELECT
-                id,
-                offerId as offer_id,
-                ROW_NUMBER() OVER (
-                    PARTITION BY offerId
-                    ORDER BY
-                        dateModifiedAtLastProvider DESC
-                ) as rnk
-            FROM
-                `{{ bigquery_analytics_dataset }}`.`applicative_database_mediation`
-            WHERE
-                isActive
-        ) inn
-    WHERE
-        rnk = 1
-),
-base as (
-    SELECT
-        o.offer_validation,
-CASE
-            when (
-                o.offer_name is null
-                or o.offer_name = 'NaN'
-            ) then "None"
-            else safe_cast(o.offer_name as STRING)
-        END as offer_name,
-CASE
-            when (
-                o.offer_description is null
-                or o.offer_description = 'NaN'
-            ) then "None"
-            else safe_cast(o.offer_description as STRING)
+        o.offer_id,
+        CASE	
+            when (	
+                o.offer_name is null	
+                or o.offer_name = 'NaN'	
+            ) then "None"	
+            else safe_cast(o.offer_name as STRING)	
+        END as offer_name,	
+        CASE	
+            when (	
+                o.offer_description is null	
+                or o.offer_description = 'NaN'	
+            ) then "None"	
+            else safe_cast(o.offer_description as STRING)	
         END as offer_description,
+        o.offer_validation,
         o.offer_subcategoryid,
         oed.rayon,
         rayon_ref.macro_rayon as macro_rayon,
-CASE
+        CASE
             when s.stock_price is null then 0
             else safe_cast(s.stock_price as INTEGER)
         END as stock_price,
-CASE
+        CASE
             when s.stock_quantity is null then 0
             else safe_cast(s.stock_quantity as INTEGER)
         END as stock,
-CASE
-            WHEN mediation.mediation_humanized_id is not null THEN CONCAT(
-                "https://storage.googleapis.com/{{ mediation_url }}-assets-fine-grained/thumbs/mediations/",
-                mediation.mediation_humanized_id
-            )
-            ELSE CONCAT(
-                "https://storage.googleapis.com/{{ mediation_url }}-assets-fine-grained/thumbs/products/",
-                humanize_id(o.offer_product_id)
-            )
-        END AS offer_image,
-CASE
+        CASE
             WHEN subcat.id = 'ESCAPE_GAME'
             AND o.offer_creation_date < DATETIME '2022-02-01' THEN False
             WHEN subcat.id = 'BON_ACHAT_INSTRUMENT'
@@ -77,12 +36,10 @@ CASE
         END AS is_rule_up_to_date
     FROM
         `{{ bigquery_raw_dataset }}`.`applicative_database_offer` o
-        LEFT JOIN `{{ bigquery_raw_dataset }}`.`applicative_database_stock` s on s.offer_id = o.offer_id 
-        --TODO:update join with offer_extra_data
+        LEFT JOIN `{{ bigquery_raw_dataset }}`.`applicative_database_stock` s on s.offer_id = o.offer_id --TODO:update join with offer_extra_data
         LEFT JOIN `{{ bigquery_analytics_dataset }}`.`offer_extracted_data` oed ON oed.offer_id = o.offer_id
         LEFT JOIN `{{ bigquery_analytics_dataset }}`.`subcategories` subcat ON subcat.id = o.offer_subcategoryid
         LEFT JOIN `{{ bigquery_analytics_dataset }}`.`macro_rayons` AS rayon_ref ON oed.rayon = rayon_ref.rayon
-        LEFT JOIN mediation ON o.offer_id = mediation.offer_id
     where
         o.offer_validation <> 'DRAFT'
         and o.offer_last_validation_type = 'MANUAL'
@@ -93,11 +50,28 @@ CASE
             )
         )
         and o.offer_creation_date > DATETIME '2022-09-01'
-
+    GROUP BY
+        o.offer_id,
+        o.offer_name,
+        o.offer_description,
+        o.offer_validation,
+        o.offer_subcategoryid,
+        subcat.id,
+        o.offer_creation_date,
+        oed.rayon,
+        macro_rayon,
+        stock,
+        stock_price
 )
 select
-    * except(is_rule_up_to_date)
+    b.*
+except
+(is_rule_up_to_date),
+    ie.semantic_content_embedding as semantic_content_embedding,
+    ie.image_embedding as image_embedding
 from
-    base
+    base b
+    LEFT JOIN `{{ bigquery_analytics_dataset }}`.offer_item_ids oii on b.offer_id = oii.offer_id
+    JOIN `{{ bigquery_clean_dataset }}`.item_embeddings ie on oii.item_id = ie.item_id
 where
     is_rule_up_to_date

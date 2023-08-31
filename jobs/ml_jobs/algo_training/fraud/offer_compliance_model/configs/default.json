@@ -13,9 +13,9 @@
         "cat_features": ["offer_subcategoryid", "rayon", "macro_rayon"],
         "text_features": ["offer_name", "offer_description"],
         "embedding_features": [
-            "offer_image_embedding",
-            "offer_name_embedding",
-            "offer_description_embedding"
+            "image_embedding",
+            "name_embedding",
+            "description_embedding"
         ]
     }
 }

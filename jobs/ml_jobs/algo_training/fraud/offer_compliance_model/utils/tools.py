@@ -40,7 +40,7 @@ def prepare_features(df):
     # Set target
     df["target"] = np.where(df["offer_validation"] == "APPROVED", 1, 0)
     # Remove useless columns
-    df = df.drop(columns=["offer_validation"])
+    df = df.drop(columns=["offer_validation", "offer_id"])
     return df
 
 

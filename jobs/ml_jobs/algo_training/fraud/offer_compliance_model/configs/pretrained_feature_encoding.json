@@ -1,0 +1,15 @@
+{
+    "preprocess_features_type": {
+        "text_features": ["rayon", "macro_rayon"],
+        "numerical_features": ["stock", "stock_price"],
+        "boolean_features": ["outling", "physical_goods"]
+    },
+    "catboost_features_types": {
+        "cat_features": ["offer_subcategoryid", "rayon", "macro_rayon"],
+        "text_features": null,
+        "embedding_features": [
+            "image_embedding",
+            "semantic_content_embedding"
+        ]
+    }
+}

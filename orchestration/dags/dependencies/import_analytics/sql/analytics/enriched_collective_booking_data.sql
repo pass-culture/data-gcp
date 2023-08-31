@@ -60,4 +60,4 @@ FROM
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.region_department AS venue_region_departement ON venue.venue_department_code = venue_region_departement.num_dep
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.region_department AS school_region_departement ON eple.code_departement = school_region_departement.num_dep
     LEFT JOIN collective_booking_ranking_view ON collective_booking_ranking_view.collective_booking_id = collective_booking.collective_booking_id
-    LEFT JOIN `{{ bigquery_analytics_dataset }}`.subcategories subcategories ON collective_booking.collective_offer_subcategory_id = subcategories.id;
+    LEFT JOIN `{{ bigquery_analytics_dataset }}`.subcategories subcategories ON collective_offer.collective_offer_subcategory_id = subcategories.id;

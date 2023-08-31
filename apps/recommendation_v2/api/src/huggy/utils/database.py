@@ -43,13 +43,3 @@ else:
 Base = declarative_base()
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=bind_engine)
-
-
-def get_available_materialized_view(engine, materialized_view_name: str) -> str:
-    for suffix in ["_mv", "_mv_tmp", "_mv_old"]:
-        table_name = f"{materialized_view_name}{suffix}"
-        result = inspect(engine).has_table(table_name)
-        if result:
-            return table_name
-
-    return materialized_view_name

@@ -132,8 +132,15 @@ class RetrievalEndpoint(AbstractEndpoint):
             ListParams(label="subcategory_id", values=self.params_in.subcategories_id)
         )
         params.append(EqParams(label="offer_is_duo", value=self.params_in.offer_is_duo))
-
-        # TODO : Handle offer_type_list in reco
+        if self.params_in.offer_type_list is not None:
+            label, domain = [], []
+            for type in self.params_in.offer_type_list:
+                domain.append(type.key)
+                label.append(type.value)
+            params.append(ListParams(label="offer_type_domain", values=domain))
+            params.append(
+                ListParams(label="offer_type_label", values=self.params_in.label)
+            )
 
         return {"$and": {k: v for d in params for k, v in d.filter().items()}}
 

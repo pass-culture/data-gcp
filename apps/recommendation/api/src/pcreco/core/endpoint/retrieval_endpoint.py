@@ -138,9 +138,7 @@ class RetrievalEndpoint(AbstractEndpoint):
                 domain.append(type.key)
                 label.append(type.value)
             params.append(ListParams(label="offer_type_domain", values=domain))
-            params.append(
-                ListParams(label="offer_type_label", values=self.params_in.label)
-            )
+            params.append(ListParams(label="offer_type_label", values=label))
 
         return {"$and": {k: v for d in params for k, v in d.filter().items()}}
 

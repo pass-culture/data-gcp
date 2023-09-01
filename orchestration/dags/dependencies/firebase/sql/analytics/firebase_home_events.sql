@@ -62,6 +62,7 @@ firebase_module_events AS (
         e.session_id,
         e.user_id,
         e.user_pseudo_id,
+        e.unique_session_id,
         e.platform,
         --events
         e.event_name,
@@ -133,6 +134,7 @@ firebase_conversion_step AS (
         conv.session_id,
         conv.user_id,
         conv.user_pseudo_id,
+        conv.unique_session_id,
         conv.platform,
         --events
         conv.event_name,
@@ -155,7 +157,7 @@ firebase_conversion_step AS (
         ) as rank
     FROM
         `{{ bigquery_analytics_dataset }}.firebase_events` conv
-        INNER JOIN firebase_module_events event on event.session_id = conv.session_id
+        INNER JOIN firebase_module_events event on event.unique_session_id = conv.unique_session_id
         AND event.offer_id = conv.offer_id
         AND event.user_id = conv.user_id -- conversion event after click event
     WHERE
@@ -190,6 +192,7 @@ SELECT
     e.session_id,
     e.user_id,
     e.user_pseudo_id,
+    e.unique_session_id,
     e.call_id,
     e.platform,
     e.event_name,

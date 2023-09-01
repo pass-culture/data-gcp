@@ -38,7 +38,7 @@ events AS (
       poc.user_favorites_count,
       poc.user_deposit_remaining_credit,
       poc.user_iris_id,
-      round(poc.offer_user_distance / 1000) as offer_user_distance,
+      poc.offer_user_distance as offer_user_distance,
       poc.offer_id,
       poc.offer_item_id,
       poc.offer_booking_number,
@@ -58,7 +58,7 @@ events AS (
     FROM `{{ bigquery_raw_dataset }}.past_offer_context` poc
     INNER JOIN  `{{ bigquery_clean_dataset }}.past_similar_offers` 
       pso on 
-      pso.event_date >= DATE_SUB(CURRENT_DATE, INTERVAL 14 DAY) 
+      pso.event_date >= DATE_SUB(CURRENT_DATE, INTERVAL 7 DAY) 
       and pso.event_date = date(poc.date) 
       and pso.reco_call_id = poc.call_id
       and pso.offer_id = poc.offer_id
@@ -77,7 +77,7 @@ seen AS (
     FROM
         `{{ bigquery_analytics_dataset }}.firebase_similar_offer_events`
     WHERE
-        event_date >= DATE_SUB(CURRENT_DATE, INTERVAL 14 DAY)
+        event_date >= DATE_SUB(CURRENT_DATE, INTERVAL 7 DAY)
         AND event_name = 'PlaylistVerticalScroll'
     GROUP BY
         1,
@@ -94,11 +94,11 @@ interact AS (
         sum(if(event_name = "BookingConfirmation", 1, null)) as booking,
         sum(d.delta_diversification) as delta_diversification
     FROM
-        `{{ bigquery_analytics_dataset }}.firebase_similar_offer_events` fsoe
+        `{{ bigquery_analytics_dataset }}.firebase_events` fsoe
     LEFT JOIN diversification d on d.booking_id = fsoe.booking_id
 
     WHERE
-        event_date >= DATE_SUB(CURRENT_DATE, INTERVAL 14 DAY)
+        event_date >= DATE_SUB(CURRENT_DATE, INTERVAL 7 DAY)
         AND event_name in ("ConsultOffer", "BookingConfirmation")
     GROUP BY
         1,

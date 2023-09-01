@@ -131,7 +131,6 @@ related_stocks AS (
 
 SELECT
     user_pro.user_id, 
-    user_pro.offerer_id,
     user_pro.user_creation_date,
     user_pro.user_department_code,
     user_pro.user_postal_code,
@@ -142,7 +141,7 @@ SELECT
     user_pro.user_has_seen_pro_tutorials,
     user_pro.user_phone_validation_status,
     user_pro.user_has_validated_email,
-    ROW_NUMBER() OVER(PARTITION BY user_pro.offerer_id ORDER BY COALESCE(offerer_creation_date, user_creation_date) as user_offerer_link_rank,
+    ROW_NUMBER() OVER(PARTITION BY offerer.offerer_id ORDER BY COALESCE(offerer.offerer_creation_date, user_pro.user_creation_date)) as user_offerer_link_rank,
     CONCAT("offerer-",offerer.offerer_id) AS partner_id,
     offerer.offerer_name,
     offerer.offerer_creation_date,

@@ -130,7 +130,8 @@ related_stocks AS (
 )
 
 SELECT
-    user_pro.user_id as offerer_id,
+    user_pro.user_id, 
+    user_pro.offerer_id,
     user_pro.user_creation_date,
     user_pro.user_department_code,
     user_pro.user_postal_code,
@@ -141,6 +142,7 @@ SELECT
     user_pro.user_has_seen_pro_tutorials,
     user_pro.user_phone_validation_status,
     user_pro.user_has_validated_email,
+    ROW_NUMBER() OVER(PARTITION BY user_pro.offerer_id ORDER BY COALESCE(offerer_creation_date, user_creation_date) as user_offerer_link_rank,
     CONCAT("offerer-",offerer.offerer_id) AS partner_id,
     offerer.offerer_name,
     offerer.offerer_creation_date,
@@ -196,17 +198,18 @@ SELECT
     siren_data_labels.label_categorie_juridique AS legal_unit_legal_category_label,
     siren_data.activitePrincipaleUniteLegale = '84.11Z' AS is_territorial_authorities,
     COALESCE(related_venues.venue_cnt,0) AS venue_cnt
+    
 FROM
     `{{ bigquery_clean_dataset }}`.applicative_database_user_pro AS user_pro
-    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offerer AS offerer ON user_pro.user_id = offerer.offerer_id
-    LEFT JOIN individual_bookings_per_offerer ON individual_bookings_per_offerer.offerer_id = user_pro.user_id
-    LEFT JOIN collective_bookings_per_offerer ON collective_bookings_per_offerer.offerer_id = user_pro.user_id
-    LEFT JOIN individual_offers_per_offerer ON individual_offers_per_offerer.offerer_id = user_pro.user_id
-    LEFT JOIN collective_offers_per_offerer ON collective_offers_per_offerer.offerer_id = user_pro.user_id
-    LEFT JOIN related_stocks ON related_stocks.offerer_id = user_pro.user_id
-    LEFT JOIN related_venues ON related_venues.offerer_id = user_pro.user_id
-    LEFT JOIN bookable_individual_offer_cnt ON bookable_individual_offer_cnt.offerer_id = user_pro.user_id
-    LEFT JOIN bookable_collective_offer_cnt ON bookable_collective_offer_cnt.offerer_id = user_pro.user_id
+    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offerer AS offerer ON user_pro.offerer_id = offerer.offerer_id
+    LEFT JOIN individual_bookings_per_offerer ON individual_bookings_per_offerer.offerer_id = user_pro.offerer_id
+    LEFT JOIN collective_bookings_per_offerer ON collective_bookings_per_offerer.offerer_id = user_pro.offerer_id
+    LEFT JOIN individual_offers_per_offerer ON individual_offers_per_offerer.offerer_id = user_pro.offerer_id
+    LEFT JOIN collective_offers_per_offerer ON collective_offers_per_offerer.offerer_id = user_pro.offerer_id
+    LEFT JOIN related_stocks ON related_stocks.offerer_id = user_pro.offerer_id
+    LEFT JOIN related_venues ON related_venues.offerer_id = user_pro.offerer_id
+    LEFT JOIN bookable_individual_offer_cnt ON bookable_individual_offer_cnt.offerer_id = user_pro.offerer_id
+    LEFT JOIN bookable_collective_offer_cnt ON bookable_collective_offer_cnt.offerer_id = user_pro.offerer_id
     LEFT JOIN `{{ bigquery_clean_dataset }}`.siren_data AS siren_data ON siren_data.siren = offerer.offerer_siren
     LEFT JOIN `{{ bigquery_clean_dataset }}`.siren_data_labels AS siren_data_labels ON siren_data_labels.activitePrincipaleUniteLegale = siren_data.activitePrincipaleUniteLegale
 

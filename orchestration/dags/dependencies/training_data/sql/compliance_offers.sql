@@ -24,10 +24,6 @@ with base as (
             else safe_cast(s.stock_price as INTEGER)
         END as stock_price,
         CASE
-            when s.stock_quantity is null then 0
-            else safe_cast(s.stock_quantity as INTEGER)
-        END as stock,
-        CASE
             WHEN subcat.id = 'ESCAPE_GAME'
             AND o.offer_creation_date < DATETIME '2022-02-01' THEN False
             WHEN subcat.id = 'BON_ACHAT_INSTRUMENT'
@@ -60,7 +56,6 @@ with base as (
         o.offer_creation_date,
         oed.rayon,
         macro_rayon,
-        stock,
         stock_price
 )
 select

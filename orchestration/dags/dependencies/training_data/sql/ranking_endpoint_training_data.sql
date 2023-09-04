@@ -38,7 +38,7 @@ events AS (
       poc.user_favorites_count,
       poc.user_deposit_remaining_credit,
       poc.user_iris_id,
-      round(poc.offer_user_distance / 1000) as offer_user_distance,
+      poc.offer_user_distance as offer_user_distance,
       poc.offer_id,
       poc.offer_item_id,
       poc.offer_booking_number,
@@ -94,7 +94,7 @@ interact AS (
         sum(if(event_name = "BookingConfirmation", 1, null)) as booking,
         sum(d.delta_diversification) as delta_diversification
     FROM
-        `{{ bigquery_analytics_dataset }}.firebase_similar_offer_events` fsoe
+        `{{ bigquery_analytics_dataset }}.firebase_events` fsoe
     LEFT JOIN diversification d on d.booking_id = fsoe.booking_id
 
     WHERE

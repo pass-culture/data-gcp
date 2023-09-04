@@ -9,6 +9,8 @@ SELECT
     CAST(jsonPayload.extra.statuscode as INT64) as status_code,
     jsonPayload.extra.deviceid as device_id,
     jsonPayload.extra.sourceip as source_ip,
+    jsonPayload.extra.appversion as app_version,
+    jsonPayload.extra.platform,
     timestamp,
 FROM
     `{{ bigquery_raw_dataset }}.stdout`

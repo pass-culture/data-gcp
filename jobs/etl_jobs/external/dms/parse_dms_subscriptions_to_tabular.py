@@ -199,18 +199,6 @@ def parse_result_pro(result, df_applications):
                 else:
                     dossier_line["erreur_traitement_pass_culture"] = None
 
-                # handling exceptions see utils
-                try:
-                    exceptions = demarches_exceptions["pro"]
-                    for proc_id in exceptions.keys():
-                        if dossier_line["procedure_id"] == proc_id:
-                            for field in exceptions[proc_id].keys():
-                                if dossier_line[field]:
-                                    print()
-                                    dossier_line[field] = exceptions[proc_id][field]
-                except KeyError:
-                    pass
-
                 df_applications.loc[len(df_applications)] = dossier_line
     return
 

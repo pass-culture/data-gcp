@@ -66,8 +66,18 @@ def get_non_recommendable_items(db: Session, user: User) -> List[str]:
     ]
 
 
-def get_nearest_offer(db: Session, user: User, item: RecommendableItem) -> Offer:
-    """Query the database to get the nearest offer from user given a recommendable item."""
+def get_nearest_offers(
+    db: Session, user: User, recommendable_items: List[RecommendableItem]
+) -> List[Offer]:
+    offer_table = get_available_table(bind_engine, "RecommendableOffersRaw")
+
+    non_recommendable_items = get_non_recommendable_items(db, user)
+
+    recommendable_items_ids = [
+        item.item_id
+        for item in recommendable_items
+        if item.item_id not in non_recommendable_items
+    ]
 
     offer_table = get_available_table(bind_engine, "RecommendableOffersRaw")
 
@@ -92,92 +102,89 @@ def get_nearest_offer(db: Session, user: User, item: RecommendableItem) -> Offer
             ),
         ).label("user_distance")
 
-        nearest_offer = (
-            db.query(
-                offer_table.offer_id.label("offer_id"),
-                offer_table.item_id.label("item_id"),
-                offer_table.venue_id.label("venue_id"),
-                user_distance,
-                offer_table.booking_number.label("booking_number"),
-                offer_table.stock_price.label("stock_price"),
-                offer_table.offer_creation_date.label("offer_creation_date"),
-                offer_table.stock_beginning_date.label("stock_beginning_date"),
-                offer_table.category.label("category"),
-                offer_table.subcategory_id.label("subcategory_id"),
-                offer_table.search_group_name.label("search_group_name"),
-                offer_table.venue_latitude.label("venue_latitude"),
-                offer_table.venue_longitude.label("venue_longitude"),
-                offer_table.is_geolocated.label("is_geolocated"),
-            )
-            .filter(offer_table.item_id == item.item_id)
-            .filter(offer_table.stock_price <= user.user_deposit_remaining_credit)
-            .filter(
-                or_(
-                    offer_table.default_max_distance >= user_distance,
-                    user_distance == None,
-                )
-            )
-            .filter(*underage_condition)
-            .order_by(user_distance)
-            .limit(1)
-            .all()
+        offer_rank = (
+            func.row_number()
+            .over(partition_by=offer_table.item_id, order_by=user_distance)
+            .label("offer_rank")
         )
 
-        nearest_offer = [
-            RecommendableOffer(
-                offer_id=offer_id,
-                item_id=item_id,
-                venue_id=venue_id,
-                user_distance=user_distance,
-                booking_number=booking_number,
-                stock_price=stock_price,
-                offer_creation_date=offer_creation_date,
-                stock_beginning_date=stock_beginning_date,
-                category=category,
-                subcategory_id=subcategory_id,
-                search_group_name=search_group_name,
-                venue_latitude=venue_latitude,
-                venue_longitude=venue_longitude,
-                item_score=item.item_score,
+    nearest_offers_subquery = (
+        db.query(
+            offer_table.offer_id.label("offer_id"),
+            offer_table.item_id.label("item_id"),
+            offer_table.venue_id.label("venue_id"),
+            user_distance,
+            offer_table.booking_number.label("booking_number"),
+            offer_table.stock_price.label("stock_price"),
+            offer_table.offer_creation_date.label("offer_creation_date"),
+            offer_table.stock_beginning_date.label("stock_beginning_date"),
+            offer_table.category.label("category"),
+            offer_table.subcategory_id.label("subcategory_id"),
+            offer_table.search_group_name.label("search_group_name"),
+            offer_table.venue_latitude.label("venue_latitude"),
+            offer_table.venue_longitude.label("venue_longitude"),
+            offer_table.is_geolocated.label("is_geolocated"),
+            offer_rank,
+        )
+        .filter(offer_table.item_id.in_(recommendable_items_ids))
+        .filter(offer_table.stock_price <= user.user_deposit_remaining_credit)
+        .filter(
+            or_(
+                offer_table.default_max_distance >= user_distance,
+                user_distance == None,
             )
-            for offer_id, item_id, venue_id, user_distance, booking_number, stock_price, offer_creation_date, stock_beginning_date, category, subcategory_id, search_group_name, venue_latitude, venue_longitude, is_geolocated in nearest_offer
-        ]
+        )
+        .filter(*underage_condition)
+        .subquery()
+    )
 
-    else:
-        nearest_offer = (
-            db.query(
-                offer_table.offer_id.label("offer_id"),
-                offer_table.item_id.label("item_id"),
-                offer_table.venue_id.label("venue_id"),
-                offer_table.booking_number.label("booking_number"),
-                offer_table.stock_price.label("stock_price"),
-                offer_table.offer_creation_date.label("offer_creation_date"),
-                offer_table.stock_beginning_date.label("stock_beginning_date"),
-                offer_table.category.label("category"),
-                offer_table.subcategory_id.label("subcategory_id"),
-                offer_table.search_group_name.label("search_group_name"),
-                offer_table.is_geolocated.label("is_geolocated"),
+    nearest_offers = (
+        db.query(
+            offer_table.offer_id.label("offer_id"),
+            offer_table.item_id.label("item_id"),
+            offer_table.venue_id.label("venue_id"),
+            user_distance,
+            offer_table.booking_number.label("booking_number"),
+            offer_table.stock_price.label("stock_price"),
+            offer_table.offer_creation_date.label("offer_creation_date"),
+            offer_table.stock_beginning_date.label("stock_beginning_date"),
+            offer_table.category.label("category"),
+            offer_table.subcategory_id.label("subcategory_id"),
+            offer_table.search_group_name.label("search_group_name"),
+            offer_table.venue_latitude.label("venue_latitude"),
+            offer_table.venue_longitude.label("venue_longitude"),
+            offer_table.is_geolocated.label("is_geolocated"),
+            offer_rank,
+        )
+        .join(
+            nearest_offers_subquery,
+            offer_table.offer_id == nearest_offers_subquery.c.offer_id,
+        )
+        .filter(nearest_offers_subquery.c.offer_rank == 1)
+        .all()
+    )
+
+    nearest_offers_result = []
+    for offer in nearest_offers:
+        nearest_offers_result.append(
+            RecommendableOffer(
+                offer_id=offer[0],
+                item_id=offer[1],
+                venue_id=offer[2],
+                user_distance=offer[3],
+                booking_number=offer[4],
+                stock_price=offer[5],
+                offer_creation_date=offer[6],
+                stock_beginning_date=offer[7],
+                category=offer[8],
+                subcategory_id=offer[9],
+                search_group_name=offer[10],
+                venue_latitude=offer[11],
+                venue_longitude=offer[12],
+                item_score=[
+                    reco for reco in recommendable_items if reco.item_id == offer[1]
+                ][0].item_score,
             )
-            .filter(offer_table.item_id == item.item_id)
-            .limit(1)
-            .all()
         )
 
-        nearest_offer = [
-            RecommendableOffer(
-                offer_id=offer_id,
-                item_id=item_id,
-                venue_id=venue_id,
-                booking_number=booking_number,
-                stock_price=stock_price,
-                offer_creation_date=offer_creation_date,
-                stock_beginning_date=stock_beginning_date,
-                category=category,
-                subcategory_id=subcategory_id,
-                search_group_name=search_group_name,
-                item_score=item.item_score,
-            )
-            for offer_id, item_id, venue_id, booking_number, stock_price, offer_creation_date, stock_beginning_date, category, subcategory_id, search_group_name, is_geolocated in nearest_offer
-        ]
-
-    return nearest_offer
+    return nearest_offers_result

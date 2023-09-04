@@ -36,7 +36,7 @@ LEFT JOIN convert_data ON display_data.unique_session_id = convert_data.unique_s
                         AND display_data.offer_id = convert_data.similar_offer_id
 LEFT JOIN `{{ bigquery_analytics_dataset }}.diversification_booking` AS diversification_booking ON diversification_booking.booking_id = convert_data.booking_id
 JOIN `{{ bigquery_analytics_dataset }}.enriched_user_data` AS enriched_user_data ON enriched_user_data.user_id = display_data.user_id
-GROUP BY 1,2,3,4,5,6,7,8,9,10,11
+GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
 ),
 
 data_and_lags AS ( -- Déterminer si un utilisateur a consulté une offre X, vu l'algo d'offres similaires A, consulté depuis A une offre Y, vu l'algo B et consulté depuis B une offre Z

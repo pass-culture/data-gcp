@@ -58,7 +58,7 @@ events AS (
     FROM `{{ bigquery_raw_dataset }}.past_offer_context` poc
     INNER JOIN  `{{ bigquery_clean_dataset }}.past_similar_offers` 
       pso on 
-      pso.event_date >= DATE_SUB(CURRENT_DATE, INTERVAL 7 DAY) 
+      pso.event_date >= DATE_SUB(CURRENT_DATE, INTERVAL 14 DAY) 
       and pso.event_date = date(poc.date) 
       and pso.reco_call_id = poc.call_id
       and pso.offer_id = poc.offer_id
@@ -77,7 +77,7 @@ seen AS (
     FROM
         `{{ bigquery_analytics_dataset }}.firebase_similar_offer_events`
     WHERE
-        event_date >= DATE_SUB(CURRENT_DATE, INTERVAL 7 DAY)
+        event_date >= DATE_SUB(CURRENT_DATE, INTERVAL 14 DAY)
         AND event_name = 'PlaylistVerticalScroll'
     GROUP BY
         1,
@@ -98,7 +98,7 @@ interact AS (
     LEFT JOIN diversification d on d.booking_id = fsoe.booking_id
 
     WHERE
-        event_date >= DATE_SUB(CURRENT_DATE, INTERVAL 7 DAY)
+        event_date >= DATE_SUB(CURRENT_DATE, INTERVAL 14 DAY)
         AND event_name in ("ConsultOffer", "BookingConfirmation")
     GROUP BY
         1,

@@ -25,7 +25,7 @@ SELECT
     statut,
     typologie,
     academie_historique_intervention,
-    case when procedure_id = '65028' then 'Commission nationale' else groupe_academie_instructeur end as groupe_academie_instructeur,
+    case when procedure_id = '65028' then 'Commission nationale' else academie_groupe_instructeur end as academie_groupe_instructeur,
     domaines,
     TRIM(erreur_traitement_pass_culture) as erreur_traitement_pass_culture
     {% else %}

@@ -195,7 +195,7 @@ with DAG(
             {"name": "academie_groupe_instructeur", "type": "STRING"},
             {"name": "domaines", "type": "STRING"},
             {"name": "erreur_traitement_pass_culture", "type": "STRING"},
-            {"name": "update_date", "type": "INT64"},
+            {"name": "update_date", "type": "TIMESTAMP"},
         ],
         write_disposition="WRITE_APPEND",
     )

@@ -4,10 +4,6 @@ from google.cloud import secretmanager
 API_URL = "https://www.demarches-simplifiees.fr/api/v2/graphql"
 demarches_jeunes = [47380, 47480]
 demarches_pro = [50362, 55475, 57081, 57189, 61589, 62703, 65028]
-# exception : {dms_target : {procedure_id : {exception_field_renamed_in_bq : manual_corrected_value, } , } , }
-demarches_exceptions = (
-    {}
-)  # {"pro":{65028 : {"academie_groupe_instructeur":'Commission nationale'}}}
 
 
 # find and replace string to str

@@ -4,7 +4,6 @@ import gcsfs
 import logging
 import typer
 from utils import (
-    demarches_exceptions,
     destination_table_schema_jeunes,
     destination_table_schema_pro,
 )
@@ -61,10 +60,14 @@ def save_results(df_applications, dms_target, updated_since, data_gcs_bucket_nam
         name = column["name"]
         type = column["type"]
         if type == "TIMESTAMP":
-            df_applications[f"{name}"] = pd.to_datetime(df_applications[f"{name}"])
+            df_applications[f"{name}"] = (
+                pd.to_datetime(df_applications[f"{name}"])
+                .dt.tz_localize(None)
+                .view("int64")
+            )
         elif type == "STRING":
             df_applications[f"{name}"] = df_applications[f"{name}"].astype(str)
-    df_applications["update_date"] = pd.to_datetime("today")
+    df_applications["update_date"] = pd.to_datetime("today").asm8.view("int64")
     df_applications.to_parquet(
         f"gs://{data_gcs_bucket_name}/dms_export/dms_{dms_target}_{updated_since}.parquet",
         engine="pyarrow",
@@ -106,17 +109,6 @@ def parse_result_jeunes(result, df_applications):
                     instructeurs.append(instructeur["email"])
                 if instructeurs != []:
                     dossier_line["instructors"] = "; ".join(instructeurs)
-
-                # handling exceptions see utils
-                try:
-                    exceptions = demarches_exceptions["jeunes"]
-                    for proc_id in exceptions.keys():
-                        if dossier_line["procedure_id"] == proc_id:
-                            for field in exceptions[proc_id].keys():
-                                if dossier_line[field]:
-                                    dossier_line[field] = exceptions[proc_id][field]
-                except KeyError:
-                    pass
 
                 df_applications.loc[len(df_applications)] = dossier_line
     return

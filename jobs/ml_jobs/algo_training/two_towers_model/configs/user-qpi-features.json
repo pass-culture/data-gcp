@@ -1,14 +1,9 @@
 {
   "user_embedding_layers": {
-      "user_id": {"type": "string", "embedding_size": 64},
-      "consult_offer": {"type":  "int", "embedding_size":  2},
-      "has_added_offer_to_favorites": {"type":  "int", "embedding_size":  2},
-      "user_theoretical_remaining_credit": {"type":  "int", "embedding_size": 2},
       "qpi_subcategory_ids": {
         "type": "string",
         "embedding_size": 64
       }
-
   },
   "item_embedding_layers": {
       "item_id": {"type": "string", "embedding_size": 64},

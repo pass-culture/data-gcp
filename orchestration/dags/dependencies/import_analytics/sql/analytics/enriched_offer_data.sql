@@ -125,6 +125,7 @@ SELECT
     offer.offer_id_at_providers,
     offer.offer_name,
     offer.offer_subcategoryId,
+    subcategories.category_id offer_category_id,
     last_stock.last_stock_price,
     offer.offer_creation_date,
     offer.offer_is_duo,
@@ -199,6 +200,7 @@ SELECT
     offer_extracted_data.countries,
     offer_extracted_data.casting,
     offer_extracted_data.isbn,
+    offer_extracted_data.titelive_gtl_id,
     isbn_rayon_editor.rayon,
     isbn_rayon_editor.book_editor,
     CASE

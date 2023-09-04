@@ -79,6 +79,8 @@ def get_nearest_offers(
         if item.item_id not in non_recommendable_items
     ]
 
+    offer_table = get_available_table(bind_engine, "RecommendableOffersRaw")
+
     if user.latitude is not None and user.longitude is not None:
         user_geolocated = True
         user_point = WKTElement(f"POINT({user.latitude} {user.longitude})")

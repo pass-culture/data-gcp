@@ -3,15 +3,51 @@ import os
 from sentence_transformers import SentenceTransformer
 
 import pandas as pd
+import numpy as np
 import typer
 from fraud.offer_compliance_model.utils.constants import CONFIGS_PATH
-from fraud.offer_compliance_model.utils.tools import extract_embedding, prepare_features
 from utils.constants import MODEL_DIR, STORAGE_PATH
 from utils.data_collect_queries import read_from_gcs
 
 
 IMAGE_MODEL = SentenceTransformer("clip-ViT-B-32")
 TEXT_MODEL = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+
+
+def convert_str_emb_to_float(emb_list, emb_size=124):
+    float_emb = []
+    for str_emb in emb_list:
+        try:
+            emb = json.loads(str_emb)
+        except:
+            emb = [0] * emb_size
+        float_emb.append(np.array(emb))
+    return float_emb
+
+
+def prepare_features(df, features):
+    prepocessed_cols = []
+    for feature_types in features.keys():
+        for col in features[feature_types]:
+            prepocessed_cols.append(col)
+            if feature_types == "text_features":
+                df[col] = df[col].fillna("")
+                df[col] = df[col].astype(str)
+            if feature_types == "numerical_features":
+                df[col] = df[col].fillna(0)
+                df[col] = df[col].astype(int)
+            if feature_types == "embedding_features":
+                df[col] = convert_str_emb_to_float(df[col].tolist())
+                df[col] = df[col].astype("object")
+    # Set target
+    df["target"] = np.where(df["offer_validation"] == "APPROVED", 1, 0)
+    prepocessed_cols.append("target")
+    # Remove useless columns
+    useless_columns = [
+        col for col in df.columns.tolist() if col not in prepocessed_cols
+    ]
+    df = df.drop(columns=useless_columns)
+    return df
 
 
 def preprocess(
@@ -38,19 +74,11 @@ def preprocess(
     offer_compliance_raw = read_from_gcs(
         storage_path=STORAGE_PATH, table_name=input_dataframe_file_name
     )
-    offer_compliance_raw = offer_compliance_raw.rename(
-        columns={"image_url": "offer_image"}
-    )
 
-    offer_compliance_clean = prepare_features(offer_compliance_raw)
-    ## Extract emb
-    offer_compliance_clean_w_emb = extract_embedding(
-        offer_compliance_clean,
-        features["features_to_extract_embedding"],
-        IMAGE_MODEL,
-        TEXT_MODEL,
+    offer_compliance_clean = prepare_features(
+        offer_compliance_raw, features["preprocess_features_type"]
     )
-    offer_compliance_clean_w_emb.to_parquet(
+    offer_compliance_clean.to_parquet(
         f"{STORAGE_PATH}/{output_dataframe_file_name}/data.parquet"
     )
 

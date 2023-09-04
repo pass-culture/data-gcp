@@ -5,18 +5,23 @@ import uuid
 import numpy as np
 
 dtypes = {
-    "category": "str",
-    "subcategory_id": "str",
-    "search_group_name": "str",
-    "is_numerical": "float",
-    "is_national": "float",
-    "is_geolocated": "float",
-    "offer_is_duo": "float",
-    "booking_number": "float",
-    "stock_price": "float",
-    "offer_creation_date": "float",
-    "stock_beginning_date": "float",
-    "is_underage_recommendable": "float",
+    "category": str,
+    "subcategory_id": str,
+    "search_group_name": str,
+    "is_numerical": float,
+    "is_national": float,
+    "is_geolocated": float,
+    "offer_is_duo": float,
+    "booking_number": float,
+    "booking_number_last_7_days": float,
+    "booking_number_last_14_days": float,
+    "booking_number_last_28_days": float,
+    "stock_price": float,
+    "offer_creation_date": float,
+    "stock_beginning_date": float,
+    "is_underage_recommendable": float,
+    "offer_type_label": str,
+    "offer_type_domain": str,
 }
 
 filter_dtypes = {

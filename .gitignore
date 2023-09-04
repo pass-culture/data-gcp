@@ -16,6 +16,7 @@ venv-lint/
 # *.json
 # !recommendation/db/tests/tables/data.json
 # !recommendation/api/*.json
+*.code-workspace
 airflow.cfg
 unittests.cfg
 credentials/

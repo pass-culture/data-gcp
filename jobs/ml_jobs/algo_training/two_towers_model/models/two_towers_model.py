@@ -1,11 +1,12 @@
+import numpy as np
+import pandas as pd
 import tensorflow as tf
 import tensorflow_recommenders as tfrs
-import pandas as pd
 from loguru import logger
-
 from utils.layers import (
-    StringEmbeddingLayer,
     IntegerEmbeddingLayer,
+    PretainedEmbeddingLayer,
+    StringEmbeddingLayer,
     TextEmbeddingLayer,
 )
 
@@ -31,7 +32,8 @@ class TwoTowersModel(tfrs.models.Model):
         # dict of preprocessing layers for each user feature
         user_embedding_layers = {
             name: self.load_embedding_layer(
-                layer_type=layer["type"], embedding_size=layer["embedding_size"]
+                layer_type=layer["type"],
+                embedding_size=layer["embedding_size"],
             )
             for name, layer in user_features_config.items()
         }
@@ -40,10 +42,15 @@ class TwoTowersModel(tfrs.models.Model):
         # dict of preprocessing layers for each item feature
         item_embedding_layers = {
             name: self.load_embedding_layer(
-                layer_type=layer["type"], embedding_size=layer["embedding_size"]
+                layer_type=layer["type"],
+                embedding_size=layer["embedding_size"],
+                embedding_initialisation_weights=data[name].drop_duplicates().tolist()
+                if layer["type"] == "pretrained"
+                else None,
             )
             for name, layer in item_features_config.items()
         }
+
         self._item_feature_names = item_features_config.keys()
 
         self.user_model = SingleTowerModel(
@@ -80,12 +87,20 @@ class TwoTowersModel(tfrs.models.Model):
         return self.task(user_embedding, item_embedding, compute_metrics=not training)
 
     @staticmethod
-    def load_embedding_layer(layer_type: str, embedding_size: int):
+    def load_embedding_layer(
+        layer_type: str,
+        embedding_size: int,
+        embedding_initialisation_weights: pd.DataFrame = None,
+    ):
         try:
             return {
                 "string": StringEmbeddingLayer(embedding_size=embedding_size),
                 "int": IntegerEmbeddingLayer(embedding_size=embedding_size),
                 "text": TextEmbeddingLayer(embedding_size=embedding_size),
+                "pretrained": PretainedEmbeddingLayer(
+                    embedding_size=embedding_size,
+                    embedding_initialisation_weights=embedding_initialisation_weights,
+                ),
             }[layer_type]
         except KeyError:
             raise ValueError(

@@ -8,10 +8,11 @@ from huggy.schemas.user import User
 from huggy.schemas.item import Item, RecommendableItem
 
 from huggy.models.item_ids_mv import ItemIdsMv
-from huggy.models.recommendable_offers_raw_mv import RecommendableOffersRaw
+from huggy.models.recommendable_offers_raw import get_available_table
 from huggy.models.non_recommendable_items import NonRecommendableItems
 
 from huggy.crud.iris import get_iris_from_coordinates
+from huggy.utils.database import bind_engine
 
 
 def get_offer_characteristics(
@@ -68,6 +69,8 @@ def get_non_recommendable_items(db: Session, user: User) -> List[str]:
 def get_nearest_offer(db: Session, user: User, item: RecommendableItem) -> Offer:
     """Query the database to get the nearest offer from user given a recommendable item."""
 
+    offer_table = get_available_table(bind_engine, "RecommendableOffersRaw")
+
     if user.latitude is not None and user.longitude is not None:
         user_geolocated = True
         user_point = WKTElement(f"POINT({user.latitude} {user.longitude})")
@@ -76,45 +79,41 @@ def get_nearest_offer(db: Session, user: User, item: RecommendableItem) -> Offer
 
     underage_condition = []
     if user.age and user.age < 18:
-        underage_condition.append(RecommendableOffersRaw.is_underage_recommendable)
+        underage_condition.append(offer_table.is_underage_recommendable)
 
     if user_geolocated:
         user_distance = func.ST_Distance(
             user_point,
             func.Geometry(
                 func.ST_MakePoint(
-                    RecommendableOffersRaw.venue_longitude,
-                    RecommendableOffersRaw.venue_latitude,
+                    offer_table.venue_longitude,
+                    offer_table.venue_latitude,
                 )
             ),
         ).label("user_distance")
 
         nearest_offer = (
             db.query(
-                RecommendableOffersRaw.offer_id.label("offer_id"),
-                RecommendableOffersRaw.item_id.label("item_id"),
-                RecommendableOffersRaw.venue_id.label("venue_id"),
+                offer_table.offer_id.label("offer_id"),
+                offer_table.item_id.label("item_id"),
+                offer_table.venue_id.label("venue_id"),
                 user_distance,
-                RecommendableOffersRaw.booking_number.label("booking_number"),
-                RecommendableOffersRaw.stock_price.label("stock_price"),
-                RecommendableOffersRaw.offer_creation_date.label("offer_creation_date"),
-                RecommendableOffersRaw.stock_beginning_date.label(
-                    "stock_beginning_date"
-                ),
-                RecommendableOffersRaw.category.label("category"),
-                RecommendableOffersRaw.subcategory_id.label("subcategory_id"),
-                RecommendableOffersRaw.search_group_name.label("search_group_name"),
-                RecommendableOffersRaw.venue_latitude.label("venue_latitude"),
-                RecommendableOffersRaw.venue_longitude.label("venue_longitude"),
-                RecommendableOffersRaw.is_geolocated.label("is_geolocated"),
+                offer_table.booking_number.label("booking_number"),
+                offer_table.stock_price.label("stock_price"),
+                offer_table.offer_creation_date.label("offer_creation_date"),
+                offer_table.stock_beginning_date.label("stock_beginning_date"),
+                offer_table.category.label("category"),
+                offer_table.subcategory_id.label("subcategory_id"),
+                offer_table.search_group_name.label("search_group_name"),
+                offer_table.venue_latitude.label("venue_latitude"),
+                offer_table.venue_longitude.label("venue_longitude"),
+                offer_table.is_geolocated.label("is_geolocated"),
             )
-            .filter(RecommendableOffersRaw.item_id == item.item_id)
-            .filter(
-                RecommendableOffersRaw.stock_price <= user.user_deposit_remaining_credit
-            )
+            .filter(offer_table.item_id == item.item_id)
+            .filter(offer_table.stock_price <= user.user_deposit_remaining_credit)
             .filter(
                 or_(
-                    RecommendableOffersRaw.default_max_distance >= user_distance,
+                    offer_table.default_max_distance >= user_distance,
                     user_distance == None,
                 )
             )
@@ -147,21 +146,19 @@ def get_nearest_offer(db: Session, user: User, item: RecommendableItem) -> Offer
     else:
         nearest_offer = (
             db.query(
-                RecommendableOffersRaw.offer_id.label("offer_id"),
-                RecommendableOffersRaw.item_id.label("item_id"),
-                RecommendableOffersRaw.venue_id.label("venue_id"),
-                RecommendableOffersRaw.booking_number.label("booking_number"),
-                RecommendableOffersRaw.stock_price.label("stock_price"),
-                RecommendableOffersRaw.offer_creation_date.label("offer_creation_date"),
-                RecommendableOffersRaw.stock_beginning_date.label(
-                    "stock_beginning_date"
-                ),
-                RecommendableOffersRaw.category.label("category"),
-                RecommendableOffersRaw.subcategory_id.label("subcategory_id"),
-                RecommendableOffersRaw.search_group_name.label("search_group_name"),
-                RecommendableOffersRaw.is_geolocated.label("is_geolocated"),
+                offer_table.offer_id.label("offer_id"),
+                offer_table.item_id.label("item_id"),
+                offer_table.venue_id.label("venue_id"),
+                offer_table.booking_number.label("booking_number"),
+                offer_table.stock_price.label("stock_price"),
+                offer_table.offer_creation_date.label("offer_creation_date"),
+                offer_table.stock_beginning_date.label("stock_beginning_date"),
+                offer_table.category.label("category"),
+                offer_table.subcategory_id.label("subcategory_id"),
+                offer_table.search_group_name.label("search_group_name"),
+                offer_table.is_geolocated.label("is_geolocated"),
             )
-            .filter(RecommendableOffersRaw.item_id == item.item_id)
+            .filter(offer_table.item_id == item.item_id)
             .limit(1)
             .all()
         )

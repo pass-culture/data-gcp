@@ -5,10 +5,10 @@ SELECT
     application_number,
     application_archived,
     application_status,
-    msec_to_timestamp(round(last_update_at,-3)) as last_update_at,
-    msec_to_timestamp(round(application_submitted_at,-3)) as application_submitted_at,
-    msec_to_timestamp(round(passed_in_instruction_at,-3)) as passed_in_instruction_at,
-    msec_to_timestamp(round(processed_at,-3)) as processed_at,
+    timestamp_seconds(cast( last_update_at / power(10,9) as INTEGER)) as last_update_at,
+    timestamp_seconds(cast( application_submitted_at / power(10,9) as INTEGER)) as application_submitted_at,
+    timestamp_seconds(cast( passed_in_instruction_at / power(10,9) as INTEGER)) as passed_in_instruction_at,
+    timestamp_seconds(cast( processed_at / power(10,9) as INTEGER)) as processed_at,
     application_motivation,
     instructors,
     demandeur_siret,
@@ -34,14 +34,14 @@ SELECT
     application_number,
     application_archived,
     application_status,
-    msec_to_timestamp(round(last_update_at,-3)) as last_update_at,
-    msec_to_timestamp(round(application_submitted_at,-3)) as application_submitted_at,
-    msec_to_timestamp(round(passed_in_instruction_at,-3)) as passed_in_instruction_at,
-    msec_to_timestamp(round(processed_at,-3)) as processed_at,
+    timestamp_seconds(cast( last_update_at / power(10,9) as INTEGER)) as last_update_at,
+    timestamp_seconds(cast( application_submitted_at / power(10,9) as INTEGER)) as application_submitted_at,
+    timestamp_seconds(cast( passed_in_instruction_at / power(10,9) as INTEGER)) as passed_in_instruction_at,
+    timestamp_seconds(cast( processed_at / power(10,9) as INTEGER)) as processed_at,
     application_motivation,
     instructors,
     applicant_department,
     applicant_postal_code
     {% endif %}
-FROM `{{ bigquery_clean_dataset }}.dms_{{ params.target }}`
+FROM  `{{ bigquery_raw_dataset }}.raw_dms_{{ params.target }}`
 QUALIFY ROW_NUMBER() OVER (PARTITION BY application_number ORDER BY update_date DESC, last_update_at DESC) = 1

@@ -141,7 +141,7 @@ with DAG(
             "dms_export/dms_jeunes_{{ params.updated_since_jeunes }}.parquet"
         ],
         source_format="PARQUET",
-        destination_project_dataset_table=f"{BIGQUERY_RAW_DATASET}.dms_jeunes",
+        destination_project_dataset_table=f"{BIGQUERY_RAW_DATASET}.raw_dms_jeunes",
         schema_fields=[
             {"name": "procedure_id", "type": "STRING"},
             {"name": "application_id", "type": "STRING"},
@@ -166,7 +166,7 @@ with DAG(
         bucket=DATA_GCS_BUCKET_NAME,
         source_objects=["dms_export/dms_pro_{{ params.updated_since_pro }}.parquet"],
         source_format="PARQUET",
-        destination_project_dataset_table=f"{BIGQUERY_RAW_DATASET}.dms_pro",
+        destination_project_dataset_table=f"{BIGQUERY_RAW_DATASET}.raw_dms_pro",
         schema_fields=[
             {"name": "procedure_id", "type": "STRING"},
             {"name": "application_id", "type": "STRING"},

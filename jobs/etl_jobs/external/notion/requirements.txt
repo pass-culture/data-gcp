@@ -1,9 +1,9 @@
 pandas==1.3.5
-pandas_gbq
+pandas-gbq>=0.17.1
 requests==2.20.1
 google-cloud-secret-manager==2.2.0
 google-auth-oauthlib==0.4.6
 tqdm==4.58.0
-notion-client  
-notion2md
-typer
+notion-client==2.0.0  
+notion2md==2.8.3
+typer==0.7.0

@@ -1,7 +1,7 @@
 select 
-uo.offererid as offerer_id, 
+uo.offererId as offerer_id, 
 u.user_id,
-ROW_NUMBER() OVER(PARTITION BY uo.offererid ORDER BY COALESCE(u.user_creation_date, u.user_creation_date)) as user_affiliation_rank,    
+ROW_NUMBER() OVER(PARTITION BY uo.offererId ORDER BY COALESCE(u.user_creation_date, u.user_creation_date)) as user_affiliation_rank,    
 u.user_creation_date,
 COALESCE(
     CASE

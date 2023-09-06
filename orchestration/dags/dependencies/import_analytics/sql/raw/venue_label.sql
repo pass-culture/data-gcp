@@ -1,4 +1,4 @@
 SELECT
-    CAST("id" AS varchar(255))
-    , "label"
+    CAST("id" AS varchar(255)),
+    "label"
 FROM public.venue_label

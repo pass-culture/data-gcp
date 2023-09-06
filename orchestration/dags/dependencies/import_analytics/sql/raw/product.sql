@@ -1,5 +1,5 @@
 SELECT
-    "id" as id
-    , "name" as name
-    ,"thumbCount" as thumbCount
+    "id" AS id,
+    "name" AS name,
+    "thumbCount" AS thumbcount
 FROM public.product

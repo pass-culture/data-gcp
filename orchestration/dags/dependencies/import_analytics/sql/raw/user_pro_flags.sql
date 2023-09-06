@@ -1,4 +1,4 @@
-SELECT 
-    CAST("userId" AS varchar(255)) as userId,
-    firebase  
-FROM public.user_pro_flags 
+SELECT
+    CAST("userId" AS varchar(255)) AS USERID,
+    FIREBASE
+FROM PUBLIC.USER_PRO_FLAGS

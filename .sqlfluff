@@ -1,0 +1,10 @@
+[sqlfluff]
+dialect = bigquery
+templater = jinja
+exclude_rules = convention.quoted_literals, structure.column_order
+
+[sqlfluff:indentation]
+indented_joins = false
+
+[sqlfluff:rules:layout.commas]
+line_position = leading

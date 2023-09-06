@@ -1,6 +1,7 @@
 SELECT
     user_id
     , session_id
+    , unique_session_id
     , event_date
     , event_timestamp
     , app_version

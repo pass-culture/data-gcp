@@ -2,10 +2,11 @@
 SELECT DISTINCT
     user_pseudo_id
     , session_id
-    , FIRST_VALUE(event_date)OVER(PARTITION BY user_pseudo_id, session_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS first_event_date
-    , LAST_VALUE(traffic_campaign) OVER(PARTITION BY user_pseudo_id, session_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS traffic_campaign
-    , LAST_VALUE(traffic_source) OVER(PARTITION BY user_pseudo_id, session_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS traffic_source
-    , LAST_VALUE(traffic_medium) OVER(PARTITION BY user_pseudo_id, session_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS traffic_medium
+    , unique_session_id
+    , FIRST_VALUE(event_date)OVER(PARTITION BY unique_session_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS first_event_date
+    , LAST_VALUE(traffic_campaign) OVER(PARTITION BY unique_session_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS traffic_campaign
+    , LAST_VALUE(traffic_source) OVER(PARTITION BY unique_session_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS traffic_source
+    , LAST_VALUE(traffic_medium) OVER(PARTITION BY unique_session_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS traffic_medium
 FROM `{{ bigquery_analytics_dataset }}.firebase_events` AS firebase_events
 WHERE  session_id IS NOT NULL
 AND event_name NOT IN (

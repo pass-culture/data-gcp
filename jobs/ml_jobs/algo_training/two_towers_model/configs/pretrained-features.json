@@ -16,11 +16,11 @@
       "item_mean_stock_price": {"type": "int", "embedding_size": 2},
       "item_booking_cnt": {"type": "int", "embedding_size": 2},
       "item_favourite_cnt": {"type": "int", "embedding_size": 2},
-      "item_image_embedding_optim_image": {
+      "item_image_embedding": {
         "type": "pretrained",
         "embedding_size": 16
       },	
-      "item_semantic_embedding_content_hybrid": {
+      "item_semantic_content_hybrid_embedding": {
         "type": "pretrained",
         "embedding_size": 16
       }	

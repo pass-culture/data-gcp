@@ -14,9 +14,11 @@ from google.oauth2 import id_token
 from common.alerts import task_fail_slack_alert
 from common.operators.biquery import bigquery_job_task
 
+
 from common.config import (
     DATA_GCS_BUCKET_NAME,
     BIGQUERY_CLEAN_DATASET,
+    BIGQUERY_RAW_DATASET,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     DAG_FOLDER,
@@ -29,10 +31,7 @@ from common.operators.gce import (
     SSHGCEOperator,
 )
 
-from dependencies.dms_subscriptions.import_dms_subscriptions import (
-    parse_api_result,
-    ANALYTICS_TABLES,
-)
+from dependencies.dms_subscriptions.import_dms_subscriptions import CLEAN_TABLES
 from common import macros
 from common.utils import get_airflow_schedule
 
@@ -86,7 +85,7 @@ with DAG(
         task_id="fetch_code",
         instance_name=GCE_INSTANCE,
         command="{{ params.branch }}",
-        python_version="3.10",
+        python_version="3.8",
         retries=2,
     )
 
@@ -117,24 +116,22 @@ with DAG(
         do_xcom_push=True,
     )
 
-    parse_api_result_jeunes = PythonOperator(
+    parse_api_result_jeunes = SSHGCEOperator(
         task_id="parse_api_result_jeunes",
-        python_callable=parse_api_result,
-        op_args=[
-            "{{ params.updated_since_jeunes }}",
-            "jeunes",
-        ],
-        dag=dag,
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_PATH,
+        command="python parse_dms_subscriptions_to_tabular.py --target jeunes --updated-since {{ params.updated_since_jeunes }} "
+        + f"--bucket-name {DATA_GCS_BUCKET_NAME} --project-id {GCP_PROJECT_ID}",
+        do_xcom_push=True,
     )
 
-    parse_api_result_pro = PythonOperator(
+    parse_api_result_pro = SSHGCEOperator(
         task_id="parse_api_result_pro",
-        python_callable=parse_api_result,
-        op_args=[
-            "{{ params.updated_since_pro }}",
-            "pro",
-        ],
-        dag=dag,
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_PATH,
+        command="python parse_dms_subscriptions_to_tabular.py --target pro --updated-since {{ params.updated_since_pro }} "
+        + f"--bucket-name {DATA_GCS_BUCKET_NAME} --project-id {GCP_PROJECT_ID}",
+        do_xcom_push=True,
     )
 
     import_dms_jeunes_to_bq = GCSToBigQueryOperator(
@@ -144,22 +141,22 @@ with DAG(
             "dms_export/dms_jeunes_{{ params.updated_since_jeunes }}.parquet"
         ],
         source_format="PARQUET",
-        destination_project_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.dms_jeunes",
+        destination_project_dataset_table=f"{BIGQUERY_RAW_DATASET}.raw_dms_jeunes",
         schema_fields=[
             {"name": "procedure_id", "type": "STRING"},
             {"name": "application_id", "type": "STRING"},
             {"name": "application_number", "type": "STRING"},
             {"name": "application_archived", "type": "STRING"},
             {"name": "application_status", "type": "STRING"},
-            {"name": "last_update_at", "type": "TIMESTAMP"},
-            {"name": "application_submitted_at", "type": "TIMESTAMP"},
-            {"name": "passed_in_instruction_at", "type": "TIMESTAMP"},
-            {"name": "processed_at", "type": "TIMESTAMP"},
+            {"name": "last_update_at", "type": "INT64"},
+            {"name": "application_submitted_at", "type": "INT64"},
+            {"name": "passed_in_instruction_at", "type": "INT64"},
+            {"name": "processed_at", "type": "INT64"},
             {"name": "application_motivation", "type": "STRING"},
             {"name": "instructors", "type": "STRING"},
             {"name": "applicant_department", "type": "STRING"},
             {"name": "applicant_postal_code", "type": "STRING"},
-            {"name": "update_date", "type": "TIMESTAMP"},
+            {"name": "update_date", "type": "INT64"},
         ],
         write_disposition="WRITE_APPEND",
     )
@@ -169,17 +166,17 @@ with DAG(
         bucket=DATA_GCS_BUCKET_NAME,
         source_objects=["dms_export/dms_pro_{{ params.updated_since_pro }}.parquet"],
         source_format="PARQUET",
-        destination_project_dataset_table=f"{BIGQUERY_CLEAN_DATASET}.dms_pro",
+        destination_project_dataset_table=f"{BIGQUERY_RAW_DATASET}.raw_dms_pro",
         schema_fields=[
             {"name": "procedure_id", "type": "STRING"},
             {"name": "application_id", "type": "STRING"},
             {"name": "application_number", "type": "STRING"},
             {"name": "application_archived", "type": "STRING"},
             {"name": "application_status", "type": "STRING"},
-            {"name": "last_update_at", "type": "TIMESTAMP"},
-            {"name": "application_submitted_at", "type": "TIMESTAMP"},
-            {"name": "passed_in_instruction_at", "type": "TIMESTAMP"},
-            {"name": "processed_at", "type": "TIMESTAMP"},
+            {"name": "last_update_at", "type": "INT64"},
+            {"name": "application_submitted_at", "type": "INT64"},
+            {"name": "passed_in_instruction_at", "type": "INT64"},
+            {"name": "processed_at", "type": "INT64"},
             {"name": "application_motivation", "type": "STRING"},
             {"name": "instructors", "type": "STRING"},
             {"name": "demandeur_siret", "type": "STRING"},
@@ -198,15 +195,15 @@ with DAG(
             {"name": "academie_groupe_instructeur", "type": "STRING"},
             {"name": "domaines", "type": "STRING"},
             {"name": "erreur_traitement_pass_culture", "type": "STRING"},
-            {"name": "update_date", "type": "TIMESTAMP"},
+            {"name": "update_date", "type": "INT64"},
         ],
         write_disposition="WRITE_APPEND",
     )
 
-    analytics_tasks = []
-    for table, params in ANALYTICS_TABLES.items():
+    cleaning_tasks = []
+    for table, params in CLEAN_TABLES.items():
         task = bigquery_job_task(table=table, dag=dag, job_params=params)
-        analytics_tasks.append(task)
+        cleaning_tasks.append(task)
 
     end = DummyOperator(task_id="end")
 
@@ -225,14 +222,14 @@ with DAG(
     dms_to_gcs_jeunes
     >> parse_api_result_jeunes
     >> import_dms_jeunes_to_bq
-    >> analytics_tasks[0]
+    >> cleaning_tasks[0]
     >> end
 )
 (
     dms_to_gcs_pro
     >> parse_api_result_pro
     >> import_dms_pro_to_bq
-    >> analytics_tasks[1]
+    >> cleaning_tasks[1]
     >> end
 )
 (end >> gce_instance_stop)

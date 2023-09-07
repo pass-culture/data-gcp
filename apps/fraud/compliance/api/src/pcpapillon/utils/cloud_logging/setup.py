@@ -8,7 +8,7 @@ from pcpapillon.utils.env_vars import API_LOCAL
 
 
 def setup_logging():
-    if API_LOCAL == "True":
+    if API_LOCAL:
         api_logger = logging.getLogger("uvicorn")
     else:
         client = google.cloud.logging.Client()

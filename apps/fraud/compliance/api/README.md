@@ -56,7 +56,14 @@ Le dossier contient:
 
 ## Déploiement local
 **Pour tester l'API en local**
+- Telecharger le model en local
+```
+mkdir ./src/pcpapillon/local_model
+gsutil cp <GSC_PATH> ./src/pcpapillon/local_model/
+```
+Vous pouvez trouver le GSC_PATH sur MLflow
 ``` 
+export API_LOCAL=True
 cd apps/fraud/validation/api/src/
 uvicorn main:app --reload
 ```

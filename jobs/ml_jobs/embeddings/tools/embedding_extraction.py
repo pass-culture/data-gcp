@@ -32,7 +32,7 @@ def extract_embedding(
     for feature in params["features"]:
         for model_type in feature["model"]:
             model = MODEL_DICT[model_type]
-            emb_name_suffix='' if model_type !='hybrid' else '_hybrid'
+            emb_name_suffix = "" if model_type != "hybrid" else "_hybrid"
             emb_col_name = f"""{feature["name"]}{emb_name_suffix}_embedding"""
             if feature["type"] == "image":
                 df_encoded[emb_col_name] = encode_img_from_path(

@@ -10,17 +10,17 @@
 mediation AS (
     SELECT
         offer_id,
-        humanize_id(id) as mediation_humanized_id
+        humanize_id(id) AS mediation_humanized_id
     FROM
         (
             SELECT
                 id,
-                offerId as offer_id,
+                offerId AS offer_id,
                 ROW_NUMBER() OVER (
                     PARTITION BY offerId
                     ORDER BY
                         dateModifiedAtLastProvider DESC
-                ) as rnk
+                ) AS rnk
             FROM
                 `{{ bigquery_analytics_dataset }}`.applicative_database_mediation
             WHERE
@@ -37,21 +37,21 @@ SELECT
             o.offer_name is null
             or o.offer_name = 'NaN'
         ) then "None"
-        else safe_cast(o.offer_name as STRING)
-    END as offer_name,
+        else safe_cast(o.offer_name AS STRING)
+    END AS name,
     CASE
         when (
             o.offer_description is null
             or o.offer_description = 'NaN'
         ) then "None"
-        else safe_cast(o.offer_description as STRING)
-    END as offer_description,
+        else safe_cast(o.offer_description AS STRING)
+    END AS description,
     enriched_item_metadata.subcategory_id AS subcategory_id,
-    enriched_item_metadata.category_id as category,
-    enriched_item_metadata.offer_type_id,
-    enriched_item_metadata.offer_type_label,
-    enriched_item_metadata.offer_sub_type_id,
-    enriched_item_metadata.offer_sub_type_label,
+    enriched_item_metadata.category_id AS category,
+    enriched_item_metadata.offer_type_id AS type_id,
+    enriched_item_metadata.offer_type_label AS type_label,
+    enriched_item_metadata.offer_sub_type_id AS sub_type_id,
+    enriched_item_metadata.offer_sub_type_label AS sub_type_label,
     offer_extracted_data.author,
     offer_extracted_data.performer,
     CASE

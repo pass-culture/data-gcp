@@ -1,25 +1,25 @@
 {
     "features": [
         {
-            "name": "offer_name",
+            "name": "name",
             "type": "text",
             "model":["optim_text"]
         },
         {
-            "name": "offer_description",
+            "name": "description",
             "type": "text",
             "model": ["optim_text"]
         },
         {
-            "name": "offer_semantic_content",
-            "content":["offer_name","offer_description","offer_type_label","offer_sub_type_label","author","performer"],
+            "name": "semantic_content",
+            "content":["name","description","type_label","sub_type_label","author","performer"],
             "type": "macro_text",
             "model":["optim_text","hybrid"]
         },
         {
-            "name": "offer_image",
+            "name": "image",
             "type": "image",
-            "model":["optim_image","hybrid"]
+            "model":["optim_image"]
         }
     ],
     "models":{

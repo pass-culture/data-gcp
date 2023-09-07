@@ -18,6 +18,7 @@ display_and_convert AS (
 SELECT
     display_data.user_id
     , display_data.session_id
+    , display_data.unique_session_id
     , display_data.event_timestamp
     , display_data.event_date
     , enriched_user_data.user_current_deposit_type
@@ -31,12 +32,11 @@ SELECT
     , COUNT(DISTINCT CASE WHEN convert_data.event_name = 'BookingConfirmation' THEN convert_data.offer_id ELSE NULL END) AS nb_offers_booked
     , SUM(CASE WHEN convert_data.event_name = 'BookingConfirmation' THEN delta_diversification ELSE NULL END) AS diversification_score
 FROM display_data
-LEFT JOIN convert_data ON display_data.session_id = convert_data.session_id
-                        AND display_data.user_id = convert_data.user_id
+LEFT JOIN convert_data ON display_data.unique_session_id = convert_data.unique_session_id
                         AND display_data.offer_id = convert_data.similar_offer_id
 LEFT JOIN `{{ bigquery_analytics_dataset }}.diversification_booking` AS diversification_booking ON diversification_booking.booking_id = convert_data.booking_id
 JOIN `{{ bigquery_analytics_dataset }}.enriched_user_data` AS enriched_user_data ON enriched_user_data.user_id = display_data.user_id
-GROUP BY 1,2,3,4,5,6,7,8,9,10,11
+GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
 ),
 
 data_and_lags AS ( -- Déterminer si un utilisateur a consulté une offre X, vu l'algo d'offres similaires A, consulté depuis A une offre Y, vu l'algo B et consulté depuis B une offre Z

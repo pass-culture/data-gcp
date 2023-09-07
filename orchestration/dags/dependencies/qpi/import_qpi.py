@@ -34,6 +34,7 @@ CLEAN_TABLES = {
         "destination_dataset": "{{ bigquery_clean_dataset }}",
         "destination_table": "qpi_answers_historical_clean",
         "trigger_rule": "none_failed_or_skipped",
+        "load_table": False,
     },
     "qpi_answers_v4_clean": {
         "sql": f"{SQL_CLEAN_PATH}/qpi_answers_v4_clean.sql",

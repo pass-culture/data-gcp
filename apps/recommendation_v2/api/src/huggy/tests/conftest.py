@@ -549,7 +549,7 @@ def create_past_recommended_offers(engine):
 
 
 def create_iris_france(engine, connection):
-    iris_france = pd.read_csv("./src/tests/iris_france_tests.csv")
+    iris_france = pd.read_csv("./src/huggy/tests/iris_france_tests.csv")
     iris_france.to_sql("iris_france", con=engine, if_exists="replace", index=False)
     sql = """ALTER TABLE public.iris_france
             ALTER COLUMN shape TYPE Geometry(GEOMETRY, 4326)

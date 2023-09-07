@@ -52,6 +52,16 @@ WITH temp_firebase_events AS (
             where
                 event_params.key = 'ga_session_id'
         ) as session_id,
+        CONCAT(user_pseudo_id, '-',
+                (
+            select
+                event_params.value.int_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'ga_session_id'
+                )
+         ) AS unique_session_id,
         (
             select
                 event_params.value.string_value

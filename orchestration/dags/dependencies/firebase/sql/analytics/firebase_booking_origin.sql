@@ -4,6 +4,7 @@ WITH firebase_bookings AS (
     , event_date AS booking_date
     , event_timestamp AS booking_timestamp
     , session_id AS booking_session_id
+    , unique_session_id AS booking_unique_session_id
     , offer_id
     , booking_id
     , platform
@@ -45,6 +46,7 @@ WITH firebase_bookings AS (
     , booking_date
     , booking_timestamp
     , booking_session_id
+    , booking_unique_session_id
     , reco_call_id
     , firebase_bookings.offer_id
     , booking_id
@@ -71,6 +73,7 @@ WITH firebase_bookings AS (
     , booking_date
     , booking_timestamp
     , booking_session_id
+    , booking_unique_session_id
     , reco_call_id
     , firebase_bookings.offer_id
     , booking_id
@@ -96,6 +99,7 @@ WITH firebase_bookings AS (
   , first_t.booking_date
   , first_t.booking_timestamp
   , first_t.booking_session_id
+  , first_t.booking_unique_session_id
   , first_t.reco_call_id
   , first_t.offer_id
   , first_t.booking_id
@@ -127,6 +131,7 @@ SELECT
   , booking_date
   , booking_timestamp
   , booking_session_id
+  , booking_unique_session_id
   , reco_call_id
   , offer_id
   , booking_id

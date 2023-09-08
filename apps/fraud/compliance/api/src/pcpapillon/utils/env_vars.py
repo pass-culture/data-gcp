@@ -20,6 +20,7 @@ GCP_PROJECT = os.environ.get("GCP_PROJECT", "passculture-data-ehp")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 # API_LOCAL is string to match terraform boolean handling
 API_LOCAL = os.environ.get("API_LOCAL", False)
+isAPI_LOCAL = True if API_LOCAL == "True" else False
 # API
 API_SECRET_KET_SECRET_ID = os.environ.get(
     "API_SECRET_KET_SECRET_ID", "api-papillon-auth-secret-key-dev"

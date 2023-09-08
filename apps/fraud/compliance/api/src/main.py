@@ -16,7 +16,7 @@ from pcpapillon.utils.data_model import (
     ComplianceOutput,
 )
 from pcpapillon.utils.env_vars import (
-    API_LOCAL,
+    isAPI_LOCAL,
     LOGIN_TOKEN_EXPIRATION,
     cloud_trace_context,
     users_db,
@@ -46,7 +46,7 @@ model_config = config_handler.get_config_by_name_and_type("model", "default")
 model_handler = ModelHandler(model_config)
 custom_logger.info("load_compliance_model..")
 model_loaded = model_handler.get_model_by_name(
-    name="compliance", type="default" if not API_LOCAL else "local"
+    name="compliance", type="local" if isAPI_LOCAL else "default"
 )
 custom_logger.info("load_preproc_model..")
 prepoc_models = {}

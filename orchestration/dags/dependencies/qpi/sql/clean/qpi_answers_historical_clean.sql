@@ -10,7 +10,7 @@ with qpi_v1 as (
         , subcat.category_id as category_id
         ,'none' as subcategory_id 
     from unpivot_qpi uqpi
-    join `{{ bigquery_analytics_dataset }}.subcategories` subcat 
+    join `{{ bigquery_clean_dataset }}.subcategories` subcat 
     ON lower(subcat.category_id)=uqpi.categories
     where answers 
     and user_id is not null
@@ -28,7 +28,7 @@ qpi_v2 as (
         , cast(null as timestamp) as submitted_at
         , subcat.category_id as category_id
         ,'none' as subcategory_id from unpivot_qpi uqpi
-    join `{{ bigquery_analytics_dataset }}.subcategories` subcat 
+    join `{{ bigquery_clean_dataset }}.subcategories` subcat 
     ON lower(subcat.category_id)=uqpi.categories
     where answers 
     and user_id is not null
@@ -92,7 +92,7 @@ qpi_v3 as(
         , subcat.category_id as category_id
         , uqpi.subcategory_id 
     from unpivot_qpi uqpi
-    join `{{ bigquery_analytics_dataset }}.subcategories` subcat 
+    join `{{ bigquery_clean_dataset }}.subcategories` subcat 
     ON subcat.id=uqpi.subcategory_id
     where uqpi.answers
 )

@@ -4,11 +4,11 @@ import google.cloud.logging
 from fastapi.logger import logger
 from pcpapillon.utils.cloud_logging.filter import GoogleCloudLogFilter
 from pcpapillon.utils.cloud_logging.logger import CustomLogger
-from pcpapillon.utils.env_vars import API_LOCAL
+from pcpapillon.utils.env_vars import isAPI_LOCAL
 
 
 def setup_logging():
-    if API_LOCAL == "True":
+    if isAPI_LOCAL:
         api_logger = logging.getLogger("uvicorn")
     else:
         client = google.cloud.logging.Client()

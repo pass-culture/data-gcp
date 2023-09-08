@@ -21,7 +21,7 @@ airflow.cfg
 unittests.cfg
 credentials/
 apps/recommendation/api/src/locustfile.py
+*.cb
 apps/recommendation_v2/api/src/locustfile.py
-
 # venv
 data-gcp-api

@@ -6,7 +6,7 @@ with qpi_v1 as (
     )
     SELECT 
         uqpi.user_id
-        , null as submitted_at
+        , cast(null as timestamp) as submitted_at
         , subcat.category_id as category_id
         ,'none' as subcategory_id 
     from unpivot_qpi uqpi
@@ -25,7 +25,7 @@ qpi_v2 as (
 )
     select 
         uqpi.user_id
-        , null as submitted_at
+        , cast(null as timestamp) as submitted_at
         , subcat.category_id as category_id
         ,'none' as subcategory_id from unpivot_qpi uqpi
     join `{{ bigquery_analytics_dataset }}.subcategories` subcat 

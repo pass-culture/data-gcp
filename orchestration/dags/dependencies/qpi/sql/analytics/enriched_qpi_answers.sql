@@ -1,10 +1,10 @@
-qpi_v4 as (
+WITH qpi_v4 as (
   SELECT 
     user_id
     , submitted_at
     , subcat.category_id
     , subcategories as subcategory_id
-FROM `{{ bigquery_clean_dataset }}.qpi_answers_v4` uqpi
+FROM `{{ bigquery_clean_dataset }}.qpi_answers_v4_clean` uqpi
 join `{{ bigquery_analytics_dataset }}.subcategories` subcat
 ON subcat.id=uqpi.subcategories
 )

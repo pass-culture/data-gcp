@@ -4,10 +4,12 @@ from scripts.import_adage import (
 )
 
 
-def run(request):
-    """The Cloud Function entrypoint."""
+def run():
     import_adage()
 
     get_adage_stats()
 
     return "Success"
+
+
+run()

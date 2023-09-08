@@ -10,6 +10,7 @@ from mapping import (
     APP_REPORT,
     APP_REPORT_MAPPING,
 )
+import typer
 
 APPS = {"ios": IOS_APP_ID, "android": ANDROID_APP_ID}
 
@@ -71,29 +72,21 @@ def date_minus_n_days(current_date, n_days):
     return current_date - timedelta(days=n_days)
 
 
-def run(request):
+def run(
+    n_days: int = typer.Option(
+        ...,
+        help="Nombre de jours",
+    ),
+    table_name: str = typer.Option(
+        ...,
+        help="Nom de la table à importer",
+    ),
+):
     _default = default_date()
-    try:
-        n_days = request.get_json().get("n_days", None)
-        table_names = [request.get_json().get("table_name", None)]
-    except:
-        table_names = ["activity_report", "daily_report", "in_app_event_report"]
-        n_days = 5
-
-    try:
-        end_date = request.get_json().get("execution_date", None)
-        if end_date is None:
-
-            end_date = _default.strftime("%Y-%m-%d")
-            start_date = date_minus_n_days(_default, n_days).strftime("%Y-%m-%d")
-        else:
-            start_date = date_minus_n_days(
-                datetime.strptime(end_date, "%Y-%m-%d"), n_days
-            ).strftime("%Y-%m-%d")
-
-    except:
-        end_date = _default.strftime("%Y-%m-%d")
-        start_date = date_minus_n_days(_default, n_days).strftime("%Y-%m-%d")
+    n_days = n_days
+    table_names = [table_name]
+    end_date = _default.strftime("%Y-%m-%d")
+    start_date = date_minus_n_days(_default, n_days).strftime("%Y-%m-%d")
 
     import_app = ImportAppsFlyer(start_date, end_date)
     if "activity_report" in table_names:
@@ -128,3 +121,7 @@ def run(request):
         )
 
     return "Success"
+
+
+if __name__ == "__main__":
+    typer.run(run)

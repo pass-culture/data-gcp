@@ -1,5 +1,5 @@
 import pandas as pd
-import requests
+import typer
 from utils import (
     DATA_CENTER,
     DIRECTORY_ID,
@@ -19,17 +19,22 @@ ir_surveys_mapping = {
 }
 
 
-def run(request):
+def run(
+    task: str = typer.Option(
+        ...,
+        help="Nom de la tache",
+    )
+):
 
-    request_json = request.get_json(silent=True)
-    request_args = request.args
+    # request_json = request.get_json(silent=True)
+    # request_args = request.args
 
-    if request_json and "task" in request_json:
-        task = request_json["task"]
-    elif request_args and "task" in request_args:
-        task = request_args["task"]
-    else:
-        raise RuntimeError("You need to provide a task argument.")
+    # if request_json and "task" in request_json:
+    #     task = request_json["task"]
+    # elif request_args and "task" in request_args:
+    #     task = request_args["task"]
+    # else:
+    #     raise RuntimeError("You need to provide a task argument.")
 
     if task == "import_opt_out_users":
         import_qualtrics_opt_out(
@@ -65,3 +70,7 @@ def run(request):
         )
 
     return "Success"
+
+
+if __name__ == "__main__":
+    typer.run(run)

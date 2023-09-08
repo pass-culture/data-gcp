@@ -2,9 +2,9 @@ import os
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import secretmanager
 
-BIGQUERY_RAW_DATASET = os.environ.get("RAW_DATASET")
-ENV_SHORT_NAME = os.environ.get("ENVIRONMENT_SHORT_NAME")
-GCP_PROJECT = os.environ.get("PROJECT_NAME")
+GCP_PROJECT = os.environ.get("GCP_PROJECT")
+ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
+BIGQUERY_RAW_DATASET = f"raw_{ENV_SHORT_NAME}"
 
 
 def access_secret_data(project_id, secret_id, version_id="latest", default=None):

@@ -63,8 +63,9 @@ SELECT DISTINCT
     , COUNT(DISTINCT CASE WHEN event_name = 'HasAddedOfferToFavorites' THEN offer_id ELSE NULL END) OVER (PARTITION BY search_id, user_id, user_pseudo_id) AS nb_offers_added_to_favorites
     , COUNT( CASE WHEN event_name = 'NoSearchResult' THEN 1 ELSE NULL END) OVER (PARTITION BY search_id, user_id, user_pseudo_id ) AS nb_no_search_result
     , COUNT( CASE WHEN event_name = 'PerformSearch' THEN 1 ELSE NULL END) OVER (PARTITION BY search_id, user_id, user_pseudo_id ) AS nb_iterations_search
-FROM `{{ bigquery_analytics_dataset }}`.firebase_events
-WHERE event_name IN ('PerformSearch', 'NoSearchResult','ConsultOffer','HasAddedOfferToFavorites')
+    , COUNT( CASE WHEN event_name = 'VenuePlaylistDisplayedOnSearchResults' THEN 1 ELSE NULL END) OVER (PARTITION BY search_id, user_id, user_pseudo_id ) AS nb_venue_playlist_displayed_on_search_results
+    FROM `{{ bigquery_analytics_dataset }}`.firebase_events
+WHERE event_name IN ('PerformSearch', 'NoSearchResult','ConsultOffer','HasAddedOfferToFavorites','VenuePlaylistDisplayedOnSearchResults')
 AND event_date > '2023-01-01'
 AND search_id IS NOT NULL
 )

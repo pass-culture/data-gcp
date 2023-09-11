@@ -1,6 +1,7 @@
 import requests
 import numpy as np
 from PIL import Image
+import io
 
 
 def extract_embedding(data, params, prepoc_models):
@@ -15,14 +16,14 @@ def extract_embedding(data, params, prepoc_models):
     [
         {"name": "offer_name", "type": "text"},
         {"name": "offer_description", "type": "text"},
-        {"name": "offer_image", "type": "image"},
+        {"name": "image_url", "type": "image"},
     ]
     """
     for feature in params:
         if feature["type"] == "image":
             model = prepoc_models[feature["type"]]
             url = data[feature["name"]]
-            data[f"""{feature["name"]}_embedding"""] = _encode_img_from_url(model, url)
+            data["image_embedding"] = _encode_img_from_url(model, url)
             try:
                 del data[feature["name"]]
             except KeyError:
@@ -31,6 +32,7 @@ def extract_embedding(data, params, prepoc_models):
             model = prepoc_models[feature["type"]]
             embedding = model.encode(data[feature["name"]])
             data[f"""{feature["name"]}_embedding"""] = embedding
+
     return data
 
 

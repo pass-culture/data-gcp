@@ -9,7 +9,6 @@ from pcpapillon.core.predict import get_prediction_and_main_contribution
 from pcpapillon.core.preprocess import preprocess
 from pcpapillon.utils.cloud_logging.setup import setup_logging
 from pcpapillon.utils.data_model import (
-    Config,
     Item,
     Token,
     User,
@@ -17,12 +16,13 @@ from pcpapillon.utils.data_model import (
     ComplianceOutput,
 )
 from pcpapillon.utils.env_vars import (
-    API_PARAMS,
+    isAPI_LOCAL,
     LOGIN_TOKEN_EXPIRATION,
     cloud_trace_context,
     users_db,
 )
 from pcpapillon.utils.model_handler import ModelHandler
+from pcpapillon.utils.config_handler import ConfigHandler
 from pcpapillon.utils.security import (
     authenticate_user,
     create_access_token,
@@ -40,13 +40,17 @@ async def setup_trace(request: Request):
 
 
 custom_logger = setup_logging()
-model_handler = ModelHandler()
-api_config = Config.from_dict(API_PARAMS)
+config_handler = ConfigHandler()
+api_config = config_handler.get_config_by_name_and_type("API", "default")
+model_config = config_handler.get_config_by_name_and_type("model", "default")
+model_handler = ModelHandler(model_config)
 custom_logger.info("load_compliance_model..")
-model_loaded = model_handler.get_model_by_name("compliance")
+model_loaded = model_handler.get_model_by_name(
+    name="compliance", type="local" if isAPI_LOCAL else "default"
+)
 custom_logger.info("load_preproc_model..")
 prepoc_models = {}
-for feature_type in api_config.pre_trained_model_for_embedding_extraction.keys():
+for feature_type in model_config.pre_trained_model_for_embedding_extraction.keys():
     prepoc_models[feature_type] = model_handler.get_model_by_name(feature_type)
 
 
@@ -62,9 +66,7 @@ def read_root():
     dependencies=[Depends(setup_trace)],
 )
 @version(1, 0)
-def model_compliance_scoring(
-    item: Item, current_user: Annotated[User, Depends(get_current_active_user)]
-):
+def model_compliance_scoring(item: Item):
     start = time.time()
     log_extra_data = {
         "model_version": "default_model",
@@ -72,7 +74,7 @@ def model_compliance_scoring(
         "scoring_input": item.dict(),
     }
     custom_logger.info(prepoc_models)
-    pool, data_w_emb = preprocess(item.dict(), prepoc_models)
+    pool, data_w_emb = preprocess(api_config, model_config, item.dict(), prepoc_models)
     (
         proba_validation,
         proba_rejection,
@@ -100,7 +102,11 @@ def model_compliance_load(
     log_extra_data = {"model_params": model_params.dict()}
     custom_logger.info("Loading new model", extra=log_extra_data)
     global model_loaded
-    model_loaded = model_handler.get_model_by_name("compliance")
+    model_loaded = model_handler.get_model_by_name(model_params.name, model_params.type)
+    global model_config
+    model_config = config_handler.get_config_by_name_and_type(
+        "model", model_params.type
+    )
     custom_logger.info("Validation model updated", extra=log_extra_data)
     return model_params
 

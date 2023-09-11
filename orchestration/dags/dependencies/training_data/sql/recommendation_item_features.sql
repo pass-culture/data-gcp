@@ -13,8 +13,8 @@ ROUND(SUM(enroffer.booking_confirm_cnt), -1)            AS item_booking_cnt,
 ROUND(SUM(enroffer.favourite_cnt), -1)                  AS item_favourite_cnt,
 item_embeddings_reduced.name_embedding                   AS item_names_embedding_optim_text,
 item_embeddings_reduced.description_embedding	        AS item_descriptions_embedding_optim_text,
-item_embeddings_reduced.image_embedding         AS item_image_embedding_optim_image,
-item_embeddings_reduced.semantic_content_embedding_hybrid   AS item_semantic_embedding_content_hybrid,
+item_embeddings_reduced.image_embedding         AS item_image_embedding,
+item_embeddings_reduced.semantic_content_hybrid_embedding   AS item_semantic_content_hybrid_embedding,
 
 FROM `{{ bigquery_analytics_dataset }}`.enriched_offer_data enroffer
 INNER JOIN `{{ bigquery_clean_dataset }}`.`applicative_database_offer` offer

@@ -20,8 +20,8 @@ import matplotlib.pyplot as plt
 
 
 def evaluate(
-    experiment_name: str = typer.Option(
-        EXPERIMENT_NAME, help="Name of the experiment on MLflow"
+    model_name: str = typer.Option(
+        "compliance_default", help="Model name for the training"
     ),
     config_file_name: str = typer.Option(
         ...,
@@ -62,8 +62,9 @@ def evaluate(
     )
     client_id = get_secret("mlflow_client_id")
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
-    model_name = f"compliance_model_{ENV_SHORT_NAME}"
-    model = mlflow.catboost.load_model(model_uri=f"models:/{model_name}/latest")
+    model = mlflow.catboost.load_model(
+        model_uri=f"models:/{model_name}_{ENV_SHORT_NAME}/latest"
+    )
     metrics = model.eval_metrics(
         eval_pool,
         ["Accuracy", "BalancedAccuracy", "Precision", "Recall", "BalancedErrorRate"],
@@ -81,7 +82,7 @@ def evaluate(
     save_probability_distribution_plot(
         model, eval_pool, eval_data_labels, figure_folder
     )
-
+    experiment_name = f"{model_name}_v1.0_{ENV_SHORT_NAME}"
     experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
     with open(f"{MODEL_DIR}/{MLFLOW_RUN_ID_FILENAME}.txt", mode="r") as file:
         run_id = file.read()
@@ -89,9 +90,13 @@ def evaluate(
         mlflow.log_metrics(metrics)
         mlflow.log_artifacts(figure_folder, "probability_distribution")
     client = MlflowClient()
-    latest_version = client.get_latest_versions(model_name, stages=["None"])[0].version
+    latest_version = client.get_latest_versions(
+        f"{model_name}_{ENV_SHORT_NAME}", stages=["None"]
+    )[0].version
     client.transition_model_version_stage(
-        name=model_name, version=latest_version, stage="Production"
+        name=f"{model_name}_{ENV_SHORT_NAME}",
+        version=latest_version,
+        stage="Production",
     )
 
 

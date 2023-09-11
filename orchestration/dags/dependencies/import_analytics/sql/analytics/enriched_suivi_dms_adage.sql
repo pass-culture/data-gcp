@@ -72,9 +72,9 @@ SELECT
     , typeform_ranked.quels_sont_vos_domaines_d_intervention AS typeform_applicant_intervention_domain
     , typeform_ranked.quel_est_votre_type_de_structure AS typeform_applicant_type
 FROM
-    `{{ bigquery_analytics_dataset }}`.dms_pro AS dms_pro
+    `{{ bigquery_clean_dataset }}`.dms_pro_cleaned AS dms_pro
 LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offerer AS offerer 
-    ON dms_pro.demandeur_entreprise_siren = offerer.offerer_siren
+    ON dms_pro.demandeur_entreprise_siren = offerer.offerer_siren AND offerer.offerer_siren <> "nan"
 LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue
     ON venue.venue_managing_offerer_id = offerer.offerer_id 
     AND venue_name != 'Offre numérique'

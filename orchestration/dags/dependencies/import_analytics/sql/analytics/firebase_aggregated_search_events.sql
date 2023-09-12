@@ -1,4 +1,7 @@
-WITH consulted_from_search AS (
+DECLARE set_date DATE DEFAULT '2023-01-01';
+
+WITH
+consulted_from_search AS (
     SELECT
         user_pseudo_id
         , user_id
@@ -8,7 +11,7 @@ WITH consulted_from_search AS (
         , event_timestamp AS consult_timestamp
         , event_date AS consult_date
     FROM `{{ bigquery_analytics_dataset }}`.firebase_events
-    WHERE event_date > '2023-01-01'
+    WHERE event_date > set_date
     AND event_name = 'ConsultOffer'
     AND origin = 'search'
 ),
@@ -25,7 +28,7 @@ booked_from_search AS (
         ON consulted_from_search.user_pseudo_id = firebase_events.user_pseudo_id
         AND consulted_from_search.session_id = firebase_events.session_id
         AND consulted_from_search.offer_id = firebase_events.offer_id
-        AND event_date > '2023-01-01'
+        AND event_date > set_date
         AND event_name = 'BookingConfirmation'
         AND event_timestamp > consult_timestamp
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.diversification_booking 
@@ -67,7 +70,7 @@ SELECT DISTINCT
     , COUNT( DISTINCT CASE WHEN event_name = 'ConsultVenue' THEN venue_id ELSE NULL END) OVER (PARTITION BY search_id, user_id, user_pseudo_id ) AS nb_venues_consulted
     FROM `{{ bigquery_analytics_dataset }}`.firebase_events
 WHERE event_name IN ('PerformSearch', 'NoSearchResult','ConsultOffer','HasAddedOfferToFavorites','VenuePlaylistDisplayedOnSearchResults','ConsultVenue')
-AND event_date > '2023-01-01'
+AND event_date > set_date
 AND search_id IS NOT NULL
 )
 

@@ -185,7 +185,7 @@ venues_with_offers AS (
 
 SELECT
     offerer.offerer_id,
-    CASE WHEN related_venues.permanent_venue_cnt THEN CONCAT("offerer-", offerer.offerer_id)
+    CASE WHEN related_venues.permanent_venue_cnt IS NULL THEN CONCAT("offerer-", offerer.offerer_id)
          ELSE NULL END AS partner_id,
     offerer.offerer_name,
     offerer.offerer_creation_date,

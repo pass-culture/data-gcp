@@ -826,6 +826,7 @@ ENRICHED_STOCK_DATA_INPUT = {
             "venue_department_code": None,
             "venue_is_virtual": True,
             "venue_fields_updated": "{}",
+            "venue_is_permanent": True,
         }
     ],
 }
@@ -836,6 +837,7 @@ ENRICHED_STOCK_DATA_EXPECTED = [
         "offer_id": "3",
         "offer_name": "Test",
         "offerer_id": "3",
+        "partner_id": "4",
         "offer_subcategoryId": "SEANCE_CINE",
         "venue_department_code": None,
         "stock_creation_date": datetime(2019, 11, 1),
@@ -857,6 +859,7 @@ ENRICHED_STOCK_DATA_EXPECTED = [
         "offer_id": "2",
         "offer_name": "Test bis",
         "offerer_id": "3",
+        "partner_id": "4",
         "offer_subcategoryId": "LIVRE_PAPIER",
         "venue_department_code": None,
         "stock_creation_date": datetime(2019, 10, 1),

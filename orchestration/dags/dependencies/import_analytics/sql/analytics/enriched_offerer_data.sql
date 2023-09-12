@@ -162,6 +162,8 @@ related_venues AS (
     SELECT
         offerer.offerer_id,
         COUNT(venue.venue_id) AS venue_cnt
+        ,COUNT(CASE WHEN venue.venue_is_permanent IS TRUE 
+                THEN venue.venue_id ELSE NULL END) AS permanent_venue_cnt
     FROM
         `{{ bigquery_clean_dataset }}`.applicative_database_offerer AS offerer
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue ON offerer.offerer_id = venue.venue_managing_offerer_id
@@ -183,7 +185,8 @@ venues_with_offers AS (
 
 SELECT
     offerer.offerer_id,
-    CONCAT("offerer-",offerer.offerer_id) AS partner_id,
+    CASE WHEN related_venues.permanent_venue_cnt THEN CONCAT("offerer-", offerer.offerer_id)
+         ELSE NULL END AS partner_id,
     offerer.offerer_name,
     offerer.offerer_creation_date,
     offerer.offerer_validation_date,

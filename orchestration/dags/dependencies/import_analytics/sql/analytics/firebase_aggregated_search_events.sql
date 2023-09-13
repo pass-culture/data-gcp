@@ -49,8 +49,8 @@ bookings_per_search_id AS (
         , unique_search_id
         , user_pseudo_id
         , session_id
-        , COUNT(DISTINCT offer_id) OVER(PARTITION BY search_id, user_pseudo_id, session_id) AS nb_offers_booked
-        , SUM(delta_diversification) OVER(PARTITION BY search_id, user_pseudo_id, session_id) AS total_diversification
+        , COUNT(DISTINCT offer_id) OVER(PARTITION BY unique_search_id) AS nb_offers_booked
+        , SUM(delta_diversification) OVER(PARTITION BY unique_search_id) AS total_diversification
     FROM booked_from_search
 ),
 agg_search_data AS (
@@ -60,25 +60,25 @@ SELECT DISTINCT
     , user_id
     , user_pseudo_id
     , app_version
-    , LAST_VALUE(session_id) OVER (PARTITION BY unique_search_id, user_id, user_pseudo_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS session_id
-    , LAST_VALUE(query IGNORE NULLS) OVER (PARTITION BY unique_search_id, user_id, user_pseudo_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS query_input
-    , MIN(event_date) OVER (PARTITION BY unique_search_id, user_id, user_pseudo_id) AS first_date
-    , MIN(event_timestamp)OVER (PARTITION BY unique_search_id, user_id, user_pseudo_id) AS first_timestamp
-    , LAST_VALUE(search_type IGNORE NULLS ) OVER (PARTITION BY unique_search_id, user_id, user_pseudo_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS search_type
-    , LAST_VALUE(search_date_filter IGNORE NULLS ) OVER (PARTITION BY unique_search_id, user_id, user_pseudo_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS search_date_filter
-    , LAST_VALUE(search_location_filter IGNORE NULLS ) OVER (PARTITION BY unique_search_id, user_id, user_pseudo_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS search_location_filter
-    ,LAST_VALUE(search_categories_filter IGNORE NULLS) OVER (PARTITION BY unique_search_id, user_id, user_pseudo_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS  search_categories_filter
-    ,LAST_VALUE(search_genre_types_filter IGNORE NULLS) OVER (PARTITION BY unique_search_id, user_id, user_pseudo_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS  search_genre_types_filter
-    ,LAST_VALUE(search_max_price_filter IGNORE NULLS) OVER (PARTITION BY unique_search_id, user_id, user_pseudo_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS  search_max_price_filter
-    ,LAST_VALUE(search_is_autocomplete IGNORE NULLS) OVER (PARTITION BY unique_search_id, user_id, user_pseudo_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS  search_is_autocomplete
-    ,LAST_VALUE(search_offer_is_duo_filter IGNORE NULLS) OVER (PARTITION BY unique_search_id, user_id, user_pseudo_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) search_offer_is_duo_filter
-    ,LAST_VALUE(search_native_categories_filter IGNORE NULLS) OVER(PARTITION BY unique_search_id, user_id, user_pseudo_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) search_native_categories_filter
-    , COUNT(DISTINCT CASE WHEN event_name = 'ConsultOffer' THEN offer_id ELSE NULL END) OVER (PARTITION BY unique_search_id, user_id, user_pseudo_id) AS nb_offers_consulted
-    , COUNT(DISTINCT CASE WHEN event_name = 'HasAddedOfferToFavorites' THEN offer_id ELSE NULL END) OVER (PARTITION BY unique_search_id, user_id, user_pseudo_id) AS nb_offers_added_to_favorites
-    , COUNT( CASE WHEN event_name = 'NoSearchResult' THEN 1 ELSE NULL END) OVER (PARTITION BY unique_search_id, user_id, user_pseudo_id ) AS nb_no_search_result
-    , COUNT( CASE WHEN event_name = 'PerformSearch' THEN 1 ELSE NULL END) OVER (PARTITION BY unique_search_id, user_id, user_pseudo_id ) AS nb_iterations_search
-    , COUNT( CASE WHEN event_name = 'VenuePlaylistDisplayedOnSearchResults' THEN 1 ELSE NULL END) OVER (PARTITION BY unique_search_id, user_id, user_pseudo_id ) AS nb_venue_playlist_displayed_on_search_results
-    , COUNT( DISTINCT CASE WHEN event_name = 'ConsultVenue' THEN venue_id ELSE NULL END) OVER (PARTITION BY unique_search_id, user_id, user_pseudo_id ) AS nb_venues_consulted
+    , LAST_VALUE(session_id) OVER (PARTITION BY unique_search_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS session_id
+    , LAST_VALUE(query IGNORE NULLS) OVER (PARTITION BY unique_search_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS query_input
+    , MIN(event_date) OVER (PARTITION BY unique_search_id) AS first_date
+    , MIN(event_timestamp)OVER (PARTITION BY unique_search_id) AS first_timestamp
+    , LAST_VALUE(search_type IGNORE NULLS ) OVER (PARTITION BY unique_search_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS search_type
+    , LAST_VALUE(search_date_filter IGNORE NULLS ) OVER (PARTITION BY unique_search_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS search_date_filter
+    , LAST_VALUE(search_location_filter IGNORE NULLS ) OVER (PARTITION BY unique_search_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS search_location_filter
+    ,LAST_VALUE(search_categories_filter IGNORE NULLS) OVER (PARTITION BY unique_search_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS  search_categories_filter
+    ,LAST_VALUE(search_genre_types_filter IGNORE NULLS) OVER (PARTITION BY unique_search_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS  search_genre_types_filter
+    ,LAST_VALUE(search_max_price_filter IGNORE NULLS) OVER (PARTITION BY unique_search_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS  search_max_price_filter
+    ,LAST_VALUE(search_is_autocomplete IGNORE NULLS) OVER (PARTITION BY unique_search_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS  search_is_autocomplete
+    ,LAST_VALUE(search_offer_is_duo_filter IGNORE NULLS) OVER (PARTITION BY unique_search_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) search_offer_is_duo_filter
+    ,LAST_VALUE(search_native_categories_filter IGNORE NULLS) OVER(PARTITION BY unique_search_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) search_native_categories_filter
+    , COUNT(DISTINCT CASE WHEN event_name = 'ConsultOffer' THEN offer_id ELSE NULL END) OVER (PARTITION BY unique_search_id) AS nb_offers_consulted
+    , COUNT(DISTINCT CASE WHEN event_name = 'HasAddedOfferToFavorites' THEN offer_id ELSE NULL END) OVER (PARTITION BY unique_search_id) AS nb_offers_added_to_favorites
+    , COUNT( CASE WHEN event_name = 'NoSearchResult' THEN 1 ELSE NULL END) OVER (PARTITION BY unique_search_id ) AS nb_no_search_result
+    , COUNT( CASE WHEN event_name = 'PerformSearch' THEN 1 ELSE NULL END) OVER (PARTITION BY unique_search_id ) AS nb_iterations_search
+    , COUNT( CASE WHEN event_name = 'VenuePlaylistDisplayedOnSearchResults' THEN 1 ELSE NULL END) OVER (PARTITION BY unique_search_id ) AS nb_venue_playlist_displayed_on_search_results
+    , COUNT( DISTINCT CASE WHEN event_name = 'ConsultVenue' THEN venue_id ELSE NULL END) OVER (PARTITION BY unique_search_id ) AS nb_venues_consulted
     FROM `{{ bigquery_analytics_dataset }}`.firebase_events
 WHERE event_name IN ('PerformSearch', 'NoSearchResult','ConsultOffer','HasAddedOfferToFavorites','VenuePlaylistDisplayedOnSearchResults','ConsultVenue')
 AND event_date > set_date

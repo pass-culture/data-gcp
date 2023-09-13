@@ -1252,7 +1252,9 @@ ENRICHED_OFFERER_DATA_INPUT = {
             "collective_stock_price": 5,
         }
     ],
-    "applicative_database_venue": [{"venue_id": "1", "venue_managing_offerer_id": "1", "venue_is_permanent": False }],
+    "applicative_database_venue": [
+        {"venue_id": "1", "venue_managing_offerer_id": "1", "venue_is_permanent": False}
+    ],
     "applicative_database_venue_label": [],
     "region_department": [{"num_dep": "973", "region_name": "Guyane"}],
     "bookable_offer": [{"offer_id": 1, "offerer_id": 1}],

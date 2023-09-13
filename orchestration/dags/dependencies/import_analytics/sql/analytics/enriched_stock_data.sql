@@ -16,6 +16,8 @@ SELECT
     stock.offer_id,
     offer.offer_name,
     venue.venue_managing_offerer_id AS offerer_id,
+    CASE WHEN venue.venue_is_permanent IS TRUE THEN CONCAT("venue-",venue.venue_id)
+         ELSE CONCAT("offerer-",venue.venue_managing_offerer_id) END AS partner_id,
     offer.offer_subcategoryId,
     venue.venue_department_code,
     stock.stock_creation_date,

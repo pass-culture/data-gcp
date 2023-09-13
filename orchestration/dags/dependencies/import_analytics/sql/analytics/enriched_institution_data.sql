@@ -33,6 +33,7 @@ WITH ranked_deposit AS (
 first_deposit AS (
     SELECT
         institution_id,
+        ministry,
         deposit_creation_date AS first_deposit_creation_date
     FROM
         ranked_deposit
@@ -193,7 +194,7 @@ SELECT
     educational_institution.educational_institution_id AS institution_id,
     educational_institution.institution_id AS institution_external_id,
     institution_name AS institution_name,
-    current_deposit.ministry AS ministry,
+    first_deposit.ministry AS ministry,
     educational_institution.institution_type,
     region_department.academy_name AS institution_academie,
     region_department.region_name AS institution_region_name,

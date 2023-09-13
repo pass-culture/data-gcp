@@ -30,8 +30,8 @@ GROUP BY offer_item_ids.item_id,
         offer.offer_subcategoryId,
         item_names_embedding_optim_text,
         item_descriptions_embedding_optim_text,
-        item_image_embedding_optim_image,
-        item_semantic_embedding_content_hybrid
+        item_image_embedding,
+        item_semantic_content_hybrid_embedding
 )
 select *  from base
 QUALIFY ROW_NUMBER() OVER (

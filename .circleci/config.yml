@@ -141,32 +141,6 @@ workflows:
             - Slack
           <<: *slack-fail-post-step
 
-      - build_and_deploy_api_compliance:
-          name: build_and_deploy_api_compliance_staging
-          api-instance-name: api-compliance-stg
-          filters:
-            branches:
-              only:
-                - master
-          context:
-            - DATA_GCP
-            - DATA_GCP_EHP
-            - Slack
-          <<: *slack-fail-post-step
-
-      - build_and_deploy_api_compliance:
-          name: build_and_deploy_api_compliance_production
-          api-instance-name: api-compliance-prod
-          filters:
-            branches:
-              only:
-                - production
-          context:
-            - DATA_GCP
-            - DATA_GCP_EHP
-            - Slack
-          <<: *slack-fail-post-step
-
       - build_and_deploy_api_reco:
           name: build_and_deploy_api_reco_production
           api-instance-name: apireco-prod
@@ -787,10 +761,6 @@ workflows:
           name: build_and_deploy_api_reco_dev
           api-instance-name: apireco-dev
           <<: *deploy_on_dev_commons
-      - build_and_deploy_api_compliance:
-          name: build_and_deploy_api_compliance_dev
-          api-instance-name: api-compliance-dev
-          <<: *deploy_on_dev_commons
 ### temporarily removing api reco tests ###
 #      - api-integration-tests:
 #          env: dev
@@ -1173,33 +1143,6 @@ jobs:
           service-name: << parameters.api-instance-name >>
           unauthenticated: true
 
-  build_and_deploy_api_compliance:
-    docker:
-      - image: "cimg/base:stable"
-    parameters:
-      api-instance-name:
-        description: "API compliance"
-        type: string
-    working_directory: ~/data-gcp/apps/fraud/compliance/api
-    steps:
-      - checkout:
-          path: ~/data-gcp
-      - cloudrun/init
-      - cloudrun/build:
-          tag: "eu.gcr.io/${GOOGLE_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}/<< parameters.api-instance-name >>:${CIRCLE_SHA1}"
-      - run:
-          name: Apply latest tag
-          no_output_timeout: 60m
-          command: |
-            gcloud container images add-tag \
-            eu.gcr.io/${GOOGLE_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}/<< parameters.api-instance-name >>:${CIRCLE_SHA1} \
-            eu.gcr.io/${GOOGLE_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}/<< parameters.api-instance-name >>:latest
-      - cloudrun/deploy:
-          image: "eu.gcr.io/${GOOGLE_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}/<< parameters.api-instance-name >>:${CIRCLE_SHA1}"
-          platform: managed
-          region: europe-west1
-          service-name: << parameters.api-instance-name >>
-          unauthenticated: true
 
   slack-alert:
     docker:

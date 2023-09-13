@@ -3,8 +3,7 @@ from google.cloud import secretmanager
 
 API_URL = "https://www.demarches-simplifiees.fr/api/v2/graphql"
 demarches_jeunes = [47380, 47480]
-demarches_pro = [50362, 55475, 57081, 57189, 61589, 62703, 65028]
-
+demarches_pro = [50362, 55475, 61589, 62703, 80264]
 
 # find and replace string to str
 destination_table_schema_jeunes = [

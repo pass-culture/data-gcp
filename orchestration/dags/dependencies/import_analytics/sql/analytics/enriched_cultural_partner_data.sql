@@ -61,7 +61,8 @@ SELECT
   criterion_name AS partner_type,
   'venue_tag' AS partner_type_origin
 FROM `{{ bigquery_analytics_dataset }}`.enriched_venue_data 
-JOIN `{{ bigquery_analytics_dataset }}`.enriched_venue_tags_data ON enriched_venue_data.venue_id = enriched_venue_tags_data.venue_id AND enriched_venue_tags_data.criterion_category_label = "Comptage partenaire label et appellation du MC"
+JOIN `{{ bigquery_analytics_dataset }}`.enriched_venue_tags_data ON enriched_venue_data.venue_id = enriched_venue_tags_data.venue_id
+AND enriched_venue_tags_data.criterion_category_label = "Comptage partenaire sectoriel"
 QUALIFY ROW_NUMBER() OVER(PARTITION BY venue_managing_offerer_id ORDER BY theoretic_revenue DESC, (COALESCE(enriched_venue_data.individual_offers_created,0) + COALESCE(enriched_venue_data.collective_offers_created,0)) DESC ) = 1
 ),
 

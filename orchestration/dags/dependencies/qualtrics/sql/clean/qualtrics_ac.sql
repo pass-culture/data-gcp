@@ -69,7 +69,7 @@ cnt_appli_dms as (SELECT
   demandeur_siret
   , application_status
   , count(distinct application_id) as cnt_applications
-FROM `{{ bigquery_clean_dataset }}.dms_pro`
+FROM `{{ bigquery_clean_dataset }}.dms_pro_cleaned`
 WHERE demandeur_siret != 'nan'
 GROUP BY 
   demandeur_siret
@@ -93,7 +93,7 @@ last_application_dms as (
   , application_status as last_application_status
   , application_submitted_at as last_application_submitted_at
   , processed_at as last_application_processed_at
-FROM `{{ bigquery_clean_dataset }}.dms_pro`
+FROM `{{ bigquery_clean_dataset }}.dms_pro_cleaned`
 qualify row_number() over(partition by demandeur_siret order by application_submitted_at desc) = 1
 ), 
 

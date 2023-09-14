@@ -183,7 +183,7 @@ venues_with_offers AS (
 
 SELECT
     offerer.offerer_id,
-    CONCAT("offerer-",offerer.offerer_id) AS partner_id,
+    CONCAT("offerer-", offerer.offerer_id) AS partner_id,
     offerer.offerer_name,
     offerer.offerer_creation_date,
     offerer.offerer_validation_date,

@@ -7,6 +7,9 @@
     "catboost_features_types": {
         "cat_features": ["offer_subcategoryid", "rayon", "macro_rayon"],
         "text_features": ["offer_name", "offer_description"],
+        "numerical_features": [
+            "stock_price"
+        ],
         "embedding_features": [
             "image_embedding"
         ]

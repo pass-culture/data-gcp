@@ -26,6 +26,10 @@ SELECT
     CAST(coalesce(jsonPayload.extra.bookingId, jsonPayload.extra.booking_id) as string) as booking_id,
     ARRAY_TO_STRING(jsonPayload.extra.filters, ',') AS filters,
     cast(jsonPayload.extra.resultscount as int) as results_count,
+    jsonPayload.extra.filtervalues.eventaddresstype as address_type_filter,
+    jsonPayload.extra.filtervalues.query as text_filter,
+    ARRAY_TO_STRING(jsonPayload.extra.filtervalues.departments, ',') as department_filter,
+    ARRAY_TO_STRING(jsonPayload.extra.filtervalues.academies, ',') as academy_filter,
 
 FROM
     `{{ bigquery_raw_dataset }}.stdout`

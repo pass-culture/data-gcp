@@ -26,10 +26,8 @@ def convert_str_emb_to_float(emb_list, emb_size=124):
 
 
 def prepare_features(df, features):
-    prepocessed_cols = []
-    for feature_types in features.keys():
-        for col in features[feature_types]:
-            prepocessed_cols.append(col)
+    for feature_types in features["preprocess_features_type"].keys():
+        for col in features["preprocess_features_type"][feature_types]:
             if feature_types == "text_features":
                 df[col] = df[col].fillna("")
                 df[col] = df[col].astype(str)
@@ -39,14 +37,13 @@ def prepare_features(df, features):
             if feature_types == "embedding_features":
                 df[col] = convert_str_emb_to_float(df[col].tolist())
                 df[col] = df[col].astype("object")
+
+    scoring_features = sum(features["catboost_features_types"].values(), [])
     # Set target
     df["target"] = np.where(df["offer_validation"] == "APPROVED", 1, 0)
-    prepocessed_cols.append("target")
-    # Remove useless columns
-    useless_columns = [
-        col for col in df.columns.tolist() if col not in prepocessed_cols
-    ]
-    df = df.drop(columns=useless_columns)
+    scoring_features.append("target")
+    # Only keep features used for scoring
+    df = df[scoring_features]
     return df
 
 
@@ -75,9 +72,7 @@ def preprocess(
         storage_path=STORAGE_PATH, table_name=input_dataframe_file_name
     )
 
-    offer_compliance_clean = prepare_features(
-        offer_compliance_raw, features["preprocess_features_type"]
-    )
+    offer_compliance_clean = prepare_features(offer_compliance_raw, features)
     offer_compliance_clean.to_parquet(
         f"{STORAGE_PATH}/{output_dataframe_file_name}/data.parquet"
     )

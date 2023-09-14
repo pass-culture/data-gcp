@@ -11,7 +11,7 @@ from huggy.schemas.playlist_params import PlaylistParams
 from huggy.schemas.offer import RecommendableOffer
 from huggy.schemas.item import RecommendableItem
 
-from huggy.crud.offer import get_nearest_offer, get_non_recommendable_items
+from huggy.crud.offer import get_nearest_offers
 
 from huggy.utils.manage_output_offers import limit_offers
 from huggy.utils.env_vars import log_duration
@@ -80,14 +80,7 @@ class OfferScorer:
         recommendable_items: List[RecommendableItem],
     ) -> List[RecommendableOffer]:
 
-        non_recommendable_items = get_non_recommendable_items(db, self.user)
-
-        recommendable_offers = []
-        for item in recommendable_items:
-            if item.item_id not in non_recommendable_items:
-                recommendable_offer = get_nearest_offer(db, self.user, item)
-                if recommendable_offer:
-                    recommendable_offers.append(recommendable_offer[0])
+        recommendable_offers = get_nearest_offers(db, self.user, recommendable_items)
 
         size = len(recommendable_offers)
 

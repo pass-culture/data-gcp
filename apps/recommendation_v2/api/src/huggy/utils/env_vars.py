@@ -12,7 +12,7 @@ NUMBER_OF_RECOMMENDATIONS = 20
 NUMBER_OF_PRESELECTED_OFFERS = 50 if not os.environ.get("CI") else 3
 DEFAULT_SIMILAR_OFFER_MODEL = os.environ.get("DEFAULT_SIMILAR_OFFER_MODEL", "default")
 DEFAULT_RECO_MODEL = os.environ.get("DEFAULT_RECO_MODEL", "default")
-API_LOCAL = os.environ.get("API_LOCAL", "False")
+API_LOCAL = os.environ.get("API_LOCAL", False)
 # SQL
 SQL_BASE = os.environ.get("SQL_BASE")
 SQL_BASE_SECRET_ID = os.environ.get("SQL_BASE_SECRET_ID")

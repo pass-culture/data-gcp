@@ -124,7 +124,7 @@ class RetrievalEndpoint(AbstractEndpoint):
         )
         # search_group_names
         params.append(
-            ListParams(label="search_group_name", values=self.params_in.offer_type_list)
+            ListParams(label="search_group_name", values=self.params_in.categories)
         )
         # subcategory_id
         params.append(

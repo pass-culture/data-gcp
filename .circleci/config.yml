@@ -262,10 +262,6 @@ workflows:
           requires:
             - production-composer-deploy
             - api-integration-tests-prod
-            - import-typeform-adage-reference-request-prod
-            - metabase-archiving-prod
-            - cold-data-prod
-            - sendinblue-import-prod
 
       - slack-alert:
           name: slack-alert-staging
@@ -278,10 +274,6 @@ workflows:
           requires:
             - staging-composer-deploy
             - api-integration-tests-staging
-            - import-typeform-adage-reference-request-stg
-            - metabase-archiving-stg
-            - cold-data-stg
-            - sendinblue-import-stg
 
   # ----------------
   # Workflow to deploy on dev
@@ -316,11 +308,6 @@ workflows:
           requires:
             - dev-composer-deploy
             - build_and_deploy_api_reco_dev
-            - adage-import-function-deploy-dev
-            - typeform-adage-reference-request-dev
-            - metabase-archiving-dev
-            - cold-data-dev
-            - sendinblue-import-dev
 ### temporarily removing api reco tests ###
 #          requires:
 #            - api-integration-tests-dev

@@ -262,7 +262,6 @@ workflows:
           requires:
             - production-composer-deploy
             - api-integration-tests-prod
-            - build_and_deploy_api_compliance_production
             - import-typeform-adage-reference-request-prod
             - metabase-archiving-prod
             - cold-data-prod
@@ -279,7 +278,6 @@ workflows:
           requires:
             - staging-composer-deploy
             - api-integration-tests-staging
-            - build_and_deploy_api_compliance_staging
             - import-typeform-adage-reference-request-stg
             - metabase-archiving-stg
             - cold-data-stg
@@ -318,7 +316,6 @@ workflows:
           requires:
             - dev-composer-deploy
             - build_and_deploy_api_reco_dev
-            - build_and_deploy_api_compliance_dev
             - adage-import-function-deploy-dev
             - typeform-adage-reference-request-dev
             - metabase-archiving-dev

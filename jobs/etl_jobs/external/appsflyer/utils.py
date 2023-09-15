@@ -5,8 +5,8 @@ from google.cloud import secretmanager, bigquery
 import pandas as pd
 
 PROJECT_NAME = os.environ.get("PROJECT_NAME")
-BIGQUERY_RAW_DATASET = os.environ.get("BIGQUERY_RAW_DATASET")
-ENVIRONMENT_SHORT_NAME = os.environ.get("ENVIRONMENT_SHORT_NAME")
+ENVIRONMENT_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
+BIGQUERY_RAW_DATASET = f"raw_{ENVIRONMENT_SHORT_NAME}"
 
 
 def to_sql_type(_type):

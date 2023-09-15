@@ -4,6 +4,13 @@ from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobO
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.http.operators.http import SimpleHttpOperator
 from airflow.operators.python import PythonOperator
+from airflow.models import Param
+from common.operators.gce import (
+    StartGCEOperator,
+    StopGCEOperator,
+    CloneRepositoryGCEOperator,
+    SSHGCEOperator,
+)
 from common.alerts import task_fail_slack_alert
 
 from common.config import (
@@ -14,8 +21,14 @@ from common.config import (
 )
 from common.utils import getting_service_account_token, get_airflow_schedule
 
-FUNCTION_NAME = f"typeform_adage_reference_request_{ENV_SHORT_NAME}"
+# FUNCTION_NAME = f"typeform_adage_reference_request_{ENV_SHORT_NAME}"
 
+GCE_INSTANCE = f"import-typeform-adage-reference-request-{ENV_SHORT_NAME}"
+BASE_PATH = "data-gcp/jobs/etl_jobs/external/typeform-adage-reference-request"
+dag_config = {
+    "PROJECT_NAME": GCP_PROJECT_ID,
+    "ENV_SHORT_NAME": ENV_SHORT_NAME,
+}
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 1),
@@ -25,7 +38,7 @@ default_dag_args = {
 }
 
 
-dag = DAG(
+with DAG(
     "import_typeform_adage_reference_request",
     default_args=default_dag_args,
     description="Import Typeform Adage Reference Request from API",
@@ -33,54 +46,75 @@ dag = DAG(
     schedule_interval=get_airflow_schedule("0 1 * * *"),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
-)
-
-start = DummyOperator(task_id="start", dag=dag)
-
-getting_service_account_token = PythonOperator(
-    task_id="getting_service_account_token",
-    python_callable=getting_service_account_token,
-    op_kwargs={"function_name": f"{FUNCTION_NAME}"},
-    dag=dag,
-)
-
-typeform_adage_reference_request_to_bq = SimpleHttpOperator(
-    task_id="typeform_adage_reference_request_to_bq",
-    method="POST",
-    http_conn_id="http_gcp_cloud_function",
-    endpoint=FUNCTION_NAME,
-    headers={
-        "Content-Type": "application/json",
-        "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_service_account_token', key='return_value')}}",
+    params={
+        "branch": Param(
+            default="production" if ENV_SHORT_NAME == "prod" else "master",
+            type="string",
+        )
     },
-    log_response=True,
-    dag=dag,
-)
+) as dag:
 
+    start = DummyOperator(task_id="start", dag=dag)
 
-create_analytics_table = BigQueryInsertJobOperator(
-    dag=dag,
-    task_id="typeform_adage_reference_request_to_analytics",
-    configuration={
-        "query": {
-            "query": f"SELECT * FROM `{GCP_PROJECT_ID}.{BIGQUERY_RAW_DATASET}.typeform_adage_reference_request_sheet`",
-            "useLegacySql": False,
-            "destinationTable": {
-                "projectId": GCP_PROJECT_ID,
-                "datasetId": BIGQUERY_ANALYTICS_DATASET,
-                "tableId": "typeform_adage_reference_request",
-            },
-            "writeDisposition": "WRITE_TRUNCATE",
-        }
-    },
-)
+    gce_instance_start = StartGCEOperator(
+        instance_name=GCE_INSTANCE, task_id="gce_start_task"
+    )
 
-end = DummyOperator(task_id="end", dag=dag)
+    fetch_code = CloneRepositoryGCEOperator(
+        task_id="fetch_code",
+        instance_name=GCE_INSTANCE,
+        command="{{ params.branch }}",
+        python_version="3.8",
+    )
 
-(
-    start
-    >> getting_service_account_token
-    >> typeform_adage_reference_request_to_bq
-    >> create_analytics_table
-    >> end
-)
+    install_dependencies = SSHGCEOperator(
+        task_id="install_dependencies",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_PATH,
+        command="pip install -r requirements.txt --user",
+        dag=dag,
+        retries=2,
+    )
+
+    typeform_adage_reference_request_to_bq = SSHGCEOperator(
+        task_id="typeform_adage_reference_request_to_bq",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_PATH,
+        environment=dag_config,
+        command="python main.py ",
+        do_xcom_push=True,
+    )
+
+    gce_instance_stop = StopGCEOperator(
+        task_id="gce_stop_task", instance_name=GCE_INSTANCE
+    )
+
+    create_analytics_table = BigQueryInsertJobOperator(
+        dag=dag,
+        task_id="typeform_adage_reference_request_to_analytics",
+        configuration={
+            "query": {
+                "query": f"SELECT * FROM `{GCP_PROJECT_ID}.{BIGQUERY_RAW_DATASET}.typeform_adage_reference_request_sheet`",
+                "useLegacySql": False,
+                "destinationTable": {
+                    "projectId": GCP_PROJECT_ID,
+                    "datasetId": BIGQUERY_ANALYTICS_DATASET,
+                    "tableId": "typeform_adage_reference_request",
+                },
+                "writeDisposition": "WRITE_TRUNCATE",
+            }
+        },
+    )
+
+    end = DummyOperator(task_id="end", dag=dag)
+
+    (
+        start
+        >> gce_instance_start
+        >> fetch_code
+        >> install_dependencies
+        >> typeform_adage_reference_request_to_bq
+        >> gce_instance_stop
+        >> create_analytics_table
+        >> end
+    )

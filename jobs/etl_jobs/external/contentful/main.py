@@ -29,7 +29,7 @@ def save_raw_modules_to_bq(modules_df, table_name):
     job.result()
 
 
-def run(request):
+def run():
     """The Cloud Function entrypoint.
     Args:
         request (flask.Request): The request object.
@@ -66,3 +66,6 @@ def run(request):
     )
 
     return "Done"
+
+
+run()

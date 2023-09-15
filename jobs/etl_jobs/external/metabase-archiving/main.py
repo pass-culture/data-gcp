@@ -19,7 +19,7 @@ password = access_secret_data(
 )
 
 
-def run(request):
+def run():
     metabase = MetabaseAPI(
         username=METABASE_API_USERNAME, password=password, host=METABASE_HOST
     )
@@ -45,3 +45,6 @@ def run(request):
         time.sleep(1)
 
     return "success"
+
+
+run()

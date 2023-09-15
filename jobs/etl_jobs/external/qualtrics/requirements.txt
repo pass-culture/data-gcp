@@ -14,3 +14,4 @@ requests==2.20.1
 temp==2020.7.2
 Werkzeug==2.2.3
 pandas-gbq
+typer

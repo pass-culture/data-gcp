@@ -38,3 +38,6 @@ def run(request):
         )
 
     return "Success"
+
+
+run()

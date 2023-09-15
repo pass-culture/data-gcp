@@ -11,10 +11,11 @@ from scripts.bigquery_client import BigQueryClient
 
 bigquery_client = BigQueryClient()
 
-GCP_PROJECT = os.environ["PROJECT_NAME"]
-BIGQUERY_RAW_DATASET = os.environ["BIGQUERY_RAW_DATASET"]
-BIGQUERY_CLEAN_DATASET = os.environ["BIGQUERY_CLEAN_DATASET"]
-BUCKET_NAME = os.environ["BUCKET_NAME"]
+GCP_PROJECT = os.environ["GCP_PROJECT"]
+ENV_SHORT_NAME = os.environ["ENV_SHORT_NAME"]
+BIGQUERY_RAW_DATASET = f"raw_{ENV_SHORT_NAME}"
+BIGQUERY_CLEAN_DATASET = f"clean_{ENV_SHORT_NAME}"
+BUCKET_NAME = f"data-bucket-{ENV_SHORT_NAME}"
 
 
 class AdressesDownloader:

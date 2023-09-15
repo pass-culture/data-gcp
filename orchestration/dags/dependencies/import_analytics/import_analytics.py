@@ -418,6 +418,7 @@ analytics_tables = {
         "time_partitioning": {"field": "first_date"},
         "depends": ["diversification_booking"],
         "dag_depends": ["import_intraday_firebase_data"],
+        "params": {"set_date": "2023-01-01"},
     },
     "enriched_cultural_partner_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_cultural_partner_data.sql",

@@ -25,9 +25,11 @@ SELECT
     jsonPayload.extra.header_link_name as header_link_name,
     CAST(coalesce(jsonPayload.extra.bookingId, jsonPayload.extra.booking_id) as string) as booking_id,
     ARRAY_TO_STRING(jsonPayload.extra.filters, ',') AS filters,
-    cast(jsonPayload.extra.resultscount as int) as results_count,
+    CASE WHEN jsonPayload.message="SearchButtonClicked" THEN cast(jsonPayload.extra.resultscount as int) 
+    WHEN jsonPayload.message="TrackingFilter" THEN cast(jsonPayload.extra.resultnumber as int) 
+    ELSE NULL END as results_count,
     jsonPayload.extra.filtervalues.eventaddresstype as address_type_filter,
-    jsonPayload.extra.filtervalues.query as text_filter,
+    cast(jsonPayload.extra.filtervalues.query as string) as text_filter,
     ARRAY_TO_STRING(jsonPayload.extra.filtervalues.departments, ',') as department_filter,
     ARRAY_TO_STRING(jsonPayload.extra.filtervalues.academies, ',') as academy_filter,
 

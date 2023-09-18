@@ -1,4 +1,4 @@
-name: "Deploy Cloud Function"
+name: "Test Orchestration"
 
 on:
  push:
@@ -49,7 +49,7 @@ jobs:
           service_account: ${{ secrets.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
       - uses: actions/setup-python@v4.7.0
         with:
-         python-version: "3.8"
+         python-version: "3.7"
       - name: Install Python requirements
         run: |
             pip install -r airflow/orchestration-requirements.txt

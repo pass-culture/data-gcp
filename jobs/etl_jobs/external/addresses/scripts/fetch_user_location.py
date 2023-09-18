@@ -192,22 +192,12 @@ class AdressesDownloader:
         )
 
     def run(self):
-        print("start script")
-        print("fetch new user data")
         self.user_address_dataframe = self.fetch_new_user_data()
-        print(f"{self.user_address_dataframe.shape[0]} users fetched")
         if self.user_address_dataframe.shape[0] == 0:
             return "No new users !"
-        print("add address")
         self.add_parsed_adress()
-        print("address added")
-        print("add coordinates")
         self.add_coordinates()
-        print("coordinates added")
-        print("add qpv / commune info")
         self.add_commune_epci_qpv()
-        print("qpv / commune info added")
-        print("create csv")
         self.user_address_dataframe["date_updated"] = datetime.now().isoformat()
         self.user_address_dataframe[
             [
@@ -233,5 +223,4 @@ class AdressesDownloader:
             index=False,
             sep="|",
         )
-        print("csv created")
         return self.user_locations_file_name

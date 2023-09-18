@@ -3,8 +3,8 @@ from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import secretmanager
 
 
-PROJECT_NAME = os.environ.get("PROJECT_NAME")
-ENVIRONMENT_SHORT_NAME = os.environ.get("ENVIRONMENT_SHORT_NAME")
+PROJECT_NAME = os.environ.get("GCP_PROJECT_ID")
+ENVIRONMENT_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
 
 NOTION_GLOSSARY_SECRET_NAME = f"notion_glossary_database_id_{ENVIRONMENT_SHORT_NAME}"
 NOTION_DOCUMENTATION_SECRET_NAME = (

@@ -4,11 +4,13 @@ from utils import (
     NOTION_API_KEY_SECRET_NAME,
     NOTION_DOCUMENTATION_SECRET_NAME,
     NOTION_GLOSSARY_SECRET_NAME,
+    ENVIRONMENT_SHORT_NAME,
     RAW_DATASET,
 )
 import os
 import typer
 import pandas as pd
+
 from handler import NotionDocumentation, NotionGlossary, BQExport
 
 api_token = access_secret_data(PROJECT_NAME, NOTION_API_KEY_SECRET_NAME)
@@ -38,7 +40,7 @@ def reformat_bq(bq_export: BQExport, doc: list, glossary: list):
         if c["table_name"] == table_name
     }
     bq_export.push_doc(
-        dataset_id=dataset_id,
+        dataset_id=f"{dataset_id}_{ENVIRONMENT_SHORT_NAME}",
         table_name=table_name,
         description=description,
         columns=columns,
@@ -55,13 +57,26 @@ def main():
     notion_doc = NotionDocumentation(
         database_id=documentation_id, api_key=api_token
     ).export()
-    pd.DataFrame(notion_doc).to_gbq(f"{RAW_DATASET}.table_documentation")
+    notion_df = pd.DataFrame(notion_doc)
+    # convert to str format for export
+    notion_df["parents"] = notion_df["parents"].apply(lambda x: ":".join(x))
+    notion_df["childrens"] = notion_df["childrens"].apply(lambda x: ":".join(x))
+    notion_df["source_type"] = notion_df["source_type"].apply(lambda x: ":".join(x))
+    notion_df["parents_name"] = notion_df["parents_name"].apply(lambda x: ":".join(x))
+    notion_df["childrens_name"] = notion_df["childrens_name"].apply(
+        lambda x: ":".join(x)
+    )
+
+    print(notion_df.columns)
+    notion_df.to_gbq(f"{RAW_DATASET}.table_documentation", if_exists="replace")
 
     glossary_doc = NotionGlossary(database_id=glossary_id, api_key=api_token).export()
-    pd.DataFrame(glossary_doc).to_gbq(f"{RAW_DATASET}.glossary_documentation")
+    glossary_df = pd.DataFrame(glossary_doc)
+
+    glossary_df.to_gbq(f"{RAW_DATASET}.glossary_documentation", if_exists="replace")
 
     bq_export = BQExport(project_name=PROJECT_NAME)
-    for doc in notion_doc[:1]:
+    for doc in notion_doc:
         reformat_bq(bq_export, doc, glossary_doc)
 
 

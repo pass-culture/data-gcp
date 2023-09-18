@@ -1,6 +1,7 @@
 from notion_client import Client
 from notion2md.exporter.block import StringExporter
 from google.cloud import bigquery
+from utils import ENVIRONMENT_SHORT_NAME
 
 
 class BQExport:
@@ -144,7 +145,7 @@ class NotionDocumentation(NotionGlossary):
     def get_simple_description(document):
         try:
             return document["properties"]["Description"]["title"][0]["plain_text"]
-        except TypeError:
+        except (TypeError, KeyError):
             return None
 
     @staticmethod

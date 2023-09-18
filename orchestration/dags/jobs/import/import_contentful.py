@@ -4,7 +4,13 @@ from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.http.operators.http import SimpleHttpOperator
 from airflow.operators.python import PythonOperator
-
+from airflow.models import Param
+from common.operators.gce import (
+    StartGCEOperator,
+    StopGCEOperator,
+    CloneRepositoryGCEOperator,
+    SSHGCEOperator,
+)
 
 from dependencies.contentful.import_contentful import contentful_tables
 
@@ -20,6 +26,13 @@ from common.alerts import task_fail_slack_alert
 from common import macros
 from common.config import ENV_SHORT_NAME, GCP_PROJECT_ID, DAG_FOLDER
 
+GCE_INSTANCE = f"import-contentful-{ENV_SHORT_NAME}"
+BASE_PATH = "data-gcp/jobs/etl_jobs/external/contentful"
+dag_config = {
+    "GCP_PROJECT": GCP_PROJECT_ID,
+    "ENV_SHORT_NAME": ENV_SHORT_NAME,
+}
+
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),
     "retries": 1,
@@ -28,7 +41,7 @@ default_dag_args = {
     "project_id": GCP_PROJECT_ID,
 }
 
-dag = DAG(
+with DAG(
     "import_contentful",
     default_args=default_dag_args,
     description="Import contentful tables",
@@ -37,29 +50,46 @@ dag = DAG(
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
-)
-
-
-getting_contentful_service_account_token = PythonOperator(
-    task_id="getting_contentful_service_account_token",
-    python_callable=getting_service_account_token,
-    op_kwargs={"function_name": f"contentful_{ENV_SHORT_NAME}"},
-    dag=dag,
-)
-
-import_contentful_data_to_bigquery = SimpleHttpOperator(
-    task_id="import_contentful_data_to_bigquery",
-    method="POST",
-    http_conn_id="http_gcp_cloud_function",
-    endpoint=f"contentful_{ENV_SHORT_NAME}",
-    headers={
-        "Content-Type": "application/json",
-        "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_contentful_service_account_token', key='return_value')}}",
+    params={
+        "branch": Param(
+            default="production" if ENV_SHORT_NAME == "prod" else "master",
+            type="string",
+        )
     },
-    log_response=True,
-    dag=dag,
-)
+) as dag:
 
+    gce_instance_start = StartGCEOperator(
+        instance_name=GCE_INSTANCE, task_id="gce_start_task"
+    )
+
+    fetch_code = CloneRepositoryGCEOperator(
+        task_id="fetch_code",
+        instance_name=GCE_INSTANCE,
+        command="{{ params.branch }}",
+        python_version="3.8",
+    )
+
+    install_dependencies = SSHGCEOperator(
+        task_id="install_dependencies",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_PATH,
+        command="pip install -r requirements.txt --user",
+        dag=dag,
+        retries=2,
+    )
+
+    import_contentful_data_to_bigquery = SSHGCEOperator(
+        task_id="import_contentful_data_to_bigquery",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_PATH,
+        environment=dag_config,
+        command="python main.py ",
+        do_xcom_push=True,
+    )
+
+    gce_instance_stop = StopGCEOperator(
+        task_id="gce_stop_task", instance_name=GCE_INSTANCE
+    )
 
 start = DummyOperator(task_id="start", dag=dag)
 
@@ -75,5 +105,13 @@ for table, job_params in contentful_tables.items():
 table_jobs = depends_loop(table_jobs, start, dag=dag)
 end = DummyOperator(task_id="end", dag=dag)
 
-getting_contentful_service_account_token >> import_contentful_data_to_bigquery >> start
-table_jobs >> end
+(
+    start
+    >> gce_instance_start
+    >> fetch_code
+    >> install_dependencies
+    >> import_contentful_data_to_bigquery
+    >> gce_instance_stop
+    >> table_jobs
+    >> end
+)

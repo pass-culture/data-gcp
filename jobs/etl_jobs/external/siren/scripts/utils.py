@@ -8,7 +8,7 @@ ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "")
 BIGQUERY_CLEAN_DATASET = os.environ.get(
     "BIGQUERY_CLEAN_DATASET", f"clean_{ENV_SHORT_NAME}"
 )
-BUCKET_NAME = os.environ["BUCKET_NAME"]
+BUCKET_NAME = f"data-bucket-{ENV_SHORT_NAME}"
 
 
 def access_secret_data(project_id, secret_id, version_id="latest", default=None):

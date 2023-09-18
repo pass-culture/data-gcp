@@ -66,18 +66,14 @@ def get_google(execution_date):
     df.to_gbq(f"{BIGQUERY_RAW_DATASET}.google_download_stats", if_exists="append")
 
 
-def run(request):
-    try:
-        execution_date = request.get_json().get("execution_date", None)
-    except:
-        execution_date = None
+def run():
 
-    if execution_date is None:
-        execution_date = datetime.today()
-    else:
-        execution_date = datetime.strptime(execution_date, "%Y-%m-%d")
+    execution_date = datetime.today()
 
     get_google(execution_date)
     get_apple(execution_date)
 
     return "Success"
+
+
+run()

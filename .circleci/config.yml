@@ -262,7 +262,6 @@ workflows:
           requires:
             - production-composer-deploy
             - api-integration-tests-prod
-            - build_and_deploy_api_compliance_production
 
       - slack-alert:
           name: slack-alert-staging
@@ -275,8 +274,7 @@ workflows:
           requires:
             - staging-composer-deploy
             - api-integration-tests-staging
-            - build_and_deploy_api_compliance_staging
-
+            
   # ----------------
   # Workflow to deploy on dev
   # ----------------
@@ -309,8 +307,7 @@ workflows:
           requires:
             - dev-composer-deploy
             - build_and_deploy_api_reco_dev
-            - build_and_deploy_api_compliance_dev
-            
+
 ### temporarily removing api reco tests ###
 #          requires:
 #            - api-integration-tests-dev

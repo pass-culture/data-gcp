@@ -20,13 +20,12 @@ os.environ["NOTION_TOKEN"] = api_token
 
 
 def reformat_bq(bq_export: BQExport, doc: list, glossary: list):
+    tags = {}
+    dataset_id = doc["dataset_id"]
+    table_name = doc["table_name"]
+    description = doc["description"]
     print(f"updating... {table_name}")
     try:
-        tags = {}
-        dataset_id = doc["dataset_id"]
-        table_name = doc["table_name"]
-        description = doc["description"]
-
         source_type = doc["source_type"]
         if len(source_type) > 0:
             tags["source-type"] = ":".join(source_type)

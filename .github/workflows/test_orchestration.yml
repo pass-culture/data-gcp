@@ -1,0 +1,55 @@
+name: "Deploy Cloud Function"
+
+on:
+ push:
+    # branches:
+    #   - main
+    #   - staging
+    #   - production
+
+jobs:
+
+  setup-env:
+    runs-on: [self-hosted, linux, x64]
+    outputs:
+      env_name: ${{ steps.set-variable.outputs.env_name }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set environment variable
+        id: set-variable
+        run: |
+          if [ ${{ github.ref }} = 'refs/heads/main' ]; then
+            echo "env_name=dev" >> $GITHUB_OUTPUT
+          elif [ ${{ github.ref }} = 'refs/heads/staging' ]; then
+            echo "env_name=staging" >> $GITHUB_OUTPUT
+          elif [ ${{ github.ref }} = 'refs/heads/production' ]; then
+            echo "env_name=production" >> $GITHUB_OUTPUT
+          else
+            echo "env_name=dev" >> $GITHUB_OUTPUT
+          fi
+
+  test-orchestration:
+    defaults:
+     run: 
+       working-directory: "./orchestration/"
+    permissions:
+     contents: "write"
+     id-token: "write"
+    name: "deploy cloud function"
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - uses: actions/checkout@v3
+      - id: auth
+        name: "Authenticate with Google Cloud"
+        uses: "google-github-actions/auth@v1"
+        with:
+          create_credentials_file: false
+          token_format: "access_token"
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
+      - uses: actions/setup-python@v4.7.0
+        with:
+         python-version: "3.8"
+      - name: Install Python requirements
+        run: |
+            pip install -r airflow/orchestration-requirements.txt

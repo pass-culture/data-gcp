@@ -96,6 +96,8 @@ with DAG(
         instance_name=GCE_INSTANCE, task_id="gce_stop_task"
     )
 
+    end = DummyOperator(task_id="end", dag=dag)
+
     (
         sleep_op
         >> gce_instance_start
@@ -103,4 +105,5 @@ with DAG(
         >> install_dependencies
         >> adage_to_bq
         >> gce_instance_stop
+        >> end
     )

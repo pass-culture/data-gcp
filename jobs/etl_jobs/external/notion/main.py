@@ -10,6 +10,7 @@ from utils import (
 import os
 import typer
 import pandas as pd
+import google
 
 from handler import NotionDocumentation, NotionGlossary, BQExport
 
@@ -19,33 +20,37 @@ os.environ["NOTION_TOKEN"] = api_token
 
 
 def reformat_bq(bq_export: BQExport, doc: list, glossary: list):
-    tags = {}
-    dataset_id = doc["dataset_id"]
-    table_name = doc["table_name"]
-    description = doc["description"]
+    print(f"updating... {table_name}")
+    try:
+        tags = {}
+        dataset_id = doc["dataset_id"]
+        table_name = doc["table_name"]
+        description = doc["description"]
 
-    source_type = doc["source_type"]
-    if len(source_type) > 0:
-        tags["source-type"] = ":".join(source_type)
-    self_service = doc["self_service"]
-    if self_service:
-        tags["self-service"] = doc["self_service"]
-    owner_team = doc["owner"]
-    if owner_team:
-        tags["team-owner"] = owner_team
+        source_type = doc["source_type"]
+        if len(source_type) > 0:
+            tags["source-type"] = ":".join(source_type)
+        self_service = doc["self_service"]
+        if self_service:
+            tags["self-service"] = doc["self_service"]
+        owner_team = doc["owner"]
+        if owner_team:
+            tags["team-owner"] = owner_team
 
-    columns = {
-        glossary["column_name"]: glossary["description"]
-        for c in glossary
-        if c["table_name"] == table_name
-    }
-    bq_export.push_doc(
-        dataset_id=f"{dataset_id}_{ENVIRONMENT_SHORT_NAME}",
-        table_name=table_name,
-        description=description,
-        columns=columns,
-        labels=tags,
-    )
+        columns = {
+            glossary["column_name"]: glossary["description"]
+            for c in glossary
+            if c["table_name"] == table_name
+        }
+        bq_export.push_doc(
+            dataset_id=f"{dataset_id}_{ENVIRONMENT_SHORT_NAME}",
+            table_name=table_name,
+            description=description,
+            columns=columns,
+            labels=tags,
+        )
+    except google.api_core.exceptions.NotFound:
+        print(f"Error with table : {table_name}")
 
 
 def main():

@@ -180,7 +180,7 @@ class NotionDocumentation(NotionGlossary):
                     "table_name": self.get_table_name(document),
                     "source_type": self.get_source_type(document),
                     "parents": self.get_parents(document),
-                    "childrens": self.get_parents(document),
+                    "childrens": self.get_childrens(document),
                     "self_service": self.get_self_service(document),
                     "owner": self.get_team_owner(document),
                     "description": self.get_simple_description(document),

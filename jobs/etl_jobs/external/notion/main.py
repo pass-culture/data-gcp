@@ -26,13 +26,13 @@ def reformat_bq(bq_export: BQExport, doc: list, glossary: list):
 
     source_type = doc["source_type"]
     if len(source_type) > 0:
-        tags["source_type"] = ":".join(source_type)
+        tags["source-type"] = ":".join(source_type)
     self_service = doc["self_service"]
     if self_service:
-        tags["self_service"] = doc["self_service"]
+        tags["self-service"] = doc["self_service"]
     owner_team = doc["owner"]
     if owner_team:
-        tags["owner"] = owner_team
+        tags["team-owner"] = owner_team
 
     columns = {
         glossary["column_name"]: glossary["description"]

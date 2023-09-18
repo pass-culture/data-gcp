@@ -1,5 +1,41 @@
 from notion_client import Client
 from notion2md.exporter.block import StringExporter
+from google.cloud import bigquery
+
+
+class BQExport:
+    def __init__(self, project_name):
+        self.project_name = project_name
+        self.client = bigquery.Client()
+
+    def push_doc(
+        self,
+        dataset_id: str,
+        table_name: str,
+        description: str,
+        columns: dict,
+        labels: dict,
+    ):
+        dataset_ref = bigquery.DatasetReference(self.project_name, dataset_id)
+        table_ref = dataset_ref.table(table_name)
+        table = self.client.get_table(table_ref)
+        export_schema = []
+        for s in table.schema:
+            description = columns.get(s.name, None)
+            if description is not None:
+                s = bigquery.SchemaField(
+                    name=s.name,
+                    field_type=s.field_type,
+                    mode=s.mode,
+                    default_value_expression=s.default_value_expression,
+                    description=description,
+                )
+
+            export_schema.append(s)
+        table.schema = export_schema
+        table.description = description
+        table.labels = labels
+        table = self.client.update_table(table, ["description", "labels", "schema"])
 
 
 class NotionGlossary:
@@ -98,6 +134,13 @@ class NotionDocumentation(NotionGlossary):
             return None
 
     @staticmethod
+    def get_team_owner(document):
+        try:
+            return document["properties"]["Owner"]["select"]["name"]
+        except TypeError:
+            return None
+
+    @staticmethod
     def get_simple_description(document):
         try:
             return document["properties"]["Description"]["title"][0]["plain_text"]
@@ -132,12 +175,13 @@ class NotionDocumentation(NotionGlossary):
                     "created_by": document["created_by"]["id"],
                     "edited_at": document["last_edited_time"],
                     "edited_by": document["last_edited_by"]["id"],
-                    "dataset_name": self.get_dataset(document),
+                    "dataset_id": self.get_dataset(document),
                     "table_name": self.get_table_name(document),
                     "source_type": self.get_source_type(document),
                     "parents": self.get_parents(document),
                     "childrens": self.get_parents(document),
                     "self_service": self.get_self_service(document),
+                    "owner": self.get_team_owner(document),
                     "description": self.get_simple_description(document),
                     "full_description": StringExporter(block_id=page_id).export(),
                 }

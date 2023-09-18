@@ -52,7 +52,7 @@ with DAG(
         task_id="fetch_code",
         instance_name=GCE_INSTANCE,
         command="{{ params.branch }}",
-        python_version="3.10",
+        python_version="3.8",
         retries=2,
     )
 

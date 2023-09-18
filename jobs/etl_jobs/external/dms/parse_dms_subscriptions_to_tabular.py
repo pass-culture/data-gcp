@@ -88,10 +88,14 @@ def parse_result_jeunes(result, df_applications):
                         "application_archived": dossier["archived"],
                         "application_status": dossier["state"],
                         "last_update_at": dossier["dateDerniereModification"],
-                        "application_submitted_at": dossier["datePassageEnConstruction"],
+                        "application_submitted_at": dossier[
+                            "datePassageEnConstruction"
+                        ],
                         "passed_in_instruction_at": dossier["datePassageEnInstruction"],
                         "processed_at": dossier["dateTraitement"],
-                        "application_motivation": dossier["motivation"].replace("\n", " ")
+                        "application_motivation": dossier["motivation"].replace(
+                            "\n", " "
+                        )
                         if dossier["motivation"]
                         else None,
                         "instructors": "",
@@ -117,90 +121,85 @@ def parse_result_jeunes(result, df_applications):
 def parse_result_pro(result, df_applications):
     logging.info(f"Size of json to parse: {len(result['data'])}")
     for data in result["data"]:
-        if data["demarche"]["dossiers"]["edges"] is not None:
-            for node in data["demarche"]["dossiers"]["edges"]:
-                dossier = node["node"]
-                if dossier is not None:
-                    dossier_line = {
-                        "procedure_id": dossier["demarche_id"],
-                        "application_id": dossier["id"],
-                        "application_number": dossier["number"],
-                        "application_archived": dossier["archived"],
-                        "application_status": dossier["state"],
-                        "last_update_at": dossier["dateDerniereModification"],
-                        "application_submitted_at": dossier["datePassageEnConstruction"],
-                        "passed_in_instruction_at": dossier["datePassageEnInstruction"],
-                        "processed_at": dossier["dateTraitement"],
-                        "application_motivation": dossier["motivation"].replace("\n", " ")
-                        if dossier["motivation"]
-                        else None,
-                        "instructors": "",
-                    }
-
-                    if "siret" in dossier["demandeur"] and dossier["demandeur"]["siret"]:
-                        dossier_line["demandeur_siret"] = dossier["demandeur"]["siret"]
-                        dossier_line["demandeur_naf"] = dossier["demandeur"]["naf"]
-                        dossier_line["demandeur_libelleNaf"] = dossier["demandeur"][
-                            "libelleNaf"
-                        ].replace("\n", " ")
-                        if dossier["demandeur"]["entreprise"]:
-                            dossier_line["demandeur_entreprise_siren"] = dossier[
-                                "demandeur"
-                            ]["entreprise"]["siren"]
-                            dossier_line["demandeur_entreprise_formeJuridique"] = dossier[
-                                "demandeur"
-                            ]["entreprise"]["formeJuridique"]
-                            dossier_line[
-                                "demandeur_entreprise_formeJuridiqueCode"
-                            ] = dossier["demandeur"]["entreprise"]["formeJuridiqueCode"]
-                            dossier_line[
-                                "demandeur_entreprise_codeEffectifEntreprise"
-                            ] = dossier["demandeur"]["entreprise"]["codeEffectifEntreprise"]
-                            dossier_line["demandeur_entreprise_raisonSociale"] = dossier[
-                                "demandeur"
-                            ]["entreprise"]["raisonSociale"]
-                            dossier_line["demandeur_entreprise_siretSiegeSocial"] = dossier[
-                                "demandeur"
-                            ]["entreprise"]["siretSiegeSocial"]
-                    if dossier["champs"]:
-                        for champs in dossier["champs"]:
-                            if champs["id"] == "Q2hhbXAtMjY3NDMyMQ==":
-                                dossier_line["numero_identifiant_lieu"] = champs[
-                                    "stringValue"
-                                ]
-                            elif champs["id"] == "Q2hhbXAtMjQzODcyMA==":
-                                dossier_line["statut"] = champs["stringValue"]
-                            elif champs["id"] == "Q2hhbXAtMjQzMTg1OA==":
-                                dossier_line["typologie"] = champs["stringValue"]
-                            elif champs["id"] == "Q2hhbXAtMjQzMjIxMg==":
-                                dossier_line["academie_historique_intervention"] = champs[
-                                    "stringValue"
-                                ]
-                            elif champs["id"] == "Q2hhbXAtMjQzMjM1Mw==":
-                                dossier_line["domaines"] = champs["stringValue"]
-                    else:
-                        dossier_line["numero_identifiant_lieu"] = None
-                    instructeurs = []
-                    for instructeur in dossier["instructeurs"]:
-                        instructeurs.append(instructeur["email"])
-                    if instructeurs != []:
-                        dossier_line["instructors"] = "; ".join(instructeurs)
-
-                    if dossier["groupeInstructeur"]:
-                        dossier_line["academie_groupe_instructeur"] = dossier[
-                            "groupeInstructeur"
-                        ]["label"]
-
-                    if dossier["annotations"]:
-                        for annotation in dossier["annotations"]:
-                            if annotation["label"] == "Erreur traitement pass Culture":
-                                dossier_line["erreur_traitement_pass_culture"] = annotation[
-                                    "stringValue"
-                                ]
-                    else:
-                        dossier_line["erreur_traitement_pass_culture"] = None
-
-                    df_applications.loc[len(df_applications)] = dossier_line
+        for node in data["demarche"]["dossiers"]["edges"]:
+            dossier = node["node"]
+            if dossier is not None:
+                dossier_line = {
+                    "procedure_id": dossier["demarche_id"],
+                    "application_id": dossier["id"],
+                    "application_number": dossier["number"],
+                    "application_archived": dossier["archived"],
+                    "application_status": dossier["state"],
+                    "last_update_at": dossier["dateDerniereModification"],
+                    "application_submitted_at": dossier["datePassageEnConstruction"],
+                    "passed_in_instruction_at": dossier["datePassageEnInstruction"],
+                    "processed_at": dossier["dateTraitement"],
+                    "application_motivation": dossier["motivation"].replace("\n", " ")
+                    if dossier["motivation"]
+                    else None,
+                    "instructors": "",
+                }
+                if "siret" in dossier["demandeur"] and dossier["demandeur"]["siret"]:
+                    dossier_line["demandeur_siret"] = dossier["demandeur"]["siret"]
+                    dossier_line["demandeur_naf"] = dossier["demandeur"]["naf"]
+                    dossier_line["demandeur_libelleNaf"] = dossier["demandeur"][
+                        "libelleNaf"
+                    ].replace("\n", " ")
+                    if dossier["demandeur"]["entreprise"]:
+                        dossier_line["demandeur_entreprise_siren"] = dossier[
+                            "demandeur"
+                        ]["entreprise"]["siren"]
+                        dossier_line["demandeur_entreprise_formeJuridique"] = dossier[
+                            "demandeur"
+                        ]["entreprise"]["formeJuridique"]
+                        dossier_line[
+                            "demandeur_entreprise_formeJuridiqueCode"
+                        ] = dossier["demandeur"]["entreprise"]["formeJuridiqueCode"]
+                        dossier_line[
+                            "demandeur_entreprise_codeEffectifEntreprise"
+                        ] = dossier["demandeur"]["entreprise"]["codeEffectifEntreprise"]
+                        dossier_line["demandeur_entreprise_raisonSociale"] = dossier[
+                            "demandeur"
+                        ]["entreprise"]["raisonSociale"]
+                        dossier_line["demandeur_entreprise_siretSiegeSocial"] = dossier[
+                            "demandeur"
+                        ]["entreprise"]["siretSiegeSocial"]
+                if dossier["champs"]:
+                    for champs in dossier["champs"]:
+                        if champs["id"] == "Q2hhbXAtMjY3NDMyMQ==":
+                            dossier_line["numero_identifiant_lieu"] = champs[
+                                "stringValue"
+                            ]
+                        elif champs["id"] == "Q2hhbXAtMjQzODcyMA==":
+                            dossier_line["statut"] = champs["stringValue"]
+                        elif champs["id"] == "Q2hhbXAtMjQzMTg1OA==":
+                            dossier_line["typologie"] = champs["stringValue"]
+                        elif champs["id"] == "Q2hhbXAtMjQzMjIxMg==":
+                            dossier_line["academie_historique_intervention"] = champs[
+                                "stringValue"
+                            ]
+                        elif champs["id"] == "Q2hhbXAtMjQzMjM1Mw==":
+                            dossier_line["domaines"] = champs["stringValue"]
+                else:
+                    dossier_line["numero_identifiant_lieu"] = None
+                instructeurs = []
+                for instructeur in dossier["instructeurs"]:
+                    instructeurs.append(instructeur["email"])
+                if instructeurs != []:
+                    dossier_line["instructors"] = "; ".join(instructeurs)
+                if dossier["groupeInstructeur"]:
+                    dossier_line["academie_groupe_instructeur"] = dossier[
+                        "groupeInstructeur"
+                    ]["label"]
+                if dossier["annotations"]:
+                    for annotation in dossier["annotations"]:
+                        if annotation["label"] == "Erreur traitement pass Culture":
+                            dossier_line["erreur_traitement_pass_culture"] = annotation[
+                                "stringValue"
+                            ]
+                else:
+                    dossier_line["erreur_traitement_pass_culture"] = None
+                df_applications.loc[len(df_applications)] = dossier_line
     return
 
 

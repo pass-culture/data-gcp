@@ -59,14 +59,13 @@ def fetch_result(demarches_ids, updated_since, env_short_name, gcp_project_id):
                     "hasNextPage"
                 ]
                 result = mergeDictionary(result, resultTemp)
-                if env_short_name != "prod":
-                    has_next_page = False
-
-                if has_next_page:
-                    end_cursor = resultTemp["data"]["demarche"]["dossiers"]["pageInfo"][
-                        "endCursor"
-                    ]
-                    query_body = get_query_body(demarche_id, end_cursor, updated_since)
+            if env_short_name != "prod":
+                has_next_page = False
+            if has_next_page:
+                end_cursor = resultTemp["data"]["demarche"]["dossiers"]["pageInfo"][
+                    "endCursor"
+                ]
+                query_body = get_query_body(demarche_id, end_cursor, updated_since)
     if not isinstance(result["data"], list):
         result["data"] = [result["data"]]
     return result

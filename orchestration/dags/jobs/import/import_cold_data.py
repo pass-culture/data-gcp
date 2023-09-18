@@ -3,9 +3,14 @@ from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python import PythonOperator
 from airflow.providers.http.operators.http import SimpleHttpOperator
+from airflow.models import Param
+from common.operators.gce import (
+    StartGCEOperator,
+    StopGCEOperator,
+    CloneRepositoryGCEOperator,
+    SSHGCEOperator,
+)
 from common.operators.biquery import bigquery_job_task
-
-
 from common import macros
 from common.utils import (
     getting_service_account_token,
@@ -26,7 +31,14 @@ default_dag_args = {
     "project_id": GCP_PROJECT_ID,
 }
 
-dag = DAG(
+GCE_INSTANCE = f"import-cold-data-{ENV_SHORT_NAME}"
+BASE_PATH = "data-gcp/jobs/etl_jobs/internal/cold-data"
+dag_config = {
+    "PROJECT_NAME": GCP_PROJECT_ID,
+    "ENV_SHORT_NAME": ENV_SHORT_NAME,
+}
+
+with DAG(
     "import_cold_data",
     default_args=default_dag_args,
     description="Import cold data from GCS to BQ",
@@ -35,52 +47,73 @@ dag = DAG(
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
-)
-
-start = DummyOperator(task_id="start", dag=dag)
-
-service_account_token = PythonOperator(
-    task_id="getting_cold_data_service_account_token",
-    python_callable=getting_service_account_token,
-    op_kwargs={"function_name": f"cold_data_{ENV_SHORT_NAME}"},
-    dag=dag,
-)
-
-import_cold_data_op = SimpleHttpOperator(
-    task_id=f"import_cold_data",
-    method="POST",
-    http_conn_id="http_gcp_cloud_function",
-    endpoint=f"cold_data_{ENV_SHORT_NAME}",
-    headers={
-        "Content-Type": "application/json",
-        "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_cold_data_service_account_token', key='return_value')}}",
+    params={
+        "branch": Param(
+            default="production" if ENV_SHORT_NAME == "prod" else "master",
+            type="string",
+        )
     },
-    log_response=True,
-    dag=dag,
-)
+) as dag:
 
-end_raw = DummyOperator(task_id="end_raw", dag=dag)
+    start = DummyOperator(task_id="start", dag=dag)
 
-analytics_table_jobs = {}
-for name, params in analytics_tables.items():
+    gce_instance_start = StartGCEOperator(
+        instance_name=GCE_INSTANCE, task_id="gce_start_task"
+    )
 
-    task = bigquery_job_task(dag=dag, table=name, job_params=params)
+    fetch_code = CloneRepositoryGCEOperator(
+        task_id="fetch_code",
+        instance_name=GCE_INSTANCE,
+        command="{{ params.branch }}",
+        python_version="3.9",
+    )
 
-    analytics_table_jobs[name] = {
-        "operator": task,
-        "depends": params.get("depends", []),
-        "dag_depends": params.get("dag_depends", []),
-    }
+    install_dependencies = SSHGCEOperator(
+        task_id="install_dependencies",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_PATH,
+        command="pip install -r requirements.txt --user",
+        dag=dag,
+        retries=2,
+    )
 
-analytics_table_tasks = depends_loop(analytics_table_jobs, end_raw, dag=dag)
+    import_cold_data_op = SSHGCEOperator(
+        task_id="import_cold_data_op",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_PATH,
+        environment=dag_config,
+        command="python main.py ",
+    )
 
-end = DummyOperator(task_id="end", dag=dag)
+    gce_instance_stop = StopGCEOperator(
+        task_id="gce_stop_task", instance_name=GCE_INSTANCE
+    )
 
-(
-    start
-    >> service_account_token
-    >> import_cold_data_op
-    >> end_raw
-    >> analytics_table_tasks
-    >> end
-)
+    end_raw = DummyOperator(task_id="end_raw", dag=dag)
+
+    analytics_table_jobs = {}
+    for name, params in analytics_tables.items():
+
+        task = bigquery_job_task(dag=dag, table=name, job_params=params)
+
+        analytics_table_jobs[name] = {
+            "operator": task,
+            "depends": params.get("depends", []),
+            "dag_depends": params.get("dag_depends", []),
+        }
+
+    analytics_table_tasks = depends_loop(analytics_table_jobs, end_raw, dag=dag)
+
+    end = DummyOperator(task_id="end", dag=dag)
+
+    (
+        start
+        >> gce_instance_start
+        >> fetch_code
+        >> install_dependencies
+        >> import_cold_data_op
+        >> gce_instance_stop
+        >> end_raw
+        >> analytics_table_tasks
+        >> end
+    )

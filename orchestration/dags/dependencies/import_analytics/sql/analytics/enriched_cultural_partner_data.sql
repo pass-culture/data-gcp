@@ -49,7 +49,7 @@ SELECT
     ,STRING_AGG(DISTINCT (CASE WHEN tag_label IS NOT NULL THEN tag_label ELSE NULL END) ORDER BY (CASE WHEN tag_label IS NOT NULL THEN tag_label ELSE NULL END)) AS partner_type
 FROM `{{ bigquery_analytics_dataset }}`.enriched_offerer_tags_data
 WHERE tag_category_name = 'comptage'
-AND tag_label NOT IN ('Association', 'EPN','Collectivité','Pas de tag associé','Auto-Entrepreneur')
+AND tag_label NOT IN ('Association', 'EPN','Collectivité','Pas de tag associé','Auto-Entrepreneur','Compagnie','Tourneur')
 GROUP BY 1
 ),
 

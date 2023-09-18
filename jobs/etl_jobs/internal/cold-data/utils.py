@@ -3,10 +3,10 @@ from datetime import datetime
 from google.cloud import storage, bigquery
 
 PROJECT_NAME = os.environ.get("PROJECT_NAME")
-ENVIRONMENT_SHORT_NAME = os.environ.get("ENVIRONMENT_SHORT_NAME")
-RAW_DATASET = os.environ.get("RAW_DATASET")
-DATA_BUCKET = os.environ.get("DATA_BUCKET")
-BIGQUERY_IMPORT_BUCKET_FOLDER = os.environ.get("BIGQUERY_IMPORT_BUCKET_FOLDER")
+ENVIRONMENT_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
+RAW_DATASET = f"raw_{ENVIRONMENT_SHORT_NAME}"
+DATA_BUCKET = f"data-bucket-{ENVIRONMENT_SHORT_NAME}"
+BIGQUERY_IMPORT_BUCKET_FOLDER = "bigquery_imports"
 
 
 def GCS_to_bigquery(

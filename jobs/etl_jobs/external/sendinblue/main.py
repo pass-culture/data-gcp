@@ -1,3 +1,4 @@
+import typer
 from sendinblue_newsletters import SendinblueNewsletters
 from sendinblue_transactional import SendinblueTransactional
 from datetime import datetime, timezone, timedelta, date
@@ -23,17 +24,22 @@ today = datetime.now(tz=timezone.utc)
 yesterday = date.today() - timedelta(days=1)
 
 
-def run(request):
+def run(
+    target: str = typer.Option(
+        ...,
+        help="Nom de la tache",
+    )
+):
 
-    request_json = request.get_json(silent=True)
-    request_args = request.args
+    # request_json = request.get_json(silent=True)
+    # request_args = request.args
 
-    if request_json and "target" in request_json:
-        target = request_json["target"]
-    elif request_args and "target" in request_args:
-        target = request_args["target"]
-    else:
-        raise RuntimeError("You need to provide a target argument.")
+    # if request_json and "target" in request_json:
+    #     target = request_json["target"]
+    # elif request_args and "target" in request_args:
+    #     target = request_args["target"]
+    # else:
+    #     raise RuntimeError("You need to provide a target argument.")
 
     if target == "newsletter":
         # Statistics for email campaigns Sendinblue
@@ -73,3 +79,7 @@ def run(request):
 
     else:
         return "Invalid target. Must be one of transactional/newsletter."
+
+
+if __name__ == "__main__":
+    typer.run(run)

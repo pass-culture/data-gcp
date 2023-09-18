@@ -103,6 +103,7 @@ with DAG(
         base_dir=BASE_PATH,
         environment=dag_config,
         command="python main.py ",
+        do_xcom_push=True,
     )
 
     gce_instance_stop = StopGCEOperator(

@@ -1,0 +1,53 @@
+name: "Deploy Composer"
+
+on:
+ push:
+   branches:
+     - main
+     - staging
+     - production
+
+jobs:
+
+  setup-env:
+    runs-on: [self-hosted, linux, x64]
+    outputs:
+      env_name: ${{ steps.set-variable.outputs.env_name }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set environment variable
+        id: set-variable
+        run: |
+          if [ ${{ github.ref }} = 'refs/heads/main' ]; then
+            echo "env_name=dev" >> $GITHUB_OUTPUT
+          elif [ ${{ github.ref }} = 'refs/heads/staging' ]; then
+            echo "env_name=staging" >> $GITHUB_OUTPUT
+          elif [ ${{ github.ref }} = 'refs/heads/production' ]; then
+            echo "env_name=production" >> $GITHUB_OUTPUT
+          else
+            echo "env_name=dev" >> $GITHUB_OUTPUT
+          fi
+
+  # composer-deploy:
+  #   container: gcp-sdk
+  #   runs-on: [self-hosted, linux, x64]
+  #   defaults:
+  #    run: 
+  #      working-directory: "./orchestration/"
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - id: auth
+  #       name: "Authenticate with Google Cloud"
+  #       uses: "google-github-actions/auth@v1"
+  #       with:
+  #         create_credentials_file: false
+  #         token_format: "access_token"
+  #         workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+  #         service_account: ${{ secrets.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
+  #     - name: Deploy to composer
+  #       run: |
+  #           gsutil -m rm -r gs://${COMPOSER_BUCKET}/dags
+  #           gsutil cp -r dags gs://${COMPOSER_BUCKET}
+  #     - name: Wait for composer to be deployed (10s x 6 times)
+  #       run: |
+  #           ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} airflow_monitoring 6 10

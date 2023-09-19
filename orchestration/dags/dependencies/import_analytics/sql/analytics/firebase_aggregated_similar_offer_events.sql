@@ -26,12 +26,10 @@ SELECT
     , display_data.similar_offer_playlist_type
     , display_data.is_algolia_recommend
     , display_data.reco_call_id
-    , display_data.offer_id
     , display_data.item_id
-    , display_data.similar_offer_id
     , display_data.similar_item_id
-    , COUNT(DISTINCT CASE WHEN convert_data.event_name = 'ConsultOffer' THEN convert_data.offer_id ELSE NULL END) AS nb_offers_consulted
-    , COUNT(DISTINCT CASE WHEN convert_data.event_name = 'BookingConfirmation' THEN convert_data.offer_id ELSE NULL END) AS nb_offers_booked
+    , COUNT(DISTINCT CASE WHEN convert_data.event_name = 'ConsultOffer' THEN convert_data.item_id ELSE NULL END) AS nb_items_consulted
+    , COUNT(DISTINCT CASE WHEN convert_data.event_name = 'BookingConfirmation' THEN convert_data.item_id ELSE NULL END) AS nb_items_booked
     , SUM(CASE WHEN convert_data.event_name = 'BookingConfirmation' THEN delta_diversification ELSE NULL END) AS diversification_score
 FROM display_data
 LEFT JOIN convert_data ON display_data.unique_session_id = convert_data.unique_session_id

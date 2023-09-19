@@ -5,13 +5,16 @@ from utils import (
     PROJECT_NAME,
     ENVIRONMENT_SHORT_NAME,
     METABASE_API_USERNAME,
-    METABASE_HOST,
     ANALYTICS_DATASET,
     access_secret_data,
     max_cards_to_archive,
     sql_file,
     parent_folder_to_archive,
     limit_inactivity_in_days,
+)
+
+METABASE_HOST = access_secret_data(
+    PROJECT_NAME, f"metabase_host_{ENVIRONMENT_SHORT_NAME}"
 )
 
 password = access_secret_data(

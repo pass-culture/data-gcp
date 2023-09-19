@@ -28,7 +28,7 @@ def reformat_bq(bq_export: BQExport, doc: list, glossary: list):
     try:
         source_type = doc["source_type"]
         if len(source_type) > 0:
-            tags["source-type"] = ":".join(source_type)
+            tags["source-type"] = "-".join(source_type)
         self_service = doc["self_service"]
         if self_service:
             tags["self-service"] = doc["self_service"].lower()
@@ -37,7 +37,7 @@ def reformat_bq(bq_export: BQExport, doc: list, glossary: list):
             tags["team-owner"] = owner_team.lower()
 
         columns = {
-            glossary["column_name"]: glossary["description"]
+            c["column_name"]: c["description"]
             for c in glossary
             if c["table_name"] == table_name.lower()
         }
@@ -48,8 +48,9 @@ def reformat_bq(bq_export: BQExport, doc: list, glossary: list):
             columns=columns,
             labels=tags,
         )
-    except google.api_core.exceptions.NotFound:
+    except google.api_core.exceptions.NotFound as e:
         print(f"Error with table : {table_name}")
+        print(e)
 
 
 def main():

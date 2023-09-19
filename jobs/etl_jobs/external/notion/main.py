@@ -31,15 +31,15 @@ def reformat_bq(bq_export: BQExport, doc: list, glossary: list):
             tags["source-type"] = ":".join(source_type)
         self_service = doc["self_service"]
         if self_service:
-            tags["self-service"] = doc["self_service"]
+            tags["self-service"] = doc["self_service"].lower()
         owner_team = doc["owner"]
         if owner_team:
-            tags["team-owner"] = owner_team
+            tags["team-owner"] = owner_team.lower()
 
         columns = {
             glossary["column_name"]: glossary["description"]
             for c in glossary
-            if c["table_name"] == table_name
+            if c["table_name"] == table_name.lower()
         }
         bq_export.push_doc(
             dataset_id=f"{dataset_id}_{ENVIRONMENT_SHORT_NAME}",

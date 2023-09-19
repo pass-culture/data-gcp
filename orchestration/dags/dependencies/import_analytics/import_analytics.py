@@ -393,7 +393,11 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "firebase_aggregated_similar_offer_events",
         "time_partitioning": {"field": "event_date"},
-        "depends": ["diversification_booking", "enriched_user_data"],
+        "depends": [
+            "diversification_booking",
+            "enriched_user_data",
+            "similar_offer_events",
+        ],
         "dag_depends": [
             "import_intraday_firebase_data",
         ],

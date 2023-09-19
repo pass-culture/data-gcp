@@ -317,7 +317,7 @@ analytics_tables = {
         ],
     },
     "analytics_firebase_booking_origin": {
-        "sql": f"{SQL_PATH}/analytics/firebase_booking_origin.sql",
+        "sql": f"{ANALYTICS_SQL_PATH}/analytics/firebase_booking_origin.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "firebase_booking_origin",
         "partition_prefix": "$",
@@ -326,7 +326,7 @@ analytics_tables = {
         "depends": ["offer_item_ids"],
     },
     "analytics_firebase_similar_offer_events": {
-        "sql": f"{SQL_PATH}/analytics/firebase_similar_offer_events.sql",
+        "sql": f"{ANALYTICS_SQL_PATH}/analytics/firebase_similar_offer_events.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "firebase_similar_offer_events",
         "time_partitioning": {"field": "event_date"},

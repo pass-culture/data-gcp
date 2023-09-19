@@ -396,10 +396,7 @@ analytics_tables = {
         "depends": [
             "diversification_booking",
             "enriched_user_data",
-            "similar_offer_events",
-        ],
-        "dag_depends": [
-            "import_intraday_firebase_data",
+            "analytics_firebase_similar_offer_events",
         ],
     },
     "adage_involved_student": {

@@ -1,0 +1,15 @@
+name: "Base Workflow"
+
+on:
+ push:
+
+jobs:
+
+   test-jobs:
+    uses: ./.github/workflows/reusable_test_jobs.yml
+
+   test-orchestration:
+    uses: ./.github/workflows/reusable_test_orchestration.yml
+    secrets:
+      GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      ARTIFACT_REGISTRY_SERVICE_ACCOUNT: ${{ secrets.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}

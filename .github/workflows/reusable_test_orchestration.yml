@@ -1,0 +1,51 @@
+name: "Test Orchestration"
+
+on:
+  workflow_call:
+    secrets:
+       GCP_WORKLOAD_IDENTITY_PROVIDER:
+        required: true
+       ARTIFACT_REGISTRY_SERVICE_ACCOUNT:
+        required: true
+
+
+
+jobs:
+  test-orchestration:
+    permissions:
+      id-token: write
+      contents: write
+    defaults:
+     run: 
+       working-directory: "./orchestration/"
+    env:
+      AIRFLOW_HOME: "~/data-gcp/orchestration"
+      DAG_FOLDER: "./dags"
+      RECOMMENDATION_SQL_INSTANCE: cloudsql-recommendation-circleci
+      RECOMMENDATION_SQL_BASE: cloudsql-recommendation-circleci
+    name: "Test Orchestration"
+    runs-on: [self-hosted, linux, x64]
+    container: python:3.7
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Python requirements
+        run: |
+            pip install -r airflow/orchestration-requirements.txt
+      - id: auth
+        name: "Authenticate with Google Cloud"
+        uses: "google-github-actions/auth@v1"
+        with:
+          create_credentials_file: true
+          token_format: "access_token"
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
+      - name: Run tests
+        env:
+            GCP_PROJECT: passculture-data-ehp
+            GOOGLE_CLOUD_PROJECT: passculture-data-ehp
+            GCLOUD_PROJECT: passculture-data-ehp         
+        run: |
+          echo $PYTHONPATH
+          export PYTHONPATH=$PYTHONPATH:./dags
+          airflow db init
+          pytest --log-cli-level=debug tests

@@ -124,6 +124,12 @@ class BaseSSHGCEOperator(BaseOperator):
                 if context and self.do_xcom_push:
                     ti = context.get("task_instance")
                     ti.xcom_push(key="ssh_exit", value=exit_status)
+                    lines_result = agg_stdout.decode("utf-8").split("\n")
+                    if len(lines_result[-1]) > 0:
+                        result = lines_result[-1]
+                    else:
+                        result = lines_result[-2]
+                    ti.xcom_push(key="result", value=result)
                 if exit_status != 0:
                     raise AirflowException(
                         f"SSH operator error: exit status = {exit_status}"

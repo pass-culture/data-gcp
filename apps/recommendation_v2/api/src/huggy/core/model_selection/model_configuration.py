@@ -54,14 +54,14 @@ class ModelConfiguration:
         """
         Overwrite default params
         """
-        if params_in.is_reco_mixed is not None:
-            self.diversification_params.is_active = params_in.is_reco_mixed
+        # if params_in.is_reco_mixed is not None:
+        #     self.diversification_params.is_active = params_in.is_reco_mixed
 
         if params_in.is_reco_shuffled is not None:
             self.diversification_params.is_reco_shuffled = params_in.is_reco_shuffled
 
-        if params_in.mixing_features is not None:
-            self.diversification_params.mixing_features = params_in.mixing_features
+        # if params_in.mixing_features is not None:
+        #     self.diversification_params.mixing_features = params_in.mixing_features
 
         return self.diversification_params
 
@@ -97,6 +97,6 @@ class ModelFork:
         if not offer.found:
             return copy.deepcopy(self.cold_start_model), "unknown"
         if self.bookings_count is not None:
-            if offer.bookings_count >= self.bookings_count:
+            if offer.booking_number >= self.bookings_count:
                 return copy.deepcopy(self.warm_start_model), "algo"
         return copy.deepcopy(self.cold_start_model), "cold_start"

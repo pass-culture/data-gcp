@@ -9,7 +9,7 @@ SELECT
     , platform
     , onboarding_user_selected_age
 FROM `{{ bigquery_analytics_dataset }}`.firebase_events f
-WHERE (event_name IN ('SelectAge','HasAcceptedAllCookies','login','OnboardingStarted','ConsultOffer','BookingConfirmation','first_open','ConsultOffer','ContinueSetEmail','ContinueSetPassword','ContinueSetBirthday','SetEmail','SetPassword','SetBirthday')
+WHERE (event_name IN ('SelectAge','HasAcceptedAllCookies','login','OnboardingStarted','ConsultOffer','BookingConfirmation','first_open','ConsultOffer','ContinueSetEmail','ContinueSetPassword','ContinueSetBirthday','ContinueCGU','SetEmail','SetPassword','SetBirthday')
 OR firebase_screen IN ('SignupForm','ProfilSignUp', 'SignupConfirmationEmailSent', 'OnboardingWelcome','OnboardingGeolocation', 'FirstTutorial','BeneficiaryRequestSent','UnderageAccountCreated','BeneficiaryAccountCreated','FirstTutorial2','FirstTutorial3','FirstTutorial4','HasSkippedTutorial' )) 
 ),
 
@@ -77,7 +77,7 @@ SELECT
     user_pseudo_id
     ,MIN(event_timestamp) as signup_completed_date
 FROM logs
-WHERE firebase_screen = 'SignupConfirmationEmailSent'
+WHERE (firebase_screen = 'SignupConfirmationEmailSent' OR event_name = 'ContinueCGU')
 GROUP BY 1
 ),
 

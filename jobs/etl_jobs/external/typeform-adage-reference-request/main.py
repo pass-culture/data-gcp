@@ -4,10 +4,12 @@ from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import secretmanager
 from typeform import TypeformDownloader
 from gsheet import export_sheet
+import json
 
 GCP_PROJECT_ID = os.environ["PROJECT_NAME"]
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
-BIGQUERY_RAW_DATASET = os.environ.get("BIGQUERY_RAW_DATASET")
+BIGQUERY_RAW_DATASET = f"raw_{ENV_SHORT_NAME}"
+SA_ACCOUNT = f"algo-training-{ENV_SHORT_NAME}"
 
 
 def access_secret_data(project_id, secret_id, version_id=1, default=None):
@@ -20,18 +22,18 @@ def access_secret_data(project_id, secret_id, version_id=1, default=None):
         return default
 
 
-api_key = access_secret_data(GCP_PROJECT_ID, "typeform_api_key")
+def run():
 
-
-def run(request):
-    sheet_df = export_sheet()
+    sheet_df = export_sheet(json.loads(access_secret_data(GCP_PROJECT_ID, SA_ACCOUNT)))
     sheet_df.to_gbq(
         f"{BIGQUERY_RAW_DATASET}.typeform_adage_reference_request_sheet",
         GCP_PROJECT_ID,
         if_exists="replace",
     )
 
-    clean_responses = TypeformDownloader(api_key, form_id="VtKospEg").run()
+    clean_responses = TypeformDownloader(
+        access_secret_data(GCP_PROJECT_ID, "typeform_api_key"), form_id="VtKospEg"
+    ).run()
     responses_df = pd.DataFrame(clean_responses)
     responses_df["answers"] = responses_df["answers"].astype(str)
     responses_df = responses_df.drop_duplicates()
@@ -42,3 +44,6 @@ def run(request):
         if_exists="replace",
     )
     return "Success"
+
+
+run()

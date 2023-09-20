@@ -21,7 +21,7 @@ GCE_INSTANCE = f"extract-items-embeddings-{ENV_SHORT_NAME}"
 BASE_DIR = "data-gcp/jobs/ml_jobs/embeddings"
 DATE = "{{ yyyymmdd(ds) }}"
 default_args = {
-    "start_date": datetime(2023, 3, 6),
+    "start_date": datetime(2023, 9, 6),
     "on_failure_callback": task_fail_slack_alert,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
@@ -33,7 +33,7 @@ with DAG(
     "embeddings_extraction_items",
     default_args=default_args,
     description="Extact items metadata embeddings",
-    schedule_interval=get_airflow_schedule("0 */6 * * *"),
+    schedule_interval=get_airflow_schedule("0 0 * * *"),
     catchup=False,
     dagrun_timeout=timedelta(minutes=180),
     user_defined_macros=macros.default,
@@ -105,7 +105,7 @@ with DAG(
         f"--env-short-name {ENV_SHORT_NAME} "
         "--config-file-name {{ params.config_file_name }} "
         f"--input-table-name {DATE}_item_to_extract_embeddings_clean "
-        f"--output-table-name item_embeddings_v2 ",
+        f"--output-table-name item_embeddings ",
     )
 
     reduce_dimension = SSHGCEOperator(
@@ -117,7 +117,7 @@ with DAG(
         f"--gcp-project {GCP_PROJECT_ID} "
         f"--env-short-name {ENV_SHORT_NAME} "
         "--config-file-name {{ params.config_file_name }} "
-        f"--input-table-name item_embeddings_v2 "
+        f"--input-table-name item_embeddings "
         f"--output-table-name item_embeddings_reduced ",
     )
 

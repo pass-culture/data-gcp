@@ -3,6 +3,7 @@ SELECT
     DATE_TRUNC(date,MONTH) AS date,
     MAX(date) AS last_date 
 FROM `{{ bigquery_analytics_dataset }}.adage_involved_student`
+WHERE date >= '2023-08-01'
 GROUP BY 1
 )
 
@@ -29,4 +30,5 @@ WHERE
 {% else %}
     NOT department_code = '-1'
 {% endif %}
+AND involved.scholar_year = "2023-2024" 
 GROUP BY 1, 2, 3, 4, 5

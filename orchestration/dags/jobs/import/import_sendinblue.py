@@ -4,6 +4,13 @@ from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.http.operators.http import SimpleHttpOperator
 from airflow.operators.python import PythonOperator
+from airflow.models import Param
+from common.operators.gce import (
+    StartGCEOperator,
+    StopGCEOperator,
+    CloneRepositoryGCEOperator,
+    SSHGCEOperator,
+)
 from common.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
@@ -22,6 +29,14 @@ from common import macros
 
 from dependencies.sendinblue.import_sendinblue import analytics_tables
 
+
+GCE_INSTANCE = f"import-sendinblue-{ENV_SHORT_NAME}"
+BASE_PATH = "data-gcp/jobs/etl_jobs/external/sendinblue"
+dag_config = {
+    "GCP_PROJECT": GCP_PROJECT_ID,
+    "ENV_SHORT_NAME": ENV_SHORT_NAME,
+}
+
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),
     "retries": 1,
@@ -30,7 +45,7 @@ default_dag_args = {
     "project_id": GCP_PROJECT_ID,
 }
 
-dag = DAG(
+with DAG(
     "import_sendinblue",
     default_args=default_dag_args,
     description="Import sendinblue tables",
@@ -41,62 +56,78 @@ dag = DAG(
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
-)
-
-service_account_token = PythonOperator(
-    task_id="getting_sendinblue_service_account_token",
-    python_callable=getting_service_account_token,
-    op_kwargs={"function_name": f"sendinblue_import_{ENV_SHORT_NAME}"},
-    dag=dag,
-)
-
-import_transactional_data_to_raw = SimpleHttpOperator(
-    task_id="import_transactional_data_to_raw",
-    method="POST",
-    http_conn_id="http_gcp_cloud_function",
-    endpoint=f"sendinblue_import_{ENV_SHORT_NAME}",
-    data=json.dumps({"target": "transactional"}),
-    headers={
-        "Content-Type": "application/json",
-        "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_sendinblue_service_account_token', key='return_value')}}",
+    params={
+        "branch": Param(
+            default="production" if ENV_SHORT_NAME == "prod" else "master",
+            type="string",
+        )
     },
-    log_response=True,
-    dag=dag,
-)
+) as dag:
 
-import_newsletter_data_to_raw = SimpleHttpOperator(
-    task_id="import_newsletter_data_to_raw",
-    method="POST",
-    http_conn_id="http_gcp_cloud_function",
-    endpoint=f"sendinblue_import_{ENV_SHORT_NAME}",
-    data=json.dumps({"target": "newsletter"}),
-    headers={
-        "Content-Type": "application/json",
-        "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_sendinblue_service_account_token', key='return_value')}}",
-    },
-    log_response=True,
-    dag=dag,
-)
+    gce_instance_start = StartGCEOperator(
+        instance_name=GCE_INSTANCE, task_id="gce_start_task"
+    )
 
-end_raw = DummyOperator(task_id="end_raw", dag=dag)
+    fetch_code = CloneRepositoryGCEOperator(
+        task_id="fetch_code",
+        instance_name=GCE_INSTANCE,
+        command="{{ params.branch }}",
+        python_version="3.9",
+    )
 
-analytics_table_jobs = {}
-for name, params in analytics_tables.items():
-    task = bigquery_job_task(dag=dag, table=name, job_params=params)
-    analytics_table_jobs[name] = {
-        "operator": task,
-        "depends": params.get("depends", []),
-        "dag_depends": params.get("dag_depends", []),
-    }
+    install_dependencies = SSHGCEOperator(
+        task_id="install_dependencies",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_PATH,
+        command="pip install -r requirements.txt --user",
+        dag=dag,
+        retries=2,
+    )
 
-    # import_tables_to_analytics_tasks.append(task)
+    import_transactional_data_to_raw = SSHGCEOperator(
+        task_id="import_transactional_data_to_raw",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_PATH,
+        environment=dag_config,
+        command="python main.py --target transactional ",
+        do_xcom_push=True,
+    )
 
-analytics_table_tasks = depends_loop(analytics_table_jobs, end_raw, dag=dag)
+    import_newsletter_data_to_raw = SSHGCEOperator(
+        task_id="import_newsletter_data_to_raw",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_PATH,
+        environment=dag_config,
+        command="python main.py --target newsletter ",
+        do_xcom_push=True,
+    )
 
-(
-    service_account_token
-    >> import_newsletter_data_to_raw
-    >> import_transactional_data_to_raw
-    >> end_raw
-    >> analytics_table_tasks
-)
+    gce_instance_stop = StopGCEOperator(
+        task_id="gce_stop_task", instance_name=GCE_INSTANCE
+    )
+
+    end_raw = DummyOperator(task_id="end_raw", dag=dag)
+
+    analytics_table_jobs = {}
+    for name, params in analytics_tables.items():
+        task = bigquery_job_task(dag=dag, table=name, job_params=params)
+        analytics_table_jobs[name] = {
+            "operator": task,
+            "depends": params.get("depends", []),
+            "dag_depends": params.get("dag_depends", []),
+        }
+
+        # import_tables_to_analytics_tasks.append(task)
+
+    analytics_table_tasks = depends_loop(analytics_table_jobs, end_raw, dag=dag)
+
+    (
+        gce_instance_start
+        >> fetch_code
+        >> install_dependencies
+        >> import_newsletter_data_to_raw
+        >> import_transactional_data_to_raw
+        >> gce_instance_stop
+        >> end_raw
+        >> analytics_table_tasks
+    )

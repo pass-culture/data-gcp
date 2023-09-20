@@ -1,6 +1,7 @@
 SELECT
     session_id,
     user_pseudo_id,
+    unique_session_id,
     ANY_VALUE(session_number) AS session_number,
     ANY_VALUE(user_id) AS user_id,
     MIN(event_timestamp) AS first_event_timestamp,
@@ -33,4 +34,5 @@ FROM
         )
 GROUP BY
     session_id,
-    user_pseudo_id;
+    user_pseudo_id,
+    unique_session_id;

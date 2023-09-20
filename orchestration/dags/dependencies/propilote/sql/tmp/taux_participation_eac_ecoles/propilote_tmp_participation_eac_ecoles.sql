@@ -1,7 +1,7 @@
 WITH dates AS (
     select 
         month as month
-    from unnest(generate_date_array('2020-01-01', current_date(), interval 1 month)) month
+    from unnest(generate_date_array('2023-08-01', current_date(), interval 1 month)) month
 ),
 
 institutions AS (
@@ -34,7 +34,7 @@ active_institutions AS (
     JOIN `{{ bigquery_analytics_dataset }}.enriched_collective_booking_data` as collective_booking
         ON dates.month >= DATE_TRUNC(collective_booking.collective_booking_creation_date, MONTH)
         AND collective_booking_status IN ('USED','REIMBURSED','CONFIRMED')
-        AND scholar_year = "2022-2023" 
+        AND scholar_year = "2023-2024" 
     JOIN `{{ bigquery_analytics_dataset }}.enriched_institution_data` as institution
         ON collective_booking.educational_institution_id = institution.institution_id
     GROUP BY 1, 2, 3

@@ -7,7 +7,14 @@ from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
     GCSToBigQueryOperator,
 )
 from airflow.operators.python import BranchPythonOperator, PythonOperator
-from common.config import DAG_FOLDER
+from airflow.models import Param
+from common.operators.gce import (
+    StartGCEOperator,
+    StopGCEOperator,
+    CloneRepositoryGCEOperator,
+    SSHGCEOperator,
+)
+from common.config import ENV_SHORT_NAME, GCP_PROJECT_ID, DAG_FOLDER
 from common import macros
 from common.config import (
     BIGQUERY_RAW_DATASET,
@@ -23,8 +30,14 @@ from dependencies.addresses.import_addresses import (
     ANALYTICS_TABLES,
 )
 
+GCE_INSTANCE = f"import-addresses-{ENV_SHORT_NAME}"
+BASE_PATH = "data-gcp/jobs/etl_jobs/external/addresses"
+dag_config = {
+    "GCP_PROJECT": GCP_PROJECT_ID,
+    "ENV_SHORT_NAME": ENV_SHORT_NAME,
+}
 
-FUNCTION_NAME = f"addresses_import_{ENV_SHORT_NAME}"
+# FUNCTION_NAME = f"addresses_import_{ENV_SHORT_NAME}"
 USER_LOCATIONS_TABLE = "user_locations"
 schedule_interval = "0 * * * *" if ENV_SHORT_NAME == "prod" else "30 2 * * *"
 
@@ -54,29 +67,48 @@ with DAG(
     dagrun_timeout=timedelta(minutes=180),
     template_searchpath=DAG_FOLDER,
     user_defined_macros=macros.default,
+    params={
+        "branch": Param(
+            default="production" if ENV_SHORT_NAME == "prod" else "master",
+            type="string",
+        )
+    },
 ) as dag:
 
     start = DummyOperator(task_id="start")
 
-    getting_service_account_token = PythonOperator(
-        task_id="getting_service_account_token",
-        python_callable=getting_service_account_token,
-        op_kwargs={"function_name": FUNCTION_NAME},
+    gce_instance_start = StartGCEOperator(
+        instance_name=GCE_INSTANCE, task_id="gce_start_task"
     )
 
-    addresses_to_gcs = SimpleHttpOperator(
+    fetch_code = CloneRepositoryGCEOperator(
+        task_id="fetch_code",
+        instance_name=GCE_INSTANCE,
+        command="{{ params.branch }}",
+        python_version="3.8",
+    )
+
+    install_dependencies = SSHGCEOperator(
+        task_id="install_dependencies",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_PATH,
+        command="pip install -r requirements.txt --user",
+        dag=dag,
+        retries=2,
+    )
+
+    addresses_to_gcs = SSHGCEOperator(
         task_id="addresses_to_gcs",
-        method="POST",
-        http_conn_id="http_gcp_cloud_function",
-        endpoint=FUNCTION_NAME,
-        headers={
-            "Content-Type": "application/json",
-            "Authorization": "Bearer {{task_instance.xcom_pull(task_ids='getting_service_account_token', key='return_value')}}",
-        },
-        log_response=True,
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_PATH,
+        environment=dag_config,
+        command="python main.py ",
         do_xcom_push=True,
     )
 
+    gce_instance_stop = StopGCEOperator(
+        task_id="gce_stop_task", instance_name=GCE_INSTANCE
+    )
     branch_op = BranchPythonOperator(
         task_id="checking_if_new_users",
         python_callable=branch_function,
@@ -89,7 +121,7 @@ with DAG(
         task_id="import_addresses_to_bigquery",
         bucket=DATA_GCS_BUCKET_NAME,
         source_objects=[
-            "{{task_instance.xcom_pull(task_ids='addresses_to_gcs', key='return_value')}}"
+            "{{task_instance.xcom_pull(task_ids='addresses_to_gcs', key='result')}}"
         ],
         destination_project_dataset_table=f"{BIGQUERY_RAW_DATASET}.{USER_LOCATIONS_TABLE}",
         write_disposition="WRITE_APPEND",
@@ -121,7 +153,15 @@ with DAG(
 
     end = DummyOperator(task_id="end", trigger_rule="one_success")
 
-    start >> getting_service_account_token >> addresses_to_gcs >> branch_op
+    (
+        start
+        >> gce_instance_start
+        >> fetch_code
+        >> install_dependencies
+        >> addresses_to_gcs
+        >> gce_instance_stop
+        >> branch_op
+    )
     (
         branch_op
         >> import_addresses_to_bigquery

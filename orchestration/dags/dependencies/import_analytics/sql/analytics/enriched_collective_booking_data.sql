@@ -19,6 +19,7 @@ SELECT
     offer_id AS offer_id,
     collective_offer.collective_offer_name,
     collective_offer.collective_offer_subcategory_id,
+    subcategories.category_id AS collective_offer_category_id,
     collective_offer.venue_id AS venue_id,
     venue.venue_name,
     venue.venue_department_code,
@@ -38,6 +39,7 @@ SELECT
     eple.libelle_academie,
     collective_booking.collective_booking_creation_date,
     collective_booking.collective_booking_cancellation_date,
+    CASE WHEN collective_booking.collective_booking_cancellation_date IS NULL THEN "FALSE" ELSE "TRUE" END AS collective_booking_is_cancelled,
     collective_booking.collective_booking_status,
     collective_booking.collective_booking_cancellation_reason,
     collective_booking.collective_booking_confirmation_date,
@@ -57,4 +59,5 @@ FROM
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.eple AS eple ON eple.id_etablissement = educational_institution.institution_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.region_department AS venue_region_departement ON venue.venue_department_code = venue_region_departement.num_dep
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.region_department AS school_region_departement ON eple.code_departement = school_region_departement.num_dep
-    LEFT JOIN collective_booking_ranking_view ON collective_booking_ranking_view.collective_booking_id = collective_booking.collective_booking_id;
+    LEFT JOIN collective_booking_ranking_view ON collective_booking_ranking_view.collective_booking_id = collective_booking.collective_booking_id
+    LEFT JOIN `{{ bigquery_analytics_dataset }}`.subcategories subcategories ON collective_offer.collective_offer_subcategory_id = subcategories.id;

@@ -16,7 +16,7 @@ storage_client = storage.Client()
 bigquery_client = bigquery.Client()
 
 
-def run(request):
+def run():
     for table, config in ref_tables.items():
 
         folder_name = BIGQUERY_IMPORT_BUCKET_FOLDER + "/" + table
@@ -38,3 +38,6 @@ def run(request):
         )
 
     return "Success"
+
+
+run()

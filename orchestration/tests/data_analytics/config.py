@@ -107,6 +107,7 @@ BIGQUERY_SCHEMAS = {
         "countries": "STRING",
         "casting": "STRING",
         "isbn": "STRING",
+        "titelive_gtl_id": "STRING",
         "book_editor": "STRING",
     },
     "applicative_database_offerer": {
@@ -239,6 +240,7 @@ BIGQUERY_SCHEMAS = {
         "offer_id": "STRING",
         "offer_name": "STRING",
         "offerer_id": "STRING",
+        "partner_id": "STRING",
         "offer_subcategoryId": "STRING",
         "venue_department_code": "STRING",
         "stock_creation_date": "DATETIME",

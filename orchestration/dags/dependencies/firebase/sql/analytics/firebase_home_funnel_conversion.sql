@@ -33,6 +33,7 @@ with child_home as (
     user_pseudo_id
   , user_id
   , session_id
+  , unique_session_id
   , entry_id
   , home_ref.title as entry_name
   , module_id as parent_module_id
@@ -53,13 +54,14 @@ with child_home as (
   {% else %}
   AND event_date = DATE('{{ add_days(ds, -1) }}')
   {% endif %}
-  QUALIFY rank() over(partition by user_pseudo_id, session_id, module_id order by event_timestamp) = 1 -- get the first display event
+  QUALIFY rank() over(partition by unique_session_id, module_id order by event_timestamp) = 1 -- get the first display event
 )
 , clicked as (
     SELECT
       user_pseudo_id
       , user_id
       , session_id
+      , unique_session_id
       , entry_id
       , home_ref.title as entry_name
       , event_name as click_type
@@ -83,7 +85,7 @@ with child_home as (
     -- entry_id param is missing for event HighlightBlockClicked because it is available in a prior version of the app. 
     and user_pseudo_id is not null
     and session_id is not null
-    QUALIFY rank() over(partition by user_pseudo_id, session_id, module_id order by event_timestamp) = 1 -- get the first click event
+    QUALIFY rank() over(partition by unique_session_id, module_id order by event_timestamp) = 1 -- get the first click event
 )
 , consultations as (
     WITH relationships as (
@@ -100,6 +102,7 @@ with child_home as (
       user_pseudo_id
       , user_id
       , session_id
+      , unique_session_id
       , entry_id
       , module_id
       , origin
@@ -110,13 +113,14 @@ with child_home as (
     WHERE event_name = 'ConsultOffer'
     AND origin in ("home", "exclusivity", "venue","video","videoModal")
     AND user_pseudo_id is not null
-    QUALIFY rank() over(partition by user_pseudo_id, session_id, offer_id order by event_timestamp desc) = 1 -- get the last consultation
+    QUALIFY rank() over(partition by unique_session_id, offer_id order by event_timestamp desc) = 1 -- get the last consultation
     ),
     venue as ( -- get the module_id for venue playlist
       SELECT
         user_pseudo_id
         , user_id
         , session_id
+        , unique_session_id
         , entry_id
         , module_id
         , offer_id
@@ -126,12 +130,13 @@ with child_home as (
       WHERE event_name = "ConsultVenue"
       AND origin = "home" 
       and user_pseudo_id is not null
-      QUALIFY rank() over(partition by user_pseudo_id, session_id, venue_id order by event_timestamp desc) = 1 -- get the last consultation
+      QUALIFY rank() over(partition by unique_session_id, venue_id order by event_timestamp desc) = 1 -- get the last consultation
   )
   SELECT 
       offer.user_pseudo_id
       , offer.user_id
       , offer.session_id
+      , offer.unique_session_id
       , coalesce(offer.entry_id, venue.entry_id) as entry_id
       , home_ref.title as entry_name
       , coalesce(offer.module_id, venue.module_id) as module_id
@@ -147,8 +152,7 @@ with child_home as (
       , playlist_name
     FROM venue
     FULL OUTER JOIN offer
-    ON offer.user_pseudo_id = venue.user_pseudo_id
-    AND offer.session_id = venue.session_id
+    ON offer.unique_session_id = venue.unique_session_id
     AND offer.venue_id = venue.venue_id
     AND offer.consult_offer_timestamp >= venue.consult_venue_timestamp
     LEFT JOIN home_ref
@@ -164,6 +168,7 @@ SELECT
     displayed.user_pseudo_id
   , displayed.user_id
   , displayed.session_id
+  , displayed.unique_session_id
   , displayed.entry_id -- first touch
   , displayed.entry_name
   , displayed.parent_module_id -- Can be category list block, highlight etc / second touch
@@ -189,19 +194,16 @@ SELECT
   , booking_timestamp
 FROM displayed
 LEFT JOIN clicked
-  ON displayed.user_pseudo_id = clicked.user_pseudo_id 
-  AND displayed.session_id = clicked.session_id
+  ON displayed.unique_session_id = clicked.unique_session_id
   AND displayed.entry_id = clicked.entry_id
   AND displayed.parent_module_id = coalesce(clicked.module_list_id, clicked.module_id) -- coalesce pour ne pas exclure les blocs qui ne redirigent pas vers une home
   AND displayed.module_displayed_timestamp <= clicked.module_clicked_timestamp
 LEFT JOIN consultations
-  ON displayed.user_pseudo_id = consultations.user_pseudo_id
-  AND displayed.session_id =  consultations.session_id
+  ON displayed.unique_session_id = consultations.unique_session_id
   -- coalesce + conditional joining pour ne pas exclure les consultations d'offres "directes" => performance ?
   AND coalesce(clicked.destination_entry_id, displayed.parent_module_id) = case when clicked.destination_entry_id is null then playlist_id else consultations.home_id end 
   AND coalesce(clicked.module_clicked_timestamp, displayed.module_displayed_timestamp) <= consultations.consult_offer_timestamp
 LEFT JOIN `{{ bigquery_analytics_dataset }}.firebase_bookings` as bookings
-  ON displayed.user_pseudo_id = bookings.user_pseudo_id
-  AND displayed.session_id = bookings.session_id
+  ON displayed.unique_session_id = bookings.unique_session_id
   AND consultations.offer_id = bookings.offer_id
   AND consultations.consult_offer_timestamp <= bookings.booking_timestamp

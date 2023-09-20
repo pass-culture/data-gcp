@@ -5,7 +5,6 @@ from utils import (
     PROJECT_NAME,
     ENVIRONMENT_SHORT_NAME,
     METABASE_API_USERNAME,
-    METABASE_HOST,
     ANALYTICS_DATASET,
     access_secret_data,
     max_cards_to_archive,
@@ -14,12 +13,16 @@ from utils import (
     limit_inactivity_in_days,
 )
 
+METABASE_HOST = access_secret_data(
+    PROJECT_NAME, f"metabase_host_{ENVIRONMENT_SHORT_NAME}"
+)
+
 password = access_secret_data(
     PROJECT_NAME, f"metabase-api-secret-{ENVIRONMENT_SHORT_NAME}"
 )
 
 
-def run(request):
+def run():
     metabase = MetabaseAPI(
         username=METABASE_API_USERNAME, password=password, host=METABASE_HOST
     )
@@ -45,3 +48,6 @@ def run(request):
         time.sleep(1)
 
     return "success"
+
+
+run()

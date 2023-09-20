@@ -1,9 +1,12 @@
-import google.auth
 import gspread
 import pandas as pd
 import utils
+from google.oauth2 import service_account
+
 
 SPREADSHEET_ID = "1rC4K-WIECJMXYTe0-rCKAiaO3QJ7oK8jXdinvaiXi5M"
+SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
+
 EXPECTED_HEADERS = [
     "Vous êtes",
     "Exercez-vous dans un cadre professionnel ?",
@@ -31,10 +34,11 @@ EXPECTED_HEADERS = [
 ]
 
 
-def export_sheet():
-
-    creds, _ = google.auth.default()
-    gc = gspread.authorize(creds)
+def export_sheet(sa_info):
+    credentials = service_account.Credentials.from_service_account_info(
+        sa_info, scopes=SCOPES
+    )
+    gc = gspread.authorize(credentials)
     sh = gc.open_by_key(SPREADSHEET_ID)
     worksheet = sh.get_worksheet(0)
     df = pd.DataFrame(worksheet.get_all_records(expected_headers=EXPECTED_HEADERS))[

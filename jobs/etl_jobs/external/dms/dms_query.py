@@ -2,7 +2,7 @@ DMS_QUERY = """
 query getDemarches($demarcheNumber: Int!, $after: String,  $updatedSince: ISO8601DateTime) {
     demarche(number:$demarcheNumber) {
         title
-        dossiers(first: 100, after: $after, updatedSince: $updatedSince) {
+        dossiers(first: 10, after: $after, updatedSince: $updatedSince) {
             edges {
                 node {
                     ...DossierFragment

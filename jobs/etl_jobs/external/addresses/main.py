@@ -4,7 +4,7 @@ from scripts import fetch_user_location
 STORAGE_PATH = "addresses_exports"
 
 
-def run(request):
+def run():
     """The Cloud Function entrypoint."""
 
     now = datetime.now().isoformat(timespec="minutes")
@@ -12,5 +12,9 @@ def run(request):
 
     downloader = fetch_user_location.AdressesDownloader(user_locations_file_name)
     result = downloader.run()
+    print(f"{result}")
+    return f"{result}"
 
-    return result
+
+if __name__ == "__main__":
+    run()

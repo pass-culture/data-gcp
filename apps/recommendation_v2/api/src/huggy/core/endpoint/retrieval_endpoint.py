@@ -89,8 +89,8 @@ class RetrievalEndpoint(AbstractEndpoint):
         if not self.is_geolocated:
             params.append(EqParams(label="is_geolocated", value=float(0.0)))
 
-        # if self.user.age and self.user.age < 18:
-        #    params.append(EqParams(label="is_underage_recommendable", value=1))
+        if self.user.age and self.user.age < 18:
+            params.append(EqParams(label="is_underage_recommendable", value=1))
 
         # dates filter
         if self.params_in.start_date is not None or self.params_in.end_date is not None:
@@ -124,15 +124,21 @@ class RetrievalEndpoint(AbstractEndpoint):
         )
         # search_group_names
         params.append(
-            ListParams(label="search_group_name", values=self.params_in.offer_type_list)
+            ListParams(label="search_group_name", values=self.params_in.categories)
         )
         # subcategory_id
         params.append(
             ListParams(label="subcategory_id", values=self.params_in.subcategories)
         )
-        # params.append(EqParams(label="offer_is_duo", value=self.params_in.offer_is_duo))
+        params.append(EqParams(label="offer_is_duo", value=self.params_in.offer_is_duo))
 
-        # TODO : Handle offer_type_list in reco
+        if self.params_in.offer_type_list is not None:
+            label, domain = [], []
+            for type in self.params_in.offer_type_list:
+                domain.append(type.key)
+                label.append(type.value)
+            params.append(ListParams(label="offer_type_domain", values=domain))
+            params.append(ListParams(label="offer_type_label", values=label))
 
         return {"$and": {k: v for d in params for k, v in d.filter().items()}}
 

@@ -129,7 +129,8 @@ GROUP BY 1
 
 SELECT
     venue.venue_id,
-    CONCAT("venue-",venue.venue_id) AS partner_id,
+    CASE WHEN venue.venue_is_permanent THEN CONCAT("venue-",venue.venue_id)
+         ELSE CONCAT("offerer-", offerer.offerer_id) END AS partner_id,
     venue.venue_name,
     venue.venue_public_name,
     venue.venue_booking_email,

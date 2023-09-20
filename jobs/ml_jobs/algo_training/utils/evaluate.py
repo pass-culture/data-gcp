@@ -60,9 +60,9 @@ def evaluate(
     logger.info(f"training_item_ids : {training_item_ids.shape[0]}")
 
     logger.info("Load test data...")
-    test_columns = ["user_id", "item_id"]
-    if prediction_input_feature not in test_columns:
-        test_columns.append(prediction_input_feature)
+    test_columns = [prediction_input_feature, "item_id"]
+    if "user_id" not in test_columns:
+        test_columns.append("user_id")
     positive_data_test = read_from_gcs(
         storage_path, test_dataset_name, parallel=False
     ).astype(

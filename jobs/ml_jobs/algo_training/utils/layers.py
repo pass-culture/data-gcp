@@ -1,8 +1,9 @@
 from dataclasses import dataclass
-
+from loguru import logger
+import pandas as pd
 import numpy as np
 import tensorflow as tf
-
+import json
 from tensorflow.keras.layers import Embedding, TextVectorization, Dot
 from tensorflow.keras.layers.experimental.preprocessing import (
     StringLookup,
@@ -101,6 +102,54 @@ class TextEmbeddingLayer:
                 tf.keras.layers.GlobalAveragePooling1D(),
             ]
         )
+
+
+@dataclass
+class PretainedEmbeddingLayer:
+    """
+    A preprocessing layer which maps string features into pretrained embeddings.
+
+    """
+
+    embedding_size: int
+    embedding_initialisation_weights: list
+
+    def convert_str_emb_to_matrix(self, emb_list, emb_size):
+        # here we account for UNK token
+        float_emb = [np.array([0] * emb_size)]
+        for str_emb in emb_list:
+            try:
+                emb = json.loads(str_emb)
+                emb = emb
+            except:
+                emb = [0] * emb_size
+            float_emb.append(np.array(emb))
+        emb_matrix = np.matrix(float_emb)
+        return emb_matrix
+
+    def build_sequential_layer(self, vocabulary: np.ndarray):
+        logger.info("Pretained layer...")
+        logger.info("Init emb...")
+        pretrained_emb = self.convert_str_emb_to_matrix(
+            self.embedding_initialisation_weights, self.embedding_size
+        )
+        embedding = Embedding(
+            input_dim=len(pretrained_emb),
+            output_dim=self.embedding_size,
+            weights=[pretrained_emb],
+            trainable=False,
+            name="embedding",
+        )
+        logger.info("Building sequential...")
+        pretained_layer = tf.keras.Sequential(
+            [
+                StringLookup(vocabulary=vocabulary),
+                # IntegerLookup(vocabulary=vocabulary.astype(int)),
+                embedding,
+            ]
+        )
+        logger.info("Return pretrained_layer")
+        return pretained_layer
 
 
 class String2IntegerLayer(tf.keras.layers.Layer):

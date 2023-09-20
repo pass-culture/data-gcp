@@ -47,14 +47,24 @@ WITH temp_firebase_events AS (
             where
                 event_params.key = 'venue_id'
         ) as venue_id,
+        COALESCE(
         (
             select
-                event_params.value.string_value
+                CAST (event_params.value.int_value AS STRING)
             from
                 unnest(event_params) event_params
             where
                 event_params.key = 'offerer_id'
-        ) as offerer_humanized_id,
+        ),
+        (
+            select
+                CAST (event_params.value.int_value AS STRING)
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'offererId'
+        )
+        ) as offerer_id,
         (
             select
                 event_params.value.string_value

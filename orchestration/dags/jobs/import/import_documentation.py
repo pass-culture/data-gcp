@@ -29,7 +29,7 @@ with DAG(
     "import_documentation",
     default_args=default_args,
     description="Import Documentation from Notion",
-    schedule_interval=get_airflow_schedule("0 0 * * *"),
+    schedule_interval=get_airflow_schedule("0 8 * * *"),
     catchup=False,
     dagrun_timeout=timedelta(minutes=300),
     params={

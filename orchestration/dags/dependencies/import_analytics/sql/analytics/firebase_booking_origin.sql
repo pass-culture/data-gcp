@@ -15,11 +15,7 @@ WITH firebase_bookings AS (
   INNER JOIN `{{ bigquery_analytics_dataset }}.offer_item_ids` offer_item_ids USING(offer_id)
   WHERE
       event_name = 'BookingConfirmation'
-  {% if params.dag_type == 'intraday' %}
-  AND event_date = DATE('{{ ds }}')        
-  {% else %}
   AND event_date = DATE('{{ add_days(ds, -1) }}')
-  {% endif %}
 )
 
 , firebase_consult AS (
@@ -37,11 +33,7 @@ WITH firebase_bookings AS (
   FROM `{{ bigquery_analytics_dataset }}.firebase_events`
   INNER JOIN `{{ bigquery_analytics_dataset }}.offer_item_ids` offer_item_ids USING(offer_id)
   WHERE event_name = 'ConsultOffer'
-  {% if params.dag_type == 'intraday' %}
-  AND event_date BETWEEN DATE('{{ add_days(ds, -7) }}') AND DATE('{{ ds }}')  
-  {% else %}
   AND event_date BETWEEN DATE('{{ add_days(ds, -8) }}') AND DATE('{{ add_days(ds, -1) }}')  
-  {% endif %}
 )
 
 , bookings_origin_first_touch AS (

@@ -316,6 +316,23 @@ analytics_tables = {
             "enriched_user_data",
         ],
     },
+    "analytics_firebase_booking_origin": {
+        "sql": f"{ANALYTICS_SQL_PATH}/firebase_booking_origin.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "firebase_booking_origin",
+        "partition_prefix": "$",
+        "time_partitioning": {"field": "booking_date"},
+        "dag_depends": ["import_intraday_firebase_data", "import_contentful"],
+        "depends": ["offer_item_ids"],
+    },
+    "analytics_firebase_similar_offer_events": {
+        "sql": f"{ANALYTICS_SQL_PATH}/firebase_similar_offer_events.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "firebase_similar_offer_events",
+        "time_partitioning": {"field": "event_date"},
+        "dag_depends": ["import_intraday_firebase_data"],
+        "depends": ["offer_item_ids"],
+    },
     "analytics_firebase_home_events_details": {
         "sql": f"{ANALYTICS_SQL_PATH}/firebase_home_events_details.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
@@ -376,9 +393,10 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "firebase_aggregated_similar_offer_events",
         "time_partitioning": {"field": "event_date"},
-        "depends": ["diversification_booking", "enriched_user_data"],
-        "dag_depends": [
-            "import_intraday_firebase_data",
+        "depends": [
+            "diversification_booking",
+            "enriched_user_data",
+            "analytics_firebase_similar_offer_events",
         ],
     },
     "adage_involved_student": {

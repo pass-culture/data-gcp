@@ -1,32 +1,34 @@
 with qpi_v1 as (
   with unpivot_qpi as (
     SELECT * 
-    FROM `{{ bigquery_analytics_dataset }}.enriched_qpi_answers_v1` 
+    FROM `{{ bigquery_clean_dataset }}.qpi_answers_v1_clean`
     UNPIVOT(answers FOR categories IN (cinema,audiovisuel,jeux_videos,livre,musees_patrimoine,musique,pratique_artistique,spectacle_vivant,instrument) ) 
     )
     SELECT 
         uqpi.user_id
+        , cast(null as timestamp) as submitted_at
         , subcat.category_id as category_id
         ,'none' as subcategory_id 
     from unpivot_qpi uqpi
-    join `{{ bigquery_analytics_dataset }}.subcategories` subcat 
+    join `{{ bigquery_clean_dataset }}.subcategories` subcat 
     ON lower(subcat.category_id)=uqpi.categories
     where answers 
     and user_id is not null
     and uqpi.answers 
-    ),
+),
 qpi_v2 as (
   with unpivot_qpi as(
     SELECT
         * 
-    FROM `{{ bigquery_analytics_dataset }}.enriched_qpi_answers_v2` 
+    FROM `{{ bigquery_clean_dataset }}.qpi_answers_v2_clean` 
     UNPIVOT(answers FOR categories IN (cinema,audiovisuel,jeux_videos,livre,musees_patrimoine,musique,pratique_artistique,spectacle_vivant,instrument) ) 
 )
     select 
         uqpi.user_id
+        , cast(null as timestamp) as submitted_at
         , subcat.category_id as category_id
         ,'none' as subcategory_id from unpivot_qpi uqpi
-    join `{{ bigquery_analytics_dataset }}.subcategories` subcat 
+    join `{{ bigquery_clean_dataset }}.subcategories` subcat 
     ON lower(subcat.category_id)=uqpi.categories
     where answers 
     and user_id is not null
@@ -36,7 +38,7 @@ qpi_v3 as(
   with unpivot_qpi as(
     SELECT
         * 
-    FROM `{{ bigquery_analytics_dataset }}.enriched_qpi_answers_v3` 
+    FROM `{{ bigquery_clean_dataset }}.qpi_answers_v3_clean` 
     UNPIVOT(answers FOR subcategory_id IN (	
     CARTE_CINE_MULTISEANCES	
     ,CARTE_MUSEE	
@@ -86,25 +88,16 @@ qpi_v3 as(
     )
     select 
         uqpi.user_id
+        , submitted_at
         , subcat.category_id as category_id
-        , uqpi.subcategory_id from unpivot_qpi uqpi
-    join `{{ bigquery_analytics_dataset }}.subcategories` subcat 
+        , uqpi.subcategory_id 
+    from unpivot_qpi uqpi
+    join `{{ bigquery_clean_dataset }}.subcategories` subcat 
     ON subcat.id=uqpi.subcategory_id
     where uqpi.answers
-),
-qpi_v4 as (
-  SELECT 
-    user_id
-    , subcat.category_id
-    , subcategories as subcategory_id
-FROM `{{ bigquery_analytics_dataset }}.enriched_qpi_answers_v4` uqpi
-join `{{ bigquery_analytics_dataset }}.subcategories` subcat
-ON subcat.id=uqpi.subcategories
 )
 select * from qpi_v1
 UNION ALL
 select * from qpi_v2
 UNION ALL
 select * from qpi_v3
-UNION ALL
-select * from qpi_v4

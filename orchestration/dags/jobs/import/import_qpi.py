@@ -98,10 +98,11 @@ with DAG(
 
     clean_tasks = []
     for table, params in CLEAN_TABLES.items():
-        task = bigquery_job_task(
-            dag=dag, table=f"add_{table}_to_clean", job_params=params
-        )
-        clean_tasks.append(task)
+        if params.get("load_table", True) is True:
+            task = bigquery_job_task(
+                dag=dag, table=f"add_{table}_to_clean", job_params=params
+            )
+            clean_tasks.append(task)
 
     end_clean = DummyOperator(task_id="end_clean")
 

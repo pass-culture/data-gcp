@@ -121,7 +121,7 @@ with DAG(
         task_id="import_addresses_to_bigquery",
         bucket=DATA_GCS_BUCKET_NAME,
         source_objects=[
-            "{{task_instance.xcom_pull(task_ids='addresses_to_gcs', key='return_value')}}"
+            "{{task_instance.xcom_pull(task_ids='addresses_to_gcs', key='result')}}"
         ],
         destination_project_dataset_table=f"{BIGQUERY_RAW_DATASET}.{USER_LOCATIONS_TABLE}",
         write_disposition="WRITE_APPEND",

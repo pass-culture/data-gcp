@@ -50,17 +50,17 @@ def fetch_result(demarches_ids, updated_since, env_short_name, gcp_project_id):
         has_next_page = True
         while has_next_page:
             resultTemp = run_query(query_body, gcp_project_id)
-            for node in resultTemp["data"]["demarche"]["dossiers"]["edges"]:
-                dossier = node["node"]
-                if dossier is not None:
-                    dossier["demarche_id"] = demarche_id
-            has_next_page = resultTemp["data"]["demarche"]["dossiers"]["pageInfo"][
-                "hasNextPage"
-            ]
-            result = mergeDictionary(result, resultTemp)
+            if resultTemp["data"] is not None:
+                for node in resultTemp["data"]["demarche"]["dossiers"]["edges"]:
+                    dossier = node["node"]
+                    if dossier is not None:
+                        dossier["demarche_id"] = demarche_id
+                has_next_page = resultTemp["data"]["demarche"]["dossiers"]["pageInfo"][
+                    "hasNextPage"
+                ]
+                result = mergeDictionary(result, resultTemp)
             if env_short_name != "prod":
                 has_next_page = False
-
             if has_next_page:
                 end_cursor = resultTemp["data"]["demarche"]["dossiers"]["pageInfo"][
                     "endCursor"

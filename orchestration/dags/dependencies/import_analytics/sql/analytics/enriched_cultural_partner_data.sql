@@ -38,7 +38,7 @@ FROM `{{ bigquery_analytics_dataset }}`.enriched_venue_data AS enriched_venue_da
 LEFT JOIN `{{ bigquery_analytics_dataset }}`.region_department AS region_department
     ON enriched_venue_data.venue_department_code = region_department.num_dep
 LEFT JOIN `{{ bigquery_analytics_dataset }}`.agg_partner_cultural_sector ON agg_partner_cultural_sector.partner_type = enriched_venue_data.venue_type_label
-LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_venue_tags_data ON enriched_venue_data.venue_id = enriched_venue_tags_data.venue_id AND enriched_venue_tags_data.criterion_category_label = "Comptage partenaire label et appellation du MC"
+LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_venue_tags_data ON enriched_venue_data.venue_id = enriched_venue_tags_data.venue_id AND enriched_venue_tags_data.criterion_category_label = "Comptage partenaire sectoriel"
 WHERE venue_is_permanent IS TRUE
 ),
 

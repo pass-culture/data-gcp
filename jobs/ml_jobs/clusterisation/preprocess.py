@@ -12,6 +12,9 @@ import numpy as np
 
 
 def preprocess(
+    splitting: float = typer.Option(
+        ..., help="Split proportion between fit and predict"
+    ),
     input_table: str = typer.Option(..., help="Path to data"),
     output_table: str = typer.Option(..., help="Path to data"),
     config_file_name: str = typer.Option(
@@ -47,39 +50,41 @@ def preprocess(
     )
     logger.info(f"item_semantic_encoding: {len(item_semantic_encoding)}")
     # Prepare categorical encoding
+    already_used_df = [pretrained_embedding_df]
+    del already_used_df
     logger.info("Prepare categorical encoding...")
     items_tmp = items.drop(pretained_embedding_col, axis=1)
-    item_by_category_encoded_reduced, item_by_category = prepare_categorical_fields(
-        items_tmp
+    already_used_df = [items]
+    del already_used_df
+    item_by_category_encoded_reduced, item_by_macro_cat = prepare_categorical_fields(
+        items_tmp, splitting
     )
-
-    # Prepare clusterisation
-    logger.info("Prepare clusterisation...")
-    item_full_encoding_w_cat_group = prepare_clusterisation(
-        item_semantic_encoding, item_by_category_encoded_reduced, item_by_category
+    
+    item_semantic_encoding = item_semantic_encoding.drop_duplicates(
+        subset=["item_id"], keep="first"
     )
-
-    item_full_encoding_enriched = pd.merge(
-        items[
-            [
-                "item_id",
-                "category",
-                "subcategory_id",
-                "offer_sub_type_label",
-                "offer_type_label",
-            ]
-        ],
-        item_full_encoding_w_cat_group,
-        how="inner",
+    item_by_category_encoded_reduced = item_by_category_encoded_reduced.drop_duplicates(
+        subset=["item_id"], keep="first"
+    )
+    item_full_encoding = pd.merge(
+        item_semantic_encoding,
+        item_by_category_encoded_reduced,
+        how="left",
         on=["item_id"],
+        validate="one_to_one",
+    )
+    logger.info(f"""item_full_encoding 0.0: {len(item_full_encoding)}""")
+    item_full_encoding[["c0", "c1"]] = item_full_encoding[["c0", "c1"]].fillna(
+        item_full_encoding[["c0", "c1"]].mean()
     )
 
-    item_full_encoding_enriched = item_full_encoding_enriched.astype(str)
-
-    item_full_encoding_enriched.to_gbq(
-        f"tmp_{ENV_SHORT_NAME}.{output_table}", if_exists="replace"
+    item_by_macro_cat.to_gbq(
+        f"tmp_{ENV_SHORT_NAME}.item_by_macro_cat", if_exists="replace"
     )
 
+    item_full_encoding.to_gbq(
+        f"tmp_{ENV_SHORT_NAME}.item_full_encoding", if_exists="replace"
+    )
     return
 
 

@@ -50,7 +50,7 @@ default_args = {
 
 
 def branch_function(ti, **kwargs):
-    xcom_value = ti.xcom_pull(task_ids=["addresses_to_gcs"])
+    xcom_value = ti.xcom_pull(task_ids="addresses_to_gcs", key="result")
     if "No new users !" not in xcom_value:
         return "import_addresses_to_bigquery"
     else:

@@ -70,9 +70,9 @@ with DAG(
             default="default-config",
             type="string",
         ),
-        "clusterisation_top_N_items": Param(
-            default=10000 if ENV_SHORT_NAME == "prod" else 1000,
-            type="integer",
+        "splitting": Param(
+            default="50" if ENV_SHORT_NAME == "prod" else "10",
+            type="string",
         ),
     },
 ) as dag:
@@ -109,20 +109,38 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command="PYTHONPATH=. python preprocess.py "
+        "--splitting {{ params.splitting }} "
         f"--input-table {DATE}_clusterisation_items_raw --output-table {DATE}_item_full_encoding_enriched "
         "--config-file-name {{ params.config_file_name }} ",
     )
 
-    clusterisation = SSHGCEOperator(
-        task_id="clusterisation",
+    preprocess_second = SSHGCEOperator(
+        task_id="preprocess_second",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
-        environment=dag_config,
-        command="PYTHONPATH=. python clusterisation.py "
-        f"--input-table {DATE}_item_full_encoding_enriched --output-table item_clusters "
+        command="PYTHONPATH=. python preprocess_second.py "
+        "--splitting {{ params.splitting }} "
+        f"--input-table {DATE}_clusterisation_items_raw --output-table {DATE}_item_full_encoding_enriched "
         "--config-file-name {{ params.config_file_name }} ",
     )
 
+    clusters_categories=[]
+    clusterisation_task=[
+    ]
+    for clustering_category in clusters_categories
+        clusterisation_task.append(
+            SSHGCEOperator(
+            task_id="clusterisation",
+            instance_name=GCE_INSTANCE,
+            base_dir=BASE_DIR,
+            environment=dag_config,
+            command="PYTHONPATH=. python clusterisation.py "
+            "--splitting {{ params.splitting }} "
+            f"--input-table {DATE}_item_full_encoding_enriched --output-table item_clusters "
+            "--config-file-name {{ params.config_file_name }} ",
+            f"--clustering_category {clustering_category} ",
+            )
+        )
     gce_instance_stop = StopGCEOperator(
         task_id="gce_stop_task", instance_name=GCE_INSTANCE
     )
@@ -134,7 +152,8 @@ with DAG(
         >> fetch_code
         >> install_dependencies
         >> preprocess
-        >> clusterisation
+        >> preprocess_second
+        >> clusterisation_task[-1]
         >> gce_instance_stop
         >> end
     )

@@ -20,13 +20,11 @@ item_top_N_booking_by_cat as(
             PARTITION BY offer_subcategoryid
             ORDER BY
                 booking_cnt DESC
-        ) AS rnk
+        ) AS rank
     FROM
-        booking_info QUALIFY ROW_NUMBER() OVER (
-            PARTITION BY offer_subcategoryid
-            ORDER BY
-                booking_cnt DESC
-        ) <= {{ params.clusterisation_top_N_items }}
+        booking_info 
+    where booking_cnt>0
+
 ),
 items_w_embedding as (
     SELECT
@@ -40,6 +38,7 @@ items_w_embedding as (
 base as (
     select
         top_items.item_id,
+        top_items.rank,
         ie.offer_semantic_content_optim_text,
         enriched_item_metadata.subcategory_id AS subcategory_id,
         enriched_item_metadata.category_id as category,

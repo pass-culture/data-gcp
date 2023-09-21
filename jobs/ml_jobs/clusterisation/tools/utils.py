@@ -6,7 +6,6 @@ import json
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 CONFIGS_PATH = os.environ.get("CONFIGS_PATH", "configs")
 
-
 ##Clusterisation Config
 clusterisation_reduction = 2
 clusterisation_reduct_method = "umap"

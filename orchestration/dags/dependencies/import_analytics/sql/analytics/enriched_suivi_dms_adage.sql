@@ -23,7 +23,7 @@ SELECT
     , offerer.offerer_validation_date
     , venue.venue_id
     , CASE WHEN venue.venue_is_permanent THEN CONCAT("venue-",venue.venue_id)
-         ELSE CONCAT("offerer-", offerer.offerer_id) END AS partner_id,
+         ELSE CONCAT("offerer-", offerer.offerer_id) END AS partner_id
     , venue.venue_name
     , venue.venue_creation_date
     , venue.venue_is_permanent

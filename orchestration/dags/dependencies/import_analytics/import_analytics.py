@@ -319,8 +319,7 @@ analytics_tables = {
     "analytics_firebase_booking_origin": {
         "sql": f"{ANALYTICS_SQL_PATH}/firebase_booking_origin.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "firebase_booking_origin",
-        "partition_prefix": "$",
+        "destination_table": "firebase_booking_origin${{ yyyymmdd(add_days(ds, -1)) }}",
         "time_partitioning": {"field": "booking_date"},
         "dag_depends": ["import_intraday_firebase_data", "import_contentful"],
         "depends": ["offer_item_ids"],

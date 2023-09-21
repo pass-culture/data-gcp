@@ -174,16 +174,41 @@ WITH
   FROM
     visits_and_conversion
   WHERE
-    nb_visits > 0 )
+    nb_visits > 0 ),
 
-SELECT
-  *,
-  LAG(nb_visits) OVER(PARTITION BY user_id ORDER BY active_week) AS visits_previous_week,
-  LAG(nb_consult_offer) OVER(PARTITION BY user_id ORDER BY active_week) AS consult_previous_week
-FROM
-  visits_and_conversion
-LEFT JOIN
-  visits_ranked
-USING
-  (deposit_id,
+  visits_and_user_engagement_level_metrics AS (
+  SELECT
+    *,
+    LAG(nb_visits) OVER(PARTITION BY deposit_id ORDER BY active_week) AS visits_previous_week,
+    LAG(nb_consult_offer) OVER(PARTITION BY deposit_id ORDER BY active_week) AS consult_previous_week,
+    COUNT(CASE WHEN nb_visits >0 THEN 1 ELSE NULL END) OVER(PARTITION BY deposit_id ORDER BY active_week ROWS BETWEEN 3 PRECEDING AND CURRENT ROW ) AS nb_co_last_4_weeks,
+    COUNT(CASE WHEN nb_visits >0 THEN 1 ELSE NULL END) OVER(PARTITION BY deposit_id ORDER BY active_week ROWS BETWEEN 11 PRECEDING AND 8 PRECEDING ) AS nb_co_3_months_ago,
+    COUNT(CASE WHEN nb_visits >0 THEN 1 ELSE NULL END) OVER(PARTITION BY deposit_id ORDER BY active_week ROWS BETWEEN 7 PRECEDING AND 4 PRECEDING ) AS nb_co_2_months_ago,
+    COUNT(CASE WHEN nb_visits >0 THEN 1 ELSE NULL END) OVER(PARTITION BY deposit_id ORDER BY active_week ROWS BETWEEN 11 PRECEDING AND CURRENT ROW ) AS nb_co_last_3_months
+  FROM
+    visits_and_conversion
+  LEFT JOIN
+    visits_ranked
+  USING
+    (deposit_id,
     active_week)
+  ),
+
+  visits_and_user_engagement_level AS (
+  SELECT
+    *,
+    CASE
+    WHEN nb_co_last_4_weeks = 4 THEN 'Power user' -- Power user : connected every week for the last 4 weeks
+    WHEN nb_co_last_4_weeks > 0 AND nb_co_3_months_ago > 0 AND nb_co_2_months_ago > 0 THEN 'Core user' -- Core user : connected at least once every month in the last quarter
+    WHEN nb_co_last_3_months > 0 THEN 'Casual user' -- Casual user: connected at least once in the last quarter
+    WHEN nb_co_last_3_months = 0 THEN 'Dead user' -- Dead user: no connexion in the last quarter
+    END AS user_engagement_level
+  FROM
+    visits_and_user_engagement_level_metrics
+  )
+
+  SELECT
+    *,
+    LAG(user_engagement_level)OVER(PARTITION BY deposit_id ORDER BY active_week) AS user_last_week_engagement_level
+  FROM
+    visits_and_user_engagement_level

@@ -148,6 +148,10 @@ analytics_tables = {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_reimbursement_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
     },
+    "enriched_venue_provider_data": {
+        "sql": f"{ANALYTICS_SQL_PATH}/enriched_venue_provider_data.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+    },
     "eple_aggregated": {
         "sql": f"{ANALYTICS_SQL_PATH}/eple_aggregated.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",

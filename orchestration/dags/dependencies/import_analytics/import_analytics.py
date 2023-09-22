@@ -74,12 +74,12 @@ analytics_tables = {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_deposit_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
     },
-    "enriched_dms_pro": {
-        "sql": f"{ANALYTICS_SQL_PATH}/enriched_dms_pro.sql",
+    "dms_pro": {
+        "sql": f"{ANALYTICS_SQL_PATH}/dms_pro.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
     },
-    "enriched_dms_jeunes": {
-        "sql": f"{ANALYTICS_SQL_PATH}/enriched_dms_jeunes.sql",
+    "dms_jeunes": {
+        "sql": f"{ANALYTICS_SQL_PATH}/dms_jeunes.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
     },
     "enriched_institution_data": {

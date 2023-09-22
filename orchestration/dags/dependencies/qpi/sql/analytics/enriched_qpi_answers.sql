@@ -9,7 +9,7 @@ join `{{ bigquery_analytics_dataset }}.subcategories` subcat
 ON subcat.id=uqpi.subcategories
 ),
 
-all AS (
+union_all AS (
   SELECT 
     user_id
       , submitted_at
@@ -25,5 +25,5 @@ all AS (
   FROM qpi_v4
 )
 
-SELECT * FROM all 
+SELECT * FROM union_all 
 QUALIFY ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY submitted_at DESC ) = 1

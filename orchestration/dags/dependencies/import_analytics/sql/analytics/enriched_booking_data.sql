@@ -32,7 +32,7 @@ SELECT
     subcategories.category_id AS offer_category_id,
     offer.offer_name,
     venue.venue_name,
-    venue_label.label as venue_label_name,
+    venue_label.venue_label as venue_label_name,
     venue.venue_type_code as venue_type_name,
     venue.venue_id,
     venue.venue_department_code,

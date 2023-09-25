@@ -148,7 +148,7 @@ SELECT
     offerer.offerer_name,
     offerer.offerer_validation_status,
     venue.venue_type_code AS venue_type_label,
-    venue_label.label AS venue_label,
+    venue_label.venue_label AS venue_label,
     COALESCE(individual_bookings_per_venue.total_individual_bookings,0) + COALESCE(collective_bookings_per_venue.total_collective_bookings,0) AS total_bookings,
     COALESCE(individual_bookings_per_venue.non_cancelled_individual_bookings,0) AS non_cancelled_individual_bookings,
     COALESCE(collective_bookings_per_venue.non_cancelled_collective_bookings,0) AS non_cancelled_collective_bookings,

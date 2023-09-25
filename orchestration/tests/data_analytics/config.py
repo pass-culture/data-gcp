@@ -392,8 +392,8 @@ BIGQUERY_SCHEMAS = {
         "web_presence": "STRING",
     },
     "applicative_database_venue_label": {
-        "id": "STRING",
-        "label": "STRING",
+        "venue_label_id": "STRING",
+        "venue_label": "STRING",
         "lastupdate": "DATETIME",
     },
     "region_department": {

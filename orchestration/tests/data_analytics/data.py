@@ -1118,7 +1118,9 @@ ENRICHED_VENUE_DATA_INPUT = {
         }
     ],
     "applicative_database_venue_registration": [],
-    "applicative_database_venue_label": [{"id": "1", "label": "an other label"}],
+    "applicative_database_venue_label": [
+        {"venue_label_id": "1", "venue_label": "an other label"}
+    ],
     "region_department": [{"num_dep": "92", "region_name": "IDF"}],
 }
 
@@ -1410,7 +1412,9 @@ ENRICHED_BOOKING_DATA_INPUT = {
             "user_activity": "Lycéen",
         }
     ],
-    "applicative_database_venue_label": [{"id": "15", "label": "label"}],
+    "applicative_database_venue_label": [
+        {"venue_label_id": "15", "venue_label": "label"}
+    ],
     "subcategories": [
         {
             "id": "ACHAT_INSTRUMENT",
@@ -1684,8 +1688,8 @@ OFFER_MODERATION_INPUT = {
     ],
     "applicative_database_venue_label": [
         {
-            "id": "15",
-            "label": "Scène nationale",
+            "venue_label_id": "15",
+            "venue_label": "Scène nationale",
         }
     ],
     "applicative_database_venue_contact": [

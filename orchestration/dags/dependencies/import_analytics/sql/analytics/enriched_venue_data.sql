@@ -148,7 +148,7 @@ SELECT
     offerer.offerer_name,
     offerer.offerer_validation_status,
     venue.venue_type_code AS venue_type_label,
-    venue_label.label AS venue_label,
+    venue_label.venue_label AS venue_label,
     COALESCE(individual_bookings_per_venue.total_individual_bookings,0) + COALESCE(collective_bookings_per_venue.total_collective_bookings,0) AS total_bookings,
     COALESCE(individual_bookings_per_venue.non_cancelled_individual_bookings,0) AS non_cancelled_individual_bookings,
     COALESCE(collective_bookings_per_venue.non_cancelled_collective_bookings,0) AS non_cancelled_collective_bookings,
@@ -208,7 +208,7 @@ SELECT
 FROM
     `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue
     LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offerer AS offerer ON venue.venue_managing_offerer_id = offerer.offerer_id
-    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue_label AS venue_label ON venue_label.id = venue.venue_label_id
+    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue_label AS venue_label ON venue_label.venue_label_id = venue.venue_label_id
     LEFT JOIN individual_bookings_per_venue ON individual_bookings_per_venue.venue_id = venue.venue_id
     LEFT JOIN collective_bookings_per_venue ON collective_bookings_per_venue.venue_id = venue.venue_id
     LEFT JOIN individual_offers_per_venue ON individual_offers_per_venue.venue_id = venue.venue_id

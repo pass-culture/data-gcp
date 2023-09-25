@@ -1,12 +1,12 @@
 SELECT
-    "isActive"
-    , CAST("id" AS varchar(255))
-    , CAST("idAtProviders" AS varchar(255))
-    , "dateModifiedAtLastProvider" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' as dateModifiedAtLastProvider
-    , CAST("venueId" AS varchar(255))
-    , CAST("providerId" AS varchar(255))
-    , CAST("venueIdAtOfferProvider" AS varchar(255))
-    , "lastSyncDate"
-    , CAST("lastProviderId" AS varchar(255))
-    , "fieldsUpdated"
+    "isActive" as is_active
+    , CAST("id" AS varchar(255)) as id
+    , CAST("idAtProviders" AS varchar(255)) as id_at_providers
+    , "dateModifiedAtLastProvider" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' as date_modified_at_last_provider
+    , CAST("venueId" AS varchar(255)) as venue_id
+    , CAST("providerId" AS varchar(255)) as provider_id
+    , CAST("venueIdAtOfferProvider" AS varchar(255)) as venue_id_at_offer_provider
+    , "lastSyncDate" as last_sync_date
+    , CAST("lastProviderId" AS varchar(255)) as last_provider_id
+    , "fieldsUpdated" as fields_updated
 FROM public.venue_provider

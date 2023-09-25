@@ -208,7 +208,7 @@ SELECT
 FROM
     `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue
     LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offerer AS offerer ON venue.venue_managing_offerer_id = offerer.offerer_id
-    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue_label AS venue_label ON venue_label.id = venue.venue_label_id
+    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue_label AS venue_label ON venue_label.venue_label_id = venue.venue_label_id
     LEFT JOIN individual_bookings_per_venue ON individual_bookings_per_venue.venue_id = venue.venue_id
     LEFT JOIN collective_bookings_per_venue ON collective_bookings_per_venue.venue_id = venue.venue_id
     LEFT JOIN individual_offers_per_venue ON individual_offers_per_venue.venue_id = venue.venue_id

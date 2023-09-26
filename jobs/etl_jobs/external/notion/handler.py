@@ -144,7 +144,7 @@ class NotionDocumentation(NotionGlossary):
     @staticmethod
     def get_simple_description(document):
         try:
-            return document["properties"]["Description"]["title"][0]["plain_text"]
+            return document["properties"]["Description"]["rich_text"][0]["plain_text"]
         except (TypeError, KeyError):
             return None
 

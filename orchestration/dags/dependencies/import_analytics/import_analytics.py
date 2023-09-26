@@ -323,10 +323,19 @@ analytics_tables = {
     "analytics_firebase_booking_origin": {
         "sql": f"{ANALYTICS_SQL_PATH}/firebase_booking_origin.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "firebase_booking_origin${{ yyyymmdd(add_days(ds, -1)) }}",
+        "destination_table": "firebase_booking_origin${{ yyyymmdd(add_days(ds, 0)) }}",
         "time_partitioning": {"field": "booking_date"},
         "dag_depends": ["import_intraday_firebase_data", "import_contentful"],
         "depends": ["offer_item_ids"],
+        "params": {"from": -8, "to": 0},
+    },
+    "analytics_firebase_booking_origin_catchup": {
+        "sql": f"{ANALYTICS_SQL_PATH}/firebase_booking_origin.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "firebase_booking_origin${{ yyyymmdd(add_days(ds, -2)) }}",
+        "time_partitioning": {"field": "booking_date"},
+        "depends": ["offer_item_ids"],
+        "params": {"from": -10, "to": -2},
     },
     "analytics_firebase_similar_offer_events": {
         "sql": f"{ANALYTICS_SQL_PATH}/firebase_similar_offer_events.sql",

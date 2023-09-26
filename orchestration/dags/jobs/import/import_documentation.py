@@ -24,12 +24,14 @@ default_args = {
     "retry_delay": timedelta(minutes=2),
 }
 
+schedule_dict = {"prod": "0 8 * * *", "dev": "0 9 * * *", "stg": "0 10 * * *"}
+
 
 with DAG(
     "import_documentation",
     default_args=default_args,
     description="Import Documentation from Notion",
-    schedule_interval=get_airflow_schedule("0 8 * * *"),
+    schedule_interval=get_airflow_schedule(schedule_dict[ENV_SHORT_NAME]),
     catchup=False,
     dagrun_timeout=timedelta(minutes=300),
     params={

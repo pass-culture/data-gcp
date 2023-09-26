@@ -7,7 +7,8 @@ ARG GCLOUD_VERSION=google-cloud-cli-411.0.0-linux-x86_64.tar.gz
 WORKDIR ${AIRFLOW_USER_HOME}
 COPY orchestration-requirements.txt /opt/requirements.txt
 RUN pip3 install --upgrade pip
-RUN pip3 install --no-cache-dir -r /opt/requirements.txt
+RUN pip3 install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org setuptools
+RUN pip3 install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org --no-cache-dir -r /opt/requirements.txt
 
 # install gcloud
 USER root

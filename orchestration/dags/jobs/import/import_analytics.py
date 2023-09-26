@@ -208,7 +208,7 @@ for table, job_params in export_tables.items():
 
 
 analytics_table_tasks = depends_loop(
-    analytics_table_jobs, start_analytics_table_tasks, dag
+    export_tables, analytics_table_jobs, start_analytics_table_tasks, dag
 )
 end_analytics_table_tasks = DummyOperator(task_id="end_analytics_table_tasks", dag=dag)
 

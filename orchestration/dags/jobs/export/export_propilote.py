@@ -39,6 +39,6 @@ for table, job_params in propilote_tables.items():
         "dag_depends": job_params.get("dag_depends", []),
     }
 
-table_jobs = depends_loop(table_jobs, start, dag=dag)
+table_jobs = depends_loop(propilote_tables, table_jobs, start, dag=dag)
 end = DummyOperator(task_id="end", dag=dag)
 table_jobs >> end

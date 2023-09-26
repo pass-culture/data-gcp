@@ -49,6 +49,6 @@ for schedule_type, schedule_cron in dag_schedule.items():
                 "dag_depends": params.get("dag_depends", []),
             }
 
-    export_table_tasks = depends_loop(export_table_jobs, start, dag)
+    export_table_tasks = depends_loop(create_tables, export_table_jobs, start, dag)
 
     (start >> export_table_tasks >> end)

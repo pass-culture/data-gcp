@@ -15,6 +15,7 @@ SELECT
     COUNTIF(event_name = "Share") AS nb_share,
     COUNTIF(event_name = "Screenshot") AS nb_screenshot,
     COUNTIF(event_name = "ConsultVideo") AS nb_consult_video,
+    COUNTIF(event_name = "ConsultVenue") AS nb_consult_venue,
     COUNTIF(event_name = 'screen_view') AS nb_screen_view,
     COUNTIF(event_name = 'screen_view' AND firebase_screen = 'Home') AS nb_screen_view_home,
     COUNTIF(event_name = 'screen_view' AND firebase_screen = 'Search') AS nb_screen_view_search,

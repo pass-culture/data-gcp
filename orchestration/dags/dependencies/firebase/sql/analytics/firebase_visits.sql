@@ -13,6 +13,7 @@ SELECT
     COUNTIF(event_name = "BookingConfirmation") AS nb_booking_confirmation,
     COUNTIF(event_name = "HasAddedOfferToFavorites") AS nb_add_to_favorites,
     COUNTIF(event_name = "Share") AS nb_share,
+    COUNTIF(event_name = "Screenshot") AS nb_screenshot,
     COUNTIF(event_name = "ConsultVideo") AS nb_consult_video,
     COUNTIF(event_name = 'screen_view') AS nb_screen_view,
     COUNTIF(event_name = 'screen_view' AND firebase_screen = 'Home') AS nb_screen_view_home,

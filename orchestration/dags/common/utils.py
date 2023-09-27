@@ -82,7 +82,9 @@ def waiting_operator(dag, dag_id, external_task_id="end"):
     )
 
 
-def depends_loop(tables_config, jobs: dict, default_upstream_operator, dag):
+def depends_loop(
+    tables_config, jobs: dict, default_upstream_operator, dag, default_end_operator
+):
     default_downstream_operators = []
     has_downstream_dependencies = []
 
@@ -104,10 +106,10 @@ def depends_loop(tables_config, jobs: dict, default_upstream_operator, dag):
 
     for dependency in dependencies:
         if dependency["dependency_type"] == "dag":
-            if dependency["upstream_id"].str.contains("/"):
+            if "/" in dependency["upstream_id"]:
                 depend_job = waiting_operator(
                     dag,
-                    dependency["upstream_id"],
+                    dependency["upstream_id"].split("/")[0],
                     external_task_id=dependency["upstream_id"].split("/")[-1],
                 )
             else:
@@ -149,6 +151,11 @@ def depends_loop(tables_config, jobs: dict, default_upstream_operator, dag):
                     has_downstream_dependencies.append(dependant_task)
 
                 dependant_task.set_upstream(depend_job)
+
+    if len(has_downstream_dependencies) > 0:
+        default_end_operator.set_upstream(has_downstream_dependencies)
+    else:
+        default_end_operator.set_upstream(default_downstream_operators)
 
     return [
         x for x in default_downstream_operators if x not in has_downstream_dependencies

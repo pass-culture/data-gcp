@@ -105,8 +105,16 @@ with TaskGroup(
             "dag_depends": params.get("dag_depends", []),  # liste de dag_id
         }
 
+    end_import_table_to_clean = DummyOperator(
+        task_id="end_import_table_to_clean", dag=dag
+    )
+
     import_tables_to_clean_transformation_tasks = depends_loop(
-        import_tables_to_clean_transformation_jobs, end_raw, dag
+        clean_tables,
+        import_tables_to_clean_transformation_jobs,
+        end_raw,
+        dag,
+        default_end_operator=end_import_table_to_clean,
     )
 
 
@@ -207,10 +215,14 @@ for table, job_params in export_tables.items():
     }
 
 
-analytics_table_tasks = depends_loop(
-    export_tables, analytics_table_jobs, start_analytics_table_tasks, dag
-)
 end_analytics_table_tasks = DummyOperator(task_id="end_analytics_table_tasks", dag=dag)
+analytics_table_tasks = depends_loop(
+    export_tables,
+    analytics_table_jobs,
+    start_analytics_table_tasks,
+    dag,
+    default_end_operator=end_analytics_table_tasks,
+)
 
 end = DummyOperator(task_id="end", dag=dag)
 
@@ -219,7 +231,6 @@ end = DummyOperator(task_id="end", dag=dag)
     >> raw_operations_group
     >> end_raw
     >> clean_transformations
-    >> end_import_table_to_clean
     >> analytics_copy
     >> end_import
 )
@@ -237,4 +248,4 @@ end = DummyOperator(task_id="end", dag=dag)
     >> end_historical_analytics_table_tasks
 )
 (end_import >> start_analytics_table_tasks)
-(analytics_table_tasks >> end_analytics_table_tasks >> end)
+(analytics_table_tasks)

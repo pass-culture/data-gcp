@@ -102,9 +102,14 @@ with DAG(
             "dag_depends": params.get("dag_depends", []),
         }
 
-    analytics_table_tasks = depends_loop(analytics_table_jobs, end_raw, dag=dag)
-
     end = DummyOperator(task_id="end", dag=dag)
+    analytics_table_tasks = depends_loop(
+        analytics_tables,
+        analytics_table_jobs,
+        end_raw,
+        dag=dag,
+        default_end_operator=end,
+    )
 
     (
         start
@@ -115,5 +120,4 @@ with DAG(
         >> gce_instance_stop
         >> end_raw
         >> analytics_table_tasks
-        >> end
     )

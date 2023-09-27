@@ -24,8 +24,8 @@ DEFAULT_SIMILAR_OFFER_MODEL = os.environ.get("DEFAULT_SIMILAR_OFFER_MODEL", "def
 
 MIXING_FEATURE_LIST = ["subcategory_id", "search_group_name", "category"]
 
-NUMBER_OF_PRESELECTED_OFFERS = 50 if not os.environ.get("CI") else 3
-NUMBER_OF_RECOMMENDATIONS = 20
+NUMBER_OF_PRESELECTED_OFFERS = 60 if not os.environ.get("CI") else 3
+NUMBER_OF_RECOMMENDATIONS = 40
 
 MAX_RECO_ITEM_PER_BATCH = os.environ.get("MAX_RECO_ITEM_PER_BATCH", 5000)
 

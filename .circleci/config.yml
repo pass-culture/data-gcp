@@ -524,7 +524,7 @@ jobs:
             PYTHONPATH=. pytest tests
 
   record-linkage-install:
-    executor: python
+    executor: python310
     working_directory: ~/data-gcp/jobs/ml_jobs/record_linkage
     steps:
       - checkout:

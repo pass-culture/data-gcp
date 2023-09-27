@@ -1,7 +1,7 @@
 SELECT
     booking_id
     , booking_creation_date
-    , stock_id
+    , booking.stock_id
     , booking_quantity
     , user_id
     , booking_amount
@@ -19,4 +19,5 @@ SELECT
     , coalesce(booking_amount, 0) * coalesce(booking_quantity, 0) AS booking_intermediary_amount
     , rank() OVER (PARTITION BY user_id ORDER BY booking_creation_date) AS booking_rank
     , reimbursed
-FROM `{{ bigquery_raw_dataset }}.applicative_database_booking`
+FROM `{{ bigquery_raw_dataset }}.applicative_database_booking` booking
+JOIN `{{ bigquery_raw_dataset }}.applicative_database_stock` stock USING(stock_id)

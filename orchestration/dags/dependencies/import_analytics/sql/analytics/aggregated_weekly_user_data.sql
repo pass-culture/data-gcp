@@ -198,11 +198,25 @@ WITH
   SELECT
     *,
     CASE
-    WHEN nb_co_last_4_weeks = 4 THEN 'Power user' -- Power user : connected every week for the last 4 weeks
-    WHEN nb_co_last_4_weeks > 0 AND nb_co_3_months_ago > 0 AND nb_co_2_months_ago > 0 THEN 'Core user' -- Core user : connected at least once every month in the last quarter
-    WHEN nb_co_last_3_months > 0 THEN 'Casual user' -- Casual user: connected at least once in the last quarter
-    WHEN nb_co_last_3_months = 0 THEN 'Dead user' -- Dead user: no connexion in the last quarter
-    END AS user_engagement_level
+        WHEN nb_co_last_4_weeks = 4 THEN 'Power user' -- Power user : connected every week for the last 4 weeks
+        WHEN nb_co_last_4_weeks > 0 AND nb_co_3_months_ago > 0 AND nb_co_2_months_ago > 0 THEN 'Core user' -- Core user : connected at least once every month in the last quarter
+        WHEN nb_co_last_3_months > 0 THEN 'Casual user' -- Casual user: connected at least once in the last quarter
+        WHEN nb_co_last_3_months = 0 THEN 'Dead user' -- Dead user: no connexion in the last quarter
+        END AS user_engagement_level,
+    CASE
+        WHEN weeks_since_deposit_created <= 4 THEN 'New users' -- Activated last period
+        WHEN nb_co_last_4_weeks > 0 AND nb_co_2_months_ago > 0 THEN 'Current' -- Active both current and previous period
+        WHEN nb_co_2_months_ago > 0 AND nb_co_last_4_weeks = 0 THEN 'Churned' -- Active previous period, not current period
+        WHEN nb_co_2_months_ago = 0 AND nb_co_last_4_weeks > 0 THEN 'Resurrected' -- Active current period, not previous one
+        WHEN nb_co_2_months_ago = 0 AND nb_co_last_4_weeks = 0 THEN 'Dormant' -- Inactive both current and previous period
+        END AS user_lifecycle_monthly_state,
+    CASE
+        WHEN (weeks_since_deposit_created = 0 OR visits_previous_week IS NULL) THEN 'New users'
+        WHEN visits_previous_week > 0 AND nb_visits > 0 THEN 'Current'
+        WHEN visits_previous_week > 0 AND nb_visits = 0 THEN 'Churned'
+        WHEN visits_previous_week = 0 AND nb_visits > 0 THEN 'Resurrected'
+        WHEN visits_previous_week = 0 AND nb_visits = 0 THEN 'Dormant'
+        END AS user_lifecycle_weekly_state,
   FROM
     visits_and_user_engagement_level_metrics
   )

@@ -6,6 +6,10 @@ WITH all_bookings_reconciled AS (
     , session_id AS booking_session_id
     , unique_session_id AS booking_unique_session_id
     , booking.offer_id
+    , booking.deposit_id
+    , booking.booking_status
+    , booking.booking_is_cancelled
+    , booking.booking_intermediary_amount
     , item_id
     , booking.booking_id
     , platform
@@ -105,6 +109,10 @@ WITH all_bookings_reconciled AS (
   , all_bookings_reconciled.offer_id
   , all_bookings_reconciled.item_id
   , all_bookings_reconciled.booking_id
+  , all_bookings_reconciled.deposit_id
+  , all_bookings_reconciled.booking_status
+  , all_bookings_reconciled.booking_is_cancelled
+  , all_bookings_reconciled.booking_intermediary_amount
   , first_t.consult_date
   , first_t.consult_timestamp
   , consult_origin_first_touch
@@ -129,6 +137,7 @@ LEFT JOIN bookings_origin_last_touch AS last_t USING(booking_id)
 
 SELECT 
     user_id
+  , deposit_id
   , booking_date
   , booking_timestamp
   , booking_session_id
@@ -137,6 +146,9 @@ SELECT
   , offer_id
   , item_id
   , booking_id
+  , booking_status
+  , booking_is_cancelled
+  , booking_intermediary_amount
   , consult_date
   , consult_timestamp
   , consult_origin_first_touch

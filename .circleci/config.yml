@@ -445,7 +445,7 @@ jobs:
             newman run api_integration_tests.postman_collection.json --environment <<parameters.env>>.postman_environment.json --env-var "api_token=<<parameters.api_token>>"
 
   orchestration-install:
-    executor: python
+    executor: python310
     working_directory: ~/data-gcp/orchestration
     steps:
       - checkout:
@@ -468,7 +468,7 @@ jobs:
             - .
 
   orchestration-tests:
-    executor: python
+    executor: python310
     working_directory: ~/data-gcp/orchestration
     environment:
       AIRFLOW_HOME: ~/data-gcp/orchestration
@@ -524,7 +524,7 @@ jobs:
             PYTHONPATH=. pytest tests
 
   record-linkage-install:
-    executor: python
+    executor: python310
     working_directory: ~/data-gcp/jobs/ml_jobs/record_linkage
     steps:
       - checkout:
@@ -547,7 +547,7 @@ jobs:
             - .
 
   record-linkage-tests:
-    executor: python
+    executor: python310
     working_directory: ~/data-gcp/jobs/ml_jobs/record_linkage
     steps:
       - attach_workspace:

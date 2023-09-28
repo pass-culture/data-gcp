@@ -1,5 +1,6 @@
 SELECT
     booking_id
+    , stock.offer_id
     , booking_creation_date
     , booking.stock_id
     , booking_quantity

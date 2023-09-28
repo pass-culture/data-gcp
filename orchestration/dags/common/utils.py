@@ -124,8 +124,8 @@ def depends_loop(
                 for table, jobs_params in jobs.items()
                 if table in dependant_tables
             ]
-            has_downstream_dependencies.append(depend_job)
             for dependant_task in dependant_tasks:
+                has_downstream_dependencies.append(dependant_task)
                 dependant_task.set_upstream(depend_job)
 
             depend_job.set_upstream(default_upstream_operator)

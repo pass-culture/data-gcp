@@ -1,4 +1,6 @@
-Please go the the `Preview` tab and select the appropriate sub-template:
+## Choose your PR type
+
+(go the the `Preview` tab and select the appropriate sub-template)
 
 * [Hotfix](?expand=1&template=hotfix_template.md)
 * [DA](?expand=1&template=DA_ticket_template.md)

@@ -13,7 +13,7 @@ class BQExport:
         self,
         dataset_id: str,
         table_name: str,
-        description: str,
+        main_description: str,
         columns: dict,
         labels: dict,
     ):
@@ -34,7 +34,7 @@ class BQExport:
 
             export_schema.append(s)
         table.schema = export_schema
-        table.description = description
+        table.description = main_description
         table.labels = labels
         table = self.client.update_table(table, ["description", "labels", "schema"])
 

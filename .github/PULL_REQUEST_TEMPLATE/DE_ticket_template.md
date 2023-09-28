@@ -1,4 +1,4 @@
-# DE ticket PR template
+# DE ticket PR
 
 ## Describe your changes
 Please include a summary of the changes:

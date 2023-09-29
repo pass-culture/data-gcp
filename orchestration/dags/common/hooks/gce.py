@@ -15,7 +15,7 @@ from common.config import (
     GCE_SA,
 )
 
-DEFAULT_LABELS = {"env": ENV_SHORT_NAME, "terraform": "false", "airflow": "true"}
+DEFAULT_LABELS = {"env": ENV_SHORT_NAME, "terraform": "false", "airflow": "true","keep_alive": "false",}
 
 
 @dataclass
@@ -82,6 +82,7 @@ class GCEHook(GoogleBaseHook):
         instance_name,
         instance_type,
         preemptible,
+        labels={},
         accelerator_types=[],
     ):
         instances = self.list_instances()
@@ -132,6 +133,7 @@ class GCEHook(GoogleBaseHook):
         self,
         instance_type,
         name,
+        labels,
         metadata=None,
         wait=False,
         accelerator_types=[],
@@ -185,7 +187,7 @@ class GCEHook(GoogleBaseHook):
             ],
             "metadata": {"items": metadata},
             "tags": {"items": ["training"]},
-            "labels": DEFAULT_LABELS,
+            "labels": labels,
         }
         # GPUs
         if len(accelerator_type) > 0:
@@ -243,6 +245,7 @@ class GCEHook(GoogleBaseHook):
             for x in instances
             if x.get("labels", {}).get("airflow", "") == "true"
             and x.get("labels", {}).get("env", "") == ENV_SHORT_NAME
+            and not x.get("labels", {}).get("keep_alive", "") == "true"
         ]
 
         for instance in instances:

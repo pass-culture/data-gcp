@@ -29,6 +29,7 @@ class StartGCEOperator(BaseOperator):
         preemptible: bool = True,
         accelerator_types=[],
         source_image_type=None,
+        labels={},
         *args,
         **kwargs,
     ):
@@ -43,6 +44,7 @@ class StartGCEOperator(BaseOperator):
             )
 
         self.source_image_type = source_image_type
+        self.labels = labels
 
     def execute(self, context) -> None:
         hook = GCEHook(source_image_type=self.source_image_type)
@@ -51,6 +53,7 @@ class StartGCEOperator(BaseOperator):
             self.instance_type,
             preemptible=self.preemptible,
             accelerator_types=self.accelerator_types,
+            labels=self.labels,
         )
 
 

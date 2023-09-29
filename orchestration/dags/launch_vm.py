@@ -63,7 +63,7 @@ with DAG(
             default=gce_params["instance_type"]["prod"], type="string"
         ),
         "instance_name": Param(default=gce_params["instance_name"], type="string"),
-        "gpu_count": Param(default=0, type="int"),
+        "gpu_count": Param(default=0, type="string"),
         "keep_alive": Param(default="true", type="string"),
     },
 ) as dag:
@@ -75,9 +75,9 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         instance_type="{{ params.instance_type }}",
         labels={"keep_alive": "{{ params.keep_alive }}"},
-        accelerator_types="[]"
+        accelerator_types=[]
         if int("{{ params.gpu_count }}") <= 0
-        else str([{"name": "nvidia-tesla-t4", "count": "{{ params.gpu_count }}"}]),
+        else [{"name": "nvidia-tesla-t4", "count": "{{ params.gpu_count }}"}],
     )
 
     fetch_code = CloneRepositoryGCEOperator(

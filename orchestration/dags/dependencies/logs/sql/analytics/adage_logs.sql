@@ -32,6 +32,8 @@ SELECT
     cast(jsonPayload.extra.filtervalues.query as string) as text_filter,
     ARRAY_TO_STRING(jsonPayload.extra.filtervalues.departments, ',') as department_filter,
     ARRAY_TO_STRING(jsonPayload.extra.filtervalues.academies, ',') as academy_filter,
+    ARRAY_TO_STRING(ARRAY(SELECT CAST(value AS STRING) FROM UNNEST(jsonPayload.extra.filtervalues.domains) AS value), ',') as artistic_domain_filter,
+    ARRAY_TO_STRING(ARRAY(SELECT CAST(value AS STRING) FROM UNNEST(jsonPayload.extra.filtervalues.students) AS value), ',') as student_filter,
 
 FROM
     `{{ bigquery_raw_dataset }}.stdout`

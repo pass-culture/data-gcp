@@ -76,7 +76,7 @@ with DAG(
         instance_type="{{ params.instance_type }}",
         labels={"keep_alive": "{{ params.keep_alive }}"},
         accelerator_types=[]
-        if "{{ params.gpu_count }}" == 0
+        if "{{ params.gpu_count <= 0 }}" == "True"
         else [{"name": "nvidia-tesla-t4", "count": "{{ params.gpu_count }}"}],
     )
 

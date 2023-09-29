@@ -63,7 +63,7 @@ with DAG(
             default=gce_params["instance_type"]["prod"], type="string"
         ),
         "instance_name": Param(default=gce_params["instance_name"], type="string"),
-        "gpu_count": Param(default=0, type="string"),
+        "gpu_count": Param(default=0, type="int"),
         "keep_alive": Param(default="true", type="string"),
     },
 ) as dag:
@@ -76,7 +76,7 @@ with DAG(
         instance_type="{{ params.instance_type }}",
         labels={"keep_alive": "{{ params.keep_alive }}"},
         accelerator_types=[]
-        if int("{{ params.gpu_count }}") <= 0
+        if "{{ params.gpu_count }}" == 0
         else [{"name": "nvidia-tesla-t4", "count": "{{ params.gpu_count }}"}],
     )
 

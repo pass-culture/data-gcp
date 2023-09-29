@@ -15,7 +15,12 @@ from common.config import (
     GCE_SA,
 )
 
-DEFAULT_LABELS = {"env": ENV_SHORT_NAME, "terraform": "false", "airflow": "true","keep_alive": "false",}
+DEFAULT_LABELS = {
+    "env": ENV_SHORT_NAME,
+    "terraform": "false",
+    "airflow": "true",
+    "keep_alive": "false",
+}
 
 
 @dataclass
@@ -97,6 +102,7 @@ class GCEHook(GoogleBaseHook):
         self.__create_instance(
             instance_type,
             instance_name,
+            labels=labels,
             wait=True,
             preemptible=preemptible,
             accelerator_types=accelerator_types,
@@ -187,7 +193,7 @@ class GCEHook(GoogleBaseHook):
             ],
             "metadata": {"items": metadata},
             "tags": {"items": ["training"]},
-            "labels": labels,
+            "labels": dict(DEFAULT_LABELS, labels),
         }
         # GPUs
         if len(accelerator_type) > 0:

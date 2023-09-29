@@ -34,8 +34,8 @@ gce_params = {
     "instance_name": f"playground-vm-YourName-{ENV_SHORT_NAME}",
     "instance_type": {
         "dev": "n1-standard-2",
-        "stg": "n1-highmem-8",
-        "prod": "n1-highmem-32",
+        "stg": "n1-standard-2",
+        "prod": "n1-standard-2",
     },
 }
 
@@ -49,7 +49,7 @@ default_args = {
 with DAG(
     "launch_vm",
     default_args=default_args,
-    description="Launch a vm to work in production environment",
+    description="Launch a vm to work on",
     schedule=None,
     catchup=False,
     dagrun_timeout=None,
@@ -63,7 +63,8 @@ with DAG(
             default=gce_params["instance_type"]["prod"], type="string"
         ),
         "instance_name": Param(default=gce_params["instance_name"], type="string"),
-        "gpu_count": Param(default=0, type="int"),
+        "gpu_count": Param(default=0, type="integer"),
+        "gpu_type": Param(default="nvidia-tesla-t4", type="string"),
         "keep_alive": Param(default="true", type="string"),
     },
 ) as dag:
@@ -77,7 +78,7 @@ with DAG(
         labels={"keep_alive": "{{ params.keep_alive }}"},
         accelerator_types=[]
         if "{{ params.gpu_count }}" == "0"
-        else [{"name": "nvidia-tesla-t4", "count": "{{ params.gpu_count }}"}],
+        else [{"name": "{{ params.gpu_type }}", "count": "{{ params.gpu_count }}"}],
     )
 
     fetch_code = CloneRepositoryGCEOperator(

@@ -41,7 +41,6 @@ gce_params = {
 
 default_args = {
     "start_date": datetime(2022, 11, 30),
-    "on_failure_callback": task_fail_slack_alert,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }

@@ -8,8 +8,6 @@ on:
        ARTIFACT_REGISTRY_SERVICE_ACCOUNT:
         required: true
 
-
-
 jobs:
   test-orchestration:
     permissions:
@@ -19,7 +17,7 @@ jobs:
      run: 
        working-directory: "./orchestration/"
     env:
-      AIRFLOW_HOME: "~/data-gcp/orchestration"
+      AIRFLOW_HOME: "./"
       DAG_FOLDER: "./dags"
       RECOMMENDATION_SQL_INSTANCE: cloudsql-recommendation-circleci
       RECOMMENDATION_SQL_BASE: cloudsql-recommendation-circleci
@@ -45,7 +43,6 @@ jobs:
             GOOGLE_CLOUD_PROJECT: passculture-data-ehp
             GCLOUD_PROJECT: passculture-data-ehp         
         run: |
-          echo $PYTHONPATH
           export PYTHONPATH=$PYTHONPATH:./dags
           airflow db init
-          pytest --log-cli-level=debug tests
+          pytest tests

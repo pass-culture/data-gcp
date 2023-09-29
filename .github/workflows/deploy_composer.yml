@@ -2,67 +2,44 @@ name: "Deploy Composer"
 
 on:
  push:
-    branches:
-      - master
-      - production
+   # branches:
+      # - master
+      # - production
 
 jobs:
 
   test-jobs:
     uses: ./.github/workflows/reusable_test_jobs.yml
 
-  test-orchestration:
-    uses: ./.github/workflows/reusable_test_orchestration.yml
+  # test-orchestration:
+  #   uses: ./.github/workflows/reusable_test_orchestration.yml
+  #   secrets:
+  #     GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+  #     ARTIFACT_REGISTRY_SERVICE_ACCOUNT: ${{ secrets.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
 
-  composer-deploy-on-dev:
-   # if: github.ref = 'refs/heads/production'
-    needs:
-       - test-orchestration
-       - test-jobs
-    container: gcp-sdk
-    runs-on: [self-hosted, linux, x64]
-    defaults:
-     run: 
-       working-directory: "./orchestration/"
-    steps:
-      - uses: actions/checkout@v4
-      - id: auth
-        name: "Authenticate with Google Cloud"
-        uses: "google-github-actions/auth@v1"
-        with:
-          create_credentials_file: false
-          token_format: "access_token"
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
-      - name: deploy on DEV
-        run: echo "deploying on DEV"
-      - name: deploy on DEV
-        run: echo "Wait for composer to be deployed (10s x 6 times)"
-  #     - name: Deploy to composer
-  #       run: |
-  #           gsutil -m rm -r gs://${COMPOSER_BUCKET}/dags
-  #           gsutil cp -r dags gs://${COMPOSER_BUCKET}
-  #     - name: Wait for composer to be deployed (10s x 6 times)
-  #       run: |
-  #           ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} airflow_monitoring 6 10
+  composer-deploy-on-dev:  
+    uses: ./.github/workflows/deploy_composer.yml
+    needs: 
+      - test-jobs
+    with:
+      TARGET_ENV:  "dev"
+      COMPOSER_DAGS_BUCKET: "europe-west1-data-composer--a3134989-bucket"
+      COMPOSER_ENVIRONMENT_NAME: "data-composer-dev"
+      DATA_GCP_PROJECT: "passculture-data-ehp"
+    secrets:
+      GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      ARTIFACT_REGISTRY_SERVICE_ACCOUNT: ${{ secrets.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
+
 
   composer-deploy-on-stg:
     if: github.ref == 'refs/heads/master'
-    container: gcp-sdk
+    container: google/cloud-sdk:448.0.0
     runs-on: [self-hosted, linux, x64]
     defaults:
      run: 
        working-directory: "./orchestration/"
     steps:
       - uses: actions/checkout@v4
-      - id: auth
-        name: "Authenticate with Google Cloud"
-        uses: "google-github-actions/auth@v1"
-        with:
-          create_credentials_file: false
-          token_format: "access_token"
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
       - name: deploy on Staging
         run: echo "deploying on Saging"
       - name: Wait for composer
@@ -71,21 +48,12 @@ jobs:
   composer-deploy-on-prod:
     if: github.ref == 'refs/heads/production'
     needs: composer-deploy-on-dev
-    container: gcp-sdk
+    container: google/cloud-sdk:448.0.0
     runs-on: [self-hosted, linux, x64]
     defaults:
      run: 
        working-directory: "./orchestration/"
     steps:
-      - uses: actions/checkout@v4
-      - id: auth
-        name: "Authenticate with Google Cloud"
-        uses: "google-github-actions/auth@v1"
-        with:
-          create_credentials_file: false
-          token_format: "access_token"
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
       - name: deploy on Prod
         run: echo "deploying on Prod"
       - name: Wait for composer 

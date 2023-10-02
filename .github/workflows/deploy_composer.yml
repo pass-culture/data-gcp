@@ -8,19 +8,16 @@ on:
 
 jobs:
 
-  test-jobs:
-    uses: ./.github/workflows/reusable_test_jobs.yml
-
-  # test-orchestration:
-  #   uses: ./.github/workflows/reusable_test_orchestration.yml
-  #   secrets:
-  #     GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-  #     ARTIFACT_REGISTRY_SERVICE_ACCOUNT: ${{ secrets.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
+  test-orchestration:
+    uses: ./.github/workflows/reusable_test_orchestration.yml
+    secrets:
+      GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      ARTIFACT_REGISTRY_SERVICE_ACCOUNT: ${{ secrets.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
 
   composer-deploy-on-dev:  
     uses: ./.github/workflows/reusable_deploy_composer.yml
     needs: 
-      - test-jobs
+      - test-orchestration
     with:
       TARGET_ENV:  "dev"
       COMPOSER_DAGS_BUCKET: "europe-west1-data-composer--a3134989-bucket"

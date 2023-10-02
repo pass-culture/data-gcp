@@ -22,6 +22,8 @@ on:
         required: true
       ARTIFACT_REGISTRY_SERVICE_ACCOUNT:
         required: true
+      SLACK_BOT_TOKEN:
+        required: true
 
 env:
     GCP_REGION: "europe-west1"

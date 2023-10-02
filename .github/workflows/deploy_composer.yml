@@ -2,9 +2,9 @@ name: "Deploy Composer"
 
 on:
  push:
-   branches:
-      - master
-      - production
+   #   branches:
+   #   - master
+   #   - production
 
 jobs:
 

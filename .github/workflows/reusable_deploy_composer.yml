@@ -1,4 +1,6 @@
-name: "Deploy Composer on ${{ github.event.inputs.TARGET_ENV }}"
+name: "Deploy Composer"
+
+run-name: "Deploy Composer on ${{ github.event.inputs.TARGET_ENV }}"
 
 on:
   workflow_call:

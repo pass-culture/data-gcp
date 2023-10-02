@@ -1,0 +1,35 @@
+name: "Test job"
+
+run-name: "Test job  ${{ inputs.JOB_PATH }}"
+
+on:
+  workflow_call:
+    inputs:
+      JOB_PATH:
+        type: string
+        required: true
+    secrets:
+      SLACK_BOT_TOKEN:
+        required: true
+
+env:
+    GCP_REGION: "europe-west1"
+
+jobs:
+  test-job:
+    name: "Test job ${{ inputs.JOB_PATH }}"
+    runs-on: [self-hosted, linux, x64]
+    container: python:3.10
+    defaults:
+     run: 
+       working-directory: "./jobs/${{ inputs.JOB_PATH }}"
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Python requirements
+        run:  pip install -r requirements.txt
+      - name: Run tests
+        env:
+          PYTHONPATH: "."
+        run: |
+          pytest tests
+    

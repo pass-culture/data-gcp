@@ -50,7 +50,7 @@ jobs:
           pytest tests
       - name: Post to a Slack channel
         id: slack
-        if: ${{ always() }}
+        if: ${{ failure() }}
         uses: slackapi/slack-github-action@v1.23.0
         with:
           channel-id: "C05U5UW010U" # lgd-test
@@ -65,7 +65,7 @@ jobs:
                             "author_icon": "https://github.com/${{github.actor}}.png",
                             "title": "Test Orechestration",
                             "title_link": "https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}",
-                            "text": "Les tests d'orchestration est échoué"
+                            "text": "Les tests d'orchestration ont échoués"
                         }
                     ],
                     "unfurl_links": false,

@@ -15,7 +15,7 @@ jobs:
       ARTIFACT_REGISTRY_SERVICE_ACCOUNT: ${{ secrets.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
 
   composer-deploy-on-dev:
-    if: github.ref == 'refs/heads/production'
+    #if: github.ref == 'refs/heads/production'
     uses: ./.github/workflows/reusable_deploy_composer.yml
     needs: 
       - test-orchestration

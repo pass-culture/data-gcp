@@ -32,4 +32,29 @@ jobs:
           PYTHONPATH: "."
         run: |
           pytest tests
+      - name: Post to a Slack channel
+        id: slack
+        if: ${{ always() }}
+        uses: slackapi/slack-github-action@v1.23.0
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+        with:
+          channel-id: "C05U5UW010U" # lgd-test
+          payload: |
+            {
+                    "attachments": [
+                        {
+                            "mrkdwn_in": ["text"],
+                            "color": "#A30002",
+                            "author_name": "${{github.actor}}",
+                            "author_link": "https://github.com/${{github.actor}}",
+                            "author_icon": "https://github.com/${{github.actor}}.png",
+                            "title": "Test jobs échoués",
+                            "title_link": "https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}",
+                            "text": ":fire: Les tests sur le job ${{ inputs.JOB_PATH }} ont échoués :no_entry:"
+                        }
+                    ],
+                    "unfurl_links": false,
+                    "unfurl_media": false
+            }
     

@@ -4,6 +4,69 @@ on:
  pull_request:
 
 jobs:
+   find-test-jobs:
+     outputs:
+       jobs: ${{ steps.compute.outputs.jobs }}
+     runs-on: "ubuntu-latest"
+     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get etl_jobs changed files 
+        id: changed-etl-files
+        uses: tj-actions/changed-files@v39
+        with:
+          files: "jobs/etl_jobs/**"
+          json: true
+          dir_names: true
+          dir_names_max_depth: 4
+
+      - name: Get ml_jobs changed files 
+        id: changed-ml-files
+        uses: tj-actions/changed-files@v39
+        with:
+          files: "jobs/ml_jobs/**"
+          json: true
+          dir_names: true
+          dir_names_max_depth: 5
+
+      - name: Trouver les Jobs non testables
+        id: find-testable-jobs
+        run: |
+          find jobs -type d -name "tests"
+          find jobs/etl_jobs -mindepth 3 -maxdepth 3 -type d  -name "tests" > /tmp/list.txt
+          find jobs/ml_jobs -mindepth 2 -maxdepth 2 -type d -name "tests" >> /tmp/list.txt
+          folders=()
+          for folder in $(cat /tmp/list.txt); do
+            folders+=(\\\"${folder}\\\")
+          done
+          json_array="[$(IFS=,; echo "${folders[*]}")]"
+          echo "testable_jobs=$json_array" | tee -a $GITHUB_OUTPUT
+
+      - name: Show found files
+        id: compute # Intersection de testable_jobs et de (changed-etl-files et changed-ml-files)
+        run: |
+          echo "${{ steps.changed-etl-files.outputs.all_changed_files }}" > /tmp/output.json
+          echo "${{ steps.changed-ml-files.outputs.all_changed_files }}" >> /tmp/output.json
+          echo "${{ steps.find-testable-jobs.outputs.testable_jobs }}" >> /tmp/output.json
+          cat /tmp/output.json
+          jobs_to_test=$(jq --slurp '(.[0] + .[1]) - ((.[0] + .[1]) - .[2])' /tmp/output.json) 
+          echo "jobs=${jobs_to_test}" | tee -a $GITHUB_OUTPUT
+
+   test-jobs:
+    uses: ./.github/workflows/reusable_job_test.yml
+    secrets:
+      SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+    needs:
+      - find-test-jobs
+    strategy:
+      fail-fast: false
+      matrix:
+        job: ${{ needs.find-test-jobs.outputs.jobs }}
+    with:
+      JOB_PATH: ${{ matrix.job }}
+
    test-orchestration:
     uses: ./.github/workflows/reusable_test_orchestration.yml
     secrets:

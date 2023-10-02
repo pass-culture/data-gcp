@@ -61,12 +61,13 @@ def save_results(df_applications, dms_target, updated_since, data_gcs_bucket_nam
         type = column["type"]
         if type == "TIMESTAMP":
             df_applications[f"{name}"] = df_applications[f"{name}"].map(
-                lambda x: int(pd.Timestamp(x).to_pydatetime())
+                lambda x: int(pd.Timestamp(x).as_unit("s").timestamp())
             )
+            # .to_pydatetime() methods needs pandas < 2
 
         elif type == "STRING":
             df_applications[f"{name}"] = df_applications[f"{name}"].astype(str)
-    df_applications["update_date"] = int(pd.Timestamp.today().to_pydatetime())
+    df_applications["update_date"] = int(pd.Timestamp.today().as_unit("s").timestamp())
     df_applications.to_parquet(
         f"gs://{data_gcs_bucket_name}/dms_export/dms_{dms_target}_{updated_since}.parquet",
         engine="pyarrow",

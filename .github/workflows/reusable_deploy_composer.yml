@@ -63,7 +63,7 @@ jobs:
         if: ${{ always() }}
         uses: slackapi/slack-github-action@v1.23.0
         with:
-          channel-id: "C05U5UW010U" # lgd-test
+          channel-id: "C01GVAXM02W" # alertes-data
           payload: |
             {
                     "attachments": [

@@ -46,19 +46,12 @@ jobs:
           export PYTHONPATH=$PYTHONPATH:./dags
           airflow db init
           pytest tests
-
-  slack-notification:
-    runs-on: [self-hosted, linux, x64]
-    needs:
-      - test-orchestration
-    if: ${{ failure() }}
-    steps:
       - name: Post to a Slack channel
         id: slack
         if: ${{ always() }}
         uses: slackapi/slack-github-action@v1.23.0
         with:
-          channel-id: "C01GVAXM02W" # alerts_data
+          channel-id: "C05U5UW010U" # lgd-test
           payload: |
             {
                     "attachments": [
@@ -76,5 +69,5 @@ jobs:
                     "unfurl_links": false,
                     "unfurl_media": false
             }
-    env:
-        SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+        env:
+           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}

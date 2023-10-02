@@ -56,3 +56,28 @@ jobs:
       - name: Wait for composer to be deployed (10s x 6 times)
         run: |
                ./wait_for_dag_deployed.sh ${{ inputs.COMPOSER_ENVIRONMENT_NAME }} ${{ env.GCP_REGION }} airflow_monitoring 6 10 ${{ inputs.DATA_GCP_PROJECT }}
+      - name: Post to a Slack channel
+        id: slack
+        if: ${{ always() }}
+        uses: slackapi/slack-github-action@v1.23.0
+        with:
+          channel-id: "C05U5UW010U" # lgd-test
+          payload: |
+            {
+                    "attachments": [
+                        {
+                            "mrkdwn_in": ["text"],
+                            "color": "${{ fromJSON('["#36a64f", "#A30002"]')[job.status != 'success'] }}",
+                            "author_name": "${{github.actor}}",
+                            "author_link": "https://github.com/${{github.actor}}",
+                            "author_icon": "https://github.com/${{github.actor}}.png",
+                            "title": "Composer déployé",
+                            "title_link": "https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}",
+                            "text": "Composer a été déployé sur l'environnement ${{ inputs.DATA_GCP_PROJECT }}"
+                        }
+                    ],
+                    "unfurl_links": false,
+                    "unfurl_media": false
+            }
+    env:
+        SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}

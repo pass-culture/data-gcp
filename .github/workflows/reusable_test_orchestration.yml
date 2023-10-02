@@ -25,7 +25,7 @@ jobs:
       RECOMMENDATION_SQL_BASE: cloudsql-recommendation-circleci
     name: "Test Orchestration"
     runs-on: [self-hosted, linux, x64]
-    container: python:3.7
+    container: python:3.10
     steps:
       - uses: actions/checkout@v3
       - name: Install Python requirements

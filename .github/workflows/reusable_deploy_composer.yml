@@ -55,5 +55,5 @@ jobs:
       - name: Wait for composer to be deployed (10s x 6 times)
         run: |
                gcloud config set project ${{ inputs.DATA_GCP_PROJECT }}
-               gcloud composer environments run ${{ inputs.COMPOSER_ENVIRONMENT_NAME } --location ${{ env.GCP_REGION }} dags list | grep -E "airflow_monitoring"
+               gcloud composer environments run ${{ inputs.COMPOSER_ENVIRONMENT_NAME }} --location ${{ env.GCP_REGION }} dags list | grep -E "airflow_monitoring"
                ./wait_for_dag_deployed.sh ${{ inputs.COMPOSER_ENVIRONMENT_NAME }} ${{ env.GCP_REGION }} airflow_monitoring 6 10

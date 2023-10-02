@@ -18,7 +18,7 @@ jobs:
   #     ARTIFACT_REGISTRY_SERVICE_ACCOUNT: ${{ secrets.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
 
   composer-deploy-on-dev:  
-    uses: ./.github/workflows/deploy_composer.yml
+    uses: ./.github/workflows/reusable_deploy_composer.yml
     needs: 
       - test-jobs
     with:

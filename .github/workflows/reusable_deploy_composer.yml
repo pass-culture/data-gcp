@@ -12,6 +12,9 @@ on:
       COMPOSER_ENVIRONMENT_NAME:
         type: string
         required: true
+      TARGET_ENV:
+        type: string
+        required: true
     secrets:
       GCP_WORKLOAD_IDENTITY_PROVIDER:
         required: true

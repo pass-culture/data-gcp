@@ -130,6 +130,7 @@ class RetrievalEndpoint(AbstractEndpoint):
         params.append(
             ListParams(label="subcategory_id", values=self.params_in.subcategories)
         )
+
         params.append(EqParams(label="offer_is_duo", value=self.params_in.offer_is_duo))
 
         if self.params_in.offer_type_list is not None:

@@ -49,6 +49,9 @@ jobs:
       - name: 'Set up Cloud SDK'
         uses: 'google-github-actions/setup-gcloud@v1'
       - name: Deploy composer
+        env:
+          GCP_PROJECT: ${{ inputs.DATA_GCP_PROJECT }}
+          CLOUDSDK_CORE_PROJECT: ${{ inputs.DATA_GCP_PROJECT }}
         run: |
               gsutil -m rm -r gs://${{ inputs.COMPOSER_DAGS_BUCKET }}/dags
               gsutil -m cp -r dags gs://${{ inputs.COMPOSER_DAGS_BUCKET }}

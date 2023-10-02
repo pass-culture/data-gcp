@@ -2,13 +2,8 @@ name: "Base Workflow"
 
 on:
  push:
-   branches:
-    - master
 
 jobs:
-
-   test-jobs:
-    uses: ./.github/workflows/reusable_test_jobs.yml
 
    test-orchestration:
     uses: ./.github/workflows/reusable_test_orchestration.yml

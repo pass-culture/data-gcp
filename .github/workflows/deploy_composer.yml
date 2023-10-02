@@ -2,9 +2,9 @@ name: "Deploy Composer"
 
 on:
  push:
-   # branches:
-      # - master
-      # - production
+   branches:
+      - master
+      - production
 
 jobs:
 
@@ -14,7 +14,8 @@ jobs:
       GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
       ARTIFACT_REGISTRY_SERVICE_ACCOUNT: ${{ secrets.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
 
-  composer-deploy-on-dev:  
+  composer-deploy-on-dev:
+    if: github.ref == 'refs/heads/production'
     uses: ./.github/workflows/reusable_deploy_composer.yml
     needs: 
       - test-orchestration
@@ -27,31 +28,31 @@ jobs:
       GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
       ARTIFACT_REGISTRY_SERVICE_ACCOUNT: ${{ secrets.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
 
-
   composer-deploy-on-stg:
     if: github.ref == 'refs/heads/master'
-    container: google/cloud-sdk:448.0.0
-    runs-on: [self-hosted, linux, x64]
-    defaults:
-     run: 
-       working-directory: "./orchestration/"
-    steps:
-      - uses: actions/checkout@v4
-      - name: deploy on Staging
-        run: echo "deploying on Saging"
-      - name: Wait for composer
-        run: echo "Wait for composer to be deployed (10s x 6 times)"
+    uses: ./.github/workflows/reusable_deploy_composer.yml
+    needs: 
+      - test-orchestration
+    with:
+      TARGET_ENV:  "staging"
+      COMPOSER_DAGS_BUCKET: "europe-west1-data-composer--00137508-bucket"
+      COMPOSER_ENVIRONMENT_NAME: "data-composer-stg"
+      DATA_GCP_PROJECT: "passculture-data-ehp"
+    secrets:
+      GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      ARTIFACT_REGISTRY_SERVICE_ACCOUNT: ${{ secrets.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
 
   composer-deploy-on-prod:
     if: github.ref == 'refs/heads/production'
-    needs: composer-deploy-on-dev
-    container: google/cloud-sdk:448.0.0
-    runs-on: [self-hosted, linux, x64]
-    defaults:
-     run: 
-       working-directory: "./orchestration/"
-    steps:
-      - name: deploy on Prod
-        run: echo "deploying on Prod"
-      - name: Wait for composer 
-        run: echo "Wait for composer to be deployed (10s x 6 times)"
+    uses: ./.github/workflows/reusable_deploy_composer.yml
+    needs: 
+      - test-orchestration
+      - composer-deploy-on-dev
+    with:
+      TARGET_ENV:  "prod"
+      COMPOSER_DAGS_BUCKET: "europe-west1-data-composer--d5adf2e8-bucket"
+      COMPOSER_ENVIRONMENT_NAME: "data-composer-prod"
+      DATA_GCP_PROJECT: "passculture-data-prod"
+    secrets:
+      GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      ARTIFACT_REGISTRY_SERVICE_ACCOUNT: ${{ secrets.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}

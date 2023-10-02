@@ -2,9 +2,9 @@ name: "Deploy Composer"
 
 on:
  push:
-   #   branches:
-   #   - master
-   #   - production
+   branches:
+   - master
+   - production
 
 jobs:
 
@@ -16,7 +16,7 @@ jobs:
       SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
 
   composer-deploy-on-dev:
-    #if: github.ref == 'refs/heads/production'
+    if: github.ref == 'refs/heads/production'
     uses: ./.github/workflows/reusable_deploy_composer.yml
     needs: 
       - test-orchestration

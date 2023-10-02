@@ -43,20 +43,18 @@ jobs:
         uses: "google-github-actions/auth@v1"
         with:
           create_credentials_file: true
+          project_id: ${{ inputs.DATA_GCP_PROJECT }}
           token_format: "access_token"
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
       - name: 'Set up Cloud SDK'
         uses: 'google-github-actions/setup-gcloud@v1'
       - name: Deploy composer
-        env:
-          GCP_PROJECT: ${{ inputs.DATA_GCP_PROJECT }}
-          CLOUDSDK_CORE_PROJECT: ${{ inputs.DATA_GCP_PROJECT }}
         run: |
               gsutil -m rm -r gs://${{ inputs.COMPOSER_DAGS_BUCKET }}/dags
               gsutil -m cp -r dags gs://${{ inputs.COMPOSER_DAGS_BUCKET }}
       - name: Wait for composer to be deployed (10s x 6 times)
         run: |
                gcloud config set project ${{ inputs.DATA_GCP_PROJECT }}
-               gcloud composer environments --project ${{ inputs.DATA_GCP_PROJECT }} run ${{ inputs.COMPOSER_ENVIRONMENT_NAME }} --location ${{ env.GCP_REGION }} dags list | grep -E "airflow_monitoring"
+               gcloud composer environments run ${{ inputs.COMPOSER_ENVIRONMENT_NAME }} --location ${{ env.GCP_REGION }} dags list | grep -E "airflow_monitoring"
                ./wait_for_dag_deployed.sh ${{ inputs.COMPOSER_ENVIRONMENT_NAME }} ${{ env.GCP_REGION }} airflow_monitoring 6 10 ${{ inputs.DATA_GCP_PROJECT }}

@@ -248,4 +248,4 @@ end = DummyOperator(task_id="end", dag=dag)
     >> end_historical_analytics_table_tasks
 )
 (end_import >> start_analytics_table_tasks)
-(analytics_table_tasks)
+(analytics_table_tasks >> end_analytics_table_tasks >> end)

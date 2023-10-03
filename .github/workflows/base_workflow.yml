@@ -13,7 +13,7 @@ jobs:
    find-test-jobs:
      outputs:
        jobs: ${{ steps.compute.outputs.jobs }}
-     runs-on: "ubuntu-latest"
+     runs-on: [self-hosted, linux, x64]
      steps:
       - uses: actions/checkout@v4
         with:
@@ -58,11 +58,20 @@ jobs:
           jobs_to_test=$(jq --compact-output --slurp '(.[0] + .[1]) - ((.[0] + .[1]) - .[2])' /tmp/output.json)
           echo "jobs=${jobs_to_test}" | tee -a $GITHUB_OUTPUT
 
+   assert-matrix-not-empty:
+    needs:
+      - find-test-jobs
+    if: ${{ needs.find-test-jobs.outputs.jobs != '' && toJson(fromJson(needs.find-test-jobs.outputs.jobs)) != '[]' }}
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - run: echo "Matrix Not Empty"
+  
    test-jobs:
     uses: ./.github/workflows/reusable_job_test.yml
     secrets:
       SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
     needs:
+      - assert-matrix-not-empty
       - find-test-jobs
     strategy:
       fail-fast: false

@@ -2,9 +2,9 @@ name: "Deploy Composer"
 
 on:
  push:
-   branches:
-   - master
-   - production
+  branches:
+  - master
+  - production
 
 jobs:
 
@@ -13,6 +13,39 @@ jobs:
     secrets:
       SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
 
+  find-test-jobs:
+    outputs:
+      jobs: ${{ steps.find-testable-jobs.outputs.testable_jobs }}
+    runs-on: [self-hosted, linux, x64]
+    steps:
+     - uses: actions/checkout@v4
+       with:
+         fetch-depth: 0
+     - name: Trouver les Jobs testables
+       id: find-testable-jobs
+       run: |
+         find jobs -type d  -name "tests" -exec dirname {} \; > /tmp/list.txt
+         folders=()
+         for folder in $(cat /tmp/list.txt); do
+           folders+=(\"${folder}\")
+         done
+         json_array="[$(IFS=,; echo "${folders[*]}")]"
+         echo "testable_jobs=$json_array" | tee -a $GITHUB_OUTPUT
+
+  test-jobs:
+   if: ${{ needs.find-test-jobs.outputs.jobs != '' && toJson(fromJson(needs.find-test-jobs.outputs.jobs)) != '[]' }}
+   uses: ./.github/workflows/reusable_job_test.yml
+   secrets:
+     SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+   needs:
+     - find-test-jobs
+   strategy:
+     fail-fast: false
+     matrix:
+       job: ${{ fromJSON(needs.find-test-jobs.outputs.jobs) }}
+   with:
+     JOB_PATH: ${{ matrix.job }}
+  
   test-orchestration:
     uses: ./.github/workflows/reusable_test_orchestration.yml
     secrets:
@@ -26,6 +59,8 @@ jobs:
     uses: ./.github/workflows/reusable_deploy_composer.yml
     needs: 
       - test-orchestration
+      - test-jobs
+      - linter
     with:
       TARGET_ENV:  "dev"
       COMPOSER_DAGS_BUCKET: "europe-west1-data-composer--a3134989-bucket"
@@ -41,6 +76,8 @@ jobs:
     uses: ./.github/workflows/reusable_deploy_composer.yml
     needs: 
       - test-orchestration
+      - test-jobs
+      - linter
     with:
       TARGET_ENV:  "staging"
       COMPOSER_DAGS_BUCKET: "europe-west1-data-composer--00137508-bucket"
@@ -56,6 +93,8 @@ jobs:
     uses: ./.github/workflows/reusable_deploy_composer.yml
     needs: 
       - test-orchestration
+      - test-jobs
+      - linter
       - composer-deploy-on-dev
     with:
       TARGET_ENV:  "prod"

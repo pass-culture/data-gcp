@@ -75,7 +75,7 @@ jobs:
                             "author_icon": "https://github.com/${{github.actor}}.png",
                             "title": "Composer déployé",
                             "title_link": "https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}",
-                            "text": "Composer a été déployé sur l'environnement ${{ inputs.DATA_GCP_PROJECT }}"
+                            "text": "Composer a été déployé sur l'environnement ${{ inputs.COMPOSER_ENVIRONMENT_NAME }}"
                         }
                     ],
                     "unfurl_links": false,

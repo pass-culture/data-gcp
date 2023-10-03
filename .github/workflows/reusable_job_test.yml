@@ -18,7 +18,7 @@ env:
 jobs:
   test-job:
     name: "Test job ${{ inputs.JOB_PATH }}"
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64]
     defaults:
      run: 
        working-directory: "./${{ inputs.JOB_PATH }}"

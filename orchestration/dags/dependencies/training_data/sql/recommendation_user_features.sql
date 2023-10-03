@@ -7,7 +7,7 @@ with user_qpi as (
         subcategory_id
     ) as qpi_subcategory_ids
   FROM
-    `{{ bigquery_analytics_dataset }}`.enriched_qpi_answers
+    `{{ bigquery_analytics_dataset }}`.enriched_aggregated_qpi_answers
   where subcategory_id <> 'none'
   group by
     user_id

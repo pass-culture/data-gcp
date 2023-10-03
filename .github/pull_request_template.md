@@ -59,6 +59,7 @@ JIRA-replace_with_ticket_number
 <details>
 
 <summary>DE PR</summary>
+
 ## Type of change
 - [ ] Fix (non-breaking change which corrects expected behavior)
 - [ ] New fields (non-breaking change)

@@ -1,4 +1,4 @@
-<!-- (go the the `Preview` tab and to preview)
+<!-- (go the the `Preview` tab and to preview rendered PR)
 
 To tick boxe replace [ ] with [x]
 

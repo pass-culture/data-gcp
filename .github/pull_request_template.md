@@ -3,8 +3,11 @@
 To tick boxe replace [ ] with [x]
 
  -->
+- [ ] **MEP**
+version:
 
-
+- [ ] **Other**
+<details>
 
 ## Describe your changes
 
@@ -141,3 +144,5 @@ JIRA-replace_with_ticket_number
 ## Reviewer's checklist
 - [ ] I have thoroughly read the code and validated the changes
 - [ ] I have checked and approved the documentation
+
+</details>

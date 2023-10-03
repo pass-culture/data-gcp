@@ -4,6 +4,12 @@ on:
  pull_request:
 
 jobs:
+
+   linter:
+    uses: ./.github/workflows/reusable_linter.yml
+    secrets:
+      SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+
    find-test-jobs:
      outputs:
        jobs: ${{ steps.compute.outputs.jobs }}

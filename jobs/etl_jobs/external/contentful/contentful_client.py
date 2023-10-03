@@ -138,7 +138,6 @@ contentful_modules = [
             "around_radius",
             "offer_image",
             "offer_tag",
-            "offer_ean",
             "offer_id",
         ],
         "children": [],

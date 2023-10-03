@@ -3,11 +3,6 @@
 To tick boxe replace [ ] with [x]
 
  -->
-- [ ] **MEP**
-version:
-
-- [ ] **Other**
-<details>
 
 ## Describe your changes
 
@@ -16,6 +11,8 @@ version:
 This PR [adds/removes/fixes/replaces] the [feature/bug/etc]. 
 
 Tag a reviewer if necessacy  @github/username 
+
+if mep : MEP add version
 -->
 
 
@@ -140,9 +137,17 @@ JIRA-replace_with_ticket_number
 
 </details>
 
+<details>
+
+<summary>MEP</summary>
+
+version:
+
+### Checklist MEP
+-[ ] version number
+-[ ] CI/CD tests pass
+-[ ] Add message on data review slack channel
 
 ## Reviewer's checklist
 - [ ] I have thoroughly read the code and validated the changes
 - [ ] I have checked and approved the documentation
-
-</details>

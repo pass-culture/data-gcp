@@ -141,6 +141,7 @@ contentful_modules = [
             "offerEan",
             "offerId",
         ],
+        "children": [],
     },
     {
         "name": "categoryList",

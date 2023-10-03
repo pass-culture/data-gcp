@@ -2,7 +2,7 @@ SELECT
   StartDate as start_date
   , EndDate as end_date
   , ResponseId as response_id
-  , ExternalReference as user_id
+  , ExternalReference as venue_id
   , user_type
   , question
   , question_id

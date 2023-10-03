@@ -63,7 +63,7 @@ jobs:
                             "author_name": "${{github.actor}}",
                             "author_link": "https://github.com/${{github.actor}}",
                             "author_icon": "https://github.com/${{github.actor}}.png",
-                            "title": "Test Orechestration",
+                            "title": "Tests Orchestration",
                             "title_link": "https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}",
                             "text": "Les tests d'orchestration ont échoués"
                         }

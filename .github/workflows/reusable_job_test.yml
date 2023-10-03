@@ -22,7 +22,7 @@ jobs:
     container: python:3.10
     defaults:
      run: 
-       working-directory: "./jobs/${{ inputs.JOB_PATH }}"
+       working-directory: "./${{ inputs.JOB_PATH }}"
     steps:
       - uses: actions/checkout@v3
       - name: Install Python requirements

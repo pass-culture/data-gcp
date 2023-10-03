@@ -31,12 +31,10 @@ jobs:
           dir_names: true
           dir_names_max_depth: 5
 
-      - name: Trouver les Jobs non testables
+      - name: Trouver les Jobs testables
         id: find-testable-jobs
         run: |
-          find jobs -type d -name "tests"
-          find jobs/etl_jobs -mindepth 3 -maxdepth 3 -type d  -name "tests" > /tmp/list.txt
-          find jobs/ml_jobs -mindepth 2 -maxdepth 2 -type d -name "tests" >> /tmp/list.txt
+          find jobs -type d  -name "tests" -exec dirname {} \; > /tmp/list.txt
           folders=()
           for folder in $(cat /tmp/list.txt); do
             folders+=(\\\"${folder}\\\")
@@ -51,7 +49,7 @@ jobs:
           echo "${{ steps.changed-ml-files.outputs.all_changed_files }}" >> /tmp/output.json
           echo "${{ steps.find-testable-jobs.outputs.testable_jobs }}" >> /tmp/output.json
           cat /tmp/output.json
-          jobs_to_test=$(jq --slurp '(.[0] + .[1]) - ((.[0] + .[1]) - .[2])' /tmp/output.json) 
+          jobs_to_test=$(jq --compact-output --slurp '(.[0] + .[1]) - ((.[0] + .[1]) - .[2])' /tmp/output.json)
           echo "jobs=${jobs_to_test}" | tee -a $GITHUB_OUTPUT
 
    test-jobs:
@@ -63,7 +61,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        job: ${{ needs.find-test-jobs.outputs.jobs }}
+        job: ${{ fromJSON(needs.find-test-jobs.outputs.jobs) }}
     with:
       JOB_PATH: ${{ matrix.job }}
 

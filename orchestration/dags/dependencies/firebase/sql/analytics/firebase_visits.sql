@@ -8,6 +8,8 @@ SELECT
     ANY_VALUE(traffic_campaign) AS traffic_campaign,
     ANY_VALUE(traffic_medium) AS traffic_medium,
     ANY_VALUE(traffic_source) AS traffic_source,
+    ANY_VALUE(traffic_gen) AS traffic_gen,
+    ANY_VALUE(traffic_content) AS traffic_content,
     MAX(event_timestamp) AS last_event_timestamp,
     COUNTIF(event_name = "ConsultOffer") AS nb_consult_offer,
     COUNTIF(event_name = "BookingConfirmation") AS nb_booking_confirmation,

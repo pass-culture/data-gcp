@@ -111,7 +111,7 @@ with child_home as (
       , event_timestamp as consult_offer_timestamp
     FROM `{{ bigquery_analytics_dataset }}.firebase_events` events
     WHERE event_name = 'ConsultOffer'
-    AND origin in ("home", "exclusivity", "venue","video","videoModal")
+    AND origin in ("home", "exclusivity", "venue","video","videoModal","highlightOffer")
     AND user_pseudo_id is not null
     QUALIFY rank() over(partition by unique_session_id, offer_id order by event_timestamp desc) = 1 -- get the last consultation
     ),

@@ -19,7 +19,13 @@ from base64 import b64encode
 
 
 class StartGCEOperator(BaseOperator):
-    template_fields = ["instance_name", "instance_type", "preemptible"]
+    template_fields = [
+        "instance_name",
+        "instance_type",
+        "preemptible",
+        "accelerator_types",
+        "labels",
+    ]
 
     @apply_defaults
     def __init__(
@@ -64,15 +70,19 @@ class CleanGCEOperator(BaseOperator):
     def __init__(
         self,
         timeout_in_minutes: int,
+        job_type: str,
         *args,
         **kwargs,
     ):
         super(CleanGCEOperator, self).__init__(*args, **kwargs)
         self.timeout_in_minutes = timeout_in_minutes
+        self.job_type = job_type
 
     def execute(self, context) -> None:
         hook = GCEHook()
-        hook.delete_instances(timeout_in_minutes=self.timeout_in_minutes)
+        hook.delete_instances(
+            job_type=self.job_type, timeout_in_minutes=self.timeout_in_minutes
+        )
 
 
 class StopGCEOperator(BaseOperator):

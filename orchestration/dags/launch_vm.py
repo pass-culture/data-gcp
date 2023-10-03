@@ -31,7 +31,7 @@ dag_config = {
 # Params
 # default instance type prod :  "n1-highmem-32"
 gce_params = {
-    "instance_name": f"playground-vm-YourName-{ENV_SHORT_NAME}",
+    "instance_name": f"playground-vm-yourname-{ENV_SHORT_NAME}",
     "instance_type": {
         "dev": "n1-standard-2",
         "stg": "n1-standard-2",
@@ -76,9 +76,9 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         instance_type="{{ params.instance_type }}",
         labels={"keep_alive": "{{ params.keep_alive }}"},
-        accelerator_types=[]
-        if "{{ params.gpu_count }}" == "0"
-        else [{"name": "{{ params.gpu_type }}", "count": "{{ params.gpu_count }}"}],
+        accelerator_types=[
+            {"name": "{{ params.gpu_type }}", "count": "{{ params.gpu_count }}"}
+        ],
     )
 
     fetch_code = CloneRepositoryGCEOperator(

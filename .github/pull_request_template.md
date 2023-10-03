@@ -1,18 +1,34 @@
-(go the the `Preview` tab and to preview)
-unfold relevant PR type and delete others
-to tick boxe replace `[ ]` with `[x]`
+<!-- (go the the `Preview` tab and to preview)
+
+To tick boxe replace [ ] with [x]
+
+ -->
+
 
 
 ## Describe your changes
-Please include a summary of the changes:
+
+<!-- Please include a summary of the changes:
+
 This PR [adds/removes/fixes/replaces] the [feature/bug/etc]. 
-tag a reviewer if necessacy  `@github/username``
+
+Tag a reviewer if necessacy  @github/username 
+-->
+
+
 
 ## Jira ticket number and/or notion link
+<!-- 
 TO DO repo admin: [https://passculture.atlassian.net/browse/PC-<num>](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/managing-repository-settings/configuring-autolinks-to-reference-external-resources)
+
 JIRA-replace_with_ticket_number
-[Notion-link](paste within parenthesis)
+
+[Notion-link](paste within parenthesis) 
+-->
+
 ## Choose your PR type
+
+<!-- Unfold relevant PR type and delete others -->
 
 <details>
 
@@ -124,4 +140,4 @@ JIRA-replace_with_ticket_number
 
 ## Reviewer's checklist
 - [ ] I have thoroughly read the code and validated the changes
-- [ ] I have checked and approuved the documentation
+- [ ] I have checked and approved the documentation

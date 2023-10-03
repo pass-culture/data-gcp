@@ -53,7 +53,8 @@ JIRA-replace_with_ticket_number
 - [ ] My code passes CI/CD tests
 - [ ] I will post on slack review channel and ensure to specify the duration of the review task: short (<10min), medium (<30min), long (>30min)
 
-<details>
+</details>
+
 
 <details>
 
@@ -82,7 +83,7 @@ JIRA-replace_with_ticket_number
 - [ ] 🙋 no, because I need help
 - [ ] ⏰ no, but I created a ticket
 
-<details>
+</details>
 
 <details>
 
@@ -117,7 +118,7 @@ JIRA-replace_with_ticket_number
 - [ ] ⏰ no, but I created a ticket
 
 
-<details>
+</details>
 
 
 ## Reviewer's checklist

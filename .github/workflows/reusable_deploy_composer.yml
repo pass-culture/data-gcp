@@ -26,7 +26,7 @@ on:
         required: true
 
 env:
-    GCP_REGION: "europe-west1"
+  GCP_REGION: "europe-west1"
 
 jobs:
   composer-deploy:

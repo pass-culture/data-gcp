@@ -80,7 +80,21 @@ jobs:
     with:
       JOB_PATH: ${{ matrix.job }}
 
+   find-changed-orchestration:
+     runs-on: [self-hosted,linux,x64]
+     outputs:
+       run_tests: ${{ steps.changed-orchestration-files.outputs.any_modified }}
+     steps:
+      - name: Get changed files in orchestration folder
+        id: changed-orchestration-files
+        uses: tj-actions/changed-files@v39
+        with:
+          files: "orchestration/**"
+
    test-orchestration:
+    needs:
+      - find-changed-orchestration
+    if: needs.find-changed-orchestration.outputs.run_tests == 'true'
     uses: ./.github/workflows/reusable_test_orchestration.yml
     secrets:
       GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}

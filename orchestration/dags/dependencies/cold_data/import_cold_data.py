@@ -43,4 +43,14 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "pilote_geographic_standards",
     },
+    "eple": {
+        "sql": f"{SQL_PATH}/analytics/eple.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "eple",
+    },
+    "rural_city_type_data": {
+        "sql": f"{SQL_PATH}/analytics/rural_city_type_data.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "rural_city_type_data",
+    },
 }

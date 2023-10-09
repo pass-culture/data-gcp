@@ -195,7 +195,7 @@ class GCEHook(GoogleBaseHook):
             ],
             "metadata": {"items": metadata},
             "tags": {"items": ["training"]},
-            "labels": DEFAULT_LABELS | labels,
+            "labels": dict({**DEFAULT_LABELS, **labels}),
         }
         # GPUs
         if len(accelerator_type) > 0:

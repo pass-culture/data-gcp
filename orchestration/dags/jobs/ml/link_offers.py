@@ -49,6 +49,7 @@ with DAG(
         task_id="gce_start_task",
         instance_name=GCE_INSTANCE,
         instance_type="{{ params.instance_type }}",
+        labels={"job_type": "ml"},
     )
 
     fetch_code = CloneRepositoryGCEOperator(

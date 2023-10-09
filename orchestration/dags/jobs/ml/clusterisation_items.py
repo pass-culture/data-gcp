@@ -87,6 +87,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         instance_type="{{ params.instance_type }}",
         retries=2,
+        labels={"job_type": "ml"},
     )
 
     fetch_code = CloneRepositoryGCEOperator(

@@ -12,7 +12,8 @@ default_args = {
 }
 
 
-clean_delay = {"prod": 60 * 12, "dev": 60 * 3, "stg": 60 * 6}
+clean_default_delay = {"prod": 60 * 1, "dev": 60 * 2, "stg": 60 * 1}
+clean_ml_delay = {"prod": 60 * 12, "dev": 60 * 3, "stg": 60 * 6}
 
 
 dag = DAG(
@@ -24,8 +25,15 @@ dag = DAG(
     dagrun_timeout=timedelta(hours=1),
 )
 
-t1 = CleanGCEOperator(
+dag_cleaning = CleanGCEOperator(
     dag=dag,
-    task_id="clean_gce_operator",
-    timeout_in_minutes=clean_delay[ENV_SHORT_NAME],
+    task_id="clean_default_vm_gce_operator",
+    timeout_in_minutes=clean_default_delay[ENV_SHORT_NAME],
+    job_type="default",
+)
+ml_cleaning = CleanGCEOperator(
+    dag=dag,
+    task_id="clean_ml_vm_gce_operator",
+    timeout_in_minutes=clean_ml_delay[ENV_SHORT_NAME],
+    job_type="ml",
 )

@@ -4,7 +4,97 @@ on:
  pull_request:
 
 jobs:
+
+   linter:
+    uses: ./.github/workflows/reusable_linter.yml
+    secrets:
+      SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+
+   find-test-jobs:
+     outputs:
+       jobs: ${{ steps.compute.outputs.jobs }}
+     runs-on: [self-hosted, linux, x64]
+     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get etl_jobs changed files 
+        id: changed-etl-files
+        uses: tj-actions/changed-files@v39
+        with:
+          files: "jobs/etl_jobs/**"
+          json: true
+          dir_names: true
+          dir_names_max_depth: 4
+
+      - name: Get ml_jobs changed files 
+        id: changed-ml-files
+        uses: tj-actions/changed-files@v39
+        with:
+          files: "jobs/ml_jobs/**"
+          json: true
+          dir_names: true
+          dir_names_max_depth: 5
+
+      - name: Trouver les Jobs testables
+        id: find-testable-jobs
+        run: |
+          find jobs -type d  -name "tests" -exec dirname {} \; > /tmp/list.txt
+          folders=()
+          for folder in $(cat /tmp/list.txt); do
+            folders+=(\\\"${folder}\\\")
+          done
+          json_array="[$(IFS=,; echo "${folders[*]}")]"
+          echo "testable_jobs=$json_array" | tee -a $GITHUB_OUTPUT
+
+      - name: Show found files
+        id: compute # Intersection de testable_jobs et de (changed-etl-files et changed-ml-files)
+        run: |
+          echo "${{ steps.changed-etl-files.outputs.all_changed_files }}" > /tmp/output.json
+          echo "${{ steps.changed-ml-files.outputs.all_changed_files }}" >> /tmp/output.json
+          echo "${{ steps.find-testable-jobs.outputs.testable_jobs }}" >> /tmp/output.json
+          cat /tmp/output.json
+          jobs_to_test=$(jq --compact-output --slurp '(.[0] + .[1]) - ((.[0] + .[1]) - .[2])' /tmp/output.json)
+          echo "jobs=${jobs_to_test}" | tee -a $GITHUB_OUTPUT
+
+   assert-matrix-not-empty:
+    needs:
+      - find-test-jobs
+    if: ${{ needs.find-test-jobs.outputs.jobs != '' && toJson(fromJson(needs.find-test-jobs.outputs.jobs)) != '[]' }}
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - run: echo "Matrix Not Empty"
+  
+   test-jobs:
+    uses: ./.github/workflows/reusable_job_test.yml
+    secrets:
+      SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+    needs:
+      - assert-matrix-not-empty
+      - find-test-jobs
+    strategy:
+      fail-fast: false
+      matrix:
+        job: ${{ fromJSON(needs.find-test-jobs.outputs.jobs) }}
+    with:
+      JOB_PATH: ${{ matrix.job }}
+
+   find-changed-orchestration:
+     runs-on: [self-hosted,linux,x64]
+     outputs:
+       run_tests: ${{ steps.changed-orchestration-files.outputs.any_modified }}
+     steps:
+      - name: Get changed files in orchestration folder
+        id: changed-orchestration-files
+        uses: tj-actions/changed-files@v39
+        with:
+          files: "orchestration/**"
+
    test-orchestration:
+    needs:
+      - find-changed-orchestration
+    if: needs.find-changed-orchestration.outputs.run_tests == 'true'
     uses: ./.github/workflows/reusable_test_orchestration.yml
     secrets:
       GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}

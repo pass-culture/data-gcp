@@ -10,6 +10,8 @@ on:
        SLACK_BOT_TOKEN:
         required: true
 
+
+
 jobs:
   test-orchestration:
     permissions:
@@ -24,10 +26,14 @@ jobs:
       RECOMMENDATION_SQL_INSTANCE: cloudsql-recommendation-circleci
       RECOMMENDATION_SQL_BASE: cloudsql-recommendation-circleci
     name: "Test Orchestration"
-    runs-on: [self-hosted, linux, x64]
-    container: python:3.10
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip' # caching pip dependencies
+          cache-dependency-path: ./orchestration/airflow/orchestration-requirements.txt
       - name: Install Python requirements
         run: |
             pip install -r airflow/orchestration-requirements.txt

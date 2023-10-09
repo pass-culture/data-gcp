@@ -201,6 +201,9 @@ SELECT
     educational_institution.institution_departement_code,
     institution_postal_code,
     institution_city,
+    eple.code_commune as institution_city_code,
+    rurality.geo_code as rurality_code,
+    rurality.geo_type as rurality_type_label,
     first_deposit.first_deposit_creation_date,
     current_deposit.institution_current_deposit_amount,
     current_deposit.current_deposit_creation_date,
@@ -240,3 +243,8 @@ FROM
     LEFT JOIN bookings_per_institution ON educational_institution.educational_institution_id = bookings_per_institution.institution_id
     LEFT JOIN students_per_institution ON educational_institution.institution_id = students_per_institution.institution_id
     LEFT JOIN students_educonnectes ON educational_institution.institution_id = students_educonnectes.institution_external_id
+    LEFT JOIN `{{ bigquery_analytics_dataset }}.eple` as eple
+        ON educational_institution.institution_id = eple.id_etablissement
+    LEFT JOIN `{{ bigquery_analytics_dataset }}.rural_city_type_data` as rurality 
+        ON rurality.geo_code = eple.code_commune
+        

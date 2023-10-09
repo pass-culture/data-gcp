@@ -10,11 +10,7 @@ SELECT
     , "isActive" as offer_is_active
     , "name" as offer_name
     , "description" as offer_description
-    , "conditions" as offer_conditions
-    , "ageMin" as offer_age_min
-    , "ageMax" as offer_age_max
     , "url" as offer_url
-    , "mediaUrls" as offer_media_urls
     , "durationMinutes" as offer_duration_minutes
     , "isNational" as offer_is_national
     , "jsonData" as offer_extra_data

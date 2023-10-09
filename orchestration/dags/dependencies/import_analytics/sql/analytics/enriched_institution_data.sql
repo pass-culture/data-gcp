@@ -201,9 +201,7 @@ SELECT
     educational_institution.institution_departement_code,
     institution_postal_code,
     institution_city,
-    eple.code_commune as institution_city_code,
-    rurality.geo_code as rurality_code,
-    rurality.geo_type as rurality_type_label,
+    rurality.geo_type as institution_rural_level,
     first_deposit.first_deposit_creation_date,
     current_deposit.institution_current_deposit_amount,
     current_deposit.current_deposit_creation_date,
@@ -247,4 +245,3 @@ FROM
         ON educational_institution.institution_id = eple.id_etablissement
     LEFT JOIN `{{ bigquery_analytics_dataset }}.rural_city_type_data` as rurality 
         ON rurality.geo_code = eple.code_commune
-        

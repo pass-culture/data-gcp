@@ -87,4 +87,19 @@ ref_tables = {
             "nom": "STRING",
         },
     },
+    "priority_local_authorities": {
+        "file_type": "csv",
+        "schema": {
+            "priority_local_authority_name": "STRING",
+            "priority_local_authority_region": "STRING",
+            "priority_local_authority_department": "STRING",
+            "priority_local_authority_city": "STRING",
+            "priority_local_authority_internal_contact": "STRING",
+            "priority_local_authority_type": "STRING",
+            "priority_local_authority_status": "STRING",
+            "priority_local_authority_siren": "STRING",
+            "priority_offerer_id": "STRING",
+            "priority_zendesk_id": "STRING",
+        },
+    },
 }

@@ -43,4 +43,9 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "pilote_geographic_standards",
     },
+    "priority_local_authorities": {
+        "sql": f"{SQL_PATH}/analytics/priority_local_authorities.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "priority_local_authorities",
+    },
 }

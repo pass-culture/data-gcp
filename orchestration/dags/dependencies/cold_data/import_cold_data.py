@@ -47,5 +47,14 @@ analytics_tables = {
         "sql": f"{SQL_PATH}/analytics/priority_local_authorities.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "priority_local_authorities",
+    "eple": {
+        "sql": f"{SQL_PATH}/analytics/eple.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "eple",
+    },
+    "rural_city_type_data": {
+        "sql": f"{SQL_PATH}/analytics/rural_city_type_data.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "rural_city_type_data",
     },
 }

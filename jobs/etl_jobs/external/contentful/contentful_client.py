@@ -130,6 +130,19 @@ contentful_modules = [
         ],
     },
     {
+        "name": "highlightOffer",
+        "additional_fields": [
+            "offer_title",
+            "highlight_title",
+            "is_geolocated",
+            "around_radius",
+            "offer_image",
+            "offer_tag",
+            "offer_id",
+        ],
+        "children": [],
+    },
+    {
         "name": "categoryList",
         "additional_fields": [
             "title",

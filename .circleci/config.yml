@@ -172,82 +172,82 @@ workflows:
             - Slack
           <<: *slack-fail-post-step
 
-      - algo-training-install:
-          requires:
-            - linter
-          context:
-            - Slack
-          <<: *slack-fail-post-step
-
-      - algo-training-tests:
-          requires:
-            - algo-training-install
-          context:
-            - Slack
-            - DATA_GCP
-            - DATA_GCP_EHP
-          <<: *slack-fail-post-step
-
-      - record-linkage-install:
-          requires:
-            - linter
-          context:
-            - Slack
-          <<: *slack-fail-post-step
-
-      - record-linkage-tests:
-          requires:
-            - record-linkage-install
-          context:
-            - Slack
-            - DATA_GCP
-            - DATA_GCP_EHP
-          <<: *slack-fail-post-step
+            #      - algo-training-install:
+            #          requires:
+            #            - linter
+            #          context:
+            #            - Slack
+            #          <<: *slack-fail-post-step
+            #
+            #      - algo-training-tests:
+            #          requires:
+            #            - algo-training-install
+            #          context:
+            #            - Slack
+            #            - DATA_GCP
+            #            - DATA_GCP_EHP
+            #          <<: *slack-fail-post-step
+            #
+            #      - record-linkage-install:
+            #          requires:
+            #            - linter
+            #          context:
+            #            - Slack
+            #          <<: *slack-fail-post-step
+            #
+            #      - record-linkage-tests:
+            #          requires:
+            #            - record-linkage-install
+            #          context:
+            #            - Slack
+            #            - DATA_GCP
+            #            - DATA_GCP_EHP
+            #          <<: *slack-fail-post-step
       # Composer jobs
       # -------------
-      - orchestration-install:
-          requires:
-            - linter
-          context:
-            - Slack
-          <<: *slack-fail-post-step
+      # - orchestration-install:
+      #     requires:
+      #       - linter
+      #     context:
+      #       - Slack
+      #     <<: *slack-fail-post-step
 
-      - orchestration-tests:
-          requires:
-            - orchestration-install
-          context:
-            - Slack
-            - DATA_GCP
-            - DATA_GCP_EHP
-          <<: *slack-fail-post-step
+      # - orchestration-tests:
+      #     requires:
+      #       - orchestration-install
+      #     context:
+      #       - Slack
+      #       - DATA_GCP
+      #       - DATA_GCP_EHP
+      #     <<: *slack-fail-post-step
 
-      - composer-deploy:
-          name: staging-composer-deploy
-          requires:
-            - orchestration-tests
-          filters:
-            branches:
-              only:
-                - master
-          context:
-            - DATA_GCP
-            - DATA_GCP_EHP
-            - Slack
-          <<: *slack-fail-post-step
+            # - composer-deploy:
+            #     name: staging-composer-deploy
+            #     requires:
+            #       - orchestration-tests
+            #     filters:
+            #       branches:
+            #         only:
+            #           - master
+            #     context:
+            #       - DATA_GCP
+            #       - DATA_GCP_EHP
+            #       - Slack
+            #     <<: *slack-fail-post-step
 
-      - composer-deploy:
-          name: production-composer-deploy
-          requires:
-            - orchestration-tests
-          filters:
-            branches:
-              only:
-                - production
-          context:
-            - DATA_GCP
-            - DATA_GCP_PROD
-            - Slack
-          <<: *slack-fail-post-step
+            # - composer-deploy:
+            #     name: production-composer-deploy
+            #     requires:
+            #       - orchestration-tests
+            #     filters:
+            #       branches:
+            #         only:
+            #           - production
+            #     context:
+            #       - DATA_GCP
+            #       - DATA_GCP_PROD
+            #       - Slack
+            #     <<: *slack-fail-post-step
 
       # Slack alerts jobs
       # ----------------
@@ -260,7 +260,7 @@ workflows:
               only:
                 - production
           requires:
-            - production-composer-deploy
+            # - production-composer-deploy
             - api-integration-tests-prod
 
       - slack-alert:
@@ -272,7 +272,7 @@ workflows:
               only:
                 - master
           requires:
-            - staging-composer-deploy
+            # - staging-composer-deploy
             - api-integration-tests-staging
 
   # ----------------
@@ -281,9 +281,9 @@ workflows:
 
   deploy_on_dev:
     jobs:
-      - composer-deploy:
-          name: dev-composer-deploy
-          <<: *deploy_on_dev_commons
+      #- composer-deploy:
+      #    name: dev-composer-deploy
+      #    <<: *deploy_on_dev_commons
       - build_and_deploy_api_reco:
           name: build_and_deploy_api_reco_dev
           api-instance-name: apireco-dev
@@ -306,7 +306,7 @@ workflows:
           destination_env: dev
           context: Slack
           requires:
-            - dev-composer-deploy
+            #- dev-composer-deploy
             - build_and_deploy_api_reco_dev
 ### temporarily removing api reco tests ###
 #          requires:
@@ -444,119 +444,119 @@ jobs:
             cd apps/recommendation/api/postman
             newman run api_integration_tests.postman_collection.json --environment <<parameters.env>>.postman_environment.json --env-var "api_token=<<parameters.api_token>>"
 
-  orchestration-install:
-    executor: python
-    working_directory: ~/data-gcp/orchestration
-    steps:
-      - checkout:
-          path: ~/data-gcp
-      - restore_cache:
-          key: deps-{{ checksum "airflow/orchestration-requirements.txt" }}
-      - run:
-          name: Install Python requirements
-          command: |
-            python3 -m venv venv-orchestration
-            . venv-orchestration/bin/activate
-            pip install -r airflow/orchestration-requirements.txt
-      - save_cache:
-          key: deps-{{ checksum "airflow/orchestration-requirements.txt" }}
-          paths:
-            - "venv-orchestration"
-      - persist_to_workspace:
-          root: .
-          paths:
-            - .
-
-  orchestration-tests:
-    executor: python
-    working_directory: ~/data-gcp/orchestration
-    environment:
-      AIRFLOW_HOME: ~/data-gcp/orchestration
-      DAG_FOLDER: /home/circleci/data-gcp/orchestration/dags
-      RECOMMENDATION_SQL_INSTANCE: cloudsql-recommendation-circleci
-      RECOMMENDATION_SQL_BASE: cloudsql-recommendation-circleci
-    steps:
-      - attach_workspace:
-          at: .
-      - run:
-          name: Run tests
-          command: |
-            echo $GCLOUD_SERVICE_KEY > /tmp/service_account.json
-            export GOOGLE_APPLICATION_CREDENTIALS="/tmp/service_account.json" 
-            . venv-orchestration/bin/activate
-            airflow db init
-            pytest tests
-
-  algo-training-install:
-    executor: python310
-    working_directory: ~/data-gcp/jobs/ml_jobs/algo_training
-    steps:
-      - checkout:
-          path: ~/data-gcp
-      - restore_cache:
-          key: deps-{{ checksum "requirements.txt" }}
-      - run:
-          name: Install Python requirements
-          command: |
-            python3 -m venv venv-algo-training
-            . venv-algo-training/bin/activate
-            python3 -m pip install --upgrade pip
-            pip3 install -r requirements.txt
-      - save_cache:
-          key: deps-{{ checksum "requirements.txt" }}
-          paths:
-            - "venv-algo-training"
-      - persist_to_workspace:
-          root: .
-          paths:
-            - .
-
-  algo-training-tests:
-    executor: python310
-    working_directory: ~/data-gcp/jobs/ml_jobs/algo_training
-    steps:
-      - attach_workspace:
-          at: .
-      - run:
-          name: Run tests
-          command: |
-            . venv-algo-training/bin/activate
-            PYTHONPATH=. pytest tests
-
-  record-linkage-install:
-    executor: python
-    working_directory: ~/data-gcp/jobs/ml_jobs/record_linkage
-    steps:
-      - checkout:
-          path: ~/data-gcp
-      - restore_cache:
-          key: deps-{{ checksum "requirements.txt" }}
-      - run:
-          name: Install Python requirements
-          command: |
-            python3 -m venv venv-record-linkage
-            . venv-record-linkage/bin/activate
-            pip install -r requirements.txt
-      - save_cache:
-          key: deps-{{ checksum "requirements.txt" }}
-          paths:
-            - "venv-record-linkage"
-      - persist_to_workspace:
-          root: .
-          paths:
-            - .
-
-  record-linkage-tests:
-    executor: python
-    working_directory: ~/data-gcp/jobs/ml_jobs/record_linkage
-    steps:
-      - attach_workspace:
-          at: .
-      - run:
-          name: Run tests
-          command: |
-            . venv-record-linkage/bin/activate
-            PYTHONPATH=. pytest tests
+            #  orchestration-install:
+            #    executor: python310
+            #    working_directory: ~/data-gcp/orchestration
+            #    steps:
+            #      - checkout:
+            #          path: ~/data-gcp
+            #      - restore_cache:
+            #          key: deps-{{ checksum "airflow/orchestration-requirements.txt" }}
+            #      - run:
+            #          name: Install Python requirements
+            #          command: |
+            #            python3 -m venv venv-orchestration
+            #            . venv-orchestration/bin/activate
+            #            pip install -r airflow/orchestration-requirements.txt
+            #      - save_cache:
+            #          key: deps-{{ checksum "airflow/orchestration-requirements.txt" }}
+            #          paths:
+            #            - "venv-orchestration"
+            #      - persist_to_workspace:
+            #          root: .
+            #          paths:
+            #            - .
+            #
+            #  orchestration-tests:
+            #    executor: python310
+            #    working_directory: ~/data-gcp/orchestration
+            #    environment:
+            #      AIRFLOW_HOME: ~/data-gcp/orchestration
+            #      DAG_FOLDER: /home/circleci/data-gcp/orchestration/dags
+            #      RECOMMENDATION_SQL_INSTANCE: cloudsql-recommendation-circleci
+            #      RECOMMENDATION_SQL_BASE: cloudsql-recommendation-circleci
+            #    steps:
+            #      - attach_workspace:
+            #          at: .
+            #      - run:
+            #          name: Run tests
+            #          command: |
+            #            echo $GCLOUD_SERVICE_KEY > /tmp/service_account.json
+            #            export GOOGLE_APPLICATION_CREDENTIALS="/tmp/service_account.json" 
+            #            . venv-orchestration/bin/activate
+            #            airflow db init
+            #            pytest tests
+            #
+            #  algo-training-install:
+            #    executor: python310
+            #    working_directory: ~/data-gcp/jobs/ml_jobs/algo_training
+            #    steps:
+            #      - checkout:
+            #          path: ~/data-gcp
+            #      - restore_cache:
+            #          key: deps-{{ checksum "requirements.txt" }}
+            #      - run:
+            #          name: Install Python requirements
+            #          command: |
+            #            python3 -m venv venv-algo-training
+            #            . venv-algo-training/bin/activate
+            #            python3 -m pip install --upgrade pip
+            #            pip3 install -r requirements.txt
+            #      - save_cache:
+            #          key: deps-{{ checksum "requirements.txt" }}
+            #          paths:
+            #            - "venv-algo-training"
+            #      - persist_to_workspace:
+            #          root: .
+            #          paths:
+            #            - .
+            #
+            #  algo-training-tests:
+            #    executor: python310
+            #    working_directory: ~/data-gcp/jobs/ml_jobs/algo_training
+            #    steps:
+            #      - attach_workspace:
+            #          at: .
+            #      - run:
+            #          name: Run tests
+            #          command: |
+            #            . venv-algo-training/bin/activate
+            #            PYTHONPATH=. pytest tests
+            #
+            #  record-linkage-install:
+            #    executor: python310
+            #    working_directory: ~/data-gcp/jobs/ml_jobs/record_linkage
+            #    steps:
+            #      - checkout:
+            #          path: ~/data-gcp
+            #      - restore_cache:
+            #          key: deps-{{ checksum "requirements.txt" }}
+            #      - run:
+            #          name: Install Python requirements
+            #          command: |
+            #            python3 -m venv venv-record-linkage
+            #            . venv-record-linkage/bin/activate
+            #            pip install -r requirements.txt
+            #      - save_cache:
+            #          key: deps-{{ checksum "requirements.txt" }}
+            #          paths:
+            #            - "venv-record-linkage"
+            #      - persist_to_workspace:
+            #          root: .
+            #          paths:
+            #            - .
+            #
+            #  record-linkage-tests:
+            #    executor: python310
+            #    working_directory: ~/data-gcp/jobs/ml_jobs/record_linkage
+            #    steps:
+            #      - attach_workspace:
+            #          at: .
+            #      - run:
+            #          name: Run tests
+            #          command: |
+            #            . venv-record-linkage/bin/activate
+            #            PYTHONPATH=. pytest tests
   #recommendation-db-install:
   #  executor: python
   #  working_directory: ~/data-gcp/recommendation/db
@@ -602,28 +602,28 @@ jobs:
 #            export PYTHONPATH=$PYTHONPATH:~/data-gcp/recommendation/db
 #            . venv-db/bin/activate
 #            ./run_tests.sh
-  composer-deploy:
-    executor: gcp-sdk
-    working_directory: ~/data-gcp/orchestration
-    steps:
-      - checkout:
-          path: ~/data-gcp
-      - run:
-          name: Connect to GCP
-          command: |
-            echo $GCLOUD_SERVICE_KEY | gcloud auth activate-service-account --key-file=-
-            gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
-            gcloud --quiet config set compute/zone ${GOOGLE_COMPUTE_ZONE}
-      - run:
-          name: Deploy to composer
-          command: |
-            gsutil -m rm -r gs://${COMPOSER_BUCKET}/dags
-            gsutil cp -r dags gs://${COMPOSER_BUCKET}
-      - run:
-          name: Wait for composer to be deployed (10s x 6 times)
-          command: |
-            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} airflow_monitoring 6 10
-
+#  composer-deploy:
+#    executor: gcp-sdk
+#    working_directory: ~/data-gcp/orchestration
+#    steps:
+#      - checkout:
+#          path: ~/data-gcp
+#      - run:
+#          name: Connect to GCP
+#          command: |
+#            echo $GCLOUD_SERVICE_KEY | gcloud auth activate-service-account --key-file=-
+#            gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
+#            gcloud --quiet config set compute/zone ${GOOGLE_COMPUTE_ZONE}
+#      - run:
+#          name: Deploy to composer
+#          command: |
+#            gsutil -m rm -r gs://${COMPOSER_BUCKET}/dags
+#            gsutil cp -r dags gs://${COMPOSER_BUCKET}
+#      - run:
+#          name: Wait for composer to be deployed (10s x 6 times)
+#          command: |
+#            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} airflow_monitoring 6 10
+#
 
   build_and_deploy_api_reco:
     docker:

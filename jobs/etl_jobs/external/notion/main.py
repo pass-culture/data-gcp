@@ -44,7 +44,7 @@ def reformat_bq(bq_export: BQExport, doc: list, glossary: list):
         bq_export.push_doc(
             dataset_id=f"{dataset_id}_{ENVIRONMENT_SHORT_NAME}",
             table_name=table_name,
-            description=description,
+            main_description=description,
             columns=columns,
             labels=tags,
         )

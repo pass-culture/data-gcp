@@ -63,13 +63,16 @@ def save_results(df_applications, dms_target, updated_since, data_gcs_bucket_nam
         if type == "TIMESTAMP":
             df_applications[f"{name}"] = pd.to_datetime(
                 df_applications[f"{name}"], utc=True, origin="unix", errors="coerce"
+
             )
 
         elif type == "STRING":
             df_applications[f"{name}"] = df_applications[f"{name}"].astype(str)
+
     df_applications["update_date"] = pd.to_datetime(
         pd.Timestamp.today(), utc=True, origin="unix"
     )
+
     df_applications.to_parquet(
         f"gs://{data_gcs_bucket_name}/dms_export/dms_{dms_target}_{updated_since}.parquet",
         engine="pyarrow",

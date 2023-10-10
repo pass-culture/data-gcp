@@ -338,6 +338,22 @@ WITH temp_firebase_events AS (
             where
                 event_params.key = 'traffic_source'
         ) as traffic_source,
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'traffic_gen'
+        ) as traffic_gen,
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'traffic_content'
+        ) as traffic_content,
         COALESCE(
             (
                 select

@@ -1,21 +1,28 @@
-WITH firebase_bookings AS (
+WITH all_bookings_reconciled AS (
   SELECT
-    user_id
-    , event_date AS booking_date
-    , event_timestamp AS booking_timestamp
+    booking.user_id
+    , COALESCE(event_date, DATE(booking_creation_date)) AS booking_date
+    , COALESCE(event_timestamp, TIMESTAMP(booking_creation_date)) AS booking_timestamp
     , session_id AS booking_session_id
     , unique_session_id AS booking_unique_session_id
-    , offer_id
+    , booking.offer_id
+    , booking.deposit_id
+    , booking.booking_status
+    , booking.booking_is_cancelled
+    , booking.booking_intermediary_amount
     , item_id
-    , booking_id
+    , booking.booking_id
     , platform
     , search_id
   FROM
-      `{{ bigquery_analytics_dataset }}.firebase_events` f_events
-  INNER JOIN `{{ bigquery_analytics_dataset }}.offer_item_ids` offer_item_ids USING(offer_id)
-  WHERE
-      event_name = 'BookingConfirmation'
+      `{{ bigquery_clean_dataset }}.booking` booking
+  LEFT JOIN `{{ bigquery_analytics_dataset }}.firebase_events` f_events
+  ON f_events.booking_id = booking.booking_id
+  AND event_name = 'BookingConfirmation'
   AND event_date = DATE('{{ add_days(ds, params.to) }}')
+  INNER JOIN `{{ bigquery_analytics_dataset }}.offer_item_ids` offer_item_ids
+  ON offer_item_ids.offer_id = booking.offer_id
+  WHERE DATE(booking_creation_date) = DATE('{{ add_days(ds, params.to) }}')
 )
 
 , firebase_consult AS (
@@ -33,19 +40,20 @@ WITH firebase_bookings AS (
   FROM `{{ bigquery_analytics_dataset }}.firebase_events`
   INNER JOIN `{{ bigquery_analytics_dataset }}.offer_item_ids` offer_item_ids USING(offer_id)
   WHERE event_name = 'ConsultOffer'
+  AND origin NOT IN ('offer', 'endedbookings','bookingimpossible', 'bookings')
   AND event_date BETWEEN DATE('{{ add_days(ds, params.from) }}') AND DATE('{{ add_days(ds, params.to) }}')  
 )
 
 , bookings_origin_first_touch AS (
   SELECT 
-    firebase_bookings.user_id
+    all_bookings_reconciled.user_id
     , booking_date
     , booking_timestamp
     , booking_session_id
     , booking_unique_session_id
     , reco_call_id
-    , firebase_bookings.offer_id
-    , firebase_bookings.item_id
+    , all_bookings_reconciled.offer_id
+    , all_bookings_reconciled.item_id
     , booking_id
     , consult_date
     , consult_timestamp
@@ -55,10 +63,10 @@ WITH firebase_bookings AS (
     , module_id AS module_id_first_touch
     , module_name AS module_name_first_touch
     , entry_id
-  FROM firebase_bookings
+  FROM all_bookings_reconciled
   LEFT JOIN firebase_consult
-  ON firebase_bookings.user_id = firebase_consult.user_id
-  AND firebase_bookings.item_id = firebase_consult.item_id
+  ON all_bookings_reconciled.user_id = firebase_consult.user_id
+  AND all_bookings_reconciled.item_id = firebase_consult.item_id
   AND consult_date >= DATE_SUB(booking_date, INTERVAL 7 DAY)
   AND consult_timestamp < booking_timestamp
   QUALIFY ROW_NUMBER() OVER(PARTITION BY firebase_consult.user_id, firebase_consult.item_id ORDER BY consult_timestamp ) = 1
@@ -66,14 +74,14 @@ WITH firebase_bookings AS (
 
 , bookings_origin_last_touch AS (
   SELECT 
-      firebase_bookings.user_id
+      all_bookings_reconciled.user_id
     , booking_date
     , booking_timestamp
     , booking_session_id
     , booking_unique_session_id
     , reco_call_id
-    , firebase_bookings.offer_id
-    , firebase_bookings.item_id
+    , all_bookings_reconciled.offer_id
+    , all_bookings_reconciled.item_id
     , booking_id
     , consult_date
     , consult_timestamp
@@ -82,10 +90,10 @@ WITH firebase_bookings AS (
     , search_id
     , module_id AS module_id_last_touch
     , module_name AS module_name_last_touch
-  FROM firebase_bookings
+  FROM all_bookings_reconciled
   LEFT JOIN firebase_consult
-  ON firebase_bookings.user_id = firebase_consult.user_id
-  AND firebase_bookings.item_id = firebase_consult.item_id
+  ON all_bookings_reconciled.user_id = firebase_consult.user_id
+  AND all_bookings_reconciled.item_id = firebase_consult.item_id
   AND consult_date >= DATE_SUB(booking_date, INTERVAL 7 DAY)
   AND consult_timestamp < booking_timestamp
   QUALIFY ROW_NUMBER() OVER(PARTITION BY firebase_consult.user_id, firebase_consult.item_id ORDER BY consult_timestamp DESC) = 1
@@ -93,15 +101,19 @@ WITH firebase_bookings AS (
 
 , booking_origin AS (
   SELECT 
-  first_t.user_id
-  , first_t.booking_date
-  , first_t.booking_timestamp
-  , first_t.booking_session_id
-  , first_t.booking_unique_session_id
+  all_bookings_reconciled.user_id
+  , all_bookings_reconciled.booking_date
+  , all_bookings_reconciled.booking_timestamp
+  , all_bookings_reconciled.booking_session_id
+  , all_bookings_reconciled.booking_unique_session_id
   , first_t.reco_call_id
-  , first_t.offer_id
-  , first_t.item_id
-  , first_t.booking_id
+  , all_bookings_reconciled.offer_id
+  , all_bookings_reconciled.item_id
+  , all_bookings_reconciled.booking_id
+  , all_bookings_reconciled.deposit_id
+  , all_bookings_reconciled.booking_status
+  , all_bookings_reconciled.booking_is_cancelled
+  , all_bookings_reconciled.booking_intermediary_amount
   , first_t.consult_date
   , first_t.consult_timestamp
   , consult_origin_first_touch
@@ -113,10 +125,9 @@ WITH firebase_bookings AS (
   , module_id_last_touch
   , module_name_last_touch
   , entry_id
-FROM bookings_origin_first_touch AS first_t
-JOIN bookings_origin_last_touch AS last_t
-ON first_t.user_id = last_t.user_id
-AND first_t.item_id = last_t.item_id
+FROM all_bookings_reconciled
+LEFT JOIN bookings_origin_first_touch AS first_t USING(booking_id)
+LEFT JOIN bookings_origin_last_touch AS last_t USING(booking_id)
 )
 
 , mapping_module AS (
@@ -127,6 +138,7 @@ AND first_t.item_id = last_t.item_id
 
 SELECT 
     user_id
+  , deposit_id
   , booking_date
   , booking_timestamp
   , booking_session_id
@@ -135,6 +147,9 @@ SELECT
   , offer_id
   , item_id
   , booking_id
+  , booking_status
+  , booking_is_cancelled
+  , booking_intermediary_amount
   , consult_date
   , consult_timestamp
   , consult_origin_first_touch

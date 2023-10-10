@@ -5,6 +5,7 @@ SELECT
     application_number,
     application_archived,
     application_status,
+
     timestamp_micros(cast( (last_update_at/1000) as INTEGER)) as last_update_at,
     timestamp_micros(cast( (application_submitted_at/1000) as INTEGER)) as application_submitted_at,
     timestamp_micros(cast( (passed_in_instruction_at/1000) as INTEGER)) as passed_in_instruction_at,

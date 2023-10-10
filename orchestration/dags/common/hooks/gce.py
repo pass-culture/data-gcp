@@ -15,7 +15,13 @@ from common.config import (
     GCE_SA,
 )
 
-DEFAULT_LABELS = {"env": ENV_SHORT_NAME, "terraform": "false", "airflow": "true"}
+DEFAULT_LABELS = {
+    "env": ENV_SHORT_NAME,
+    "terraform": "false",
+    "airflow": "true",
+    "keep_alive": "false",
+    "job_type": "default",
+}
 
 
 @dataclass
@@ -82,6 +88,7 @@ class GCEHook(GoogleBaseHook):
         instance_name,
         instance_type,
         preemptible,
+        labels={},
         accelerator_types=[],
     ):
         instances = self.list_instances()
@@ -96,6 +103,7 @@ class GCEHook(GoogleBaseHook):
         self.__create_instance(
             instance_type,
             instance_name,
+            labels=labels,
             wait=True,
             preemptible=preemptible,
             accelerator_types=accelerator_types,
@@ -132,6 +140,7 @@ class GCEHook(GoogleBaseHook):
         self,
         instance_type,
         name,
+        labels,
         metadata=None,
         wait=False,
         accelerator_types=[],
@@ -140,11 +149,12 @@ class GCEHook(GoogleBaseHook):
         instance_type = "zones/%s/machineTypes/%s" % (self.gcp_zone, instance_type)
         accelerator_type = [
             {
-                "acceleratorCount": [a_t["count"]],
+                "acceleratorCount": [int(a_t["count"])],
                 "acceleratorType": "zones/%s/acceleratorTypes/%s"
                 % (self.gcp_zone, a_t["name"]),
             }
             for a_t in accelerator_types
+            if int(a_t["count"]) in [1, 2, 4]
         ]
         metadata = (
             [{"key": key, "value": value} for key, value in metadata.items()]
@@ -185,7 +195,7 @@ class GCEHook(GoogleBaseHook):
             ],
             "metadata": {"items": metadata},
             "tags": {"items": ["training"]},
-            "labels": DEFAULT_LABELS,
+            "labels": dict({**DEFAULT_LABELS, **labels}),
         }
         # GPUs
         if len(accelerator_type) > 0:
@@ -235,7 +245,7 @@ class GCEHook(GoogleBaseHook):
             else:
                 raise
 
-    def delete_instances(self, timeout_in_minutes=60 * 12):
+    def delete_instances(self, job_type="default", timeout_in_minutes=60 * 12):
         instances = self.list_instances()
 
         instances = [
@@ -243,6 +253,8 @@ class GCEHook(GoogleBaseHook):
             for x in instances
             if x.get("labels", {}).get("airflow", "") == "true"
             and x.get("labels", {}).get("env", "") == ENV_SHORT_NAME
+            and not x.get("labels", {}).get("keep_alive", "false") == "true"
+            and x.get("labels", {}).get("job_type", "default") == job_type
         ]
 
         for instance in instances:

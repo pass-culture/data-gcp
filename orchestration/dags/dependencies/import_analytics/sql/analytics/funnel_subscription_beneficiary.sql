@@ -138,6 +138,7 @@ SELECT
    ,au.media_source as paid_acquisition_media_source
    ,au.campaign as paid_acquisition_campaign
    ,au.ad as paid_acquisition_ad
+   ,au.adset AS paid_acquisition_adset
    ,au.install_time as appsflyer_install_time
 FROM first_open
 LEFT JOIN age_selected ON first_open.user_pseudo_id=age_selected.user_pseudo_id and rank_time_selected_age = 1

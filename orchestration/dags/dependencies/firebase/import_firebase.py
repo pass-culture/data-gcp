@@ -179,6 +179,14 @@ import_firebase_beneficiary_tables = {
         "time_partitioning": {"field": "booking_date"},
         "depends": ["analytics_firebase_events"],
     },
+    "analytics_firebase_venue_data": {
+        "sql": f"{SQL_PATH}/analytics/firebase_venue_data.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "firebase_venue_data",
+        "partition_prefix": "$",
+        "time_partitioning": {"field": "display_date"},
+        "depends": ["analytics_firebase_events"],
+    },
     "analytics_firebase_app_experiments": {
         "sql": f"{SQL_PATH}/analytics/firebase_app_experiments.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",

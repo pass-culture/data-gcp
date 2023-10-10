@@ -130,6 +130,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         instance_type="{{ params.instance_type }}",
         accelerator_types=[{"name": "nvidia-tesla-t4", "count": 1}],
+        labels={"job_type": "ml"},
     )
 
     fetch_code = CloneRepositoryGCEOperator(

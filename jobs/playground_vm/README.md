@@ -7,3 +7,7 @@ conda init zsh && source ~/.zshrc && conda activate data-gcp
 pip install -r requirements.txt
 
 ipython kernel install --user --name=data-gcp   
+
+
+cd data-gcp/jobs/playground-vm
+sh init.sh

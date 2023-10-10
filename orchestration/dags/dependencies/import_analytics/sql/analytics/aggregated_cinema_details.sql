@@ -1,31 +1,43 @@
 with sources_cine as (
 SELECT 
-  boost_cinema_details_id as cinema_source_id , 
-  'boost' as source ,
+  boost_cinema_details_id as cinema_source_id, 
+  'boost' as source,
   cinema_url, 
   null as cinema_api_token, 
   null as account_id,
-  cinema_provider_pivot_id
+  cinema_provider_pivot_id,
+  null as last_version
 FROM `{{ bigquery_clean_dataset }}.applicative_database_boost_cinema_details`
 UNION ALL
 SELECT 
-  cds_cinema_details_id as cinema_source_id ,
+  cds_cinema_details_id as cinema_source_id,
  'cds' as source,
   null as cinema_url,
   cinema_api_token,
   account_id,
-  cinema_provider_pivot_id
-
+  cinema_provider_pivot_id,
+  null as last_version
 FROM `{{ bigquery_clean_dataset }}.applicative_database_cds_cinema_details` 
 UNION ALL
 SELECT 
-  cgr_cinema_details_id as cinema_source_id ,
+  cgr_cinema_details_id as cinema_source_id,
  'cgr' as source,
   cinema_url,
   null as cinema_api_token, 
   null as account_id,
-  cinema_provider_pivot_id
+  cinema_provider_pivot_id,
+  null as last_version
 FROM `{{ bigquery_clean_dataset }}.applicative_database_cgr_cinema_details` 
+UNION ALL
+SELECT 
+  ems_cinema_details_id as cinema_source_id,
+ 'ems' as source,
+  null as cinema_url,
+  null as cinema_api_token, 
+  null as account_id,
+  cinema_provider_pivot_id,
+  last_version
+FROM `{{ bigquery_clean_dataset }}.applicative_database_ems_cinema_details`
 )
 select 
   sources_cine.* except(cinema_provider_pivot_id),

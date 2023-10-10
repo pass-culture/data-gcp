@@ -17,9 +17,6 @@ on:
       TARGET_ENV:
         type: string
         required: true
-      NOTIF_CHANNEL_ID:
-        type: string
-        required: false # Si pas fourni, alors pas de notif
     secrets:
       GCP_WORKLOAD_IDENTITY_PROVIDER:
         required: true
@@ -64,10 +61,10 @@ jobs:
           #               ./wait_for_dag_deployed.sh ${{ inputs.COMPOSER_ENVIRONMENT_NAME }} ${{ env.GCP_REGION }} airflow_monitoring 6 10 ${{ inputs.DATA_GCP_PROJECT }}
       - name: Post to a Slack channel
         id: slack
-        if: ${{ inputs.NOTIF_CHANNEL_ID != '' && always() }}
+        if: ${{ always() }}
         uses: slackapi/slack-github-action@v1.23.0
         with:
-          channel-id: ${{ inputs.NOTIF_CHANNEL_ID }}
+          channel-id: ${{ vars.NOTIF_CHANNEL_ID }}
           payload: |
             {
                     "attachments": [

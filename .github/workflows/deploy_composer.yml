@@ -70,7 +70,6 @@ jobs:
       COMPOSER_DAGS_BUCKET: "europe-west1-data-composer--a3134989-bucket"
       COMPOSER_ENVIRONMENT_NAME: "data-composer-dev"
       DATA_GCP_PROJECT: "passculture-data-ehp"
-      NOTIF_CHANNEL_ID: ${{ vars.NOTIF_CHANNEL_ID }}
     secrets:
       GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
       ARTIFACT_REGISTRY_SERVICE_ACCOUNT: ${{ secrets.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
@@ -88,7 +87,6 @@ jobs:
         #    COMPOSER_DAGS_BUCKET: "europe-west1-data-composer--00137508-bucket"
         #    COMPOSER_ENVIRONMENT_NAME: "data-composer-stg"
         #    DATA_GCP_PROJECT: "passculture-data-ehp"
-        #    NOTIF_CHANNEL_ID: ${{ vars.NOTIF_CHANNEL_ID }}
         #  secrets:
         #    GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
         #    ARTIFACT_REGISTRY_SERVICE_ACCOUNT: ${{ secrets.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
@@ -107,7 +105,6 @@ jobs:
         #    COMPOSER_DAGS_BUCKET: "europe-west1-data-composer--d5adf2e8-bucket"
         #    COMPOSER_ENVIRONMENT_NAME: "data-composer-prod"
         #    DATA_GCP_PROJECT: "passculture-data-prod"
-        #    NOTIF_CHANNEL_ID: ${{ vars.NOTIF_CHANNEL_ID }}
         #  secrets:
         #    GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
         #    ARTIFACT_REGISTRY_SERVICE_ACCOUNT: ${{ secrets.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}

@@ -149,4 +149,12 @@ ref_tables = {
             "code_type_contrat_prive": "STRING",
         },
     },
+    "institution_scholar_level ": {
+        "file_type": "csv",
+        "schema": {
+            "n_ms4_id": "STRING",
+            "n_ms4_cod": "STRING",
+            "n_ms4_lib": "STRING",
+        },
+    },
 }

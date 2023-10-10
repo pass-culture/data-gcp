@@ -5,3 +5,5 @@ export GCP_PROJECT_ID=passculture-data-...
 conda init zsh && source ~/.zshrc && conda activate data-gcp
 ```
 pip install -r requirements.txt
+
+ipython kernel install --user --name=data-gcp   

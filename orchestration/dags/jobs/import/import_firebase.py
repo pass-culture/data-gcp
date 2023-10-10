@@ -83,6 +83,8 @@ for type, params in dags.items():
             if type == "intraday"
             else [],
         }
-    table_jobs = depends_loop(table_jobs, start, dag=dag)
     end = DummyOperator(task_id="end", dag=dag)
-    table_jobs >> end
+    table_jobs = depends_loop(
+        import_tables_temp, table_jobs, start, dag=dag, default_end_operator=end
+    )
+    table_jobs

@@ -107,11 +107,15 @@ with DAG(
             "dag_depends": job_params.get("dag_depends", []),  # liste de dag_id
         }
 
-    analytics_table_tasks = depends_loop(
-        analytics_table_jobs, start_analytics_table_tasks, dag
-    )
-
     end = DummyOperator(task_id="end", dag=dag)
+
+    analytics_table_tasks = depends_loop(
+        import_batch_tables,
+        analytics_table_jobs,
+        start_analytics_table_tasks,
+        dag,
+        default_end_operator=end,
+    )
 
     (start >> gce_instance_start >> fetch_code >> install_dependencies)
     (
@@ -121,5 +125,4 @@ with DAG(
         >> gce_instance_stop
         >> start_analytics_table_tasks
         >> analytics_table_tasks
-        >> end
     )

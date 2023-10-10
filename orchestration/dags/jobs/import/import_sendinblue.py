@@ -119,7 +119,14 @@ with DAG(
 
         # import_tables_to_analytics_tasks.append(task)
 
-    analytics_table_tasks = depends_loop(analytics_table_jobs, end_raw, dag=dag)
+    end = DummyOperator(task_id="end", dag=dag)
+    analytics_table_tasks = depends_loop(
+        analytics_tables,
+        analytics_table_jobs,
+        end_raw,
+        dag=dag,
+        default_end_operator=end,
+    )
 
     (
         gce_instance_start

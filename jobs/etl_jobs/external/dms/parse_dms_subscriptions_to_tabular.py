@@ -63,7 +63,6 @@ def save_results(df_applications, dms_target, updated_since, data_gcs_bucket_nam
         if type == "TIMESTAMP":
             df_applications[f"{name}"] = pd.to_datetime(
                 df_applications[f"{name}"], utc=True, origin="unix", errors="coerce"
-
             )
 
         elif type == "STRING":

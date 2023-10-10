@@ -2,9 +2,9 @@ name: "Deploy Composer"
 
 on:
  push:
-   branches:
-   - master
-   - production
+  branches:
+  - master
+  - production
 
 jobs:
   linter:
@@ -56,7 +56,6 @@ jobs:
       GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
       ARTIFACT_REGISTRY_SERVICE_ACCOUNT: ${{ secrets.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
       SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
- 
 
   composer-deploy-on-dev:
     if: github.ref == 'refs/heads/production'

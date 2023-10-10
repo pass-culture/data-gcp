@@ -38,7 +38,7 @@ SELECT
     display.* EXCEPT(venue_display_rank)
     , offer_id
     , event_timestamp AS consult_offer_timestamp
-    , ROW_NUMBER() OVER(PARTITION BY unique_session_id, venue_id, offer_id ORDER BY event_timestamp) AS consult_rank
+    , ROW_NUMBER() OVER(PARTITION BY display.unique_session_id, display.venue_id, offer_id ORDER BY event_timestamp) AS consult_rank
 FROM display
 LEFT JOIN venue_data ON display.unique_session_id = venue_data.unique_session_id
                     AND display.venue_id = venue_data.venue_id

@@ -55,13 +55,13 @@ jobs:
           service_account: ${{ secrets.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
       - name: 'Set up Cloud SDK'
         uses: 'google-github-actions/setup-gcloud@v1'
-      - name: Deploy composer
-        run: |
-              gsutil -m rm -r gs://${{ inputs.COMPOSER_DAGS_BUCKET }}/dags
-              gsutil -m cp -r dags gs://${{ inputs.COMPOSER_DAGS_BUCKET }}
-      - name: Wait for composer to be deployed (10s x 6 times)
-        run: |
-               ./wait_for_dag_deployed.sh ${{ inputs.COMPOSER_ENVIRONMENT_NAME }} ${{ env.GCP_REGION }} airflow_monitoring 6 10 ${{ inputs.DATA_GCP_PROJECT }}
+          #      - name: Deploy composer
+          #        run: |
+          #              gsutil -m rm -r gs://${{ inputs.COMPOSER_DAGS_BUCKET }}/dags
+          #              gsutil -m cp -r dags gs://${{ inputs.COMPOSER_DAGS_BUCKET }}
+          #      - name: Wait for composer to be deployed (10s x 6 times)
+          #        run: |
+          #               ./wait_for_dag_deployed.sh ${{ inputs.COMPOSER_ENVIRONMENT_NAME }} ${{ env.GCP_REGION }} airflow_monitoring 6 10 ${{ inputs.DATA_GCP_PROJECT }}
       - name: Post to a Slack channel
         id: slack
         if: ${{ inputs.NOTIF_CHANNEL_ID != '' && always() }}

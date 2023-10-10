@@ -2,9 +2,9 @@ name: "Deploy Composer"
 
 on:
  push:
-  branches:
-  - master
-  - production
+   # branches:
+   # - master
+   # - production
 
 jobs:
   linter:
@@ -48,21 +48,21 @@ jobs:
      JOB_PATH: ${{ matrix.job }}
      NOTIF_CHANNEL_ID: ${{ vars.DEFAULT_NOTIF_CHANNEL_ID }}
   
-  test-orchestration:
-    uses: ./.github/workflows/reusable_test_orchestration.yml
-    with:
-      NOTIF_CHANNEL_ID: ${{ vars.DEFAULT_NOTIF_CHANNEL_ID }}
-    secrets:
-      GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-      ARTIFACT_REGISTRY_SERVICE_ACCOUNT: ${{ secrets.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
-      SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-
+       #  test-orchestration:
+       #    uses: ./.github/workflows/reusable_test_orchestration.yml
+       #    with:
+       #      NOTIF_CHANNEL_ID: ${{ vars.DEFAULT_NOTIF_CHANNEL_ID }}
+       #    secrets:
+       #      GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+       #      ARTIFACT_REGISTRY_SERVICE_ACCOUNT: ${{ secrets.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
+       #      SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+       #
 
   composer-deploy-on-dev:
-    if: github.ref == 'refs/heads/production'
+    #  if: github.ref == 'refs/heads/production'
     uses: ./.github/workflows/reusable_deploy_composer.yml
     needs: 
-      - test-orchestration
+      #      - test-orchestration
       - test-jobs
       - linter
     with:
@@ -76,39 +76,39 @@ jobs:
       ARTIFACT_REGISTRY_SERVICE_ACCOUNT: ${{ secrets.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
       SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
 
-  composer-deploy-on-stg:
-    if: github.ref == 'refs/heads/master'
-    uses: ./.github/workflows/reusable_deploy_composer.yml
-    needs: 
-      - test-orchestration
-      - test-jobs
-      - linter
-    with:
-      TARGET_ENV:  "staging"
-      COMPOSER_DAGS_BUCKET: "europe-west1-data-composer--00137508-bucket"
-      COMPOSER_ENVIRONMENT_NAME: "data-composer-stg"
-      DATA_GCP_PROJECT: "passculture-data-ehp"
-      NOTIF_CHANNEL_ID: ${{ vars.NOTIF_CHANNEL_ID }}
-    secrets:
-      GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-      ARTIFACT_REGISTRY_SERVICE_ACCOUNT: ${{ secrets.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
-      SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+        #composer-deploy-on-stg:
+        #  if: github.ref == 'refs/heads/master'
+        #  uses: ./.github/workflows/reusable_deploy_composer.yml
+        #  needs: 
+        #    - test-orchestration
+        #    - test-jobs
+        #    - linter
+        #  with:
+        #    TARGET_ENV:  "staging"
+        #    COMPOSER_DAGS_BUCKET: "europe-west1-data-composer--00137508-bucket"
+        #    COMPOSER_ENVIRONMENT_NAME: "data-composer-stg"
+        #    DATA_GCP_PROJECT: "passculture-data-ehp"
+        #    NOTIF_CHANNEL_ID: ${{ vars.NOTIF_CHANNEL_ID }}
+        #  secrets:
+        #    GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+        #    ARTIFACT_REGISTRY_SERVICE_ACCOUNT: ${{ secrets.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
+        #    SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
 
-  composer-deploy-on-prod:
-    if: github.ref == 'refs/heads/production'
-    uses: ./.github/workflows/reusable_deploy_composer.yml
-    needs: 
-      - test-orchestration
-      - test-jobs
-      - linter
-      - composer-deploy-on-dev
-    with:
-      TARGET_ENV:  "production"
-      COMPOSER_DAGS_BUCKET: "europe-west1-data-composer--d5adf2e8-bucket"
-      COMPOSER_ENVIRONMENT_NAME: "data-composer-prod"
-      DATA_GCP_PROJECT: "passculture-data-prod"
-      NOTIF_CHANNEL_ID: ${{ vars.NOTIF_CHANNEL_ID }}
-    secrets:
-      GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-      ARTIFACT_REGISTRY_SERVICE_ACCOUNT: ${{ secrets.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
-      SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+        #composer-deploy-on-prod:
+        #  if: github.ref == 'refs/heads/production'
+        #  uses: ./.github/workflows/reusable_deploy_composer.yml
+        #  needs: 
+        #    - test-orchestration
+        #    - test-jobs
+        #    - linter
+        #    - composer-deploy-on-dev
+        #  with:
+        #    TARGET_ENV:  "production"
+        #    COMPOSER_DAGS_BUCKET: "europe-west1-data-composer--d5adf2e8-bucket"
+        #    COMPOSER_ENVIRONMENT_NAME: "data-composer-prod"
+        #    DATA_GCP_PROJECT: "passculture-data-prod"
+        #    NOTIF_CHANNEL_ID: ${{ vars.NOTIF_CHANNEL_ID }}
+        #  secrets:
+        #    GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+        #    ARTIFACT_REGISTRY_SERVICE_ACCOUNT: ${{ secrets.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
+        #    SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}

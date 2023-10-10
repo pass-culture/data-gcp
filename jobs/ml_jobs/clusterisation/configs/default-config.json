@@ -1,5 +1,95 @@
 {
     "pretained_embedding_name":"semantic_content",
-    "target_nbclusters":150,
-    "clusterisation_by_group": false
+    "group_config" :[
+        {
+            "group": "MANGA",
+            "features": [
+                {
+                    "type": "offer_type_label",
+                    "name": "Manga"
+                }
+            ]
+        },
+        {
+            "group": "LIVRES",
+            "features": [
+                {
+                    "type": "category",
+                    "name": "LIVRE"
+                },
+                {
+                    "type": "category",
+                    "name": "MEDIA"
+                }
+            ]
+        },
+        {
+            "group": "CINEMA",
+            "features": [
+                {
+                    "type": "category",
+                    "name": "FILM"
+                },
+                {
+                    "type": "category",
+                    "name": "CINEMA"
+                }
+            ]
+        },
+        {
+            "group": "MUSIQUE",
+            "features": [
+                {
+                    "type": "category",
+                    "name": "MUSIQUE_ENREGISTREE"
+                },
+                {
+                    "type": "category",
+                    "name": "MUSIQUE_LIVE"
+                },
+                {
+                    "type": "category",
+                    "name": "INSTRUMENT"
+                }
+            ]
+        },
+        {
+            "group": "ARTS",
+            "features": [
+                {
+                    "type": "category",
+                    "name": "MUSEE"
+                },
+                {
+                    "type": "category",
+                    "name": "CARTE_JEUNES"
+                },
+                {
+                    "type": "category",
+                    "name": "BEAUX_ARTS"
+                },
+                {
+                    "type": "category",
+                    "name": "PRATIQUE_ART"
+                }
+            ]
+        },
+        {
+            "group": "SORTIES",
+            "features": [
+                {
+                    "type": "category",
+                    "name": "SPECTACLE"
+                },
+                {
+                    "type": "category",
+                    "name": "JEU"
+                },
+                {
+                    "type": "category",
+                    "name": "CONFERENCE"
+                }
+            ]
+        }
+    ]
 }

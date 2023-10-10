@@ -3,18 +3,16 @@ import pandas as pd
 import json
 from loguru import logger
 from tools.preprocessing import (
-    prepare_pretrained_encoding,
-    prepare_categorical_fields,
-    prepare_clusterisation,
+    prepare_embedding,
+    get_item_by_categories,
+    get_item_by_group,
 )
 from tools.utils import ENV_SHORT_NAME, CONFIGS_PATH
+
 import numpy as np
 
 
 def preprocess(
-    splitting: float = typer.Option(
-        ..., help="Split proportion between fit and predict"
-    ),
     input_table: str = typer.Option(..., help="Path to data"),
     output_table: str = typer.Option(..., help="Path to data"),
     config_file_name: str = typer.Option(
@@ -29,62 +27,46 @@ def preprocess(
     ) as config_file:
         params = json.load(config_file)
 
-    logger.info("Loading data: fetch item with pretained encoding")
+    logger.info("Loading data: fetch items with metadata and pretained embedding")
     items = pd.read_gbq(f"SELECT * from `tmp_{ENV_SHORT_NAME}.{input_table}`")
+    items = items.drop_duplicates(subset=["item_id"], keep="first")
 
-    # Prepare semantic encoding
-    logger.info("Prepare semantice encoding...")
-    pretained_embedding_col = [
+    logger.info("Build item groups...")
+    item_clean = (
+        items[
+            [
+                "item_id",
+                "category",
+                "subcategory_id",
+                "offer_type_label",
+                "offer_sub_type_label",
+            ]
+        ]
+        .fillna("")
+        .replace("None", "")
+    )
+    item_by_category = get_item_by_categories(item_clean)
+    item_by_group = get_item_by_group(item_by_category, params["group_config"])
+
+    logger.info("Prepare pretrained embedding...")
+    embedding_col = [
         col
         for col in items.columns.tolist()
         if params["pretained_embedding_name"] in col
     ][0]
 
-    pretrained_embedding_df = prepare_pretrained_encoding(
-        items[pretained_embedding_col].tolist()
+    embedding_clean = prepare_embedding(items[embedding_col].tolist())
+    item_embedding = pd.concat([items[["item_id"]], embedding_clean], axis=1)
+    logger.info(f"item_embedding: {len(item_embedding)}")
+
+    item_embedding_w_group = pd.merge(
+        item_embedding, item_by_group, how="inner", on=["item_id"]
     )
-    logger.info(f"""items[["item_id"]]: {len(items[["item_id"]])}""")
-    logger.info(f"pretrained_embedding_df: {len(pretrained_embedding_df)}")
-    item_semantic_encoding = pd.concat(
-        [items[["item_id"]], pretrained_embedding_df], axis=1
-    )
-    logger.info(f"item_semantic_encoding: {len(item_semantic_encoding)}")
-    # Prepare categorical encoding
-    already_used_df = [pretrained_embedding_df]
-    del already_used_df
-    logger.info("Prepare categorical encoding...")
-    items_tmp = items.drop(pretained_embedding_col, axis=1)
-    already_used_df = [items]
-    del already_used_df
-    item_by_category_encoded_reduced, item_by_macro_cat = prepare_categorical_fields(
-        items_tmp, splitting
-    )
-    
-    item_semantic_encoding = item_semantic_encoding.drop_duplicates(
-        subset=["item_id"], keep="first"
-    )
-    item_by_category_encoded_reduced = item_by_category_encoded_reduced.drop_duplicates(
-        subset=["item_id"], keep="first"
-    )
-    item_full_encoding = pd.merge(
-        item_semantic_encoding,
-        item_by_category_encoded_reduced,
-        how="left",
-        on=["item_id"],
-        validate="one_to_one",
-    )
-    logger.info(f"""item_full_encoding 0.0: {len(item_full_encoding)}""")
-    item_full_encoding[["c0", "c1"]] = item_full_encoding[["c0", "c1"]].fillna(
-        item_full_encoding[["c0", "c1"]].mean()
+    item_embedding_w_group = item_embedding_w_group.fillna(0)
+    item_embedding_w_group.to_gbq(
+        f"tmp_{ENV_SHORT_NAME}.{output_table}", if_exists="replace"
     )
 
-    item_by_macro_cat.to_gbq(
-        f"tmp_{ENV_SHORT_NAME}.item_by_macro_cat", if_exists="replace"
-    )
-
-    item_full_encoding.to_gbq(
-        f"tmp_{ENV_SHORT_NAME}.item_full_encoding", if_exists="replace"
-    )
     return
 
 

@@ -38,6 +38,7 @@ Repo pour la team data sur GCP
 |   +-- algo_training
 |   +-- embeddings
 |   +-- record_linkage
+|   +-- clusterisation
 
 ```
 

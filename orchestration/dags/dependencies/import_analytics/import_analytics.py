@@ -491,6 +491,14 @@ analytics_tables = {
         "depends": ["enriched_user_data"],
         "dag_depends": ["import_intraday_firebase_data", "import_appsflyer"],
     },
+    "dms_pro": {
+        "sql": f"{ANALYTICS_SQL_PATH}/dms_pro.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+    },
+    "dms_jeunes": {
+        "sql": f"{ANALYTICS_SQL_PATH}/dms_jeunes.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+    },
 }
 
 aggregated_tables = {

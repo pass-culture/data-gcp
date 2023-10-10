@@ -1,0 +1,64 @@
+name: "Test job"
+
+run-name: "Test job  ${{ inputs.JOB_PATH }}"
+
+on:
+  workflow_call:
+    inputs:
+      JOB_PATH:
+        type: string
+        required: true
+    secrets:
+      SLACK_BOT_TOKEN:
+        required: true
+
+env:
+    GCP_REGION: "europe-west1"
+
+jobs:
+  test-job:
+    name: "Test job ${{ inputs.JOB_PATH }}"
+    runs-on: [self-hosted, linux, x64]
+    defaults:
+     run: 
+       working-directory: "./${{ inputs.JOB_PATH }}"
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip' # caching pip dependencies
+          cache-dependency-path:  "./${{ inputs.JOB_PATH }}/requirements.txt"
+      - name: Install Python requirements
+        run:  pip install -r requirements.txt
+      - name: Run tests
+        env:
+          PYTHONPATH: "."
+        run: |
+          pytest tests
+      - name: Post to a Slack channel
+        id: slack
+        if: ${{ failure() }}
+        uses: slackapi/slack-github-action@v1.23.0
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+        with:
+          channel-id: "C01GVAXM02W" # alertes-data 
+          payload: |
+            {
+                    "attachments": [
+                        {
+                            "mrkdwn_in": ["text"],
+                            "color": "#A30002",
+                            "author_name": "${{github.actor}}",
+                            "author_link": "https://github.com/${{github.actor}}",
+                            "author_icon": "https://github.com/${{github.actor}}.png",
+                            "title": "Test jobs échoués",
+                            "title_link": "https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}",
+                            "text": ":fire: Les tests sur le job ${{ inputs.JOB_PATH }} ont échoués :no_entry:"
+                        }
+                    ],
+                    "unfurl_links": false,
+                    "unfurl_media": false
+            }
+    

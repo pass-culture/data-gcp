@@ -100,6 +100,8 @@ ref_tables = {
             "priority_local_authority_siren": "STRING",
             "priority_offerer_id": "STRING",
             "priority_zendesk_id": "STRING",
+        },
+    },
     "rural_city_type_data": {
         "file_type": "csv",
         "schema": {

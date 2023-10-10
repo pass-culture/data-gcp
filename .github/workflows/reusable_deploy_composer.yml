@@ -35,6 +35,7 @@ jobs:
       contents: write
     container: google/cloud-sdk:448.0.0
     runs-on: [self-hosted, linux, x64]
+    environment: ${{ inputs.TARGET_ENV }}
     defaults:
      run: 
        working-directory: "./orchestration/"
@@ -63,7 +64,7 @@ jobs:
         if: ${{ always() }}
         uses: slackapi/slack-github-action@v1.23.0
         with:
-          channel-id: "C01GVAXM02W" # alertes-data
+          channel-id: ${{ vars.NOTIF_CHANNEL_ID }}
           payload: |
             {
                     "attachments": [

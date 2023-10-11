@@ -12,7 +12,7 @@ SELECT
     enriched_offerer_data.offerer_id
     ,REPLACE(enriched_offerer_data.partner_id,'offerer','local-authority') AS local_authority_id
     ,enriched_offerer_data.offerer_name AS local_authority_name
-    ,CASE WHEN enriched_offerer_data.offerer_id IN (SELECT priority_offerer_id FROM analytics_prod.priority_local_authorities) THEN TRUE ELSE FALSE END AS is_priority
+    ,CASE WHEN enriched_offerer_data.offerer_id IN (SELECT priority_offerer_id FROM `{{ bigquery_analytics_dataset }}`.priority_local_authorities) THEN TRUE ELSE FALSE END AS is_priority
     ,COALESCE(applicative_database_offerer.offerer_validation_date,applicative_database_offerer.offerer_creation_date) AS local_authority_creation_date
     ,CASE WHEN DATE_TRUNC(COALESCE(enriched_offerer_data.offerer_validation_date,enriched_offerer_data.offerer_creation_date),YEAR) <= DATE_TRUNC(DATE_SUB(DATE(CURRENT_DATE/*'{{ ds }}'*/),INTERVAL 1 YEAR),YEAR) THEN TRUE ELSE FALSE END AS was_registered_last_year
     ,academy_name AS local_authority_academy_name

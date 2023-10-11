@@ -448,6 +448,14 @@ analytics_tables = {
             "enriched_venue_tags_data",
         ],
     },
+    "enriched_local_authority_data": {
+        "sql": f"{ANALYTICS_SQL_PATH}/enriched_local_authority_data.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "depends": [
+            "enriched_offerer_data",
+            "enriched_venue_data",
+        ],
+    },
     "bookable_venue_history": {
         "sql": f"{ANALYTICS_SQL_PATH}/bookable_venue_history.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",

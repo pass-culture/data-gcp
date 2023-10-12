@@ -30,6 +30,8 @@ from common.operators.gce import (
     CloneRepositoryGCEOperator,
     SSHGCEOperator,
 )
+from common.operators.sensor import TimeSleepSensor
+
 
 from dependencies.dms_subscriptions.import_dms_subscriptions import CLEAN_TABLES
 from common import macros
@@ -211,6 +213,15 @@ with DAG(
         instance_name=GCE_INSTANCE, task_id="gce_stop_task", dag=dag
     )
 
+    sleep_task = TimeSleepSensor(
+        dag=dag,
+        task_id="sleep_task",
+        execution_delay=datetime.timedelta(days=1),  # Execution Date = day minus 1
+        sleep_duration=datetime.timedelta(minutes=1),  # 1 minute
+        poke_interval=10,  # check every ten seconds
+        mode="reschedule",
+    )
+
 (
     start
     >> gce_instance_start
@@ -219,7 +230,8 @@ with DAG(
     >> [dms_to_gcs_pro, dms_to_gcs_jeunes]
 )
 (
-    dms_to_gcs_jeunes
+    sleep_task
+    >>dms_to_gcs_jeunes
     >> parse_api_result_jeunes
     >> import_dms_jeunes_to_bq
     >> cleaning_tasks[0]

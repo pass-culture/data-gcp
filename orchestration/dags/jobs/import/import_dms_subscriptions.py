@@ -30,7 +30,7 @@ from common.operators.gce import (
     CloneRepositoryGCEOperator,
     SSHGCEOperator,
 )
-from common.operators.sensor import TimeSleepSensor
+import time
 
 
 from dependencies.dms_subscriptions.import_dms_subscriptions import CLEAN_TABLES
@@ -109,6 +109,13 @@ with DAG(
         do_xcom_push=True,
     )
 
+    sleep_op = PythonOperator(
+        dag=dag,
+        task_id="sleep_task",
+        python_callable=lambda: time.sleep(60), # wait 1 minute 
+
+    )
+    
     dms_to_gcs_jeunes = SSHGCEOperator(
         task_id=f"dms_to_gcs_jeunes",
         instance_name=GCE_INSTANCE,
@@ -213,24 +220,15 @@ with DAG(
         instance_name=GCE_INSTANCE, task_id="gce_stop_task", dag=dag
     )
 
-    sleep_task = TimeSleepSensor(
-        dag=dag,
-        task_id="sleep_task",
-        execution_delay=datetime.timedelta(days=1),  # Execution Date = day minus 1
-        sleep_duration=datetime.timedelta(minutes=1),  # 1 minute
-        poke_interval=10,  # check every ten seconds
-        mode="reschedule",
-    )
-
 (
     start
     >> gce_instance_start
     >> fetch_code
     >> install_dependencies
-    >> [dms_to_gcs_pro, sleep_task]
+    >> [dms_to_gcs_pro, sleep_op]
 )
 (
-    sleep_task
+    sleep_op
     >>dms_to_gcs_jeunes
     >> parse_api_result_jeunes
     >> import_dms_jeunes_to_bq

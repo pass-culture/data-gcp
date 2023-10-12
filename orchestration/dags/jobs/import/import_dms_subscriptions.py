@@ -112,10 +112,9 @@ with DAG(
     sleep_op = PythonOperator(
         dag=dag,
         task_id="sleep_task",
-        python_callable=lambda: time.sleep(60), # wait 1 minute 
-
+        python_callable=lambda: time.sleep(60),  # wait 1 minute
     )
-    
+
     dms_to_gcs_jeunes = SSHGCEOperator(
         task_id=f"dms_to_gcs_jeunes",
         instance_name=GCE_INSTANCE,
@@ -229,7 +228,7 @@ with DAG(
 )
 (
     sleep_op
-    >>dms_to_gcs_jeunes
+    >> dms_to_gcs_jeunes
     >> parse_api_result_jeunes
     >> import_dms_jeunes_to_bq
     >> cleaning_tasks[0]

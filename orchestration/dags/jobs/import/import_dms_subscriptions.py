@@ -227,7 +227,7 @@ with DAG(
     >> gce_instance_start
     >> fetch_code
     >> install_dependencies
-    >> [dms_to_gcs_pro, dms_to_gcs_jeunes]
+    >> [dms_to_gcs_pro, sleep_task]
 )
 (
     sleep_task

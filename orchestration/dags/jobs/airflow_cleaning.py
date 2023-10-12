@@ -16,7 +16,6 @@ clean_ml_delay = {"prod": 60 * 12, "dev": 60 * 3, "stg": 60 * 6}
 clean_long_tasks_delay = {"prod": 60 * 3, "dev": 60 * 12, "stg": 60 * 6}
 
 
-
 dag = DAG(
     "airflow_cleaning",
     default_args=default_args,

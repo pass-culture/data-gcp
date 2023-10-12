@@ -1115,6 +1115,15 @@ ENRICHED_VENUE_DATA_INPUT = {
             "venue_label_id": "1",
             "venue_type_id": "1",
             "banner_url": "url",
+            "venue_description": "description",
+            "venue_withdrawal_details": "withdrawaldetails",
+        }
+    ],
+    "applicative_database_venue_contact": [
+        {
+            "venue_contact_phone_number": "0618018859",
+            "venue_contact_email": "email@gmail.com",
+            "venue_contact_website": "website.com",
         }
     ],
     "applicative_database_venue_registration": [],
@@ -1185,6 +1194,11 @@ ENRICHED_VENUE_DATA_EXPECTED = [
         "venue_pc_pro_link": "https://passculture.pro/structures/AE/lieux/AE",
         "venue_targeted_audience": None,
         "banner_url": "url",
+        "venue_description": "description",
+        "venue_withdrawal_details": "withdrawaldetails",
+        "venue_contact_phone_number": "0618018859",
+        "venue_contact_email": "email@gmail.com",
+        "venue_contact_website": "website.com",
     }
 ]
 

@@ -495,10 +495,6 @@ analytics_tables = {
         "sql": f"{ANALYTICS_SQL_PATH}/dms_pro.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
     },
-    "dms_jeunes": {
-        "sql": f"{ANALYTICS_SQL_PATH}/dms_jeunes.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-    },
     "institution_locations": {
         "sql": f"{ANALYTICS_SQL_PATH}/institution_locations.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",

@@ -376,6 +376,8 @@ BIGQUERY_SCHEMAS = {
         "venue_creation_date": "DATETIME",
         "venue_type_code": "STRING",
         "banner_url": "STRING",
+        "venue_description": "STRING",
+        "venue_withdrawal_details": "STRING",
     },
     "applicative_database_venue_registration": {
         "venue_registration_id": "STRING",

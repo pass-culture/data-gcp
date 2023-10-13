@@ -60,4 +60,6 @@ SELECT
     , "collectivePhone" AS collective_phone
     , "collectiveEmail" AS collective_email
     , "dmsToken" AS dms_token
+    , "description" AS venue_description
+    , "withdrawalDetails" AS venue_withdrawal_details
 FROM public.venue

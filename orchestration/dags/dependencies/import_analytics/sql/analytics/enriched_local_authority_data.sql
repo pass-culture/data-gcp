@@ -12,6 +12,24 @@ SELECT
     enriched_offerer_data.offerer_id
     ,REPLACE(enriched_offerer_data.partner_id,'offerer','local-authority') AS local_authority_id
     ,enriched_offerer_data.offerer_name AS local_authority_name
+    ,CASE
+        WHEN (LOWER(enriched_offerer_data.offerer_name) LIKE 'commune%'
+            OR LOWER(enriched_offerer_data.offerer_name) LIKE '%ville%de%') THEN 'Communes'
+        WHEN (LOWER(enriched_offerer_data.offerer_name) LIKE '%departement%'
+            OR LOWER(enriched_offerer_data.offerer_name) LIKE '%département%') THEN 'Départements'
+        WHEN (LOWER(enriched_offerer_data.offerer_name) LIKE 'region%'
+            OR LOWER(enriched_offerer_data.offerer_name) LIKE 'région%') THEN 'Régions'
+        WHEN (LOWER(enriched_offerer_data.offerer_name) LIKE 'ca%'
+            OR LOWER(enriched_offerer_data.offerer_name) LIKE 'cc%'
+            OR LOWER(enriched_offerer_data.offerer_name) LIKE 'cu%'
+            OR LOWER(enriched_offerer_data.offerer_name) LIKE '%communaute%'
+            OR LOWER(enriched_offerer_data.offerer_name) LIKE '%agglomeration%'
+            OR LOWER(enriched_offerer_data.offerer_name) LIKE '%agglomération%'
+            OR LOWER(enriched_offerer_data.offerer_name) LIKE '%metropole%'
+            OR LOWER(enriched_offerer_data.offerer_name) LIKE '%com%com%'
+            OR LOWER(enriched_offerer_data.offerer_name) LIKE '%petr%'
+            OR LOWER(enriched_offerer_data.offerer_name) LIKE '%intercommunal%') THEN 'CC / Agglomérations / Métropoles'
+        ELSE 'Non qualifiable' END AS local_authority_type
     ,CASE WHEN enriched_offerer_data.offerer_id IN (SELECT priority_offerer_id FROM `{{ bigquery_analytics_dataset }}`.priority_local_authorities) THEN TRUE ELSE FALSE END AS is_priority
     ,COALESCE(applicative_database_offerer.offerer_validation_date,applicative_database_offerer.offerer_creation_date) AS local_authority_creation_date
     ,CASE WHEN DATE_TRUNC(COALESCE(enriched_offerer_data.offerer_validation_date,enriched_offerer_data.offerer_creation_date),YEAR) <= DATE_TRUNC(DATE_SUB(DATE(CURRENT_DATE/*'{{ ds }}'*/),INTERVAL 1 YEAR),YEAR) THEN TRUE ELSE FALSE END AS was_registered_last_year

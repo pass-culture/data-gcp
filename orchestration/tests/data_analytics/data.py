@@ -1121,6 +1121,7 @@ ENRICHED_VENUE_DATA_INPUT = {
     ],
     "applicative_database_venue_contact": [
         {
+            "venue_id": "1",
             "venue_contact_phone_number": "0618018859",
             "venue_contact_email": "email@gmail.com",
             "venue_contact_website": "website.com",

@@ -35,7 +35,6 @@ SELECT
     ARRAY_TO_STRING(ARRAY(SELECT CAST(value AS STRING) FROM UNNEST(jsonPayload.extra.filtervalues.domains) AS value), ',') as artistic_domain_filter,
     ARRAY_TO_STRING(ARRAY(SELECT CAST(value AS STRING) FROM UNNEST(jsonPayload.extra.filtervalues.students) AS value), ',') as student_filter,
     ARRAY_TO_STRING(jsonPayload.extra.filtervalues.categories, ',') as category_filter,
-    jsonPayload.extra.header_link_name as header_link_name,
     jsonPayload.extra.suggestiontype as suggestion_type,
     jsonPayload.extra.suggestionvalue as suggestion_value,
 

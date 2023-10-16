@@ -417,6 +417,12 @@ analytics_tables = {
         "destination_table": "adage_involved_student",
         "dag_depends": ["import_adage_v1"],
     },
+    "adage_involved_institution": {
+        "sql": f"{ANALYTICS_SQL_PATH}/adage_involved_institution.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "adage_involved_institution",
+        "dag_depends": ["import_adage_v1"],
+    },
     "analytics_firebase_recommendation_events": {
         "sql": f"{ANALYTICS_SQL_PATH}/firebase_recommendation_events.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",

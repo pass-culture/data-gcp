@@ -74,6 +74,6 @@ generate_session AS (
 
 SELECT 
 * EXCEPT(session_num, session_start, rnk, same_session, session_sum),
-TO_HEX(MD5(CONCAT(CAST(session_start AS STRING), user_id, session_num))) as session_id,
+TO_HEX(MD5(CONCAT(CAST(session_start AS STRING), user_id, session_num))) as session_id
 FROM generate_session
 WHERE partition_date = DATE("{{ ds }}")

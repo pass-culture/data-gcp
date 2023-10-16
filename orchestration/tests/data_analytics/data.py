@@ -1262,7 +1262,12 @@ ENRICHED_OFFERER_DATA_INPUT = {
         }
     ],
     "applicative_database_venue": [
-        {"venue_id": "1", "venue_managing_offerer_id": "1", "venue_is_permanent": False, "venue_is_virtual": True}
+        {
+            "venue_id": "1",
+            "venue_managing_offerer_id": "1",
+            "venue_is_permanent": False,
+            "venue_is_virtual": True,
+        }
     ],
     "applicative_database_venue_label": [],
     "region_department": [{"num_dep": "973", "region_name": "Guyane"}],
@@ -1341,11 +1346,10 @@ ENRICHED_OFFERER_DATA_EXPECTED = [
         "legal_unit_business_activity_label": "Administration generale",
         "legal_unit_legal_category_code": "2232",
         "legal_unit_legal_category_label": "Collectivite",
-        "total_venues_managed":1,
-        "physical_venues_managed":0,
-        "permanent_venues_managed":0,
-
-    "venue_with_offer": 1,
+        "total_venues_managed": 1,
+        "physical_venues_managed": 0,
+        "permanent_venues_managed": 0,
+        "venue_with_offer": 1,
         "offerer_humanized_id": "AE",
         "current_year_revenue": 7,
         "is_territorial_authorities": True,

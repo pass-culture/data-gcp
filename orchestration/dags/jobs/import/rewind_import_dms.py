@@ -1,0 +1,211 @@
+from datetime import date, datetime, timedelta
+
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.python import PythonOperator
+from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
+    GCSToBigQueryOperator,
+)
+from airflow.models.baseoperator import chain
+
+from google.auth.transport.requests import Request
+from google.oauth2 import id_token
+
+from common.alerts import task_fail_slack_alert
+from common.operators.biquery import bigquery_job_task
+
+
+from common.config import (
+    DATA_GCS_BUCKET_NAME,
+    BIGQUERY_CLEAN_DATASET,
+    BIGQUERY_RAW_DATASET,
+    ENV_SHORT_NAME,
+    GCP_PROJECT_ID,
+    DAG_FOLDER,
+)
+
+from common.operators.gce import (
+    StartGCEOperator,
+    StopGCEOperator,
+    CloneRepositoryGCEOperator,
+    SSHGCEOperator,
+)
+import time
+
+
+from dependencies.dms_subscriptions.import_dms_subscriptions import CLEAN_TABLES
+from common import macros
+from common.utils import get_airflow_schedule
+
+
+DMS_FUNCTION_NAME = "dms_" + ENV_SHORT_NAME
+GCE_INSTANCE = f"import-dms-{ENV_SHORT_NAME}"
+BASE_PATH = "data-gcp/jobs/etl_jobs/external/dms"
+
+default_args = {
+    "start_date": datetime(2020, 12, 1),
+    "on_failure_callback": task_fail_slack_alert,
+    "retries": 2,
+    "retry_delay": timedelta(minutes=5),
+}
+
+
+with DAG(
+    "import_dms_subscriptions",
+    default_args=default_args,
+    description="Import DMS subscriptions back in past",
+    schedule_interval=None,
+    catchup=False,
+    dagrun_timeout=timedelta(minutes=720),
+    params={
+        "branch": Param(
+            default="production" if ENV_SHORT_NAME == "prod" else "master",
+            type="string",
+        ),
+        "target": Param(
+            default="pro",
+            type="string",
+        ),
+        "number_of_days_in_past": Param(
+            default=1,
+            type="integer",
+        ),
+    },
+    template_searchpath=DAG_FOLDER,
+    user_defined_macros=macros.default,
+) as dag:
+
+    start = DummyOperator(task_id="start")
+
+    gce_instance_start = StartGCEOperator(
+        instance_name=GCE_INSTANCE,
+        task_id="gce_start_task",
+        retries=2,
+        labels={"job_type": "long_task"},
+    )
+
+    fetch_code = CloneRepositoryGCEOperator(
+        task_id="fetch_code",
+        instance_name=GCE_INSTANCE,
+        command="{{ params.branch }}",
+        python_version="3.8",
+        retries=2,
+    )
+
+    install_dependencies = SSHGCEOperator(
+        task_id="install_dependencies",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_PATH,
+        command="pip install -r requirements.txt --user",
+        dag=dag,
+        retries=2,
+    )
+    past = list(range(-int("{{ params.number_of_days_in_past }}"), 0))
+
+    updated_since = [
+        (date.today() + timedelta(days=day)).strftime("%Y-%m-%d") for day in past
+    ]
+
+    dms_to_gcs_op_list = [
+        SSHGCEOperator(
+            task_id=f"dms_to_gcs_{day}_" + "{{ params.target }}",
+            instance_name=GCE_INSTANCE,
+            base_dir=BASE_PATH,
+            command="python main.py {{ params.target }} "
+            + f"{day} {GCP_PROJECT_ID} {ENV_SHORT_NAME}",
+            do_xcom_push=True,
+        )
+        for day in updated_since
+    ]
+
+    parse_api_result_op_list = [
+        SSHGCEOperator(
+            task_id=f"parse_api_result_{day}_" + "{{ params.target }}",
+            instance_name=GCE_INSTANCE,
+            base_dir=BASE_PATH,
+            command="python parse_dms_subscriptions_to_tabular.py --target {{ params.target }} --updated-since "
+            + f"{day} --bucket-name {DATA_GCS_BUCKET_NAME} --project-id {GCP_PROJECT_ID}",
+            do_xcom_push=True,
+        )
+        for day in updated_since
+    ]
+
+    import_dms_to_bq_op_list = [
+        GCSToBigQueryOperator(
+            task_id="import_dms_to_bq_{day}_" + "{{ params.target }}",
+            bucket=DATA_GCS_BUCKET_NAME,
+            source_objects=[f"dms_export/dms_{{ params.target }}_{day}.parquet"],
+            source_format="PARQUET",
+            destination_project_dataset_table=f"{BIGQUERY_RAW_DATASET}.raw_dms_{{ params.target }}",
+            schema_fields=[
+                {"name": "procedure_id", "type": "STRING"},
+                {"name": "application_id", "type": "STRING"},
+                {"name": "application_number", "type": "STRING"},
+                {"name": "application_archived", "type": "STRING"},
+                {"name": "application_status", "type": "STRING"},
+                {"name": "last_update_at", "type": "INT64"},
+                {"name": "application_submitted_at", "type": "INT64"},
+                {"name": "passed_in_instruction_at", "type": "INT64"},
+                {"name": "processed_at", "type": "INT64"},
+                {"name": "application_motivation", "type": "STRING"},
+                {"name": "instructors", "type": "STRING"},
+                {"name": "applicant_department", "type": "STRING"},
+                {"name": "applicant_postal_code", "type": "STRING"},
+                {"name": "update_date", "type": "INT64"},
+            ]
+            if "{{ params.target }}" == "jeunes"
+            else [
+                {"name": "procedure_id", "type": "STRING"},
+                {"name": "application_id", "type": "STRING"},
+                {"name": "application_number", "type": "STRING"},
+                {"name": "application_archived", "type": "STRING"},
+                {"name": "application_status", "type": "STRING"},
+                {"name": "last_update_at", "type": "INT64"},
+                {"name": "application_submitted_at", "type": "INT64"},
+                {"name": "passed_in_instruction_at", "type": "INT64"},
+                {"name": "processed_at", "type": "INT64"},
+                {"name": "application_motivation", "type": "STRING"},
+                {"name": "instructors", "type": "STRING"},
+                {"name": "applicant_department", "type": "STRING"},
+                {"name": "applicant_postal_code", "type": "STRING"},
+                {"name": "update_date", "type": "INT64"},
+            ],
+            write_disposition="WRITE_APPEND",
+        )
+        for day in updated_since
+    ]
+
+    interleaved_op_list = [
+        op
+        for sequence in zip(
+            *[dms_to_gcs_op_list, parse_api_result_op_list, import_dms_to_bq_op_list]
+        )
+        for op in sequence
+    ]
+
+    chain(*interleaved_op_list)
+
+    cleaning_task = bigquery_job_task(
+        table="dms_{{ params.target }}",
+        dag=dag,
+        job_params=CLEAN_TABLES["dms_{{ params.target }}"],
+    )
+
+    end = DummyOperator(task_id="end")
+
+    gce_instance_stop = StopGCEOperator(
+        instance_name=GCE_INSTANCE, task_id="gce_stop_task", dag=dag
+    )
+
+(
+    start
+    >> gce_instance_start
+    >> fetch_code
+    >> install_dependencies
+    >> interleaved_op_list[0]
+)
+
+(interleaved_op_list[-1] >> cleaning_task >> end)
+
+(end >> gce_instance_stop)

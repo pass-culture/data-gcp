@@ -1,13 +1,3 @@
-WITH nb_venues_per_offerers AS
-(SELECT
-    offerer_id
-    ,COALESCE(COUNT(DISTINCT venue_id),0) AS total_physical_venues_managed
-    ,COALESCE(COUNT(DISTINCT CASE WHEN venue_is_permanent IS TRUE THEN venue_id ELSE NULL END),0) AS permanent_venues_managed
-FROM `{{ bigquery_analytics_dataset }}`.enriched_offerer_data
-LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_venue_data ON enriched_offerer_data.offerer_id = enriched_venue_data.venue_managing_offerer_id
-    AND NOT venue_is_virtual
-GROUP BY 1)
-
 SELECT
     enriched_offerer_data.offerer_id
     ,REPLACE(enriched_offerer_data.partner_id,'offerer','local-authority') AS local_authority_id
@@ -39,7 +29,8 @@ SELECT
     ,applicative_database_offerer.offerer_postal_code AS local_authority_postal_code
     ,CASE WHEN DATE_DIFF(CURRENT_DATE,offerer_last_bookable_offer_date,DAY) <= 30 THEN TRUE ELSE FALSE END AS is_active_last_30days
     ,CASE WHEN DATE_DIFF(CURRENT_DATE,offerer_last_bookable_offer_date,YEAR) = 0 THEN TRUE ELSE FALSE END AS is_active_current_year
-    ,total_physical_venues_managed
+    ,total_venues_managed
+    ,physical_venues_managed
     ,permanent_venues_managed
     ,COALESCE(offerer_individual_offers_created,0) AS individual_offers_created
     ,COALESCE(offerer_collective_offers_created,0) AS collective_offers_created
@@ -56,8 +47,6 @@ SELECT
     ,COALESCE(offerer_real_revenue)+COALESCE(offerer_collective_real_revenue) AS total_real_revenue
 FROM `{{ bigquery_analytics_dataset }}`.enriched_offerer_data
 JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offerer ON enriched_offerer_data.offerer_id = applicative_database_offerer.offerer_id
-JOIN `{{ bigquery_analytics_dataset }}`.siren_data ON enriched_offerer_data.offerer_siren = siren_data.siren
 JOIN `{{ bigquery_analytics_dataset }}`.region_department ON enriched_offerer_data.offerer_department_code = region_department.num_dep
 LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_venue_data ON enriched_offerer_data.offerer_id = enriched_venue_data.venue_managing_offerer_id
-LEFT JOIN nb_venues_per_offerers ON nb_venues_per_offerers.offerer_id = enriched_offerer_data.offerer_id
-WHERE activitePrincipaleUniteLegale = '84.11Z'
+WHERE is_local_authority IS TRUE

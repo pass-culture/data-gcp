@@ -238,7 +238,7 @@ SELECT
     label_unite_legale AS legal_unit_business_activity_label,
     siren_data.categorieJuridiqueUniteLegale AS legal_unit_legal_category_code,
     label_categorie_juridique AS legal_unit_legal_category_label,
-    siren_data.activitePrincipaleUniteLegale = '84.11Z' AS is_territorial_authorities,
+    siren_data.activitePrincipaleUniteLegale = '84.11Z' AS is_local_authority,
     total_venues_managed,
     physical_venues_managed,
     permanent_venues_managed,

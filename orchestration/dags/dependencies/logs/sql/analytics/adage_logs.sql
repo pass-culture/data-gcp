@@ -36,8 +36,7 @@ SELECT
     ARRAY_TO_STRING(ARRAY(SELECT CAST(value AS STRING) FROM UNNEST(jsonPayload.extra.filtervalues.students) AS value), ',') as student_filter,
     ARRAY_TO_STRING(jsonPayload.extra.filtervalues.categories, ',') as category_filter,
     jsonPayload.extra.suggestiontype as suggestion_type,
-    jsonPayload.extra.suggestionvalue as suggestion_value,
-
+    jsonPayload.extra.suggestionvalue as suggestion_value
 
 FROM
     `{{ bigquery_raw_dataset }}.stdout`
@@ -75,6 +74,6 @@ generate_session AS (
 
 SELECT 
 * EXCEPT(session_num, session_start, rnk, same_session, session_sum),
-TO_HEX(MD5(CONCAT(CAST(session_start AS STRING), user_id, session_num))) as session_id,
+TO_HEX(MD5(CONCAT(CAST(session_start AS STRING), user_id, session_num))) as session_id
 FROM generate_session
 WHERE partition_date = DATE("{{ ds }}")

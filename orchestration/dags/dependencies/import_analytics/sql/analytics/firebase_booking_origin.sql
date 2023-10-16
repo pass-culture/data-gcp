@@ -40,6 +40,7 @@ WITH all_bookings_reconciled AS (
   FROM `{{ bigquery_analytics_dataset }}.firebase_events`
   INNER JOIN `{{ bigquery_analytics_dataset }}.offer_item_ids` offer_item_ids USING(offer_id)
   WHERE event_name = 'ConsultOffer'
+  AND origin NOT IN ('offer', 'endedbookings','bookingimpossible', 'bookings')
   AND event_date BETWEEN DATE('{{ add_days(ds, params.from) }}') AND DATE('{{ add_days(ds, params.to) }}')  
 )
 

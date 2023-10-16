@@ -2,6 +2,10 @@ name: "Test Orchestration"
 
 on:
   workflow_call:
+    inputs:
+      NOTIF_CHANNEL_ID:
+        type: string
+        required: false # Si pas fourni, alors pas de notif
     secrets:
        GCP_WORKLOAD_IDENTITY_PROVIDER:
         required: true
@@ -56,10 +60,10 @@ jobs:
           pytest tests
       - name: Post to a Slack channel
         id: slack
-        if: ${{ failure() }}
+        if: ${{ inputs.NOTIF_CHANNEL_ID != '' && failure() }}
         uses: slackapi/slack-github-action@v1.23.0
         with:
-          channel-id: "C01GVAXM02W" # alertes-data
+          channel-id: ${{ inputs.NOTIF_CHANNEL_ID }}
           payload: |
             {
                     "attachments": [

@@ -491,6 +491,15 @@ analytics_tables = {
         "depends": ["enriched_user_data"],
         "dag_depends": ["import_intraday_firebase_data", "import_appsflyer"],
     },
+    "dms_pro": {
+        "sql": f"{ANALYTICS_SQL_PATH}/dms_pro.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+    },
+    "institution_locations": {
+        "sql": f"{ANALYTICS_SQL_PATH}/institution_locations.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "institution_locations",
+    },
 }
 
 aggregated_tables = {

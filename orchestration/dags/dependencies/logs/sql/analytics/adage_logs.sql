@@ -37,7 +37,7 @@ SELECT
     ARRAY_TO_STRING(jsonPayload.extra.filtervalues.categories, ',') as category_filter,
     jsonPayload.extra.suggestiontype as suggestion_type,
     jsonPayload.extra.suggestionvalue as suggestion_value,
-
+    jsonPayload.extra.uai as uai
 
 FROM
     `{{ bigquery_raw_dataset }}.stdout`

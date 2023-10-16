@@ -124,7 +124,6 @@ ENRICHED_OFFER_DATA_INPUT = {
         {
             "offerer_id": "4",
             "offerer_siren": "234567890",
-            "offerer_thumb_count": "0",
             "offerer_is_active": True,
             "offerer_postal_code": "93100",
             "offerer_city": "Montreuil",

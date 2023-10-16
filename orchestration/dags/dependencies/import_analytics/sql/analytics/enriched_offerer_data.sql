@@ -160,8 +160,10 @@ offerer_department_code AS (
 
 related_venues AS (
     SELECT
-        offerer.offerer_id,
-        COUNT(venue.venue_id) AS venue_cnt
+        offerer.offerer_id
+        ,COUNT(DISTINCT venue_id) AS total_venues_managed
+        ,COALESCE(COUNT(DISTINCT CASE WHEN venue_is_virtual IS FALSE THEN venue_id ELSE NULL END),0) AS physical_venues_managed
+        ,COALESCE(COUNT(DISTINCT CASE WHEN venue_is_permanent IS TRUE THEN venue_id ELSE NULL END),0) AS permanent_venues_managed
     FROM
         `{{ bigquery_clean_dataset }}`.applicative_database_offerer AS offerer
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue ON offerer.offerer_id = venue.venue_managing_offerer_id
@@ -237,7 +239,9 @@ SELECT
     siren_data.categorieJuridiqueUniteLegale AS legal_unit_legal_category_code,
     label_categorie_juridique AS legal_unit_legal_category_label,
     siren_data.activitePrincipaleUniteLegale = '84.11Z' AS is_territorial_authorities,
-    COALESCE(related_venues.venue_cnt,0) AS venue_cnt,
+    total_venues_managed,
+    physical_venues_managed,
+    permanent_venues_managed,
     COALESCE(venues_with_offers.nb_venue_with_offers,0) AS venue_with_offer,
     offerer_humanized_id.humanized_id AS offerer_humanized_id,
 FROM

@@ -1,4 +1,4 @@
-SELECT
+SELECT DISTINCT
     enriched_offerer_data.offerer_id
     ,REPLACE(enriched_offerer_data.partner_id,'offerer','local-authority') AS local_authority_id
     ,enriched_offerer_data.offerer_name AS local_authority_name

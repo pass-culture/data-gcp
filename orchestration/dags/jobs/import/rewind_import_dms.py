@@ -52,7 +52,7 @@ default_args = {
 
 
 with DAG(
-    "import_dms_subscriptions",
+    "rewind_import_dms_subscriptions",
     default_args=default_args,
     description="Import DMS subscriptions back in past",
     schedule_interval=None,
@@ -74,6 +74,7 @@ with DAG(
     },
     template_searchpath=DAG_FOLDER,
     user_defined_macros=macros.default,
+    render_template_as_native_obj=True,
 ) as dag:
 
     start = DummyOperator(task_id="start")
@@ -101,60 +102,73 @@ with DAG(
         dag=dag,
         retries=2,
     )
-    past = list(range(-int("{{ params.number_of_days_in_past }}"), 0))
 
+    # chancge this
+    past = list(range(-dag.params["number_of_days_in_past"], 0))
     updated_since = [
         (date.today() + timedelta(days=day)).strftime("%Y-%m-%d") for day in past
     ]
-
+    target = "{{ params.target }}"
     dms_to_gcs_op_list = [
         SSHGCEOperator(
-            task_id=f"dms_to_gcs_{day}_" + "{{ params.target }}",
+            task_id=f"dms_to_gcs_{past_date}_".replace("-","_") + dag.params["target"],
             instance_name=GCE_INSTANCE,
             base_dir=BASE_PATH,
             command="python main.py {{ params.target }} "
-            + f"{day} {GCP_PROJECT_ID} {ENV_SHORT_NAME}",
+            + f"{past_date} {GCP_PROJECT_ID} {ENV_SHORT_NAME}",
             do_xcom_push=True,
         )
-        for day in updated_since
-    ]
+        for past_date in updated_since ]
 
     parse_api_result_op_list = [
         SSHGCEOperator(
-            task_id=f"parse_api_result_{day}_" + "{{ params.target }}",
+            task_id=f"parse_api_result_{past_date}_".replace("-","_") + dag.params["target"],
             instance_name=GCE_INSTANCE,
             base_dir=BASE_PATH,
             command="python parse_dms_subscriptions_to_tabular.py --target {{ params.target }} --updated-since "
-            + f"{day} --bucket-name {DATA_GCS_BUCKET_NAME} --project-id {GCP_PROJECT_ID}",
+            + f"{past_date} --bucket-name {DATA_GCS_BUCKET_NAME} --project-id {GCP_PROJECT_ID}",
             do_xcom_push=True,
         )
-        for day in updated_since
-    ]
+        for past_date in updated_since ]
+
 
     import_dms_to_bq_op_list = [
         GCSToBigQueryOperator(
-            task_id="import_dms_to_bq_{day}_" + "{{ params.target }}",
+            task_id=f"import_dms_to_bq_{past_date}_".replace("-","_") + dag.params["target"],
             bucket=DATA_GCS_BUCKET_NAME,
-            source_objects=[f"dms_export/dms_{{ params.target }}_{day}.parquet"],
+            source_objects=["dms_export/dms_"+"{{ params.target }}" +f"_{past_date}.parquet"],
             source_format="PARQUET",
-            destination_project_dataset_table=f"{BIGQUERY_RAW_DATASET}.raw_dms_{{ params.target }}",
+            destination_project_dataset_table=f"{BIGQUERY_RAW_DATASET}.raw_dms_pro",
             schema_fields=[
                 {"name": "procedure_id", "type": "STRING"},
                 {"name": "application_id", "type": "STRING"},
                 {"name": "application_number", "type": "STRING"},
                 {"name": "application_archived", "type": "STRING"},
                 {"name": "application_status", "type": "STRING"},
-                {"name": "last_update_at", "type": "INT64"},
-                {"name": "application_submitted_at", "type": "INT64"},
-                {"name": "passed_in_instruction_at", "type": "INT64"},
-                {"name": "processed_at", "type": "INT64"},
+                {"name": "last_update_at", "type": "TIMESTAMP"},
+                {"name": "application_submitted_at", "type": "TIMESTAMP"},
+                {"name": "passed_in_instruction_at", "type": "TIMESTAMP"},
+                {"name": "processed_at", "type": "TIMESTAMP"},
                 {"name": "application_motivation", "type": "STRING"},
                 {"name": "instructors", "type": "STRING"},
-                {"name": "applicant_department", "type": "STRING"},
-                {"name": "applicant_postal_code", "type": "STRING"},
-                {"name": "update_date", "type": "INT64"},
+                {"name": "demandeur_siret", "type": "STRING"},
+                {"name": "demandeur_naf", "type": "STRING"},
+                {"name": "demandeur_libelleNaf", "type": "STRING"},
+                {"name": "demandeur_entreprise_siren", "type": "STRING"},
+                {"name": "demandeur_entreprise_formeJuridique", "type": "STRING"},
+                {"name": "demandeur_entreprise_formeJuridiqueCode", "type": "STRING"},
+                {"name": "demandeur_entreprise_codeEffectifEntreprise", "type": "STRING"},
+                {"name": "demandeur_entreprise_raisonSociale", "type": "STRING"},
+                {"name": "demandeur_entreprise_siretSiegeSocial", "type": "STRING"},
+                {"name": "numero_identifiant_lieu", "type": "STRING"},
+                {"name": "statut", "type": "STRING"},
+                {"name": "typologie", "type": "STRING"},
+                {"name": "academie_historique_intervention", "type": "STRING"},
+                {"name": "academie_groupe_instructeur", "type": "STRING"},
+                {"name": "domaines", "type": "STRING"},
+                {"name": "erreur_traitement_pass_culture", "type": "STRING"},
             ]
-            if "{{ params.target }}" == "jeunes"
+            if "{{ params.target }}" == "pro"
             else [
                 {"name": "procedure_id", "type": "STRING"},
                 {"name": "application_id", "type": "STRING"},
@@ -173,8 +187,7 @@ with DAG(
             ],
             write_disposition="WRITE_APPEND",
         )
-        for day in updated_since
-    ]
+        for past_date in updated_since ]
 
     interleaved_op_list = [
         op
@@ -187,9 +200,9 @@ with DAG(
     chain(*interleaved_op_list)
 
     cleaning_task = bigquery_job_task(
-        table="dms_{{ params.target }}",
+        table="dms_"+ dag.params["target"],
         dag=dag,
-        job_params=CLEAN_TABLES["dms_{{ params.target }}"],
+        job_params=CLEAN_TABLES["dms_"+ dag.params["target"]],
     )
 
     end = DummyOperator(task_id="end")

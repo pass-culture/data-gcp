@@ -60,7 +60,7 @@ with DAG(
     dagrun_timeout=timedelta(minutes=720),
     params={
         "branch": Param(
-            default="dms_rewind",  # "production" if ENV_SHORT_NAME == "prod" else "master",
+            default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
         "target": Param(
@@ -68,7 +68,7 @@ with DAG(
             type="string",
         ),
         "number_of_days_in_past": Param(
-            default=3,
+            default=30,
             type="integer",
         ),
     },

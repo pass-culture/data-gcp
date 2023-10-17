@@ -60,7 +60,7 @@ with DAG(
     dagrun_timeout=timedelta(minutes=720),
     params={
         "branch": Param(
-            default="production" if ENV_SHORT_NAME == "prod" else "master",
+            default="dms_rewind",  # "production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
         "target": Param(
@@ -68,7 +68,7 @@ with DAG(
             type="string",
         ),
         "number_of_days_in_past": Param(
-            default=1,
+            default=3,
             type="integer",
         ),
     },
@@ -103,12 +103,11 @@ with DAG(
         retries=2,
     )
 
-    # chancge this
     past = list(range(-dag.params["number_of_days_in_past"], 0))
     updated_since = [
         (date.today() + timedelta(days=day)).strftime("%Y-%m-%d") for day in past
     ]
-    target = "{{ params.target }}"
+
     dms_to_gcs_op_list = [
         SSHGCEOperator(
             task_id=f"dms_to_gcs_{past_date}_".replace("-", "_") + dag.params["target"],
@@ -224,17 +223,6 @@ with DAG(
         install_dependencies,
     ] + interleaved_op_list
 
-# (
-#     start
-#     >> gce_instance_start
-#     >> fetch_code
-#     >> install_dependencies
-#     >> interleaved_op_list[0]
-# )
-
-# (interleaved_op_list[-1] >> cleaning_task >> end)
-
-# (end >> gce_instance_stop)
 
 (chain(*op_list))
 (op_list[-1] >> cleaning_task >> end >> gce_instance_stop)

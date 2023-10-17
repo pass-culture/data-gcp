@@ -111,32 +111,37 @@ with DAG(
     target = "{{ params.target }}"
     dms_to_gcs_op_list = [
         SSHGCEOperator(
-            task_id=f"dms_to_gcs_{past_date}_".replace("-","_") + dag.params["target"],
+            task_id=f"dms_to_gcs_{past_date}_".replace("-", "_") + dag.params["target"],
             instance_name=GCE_INSTANCE,
             base_dir=BASE_PATH,
             command="python main.py {{ params.target }} "
             + f"{past_date} {GCP_PROJECT_ID} {ENV_SHORT_NAME}",
             do_xcom_push=True,
         )
-        for past_date in updated_since ]
+        for past_date in updated_since
+    ]
 
     parse_api_result_op_list = [
         SSHGCEOperator(
-            task_id=f"parse_api_result_{past_date}_".replace("-","_") + dag.params["target"],
+            task_id=f"parse_api_result_{past_date}_".replace("-", "_")
+            + dag.params["target"],
             instance_name=GCE_INSTANCE,
             base_dir=BASE_PATH,
             command="python parse_dms_subscriptions_to_tabular.py --target {{ params.target }} --updated-since "
             + f"{past_date} --bucket-name {DATA_GCS_BUCKET_NAME} --project-id {GCP_PROJECT_ID}",
             do_xcom_push=True,
         )
-        for past_date in updated_since ]
-
+        for past_date in updated_since
+    ]
 
     import_dms_to_bq_op_list = [
         GCSToBigQueryOperator(
-            task_id=f"import_dms_to_bq_{past_date}_".replace("-","_") + dag.params["target"],
+            task_id=f"import_dms_to_bq_{past_date}_".replace("-", "_")
+            + dag.params["target"],
             bucket=DATA_GCS_BUCKET_NAME,
-            source_objects=["dms_export/dms_"+"{{ params.target }}" +f"_{past_date}.parquet"],
+            source_objects=[
+                "dms_export/dms_" + "{{ params.target }}" + f"_{past_date}.parquet"
+            ],
             source_format="PARQUET",
             destination_project_dataset_table=f"{BIGQUERY_RAW_DATASET}.raw_dms_pro",
             schema_fields=[
@@ -157,7 +162,10 @@ with DAG(
                 {"name": "demandeur_entreprise_siren", "type": "STRING"},
                 {"name": "demandeur_entreprise_formeJuridique", "type": "STRING"},
                 {"name": "demandeur_entreprise_formeJuridiqueCode", "type": "STRING"},
-                {"name": "demandeur_entreprise_codeEffectifEntreprise", "type": "STRING"},
+                {
+                    "name": "demandeur_entreprise_codeEffectifEntreprise",
+                    "type": "STRING",
+                },
                 {"name": "demandeur_entreprise_raisonSociale", "type": "STRING"},
                 {"name": "demandeur_entreprise_siretSiegeSocial", "type": "STRING"},
                 {"name": "numero_identifiant_lieu", "type": "STRING"},
@@ -187,7 +195,8 @@ with DAG(
             ],
             write_disposition="WRITE_APPEND",
         )
-        for past_date in updated_since ]
+        for past_date in updated_since
+    ]
 
     interleaved_op_list = [
         op
@@ -197,12 +206,10 @@ with DAG(
         for op in sequence
     ]
 
-    chain(*interleaved_op_list)
-
     cleaning_task = bigquery_job_task(
-        table="dms_"+ dag.params["target"],
+        table="dms_" + dag.params["target"] + "to_clean_table",
         dag=dag,
-        job_params=CLEAN_TABLES["dms_"+ dag.params["target"]],
+        job_params=CLEAN_TABLES["dms_" + dag.params["target"]],
     )
 
     end = DummyOperator(task_id="end")
@@ -210,15 +217,24 @@ with DAG(
     gce_instance_stop = StopGCEOperator(
         instance_name=GCE_INSTANCE, task_id="gce_stop_task", dag=dag
     )
+    op_list = [
+        start,
+        gce_instance_start,
+        fetch_code,
+        install_dependencies,
+    ] + interleaved_op_list
 
-(
-    start
-    >> gce_instance_start
-    >> fetch_code
-    >> install_dependencies
-    >> interleaved_op_list[0]
-)
+# (
+#     start
+#     >> gce_instance_start
+#     >> fetch_code
+#     >> install_dependencies
+#     >> interleaved_op_list[0]
+# )
 
-(interleaved_op_list[-1] >> cleaning_task >> end)
+# (interleaved_op_list[-1] >> cleaning_task >> end)
 
-(end >> gce_instance_stop)
+# (end >> gce_instance_stop)
+
+(chain(*op_list))
+(op_list[-1] >> cleaning_task >> end >> gce_instance_stop)

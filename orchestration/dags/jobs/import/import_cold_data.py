@@ -1,8 +1,6 @@
 import datetime
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.python import PythonOperator
-from airflow.providers.http.operators.http import SimpleHttpOperator
 from airflow.models import Param
 from common.operators.gce import (
     StartGCEOperator,
@@ -13,7 +11,6 @@ from common.operators.gce import (
 from common.operators.biquery import bigquery_job_task
 from common import macros
 from common.utils import (
-    getting_service_account_token,
     depends_loop,
     get_airflow_schedule,
 )
@@ -21,7 +18,7 @@ from common.utils import (
 from common.config import GCP_PROJECT_ID, DAG_FOLDER, ENV_SHORT_NAME
 from common.config import GCP_PROJECT_ID, DAG_FOLDER
 from common.alerts import task_fail_slack_alert
-from dependencies.cold_data.import_cold_data import analytics_tables
+from dependencies.cold_data.import_cold_data import import_tables
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),
@@ -92,7 +89,7 @@ with DAG(
     end_raw = DummyOperator(task_id="end_raw", dag=dag)
 
     analytics_table_jobs = {}
-    for name, params in analytics_tables.items():
+    for name, params in import_tables.items():
 
         task = bigquery_job_task(dag=dag, table=name, job_params=params)
 
@@ -104,7 +101,7 @@ with DAG(
 
     end = DummyOperator(task_id="end", dag=dag)
     analytics_table_tasks = depends_loop(
-        analytics_tables,
+        import_tables,
         analytics_table_jobs,
         end_raw,
         dag=dag,

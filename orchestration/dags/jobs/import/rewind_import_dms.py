@@ -206,7 +206,7 @@ with DAG(
     ]
 
     cleaning_task = bigquery_job_task(
-        table="dms_" + dag.params["target"] + "to_clean_table",
+        table="dms_" + dag.params["target"] + "_to_clean_table",
         dag=dag,
         job_params=CLEAN_TABLES["dms_" + dag.params["target"]],
     )

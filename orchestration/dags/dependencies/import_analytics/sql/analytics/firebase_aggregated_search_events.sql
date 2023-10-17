@@ -120,6 +120,11 @@ SELECT
       FROM `{{ bigquery_analytics_dataset }}`.subcategories sc
       WHERE LOWER(query_input) LIKE CONCAT('%', LOWER(sc.category_id), '%')
          OR LOWER(query_input) LIKE CONCAT('%', LOWER(sc.id), '%')
+    OR EXISTS ( -- Si recherche textuelle contient un rayon / macro rayon, alors la recherche est considérée comme générique
+      SELECT 1
+      FROM `{{ bigquery_analytics_dataset }}`.macro_rayons mr
+      WHERE LOWER(query_input) LIKE CONCAT('%', LOWER(mr.macro_rayon), '%')
+         OR LOWER(query_input) LIKE CONCAT('%', LOWER(mr.rayon), '%')
     ) THEN TRUE
     ELSE FALSE
   END AS search_query_input_is_generic

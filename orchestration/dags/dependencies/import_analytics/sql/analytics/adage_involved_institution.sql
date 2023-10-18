@@ -13,14 +13,12 @@ WITH involved_students AS (
         ey.educational_year_expiration_date,
         ey.adage_id,
         ey.scholar_year,
-        isl.level_id,
-        isl.level_code,
-        coalesce(sum(SAFE_CAST(involved_students as FLOAT64)), 0) as involved_students,
-        coalesce(sum(SAFE_CAST(total_involved_students as FLOAT64)), 0) as total_involved_students,
+        ais.level,
+        coalesce(sum(SAFE_CAST(institutions as FLOAT64)), 0) as institutions,
+        coalesce(sum(SAFE_CAST(total_institutions as FLOAT64)), 0) as total_institutions,
     FROM
         `{{ bigquery_clean_dataset }}.adage_involved_student` ais
         LEFT JOIN `{{ bigquery_clean_dataset }}.applicative_database_educational_year` ey on SAFE_CAST(ey.adage_id as int) = SAFE_CAST(ais.educational_year_adage_id as int)
-        LEFT JOIN `{{ bigquery_clean_dataset }}.institutional_scholar_level` isl on ais.level = isl.level_id
     where
         metric_name = "departements"
     GROUP BY
@@ -31,10 +29,19 @@ WITH involved_students AS (
         5,
         6,
         7,
-        8,
-        9
+        8
 )
+
 SELECT
-    *
+    involved.date,
+    involved.department_code,
+    involved.educational_year_id,
+    involved.educational_year_beginning_date,
+    involved.educational_year_expiration_date,
+    involved.adage_id,
+    involved.scholar_year,
+    avg(institutions) as institutions,
+    avg(total_institutions) as total_institutions
 FROM
     involved_students involved
+GROUP BY 1,2,3,4,5,6,7

@@ -8,6 +8,11 @@ clean_tables = {
         "destination_dataset": "{{ bigquery_clean_dataset }}",
         "destination_table": "institutional_scholar_level",
     },
+    "eac_webinar": {
+        "sql": f"{SQL_PATH}/clean/eac_webinar.sql",
+        "destination_dataset": "{{ bigquery_clean_dataset }}",
+        "destination_table": "eac_webinar",
+    },
 }
 
 analytics_tables = {

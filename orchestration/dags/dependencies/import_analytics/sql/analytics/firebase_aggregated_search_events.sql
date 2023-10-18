@@ -137,6 +137,6 @@ LEFT JOIN bookings_per_search_id USING (unique_search_id)
 SELECT
   *
   , CASE
-    WHEN query_input IS NOT NULL AND NOT search_query_input_is_generic THEN 'Recherche précise'
-    ELSE 'Recherche de découverte' END AS search_objective
+    WHEN query_input IS NOT NULL AND NOT search_query_input_is_generic THEN 'specific_search'
+    ELSE 'discovery_search' END AS search_objective
 FROM genereic_search_and_other_searches

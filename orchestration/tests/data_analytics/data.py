@@ -114,25 +114,21 @@ ENRICHED_OFFER_DATA_INPUT = {
     "applicative_database_offerer": [
         {
             "offerer_id": "3",
-            "offerer_thumb_count": "0",
             "offerer_is_active": True,
             "offerer_postal_code": "93100",
             "offerer_city": "Montreuil",
             "offerer_creation_date": "2019-11-20",
             "offerer_name": "Test Offerer",
             "offerer_siren": "123456789",
-            "offerer_fields_updated": "{}",
         },
         {
             "offerer_id": "4",
             "offerer_siren": "234567890",
-            "offerer_thumb_count": "0",
             "offerer_is_active": True,
             "offerer_postal_code": "93100",
             "offerer_city": "Montreuil",
             "offerer_creation_date": "2019-11-20",
             "offerer_name": "Test Offerer",
-            "offerer_fields_updated": "{}",
         },
     ],
     "applicative_database_payment": [
@@ -683,14 +679,12 @@ ENRICHED_STOCK_DATA_INPUT = {
     "applicative_database_offerer": [
         {
             "offerer_id": "3",
-            "offerer_thumb_count": "0",
             "offerer_is_active": True,
             "offerer_postal_code": "93100",
             "offerer_city": "Montreuil",
             "offerer_creation_date": "2019-11-20",
             "offerer_name": "Test Offerer",
             "offerer_siren": "123456789",
-            "offerer_fields_updated": "{}",
         }
     ],
     "applicative_database_payment": [
@@ -1262,7 +1256,12 @@ ENRICHED_OFFERER_DATA_INPUT = {
         }
     ],
     "applicative_database_venue": [
-        {"venue_id": "1", "venue_managing_offerer_id": "1", "venue_is_permanent": False}
+        {
+            "venue_id": "1",
+            "venue_managing_offerer_id": "1",
+            "venue_is_permanent": False,
+            "venue_is_virtual": True,
+        }
     ],
     "applicative_database_venue_label": [],
     "region_department": [{"num_dep": "973", "region_name": "Guyane"}],
@@ -1341,11 +1340,13 @@ ENRICHED_OFFERER_DATA_EXPECTED = [
         "legal_unit_business_activity_label": "Administration generale",
         "legal_unit_legal_category_code": "2232",
         "legal_unit_legal_category_label": "Collectivite",
-        "venue_cnt": 1,
+        "total_venues_managed": 1,
+        "physical_venues_managed": 0,
+        "permanent_venues_managed": 0,
         "venue_with_offer": 1,
         "offerer_humanized_id": "AE",
         "current_year_revenue": 7,
-        "is_territorial_authorities": True,
+        "is_local_authority": True,
     }
 ]
 

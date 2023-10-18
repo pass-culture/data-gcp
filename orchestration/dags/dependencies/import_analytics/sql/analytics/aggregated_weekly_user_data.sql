@@ -21,8 +21,8 @@ WITH
   INNER JOIN
     weeks
   ON
-    weeks.week BETWEEN DATE(enriched_deposit_data.deposit_creation_date)
-    AND DATE(enriched_deposit_data.deposit_expiration_date) -- Toutes les semaines de vie du crédit
+    weeks.week BETWEEN DATE_TRUNC(DATE(enriched_deposit_data.deposit_creation_date),WEEK(MONDAY))
+    AND DATE_TRUNC(DATE(enriched_deposit_data.deposit_expiration_date),WEEK(MONDAY)) -- Toutes les semaines de vie du crédit
     AND deposit_creation_date > '2021-05-20' -- Les utilisateurs post sortie de l'app mobile
   INNER JOIN
     `{{ bigquery_analytics_dataset }}.firebase_aggregated_users` fau

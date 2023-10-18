@@ -1409,6 +1409,7 @@ ENRICHED_BOOKING_DATA_INPUT = {
             "venue_managing_offerer_id": "2",
             "venue_type_id": "1",
             "venue_type_code": "Librairie",
+            "venue_is_permanent":True,
         }
     ],
     "applicative_database_offerer": [{"offerer_id": "2", "offerer_name": "Offerer"}],
@@ -1476,6 +1477,7 @@ ENRICHED_BOOKING_DATA_EXPECTED = [
         "venue_name": "My Wonderful Venue",
         "venue_type_name": "Librairie",
         "booking_used_date": datetime.now().replace(microsecond=0),
+        "partner_type":"venue-8"
     }
 ]
 

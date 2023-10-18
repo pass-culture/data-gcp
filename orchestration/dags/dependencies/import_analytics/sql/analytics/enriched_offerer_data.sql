@@ -162,8 +162,8 @@ related_venues AS (
     SELECT
         offerer.offerer_id
         ,COUNT(DISTINCT venue_id) AS total_venues_managed
-        ,COALESCE(COUNT(DISTINCT CASE WHEN venue_is_virtual IS FALSE THEN venue_id ELSE NULL END),0) AS physical_venues_managed
-        ,COALESCE(COUNT(DISTINCT CASE WHEN venue_is_permanent IS TRUE THEN venue_id ELSE NULL END),0) AS permanent_venues_managed
+        ,COALESCE(COUNT(DISTINCT CASE WHEN NOT venue_is_virtual THEN venue_id ELSE NULL END),0) AS physical_venues_managed
+        ,COALESCE(COUNT(DISTINCT CASE WHEN venue_is_permanent THEN venue_id ELSE NULL END),0) AS permanent_venues_managed
     FROM
         `{{ bigquery_clean_dataset }}`.applicative_database_offerer AS offerer
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue ON offerer.offerer_id = venue.venue_managing_offerer_id

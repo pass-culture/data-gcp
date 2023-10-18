@@ -42,4 +42,11 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "qualtrics_answers_ir_pro",
     },
+    "enriched_qualtrics_pro": {
+        "sql": f"{SQL_PATH}/analytics/enriched_qualtrics_pro.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "enriched_qualtrics_pro",
+        "dag_depends": ["import_analytics"],
+        "depends": ["qualtrics_answers_ir_pro"],
+    },
 }

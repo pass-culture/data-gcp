@@ -114,25 +114,21 @@ ENRICHED_OFFER_DATA_INPUT = {
     "applicative_database_offerer": [
         {
             "offerer_id": "3",
-            "offerer_thumb_count": "0",
             "offerer_is_active": True,
             "offerer_postal_code": "93100",
             "offerer_city": "Montreuil",
             "offerer_creation_date": "2019-11-20",
             "offerer_name": "Test Offerer",
             "offerer_siren": "123456789",
-            "offerer_fields_updated": "{}",
         },
         {
             "offerer_id": "4",
             "offerer_siren": "234567890",
-            "offerer_thumb_count": "0",
             "offerer_is_active": True,
             "offerer_postal_code": "93100",
             "offerer_city": "Montreuil",
             "offerer_creation_date": "2019-11-20",
             "offerer_name": "Test Offerer",
-            "offerer_fields_updated": "{}",
         },
     ],
     "applicative_database_payment": [
@@ -683,14 +679,12 @@ ENRICHED_STOCK_DATA_INPUT = {
     "applicative_database_offerer": [
         {
             "offerer_id": "3",
-            "offerer_thumb_count": "0",
             "offerer_is_active": True,
             "offerer_postal_code": "93100",
             "offerer_city": "Montreuil",
             "offerer_creation_date": "2019-11-20",
             "offerer_name": "Test Offerer",
             "offerer_siren": "123456789",
-            "offerer_fields_updated": "{}",
         }
     ],
     "applicative_database_payment": [

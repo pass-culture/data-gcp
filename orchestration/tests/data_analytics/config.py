@@ -108,10 +108,6 @@ BIGQUERY_SCHEMAS = {
     },
     "applicative_database_offerer": {
         "offerer_is_active": "BOOLEAN",
-        "offerer_thumb_count": "INT64",
-        "offerer_first_thumb_dominant_color": "BYTES",
-        "offerer_id_at_providers": "STRING",
-        "offerer_date_modified_at_last_provider": "DATETIME",
         "offerer_address": "STRING",
         "offerer_postal_code": "STRING",
         "offerer_city": "STRING",
@@ -120,8 +116,6 @@ BIGQUERY_SCHEMAS = {
         "offerer_validation_date": "DATETIME",
         "offerer_name": "STRING",
         "offerer_siren": "STRING",
-        "offerer_last_provider_id": "STRING",
-        "offerer_fields_updated": "STRING",
         "offerer_validation_status": "STRING",
     },
     "applicative_database_payment": {

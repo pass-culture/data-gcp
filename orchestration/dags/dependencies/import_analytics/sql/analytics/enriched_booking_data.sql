@@ -38,6 +38,8 @@ SELECT
     venue.venue_department_code,
     offerer.offerer_id,
     offerer.offerer_name,
+    CASE WHEN venue.venue_is_permanent THEN CONCAT("venue-",venue.venue_id)
+         ELSE CONCAT("offerer-", offerer.offerer_id) END AS partner_id,
     booking.user_id,
     booking.deposit_id,
     deposit.type AS deposit_type,

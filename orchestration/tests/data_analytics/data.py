@@ -1477,7 +1477,7 @@ ENRICHED_BOOKING_DATA_EXPECTED = [
         "venue_name": "My Wonderful Venue",
         "venue_type_name": "Librairie",
         "booking_used_date": datetime.now().replace(microsecond=0),
-        "partner_type": "venue-8",
+        "partner_id": "venue-8",
     }
 ]
 

@@ -26,6 +26,8 @@ SELECT
     COUNTIF(event_name = 'screen_view' AND firebase_screen = 'Offer') AS nb_screen_view_offer,
     COUNTIF(event_name = 'screen_view' AND firebase_screen = 'Profile') AS nb_screen_view_profile,
     COUNTIF(event_name = 'screen_view' AND firebase_screen = 'Favorites') AS nb_screen_view_favorites,
+    COUNTIF((firebase_screen = 'SignupConfirmationEmailSent' OR event_name = 'ContinueCGU')) AS nb_signup_completed,
+    COUNTIF(firebase_screen IN ('BeneficiaryRequestSent','UnderageAccountCreated','BeneficiaryAccountCreated')) AS nb_benef_request_sent,
     DATE_DIFF(MAX(event_timestamp),MIN(event_timestamp),SECOND) AS visit_duration_seconds,
 FROM
         `{{ bigquery_analytics_dataset }}.firebase_events`

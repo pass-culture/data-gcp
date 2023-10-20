@@ -138,6 +138,8 @@ import_firebase_beneficiary_tables = {
         "sql": f"{SQL_PATH}/analytics/firebase_visits.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "firebase_visits",
+        "partition_prefix": "$",
+        "time_partitioning": {"field": "visit_date"},
         "depends": ["analytics_firebase_events"],
     },
     "analytics_firebase_aggregated_users": {
@@ -159,6 +161,7 @@ import_firebase_beneficiary_tables = {
         "sql": f"{SQL_PATH}/analytics/firebase_session_origin.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "firebase_session_origin",
+        "partition_prefix": "$",
         "time_partitioning": {"field": "first_event_date"},
         "depends": ["analytics_firebase_events"],
     },

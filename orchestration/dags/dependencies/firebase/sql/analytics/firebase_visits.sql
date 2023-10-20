@@ -7,6 +7,7 @@ SELECT
     ANY_VALUE(session_number) AS session_number,
     ANY_VALUE(user_id) AS user_id,
     MIN(event_timestamp) AS first_event_timestamp,
+    MIN(event_date) AS visit_date,
     ANY_VALUE(traffic_campaign) AS traffic_campaign,
     ANY_VALUE(traffic_medium) AS traffic_medium,
     ANY_VALUE(traffic_source) AS traffic_source,
@@ -40,6 +41,11 @@ FROM
             'batch_notification_dismiss',
             'app_update'
         )
+  {% if params.dag_type == 'intraday' %}
+  AND event_date = DATE('{{ ds }}')
+  {% else %}
+  AND event_date = DATE('{{ add_days(ds, -1) }}')
+  {% endif %}
 GROUP BY
     session_id,
     user_pseudo_id,

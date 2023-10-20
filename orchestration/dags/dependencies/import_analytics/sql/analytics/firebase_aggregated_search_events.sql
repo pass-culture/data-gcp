@@ -11,7 +11,7 @@ consulted_from_search AS (
         , event_date AS consult_date
         , ROW_NUMBER() OVER(PARTITION BY user_pseudo_id, session_id, offer_id, search_id ORDER BY event_timestamp) AS consult_rank
     FROM `{{ bigquery_analytics_dataset }}`.firebase_events
-    WHERE event_date > DATE('{{ params.set_date }}')
+    WHERE event_date = DATE('{{ add_days(ds, -1) }}')
     AND event_name = 'ConsultOffer'
     AND origin = 'search'
     QUALIFY ROW_NUMBER() OVER(PARTITION BY user_pseudo_id, session_id, offer_id, search_id ORDER BY event_timestamp) = 1
@@ -31,7 +31,7 @@ booked_from_search AS (
         ON consulted_from_search.user_pseudo_id = firebase_events.user_pseudo_id
         AND consulted_from_search.session_id = firebase_events.session_id
         AND consulted_from_search.offer_id = firebase_events.offer_id
-        AND event_date > DATE('{{ params.set_date }}')
+        AND event_date = DATE('{{ add_days(ds, -1) }}')
         AND event_name = 'BookingConfirmation'
         AND event_timestamp > consult_timestamp
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.diversification_booking
@@ -67,7 +67,7 @@ SELECT
         WHEN search_location_filter IS NOT NULL THEN 'location_filter'
         ELSE 'Autre' END AS first_filter_applied
 FROM `{{ bigquery_analytics_dataset }}`.firebase_events
-WHERE event_date > DATE('{{ params.set_date }}')
+WHERE event_date = DATE('{{ add_days(ds, -1) }}')
 AND event_name = 'PerformSearch'
 AND unique_search_id IS NOT NULL
 AND NOT (event_name = 'PerformSearch' AND search_type = 'Suggestions' AND query IS NULL AND search_categories_filter IS NULL AND search_native_categories_filter IS NULL AND search_location_filter = '{"locationType":"EVERYWHERE"}')
@@ -105,7 +105,7 @@ SELECT DISTINCT
     FROM `{{ bigquery_analytics_dataset }}`.firebase_events
     INNER JOIN first_search USING(unique_search_id, search_id, unique_session_id)
 WHERE event_name IN ('PerformSearch', 'NoSearchResult','ConsultOffer','HasAddedOfferToFavorites','VenuePlaylistDisplayedOnSearchResults','ConsultVenue')
-AND event_date > DATE('{{ params.set_date }}')
+AND event_date = DATE('{{ add_days(ds, -1) }}')
 AND search_id IS NOT NULL
 AND NOT (event_name = 'PerformSearch' AND search_type = 'Suggestions' AND query IS NULL AND search_categories_filter IS NULL AND search_native_categories_filter IS NULL AND search_location_filter = '{"locationType":"EVERYWHERE"}')-- Tracking déclenché à tort
 ),

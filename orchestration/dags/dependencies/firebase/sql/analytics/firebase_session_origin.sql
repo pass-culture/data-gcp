@@ -19,3 +19,8 @@ AND event_name NOT IN (
             'batch_notification_dismiss',
             'app_update'
         )
+{% if params.dag_type == 'intraday' %}
+AND event_date = DATE('{{ ds }}')
+{% else %}
+AND event_date = DATE('{{ add_days(ds, -1) }}')
+{% endif %}

@@ -436,7 +436,7 @@ analytics_tables = {
     "analytics_firebase_aggregated_search_events": {
         "sql": f"{ANALYTICS_SQL_PATH}/firebase_aggregated_search_events.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "firebase_aggregated_search_events",
+        "destination_table": "firebase_aggregated_search_events${{ yyyymmdd(add_days(ds, 0)) }}",
         "time_partitioning": {"field": "first_date"},
         "depends": ["diversification_booking"],
         "dag_depends": ["import_intraday_firebase_data"],

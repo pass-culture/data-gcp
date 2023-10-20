@@ -562,6 +562,15 @@ aggregated_tables = {
         ],
         "dag_depends": ["import_intraday_firebase_data"],
     },
+    "firebase_aggregated_daily_campaign_events": {
+        "sql": f"{ANALYTICS_SQL_PATH}/firebase_aggregated_daily_campaign_events.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "depends": [
+            "aggregated_daily_user_used_activity",
+            "diversification_booking",
+        ],
+        "dag_depends": ["import_intraday_firebase_data"],
+    },
 }
 
 

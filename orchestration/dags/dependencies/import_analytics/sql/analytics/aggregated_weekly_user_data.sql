@@ -118,6 +118,14 @@ WITH
     amount_spent,
     cnt_no_cancelled_bookings,
     cumulative_amount_spent,
+    deposit_amount - cumulative_amount_spent AS deposit_remaining_amount,
+    CASE
+        WHEN cumulative_amount_spent = 0 THEN 'nothing_spent'
+        WHEN deposit_amount - cumulative_amount_spent <= 5 THEN 'less_than_5_remaining'
+        WHEN deposit_amount - cumulative_amount_spent <= 50 THEN 'less_than_50_remaining'
+        WHEN deposit_amount - cumulative_amount_spent > 200 THEN 'more_than_200_remaining'
+        WHEN deposit_amount - cumulative_amount_spent BETWEEN 50 AND 200 THEN 'between_50_and_200_remaining'
+    END AS deposit_remaining_amount_bucket,
     cumulative_cnt_no_cancelled_bookings,
     delta_diversification,
     delta_diversification_cumsum,
@@ -164,7 +172,9 @@ WITH
     15,
     16,
     17,
-    18 ),
+    18,
+    19,
+    20),
 
   visits_ranked AS (
   SELECT

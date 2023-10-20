@@ -30,7 +30,7 @@ import_tables = {
         "time_partitioning": {"field": "partition_date"},
         "clustering_fields": {"fields": ["partition_date"]},
     },
-      "backoffice_logs": {
+    "backoffice_logs": {
         "sql": f"{SQL_PATH}/backoffice_logs.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "backoffice_logs${{ yyyymmdd(ds) }}",

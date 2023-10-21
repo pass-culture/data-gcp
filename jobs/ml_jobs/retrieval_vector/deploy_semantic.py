@@ -12,6 +12,7 @@ from utils import (
 import pyarrow.dataset as ds
 import polars as pl
 import numpy as np
+import umap
 
 MODEL_TYPE = {
     "n_dim": 384,
@@ -22,7 +23,7 @@ MODEL_TYPE = {
 }
 
 
-def download_embeddings(bucket_path):
+def download_embeddings(bucket_path, reduce=True):
     # download
     dataset = ds.dataset(bucket_path, format="parquet")
     ldf = pl.scan_pyarrow_dataset(dataset)
@@ -30,6 +31,13 @@ def download_embeddings(bucket_path):
     item_weights = np.vstack(np.vstack(ldf.select("embedding").collect())[0]).astype(
         np.float32
     )
+    # reduce
+    if reduce:
+        trans = umap.UMAP(
+            n_neighbors=15, n_components=64, random_state=42, verbose=True, unique=True
+        ).fit(item_weights)
+        item_weights = trans.embedding_.astype(np.float32)
+
     return {x: y for x, y in zip(item_list, item_weights)}
 
 

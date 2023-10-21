@@ -1,0 +1,12 @@
+google-cloud-secret-manager==2.4.0
+google-cloud-bigquery==2.3.1
+gcsfs==2021.9.0
+numpy>=1.22.0
+pandas==1.5.3
+pandas-gbq>=0.17.1
+typer==0.7.0
+posthog
+tqdm
+request
+protobuf>=3.9.2
+polars==0.18.6

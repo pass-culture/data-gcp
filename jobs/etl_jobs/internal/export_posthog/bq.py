@@ -2,7 +2,7 @@ import numpy as np
 import typing as t
 from datetime import datetime
 import uuid
-from utils import PostHogEvent
+from utils import PostHogEvent, ENV_SHORT_NAME
 
 
 def export_type(values):
@@ -61,6 +61,7 @@ def format_event(event: dict) -> PostHogEvent:
     properties = dict(**user_params, **event_params)
 
     return PostHogEvent(
+        environment=ENV_SHORT_NAME,
         origin=origin,
         device_id=user_pseudo_id,
         event_type=event_type,

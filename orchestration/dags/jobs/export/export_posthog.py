@@ -1,4 +1,3 @@
-import datetime
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.models import Param
@@ -12,7 +11,7 @@ from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryExecuteQueryOperator,
     BigQueryInsertJobOperator,
 )
-from datetime import datetime, timedelta
+import datetime
 from pathlib import Path
 from common.config import (
     GCP_PROJECT_ID,
@@ -45,7 +44,7 @@ default_dag_args = {
 }
 DATE = "{{ ts_nodash }}"
 
-# Environment variables to export before running commands
+
 dag_config = {
     "STORAGE_PATH": f"gs://{DATA_GCS_BUCKET_NAME}/posthog_export_{ENV_SHORT_NAME}/export_posthog_{DATE}/",
     "BASE_DIR": "data-gcp/jobs/etl_jobs/internal/export_posthog/",
@@ -56,22 +55,16 @@ gce_params = {
     "instance_type": "n1-standard-8",
 }
 
-default_args = {
-    "start_date": datetime(2022, 11, 30),
-    "on_failure_callback": task_fail_slack_alert,
-    "retries": 0,
-    "retry_delay": timedelta(minutes=2),
-}
 
 schedule_dict = {"prod": "0 4 * * *", "dev": "0 6 * * *", "stg": "0 6 * * 3"}
 
 with DAG(
     "export_posthog",
-    default_args=default_args,
+    default_args=default_dag_args,
     description="Export to analytics data posthog",
     schedule_interval=get_airflow_schedule(schedule_dict[ENV_SHORT_NAME]),
     catchup=False,
-    dagrun_timeout=timedelta(minutes=1440),
+    dagrun_timeout=datetime.timedelta(minutes=1440),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
     params={
@@ -87,6 +80,10 @@ with DAG(
             default=gce_params["instance_name"],
             type="string",
         ),
+        "days": Param(
+            default=0,
+            type="integer",
+        ),
     },
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)
@@ -94,8 +91,8 @@ with DAG(
     for sql_query in ["export_firebase_pro_events", "export_firebase_native_events"]:
         table_id = f"{DATE}_{sql_query}_export"
         export_task = BigQueryExecuteQueryOperator(
-            task_id=f"export_{sql_query}",
-            sql=(SQL_BASE_PATH / f"export_{sql_query}.sql").as_posix(),
+            task_id=f"{sql_query}",
+            sql=(SQL_BASE_PATH / f"{sql_query}.sql").as_posix(),
             write_disposition="WRITE_TRUNCATE",
             use_legacy_sql=False,
             destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{table_id}",
@@ -103,7 +100,7 @@ with DAG(
         )
 
         export_bq = BigQueryInsertJobOperator(
-            task_id=f"export_{sql_query}_to_bucket",
+            task_id=f"{sql_query}_to_bucket",
             configuration={
                 "extract": {
                     "sourceTable": {
@@ -118,7 +115,10 @@ with DAG(
             },
             dag=dag,
         )
-        export_tasks.append(export_task)
+        export_task.set_upstream(start)
+        export_bq.set_upstream(export_task)
+
+        export_tasks.append(export_bq)
 
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
@@ -170,12 +170,10 @@ with DAG(
     )
 
     (
-        start
-        > export_tasks
+        export_tasks
         >> gce_instance_start
         >> fetch_code
         >> install_dependencies
-        >> export_bq
         >> firebase_pro_events_export
         >> native_events_export
         >> gce_instance_stop

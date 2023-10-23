@@ -11,6 +11,7 @@ PROJECT_NAME = os.environ.get("PROJECT_NAME")
 
 @dataclass
 class PostHogEvent:
+    environment: str
     origin: str
     event_type: str
     device_id: str

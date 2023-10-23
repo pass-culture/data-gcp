@@ -7,5 +7,5 @@ SELECT
     event_params,
     platform,
     'pro' as origin
-FROM `{{ bigquery_clean_dataset }}.clean_prod.firebase_pro_events_{{ yyyymmdd(ds) }}` 
+FROM `{{ bigquery_clean_dataset }}.firebase_pro_events_{{ yyyymmdd(add_days(ds, params.days)) }}` 
 WHERE NOT REGEXP_CONTAINS(event_name, '^[a-z]+(_[a-z]+)*$')

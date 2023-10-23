@@ -46,7 +46,7 @@ DATE = "{{ ts_nodash }}"
 
 
 dag_config = {
-    "STORAGE_PATH": f"gs://{DATA_GCS_BUCKET_NAME}/posthog_export_{ENV_SHORT_NAME}/export_posthog_{DATE}/",
+    "STORAGE_PATH": f"gs://{DATA_GCS_BUCKET_NAME}/posthog_export_{ENV_SHORT_NAME}/export_posthog_{DATE}",
     "BASE_DIR": "data-gcp/jobs/etl_jobs/internal/export_posthog/",
 }
 

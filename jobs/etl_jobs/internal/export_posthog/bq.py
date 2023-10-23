@@ -55,7 +55,7 @@ def format_event(event: dict) -> PostHogEvent:
     user_params = {
         "user_id": event.get("user_id"),
         "platform": event.get("platform"),
-        "app_version": event.get("app_version"),
+        "firebase_app_version": event.get("app_version"),
         "environment": ENV_SHORT_NAME,
         "firebase_origin": event["origin"],
     }

@@ -5,7 +5,7 @@ numpy
 pandas
 pyarrow
 loguru
-annlite
 docarray
 sentence-transformers
 python-json-logger
+lancedb==0.3.1

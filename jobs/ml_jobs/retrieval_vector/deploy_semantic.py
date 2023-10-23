@@ -8,6 +8,7 @@ from utils import (
     save_experiment,
     save_model_type,
     get_item_docs,
+    create_items_table,
 )
 import pyarrow.dataset as ds
 import polars as pl
@@ -16,14 +17,13 @@ import umap
 
 MODEL_TYPE = {
     "n_dim": 384,
-    "metric": "cosine",
     "type": "semantic",
     "default_token": None,
     "transformer": "sentence-transformers/all-MiniLM-L6-v2",
 }
 
 
-def download_embeddings(bucket_path, reduce=True):
+def download_embeddings(bucket_path, reduce=False):
     # download
     dataset = ds.dataset(bucket_path, format="parquet")
     ldf = pl.scan_pyarrow_dataset(dataset)
@@ -46,6 +46,12 @@ def prepare_docs(bucket_path):
     item_embedding_dict = download_embeddings(bucket_path)
     item_docs = get_item_docs(item_embedding_dict, items_df)
     item_docs.save("./metadata/item.docs")
+    create_items_table(
+        item_embedding_dict,
+        items_df,
+        emb_size=MODEL_TYPE["n_dim"],
+        uri="./metadata/vector",
+    )
 
 
 def main(

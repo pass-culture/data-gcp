@@ -13,6 +13,7 @@ from utils import (
     get_item_docs,
     save_experiment,
     save_model_type,
+    create_items_table,
 )
 import tensorflow as tf
 import numpy as np
@@ -20,7 +21,6 @@ import numpy as np
 
 MODEL_TYPE = {
     "n_dim": 64,
-    "metric": "cosine",
     "type": "recommendation",
     "default_token": "[UNK]",
 }
@@ -56,7 +56,6 @@ def download_model(artifact_uri):
     # TODO handle errors
     for line in results.stdout:
         print(line.rstrip().decode("utf-8"))
-    # export weights to npy format
 
 
 def prepare_docs():
@@ -77,6 +76,12 @@ def prepare_docs():
     user_docs.save("./metadata/user.docs")
     item_docs = get_item_docs(item_embedding_dict, items_df)
     item_docs.save("./metadata/item.docs")
+    create_items_table(
+        item_embedding_dict,
+        items_df,
+        emb_size=MODEL_TYPE["n_dim"],
+        uri="./metadata/vector",
+    )
 
 
 def main(
@@ -121,7 +126,7 @@ def main(
     prepare_docs()
     print("Deploy...")
     save_model_type(model_type=MODEL_TYPE)
-    deploy_container(serving_container, workers=5)
+    deploy_container(serving_container, workers=3)
     save_experiment(experiment_name, model_name, serving_container, run_id=run_id)
 
 

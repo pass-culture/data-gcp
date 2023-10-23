@@ -13,7 +13,7 @@ from common.config import (
     SSH_USER,
     ENV_SHORT_NAME,
 )
-from common.hooks.gce import GCEHook, GPUImage, CPUImage
+from common.hooks.gce import GCEHook, TFGPUImage, CPUImage
 import typing as t
 from base64 import b64encode
 
@@ -46,7 +46,7 @@ class StartGCEOperator(BaseOperator):
         self.accelerator_types = accelerator_types
         if source_image_type is None:
             source_image_type = (
-                GPUImage() if len(self.accelerator_types) > 0 else CPUImage()
+                TFGPUImage() if len(self.accelerator_types) > 0 else CPUImage()
             )
 
         self.source_image_type = source_image_type

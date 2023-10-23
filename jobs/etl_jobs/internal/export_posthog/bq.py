@@ -43,7 +43,6 @@ def bq_to_events(df) -> t.List[PostHogEvent]:
 
 def format_event(event: dict) -> PostHogEvent:
     user_pseudo_id = event["user_pseudo_id"]
-    origin = event["origin"]
     event_time = datetime.utcfromtimestamp(event["event_timestamp"] / 1e6)
 
     unique_event = (
@@ -56,16 +55,18 @@ def format_event(event: dict) -> PostHogEvent:
     user_params = {
         "user_id": event.get("user_id"),
         "platform": event.get("platform"),
+        "app_version": event.get("app_version"),
+        "environment": ENV_SHORT_NAME,
+        "firebase_origin": event["origin"],
     }
 
     properties = dict(**user_params, **event_params)
 
     return PostHogEvent(
-        environment=ENV_SHORT_NAME,
-        origin=origin,
         device_id=user_pseudo_id,
         event_type=event_type,
         properties=properties,
         timestamp=event_time,
         uuid=str(event_uuid),
+        user_properties=user_params,
     )

@@ -10,13 +10,12 @@ PROJECT_NAME = os.environ.get("GCP_PROJECT_ID")
 
 @dataclass
 class PostHogEvent:
-    environment: str
-    origin: str
     event_type: str
     device_id: str
     properties: dict
     timestamp: datetime
     uuid: str
+    user_properties: dict
 
 
 def access_secret_data(project_id, secret_id, version_id="latest", default=None):

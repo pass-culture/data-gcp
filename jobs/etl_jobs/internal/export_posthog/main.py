@@ -16,7 +16,7 @@ def download_df(bucket_path):
     # download
     dataset = ds.dataset(bucket_path, format="parquet")
     ldf = pl.scan_pyarrow_dataset(dataset)
-    return ldf.collect()
+    return ldf.collect().to_pandas()
 
 
 def run(

@@ -89,7 +89,7 @@ with DAG(
     start = DummyOperator(task_id="start", dag=dag)
     export_tasks = []
     for sql_query in ["export_firebase_pro_events", "export_firebase_native_events"]:
-        table_id = f"{DATE}_{sql_query}_export"
+        table_id = f"{DATE}_{sql_query}"
         export_task = BigQueryExecuteQueryOperator(
             task_id=f"{sql_query}",
             sql=(SQL_BASE_PATH / f"{sql_query}.sql").as_posix(),
@@ -145,9 +145,11 @@ with DAG(
     )
 
     pro_storage_path = (
-        f"{dag_config['STORAGE_PATH']}/firebase_pro_events/data-*.parquet"
+        f"{dag_config['STORAGE_PATH']}/{DATE}_export_firebase_pro_events/"
     )
-    native_storage_path = f"{dag_config['STORAGE_PATH']}/firebase_events/data-*.parquet"
+    native_storage_path = (
+        f"{dag_config['STORAGE_PATH']}/{DATE}_export_firebase_native_events/"
+    )
 
     firebase_pro_events_export = SSHGCEOperator(
         task_id="firebase_pro_events_export",

@@ -19,9 +19,8 @@ class EventExporter:
             event=event.event_type,
             properties={
                 **event.properties,
-                "firebase_origin": event.origin,
-                "environment": event.environment,
                 "$geoip_disable": True,
+                "$set": {**event.user_properties},
             },
             timestamp=event.timestamp,
             uuid=event.uuid,

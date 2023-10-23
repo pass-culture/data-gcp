@@ -20,7 +20,7 @@ def download_df(bucket_path):
 
 
 def run(
-    source_gs_path: int = typer.Option(
+    source_gs_path: str = typer.Option(
         ...,
         help="source_gs_path",
     ),

@@ -4,9 +4,8 @@ from google.cloud import secretmanager
 from datetime import datetime
 from dataclasses import dataclass
 
-BIGQUERY_RAW_DATASET = os.environ.get("BIGQUERY_RAW_DATASET")
-ENV_SHORT_NAME = os.environ.get("ENVIRONMENT_SHORT_NAME")
-PROJECT_NAME = os.environ.get("PROJECT_NAME")
+ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
+PROJECT_NAME = os.environ.get("GCP_PROJECT_ID")
 
 
 @dataclass

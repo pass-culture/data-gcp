@@ -8,6 +8,9 @@ import json
 import pyarrow as pa
 import lancedb
 
+from google.cloud import bigquery
+
+
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 BIGQUERY_CLEAN_DATASET = f"clean_{ENV_SHORT_NAME}"
@@ -78,16 +81,20 @@ def deploy_container(serving_container, workers):
 
 
 def get_items_metadata():
+    client = bigquery.Client()
+
     sql = f"""
         SELECT 
         *, 
         ROW_NUMBER() OVER (ORDER BY booking_number DESC) as booking_number_desc,
         FROM `{GCP_PROJECT_ID}.{BIGQUERY_ANALYTICS_DATASET}.recommendable_items_raw`
     """
-    return pd.read_gbq(sql)
+    return client.query(sql).to_dataframe()
 
 
 def get_users_metadata():
+    client = bigquery.Client()
+
     sql = f"""
         SELECT 
             user_id,
@@ -96,7 +103,7 @@ def get_users_metadata():
             COALESCE(user_theoretical_remaining_credit, user_last_deposit_amount) as user_theoretical_remaining_credit
         FROM `{GCP_PROJECT_ID}.{BIGQUERY_ANALYTICS_DATASET}.enriched_user_data` 
     """
-    return pd.read_gbq(sql)
+    return client.query(sql).to_dataframe()
 
 
 def to_ts(f):

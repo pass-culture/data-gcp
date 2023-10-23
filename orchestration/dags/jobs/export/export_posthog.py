@@ -56,7 +56,7 @@ gce_params = {
 }
 
 
-schedule_dict = {"prod": "0 4 * * *", "dev": "0 6 * * *", "stg": "0 6 * * 3"}
+schedule_dict = {"prod": "0 8 * * *", "dev": "0 12 * * *", "stg": "0 10 * * *"}
 
 with DAG(
     "export_posthog",

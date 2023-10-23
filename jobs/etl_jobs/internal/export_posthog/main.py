@@ -4,12 +4,17 @@ import pyarrow.dataset as ds
 import polars as pl
 from bq import bq_to_events
 from event import EventExporter
+import time
 
 posthog_api_key = access_secret_data(PROJECT_NAME, f"posthog_api_key_{ENV_SHORT_NAME}")
 posthog_host = access_secret_data(PROJECT_NAME, f"posthog_host_{ENV_SHORT_NAME}")
 posthog_personal_api_key = access_secret_data(
     PROJECT_NAME, f"posthog_personal_api_key_{ENV_SHORT_NAME}"
 )
+
+
+BATCH_SIZE = 10_000
+TIME = 5
 
 
 def download_df(bucket_path):
@@ -32,8 +37,11 @@ def run(
         posthog_host=posthog_host,
         posthog_personal_api_key=posthog_personal_api_key,
     )
-    for e in events:
-        ph.event_to_posthog(e)
+    for event_idx, event in enumerate(events, 1):
+        ph.event_to_posthog(event)
+        if event_idx % BATCH_SIZE == 0:
+            print(f"Processed {event_idx} events. Pausing for {TIME} second...")
+            time.sleep(TIME)
 
 
 if __name__ == "__main__":

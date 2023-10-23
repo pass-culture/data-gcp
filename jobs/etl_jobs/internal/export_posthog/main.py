@@ -37,11 +37,14 @@ def run(
         posthog_host=posthog_host,
         posthog_personal_api_key=posthog_personal_api_key,
     )
+    print(f"Will process {len(events)} events...")
     for event_idx, event in enumerate(events, 1):
         ph.event_to_posthog(event)
         if event_idx % BATCH_SIZE == 0:
             print(f"Processed {event_idx} events. Pausing for {TIME} second...")
             time.sleep(TIME)
+    print(f"Processed {event_idx} events.... Wait for finish")
+    time.sleep(300)
 
 
 if __name__ == "__main__":

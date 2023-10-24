@@ -41,6 +41,11 @@ get_recommendable_offers AS (
         offer.offer_creation_date AS offer_creation_date,
         stock.stock_beginning_date AS stock_beginning_date,
         offer.last_stock_price AS stock_price,
+        offer.titelive_gtl_id AS gtl_id,
+        glt_mapping.gtl_label_level_1 AS gtl_l1,
+        glt_mapping.gtl_label_level_2 AS gtl_l2,
+        glt_mapping.gtl_label_level_3 AS gtl_l3,
+        glt_mapping.gtl_label_level_4 AS gtl_l4,
         MAX(item_counts.item_count) as item_count,
         MAX(COALESCE(booking_numbers.booking_number, 0)) AS booking_number,
         MAX(COALESCE(booking_numbers.booking_number_last_7_days, 0)) AS booking_number_last_7_days,
@@ -113,12 +118,14 @@ get_recommendable_offers AS (
             enriched_item_metadata.subcategory_id = forbidden_query.subcategory_id
         LEFT JOIN `{{ bigquery_raw_dataset }}`.forbidden_offers_recommendation forbidden_offer on 
             offer.offer_product_id = forbidden_offer.product_id
+        LEFT JOIN `{{ bigquery_analytics_dataset }}`.titelive_gtl_mapping glt_mapping on 
+            offer.titelive_gtl_id = glt_mapping.gtl_id
     WHERE
         offer.is_active = TRUE
         AND offer.offer_is_bookable = TRUE
         AND offerer.offerer_is_active = TRUE
         AND offer.offer_validation = 'APPROVED'
-    GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13
+    GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18
 )
 SELECT  * 
 FROM get_recommendable_offers 

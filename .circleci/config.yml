@@ -64,114 +64,7 @@ workflows:
   run-checks:
     jobs:
       - linter
-      # Recommendation jobs
-      # -------------------
-
-      #- recommendation-db-install:
-      #    requires:
-      #      - linter
-      #    context:
-      #      - Slack
-      #    <<: *slack-fail-post-step
-      #
-      #- recommendation-db-tests:
-      #    requires:
-      #      - recommendation-db-install
-      #    context:
-      #      - Slack
-      #    <<: *slack-fail-post-step
-
-      - recommendation-api-build:
-          requires:
-            - linter
-          context:
-            - Slack
-          <<: *slack-fail-post-step
-
-      - recommendation-api-tests:
-          requires:
-            - recommendation-api-build
-          context:
-            - Slack
-          <<: *slack-fail-post-step
-
-      #- api-integration-tests:
-      #    env: dev
-      #    api_token: $API_TOKEN_DEV
-      #    name: api-integration-tests-dev
-      #   requires:
-      #      - recommendation-api-tests
-      #    filters:
-      #      branches:
-      #        ignore:
-      #          - master
-      #          - production
-      #    context:
-      #      - DATA_GCP_DEV
-      #      - Slack
-      #    <<: *slack-fail-post-step
-
-      - build_and_deploy_api_reco:
-          name: build_and_deploy_api_reco_staging
-          api-instance-name: apireco-stg
-          requires:
-            - recommendation-api-tests
-          filters:
-            branches:
-              only:
-                - master
-          context:
-            - DATA_GCP
-            - DATA_GCP_EHP
-            - Slack
-          <<: *slack-fail-post-step
-
-      - api-integration-tests:
-          name: api-integration-tests-staging
-          env: staging
-          api_token: $API_TOKEN_STG
-          requires:
-            - build_and_deploy_api_reco_staging
-          filters:
-            branches:
-              only:
-                - master
-          context:
-            - DATA_GCP_EHP
-            - Slack
-          <<: *slack-fail-post-step
-
-      - build_and_deploy_api_reco:
-          name: build_and_deploy_api_reco_production
-          api-instance-name: apireco-prod
-          requires:
-            - recommendation-api-tests
-            #- recommendation-db-tests
-          filters:
-            branches:
-              only:
-                - production
-          context:
-            - DATA_GCP
-            - DATA_GCP_PROD
-            - Slack
-          <<: *slack-fail-post-step
-
-      - api-integration-tests:
-          name: api-integration-tests-prod
-          env: production
-          api_token: $API_TOKEN_PROD
-          requires:
-            - build_and_deploy_api_reco_production
-          filters:
-            branches:
-              only:
-                - production
-          context:
-            - DATA_GCP_PROD
-            - Slack
-          <<: *slack-fail-post-step
-
+      
             #      - algo-training-install:
             #          requires:
             #            - linter
@@ -261,7 +154,6 @@ workflows:
                 - production
           requires:
             # - production-composer-deploy
-            - api-integration-tests-prod
 
       - slack-alert:
           name: slack-alert-staging
@@ -273,7 +165,6 @@ workflows:
                 - master
           requires:
             # - staging-composer-deploy
-            - api-integration-tests-staging
 
   # ----------------
   # Workflow to deploy on dev
@@ -284,33 +175,13 @@ workflows:
       #- composer-deploy:
       #    name: dev-composer-deploy
       #    <<: *deploy_on_dev_commons
-      - build_and_deploy_api_reco:
-          name: build_and_deploy_api_reco_dev
-          api-instance-name: apireco-dev
-          <<: *deploy_on_dev_commons
-### temporarily removing api reco tests ###
-#      - api-integration-tests:
-#          env: dev
-#          api_token: $API_TOKEN_DEV
-#          name: api-integration-tests-dev
-#          requires:
-#            - dev-composer-deploy
-#            - build_and_deploy_api_reco_dev
-#            - adage-import-function-deploy-dev
-#          context:
-#            - DATA_GCP_DEV
-#            - Slack
-#          <<: *slack-fail-post-step
+
       - slack-alert:
           name: slack-alert-dev
           destination_env: dev
           context: Slack
           requires:
             #- dev-composer-deploy
-            - build_and_deploy_api_reco_dev
-### temporarily removing api reco tests ###
-#          requires:
-#            - api-integration-tests-dev
 
 
 ###################
@@ -413,36 +284,6 @@ jobs:
             export PYTHONPATH=$PYTHONPATH:~/data-gcp/apps/recommendation/api
             . venv-api/bin/activate
             ./run_tests.sh
-
-  api-integration-tests:
-    parameters:
-      env:
-        description: "Which environement to target"
-        default: "dev"
-        type: string
-      api_token:
-        description: "The api token (given with env var)"
-        default: ""
-        type: string
-    docker:
-      - image: postman/newman
-        auth:
-          username: $DOCKERHUB_USER
-          password: $DOCKERHUB_PASSWORD
-    working_directory: ~/data-gcp
-    steps:
-      - run:
-          name: Install Git
-          command: |
-            apk update
-            apk upgrade
-            apk add --no-cache bash git openssh
-      - checkout
-      - run:
-          name: Run tests collection
-          command: |
-            cd apps/recommendation/api/postman
-            newman run api_integration_tests.postman_collection.json --environment <<parameters.env>>.postman_environment.json --env-var "api_token=<<parameters.api_token>>"
 
             #  orchestration-install:
             #    executor: python310
@@ -557,51 +398,6 @@ jobs:
             #          command: |
             #            . venv-record-linkage/bin/activate
             #            PYTHONPATH=. pytest tests
-  #recommendation-db-install:
-  #  executor: python
-  #  working_directory: ~/data-gcp/recommendation/db
-  #  steps:
-  #    - checkout:
-  #        path: ~/data-gcp
-  #    - restore_cache:
-  #        key: dependencies-{{ checksum "db-requirements.txt" }}
-  #    - run:
-  #        name: Install Python deps in a venv
-  #        command: |
-  #          python3 -m venv venv-db
-  #          . venv-db/bin/activate
-  #          pip install -r db-requirements.txt
-  #    - save_cache:
-  #        key: dependencies-{{ checksum "db-requirements.txt" }}
-  #        paths:
-  #          - "venv-db"
-  #    - persist_to_workspace:
-  #        root: .
-  #        paths:
-  #          - .
-#
-#  recommendation-db-tests:
-#    docker:
-#      - image: circleci/python:3.7
-#        auth:
-#          username: $DOCKERHUB_USER
-#          password: $DOCKERHUB_PASSWORD
-#      - image: circleci/postgres:12
-#        environment:
-#          POSTGRES_PASSWORD: postgres
-#    working_directory: ~/data-gcp/recommendation/db
-#    steps:
-#      - attach_workspace:
-#          at: .
-#      - run:
-#          name: Install psql
-#          command: sudo apt update && sudo apt install postgresql-client
-#      - run:
-#          name: Run tests
-#          command: |
-#            export PYTHONPATH=$PYTHONPATH:~/data-gcp/recommendation/db
-#            . venv-db/bin/activate
-#            ./run_tests.sh
 #  composer-deploy:
 #    executor: gcp-sdk
 #    working_directory: ~/data-gcp/orchestration
@@ -624,34 +420,6 @@ jobs:
 #          command: |
 #            ./wait_for_dag_deployed.sh ${COMPOSER_ENV_NAME} ${REGION} airflow_monitoring 6 10
 #
-
-  build_and_deploy_api_reco:
-    docker:
-      - image: "cimg/base:stable"
-    parameters:
-      api-instance-name:
-        description: "API recommendation"
-        type: string
-    working_directory: ~/data-gcp/apps/recommendation/api
-    steps:
-      - checkout:
-          path: ~/data-gcp
-      - cloudrun/init
-      - cloudrun/build:
-          tag: "eu.gcr.io/${GOOGLE_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}/<< parameters.api-instance-name >>:${CIRCLE_SHA1}"
-      - run:
-          name: Apply latest tag
-          command: |
-            gcloud container images add-tag \
-            eu.gcr.io/${GOOGLE_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}/<< parameters.api-instance-name >>:${CIRCLE_SHA1} \
-            eu.gcr.io/${GOOGLE_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}/<< parameters.api-instance-name >>:latest
-      - cloudrun/deploy:
-          image: "eu.gcr.io/${GOOGLE_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}/<< parameters.api-instance-name >>:${CIRCLE_SHA1}"
-          platform: managed
-          region: europe-west1
-          service-name: << parameters.api-instance-name >>
-          unauthenticated: true
-
 
   slack-alert:
     docker:

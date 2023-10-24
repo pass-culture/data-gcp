@@ -26,7 +26,6 @@ Repo pour la team data sur GCP
 |     +-- qualtrics
 |     +-- sendinblue
 |     +-- siren
-|     +-- typeform-adage-reference-request
 |     +-- batch
 |
 |   +-- internal

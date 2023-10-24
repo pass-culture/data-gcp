@@ -7,7 +7,7 @@ SELECT
     cast(jsonPayload.user_id as string) as user_id,
     jsonPayload.extra.searchtype as search_type,
     COALESCE(jsonPayload.extra.searchsubtype,LOWER(jsonPayload.extra.searchprotype)) as search_protype,
-    jsonPayload.extra.searchquery as search_query,
+    CASE WHEN jsonPayload.extra.searchquery LIKE "%@%" THEN "xxx@xxx.com" ELSE jsonPayload.extra.searchquery as search_query,
     cast(jsonPayload.extra.searchnbresults as int) as search_nb_results,
     cast(jsonPayload.extra.searchrank as int) as card_clicked_rank
 

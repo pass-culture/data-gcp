@@ -49,23 +49,26 @@ def fetch_result(demarches_ids, updated_since, env_short_name, gcp_project_id):
         query_body = get_query_body(demarche_id, "", updated_since)
         has_next_page = True
         while has_next_page:
+            has_next_page = False
             resultTemp = run_query(query_body, gcp_project_id)
-            for node in resultTemp["data"]["demarche"]["dossiers"]["edges"]:
-                dossier = node["node"]
-                if dossier is not None:
-                    dossier["demarche_id"] = demarche_id
-            has_next_page = resultTemp["data"]["demarche"]["dossiers"]["pageInfo"][
-                "hasNextPage"
-            ]
-            result = mergeDictionary(result, resultTemp)
-            if env_short_name != "prod":
-                has_next_page = False
+            if "errors" in resultTemp:
+                print(resultTemp)
+            if resultTemp["data"] is not None:
+                for node in resultTemp["data"]["demarche"]["dossiers"]["edges"]:
+                    dossier = node["node"]
+                    if dossier is not None:
+                        dossier["demarche_id"] = demarche_id
+                result = mergeDictionary(result, resultTemp)
 
-            if has_next_page:
-                end_cursor = resultTemp["data"]["demarche"]["dossiers"]["pageInfo"][
-                    "endCursor"
+                has_next_page = resultTemp["data"]["demarche"]["dossiers"]["pageInfo"][
+                    "hasNextPage"
                 ]
-                query_body = get_query_body(demarche_id, end_cursor, updated_since)
+                if has_next_page:
+                    end_cursor = resultTemp["data"]["demarche"]["dossiers"]["pageInfo"][
+                        "endCursor"
+                    ]
+                    query_body = get_query_body(demarche_id, end_cursor, updated_since)
+
     if not isinstance(result["data"], list):
         result["data"] = [result["data"]]
     return result

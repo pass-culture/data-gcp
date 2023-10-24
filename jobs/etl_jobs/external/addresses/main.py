@@ -12,8 +12,8 @@ def run():
 
     downloader = fetch_user_location.AdressesDownloader(user_locations_file_name)
     result = downloader.run()
-
-    return result
+    print(f"{result}")
+    return f"{result}"
 
 
 if __name__ == "__main__":

@@ -1,0 +1,52 @@
+name: "Linter job"
+
+on:
+  workflow_call:
+    inputs:
+      NOTIF_CHANNEL_ID:
+        type: string
+        required: false # Si pas fourni, alors pas de notif
+    secrets:
+      SLACK_BOT_TOKEN:
+        required: true
+jobs:
+   linter:
+    name: "linter job"
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4.7.0
+        with:
+          python-version: '3.10'
+      - name : Install Black 
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r  linter-requirements.txt      
+      - name: Run Black
+        run: black --check --verbose .
+      - name: Post to a Slack channel
+        id: slack
+        if: ${{ inputs.NOTIF_CHANNEL_ID != '' && failure() }}
+        uses: slackapi/slack-github-action@v1.23.0
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+        with:
+          channel-id: ${{ inputs.NOTIF_CHANNEL_ID }}
+          payload: |
+            {
+                    "attachments": [
+                        {
+                            "mrkdwn_in": ["text"],
+                            "color": "#A30002",
+                            "author_name": "${{github.actor}}",
+                            "author_link": "https://github.com/${{github.actor}}",
+                            "author_icon": "https://github.com/${{github.actor}}.png",
+                            "title": "Linter job échoué",
+                            "title_link": "https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}",
+                            "text": ":fire: Linter Job échoué :no_entry:"
+                        }
+                    ],
+                    "unfurl_links": false,
+                    "unfurl_media": false
+            }
+    

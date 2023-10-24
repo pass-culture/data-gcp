@@ -9,11 +9,6 @@ ANALYTICS_DATASET = f"analytics_{ENVIRONMENT_SHORT_NAME}"
 # METABASE_API_USERNAME = os.environ.get("METABASE_API_USERNAME")
 # METABASE_HOST = os.environ.get("METABASE_HOST")
 METABASE_API_USERNAME = "metabase-data-bot@passculture.app"
-METABASE_HOST = (
-    "https://data-analytics-staging.internal-passculture.app"
-    if ENVIRONMENT_SHORT_NAME != "prod"
-    else "https://data-analytics.internal-passculture.app"
-)
 
 parent_folder_to_archive = ["interne", "operationnel"]
 limit_inactivity_in_days = 100

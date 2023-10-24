@@ -170,8 +170,8 @@ SELECT DISTINCT
     venue.venue_department_code,
     venue.venue_postal_code,
     venue.venue_type_code AS venue_type_label,
-    IF(venue_label.label IN("SMAC - Scène de musiques actuelles", "Théâtre lyrique conventionné d'intérêt national", "CNCM - Centre national de création musicale", "FRAC - Fonds régional d'art contemporain", "Scènes conventionnées", "Scène nationale", "Théâtres nationaux", "CAC - Centre d'art contemporain d'intérêt national", "CDCN - Centre de développement chorégraphique national", "Orchestre national en région", "CCN - Centre chorégraphique national", "CDN - Centre dramatique national", "Opéra national en région", "PNC - Pôle national du cirque","CNAREP - Centre national des arts de la rue et de l'espace public"), TRUE, FALSE) AS is_dgca,
-    venue_label.label AS venue_label,
+    IF(venue_label.venue_label IN("SMAC - Scène de musiques actuelles", "Théâtre lyrique conventionné d'intérêt national", "CNCM - Centre national de création musicale", "FRAC - Fonds régional d'art contemporain", "Scènes conventionnées", "Scène nationale", "Théâtres nationaux", "CAC - Centre d'art contemporain d'intérêt national", "CDCN - Centre de développement chorégraphique national", "Orchestre national en région", "CCN - Centre chorégraphique national", "CDN - Centre dramatique national", "Opéra national en région", "PNC - Pôle national du cirque","CNAREP - Centre national des arts de la rue et de l'espace public"), TRUE, FALSE) AS is_dgca,
+    venue_label.venue_label AS venue_label,
     venue_humanized_id.venue_humanized_id,
     venue.venue_booking_email,
     venue_contact.venue_contact_phone_number,
@@ -200,7 +200,7 @@ FROM
     LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue venue ON venue.venue_id = offer.venue_id
     LEFT JOIN venue_humanized_id ON venue_humanized_id.venue_id = venue.venue_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.region_department region_dept ON region_dept.num_dep = venue.venue_department_code
-    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue_label venue_label ON venue_label.id = venue.venue_label_id
+    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue_label venue_label ON venue_label.venue_label_id = venue.venue_label_id
     LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offerer offerer ON offerer.offerer_id = venue.venue_managing_offerer_id
     LEFT JOIN offerer_humanized_id ON offerer_humanized_id.offerer_id = offerer.offerer_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.siren_data siren_data ON  siren_data.siren = offerer.offerer_siren

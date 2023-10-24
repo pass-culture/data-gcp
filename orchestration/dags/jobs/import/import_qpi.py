@@ -98,10 +98,11 @@ with DAG(
 
     clean_tasks = []
     for table, params in CLEAN_TABLES.items():
-        task = bigquery_job_task(
-            dag=dag, table=f"add_{table}_to_clean", job_params=params
-        )
-        clean_tasks.append(task)
+        if params.get("load_table", True) is True:
+            task = bigquery_job_task(
+                dag=dag, table=f"add_{table}_to_clean", job_params=params
+            )
+            clean_tasks.append(task)
 
     end_clean = DummyOperator(task_id="end_clean")
 
@@ -123,11 +124,15 @@ with DAG(
             "dag_depends": job_params.get("dag_depends", []),
         }
 
-    analytics_tables_jobs = depends_loop(
-        analytics_tables_jobs, start_analytics, dag=dag
-    )
-
     end = DummyOperator(task_id="end", trigger_rule="one_success")
+
+    analytics_tables_jobs = depends_loop(
+        ANALYTICS_TABLES,
+        analytics_tables_jobs,
+        start_analytics,
+        dag=dag,
+        default_end_operator=end,
+    )
 
     (
         start
@@ -141,6 +146,5 @@ with DAG(
         >> delete_temp_answer_table_raw
         >> start_analytics
         >> analytics_tables_jobs
-        >> end
     )
     (checking_folder_QPI >> empty >> end)

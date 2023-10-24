@@ -32,12 +32,14 @@ SELECT
     subcategories.category_id AS offer_category_id,
     offer.offer_name,
     venue.venue_name,
-    venue_label.label as venue_label_name,
+    venue_label.venue_label as venue_label_name,
     venue.venue_type_code as venue_type_name,
     venue.venue_id,
     venue.venue_department_code,
     offerer.offerer_id,
     offerer.offerer_name,
+    CASE WHEN venue.venue_is_permanent THEN CONCAT("venue-",venue.venue_id)
+         ELSE CONCAT("offerer-", offerer.offerer_id) END AS partner_id,
     booking.user_id,
     booking.deposit_id,
     deposit.type AS deposit_type,
@@ -60,7 +62,7 @@ FROM
     INNER JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offerer AS offerer ON venue.venue_managing_offerer_id = offerer.offerer_id
     INNER JOIN `{{ bigquery_clean_dataset }}`.user_beneficiary AS user ON user.user_id = booking.user_id
     INNER JOIN `{{ bigquery_clean_dataset }}`.applicative_database_deposit AS deposit ON deposit.id = booking.deposit_id
-    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue_label AS venue_label ON venue.venue_label_id = venue_label.id
+    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue_label AS venue_label ON venue.venue_label_id = venue_label.venue_label_id
     INNER JOIN `{{ bigquery_analytics_dataset }}`.subcategories subcategories ON offer.offer_subcategoryId = subcategories.id
     LEFT JOIN booking_ranking_in_category_view ON booking_ranking_in_category_view.booking_id = booking.booking_id
 ;

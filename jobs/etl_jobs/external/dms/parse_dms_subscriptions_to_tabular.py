@@ -8,7 +8,8 @@ from utils import (
     destination_table_schema_pro,
 )
 
-# attention si modif destination_table_schema_jeunes, destination_table_schema_pro dans utils -> modifier aussi dans  orchestration/dags/jobs/import/import_dms_subscriptions.py
+# attention si modif destination_table_schema_jeunes, destination_table_schema_pro dans utils servent a la logique du code
+# dans orchestration/dags/jobs/import/import_dms_subscriptions.py ce sont les "vrais schemas" : INT64 au lieu de TIMESTAMP
 
 
 def parse_api_result(updated_since, dms_target, gcp_project_id, data_gcs_bucket_name):
@@ -60,13 +61,17 @@ def save_results(df_applications, dms_target, updated_since, data_gcs_bucket_nam
         name = column["name"]
         type = column["type"]
         if type == "TIMESTAMP":
-            df_applications[f"{name}"] = df_applications[f"{name}"].map(
-                lambda x: pd.Timestamp(x).asm8.view("int64")
+            df_applications[f"{name}"] = pd.to_datetime(
+                df_applications[f"{name}"], utc=True, origin="unix", errors="coerce"
             )
 
         elif type == "STRING":
             df_applications[f"{name}"] = df_applications[f"{name}"].astype(str)
-    df_applications["update_date"] = pd.Timestamp.today().asm8.view("int64")
+
+    df_applications["update_date"] = pd.to_datetime(
+        pd.Timestamp.today(), utc=True, origin="unix"
+    )
+
     df_applications.to_parquet(
         f"gs://{data_gcs_bucket_name}/dms_export/dms_{dms_target}_{updated_since}.parquet",
         engine="pyarrow",
@@ -77,39 +82,44 @@ def save_results(df_applications, dms_target, updated_since, data_gcs_bucket_nam
 
 def parse_result_jeunes(result, df_applications):
     for data in result["data"]:
-        for node in data["demarche"]["dossiers"]["edges"]:
-            dossier = node["node"]
-            if dossier is not None:
-                dossier_line = {
-                    "procedure_id": dossier["demarche_id"],
-                    "application_id": dossier["id"],
-                    "application_number": dossier["number"],
-                    "application_archived": dossier["archived"],
-                    "application_status": dossier["state"],
-                    "last_update_at": dossier["dateDerniereModification"],
-                    "application_submitted_at": dossier["datePassageEnConstruction"],
-                    "passed_in_instruction_at": dossier["datePassageEnInstruction"],
-                    "processed_at": dossier["dateTraitement"],
-                    "application_motivation": dossier["motivation"].replace("\n", " ")
-                    if dossier["motivation"]
-                    else None,
-                    "instructors": "",
-                }
-                for champ in dossier["champs"]:
-                    if not champ or "id" not in champ:
-                        continue
-                    if champ["id"] == "Q2hhbXAtNTk2NDUz":
-                        dossier_line["applicant_department"] = champ["stringValue"]
-                    elif champ["id"] == "Q2hhbXAtNTgyMjIx":
-                        dossier_line["applicant_postal_code"] = champ["stringValue"]
+        if data["demarche"]["dossiers"]["edges"] is not None:
+            for node in data["demarche"]["dossiers"]["edges"]:
+                dossier = node["node"]
+                if dossier is not None:
+                    dossier_line = {
+                        "procedure_id": dossier["demarche_id"],
+                        "application_id": dossier["id"],
+                        "application_number": dossier["number"],
+                        "application_archived": dossier["archived"],
+                        "application_status": dossier["state"],
+                        "last_update_at": dossier["dateDerniereModification"],
+                        "application_submitted_at": dossier[
+                            "datePassageEnConstruction"
+                        ],
+                        "passed_in_instruction_at": dossier["datePassageEnInstruction"],
+                        "processed_at": dossier["dateTraitement"],
+                        "application_motivation": dossier["motivation"].replace(
+                            "\n", " "
+                        )
+                        if dossier["motivation"]
+                        else None,
+                        "instructors": "",
+                    }
+                    for champ in dossier["champs"]:
+                        if not champ or "id" not in champ:
+                            continue
+                        if champ["id"] == "Q2hhbXAtNTk2NDUz":
+                            dossier_line["applicant_department"] = champ["stringValue"]
+                        elif champ["id"] == "Q2hhbXAtNTgyMjIx":
+                            dossier_line["applicant_postal_code"] = champ["stringValue"]
 
-                instructeurs = []
-                for instructeur in dossier["instructeurs"]:
-                    instructeurs.append(instructeur["email"])
-                if instructeurs != []:
-                    dossier_line["instructors"] = "; ".join(instructeurs)
+                    instructeurs = []
+                    for instructeur in dossier["instructeurs"]:
+                        instructeurs.append(instructeur["email"])
+                    if instructeurs != []:
+                        dossier_line["instructors"] = "; ".join(instructeurs)
 
-                df_applications.loc[len(df_applications)] = dossier_line
+                    df_applications.loc[len(df_applications)] = dossier_line
     return
 
 
@@ -134,7 +144,6 @@ def parse_result_pro(result, df_applications):
                     else None,
                     "instructors": "",
                 }
-
                 if "siret" in dossier["demandeur"] and dossier["demandeur"]["siret"]:
                     dossier_line["demandeur_siret"] = dossier["demandeur"]["siret"]
                     dossier_line["demandeur_naf"] = dossier["demandeur"]["naf"]
@@ -183,12 +192,10 @@ def parse_result_pro(result, df_applications):
                     instructeurs.append(instructeur["email"])
                 if instructeurs != []:
                     dossier_line["instructors"] = "; ".join(instructeurs)
-
                 if dossier["groupeInstructeur"]:
                     dossier_line["academie_groupe_instructeur"] = dossier[
                         "groupeInstructeur"
                     ]["label"]
-
                 if dossier["annotations"]:
                     for annotation in dossier["annotations"]:
                         if annotation["label"] == "Erreur traitement pass Culture":
@@ -197,7 +204,6 @@ def parse_result_pro(result, df_applications):
                             ]
                 else:
                     dossier_line["erreur_traitement_pass_culture"] = None
-
                 df_applications.loc[len(df_applications)] = dossier_line
     return
 

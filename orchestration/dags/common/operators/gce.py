@@ -19,7 +19,13 @@ from base64 import b64encode
 
 
 class StartGCEOperator(BaseOperator):
-    template_fields = ["instance_name", "instance_type", "preemptible"]
+    template_fields = [
+        "instance_name",
+        "instance_type",
+        "preemptible",
+        "accelerator_types",
+        "labels",
+    ]
 
     @apply_defaults
     def __init__(
@@ -29,6 +35,7 @@ class StartGCEOperator(BaseOperator):
         preemptible: bool = True,
         accelerator_types=[],
         source_image_type=None,
+        labels={},
         *args,
         **kwargs,
     ):
@@ -43,6 +50,7 @@ class StartGCEOperator(BaseOperator):
             )
 
         self.source_image_type = source_image_type
+        self.labels = labels
 
     def execute(self, context) -> None:
         hook = GCEHook(source_image_type=self.source_image_type)
@@ -51,6 +59,7 @@ class StartGCEOperator(BaseOperator):
             self.instance_type,
             preemptible=self.preemptible,
             accelerator_types=self.accelerator_types,
+            labels=self.labels,
         )
 
 
@@ -61,15 +70,19 @@ class CleanGCEOperator(BaseOperator):
     def __init__(
         self,
         timeout_in_minutes: int,
+        job_type: str,
         *args,
         **kwargs,
     ):
         super(CleanGCEOperator, self).__init__(*args, **kwargs)
         self.timeout_in_minutes = timeout_in_minutes
+        self.job_type = job_type
 
     def execute(self, context) -> None:
         hook = GCEHook()
-        hook.delete_instances(timeout_in_minutes=self.timeout_in_minutes)
+        hook.delete_instances(
+            job_type=self.job_type, timeout_in_minutes=self.timeout_in_minutes
+        )
 
 
 class StopGCEOperator(BaseOperator):
@@ -124,6 +137,12 @@ class BaseSSHGCEOperator(BaseOperator):
                 if context and self.do_xcom_push:
                     ti = context.get("task_instance")
                     ti.xcom_push(key="ssh_exit", value=exit_status)
+                    lines_result = agg_stdout.decode("utf-8").split("\n")
+                    if len(lines_result[-1]) > 0:
+                        result = lines_result[-1]
+                    else:
+                        result = lines_result[-2]
+                    ti.xcom_push(key="result", value=result)
                 if exit_status != 0:
                     raise AirflowException(
                         f"SSH operator error: exit status = {exit_status}"

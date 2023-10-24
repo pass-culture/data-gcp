@@ -2,13 +2,13 @@ with user_qpi as (
   SELECT
     user_id,
     STRING_AGG(
-      DISTINCT subcategory_id
+      DISTINCT subcategories
       order by
-        subcategory_id
+        subcategories
     ) as qpi_subcategory_ids
   FROM
-    `{{ bigquery_analytics_dataset }}`.enriched_aggregated_qpi_answers
-  where subcategory_id <> 'none'
+    `{{ bigquery_analytics_dataset }}`.enriched_qpi_answers
+  where subcategories <> 'none'
   group by
     user_id
 )

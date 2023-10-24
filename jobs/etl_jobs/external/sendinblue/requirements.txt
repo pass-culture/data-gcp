@@ -3,3 +3,4 @@ pandas_gbq
 google-cloud-secret-manager==2.2.0
 google-auth-oauthlib==0.4.6
 sib_api_v3_sdk==7.5.0
+typer

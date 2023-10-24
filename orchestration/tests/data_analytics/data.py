@@ -33,7 +33,6 @@ ENRICHED_OFFER_DATA_INPUT = {
             "offer_subcategoryId": "SEANCE_CINE",
             "offer_name": "Test",
             "offer_is_active": True,
-            "offer_media_urls": '["https://url.test", "https://someurl.test"]',
             "offer_url": None,
             "offer_is_national": False,
             "offer_creation_date": "2019-11-20",
@@ -49,7 +48,6 @@ ENRICHED_OFFER_DATA_INPUT = {
             "offer_subcategoryId": "LIVRE_PAPIER",
             "offer_name": "RIP Dylan Rieder",
             "offer_is_active": True,
-            "offer_media_urls": '["https://url.test", "https://someurl.test"]',
             "offer_url": None,
             "offer_is_national": False,
             "offer_creation_date": "2019-11-20",
@@ -116,25 +114,21 @@ ENRICHED_OFFER_DATA_INPUT = {
     "applicative_database_offerer": [
         {
             "offerer_id": "3",
-            "offerer_thumb_count": "0",
             "offerer_is_active": True,
             "offerer_postal_code": "93100",
             "offerer_city": "Montreuil",
             "offerer_creation_date": "2019-11-20",
             "offerer_name": "Test Offerer",
             "offerer_siren": "123456789",
-            "offerer_fields_updated": "{}",
         },
         {
             "offerer_id": "4",
             "offerer_siren": "234567890",
-            "offerer_thumb_count": "0",
             "offerer_is_active": True,
             "offerer_postal_code": "93100",
             "offerer_city": "Montreuil",
             "offerer_creation_date": "2019-11-20",
             "offerer_name": "Test Offerer",
-            "offerer_fields_updated": "{}",
         },
     ],
     "applicative_database_payment": [
@@ -158,7 +152,6 @@ ENRICHED_OFFER_DATA_INPUT = {
             "type": "EventType.CINEMA",
             "thumbCount": "0",
             "name": "Livre",
-            "mediaUrls": '["https://url.test", "https://someurl.test"]',
             "fieldsUpdated": "{}",
             "url": None,
             "isNational": False,
@@ -168,7 +161,6 @@ ENRICHED_OFFER_DATA_INPUT = {
             "type": "ThingType.LIVRE_EDITION",
             "thumbCount": "0",
             "name": "Livre",
-            "mediaUrls": '["https://url.test", "https://someurl.test"]',
             "fieldsUpdated": "{}",
             "url": None,
             "isNational": False,
@@ -664,7 +656,6 @@ ENRICHED_STOCK_DATA_INPUT = {
             "offer_subcategoryId": "SEANCE_CINE",
             "offer_name": "Test",
             "offer_is_active": True,
-            "offer_media_urls": '["https://url.test", "https://someurl.test"]',
             "offer_url": None,
             "offer_is_national": False,
             "offer_creation_date": "2019-11-20",
@@ -678,7 +669,6 @@ ENRICHED_STOCK_DATA_INPUT = {
             "offer_subcategoryId": "LIVRE_PAPIER",
             "offer_name": "Test bis",
             "offer_is_active": True,
-            "offer_media_urls": '["https://url.test", "https://someurl.test"]',
             "offer_url": None,
             "offer_is_national": False,
             "offer_creation_date": "2019-11-20",
@@ -689,14 +679,12 @@ ENRICHED_STOCK_DATA_INPUT = {
     "applicative_database_offerer": [
         {
             "offerer_id": "3",
-            "offerer_thumb_count": "0",
             "offerer_is_active": True,
             "offerer_postal_code": "93100",
             "offerer_city": "Montreuil",
             "offerer_creation_date": "2019-11-20",
             "offerer_name": "Test Offerer",
             "offerer_siren": "123456789",
-            "offerer_fields_updated": "{}",
         }
     ],
     "applicative_database_payment": [
@@ -720,7 +708,6 @@ ENRICHED_STOCK_DATA_INPUT = {
             "type": "EventType.CINEMA",
             "thumbCount": "0",
             "name": "Livre",
-            "mediaUrls": '["https://url.test", "https://someurl.test"]',
             "fieldsUpdated": "{}",
             "url": None,
             "isNational": False,
@@ -730,7 +717,6 @@ ENRICHED_STOCK_DATA_INPUT = {
             "type": "ThingType.LIVRE_EDITION",
             "thumbCount": "0",
             "name": "Livre",
-            "mediaUrls": '["https://url.test", "https://someurl.test"]',
             "fieldsUpdated": "{}",
             "url": None,
             "isNational": False,
@@ -1115,10 +1101,22 @@ ENRICHED_VENUE_DATA_INPUT = {
             "venue_label_id": "1",
             "venue_type_id": "1",
             "banner_url": "url",
+            "venue_description": "description",
+            "venue_withdrawal_details": "withdrawaldetails",
+        }
+    ],
+    "applicative_database_venue_contact": [
+        {
+            "venue_id": "1",
+            "venue_contact_phone_number": "0618018859",
+            "venue_contact_email": "email@gmail.com",
+            "venue_contact_website": "website.com",
         }
     ],
     "applicative_database_venue_registration": [],
-    "applicative_database_venue_label": [{"id": "1", "label": "an other label"}],
+    "applicative_database_venue_label": [
+        {"venue_label_id": "1", "venue_label": "an other label"}
+    ],
     "region_department": [{"num_dep": "92", "region_name": "IDF"}],
 }
 
@@ -1183,6 +1181,11 @@ ENRICHED_VENUE_DATA_EXPECTED = [
         "venue_pc_pro_link": "https://passculture.pro/structures/AE/lieux/AE",
         "venue_targeted_audience": None,
         "banner_url": "url",
+        "venue_description": "description",
+        "venue_withdrawal_details": "withdrawaldetails",
+        "venue_contact_phone_number": "0618018859",
+        "venue_contact_email": "email@gmail.com",
+        "venue_contact_website": "website.com",
     }
 ]
 
@@ -1253,7 +1256,12 @@ ENRICHED_OFFERER_DATA_INPUT = {
         }
     ],
     "applicative_database_venue": [
-        {"venue_id": "1", "venue_managing_offerer_id": "1", "venue_is_permanent": False}
+        {
+            "venue_id": "1",
+            "venue_managing_offerer_id": "1",
+            "venue_is_permanent": False,
+            "venue_is_virtual": True,
+        }
     ],
     "applicative_database_venue_label": [],
     "region_department": [{"num_dep": "973", "region_name": "Guyane"}],
@@ -1332,11 +1340,13 @@ ENRICHED_OFFERER_DATA_EXPECTED = [
         "legal_unit_business_activity_label": "Administration generale",
         "legal_unit_legal_category_code": "2232",
         "legal_unit_legal_category_label": "Collectivite",
-        "venue_cnt": 1,
+        "total_venues_managed": 1,
+        "physical_venues_managed": 0,
+        "permanent_venues_managed": 0,
         "venue_with_offer": 1,
         "offerer_humanized_id": "AE",
         "current_year_revenue": 7,
-        "is_territorial_authorities": True,
+        "is_local_authority": True,
     }
 ]
 
@@ -1399,6 +1409,7 @@ ENRICHED_BOOKING_DATA_INPUT = {
             "venue_managing_offerer_id": "2",
             "venue_type_id": "1",
             "venue_type_code": "Librairie",
+            "venue_is_permanent": True,
         }
     ],
     "applicative_database_offerer": [{"offerer_id": "2", "offerer_name": "Offerer"}],
@@ -1410,7 +1421,9 @@ ENRICHED_BOOKING_DATA_INPUT = {
             "user_activity": "Lycéen",
         }
     ],
-    "applicative_database_venue_label": [{"id": "15", "label": "label"}],
+    "applicative_database_venue_label": [
+        {"venue_label_id": "15", "venue_label": "label"}
+    ],
     "subcategories": [
         {
             "id": "ACHAT_INSTRUMENT",
@@ -1464,6 +1477,7 @@ ENRICHED_BOOKING_DATA_EXPECTED = [
         "venue_name": "My Wonderful Venue",
         "venue_type_name": "Librairie",
         "booking_used_date": datetime.now().replace(microsecond=0),
+        "partner_id": "venue-8",
     }
 ]
 
@@ -1684,8 +1698,8 @@ OFFER_MODERATION_INPUT = {
     ],
     "applicative_database_venue_label": [
         {
-            "id": "15",
-            "label": "Scène nationale",
+            "venue_label_id": "15",
+            "venue_label": "Scène nationale",
         }
     ],
     "applicative_database_venue_contact": [

@@ -5,7 +5,7 @@ SELECT
     ,venue_managing_offerer_id AS offerer_id
     ,enriched_venue_data.partner_id
     ,venue_creation_date AS partner_creation_date
-    ,CASE WHEN DATE_TRUNC(venue_creation_date,YEAR) <= DATE_TRUNC(DATE_SUB(DATE('{{ ds }}'),INTERVAL 1 YEAR),YEAR) THEN TRUE ELSE NULL END AS was_registered_last_year
+    ,CASE WHEN DATE_TRUNC(venue_creation_date,YEAR) <= DATE_TRUNC(DATE_SUB(DATE('{{ ds }}'),INTERVAL 1 YEAR),YEAR) THEN TRUE ELSE FALSE END AS was_registered_last_year
     ,enriched_venue_data.venue_name AS partner_name
     ,region_department.academy_name AS partner_academy_name
     ,enriched_venue_data.venue_region_name AS partner_region_name
@@ -38,7 +38,7 @@ FROM `{{ bigquery_analytics_dataset }}`.enriched_venue_data AS enriched_venue_da
 LEFT JOIN `{{ bigquery_analytics_dataset }}`.region_department AS region_department
     ON enriched_venue_data.venue_department_code = region_department.num_dep
 LEFT JOIN `{{ bigquery_analytics_dataset }}`.agg_partner_cultural_sector ON agg_partner_cultural_sector.partner_type = enriched_venue_data.venue_type_label
-LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_venue_tags_data ON enriched_venue_data.venue_id = enriched_venue_tags_data.venue_id AND enriched_venue_tags_data.criterion_category_label = "Comptage partenaire label et appellation du MC"
+LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_venue_tags_data ON enriched_venue_data.venue_id = enriched_venue_tags_data.venue_id AND enriched_venue_tags_data.criterion_category_label = "Comptage partenaire sectoriel"
 WHERE venue_is_permanent IS TRUE
 ),
 
@@ -49,7 +49,7 @@ SELECT
     ,STRING_AGG(DISTINCT (CASE WHEN tag_label IS NOT NULL THEN tag_label ELSE NULL END) ORDER BY (CASE WHEN tag_label IS NOT NULL THEN tag_label ELSE NULL END)) AS partner_type
 FROM `{{ bigquery_analytics_dataset }}`.enriched_offerer_tags_data
 WHERE tag_category_name = 'comptage'
-AND tag_label NOT IN ('Association', 'EPN','Collectivité','Pas de tag associé','Auto-Entrepreneur')
+AND tag_label NOT IN ('Association', 'EPN','Collectivité','Pas de tag associé','Auto-Entrepreneur','Compagnie','Tourneur')
 GROUP BY 1
 ),
 
@@ -134,7 +134,7 @@ LEFT JOIN tagged_partners ON tagged_partners.offerer_id = enriched_offerer_data.
 LEFT JOIN permanent_venues ON permanent_venues.offerer_id = enriched_offerer_data.offerer_id
 LEFT JOIN top_venue_per_offerer ON top_venue_per_offerer.offerer_id = enriched_offerer_data.offerer_id
 LEFT JOIN `{{ bigquery_analytics_dataset }}`.agg_partner_cultural_sector ON agg_partner_cultural_sector.partner_type = COALESCE(tagged_partners.partner_type, top_venue_per_offerer.partner_type)
-WHERE NOT enriched_offerer_data.is_territorial_authorities  -- Collectivités à part
+WHERE NOT enriched_offerer_data.is_local_authority  -- Collectivités à part
 AND permanent_venues.offerer_id IS NULL -- Pas déjà compté à l'échelle du lieu permanent
 )
 

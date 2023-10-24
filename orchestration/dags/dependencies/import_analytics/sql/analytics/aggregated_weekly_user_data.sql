@@ -21,8 +21,8 @@ WITH
   INNER JOIN
     weeks
   ON
-    weeks.week BETWEEN DATE(enriched_deposit_data.deposit_creation_date)
-    AND DATE(enriched_deposit_data.deposit_expiration_date) -- Toutes les semaines de vie du crédit
+    weeks.week BETWEEN DATE_TRUNC(DATE(enriched_deposit_data.deposit_creation_date),WEEK(MONDAY))
+    AND DATE_TRUNC(DATE(enriched_deposit_data.deposit_expiration_date),WEEK(MONDAY)) -- Toutes les semaines de vie du crédit
     AND deposit_creation_date > '2021-05-20' -- Les utilisateurs post sortie de l'app mobile
   INNER JOIN
     `{{ bigquery_analytics_dataset }}.firebase_aggregated_users` fau
@@ -174,16 +174,55 @@ WITH
   FROM
     visits_and_conversion
   WHERE
-    nb_visits > 0 )
+    nb_visits > 0 ),
 
-SELECT
-  *,
-  LAG(nb_visits) OVER(PARTITION BY user_id ORDER BY active_week) AS visits_previous_week,
-  LAG(nb_consult_offer) OVER(PARTITION BY user_id ORDER BY active_week) AS consult_previous_week
-FROM
-  visits_and_conversion
-LEFT JOIN
-  visits_ranked
-USING
-  (deposit_id,
+  visits_and_user_engagement_level_metrics AS (
+  SELECT
+    *,
+    LAG(nb_visits) OVER(PARTITION BY deposit_id ORDER BY active_week) AS visits_previous_week,
+    LAG(nb_consult_offer) OVER(PARTITION BY deposit_id ORDER BY active_week) AS consult_previous_week,
+    COUNT(CASE WHEN nb_visits >0 THEN 1 ELSE NULL END) OVER(PARTITION BY deposit_id ORDER BY active_week ROWS BETWEEN 3 PRECEDING AND CURRENT ROW ) AS nb_co_last_4_weeks,
+    COUNT(CASE WHEN nb_visits >0 THEN 1 ELSE NULL END) OVER(PARTITION BY deposit_id ORDER BY active_week ROWS BETWEEN 11 PRECEDING AND 8 PRECEDING ) AS nb_co_3_months_ago,
+    COUNT(CASE WHEN nb_visits >0 THEN 1 ELSE NULL END) OVER(PARTITION BY deposit_id ORDER BY active_week ROWS BETWEEN 7 PRECEDING AND 4 PRECEDING ) AS nb_co_2_months_ago,
+    COUNT(CASE WHEN nb_visits >0 THEN 1 ELSE NULL END) OVER(PARTITION BY deposit_id ORDER BY active_week ROWS BETWEEN 11 PRECEDING AND CURRENT ROW ) AS nb_co_last_3_months
+  FROM
+    visits_and_conversion
+  LEFT JOIN
+    visits_ranked
+  USING
+    (deposit_id,
     active_week)
+  ),
+
+  visits_and_user_engagement_level AS (
+  SELECT
+    *,
+    CASE
+        WHEN nb_co_last_4_weeks = 4 THEN 'Power user' -- Power user : connected every week for the last 4 weeks
+        WHEN nb_co_last_4_weeks > 0 AND nb_co_3_months_ago > 0 AND nb_co_2_months_ago > 0 THEN 'Core user' -- Core user : connected at least once every month in the last quarter
+        WHEN nb_co_last_3_months > 0 THEN 'Casual user' -- Casual user: connected at least once in the last quarter
+        WHEN nb_co_last_3_months = 0 THEN 'Dead user' -- Dead user: no connexion in the last quarter
+        END AS user_engagement_level,
+    CASE
+        WHEN weeks_since_deposit_created <= 4 THEN 'New users' -- Activated last period
+        WHEN nb_co_last_4_weeks > 0 AND nb_co_2_months_ago > 0 THEN 'Current' -- Active both current and previous period
+        WHEN nb_co_2_months_ago > 0 AND nb_co_last_4_weeks = 0 THEN 'Churned' -- Active previous period, not current period
+        WHEN nb_co_2_months_ago = 0 AND nb_co_last_4_weeks > 0 THEN 'Resurrected' -- Active current period, not previous one
+        WHEN nb_co_2_months_ago = 0 AND nb_co_last_4_weeks = 0 THEN 'Dormant' -- Inactive both current and previous period
+        END AS user_lifecycle_monthly_state,
+    CASE
+        WHEN (weeks_since_deposit_created = 0 OR visits_previous_week IS NULL) THEN 'New users'
+        WHEN visits_previous_week > 0 AND nb_visits > 0 THEN 'Current'
+        WHEN visits_previous_week > 0 AND nb_visits = 0 THEN 'Churned'
+        WHEN visits_previous_week = 0 AND nb_visits > 0 THEN 'Resurrected'
+        WHEN visits_previous_week = 0 AND nb_visits = 0 THEN 'Dormant'
+        END AS user_lifecycle_weekly_state,
+  FROM
+    visits_and_user_engagement_level_metrics
+  )
+
+  SELECT
+    *,
+    LAG(user_engagement_level)OVER(PARTITION BY deposit_id ORDER BY active_week) AS user_last_week_engagement_level
+  FROM
+    visits_and_user_engagement_level

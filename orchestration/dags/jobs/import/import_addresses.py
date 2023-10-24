@@ -50,7 +50,7 @@ default_args = {
 
 
 def branch_function(ti, **kwargs):
-    xcom_value = ti.xcom_pull(task_ids=["addresses_to_gcs"])
+    xcom_value = ti.xcom_pull(task_ids="addresses_to_gcs", key="result")
     if "No new users !" not in xcom_value:
         return "import_addresses_to_bigquery"
     else:
@@ -103,6 +103,7 @@ with DAG(
         base_dir=BASE_PATH,
         environment=dag_config,
         command="python main.py ",
+        do_xcom_push=True,
     )
 
     gce_instance_stop = StopGCEOperator(
@@ -120,7 +121,7 @@ with DAG(
         task_id="import_addresses_to_bigquery",
         bucket=DATA_GCS_BUCKET_NAME,
         source_objects=[
-            "{{task_instance.xcom_pull(task_ids='addresses_to_gcs', key='return_value')}}"
+            "{{task_instance.xcom_pull(task_ids='addresses_to_gcs', key='result')}}"
         ],
         destination_project_dataset_table=f"{BIGQUERY_RAW_DATASET}.{USER_LOCATIONS_TABLE}",
         write_disposition="WRITE_APPEND",

@@ -119,8 +119,8 @@ def adding_value():
                 labelId,
                 typeId, 
                 communeId,
-                 libelle,
-                 adresse,
+                libelle,
+                adresse,
                 siteWeb,
                 latitude, 
                 longitude,
@@ -172,24 +172,44 @@ def get_adage_stats():
 
     export = []
     for _id in ids:
-
         results = get_request(ENDPOINT, API_KEY, route=f"stats-pass-culture/{_id}")
         for metric_name, rows in results.items():
             for metric_id, v in rows.items():
-                export.append(
-                    dict(
-                        {
-                            "metric_name": metric_name,
-                            "metric_id": metric_id,
-                            "educational_year_adage_id": _id,
-                            "metric_key": v[stats_dict[metric_name]],
-                            "involved_students": v["eleves"],
-                            "institutions": v["etabs"],
-                            "total_involved_students": v["totalEleves"],
-                            "total_institutions": v["totalEtabs"],
-                        }
+                if v["niveaux"] != []:
+                    for level in v["niveaux"].keys():
+                        export.append(
+                            dict(
+                                {
+                                    "metric_name": metric_name,
+                                    "metric_id": metric_id,
+                                    "educational_year_adage_id": _id,
+                                    "metric_key": v[stats_dict[metric_name]],
+                                    "level": level,
+                                    "involved_students": v["niveaux"][level]["eleves"],
+                                    "institutions": v["etabs"],
+                                    "total_involved_students": v["niveaux"][level][
+                                        "totalEleves"
+                                    ],
+                                    "total_institutions": v["totalEtabs"],
+                                }
+                            )
+                        )
+                else:
+                    export.append(
+                        dict(
+                            {
+                                "metric_name": metric_name,
+                                "metric_id": metric_id,
+                                "educational_year_adage_id": _id,
+                                "metric_key": v[stats_dict[metric_name]],
+                                "level": None,
+                                "involved_students": v["eleves"],
+                                "institutions": v["etabs"],
+                                "total_involved_students": v["totalEleves"],
+                                "total_institutions": v["totalEtabs"],
+                            }
+                        )
                     )
-                )
 
     df = pd.DataFrame(export)
     # force types

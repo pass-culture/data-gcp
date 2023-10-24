@@ -100,8 +100,15 @@ with DAG(
             "depends": params.get("depends", []),
             "dag_depends": params.get("dag_depends", []),
         }
+    end = DummyOperator(task_id="end", dag=dag)
 
-    analytics_table_tasks = depends_loop(analytics_table_jobs, end_raw, dag=dag)
+    analytics_table_tasks = depends_loop(
+        analytics_tables,
+        analytics_table_jobs,
+        end_raw,
+        dag=dag,
+        default_end_operator=end,
+    )
 
     if ENV_SHORT_NAME == "prod":
 

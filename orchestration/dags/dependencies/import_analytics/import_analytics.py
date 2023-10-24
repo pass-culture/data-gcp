@@ -114,7 +114,6 @@ analytics_tables = {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_suivi_dms_adage.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "dag_depends": [
-            "import_typeform_adage_reference_request",
             "import_adage_v1",
             "import_dms_subscriptions",
         ],

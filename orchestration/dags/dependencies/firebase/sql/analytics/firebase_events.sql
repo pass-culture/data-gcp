@@ -468,6 +468,7 @@ WITH temp_firebase_events AS (
             where
                 event_params.key = 'enabled'
         ) as enabled,
+        COALESCE(
         (
             select
                 event_params.value.string_value
@@ -475,7 +476,16 @@ WITH temp_firebase_events AS (
                 unnest(event_params) event_params
             where
                 event_params.key = 'age'
-        ) as onboarding_user_selected_age,
+        ),
+                 (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'userStatus'
+        )
+         ) as onboarding_user_selected_age,
         (
             select
                 event_params.value.string_value

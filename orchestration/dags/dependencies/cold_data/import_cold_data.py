@@ -13,6 +13,11 @@ clean_tables = {
         "destination_dataset": "{{ bigquery_clean_dataset }}",
         "destination_table": "eac_webinar",
     },
+    "emboitements_iris": {
+        "sql": f"{SQL_PATH}/clean/emboitements_iris.sql",
+        "destination_dataset": "{{ bigquery_clean_dataset }}",
+        "destination_table": "emboitements_iris",
+    },
 }
 
 analytics_tables = {

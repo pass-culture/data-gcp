@@ -25,14 +25,11 @@ WITH temp1 AS
               WHEN
                    INDICATOR = "taux_participation_eac_ecoles" THEN "IND-046"
           END AS identifiant_indic,
-          sum(numerator) as numerator,
-          sum(denominator) as denominator
+          numerator,
+          denominator
    FROM `{{ bigquery_analytics_dataset }}`.propilote_kpis
    LEFT JOIN `{{ bigquery_analytics_dataset }}`.region_department ON propilote_kpis.dimension_value = region_department.num_dep
-   WHERE dimension_name != 'ACAD' AND is_current_year
-   GROUP BY 1,2,3,4,5,6
-   
-   ),
+   WHERE dimension_name != 'ACAD' ),
      temp2 AS
   (SELECT identifiant_indic,
           CASE

@@ -1,55 +1,43 @@
-WITH dates AS (
-    select 
-        month as month
-    from unnest(generate_date_array('2023-08-01', current_date(), interval 1 month)) month
-),
-
-institutions AS (
-    SELECT 
-        dates.month
-        , "{{ params.group_type }}" as dimension_name
-        , {% if params.group_type == 'NAT' %}
-            'NAT'
-        {% else %}
-            {{ params.group_type_name }}
-        {% endif %} as dimension_value
-        , COUNT(DISTINCT institution_id) AS total_institutions
-    FROM dates
-    LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_institution_data` institution
-        ON dates.month >= DATE_TRUNC(institution.first_deposit_creation_date, MONTH)
-    GROUP BY 1, 2, 3
-), 
-
-active_institutions AS (
-    SELECT 
-        dates.month
-        , "{{ params.group_type }}" as dimension_name
-        , {% if params.group_type == 'NAT' %}
-            'NAT'
-        {% else %}
-            {{ params.group_type_name }}
-        {% endif %} as dimension_value
-        , COUNT(DISTINCT educational_institution_id) AS total_active_institutions
-    FROM dates
-    JOIN `{{ bigquery_analytics_dataset }}.enriched_collective_booking_data` as collective_booking
-        ON dates.month >= DATE_TRUNC(collective_booking.collective_booking_creation_date, MONTH)
-        AND collective_booking_status IN ('USED','REIMBURSED','CONFIRMED')
-        AND scholar_year = "2023-2024" 
-    JOIN `{{ bigquery_analytics_dataset }}.enriched_institution_data` as institution
-        ON collective_booking.educational_institution_id = institution.institution_id
-    GROUP BY 1, 2, 3
-    )
-
+WITH last_year_beginning_date as (
 SELECT 
-    institutions.month 
-    , institutions.dimension_name
-    , institutions.dimension_value
-    , null as user_type 
-    , "taux_participation_eac_ecoles" as indicator
-    , total_active_institutions as numerator
-    , total_institutions as denominator
+    educational_year_beginning_date as last_year_start_date
+FROM `{{ bigquery_analytics_dataset }}.applicative_database_educational_year` 
+WHERE educational_year_beginning_date <= DATE_SUB(current_date(), interval 1 year) AND educational_year_expiration_date > DATE_SUB(current_date(), interval 1 year)
+)
 
-FROM institutions
-LEFT JOIN active_institutions 
-    ON institutions.month = active_institutions.month 
-    AND institutions.dimension_value = active_institutions.dimension_value
+, last_day AS (
+SELECT 
+    DATE_TRUNC(date,MONTH) AS date,
+    MAX(date) AS last_date,
+    MAX(adage_id) AS last_adage_id
+FROM `{{ bigquery_analytics_dataset }}.adage_involved_student`
+WHERE 
+    date <= current_date 
+AND 
+    date > (select last_year_start_date from last_year_beginning_date)GROUP BY 1
+)
+
+SELECT
+    DATE_TRUNC(involved.date, MONTH) AS month
+    , "{{ params.group_type }}" as dimension_name
+    , {% if params.group_type == 'NAT' %}
+        'NAT'
+    {% else %}
+        {{ params.group_type_name }}
+    {% endif %} as dimension_value
+    , null as user_type -- nous n'avons pas le détail par age dans la table adage_involved_institution
+    , "taux_participation_eac_jeunes" as indicator
+    , SUM(institutions) AS numerator -- active_institutions
+    , SUM(total_institutions) AS denominator -- total_institutions
+FROM `{{ bigquery_analytics_dataset }}.adage_involved_institution` as involved
+-- take only last day for each month.
+JOIN last_day ON last_day.last_date = involved.date AND DATE_TRUNC(involved.date,MONTH) = last_day.date AND last_day.last_adage_id = involved.adage_id
+LEFT JOIN `{{ bigquery_analytics_dataset }}.region_department` as rd
+    ON involved.department_code = rd.num_dep
+WHERE
+{% if params.group_type == 'NAT' %}
+    department_code = '-1'
+{% else %}
+    NOT department_code = '-1'
+{% endif %}
+GROUP BY 1, 2, 3, 4, 5

@@ -176,6 +176,16 @@ WITH
   WHERE
     nb_visits > 0 ),
 
+only_visitors_since_first_week AS ( -- Only keep users with tracking data the week of their credit creation
+   SELECT
+    deposit_id
+ FROM
+    visits_and_conversion
+  WHERE
+    nb_visits > 0
+  AND
+    weeks_since_deposit_created = 0),
+
   visits_and_user_engagement_level_metrics AS (
   SELECT
     *,
@@ -187,6 +197,8 @@ WITH
     COUNT(CASE WHEN nb_visits >0 THEN 1 ELSE NULL END) OVER(PARTITION BY deposit_id ORDER BY active_week ROWS BETWEEN 11 PRECEDING AND CURRENT ROW ) AS nb_co_last_3_months
   FROM
     visits_and_conversion
+  INNER JOIN
+    only_visitors_since_first_week USING(deposit_id)
   LEFT JOIN
     visits_ranked
   USING

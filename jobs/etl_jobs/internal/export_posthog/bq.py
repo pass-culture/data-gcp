@@ -3,6 +3,11 @@ import typing as t
 from datetime import datetime
 import uuid
 from utils import PostHogEvent, ENV_SHORT_NAME
+import pyarrow.dataset as ds
+import polars as pl
+
+
+BATCH_SIZE = 100_000
 
 
 def export_type(values):
@@ -33,11 +38,23 @@ def row_to_dict(row, df):
     return _dict
 
 
-def bq_to_events(df) -> t.List[PostHogEvent]:
+def download_df(bucket_path):
+    # download
+    dataset = ds.dataset(bucket_path, format="parquet")
+    ldf = pl.scan_pyarrow_dataset(dataset)
+    return ldf.collect().to_pandas()
+
+
+def bq_to_events(source_gs_path) -> t.List[PostHogEvent]:
+    print("Download...")
+    df = download_df(bucket_path=source_gs_path)
+    print("Reformat... f{df.shape[0]}")
     rows = []
-    for row in df.itertuples():
+    for event_idx, row in enumerate(df.itertuples()):
         _dict = row_to_dict(row, df)
         rows.append(format_event(_dict))
+        if event_idx % BATCH_SIZE == 0:
+            print(f"Processed {event_idx} events.")
     return rows
 
 

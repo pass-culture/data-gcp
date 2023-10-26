@@ -6,6 +6,7 @@ SELECT
     , event_date
     , event_name
     , firebase_screen
+    , origin
     , platform
     , onboarding_user_selected_age
 FROM `{{ bigquery_analytics_dataset }}`.firebase_events f
@@ -59,7 +60,7 @@ SELECT
    ,onboarding_user_selected_age
    ,ROW_NUMBER()OVER (PARTITION BY user_pseudo_id ORDER BY event_timestamp DESC) AS rank_time_selected_age
 FROM logs
-WHERE event_name IN("SelectAge","SignUpTooYoung")
+WHERE ((event_name = 'SelectAge' AND (origin = 'onboarding' OR origin IS NULL)) OR event_name = 'SignUpTooYoung')
 ),
 
     signup_started AS (

@@ -52,7 +52,7 @@ dag_config = {
 
 gce_params = {
     "instance_name": f"export-posthog-data-{ENV_SHORT_NAME}",
-    "instance_type": "n1-standard-8",
+    "instance_type": "n1-standard-16",
 }
 
 
@@ -126,6 +126,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         instance_type="{{ params.instance_type }}",
         retries=2,
+        labels={"job_type": "long_task"},
     )
 
     fetch_code = CloneRepositoryGCEOperator(

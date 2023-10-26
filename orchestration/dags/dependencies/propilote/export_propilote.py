@@ -286,7 +286,7 @@ tmp_tables_detailed = {
         "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_taux_participation_eac_ecoles_region",
         "params": {
             "group_type": "REG",
-            "group_type_name": "institution_region_name",
+            "group_type_name": "region_name",
         },
     },
     "propilote_taux_participation_eac_ecoles_departement": {
@@ -295,7 +295,7 @@ tmp_tables_detailed = {
         "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_taux_participation_eac_ecoles_departement",
         "params": {
             "group_type": "DEPT",
-            "group_type_name": "institution_departement_code",
+            "group_type_name": "department_code",
         },
     },
     "propilote_taux_participation_eac_ecoles_academie": {
@@ -304,7 +304,7 @@ tmp_tables_detailed = {
         "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_taux_participation_eac_ecoles_academie",
         "params": {
             "group_type": "ACAD",
-            "group_type_name": "institution_academie",
+            "group_type_name": "academy_name",
         },
     },
     "propilote_taux_participation_eac_ecoles_all": {

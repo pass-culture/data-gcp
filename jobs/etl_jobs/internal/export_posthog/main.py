@@ -1,7 +1,5 @@
 from utils import access_secret_data, PROJECT_NAME, ENV_SHORT_NAME
 import typer
-import pyarrow.dataset as ds
-import polars as pl
 from bq import bq_to_events
 from event import EventExporter
 import time
@@ -17,21 +15,15 @@ BATCH_SIZE = 10_000
 TIME = 5
 
 
-def download_df(bucket_path):
-    # download
-    dataset = ds.dataset(bucket_path, format="parquet")
-    ldf = pl.scan_pyarrow_dataset(dataset)
-    return ldf.collect().to_pandas()
-
-
 def run(
     source_gs_path: str = typer.Option(
         ...,
         help="source_gs_path",
     ),
 ):
-    df = download_df(bucket_path=source_gs_path)
-    events = bq_to_events(df)
+
+    print(f"Download all rows......")
+    events = bq_to_events(source_gs_path)
     ph = EventExporter(
         posthog_api_key=posthog_api_key,
         posthog_host=posthog_host,

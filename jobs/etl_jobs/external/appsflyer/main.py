@@ -39,19 +39,30 @@ class ImportAppsFlyer:
     def get_daily_report(self):
         dfs = []
         for app, api in self.apis.items():
-            df = api.daily_report(self._from, self._to, True)
+            # Facebook
+            df = api.daily_report(self._from, self._to, True, category="facebook")
+            df["app"] = app
+            dfs.append(df)
+            # Else
+            df = api.daily_report(self._from, self._to, True, category="standard")
+            df = df[df["Media Source (pid)"] != "Facebook Ads"]
             df["app"] = app
             dfs.append(df)
         df = pd.concat(dfs, ignore_index=True)
         df = df.rename(columns=DAILY_REPORT)
+        df_columns = list(df.columns)
         for k, v in DAILY_REPORT_MAPPING.items():
+            if k not in df_columns:
+                df[k] = None
             df[k] = df[k].astype(v)
         return df[list(DAILY_REPORT.values()) + ["app"]]
 
     def get_in_app_events_report(self):
         dfs = []
         for app, api in self.apis.items():
-            df = api.in_app_events_report(self._from, self._to, True)
+            df = api.in_app_events_report(
+                self._from, self._to, True, maximum_rows=1000000
+            )
             df["app"] = app
             dfs.append(df)
         df = pd.concat(dfs, ignore_index=True)

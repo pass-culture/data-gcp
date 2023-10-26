@@ -1,7 +1,8 @@
 import typing as t
 from docarray import DocumentArray, Document
 import lancedb
-from app.filter import Filter
+from filter import Filter
+import joblib
 
 
 class DefaultClient:
@@ -95,7 +96,9 @@ class DefaultClient:
                     }
                 )
             else:
+                # drop embs to reduce latency
                 row.pop("vector", None)
+                row.pop("raw_embeddings", None)
                 predictions.append(
                     dict(
                         {
@@ -121,16 +124,22 @@ class RecoClient(DefaultClient):
     def load(self) -> None:
         self.item_docs = DocumentArray.load("./metadata/item.docs")
         self.user_docs = DocumentArray.load("./metadata/user.docs")
+        uri = "./metadata/vector"
+        db = lancedb.connect(uri)
+        self.table = db.open_table("items")
 
 
 class TextClient(DefaultClient):
-    def __init__(self, transformer: str) -> None:
+    def __init__(self, transformer: str, reducer_path: str) -> None:
         from sentence_transformers import SentenceTransformer
 
         self.encoder = SentenceTransformer(transformer)
+        self.reducer = joblib.load(reducer_path)
 
     def text_vector(self, var: str):
         try:
-            return Document(embedding=list(self.encoder.encode(var)))
+            encode = self.encoder.encode(var)
+            reduce = self.reducer.transform([encode])
+            return Document(embedding=reduce)
         except:
             return None

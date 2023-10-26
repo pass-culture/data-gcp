@@ -13,37 +13,41 @@ from utils import (
 import pyarrow.dataset as ds
 import polars as pl
 import numpy as np
-import umap
+from hnne import HNNE
+import joblib
 
 MODEL_TYPE = {
-    "n_dim": 384,
+    "n_dim": 64,
     "type": "semantic",
     "default_token": None,
     "transformer": "sentence-transformers/all-MiniLM-L6-v2",
+    "reducer": "./metadata/reducer.pkl",
 }
 
 
-def download_embeddings(bucket_path, reduce=False):
+def download_embeddings(bucket_path):
     # download
+    hnne = HNNE(dim=MODEL_TYPE["n_dim"])
     dataset = ds.dataset(bucket_path, format="parquet")
     ldf = pl.scan_pyarrow_dataset(dataset)
     item_list = ldf.select("item_id").collect().to_numpy().flatten()
     item_weights = np.vstack(np.vstack(ldf.select("embedding").collect())[0]).astype(
         np.float32
     )
-    # reduce
-    if reduce:
-        trans = umap.UMAP(
-            n_neighbors=15, n_components=64, random_state=42, verbose=True, unique=True
-        ).fit(item_weights)
-        item_weights = trans.embedding_.astype(np.float32)
+    item_weights = hnne.fit_transform(item_weights, dim=MODEL_TYPE["n_dim"]).astype(
+        np.float32
+    )
+    joblib.dump(hnne, MODEL_TYPE["reducer"])
 
     return {x: y for x, y in zip(item_list, item_weights)}
 
 
 def prepare_docs(bucket_path):
+    print("Get items...")
     items_df = get_items_metadata()
+    print("Get embeddings...")
     item_embedding_dict = download_embeddings(bucket_path)
+    print("Preproc items...")
     item_docs = get_item_docs(item_embedding_dict, items_df)
     item_docs.save("./metadata/item.docs")
     create_items_table(
@@ -77,9 +81,9 @@ def main(
         f"eu.gcr.io/{GCP_PROJECT_ID}/{experiment_name.replace('.', '_')}:{run_id}"
     )
     print(f"Download...")
-    print("Deploy...")
-    prepare_docs(source_gs_path)
 
+    prepare_docs(source_gs_path)
+    print("Deploy...")
     save_model_type(model_type=MODEL_TYPE)
     deploy_container(serving_container, workers=3)
     save_experiment(experiment_name, model_name, serving_container, run_id=run_id)

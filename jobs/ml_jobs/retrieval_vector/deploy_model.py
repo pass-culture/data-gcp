@@ -1,6 +1,7 @@
 import pandas as pd
 from datetime import datetime
 import subprocess
+from google.cloud import bigquery
 import typer
 from utils import (
     BIGQUERY_CLEAN_DATASET,
@@ -29,16 +30,26 @@ MODEL_TYPE = {
 def get_model_from_mlflow(
     experiment_name: str, run_id: str = None, artifact_uri: str = None
 ):
+    client = bigquery.Client()
+
     # get artifact_uri from BQ
     if artifact_uri is None or len(artifact_uri) <= 10:
         if run_id is None or len(run_id) <= 2:
-            results_array = pd.read_gbq(
-                f"""SELECT * FROM `{BIGQUERY_CLEAN_DATASET}.{MODELS_RESULTS_TABLE_NAME}` WHERE experiment_name = '{experiment_name}' ORDER BY execution_date DESC LIMIT 1"""
-            ).to_dict("records")
+            results_array = (
+                client.query(
+                    f"""SELECT * FROM `{BIGQUERY_CLEAN_DATASET}.{MODELS_RESULTS_TABLE_NAME}` WHERE experiment_name = '{experiment_name}' ORDER BY execution_date DESC LIMIT 1"""
+                )
+                .to_dataframe()
+                .to_dict("records")
+            )
         else:
-            results_array = pd.read_gbq(
-                f"""SELECT * FROM `{BIGQUERY_CLEAN_DATASET}.{MODELS_RESULTS_TABLE_NAME}` WHERE experiment_name = '{experiment_name}' AND run_id = '{run_id}' ORDER BY execution_date DESC LIMIT 1"""
-            ).to_dict("records")
+            results_array = (
+                client.query(
+                    f"""SELECT * FROM `{BIGQUERY_CLEAN_DATASET}.{MODELS_RESULTS_TABLE_NAME}` WHERE experiment_name = '{experiment_name}' AND run_id = '{run_id}' ORDER BY execution_date DESC LIMIT 1"""
+                )
+                .to_dataframe()
+                .to_dict("records")
+            )
         if len(results_array) == 0:
             raise Exception(
                 f"Model {experiment_name} not found into BQ {MODELS_RESULTS_TABLE_NAME}. Failing."

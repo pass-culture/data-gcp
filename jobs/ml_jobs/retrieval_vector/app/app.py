@@ -18,7 +18,7 @@ def load_model() -> DefaultClient:
             )
         if desc["type"] == "semantic":
             return TextClient(
-                transformer=desc["transformer"],
+                transformer=desc["transformer"], reducer_path=desc["reducer"]
             )
         else:
             raise Exception("Model desc not found.")
@@ -116,12 +116,14 @@ def is_alive():
 
 @app.route("/predict", methods=["POST"])
 def predict():
-    call_id = input_json.get("call_id", str(uuid.uuid4()))
     input_json = request.get_json()["instances"][0]
+    call_id = input_json.get("call_id", str(uuid.uuid4()))
     model_type = input_json["model_type"]
     debug = bool(input_json.get("debug", 0))
-    prefilter = bool(input_json.get("prefilter", 1))
+    prefilter = input_json.get("prefilter", None)
     selected_params = input_json.get("params", {})
+    if prefilter is None:
+        prefilter = len(selected_params.keys()) > 0
     size = input_size(input_json.get("size", 500))
 
     try:

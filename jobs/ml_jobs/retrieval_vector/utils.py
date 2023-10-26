@@ -63,11 +63,29 @@ def save_experiment(experiment_name, model_name, serving_container, run_id):
         "artifact_uri": None,
         "serving_container": serving_container,
     }
-    pd.DataFrame.from_dict([log_results], orient="columns").to_gbq(
-        f"""{BIGQUERY_CLEAN_DATASET}.{MODELS_RESULTS_TABLE_NAME}""",
-        project_id=f"{GCP_PROJECT_ID}",
-        if_exists="append",
+
+    client = bigquery.Client()
+    table_id = f"""{BIGQUERY_CLEAN_DATASET}.{MODELS_RESULTS_TABLE_NAME}"""
+
+    job_config = bigquery.LoadJobConfig(
+        schema=[
+            bigquery.SchemaField("execution_date", "STRING"),
+            bigquery.SchemaField("experiment_name", "STRING"),
+            bigquery.SchemaField("model_name", "STRING"),
+            bigquery.SchemaField("model_type", "STRING"),
+            bigquery.SchemaField("run_id", "STRING"),
+            bigquery.SchemaField("run_start_time", "INTEGER"),
+            bigquery.SchemaField("run_end_time", "INTEGER"),
+            bigquery.SchemaField("artifact_uri", "STRING"),
+            bigquery.SchemaField("serving_container", "STRING"),
+        ]
     )
+    job_config.write_disposition = bigquery.WriteDisposition.WRITE_APPEND
+
+    df = pd.DataFrame.from_dict([log_results], orient="columns")
+
+    job = client.load_table_from_dataframe(df, table_id, job_config=job_config)
+    job.result()
 
 
 def deploy_container(serving_container, workers):

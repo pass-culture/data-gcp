@@ -15,6 +15,7 @@ SELECT
   sum(installs) as installs,
   sum(conversion_rate) as conversion_rate,
   sum(loyal_users) as loyal_users,
+  sum(total_cost) as total_cost
  FROM `{{ bigquery_raw_dataset }}.appsflyer_daily_report` 
  WHERE campaign != 'None'
  GROUP BY 1,2,3,4

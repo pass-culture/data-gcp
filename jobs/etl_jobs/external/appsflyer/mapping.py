@@ -141,7 +141,7 @@ DAILY_REPORT_MAPPING = {
     "agency": str,
     "media_source": str,
     "campaign": str,
-    "campaign_id" : str,
+    "campaign_id": str,
     "adset": str,
     "adset_id": str,
     "adgroup": str,

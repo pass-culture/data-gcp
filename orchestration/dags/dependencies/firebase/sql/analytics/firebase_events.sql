@@ -477,7 +477,7 @@ WITH temp_firebase_events AS (
             where
                 event_params.key = 'age'
         ),
-                 (
+        (
             select
                 event_params.value.string_value
             from

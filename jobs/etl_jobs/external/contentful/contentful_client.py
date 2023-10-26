@@ -240,6 +240,42 @@ contentful_modules = [
             },
         ],
     },
+    {
+        "name": "gtlPlaylist",
+        "additional_fields": ["title", "algolia_parameters", "display_parameters"],
+        "children": [
+            {
+                "name": "display_parameters",
+                "additional_fields": ["title", "layout", "min_offers"],
+                "type": "unique",
+            },
+            {
+                "name": "algolia_parameters",
+                "additional_fields": [
+                    "title",
+                    "is_geolocated",
+                    "around_radius",
+                    "tags",
+                    "hits_per_page",
+                    "categories",
+                    "subcategories",
+                    "is_thing",
+                    "beginning_datetime",
+                    "ending_datetime",
+                    "is_event",
+                    "is_duo",
+                    "is_digital",
+                    "newest_only",
+                    "price_max",
+                    "price_min",
+                    "image_full_screen",
+                    "gtl_level",
+                    "gtl_label",
+                ],
+                "type": "unique",
+            },
+        ],
+    },
 ]
 
 

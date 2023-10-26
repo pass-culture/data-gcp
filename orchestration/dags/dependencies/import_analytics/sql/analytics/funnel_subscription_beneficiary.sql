@@ -6,6 +6,7 @@ SELECT
     , event_date
     , event_name
     , firebase_screen
+    , origin
     , platform
     , onboarding_user_selected_age
 FROM `{{ bigquery_analytics_dataset }}`.firebase_events f

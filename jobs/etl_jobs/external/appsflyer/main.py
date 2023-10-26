@@ -13,6 +13,7 @@ from mapping import (
 import typer
 
 APPS = {"ios": IOS_APP_ID, "android": ANDROID_APP_ID}
+import time
 
 
 class ImportAppsFlyer:
@@ -30,6 +31,7 @@ class ImportAppsFlyer:
             df_uninstalls["app"] = app
             dfs.append(df_installs)
             dfs.append(df_uninstalls)
+            time.sleep(60)
         df = pd.concat(dfs, ignore_index=True)
         df = df.rename(columns=INSTALLS_REPORT)
         for k, v in INSTALLS_REPORT_MAPPING.items():
@@ -43,11 +45,13 @@ class ImportAppsFlyer:
             df = api.daily_report(self._from, self._to, True, category="facebook")
             df["app"] = app
             dfs.append(df)
+            time.sleep(60)
             # Else
             df = api.daily_report(self._from, self._to, True, category="standard")
             df = df[df["Media Source (pid)"] != "Facebook Ads"]
             df["app"] = app
             dfs.append(df)
+            time.sleep(60)
         df = pd.concat(dfs, ignore_index=True)
         df = df.rename(columns=DAILY_REPORT)
         df_columns = list(df.columns)
@@ -65,6 +69,7 @@ class ImportAppsFlyer:
             )
             df["app"] = app
             dfs.append(df)
+            time.sleep(60)
         df = pd.concat(dfs, ignore_index=True)
         df = df.rename(columns=APP_REPORT)
         for k, v in APP_REPORT_MAPPING.items():

@@ -9,7 +9,7 @@ SELECT
     DATE_TRUNC(date,MONTH) AS date,
     MAX(date) AS last_date,
     MAX(adage_id) AS last_adage_id
-FROM `{{ bigquery_analytics_dataset }}.adage_involved_student`
+FROM `{{ bigquery_analytics_dataset }}.adage_involved_institution`
 WHERE 
     date <= current_date 
 AND 
@@ -25,7 +25,7 @@ SELECT
         {{ params.group_type_name }}
     {% endif %} as dimension_value
     , null as user_type -- nous n'avons pas le détail par age dans la table adage_involved_institution
-    , "taux_participation_eac_jeunes" as indicator
+    , "taux_participation_eac_ecoles" as indicator
     , SUM(institutions) AS numerator -- active_institutions
     , SUM(total_institutions) AS denominator -- total_institutions
 FROM `{{ bigquery_analytics_dataset }}.adage_involved_institution` as involved

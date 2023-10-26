@@ -4,7 +4,7 @@ from googleapiclient.errors import HttpError
 import pytz, json, os, time
 import dateutil
 import datetime
-from dataclasses import dataclass
+from common.hooks.image import CPUImage
 from common.config import (
     ENV_SHORT_NAME,
     GCP_REGION,
@@ -22,27 +22,6 @@ DEFAULT_LABELS = {
     "keep_alive": "false",
     "job_type": "default",
 }
-
-
-@dataclass
-class CPUImage:
-    source_image: str = (
-        "projects/deeplearning-platform-release/global/images/tf-latest-cpu-v20221219"
-    )
-    startup_script: str = None
-    startup_script_wait_time: int = 30
-
-
-@dataclass
-class GPUImage:
-    source_image: str = (
-        "projects/deeplearning-platform-release/global/images/tf-latest-gpu-v20221219"
-    )
-    startup_script: str = """
-        #!/bin/bash
-        sudo /opt/deeplearning/install-driver.sh
-    """
-    startup_script_wait_time: int = 180
 
 
 class GCEHook(GoogleBaseHook):

@@ -10,6 +10,7 @@ from utils import (
     get_item_docs,
     save_experiment,
     save_model_type,
+    create_items_table,
 )
 import numpy as np
 
@@ -42,6 +43,12 @@ def prepare_docs():
     user_docs.save("./metadata/user.docs")
     item_docs = get_item_docs(item_embedding_dict, items_df)
     item_docs.save("./metadata/item.docs")
+    create_items_table(
+        item_embedding_dict,
+        items_df,
+        emb_size=MODEL_TYPE["n_dim"],
+        uri="./metadata/vector",
+    )
 
 
 def main(

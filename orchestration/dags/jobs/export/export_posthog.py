@@ -52,7 +52,7 @@ dag_config = {
 
 gce_params = {
     "instance_name": f"export-posthog-data-{ENV_SHORT_NAME}",
-    "instance_type": "n1-standard-8",
+    "instance_type": "n1-standard-16",
 }
 
 

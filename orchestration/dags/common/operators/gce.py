@@ -2,8 +2,8 @@ from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
 from airflow.providers.google.cloud.hooks.compute_ssh import ComputeEngineSSHHook
 from airflow.exceptions import AirflowException
-from airflow.operators.bash import BashOperator
 from airflow.configuration import conf
+from common.hooks.image import MACHINE_TYPE
 from time import sleep
 from paramiko.ssh_exception import SSHException
 from common.config import (
@@ -13,7 +13,7 @@ from common.config import (
     SSH_USER,
     ENV_SHORT_NAME,
 )
-from common.hooks.gce import GCEHook, GPUImage, CPUImage
+from common.hooks.gce import GCEHook
 import typing as t
 from base64 import b64encode
 
@@ -24,6 +24,7 @@ class StartGCEOperator(BaseOperator):
         "instance_type",
         "preemptible",
         "accelerator_types",
+        "source_image_type",
         "labels",
     ]
 
@@ -34,7 +35,7 @@ class StartGCEOperator(BaseOperator):
         instance_type: str = "n1-standard-1",
         preemptible: bool = True,
         accelerator_types=[],
-        source_image_type=None,
+        source_image_type: str = None,
         labels={},
         *args,
         **kwargs,
@@ -44,16 +45,18 @@ class StartGCEOperator(BaseOperator):
         self.instance_type = instance_type
         self.preemptible = preemptible
         self.accelerator_types = accelerator_types
-        if source_image_type is None:
-            source_image_type = (
-                GPUImage() if len(self.accelerator_types) > 0 else CPUImage()
-            )
-
         self.source_image_type = source_image_type
         self.labels = labels
 
     def execute(self, context) -> None:
-        hook = GCEHook(source_image_type=self.source_image_type)
+        if self.source_image_type is None:
+            if len(self.accelerator_types) > 0:
+                image_type = MACHINE_TYPE["gpu"]
+            else:
+                image_type = MACHINE_TYPE["cpu"]
+        else:
+            image_type = MACHINE_TYPE[self.source_image_type]
+        hook = GCEHook(source_image_type=image_type)
         hook.start_vm(
             self.instance_name,
             self.instance_type,

@@ -5,9 +5,9 @@ mlflow==2.2.1
 numpy>=1.22.0
 pandas==1.5.3
 pandas-gbq>=0.17.1
-tensorflow==2.11.1
+tensorflow==2.14.0
 tensorflow-recommenders==0.7.3
-keras==2.11.0
+keras==2.14
 recmetrics==0.1.5
 google-cloud-aiplatform==1.22.0
 typer==0.7.0

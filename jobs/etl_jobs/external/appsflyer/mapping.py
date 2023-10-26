@@ -119,13 +119,6 @@ DAILY_REPORT = {
     "Date": "date",
     "Agency/PMD (af_prt)": "agency",
     "Media Source (pid)": "media_source",
-    "Campaign (c)": "campaign",
-}
-
-DAILY_FB_REPORT = {
-    "Date": "date",
-    "Agency/PMD (af_prt)": "agency",
-    "Media Source (pid)": "media_source",
     "Campaign Name": "campaign",
     "Campaign Id": "campaign_id",
     "Adset Name": "adset",

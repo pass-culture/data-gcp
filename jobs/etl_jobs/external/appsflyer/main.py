@@ -50,6 +50,8 @@ class ImportAppsFlyer:
                 df["Adset Id"] = df["Adset Id"].map(lambda x: "{:.0f}".format(x))
             if "Adgroup Id" in _cols:
                 df["Adgroup Id"] = df["Adgroup Id"].map(lambda x: "{:.0f}".format(x))
+            if "Campaign Id" in _cols:
+                df["Campaign Id"] = df["Campaign Id"].map(lambda x: "{:.0f}".format(x))
             dfs.append(df)
             time.sleep(60)
             # Else

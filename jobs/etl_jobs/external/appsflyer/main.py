@@ -42,8 +42,9 @@ class ImportAppsFlyer:
         dfs = []
         for app, api in self.apis.items():
             # Facebook
-            _cols = list(df.columns)
+
             df = api.daily_report(self._from, self._to, True, category="facebook")
+            _cols = list(df.columns)
             df["app"] = app
             if "Adset Id" in _cols:
                 df["Adset Id"] = df["Adset Id"].map(lambda x: "{:.0f}".format(x))

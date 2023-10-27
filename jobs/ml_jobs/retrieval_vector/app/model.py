@@ -5,6 +5,7 @@ from filter import Filter
 import joblib
 import numpy as np
 
+
 class DefaultClient:
     def load(self) -> None:
         self.item_docs = DocumentArray.load("./metadata/item.docs")
@@ -132,7 +133,6 @@ class RecoClient(DefaultClient):
 class TextClient(DefaultClient):
     def __init__(self, transformer: str, reducer_path: str) -> None:
         from sentence_transformers import SentenceTransformer
-        
 
         self.encoder = SentenceTransformer(transformer)
         self.reducer = joblib.load(reducer_path)
@@ -141,4 +141,3 @@ class TextClient(DefaultClient):
         encode = self.encoder.encode(var)
         reduce = np.array(self.reducer.transform([encode])).flatten()
         return Document(embedding=reduce)
-     

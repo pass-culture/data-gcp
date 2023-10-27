@@ -26,7 +26,7 @@
             , cast(denominator as INTEGER) as denominator
         FROM
             `{{ bigquery_tmp_dataset }}.{{ yyyymmdd(ds) }}_{{ kpi_details.table_name }}_{{ granularity }}`
-        WHERE DATE_TRUNC(DATE_SUB(CURRENT_DATE, interval 1 year), MONTH) = DATE_TRUNC(cast(month as date), MONTH)
+        WHERE DATE_TRUNC(DATE_SUB(CURRENT_DATE, interval 1 year), MONTH) >= DATE_TRUNC(cast(month as date), MONTH)
     {% if not loop.last %}
         UNION ALL 
     {% endif %}

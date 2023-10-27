@@ -1,8 +1,9 @@
-WITH current_year_beginning_date as (
+WITH last_year_beginning_date as (
 SELECT 
-    educational_year_beginning_date as current_year_start_date
+    educational_year_beginning_date as last_year_start_date
 FROM `{{ bigquery_analytics_dataset }}.applicative_database_educational_year` 
-WHERE educational_year_beginning_date <= current_date() AND educational_year_expiration_date > current_date())
+WHERE educational_year_beginning_date <= DATE_SUB(current_date(), interval 1 year) AND educational_year_expiration_date > DATE_SUB(current_date(), interval 1 year)
+)
 
 , last_day AS (
 SELECT 
@@ -13,7 +14,7 @@ FROM `{{ bigquery_analytics_dataset }}.adage_involved_institution`
 WHERE 
     date <= current_date 
 AND 
-    date > (select current_year_start_date from current_year_beginning_date)GROUP BY 1
+    date > (select last_year_start_date from last_year_beginning_date)GROUP BY 1
 )
 
 SELECT

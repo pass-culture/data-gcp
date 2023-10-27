@@ -3,7 +3,7 @@ from docarray import DocumentArray, Document
 import lancedb
 from filter import Filter
 import joblib
-
+import numpy as np
 
 class DefaultClient:
     def load(self) -> None:
@@ -132,6 +132,7 @@ class RecoClient(DefaultClient):
 class TextClient(DefaultClient):
     def __init__(self, transformer: str, reducer_path: str) -> None:
         from sentence_transformers import SentenceTransformer
+        
 
         self.encoder = SentenceTransformer(transformer)
         self.reducer = joblib.load(reducer_path)
@@ -139,7 +140,7 @@ class TextClient(DefaultClient):
     def text_vector(self, var: str):
         try:
             encode = self.encoder.encode(var)
-            reduce = self.reducer.transform([encode])
+            reduce = np.array(self.reducer.transform([encode])).astype(float)
             return Document(embedding=reduce)
         except:
             return None

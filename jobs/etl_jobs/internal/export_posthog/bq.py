@@ -48,7 +48,7 @@ def download_df(bucket_path):
 def bq_to_events(source_gs_path) -> t.List[PostHogEvent]:
     print("Download...")
     df = download_df(bucket_path=source_gs_path)
-    print("Reformat... f{df.shape[0]}")
+    print(f"Reformat... {df.shape[0]}")
     rows = []
     for event_idx, row in enumerate(df.itertuples()):
         _dict = row_to_dict(row, df)
@@ -62,9 +62,8 @@ def format_event(event: dict) -> PostHogEvent:
     user_pseudo_id = event["user_pseudo_id"]
     event_time = datetime.utcfromtimestamp(event["event_timestamp"] / 1e6)
 
-    unique_event = (
-        user_pseudo_id + str(event_time) + str(event["event_params"]["ga_session_id"])
-    )
+    unique_event = user_pseudo_id + str(event_time)
+
     event_uuid = uuid.uuid5(uuid.NAMESPACE_DNS, unique_event)
     event_params = event["event_params"]
     event_type = event["event_name"]

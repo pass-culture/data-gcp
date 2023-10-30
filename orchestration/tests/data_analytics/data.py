@@ -528,6 +528,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_INPUT = {
             "collective_offer_validation": "APPROVED",
             "provider_id": "65378",
             "national_program_id": None,
+            "template_id": "1",
         }
     ],
     "applicative_database_collective_offer_template": [
@@ -593,6 +594,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_EXPECTED = [
         "provider_id": "65378",
         "national_program_id": None,
         "national_program_name": None,
+        "template_id": "1",
     },
     {
         "collective_offer_id": "4",
@@ -628,6 +630,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_EXPECTED = [
         "provider_id": "65378",
         "national_program_id": None,
         "national_program_name": None,
+        "template_id": "1",
     },
 ]
 

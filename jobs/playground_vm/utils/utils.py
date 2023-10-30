@@ -5,8 +5,7 @@ import pandas_gbq
 from google.auth.transport.requests import Request
 from google.oauth2 import id_token
 from json import loads, dumps
-from constants import BIGQUERY_ANALYTICS_DATASET,GCP_PROJECT_ID
-
+from utils.constants import BIGQUERY_ANALYTICS_DATASET,GCP_PROJECT_ID
 
 
 

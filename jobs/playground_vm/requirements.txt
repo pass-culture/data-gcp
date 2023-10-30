@@ -2,6 +2,7 @@ numpy
 google
 ipykernel
 pandas
+pandas_gbq
 nvidia-smi
 ipywidgets
 #deepspeed

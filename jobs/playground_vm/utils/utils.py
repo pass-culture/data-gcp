@@ -1,18 +1,16 @@
 from google.cloud import bigquery
+import os
 import pandas
 import pandas_gbq
 from google.auth.transport.requests import Request
 from google.oauth2 import id_token
 from json import loads, dumps
+from constants import BIGQUERY_ANALYTICS_DATASET,GCP_PROJECT_ID
 
 
-ENV_SHORT_NAME ='prod'
-
-BIGQUERY_ANALYTICS_DATASET='analytics_prod'
-GCP_PROJECT_ID='passculture-data-prod'
 
 
-def get_offers(number_offers=100,ENV_SHORT_NAME ='prod',BIGQUERY_ANALYTICS_DATASET='analytics_prod',GCP_PROJECT_ID='passculture-data-prod'):
+def get_offers(number_offers=100,analytics_dataset = BIGQUERY_ANALYTICS_DATASET,gcp_project = GCP_PROJECT_ID):
     QUERY = (
             f"""SELECT 
             eim.offer_name,
@@ -30,8 +28,8 @@ def get_offers(number_offers=100,ENV_SHORT_NAME ='prod',BIGQUERY_ANALYTICS_DATAS
             rir.is_underage_recommendable,
             eim.image_url,
             rir.booking_number_last_28_days
-            FROM `{GCP_PROJECT_ID}.{BIGQUERY_ANALYTICS_DATASET}.recommendable_items_raw` rir 
-            left join `{GCP_PROJECT_ID}.{BIGQUERY_ANALYTICS_DATASET}.enriched_item_metadata` eim using (item_id)
+            FROM `{gcp_project}.{analytics_dataset}.recommendable_items_raw` rir 
+            left join `{gcp_project}.{analytics_dataset}.enriched_item_metadata` eim using (item_id)
             where rir.subcategory_id not like "CINE_VENTE_DISTANCE"
             order by booking_number_last_28_days desc 
             

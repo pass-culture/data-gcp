@@ -52,7 +52,7 @@ dag_config = {
 
 gce_params = {
     "instance_name": f"export-posthog-data-{ENV_SHORT_NAME}",
-    "instance_type": "n1-standard-16",
+    "instance_type": "n1-standard-8",
 }
 
 
@@ -86,10 +86,12 @@ with DAG(
         ),
     },
 ) as dag:
-    start = DummyOperator(task_id="start", dag=dag)
-    export_tasks = []
-    for sql_query in ["export_firebase_pro_events", "export_firebase_native_events"]:
+    for origin in ["pro", "native"]:
+        sql_query = f"export_firebase_{origin}_events"
         table_id = f"{DATE}_{sql_query}"
+        params_instance = "{{ params.instance_name }}"
+        instance_name = f"{origin}-{params_instance}"
+        storage_path = f"{dag_config['STORAGE_PATH']}/{DATE}_{sql_query}/"
         export_task = BigQueryExecuteQueryOperator(
             task_id=f"{sql_query}",
             sql=(SQL_BASE_PATH / f"{sql_query}.sql").as_posix(),
@@ -115,69 +117,50 @@ with DAG(
             },
             dag=dag,
         )
-        export_task.set_upstream(start)
-        export_bq.set_upstream(export_task)
 
-        export_tasks.append(export_bq)
+        gce_instance_start = StartGCEOperator(
+            task_id=f"{origin}_gce_start_task",
+            preemptible=False,
+            instance_name=instance_name,
+            instance_type="{{ params.instance_type }}",
+            retries=2,
+            labels={"job_type": "long_task"},
+        )
 
-    gce_instance_start = StartGCEOperator(
-        task_id="gce_start_task",
-        preemptible=False,
-        instance_name="{{ params.instance_name }}",
-        instance_type="{{ params.instance_type }}",
-        retries=2,
-        labels={"job_type": "long_task"},
-    )
+        fetch_code = CloneRepositoryGCEOperator(
+            task_id=f"{origin}_fetch_code",
+            instance_name=instance_name,
+            python_version="3.10",
+            command="{{ params.branch }}",
+            retries=2,
+        )
 
-    fetch_code = CloneRepositoryGCEOperator(
-        task_id="fetch_code",
-        instance_name="{{ params.instance_name }}",
-        python_version="3.10",
-        command="{{ params.branch }}",
-        retries=2,
-    )
+        install_dependencies = SSHGCEOperator(
+            task_id=f"{origin}_install_dependencies",
+            instance_name=instance_name,
+            base_dir=dag_config["BASE_DIR"],
+            command="pip install -r requirements.txt --user",
+            dag=dag,
+        )
 
-    install_dependencies = SSHGCEOperator(
-        task_id="install_dependencies",
-        instance_name="{{ params.instance_name }}",
-        base_dir=dag_config["BASE_DIR"],
-        command="pip install -r requirements.txt --user",
-        dag=dag,
-    )
+        events_export = SSHGCEOperator(
+            task_id=f"{origin}_events_export",
+            instance_name=instance_name,
+            base_dir=dag_config["BASE_DIR"],
+            command="python main.py " f"--source-gs-path {storage_path}",
+            dag=dag,
+        )
 
-    pro_storage_path = (
-        f"{dag_config['STORAGE_PATH']}/{DATE}_export_firebase_pro_events/"
-    )
-    native_storage_path = (
-        f"{dag_config['STORAGE_PATH']}/{DATE}_export_firebase_native_events/"
-    )
+        gce_instance_stop = StopGCEOperator(
+            task_id=f"{origin}_gce_stop_task", instance_name=instance_name
+        )
 
-    firebase_pro_events_export = SSHGCEOperator(
-        task_id="firebase_pro_events_export",
-        instance_name="{{ params.instance_name }}",
-        base_dir=dag_config["BASE_DIR"],
-        command="python main.py " f"--source-gs-path {pro_storage_path}",
-        dag=dag,
-    )
-
-    native_events_export = SSHGCEOperator(
-        task_id="native_events_export",
-        instance_name="{{ params.instance_name }}",
-        base_dir=dag_config["BASE_DIR"],
-        command="python main.py " f"--source-gs-path {native_storage_path}",
-        dag=dag,
-    )
-
-    gce_instance_stop = StopGCEOperator(
-        task_id="gce_stop_task", instance_name="{{ params.instance_name }}"
-    )
-
-    (
-        export_tasks
-        >> gce_instance_start
-        >> fetch_code
-        >> install_dependencies
-        >> firebase_pro_events_export
-        >> native_events_export
-        >> gce_instance_stop
-    )
+        (
+            export_task
+            >> export_bq
+            >> gce_instance_start
+            >> fetch_code
+            >> install_dependencies
+            >> events_export
+            >> gce_instance_stop
+        )

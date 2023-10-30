@@ -45,4 +45,28 @@ create_tables = {
         "write_disposition": "WRITE_TRUNCATE",
         "dag_depends": ["import_analytics_v7/end_import"],  # dag_id/task_id
     },
+    "adage_home_playlist_1": {
+        "sql": f"{BACKEND_SQL_PATH}/adage_home_playlist_1.sql",
+        "destination_dataset": "{{ bigquery_backend_dataset }}",
+        "destination_table": "adage_home_playlist_1",
+        "schedule_type": "daily",
+        "write_disposition": "WRITE_TRUNCATE",
+        "dag_depends": ["import_analytics_v7/end_import"],  # dag_id/task_id
+    },
+    "adage_home_playlist_2": {
+        "sql": f"{BACKEND_SQL_PATH}/adage_home_playlist_2.sql",
+        "destination_dataset": "{{ bigquery_backend_dataset }}",
+        "destination_table": "adage_home_playlist_2",
+        "schedule_type": "daily",
+        "write_disposition": "WRITE_TRUNCATE",
+        "dag_depends": ["import_analytics_v7/end_import"],  # dag_id/task_id
+    },
+    "adage_home_playlist_4": {
+        "sql": f"{BACKEND_SQL_PATH}/adage_home_playlist_4.sql",
+        "destination_dataset": "{{ bigquery_backend_dataset }}",
+        "destination_table": "adage_home_playlist_4",
+        "schedule_type": "daily",
+        "write_disposition": "WRITE_TRUNCATE",
+        "dag_depends": ["import_analytics_v7/end_import"],  # dag_id/task_id
+    },
 }

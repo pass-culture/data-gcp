@@ -10,7 +10,7 @@ SELECT
     DATE_TRUNC(date,MONTH) AS date,
     MAX(date) AS last_date,
     MAX(adage_id) AS last_adage_id
-FROM `{{ bigquery_analytics_dataset }}.adage_involved_institution`
+FROM `{{ bigquery_analytics_dataset }}.adage_involved_student`
 WHERE 
     date <= current_date 
 AND 

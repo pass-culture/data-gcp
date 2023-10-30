@@ -46,7 +46,7 @@ def get_subcategories(gcp_project_id, env_short_name):
         _exports = {
             "id": subcats.id,
             "category_id": subcats.category.id,
-            "pro_label": subcats.category.pro_label,
+            "pro_label": subcats.pro_label,
             "app_label": subcats.app_label,
             "search_group_name": subcats.search_group_name,
             "homepage_label_name": subcats.homepage_label_name,

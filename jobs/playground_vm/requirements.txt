@@ -4,13 +4,12 @@ ipykernel
 pandas
 nvidia-smi
 ipywidgets
-deepspeed
-packaging 
-ninja
-nvidia-smi
+#deepspeed
+#packaging 
+#ninja
 autoawq 
 vllm
-vertexai
+#vertexai
 torch
 torchvision
 torchaudio

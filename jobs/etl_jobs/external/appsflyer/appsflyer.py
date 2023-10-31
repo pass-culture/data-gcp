@@ -6,7 +6,7 @@ from furl import furl
 
 
 class AppsFlyer:
-    DEFAULT_ENDPOINT = "https://hq.appsflyer.com"  # https://hq1.appsflyer.com/api/raw-data/export/app/{_id}/installs_report/v5?
+    DEFAULT_ENDPOINT = "https://hq1.appsflyer.com"
     RAW_DATA_REPORT_ADDITIONAL_FIELDS = ",".join(
         [
             "install_app_store",

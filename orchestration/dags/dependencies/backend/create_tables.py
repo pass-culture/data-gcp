@@ -46,25 +46,25 @@ create_tables = {
         "dag_depends": ["import_analytics_v7/end_import"],  # dag_id/task_id
     },
     "adage_home_playlist_local_offerers": {
-        "sql": f"{BACKEND_SQL_PATH}/adage_home_local_offerers.sql",
+        "sql": f"{BACKEND_SQL_PATH}/adage_home_playlist_local_offerers.sql",
         "destination_dataset": "{{ bigquery_backend_dataset }}",
-        "destination_table": "adage_home_local_offerers",
+        "destination_table": "adage_home_playlist_local_offerers",
         "schedule_type": "daily",
         "write_disposition": "WRITE_TRUNCATE",
         "dag_depends": ["import_analytics_v7/end_import"],  # dag_id/task_id
     },
     "adage_home_playlist_new_template_offers": {
-        "sql": f"{BACKEND_SQL_PATH}/adage_home_new_template_offers.sql",
+        "sql": f"{BACKEND_SQL_PATH}/adage_home_playlist_new_template_offers.sql",
         "destination_dataset": "{{ bigquery_backend_dataset }}",
-        "destination_table": "adage_home_new_template_offers",
+        "destination_table": "adage_home_playlist_new_template_offers",
         "schedule_type": "daily",
         "write_disposition": "WRITE_TRUNCATE",
         "dag_depends": ["import_analytics_v7/end_import"],  # dag_id/task_id
     },
     "adage_home_playlist_moving_offerers": {
-        "sql": f"{BACKEND_SQL_PATH}/adage_home_moving_offerers.sql",
+        "sql": f"{BACKEND_SQL_PATH}/adage_home_playlist_moving_offerers.sql",
         "destination_dataset": "{{ bigquery_backend_dataset }}",
-        "destination_table": "adage_home_moving_offerers",
+        "destination_table": "adage_home_playlist_moving_offerers",
         "schedule_type": "daily",
         "write_disposition": "WRITE_TRUNCATE",
         "dag_depends": ["import_analytics_v7/end_import"],  # dag_id/task_id

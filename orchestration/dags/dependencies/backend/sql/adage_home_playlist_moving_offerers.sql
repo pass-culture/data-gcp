@@ -8,7 +8,7 @@ WITH offerer_venue_info AS
           COUNT(DISTINCT b.collective_booking_id) AS nb_booking
    FROM `{{ bigquery_analytics_dataset }}`.enriched_collective_booking_data b
    INNER JOIN `{{ bigquery_clean_dataset }}`.applicative_database_collective_offer o ON b.collective_offer_id=o.collective_offer_id
-   AND collective_offer_venue_address_type = "school"
+   AND o.collective_offer_venue_address_type = "school"
    LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_institution_data id ON id.institution_id=b.educational_institution_id
    WHERE collective_booking_status IN ("CONFIRMED",
                                        "REIMBURSED",

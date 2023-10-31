@@ -36,7 +36,7 @@ def run(
             print(f"Processed {event_idx} events. Pausing for {TIME} second...")
             time.sleep(TIME)
     print(f"Processed {event_idx} events.... Wait for finish")
-    time.sleep(300)
+    time.sleep(900)
 
 
 if __name__ == "__main__":

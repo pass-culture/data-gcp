@@ -1,7 +1,7 @@
 import datetime
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
-from dependencies.appsflyer.import_appsflyer import analytics_tables
+from dependencies.appsflyer.import_appsflyer import dag_tables
 from common.alerts import task_fail_slack_alert
 from common.operators.biquery import bigquery_job_task
 from common.utils import depends_loop, get_airflow_schedule
@@ -105,7 +105,7 @@ with DAG(
 start = DummyOperator(task_id="start", dag=dag)
 
 table_jobs = {}
-for table, job_params in analytics_tables.items():
+for table, job_params in dag_tables.items():
     task = bigquery_job_task(dag, table, job_params)
     table_jobs[table] = {
         "operator": task,
@@ -115,7 +115,7 @@ for table, job_params in analytics_tables.items():
 
 end = DummyOperator(task_id="end", dag=dag)
 table_jobs = depends_loop(
-    analytics_tables, table_jobs, start, dag=dag, default_end_operator=end
+    dag_tables, table_jobs, start, dag=dag, default_end_operator=end
 )
 
 (

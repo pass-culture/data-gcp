@@ -62,6 +62,9 @@ class AppsFlyer:
 
     def __to_df(self, resp):
         if resp.status_code != requests.codes.ok:
+            print("ERROR...")
+            print(resp.text)
+            print(resp.content)
             raise Exception(resp.text)
 
         return df.read_csv(StringIO(resp.text))

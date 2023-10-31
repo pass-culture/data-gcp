@@ -73,9 +73,7 @@ class ImportAppsFlyer:
     def get_in_app_events_report(self):
         dfs = []
         for app, api in self.apis.items():
-            df = api.in_app_events_report(
-                self._from, self._to, True, maximum_rows=1000000
-            )
+            df = api.in_app_events_report(self._from, self._to, True)
             df["app"] = app
             dfs.append(df)
             time.sleep(60)

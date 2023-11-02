@@ -85,6 +85,7 @@ SELECT
     , search_genre_types_filter
     , search_max_price_filter
     , search_is_autocomplete
+    , search_is_based_on_history
     , search_offer_is_duo_filter
     , search_native_categories_filter
  FROM `{{ bigquery_analytics_dataset }}`.firebase_events

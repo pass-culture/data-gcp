@@ -36,7 +36,7 @@ dag_config = {
 }
 
 default_dag_args = {
-    "start_date": datetime.datetime(2020, 12, 21),
+    "start_date": datetime.datetime(2023, 9, 1),
     "retries": 1,
     "on_failure_callback": task_fail_slack_alert,
     "retry_delay": datetime.timedelta(minutes=5),
@@ -59,11 +59,13 @@ gce_params = {
 schedule_dict = {"prod": "0 8 * * *", "dev": "0 12 * * *", "stg": "0 10 * * *"}
 
 with DAG(
-    "export_posthog",
+    "export_posthog_catchup",
     default_args=default_dag_args,
     description="Export to analytics data posthog",
     schedule_interval=get_airflow_schedule(schedule_dict[ENV_SHORT_NAME]),
-    catchup=False,
+    catchup=True,
+    start_date=datetime.datetime(2023, 9, 1),
+    max_active_runs=1,
     dagrun_timeout=datetime.timedelta(minutes=1440),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
@@ -151,9 +153,9 @@ with DAG(
             dag=dag,
         )
 
-        gce_instance_stop = StopGCEOperator(
-            task_id=f"{origin}_gce_stop_task", instance_name=instance_name
-        )
+        # gce_instance_stop = StopGCEOperator(
+        #    task_id=f"{origin}_gce_stop_task", instance_name=instance_name
+        # )
 
         (
             export_task
@@ -162,5 +164,5 @@ with DAG(
             >> fetch_code
             >> install_dependencies
             >> events_export
-            >> gce_instance_stop
+            # >> gce_instance_stop
         )

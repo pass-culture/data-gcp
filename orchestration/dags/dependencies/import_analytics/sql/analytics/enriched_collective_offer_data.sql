@@ -106,7 +106,8 @@ SELECT
     collective_offer.collective_offer_image_id,
     collective_offer.provider_id,
     collective_offer.national_program_id,
-    national_program.national_program_name
+    national_program.national_program_name,
+    collective_offer.template_id
 FROM
     `{{ bigquery_clean_dataset }}`.applicative_database_collective_offer AS collective_offer
     JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue ON venue.venue_id = collective_offer.venue_id
@@ -158,7 +159,8 @@ SELECT
     template.collective_offer_image_id,
     template.provider_id,
     template.national_program_id,
-    national_program.national_program_name
+    national_program.national_program_name,
+    NULL as template_id
 FROM
     `{{ bigquery_clean_dataset }}`.applicative_database_collective_offer_template AS template
     JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue ON venue.venue_id = template.venue_id

@@ -14,6 +14,22 @@ class EventExporter:
         )
 
     def event_to_posthog(self, event: PostHogEvent) -> None:
+        if event.event_type in ("page_view", "screen_view"):
+            self.page(event)
+        else:
+            self.capture(event)
+
+    def page(self, event: PostHogEvent) -> None:
+        self.client.page(
+            event.device_id,
+            url=event.screen,
+            properties=dict(event.properties, **event.user_properties),
+            timestamp=event.timestamp,
+            uuid=event.uuid,
+            disable_geoip=True,
+        )
+
+    def capture(self, event: PostHogEvent) -> None:
         self.client.capture(
             event.device_id,
             event=event.event_type,

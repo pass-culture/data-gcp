@@ -75,6 +75,10 @@ def format_event(event: dict) -> PostHogEvent:
         "environment": ENV_SHORT_NAME,
         "firebase_origin": event["origin"],
     }
+    if event["origin"] == "pro":
+        screen = event.get("page_location", None)
+    else:
+        screen = event.get("firebase_screen", None)
 
     properties = dict(**user_params, **event_params)
 
@@ -85,4 +89,5 @@ def format_event(event: dict) -> PostHogEvent:
         timestamp=event_time,
         uuid=str(event_uuid),
         user_properties=user_params,
+        screen=screen,
     )

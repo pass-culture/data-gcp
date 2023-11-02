@@ -218,23 +218,41 @@ only_visitors_since_first_week AS ( -- Only keep users with tracking data the we
     CASE
         WHEN weeks_since_deposit_created <= 4 THEN 'New users' -- Activated last period
         WHEN nb_co_last_4_weeks > 0 AND nb_co_2_months_ago > 0 THEN 'Current' -- Active both current and previous period
-        WHEN nb_co_2_months_ago > 0 AND nb_co_last_4_weeks = 0 THEN 'Churned' -- Active previous period, not current period
+        WHEN nb_co_2_months_ago > 0 AND nb_co_last_4_weeks = 0 THEN 'Dormant' -- Active previous period, not current period
         WHEN nb_co_2_months_ago = 0 AND nb_co_last_4_weeks > 0 THEN 'Resurrected' -- Active current period, not previous one
-        WHEN nb_co_2_months_ago = 0 AND nb_co_last_4_weeks = 0 THEN 'Dormant' -- Inactive both current and previous period
+        WHEN nb_co_2_months_ago = 0 AND nb_co_last_4_weeks = 0 THEN 'Churned' -- Inactive both current and previous period
         END AS user_lifecycle_monthly_state,
     CASE
         WHEN (weeks_since_deposit_created = 0 OR visits_previous_week IS NULL) THEN 'New users'
         WHEN visits_previous_week > 0 AND nb_visits > 0 THEN 'Current'
-        WHEN visits_previous_week > 0 AND nb_visits = 0 THEN 'Churned'
+        WHEN visits_previous_week > 0 AND nb_visits = 0 THEN 'Dormant'
         WHEN visits_previous_week = 0 AND nb_visits > 0 THEN 'Resurrected'
-        WHEN visits_previous_week = 0 AND nb_visits = 0 THEN 'Dormant'
+        WHEN visits_previous_week = 0 AND nb_visits = 0 THEN 'Churned'
         END AS user_lifecycle_weekly_state,
   FROM
     visits_and_user_engagement_level_metrics
-  )
+  ),
+
+ first_8_weeks_behavior AS (
+  SELECT
+   deposit_id
+   , CASE
+       WHEN COUNT(DISTINCT active_week) = 1 THEN 'early_churner'
+       WHEN COUNT(DISTINCT active_week) <= 3 THEN 'yet_to_convince'
+       WHEN COUNT(DISTINCT active_week) < 6 THEN 'onboarded'
+       WHEN COUNT(DISTINCT active_week) >= 6 THEN 'early_power_user'
+       ELSE 'Autre' END AS user_first_8_weeks_engagement_level
+  FROM
+    visits_and_user_engagement_level
+  WHERE seniority_weeks > 7
+  AND weeks_since_deposit_created <= 7
+  AND nb_visits > 0
+  GROUP BY 1)
 
   SELECT
-    *,
+    visits_and_user_engagement_level.*,
+    user_first_8_weeks_engagement_level,
     LAG(user_engagement_level)OVER(PARTITION BY deposit_id ORDER BY active_week) AS user_last_week_engagement_level
   FROM
     visits_and_user_engagement_level
+  LEFT JOIN first_8_weeks_behavior USING(deposit_id)

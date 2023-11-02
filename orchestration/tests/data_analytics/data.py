@@ -39,6 +39,7 @@ ENRICHED_OFFER_DATA_INPUT = {
             "offer_is_duo": False,
             "offer_fields_updated": "{}",
             "offer_validation": "APPROVED",
+            "offer_description": "Offre 1",
         },
         {
             "venue_id": "2",
@@ -54,6 +55,7 @@ ENRICHED_OFFER_DATA_INPUT = {
             "offer_is_duo": False,
             "offer_fields_updated": "{}",
             "offer_validation": "APPROVED",
+            "offer_description": "Offre 2",
         },
     ],
     "offer_extracted_data": [
@@ -370,6 +372,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "is_active": True,
         "offer_validation": "APPROVED",
         "offer_name": "Test",
+        "offer_description": "Offre 1",
         "offer_subcategoryId": "SEANCE_CINE",
         "offer_category_id": "CINEMA",
         "last_stock_price": 0.0,
@@ -427,6 +430,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "is_active": True,
         "offer_validation": "APPROVED",
         "offer_name": "RIP Dylan Rieder",
+        "offer_description": "Offre 2",
         "offer_subcategoryId": "LIVRE_PAPIER",
         "offer_category_id": "LIVRE",
         "last_stock_price": 0.0,

@@ -138,9 +138,15 @@ SELECT
         AS acquisition_origin
    ,au.media_source as paid_acquisition_media_source
    ,au.campaign as paid_acquisition_campaign
+   ,au.campaign_id as paid_acquisition_campaign_id
    ,au.ad as paid_acquisition_ad
    ,au.adset AS paid_acquisition_adset
+   ,au.adset_id AS paid_acquisition_adset_id
    ,au.install_time as appsflyer_install_time
+   ,au.adgroup as appsflyer_adgroup
+   ,au.cost_per_install as appsflyer_cost_per_install
+   ,au.total_campaign_costs as appsflyer_total_campaign_costs
+    au.total_campaign_installs as appsflyer_total_campaign_installs
 FROM first_open
 LEFT JOIN age_selected ON first_open.user_pseudo_id=age_selected.user_pseudo_id and rank_time_selected_age = 1
 LEFT JOIN onboarding_started ON first_open.user_pseudo_id=onboarding_started.user_pseudo_id

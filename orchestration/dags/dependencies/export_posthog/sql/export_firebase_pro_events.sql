@@ -9,4 +9,4 @@ SELECT
     app_info.version as app_version,
     'pro' as origin
 FROM `{{ bigquery_clean_dataset }}.firebase_pro_events_{{ yyyymmdd(add_days(ds, params.days)) }}` 
-WHERE NOT REGEXP_CONTAINS(event_name, '^[a-z]+(_[a-z]+)*$')
+WHERE (NOT REGEXP_CONTAINS(event_name, '^[a-z]+(_[a-z]+)*$') OR event_name = "page_view")

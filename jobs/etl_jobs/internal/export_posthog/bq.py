@@ -76,7 +76,7 @@ def format_event(event: dict) -> PostHogEvent:
         "firebase_origin": event["origin"],
     }
     if event["origin"] == "pro":
-        screen = event_params.get("page_location", "")
+        screen = event_params.get("page_title", "")
     else:
         screen = event_params.get("firebase_screen", "")
 

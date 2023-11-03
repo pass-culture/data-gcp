@@ -70,8 +70,8 @@ class TwoTowersModel(tfrs.models.Model):
             ),
             metrics=tfrs.metrics.FactorizedTopK(
                 # candidates=items_dataset.map(self.item_model),
-                candidates=tfrs.layers.factorized_top_k.BruteForce().index(
-                    items_dataset.batch(8192).map(self.item_model)
+                candidates=tfrs.layers.factorized_top_k.ScaNN().index(
+                    items_dataset.map(self.item_model)
                 ),
                 ks=[50],
             ),

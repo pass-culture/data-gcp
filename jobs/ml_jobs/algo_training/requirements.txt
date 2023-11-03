@@ -19,3 +19,4 @@ sentence-transformers==2.2.2
 catboost==1.2
 shap==0.41.0
 polars==0.18.6
+scann

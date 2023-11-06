@@ -150,7 +150,8 @@ class SendinblueTransactional:
         columns = [
             "template",
             "tag",
-            "email" "event_date",
+            "email",
+            "event_date",
             "delivered_count",
             "opened_count",
             "unsubscribed_count",
@@ -173,7 +174,7 @@ class SendinblueTransactional:
         job_config = bigquery.LoadJobConfig(
             write_disposition="WRITE_APPEND",
             time_partitioning=bigquery.TimePartitioning(
-                type_=bigquery.TimePartitioningType.DAY, field="update_date"
+                type_=bigquery.TimePartitioningType.DAY, field="event_date"
             ),
             schema=[
                 bigquery.SchemaField(column, _type) for column, _type in schema.items()

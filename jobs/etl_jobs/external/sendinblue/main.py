@@ -17,7 +17,7 @@ API_KEY = access_secret_data(
 )
 
 NEWSLETTERS_TABLE_NAME = "sendinblue_newsletters"
-TRANSACTIONAL_TABLE_NAME = "sendinblue_transactional"
+TRANSACTIONAL_TABLE_NAME = "sendinblue_transactional_detailed"
 UPDATE_WINDOW = 31 if ENV_SHORT_NAME == "prod" else 500
 
 today = datetime.now(tz=timezone.utc)

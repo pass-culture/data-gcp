@@ -109,80 +109,60 @@ class SendinblueTransactional:
     def parse_to_df(self, all_events):
 
         df = pd.DataFrame()
-
         df = (
             df.assign(email=[event.email for event in all_events])
             .assign(event=[event.event for event in all_events])
             .assign(template=[event.template_id for event in all_events])
-            .assign(event_date=[event._date for event in all_events])
+            .assign(event_date=pd.to_datetime([event._date for event in all_events]))
             .assign(tag=[event.tag for event in all_events])
             .drop_duplicates()
-            .groupby(["template", "event", "tag"], dropna=False)
-            .agg(
-                unique=("email", "nunique"),
-                count=("email", "count"),
-                first_date=("event_date", "min"),
-                last_date=("event_date", "max"),
-            )
-            .reset_index()
-            .pivot_table(
-                index=["template", "tag"],
-                values=["unique", "count", "first_date", "last_date"],
-                columns="event",
-                aggfunc={
-                    "first_date": "min",
-                    "last_date": "max",
-                    "unique": "sum",
-                    "count": "sum",
-                },
-            )
         )
 
-        df.columns = df.columns.map("_".join)
+        df["event_date"] = df["event_date"].dt.date
 
-        df = df.reset_index().assign(update_date=pd.to_datetime(self.start_date))
+        df_grouped = df.groupby(
+            ["tag", "template", "email", "event", "event_date"]
+        ).agg({"event_date": ["count"]})
+
+        df_grouped.columns = df_grouped.columns.map("_".join)
+        df_grouped.reset_index(inplace=True)
+
+        df_kpis = pd.pivot_table(
+            df_grouped,
+            values=["event_date_count"],
+            index=["tag", "template", "email", "event_date"],
+            columns=["event"],
+            aggfunc={"event_date_count": "sum"},
+        )
+
+        df_kpis.columns = df_kpis.columns.map("_".join)
+        df_kpis.reset_index(inplace=True)
+        df_kpis.fillna(0, inplace=True)
+        df_kpis.rename(
+            columns={
+                "event_date_count_delivered": "delivered_count",
+                "event_date_count_opened": "opened_count",
+                "event_date_count_unsubscribed": "unsubscribed_count",
+            },
+            inplace=True,
+        )
 
         columns = [
             "template",
             "tag",
-            "count_delivered",
-            "first_date_delivered",
-            "last_date_delivered",
-            "unique_delivered",
-            "count_opened",
-            "first_date_opened",
-            "last_date_opened",
-            "unique_opened",
-            "count_unsubscribed",
-            "first_date_unsubscribed",
-            "last_date_unsubscribed",
-            "unique_unsubscribed",
-            "update_date",
+            "email" "event_date",
+            "delivered_count",
+            "opened_count",
+            "unsubscribed_count",
         ]
 
         for column in columns:
-            if column not in df:
-                df[column] = np.nan
+            if column not in df_kpis:
+                df_kpis[column] = np.nan
 
-        df = df[columns]
+        df_kpis = df_kpis[columns]
 
-        # convert to datetime
-        df = df.assign(
-            first_date_delivered=lambda _df: pd.to_datetime(
-                _df["first_date_delivered"]
-            ),
-            last_date_delivered=lambda _df: pd.to_datetime(_df["last_date_delivered"]),
-            first_date_opened=lambda _df: pd.to_datetime(_df["first_date_opened"]),
-            last_date_opened=lambda _df: pd.to_datetime(_df["last_date_opened"]),
-            first_date_unsubscribed=lambda _df: pd.to_datetime(
-                _df["first_date_unsubscribed"]
-            ),
-            last_date_unsubscribed=lambda _df: pd.to_datetime(
-                _df["last_date_unsubscribed"]
-            ),
-        )
-
-        return df
+        return df_kpis
 
     def save_to_historical(self, df_to_save, schema):
 

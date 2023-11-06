@@ -27,7 +27,7 @@ from common.alerts import task_fail_slack_alert
 
 from common import macros
 
-from dependencies.sendinblue.import_sendinblue import analytics_tables
+from dependencies.sendinblue.import_sendinblue import clean_tables, analytics_tables
 
 
 GCE_INSTANCE = f"import-sendinblue-{ENV_SHORT_NAME}"
@@ -107,6 +107,23 @@ with DAG(
     )
 
     end_raw = DummyOperator(task_id="end_raw", dag=dag)
+    clean_table_jobs = {}
+
+    for name, params in clean_tables.items():
+        task = bigquery_job_task(dag=dag, table=name, job_params=params)
+        clean_table_jobs[name] = {
+            "operator": task,
+        }
+
+    end_clean = DummyOperator(task_id="end_clean", dag=dag)
+
+    clean_table_tasks = depends_loop(
+        clean_tables,
+        clean_table_jobs,
+        end_raw,
+        dag=dag,
+        default_end_operator=end_clean,
+    )
 
     analytics_table_jobs = {}
     for name, params in analytics_tables.items():
@@ -123,7 +140,7 @@ with DAG(
     analytics_table_tasks = depends_loop(
         analytics_tables,
         analytics_table_jobs,
-        end_raw,
+        end_clean,
         dag=dag,
         default_end_operator=end,
     )
@@ -136,5 +153,7 @@ with DAG(
         >> import_transactional_data_to_raw
         >> gce_instance_stop
         >> end_raw
+        >> clean_table_tasks
+        >> end_clean
         >> analytics_table_tasks
     )

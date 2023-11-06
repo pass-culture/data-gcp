@@ -73,6 +73,7 @@ def run(
             all_events.append(sendinblue_transactional.get_events(event_type))
         all_events = sum(all_events, [])
         df = sendinblue_transactional.parse_to_df(all_events)
+        df = sendinblue_transactional.remove_email(df)
         sendinblue_transactional.save_to_historical(df, transactional_histo_schema)
 
         return "success"

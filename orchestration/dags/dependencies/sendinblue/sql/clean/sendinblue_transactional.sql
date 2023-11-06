@@ -2,7 +2,7 @@ with user_infos as (
   SELECT 
     tag
     , template
-    , email
+    , user_id
     , sum(delivered_count) as delivered_count
     , sum(opened_count) as opened_count
     , sum(unsubscribed_count) as unsubscribed_count
@@ -10,7 +10,7 @@ with user_infos as (
   GROUP BY 
     tag
     , template
-    , email
+    , user_id
 ),
 
 infos_aggregated as (

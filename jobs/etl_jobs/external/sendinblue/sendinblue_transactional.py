@@ -7,6 +7,8 @@ import numpy as np
 
 import logging
 
+from utils import APPLICATIVE_EXTERNAL_CONNECTION_ID
+
 
 class SendinblueTransactional:
     def __init__(
@@ -164,6 +166,17 @@ class SendinblueTransactional:
         df_kpis = df_kpis[columns]
 
         return df_kpis
+
+    def remove_email(self, df):
+        sql = f"""
+        SELECT * FROM EXTERNAL_QUERY('{APPLICATIVE_EXTERNAL_CONNECTION_ID}',
+        'SELECT CAST("id" AS varchar(255)) AS user_id, email FROM public.user')
+        """
+        emails = pd.read_gbq(sql)
+
+        df = df.merge(emails, how="inner", on="email").drop("email", axis=1)
+
+        return df
 
     def save_to_historical(self, df_to_save, schema):
 

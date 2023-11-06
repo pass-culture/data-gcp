@@ -4,6 +4,9 @@ from google.cloud import secretmanager
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
+APPLICATIVE_EXTERNAL_CONNECTION_ID = os.environ.get(
+    "APPLICATIVE_EXTERNAL_CONNECTION_ID", ""
+)
 BIGQUERY_RAW_DATASET = f"raw_{ENV_SHORT_NAME}"
 
 
@@ -32,7 +35,7 @@ campaigns_histo_schema = {
 transactional_histo_schema = {
     "template": "INTEGER",
     "tag": "STRING",
-    "email": "STRING",
+    "user_id": "STRING",
     "event_date": "DATETIME",
     "delivered_count": "INTEGER",
     "opened_count": "INTEGER",

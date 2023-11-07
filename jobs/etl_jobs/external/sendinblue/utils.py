@@ -4,8 +4,12 @@ from google.cloud import secretmanager
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
+ENV = os.environ.get("ENV")
+if ENV == "dev":
+    ENV = "testing"
 APPLICATIVE_EXTERNAL_CONNECTION_ID = os.environ.get(
-    "APPLICATIVE_EXTERNAL_CONNECTION_ID", ""
+    "APPLICATIVE_EXTERNAL_CONNECTION_ID",
+    f"{GCP_PROJECT}.europe-west1.metier-pcapi-{ENV}-connection",
 )
 BIGQUERY_RAW_DATASET = f"raw_{ENV_SHORT_NAME}"
 

@@ -1,5 +1,4 @@
 SELECT
-
     id,
     call_id,
     context,
@@ -22,6 +21,4 @@ SELECT
     offer_item_score,
     offer_order,
     offer_venue_id
-
-
 FROM public.offer_context

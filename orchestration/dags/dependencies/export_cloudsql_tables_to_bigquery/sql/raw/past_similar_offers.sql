@@ -10,5 +10,4 @@ SELECT
     call_id,
     reco_filters,
     venue_iris_id
-    
 FROM public.past_similar_offers

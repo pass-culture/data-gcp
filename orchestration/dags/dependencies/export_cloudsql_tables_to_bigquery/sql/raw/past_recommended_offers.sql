@@ -1,5 +1,4 @@
 SELECT 
-
     id,
     userid,
     offerid,
@@ -11,5 +10,4 @@ SELECT
     call_id,
     reco_filters,
     user_iris_id
-
 FROM public.past_recommended_offers

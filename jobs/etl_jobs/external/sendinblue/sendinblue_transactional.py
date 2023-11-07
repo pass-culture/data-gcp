@@ -61,10 +61,7 @@ class SendinblueTransactional:
                 % e
             )
 
-        if ENV_SHORT_NAME != "prod":
-            return active_templates[:1]
-        else:
-            return active_templates
+        return active_templates
 
     def get_events(self, event_type):
 

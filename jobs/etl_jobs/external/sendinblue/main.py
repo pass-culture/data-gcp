@@ -5,6 +5,7 @@ from datetime import datetime, timezone, timedelta, date
 from utils import (
     GCP_PROJECT,
     BIGQUERY_RAW_DATASET,
+    BIGQUERY_TMP_DATASET,
     ENV_SHORT_NAME,
     access_secret_data,
     campaigns_histo_schema,
@@ -31,16 +32,6 @@ def run(
     )
 ):
 
-    # request_json = request.get_json(silent=True)
-    # request_args = request.args
-
-    # if request_json and "target" in request_json:
-    #     target = request_json["target"]
-    # elif request_args and "target" in request_args:
-    #     target = request_args["target"]
-    # else:
-    #     raise RuntimeError("You need to provide a target argument.")
-
     if target == "newsletter":
         # Statistics for email campaigns Sendinblue
         sendinblue_newsletters = SendinblueNewsletters(
@@ -61,7 +52,7 @@ def run(
         # Statistics for transactional email Sendinblue
         sendinblue_transactional = SendinblueTransactional(
             gcp_project=GCP_PROJECT,
-            raw_dataset=BIGQUERY_RAW_DATASET,
+            tmp_dataset=BIGQUERY_TMP_DATASET,
             api_key=API_KEY,
             destination_table_name=TRANSACTIONAL_TABLE_NAME,
             start_date=yesterday.strftime("%Y-%m-%d"),
@@ -73,7 +64,6 @@ def run(
             all_events.append(sendinblue_transactional.get_events(event_type))
         all_events = sum(all_events, [])
         df = sendinblue_transactional.parse_to_df(all_events)
-        df = sendinblue_transactional.remove_email(df)
         sendinblue_transactional.save_to_historical(df, transactional_histo_schema)
 
         return "success"

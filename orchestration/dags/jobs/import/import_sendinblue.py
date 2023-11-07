@@ -27,7 +27,11 @@ from common.alerts import task_fail_slack_alert
 
 from common import macros
 
-from dependencies.sendinblue.import_sendinblue import clean_tables, analytics_tables
+from dependencies.sendinblue.import_sendinblue import (
+    raw_tables,
+    clean_tables,
+    analytics_tables,
+)
 
 
 GCE_INSTANCE = f"import-sendinblue-{ENV_SHORT_NAME}"
@@ -84,13 +88,32 @@ with DAG(
         retries=2,
     )
 
-    import_transactional_data_to_raw = SSHGCEOperator(
-        task_id="import_transactional_data_to_raw",
+    import_transactional_data_to_tmp = SSHGCEOperator(
+        task_id="import_transactional_data_to_tmp",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
         command="python main.py --target transactional ",
         do_xcom_push=True,
+    )
+
+    ### jointure avec pcapi pour retirer les emails
+    raw_table_jobs = {}
+
+    for name, params in raw_tables.items():
+        task = bigquery_job_task(dag=dag, table=name, job_params=params)
+        raw_table_jobs[name] = {
+            "operator": task,
+        }
+
+    end_raw = DummyOperator(task_id="end_raw", dag=dag)
+
+    raw_table_tasks = depends_loop(
+        raw_tables,
+        raw_table_jobs,
+        import_transactional_data_to_tmp,
+        dag=dag,
+        default_end_operator=end_raw,
     )
 
     import_newsletter_data_to_raw = SSHGCEOperator(

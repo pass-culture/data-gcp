@@ -1,8 +1,18 @@
 SQL_PATH = f"dependencies/sendinblue/sql"
 
+raw_tables = {
+    "sendinblue_transactional": {
+        "sql": f"{SQL_PATH}/raw/sendinblue_transactional.sql",
+        "destination_dataset": "{{ bigquery_raw_dataset }}",
+        "destination_table": "sendinblue_transactional",
+        "time_partitioning": {"field": "event_date"},
+        "partition_prefix": "$",
+    },
+}
+
 clean_tables = {
     "sendinblue_transactional": {
-        "sql": f"{SQL_PATH}/analytics/sendinblue_transactional.sql",
+        "sql": f"{SQL_PATH}/clean/sendinblue_transactional.sql",
         "destination_dataset": "{{ bigquery_clean_dataset }}",
         "destination_table": "sendinblue_transactional",
         "time_partitioning": {"field": "update_date"},

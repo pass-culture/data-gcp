@@ -6,22 +6,21 @@ import pandas as pd
 import numpy as np
 
 import logging
-
-from utils import APPLICATIVE_EXTERNAL_CONNECTION_ID
+from utils import ENV_SHORT_NAME
 
 
 class SendinblueTransactional:
     def __init__(
         self,
         gcp_project,
-        raw_dataset,
+        tmp_dataset,
         destination_table_name,
         api_key,
         start_date,
         end_date,
     ):
         self.gcp_project = gcp_project
-        self.raw_dataset = raw_dataset
+        self.tmp_dataset = tmp_dataset
         self.destination_table_name = destination_table_name
         self.api_key = api_key
         self.start_date = start_date
@@ -62,7 +61,10 @@ class SendinblueTransactional:
                 % e
             )
 
-        return active_templates
+        if ENV_SHORT_NAME != "prod":
+            return active_templates[:1]
+        else:
+            return active_templates
 
     def get_events(self, event_type):
 
@@ -167,28 +169,15 @@ class SendinblueTransactional:
 
         return df_kpis
 
-    def remove_email(self, df):
-        sql = f"""
-        SELECT * FROM EXTERNAL_QUERY('{APPLICATIVE_EXTERNAL_CONNECTION_ID}',
-        'SELECT CAST("id" AS varchar(255)) AS user_id, email FROM public.user')
-        """
-        emails = pd.read_gbq(sql)
-
-        df = df.merge(emails, how="inner", on="email").drop("email", axis=1)
-
-        return df
-
     def save_to_historical(self, df_to_save, schema):
 
         bigquery_client = bigquery.Client()
 
         yyyymmdd = self.start_date.replace("-", "")
-        table_id = f"{self.gcp_project}.{self.raw_dataset}.{self.destination_table_name}_histo${yyyymmdd}"
+        table_id = f"{self.gcp_project}.{self.tmp_dataset}.{yyyymmdd}_{self.destination_table_name}_histo"
+
         job_config = bigquery.LoadJobConfig(
             write_disposition="WRITE_APPEND",
-            time_partitioning=bigquery.TimePartitioning(
-                type_=bigquery.TimePartitioningType.DAY, field="event_date"
-            ),
             schema=[
                 bigquery.SchemaField(column, _type) for column, _type in schema.items()
             ],

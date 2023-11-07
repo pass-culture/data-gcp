@@ -4,14 +4,8 @@ from google.cloud import secretmanager
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
-ENV = os.environ.get("ENV")
-if ENV == "dev":
-    ENV = "testing"
-APPLICATIVE_EXTERNAL_CONNECTION_ID = os.environ.get(
-    "APPLICATIVE_EXTERNAL_CONNECTION_ID",
-    f"{GCP_PROJECT}.europe-west1.metier-pcapi-{ENV}-connection",
-)
 BIGQUERY_RAW_DATASET = f"raw_{ENV_SHORT_NAME}"
+BIGQUERY_TMP_DATASET = f"tmp_{ENV_SHORT_NAME}"
 
 
 def access_secret_data(project_id, secret_id, version_id="latest", default=None):
@@ -39,7 +33,7 @@ campaigns_histo_schema = {
 transactional_histo_schema = {
     "template": "INTEGER",
     "tag": "STRING",
-    "user_id": "STRING",
+    "email": "STRING",
     "event_date": "DATETIME",
     "delivered_count": "INTEGER",
     "opened_count": "INTEGER",

@@ -11,6 +11,7 @@ from common.config import (
     BASE32_JS_LIB_PATH,
     BIGQUERY_SANDBOX_DATASET,
     MEDIATION_URL,
+    APPLICATIVE_EXTERNAL_CONNECTION_ID,
 )
 
 
@@ -90,4 +91,5 @@ default = {
     "create_humanize_id_function": create_humanize_id_function,
     "create_dehumanize_id_function": create_dehumanize_id_function,
     "mediation_url": MEDIATION_URL,
+    "applicative_external_connection_id": APPLICATIVE_EXTERNAL_CONNECTION_ID,
 }

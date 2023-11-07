@@ -6,7 +6,7 @@ with user_infos as (
     , sum(delivered_count) as delivered_count
     , sum(opened_count) as opened_count
     , sum(unsubscribed_count) as unsubscribed_count
-  FROM `{{ bigquery_raw_dataset }}.sendinblue_transactional_detailed`
+  FROM `{{ bigquery_raw_dataset }}.sendinblue_transactional`
   GROUP BY 
     tag
     , template

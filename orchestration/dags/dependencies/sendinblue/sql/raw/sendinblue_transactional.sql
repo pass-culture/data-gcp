@@ -13,4 +13,6 @@ SELECT
     , delivered_count
     , opened_count
     , unsubscribed_count
-FROM `{{ bigquery_tmp_dataset }}.{{ yyyymmdd(ds) }}_sendinblue_transactional_detailed`
+FROM `{{ bigquery_tmp_dataset }}.{{ yyyymmdd(add_days(ds, -1)) }}_sendinblue_transactional_detailed_histo` s
+LEFT JOIN emails
+ON s.email = emails.email

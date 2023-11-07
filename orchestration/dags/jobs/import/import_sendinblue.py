@@ -18,7 +18,6 @@ from common.config import (
 )
 from common.operators.biquery import bigquery_job_task
 from common.utils import (
-    getting_service_account_token,
     depends_loop,
     get_airflow_schedule,
 )
@@ -129,7 +128,6 @@ with DAG(
         task_id="gce_stop_task", instance_name=GCE_INSTANCE
     )
 
-    end_raw = DummyOperator(task_id="end_raw", dag=dag)
     clean_table_jobs = {}
 
     for name, params in clean_tables.items():
@@ -173,8 +171,9 @@ with DAG(
         >> fetch_code
         >> install_dependencies
         >> import_newsletter_data_to_raw
-        >> import_transactional_data_to_raw
+        >> import_transactional_data_to_tmp
         >> gce_instance_stop
+        >> raw_table_tasks
         >> end_raw
         >> clean_table_tasks
         >> end_clean

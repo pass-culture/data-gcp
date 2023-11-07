@@ -513,6 +513,13 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "institution_locations",
     },
+    "user_iris_per_month": {
+        "sql": f"{ANALYTICS_SQL_PATH}/user_iris_per_month.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "user_iris_per_month",
+        "partition_prefix": "$",
+        "time_partitioning": {"field": "month_log"},
+    },
 }
 
 aggregated_tables = {

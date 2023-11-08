@@ -213,9 +213,8 @@ def train(
         logger.info("Predicting final item embeddings")
         item_embeddings = two_tower_model.item_model.predict(item_dataset)
         logger.info("Building and saving the MatchModel")
-        user_input = input_prediction_feature
         match_model = MatchModel(
-            user_input=train_user_data[user_input].unique(),
+            user_input=train_user_data[input_prediction_feature].unique(),
             item_ids=train_item_data["item_id"].unique(),
             embedding_size=embedding_size,
         )

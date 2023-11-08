@@ -5,6 +5,7 @@ from datetime import datetime, timezone, timedelta, date
 from utils import (
     GCP_PROJECT,
     BIGQUERY_RAW_DATASET,
+    BIGQUERY_TMP_DATASET,
     ENV_SHORT_NAME,
     access_secret_data,
     campaigns_histo_schema,
@@ -17,7 +18,7 @@ API_KEY = access_secret_data(
 )
 
 NEWSLETTERS_TABLE_NAME = "sendinblue_newsletters"
-TRANSACTIONAL_TABLE_NAME = "sendinblue_transactional"
+TRANSACTIONAL_TABLE_NAME = "sendinblue_transactional_detailed"
 UPDATE_WINDOW = 31 if ENV_SHORT_NAME == "prod" else 500
 
 today = datetime.now(tz=timezone.utc)
@@ -30,16 +31,6 @@ def run(
         help="Nom de la tache",
     )
 ):
-
-    # request_json = request.get_json(silent=True)
-    # request_args = request.args
-
-    # if request_json and "target" in request_json:
-    #     target = request_json["target"]
-    # elif request_args and "target" in request_args:
-    #     target = request_args["target"]
-    # else:
-    #     raise RuntimeError("You need to provide a target argument.")
 
     if target == "newsletter":
         # Statistics for email campaigns Sendinblue
@@ -61,7 +52,7 @@ def run(
         # Statistics for transactional email Sendinblue
         sendinblue_transactional = SendinblueTransactional(
             gcp_project=GCP_PROJECT,
-            raw_dataset=BIGQUERY_RAW_DATASET,
+            tmp_dataset=BIGQUERY_TMP_DATASET,
             api_key=API_KEY,
             destination_table_name=TRANSACTIONAL_TABLE_NAME,
             start_date=yesterday.strftime("%Y-%m-%d"),

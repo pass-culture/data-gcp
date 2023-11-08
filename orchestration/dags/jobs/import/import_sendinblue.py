@@ -18,7 +18,6 @@ from common.config import (
 )
 from common.operators.biquery import bigquery_job_task
 from common.utils import (
-    getting_service_account_token,
     depends_loop,
     get_airflow_schedule,
 )
@@ -27,7 +26,11 @@ from common.alerts import task_fail_slack_alert
 
 from common import macros
 
-from dependencies.sendinblue.import_sendinblue import analytics_tables
+from dependencies.sendinblue.import_sendinblue import (
+    raw_tables,
+    clean_tables,
+    analytics_tables,
+)
 
 
 GCE_INSTANCE = f"import-sendinblue-{ENV_SHORT_NAME}"
@@ -84,13 +87,32 @@ with DAG(
         retries=2,
     )
 
-    import_transactional_data_to_raw = SSHGCEOperator(
-        task_id="import_transactional_data_to_raw",
+    import_transactional_data_to_tmp = SSHGCEOperator(
+        task_id="import_transactional_data_to_tmp",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
         command="python main.py --target transactional ",
         do_xcom_push=True,
+    )
+
+    ### jointure avec pcapi pour retirer les emails
+    raw_table_jobs = {}
+
+    for name, params in raw_tables.items():
+        task = bigquery_job_task(dag=dag, table=name, job_params=params)
+        raw_table_jobs[name] = {
+            "operator": task,
+        }
+
+    end_raw = DummyOperator(task_id="end_raw", dag=dag)
+
+    raw_table_tasks = depends_loop(
+        raw_tables,
+        raw_table_jobs,
+        import_transactional_data_to_tmp,
+        dag=dag,
+        default_end_operator=end_raw,
     )
 
     import_newsletter_data_to_raw = SSHGCEOperator(
@@ -106,7 +128,23 @@ with DAG(
         task_id="gce_stop_task", instance_name=GCE_INSTANCE
     )
 
-    end_raw = DummyOperator(task_id="end_raw", dag=dag)
+    clean_table_jobs = {}
+
+    for name, params in clean_tables.items():
+        task = bigquery_job_task(dag=dag, table=name, job_params=params)
+        clean_table_jobs[name] = {
+            "operator": task,
+        }
+
+    end_clean = DummyOperator(task_id="end_clean", dag=dag)
+
+    clean_table_tasks = depends_loop(
+        clean_tables,
+        clean_table_jobs,
+        end_raw,
+        dag=dag,
+        default_end_operator=end_clean,
+    )
 
     analytics_table_jobs = {}
     for name, params in analytics_tables.items():
@@ -123,7 +161,7 @@ with DAG(
     analytics_table_tasks = depends_loop(
         analytics_tables,
         analytics_table_jobs,
-        end_raw,
+        end_clean,
         dag=dag,
         default_end_operator=end,
     )
@@ -133,8 +171,11 @@ with DAG(
         >> fetch_code
         >> install_dependencies
         >> import_newsletter_data_to_raw
-        >> import_transactional_data_to_raw
+        >> import_transactional_data_to_tmp
         >> gce_instance_stop
+        >> raw_table_tasks
         >> end_raw
+        >> clean_table_tasks
+        >> end_clean
         >> analytics_table_tasks
     )

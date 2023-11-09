@@ -34,11 +34,8 @@ class DefaultClient:
         details: bool = False,
         item_id: str = None,
         prefilter: bool = True,
+        vector_column_name: str = "vector",
     ) -> t.List[t.Dict]:
-        if prefilter:
-            vector_column_name = "raw_embeddings"
-        else:
-            vector_column_name = "vector"
 
         results = (
             self.table.search(

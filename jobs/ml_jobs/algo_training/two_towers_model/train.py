@@ -90,10 +90,16 @@ def train(
         storage_path=STORAGE_PATH, table_name=validation_table_name
     )[user_columns + item_columns].astype(str)
 
-    train_user_data = train_data[user_columns].drop_duplicates(
-        subset=[input_prediction_feature]
+    train_user_data = (
+        train_data[user_columns]
+        .drop_duplicates(subset=[input_prediction_feature])
+        .reset_index(drop=True)
     )
-    train_item_data = train_data[item_columns].drop_duplicates(subset=["item_id"])
+    train_item_data = (
+        train_data[item_columns]
+        .drop_duplicates(subset=["item_id"])
+        .reset_index(drop=True)
+    )
 
     # Build tf datasets
     logger.info("Building tf datasets")
@@ -207,9 +213,8 @@ def train(
         logger.info("Predicting final item embeddings")
         item_embeddings = two_tower_model.item_model.predict(item_dataset)
         logger.info("Building and saving the MatchModel")
-        user_input = input_prediction_feature
         match_model = MatchModel(
-            user_input=train_user_data[user_input],
+            user_input=train_user_data[input_prediction_feature].unique(),
             item_ids=train_item_data["item_id"].unique(),
             embedding_size=embedding_size,
         )

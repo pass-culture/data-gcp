@@ -5,6 +5,7 @@ from google.cloud import secretmanager
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
 BIGQUERY_RAW_DATASET = f"raw_{ENV_SHORT_NAME}"
+BIGQUERY_TMP_DATASET = f"tmp_{ENV_SHORT_NAME}"
 
 
 def access_secret_data(project_id, secret_id, version_id="latest", default=None):
@@ -32,17 +33,9 @@ campaigns_histo_schema = {
 transactional_histo_schema = {
     "template": "INTEGER",
     "tag": "STRING",
-    "count_delivered": "INTEGER",
-    "first_date_delivered": "TIMESTAMP",
-    "last_date_delivered": "TIMESTAMP",
-    "unique_delivered": "INTEGER",
-    "count_opened": "INTEGER",
-    "first_date_opened": "TIMESTAMP",
-    "last_date_opened": "TIMESTAMP",
-    "unique_opened": "INTEGER",
-    "count_unsubscribed": "INTEGER",
-    "first_date_unsubscribed": "TIMESTAMP",
-    "last_date_unsubscribed": "TIMESTAMP",
-    "unique_unsubscribed": "INTEGER",
-    "update_date": "DATETIME",
+    "email": "STRING",
+    "event_date": "DATETIME",
+    "delivered_count": "INTEGER",
+    "opened_count": "INTEGER",
+    "unsubscribed_count": "INTEGER",
 }

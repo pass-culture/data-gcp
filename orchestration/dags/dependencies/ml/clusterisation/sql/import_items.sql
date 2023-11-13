@@ -6,7 +6,6 @@ WITH booking_info AS(
     FROM
         `{{ bigquery_analytics_dataset }}.enriched_offer_data` o
         LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_booking_data` b ON o.offer_id = b.offer_id
-        AND booking_creation_date >= DATE_SUB(current_date, INTERVAL 6 MONTH)
     GROUP BY
         1,
         2
@@ -15,32 +14,28 @@ WITH booking_info AS(
 ),
 item_top_N_booking_by_cat as(
     SELECT
-        *,
-        ROW_NUMBER() OVER (
-            PARTITION BY offer_subcategoryid
-            ORDER BY
-                booking_cnt DESC
-        ) AS rnk
+        *
     FROM
-        booking_info QUALIFY ROW_NUMBER() OVER (
-            PARTITION BY offer_subcategoryid
-            ORDER BY
-                booking_cnt DESC
-        ) <= {{ params.clusterisation_top_N_items }}
+        booking_info
+    where booking_cnt>0
+
 ),
 items_w_embedding as (
     SELECT
         ie.item_id,
-        ie.offer_semantic_content_optim_text,
+        ie.semantic_content_embedding,
     FROM
-        `{{ bigquery_clean_dataset }}`.item_embeddings_semantic_content_reduced_5 ie
-    ORDER BY
-        ie.extraction_date DESC
+        `{{ bigquery_clean_dataset }}`.item_embeddings_reduced_5 ie
+    QUALIFY ROW_NUMBER() OVER (
+            PARTITION BY item_id
+            ORDER BY
+                ie.extraction_date DESC
+        ) =1
 ),
 base as (
     select
         top_items.item_id,
-        ie.offer_semantic_content_optim_text,
+        ie.semantic_content_embedding,
         enriched_item_metadata.subcategory_id AS subcategory_id,
         enriched_item_metadata.category_id as category,
         enriched_item_metadata.offer_type_id,

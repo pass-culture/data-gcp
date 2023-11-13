@@ -34,7 +34,7 @@ transactional_histo_schema = {
     "template": "INTEGER",
     "tag": "STRING",
     "email": "STRING",
-    "event_date": "DATETIME",
+    "event_date": "DATE",
     "delivered_count": "INTEGER",
     "opened_count": "INTEGER",
     "unsubscribed_count": "INTEGER",

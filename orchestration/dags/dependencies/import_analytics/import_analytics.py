@@ -30,6 +30,14 @@ def define_import_tables():
         "user_offerer",
         "venue",
         "venue_provider",
+        # add temporarly reimbursement tables
+        "cashflow_batch",
+        "cashflow_log",
+        "cashflow_pricing",
+        "invoice",
+        "invoice_cashflow",
+        "invoice_line",
+        "venue_reimbursement_point_link",
     ]
 
 

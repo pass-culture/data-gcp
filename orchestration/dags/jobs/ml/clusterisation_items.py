@@ -1,12 +1,7 @@
 from datetime import datetime, timedelta
-
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryExecuteQueryOperator,
-    BigQueryInsertJobOperator,
-)
 from common.operators.gce import (
     StartGCEOperator,
     StopGCEOperator,
@@ -14,21 +9,12 @@ from common.operators.gce import (
     SSHGCEOperator,
 )
 from common.operators.biquery import bigquery_job_task
-from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 from dependencies.ml.clusterisation.import_data import params
+from dependencies.ml.clusterisation.postprocess import postprocess_params
+
 from common import macros
 from common.alerts import task_fail_slack_alert
-from common.config import (
-    GCP_PROJECT_ID,
-    DAG_FOLDER,
-    DATA_GCS_BUCKET_NAME,
-    ENV_SHORT_NAME,
-    SLACK_CONN_ID,
-    SLACK_CONN_PASSWORD,
-    BIGQUERY_CLEAN_DATASET,
-    BIGQUERY_TMP_DATASET,
-)
-from jobs.ml.constants import IMPORT_CLUSTERING_SQL_PATH
+from common.config import DAG_FOLDER, DATA_GCS_BUCKET_NAME, ENV_SHORT_NAME
 
 from common.utils import get_airflow_schedule
 
@@ -48,6 +34,33 @@ default_args = {
 dag_config = {
     "TOKENIZERS_PARALLELISM": "false",
 }
+
+categories_config = [
+    {
+        "group": "MANGA",
+        "target_n_clusters": "30",
+    },
+    {
+        "group": "LIVRES",
+        "target_n_clusters": "150",
+    },
+    {
+        "group": "CINEMA",
+        "target_n_clusters": "150",
+    },
+    {
+        "group": "MUSIQUE",
+        "target_n_clusters": "150",
+    },
+    {
+        "group": "ARTS",
+        "target_n_clusters": "30",
+    },
+    {
+        "group": "SORTIES",
+        "target_n_clusters": "30",
+    },
+]
 with DAG(
     "clusterisation_item",
     default_args=default_args,
@@ -70,9 +83,9 @@ with DAG(
             default="default-config",
             type="string",
         ),
-        "clusterisation_top_N_items": Param(
-            default=10000 if ENV_SHORT_NAME == "prod" else 1000,
-            type="integer",
+        "target_n_clusters": Param(
+            default="150",
+            type="string",
         ),
     },
 ) as dag:
@@ -110,22 +123,36 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command="PYTHONPATH=. python preprocess.py "
-        f"--input-table {DATE}_clusterisation_items_raw --output-table {DATE}_item_full_encoding_enriched "
+        f"--input-table {DATE}_clusterisation_items_raw --output-table {DATE}_clustering_item_full_encoding_w_cat_group "
         "--config-file-name {{ params.config_file_name }} ",
     )
 
-    clusterisation = SSHGCEOperator(
-        task_id="clusterisation",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        environment=dag_config,
-        command="PYTHONPATH=. python clusterisation.py "
-        f"--input-table {DATE}_item_full_encoding_enriched --output-table item_clusters "
-        "--config-file-name {{ params.config_file_name }} ",
-    )
+    clusterisation_task = []
+    for category_config in categories_config:
+        group = category_config["group"]
+        output_table = (
+            f"""{DATE}_item_clusters_{category_config["target_n_clusters"]}_{group}"""
+        )
+        clusterisation_task.append(
+            SSHGCEOperator(
+                task_id=f"clusterisation_{group}",
+                instance_name=GCE_INSTANCE,
+                base_dir=BASE_DIR,
+                environment=dag_config,
+                command="PYTHONPATH=. python clusterisation.py "
+                f"""--target-n-clusters {category_config["target_n_clusters"]} """
+                f"--input-table {DATE}_clustering_item_full_encoding_w_cat_group "
+                f"--output-table {output_table} "
+                f"--clustering-group {group} ",
+            )
+        )
 
     gce_instance_stop = StopGCEOperator(
         task_id="gce_stop_task", instance_name=GCE_INSTANCE
+    )
+
+    postprocess_clustering = bigquery_job_task(
+        dag, "postprocess_clustering", postprocess_params, extra_params={}
     )
 
     (
@@ -135,7 +162,16 @@ with DAG(
         >> fetch_code
         >> install_dependencies
         >> preprocess
-        >> clusterisation
-        >> gce_instance_stop
-        >> end
     )
+    (
+        preprocess
+        # for task in clusterisation_task:
+        >> clusterisation_task[0]
+        >> clusterisation_task[1]
+        >> clusterisation_task[2]
+        >> clusterisation_task[3]
+        >> clusterisation_task[4]
+        >> clusterisation_task[5]
+        >> gce_instance_stop
+    )
+    (gce_instance_stop >> postprocess_clustering >> end)

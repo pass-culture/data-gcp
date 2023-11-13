@@ -18,7 +18,7 @@ class MatchModel(tf.keras.models.Model):
 
         self.user_layer = tf.keras.Sequential(
             [
-                StringLookup(vocabulary=user_input.unique()),
+                StringLookup(vocabulary=user_input),
                 # We add an additional embedding to account for unknown tokens.
                 Embedding(
                     input_dim=len(user_input) + 1,

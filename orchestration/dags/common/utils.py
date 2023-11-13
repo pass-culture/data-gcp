@@ -163,15 +163,8 @@ def depends_loop(
 
 
 def from_external(conn_id, sql_path):
-    return (
-        f"SELECT * FROM EXTERNAL_QUERY('{conn_id}', "
-        + '"'
-        + "{% include '"
-        + sql_path
-        + "' %}"
-        + '"'
-        + ");"
-    )
+    include = "{% include '" + sql_path + "' %}"
+    return f' SELECT * FROM EXTERNAL_QUERY("{conn_id}", """ {include} """ ) ; '
 
 
 def one_line_query(sql_path):

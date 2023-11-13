@@ -25,7 +25,8 @@ else:
     MLFLOW_URL = "https://mlflow.passculture.team/"
 
 APPLICATIVE_EXTERNAL_CONNECTION_ID = os.environ.get(
-    "APPLICATIVE_EXTERNAL_CONNECTION_ID", ""
+    "APPLICATIVE_EXTERNAL_CONNECTION_ID",
+    "passculture-metier-ehp.europe-west1.metier-pcapi-testing-connection",
 )
 METABASE_EXTERNAL_CONNECTION_ID = os.environ.get("METABASE_EXTERNAL_CONNECTION_ID", "")
 DATA_GCS_BUCKET_NAME = os.environ.get(

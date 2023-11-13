@@ -265,6 +265,7 @@ BIGQUERY_SCHEMAS = {
         "item_id": "STRING",
         "offer_id_at_providers": "STRING",
         "offer_name": "STRING",
+        "offer_description": "STRING",
         "URL": "STRING",
         "is_national": "STRING",
         "is_active": "STRING",
@@ -465,6 +466,7 @@ BIGQUERY_SCHEMAS = {
         "collective_offer_image_id": "STRING",
         "provider_id": "STRING",
         "national_program_id": "STRING",
+        "template_id": "STRING",
     },
     "applicative_database_collective_offer_template": {
         "collective_offer_audio_disability_compliant": "BOOLEAN",
@@ -616,5 +618,10 @@ BIGQUERY_SCHEMAS = {
         "national_program_id": "STRING",
         "national_program_name": "STRING",
         "national_program_creation_date": "DATETIME",
+    },
+    "institution_locations": {
+        "institution_id": "STRING",
+        "institution_latitude": "FLOAT",
+        "institution_longitude": "FLOAT",
     },
 }

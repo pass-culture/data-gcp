@@ -16,6 +16,7 @@ class PostHogEvent:
     timestamp: datetime
     uuid: str
     user_properties: dict
+    screen: str
 
 
 def access_secret_data(project_id, secret_id, version_id="latest", default=None):

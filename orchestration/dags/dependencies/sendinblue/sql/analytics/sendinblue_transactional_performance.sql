@@ -4,11 +4,9 @@
 -- *** Missing utm 
 
 WITH sendinblue_transactional as (
-    SELECT 
+    SELECT DISTINCT 
         *
-        , row_number() over( partition by template, tag order by update_date desc) as rank_update
-    FROM `{{ bigquery_raw_dataset }}.sendinblue_transactional_histo`
-    QUALIFY rank_update = 1
+    FROM `{{ bigquery_clean_dataset }}.sendinblue_transactional`
 ),
 
 user_traffic as (
@@ -30,10 +28,9 @@ user_traffic as (
 SELECT 
     template as template_id
     , tag
-    , last_date_delivered
-    , count_delivered as audience_size
-    , unique_opened as open_number
-    , unique_unsubscribed as unsubscriptions
+    , delivered_count as audience_size
+    , unique_opened_count as open_number
+    , unsubscribed_count as unsubscriptions
     , user_current_deposit_type
     , session_number
     , offer_consultation_number

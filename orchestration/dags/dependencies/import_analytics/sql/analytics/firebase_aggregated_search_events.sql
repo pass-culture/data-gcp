@@ -88,6 +88,7 @@ SELECT
     , search_is_based_on_history
     , search_offer_is_duo_filter
     , search_native_categories_filter
+    , user_location_type
  FROM `{{ bigquery_analytics_dataset }}`.firebase_events
  WHERE event_name = 'PerformSearch'
  AND NOT (event_name = 'PerformSearch' AND search_type = 'Suggestions' AND query IS NULL AND search_categories_filter IS NULL AND search_native_categories_filter IS NULL AND search_location_filter = '{"locationType":"EVERYWHERE"}')
@@ -121,7 +122,7 @@ INNER JOIN first_search USING(unique_search_id, unique_session_id)
 INNER JOIN conversion_per_search USING(unique_search_id, unique_session_id)
 ),
 
-genereic_search_and_other_searches AS (
+generic_search_and_other_searches AS (
 SELECT
     agg_search_data.*
     , LEAD(first_date) OVER(PARTITION BY unique_session_id ORDER BY first_timestamp) IS NOT NULL AS made_another_search
@@ -150,4 +151,4 @@ SELECT
   , CASE
     WHEN query_input IS NOT NULL AND NOT search_query_input_is_generic THEN 'specific_search'
     ELSE 'discovery_search' END AS search_objective
-FROM genereic_search_and_other_searches
+FROM generic_search_and_other_searches

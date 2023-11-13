@@ -7,6 +7,7 @@ SELECT
     , booking_id
     , event_date as booking_date
     , event_timestamp as booking_timestamp
+    , user_location_type
 FROM `{{ bigquery_analytics_dataset }}.firebase_events`
 WHERE event_name = "BookingConfirmation"
   {% if params.dag_type == 'intraday' %}

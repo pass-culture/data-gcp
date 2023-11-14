@@ -6,7 +6,7 @@ WITH venues AS (
         FROM `{{ bigquery_clean_dataset }}.applicative_database_venue` as venue
         JOIN `{{ bigquery_clean_dataset }}.applicative_database_offerer` as offerer ON venue_managing_offerer_id=offerer_id
         WHERE venue.venue_is_virtual is false
-        AND offerer.offerer_validation_status ='VALIDATED'
+        AND offerer.offerer_validation_status = 'VALIDATED'
 ),
 
 recommendable_offers_data AS (
@@ -31,6 +31,7 @@ recommendable_offers_data AS (
             MAX(booking_number_last_14_days) AS booking_number_last_14_days,
             MAX(booking_number_last_28_days) AS booking_number_last_28_days,
             MAX(is_underage_recommendable) as is_underage_recommendable,
+            MAX(is_sensitive) as is_sensitive,
             MAX(subcategory_id) as subcategory_id,
             MAX(search_group_name) as search_group_name,
             MAX(name) as name,
@@ -78,6 +79,7 @@ SELECT
     ro.booking_number_last_14_days,
     ro.booking_number_last_28_days,
     ro.is_underage_recommendable,
+    ro.is_sensitive,
     v.venue_latitude,
     v.venue_longitude,
     CASE

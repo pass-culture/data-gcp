@@ -72,7 +72,7 @@ get_recommendable_offers AS (
                 ELSE FALSE
             END
         ) AS is_underage_recommendable,
-        MIN(forbidden_offer.item_id is null)) as is_recommendable,
+        MIN(forbidden_offer.item_id is null) as is_recommendable,
         MAX(sensitive_offer.item_id is not null) as is_sensitive,
         ANY_VALUE(enriched_item_metadata.offer_type_labels) as offer_type_labels,
         ANY_VALUE(enriched_item_metadata.offer_type_domain) as offer_type_domain,

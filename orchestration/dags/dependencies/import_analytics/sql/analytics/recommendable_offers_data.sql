@@ -72,12 +72,8 @@ get_recommendable_offers AS (
                 ELSE FALSE
             END
         ) AS is_underage_recommendable,
-        -- not in forbidden_query or forbidden_offer
-        MIN(
-            forbidden_query.subcategory_id is null OR 
-            NOT (REGEXP_CONTAINS(LOWER(offer.offer_name) ,CONCAT(r'(?i)(\b', forbidden_query.query, r'\b)')))
-            OR forbidden_offer.product_id is null
-        ) as is_recommendable,
+        MIN(forbidden_query.subcategory_id is null)) as is_recommendable,
+        MAX(sensitive_offer.item_id is not null) as is_sensitive,
         ANY_VALUE(enriched_item_metadata.offer_type_labels) as offer_type_labels,
         ANY_VALUE(enriched_item_metadata.offer_type_domain) as offer_type_domain,
         ANY_VALUE(enriched_item_metadata.offer_type_id) as offer_type_id,
@@ -113,11 +109,10 @@ get_recommendable_offers AS (
         ) item_counts on item_counts.item_id = offer.item_id
         JOIN `{{ bigquery_analytics_dataset }}`.offer_with_mediation om on offer.offer_id=om.offer_id
         LEFT JOIN  `{{ bigquery_analytics_dataset }}`.enriched_item_metadata enriched_item_metadata on offer.item_id = enriched_item_metadata.item_id
-        
-        LEFT JOIN `{{ bigquery_raw_dataset }}`.forbidden_query_recommendation forbidden_query on 
-            enriched_item_metadata.subcategory_id = forbidden_query.subcategory_id
         LEFT JOIN `{{ bigquery_raw_dataset }}`.forbidden_offers_recommendation forbidden_offer on 
-            offer.offer_product_id = forbidden_offer.product_id
+            offer.item_id = forbidden_offer.item_id
+        LEFT JOIN `{{ bigquery_raw_dataset }}`.sensitive_offers_recommendation sensitive_offer on 
+            offer.item_id = sensitive_offer.item_id
         LEFT JOIN `{{ bigquery_analytics_dataset }}`.titelive_gtl_mapping glt_mapping on 
             offer.titelive_gtl_id = glt_mapping.gtl_id
     WHERE

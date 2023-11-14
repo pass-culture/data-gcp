@@ -25,6 +25,7 @@ RETURNS TABLE (
                 offer_type_label VARCHAR,
                 booking_number INTEGER,
                 is_underage_recommendable BOOLEAN,
+                is_sensitive BOOLEAN,
                 venue_latitude DECIMAL, 
                 venue_longitude DECIMAL,
                 default_max_distance INTEGER,

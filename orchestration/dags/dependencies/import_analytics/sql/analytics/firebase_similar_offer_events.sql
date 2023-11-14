@@ -14,6 +14,7 @@ SELECT
     , similar_offer_item_ids.item_id AS similar_item_id
     , booking_id
     , event_name
+    , f_events.user_location_type
     , CASE WHEN event_name = 'PlaylistVerticalScroll' THEN 'display' ELSE 'convert' END AS event_type
 FROM `{{ bigquery_analytics_dataset }}.firebase_events` f_events
 INNER JOIN `{{ bigquery_analytics_dataset }}.offer_item_ids` offer_item_ids USING(offer_id)

@@ -3,7 +3,7 @@
         offer_id,
         humanize_id(offer_id) AS humanized_id,
     FROM
-        `{{ bigquery_analytics_dataset }}.`.applicative_database_offer
+        `{{ bigquery_clean_dataset }}.`.applicative_database_offer
     WHERE
         offer_id is not NULL
 ),
@@ -22,7 +22,7 @@ mediation AS (
                         dateModifiedAtLastProvider DESC
                 ) AS rnk
             FROM
-                `{{ bigquery_analytics_dataset }}`.applicative_database_mediation
+                `{{ bigquery_clean_dataset }}`.applicative_database_mediation
             WHERE
                 isActive
         ) inn

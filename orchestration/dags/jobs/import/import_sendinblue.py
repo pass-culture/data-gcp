@@ -101,7 +101,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="python main.py --target transactional --start_date {{ params.start_date }}, --end_date {{ params.end_date }}",
+        command='python main.py --target transactional --start-date "{{ params.start_date }}" --end-date "{{ params.end_date }}"',
         do_xcom_push=True,
     )
 
@@ -129,7 +129,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="python main.py --target newsletter --start_date {{ params.start_date }}, --end_date {{ params.end_date }}",
+        command="python main.py --target newsletter --start-date {{ params.start_date }} --end-date {{ params.end_date }}",
         do_xcom_push=True,
     )
 

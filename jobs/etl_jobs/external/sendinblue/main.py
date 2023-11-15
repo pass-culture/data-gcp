@@ -30,8 +30,8 @@ def run(
         ...,
         help="Nom de la tache",
     ),
-    start_date: date = typer.Option(..., help="Date de début d'import"),
-    end_date: date = typer.Option(..., help="Date de fin d'import"),
+    start_date: str = typer.Option(..., help="Date de début d'import"),
+    end_date: str = typer.Option(..., help="Date de fin d'import"),
 ):
 
     if target == "newsletter":

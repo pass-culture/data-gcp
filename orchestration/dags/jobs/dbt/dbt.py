@@ -1,13 +1,14 @@
 import datetime
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.bash import BashOperator
 from common.alerts import task_fail_slack_alert
 from common.utils import (
     get_airflow_schedule,
 )
 
 from common import macros
-from common.config import ENV_SHORT_NAME, GCP_PROJECT_ID, DAG_FOLDER
+from common.config import GCP_PROJECT_ID, DAG_FOLDER
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 1),
@@ -18,9 +19,9 @@ default_dag_args = {
 
 
 with DAG(
-    "compile_dbt",
+    "dbt_jobs",
     default_args=default_dag_args,
-    description="Compile dbt test",
+    description="dbt test dag",
     on_failure_callback=None,
     schedule_interval=get_airflow_schedule("0 1 * * *"),
     catchup=False,
@@ -30,3 +31,10 @@ with DAG(
 ) as dag:
 
     start = DummyOperator(task_id="start")
+
+    dbt_run_op = BashOperator(
+        task_id='run_dbt',  
+        bash_command="dbt run --target dev"
+    )
+
+start >> dbt_run_op

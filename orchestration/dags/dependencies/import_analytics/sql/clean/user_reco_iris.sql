@@ -22,7 +22,7 @@ SELECT
   user_id, 
   reco_iris, 
   nb_logs,
-  emboitements_iris.department
+  iris_france.department
 FROM geoloc_ranked 
-LEFT JOIN `{{ bigquery_clean_dataset }}.emboitements_iris` emboitements_iris ON geoloc_ranked.reco_iris = emboitements_iris.code_iris
+LEFT JOIN `{{ bigquery_clean_dataset }}.iris_france` iris_france ON geoloc_ranked.reco_iris = iris_france.code_iris
 WHERE ranking = 1

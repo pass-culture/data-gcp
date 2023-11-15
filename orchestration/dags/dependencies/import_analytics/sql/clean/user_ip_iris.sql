@@ -45,9 +45,8 @@ SELECT
   ip_ranking.user_id,
   ip_ranking.nb_log_ip,
   iris_france.iriscode as ip_iris,
-  emboitements_iris.department 
+  iris_france.department 
 FROM ip_ranking 
-CROSS JOIN `{{ bigquery_analytics_dataset }}.iris_france`
-LEFT JOIN `{{ bigquery_clean_dataset }}.emboitements_iris` emboitements_iris ON iris_france.iriscode = emboitements_iris.code_iris
+CROSS JOIN `{{ bigquery_clean_dataset }}.iris_france`
 WHERE ranking = 1 
 AND ST_CONTAINS(iris_france.shape, ST_GEOGPOINT(longitude, latitude))

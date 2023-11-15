@@ -29,7 +29,9 @@ def run(
     target: str = typer.Option(
         ...,
         help="Nom de la tache",
-    )
+    ),
+    start_date: date = typer.Option(..., help="Date de début d'import"),
+    end_date: date = typer.Option(..., help="Date de fin d'import"),
 ):
 
     if target == "newsletter":
@@ -55,8 +57,8 @@ def run(
             tmp_dataset=BIGQUERY_TMP_DATASET,
             api_key=API_KEY,
             destination_table_name=TRANSACTIONAL_TABLE_NAME,
-            start_date=yesterday.strftime("%Y-%m-%d"),
-            end_date=yesterday.strftime("%Y-%m-%d"),
+            start_date=start_date,
+            end_date=end_date,
         )
         sendinblue_transactional.create_instance_transactional_email_api()
         all_events = []

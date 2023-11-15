@@ -5,7 +5,7 @@ with emails as (
         '{{ applicative_external_connection_id }}',
         'SELECT CAST("id" AS varchar(255)) AS user_id, email FROM public.user')
 )
-SELECT 
+SELECT DISTINCT
     template
     , tag
     , user_id

@@ -1,0 +1,14 @@
+version: 2
+
+sources:
+  - name: 'clean' # this is the source_name
+    database: |
+      {%- if  target.name == "dev" -%} passculture-data-ehp
+      {%- elif target.name == "stg"  -%} passculture-data-ehp
+      {%- elif target.name == "prod"  -%} passculture-data-prod
+      {%- else -%} invalid_database
+      {%- endif -%}
+    schema: 'clean_{{ target.name }}' # this is the source_name
+    tables:
+      - name: adage_involved_student # this is the table_name
+      - name: applicative_database_educational_year

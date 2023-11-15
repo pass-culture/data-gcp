@@ -35,6 +35,7 @@ from dependencies.sendinblue.import_sendinblue import (
 
 GCE_INSTANCE = f"import-sendinblue-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/sendinblue"
+yesterday = (datetime.date.today() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
 dag_config = {
     "GCP_PROJECT": GCP_PROJECT_ID,
     "ENV_SHORT_NAME": ENV_SHORT_NAME,
@@ -63,7 +64,15 @@ with DAG(
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
-        )
+        ),
+        "start_date": Param(
+            default=yesterday,
+            type="string",
+        ),
+        "end_date": Param(
+            default=yesterday,
+            type="string",
+        ),
     },
 ) as dag:
 
@@ -92,7 +101,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="python main.py --target transactional ",
+        command='python main.py --target transactional --start-date "{{ params.start_date }}" --end-date "{{ params.end_date }}"',
         do_xcom_push=True,
     )
 
@@ -120,7 +129,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="python main.py --target newsletter ",
+        command="python main.py --target newsletter --start-date {{ params.start_date }} --end-date {{ params.end_date }}",
         do_xcom_push=True,
     )
 

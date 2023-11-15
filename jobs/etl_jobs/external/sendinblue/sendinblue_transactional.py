@@ -4,6 +4,7 @@ from sib_api_v3_sdk.rest import ApiException
 from google.cloud import bigquery
 import pandas as pd
 import numpy as np
+from datetime import datetime
 
 import logging
 from utils import ENV_SHORT_NAME
@@ -170,7 +171,7 @@ class SendinblueTransactional:
 
         bigquery_client = bigquery.Client()
 
-        yyyymmdd = self.start_date.replace("-", "")
+        yyyymmdd = datetime.today().strftime("%Y%m%d")
         table_id = f"{self.gcp_project}.{self.tmp_dataset}.{yyyymmdd}_{self.destination_table_name}_histo"
 
         job_config = bigquery.LoadJobConfig(

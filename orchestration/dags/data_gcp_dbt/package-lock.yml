@@ -3,4 +3,8 @@ packages:
   version: 1.0.0
 - package: elementary-data/elementary
   version: 0.7.1
-sha1_hash: fd4399fb2dfc72781c757145bf848505ad03147e
+- package: calogica/dbt_expectations
+  version: 0.10.1
+- package: calogica/dbt_date
+  version: 0.10.0
+sha1_hash: 852934279dc50bbae9c7a10dd5d419a9be18eb5f

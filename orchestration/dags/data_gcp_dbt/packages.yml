@@ -3,3 +3,5 @@ packages:
     version: 1.0.0
   - package: elementary-data/elementary
     version: 0.7.1
+  - package: calogica/dbt_expectations
+    version: 0.10.1

@@ -11,8 +11,10 @@ from common.utils import (
 from common import macros
 from common.config import GCP_PROJECT_ID, DAG_FOLDER
 
-PATH_TO_DBT_VENV = "/Users/valentin/.pyenv/versions/3.10.4/envs/dbt-venv"
-PATH_TO_DBT_PROJECT = "orchestration/dags/data_gcp_dbt"
+
+# source {PATH_TO_DBT_VENV} && 
+PATH_TO_DBT_VENV = "3.10.4/envs/dbt-venv"
+PATH_TO_DBT_PROJECT ="orchestration/dags/data_gcp_dbt"
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 1),
@@ -20,10 +22,11 @@ default_dag_args = {
     "retries": 1,
     "project_id": GCP_PROJECT_ID,
 }
-dag_config = {
-    "PATH_TO_DBT_VENV": None,
-    "PATH_TO_DBT_PROJECT": "orchestration/dags/data_gcp_dbt",
-}
+# dag_config = {
+#     "PATH_TO_DBT_VENV": None,
+#     "PATH_TO_DBT_PROJECT": "orchestration/dags/data_gcp_dbt"
+
+# }
 
 with DAG(
     "dbt_source_jobs",
@@ -54,10 +57,9 @@ with DAG(
     start = DummyOperator(task_id="start")
 
     dbt_run_op = BashOperator(
-        task_id="run_selective_dbt",
-        env={"PATH_TO_DBT_VENV": PATH_TO_DBT_VENV},
-        cwd=PATH_TO_DBT_PROJECT,
-        bash_command="source $PATH_TO_DBT_VENV && dbt run --select models.{{ params.folder }}.*{{ params.children }} --target {{ params.target }}",
+        task_id='run_selective_dbt',  
+        bash_command="dbt run --select models.{{ params.folder }}.*{{ params.children }} --target {{ params.target }}"
+        
     )
 
 start >> dbt_run_op

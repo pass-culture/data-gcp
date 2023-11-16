@@ -11,6 +11,7 @@ SELECT
     user_deposit_remaining_credit,
     user_iris_id,
     user_is_geolocated,
+    user_extra_data,
     offer_user_distance,
     offer_is_geolocated,
     offer_id,

@@ -1,7 +1,7 @@
 WITH export_table AS (
     SELECT
         pso.id,
-        reco_call_id,
+        call_id as reco_call_id,
         context,
         context_extra_data,
         date,
@@ -29,8 +29,6 @@ WITH export_table AS (
         offer_order,
         offer_venue_id,
         offer_extra_data,
-        venue_iris_id,
-        i.centroid as venue_iris_centroid,
         ROW_NUMBER() OVER (
             PARTITION BY call_id,
             date(date),
@@ -40,7 +38,6 @@ WITH export_table AS (
         ) as item_rank
     FROM
         `{{ bigquery_raw_dataset }}.past_offer_context` pso
-        LEFT JOIN `{{ bigquery_analytics_dataset }}.iris_france` i on i.id = pso.venue_iris_id
         LEFT JOIN `{{ bigquery_analytics_dataset }}.iris_france` ii on ii.id = pso.user_iris_id QUALIFY ROW_NUMBER() OVER (
             PARTITION BY user_id,
             call_id,

@@ -1303,7 +1303,6 @@ ENRICHED_OFFERER_DATA_INPUT = {
             "last_update_at": datetime.now().replace(microsecond=0),
         }
     ],
-
 }
 
 ENRICHED_OFFERER_DATA_EXPECTED = [
@@ -1335,7 +1334,9 @@ ENRICHED_OFFERER_DATA_EXPECTED = [
         "offerer_last_bookable_offer_date": None,
         "offerer_first_individual_booking_date": datetime.now().replace(microsecond=0),
         "offerer_last_individual_booking_date": datetime.now().replace(microsecond=0),
-        "first_individual_paid_offer_creation_date": datetime.now().replace(microsecond=0)
+        "first_individual_paid_offer_creation_date": datetime.now().replace(
+            microsecond=0
+        ),
         "offerer_first_collective_booking_date": datetime.now().replace(microsecond=0),
         "offerer_last_collective_booking_date": datetime.now().replace(microsecond=0),
         "first_booking_date": datetime.now().replace(microsecond=0),
@@ -1372,7 +1373,7 @@ ENRICHED_OFFERER_DATA_EXPECTED = [
         "offerer_humanized_id": "AE",
         "current_year_revenue": 7,
         "is_local_authority": True,
-        "first_adage_validation_date": datetime.now().replace(microsecond=0)
+        "first_adage_validation_date": datetime.now().replace(microsecond=0),
     }
 ]
 

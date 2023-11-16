@@ -1,5 +1,5 @@
 
-version: 2
+version: 1
 
 models:
   - name: adage_involved_institution
@@ -8,3 +8,6 @@ models:
       - name: date
         tests:
           - not_null
+  - name: firebase_events
+    description: "firebase events."
+

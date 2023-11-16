@@ -624,4 +624,12 @@ BIGQUERY_SCHEMAS = {
         "institution_latitude": "FLOAT",
         "institution_longitude": "FLOAT",
     },
+    "enriched_suivi_dms_adage": {
+        "offerer_id": "STRING",
+        "application_number": "STRING",
+    },
+    "dms_pro": {
+        "application_number": "STRING",
+        "last_update_at": "DATETIME",
+    },
 }

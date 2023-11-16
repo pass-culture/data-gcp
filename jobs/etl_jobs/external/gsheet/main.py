@@ -1,7 +1,7 @@
 import os
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import secretmanager
-from gsheet import export_sheet
+from gsheet import export_sheet, SHEETS
 import json
 import typer
 
@@ -22,13 +22,15 @@ def access_secret_data(project_id, secret_id, version_id=1, default=None):
 
 
 def main():
-
-    sheet_df = export_sheet(json.loads(access_secret_data(GCP_PROJECT_ID, SA_ACCOUNT)))
-    sheet_df.to_gbq(
-        f"{BIGQUERY_RAW_DATASET}.gsheet_eac_webinar",
-        GCP_PROJECT_ID,
-        if_exists="replace",
-    )
+    for k, v in SHEETS.items():
+        sheet_df = export_sheet(
+            json.loads(access_secret_data(GCP_PROJECT_ID, SA_ACCOUNT)), v
+        )
+        sheet_df.to_gbq(
+            f"{BIGQUERY_RAW_DATASET}.{k}",
+            GCP_PROJECT_ID,
+            if_exists="replace",
+        )
 
 
 if __name__ == "__main__":

@@ -68,3 +68,5 @@ elif ENV_SHORT_NAME == "stg":
     MEDIATION_URL = "passculture-metier-ehp-staging"
 else:
     MEDIATION_URL = "passculture-metier-ehp-testing"
+
+PATH_TO_DBT_PROJECT = "dags/data_gcp_dbt"

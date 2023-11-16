@@ -12,6 +12,7 @@ WITH export_table AS (
         user_favorites_count,
         user_deposit_remaining_credit,
         user_iris_id,
+        ii.centroid as user_iris_centroid,
         user_is_geolocated,
         offer_user_distance,
         offer_is_geolocated,

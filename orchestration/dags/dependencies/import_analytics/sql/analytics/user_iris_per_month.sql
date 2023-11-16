@@ -12,9 +12,9 @@ SELECT
   user_reco_iris.reco_iris,
   user_reco_iris.nb_log_reco,
   user_reco_iris.department AS reco_department
-FROM `{{ bigquery_clean_dataset }}.user_ip_iris` 
-LEFT JOIN `{{ bigquery_clean_dataset }}.user_reco_iris` ON user_ip_iris.month_log = user_reco_iris.month_log AND user_ip_iris.user_id = user_reco_iris.user_id 
-LEFT JOIN `{{ bigquery_clean_dataset }}.user_declared_iris` ON user_ip_iris.user_id = user_declared_iris.user_id
+FROM `{{ bigquery_clean_dataset }}.user_ip_iris` AS user_ip_iris
+LEFT JOIN `{{ bigquery_clean_dataset }}.user_reco_iris` AS user_reco_iris ON user_ip_iris.month_log = user_reco_iris.month_log AND user_ip_iris.user_id = user_reco_iris.user_id 
+LEFT JOIN `{{ bigquery_clean_dataset }}.user_declared_iris` AS user_declared_iris ON user_ip_iris.user_id = user_declared_iris.user_id
 
 -- Mettre ici variable du mois du jour de calcul {  d  }
 WHERE month_log = date_trunc(DATE('{{ ds }}'), month)

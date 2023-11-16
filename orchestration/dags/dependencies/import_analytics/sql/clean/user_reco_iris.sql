@@ -3,7 +3,7 @@ SELECT
   DATE_TRUNC(DATE(`{{ bigquery_clean_dataset }}.past_recommended_offers`.date), month) as month_log,
   userid AS user_id,
   user_iris_id AS reco_iris,
-  COUNT(DISTINCT `{{ bigquery_clean_dataset }}.past_recommended_offers`.date) nb_logs,
+  COUNT(DISTINCT `{{ bigquery_clean_dataset }}.past_recommended_offers`.date) nb_log_reco,
 FROM  `{{ bigquery_clean_dataset }}.past_recommended_offers` 
 WHERE user_iris_id IS NOT NULL 
 AND DATE_TRUNC(DATE(date), MONTH) = DATE_TRUNC(DATE('{{ ds }}'), month)
@@ -19,10 +19,10 @@ ORDER BY 1, 2, 3, 4)
 
 SELECT 
   month_log, 
-  user_id, 
-  reco_iris, 
-  nb_logs,
+  CAST(user_id AS STRING) AS user_id, 
+  iriscode AS reco_iris, 
+  nb_log_reco,
   iris_france.department
 FROM geoloc_ranked 
-LEFT JOIN `{{ bigquery_clean_dataset }}.iris_france` iris_france ON geoloc_ranked.reco_iris = iris_france.code_iris
+LEFT JOIN `{{ bigquery_clean_dataset }}.iris_france` iris_france ON geoloc_ranked.reco_iris = iris_france.id
 WHERE ranking = 1

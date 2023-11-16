@@ -47,6 +47,6 @@ SELECT
   iris_france.iriscode as ip_iris,
   iris_france.department 
 FROM ip_ranking 
-CROSS JOIN `{{ bigquery_clean_dataset }}.iris_france`
+CROSS JOIN `{{ bigquery_clean_dataset }}.iris_france` AS iris_france
 WHERE ranking = 1 
 AND ST_CONTAINS(iris_france.shape, ST_GEOGPOINT(longitude, latitude))

@@ -27,4 +27,4 @@ SELECT
     offer_venue_id,
     offer_extra_data
 FROM
-    public .past_offer_context
+    public.past_offer_context

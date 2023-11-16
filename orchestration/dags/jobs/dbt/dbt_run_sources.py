@@ -50,7 +50,7 @@ with DAG(
 
     dbt_run_op = BashOperator(
         task_id='run_selective_dbt',  
-        bash_command="dbt run --models {{ params.folder }}.*{{ params.children }} --target {{ params.target }}"
+        bash_command="dbt run --select models.{{ params.folder }}.*{{ params.children }} --target {{ params.target }}"
     )
 
 start >> dbt_run_op

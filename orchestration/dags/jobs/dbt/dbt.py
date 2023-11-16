@@ -33,8 +33,8 @@ with DAG(
     start = DummyOperator(task_id="start")
 
     dbt_run_op = BashOperator(
-        task_id='run_dbt',  
-        bash_command="dbt run --target dev"
+        task_id="run_dbt",
+        bash_command=f"cd /opt/airflow/dags/data_gcp_dbt && dbt deps && dbt run --target dev --profiles-dir /opt/airflow/dags/data_gcp_dbt",
     )
 
 start >> dbt_run_op

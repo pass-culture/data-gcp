@@ -34,3 +34,5 @@ models:
   data_gcp_dbt:
     # Config indicated by + and applies to all files under models/example/
     +materialized: view
+vars:
+  ENV: "{{ env_var('DATABASE', 'passculture-data-ehp') }}"

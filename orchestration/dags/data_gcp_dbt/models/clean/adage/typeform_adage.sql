@@ -1,0 +1,1 @@
+select * from {{ source('clean','gsheet_eac_webinar') }}

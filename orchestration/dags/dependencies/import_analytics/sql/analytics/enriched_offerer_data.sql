@@ -95,7 +95,8 @@ all_collective_offers AS (
         collective_offer_id,
         venue.venue_id,
         venue.venue_managing_offerer_id AS offerer_id,
-        collective_offer_creation_date
+        collective_offer_creation_date,
+        1=0 AS is_template
     FROM
         `{{ bigquery_clean_dataset }}`.applicative_database_collective_offer AS collective_offer
      JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue ON venue.venue_id = collective_offer.venue_id
@@ -106,7 +107,8 @@ all_collective_offers AS (
         collective_offer_id,
         venue.venue_id,
         venue.venue_managing_offerer_id AS offerer_id,
-        collective_offer_creation_date
+        collective_offer_creation_date,
+        1=1 AS is_template
     FROM
         `{{ bigquery_clean_dataset }}`.applicative_database_collective_offer_template AS collective_offer_template
      JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue ON venue.venue_id = collective_offer_template.venue_id
@@ -118,8 +120,14 @@ collective_offers_per_offerer AS (
     SELECT
         offerer_id,
         count(collective_offer_id) AS collective_offers_created,
+        count(CASE WHEN is_template THEN collective_offer_id ELSE NULL END) AS collective_offers_template_created,
+        count(CASE WHEN is_template THEN NULL ELSE collective_offer_id END) AS collective_offers_pre_bookable_created,
         MIN(collective_offer_creation_date) AS first_collective_offer_creation_date,
+        MIN(CASE WHEN is_template THEN collective_offer_id ELSE NULL END) AS first_collective_offer_template_creation_date,
+        MIN(CASE WHEN is_template THEN NULL ELSE collective_offer_id END) AS first_collective_offer_pre_bookable_creation_date,
         MAX(collective_offer_creation_date) AS last_collective_offer_creation_date
+        MAX(CASE WHEN is_template THEN collective_offer_id ELSE NULL END) AS last_collective_offer_template_creation_date,
+        MAX(CASE WHEN is_template THEN NULL ELSE collective_offer_id END) AS last_collective_offer_pre_bookable_creation_date,
     FROM
         all_collective_offers
     GROUP BY
@@ -139,8 +147,8 @@ bookable_individual_offer_cnt AS (
  bookable_collective_offer_cnt AS (
     SELECT
         offerer_id,
-        COUNT(DISTINCT collective_offer_id) AS offerer_bookable_collective_offer_cnt
-    FROM
+        COUNT(DISTINCT collective_offer_id) AS offerer_bookable_collective_offer_cnt,
+   FROM
         `{{ bigquery_clean_dataset }}`.bookable_collective_offer
     GROUP BY
         1
@@ -231,7 +239,11 @@ SELECT
     individual_offers_per_offerer.last_individual_offer_creation_date AS offerer_last_individual_offer_creation_date,
     individual_offers_per_offerer.first_individual_paid_offer_creation_date AS first_individual_paid_offer_creation_date
     collective_offers_per_offerer.first_collective_offer_creation_date AS offerer_first_collective_offer_creation_date,
+    collective_offers_per_offerer.first_collective_offer_template_creation_date AS offerer_first_collective_offer_template_creation_date,
+    collective_offers_per_offerer.first_collective_offer_pre_bookable_creation_date AS offerer_first_collective_offer_pre_bookable_creation_date,
     collective_offers_per_offerer.last_collective_offer_creation_date AS offerer_last_collective_offer_creation_date,
+    collective_offers_per_offerer.last_collective_offer_template_creation_date AS offerer_last_collective_offer_template_creation_date,
+    collective_offers_per_offerer.last_collective_offer_pre_bookable_creation_date AS offerer_last_collective_offer_pre_bookable_creation_date,
     CASE WHEN first_individual_offer_creation_date IS NOT NULL AND first_collective_offer_creation_date IS NOT NULL THEN LEAST(first_collective_offer_creation_date, first_individual_offer_creation_date)
          WHEN first_individual_offer_creation_date IS NOT NULL THEN first_individual_offer_creation_date
          ELSE first_collective_offer_creation_date END AS offerer_first_offer_creation_date,
@@ -252,6 +264,8 @@ SELECT
          ELSE last_collective_booking_date END AS offerer_last_booking_date,
     COALESCE(individual_offers_per_offerer.individual_offers_created,0) AS offerer_individual_offers_created,
     COALESCE(collective_offers_per_offerer.collective_offers_created,0) AS offerer_collective_offers_created,
+    COALESCE(collective_offers_per_offerer.collective_offers_template_created,0) AS offerer_collective_offers_template_created,
+    COALESCE(collective_offers_per_offerer.collective_offers_pre_bookable_created,0) AS offerer_collective_offers_pre_bookable_created,
     COALESCE(individual_offers_per_offerer.individual_offers_created,0) + COALESCE(collective_offers_per_offerer.collective_offers_created,0) AS offer_cnt,
     COALESCE(bookable_individual_offer_cnt.offerer_bookable_individual_offer_cnt,0) AS offerer_bookable_individual_offer_cnt,
     COALESCE(bookable_collective_offer_cnt.offerer_bookable_collective_offer_cnt,0) AS offerer_bookable_collective_offer_cnt,

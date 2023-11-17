@@ -447,6 +447,7 @@ analytics_tables = {
         "depends": [
             "enriched_offerer_data",
             "enriched_venue_data",
+            "bookable_venue_history",
         ],
     },
     "bookable_venue_history": {

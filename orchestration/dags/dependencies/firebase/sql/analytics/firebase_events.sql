@@ -272,7 +272,7 @@ WITH temp_firebase_events AS (
             from
                 unnest(event_params) event_params
             where
-                event_params.key = 'searchIsBasedOnHistory '
+                event_params.key = 'searchIsBasedOnHistory'
         ) as search_is_based_on_history,
         (
             select

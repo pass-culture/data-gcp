@@ -96,7 +96,7 @@ all_collective_offers AS (
         venue.venue_id,
         venue.venue_managing_offerer_id AS offerer_id,
         collective_offer_creation_date,
-        false AS is_template
+        False AS is_template
     FROM
         `{{ bigquery_clean_dataset }}`.applicative_database_collective_offer AS collective_offer
      JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue ON venue.venue_id = collective_offer.venue_id
@@ -108,7 +108,7 @@ all_collective_offers AS (
         venue.venue_id,
         venue.venue_managing_offerer_id AS offerer_id,
         collective_offer_creation_date,
-        true AS is_template
+        True AS is_template
     FROM
         `{{ bigquery_clean_dataset }}`.applicative_database_collective_offer_template AS collective_offer_template
      JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue ON venue.venue_id = collective_offer_template.venue_id
@@ -125,9 +125,9 @@ collective_offers_per_offerer AS (
         MIN(collective_offer_creation_date) AS first_collective_offer_creation_date,
         MIN(CASE WHEN is_template THEN collective_offer_id ELSE NULL END) AS first_collective_offer_template_creation_date,
         MIN(CASE WHEN is_template THEN NULL ELSE collective_offer_id END) AS first_collective_offer_pre_bookable_creation_date,
-        MAX(collective_offer_creation_date) AS last_collective_offer_creation_date
+        MAX(collective_offer_creation_date) AS last_collective_offer_creation_date,
         MAX(CASE WHEN is_template THEN collective_offer_id ELSE NULL END) AS last_collective_offer_template_creation_date,
-        MAX(CASE WHEN is_template THEN NULL ELSE collective_offer_id END) AS last_collective_offer_pre_bookable_creation_date,
+        MAX(CASE WHEN is_template THEN NULL ELSE collective_offer_id END) AS last_collective_offer_pre_bookable_creation_date
     FROM
         all_collective_offers
     GROUP BY

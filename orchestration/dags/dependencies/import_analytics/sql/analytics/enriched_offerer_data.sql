@@ -96,7 +96,7 @@ all_collective_offers AS (
         venue.venue_id,
         venue.venue_managing_offerer_id AS offerer_id,
         collective_offer_creation_date,
-        1=0 AS is_template
+        false AS is_template
     FROM
         `{{ bigquery_clean_dataset }}`.applicative_database_collective_offer AS collective_offer
      JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue ON venue.venue_id = collective_offer.venue_id
@@ -108,7 +108,7 @@ all_collective_offers AS (
         venue.venue_id,
         venue.venue_managing_offerer_id AS offerer_id,
         collective_offer_creation_date,
-        1=1 AS is_template
+        true AS is_template
     FROM
         `{{ bigquery_clean_dataset }}`.applicative_database_collective_offer_template AS collective_offer_template
      JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue ON venue.venue_id = collective_offer_template.venue_id
@@ -147,7 +147,7 @@ bookable_individual_offer_cnt AS (
  bookable_collective_offer_cnt AS (
     SELECT
         offerer_id,
-        COUNT(DISTINCT collective_offer_id) AS offerer_bookable_collective_offer_cnt,
+        COUNT(DISTINCT collective_offer_id) AS offerer_bookable_collective_offer_cnt
    FROM
         `{{ bigquery_clean_dataset }}`.bookable_collective_offer
     GROUP BY
@@ -237,7 +237,7 @@ SELECT
     related_stocks.first_stock_creation_date,
     individual_offers_per_offerer.first_individual_offer_creation_date AS offerer_first_individual_offer_creation_date,
     individual_offers_per_offerer.last_individual_offer_creation_date AS offerer_last_individual_offer_creation_date,
-    individual_offers_per_offerer.first_individual_paid_offer_creation_date AS first_individual_paid_offer_creation_date
+    individual_offers_per_offerer.first_individual_paid_offer_creation_date AS first_individual_paid_offer_creation_date,
     collective_offers_per_offerer.first_collective_offer_creation_date AS offerer_first_collective_offer_creation_date,
     collective_offers_per_offerer.first_collective_offer_template_creation_date AS offerer_first_collective_offer_template_creation_date,
     collective_offers_per_offerer.first_collective_offer_pre_bookable_creation_date AS offerer_first_collective_offer_pre_bookable_creation_date,
@@ -296,7 +296,7 @@ SELECT
     permanent_venues_managed,
     COALESCE(venues_with_offers.nb_venue_with_offers,0) AS venue_with_offer,
     offerer_humanized_id.humanized_id AS offerer_humanized_id,
-    adage_validation.first_adage_validation_date,
+    adage_validation.first_adage_validation_date as offerer_first_adage_validation_date,
 FROM
     `{{ bigquery_clean_dataset }}`.applicative_database_offerer AS offerer
     LEFT JOIN individual_bookings_per_offerer ON individual_bookings_per_offerer.offerer_id = offerer.offerer_id

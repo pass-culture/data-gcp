@@ -54,12 +54,13 @@ individual_offer_add_price AS (
         offer_id,
         offer_creation_date, 
         offerer_id,
-        venue_id,
         stock_price AS last_stock_price
     FROM
         (
             SELECT
                 offer.offer_id,
+                offer.offerer_id,
+                offer.offer_creation_date,
                 stock.stock_price,
                 rank() OVER (
                     PARTITION BY stock.offer_id

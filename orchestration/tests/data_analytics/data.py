@@ -533,6 +533,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_INPUT = {
             "provider_id": "65378",
             "national_program_id": None,
             "template_id": "1",
+            "collective_offer_format": "CONCERT",
         }
     ],
     "applicative_database_collective_offer_template": [
@@ -549,6 +550,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_INPUT = {
             "collective_offer_image_id": "28",
             "provider_id": "65378",
             "national_program_id": None,
+            "collective_offer_format": "CONCERT",
         }
     ],
     "applicative_database_national_program": [],
@@ -585,6 +587,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_EXPECTED = [
         "number_of_tickets": 30,
         "collective_offer_subcategory_id": "CONCERT",
         "collective_offer_category_id": "MUSIQUE_LIVE",
+        "collective_offer_format": "CONCERT",
         "collective_offer_students": "COLLEGE4",
         "collective_offer_is_active": True,
         "collective_offer_is_bookable": False,
@@ -621,6 +624,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_EXPECTED = [
         "number_of_tickets": None,
         "collective_offer_subcategory_id": "CONCERT",
         "collective_offer_category_id": "MUSIQUE_LIVE",
+        "collective_offer_format": "CONCERT",
         "collective_offer_students": "COLLEGE4",
         "collective_offer_is_active": True,
         "collective_offer_is_bookable": False,

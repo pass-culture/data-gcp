@@ -1,6 +1,6 @@
 {% macro create_humanize_id_temp_function_udf() %}
 
-CREATE TEMPORARY FUNCTION {{target.schema}}.humanize_id(id STRING)
+CREATE OR REPLACE TEMPORARY FUNCTION {{target.schema}}.humanize_id(id STRING)
 RETURNS STRING
 LANGUAGE js
 OPTIONS (library="{BASE32_JS_LIB_PATH}")

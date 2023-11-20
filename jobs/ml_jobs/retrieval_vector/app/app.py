@@ -85,6 +85,7 @@ def search_vector(
         if vector is not None:
             results = model.search(
                 vector=vector,
+                similarity_metric="dot",
                 n=size,
                 query_filter=selected_params,
                 details=debug,

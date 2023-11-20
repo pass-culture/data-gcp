@@ -23,7 +23,9 @@ clean-targets:         # directories to be removed by `dbt clean`
   - "target"
   - "dbt_packages"
 
-
+on-run-start:
+  - "{{ create_humanize_id_temp_function_udf()}}"
+  - "{{ create_dehumanize_id_temp_function_udf()}}"
 # Configuring models
 # Full documentation: https://docs.getdbt.com/docs/configuring-models
 

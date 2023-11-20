@@ -1300,7 +1300,7 @@ ENRICHED_OFFERER_DATA_INPUT = {
     "dms_pro": [
         {
             "application_number": "1",
-            "last_update_at": datetime.now().replace(microsecond=0),
+            "last_update_at": datetime.now().replace(microsecond=0).timestamp(),
         }
     ],
 }
@@ -1319,7 +1319,7 @@ ENRICHED_OFFERER_DATA_EXPECTED = [
         "offerer_last_individual_offer_creation_date": datetime.now().replace(
             microsecond=0
         ),
-        "first_individual_paid_offer_creation_date": datetime.now().replace(
+        "offerer_first_individual_paid_offer_creation_date": datetime.now().replace(
             microsecond=0
         ),
         "offerer_first_collective_offer_creation_date": datetime.now().replace(

@@ -630,6 +630,6 @@ BIGQUERY_SCHEMAS = {
     },
     "dms_pro": {
         "application_number": "STRING",
-        "last_update_at": "DATETIME",
+        "last_update_at": "TIMESTAMP",
     },
 }

@@ -80,7 +80,7 @@ individual_offers_per_offerer AS (
     SELECT
         venue.venue_managing_offerer_id AS offerer_id,
         MIN(individual_offer_add_price.offer_creation_date) AS first_individual_offer_creation_date,
-        MIN(CASE WHEN individual_offer_add_price.last_stock_price >0 THEN individual_offer_add_price.offer_creation_date ELSE NULL END) AS first_individual_paid_offer_creation_date,
+        MIN(CASE WHEN individual_offer_add_price.last_stock_price >0 THEN individual_offer_add_price.offer_creation_date ELSE NULL END) AS offerer_first_individual_paid_offer_creation_date,
         MAX(individual_offer_add_price.offer_creation_date) AS last_individual_offer_creation_date,
         COUNT(individual_offer_add_price.offer_id) AS individual_offers_created
     FROM
@@ -221,7 +221,7 @@ venues_with_offers AS (
 adage_validation AS (
     SELECT DISTINCT 
         offerer.offerer_id, 
-        MIN(last_update_at) OVER(PARTITION BY offerer.offerer_id) AS first_adage_validation_date
+        MIN(CAST(last_update_at as datetime)) OVER(PARTITION BY offerer.offerer_id) AS first_adage_validation_date
     FROM 
         `{{ bigquery_clean_dataset }}`.applicative_database_offerer AS offerer
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_suivi_dms_adage ON enriched_suivi_dms_adage.offerer_id = enriched_offerer_data.offerer_id
@@ -237,7 +237,7 @@ SELECT
     related_stocks.first_stock_creation_date,
     individual_offers_per_offerer.first_individual_offer_creation_date AS offerer_first_individual_offer_creation_date,
     individual_offers_per_offerer.last_individual_offer_creation_date AS offerer_last_individual_offer_creation_date,
-    individual_offers_per_offerer.first_individual_paid_offer_creation_date AS first_individual_paid_offer_creation_date,
+    individual_offers_per_offerer.offerer_first_individual_paid_offer_creation_date AS offerer_first_individual_paid_offer_creation_date,
     collective_offers_per_offerer.first_collective_offer_creation_date AS offerer_first_collective_offer_creation_date,
     collective_offers_per_offerer.first_collective_offer_template_creation_date AS offerer_first_collective_offer_template_creation_date,
     collective_offers_per_offerer.first_collective_offer_pre_bookable_creation_date AS offerer_first_collective_offer_pre_bookable_creation_date,

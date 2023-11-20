@@ -439,7 +439,6 @@ BIGQUERY_SCHEMAS = {
         "collective_booking_confirmation_date": "DATETIME",
         "collective_booking_confirmation_limit_date": "DATETIME",
         "educational_redactor_id": "STRING",
-        "collective_offer_format": "STRING",
     },
     "applicative_database_collective_offer": {
         "collective_offer_audio_disability_compliant": "BOOLEAN",
@@ -497,6 +496,7 @@ BIGQUERY_SCHEMAS = {
         "collective_offer_image_id": "STRING",
         "provider_id": "STRING",
         "national_program_id": "STRING",
+        "collective_offer_format": "STRING",
     },
     "applicative_database_collective_stock": {
         "collective_stock_id": "STRING",

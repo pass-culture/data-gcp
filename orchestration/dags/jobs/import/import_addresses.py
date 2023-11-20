@@ -29,7 +29,8 @@ from dependencies.addresses.import_addresses import (
     CLEAN_TABLES,
     ANALYTICS_TABLES,
 )
-ENV_SHORT_NAME ="dev"
+
+ENV_SHORT_NAME = "dev"
 
 GCE_INSTANCE = f"import-addresses-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/addresses"

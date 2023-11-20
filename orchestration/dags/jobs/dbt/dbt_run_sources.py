@@ -12,7 +12,7 @@ from common import macros
 from common.config import GCP_PROJECT_ID, DAG_FOLDER, PATH_TO_DBT_PROJECT
 
 
-# source {PATH_TO_DBT_VENV} && 
+# source {PATH_TO_DBT_VENV} &&
 # PATH_TO_DBT_VENV = "3.10.4/envs/dbt-venv"
 # PATH_TO_DBT_PROJECT ="dags/data_gcp_dbt"
 
@@ -58,10 +58,9 @@ with DAG(
     start = DummyOperator(task_id="start")
 
     dbt_run_op = BashOperator(
-        task_id='run_selective_dbt',  
+        task_id="run_selective_dbt",
         bash_command="dbt run --select models.{{ params.folder }}.*{{ params.children }} --target {{ params.target }}",
-        cwd=PATH_TO_DBT_PROJECT 
-        
+        cwd=PATH_TO_DBT_PROJECT,
     )
 
 start >> dbt_run_op

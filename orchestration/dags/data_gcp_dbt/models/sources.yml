@@ -1,9 +1,9 @@
 version: 1
 
 sources:
-  - name: 'raw'
+  - name: 'raw'   
     schema: 'raw_{{ target.name }}'
-    tables:
+    tables: # sort table names alphabetically
       - name: applicative_database_booking
       - name: applicative_database_stock
       - name: applicative_database_offer

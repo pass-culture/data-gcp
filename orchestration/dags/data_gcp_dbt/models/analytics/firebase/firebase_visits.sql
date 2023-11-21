@@ -47,4 +47,4 @@ GROUP BY
     user_pseudo_id,
     unique_session_id,
     platform,
-    app_version;
+    app_version

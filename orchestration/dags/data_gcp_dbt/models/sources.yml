@@ -1,6 +1,13 @@
 version: 1
 
 sources:
+  - name: 'raw'
+    schema: 'raw_{{ target.name }}'
+    tables:
+      - name: applicative_database_booking
+      - name: applicative_database_stock
+      - name: applicative_database_offer
+      - name: applicative_database_user
   - name: 'clean' # this is the source_name
     schema: 'clean_{{ target.name }}' # this is the schema_name
     tables:
@@ -14,6 +21,7 @@ sources:
       - name: applicative_database_bank_information
       - name: applicative_database_offerer
       - name: applicative_database_venue
+      
   - name: 'analytics' # this is the source_name
     schema: 'analytics_{{ target.name }}' # this is the schema_name
     tables:

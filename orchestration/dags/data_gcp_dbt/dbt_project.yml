@@ -23,9 +23,10 @@ clean-targets:         # directories to be removed by `dbt clean`
   - "target"
   - "dbt_packages"
 
-on-run-start:
-  - "{{ create_humanize_id_temp_function_udf()}}"
-  - "{{ create_dehumanize_id_temp_function_udf()}}"
+# on-run-start:
+#   - "{{ create_humanize_id_temp_function_udf()}}"
+#   - "{{ create_dehumanize_id_temp_function_udf()}}"
+
 # Configuring models
 # Full documentation: https://docs.getdbt.com/docs/configuring-models
 
@@ -36,5 +37,27 @@ models:
   data_gcp_dbt:
     # Config indicated by + and applies to all files under models/example/
     +materialized: view
+
+  # elementary:
+  #     +schema: elementary
+  #     +docs:
+  #       show: false
+
+  # seeds:
+  #   +schema: seeds
+  #   +docs:
+  #     node_color: "#000000"
+
+  # snapshots:
+  #   +target_schema: snapshots
+  #   +docs:
+  #     show: false
+
+  # tests:
+  #   +store_failures: true  # store failures for all tests
+  #   +docs:
+  #     show: false
+
 vars:
-  ENV: "{{ env_var('DATABASE', 'passculture-data-ehp') }}"
+  ENV: "{{ env_var('DATABASE', 'passculture-data-ehp') }}"  # export DATABASE env var in airflow microservice ?
+  BASE32_JS_LIB_PATH: "gs://data-bucket-{{env_var('ENV_SHORT_NAME','dev')}}/base32-encode/base32.js" # idem

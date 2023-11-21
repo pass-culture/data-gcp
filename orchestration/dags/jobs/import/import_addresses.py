@@ -30,8 +30,6 @@ from dependencies.addresses.import_addresses import (
     ANALYTICS_TABLES,
 )
 
-ENV_SHORT_NAME = "dev"
-
 GCE_INSTANCE = f"import-addresses-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/addresses"
 dag_config = {
@@ -60,11 +58,11 @@ def branch_function(ti, **kwargs):
 
 
 with DAG(
-    "dbt_crashtest",
+    "import_addresses_v1",
     default_args=default_args,
-    description="test",
+    description="Importing new data from addresses api every day.",
     # every 10 minutes if prod once a day otherwise
-    schedule_interval=None,
+    schedule_interval=get_airflow_schedule(schedule_interval),
     catchup=False,
     dagrun_timeout=timedelta(minutes=180),
     template_searchpath=DAG_FOLDER,
@@ -78,3 +76,98 @@ with DAG(
 ) as dag:
 
     start = DummyOperator(task_id="start")
+
+    gce_instance_start = StartGCEOperator(
+        instance_name=GCE_INSTANCE, task_id="gce_start_task"
+    )
+
+    fetch_code = CloneRepositoryGCEOperator(
+        task_id="fetch_code",
+        instance_name=GCE_INSTANCE,
+        command="{{ params.branch }}",
+        python_version="3.8",
+    )
+
+    install_dependencies = SSHGCEOperator(
+        task_id="install_dependencies",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_PATH,
+        command="pip install -r requirements.txt --user",
+        dag=dag,
+        retries=2,
+    )
+
+    addresses_to_gcs = SSHGCEOperator(
+        task_id="addresses_to_gcs",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_PATH,
+        environment=dag_config,
+        command="python main.py ",
+        do_xcom_push=True,
+    )
+
+    gce_instance_stop = StopGCEOperator(
+        task_id="gce_stop_task", instance_name=GCE_INSTANCE
+    )
+    branch_op = BranchPythonOperator(
+        task_id="checking_if_new_users",
+        python_callable=branch_function,
+        provide_context=True,
+        do_xcom_push=False,
+        dag=dag,
+    )
+
+    import_addresses_to_bigquery = GCSToBigQueryOperator(
+        task_id="import_addresses_to_bigquery",
+        bucket=DATA_GCS_BUCKET_NAME,
+        source_objects=[
+            "{{task_instance.xcom_pull(task_ids='addresses_to_gcs', key='result')}}"
+        ],
+        destination_project_dataset_table=f"{BIGQUERY_RAW_DATASET}.{USER_LOCATIONS_TABLE}",
+        write_disposition="WRITE_APPEND",
+        source_format="CSV",
+        autodetect=False,
+        schema_fields=USER_LOCATIONS_SCHEMA,
+        skip_leading_rows=1,
+        field_delimiter="|",
+    )
+
+    clean_tasks = []
+
+    for table, params in CLEAN_TABLES.items():
+
+        to_clean = bigquery_job_task(
+            dag=dag, table=f"copy_to_clean_{table}", job_params=params
+        )
+        clean_tasks.append(to_clean)
+
+    end_clean = DummyOperator(task_id="end_clean")
+
+    analytics_tasks = []
+    for table, params in ANALYTICS_TABLES.items():
+
+        to_analytics = bigquery_job_task(
+            dag=dag, table=f"copy_to_analytics_{table}", job_params=params
+        )
+        analytics_tasks.append(to_analytics)
+
+    end = DummyOperator(task_id="end", trigger_rule="one_success")
+
+    (
+        start
+        >> gce_instance_start
+        >> fetch_code
+        >> install_dependencies
+        >> addresses_to_gcs
+        >> gce_instance_stop
+        >> branch_op
+    )
+    (
+        branch_op
+        >> import_addresses_to_bigquery
+        >> clean_tasks
+        >> end_clean
+        >> analytics_tasks
+        >> end
+    )
+    branch_op >> end

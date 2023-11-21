@@ -2,19 +2,20 @@ version: 1
 
 sources:
   - name: 'clean' # this is the source_name
-    database: |
-      {%- if  target.name == "dev" -%} passculture-data-ehp
-      {%- elif target.name == "stg"  -%} passculture-data-ehp
-      {%- elif target.name == "prod"  -%} passculture-data-prod
-      {%- else -%} invalid_database
-      {%- endif -%}
     schema: 'clean_{{ target.name }}' # this is the schema_name
     tables:
       - name: adage_involved_student # this is the table_name
-        freshness: # default freshness
-          warn_after: {count: 12, period: hour}
-          error_after: {count: 24, period: hour}
       - name: applicative_database_educational_year
-      - name: firebase_pro_events
       - name: firebase_events
       - name: firebase_app_experiments
+      - name: dms_jeunes_cleaned
+      - name: dms_pro_cleaned
+      - name: gsheet_eac_webinar
+      - name: applicative_database_bank_information
+      - name: applicative_database_offerer
+      - name: applicative_database_venue
+  - name: 'analytics' # this is the source_name
+    schema: 'analytics_{{ target.name }}' # this is the schema_name
+    tables:
+      - name: adage
+

@@ -1,0 +1,1 @@
+select * from {{ source('clean','applicative_database_bank_information')}}

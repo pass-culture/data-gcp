@@ -1549,6 +1549,7 @@ ENRICHED_COLLECTIVE_BOOKING_DATA_INPUT = {
             "collective_offer_subcategory_id": "CINE_PLEIN_AIR",
             "collective_offer_name": "EAC sympa",
             "venue_id": "8",
+            "collective_offer_format" : "CINEMA",
         }
     ],
     "applicative_database_collective_stock": [
@@ -1604,6 +1605,7 @@ ENRICHED_COLLECTIVE_BOOKING_DATA_EXPECTED = [
         "collective_offer_name": "EAC sympa",
         "collective_offer_subcategory_id": "CINE_PLEIN_AIR",
         "collective_offer_category_id": "CINEMA",
+        "collective_offer_format" : "CINEMA",
         "venue_id": "8",
         "venue_name": "My Wonderful Venue",
         "venue_department_code": 78,

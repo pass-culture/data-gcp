@@ -60,6 +60,7 @@ SELECT
     collective_stock.collective_stock_number_of_tickets AS number_of_tickets,
     collective_offer.collective_offer_subcategory_id,
     subcategories.category_id AS collective_offer_category_id,
+    collective_offer.collective_offer_format,
     collective_offer.collective_offer_students,
     collective_offer.collective_offer_is_active,
     CASE
@@ -142,6 +143,7 @@ SELECT
     collective_stock.collective_stock_number_of_tickets AS number_of_tickets,
     template.collective_offer_subcategory_id,
     subcategories.category_id AS collective_offer_category_id,
+    template.collective_offer_format,
     template.collective_offer_students,
     template.collective_offer_is_active,
     FALSE AS collective_offer_is_bookable,

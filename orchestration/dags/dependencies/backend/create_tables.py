@@ -69,4 +69,12 @@ create_tables = {
         "write_disposition": "WRITE_TRUNCATE",
         "dag_depends": ["import_analytics_v7/end_import"],  # dag_id/task_id
     },
+    "booking_per_ean_last_30_days": {
+        "sql": f"{BACKEND_SQL_PATH}/booking_per_ean_last_30_days.sql",
+        "destination_dataset": "{{ bigquery_backend_dataset }}",
+        "destination_table": "booking_per_ean_last_30_days",
+        "schedule_type": "daily",
+        "write_disposition": "WRITE_TRUNCATE",
+        "dag_depends": ["import_analytics_v7/end_import"],  # dag_id/task_id
+    },
 }

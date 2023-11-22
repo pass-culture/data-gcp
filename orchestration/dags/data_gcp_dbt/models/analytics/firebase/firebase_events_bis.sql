@@ -543,12 +543,11 @@ WITH temp_firebase_events AS (
                 event_params.key = 'appsFlyerUserId'
         ) as appsflyer_id
 FROM
-
-        {% if params.dag_type == 'intraday' %}
-        `{{ bigquery_clean_dataset }}.firebase_events_{{ yyyymmdd(ds) }}`
-        {% else %}
-        `{{ bigquery_clean_dataset }}.firebase_events_{{ yyyymmdd(add_days(ds, -1)) }}`
-        {% endif %}
+    {{ ref('firebase_events') }}
+WHERE _PARTITIONDATE =
+{% if env_var('FIREBASE_DAG_TYPE') == 'intraday' %} "{{ ds() }}"   
+{% else %} DATE_SUB("{{ ds() }}", INTERVAL 1 DAY)
+{% endif %}
 )
 SELECT
     *

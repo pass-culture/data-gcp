@@ -10,8 +10,8 @@ SELECT
     , user_location_type
 FROM {{ ref('firebase_events') }}
 WHERE event_name = "BookingConfirmation"
-  {% if params.dag_type == 'intraday' %}
-  AND event_date = DATE('{{ ds }}')        
-  {% else %}
-  AND event_date = DATE('{{ add_days(ds, -1) }}')
-  {% endif %}
+{% if env_var('FIREBASE_DAG_TYPE') == 'intraday' %}
+AND event_date = '{{ ds() }}'    
+{% else %}
+AND event_date = DATE_SUB("{{ ds() }}", INTERVAL 1 DAY)
+{% endif %}

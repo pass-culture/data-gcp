@@ -10,27 +10,29 @@ from airflow.exceptions import DuplicateTaskIdFound
 
 
 default_args = {
-    'depends_on_past': False,
-    'start_date': datetime(2020, 12, 23),
-    'retries': 2,
-    'retry_delay': timedelta(minutes=5)
+    "depends_on_past": False,
+    "start_date": datetime(2020, 12, 23),
+    "retries": 2,
+    "retry_delay": timedelta(minutes=5),
 }
 
 dag = DAG(
-    'dbt_dag',
+    "dbt_dag",
     default_args=default_args,
-    description='A dbt wrapper for airflow',
+    description="A dbt wrapper for airflow",
     schedule_interval=timedelta(days=1),
 )
 
+
 def load_manifest():
-    local_filepath = PATH_TO_DBT_PROJECT  + "/target/manifest.json"
+    local_filepath = PATH_TO_DBT_PROJECT + "/target/manifest.json"
     with open(local_filepath) as f:
         data = json.load(f)
 
     return data
 
-def make_dbt_task(node, dbt_verb,dag):
+
+def make_dbt_task(node, dbt_verb, dag):
     """Returns an Airflow operator either run and test an individual model"""
     DBT_DIR = PATH_TO_DBT_PROJECT
     GLOBAL_CLI_FLAGS = "--no-write-json"
@@ -43,7 +45,7 @@ def make_dbt_task(node, dbt_verb,dag):
             dbt {GLOBAL_CLI_FLAGS} {dbt_verb} --target dev --models {model}
             """,
             dag=dag,
-            cwd=PATH_TO_DBT_PROJECT 
+            cwd=PATH_TO_DBT_PROJECT,
         )
 
     elif dbt_verb == "test":
@@ -54,10 +56,11 @@ def make_dbt_task(node, dbt_verb,dag):
             dbt {GLOBAL_CLI_FLAGS} {dbt_verb} --target dev --models {model}
             """,
             dag=dag,
-            cwd=PATH_TO_DBT_PROJECT 
+            cwd=PATH_TO_DBT_PROJECT,
         )
 
     return dbt_task
+
 
 data = load_manifest()
 
@@ -66,12 +69,12 @@ for node in data["nodes"].keys():
     print(node)
     if node.split(".")[0] == "model":
         node_test = node.replace("model", "test")
-        try :
-            dbt_tasks[node] = make_dbt_task(node, "run",dag)
+        try:
+            dbt_tasks[node] = make_dbt_task(node, "run", dag)
         except DuplicateTaskIdFound:
             pass
-        try :
-            dbt_tasks[node_test] = make_dbt_task(node, "test",dag)
+        try:
+            dbt_tasks[node_test] = make_dbt_task(node, "test", dag)
         except DuplicateTaskIdFound:
             pass
 

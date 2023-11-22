@@ -11,6 +11,7 @@ __pycache__/
 .venv/
 venv/
 venv-lint/
+logs/
 
 # ignore .json credential files
 # *.json

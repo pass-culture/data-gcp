@@ -1,10 +1,9 @@
--- TODO :: change template  
 WITH diversification AS (
     SELECT
         offer_id,
         avg(delta_diversification) as delta_diversification
     FROM
-        `passculture-data-prod.analytics_prod.diversification_booking`
+        `{{ bigquery_analytics_dataset }}.diversification_booking`
     WHERE
         date(booking_creation_date) > DATE_SUB(CURRENT_DATE, INTERVAL 90 DAY)
     GROUP BY
@@ -43,7 +42,7 @@ events AS (
                 offer_order DESC
         ) as offer_rank
     FROM
-        `passculture-data-prod.clean_prod.past_offer_context` poc
+        `{{ bigquery_clean_dataset }}.past_offer_context` poc
     WHERE
         event_date >= DATE_SUB(CURRENT_DATE, INTERVAL 14 DAY)
         AND context in ('similar_offer', 'recommendation')
@@ -57,7 +56,7 @@ interact AS (
         sum(if(event_name = "BookingConfirmation", 1, null)) as booking,
         avg(d.delta_diversification) as delta_diversification
     FROM
-        `passculture-data-prod.analytics_prod.firebase_events` fsoe
+        `{{ bigquery_analytics_dataset }}.firebase_events` fsoe
         LEFT JOIN diversification d on d.offer_id = fsoe.offer_id
     WHERE
         event_date >= DATE_SUB(CURRENT_DATE, INTERVAL 14 DAY)
@@ -72,7 +71,7 @@ seen AS (
         user_id,
         reco_call_id
     FROM
-        `passculture-data-prod.analytics_prod.firebase_events` fsoe
+        `{{ bigquery_analytics_dataset }}.firebase_events` fsoe
     WHERE
         event_date >= DATE_SUB(CURRENT_DATE, INTERVAL 14 DAY)
         AND event_name in ("ConsultOffer", "BookingConfirmation")

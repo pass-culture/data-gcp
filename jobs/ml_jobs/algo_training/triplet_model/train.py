@@ -93,7 +93,6 @@ def train(
         with open(f"{MODEL_DIR}/{MLFLOW_RUN_ID_FILENAME}.txt", mode="w") as file:
             file.write(run_uuid)
 
-        # used by sim_offers model
         export_path = f"{TRAIN_DIR}/{ENV_SHORT_NAME}/"
 
         mlflow.log_params(

@@ -29,6 +29,7 @@ gce_params = {
     "instance_name": f"ranking-endpoint-build-{ENV_SHORT_NAME}",
     "experiment_name": f"ranking_endpoint_v1.1_{ENV_SHORT_NAME}",
     "model_name": f"v0.0_{ENV_SHORT_NAME}",
+    "run_name": "default",
     "instance_type": {
         "dev": "n1-standard-2",
         "stg": "n1-standard-2",
@@ -61,12 +62,12 @@ with DAG(
             type="string",
         ),
         "experiment_name": Param(default=gce_params["experiment_name"], type="string"),
+        "run_name": Param(default=gce_params["run_name"], type="string"),
         "model_name": Param(default=gce_params["model_name"], type="string"),
         "table_name": Param(default="training_ranking_data", type="string"),
         "dataset_name": Param(default=BIGQUERY_TMP_DATASET, type="string"),
     },
 ) as dag:
-
     import_table = BigQueryExecuteQueryOperator(
         task_id=f"create_train_ranking_table",
         sql=(
@@ -108,6 +109,7 @@ with DAG(
         base_dir=BASE_DIR,
         command="python deploy_model.py "
         "--experiment-name {{ params.experiment_name }} "
+        "--run-name {{ params.run_name }}"
         "--model-name {{ params.model_name }} "
         "--dataset-name {{ params.dataset_name }} "
         "--table-name {{ params.table_name }}",

@@ -35,7 +35,7 @@ class DefaultClient:
         details: bool = False,
         item_id: str = None,
         prefilter: bool = True,
-        vector_column_name: str = "vector",
+        vector_column_name: str = "raw_embeddings",
     ) -> t.List[t.Dict]:
 
         results = (

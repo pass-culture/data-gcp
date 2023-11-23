@@ -40,3 +40,6 @@ models:
       +schema: analytics_{{ target.name }}
     clean:
       +schema: clean_{{ target.name }}
+      
+vars:
+  ENV_SHORT_NAME: dev

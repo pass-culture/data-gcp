@@ -5,6 +5,8 @@ packages:
   version: 0.7.1
 - package: calogica/dbt_expectations
   version: 0.10.1
+- git: https://github.com/yu-iskw/dbt-airflow-macros.git
+  revision: 0.2.2
 - package: calogica/dbt_date
   version: 0.10.0
-sha1_hash: 852934279dc50bbae9c7a10dd5d419a9be18eb5f
+sha1_hash: fcc16a569b5589a60d4a006c71c4817925125ee1

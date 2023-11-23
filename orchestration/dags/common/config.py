@@ -69,4 +69,4 @@ elif ENV_SHORT_NAME == "stg":
 else:
     MEDIATION_URL = "passculture-metier-ehp-testing"
 
-PATH_TO_DBT_PROJECT = "dags/data_gcp_dbt"
+PATH_TO_DBT_PROJECT = f"{DAG_FOLDER}/data_gcp_dbt"

@@ -37,6 +37,7 @@ def plot_cm(
     y_test_binary = (y >= proba).astype(int)
 
     conf_matrix = confusion_matrix(y_test_binary, y_pred_binary)
+    print(conf_matrix)
 
     plt.figure(figsize=(6, 4))
     if perc:

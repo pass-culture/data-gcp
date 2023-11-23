@@ -32,14 +32,17 @@ def is_alive():
 def predict():
     input_json = request.get_json()["instances"]
     try:
-        results = model.predict(input_json)
-
+        results, errors = model.predict(input_json)
         log_data = {
             "event": "predict",
             "input_data": input_json,
             "result": results,
         }
-        logger.info("predict.", extra=log_data)
+        if len(errors) > 0:
+            log_data["error"] = f""" {",".join(errors)} not found"""
+            logger.warn("predict_error", extra=log_data)
+        else:
+            logger.info("predict.", extra=log_data)
 
         return jsonify(
             {"predictions": sorted(results, key=lambda x: x["score"], reverse=True)}

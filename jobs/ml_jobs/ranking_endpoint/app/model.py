@@ -29,6 +29,9 @@ categorical_features = [
     "offer_subcategory_id",
 ]
 
+default_categorical = "UNKNOWN"
+default_numerical = -1
+
 
 class PredictPipeline:
     def __init__(self) -> None:
@@ -38,13 +41,25 @@ class PredictPipeline:
         self.preprocessor = joblib.load("./metadata/preproc.joblib")
 
     def predict(self, input_data: t.List[dict]):
+        errors = []
         df = pd.DataFrame(input_data)
+        _cols = list(df.columns)
+
+        for x in self.numeric_features:
+            if x not in _cols:
+                errors.append(x)
+                df[x] = default_numerical
+        for x in self.categorical_features:
+            if x not in _cols:
+                errors.append(x)
+                df[x] = default_categorical
+
         processed_data = self.preprocessor.transform(df)
         z = self.model.predict(processed_data)
 
         for x, y in zip(input_data, z):
             x["score"] = y
-        return input_data
+        return input_data, errors
 
 
 class TrainPipeline:
@@ -72,12 +87,20 @@ class TrainPipeline:
 
     def set_pipeline(self):
         numeric_transformer = Pipeline(
-            steps=[("imputer", SimpleImputer(strategy="constant", fill_value=-1))]
+            steps=[
+                (
+                    "imputer",
+                    SimpleImputer(strategy="constant", fill_value=default_numerical),
+                )
+            ]
         )
 
         categorical_transformer = Pipeline(
             steps=[
-                ("imputer", SimpleImputer(strategy="constant", fill_value="UNKNOWN")),
+                (
+                    "imputer",
+                    SimpleImputer(strategy="constant", fill_value=default_categorical),
+                ),
                 (
                     "encoder",
                     OrdinalEncoder(
@@ -96,9 +119,11 @@ class TrainPipeline:
 
     def fit_transform(self, df):
         df[self.categorical_features] = (
-            df[self.categorical_features].astype(str).fillna("UNKNOWN")
+            df[self.categorical_features].astype(str).fillna(default_categorical)
         )
-        df[self.numeric_features] = df[self.numeric_features].astype(float).fillna(-1)
+        df[self.numeric_features] = (
+            df[self.numeric_features].astype(float).fillna(default_numerical)
+        )
         return self.preprocessor.fit_transform(df)
 
     def transform(self, input_data):

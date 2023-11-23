@@ -38,7 +38,7 @@ def load_data(dataset_name, table_name):
       SELECT
           * 
       FROM `{GCP_PROJECT_ID}.{dataset_name}.{table_name}` 
-      consult = False and booking = False
+      WHERE not consult and not booking
       ORDER BY offer_order DESC
       LIMIT {PARAMS['seen']}
     ),
@@ -46,7 +46,7 @@ def load_data(dataset_name, table_name):
         SELECT
             * 
         FROM `{GCP_PROJECT_ID}.{dataset_name}.{table_name}` 
-        WHERE consult = True
+        WHERE consult
         LIMIT {PARAMS['consult']}
 
     ),
@@ -54,7 +54,7 @@ def load_data(dataset_name, table_name):
       SELECT
             * 
         FROM `{GCP_PROJECT_ID}.{dataset_name}.{table_name}` 
-        WHERE booking = True
+        WHERE booking
         LIMIT {PARAMS['booking']}
     )
     
@@ -64,6 +64,7 @@ def load_data(dataset_name, table_name):
     UNION ALL 
     select * FROM booking 
     """
+    print(sql)
     return pd.read_gbq(sql).sample(frac=1)
 
 
@@ -72,14 +73,14 @@ def plot_figures(test_data, pipeline, figure_folder):
     plot_cm(
         y=test_data["target"],
         y_pred=test_data["score"],
-        filename=f"{figure_folder}/confusion_matrix_perc_proba_1.5.pdf",
+        filename=f"{figure_folder}/confusion_matrix_perc_proba_0.5.pdf",
         perc=True,
         proba=0.5,
     )
     plot_cm(
         y=test_data["target"],
         y_pred=test_data["score"],
-        filename=f"{figure_folder}/confusion_matrix_total_proba_1.5.pdf",
+        filename=f"{figure_folder}/confusion_matrix_total_proba_0.5.pdf",
         perc=False,
         proba=0.5,
     )
@@ -94,7 +95,7 @@ def plot_figures(test_data, pipeline, figure_folder):
         y=test_data["target"],
         y_pred=test_data["score"],
         filename=f"{figure_folder}/confusion_matrix_total_proba_1.5.pdf",
-        perc=True,
+        perc=False,
         proba=1.5,
     )
     plot_features_importance(
@@ -110,7 +111,7 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
     data["delta_diversification"] = (
         data["delta_diversification"].astype(float).fillna(0)
     )
-    data["target"] = data["consult"] + data["booking"] * (
+    data["target"] = (data["consult"] + data["booking"]) * (
         1 + data["delta_diversification"]
     )
     train_data, test_data = train_test_split(data, test_size=0.2)
@@ -134,6 +135,9 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
 
         mlflow.log_artifacts(figure_folder, "model_plots")
 
+    # retrain on whole
+    pipeline.train(data)
+    # save
     pipeline.save()
 
 

@@ -44,7 +44,7 @@ events AS (
     FROM
         `{{ bigquery_clean_dataset }}.past_offer_context` poc
     WHERE
-        event_date >= DATE_SUB(CURRENT_DATE, INTERVAL 14 DAY) -- AND context in ('similar_offer', 'recommendation')
+        event_date >= DATE_SUB(CURRENT_DATE, INTERVAL 14 DAY)
         AND user_id != "-1" QUALIFY offer_rank <= 50
 ),
 interact AS (

@@ -109,7 +109,7 @@ with DAG(
         base_dir=BASE_DIR,
         command="python deploy_model.py "
         "--experiment-name {{ params.experiment_name }} "
-        "--run-name {{ params.run_id }}"
+        "--run-name {{ params.run_name }}"
         "--model-name {{ params.model_name }} "
         "--dataset-name {{ params.dataset_name }} "
         "--table-name {{ params.table_name }}",

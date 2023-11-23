@@ -95,8 +95,10 @@ class TrainPipeline:
         )
 
     def fit_transform(self, df):
-        df[self.categorical_features] = df[self.categorical_features].fillna("UNKNOWN")
-        df[self.numeric_features] = df[self.numeric_features].fillna(0)
+        df[self.categorical_features] = (
+            df[self.categorical_features].astype(str).fillna("UNKNOWN")
+        )
+        df[self.numeric_features] = df[self.numeric_features].astype(float).fillna(-1)
         return self.preprocessor.fit_transform(df)
 
     def transform(self, input_data):

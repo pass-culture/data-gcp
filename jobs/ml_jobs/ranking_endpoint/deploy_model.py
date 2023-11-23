@@ -14,7 +14,7 @@ from utils import (
     get_mlflow_experiment,
     get_secret,
 )
-from figure import plot_features_importance, plot_cm
+from figure import plot_features_importance, plot_cm, plot_hist
 
 
 PARAMS = {"seen": 500_000, "consult": 500_000, "booking": 500_000}
@@ -72,9 +72,8 @@ def plot_figures(test_data, train_data, pipeline, figure_folder):
     os.makedirs(figure_folder, exist_ok=True)
 
     for prefix, df in [("test_", test_data), ("train_", train_data)]:
-        ax = df["target"].hist(bins=30, histtype="barstacked", stacked=True)
-        fig = ax.get_figure()
-        fig.savefig(f"{figure_folder}/{prefix}target_histogram.pdf")
+        plot_hist(df, figure_folder, prefix=prefix)
+
         plot_cm(
             y=df["target"],
             y_pred=df["score"],

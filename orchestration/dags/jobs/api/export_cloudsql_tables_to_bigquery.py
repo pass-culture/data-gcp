@@ -97,7 +97,7 @@ delete_rows = []
 for delete_table_rows in [
     "past_recommended_offers",
     "past_similar_offers",
-    "offer_context",
+    "past_offer_context",
 ]:
     delete_job = drop_table_task = CloudSQLExecuteQueryOperator(
         task_id=f"drop_yesterday_rows_{delete_table_rows}",

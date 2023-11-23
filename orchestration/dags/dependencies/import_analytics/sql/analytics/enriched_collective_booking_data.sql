@@ -20,6 +20,7 @@ SELECT
     collective_offer.collective_offer_name,
     collective_offer.collective_offer_subcategory_id,
     subcategories.category_id AS collective_offer_category_id,
+    collective_offer.collective_offer_format AS collective_offer_format,
     collective_offer.venue_id AS venue_id,
     venue.venue_name,
     venue.venue_department_code,

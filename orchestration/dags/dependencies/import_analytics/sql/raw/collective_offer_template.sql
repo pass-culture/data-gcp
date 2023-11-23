@@ -14,7 +14,7 @@ SELECT
     , "durationMinutes" AS collective_offer_duration_minutes
     , "dateCreated" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS collective_offer_creation_date
     , CAST("subcategoryId" AS varchar(255)) AS collective_offer_subcategory_id
-    , REPLACE(REPLACE(CAST("formats" AS varchar(255)), '{', ''), '}', '') AS collective_offer_format
+    , REPLACE(REPLACE(CAST("formats" AS varchar(255)), \'{\', \'\'), \'}\', \'\')  AS collective_offer_format
     , "dateUpdated" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS collective_offer_date_updated
     , BTRIM(array_to_string("students", \',\'), \'{\') AS collective_offer_students
     , "priceDetail" AS collective_offer_price_detail

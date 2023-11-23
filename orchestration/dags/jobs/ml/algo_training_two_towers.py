@@ -264,18 +264,6 @@ with DAG(
         dag=dag,
     )
 
-    train_sim_offers = SSHGCEOperator(
-        task_id="containerize_similar_offers",
-        instance_name="{{ params.instance_name }}",
-        base_dir=f"{dag_config['BASE_DIR']}/similar_offers",
-        environment=dag_config,
-        command="python deploy_model.py "
-        "--experiment-name similar_offers_two_towers_v1.1_" + f"{ENV_SHORT_NAME} "
-        "--model-name similar_offers_two_towers_v1.1 "
-        f"--source-experiment-name {dag_config['EXPERIMENT_NAME']} ",
-        dag=dag,
-    )
-
     gce_instance_stop = StopGCEOperator(
         task_id="gce_stop_task", instance_name="{{ params.instance_name }}"
     )
@@ -314,7 +302,6 @@ with DAG(
         >> preprocess_data["test"]
         >> train
         >> evaluate
-        >> train_sim_offers
         >> gce_instance_stop
         >> send_slack_notif_success
     )

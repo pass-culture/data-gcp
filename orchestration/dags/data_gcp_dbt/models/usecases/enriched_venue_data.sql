@@ -1,11 +1,11 @@
-{{ config(
-    pre_hook="{{ create_humanize_id_function() }}"
-) }}
 
+{{ config(
+    pre_hook="{{create_humanize_id_function()}}"
+) }}
 WITH venue_humanized_id AS (
     SELECT
         venue_id,
-         {{target.schema}}.humanize_id(venue_id) AS humanized_id
+        {{target.schema}}.humanize_id(venue_id) AS humanized_id
     FROM
        {{ ref('applicative_database_venue') }}
     WHERE
@@ -125,7 +125,7 @@ bookable_individual_offer_cnt AS (
     venue_id
     , MIN(partition_date) AS venue_first_bookable_offer_date
     , MAX(partition_date) AS venue_last_bookable_offer_date
-FROM `{{ bigquery_analytics_dataset }}`.bookable_venue_history
+FROM {{ ref('bookable_venue_history')}}
 GROUP BY 1
 )
 
@@ -221,7 +221,7 @@ FROM
     LEFT JOIN individual_offers_per_venue ON individual_offers_per_venue.venue_id = venue.venue_id
     LEFT JOIN collective_offers_per_venue ON collective_offers_per_venue.venue_id = venue.venue_id
     LEFT JOIN venue_humanized_id AS venue_humanized_id ON venue_humanized_id.venue_id = venue.venue_id
-    LEFT JOIN `{{ bigquery_analytics_dataset }}`.region_department AS venue_region_departement ON venue.venue_department_code = venue_region_departement.num_dep
+    LEFT JOIN {{ ref('region_department') }} AS venue_region_departement ON venue.venue_department_code = venue_region_departement.num_dep
     LEFT JOIN offerer_humanized_id AS offerer_humanized_id ON offerer_humanized_id.offerer_id = venue.venue_managing_offerer_id
     LEFT JOIN bookable_individual_offer_cnt ON bookable_individual_offer_cnt.venue_id = venue.venue_id
     LEFT JOIN bookable_collective_offer_cnt ON bookable_collective_offer_cnt.venue_id = venue.venue_id
@@ -230,4 +230,4 @@ FROM
     LEFT JOIN{{ ref('applicative_database_venue_contact') }} AS venue_contact ON venue.venue_id = venue_contact.venue_id
 WHERE
     offerer.offerer_validation_status='VALIDATED'
-    AND offerer.offerer_is_active;
+    AND offerer.offerer_is_active

@@ -1,9 +1,11 @@
-{{ create_humanize_id_function() }} 
+{{ config(
+    pre_hook="{{ create_humanize_id_function() }}"
+) }}     
 
 WITH offer_humanized_id AS (
     SELECT
         offer_id,
-        {{target}}.humanize_id(offer_id) AS humanized_id,
+        {{target.schema}}.humanize_id(offer_id) AS humanized_id,
     FROM
         {{ ref('applicative_database_offer') }}
     WHERE
@@ -100,7 +102,7 @@ last_stock AS (
 mediation AS (
     SELECT 
         offer_id, 
-        humanize_id(id) as mediation_humanized_id
+        {{target.schema}}.humanize_id(id) as mediation_humanized_id
     FROM (
         SELECT
             id,
@@ -121,7 +123,7 @@ SELECT
     venue.venue_department_code,
     offer.offer_id,
     offer.offer_product_id,
-    humanize_id(offer.offer_product_id) as offer_product_humanized_id,
+    {{target.schema}}.humanize_id(offer.offer_product_id) as offer_product_humanized_id,
     offer.offer_id_at_providers,
     offer.offer_name,
     offer_description,

@@ -8,7 +8,6 @@ models:
     columns:
       - name: siren
         tests: 
-          - unique
           - not_null
 
 

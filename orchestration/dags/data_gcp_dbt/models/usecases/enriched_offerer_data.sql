@@ -263,4 +263,4 @@ LEFT JOIN {{ ref('siren_data_labels') }} AS siren_data_labels ON siren_data_labe
                                             AND CAST(siren_data_labels.categorieJuridiqueUniteLegale AS STRING) = CAST(siren_data.categorieJuridiqueUniteLegale AS STRING)
 WHERE
     offerer.offerer_validation_status='VALIDATED'
-    AND offerer.offerer_is_active;
+    AND offerer.offerer_is_active

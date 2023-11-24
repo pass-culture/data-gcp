@@ -1,0 +1,1 @@
+select * from {{ source('analyticshistory','bookable_venue_history')}}

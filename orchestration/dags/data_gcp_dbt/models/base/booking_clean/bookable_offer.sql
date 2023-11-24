@@ -1,0 +1,1 @@
+SELECT * FROM {{ source('clean', 'bookable_offer') }}

@@ -1,9 +1,8 @@
 version: 1
 
 exposures:
-
   - name: enriched_venue_data
-    label: "Dreem Health Clinops - Providers"
+    label: "venue"
     type: dashboard
     maturity: medium
     tags: ["jeunes","pro"]

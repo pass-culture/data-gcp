@@ -1,4 +1,3 @@
-{{create_humanize_id_function() }}
 
 WITH bookings_per_offer AS (
     SELECT
@@ -96,7 +95,7 @@ SELECT
     COALESCE(collective_booking_cnt, 0.0) AS collective_booking_cnt,
     COALESCE(collective_booking_no_cancelled_cnt, 0.0) AS collective_booking_no_cancelled_cnt,
     COALESCE(collective_booking_confirm_cnt, 0.0) AS collective_booking_confirm_cnt,
-    humanize_id(collective_offer.collective_offer_id) AS collective_offer_humanized_id,
+    {{target}}.humanize_id(collective_offer.collective_offer_id) AS collective_offer_humanized_id,
     CONCAT(
         'https://passculture.pro/offre/',
         humanize_id(collective_offer.collective_offer_id),

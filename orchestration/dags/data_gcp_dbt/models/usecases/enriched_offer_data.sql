@@ -3,7 +3,7 @@
 WITH offer_humanized_id AS (
     SELECT
         offer_id,
-        humanize_id(offer_id) AS humanized_id,
+        {{target}}.humanize_id(offer_id) AS humanized_id,
     FROM
         {{ ref('applicative_database_offer') }}
     WHERE

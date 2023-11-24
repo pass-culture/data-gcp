@@ -1,6 +1,6 @@
-{% macro create_dehumanize_id_temp_function_udf() %}
+{% macro create_dehumanize_id_function() %}
 
-CREATE OR REPLACE TEMPORARY FUNCTION {{target.schema}}.dehumanize_id(id STRING)
+CREATE FUNCTION if not exists {{target.schema}}.dehumanize_id(id STRING)
 RETURNS STRING
 LANGUAGE js
 OPTIONS (library="{BASE32_JS_LIB_PATH}")

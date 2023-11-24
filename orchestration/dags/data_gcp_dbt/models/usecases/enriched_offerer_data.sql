@@ -1,10 +1,9 @@
 
-{{ create_humanize_id_function() }} 
 
 WITH offerer_humanized_id AS (
     SELECT
         offerer_id,
-        humanize_id(offerer_id) AS humanized_id
+         {{target.schema}}.humanize_id(offerer_id) AS humanized_id
     FROM
         {{ ref('applicative_database_offerer') }}
     WHERE

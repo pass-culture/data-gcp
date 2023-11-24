@@ -23,9 +23,9 @@ clean-targets:         # directories to be removed by `dbt clean`
   - "target"
   - "dbt_packages"
 
-on-run-start:
-  - "{{ create_humanize_id_temp_function_udf()}}"
-  - "{{ create_dehumanize_id_temp_function_udf()}}"
+# on-run-start:
+#   - "{{ create_humanize_id_function() }}"
+#   - "{{ create_dehumanize_id_function() }}"
 # Configuring models
 # Full documentation: https://docs.getdbt.com/docs/configuring-models
 
@@ -39,7 +39,7 @@ models:
       +materialized: table
       +docs:
         node_color: "#0320fc"
-      applicative:
+      applicative_raw:
         schema: applicative_raw
         tags: "applicative"
     staging:
@@ -67,41 +67,3 @@ tests:
 # In this example config, we tell dbt to build all models in the example/ directory
 # as tables. These settings can be overridden in the individual model files
 # using the `{{ config(...) }}` macro.
-models:
-  dreem_analytics:
-    # Config indicated by + and applies to all files under models/example/
-    base:
-      +materialized: table
-      +docs:
-        node_color: "#0320fc"
-      applicative:
-        schema: applicative_raw
-        tags: applicative
-      
-    staging:
-      +materialized: view
-      +schema: staging
-      +docs: 
-        node_color: "#b43ddb"
-    usecases:
-      +materialized: table
-      +docs: 
-        node_color: "#d90000" 
-
-  elementary:
-    +schema: elementary
-    +docs:
-      show: false
-
-seeds:
-  +schema: seeds
-  +docs:
-    node_color: "#000000"
-snapshots:
-  +target_schema: snapshots
-  +docs:
-    show: false
-tests:
-  +store_failures: true  # store failures for all tests
-  +docs:
-    show: false

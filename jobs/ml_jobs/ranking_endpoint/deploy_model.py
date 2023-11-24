@@ -14,10 +14,10 @@ from utils import (
     get_mlflow_experiment,
     get_secret,
 )
-from figure import plot_features_importance, plot_cm
+from figure import plot_features_importance, plot_cm, plot_hist
 
 
-PARAMS = {"seen": 2_000_000, "consult": 2_000_000, "booking": 2_000_000}
+PARAMS = {"seen": 1_000_000, "consult": 1_000_000, "booking": 1_000_000}
 
 MODEL_PARAMS = {
     "objective": "regression",
@@ -68,36 +68,40 @@ def load_data(dataset_name, table_name):
     return pd.read_gbq(sql).sample(frac=1)
 
 
-def plot_figures(test_data, pipeline, figure_folder):
-    os.makedirs(figure_folder, exist_ok=True),
-    plot_cm(
-        y=test_data["target"],
-        y_pred=test_data["score"],
-        filename=f"{figure_folder}/confusion_matrix_perc_proba_0.5.pdf",
-        perc=True,
-        proba=0.5,
-    )
-    plot_cm(
-        y=test_data["target"],
-        y_pred=test_data["score"],
-        filename=f"{figure_folder}/confusion_matrix_total_proba_0.5.pdf",
-        perc=False,
-        proba=0.5,
-    )
-    plot_cm(
-        y=test_data["target"],
-        y_pred=test_data["score"],
-        filename=f"{figure_folder}/confusion_matrix_perc_proba_1.5.pdf",
-        perc=True,
-        proba=1.5,
-    )
-    plot_cm(
-        y=test_data["target"],
-        y_pred=test_data["score"],
-        filename=f"{figure_folder}/confusion_matrix_total_proba_1.5.pdf",
-        perc=False,
-        proba=1.5,
-    )
+def plot_figures(test_data, train_data, pipeline, figure_folder):
+    os.makedirs(figure_folder, exist_ok=True)
+
+    for prefix, df in [("test_", test_data), ("train_", train_data)]:
+        plot_hist(df, figure_folder, prefix=prefix)
+
+        plot_cm(
+            y=df["target"],
+            y_pred=df["score"],
+            filename=f"{figure_folder}/{prefix}confusion_matrix_perc_proba_0.5.pdf",
+            perc=True,
+            proba=0.5,
+        )
+        plot_cm(
+            y=df["target"],
+            y_pred=df["score"],
+            filename=f"{figure_folder}/{prefix}confusion_matrix_total_proba_0.5.pdf",
+            perc=False,
+            proba=0.5,
+        )
+        plot_cm(
+            y=df["target"],
+            y_pred=df["score"],
+            filename=f"{figure_folder}/{prefix}confusion_matrix_perc_proba_1.5.pdf",
+            perc=True,
+            proba=1.5,
+        )
+        plot_cm(
+            y=df["target"],
+            y_pred=df["score"],
+            filename=f"{figure_folder}/{prefix}confusion_matrix_total_proba_1.5.pdf",
+            perc=False,
+            proba=1.5,
+        )
     plot_features_importance(
         pipeline, filename=f"{figure_folder}/plot_features_importance.pdf"
     )
@@ -111,7 +115,7 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
     data["delta_diversification"] = (
         data["delta_diversification"].astype(float).fillna(0)
     )
-    data["target"] = (data["consult"] + data["booking"]) * (
+    data["target"] = data["consult"] + data["booking"] * (
         1 + data["delta_diversification"]
     )
     train_data, test_data = train_test_split(data, test_size=0.2)
@@ -130,8 +134,8 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
         pipeline.train(train_data)
 
         test_data = pipeline.predict(test_data)
-
-        plot_figures(test_data, pipeline, figure_folder)
+        train_data = pipeline.predict(train_data)
+        plot_figures(test_data, train_data, pipeline, figure_folder)
 
         mlflow.log_artifacts(figure_folder, "model_plots")
 

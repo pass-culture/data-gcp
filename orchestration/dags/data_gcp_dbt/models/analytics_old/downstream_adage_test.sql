@@ -1,1 +1,0 @@
-select * from {{ ref('adage_involved_institution') }}

@@ -1,1 +1,1 @@
-select * from {{ source('analyticshistory','bookable_venue_history')}}
+select * from {{ source('analytics','bookable_venue_history')}}

@@ -33,17 +33,7 @@ sources:
   - name: clean # this is the source_name
     schema: clean_{{ env_var('ENV_SHORT_NAME') }} # this is the schema_name
     tables:
-      - name: applicative_database_collective_booking
-      - name: applicative_database_collective_offer
-      - name: applicative_database_collective_offer_template
-      - name: applicative_database_collective_stock
-      - name: applicative_database_offer
-      - name: applicative_database_offerer
-      - name: applicative_database_stock
-      - name: applicative_database_venue
-      - name: booking
       - name: siren_data
-      - name: applicative_database_collective_stock_history
   - name: analytics # this is the source_name
     schema: analytics_{{ env_var('ENV_SHORT_NAME') }} # this is the schema_name
     tables:

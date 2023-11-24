@@ -35,8 +35,73 @@ on-run-start:
 models:
   data_gcp_dbt:
     # Config indicated by + and applies to all files under models/example/
-    +materialized: view
-    analytics:
-      +schema: analytics_{{ target.name }}
-    clean:
-      +schema: clean_{{ target.name }}
+    base:
+      +materialized: table
+      +docs:
+        node_color: "#0320fc"
+      applicative:
+        schema: applicative_raw
+        tags: "applicative"
+    staging:
+      +materialized: view
+      +schema: staging
+      +docs: 
+        node_color: "#b43ddb"
+    usecases:
+      +materialized: table
+      +docs: 
+        node_color: "#d90000" 
+seeds:
+  +schema: seeds
+  +docs:
+    node_color: "#000000"
+snapshots:
+  +target_schema: snapshots
+  +docs:
+    show: false
+tests:
+  +store_failures: true  # store failures for all tests
+  +docs:
+    show: true
+    tags: "test"
+# In this example config, we tell dbt to build all models in the example/ directory
+# as tables. These settings can be overridden in the individual model files
+# using the `{{ config(...) }}` macro.
+models:
+  dreem_analytics:
+    # Config indicated by + and applies to all files under models/example/
+    base:
+      +materialized: table
+      +docs:
+        node_color: "#0320fc"
+      applicative:
+        schema: applicative_raw
+        tags: applicative
+      
+    staging:
+      +materialized: view
+      +schema: staging
+      +docs: 
+        node_color: "#b43ddb"
+    usecases:
+      +materialized: table
+      +docs: 
+        node_color: "#d90000" 
+
+  elementary:
+    +schema: elementary
+    +docs:
+      show: false
+
+seeds:
+  +schema: seeds
+  +docs:
+    node_color: "#000000"
+snapshots:
+  +target_schema: snapshots
+  +docs:
+    show: false
+tests:
+  +store_failures: true  # store failures for all tests
+  +docs:
+    show: false

@@ -1,0 +1,14 @@
+version: 1
+
+models:
+  - name: siren_data
+    config: 
+      materialized: view
+      tags: ["pro"]
+    columns:
+      - name: siren
+        tests: 
+          - unique
+          - not_null
+
+

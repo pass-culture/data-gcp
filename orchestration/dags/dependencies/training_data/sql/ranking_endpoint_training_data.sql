@@ -34,12 +34,11 @@ events AS (
         poc.offer_category,
         poc.offer_subcategory_id,
         cast(poc.offer_item_score as FLOAT64) as offer_item_score,
-        cast(poc.offer_order as FLOAT64) as offer_order_score,
         ROW_NUMBER() OVER (
             PARTITION BY reco_call_id,
             user_id
             ORDER BY
-                offer_order DESC
+                id ASC
         ) as offer_rank
     FROM
         `{{ bigquery_clean_dataset }}.past_offer_context` poc
@@ -58,7 +57,7 @@ interact AS (
         `{{ bigquery_analytics_dataset }}.firebase_events` fsoe
         LEFT JOIN diversification d on d.offer_id = fsoe.offer_id
     WHERE
-        event_date >= DATE_SUB(CURRENT_DATE, INTERVAL 14 DAY)
+        event_date >= DATE_SUB(CURRENT_DATE, INTERVAL 7 DAY)
         AND event_name in ("ConsultOffer", "BookingConfirmation")
     GROUP BY
         1,
@@ -72,7 +71,7 @@ seen AS (
     FROM
         `{{ bigquery_analytics_dataset }}.firebase_events` fsoe
     WHERE
-        event_date >= DATE_SUB(CURRENT_DATE, INTERVAL 14 DAY)
+        event_date >= DATE_SUB(CURRENT_DATE, INTERVAL 7 DAY)
         AND event_name in ("ConsultOffer", "BookingConfirmation")
 ),
 transactions AS (
@@ -108,7 +107,7 @@ SELECT
     offer_is_geolocated,
     avg(offer_item_score) as offer_item_score,
     -- similarity score
-    avg(offer_order_score) as offer_order,
+    avg(offer_rank) as offer_order,
     -- ranking score 
     max(booking) as booking,
     max(consult) as consult,

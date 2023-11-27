@@ -17,7 +17,7 @@ from utils import (
 from figure import plot_features_importance, plot_cm, plot_hist
 
 
-PARAMS = {"seen": 1_000_000, "consult": 1_000_000, "booking": 1_000_000}
+PARAMS = {"seen": 500_000, "consult": 500_000, "booking": 500_000}
 
 MODEL_PARAMS = {
     "objective": "regression",
@@ -39,7 +39,7 @@ def load_data(dataset_name, table_name):
           * 
       FROM `{GCP_PROJECT_ID}.{dataset_name}.{table_name}` 
       WHERE not consult and not booking
-      ORDER BY offer_order DESC
+      ORDER BY offer_order ASC
       LIMIT {PARAMS['seen']}
     ),
     consult AS (

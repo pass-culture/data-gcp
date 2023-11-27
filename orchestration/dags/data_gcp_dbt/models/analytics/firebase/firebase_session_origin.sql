@@ -10,7 +10,7 @@ SELECT DISTINCT
     , LAST_VALUE(traffic_gen) OVER(PARTITION BY unique_session_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS traffic_gen
     , LAST_VALUE(traffic_content) OVER(PARTITION BY unique_session_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS traffic_content
     , LAST_VALUE(user_location_type IGNORE NULLS) OVER(PARTITION BY unique_session_id ORDER BY event_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS last_user_location_type
-FROM {{ ref('firebase_events') }} AS firebase_events
+FROM {{ ref('firebase_events_analytics') }} AS firebase_events
 WHERE  session_id IS NOT NULL
 AND event_name NOT IN (
             'app_remove',

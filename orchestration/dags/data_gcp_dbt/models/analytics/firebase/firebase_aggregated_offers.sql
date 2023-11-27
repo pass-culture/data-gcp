@@ -32,7 +32,7 @@ SELECT
         CAST(event_name = 'HasAddedOfferToFavorites' AS INT64)
     ) AS has_added_offer_to_favorites
 from
-        {{ ref('firebase_events') }}
+        {{ ref('firebase_events_analytics') }}
 WHERE
     offer_id IS NOT NULL
 GROUP BY

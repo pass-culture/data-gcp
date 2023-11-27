@@ -23,9 +23,9 @@ clean-targets:         # directories to be removed by `dbt clean`
   - "target"
   - "dbt_packages"
 
-on-run-start:
-  - "{{ create_humanize_id_temp_function_udf()}}"
-  - "{{ create_dehumanize_id_temp_function_udf()}}"
+# on-run-start:
+#   - "{{ create_humanize_id_temp_function_udf()}}"
+#   - "{{ create_dehumanize_id_temp_function_udf()}}"
 # Configuring models
 # Full documentation: https://docs.getdbt.com/docs/configuring-models
 
@@ -34,7 +34,6 @@ on-run-start:
 # files using the `{{ config(...) }}` macro.
 models:
   data_gcp_dbt:
-    # Config indicated by + and applies to all files under models/example/
     +materialized: view
     analytics:
       +schema: analytics_{{ target.name }}

@@ -543,8 +543,8 @@ WITH temp_firebase_events AS (
                 event_params.key = 'appsFlyerUserId'
         ) as appsflyer_id
 FROM
-    {{ ref('firebase_events') }}
-WHERE _PARTITIONDATE =
+    {{ source('clean', 'firebase_events') }}
+WHERE event_date =
 {% if env_var('FIREBASE_DAG_TYPE') == 'intraday' %} "{{ ds() }}"   
 {% else %} DATE_SUB("{{ ds() }}", INTERVAL 1 DAY)
 {% endif %}

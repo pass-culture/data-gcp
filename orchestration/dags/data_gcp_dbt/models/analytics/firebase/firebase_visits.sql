@@ -32,7 +32,7 @@ SELECT
     COUNTIF(firebase_screen IN ('BeneficiaryRequestSent','UnderageAccountCreated','BeneficiaryAccountCreated')) AS nb_benef_request_sent,
     DATE_DIFF(MAX(event_timestamp),MIN(event_timestamp),SECOND) AS visit_duration_seconds,
 FROM
-        {{ ref('firebase_events') }}
+        {{ ref('firebase_events_analytics') }}
     WHERE
         event_name NOT IN (
             'app_remove',
@@ -47,4 +47,4 @@ GROUP BY
     user_pseudo_id,
     unique_session_id,
     platform,
-    app_version;
+    app_version

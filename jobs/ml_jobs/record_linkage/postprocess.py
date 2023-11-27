@@ -1,13 +1,19 @@
 import pandas as pd
 import typer
 from tools.config import GCP_PROJECT_ID, ENV_SHORT_NAME
+from loguru import logger
 
 
 def build_item_id_from_linkage(df):
     for link_id in df.linked_id.unique():
         df_tmp = df.query(f"linked_id=='{link_id}'")
-        product_ids = df_tmp.item_id.unique()
-        item_ids = [item for item in product_ids if "movie" in item]
+        df_tmp = df_tmp.dropna()
+        product_ids = list(df_tmp.item_id.unique())
+        # logger.info(f"product_ids: {print(product_ids)}")
+        if product_ids is not None:
+            item_ids = [item for item in product_ids if "movie" in item]
+        else:
+            item_ids = []
         if len(item_ids) > 0:
             df.loc[df["linked_id"] == link_id, "item_linked_id"] = item_ids[0]
         else:
@@ -26,13 +32,16 @@ def main(
 ):
     ####
     # Load linked offers
+    logger.info("Loading data from linkage to build label for linked items ")
     df_offers_linked_full = pd.read_gbq(
         f"SELECT * FROM `{gcp_project}.sandbox_{env_short_name}.linked_offers_full`"
     )
+    logger.info(f"{len(df_offers_linked_full)} items to label")
     ####
     # Build new item_id from linkage
     # If pre-existent item (ex: movie-ABC) is in cluster
     # then all offers in cluster get this item_id
+    logger.info("Building label from linkage data...")
     build_item_id_from_linkage(df_offers_linked_full)
     ####
     # Convert offer_id back to string to be consititent with dataset

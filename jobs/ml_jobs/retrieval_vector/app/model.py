@@ -37,7 +37,6 @@ class DefaultClient:
         prefilter: bool = True,
         vector_column_name: str = "vector",
     ) -> t.List[t.Dict]:
-
         results = (
             self.table.search(
                 vector.embedding,

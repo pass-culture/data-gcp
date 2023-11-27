@@ -79,6 +79,7 @@ def search_vector(
     debug,
     call_id,
     prefilter: bool,
+    vector_column_name: str,
     item_id=None,
 ):
     try:
@@ -91,6 +92,7 @@ def search_vector(
                 details=debug,
                 item_id=item_id,
                 prefilter=prefilter,
+                vector_column_name=vector_column_name,
             )
             return jsonify({"predictions": results})
         else:
@@ -122,9 +124,13 @@ def predict():
     model_type = input_json["model_type"]
     debug = bool(input_json.get("debug", 0))
     prefilter = input_json.get("prefilter", None)
+    vector_column_name = input_json.get("vector_column_name", None)
     selected_params = input_json.get("params", {})
     if prefilter is None:
         prefilter = len(selected_params.keys()) > 0
+    if vector_column_name is None:
+        vector_column_name = "vector"
+
     size = input_size(input_json.get("size", 500))
 
     try:
@@ -148,6 +154,7 @@ def predict():
                     debug,
                     call_id=call_id,
                     prefilter=prefilter,
+                    vector_column_name=vector_column_name,
                 )
         if isinstance(model, TextClient):
             if model_type == "semantic":
@@ -169,6 +176,7 @@ def predict():
                     debug,
                     call_id=call_id,
                     prefilter=prefilter,
+                    vector_column_name=vector_column_name,
                 )
 
         if model_type == "similar_offer":
@@ -188,9 +196,10 @@ def predict():
                 size,
                 selected_params,
                 debug,
-                item_id=input_str,
                 call_id=call_id,
                 prefilter=prefilter,
+                vector_column_name=vector_column_name,
+                item_id=input_str,
             )
 
         if model_type == "filter":

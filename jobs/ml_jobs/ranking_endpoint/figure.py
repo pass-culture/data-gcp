@@ -24,6 +24,7 @@ def plot_features_importance(pipeline, filename):
     plt.xlabel("Feature Importance")
     plt.title("Feature Importance Plot")
     plt.savefig(filename, format="pdf", dpi=300, bbox_inches="tight")
+    plt.close()
 
 
 def plot_cm(
@@ -34,21 +35,30 @@ def plot_cm(
     proba=0.5,
 ):
     y_pred_binary = (y_pred >= proba).astype(int)
-    y_test_binary = (y >= proba).astype(int)
+    y_true_binary = (y >= proba).astype(int)
 
-    conf_matrix = confusion_matrix(y_test_binary, y_pred_binary)
+    conf_matrix = confusion_matrix(y_true_binary, y_pred_binary)
+    print(conf_matrix)
 
     plt.figure(figsize=(6, 4))
     if perc:
         conf_matrix_percent = (
             conf_matrix.astype("float") / conf_matrix.sum(axis=1)[:, np.newaxis]
         )
-        sns.heatmap(
-            conf_matrix_percent, annot=True, fmt=".2f", cmap="Blues", cbar=False
-        )
+        sns.heatmap(conf_matrix_percent, annot=True, fmt=".2f")
     else:
-        sns.heatmap(conf_matrix, annot=True, fmt=".0f", cmap="Blues", cbar=False)
+        sns.heatmap(conf_matrix, annot=True, fmt=".0f")
+
     plt.xlabel(f"Predicted Label")
     plt.ylabel(f"True Label")
     plt.title(f"Confusion Matrix [proba >= {proba}]")
+
     plt.savefig(filename, format="pdf", dpi=300, bbox_inches="tight")
+
+    plt.close()
+
+
+def plot_hist(df, figure_folder, prefix=""):
+    ax = df["target"].hist(bins=30, histtype="barstacked", stacked=True)
+    fig = ax.get_figure()
+    fig.savefig(f"{figure_folder}/{prefix}target_histogram.pdf")

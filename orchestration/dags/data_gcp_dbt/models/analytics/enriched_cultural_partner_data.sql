@@ -5,7 +5,7 @@ SELECT
     ,venue_managing_offerer_id AS offerer_id
     ,enriched_venue_data.partner_id
     ,venue_creation_date AS partner_creation_date
-    ,CASE WHEN DATE_TRUNC(venue_creation_date,YEAR) <= DATE_TRUNC(DATE_SUB(DATE('{{ ds }}'),INTERVAL 1 YEAR),YEAR) THEN TRUE ELSE FALSE END AS was_registered_last_year
+    ,CASE WHEN DATE_TRUNC(venue_creation_date,YEAR) <= DATE_TRUNC(DATE_SUB(DATE('{{ ds() }}'),INTERVAL 1 YEAR),YEAR) THEN TRUE ELSE FALSE END AS was_registered_last_year
     ,enriched_venue_data.venue_name AS partner_name
     ,region_department.academy_name AS partner_academy_name
     ,enriched_venue_data.venue_region_name AS partner_region_name
@@ -96,7 +96,7 @@ SELECT
     ,enriched_offerer_data.offerer_id
     ,enriched_offerer_data.partner_id
     ,enriched_offerer_data.offerer_creation_date AS partner_creation_date
-    ,CASE WHEN DATE_TRUNC(enriched_offerer_data.offerer_creation_date,YEAR) <= DATE_TRUNC(DATE_SUB(DATE('{{ ds }}'),INTERVAL 1 YEAR),YEAR) THEN TRUE ELSE NULL END AS was_registered_last_year
+    ,CASE WHEN DATE_TRUNC(enriched_offerer_data.offerer_creation_date,YEAR) <= DATE_TRUNC(DATE_SUB(DATE('{{ ds() }}'),INTERVAL 1 YEAR),YEAR) THEN TRUE ELSE NULL END AS was_registered_last_year
     ,enriched_offerer_data.offerer_name AS partner_name
     ,region_department.academy_name AS partner_academy_name
     ,enriched_offerer_data.offerer_region_name AS partner_region_name

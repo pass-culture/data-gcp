@@ -4,9 +4,9 @@ import json
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
-
-from airflow.utils.dates import datetime
-from airflow.utils.dates import timedelta
+from airflow.operators.EmptyOperator import EmptyOperator
+from airflow.utils.task_group import TaskGroup
+from airflow.utils.dates import datetime, timedelta
 from common.config import PATH_TO_DBT_PROJECT
 from airflow.exceptions import DuplicateTaskIdFound
 
@@ -63,43 +63,51 @@ def make_dbt_task(node, dbt_verb,dag):
 
 start = DummyOperator(task_id="start")
 
-    dbt_compile_op = BashOperator(
+dbt_compile_op = BashOperator(
         task_id="run_compile_dbt",
         bash_command="dbt compile --target {{ params.target }}",
         cwd=PATH_TO_DBT_PROJECT,
     )
-data = load_manifest()
 
-dbt_tasks = {}
+with TaskGroup(group_id='data_transformation') as data_transfo:
 
-for node in data["nodes"].keys():
-    if "elementary" not in node.split("."):
-        if node.split(".")[0] == "model":
-            node_test = node.replace("model", "test")
-            dbt_tasks[node] = make_dbt_task(node, "run",dag)
-            try :
+    data = load_manifest()
+
+    dbt_tasks = {}
+
+    for node in data["nodes"].keys():
+        if "elementary" not in node.split("."):
+            if node.split(".")[0] == "model":
+                node_test = node.replace("model", "test")
                 dbt_tasks[node] = make_dbt_task(node, "run",dag)
-            except DuplicateTaskIdFound:
-                print(node)
-                # print(dbt_tasks[node])
-                pass
-            try :
-                dbt_tasks[node_test] = make_dbt_task(node, "test",dag)
-            except DuplicateTaskIdFound:
-                # print(node)
-                # print(dbt_tasks[node])
-                pass
+                try :
+                    dbt_tasks[node] = make_dbt_task(node, "run",dag)
+                except DuplicateTaskIdFound:
+                    print(node)
+                    # print(dbt_tasks[node])
+                    pass
+                try :
+                    dbt_tasks[node_test] = make_dbt_task(node, "test",dag)
+                except DuplicateTaskIdFound:
+                    # print(node)
+                    # print(dbt_tasks[node])
+                    pass
 
-for node in data["nodes"].keys():
-    if node.split(".")[0] == "model":
 
-        # Set dependency to run tests on a model after model runs finishes
-        # node_test = node.replace("model", "test")
-        # dbt_tasks[node] >> dbt_tasks[node_test]
+    for node in data["nodes"].keys():
+        if node.split(".")[0] == "model":
 
-        # Set all model -> model dependencies
-        for upstream_node in data["nodes"][node]["depends_on"]["nodes"]:
-            if "elementary" not in upstream_node.split("."):
-                upstream_node_type = upstream_node.split(".")[0]
-                if upstream_node_type == "model":
-                    dbt_tasks[upstream_node] >> dbt_tasks[node]
+            # Set dependency to run tests on a model after model runs finishes
+            # node_test = node.replace("model", "test")
+            # dbt_tasks[node] >> dbt_tasks[node_test]
+
+            # Set all model -> model dependencies
+            for upstream_node in data["nodes"][node]["depends_on"]["nodes"]:
+                if "elementary" not in upstream_node.split("."):
+                    upstream_node_type = upstream_node.split(".")[0]
+                    if upstream_node_type == "model":
+                        dbt_tasks[upstream_node] >> dbt_tasks[node]
+
+end = EmptyOperator(task_id='tranfo completed')
+
+start >> dbt_compile_op >> data_transfo >> end

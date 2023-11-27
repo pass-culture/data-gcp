@@ -3,6 +3,8 @@ import json
 
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
+from airflow.operators.dummy_operator import DummyOperator
+
 from airflow.utils.dates import datetime
 from airflow.utils.dates import timedelta
 from common.config import PATH_TO_DBT_PROJECT
@@ -59,7 +61,13 @@ def make_dbt_task(node, dbt_verb,dag):
 
     return dbt_task
 
+start = DummyOperator(task_id="start")
 
+    dbt_compile_op = BashOperator(
+        task_id="run_compile_dbt",
+        bash_command="dbt compile --target {{ params.target }}",
+        cwd=PATH_TO_DBT_PROJECT,
+    )
 data = load_manifest()
 
 dbt_tasks = {}

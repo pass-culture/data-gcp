@@ -4,7 +4,7 @@
 WITH offerer_humanized_id AS (
     SELECT
         offerer_id,
-        offerer_id AS humanized_id
+        humanize_id(offerer_id) AS humanized_id
     FROM
         `{{ bigquery_clean_dataset }}`.applicative_database_offerer
     WHERE

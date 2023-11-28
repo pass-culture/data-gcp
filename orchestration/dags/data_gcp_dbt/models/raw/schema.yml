@@ -15,11 +15,18 @@ models:
           - relationships:
               to: ref('region_department')
               field: dep_name
-              severity: 'warn'
+              severity: 'error'
           - accepted_values:
               values: ['PME','GE']
               error_if: '>=10'
-
+  - name: enriched_cultural_partner_data
+    config: 
+      materialized: table
+      tags: ["pro"]
+    columns:
+      - name: venue_id
+        tests: 
+          - unique
 
 
 

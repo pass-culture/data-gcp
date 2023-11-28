@@ -234,6 +234,11 @@ WITH temp_firebase_events AS (
             where
                 event_params.key = 'traffic_source'
         ) as traffic_source,
+        device.category as user_device_category,
+        device.operating_system as user_device_operating_system,
+        device.operating_system_version as user_device_operating_system_version,
+        device.web_info.browser as user_web_browser,
+        device.web_info.browser_version as user_web_browser_version,
   FROM
         {% if params.dag_type == 'intraday' %}
         `{{ bigquery_clean_dataset }}.firebase_pro_events_{{ yyyymmdd(ds) }}`

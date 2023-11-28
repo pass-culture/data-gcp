@@ -4,7 +4,6 @@ import json
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.EmptyOperator import EmptyOperator
 from airflow.utils.task_group import TaskGroup
 from airflow.utils.dates import datetime, timedelta
 from common.config import PATH_TO_DBT_PROJECT
@@ -61,15 +60,16 @@ def make_dbt_task(node, dbt_verb,dag):
 
     return dbt_task
 
-start = DummyOperator(task_id="start")
+start = DummyOperator(task_id="start",dag=dag)
 
 dbt_compile_op = BashOperator(
         task_id="run_compile_dbt",
         bash_command="dbt compile --target {{ params.target }}",
         cwd=PATH_TO_DBT_PROJECT,
+        dag=dag
     )
 
-with TaskGroup(group_id='data_transformation') as data_transfo:
+with TaskGroup(group_id='data_transformation',dag=dag) as data_transfo:
 
     data = load_manifest()
 
@@ -108,6 +108,6 @@ with TaskGroup(group_id='data_transformation') as data_transfo:
                     if upstream_node_type == "model":
                         dbt_tasks[upstream_node] >> dbt_tasks[node]
 
-end = EmptyOperator(task_id='transfo completed')
+end = DummyOperator(task_id='transfo completed',dag=dag)
 
 start >> dbt_compile_op >> data_transfo >> end

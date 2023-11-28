@@ -35,19 +35,19 @@ clean-targets:         # directories to be removed by `dbt clean`
 models:
   data_gcp_dbt:
     # Config indicated by + and applies to all files under models/example/
-    base:
+    raw:
       +materialized: table
       +docs:
         node_color: "#0320fc"
       applicative_raw:
         schema: applicative_raw
         tags: "applicative"
-    staging:
+    clean:
       +materialized: view
       +schema: staging
       +docs: 
         node_color: "#b43ddb"
-    usecases:
+    analytics:
       +materialized: table
       +docs: 
         node_color: "#d90000" 
@@ -61,6 +61,7 @@ snapshots:
     show: false
 tests:
   +store_failures: true  # store failures for all tests
+  +severity: warn
   +docs:
     show: true
     tags: "test"

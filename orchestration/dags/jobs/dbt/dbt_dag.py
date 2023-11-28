@@ -108,6 +108,6 @@ with TaskGroup(group_id='data_transformation') as data_transfo:
                     if upstream_node_type == "model":
                         dbt_tasks[upstream_node] >> dbt_tasks[node]
 
-end = EmptyOperator(task_id='tranfo completed')
+end = EmptyOperator(task_id='transfo completed')
 
 start >> dbt_compile_op >> data_transfo >> end

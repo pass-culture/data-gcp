@@ -23,9 +23,9 @@ clean-targets:         # directories to be removed by `dbt clean`
   - "target"
   - "dbt_packages"
 
-# on-run-start:
-#   - "{{ create_humanize_id_temp_function_udf()}}"
-#   - "{{ create_dehumanize_id_temp_function_udf()}}"
+# # on-run-start:
+# #   - "{{ create_humanize_id_function() }}"
+# #   - "{{ create_dehumanize_id_function() }}"
 # Configuring models
 # Full documentation: https://docs.getdbt.com/docs/configuring-models
 
@@ -34,11 +34,40 @@ clean-targets:         # directories to be removed by `dbt clean`
 # files using the `{{ config(...) }}` macro.
 models:
   data_gcp_dbt:
-    +materialized: view
-    analytics:
-      +schema: analytics_{{ target.name }}
+    raw:
+      +materialized: table
+      +docs:
+        node_color: "#0320fc"
+      applicative_raw:
+        schema: applicative_raw
+        tags: "applicative"
     clean:
-      +schema: clean_{{ target.name }}
+      +materialized: view
+      +schema: staging
+      +docs: 
+        node_color: "#b43ddb"
+    analytics:
+      +materialized: table
+      +docs: 
+        node_color: "#d90000" 
+seeds:
+  +schema: seeds
+  +docs:
+    node_color: "#000000"
+snapshots:
+  +target_schema: snapshots
+  +docs:
+    show: false
+tests:
+  +store_failures: true  # store failures for all tests
+  +severity: warn
+  +docs:
+    show: true
+    tags: "test"
+# In this example config, we tell dbt to build all models in the example/ directory
+# as tables. These settings can be overridden in the individual model files
+# using the `{{ config(...) }}` macro.
+
       
 vars:
   ENV_SHORT_NAME: dev

@@ -1,1 +1,0 @@
-select * from {{ source('clean','applicative_database_venue')}}

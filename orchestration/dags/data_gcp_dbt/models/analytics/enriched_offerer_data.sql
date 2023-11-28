@@ -1,10 +1,9 @@
 
-{{ create_humanize_id_function() }} 
 
 WITH offerer_humanized_id AS (
     SELECT
         offerer_id,
-        humanize_id(offerer_id) AS humanized_id
+         {{target.schema}}.humanize_id(offerer_id) AS humanized_id
     FROM
         {{ ref('applicative_database_offerer') }}
     WHERE
@@ -264,4 +263,4 @@ LEFT JOIN {{ ref('siren_data_labels') }} AS siren_data_labels ON siren_data_labe
                                             AND CAST(siren_data_labels.categorieJuridiqueUniteLegale AS STRING) = CAST(siren_data.categorieJuridiqueUniteLegale AS STRING)
 WHERE
     offerer.offerer_validation_status='VALIDATED'
-    AND offerer.offerer_is_active;
+    AND offerer.offerer_is_active

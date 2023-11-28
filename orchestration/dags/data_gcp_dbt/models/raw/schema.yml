@@ -1,0 +1,25 @@
+version: 1
+
+models:
+  - name: siren_data
+    config: 
+      materialized: view
+      tags: ["pro"]
+    columns:
+      - name: siren
+        tests: 
+          - not_null
+          - unique
+      - name: categorieEntreprise
+        tests:
+          - relationships:
+              to: ref('region_department')
+              field: dep_name
+              severity: 'warn'
+          - accepted_values:
+              values: ['PME','GE']
+              error_if: '>=10'
+
+
+
+

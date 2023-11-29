@@ -2,7 +2,7 @@ version: 1
 
 sources:
   - name: raw # this is the source_name
-    schema: raw_{{ env_var('ENV_SHORT_NAME') }} # this is the schema_name
+    schema: raw_{{ var('ENV_SHORT_NAME') }} # this is the schema_name
     tables:
       - name: agg_partner_cultural_sector # try to plug it directly to google cloud storage with dbt_external_tables package
       - name: applicative_database_booking
@@ -32,7 +32,7 @@ sources:
       - name: applicative_database_stock 
       - name: gsheet_eac_webinar
   - name: clean # this is the source_name
-    schema: clean_{{ env_var('ENV_SHORT_NAME') }} # this is the schema_name
+    schema: clean_{{ var('ENV_SHORT_NAME') }} # this is the schema_name
     tables:
       - name: adage_involved_student # this is the table_name
       - name: applicative_database_bank_information
@@ -45,7 +45,7 @@ sources:
       - name: firebase_events
       - name: siren_data
   - name: analytics # this is the source_name
-    schema: analytics_{{ env_var('ENV_SHORT_NAME') }} # this is the schema_name
+    schema: analytics_{{ var('ENV_SHORT_NAME') }} # this is the schema_name
     tables:
       - name: bookable_venue_history
       - name: linked_offers

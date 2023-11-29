@@ -8,6 +8,7 @@ from airflow.utils.task_group import TaskGroup
 from airflow.utils.dates import datetime, timedelta
 from common.config import PATH_TO_DBT_PROJECT
 from airflow.exceptions import DuplicateTaskIdFound
+from airflow.models import Param
 
 default_args = {
     "depends_on_past": False,
@@ -19,8 +20,14 @@ default_args = {
 dag = DAG(
     "dbt_dag2",
     default_args=default_args,
-    description="A dbt wrapper for airflow",
+    description="A dbt wrapper for airflow - with critical test nodes",
     schedule_interval=None,
+    params={
+        "target": Param(
+            default="dev",
+            type="string",
+        )
+    },
 )
 
 
@@ -60,9 +67,10 @@ full_refresh = False
 
 start = DummyOperator(task_id="start",dag=dag)
 
+
 dbt_compile_op = BashOperator(
         task_id="run_compile_dbt",
-        bash_command="dbt compile --target {{ params.target }}",
+        bash_command="dbt deps && dbt compile --target {{ params.target }} --vars '{\"ENV_SHORT_NAME\": \"dev\"}' ",
         cwd=PATH_TO_DBT_PROJECT,
         dag=dag
     )

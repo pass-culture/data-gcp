@@ -60,7 +60,7 @@ snapshots:
     show: false
 tests:
   +store_failures: true  # store failures for all tests
-  +severity: warn
+  +severity: warn # Failing tests will generate a warning by default. To raise an error, overwrite a config with severity: error.  
   +docs:
     show: true
     tags: "test"

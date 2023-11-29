@@ -68,3 +68,6 @@ tests:
 # In this example config, we tell dbt to build all models in the example/ directory
 # as tables. These settings can be overridden in the individual model files
 # using the `{{ config(...) }}` macro.
+
+vars:
+  ENV_SHORT_NAME: dev

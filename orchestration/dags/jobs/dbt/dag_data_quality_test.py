@@ -3,11 +3,11 @@ import json
 
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
-from airflow.operators.python_operator import PythonOperator
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.trigger_dagrun import TriggerDagRunOperator
+from airflow.sensors.external_task_sensor import ExternalTaskSensor
 from airflow.utils.task_group import TaskGroup
 from airflow.utils.dates import datetime, timedelta
+from common.config import PATH_TO_DBT_PROJECT, ENV_SHORT_NAME
 from airflow.exceptions import DuplicateTaskIdFound
 from airflow.models import Param
 from common.alerts import task_fail_slack_alert
@@ -16,7 +16,8 @@ from common.utils import (
 )
 
 from common import macros
-from common.config import GCP_PROJECT_ID, PATH_TO_DBT_PROJECT#, ENV_SHORT_NAME
+from common.config import GCP_PROJECT_ID, PATH_TO_DBT_PROJECT, ENV_SHORT_NAME
+
 
 def load_manifest():
     local_filepath = PATH_TO_DBT_PROJECT + "/target/manifest.json"
@@ -52,13 +53,6 @@ def rebuild_manifest():
     return simplified_manifest
 
 
-
-# DBT_DIR = PATH_TO_DBT_PROJECT
-# GLOBAL_CLI_FLAGS = "--no-write-json"
-# full_refresh = False
-
-
-ENV_SHORT_NAME= 'dev'
 default_args = {
     "start_date": datetime(2020, 12, 23),
     "retries": 1,
@@ -68,7 +62,7 @@ default_args = {
 }
 
 dag = DAG(
-    "dbt_run_dag",
+    "dbt_data_quality_tests",
     default_args=default_args,
     description="A dbt wrapper for airflow",
     schedule_interval=None,
@@ -87,49 +81,31 @@ dag = DAG(
         ),
     }   
 )
+external_tasks_sensor = {}
+simplified_manifest = rebuild_manifest()
 
 
 start = DummyOperator(task_id="start",dag=dag)
-
-# with TaskGroup(group_id='dbt_init',dag=dag) as dbt_init:
-#     dbt_dep_op = BashOperator(
-#             task_id="dbt_deps",
-#             bash_command="dbt deps --target {{ params.target }}",
-#             cwd=PATH_TO_DBT_PROJECT,
-#             dag=dag
-#         )
-#     dbt_compile_op = BashOperator(
-#             task_id="dbt_compile",
-#             bash_command="dbt compile --target {{ params.target }}",
-#             cwd=PATH_TO_DBT_PROJECT,
-#             dag=dag
-#         )
-
-#     dbt_dep_op >> dbt_compile_op 
+alerting_task = DummyOperator(task_id="dummy_alerting_task",dag=dag)
+end = DummyOperator(task_id="end",dag=dag)
 
 
-    
-with TaskGroup(group_id='data_transformation',dag=dag) as data_transfo:
-    simplified_manifest = rebuild_manifest()
-
-
-    for model_node,model_data in simplified_manifest.items():
-        tests_list = model_data["model_tests"].get('error',[])
-
+for model_node,model_data in simplified_manifest.items():
+        tests_list = model_data["model_tests"].get('warn',[])
         if len(tests_list) != 0 :   
-            with TaskGroup(group_id=f'{model_data["model_alias"]}_tasks',dag=dag) as model_tasks:
-                model_op = BashOperator(
-                    task_id = model_data['model_alias'],
-                    bash_command=f"""
-                    dbt {{ params.GLOBAL_CLI_FLAGS }} run --target {{ params.target }} --select {model_data['model_alias']} --no-compile
-                    """ if not "{{ params.full_refresh }}" else f"""
-                    dbt {{ params.GLOBAL_CLI_FLAGS }} run --target {{ params.target }} --select {model_data['model_alias']} --no-compile --full-refresh
-                    """,
-                    cwd=PATH_TO_DBT_PROJECT, 
-                    dag=dag
-                    )
-
-                with TaskGroup(group_id=f'{model_data["model_alias"]}_critical_tests',dag=dag) as tests_task:
+            with TaskGroup(group_id=f'{model_data["model_alias"]}_quality_tests',dag=dag) as model_testing_task:
+                # first create waiting task for an external model execution
+                external_tasks_sensor[model_node] = ExternalTaskSensor(
+                    task_id=f'{model_data["model_alias"]}_external_task_sensor',
+                    poke_interval=60,
+                    timeout=180,
+                    soft_fail=False,
+                    retries=2,
+                    external_task_id=model_data['model_alias'],
+                    external_dag_id='dbt_run_dag',
+                    dag=dag)
+                #then create a group of test task 
+                with TaskGroup(group_id=f'{model_data["model_alias"]}_critical_tests',dag=dag) as tests_tasks:
                     dbt_test_tasks = [BashOperator(
                     task_id = test['test_alias'],
                     bash_command=f"""
@@ -144,56 +120,11 @@ with TaskGroup(group_id='data_transformation',dag=dag) as data_transfo:
                     cwd=PATH_TO_DBT_PROJECT, 
                     dag=dag
                     ) for test in tests_list]
-                model_op >> tests_task
-        else:
-            model_tasks = BashOperator(
-                    task_id = f'{model_data["model_alias"]}_tasks',
-                    bash_command=f"""
-                    dbt {{ params.GLOBAL_CLI_FLAGS }} run --target {{ params.target }} --select {model_data['model_alias']} --no-compile
-                    """ if not "{{ params.full_refresh }}" else f"""
-                    dbt {{ params.GLOBAL_CLI_FLAGS }} run --target {{ params.target }} --select {model_data['model_alias']} --no-compile --full-refresh
-                    """,
-                    cwd=PATH_TO_DBT_PROJECT, 
-                    dag=dag
-                    )
-   
-        simplified_manifest[model_node]["redirect_dep"] = model_tasks
+                    external_tasks_sensor[model_node] >> tests_tasks
+                
+                start >> model_testing_task >> alerting_task
 
+alerting_task >> end
 
-    for node in simplified_manifest.keys():
-        for upstream_node in simplified_manifest[node]["depends_on_node"]:
-            if upstream_node is not None:
-                if upstream_node.startswith("model."):
-                    try:
-                        simplified_manifest[upstream_node]['redirect_dep'] >> simplified_manifest[node]['redirect_dep']
-                    except:
-                        pass
-                else:
-                    pass
-   
+# TO DO : gather test warnings logs and send them to slack alert task through xcom 
 
-end = DummyOperator(task_id='transfo_completed',dag=dag)
-
-# start >> dbt_init >> data_transfo >> end
-
-dbt_dep_op = BashOperator(
-        task_id="dbt_deps",
-        bash_command="dbt deps --target {{ params.target }}",
-        cwd=PATH_TO_DBT_PROJECT,
-        dag=dag
-    )
-dbt_compile_op = BashOperator(
-        task_id="dbt_compile",
-        bash_command="dbt compile --target {{ params.target }}",
-        cwd=PATH_TO_DBT_PROJECT,
-        dag=dag
-    )
-trigger_quality_tests_dag_op = TriggerDagRunOperator(
-  task_id="trigger_quality_tests_dag",
-  trigger_dag_id="dbt_data_quality_tests",
-  conf=None,
-  dag=dag
-)
-start >> dbt_dep_op >> (dbt_compile_op ,trigger_quality_tests_dag_op)
-
-dbt_compile_op >> data_transfo >> end

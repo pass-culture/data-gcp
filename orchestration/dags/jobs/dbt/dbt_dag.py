@@ -14,6 +14,7 @@ default_args = {
     "depends_on_past": False,
     "start_date": datetime(2020, 12, 23),
     "retries": 2,
+    
     "retry_delay": timedelta(minutes=5),
 }
 
@@ -108,6 +109,6 @@ with TaskGroup(group_id='data_transformation',dag=dag) as data_transfo:
                     if upstream_node_type == "model":
                         dbt_tasks[upstream_node] >> dbt_tasks[node]
 
-end = DummyOperator(task_id='transfo completed',dag=dag)
+end = DummyOperator(task_id='transfo_completed',dag=dag)
 
 start >> dbt_compile_op >> data_transfo >> end

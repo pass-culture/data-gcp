@@ -637,5 +637,5 @@ BIGQUERY_SCHEMAS = {
         "application_submitted_at": "DATETIME",
         "application_status": "STRING",
         "processed_at": "DATETIME",
-    }
+    },
 }

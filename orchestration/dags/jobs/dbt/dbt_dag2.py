@@ -58,7 +58,7 @@ def rebuild_manifest():
 # full_refresh = False
 
 
-ENV_SHORT_NAME= 'dev'
+# ENV_SHORT_NAME= 'dev'
 default_args = {
     "start_date": datetime(2020, 12, 23),
     "retries": 1,
@@ -91,45 +91,44 @@ dag = DAG(
 
 start = DummyOperator(task_id="start",dag=dag)
 
-# with TaskGroup(group_id='dbt_init',dag=dag) as dbt_init:
-#     dbt_dep_op = BashOperator(
-#             task_id="dbt_deps",
-#             bash_command="dbt deps --target {{ params.target }}",
-#             cwd=PATH_TO_DBT_PROJECT,
-#             dag=dag
-#         )
-#     dbt_compile_op = BashOperator(
-#             task_id="dbt_compile",
-#             bash_command="dbt compile --target {{ params.target }}",
-#             cwd=PATH_TO_DBT_PROJECT,
-#             dag=dag
-#         )
+dbt_dep_op = BashOperator(
+        task_id="dbt_deps",
+        bash_command="dbt deps --target {{ params.target }}",
+        cwd=PATH_TO_DBT_PROJECT,
+        dag=dag
+    )
+dbt_compile_op = BashOperator(
+        task_id="dbt_compile",
+        bash_command="dbt compile --target {{ params.target }}",
+        cwd=PATH_TO_DBT_PROJECT,
+        dag=dag
+    )
+# TO DO : gather test warnings logs and send them to slack alert task through xcom
+alerting_task = DummyOperator(task_id="dummy_quality_alerting_task",dag=dag)
 
-#     dbt_dep_op >> dbt_compile_op 
+end = DummyOperator(task_id='transfo_completed',dag=dag)
 
+model_op_dict = {}    
 
-    
 with TaskGroup(group_id='data_transformation',dag=dag) as data_transfo:
     simplified_manifest = rebuild_manifest()
-
-
     for model_node,model_data in simplified_manifest.items():
-        tests_list = model_data["model_tests"].get('error',[])
+        crit_tests_list = model_data["model_tests"].get('error',[])
+        with TaskGroup(group_id=f'{model_data["model_alias"]}_tasks',dag=dag) as model_tasks:
+            model_op = BashOperator(
+                task_id = model_data['model_alias'],
+                bash_command=f"""
+                dbt {{ params.GLOBAL_CLI_FLAGS }} run --target {{ params.target }} --select {model_data['model_alias']} --no-compile
+                """ if not "{{ params.full_refresh }}" else f"""
+                dbt {{ params.GLOBAL_CLI_FLAGS }} run --target {{ params.target }} --select {model_data['model_alias']} --no-compile --full-refresh
+                """,
+                cwd=PATH_TO_DBT_PROJECT, 
+                dag=dag
+                )
+            model_op_dict[model_data['model_alias']] = model_op
 
-        if len(tests_list) != 0 :   
-            with TaskGroup(group_id=f'{model_data["model_alias"]}_tasks',dag=dag) as model_tasks:
-                model_op = BashOperator(
-                    task_id = model_data['model_alias'],
-                    bash_command=f"""
-                    dbt {{ params.GLOBAL_CLI_FLAGS }} run --target {{ params.target }} --select {model_data['model_alias']} --no-compile
-                    """ if not "{{ params.full_refresh }}" else f"""
-                    dbt {{ params.GLOBAL_CLI_FLAGS }} run --target {{ params.target }} --select {model_data['model_alias']} --no-compile --full-refresh
-                    """,
-                    cwd=PATH_TO_DBT_PROJECT, 
-                    dag=dag
-                    )
-
-                with TaskGroup(group_id=f'{model_data["model_alias"]}_critical_tests',dag=dag) as tests_task:
+            if len(crit_tests_list) > 0:
+                with TaskGroup(group_id=f'{model_data["model_alias"]}_critical_tests',dag=dag) as crit_tests_task:
                     dbt_test_tasks = [BashOperator(
                     task_id = test['test_alias'],
                     bash_command=f"""
@@ -143,21 +142,34 @@ with TaskGroup(group_id='data_transformation',dag=dag) as data_transfo:
                     """,
                     cwd=PATH_TO_DBT_PROJECT, 
                     dag=dag
-                    ) for test in tests_list]
-                model_op >> tests_task
-        else:
-            model_tasks = BashOperator(
-                    task_id = f'{model_data["model_alias"]}_tasks',
-                    bash_command=f"""
-                    dbt {{ params.GLOBAL_CLI_FLAGS }} run --target {{ params.target }} --select {model_data['model_alias']} --no-compile
-                    """ if not "{{ params.full_refresh }}" else f"""
-                    dbt {{ params.GLOBAL_CLI_FLAGS }} run --target {{ params.target }} --select {model_data['model_alias']} --no-compile --full-refresh
-                    """,
-                    cwd=PATH_TO_DBT_PROJECT, 
-                    dag=dag
-                    )
-   
-        simplified_manifest[model_node]["redirect_dep"] = model_tasks
+                    ) for test in crit_tests_list]
+                    model_op >> crit_tests_task
+            simplified_manifest[model_node]["redirect_dep"] = model_tasks
+
+with TaskGroup(group_id='data_quality_testing',dag=dag) as data_quality:
+    for model_node,model_data in simplified_manifest.items():
+        quality_tests_list = model_data["model_tests"].get('warn',[]) 
+        if len(quality_tests_list) > 0:
+            with TaskGroup(group_id=f'{model_data["model_alias"]}_quality_tests',dag=dag) as quality_tests_task:
+                dbt_test_tasks = [BashOperator(
+                task_id = test['test_alias'],
+                bash_command=f"""
+                dbt {{ params.GLOBAL_CLI_FLAGS }} run --target {{ params.target }} --select {test['test_alias']} --no-compile
+                """ if (not "{{ params.full_refresh }}" and test['test_type'] == 'generic') else f"""
+                dbt {{ params.GLOBAL_CLI_FLAGS }} run --target {{ params.target }} --select {test['test_alias']} --no-compile --full-refresh
+                """ if ("{{ params.full_refresh }}" and test['test_type'] == 'generic') else f"""
+                dbt {{ params.GLOBAL_CLI_FLAGS }} test --target {{ params.target }} --select {test['test_alias']} --no-compile
+                """ if (not "{{ params.full_refresh }}" and test['test_type'] == 'custom') else f"""
+                dbt {{ params.GLOBAL_CLI_FLAGS }} test --target {{ params.target }} --select {test['test_alias']} --no-compile --full-refresh
+                """,
+                cwd=PATH_TO_DBT_PROJECT, 
+                dag=dag
+                ) for test in quality_tests_list]
+            
+            model_op_dict[model_data['model_alias']] >> quality_tests_task
+
+        
+        
 
 
     for node in simplified_manifest.keys():
@@ -172,28 +184,7 @@ with TaskGroup(group_id='data_transformation',dag=dag) as data_transfo:
                     pass
    
 
-end = DummyOperator(task_id='transfo_completed',dag=dag)
 
-# start >> dbt_init >> data_transfo >> end
-
-dbt_dep_op = BashOperator(
-        task_id="dbt_deps",
-        bash_command="dbt deps --target {{ params.target }}",
-        cwd=PATH_TO_DBT_PROJECT,
-        dag=dag
-    )
-dbt_compile_op = BashOperator(
-        task_id="dbt_compile",
-        bash_command="dbt compile --target {{ params.target }}",
-        cwd=PATH_TO_DBT_PROJECT,
-        dag=dag
-    )
-trigger_quality_tests_dag_op = TriggerDagRunOperator(
-  task_id="trigger_quality_tests_dag",
-  trigger_dag_id="dbt_data_quality_tests",
-  conf=None,
-  dag=dag
-)
-start >> dbt_dep_op >> (dbt_compile_op ,trigger_quality_tests_dag_op)
-
-dbt_compile_op >> data_transfo >> end
+start >> dbt_dep_op >> dbt_compile_op >> data_transfo 
+data_quality >> alerting_task
+(data_transfo ,alerting_task ) >> end

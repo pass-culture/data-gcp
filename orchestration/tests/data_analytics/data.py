@@ -1294,6 +1294,24 @@ ENRICHED_OFFERER_DATA_INPUT = {
             "label_categorie_juridique": "Collectivite",
         }
     ],
+    "adage": [
+        {
+            "id": "1",
+            "siret": "123456789000",
+            "venueid": "1",
+            "synchroPass": "1",
+        }
+    ],
+    "dms_pro_cleaned": [
+        {
+            "procedure_id": "80264",
+            "demandeur_entreprise_siren": "123456789",
+            "demandeur_siret": "123456789000",
+            "application_submitted_at": datetime.now().replace(microsecond=0),
+            "application_status": "accepte",
+            "processed_at": datetime.now().replace(microsecond=0),
+        }
+    ],
 }
 
 ENRICHED_OFFERER_DATA_EXPECTED = [
@@ -1358,6 +1376,10 @@ ENRICHED_OFFERER_DATA_EXPECTED = [
         "offerer_humanized_id": "AE",
         "current_year_revenue": 7,
         "is_local_authority": True,
+        "first_dms_adage_status": "accepte",
+        "dms_accepted_at": datetime.now().replace(microsecond=0),
+        "is_reference_adage": True,
+        "is_synchro_adage": True,
     }
 ]
 

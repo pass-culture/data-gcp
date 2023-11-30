@@ -183,6 +183,57 @@ venues_with_offers AS (
         offerer_id
         )
 
+, adage_agreg_synchro AS (
+SELECT 
+    left(siret, 9) AS siren,
+    siret
+FROM `{{ bigquery_analytics_dataset }}`.adage
+where synchroPass = "1"
+)
+
+, siret_reference_adage AS (
+SELECT 
+    venueid,
+    id,
+    siret,
+    left(siret, 9) AS siren,
+    CASE WHEN siret in (select siret from adage_agreg_synchro) THEN TRUE ELSE FALSE END AS siret_synchro_adage,
+    CASE WHEN left(siret, 9) in (select siren from adage_agreg_synchro) THEN TRUE ELSE FALSE END AS siren_synchro_adage,
+FROM `{{ bigquery_analytics_dataset }}`.adage 
+)
+
+,siren_reference_adage AS (
+  SELECT 
+    siren,
+    max(siren_synchro_adage) AS siren_synchro_adage
+  FROM siret_reference_adage 
+  GROUP BY 1
+)
+
+,dms_adage AS (
+  
+SELECT * EXCEPT(demandeur_entreprise_siren),
+  CASE WHEN demandeur_entreprise_siren is null or demandeur_entreprise_siren = "nan" 
+  THEN left(demandeur_siret, 9) ELSE demandeur_entreprise_siren END AS demandeur_entreprise_siren
+  
+FROM `{{ bigquery_clean_dataset }}`.dms_pro_cleaned
+WHERE procedure_id IN ('57081', '57189','61589','65028','80264')
+)
+
+,first_dms_adage AS (
+SELECT * 
+FROM dms_adage
+QUALIFY row_number() OVER(PARTITION BY demandeur_entreprise_siren ORDER BY application_submitted_at ASC) = 1
+)
+
+, first_dms_adage_accepted AS (
+SELECT * 
+FROM dms_adage
+WHERE application_status = "accepte"
+QUALIFY row_number() OVER(PARTITION BY demandeur_entreprise_siren ORDER BY processed_at ASC) = 1
+)
+
+
 SELECT
     offerer.offerer_id,
     CONCAT("offerer-", offerer.offerer_id) AS partner_id,
@@ -244,6 +295,10 @@ SELECT
     permanent_venues_managed,
     COALESCE(venues_with_offers.nb_venue_with_offers,0) AS venue_with_offer,
     offerer_humanized_id.humanized_id AS offerer_humanized_id,
+    CASE WHEN first_dms_adage.application_status IS NULL THEN "dms_adage_non_depose" ELSE first_dms_adage.application_status END AS first_dms_adage_status,
+    first_dms_adage_accepted.processed_at AS dms_accepted_at,
+    CASE WHEN siren_reference_adage.siren is null THEN FALSE ELSE TRUE END AS is_reference_adage,
+    CASE WHEN siren_reference_adage.siren is null THEN FALSE ELSE siren_synchro_adage END AS is_synchro_adage 
 FROM
     `{{ bigquery_clean_dataset }}`.applicative_database_offerer AS offerer
     LEFT JOIN individual_bookings_per_offerer ON individual_bookings_per_offerer.offerer_id = offerer.offerer_id
@@ -261,7 +316,10 @@ FROM
     LEFT JOIN bookable_offer_history ON bookable_offer_history.offerer_id = offerer.offerer_id
 LEFT JOIN `{{ bigquery_analytics_dataset }}`.siren_data AS siren_data ON siren_data.siren = offerer.offerer_siren
 LEFT JOIN `{{ bigquery_analytics_dataset }}`.siren_data_labels AS siren_data_labels ON siren_data_labels.activitePrincipaleUniteLegale = siren_data.activitePrincipaleUniteLegale
-                                            AND CAST(siren_data_labels.categorieJuridiqueUniteLegale AS STRING) = CAST(siren_data.categorieJuridiqueUniteLegale AS STRING)
+                                            AND CAST(siren_data_labels.categorieJuridiqueUniteLegale AS STRING) = CAST(siren_data.categorieJuridiqueUniteLegale AS STRING)   
+LEFT JOIN first_dms_adage ON first_dms_adage.demandeur_entreprise_siren = offerer.offerer_siren
+LEFT JOIN first_dms_adage_accepted ON first_dms_adage_accepted.demandeur_entreprise_siren = offerer.offerer_siren                                               
+LEFT JOIN siren_reference_adage ON offerer.offerer_siren = siren_reference_adage.siren                                
 WHERE
     offerer.offerer_validation_status='VALIDATED'
     AND offerer.offerer_is_active;

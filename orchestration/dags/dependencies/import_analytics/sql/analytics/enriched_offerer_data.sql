@@ -219,15 +219,6 @@ venues_with_offers AS (
         offerer_id
 ),
 
-adage_validation AS (
-    SELECT DISTINCT 
-        offerer.offerer_id, 
-        MIN(CAST(last_update_at as datetime)) OVER(PARTITION BY offerer.offerer_id) AS first_adage_validation_date
-    FROM 
-        `{{ bigquery_clean_dataset }}`.applicative_database_offerer AS offerer
-    LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_suivi_dms_adage ON enriched_suivi_dms_adage.offerer_id = enriched_offerer_data.offerer_id
-    LEFT JOIN `{{ bigquery_analytics_dataset }}`.dms_pro ON dms_pro.application_number = enriched_suivi_dms_adage.application_number
-)
 
 SELECT
     offerer.offerer_id,
@@ -297,7 +288,6 @@ SELECT
     permanent_venues_managed,
     COALESCE(venues_with_offers.nb_venue_with_offers,0) AS venue_with_offer,
     offerer_humanized_id.humanized_id AS offerer_humanized_id,
-    adage_validation.first_adage_validation_date as offerer_first_adage_validation_date,
 FROM
     `{{ bigquery_clean_dataset }}`.applicative_database_offerer AS offerer
     LEFT JOIN individual_bookings_per_offerer ON individual_bookings_per_offerer.offerer_id = offerer.offerer_id
@@ -316,7 +306,6 @@ FROM
 LEFT JOIN `{{ bigquery_analytics_dataset }}`.siren_data AS siren_data ON siren_data.siren = offerer.offerer_siren
 LEFT JOIN `{{ bigquery_analytics_dataset }}`.siren_data_labels AS siren_data_labels ON siren_data_labels.activitePrincipaleUniteLegale = siren_data.activitePrincipaleUniteLegale
                                             AND CAST(siren_data_labels.categorieJuridiqueUniteLegale AS STRING) = CAST(siren_data.categorieJuridiqueUniteLegale AS STRING)
-LEFT JOIN adage_validation ON offerer.offerer_id=adage_validation.offerer_id
 WHERE
     offerer.offerer_validation_status='VALIDATED'
     AND offerer.offerer_is_active;

@@ -1291,18 +1291,6 @@ ENRICHED_OFFERER_DATA_INPUT = {
             "label_categorie_juridique": "Collectivite",
         }
     ],
-    "enriched_suivi_dms_adage": [
-        {
-            "offerer_id": "1",
-            "application_number": "1",
-        }
-    ],
-    "dms_pro": [
-        {
-            "application_number": "1",
-            "last_update_at": datetime.now().replace(microsecond=0).timestamp(),
-        }
-    ],
 }
 
 ENRICHED_OFFERER_DATA_EXPECTED = [
@@ -1384,7 +1372,6 @@ ENRICHED_OFFERER_DATA_EXPECTED = [
         "offerer_humanized_id": "AE",
         "current_year_revenue": 7,
         "is_local_authority": True,
-        "first_adage_validation_date": datetime.now().replace(microsecond=0),
     }
 ]
 

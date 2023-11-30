@@ -1304,7 +1304,7 @@ ENRICHED_OFFERER_DATA_INPUT = {
             "demandeur_entreprise_siren": "123456789",
             "demandeur_siret": "123456789000",
             "application_submitted_at": datetime.now().replace(microsecond=0),
-            "application_status": "valide",
+            "application_status": "accepte",
             "processed_at": datetime.now().replace(microsecond=0),
         }
     ],

@@ -627,7 +627,7 @@ BIGQUERY_SCHEMAS = {
     "adage": {
         "id": "STRING",
         "siret": "STRING",
-        "venue_id": "STRING",
+        "venueid": "STRING",
         "synchroPass": "STRING",
     },
     "dms_pro_cleaned": {

@@ -220,10 +220,17 @@ FROM `{{ bigquery_clean_dataset }}`.dms_pro_cleaned
 WHERE procedure_id IN ('57081', '57189','61589','65028','80264')
 )
 
-,last_dms_adage AS (
+,first_dms_adage AS (
 SELECT * 
 FROM dms_adage
-QUALIFY row_number() OVER(PARTITION BY demandeur_entreprise_siren ORDER BY application_submitted_at DESC) = 1
+QUALIFY row_number() OVER(PARTITION BY demandeur_entreprise_siren ORDER BY application_submitted_at ASC) = 1
+)
+
+, first_dms_adage_accepted AS (
+SELECT * 
+FROM dms_adage
+WHERE application_status = "accepte"
+QUALIFY row_number() OVER(PARTITION BY demandeur_entreprise_siren ORDER BY processed_at ASC) = 1
 )
 
 
@@ -288,9 +295,10 @@ SELECT
     permanent_venues_managed,
     COALESCE(venues_with_offers.nb_venue_with_offers,0) AS venue_with_offer,
     offerer_humanized_id.humanized_id AS offerer_humanized_id,
-    CASE WHEN last_dms_adage.application_status IS NULL THEN "dms_adage_non_depose" ELSE last_dms_adage.application_status END AS last_dms_adage_status,
-    CASE WHEN siren_reference_adage.siren is null THEN FALSE ELSE TRUE END AS reference_adage,
-    CASE WHEN siren_reference_adage.siren is null THEN FALSE ELSE siren_synchro_adage END AS synchro_adage 
+    CASE WHEN first_dms_adage.application_status IS NULL THEN "dms_adage_non_depose" ELSE first_dms_adage.application_status END AS first_dms_adage_status,
+    first_dms_adage_accepted.processed_at AS dms_accepted_at,
+    CASE WHEN siren_reference_adage.siren is null THEN FALSE ELSE TRUE END AS is_reference_adage,
+    CASE WHEN siren_reference_adage.siren is null THEN FALSE ELSE siren_synchro_adage END AS is_synchro_adage 
 FROM
     `{{ bigquery_clean_dataset }}`.applicative_database_offerer AS offerer
     LEFT JOIN individual_bookings_per_offerer ON individual_bookings_per_offerer.offerer_id = offerer.offerer_id
@@ -309,7 +317,8 @@ FROM
 LEFT JOIN `{{ bigquery_analytics_dataset }}`.siren_data AS siren_data ON siren_data.siren = offerer.offerer_siren
 LEFT JOIN `{{ bigquery_analytics_dataset }}`.siren_data_labels AS siren_data_labels ON siren_data_labels.activitePrincipaleUniteLegale = siren_data.activitePrincipaleUniteLegale
                                             AND CAST(siren_data_labels.categorieJuridiqueUniteLegale AS STRING) = CAST(siren_data.categorieJuridiqueUniteLegale AS STRING)   
-LEFT JOIN last_dms_adage ON last_dms_adage.demandeur_entreprise_siren = offerer.offerer_siren                                           
+LEFT JOIN first_dms_adage ON first_dms_adage.demandeur_entreprise_siren = offerer.offerer_siren
+LEFT JOIN first_dms_adage_accepted ON first_dms_adage_accepted.demandeur_entreprise_siren = offerer.offerer_siren                                               
 LEFT JOIN siren_reference_adage ON offerer.offerer_siren = siren_reference_adage.siren                                
 WHERE
     offerer.offerer_validation_status='VALIDATED'

@@ -13,7 +13,7 @@ GROUP BY 1, 2, 3
 , geoloc_ranked AS (
 SELECT 
   *, 
-  ROW_NUMBER() OVER(PARTITION BY month_log, user_id ORDER BY nb_logs DESC) AS ranking 
+  ROW_NUMBER() OVER(PARTITION BY month_log, user_id ORDER BY nb_log_reco DESC) AS ranking 
 FROM active_dates_geoloc
 ORDER BY 1, 2, 3, 4)
 

@@ -626,4 +626,18 @@ BIGQUERY_SCHEMAS = {
         "institution_latitude": "FLOAT",
         "institution_longitude": "FLOAT",
     },
+    "adage": {
+        "id": "STRING",
+        "siret": "STRING",
+        "venueid": "STRING",
+        "synchroPass": "STRING",
+    },
+    "dms_pro_cleaned": {
+        "procedure_id": "STRING",
+        "demandeur_entreprise_siren": "STRING",
+        "demandeur_siret": "STRING",
+        "application_submitted_at": "DATETIME",
+        "application_status": "STRING",
+        "processed_at": "DATETIME",
+    },
 }

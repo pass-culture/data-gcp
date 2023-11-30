@@ -164,14 +164,14 @@ ref_tables = {
             "code_type_contrat_prive": "STRING",
         },
     },
-    "institutional_scholar_level": {
-        "file_type": "csv",
-        "schema": {
-            "n_ms4_id": "STRING",
-            "n_ms4_cod": "STRING",
-            "n_ms4_lib": "STRING",
-        },
-    },
+    # "institutional_scholar_level": {
+    #     "file_type": "csv",
+    #     "schema": {
+    #         "n_ms4_id": "STRING",
+    #         "n_ms4_cod": "STRING",
+    #         "n_ms4_lib": "STRING",
+    #     },
+    # },
     "iris_france": {
         "file_type": "csv",
         "schema": {

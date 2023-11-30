@@ -13,6 +13,7 @@ SELECT DISTINCT
     , delivered_count
     , opened_count
     , unsubscribed_count
+    , DATE("{{ ds }}") as execution_date
 FROM `{{ bigquery_tmp_dataset }}.{{ yyyymmdd(today()) }}_sendinblue_transactional_detailed_histo` s
 LEFT JOIN emails
 ON s.email = emails.email

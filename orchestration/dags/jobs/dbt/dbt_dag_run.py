@@ -103,12 +103,14 @@ dbt_compile_op = BashOperator(
         cwd=PATH_TO_DBT_PROJECT,
         dag=dag
     )
+
 # TO DO : gather test warnings logs and send them to slack alert task through xcom
 alerting_task = DummyOperator(task_id="dummy_quality_alerting_task",dag=dag)
 
 end = DummyOperator(task_id='transfo_completed',dag=dag)
 
 model_op_dict = {}    
+test_op_dict = {}
 
 with TaskGroup(group_id='data_transformation',dag=dag) as data_transfo:
     simplified_manifest = rebuild_manifest()
@@ -144,6 +146,11 @@ with TaskGroup(group_id='data_transformation',dag=dag) as data_transfo:
                     dag=dag
                     ) for test in crit_tests_list]
                     model_op >> crit_tests_task
+                for i,test in enumerate(crit_tests_list):
+                    if test['test_alias'] not in test_op_dict.keys():
+                        test_op_dict[test['test_alias']] = {'parent_model':[model_data['model_alias']],'test_op':dbt_test_tasks[i]}
+                    else: 
+                        test_op_dict[test['test_alias']]['parent_model'] += [model_data['model_alias']]
             simplified_manifest[model_node]["redirect_dep"] = model_tasks
 
 with TaskGroup(group_id='data_quality_testing',dag=dag) as data_quality:
@@ -165,11 +172,15 @@ with TaskGroup(group_id='data_quality_testing',dag=dag) as data_quality:
                 cwd=PATH_TO_DBT_PROJECT, 
                 dag=dag
                 ) for test in quality_tests_list]
-            
+                for i,test in enumerate(quality_tests_list):
+                    if test['test_alias'] not in test_op_dict.keys():
+                        test_op_dict[test['test_alias']] = {'parent_model':[model_data['model_alias']],'test_op':dbt_test_tasks[i]}
+                    else: 
+                        test_op_dict[test['test_alias']]['parent_model'] += [model_data['model_alias']]
             model_op_dict[model_data['model_alias']] >> quality_tests_task
 
         
-        
+
 
 
     for node in simplified_manifest.keys():
@@ -184,6 +195,10 @@ with TaskGroup(group_id='data_quality_testing',dag=dag) as data_quality:
                     pass
    
 
+
+for test_alias,details in test_op_dict.items():
+    for parent in details['parent_model']:
+        model_op_dict[parent] >> details['test_op']
 
 start >> dbt_dep_op >> dbt_compile_op >> data_transfo 
 data_quality >> alerting_task

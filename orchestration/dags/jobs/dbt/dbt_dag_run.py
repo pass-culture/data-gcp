@@ -52,13 +52,6 @@ def rebuild_manifest():
     return simplified_manifest
 
 
-
-# DBT_DIR = PATH_TO_DBT_PROJECT
-# GLOBAL_CLI_FLAGS = "--no-write-json"
-# full_refresh = False
-
-
-# ENV_SHORT_NAME= 'dev'
 default_args = {
     "start_date": datetime(2020, 12, 23),
     "retries": 1,
@@ -107,7 +100,7 @@ dbt_compile_op = BashOperator(
 # TO DO : gather test warnings logs and send them to slack alert task through xcom
 alerting_task = DummyOperator(task_id="dummy_quality_alerting_task",dag=dag)
 
-end = DummyOperator(task_id='transfo_completed',dag=dag)
+end = DummyOperator(task_id='end',dag=dag)
 
 model_op_dict = {}    
 test_op_dict = {}

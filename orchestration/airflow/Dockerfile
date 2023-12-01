@@ -11,7 +11,7 @@ RUN pip3 install --no-cache-dir -r /opt/requirements.txt
 
 # install gcloud
 USER root
-RUN apt-get update && apt-get install -y ca-certificates --no-install-recommends
+RUN apt-get update && apt-get install -y ca-certificates --no-install-recommends && apt-get install git -y
 COPY ./etc/sa.gcpkey.json ${GCLOUD_SERVICE_KEY}
 RUN curl -LO -k https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/${GCLOUD_VERSION} && tar xf ${GCLOUD_VERSION}
 ENV PATH $PATH:$AIRFLOW_USER_HOME/google-cloud-sdk/bin

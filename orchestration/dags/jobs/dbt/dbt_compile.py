@@ -20,13 +20,13 @@ dag = DAG(
     schedule_interval=timedelta(days=1),
 )
 compile_task = BashOperator(
-            task_id="c",
-            bash_command=f"""
+    task_id="c",
+    bash_command=f"""
             dbt compile --target dev
             """,
-            dag=dag,
-            cwd=PATH_TO_DBT_PROJECT,
-        )
+    dag=dag,
+    cwd=PATH_TO_DBT_PROJECT,
+)
 import datetime
 from airflow import DAG
 from airflow.models import Param
@@ -83,7 +83,6 @@ with DAG(
         ),
     },
 ) as dag:
-
     start = DummyOperator(task_id="start")
 
     dbt_compile_op = BashOperator(

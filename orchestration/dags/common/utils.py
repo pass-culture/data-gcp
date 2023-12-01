@@ -23,7 +23,6 @@ def getting_service_account_token(function_name):
 
 
 def get_dependencies(tables_config):
-
     # 1. DAGS dependencies
     dags_list_of_list = [
         job_params.get("dag_depends", "") for _, job_params in tables_config.items()
@@ -68,7 +67,6 @@ def get_dependencies(tables_config):
 
 
 def waiting_operator(dag, dag_id, external_task_id="end"):
-
     return ExternalTaskSensor(
         task_id=f"wait_for_{dag_id}_{external_task_id}",
         external_dag_id=dag_id,
@@ -131,7 +129,6 @@ def depends_loop(
             depend_job.set_upstream(default_upstream_operator)
 
         elif dependency["dependency_type"] == "table":
-
             depend_job = [
                 jobs_params["operator"]
                 for table, jobs_params in jobs.items()

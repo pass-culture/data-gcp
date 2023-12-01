@@ -9,8 +9,8 @@ data_gcp_dbt:
       method: oauth
       priority: interactive
       project: passculture-data-ehp
-      threads: 1
-      type: bigquery
+      threads: 4
+      type: bigquery  
     stg:
       dataset: tmp_stg
       job_execution_timeout_seconds: 300
@@ -19,12 +19,12 @@ data_gcp_dbt:
       method: oauth
       priority: interactive
       project: passculture-data-ehp
-      threads: 1
+      threads: 4
       type: bigquery
     prod:
       dataset: tmp_prod
       job_execution_timeout_seconds: 300
-      job_retries: 1
+      job_retries: 8
       location: europe-west1
       method: oauth
       priority: interactive

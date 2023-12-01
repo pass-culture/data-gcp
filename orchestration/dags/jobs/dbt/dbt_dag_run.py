@@ -40,7 +40,6 @@ def build_simplified_manifest(data):
             data["nodes"][node]["resource_type"] == "model" and "elementary" not in node
         )
     }
-    unique_test_aliases = []
     for node in data["nodes"].keys():
         if data["nodes"][node]["resource_type"] == "test":
             generic_test = True in [

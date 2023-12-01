@@ -1335,7 +1335,7 @@ ENRICHED_OFFERER_DATA_EXPECTED = [
         "offerer_first_collective_offer_creation_date": datetime.now().replace(
             microsecond=0
         ),
-            "offerer_first_collective_offer_template_creation_date": datetime.now().replace(
+        "offerer_first_collective_offer_template_creation_date": datetime.now().replace(
             microsecond=0
         ),
         "offerer_first_collective_offer_pre_bookable_creation_date": datetime.now().replace(
@@ -1344,7 +1344,7 @@ ENRICHED_OFFERER_DATA_EXPECTED = [
         "offerer_last_collective_offer_creation_date": datetime.now().replace(
             microsecond=0
         ),
-            "offerer_last_collective_offer_template_creation_date": datetime.now().replace(
+        "offerer_last_collective_offer_template_creation_date": datetime.now().replace(
             microsecond=0
         ),
         "offerer_last_collective_offer_pre_bookable_creation_date": datetime.now().replace(

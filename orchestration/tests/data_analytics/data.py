@@ -1247,6 +1247,7 @@ ENRICHED_OFFERER_DATA_INPUT = {
         {
             "stock_id": "1",
             "offer_id": "1",
+            "stock_price": 5,
             "stock_creation_date": datetime.now().replace(microsecond=0),
         }
     ],
@@ -1325,13 +1326,28 @@ ENRICHED_OFFERER_DATA_EXPECTED = [
         "offerer_first_individual_offer_creation_date": datetime.now().replace(
             microsecond=0
         ),
+        "offerer_first_individual_paid_offer_creation_date": datetime.now().replace(
+            microsecond=0
+        ),
         "offerer_last_individual_offer_creation_date": datetime.now().replace(
             microsecond=0
         ),
         "offerer_first_collective_offer_creation_date": datetime.now().replace(
             microsecond=0
         ),
+            "offerer_first_collective_offer_template_creation_date": datetime.now().replace(
+            microsecond=0
+        ),
+        "offerer_first_collective_offer_pre_bookable_creation_date": datetime.now().replace(
+            microsecond=0
+        ),
         "offerer_last_collective_offer_creation_date": datetime.now().replace(
+            microsecond=0
+        ),
+            "offerer_last_collective_offer_template_creation_date": datetime.now().replace(
+            microsecond=0
+        ),
+        "offerer_last_collective_offer_pre_bookable_creation_date": datetime.now().replace(
             microsecond=0
         ),
         "offerer_first_offer_creation_date": datetime.now().replace(microsecond=0),
@@ -1346,6 +1362,8 @@ ENRICHED_OFFERER_DATA_EXPECTED = [
         "offerer_last_booking_date": datetime.now().replace(microsecond=0),
         "offerer_individual_offers_created": 1,
         "offerer_collective_offers_created": 1,
+        "offerer_collective_offers_template_created": 0,
+        "offerer_collective_offers_pre_bookable_created": 1,
         "offer_cnt": 2,
         "offerer_bookable_individual_offer_cnt": 1,
         "offerer_bookable_collective_offer_cnt": 0,

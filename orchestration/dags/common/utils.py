@@ -1,6 +1,7 @@
 from google.auth.transport.requests import Request
 from google.oauth2 import id_token
 from airflow.sensors.external_task import ExternalTaskSensor
+from airflow.models.dagrun import DagRun
 import base64
 import hashlib
 
@@ -175,3 +176,9 @@ def get_airflow_schedule(schedule_interval, local_env=LOCAL_ENV):
         return None
     else:
         return schedule_interval
+    
+def get_most_recent_da_run(dag_id):
+    dags_runs = DagRun.find(dag_id=dag_id)
+    dags_runs.sort(key=lambda x: x.execution_date,reverse=True)
+    if dags_runs:
+        return dags_runs[0].execution_date

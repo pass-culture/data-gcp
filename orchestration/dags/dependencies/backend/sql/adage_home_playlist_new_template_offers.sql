@@ -9,14 +9,24 @@ WITH offerer_offer_info AS
           MIN(collective_offer_creation_date) OVER (PARTITION BY offerer_id) AS first_template_offer_creation_date
    FROM `{{ bigquery_analytics_dataset }}`.enriched_collective_offer_data o
    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue v ON v.venue_id=o.venue_id
-   WHERE offer_is_template IS TRUE 
+   WHERE offer_is_template IS TRUE
    QUALIFY ROW_NUMBER() OVER(PARTITION BY offerer_id ORDER BY collective_offer_creation_date ASC) = 1 ), 
 
 -- Only keep first template offers of last 2 months
 offerer_offer_2_month AS
   (SELECT *
    FROM offerer_offer_info
-   WHERE collective_offer_creation_date >= DATE_SUB(current_date(), INTERVAL 2 MONTH) ), 
+   WHERE collective_offer_creation_date >= DATE_SUB(current_date(), INTERVAL 2 MONTH) ),
+
+-- Add location of the venue_representation (venue_id of the field venue_adress) when it is different from the initial venue of the offer
+add_representation_venue AS
+  (SELECT o.* ,
+          collective_offer_venue_humanized_id AS venue_v2_id ,
+          v.venue_latitude AS venue_v2_latitude ,
+          v.venue_longitude AS venue_v2_longitude
+   FROM offerer_offer_2_month o
+   LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_collective_offer_template a ON o.collective_offer_id=a.collective_offer_id AND collective_offer_venue_humanized_id != a.venue_id AND collective_offer_venue_humanized_id IS NOT NULL 
+   LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue v ON v.venue_id=a.collective_offer_venue_humanized_id),
 
 -- Get institutions
 institution_info AS
@@ -32,11 +42,13 @@ calculate_distance AS
           i.institution_rural_level ,
           o.offerer_id ,
           o.venue_id ,
+          o.venue_v2_id ,
           o.collective_offer_id ,
           o.collective_offer_creation_date ,
-          ST_Distance(ST_geogPoint(venue_longitude, venue_latitude), ST_geogPoint(institution_longitude, institution_latitude)) AS distance
+          ST_Distance(ST_geogPoint(venue_longitude, venue_latitude), ST_geogPoint(institution_longitude, institution_latitude)) AS distance ,
+          ST_Distance(ST_geogPoint(venue_v2_longitude, venue_v2_latitude), ST_geogPoint(institution_longitude, institution_latitude)) AS distance_v2
    FROM institution_info i
-   CROSS JOIN offerer_offer_2_month o) 
+   CROSS JOIN add_representation_venue o) 
    
 -- Filter < 300km
 SELECT institution_id ,
@@ -45,7 +57,8 @@ SELECT institution_id ,
        venue_id ,
        collective_offer_id ,
        collective_offer_creation_date ,
-       SAFE_DIVIDE(distance, 1000) as distance_in_km
+       SAFE_DIVIDE(distance, 1000) as distance_in_km ,
+       SAFE_DIVIDE(distance_v2, 1000) as distance_v2_in_km
 FROM calculate_distance
 WHERE distance < 300000
 GROUP BY 1,
@@ -54,4 +67,5 @@ GROUP BY 1,
          4,
          5,
          6,
-         7
+         7,
+         8

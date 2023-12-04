@@ -1,6 +1,5 @@
 SELECT
     CAST("id" AS varchar(255)) AS collective_booking_id
-    , CAST("bookingId" AS varchar(255)) AS booking_id
     , "dateCreated" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS collective_booking_creation_date
     , "dateUsed" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS collective_booking_used_date
     , CAST("collectiveStockId" AS varchar(255)) AS collective_stock_id

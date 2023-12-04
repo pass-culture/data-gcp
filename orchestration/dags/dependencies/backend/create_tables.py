@@ -31,7 +31,7 @@ create_tables = {
     "stats_display_top_3_most_consulted_offers_last_30_days": {
         "sql": f"{BACKEND_SQL_PATH}/stats_display_top_3_most_consulted_offers_last_30_days.sql",
         "destination_dataset": "{{ bigquery_backend_dataset }}",
-        "destination_table": "stats_display_top_3_most_consulted_offers_last_30_days${{ yyyymmdd(ds) }}",
+        "destination_table": "stats_display_top_3_most_consulted_offers_last_30_days${{ yyyymmdd(today()) }}",
         "time_partitioning": {"field": "execution_date"},
         "schedule_type": "daily",
         "write_disposition": "WRITE_TRUNCATE",

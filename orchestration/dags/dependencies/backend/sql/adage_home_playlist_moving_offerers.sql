@@ -1,6 +1,18 @@
--- Get offerers/venues which moved to educational institutions, last 12 months
-WITH offerer_venue_info AS
+-- Get one random template offer per venue, that can take place at school
+WITH random_template_offer_per_venue AS
+  (SELECT collective_offer_id,
+          collective_offer_creation_date,
+          venue_id
+   FROM `{{ bigquery_clean_dataset }}`.applicative_database_collective_offer_template o
+   WHERE o.collective_offer_venue_address_type = "school"
+   AND collective_offer_is_active
+   QUALIFY ROW_NUMBER() OVER (PARTITION BY venue_id ORDER BY RAND() )=1),
+
+-- Get venues which moved to educational institutions, last 12 months, and the random active template offer
+offerer_venue_info AS
   (SELECT b.offerer_id,
+          b.venue_id,
+          v.collective_offer_id,
           b.educational_institution_id AS institution_id,
           id.institution_latitude AS venue_moving_latitude,
           id.institution_longitude AS venue_moving_longitude,
@@ -9,6 +21,7 @@ WITH offerer_venue_info AS
    FROM `{{ bigquery_analytics_dataset }}`.enriched_collective_booking_data b
    INNER JOIN `{{ bigquery_clean_dataset }}`.applicative_database_collective_offer o ON b.collective_offer_id=o.collective_offer_id
    AND o.collective_offer_venue_address_type = "school"
+   JOIN random_template_offer_per_venue v ON v.venue_id=b.venue_id -- JOIN because we only keep venues that have bookings AND template offer
    LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_institution_data id ON id.institution_id=b.educational_institution_id
    WHERE collective_booking_status IN ("CONFIRMED",
                                        "REIMBURSED",
@@ -17,7 +30,9 @@ WITH offerer_venue_info AS
    GROUP BY 1,
             2,
             3,
-            4), 
+            4,
+            5,
+            6), 
 
 -- Get institutions
 institution_info AS
@@ -27,11 +42,12 @@ institution_info AS
           institution_longitude
    FROM `{{ bigquery_analytics_dataset }}`.enriched_institution_data id), 
 
--- Get all offerers with at least one reservation at less than 300KM.
+-- Get all venues with at least one reservation at less than 300KM.
 ac_moving AS
   (SELECT i.institution_id,
           i.institution_rural_level,
-          o.offerer_id,
+          o.venue_id,
+          o.collective_offer_id,
           o.last_booking_date,
           o.nb_booking,
           o.venue_moving_latitude,
@@ -45,7 +61,8 @@ ac_moving AS
 all_institutions AS
   (SELECT i.institution_id,
           i.institution_rural_level,
-          m.offerer_id AS offerer_id,
+          m.venue_id,
+          m.collective_offer_id,
           ST_Distance(ST_geogPoint(m.venue_moving_longitude, m.venue_moving_latitude), ST_geogPoint(i.institution_longitude, i.institution_latitude)) AS distance,
           m.nb_booking AS reserved_nb_booking,
           m.last_booking_date AS last_booking_date,
@@ -58,7 +75,8 @@ all_institutions AS
 -- Filter < 300KM
 SELECT institution_id,
        institution_rural_level,
-       offerer_id,
+       venue_id,
+       collective_offer_id,
        SAFE_DIVIDE(distance, 1000) AS distance_in_km,
        last_booking_date
 FROM all_institutions
@@ -67,4 +85,5 @@ GROUP BY 1,
          2,
          3,
          4,
-         5
+         5,
+         6

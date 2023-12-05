@@ -99,14 +99,15 @@ get_recommendable_offers AS (
             WHERE
                 offerer_validation_status='VALIDATED'
         ) offerer ON offerer.offerer_id = venue.venue_managing_offerer_id
-        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock stock ON offer.offer_id = stock.offer_id
-        LEFT JOIN booking_numbers ON booking_numbers.item_id = offer.item_id
-        LEFT JOIN (
-            SELECT count(*) as item_count,
-            offer.item_id as item_id,
+        JOIN (
+            SELECT
+                offer.item_id as item_id,
+                count(*) as item_count,
             FROM `{{ bigquery_analytics_dataset }}`.enriched_offer_data offer
             GROUP BY item_id
         ) item_counts on item_counts.item_id = offer.item_id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock stock ON offer.offer_id = stock.offer_id
+        LEFT JOIN booking_numbers ON booking_numbers.item_id = offer.item_id
         JOIN `{{ bigquery_analytics_dataset }}`.offer_with_mediation om on offer.offer_id=om.offer_id
         LEFT JOIN  `{{ bigquery_analytics_dataset }}`.enriched_item_metadata enriched_item_metadata on offer.item_id = enriched_item_metadata.item_id
         LEFT JOIN `{{ bigquery_raw_dataset }}`.forbidden_item_recommendation forbidden_offer on 

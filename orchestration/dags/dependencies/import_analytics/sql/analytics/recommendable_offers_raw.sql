@@ -26,6 +26,7 @@ recommendable_offers_data AS (
             MAX(offer_type_domain) as offer_type_domain,
             MAX(offer_type_label) as offer_type_label,
             MAX(ARRAY_TO_STRING(offer_type_labels, ';')) as offer_type_labels,
+            MAX(item_count) as total_offers,
             MAX(booking_number) as booking_number,
             MAX(booking_number_last_7_days) AS booking_number_last_7_days,
             MAX(booking_number_last_14_days) AS booking_number_last_14_days,
@@ -74,6 +75,7 @@ SELECT
     ro.offer_type_domain,
     ro.offer_type_label,
     ro.offer_type_labels,
+    ro.total_offers,
     ro.booking_number,
     ro.booking_number_last_7_days,
     ro.booking_number_last_14_days,
@@ -88,7 +90,7 @@ SELECT
         WHEN subcategories.category_id = 'SPECTACLE' THEN 250000
         WHEN subcategories.category_id = 'CINEMA' THEN 50000
         WHEN subcategories.category_id = 'LIVRE' THEN 50000
-        ELSE 250000
+        ELSE 50000
     END as default_max_distance,
     ROW_NUMBER() over() as unique_id
 FROM

@@ -42,12 +42,15 @@ sources:
       - name: dms_jeunes_cleaned
       - name: dms_pro_cleaned
       - name: firebase_app_experiments
-      - name: firebase_events
       - name: siren_data
   - name: analytics # this is the source_name
     schema: analytics_{{ var('ENV_SHORT_NAME') }} # this is the schema_name
     tables:
       - name: bookable_venue_history
+      - name: contentful_entries
+      - name: contentful_relationships
+      - name: firebase_events
+      - name: firebase_pro_events
       - name: linked_offers
       - name: region_department
       - name: siren_data_labels

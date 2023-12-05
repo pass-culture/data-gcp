@@ -57,7 +57,7 @@ interact AS (
         `{{ bigquery_analytics_dataset }}.firebase_events` fsoe
         LEFT JOIN diversification d on d.offer_id = fsoe.offer_id
     WHERE
-        event_date >= DATE_SUB(CURRENT_DATE, INTERVAL 7 DAY)
+        event_date >= DATE_SUB(CURRENT_DATE, INTERVAL 14 DAY)
         AND event_name in ("ConsultOffer", "BookingConfirmation")
     GROUP BY
         1,
@@ -71,7 +71,7 @@ seen AS (
     FROM
         `{{ bigquery_analytics_dataset }}.firebase_events` fsoe
     WHERE
-        event_date >= DATE_SUB(CURRENT_DATE, INTERVAL 7 DAY)
+        event_date >= DATE_SUB(CURRENT_DATE, INTERVAL 14 DAY)
         AND event_name in ("ConsultOffer", "BookingConfirmation")
 ),
 transactions AS (

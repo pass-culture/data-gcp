@@ -18,7 +18,7 @@ offerer_offer_2_month AS
    FROM offerer_offer_info
    WHERE collective_offer_creation_date >= DATE_SUB(current_date(), INTERVAL 2 MONTH) ),
 
--- Add location of the venue_representation (venue_id of the field venue_adress) when it is different from the initial venue of the offer
+-- Add location of the venue_representation (venue_id of the dictionnary field venue_adress -> collective_offer_venue_humanized_id) when it is different from the initial venue of the offer (venue_id)
 add_representation_venue AS
   (SELECT o.* ,
           collective_offer_venue_humanized_id AS venue_v2_id ,

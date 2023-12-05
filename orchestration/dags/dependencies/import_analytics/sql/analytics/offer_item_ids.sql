@@ -31,10 +31,10 @@ items_grouping AS (
         CASE
             WHEN linked_offers.item_linked_id is not null THEN REGEXP_REPLACE(
                 linked_offers.item_linked_id,
-                r '[^a-zA-Z0-9\-\_]',
+                r'[^a-zA-Z0-9\-\_]',
                 ''
             )
-            else REGEXP_REPLACE(offer.item_id, r '[^a-zA-Z0-9\-\_]', '')
+            else REGEXP_REPLACE(offer.item_id, r'[^a-zA-Z0-9\-\_]', '')
         END as item_id
     FROM
         item_group_by_extra_data offer

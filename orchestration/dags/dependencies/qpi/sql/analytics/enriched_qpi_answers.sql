@@ -25,5 +25,5 @@ union_all AS (
   FROM qpi_v4
 )
 
-SELECT * FROM union_all 
-QUALIFY ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY submitted_at DESC ) = 1
+SELECT DISTINCT * FROM union_all 
+QUALIFY RANK() OVER (PARTITION BY user_id ORDER BY submitted_at DESC ) = 1

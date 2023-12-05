@@ -11,6 +11,7 @@ WITH export_table AS (
         call_id,
         reco_filters,
         user_iris_id,
+        import_date,
         ROW_NUMBER() OVER (
             PARTITION BY id,
             userid,
@@ -29,3 +30,5 @@ FROM
     export_table
 WHERE
     row_number = 1
+AND 
+    import_date between current_date() and date_sub(current_date(), interval 30 day) 

@@ -13,3 +13,5 @@ typer==0.7.0
 pyarrow==13.0.0
 polars==0.19.12
 git+https://github.com/naubuan/bdendro.git
+timeout-decorator
+tensorflow

@@ -1,8 +1,11 @@
 import os
 import io
 from google.cloud import bigquery
+import openai
+
+from timeout_decorator import timeout, TimeoutError
+import time
 import numpy as np
-import os
 import json
 
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
@@ -31,3 +34,63 @@ def export_polars_to_bq(client, data, dataset, output_table):
             ),
         )
     job.result()
+
+
+def call(messages, ttl=5, temperature=0.2, model="gpt-3.5-turbo-1106"):
+    @timeout(ttl)
+    def _call(messages):
+        completion = openai.ChatCompletion.create(
+            model=model,
+            messages=messages,
+            max_tokens=4096,
+            n=1,
+            stop=None,
+            temperature=temperature,
+            timeout=ttl,
+            response_format={"type": "json_object"},
+        )
+        return completion.choices[0].message["content"]
+
+    try:
+        return _call(messages)
+    except TimeoutError:
+        return ""
+    except Exception as e:
+        print(e)
+        time.sleep(60)
+        return ""
+
+
+def call_retry(
+    messages,
+    test_fn,
+    retry=0,
+    max_retry=10,
+    ttl=20,
+    temperature=0.5,
+    model="gpt-3.5-turbo-1106",
+    default_return={},
+):
+    while retry <= max_retry:
+        try:
+            raw = call(messages=messages, ttl=ttl, temperature=temperature, model=model)
+            result = json.loads(raw)
+
+        except Exception as e:
+            time.sleep(1)
+            result = {}
+
+        if test_fn(result):
+            return result
+        else:
+            return call_retry(
+                messages,
+                test_fn,
+                ttl=ttl,
+                retry=retry + 1,
+                max_retry=max_retry,
+                temperature=temperature,
+                model=model,
+            )
+
+    return default_return

@@ -12,7 +12,6 @@ WITH collective_booking_ranking_view AS (
 
 SELECT
     collective_booking.collective_booking_id,
-    collective_booking.booking_id,
     collective_booking.collective_stock_id AS collective_stock_id,
     collective_stock.stock_id AS stock_id,
     collective_stock.collective_offer_id AS collective_offer_id,

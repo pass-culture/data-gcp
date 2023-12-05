@@ -131,7 +131,6 @@ collective AS (
     FROM
         `{{ bigquery_clean_dataset }}`.applicative_database_collective_booking collective_booking
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_pricing pricing ON collective_booking.collective_booking_id = pricing.collective_booking_id
-        AND booking_id IS NULL
         LEFT JOIN coll_clean_pricing_line2 ON collective_booking.collective_booking_id = coll_clean_pricing_line2.collective_booking_id
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_cashflow_pricing cashflow_pricing ON pricing.id = cashflow_pricing.pricingId
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_cashflow cashflow ON cashflow_pricing.cashflowId = cashflow.id

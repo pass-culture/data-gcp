@@ -95,7 +95,6 @@ with DAG(
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
 ) as dag:
-
     start = DummyOperator(task_id="start")
     start_monitoring = DummyOperator(task_id="start_monitoring")
     start_drop_restore = DummyOperator(task_id="start_drop_restore")
@@ -116,7 +115,6 @@ with DAG(
         monitor_tables_task.append(task)
 
     for table in TABLES:
-
         dataset_type = TABLES[table]["dataset_type"]
         bigquery_table_name = TABLES[table]["bigquery_table_name"]
         if dataset_type == "clean":
@@ -262,10 +260,8 @@ with DAG(
 
     recreate_indexes_query = """
         CREATE INDEX IF NOT EXISTS idx_user_id                             ON public.enriched_user                        USING btree (user_id);
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_non_recommendable_id         ON public.non_recommendable_offers             USING btree (user_id,offer_id);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_non_recommendable_item_id    ON public.non_recommendable_items              USING btree (user_id,item_id);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_enriched_user_mv             ON public.enriched_user_mv                     USING btree (user_id);
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_qpi_answers_mv               ON public.qpi_answers_mv                       USING btree (user_id,subcategories);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_item_ids_mv                  ON public.item_ids_mv                          USING btree (offer_id);
 
     """
@@ -277,10 +273,8 @@ with DAG(
     )
 
     views_to_refresh = [
-        "non_recommendable_offers",
         "non_recommendable_items",
         "enriched_user_mv",
-        "qpi_answers_mv",
         "item_ids_mv",
     ]
 

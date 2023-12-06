@@ -1,4 +1,5 @@
 import gspread
+import numpy as np
 import pandas as pd
 from google.oauth2 import service_account
 
@@ -44,6 +45,8 @@ def export_sheet(sa_info, sheet_details):
     df = pd.DataFrame(worksheet.get_all_records(expected_headers=raw_columns))[
         raw_columns
     ]
+    df = df.replace("", np.nan)
+    df = df.dropna(how="all", axis=0)
     df = df.rename(columns=sheet_details["expected_headers_dict"])
     for _c in df.columns:
         df[_c] = df[_c].astype(str)

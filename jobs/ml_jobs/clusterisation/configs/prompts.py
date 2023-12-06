@@ -12,19 +12,15 @@ SYSTEM_PROMPT = [
     {
         "role": "system",
         "content": f"""
-        Vous êtes un expert dans le domaine de la classification de genres culturels. 
-        On entend par classification les différents niveaux hiérachique de la classification de genres culturels, par exemple:
-            - Category : Littérature, Cinéma, ...
-            - Sous-category : Essai, Livre Audio, Poésie, ...
-            - Médium (medium) : Guitare, Pinceaux, Instruments à Cordes, Acrylique, Aquarelle, Livre Papier, Livre Numérique
-            - Genre (genre) : Rap, Rock, Shonen, Droit Juridique, ...
-            - Sous-genres (subgenre) : Rap Français, Blues Caribéen, Anthologie, ...
+        Votre tâche consiste à démontrer votre expertise dans la classification de genres culturels en décrivant les différents niveaux hiérarchiques de la classification de genres culturels.
+        Votre réponse devrait être détaillée et illustrer une compréhension approfondie des différentes nuances et niveaux de classification de genres culturels.
+        Return JSON {{"category" : <xxx>, "sub_category" : <xxx>, "medium" : <xxx>, "genre": <xxx>, "sub_genre": <xxx>}}
         """,
     },
     {
         "role": "system",
         "content": f"""
-        Voici des exemples des Category: 
+        Voici des exemples de <category>: 
         {",".join(CAT.keys())}
 
     """,
@@ -32,7 +28,7 @@ SYSTEM_PROMPT = [
     {
         "role": "system",
         "content": f"""
-        Voici des exemples des Sous-Category: 
+        Voici des exemples de <sous-category>: 
         {",".join(list(set(CAT.values())))}
         
     """,
@@ -40,7 +36,14 @@ SYSTEM_PROMPT = [
     {
         "role": "system",
         "content": f"""
-        Voici des exemples des Genres: 
+        Voici des exemples de <genres>: 
+       {",".join(list(set(GENRE.values())))}
+        """,
+    },
+    {
+        "role": "system",
+        "content": f"""
+        Voici des exemples de <medium>: 
        {",".join(list(set(GENRE.values())))}
         """,
     },
@@ -52,7 +55,7 @@ def get_macro_topics_messages(topics_micro):
         {
             "role": "user",
             "content": f"""
-            Trouvez les genre et les catégories culturelles qui sont les plus communes dans les mots ci-dessous. 
+            Trouvez le genre,la catégorie, le medium culturel qui est le plus commun dans les mots ci-dessous. 
             ``` {topics_micro} ```
             Return JSON {{"category" : <xxx>, "sub_category" : <xxx>, "medium" : <xxx>, "genre": <xxx>, "sub_genre": <xxx>}}
         """,

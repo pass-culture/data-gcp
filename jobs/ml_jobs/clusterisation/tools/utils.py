@@ -2,19 +2,35 @@ import os
 import io
 from google.cloud import bigquery
 import openai
-
 from timeout_decorator import timeout, TimeoutError
+from google.cloud import secretmanager
 import time
 import numpy as np
 import json
 import hashlib
 import base64
 
+
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 CONFIGS_PATH = os.environ.get("CONFIGS_PATH", "configs")
 TMP_DATASET = f"sandbox_{ENV_SHORT_NAME}"  # TODO update this once ok
 CLEAN_DATASET = f"clean_{ENV_SHORT_NAME}"
+
+
+def get_secret(secret_id: str):
+    client = secretmanager.SecretManagerServiceClient()
+    name = f"projects/{GCP_PROJECT_ID}/secrets/{secret_id}/versions/1"
+    response = client.access_secret_version(name=name)
+    return response.payload.data.decode("UTF-8")
+
+
+try:
+    openai.api_key = get_secret(f"openai_token_{ENV_SHORT_NAME}")
+except:
+    print("Error, secret not found...")
+    openai.api_key = None
+    pass
 
 
 def sha1_to_base64(input_string):

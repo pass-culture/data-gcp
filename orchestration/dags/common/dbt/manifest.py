@@ -68,7 +68,7 @@ def build_simplified_manifest(data):
     return simplified_manifest
 
 
-def rebuild_manifest():
-    data = load_manifest()
+def rebuild_manifest(_PATH_TO_DBT_PROJECT):
+    data = load_manifest(_PATH_TO_DBT_PROJECT)
     simplified_manifest = build_simplified_manifest(data)
     return simplified_manifest

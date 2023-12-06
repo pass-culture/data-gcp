@@ -73,7 +73,7 @@ test_op_dict = {}
 
 with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
     full_ref_str = " --full-refresh" if not '{{ params.full_refresh }}' else ""
-    simplified_manifest = rebuild_manifest()
+    simplified_manifest = rebuild_manifest(PATH_TO_DBT_PROJECT)
     # models task group
     for model_node, model_data in simplified_manifest.items():
         crit_tests_list = model_data["model_tests"].get("error", [])

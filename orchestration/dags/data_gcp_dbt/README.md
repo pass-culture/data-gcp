@@ -16,7 +16,6 @@ Try running the following commands:
 
 
 ### Environement variables : 
-- FIREBASE_DAG_TYPE : specify intraday/daily
 - ENV_SHORT_NAME : specify dev/stg/prod to select source data.
 
 

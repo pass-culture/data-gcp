@@ -40,23 +40,12 @@ from common.utils import (
 from common import macros
 from common.config import GCP_PROJECT_ID, DAG_FOLDER, PATH_TO_DBT_PROJECT
 
-
-# source {PATH_TO_DBT_VENV} &&
-# PATH_TO_DBT_VENV = "3.10.4/envs/dbt-venv"
-# PATH_TO_DBT_PROJECT ="dags/data_gcp_dbt"
-
-
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 1),
     "on_failure_callback": task_fail_slack_alert,
     "retries": 1,
     "project_id": GCP_PROJECT_ID,
 }
-# dag_config = {
-#     "PATH_TO_DBT_VENV": None,
-#     "PATH_TO_DBT_PROJECT": "orchestration/dags/data_gcp_dbt"
-
-# }
 
 with DAG(
     "dbt_compile",

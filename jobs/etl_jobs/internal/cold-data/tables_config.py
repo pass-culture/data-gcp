@@ -172,4 +172,21 @@ ref_tables = {
             "n_ms4_lib": "STRING",
         },
     },
+    "iris_france": {
+        "file_type": "csv",
+        "schema": {
+            "id": "STRING",
+            "irisCode": "STRING",
+            "centroid": "GEOGRAPHY",
+            "shape": "GEOGRAPHY",
+        },
+    },
+    "emboitements_iris": {
+        "file_type": "csv",
+        "schema": {
+            "code_iris": "STRING",
+            "region_name": "STRING",
+            "department": "STRING",
+        },
+    },
 }

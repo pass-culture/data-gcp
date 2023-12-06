@@ -114,15 +114,16 @@ with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
                     if len(dbt_test_tasks)>0:
                         model_op >> crit_tests_task
                 for i, test in enumerate(crit_tests_list):
-                    if test["test_alias"] not in test_op_dict.keys():
-                        test_op_dict[test["test_alias"]] = {
-                            "parent_model": [model_data["model_alias"]],
-                            "test_op": dbt_test_tasks[i],
-                        }
-                    else:
-                        test_op_dict[test["test_alias"]]["parent_model"] += [
-                            model_data["model_alias"]
-                        ]
+                    if not test['test_alias'].endswith(f'ref_{model_data["model_alias"]}_'):
+                        if test["test_alias"] not in test_op_dict.keys():
+                            test_op_dict[test["test_alias"]] = {
+                                "parent_model": [model_data["model_alias"]],
+                                "test_op": dbt_test_tasks[i],
+                            }
+                        else:
+                            test_op_dict[test["test_alias"]]["parent_model"] += [
+                                model_data["model_alias"]
+                            ]
             simplified_manifest[model_node]["redirect_dep"] = model_tasks
 
 # data quality test group

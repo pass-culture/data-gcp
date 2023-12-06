@@ -13,6 +13,11 @@ clean_tables = {
         "destination_dataset": "{{ bigquery_clean_dataset }}",
         "destination_table": "eac_webinar",
     },
+    "iris_france": {
+        "sql": f"{SQL_PATH}/clean/iris_france.sql",
+        "destination_dataset": "{{ bigquery_clean_dataset }}",
+        "destination_table": "iris_france",
+    },
 }
 
 analytics_tables = {

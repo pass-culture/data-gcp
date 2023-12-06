@@ -14,7 +14,7 @@ import base64
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 CONFIGS_PATH = os.environ.get("CONFIGS_PATH", "configs")
-TMP_DATASET = f"sandbox_{ENV_SHORT_NAME}"  # TODO update this once ok
+TMP_DATASET = f"tmp_{ENV_SHORT_NAME}"
 CLEAN_DATASET = f"clean_{ENV_SHORT_NAME}"
 
 

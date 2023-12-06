@@ -83,7 +83,7 @@ with DAG(
         task_id="install_dependencies",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
-        command="""pip install -r requirements.txt --user""",
+        command="""pip install -r requirements.txt --user && python3 -m spacy download fr_core_news_sm""",
     )
 
     preprocess_clustering = SSHGCEOperator(
@@ -91,7 +91,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command="PYTHONPATH=. python cluster/preprocess.py "
-        f"--input-table {DATE}_import_item_clusters "
+        f"--input-table {DATE}_import_item_embeddings "
         f"--output-table {DATE}_import_item_clusters_preprocesss "
         "--config-file-name {{ params.config_file_name }} ",
     )
@@ -115,17 +115,18 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command="PYTHONPATH=. python topics/generate.py "
-        f"--input-table item_clusters "
-        f"--item-topics-labels-output-table item_topics_labels "
-        f"--item-topics-output-table item_topics ",
+        f"--input-table {DATE}_import_item_clusters "
+        f"--item-topics-labels-output-table {DATE}_item_topics_labels "
+        f"--item-topics-output-table {DATE}_item_topics ",
     )
 
     clean_topics = SSHGCEOperator(
-        task_id="generate_topics",
+        task_id="clean_topics",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command="PYTHONPATH=. python topics/clean.py "
-        f"--input-table item_clusters "
+        f"--item-topics-labels-input-table {DATE}_item_topics_labels "
+        f"--item-topics-input-table {DATE}_item_topics "
         f"--item-topics-labels-output-table item_topics_labels "
         f"--item-topics-output-table item_topics ",
     )
@@ -141,7 +142,7 @@ with DAG(
         >> fetch_code
         >> install_dependencies
         >> preprocess_clustering
-        >> preprocess_clustering
+        >> generate_clustering
         >> bq_import_item_clusters_task
         >> generate_topics
         >> clean_topics

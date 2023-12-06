@@ -79,6 +79,8 @@ def load_df(input_table):
 def main(
     item_topics_labels_input_table: str = typer.Option(..., help="Path to data"),
     item_topics_input_table: str = typer.Option(..., help="Path to data"),
+    item_topics_labels_output_table: str = typer.Option(..., help="Path to data"),
+    item_topics_output_table: str = typer.Option(..., help="Path to data"),
 ):
     df = load_df(item_topics_labels_input_table)
 
@@ -103,20 +105,23 @@ def main(
     for lvl_0 in list(CAT.keys()):
         print(f"Categorize {lvl_0}")
         _df = df[df["category_lvl0"] == lvl_0].reset_index(drop=True)
-        for output_col, params_details in tqdm(LIST_TO_MAP.items()):
-            target_cat = params_details.get("target", None)
-            in_column = params_details.get("in_column", None)
-            _df[in_column] = _df[in_column].apply(clean_row)
-            if target_cat is not None:
-                _df = match_with_target(
-                    _df,
-                    input_column=in_column,
-                    target_list=target_cat[lvl_0],
-                    target_column=output_col,
-                )
-            else:
-                _df = clean_words(_df, input_column=in_column, target_column=output_col)
-        post_proc.append(_df)
+        if not _df.empty:
+            for output_col, params_details in tqdm(LIST_TO_MAP.items()):
+                target_cat = params_details.get("target", None)
+                in_column = params_details.get("in_column", None)
+                _df[in_column] = _df[in_column].apply(clean_row)
+                if target_cat is not None:
+                    _df = match_with_target(
+                        _df,
+                        input_column=in_column,
+                        target_list=target_cat[lvl_0],
+                        target_column=output_col,
+                    )
+                else:
+                    _df = clean_words(
+                        _df, input_column=in_column, target_column=output_col
+                    )
+            post_proc.append(_df)
 
     post_proc_df = pd.concat(post_proc)[
         [
@@ -134,10 +139,14 @@ def main(
             "category_genre_lvl2",
             "micro_category_details",
             "macro_category_details",
+            "x_cluster_mean",
+            "y_cluster_mean",
+            "booking_cluster_cnt",
+            "item_id_cluster_cnt",
         ]
     ]
     post_proc_df.to_gbq(
-        f"{CLEAN_DATASET}.{item_topics_labels_input_table}", if_exists="replace"
+        f"{CLEAN_DATASET}.{item_topics_labels_output_table}", if_exists="replace"
     )
 
     df_raw.merge(
@@ -155,7 +164,7 @@ def main(
             ]
         ],
         on=["semantic_cluster_id", "topic_id"],
-    ).to_gbq(f"{CLEAN_DATASET}.{item_topics_input_table}", if_exists="replace")
+    ).to_gbq(f"{CLEAN_DATASET}.{item_topics_output_table}", if_exists="replace")
 
 
 if __name__ == "__main__":

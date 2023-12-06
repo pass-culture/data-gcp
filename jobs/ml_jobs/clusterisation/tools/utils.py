@@ -1,7 +1,7 @@
 import os
 import io
 from google.cloud import bigquery
-import openai
+from openai import OpenAI
 from timeout_decorator import timeout, TimeoutError
 from google.cloud import secretmanager
 import time
@@ -26,11 +26,13 @@ def get_secret(secret_id: str):
 
 
 try:
-    openai.api_key = get_secret(f"openai_token_{ENV_SHORT_NAME}")
+    openai_api_key = get_secret(f"openai_token_{ENV_SHORT_NAME}")
 except:
     print("Error, secret not found...")
-    openai.api_key = None
+    openai_api_key = os.environ.get("OPENAI_API_KEY")
     pass
+
+open_client = OpenAI(api_key=openai_api_key)
 
 
 def sha1_to_base64(input_string):
@@ -75,7 +77,7 @@ def export_polars_to_bq(client, data, dataset, output_table):
 def call(messages, ttl=5, temperature=0.2, model="gpt-3.5-turbo-1106"):
     @timeout(ttl)
     def _call(messages):
-        completion = openai.ChatCompletion.create(
+        completion = open_client.chat.completions.create(
             model=model,
             messages=messages,
             max_tokens=4096,
@@ -85,7 +87,7 @@ def call(messages, ttl=5, temperature=0.2, model="gpt-3.5-turbo-1106"):
             timeout=ttl,
             response_format={"type": "json_object"},
         )
-        return completion.choices[0].message["content"]
+        return completion.choices[0].message.content
 
     try:
         return _call(messages)

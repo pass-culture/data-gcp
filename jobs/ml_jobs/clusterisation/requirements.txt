@@ -1,5 +1,4 @@
 google-cloud-bigquery==3.12.0
-google-cloud-bigquery==2.3.1
 google-cloud-bigquery-storage==2.4.0
 google-cloud-core==1.6.0
 google-cloud-secret-manager==2.2.0
@@ -20,6 +19,6 @@ polars==0.19.12
 timeout-decorator
 tensorflow
 polyfuzz
-bertopic
+bertopic[spacy,]
 flair
 openai

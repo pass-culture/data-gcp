@@ -20,7 +20,15 @@ from configs.prompts import (
 
 
 def load_df(input_table):
-    return pd.read_gbq(f"""SELECT * FROM `{CLEAN_DATASET}.{input_table}`""")
+    return pd.read_gbq(f"""SELECT * FROM `{TMP_DATASET}.{input_table}`""")
+
+
+def decode(x):
+    values = list(x.values())
+    if len(values) == 5:
+        return np.array(values)
+    else:
+        return None
 
 
 def generate_topics(topic_items_df, semantic_cluster_id):
@@ -32,7 +40,7 @@ def generate_topics(topic_items_df, semantic_cluster_id):
         + " "
         + selected_topic["offer_description"].astype(str)
     )
-    embeddings = np.hstack(selected_topic["semantic_encoding_emb"]).reshape(-1, 5)
+    embeddings = np.hstack(selected_topic["semantic_encoding"]).reshape(-1, 5)
     mmr = MaximalMarginalRelevance(diversity=0.3, top_n_words=20)
     pos = PartOfSpeech("fr_core_news_sm", top_n_words=20)
     representation_models = [pos, mmr]
@@ -125,6 +133,10 @@ def main(
     item_topics_output_table: str = typer.Option(..., help="Path to data"),
 ):
     topic_items_df = load_df(input_table)
+
+    topic_items_df["semantic_encoding"] = topic_items_df["semantic_encoding"].apply(
+        decode
+    )
     topic_items_df["category"] = (
         topic_items_df["semantic_category"].str.split("-", 1).str[0]
     )
@@ -154,7 +166,7 @@ def main(
 
     for semantic_cluster_id in tqdm(list(count_df["semantic_cluster_id"].unique())):
         topic_raw_df = generate_topics(topic_items_df, semantic_cluster_id)
-        topics = preproc_topics(topic_raw_df)
+        topics = preproc_topics(topic_raw_df, semantic_cluster_id)
         topics_df = loop_gpt(topics)
         topics_raw_all_df.append(topic_raw_df)
         topics_all_df.append(topics_df)
@@ -174,14 +186,9 @@ def main(
     )
 
     topics_raw_all_df["topic_id"] = topics_raw_all_df["topic_id"].apply(sha1_to_base64)
-    topics_all_df[
-        [
-            "category",
-            "topic_id",
-            "semantic_cluster_id",
-            "topic_terms",
-        ]
-    ].to_gbq(f"{TMP_DATASET}.{item_topics_labels_output_table}", if_exists="replace")
+    topics_all_df.to_gbq(
+        f"{TMP_DATASET}.{item_topics_labels_output_table}", if_exists="replace"
+    )
     topics_raw_all_df[
         ["item_id", "topic_id", "semantic_cluster_id", "booking_cnt"]
     ].to_gbq(f"{TMP_DATASET}.{item_topics_output_table}", if_exists="replace")

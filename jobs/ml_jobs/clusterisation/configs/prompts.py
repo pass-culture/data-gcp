@@ -1,4 +1,14 @@
 from configs.labels import CAT, GENRE
+from configs.labels import CAT, GENRE, MEDIUM
+import itertools
+import random
+
+GENRE_EXAMPLES = random.sample(list(set(itertools.chain(*list(GENRE.values())))), k=20)
+MEDIUM_EXAMPLES = random.sample(
+    list(set(itertools.chain(*list(MEDIUM.values())))), k=20
+)
+CAT_EXAMPLE = random.sample(list(set(itertools.chain(*list(CAT.values())))), k=20)
+
 
 EXPECTED_RESULTS = [
     "category",
@@ -21,7 +31,7 @@ SYSTEM_PROMPT = [
         "role": "system",
         "content": f"""
         Voici des exemples de <category>: 
-        {",".join(CAT.keys())}
+        {",".join(list(CAT.keys()))}
 
     """,
     },
@@ -29,7 +39,7 @@ SYSTEM_PROMPT = [
         "role": "system",
         "content": f"""
         Voici des exemples de <sous-category>: 
-        {",".join(list(set(CAT.values())))}
+        {",".join(CAT_EXAMPLE)}
         
     """,
     },
@@ -37,14 +47,14 @@ SYSTEM_PROMPT = [
         "role": "system",
         "content": f"""
         Voici des exemples de <genres>: 
-       {",".join(list(set(GENRE.values())))}
+       {",".join(GENRE_EXAMPLES)}
         """,
     },
     {
         "role": "system",
         "content": f"""
         Voici des exemples de <medium>: 
-       {",".join(list(set(GENRE.values())))}
+       {",".join(MEDIUM_EXAMPLES)}
         """,
     },
 ]

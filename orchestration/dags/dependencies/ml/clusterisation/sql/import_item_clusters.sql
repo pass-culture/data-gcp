@@ -8,8 +8,8 @@ WITH offer_booking AS (
         1
 )
 SELECT
-    ic.cluster as cluster_id,
-    ic.cluster_name as semantic_category,
+    ic.category,
+    ic.semantic_category,
     semantic_cluster_id,
     ic.x_cluster,
     ic.y_cluster,
@@ -28,5 +28,5 @@ FROM
     LEFT JOIN offer_booking ob on ob.item_id = ic.item_id QUALIFY ROW_NUMBER() OVER (
         PARTITION BY ic.item_id
         ORDER BY
-            ic.cluster ASC
+            ic.semantic_cluster_id ASC
     ) = 1

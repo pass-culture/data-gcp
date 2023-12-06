@@ -131,6 +131,7 @@ with TaskGroup(group_id="data_quality_testing", dag=dag) as data_quality:
     full_ref_str = " --full-refresh" if not '{{ params.full_refresh }}' else ""
     for model_node, model_data in simplified_manifest.items():
         quality_tests_list = model_data["model_tests"].get("warn", [])
+        quality_tests_list = [test for test in quality_tests_list if not test['test_alias'].endswith(f'ref_{model_data["model_alias"]}_')]
         if len(quality_tests_list) > 0:
             # model testing subgroup
             with TaskGroup(
@@ -150,7 +151,7 @@ with TaskGroup(group_id="data_quality_testing", dag=dag) as data_quality:
                         cwd=PATH_TO_DBT_PROJECT,
                         dag=dag,
                     )
-                    for test in quality_tests_list if not test['test_alias'].endswith(f'ref_{model_data["model_alias"]}_')
+                    for test in quality_tests_list
                 ]
                 for i, test in enumerate(quality_tests_list):
                     if test["test_alias"] not in test_op_dict.keys():

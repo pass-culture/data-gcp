@@ -68,7 +68,7 @@ class SendinblueTransactional:
     def get_events(self, event_type):
 
         active_templates = self.get_active_templates_id()
-        if ENV_SHORT_NAME != "prod" and len(active_templates)>0:
+        if ENV_SHORT_NAME != "prod" and len(active_templates) > 0:
             active_templates = active_templates[:1]
 
         print(f"Number of active templates : {len(active_templates)}")

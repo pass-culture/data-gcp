@@ -6,7 +6,7 @@ raw_tables = {
         "destination_dataset": "{{ bigquery_raw_dataset }}",
         "destination_table": "sendinblue_transactional${{ yyyymmdd(ds) }}",
         "time_partitioning": {"field": "execution_date"},
-        },
+    },
 }
 
 clean_tables = {

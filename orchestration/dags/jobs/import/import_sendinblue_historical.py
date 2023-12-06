@@ -54,20 +54,24 @@ default_dag_args = {
 }
 
 
-def get_end_date(dataset): 
-    query = f"""SELECT min(event_date) as date FROM `{dataset}.sendinblue_transactional`"""
+def get_end_date(dataset):
+    query = (
+        f"""SELECT min(event_date) as date FROM `{dataset}.sendinblue_transactional`"""
+    )
     df = pd.read_gbq(query)
-    end_date = df['date'][0] + timedelta(days=-1)
+    end_date = df["date"][0] + timedelta(days=-1)
 
-    end_date = end_date.strftime('%Y-%m-%d')
+    end_date = end_date.strftime("%Y-%m-%d")
 
     return end_date
 
-def get_start_date(end_date): 
-    end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+
+def get_start_date(end_date):
+    end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d")
     start_date = end_date + timedelta(days=-7)
-    start_date = start_date.strftime('%Y-%m-%d')
+    start_date = start_date.strftime("%Y-%m-%d")
     return start_date
+
 
 # end_date = """SELECT min(event_date) FROM `{{ bigquery_raw_dataset }}.sendinblue_transactional`"""
 # start_date = end_date - 7
@@ -82,20 +86,19 @@ with DAG(
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
     params={
-    "branch": Param(
-        default="production" if ENV_SHORT_NAME == "prod" else "master",
-        type="string",
-    ),
-    "instance_type": Param(
-        default="n1-standard-2",
-        type="string",
-    ),
-},
+        "branch": Param(
+            default="production" if ENV_SHORT_NAME == "prod" else "master",
+            type="string",
+        ),
+        "instance_type": Param(
+            default="n1-standard-2",
+            type="string",
+        ),
+    },
 ) as dag:
 
     gce_instance_start = StartGCEOperator(
-        instance_name=GCE_INSTANCE,
-        task_id="gce_start_task"
+        instance_name=GCE_INSTANCE, task_id="gce_start_task"
     )
 
     fetch_code = CloneRepositoryGCEOperator(
@@ -114,12 +117,11 @@ with DAG(
         retries=2,
     )
 
-
     get_end_date = PythonOperator(
         task_id=f"get_end_date",
         python_callable=get_end_date,
         op_kwargs={
-                "dataset": "{{ bigquery_raw_dataset }}",
+            "dataset": "{{ bigquery_raw_dataset }}",
         },
         provide_context=True,
         do_xcom_push=True,
@@ -136,14 +138,13 @@ with DAG(
         do_xcom_push=True,
         dag=dag,
     )
-    
 
     import_transactional_data_to_tmp = SSHGCEOperator(
         task_id="import_transactional_data_to_tmp",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command='python main.py --target transactional --start-date "{{task_instance.xcom_pull(task_ids=\'get_start_date\', key=\'return_value\')}}" --end-date "{{task_instance.xcom_pull(task_ids=\'get_end_date\', key=\'return_value\')}}"',
+        command="python main.py --target transactional --start-date \"{{task_instance.xcom_pull(task_ids='get_start_date', key='return_value')}}\" --end-date \"{{task_instance.xcom_pull(task_ids='get_end_date', key='return_value')}}\"",
         do_xcom_push=True,
     )
 

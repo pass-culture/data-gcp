@@ -43,12 +43,12 @@ models:
         tags: "applicative"
     clean:
       +materialized: view
-      +schema: clean_{{ target.name }}
+      +schema: clean_dbt_{{ target.name }}
       +docs: 
         node_color: "#b43ddb"
     analytics:
       +materialized: table
-      +schema: analytics_{{ target.name }}
+      +schema: analytics_dbt_{{ target.name }}
       +docs: 
         node_color: "#d90000" 
 seeds:

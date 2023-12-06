@@ -10,41 +10,17 @@ from tqdm import tqdm
 import numpy as np
 
 
-from tools.utils import ENV_SHORT_NAME, GCP_PROJECT_ID
-from tools.prompts import EXPECTED_RESULTS, SYSTEM_PROMPT
-from tools.utils import call_retry
+from tools.utils import ENV_SHORT_NAME, TMP_DATASET, CLEAN_DATASET
+from tools.utils import call_retry, sha1_to_base64
+from configs.prompts import (
+    get_macro_topics_messages,
+    get_micro_topics_messages,
+    EXPECTED_RESULTS,
+)
 
 
-def load_df():
-    return pd.read_gbq(
-        f"""
-        WITH offer_booking AS (
-            SELECT
-                item_id,
-                sum(booking_cnt) as booking_cnt
-            FROM `{GCP_PROJECT_ID}.analytics_{ENV_SHORT_NAME}.enriched_offer_data`
-            GROUP BY 1
-        )
-
-        SELECT 
-            ic.cluster as cluster_id,
-            ic.cluster_name as semantic_category, 
-            TO_BASE64(SHA1(ic.cluster_name)) as semantic_cluster_id,
-            ic.x_cluster,
-            ic.y_cluster,
-            ic.item_id,
-            
-            ic.semantic_encoding,
-            if(ei.offer_name = 'None', '', ei.offer_name) as offer_name,
-            if(ei.offer_description = 'None', '', ei.offer_description) as offer_description,
-            ob.booking_cnt
-        FROM `{GCP_PROJECT_ID}.clean_{ENV_SHORT_NAME}.item_clusters` ic
-
-        LEFT JOIN `{GCP_PROJECT_ID}.analytics_{ENV_SHORT_NAME}.enriched_item_metadata` ei on ei.item_id = ic.item_id
-        LEFT JOIN offer_booking ob on ob.item_id = ic.item_id
-        QUALIFY ROW_NUMBER() OVER (PARTITION BY ic.item_id ORDER BY ic.cluster ASC) = 1
-    """
-    )
+def load_df(input_table):
+    return pd.read_gbq(f"""SELECT * FROM `{CLEAN_DATASET}.{input_table}`""")
 
 
 def generate_topics(topic_items_df, semantic_cluster_id):
@@ -104,21 +80,7 @@ def loop_gpt(topics):
     for terms in topics:
         topic_term = terms["topic_terms"]
         doc = terms["docs"]
-
-        messages = SYSTEM_PROMPT + [
-            {
-                "role": "user",
-                "content": f"""
-            Trouvez un genre ou une catégorie culturelle qui est la plus commune dans les mots ci-dessous. 
-            Les mots du début sont plus important que ceux de la fin.
-             ``` {topic_term} ```
-            Voici des documents représentatifs: 
-            ``` {doc} ```  
-            Donnez un terme pour chaque type.
-            Return JSON {{"category" : <xxx>, "sub_category" : <xxx>, "medium" : <xxx>, "genre": <xxx>, "sub_genre": <xxx>}}
-        """,
-            },
-        ]
+        messages = get_micro_topics_messages(topic_term, doc)
         categories = call_retry(
             messages,
             test_fn=lambda x: all([x in EXPECTED_RESULTS for x in list(x.keys())])
@@ -138,16 +100,7 @@ def loop_gpt(topics):
 
     topics_micro = " | ".join(topics_df["micro_category"].values)
 
-    messages = SYSTEM_PROMPT + [
-        {
-            "role": "user",
-            "content": f"""
-            Trouvez les genre et les catégories culturelles qui sont les plus communes dans les mots ci-dessous. 
-            ``` {topics_micro} ```
-            Return JSON {{"category" : <xxx>, "sub_category" : <xxx>, "medium" : <xxx>, "genre": <xxx>, "sub_genre": <xxx>}}
-        """,
-        },
-    ]
+    messages = get_macro_topics_messages(topics_micro)
     categories = call_retry(
         messages,
         test_fn=lambda x: all([x in EXPECTED_RESULTS for x in list(x.keys())])
@@ -166,8 +119,12 @@ def loop_gpt(topics):
     return topics_df
 
 
-def main():
-    topic_items_df = load_df()
+def main(
+    input_table: str = typer.Option(..., help="Path to data"),
+    item_topics_labels_output_table: str = typer.Option(..., help="Path to data"),
+    item_topics_output_table: str = typer.Option(..., help="Path to data"),
+):
+    topic_items_df = load_df(input_table)
     topic_items_df["category"] = (
         topic_items_df["semantic_category"].str.split("-", 1).str[0]
     )
@@ -204,12 +161,30 @@ def main():
 
     topics_all_df = pd.concat(topics_all_df).merge(count_df, on=["semantic_cluster_id"])
     topics_raw_all_df = pd.concat(topics_raw_all_df)
-    topics_all_df.to_gbq(
-        f"tmp_{ENV_SHORT_NAME}.item_topics_all_df", if_exists="replace"
+
+    topics_all_df["topic_id"] = (
+        topics_all_df["topic"].astype(str) + " " + topics_all_df["semantic_cluster_id"]
     )
-    topics_raw_all_df.to_gbq(
-        f"tmp_{ENV_SHORT_NAME}.item_topics_raw_all_df", if_exists="replace"
+    topics_all_df["topic_id"] = topics_all_df["topic_id"].apply(sha1_to_base64)
+
+    topics_raw_all_df["topic_id"] = (
+        topics_raw_all_df["topic"].astype(str)
+        + " "
+        + topics_raw_all_df["semantic_cluster_id"]
     )
+
+    topics_raw_all_df["topic_id"] = topics_raw_all_df["topic_id"].apply(sha1_to_base64)
+    topics_all_df[
+        [
+            "category",
+            "topic_id",
+            "semantic_cluster_id",
+            "topic_terms",
+        ]
+    ].to_gbq(f"{TMP_DATASET}.{item_topics_labels_output_table}", if_exists="replace")
+    topics_raw_all_df[
+        ["item_id", "topic_id", "semantic_cluster_id", "booking_cnt"]
+    ].to_gbq(f"{TMP_DATASET}.{item_topics_output_table}", if_exists="replace")
 
 
 if __name__ == "__main__":

@@ -1,25 +1,28 @@
-EXPECTED_RESULTS = [
-    "category",
-    "sub_category",
-    "medium",
-    "genre",
-    "sub_genre",
-]
-
+MUSIQUE_LABEL = "Musique (CD, Vinyles, Instruments)"
+LIVRE_LABEL = "Littérature (Livres, Bandes dessinés)"
+CINEMA_LABEL = "Cinéma & Films (DVD)"
+ART_LABEL = "Musées & Arts Visuels & Pratique Artistique (Cours, Ateliers)"
+SORTIES_LABEL = "Sorties (Spectacle Vivant, Concerts & Festivals, Jeux, Conférences)"
 
 CAT = {
-    "Musique (CD & Vinyles)": ["CD", "Vinyles"],
-    "Spectacle Vivant, Concerts & Festivals": [
+    MUSIQUE_LABEL: [
+        "CD",
+        "Vinyles",
+        "Instrument de musique",
+    ],
+    SORTIES_LABEL: [
         "Festivals",
         "Concert Live",
         "Pièce de théâtre",
         "Représentation en direct",
+        "Conférence",
         "Danse",
         "Stand-up",
         "Opéra",
-        "One-man-show",
+        "One-man show",
+        "Escape Game",
     ],
-    "Littérature (Livres, Bandes dessinés)": [
+    LIVRE_LABEL: [
         "Bandes dessinées",
         "Mangas",
         "Comics",
@@ -39,7 +42,7 @@ CAT = {
         "Poésie",
         "Roman",
     ],
-    "Cinéma & Films (DVD)": [
+    CINEMA_LABEL: [
         "Animation",
         "Documentaire",
         "Biographie",
@@ -48,24 +51,20 @@ CAT = {
         "Séries TV",
         "DVD / Blue Ray",
     ],
-    "Musées & Arts Visuels": [
+    ART_LABEL: [
         "Photographie",
         "Sculpture",
         "Peinture",
         "Art Comtemporain",
         "Arts graphiques",
-    ],
-    "Pratique Artistique (Cours, Ateliers, Jeux, Instruments)": [
         "Fournitures artistiques",
-        "Instrument de musique",
-        "Escape Game",
         "Jeux Videos",
     ],
 }
 
 
 GENRE = {
-    "Musique (CD & Vinyles)": [
+    MUSIQUE_LABEL: [
         "Blues",
         "Chanson française",
         "Dubstep",
@@ -93,7 +92,7 @@ GENRE = {
         "RnB contemporain",
         "Rock",
     ],
-    "Spectacle Vivant, Concerts & Festivals": [
+    SORTIES_LABEL: [
         "Cirque",
         "Conférence",
         "Danse Classique",
@@ -101,8 +100,10 @@ GENRE = {
         "Drame",
         "Ballet",
         "Orchestre",
+        "Réalité virtuelle",
+        "Escape Game",
     ],
-    "Littérature (Livres, Bandes dessinés)": [
+    LIVRE_LABEL: [
         "Arts",
         "Jeux",
         "Droit",
@@ -140,7 +141,7 @@ GENRE = {
         "Science-fiction, Fantastique & Terreur",
         "Sciences Humaines, Encyclopédie, Dictionnaire",
     ],
-    "Cinéma & Films (DVD)": [
+    CINEMA_LABEL: [
         "Action",
         "Animation",
         "Arts Martiaux",
@@ -169,7 +170,7 @@ GENRE = {
         "Thriller",
         "Western",
     ],
-    "Musées & Arts Visuels": [
+    ART_LABEL: [
         "Dessin",
         "Peinture",
         "Photographie",
@@ -177,97 +178,52 @@ GENRE = {
         "Arts Plastiques",
         "Art Comtemporain",
         "Arts graphiques",
-    ],
-    "Pratique Artistique (Cours, Ateliers, Jeux, Instruments)": [
+        "Histoire de l'art",
+        "Réalité virtuelle",
         "Cours de Couture",
         "Cours de Peinture",
         "Cours de Dessin",
-        "Photographie",
-        "Histoire de l'art",
-        "Réalité virtuelle",
-        "Arts Plastiques",
     ],
 }
 
 
 MEDIUM = {
-    "Musique (CD & Vinyles)": ["CD", "Vinyle", "Studio d'Enregistrement"],
-    "Spectacle Vivant, Concerts & Festivals": [
+    MUSIQUE_LABEL: [
+        "CD",
+        "Vinyle",
+        "Studio d'Enregistrement",
+        "Album",
+        "Pratique Artistique",
+        "Guitare",
+        "Saxophone",
+        "Piano",  # TODO
+    ],
+    SORTIES_LABEL: [
         "Physique",
         "Numérique",
         "Studio d'Enregistrement",
         "Rencontre en ligne",
+        "Réalité virtuelle",
+        "Escape Game",
+        "Jeu de Société",
     ],
-    "Littérature (Livres, Bandes dessinés)": [
+    LIVRE_LABEL: [
         "Papier",
         "Numérique",
         "Audio",
     ],
-    "Cinéma & Films (DVD)": ["Vidéos", "Numérique", "Streaming", "Physique"],
-    "Musées & Arts Visuels": [
+    CINEMA_LABEL: ["Vidéos", "Numérique", "Streaming", "Physique"],
+    ART_LABEL: [
         "Dessin",
         "Peinture",
         "Acquarelle",
         "Photographie",
-        "Réalité virtuelle",
-        "Escape Game",
-        "Jeu de Société",
         "Grandeur Nature",
-    ],
-    "Pratique Artistique (Cours, Ateliers, Jeux, Instruments)": [
-        "Dessin",
-        "Peinture",
-        "Acquarelle",
-        "Photographie",
         "Feutres",
         "Papier",
         "Crayons de Couleur",
         "Réalité virtuelle",
-        "Escape Game",
         "Jeu de Société",
         "Grandeur Nature",
-        "Studio d'Enregistrement",
-        "Guitare",
-        "Saxophone",
-        "Piano",
     ],
 }
-
-
-SYSTEM_PROMPT = [
-    {
-        "role": "system",
-        "content": f"""
-        Vous êtes un expert dans le domaine de la classification de genres culturels. 
-        On entend par classification les différents niveaux hiérachique de la classification de genres culturels, par exemple:
-            - Category : Littérature, Cinéma, ...
-            - Sous-category : Essai, Livre Audio, Poésie, ...
-            - Médium (medium) : Guitare, Pinceaux, Instruments à Cordes, Acrylique, Aquarelle, Livre Papier, Livre Numérique
-            - Genre (genre) : Rap, Rock, Shonen, Droit Juridique, ...
-            - Sous-genres (subgenre) : Rap Français, Blues Caribéen, Anthologie, ...
-        """,
-    },
-    {
-        "role": "system",
-        "content": f"""
-        Voici des exemples des Category: 
-        {",".join(CAT.keys())}
-
-    """,
-    },
-    {
-        "role": "system",
-        "content": f"""
-        Voici des exemples des Sous-Category: 
-        {",".join(list(set(CAT.values())))}
-        
-    """,
-    },
-    {
-        "role": "system",
-        "content": f"""
-        Voici des exemples des Genres: 
-       {",".join(list(set(GENRE.values())))}
-        """,
-    },
-]

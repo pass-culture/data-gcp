@@ -7,10 +7,30 @@ from timeout_decorator import timeout, TimeoutError
 import time
 import numpy as np
 import json
+import hashlib
+import base64
 
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 CONFIGS_PATH = os.environ.get("CONFIGS_PATH", "configs")
+TMP_DATASET = f"sandbox_{ENV_SHORT_NAME}"  # TODO update this once ok
+CLEAN_DATASET = f"clean_{ENV_SHORT_NAME}"
+
+
+def sha1_to_base64(input_string):
+    sha1_hash = hashlib.sha1(input_string.encode()).digest()
+    base64_encoded = base64.b64encode(sha1_hash).decode()
+
+    return base64_encoded
+
+
+def load_config_file(config_file_name):
+    with open(
+        f"{CONFIGS_PATH}/{config_file_name}.json",
+        mode="r",
+        encoding="utf-8",
+    ) as config_file:
+        return json.load(config_file)
 
 
 def convert_str_emb_to_float(emb_list, emb_size=5):

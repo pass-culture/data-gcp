@@ -17,20 +17,19 @@ item_top_N_booking_by_cat as(
         *
     FROM
         booking_info
-    where booking_cnt>0
-
+    where
+        booking_cnt > 0
 ),
 items_w_embedding as (
     SELECT
         ie.item_id,
         ie.semantic_content_embedding,
     FROM
-        `{{ bigquery_clean_dataset }}`.item_embeddings_reduced_5 ie
-    QUALIFY ROW_NUMBER() OVER (
+        `{{ bigquery_clean_dataset }}.item_embeddings_reduced_5` ie QUALIFY ROW_NUMBER() OVER (
             PARTITION BY item_id
             ORDER BY
                 ie.extraction_date DESC
-        ) =1
+        ) = 1
 ),
 base as (
     select
@@ -45,7 +44,7 @@ base as (
     from
         item_top_N_booking_by_cat top_items
         JOIN items_w_embedding ie on ie.item_id = top_items.item_id
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_item_metadata enriched_item_metadata on top_items.item_id = enriched_item_metadata.item_id
+        LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_item_metadata` enriched_item_metadata on top_items.item_id = enriched_item_metadata.item_id
 )
 select
     *

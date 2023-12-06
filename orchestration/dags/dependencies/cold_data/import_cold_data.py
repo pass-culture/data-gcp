@@ -3,11 +3,11 @@ from common.config import DAG_FOLDER
 SQL_PATH = f"dependencies/cold_data/sql"
 
 clean_tables = {
-    # "institutional_scholar_level": {
-    #     "sql": f"{SQL_PATH}/clean/institutional_scholar_level.sql",
-    #     "destination_dataset": "{{ bigquery_clean_dataset }}",
-    #     "destination_table": "institutional_scholar_level",
-    # },
+    "institutional_scholar_level": {
+        "sql": f"{SQL_PATH}/clean/institutional_scholar_level.sql",
+        "destination_dataset": "{{ bigquery_clean_dataset }}",
+        "destination_table": "institutional_scholar_level",
+    },
     "eac_webinar": {
         "sql": f"{SQL_PATH}/clean/eac_webinar.sql",
         "destination_dataset": "{{ bigquery_clean_dataset }}",

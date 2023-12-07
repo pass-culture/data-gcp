@@ -1,9 +1,8 @@
-
 WITH current_month AS (
 
 SELECT 
-  user_ip_iris.month_log,
-  user_ip_iris.user_id,
+  DATE_TRUNC(DATE('{{ ds }}'), month) AS month_log,
+  user_declared_iris.user_id,
   user_declared_iris.iriscode as iris_declaree,
   user_declared_iris.department as department_declare,
   user_ip_iris.ip_iris,
@@ -12,12 +11,13 @@ SELECT
   user_reco_iris.reco_iris,
   user_reco_iris.nb_log_reco,
   user_reco_iris.department AS reco_department
-FROM `{{ bigquery_clean_dataset }}.user_ip_iris` AS user_ip_iris
-LEFT JOIN `{{ bigquery_clean_dataset }}.user_reco_iris` AS user_reco_iris ON user_ip_iris.month_log = user_reco_iris.month_log AND user_ip_iris.user_id = user_reco_iris.user_id 
-LEFT JOIN `{{ bigquery_clean_dataset }}.user_declared_iris` AS user_declared_iris ON user_ip_iris.user_id = user_declared_iris.user_id
+FROM `{{ bigquery_clean_dataset }}.user_declared_iris` AS user_declared_iris 
+LEFT JOIN `{{ bigquery_clean_dataset }}.user_reco_iris` AS user_reco_iris ON user_reco_iris.user_id = user_declared_iris.user_id
+LEFT JOIN `{{ bigquery_clean_dataset }}.user_ip_iris` AS user_ip_iris ON user_ip_iris.user_id = user_declared_iris.user_id
 
 -- Mettre ici variable du mois du jour de calcul {  d  }
-WHERE month_log = date_trunc(DATE('{{ ds }}'), month)
+WHERE user_ip_iris.month_log = date_trunc(DATE('{{ ds }}'), month)
+AND user_reco_iris.month_log = date_trunc(DATE('{{ ds }}'), month)
 )
 
 , last_month AS (
@@ -27,16 +27,18 @@ SELECT
   actual_iris as actual_iris_last_month,
   most_freq_iris as most_freq_iris_last_month,
   actual_department as actual_department_last_month,
-  most_freq_department as most_freq_department_last_month
+  most_freq_department as most_freq_department_last_month,
+  iris_score,
+  department_score
 FROM `{{ bigquery_analytics_dataset }}.user_iris_per_month` 
 WHERE month_log = DATE_SUB(date_trunc(DATE('{{ ds }}'), month), interval 1 month) 
 )
 
 , almost AS (
 SELECT 
-  month_log,
-  user_id,
-  iris_declaree,
+  current_month.month_log,
+  current_month.user_id,
+  current_month.iris_declaree,
   CASE WHEN nb_log_ip > nb_log_reco THEN ip_iris ELSE reco_iris END AS most_freq_iris,
   CASE WHEN nb_log_ip > nb_log_reco THEN ip_department ELSE reco_department END AS most_freq_department,
   actual_iris_last_month,
@@ -54,6 +56,7 @@ SELECT
   user_id,
   iris_declaree,
   most_freq_iris,
+  most_freq_department,
   CASE 
   WHEN most_freq_iris = most_freq_iris_last_month THEN most_freq_iris 
   ELSE actual_iris_last_month
@@ -75,6 +78,7 @@ SELECT
   ST_DISTANCE(param_iris_most_freq.centroid, param_iris_declaree.centroid) distance_iris_actuelle_et_iris_declaree
 
 FROM almost 
-LEFT JOIN `{{ bigquery_analytics_dataset }}.iris_france` param_iris_most_freq on param_iris_most_freq.id = almost.most_freq_iris
-LEFT JOIN `{{ bigquery_analytics_dataset }}.iris_france` param_iris_declaree on param_iris_declaree.id = almost.iris_declaree
+LEFT JOIN `{{ bigquery_clean_dataset }}.iris_france` param_iris_most_freq on param_iris_most_freq.id = almost.most_freq_iris
+LEFT JOIN `{{ bigquery_clean_dataset }}.iris_france` param_iris_declaree on param_iris_declaree.id = almost.iris_declaree
+
 

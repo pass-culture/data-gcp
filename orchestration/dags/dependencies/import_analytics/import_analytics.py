@@ -1,6 +1,6 @@
 from common.config import ENV_SHORT_NAME
 
-ANALYTICS_SQL_PATH = f"dependencies/import_analytics/sql/analytics"
+ANALYTICS_SQL_PATH = f"import_analytics/sql/analytics"
 
 
 def define_import_tables():

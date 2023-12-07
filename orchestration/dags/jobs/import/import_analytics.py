@@ -55,7 +55,7 @@ dag = DAG(
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=240),
     user_defined_macros=macros.default,
-    template_searchpath=DAG_FOLDER,
+    template_searchpath=f"{DAG_FOLDER}dependencies/",
 )
 
 start = DummyOperator(task_id="start", dag=dag)

@@ -107,7 +107,7 @@ def test_create_queries(flush_dataset, table_name, input_data, expected, sorting
         data=input_data,
     )
     table_params = export_tables[table_name]
-    environment = Environment(loader=FileSystemLoader("dags/"))
+    environment = Environment(loader=FileSystemLoader("dags/dependencies/"))
     template = environment.get_template(table_params["sql"])
 
     sql = template.render(

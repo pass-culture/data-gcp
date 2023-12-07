@@ -69,9 +69,9 @@ def build_simplified_manifest(data):
 
 
 def rebuild_manifest(_PATH_TO_DBT_PROJECT):
-    try: 
+    try:
         data = load_manifest(_PATH_TO_DBT_PROJECT)
         simplified_manifest = build_simplified_manifest(data)
-    except FileNotFoundError: 
+    except FileNotFoundError:
         simplified_manifest = {}
     return simplified_manifest

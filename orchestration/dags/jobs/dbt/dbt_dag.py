@@ -31,7 +31,8 @@ def load_manifest():
         data = json.load(f)
     return data
 
-def make_dbt_task(node, dbt_verb,dag):
+
+def make_dbt_task(node, dbt_verb, dag):
     """Returns an Airflow operator either run and test an individual model"""
     DBT_DIR = PATH_TO_DBT_PROJECT
     GLOBAL_CLI_FLAGS = "--no-write-json"
@@ -39,12 +40,14 @@ def make_dbt_task(node, dbt_verb,dag):
 
     if dbt_verb == "run":
         dbt_task = BashOperator(
-            task_id=model if node.split(".")[0]=="model" else node.split(".")[0]+'.'+model,
+            task_id=model
+            if node.split(".")[0] == "model"
+            else node.split(".")[0] + "." + model,
             bash_command=f"""
             dbt {GLOBAL_CLI_FLAGS} {dbt_verb} --target dev --models {model}
             """,
-            cwd=PATH_TO_DBT_PROJECT, 
-            dag=dag
+            cwd=PATH_TO_DBT_PROJECT,
+            dag=dag,
         )
 
     elif dbt_verb == "test":
@@ -55,21 +58,22 @@ def make_dbt_task(node, dbt_verb,dag):
             dbt {GLOBAL_CLI_FLAGS} {dbt_verb} --target dev --models {model}
             """,
             cwd=PATH_TO_DBT_PROJECT,
-            dag=dag
+            dag=dag,
         )
 
     return dbt_task
 
-start = DummyOperator(task_id="start",dag=dag)
+
+start = DummyOperator(task_id="start", dag=dag)
 
 dbt_compile_op = BashOperator(
-        task_id="run_compile_dbt",
-        bash_command="dbt compile --target {{ params.target }}",
-        cwd=PATH_TO_DBT_PROJECT,
-        dag=dag
-    )
+    task_id="run_compile_dbt",
+    bash_command="dbt compile --target {{ params.target }}",
+    cwd=PATH_TO_DBT_PROJECT,
+    dag=dag,
+)
 
-with TaskGroup(group_id='data_transformation',dag=dag) as data_transfo:
+with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
 
     data = load_manifest()
 
@@ -79,20 +83,19 @@ with TaskGroup(group_id='data_transformation',dag=dag) as data_transfo:
         if "elementary" not in node.split("."):
             if node.split(".")[0] == "model":
                 node_test = node.replace("model", "test")
-                dbt_tasks[node] = make_dbt_task(node, "run",dag)
-                try :
-                    dbt_tasks[node] = make_dbt_task(node, "run",dag)
+                dbt_tasks[node] = make_dbt_task(node, "run", dag)
+                try:
+                    dbt_tasks[node] = make_dbt_task(node, "run", dag)
                 except DuplicateTaskIdFound:
                     print(node)
                     # print(dbt_tasks[node])
                     pass
-                try :
-                    dbt_tasks[node_test] = make_dbt_task(node, "test",dag)
+                try:
+                    dbt_tasks[node_test] = make_dbt_task(node, "test", dag)
                 except DuplicateTaskIdFound:
                     # print(node)
                     # print(dbt_tasks[node])
                     pass
-
 
     for node in data["nodes"].keys():
         if node.split(".")[0] == "model":
@@ -108,6 +111,6 @@ with TaskGroup(group_id='data_transformation',dag=dag) as data_transfo:
                     if upstream_node_type == "model":
                         dbt_tasks[upstream_node] >> dbt_tasks[node]
 
-end = DummyOperator(task_id='transfo_completed',dag=dag)
+end = DummyOperator(task_id="transfo_completed", dag=dag)
 
 start >> dbt_compile_op >> data_transfo >> end

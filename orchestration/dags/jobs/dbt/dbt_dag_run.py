@@ -72,7 +72,7 @@ model_op_dict = {}
 test_op_dict = {}
 
 with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
-    full_ref_str = " --full-refresh" if not '{{ params.full_refresh }}' else ""
+    full_ref_str = " --full-refresh" if not "{{ params.full_refresh }}" else ""
     simplified_manifest = rebuild_manifest(PATH_TO_DBT_PROJECT)
     # models task group
     for model_node, model_data in simplified_manifest.items():
@@ -80,7 +80,7 @@ with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
         with TaskGroup(
             group_id=f'{model_data["model_alias"]}_tasks', dag=dag
         ) as model_tasks:
-            # models 
+            # models
             model_op = BashOperator(
                 task_id=model_data["model_alias"],
                 bash_command=f"""
@@ -102,19 +102,23 @@ with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
                     dbt {{ params.GLOBAL_CLI_FLAGS }} run --target {{ params.target }} --select {test['test_alias']} --no-compile{full_ref_str}
                     """
                             if test["test_type"] == "generic"
-                            
-                            else  f"""
+                            else f"""
                     dbt {{ params.GLOBAL_CLI_FLAGS }} test --target {{ params.target }} --select {test['test_alias']} --no-compile{full_ref_str}
                     """,
                             cwd=PATH_TO_DBT_PROJECT,
                             dag=dag,
                         )
-                        for test in crit_tests_list if not test['test_alias'].endswith(f'ref_{model_data["model_alias"]}_')
-                    ] 
-                    if len(dbt_test_tasks)>0:
+                        for test in crit_tests_list
+                        if not test["test_alias"].endswith(
+                            f'ref_{model_data["model_alias"]}_'
+                        )
+                    ]
+                    if len(dbt_test_tasks) > 0:
                         model_op >> crit_tests_task
                 for i, test in enumerate(crit_tests_list):
-                    if not test['test_alias'].endswith(f'ref_{model_data["model_alias"]}_'):
+                    if not test["test_alias"].endswith(
+                        f'ref_{model_data["model_alias"]}_'
+                    ):
                         if test["test_alias"] not in test_op_dict.keys():
                             test_op_dict[test["test_alias"]] = {
                                 "parent_model": [model_data["model_alias"]],
@@ -128,10 +132,14 @@ with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
 
 # data quality test group
 with TaskGroup(group_id="data_quality_testing", dag=dag) as data_quality:
-    full_ref_str = " --full-refresh" if not '{{ params.full_refresh }}' else ""
+    full_ref_str = " --full-refresh" if not "{{ params.full_refresh }}" else ""
     for model_node, model_data in simplified_manifest.items():
         quality_tests_list = model_data["model_tests"].get("warn", [])
-        quality_tests_list = [test for test in quality_tests_list if not test['test_alias'].endswith(f'ref_{model_data["model_alias"]}_')]
+        quality_tests_list = [
+            test
+            for test in quality_tests_list
+            if not test["test_alias"].endswith(f'ref_{model_data["model_alias"]}_')
+        ]
         if len(quality_tests_list) > 0:
             # model testing subgroup
             with TaskGroup(
@@ -143,9 +151,8 @@ with TaskGroup(group_id="data_quality_testing", dag=dag) as data_quality:
                         bash_command=f"""
                     dbt {{ params.GLOBAL_CLI_FLAGS }} run --target {{ params.target }} --select {test['test_alias']} --no-compile{full_ref_str}
                     """
-                            if test["test_type"] == "generic"
-                            
-                            else  f"""
+                        if test["test_type"] == "generic"
+                        else f"""
                     dbt {{ params.GLOBAL_CLI_FLAGS }} test --target {{ params.target }} --select {test['test_alias']} --no-compile{full_ref_str}
                     """,
                         cwd=PATH_TO_DBT_PROJECT,
@@ -163,7 +170,7 @@ with TaskGroup(group_id="data_quality_testing", dag=dag) as data_quality:
                         test_op_dict[test["test_alias"]]["parent_model"] += [
                             model_data["model_alias"]
                         ]
-            if len(dbt_test_tasks)>0:            
+            if len(dbt_test_tasks) > 0:
                 model_op_dict[model_data["model_alias"]] >> quality_tests_task
     # models' task groups dependencies
     for node in simplified_manifest.keys():

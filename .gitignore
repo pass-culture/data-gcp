@@ -11,6 +11,7 @@ __pycache__/
 .venv/
 venv/
 venv-lint/
+logs/
 
 # ignore .json credential files
 # *.json
@@ -24,3 +25,4 @@ apps/recommendation/api/src/locustfile.py
 *.cb
 # venv
 data-gcp-api
+logs/dbt.log

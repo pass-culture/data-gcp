@@ -1,0 +1,58 @@
+version: 1
+
+sources:
+  - name: raw # this is the source_name
+    schema: raw_{{ var('ENV_SHORT_NAME') }} # this is the schema_name
+    tables:
+      - name: agg_partner_cultural_sector # try to plug it directly to google cloud storage with dbt_external_tables package
+      - name: applicative_database_booking
+      - name: applicative_database_collective_booking
+      - name: applicative_database_collective_offer
+      - name: applicative_database_collective_offer_template
+      - name: applicative_database_collective_stock
+      - name: applicative_database_criterion
+      - name: applicative_database_criterion_category
+      - name: applicative_database_criterion_category_mapping
+      - name: applicative_database_favorite
+      - name: applicative_database_national_program
+      - name: applicative_database_mediation
+      - name: applicative_database_offer
+      - name: applicative_database_offerer
+      - name: applicative_database_offerer_tag
+      - name: applicative_database_offerer_tag_mapping
+      - name: applicative_database_offerer_tag_category
+      - name: applicative_database_offerer_tag_category_mapping
+      - name: applicative_database_venue
+      - name: applicative_database_venue_contact
+      - name: applicative_database_venue_criterion
+      - name: applicative_database_venue_label
+      - name: applicative_database_venue_registration
+      - name: applicative_database_price_category
+      - name: applicative_database_price_category_label
+      - name: applicative_database_stock 
+      - name: gsheet_eac_webinar
+  - name: clean # this is the source_name
+    schema: clean_{{ var('ENV_SHORT_NAME') }} # this is the schema_name
+    tables:
+      - name: adage_involved_student # this is the table_name
+      - name: applicative_database_bank_information
+      - name: applicative_database_educational_year
+      - name: applicative_database_offerer
+      - name: applicative_database_venue
+      - name: dms_jeunes_cleaned
+      - name: dms_pro_cleaned
+      - name: firebase_app_experiments
+      - name: siren_data
+  - name: analytics # this is the source_name
+    schema: analytics_{{ var('ENV_SHORT_NAME') }} # this is the schema_name
+    tables:
+      - name: bookable_venue_history
+      - name: contentful_entries
+      - name: contentful_relationships
+      - name: firebase_events
+      - name: firebase_pro_events
+      - name: linked_offers
+      - name: region_department
+      - name: siren_data_labels
+      - name: subcategories
+      

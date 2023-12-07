@@ -1,0 +1,1 @@
+SELECT * FROM {{ source('analytics', 'region_department') }}

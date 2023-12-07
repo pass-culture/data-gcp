@@ -1,0 +1,74 @@
+
+# Name your project! Project names should contain only lowercase characters
+# and underscores. A good package name should reflect your organization's
+# name or the intended use of these models
+name: 'data_gcp_dbt'
+version: '1.0.0'
+config-version: 2
+
+# This setting configures which "profile" dbt uses for this project.
+profile: 'data_gcp_dbt'
+
+# These configurations specify where dbt should look for different types of files.
+# The `model-paths` config, for example, states that models in this project can be
+# found in the "models/" directory. You probably won't need to change these!
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:         # directories to be removed by `dbt clean`
+  - "target"
+  - "dbt_packages"
+
+# # on-run-start:
+# #   - "{{ create_humanize_id_function() }}"
+# #   - "{{ create_dehumanize_id_function() }}"
+# Configuring models
+# Full documentation: https://docs.getdbt.com/docs/configuring-models
+
+# In this example config, we tell dbt to build all models in the example/
+# directory as views. These settings can be overridden in the individual model
+# files using the `{{ config(...) }}` macro.
+models:
+  data_gcp_dbt:
+    raw:
+      +materialized: table
+      +docs:
+        node_color: "#0320fc"
+      applicative_raw:
+        schema: applicative_raw
+        tags: "applicative"
+    clean:
+      +materialized: view
+      +schema: clean_dbt_{{ target.name }}
+      +docs: 
+        node_color: "#b43ddb"
+    analytics:
+      +materialized: table
+      +schema: analytics_dbt_{{ target.name }}
+      +docs: 
+        node_color: "#d90000" 
+seeds:
+  +schema: seeds
+  +docs:
+    node_color: "#000000"
+snapshots:
+  +target_schema: snapshots
+  +docs:
+    show: false
+tests:
+  +store_failures: true  # store failures for all tests
+  +severity: warn # Failing tests will generate a warning by default. To raise an error, overwrite a config with severity: error.  
+  +docs:
+    show: true
+    tags: "test"
+# In this example config, we tell dbt to build all models in the example/ directory
+# as tables. These settings can be overridden in the individual model files
+# using the `{{ config(...) }}` macro.
+
+      
+vars:
+  ENV_SHORT_NAME: dev

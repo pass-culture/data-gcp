@@ -1,15 +1,13 @@
 import typer
 import pandas as pd
-import json
+
 from loguru import logger
 from tools.preprocessing import (
     prepare_embedding,
     get_item_by_categories,
     get_item_by_group,
 )
-from tools.utils import ENV_SHORT_NAME, CONFIGS_PATH
-
-import numpy as np
+from tools.utils import ENV_SHORT_NAME, load_config_file, TMP_DATASET, CLEAN_DATASET
 
 
 def preprocess(
@@ -20,15 +18,10 @@ def preprocess(
         help="Config file name",
     ),
 ):
-    with open(
-        f"{CONFIGS_PATH}/{config_file_name}.json",
-        mode="r",
-        encoding="utf-8",
-    ) as config_file:
-        params = json.load(config_file)
+    params = load_config_file(config_file_name)
 
     logger.info("Loading data: fetch items with metadata and pretained embedding")
-    items = pd.read_gbq(f"SELECT * from `tmp_{ENV_SHORT_NAME}.{input_table}`")
+    items = pd.read_gbq(f"SELECT * from `{TMP_DATASET}.{input_table}`")
     items = items.drop_duplicates(subset=["item_id"], keep="first")
 
     logger.info("Build item groups...")
@@ -63,9 +56,7 @@ def preprocess(
         item_embedding, item_by_group, how="inner", on=["item_id"]
     )
     item_embedding_w_group = item_embedding_w_group.fillna(0)
-    item_embedding_w_group.to_gbq(
-        f"tmp_{ENV_SHORT_NAME}.{output_table}", if_exists="replace"
-    )
+    item_embedding_w_group.to_gbq(f"{TMP_DATASET}.{output_table}", if_exists="replace")
 
     return
 

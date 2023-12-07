@@ -9,6 +9,7 @@ WITH offerer_offer_info AS
    JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue v ON v.venue_id=o.venue_id
    AND venue_is_permanent IS TRUE
    WHERE offer_is_template IS TRUE
+     AND collective_offer_venue_address_type != "school"
      AND collective_offer_is_active ), 
 
 -- Get institutions

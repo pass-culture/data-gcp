@@ -447,6 +447,7 @@ analytics_tables = {
         "depends": [
             "enriched_offerer_data",
             "enriched_venue_data",
+            "bookable_venue_history",
         ],
     },
     "bookable_venue_history": {
@@ -500,6 +501,13 @@ analytics_tables = {
         "sql": f"{ANALYTICS_SQL_PATH}/institution_locations.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "institution_locations",
+    },
+    "user_iris_per_month": {
+        "sql": f"{ANALYTICS_SQL_PATH}/user_iris_per_month.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "user_iris_per_month",
+        "partition_prefix": "$",
+        "time_partitioning": {"field": "month_log"},
     },
 }
 
@@ -557,6 +565,16 @@ aggregated_tables = {
             "diversification_booking",
         ],
         "dag_depends": ["import_intraday_firebase_data"],
+    },
+    "partner_type_bookability_frequency": {
+        "sql": f"{ANALYTICS_SQL_PATH}/partner_type_bookability_frequency.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "depends": [
+            "enriched_offer_data",
+            "bookable_partner_history",
+            "enriched_venue_data",
+            "enriched_cultural_partner_data",
+        ],
     },
 }
 

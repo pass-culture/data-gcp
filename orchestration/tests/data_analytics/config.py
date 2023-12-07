@@ -467,6 +467,7 @@ BIGQUERY_SCHEMAS = {
         "provider_id": "STRING",
         "national_program_id": "STRING",
         "template_id": "STRING",
+        "collective_offer_format": "STRING",
     },
     "applicative_database_collective_offer_template": {
         "collective_offer_audio_disability_compliant": "BOOLEAN",
@@ -495,6 +496,7 @@ BIGQUERY_SCHEMAS = {
         "collective_offer_image_id": "STRING",
         "provider_id": "STRING",
         "national_program_id": "STRING",
+        "collective_offer_format": "STRING",
     },
     "applicative_database_collective_stock": {
         "collective_stock_id": "STRING",
@@ -623,5 +625,19 @@ BIGQUERY_SCHEMAS = {
         "institution_id": "STRING",
         "institution_latitude": "FLOAT",
         "institution_longitude": "FLOAT",
+    },
+    "adage": {
+        "id": "STRING",
+        "siret": "STRING",
+        "venueid": "STRING",
+        "synchroPass": "STRING",
+    },
+    "dms_pro_cleaned": {
+        "procedure_id": "STRING",
+        "demandeur_entreprise_siren": "STRING",
+        "demandeur_siret": "STRING",
+        "application_submitted_at": "DATETIME",
+        "application_status": "STRING",
+        "processed_at": "DATETIME",
     },
 }

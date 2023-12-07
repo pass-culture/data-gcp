@@ -24,7 +24,9 @@ RETURNS TABLE (
                 offer_type_domain VARCHAR,
                 offer_type_label VARCHAR,
                 booking_number INTEGER,
+                total_offers INTEGER,
                 is_underage_recommendable BOOLEAN,
+                is_sensitive BOOLEAN,
                 venue_latitude DECIMAL, 
                 venue_longitude DECIMAL,
                 default_max_distance INTEGER,
@@ -55,6 +57,9 @@ USING btree (is_geolocated,item_id,offer_id,unique_id);
 
 CREATE INDEX IF NOT EXISTS offer_idx_offer_recommendable_raw_{{ ts_nodash  }}
 ON public.recommendable_offers_raw_mv_tmp(offer_id);
+
+CREATE INDEX IF NOT EXISTS item_idx_offer_recommendable_raw_{{ ts_nodash  }}
+ON public.recommendable_offers_raw_mv_tmp(item_id);
 
 CREATE INDEX IF NOT EXISTS offer_item_idx_recommendable_offers_raw_mv_tmp_{{ ts_nodash  }} 
 ON public.recommendable_offers_raw_mv_tmp 

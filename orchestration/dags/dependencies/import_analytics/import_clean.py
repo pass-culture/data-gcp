@@ -77,6 +77,25 @@ clean_tables = {
         "destination_dataset": "{{ bigquery_clean_dataset }}",
         "destination_table": "booking",
     },
+    "user_ip_iris": {
+        "sql": f"{CLEAN_SQL_PATH}/user_ip_iris.sql",
+        "destination_dataset": "{{ bigquery_clean_dataset }}",
+        "destination_table": "user_ip_iris",
+        "partition_prefix": "$",
+        "time_partitioning": {"field": "month_log"},
+    },
+    "user_reco_iris": {
+        "sql": f"{CLEAN_SQL_PATH}/user_reco_iris.sql",
+        "destination_dataset": "{{ bigquery_clean_dataset }}",
+        "destination_table": "user_reco_iris",
+        "partition_prefix": "$",
+        "time_partitioning": {"field": "month_log"},
+    },
+    "user_declared_iris": {
+        "sql": f"{CLEAN_SQL_PATH}/user_declared_iris.sql",
+        "destination_dataset": "{{ bigquery_clean_dataset }}",
+        "destination_table": "user_declared_iris",
+    },
 }
 
 

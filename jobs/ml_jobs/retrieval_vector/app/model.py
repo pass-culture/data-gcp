@@ -29,6 +29,7 @@ class DefaultClient:
     def search(
         self,
         vector: Document,
+        similarity_metric="dot",
         n=50,
         query_filter: t.Dict = None,
         details: bool = False,
@@ -36,7 +37,6 @@ class DefaultClient:
         prefilter: bool = True,
         vector_column_name: str = "vector",
     ) -> t.List[t.Dict]:
-
         results = (
             self.table.search(
                 vector.embedding,
@@ -45,6 +45,7 @@ class DefaultClient:
             )
             .where(self.build_query(query_filter), prefilter=prefilter)
             .select(columns=self.columns(details))
+            .metric(similarity_metric)
             .limit(n)
             .to_list()
         )

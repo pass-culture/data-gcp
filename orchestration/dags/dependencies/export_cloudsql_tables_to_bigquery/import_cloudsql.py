@@ -39,4 +39,12 @@ CLEAN_TABLES = {
         "destination_dataset": "{{ bigquery_clean_dataset }}",
         "destination_table": "past_similar_offers",
     },
+    "past_offer_context": {
+        "sql": f"{SQL_CLEAN_PATH}/past_offer_context.sql",
+        "write_disposition": "WRITE_TRUNCATE",
+        "time_partitioning": {"field": "event_date"},
+        "clustering_fields": {"fields": ["event_date"]},
+        "destination_dataset": "{{ bigquery_clean_dataset }}",
+        "destination_table": "past_offer_context",
+    },
 }

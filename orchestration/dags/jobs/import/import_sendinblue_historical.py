@@ -1,9 +1,13 @@
+# from airflow.operators.trigger_dagrun import TriggerDagRunOperator
+
 import datetime
-import json
+from datetime import timedelta
+import pandas as pd
+
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.providers.http.operators.http import SimpleHttpOperator
 from airflow.operators.python import PythonOperator
+
 from airflow.models import Param
 from common.operators.gce import (
     StartGCEOperator,
@@ -32,7 +36,6 @@ from dependencies.sendinblue.import_sendinblue import (
     analytics_tables,
 )
 
-
 GCE_INSTANCE = f"import-sendinblue-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/sendinblue"
 yesterday = (datetime.date.today() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
@@ -40,6 +43,7 @@ dag_config = {
     "GCP_PROJECT": GCP_PROJECT_ID,
     "ENV_SHORT_NAME": ENV_SHORT_NAME,
 }
+
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),
@@ -49,13 +53,34 @@ default_dag_args = {
     "project_id": GCP_PROJECT_ID,
 }
 
+
+def get_end_date(dataset):
+    query = (
+        f"""SELECT min(event_date) as date FROM `{dataset}.sendinblue_transactional`"""
+    )
+    df = pd.read_gbq(query)
+    end_date = df["date"][0] + timedelta(days=-1)
+
+    end_date = end_date.strftime("%Y-%m-%d")
+
+    return end_date
+
+
+def get_start_date(end_date):
+    end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d")
+    start_date = end_date + timedelta(days=-7)
+    start_date = start_date.strftime("%Y-%m-%d")
+    return start_date
+
+
+# end_date = """SELECT min(event_date) FROM `{{ bigquery_raw_dataset }}.sendinblue_transactional`"""
+# start_date = end_date - 7
+
 with DAG(
-    "import_sendinblue",
+    "import_sendinblue_historical",
     default_args=default_dag_args,
-    description="Import sendinblue tables",
-    schedule_interval=get_airflow_schedule("00 04 * * *")
-    if ENV_SHORT_NAME in ["prod", "stg"]
-    else get_airflow_schedule("00 07 * * *"),
+    description="Import historic sendinblue tables",
+    schedule_interval=get_airflow_schedule("0 */6 * * *"),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,
@@ -65,12 +90,8 @@ with DAG(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
-        "start_date": Param(
-            default=yesterday,
-            type="string",
-        ),
-        "end_date": Param(
-            default=yesterday,
+        "instance_type": Param(
+            default="n1-standard-2",
             type="string",
         ),
     },
@@ -96,12 +117,34 @@ with DAG(
         retries=2,
     )
 
+    get_end_date = PythonOperator(
+        task_id=f"get_end_date",
+        python_callable=get_end_date,
+        op_kwargs={
+            "dataset": "{{ bigquery_raw_dataset }}",
+        },
+        provide_context=True,
+        do_xcom_push=True,
+        dag=dag,
+    )
+
+    get_start_date = PythonOperator(
+        task_id=f"get_start_date",
+        python_callable=get_start_date,
+        op_kwargs={
+            "end_date": "{{task_instance.xcom_pull(task_ids='get_end_date', key='return_value')}}",
+        },
+        provide_context=True,
+        do_xcom_push=True,
+        dag=dag,
+    )
+
     import_transactional_data_to_tmp = SSHGCEOperator(
         task_id="import_transactional_data_to_tmp",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command='python main.py --target transactional --start-date "{{ params.start_date }}" --end-date "{{ params.end_date }}"',
+        command="python main.py --target transactional --start-date \"{{task_instance.xcom_pull(task_ids='get_start_date', key='return_value')}}\" --end-date \"{{task_instance.xcom_pull(task_ids='get_end_date', key='return_value')}}\"",
         do_xcom_push=True,
     )
 
@@ -122,15 +165,6 @@ with DAG(
         import_transactional_data_to_tmp,
         dag=dag,
         default_end_operator=end_raw,
-    )
-
-    import_newsletter_data_to_raw = SSHGCEOperator(
-        task_id="import_newsletter_data_to_raw",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_PATH,
-        environment=dag_config,
-        command="python main.py --target newsletter --start-date {{ params.start_date }} --end-date {{ params.end_date }}",
-        do_xcom_push=True,
     )
 
     gce_instance_stop = StopGCEOperator(
@@ -179,7 +213,8 @@ with DAG(
         gce_instance_start
         >> fetch_code
         >> install_dependencies
-        >> import_newsletter_data_to_raw
+        >> get_end_date
+        >> get_start_date
         >> import_transactional_data_to_tmp
         >> gce_instance_stop
         >> raw_table_tasks

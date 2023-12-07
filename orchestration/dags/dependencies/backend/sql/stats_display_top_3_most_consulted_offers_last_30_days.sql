@@ -7,15 +7,16 @@ WITH
   FROM
     `{{ bigquery_analytics_dataset }}.aggregated_daily_offer_consultation_data`
   WHERE
-    event_date >= DATE_SUB(current_date, INTERVAL 30 DAY)
+    event_date between DATE_SUB(current_date, INTERVAL 30 DAY) and DATE(current_date)
   AND
     event_name = 'ConsultOffer'
   GROUP BY
     1,
-    2 )
+    2 
+)
 
-SELECT
-  CAST("{{ today() }}" AS DATETIME) AS execution_date,
+SELECT 
+  CAST(current_date AS DATETIME) AS execution_date,
   offerer_id,
   offer_id,
   nb_consult_last_30_days,

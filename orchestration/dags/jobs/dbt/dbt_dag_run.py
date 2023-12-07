@@ -14,7 +14,7 @@ from common.utils import (
 from common.dbt.manifest import rebuild_manifest
 
 from common import macros
-from common.config import GCP_PROJECT_ID, PATH_TO_DBT_PROJECT  # , ENV_SHORT_NAME
+from common.config import GCP_PROJECT_ID, PATH_TO_DBT_PROJECT, ENV_SHORT_NAME
 
 
 default_args = {
@@ -32,7 +32,7 @@ dag = DAG(
     schedule_interval=get_airflow_schedule("0 3 * * *"),
     params={
         "target": Param(
-            default="dev",
+            default=ENV_SHORT_NAME,
             type="string",
         ),
         "GLOBAL_CLI_FLAGS": Param(

@@ -20,9 +20,9 @@ z AS (
                 UNNEST(
                     SPLIT(
                         SUBSTR(
-                            offer_semantic_content_optim_text,
+                            semantic_content_embedding,
                             2,
-                            LENGTH(offer_semantic_content_optim_text) - 2
+                            LENGTH(semantic_content_embedding) - 2
                         )
                     )
                 ) e

@@ -1,0 +1,1 @@
+select * from {{ source('analytics', 'linked_offers')}}

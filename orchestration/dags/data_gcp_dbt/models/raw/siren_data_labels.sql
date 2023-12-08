@@ -1,0 +1,1 @@
+SELECT * FROM {{ source('analytics', 'siren_data_labels') }}

@@ -1,0 +1,34 @@
+data_gcp_dbt:
+  target: dev
+  outputs:
+    dev:
+      dataset: tmp_dev
+      job_execution_timeout_seconds: 300
+      job_retries: 1
+      location: europe-west1
+      method: oauth
+      priority: interactive
+      project: passculture-data-ehp
+      threads: 4
+      type: bigquery  
+    stg:
+      dataset: tmp_stg
+      job_execution_timeout_seconds: 300
+      job_retries: 1
+      location: europe-west1
+      method: oauth
+      priority: interactive
+      project: passculture-data-ehp
+      threads: 4
+      type: bigquery
+    prod:
+      dataset: tmp_prod
+      job_execution_timeout_seconds: 300
+      job_retries: 8
+      location: europe-west1
+      method: oauth
+      priority: interactive
+      project: passculture-data-prod
+      threads: 1
+      type: bigquery
+  

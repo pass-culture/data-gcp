@@ -9,7 +9,11 @@ WITH child_tags AS (
     `{{ bigquery_analytics_dataset }}.contentful_entries`,
     UNNEST(JSON_EXTRACT_ARRAY(tags, '$')) AS tags
   where
-    tags is not null
+    tags is not null 
+  and tags != 'nan'
+    -- contient uniquement des playlists taggées / exclut les playlists automatiques.
+    -- contient envirion 1800 playlists
+    -- parmi ces playlists, 30 ont plus d'un tag
 ),
 criterion AS (
   SELECT
@@ -26,6 +30,7 @@ criterion AS (
     LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_criterion adc on adc.name = ct.tag_name
     LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer_criterion adoc on adoc.criterionId = adc.id
     LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer ado on ado.offer_id = adoc.offerId
+  -- liste des offer_id par tag par playlist
 ),
 module_ids AS (
   SELECT
@@ -38,6 +43,7 @@ module_ids AS (
   WHERE
     e.content_type = "algolia"
 )
+-- retire tous les tags qui n'ont pas de parents / tags non utilisés ?
 SELECT
   *
 except

@@ -1,4 +1,3 @@
-
 {{ create_humanize_id_function() }} 
 
 WITH offerer_humanized_id AS (

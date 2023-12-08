@@ -11,7 +11,7 @@ umap>=0.1.1
 umap_learn>=0.5.3
 loguru==0.7.0
 typer==0.7.0
-pyarrow==13.0.0
+pyarrow==14.0.1
 polars==0.19.12
 timeout-decorator
 tensorflow

@@ -3,11 +3,9 @@ from configs.labels import CAT, GENRE, MEDIUM
 import itertools
 import random
 
-GENRE_EXAMPLES = random.sample(list(set(itertools.chain(*list(GENRE.values())))), k=50)
-MEDIUM_EXAMPLES = random.sample(
-    list(set(itertools.chain(*list(MEDIUM.values())))), k=50
-)
-CAT_EXAMPLE = random.sample(list(set(itertools.chain(*list(CAT.values())))), k=50)
+GENRE_EXAMPLES = list(set(itertools.chain(*list(GENRE.values()))))
+MEDIUM_EXAMPLES = list(set(itertools.chain(*list(MEDIUM.values()))))
+CAT_EXAMPLE = list(set(itertools.chain(*list(CAT.values()))))
 
 
 EXPECTED_RESULTS = [

@@ -1259,7 +1259,14 @@ ENRICHED_OFFERER_DATA_INPUT = {
             "collective_offer_validation": "APPROVED",
         }
     ],
-    "applicative_database_collective_offer_template": [],
+    "applicative_database_collective_offer_template": [
+        {
+            "collective_offer_id": "2",
+            "venue_id": "1",
+            "collective_offer_creation_date": datetime.now().replace(microsecond=0),
+            "collective_offer_validation": "APPROVED",
+        }
+    ],
     "applicative_database_collective_stock": [
         {
             "collective_offer_id": "1",
@@ -1361,8 +1368,8 @@ ENRICHED_OFFERER_DATA_EXPECTED = [
         "first_booking_date": datetime.now().replace(microsecond=0),
         "offerer_last_booking_date": datetime.now().replace(microsecond=0),
         "offerer_individual_offers_created": 1,
-        "offerer_collective_offers_created": 1,
-        "offerer_collective_offers_template_created": 0,
+        "offerer_collective_offers_created": 2,
+        "offerer_collective_offers_template_created": 1,
         "offerer_collective_offers_pre_bookable_created": 1,
         "offer_cnt": 2,
         "offerer_bookable_individual_offer_cnt": 1,

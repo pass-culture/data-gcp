@@ -96,8 +96,8 @@ all_collective_offers AS (
         collective_offer_id,
         venue.venue_id,
         venue.venue_managing_offerer_id AS offerer_id,
-        collective_offer_creation_date
-        False AS is_template
+        collective_offer_creation_date,
+        FALSE AS is_template
     FROM
         `{{ bigquery_clean_dataset }}`.applicative_database_collective_offer AS collective_offer
      JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue ON venue.venue_id = collective_offer.venue_id
@@ -108,8 +108,8 @@ all_collective_offers AS (
         collective_offer_id,
         venue.venue_id,
         venue.venue_managing_offerer_id AS offerer_id,
-        collective_offer_creation_date
-        True AS is_template
+        collective_offer_creation_date,
+        TRUE AS is_template
     FROM
         `{{ bigquery_clean_dataset }}`.applicative_database_collective_offer_template AS collective_offer_template
      JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue ON venue.venue_id = collective_offer_template.venue_id

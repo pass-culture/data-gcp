@@ -1,8 +1,8 @@
 import json
 
 
-def load_manifest(_PATH_TO_DBT_PROJECT):
-    local_filepath = _PATH_TO_DBT_PROJECT + "/manifest.json"
+def load_manifest(_PATH_TO_DBT_TARGET):
+    local_filepath = _PATH_TO_DBT_TARGET + "/manifest.json"
     with open(local_filepath) as f:
         data = json.load(f)
     return data

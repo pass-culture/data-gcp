@@ -64,7 +64,8 @@ dbt_dep_op = BashOperator(
 
 dbt_compile_op = BashOperator(
     task_id="dbt_compile",
-    bash_command="dbt compile --target {{ params.target }} " + f"--target-path {PATH_TO_DBT_TARGET}",
+    bash_command="dbt compile --target {{ params.target }} "
+    + f"--target-path {PATH_TO_DBT_TARGET}",
     cwd=PATH_TO_DBT_PROJECT,
     dag=dag,
 )

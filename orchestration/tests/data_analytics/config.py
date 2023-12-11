@@ -60,6 +60,7 @@ BIGQUERY_SCHEMAS = {
         "offer_id_at_providers": "STRING",
         "offer_modified_at_last_provider_date": "DATETIME",
         "offer_id": "STRING",
+        "offerer_id": "STRING",
         "offer_creation_date": "DATETIME",
         "offer_product_id": "STRING",
         "venue_id": "STRING",

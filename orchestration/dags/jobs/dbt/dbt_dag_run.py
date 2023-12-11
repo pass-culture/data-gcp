@@ -28,6 +28,7 @@ default_args = {
 dag = DAG(
     "dbt_run_dag",
     default_args=default_args,
+    catchup=False,
     description="A dbt wrapper for airflow",
     schedule_interval=get_airflow_schedule("0 3 * * *"),
     params={

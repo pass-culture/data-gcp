@@ -2,7 +2,7 @@ import json
 
 
 def load_manifest(_PATH_TO_DBT_PROJECT):
-    local_filepath = _PATH_TO_DBT_PROJECT + "/target/manifest.json"
+    local_filepath = _PATH_TO_DBT_PROJECT + "/manifest.json"
     with open(local_filepath) as f:
         data = json.load(f)
     return data

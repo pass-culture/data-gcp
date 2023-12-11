@@ -1,0 +1,32 @@
+version: 1
+
+models:
+  - name: siren_data
+    config: 
+      materialized: view
+      tags: ["pro"]
+    columns:
+      - name: siren
+        tests: 
+          - not_null
+          - unique
+      - name: categorieEntreprise
+        tests:
+          - relationships:
+              to: ref('region_department')
+              field: dep_name
+              severity: 'error'
+          - accepted_values:
+              values: ['PME','GE']
+              error_if: '>=10'
+  - name: enriched_cultural_partner_data
+    config: 
+      materialized: table
+      tags: ["pro"]
+    columns:
+      - name: venue_id
+        tests: 
+          - unique
+
+
+

@@ -1,17 +1,9 @@
 {
-    "pretained_embedding_name":"semantic_content",
-    "group_config" :[
-        {
-            "group": "MANGA",
-            "features": [
-                {
-                    "type": "offer_type_label",
-                    "name": "Manga"
-                }
-            ]
-        },
+    "pretained_embedding_name": "semantic_content",
+    "group_config": [
         {
             "group": "LIVRES",
+            "nb_clusters": 150,
             "features": [
                 {
                     "type": "category",
@@ -25,6 +17,7 @@
         },
         {
             "group": "CINEMA",
+            "nb_clusters": 100,
             "features": [
                 {
                     "type": "category",
@@ -38,6 +31,7 @@
         },
         {
             "group": "MUSIQUE",
+            "nb_clusters": 100,
             "features": [
                 {
                     "type": "category",
@@ -55,6 +49,7 @@
         },
         {
             "group": "ARTS",
+            "nb_clusters": 50,
             "features": [
                 {
                     "type": "category",
@@ -76,6 +71,7 @@
         },
         {
             "group": "SORTIES",
+            "nb_clusters": 50,
             "features": [
                 {
                     "type": "category",

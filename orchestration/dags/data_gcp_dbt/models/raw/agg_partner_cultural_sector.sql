@@ -1,0 +1,1 @@
+SELECT * FROM {{ source('raw', 'agg_partner_cultural_sector') }}

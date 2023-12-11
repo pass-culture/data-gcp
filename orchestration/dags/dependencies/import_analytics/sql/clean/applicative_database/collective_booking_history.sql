@@ -1,6 +1,5 @@
 SELECT
     collective_booking_id,
-    booking_id,
     collective_booking_creation_date,
     collective_booking_used_date,
     collective_stock_id,

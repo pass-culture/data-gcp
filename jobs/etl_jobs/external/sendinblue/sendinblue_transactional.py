@@ -4,6 +4,7 @@ from sib_api_v3_sdk.rest import ApiException
 from google.cloud import bigquery
 import pandas as pd
 import numpy as np
+from datetime import datetime
 
 import logging
 from utils import ENV_SHORT_NAME
@@ -45,13 +46,14 @@ class SendinblueTransactional:
                 template_status="true", offset=offset
             )
             api_responses = response.templates
-            while response is not None and len(response.templates) == 50:
-                offset = offset + 50
-                response = self.api_instance.get_smtp_templates(
-                    template_status="true", offset=offset
-                )
-                for temp in response.templates:
-                    api_responses.append(temp)
+            if ENV_SHORT_NAME == "prod":
+                while response is not None and len(response.templates) == 50:
+                    offset = offset + 50
+                    response = self.api_instance.get_smtp_templates(
+                        template_status="true", offset=offset
+                    )
+                    for temp in response.templates:
+                        api_responses.append(temp)
 
             active_templates = [template.id for template in api_responses]
             logging.info("Number of active templates : ", len(active_templates))
@@ -66,6 +68,8 @@ class SendinblueTransactional:
     def get_events(self, event_type):
 
         active_templates = self.get_active_templates_id()
+        if ENV_SHORT_NAME != "prod" and len(active_templates) > 0:
+            active_templates = active_templates[:1]
 
         print(f"Number of active templates : {len(active_templates)}")
 
@@ -84,6 +88,8 @@ class SendinblueTransactional:
                     f"Number of responses for template {template}: {len(response)}"
                 )
                 api_responses.append(response)
+                if ENV_SHORT_NAME != "prod":
+                    continue
                 while response is not None and len(response) == 2500:
                     offset = offset + 2500
                     logging.info(f"Importing offset {offset} for template {template} ")
@@ -170,7 +176,7 @@ class SendinblueTransactional:
 
         bigquery_client = bigquery.Client()
 
-        yyyymmdd = self.start_date.replace("-", "")
+        yyyymmdd = datetime.today().strftime("%Y%m%d")
         table_id = f"{self.gcp_project}.{self.tmp_dataset}.{yyyymmdd}_{self.destination_table_name}_histo"
 
         job_config = bigquery.LoadJobConfig(

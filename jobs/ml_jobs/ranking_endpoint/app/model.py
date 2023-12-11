@@ -8,25 +8,29 @@ import joblib
 import lightgbm as lgb
 import typing as t
 
-
 numeric_features = [
+    "user_bookings_count",
     "user_clicks_count",
     "user_favorites_count",
     "user_deposit_remaining_credit",
+    "user_is_geolocated",
+    "user_iris_x",
+    "user_iris_y",
     "offer_user_distance",
     "offer_booking_number",
     "offer_item_score",
+    "offer_is_geolocated",
     "offer_stock_price",
     "offer_creation_days",
     "offer_stock_beginning_days",
-    "is_geolocated",
-    "venue_latitude",
-    "venue_longitude",
 ]
 
 categorical_features = [
     "offer_subcategory_id",
 ]
+
+default_categorical = "UNKNOWN"
+default_numerical = -1
 
 
 class PredictPipeline:
@@ -37,13 +41,25 @@ class PredictPipeline:
         self.preprocessor = joblib.load("./metadata/preproc.joblib")
 
     def predict(self, input_data: t.List[dict]):
+        errors = []
         df = pd.DataFrame(input_data)
+        _cols = list(df.columns)
+
+        for x in self.numeric_features:
+            if x not in _cols:
+                errors.append(x)
+                df[x] = default_numerical
+        for x in self.categorical_features:
+            if x not in _cols:
+                errors.append(x)
+                df[x] = default_categorical
+
         processed_data = self.preprocessor.transform(df)
         z = self.model.predict(processed_data)
 
         for x, y in zip(input_data, z):
             x["score"] = y
-        return input_data
+        return input_data, errors
 
 
 class TrainPipeline:
@@ -71,12 +87,20 @@ class TrainPipeline:
 
     def set_pipeline(self):
         numeric_transformer = Pipeline(
-            steps=[("imputer", SimpleImputer(strategy="constant", fill_value=0))]
+            steps=[
+                (
+                    "imputer",
+                    SimpleImputer(strategy="constant", fill_value=default_numerical),
+                )
+            ]
         )
 
         categorical_transformer = Pipeline(
             steps=[
-                ("imputer", SimpleImputer(strategy="constant", fill_value="UNKNOWN")),
+                (
+                    "imputer",
+                    SimpleImputer(strategy="constant", fill_value=default_categorical),
+                ),
                 (
                     "encoder",
                     OrdinalEncoder(
@@ -94,8 +118,12 @@ class TrainPipeline:
         )
 
     def fit_transform(self, df):
-        df[self.categorical_features] = df[self.categorical_features].fillna("UNKNOWN")
-        df[self.numeric_features] = df[self.numeric_features].fillna(0)
+        df[self.categorical_features] = (
+            df[self.categorical_features].astype(str).fillna(default_categorical)
+        )
+        df[self.numeric_features] = (
+            df[self.numeric_features].astype(float).fillna(default_numerical)
+        )
         return self.preprocessor.fit_transform(df)
 
     def transform(self, input_data):

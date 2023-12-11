@@ -12,7 +12,6 @@ WITH collective_booking_ranking_view AS (
 
 SELECT
     collective_booking.collective_booking_id,
-    collective_booking.booking_id,
     collective_booking.collective_stock_id AS collective_stock_id,
     collective_stock.stock_id AS stock_id,
     collective_stock.collective_offer_id AS collective_offer_id,
@@ -20,6 +19,7 @@ SELECT
     collective_offer.collective_offer_name,
     collective_offer.collective_offer_subcategory_id,
     subcategories.category_id AS collective_offer_category_id,
+    collective_offer.collective_offer_format AS collective_offer_format,
     collective_offer.venue_id AS venue_id,
     venue.venue_name,
     venue.venue_department_code,

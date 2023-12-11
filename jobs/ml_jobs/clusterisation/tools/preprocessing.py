@@ -31,10 +31,7 @@ def get_item_by_group(data, group_config):
         df_tmp = data.loc[
             data["categ"].str.contains(feature_list, case=False, regex=True, na=False)
         ]
-        if group["group"] == "LIVRES":
-            logger.info("Removing Mangas from LIVRES..")
-            df_manga = data[data["categ"] == "offer_type_label Manga"]
-            df_tmp = df_tmp[~df_tmp["item_id"].isin(list(df_manga.item_id))]
+
         df_tmp = df_tmp.drop_duplicates(subset=["item_id"], keep="first")
         df_tmp["category_group"] = group["group"]
         df_tmp = df_tmp[["item_id", "categ", "category_group"]]

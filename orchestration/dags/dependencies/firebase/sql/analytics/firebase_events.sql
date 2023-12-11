@@ -94,6 +94,14 @@ WITH temp_firebase_events AS (
             where
                 event_params.key = 'from'
         ) as origin,
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'locationType'
+        ) as user_location_type,
         COALESCE(
         (
             select
@@ -264,7 +272,7 @@ WITH temp_firebase_events AS (
             from
                 unnest(event_params) event_params
             where
-                event_params.key = 'searchIsBasedOnHistory '
+                event_params.key = 'searchIsBasedOnHistory'
         ) as search_is_based_on_history,
         (
             select

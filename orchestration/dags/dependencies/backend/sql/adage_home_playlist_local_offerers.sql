@@ -8,8 +8,10 @@ WITH offerer_offer_info AS
    FROM `{{ bigquery_analytics_dataset }}`.enriched_collective_offer_data o
    JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue v ON v.venue_id=o.venue_id
    AND venue_is_permanent IS TRUE
+   JOIN `{{ bigquery_clean_dataset }}`.applicative_database_collective_offer_template t ON t.collective_offer_id=o.collective_offer_id
+     AND collective_offer_venue_address_type != "school"
    WHERE offer_is_template IS TRUE
-     AND collective_offer_is_active ), 
+     AND o.collective_offer_is_active ), 
 
 -- Get institutions
 institution_info AS

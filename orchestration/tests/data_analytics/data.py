@@ -533,6 +533,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_INPUT = {
             "provider_id": "65378",
             "national_program_id": None,
             "template_id": "1",
+            "collective_offer_format": "CONCERT",
         }
     ],
     "applicative_database_collective_offer_template": [
@@ -549,6 +550,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_INPUT = {
             "collective_offer_image_id": "28",
             "provider_id": "65378",
             "national_program_id": None,
+            "collective_offer_format": "CONCERT",
         }
     ],
     "applicative_database_national_program": [],
@@ -585,6 +587,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_EXPECTED = [
         "number_of_tickets": 30,
         "collective_offer_subcategory_id": "CONCERT",
         "collective_offer_category_id": "MUSIQUE_LIVE",
+        "collective_offer_format": "CONCERT",
         "collective_offer_students": "COLLEGE4",
         "collective_offer_is_active": True,
         "collective_offer_is_bookable": False,
@@ -621,6 +624,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_EXPECTED = [
         "number_of_tickets": None,
         "collective_offer_subcategory_id": "CONCERT",
         "collective_offer_category_id": "MUSIQUE_LIVE",
+        "collective_offer_format": "CONCERT",
         "collective_offer_students": "COLLEGE4",
         "collective_offer_is_active": True,
         "collective_offer_is_bookable": False,
@@ -1290,6 +1294,24 @@ ENRICHED_OFFERER_DATA_INPUT = {
             "label_categorie_juridique": "Collectivite",
         }
     ],
+    "adage": [
+        {
+            "id": "1",
+            "siret": "123456789000",
+            "venueid": "1",
+            "synchroPass": "1",
+        }
+    ],
+    "dms_pro_cleaned": [
+        {
+            "procedure_id": "80264",
+            "demandeur_entreprise_siren": "123456789",
+            "demandeur_siret": "123456789000",
+            "application_submitted_at": datetime.now().replace(microsecond=0),
+            "application_status": "accepte",
+            "processed_at": datetime.now().replace(microsecond=0),
+        }
+    ],
 }
 
 ENRICHED_OFFERER_DATA_EXPECTED = [
@@ -1354,6 +1376,10 @@ ENRICHED_OFFERER_DATA_EXPECTED = [
         "offerer_humanized_id": "AE",
         "current_year_revenue": 7,
         "is_local_authority": True,
+        "first_dms_adage_status": "accepte",
+        "dms_accepted_at": datetime.now().replace(microsecond=0),
+        "is_reference_adage": True,
+        "is_synchro_adage": True,
     }
 ]
 
@@ -1545,6 +1571,7 @@ ENRICHED_COLLECTIVE_BOOKING_DATA_INPUT = {
             "collective_offer_subcategory_id": "CINE_PLEIN_AIR",
             "collective_offer_name": "EAC sympa",
             "venue_id": "8",
+            "collective_offer_format": "CINEMA",
         }
     ],
     "applicative_database_collective_stock": [
@@ -1600,6 +1627,7 @@ ENRICHED_COLLECTIVE_BOOKING_DATA_EXPECTED = [
         "collective_offer_name": "EAC sympa",
         "collective_offer_subcategory_id": "CINE_PLEIN_AIR",
         "collective_offer_category_id": "CINEMA",
+        "collective_offer_format": "CINEMA",
         "venue_id": "8",
         "venue_name": "My Wonderful Venue",
         "venue_department_code": 78,

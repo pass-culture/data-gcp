@@ -1225,6 +1225,7 @@ ENRICHED_OFFERER_DATA_INPUT = {
     ],
     "applicative_database_offer": [
         {
+            "offerer_id": "1",
             "offer_id": "1",
             "venue_id": "1",
             "offer_creation_date": datetime.now().replace(microsecond=0),

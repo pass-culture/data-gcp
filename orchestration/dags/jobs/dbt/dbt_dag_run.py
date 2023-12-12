@@ -92,10 +92,15 @@ with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
             # models
             model_op = BashOperator(
                 task_id=model_data["model_alias"],
-                bash_command="""
-                dbt {{ params.GLOBAL_CLI_FLAGS }} run --target {{ params.target }}
-                """
-                + f"--select {model_data['model_alias']} --no-compile{full_ref_str} --target-path {PATH_TO_DBT_TARGET}",
+                bash_command=f"bash {PATH_TO_DBT_PROJECT}/dbt_run.sh ",
+                env={
+                    "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
+                    "target": "{{ params.target }}",
+                    "model": f"{model_data['model_alias']}",
+                    "full_ref_str": full_ref_str,
+                    "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+                },
+                append_env=True,
                 cwd=PATH_TO_DBT_PROJECT,
                 dag=dag,
             )
@@ -108,15 +113,17 @@ with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
                     dbt_test_tasks = [
                         BashOperator(
                             task_id=test["test_alias"],
-                            bash_command="""
-                    dbt {{ params.GLOBAL_CLI_FLAGS }} run --target {{ params.target }}
-                    """
-                            + f"--select {model_data['model_alias']} --no-compile{full_ref_str} --target-path {PATH_TO_DBT_TARGET}"
+                            bash_command=f"bash {PATH_TO_DBT_PROJECT}/dbt_run.sh "
                             if test["test_type"] == "generic"
-                            else """
-                    dbt {{ params.GLOBAL_CLI_FLAGS }} test --target {{ params.target }}
-                    """
-                            + f"--select {model_data['model_alias']} --no-compile{full_ref_str} --target-path {PATH_TO_DBT_TARGET}",
+                            else f"bash {PATH_TO_DBT_PROJECT}/dbt_test.sh ",
+                            env={
+                                "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
+                                "target": "{{ params.target }}",
+                                "model": f"{model_data['model_alias']}",
+                                "full_ref_str": full_ref_str,
+                                "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+                            },
+                            append_env=True,
                             cwd=PATH_TO_DBT_PROJECT,
                             dag=dag,
                         )
@@ -160,15 +167,17 @@ with TaskGroup(group_id="data_quality_testing", dag=dag) as data_quality:
                 dbt_test_tasks = [
                     BashOperator(
                         task_id=test["test_alias"],
-                        bash_command="""
-                    dbt {{ params.GLOBAL_CLI_FLAGS }} run --target {{ params.target }}
-                    """
-                        + f"--select {model_data['model_alias']} --no-compile{full_ref_str} --target-path {PATH_TO_DBT_TARGET}"
+                        bash_command=f"bash {PATH_TO_DBT_PROJECT}/dbt_run.sh "
                         if test["test_type"] == "generic"
-                        else """
-                    dbt {{ params.GLOBAL_CLI_FLAGS }} test --target {{ params.target }}
-                    """
-                        + f"--select {model_data['model_alias']} --no-compile{full_ref_str} --target-path {PATH_TO_DBT_TARGET}",
+                        else f"bash {PATH_TO_DBT_PROJECT}/dbt_test.sh ",
+                        env={
+                            "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
+                            "target": "{{ params.target }}",
+                            "model": f"{model_data['model_alias']}",
+                            "full_ref_str": full_ref_str,
+                            "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+                        },
+                        append_env=True,
                         cwd=PATH_TO_DBT_PROJECT,
                         dag=dag,
                     )

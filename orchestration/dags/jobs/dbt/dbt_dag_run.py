@@ -93,7 +93,7 @@ with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
             model_op = BashOperator(
                 task_id=model_data["model_alias"],
                 bash_command=f"""
-                dbt {{ params.GLOBAL_CLI_FLAGS }} run --target {{ params.target }} --select {model_data['model_alias']} --no-compile{full_ref_str}
+                dbt {{ params.GLOBAL_CLI_FLAGS }} run --target {{ params.target }} --select {model_data['model_alias']} --no-compile{full_ref_str} --target-path {PATH_TO_DBT_TARGET}
                 """,
                 cwd=PATH_TO_DBT_PROJECT,
                 dag=dag,
@@ -108,11 +108,11 @@ with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
                         BashOperator(
                             task_id=test["test_alias"],
                             bash_command=f"""
-                    dbt {{ params.GLOBAL_CLI_FLAGS }} run --target {{ params.target }} --select {test['test_alias']} --no-compile{full_ref_str}
+                    dbt {{ params.GLOBAL_CLI_FLAGS }} run --target {{ params.target }} --select {test['test_alias']} --no-compile{full_ref_str} --target-path {PATH_TO_DBT_TARGET}
                     """
                             if test["test_type"] == "generic"
                             else f"""
-                    dbt {{ params.GLOBAL_CLI_FLAGS }} test --target {{ params.target }} --select {test['test_alias']} --no-compile{full_ref_str}
+                    dbt {{ params.GLOBAL_CLI_FLAGS }} test --target {{ params.target }} --select {test['test_alias']} --no-compile{full_ref_str} --target-path {PATH_TO_DBT_TARGET}
                     """,
                             cwd=PATH_TO_DBT_PROJECT,
                             dag=dag,
@@ -158,11 +158,11 @@ with TaskGroup(group_id="data_quality_testing", dag=dag) as data_quality:
                     BashOperator(
                         task_id=test["test_alias"],
                         bash_command=f"""
-                    dbt {{ params.GLOBAL_CLI_FLAGS }} run --target {{ params.target }} --select {test['test_alias']} --no-compile{full_ref_str}
+                    dbt {{ params.GLOBAL_CLI_FLAGS }} run --target {{ params.target }} --select {test['test_alias']} --no-compile{full_ref_str} --target-path {PATH_TO_DBT_TARGET}
                     """
                         if test["test_type"] == "generic"
                         else f"""
-                    dbt {{ params.GLOBAL_CLI_FLAGS }} test --target {{ params.target }} --select {test['test_alias']} --no-compile{full_ref_str}
+                    dbt {{ params.GLOBAL_CLI_FLAGS }} test --target {{ params.target }} --select {test['test_alias']} --no-compile{full_ref_str} --target-path {PATH_TO_DBT_TARGET}
                     """,
                         cwd=PATH_TO_DBT_PROJECT,
                         dag=dag,

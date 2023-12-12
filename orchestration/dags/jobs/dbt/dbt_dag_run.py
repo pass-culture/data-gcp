@@ -14,7 +14,12 @@ from common.utils import (
 from common.dbt.manifest import rebuild_manifest
 
 from common import macros
-from common.config import GCP_PROJECT_ID, PATH_TO_DBT_PROJECT, ENV_SHORT_NAME
+from common.config import (
+    GCP_PROJECT_ID,
+    PATH_TO_DBT_PROJECT,
+    ENV_SHORT_NAME,
+    PATH_TO_DBT_TARGET,
+)
 
 
 default_args = {
@@ -56,9 +61,11 @@ dbt_dep_op = BashOperator(
     cwd=PATH_TO_DBT_PROJECT,
     dag=dag,
 )
+
 dbt_compile_op = BashOperator(
     task_id="dbt_compile",
-    bash_command="dbt compile --target {{ params.target }}",
+    bash_command="dbt compile --target {{ params.target }} "
+    + f"--target-path {PATH_TO_DBT_TARGET}",
     cwd=PATH_TO_DBT_PROJECT,
     dag=dag,
 )
@@ -72,7 +79,7 @@ alerting_task = DummyOperator(task_id="dummy_quality_alerting_task", dag=dag)
 model_op_dict = {}
 test_op_dict = {}
 
-simplified_manifest = rebuild_manifest(PATH_TO_DBT_PROJECT)
+simplified_manifest = rebuild_manifest(PATH_TO_DBT_TARGET)
 
 with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
     full_ref_str = " --full-refresh" if not "{{ params.full_refresh }}" else ""

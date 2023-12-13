@@ -80,15 +80,13 @@ clean_tables = {
     "user_ip_iris": {
         "sql": f"{CLEAN_SQL_PATH}/user_ip_iris.sql",
         "destination_dataset": "{{ bigquery_clean_dataset }}",
-        "destination_table": "user_ip_iris",
-        "partition_prefix": "$",
+        "destination_table": "user_ip_iris${{ yyyymmdd(current_month(ds)) }}",
         "time_partitioning": {"field": "month_log"},
     },
     "user_reco_iris": {
         "sql": f"{CLEAN_SQL_PATH}/user_reco_iris.sql",
         "destination_dataset": "{{ bigquery_clean_dataset }}",
-        "destination_table": "user_reco_iris",
-        "partition_prefix": "$",
+        "destination_table": "user_reco_iris${{ yyyymmdd(current_month(ds)) }}",
         "time_partitioning": {"field": "month_log"},
     },
     "user_declared_iris": {

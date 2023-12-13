@@ -55,15 +55,15 @@ SELECT
   month_log,
   user_id,
   iris_declaree,
-  most_freq_iris,
+  CASE WHEN most_freq_iris IS NULL THEN most_freq_iris_last_month ELSE most_freq_iris END AS most_freq_iris,
   most_freq_department,
   CASE 
-  WHEN most_freq_iris = most_freq_iris_last_month THEN most_freq_iris 
+  WHEN most_freq_iris = most_freq_iris_last_month AND most_freq_iris IS NOT NULL THEN most_freq_iris 
   ELSE actual_iris_last_month
   END 
   AS actual_iris,
   CASE 
-  WHEN most_freq_department = most_freq_department_last_month THEN most_freq_department 
+  WHEN most_freq_department = most_freq_department_last_month AND most_freq_department IS NOT NULL THEN most_freq_department 
   ELSE actual_department_last_month
   END 
   AS actual_department,

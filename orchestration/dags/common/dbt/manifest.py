@@ -1,8 +1,8 @@
 import json
 
 
-def load_manifest(_PATH_TO_DBT_PROJECT):
-    local_filepath = _PATH_TO_DBT_PROJECT + "/target/manifest.json"
+def load_manifest(_PATH_TO_DBT_TARGET):
+    local_filepath = _PATH_TO_DBT_TARGET + "/manifest.json"
     with open(local_filepath) as f:
         data = json.load(f)
     return data
@@ -68,9 +68,9 @@ def build_simplified_manifest(data):
     return simplified_manifest
 
 
-def rebuild_manifest(_PATH_TO_DBT_PROJECT):
+def rebuild_manifest(_PATH_TO_DBT_TARGET):
     try:
-        data = load_manifest(_PATH_TO_DBT_PROJECT)
+        data = load_manifest(_PATH_TO_DBT_TARGET)
         simplified_manifest = build_simplified_manifest(data)
     except FileNotFoundError:
         simplified_manifest = {}

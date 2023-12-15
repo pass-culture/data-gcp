@@ -52,7 +52,7 @@ SELECT
   user_id,
   iris_declaree,
   CASE WHEN most_freq_iris IS NULL THEN most_freq_iris_last_month ELSE most_freq_iris END AS most_freq_iris,
-  most_freq_department,
+  CASE WHEN most_freq_department IS NULL THEN most_freq_department_last_month ELSE most_freq_department END AS most_freq_department,
   CASE 
   WHEN most_freq_iris = most_freq_iris_last_month AND most_freq_iris IS NOT NULL THEN most_freq_iris 
   ELSE actual_iris_last_month

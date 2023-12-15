@@ -40,6 +40,9 @@ models:
       +schema: analytics_dbt_{{ target.name }}
       +docs: 
         node_color: "#d90000" 
+  elementary:
+    +schema: "elementary"
+    
 seeds:
   +schema: seeds
   +docs:

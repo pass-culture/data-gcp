@@ -7,11 +7,11 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.utils.task_group import TaskGroup
 from airflow.utils.dates import datetime, timedelta
 from airflow.models import Param
-from common.alerts import task_fail_slack_alert
+from common.alerts import dbt_test_fail_slack_alert
 from common.utils import (
     get_airflow_schedule,
 )
-from common.dbt.manifest import rebuild_manifest
+from common.dbt.utils import rebuild_manifest, load_run_results
 
 from common import macros
 from common.config import (
@@ -25,7 +25,6 @@ from common.config import (
 default_args = {
     "start_date": datetime(2020, 12, 23),
     "retries": 1,
-    "on_failure_callback": task_fail_slack_alert,
     "retry_delay": timedelta(minutes=2),
     "project_id": GCP_PROJECT_ID,
 }
@@ -72,8 +71,6 @@ dbt_compile_op = BashOperator(
 
 end = DummyOperator(task_id="end", dag=dag)
 
-# TO DO : gather test warnings logs and send them to slack alert task through xcom
-alerting_task = DummyOperator(task_id="dummy_quality_alerting_task", dag=dag)
 
 # Dbt dag reconstruction
 model_op_dict = {}
@@ -86,6 +83,11 @@ with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
     # models task group
     for model_node, model_data in simplified_manifest.items():
         crit_tests_list = model_data["model_tests"].get("error", [])
+        crit_tests_list = [
+            test
+            for test in crit_tests_list
+            if not test["test_alias"].endswith(f'ref_{model_data["model_alias"]}_')
+        ]
         with TaskGroup(
             group_id=f'{model_data["model_alias"]}_tasks', dag=dag
         ) as model_tasks:
@@ -128,12 +130,10 @@ with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
                             dag=dag,
                         )
                         for test in crit_tests_list
-                        if not test["test_alias"].endswith(
-                            f'ref_{model_data["model_alias"]}_'
-                        )
                     ]
                     if len(dbt_test_tasks) > 0:
                         model_op >> crit_tests_task
+
                 for i, test in enumerate(crit_tests_list):
                     if not test["test_alias"].endswith(
                         f'ref_{model_data["model_alias"]}_'
@@ -215,7 +215,62 @@ for test_alias, details in test_op_dict.items():
     for parent in details["parent_model"]:
         model_op_dict[parent] >> details["test_op"]
 
+
+# TO DO : gather test warnings logs and send them to slack alert task through xcom
+# alerting_task = DummyOperator(task_id="dummy_quality_alerting_task", dag=dag)
+
+
+with TaskGroup(group_id="alerting_tasks", dag=dag) as alert_tasks:
+    run_results = load_run_results(PATH_TO_DBT_TARGET)
+    failed_crit = {}
+    failed_qual = {}
+    for p_node, p_node_attributes in simplified_manifest.items():
+        crit_tests = p_node_attributes["model_tests"].get("error", [])
+        qual_tests = p_node_attributes["model_tests"].get("warn", [])
+        if len(crit_tests) > 0:
+            # print(f"crit test: {crit_tests}")
+            out = {
+                p_node: [
+                    {
+                        test[
+                            "test_node"
+                        ]: f"status: {run_results[test['test_node']]['status']} | message: {run_results[test['test_node']]['message']} | failures: {run_results[test['test_node']]['failures']}"
+                    }
+                    for test in crit_tests
+                    if (run_results[test["test_node"]]["status"] != "pass")
+                ]
+            }
+            failed_crit = (
+                {**failed_crit, **out} if len(out[p_node]) else {**failed_crit, **{}}
+            )
+        if len(qual_tests) > 0:
+            # print(f"qual test: {qual_tests}")
+            out = {
+                p_node: [
+                    {
+                        test[
+                            "test_node"
+                        ]: f"status: {run_results[test['test_node']]['status']} | message: {run_results[test['test_node']]['message']} | failures: {run_results[test['test_node']]['failures']}"
+                    }
+                    for test in qual_tests
+                    if (run_results[test["test_node"]]["status"] != "pass")
+                ]
+            }
+            failed_qual = (
+                {**failed_qual, **out} if len(out[p_node]) else {**failed_qual, **{}}
+            )
+
+    # dag.add_task(dbt_test_fail_slack_alert(failed_crit,'critical'))
+    # dag.add_task(dbt_test_fail_slack_alert(failed_qual,'quality'))
+    crit_alerting_task = dbt_test_fail_slack_alert(failed_crit, "critical", dag)
+    qual_alerting_task = dbt_test_fail_slack_alert(failed_qual, "quality", dag)
+
+tests_op = BashOperator(
+    task_id="dbt_tests",
+    bash_command=f"""dbt test --target {{ params.target }} --no-compile""",
+    cwd=PATH_TO_DBT_PROJECT,
+    dag=dag,
+)
 # macrolevel dependencies
 start >> dbt_dep_op >> dbt_compile_op >> data_transfo
-data_quality >> alerting_task
-(data_transfo, alerting_task) >> end
+(data_quality, data_transfo) >> tests_op >> alert_tasks >> end

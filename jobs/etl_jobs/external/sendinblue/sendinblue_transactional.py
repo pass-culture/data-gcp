@@ -28,7 +28,6 @@ class SendinblueTransactional:
         self.end_date = end_date
 
     def create_instance_transactional_email_api(self):
-
         configuration = sib_api_v3_sdk.Configuration()
         configuration.api_key["api-key"] = self.api_key  # get secret
 
@@ -39,7 +38,6 @@ class SendinblueTransactional:
         self.api_instance = api_instance
 
     def get_active_templates_id(self):
-
         try:
             offset = 0
             response = self.api_instance.get_smtp_templates(
@@ -66,7 +64,6 @@ class SendinblueTransactional:
         return active_templates
 
     def get_events(self, event_type):
-
         active_templates = self.get_active_templates_id()
         if ENV_SHORT_NAME != "prod" and len(active_templates) > 0:
             active_templates = active_templates[:1]
@@ -114,7 +111,6 @@ class SendinblueTransactional:
         return api_responses
 
     def parse_to_df(self, all_events):
-
         df = pd.DataFrame()
         df = (
             df.assign(email=[event.email for event in all_events])
@@ -173,7 +169,6 @@ class SendinblueTransactional:
         return df_kpis
 
     def save_to_historical(self, df_to_save, schema):
-
         bigquery_client = bigquery.Client()
 
         yyyymmdd = datetime.today().strftime("%Y%m%d")

@@ -62,7 +62,6 @@ with DAG(
         )
     },
 ) as dag:
-
     start = DummyOperator(task_id="start", dag=dag)
 
     import_tables_to_raw_tasks = []
@@ -111,7 +110,6 @@ with DAG(
     )
 
     if ENV_SHORT_NAME == "prod":
-
         gce_instance_start = StartGCEOperator(
             instance_name=GCE_INSTANCE, task_id="gce_start_task"
         )

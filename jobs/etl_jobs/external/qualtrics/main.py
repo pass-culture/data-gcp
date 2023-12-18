@@ -25,7 +25,6 @@ def run(
         help="Nom de la tache",
     )
 ):
-
     # request_json = request.get_json(silent=True)
     # request_args = request.args
 

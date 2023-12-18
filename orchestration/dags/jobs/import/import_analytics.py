@@ -95,7 +95,6 @@ end_raw = DummyOperator(task_id="end_raw", dag=dag)
 with TaskGroup(
     group_id="clean_transformations_group", dag=dag
 ) as clean_transformations:
-
     import_tables_to_clean_transformation_jobs = {}
     for table, params in clean_tables.items():
         task = bigquery_job_task(dag=dag, table=table, job_params=params)

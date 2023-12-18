@@ -53,7 +53,6 @@ with DAG(
         )
     },
 ) as dag:
-
     # Cannot Schedule before 5AM UTC+2 as data from API is not available.
     sleep_op = TimeSleepSensor(
         dag=dag,

@@ -51,7 +51,6 @@ item_columns = [
 
 
 def save_experiment(experiment_name, model_name, serving_container, run_id):
-
     log_results = {
         "execution_date": datetime.now().isoformat(),
         "experiment_name": experiment_name,

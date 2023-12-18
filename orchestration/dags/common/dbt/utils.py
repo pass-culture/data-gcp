@@ -77,12 +77,16 @@ def rebuild_manifest(_PATH_TO_DBT_PROJECT):
         simplified_manifest = {}
     return simplified_manifest
 
+
 def load_run_results(_PATH_TO_DBT_TARGET):
     local_filepath = _PATH_TO_DBT_TARGET + "/run_results.json"
     with open(local_filepath) as f:
         data = json.load(f)
     dict_results = {}
-    for item in data['results']:
-        dict_results[item['unique_id']] = {**dict_results.get(item['unique_id'],{}) , **item}
+    for item in data["results"]:
+        dict_results[item["unique_id"]] = {
+            **dict_results.get(item["unique_id"], {}),
+            **item,
+        }
 
     return dict_results

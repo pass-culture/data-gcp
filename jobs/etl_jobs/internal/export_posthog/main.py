@@ -21,7 +21,6 @@ def run(
         help="source_gs_path",
     ),
 ):
-
     print(f"Download all rows......")
     events = bq_to_events(source_gs_path)
     ph = EventExporter(

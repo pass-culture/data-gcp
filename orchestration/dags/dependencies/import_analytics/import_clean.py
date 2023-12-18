@@ -101,6 +101,7 @@ raw_tables = get_tables_config_dict(
     PATH=DAG_FOLDER + "/" + RAW_SQL_PATH, BQ_DESTINATION_DATASET=BIGQUERY_RAW_DATASET
 )
 
+
 # Generate dictionnary for tables to copy from raw to clean.
 def get_clean_tables_copy_dict():
     clean_tables_copy = {

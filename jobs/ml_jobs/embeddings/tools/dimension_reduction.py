@@ -17,7 +17,6 @@ def reduce_embedding_dimension(
     data,
     dimension,
 ):
-
     float_emb = convert_str_emb_to_float(data)
 
     logger.info(f"reduction to {dimension} dimensions...")

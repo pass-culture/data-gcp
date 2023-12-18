@@ -4,7 +4,6 @@ from utils import PostHogEvent
 
 class EventExporter:
     def __init__(self, posthog_api_key, posthog_host, posthog_personal_api_key):
-
         self.client = Posthog(
             posthog_api_key,
             sync_mode=False,  # force synchron

@@ -10,7 +10,6 @@ class BucketFolder:
         return datetime.strptime(filename.split("_")[-1], "%Y%m%d")
 
     def get_last_file_name(self, storage_client):
-
         blobs = storage_client.list_blobs(
             self.bucket_name, prefix=f"{self.folder_name}"
         )

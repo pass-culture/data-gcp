@@ -20,7 +20,6 @@ class SendinblueNewsletters:
         start_date,
         end_date,
     ):
-
         self.gcp_project = gcp_project
         self.raw_dataset = raw_dataset
         self.destination_table_name = destination_table_name
@@ -29,7 +28,6 @@ class SendinblueNewsletters:
         self.end_date = end_date
 
     def create_instance_email_campaigns_api(self):
-
         configuration = sib_api_v3_sdk.Configuration()
         configuration.api_key["api-key"] = self.api_key  # get secret
 
@@ -40,7 +38,6 @@ class SendinblueNewsletters:
         self.api_instance = api_instance
 
     def get_email_campaigns(self):
-
         try:
             campaigns = self.api_instance.get_email_campaigns(
                 status="sent",
@@ -58,7 +55,6 @@ class SendinblueNewsletters:
         return campaigns_list
 
     def get_data(self):
-
         campaigns_list = self.get_email_campaigns()
 
         campaign_stats = {}
@@ -102,7 +98,9 @@ class SendinblueNewsletters:
                 ]
             )
             .reset_index()
-            .assign(update_date=pd.to_datetime("today"),)[
+            .assign(
+                update_date=pd.to_datetime("today"),
+            )[
                 [
                     "campaign_id",
                     "campaign_utm",
@@ -120,7 +118,6 @@ class SendinblueNewsletters:
         return campaign_stats_df
 
     def save_to_historical(self, df_to_save, schema):
-
         bigquery_client = bigquery.Client()
 
         _now = self.end_date

@@ -91,7 +91,6 @@ class GreatExpectationsContext:
         """Create a specific batch to validate tests over last partition."""
 
         if partitioned is True:
-
             today_date = datetime.today().strftime("%Y-%m-%d")
 
             batch_request = RuntimeBatchRequest(

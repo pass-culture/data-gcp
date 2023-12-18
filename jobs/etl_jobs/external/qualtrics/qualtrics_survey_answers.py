@@ -60,7 +60,6 @@ class QualtricsSurvey:
         return df
 
     def process_qualtrics_data(self, target: str) -> pd.DataFrame:
-
         response_df = self.get_qualtrics_survey()
         nb_columns = response_df.shape[1]
 

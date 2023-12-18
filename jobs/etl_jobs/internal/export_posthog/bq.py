@@ -22,7 +22,6 @@ def export_list_metadata(list_metadata):
         key = z["key"]
         value = z["value"]
         if isinstance(z, dict):
-
             value = export_type(value)
         _dict[key] = value
     return _dict

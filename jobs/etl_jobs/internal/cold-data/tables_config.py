@@ -50,19 +50,6 @@ ref_tables = {
             "zone_parent": "STRING",
         },
     },
-    "forbidden_query_recommendation": {
-        "file_type": "csv",
-        "schema": {
-            "subcategory_id": "STRING",
-            "query": "STRING",
-        },
-    },
-    "forbidden_offers_recommendation": {
-        "file_type": "csv",
-        "schema": {
-            "product_id": "STRING",
-        },
-    },
     "departmental_objectives": {
         "file_type": "csv",
         "schema": {

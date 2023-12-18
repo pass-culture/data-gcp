@@ -32,3 +32,26 @@ data_gcp_dbt:
       threads: 1
       type: bigquery
   
+elementary:
+  outputs:
+    dev:
+      dataset: elementary_dev
+      type: bigquery
+      method: oauth
+      project: passculture-data-ehp 
+      location: europe-west1
+      threads: 2
+    stg:
+      dataset: elementary_stg
+      type: bigquery
+      method: oauth
+      project: passculture-data-ehp 
+      location: europe-west1
+      threads: 2
+    prod:
+      dataset: elementary_prod
+      type: bigquery
+      method: oauth
+      project: passculture-data-prod
+      location: europe-west1
+      threads: 2

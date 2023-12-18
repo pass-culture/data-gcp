@@ -45,7 +45,6 @@ with DAG(
     template_searchpath=DAG_FOLDER,
     user_defined_macros=macros.default,
 ) as dag:
-
     start = DummyOperator(task_id="start")
 
     gce_instance_start = StartGCEOperator(

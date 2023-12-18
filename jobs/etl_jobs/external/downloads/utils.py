@@ -29,7 +29,6 @@ BUCKET_NAME = access_secret_data(
 
 
 def get_last_month(today):
-
     current_month_first_day = today.replace(day=1)
     last_month = (current_month_first_day - timedelta(days=1)).replace(day=1)
     return last_month

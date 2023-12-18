@@ -1,7 +1,3 @@
-
-# Name your project! Project names should contain only lowercase characters
-# and underscores. A good package name should reflect your organization's
-# name or the intended use of these models
 name: 'data_gcp_dbt'
 version: '1.0.0'
 config-version: 2
@@ -18,20 +14,13 @@ test-paths: ["tests"]
 seed-paths: ["seeds"]
 macro-paths: ["macros"]
 snapshot-paths: ["snapshots"]
+# TODO : setup conditional packages path depending on working environment. 
+packages-install-path: '/home/airflow/gcs/data/target/dbt_packages'
 
 clean-targets:         # directories to be removed by `dbt clean`
   - "target"
   - "dbt_packages"
 
-# # on-run-start:
-# #   - "{{ create_humanize_id_function() }}"
-# #   - "{{ create_dehumanize_id_function() }}"
-# Configuring models
-# Full documentation: https://docs.getdbt.com/docs/configuring-models
-
-# In this example config, we tell dbt to build all models in the example/
-# directory as views. These settings can be overridden in the individual model
-# files using the `{{ config(...) }}` macro.
 models:
   data_gcp_dbt:
     raw:
@@ -51,6 +40,9 @@ models:
       +schema: analytics_dbt_{{ target.name }}
       +docs: 
         node_color: "#d90000" 
+  elementary:
+    +schema: "elementary"
+    
 seeds:
   +schema: seeds
   +docs:
@@ -65,10 +57,7 @@ tests:
   +docs:
     show: true
     tags: "test"
-# In this example config, we tell dbt to build all models in the example/ directory
-# as tables. These settings can be overridden in the individual model files
-# using the `{{ config(...) }}` macro.
 
-      
+
 vars:
   ENV_SHORT_NAME: dev

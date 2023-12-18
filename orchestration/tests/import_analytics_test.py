@@ -36,7 +36,6 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 @pytest.fixture(scope="module", autouse=True)
 def prepare_bigquery():
-
     pytest.bq_client = bigquery.Client()
     drop_dataset(client=pytest.bq_client, dataset=TEST_DATASET)
     create_dataset(client=pytest.bq_client, dataset=TEST_DATASET)

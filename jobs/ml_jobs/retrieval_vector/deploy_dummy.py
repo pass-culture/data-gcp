@@ -61,7 +61,6 @@ def main(
         help="Name of the model",
     ),
 ) -> None:
-
     yyyymmdd = datetime.now().strftime("%Y%m%d")
     if model_name is None:
         model_name = "default"

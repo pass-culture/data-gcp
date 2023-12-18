@@ -98,7 +98,6 @@ class StopGCEOperator(BaseOperator):
         *args,
         **kwargs,
     ):
-
         super(StopGCEOperator, self).__init__(*args, **kwargs)
         self.instance_name = f"{GCE_BASE_PREFIX}-{instance_name}"
 
@@ -121,7 +120,6 @@ class BaseSSHGCEOperator(BaseOperator):
         *args,
         **kwargs,
     ):
-
         self.instance_name = f"{GCE_BASE_PREFIX}-{instance_name}"
         self.command = command
         self.environment = environment

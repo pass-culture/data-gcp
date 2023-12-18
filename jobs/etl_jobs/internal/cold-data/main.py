@@ -18,7 +18,6 @@ bigquery_client = bigquery.Client()
 
 def run():
     for table, config in ref_tables.items():
-
         folder_name = BIGQUERY_IMPORT_BUCKET_FOLDER + "/" + table
         print("Folder Name : ", folder_name)
         bucket_folder = BucketFolder(DATA_BUCKET, folder_name)

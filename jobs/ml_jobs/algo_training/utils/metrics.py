@@ -11,7 +11,6 @@ from utils.diversification import order_offers_by_score_and_diversify_categories
 def get_actual_and_predicted(
     data_model_dict: dict, shuffle_recommendation: bool = SHUFFLE_RECOMMENDATION
 ):
-
     data_test = data_model_dict["data"]["test"]
     data_test = data_test.sort_values(["user_id", "count"], ascending=False)
     df_actual = (
@@ -46,7 +45,6 @@ def get_actual_and_predicted(
 
 
 def get_prediction(prediction_input_feature, data_model_dict):
-
     model = data_model_dict["model"]
     data = data_model_dict["data"]["test"][
         ["item_id", "offer_subcategoryid"]
@@ -77,7 +75,6 @@ def get_prediction(prediction_input_feature, data_model_dict):
 
 
 def compute_metrics(data_model_dict, k):
-
     try:
         logger.info("Compute recall and precision")
         mark, mapk, mark_panachage, mapk_panachage = compute_recall_and_precision_at_k(
@@ -110,7 +107,6 @@ def compute_metrics(data_model_dict, k):
 
 
 def compute_recall_and_precision_at_k(data_model_dict, k):
-
     actual = data_model_dict["top_offers"].actual.values.tolist()
     model_predictions = data_model_dict["top_offers"].model_predicted.values.tolist()
     model_predictions_panachage = data_model_dict[
@@ -125,7 +121,6 @@ def compute_recall_and_precision_at_k(data_model_dict, k):
 
 
 def get_avg_recall_and_precision_at_k(actual, model_predictions, k):
-
     cf_mark = recmetrics.mark(actual, model_predictions, k)
     cf_mapk = mapk(actual, model_predictions, k)
     return cf_mark, cf_mapk
@@ -178,7 +173,6 @@ def compute_diversification_score(data_model_dict, k):
 
 
 def get_avg_diversification_score(df_raw, recos, k):
-
     max_recos = min(10_000, len(recos))
 
     diversification_count = 0

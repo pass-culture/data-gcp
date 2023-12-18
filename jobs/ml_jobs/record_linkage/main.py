@@ -41,7 +41,6 @@ def main(
     gcp_project,
     env_short_name,
 ) -> None:
-
     ###############
     # Load preprocessed data
     df_offers_to_link_clean = pd.read_gbq(

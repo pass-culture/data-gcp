@@ -25,7 +25,6 @@ def preprocess_data_archiving(
     parent_folder_to_archive,
     limit_inactivity_in_days,
 ):
-
     # Compute the number of days since last activity of a card
     _df = _df.assign(
         days_since_last_execution=lambda _df: pd.to_datetime("today")

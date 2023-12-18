@@ -42,7 +42,7 @@ dag = DAG(
             type="string",
         ),
         "GLOBAL_CLI_FLAGS": Param(
-            default="--no-write-json",
+            default="",
             type="string",
         ),
         "full_refresh": Param(
@@ -92,9 +92,15 @@ with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
             # models
             model_op = BashOperator(
                 task_id=model_data["model_alias"],
-                bash_command=f"""
-                dbt {{ params.GLOBAL_CLI_FLAGS }} run --target {{ params.target }} --select {model_data['model_alias']} --no-compile{full_ref_str}
-                """,
+                bash_command=f"bash {PATH_TO_DBT_PROJECT}/dbt_run.sh ",
+                env={
+                    "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
+                    "target": "{{ params.target }}",
+                    "model": f"{model_data['model_alias']}",
+                    "full_ref_str": full_ref_str,
+                    "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+                },
+                append_env=True,
                 cwd=PATH_TO_DBT_PROJECT,
                 dag=dag,
             )
@@ -107,13 +113,17 @@ with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
                     dbt_test_tasks = [
                         BashOperator(
                             task_id=test["test_alias"],
-                            bash_command=f"""
-                    dbt {{ params.GLOBAL_CLI_FLAGS }} run --target {{ params.target }} --select {test['test_alias']} --no-compile{full_ref_str}
-                    """
+                            bash_command=f"bash {PATH_TO_DBT_PROJECT}/dbt_run.sh "
                             if test["test_type"] == "generic"
-                            else f"""
-                    dbt {{ params.GLOBAL_CLI_FLAGS }} test --target {{ params.target }} --select {test['test_alias']} --no-compile{full_ref_str}
-                    """,
+                            else f"bash {PATH_TO_DBT_PROJECT}/dbt_test.sh ",
+                            env={
+                                "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
+                                "target": "{{ params.target }}",
+                                "model": f"{model_data['model_alias']}",
+                                "full_ref_str": full_ref_str,
+                                "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+                            },
+                            append_env=True,
                             cwd=PATH_TO_DBT_PROJECT,
                             dag=dag,
                         )
@@ -157,13 +167,17 @@ with TaskGroup(group_id="data_quality_testing", dag=dag) as data_quality:
                 dbt_test_tasks = [
                     BashOperator(
                         task_id=test["test_alias"],
-                        bash_command=f"""
-                    dbt {{ params.GLOBAL_CLI_FLAGS }} run --target {{ params.target }} --select {test['test_alias']} --no-compile{full_ref_str}
-                    """
+                        bash_command=f"bash {PATH_TO_DBT_PROJECT}/dbt_run.sh "
                         if test["test_type"] == "generic"
-                        else f"""
-                    dbt {{ params.GLOBAL_CLI_FLAGS }} test --target {{ params.target }} --select {test['test_alias']} --no-compile{full_ref_str}
-                    """,
+                        else f"bash {PATH_TO_DBT_PROJECT}/dbt_test.sh ",
+                        env={
+                            "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
+                            "target": "{{ params.target }}",
+                            "model": f"{model_data['model_alias']}",
+                            "full_ref_str": full_ref_str,
+                            "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+                        },
+                        append_env=True,
                         cwd=PATH_TO_DBT_PROJECT,
                         dag=dag,
                     )

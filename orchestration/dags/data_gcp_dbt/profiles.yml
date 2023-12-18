@@ -2,7 +2,7 @@ data_gcp_dbt:
   target: dev
   outputs:
     dev:
-      dataset: tmp_dev
+      dataset: tmp_dev_luciler
       job_execution_timeout_seconds: 300
       job_retries: 1
       location: europe-west1

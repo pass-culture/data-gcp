@@ -40,9 +40,9 @@ SELECT
     jsonPayload.extra.suggestiontype as suggestion_type,
     jsonPayload.extra.suggestionvalue as suggestion_value,
     CAST(jsonPayload.extra.isfavorite as boolean) as is_favorite,
-    CAST(CAST(jsonPayload.extra.playlistid as INT), as STRING) as playlist_id_origin,
-    CAST(CAST(jsonPayload.extra.domainid as INT), as STRING) as playlist_domain_id_origin,
-    CAST(CAST(jsonPayload.extra.venueid as INT), as STRING) as playlist_venue_id_origin
+    CAST(CAST(jsonPayload.extra.playlistid as INT), as STRING) as playlist_id,
+    CAST(CAST(jsonPayload.extra.domainid as INT), as STRING) as domain_id,
+    CAST(CAST(jsonPayload.extra.venueid as INT), as STRING) as venue_id
 
 FROM
     `{{ bigquery_raw_dataset }}.stdout`

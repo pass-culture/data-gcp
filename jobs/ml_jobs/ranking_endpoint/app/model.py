@@ -9,6 +9,7 @@ import lightgbm as lgb
 import typing as t
 
 numeric_features = [
+    "context",
     "user_bookings_count",
     "user_clicks_count",
     "user_favorites_count",

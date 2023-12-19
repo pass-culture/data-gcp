@@ -126,11 +126,11 @@ collective_offers_per_offerer AS (
         count(CASE WHEN is_template THEN NULL ELSE collective_offer_id END) AS collective_offers_pre_bookable_created,
         count(collective_offer_id) AS collective_offers_created,
         MIN(collective_offer_creation_date) AS first_collective_offer_creation_date,
-        MIN(CASE WHEN is_template THEN collective_offer_id ELSE NULL END) AS first_collective_offer_template_creation_date,
-        MIN(CASE WHEN is_template THEN NULL ELSE collective_offer_id END) AS first_collective_offer_pre_bookable_creation_date,
+        MIN(CASE WHEN is_template THEN collective_offer_creation_date ELSE NULL END) AS first_collective_offer_template_creation_date,
+        MIN(CASE WHEN is_template THEN NULL ELSE collective_offer_date END) AS first_collective_offer_pre_bookable_creation_date,
         MAX(collective_offer_creation_date) AS last_collective_offer_creation_date,
-        MAX(CASE WHEN is_template THEN collective_offer_id ELSE NULL END) AS last_collective_offer_template_creation_date,
-        MAX(CASE WHEN is_template THEN NULL ELSE collective_offer_id END) AS last_collective_offer_pre_bookable_creation_date
+        MAX(CASE WHEN is_template THEN collective_offer_date ELSE NULL END) AS last_collective_offer_template_creation_date,
+        MAX(CASE WHEN is_template THEN NULL ELSE collective_offer_date END) AS last_collective_offer_pre_bookable_creation_date
     FROM
         all_collective_offers
     GROUP BY
@@ -359,12 +359,12 @@ FROM
     LEFT JOIN bookable_individual_offer_cnt ON bookable_individual_offer_cnt.offerer_id = offerer.offerer_id
     LEFT JOIN bookable_collective_offer_cnt ON bookable_collective_offer_cnt.offerer_id = offerer.offerer_id
     LEFT JOIN bookable_offer_history ON bookable_offer_history.offerer_id = offerer.offerer_id
-LEFT JOIN `{{ bigquery_analytics_dataset }}`.siren_data AS siren_data ON siren_data.siren = offerer.offerer_siren
-LEFT JOIN `{{ bigquery_analytics_dataset }}`.siren_data_labels AS siren_data_labels ON siren_data_labels.activitePrincipaleUniteLegale = siren_data.activitePrincipaleUniteLegale
-                                            AND CAST(siren_data_labels.categorieJuridiqueUniteLegale AS STRING) = CAST(siren_data.categorieJuridiqueUniteLegale AS STRING)   
-LEFT JOIN first_dms_adage ON first_dms_adage.demandeur_entreprise_siren = offerer.offerer_siren
-LEFT JOIN first_dms_adage_accepted ON first_dms_adage_accepted.demandeur_entreprise_siren = offerer.offerer_siren                                               
-LEFT JOIN siren_reference_adage ON offerer.offerer_siren = siren_reference_adage.siren                                
+    LEFT JOIN `{{ bigquery_analytics_dataset }}`.siren_data AS siren_data ON siren_data.siren = offerer.offerer_siren
+    LEFT JOIN `{{ bigquery_analytics_dataset }}`.siren_data_labels AS siren_data_labels ON siren_data_labels.activitePrincipaleUniteLegale = siren_data.activitePrincipaleUniteLegale
+                                                AND CAST(siren_data_labels.categorieJuridiqueUniteLegale AS STRING) = CAST(siren_data.categorieJuridiqueUniteLegale AS STRING)   
+    LEFT JOIN first_dms_adage ON first_dms_adage.demandeur_entreprise_siren = offerer.offerer_siren
+    LEFT JOIN first_dms_adage_accepted ON first_dms_adage_accepted.demandeur_entreprise_siren = offerer.offerer_siren                                               
+    LEFT JOIN siren_reference_adage ON offerer.offerer_siren = siren_reference_adage.siren                                
 WHERE
     offerer.offerer_validation_status='VALIDATED'
     AND offerer.offerer_is_active;

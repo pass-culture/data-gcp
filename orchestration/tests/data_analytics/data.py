@@ -1372,7 +1372,7 @@ ENRICHED_OFFERER_DATA_EXPECTED = [
         "offerer_collective_offers_created": 2,
         "offerer_collective_offers_template_created": 1,
         "offerer_collective_offers_pre_bookable_created": 1,
-        "offer_cnt": 2,
+        "offer_cnt": 3,
         "offerer_bookable_individual_offer_cnt": 1,
         "offerer_bookable_collective_offer_cnt": 0,
         "offerer_bookable_offer_cnt": 1,

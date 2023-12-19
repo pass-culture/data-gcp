@@ -33,7 +33,7 @@ LOCATION = os.environ.get("REGION")
 DAG_FOLDER = os.environ.get("DAG_FOLDER")
 
 
-BIGQUERY_RAW_DATASET = os.environ.get("BIGQUERY_RAW_DATASET")
+BIGQUERY_TMP_DATASET = os.environ.get("BIGQUERY_TMP_DATASET")
 
 # Recreate proprely the connection url
 database_url = access_secret_data(
@@ -79,7 +79,7 @@ for table, params in TMP_TABLES.items():
                 "useLegacySql": False,
                 "destinationTable": {
                     "projectId": GCP_PROJECT_ID,
-                    "datasetId": BIGQUERY_RAW_DATASET,
+                    "datasetId": BIGQUERY_TMP_DATASET,
                     "tableId": table,
                 },
                 "writeDisposition": params["write_disposition"],

@@ -76,8 +76,8 @@ for table, params in TMP_TABLES.items():
                 "useLegacySql": False,
                 "destinationTable": {
                     "projectId": GCP_PROJECT_ID,
-                    "datasetId": BIGQUERY_TMP_DATASET,
-                    "tableId": table,
+                    "datasetId": params["destination_dataset"],
+                    "tableId": params["destination_table"],
                 },
                 "writeDisposition": params["write_disposition"],
             }

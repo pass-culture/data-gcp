@@ -127,10 +127,10 @@ collective_offers_per_offerer AS (
         count(collective_offer_id) AS collective_offers_created,
         MIN(collective_offer_creation_date) AS first_collective_offer_creation_date,
         MIN(CASE WHEN is_template THEN collective_offer_creation_date ELSE NULL END) AS first_collective_offer_template_creation_date,
-        MIN(CASE WHEN is_template THEN NULL ELSE collective_offer_date END) AS first_collective_offer_pre_bookable_creation_date,
+        MIN(CASE WHEN is_template THEN NULL ELSE collective_offer_creation_date END) AS first_collective_offer_pre_bookable_creation_date,
         MAX(collective_offer_creation_date) AS last_collective_offer_creation_date,
-        MAX(CASE WHEN is_template THEN collective_offer_date ELSE NULL END) AS last_collective_offer_template_creation_date,
-        MAX(CASE WHEN is_template THEN NULL ELSE collective_offer_date END) AS last_collective_offer_pre_bookable_creation_date
+        MAX(CASE WHEN is_template THEN collective_offer_creation_date ELSE NULL END) AS last_collective_offer_template_creation_date,
+        MAX(CASE WHEN is_template THEN NULL ELSE collective_offer_creation_date END) AS last_collective_offer_pre_bookable_creation_date
     FROM
         all_collective_offers
     GROUP BY

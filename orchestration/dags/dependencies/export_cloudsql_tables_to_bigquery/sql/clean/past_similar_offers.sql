@@ -11,6 +11,7 @@ WITH export_table AS (
         model_version,
         venue_iris_id,
         i.centroid as venue_iris_centroid,
+        import_date,
         ROW_NUMBER() OVER (
             PARTITION BY call_id,
             date(date),
@@ -44,3 +45,5 @@ EXCEPT
     ) as item_rank
 FROM
     export_table
+WHERE 
+    import_date between current_date() and date_sub(current_date(), interval 30 day) 

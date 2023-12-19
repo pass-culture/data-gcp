@@ -28,7 +28,6 @@ from common.config import (
     DAG_FOLDER,
     RECOMMENDATION_SQL_INSTANCE,
 )
-from dependencies.import_recommendation_cloudsql.monitor_tables import monitoring_tables
 from common.alerts import task_fail_slack_alert
 from common import macros
 from common.utils import get_airflow_schedule
@@ -89,6 +88,10 @@ def wait_for_5_minutes():
     time.sleep(300)
     print("Done waiting!")
 
+def wait_for_60_minutes():
+    print("Waiting for 60 minutes...")
+    time.sleep(3600)
+    print("Done waiting!")
 
 def get_table_names():
     tables = pd.read_csv(TABLES_DATA_PATH)
@@ -107,23 +110,9 @@ with DAG(
     template_searchpath=DAG_FOLDER,
 ) as dag:
     start = DummyOperator(task_id="start")
-    start_monitoring = DummyOperator(task_id="start_monitoring")
     start_drop_restore = DummyOperator(task_id="start_drop_restore")
 
-    end_monitoring = DummyOperator(task_id="end_monitoring")
     end_data_prep = DummyOperator(task_id="end_data_prep")
-
-    monitor_tables_task = []
-    for table, params in monitoring_tables.items():
-        dataset = params["destination_dataset"]
-        task = BigQueryExecuteQueryOperator(
-            task_id=f"monitor_{table}",
-            sql=params["sql"],
-            destination_dataset_table=f"{GCP_PROJECT_ID}.{dataset}.monitor_{table}",
-            use_legacy_sql=False,
-            write_disposition="WRITE_APPEND",
-        )
-        monitor_tables_task.append(task)
 
     for table in TABLES:
         dataset_type = TABLES[table]["dataset_type"]
@@ -338,7 +327,7 @@ with DAG(
 
     wait_end_create_materialized_view = PythonOperator(
         task_id=f"wait_view_{materialized_view}",
-        python_callable=wait_for_5_minutes,
+        python_callable=wait_for_60_minutes,
         dag=dag,
     )
     wait_end_create_materialized_view.set_upstream(create_materialized_view)
@@ -393,10 +382,4 @@ with DAG(
         >> end_all_dag
     )
 
-    (
-        start
-        >> start_monitoring
-        >> monitor_tables_task
-        >> end_monitoring
-        >> start_drop_restore
-    )
+    (start >> start_drop_restore)

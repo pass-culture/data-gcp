@@ -26,10 +26,8 @@ from common.config import (
     BIGQUERY_CLEAN_DATASET,
     BIGQUERY_ANALYTICS_DATASET,
     DAG_FOLDER,
-    QPI_TABLE,
     RECOMMENDATION_SQL_INSTANCE,
 )
-from dependencies.import_recommendation_cloudsql.monitor_tables import monitoring_tables
 from common.alerts import task_fail_slack_alert
 from common import macros
 from common.utils import get_airflow_schedule
@@ -109,23 +107,9 @@ with DAG(
     template_searchpath=DAG_FOLDER,
 ) as dag:
     start = DummyOperator(task_id="start")
-    start_monitoring = DummyOperator(task_id="start_monitoring")
     start_drop_restore = DummyOperator(task_id="start_drop_restore")
 
-    end_monitoring = DummyOperator(task_id="end_monitoring")
     end_data_prep = DummyOperator(task_id="end_data_prep")
-
-    monitor_tables_task = []
-    for table, params in monitoring_tables.items():
-        dataset = params["destination_dataset"]
-        task = BigQueryExecuteQueryOperator(
-            task_id=f"monitor_{table}",
-            sql=params["sql"],
-            destination_dataset_table=f"{GCP_PROJECT_ID}.{dataset}.monitor_{table}",
-            use_legacy_sql=False,
-            write_disposition="WRITE_APPEND",
-        )
-        monitor_tables_task.append(task)
 
     for table in TABLES:
         dataset_type = TABLES[table]["dataset_type"]
@@ -330,10 +314,4 @@ with DAG(
     end_all_dag = DummyOperator(task_id="end")
     materialized_view_tasks >> end_all_dag
 
-    (
-        start
-        >> start_monitoring
-        >> monitor_tables_task
-        >> end_monitoring
-        >> start_drop_restore
-    )
+    (start >> start_drop_restore)

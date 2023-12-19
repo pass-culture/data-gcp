@@ -16,7 +16,7 @@ from dependencies.export_cloudsql_tables_to_bigquery.import_cloudsql import (
 from common.access_gcp_secrets import access_secret_data
 from common.alerts import task_fail_slack_alert
 from common.config import (
-    BIGQUERY_CLEAN_DATASET,
+    BIGQUERY_TMP_DATASET,
     RECOMMENDATION_SQL_INSTANCE,
     CONNECTION_ID,
 )
@@ -31,9 +31,6 @@ yesterday = (datetime.datetime.now() + datetime.timedelta(days=-1)).strftime(
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID")
 LOCATION = os.environ.get("REGION")
 DAG_FOLDER = os.environ.get("DAG_FOLDER")
-
-
-BIGQUERY_TMP_DATASET = os.environ.get("BIGQUERY_TMP_DATASET")
 
 # Recreate proprely the connection url
 database_url = access_secret_data(

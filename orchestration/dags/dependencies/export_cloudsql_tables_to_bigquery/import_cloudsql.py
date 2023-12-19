@@ -7,20 +7,20 @@ TMP_TABLES = {
     "past_recommended_offers": {
         "sql": f"{SQL_TMP_PATH}/past_recommended_offers.sql",
         "write_disposition": "WRITE_TRUNCATE",
-        "destination_dataset": "{{ bigquery_tmp_dataset }}_{{ yyyymmdd(today()) }}",
-        "destination_table": "past_recommended_offers",
+        "destination_dataset": "{{ bigquery_tmp_dataset }}",
+        "destination_table": "past_recommended_offers_{{ yyyymmdd(today()) }}",
     },
     "past_similar_offers": {
         "sql": f"{SQL_TMP_PATH}/past_similar_offers.sql",
         "write_disposition": "WRITE_TRUNCATE",
-        "destination_dataset": "{{ bigquery_tmp_dataset }}_{{ yyyymmdd(today()) }}",
-        "destination_table": "past_similar_offers",
+        "destination_dataset": "{{ bigquery_tmp_dataset }}",
+        "destination_table": "past_similar_offers_{{ yyyymmdd(today()) }}",
     },
     "past_offer_context": {
         "sql": f"{SQL_TMP_PATH}/past_offer_context.sql",
         "write_disposition": "WRITE_TRUNCATE",
-        "destination_dataset": "{{ bigquery_tmp_dataset }}_{{ yyyymmdd(today()) }}",
-        "destination_table": "past_offer_context",
+        "destination_dataset": "{{ bigquery_tmp_dataset }}",
+        "destination_table": "past_offer_context_{{ yyyymmdd(today()) }}",
     },
 }
 

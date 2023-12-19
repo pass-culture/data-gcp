@@ -33,7 +33,7 @@ events AS (
         date_diff(poc.offer_stock_beginning_date, event_date, DAY) as offer_stock_beginning_days,
         poc.offer_category,
         poc.offer_subcategory_id,
-        cast(poc.offer_item_score as FLOAT64) as offer_item_score,
+        cast(poc.offer_item_rank as FLOAT64) as offer_item_score,
         ROW_NUMBER() OVER (
             PARTITION BY reco_call_id,
             user_id

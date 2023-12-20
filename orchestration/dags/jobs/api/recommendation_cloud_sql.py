@@ -88,10 +88,12 @@ def wait_for_5_minutes():
     time.sleep(300)
     print("Done waiting!")
 
+
 def wait_for_60_minutes():
     print("Waiting for 60 minutes...")
     time.sleep(3600)
     print("Done waiting!")
+
 
 def get_table_names():
     tables = pd.read_csv(TABLES_DATA_PATH)

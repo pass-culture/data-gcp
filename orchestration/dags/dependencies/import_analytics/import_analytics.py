@@ -575,6 +575,21 @@ aggregated_tables = {
             "enriched_cultural_partner_data",
         ],
     },
+    "enriched_partner_retention_data": {
+        "sql": f"{ANALYTICS_SQL_PATH}/enriched_partner_retention_data.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "depends": [
+            "enriched_cultural_partner_data",
+            "partner_type_bookability_frequency",
+            "enriched_offer_data",
+            "enriched_booking_data",
+            "enriched_collective_offer_data",
+            "enriched_collective_booking_data",
+            "enriched_venue_data",
+            "enriched_offerer_data",
+            "enriched_venue_provider_data",
+        ],
+    },
 }
 
 

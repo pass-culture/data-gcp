@@ -88,6 +88,10 @@ def wait_for_5_minutes():
     time.sleep(300)
     print("Done waiting!")
 
+def wait_for_60_minutes():
+    print("Waiting for 60 minutes...")
+    time.sleep(3600)
+    print("Done waiting!")
 
 def get_table_names():
     tables = pd.read_csv(TABLES_DATA_PATH)
@@ -323,7 +327,7 @@ with DAG(
 
     wait_end_create_materialized_view = PythonOperator(
         task_id=f"wait_view_{materialized_view}",
-        python_callable=wait_for_5_minutes,
+        python_callable=wait_for_60_minutes,
         dag=dag,
     )
     wait_end_create_materialized_view.set_upstream(create_materialized_view)
@@ -371,6 +375,12 @@ with DAG(
     drop_old_function.set_upstream(drop_old_materialized_view)
     reco_materialized_view = [drop_old_function]
     end_all_dag = DummyOperator(task_id="end")
+    (
+        materialized_view_tasks
+        >> end_concurent_mv
+        >> reco_materialized_view[0]
+        >> end_all_dag
+    )
     (
         materialized_view_tasks
         >> end_concurent_mv

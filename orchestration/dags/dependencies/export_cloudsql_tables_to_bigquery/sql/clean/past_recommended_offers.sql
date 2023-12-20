@@ -31,4 +31,4 @@ FROM
 WHERE
     row_number = 1
 AND 
-    import_date between current_date() and date_sub(current_date(), interval 30 day) 
+    import_date between date_sub(current_date, interval 30 day) and current_date

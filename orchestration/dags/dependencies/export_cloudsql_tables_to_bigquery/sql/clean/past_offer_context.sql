@@ -55,6 +55,6 @@ SELECT
 FROM
     export_table
 WHERE
-    import_date between current_date() and date_sub(current_date(), interval 30 day) 
+    import_date between date_sub(current_date, interval 30 day) and current_date
 AND 
     DATE_DIFF(current_date, event_date, MONTH) <= 3

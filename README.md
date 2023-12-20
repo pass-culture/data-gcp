@@ -5,9 +5,6 @@ Repo pour la team data sur GCP
 ## Organisation
 
 ```
-+-- api
-| +-- recommandation
-|
 +-- orchestration : DAGS Airflow (Cloud Composer)
 | +-- airflow
 | +-- dags
@@ -15,7 +12,7 @@ Repo pour la team data sur GCP
 |
 +-- jobs
 | +-- etl_jobs
-|   +-- external (spécifier dans le readme du job comment est éxécuté le job (cloudfn ou vm ou airflow))
+|   +-- external 
 |     +-- adage
 |     +-- addresses
 |     +-- appsflyer
@@ -27,17 +24,22 @@ Repo pour la team data sur GCP
 |     +-- sendinblue
 |     +-- siren
 |     +-- batch
+|     +-- ...
 |
 |   +-- internal
 |     +-- cold-data
 |     +-- human_ids
 |     +-- import_api_referentials
+|     +-- ...
 |
 | +-- ml_jobs
 |   +-- algo_training
 |   +-- embeddings
 |   +-- record_linkage
+|   +-- ranking_endpoint
 |   +-- clusterisation
+|   +-- retrieval_endpoint
+|   +-- ...
 
 ```
 
@@ -79,12 +81,6 @@ Orchestration des jobs dags analytics & data science.
 [plus de détails dans dags/README.md](/orchestration/README.md)
 
 Les dags sont déployés automatiquement lors d'un merge sur master / production
-
-## Recommandation
-
-API pour la brique de recommandation sur l'application.
-
-[plus de détails dans recommendation/README.md](/recommendation/README.md)
 
 
 ## CI/CD

@@ -3,17 +3,21 @@ SELECT
     event_name,
     event_timestamp,
     user_id,
-    user_current_deposit_type,
-    user_last_deposit_amount,
-    user_first_deposit_type,
-    user_deposit_initial_amount,
     user_pseudo_id,
     event_params,
-    offer_name,
-    offer_category_id,
-    offer_subcategoryId,
-    venue.venue_name,
-    venue_type_label,
+    STRUCT(
+        offer_name,
+        offer_category_id,
+        offer_subcategoryId,
+        venue.venue_name,
+        venue_type_label
+    ) as extra_params,
+    STRUCT(
+        user_current_deposit_type,
+        user_last_deposit_amount,
+        user_first_deposit_type,
+        user_deposit_initial_amount
+    ) as user_params,
     platform,
     app_info.version as app_version,
     'native' as origin
@@ -37,5 +41,21 @@ ON venue.venue_id = (
             where
                 event_params.key = 'venueId'
         )
-WHERE (NOT REGEXP_CONTAINS(event_name, '^[a-z]+(_[a-z]+)*$') OR event_name = "screen_view")
+WHERE (
+    (
+        NOT REGEXP_CONTAINS(event_name, '^[a-z]+(_[a-z]+)*$') 
+    )
+    OR
+    (
+        event_name = "screen_view" 
+        AND (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'firebase_screen'
+        ) IN ('SignupForm','ProfilSignUp', 'SignupConfirmationEmailSent', 'OnboardingWelcome','OnboardingGeolocation', 'FirstTutorial','BeneficiaryRequestSent','UnderageAccountCreated','BeneficiaryAccountCreated','FirstTutorial2','FirstTutorial3','FirstTutorial4','HasSkippedTutorial' )
+    )
+)
 AND  MOD(ABS(FARM_FINGERPRINT(user_pseudo_id)),10) = 0

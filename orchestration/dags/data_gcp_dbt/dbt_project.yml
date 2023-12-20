@@ -25,10 +25,11 @@ models:
   data_gcp_dbt:
     raw:
       +materialized: table
+      +schema: raw_dbt_{{ target.name }}
       +docs:
         node_color: "#0320fc"
       applicative_raw:
-        schema: applicative_raw
+        # schema: applicative_raw
         tags: "applicative"
     clean:
       +materialized: view

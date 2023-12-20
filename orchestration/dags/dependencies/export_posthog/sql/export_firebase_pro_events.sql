@@ -25,7 +25,7 @@ SELECT
         venue.venue_type_label,
         venue.venue_is_permanent,
         venue.venue_is_virtual,
-        CASE WHEN venue.venue_siret is not NULL THEN TRUE ELSE FALSE END AS venue_has_siret,
+        CASE WHEN venue.venue_siret is not NULL THEN TRUE ELSE FALSE END AS venue_has_siret
     ) as extra_params, 
     STRUCT(
         user.user_creation_date,

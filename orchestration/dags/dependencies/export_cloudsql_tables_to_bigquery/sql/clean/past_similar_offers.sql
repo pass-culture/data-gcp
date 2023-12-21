@@ -22,7 +22,9 @@ WITH export_table AS (
         ) as item_rank
     FROM
         `{{ bigquery_raw_dataset }}.past_similar_offers` pso
-        LEFT JOIN `{{ bigquery_analytics_dataset }}.iris_france` i on i.id = pso.venue_iris_id QUALIFY ROW_NUMBER() OVER (
+    LEFT JOIN `{{ bigquery_analytics_dataset }}.iris_france` i on i.id = pso.venue_iris_id
+    WHERE import_date between date_sub(current_date, interval 30 day) and current_date
+    QUALIFY ROW_NUMBER() OVER (
             PARTITION BY origin_offer_id,
             user_id,
             call_id,
@@ -30,7 +32,6 @@ WITH export_table AS (
             ORDER BY
                 date DESC
         ) = 1
-    WHERE import_date between date_sub(current_date, interval 30 day) and current_date
 )
 SELECT
     *

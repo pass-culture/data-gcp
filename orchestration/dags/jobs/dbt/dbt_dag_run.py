@@ -92,7 +92,7 @@ with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
             # models
             model_op = BashOperator(
                 task_id=model_data["model_alias"],
-                bash_command=f"bash {PATH_TO_DBT_PROJECT}/dbt_run.sh ",
+                bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_run.sh ",
                 env={
                     "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
                     "target": "{{ params.target }}",
@@ -113,9 +113,9 @@ with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
                     dbt_test_tasks = [
                         BashOperator(
                             task_id=test["test_alias"],
-                            bash_command=f"bash {PATH_TO_DBT_PROJECT}/dbt_run.sh "
+                            bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_run.sh "
                             if test["test_type"] == "generic"
-                            else f"bash {PATH_TO_DBT_PROJECT}/dbt_test.sh ",
+                            else f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_test.sh ",
                             env={
                                 "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
                                 "target": "{{ params.target }}",
@@ -167,9 +167,9 @@ with TaskGroup(group_id="data_quality_testing", dag=dag) as data_quality:
                 dbt_test_tasks = [
                     BashOperator(
                         task_id=test["test_alias"],
-                        bash_command=f"bash {PATH_TO_DBT_PROJECT}/dbt_run.sh "
+                        bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_run.sh "
                         if test["test_type"] == "generic"
-                        else f"bash {PATH_TO_DBT_PROJECT}/dbt_test.sh ",
+                        else f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_test.sh ",
                         env={
                             "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
                             "target": "{{ params.target }}",

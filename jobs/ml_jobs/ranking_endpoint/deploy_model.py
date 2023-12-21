@@ -17,7 +17,7 @@ from utils import (
 from figure import plot_features_importance, plot_cm, plot_hist
 
 
-PARAMS = {"seen": 1_000_000, "consult": 1_000_000, "booking": 1_000_000}
+PARAMS = {"seen": 100_000, "consult": 100_000, "booking": 100_000}
 
 MODEL_PARAMS = {
     "objective": "regression",
@@ -111,7 +111,7 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
     data = load_data(dataset_name, table_name)
     data["consult"] = data["consult"].astype(float).fillna(0)
     data["booking"] = data["booking"].astype(float).fillna(0)
-
+    
     data["delta_diversification"] = (
         data["delta_diversification"].astype(float).fillna(0)
     )

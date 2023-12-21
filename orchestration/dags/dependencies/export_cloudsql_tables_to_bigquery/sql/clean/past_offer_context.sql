@@ -29,20 +29,14 @@ WITH export_table AS (
         offer_order,
         offer_venue_id,
         offer_extra_data,
-        import_date,
-        ROW_NUMBER() OVER (
-            PARTITION BY call_id,
-            date(date),
-            user_id
-            ORDER BY
-                pso.id
-        ) as item_rank
+        import_date
     FROM
         `{{ bigquery_raw_dataset }}.past_offer_context` pso
     LEFT JOIN `{{ bigquery_analytics_dataset }}.iris_france` ii
         on ii.id = pso.user_iris_id 
     WHERE 
         import_date between date_sub(current_date, interval 30 day) and current_date
+    
     QUALIFY ROW_NUMBER() OVER (
         PARTITION BY
             user_id,
@@ -53,7 +47,15 @@ WITH export_table AS (
         ) = 1
 )
 SELECT
-    *
+    *,
+    ROW_NUMBER() OVER (
+            PARTITION BY 
+            reco_call_id,
+            event_date,
+            user_id
+            ORDER BY
+            id
+    ) as item_rank
 FROM
     export_table
 WHERE

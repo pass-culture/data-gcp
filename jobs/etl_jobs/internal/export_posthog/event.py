@@ -22,7 +22,7 @@ class EventExporter:
         self.client.page(
             event.device_id,
             url=event.screen,
-            properties=dict(event.properties, **event.user_properties),
+            properties={**event.properties, **event.user_properties},
             timestamp=event.timestamp,
             uuid=event.uuid,
             disable_geoip=True,

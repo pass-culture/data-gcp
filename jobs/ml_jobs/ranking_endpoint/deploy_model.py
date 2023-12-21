@@ -111,7 +111,7 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
     data = load_data(dataset_name, table_name)
     data["consult"] = data["consult"].astype(float).fillna(0)
     data["booking"] = data["booking"].astype(float).fillna(0)
-    
+
     data["delta_diversification"] = (
         data["delta_diversification"].astype(float).fillna(0)
     )

@@ -1,4 +1,4 @@
-version: 1
+version: 1.1
 
 sources:
   - name: raw # this is the source_name
@@ -17,7 +17,12 @@ sources:
       - name: applicative_database_national_program
       - name: applicative_database_mediation
       - name: applicative_database_offer
-      - name: applicative_database_offerer
+        freshness:  # https://docs.getdbt.com/reference/resource-properties/freshness different output target https://docs.getdbt.com/reference/commands/source#:~:text=By%20default%2C%20dbt%20source%20freshness,use%20the%20%2D%2Dselect%20flag.
+          warn_after: { count: 1, period: minute }
+          error_after: { count: 1, period: hour }
+        filter: "NOT offer_is_duo"
+        loaded_at_field: "CAST(offer_creation_date AS TIMESTAMP)"
+      - me: applicative_database_offerer
       - name: applicative_database_offerer_tag
       - name: applicative_database_offerer_tag_mapping
       - name: applicative_database_offerer_tag_category

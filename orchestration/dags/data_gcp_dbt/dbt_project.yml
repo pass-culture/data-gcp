@@ -49,8 +49,10 @@ models:
         - column_metrics
       +docs: 
         node_color: "#d90000" 
+      +meta:
+        alert_fields: ["table", "description", "owners", "tags", "subscribers"]
   elementary:
-    +schema: "elementary"
+    +schema: "elementary_{{ target.name }}"
     
 seeds:
   +schema: seeds
@@ -61,7 +63,9 @@ snapshots:
   +docs:
     show: false
 tests:
-  # +store_failures: true  # store failures for all tests
+  +store_failures: true  # store failures for all tests
+  +meta:
+    slack_group_alerts_by: table
   +severity: warn # Failing tests will generate a warning by default. To raise an error, overwrite a config with severity: error.  
   +docs:
     show: true
@@ -71,3 +75,6 @@ tests:
 vars:
   ENV_SHORT_NAME: dev
   re_data:save_test_history: true
+  disable_skipped_model_alerts: true
+  disable_skipped_test_alerts: true
+  

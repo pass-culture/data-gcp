@@ -27,6 +27,14 @@ models:
       - name: venue_id
         tests: 
           - unique
-
+  - name: applicative_database_offer
+    tests:
+      - elementary.freshness_anomalies:
+          severity: error
+          timestamp_column: "CAST(offer_creation_date AS TIMESTAMP)" # Mandatory
+          where_expression: "NOT offer_is_duo"
+          time_bucket: # Daily by default
+            period: day
+            count: 1
 
 

@@ -1,9 +1,12 @@
 {% macro create_dehumanize_id_function() %}
 
-CREATE FUNCTION if not exists {{target.schema}}.dehumanize_id(id STRING)
+{% set target_name = target.name %}
+{% set target_schema = generate_schema_name('analytics_dbt_' ~ target_name) %}
+
+CREATE FUNCTION if not exists {{ target_schema }}.dehumanize_id(id STRING)
 RETURNS STRING
 LANGUAGE js
-OPTIONS (library="{BASE32_JS_LIB_PATH}")
+OPTIONS (library="gs://data-bucket-{{ target_name }}/base32-encode/base32.js")
 AS 
 """
 var public_id = id.replace(/8/g, 'O').replace(/9/g, 'I');

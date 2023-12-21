@@ -1,11 +1,14 @@
+{% set target_name = target.name %}
+{% set target_schema = generate_schema_name('analytics_dbt_' ~ target_name) %}
 
 {{ config(
     pre_hook="{{create_humanize_id_function()}}"
 ) }}
+
 WITH venue_humanized_id AS (
     SELECT
         venue_id,
-        {{target.schema}}.humanize_id(venue_id) AS humanized_id
+        {{target_schema}}.humanize_id(venue_id) AS humanized_id
     FROM
        {{ ref('applicative_database_venue') }}
     WHERE
@@ -14,7 +17,7 @@ WITH venue_humanized_id AS (
 offerer_humanized_id AS (
     SELECT
         offerer_id,
-        {{target.schema}}.humanize_id(offerer_id) AS humanized_id
+        {{target_schema}}.humanize_id(offerer_id) AS humanized_id
     FROM
        {{ ref('applicative_database_offerer') }}
     WHERE

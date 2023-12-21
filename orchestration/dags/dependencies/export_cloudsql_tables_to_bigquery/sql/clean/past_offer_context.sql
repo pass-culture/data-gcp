@@ -41,6 +41,8 @@ WITH export_table AS (
         `{{ bigquery_raw_dataset }}.past_offer_context` pso
     LEFT JOIN `{{ bigquery_analytics_dataset }}.iris_france` ii
         on ii.id = pso.user_iris_id 
+    WHERE 
+        import_date between date_sub(current_date, interval 30 day) and current_date
     QUALIFY ROW_NUMBER() OVER (
         PARTITION BY
             user_id,
@@ -55,6 +57,4 @@ SELECT
 FROM
     export_table
 WHERE
-    import_date between date_sub(current_date, interval 30 day) and current_date
-AND 
     DATE_DIFF(current_date, event_date, MONTH) <= 3

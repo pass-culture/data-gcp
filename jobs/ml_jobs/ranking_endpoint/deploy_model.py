@@ -17,7 +17,7 @@ from utils import (
 from figure import plot_features_importance, plot_cm, plot_hist
 
 
-PARAMS = {"seen": 1_000_000, "consult": 1_000_000, "booking": 1_000_000}
+PARAMS = {"seen": 100_000, "consult": 100_000, "booking": 100_000}
 
 MODEL_PARAMS = {
     "objective": "regression",

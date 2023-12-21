@@ -63,6 +63,8 @@ class DefaultClient:
                 [0], vector_column_name="booking_number_desc", query_type="vector"
             )
             .where(self.build_query(query_filter), prefilter=prefilter)
+            .nprobes(20)
+            .refine_factor(10)
             .select(columns=self.columns(details))
             .limit(n)
             .to_list()

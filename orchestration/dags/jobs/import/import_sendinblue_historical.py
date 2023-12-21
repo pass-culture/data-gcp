@@ -80,7 +80,7 @@ with DAG(
     "import_sendinblue_historical",
     default_args=default_dag_args,
     description="Import historic sendinblue tables",
-    schedule_interval=get_airflow_schedule("00 06 * * *"),
+    schedule_interval=get_airflow_schedule("00 13 * * *"),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,

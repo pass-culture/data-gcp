@@ -41,7 +41,7 @@ events AS (
     WHERE
         event_date >= DATE_SUB(CURRENT_DATE, INTERVAL 14 DAY)
         AND user_id != "-1" 
-    QUALIFY poc.item_rank <= 30
+        AND poc.item_rank <= 30
 ),
 interact AS (
     SELECT
@@ -130,4 +130,6 @@ GROUP BY
     11,
     12,
     13,
-    14
+    14,
+    15,
+    16

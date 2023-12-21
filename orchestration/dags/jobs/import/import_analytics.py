@@ -41,7 +41,7 @@ raw_tables = get_tables_config_dict(
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 1),
-    "retries": 1,
+    "retries": 2,
     "on_failure_callback": analytics_fail_slack_alert,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT_ID,

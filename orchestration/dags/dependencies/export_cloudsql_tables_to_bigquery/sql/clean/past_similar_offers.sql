@@ -32,6 +32,7 @@ WITH export_table AS (
             ORDER BY
                 date DESC
         ) = 1
+    WHERE import_date between date_sub(current_date, interval 30 day) and current_date
 )
 SELECT
     *
@@ -47,5 +48,3 @@ EXCEPT
     ) as item_rank
 FROM
     export_table
-WHERE 
-    import_date between date_sub(current_date, interval 30 day) and current_date

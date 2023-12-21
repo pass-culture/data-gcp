@@ -2,7 +2,6 @@ FROM apache/airflow:2.6.3-python3.10
 ARG GCLOUD_SERVICE_KEY=/etc/sa.gcpkey.json
 ARG AIRFLOW_USER_HOME=/opt/airflow
 ARG GCLOUD_VERSION=google-cloud-cli-411.0.0-linux-x86_64.tar.gz
-ARG DBT_TARGET_PATH=/opt/airflow
 
 # install airflow deps
 WORKDIR ${AIRFLOW_USER_HOME}

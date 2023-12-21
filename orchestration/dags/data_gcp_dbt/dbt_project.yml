@@ -51,7 +51,10 @@ models:
         node_color: "#d90000" 
       +meta:
         alert_fields: ["table", "description", "owners", "tags", "subscribers"]
+      +meta:
+        alert_fields: ["table", "description", "owners", "tags", "subscribers"]
   elementary:
+    +schema: "elementary_{{ target.name }}"
     +schema: "elementary_{{ target.name }}"
     
 seeds:
@@ -64,6 +67,8 @@ snapshots:
     show: false
 tests:
   +store_failures: true  # store failures for all tests
+  +meta:
+    slack_group_alerts_by: table
   +meta:
     slack_group_alerts_by: table
   +severity: warn # Failing tests will generate a warning by default. To raise an error, overwrite a config with severity: error.  

@@ -34,7 +34,6 @@ events AS (
         poc.offer_category,
         poc.offer_subcategory_id,
         poc.item_rank,
-        poc.item_rank,
         cast(poc.offer_item_rank as FLOAT64) as offer_item_score,
     FROM
         `{{ bigquery_clean_dataset }}.past_offer_context` poc
@@ -49,14 +48,12 @@ interact AS (
         fsoe.offer_id,
         sum(if(event_name = "ConsultOffer", 1, null)) as consult,
         sum(if(event_name in ("BookingConfirmation", "HasAddedOfferToFavorites"), 1, null)) as booking,
-        sum(if(event_name in ("BookingConfirmation", "HasAddedOfferToFavorites"), 1, null)) as booking,
         avg(d.delta_diversification) as delta_diversification
     FROM
         `{{ bigquery_analytics_dataset }}.firebase_events` fsoe
         LEFT JOIN diversification d on d.offer_id = fsoe.offer_id
     WHERE
         event_date >= DATE_SUB(CURRENT_DATE, INTERVAL 14 DAY)
-        AND event_name in ("ConsultOffer", "BookingConfirmation", "HasAddedOfferToFavorites")
         AND event_name in ("ConsultOffer", "BookingConfirmation", "HasAddedOfferToFavorites")
     GROUP BY
         1,

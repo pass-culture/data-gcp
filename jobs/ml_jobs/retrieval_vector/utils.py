@@ -201,7 +201,7 @@ def create_items_table(
     db = lancedb.connect(uri)
     db.drop_database()
     table = db.create_table("items", data=data)
-    table.create_index(num_partitions=1024, num_sub_vectors=96)
+    table.create_index(num_partitions=1024, num_sub_vectors=32)
 
 
 def get_item_docs(item_embedding_dict, items_df):

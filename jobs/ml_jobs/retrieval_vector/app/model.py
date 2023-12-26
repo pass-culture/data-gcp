@@ -6,6 +6,32 @@ import joblib
 import numpy as np
 
 
+DETAIL_COLUMNS = [
+    "item_id",
+    "topic_id",
+    "cluster_id",
+    "is_geolocated",
+    "booking_number",
+    "stock_price",
+    "offer_creation_date",
+    "stock_beginning_date",
+    "category",
+    "subcategory_id",
+    "search_group_name",
+    "gtl_id",
+    "gtl_l1",
+    "gtl_l2",
+    "gtl_l3",
+    "gtl_l4",
+    "total_offers",
+    "example_offer_id",
+    "example_offer_name",
+    "example_venue_id",
+    "example_venue_latitude",
+    "example_venue_longitude",
+]
+
+
 class DefaultClient:
     def load(self) -> None:
         self.item_docs = DocumentArray.load("./metadata/item.docs")
@@ -75,13 +101,7 @@ class DefaultClient:
         if details:
             return None
         else:
-            return [
-                "item_id",
-                "booking_number",
-                "example_offer_name",
-                "search_group_name",
-                "example_offer_id",
-            ]
+            return DETAIL_COLUMNS
 
     def out(self, results, details, item_id=None):
         predictions = []

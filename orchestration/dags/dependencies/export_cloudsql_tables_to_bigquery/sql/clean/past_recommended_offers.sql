@@ -14,7 +14,8 @@ WITH export_table AS (
         user_iris_id,
         import_date,
         ROW_NUMBER() OVER (
-            PARTITION BY id,
+            PARTITION BY 
+            offerid,
             userid,
             call_id
             ORDER BY

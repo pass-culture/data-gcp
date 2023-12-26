@@ -16,6 +16,7 @@ WITH firebase_recommendation_details AS (
         reco_call_id is not null
         AND event_date >= DATE_SUB(date('{{ ds }}'), INTERVAL 12 MONTH)
         AND module_id is not null
+        AND entry_id is not null 
     GROUP BY
         1,
         2,

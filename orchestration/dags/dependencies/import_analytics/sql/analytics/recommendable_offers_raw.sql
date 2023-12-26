@@ -41,6 +41,8 @@ recommendable_offers_data AS (
             MAX(gtl_l2) AS gtl_l2,
             MAX(gtl_l3) AS gtl_l3,
             MAX(gtl_l4) AS gtl_l4,
+            MAX(topic_id) AS topic_id,
+            MAX(cluster_id) AS cluster_id,
             MAX(is_national) as is_national,
             MIN(url IS NOT NULL) as is_numerical,
             MAX((url IS NULL AND NOT is_national)) as is_geolocated,
@@ -65,6 +67,8 @@ SELECT
     ro.gtl_l2,
     ro.gtl_l3,
     ro.gtl_l4,
+    ro.topic_id,
+    ro.cluster_id,
     ro.is_numerical,
     ro.is_national,
     ro.is_geolocated,
@@ -85,9 +89,9 @@ SELECT
     v.venue_latitude,
     v.venue_longitude,
     CASE
-        WHEN subcategories.category_id = 'MUSIQUE_LIVE' THEN 250000
+        WHEN subcategories.category_id = 'MUSIQUE_LIVE' THEN 150000
         WHEN subcategories.category_id = 'MUSIQUE_ENREGISTREE'  THEN 50000
-        WHEN subcategories.category_id = 'SPECTACLE' THEN 250000
+        WHEN subcategories.category_id = 'SPECTACLE' THEN 100000
         WHEN subcategories.category_id = 'CINEMA' THEN 50000
         WHEN subcategories.category_id = 'LIVRE' THEN 50000
         ELSE 50000

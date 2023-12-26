@@ -1,10 +1,10 @@
 WITH active_dates_geoloc AS (
 SELECT 
-  DATE_TRUNC(DATE(`{{ bigquery_clean_dataset }}.past_recommended_offers`.date), month) as month_log,
-  userid AS user_id,
+  DATE_TRUNC(pro.event_date, month) as month_log,
+  user_id,
   user_iris_id AS reco_iris,
-  COUNT(DISTINCT `{{ bigquery_clean_dataset }}.past_recommended_offers`.date) nb_log_reco,
-FROM  `{{ bigquery_clean_dataset }}.past_recommended_offers` 
+  COUNT(DISTINCT pro.event_date) as nb_log_reco,
+FROM  `{{ bigquery_clean_dataset }}.firebase_recommendation_events` pro
 WHERE user_iris_id IS NOT NULL 
 AND DATE_TRUNC(DATE(date), MONTH) = DATE_TRUNC(DATE('{{ ds }}'), month)
 GROUP BY 1, 2, 3 

@@ -80,6 +80,8 @@ get_recommendable_offers AS (
         ANY_VALUE(enriched_item_metadata.offer_type_label) as offer_type_label,
         ANY_VALUE(enriched_item_metadata.offer_sub_type_id) as offer_sub_type_id,
         ANY_VALUE(enriched_item_metadata.offer_sub_type_label) as offer_sub_type_label,
+        ANY_VALUE(enriched_item_metadata.cluster_id) AS cluster_id,
+        ANY_VALUE(enriched_item_metadata.topic_id) AS topic_id,
 
     FROM
         `{{ bigquery_analytics_dataset }}`.enriched_offer_data offer

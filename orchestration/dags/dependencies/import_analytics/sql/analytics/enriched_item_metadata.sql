@@ -11,13 +11,26 @@ WITH offer_booking_information_view AS (
         offer_id
 ), 
 
+item_clusters AS (
+    SELECT 
+        ic.item_id,  
+        ANY_VALUE(ic.semantic_cluster_id) as cluster_id,
+        ANY_VALUE(it.topic_id)
+    FROM `{{ bigquery_clean_dataset }}`.item_clusters ic
+    LEFT JOIN `{{ bigquery_clean_dataset }}`.item_topics it on it.item_id = ic.item_id
+    GROUP BY 1
+),
+
 enriched_items AS (
     SELECT 
         offer.*,
-        item_id,
+        offer_ids.item_id,
+        ic.topic_id,
+        ic.cluster_id,
         IF(offer_type_label is not null, count_booking, null) as count_booking
     FROM `{{ bigquery_analytics_dataset }}`.enriched_offer_metadata offer
-    LEFT JOIN `{{ bigquery_analytics_dataset }}`.offer_item_ids AS offer_ids on offer.offer_id=offer_ids.offer_id
+    LEFT JOIN `{{ bigquery_analytics_dataset }}`.offer_item_ids offer_ids on offer.offer_id=offer_ids.offer_id
+    LEFT JOIN item_clusters ic on ic.item_id = offer_ids.item_id
     LEFT JOIN offer_booking_information_view obi on obi.offer_id = offer.offer_id
 )
 

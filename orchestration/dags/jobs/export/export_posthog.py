@@ -153,9 +153,9 @@ with DAG(
             dag=dag,
         )
 
-        # gce_instance_stop = StopGCEOperator(
-        #    task_id=f"{origin}_gce_stop_task", instance_name=instance_name
-        # )
+        gce_instance_stop = StopGCEOperator(
+            task_id=f"{origin}_gce_stop_task", instance_name=instance_name
+        )
 
         (
             export_task
@@ -164,5 +164,5 @@ with DAG(
             >> fetch_code
             >> install_dependencies
             >> events_export
-            # >> gce_instance_stop
+            >> gce_instance_stop
         )

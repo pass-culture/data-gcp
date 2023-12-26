@@ -18,7 +18,7 @@ item_clusters AS (
         ANY_VALUE(it.topic_id)
     FROM `{{ bigquery_clean_dataset }}`.item_clusters ic
     LEFT JOIN `{{ bigquery_clean_dataset }}`.item_topics it on it.item_id = ic.item_id
-    GROUP BY 1,2
+    GROUP BY 1
 ),
 
 enriched_items AS (

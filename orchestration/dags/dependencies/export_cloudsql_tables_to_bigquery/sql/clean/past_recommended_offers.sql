@@ -23,7 +23,7 @@ WITH export_table AS (
         ) as row_number
     FROM
         `{{ bigquery_raw_dataset }}.past_recommended_offers`
-    WHERE import_date >= DATE_SUB(date('{{ ds }}'), INTERVAL 12 MONTH)
+    WHERE import_date >= DATE('{{ add_days(ds, -365) }}')
 )
 SELECT
     *

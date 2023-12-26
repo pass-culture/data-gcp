@@ -23,7 +23,7 @@ WITH export_table AS (
     FROM
         `{{ bigquery_raw_dataset }}.past_similar_offers` pso
     LEFT JOIN `{{ bigquery_analytics_dataset }}.iris_france` i on i.id = pso.venue_iris_id
-    WHERE import_date between date_sub(current_date, interval 30 day) and current_date
+    WHERE import_date  >= DATE('{{ add_days(ds, -60) }}')
     QUALIFY ROW_NUMBER() OVER (
             PARTITION BY origin_offer_id,
             user_id,

@@ -35,7 +35,7 @@ WITH export_table AS (
     LEFT JOIN `{{ bigquery_analytics_dataset }}.iris_france` ii
         on ii.id = pso.user_iris_id 
     WHERE 
-        import_date between date_sub(current_date, interval 30 day) and current_date
+        import_date >= DATE('{{ add_days(ds, -60) }}')
     
     QUALIFY ROW_NUMBER() OVER (
         PARTITION BY
@@ -59,4 +59,4 @@ SELECT
 FROM
     export_table
 WHERE
-    DATE_DIFF(current_date, event_date, MONTH) <= 3
+    event_date >= DATE('{{ add_days(ds, -60) }}')

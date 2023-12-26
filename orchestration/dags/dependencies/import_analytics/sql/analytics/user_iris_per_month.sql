@@ -1,19 +1,19 @@
 WITH current_month AS (
 
-SELECT 
-  DATE_TRUNC(DATE('{{ ds }}'), month) AS month_log,
-  user_declared_iris.user_id,
-  user_declared_iris.iriscode as iris_declaree,
-  user_declared_iris.department as department_declare,
-  user_ip_iris.ip_iris,
-  user_ip_iris.nb_log_ip,
-  user_ip_iris.department AS ip_department,
-  user_reco_iris.reco_iris,
-  user_reco_iris.nb_log_reco,
-  user_reco_iris.department AS reco_department
-FROM `{{ bigquery_clean_dataset }}.user_declared_iris` AS user_declared_iris 
-LEFT JOIN `{{ bigquery_clean_dataset }}.user_reco_iris` AS user_reco_iris ON user_reco_iris.user_id = user_declared_iris.user_id AND user_reco_iris.month_log = date_trunc(DATE('{{ ds }}'), month)
-LEFT JOIN `{{ bigquery_clean_dataset }}.user_ip_iris` AS user_ip_iris ON user_ip_iris.user_id = user_declared_iris.user_id AND user_ip_iris.month_log = date_trunc(DATE('{{ ds }}'), month)
+  SELECT 
+    DATE_TRUNC(DATE('{{ ds }}'), month) AS month_log,
+    user_declared_iris.user_id,
+    user_declared_iris.iriscode as iris_declaree,
+    user_declared_iris.department as department_declare,
+    user_ip_iris.ip_iris,
+    user_ip_iris.nb_log_ip,
+    user_ip_iris.department AS ip_department,
+    user_reco_iris.reco_iris,
+    user_reco_iris.nb_log_reco,
+    user_reco_iris.department AS reco_department
+  FROM `{{ bigquery_clean_dataset }}.user_declared_iris` AS user_declared_iris 
+  LEFT JOIN `{{ bigquery_clean_dataset }}.user_reco_iris` AS user_reco_iris ON user_reco_iris.user_id = user_declared_iris.user_id AND user_reco_iris.month_log = date_trunc(DATE('{{ ds }}'), month)
+  LEFT JOIN `{{ bigquery_clean_dataset }}.user_ip_iris` AS user_ip_iris ON user_ip_iris.user_id = user_declared_iris.user_id AND user_ip_iris.month_log = date_trunc(DATE('{{ ds }}'), month)
 )
 
 , last_month AS (

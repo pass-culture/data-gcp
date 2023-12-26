@@ -15,7 +15,7 @@ item_clusters AS (
     SELECT 
         ic.item_id,  
         ANY_VALUE(ic.semantic_cluster_id) as cluster_id,
-        ANY_VALUE(it.topic_id)
+        ANY_VALUE(it.topic_id) as topic_id
     FROM `{{ bigquery_clean_dataset }}`.item_clusters ic
     LEFT JOIN `{{ bigquery_clean_dataset }}`.item_topics it on it.item_id = ic.item_id
     GROUP BY 1

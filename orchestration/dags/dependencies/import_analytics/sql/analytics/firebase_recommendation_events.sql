@@ -1,7 +1,6 @@
 WITH firebase_recommendation_details AS (
     SELECT
         event_date,
-        event_name,
         reco_call_id,
         user_id,
         user_pseudo_id,
@@ -44,7 +43,6 @@ past_recommended_offers AS (
 SELECT
     frd.event_date,
     frd.reco_call_id,
-    frd.event_name,
     frd.user_location_type,
     frd.user_id,
     frd.user_pseudo_id,

@@ -52,6 +52,7 @@ create_tables = {
         "schedule_type": "daily",
         "write_disposition": "WRITE_TRUNCATE",
         "dag_depends": ["import_analytics_v7/end_import"],  # dag_id/task_id
+        "clustering_fields": {"fields": ["institution_id"]},
     },
     "adage_home_playlist_new_template_offers": {
         "sql": f"{BACKEND_SQL_PATH}/adage_home_playlist_new_template_offers.sql",
@@ -60,6 +61,7 @@ create_tables = {
         "schedule_type": "daily",
         "write_disposition": "WRITE_TRUNCATE",
         "dag_depends": ["import_analytics_v7/end_import"],  # dag_id/task_id
+        "clustering_fields": {"fields": ["institution_id"]},
     },
     "adage_home_playlist_moving_offerers": {
         "sql": f"{BACKEND_SQL_PATH}/adage_home_playlist_moving_offerers.sql",
@@ -68,6 +70,7 @@ create_tables = {
         "schedule_type": "daily",
         "write_disposition": "WRITE_TRUNCATE",
         "dag_depends": ["import_analytics_v7/end_import"],  # dag_id/task_id
+        "clustering_fields": {"fields": ["institution_id"]},
     },
     "booking_per_ean_last_30_days": {
         "sql": f"{BACKEND_SQL_PATH}/booking_per_ean_last_30_days.sql",

@@ -64,7 +64,7 @@ SELECT
     od.offer_name as example_offer_name, 
     od.offer_id as example_offer_id,
     od.venue_id as example_venue_id,
-    od.venue_longitude as exemple_venue_longitude,
-    od.venue_latitude as exemple_venue_latitude
+    od.venue_longitude as example_venue_longitude,
+    od.venue_latitude as example_venue_latitude
 FROM recommendable_items_raw ro
 LEFT JOIN offer_details od on od.item_id = ro.item_id

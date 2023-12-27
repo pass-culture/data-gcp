@@ -39,7 +39,8 @@ past_recommended_offers AS (
     GROUP BY
         1,
         2,
-        3
+        3,
+        4
 )
 SELECT
     frd.event_date,

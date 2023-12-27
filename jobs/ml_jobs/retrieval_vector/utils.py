@@ -190,7 +190,6 @@ def get_table_batches(item_embedding_dict: dict, items_df, emb_size):
                     pa.array([str(row.example_offer_id or "")], pa.utf8()),
                     pa.array([str(row.example_offer_name or "")], pa.utf8()),
                     pa.array([str(row.example_venue_id or "")], pa.utf8()),
-                    # TODO
                     pa.array([to_float(row.example_venue_latitude or 0.0)], pa.float32()),
                     pa.array([to_float(row.example_venue_longitude or 0.0)], pa.float32()),
                 ],

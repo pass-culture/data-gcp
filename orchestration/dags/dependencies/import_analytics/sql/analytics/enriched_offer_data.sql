@@ -177,7 +177,7 @@ SELECT
     offer_humanized_id.humanized_id AS offer_humanized_id,
     CONCAT(
         'https://passculture.pro/offre/individuelle/',
-        offer_humanized_id.humanized_id,
+        offer.offer_id,
         '/informations'
     ) AS passculture_pro_url,
     CONCAT('https://passculture.app/offre/', offer.offer_id) AS webapp_url,

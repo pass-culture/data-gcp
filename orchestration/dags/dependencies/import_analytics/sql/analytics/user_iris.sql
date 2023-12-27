@@ -5,7 +5,7 @@ WITH aggregated_reco as (SELECT
   , call_id
   , date as reco_date
   , user_iris_id
-  , count(offerid) as nb_recommended_offers
+  , count(offer_id) as nb_recommended_offers
 FROM `{{ bigquery_clean_dataset }}.past_recommended_offers`
 WHERE user_iris_id is not null AND user_iris_id != ""
 AND DATE(date) >= DATE_ADD(current_date(), INTERVAL - 6 MONTH)

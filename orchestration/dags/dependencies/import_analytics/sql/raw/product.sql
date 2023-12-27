@@ -3,7 +3,7 @@ SELECT
     ,"name" as name
     ,"description" as description
     ,"thumbCount" as thumbCount
-    ,"extraData" as extraData
+    ,"jsonData" as jsonData
     ,"subcategoryId" as subcategoryId
     ,"isGcuCompatible" as isGcuCompatible
     ,"isSynchronizationCompatible" as isSynchronizationCompatible

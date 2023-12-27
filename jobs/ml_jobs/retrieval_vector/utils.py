@@ -181,7 +181,7 @@ def get_table_batches(item_embedding_dict: dict, items_df, emb_size):
                     pa.array([to_ts(row.offer_creation_date)], pa.float32()),
                     pa.array([to_ts(row.stock_beginning_date)], pa.float32()),
                     # if unique
-                    pa.array([float(row.total_offers)], pa.utf8()),
+                    pa.array([float(row.total_offers)], pa.float32()),
                     pa.array([str(row.example_offer_id or "")], pa.utf8()),
                     pa.array([str(row.example_offer_name or "")], pa.utf8()),
                     pa.array([str(row.example_venue_id or "")], pa.utf8()),

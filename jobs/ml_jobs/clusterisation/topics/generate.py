@@ -41,17 +41,16 @@ def generate_topics(topic_items_df, semantic_cluster_id):
         + selected_topic["offer_description"].astype(str)
     )
     embeddings = np.hstack(selected_topic["semantic_encoding"]).reshape(-1, 5)
-    mmr = MaximalMarginalRelevance(diversity=0.3, top_n_words=20)
+    mmr = MaximalMarginalRelevance(diversity=0.5, top_n_words=20)
     pos = PartOfSpeech("fr_core_news_sm", top_n_words=20)
     representation_models = [pos, mmr]
 
     topic_model = BERTopic(
         language="multilingual",
         top_n_words=25,
-        # min_topic_size=min_topic_size,
-        nr_topics=10,
+        min_topic_size=1,
         representation_model=representation_models,
-        # nr_topics="auto",
+        nr_topics="auto",
         calculate_probabilities=False,
     )
     topics, probs = topic_model.fit_transform(
@@ -165,11 +164,15 @@ def main(
     topics_all_df = []
 
     for semantic_cluster_id in tqdm(list(count_df["semantic_cluster_id"].unique())):
-        topic_raw_df = generate_topics(topic_items_df, semantic_cluster_id)
-        topics = preproc_topics(topic_raw_df, semantic_cluster_id)
-        topics_df = loop_gpt(topics)
-        topics_raw_all_df.append(topic_raw_df)
-        topics_all_df.append(topics_df)
+        try:
+            topic_raw_df = generate_topics(topic_items_df, semantic_cluster_id)
+            topics = preproc_topics(topic_raw_df, semantic_cluster_id)
+            topics_df = loop_gpt(topics)
+            topics_raw_all_df.append(topic_raw_df)
+            topics_all_df.append(topics_df)
+        except ValueError as e:
+            print(f"Error for {semantic_cluster_id}")
+            print(e)
 
     topics_all_df = pd.concat(topics_all_df).merge(count_df, on=["semantic_cluster_id"])
     topics_raw_all_df = pd.concat(topics_raw_all_df)

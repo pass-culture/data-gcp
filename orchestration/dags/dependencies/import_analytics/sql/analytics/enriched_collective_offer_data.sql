@@ -100,7 +100,7 @@ SELECT
     humanize_id(collective_offer.collective_offer_id) AS collective_offer_humanized_id,
     CONCAT(
         'https://passculture.pro/offre/',
-        humanize_id(collective_offer.collective_offer_id),
+        collective_offer.collective_offer_id,
         '/collectif/edition'
     ) AS passculture_pro_url,
     FALSE AS offer_is_template,

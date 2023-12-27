@@ -4,9 +4,9 @@ SELECT
   user_id,
   user_iris_id AS reco_iris,
   COUNT(DISTINCT pro.event_date) as nb_log_reco,
-FROM  `{{ bigquery_clean_dataset }}.firebase_recommendation_events` pro
+FROM  `{{ bigquery_analytics_dataset }}.firebase_recommendation_events` pro
 WHERE user_iris_id IS NOT NULL 
-AND DATE_TRUNC(DATE(date), MONTH) = DATE_TRUNC(DATE('{{ ds }}'), month)
+AND DATE_TRUNC(DATE(event_date), MONTH) = DATE_TRUNC(DATE('{{ ds }}'), month)
 GROUP BY 1, 2, 3 
 )
 

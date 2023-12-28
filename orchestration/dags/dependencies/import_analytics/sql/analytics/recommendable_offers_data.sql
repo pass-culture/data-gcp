@@ -112,7 +112,7 @@ get_recommendable_offers AS (
         LEFT JOIN booking_numbers ON booking_numbers.item_id = offer.item_id
         JOIN `{{ bigquery_analytics_dataset }}`.offer_with_mediation om on offer.offer_id=om.offer_id
         LEFT JOIN  `{{ bigquery_analytics_dataset }}`.enriched_item_metadata enriched_item_metadata on offer.item_id = enriched_item_metadata.item_id
-        LEFT JOIN `{{ bigquery_raw_dataset }}`.forbidden_item_recommendation forbidden_offer on 
+        LEFT JOIN `{{ bigquery_analytics_dataset }}`.forbidden_item_recommendation forbidden_offer on 
             offer.item_id = forbidden_offer.item_id
         LEFT JOIN `{{ bigquery_raw_dataset }}`.sensitive_item_recommendation sensitive_offer on 
             offer.item_id = sensitive_offer.item_id

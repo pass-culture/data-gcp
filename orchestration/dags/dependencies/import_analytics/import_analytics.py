@@ -141,14 +141,6 @@ analytics_tables = {
             "enriched_booking_data",
         ],
     },
-    "iris_venues_in_shape": {
-        "sql": f"{ANALYTICS_SQL_PATH}/iris_venues_in_shape.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-    },
-    "iris_venues_at_radius": {
-        "sql": f"{ANALYTICS_SQL_PATH}/iris_venues_at_radius.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-    },
     "isbn_rayon_editor": {
         "sql": f"{ANALYTICS_SQL_PATH}/isbn_rayon_editor.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
@@ -491,7 +483,7 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "funnel_subscription_beneficiary",
         "depends": ["enriched_user_data"],
-        "dag_depends": ["import_intraday_firebase_data", "import_appsflyer"],
+        "dag_depends": ["import_intraday_firebase_data"],
     },
     "dms_pro": {
         "sql": f"{ANALYTICS_SQL_PATH}/dms_pro.sql",

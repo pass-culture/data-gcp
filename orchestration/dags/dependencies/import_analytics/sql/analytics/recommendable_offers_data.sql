@@ -72,7 +72,8 @@ get_recommendable_offers AS (
                 ELSE FALSE
             END
         ) AS is_underage_recommendable,
-        MIN(forbidden_offer.item_id is null) as is_recommendable,
+        MAX(forbidden_offer.restrained) as is_restrained,
+        MAX(forbidden_offer.blocked) as is_blocked,
         MAX(sensitive_offer.item_id is not null) as is_sensitive,
         ANY_VALUE(enriched_item_metadata.offer_type_labels) as offer_type_labels,
         ANY_VALUE(enriched_item_metadata.offer_type_domain) as offer_type_domain,
@@ -127,4 +128,4 @@ get_recommendable_offers AS (
 )
 SELECT  * 
 FROM get_recommendable_offers 
-where is_recommendable 
+where not is_blocked 

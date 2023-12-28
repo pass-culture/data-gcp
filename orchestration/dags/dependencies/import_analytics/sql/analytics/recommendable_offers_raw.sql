@@ -33,6 +33,7 @@ recommendable_offers_data AS (
             MAX(booking_number_last_28_days) AS booking_number_last_28_days,
             MAX(is_underage_recommendable) as is_underage_recommendable,
             MAX(is_sensitive) as is_sensitive,
+            MAX(is_restrained) as is_restrained,
             MAX(subcategory_id) as subcategory_id,
             MAX(search_group_name) as search_group_name,
             MAX(name) as name,
@@ -86,6 +87,7 @@ SELECT
     ro.booking_number_last_28_days,
     ro.is_underage_recommendable,
     ro.is_sensitive,
+    ro.is_restrained,
     v.venue_latitude,
     v.venue_longitude,
     CASE

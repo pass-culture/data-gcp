@@ -114,4 +114,4 @@ def dbt_test_fail_slack_alert(
         username="airflow",
         dag=dag,
     )
-    return dbt_test_fail_slack_alert_alert  # .execute(context=context)
+    return dbt_test_fail_slack_alert_alert.execute(context=context)

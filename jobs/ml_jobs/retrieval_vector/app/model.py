@@ -19,17 +19,17 @@ DETAIL_COLUMNS = [
     "subcategory_id",
     "search_group_name",
     "gtl_id",
-    "gtl_l1",
-    "gtl_l2",
     "gtl_l3",
     "gtl_l4",
     "total_offers",
     "example_offer_id",
-    "example_offer_name",
     "example_venue_id",
+    "example_offer_name",
     "example_venue_latitude",
     "example_venue_longitude",
 ]
+
+DEFAULTS = ["_distance"]
 
 
 class DefaultClient:
@@ -70,6 +70,8 @@ class DefaultClient:
                 query_type="vector",
             )
             .where(self.build_query(query_filter), prefilter=prefilter)
+            .nprobes(20)
+            .refine_factor(10)
             .select(columns=self.columns(details))
             .metric(similarity_metric)
             .limit(n)
@@ -89,21 +91,19 @@ class DefaultClient:
                 [0], vector_column_name="booking_number_desc", query_type="vector"
             )
             .where(self.build_query(query_filter), prefilter=prefilter)
-            .nprobes(20)
-            .refine_factor(10)
             .select(columns=self.columns(details))
             .limit(n)
             .to_list()
         )
         return self.out(results, details)
 
-    def columns(self, details):
+    def columns(self, details: bool) -> t.Optional[t.List[str]]:
         if details:
             return None
         else:
             return DETAIL_COLUMNS
 
-    def out(self, results, details, item_id=None):
+    def out(self, results, details: bool, item_id: str = None):
         predictions = []
         for idx, row in enumerate(results):
             if item_id is not None and str(row["item_id"]) == item_id:
@@ -125,7 +125,7 @@ class DefaultClient:
                         {
                             "idx": idx,
                         },
-                        **row,
+                        **{k: row[k] for k in row if k in DETAIL_COLUMNS + DEFAULTS}
                     )
                 )
         return predictions

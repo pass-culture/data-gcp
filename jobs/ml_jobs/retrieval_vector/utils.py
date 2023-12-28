@@ -136,11 +136,13 @@ def to_ts(f):
     except:
         return 0.0
 
+
 def to_float(f):
     try:
         return float(f)
     except:
         return None
+
 
 def save_model_type(model_type):
     with open("./metadata/model_type.json", "w") as file:
@@ -190,8 +192,12 @@ def get_table_batches(item_embedding_dict: dict, items_df, emb_size):
                     pa.array([str(row.example_offer_id or "")], pa.utf8()),
                     pa.array([str(row.example_offer_name or "")], pa.utf8()),
                     pa.array([str(row.example_venue_id or "")], pa.utf8()),
-                    pa.array([to_float(row.example_venue_latitude or 0.0)], pa.float32()),
-                    pa.array([to_float(row.example_venue_longitude or 0.0)], pa.float32()),
+                    pa.array(
+                        [to_float(row.example_venue_latitude or 0.0)], pa.float32()
+                    ),
+                    pa.array(
+                        [to_float(row.example_venue_longitude or 0.0)], pa.float32()
+                    ),
                 ],
                 item_columns,
             )

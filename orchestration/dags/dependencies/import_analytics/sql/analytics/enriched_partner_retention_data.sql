@@ -203,7 +203,7 @@ SELECT DISTINCT
     ,COALESCE(favorites.favorites_cnt,0) AS favorites_cnt
     ,has_active_siren
     ,COALESCE(rejected_offers.offers_cnt,0) AS rejected_offers_cnt
-    ,COALESCE(ROUND(SAFE_DIVIDE(rejected_offers.offers_cnt, individual_offers_created_cnt)*100),0) AS rejected_offers_pct
+    ,COALESCE(ROUND(SAFE_DIVIDE(rejected_offers.offers_cnt, individual_offers_created_cnt + rejected_offers.offers_cnt)*100),0) AS rejected_offers_pct
     ,has_provider
     ,CASE WHEN nb_reimbursment_point >= 1 THEN TRUE ELSE FALSE END AS has_reimbursement_point
     ,COALESCE(unique_fraud_users,0) AS unique_fraud_users

@@ -33,23 +33,49 @@ data_gcp_dbt:
       type: bigquery
   
 elementary:
+  target: dev
   outputs:
     dev:
-      dataset: elementary_dev
+      dataset: tmp_dev
       type: bigquery
       method: oauth
       project: passculture-data-ehp 
       location: europe-west1
       threads: 2
     stg:
-      dataset: elementary_stg
+      dataset: tmp_stg
       type: bigquery
       method: oauth
       project: passculture-data-ehp 
       location: europe-west1
       threads: 2
     prod:
-      dataset: elementary_prod
+      dataset: tmp_prod
+      type: bigquery
+      method: oauth
+      project: passculture-data-prod
+      location: europe-west1
+      threads: 2
+
+dbt_artifacts:
+  target: dev
+  outputs:
+    dev:
+      dataset: tmp_dev
+      type: bigquery
+      method: oauth
+      project: passculture-data-ehp 
+      location: europe-west1
+      threads: 2
+    stg:
+      dataset: tmp_stg
+      type: bigquery
+      method: oauth
+      project: passculture-data-ehp 
+      location: europe-west1
+      threads: 2
+    prod:
+      dataset: tmp_prod
       type: bigquery
       method: oauth
       project: passculture-data-prod

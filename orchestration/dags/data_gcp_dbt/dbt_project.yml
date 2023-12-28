@@ -14,13 +14,12 @@ test-paths: ["tests"]
 seed-paths: ["seeds"]
 macro-paths: ["macros"]
 snapshot-paths: ["snapshots"]
-target-path: "target" # directory which will store compiled SQL files
-# TODO : setup conditional packages path depending on working environment. 
-packages-install-path: '/home/airflow/gcs/data/target/dbt_packages'
+target-path: "{{ env_var('DBT_TARGET_PATH', './target') }}/compiled_files" # directory which will store compiled SQL files
+packages-install-path: "{{ env_var('DBT_TARGET_PATH', './target/dbt_packages') }}" # directory which will store dbt packages
 
 clean-targets:         # directories to be removed by `dbt clean`
-  - "target"
-  - "dbt_packages"
+  - "{{ env_var('DBT_TARGET_PATH', './target') }}/compiled_files"
+  - "{{ env_var('DBT_TARGET_PATH', './target/dbt_packages') }}"
 
 models:
   data_gcp_dbt:
@@ -49,8 +48,12 @@ models:
         - column_metrics
       +docs: 
         node_color: "#d90000" 
+      +meta:
   elementary:
-    +schema: "elementary"
+    +schema: "elementary_{{ target.name }}"
+  dbt_artifacts:
+    +database: "dbt_artifacts_{{ target.name }}"
+    +schema: "dbt_artifacts_{{ target.name }}"
     
 seeds:
   +schema: seeds
@@ -61,7 +64,9 @@ snapshots:
   +docs:
     show: false
 tests:
-  # +store_failures: true  # store failures for all tests
+  +store_failures: true  # store failures for all tests
+  +meta:
+    slack_group_alerts_by: table
   +severity: warn # Failing tests will generate a warning by default. To raise an error, overwrite a config with severity: error.  
   +docs:
     show: true
@@ -71,3 +76,6 @@ tests:
 vars:
   ENV_SHORT_NAME: dev
   re_data:save_test_history: true
+  disable_skipped_model_alerts: true
+  disable_skipped_test_alerts: true
+  

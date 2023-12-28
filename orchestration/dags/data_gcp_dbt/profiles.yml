@@ -81,3 +81,6 @@ dbt_artifacts:
       project: passculture-data-prod
       location: europe-west1
       threads: 2
+
+config:
+    send_anonymous_usage_stats: False

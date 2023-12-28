@@ -14,8 +14,12 @@ test-paths: ["tests"]
 seed-paths: ["seeds"]
 macro-paths: ["macros"]
 snapshot-paths: ["snapshots"]
-target-path: "{{ env_var('DBT_TARGET_PATH', './target') }}/compiled_files" # directory which will store compiled SQL files
-packages-install-path: "{{ env_var('DBT_TARGET_PATH', './target/dbt_packages') }}" # directory which will store dbt packages
+# target-path: "{{ env_var('DBT_TARGET_PATH', './target') }}/compiled_files" 
+#             directory which will store compiled SQL files
+#             The `target-path` config in `dbt_project.yml` has been deprecated, and will no longer be supported in a future version of dbt-core. 
+#             If you wish to write dbt artifacts to a custom directory, please use the --target-path CLI flag or DBT_TARGET_PATH env var instead.
+               
+packages-install-path: "{{ env_var('DBT_TARGET_PATH', 'target') }}/dbt_packages" # directory which will store dbt packages
 
 clean-targets:         # directories to be removed by `dbt clean`
   - "{{ env_var('DBT_TARGET_PATH', './target') }}/compiled_files"

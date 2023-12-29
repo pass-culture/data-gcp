@@ -1,12 +1,14 @@
 import json
 
 
-def load_manifest(_PATH_TO_DBT_PROJECT):
-    local_filepath = _PATH_TO_DBT_PROJECT + "/target/manifest.json"
+def load_json_artifact(_PATH_TO_DBT_TARGET,artifact):
+    local_filepath = _PATH_TO_DBT_TARGET + "/" + artifact
     with open(local_filepath) as f:
         data = json.load(f)
     return data
 
+def load_manifest(_PATH_TO_DBT_TARGET):
+    return load_json_artifact(_PATH_TO_DBT_TARGET,"manifest.json")
 
 def build_simplified_manifest(data):
     simplified_manifest = {
@@ -69,24 +71,21 @@ def build_simplified_manifest(data):
     return simplified_manifest
 
 
-def rebuild_manifest(_PATH_TO_DBT_PROJECT):
+def rebuild_manifest(_PATH_TO_DBT_TARGET):
     try:
-        data = load_manifest(_PATH_TO_DBT_PROJECT)
+        data = load_manifest(_PATH_TO_DBT_TARGET)
         simplified_manifest = build_simplified_manifest(data)
-    except FileNotFoundError:
+    except (FileNotFoundError,json.decoder.JSONDecodeError):
         simplified_manifest = {}
     return simplified_manifest
 
 
 def load_run_results(_PATH_TO_DBT_TARGET):
-    local_filepath = _PATH_TO_DBT_TARGET + "/run_results.json"
-    with open(local_filepath) as f:
-        data = json.load(f)
+    data = load_json_artifact(_PATH_TO_DBT_TARGET,"run_results.json")
     dict_results = {}
     for item in data["results"]:
         dict_results[item["unique_id"]] = {
             **dict_results.get(item["unique_id"], {}),
             **item,
         }
-
     return dict_results

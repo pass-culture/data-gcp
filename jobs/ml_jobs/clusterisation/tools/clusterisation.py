@@ -13,7 +13,7 @@ def clusterisation_from_prebuild_embedding(
     clustering, cluster_labels = mbkmeans_clusters(
         X=embedding,
         k=target_n_clusters,
-        mb=10000,
+        mb=10_240,
         print_silhouette_values=False,
     )
     items_with_clusters = pl.DataFrame({"cluster": cluster_labels})

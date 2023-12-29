@@ -72,8 +72,8 @@ get_recommendable_offers AS (
                 ELSE FALSE
             END
         ) AS is_underage_recommendable,
-        MAX(forbidden_offer.restrained) as is_restrained,
-        MAX(forbidden_offer.blocked) as is_blocked,
+        MAX(COALESCE(forbidden_offer.restrained, False)) as is_restrained,
+        MAX(COALESCE(forbidden_offer.blocked, False)) as is_blocked,
         MAX(sensitive_offer.item_id is not null) as is_sensitive,
         ANY_VALUE(enriched_item_metadata.offer_type_labels) as offer_type_labels,
         ANY_VALUE(enriched_item_metadata.offer_type_domain) as offer_type_domain,

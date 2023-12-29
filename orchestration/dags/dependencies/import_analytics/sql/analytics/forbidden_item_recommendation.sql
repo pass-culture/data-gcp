@@ -35,7 +35,7 @@ SELECT
     gtl.gtl_label_level_1 IN (
         "Sciences humaines & sociales", 
         "Scolaire", 
-        "Parascolaire",
+        "Parascolaire"
     ) 
     OR
     gtl.gtl_label_level_4 IN (

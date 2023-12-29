@@ -177,6 +177,14 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "offer_with_mediation",
     },
+    "forbidden_item_recommendation": {
+        "sql": f"{ANALYTICS_SQL_PATH}/forbidden_item_recommendation.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "forbidden_item_recommendation",
+        "depends": [
+            "enriched_offer_data",
+        ],
+    },
     "recommendable_offers_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/recommendable_offers_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
@@ -186,6 +194,7 @@ analytics_tables = {
             "enriched_offer_data",
             "offer_with_mediation",
             "enriched_item_metadata",
+            "forbidden_item_recommendation",
         ],
     },
     "recommendable_offers_raw": {

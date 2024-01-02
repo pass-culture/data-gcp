@@ -41,7 +41,7 @@ dag = DAG(
             type="string",
         ),
         "command": Param(
-            default="dbt --version",
+            default="dbt run --models package:re_data",
             type="string",
         ),
     },

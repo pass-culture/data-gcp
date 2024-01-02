@@ -21,7 +21,7 @@ jobs:
 
       - name: Get etl_jobs changed files 
         id: changed-etl-files
-        uses: tj-actions/changed-files@v39
+        uses: tj-actions/changed-files@v41
         with:
           files: "jobs/etl_jobs/**"
           json: true
@@ -30,7 +30,7 @@ jobs:
 
       - name: Get ml_jobs changed files 
         id: changed-ml-files
-        uses: tj-actions/changed-files@v39
+        uses: tj-actions/changed-files@v41
         with:
           files: "jobs/ml_jobs/**"
           json: true
@@ -87,7 +87,7 @@ jobs:
      steps:
       - name: Get changed files in orchestration folder
         id: changed-orchestration-files
-        uses: tj-actions/changed-files@v39
+        uses: tj-actions/changed-files@v41
         with:
           files: "orchestration/**"
 

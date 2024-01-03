@@ -18,6 +18,13 @@ import typing as t
 from base64 import b64encode
 
 
+def parse_int(x):
+    try:
+        return int(x)
+    except ValueError:
+        return 0
+
+
 class StartGCEOperator(BaseOperator):
     template_fields = [
         "instance_name",
@@ -49,8 +56,12 @@ class StartGCEOperator(BaseOperator):
         self.labels = labels
 
     def execute(self, context) -> None:
+        accelerator_types = [
+            x for x in self.accelerator_types if parse_int(x.get("count", "")) > 0
+        ]
         if self.source_image_type is None:
-            if len(self.accelerator_types) > 0:
+
+            if len(accelerator_types) > 0:
                 image_type = MACHINE_TYPE["gpu"]
             else:
                 image_type = MACHINE_TYPE["cpu"]
@@ -61,7 +72,7 @@ class StartGCEOperator(BaseOperator):
             self.instance_name,
             self.instance_type,
             preemptible=self.preemptible,
-            accelerator_types=self.accelerator_types,
+            accelerator_types=accelerator_types,
             labels=self.labels,
         )
 

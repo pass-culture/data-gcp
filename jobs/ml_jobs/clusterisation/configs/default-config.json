@@ -1,5 +1,6 @@
 {
-    "pretained_embedding_name": "semantic_content",
+    "pretrained_embedding_name": "semantic_content_embedding",
+    "pretrained_embedding_size" : 32,
     "group_config": [
         {
             "group": "LIVRES",

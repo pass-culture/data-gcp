@@ -39,7 +39,15 @@ def dimension_reduction(
     ###############
     # Load preprocessed data
     df_data_w_embedding = pd.read_gbq(
-        f"SELECT * FROM `tmp_{env_short_name}.{input_table_name}`"
+        f"""
+            SELECT * 
+            FROM `clean_{env_short_name}.{input_table_name}`
+            QUALIFY ROW_NUMBER() OVER (
+                PARTITION BY item_id
+                ORDER BY
+                extraction_date DESC
+            ) = 1
+        """
     )
 
     reduced_emb_df_init = df_data_w_embedding[["item_id", "extraction_date"]].astype(
@@ -64,7 +72,7 @@ def dimension_reduction(
         final_reduced_emb.to_gbq(
             f"clean_{env_short_name}.{output_table_name}_{dim}",
             project_id=gcp_project,
-            if_exists="append",
+            if_exists="replace",
         )
 
     return

@@ -8,7 +8,6 @@ import umap
 
 from tools.config import CONFIGS_PATH, ENV_SHORT_NAME, GCP_PROJECT_ID
 from tools.embedding_extraction import extract_embedding
-from tools.dimension_reduction import reduce_embedding_dimension
 
 
 def main(

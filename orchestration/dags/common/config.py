@@ -25,7 +25,8 @@ else:
     MLFLOW_URL = "https://mlflow.passculture.team/"
 
 APPLICATIVE_EXTERNAL_CONNECTION_ID = os.environ.get(
-    "APPLICATIVE_EXTERNAL_CONNECTION_ID", ""
+    "APPLICATIVE_EXTERNAL_CONNECTION_ID",
+    "passculture-metier-ehp.europe-west1.metier-pcapi-testing-connection",
 )
 METABASE_EXTERNAL_CONNECTION_ID = os.environ.get("METABASE_EXTERNAL_CONNECTION_ID", "")
 DATA_GCS_BUCKET_NAME = os.environ.get(
@@ -48,7 +49,7 @@ BIGQUERY_BACKEND_DATASET = os.environ.get(
 BIGQUERY_TMP_DATASET = os.environ.get("BIGQUERY_TMP_DATASET", f"tmp_{ENV_SHORT_NAME}")
 
 APPLICATIVE_PREFIX = "applicative_database_"
-QPI_TABLE = "qpi_answers"
+
 RECOMMENDATION_SQL_INSTANCE = os.environ.get(
     "RECOMMENDATION_SQL_INSTANCE", f"cloudsql-recommendation-{ENV_SHORT_NAME}-ew1"
 )
@@ -67,3 +68,6 @@ elif ENV_SHORT_NAME == "stg":
     MEDIATION_URL = "passculture-metier-ehp-staging"
 else:
     MEDIATION_URL = "passculture-metier-ehp-testing"
+
+PATH_TO_DBT_PROJECT = f"{DAG_FOLDER}/data_gcp_dbt".replace("//", "/")
+PATH_TO_DBT_TARGET = os.environ.get("DBT_TARGET_PATH", "./target")

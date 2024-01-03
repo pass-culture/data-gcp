@@ -21,7 +21,6 @@ def main(
         help="Environnement short name",
     ),
 ) -> None:
-
     df_offers_to_link = pd.read_gbq(
         f"SELECT * FROM `{gcp_project}.sandbox_{env_short_name}.offers_to_link`"
     )

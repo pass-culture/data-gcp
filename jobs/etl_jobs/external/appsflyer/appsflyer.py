@@ -6,7 +6,7 @@ from furl import furl
 
 
 class AppsFlyer:
-    DEFAULT_ENDPOINT = "https://hq.appsflyer.com"  # https://hq1.appsflyer.com/api/raw-data/export/app/{_id}/installs_report/v5?
+    DEFAULT_ENDPOINT = "https://hq1.appsflyer.com"
     RAW_DATA_REPORT_ADDITIONAL_FIELDS = ",".join(
         [
             "install_app_store",
@@ -43,6 +43,9 @@ class AppsFlyer:
             "currency": kwargs.get("currency", "preferred"),
         }
 
+        if "maximum_rows" in kwargs:
+            args["maximum_rows"] = kwargs.get("maximum_rows")
+
         if "media_source" in kwargs:
             args["media_source"] = kwargs.get("media_source")
 
@@ -59,6 +62,9 @@ class AppsFlyer:
 
     def __to_df(self, resp):
         if resp.status_code != requests.codes.ok:
+            print("ERROR...")
+            print(resp.text)
+            print(resp.content)
             raise Exception(resp.text)
 
         return df.read_csv(StringIO(resp.text))
@@ -87,9 +93,7 @@ class AppsFlyer:
 
     def daily_report(self, date_from, date_to, as_df=False, **kwargs):
         f = furl(self.DEFAULT_ENDPOINT)
-        f.path = (
-            "/api/agg-data/export/%s/daily_report/v5" % self.app_id
-        )  # api/agg-data/export/app/
+        f.path = "/api/agg-data/export/%s/daily_report/v5" % self.app_id
         f.args = self.__build_args(date_from, date_to, kwargs)
         resp = requests.get(f.url, headers=self.headers)
 

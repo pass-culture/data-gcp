@@ -41,6 +41,11 @@ get_recommendable_offers AS (
         offer.offer_creation_date AS offer_creation_date,
         stock.stock_beginning_date AS stock_beginning_date,
         offer.last_stock_price AS stock_price,
+        offer.titelive_gtl_id AS gtl_id,
+        glt_mapping.gtl_label_level_1 AS gtl_l1,
+        glt_mapping.gtl_label_level_2 AS gtl_l2,
+        glt_mapping.gtl_label_level_3 AS gtl_l3,
+        glt_mapping.gtl_label_level_4 AS gtl_l4,
         MAX(item_counts.item_count) as item_count,
         MAX(COALESCE(booking_numbers.booking_number, 0)) AS booking_number,
         MAX(COALESCE(booking_numbers.booking_number_last_7_days, 0)) AS booking_number_last_7_days,
@@ -67,18 +72,17 @@ get_recommendable_offers AS (
                 ELSE FALSE
             END
         ) AS is_underage_recommendable,
-        -- not in forbidden_query or forbidden_offer
-        MIN(
-            forbidden_query.subcategory_id is null OR 
-            NOT (REGEXP_CONTAINS(LOWER(offer.offer_name) ,CONCAT(r'(?i)(\b', forbidden_query.query, r'\b)')))
-            OR forbidden_offer.product_id is null
-        ) as is_recommendable,
+        MAX(COALESCE(forbidden_offer.restrained, False)) as is_restrained,
+        MAX(COALESCE(forbidden_offer.blocked, False)) as is_blocked,
+        MAX(sensitive_offer.item_id is not null) as is_sensitive,
         ANY_VALUE(enriched_item_metadata.offer_type_labels) as offer_type_labels,
         ANY_VALUE(enriched_item_metadata.offer_type_domain) as offer_type_domain,
         ANY_VALUE(enriched_item_metadata.offer_type_id) as offer_type_id,
         ANY_VALUE(enriched_item_metadata.offer_type_label) as offer_type_label,
         ANY_VALUE(enriched_item_metadata.offer_sub_type_id) as offer_sub_type_id,
         ANY_VALUE(enriched_item_metadata.offer_sub_type_label) as offer_sub_type_label,
+        ANY_VALUE(enriched_item_metadata.cluster_id) AS cluster_id,
+        ANY_VALUE(enriched_item_metadata.topic_id) AS topic_id,
 
     FROM
         `{{ bigquery_analytics_dataset }}`.enriched_offer_data offer
@@ -98,28 +102,30 @@ get_recommendable_offers AS (
             WHERE
                 offerer_validation_status='VALIDATED'
         ) offerer ON offerer.offerer_id = venue.venue_managing_offerer_id
-        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock stock ON offer.offer_id = stock.offer_id
-        LEFT JOIN booking_numbers ON booking_numbers.item_id = offer.item_id
-        LEFT JOIN (
-            SELECT count(*) as item_count,
-            offer.item_id as item_id,
+        JOIN (
+            SELECT
+                offer.item_id as item_id,
+                count(*) as item_count,
             FROM `{{ bigquery_analytics_dataset }}`.enriched_offer_data offer
             GROUP BY item_id
         ) item_counts on item_counts.item_id = offer.item_id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock stock ON offer.offer_id = stock.offer_id
+        LEFT JOIN booking_numbers ON booking_numbers.item_id = offer.item_id
         JOIN `{{ bigquery_analytics_dataset }}`.offer_with_mediation om on offer.offer_id=om.offer_id
         LEFT JOIN  `{{ bigquery_analytics_dataset }}`.enriched_item_metadata enriched_item_metadata on offer.item_id = enriched_item_metadata.item_id
-        
-        LEFT JOIN `{{ bigquery_raw_dataset }}`.forbidden_query_recommendation forbidden_query on 
-            enriched_item_metadata.subcategory_id = forbidden_query.subcategory_id
-        LEFT JOIN `{{ bigquery_raw_dataset }}`.forbidden_offers_recommendation forbidden_offer on 
-            offer.offer_product_id = forbidden_offer.product_id
+        LEFT JOIN `{{ bigquery_analytics_dataset }}`.forbidden_item_recommendation forbidden_offer on 
+            offer.item_id = forbidden_offer.item_id
+        LEFT JOIN `{{ bigquery_raw_dataset }}`.sensitive_item_recommendation sensitive_offer on 
+            offer.item_id = sensitive_offer.item_id
+        LEFT JOIN `{{ bigquery_analytics_dataset }}`.titelive_gtl_mapping glt_mapping on 
+            offer.titelive_gtl_id = glt_mapping.gtl_id
     WHERE
         offer.is_active = TRUE
         AND offer.offer_is_bookable = TRUE
         AND offerer.offerer_is_active = TRUE
         AND offer.offer_validation = 'APPROVED'
-    GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13
+    GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18
 )
 SELECT  * 
 FROM get_recommendable_offers 
-where is_recommendable 
+where not is_blocked 

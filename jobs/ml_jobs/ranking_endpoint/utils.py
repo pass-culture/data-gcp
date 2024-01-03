@@ -3,7 +3,14 @@ import pandas as pd
 from datetime import datetime
 import time
 import subprocess
+from google.auth.transport.requests import Request
+from google.oauth2 import id_token
+from google.cloud import secretmanager
+import mlflow
 
+
+MLFLOW_EHP_URI = "https://mlflow.staging.passculture.team/"
+MLFLOW_PROD_URI = "https://mlflow.passculture.team/"
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 BIGQUERY_CLEAN_DATASET = f"clean_{ENV_SHORT_NAME}"
@@ -11,7 +18,6 @@ MODELS_RESULTS_TABLE_NAME = "mlflow_training_results"
 
 
 def save_experiment(experiment_name, model_name, serving_container, run_id):
-
     log_results = {
         "execution_date": datetime.now().isoformat(),
         "experiment_name": experiment_name,
@@ -38,3 +44,24 @@ def deploy_container(serving_container):
     # TODO handle errors
     for line in results.stdout:
         print(line.rstrip().decode("utf-8"))
+
+
+def connect_remote_mlflow(client_id, env="ehp"):
+    os.environ["MLFLOW_TRACKING_TOKEN"] = id_token.fetch_id_token(Request(), client_id)
+    uri = MLFLOW_PROD_URI if env == "prod" else MLFLOW_EHP_URI
+    mlflow.set_tracking_uri(uri)
+
+
+def get_mlflow_experiment(experiment_name: str):
+    experiment = mlflow.get_experiment_by_name(experiment_name)
+    if experiment is None:
+        mlflow.create_experiment(name=experiment_name)
+        experiment = mlflow.get_experiment_by_name(experiment_name)
+    return experiment
+
+
+def get_secret(secret_id: str):
+    client = secretmanager.SecretManagerServiceClient()
+    name = f"projects/{GCP_PROJECT_ID}/secrets/{secret_id}/versions/1"
+    response = client.access_secret_version(name=name)
+    return response.payload.data.decode("UTF-8")

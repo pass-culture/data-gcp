@@ -13,6 +13,7 @@ from mapping import (
 import typer
 
 APPS = {"ios": IOS_APP_ID, "android": ANDROID_APP_ID}
+import time
 
 
 class ImportAppsFlyer:
@@ -30,6 +31,7 @@ class ImportAppsFlyer:
             df_uninstalls["app"] = app
             dfs.append(df_installs)
             dfs.append(df_uninstalls)
+            time.sleep(60)
         df = pd.concat(dfs, ignore_index=True)
         df = df.rename(columns=INSTALLS_REPORT)
         for k, v in INSTALLS_REPORT_MAPPING.items():
@@ -39,21 +41,44 @@ class ImportAppsFlyer:
     def get_daily_report(self):
         dfs = []
         for app, api in self.apis.items():
-            df = api.daily_report(self._from, self._to, True)
+            # Facebook
+
+            df = api.daily_report(self._from, self._to, True, category="facebook")
+            _cols = list(df.columns)
+            df["app"] = app
+            if "Adset Id" in _cols:
+                df["Adset Id"] = df["Adset Id"].map(lambda x: "{:.0f}".format(x))
+            if "Adgroup Id" in _cols:
+                df["Adgroup Id"] = df["Adgroup Id"].map(lambda x: "{:.0f}".format(x))
+            if "Campaign Id" in _cols:
+                df["Campaign Id"] = df["Campaign Id"].map(lambda x: "{:.0f}".format(x))
+            dfs.append(df)
+            time.sleep(60)
+            # Else
+            df = api.daily_report(self._from, self._to, True, category="standard")
+            df = df[df["Media Source (pid)"] != "Facebook Ads"]
+
             df["app"] = app
             dfs.append(df)
+            time.sleep(60)
         df = pd.concat(dfs, ignore_index=True)
         df = df.rename(columns=DAILY_REPORT)
+        df_columns = list(df.columns)
         for k, v in DAILY_REPORT_MAPPING.items():
+            if k not in df_columns:
+                df[k] = None
             df[k] = df[k].astype(v)
         return df[list(DAILY_REPORT.values()) + ["app"]]
 
     def get_in_app_events_report(self):
         dfs = []
         for app, api in self.apis.items():
-            df = api.in_app_events_report(self._from, self._to, True)
+            df = api.in_app_events_report(
+                self._from, self._to, True, maximum_rows=1000000
+            )
             df["app"] = app
             dfs.append(df)
+            time.sleep(60)
         df = pd.concat(dfs, ignore_index=True)
         df = df.rename(columns=APP_REPORT)
         for k, v in APP_REPORT_MAPPING.items():

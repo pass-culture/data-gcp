@@ -41,6 +41,7 @@ with child_home as (
   , ref.content_type as parent_module_type
   , event_date as module_displayed_date
   , event_timestamp as module_displayed_timestamp
+  , events.user_location_type
   FROM `{{ bigquery_analytics_dataset }}.firebase_events` events
   LEFT JOIN `{{ bigquery_analytics_dataset }}.contentful_entries` as ref
   on events.module_id = ref.id
@@ -72,6 +73,7 @@ with child_home as (
       , module_id
       , children_ref.title as module_name -- category block / highlight name
       , event_timestamp as module_clicked_timestamp
+      , events.user_location_type
     FROM `{{ bigquery_analytics_dataset }}.firebase_events` events
     LEFT JOIN parents_ref
     ON events.module_list_id = parents_ref.id
@@ -109,9 +111,10 @@ with child_home as (
       , events.offer_id
       , events.venue_id
       , event_timestamp as consult_offer_timestamp
+      , events.user_location_type
     FROM `{{ bigquery_analytics_dataset }}.firebase_events` events
     WHERE event_name = 'ConsultOffer'
-    AND origin in ("home", "exclusivity", "venue","video","videoModal")
+    AND origin in ("home", "exclusivity", "venue","video","videoModal","highlightOffer")
     AND user_pseudo_id is not null
     QUALIFY rank() over(partition by unique_session_id, offer_id order by event_timestamp desc) = 1 -- get the last consultation
     ),
@@ -126,6 +129,7 @@ with child_home as (
         , offer_id
         , venue_id
         , event_timestamp as consult_venue_timestamp
+        , user_location_type
       FROM `{{ bigquery_analytics_dataset }}.firebase_events`
       WHERE event_name = "ConsultVenue"
       AND origin = "home" 
@@ -143,6 +147,7 @@ with child_home as (
       , ref.title as module_name
       , ref.content_type
       , offer.origin
+      , coalesce(offer.user_location_type, venue.user_location_type) as user_location_type
       , offer.offer_id
       , venue.venue_id
       , consult_offer_timestamp
@@ -174,6 +179,7 @@ SELECT
   , displayed.parent_module_id -- Can be category list block, highlight etc / second touch
   , displayed.parent_module_name
   , displayed.parent_module_type
+  , displayed.user_location_type
   , destination_entry_id --  2nd home id in case of redirection to an home_id
   , destination_entry_name
   , click_type

@@ -9,7 +9,6 @@ SELECT
     offer_name,
     offer_description,
     offer_url,
-    offer_media_urls,
     offer_duration_minutes,
     offer_extra_data,
     offer_is_duo,

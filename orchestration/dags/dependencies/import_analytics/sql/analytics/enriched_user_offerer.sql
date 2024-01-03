@@ -29,4 +29,5 @@ u.user_has_enabled_marketing_email
 from `{{ bigquery_raw_dataset }}`.applicative_database_user_offerer as uo
 left join  `{{ bigquery_raw_dataset }}`.applicative_database_user as u on uo.userid = u.user_id
 where  uo.user_offerer_validation_status = 'VALIDATED'
+AND u.user_is_active
 order by uo.offererid, u.user_creation_date

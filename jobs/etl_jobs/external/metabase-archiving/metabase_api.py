@@ -43,7 +43,6 @@ class MetabaseAPI:
         return response.json()
 
     def get_cards(self, _id=None):
-
         if _id:
             response = requests.get(f"{self.host}/api/card/{_id}", headers=self.headers)
         else:

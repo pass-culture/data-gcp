@@ -90,7 +90,6 @@ class BatchClient:
         return campaigns_stats_df
 
     def get_ab_testing_details(self, campaigns_stats_df):
-
         ab_testing_df = (
             campaigns_stats_df[~campaigns_stats_df["versions"].isna()]
             .reset_index(drop=True)
@@ -130,7 +129,6 @@ class BatchClient:
         return ab_testing_df
 
     def get_campaigns_stats_detailed(self, campaigns_stats_df, ab_testing_df):
-
         final_df = pd.concat(
             [campaigns_stats_df[campaigns_stats_df["versions"].isna()], ab_testing_df]
         ).drop("versions", axis=1)
@@ -138,7 +136,6 @@ class BatchClient:
         return final_df
 
     def get_transactional_stats(self, group_id, start_date, end_date):
-
         url = f"{self.base_url}{self.api_key}/transactional/stats"
         response = session.get(
             f"{url}/{group_id}?since={start_date}&until={end_date}",

@@ -124,6 +124,7 @@ SELECT
     humanize_id(offer.offer_product_id) as offer_product_humanized_id,
     offer.offer_id_at_providers,
     offer.offer_name,
+    offer_description,
     offer.offer_subcategoryId,
     subcategories.category_id offer_category_id,
     last_stock.last_stock_price,
@@ -176,7 +177,7 @@ SELECT
     offer_humanized_id.humanized_id AS offer_humanized_id,
     CONCAT(
         'https://passculture.pro/offre/individuelle/',
-        offer_humanized_id.humanized_id,
+        offer.offer_id,
         '/informations'
     ) AS passculture_pro_url,
     CONCAT('https://passculture.app/offre/', offer.offer_id) AS webapp_url,

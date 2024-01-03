@@ -52,7 +52,7 @@ with DAG(
             type="string",
         ),
         "batch_size": Param(
-            default=50000 if ENV_SHORT_NAME == "prod" else 10000,
+            default=20000 if ENV_SHORT_NAME == "prod" else 10000,
             type="integer",
         ),
     },
@@ -66,6 +66,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         instance_type="{{ params.instance_type }}",
         retries=2,
+        labels={"job_type": "ml"},
     )
 
     fetch_code = CloneRepositoryGCEOperator(

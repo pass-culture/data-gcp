@@ -1,0 +1,13 @@
+version: 2
+
+tests:
+  - name: sum_2_columns_equals_another_column
+    description: This tests if the addition of column_name1 + column_name2 = column_name
+
+    arguments:
+      - name: column_name1
+        description: First column in the sum
+      - name: column_name2
+        description: Second column in the sum
+      - name: column_name
+        description: Expected column value

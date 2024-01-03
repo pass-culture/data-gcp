@@ -9,13 +9,19 @@ SELECT
     WHEN media_source = "restricted" THEN "Unknown"
   ELSE media_source END AS media_source,
   IF(campaign = 'None', 'Unknown', campaign) as campaign,
+  campaign_id,
+  adset,
+  adset_id,
+  adgroup,
+  adgroup_id, 
   sum(impressions) as impressions,
   sum(clicks) as clicks,
   sum(ctr) as ctr,
   sum(installs) as installs,
   sum(conversion_rate) as conversion_rate,
   sum(loyal_users) as loyal_users,
+  sum(total_cost) as total_cost
  FROM `{{ bigquery_raw_dataset }}.appsflyer_daily_report` 
  WHERE campaign != 'None'
- GROUP BY 1,2,3,4
+ GROUP BY 1,2,3,4,5,6,7,8,9
 

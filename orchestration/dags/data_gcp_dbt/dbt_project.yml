@@ -1,0 +1,75 @@
+name: 'data_gcp_dbt'
+version: '1.0.0'
+config-version: 2
+
+# This setting configures which "profile" dbt uses for this project.
+profile: 'data_gcp_dbt'
+
+# These configurations specify where dbt should look for different types of files.
+# The `model-paths` config, for example, states that models in this project can be
+# found in the "models/" directory. You probably won't need to change these!
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+target-path: "{{ env_var('DBT_TARGET_PATH', 'target') }}" # directory which will store compiled SQL files
+packages-install-path: "{{ env_var('DBT_TARGET_PATH', 'target') }}/dbt_packages"
+
+clean-targets:         # directories to be removed by `dbt clean`
+  - "{{ env_var('DBT_TARGET_PATH', 'target') }}"
+
+models:
+  data_gcp_dbt:
+    raw:
+      +materialized: table
+      +schema: raw_dbt_{{ target.name }}
+      +docs:
+        node_color: "#0320fc"
+      applicative_raw:
+        # schema: applicative_raw
+        tags: "applicative"
+    clean:
+      +materialized: view
+      +schema: clean_dbt_{{ target.name }}
+      +docs: 
+        node_color: "#b43ddb"
+    analytics:
+      +materialized: table
+      +schema: analytics_dbt_{{ target.name }}
+      +re_data_monitored: true
+      +re_data_anomaly_detector:
+        name: modified_z_score
+        threshold: 3
+      +re_data_metrics_groups:
+        - table_metrics
+        - column_metrics
+      +docs: 
+        node_color: "#d90000" 
+  elementary:
+    +schema: "elementary"
+  re_data:
+    +schema: "re_data"
+
+    
+seeds:
+  +schema: seeds
+  +docs:
+    node_color: "#000000"
+snapshots:
+  +target_schema: snapshots
+  +docs:
+    show: false
+tests:
+  # +store_failures: true  # store failures for all tests
+  +severity: warn # Failing tests will generate a warning by default. To raise an error, overwrite a config with severity: error.  
+  +docs:
+    show: true
+    tags: "test"
+
+
+vars:
+  ENV_SHORT_NAME: dev
+  re_data:save_test_history: true

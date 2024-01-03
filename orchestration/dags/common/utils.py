@@ -22,17 +22,53 @@ def getting_service_account_token(function_name):
     return open_id_connect_token
 
 
-def waiting_operator(dag, dag_id, task_id, external_task_id="end"):
+def get_dependencies(tables_config):
+    # 1. DAGS dependencies
+    dags_list_of_list = [
+        job_params.get("dag_depends", "") for _, job_params in tables_config.items()
+    ]
+    dags = list(set([dag for dag_list in dags_list_of_list for dag in dag_list]))
+    dag_dependencies = []
+    # initialize dict
+    for dag in dags:
+        d = {"dependency_type": "dag", "upstream_id": dag, "dependant_tables": []}
+        for table, job_params in tables_config.items():
+            for dag in job_params.get("dag_depends", ""):
+                if dag in d["upstream_id"]:
+                    d["dependant_tables"].append(table)
 
-    hasher = hashlib.sha1(task_id.encode("utf-8"))
-    hashed_task_id = (
-        str(base64.urlsafe_b64encode(hasher.digest()[:10]))
-        .replace("=", "")
-        .replace("'", "")
+        dag_dependencies.append(d)
+
+    # 2. TABLES dependencies
+    tables_list_of_list = [
+        job_params.get("depends", "") for _, job_params in tables_config.items()
+    ]
+    upstream_tables = list(
+        set([table for table_list in tables_list_of_list for table in table_list])
     )
+    tables_dependencies = []
+    # initialize dict
+    for upstream_table in upstream_tables:
+        t = {
+            "dependency_type": "table",
+            "upstream_id": upstream_table,
+            "dependant_tables": [],
+        }
+        for table, job_params in tables_config.items():
+            for dependant_table in job_params.get("depends", ""):
+                if dependant_table in t["upstream_id"]:
+                    t["dependant_tables"].append(table)
 
+        tables_dependencies.append(t)
+
+    dependencies = dag_dependencies + tables_dependencies
+
+    return dependencies
+
+
+def waiting_operator(dag, dag_id, external_task_id="end"):
     return ExternalTaskSensor(
-        task_id=f"wait_for_{dag_id}_{external_task_id}_{hashed_task_id}",
+        task_id=f"wait_for_{dag_id}_{external_task_id}",
         external_dag_id=dag_id,
         external_task_id=external_task_id,
         check_existence=True,
@@ -44,72 +80,79 @@ def waiting_operator(dag, dag_id, task_id, external_task_id="end"):
     )
 
 
-def depends_loop(jobs: dict, default_upstream_operator, dag):
+def depends_loop(
+    tables_config, jobs: dict, default_upstream_operator, dag, default_end_operator
+):
     default_downstream_operators = []
     has_downstream_dependencies = []
 
-    table_dependencies = [
-        {
-            "dependency_type": "table",
-            "task_id": table,
-            "task": jobs_def["operator"],
-            "depends_on": dependency,
-        }
-        for table, jobs_def in jobs.items()
-        for dependency in jobs_def.get("depends", [])
-    ]
+    dependencies = get_dependencies(tables_config)
 
-    dag_dependencies = [
-        {
-            "dependency_type": "dag",
-            "task_id": table,
-            "task": jobs_def["operator"],
-            "depends_on": dependency,
-        }
-        for table, jobs_def in jobs.items()
-        for dependency in jobs_def.get("dag_depends", [])
+    tables_with_dependencies = [
+        dependency["dependant_tables"] for dependency in dependencies
     ]
-
-    dependencies = table_dependencies + dag_dependencies
+    tables_with_dependencies = list(
+        set([table for table_list in tables_with_dependencies for table in table_list])
+    )  # flatten list
 
     for table, jobs_def in jobs.items():
-
         operator = jobs_def["operator"]
-        default_downstream_operators.append(operator)
-
-        if operator not in [dependency["task"] for dependency in dependencies]:
+        # Case for tables without dependencies
+        if table not in tables_with_dependencies:
+            default_downstream_operators.append(operator)
             operator.set_upstream(default_upstream_operator)
 
-        # keep dependencies of the current table only
-        for dependency in [
-            dependency_task
-            for dependency_task in dependencies
-            if dependency_task["task_id"] == table
-        ]:
+    for dependency in dependencies:
+        if dependency["dependency_type"] == "dag":
+            if "/" in dependency["upstream_id"]:
+                depend_job = waiting_operator(
+                    dag,
+                    dependency["upstream_id"].split("/")[0],
+                    external_task_id=dependency["upstream_id"].split("/")[-1],
+                )
+            else:
+                depend_job = waiting_operator(
+                    dag, dependency["upstream_id"], external_task_id="end"
+                )
 
-            if dependency["dependency_type"] == "dag":
-                if type(dependency["depends_on"]) is str:
-                    depend_job = waiting_operator(
-                        dag,
-                        dependency["depends_on"],
-                        task_id=dependency["task_id"],
-                        external_task_id="end",
-                    )
-                elif type(dependency["depends_on"]) is dict:
-                    depend_job = waiting_operator(
-                        dag,
-                        list(dependency["depends_on"].keys())[0],
-                        task_id=dependency["task_id"],
-                        external_task_id=list(dependency["depends_on"].values())[0],
-                    )
-                has_downstream_dependencies.append(depend_job)
-                dependency["task"].set_upstream(depend_job)
-                depend_job.set_upstream(default_upstream_operator)
+            # get all dependant tasks
+            dependant_tables = dependency["dependant_tables"]
+            dependant_tasks = [
+                jobs_params["operator"]
+                for table, jobs_params in jobs.items()
+                if table in dependant_tables
+            ]
+            for dependant_task in dependant_tasks:
+                has_downstream_dependencies.append(dependant_task)
+                dependant_task.set_upstream(depend_job)
 
-            if dependency["dependency_type"] == "table":
-                depend_job = jobs[dependency["depends_on"]]["operator"]
-                has_downstream_dependencies.append(depend_job)
-                dependency["task"].set_upstream(depend_job)
+            depend_job.set_upstream(default_upstream_operator)
+
+        elif dependency["dependency_type"] == "table":
+            depend_job = [
+                jobs_params["operator"]
+                for table, jobs_params in jobs.items()
+                if table == dependency["upstream_id"]
+            ][0]
+
+            dependant_tables = dependency["dependant_tables"]
+
+            dependant_tasks = [
+                jobs_params["operator"]
+                for table, jobs_params in jobs.items()
+                if table in dependant_tables
+            ]
+
+            for dependant_task in dependant_tasks:
+                if dependant_task not in has_downstream_dependencies:
+                    has_downstream_dependencies.append(dependant_task)
+
+                dependant_task.set_upstream(depend_job)
+
+    if len(has_downstream_dependencies) > 0:
+        default_end_operator.set_upstream(has_downstream_dependencies)
+    else:
+        default_end_operator.set_upstream(default_downstream_operators)
 
     return [
         x for x in default_downstream_operators if x not in has_downstream_dependencies
@@ -117,15 +160,8 @@ def depends_loop(jobs: dict, default_upstream_operator, dag):
 
 
 def from_external(conn_id, sql_path):
-    return (
-        f"SELECT * FROM EXTERNAL_QUERY('{conn_id}', "
-        + '"'
-        + "{% include '"
-        + sql_path
-        + "' %}"
-        + '"'
-        + ");"
-    )
+    include = "{% include '" + sql_path + "' %}"
+    return f' SELECT * FROM EXTERNAL_QUERY("{conn_id}", """ {include} """ ) ; '
 
 
 def one_line_query(sql_path):

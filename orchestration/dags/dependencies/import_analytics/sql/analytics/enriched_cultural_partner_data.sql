@@ -5,7 +5,7 @@ SELECT
     ,venue_managing_offerer_id AS offerer_id
     ,enriched_venue_data.partner_id
     ,venue_creation_date AS partner_creation_date
-    ,CASE WHEN DATE_TRUNC(venue_creation_date,YEAR) <= DATE_TRUNC(DATE_SUB(DATE('{{ ds }}'),INTERVAL 1 YEAR),YEAR) THEN TRUE ELSE NULL END AS was_registered_last_year
+    ,CASE WHEN DATE_TRUNC(venue_creation_date,YEAR) <= DATE_TRUNC(DATE_SUB(DATE('{{ ds }}'),INTERVAL 1 YEAR),YEAR) THEN TRUE ELSE FALSE END AS was_registered_last_year
     ,enriched_venue_data.venue_name AS partner_name
     ,region_department.academy_name AS partner_academy_name
     ,enriched_venue_data.venue_region_name AS partner_region_name
@@ -134,7 +134,7 @@ LEFT JOIN tagged_partners ON tagged_partners.offerer_id = enriched_offerer_data.
 LEFT JOIN permanent_venues ON permanent_venues.offerer_id = enriched_offerer_data.offerer_id
 LEFT JOIN top_venue_per_offerer ON top_venue_per_offerer.offerer_id = enriched_offerer_data.offerer_id
 LEFT JOIN `{{ bigquery_analytics_dataset }}`.agg_partner_cultural_sector ON agg_partner_cultural_sector.partner_type = COALESCE(tagged_partners.partner_type, top_venue_per_offerer.partner_type)
-WHERE NOT enriched_offerer_data.is_territorial_authorities  -- Collectivités à part
+WHERE NOT enriched_offerer_data.is_local_authority  -- Collectivités à part
 AND permanent_venues.offerer_id IS NULL -- Pas déjà compté à l'échelle du lieu permanent
 )
 

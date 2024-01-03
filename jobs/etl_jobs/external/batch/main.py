@@ -13,7 +13,6 @@ def main(
     env_short_name,
     operating_system,
 ):
-
     if operating_system == "android":
         API_KEY = access_secret_data(
             gcp_project_id, f"batch-android-api-key-{env_short_name}", version_id=1

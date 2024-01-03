@@ -30,6 +30,8 @@ from common.operators.gce import (
     CloneRepositoryGCEOperator,
     SSHGCEOperator,
 )
+import time
+
 
 from dependencies.dms_subscriptions.import_dms_subscriptions import CLEAN_TABLES
 from common import macros
@@ -72,13 +74,13 @@ with DAG(
     template_searchpath=DAG_FOLDER,
     user_defined_macros=macros.default,
 ) as dag:
-
     start = DummyOperator(task_id="start")
 
     gce_instance_start = StartGCEOperator(
         instance_name=GCE_INSTANCE,
         task_id="gce_start_task",
         retries=2,
+        labels={"job_type": "long_task"},
     )
 
     fetch_code = CloneRepositoryGCEOperator(
@@ -105,6 +107,12 @@ with DAG(
         command="python main.py pro {{ params.updated_since_pro }} "
         + f"{GCP_PROJECT_ID} {ENV_SHORT_NAME}",
         do_xcom_push=True,
+    )
+
+    sleep_op = PythonOperator(
+        dag=dag,
+        task_id="sleep_task",
+        python_callable=lambda: time.sleep(60),  # wait 1 minute
     )
 
     dms_to_gcs_jeunes = SSHGCEOperator(
@@ -216,10 +224,11 @@ with DAG(
     >> gce_instance_start
     >> fetch_code
     >> install_dependencies
-    >> [dms_to_gcs_pro, dms_to_gcs_jeunes]
+    >> [dms_to_gcs_pro, sleep_op]
 )
 (
-    dms_to_gcs_jeunes
+    sleep_op
+    >> dms_to_gcs_jeunes
     >> parse_api_result_jeunes
     >> import_dms_jeunes_to_bq
     >> cleaning_tasks[0]

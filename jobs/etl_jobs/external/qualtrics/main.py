@@ -14,7 +14,7 @@ from qualtrics_survey_answers import QualtricsSurvey
 
 ir_surveys_mapping = {
     "GRANT_15_17": "SV_3IdnHqrnsuS17oy",
-    "GRANT_18": "SV_cBV3xaZ92BoW5sW",
+    # "GRANT_18": "SV_cBV3xaZ92BoW5sW",
     "pro": "SV_eOOPuFjgZo1emR8",
 }
 
@@ -25,7 +25,6 @@ def run(
         help="Nom de la tache",
     )
 ):
-
     # request_json = request.get_json(silent=True)
     # request_args = request.args
 

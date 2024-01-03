@@ -111,7 +111,10 @@ for table, job_params in clean_tables.items():
     )
     export_task.set_upstream(task)
 
-clean_table_jobs = depends_loop(clean_table_jobs, start, dag=dag)
+end_raw = DummyOperator(task_id="end_raw", dag=dag)
+clean_table_jobs = depends_loop(
+    clean_tables, clean_table_jobs, start, dag=dag, default_end_operator=end_raw
+)
 
 
 analytics_table_jobs = {}
@@ -122,9 +125,10 @@ for table, job_params in analytics_tables.items():
         "depends": job_params.get("depends", []),
         "dag_depends": job_params.get("dag_depends", []),
     }
+end = DummyOperator(task_id="end", dag=dag)
+analytics_table_jobs = depends_loop(
+    analytics_tables, analytics_table_jobs, start, dag=dag, default_end_operator=end
+)
 
-analytics_table_jobs = depends_loop(analytics_table_jobs, start, dag=dag)
 
-end_raw = DummyOperator(task_id="end_raw", dag=dag)
-
-(start >> clean_table_jobs >> end_raw)
+(start >> clean_table_jobs)

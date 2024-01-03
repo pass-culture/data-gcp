@@ -5,6 +5,7 @@ SELECT
     , "address" as venue_address
     , "postalCode" as venue_postal_code
     , "city" as venue_city
+    , "banId" as ban_id
     , CAST("id" AS varchar(255)) AS venue_id
     , "name" AS venue_name
     , "siret" AS venue_siret
@@ -60,4 +61,6 @@ SELECT
     , "collectivePhone" AS collective_phone
     , "collectiveEmail" AS collective_email
     , "dmsToken" AS dms_token
+    , "description" AS venue_description
+    , "withdrawalDetails" AS venue_withdrawal_details
 FROM public.venue

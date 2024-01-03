@@ -5,22 +5,12 @@ ANALYTICS_SQL_PATH = f"dependencies/import_analytics/sql/analytics"
 
 def define_import_tables():
     return [
-        "action_history",
         "bank_information",
         "beneficiary_fraud_check",
         "booking",
-        "boost_cinema_details",
         "cashflow",
-        "cashflow_batch",
-        "cashflow_log",
-        "cashflow_pricing",
-        "cds_cinema_details",
-        "cgr_cinema_details",
-        "collective_booking",
         "collective_offer",
         "collective_offer_domain",
-        "collective_offer_template",
-        "collective_stock",
         "criterion",
         "deposit",
         "educational_deposit",
@@ -28,27 +18,25 @@ def define_import_tables():
         "educational_institution",
         "educational_year",
         "favorite",
-        "invoice",
-        "invoice_cashflow",
-        "invoice_line",
-        "mediation",
         "offer",
         "offer_criterion",
         "offerer",
-        "offerer_tag",
-        "offerer_tag_mapping",
         "payment",
-        "payment_message",
         "payment_status",
         "pricing",
         "pricing_line",
-        "provider",
-        "recredit",
         "stock",
         "user",
         "user_offerer",
         "venue",
         "venue_provider",
+        # add temporarly reimbursement tables
+        "cashflow_batch",
+        "cashflow_log",
+        "cashflow_pricing",
+        "invoice",
+        "invoice_cashflow",
+        "invoice_line",
         "venue_reimbursement_point_link",
     ]
 
@@ -114,7 +102,6 @@ analytics_tables = {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_suivi_dms_adage.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "dag_depends": [
-            "import_typeform_adage_reference_request",
             "import_adage_v1",
             "import_dms_subscriptions",
         ],
@@ -154,14 +141,6 @@ analytics_tables = {
             "enriched_booking_data",
         ],
     },
-    "iris_venues_in_shape": {
-        "sql": f"{ANALYTICS_SQL_PATH}/iris_venues_in_shape.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-    },
-    "iris_venues_at_radius": {
-        "sql": f"{ANALYTICS_SQL_PATH}/iris_venues_at_radius.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-    },
     "isbn_rayon_editor": {
         "sql": f"{ANALYTICS_SQL_PATH}/isbn_rayon_editor.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
@@ -198,6 +177,14 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "offer_with_mediation",
     },
+    "forbidden_item_recommendation": {
+        "sql": f"{ANALYTICS_SQL_PATH}/forbidden_item_recommendation.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "forbidden_item_recommendation",
+        "depends": [
+            "enriched_offer_data",
+        ],
+    },
     "recommendable_offers_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/recommendable_offers_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
@@ -207,6 +194,7 @@ analytics_tables = {
             "enriched_offer_data",
             "offer_with_mediation",
             "enriched_item_metadata",
+            "forbidden_item_recommendation",
         ],
     },
     "recommendable_offers_raw": {
@@ -417,6 +405,12 @@ analytics_tables = {
         "destination_table": "adage_involved_student",
         "dag_depends": ["import_adage_v1"],
     },
+    "adage_involved_institution": {
+        "sql": f"{ANALYTICS_SQL_PATH}/adage_involved_institution.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "adage_involved_institution",
+        "dag_depends": ["import_adage_v1"],
+    },
     "analytics_firebase_recommendation_events": {
         "sql": f"{ANALYTICS_SQL_PATH}/firebase_recommendation_events.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
@@ -446,6 +440,15 @@ analytics_tables = {
             "enriched_offer_data",
             "enriched_offerer_tags_data",
             "enriched_venue_tags_data",
+        ],
+    },
+    "enriched_local_authority_data": {
+        "sql": f"{ANALYTICS_SQL_PATH}/enriched_local_authority_data.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "depends": [
+            "enriched_offerer_data",
+            "enriched_venue_data",
+            "bookable_venue_history",
         ],
     },
     "bookable_venue_history": {
@@ -489,7 +492,22 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "funnel_subscription_beneficiary",
         "depends": ["enriched_user_data"],
-        "dag_depends": ["import_intraday_firebase_data", "import_appsflyer"],
+        "dag_depends": ["import_intraday_firebase_data"],
+    },
+    "dms_pro": {
+        "sql": f"{ANALYTICS_SQL_PATH}/dms_pro.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+    },
+    "institution_locations": {
+        "sql": f"{ANALYTICS_SQL_PATH}/institution_locations.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "institution_locations",
+    },
+    "user_iris_per_month": {
+        "sql": f"{ANALYTICS_SQL_PATH}/user_iris_per_month.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "user_iris_per_month${{ yyyymmdd(current_month(ds)) }}",
+        "time_partitioning": {"field": "month_log"},
     },
 }
 
@@ -538,6 +556,40 @@ aggregated_tables = {
             "diversification_booking",
         ],
         "dag_depends": ["import_intraday_firebase_data"],
+    },
+    "firebase_aggregated_daily_campaign_events": {
+        "sql": f"{ANALYTICS_SQL_PATH}/firebase_aggregated_daily_campaign_events.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "depends": [
+            "aggregated_daily_user_used_activity",
+            "diversification_booking",
+        ],
+        "dag_depends": ["import_intraday_firebase_data"],
+    },
+    "partner_type_bookability_frequency": {
+        "sql": f"{ANALYTICS_SQL_PATH}/partner_type_bookability_frequency.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "depends": [
+            "enriched_offer_data",
+            "bookable_partner_history",
+            "enriched_venue_data",
+            "enriched_cultural_partner_data",
+        ],
+    },
+    "enriched_partner_retention_data": {
+        "sql": f"{ANALYTICS_SQL_PATH}/enriched_partner_retention_data.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "depends": [
+            "enriched_cultural_partner_data",
+            "partner_type_bookability_frequency",
+            "enriched_offer_data",
+            "enriched_booking_data",
+            "enriched_collective_offer_data",
+            "enriched_collective_booking_data",
+            "enriched_venue_data",
+            "enriched_offerer_data",
+            "enriched_venue_provider_data",
+        ],
     },
 }
 

@@ -10,7 +10,7 @@ SELECT DISTINCT
     ,eid.ministry 
     ,institution_type
     ,ey.scholar_year
-    ,institution_current_deposit_amount
+    ,ed.educational_deposit_amount AS institution_deposit_amount
 FROM `{{ bigquery_analytics_dataset }}.enriched_institution_data` eid
 LEFT JOIN `{{ bigquery_analytics_dataset }}.region_department` rd ON eid.institution_departement_code = rd.num_dep
 JOIN `{{ bigquery_clean_dataset }}.applicative_database_educational_deposit` ed ON ed.educational_institution_id = eid.institution_id
@@ -63,11 +63,11 @@ SELECT
     ,eple_infos.ministry
     ,eple_infos.institution_type
     ,eple_infos.scholar_year
-    ,institution_current_deposit_amount
+    ,institution_deposit_amount
     ,theoric_amount_spent
-    ,SAFE_DIVIDE(theoric_amount_spent, institution_current_deposit_amount) AS pct_credit_theoric_amount_spent
+    ,SAFE_DIVIDE(theoric_amount_spent, institution_deposit_amount) AS pct_credit_theoric_amount_spent
     ,real_amount_spent
-    ,SAFE_DIVIDE(real_amount_spent, institution_current_deposit_amount) AS pct_credit_real_amount_spent
+    ,SAFE_DIVIDE(real_amount_spent, institution_deposit_amount) AS pct_credit_real_amount_spent
     ,nb_students AS total_students
     ,educonnect_inscriptions
     ,last_12_months_inscriptions

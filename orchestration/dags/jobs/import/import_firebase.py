@@ -63,6 +63,8 @@ for type, params in dags.items():
     table_jobs = {}
     import_tables_temp = copy.deepcopy(import_tables)
     for table, job_params in import_tables_temp.items():
+        if type == "daily" and import_tables_temp[table].get("dag_depends") is not None:
+            del import_tables_temp[table]["dag_depends"]
         # force this to include custom yyyymmdd
         if job_params.get("partition_prefix", None) is not None:
             job_params[
@@ -83,6 +85,8 @@ for type, params in dags.items():
             if type == "intraday"
             else [],
         }
-    table_jobs = depends_loop(table_jobs, start, dag=dag)
     end = DummyOperator(task_id="end", dag=dag)
-    table_jobs >> end
+    table_jobs = depends_loop(
+        import_tables_temp, table_jobs, start, dag=dag, default_end_operator=end
+    )
+    table_jobs

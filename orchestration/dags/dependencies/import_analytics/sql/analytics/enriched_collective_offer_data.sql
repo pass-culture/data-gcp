@@ -60,6 +60,7 @@ SELECT
     collective_stock.collective_stock_number_of_tickets AS number_of_tickets,
     collective_offer.collective_offer_subcategory_id,
     subcategories.category_id AS collective_offer_category_id,
+    collective_offer.collective_offer_format,
     collective_offer.collective_offer_students,
     collective_offer.collective_offer_is_active,
     CASE
@@ -99,14 +100,15 @@ SELECT
     humanize_id(collective_offer.collective_offer_id) AS collective_offer_humanized_id,
     CONCAT(
         'https://passculture.pro/offre/',
-        humanize_id(collective_offer.collective_offer_id),
+        collective_offer.collective_offer_id,
         '/collectif/edition'
     ) AS passculture_pro_url,
     FALSE AS offer_is_template,
     collective_offer.collective_offer_image_id,
     collective_offer.provider_id,
     collective_offer.national_program_id,
-    national_program.national_program_name
+    national_program.national_program_name,
+    collective_offer.template_id
 FROM
     `{{ bigquery_clean_dataset }}`.applicative_database_collective_offer AS collective_offer
     JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue ON venue.venue_id = collective_offer.venue_id
@@ -141,6 +143,7 @@ SELECT
     collective_stock.collective_stock_number_of_tickets AS number_of_tickets,
     template.collective_offer_subcategory_id,
     subcategories.category_id AS collective_offer_category_id,
+    template.collective_offer_format,
     template.collective_offer_students,
     template.collective_offer_is_active,
     FALSE AS collective_offer_is_bookable,
@@ -150,15 +153,15 @@ SELECT
     humanize_id(template.collective_offer_id) AS collective_offer_humanized_id,
     CONCAT(
         'https://passculture.pro/offre/',
-        'T-',
-        humanize_id(template.collective_offer_id),
+        template.collective_offer_id,
         '/collectif/edition'
     ) AS passculture_pro_url,
     TRUE AS offer_is_template,
     template.collective_offer_image_id,
     template.provider_id,
     template.national_program_id,
-    national_program.national_program_name
+    national_program.national_program_name,
+    NULL as template_id
 FROM
     `{{ bigquery_clean_dataset }}`.applicative_database_collective_offer_template AS template
     JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue ON venue.venue_id = template.venue_id

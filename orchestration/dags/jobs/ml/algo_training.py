@@ -130,6 +130,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         instance_type="{{ params.instance_type }}",
         accelerator_types=[{"name": "nvidia-tesla-t4", "count": 1}],
+        labels={"job_type": "ml"},
     )
 
     fetch_code = CloneRepositoryGCEOperator(
@@ -211,19 +212,6 @@ with DAG(
         dag=dag,
     )
 
-    train_sim_offers = SSHGCEOperator(
-        task_id="containerize_similar_offers",
-        instance_name="{{ params.instance_name }}",
-        base_dir=f"{dag_config['BASE_DIR']}/similar_offers",
-        environment=dag_config,
-        command="python deploy_model.py "
-        "--experiment-name similar_offers_{{ params.input_type }}"
-        + f"_v2.1_{ENV_SHORT_NAME} "
-        "--model-name v2.1 "
-        f"--source-experiment-name {dag_config['EXPERIMENT_NAME']} ",
-        dag=dag,
-    )
-
     gce_instance_stop = StopGCEOperator(
         task_id="gce_stop_task", instance_name="{{ params.instance_name }}"
     )
@@ -257,7 +245,6 @@ with DAG(
         ]
         >> train
         >> evaluate
-        >> train_sim_offers
         >> gce_instance_stop
         >> send_slack_notif_success
     )

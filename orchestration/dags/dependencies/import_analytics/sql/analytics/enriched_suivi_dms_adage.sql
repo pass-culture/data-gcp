@@ -1,10 +1,40 @@
-WITH typeform_ranked AS (
-SELECT
-    *
-    , ROW_NUMBER() OVER (PARTITION BY typeform.quel_est_le_numero_de_siret_de_votre_structure ORDER BY SAFE.PARSE_DATETIME("%d/%m/%Y %H:%M:%S", typeform.submitted_at) DESC) AS typeform_rank
-FROM `{{ bigquery_analytics_dataset }}`.typeform_adage_reference_request typeform
-QUALIFY ROW_NUMBER() OVER (PARTITION BY typeform.quel_est_le_numero_de_siret_de_votre_structure ORDER BY SAFE.PARSE_DATETIME("%d/%m/%Y %H:%M:%S", typeform.submitted_at) DESC) = 1
+WITH dms_pro AS (
+  
+SELECT * EXCEPT(demandeur_entreprise_siren),
+  CASE WHEN demandeur_entreprise_siren is null or demandeur_entreprise_siren = "nan" 
+  THEN left(demandeur_siret, 9) ELSE demandeur_entreprise_siren END AS demandeur_entreprise_siren
+  
+FROM `{{ bigquery_clean_dataset }}`.dms_pro_cleaned
 )
+
+, adage_agreg_synchro AS (
+SELECT 
+    left(siret, 9) AS siren,
+    siret
+FROM `{{ bigquery_analytics_dataset }}`.adage
+where synchroPass = "1"
+)
+
+, siret_reference_adage AS (
+SELECT 
+    venueid,
+    id,
+    siret,
+    left(siret, 9) AS siren,
+    CASE WHEN siret in (select siret from adage_agreg_synchro) THEN TRUE ELSE FALSE END AS siret_synchro_adage,
+    CASE WHEN left(siret, 9) in (select siren from adage_agreg_synchro) THEN TRUE ELSE FALSE END AS siren_synchro_adage,
+FROM `{{ bigquery_analytics_dataset }}`.adage 
+)
+
+,siren_reference_adage AS (
+  SELECT 
+    siren,
+    max(siren_synchro_adage) AS siren_synchro_adage
+  FROM siret_reference_adage 
+  GROUP BY 1
+)
+
+
 
 SELECT
     dms_pro.procedure_id
@@ -29,60 +59,19 @@ SELECT
     , venue.venue_is_permanent
     , adage.id as adage_id
     , adage.dateModification as adage_date_modification
-    , CASE
-        WHEN venue_id IN (
-            SELECT
-                DISTINCT venueId
-            FROM
-                `{{ bigquery_clean_dataset }}`.applicative_database_bank_information
-        ) 
-        THEN TRUE
-        ELSE FALSE
-    END AS venue_has_bank_information
-    , CASE
-        WHEN offerer_id IN (
-            SELECT
-                DISTINCT offererId
-            FROM
-                `{{ bigquery_clean_dataset }}`.applicative_database_bank_information
-            ) 
-        THEN TRUE
-        ELSE FALSE
-    END AS offerer_has_bank_information
-    , CASE 
-        WHEN venue_id IN (
-            SELECT
-                venueId
-            FROM `{{ bigquery_analytics_dataset }}`.adage
-            ) 
-        THEN TRUE 
-        ELSE FALSE 
-    END AS lieu_in_adage
-    , CASE 
-        WHEN venue_managing_offerer_id IN (
-            SELECT
-                venue_managing_offerer_id
-            FROM `{{ bigquery_analytics_dataset }}`.adage AS adage
-            JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue 
-                ON venue.venue_id = adage.venueId 
-            )
-        THEN TRUE
-        ELSE FALSE
-    END AS structure_in_adage
-    , typeform_ranked.token AS typeform_token
-    , typeform_ranked.vous_etes AS typeform_applicant_status
-    , typeform_ranked.quels_sont_vos_domaines_d_intervention AS typeform_applicant_intervention_domain
-    , typeform_ranked.quel_est_votre_type_de_structure AS typeform_applicant_type
+    , CASE WHEN demandeur_siret IN (SELECT siret from siret_reference_adage) THEN TRUE ELSE FALSE END AS siret_ref_adage
+    , CASE WHEN demandeur_siret IN (SELECT siret from siret_reference_adage where siret_synchro_adage = TRUE) THEN TRUE ELSE FALSE END AS siret_synchro_adage
+    , CASE WHEN demandeur_entreprise_siren IN (SELECT siren from siren_reference_adage) THEN TRUE ELSE FALSE END AS siren_ref_adage
+    , CASE WHEN demandeur_entreprise_siren IN (SELECT siren from siren_reference_adage WHERE siren_synchro_adage) THEN TRUE ELSE FALSE END AS siren_synchro_adage
+
 FROM
-    `{{ bigquery_clean_dataset }}`.dms_pro_cleaned AS dms_pro
+    dms_pro
 LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offerer AS offerer 
     ON dms_pro.demandeur_entreprise_siren = offerer.offerer_siren AND offerer.offerer_siren <> "nan"
 LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue
     ON venue.venue_managing_offerer_id = offerer.offerer_id 
     AND venue_name != 'Offre numérique'
 LEFT JOIN `{{ bigquery_analytics_dataset }}`.adage AS adage 
-    ON left(adage.siret, 9) = dms_pro.demandeur_entreprise_siren
-LEFT JOIN typeform_ranked
-    ON typeform_ranked.siret = dms_pro.demandeur_siret
+    ON adage.siret = dms_pro.demandeur_siret
 WHERE dms_pro.application_status = 'accepte'
 AND dms_pro.procedure_id IN ('57081', '57189','61589','65028','80264')

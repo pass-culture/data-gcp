@@ -13,19 +13,6 @@ from dependencies.import_analytics.import_raw import (
 CLEAN_SQL_PATH = f"dependencies/import_analytics/sql/clean"
 
 clean_tables = {
-    "clean_iris_venues_in_shape": {
-        "sql": f"{CLEAN_SQL_PATH}/iris_venues_in_shape.sql",
-        "destination_dataset": "{{ bigquery_clean_dataset }}",
-        "destination_table": "iris_venues_in_shape",
-        "depends": ["venue"],
-    },
-    "clean_iris_venues_at_radius": {
-        "sql": f"{CLEAN_SQL_PATH}/iris_venues_at_radius.sql",
-        "destination_dataset": "{{ bigquery_clean_dataset }}",
-        "destination_table": "iris_venues_at_radius",
-        "params": {"iris_distance": 150000 if ENV_SHORT_NAME != "dev" else 20000},
-        "depends": ["venue"],
-    },
     "offer": {
         "sql": f"{CLEAN_SQL_PATH}/offer.sql",
         "destination_dataset": "{{ bigquery_clean_dataset }}",
@@ -77,12 +64,30 @@ clean_tables = {
         "destination_dataset": "{{ bigquery_clean_dataset }}",
         "destination_table": "booking",
     },
+    "user_ip_iris": {
+        "sql": f"{CLEAN_SQL_PATH}/user_ip_iris.sql",
+        "destination_dataset": "{{ bigquery_clean_dataset }}",
+        "destination_table": "user_ip_iris${{ yyyymmdd(current_month(ds)) }}",
+        "time_partitioning": {"field": "month_log"},
+    },
+    "user_reco_iris": {
+        "sql": f"{CLEAN_SQL_PATH}/user_reco_iris.sql",
+        "destination_dataset": "{{ bigquery_clean_dataset }}",
+        "destination_table": "user_reco_iris${{ yyyymmdd(current_month(ds)) }}",
+        "time_partitioning": {"field": "month_log"},
+    },
+    "user_declared_iris": {
+        "sql": f"{CLEAN_SQL_PATH}/user_declared_iris.sql",
+        "destination_dataset": "{{ bigquery_clean_dataset }}",
+        "destination_table": "user_declared_iris",
+    },
 }
 
 
 raw_tables = get_tables_config_dict(
     PATH=DAG_FOLDER + "/" + RAW_SQL_PATH, BQ_DESTINATION_DATASET=BIGQUERY_RAW_DATASET
 )
+
 
 # Generate dictionnary for tables to copy from raw to clean.
 def get_clean_tables_copy_dict():

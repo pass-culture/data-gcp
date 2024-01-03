@@ -1,6 +1,7 @@
 import pandas as pd
 from datetime import datetime
 import subprocess
+from google.cloud import bigquery
 import typer
 from utils import (
     BIGQUERY_CLEAN_DATASET,
@@ -13,6 +14,7 @@ from utils import (
     get_item_docs,
     save_experiment,
     save_model_type,
+    create_items_table,
 )
 import tensorflow as tf
 import numpy as np
@@ -20,7 +22,6 @@ import numpy as np
 
 MODEL_TYPE = {
     "n_dim": 64,
-    "metric": "cosine",
     "type": "recommendation",
     "default_token": "[UNK]",
 }
@@ -29,16 +30,26 @@ MODEL_TYPE = {
 def get_model_from_mlflow(
     experiment_name: str, run_id: str = None, artifact_uri: str = None
 ):
+    client = bigquery.Client()
+
     # get artifact_uri from BQ
     if artifact_uri is None or len(artifact_uri) <= 10:
         if run_id is None or len(run_id) <= 2:
-            results_array = pd.read_gbq(
-                f"""SELECT * FROM `{BIGQUERY_CLEAN_DATASET}.{MODELS_RESULTS_TABLE_NAME}` WHERE experiment_name = '{experiment_name}' ORDER BY execution_date DESC LIMIT 1"""
-            ).to_dict("records")
+            results_array = (
+                client.query(
+                    f"""SELECT * FROM `{BIGQUERY_CLEAN_DATASET}.{MODELS_RESULTS_TABLE_NAME}` WHERE experiment_name = '{experiment_name}' ORDER BY execution_date DESC LIMIT 1"""
+                )
+                .to_dataframe()
+                .to_dict("records")
+            )
         else:
-            results_array = pd.read_gbq(
-                f"""SELECT * FROM `{BIGQUERY_CLEAN_DATASET}.{MODELS_RESULTS_TABLE_NAME}` WHERE experiment_name = '{experiment_name}' AND run_id = '{run_id}' ORDER BY execution_date DESC LIMIT 1"""
-            ).to_dict("records")
+            results_array = (
+                client.query(
+                    f"""SELECT * FROM `{BIGQUERY_CLEAN_DATASET}.{MODELS_RESULTS_TABLE_NAME}` WHERE experiment_name = '{experiment_name}' AND run_id = '{run_id}' ORDER BY execution_date DESC LIMIT 1"""
+                )
+                .to_dataframe()
+                .to_dict("records")
+            )
         if len(results_array) == 0:
             raise Exception(
                 f"Model {experiment_name} not found into BQ {MODELS_RESULTS_TABLE_NAME}. Failing."
@@ -56,7 +67,6 @@ def download_model(artifact_uri):
     # TODO handle errors
     for line in results.stdout:
         print(line.rstrip().decode("utf-8"))
-    # export weights to npy format
 
 
 def prepare_docs():
@@ -77,6 +87,12 @@ def prepare_docs():
     user_docs.save("./metadata/user.docs")
     item_docs = get_item_docs(item_embedding_dict, items_df)
     item_docs.save("./metadata/item.docs")
+    create_items_table(
+        item_embedding_dict,
+        items_df,
+        emb_size=MODEL_TYPE["n_dim"],
+        uri="./metadata/vector",
+    )
 
 
 def main(
@@ -101,7 +117,6 @@ def main(
         help="Source run_id of the model",
     ),
 ) -> None:
-
     yyyymmdd = datetime.now().strftime("%Y%m%d")
     if model_name is None:
         model_name = "default"
@@ -121,7 +136,7 @@ def main(
     prepare_docs()
     print("Deploy...")
     save_model_type(model_type=MODEL_TYPE)
-    deploy_container(serving_container, workers=5)
+    deploy_container(serving_container, workers=3)
     save_experiment(experiment_name, model_name, serving_container, run_id=run_id)
 
 

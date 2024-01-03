@@ -13,7 +13,7 @@ SELECT
     jsonPayload.extra.userId as user_id,
     jsonPayload.extra.uai AS uai,
     jsonPayload.extra.user_role AS user_role,
-    jsonPayload.extra.AdageHeaderFrom as origin,
+    jsonPayload.extra.from as origin,
     cast(jsonPayload.extra.stockId as string) as stock_id,
     cast(jsonPayload.extra.offerId as string) as offer_id,
     cast(jsonPayload.extra.collective_offer_template_id as string) as collective_offer_template_id,
@@ -32,8 +32,17 @@ SELECT
     cast(jsonPayload.extra.filtervalues.query as string) as text_filter,
     ARRAY_TO_STRING(jsonPayload.extra.filtervalues.departments, ',') as department_filter,
     ARRAY_TO_STRING(jsonPayload.extra.filtervalues.academies, ',') as academy_filter,
+    ARRAY_TO_STRING(ARRAY(SELECT CAST(value AS STRING) FROM UNNEST(jsonPayload.extra.filtervalues.venue) AS value), ',') as venue_filter,
     ARRAY_TO_STRING(ARRAY(SELECT CAST(value AS STRING) FROM UNNEST(jsonPayload.extra.filtervalues.domains) AS value), ',') as artistic_domain_filter,
     ARRAY_TO_STRING(ARRAY(SELECT CAST(value AS STRING) FROM UNNEST(jsonPayload.extra.filtervalues.students) AS value), ',') as student_filter,
+    ARRAY_TO_STRING(jsonPayload.extra.filtervalues.formats, ',') as format_filter,
+    ARRAY_TO_STRING(jsonPayload.extra.filtervalues.categories, ',') as category_filter,
+    jsonPayload.extra.suggestiontype as suggestion_type,
+    jsonPayload.extra.suggestionvalue as suggestion_value,
+    CAST(jsonPayload.extra.isfavorite as boolean) as is_favorite,
+    CAST(CAST(jsonPayload.extra.playlistid as INT) as STRING) as playlist_id,
+    CAST(CAST(jsonPayload.extra.domainid as INT) as STRING) as domain_id,
+    CAST(CAST(jsonPayload.extra.venueid as INT) as STRING) as venue_id
 
 FROM
     `{{ bigquery_raw_dataset }}.stdout`
@@ -71,6 +80,6 @@ generate_session AS (
 
 SELECT 
 * EXCEPT(session_num, session_start, rnk, same_session, session_sum),
-TO_HEX(MD5(CONCAT(CAST(session_start AS STRING), user_id, session_num))) as session_id,
+TO_HEX(MD5(CONCAT(CAST(session_start AS STRING), user_id, session_num))) as session_id
 FROM generate_session
 WHERE partition_date = DATE("{{ ds }}")

@@ -33,13 +33,13 @@ ENRICHED_OFFER_DATA_INPUT = {
             "offer_subcategoryId": "SEANCE_CINE",
             "offer_name": "Test",
             "offer_is_active": True,
-            "offer_media_urls": '["https://url.test", "https://someurl.test"]',
             "offer_url": None,
             "offer_is_national": False,
             "offer_creation_date": "2019-11-20",
             "offer_is_duo": False,
             "offer_fields_updated": "{}",
             "offer_validation": "APPROVED",
+            "offer_description": "Offre 1",
         },
         {
             "venue_id": "2",
@@ -49,13 +49,13 @@ ENRICHED_OFFER_DATA_INPUT = {
             "offer_subcategoryId": "LIVRE_PAPIER",
             "offer_name": "RIP Dylan Rieder",
             "offer_is_active": True,
-            "offer_media_urls": '["https://url.test", "https://someurl.test"]',
             "offer_url": None,
             "offer_is_national": False,
             "offer_creation_date": "2019-11-20",
             "offer_is_duo": False,
             "offer_fields_updated": "{}",
             "offer_validation": "APPROVED",
+            "offer_description": "Offre 2",
         },
     ],
     "offer_extracted_data": [
@@ -116,25 +116,21 @@ ENRICHED_OFFER_DATA_INPUT = {
     "applicative_database_offerer": [
         {
             "offerer_id": "3",
-            "offerer_thumb_count": "0",
             "offerer_is_active": True,
             "offerer_postal_code": "93100",
             "offerer_city": "Montreuil",
             "offerer_creation_date": "2019-11-20",
             "offerer_name": "Test Offerer",
             "offerer_siren": "123456789",
-            "offerer_fields_updated": "{}",
         },
         {
             "offerer_id": "4",
             "offerer_siren": "234567890",
-            "offerer_thumb_count": "0",
             "offerer_is_active": True,
             "offerer_postal_code": "93100",
             "offerer_city": "Montreuil",
             "offerer_creation_date": "2019-11-20",
             "offerer_name": "Test Offerer",
-            "offerer_fields_updated": "{}",
         },
     ],
     "applicative_database_payment": [
@@ -158,7 +154,6 @@ ENRICHED_OFFER_DATA_INPUT = {
             "type": "EventType.CINEMA",
             "thumbCount": "0",
             "name": "Livre",
-            "mediaUrls": '["https://url.test", "https://someurl.test"]',
             "fieldsUpdated": "{}",
             "url": None,
             "isNational": False,
@@ -168,7 +163,6 @@ ENRICHED_OFFER_DATA_INPUT = {
             "type": "ThingType.LIVRE_EDITION",
             "thumbCount": "0",
             "name": "Livre",
-            "mediaUrls": '["https://url.test", "https://someurl.test"]',
             "fieldsUpdated": "{}",
             "url": None,
             "isNational": False,
@@ -378,6 +372,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "is_active": True,
         "offer_validation": "APPROVED",
         "offer_name": "Test",
+        "offer_description": "Offre 1",
         "offer_subcategoryId": "SEANCE_CINE",
         "offer_category_id": "CINEMA",
         "last_stock_price": 0.0,
@@ -392,7 +387,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "favourite_cnt": 2.0,
         "stock": 10.0,
         "offer_humanized_id": "AM",
-        "passculture_pro_url": "https://passculture.pro/offre/individuelle/AM/informations",
+        "passculture_pro_url": "https://passculture.pro/offre/individuelle/3/informations",
         "webapp_url": "https://passculture.app/offre/3",
         "mediation_humanized_id": "ATJA",
         "first_booking_cnt": 1,
@@ -435,6 +430,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "is_active": True,
         "offer_validation": "APPROVED",
         "offer_name": "RIP Dylan Rieder",
+        "offer_description": "Offre 2",
         "offer_subcategoryId": "LIVRE_PAPIER",
         "offer_category_id": "LIVRE",
         "last_stock_price": 0.0,
@@ -449,7 +445,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "favourite_cnt": 1.0,
         "stock": 12.0,
         "offer_humanized_id": "AQ",
-        "passculture_pro_url": "https://passculture.pro/offre/individuelle/AQ/informations",
+        "passculture_pro_url": "https://passculture.pro/offre/individuelle/4/informations",
         "webapp_url": "https://passculture.app/offre/4",
         "mediation_humanized_id": None,
         "first_booking_cnt": None,
@@ -536,6 +532,8 @@ ENRICHED_COLLECTIVE_OFFER_DATA_INPUT = {
             "collective_offer_validation": "APPROVED",
             "provider_id": "65378",
             "national_program_id": None,
+            "template_id": "1",
+            "collective_offer_format": "CONCERT",
         }
     ],
     "applicative_database_collective_offer_template": [
@@ -552,6 +550,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_INPUT = {
             "collective_offer_image_id": "28",
             "provider_id": "65378",
             "national_program_id": None,
+            "collective_offer_format": "CONCERT",
         }
     ],
     "applicative_database_national_program": [],
@@ -588,6 +587,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_EXPECTED = [
         "number_of_tickets": 30,
         "collective_offer_subcategory_id": "CONCERT",
         "collective_offer_category_id": "MUSIQUE_LIVE",
+        "collective_offer_format": "CONCERT",
         "collective_offer_students": "COLLEGE4",
         "collective_offer_is_active": True,
         "collective_offer_is_bookable": False,
@@ -595,12 +595,13 @@ ENRICHED_COLLECTIVE_OFFER_DATA_EXPECTED = [
         "collective_booking_no_cancelled_cnt": 1.0,
         "collective_booking_confirm_cnt": 1.0,
         "collective_offer_humanized_id": "AM",
-        "passculture_pro_url": "https://passculture.pro/offre/AM/collectif/edition",
+        "passculture_pro_url": "https://passculture.pro/offre/3/collectif/edition",
         "offer_is_template": False,
         "collective_offer_image_id": "27",
         "provider_id": "65378",
         "national_program_id": None,
         "national_program_name": None,
+        "template_id": "1",
     },
     {
         "collective_offer_id": "4",
@@ -623,6 +624,7 @@ ENRICHED_COLLECTIVE_OFFER_DATA_EXPECTED = [
         "number_of_tickets": None,
         "collective_offer_subcategory_id": "CONCERT",
         "collective_offer_category_id": "MUSIQUE_LIVE",
+        "collective_offer_format": "CONCERT",
         "collective_offer_students": "COLLEGE4",
         "collective_offer_is_active": True,
         "collective_offer_is_bookable": False,
@@ -630,12 +632,13 @@ ENRICHED_COLLECTIVE_OFFER_DATA_EXPECTED = [
         "collective_booking_no_cancelled_cnt": 0.0,
         "collective_booking_confirm_cnt": 0.0,
         "collective_offer_humanized_id": "AQ",
-        "passculture_pro_url": "https://passculture.pro/offre/T-AQ/collectif/edition",
+        "passculture_pro_url": "https://passculture.pro/offre/4/collectif/edition",
         "offer_is_template": True,
         "collective_offer_image_id": "28",
         "provider_id": "65378",
         "national_program_id": None,
         "national_program_name": None,
+        "template_id": None,
     },
 ]
 
@@ -664,7 +667,6 @@ ENRICHED_STOCK_DATA_INPUT = {
             "offer_subcategoryId": "SEANCE_CINE",
             "offer_name": "Test",
             "offer_is_active": True,
-            "offer_media_urls": '["https://url.test", "https://someurl.test"]',
             "offer_url": None,
             "offer_is_national": False,
             "offer_creation_date": "2019-11-20",
@@ -678,7 +680,6 @@ ENRICHED_STOCK_DATA_INPUT = {
             "offer_subcategoryId": "LIVRE_PAPIER",
             "offer_name": "Test bis",
             "offer_is_active": True,
-            "offer_media_urls": '["https://url.test", "https://someurl.test"]',
             "offer_url": None,
             "offer_is_national": False,
             "offer_creation_date": "2019-11-20",
@@ -689,14 +690,12 @@ ENRICHED_STOCK_DATA_INPUT = {
     "applicative_database_offerer": [
         {
             "offerer_id": "3",
-            "offerer_thumb_count": "0",
             "offerer_is_active": True,
             "offerer_postal_code": "93100",
             "offerer_city": "Montreuil",
             "offerer_creation_date": "2019-11-20",
             "offerer_name": "Test Offerer",
             "offerer_siren": "123456789",
-            "offerer_fields_updated": "{}",
         }
     ],
     "applicative_database_payment": [
@@ -720,7 +719,6 @@ ENRICHED_STOCK_DATA_INPUT = {
             "type": "EventType.CINEMA",
             "thumbCount": "0",
             "name": "Livre",
-            "mediaUrls": '["https://url.test", "https://someurl.test"]',
             "fieldsUpdated": "{}",
             "url": None,
             "isNational": False,
@@ -730,7 +728,6 @@ ENRICHED_STOCK_DATA_INPUT = {
             "type": "ThingType.LIVRE_EDITION",
             "thumbCount": "0",
             "name": "Livre",
-            "mediaUrls": '["https://url.test", "https://someurl.test"]',
             "fieldsUpdated": "{}",
             "url": None,
             "isNational": False,
@@ -1115,6 +1112,16 @@ ENRICHED_VENUE_DATA_INPUT = {
             "venue_label_id": "1",
             "venue_type_id": "1",
             "banner_url": "url",
+            "venue_description": "description",
+            "venue_withdrawal_details": "withdrawaldetails",
+        }
+    ],
+    "applicative_database_venue_contact": [
+        {
+            "venue_id": "1",
+            "venue_contact_phone_number": "0618018859",
+            "venue_contact_email": "email@gmail.com",
+            "venue_contact_website": "website.com",
         }
     ],
     "applicative_database_venue_registration": [],
@@ -1185,6 +1192,11 @@ ENRICHED_VENUE_DATA_EXPECTED = [
         "venue_pc_pro_link": "https://passculture.pro/structures/AE/lieux/AE",
         "venue_targeted_audience": None,
         "banner_url": "url",
+        "venue_description": "description",
+        "venue_withdrawal_details": "withdrawaldetails",
+        "venue_contact_phone_number": "0618018859",
+        "venue_contact_email": "email@gmail.com",
+        "venue_contact_website": "website.com",
     }
 ]
 
@@ -1255,7 +1267,12 @@ ENRICHED_OFFERER_DATA_INPUT = {
         }
     ],
     "applicative_database_venue": [
-        {"venue_id": "1", "venue_managing_offerer_id": "1", "venue_is_permanent": False}
+        {
+            "venue_id": "1",
+            "venue_managing_offerer_id": "1",
+            "venue_is_permanent": False,
+            "venue_is_virtual": True,
+        }
     ],
     "applicative_database_venue_label": [],
     "region_department": [{"num_dep": "973", "region_name": "Guyane"}],
@@ -1275,6 +1292,24 @@ ENRICHED_OFFERER_DATA_INPUT = {
             "label_unite_legale": "Administration generale",
             "categorieJuridiqueUniteLegale": 2232,
             "label_categorie_juridique": "Collectivite",
+        }
+    ],
+    "adage": [
+        {
+            "id": "1",
+            "siret": "123456789000",
+            "venueid": "1",
+            "synchroPass": "1",
+        }
+    ],
+    "dms_pro_cleaned": [
+        {
+            "procedure_id": "80264",
+            "demandeur_entreprise_siren": "123456789",
+            "demandeur_siret": "123456789000",
+            "application_submitted_at": datetime.now().replace(microsecond=0),
+            "application_status": "accepte",
+            "processed_at": datetime.now().replace(microsecond=0),
         }
     ],
 }
@@ -1334,11 +1369,17 @@ ENRICHED_OFFERER_DATA_EXPECTED = [
         "legal_unit_business_activity_label": "Administration generale",
         "legal_unit_legal_category_code": "2232",
         "legal_unit_legal_category_label": "Collectivite",
-        "venue_cnt": 1,
+        "total_venues_managed": 1,
+        "physical_venues_managed": 0,
+        "permanent_venues_managed": 0,
         "venue_with_offer": 1,
         "offerer_humanized_id": "AE",
         "current_year_revenue": 7,
-        "is_territorial_authorities": True,
+        "is_local_authority": True,
+        "first_dms_adage_status": "accepte",
+        "dms_accepted_at": datetime.now().replace(microsecond=0),
+        "is_reference_adage": True,
+        "is_synchro_adage": True,
     }
 ]
 
@@ -1401,6 +1442,7 @@ ENRICHED_BOOKING_DATA_INPUT = {
             "venue_managing_offerer_id": "2",
             "venue_type_id": "1",
             "venue_type_code": "Librairie",
+            "venue_is_permanent": True,
         }
     ],
     "applicative_database_offerer": [{"offerer_id": "2", "offerer_name": "Offerer"}],
@@ -1468,6 +1510,7 @@ ENRICHED_BOOKING_DATA_EXPECTED = [
         "venue_name": "My Wonderful Venue",
         "venue_type_name": "Librairie",
         "booking_used_date": datetime.now().replace(microsecond=0),
+        "partner_id": "venue-8",
     }
 ]
 
@@ -1528,6 +1571,7 @@ ENRICHED_COLLECTIVE_BOOKING_DATA_INPUT = {
             "collective_offer_subcategory_id": "CINE_PLEIN_AIR",
             "collective_offer_name": "EAC sympa",
             "venue_id": "8",
+            "collective_offer_format": "CINEMA",
         }
     ],
     "applicative_database_collective_stock": [
@@ -1583,6 +1627,7 @@ ENRICHED_COLLECTIVE_BOOKING_DATA_EXPECTED = [
         "collective_offer_name": "EAC sympa",
         "collective_offer_subcategory_id": "CINE_PLEIN_AIR",
         "collective_offer_category_id": "CINEMA",
+        "collective_offer_format": "CINEMA",
         "venue_id": "8",
         "venue_name": "My Wonderful Venue",
         "venue_department_code": 78,

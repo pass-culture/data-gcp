@@ -66,7 +66,6 @@ with DAG(
     template_searchpath=DAG_FOLDER,
     user_defined_macros=macros.default,
 ) as dag:
-
     start = DummyOperator(task_id="start")
 
     checking_folder_QPI = BranchPythonOperator(
@@ -124,11 +123,15 @@ with DAG(
             "dag_depends": job_params.get("dag_depends", []),
         }
 
-    analytics_tables_jobs = depends_loop(
-        analytics_tables_jobs, start_analytics, dag=dag
-    )
-
     end = DummyOperator(task_id="end", trigger_rule="one_success")
+
+    analytics_tables_jobs = depends_loop(
+        ANALYTICS_TABLES,
+        analytics_tables_jobs,
+        start_analytics,
+        dag=dag,
+        default_end_operator=end,
+    )
 
     (
         start
@@ -142,6 +145,5 @@ with DAG(
         >> delete_temp_answer_table_raw
         >> start_analytics
         >> analytics_tables_jobs
-        >> end
     )
     (checking_folder_QPI >> empty >> end)

@@ -1,43 +1,43 @@
 import typing as t
 from docarray import DocumentArray, Document
-from annlite import AnnLite
-import uuid
+import lancedb
+from filter import Filter
+import joblib
 import numpy as np
 
-dtypes = {
-    "category": str,
-    "subcategory_id": str,
-    "search_group_name": str,
-    "is_numerical": float,
-    "is_national": float,
-    "is_geolocated": float,
-    "offer_is_duo": float,
-    "booking_number": float,
-    "booking_number_last_7_days": float,
-    "booking_number_last_14_days": float,
-    "booking_number_last_28_days": float,
-    "stock_price": float,
-    "offer_creation_date": float,
-    "stock_beginning_date": float,
-    "is_underage_recommendable": float,
-    "offer_type_label": str,
-    "offer_type_domain": str,
-}
 
-filter_dtypes = {
-    "$eq": "float",
-    "$lte": "float",
-    "$gte": "float",
-}
+DETAIL_COLUMNS = [
+    "item_id",
+    "topic_id",
+    "cluster_id",
+    "is_geolocated",
+    "booking_number",
+    "stock_price",
+    "offer_creation_date",
+    "stock_beginning_date",
+    "category",
+    "subcategory_id",
+    "search_group_name",
+    "gtl_id",
+    "gtl_l3",
+    "gtl_l4",
+    "total_offers",
+    "example_offer_id",
+    "example_venue_id",
+    "example_offer_name",
+    "example_venue_latitude",
+    "example_venue_longitude",
+]
+
+DEFAULTS = ["_distance"]
 
 
 class DefaultClient:
-    def __init__(self, metric: str, n_dim: int) -> None:
-        self.metric = metric
-        self.n_dim = n_dim
-
     def load(self) -> None:
         self.item_docs = DocumentArray.load("./metadata/item.docs")
+        uri = "./metadata/vector"
+        db = lancedb.connect(uri)
+        self.table = db.open_table("items")
 
     def offer_vector(self, var: str) -> Document:
         # not default case
@@ -46,105 +46,93 @@ class DefaultClient:
         except:
             return None
 
-    def parse_params(self, params):
-        result = {}
-        for key, value in params.items():
-            if isinstance(value, dict):
-                result[key] = self.parse_params(value)
-            else:
-                data_type = filter_dtypes.get(key)
-                if data_type == "str":
-                    result[key] = str(value)
-                elif data_type == "float":
-                    result[key] = float(value)
-                else:
-                    result[key] = value
-        return result
-
-    def index(self):
-        self.ann = AnnLite(
-            self.n_dim,
-            metric=self.metric,
-            data_path=f"./metadata/annlite_{str(uuid.uuid4())}",
-            columns=dtypes,
-        )
-        self.ann.index(self.item_docs)
-        self.ann.read_only = True
+    def build_query(self, params):
+        sql = Filter(params).parse_where_clause()
+        if len(sql) == 0:
+            return None
+        return sql
 
     def search(
         self,
         vector: Document,
+        similarity_metric="dot",
         n=50,
         query_filter: t.Dict = None,
         details: bool = False,
         item_id: str = None,
+        prefilter: bool = True,
+        vector_column_name: str = "vector",
     ) -> t.List[t.Dict]:
-        _, documents = self.ann.search_by_vectors(
-            np.array([vector.embedding]), filter=query_filter, limit=n
+        results = (
+            self.table.search(
+                vector.embedding,
+                vector_column_name=vector_column_name,
+                query_type="vector",
+            )
+            .where(self.build_query(query_filter), prefilter=prefilter)
+            .nprobes(20)
+            .refine_factor(10)
+            .select(columns=self.columns(details))
+            .metric(similarity_metric)
+            .limit(n)
+            .to_list()
         )
+        return self.out(results, details, item_id=item_id)
+
+    def filter(
+        self,
+        query_filter: t.Dict = None,
+        n=50,
+        details: bool = False,
+        prefilter: bool = True,
+    ) -> t.List[t.Dict]:
+        results = (
+            self.table.search(
+                [0], vector_column_name="booking_number_desc", query_type="vector"
+            )
+            .where(self.build_query(query_filter), prefilter=prefilter)
+            .select(columns=self.columns(details))
+            .limit(n)
+            .to_list()
+        )
+        return self.out(results, details)
+
+    def columns(self, details: bool) -> t.Optional[t.List[str]]:
+        if details:
+            return None
+        else:
+            return DETAIL_COLUMNS
+
+    def out(self, results, details: bool, item_id: str = None):
         predictions = []
-        for idx, row in enumerate(documents[0]):
-            # don't retrieve same object.
-            if item_id is not None and str(row.tags["item_id"]) == item_id:
+        for idx, row in enumerate(results):
+            if item_id is not None and str(row["item_id"]) == item_id:
                 continue
 
             if not details:
                 predictions.append(
                     {
                         "idx": idx,
-                        "score": float(row.scores[self.metric].value),
-                        "item_id": row.tags["item_id"],
+                        "item_id": row["item_id"],
                     }
                 )
             else:
-                predictions.append(
-                    dict(
-                        {
-                            "idx": idx,
-                            "score": float(row.scores[self.metric].value),
-                        },
-                        **row.tags,
-                    )
-                )
-        return predictions
-
-    def filter(
-        self,
-        query_filter: t.Dict,
-        n=50,
-        details: bool = False,
-        order_by: str = "booking_number",
-        ascending: bool = False,
-    ) -> t.List[t.Dict]:
-
-        results = self.ann.filter(
-            filter=query_filter, limit=n, order_by=order_by, ascending=ascending
-        )
-        predictions = []
-        for idx, row in enumerate(results):
-
-            if not details:
-                predictions.append(
-                    {
-                        "idx": idx,
-                        "item_id": row.tags["item_id"],
-                    }
-                )
-            else:
+                # drop embs to reduce latency
+                row.pop("vector", None)
+                row.pop("raw_embeddings", None)
                 predictions.append(
                     dict(
                         {
                             "idx": idx,
                         },
-                        **row.tags,
+                        **{k: row[k] for k in row if k in DETAIL_COLUMNS + DEFAULTS}
                     )
                 )
         return predictions
 
 
 class RecoClient(DefaultClient):
-    def __init__(self, metric: str, n_dim: int, default_token: str) -> None:
-        super().__init__(metric, n_dim)
+    def __init__(self, default_token: str) -> None:
         self.default_token = default_token
 
     def user_vector(self, var: str) -> Document:
@@ -157,18 +145,19 @@ class RecoClient(DefaultClient):
     def load(self) -> None:
         self.item_docs = DocumentArray.load("./metadata/item.docs")
         self.user_docs = DocumentArray.load("./metadata/user.docs")
+        uri = "./metadata/vector"
+        db = lancedb.connect(uri)
+        self.table = db.open_table("items")
 
 
 class TextClient(DefaultClient):
-    def __init__(self, metric: str, n_dim: int, transformer: str) -> None:
-        super().__init__(metric, n_dim)
-        # import only for custom model
+    def __init__(self, transformer: str, reducer_path: str) -> None:
         from sentence_transformers import SentenceTransformer
 
         self.encoder = SentenceTransformer(transformer)
+        self.reducer = joblib.load(reducer_path)
 
     def text_vector(self, var: str):
-        try:
-            return Document(embedding=list(self.encoder.encode(var)))
-        except:
-            return None
+        encode = self.encoder.encode(var)
+        reduce = np.array(self.reducer.transform([encode])).flatten()
+        return Document(embedding=reduce)

@@ -15,6 +15,7 @@ ADAGE_INVOLVED_STUDENTS_DTYPE = {
     "metric_id": str,
     "educational_year_adage_id": int,
     "metric_key": str,
+    "level": str,
     "involved_students": str,
     "institutions": str,
     "total_involved_students": str,

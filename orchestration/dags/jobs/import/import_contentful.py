@@ -57,7 +57,6 @@ with DAG(
         )
     },
 ) as dag:
-
     gce_instance_start = StartGCEOperator(
         instance_name=GCE_INSTANCE, task_id="gce_start_task"
     )
@@ -102,8 +101,10 @@ for table, job_params in contentful_tables.items():
         "dag_depends": job_params.get("dag_depends", []),
     }
 
-table_jobs = depends_loop(table_jobs, start, dag=dag)
 end = DummyOperator(task_id="end", dag=dag)
+table_jobs = depends_loop(
+    contentful_tables, table_jobs, start, dag=dag, default_end_operator=end
+)
 
 (
     start
@@ -113,5 +114,4 @@ end = DummyOperator(task_id="end", dag=dag)
     >> import_contentful_data_to_bigquery
     >> gce_instance_stop
     >> table_jobs
-    >> end
 )

@@ -14,15 +14,11 @@ def load_model() -> DefaultClient:
         desc = json.load(file)
         if desc["type"] == "recommendation":
             return RecoClient(
-                metric=desc["metric"],
                 default_token=desc["default_token"],
-                n_dim=desc["n_dim"],
             )
         if desc["type"] == "semantic":
             return TextClient(
-                metric=desc["metric"],
-                n_dim=desc["n_dim"],
-                transformer=desc["transformer"],
+                transformer=desc["transformer"], reducer_path=desc["reducer"]
             )
         else:
             raise Exception("Model desc not found.")
@@ -30,7 +26,6 @@ def load_model() -> DefaultClient:
 
 model = load_model()
 model.load()
-model.index()
 
 
 logger = logging.getLogger(__name__)
@@ -58,16 +53,10 @@ def input_size(size):
         return 10
 
 
-def filter(
-    selected_params, order_by: str, ascending: bool, size: int, debug: bool, call_id
-):
+def filter(selected_params, size: int, debug: bool, call_id, prefilter: bool):
     try:
         results = model.filter(
-            selected_params,
-            details=debug,
-            n=size,
-            order_by=order_by,
-            ascending=ascending,
+            selected_params, details=debug, n=size, prefilter=prefilter
         )
         return jsonify({"predictions": results})
     except Exception as e:
@@ -84,16 +73,27 @@ def filter(
 
 
 def search_vector(
-    vector: Document, size: int, selected_params, debug, call_id, item_id=None
+    vector: Document,
+    size: int,
+    selected_params,
+    debug,
+    call_id,
+    prefilter: bool,
+    vector_column_name: str,
+    similarity_metric: str,
+    item_id=None,
 ):
     try:
         if vector is not None:
             results = model.search(
                 vector=vector,
+                similarity_metric=similarity_metric,
                 n=size,
                 query_filter=selected_params,
                 details=debug,
                 item_id=item_id,
+                prefilter=prefilter,
+                vector_column_name=vector_column_name,
             )
             return jsonify({"predictions": results})
         else:
@@ -120,11 +120,21 @@ def is_alive():
 
 @app.route("/predict", methods=["POST"])
 def predict():
-    call_id = uuid.uuid4()
     input_json = request.get_json()["instances"][0]
+    call_id = input_json.get("call_id", str(uuid.uuid4()))
     model_type = input_json["model_type"]
     debug = bool(input_json.get("debug", 0))
-    selected_params = model.parse_params(input_json.get("params", {}))
+    prefilter = input_json.get("prefilter", None)
+    vector_column_name = input_json.get("vector_column_name", None)
+    similarity_metric = input_json.get("similarity_metric", None)
+    selected_params = input_json.get("params", {})
+    if prefilter is None:
+        prefilter = len(selected_params.keys()) > 0
+    if vector_column_name is None:
+        vector_column_name = "vector"
+    if similarity_metric is None:
+        similarity_metric = "dot"
+
     size = input_size(input_json.get("size", 500))
 
     try:
@@ -142,7 +152,14 @@ def predict():
                 )
                 vector = model.user_vector(input_str)
                 return search_vector(
-                    vector, size, selected_params, debug, call_id=call_id
+                    vector,
+                    size,
+                    selected_params,
+                    debug,
+                    call_id=call_id,
+                    prefilter=prefilter,
+                    similarity_metric=similarity_metric,
+                    vector_column_name=vector_column_name,
                 )
         if isinstance(model, TextClient):
             if model_type == "semantic":
@@ -158,7 +175,14 @@ def predict():
                 )
                 vector = model.text_vector(input_str)
                 return search_vector(
-                    vector, size, selected_params, debug, call_id=call_id
+                    vector,
+                    size,
+                    selected_params,
+                    debug,
+                    call_id=call_id,
+                    prefilter=prefilter,
+                    similarity_metric=similarity_metric,
+                    vector_column_name=vector_column_name,
                 )
 
         if model_type == "similar_offer":
@@ -174,23 +198,28 @@ def predict():
             )
             vector = model.offer_vector(input_str)
             return search_vector(
-                vector, size, selected_params, debug, item_id=input_str, call_id=call_id
+                vector,
+                size,
+                selected_params,
+                debug,
+                call_id=call_id,
+                prefilter=prefilter,
+                similarity_metric=similarity_metric,
+                vector_column_name=vector_column_name,
+                item_id=input_str,
             )
 
         if model_type == "filter":
-            order_by = str(input_json["order_by"])
-            ascending = bool(input_json["ascending"])
             logger.info(
                 f"filter",
                 extra={
                     "uuid": call_id,
-                    "order_by": order_by,
                     "params": selected_params,
                     "size": size,
                 },
             )
             return filter(
-                selected_params, order_by, ascending, size, debug, call_id=call_id
+                selected_params, size, debug, call_id=call_id, prefilter=prefilter
             )
 
     except Exception as e:

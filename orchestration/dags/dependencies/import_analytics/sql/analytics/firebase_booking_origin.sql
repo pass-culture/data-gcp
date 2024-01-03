@@ -14,6 +14,7 @@ WITH all_bookings_reconciled AS (
     , booking.booking_id
     , platform
     , search_id
+    , f_events.user_location_type
   FROM
       `{{ bigquery_clean_dataset }}.booking` booking
   LEFT JOIN `{{ bigquery_analytics_dataset }}.firebase_events` f_events
@@ -40,6 +41,7 @@ WITH all_bookings_reconciled AS (
   FROM `{{ bigquery_analytics_dataset }}.firebase_events`
   INNER JOIN `{{ bigquery_analytics_dataset }}.offer_item_ids` offer_item_ids USING(offer_id)
   WHERE event_name = 'ConsultOffer'
+  AND origin NOT IN ('offer', 'endedbookings','bookingimpossible', 'bookings')
   AND event_date BETWEEN DATE('{{ add_days(ds, params.from) }}') AND DATE('{{ add_days(ds, params.to) }}')  
 )
 
@@ -59,6 +61,7 @@ WITH all_bookings_reconciled AS (
     , consult_origin AS consult_origin_first_touch
     , platform
     , search_id
+    , all_bookings_reconciled.user_location_type
     , module_id AS module_id_first_touch
     , module_name AS module_name_first_touch
     , entry_id

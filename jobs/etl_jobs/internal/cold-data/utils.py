@@ -20,7 +20,6 @@ def GCS_to_bigquery(
     destination_table,
     schema,
 ):
-
     # TODO : support other file formats.
     if file_type == "csv":
         job_config = bigquery.LoadJobConfig(

@@ -94,6 +94,14 @@ WITH temp_firebase_events AS (
             where
                 event_params.key = 'from'
         ) as origin,
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'locationType'
+        ) as user_location_type,
         COALESCE(
         (
             select
@@ -260,6 +268,14 @@ WITH temp_firebase_events AS (
         ) as search_is_autocomplete,
         (
             select
+                CAST(event_params.value.int_value AS STRING)
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'searchIsBasedOnHistory'
+        ) as search_is_based_on_history,
+        (
+            select
                 event_params.value.string_value
             from
                 unnest(event_params) event_params
@@ -338,6 +354,22 @@ WITH temp_firebase_events AS (
             where
                 event_params.key = 'traffic_source'
         ) as traffic_source,
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'traffic_gen'
+        ) as traffic_gen,
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'traffic_content'
+        ) as traffic_content,
         COALESCE(
             (
                 select
@@ -452,6 +484,7 @@ WITH temp_firebase_events AS (
             where
                 event_params.key = 'enabled'
         ) as enabled,
+        COALESCE(
         (
             select
                 event_params.value.string_value
@@ -459,7 +492,16 @@ WITH temp_firebase_events AS (
                 unnest(event_params) event_params
             where
                 event_params.key = 'age'
-        ) as onboarding_user_selected_age,
+        ),
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'userStatus'
+        )
+         ) as onboarding_user_selected_age,
         (
             select
                 event_params.value.string_value

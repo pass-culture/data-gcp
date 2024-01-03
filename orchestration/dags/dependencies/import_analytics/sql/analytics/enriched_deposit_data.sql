@@ -100,7 +100,11 @@ SELECT
     user.user_department_code,
     user.user_age,
     region_department.region_name AS user_region_name,
-    deposit.source AS deposit_source,
+    CASE WHEN lower(deposit.source) like "%educonnect%" THEN "EDUCONNECT" 
+    WHEN lower(deposit.source) like "%ubble%" THEN "UBBLE" 
+    WHEN (lower(deposit.source) like "%dms%" OR lower(deposit.source) like "%démarches simplifiées%") THEN "DMS"
+    ELSE deposit.source END
+    AS deposit_source,
     user.user_creation_date AS user_creation_date,
     deposit.dateCreated AS deposit_creation_date,
     deposit.dateUpdated AS deposit_update_date,

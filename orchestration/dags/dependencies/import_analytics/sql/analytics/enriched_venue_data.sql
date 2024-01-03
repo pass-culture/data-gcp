@@ -203,7 +203,12 @@ SELECT
         venue_humanized_id.humanized_id
     ) AS venue_pc_pro_link,
     venue_registration.venue_target AS venue_targeted_audience,
-    venue.banner_url 
+    venue.banner_url,
+    venue.venue_description,
+    venue.venue_withdrawal_details,
+    venue_contact.venue_contact_phone_number,
+    venue_contact.venue_contact_email,
+    venue_contact.venue_contact_website
 
 FROM
     `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue
@@ -220,6 +225,7 @@ FROM
     LEFT JOIN bookable_collective_offer_cnt ON bookable_collective_offer_cnt.venue_id = venue.venue_id
     LEFT JOIN bookable_offer_history ON bookable_offer_history.venue_id = venue.venue_id
     LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue_registration AS venue_registration ON venue.venue_id = venue_registration.venue_id
+    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue_contact AS venue_contact ON venue.venue_id = venue_contact.venue_id
 WHERE
     offerer.offerer_validation_status='VALIDATED'
     AND offerer.offerer_is_active;

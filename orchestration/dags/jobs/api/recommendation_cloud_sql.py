@@ -26,14 +26,12 @@ from common.config import (
     BIGQUERY_CLEAN_DATASET,
     BIGQUERY_ANALYTICS_DATASET,
     DAG_FOLDER,
-    QPI_TABLE,
     RECOMMENDATION_SQL_INSTANCE,
 )
-from dependencies.import_recommendation_cloudsql.monitor_tables import monitoring_tables
 from common.alerts import task_fail_slack_alert
 from common import macros
 from common.utils import get_airflow_schedule
-
+import time
 
 database_url = access_secret_data(
     GCP_PROJECT_ID, f"{RECOMMENDATION_SQL_INSTANCE}_database_url", default=""
@@ -48,6 +46,12 @@ TABLES_DATA_PATH = f"{DAG_FOLDER}/ressources/tables.csv"
 BUCKET_NAME = "bigquery_exports/{{ ds }}"
 BUCKET_PATH = f"gs://{DATA_GCS_BUCKET_NAME}/{BUCKET_NAME}"
 SQL_PATH = "dependencies/import_recommendation_cloudsql/sql"
+
+CONCURENT_MATERIALIZED_TABLES = [
+    "enriched_user_mv",
+    "item_ids_mv",
+    "non_recommendable_items_mv",
+]
 
 default_args = {
     "start_date": datetime(2020, 12, 1),
@@ -79,6 +83,12 @@ def get_table_data():
 TABLES = get_table_data()
 
 
+def wait_for_5_minutes():
+    print("Waiting for 5 minutes...")
+    time.sleep(300)
+    print("Done waiting!")
+
+
 def get_table_names():
     tables = pd.read_csv(TABLES_DATA_PATH)
     table_names = tables.table_name.unique()
@@ -89,34 +99,18 @@ with DAG(
     "recommendation_cloud_sql_v1",
     default_args=default_args,
     description="Export bigQuery tables to GCS to dump and restore Cloud SQL tables",
-    schedule_interval=get_airflow_schedule("15 5 * * *"),
+    schedule_interval=get_airflow_schedule("15 3 * * *"),
     catchup=False,
     dagrun_timeout=timedelta(minutes=480),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
 ) as dag:
-
     start = DummyOperator(task_id="start")
-    start_monitoring = DummyOperator(task_id="start_monitoring")
     start_drop_restore = DummyOperator(task_id="start_drop_restore")
 
-    end_monitoring = DummyOperator(task_id="end_monitoring")
     end_data_prep = DummyOperator(task_id="end_data_prep")
 
-    monitor_tables_task = []
-    for table, params in monitoring_tables.items():
-        dataset = params["destination_dataset"]
-        task = BigQueryExecuteQueryOperator(
-            task_id=f"monitor_{table}",
-            sql=params["sql"],
-            destination_dataset_table=f"{GCP_PROJECT_ID}.{dataset}.monitor_{table}",
-            use_legacy_sql=False,
-            write_disposition="WRITE_APPEND",
-        )
-        monitor_tables_task.append(task)
-
     for table in TABLES:
-
         dataset_type = TABLES[table]["dataset_type"]
         bigquery_table_name = TABLES[table]["bigquery_table_name"]
         if dataset_type == "clean":
@@ -137,16 +131,11 @@ with DAG(
                 if column_name not in list_type_columns
             ]
         )
-        if table == "qpi_answers":
-            filter_column_query = f"""
-                SELECT {select_columns}
-                FROM `{GCP_PROJECT_ID}.{dataset}.enriched_{QPI_TABLE}`
-            """
-        else:
-            filter_column_query = f"""
-                SELECT {select_columns}
-                FROM `{GCP_PROJECT_ID}.{dataset}.{bigquery_table_name}`
-            """
+
+        filter_column_query = f"""
+            SELECT {select_columns}
+            FROM `{GCP_PROJECT_ID}.{dataset}.{bigquery_table_name}`
+        """
 
         filter_column_task = BigQueryExecuteQueryOperator(
             task_id=f"filter_column_{table}",
@@ -248,67 +237,43 @@ with DAG(
         restore_tasks.append(task)
         if index:
             restore_tasks[index - 1] >> restore_tasks[index]
+
     end_drop_restore = DummyOperator(task_id="end_drop_restore")
 
+    # Create a task to execute the Python function
+    wait_end_drop_restore = PythonOperator(
+        task_id="wait_end_drop_restore",
+        python_callable=wait_for_5_minutes,
+        dag=dag,
+    )
+
     end_data_prep >> restore_tasks[0]
-    restore_tasks[-1] >> end_drop_restore
+    restore_tasks[-1] >> end_drop_restore >> wait_end_drop_restore
 
-    create_materialized_offers_raw_view = CloudSQLExecuteQueryOperator(
-        task_id="create_materialized_raw_view_recommendable_offers_raw_mv",
-        gcp_cloudsql_conn_id="proxy_postgres_tcp",
-        sql=f"{SQL_PATH}/create_recommendable_offers_raw_mv.sql",
-        autocommit=True,
-    )
-
-    recreate_indexes_query = """
-        CREATE INDEX IF NOT EXISTS idx_user_id                             ON public.enriched_user                        USING btree (user_id);
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_non_recommendable_id         ON public.non_recommendable_offers             USING btree (user_id,offer_id);
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_non_recommendable_item_id    ON public.non_recommendable_items              USING btree (user_id,item_id);
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_enriched_user_mv             ON public.enriched_user_mv                     USING btree (user_id);
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_qpi_answers_mv               ON public.qpi_answers_mv                       USING btree (user_id,subcategories);
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_item_ids_mv                  ON public.item_ids_mv                          USING btree (offer_id);
-
-    """
-    recreate_indexes_task = CloudSQLExecuteQueryOperator(
-        task_id="recreate_indexes",
-        gcp_cloudsql_conn_id="proxy_postgres_tcp",
-        sql=recreate_indexes_query,
-        autocommit=True,
-    )
-
-    views_to_refresh = [
-        "non_recommendable_offers",
-        "non_recommendable_items",
-        "enriched_user_mv",
-        "qpi_answers_mv",
-        "item_ids_mv",
-    ]
-
-    refresh_materialized_view_tasks = []
-    for materialized_view in views_to_refresh:
-        refresh_materialized_view_task = CloudSQLExecuteQueryOperator(
-            task_id=f"refresh_{materialized_view}",
+    materialized_view_tasks = []
+    for index, materialized_view in enumerate(CONCURENT_MATERIALIZED_TABLES):
+        create_materialized_view = CloudSQLExecuteQueryOperator(
+            task_id=f"create_materialized_raw_view_{materialized_view}",
             gcp_cloudsql_conn_id="proxy_postgres_tcp",
-            sql=f"REFRESH MATERIALIZED VIEW CONCURRENTLY {materialized_view};",
+            sql=f"{SQL_PATH}/create_{materialized_view}.sql",
             autocommit=True,
         )
-        refresh_materialized_view_tasks.append(refresh_materialized_view_task)
+        create_materialized_view.set_upstream(wait_end_drop_restore)
 
-    # update MV
-    end_refresh = DummyOperator(task_id="end_refresh")
+        wait_end_create_materialized_view = PythonOperator(
+            task_id=f"wait_view_{materialized_view}",
+            python_callable=wait_for_5_minutes,
+            dag=dag,
+        )
+        wait_end_create_materialized_view.set_upstream(create_materialized_view)
 
-    rename_materialized_view_tables = [
-        "recommendable_offers_raw_mv",
-    ]
-    rename_materialized_view_tasks = []
-    for materialized_view in rename_materialized_view_tables:
         rename_current_materialized_view = CloudSQLExecuteQueryOperator(
             task_id=f"rename_{materialized_view}_current_materialized_view_to_old",
             gcp_cloudsql_conn_id="proxy_postgres_tcp",
             sql=f"ALTER MATERIALIZED VIEW IF EXISTS {materialized_view} rename to {materialized_view}_old",
             autocommit=True,
         )
-        rename_current_materialized_view.set_upstream(end_refresh)
+        rename_current_materialized_view.set_upstream(wait_end_create_materialized_view)
 
         rename_temp_materialized_view = CloudSQLExecuteQueryOperator(
             task_id=f"rename_{materialized_view}_temp_materialized_view_to_current",
@@ -317,13 +282,22 @@ with DAG(
             autocommit=True,
         )
         rename_temp_materialized_view.set_upstream(rename_current_materialized_view)
+
+        wait_drop_materialized_view = PythonOperator(
+            task_id=f"wait_drop_view_{materialized_view}",
+            python_callable=wait_for_5_minutes,
+            dag=dag,
+        )
+
+        wait_drop_materialized_view.set_upstream(rename_temp_materialized_view)
+
         drop_old_materialized_view = CloudSQLExecuteQueryOperator(
             task_id=f"drop_{materialized_view}_old_materialized_view",
             gcp_cloudsql_conn_id="proxy_postgres_tcp",
             sql=f"DROP MATERIALIZED VIEW IF EXISTS {materialized_view}_old CASCADE",
             autocommit=True,
         )
-        drop_old_materialized_view.set_upstream(rename_temp_materialized_view)
+        drop_old_materialized_view.set_upstream(wait_drop_materialized_view)
 
         # yesterday = (datetime.today() - timedelta(days=1)).strftime("%Y%m%d")
         drop_old_function = CloudSQLExecuteQueryOperator(
@@ -334,22 +308,74 @@ with DAG(
             autocommit=True,
         )
         drop_old_function.set_upstream(drop_old_materialized_view)
-        rename_materialized_view_tasks.append(drop_old_function)
+        materialized_view_tasks.append(drop_old_function)
 
-    end = DummyOperator(task_id="end")
+    end_concurent_mv = DummyOperator(task_id="end_concurent_mv")
 
-    (
-        start
-        >> start_monitoring
-        >> monitor_tables_task
-        >> end_monitoring
-        >> start_drop_restore
+    materialized_view = "recommendable_offers_raw_mv"
+    create_materialized_view = CloudSQLExecuteQueryOperator(
+        task_id=f"create_materialized_raw_view_{materialized_view}",
+        gcp_cloudsql_conn_id="proxy_postgres_tcp",
+        sql=f"{SQL_PATH}/create_{materialized_view}.sql",
+        autocommit=True,
     )
-    (
-        end_drop_restore
-        >> create_materialized_offers_raw_view
-        >> recreate_indexes_task
-        >> refresh_materialized_view_tasks
-        >> end_refresh
+    create_materialized_view.set_upstream(end_concurent_mv)
+
+    wait_end_create_materialized_view = PythonOperator(
+        task_id=f"wait_view_{materialized_view}",
+        python_callable=wait_for_5_minutes,
+        dag=dag,
     )
-    (rename_materialized_view_tasks >> end)
+    wait_end_create_materialized_view.set_upstream(create_materialized_view)
+
+    rename_current_materialized_view = CloudSQLExecuteQueryOperator(
+        task_id=f"rename_{materialized_view}_current_materialized_view_to_old",
+        gcp_cloudsql_conn_id="proxy_postgres_tcp",
+        sql=f"ALTER MATERIALIZED VIEW IF EXISTS {materialized_view} rename to {materialized_view}_old",
+        autocommit=True,
+    )
+    rename_current_materialized_view.set_upstream(wait_end_create_materialized_view)
+
+    rename_temp_materialized_view = CloudSQLExecuteQueryOperator(
+        task_id=f"rename_{materialized_view}_temp_materialized_view_to_current",
+        gcp_cloudsql_conn_id="proxy_postgres_tcp",
+        sql=f"ALTER MATERIALIZED VIEW {materialized_view}_tmp rename to {materialized_view}",
+        autocommit=True,
+    )
+    rename_temp_materialized_view.set_upstream(rename_current_materialized_view)
+
+    wait_drop_materialized_view = PythonOperator(
+        task_id=f"wait_drop_view_{materialized_view}",
+        python_callable=wait_for_5_minutes,
+        dag=dag,
+    )
+
+    wait_drop_materialized_view.set_upstream(rename_temp_materialized_view)
+
+    drop_old_materialized_view = CloudSQLExecuteQueryOperator(
+        task_id=f"drop_{materialized_view}_old_materialized_view",
+        gcp_cloudsql_conn_id="proxy_postgres_tcp",
+        sql=f"DROP MATERIALIZED VIEW IF EXISTS {materialized_view}_old CASCADE",
+        autocommit=True,
+    )
+    drop_old_materialized_view.set_upstream(wait_drop_materialized_view)
+
+    # yesterday = (datetime.today() - timedelta(days=1)).strftime("%Y%m%d")
+    drop_old_function = CloudSQLExecuteQueryOperator(
+        task_id=f"drop_{materialized_view}_old_function",
+        gcp_cloudsql_conn_id="proxy_postgres_tcp",
+        sql=f"DROP FUNCTION IF EXISTS get_{materialized_view}_"
+        + "{{ prev_execution_date_success | ts_nodash }} CASCADE",
+        autocommit=True,
+    )
+    drop_old_function.set_upstream(drop_old_materialized_view)
+    reco_materialized_view = [drop_old_function]
+    end_all_dag = DummyOperator(task_id="end")
+    (
+        materialized_view_tasks
+        >> end_concurent_mv
+        >> reco_materialized_view[0]
+        >> end_all_dag
+    )
+
+    (start >> start_drop_restore)

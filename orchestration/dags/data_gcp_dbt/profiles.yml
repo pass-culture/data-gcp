@@ -1,0 +1,79 @@
+config:
+    send_anonymous_usage_stats: False
+
+data_gcp_dbt:
+  target: dev
+  outputs:
+    dev:
+      dataset: tmp_dev
+      job_execution_timeout_seconds: 300
+      job_retries: 1
+      location: europe-west1
+      method: oauth
+      priority: interactive
+      project: passculture-data-ehp
+      threads: 4
+      type: bigquery  
+    stg:
+      dataset: tmp_stg
+      job_execution_timeout_seconds: 300
+      job_retries: 1
+      location: europe-west1
+      method: oauth
+      priority: interactive
+      project: passculture-data-ehp
+      threads: 4
+      type: bigquery
+    prod:
+      dataset: tmp_prod
+      job_execution_timeout_seconds: 300
+      job_retries: 8
+      location: europe-west1
+      method: oauth
+      priority: interactive
+      project: passculture-data-prod
+      threads: 1
+      type: bigquery
+  
+elementary:
+  target: dev
+  outputs:
+    dev:
+      dataset: elementary_dev
+      type: bigquery
+      method: oauth
+      project: passculture-data-ehp 
+      location: europe-west1
+      threads: 2
+    stg:
+      dataset: elementary_stg
+      type: bigquery
+      method: oauth
+      project: passculture-data-ehp 
+      location: europe-west1
+      threads: 2
+    prod:
+      dataset: elementary_prod
+      type: bigquery
+      method: oauth
+      project: passculture-data-prod
+      location: europe-west1
+      threads: 2
+      
+re_data:
+  target: dev
+  outputs:
+    dev:
+      dataset: re_data_dev
+      type: bigquery
+      method: oauth
+      project: passculture-data-ehp 
+      location: europe-west1
+      threads: 2
+    stg:
+      dataset: re_data_stg
+      type: bigquery
+      method: oauth
+      project: passculture-data-ehp 
+      location: europe-west1
+      threads: 2

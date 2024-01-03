@@ -74,7 +74,6 @@ with DAG(
         )
     },
 ) as dag:
-
     start = DummyOperator(task_id="start")
 
     gce_instance_start = StartGCEOperator(
@@ -135,7 +134,6 @@ with DAG(
     clean_tasks = []
 
     for table, params in CLEAN_TABLES.items():
-
         to_clean = bigquery_job_task(
             dag=dag, table=f"copy_to_clean_{table}", job_params=params
         )
@@ -145,7 +143,6 @@ with DAG(
 
     analytics_tasks = []
     for table, params in ANALYTICS_TABLES.items():
-
         to_analytics = bigquery_job_task(
             dag=dag, table=f"copy_to_analytics_{table}", job_params=params
         )

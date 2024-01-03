@@ -12,7 +12,6 @@ def get_actual_and_predicted(
     data_model_dict: dict, shuffle_recommendation: bool = SHUFFLE_RECOMMENDATION
 ):
     data_test = data_model_dict["data"]["test"]
-    data_test = data_test.sort_values(["user_id", "count"], ascending=False)
     df_actual = (
         data_test.copy()
         .groupby("user_id", as_index=False)["item_id"]

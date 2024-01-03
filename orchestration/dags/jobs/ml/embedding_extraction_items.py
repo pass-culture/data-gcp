@@ -127,7 +127,7 @@ with DAG(
         sql=(IMPORT_TRAINING_SQL_PATH / f"item_embeddings_reduction.sql").as_posix(),
         write_disposition="WRITE_TRUNCATE",
         use_legacy_sql=False,
-        destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DATE}_retrieval_semantic_vector_data",
+        destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DATE}_item_embeddings_reduction",
         dag=dag,
     )
 
@@ -138,7 +138,7 @@ with DAG(
                 "sourceTable": {
                     "projectId": GCP_PROJECT_ID,
                     "datasetId": BIGQUERY_TMP_DATASET,
-                    "tableId": f"{DATE}_retrieval_semantic_vector_data",
+                    "tableId": f"{DATE}_item_embeddings_reduction",
                 },
                 "compression": None,
                 "destinationUris": f"{dag_config['STORAGE_PATH']}/data-*.parquet",

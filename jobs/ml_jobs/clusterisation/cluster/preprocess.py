@@ -7,7 +7,7 @@ from tools.preprocessing import (
     get_item_by_categories,
     get_item_by_group,
 )
-from tools.utils import ENV_SHORT_NAME, load_config_file, TMP_DATASET, CLEAN_DATASET
+from tools.utils import load_config_file, TMP_DATASET
 
 
 def preprocess(
@@ -22,7 +22,6 @@ def preprocess(
 
     logger.info("Loading data: fetch items with metadata and pretained embedding")
     items = pd.read_gbq(f"SELECT * from `{TMP_DATASET}.{input_table}`")
-    items = items.drop_duplicates(subset=["item_id"], keep="first")
 
     logger.info("Build item groups...")
     item_clean = (
@@ -42,13 +41,10 @@ def preprocess(
     item_by_group = get_item_by_group(item_by_category, params["group_config"])
 
     logger.info("Prepare pretrained embedding...")
-    embedding_col = [
-        col
-        for col in items.columns.tolist()
-        if params["pretained_embedding_name"] in col
-    ][0]
-
-    embedding_clean = prepare_embedding(items[embedding_col].tolist())
+    embedding_clean = prepare_embedding(
+        items[params["pretrained_embedding_name"]].tolist(),
+        params["pretrained_embedding_size"],
+    )
     item_embedding = pd.concat([items[["item_id"]], embedding_clean], axis=1)
     logger.info(f"item_embedding: {len(item_embedding)}")
 
@@ -56,6 +52,7 @@ def preprocess(
         item_embedding, item_by_group, how="inner", on=["item_id"]
     )
     item_embedding_w_group = item_embedding_w_group.fillna(0)
+    logger.info(f"item_embedding: {len(item_embedding_w_group)}")
     item_embedding_w_group.to_gbq(f"{TMP_DATASET}.{output_table}", if_exists="replace")
 
     return

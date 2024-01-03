@@ -19,7 +19,7 @@ SELECT
     ) as extra_params, 
     STRUCT(
         user.user_creation_date,
-        user.offerer_id
+        user.offerer_id,
         offerer.offerer_creation_date,
         offerer.offerer_first_offer_creation_date,
         offerer.offerer_first_individual_offer_creation_date,
@@ -29,7 +29,7 @@ SELECT
         offerer.is_synchro_adage,
         offerer.first_dms_adage_status,
         offerer.offerer_non_cancelled_individual_bookings,
-        offerer.offerer_non_cancelled_collective_bookings,
+        offerer.offerer_non_cancelled_collective_bookings
     ) as user_params,
     platform,
     app_info.version as app_version,

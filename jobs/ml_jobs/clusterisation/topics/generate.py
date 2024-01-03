@@ -10,7 +10,7 @@ from tqdm import tqdm
 import numpy as np
 
 
-from tools.utils import ENV_SHORT_NAME, TMP_DATASET, CLEAN_DATASET
+from tools.utils import ENV_SHORT_NAME, TMP_DATASET, CLEAN_DATASET, load_config_file
 from tools.utils import call_retry, sha1_to_base64
 from configs.prompts import (
     get_macro_topics_messages,
@@ -23,9 +23,9 @@ def load_df(input_table):
     return pd.read_gbq(f"""SELECT * FROM `{TMP_DATASET}.{input_table}`""")
 
 
-def decode(x):
+def decode(x, emb_size):
     values = list(x.values())
-    if len(values) == 5:
+    if len(values) == emb_size:
         return np.array(values)
     else:
         return None
@@ -131,11 +131,17 @@ def main(
     input_table: str = typer.Option(..., help="Path to data"),
     item_topics_labels_output_table: str = typer.Option(..., help="Path to data"),
     item_topics_output_table: str = typer.Option(..., help="Path to data"),
+    config_file_name: str = typer.Option(
+        "default-config-offer",
+        help="Config file name",
+    ),
 ):
     topic_items_df = load_df(input_table)
+    params = load_config_file(config_file_name)
+    emb_size = params["pretrained_embedding_size"]
 
     topic_items_df["semantic_encoding"] = topic_items_df["semantic_encoding"].apply(
-        decode
+        lambda x: decode(x, emb_size)
     )
     topic_items_df["category"] = (
         topic_items_df["semantic_category"].str.split("-", 1).str[0]

@@ -11,7 +11,7 @@ from common.alerts import task_fail_slack_alert
 from common.utils import (
     get_airflow_schedule,
 )
-from common.dbt.manifest import rebuild_manifest
+from common.dbt.utils import rebuild_manifest
 
 from common import macros
 from common.config import (

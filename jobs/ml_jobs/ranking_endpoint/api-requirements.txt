@@ -1,6 +1,6 @@
-flask
-flask-cors
-hypercorn
+flask==3.0.0
+flask-cors==4.0.0
+hypercorn==0.15.0
 numpy
 pandas
 pyarrow

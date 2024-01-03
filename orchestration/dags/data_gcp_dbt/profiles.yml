@@ -1,3 +1,6 @@
+config:
+    send_anonymous_usage_stats: False
+
 data_gcp_dbt:
   target: dev
   outputs:
@@ -33,6 +36,7 @@ data_gcp_dbt:
       type: bigquery
   
 elementary:
+  target: dev
   outputs:
     dev:
       dataset: elementary_dev
@@ -53,5 +57,23 @@ elementary:
       type: bigquery
       method: oauth
       project: passculture-data-prod
+      location: europe-west1
+      threads: 2
+      
+re_data:
+  target: dev
+  outputs:
+    dev:
+      dataset: re_data_dev
+      type: bigquery
+      method: oauth
+      project: passculture-data-ehp 
+      location: europe-west1
+      threads: 2
+    stg:
+      dataset: re_data_stg
+      type: bigquery
+      method: oauth
+      project: passculture-data-ehp 
       location: europe-west1
       threads: 2

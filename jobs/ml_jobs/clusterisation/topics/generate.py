@@ -48,9 +48,10 @@ def generate_topics(topic_items_df, semantic_cluster_id):
     topic_model = BERTopic(
         language="multilingual",
         top_n_words=25,
-        min_topic_size=1,
+        # min_topic_size=min_topic_size,
+        nr_topics=10,
         representation_model=representation_models,
-        nr_topics="auto",
+        # nr_topics="auto",
         calculate_probabilities=False,
     )
     topics, probs = topic_model.fit_transform(
@@ -170,7 +171,7 @@ def main(
             topics_df = loop_gpt(topics)
             topics_raw_all_df.append(topic_raw_df)
             topics_all_df.append(topics_df)
-        except ValueError as e:
+        except (ValueError, TypeError) as e:
             print(f"Error for {semantic_cluster_id}")
             print(e)
 

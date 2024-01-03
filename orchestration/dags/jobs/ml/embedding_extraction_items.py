@@ -106,7 +106,7 @@ with DAG(
         f"--env-short-name {ENV_SHORT_NAME} "
         "--config-file-name {{ params.config_file_name }} "
         f"--input-table-name {DATE}_item_to_extract_embeddings_clean "
-        f"--output-table-name item_embeddings ",
+        f"--output-table-name item_embeddings",
     )
 
     reduce_dimension = SSHGCEOperator(
@@ -119,7 +119,7 @@ with DAG(
         f"--env-short-name {ENV_SHORT_NAME} "
         "--config-file-name {{ params.config_file_name }} "
         f"--input-table-name item_embeddings "
-        f"--output-table-name item_embeddings_reduced ",
+        f"--output-table-name item_embeddings_reduced",
     )
 
     gce_instance_stop = StopGCEOperator(

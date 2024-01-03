@@ -4,11 +4,11 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 import typer
-import umap
 from loguru import logger
 from tools.config import CONFIGS_PATH, ENV_SHORT_NAME, GCP_PROJECT_ID
-from tools.embedding_extraction import extract_embedding
 from tools.dimension_reduction import reduce_embedding_dimension
+import pyarrow.dataset as ds
+import polars as pl
 
 
 def dimension_reduction(
@@ -17,7 +17,7 @@ def dimension_reduction(
     config_file_name: str = typer.Option(
         "default-config-offer", help="Config file name"
     ),
-    input_table_name: str = typer.Option(
+    source_gs_path: str = typer.Option(
         ...,
         help="Name of the dataframe we want to clean",
     ),
@@ -38,17 +38,10 @@ def dimension_reduction(
 
     ###############
     # Load preprocessed data
-    df_data_w_embedding = pd.read_gbq(
-        f"""
-            SELECT * 
-            FROM `clean_{env_short_name}.{input_table_name}`
-            QUALIFY ROW_NUMBER() OVER (
-                PARTITION BY item_id
-                ORDER BY
-                extraction_date DESC
-            ) = 1
-        """
-    )
+
+    dataset = ds.dataset(source_gs_path, format="parquet")
+    ldf = pl.scan_pyarrow_dataset(dataset)
+    df_data_w_embedding = ldf.collect().to_pandas()
 
     reduced_emb_df_init = df_data_w_embedding[["item_id", "extraction_date"]].astype(
         str

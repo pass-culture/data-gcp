@@ -15,6 +15,18 @@ from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import GCP_PROJECT_ID, ENV_SHORT_NAME, DAG_FOLDER
 from common.utils import get_airflow_schedule
+from common.config import (
+    GCP_PROJECT_ID,
+    DAG_FOLDER,
+    ENV_SHORT_NAME,
+    MLFLOW_BUCKET_NAME,
+    BIGQUERY_TMP_DATASET,
+)
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryExecuteQueryOperator,
+    BigQueryInsertJobOperator,
+)
+from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
 
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"extract-items-embeddings-{ENV_SHORT_NAME}"
@@ -27,6 +39,7 @@ default_args = {
     "retry_delay": timedelta(minutes=2),
 }
 dag_config = {
+    "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/embedding_extraction_items_{ENV_SHORT_NAME}/embedding_extraction_items_{DATE}/{DATE}_item_embbedding_data",
     "TOKENIZERS_PARALLELISM": "false",
 }
 with DAG(
@@ -109,6 +122,32 @@ with DAG(
         f"--output-table-name item_embeddings",
     )
 
+    export_task = BigQueryExecuteQueryOperator(
+        task_id=f"import_retrieval_semantic_vector_table",
+        sql=(IMPORT_TRAINING_SQL_PATH / f"item_embeddings_reduction.sql").as_posix(),
+        write_disposition="WRITE_TRUNCATE",
+        use_legacy_sql=False,
+        destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DATE}_retrieval_semantic_vector_data",
+        dag=dag,
+    )
+
+    export_bq = BigQueryInsertJobOperator(
+        task_id=f"store_item_embbedding_data",
+        configuration={
+            "extract": {
+                "sourceTable": {
+                    "projectId": GCP_PROJECT_ID,
+                    "datasetId": BIGQUERY_TMP_DATASET,
+                    "tableId": f"{DATE}_retrieval_semantic_vector_data",
+                },
+                "compression": None,
+                "destinationUris": f"{dag_config['STORAGE_PATH']}/data-*.parquet",
+                "destinationFormat": "PARQUET",
+            }
+        },
+        dag=dag,
+    )
+
     reduce_dimension = SSHGCEOperator(
         task_id="reduce_dimension",
         instance_name=GCE_INSTANCE,
@@ -118,7 +157,7 @@ with DAG(
         f"--gcp-project {GCP_PROJECT_ID} "
         f"--env-short-name {ENV_SHORT_NAME} "
         "--config-file-name {{ params.config_file_name }} "
-        f"--input-table-name item_embeddings "
+        f"--source-gs-path {dag_config['STORAGE_PATH']} "
         f"--output-table-name item_embeddings_reduced",
     )
 
@@ -133,6 +172,8 @@ with DAG(
         >> install_dependencies
         >> preprocess
         >> extract_embedding
+        >> export_task
+        >> export_bq
         >> reduce_dimension
         >> gce_instance_stop
     )

@@ -123,7 +123,7 @@ with DAG(
     )
 
     export_task = BigQueryExecuteQueryOperator(
-        task_id=f"import_retrieval_semantic_vector_table",
+        task_id=f"import_item_embbedding_data",
         sql=(IMPORT_TRAINING_SQL_PATH / f"item_embeddings_reduction.sql").as_posix(),
         write_disposition="WRITE_TRUNCATE",
         use_legacy_sql=False,

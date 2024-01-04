@@ -38,6 +38,7 @@ BQ_ADAGE_DTYPE = {
     "latitude": "STRING",
     "longitude": "STRING",
     "actif": "STRING",
+    "synchroPass": "STRING",
     "dateModification": "STRING",
     "statutLibelle": "STRING",
     "labelLibelle": "STRING",

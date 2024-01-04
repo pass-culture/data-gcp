@@ -14,7 +14,7 @@ SELECT
     collective_offer_visual_disability_compliant,
     collective_offer_last_validation_date,
     collective_offer_validation,
-    collective_offer_id,
+    template.collective_offer_id,
     collective_offer_is_active,
     venue_id,
     collective_offer_name,

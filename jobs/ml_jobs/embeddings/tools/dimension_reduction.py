@@ -5,6 +5,7 @@ import json
 from loguru import logger
 import io
 from google.cloud import bigquery
+from hnne import HNNE
 
 
 def convert_str_emb_to_float(emb_list):
@@ -20,13 +21,9 @@ def reduce_embedding_dimension(
     dimension,
 ):
     float_emb = convert_str_emb_to_float(data)
-    logger.info(f"reduction to {dimension} dimensions... size {len(float_emb)}")
-    return umap.UMAP(
-        n_components=dimension,
-        random_state=42,
-        transform_seed=42,
-        verbose=True,
-    ).fit_transform(float_emb)
+    total_size = len(float_emb)
+    logger.info(f"reduction to {dimension} dimensions... size {total_size}")
+    return HNNE(dim=dimension).fit_transform(np.array(float_emb))
 
 
 def export_polars_to_bq(data, project_id, dataset, output_table):

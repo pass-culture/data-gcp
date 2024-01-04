@@ -3,6 +3,7 @@ import numpy as np
 import umap
 import json
 from loguru import logger
+import random
 
 
 def convert_str_emb_to_float(emb_list):
@@ -23,9 +24,8 @@ def reduce_embedding_dimension(
     transformer = umap.UMAP(
         n_components=dimension,
         random_state=42,
-        n_neighbors=10,
         transform_seed=42,
-        verbose=False,
-    ).fit(float_emb)
-    emb_reduced = transformer.embedding_.astype(np.float32)
+        verbose=True,
+    ).fit(random.sample(float_emb, len(float_emb) // 10))
+    emb_reduced = transformer.transform(float_emb).astype(np.float32)
     return emb_reduced.tolist()

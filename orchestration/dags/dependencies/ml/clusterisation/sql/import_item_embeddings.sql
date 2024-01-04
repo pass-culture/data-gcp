@@ -3,7 +3,7 @@ WITH items_w_embedding as (
         ie.item_id,
         ie.semantic_content_hybrid_embedding as semantic_content_embedding,
     FROM
-        `{{ bigquery_clean_dataset }}.item_embeddings_reduced_32` ie
+        `{{ bigquery_clean_dataset }}.item_embeddings_reduced_16` ie
 ),
 base as (
     SELECT

@@ -12,15 +12,15 @@ import polars as pl
 
 
 def export_reduction_table(df, dimension, embedding_columns):
-    exported_cols = []
     for emb_col in embedding_columns:
         logger.info(f"Reducing {emb_col}...")
-        exported_cols.append(
-            pl.Series(emb_col, reduce_embedding_dimension(df[emb_col], dimension))
-        )
+        with pl.Config(auto_structify=True):
+            df = df.with_columns(
+                pl.Series(emb_col, reduce_embedding_dimension(df[emb_col], dimension))
+            )
         logger.info(f"Done for {emb_col}...")
-    with pl.Config(auto_structify=True):
-        return df.with_columns(exported_cols)
+
+    return df
 
 
 def dimension_reduction(

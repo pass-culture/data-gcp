@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-import umap
 import json
 from loguru import logger
 import io

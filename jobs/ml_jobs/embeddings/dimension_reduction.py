@@ -47,24 +47,23 @@ def dimension_reduction(
 
     ###############
     # Load preprocessed data
-
-    dataset = ds.dataset(source_gs_path, format="parquet")
-    ldf = pl.scan_pyarrow_dataset(dataset)
-    df_data_w_embedding = ldf.collect().to_pandas()
-
     for reduction_dim_str, embedding_columns in params["reduction_plan"].items():
+
+        dataset = ds.dataset(source_gs_path, format="parquet")
+        ldf = pl.scan_pyarrow_dataset(dataset)
+        export_cols = ["extraction_date", "item_id"] + embedding_columns
         logger.info(f"Reducing Table... {output_table_name}_{reduction_dim_str}")
-        export_df = export_reduction_table(
-            df_data_w_embedding.copy(),
+        export_reduction_table(
+            ldf.select(export_cols).collect().to_pandas(),
             dimension=int(reduction_dim_str),
             embedding_columns=embedding_columns,
-        )
-        export_df.to_gbq(
+        ).to_gbq(
             f"clean_{env_short_name}.{output_table_name}_{reduction_dim_str}",
             project_id=gcp_project,
             if_exists="replace",
         )
         logger.info(f"Done Table... {output_table_name}_{reduction_dim_str}")
+
 
 if __name__ == "__main__":
     typer.run(dimension_reduction)

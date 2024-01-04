@@ -19,13 +19,13 @@ def reduce_embedding_dimension(
     dimension,
 ):
     float_emb = convert_str_emb_to_float(data)
+    total_size = len(float_emb) // 10
 
-    logger.info(f"reduction to {dimension} dimensions...")
+    logger.info(f"reduction to {dimension} dimensions... size {total_size}")
     transformer = umap.UMAP(
         n_components=dimension,
         random_state=42,
         transform_seed=42,
         verbose=True,
-    ).fit(random.sample(float_emb, len(float_emb) // 10))
-    emb_reduced = transformer.transform(float_emb).astype(np.float32)
-    return emb_reduced.tolist()
+    ).fit(random.sample(float_emb, total_size))
+    return transformer.transform(float_emb).astype(np.float32)

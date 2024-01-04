@@ -66,6 +66,7 @@ with DAG(
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
         instance_name=GCE_INSTANCE,
+        preemptible=False,
         instance_type="{{ params.instance_type }}",
         retries=2,
         labels={"job_type": "long_ml"},

@@ -4,11 +4,22 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 import typer
-import umap
 from loguru import logger
 from tools.config import CONFIGS_PATH, ENV_SHORT_NAME, GCP_PROJECT_ID
-from tools.embedding_extraction import extract_embedding
-from tools.dimension_reduction import reduce_embedding_dimension
+from tools.dimension_reduction import reduce_embedding_dimension, export_polars_to_bq
+import pyarrow.dataset as ds
+import polars as pl
+
+
+def export_reduction_table(df, dimension, embedding_columns):
+    for emb_col in embedding_columns:
+        logger.info(f"Reducing {emb_col}...")
+        df = df.with_columns(
+            pl.Series(emb_col, reduce_embedding_dimension(df[emb_col], dimension))
+        )
+        logger.info(f"Done for {emb_col}...")
+
+    return df
 
 
 def dimension_reduction(
@@ -17,7 +28,7 @@ def dimension_reduction(
     config_file_name: str = typer.Option(
         "default-config-offer", help="Config file name"
     ),
-    input_table_name: str = typer.Option(
+    source_gs_path: str = typer.Option(
         ...,
         help="Name of the dataframe we want to clean",
     ),
@@ -38,44 +49,23 @@ def dimension_reduction(
 
     ###############
     # Load preprocessed data
-    df_data_w_embedding = pd.read_gbq(
-        f"""
-            SELECT * 
-            FROM `clean_{env_short_name}.{input_table_name}`
-            QUALIFY ROW_NUMBER() OVER (
-                PARTITION BY item_id
-                ORDER BY
-                extraction_date DESC
-            ) = 1
-        """
-    )
+    for reduction_dim_str, embedding_columns in params["reduction_plan"].items():
 
-    reduced_emb_df_init = df_data_w_embedding[["item_id", "extraction_date"]].astype(
-        str
-    )
-    for dim in params["reduction_dimensions"]:
-        emb_cols = [
-            col
-            for col in df_data_w_embedding.columns.tolist()
-            if col not in ["item_id", "extraction_date"]
-        ]
-        reduced_emb_dict = {}
-        for emb_col in emb_cols:
-            logger.info(f"Reducing {emb_col}...")
-            reduced_emb_dict[emb_col] = reduce_embedding_dimension(
-                data=df_data_w_embedding[emb_col].tolist(),
-                dimension=dim,
-            )
-        reduce_emb_df = pd.DataFrame(reduced_emb_dict)
-        reduce_emb_df = reduce_emb_df.astype(str)
-        final_reduced_emb = pd.concat([reduced_emb_df_init, reduce_emb_df], axis=1)
-        final_reduced_emb.to_gbq(
-            f"clean_{env_short_name}.{output_table_name}_{dim}",
+        dataset = ds.dataset(source_gs_path, format="parquet")
+        ldf = pl.scan_pyarrow_dataset(dataset)
+        export_cols = ["extraction_date", "item_id"] + embedding_columns
+        logger.info(f"Reducing Table... {output_table_name}_{reduction_dim_str}")
+        export_polars_to_bq(
+            export_reduction_table(
+                ldf.select(export_cols).collect(),
+                dimension=int(reduction_dim_str),
+                embedding_columns=embedding_columns,
+            ),
             project_id=gcp_project,
-            if_exists="replace",
+            dataset=f"clean_{env_short_name}",
+            output_table=f"{output_table_name}_{reduction_dim_str}",
         )
-
-    return
+        logger.info(f"Done Table... {output_table_name}_{reduction_dim_str}")
 
 
 if __name__ == "__main__":

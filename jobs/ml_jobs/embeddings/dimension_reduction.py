@@ -6,18 +6,21 @@ import pandas as pd
 import typer
 from loguru import logger
 from tools.config import CONFIGS_PATH, ENV_SHORT_NAME, GCP_PROJECT_ID
-from tools.dimension_reduction import reduce_embedding_dimension
+from tools.dimension_reduction import reduce_embedding_dimension, export_polars_to_bq
 import pyarrow.dataset as ds
 import polars as pl
 
 
 def export_reduction_table(df, dimension, embedding_columns):
+    exported_cols = []
     for emb_col in embedding_columns:
         logger.info(f"Reducing {emb_col}...")
-        df[emb_col] = reduce_embedding_dimension(df[emb_col], dimension).tolist()
-        df[emb_col] = df[emb_col].astype(str)
+        exported_cols.append(
+            pl.Series(emb_col, reduce_embedding_dimension(df[emb_col], dimension))
+        )
         logger.info(f"Done for {emb_col}...")
-    return df
+    with pl.Config(auto_structify=True):
+        return df.with_columns(exported_cols)
 
 
 def dimension_reduction(
@@ -53,14 +56,15 @@ def dimension_reduction(
         ldf = pl.scan_pyarrow_dataset(dataset)
         export_cols = ["extraction_date", "item_id"] + embedding_columns
         logger.info(f"Reducing Table... {output_table_name}_{reduction_dim_str}")
-        export_reduction_table(
-            ldf.select(export_cols).collect().to_pandas(),
-            dimension=int(reduction_dim_str),
-            embedding_columns=embedding_columns,
-        ).to_gbq(
-            f"clean_{env_short_name}.{output_table_name}_{reduction_dim_str}",
+        export_polars_to_bq(
+            export_reduction_table(
+                ldf.select(export_cols).collect(),
+                dimension=int(reduction_dim_str),
+                embedding_columns=embedding_columns,
+            ),
             project_id=gcp_project,
-            if_exists="replace",
+            dataset=f"clean_{env_short_name}",
+            output_table=f"{output_table_name}_{reduction_dim_str}",
         )
         logger.info(f"Done Table... {output_table_name}_{reduction_dim_str}")
 

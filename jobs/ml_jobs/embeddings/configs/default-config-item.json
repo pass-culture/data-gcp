@@ -44,45 +44,36 @@
         "hybrid": "sentence-transformers/clip-ViT-B-32-multilingual-v1"
     },
     "reduction_configs": {
-        "default": {
-            "target_dimensions": [
-                5,
-                16,
-                32
-            ],
-            "method": "PUMAP",
-            "embedding_columns": [
-                "image_embedding",
-                "semantic_content_embedding",
-                "semantic_content_hybrid_embedding"
-            ]
-        },
-        "pca": {
-            "target_dimensions": [
-                5,
-                16,
-                32
-            ],
-            "method": "PCA",
-            "embedding_columns": [
-                "image_embedding",
-                "semantic_content_embedding",
-                "semantic_content_hybrid_embedding"
-            ]
-        },
-        "umap": {
-            "target_dimensions": [
-                5,
-                16,
-                32
-            ],
-            "method": "UMAP",
-            "embedding_columns": [
-                "image_embedding",
-                "semantic_content_embedding",
-                "semantic_content_hybrid_embedding"
-            ]
-        }
-
+        "default": [
+            {
+                "target_dimensions": 32,
+                "method": "PCA",
+                "embedding_columns": [
+                    "image_embedding",
+                    "semantic_content_embedding",
+                    "semantic_content_hybrid_embedding"
+                ]
+            },
+            {
+                "target_dimensions": 16,
+                "method": "PUMAP",
+                "embedding_columns": [
+                    "image_embedding",
+                    "semantic_content_embedding",
+                    "semantic_content_hybrid_embedding"
+                ],
+                "pca_pre_reduction_dimension" : 32
+            },
+            {
+                "target_dimensions": 5,
+                "method": "UMAP",
+                "embedding_columns": [
+                    "image_embedding",
+                    "semantic_content_embedding",
+                    "semantic_content_hybrid_embedding"
+                ],
+                "pca_pre_reduction_dimension" : 16
+            }
+        ]
     }
 }

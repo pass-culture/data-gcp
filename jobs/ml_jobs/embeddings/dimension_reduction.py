@@ -26,24 +26,23 @@ def export_reduction_table(
         logger.info(f"Convert serialized embeddings... {emb_col}...")
         X = np.array(convert_str_emb_to_float(df[emb_col]))
         # reduce first with PCA
-        if X.shape[1] >= max_dimension:
+        if method in ("UMAP", "PUMAP"):
             logger.info(f"Reducing first with PCA {emb_col}...")
             X = pca_reduce_embedding_dimension(X, dimension=max_dimension)
-        # if we still need to reduce it
-        if target_dimension < max_dimension:
-            if method == "UMAP":
-                logger.info(f"Reducing with UMAP {emb_col}...")
-                X = umap_reduce_embedding_dimension(X, target_dimension)
-            elif method == "PUMAP":
-                logger.info(f"Reducing with PUMAP {emb_col}...")
-                X = pumap_reduce_embedding_dimension(
-                    X, target_dimension, batch_size=10240, train_frac=0.1
-                )
-            elif method == "PCA":
-                logger.info(f"Reducing with PCA {emb_col}...")
-                X = pca_reduce_embedding_dimension(X, dimension=target_dimension)
-            else:
-                raise Exception("Metohd not found.")
+
+        if method == "UMAP":
+            logger.info(f"Reducing with UMAP {emb_col}...")
+            X = umap_reduce_embedding_dimension(X, target_dimension)
+        elif method == "PUMAP":
+            logger.info(f"Reducing with PUMAP {emb_col}...")
+            X = pumap_reduce_embedding_dimension(
+                X, target_dimension, batch_size=2048, train_frac=0.1
+            )
+        elif method == "PCA":
+            logger.info(f"Reducing with PCA {emb_col}...")
+            X = pca_reduce_embedding_dimension(X, dimension=target_dimension)
+        else:
+            raise Exception("Metohd not found.")
         # transform as str again
         logger.info(f"Transform embeddings as str for {emb_col}...")
         X = convert_arr_emb_to_str(X)
@@ -111,13 +110,15 @@ def dimension_reduction(
         mode="r",
         encoding="utf-8",
     ) as config_file:
-        params = json.load(config_file)["reduction_configs"][reduction_config]
+        config_json = json.load(config_file)["reduction_configs"][reduction_config]
 
     ###############
     # Load preprocessed data
-    method = params["method"]
-    embedding_columns = params["embedding_columns"]
-    for target_dimension in params["target_dimensions"]:
+    for params in config_json:
+        target_dimension = params["target_dimensions"]
+        method = params["method"]
+        embedding_columns = params["embedding_columns"]
+        pre_reduction_dim = params.get("pca_pre_reduction_dimension", 32)
         plan(
             source_gs_path,
             embedding_columns,
@@ -126,7 +127,7 @@ def dimension_reduction(
             gcp_project=gcp_project,
             env_short_name=env_short_name,
             method=method,
-            max_dimension=32,
+            max_dimension=pre_reduction_dim,
         )
 
 

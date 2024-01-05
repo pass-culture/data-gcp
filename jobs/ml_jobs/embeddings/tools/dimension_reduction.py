@@ -22,7 +22,7 @@ def convert_arr_emb_to_str(emb_list):
     float_emb = []
     for str_emb in emb_list:
         emb = json.dumps(str_emb.tolist())
-        float_emb.append(np.array(emb))
+        float_emb.append(emb)
     return float_emb
 
 

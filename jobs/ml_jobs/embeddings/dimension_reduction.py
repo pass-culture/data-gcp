@@ -99,7 +99,7 @@ def dimension_reduction(
         help="Name of the dataframe we want to clean",
     ),
     reduction_config: str = typer.Option(
-        ...,
+        "default",
         help="String for the configuration plan to execute",
     ),
 ) -> None:

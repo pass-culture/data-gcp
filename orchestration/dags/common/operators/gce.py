@@ -24,6 +24,7 @@ class StartGCEOperator(BaseOperator):
         "instance_type",
         "preemptible",
         "accelerator_types",
+        "gpu_count",
         "source_image_type",
         "labels",
     ]
@@ -35,6 +36,7 @@ class StartGCEOperator(BaseOperator):
         instance_type: str = "n1-standard-1",
         preemptible: bool = True,
         accelerator_types=[],
+        gpu_count: int = 0,
         source_image_type: str = None,
         labels={},
         *args,
@@ -45,6 +47,7 @@ class StartGCEOperator(BaseOperator):
         self.instance_type = instance_type
         self.preemptible = preemptible
         self.accelerator_types = accelerator_types
+        self.gpu_count = gpu_count
         self.source_image_type = source_image_type
         self.labels = labels
 
@@ -62,6 +65,7 @@ class StartGCEOperator(BaseOperator):
             self.instance_type,
             preemptible=self.preemptible,
             accelerator_types=self.accelerator_types,
+            gpu_count=self.gpu_count,
             labels=self.labels,
         )
 

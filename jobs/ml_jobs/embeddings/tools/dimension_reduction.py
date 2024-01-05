@@ -1,12 +1,13 @@
 import pandas as pd
 import numpy as np
 import json
-from loguru import logger
 import io
 from google.cloud import bigquery
 import umap
 import random
 from sklearn.decomposition import PCA
+import tensorflow as tf
+from loguru import logger
 
 
 def convert_str_emb_to_float(emb_list):
@@ -37,6 +38,7 @@ def umap_reduce_embedding_dimension(
     return umap.UMAP(
         n_neighbors=10,
         n_components=dimension,
+        init="random",
         metric="cosine",
         low_memory=True,
         unique=True,
@@ -44,11 +46,28 @@ def umap_reduce_embedding_dimension(
 
 
 def pumap_reduce_embedding_dimension(data, dimension, train_frac=0.1, batch_size=2048):
-    return (
-        umap.ParametricUMAP(n_components=dimension, batch_size=batch_size)
-        .fit(get_sample(data, train_frac))
-        .transform(data)
+
+    keras_fit_kwargs = {
+        "callbacks": [
+            tf.keras.callbacks.EarlyStopping(
+                monitor="loss",
+                min_delta=10**-2,
+                patience=2,
+                verbose=1,
+            )
+        ]
+    }
+
+    embedder = umap.ParametricUMAP(
+        n_components=dimension,
+        n_neighbors=10,
+        verbose=True,
+        metric="cosine",
+        keras_fit_kwargs=keras_fit_kwargs,
+        n_training_epochs=10,
+        batch_size=batch_size,
     )
+    return embedder.fit(get_sample(data, train_frac)).transform(data)
 
 
 def pca_reduce_embedding_dimension(

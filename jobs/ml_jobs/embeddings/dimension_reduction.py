@@ -52,6 +52,7 @@ def export_reduction_table(
                 X,
             )
         )
+        del X;
 
         logger.info(f"Done for {emb_col}...")
 

@@ -4,7 +4,8 @@ import json
 from loguru import logger
 import io
 from google.cloud import bigquery
-from hnne import HNNE
+import umap
+import trimap
 
 
 def convert_str_emb_to_float(emb_list):
@@ -15,14 +16,22 @@ def convert_str_emb_to_float(emb_list):
     return float_emb
 
 
-def reduce_embedding_dimension(
+def umap_reduce_embedding_dimension(
+    data,
+    dimension,
+):
+    return umap.UMAP(
+        n_neighbors=10, n_components=dimension, metric="cosine", low_memory=True, verbose=True
+    ).fit_transform(convert_str_emb_to_float(data))
+
+def trimap_reduce_embedding_dimension(
     data,
     dimension,
 ):
     float_emb = convert_str_emb_to_float(data)
-    total_size = len(float_emb)
-    logger.info(f"reduction to {dimension} dimensions... size {total_size}")
-    return HNNE(dim=dimension).fit_transform(np.array(float_emb))
+    return trimap.TRIMAP(n_dims=dimension, verbose=True).fit_transform(np.array(float_emb))
+
+
 
 
 def export_polars_to_bq(data, project_id, dataset, output_table):

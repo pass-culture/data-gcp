@@ -6,7 +6,7 @@ import pandas as pd
 import typer
 from loguru import logger
 from tools.config import CONFIGS_PATH, ENV_SHORT_NAME, GCP_PROJECT_ID
-from tools.dimension_reduction import reduce_embedding_dimension, export_polars_to_bq
+from tools.dimension_reduction import umap_reduce_embedding_dimension, export_polars_to_bq
 import pyarrow.dataset as ds
 import polars as pl
 
@@ -15,11 +15,36 @@ def export_reduction_table(df, dimension, embedding_columns):
     for emb_col in embedding_columns:
         logger.info(f"Reducing {emb_col}...")
         df = df.with_columns(
-            pl.Series(emb_col, reduce_embedding_dimension(df[emb_col], dimension))
+            pl.Series(emb_col, umap_reduce_embedding_dimension(df[emb_col], dimension))
         )
         logger.info(f"Done for {emb_col}...")
 
     return df
+
+
+def loop(
+    source_gs_path,
+    embedding_columns,
+    output_table_name,
+    reduction_dim_str,
+    gcp_project,
+    env_short_name,
+):
+    dataset = ds.dataset(source_gs_path, format="parquet")
+    ldf = pl.scan_pyarrow_dataset(dataset)
+    export_cols = ["extraction_date", "item_id"] + embedding_columns
+    logger.info(f"Reducing Table... {output_table_name}_{reduction_dim_str}")
+    export_polars_to_bq(
+        export_reduction_table(
+            ldf.select(export_cols).collect(),
+            dimension=int(reduction_dim_str),
+            embedding_columns=embedding_columns,
+        ),
+        project_id=gcp_project,
+        dataset=f"clean_{env_short_name}",
+        output_table=f"{output_table_name}_{reduction_dim_str}",
+    )
+    logger.info(f"Done Table... {output_table_name}_{reduction_dim_str}")
 
 
 def dimension_reduction(
@@ -50,22 +75,14 @@ def dimension_reduction(
     ###############
     # Load preprocessed data
     for reduction_dim_str, embedding_columns in params["reduction_plan"].items():
-
-        dataset = ds.dataset(source_gs_path, format="parquet")
-        ldf = pl.scan_pyarrow_dataset(dataset)
-        export_cols = ["extraction_date", "item_id"] + embedding_columns
-        logger.info(f"Reducing Table... {output_table_name}_{reduction_dim_str}")
-        export_polars_to_bq(
-            export_reduction_table(
-                ldf.select(export_cols).collect(),
-                dimension=int(reduction_dim_str),
-                embedding_columns=embedding_columns,
-            ),
-            project_id=gcp_project,
-            dataset=f"clean_{env_short_name}",
-            output_table=f"{output_table_name}_{reduction_dim_str}",
+        loop(
+            source_gs_path,
+            embedding_columns,
+            output_table_name,
+            reduction_dim_str,
+            gcp_project,
+            env_short_name,
         )
-        logger.info(f"Done Table... {output_table_name}_{reduction_dim_str}")
 
 
 if __name__ == "__main__":

@@ -45,17 +45,17 @@
     },
     "reduction_plan": {
         "5": [
+            "image_embedding",
             "semantic_content_embedding",
             "semantic_content_hybrid_embedding"
         ],
         "16": [
-            "name_embedding",
-            "description_embedding",
             "image_embedding",
             "semantic_content_embedding",
             "semantic_content_hybrid_embedding"
         ],
         "32": [
+            "image_embedding",
             "semantic_content_embedding",
             "semantic_content_hybrid_embedding"
         ]

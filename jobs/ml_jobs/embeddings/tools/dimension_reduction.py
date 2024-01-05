@@ -5,7 +5,8 @@ from loguru import logger
 import io
 from google.cloud import bigquery
 import umap
-import trimap
+import random
+from sklearn.decomposition import PCA
 
 
 def convert_str_emb_to_float(emb_list):
@@ -14,6 +15,11 @@ def convert_str_emb_to_float(emb_list):
         emb = json.loads(str_emb)
         float_emb.append(np.array(emb))
     return float_emb
+
+
+def get_sample(data, frac):
+    sample_size = int(frac * len(data))
+    return data[np.random.choice(len(data), size=sample_size, replace=False)]
 
 
 def umap_reduce_embedding_dimension(
@@ -25,18 +31,23 @@ def umap_reduce_embedding_dimension(
         n_components=dimension,
         metric="cosine",
         low_memory=True,
-        verbose=True,
-    ).fit_transform(convert_str_emb_to_float(data))
+        unique=True,
+    ).fit_transform(data)
 
 
-def trimap_reduce_embedding_dimension(
+def pumap_reduce_embedding_dimension(data, dimension, train_frac=0.1, batch_size=2048):
+    return (
+        umap.ParametricUMAP(n_components=dimension, batch_size=batch_size)
+        .fit(get_sample(data, train_frac))
+        .transform(data)
+    )
+
+
+def pca_reduce_embedding_dimension(
     data,
     dimension,
 ):
-    float_emb = convert_str_emb_to_float(data)
-    return trimap.TRIMAP(n_dims=dimension, verbose=True).fit_transform(
-        np.array(float_emb)
-    )
+    return PCA(n_components=dimension).fit_transform(data)
 
 
 def export_polars_to_bq(data, project_id, dataset, output_table):

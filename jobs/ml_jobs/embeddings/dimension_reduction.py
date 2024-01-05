@@ -18,7 +18,7 @@ import polars as pl
 
 
 def export_reduction_table(
-    df, dimension, embedding_columns, method="PUMAP", max_dimension=32
+    df, target_dimension, embedding_columns, method="PUMAP", max_dimension=32
 ):
 
     for emb_col in embedding_columns:
@@ -29,22 +29,22 @@ def export_reduction_table(
             logger.info(f"Reducing first with PCA {emb_col}...")
             X = pca_reduce_embedding_dimension(X, dimension=max_dimension)
         # if we still need to reduce it
-        if dimension < max_dimension:
+        if target_dimension < max_dimension:
             if method == "UMAP":
                 logger.info(f"Reducing with UMAP {emb_col}...")
-                X = umap_reduce_embedding_dimension(X, dimension)
+                X = umap_reduce_embedding_dimension(X, target_dimension)
             elif method == "PUMAP":
                 logger.info(f"Reducing with PUMAP {emb_col}...")
                 X = pumap_reduce_embedding_dimension(
-                    X, dimension, batch_size=10240, train_frac=0.1
+                    X, target_dimension, batch_size=10240, train_frac=0.1
                 )
             elif method == "PCA":
                 logger.info(f"Reducing with PCA {emb_col}...")
-                X = pca_reduce_embedding_dimension(X, dimension=dimension)
+                X = pca_reduce_embedding_dimension(X, dimension=target_dimension)
             else:
                 raise Exception("Metohd not found.")
 
-            logger.info(f"Process done {emb_col}...")
+        logger.info(f"Process done {emb_col}...")
 
         df = df.with_columns(
             pl.Series(
@@ -73,7 +73,7 @@ def plan(
     ldf = pl.scan_pyarrow_dataset(dataset)
     export_cols = ["extraction_date", "item_id"] + embedding_columns
     output_table_name = (f"{output_table_prefix}_reduced_{target_dimension}",)
-    logger.info(f"Reducing Table... output_table_name")
+    logger.info(f"Reducing Table... {output_table_name}")
     export_polars_to_bq(
         export_reduction_table(
             ldf.select(export_cols).collect(),
@@ -86,7 +86,7 @@ def plan(
         dataset=f"clean_{env_short_name}",
         output_table=output_table_name,
     )
-    logger.info(f"Done Table... output_table_name")
+    logger.info(f"Done Table... {output_table_name}")
 
 
 def dimension_reduction(

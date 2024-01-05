@@ -17,6 +17,14 @@ def convert_str_emb_to_float(emb_list):
     return float_emb
 
 
+def convert_arr_emb_to_str(emb_list):
+    float_emb = []
+    for str_emb in emb_list:
+        emb = json.dumps(str_emb.tolist())
+        float_emb.append(np.array(emb))
+    return float_emb
+
+
 def get_sample(data, frac):
     sample_size = int(frac * len(data))
     return data[np.random.choice(len(data), size=sample_size, replace=False)]

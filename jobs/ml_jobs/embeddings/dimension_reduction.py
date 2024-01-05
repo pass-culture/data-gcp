@@ -12,6 +12,7 @@ from tools.dimension_reduction import (
     pca_reduce_embedding_dimension,
     pumap_reduce_embedding_dimension,
     convert_str_emb_to_float,
+    convert_arr_emb_to_str,
 )
 import pyarrow.dataset as ds
 import polars as pl
@@ -22,7 +23,7 @@ def export_reduction_table(
 ):
 
     for emb_col in embedding_columns:
-        logger.info(f"Convert {emb_col}...")
+        logger.info(f"Convert serialized embeddings... {emb_col}...")
         X = np.array(convert_str_emb_to_float(df[emb_col]))
         # reduce first with PCA
         if X.shape[1] >= max_dimension:
@@ -43,17 +44,11 @@ def export_reduction_table(
                 X = pca_reduce_embedding_dimension(X, dimension=target_dimension)
             else:
                 raise Exception("Metohd not found.")
-
+        # transform as str again
+        logger.info(f"Transform embeddings as str for {emb_col}...")
+        X = convert_arr_emb_to_str(X)
         logger.info(f"Process done {emb_col}...")
-
-        df = df.with_columns(
-            pl.Series(
-                emb_col,
-                X,
-            )
-        )
-        del X
-
+        df = df.with_columns(pl.Series(name=emb_col, values=X))
         logger.info(f"Done for {emb_col}...")
 
     return df.with_columns(reduction_method=pl.lit(method))

@@ -46,6 +46,13 @@
     "reduction_configs": {
         "default": [
             {
+                "target_dimensions": 64,
+                "method": "PCA",
+                "embedding_columns": [
+                    "semantic_content_hybrid_embedding"
+                ]
+            },
+            {
                 "target_dimensions": 32,
                 "method": "PCA",
                 "embedding_columns": [

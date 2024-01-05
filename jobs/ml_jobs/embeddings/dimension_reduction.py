@@ -65,17 +65,18 @@ def plan(
 ):
     dataset = ds.dataset(source_gs_path, format="parquet")
     ldf = pl.scan_pyarrow_dataset(dataset)
-    export_cols = ["extraction_date", "item_id"] + embedding_columns
+    export_cols = ["item_id"] + embedding_columns
     output_table_name = f"{output_table_prefix}_reduced_{target_dimension}"
     logger.info(f"Reducing Table... {output_table_name}")
+    ldf = export_reduction_table(
+        ldf.select(export_cols).collect(),
+        target_dimension=target_dimension,
+        embedding_columns=embedding_columns,
+        method=method,
+        max_dimension=max_dimension,
+    )
     export_polars_to_bq(
-        export_reduction_table(
-            ldf.select(export_cols).collect(),
-            target_dimension=target_dimension,
-            embedding_columns=embedding_columns,
-            method=method,
-            max_dimension=max_dimension,
-        ),
+        ldf.select(["item_id", "reduction_method"] + embedding_columns),
         project_id=gcp_project,
         dataset=f"clean_{env_short_name}",
         output_table=output_table_name,

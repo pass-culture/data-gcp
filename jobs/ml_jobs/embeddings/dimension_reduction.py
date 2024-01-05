@@ -6,7 +6,10 @@ import pandas as pd
 import typer
 from loguru import logger
 from tools.config import CONFIGS_PATH, ENV_SHORT_NAME, GCP_PROJECT_ID
-from tools.dimension_reduction import umap_reduce_embedding_dimension, export_polars_to_bq
+from tools.dimension_reduction import (
+    umap_reduce_embedding_dimension,
+    export_polars_to_bq,
+)
 import pyarrow.dataset as ds
 import polars as pl
 

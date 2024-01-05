@@ -21,17 +21,22 @@ def umap_reduce_embedding_dimension(
     dimension,
 ):
     return umap.UMAP(
-        n_neighbors=10, n_components=dimension, metric="cosine", low_memory=True, verbose=True
+        n_neighbors=10,
+        n_components=dimension,
+        metric="cosine",
+        low_memory=True,
+        verbose=True,
     ).fit_transform(convert_str_emb_to_float(data))
+
 
 def trimap_reduce_embedding_dimension(
     data,
     dimension,
 ):
     float_emb = convert_str_emb_to_float(data)
-    return trimap.TRIMAP(n_dims=dimension, verbose=True).fit_transform(np.array(float_emb))
-
-
+    return trimap.TRIMAP(n_dims=dimension, verbose=True).fit_transform(
+        np.array(float_emb)
+    )
 
 
 def export_polars_to_bq(data, project_id, dataset, output_table):

@@ -30,4 +30,6 @@ SELECT
     ,CAST("imageId" AS varchar(255)) AS collective_offer_image_id
     , CAST("providerId" AS VARCHAR) AS provider_id
     , CAST("nationalProgramId" AS varchar(255)) AS national_program_id
+    , CAST(TRIM(BOTH \'[") \' FROM SPLIT_PART("timespan" :: text, \',\',1)) AS timestamp) AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS bank_account_link_beginning_date
+    , CAST(NULLIF(TRIM(BOTH \'[") \' FROM SPLIT_PART("timespan" :: text, \',\',2)),\'\') AS timestamp) AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS bank_account_link_ending_date
 FROM public.collective_offer_template

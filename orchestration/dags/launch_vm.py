@@ -76,7 +76,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         instance_type="{{ params.instance_type }}",
         labels={"keep_alive": "{{ params.keep_alive|lower }}"},
-        gpu_count = "{{ params.gpu_count }}",
+        gpu_count="{{ params.gpu_count }}",
         accelerator_types=[
             {"name": "{{ params.gpu_type }}", "count": "{{ params.gpu_count }}"}
         ],

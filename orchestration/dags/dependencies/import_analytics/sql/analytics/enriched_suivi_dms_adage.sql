@@ -12,7 +12,7 @@ SELECT
     left(siret, 9) AS siren,
     siret
 FROM `{{ bigquery_analytics_dataset }}`.adage
-where synchroPass = "1"
+where synchroPass = "1.0"
 )
 
 , siret_reference_adage AS (

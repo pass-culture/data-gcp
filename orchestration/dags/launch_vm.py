@@ -65,7 +65,7 @@ with DAG(
         "instance_name": Param(default=gce_params["instance_name"], type="string"),
         "gpu_count": Param(default=0, type="integer"),
         "gpu_type": Param(default="nvidia-tesla-t4", type="string"),
-        "keep_alive": Param(default="true", type="string"),
+        "keep_alive": Param(default=True, type="boolean"),
     },
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)
@@ -75,7 +75,8 @@ with DAG(
         preemptible=False,
         instance_name="{{ params.instance_name }}",
         instance_type="{{ params.instance_type }}",
-        labels={"keep_alive": "{{ params.keep_alive }}"},
+        labels={"keep_alive": "{{ params.keep_alive|lower }}"},
+        gpu_count = "{{ params.gpu_count }}",
         accelerator_types=[
             {"name": "{{ params.gpu_type }}", "count": "{{ params.gpu_count }}"}
         ],

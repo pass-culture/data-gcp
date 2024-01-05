@@ -65,8 +65,8 @@ class StartGCEOperator(BaseOperator):
             self.instance_type,
             preemptible=self.preemptible,
             accelerator_types=self.accelerator_types,
-            gpu_count=self.gpu_count,
             labels=self.labels,
+            gpu_count=self.gpu_count,
         )
 
 

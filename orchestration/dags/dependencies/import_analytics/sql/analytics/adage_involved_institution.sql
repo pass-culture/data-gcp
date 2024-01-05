@@ -21,6 +21,8 @@ WITH involved_students AS (
         LEFT JOIN `{{ bigquery_clean_dataset }}.applicative_database_educational_year` ey on SAFE_CAST(ey.adage_id as int) = SAFE_CAST(ais.educational_year_adage_id as int)
     where
         metric_name = "departements"
+    AND 
+        institutions <> "None"
     GROUP BY
         1,
         2,

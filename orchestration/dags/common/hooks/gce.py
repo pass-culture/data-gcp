@@ -129,7 +129,9 @@ class GCEHook(GoogleBaseHook):
         preemptible=False,
     ):
         instance_type = "zones/%s/machineTypes/%s" % (self.gcp_zone, instance_type)
-        with max([gpu_count]+[a_t["count"] for a_t in accelerator_types]) as gpu_counter:
+        with max(
+            [gpu_count] + [a_t["count"] for a_t in accelerator_types]
+        ) as gpu_counter:
             accelerator_type = [
                 {
                     "acceleratorCount": [gpu_counter],

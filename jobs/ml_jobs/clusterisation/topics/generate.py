@@ -31,7 +31,7 @@ def decode(x, emb_size):
         return None
 
 
-def generate_topics(topic_items_df, semantic_cluster_id):
+def generate_topics(topic_items_df, semantic_cluster_id, emb_size):
     selected_topic = topic_items_df[
         topic_items_df.semantic_cluster_id == semantic_cluster_id
     ].reset_index(drop=True)
@@ -40,7 +40,7 @@ def generate_topics(topic_items_df, semantic_cluster_id):
         + " "
         + selected_topic["offer_description"].astype(str)
     )
-    embeddings = np.hstack(selected_topic["semantic_encoding"]).reshape(-1, 5)
+    embeddings = np.hstack(selected_topic["semantic_encoding"]).reshape(-1, emb_size)
     mmr = MaximalMarginalRelevance(diversity=0.5, top_n_words=20)
     pos = PartOfSpeech("fr_core_news_sm", top_n_words=20)
     representation_models = [pos, mmr]
@@ -132,12 +132,12 @@ def main(
     item_topics_labels_output_table: str = typer.Option(..., help="Path to data"),
     item_topics_output_table: str = typer.Option(..., help="Path to data"),
     config_file_name: str = typer.Option(
-        "default-config-offer",
+        "default-config",
         help="Config file name",
     ),
 ):
-    topic_items_df = load_df(input_table)
     params = load_config_file(config_file_name)
+    topic_items_df = load_df(input_table)
     emb_size = params["pretrained_embedding_size"]
 
     topic_items_df["semantic_encoding"] = topic_items_df["semantic_encoding"].apply(
@@ -172,7 +172,9 @@ def main(
 
     for semantic_cluster_id in tqdm(list(count_df["semantic_cluster_id"].unique())):
         try:
-            topic_raw_df = generate_topics(topic_items_df, semantic_cluster_id)
+            topic_raw_df = generate_topics(
+                topic_items_df, semantic_cluster_id, emb_size
+            )
             topics = preproc_topics(topic_raw_df, semantic_cluster_id)
             topics_df = loop_gpt(topics)
             topics_raw_all_df.append(topic_raw_df)

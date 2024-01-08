@@ -118,7 +118,8 @@ with DAG(
         command="PYTHONPATH=. python topics/generate.py "
         f"--input-table {DATE}_import_item_clusters "
         f"--item-topics-labels-output-table {DATE}_item_topics_labels "
-        f"--item-topics-output-table {DATE}_item_topics ",
+        f"--item-topics-output-table {DATE}_item_topics "
+        "--config-file-name {{ params.config_file_name }} ",
     )
 
     clean_topics = SSHGCEOperator(
@@ -129,7 +130,8 @@ with DAG(
         f"--item-topics-labels-input-table {DATE}_item_topics_labels "
         f"--item-topics-input-table {DATE}_item_topics "
         f"--item-topics-labels-output-table item_topics_labels "
-        f"--item-topics-output-table item_topics ",
+        f"--item-topics-output-table item_topics "
+        "--config-file-name {{ params.config_file_name }} ",
     )
 
     gce_instance_stop = StopGCEOperator(

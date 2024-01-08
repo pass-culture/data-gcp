@@ -69,6 +69,7 @@ def export_polars_to_bq(client, data, dataset, output_table):
             project=GCP_PROJECT_ID,
             job_config=bigquery.LoadJobConfig(
                 source_format=bigquery.SourceFormat.PARQUET,
+                write_disposition="WRITE_TRUNCATE",
             ),
         )
     job.result()

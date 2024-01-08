@@ -43,21 +43,44 @@
         "optim_image": "clip-ViT-B-32",
         "hybrid": "sentence-transformers/clip-ViT-B-32-multilingual-v1"
     },
-    "reduction_plan": {
-        "5": [
-            "semantic_content_embedding",
-            "semantic_content_hybrid_embedding"
-        ],
-        "16": [
-            "name_embedding",
-            "description_embedding",
-            "image_embedding",
-            "semantic_content_embedding",
-            "semantic_content_hybrid_embedding"
-        ],
-        "32": [
-            "semantic_content_embedding",
-            "semantic_content_hybrid_embedding"
+    "reduction_configs": {
+        "default": [
+            {
+                "target_dimensions": 64,
+                "method": "PCA",
+                "embedding_columns": [
+                    "semantic_content_hybrid_embedding"
+                ]
+            },
+            {
+                "target_dimensions": 32,
+                "method": "PCA",
+                "embedding_columns": [
+                    "image_embedding",
+                    "semantic_content_embedding",
+                    "semantic_content_hybrid_embedding"
+                ]
+            },
+            {
+                "target_dimensions": 16,
+                "method": "PUMAP",
+                "embedding_columns": [
+                    "image_embedding",
+                    "semantic_content_embedding",
+                    "semantic_content_hybrid_embedding"
+                ],
+                "pca_pre_reduction_dimension" : 32
+            },
+            {
+                "target_dimensions": 5,
+                "method": "UMAP",
+                "embedding_columns": [
+                    "image_embedding",
+                    "semantic_content_embedding",
+                    "semantic_content_hybrid_embedding"
+                ],
+                "pca_pre_reduction_dimension" : 16
+            }
         ]
     }
 }

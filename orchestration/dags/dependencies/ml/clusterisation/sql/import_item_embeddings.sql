@@ -15,7 +15,7 @@ base as (
         enriched_item_metadata.offer_type_label,
         enriched_item_metadata.offer_sub_type_id,
         enriched_item_metadata.offer_sub_type_label,
-    FROM items_w_embedding ie on ie.item_id = top_items.item_id
+    FROM items_w_embedding ie
     LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_item_metadata` enriched_item_metadata on ie.item_id = enriched_item_metadata.item_id
 )
 select

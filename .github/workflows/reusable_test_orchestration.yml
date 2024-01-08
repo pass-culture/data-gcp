@@ -69,6 +69,8 @@ jobs:
       - name: "Post to a Slack channel"
         if: ${{ inputs.NOTIF_CHANNEL_ID != '' && failure() }}
         uses: slackapi/slack-github-action@v1.23.0
+        env:
+           SLACK_BOT_TOKEN: ${{ steps.secrets.outputs.SLACK_BOT_TOKEN }}
         with:
           channel-id: ${{ inputs.NOTIF_CHANNEL_ID }}
           payload: |
@@ -88,5 +90,3 @@ jobs:
               "unfurl_links": false,
               "unfurl_media": false
             }
-        env:
-           SLACK_BOT_TOKEN: ${{ steps.secrets.outputs.SLACK_BOT_TOKEN }}

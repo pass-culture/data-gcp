@@ -55,7 +55,8 @@ def pumap_reduce_embedding_dimension(data, dimension, train_frac=0.1, batch_size
                 patience=2,
                 verbose=1,
             )
-        ]
+        ],
+        "verbose": 2,
     }
 
     embedder = umap.ParametricUMAP(

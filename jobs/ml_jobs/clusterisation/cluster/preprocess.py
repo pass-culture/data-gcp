@@ -14,7 +14,7 @@ def preprocess(
     input_table: str = typer.Option(..., help="Path to data"),
     output_table: str = typer.Option(..., help="Path to data"),
     config_file_name: str = typer.Option(
-        "default-config-offer",
+        "default-config",
         help="Config file name",
     ),
 ):

@@ -48,7 +48,7 @@ with DAG(
             type="string",
         ),
         "instance_type": Param(
-            default="n1-standard-2" if ENV_SHORT_NAME == "dev" else "n1-highmem-32",
+            default="n1-standard-2" if ENV_SHORT_NAME == "dev" else "n1-standard-64",
             type="string",
         ),
         "config_file_name": Param(

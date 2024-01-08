@@ -238,7 +238,7 @@ class GCEHook(GoogleBaseHook):
             for x in instances
             if x.get("labels", {}).get("airflow", "") == "true"
             and x.get("labels", {}).get("env", "") == ENV_SHORT_NAME
-            and not x.get("labels", {}).get("keep_alive", False) == True
+            and not x.get("labels", {}).get("keep_alive", "false") == "true"
             and x.get("labels", {}).get("job_type", "default") == job_type
         ]
 

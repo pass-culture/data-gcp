@@ -59,7 +59,7 @@ compute_metrics = BashOperator(
 )
 
 re_data_generate_json = BashOperator(
-    task_id="re_data_notify",
+    task_id="re_data_generate_json",
     bash_command="re_data overview generate" + f"--target-path {PATH_TO_DBT_TARGET}",
     cwd=PATH_TO_DBT_PROJECT,
     dag=dag,

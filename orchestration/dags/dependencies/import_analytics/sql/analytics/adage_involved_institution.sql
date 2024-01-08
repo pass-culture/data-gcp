@@ -21,8 +21,6 @@ WITH involved_students AS (
         LEFT JOIN `{{ bigquery_clean_dataset }}.applicative_database_educational_year` ey on SAFE_CAST(ey.adage_id as int) = SAFE_CAST(ais.educational_year_adage_id as int)
     where
         metric_name = "departements"
-    AND 
-        institutions <> "None"
     GROUP BY
         1,
         2,
@@ -46,4 +44,5 @@ SELECT
     avg(total_institutions) as total_institutions
 FROM
     involved_students involved
+WHERE NOT is_NaN(institutions)
 GROUP BY 1,2,3,4,5,6,7

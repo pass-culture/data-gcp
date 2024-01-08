@@ -23,8 +23,6 @@ WITH involved_students AS (
         LEFT JOIN `{{ bigquery_clean_dataset }}.institutional_scholar_level` isl on ais.level = isl.level_id
     where
         metric_name = "departements"
-    AND 
-        involved_students <> "None"
     GROUP BY
         1,
         2,
@@ -40,3 +38,4 @@ SELECT
     *
 FROM
     involved_students involved
+WHERE NOT Is_NAN(involved_students)

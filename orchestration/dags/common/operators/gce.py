@@ -53,7 +53,7 @@ class StartGCEOperator(BaseOperator):
 
     def execute(self, context) -> None:
         if self.source_image_type is None:
-            if len(self.accelerator_types) > 0:
+            if len(self.accelerator_types) > 0 or self.gpu_count > 0:
                 image_type = MACHINE_TYPE["gpu"]
             else:
                 image_type = MACHINE_TYPE["cpu"]

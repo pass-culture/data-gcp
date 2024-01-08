@@ -83,7 +83,7 @@ def main(
     item_topics_labels_output_table: str = typer.Option(..., help="Path to data"),
     item_topics_output_table: str = typer.Option(..., help="Path to data"),
     config_file_name: str = typer.Option(
-        "default-config-offer",
+        "default-config",
         help="Config file name",
     ),
 ):

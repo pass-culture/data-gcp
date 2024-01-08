@@ -57,7 +57,7 @@ with DAG(
             type="string",
         ),
         "instance_type": Param(
-            default="n1-standard-2" if ENV_SHORT_NAME == "dev" else "n1-standard-64",
+            default="n1-standard-2" if ENV_SHORT_NAME == "dev" else "n1-standard-32",
             type="string",
         ),
         "config_file_name": Param(
@@ -159,7 +159,8 @@ with DAG(
         f"--env-short-name {ENV_SHORT_NAME} "
         "--config-file-name {{ params.config_file_name }} "
         f"--source-gs-path {dag_config['STORAGE_PATH']} "
-        f"--output-table-name item_embeddings_reduced",
+        f"--output-table-name item_embeddings "
+        f"--reduction-config default ",
     )
 
     gce_instance_stop = StopGCEOperator(

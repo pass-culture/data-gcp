@@ -1,10 +1,7 @@
 import json
 from datetime import datetime
-
-import numpy as np
 import pandas as pd
 import typer
-import umap
 
 from tools.config import CONFIGS_PATH, ENV_SHORT_NAME, GCP_PROJECT_ID
 from tools.embedding_extraction import extract_embedding

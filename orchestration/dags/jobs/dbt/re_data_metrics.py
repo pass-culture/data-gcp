@@ -39,6 +39,7 @@ dag = DAG(
     catchup=False,
     description="Compute data quality metrics and send Slack notifications reports",
     schedule_interval=get_airflow_schedule("0 3 * * *"),
+    user_defined_macros=macros.default,
     params={
         "target": Param(
             default=ENV_SHORT_NAME,
@@ -52,7 +53,7 @@ start = DummyOperator(task_id="start", dag=dag)
 
 compute_metrics = BashOperator(
     task_id="compute_metrics",
-    bash_command="dbt run --target {{ params.target }} --select package:re_data"
+    bash_command="dbt run --target {{ params.target }} --select package:re_data "
     + f"--target-path {PATH_TO_DBT_TARGET}",
     cwd=PATH_TO_DBT_PROJECT,
     dag=dag,
@@ -60,10 +61,34 @@ compute_metrics = BashOperator(
 
 re_data_generate_json = BashOperator(
     task_id="re_data_generate_json",
-    bash_command="re_data overview generate" + f"--target-path {PATH_TO_DBT_TARGET}",
+    bash_command="""dbt run-operation generate_overview --args '{end_date: '{{ today() }}', start_date: '{{ last_week() }}', interval: 'days:1', monitored_path: """
+    + f"{PATH_TO_DBT_TARGET}"
+    + "/re_data/monitored.json"
+    + ", overview_path: "
+    + f"{PATH_TO_DBT_TARGET}"
+    + "/re_data/overview.json}'",
     cwd=PATH_TO_DBT_PROJECT,
     dag=dag,
 )
+
+export_tests_history = BashOperator(
+    task_id="export_tests_history",
+    bash_command="dbt run-operation export_tests_history --args '{end_date: '{{ today() }}', start_date: '{{ last_week() }}', tests_history_path: "
+    + f"{PATH_TO_DBT_TARGET}"
+    + "/re_data/tests_history.json }'",
+    cwd=PATH_TO_DBT_PROJECT,
+    dag=dag,
+)
+
+export_table_samples = BashOperator(
+    task_id="export_table_samples",
+    bash_command="dbt run-operation export_table_samples --args '{end_date: '{{ today() }}', start_date: '{{ last_week() }}', table_samples_path: "
+    + f"""{PATH_TO_DBT_TARGET}"""
+    + "/re_data/table_samples_path.json }'",
+    cwd=PATH_TO_DBT_PROJECT,
+    dag=dag,
+)
+
 
 re_data_notify = BashOperator(
     task_id="re_data_notify",
@@ -79,4 +104,11 @@ re_data_notify = BashOperator(
     dag=dag,
 )
 
-start >> compute_metrics >> re_data_generate_json >> re_data_notify
+(
+    start
+    >> compute_metrics
+    >> re_data_generate_json
+    >> export_tests_history
+    >> export_table_samples
+    >> re_data_notify
+)

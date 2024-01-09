@@ -39,6 +39,10 @@ def yesterday():
     return (datetime.today() - timedelta(days=1)).strftime("%Y-%m-%d")
 
 
+def last_week():
+    return (datetime.today() - timedelta(days=7)).strftime("%Y-%m-%d")
+
+
 def add_days(ds, days):
     if ds is None:
         ds = datetime.now()
@@ -87,6 +91,7 @@ default = {
     "today": today,
     "current_month": current_month,
     "yesterday": yesterday,
+    "last_week": last_week,
     "add_days": add_days,
     "create_humanize_id_function": create_humanize_id_function,
     "create_dehumanize_id_function": create_dehumanize_id_function,

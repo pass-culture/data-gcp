@@ -11,6 +11,8 @@ packages:
   version: 0.11.0
 - package: dbt-labs/dbt_external_tables
   version: 0.8.7
+- package: re-data/re_data
+  version: 0.10.9
 - package: calogica/dbt_date
   version: 0.10.0
-sha1_hash: 60e3de67639ca8e1e47bfc015bcd22f45c073316
+sha1_hash: 0ffdf8c1dd9de41b741055112aee9e438394473f

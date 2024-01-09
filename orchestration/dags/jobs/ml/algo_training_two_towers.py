@@ -48,7 +48,7 @@ dag_config = {
 
 # Params
 train_params = {
-    "config_file_name": "default-features",
+    "config_file_name": "pretrained-features",
     "batch_size": 8192,
     "validation_steps_ratio": 0.1 if ENV_SHORT_NAME == "prod" else 0.4,
     "embedding_size": 64,

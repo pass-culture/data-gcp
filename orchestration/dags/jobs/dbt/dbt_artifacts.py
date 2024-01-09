@@ -34,10 +34,10 @@ default_args = {
 }
 
 dag = DAG(
-    "re_data_metrics",
+    "dbt_artifacts",
     default_args=default_args,
     catchup=False,
-    description="Compute data quality metrics and send Slack notifications reports",
+    description="Compute data quality metrics with package elementary and re_data and send Slack notifications reports",
     schedule_interval=get_airflow_schedule("0 3 * * *"),
     user_defined_macros=macros.default,
     params={
@@ -51,9 +51,17 @@ dag = DAG(
 # Basic steps
 start = DummyOperator(task_id="start", dag=dag)
 
-compute_metrics = BashOperator(
-    task_id="compute_metrics",
-    bash_command="dbt run --target {{ params.target }} --select package:re_data "
+compute_metrics_re_data = BashOperator(
+    task_id="compute_metrics_re_data",
+    bash_command="dbt run --target {{ params.target }} --select package:re_data --profile dbt_artifacts"
+    + f"--target-path {PATH_TO_DBT_TARGET}",
+    cwd=PATH_TO_DBT_PROJECT,
+    dag=dag,
+)
+
+compute_metrics_elementary = BashOperator(
+    task_id="compute_metrics_elementary",
+    bash_command="dbt run --target {{ params.target }} --select package:elementary --profile dbt_artifacts"
     + f"--target-path {PATH_TO_DBT_TARGET}",
     cwd=PATH_TO_DBT_PROJECT,
     dag=dag,
@@ -106,9 +114,10 @@ re_data_notify = BashOperator(
 
 (
     start
-    >> compute_metrics
+    >> compute_metrics_re_data
     >> re_data_generate_json
     >> export_tests_history
     >> export_table_samples
     >> re_data_notify
 )
+start >> compute_metrics_elementary

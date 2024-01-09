@@ -49,8 +49,6 @@ models:
         - column_metrics
       +docs: 
         node_color: "#d90000" 
-  elementary:
-    +schema: "elementary"
     
 seeds:
   +schema: seeds

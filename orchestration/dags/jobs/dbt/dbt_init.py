@@ -34,7 +34,7 @@ dag = DAG(
     default_args=default_args,
     catchup=False,
     description="A dbt wrapper for airflow",
-    schedule_interval=None,#get_airflow_schedule("0 3 * * *"),
+    schedule_interval=None,  # get_airflow_schedule("0 3 * * *"),
     params={
         "target": Param(
             default=ENV_SHORT_NAME,
@@ -54,57 +54,57 @@ dag = DAG(
 start = DummyOperator(task_id="start", dag=dag)
 
 deps = BashOperator(
-                task_id="dbt_packages_dependencies",
-                bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_deps.sh ",
-                            env={
-                                "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
-                                "target": "{{ params.target }}",
-                                "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
-                            },
-                append_env=True,
-                cwd=PATH_TO_DBT_PROJECT,
-                dag=dag,
+    task_id="dbt_packages_dependencies",
+    bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_deps.sh ",
+    env={
+        "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
+        "target": "{{ params.target }}",
+        "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+    },
+    append_env=True,
+    cwd=PATH_TO_DBT_PROJECT,
+    dag=dag,
 )
 
 manifest = BashOperator(
-                task_id="dbt_manifest",
-                bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_manifest.sh ",
-                            env={
-                                "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
-                                "target": "{{ params.target }}",
-                                "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
-                            },
-                append_env=True,
-                cwd=PATH_TO_DBT_PROJECT,
-                dag=dag,
+    task_id="dbt_manifest",
+    bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_manifest.sh ",
+    env={
+        "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
+        "target": "{{ params.target }}",
+        "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+    },
+    append_env=True,
+    cwd=PATH_TO_DBT_PROJECT,
+    dag=dag,
 )
 
 run_elementary = BashOperator(
-                task_id="dbt_elementary",
-                bash_command=f"bash ./scripts/dbt_run_package.sh ",
-                            env={
-                                "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
-                                "target": "{{ params.target }}",
-                                "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
-                                "package_name": "elementary"
-                            },
-                append_env=True,
-                cwd=PATH_TO_DBT_PROJECT,
-                dag=dag, 
+    task_id="dbt_elementary",
+    bash_command=f"bash ./scripts/dbt_run_package.sh ",
+    env={
+        "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
+        "target": "{{ params.target }}",
+        "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+        "package_name": "elementary",
+    },
+    append_env=True,
+    cwd=PATH_TO_DBT_PROJECT,
+    dag=dag,
 )
 
 run_re_data = BashOperator(
-                task_id="dbt_re_data",
-                bash_command=f"bash ./scripts/dbt_run_package.sh ",
-                            env={
-                                "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
-                                "target": "{{ params.target }}",
-                                "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
-                                "package_name": "re_data"
-                            },
-                append_env=True,
-                cwd=PATH_TO_DBT_PROJECT,
-                dag=dag,
+    task_id="dbt_re_data",
+    bash_command=f"bash ./scripts/dbt_run_package.sh ",
+    env={
+        "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
+        "target": "{{ params.target }}",
+        "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+        "package_name": "re_data",
+    },
+    append_env=True,
+    cwd=PATH_TO_DBT_PROJECT,
+    dag=dag,
 )
 
 end = DummyOperator(task_id="end", dag=dag)

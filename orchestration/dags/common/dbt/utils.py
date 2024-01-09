@@ -1,10 +1,12 @@
 import json
 
+
 def load_json_artifact(_PATH_TO_DBT_TARGET, artifact):
     local_filepath = _PATH_TO_DBT_TARGET + "/" + artifact
     with open(local_filepath) as f:
         data = json.load(f)
     return data
+
 
 def load_manifest(_PATH_TO_DBT_TARGET):
     return load_json_artifact(_PATH_TO_DBT_TARGET, "manifest.json")

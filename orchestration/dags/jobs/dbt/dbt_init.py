@@ -30,11 +30,11 @@ default_args = {
 }
 
 dag = DAG(
-    "dbt_dynamic_dag",
+    "dbt_init_dag",
     default_args=default_args,
     catchup=False,
     description="A dbt wrapper for airflow",
-    schedule_interval=get_airflow_schedule("0 3 * * *"),
+    schedule_interval=None,#get_airflow_schedule("0 3 * * *"),
     params={
         "target": Param(
             default=ENV_SHORT_NAME,
@@ -81,7 +81,7 @@ manifest = BashOperator(
 
 run_elementary = BashOperator(
                 task_id="dbt_elementary",
-                bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_run_package.sh ",
+                bash_command=f"bash ./scripts/dbt_run_package.sh ",
                             env={
                                 "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
                                 "target": "{{ params.target }}",
@@ -90,12 +90,12 @@ run_elementary = BashOperator(
                             },
                 append_env=True,
                 cwd=PATH_TO_DBT_PROJECT,
-                dag=dag,
+                dag=dag, 
 )
 
 run_re_data = BashOperator(
                 task_id="dbt_re_data",
-                bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_run_package.sh ",
+                bash_command=f"bash ./scripts/dbt_run_package.sh ",
                             env={
                                 "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
                                 "target": "{{ params.target }}",

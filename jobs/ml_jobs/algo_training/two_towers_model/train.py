@@ -1,4 +1,5 @@
 import json
+import os
 
 import mlflow
 import typer
@@ -27,6 +28,7 @@ N_EPOCHS = 100
 MIN_DELTA = 0.001  # Minimum change in the accuracy before a callback is called
 LEARNING_RATE = 0.1
 VERBOSE = 1 if ENV_SHORT_NAME == "prod" else 1
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 
 def train(
@@ -82,6 +84,7 @@ def train(
 
     user_columns = list(user_features_config.keys())
     item_columns = list(item_features_config.keys())
+    timestamp_columns = ["event_date"]
     # We ensure that the datasets contains the features in the correct order (user_id, ..., item_id, ...)
     train_data = read_from_gcs(
         storage_path=STORAGE_PATH, table_name=training_table_name

@@ -48,7 +48,7 @@ with DAG(
             type="string",
         ),
         "instance_type": Param(
-            default="n1-standard-2" if ENV_SHORT_NAME == "dev" else "n1-highmem-32",
+            default="n1-standard-2" if ENV_SHORT_NAME == "dev" else "n1-standard-64",
             type="string",
         ),
         "config_file_name": Param(
@@ -66,6 +66,7 @@ with DAG(
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
         instance_name=GCE_INSTANCE,
+        preemptible=False,
         instance_type="{{ params.instance_type }}",
         retries=2,
         labels={"job_type": "long_ml"},
@@ -117,7 +118,8 @@ with DAG(
         command="PYTHONPATH=. python topics/generate.py "
         f"--input-table {DATE}_import_item_clusters "
         f"--item-topics-labels-output-table {DATE}_item_topics_labels "
-        f"--item-topics-output-table {DATE}_item_topics ",
+        f"--item-topics-output-table {DATE}_item_topics "
+        "--config-file-name {{ params.config_file_name }} ",
     )
 
     clean_topics = SSHGCEOperator(
@@ -128,7 +130,8 @@ with DAG(
         f"--item-topics-labels-input-table {DATE}_item_topics_labels "
         f"--item-topics-input-table {DATE}_item_topics "
         f"--item-topics-labels-output-table item_topics_labels "
-        f"--item-topics-output-table item_topics ",
+        f"--item-topics-output-table item_topics "
+        "--config-file-name {{ params.config_file_name }} ",
     )
 
     gce_instance_stop = StopGCEOperator(

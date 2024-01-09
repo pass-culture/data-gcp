@@ -10,7 +10,7 @@ from tqdm import tqdm
 import numpy as np
 
 
-from tools.utils import ENV_SHORT_NAME, TMP_DATASET, CLEAN_DATASET
+from tools.utils import ENV_SHORT_NAME, TMP_DATASET, CLEAN_DATASET, load_config_file
 from tools.utils import call_retry, sha1_to_base64
 from configs.prompts import (
     get_macro_topics_messages,
@@ -23,15 +23,15 @@ def load_df(input_table):
     return pd.read_gbq(f"""SELECT * FROM `{TMP_DATASET}.{input_table}`""")
 
 
-def decode(x):
+def decode(x, emb_size):
     values = list(x.values())
-    if len(values) == 5:
+    if len(values) == emb_size:
         return np.array(values)
     else:
         return None
 
 
-def generate_topics(topic_items_df, semantic_cluster_id):
+def generate_topics(topic_items_df, semantic_cluster_id, emb_size):
     selected_topic = topic_items_df[
         topic_items_df.semantic_cluster_id == semantic_cluster_id
     ].reset_index(drop=True)
@@ -40,8 +40,8 @@ def generate_topics(topic_items_df, semantic_cluster_id):
         + " "
         + selected_topic["offer_description"].astype(str)
     )
-    embeddings = np.hstack(selected_topic["semantic_encoding"]).reshape(-1, 5)
-    mmr = MaximalMarginalRelevance(diversity=0.3, top_n_words=20)
+    embeddings = np.hstack(selected_topic["semantic_encoding"]).reshape(-1, emb_size)
+    mmr = MaximalMarginalRelevance(diversity=0.5, top_n_words=20)
     pos = PartOfSpeech("fr_core_news_sm", top_n_words=20)
     representation_models = [pos, mmr]
 
@@ -131,11 +131,17 @@ def main(
     input_table: str = typer.Option(..., help="Path to data"),
     item_topics_labels_output_table: str = typer.Option(..., help="Path to data"),
     item_topics_output_table: str = typer.Option(..., help="Path to data"),
+    config_file_name: str = typer.Option(
+        "default-config",
+        help="Config file name",
+    ),
 ):
+    params = load_config_file(config_file_name)
     topic_items_df = load_df(input_table)
+    emb_size = params["pretrained_embedding_size"]
 
     topic_items_df["semantic_encoding"] = topic_items_df["semantic_encoding"].apply(
-        decode
+        lambda x: decode(x, emb_size)
     )
     topic_items_df["category"] = (
         topic_items_df["semantic_category"].str.split("-", 1).str[0]
@@ -165,11 +171,17 @@ def main(
     topics_all_df = []
 
     for semantic_cluster_id in tqdm(list(count_df["semantic_cluster_id"].unique())):
-        topic_raw_df = generate_topics(topic_items_df, semantic_cluster_id)
-        topics = preproc_topics(topic_raw_df, semantic_cluster_id)
-        topics_df = loop_gpt(topics)
-        topics_raw_all_df.append(topic_raw_df)
-        topics_all_df.append(topics_df)
+        try:
+            topic_raw_df = generate_topics(
+                topic_items_df, semantic_cluster_id, emb_size
+            )
+            topics = preproc_topics(topic_raw_df, semantic_cluster_id)
+            topics_df = loop_gpt(topics)
+            topics_raw_all_df.append(topic_raw_df)
+            topics_all_df.append(topics_df)
+        except (ValueError, TypeError) as e:
+            print(f"Error for {semantic_cluster_id}")
+            print(e)
 
     topics_all_df = pd.concat(topics_all_df).merge(count_df, on=["semantic_cluster_id"])
     topics_raw_all_df = pd.concat(topics_raw_all_df)

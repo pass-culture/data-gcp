@@ -14,13 +14,12 @@ test-paths: ["tests"]
 seed-paths: ["seeds"]
 macro-paths: ["macros"]
 snapshot-paths: ["snapshots"]
-target-path: "target" # directory which will store compiled SQL files
-# TODO : setup conditional packages path depending on working environment. 
-packages-install-path: '/home/airflow/gcs/data/target/dbt_packages'
+
+target-path: "{{ env_var('DBT_TARGET_PATH', 'target') }}" # directory which will store compiled SQL files
+packages-install-path: "{{ env_var('DBT_TARGET_PATH', 'target') }}/dbt_packages"
 
 clean-targets:         # directories to be removed by `dbt clean`
-  - "target"
-  - "dbt_packages"
+  - "{{ env_var('DBT_TARGET_PATH', 'target') }}"
 
 models:
   data_gcp_dbt:

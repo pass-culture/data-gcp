@@ -11,9 +11,7 @@ STRING_AGG(DISTINCT enroffer.performer, " ")            AS item_performer,
 ROUND(AVG(enroffer.last_stock_price), -1)               AS item_mean_stock_price,
 ROUND(SUM(enroffer.booking_confirm_cnt), -1)            AS item_booking_cnt,
 ROUND(SUM(enroffer.favourite_cnt), -1)                  AS item_favourite_cnt,
-item_embeddings_reduced.name_embedding                   AS item_names_embedding_optim_text,
-item_embeddings_reduced.description_embedding	        AS item_descriptions_embedding_optim_text,
-item_embeddings_reduced.image_embedding         AS item_image_embedding,
+item_embeddings_reduced.image_embedding                     AS item_image_embedding,
 item_embeddings_reduced.semantic_content_hybrid_embedding   AS item_semantic_content_hybrid_embedding,
 
 FROM `{{ bigquery_analytics_dataset }}`.enriched_offer_data enroffer
@@ -28,8 +26,6 @@ INNER JOIN `{{ bigquery_clean_dataset }}`.`item_embeddings_reduced_16` item_embe
 GROUP BY offer_item_ids.item_id,
         subcategories.category_id,
         offer.offer_subcategoryId,
-        item_names_embedding_optim_text,
-        item_descriptions_embedding_optim_text,
         item_image_embedding,
         item_semantic_content_hybrid_embedding
 )

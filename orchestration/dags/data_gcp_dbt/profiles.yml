@@ -1,3 +1,6 @@
+config:
+    send_anonymous_usage_stats: False
+
 data_gcp_dbt:
   target: dev
   outputs:
@@ -56,3 +59,5 @@ dbt_artifacts:
       project: passculture-data-prod
       location: europe-west1
       threads: 2
+      
+

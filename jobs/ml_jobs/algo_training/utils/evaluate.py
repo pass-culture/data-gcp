@@ -50,7 +50,7 @@ def evaluate(
 
     logger.info("Load raw")
     raw_data = read_from_gcs(storage_path, "bookings", parallel=False).astype(
-        {"user_id": str, "item_id": str, "count": int}
+        {"user_id": str, "item_id": str}
     )
     logger.info(f"raw_data : {raw_data.shape[0]}")
 

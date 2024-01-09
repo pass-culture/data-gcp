@@ -13,19 +13,6 @@ from dependencies.import_analytics.import_raw import (
 CLEAN_SQL_PATH = f"dependencies/import_analytics/sql/clean"
 
 clean_tables = {
-    "clean_iris_venues_in_shape": {
-        "sql": f"{CLEAN_SQL_PATH}/iris_venues_in_shape.sql",
-        "destination_dataset": "{{ bigquery_clean_dataset }}",
-        "destination_table": "iris_venues_in_shape",
-        "depends": ["venue"],
-    },
-    "clean_iris_venues_at_radius": {
-        "sql": f"{CLEAN_SQL_PATH}/iris_venues_at_radius.sql",
-        "destination_dataset": "{{ bigquery_clean_dataset }}",
-        "destination_table": "iris_venues_at_radius",
-        "params": {"iris_distance": 150000 if ENV_SHORT_NAME != "dev" else 20000},
-        "depends": ["venue"],
-    },
     "offer": {
         "sql": f"{CLEAN_SQL_PATH}/offer.sql",
         "destination_dataset": "{{ bigquery_clean_dataset }}",

@@ -1,9 +1,10 @@
 {
-    "pretained_embedding_name": "semantic_content",
+    "pretrained_embedding_name": "semantic_content_embedding",
+    "pretrained_embedding_size" : 16,
     "group_config": [
         {
             "group": "LIVRES",
-            "nb_clusters": 150,
+            "nb_clusters": 100,
             "features": [
                 {
                     "type": "category",
@@ -17,7 +18,7 @@
         },
         {
             "group": "CINEMA",
-            "nb_clusters": 100,
+            "nb_clusters": 50,
             "features": [
                 {
                     "type": "category",
@@ -31,7 +32,7 @@
         },
         {
             "group": "MUSIQUE",
-            "nb_clusters": 100,
+            "nb_clusters": 50,
             "features": [
                 {
                     "type": "category",

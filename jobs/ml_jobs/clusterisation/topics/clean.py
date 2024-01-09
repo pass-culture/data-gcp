@@ -6,7 +6,8 @@ from polyfuzz import PolyFuzz
 
 from flair.embeddings import TransformerWordEmbeddings
 from configs.labels import CAT, GENRE, MEDIUM
-from tools.utils import CLEAN_DATASET, TMP_DATASET
+from tools.utils import CLEAN_DATASET, TMP_DATASET, load_config_file
+
 from tqdm import tqdm
 
 LIST_TO_MAP = {
@@ -81,8 +82,13 @@ def main(
     item_topics_input_table: str = typer.Option(..., help="Path to data"),
     item_topics_labels_output_table: str = typer.Option(..., help="Path to data"),
     item_topics_output_table: str = typer.Option(..., help="Path to data"),
+    config_file_name: str = typer.Option(
+        "default-config",
+        help="Config file name",
+    ),
 ):
     df = load_df(item_topics_labels_input_table)
+    params = load_config_file(config_file_name)
 
     df["category_details"] = df["macro_category"] + " " + df["micro_category"]
     df["sub_category_details"] = (

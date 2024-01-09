@@ -24,6 +24,9 @@ select
     event_type,
     offer_subcategoryid,
     event_date,
+    event_hour,
+    event_day,
+    event_month,
     count(*) as count
 from
     base
@@ -32,4 +35,7 @@ group by
     item_id,
     event_type,
     offer_subcategoryid,
-    event_date
+    event_date,
+    event_hour,
+    event_day,
+    event_month

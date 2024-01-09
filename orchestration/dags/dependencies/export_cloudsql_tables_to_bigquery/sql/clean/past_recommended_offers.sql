@@ -1,8 +1,9 @@
 WITH export_table AS (
     SELECT
         id,
-        userid,
-        offerid,
+        date(date) as event_date,
+        cast(userid as string) as user_id,
+        cast(offerid as string) as offer_id,
         date,
         group_id,
         reco_origin,
@@ -13,7 +14,8 @@ WITH export_table AS (
         user_iris_id,
         import_date,
         ROW_NUMBER() OVER (
-            PARTITION BY id,
+            PARTITION BY 
+            offerid,
             userid,
             call_id
             ORDER BY
@@ -21,12 +23,14 @@ WITH export_table AS (
         ) as row_number
     FROM
         `{{ bigquery_raw_dataset }}.past_recommended_offers`
-    WHERE import_date between date_sub(current_date, interval 30 day) and current_date
+    WHERE import_date >= DATE('{{ add_days(ds, -365) }}')
 )
 SELECT
     *
 except
+
 (row_number)
+
 FROM
     export_table
 WHERE

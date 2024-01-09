@@ -497,6 +497,8 @@ BIGQUERY_SCHEMAS = {
         "provider_id": "STRING",
         "national_program_id": "STRING",
         "collective_offer_format": "STRING",
+        "collective_offer_beginning_date": "DATETIME",
+        "collective_offer_ending_date": "DATETIME",
     },
     "applicative_database_collective_stock": {
         "collective_stock_id": "STRING",

@@ -39,6 +39,7 @@ item_columns = [
     "is_national",
     "is_geolocated",
     "is_underage_recommendable",
+    "is_restrained",
     "is_sensitive",
     "offer_is_duo",
     "booking_number",
@@ -137,6 +138,13 @@ def to_ts(f):
         return 0.0
 
 
+def to_float(f):
+    try:
+        return float(f)
+    except:
+        return None
+
+
 def save_model_type(model_type):
     with open("./metadata/model_type.json", "w") as file:
         json.dump(model_type, file)
@@ -167,26 +175,31 @@ def get_table_batches(item_embedding_dict: dict, items_df, emb_size):
                     pa.array([str(row.gtl_l2 or "")], pa.utf8()),
                     pa.array([str(row.gtl_l3 or "")], pa.utf8()),
                     pa.array([str(row.gtl_l4 or "")], pa.utf8()),
-                    pa.array([float(row.is_numerical)], pa.float32()),
-                    pa.array([float(row.is_national)], pa.float32()),
-                    pa.array([float(row.is_geolocated)], pa.float32()),
-                    pa.array([float(row.is_underage_recommendable)], pa.float32()),
-                    pa.array([float(row.is_sensitive)], pa.float32()),
-                    pa.array([float(row.offer_is_duo)], pa.float32()),
-                    pa.array([float(row.booking_number)], pa.float32()),
-                    pa.array([float(row.booking_number_last_7_days)], pa.float32()),
-                    pa.array([float(row.booking_number_last_14_days)], pa.float32()),
-                    pa.array([float(row.booking_number_last_28_days)], pa.float32()),
-                    pa.array([float(row.stock_price)], pa.float32()),
+                    pa.array([to_float(row.is_numerical)], pa.float32()),
+                    pa.array([to_float(row.is_national)], pa.float32()),
+                    pa.array([to_float(row.is_geolocated)], pa.float32()),
+                    pa.array([to_float(row.is_underage_recommendable)], pa.float32()),
+                    pa.array([to_float(row.is_restrained)], pa.float32()),
+                    pa.array([to_float(row.is_sensitive)], pa.float32()),
+                    pa.array([to_float(row.offer_is_duo)], pa.float32()),
+                    pa.array([to_float(row.booking_number)], pa.float32()),
+                    pa.array([to_float(row.booking_number_last_7_days)], pa.float32()),
+                    pa.array([to_float(row.booking_number_last_14_days)], pa.float32()),
+                    pa.array([to_float(row.booking_number_last_28_days)], pa.float32()),
+                    pa.array([to_float(row.stock_price)], pa.float32()),
                     pa.array([to_ts(row.offer_creation_date)], pa.float32()),
                     pa.array([to_ts(row.stock_beginning_date)], pa.float32()),
                     # if unique
-                    pa.array([float(row.total_offers)], pa.float32()),
+                    pa.array([to_float(row.total_offers)], pa.float32()),
                     pa.array([str(row.example_offer_id or "")], pa.utf8()),
                     pa.array([str(row.example_offer_name or "")], pa.utf8()),
                     pa.array([str(row.example_venue_id or "")], pa.utf8()),
-                    pa.array([float(row.example_venue_latitude)], pa.float32()),
-                    pa.array([float(row.example_venue_longitude)], pa.float32()),
+                    pa.array(
+                        [to_float(row.example_venue_latitude or 0.0)], pa.float32()
+                    ),
+                    pa.array(
+                        [to_float(row.example_venue_longitude or 0.0)], pa.float32()
+                    ),
                 ],
                 item_columns,
             )

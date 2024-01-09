@@ -4,7 +4,7 @@ google-cloud-bigquery-storage>=2.4.0
 google-cloud-core>=1.6.0
 google-cloud-secret-manager>=2.2.0
 google-cloud-storage>=1.38.0
-numpy>=1.22.0
+numpy>=1.26.3
 pandas>=1.1.4
 requests>=2.20.1
 pandas-gbq

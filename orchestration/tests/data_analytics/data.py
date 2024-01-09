@@ -1299,7 +1299,7 @@ ENRICHED_OFFERER_DATA_INPUT = {
             "id": "1",
             "siret": "123456789000",
             "venueid": "1",
-            "synchroPass": "1",
+            "synchroPass": "1.0",
         }
     ],
     "dms_pro_cleaned": [

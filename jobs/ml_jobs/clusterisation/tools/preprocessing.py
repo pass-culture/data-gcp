@@ -3,11 +3,11 @@ from tools.utils import convert_str_emb_to_float
 from loguru import logger
 
 
-def prepare_embedding(data):
+def prepare_embedding(data, pretrained_embedding_size):
     embedding_float = convert_str_emb_to_float(data)
     embedding_df = pd.DataFrame(
         embedding_float,
-        columns=[f"t{index}" for index in range(len(embedding_float[0]))],
+        columns=[f"t{index}" for index in range(pretrained_embedding_size)],
     )
     return embedding_df
 

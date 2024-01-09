@@ -20,20 +20,22 @@ def create_clusters(
     input_table: str = typer.Option(..., help="Path to data"),
     output_table: str = typer.Option(..., help="Path to data"),
     config_file_name: str = typer.Option(
-        "default-config-offer",
+        "default-config",
         help="Config file name",
     ),
 ):
     client = bigquery.Client()
     params = load_config_file(config_file_name)
+
+    embedding_cols = [f"t{x}" for x in range(params["pretrained_embedding_size"])]
     results = []
     for group in params["group_config"]:
-        results.append(generate_clustering(group, input_table))
+        results.append(generate_clustering(group, input_table, embedding_cols))
 
     export_polars_to_bq(client, pl.concat(results), CLEAN_DATASET, output_table)
 
 
-def generate_clustering(group, input_table):
+def generate_clustering(group, input_table, embedding_cols):
     target_n_clusters = group["nb_clusters"]
     clustering_group = group["group"]
     items_with_embedding_pd = pd.read_gbq(
@@ -49,7 +51,7 @@ def generate_clustering(group, input_table):
     )
     items_with_embedding = items_with_embedding.fill_nan(0)
     ## Reduction step
-    item_embedding_components = items_with_embedding[["t0", "t1", "t2", "t3", "t4"]]
+    item_embedding_components = items_with_embedding[embedding_cols]
 
     ##Clusterisation step
     logger.info(f"Clusterisation step...")
@@ -68,14 +70,14 @@ def generate_clustering(group, input_table):
         how="horizontal",
     )
     logger.info(f"Clustering postprocessing... ")
-    return embedding_cleaning(items_fully_enriched, clustering_group)
+    return embedding_cleaning(items_fully_enriched, clustering_group, embedding_cols)
 
 
-def embedding_cleaning(items_fully_enriched, clustering_group):
+def embedding_cleaning(items_fully_enriched, clustering_group, embedding_cols):
     with pl.Config(auto_structify=True):
         items_fully_enriched = items_fully_enriched.with_columns(
             category=pl.lit(clustering_group),
-            semantic_encoding=pl.col(["t0", "t1", "t2", "t3", "t4"]),
+            semantic_encoding=pl.col(embedding_cols),
             semantic_category=pl.concat_str(
                 [pl.lit(clustering_group), pl.col("cluster")], separator="-"
             ),

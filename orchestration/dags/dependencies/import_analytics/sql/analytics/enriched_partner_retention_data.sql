@@ -88,6 +88,27 @@ JOIN `{{ bigquery_analytics_dataset }}`.enriched_cultural_partner_data USING(par
 JOIN `{{ bigquery_analytics_dataset }}`.partner_type_bookability_frequency ON enriched_cultural_partner_data.partner_type = partner_type_bookability_frequency.partner_type
 GROUP BY 1,2,3)
 
+,consultations AS (
+SELECT 
+    CASE WHEN venue.venue_is_permanent THEN CONCAT("venue-",venue.venue_id)
+         ELSE CONCAT("offerer-", venue_managing_offerer_id) END AS partner_id
+    , sum(cnt_events) as total_consultation
+    , COALESCE(SUM(CASE WHEN DATE_DIFF(CURRENT_DATE,event_date,MONTH) <= 2 THEN cnt_events END)) as consult_last_2_month
+    , COALESCE(SUM(CASE WHEN DATE_DIFF(CURRENT_DATE,event_date,MONTH) <= 6 THEN cnt_events END)) as consult_last_6_month    
+FROM `{{ bigquery_analytics_dataset }}`.aggregated_daily_offer_consultation_data consult
+LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_venue_data venue on consult.venue_id = venue.venue_id 
+GROUP BY 1
+)
+
+,adage_status AS (
+SELECT 
+    DISTINCT CASE WHEN enriched_venue_data.venue_is_permanent THEN CONCAT("venue-",enriched_venue_data.venue_id)
+     ELSE CONCAT("offerer-", venue_managing_offerer_id) END AS partner_id
+    ,first_dms_adage_status
+FROM `{{ bigquery_analytics_dataset }}`.enriched_venue_data 
+LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_offerer_data on enriched_venue_data.venue_managing_offerer_id = enriched_offerer_data.offerer_id 
+)
+
 ,siren_status AS (SELECT DISTINCT
     enriched_venue_data.partner_id
     ,CASE WHEN Etatadministratifunitelegale = 'A' THEN TRUE ELSE FALSE END AS has_active_siren
@@ -134,8 +155,8 @@ SELECT
     CASE WHEN enriched_venue_data.venue_is_permanent THEN CONCAT("venue-",bookable_venue_history.venue_id)
          ELSE CONCAT("offerer-", bookable_venue_history.offerer_id) END AS partner_id,
     max(partition_date) last_bookable_date,
-FROM analytics_prod.bookable_venue_history
-LEFT JOIN analytics_prod.enriched_venue_data on bookable_venue_history.venue_id = enriched_venue_data.venue_id 
+FROM `{{ bigquery_analytics_dataset }}`.bookable_venue_history
+LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_venue_data on bookable_venue_history.venue_id = enriched_venue_data.venue_id 
 WHERE total_bookable_offers <> 0
 GROUP BY 1 
 
@@ -149,8 +170,8 @@ SELECT
     median_bookability_frequency,
     DATE_DIFF(current_date(), last_bookable_date, DAY) days_since_last_bookable_offer
 FROM bookable 
-JOIN analytics_prod.enriched_cultural_partner_data on bookable.partner_id = enriched_cultural_partner_data.partner_id 
-JOIN analytics_prod.cultural_sector_bookability_frequency on enriched_cultural_partner_data.cultural_sector = cultural_sector_bookability_frequency.cultural_sector 
+JOIN `{{ bigquery_analytics_dataset }}`.enriched_cultural_partner_data on bookable.partner_id = enriched_cultural_partner_data.partner_id 
+JOIN `{{ bigquery_analytics_dataset }}`.cultural_sector_bookability_frequency on enriched_cultural_partner_data.cultural_sector = cultural_sector_bookability_frequency.cultural_sector 
 )
 
 , churn_segmentation as (
@@ -201,7 +222,11 @@ SELECT DISTINCT
     ,COALESCE(individual_bookings.real_individual_revenue,0) AS real_individual_revenue
     ,COALESCE(collective_bookings.real_collective_revenue,0) AS real_collective_revenue
     ,COALESCE(favorites.favorites_cnt,0) AS favorites_cnt
+    ,COALESCE(consultations.total_consultation,0) AS total_consultation
+    ,COALESCE(consultations.consult_last_2_month,0) AS consultation_last_2_month
+    ,COALESCE(consultations.consult_last_6_month,0) AS consultation_last_6_month    
     ,has_active_siren
+    ,COALESCE(first_dms_adage_status, "dms_adage_non_depose") AS first_dms_adage_status
     ,COALESCE(rejected_offers.offers_cnt,0) AS rejected_offers_cnt
     ,COALESCE(ROUND(SAFE_DIVIDE(rejected_offers.offers_cnt, individual_offers_created_cnt + rejected_offers.offers_cnt)*100),0) AS rejected_offers_pct
     ,has_provider
@@ -220,4 +245,6 @@ LEFT JOIN siren_status ON enriched_cultural_partner_data.partner_id = siren_stat
 LEFT JOIN rejected_offers ON enriched_cultural_partner_data.partner_id = rejected_offers.partner_id
 LEFT JOIN providers ON enriched_cultural_partner_data.partner_id = providers.partner_id
 LEFT JOIN reimbursment_point ON enriched_cultural_partner_data.partner_id = reimbursment_point.partner_id
-LEFT JOIN churn_segmentation ON enriched_cultural_partner_data.partner_id = churn_segmentation.partner_id 
+LEFT JOIN consultations ON enriched_cultural_partner_data.partner_id = consultations.partner_id
+LEFT JOIN adage_status ON enriched_cultural_partner_data.partner_id = adage_status.partner_id
+LEFT JOIN churn_segmentation ON enriched_cultural_partner_data.partner_id = churn_segmentation.partner_id

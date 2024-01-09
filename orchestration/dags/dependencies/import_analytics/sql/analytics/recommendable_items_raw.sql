@@ -49,6 +49,7 @@ recommendable_items_raw AS (
         MAX(ro.booking_number_last_28_days) AS booking_number_last_28_days,
         MAX(ro.is_underage_recommendable) as is_underage_recommendable,
         MAX(ro.is_sensitive) as is_sensitive,
+        MAX(ro.is_restrained) as is_restrained,
         MIN(ro.offer_creation_date) as offer_creation_date,
         MIN(ro.stock_beginning_date) as stock_beginning_date,
         AVG(ro.stock_price) as stock_price,

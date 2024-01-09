@@ -38,3 +38,4 @@ SELECT
     *
 FROM
     involved_students involved
+WHERE NOT Is_NAN(involved_students)

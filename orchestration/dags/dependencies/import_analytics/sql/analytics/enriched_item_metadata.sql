@@ -36,4 +36,5 @@ enriched_items AS (
 
 SELECT * except(count_booking, offer_id)
 FROM enriched_items
+WHERE item_id is not null
 QUALIFY ROW_NUMBER() OVER (PARTITION BY item_id ORDER BY count_booking DESC) = 1

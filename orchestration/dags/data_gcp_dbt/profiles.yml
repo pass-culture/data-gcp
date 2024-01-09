@@ -1,3 +1,6 @@
+config:
+    send_anonymous_usage_stats: False
+
 data_gcp_dbt:
   target: dev
   outputs:
@@ -31,56 +34,28 @@ data_gcp_dbt:
       project: passculture-data-prod
       threads: 1
       type: bigquery
-  
-elementary:
-  target: dev
-  outputs:
-    dev:
-      dataset: tmp_dev
-      type: bigquery
-      method: oauth
-      project: passculture-data-ehp 
-      location: europe-west1
-      threads: 2
-    stg:
-      dataset: tmp_stg
-      type: bigquery
-      method: oauth
-      project: passculture-data-ehp 
-      location: europe-west1
-      threads: 2
-    prod:
-      dataset: tmp_prod
-      type: bigquery
-      method: oauth
-      project: passculture-data-prod
-      location: europe-west1
-      threads: 2
 
 dbt_artifacts:
-  target: dev
+  target: dev 
   outputs:
     dev:
-      dataset: tmp_dev
+      dataset: dbt_artifacts_dev
       type: bigquery
       method: oauth
       project: passculture-data-ehp 
       location: europe-west1
       threads: 2
     stg:
-      dataset: tmp_stg
+      dataset: dbt_artifacts_stg
       type: bigquery
       method: oauth
       project: passculture-data-ehp 
       location: europe-west1
       threads: 2
     prod:
-      dataset: tmp_prod
+      dataset: dbt_artifacts_prod
       type: bigquery
       method: oauth
       project: passculture-data-prod
       location: europe-west1
       threads: 2
-
-config:
-    send_anonymous_usage_stats: False

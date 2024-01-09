@@ -50,11 +50,6 @@ models:
         - column_metrics
       +docs: 
         node_color: "#d90000" 
-  elementary:
-    +schema: "elementary"
-  re_data:
-    +schema: "re_data"
-
     
 seeds:
   +schema: seeds

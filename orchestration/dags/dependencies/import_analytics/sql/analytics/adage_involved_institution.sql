@@ -44,4 +44,5 @@ SELECT
     avg(total_institutions) as total_institutions
 FROM
     involved_students involved
+WHERE NOT is_NaN(institutions)
 GROUP BY 1,2,3,4,5,6,7

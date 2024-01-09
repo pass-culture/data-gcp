@@ -1,14 +1,10 @@
 import json
 from datetime import datetime
-
-import numpy as np
 import pandas as pd
 import typer
-import umap
 
 from tools.config import CONFIGS_PATH, ENV_SHORT_NAME, GCP_PROJECT_ID
 from tools.embedding_extraction import extract_embedding
-from tools.dimension_reduction import reduce_embedding_dimension
 
 
 def main(
@@ -52,12 +48,6 @@ def main(
     df_data_w_embedding["extraction_date"] = [
         datetime.now().strftime("%Y-%m-%d")
     ] * len(df_data_w_embedding)
-
-    df_data_w_embedding.to_gbq(
-        f"tmp_{env_short_name}.{output_table_name}",
-        project_id=gcp_project,
-        if_exists="replace",
-    )
 
     df_data_w_embedding.to_gbq(
         f"clean_{env_short_name}.{output_table_name}",

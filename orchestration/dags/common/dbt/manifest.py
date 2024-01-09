@@ -18,9 +18,7 @@ def build_simplified_manifest(data):
             "resource_type": data["nodes"][node]["resource_type"],
         }
         for node in data["nodes"].keys()
-        if (
-            data["nodes"][node]["resource_type"] == "model" and "elementary" not in node
-        )
+        if (data["nodes"][node]["resource_type"] == "model" and "data_gcp_dbt" in node)
     }
     for node in data["nodes"].keys():
         if data["nodes"][node]["resource_type"] == "test":

@@ -45,15 +45,32 @@ dag = DAG(
             default=ENV_SHORT_NAME,
             type="string",
         ),
+        "GLOBAL_CLI_FLAGS": Param(
+            default="",
+            type="string",
+        ),
     },
 )
 
 # Basic steps
 start = DummyOperator(task_id="start", dag=dag)
 
+dbt_test = BashOperator(
+    task_id="dbt_test",
+    bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_test.sh ",
+    env={
+        "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
+        "target": "{{ params.target }}",
+        "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+    },
+    append_env=True,
+    cwd=PATH_TO_DBT_PROJECT,
+    dag=dag,
+)
+
 compute_metrics_re_data = BashOperator(
     task_id="compute_metrics_re_data",
-    bash_command="dbt run --target {{ params.target }} --select package:re_data --profile dbt_artifacts"
+    bash_command="dbt run --target {{ params.target }} --select package:re_data --profile re_data"
     + f"--target-path {PATH_TO_DBT_TARGET}",
     cwd=PATH_TO_DBT_PROJECT,
     dag=dag,
@@ -61,7 +78,7 @@ compute_metrics_re_data = BashOperator(
 
 compute_metrics_elementary = BashOperator(
     task_id="compute_metrics_elementary",
-    bash_command="dbt run --target {{ params.target }} --select package:elementary --profile dbt_artifacts"
+    bash_command="dbt run --target {{ params.target }} --select package:elementary --profile elementary"
     + f"--target-path {PATH_TO_DBT_TARGET}",
     cwd=PATH_TO_DBT_PROJECT,
     dag=dag,
@@ -114,10 +131,11 @@ re_data_notify = BashOperator(
 
 (
     start
+    >> dbt_test
     >> compute_metrics_re_data
     >> re_data_generate_json
     >> export_tests_history
     >> export_table_samples
     >> re_data_notify
 )
-start >> compute_metrics_elementary
+dbt_test >> compute_metrics_elementary

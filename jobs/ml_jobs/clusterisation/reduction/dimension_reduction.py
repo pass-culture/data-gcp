@@ -5,14 +5,18 @@ import numpy as np
 import pandas as pd
 import typer
 from loguru import logger
-from tools.config import CONFIGS_PATH, ENV_SHORT_NAME, GCP_PROJECT_ID
+from tools.utils import (
+    CONFIGS_PATH,
+    ENV_SHORT_NAME,
+    GCP_PROJECT_ID,
+    convert_str_emb_to_float,
+    convert_arr_emb_to_str,
+)
 from tools.dimension_reduction import (
     umap_reduce_embedding_dimension,
     export_polars_to_bq,
     pca_reduce_embedding_dimension,
     pumap_reduce_embedding_dimension,
-    convert_str_emb_to_float,
-    convert_arr_emb_to_str,
 )
 import pyarrow.dataset as ds
 import polars as pl

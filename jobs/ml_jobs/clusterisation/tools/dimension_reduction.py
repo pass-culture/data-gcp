@@ -1,29 +1,9 @@
-import pandas as pd
 import numpy as np
-import json
 import io
 from google.cloud import bigquery
 import umap
-import random
 from sklearn.decomposition import PCA
 import tensorflow as tf
-from loguru import logger
-
-
-def convert_str_emb_to_float(emb_list):
-    float_emb = []
-    for str_emb in emb_list:
-        emb = json.loads(str_emb)
-        float_emb.append(np.array(emb))
-    return float_emb
-
-
-def convert_arr_emb_to_str(emb_list):
-    float_emb = []
-    for str_emb in emb_list:
-        emb = json.dumps(str_emb.tolist())
-        float_emb.append(emb)
-    return float_emb
 
 
 def get_sample(data, frac):

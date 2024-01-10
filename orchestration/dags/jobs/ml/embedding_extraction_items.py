@@ -9,7 +9,7 @@ from common.operators.gce import (
     SSHGCEOperator,
 )
 from common.operators.biquery import bigquery_job_task
-from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
+
 from dependencies.ml.embeddings.import_items import params
 from common import macros
 from common.alerts import task_fail_slack_alert
@@ -22,11 +22,6 @@ from common.config import (
     MLFLOW_BUCKET_NAME,
     BIGQUERY_TMP_DATASET,
 )
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryExecuteQueryOperator,
-    BigQueryInsertJobOperator,
-)
-from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
 
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"extract-items-embeddings-{ENV_SHORT_NAME}"
@@ -123,46 +118,6 @@ with DAG(
         f"--output-table-name item_embeddings",
     )
 
-    export_task = BigQueryExecuteQueryOperator(
-        task_id=f"import_item_embbedding_data",
-        sql=(IMPORT_TRAINING_SQL_PATH / f"item_embeddings_reduction.sql").as_posix(),
-        write_disposition="WRITE_TRUNCATE",
-        use_legacy_sql=False,
-        destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DATE}_item_embeddings_reduction",
-        dag=dag,
-    )
-
-    export_bq = BigQueryInsertJobOperator(
-        task_id=f"store_item_embbedding_data",
-        configuration={
-            "extract": {
-                "sourceTable": {
-                    "projectId": GCP_PROJECT_ID,
-                    "datasetId": BIGQUERY_TMP_DATASET,
-                    "tableId": f"{DATE}_item_embeddings_reduction",
-                },
-                "compression": None,
-                "destinationUris": f"{dag_config['STORAGE_PATH']}/data-*.parquet",
-                "destinationFormat": "PARQUET",
-            }
-        },
-        dag=dag,
-    )
-
-    reduce_dimension = SSHGCEOperator(
-        task_id="reduce_dimension",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        environment=dag_config,
-        command="PYTHONPATH=. python dimension_reduction.py "
-        f"--gcp-project {GCP_PROJECT_ID} "
-        f"--env-short-name {ENV_SHORT_NAME} "
-        "--config-file-name {{ params.config_file_name }} "
-        f"--source-gs-path {dag_config['STORAGE_PATH']} "
-        f"--output-table-name item_embeddings "
-        f"--reduction-config default ",
-    )
-
     gce_instance_stop = StopGCEOperator(
         task_id="gce_stop_task", instance_name=GCE_INSTANCE
     )
@@ -174,8 +129,5 @@ with DAG(
         >> install_dependencies
         >> preprocess
         >> extract_embedding
-        >> export_task
-        >> export_bq
-        >> reduce_dimension
         >> gce_instance_stop
     )

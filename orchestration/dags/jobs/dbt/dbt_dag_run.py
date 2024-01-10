@@ -25,7 +25,6 @@ from common.config import (
 default_args = {
     "start_date": datetime(2020, 12, 23),
     "retries": 1,
-    "on_failure_callback": task_fail_slack_alert,
     "retry_delay": timedelta(minutes=2),
     "project_id": GCP_PROJECT_ID,
 }
@@ -64,7 +63,7 @@ dbt_dep_op = BashOperator(
 
 dbt_compile_op = BashOperator(
     task_id="dbt_compile",
-    bash_command="dbt compile --target {{ params.target }} "
+    bash_command="dbt compile --target {{ params.target }} --select data_gcp_dbt "
     + f"--target-path {PATH_TO_DBT_TARGET}",
     cwd=PATH_TO_DBT_PROJECT,
     dag=dag,
@@ -92,7 +91,7 @@ with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
             # models
             model_op = BashOperator(
                 task_id=model_data["model_alias"],
-                bash_command=f"bash {PATH_TO_DBT_PROJECT}/dbt_run.sh ",
+                bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_run.sh ",
                 env={
                     "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
                     "target": "{{ params.target }}",
@@ -113,9 +112,9 @@ with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
                     dbt_test_tasks = [
                         BashOperator(
                             task_id=test["test_alias"],
-                            bash_command=f"bash {PATH_TO_DBT_PROJECT}/dbt_run.sh "
+                            bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_run.sh "
                             if test["test_type"] == "generic"
-                            else f"bash {PATH_TO_DBT_PROJECT}/dbt_test.sh ",
+                            else f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_test.sh ",
                             env={
                                 "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
                                 "target": "{{ params.target }}",
@@ -167,9 +166,9 @@ with TaskGroup(group_id="data_quality_testing", dag=dag) as data_quality:
                 dbt_test_tasks = [
                     BashOperator(
                         task_id=test["test_alias"],
-                        bash_command=f"bash {PATH_TO_DBT_PROJECT}/dbt_run.sh "
+                        bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_run.sh "
                         if test["test_type"] == "generic"
-                        else f"bash {PATH_TO_DBT_PROJECT}/dbt_test.sh ",
+                        else f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_test.sh ",
                         env={
                             "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
                             "target": "{{ params.target }}",

@@ -16,6 +16,7 @@ def clusterisation_from_prebuild_embedding(
         mb=10_240,
         print_silhouette_values=False,
     )
+    logger.info(f"mbkmeans_clusters: done...")
     items_with_clusters = pl.DataFrame({"cluster": cluster_labels})
     cluster_center_coordinates = pl.DataFrame(
         {
@@ -36,6 +37,7 @@ def clusterisation_from_prebuild_embedding(
         on="cluster",
         how="inner",
     )
+    logger.info(f"mbkmeans_clusters: exported clusters...")
 
     return items_with_cluster_and_coordinates
 
@@ -59,7 +61,7 @@ def mbkmeans_clusters(
     """
     km = MiniBatchKMeans(n_clusters=k, batch_size=mb, verbose=1).fit(X)
     logger.info(f"For n_clusters = {k}")
-    logger.info(f"Silhouette coefficient: {silhouette_score(X, km.labels_):0.2f}")
+    # TODO: fix slow : logger.info(f"Silhouette coefficient: {silhouette_score(X, km.labels_):0.2f}")
     logger.info(f"Inertia:{km.inertia_}")
 
     if print_silhouette_values:

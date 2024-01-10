@@ -22,8 +22,11 @@ def build_simplified_manifest(json_dict_data):
             "model_tests": {},
             "resource_type": json_dict_data["nodes"][node]["resource_type"],
         }
-        for node in data["nodes"].keys()
-        if (data["nodes"][node]["resource_type"] == "model" and "data_gcp_dbt" in node)
+        for node in json_dict_data["nodes"].keys()
+        if (
+            json_dict_data["nodes"][node]["resource_type"] == "model"
+            and "data_gcp_dbt" in node
+        )
     }
     for node in json_dict_data["nodes"].keys():
         if json_dict_data["nodes"][node]["resource_type"] == "test":

@@ -75,9 +75,6 @@ with DAG(
     start = DummyOperator(task_id="start", dag=dag)
     end = DummyOperator(task_id="end", dag=dag)
 
-    bq_import_item_embeddings_task = bigquery_job_task(
-        dag, "bq_import_item_embeddings", IMPORT_ITEM_EMBEDDINGS, extra_params={}
-    )
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
         instance_name=GCE_INSTANCE,
@@ -142,6 +139,10 @@ with DAG(
         f"--reduction-config default ",
     )
 
+    bq_import_item_embeddings_task = bigquery_job_task(
+        dag, "bq_import_item_embeddings", IMPORT_ITEM_EMBEDDINGS, extra_params={}
+    )
+
     preprocess_clustering = SSHGCEOperator(
         task_id="preprocess_clustering",
         instance_name=GCE_INSTANCE,
@@ -195,13 +196,13 @@ with DAG(
 
     (
         start
-        >> bq_import_item_embeddings_task
-        >> gce_instance_start
-        >> fetch_code
         >> export_task
         >> export_bq
-        >> reduce_dimension
+        >> gce_instance_start
+        >> fetch_code
         >> install_dependencies
+        >> reduce_dimension
+        >> bq_import_item_embeddings_task
         >> preprocess_clustering
         >> generate_clustering
         >> bq_import_item_clusters_task

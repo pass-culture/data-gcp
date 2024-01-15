@@ -70,7 +70,7 @@ dbt_test = BashOperator(
 
 compute_metrics_re_data = BashOperator(
     task_id="compute_metrics_re_data",
-    bash_command="dbt run --target {{ params.target }} --select package:re_data --profile re_data"
+    bash_command="dbt run --target {{ params.target }} --select package:re_data --profile re_data "
     + f"--target-path {PATH_TO_DBT_TARGET}",
     cwd=PATH_TO_DBT_PROJECT,
     dag=dag,
@@ -78,7 +78,7 @@ compute_metrics_re_data = BashOperator(
 
 compute_metrics_elementary = BashOperator(
     task_id="compute_metrics_elementary",
-    bash_command="dbt run --target {{ params.target }} --select package:elementary --profile elementary"
+    bash_command="dbt run --target {{ params.target }} --select package:elementary --profile elementary "
     + f"--target-path {PATH_TO_DBT_TARGET}",
     cwd=PATH_TO_DBT_PROJECT,
     dag=dag,

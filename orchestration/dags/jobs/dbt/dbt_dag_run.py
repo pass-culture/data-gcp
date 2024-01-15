@@ -7,10 +7,9 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.utils.task_group import TaskGroup
 from airflow.utils.dates import datetime, timedelta
 from airflow.models import Param
+from airflow.operators.python import BranchPythonOperator
 from common.alerts import task_fail_slack_alert
-from common.utils import (
-    get_airflow_schedule,
-)
+from common.utils import get_airflow_schedule, waiting_operator
 from common.dbt.utils import rebuild_manifest
 
 from common import macros
@@ -54,21 +53,27 @@ dag = DAG(
 # Basic steps
 start = DummyOperator(task_id="start", dag=dag)
 
-dbt_dep_op = BashOperator(
-    task_id="dbt_deps",
-    bash_command="dbt deps --target {{ params.target }}",
-    cwd=PATH_TO_DBT_PROJECT,
+
+def choose_branch(**context):
+    run_id = context["dag_run"].run_id
+    if run_id.startswith("scheduled__"):
+        return ["dbt_init_dag"]
+    return ["manual_trigger_shunt"]
+
+
+branching = BranchPythonOperator(
+    task_id="branching",
+    python_callable=choose_branch,
+    provide_context=True,
     dag=dag,
 )
+shunt = DummyOperator(task_id="manual_trigger_shunt", dag=dag)
 
-dbt_manifest_op = BashOperator(
-    task_id="dbt_make_manifest",
-    bash_command="dbt ls --target {{ params.target }} "
-    + f"--target-path {PATH_TO_DBT_TARGET}",
-    cwd=PATH_TO_DBT_PROJECT,
-    dag=dag,
-)
+wait4init = waiting_operator(dag, "dbt_init_dag")
 
+join = DummyOperator(task_id="join", dag=dag, trigger_rule="none_failed")
+
+# wait4init = waiting_operator(dag,"dbt_init_dag")
 end = DummyOperator(task_id="end", dag=dag, trigger_rule="all_success")
 
 # TO DO : gather test warnings logs and send them to slack alert task through xcom
@@ -97,7 +102,7 @@ with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
                     "target": "{{ params.target }}",
                     "model": f"{model_data['model_alias']}",
                     "full_ref_str": full_ref_str,
-                    "PATH_TO_DBT_TARGET": "./target",
+                    "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
                 },
                 append_env=True,
                 cwd=PATH_TO_DBT_PROJECT,
@@ -170,4 +175,4 @@ for test_alias, details in test_op_dict.items():
         model_op_dict[parent] >> details["test_op"]
 
 
-start >> dbt_dep_op >> dbt_manifest_op >> data_transfo >> end
+start >> branching >> [shunt, wait4init] >> join >> data_transfo >> end

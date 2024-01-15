@@ -1,18 +1,18 @@
 packages:
 - package: dbt-labs/dbt_utils
-  version: 1.1.1
+  version: 1.0.0
 - package: elementary-data/elementary
-  version: 0.13.1
+  version: 0.7.1
 - package: calogica/dbt_expectations
   version: 0.10.1
 - git: https://github.com/yu-iskw/dbt-airflow-macros.git
   revision: 0.2.2
 - package: dbt-labs/codegen
-  version: 0.12.1
+  version: 0.11.0
 - package: dbt-labs/dbt_external_tables
   version: 0.8.7
 - package: re-data/re_data
-  version: 0.11.0
+  version: 0.10.9
 - package: calogica/dbt_date
   version: 0.10.0
-sha1_hash: e348cc5cda4d1f3155b2ce982af867e7de39579b
+sha1_hash: 0ffdf8c1dd9de41b741055112aee9e438394473f

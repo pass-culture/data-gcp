@@ -5,31 +5,100 @@ sources:
     schema: raw_{{ var('ENV_SHORT_NAME') }} # this is the schema_name
     tables:
       - name: agg_partner_cultural_sector # try to plug it directly to google cloud storage with dbt_external_tables package
+      - name: applicative_database_action_history
+      - name: applicative_database_allocine_pivot
+      - name: applicative_database_allocine_venue_provider
+      - name: applicative_database_allocine_venue_provider_price_rule
+      - name: applicative_database_bank_account
+      - name: applicative_database_bank_information
+      - name: applicative_database_beneficiary_fraud_check
+      - name: applicative_database_beneficiary_fraud_review
+      - name: applicative_database_beneficiary_fraud_status
+      - name: applicative_database_beneficiary_import
+      - name: applicative_database_beneficiary_import_status
       - name: applicative_database_booking
+      - name: applicative_database_booking_finance_incident
+      - name: applicative_database_boost_cinema_details
+      - name: applicative_database_cashflow
+      - name: applicative_database_cashflow_batch
+      - name: applicative_database_cashflow_log
+      - name: applicative_database_cashflow_pricing
+      - name: applicative_database_cds_cinema_details
+      - name: applicative_database_cgr_cinema_details
+      - name: applicative_database_cinema_provider_pivot
       - name: applicative_database_collective_booking
       - name: applicative_database_collective_offer
+      - name: applicative_database_collective_offer_domain
+      - name: applicative_database_collective_offer_request
       - name: applicative_database_collective_offer_template
+      - name: applicative_database_collective_offer_template_domain
       - name: applicative_database_collective_stock
       - name: applicative_database_criterion
       - name: applicative_database_criterion_category
       - name: applicative_database_criterion_category_mapping
+      - name: applicative_database_deposit
+      - name: applicative_database_educational_deposit
+      - name: applicative_database_educational_domain
+      - name: applicative_database_educational_domain_venue
+      - name: applicative_database_educational_institution
+      - name: applicative_database_educational_redactor
+      - name: applicative_database_educational_year
+      - name: applicative_database_ems_cinema_details
       - name: applicative_database_favorite
-      - name: applicative_database_national_program
+      - name: applicative_database_feature
+      - name: applicative_database_finance_event
+      - name: applicative_database_finance_incident
+      - name: applicative_database_internal_user
+      - name: applicative_database_invoice
+      - name: applicative_database_invoice_cashflow
+      - name: applicative_database_invoice_line
+      - name: applicative_database_local_provider_event
       - name: applicative_database_mediation
+      - name: applicative_database_national_program
+      - name: applicative_database_national_program_offer_link_history
+      - name: applicative_database_national_program_offer_template_link_history
       - name: applicative_database_offer
-      - name: applicative_database_offerer
-      - name: applicative_database_offerer_tag
+      - name: applicative_database_login_device_history
+      - name: applicative_database_payment_message
+      - name: applicative_database_payment
       - name: applicative_database_offerer_tag_mapping
-      - name: applicative_database_offerer_tag_category
       - name: applicative_database_offerer_tag_category_mapping
-      - name: applicative_database_venue
-      - name: applicative_database_venue_contact
-      - name: applicative_database_venue_criterion
-      - name: applicative_database_venue_label
-      - name: applicative_database_venue_registration
+      - name: applicative_database_offerer_tag_category
+      - name: applicative_database_offerer_tag
+      - name: applicative_database_offerer
+      - name: applicative_database_offer_validation_sub_rule
+      - name: applicative_database_offer_validation_rule
+      - name: applicative_database_offer_report
+      - name: applicative_database_offer_criterion
+      - name: applicative_database_payment_status
       - name: applicative_database_price_category
       - name: applicative_database_price_category_label
-      - name: applicative_database_stock 
+      - name: applicative_database_pricing
+      - name: applicative_database_pricing_line
+      - name: applicative_database_pricing_log
+      - name: applicative_database_product
+      - name: applicative_database_product_whitelist
+      - name: applicative_database_provider
+      - name: applicative_database_recredit
+      - name: applicative_database_stock
+      - name: applicative_database_transaction
+      - name: applicative_database_trusted_device
+      - name: applicative_database_user
+      - name: applicative_database_user_offerer
+      - name: applicative_database_user_pro_flags
+      - name: applicative_database_validation_rule_collective_offer_link
+      - name: applicative_database_validation_rule_collective_offer_template_link
+      - name: applicative_database_validation_rule_offer_link
+      - name: applicative_database_venue
+      - name: applicative_database_venue_bank_account_link
+      - name: applicative_database_venue_contact
+      - name: applicative_database_venue_criterion
+      - name: applicative_database_venue_educational_status
+      - name: applicative_database_venue_label
+      - name: applicative_database_venue_pricing_point_link
+      - name: applicative_database_venue_provider
+      - name: applicative_database_venue_registration
+      - name: applicative_database_venue_reimbursement_point_link
       - name: gsheet_eac_webinar
   - name: clean # this is the source_name
     schema: clean_{{ var('ENV_SHORT_NAME') }} # this is the schema_name

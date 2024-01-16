@@ -3,12 +3,11 @@ import datetime
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
+from airflow.utils.task_group import TaskGroup
 from airflow.utils.dates import datetime, timedelta
 from airflow.models import Param
 from common.alerts import task_fail_slack_alert
-from common.utils import (
-    get_airflow_schedule,
-)
+from common.utils import get_airflow_schedule, waiting_operator
 
 from common import macros
 from common.config import (
@@ -55,6 +54,8 @@ dag = DAG(
 # Basic steps
 start = DummyOperator(task_id="start", dag=dag)
 
+wait_dbt_run = waiting_operator(dag, "dbt_run_dag")
+
 dbt_test = BashOperator(
     task_id="dbt_test",
     bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_test.sh ",
@@ -84,35 +85,36 @@ compute_metrics_elementary = BashOperator(
     dag=dag,
 )
 
-re_data_generate_json = BashOperator(
-    task_id="re_data_generate_json",
-    bash_command="""dbt run-operation generate_overview --args '{end_date: '{{ today() }}', start_date: '{{ last_week() }}', interval: 'days:1', monitored_path: """
-    + f"{PATH_TO_DBT_TARGET}"
-    + "/re_data/monitored.json"
-    + ", overview_path: "
-    + f"{PATH_TO_DBT_TARGET}"
-    + "/re_data/overview.json}'",
-    cwd=PATH_TO_DBT_PROJECT,
-    dag=dag,
-)
+with TaskGroup(group_id="re_data", dag=dag) as re_data_overview:
+    re_data_generate_json = BashOperator(
+        task_id="re_data_generate_json",
+        bash_command="""dbt run-operation generate_overview --args '{end_date: '{{ today() }}', start_date: '{{ last_week() }}', interval: 'days:1', monitored_path: """
+        + f"{PATH_TO_DBT_TARGET}"
+        + "/re_data/monitored.json"
+        + ", overview_path: "
+        + f"{PATH_TO_DBT_TARGET}"
+        + "/re_data/overview.json}'",
+        cwd=PATH_TO_DBT_PROJECT,
+        dag=dag,
+    )
 
-export_tests_history = BashOperator(
-    task_id="export_tests_history",
-    bash_command="dbt run-operation export_tests_history --args '{end_date: '{{ today() }}', start_date: '{{ last_week() }}', tests_history_path: "
-    + f"{PATH_TO_DBT_TARGET}"
-    + "/re_data/tests_history.json }'",
-    cwd=PATH_TO_DBT_PROJECT,
-    dag=dag,
-)
+    export_tests_history = BashOperator(
+        task_id="export_tests_history",
+        bash_command="dbt run-operation export_tests_history --args '{end_date: '{{ today() }}', start_date: '{{ last_week() }}', tests_history_path: "
+        + f"{PATH_TO_DBT_TARGET}"
+        + "/re_data/tests_history.json }'",
+        cwd=PATH_TO_DBT_PROJECT,
+        dag=dag,
+    )
 
-export_table_samples = BashOperator(
-    task_id="export_table_samples",
-    bash_command="dbt run-operation export_table_samples --args '{end_date: '{{ today() }}', start_date: '{{ last_week() }}', table_samples_path: "
-    + f"""{PATH_TO_DBT_TARGET}"""
-    + "/re_data/table_samples_path.json }'",
-    cwd=PATH_TO_DBT_PROJECT,
-    dag=dag,
-)
+    export_table_samples = BashOperator(
+        task_id="export_table_samples",
+        bash_command="dbt run-operation export_table_samples --args '{end_date: '{{ today() }}', start_date: '{{ last_week() }}', table_samples_path: "
+        + f"""{PATH_TO_DBT_TARGET}"""
+        + "/re_data/table_samples_path.json }'",
+        cwd=PATH_TO_DBT_PROJECT,
+        dag=dag,
+    )
 
 
 re_data_notify = BashOperator(
@@ -131,11 +133,10 @@ re_data_notify = BashOperator(
 
 (
     start
+    >> wait_dbt_run
     >> dbt_test
     >> compute_metrics_re_data
-    >> re_data_generate_json
-    >> export_tests_history
-    >> export_table_samples
+    >> re_data_overview
     >> re_data_notify
 )
 dbt_test >> compute_metrics_elementary

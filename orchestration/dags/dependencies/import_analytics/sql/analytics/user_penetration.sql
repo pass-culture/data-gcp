@@ -9,7 +9,7 @@ with population_dpt as (
       sum(population) as population
     FROM `{{ bigquery_analytics_dataset }}.population_age_and_department_france_details` pop
     LEFT JOIN `{{ bigquery_analytics_dataset }}.region_department` dep	on dep.num_dep = pop.department_code
-    WHERE pop.current_year in (2020, 2021, 2022, 2023) and cast(age as int) BETWEEN 15 AND 25
+    WHERE pop.current_year in (2020, 2021, 2022, 2023, 2024) and cast(age as int) BETWEEN 15 AND 25
     GROUP BY 1,2,3,4,5,6
   )
 

@@ -137,6 +137,7 @@ with DAG(
         f"--source-gs-path {dag_config['STORAGE_PATH']} "
         f"--output-table-name item_embeddings "
         f"--reduction-config default ",
+        retries=2,
     )
 
     bq_import_item_embeddings_task = bigquery_job_task(

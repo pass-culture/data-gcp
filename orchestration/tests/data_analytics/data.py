@@ -303,7 +303,6 @@ ENRICHED_OFFER_DATA_INPUT = {
             "venue_city": "Montreuil",
             "venue_department_code": "93",
             "venue_is_virtual": False,
-            "venue_fields_updated": "{}",
             "venue_is_permanent": True,
         },
         {
@@ -316,7 +315,6 @@ ENRICHED_OFFER_DATA_INPUT = {
             "venue_city": "Montreuil",
             "venue_department_code": "93",
             "venue_is_virtual": False,
-            "venue_fields_updated": "{}",
             "venue_is_permanent": True,
         },
     ],
@@ -822,7 +820,6 @@ ENRICHED_STOCK_DATA_INPUT = {
             "venue_city": None,
             "venue_department_code": None,
             "venue_is_virtual": True,
-            "venue_fields_updated": "{}",
             "venue_is_permanent": True,
         }
     ],

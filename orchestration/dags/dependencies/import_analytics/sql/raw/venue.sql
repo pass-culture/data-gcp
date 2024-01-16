@@ -1,6 +1,5 @@
 SELECT
     "thumbCount" AS venue_thumb_count
-    , "idAtProviders" AS venue_id_at_providers
     , "dateModifiedAtLastProvider" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS venue_modified_at_last_provider
     , "address" as venue_address
     , "postalCode" as venue_postal_code

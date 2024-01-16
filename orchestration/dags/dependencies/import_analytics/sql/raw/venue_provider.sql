@@ -1,7 +1,6 @@
 SELECT
     "isActive" as is_active
     , CAST("id" AS varchar(255)) as id
-    , CAST("idAtProviders" AS varchar(255)) as id_at_providers
     , "dateModifiedAtLastProvider" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' as date_modified_at_last_provider
     , CAST("venueId" AS varchar(255)) as venue_id
     , CAST("providerId" AS varchar(255)) as provider_id

@@ -173,7 +173,6 @@ BIGQUERY_SCHEMAS = {
         "stock_creation_date": "DATETIME",
         "stock_fields_updated": "STRING",
         "stock_has_been_migrated": "BOOLEAN",
-        "number_of_tickets": "INT64",
         "educational_price_detail": "STRING",
         "price_category_id": "STRING",
     },
@@ -192,7 +191,6 @@ BIGQUERY_SCHEMAS = {
         "stock_creation_date": "DATETIME",
         "stock_fields_updated": "STRING",
         "stock_has_been_migrated": "BOOLEAN",
-        "number_of_tickets": "INT64",
         "educational_price_detail": "STRING",
         "price_category_id": "STRING",
         "price_category_label_id": "STRING",
@@ -346,7 +344,6 @@ BIGQUERY_SCHEMAS = {
     "applicative_database_venue": {
         "venue_thumb_count": "INT64",
         "venue_first_thumb_dominant_color": "BYTES",
-        "venue_id_at_providers": "STRING",
         "venue_modified_at_last_provider_date": "DATETIME",
         "venue_address": "STRING",
         "venue_postal_code": "STRING",

@@ -52,6 +52,8 @@ models:
         - column_metrics
       +docs: 
         node_color: "#d90000" 
+  dbt_artifacts:
+    +on_schema_change: "append_new_columns"
     
 seeds:
   +schema: seeds

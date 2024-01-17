@@ -4,7 +4,7 @@ SELECT
 FROM {{ source('raw','applicative_database_stock') }} AS stock
 JOIN {{ source('raw','applicative_database_offer') }} AS offer 
     ON stock.offer_id = offer.offer_id
-LEFT JOIN {{ source('raw','available_stock_information') }} AS av_stock
+LEFT JOIN {{ ref('available_stock_information') }} AS av_stock
     ON stock.stock_id = av_stock.stock_id
 LEFT JOIN {{ source('raw','applicative_database_venue') }} AS venue
     ON offer.venue_id = venue.venue_id

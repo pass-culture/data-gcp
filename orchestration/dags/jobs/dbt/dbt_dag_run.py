@@ -56,7 +56,7 @@ dag = DAG(
 def choose_branch(**context):
     run_id = context["dag_run"].run_id
     if run_id.startswith("scheduled__"):
-        return ["dbt_init_dag"]
+        return ["wait_for_dbt_init_dag_end"]
     return ["manual_trigger_shunt"]
 
 

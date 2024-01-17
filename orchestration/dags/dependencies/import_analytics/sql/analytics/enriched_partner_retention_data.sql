@@ -148,17 +148,27 @@ LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_venue_provider_data ON enr
     venue_managing_offerer_id AS offerer_id
     ,enriched_venue_data.venue_id
     ,venue_is_permanent
-    ,COALESCE(COUNT(CASE WHEN reimbursement_point_link_beginning_date IS NOT NULL THEN 1 ELSE 0 END)) AS nb_reimbursment_point
+    ,reimbursement_point_link_beginning_date
+    ,reimbursement_point_link_ending_date
+    ,RANK() OVER(PARTITION BY venue_managing_offerer_id,enriched_venue_data.venue_id ORDER BY reimbursement_point_link_beginning_date DESC) AS rang
 FROM `{{ bigquery_analytics_dataset }}`.enriched_venue_data
-LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue_reimbursement_point_link ON enriched_venue_data.venue_id = applicative_database_venue_reimbursement_point_link.venue_id
--- WHERE venue_managing_offerer_id = '5159'
-GROUP BY 1,2,3)
+LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_venue_reimbursement_point_link ON enriched_venue_data.venue_id = applicative_database_venue_reimbursement_point_link.venue_id
+ORDER BY 1,2,3)
+
+,reimbursment_point2 AS (SELECT
+    offerer_id
+    ,venue_id
+    ,venue_is_permanent
+    ,COALESCE(COUNT(CASE WHEN reimbursement_point_link_beginning_date IS NOT NULL THEN 1 ELSE 0 END)) AS nb_reimbursment_point
+FROM reimbursment_point1
+WHERE rang = 1
+AND reimbursement_point_link_ending_date IS NULL)
 
 ,reimbursment_point AS (SELECT
     CASE WHEN venue_is_permanent THEN CONCAT("venue-",venue_id)
          ELSE CONCAT("offerer-", offerer_id) END AS partner_id
     ,SUM(nb_reimbursment_point) AS nb_reimbursment_point
-FROM reimbursment_point1
+FROM reimbursment_point2
 GROUP BY 1)
 
 , bookable as (

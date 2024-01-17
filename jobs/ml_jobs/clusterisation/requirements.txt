@@ -11,7 +11,7 @@ umap_learn>=0.5.3
 loguru==0.7.0
 typer==0.7.0
 pyarrow==13.0.0
-polars==0.18.6
+polars==0.19.12
 timeout-decorator
 tensorflow
 polyfuzz

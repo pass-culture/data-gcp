@@ -81,6 +81,11 @@ clean_tables = {
         "destination_dataset": "{{ bigquery_clean_dataset }}",
         "destination_table": "user_declared_iris",
     },
+    "collective_offer_domain_name": {
+        "sql": f"{CLEAN_SQL_PATH}/collective_offer_domain_name.sql",
+        "destination_dataset": "{{ bigquery_clean_dataset }}",
+        "destination_table": "collective_offer_domain_name",
+    },
 }
 
 

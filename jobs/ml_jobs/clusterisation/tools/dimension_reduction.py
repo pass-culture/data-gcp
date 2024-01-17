@@ -31,7 +31,7 @@ def pumap_reduce_embedding_dimension(data, dimension, train_frac=0.1, batch_size
         "callbacks": [
             tf.keras.callbacks.EarlyStopping(
                 monitor="loss",
-                min_delta=10 ** -2,
+                min_delta=10**-2,
                 patience=2,
                 verbose=1,
             )

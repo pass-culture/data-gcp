@@ -33,12 +33,12 @@ contentful_tables = {
         "sql": f"{SQL_PATH}/enriched_contentful_playlist_tags.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "enriched_contentful_playlist_tags",
-        "depends": "clean_contentful_tags",
+        "depends": ["clean_contentful_tags"],
     },
     "enriched_contentful_home_tags": {
         "sql": f"{SQL_PATH}/enriched_contentful_home_tags.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "enriched_contentful_home_tags",
-        "depends": "clean_contentful_tags",
+        "depends": ["clean_contentful_tags"],
     },
 }

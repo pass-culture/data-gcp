@@ -40,7 +40,7 @@ dag = DAG(
             type="string",
         ),
         "GLOBAL_CLI_FLAGS": Param(
-            default="",
+            default="--exclude path:raw",
             type="string",
         ),
         "full_refresh": Param(

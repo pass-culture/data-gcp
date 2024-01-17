@@ -9,7 +9,6 @@ SELECT
   , venue_is_permanent
   , venue_label
   , last_sync_date
-  , venue_provider.date_modified_at_last_provider
   , count(offer_id_at_providers) as offer_sync_cnt
   , min(offer_creation_date) AS first_offer_sync_date
 FROM `{{ bigquery_clean_dataset }}.applicative_database_provider` provider
@@ -33,4 +32,3 @@ GROUP BY
   , venue_is_permanent
   , venue_label
   , last_sync_date
-  , venue_provider.date_modified_at_last_provider

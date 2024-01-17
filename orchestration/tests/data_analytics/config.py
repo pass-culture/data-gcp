@@ -157,6 +157,7 @@ BIGQUERY_SCHEMAS = {
         "url": "STRING",
         "fieldsUpdated": "STRING",
         "isGcuCompatible": "BOOLEAN",
+        "ean": "STRING",
     },
     "applicative_database_stock": {
         "stock_id_at_providers": "STRING",

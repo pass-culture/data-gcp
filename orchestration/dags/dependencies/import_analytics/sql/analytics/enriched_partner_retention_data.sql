@@ -11,10 +11,10 @@ AND action_history_json_data LIKE '%fraud%')
     ,enriched_cultural_partner_data.partner_type
     ,enriched_cultural_partner_data.cultural_sector
     ,COUNT(offer_id) AS individual_offers_created_cnt
-    ,COUNT(CASE WHEN DATE_DIFF(CURRENT_DATE,offer_creation_date,MONTH) <= 2 THEN offer_id END) AS individual_offers_created_last_2_month 
+    ,COUNT(CASE WHEN DATE_DIFF(CURRENT_DATE,offer_creation_date,MONTH) <= 2 THEN offer_id END) AS individual_offers_created_last_2_month
     ,COUNT(CASE WHEN DATE_DIFF(CURRENT_DATE,offer_creation_date,MONTH) <= 6 THEN offer_id END) AS individual_offers_created_last_6_month
-    ,COUNT(CASE WHEN DATE_DIFF(last_bookable_offer_date,offer_creation_date,MONTH) <= 2 THEN offer_id END) AS individual_offers_created_2_month_before_last_bookable     
-    ,COUNT(CASE WHEN DATE_DIFF(last_bookable_offer_date,offer_creation_date,MONTH) <= 6 THEN offer_id END) AS individual_offers_created_6_month_before_last_bookable  
+    ,COUNT(CASE WHEN DATE_DIFF(last_bookable_offer_date,offer_creation_date,MONTH) <= 2 THEN offer_id END) AS individual_offers_created_2_month_before_last_bookable
+    ,COUNT(CASE WHEN DATE_DIFF(last_bookable_offer_date,offer_creation_date,MONTH) <= 6 THEN offer_id END) AS individual_offers_created_6_month_before_last_bookable
 FROM `{{ bigquery_analytics_dataset }}`.enriched_cultural_partner_data
 JOIN `{{ bigquery_analytics_dataset }}`.partner_type_bookability_frequency USING(partner_type)
 LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_offer_data ON enriched_cultural_partner_data.partner_id = enriched_offer_data.partner_id
@@ -92,8 +92,8 @@ LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_favorite ON enrich
     ,enriched_cultural_partner_data.cultural_sector
     ,COALESCE(COUNT(*),0) AS favorites_cnt
 FROM favorites1
-JOIN `analytics_prod`.enriched_cultural_partner_data USING(partner_id)
-JOIN `analytics_prod`.partner_type_bookability_frequency ON enriched_cultural_partner_data.partner_type = partner_type_bookability_frequency.partner_type
+JOIN `{{ bigquery_analytics_dataset }}`.enriched_cultural_partner_data USING(partner_id)
+JOIN `{{ bigquery_analytics_dataset }}`.partner_type_bookability_frequency ON enriched_cultural_partner_data.partner_type = partner_type_bookability_frequency.partner_type
 GROUP BY 1,2,3)
 
 ,consultations AS (

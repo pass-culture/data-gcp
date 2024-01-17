@@ -3,8 +3,8 @@ WITH bookings_grouped_by_stock AS (
         booking.stock_id,
         SUM(booking.booking_quantity) as number_of_booking
     FROM
-        {{ ref('applicative_database_booking') }} AS booking
-    LEFT JOIN {{ ref('applicative_database_stock') }} AS stock 
+        {{ source('raw','applicative_database_booking') }} AS booking
+    LEFT JOIN {{ source('raw','applicative_database_stock') }} AS stock 
         ON booking.stock_id = stock.stock_id
     WHERE
         booking.booking_is_cancelled = False
@@ -21,5 +21,5 @@ SELECT
         )
     END AS available_stock_information
 FROM
-    {{ ref('applicative_database_stock') }} AS stock
+    {{ source('raw','applicative_database_stock') }} AS stock
     LEFT JOIN bookings_grouped_by_stock ON bookings_grouped_by_stock.stock_id = stock.stock_id

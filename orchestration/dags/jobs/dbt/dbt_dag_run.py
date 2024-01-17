@@ -7,10 +7,9 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.utils.task_group import TaskGroup
 from airflow.utils.dates import datetime, timedelta
 from airflow.models import Param
+from airflow.operators.python import BranchPythonOperator
 from common.alerts import task_fail_slack_alert
-from common.utils import (
-    get_airflow_schedule,
-)
+from common.utils import get_airflow_schedule, waiting_operator
 from common.dbt.utils import rebuild_manifest
 
 from common import macros
@@ -41,7 +40,7 @@ dag = DAG(
             type="string",
         ),
         "GLOBAL_CLI_FLAGS": Param(
-            default="",
+            default="--exclude path:models/raw",
             type="string",
         ),
         "full_refresh": Param(
@@ -52,27 +51,30 @@ dag = DAG(
 )
 
 # Basic steps
+
+# branching function for skipping waiting task when dag is triggered manually
+def choose_branch(**context):
+    run_id = context["dag_run"].run_id
+    if run_id.startswith("scheduled__"):
+        return ["dbt_init_dag"]
+    return ["manual_trigger_shunt"]
+
+
 start = DummyOperator(task_id="start", dag=dag)
 
-dbt_dep_op = BashOperator(
-    task_id="dbt_deps",
-    bash_command="dbt deps --target {{ params.target }}",
-    cwd=PATH_TO_DBT_PROJECT,
+branching = BranchPythonOperator(
+    task_id="branching",
+    python_callable=choose_branch,
+    provide_context=True,
     dag=dag,
 )
+shunt = DummyOperator(task_id="manual_trigger_shunt", dag=dag)
 
-dbt_compile_op = BashOperator(
-    task_id="dbt_compile",
-    bash_command="dbt compile --target {{ params.target }} --select data_gcp_dbt "
-    + f"--target-path {PATH_TO_DBT_TARGET}",
-    cwd=PATH_TO_DBT_PROJECT,
-    dag=dag,
-)
+wait4init = waiting_operator(dag, "dbt_init_dag")
 
-end = DummyOperator(task_id="end", dag=dag)
+join = DummyOperator(task_id="join", dag=dag, trigger_rule="none_failed")
 
-# TO DO : gather test warnings logs and send them to slack alert task through xcom
-alerting_task = DummyOperator(task_id="dummy_quality_alerting_task", dag=dag)
+end = DummyOperator(task_id="end", dag=dag, trigger_rule="all_success")
 
 # Dbt dag reconstruction
 model_op_dict = {}
@@ -148,65 +150,18 @@ with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
                             ]
             simplified_manifest[model_node]["redirect_dep"] = model_tasks
 
-# data quality test group
-with TaskGroup(group_id="data_quality_testing", dag=dag) as data_quality:
-    full_ref_str = " --full-refresh" if not "{{ params.full_refresh }}" else ""
-    for model_node, model_data in simplified_manifest.items():
-        quality_tests_list = model_data["model_tests"].get("warn", [])
-        quality_tests_list = [
-            test
-            for test in quality_tests_list
-            if not test["test_alias"].endswith(f'ref_{model_data["model_alias"]}_')
-        ]
-        if len(quality_tests_list) > 0:
-            # model testing subgroup
-            with TaskGroup(
-                group_id=f'{model_data["model_alias"]}_quality_tests', dag=dag
-            ) as quality_tests_task:
-                dbt_test_tasks = [
-                    BashOperator(
-                        task_id=test["test_alias"],
-                        bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_run.sh "
-                        if test["test_type"] == "generic"
-                        else f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_test.sh ",
-                        env={
-                            "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
-                            "target": "{{ params.target }}",
-                            "model": f"{model_data['model_alias']}",
-                            "full_ref_str": full_ref_str,
-                            "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
-                        },
-                        append_env=True,
-                        cwd=PATH_TO_DBT_PROJECT,
-                        dag=dag,
+
+# models' task groups dependencies
+for node in simplified_manifest.keys():
+    for upstream_node in simplified_manifest[node]["depends_on_node"]:
+        if upstream_node is not None:
+            if upstream_node.startswith("model."):
+                try:
+                    (
+                        simplified_manifest[upstream_node]["redirect_dep"]
+                        >> simplified_manifest[node]["redirect_dep"]
                     )
-                    for test in quality_tests_list
-                ]
-                for i, test in enumerate(quality_tests_list):
-                    if test["test_alias"] not in test_op_dict.keys():
-                        test_op_dict[test["test_alias"]] = {
-                            "parent_model": [model_data["model_alias"]],
-                            "test_op": dbt_test_tasks[i],
-                        }
-                    else:
-                        test_op_dict[test["test_alias"]]["parent_model"] += [
-                            model_data["model_alias"]
-                        ]
-            if len(dbt_test_tasks) > 0:
-                model_op_dict[model_data["model_alias"]] >> quality_tests_task
-    # models' task groups dependencies
-    for node in simplified_manifest.keys():
-        for upstream_node in simplified_manifest[node]["depends_on_node"]:
-            if upstream_node is not None:
-                if upstream_node.startswith("model."):
-                    try:
-                        (
-                            simplified_manifest[upstream_node]["redirect_dep"]
-                            >> simplified_manifest[node]["redirect_dep"]
-                        )
-                    except:
-                        pass
-                else:
+                except:
                     pass
 
 # tests' cross dependencies management
@@ -214,7 +169,5 @@ for test_alias, details in test_op_dict.items():
     for parent in details["parent_model"]:
         model_op_dict[parent] >> details["test_op"]
 
-# macrolevel dependencies
-start >> dbt_dep_op >> dbt_compile_op >> data_transfo
-data_quality >> alerting_task
-(data_transfo, alerting_task) >> end
+
+start >> branching >> [shunt, wait4init] >> join >> data_transfo >> end

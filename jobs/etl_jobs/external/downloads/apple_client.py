@@ -59,7 +59,6 @@ class AppleClient:
         self.head = {"Authorization": jwt_bearer}
 
     def get_downloads(self, frequency="MONTHLY", report_date="2021-05"):
-
         r = requests.get(
             self.url,
             params={

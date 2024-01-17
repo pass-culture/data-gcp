@@ -9,12 +9,19 @@ from common.operators.gce import (
     SSHGCEOperator,
 )
 from common.operators.biquery import bigquery_job_task
-from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
+
 from dependencies.ml.embeddings.import_items import params
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import GCP_PROJECT_ID, ENV_SHORT_NAME, DAG_FOLDER
 from common.utils import get_airflow_schedule
+from common.config import (
+    GCP_PROJECT_ID,
+    DAG_FOLDER,
+    ENV_SHORT_NAME,
+    MLFLOW_BUCKET_NAME,
+    BIGQUERY_TMP_DATASET,
+)
 
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"extract-items-embeddings-{ENV_SHORT_NAME}"
@@ -27,6 +34,7 @@ default_args = {
     "retry_delay": timedelta(minutes=2),
 }
 dag_config = {
+    "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/embedding_extraction_items_{ENV_SHORT_NAME}/embedding_extraction_items_{DATE}/{DATE}_item_embbedding_data",
     "TOKENIZERS_PARALLELISM": "false",
 }
 with DAG(
@@ -64,6 +72,7 @@ with DAG(
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
         instance_name=GCE_INSTANCE,
+        preemptible=False,
         instance_type="{{ params.instance_type }}",
         retries=2,
         labels={"job_type": "ml"},
@@ -106,20 +115,7 @@ with DAG(
         f"--env-short-name {ENV_SHORT_NAME} "
         "--config-file-name {{ params.config_file_name }} "
         f"--input-table-name {DATE}_item_to_extract_embeddings_clean "
-        f"--output-table-name item_embeddings ",
-    )
-
-    reduce_dimension = SSHGCEOperator(
-        task_id="reduce_dimension",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        environment=dag_config,
-        command="PYTHONPATH=. python dimension_reduction.py "
-        f"--gcp-project {GCP_PROJECT_ID} "
-        f"--env-short-name {ENV_SHORT_NAME} "
-        "--config-file-name {{ params.config_file_name }} "
-        f"--input-table-name item_embeddings "
-        f"--output-table-name item_embeddings_reduced ",
+        f"--output-table-name item_embeddings",
     )
 
     gce_instance_stop = StopGCEOperator(
@@ -133,6 +129,5 @@ with DAG(
         >> install_dependencies
         >> preprocess
         >> extract_embedding
-        >> reduce_dimension
         >> gce_instance_stop
     )

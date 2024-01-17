@@ -39,6 +39,10 @@ def yesterday():
     return (datetime.today() - timedelta(days=1)).strftime("%Y-%m-%d")
 
 
+def last_week():
+    return (datetime.today() - timedelta(days=7)).strftime("%Y-%m-%d")
+
+
 def add_days(ds, days):
     if ds is None:
         ds = datetime.now()
@@ -81,12 +85,14 @@ default = {
     "bigquery_raw_dataset": BIGQUERY_RAW_DATASET,
     "bigquery_sandbox_dataset": BIGQUERY_SANDBOX_DATASET,
     "bigquery_backend_dataset": BIGQUERY_BACKEND_DATASET,
+    "bigquery_appsflyer_import_dataset": f"{GCP_PROJECT_ID}.appsflyer_import_{ENV_SHORT_NAME}",
     "env_short_name": ENV_SHORT_NAME,
     "gcp_project": GCP_PROJECT_ID,
     "yyyymmdd": yyyymmdd,
     "today": today,
     "current_month": current_month,
     "yesterday": yesterday,
+    "last_week": last_week,
     "add_days": add_days,
     "create_humanize_id_function": create_humanize_id_function,
     "create_dehumanize_id_function": create_dehumanize_id_function,

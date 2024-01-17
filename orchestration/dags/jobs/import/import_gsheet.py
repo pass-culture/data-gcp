@@ -45,7 +45,6 @@ with DAG(
         )
     },
 ) as dag:
-
     gce_instance_start = StartGCEOperator(
         instance_name=GCE_INSTANCE, task_id="gce_start_task"
     )
@@ -54,7 +53,7 @@ with DAG(
         task_id="fetch_code",
         instance_name=GCE_INSTANCE,
         command="{{ params.branch }}",
-        python_version="3.8",
+        python_version="3.9",
     )
 
     install_dependencies = SSHGCEOperator(

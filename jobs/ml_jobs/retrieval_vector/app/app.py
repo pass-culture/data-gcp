@@ -80,13 +80,14 @@ def search_vector(
     call_id,
     prefilter: bool,
     vector_column_name: str,
+    similarity_metric: str,
     item_id=None,
 ):
     try:
         if vector is not None:
             results = model.search(
                 vector=vector,
-                similarity_metric="dot",
+                similarity_metric=similarity_metric,
                 n=size,
                 query_filter=selected_params,
                 details=debug,
@@ -125,11 +126,14 @@ def predict():
     debug = bool(input_json.get("debug", 0))
     prefilter = input_json.get("prefilter", None)
     vector_column_name = input_json.get("vector_column_name", None)
+    similarity_metric = input_json.get("similarity_metric", None)
     selected_params = input_json.get("params", {})
     if prefilter is None:
         prefilter = len(selected_params.keys()) > 0
     if vector_column_name is None:
         vector_column_name = "vector"
+    if similarity_metric is None:
+        similarity_metric = "dot"
 
     size = input_size(input_json.get("size", 500))
 
@@ -154,6 +158,7 @@ def predict():
                     debug,
                     call_id=call_id,
                     prefilter=prefilter,
+                    similarity_metric=similarity_metric,
                     vector_column_name=vector_column_name,
                 )
         if isinstance(model, TextClient):
@@ -176,6 +181,7 @@ def predict():
                     debug,
                     call_id=call_id,
                     prefilter=prefilter,
+                    similarity_metric=similarity_metric,
                     vector_column_name=vector_column_name,
                 )
 
@@ -198,6 +204,7 @@ def predict():
                 debug,
                 call_id=call_id,
                 prefilter=prefilter,
+                similarity_metric=similarity_metric,
                 vector_column_name=vector_column_name,
                 item_id=input_str,
             )

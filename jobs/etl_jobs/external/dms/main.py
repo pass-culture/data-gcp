@@ -10,7 +10,6 @@ from utils import API_URL, access_secret_data, demarches_jeunes, demarches_pro
 
 
 def run(target, updated_since, gcp_project_id, env_short_name):
-
     print("updated_since", updated_since)
 
     if target == "jeunes":

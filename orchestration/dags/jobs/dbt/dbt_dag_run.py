@@ -11,7 +11,7 @@ from common.alerts import task_fail_slack_alert
 from common.utils import (
     get_airflow_schedule,
 )
-from common.dbt.manifest import rebuild_manifest
+from common.dbt.utils import rebuild_manifest
 
 from common import macros
 from common.config import (
@@ -25,7 +25,6 @@ from common.config import (
 default_args = {
     "start_date": datetime(2020, 12, 23),
     "retries": 1,
-    "on_failure_callback": task_fail_slack_alert,
     "retry_delay": timedelta(minutes=2),
     "project_id": GCP_PROJECT_ID,
 }
@@ -42,7 +41,7 @@ dag = DAG(
             type="string",
         ),
         "GLOBAL_CLI_FLAGS": Param(
-            default="--no-write-json",
+            default="",
             type="string",
         ),
         "full_refresh": Param(
@@ -64,7 +63,7 @@ dbt_dep_op = BashOperator(
 
 dbt_compile_op = BashOperator(
     task_id="dbt_compile",
-    bash_command="dbt compile --target {{ params.target }} "
+    bash_command="dbt compile --target {{ params.target }} --select data_gcp_dbt "
     + f"--target-path {PATH_TO_DBT_TARGET}",
     cwd=PATH_TO_DBT_PROJECT,
     dag=dag,
@@ -92,9 +91,15 @@ with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
             # models
             model_op = BashOperator(
                 task_id=model_data["model_alias"],
-                bash_command=f"""
-                dbt {{ params.GLOBAL_CLI_FLAGS }} run --target {{ params.target }} --select {model_data['model_alias']} --no-compile{full_ref_str}
-                """,
+                bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_run.sh ",
+                env={
+                    "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
+                    "target": "{{ params.target }}",
+                    "model": f"{model_data['model_alias']}",
+                    "full_ref_str": full_ref_str,
+                    "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+                },
+                append_env=True,
                 cwd=PATH_TO_DBT_PROJECT,
                 dag=dag,
             )
@@ -107,13 +112,17 @@ with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
                     dbt_test_tasks = [
                         BashOperator(
                             task_id=test["test_alias"],
-                            bash_command=f"""
-                    dbt {{ params.GLOBAL_CLI_FLAGS }} run --target {{ params.target }} --select {test['test_alias']} --no-compile{full_ref_str}
-                    """
+                            bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_run.sh "
                             if test["test_type"] == "generic"
-                            else f"""
-                    dbt {{ params.GLOBAL_CLI_FLAGS }} test --target {{ params.target }} --select {test['test_alias']} --no-compile{full_ref_str}
-                    """,
+                            else f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_test.sh ",
+                            env={
+                                "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
+                                "target": "{{ params.target }}",
+                                "model": f"{model_data['model_alias']}",
+                                "full_ref_str": full_ref_str,
+                                "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+                            },
+                            append_env=True,
                             cwd=PATH_TO_DBT_PROJECT,
                             dag=dag,
                         )
@@ -157,13 +166,17 @@ with TaskGroup(group_id="data_quality_testing", dag=dag) as data_quality:
                 dbt_test_tasks = [
                     BashOperator(
                         task_id=test["test_alias"],
-                        bash_command=f"""
-                    dbt {{ params.GLOBAL_CLI_FLAGS }} run --target {{ params.target }} --select {test['test_alias']} --no-compile{full_ref_str}
-                    """
+                        bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_run.sh "
                         if test["test_type"] == "generic"
-                        else f"""
-                    dbt {{ params.GLOBAL_CLI_FLAGS }} test --target {{ params.target }} --select {test['test_alias']} --no-compile{full_ref_str}
-                    """,
+                        else f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_test.sh ",
+                        env={
+                            "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
+                            "target": "{{ params.target }}",
+                            "model": f"{model_data['model_alias']}",
+                            "full_ref_str": full_ref_str,
+                            "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+                        },
+                        append_env=True,
                         cwd=PATH_TO_DBT_PROJECT,
                         dag=dag,
                     )

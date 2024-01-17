@@ -13,9 +13,10 @@ def clusterisation_from_prebuild_embedding(
     clustering, cluster_labels = mbkmeans_clusters(
         X=embedding,
         k=target_n_clusters,
-        mb=10000,
+        mb=10_240,
         print_silhouette_values=False,
     )
+    logger.info(f"mbkmeans_clusters: done...")
     items_with_clusters = pl.DataFrame({"cluster": cluster_labels})
     cluster_center_coordinates = pl.DataFrame(
         {
@@ -36,6 +37,7 @@ def clusterisation_from_prebuild_embedding(
         on="cluster",
         how="inner",
     )
+    logger.info(f"mbkmeans_clusters: exported clusters...")
 
     return items_with_cluster_and_coordinates
 
@@ -57,10 +59,10 @@ def mbkmeans_clusters(
     Returns:
         Trained clustering model and labels based on X.
     """
-    km = MiniBatchKMeans(n_clusters=k, batch_size=mb, verbose=0).fit(X)
-    print(f"For n_clusters = {k}")
-    print(f"Silhouette coefficient: {silhouette_score(X, km.labels_):0.2f}")
-    print(f"Inertia:{km.inertia_}")
+    km = MiniBatchKMeans(n_clusters=k, batch_size=mb, verbose=1).fit(X)
+    logger.info(f"For n_clusters = {k}")
+    # TODO: fix slow : logger.info(f"Silhouette coefficient: {silhouette_score(X, km.labels_):0.2f}")
+    logger.info(f"Inertia:{km.inertia_}")
 
     if print_silhouette_values:
         sample_silhouette_values = silhouette_samples(X, km.labels_)
@@ -80,7 +82,7 @@ def mbkmeans_clusters(
             silhouette_values, key=lambda tup: tup[2], reverse=True
         )
         for s in silhouette_values:
-            print(
+            logger.info(
                 f"    Cluster {s[0]}: Size:{s[1]} | Avg:{s[2]:.2f} | Min:{s[3]:.2f} | Max: {s[4]:.2f}"
             )
     return km, km.labels_

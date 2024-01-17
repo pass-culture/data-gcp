@@ -3,7 +3,7 @@ google-cloud-secret-manager==2.4.0
 google-cloud-bigquery==2.3.1
 requests==2.20.1
 gcsfs==2021.9.0
-numpy>=1.22.0
+numpy>=1.26.3
 pandas==1.5.3
 pandas-gbq>=0.17.1
 typer==0.7.0

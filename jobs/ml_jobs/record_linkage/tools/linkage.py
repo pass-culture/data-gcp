@@ -1,6 +1,6 @@
 import time
 import uuid
-
+import pandas as pd
 import networkx as nx
 import recordlinkage
 from tools.logging_tools import log_duration
@@ -42,6 +42,8 @@ def get_linked_offers(
         ]
         matches = matches.reset_index()
         matches = matches.rename(columns={"level_0": "index_1", "level_1": "index_2"})
+    else:
+        matches = pd.DataFrame({})
     log_duration(f"get_linked_offers: ", start)
     return matches
 

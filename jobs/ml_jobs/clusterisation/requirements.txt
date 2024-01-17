@@ -7,7 +7,6 @@ gcsfs==2023.5.0
 pandas-gbq>=0.17.1
 numpy>=1.23.3 
 hdbscan>=0.8.28
-umap>=0.1.1
 umap_learn>=0.5.3
 loguru==0.7.0
 typer==0.7.0
@@ -19,3 +18,6 @@ polyfuzz
 bertopic[spacy]
 flair
 openai
+umap-learn[parametric_umap]
+numba
+pynndescent

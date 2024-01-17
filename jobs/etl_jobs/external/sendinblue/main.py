@@ -33,7 +33,6 @@ def run(
     start_date: str = typer.Option(..., help="Date de début d'import"),
     end_date: str = typer.Option(..., help="Date de fin d'import"),
 ):
-
     if target == "newsletter":
         # Statistics for email campaigns Sendinblue
         sendinblue_newsletters = SendinblueNewsletters(

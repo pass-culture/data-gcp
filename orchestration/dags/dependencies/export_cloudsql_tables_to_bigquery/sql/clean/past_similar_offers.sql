@@ -11,6 +11,7 @@ WITH export_table AS (
         model_version,
         venue_iris_id,
         i.centroid as venue_iris_centroid,
+        import_date,
         ROW_NUMBER() OVER (
             PARTITION BY call_id,
             date(date),
@@ -21,7 +22,9 @@ WITH export_table AS (
         ) as item_rank
     FROM
         `{{ bigquery_raw_dataset }}.past_similar_offers` pso
-        LEFT JOIN `{{ bigquery_analytics_dataset }}.iris_france` i on i.id = pso.venue_iris_id QUALIFY ROW_NUMBER() OVER (
+    LEFT JOIN `{{ bigquery_analytics_dataset }}.iris_france` i on i.id = pso.venue_iris_id
+    WHERE import_date  >= DATE('{{ add_days(ds, -60) }}')
+    QUALIFY ROW_NUMBER() OVER (
             PARTITION BY origin_offer_id,
             user_id,
             call_id,

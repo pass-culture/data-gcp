@@ -39,7 +39,6 @@ with DAG(
         )
     },
 ) as dag:
-
     start = DummyOperator(task_id="start")
 
     gce_instance_start = StartGCEOperator(

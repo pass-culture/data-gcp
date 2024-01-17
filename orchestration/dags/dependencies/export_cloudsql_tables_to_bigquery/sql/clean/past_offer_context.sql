@@ -29,26 +29,34 @@ WITH export_table AS (
         offer_order,
         offer_venue_id,
         offer_extra_data,
-        ROW_NUMBER() OVER (
-            PARTITION BY call_id,
-            date(date),
-            user_id
-            ORDER BY
-                pso.id
-        ) as item_rank
+        import_date
     FROM
         `{{ bigquery_raw_dataset }}.past_offer_context` pso
-        LEFT JOIN `{{ bigquery_analytics_dataset }}.iris_france` ii on ii.id = pso.user_iris_id QUALIFY ROW_NUMBER() OVER (
-            PARTITION BY user_id,
+    LEFT JOIN `{{ bigquery_analytics_dataset }}.iris_france` ii
+        on ii.id = pso.user_iris_id 
+    WHERE 
+        import_date >= DATE('{{ add_days(ds, -60) }}')
+    
+    QUALIFY ROW_NUMBER() OVER (
+        PARTITION BY
+            user_id,
             call_id,
             offer_id
-            ORDER BY
-                date DESC
+        ORDER BY
+            date DESC
         ) = 1
 )
 SELECT
-    *
+    *,
+    ROW_NUMBER() OVER (
+            PARTITION BY 
+            reco_call_id,
+            event_date,
+            user_id
+            ORDER BY
+            id
+    ) as item_rank
 FROM
     export_table
 WHERE
-    DATE_DIFF(current_date, event_date, MONTH) <= 3
+    event_date >= DATE('{{ add_days(ds, -60) }}')

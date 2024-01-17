@@ -52,7 +52,6 @@ with DAG(
         ),
     },
 ) as dag:
-
     gce_instance_start = StartGCEOperator(
         instance_name=GCE_INSTANCE, task_id="gce_start_task"
     )

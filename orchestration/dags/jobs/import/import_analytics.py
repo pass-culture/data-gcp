@@ -41,7 +41,7 @@ raw_tables = get_tables_config_dict(
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 1),
-    "retries": 1,
+    "retries": 4,
     "on_failure_callback": analytics_fail_slack_alert,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT_ID,
@@ -95,7 +95,6 @@ end_raw = DummyOperator(task_id="end_raw", dag=dag)
 with TaskGroup(
     group_id="clean_transformations_group", dag=dag
 ) as clean_transformations:
-
     import_tables_to_clean_transformation_jobs = {}
     for table, params in clean_tables.items():
         task = bigquery_job_task(dag=dag, table=table, job_params=params)

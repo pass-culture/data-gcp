@@ -15,7 +15,6 @@ from utils import (
 
 
 def get_apple(execution_date):
-
     start = get_last_month(execution_date)
     date_generated = [
         start + timedelta(days=x) for x in range(0, (execution_date - start).days)
@@ -67,7 +66,6 @@ def get_google(execution_date):
 
 
 def run():
-
     execution_date = datetime.today()
 
     get_google(execution_date)

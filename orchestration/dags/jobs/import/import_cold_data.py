@@ -51,7 +51,6 @@ with DAG(
         )
     },
 ) as dag:
-
     start = DummyOperator(task_id="start", dag=dag)
 
     gce_instance_start = StartGCEOperator(
@@ -90,7 +89,6 @@ with DAG(
 
     analytics_table_jobs = {}
     for name, params in import_tables.items():
-
         task = bigquery_job_task(dag=dag, table=name, job_params=params)
 
         analytics_table_jobs[name] = {

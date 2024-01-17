@@ -26,6 +26,7 @@ numeric_features = [
 ]
 
 categorical_features = [
+    "context",
     "offer_subcategory_id",
 ]
 

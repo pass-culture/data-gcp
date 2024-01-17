@@ -3,29 +3,44 @@
         {
             "name": "name",
             "type": "text",
-            "model":["optim_text"]
+            "model": [
+                "optim_text"
+            ]
         },
         {
             "name": "description",
             "type": "text",
-            "model": ["optim_text"]
+            "model": [
+                "optim_text"
+            ]
         },
         {
             "name": "semantic_content",
-            "content":["name","description","type_label","sub_type_label","author","performer"],
+            "content": [
+                "name",
+                "description",
+                "type_label",
+                "sub_type_label",
+                "author",
+                "performer"
+            ],
             "type": "macro_text",
-            "model":["optim_text","hybrid"]
+            "model": [
+                "optim_text",
+                "hybrid"
+            ]
         },
         {
             "name": "image",
             "type": "image",
-            "model":["optim_image"]
+            "model": [
+                "optim_image"
+            ]
         }
     ],
-    "models":{
+    "models": {
         "optim_text": "sentence-transformers/all-MiniLM-L6-v2",
         "optim_image": "clip-ViT-B-32",
         "hybrid": "sentence-transformers/clip-ViT-B-32-multilingual-v1"
-    },
-    "reduction_dimensions":[5,16,32]
+    }
 }

@@ -1,13 +1,5 @@
 SELECT
-    id,
-    user_id,
-    origin_offer_id,
-    offer_id,
-    date,
-    group_id,
-    model_name,
-    model_version,
-    call_id,
-    reco_filters,
-    venue_iris_id
-FROM public.past_similar_offers
+    *,
+    DATE("{{ today() }}") as import_date
+FROM
+    `{{ bigquery_tmp_dataset }}.past_similar_offers_{{ yyyymmdd(today()) }}`

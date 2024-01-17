@@ -72,7 +72,6 @@ def main(
         help="GCS parquet path",
     ),
 ) -> None:
-
     yyyymmdd = datetime.now().strftime("%Y%m%d")
     if model_name is None:
         model_name = "default"

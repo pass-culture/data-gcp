@@ -19,6 +19,13 @@ SELECT
      CAST(jsonPayload.extra.product as INT64),
      CAST(jsonPayload.extra.product_id as INT64) 
    ) as product,
+   CAST(jsonPayload.extra.stock_id as INT64) as stock,
+   CAST(jsonPayload.extra.old_quantity as INT64) as stock_old_quantity,
+   CAST(jsonPayload.extra.stock_quantity as INT64) as stock_new_quantity,
+   jsonPayload.extra.old_price as stock_old_price,
+   jsonPayload.extra.stock_price as stock_new_price,
+   CAST(jsonPayload.extra.stock_dnbookedquantity as INT64) as stock_booking_quantity,
+   jsonPayload.extra.eans as list_of_eans_not_found,
    timestamp,
 FROM
  `{{ bigquery_raw_dataset }}.stdout`
@@ -27,3 +34,5 @@ OR jsonPayload.message="Offer has been created"
 OR jsonPayload.message="Offer has been updated"
 OR jsonPayload.message="Booking was marked as used"
 OR jsonPayload.message="Booking was marked as unused"
+OR jsonPayload.message="Successfully updated stock"
+OR jsonPayload.message="Some provided eans were not found"

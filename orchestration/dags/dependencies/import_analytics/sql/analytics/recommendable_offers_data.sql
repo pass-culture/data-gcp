@@ -72,7 +72,8 @@ get_recommendable_offers AS (
                 ELSE FALSE
             END
         ) AS is_underage_recommendable,
-        MIN(forbidden_offer.item_id is null) as is_recommendable,
+        MAX(COALESCE(forbidden_offer.restrained, False)) as is_restrained,
+        MAX(COALESCE(forbidden_offer.blocked, False)) as is_blocked,
         MAX(sensitive_offer.item_id is not null) as is_sensitive,
         ANY_VALUE(enriched_item_metadata.offer_type_labels) as offer_type_labels,
         ANY_VALUE(enriched_item_metadata.offer_type_domain) as offer_type_domain,
@@ -80,6 +81,8 @@ get_recommendable_offers AS (
         ANY_VALUE(enriched_item_metadata.offer_type_label) as offer_type_label,
         ANY_VALUE(enriched_item_metadata.offer_sub_type_id) as offer_sub_type_id,
         ANY_VALUE(enriched_item_metadata.offer_sub_type_label) as offer_sub_type_label,
+        ANY_VALUE(enriched_item_metadata.cluster_id) AS cluster_id,
+        ANY_VALUE(enriched_item_metadata.topic_id) AS topic_id,
 
     FROM
         `{{ bigquery_analytics_dataset }}`.enriched_offer_data offer
@@ -110,7 +113,7 @@ get_recommendable_offers AS (
         LEFT JOIN booking_numbers ON booking_numbers.item_id = offer.item_id
         JOIN `{{ bigquery_analytics_dataset }}`.offer_with_mediation om on offer.offer_id=om.offer_id
         LEFT JOIN  `{{ bigquery_analytics_dataset }}`.enriched_item_metadata enriched_item_metadata on offer.item_id = enriched_item_metadata.item_id
-        LEFT JOIN `{{ bigquery_raw_dataset }}`.forbidden_item_recommendation forbidden_offer on 
+        LEFT JOIN `{{ bigquery_analytics_dataset }}`.forbidden_item_recommendation forbidden_offer on 
             offer.item_id = forbidden_offer.item_id
         LEFT JOIN `{{ bigquery_raw_dataset }}`.sensitive_item_recommendation sensitive_offer on 
             offer.item_id = sensitive_offer.item_id
@@ -125,4 +128,4 @@ get_recommendable_offers AS (
 )
 SELECT  * 
 FROM get_recommendable_offers 
-where is_recommendable 
+where not is_blocked 

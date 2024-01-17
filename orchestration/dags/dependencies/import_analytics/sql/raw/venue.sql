@@ -1,10 +1,9 @@
 SELECT
     "thumbCount" AS venue_thumb_count
-    , "idAtProviders" AS venue_id_at_providers
-    , "dateModifiedAtLastProvider" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS venue_modified_at_last_provider
     , "address" as venue_address
     , "postalCode" as venue_postal_code
     , "city" as venue_city
+    , "banId" as ban_id
     , CAST("id" AS varchar(255)) AS venue_id
     , "name" AS venue_name
     , "siret" AS venue_siret
@@ -13,11 +12,9 @@ SELECT
     , "longitude" AS venue_longitude
     , CAST("managingOffererId" AS varchar(255)) AS venue_managing_offerer_id
     , "bookingEmail" AS venue_booking_email
-    , CAST("lastProviderId" AS varchar(255)) AS venue_last_provider_id
     , "isVirtual" AS venue_is_virtual
     , "comment" AS venue_comment
     , "publicName" AS venue_public_name
-    , "fieldsUpdated" AS venue_fields_updated
     , CASE
         WHEN "venueTypeCode" = \'ADMINISTRATIVE\' THEN \'Lieu administratif\'
         WHEN "venueTypeCode" = \'DIGITAL\' THEN \'Offre numérique\'

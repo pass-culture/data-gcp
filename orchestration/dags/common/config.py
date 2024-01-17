@@ -49,7 +49,7 @@ BIGQUERY_BACKEND_DATASET = os.environ.get(
 BIGQUERY_TMP_DATASET = os.environ.get("BIGQUERY_TMP_DATASET", f"tmp_{ENV_SHORT_NAME}")
 
 APPLICATIVE_PREFIX = "applicative_database_"
-QPI_TABLE = "qpi_answers"
+
 RECOMMENDATION_SQL_INSTANCE = os.environ.get(
     "RECOMMENDATION_SQL_INSTANCE", f"cloudsql-recommendation-{ENV_SHORT_NAME}-ew1"
 )
@@ -70,4 +70,4 @@ else:
     MEDIATION_URL = "passculture-metier-ehp-testing"
 
 PATH_TO_DBT_PROJECT = f"{DAG_FOLDER}/data_gcp_dbt".replace("//", "/")
-PATH_TO_DBT_TARGET = "/home/airflow/gcs/data/target"
+PATH_TO_DBT_TARGET = os.environ.get("DBT_TARGET_PATH", "./target")

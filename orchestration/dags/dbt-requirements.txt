@@ -1,2 +1,2 @@
-dbt-bigquery
-dbt
+dbt-bigquery==1.7.2
+dbt-core==1.7.2

@@ -71,7 +71,7 @@ dbt_test = BashOperator(
 
 compute_metrics_re_data = BashOperator(
     task_id="compute_metrics_re_data",
-    bash_command="dbt run --target {{ params.target }} --select package:re_data --profile re_data "
+    bash_command="dbt run --target {{ params.target }} --select package:re_data --profile data_gcp_dbt "
     + f"--target-path {PATH_TO_DBT_TARGET}",
     cwd=PATH_TO_DBT_PROJECT,
     dag=dag,
@@ -131,12 +131,6 @@ re_data_notify = BashOperator(
     dag=dag,
 )
 
-(
-    start
-    >> wait_dbt_run
-    >> dbt_test
-    >> compute_metrics_re_data
-    >> re_data_overview
-    >> re_data_notify
-)
-dbt_test >> compute_metrics_elementary
+(start >> wait_dbt_run >> compute_metrics_re_data >> re_data_overview >> re_data_notify)
+wait_dbt_run >> dbt_test
+wait_dbt_run >> compute_metrics_elementary

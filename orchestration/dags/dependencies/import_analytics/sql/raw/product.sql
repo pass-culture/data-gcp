@@ -11,5 +11,5 @@ SELECT
     ,"lastProviderId" as lastProviderId
     ,"dateModifiedAtLastProvider" as dateModifiedAtLastProvider
     ,"idAtProviders" as idAtProviders
-    ,"JsonData" ->> \'ean\' AS ean
+    ,"jsonData" ->> \'ean\' AS ean
 FROM public.product

@@ -5,5 +5,11 @@ SELECT
     venue_is_permanent,
     venue_type_code,
     venue_label_id,
-    banner_url
+    banner_url,
+    venue_description,
+    venue_audioDisabilityCompliant,
+    venue_mentalDisabilityCompliant,
+    venue_motorDisabilityCompliant,
+    venue_visualDisabilityCompliant,
+    venue_withdrawal_details
 FROM `{{ bigquery_clean_dataset }}`.applicative_database_venue

@@ -12,8 +12,6 @@ SELECT
     , "beginningDatetime" AS stock_beginning_date
     , "dateCreated" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS stock_creation_date
     , "fieldsUpdated" AS stock_fields_updated
-    , "numberOfTickets" AS number_of_tickets
-    , "educationalPriceDetail" AS educational_price_detail
     , CAST("priceCategoryId" AS varchar(255)) AS price_category_id
     , BTRIM(array_to_string("features", \',\'), \'{\') AS stock_features
 FROM public.stock

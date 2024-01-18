@@ -34,7 +34,7 @@ dag = DAG(
     default_args=default_args,
     catchup=False,
     description="A dbt wrapper for airflow",
-    schedule_interval=None,  # get_airflow_schedule("0 3 * * *"),
+    schedule_interval=get_airflow_schedule("0 3 * * *"),
     params={
         "target": Param(
             default=ENV_SHORT_NAME,
@@ -70,7 +70,6 @@ manifest = BashOperator(
     task_id="dbt_manifest",
     bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_manifest.sh ",
     env={
-        "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
         "target": "{{ params.target }}",
         "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
     },

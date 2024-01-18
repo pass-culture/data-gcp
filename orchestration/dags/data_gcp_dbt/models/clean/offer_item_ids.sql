@@ -22,7 +22,7 @@ with item_group_by_extra_data as(
             ELSE CONCAT('product-', offer.offer_product_id)
         END AS item_id,
     FROM
-        {{ ref('applicative_database_offer') }} AS offer
+        {{ source('raw','applicative_database_offer') }} AS offer
     LEFT JOIN {{ ref('offer_extracted_data') }} offer_extracted_data ON offer_extracted_data.offer_id = offer.offer_id
 )
 
@@ -34,4 +34,4 @@ SELECT
     END as item_id
 FROM
     item_group_by_extra_data offer
-LEFT JOIN {{ ref('linked_offers') }} linked_offers ON linked_offers.offer_id = offer.offer_id
+LEFT JOIN {{ source('analytics','linked_offers') }} linked_offers ON linked_offers.offer_id = offer.offer_id

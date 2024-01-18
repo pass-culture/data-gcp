@@ -164,6 +164,7 @@ WHERE rang = 1
 AND reimbursement_point_link_ending_date IS NULL
 GROUP BY 1,2,3)
 
+
 ,reimbursment_point AS (SELECT
     CASE WHEN venue_is_permanent THEN CONCAT("venue-",venue_id)
          ELSE CONCAT("offerer-", offerer_id) END AS partner_id

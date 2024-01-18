@@ -9,6 +9,5 @@ SELECT
     stock_is_soft_deleted,
     stock_beginning_date,
     stock_creation_date,
-    number_of_tickets,
     DATE_ADD(CURRENT_DATE(), INTERVAL -1 DAY) as partition_date
 FROM `{{ bigquery_clean_dataset }}`.`applicative_database_stock`

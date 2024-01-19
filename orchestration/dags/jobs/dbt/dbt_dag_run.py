@@ -31,6 +31,7 @@ default_args = {
 dag = DAG(
     "dbt_run_dag",
     default_args=default_args,
+    dagrun_timeout=timedelta(minutes=60),
     catchup=False,
     description="A dbt wrapper for airflow",
     schedule_interval=get_airflow_schedule("0 3 * * *"),
@@ -80,7 +81,8 @@ end = DummyOperator(task_id="end", dag=dag, trigger_rule="all_success")
 model_op_dict = {}
 test_op_dict = {}
 
-simplified_manifest = rebuild_manifest(PATH_TO_DBT_TARGET)
+simplified_manifest = rebuild_manifest(f"/{PATH_TO_DBT_TARGET}")
+
 
 with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
     full_ref_str = " --full-refresh" if not "{{ params.full_refresh }}" else ""

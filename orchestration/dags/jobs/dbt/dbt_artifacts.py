@@ -93,7 +93,8 @@ with TaskGroup(group_id="re_data", dag=dag) as re_data_overview:
         + "/re_data/monitored.json"
         + ", overview_path: "
         + f"{PATH_TO_DBT_TARGET}"
-        + "/re_data/overview.json}'",
+        + "/re_data/overview.json}' "
+        + f"--target {ENV_SHORT_NAME}",
         cwd=PATH_TO_DBT_PROJECT,
         dag=dag,
     )
@@ -102,7 +103,8 @@ with TaskGroup(group_id="re_data", dag=dag) as re_data_overview:
         task_id="export_tests_history",
         bash_command="dbt run-operation export_tests_history --args '{end_date: '{{ today() }}', start_date: '{{ last_week() }}', tests_history_path: "
         + f"{PATH_TO_DBT_TARGET}"
-        + "/re_data/tests_history.json }'",
+        + "/re_data/tests_history.json }' "
+        + f"--target {ENV_SHORT_NAME}",
         cwd=PATH_TO_DBT_PROJECT,
         dag=dag,
     )
@@ -111,7 +113,8 @@ with TaskGroup(group_id="re_data", dag=dag) as re_data_overview:
         task_id="export_table_samples",
         bash_command="dbt run-operation export_table_samples --args '{end_date: '{{ today() }}', start_date: '{{ last_week() }}', table_samples_path: "
         + f"""{PATH_TO_DBT_TARGET}"""
-        + "/re_data/table_samples_path.json }'",
+        + "/re_data/table_samples_path.json}' "
+        + f"--target {ENV_SHORT_NAME}",
         cwd=PATH_TO_DBT_PROJECT,
         dag=dag,
     )
@@ -121,6 +124,7 @@ re_data_notify = BashOperator(
     task_id="re_data_notify",
     bash_command=f""" 
     re_data notify slack \
+    --target {ENV_SHORT_NAME} \
     --webhook-url  {SLACK_WEBHOOK_URL} \
     --subtitle="More details here : link to <re_data>" \
     --select anomaly \

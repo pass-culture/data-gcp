@@ -20,5 +20,5 @@ SELECT
     , coalesce(booking_amount, 0) * coalesce(booking_quantity, 0) AS booking_intermediary_amount
     , rank() OVER (PARTITION BY user_id ORDER BY booking_creation_date) AS booking_rank
     , reimbursed
-FROM {{ ref('applicative_database_booking') }} booking
-JOIN {{ ref('applicative_database_stock') }} stock USING(stock_id)
+FROM {{ source('raw','applicative_database_booking') }} booking
+JOIN {{ source('raw','applicative_database_stock') }} stock USING(stock_id)

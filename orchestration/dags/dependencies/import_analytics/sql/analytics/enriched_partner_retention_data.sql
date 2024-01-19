@@ -11,10 +11,10 @@ AND action_history_json_data LIKE '%fraud%')
     ,enriched_cultural_partner_data.partner_type
     ,enriched_cultural_partner_data.cultural_sector
     ,COUNT(offer_id) AS individual_offers_created_cnt
-    ,COUNT(CASE WHEN DATE_DIFF(CURRENT_DATE,offer_creation_date,MONTH) <= 2 THEN offer_id END) AS individual_offers_created_last_2_month 
+    ,COUNT(CASE WHEN DATE_DIFF(CURRENT_DATE,offer_creation_date,MONTH) <= 2 THEN offer_id END) AS individual_offers_created_last_2_month
     ,COUNT(CASE WHEN DATE_DIFF(CURRENT_DATE,offer_creation_date,MONTH) <= 6 THEN offer_id END) AS individual_offers_created_last_6_month
-    ,COUNT(CASE WHEN DATE_DIFF(last_bookable_offer_date,offer_creation_date,MONTH) <= 2 THEN offer_id END) AS individual_offers_created_2_month_before_last_bookable     
-    ,COUNT(CASE WHEN DATE_DIFF(last_bookable_offer_date,offer_creation_date,MONTH) <= 6 THEN offer_id END) AS individual_offers_created_6_month_before_last_bookable  
+    ,COUNT(CASE WHEN DATE_DIFF(last_bookable_offer_date,offer_creation_date,MONTH) <= 2 THEN offer_id END) AS individual_offers_created_2_month_before_last_bookable
+    ,COUNT(CASE WHEN DATE_DIFF(last_bookable_offer_date,offer_creation_date,MONTH) <= 6 THEN offer_id END) AS individual_offers_created_6_month_before_last_bookable
 FROM `{{ bigquery_analytics_dataset }}`.enriched_cultural_partner_data
 JOIN `{{ bigquery_analytics_dataset }}`.partner_type_bookability_frequency USING(partner_type)
 LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_offer_data ON enriched_cultural_partner_data.partner_id = enriched_offer_data.partner_id
@@ -71,7 +71,7 @@ SELECT
     ,COALESCE(COUNT(CASE WHEN DATE_DIFF(CURRENT_DATE,collective_booking_creation_date,MONTH) <= 2 THEN collective_booking_id END),0) AS collective_bookings_last_2_month
     ,COALESCE(COUNT(CASE WHEN DATE_DIFF(CURRENT_DATE,collective_booking_creation_date,MONTH) <= 6 THEN collective_booking_id END),0) AS collective_bookings_last_6_month
     ,COALESCE(COUNT(CASE WHEN DATE_DIFF(last_bookable_offer_date,collective_booking_creation_date,MONTH) <= 2 THEN collective_booking_id END),0) AS collective_bookings_2_month_before_last_bookable
-    ,COALESCE(COUNT(CASE WHEN DATE_DIFF(CURRENT_DATE,collective_booking_creation_date,MONTH) <= 6 THEN collective_booking_id END),0) AS collective_bookings_6_month_before_last_bookable        
+    ,COALESCE(COUNT(CASE WHEN DATE_DIFF(CURRENT_DATE,collective_booking_creation_date,MONTH) <= 6 THEN collective_booking_id END),0) AS collective_bookings_6_month_before_last_bookable
     ,COALESCE(SUM(CASE WHEN collective_booking_status IN ('USED','REIMBURSED') THEN booking_amount ELSE NULL END),0) AS real_collective_revenue
 FROM `{{ bigquery_analytics_dataset }}`.enriched_cultural_partner_data
 JOIN `{{ bigquery_analytics_dataset }}`.partner_type_bookability_frequency USING(partner_type)
@@ -97,27 +97,27 @@ JOIN `{{ bigquery_analytics_dataset }}`.partner_type_bookability_frequency ON en
 GROUP BY 1,2,3)
 
 ,consultations AS (
-SELECT 
+SELECT
     CASE WHEN venue.venue_is_permanent THEN CONCAT("venue-",venue.venue_id)
          ELSE CONCAT("offerer-", venue_managing_offerer_id) END AS partner_id
     , sum(cnt_events) as total_consultation
     , COALESCE(SUM(CASE WHEN DATE_DIFF(CURRENT_DATE,event_date,MONTH) <= 2 THEN cnt_events END)) as consult_last_2_month
-    , COALESCE(SUM(CASE WHEN DATE_DIFF(CURRENT_DATE,event_date,MONTH) <= 6 THEN cnt_events END)) as consult_last_6_month 
+    , COALESCE(SUM(CASE WHEN DATE_DIFF(CURRENT_DATE,event_date,MONTH) <= 6 THEN cnt_events END)) as consult_last_6_month
     , COALESCE(SUM(CASE WHEN DATE_DIFF(last_bookable_offer_date,event_date,MONTH) <= 2 THEN cnt_events END)) as consult_2_month_before_last_bookable
     , COALESCE(SUM(CASE WHEN DATE_DIFF(last_bookable_offer_date,event_date,MONTH) <= 6 THEN cnt_events END)) as consult_6_month_before_last_bookable
 FROM `{{ bigquery_analytics_dataset }}`.aggregated_daily_offer_consultation_data consult
-LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_venue_data venue on consult.venue_id = venue.venue_id 
+LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_venue_data venue on consult.venue_id = venue.venue_id
 LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_cultural_partner_data on (CASE WHEN venue.venue_is_permanent THEN CONCAT("venue-",venue.venue_id) ELSE CONCAT("offerer-", venue_managing_offerer_id) END) = enriched_cultural_partner_data.partner_id
 GROUP BY 1
 )
 
 ,adage_status AS (
-SELECT 
+SELECT
     DISTINCT CASE WHEN enriched_venue_data.venue_is_permanent THEN CONCAT("venue-",enriched_venue_data.venue_id)
      ELSE CONCAT("offerer-", venue_managing_offerer_id) END AS partner_id
     ,first_dms_adage_status
-FROM `{{ bigquery_analytics_dataset }}`.enriched_venue_data 
-LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_offerer_data on enriched_venue_data.venue_managing_offerer_id = enriched_offerer_data.offerer_id 
+FROM `{{ bigquery_analytics_dataset }}`.enriched_venue_data
+LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_offerer_data on enriched_venue_data.venue_managing_offerer_id = enriched_offerer_data.offerer_id
 )
 
 ,siren_status AS (SELECT DISTINCT
@@ -152,8 +152,7 @@ LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_venue_provider_data ON enr
     ,reimbursement_point_link_ending_date
     ,RANK() OVER(PARTITION BY venue_managing_offerer_id,enriched_venue_data.venue_id ORDER BY reimbursement_point_link_beginning_date DESC) AS rang
 FROM `{{ bigquery_analytics_dataset }}`.enriched_venue_data
-LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_venue_reimbursement_point_link ON enriched_venue_data.venue_id = applicative_database_venue_reimbursement_point_link.venue_id
-ORDER BY 1,2,3)
+LEFT JOIN `{{ bigquery_analytics_dataset }}`.applicative_database_venue_reimbursement_point_link ON enriched_venue_data.venue_id = applicative_database_venue_reimbursement_point_link.venue_id)
 
 ,reimbursment_point2 AS (SELECT
     offerer_id
@@ -162,7 +161,9 @@ ORDER BY 1,2,3)
     ,COALESCE(COUNT(CASE WHEN reimbursement_point_link_beginning_date IS NOT NULL THEN 1 ELSE 0 END)) AS nb_reimbursment_point
 FROM reimbursment_point1
 WHERE rang = 1
-AND reimbursement_point_link_ending_date IS NULL)
+AND reimbursement_point_link_ending_date IS NULL
+GROUP BY 1,2,3)
+
 
 ,reimbursment_point AS (SELECT
     CASE WHEN venue_is_permanent THEN CONCAT("venue-",venue_id)
@@ -172,49 +173,49 @@ FROM reimbursment_point2
 GROUP BY 1)
 
 , bookable as (
-SELECT 
+SELECT
     CASE WHEN enriched_venue_data.venue_is_permanent THEN CONCAT("venue-",bookable_venue_history.venue_id)
          ELSE CONCAT("offerer-", bookable_venue_history.offerer_id) END AS partner_id,
     max(partition_date) last_bookable_date,
 FROM `{{ bigquery_analytics_dataset }}`.bookable_venue_history
-LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_venue_data on bookable_venue_history.venue_id = enriched_venue_data.venue_id 
+LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_venue_data on bookable_venue_history.venue_id = enriched_venue_data.venue_id
 WHERE total_bookable_offers <> 0
-GROUP BY 1 
+GROUP BY 1
 )
 
 , churned as (
-SELECT 
+SELECT
     bookable.partner_id,
     last_bookable_date,
     enriched_cultural_partner_data.cultural_sector,
     median_bookability_frequency,
     DATE_DIFF(current_date(), last_bookable_date, DAY) days_since_last_bookable_offer
-FROM bookable 
-JOIN `{{ bigquery_analytics_dataset }}`.enriched_cultural_partner_data on bookable.partner_id = enriched_cultural_partner_data.partner_id 
-JOIN `{{ bigquery_analytics_dataset }}`.cultural_sector_bookability_frequency on enriched_cultural_partner_data.cultural_sector = cultural_sector_bookability_frequency.cultural_sector 
+FROM bookable
+JOIN `{{ bigquery_analytics_dataset }}`.enriched_cultural_partner_data on bookable.partner_id = enriched_cultural_partner_data.partner_id
+JOIN `{{ bigquery_analytics_dataset }}`.cultural_sector_bookability_frequency on enriched_cultural_partner_data.cultural_sector = cultural_sector_bookability_frequency.cultural_sector
 )
 
 , churn_segmentation as (
-SELECT 
+SELECT
     partner_id,
     last_bookable_date,
     cultural_sector,
     days_since_last_bookable_offer,
-    CASE WHEN median_bookability_frequency = 13 
-        THEN 
+    CASE WHEN median_bookability_frequency = 13
+        THEN
         CASE WHEN days_since_last_bookable_offer < 30 THEN "active"
             WHEN days_since_last_bookable_offer < 60 THEN "at_risk"
-            ELSE "churned" END 
-        WHEN median_bookability_frequency > 6 
+            ELSE "churned" END
+        WHEN median_bookability_frequency > 6
         THEN
         CASE WHEN days_since_last_bookable_offer < 60 THEN "active"
             WHEN days_since_last_bookable_offer < 120 THEN "at_risk"
             ELSE "churned" END
-        WHEN median_bookability_frequency <= 6 
-        THEN 
+        WHEN median_bookability_frequency <= 6
+        THEN
         CASE WHEN days_since_last_bookable_offer < 90 THEN "active"
             WHEN days_since_last_bookable_offer < 180 THEN "at_risk"
-            ELSE "churned" END 
+            ELSE "churned" END
         ELSE "not-activated"
         END AS partner_segmentation
 FROM churned)
@@ -252,9 +253,9 @@ SELECT DISTINCT
     ,COALESCE(favorites.favorites_cnt,0) AS favorites_cnt
     ,COALESCE(consultations.total_consultation,0) AS total_consultation
     ,COALESCE(consultations.consult_last_2_month,0) AS consultation_last_2_month
-    ,COALESCE(consultations.consult_last_6_month,0) AS consultation_last_6_month 
+    ,COALESCE(consultations.consult_last_6_month,0) AS consultation_last_6_month
     ,COALESCE(consultations.consult_2_month_before_last_bookable,0) AS consultation_2_month_before_last_bookable
-    ,COALESCE(consultations.consult_6_month_before_last_bookable,0) AS consultation_6_month_before_last_bookable     
+    ,COALESCE(consultations.consult_6_month_before_last_bookable,0) AS consultation_6_month_before_last_bookable
     ,has_active_siren
     ,COALESCE(first_dms_adage_status, "dms_adage_non_depose") AS first_dms_adage_status
     ,COALESCE(rejected_offers.offers_cnt,0) AS rejected_offers_cnt

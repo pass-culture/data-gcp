@@ -7,6 +7,7 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.utils.task_group import TaskGroup
 from airflow.utils.dates import datetime, timedelta
 from airflow.models import Param
+from common.operators.sensor import TimeSleepSensor
 from common.alerts import task_fail_slack_alert
 from common.utils import (
     get_airflow_schedule,
@@ -78,6 +79,14 @@ manifest = BashOperator(
     dag=dag,
 )
 
+sleep_op = TimeSleepSensor(
+    dag=dag,
+    task_id="sleep_task",
+    execution_delay=datetime.timedelta(days=1),  # Execution Date = day minus 1
+    sleep_duration=datetime.timedelta(minutes=2),  # 2min
+    mode="reschedule",
+)
+
 run_elementary = BashOperator(
     task_id="dbt_elementary",
     bash_command=f"bash ./scripts/dbt_run_package.sh ",
@@ -92,20 +101,6 @@ run_elementary = BashOperator(
     dag=dag,
 )
 
-run_re_data = BashOperator(
-    task_id="dbt_re_data",
-    bash_command=f"bash ./scripts/dbt_run_package.sh ",
-    env={
-        "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
-        "target": "{{ params.target }}",
-        "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
-        "package_name": "re_data",
-    },
-    append_env=True,
-    cwd=PATH_TO_DBT_PROJECT,
-    dag=dag,
-)
-
 end = DummyOperator(task_id="end", dag=dag)
 
-start >> deps >> manifest >> (run_re_data, run_elementary) >> end
+start >> deps >> manifest >> sleep_op >> run_elementary >> end

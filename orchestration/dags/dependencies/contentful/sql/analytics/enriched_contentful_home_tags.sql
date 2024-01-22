@@ -1,6 +1,6 @@
 WITH
   TEMP AS (
-  SELECT
+  SELECT DISTINCT
     entry_id,
     title AS home_name,
     tag_key,

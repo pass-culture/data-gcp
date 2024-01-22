@@ -156,24 +156,6 @@ def save_model_type(model_type):
         json.dump(model_type, file)
 
 
-def calculate_trend(
-    nb_booking_last_7_days,
-    nb_booking_last_14_days,
-    nb_booking_last_30_days,
-    stability_factor=0.5,
-):
-    try:
-        return nb_booking_last_7_days * (
-            (
-                (nb_booking_last_7_days + nb_booking_last_14_days)
-                / nb_booking_last_30_days
-            )
-            * stability_factor
-        )
-    except ZeroDivisionError:
-        return 0
-
-
 def get_table_batches(item_embedding_dict: dict, items_df, emb_size):
     for row in items_df.itertuples():
         embedding_id = item_embedding_dict.get(row.item_id, None)

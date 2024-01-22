@@ -1,36 +1,42 @@
+
 WITH all_ips AS (
   SELECT 
-    distinct jsonPayload.extra.sourceip as ip, 
-    jsonPayLoad.user_id,
+    distinct 
+    DATE_TRUNC(DATE(timestamp), MONTH) as month_log,
+    jsonPayload.extra.sourceip as ip, 
+    jsonPayLoad.user_id as user_id,
   FROM `{{ bigquery_raw_dataset }}.stdout` 
-  WHERE DATE_TRUNC(DATE(timestamp), MONTH) = DATE_TRUNC(DATE('{{ ds }}'), month)
-  and jsonPayload.extra.route in ('/native/v1/me', '/native/v1/signin')
+  WHERE DATE_TRUNC(DATE(timestamp), MONTH) = DATE_TRUNC(DATE('{{ ds }}'), month) AND
+  jsonPayload.extra.route in ('/native/v1/me', '/native/v1/signin') AND
+  jsonPayLoad.user_id is not null
 ), 
 ipv4 AS (
-    SELECT DISTINCT ip, NET.SAFE_IP_FROM_STRING(ip) AS ip_bytes, user_id
+    SELECT DISTINCT ip, NET.SAFE_IP_FROM_STRING(ip) AS ip_bytes
     FROM all_ips 
     WHERE BYTE_LENGTH(NET.SAFE_IP_FROM_STRING(ip)) = 4
 ), ipv4d AS (
-    SELECT ip, user_id, city_name, country_name, latitude, longitude
+    SELECT ip, city_name, country_name, latitude, longitude
     FROM (
-        SELECT ip, user_id, ip_bytes & NET.IP_NET_MASK(4, mask) network_bin, mask
+        SELECT ip,  ip_bytes & NET.IP_NET_MASK(4, mask) network_bin, mask
         FROM ipv4, UNNEST(GENERATE_ARRAY(8,32)) mask
     )
     JOIN `{{ bigquery_raw_dataset }}.geoip_city_v4`
     USING (network_bin, mask)
     WHERE country_name = "France"
-    AND user_id is not null
+    
 )
 
 , ip_aggreg as (
 SELECT 
-  DATE_TRUNC(DATE('{{ ds }}'), month) AS month_log,
+ month_log,
   cast(user_id as string) AS user_id,
   longitude,
   latitude,
   count(*) nb_log_ip
-FROM ipv4d
-GROUP BY 1, 2, 3, 4)
+FROM  all_ips ai 
+LEFT JOIN ipv4d pv on pv.ip = ai.ip
+GROUP BY 1, 2, 3, 4
+)
 
 , ip_ranking as (
 SELECT 

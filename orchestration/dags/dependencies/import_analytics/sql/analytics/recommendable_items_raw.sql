@@ -73,7 +73,7 @@ trends AS (
         od.venue_latitude as example_venue_latitude
     FROM recommendable_items_raw ro
     LEFT JOIN offer_details od on od.item_id = ro.item_id
-),
+)
 
 SELECT
     *,

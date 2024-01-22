@@ -85,10 +85,11 @@ class DefaultClient:
         n=50,
         details: bool = False,
         prefilter: bool = True,
+        vector_column_name: str = "booking_number_desc",
     ) -> t.List[t.Dict]:
         results = (
             self.table.search(
-                [0], vector_column_name="booking_number_desc", query_type="vector"
+                [0], vector_column_name=vector_column_name, query_type="vector"
             )
             .where(self.build_query(query_filter), prefilter=prefilter)
             .select(columns=self.columns(details))

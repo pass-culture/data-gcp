@@ -1,18 +1,16 @@
 import datetime
-import json
+import time
 
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.utils.task_group import TaskGroup
+from airflow.operators.python import PythonOperator
 from airflow.utils.dates import datetime, timedelta
 from airflow.models import Param
-from common.operators.sensor import TimeSleepSensor
 from common.alerts import task_fail_slack_alert
 from common.utils import (
     get_airflow_schedule,
 )
-from common.dbt.utils import rebuild_manifest
 
 from common import macros
 from common.config import (
@@ -79,12 +77,10 @@ manifest = BashOperator(
     dag=dag,
 )
 
-sleep_op = TimeSleepSensor(
+sleep_op = PythonOperator(
     dag=dag,
     task_id="sleep_task",
-    execution_delay=datetime.timedelta(days=1),  # Execution Date = day minus 1
-    sleep_duration=datetime.timedelta(minutes=2),  # 2min
-    mode="reschedule",
+    python_callable=lambda: time.sleep(120),  # wait 2 minutes
 )
 
 run_elementary = BashOperator(

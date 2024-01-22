@@ -57,15 +57,26 @@ recommendable_items_raw AS (
     FROM
     `{{ bigquery_analytics_dataset }}`.recommendable_offers_raw ro
     GROUP BY 1
-)
+),
 
 
-SELECT 
-    ro.*, 
-    od.offer_name as example_offer_name, 
-    od.offer_id as example_offer_id,
-    od.venue_id as example_venue_id,
-    od.venue_longitude as example_venue_longitude,
-    od.venue_latitude as example_venue_latitude
-FROM recommendable_items_raw ro
-LEFT JOIN offer_details od on od.item_id = ro.item_id
+trends AS (
+    SELECT 
+        ro.*, 
+        COALESCE(booking_number_last_7_days * SAFE_DIVIDE((booking_number_last_7_days + booking_number_last_14_days), booking_number_last_28_days) * 0.5, 0) as booking_trend,
+        LEAST(1, GREATEST(date_diff(CURRENT_DATE, coalesce(stock_beginning_date, offer_creation_date), DAY), 1) / 60) as stock_date_penalty_factor,
+        LEAST(1, GREATEST(date_diff(CURRENT_DATE, offer_creation_date, DAY), 1) / 60) as creation_date_penalty_factor,
+        od.offer_name as example_offer_name, 
+        od.offer_id as example_offer_id,
+        od.venue_id as example_venue_id,
+        od.venue_longitude as example_venue_longitude,
+        od.venue_latitude as example_venue_latitude
+    FROM recommendable_items_raw ro
+    LEFT JOIN offer_details od on od.item_id = ro.item_id
+),
+
+SELECT
+    *,
+    SAFE_DIVIDE(booking_trend, stock_date_penalty_factor) as booking_release_trend,
+    SAFE_DIVIDE(booking_trend, creation_date_penalty_factor) as booking_creation_trend
+FROM trends

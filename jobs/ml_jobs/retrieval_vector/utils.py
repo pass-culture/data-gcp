@@ -22,6 +22,9 @@ item_columns = [
     "vector",
     "item_id",
     "booking_number_desc",
+    "booking_trend_desc",
+    "booking_creation_trend_desc",
+    "booking_release_trend_desc",
     "raw_embeddings",
     "topic_id",
     "cluster_id",
@@ -112,6 +115,9 @@ def get_items_metadata():
         SELECT 
         *, 
         ROW_NUMBER() OVER (ORDER BY booking_number DESC) as booking_number_desc,
+        ROW_NUMBER() OVER (ORDER BY booking_trend DESC) as booking_trend_desc,
+        ROW_NUMBER() OVER (ORDER BY booking_creation_trend DESC) as booking_creation_trend_desc,
+        ROW_NUMBER() OVER (ORDER BY booking_release_trend DESC) as booking_release_trend_desc
         FROM `{GCP_PROJECT_ID}.{BIGQUERY_ANALYTICS_DATASET}.recommendable_items_raw`
     """
     return client.query(sql).to_dataframe()
@@ -150,6 +156,24 @@ def save_model_type(model_type):
         json.dump(model_type, file)
 
 
+def calculate_trend(
+    nb_booking_last_7_days,
+    nb_booking_last_14_days,
+    nb_booking_last_30_days,
+    stability_factor=0.5,
+):
+    try:
+        return nb_booking_last_7_days * (
+            (
+                (nb_booking_last_7_days + nb_booking_last_14_days)
+                / nb_booking_last_30_days
+            )
+            * stability_factor
+        )
+    except ZeroDivisionError:
+        return 0
+
+
 def get_table_batches(item_embedding_dict: dict, items_df, emb_size):
     for row in items_df.itertuples():
         embedding_id = item_embedding_dict.get(row.item_id, None)
@@ -161,6 +185,18 @@ def get_table_batches(item_embedding_dict: dict, items_df, emb_size):
                     pa.array([_item_id], pa.utf8()),
                     pa.array(
                         [[float(row.booking_number_desc)]], pa.list_(pa.float32(), 1)
+                    ),
+                    pa.array(
+                        [[float(row.booking_trend_desc)]],
+                        pa.list_(pa.float32(), 1),
+                    ),
+                    pa.array(
+                        [[float(row.booking_creation_trend_desc)]],
+                        pa.list_(pa.float32(), 1),
+                    ),
+                    pa.array(
+                        [[float(row.booking_release_trend_desc)]],
+                        pa.list_(pa.float32(), 1),
                     ),
                     pa.array([embedding_id], pa.list_(pa.float32(), emb_size)),
                     pa.array([str(row.topic_id or "")], pa.utf8()),

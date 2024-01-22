@@ -1,6 +1,6 @@
 WITH
   TEMP AS (
-  SELECT
+  SELECT DISTINCT
     entry_id,
     COALESCE(title, offer_title) AS bloc_name,
     content_type,

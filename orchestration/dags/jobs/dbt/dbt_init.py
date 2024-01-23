@@ -1,17 +1,16 @@
 import datetime
-import json
+import time
 
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.utils.task_group import TaskGroup
+from airflow.operators.python import PythonOperator
 from airflow.utils.dates import datetime, timedelta
 from airflow.models import Param
 from common.alerts import task_fail_slack_alert
 from common.utils import (
     get_airflow_schedule,
 )
-from common.dbt.utils import rebuild_manifest
 
 from common import macros
 from common.config import (
@@ -78,6 +77,12 @@ manifest = BashOperator(
     dag=dag,
 )
 
+sleep_op = PythonOperator(
+    dag=dag,
+    task_id="sleep_task",
+    python_callable=lambda: time.sleep(120),  # wait 2 minutes
+)
+
 run_elementary = BashOperator(
     task_id="dbt_elementary",
     bash_command=f"bash ./scripts/dbt_run_package.sh ",
@@ -92,20 +97,6 @@ run_elementary = BashOperator(
     dag=dag,
 )
 
-run_re_data = BashOperator(
-    task_id="dbt_re_data",
-    bash_command=f"bash ./scripts/dbt_run_package.sh ",
-    env={
-        "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
-        "target": "{{ params.target }}",
-        "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
-        "package_name": "re_data",
-    },
-    append_env=True,
-    cwd=PATH_TO_DBT_PROJECT,
-    dag=dag,
-)
-
 end = DummyOperator(task_id="end", dag=dag)
 
-start >> deps >> manifest >> (run_re_data, run_elementary) >> end
+start >> deps >> manifest >> sleep_op >> run_elementary >> end

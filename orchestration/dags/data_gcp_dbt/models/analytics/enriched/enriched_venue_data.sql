@@ -34,7 +34,7 @@ individual_bookings_per_venue AS (
         ,MIN(booking.booking_creation_date) AS first_individual_booking_date
         ,MAX(booking.booking_creation_date) AS last_individual_booking_date
     FROM
-       {{ spurce('raw', 'applicative_database_venue') }} AS venue
+       {{ source('raw', 'applicative_database_venue') }} AS venue
         LEFT JOIN{{ source('raw', 'applicative_database_offer') }} AS offer ON venue.venue_id = offer.venue_id
         LEFT JOIN{{ source('raw', 'applicative_database_stock') }} AS stock ON stock.offer_id = offer.offer_id
         LEFT JOIN{{ ref('booking') }} AS booking ON stock.stock_id = booking.stock_id

@@ -119,7 +119,7 @@ FROM
     JOIN {{ source('raw', 'applicative_database_venue') }} AS venue ON venue.venue_id = collective_offer.venue_id
     LEFT JOIN {{ source('raw', 'applicative_database_collective_stock') }} AS collective_stock ON collective_stock.collective_offer_id = collective_offer.collective_offer_id
     JOIN {{ source('raw', 'applicative_database_offerer') }} AS offerer ON offerer.offerer_id = venue.venue_managing_offerer_id
-    LEFT JOIN {{ ref('subcategories') }} ON subcategories.id = collective_offer.collective_offer_subcategory_id
+    LEFT JOIN {{ source('clean', 'subcategories') }} ON subcategories.id = collective_offer.collective_offer_subcategory_id
     LEFT JOIN {{ source('analytics', 'region_department') }} venue_region ON venue_region.num_dep = venue.venue_department_code
     LEFT JOIN bookings_per_offer ON bookings_per_offer.collective_offer_id = collective_offer.collective_offer_id
     LEFT JOIN {{ source('raw', 'applicative_database_national_program') }} national_program USING(national_program_id)
@@ -171,7 +171,7 @@ FROM
     {{ source('raw', 'applicative_database_collective_offer_template') }} AS template
     JOIN {{ source('raw', 'applicative_database_venue') }} AS venue ON venue.venue_id = template.venue_id
     JOIN {{ source('raw', 'applicative_database_offerer') }} AS offerer ON offerer.offerer_id = venue.venue_managing_offerer_id
-    LEFT JOIN {{ ref('subcategories') }} ON subcategories.id = template.collective_offer_subcategory_id
+    LEFT JOIN {{ source('clean', 'subcategories') }} ON subcategories.id = template.collective_offer_subcategory_id
     LEFT JOIN {{ source('raw', 'applicative_database_collective_stock') }} AS collective_stock ON collective_stock.collective_offer_id = template.collective_offer_id
     LEFT JOIN {{ source('analytics', 'region_department') }} venue_region ON venue_region.num_dep = venue.venue_department_code
     LEFT JOIN bookings_per_offer ON bookings_per_offer.collective_offer_id = template.collective_offer_id

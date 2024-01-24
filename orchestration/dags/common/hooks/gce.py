@@ -68,6 +68,7 @@ class GCEHook(GoogleBaseHook):
         instance_type,
         preemptible,
         labels={},
+        gpu_count=0,
         accelerator_types=[],
     ):
         instances = self.list_instances()
@@ -86,6 +87,7 @@ class GCEHook(GoogleBaseHook):
             wait=True,
             preemptible=preemptible,
             accelerator_types=accelerator_types,
+            gpu_count=gpu_count,
         )
 
     def delete_vm(self, instance_name):
@@ -120,21 +122,25 @@ class GCEHook(GoogleBaseHook):
         instance_type,
         name,
         labels,
+        gpu_count=0,
         metadata=None,
         wait=False,
         accelerator_types=[],
         preemptible=False,
     ):
         instance_type = "zones/%s/machineTypes/%s" % (self.gcp_zone, instance_type)
-        accelerator_type = [
-            {
-                "acceleratorCount": [int(a_t["count"])],
-                "acceleratorType": "zones/%s/acceleratorTypes/%s"
-                % (self.gcp_zone, a_t["name"]),
-            }
-            for a_t in accelerator_types
-            if int(a_t["count"]) in [1, 2, 4]
-        ]
+        with max(
+            [gpu_count] + [a_t["count"] for a_t in accelerator_types]
+        ) as gpu_counter:
+            accelerator_type = [
+                {
+                    "acceleratorCount": [gpu_counter],
+                    "acceleratorType": "zones/%s/acceleratorTypes/%s"
+                    % (self.gcp_zone, a_t["name"]),
+                }
+                for a_t in accelerator_types
+                if gpu_counter in [1, 2, 4]
+            ]
         metadata = (
             [{"key": key, "value": value} for key, value in metadata.items()]
             if metadata

@@ -24,6 +24,7 @@ class StartGCEOperator(BaseOperator):
         "instance_type",
         "preemptible",
         "accelerator_types",
+        "gpu_count",
         "source_image_type",
         "labels",
     ]
@@ -35,6 +36,7 @@ class StartGCEOperator(BaseOperator):
         instance_type: str = "n1-standard-1",
         preemptible: bool = True,
         accelerator_types=[],
+        gpu_count: int = 0,
         source_image_type: str = None,
         labels={},
         *args,
@@ -45,12 +47,13 @@ class StartGCEOperator(BaseOperator):
         self.instance_type = instance_type
         self.preemptible = preemptible
         self.accelerator_types = accelerator_types
+        self.gpu_count = gpu_count
         self.source_image_type = source_image_type
         self.labels = labels
 
     def execute(self, context) -> None:
         if self.source_image_type is None:
-            if len(self.accelerator_types) > 0:
+            if len(self.accelerator_types) > 0 or self.gpu_count > 0:
                 image_type = MACHINE_TYPE["gpu"]
             else:
                 image_type = MACHINE_TYPE["cpu"]
@@ -63,6 +66,7 @@ class StartGCEOperator(BaseOperator):
             preemptible=self.preemptible,
             accelerator_types=self.accelerator_types,
             labels=self.labels,
+            gpu_count=self.gpu_count,
         )
 
 

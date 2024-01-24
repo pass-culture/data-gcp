@@ -63,6 +63,7 @@ dbt_test = BashOperator(
         "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
         "target": "{{ params.target }}",
         "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+        "ENV_SHORT_NAME": ENV_SHORT_NAME,
     },
     append_env=True,
     cwd=PATH_TO_DBT_PROJECT,

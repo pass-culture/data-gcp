@@ -98,6 +98,7 @@ with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
                 bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_run.sh ",
                 env={
                     "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
+                    "ENV_SHORT_NAME": ENV_SHORT_NAME,
                     "target": "{{ params.target }}",
                     "model": f"{model_data['model_alias']}",
                     "full_ref_str": full_ref_str,
@@ -121,6 +122,7 @@ with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
                             else f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_test_model.sh ",
                             env={
                                 "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
+                                "ENV_SHORT_NAME": ENV_SHORT_NAME,
                                 "target": "{{ params.target }}",
                                 "model": f"{model_data['model_alias']}",
                                 "full_ref_str": full_ref_str,

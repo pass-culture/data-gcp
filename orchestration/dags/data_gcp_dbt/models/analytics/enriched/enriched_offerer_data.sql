@@ -260,7 +260,7 @@ FROM
     LEFT JOIN bookable_individual_offer_cnt ON bookable_individual_offer_cnt.offerer_id = offerer.offerer_id
     LEFT JOIN bookable_collective_offer_cnt ON bookable_collective_offer_cnt.offerer_id = offerer.offerer_id
     LEFT JOIN bookable_offer_history ON bookable_offer_history.offerer_id = offerer.offerer_id
-LEFT JOIN {{ ref('siren_data') }} AS siren_data ON siren_data.siren = offerer.offerer_siren
+LEFT JOIN {{ source('clean', 'siren_data') }} AS siren_data ON siren_data.siren = offerer.offerer_siren
 LEFT JOIN {{ source('analytics', 'siren_data_labels') }} AS siren_data_labels ON siren_data_labels.activitePrincipaleUniteLegale = siren_data.activitePrincipaleUniteLegale
                                             AND CAST(siren_data_labels.categorieJuridiqueUniteLegale AS STRING) = CAST(siren_data.categorieJuridiqueUniteLegale AS STRING)
 WHERE

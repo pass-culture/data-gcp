@@ -8,10 +8,10 @@ SELECT
     , offerer_tag_category_mapping.offerer_tag_category_id AS tag_category_id
     , offerer_tag_category.offerer_tag_category_name AS tag_category_name
     , offerer_tag_category.offerer_tag_category_label AS tag_category_label
-FROM  {{ ref('applicative_database_offerer_tag_mapping') }} AS offerer_tag_mapping
-JOIN {{ ref('applicative_database_offerer_tag') }} AS offerer_tag
+FROM  {{ source('raw', 'applicative_database_offerer_tag_mapping') }} AS offerer_tag_mapping
+JOIN {{ source('raw', 'applicative_database_offerer_tag') }} AS offerer_tag
     ON offerer_tag.offerer_tag_id = offerer_tag_mapping.tag_id
-JOIN {{ ref('applicative_database_offerer_tag_category_mapping') }} AS offerer_tag_category_mapping
+JOIN {{ source('raw', 'applicative_database_offerer_tag_category_mapping') }} AS offerer_tag_category_mapping
     ON offerer_tag.offerer_tag_id = offerer_tag_category_mapping.offerer_tag_id
-JOIN {{ ref('applicative_database_offerer_tag_category') }} AS offerer_tag_category
+JOIN {{ source('raw', 'applicative_database_offerer_tag_category') }} AS offerer_tag_category
     ON offerer_tag_category_mapping.offerer_tag_category_id = offerer_tag_category.offerer_tag_category_id

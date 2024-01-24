@@ -10,7 +10,7 @@ WITH offer_humanized_id AS (
         offer_id,
         {{target_schema}}.humanize_id(offer_id) AS humanized_id,
     FROM
-        {{ ref('applicative_database_offer') }}
+        {{ source('raw', 'applicative_database_offer') }}
     WHERE
         offer_id is not NULL
 ),
@@ -31,8 +31,8 @@ offer_booking_information_view AS (
             END
         ) AS count_booking_confirm
     FROM
-        {{ ref('applicative_database_offer') }} AS offer
-        LEFT JOIN {{ ref('applicative_database_stock') }} AS stock ON stock.offer_id = offer.offer_id
+        {{ source('raw', 'applicative_database_offer') }} AS offer
+        LEFT JOIN {{ source('raw', 'applicative_database_stock') }} AS stock ON stock.offer_id = offer.offer_id
         LEFT JOIN {{ ref('booking') }} AS booking ON stock.stock_id = booking.stock_id
     GROUP BY
         offer_id
@@ -42,7 +42,7 @@ count_favorites_view AS (
         offerId,
         COUNT(*) AS count_favorite
     FROM
-        {{ ref('applicative_database_favorite') }} AS favorite
+        {{ source('raw', 'applicative_database_favorite') }} AS favorite
     GROUP BY
         offerId
 ),
@@ -51,7 +51,7 @@ sum_stock_view AS (
         offer_id,
         SUM(stock_quantity) AS stock
     FROM
-        {{ ref('applicative_database_stock') }} AS stock
+        {{ source('raw', 'applicative_database_stock') }} AS stock
     GROUP BY
         offer_id
 ),
@@ -71,7 +71,7 @@ count_first_booking_view AS (
                 ) AS booking_rank
             FROM
                 {{ ref('booking') }} AS booking
-                LEFT JOIN {{ ref('applicative_database_stock') }} AS stock on stock.stock_id = booking.stock_id
+                LEFT JOIN {{ source('raw', 'applicative_database_stock') }} AS stock on stock.stock_id = booking.stock_id
         ) c
     WHERE
         c.booking_rank = 1
@@ -96,7 +96,7 @@ last_stock AS (
                         stock.stock_id DESC
                 ) AS rang_stock
             FROM
-                {{ ref('applicative_database_offer') }} AS offer
+                {{ source('raw', 'applicative_database_offer') }} AS offer
                 JOIN {{ ref('cleaned_stock') }} AS stock on stock.offer_id = offer.offer_id
         ) c
     WHERE
@@ -111,7 +111,7 @@ mediation AS (
             id,
             offerId as offer_id,
             ROW_NUMBER() OVER (PARTITION BY offerId ORDER BY dateModifiedAtLastProvider DESC) as rnk
-        FROM {{ ref('applicative_database_mediation') }}
+        FROM {{ source('raw', 'applicative_database_mediation') }}
         WHERE isActive
         ) inn
     WHERE rnk = 1
@@ -224,10 +224,10 @@ SELECT
         AND offer_extracted_data.musicsubType IS NOT NULL THEN offer_extracted_data.musicSubtype
     END AS subType
 FROM
-    {{ ref('applicative_database_offer') }} AS offer
+    {{ source('raw', 'applicative_database_offer') }} AS offer
     LEFT JOIN {{ ref('subcategories') }} subcategories ON offer.offer_subcategoryId = subcategories.id
-    LEFT JOIN {{ ref('applicative_database_venue') }} AS venue ON offer.venue_id = venue.venue_id
-    LEFT JOIN {{ ref('applicative_database_offerer') }} AS offerer ON venue.venue_managing_offerer_id = offerer.offerer_id
+    LEFT JOIN {{ source('raw', 'applicative_database_venue') }} AS venue ON offer.venue_id = venue.venue_id
+    LEFT JOIN {{ source('raw', 'applicative_database_offerer') }} AS offerer ON venue.venue_managing_offerer_id = offerer.offerer_id
     LEFT JOIN {{ ref('offer_item_ids') }} AS offer_ids on offer.offer_id=offer_ids.offer_id
     LEFT JOIN offer_booking_information_view ON offer_booking_information_view.offer_id = offer.offer_id
     LEFT JOIN count_favorites_view ON count_favorites_view.offerId = offer.offer_id

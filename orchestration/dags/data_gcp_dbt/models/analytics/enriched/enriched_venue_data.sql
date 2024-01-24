@@ -10,7 +10,7 @@ WITH venue_humanized_id AS (
         venue_id,
         {{target_schema}}.humanize_id(venue_id) AS humanized_id
     FROM
-       {{ ref('applicative_database_venue') }}
+       {{ source('raw', 'applicative_database_venue') }}
     WHERE
         venue_id is not NULL
 ),
@@ -19,7 +19,7 @@ offerer_humanized_id AS (
         offerer_id,
         {{target_schema}}.humanize_id(offerer_id) AS humanized_id
     FROM
-       {{ ref('applicative_database_offerer') }}
+       {{ source('raw', 'applicative_database_offerer') }}
     WHERE
         offerer_id is not NULL
 ),
@@ -34,9 +34,9 @@ individual_bookings_per_venue AS (
         ,MIN(booking.booking_creation_date) AS first_individual_booking_date
         ,MAX(booking.booking_creation_date) AS last_individual_booking_date
     FROM
-       {{ ref('applicative_database_venue') }} AS venue
-        LEFT JOIN{{ ref('applicative_database_offer') }} AS offer ON venue.venue_id = offer.venue_id
-        LEFT JOIN{{ ref('applicative_database_stock') }} AS stock ON stock.offer_id = offer.offer_id
+       {{ spurce('raw', 'applicative_database_venue') }} AS venue
+        LEFT JOIN{{ source('raw', 'applicative_database_offer') }} AS offer ON venue.venue_id = offer.venue_id
+        LEFT JOIN{{ source('raw', 'applicative_database_stock') }} AS stock ON stock.offer_id = offer.offer_id
         LEFT JOIN{{ ref('booking') }} AS booking ON stock.stock_id = booking.stock_id
     GROUP BY
         venue.venue_id
@@ -53,8 +53,8 @@ collective_bookings_per_venue AS (
         ,MIN(collective_booking.collective_booking_creation_date) AS first_collective_booking_date
         ,MAX(collective_booking.collective_booking_creation_date) AS last_collective_booking_date
     FROM
-       {{ ref('applicative_database_collective_booking') }} AS collective_booking
-    INNER JOIN{{ ref('applicative_database_collective_stock') }} AS collective_stock ON collective_stock.collective_stock_id = collective_booking.collective_stock_id
+       {{ source('raw', 'applicative_database_collective_booking') }} AS collective_booking
+    INNER JOIN{{ source('raw', 'applicative_database_collective_stock') }} AS collective_stock ON collective_stock.collective_stock_id = collective_booking.collective_stock_id
     GROUP BY
         collective_booking.venue_id
 ),
@@ -66,8 +66,8 @@ individual_offers_per_venue AS (
         MAX(offer.offer_creation_date) AS last_individual_offer_creation_date,
         COUNT(offer.offer_id) AS individual_offers_created
     FROM
-       {{ ref('applicative_database_venue') }} AS venue
-        LEFT JOIN{{ ref('applicative_database_offer') }} AS offer ON venue.venue_id = offer.venue_id
+       {{ source('raw', 'applicative_database_venue') }} AS venue
+        LEFT JOIN{{ source('raw', 'applicative_database_offer') }} AS offer ON venue.venue_id = offer.venue_id
                                                                                     AND offer.offer_validation = 'APPROVED'
     GROUP BY
         venue.venue_id
@@ -79,7 +79,7 @@ all_collective_offers AS (
         venue_id,
         collective_offer_creation_date
     FROM
-       {{ ref('applicative_database_collective_offer') }} AS collective_offer
+       {{ source('raw', 'applicative_database_collective_offer') }} AS collective_offer
    WHERE collective_offer.collective_offer_validation = 'APPROVED'
     UNION
     ALL
@@ -88,7 +88,7 @@ all_collective_offers AS (
         venue_id,
         collective_offer_creation_date
     FROM
-       {{ ref('applicative_database_collective_offer_template') }} AS collective_offer_template
+       {{ source('raw', 'applicative_database_collective_offer_template') }} AS collective_offer_template
    WHERE collective_offer_template.collective_offer_validation = 'APPROVED'
 ),
 
@@ -128,7 +128,7 @@ bookable_individual_offer_cnt AS (
     venue_id
     , MIN(partition_date) AS venue_first_bookable_offer_date
     , MAX(partition_date) AS venue_last_bookable_offer_date
-FROM {{ ref('bookable_venue_history')}}
+FROM {{ source('analytics', 'bookable_venue_history')}}
 GROUP BY 1
 )
 
@@ -216,21 +216,21 @@ SELECT
     venue_contact.venue_contact_website
 
 FROM
-   {{ ref('applicative_database_venue') }} AS venue
-    LEFT JOIN{{ ref('applicative_database_offerer') }} AS offerer ON venue.venue_managing_offerer_id = offerer.offerer_id
-    LEFT JOIN{{ ref('applicative_database_venue_label') }} AS venue_label ON venue_label.venue_label_id = venue.venue_label_id
+   {{ source('raw', 'applicative_database_venue') }} AS venue
+    LEFT JOIN{{ source('raw', 'applicative_database_offerer') }} AS offerer ON venue.venue_managing_offerer_id = offerer.offerer_id
+    LEFT JOIN{{ source('raw', 'applicative_database_venue_label') }} AS venue_label ON venue_label.venue_label_id = venue.venue_label_id
     LEFT JOIN individual_bookings_per_venue ON individual_bookings_per_venue.venue_id = venue.venue_id
     LEFT JOIN collective_bookings_per_venue ON collective_bookings_per_venue.venue_id = venue.venue_id
     LEFT JOIN individual_offers_per_venue ON individual_offers_per_venue.venue_id = venue.venue_id
     LEFT JOIN collective_offers_per_venue ON collective_offers_per_venue.venue_id = venue.venue_id
     LEFT JOIN venue_humanized_id AS venue_humanized_id ON venue_humanized_id.venue_id = venue.venue_id
-    LEFT JOIN {{ ref('region_department') }} AS venue_region_departement ON venue.venue_department_code = venue_region_departement.num_dep
+    LEFT JOIN {{ source('analytics', 'region_department') }} AS venue_region_departement ON venue.venue_department_code = venue_region_departement.num_dep
     LEFT JOIN offerer_humanized_id AS offerer_humanized_id ON offerer_humanized_id.offerer_id = venue.venue_managing_offerer_id
     LEFT JOIN bookable_individual_offer_cnt ON bookable_individual_offer_cnt.venue_id = venue.venue_id
     LEFT JOIN bookable_collective_offer_cnt ON bookable_collective_offer_cnt.venue_id = venue.venue_id
     LEFT JOIN bookable_offer_history ON bookable_offer_history.venue_id = venue.venue_id
-    LEFT JOIN{{ ref('applicative_database_venue_registration') }} AS venue_registration ON venue.venue_id = venue_registration.venue_id
-    LEFT JOIN{{ ref('applicative_database_venue_contact') }} AS venue_contact ON venue.venue_id = venue_contact.venue_id
+    LEFT JOIN{{ source('raw', 'applicative_database_venue_registration') }} AS venue_registration ON venue.venue_id = venue_registration.venue_id
+    LEFT JOIN{{ source('raw', 'applicative_database_venue_contact') }} AS venue_contact ON venue.venue_id = venue_contact.venue_id
 WHERE
     offerer.offerer_validation_status='VALIDATED'
     AND offerer.offerer_is_active

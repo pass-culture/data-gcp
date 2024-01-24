@@ -7,7 +7,7 @@ WITH offerer_humanized_id AS (
         offerer_id,
          {{target_schema}}.humanize_id(offerer_id) AS humanized_id
     FROM
-        {{ ref('applicative_database_offerer') }}
+        {{ source('raw', 'applicative_database_offerer') }}
     WHERE
         offerer_id is not NULL
 ),
@@ -24,9 +24,9 @@ individual_bookings_per_offerer AS (
         ,MIN(booking.booking_creation_date) AS first_individual_booking_date
         ,MAX(booking.booking_creation_date) AS last_individual_booking_date
     FROM
-        {{ ref('applicative_database_venue') }} AS venue
-        LEFT JOIN {{ ref('applicative_database_offer') }} AS offer ON venue.venue_id = offer.venue_id
-        LEFT JOIN {{ ref('applicative_database_stock') }} AS stock ON stock.offer_id = offer.offer_id
+        {{ source('raw', 'applicative_database_venue') }} AS venue
+        LEFT JOIN {{ source('raw', 'applicative_database_offer') }} AS offer ON venue.venue_id = offer.venue_id
+        LEFT JOIN {{ source('raw', 'applicative_database_stock') }} AS stock ON stock.offer_id = offer.offer_id
         LEFT JOIN {{ ref('booking') }} AS booking ON stock.stock_id = booking.stock_id
     GROUP BY
         venue.venue_managing_offerer_id
@@ -44,8 +44,8 @@ collective_bookings_per_offerer AS (
         ,MIN(collective_booking.collective_booking_creation_date) AS first_collective_booking_date
         ,MAX(collective_booking.collective_booking_creation_date) AS last_collective_booking_date
     FROM
-        {{ ref('applicative_database_collective_booking') }} AS collective_booking
-    INNER JOIN {{ ref('applicative_database_collective_stock') }} AS collective_stock ON collective_stock.collective_stock_id = collective_booking.collective_stock_id
+        {{ source('raw', 'applicative_database_collective_booking') }} AS collective_booking
+    INNER JOIN {{ source('raw', 'applicative_database_collective_stock') }} AS collective_stock ON collective_stock.collective_stock_id = collective_booking.collective_stock_id
     GROUP BY
         collective_booking.offerer_id
 ),
@@ -57,8 +57,8 @@ individual_offers_per_offerer AS (
         MAX(offer.offer_creation_date) AS last_individual_offer_creation_date,
         COUNT(offer.offer_id) AS individual_offers_created
     FROM
-        {{ ref('applicative_database_venue') }} AS venue
-        LEFT JOIN {{ ref('applicative_database_offer') }} AS offer ON venue.venue_id = offer.venue_id
+        {{ source('raw', 'applicative_database_venue') }} AS venue
+        LEFT JOIN {{ source('raw', 'applicative_database_offer') }} AS offer ON venue.venue_id = offer.venue_id
                                                                                     AND offer.offer_validation = 'APPROVED'
     GROUP BY
         venue.venue_managing_offerer_id
@@ -71,8 +71,8 @@ all_collective_offers AS (
         venue.venue_managing_offerer_id AS offerer_id,
         collective_offer_creation_date
     FROM
-        {{ ref('applicative_database_collective_offer') }} AS collective_offer
-     JOIN {{ ref('applicative_database_venue') }} AS venue ON venue.venue_id = collective_offer.venue_id
+        {{ source('raw', 'applicative_database_collective_offer') }} AS collective_offer
+     JOIN {{ source('raw', 'applicative_database_venue') }} AS venue ON venue.venue_id = collective_offer.venue_id
                                                                              AND collective_offer.collective_offer_validation = 'APPROVED'
     UNION
     ALL
@@ -82,8 +82,8 @@ all_collective_offers AS (
         venue.venue_managing_offerer_id AS offerer_id,
         collective_offer_creation_date
     FROM
-        {{ ref('applicative_database_collective_offer_template') }} AS collective_offer_template
-     JOIN {{ ref('applicative_database_venue') }} AS venue ON venue.venue_id = collective_offer_template.venue_id
+        {{ source('raw', 'applicative_database_collective_offer_template') }} AS collective_offer_template
+     JOIN {{ source('raw', 'applicative_database_venue') }} AS venue ON venue.venue_id = collective_offer_template.venue_id
                                                                             AND collective_offer_template.collective_offer_validation = 'APPROVED'
 
 ),
@@ -134,10 +134,10 @@ related_stocks AS (
         offerer.offerer_id,
         MIN(stock.stock_creation_date) AS first_stock_creation_date
     FROM
-        {{ ref('applicative_database_offerer') }} AS offerer
-        LEFT JOIN {{ ref('applicative_database_venue') }} AS venue ON venue.venue_managing_offerer_id = offerer.offerer_id
-        LEFT JOIN {{ ref('applicative_database_offer') }} AS offer ON offer.venue_id = venue.venue_id
-        LEFT JOIN {{ ref('applicative_database_stock') }} AS stock ON stock.offer_id = offer.offer_id
+        {{ source('raw', 'applicative_database_offerer') }} AS offerer
+        LEFT JOIN {{ source('raw', 'applicative_database_venue') }} AS venue ON venue.venue_managing_offerer_id = offerer.offerer_id
+        LEFT JOIN {{ source('raw', 'applicative_database_offer') }} AS offer ON offer.venue_id = venue.venue_id
+        LEFT JOIN {{ source('raw', 'applicative_database_stock') }} AS stock ON stock.offer_id = offer.offer_id
     GROUP BY
         offerer_id
 ),
@@ -154,7 +154,7 @@ offerer_department_code AS (
         ELSE SUBSTRING(offerer_postal_code, 0, 2)
         END AS offerer_department_code
     FROM
-        {{ ref('applicative_database_offerer') }} AS offerer
+        {{ source('raw', 'applicative_database_offerer') }} AS offerer
     WHERE
         "offerer_postal_code" is not NULL
 ),
@@ -166,8 +166,8 @@ related_venues AS (
         ,COALESCE(COUNT(DISTINCT CASE WHEN NOT venue_is_virtual THEN venue_id ELSE NULL END),0) AS physical_venues_managed
         ,COALESCE(COUNT(DISTINCT CASE WHEN venue_is_permanent THEN venue_id ELSE NULL END),0) AS permanent_venues_managed
     FROM
-        {{ ref('applicative_database_offerer') }} AS offerer
-        LEFT JOIN {{ ref('applicative_database_venue') }} AS venue ON offerer.offerer_id = venue.venue_managing_offerer_id
+        {{ source('raw', 'applicative_database_offerer') }} AS offerer
+        LEFT JOIN {{ source('raw', 'applicative_database_venue') }} AS venue ON offerer.offerer_id = venue.venue_managing_offerer_id
     GROUP BY
         1
 ),
@@ -177,9 +177,9 @@ venues_with_offers AS (
         offerer.offerer_id,
         count(DISTINCT offer.venue_id) AS nb_venue_with_offers
     FROM
-        {{ ref('applicative_database_offerer') }} AS offerer
-        LEFT JOIN {{ ref('applicative_database_venue') }} AS venue ON offerer.offerer_id = venue.venue_managing_offerer_id
-        LEFT JOIN {{ ref('applicative_database_offer') }} AS offer ON venue.venue_id = offer.venue_id
+        {{ source('raw', 'applicative_database_offerer') }} AS offerer
+        LEFT JOIN {{ source('raw', 'applicative_database_venue') }} AS venue ON offerer.offerer_id = venue.venue_managing_offerer_id
+        LEFT JOIN {{ source('raw', 'applicative_database_offer') }} AS offer ON venue.venue_id = offer.venue_id
     GROUP BY
         offerer_id
         )
@@ -246,14 +246,14 @@ SELECT
     COALESCE(venues_with_offers.nb_venue_with_offers,0) AS venue_with_offer,
     offerer_humanized_id.humanized_id AS offerer_humanized_id,
 FROM
-    {{ ref('applicative_database_offerer') }} AS offerer
+    {{ source('raw', 'applicative_database_offerer') }} AS offerer
     LEFT JOIN individual_bookings_per_offerer ON individual_bookings_per_offerer.offerer_id = offerer.offerer_id
     LEFT JOIN collective_bookings_per_offerer ON collective_bookings_per_offerer.offerer_id = offerer.offerer_id
     LEFT JOIN individual_offers_per_offerer ON individual_offers_per_offerer.offerer_id = offerer.offerer_id
     LEFT JOIN collective_offers_per_offerer ON collective_offers_per_offerer.offerer_id = offerer.offerer_id
     LEFT JOIN related_stocks ON related_stocks.offerer_id = offerer.offerer_id
     LEFT JOIN offerer_department_code ON offerer_department_code.offerer_id = offerer.offerer_id
-    LEFT JOIN {{ ref('region_department') }} AS region_department ON offerer_department_code.offerer_department_code = region_department.num_dep
+    LEFT JOIN {{ source('analytics', 'region_department') }} AS region_department ON offerer_department_code.offerer_department_code = region_department.num_dep
     LEFT JOIN related_venues ON related_venues.offerer_id = offerer.offerer_id
     LEFT JOIN venues_with_offers ON venues_with_offers.offerer_id = offerer.offerer_id
     LEFT JOIN offerer_humanized_id ON offerer_humanized_id.offerer_id = offerer.offerer_id
@@ -261,7 +261,7 @@ FROM
     LEFT JOIN bookable_collective_offer_cnt ON bookable_collective_offer_cnt.offerer_id = offerer.offerer_id
     LEFT JOIN bookable_offer_history ON bookable_offer_history.offerer_id = offerer.offerer_id
 LEFT JOIN {{ ref('siren_data') }} AS siren_data ON siren_data.siren = offerer.offerer_siren
-LEFT JOIN {{ ref('siren_data_labels') }} AS siren_data_labels ON siren_data_labels.activitePrincipaleUniteLegale = siren_data.activitePrincipaleUniteLegale
+LEFT JOIN {{ source('analytics', 'siren_data_labels') }} AS siren_data_labels ON siren_data_labels.activitePrincipaleUniteLegale = siren_data.activitePrincipaleUniteLegale
                                             AND CAST(siren_data_labels.categorieJuridiqueUniteLegale AS STRING) = CAST(siren_data.categorieJuridiqueUniteLegale AS STRING)
 WHERE
     offerer.offerer_validation_status='VALIDATED'

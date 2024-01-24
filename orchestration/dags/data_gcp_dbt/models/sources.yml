@@ -108,6 +108,7 @@ sources:
       - name: dms_pro_cleaned
       - name: firebase_app_experiments
       - name: siren_data
+      - name: subcategories
   - name: analytics # this is the source_name
     schema: analytics_{{ var('ENV_SHORT_NAME') }} # this is the schema_name
     tables:

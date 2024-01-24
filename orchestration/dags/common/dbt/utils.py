@@ -13,7 +13,7 @@ def load_manifest(_PATH_TO_DBT_TARGET):
 
 
 def build_simplified_manifest(json_dict_data):
-    simplified_manifest = {
+    simplified_manifest_models = {
         node: {
             "redirect_dep": None,
             "model_node": node,
@@ -28,6 +28,25 @@ def build_simplified_manifest(json_dict_data):
             and "data_gcp_dbt" in node
         )
     }
+
+    simplified_manifest_sources = {
+        node: {
+            "redirect_dep": None,
+            "model_node": node,
+            "model_alias": json_dict_data["sources"][node]["name"],
+            "depends_on_node": None,
+            "model_tests": {},
+            "resource_type": json_dict_data["sources"][node]["resource_type"],
+        }
+        for node in json_dict_data["sources"].keys()
+        if (
+            json_dict_data["sources"][node]["resource_type"] == "source"
+            and "data_gcp_dbt" in node
+        )
+    }
+
+    simplified_manifest = simplified_manifest_models | simplified_manifest_sources
+
     for node in json_dict_data["nodes"].keys():
         if json_dict_data["nodes"][node]["resource_type"] == "test":
             generic_test = True in [

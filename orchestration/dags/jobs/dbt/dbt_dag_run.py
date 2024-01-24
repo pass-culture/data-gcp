@@ -10,7 +10,7 @@ from airflow.models import Param
 from airflow.operators.python import BranchPythonOperator
 from common.alerts import task_fail_slack_alert
 from common.utils import get_airflow_schedule, waiting_operator
-from common.dbt.utils import rebuild_manifest
+from common.dbt.utils import rebuild_manifest, load_manifest
 
 from common import macros
 from common.config import (
@@ -81,66 +81,68 @@ end = DummyOperator(task_id="end", dag=dag, trigger_rule="all_success")
 model_op_dict = {}
 test_op_dict = {}
 
-simplified_manifest = rebuild_manifest(f"/{PATH_TO_DBT_TARGET}")
-
+simplified_manifest = rebuild_manifest(f"/{PATH_TO_DBT_TARGET}")#.replace('//','/'))
+full_manifest = load_manifest(f"/{PATH_TO_DBT_TARGET}")#.replace('//','/'))
 
 with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
     full_ref_str = " --full-refresh" if not "{{ params.full_refresh }}" else ""
     # models task group
     for model_node, model_data in simplified_manifest.items():
-        crit_tests_list = model_data["model_tests"].get("error", [])
-        with TaskGroup(
-            group_id=f'{model_data["model_alias"]}_tasks', dag=dag
-        ) as model_tasks:
-            # models
-            model_op = BashOperator(
-                task_id=model_data["model_alias"],
-                bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_run.sh ",
-                env={
-                    "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
-                    "target": "{{ params.target }}",
-                    "model": f"{model_data['model_alias']}",
-                    "full_ref_str": full_ref_str,
-                    "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
-                },
-                append_env=True,
-                cwd=PATH_TO_DBT_PROJECT,
-                dag=dag,
-            )
-            model_op_dict[model_data["model_alias"]] = model_op
-            # critical tests task subgroup
-            if len(crit_tests_list) > 0:
-                with TaskGroup(
-                    group_id=f'{model_data["model_alias"]}_critical_tests', dag=dag
-                ) as crit_tests_task:
-                    dbt_test_tasks = [
-                        BashOperator(
-                            task_id=test["test_alias"],
-                            bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_run.sh "
-                            if test["test_type"] == "generic"
-                            else f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_test_model.sh ",
-                            env={
-                                "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
-                                "target": "{{ params.target }}",
-                                "model": f"{model_data['model_alias']}",
-                                "full_ref_str": full_ref_str,
-                                "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
-                            },
-                            append_env=True,
-                            cwd=PATH_TO_DBT_PROJECT,
-                            dag=dag,
-                        )
-                        for test in crit_tests_list
-                        if not test["test_alias"].endswith(
-                            f'ref_{model_data["model_alias"]}_'
-                        )
-                    ]
-                    if len(dbt_test_tasks) > 0:
-                        model_op >> crit_tests_task
-                for i, test in enumerate(crit_tests_list):
-                    if not test["test_alias"].endswith(
-                        f'ref_{model_data["model_alias"]}_'
-                    ):
+        if model_data.get('resource_type') == 'model':
+            crit_tests_list = [item for item in model_data["model_tests"].get("error", []) if item.get('attached')]
+
+            with TaskGroup(
+                group_id=f'{model_data["model_alias"]}_tasks', dag=dag
+            ) as model_tasks:
+                # models
+                model_op = BashOperator(
+                    task_id=model_data["model_alias"],
+                    bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_run.sh ",
+                    env={
+                        "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
+                        "target": "{{ params.target }}",
+                        "model": f"{model_data['model_alias']}",
+                        "full_ref_str": full_ref_str,
+                        "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+                    },
+                    append_env=True,
+                    cwd=PATH_TO_DBT_PROJECT,
+                    dag=dag,
+                )
+                model_op_dict[model_data["model_alias"]] = model_op
+                # critical tests task subgroup
+                # crit_tests_list_pruned = [test for test in crit_tests_list
+                #             if not test["test_alias"].endswith(
+                #                 f'ref_{model_data["model_alias"]}_')]
+                if len(crit_tests_list) > 0:
+                    with TaskGroup(
+                        group_id=f'{model_data["model_alias"]}_critical_tests', dag=dag
+                    ) as crit_tests_task:
+                        dbt_test_tasks = [
+                            BashOperator(
+                                task_id=test["test_alias"],
+                                bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_run.sh "
+                                if test["test_type"] == "generic"
+                                else f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_test_model.sh ",
+                                env={
+                                    "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
+                                    "target": "{{ params.target }}",
+                                    "model": f"{model_data['model_alias']}",
+                                    "full_ref_str": full_ref_str,
+                                    "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+                                },
+                                append_env=True,
+                                cwd=PATH_TO_DBT_PROJECT,
+                                dag=dag,
+                            )
+                            for test in crit_tests_list
+                        ]
+
+                        if len(dbt_test_tasks) > 0:
+                            model_op >> crit_tests_task
+
+                    for i, test in enumerate(crit_tests_list):
+
                         if test["test_alias"] not in test_op_dict.keys():
                             test_op_dict[test["test_alias"]] = {
                                 "parent_model": [model_data["model_alias"]],
@@ -150,26 +152,34 @@ with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
                             test_op_dict[test["test_alias"]]["parent_model"] += [
                                 model_data["model_alias"]
                             ]
-            simplified_manifest[model_node]["redirect_dep"] = model_tasks
-
+                simplified_manifest[model_node]["redirect_dep"] = model_tasks
 
 # models' task groups dependencies
 for node in simplified_manifest.keys():
-    for upstream_node in simplified_manifest[node]["depends_on_node"]:
-        if upstream_node is not None:
-            if upstream_node.startswith("model."):
-                try:
-                    (
-                        simplified_manifest[upstream_node]["redirect_dep"]
-                        >> simplified_manifest[node]["redirect_dep"]
-                    )
-                except:
-                    pass
+    if simplified_manifest[node].get('resource_type')=='model':
+        for upstream_node in simplified_manifest[node]["depends_on_node"]:
+            if upstream_node is not None:
+                if upstream_node.startswith("model."):
+                    try:
+                        (
+                            simplified_manifest[upstream_node]["redirect_dep"]
+                            >> simplified_manifest[node]["redirect_dep"]
+                        )
+                    except:
+                        pass
 
 # tests' cross dependencies management
-for test_alias, details in test_op_dict.items():
-    for parent in details["parent_model"]:
-        model_op_dict[parent] >> details["test_op"]
+# for test_alias, details in test_op_dict.items():
+#     for parent in details["parent_model"]:
+#         model_op_dict[parent] >> details["test_op"]
 
+for test_node, details in simplified_manifest.items():
+    if details.get('resource_type') == "test":
+        for parent in details["parents"]:
+            parent_alias = simplified_manifest[parent]["model_alias"]
+            test_alias = details.get("test_alias")
+            
+            model_op_dict[parent_alias] >> test_op_dict[test_alias].get("test_op")
+        
 
 start >> branching >> [shunt, wait4init] >> join >> data_transfo >> end

@@ -13,7 +13,7 @@ models:
       - name: categorieEntreprise
         tests:
           - relationships:
-              to: ref('region_department')
+              to: source('analytics','region_department')
               field: dep_name
               severity: 'error'
           - accepted_values:

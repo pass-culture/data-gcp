@@ -24,13 +24,10 @@ def build_simplified_manifest(json_dict_data):
             "resource_type": json_dict_data["nodes"][node]["resource_type"],
         }
         for node in json_dict_data["nodes"].keys()
-        if (
-            json_dict_data["nodes"][node]["resource_type"] == "model"
-            and "data_gcp_dbt" in node
-        )
+        if node.startswith("model.data_gcp_dbt.")
     }
     # 
-    tests_nodes = [item for item in json_dict_data['parent_map'].keys() if item.startswith('test')]
+    tests_nodes = [item for item in json_dict_data['parent_map'].keys() if item.startswith('test.data_gcp_dbt.')]
     for node in tests_nodes:
         # is the test generic ? 
         # TO DO: add sql tests names in folder data_gcp_dbt/tests/generic/*.sql

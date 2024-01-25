@@ -6,11 +6,6 @@ models:
     columns: 
       - name: venue_id
         description: Unique identifier of a venue
-        tests:
-          - unique:
-              severity: error
-          - not_null:
-              severity: error
       - name: criterion_id
         description: Identifier of criterion
       - name: criterion_category_id

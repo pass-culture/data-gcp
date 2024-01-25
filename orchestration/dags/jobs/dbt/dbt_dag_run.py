@@ -139,6 +139,7 @@ with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
                         if len(dbt_test_tasks) > 0:
                             model_op >> crit_tests_task
                     for i, test in enumerate(crit_tests_list):
+
                         if not test["test_alias"].endswith(
                             f'ref_{model_data["model_alias"]}_'
                         ):

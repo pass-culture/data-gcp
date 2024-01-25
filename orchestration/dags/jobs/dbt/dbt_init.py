@@ -71,6 +71,7 @@ manifest = BashOperator(
     env={
         "target": "{{ params.target }}",
         "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+        "ENV_SHORT_NAME": ENV_SHORT_NAME,
     },
     append_env=True,
     cwd=PATH_TO_DBT_PROJECT,
@@ -88,6 +89,7 @@ run_elementary = BashOperator(
     bash_command=f"bash ./scripts/dbt_run_package.sh ",
     env={
         "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
+        "ENV_SHORT_NAME": ENV_SHORT_NAME,
         "target": "{{ params.target }}",
         "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
         "package_name": "elementary",

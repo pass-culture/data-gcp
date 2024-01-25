@@ -225,7 +225,7 @@ SELECT
     END AS subType
 FROM
     {{ source('raw', 'applicative_database_offer') }} AS offer
-    LEFT JOIN {{ ref('subcategories') }} subcategories ON offer.offer_subcategoryId = subcategories.id
+    LEFT JOIN {{ source('clean', 'subcategories') }} subcategories ON offer.offer_subcategoryId = subcategories.id
     LEFT JOIN {{ source('raw', 'applicative_database_venue') }} AS venue ON offer.venue_id = venue.venue_id
     LEFT JOIN {{ source('raw', 'applicative_database_offerer') }} AS offerer ON venue.venue_managing_offerer_id = offerer.offerer_id
     LEFT JOIN {{ ref('offer_item_ids') }} AS offer_ids on offer.offer_id=offer_ids.offer_id

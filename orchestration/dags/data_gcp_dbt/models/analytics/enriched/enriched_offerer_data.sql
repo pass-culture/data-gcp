@@ -125,7 +125,7 @@ bookable_individual_offer_cnt AS (
     offerer_id
     , MIN(partition_date) AS offerer_first_bookable_offer_date
     , MAX(partition_date) AS offerer_last_bookable_offer_date
-FROM {{ ref('bookable_venue_history') }}
+FROM {{ source('analytics', 'bookable_venue_history') }}
 GROUP BY 1
 ),
 
@@ -260,7 +260,7 @@ FROM
     LEFT JOIN bookable_individual_offer_cnt ON bookable_individual_offer_cnt.offerer_id = offerer.offerer_id
     LEFT JOIN bookable_collective_offer_cnt ON bookable_collective_offer_cnt.offerer_id = offerer.offerer_id
     LEFT JOIN bookable_offer_history ON bookable_offer_history.offerer_id = offerer.offerer_id
-LEFT JOIN {{ ref('siren_data') }} AS siren_data ON siren_data.siren = offerer.offerer_siren
+LEFT JOIN {{ source('clean', 'siren_data') }} AS siren_data ON siren_data.siren = offerer.offerer_siren
 LEFT JOIN {{ source('analytics', 'siren_data_labels') }} AS siren_data_labels ON siren_data_labels.activitePrincipaleUniteLegale = siren_data.activitePrincipaleUniteLegale
                                             AND CAST(siren_data_labels.categorieJuridiqueUniteLegale AS STRING) = CAST(siren_data.categorieJuridiqueUniteLegale AS STRING)
 WHERE

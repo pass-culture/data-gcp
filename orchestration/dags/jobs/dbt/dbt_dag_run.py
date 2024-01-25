@@ -88,85 +88,86 @@ with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
     full_ref_str = " --full-refresh" if not "{{ params.full_refresh }}" else ""
     # models task group
     for model_node, model_data in simplified_manifest.items():
-        crit_tests_list = model_data["model_tests"].get("error", [])
-        with TaskGroup(
-            group_id=f'{model_data["model_alias"]}_tasks', dag=dag
-        ) as model_tasks:
-            # models
-            model_op = BashOperator(
-                task_id=model_data["model_alias"],
-                bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_run.sh ",
-                env={
-                    "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
-                    "ENV_SHORT_NAME": ENV_SHORT_NAME,
-                    "target": "{{ params.target }}",
-                    "model": f"{model_data['model_alias']}",
-                    "full_ref_str": full_ref_str,
-                    "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
-                },
-                append_env=True,
-                cwd=PATH_TO_DBT_PROJECT,
-                dag=dag,
-            )
-            model_op_dict[model_data["model_alias"]] = model_op
-            # critical tests task subgroup
-            if len(crit_tests_list) > 0:
-                with TaskGroup(
-                    group_id=f'{model_data["model_alias"]}_critical_tests', dag=dag
-                ) as crit_tests_task:
-                    dbt_test_tasks = [
-                        BashOperator(
-                            task_id=test["test_alias"],
-                            bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_run.sh "
-                            if test["test_type"] == "generic"
-                            else f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_test_model.sh ",
-                            env={
-                                "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
-                                "ENV_SHORT_NAME": ENV_SHORT_NAME,
-                                "target": "{{ params.target }}",
-                                "model": f"{model_data['model_alias']}",
-                                "full_ref_str": full_ref_str,
-                                "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
-                            },
-                            append_env=True,
-                            cwd=PATH_TO_DBT_PROJECT,
-                            dag=dag,
-                        )
-                        for test in crit_tests_list
+        if model_data["resource_type"] == "model":
+            crit_tests_list = model_data["model_tests"].get("error", [])
+            with TaskGroup(
+                group_id=f'{model_data["model_alias"]}_tasks', dag=dag
+            ) as model_tasks:
+                # models
+                model_op = BashOperator(
+                    task_id=model_data["model_alias"],
+                    bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_run.sh ",
+                    env={
+                        "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
+                        "target": "{{ params.target }}",
+                        "model": f"{model_data['model_alias']}",
+                        "full_ref_str": full_ref_str,
+                        "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+                    },
+                    append_env=True,
+                    cwd=PATH_TO_DBT_PROJECT,
+                    dag=dag,
+                )
+                model_op_dict[model_data["model_alias"]] = model_op
+                # critical tests task subgroup
+                if len(crit_tests_list) > 0:
+                    with TaskGroup(
+                        group_id=f'{model_data["model_alias"]}_critical_tests', dag=dag
+                    ) as crit_tests_task:
+                        dbt_test_tasks = [
+                            BashOperator(
+                                task_id=test["test_alias"],
+                                bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_run.sh "
+                                if test["test_type"] == "generic"
+                                else f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_test_model.sh ",
+                                env={
+                                    "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
+                                    "target": "{{ params.target }}",
+                                    "model": f"{model_data['model_alias']}",
+                                    "full_ref_str": full_ref_str,
+                                    "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+                                },
+                                append_env=True,
+                                cwd=PATH_TO_DBT_PROJECT,
+                                dag=dag,
+                            )
+                            for test in crit_tests_list
+                            if not test["test_alias"].endswith(
+                                f'ref_{model_data["model_alias"]}_'
+                            )
+                        ]
+                        if len(dbt_test_tasks) > 0:
+                            model_op >> crit_tests_task
+                    for i, test in enumerate(crit_tests_list):
+
                         if not test["test_alias"].endswith(
                             f'ref_{model_data["model_alias"]}_'
-                        )
-                    ]
-                    if len(dbt_test_tasks) > 0:
-                        model_op >> crit_tests_task
-                for i, test in enumerate(crit_tests_list):
-                    if not test["test_alias"].endswith(
-                        f'ref_{model_data["model_alias"]}_'
-                    ):
-                        if test["test_alias"] not in test_op_dict.keys():
-                            test_op_dict[test["test_alias"]] = {
-                                "parent_model": [model_data["model_alias"]],
-                                "test_op": dbt_test_tasks[i],
-                            }
-                        else:
-                            test_op_dict[test["test_alias"]]["parent_model"] += [
-                                model_data["model_alias"]
-                            ]
-            simplified_manifest[model_node]["redirect_dep"] = model_tasks
+                        ):
+                            if test["test_alias"] not in test_op_dict.keys():
+                                test_op_dict[test["test_alias"]] = {
+                                    "parent_model": [model_data["model_alias"]],
+                                    "test_op": dbt_test_tasks[i],
+                                }
+                            else:
+                                test_op_dict[test["test_alias"]]["parent_model"] += [
+                                    model_data["model_alias"]
+                                ]
+                simplified_manifest[model_node]["redirect_dep"] = model_tasks
 
 
 # models' task groups dependencies
-for node in simplified_manifest.keys():
-    for upstream_node in simplified_manifest[node]["depends_on_node"]:
-        if upstream_node is not None:
-            if upstream_node.startswith("model."):
-                try:
-                    (
-                        simplified_manifest[upstream_node]["redirect_dep"]
-                        >> simplified_manifest[node]["redirect_dep"]
-                    )
-                except:
-                    pass
+for node, values in simplified_manifest.items():
+    if values["resource_type"] == "model":
+        for upstream_node in simplified_manifest[node]["depends_on_node"]:
+            if upstream_node is not None:
+                if upstream_node.startswith("model."):
+                    try:
+                        (
+                            simplified_manifest[upstream_node]["redirect_dep"]
+                            >> simplified_manifest[node]["redirect_dep"]
+                        )
+                    except:
+                        pass
 
 # tests' cross dependencies management
 for test_alias, details in test_op_dict.items():

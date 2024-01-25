@@ -513,14 +513,6 @@ analytics_tables = {
         "destination_table": "user_iris_per_month${{ yyyymmdd(current_month(ds)) }}",
         "time_partitioning": {"field": "month_log"},
     },
-    "firebase_pro_visits": {
-        "sql": f"{ANALYTICS_SQL_PATH}/firebase_pro_visits.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "firebase_pro_visits${{ yyyymmdd(ds) }}",
-        "time_partitioning": {"field": "first_event_date"},
-        "dag_depends": ["import_intraday_firebase_data"],
-        "depends": ["enriched_user_offerer", "enriched_offerer_data"],
-    },
 }
 
 aggregated_tables = {

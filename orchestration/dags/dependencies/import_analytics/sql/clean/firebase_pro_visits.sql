@@ -1,21 +1,77 @@
-WITH offerer_partner AS(
-    SELECT 
-    offerer_id 
-    ,COUNT(distinct CASE WHEN partner_status = "venue" THEN partner_id ELSE NULL END) AS nb_partner_venue
-FROM `{{ bigquery_analytics_dataset }}.enriched_cultural_partner_data` 
-GROUP BY 1
+WITH change_format AS(
+SELECT (
+            select
+                event_params.value.int_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'ga_session_id'
+        ) as session_id,
+        CONCAT(user_pseudo_id, '-',
+                (
+            select
+                event_params.value.int_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'ga_session_id'
+                )
+         ) AS unique_session_id,
+        (
+            select
+                event_params.value.int_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'ga_session_number'
+        ) as session_number,
+        user_id, 
+        user_pseudo_id,
+        event_name,
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'page_title'
+        ) as page_name,
+        TIMESTAMP_SECONDS(
+            CAST(CAST(event_timestamp as INT64) / 1000000 as INT64)
+        ) AS event_timestamp,
+        PARSE_DATE("%Y%m%d", event_date) AS event_date,
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'page_location'
+        ) as page_location,
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'from'
+        ) as origin,
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'isEdition'
+        ) as is_edition,
+FROM `{{ bigquery_clean_dataset }}.firebase_pro_events_{{ yyyymmdd(add_days(ds, params.days)) }}`
 )
-
+        
 SELECT
     session_id,
     CONCAT(session_id, user_pseudo_id) as unique_session_id,
     user_pseudo_id,
-    ANY_VALUE(firebase_pro_events.user_id) AS user_id,
-    user_offerer.offerer_id AS offerer_id,
-    offerer.first_dms_adage_status AS first_dms_adage_status,
-    offerer.dms_accepted_at AS adage_synchro_date,
-    offerer.is_synchro_adage AS is_synchro_adage,
-    offerer_partner.nb_partner_venue,
+    ANY_VALUE(user_id) AS user_id,
     ANY_VALUE(session_number) AS session_number,
     MIN(event_date) AS first_event_date,
     MIN(event_timestamp) AS first_event_timestamp,
@@ -79,25 +135,9 @@ SELECT
     COUNTIF(event_name="hasClickedConsultSupport") AS nb_clic_consult_support,
     COUNTIF(event_name="hasClickedConsultCGU") AS nb_clic_consult_cgu,
 
-
-FROM
-        `{{ bigquery_analytics_dataset }}.firebase_pro_events` as firebase_pro_events
-LEFT JOIN 
-        `{{ bigquery_analytics_dataset }}.enriched_user_offerer` as user_offerer
-        ON firebase_pro_events.user_id=user_offerer.user_id
-LEFT JOIN 
-        `{{ bigquery_analytics_dataset }}.enriched_offerer_data` as offerer
-        ON user_offerer.offerer_id=offerer.offerer_id
-LEFT JOIN 
-        offerer_partner 
-        ON offerer_partner.offerer_id=offerer.offerer_id
-WHERE event_date = DATE("{{ ds }}")
+FROM change_format
+--WHERE event_date = DATE("{{ ds }}")
 GROUP BY
     session_id,
     user_pseudo_id,
-    unique_session_id,
-    user_offerer.offerer_id,
-    offerer.first_dms_adage_status,
-    offerer.dms_accepted_at,
-    offerer.is_synchro_adage,
-    offerer_partner.nb_partner_venue
+    unique_session_id

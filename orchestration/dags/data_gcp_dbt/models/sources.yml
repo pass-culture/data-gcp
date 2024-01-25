@@ -99,13 +99,16 @@ sources:
       - name: applicative_database_venue_provider
       - name: applicative_database_venue_registration
       - name: applicative_database_venue_reimbursement_point_link
+      - name: geoip_city_v4
       - name: gsheet_eac_webinar
+      - name: stdout
   - name: clean # this is the source_name
     schema: clean_{{ var('ENV_SHORT_NAME') }} # this is the schema_name
     tables:
       - name: adage_involved_student # this is the table_name
       - name: dms_jeunes_cleaned
       - name: dms_pro_cleaned
+      - name: iris_france
       - name: firebase_app_experiments
       - name: siren_data
         config: 
@@ -131,8 +134,10 @@ sources:
       - name: contentful_relationships
       - name: firebase_events
       - name: firebase_pro_events
+      - name: firebase_recommendation_events
       - name: linked_offers
       - name: region_department
       - name: siren_data_labels
       - name: subcategories
+      - name: user_locations
       

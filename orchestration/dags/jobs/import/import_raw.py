@@ -71,6 +71,6 @@ with TaskGroup(group_id="raw_operations_group", dag=dag) as raw_operations_group
     import_tables_to_raw_tasks.append(task)
 
 
-end_raw = DummyOperator(task_id="end_raw", dag=dag)
+end_raw = DummyOperator(task_id="end", dag=dag)
 
 (start >> raw_operations_group >> end_raw)

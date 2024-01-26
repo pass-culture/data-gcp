@@ -64,7 +64,7 @@ SELECT (
             where
                 event_params.key = 'isEdition'
         ) as is_edition,
-FROM `{{ bigquery_clean_dataset }}.firebase_pro_events_{{ yyyymmdd(add_days(ds, params.days)) }}`
+FROM `{{ bigquery_clean_dataset }}.firebase_pro_events_{{ yyyymmdd(ds) }}`
 )
         
 SELECT

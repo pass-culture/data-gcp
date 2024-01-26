@@ -91,7 +91,7 @@ clean_tables = {
         "destination_dataset": "{{ bigquery_clean_dataset }}",
         "destination_table": "firebase_pro_visits${{ yyyymmdd(ds) }}",
         "time_partitioning": {"field": "first_event_date"},
-        "dag_depends": ["import_intraday_firebase_data"],
+        "dag_depends": ["import_intraday_firebase_data/clean_firebase_pro_events"],
     },
 }
 

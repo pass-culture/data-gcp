@@ -70,6 +70,7 @@ SELECT (
         {% else %}
          `{{ bigquery_clean_dataset }}.firebase_pro_events_{{ yyyymmdd(add_days(ds, -1)) }}`
         {% endif %}
+
 )
         
 SELECT

@@ -47,6 +47,7 @@ GCP_PROJECT_PRO_ENV = {
 
 
 import_firebase_pro_tables = {
+    # raw
     "raw_firebase_pro_events": {
         "sql": f"{SQL_PATH}/raw/events.sql",
         "destination_dataset": "{{ bigquery_raw_dataset }}",
@@ -58,6 +59,7 @@ import_firebase_pro_tables = {
             "gcp_project_native_env": GCP_PROJECT_PRO_ENV,
         },
     },
+    # clean
     "clean_firebase_pro_events": {
         "sql": f"{SQL_PATH}/clean/events.sql",
         "destination_dataset": "{{ bigquery_clean_dataset }}",
@@ -69,6 +71,13 @@ import_firebase_pro_tables = {
             "app_info_ids": ENV_SHORT_NAME_APP_INFO_ID_MAPPING_PRO,
             "table_name": "events_pro",
         },
+    },
+    "clean_firebase_pro_visits": {
+        "sql": f"{SQL_PATH}/clean/firebase_pro_visits.sql",
+        "destination_dataset": "{{ bigquery_clean_dataset }}",
+        "destination_table": "firebase_pro_visits${{ yyyymmdd(ds) }}",
+        "time_partitioning": {"field": "first_event_date"},
+        "depends": ["clean_firebase_pro_events"],
     },
     # analytics
     "analytics_firebase_pro_events": {

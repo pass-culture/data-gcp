@@ -66,6 +66,7 @@ SELECT
     collective_stock.collective_stock_number_of_tickets AS number_of_tickets,
     collective_offer.collective_offer_subcategory_id,
     subcategories.category_id AS collective_offer_category_id,
+    collective_offer.collective_offer_format,
     collective_offer.collective_offer_students,
     collective_offer.collective_offer_is_active,
     CASE
@@ -105,7 +106,7 @@ SELECT
     {{target_schema}}.humanize_id(collective_offer.collective_offer_id) AS collective_offer_humanized_id,
     CONCAT(
         'https://passculture.pro/offre/',
-        {{target_schema}}.humanize_id(collective_offer.collective_offer_id),
+        collective_offer.collective_offer_id,
         '/collectif/edition'
     ) AS passculture_pro_url,
     FALSE AS offer_is_template,
@@ -148,6 +149,7 @@ SELECT
     collective_stock.collective_stock_number_of_tickets AS number_of_tickets,
     template.collective_offer_subcategory_id,
     subcategories.category_id AS collective_offer_category_id,
+    template.collective_offer_format,
     template.collective_offer_students,
     template.collective_offer_is_active,
     FALSE AS collective_offer_is_bookable,
@@ -157,8 +159,7 @@ SELECT
     {{target_schema}}.humanize_id(template.collective_offer_id) AS collective_offer_humanized_id,
     CONCAT(
         'https://passculture.pro/offre/',
-        'T-',
-        {{target_schema}}.humanize_id(template.collective_offer_id),
+        template.collective_offer_id,
         '/collectif/edition'
     ) AS passculture_pro_url,
     TRUE AS offer_is_template,

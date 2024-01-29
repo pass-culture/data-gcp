@@ -9,6 +9,7 @@ SELECT
     , offer_id
     , booking_id
     , venue_id
+    , module_id
     , app_version
 FROM `{{ bigquery_analytics_dataset }}.firebase_events`
 WHERE (event_name IN ('ConsultVenue','BookingConfirmation') OR (event_name = 'ConsultOffer' AND origin = 'venue'))
@@ -38,6 +39,7 @@ SELECT
     display.* EXCEPT(venue_display_rank)
     , offer_id
     , event_timestamp AS consult_offer_timestamp
+    , venue_data.module_id
     , ROW_NUMBER() OVER(PARTITION BY display.unique_session_id, display.venue_id, offer_id ORDER BY event_timestamp) AS consult_rank
 FROM display
 LEFT JOIN venue_data ON display.unique_session_id = venue_data.unique_session_id

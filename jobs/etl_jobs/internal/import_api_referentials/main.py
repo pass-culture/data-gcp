@@ -86,7 +86,7 @@ def get_types(gcp_project_id, env_short_name):
     show_types = importlib.import_module("pcapi.domain.show_types").show_types
     music_types = importlib.import_module("pcapi.domain.music_types").music_types
     book_types = importlib.import_module("pcapi.domain.book_types").BOOK_MACRO_SECTIONS
-    movie_types = importlib.import_module("pcapi.domain.movie_types").MOVIE_TYPES
+    movie_types = importlib.import_module("pcapi.domain.movie_types").movie_types
 
     types = {
         "show": show_types,
@@ -129,7 +129,9 @@ def get_types(gcp_project_id, env_short_name):
                     }
                 )
         elif domain == "movie":
-            for type_id, type_label in types_list.items():
+            for _t in types_list:
+                type_id = _t.name
+                type_label = _t.label
                 export_types.append(
                     {
                         "domain": domain,

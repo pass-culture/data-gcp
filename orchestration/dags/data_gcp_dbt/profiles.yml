@@ -35,7 +35,7 @@ data_gcp_dbt:
       threads: 1
       type: bigquery
 
-dbt_artifacts:
+elementary:
   target: dev 
   outputs:
     dev:

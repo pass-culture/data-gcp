@@ -47,8 +47,8 @@ dag_config = {
 train_params = {
     "batch_size": 4096,
     "embedding_size": 64,
-    "train_set_size": {"prod": 0.95, "dev": 0.8, "stg": 0.9}[ENV_SHORT_NAME],
-    "event_day_number": {"prod": 60, "dev": 365, "stg": 20}[ENV_SHORT_NAME],
+    "train_set_size": {"prod": 0.9, "dev": 0.8, "stg": 0.9}[ENV_SHORT_NAME],
+    "event_day_number": {"prod": 90, "dev": 365, "stg": 20}[ENV_SHORT_NAME],
     "input_type": {"prod": "clicks", "dev": "bookings", "stg": "clicks"}[
         ENV_SHORT_NAME
     ],

@@ -53,10 +53,21 @@ def input_size(size):
         return 10
 
 
-def filter(selected_params, size: int, debug: bool, call_id, prefilter: bool):
+def filter(
+    selected_params,
+    size: int,
+    debug: bool,
+    call_id,
+    prefilter: bool,
+    vector_column_name: str,
+):
     try:
         results = model.filter(
-            selected_params, details=debug, n=size, prefilter=prefilter
+            selected_params,
+            details=debug,
+            n=size,
+            prefilter=prefilter,
+            vector_column_name=vector_column_name,
         )
         return jsonify({"predictions": results})
     except Exception as e:
@@ -219,7 +230,12 @@ def predict():
                 },
             )
             return filter(
-                selected_params, size, debug, call_id=call_id, prefilter=prefilter
+                selected_params,
+                size,
+                debug,
+                call_id=call_id,
+                prefilter=prefilter,
+                vector_column_name=vector_column_name,
             )
 
     except Exception as e:

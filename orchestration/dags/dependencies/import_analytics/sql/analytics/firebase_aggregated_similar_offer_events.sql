@@ -35,6 +35,7 @@ SELECT
 FROM display_data
 LEFT JOIN convert_data ON display_data.unique_session_id = convert_data.unique_session_id
                         AND display_data.item_id = convert_data.similar_item_id
+                        AND display_data.similar_offer_playlist_type = convert_data.similar_offer_playlist_type
 LEFT JOIN `{{ bigquery_analytics_dataset }}.diversification_booking` AS diversification_booking ON diversification_booking.booking_id = convert_data.booking_id
 JOIN `{{ bigquery_analytics_dataset }}.enriched_user_data` AS enriched_user_data ON enriched_user_data.user_id = display_data.user_id
 GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13

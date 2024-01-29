@@ -35,9 +35,9 @@ SELECT
     ,COALESCE(enriched_venue_data.collective_real_revenue,0) AS real_collective_revenue
     ,(COALESCE(enriched_venue_data.individual_real_revenue,0)+COALESCE(enriched_venue_data.collective_real_revenue,0)) AS total_real_revenue
 FROM {{ ref('enriched_venue_data') }} AS enriched_venue_data
-LEFT JOIN {{ ref('region_department') }} AS region_department
+LEFT JOIN {{ source('analytics', 'region_department') }} AS region_department
     ON enriched_venue_data.venue_department_code = region_department.num_dep
-LEFT JOIN {{ ref('agg_partner_cultural_sector') }} ON agg_partner_cultural_sector.partner_type = enriched_venue_data.venue_type_label
+LEFT JOIN {{ source('raw', 'agg_partner_cultural_sector') }} ON agg_partner_cultural_sector.partner_type = enriched_venue_data.venue_type_label
 LEFT JOIN {{ ref('enriched_venue_tags_data') }} ON enriched_venue_data.venue_id = enriched_venue_tags_data.venue_id AND enriched_venue_tags_data.criterion_category_label = "Comptage partenaire sectoriel"
 WHERE venue_is_permanent IS TRUE
 ),
@@ -126,14 +126,14 @@ SELECT
     ,COALESCE(enriched_offerer_data.offerer_collective_real_revenue,0) AS real_collective_revenue
     ,COALESCE(enriched_offerer_data.offerer_individual_real_revenue,0) + COALESCE(enriched_offerer_data.offerer_collective_real_revenue,0) AS total_real_revenue
 FROM {{ ref('enriched_offerer_data') }}
-LEFT JOIN {{ ref('applicative_database_offerer') }} AS applicative_database_offerer
+LEFT JOIN {{ source('raw', 'applicative_database_offerer') }} AS applicative_database_offerer
     ON enriched_offerer_data.offerer_id = applicative_database_offerer.offerer_id
-LEFT JOIN {{ ref('region_department') }} AS region_department
+LEFT JOIN {{ source('analytics', 'region_department') }} AS region_department
     ON enriched_offerer_data.offerer_department_code = region_department.num_dep
 LEFT JOIN tagged_partners ON tagged_partners.offerer_id = enriched_offerer_data.offerer_id
 LEFT JOIN permanent_venues ON permanent_venues.offerer_id = enriched_offerer_data.offerer_id
 LEFT JOIN top_venue_per_offerer ON top_venue_per_offerer.offerer_id = enriched_offerer_data.offerer_id
-LEFT JOIN {{ ref('agg_partner_cultural_sector') }} ON agg_partner_cultural_sector.partner_type = COALESCE(tagged_partners.partner_type, top_venue_per_offerer.partner_type)
+LEFT JOIN {{ source('raw', 'agg_partner_cultural_sector') }} ON agg_partner_cultural_sector.partner_type = COALESCE(tagged_partners.partner_type, top_venue_per_offerer.partner_type)
 WHERE NOT enriched_offerer_data.is_local_authority  -- Collectivités à part
 AND permanent_venues.offerer_id IS NULL -- Pas déjà compté à l'échelle du lieu permanent
 )

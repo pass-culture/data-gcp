@@ -8,7 +8,7 @@ WITH bookings_per_stock AS (
             END
         ) AS collective_booking_stock_no_cancelled_cnt
     FROM
-        {{ ref('applicative_database_collective_booking') }} AS collective_booking
+        {{ source('raw','applicative_database_collective_booking') }} AS collective_booking
     GROUP BY
         collective_stock_id
 )
@@ -19,10 +19,10 @@ SELECT
     collective_offer.collective_offer_id
     ,collective_offer.venue_id
     ,venue.venue_managing_offerer_id AS offerer_id
-FROM {{ ref('applicative_database_collective_stock') }} AS collective_stock
-JOIN {{ ref('applicative_database_collective_offer') }} AS collective_offer
+FROM {{ source('raw','applicative_database_collective_stock') }} AS collective_stock
+JOIN {{ source('raw','applicative_database_collective_offer') }} AS collective_offer
     ON collective_stock.collective_offer_id = collective_offer.collective_offer_id
-LEFT JOIN {{ ref('applicative_database_venue') }} AS venue
+LEFT JOIN {{ source('raw','applicative_database_venue') }} AS venue
     ON collective_offer.venue_id = venue.venue_id
 LEFT JOIN bookings_per_stock ON bookings_per_stock.collective_stock_id = collective_stock.collective_stock_id
 WHERE collective_offer.collective_offer_is_active
@@ -36,5 +36,5 @@ SELECT
     ,template.venue_id
     ,venue.venue_managing_offerer_id AS offerer_id
 FROM
-    {{ ref('applicative_database_collective_offer_template') }} AS template
-    JOIN {{ ref('applicative_database_venue') }} AS venue ON venue.venue_id = template.venue_id
+    {{ source('raw','applicative_database_collective_offer_template') }} AS template
+    JOIN {{ source('raw','applicative_database_venue') }} AS venue ON venue.venue_id = template.venue_id

@@ -30,6 +30,7 @@ SELECT
     COUNTIF(event_name = 'screen_view' AND firebase_screen IN ('Bookings','BookingDetails')) AS nb_screen_view_bookings,
     COUNTIF((firebase_screen = 'SignupConfirmationEmailSent' OR event_name = 'ContinueCGU')) AS nb_signup_completed,
     COUNTIF(firebase_screen IN ('BeneficiaryRequestSent','UnderageAccountCreated','BeneficiaryAccountCreated')) AS nb_benef_request_sent,
+    COUNTIF(event_name = "login") AS nb_login,
     DATE_DIFF(MAX(event_timestamp),MIN(event_timestamp),SECOND) AS visit_duration_seconds,
 FROM
         {{ source('analytics', 'firebase_events') }}

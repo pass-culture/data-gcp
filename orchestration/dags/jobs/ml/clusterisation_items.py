@@ -54,7 +54,7 @@ with DAG(
     description="Cluster offers from metadata embeddings",
     schedule_interval=get_airflow_schedule("0 0 * * 0"),  # every sunday
     catchup=False,
-    dagrun_timeout=timedelta(minutes=720),
+    dagrun_timeout=timedelta(minutes=1440),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
     params={

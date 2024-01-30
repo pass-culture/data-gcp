@@ -1610,9 +1610,7 @@ ENRICHED_COLLECTIVE_BOOKING_DATA_INPUT = {
         }
     ],
     "applicative_database_offerer": [
-        {   "offerer_id": "2", 
-            "offerer_name": "Ma structure"
-        }
+        {"offerer_id": "2", "offerer_name": "Ma structure"}
     ],
 }
 

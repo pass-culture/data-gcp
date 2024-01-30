@@ -99,6 +99,7 @@ sources:
       - name: applicative_database_venue_provider
       - name: applicative_database_venue_registration
       - name: applicative_database_venue_reimbursement_point_link
+      - name: eple
       - name: geoip_city_v4
       - name: gsheet_eac_webinar
       - name: stdout
@@ -126,4 +127,5 @@ sources:
       - name: siren_data_labels
       - name: subcategories
       - name: user_locations
-      
+      - name: contentful_algolia_modules_criterion
+      - name: enriched_user_data

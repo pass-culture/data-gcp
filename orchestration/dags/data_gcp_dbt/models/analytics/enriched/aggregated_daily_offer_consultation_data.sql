@@ -35,14 +35,14 @@ SELECT
     ) AS user_age,
     COUNT(*) AS cnt_events,
 FROM
-    {{ ref('firebase_events')}} fe
+    {{ source('analytics','firebase_events') }} fe
     JOIN {{ ref('enriched_offer_data')}} o ON fe.offer_id = o.offer_id
     AND fe.event_name IN (
         'ConsultOffer',
         'ConsultWholeOffer',
         'ConsultDescriptionDetails'
     )
-    LEFT JOIN {{ ref('contentful_algolia_modules_criterion')}} c ON fe.module_id = c.module_id
+    LEFT JOIN {{ source('analytics','contentful_algolia_modules_criterion')}} c ON fe.module_id = c.module_id
     AND fe.offer_id = c.offer_id
     LEFT JOIN {{ ref('enriched_user_data')}} eud ON fe.user_id = eud.user_id
 GROUP BY

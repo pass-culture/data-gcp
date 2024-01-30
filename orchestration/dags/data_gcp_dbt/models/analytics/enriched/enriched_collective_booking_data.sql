@@ -49,15 +49,15 @@ SELECT
     collective_booking_ranking_view.collective_booking_rank,
     collective_offer.collective_offer_image_id,
 FROM
-    {{ ref('collective_booking')}} AS collective_booking
-    INNER JOIN {{ ref('collective_stock')}} AS collective_stock ON collective_stock.collective_stock_id = collective_booking.collective_stock_id
-    INNER JOIN {{ ref('collective_offer')}} AS collective_offer ON collective_offer.collective_offer_id = collective_stock.collective_offer_id
-    INNER JOIN {{ ref('venue')}} AS venue ON collective_booking.venue_id = venue.venue_id
-    INNER JOIN {{ ref('offerer')}} AS offerer ON offerer.offerer_id = venue.venue_managing_offerer_id
-    INNER JOIN {{ ref('educational_institution')}} AS educational_institution ON educational_institution.educational_institution_id = collective_booking.educational_institution_id
-    INNER JOIN {{ ref('educational_year')}} AS educational_year ON educational_year.adage_id = collective_booking.educational_year_id
-    LEFT JOIN {{ ref('eple')}} AS eple ON eple.id_etablissement = educational_institution.institution_id
-    LEFT JOIN {{ ref('region_departement')}} AS venue_region_departement ON venue.venue_department_code = venue_region_departement.num_dep
-    LEFT JOIN {{ ref('region_departement')}} AS school_region_departement ON eple.code_departement = school_region_departement.num_dep
+    {{ ref('collective_booking') }} AS collective_booking
+    INNER JOIN {{ ref('collective_stock') }} AS collective_stock ON collective_stock.collective_stock_id = collective_booking.collective_stock_id
+    INNER JOIN {{ ref('collective_offer') }} AS collective_offer ON collective_offer.collective_offer_id = collective_stock.collective_offer_id
+    INNER JOIN {{ ref('venue') }} AS venue ON collective_booking.venue_id = venue.venue_id
+    INNER JOIN {{ ref('offerer') }} AS offerer ON offerer.offerer_id = venue.venue_managing_offerer_id
+    INNER JOIN {{ ref('educational_institution') }} AS educational_institution ON educational_institution.educational_institution_id = collective_booking.educational_institution_id
+    INNER JOIN {{ ref('educational_year') }} AS educational_year ON educational_year.adage_id = collective_booking.educational_year_id
+    LEFT JOIN {{ source('raw','eple') }} AS eple ON eple.id_etablissement = educational_institution.institution_id
+    LEFT JOIN {{ source('analytics','region_department') }} AS venue_region_departement ON venue.venue_department_code = venue_region_departement.num_dep
+    LEFT JOIN {{ source('analytics','region_department') }} AS school_region_departement ON eple.code_departement = school_region_departement.num_dep
     LEFT JOIN collective_booking_ranking_view ON collective_booking_ranking_view.collective_booking_id = collective_booking.collective_booking_id
-    LEFT JOIN {{ref('subcategories')}} ON collective_offer.collective_offer_subcategory_id = subcategories.id;
+    LEFT JOIN {{ source('analytics','subcategories') }} ON collective_offer.collective_offer_subcategory_id = subcategories.id

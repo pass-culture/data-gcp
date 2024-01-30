@@ -64,7 +64,13 @@ SELECT (
             where
                 event_params.key = 'isEdition'
         ) as is_edition,
-FROM `{{ bigquery_clean_dataset }}.firebase_pro_events_{{ yyyymmdd(add_days(ds, params.days)) }}`
+    FROM 
+        {% if params.dag_type == 'intraday' %}
+         `{{ bigquery_clean_dataset }}.firebase_pro_events_{{ yyyymmdd(add_days(ds, 0)) }}`
+        {% else %}
+         `{{ bigquery_clean_dataset }}.firebase_pro_events_{{ yyyymmdd(add_days(ds, -1)) }}`
+        {% endif %}
+
 )
         
 SELECT

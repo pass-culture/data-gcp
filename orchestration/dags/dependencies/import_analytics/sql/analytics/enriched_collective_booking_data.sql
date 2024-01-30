@@ -25,6 +25,8 @@ SELECT
     venue.venue_department_code,
     venue_region_departement.region_name AS venue_region_name,
     collective_booking.offerer_id AS offerer_id,
+    CASE WHEN venue.venue_is_permanent THEN CONCAT("venue-",venue.venue_id)
+         ELSE CONCAT("offerer-", offerer.offerer_id) END AS partner_id,
     offerer.offerer_name,
     collective_stock.collective_stock_price AS booking_amount,
     collective_stock.collective_stock_number_of_tickets AS number_of_tickets,

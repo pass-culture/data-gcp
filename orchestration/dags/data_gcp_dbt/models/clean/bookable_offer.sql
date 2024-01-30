@@ -2,7 +2,7 @@ SELECT
     offer.*
     , offerer.offerer_id
 FROM {{ source('raw','applicative_database_stock') }} AS stock
-JOIN {{ source('raw','applicative_database_offer') }} AS offer 
+JOIN {{ ref('offer') }} AS offer 
     ON stock.offer_id = offer.offer_id
 LEFT JOIN {{ ref('available_stock_information') }} AS av_stock
     ON stock.stock_id = av_stock.stock_id

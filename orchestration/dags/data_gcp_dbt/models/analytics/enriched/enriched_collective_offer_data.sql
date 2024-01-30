@@ -23,8 +23,8 @@ WITH bookings_per_offer AS (
             END
         ) AS collective_booking_confirm_cnt
     FROM
-        {{ ref('applicative_database_collective_booking') }} AS collective_booking
-        JOIN {{ ref('applicative_database_collective_stock') }} AS collective_stock ON collective_stock.collective_stock_id = collective_booking.collective_stock_id
+        {{ source('raw', 'applicative_database_collective_booking') }} AS collective_booking
+        JOIN {{ source('raw', 'applicative_database_collective_stock') }} AS collective_stock ON collective_stock.collective_stock_id = collective_booking.collective_stock_id
     GROUP BY
         collective_offer_id
 ),
@@ -39,7 +39,7 @@ bookings_per_stock AS (
             END
         ) AS collective_booking_stock_no_cancelled_cnt
     FROM
-        {{ ref('applicative_database_collective_booking') }} AS collective_booking
+        {{ source('raw', 'applicative_database_collective_booking') }} AS collective_booking
     GROUP BY
         collective_stock_id
 )
@@ -66,6 +66,7 @@ SELECT
     collective_stock.collective_stock_number_of_tickets AS number_of_tickets,
     collective_offer.collective_offer_subcategory_id,
     subcategories.category_id AS collective_offer_category_id,
+    collective_offer.collective_offer_format,
     collective_offer.collective_offer_students,
     collective_offer.collective_offer_is_active,
     CASE
@@ -73,8 +74,8 @@ SELECT
             SELECT
                 collective_stock.collective_offer_id
             FROM
-                {{ ref('applicative_database_collective_stock') }} AS collective_stock
-                JOIN {{ ref('applicative_database_collective_offer') }} AS collective_offer ON collective_stock.collective_offer_id = collective_offer.collective_offer_id
+                {{ source('raw', 'applicative_database_collective_stock') }} AS collective_stock
+                JOIN {{ source('raw', 'applicative_database_collective_offer') }} AS collective_offer ON collective_stock.collective_offer_id = collective_offer.collective_offer_id
                 AND collective_offer.collective_offer_is_active
                 LEFT JOIN bookings_per_stock ON collective_stock.collective_stock_id = bookings_per_stock.collective_stock_id
             WHERE
@@ -105,7 +106,7 @@ SELECT
     {{target_schema}}.humanize_id(collective_offer.collective_offer_id) AS collective_offer_humanized_id,
     CONCAT(
         'https://passculture.pro/offre/',
-        {{target_schema}}.humanize_id(collective_offer.collective_offer_id),
+        collective_offer.collective_offer_id,
         '/collectif/edition'
     ) AS passculture_pro_url,
     FALSE AS offer_is_template,
@@ -115,14 +116,14 @@ SELECT
     national_program.national_program_name,
     collective_offer.template_id
 FROM
-    {{ ref('applicative_database_collective_offer') }} AS collective_offer
-    JOIN {{ ref('applicative_database_venue') }} AS venue ON venue.venue_id = collective_offer.venue_id
-    LEFT JOIN {{ ref('applicative_database_collective_stock') }} AS collective_stock ON collective_stock.collective_offer_id = collective_offer.collective_offer_id
-    JOIN {{ ref('applicative_database_offerer') }} AS offerer ON offerer.offerer_id = venue.venue_managing_offerer_id
-    LEFT JOIN {{ ref('subcategories') }} ON subcategories.id = collective_offer.collective_offer_subcategory_id
-    LEFT JOIN {{ ref('region_department') }} venue_region ON venue_region.num_dep = venue.venue_department_code
+    {{ source('raw', 'applicative_database_collective_offer') }} AS collective_offer
+    JOIN {{ source('raw', 'applicative_database_venue') }} AS venue ON venue.venue_id = collective_offer.venue_id
+    LEFT JOIN {{ source('raw', 'applicative_database_collective_stock') }} AS collective_stock ON collective_stock.collective_offer_id = collective_offer.collective_offer_id
+    JOIN {{ source('raw', 'applicative_database_offerer') }} AS offerer ON offerer.offerer_id = venue.venue_managing_offerer_id
+    LEFT JOIN {{ source('clean', 'subcategories') }} ON subcategories.id = collective_offer.collective_offer_subcategory_id
+    LEFT JOIN {{ source('analytics', 'region_department') }} venue_region ON venue_region.num_dep = venue.venue_department_code
     LEFT JOIN bookings_per_offer ON bookings_per_offer.collective_offer_id = collective_offer.collective_offer_id
-    LEFT JOIN {{ ref('applicative_database_national_program') }} national_program USING(national_program_id)
+    LEFT JOIN {{ source('raw', 'applicative_database_national_program') }} national_program USING(national_program_id)
 WHERE collective_offer.collective_offer_validation = 'APPROVED'
 UNION
 ALL
@@ -148,6 +149,7 @@ SELECT
     collective_stock.collective_stock_number_of_tickets AS number_of_tickets,
     template.collective_offer_subcategory_id,
     subcategories.category_id AS collective_offer_category_id,
+    template.collective_offer_format,
     template.collective_offer_students,
     template.collective_offer_is_active,
     FALSE AS collective_offer_is_bookable,
@@ -157,8 +159,7 @@ SELECT
     {{target_schema}}.humanize_id(template.collective_offer_id) AS collective_offer_humanized_id,
     CONCAT(
         'https://passculture.pro/offre/',
-        'T-',
-        {{target_schema}}.humanize_id(template.collective_offer_id),
+        template.collective_offer_id,
         '/collectif/edition'
     ) AS passculture_pro_url,
     TRUE AS offer_is_template,
@@ -168,12 +169,12 @@ SELECT
     national_program.national_program_name,
     NULL as template_id
 FROM
-    {{ ref('applicative_database_collective_offer_template') }} AS template
-    JOIN {{ ref('applicative_database_venue') }} AS venue ON venue.venue_id = template.venue_id
-    JOIN {{ ref('applicative_database_offerer') }} AS offerer ON offerer.offerer_id = venue.venue_managing_offerer_id
-    LEFT JOIN {{ ref('subcategories') }} ON subcategories.id = template.collective_offer_subcategory_id
-    LEFT JOIN {{ ref('applicative_database_collective_stock') }} AS collective_stock ON collective_stock.collective_offer_id = template.collective_offer_id
-    LEFT JOIN {{ ref('region_department') }} venue_region ON venue_region.num_dep = venue.venue_department_code
+    {{ source('raw', 'applicative_database_collective_offer_template') }} AS template
+    JOIN {{ source('raw', 'applicative_database_venue') }} AS venue ON venue.venue_id = template.venue_id
+    JOIN {{ source('raw', 'applicative_database_offerer') }} AS offerer ON offerer.offerer_id = venue.venue_managing_offerer_id
+    LEFT JOIN {{ source('clean', 'subcategories') }} ON subcategories.id = template.collective_offer_subcategory_id
+    LEFT JOIN {{ source('raw', 'applicative_database_collective_stock') }} AS collective_stock ON collective_stock.collective_offer_id = template.collective_offer_id
+    LEFT JOIN {{ source('analytics', 'region_department') }} venue_region ON venue_region.num_dep = venue.venue_department_code
     LEFT JOIN bookings_per_offer ON bookings_per_offer.collective_offer_id = template.collective_offer_id
-    LEFT JOIN {{ ref('applicative_database_national_program') }} national_program USING(national_program_id)
+    LEFT JOIN {{ source('raw', 'applicative_database_national_program') }} national_program USING(national_program_id)
 WHERE template.collective_offer_validation = 'APPROVED'

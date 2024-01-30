@@ -20,7 +20,7 @@ target-path: "{{ env_var('DBT_TARGET_PATH', 'target') }}" # directory which will
 
 # The `target-path` config in `dbt_project.yml` has been deprecated, and will no longer be supported in a future version of dbt-core. 
 # If you wish to write dbt artifacts to a custom directory, please use the --target-path CLI flag or DBT_TARGET_PATH env var instead.
-packages-install-path: "/{{ env_var('DBT_TARGET_PATH', 'target') }}/dbt_packages"
+packages-install-path: "{{ env_var('DBT_TARGET_PATH', 'target') }}/dbt_packages"
 
 clean-targets:         # directories to be removed by `dbt clean`
   - "{{ env_var('DBT_TARGET_PATH', 'target') }}"
@@ -36,10 +36,19 @@ models:
         # schema: applicative_raw
         tags: "applicative"
     clean:
-      +materialized: view
+      +materialized: table
       +schema: clean_dbt_{{ target.name }}
       +docs: 
         node_color: "#b43ddb"
+      applicative: 
+        +alias: applicative_database_
+        +materialized: table
+      applicative_history:
+        +alias: applicative_database_
+        +materialized: incremental
+        +partition_by: {'field': 'partition_date', 'data_type': 'date'}
+        +cluster_by: ['partition_date']  
+        +incremental_strategy: insert_overwrite
     analytics:
       +materialized: table
       +schema: analytics_dbt_{{ target.name }}

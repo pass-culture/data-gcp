@@ -3,7 +3,7 @@ from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.utils.task_group import TaskGroup
 from common import macros
-from common.utils import depends_loop, one_line_query, get_airflow_schedule
+from common.utils import depends_loop, get_airflow_schedule
 from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 from common.operators.biquery import bigquery_job_task
 from dependencies.import_analytics.import_analytics import export_tables
@@ -13,20 +13,15 @@ from dependencies.import_analytics.import_historical import (
 )
 from common.alerts import analytics_fail_slack_alert
 from common.config import DAG_FOLDER
+from common.utils import waiting_operator
 
 from common.config import (
     GCP_PROJECT_ID,
-    BIGQUERY_RAW_DATASET,
     BIGQUERY_CLEAN_DATASET,
     BIGQUERY_ANALYTICS_DATASET,
     APPLICATIVE_PREFIX,
-    APPLICATIVE_EXTERNAL_CONNECTION_ID,
 )
 
-from dependencies.import_analytics.import_raw import (
-    get_tables_config_dict,
-    RAW_SQL_PATH,
-)
 from dependencies.import_analytics.import_clean import (
     clean_tables,
     get_clean_tables_copy_dict,
@@ -35,9 +30,6 @@ from dependencies.import_analytics.import_analytics import define_import_tables
 
 import_tables = define_import_tables()
 clean_tables_copy = get_clean_tables_copy_dict()
-raw_tables = get_tables_config_dict(
-    PATH=DAG_FOLDER + "/" + RAW_SQL_PATH, BQ_DESTINATION_DATASET=BIGQUERY_RAW_DATASET
-)
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 1),
@@ -60,35 +52,7 @@ dag = DAG(
 
 start = DummyOperator(task_id="start", dag=dag)
 
-# RAW
-
-with TaskGroup(group_id="raw_operations_group", dag=dag) as raw_operations_group:
-    import_tables_to_raw_tasks = []
-    for table, params in raw_tables.items():
-        task = BigQueryInsertJobOperator(
-            task_id=f"import_to_raw_{table}",
-            configuration={
-                "query": {
-                    "query": f"""SELECT * FROM EXTERNAL_QUERY('{APPLICATIVE_EXTERNAL_CONNECTION_ID}', '{one_line_query(params['sql'])}')""",
-                    "useLegacySql": False,
-                    "destinationTable": {
-                        "projectId": GCP_PROJECT_ID,
-                        "datasetId": params["destination_dataset"],
-                        "tableId": params["destination_table"],
-                    },
-                    "writeDisposition": params.get(
-                        "write_disposition", "WRITE_TRUNCATE"
-                    ),
-                }
-            },
-            params=dict(params.get("params", {})),
-            dag=dag,
-        )
-    import_tables_to_raw_tasks.append(task)
-
-
-end_raw = DummyOperator(task_id="end_raw", dag=dag)
-
+wait_for_raw = waiting_operator(dag=dag, dag_id="import_raw")
 
 # CLEAN : Copier les tables Raw dans Clean sauf s'il y a une requete de transformation dans clean.
 
@@ -111,7 +75,7 @@ with TaskGroup(
     import_tables_to_clean_transformation_tasks = depends_loop(
         clean_tables,
         import_tables_to_clean_transformation_jobs,
-        end_raw,
+        wait_for_raw,
         dag,
         default_end_operator=end_import_table_to_clean,
     )
@@ -225,15 +189,8 @@ analytics_table_tasks = depends_loop(
 
 end = DummyOperator(task_id="end", dag=dag)
 
-(
-    start
-    >> raw_operations_group
-    >> end_raw
-    >> clean_transformations
-    >> analytics_copy
-    >> end_import
-)
-(end_raw >> clean_copy >> end_import_table_to_clean)
+(start >> wait_for_raw >> clean_transformations >> analytics_copy >> end_import)
+(wait_for_raw >> clean_copy >> end_import_table_to_clean)
 (
     end_import_table_to_clean
     >> start_historical_data_applicative_tables_tasks
@@ -247,4 +204,5 @@ end = DummyOperator(task_id="end", dag=dag)
     >> end_historical_analytics_table_tasks
 )
 (end_import >> start_analytics_table_tasks)
-(analytics_table_tasks >> end_analytics_table_tasks >> end)
+(analytics_table_tasks >> end_analytics_table_tasks)
+(end_analytics_table_tasks, end_historical_analytics_table_tasks) >> end

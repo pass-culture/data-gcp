@@ -2,7 +2,7 @@
 {{ 
     compare_relations(
         'offer_extracted_data',
-        'clean',
+        'analytics',
         'offer_id'
     )
 }}

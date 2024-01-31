@@ -2,7 +2,7 @@
 {{ 
     compare_relations(
         'offer_item_ids',
-        'clean',
+        'analytics',
         'offer_id'
     )
 }}

@@ -1,11 +1,14 @@
 
-{% macro compare_relations(table_name, legacy_schema_name, primary_key, node, legacy_table_name=none) -%}
+{% macro compare_relations(table_name, legacy_schema_name, primary_key, node, legacy_table_name=none, exclude_columns=[]) -%}
 
-    {{ config(warn_if = '>1') }}
+    {{ config(warn_if = '>= 1') }}
     
-
     {% if not legacy_table_name %}
         {% set legacy_table_name=table_name %}
+    {% endif %}
+
+    {% if table_name in ["educational_institution", "offer", "venue"] %}
+        {% set legacy_table_name="applicative_database_" ~ table_name %}
     {% endif %}
 
     {% if execute %}
@@ -21,6 +24,7 @@
             a_relation=legacy_relation,
             b_relation=dbt_relation,
             summarize=false,
+            exclude_columns=exclude_columns,
             primary_key=primary_key
         ) }}
     {% endif %}

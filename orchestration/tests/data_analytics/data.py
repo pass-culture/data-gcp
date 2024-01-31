@@ -1589,6 +1589,7 @@ ENRICHED_COLLECTIVE_BOOKING_DATA_INPUT = {
             "venue_department_code": 78,
             "venue_managing_offerer_id": "2",
             "venue_type_id": "1",
+            "venue_is_permanent": True,
         }
     ],
     "region_department": [
@@ -1629,6 +1630,7 @@ ENRICHED_COLLECTIVE_BOOKING_DATA_EXPECTED = [
         "venue_name": "My Wonderful Venue",
         "venue_department_code": 78,
         "offerer_id": "2",
+        "partner_id": "venue-8",
         "offerer_name": "Ma structure",
         "booking_amount": 50,
         "number_of_tickets": 30,

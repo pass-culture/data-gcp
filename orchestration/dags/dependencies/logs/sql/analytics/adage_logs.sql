@@ -42,7 +42,8 @@ SELECT
     CAST(jsonPayload.extra.isfavorite as boolean) as is_favorite,
     CAST(CAST(jsonPayload.extra.playlistid as INT) as STRING) as playlist_id,
     CAST(CAST(jsonPayload.extra.domainid as INT) as STRING) as domain_id,
-    CAST(CAST(jsonPayload.extra.venueid as INT) as STRING) as venue_id
+    CAST(CAST(jsonPayload.extra.venueid as INT) as STRING) as venue_id,
+    CAST(CAST(jsonPayload.extra.index as INT) as STRING) as rank_clicked
 
 FROM
     `{{ bigquery_raw_dataset }}.stdout`

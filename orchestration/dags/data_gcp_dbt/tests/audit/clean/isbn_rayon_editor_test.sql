@@ -2,7 +2,7 @@
 {{ 
     compare_relations(
         'isbn_rayon_editor',
-        'clean',
+        'analytics',
         'isbn'
     )
 }}

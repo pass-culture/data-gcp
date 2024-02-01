@@ -126,7 +126,7 @@ WITH extracted_offers AS (
             TRIM(
                 JSON_EXTRACT(offer_extra_data, "$.gtl_id"), " "),
             '"') AS titelive_gtl_id
-    FROM  {{ source('raw','applicative_database_offer') }}
+    FROM  {{ ref('offer') }}
 
 )
 

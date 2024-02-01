@@ -18,7 +18,7 @@ snapshot-paths: ["snapshots"]
 target-path: "{{ env_var('DBT_TARGET_PATH', 'target') }}" # directory which will store compiled SQL files
 
 
-# The `target-path` config in `dbt_project.yml` has been deprecated, and will no longer be supported in a future version of dbt-core. 
+# The `target-path` config in `dbt_project.yml` has been deprecated, and will no longer be supported in a future version of dbt-core.
 # If you wish to write dbt artifacts to a custom directory, please use the --target-path CLI flag or DBT_TARGET_PATH env var instead.
 packages-install-path: "{{ env_var('DBT_TARGET_PATH', 'target') }}/dbt_packages"
 
@@ -63,7 +63,8 @@ models:
         node_color: "#d90000" 
   elementary:
     +on_schema_change: "append_new_columns"
-    
+    +enabled: "{{ target.name in ['stg','prod'] }}"
+
 seeds:
   +schema: seeds
   +docs:

@@ -46,7 +46,7 @@ weekly_bookings_and_bookable_offers AS (
         LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_booking_data` booking ON booking.partner_id=user_active_weeks.partner_id
         AND user_active_weeks.active_week = DATE_TRUNC(DATE(booking_creation_date),WEEK(MONDAY))
         AND booking_is_cancelled IS FALSE
-        LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_collective_booking_data` collective_booking ON collective_booking.offerer_id=user_active_weeks.offerer_id --attention changer en partner
+        LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_collective_booking_data` collective_booking ON collective_booking.partner_id=user_active_weeks.partner_id --attention changer en partner
         AND user_active_weeks.active_week = DATE_TRUNC(DATE(collective_booking_creation_date),WEEK(MONDAY))
         AND collective_booking_is_cancelled = "FALSE"
     GROUP BY 1,2,3,4,5,6,7,8,9

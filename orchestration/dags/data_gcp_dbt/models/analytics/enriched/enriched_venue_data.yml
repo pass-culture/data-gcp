@@ -3,6 +3,15 @@ version: 1
 models: 
   - name: enriched_venue_data
     description: Data table at venue level
+    columns:
+    - name: venue_id
+      tests: 
+        - relationships:
+            to: ref('enriched_venue_tags_data')
+            field: venue_id
+            config:
+              severity: error
+              error_if: ">10"
   - name: venue_public_name
   - name: venue_name
   - name: venue_booking_email

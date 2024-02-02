@@ -52,7 +52,7 @@ models:
     analytics:
       +materialized: table
       +schema: analytics_dbt_{{ target.name }}
-      +re_data_monitored: true
+      +re_data_monitored: "{{ true if target.name == 'prod' else false }}"
       +re_data_anomaly_detector:
         name: modified_z_score
         threshold: 3

@@ -13,7 +13,7 @@ user_active_weeks AS (
         ,cultural_partner.offerer_id
         ,date(partner_creation_date) as partner_creation_date
         ,weeks.week AS active_week
-        ,DATE_DIFF(CURRENT_DATE, partner_creation_date, WEEK(MONDAY)) AS nb_weeks_since_today
+        ,DATE_DIFF(CURRENT_DATE, partner_creation_date, WEEK(MONDAY)) AS partner_seniority_weeks
     FROM `{{ bigquery_analytics_dataset }}.enriched_cultural_partner_data` cultural_partner
     JOIN weeks ON weeks.week >= DATE_TRUNC(date(partner_creation_date), WEEK(MONDAY))
 ),

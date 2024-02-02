@@ -17,7 +17,7 @@ WITH weeks AS (
         ELSE NULL END AS adage_synchro_date
         ,weeks.week AS active_week
         ,DATE_DIFF(weeks.week,DATE_TRUNC(offerer_creation_date,WEEK(MONDAY)),WEEK) AS nb_weeks_since_offerer_created
-        ,DATE_DIFF(CURRENT_DATE, offerer_creation_date, WEEK) AS nb_weeks_since_today
+        ,DATE_DIFF(CURRENT_DATE, offerer_creation_date, WEEK) AS offerer_seniority_weeks
         ,COUNT(distinct unique_session_id) as nb_session
         ,AVG(visit_duration_seconds) as avg_visit_duration_seconds
         ,SUM(visit_duration_seconds) as sum_visit_duration_seconds

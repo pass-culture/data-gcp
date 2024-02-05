@@ -6,7 +6,6 @@ SELECT
     ,"jsonData" as jsonData
     ,"subcategoryId" as subcategoryId
     ,"isGcuCompatible" as isGcuCompatible
-    ,"isSynchronizationCompatible" as isSynchronizationCompatible
     ,"last_30_days_booking" as last_30_days_booking
     ,"lastProviderId" as lastProviderId
     ,"dateModifiedAtLastProvider" as dateModifiedAtLastProvider

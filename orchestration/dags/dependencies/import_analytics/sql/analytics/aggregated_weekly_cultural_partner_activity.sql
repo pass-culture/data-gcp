@@ -83,7 +83,7 @@ SELECT
         ,offerer_id
         ,partner_creation_date
         ,active_week
-        ,nb_weeks_since_today
+        ,partner_seniority_weeks
         ,nb_weeks_since_partner_created
 -- bookable offers this week
         ,nb_individual_bookable_offers

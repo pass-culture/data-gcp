@@ -84,19 +84,16 @@ test_op_dict = {}
 # PATH_TO_DBT_TARGET='./target'
 simplified_manifest = rebuild_manifest(f"/{PATH_TO_DBT_TARGET}")
 manifest = load_manifest(f"{PATH_TO_DBT_TARGET}")
-# good_keys = [item for item in manifest['nodes'].keys() if not ('re_data' in item or 'dbt_test__audit' in item)]
-# manifest["nodes"] = {key: manifest['nodes'][key] for key in good_keys}
 
 dbt_models = [node for node in manifest['nodes'].keys() if (manifest["nodes"][node]["resource_type"] == "model" and manifest["nodes"][node]["package_name"] == "data_gcp_dbt")]
-# dbt_models = [node for node in manifest['nodes'].keys() if (
-#     manifest["nodes"][node]["resource_type"] == "model" and 
-#     manifest["nodes"][node]["package_name"] == "data_gcp_dbt" and
-#     "source." not in node)]
+
 dbt_crit_tests = [node for node in manifest['nodes'].keys() if (manifest["nodes"].get(node).get("resource_type") == "test" and manifest["nodes"].get(node).get("package_name") == "data_gcp_dbt") and manifest["nodes"][node]["config"].get("severity","warn")=="error"]
 models_with_dependencies = [node for node in manifest['child_map'].keys() if node in dbt_models]
-models_with_crit_test_dependencies = [node for node in manifest['parent_map'].keys() if node in dbt_crit_tests]
+models_with_crit_test_dependencies = [manifest['nodes'][node]['attached_node'] for node in dbt_crit_tests]
+crit_test_parents = {manifest['nodes'][test]['attached_node'] : [parent for parent in set(manifest['parent_map'][test]).intersection(set(dbt_models))] for test in dbt_crit_tests}
 models_with_dependencies = [node for node in manifest['child_map'].keys() if (node in dbt_models) and (manifest["nodes"][node]["resource_type"] == "model" and manifest["nodes"][node]["package_name"] == "data_gcp_dbt")]
 
+# first create test operators and hide them in a group
 with TaskGroup(group_id="crit_tests", dag=dag) as crit_test_group:
     for model_node in dbt_models:
         full_ref_str = " --full-refresh" if not "{{ params.full_refresh }}" else ""
@@ -116,12 +113,37 @@ with TaskGroup(group_id="crit_tests", dag=dag) as crit_test_group:
                         cwd=PATH_TO_DBT_PROJECT,
                         dag=dag,
                     )
-                
-with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:           
+# loop over models          
+with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
+    with TaskGroup(group_id="applicative_tables", dag=dag) as applicative:
+        for model_node in dbt_models:
+            # hide numerous applicative tables
+            if "applicative" in manifest["nodes"][model_node]["alias"]:
+                full_ref_str = " --full-refresh" if not "{{ params.full_refresh }}" else ""
+                model_data = manifest["nodes"][model_node]
+                # with TaskGroup(group_id=f"{model_data['alias']}_tasks", dag=dag):
+                model_op_dict[model_node] = BashOperator(
+                            task_id=model_data["alias"],
+                            bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_run.sh ",
+                            env={
+                                "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
+                                "target": "{{ params.target }}",
+                                "model": f"{model_data['alias']}",
+                                "full_ref_str": full_ref_str,
+                                "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+                            },
+                            append_env=True,
+                            cwd=PATH_TO_DBT_PROJECT,
+                            dag=dag,
+                        )
+                # create dependencies between tests and their attached model
+                if model_node in models_with_crit_test_dependencies:
+                    model_op_dict[model_node] >> test_op_dict[model_node]
     for model_node in dbt_models:
-        full_ref_str = " --full-refresh" if not "{{ params.full_refresh }}" else ""
-        model_data = manifest["nodes"][model_node]
-        with TaskGroup(group_id=f"{model_data['alias']}_tasks", dag=dag):
+        if "applicative" not in manifest["nodes"][model_node]["alias"]:
+            full_ref_str = " --full-refresh" if not "{{ params.full_refresh }}" else ""
+            model_data = manifest["nodes"][model_node]
+            # with TaskGroup(group_id=f"{model_data['alias']}_tasks", dag=dag):
             model_op_dict[model_node] = BashOperator(
                         task_id=model_data["alias"],
                         bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_run.sh ",
@@ -136,146 +158,24 @@ with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
                         cwd=PATH_TO_DBT_PROJECT,
                         dag=dag,
                     )
+            # create dependencies between tests and their attached model
             if model_node in models_with_crit_test_dependencies:
                 model_op_dict[model_node] >> test_op_dict[model_node]
 
+    # set up models ascendencies
     for model_node in dbt_models:
         full_ref_str = " --full-refresh" if not "{{ params.full_refresh }}" else ""
         model_data = manifest["nodes"][model_node]
+        # replace model ascendency by test ascendency when needed
         if model_node in models_with_crit_test_dependencies:
             test_op_dict[model_node] >> tuple([model_op_dict[child] for child in manifest["child_map"][model_node] if child in dbt_models])
         else :
             model_op_dict[model_node] >> tuple([model_op_dict[child] for child in manifest["child_map"][model_node] if child in dbt_models])
 
 
-for model_node in dbt_models:  
-    if model_node not in manifest['parent_map'].keys():
-        join >> model_op_dict[model_node]
-
-
-# with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
-#     full_ref_str = " --full-refresh" if not "{{ params.full_refresh }}" else ""
-#     # models task group
-#     for model_node in models_with_dependencies:
-#         model_data = manifest["nodes"][model_node]
-#         model_op_dict[model_node] = BashOperator(
-#                     task_id=model_data["alias"],
-#                     bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_run.sh ",
-#                     env={
-#                         "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
-#                         "target": "{{ params.target }}",
-#                         "model": f"{model_data['alias']}",
-#                         "full_ref_str": full_ref_str,
-#                         "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
-#                     },
-#                     append_env=True,
-#                     cwd=PATH_TO_DBT_PROJECT,
-#                     dag=dag,
-#                 )
-#     for test_node in dbt_crit_tests:
-#         test_data = manifest["nodes"][test_node]
-#         test_op_dict[test_node] = BashOperator(
-#                     task_id=model_data["alias"],
-#                     bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_run.sh ",
-#                     env={
-#                         "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
-#                         "target": "{{ params.target }}",
-#                         "model": f"{model_data['alias']}",
-#                         "full_ref_str": full_ref_str,
-#                         "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
-#                     },
-#                     append_env=True,
-#                     cwd=PATH_TO_DBT_PROJECT,
-#                     dag=dag,
-#                 )        
-#         if model_node in models_with_crit_test_dependencies:
-            
-
-#         if model_data["resource_type"] == "model":
-#             crit_tests_list = model_data["model_tests"].get("error", [])
-#             with TaskGroup(
-#                 group_id=f'{model_data["model_alias"]}_tasks', dag=dag
-#             ) as model_tasks:
-#                 # models
-#                 model_op = BashOperator(
-#                     task_id=model_data["model_alias"],
-#                     bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_run.sh ",
-#                     env={
-#                         "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
-#                         "target": "{{ params.target }}",
-#                         "model": f"{model_data['model_alias']}",
-#                         "full_ref_str": full_ref_str,
-#                         "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
-#                     },
-#                     append_env=True,
-#                     cwd=PATH_TO_DBT_PROJECT,
-#                     dag=dag,
-#                 )
-#                 model_op_dict[model_data["model_alias"]] = model_op
-#                 # critical tests task subgroup
-#                 if len(crit_tests_list) > 0:
-#                     with TaskGroup(
-#                         group_id=f'{model_data["model_alias"]}_critical_tests', dag=dag
-#                     ) as crit_tests_task:
-#                         dbt_test_tasks = [
-#                             BashOperator(
-#                                 task_id=test["test_alias"],
-#                                 bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_run.sh "
-#                                 if test["test_type"] == "generic"
-#                                 else f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_test_model.sh ",
-#                                 env={
-#                                     "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
-#                                     "target": "{{ params.target }}",
-#                                     "model": f"{model_data['model_alias']}",
-#                                     "full_ref_str": full_ref_str,
-#                                     "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
-#                                 },
-#                                 append_env=True,
-#                                 cwd=PATH_TO_DBT_PROJECT,
-#                                 dag=dag,
-#                             )
-#                             for test in crit_tests_list
-#                             if not test["test_alias"].endswith(
-#                                 f'ref_{model_data["model_alias"]}_'
-#                             )
-#                         ]
-#                         if len(dbt_test_tasks) > 0:
-#                             model_op >> crit_tests_task
-#                     for i, test in enumerate(crit_tests_list):
-
-#                         if not test["test_alias"].endswith(
-#                             f'ref_{model_data["model_alias"]}_'
-#                         ):
-#                             if test["test_alias"] not in test_op_dict.keys():
-#                                 test_op_dict[test["test_alias"]] = {
-#                                     "parent_model": [model_data["model_alias"]],
-#                                     "test_op": dbt_test_tasks[i],
-#                                 }
-#                             else:
-#                                 test_op_dict[test["test_alias"]]["parent_model"] += [
-#                                     model_data["model_alias"]
-#                                 ]
-#                 simplified_manifest[model_node]["redirect_dep"] = model_tasks
-
-
-# models' task groups dependencies
-# for node, values in simplified_manifest.items():
-#     if values["resource_type"] == "model":
-#         for upstream_node in simplified_manifest[node]["depends_on_node"]:
-#             if upstream_node is not None:
-#                 if upstream_node.startswith("model."):
-#                     try:
-#                         (
-#                             simplified_manifest[upstream_node]["redirect_dep"]
-#                             >> simplified_manifest[node]["redirect_dep"]
-#                         )
-#                     except:
-#                         pass
-
-# # tests' cross dependencies management
-# for test_alias, details in test_op_dict.items():
-#     for parent in details["parent_model"]:
-#         model_op_dict[parent] >> details["test_op"]
-
+# test's cross dependencies management
+for test,parents in crit_test_parents.items():
+    for p in parents:
+        model_op_dict[p] >> test_op_dict[test]
 
 start >> branching >> [shunt, wait4init] >> join >> data_transfo >> end

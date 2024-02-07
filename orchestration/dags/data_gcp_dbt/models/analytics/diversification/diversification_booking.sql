@@ -19,7 +19,7 @@ SELECT
         IF(booking.digital_goods = True, 'digital', null),
         IF(booking.event = True, 'event', null)
     ) as format
-    , {% for feature in dml_vars("diversification_features") %}
+    , {% for feature in ml_vars("diversification_features") %}
         {{feature}}_diversification
         {% if not loop.last -%} , {%- endif %}
     {% endfor %}

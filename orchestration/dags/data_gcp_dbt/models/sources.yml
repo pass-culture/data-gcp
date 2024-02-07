@@ -101,6 +101,7 @@ sources:
       - name: applicative_database_venue_reimbursement_point_link
       - name: geoip_city_v4
       - name: gsheet_eac_webinar
+      - name: macro_rayons
       - name: stdout
   - name: clean # this is the source_name
     schema: clean_{{ var('ENV_SHORT_NAME') }} # this is the schema_name
@@ -122,8 +123,8 @@ sources:
       - name: firebase_pro_events
       - name: firebase_recommendation_events
       - name: linked_offers
+      - name: offer_types
       - name: region_department
       - name: siren_data_labels
-      - name: subcategories
       - name: user_locations
       

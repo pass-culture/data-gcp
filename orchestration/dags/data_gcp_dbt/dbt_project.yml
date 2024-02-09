@@ -66,6 +66,10 @@ models:
     +enabled: false
   re_data:
     +enabled: false
+  sandbox:
+    +schema: sandbox_{{ target.name }}
+
+
 
 seeds:
   +schema: seeds

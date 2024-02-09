@@ -16,7 +16,7 @@ WITH bookings_per_stock AS (
         partition_date
 )
 SELECT
-    DISTINCT stock.partition_date, stock.offer_id, offer_item_ids.item_id, offer.offer_subcategoryId AS offer_subcategory_id, offer.offer_category_id
+    DISTINCT stock.partition_date, stock.offer_id, offer_item_ids.item_id, offer.offer_subcategoryId AS offer_subcategory_id, subcategories.category_id AS offer_category_id
 FROM
     {{ref('stock_history')}} AS stock
     JOIN {{ref('offer_history')}} AS offer ON stock.offer_id = offer.offer_id

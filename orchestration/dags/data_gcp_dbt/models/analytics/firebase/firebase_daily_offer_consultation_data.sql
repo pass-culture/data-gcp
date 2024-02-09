@@ -22,7 +22,7 @@ ON
 WHERE
   event_name = 'ConsultOffer'
    {% if is_incremental() %} -- recalculate latest day's DATA + previous
-WHERE
+AND
   DATE(event_date) >= DATE_SUB(DATE(_dbt_max_partition), INTERVAL 1 day)
 {% endif %}
 GROUP BY

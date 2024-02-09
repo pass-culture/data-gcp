@@ -6,22 +6,30 @@ WITH users AS (
   ),
 bookings AS (
   SELECT 
-    user_id
-    , item_id
-    , offer_id
-    , booking_amount
+    bookings.user_id
+    , bookings.item_id
+    , bookings.offer_id
+    , bookings.booking_amount
     , CASE
-        WHEN booking_amount = 0
+        WHEN bookings.booking_amount = 0
         THEN 1
         ELSE 0
       END as is_free_offer
-    , booking_creation_date
-    , booking_id
-    , physical_goods
-    , digital_goods
-    , event
-    , venue_id
-FROM {{ ref('enriched_booking_data') }}
+    , bookings.booking_creation_date
+    , bookings.booking_id
+    , bookings.physical_goods
+    , bookings.digital_goods
+    , bookings.event
+    , bookings.venue_id
+    , ictl.category as clustering_category
+    , ictl.semantic_category as clustering_semmantic_category
+    , ictl.semantic_cluster_id
+    , ictl.topic_id
+    , ictl.x_cluster
+    , ictl.y_cluster
+
+FROM {{ ref('enriched_booking_data') }} as bookings
+LEFT JOIN {{ ref('item_clusters_topics_labels') }} as ictl on ictl.item_id = bookings.item_id
 WHERE booking_status != 'CANCELLED'
 ),
 offer_metadata as (
@@ -37,6 +45,7 @@ SELECT
     users.user_id
     , bookings.booking_creation_date
     , bookings.booking_id
+    , bookings.item_id
     , CASE
         WHEN subcategories.is_event = TRUE THEN "event"
         WHEN subcategories.online_offline_platform = "ONLINE" AND subcategories.is_event = FALSE THEN "digital"
@@ -73,6 +82,7 @@ diversification_scores as (
   SELECT
   user_id
   , booking_id
+  , item_id
   , booking_rank
   , booking_creation_date
   , is_free_offer
@@ -96,16 +106,19 @@ FROM base_diversification
 
 SELECT
   user_id
+  , item_id
   , booking_id
   , booking_creation_date
-  , category_diversification
-  , sub_category_diversification
-  , format_diversification
-  , venue_id_diversification
-  , extra_category_diversification
+  , {% for feature in ml_vars("diversification_features") %}
+    {{feature}}_diversification
+    {% if not loop.last -%} , {%- endif %}
+    {% endfor %}
   , case
-      when booking_rank = 1 
-      then 1 -- 1 point d'office pour le premier booking
-      else category_diversification + sub_category_diversification + format_diversification + venue_id_diversification + extra_category_diversification	
+      when booking_rank = 1 then 1 -- 1 point d'office pour le premier booking
+      else -- somme des points de diversification pr les suivants
+          {% for feature in ml_vars("diversification_features") %} 
+          {{feature}}_diversification 
+          {% if not loop.last -%} + {%- endif %}
+          {% endfor %}
     end as delta_diversification
 FROM diversification_scores

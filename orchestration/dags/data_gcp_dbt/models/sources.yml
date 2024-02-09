@@ -2,7 +2,7 @@ version: 1
 
 sources:
   - name: raw # this is the source_name
-    schema: raw_{{ var('ENV_SHORT_NAME') }} # this is the schema_name
+    schema: raw_{{ var('ENV_SHORT_NAME') }}
     tables:
       - name: agg_partner_cultural_sector # try to plug it directly to google cloud storage with dbt_external_tables package
       - name: applicative_database_action_history
@@ -104,7 +104,7 @@ sources:
       - name: macro_rayons
       - name: stdout
   - name: clean # this is the source_name
-    schema: clean_{{ var('ENV_SHORT_NAME') }} # this is the schema_name
+    schema: clean_{{ var('ENV_SHORT_NAME') }}
     tables:
       - name: adage_involved_student # this is the table_name
       - name: dms_jeunes_cleaned
@@ -113,8 +113,10 @@ sources:
       - name: firebase_app_experiments
       - name: siren_data
       - name: subcategories
+      - name: item_clusters
+      - name: item_topics_labels
   - name: analytics # this is the source_name
-    schema: analytics_{{ var('ENV_SHORT_NAME') }} # this is the schema_name
+    schema: analytics_{{ var('ENV_SHORT_NAME') }}
     tables:
       - name: bookable_venue_history
       - name: contentful_entries
@@ -127,4 +129,5 @@ sources:
       - name: region_department
       - name: siren_data_labels
       - name: user_locations
+      - name: titelive_gtl_mapping
       

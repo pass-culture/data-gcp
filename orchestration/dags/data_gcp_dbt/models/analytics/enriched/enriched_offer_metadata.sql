@@ -1,10 +1,12 @@
 {{ config(
     pre_hook="{{ create_humanize_id_function() }}"
 ) }}
+{% set target_name = target.name %}
+{% set target_schema = generate_schema_name('analytics_dbt_' ~ target_name) %}
 WITH offer_humanized_id AS (
     SELECT
         offer_id,
-        {{target.schema}}.humanize_id(offer_id) AS humanized_id,
+        {{target_schema}}.humanize_id(offer_id) AS humanized_id,
     FROM
         {{ ref('offer') }}
     WHERE
@@ -13,7 +15,7 @@ WITH offer_humanized_id AS (
 mediation AS (
     SELECT
         offer_id,
-        {{target.schema}}.humanize_id(id) as mediation_humanized_id
+        {{target_schema}}.humanize_id(id) as mediation_humanized_id
     FROM
         (
             SELECT
@@ -67,7 +69,7 @@ enriched_items AS (
             )
             ELSE CONCAT(
                 "https://storage.googleapis.com/{{ mediation_url }}-assets-fine-grained/thumbs/products/",
-                {{target.schema}}.humanize_id(offer.offer_product_id)
+                {{target_schema}}.humanize_id(offer.offer_product_id)
             )
         END AS image_url
 

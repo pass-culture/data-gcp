@@ -39,7 +39,7 @@ sandbox:
   outputs:
     prod:
       dataset: sandbox_prod
-      job_execution_timeout_seconds: 300
+      job_execution_timeout_seconds: 600
       job_retries: 8
       location: europe-west1
       method: oauth

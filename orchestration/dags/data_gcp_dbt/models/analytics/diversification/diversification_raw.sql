@@ -69,6 +69,18 @@ SELECT
       END as extra_category
   -- attribuer un numéro de réservation
     , row_number() over(partition by users.user_id order by booking_creation_date) as booking_rank
+  -- features de clustering
+    , ictl.micro_category_details
+    , ictl.macro_category_details
+    , ictl.semantic_category
+    , ictl.category_lvl0
+    , ictl.category_lvl1
+    , ictl.category_lvl2
+    , ictl.category_genre_lvl1
+    , ictl.category_genre_lvl2
+    , ictl.category_medium_lvl1
+    , ictl.category_medium_lvl2
+    , ictl.semantic_cluster_id
 FROM users
 INNER JOIN bookings
   ON users.user_id = bookings.user_id
@@ -76,6 +88,9 @@ LEFT JOIN offer_metadata
   ON bookings.offer_id = offer_metadata.offer_id
 LEFT JOIN {{ source('clean','subcategories') }} subcategories
   ON offer_metadata.subcategory_id = subcategories.id
+LEFT JOIN {{ref('item_clusters_topics_labels') }} as ictl
+  ON bookings.item_id = ictl.item_id
+
 ),
 
 diversification_scores as (

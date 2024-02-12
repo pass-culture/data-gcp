@@ -18,6 +18,7 @@ from common.config import (
     PATH_TO_DBT_PROJECT,
     ENV_SHORT_NAME,
     PATH_TO_DBT_TARGET,
+    EXCLUDED_TAGS,
 )
 
 
@@ -86,6 +87,7 @@ simplified_manifest = rebuild_manifest(f"/{PATH_TO_DBT_TARGET}")
 
 with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
     full_ref_str = " --full-refresh" if not "{{ params.full_refresh }}" else ""
+
     # models task group
     for model_node, model_data in simplified_manifest.items():
         if model_data["resource_type"] == "model":
@@ -103,6 +105,10 @@ with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
                         "model": f"{model_data['model_alias']}",
                         "full_ref_str": full_ref_str,
                         "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+                        "EXCLUSION": " --exclude "
+                        + " ".join([f"tag:{item}" for item in EXCLUDED_TAGS])
+                        if len(EXCLUDED_TAGS) > 0
+                        else "",
                     },
                     append_env=True,
                     cwd=PATH_TO_DBT_PROJECT,
@@ -126,6 +132,12 @@ with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
                                     "model": f"{model_data['model_alias']}",
                                     "full_ref_str": full_ref_str,
                                     "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+                                    "EXCLUSION": " --exclude "
+                                    + " ".join(
+                                        [f"tag:{item}" for item in EXCLUDED_TAGS]
+                                    )
+                                    if len(EXCLUDED_TAGS) > 0
+                                    else "",
                                 },
                                 append_env=True,
                                 cwd=PATH_TO_DBT_PROJECT,

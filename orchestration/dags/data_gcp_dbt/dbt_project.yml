@@ -62,15 +62,13 @@ models:
       +docs: 
         node_color: "#d90000" 
       diversification:
-        +tags:
-          - sandbox
+        +tags: sandbox
   elementary:
     +on_schema_change: "append_new_columns"
     +enabled: false
   re_data:
     +enabled: false
-  sandbox:
-    +schema: sandbox_{{ target.name }}
+
 
 
 

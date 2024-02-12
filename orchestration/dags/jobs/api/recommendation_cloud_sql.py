@@ -33,12 +33,16 @@ from common import macros
 from common.utils import get_airflow_schedule
 import time
 
+database_instance_name = access_secret_data(
+    GCP_PROJECT_ID, f"{RECOMMENDATION_SQL_INSTANCE}_database_instance_name", default=""
+)
+
 database_url = access_secret_data(
     GCP_PROJECT_ID, f"{RECOMMENDATION_SQL_INSTANCE}_database_url", default=""
 )
 os.environ["AIRFLOW_CONN_PROXY_POSTGRES_TCP"] = (
     database_url.replace("postgresql://", "gcpcloudsql://")
-    + f"?database_type=postgres&project_id={GCP_PROJECT_ID}&location={GCP_REGION}&instance={RECOMMENDATION_SQL_INSTANCE}&use_proxy=True&sql_proxy_use_tcp=True"
+    + f"?database_type=postgres&project_id={GCP_PROJECT_ID}&location={GCP_REGION}&instance={database_instance_name}&use_proxy=True&sql_proxy_use_tcp=True"
 )
 
 
@@ -51,6 +55,7 @@ CONCURENT_MATERIALIZED_TABLES = [
     "enriched_user_mv",
     "item_ids_mv",
     "non_recommendable_items_mv",
+    "iris_france_mv",
 ]
 
 default_args = {
@@ -225,7 +230,7 @@ with DAG(
             task_id=f"cloud_sql_restore_table_{table_name}",
             project_id=GCP_PROJECT_ID,
             body=import_body,
-            instance=RECOMMENDATION_SQL_INSTANCE,
+            instance=database_instance_name,
         )
         return sql_restore_task
 

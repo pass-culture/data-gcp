@@ -1,9 +1,9 @@
--- depends_on: {{ ref('available_stock') }}
+-- depends_on: {{ ref('available_stock_information') }}
 {{ 
     compare_relations(
-        table_name='available_stock',
+        table_name='available_stock_information',
         legacy_schema_name='clean',
         primary_key='stock_id',
-        legacy_table_name='available_stock_information'
+        exclude_columns=['available_stock_information']
     )
 }}

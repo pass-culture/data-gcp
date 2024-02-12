@@ -1,3 +1,15 @@
+{{
+  config(
+    materialized='incremental',
+    partition_by={
+      'field': 'month_log',
+      'data_type': 'date'
+      },
+    incremental_strategy='insert_overwrite'
+  )
+}}
+
+
 WITH active_dates_geoloc AS (
 SELECT 
   DATE_TRUNC(pro.event_date, month) as month_log,
@@ -6,7 +18,10 @@ SELECT
   COUNT(DISTINCT pro.event_date) as nb_log_reco,
 FROM {{ source('analytics', 'firebase_recommendation_events') }} pro
 WHERE user_iris_id IS NOT NULL 
-AND DATE_TRUNC(DATE(event_date), MONTH) = DATE_TRUNC(DATE('{{ ds() }}'), month)
+{% if is_incremental() %}
+-- recalculate latest day's data + previous
+AND DATE_TRUNC(DATE(event_date), MONTH) = DATE_TRUNC(DATE('2023-12-01'), month)
+{% endif %}
 GROUP BY 1, 2, 3 
 )
 

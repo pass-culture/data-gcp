@@ -107,14 +107,19 @@ sources:
     schema: clean_{{ var('ENV_SHORT_NAME') }}
     tables:
       - name: adage_involved_student # this is the table_name
-      - name: dms_jeunes_cleaned
+      - name: dms_jeunes_cleaned 
       - name: dms_pro_cleaned
-      - name: iris_france
       - name: firebase_app_experiments
+      - name: iris_france
+      - name: item_clusters
+      - name: item_embeddings
+      - name: item_embeddings_reduced_64
+      - name: item_embeddings_reduced_32
+      - name: item_embeddings_reduced_16
+      - name: item_embeddings_reduced_5
+      - name: item_topics_labels
       - name: siren_data
       - name: subcategories
-      - name: item_clusters
-      - name: item_topics_labels
   - name: analytics # this is the source_name
     schema: analytics_{{ var('ENV_SHORT_NAME') }}
     tables:
@@ -128,6 +133,7 @@ sources:
       - name: offer_types
       - name: region_department
       - name: siren_data_labels
-      - name: user_locations
       - name: titelive_gtl_mapping
+      - name: user_locations
+      
       

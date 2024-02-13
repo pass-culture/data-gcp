@@ -114,10 +114,16 @@ offer_metadata_id AS (
         offer_extracted_data.genres,
         offer_extracted_data.author,
         offer_extracted_data.performer,
+        offer_extracted_data.titelive_gtl_id,
+        gtl.gtl_label_level_1,
+        gtl.gtl_label_level_2,
+        gtl.gtl_label_level_3,
+        gtl.gtl_label_level_4
 
     FROM enriched_items
     
-    LEFT JOIN {{ ref('offer_extracted_data') }} offer_extracted_data ON offer_extracted_data.offer_id = enriched_items.offer_id
+    LEFT JOIN {{ ref('offer_extracted_data') }} as offer_extracted_data ON offer_extracted_data.offer_id = enriched_items.offer_id
+    LEFT JOIN {{ source('analytics','titelive_gtl_mapping') }} as gtl ON offer_extracted_data.titelive_gtl_id = gtl.gtl_id
 ),
 
 

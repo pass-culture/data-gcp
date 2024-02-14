@@ -12,7 +12,12 @@ def load_json_artifact(_PATH_TO_DBT_TARGET, artifact):
 
 
 def load_manifest(_PATH_TO_DBT_TARGET):
-    return load_json_artifact(_PATH_TO_DBT_TARGET, "manifest.json")
+    manifest = load_json_artifact(_PATH_TO_DBT_TARGET, "manifest.json")
+    if manifest != {}:
+        return manifest
+    else:
+        empty_manifest = {"metadata": {},"nodes": {},"sources": {},"metrics": {},"exposures": {},"groups": {},"macros": {},"docs": {},"parent_map": {},"child_map": {},"group_map": {},"selectors": {},"disabled": {}}
+        return empty_manifest
 
 
 def build_simplified_manifest(json_dict_data):

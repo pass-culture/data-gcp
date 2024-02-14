@@ -18,6 +18,7 @@ from common.config import (
     PATH_TO_DBT_PROJECT,
     ENV_SHORT_NAME,
     PATH_TO_DBT_TARGET,
+    EXCLUDED_TAGS,
 )
 
 
@@ -166,6 +167,10 @@ with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
                         "model": f"{model_data['alias']}",
                         "full_ref_str": full_ref_str,
                         "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+                        "EXCLUSION": " --exclude "
+                        + " ".join([f"tag:{item}" for item in EXCLUDED_TAGS])
+                        if len(EXCLUDED_TAGS) > 0
+                        else "",
                     },
                     append_env=True,
                     cwd=PATH_TO_DBT_PROJECT,
@@ -174,7 +179,7 @@ with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
                 # create dependencies between tests and their attached model
                 if model_node in models_with_crit_test_dependencies:
                     model_op_dict[model_node] >> test_op_dict[model_node]
-
+                    
     for model_node in dbt_models:
         if "applicative" not in manifest["nodes"][model_node]["alias"]:
             full_ref_str = " --full-refresh" if not "{{ params.full_refresh }}" else ""
@@ -184,11 +189,17 @@ with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
                 task_id=model_data["alias"],
                 bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_run.sh ",
                 env={
-                    "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
-                    "target": "{{ params.target }}",
-                    "model": f"{model_data['alias']}",
-                    "full_ref_str": full_ref_str,
-                    "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+                     "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
+                     "target": "{{ params.target }}",
+                     "model": f"{model_data['model_alias']}",
+                     "full_ref_str": full_ref_str,
+                     "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+                     "EXCLUSION": " --exclude "
+                     + " ".join(
+                         [f"tag:{item}" for item in EXCLUDED_TAGS]
+                     )
+                     if len(EXCLUDED_TAGS) > 0
+                     else "",
                 },
                 append_env=True,
                 cwd=PATH_TO_DBT_PROJECT,
@@ -225,3 +236,4 @@ for test, parents in crit_test_parents.items():
             pass
 
 start >> branching >> [shunt, wait4init] >> join >> data_transfo
+

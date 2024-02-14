@@ -28,6 +28,7 @@ SELECT
     stock.stock_beginning_date,
     stock.stock_id,
     offer.offer_id,
+    offer_item_ids.item_id,
     offer.offer_subcategoryId,
     subcategories.category_id AS offer_category_id,
     offer.offer_name,
@@ -65,3 +66,4 @@ FROM
     LEFT JOIN {{ ref('venue_label') }} AS venue_label ON venue.venue_label_id = venue_label.venue_label_id
     INNER JOIN {{ source('clean','subcategories') }} AS subcategories ON offer.offer_subcategoryId = subcategories.id
     LEFT JOIN booking_ranking_in_category_view ON booking_ranking_in_category_view.booking_id = booking.booking_id
+    LEFT JOIN {{ ref('offer_item_ids') }} as offer_item_ids ON offer.offer_id = offer_item_ids.offer_id

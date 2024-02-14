@@ -84,7 +84,7 @@ test_op_dict = {}
 
 # PATH_TO_DBT_TARGET='./target'
 # simplified_manifest = rebuild_manifest(f"/{PATH_TO_DBT_TARGET}")
-manifest = load_manifest(f"{PATH_TO_DBT_TARGET}")
+manifest = load_manifest(f"/{PATH_TO_DBT_TARGET}")
 
 dbt_models = [
     node

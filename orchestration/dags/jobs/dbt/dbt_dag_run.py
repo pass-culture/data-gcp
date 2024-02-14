@@ -191,7 +191,7 @@ with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
                 env={
                      "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
                      "target": "{{ params.target }}",
-                     "model": f"{model_data['model_alias']}",
+                     "model": f"{model_data['alias']}",
                      "full_ref_str": full_ref_str,
                      "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
                      "EXCLUSION": " --exclude "

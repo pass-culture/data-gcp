@@ -44,9 +44,11 @@ class TwoTowersModel(tfrs.models.Model):
             name: self.load_embedding_layer(
                 layer_type=layer["type"],
                 embedding_size=layer["embedding_size"],
-                embedding_initialisation_weights=data[name].drop_duplicates().tolist()
-                if layer["type"] == "pretrained"
-                else None,
+                embedding_initialisation_weights=(
+                    data[name].drop_duplicates().tolist()
+                    if layer["type"] == "pretrained"
+                    else None
+                ),
             )
             for name, layer in item_features_config.items()
         }

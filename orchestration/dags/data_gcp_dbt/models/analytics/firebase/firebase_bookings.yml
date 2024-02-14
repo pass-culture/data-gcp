@@ -1,0 +1,6 @@
+models:
+  - name: firebase_bookings
+    columns:
+      - name: booking_id
+        tests:
+          - unique

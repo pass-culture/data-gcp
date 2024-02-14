@@ -53,9 +53,11 @@ with DAG(
     "import_sendinblue",
     default_args=default_dag_args,
     description="Import sendinblue tables",
-    schedule_interval=get_airflow_schedule("00 04 * * *")
-    if ENV_SHORT_NAME in ["prod", "stg"]
-    else get_airflow_schedule("00 07 * * *"),
+    schedule_interval=(
+        get_airflow_schedule("00 04 * * *")
+        if ENV_SHORT_NAME in ["prod", "stg"]
+        else get_airflow_schedule("00 07 * * *")
+    ),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,

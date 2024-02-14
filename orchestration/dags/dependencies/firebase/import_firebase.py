@@ -89,6 +89,13 @@ import_firebase_pro_tables = {
         "clustering_fields": {"fields": ["event_name"]},
         "depends": ["clean_firebase_pro_events"],
     },
+    "analytics_firebase_pro_visits": {
+        "sql": f"{SQL_PATH}/analytics/firebase_pro_visits.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "firebase_pro_visits${{ yyyymmdd(ds) }}",
+        "time_partitioning": {"field": "first_event_date"},
+        "depends": ["clean_firebase_pro_visits"],
+    },
 }
 
 import_firebase_beneficiary_tables = {

@@ -22,7 +22,7 @@ BEGIN
     irf.id::int as id,
     cast_to_int(irf."irisCode",0) as iriscode,
     irf.centroid as centroid,
-    irf.shape::geometry as shape
+    ST_SetSRID(irf.shape::geometry, 0) as shape
     FROM public.iris_france irf;
 END;
 $body$
@@ -37,6 +37,10 @@ WITH NO DATA;
 
 
 
-CREATE UNIQUE INDEX idx_iris_france_mv_tmp_{{ ts_nodash }} ON public.iris_france_mv_tmp USING btree (id);
+CREATE INDEX idx_iris_france_centroid_tmp_{{ ts_nodash }} ON public.iris_france_mv_tmp USING gist (centroid);
+
+CREATE INDEX idx_iris_france_shape_tmp_{{ ts_nodash }} ON public.iris_france_mv_tmp USING gist (shape);
+
+CREATE UNIQUE INDEX iris_france_pkey_tmp_{{ ts_nodash }} ON public.iris_france_mv_tmp USING btree (id);
 -- Refresh state
 REFRESH MATERIALIZED VIEW iris_france_mv_tmp;

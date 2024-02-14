@@ -10,7 +10,7 @@ WITH bookings_per_stock AS (
         ) AS booking_stock_no_cancelled_cnt
     FROM
         {{ref('booking_history')}} AS booking
-    WHERE partition_date = DATE("{{ ds() }}")
+    WHERE partition_date = PARSE_DATE('%Y-%m-%d','{{ ds() }}')
     GROUP BY
         stock_id,
         partition_date
@@ -47,4 +47,4 @@ WHERE
             ) > 0
         )
     )
-    AND stock.partition_date = DATE("{{ ds() }}")
+    AND stock.partition_date = PARSE_DATE('%Y-%m-%d','{{ ds() }}')

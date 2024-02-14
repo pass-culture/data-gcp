@@ -4,3 +4,4 @@ edr_target/
 dbt_packages/
 package-lock.yml
 *.ipynb
+edr_target/

@@ -67,9 +67,9 @@ for type, params in dags.items():
             del import_tables_temp[table]["dag_depends"]
         # force this to include custom yyyymmdd
         if job_params.get("partition_prefix", None) is not None:
-            job_params["destination_table"] = (
-                f"{job_params['destination_table']}{job_params['partition_prefix']}{yyyymmdd}"
-            )
+            job_params[
+                "destination_table"
+            ] = f"{job_params['destination_table']}{job_params['partition_prefix']}{yyyymmdd}"
 
         task = bigquery_job_task(
             dag=dag,

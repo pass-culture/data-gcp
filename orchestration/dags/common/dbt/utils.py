@@ -3,8 +3,11 @@ import json
 
 def load_json_artifact(_PATH_TO_DBT_TARGET, artifact):
     local_filepath = _PATH_TO_DBT_TARGET + "/" + artifact
-    with open(local_filepath) as f:
-        data = json.load(f)
+    try:
+        with open(local_filepath) as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        data = {}
     return data
 
 

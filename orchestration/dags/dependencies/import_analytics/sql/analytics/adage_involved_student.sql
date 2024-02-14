@@ -20,7 +20,7 @@ WITH involved_students AS (
             WHEN isl.level_code in ("2NDE G-T", "1ERE G-T", "TERM G-T", "CAP 1 AN", "1CAP2", "2CAP2", "2CAP3", "3CAP3", "2NDE PRO", "1ERE PRO", "TLEPRO" ) THEN "Lycée"
             WHEN isl.level_code = "MLDS" THEN "MLDS"
             ELSE isl.level_code 
-        END AS niveau_education_macro,
+        END AS level_macro,
         coalesce(sum(SAFE_CAST(involved_students as FLOAT64)), 0) as involved_students,
         coalesce(sum(SAFE_CAST(total_involved_students as FLOAT64)), 0) as total_involved_students,
     FROM

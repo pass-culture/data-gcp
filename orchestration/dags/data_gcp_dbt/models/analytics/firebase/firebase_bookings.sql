@@ -22,3 +22,4 @@ FROM {{ source('analytics', 'firebase_events') }}
 -- recalculate latest day's data + previous
 where date(event_date) >= date_sub(date(_dbt_max_partition), interval 1 day)
 {% endif %}
+QUALIFY ROW_NUMBER() OVER (PARTITION BY booking_id ORDER BY event_timestamp) = 1 -- Keep first log only

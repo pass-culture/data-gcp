@@ -53,6 +53,7 @@ dag = DAG(
 
 # Basic steps
 
+
 # branching function for skipping waiting task when dag is triggered manually
 def choose_branch(**context):
     run_id = context["dag_run"].run_id
@@ -117,9 +118,11 @@ with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
                         dbt_test_tasks = [
                             BashOperator(
                                 task_id=test["test_alias"],
-                                bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_run.sh "
-                                if test["test_type"] == "generic"
-                                else f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_test_model.sh ",
+                                bash_command=(
+                                    f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_run.sh "
+                                    if test["test_type"] == "generic"
+                                    else f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_test_model.sh "
+                                ),
                                 env={
                                     "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
                                     "target": "{{ params.target }}",

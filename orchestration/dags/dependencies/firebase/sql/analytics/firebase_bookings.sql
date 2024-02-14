@@ -15,3 +15,4 @@ WHERE event_name = "BookingConfirmation"
   {% else %}
   AND event_date = DATE('{{ add_days(ds, -1) }}')
   {% endif %}
+QUALIFY ROW_NUMBER() OVER (PARTITION BY booking_id ORDER BY event_timestamp) = 1 -- Keep first log only

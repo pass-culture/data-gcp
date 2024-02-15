@@ -78,3 +78,4 @@ else:
     PATH_TO_DBT_TARGET = os.environ.get(
         "DBT_TARGET_PATH", "/opt/airflow/dags/data_gcp_dbt/target"
     )
+EXCLUDED_TAGS = ["sandbox", "weekly", "monthly"]

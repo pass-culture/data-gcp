@@ -32,13 +32,15 @@ SELECT
         ,SUM(CASE WHEN nb_clic_collective_help+nb_clic_help_center+nb_clic_best_practices+nb_clic_consult_support+nb_clic_consult_cgu>0 THEN 1 ELSE 0 END) AS nb_consult_help
 
 FROM 
-        {% if params.dag_type == 'intraday' %}
-         `{{ bigquery_clean_dataset }}.firebase_pro_visits_{{ yyyymmdd(add_days(ds, 0)) }}` clean_firebase
-        {% else %}
-         `{{ bigquery_clean_dataset }}.firebase_pro_visits_{{ yyyymmdd(add_days(ds, -1)) }}` clean_firebase
-        {% endif %}
-        LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_user_offerer` user_offerer ON clean_firebase.user_id=user_offerer.user_id
-        LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_offerer_data` offerer ON user_offerer.offerer_id=offerer.offerer_id
-        LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_cultural_partner_data` partner ON user_offerer.offerer_id=partner.offerer_id
+ `{{ bigquery_clean_dataset }}.firebase_pro_visits` clean_firebase
+LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_user_offerer` user_offerer ON clean_firebase.user_id=user_offerer.user_id
+LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_offerer_data` offerer ON user_offerer.offerer_id=offerer.offerer_id
+LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_cultural_partner_data` partner ON user_offerer.offerer_id=partner.offerer_id
+{% if params.dag_type == 'intraday' %}
+        where clean_firebase.first_event_date = PARSE_DATE('%Y-%m-%d','{{ ds }}')
+{% else %}
+        where clean_firebase.first_event_date = DATE_SUB(PARSE_DATE('%Y-%m-%d','{{ ds }}'),INTERVAL 1 DAY)
+{% endif %}
+
 GROUP BY 1,2,3,4,5,6,7,8,9
         

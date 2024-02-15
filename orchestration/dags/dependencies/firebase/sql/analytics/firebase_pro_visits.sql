@@ -41,6 +41,5 @@ LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_cultural_partner_data` part
 {% else %}
         where clean_firebase.first_event_date = DATE_SUB(PARSE_DATE('%Y-%m-%d','{{ ds }}'),INTERVAL 1 DAY)
 {% endif %}
-
 GROUP BY 1,2,3,4,5,6,7,8,9
         

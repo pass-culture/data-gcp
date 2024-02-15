@@ -16,7 +16,21 @@ def load_manifest(_PATH_TO_DBT_TARGET):
     if manifest != {}:
         return manifest
     else:
-        empty_manifest = {"metadata": {},"nodes": {},"sources": {},"metrics": {},"exposures": {},"groups": {},"macros": {},"docs": {},"parent_map": {},"child_map": {},"group_map": {},"selectors": {},"disabled": {}}
+        empty_manifest = {
+            "metadata": {},
+            "nodes": {},
+            "sources": {},
+            "metrics": {},
+            "exposures": {},
+            "groups": {},
+            "macros": {},
+            "docs": {},
+            "parent_map": {},
+            "child_map": {},
+            "group_map": {},
+            "selectors": {},
+            "disabled": {},
+        }
         return empty_manifest
 
 

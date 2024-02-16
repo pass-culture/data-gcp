@@ -54,6 +54,10 @@ dag = DAG(
             default=False,
             type="boolean",
         ),
+        "exclude": Param(
+            default="",
+            type="string",
+        ),
     },
 )
 
@@ -70,7 +74,7 @@ monthly = BashOperator(
         "tag": "{{ params.tag }}",
         "full_ref_str": " --full-refresh" if not "{{ params.full_refresh }}" else "",
         "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
-        "EXCLUSION": "",
+        "EXCLUSION": "{{ params.exclude }}",
     },
 )
 

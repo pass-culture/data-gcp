@@ -52,8 +52,6 @@ dag = DAG(
     },
 )
 
-# Basic steps
-
 # branching function for skipping waiting task when dag is triggered manually
 def choose_branch(**context):
     run_id = context["dag_run"].run_id

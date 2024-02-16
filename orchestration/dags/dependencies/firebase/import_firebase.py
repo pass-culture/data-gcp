@@ -76,6 +76,7 @@ import_firebase_pro_tables = {
         "sql": f"{SQL_PATH}/clean/firebase_pro_visits.sql",
         "destination_dataset": "{{ bigquery_clean_dataset }}",
         "destination_table": "firebase_pro_visits",
+        "partition_prefix": "$",
         "time_partitioning": {"field": "first_event_date"},
         "depends": ["clean_firebase_pro_events"],
     },

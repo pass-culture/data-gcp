@@ -65,6 +65,7 @@ wait_for_dbt_daily = waiting_operator(dag=dag, dag_id="dbt_run_dag")
 
 weekly = BashOperator(
     task_id="run_weekly",
+    dag=dag,
     bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_run_tag.sh ",
     env={
         "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",

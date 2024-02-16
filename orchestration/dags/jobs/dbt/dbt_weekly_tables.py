@@ -78,6 +78,7 @@ weekly = BashOperator(
         "tag": "{{ params.tag }}",
         "full_ref_str": " --full-refresh" if not "{{ params.full_refresh }}" else "",
         "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+        "EXCLUSION": "",
     },
 )
 

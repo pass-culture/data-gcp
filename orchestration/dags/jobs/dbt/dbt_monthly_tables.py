@@ -57,16 +57,6 @@ dag = DAG(
     },
 )
 
-# Basic steps
-
-# branching function for skipping waiting task when dag is triggered manually
-def choose_branch(**context):
-    run_id = context["dag_run"].run_id
-    if run_id.startswith("scheduled__"):
-        return ["wait_for_dbt_init_dag_end"]
-    return ["manual_trigger_shunt"]
-
-
 start = DummyOperator(task_id="start", dag=dag)
 
 wait_for_dbt_daily = waiting_operator(dag=dag, dag_id="dbt_run_dag")

@@ -84,7 +84,6 @@ models:
       - name: venue_contact_phone_number
       - name: venue_contact_email
       - name: venue_contact_website
-
       
 
 exposures:

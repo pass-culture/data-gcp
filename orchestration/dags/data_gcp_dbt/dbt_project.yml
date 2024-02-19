@@ -67,7 +67,7 @@ models:
     +on_schema_change: "append_new_columns"
     +enabled: false
   re_data:
-    +enabled: true
+    +enabled: false
 
 seeds:
   +schema: seeds

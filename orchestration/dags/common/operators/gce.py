@@ -213,6 +213,7 @@ class CloneRepositoryGCEOperator(BaseSSHGCEOperator):
     def script(self, branch, python_version) -> str:
         return """
         export PATH=/opt/conda/bin:/opt/conda/condabin:+$PATH
+        python -m pip install --upgrade --user urllib3 
         conda create --name data-gcp python=%s -y -q
         conda init zsh
         source ~/.zshrc

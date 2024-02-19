@@ -10,7 +10,7 @@ WITH bookings_per_stock AS (
         ) AS collective_booking_stock_no_cancelled_cnt
     FROM
         {{ ref('collective_booking_history')}} AS collective_booking
-    WHERE partition_date = DATE({{ ds() }})
+    WHERE partition_date = PARSE_DATE('%Y-%m-%d','{{ ds() }}')
     GROUP BY
         1,
         2
@@ -46,7 +46,9 @@ WHERE
             collective_booking_stock_no_cancelled_cnt IS NULL
         )
     )
-    AND collective_stock.partition_date = DATE({{ ds() }})
+
+    AND collective_stock.partition_date = PARSE_DATE('%Y-%m-%d','{{ ds() }}')
+
 UNION ALL
 SELECT
     collective_offer_template.collective_offer_id
@@ -54,5 +56,6 @@ SELECT
     ,TRUE AS collective_offer_is_template
 FROM
         {{ ref('collective_offer_template_history')}} AS collective_offer_template
-    WHERE partition_date = DATE({{ ds() }})
+
+    WHERE partition_date = PARSE_DATE('%Y-%m-%d','{{ ds() }}')
     AND collective_offer_validation = "APPROVED"

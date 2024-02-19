@@ -24,12 +24,10 @@ from common.config import (
 
 from dependencies.import_analytics.import_clean import (
     clean_tables,
-    get_clean_tables_copy_dict,
 )
 from dependencies.import_analytics.import_analytics import define_import_tables
 
 import_tables = define_import_tables()
-clean_tables_copy = get_clean_tables_copy_dict()
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 1),
@@ -79,31 +77,6 @@ with TaskGroup(
         dag,
         default_end_operator=end_import_table_to_clean,
     )
-
-
-with TaskGroup(group_id="clean_copy_group", dag=dag) as clean_copy:
-    import_tables_to_clean_copy_tasks = []
-    for table, params in clean_tables_copy.items():
-        task = BigQueryInsertJobOperator(
-            task_id=f"import_to_clean_{table}",
-            configuration={
-                "query": {
-                    "query": params["sql"],
-                    "useLegacySql": False,
-                    "destinationTable": {
-                        "projectId": GCP_PROJECT_ID,
-                        "datasetId": params["destination_dataset"],
-                        "tableId": params["destination_table"],
-                    },
-                    "writeDisposition": params.get(
-                        "write_disposition", "WRITE_TRUNCATE"
-                    ),
-                }
-            },
-            params=dict(params.get("params", {})),
-            dag=dag,
-        )
-        import_tables_to_clean_copy_tasks.append(task)
 
 end_import_table_to_clean = DummyOperator(task_id="end_import_table_to_clean", dag=dag)
 
@@ -190,7 +163,7 @@ analytics_table_tasks = depends_loop(
 end = DummyOperator(task_id="end", dag=dag)
 
 (start >> wait_for_raw >> clean_transformations >> analytics_copy >> end_import)
-(wait_for_raw >> clean_copy >> end_import_table_to_clean)
+(clean_transformations >> end_import_table_to_clean)
 (
     end_import_table_to_clean
     >> start_historical_data_applicative_tables_tasks

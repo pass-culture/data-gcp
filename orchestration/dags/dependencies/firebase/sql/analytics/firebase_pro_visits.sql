@@ -37,9 +37,9 @@ LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_user_offerer` user_offerer 
 LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_offerer_data` offerer ON user_offerer.offerer_id=offerer.offerer_id
 LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_cultural_partner_data` partner ON user_offerer.offerer_id=partner.offerer_id
 {% if params.dag_type == 'intraday' %}
-        where clean_firebase.first_event_date = PARSE_DATE('%Y-%m-%d','{{ ds }}')
+        where clean_firebase.first_event_date = DATE('{{ ds }}')
 {% else %}
-        where clean_firebase.first_event_date = DATE_SUB(PARSE_DATE('%Y-%m-%d','{{ ds }}'),INTERVAL 1 DAY)
+        where clean_firebase.first_event_date = DATE('{{ add_days(ds, -1) }}')
 {% endif %}
 
 GROUP BY 1,2,3,4,5,6,7,8,9

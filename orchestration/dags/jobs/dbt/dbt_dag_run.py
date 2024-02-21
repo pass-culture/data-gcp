@@ -151,7 +151,9 @@ with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
             # hide numerous applicative tables
             if "applicative" in manifest["nodes"][model_node]["alias"]:
                 full_ref_str = (
-                    " --full-refresh" if not "{{ params.full_refresh }}" else ""
+                    " --full-refresh"
+                    if "{{ params.full_refresh|lower }}" == "true"
+                    else ""
                 )
                 model_data = manifest["nodes"][model_node]
                 # with TaskGroup(group_id=f"{model_data['alias']}_tasks", dag=dag):

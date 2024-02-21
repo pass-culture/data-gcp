@@ -78,6 +78,8 @@ with TaskGroup(
         default_end_operator=end_import_table_to_clean,
     )
 
+wait_for_clean_copy_dbt = waiting_operator(dag=dag, dag_id="dbt_run_dag", task_id="end")
+
 end_import_table_to_clean = DummyOperator(task_id="end_import_table_to_clean", dag=dag)
 
 start_historical_data_applicative_tables_tasks = DummyOperator(
@@ -163,7 +165,7 @@ analytics_table_tasks = depends_loop(
 end = DummyOperator(task_id="end", dag=dag)
 
 (start >> wait_for_raw >> clean_transformations >> analytics_copy >> end_import)
-(clean_transformations >> end_import_table_to_clean)
+(clean_transformations >> wait_for_clean_copy_dbt >> end_import_table_to_clean)
 (
     end_import_table_to_clean
     >> start_historical_data_applicative_tables_tasks

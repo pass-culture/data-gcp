@@ -11,7 +11,6 @@ WITH bookings_per_stock AS (
     FROM
         {{ref('booking_history')}} AS booking
     WHERE partition_date = PARSE_DATE('%Y-%m-%d','{{ ds() }}')
-
     GROUP BY
         stock_id,
         partition_date
@@ -49,4 +48,3 @@ WHERE
         )
     )
     AND stock.partition_date = PARSE_DATE('%Y-%m-%d','{{ ds() }}')
-

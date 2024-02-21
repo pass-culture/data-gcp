@@ -61,9 +61,13 @@ models:
         - column_metrics
       +docs: 
         node_color: "#d90000" 
+      diversification:
+        +tags: sandbox
   elementary:
     +on_schema_change: "append_new_columns"
-    +enabled: "{{ target.name in ['stg','prod'] }}"
+    +enabled: false
+  re_data:
+    +enabled: true
 
 seeds:
   +schema: seeds

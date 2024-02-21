@@ -53,15 +53,6 @@ JOIN `{{ bigquery_analytics_dataset }}`.partner_type_bookability_frequency USING
 LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_collective_offer_data ON enriched_cultural_partner_data.partner_id = enriched_collective_offer_data.partner_id
 GROUP BY 1,2,3)
 
-, collective_bookings1 AS (
-SELECT
-    CASE WHEN enriched_venue_data.venue_is_permanent THEN CONCAT("venue-",enriched_collective_booking_data.venue_id)
-         ELSE CONCAT("offerer-", enriched_collective_booking_data.offerer_id) END AS partner_id
-         ,enriched_collective_booking_data.*
-FROM `{{ bigquery_analytics_dataset }}`.enriched_collective_booking_data
-LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_venue_data USING(venue_id)
-WHERE NOT collective_booking_status = 'CANCELLED')
-
 ,collective_bookings AS (
 SELECT
     enriched_cultural_partner_data.partner_id
@@ -75,7 +66,8 @@ SELECT
     ,COALESCE(SUM(CASE WHEN collective_booking_status IN ('USED','REIMBURSED') THEN booking_amount ELSE NULL END),0) AS real_collective_revenue
 FROM `{{ bigquery_analytics_dataset }}`.enriched_cultural_partner_data
 JOIN `{{ bigquery_analytics_dataset }}`.partner_type_bookability_frequency USING(partner_type)
-LEFT JOIN collective_bookings1 ON enriched_cultural_partner_data.partner_id = collective_bookings1.partner_id
+LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_collective_booking_data collective_booking ON enriched_cultural_partner_data.partner_id = collective_booking.partner_id
+    AND NOT collective_booking_status = 'CANCELLED'
 GROUP BY 1,2,3)
 
 ,favorites1 AS (SELECT DISTINCT

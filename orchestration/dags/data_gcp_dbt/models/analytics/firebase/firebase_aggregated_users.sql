@@ -15,7 +15,7 @@ SELECT
     SUM(nb_consult_video) AS consult_video,
     SUM(nb_add_to_favorites) AS has_added_offer_to_favorites,
     SUM(nb_consult_offer) AS consult_offer,
-    SUM(nb_booking_confirmation) AS booking_confirmation,
+    SUM(nb_booking_confirmation) AS booking_confirmation
 FROM {{ ref('firebase_visits') }}
 
 WHERE

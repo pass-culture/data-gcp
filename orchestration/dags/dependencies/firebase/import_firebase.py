@@ -75,7 +75,8 @@ import_firebase_pro_tables = {
     "clean_firebase_pro_visits": {
         "sql": f"{SQL_PATH}/clean/firebase_pro_visits.sql",
         "destination_dataset": "{{ bigquery_clean_dataset }}",
-        "destination_table": "firebase_pro_visits${{ yyyymmdd(ds) }}",
+        "destination_table": "firebase_pro_visits",
+        "partition_prefix": "$",
         "time_partitioning": {"field": "first_event_date"},
         "depends": ["clean_firebase_pro_events"],
     },
@@ -88,6 +89,13 @@ import_firebase_pro_tables = {
         "time_partitioning": {"field": "event_date"},
         "clustering_fields": {"fields": ["event_name"]},
         "depends": ["clean_firebase_pro_events"],
+    },
+    "analytics_firebase_pro_visits": {
+        "sql": f"{SQL_PATH}/analytics/firebase_pro_visits.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "destination_table": "firebase_pro_visits${{ yyyymmdd(ds) }}",
+        "time_partitioning": {"field": "first_event_date"},
+        "depends": ["clean_firebase_pro_visits"],
     },
 }
 

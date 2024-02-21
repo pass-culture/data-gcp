@@ -142,7 +142,7 @@ SELECT
     COUNTIF(event_name="hasClickedConsultCGU") AS nb_clic_consult_cgu,
 
 FROM change_format
-WHERE event_date = DATE("{{ ds }}")
+WHERE event_date = PARSE_DATE('%Y-%m-%d','{{ ds }}')
 GROUP BY
     session_id,
     user_pseudo_id,

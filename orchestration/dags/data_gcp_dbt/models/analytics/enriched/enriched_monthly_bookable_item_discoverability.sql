@@ -1,6 +1,11 @@
-{{ config(
-    tags=["monthly","weekly"]
-) }}
+{{
+    config(
+        tags = "monthly"
+        materialized = 'incremental',
+        incremental_strategy = 'insert_overwrite',
+        partition_by = {'field': 'month', 'data_type': 'date'},
+    )
+}}
 
 WITH monthly_bookable_items AS (
 SELECT

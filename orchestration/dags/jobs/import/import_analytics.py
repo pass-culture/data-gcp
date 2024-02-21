@@ -78,7 +78,9 @@ with TaskGroup(
         default_end_operator=end_import_table_to_clean,
     )
 
-wait_for_clean_copy_dbt = waiting_operator(dag=dag, dag_id="dbt_run_dag", task_id="end")
+wait_for_clean_copy_dbt = waiting_operator(
+    dag=dag, dag_id="dbt_run_dag", external_task_id="end"
+)
 
 end_import_table_to_clean = DummyOperator(task_id="end_import_table_to_clean", dag=dag)
 

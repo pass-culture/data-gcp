@@ -166,7 +166,14 @@ analytics_table_tasks = depends_loop(
 
 end = DummyOperator(task_id="end", dag=dag)
 
-(start >> wait_for_raw >> clean_transformations >> analytics_copy >> end_import)
+(
+    start
+    >> wait_for_raw
+    >> clean_transformations
+    >> wait_for_clean_copy_dbt
+    >> analytics_copy
+    >> end_import
+)
 (clean_transformations >> wait_for_clean_copy_dbt >> end_import_table_to_clean)
 (
     end_import_table_to_clean

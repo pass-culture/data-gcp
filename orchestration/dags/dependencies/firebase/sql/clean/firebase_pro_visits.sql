@@ -142,6 +142,7 @@ SELECT
     COUNTIF(event_name="hasClickedConsultCGU") AS nb_clic_consult_cgu,
 
 FROM change_format
+
 GROUP BY
     session_id,
     user_pseudo_id,

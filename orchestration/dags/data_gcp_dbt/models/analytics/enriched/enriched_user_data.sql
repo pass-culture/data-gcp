@@ -3,6 +3,7 @@ WITH date_of_first_bookings AS (
         booking.user_id,
         MIN(booking.booking_creation_date) AS first_booking_date
     FROM
+
         {{ ref('booking')}} AS booking
         JOIN {{ source('raw','applicative_database_stock')}} AS stock ON stock.stock_id = booking.stock_id
         JOIN {{ ref('offer') }} AS offer ON offer.offer_id = stock.offer_id
@@ -340,7 +341,7 @@ last_deposit as (
         deposit.userId as user_id,
         deposit.id AS deposit_id,
     FROM
-        {{ source('raw','applicative_database_deposit')}} AS deposit
+    {{ source('raw','applicative_database_deposit')}} AS deposit
     QUALIFY ROW_NUMBER() OVER(PARTITION BY deposit.userId ORDER BY deposit.dateCreated DESC, id DESC) = 1
 ),
 amount_spent_last_deposit AS (
@@ -470,3 +471,4 @@ WHERE
         user.user_is_active
         OR user_suspension.action_history_reason = 'upon user request'
     )
+

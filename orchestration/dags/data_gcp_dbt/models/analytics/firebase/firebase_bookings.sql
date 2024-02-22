@@ -20,5 +20,5 @@ FROM {{ source('analytics', 'firebase_events') }}
 
 {% if is_incremental() %}
 -- recalculate latest day's data + previous
-where date(event_date_date) BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 1 DAY) and DATE('{{ ds() }}')
+where date(event_date) BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 1 DAY) and DATE('{{ ds() }}')
 {% endif %}

@@ -172,8 +172,8 @@ firebase_conversion_step AS (
             'HasAddedOfferToFavorites'
         )
         AND conv.event_timestamp > event.event_timestamp
-        AND conv.event_date >= DATE_SUB('{{ ds() }}', interval 3 day)
-        AND conv.event_date <= DATE_ADD('{{ ds() }}', interval 3 day)
+        AND conv.event_date >= DATE_SUB(date('{{ ds() }}'), interval 3 day)
+        AND conv.event_date <= DATE_ADD(date('{{ ds() }}'), interval 3 day)
 ),
 event_union AS (
     SELECT
@@ -226,5 +226,5 @@ FROM
     
 {% if is_incremental() %}
 -- recalculate latest day's data + previous
-where date(event_date) >= date_sub(date(_dbt_max_partition), interval 1 day)
+where date(event_date) BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 1 DAY) and DATE('{{ ds() }}')
 {% endif %}

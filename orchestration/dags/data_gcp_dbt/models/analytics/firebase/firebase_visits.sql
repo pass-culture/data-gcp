@@ -69,9 +69,7 @@ with visits as (
 )
 
 select * from visits
-
+-- incremental run only update partition of run day
 {% if is_incremental() %}   
-    where first_event_date > date_sub('{{ ds() }}', INTERVAL 1 DAY)
-{% else %}
-    where first_event_date > DATE("1900-01-01")
+    where first_event_date BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 1 DAY) and DATE('{{ ds() }}')
 {% endif %}

@@ -77,6 +77,9 @@ snapshots:
   +target_schema: snapshots
   +docs:
     show: false
+  data_gcp_dbt:
+    applicative_history:
+      tags: applicative_history
 tests:
   # +store_failures: true  # store failures for all tests
   +severity: warn # Failing tests will generate a warning by default. To raise an error, overwrite a config with severity: error.  

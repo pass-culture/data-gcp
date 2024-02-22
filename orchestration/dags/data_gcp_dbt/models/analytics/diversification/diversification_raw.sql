@@ -21,6 +21,7 @@ bookings AS (
     , bookings.digital_goods
     , bookings.event
     , bookings.venue_id
+    , venue.venue_type_code as venue_type_label
     , ictl.category as clustering_category
     , ictl.semantic_category as clustering_semmantic_category
     , ictl.semantic_cluster_id
@@ -30,6 +31,8 @@ bookings AS (
 
 FROM {{ ref('enriched_booking_data') }} as bookings
 LEFT JOIN {{ ref('item_clusters_topics_labels') }} as ictl on ictl.item_id = bookings.item_id
+LEFT JOIN {{ ref('venue') }} as venue on bookings.venue_id = venue.venue_id
+
 WHERE booking_status != 'CANCELLED'
 ),
 offer_metadata as (
@@ -38,7 +41,7 @@ offer_metadata as (
     , subcategory_id
     , category_id
     , offer_type_label
-    , titelive_gtl_id
+    , gtl_id
   FROM {{ ref('enriched_offer_metadata') }}
 ),
 base_diversification as (
@@ -53,13 +56,14 @@ SELECT
         WHEN subcategories.online_offline_platform in ("OFFLINE", "ONLINE_OR_OFFLINE") AND subcategories.is_event = FALSE THEN "physical"
     END as format 
     , bookings.offer_id
+    , bookings.venue_type_label
     , is_free_offer
     , offer_metadata.category_id as category
     , offer_metadata.subcategory_id as sub_category
-    , gtlmap.gtl_label_lvl_1
-    , gtlmap.gtl_label_lvl_2
-    , gtlmap.gtl_label_lvl_3
-    , gtlmap.gtl_label_lvl_4
+    , gtlmap.gtl_label_level_1
+    , gtlmap.gtl_label_level_2
+    , gtlmap.gtl_label_level_3
+    , gtlmap.gtl_label_level_4
     -- prendre une venue unique pour les offres digitales
     , CASE
         WHEN bookings.digital_goods = True 
@@ -96,7 +100,7 @@ LEFT JOIN {{ source('clean','subcategories') }} subcategories
 LEFT JOIN {{ref('item_clusters_topics_labels') }} as ictl
   ON bookings.item_id = ictl.item_id
 LEFT JOIN {{source('analytics','titelive_gtl_mapping') }} as gtlmap
-  ON offer_metadata.titelive_gtl_id = gtlmap.titelive_gtl_id
+  ON offer_metadata.gtl_id = gtlmap.gtl_id
 
 ),
 
@@ -112,6 +116,7 @@ diversification_scores as (
   , sub_category
   , format
   , extra_category
+  , venue_type_label
   -- Pour attribuer les scores de diversification : 
   -- Comparer la date de booking avec la première date de booking sur chaque feature.
   -- Lorsque ces 2 dates sont les mêmes, attribuer 1 point.
@@ -123,6 +128,12 @@ diversification_scores as (
   END as {{feature}}_diversification
   {% if not loop.last -%} , {%- endif %}
   {% endfor %}
+  ,
+  CASE
+        WHEN booking_creation_date = min(booking_creation_date) over(partition by user_id, venue_type_label) AND booking_rank != 1
+        THEN 1
+        ELSE 0
+  END as venue_type_label_diversification
 FROM base_diversification
 )
 
@@ -141,6 +152,6 @@ SELECT
           {% for feature in ml_vars("diversification_features") %} 
           {{feature}}_diversification 
           {% if not loop.last -%} + {%- endif %}
-          {% endfor %}
+          {% endfor %} + venue_type_label_diversification
     end as delta_diversification
 FROM diversification_scores

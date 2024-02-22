@@ -114,7 +114,7 @@ offer_metadata_id AS (
         offer_extracted_data.genres,
         offer_extracted_data.author,
         offer_extracted_data.performer,
-        offer_extracted_data.titelive_gtl_id,
+        offer_extracted_data.titelive_gtl_id as gtl_id,
         gtl.gtl_label_level_1,
         gtl.gtl_label_level_2,
         gtl.gtl_label_level_3,

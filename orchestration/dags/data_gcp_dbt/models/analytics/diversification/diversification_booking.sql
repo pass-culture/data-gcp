@@ -23,6 +23,7 @@ SELECT
         {{feature}}_diversification
         {% if not loop.last -%} , {%- endif %}
     {% endfor %}
+    , venue_type_label_diversification
     , delta_diversification
 FROM {{ ref('diversification_raw') }} as diversification_raw
 LEFT JOIN {{ ref('enriched_booking_data') }} as booking

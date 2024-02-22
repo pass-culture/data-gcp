@@ -76,6 +76,8 @@ join = DummyOperator(task_id="join", dag=dag, trigger_rule="none_failed")
 
 end = DummyOperator(task_id="end", dag=dag, trigger_rule="all_success")
 
+wait_for_raw = waiting_operator(dag=dag, dag_id="import_raw")
+
 # Dbt dag reconstruction
 model_op_dict = {}
 test_op_dict = {}
@@ -151,7 +153,9 @@ with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
             # hide numerous applicative tables
             if "applicative" in manifest["nodes"][model_node]["alias"]:
                 full_ref_str = (
-                    " --full-refresh" if not "{{ params.full_refresh }}" else ""
+                    " --full-refresh"
+                    if "{{ params.full_refresh|lower }}" == "true"
+                    else ""
                 )
                 model_data = manifest["nodes"][model_node]
                 # with TaskGroup(group_id=f"{model_data['alias']}_tasks", dag=dag):
@@ -230,4 +234,4 @@ for test, parents in crit_test_parents.items():
         except KeyError:
             pass
 
-start >> branching >> [shunt, wait4init] >> join >> data_transfo
+start >> branching >> [shunt, wait4init] >> join >> wait_for_raw >> data_transfo

@@ -66,7 +66,7 @@ SELECT (
         ) as is_edition,
     FROM 
         {% if params.dag_type == 'intraday' %}
-         `{{ bigquery_clean_dataset }}.firebase_pro_events_{{ yyyymmdd(add_days(ds, 0)) }}`
+         `{{ bigquery_clean_dataset }}.firebase_pro_events_{{ yyyymmdd(ds) }}`
         {% else %}
          `{{ bigquery_clean_dataset }}.firebase_pro_events_{{ yyyymmdd(add_days(ds, -1)) }}`
         {% endif %}
@@ -98,9 +98,9 @@ SELECT
 
 -- count offer creation
 -- hub
-    COUNTIF(event_name = "page_view" AND page_name="Selection du type d’offre - pass Culture Pro") AS nb_hub_for_offer_creation,
+    COUNTIF(event_name = "page_view" AND page_name IN ("Selection du type d’offre - pass Culture Pro","Choix de la nature de l'offre - Créer une offre - pass Culture Pro")) AS nb_hub_for_offer_creation,
 -- indiv
-    COUNTIF(event_name = "page_view" AND page_name= "Création - Détail de l’offre - pass Culture Pro") AS nb_start_individual_offer_creation,
+    COUNTIF(event_name = "page_view" AND page_name IN ("Création - Détail de l’offre - pass Culture Pro","Détails - Créer une offre individuelle - pass Culture Pro")) AS nb_start_individual_offer_creation,
     COUNTIF(event_name = "page_view" AND page_name= "Confirmation - Offre individuelle publiée - pass Culture Pro") AS nb_confirmed_individual_offer_creation,
 -- collectiv
     COUNTIF(event_name = "page_view" AND page_location LIKE "%/offre/creation/collectif/vitrine%" ) AS nb_start_collective_offer_template_creation,
@@ -142,7 +142,7 @@ SELECT
     COUNTIF(event_name="hasClickedConsultCGU") AS nb_clic_consult_cgu,
 
 FROM change_format
-WHERE event_date = PARSE_DATE('%Y-%m-%d','{{ ds }}')
+
 GROUP BY
     session_id,
     user_pseudo_id,

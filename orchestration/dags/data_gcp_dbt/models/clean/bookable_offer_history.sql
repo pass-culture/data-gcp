@@ -48,5 +48,6 @@ WHERE
             ) > 0
         )
     )
-    AND stock.partition_date = PARSE_DATE('%Y-%m-%d','{{ ds() }}')
+
+    AND stock.partition_date = DATE('{{ ds() }}')
 

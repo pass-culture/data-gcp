@@ -46,8 +46,7 @@ WHERE
             collective_booking_stock_no_cancelled_cnt IS NULL
         )
     )
-
-    AND collective_stock.partition_date = PARSE_DATE('%Y-%m-%d','{{ ds() }}')
+    AND collective_stock.partition_date = DATE('{{ ds() }}')
 
 UNION ALL
 SELECT

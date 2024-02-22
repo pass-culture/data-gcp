@@ -235,4 +235,3 @@ for test, parents in crit_test_parents.items():
             pass
 
 start >> branching >> [shunt, wait4init] >> join >> wait_for_raw >> data_transfo
-

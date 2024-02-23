@@ -52,7 +52,6 @@ BIGQUERY_SCHEMAS = {
         "id": "STRING",
         "userId": "STRING",
         "offerId": "STRING",
-        "mediationId": "STRING",
         "lastupdate": "DATETIME",
         "dateCreated": "DATETIME",
     },

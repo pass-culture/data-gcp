@@ -8,7 +8,7 @@ WITH booking_ranking_in_category_view AS (
                 booking.booking_creation_date
         ) AS same_category_booking_rank
     FROM
-        `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking
+        `{{ bigquery_clean_dataset }}`.booking AS booking
         INNER JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON booking.stock_id = stock.stock_id
         INNER JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON stock.offer_id = offer.offer_id
     ORDER BY
@@ -55,7 +55,7 @@ SELECT
     booking_ranking_in_category_view.same_category_booking_rank,
     booking_used_date
 FROM
-    `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking
+    `{{ bigquery_clean_dataset }}`.booking AS booking
     INNER JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON booking.stock_id = stock.stock_id
     LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON offer.offer_id = stock.offer_id
     INNER JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue ON venue.venue_id = offer.venue_id

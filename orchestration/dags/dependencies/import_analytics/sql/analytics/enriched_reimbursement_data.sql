@@ -61,7 +61,7 @@ individuel AS (
         invoice.invoice_creation_date,
         invoice.amount AS invoice_amount
     FROM
-        `{{ bigquery_clean_dataset }}`.applicative_database_booking booking
+        `{{ bigquery_clean_dataset }}`.booking booking
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock ON booking.stock_id = applicative_database_stock.stock_id
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_deposit ON booking.deposit_id = applicative_database_deposit.id
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_pricing pricing ON booking.booking_id = pricing.bookingId

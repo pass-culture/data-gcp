@@ -35,7 +35,7 @@ actual_amount_spent AS (
             0
         ) AS deposit_actual_amount_spent
     FROM
-        `{{ bigquery_clean_dataset }}`.applicative_database_booking
+        `{{ bigquery_clean_dataset }}`.booking
     WHERE booking_is_used IS TRUE
     AND booking_is_cancelled IS FALSE
     GROUP BY
@@ -52,7 +52,7 @@ theoretical_amount_spent AS (
             0
         ) AS deposit_theoretical_amount_spent
     FROM
-        `{{ bigquery_clean_dataset }}`.applicative_database_booking
+        `{{ bigquery_clean_dataset }}`.booking
     WHERE booking_is_cancelled IS FALSE
     GROUP BY
         deposit_id

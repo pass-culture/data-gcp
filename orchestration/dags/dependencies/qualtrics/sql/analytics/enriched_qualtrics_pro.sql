@@ -27,7 +27,7 @@ SELECT
   booking.venue_id,
   count(distinct booking_id) individual_bookings,
   max(booking_creation_date) last_individual_booking
-FROM `{{ bigquery_clean_dataset }}.applicative_database_booking` AS booking
+FROM `{{ bigquery_clean_dataset }}.booking` AS booking
 JOIN ir_per_user on ir_per_user.venue_id = booking.venue_id AND booking.booking_creation_date <= DATE(ir_per_user.start_date)
 GROUP BY 1,2
 )

@@ -68,10 +68,10 @@ SELECT
 FROM
     `{{ bigquery_raw_dataset }}`.applicative_database_offer o
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_offer_data eod on o.offer_id=eod.offer_id
-    LEFT JOIN `{{ bigquery_analytics_dataset }}`.offer_item_ids oii on o.offer_id=oii.offer_id
+    LEFT JOIN `{{ bigquery_clean_dataset }}`.offer_item_ids oii on o.offer_id=oii.offer_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_item_metadata enriched_item_metadata on oii.item_id = enriched_item_metadata.item_id
     LEFT JOIN mediation ON o.offer_id = mediation.offer_id
-    LEFT JOIN `{{ bigquery_analytics_dataset }}`.offer_extracted_data offer_extracted_data ON offer_extracted_data.offer_id = o.offer_id
+    LEFT JOIN `{{ bigquery_clean_dataset }}`.offer_extracted_data offer_extracted_data ON offer_extracted_data.offer_id = o.offer_id
 WHERE
     oii.item_id not in (
         select

@@ -5,7 +5,7 @@ WITH offer_booking_information_view AS (
     FROM
         `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON stock.offer_id = offer.offer_id
-        LEFT JOIN `{{ bigquery_clean_dataset }}`.booking AS booking ON stock.stock_id = booking.stock_id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking ON stock.stock_id = booking.stock_id
     WHERE booking_is_used
     GROUP BY
         offer_id
@@ -29,7 +29,7 @@ enriched_items AS (
         ic.cluster_id,
         IF(offer_type_label is not null, count_booking, null) as count_booking
     FROM `{{ bigquery_analytics_dataset }}`.enriched_offer_metadata offer
-    LEFT JOIN `{{ bigquery_analytics_dataset }}`.offer_item_ids offer_ids on offer.offer_id=offer_ids.offer_id
+    LEFT JOIN `{{ bigquery_clean_dataset }}`.offer_item_ids offer_ids on offer.offer_id=offer_ids.offer_id
     LEFT JOIN item_clusters ic on ic.item_id = offer_ids.item_id
     LEFT JOIN offer_booking_information_view obi on obi.offer_id = offer.offer_id
 )

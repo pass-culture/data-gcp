@@ -28,7 +28,7 @@ offer_booking_information_view AS (
     FROM
         `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON stock.offer_id = offer.offer_id
-        LEFT JOIN `{{ bigquery_clean_dataset }}`.booking AS booking ON stock.stock_id = booking.stock_id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking ON stock.stock_id = booking.stock_id
     GROUP BY
         offer_id
 ),
@@ -65,7 +65,7 @@ count_first_booking_view AS (
                         booking.booking_id
                 ) AS booking_rank
             FROM
-                `{{ bigquery_clean_dataset }}`.booking AS booking
+                `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking
                 LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock on stock.stock_id = booking.stock_id
         ) c
     WHERE
@@ -223,14 +223,14 @@ FROM
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.subcategories subcategories ON offer.offer_subcategoryId = subcategories.id
     LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue ON offer.venue_id = venue.venue_id
     LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offerer AS offerer ON venue.venue_managing_offerer_id = offerer.offerer_id
-    LEFT JOIN `{{ bigquery_analytics_dataset }}`.offer_item_ids AS offer_ids on offer.offer_id=offer_ids.offer_id
+    LEFT JOIN `{{ bigquery_clean_dataset }}`.offer_item_ids AS offer_ids on offer.offer_id=offer_ids.offer_id
     LEFT JOIN offer_booking_information_view ON offer_booking_information_view.offer_id = offer.offer_id
     LEFT JOIN count_favorites_view ON count_favorites_view.offerId = offer.offer_id
     LEFT JOIN sum_stock_view ON sum_stock_view.offer_id = offer.offer_id
     LEFT JOIN offer_humanized_id AS offer_humanized_id ON offer_humanized_id.offer_id = offer.offer_id
     LEFT JOIN count_first_booking_view ON count_first_booking_view.offer_id = offer.offer_id
     LEFT JOIN last_stock ON last_stock.offer_id = offer.offer_id
-    LEFT JOIN `{{ bigquery_analytics_dataset }}`.offer_extracted_data offer_extracted_data ON offer_extracted_data.offer_id = offer.offer_id
+    LEFT JOIN `{{ bigquery_clean_dataset }}`.offer_extracted_data offer_extracted_data ON offer_extracted_data.offer_id = offer.offer_id
     LEFT JOIN mediation ON offer.offer_id = mediation.offer_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.isbn_rayon_editor AS isbn_rayon_editor ON offer_extracted_data.isbn = isbn_rayon_editor.isbn
 

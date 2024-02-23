@@ -37,5 +37,5 @@ FROM
     JOIN `{{ bigquery_clean_dataset }}`.`applicative_database_offer` offer ON offer.offer_id = events.offer_id
     inner join `{{ bigquery_analytics_dataset }}`.`subcategories` subcategories on offer.offer_subcategoryId = subcategories.id
     inner join `{{ bigquery_analytics_dataset }}`.`enriched_offer_data` enroffer on enroffer.offer_id = offer.offer_id
-    inner join `{{ bigquery_analytics_dataset }}`.`offer_item_ids` offer_item_ids on offer_item_ids.offer_id = offer.offer_id
+    inner join `{{ bigquery_clean_dataset }}`.`offer_item_ids` offer_item_ids on offer_item_ids.offer_id = offer.offer_id
     inner join `{{ bigquery_analytics_dataset }}`.`enriched_user_data` enruser on enruser.user_id = events.user_id

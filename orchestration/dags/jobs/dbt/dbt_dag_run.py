@@ -78,6 +78,8 @@ end = DummyOperator(task_id="end", dag=dag, trigger_rule="none_failed")
 
 wait_for_raw = waiting_operator(dag=dag, dag_id="import_raw")
 
+wait_for_raw = waiting_operator(dag=dag, dag_id="import_raw")
+
 # Dbt dag reconstruction
 model_op_dict = {}
 test_op_dict = {}

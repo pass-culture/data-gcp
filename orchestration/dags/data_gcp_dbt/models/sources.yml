@@ -117,6 +117,7 @@ sources:
       - name: item_embeddings_reduced_32
       - name: item_embeddings_reduced_16
       - name: item_embeddings_reduced_5
+      - name: item_topics
       - name: item_topics_labels
       - name: siren_data
       - name: subcategories

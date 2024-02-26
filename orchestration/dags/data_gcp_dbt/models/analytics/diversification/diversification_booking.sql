@@ -19,11 +19,16 @@ SELECT
         IF(booking.digital_goods = True, 'digital', null),
         IF(booking.event = True, 'event', null)
     ) as format
+    , delta_diversification
+    , delta_diversification2
     , {% for feature in ml_vars("diversification_features") %}
         {{feature}}_diversification
         {% if not loop.last -%} , {%- endif %}
     {% endfor %}
-    , delta_diversification
+    , {% for feature in ml_vars("diversification_features2") %}
+        {{feature}}_diversification2
+        {% if not loop.last -%} , {%- endif %}
+    {% endfor %}
 FROM {{ ref('diversification_raw') }} as diversification_raw
 LEFT JOIN {{ ref('enriched_booking_data') }} as booking
 ON booking.booking_id = diversification_raw.booking_id

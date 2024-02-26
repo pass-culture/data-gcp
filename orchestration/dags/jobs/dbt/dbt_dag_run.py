@@ -74,7 +74,7 @@ wait4init = waiting_operator(dag, "dbt_init_dag")
 
 join = DummyOperator(task_id="join", dag=dag, trigger_rule="none_failed")
 
-end = DummyOperator(task_id="end", dag=dag, trigger_rule="all_success")
+end = DummyOperator(task_id="end", dag=dag, trigger_rule="none_failed")
 
 wait_for_raw = waiting_operator(dag=dag, dag_id="import_raw")
 

@@ -34,7 +34,7 @@ dag = DAG(
     dagrun_timeout=timedelta(minutes=60),
     catchup=False,
     description="run weekly aggregated models",
-    schedule_interval=get_airflow_schedule("0 3 * * 1"),  # run every monday at 3 AM
+    schedule_interval=get_airflow_schedule("0 1 * * 1"),  # run every monday at 1 AM
     params={
         "target": Param(
             default=ENV_SHORT_NAME,

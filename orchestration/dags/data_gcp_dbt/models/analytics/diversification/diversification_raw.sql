@@ -29,7 +29,7 @@ bookings AS (
     , ictl.y_cluster
 
 FROM {{ ref('enriched_booking_data') }} as bookings
-LEFT JOIN {{ ref('item_clusters_topics_labels') }} as ictl on ictl.item_id = bookings.item_id
+LEFT JOIN {{ ref('item_clusters_topics_labels') }} as ictl on bookings.item_id = ictl.item_id 
 WHERE booking_status != 'CANCELLED'
 ),
 offer_metadata as (

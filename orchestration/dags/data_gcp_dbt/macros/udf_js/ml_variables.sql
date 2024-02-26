@@ -3,11 +3,22 @@
         set ml_variables = {
             "diversification_features" : 
             var("diversification_features",
-                [ "category"
+                [ "category",
+                "sub_category",
+                "format",
+                "venue_id",
+                "extra_category",
+                ,])
+            ,
+            "diversification_features2" : 
+            var("diversification_features",
+                [ -- legacy features 
+                "category"
                 , "sub_category"
                 , "format"
                 , "venue_id"
                 , "extra_category"
+                -- new features
                 , "micro_category_details"
                 , "macro_category_details"
                 , "category_lvl0"
@@ -18,6 +29,7 @@
                 , "category_medium_lvl1"
                 , "category_medium_lvl2"
                 ,])
+
         } 
      -%}
 

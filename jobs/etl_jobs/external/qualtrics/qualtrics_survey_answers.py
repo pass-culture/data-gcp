@@ -92,7 +92,7 @@ class QualtricsSurvey:
                 "question_id",
                 "question_str",
                 "answer",
-                "Q3_Topics",
+                "Q2_Topics",
                 "theoretical_amount_spent",
                 "user_activity",
                 "user_civility",

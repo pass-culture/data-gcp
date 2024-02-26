@@ -35,8 +35,8 @@ dag = DAG(
     catchup=False,
     description="run monthly aggregated models",
     schedule_interval=get_airflow_schedule(
-        "0 3 1 * *"
-    ),  # run every 1st day of the month at 3 AM
+        "0 1 1 * *"
+    ),  # run every 1st day of the month at 1 AM
     params={
         "target": Param(
             default=ENV_SHORT_NAME,

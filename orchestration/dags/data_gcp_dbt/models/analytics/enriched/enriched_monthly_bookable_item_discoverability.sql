@@ -1,6 +1,6 @@
 {{
     config(
-        tags = "monthly"
+        tags = "monthly",
         materialized = 'incremental',
         incremental_strategy = 'insert_overwrite',
         partition_by = {'field': 'month', 'data_type': 'date'},
@@ -18,7 +18,7 @@ SELECT
 FROM {{ref('bookable_offer_history')}} bookable_offer_history
    {% if is_incremental() %} -- recalculate latest day's DATA + previous
 WHERE
-  DATE(partition_date) >= DATE_SUB(DATE(_dbt_max_partition), INTERVAL 1 MONTH)
+  DATE(partition_date) >= DATE(_dbt_max_partition)
 {% endif %}
 GROUP BY 1,2,3,4
 ),

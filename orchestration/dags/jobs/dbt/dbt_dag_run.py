@@ -35,7 +35,7 @@ dag = DAG(
     dagrun_timeout=timedelta(minutes=60),
     catchup=False,
     description="A dbt wrapper for airflow",
-    schedule_interval=get_airflow_schedule("0 3 * * *"),
+    schedule_interval=get_airflow_schedule("0 1 * * *"),
     params={
         "target": Param(
             default=ENV_SHORT_NAME,

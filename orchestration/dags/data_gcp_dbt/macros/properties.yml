@@ -2,34 +2,36 @@
 version: 2
 
 macros:
-  - name: get_custom_alias
-      description: A macro to generate a custom alias https://docs.getdbt.com/docs/build/custom-aliases
-      arguments:
-        - name: custom_alias_name
-        - name: node
+  - name: generate_alias_name
+    description: A macro to generate a custom alias https://docs.getdbt.com/docs/build/custom-aliases
+    arguments:
+      - name: custom_alias_name
+      - name: node
   - name: generate_schema_name
     description: |
       ## Overview
       It enables us to set up the destination dataset.
       If we develop in dev environment (target = dev), the destination schema dataset is the default (tmp_env) specified in profile.yml.
       Else the destination schema dataset is specified in dbt_project.yml (analytics_env or clean_env)
-  - name: diversification_variables
-      description: A macro to call several sets of features to calculate diversification scores
-      arguments:
-        - name: var_name
-          type: string
-          description: the name of the diversification features set you need
-  udfs: # unit tests for udfs: https://medium.com/@hamletmaschine666/snowflake-javascript-udf-unit-test-and-deploy-with-dbt-4996826da707
-    - name: humanize_id_function
-      description: A javascript function to humanize id based on base32-encode/base32.js library
-      arguments:
-        - name: id
-          type: string
-          description: id to encode
-    - name: dehumanize_id_function
-      description: A javascript function to dehumanize id based on base32-encode/base32.js library
-      arguments:
-        - name: id
-          type: string
-          description: id to decode
+  - name: diversification_vars
+    description: A macro to call several sets of features to calculate diversification scores
+    arguments:
+      - name: var_name
+        type: string
+        description: the name of the diversification features set you need
+  # UDFs:  
+  # unit tests for UDFs: 
+  # https://medium.com/@hamletmaschine666/snowflake-javascript-udf-unit-test-and-deploy-with-dbt-4996826da707
+  - name: create_humanize_id_function
+    description: A javascript function to humanize id based on base32-encode/base32.js library
+    arguments:
+      - name: id
+        type: string
+        description: id to encode
+  - name: create_dehumanize_id_function
+    description: A javascript function to dehumanize id based on base32-encode/base32.js library
+    arguments:
+      - name: id
+        type: string
+        description: id to decode
 

@@ -20,7 +20,20 @@ items as (
 )
 SELECT 
     items.*,
-    emb.semantic_content_embedding
+    ARRAY(
+            SELECT
+                cast(elem as float64)
+            FROM
+                UNNEST(
+                    SPLIT(
+                        SUBSTR(
+                            semantic_content_embedding,
+                            2,
+                            LENGTH(semantic_content_embedding) - 2
+                        )
+                    )
+                ) elem
+        ) AS semantic_content_embedding,
 FROM items
 LEFT JOIN {{ source('clean','item_embeddings') }} as emb
     ON items.item_id = emb.item_id

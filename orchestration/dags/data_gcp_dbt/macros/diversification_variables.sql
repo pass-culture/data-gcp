@@ -1,6 +1,6 @@
-{% macro ml_vars(var_name) -%}
+{% macro diversification_vars(var_name) -%}
     {%- 
-        set ml_variables = {
+        set diversification_variables = {
             "diversification_features" : 
             var("diversification_features",
                 [ "category"
@@ -20,5 +20,5 @@
         } 
      -%}
 
-     {{ return(ml_variables[var_name]) }}
+     {{ return(diversification_variables[var_name]) }}
 {%- endmacro %}

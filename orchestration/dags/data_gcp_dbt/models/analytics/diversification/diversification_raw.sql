@@ -96,7 +96,7 @@ diversification_scores as (
   -- Pour attribuer les scores de diversification : 
   -- Comparer la date de booking avec la première date de booking sur chaque feature.
   -- Lorsque ces 2 dates sont les mêmes, attribuer 1 point.
-  , {% for feature in ml_vars("diversification_features") %} 
+  , {% for feature in diversification_vars("diversification_features") %} 
   CASE
         WHEN booking_creation_date = min(booking_creation_date) over(partition by user_id, {{feature}}) AND booking_rank != 1
         THEN 1
@@ -104,7 +104,7 @@ diversification_scores as (
   END as {{feature}}_diversification
   {% if not loop.last -%} , {%- endif %}
   {% endfor %}
-  , {% for feature in ml_vars("diversification_features2") %} 
+  , {% for feature in diversification_vars("diversification_features2") %} 
   CASE
         WHEN booking_creation_date = min(booking_creation_date) over(partition by user_id, {{feature}}) AND booking_rank != 1
         THEN 1
@@ -120,11 +120,11 @@ SELECT
   , item_id
   , booking_id
   , booking_creation_date
-  , {% for feature in ml_vars("diversification_features") %}
+  , {% for feature in diversification_vars("diversification_features") %}
     {{feature}}_diversification
     {% if not loop.last -%} , {%- endif %}
     {% endfor %}
-  , {% for feature in ml_vars("diversification_features2") %}
+  , {% for feature in diversification_vars("diversification_features2") %}
     {{feature}}_diversification2
     {% if not loop.last -%} , {%- endif %}
     {% endfor %}
@@ -132,7 +132,7 @@ SELECT
       when booking_rank = 1 
         then 1 -- 1 point d'office pour le premier booking
       else -- somme des points de diversification pr les suivants
-          {% for feature in ml_vars("diversification_features") %} 
+          {% for feature in diversification_vars("diversification_features") %} 
           {{feature}}_diversification 
           {% if not loop.last -%} + {%- endif %}
           {% endfor %}
@@ -141,7 +141,7 @@ SELECT
       when booking_rank = 1 
         then 1 -- 1 point d'office pour le premier booking
       else -- somme des points de diversification pr les suivants
-          {% for feature in ml_vars("diversification_features2") %} 
+          {% for feature in diversification_vars("diversification_features2") %} 
           {{feature}}_diversification2
           {% if not loop.last -%} + {%- endif %}
           {% endfor %}

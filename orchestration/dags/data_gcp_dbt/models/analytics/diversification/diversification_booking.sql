@@ -21,11 +21,11 @@ SELECT
     ) as format
     , delta_diversification
     , delta_diversification2
-    , {% for feature in ml_vars("diversification_features") %}
+    , {% for feature in diversification_vars("diversification_features") %}
         {{feature}}_diversification
         {% if not loop.last -%} , {%- endif %}
     {% endfor %}
-    , {% for feature in ml_vars("diversification_features2") %}
+    , {% for feature in diversification_vars("diversification_features2") %}
         {{feature}}_diversification2
         {% if not loop.last -%} , {%- endif %}
     {% endfor %}

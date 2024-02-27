@@ -1,6 +1,3 @@
-
-{{ config( tags="sandbox" ) }}
-
 with unique_offers as (
     SELECT
     offer_id,
@@ -11,7 +8,6 @@ with unique_offers as (
 items as (
     SELECT
     offer.offer_id,
-    matching.item_id,
     offer.titelive_gtl_id,
     item_metadata.item_id,
     item_metadata.topic_id,

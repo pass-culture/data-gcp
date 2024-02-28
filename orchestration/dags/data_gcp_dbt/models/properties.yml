@@ -285,43 +285,43 @@ models:
   - name: beneficiary_fraud_status
     config:
       schema: clean_{{ target.name }}
+  # clean transformations 
   - name: booking
     config:
       schema: clean_{{ target.name }}
-  # clean
-  # - name: bookable_collective_offer
-  #   config:
-  #     schema: clean_{{ target.name }}
-  # - name: cleaned_stock
-  #   config:
-  #     schema: clean_{{ target.name }}
+  - name: bookable_collective_offer
+    config:
+      schema: clean_{{ target.name }}
+  - name: cleaned_stock
+    config:
+      schema: clean_{{ target.name }}
   # - name: user_ip_iris
   #   config:
   #     schema: clean_{{ target.name }}
-  # - name: offer_extracted_data
-  #   config:
-  #     schema: clean_{{ target.name }}
-  # - name: offer_item_ids
-  #   config:
-  #     schema: clean_{{ target.name }}
-  # - name: user_suspension
-  #   config:
-  #     schema: clean_{{ target.name }}
-  # - name: available_stock_information
-  #   config:
-  #     schema: clean_{{ target.name }}
+  - name: offer_extracted_data
+    config:
+      schema: clean_{{ target.name }}
+  - name: offer_item_ids
+    config:
+      schema: clean_{{ target.name }}
+  - name: user_suspension
+    config:
+      schema: clean_{{ target.name }}
+  - name: available_stock_information
+    config:
+      schema: clean_{{ target.name }}
   # - name: user_declared_iris
   #   config:
   #     schema: clean_{{ target.name }}
-  # - name: bookable_offer
-  #   config:
-  #     schema: clean_{{ target.name }}
+  - name: bookable_offer
+    config:
+      schema: clean_{{ target.name }}
   # - name: user_reco_iris
   #   config:
   #     schema: clean_{{ target.name }}
-  # - name: user_beneficiary
-  #   config:
-  #     schema: clean_{{ target.name }}
-  # - name: collective_offer_domain_name
-  #   config:
-  #     schema: clean_{{ target.name }}
+  - name: user_beneficiary
+    config:
+      schema: clean_{{ target.name }}
+  - name: collective_offer_domain_name
+    config:
+      schema: clean_{{ target.name }}

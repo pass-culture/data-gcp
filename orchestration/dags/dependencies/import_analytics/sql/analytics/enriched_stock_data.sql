@@ -39,4 +39,4 @@ FROM
     LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue ON venue.venue_id = offer.venue_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.stock_booking_information ON stock.stock_id = stock_booking_information.stock_id
     LEFT JOIN stock_humanized_id AS stock_humanized_id ON stock_humanized_id.stock_id = stock.stock_id
-    LEFT JOIN `{{ bigquery_analytics_dataset }}`.available_stock_information ON stock_booking_information.stock_id = available_stock_information.stock_id
+    LEFT JOIN `{{ bigquery_clean_dataset }}`.available_stock_information ON stock_booking_information.stock_id = available_stock_information.stock_id

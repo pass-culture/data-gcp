@@ -10,9 +10,8 @@ from airflow.models import Param
 from airflow.operators.python import BranchPythonOperator
 from common.alerts import task_fail_slack_alert
 from common.utils import get_airflow_schedule, waiting_operator
-from common.dbt.utils import rebuild_manifest, load_manifest
+from common.dbt.utils import load_manifest
 
-from common import macros
 from common.config import (
     GCP_PROJECT_ID,
     PATH_TO_DBT_PROJECT,
@@ -24,15 +23,16 @@ from common.config import (
 
 default_args = {
     "start_date": datetime(2020, 12, 23),
-    "retries": 1,
+    "retries": 2,
     "retry_delay": timedelta(minutes=2),
     "project_id": GCP_PROJECT_ID,
+    "on_failure_callback": task_fail_slack_alert,
 }
 
 dag = DAG(
     "dbt_run_dag",
     default_args=default_args,
-    dagrun_timeout=timedelta(minutes=60),
+    dagrun_timeout=timedelta(minutes=120),
     catchup=False,
     description="A dbt wrapper for airflow",
     schedule_interval=get_airflow_schedule("0 1 * * *"),

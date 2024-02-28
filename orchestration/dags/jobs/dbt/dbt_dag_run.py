@@ -24,7 +24,7 @@ from common.config import (
 
 default_args = {
     "start_date": datetime(2020, 12, 23),
-    "retries": 1,
+    "retries": 2,
     "retry_delay": timedelta(minutes=2),
     "project_id": GCP_PROJECT_ID,
 }

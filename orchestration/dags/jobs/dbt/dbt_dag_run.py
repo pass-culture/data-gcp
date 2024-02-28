@@ -11,6 +11,7 @@ from airflow.operators.python import BranchPythonOperator
 from common.alerts import task_fail_slack_alert
 from common.utils import get_airflow_schedule, waiting_operator
 from common.dbt.utils import load_manifest
+from common import macros
 
 from common.config import (
     GCP_PROJECT_ID,
@@ -165,7 +166,7 @@ with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
                     env={
                         "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
                         "target": "{{ params.target }}",
-                        "model": f"{model_data}",
+                        "model": f"{model_data['name']}",
                         "full_ref_str": full_ref_str,
                         "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
                         "EXCLUSION": " --exclude "

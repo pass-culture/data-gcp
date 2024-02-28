@@ -11,6 +11,7 @@ from airflow.operators.python import BranchPythonOperator
 from common.alerts import task_fail_slack_alert
 from common.utils import get_airflow_schedule, waiting_operator
 from common.dbt.utils import load_manifest
+from common import macros
 
 from common.config import (
     GCP_PROJECT_ID,

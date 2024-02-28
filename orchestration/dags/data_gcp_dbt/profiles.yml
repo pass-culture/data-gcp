@@ -12,7 +12,7 @@ data_gcp_dbt:
       method: oauth
       priority: interactive
       project: passculture-data-ehp
-      threads: 4
+      threads: 1
       type: bigquery  
     stg:
       dataset: tmp_stg
@@ -32,7 +32,7 @@ data_gcp_dbt:
       method: oauth
       priority: interactive
       project: passculture-data-prod
-      threads: 1
+      threads: 4
       type: bigquery
 sandbox:
   target: prod

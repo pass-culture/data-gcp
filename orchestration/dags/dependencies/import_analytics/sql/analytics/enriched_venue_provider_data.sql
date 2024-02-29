@@ -9,7 +9,7 @@ SELECT
   , venue_is_permanent
   , venue_label
   , last_sync_date
-  , count(offer_id_at_providers) as offer_sync_cnt
+  , count(distinct offer_id) as offer_sync_cnt
   , min(offer_creation_date) AS first_offer_sync_date
 FROM `{{ bigquery_clean_dataset }}.applicative_database_provider` provider
 JOIN `{{ bigquery_clean_dataset }}.applicative_database_venue_provider` venue_provider
@@ -20,7 +20,7 @@ LEFT JOIN `{{ bigquery_clean_dataset }}.applicative_database_venue_label` label
 USING(venue_label_id)
 LEFT JOIN `{{ bigquery_clean_dataset }}.applicative_database_offer` offer
 ON venue.venue_id = offer.venue_id
-AND offer_id_at_providers is not null
+AND provider.provider_id = offer.offer_last_provider_id 
 GROUP BY 
   provider.provider_id
   , provider.provider_name 

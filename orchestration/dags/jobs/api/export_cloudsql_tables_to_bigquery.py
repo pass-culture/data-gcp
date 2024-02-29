@@ -18,7 +18,6 @@ from common.alerts import task_fail_slack_alert
 from common.config import (
     BIGQUERY_TMP_DATASET,
     RECOMMENDATION_SQL_INSTANCE,
-    CONNECTION_ID,
 )
 from common.utils import from_external, get_airflow_schedule
 from common import macros
@@ -40,6 +39,9 @@ database_instance_name = access_secret_data(
 database_url = access_secret_data(
     GCP_PROJECT_ID, f"{RECOMMENDATION_SQL_INSTANCE}_database_url", default=""
 )
+
+CONNECTION_ID = f"{GCP_PROJECT_ID}.{LOCATION}.{database_instance_name}"
+
 os.environ["AIRFLOW_CONN_PROXY_POSTGRES_TCP"] = (
     database_url.replace("postgresql://", "gcpcloudsql://")
     + f"?database_type=postgres&project_id={GCP_PROJECT_ID}&location={LOCATION}&instance={database_instance_name}&use_proxy=True&sql_proxy_use_tcp=True"

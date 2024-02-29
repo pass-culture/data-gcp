@@ -3,13 +3,35 @@ import json
 
 def load_json_artifact(_PATH_TO_DBT_TARGET, artifact):
     local_filepath = _PATH_TO_DBT_TARGET + "/" + artifact
-    with open(local_filepath) as f:
-        data = json.load(f)
+    try:
+        with open(local_filepath) as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        data = {}
     return data
 
 
 def load_manifest(_PATH_TO_DBT_TARGET):
-    return load_json_artifact(_PATH_TO_DBT_TARGET, "manifest.json")
+    manifest = load_json_artifact(_PATH_TO_DBT_TARGET, "manifest.json")
+    if manifest != {}:
+        return manifest
+    else:
+        empty_manifest = {
+            "metadata": {},
+            "nodes": {},
+            "sources": {},
+            "metrics": {},
+            "exposures": {},
+            "groups": {},
+            "macros": {},
+            "docs": {},
+            "parent_map": {},
+            "child_map": {},
+            "group_map": {},
+            "selectors": {},
+            "disabled": {},
+        }
+        return empty_manifest
 
 
 def build_simplified_manifest(json_dict_data):

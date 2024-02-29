@@ -19,7 +19,7 @@ INNER JOIN `{{ bigquery_clean_dataset }}`.`applicative_database_offer` offer
         ON enroffer.offer_id = offer.offer_id
 INNER JOIN `{{ bigquery_analytics_dataset }}`.`subcategories` subcategories
         ON offer.offer_subcategoryId = subcategories.id
-INNER JOIN `{{ bigquery_analytics_dataset }}`.`offer_item_ids` offer_item_ids
+INNER JOIN `{{ bigquery_clean_dataset }}`.`offer_item_ids` offer_item_ids
         ON offer_item_ids.offer_id = offer.offer_id
 INNER JOIN `{{ bigquery_clean_dataset }}`.`item_embeddings_reduced_16` item_embeddings_reduced
         ON offer_item_ids.item_id = item_embeddings_reduced.item_id

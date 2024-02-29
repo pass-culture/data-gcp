@@ -54,8 +54,6 @@ RECOMMENDATION_SQL_INSTANCE = os.environ.get(
     "RECOMMENDATION_SQL_INSTANCE", f"cloudsql-recommendation-{ENV_SHORT_NAME}-ew1"
 )
 
-CONNECTION_ID = os.environ.get("BIGQUERY_CONNECTION_RECOMMENDATION")
-
 SLACK_CONN_ID = "slack_analytics"
 SLACK_CONN_PASSWORD = access_secret_data(GCP_PROJECT_ID, "slack-conn-password")
 
@@ -80,3 +78,4 @@ else:
     PATH_TO_DBT_TARGET = os.environ.get(
         "DBT_TARGET_PATH", "/opt/airflow/dags/data_gcp_dbt/target"
     )
+EXCLUDED_TAGS = ["sandbox", "weekly", "monthly"]

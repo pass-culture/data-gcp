@@ -260,6 +260,7 @@ BIGQUERY_SCHEMAS = {
         "offer_product_humanized_id": "STRING",
         "item_id": "STRING",
         "offer_id_at_providers": "STRING",
+        "is_synchronised": "BOOLEAN",
         "offer_name": "STRING",
         "offer_description": "STRING",
         "URL": "STRING",

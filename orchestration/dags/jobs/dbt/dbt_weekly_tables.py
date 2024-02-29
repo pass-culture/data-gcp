@@ -4,13 +4,10 @@ import json
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.utils.task_group import TaskGroup
 from airflow.utils.dates import datetime, timedelta
 from airflow.models import Param
-from airflow.operators.python import BranchPythonOperator
 from common.alerts import task_fail_slack_alert
 from common.utils import get_airflow_schedule, waiting_operator
-from common.dbt.utils import rebuild_manifest, load_manifest
 
 from common import macros
 from common.config import (
@@ -75,6 +72,8 @@ weekly = BashOperator(
         "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
         "EXCLUSION": "{{ params.exclude }}",
     },
+    cwd=PATH_TO_DBT_PROJECT,
+    append_env=True,
 )
 
 

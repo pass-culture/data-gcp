@@ -134,14 +134,13 @@ with TaskGroup(group_id="critical_tests", dag=dag) as crit_test_group:
         if model_node in models_with_crit_test_dependencies:
             test_op_dict[model_node] = BashOperator(
                 task_id=model_data["alias"] + "_tests",
-                bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_test.sh ",
+                bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_test_model.sh ",
                 env={
                     "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
                     "target": "{{ params.target }}",
                     "model": f"""{model_data['alias']}""",
                     "full_ref_str": full_ref_str,
                     "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
-                    "EXCLUSION": "config.severity:warn",
                 },
                 append_env=True,
                 cwd=PATH_TO_DBT_PROJECT,

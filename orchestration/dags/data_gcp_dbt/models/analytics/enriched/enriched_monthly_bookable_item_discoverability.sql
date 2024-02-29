@@ -18,7 +18,10 @@ SELECT
 FROM {{ref('bookable_offer_history')}} bookable_offer_history
    {% if is_incremental() %} -- recalculate latest day's DATA + previous
 WHERE
-  DATE(partition_date) >= DATE(_dbt_max_partition)
+  DATE(partition_date) BETWEEN
+    DATE_TRUNC('{{ ds() }}', MONTH) -- first day of the month 
+    AND 
+    DATE_SUB(DATE_ADD(DATE_TRUNC('{{ ds() }}', MONTH), INTERVAL 1 month), interval 1 day) -- last day of the month
 {% endif %}
 GROUP BY 1,2,3,4
 ),
@@ -37,7 +40,10 @@ SELECT
 FROM {{ref('firebase_daily_offer_consultation_data')}} firebase_daily_offer_consultation_data
    {% if is_incremental() %} -- recalculate latest day's DATA + previous
 WHERE
-  DATE(event_date) >= DATE_SUB(DATE(_dbt_max_partition), INTERVAL 1 MONTH)
+  DATE(event_date) BETWEEN
+    DATE_TRUNC('{{ ds() }}', MONTH) -- first day of the month 
+    AND 
+    DATE_SUB(DATE_ADD(DATE_TRUNC('{{ ds() }}', MONTH), INTERVAL 1 month), interval 1 day) -- last day of the month
 {% endif %}
 GROUP BY 1,2
 )

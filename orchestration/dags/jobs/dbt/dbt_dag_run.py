@@ -138,9 +138,10 @@ with TaskGroup(group_id="critical_tests", dag=dag) as crit_test_group:
                 env={
                     "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
                     "target": "{{ params.target }}",
-                    "model": f"""{model_data['alias']} --exclude "config.severity:warn""",
+                    "model": f"""{model_data['alias']}""",
                     "full_ref_str": full_ref_str,
                     "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+                    "EXCLUSION": "config.severity:warn",
                 },
                 append_env=True,
                 cwd=PATH_TO_DBT_PROJECT,

@@ -5,7 +5,7 @@ ENRICHED_OFFER_DATA_INPUT = {
     "bookable_offer": [
         {"offer_id": 4},
     ],
-    "": [
+    "applicative_database_booking": [
         {
             "user_id": "1",
             "stock_id": "1",

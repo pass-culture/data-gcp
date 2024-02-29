@@ -14,7 +14,7 @@ WITH booking_numbers AS (
         )) AS booking_number_last_28_days,
         offer.item_id as item_id
     FROM
-        `{{ bigquery_clean_dataset }}`.booking booking
+        `{{ bigquery_clean_dataset }}`.applicative_database_booking booking
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock stock ON booking.stock_id = stock.stock_id
         LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_offer_data offer ON stock.offer_id = offer.offer_id
     WHERE

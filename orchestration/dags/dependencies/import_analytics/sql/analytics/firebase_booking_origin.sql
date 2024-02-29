@@ -16,7 +16,7 @@ WITH all_bookings_reconciled AS (
     , search_id
     , f_events.user_location_type
   FROM
-      `{{ bigquery_clean_dataset }}.booking` booking
+      `{{ bigquery_clean_dataset }}.applicative_database_booking` booking
   LEFT JOIN `{{ bigquery_analytics_dataset }}.firebase_events` f_events
   ON f_events.booking_id = booking.booking_id
   AND event_name = 'BookingConfirmation'

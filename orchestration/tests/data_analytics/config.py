@@ -4,7 +4,7 @@ TEST_DATASET = f"test_{uuid.uuid1().hex}"
 GCP_REGION = "europe-west1"
 GCP_PROJECT = "passculture-data-ehp"
 BIGQUERY_SCHEMAS = {
-    "booking": {
+    "applicative_database_booking": {
         "booking_is_active": "BOOLEAN",
         "booking_id": "STRING",
         "deposit_id": "STRING",

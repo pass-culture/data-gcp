@@ -2,7 +2,7 @@
   config(
     materialized = "incremental",
     partition_by={
-      "field": "first_event_date",
+      "field": "event_date",
       "data_type": "date",
       "granularity": "day",
       "time_ingestion_partitioning": false

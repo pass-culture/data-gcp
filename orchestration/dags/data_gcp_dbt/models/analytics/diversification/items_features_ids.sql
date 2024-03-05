@@ -37,3 +37,4 @@ SELECT
 FROM items
 INNER JOIN {{ source('clean','item_embeddings') }} as emb
     ON items.item_id = emb.item_id
+ORDER BY cluster_id

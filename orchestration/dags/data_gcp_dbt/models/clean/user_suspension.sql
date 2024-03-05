@@ -8,3 +8,4 @@ SELECT
     ) AS rank
 FROM {{ source('raw', 'applicative_database_action_history') }}
 WHERE action_type IN ('USER_SUSPENDED', 'USER_UNSUSPENDED')
+AND rank = 1

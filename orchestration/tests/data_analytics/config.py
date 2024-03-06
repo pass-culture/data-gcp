@@ -557,6 +557,7 @@ BIGQUERY_SCHEMAS = {
         "siren": "STRING",
         "activitePrincipaleUniteLegale": "STRING",
         "categorieJuridiqueUniteLegale": "STRING",
+        "update_date": "DATE",
     },
     "siren_data_labels": {
         "activitePrincipaleUniteLegale": "STRING",

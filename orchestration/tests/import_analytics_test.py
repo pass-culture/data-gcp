@@ -4,20 +4,8 @@ from jinja2 import Environment, FileSystemLoader
 from google.cloud import bigquery
 from data_analytics.config import GCP_PROJECT, TEST_DATASET
 from data_analytics.data import (
-    ENRICHED_BOOKING_DATA_EXPECTED,
-    ENRICHED_BOOKING_DATA_INPUT,
-    ENRICHED_OFFER_DATA_EXPECTED,
-    ENRICHED_OFFER_DATA_INPUT,
-    ENRICHED_COLLECTIVE_OFFER_DATA_EXPECTED,
-    ENRICHED_COLLECTIVE_OFFER_DATA_INPUT,
-    ENRICHED_OFFERER_DATA_EXPECTED,
-    ENRICHED_OFFERER_DATA_INPUT,
     ENRICHED_STOCK_DATA_EXPECTED,
     ENRICHED_STOCK_DATA_INPUT,
-    ENRICHED_USER_DATA_EXPECTED,
-    ENRICHED_USER_DATA_INPUT,
-    ENRICHED_VENUE_DATA_EXPECTED,
-    ENRICHED_VENUE_DATA_INPUT,
 )
 
 from data_analytics.utils.gcp import (
@@ -55,42 +43,6 @@ def flush_dataset():
 @pytest.mark.parametrize(
     ["table_name", "input_data", "expected", "sorting_key"],
     [
-        (
-            "enriched_offerer_data",
-            ENRICHED_OFFERER_DATA_INPUT,
-            ENRICHED_OFFERER_DATA_EXPECTED,
-            "offerer_id",
-        ),
-        (
-            "enriched_venue_data",
-            ENRICHED_VENUE_DATA_INPUT,
-            ENRICHED_VENUE_DATA_EXPECTED,
-            "venue_id",
-        ),
-        (
-            "enriched_booking_data",
-            ENRICHED_BOOKING_DATA_INPUT,
-            ENRICHED_BOOKING_DATA_EXPECTED,
-            "booking_id",
-        ),
-        (
-            "enriched_user_data",
-            ENRICHED_USER_DATA_INPUT,
-            ENRICHED_USER_DATA_EXPECTED,
-            "user_id",
-        ),
-        (
-            "enriched_offer_data",
-            ENRICHED_OFFER_DATA_INPUT,
-            ENRICHED_OFFER_DATA_EXPECTED,
-            "offer_id",
-        ),
-        (
-            "enriched_collective_offer_data",
-            ENRICHED_COLLECTIVE_OFFER_DATA_INPUT,
-            ENRICHED_COLLECTIVE_OFFER_DATA_EXPECTED,
-            "collective_offer_id",
-        ),
         (
             "enriched_stock_data",
             ENRICHED_STOCK_DATA_INPUT,

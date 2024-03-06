@@ -9,7 +9,7 @@ WITH booking_ranking_in_category_view AS (
         ) AS same_category_booking_rank
     FROM
         {{ ref('booking') }} AS booking
-        INNER JOIN {{ ref('stock') }} AS stock ON booking.stock_id = stock.stock_id
+        INNER JOIN {{ source('raw', 'applicative_database_stock') }} AS stock ON booking.stock_id = stock.stock_id
         INNER JOIN {{ ref('offer') }} AS offer ON stock.offer_id = offer.offer_id
     ORDER BY
         booking.booking_id

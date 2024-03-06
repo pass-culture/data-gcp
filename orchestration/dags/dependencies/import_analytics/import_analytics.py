@@ -55,6 +55,11 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "depends": ["enriched_offer_metadata"],
     },
+    "enriched_stock_data": {
+        "sql": f"{ANALYTICS_SQL_PATH}/enriched_stock_data.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
+        "depends": ["stock_booking_information"],
+    },
     "enriched_suivi_dms_adage": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_suivi_dms_adage.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",

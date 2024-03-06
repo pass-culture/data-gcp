@@ -89,7 +89,7 @@ bookings_infos AS (
             ELSE FALSE
         END AS is_current_year_booking,
     FROM
-        {{ source('raw','applicative_database_educational_institution') }} AS educational_institution
+        {{ ref('educational_institution') }} AS educational_institution
         JOIN {{ source('raw','applicative_database_collective_booking') }} AS collective_booking ON educational_institution.educational_institution_id = collective_booking.educational_institution_id
         AND collective_booking_status != 'CANCELLED'
         JOIN {{ source('raw','applicative_database_educational_year') }} AS educational_year ON educational_year.adage_id = collective_booking.educational_year_id

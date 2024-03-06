@@ -18,7 +18,7 @@ LEFT JOIN {{ source('raw', 'applicative_database_venue') }} AS venue
 USING(venue_id)
 LEFT JOIN {{ source('raw', 'applicative_database_venue_label') }} AS label
 USING(venue_label_id)
-LEFT JOIN {{ source('raw', 'applicative_database_offer') }} AS offer
+LEFT JOIN {{ ref('offer') }} AS offer
 ON venue.venue_id = offer.venue_id
 AND provider.provider_id = offer.offer_last_provider_id
 GROUP BY

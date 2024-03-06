@@ -127,7 +127,7 @@ collective AS (
         invoice.invoice_creation_date,
         invoice.amount AS invoice_amount
     FROM
-        {{ source('raw', 'applicative_database_collective_booking') }} AS collective_booking
+        {{ ref('booking') }} AS collective_booking
         LEFT JOIN {{ source('raw', 'applicative_database_pricing') }} AS pricing ON collective_booking.collective_booking_id = pricing.collective_booking_id
         LEFT JOIN coll_clean_pricing_line2 ON collective_booking.collective_booking_id = coll_clean_pricing_line2.collective_booking_id
         LEFT JOIN {{ source('raw', 'applicative_database_cashflow_pricing') }} AS cashflow_pricing ON pricing.id = cashflow_pricing.pricingId

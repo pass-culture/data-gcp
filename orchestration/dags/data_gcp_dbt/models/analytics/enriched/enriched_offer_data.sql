@@ -128,6 +128,7 @@ SELECT
     offer.offer_product_id,
     {{target_schema}}.humanize_id(offer.offer_product_id) as offer_product_humanized_id,
     offer.offer_id_at_providers,
+    CASE WHEN offer.offer_id_at_providers IS NOT NULL THEN TRUE ELSE FALSE END as is_synchronised,
     offer.offer_name,
     offer_description,
     offer.offer_subcategoryId,

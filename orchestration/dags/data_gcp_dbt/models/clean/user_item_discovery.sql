@@ -1,5 +1,3 @@
-{% set discovery_features = ['category_id', 'subcategory_id', 'new_items'] %}
-
 WITH consultation as (
     SELECT 
         *
@@ -30,7 +28,7 @@ new_consultation_item as (
         , new_items
         , category_id
         , subcategory_id
-        , {% for feature in discovery_features %} 
+        , {% for feature in discovery_vars("discovery_features") %} 
         CASE
             WHEN consultation_date = min(consultation_date) over(partition by user_id, {{feature}})
             THEN 1
@@ -68,7 +66,7 @@ agg_new_consultation_item as (
         SELECT
         user_id
         , consultation_date  
-        , {% for feature in discovery_features %} 
+        , {% for feature in discovery_vars("discovery_features") %} 
         sum({{feature}}_discovery) as discovery_{{feature}}
       {% if not loop.last -%} , {%- endif %}
       {% endfor %}

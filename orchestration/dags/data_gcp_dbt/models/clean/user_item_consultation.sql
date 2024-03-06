@@ -14,8 +14,11 @@ SELECT
 FROM {{ ref('user_beneficiary') }} user
 JOIN {{ source('analytics', 'firebase_events') }} firebase
     ON user.user_id = firebase.user_id
-    and event_name = 'ConsultOffer'
-    and event_date >= date_sub('{{ ds() }}', INTERVAL 3 day)
+    and event_name = 'ConsultOffer'    
+    {% if is_incremental() %}
+    -- recalculate latest day's data
+    and date(event_date) = date_sub('{{ ds() }}', INTERVAL 1 day)
+    {% endif %}
 JOIN {{ ref('offer_item_ids') }} offer_item_ids -- retire les offres non reliées à un item_id 
     ON firebase.offer_id = offer_item_ids.offer_id
 GROUP BY 1, 2

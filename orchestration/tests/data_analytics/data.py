@@ -1283,7 +1283,7 @@ ENRICHED_OFFERER_DATA_INPUT = {
             "siren": "123456789",
             "activitePrincipaleUniteLegale": "84.11Z",
             "categorieJuridiqueUniteLegale": "2232",
-            "update_date": '2024-01-01',
+            "update_date": "2024-01-01",
         }
     ],
     "siren_data_labels": [

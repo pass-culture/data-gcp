@@ -57,13 +57,13 @@ SELECT
     booking_used_date
 FROM
     {{ ref('booking') }} AS booking
-    INNER JOIN {{ ref('stock') }} AS stock ON booking.stock_id = stock.stock_id
+    INNER JOIN {{ source('raw', 'applicative_database_stock') }} AS stock ON booking.stock_id = stock.stock_id
     LEFT JOIN {{ ref('offer') }} AS offer ON offer.offer_id = stock.offer_id
     INNER JOIN {{ ref('venue') }} AS venue ON venue.venue_id = offer.venue_id
-    INNER JOIN {{ ref('offerer') }} AS offerer ON venue.venue_managing_offerer_id = offerer.offerer_id
+    INNER JOIN {{ source('raw', 'applicative_database_offerer') }} AS offerer ON venue.venue_managing_offerer_id = offerer.offerer_id
     INNER JOIN {{ ref('user_beneficiary') }} AS user ON user.user_id = booking.user_id
-    INNER JOIN {{ ref('deposit') }} AS deposit ON deposit.id = booking.deposit_id
-    LEFT JOIN {{ ref('venue_label') }} AS venue_label ON venue.venue_label_id = venue_label.venue_label_id
+    INNER JOIN {{ source('raw', 'applicative_database_deposit') }} AS deposit ON deposit.id = booking.deposit_id
+    LEFT JOIN {{ source('raw', 'applicative_database_venue_label') }} AS venue_label ON venue.venue_label_id = venue_label.venue_label_id
     INNER JOIN {{ source('clean','subcategories') }} AS subcategories ON offer.offer_subcategoryId = subcategories.id
     LEFT JOIN booking_ranking_in_category_view ON booking_ranking_in_category_view.booking_id = booking.booking_id
     LEFT JOIN {{ ref('offer_item_ids') }} as offer_item_ids ON offer.offer_id = offer_item_ids.offer_id

@@ -10,7 +10,7 @@ WITH venue_humanized_id AS (
         venue_id,
         {{target_schema}}.humanize_id(venue_id) AS humanized_id
     FROM
-       {{ source('raw', 'applicative_database_venue') }}
+       {{ ref('venue') }}
     WHERE
         venue_id is not NULL
 ),
@@ -34,10 +34,10 @@ individual_bookings_per_venue AS (
         ,MIN(booking.booking_creation_date) AS first_individual_booking_date
         ,MAX(booking.booking_creation_date) AS last_individual_booking_date
     FROM
-       {{ source('raw', 'applicative_database_venue') }} AS venue
-        LEFT JOIN{{ source('raw', 'applicative_database_offer') }} AS offer ON venue.venue_id = offer.venue_id
-        LEFT JOIN{{ source('raw', 'applicative_database_stock') }} AS stock ON stock.offer_id = offer.offer_id
-        LEFT JOIN{{ ref('booking') }} AS booking ON stock.stock_id = booking.stock_id
+        {{ ref('venue') }} AS venue
+        LEFT JOIN {{ ref('offer') }} AS offer ON venue.venue_id = offer.venue_id
+        LEFT JOIN {{ source('raw', 'applicative_database_stock') }} AS stock ON stock.offer_id = offer.offer_id
+        LEFT JOIN {{ ref('booking') }} AS booking ON stock.stock_id = booking.stock_id
     GROUP BY
         venue.venue_id
 ),
@@ -66,8 +66,8 @@ individual_offers_per_venue AS (
         MAX(offer.offer_creation_date) AS last_individual_offer_creation_date,
         COUNT(offer.offer_id) AS individual_offers_created
     FROM
-       {{ source('raw', 'applicative_database_venue') }} AS venue
-        LEFT JOIN{{ source('raw', 'applicative_database_offer') }} AS offer ON venue.venue_id = offer.venue_id
+        {{ ref('venue') }} AS venue
+        LEFT JOIN {{ ref('offer') }} AS offer ON venue.venue_id = offer.venue_id
                                                                                     AND offer.offer_validation = 'APPROVED'
     GROUP BY
         venue.venue_id
@@ -216,7 +216,7 @@ SELECT
     venue_contact.venue_contact_website
 
 FROM
-   {{ source('raw', 'applicative_database_venue') }} AS venue
+    {{ ref('venue') }} AS venue
     LEFT JOIN{{ source('raw', 'applicative_database_offerer') }} AS offerer ON venue.venue_managing_offerer_id = offerer.offerer_id
     LEFT JOIN{{ source('raw', 'applicative_database_venue_label') }} AS venue_label ON venue_label.venue_label_id = venue.venue_label_id
     LEFT JOIN individual_bookings_per_venue ON individual_bookings_per_venue.venue_id = venue.venue_id

@@ -117,7 +117,7 @@ SELECT
     collective_offer.template_id
 FROM
     {{ source('raw', 'applicative_database_collective_offer') }} AS collective_offer
-    JOIN {{ source('raw', 'applicative_database_venue') }} AS venue ON venue.venue_id = collective_offer.venue_id
+    JOIN {{ ref('venue') }} AS venue ON venue.venue_id = collective_offer.venue_id
     LEFT JOIN {{ source('raw', 'applicative_database_collective_stock') }} AS collective_stock ON collective_stock.collective_offer_id = collective_offer.collective_offer_id
     JOIN {{ source('raw', 'applicative_database_offerer') }} AS offerer ON offerer.offerer_id = venue.venue_managing_offerer_id
     LEFT JOIN {{ source('clean', 'subcategories') }} ON subcategories.id = collective_offer.collective_offer_subcategory_id
@@ -170,7 +170,7 @@ SELECT
     NULL as template_id
 FROM
     {{ source('raw', 'applicative_database_collective_offer_template') }} AS template
-    JOIN {{ source('raw', 'applicative_database_venue') }} AS venue ON venue.venue_id = template.venue_id
+    JOIN {{ ref('venue') }} AS venue ON venue.venue_id = template.venue_id
     JOIN {{ source('raw', 'applicative_database_offerer') }} AS offerer ON offerer.offerer_id = venue.venue_managing_offerer_id
     LEFT JOIN {{ source('clean', 'subcategories') }} ON subcategories.id = template.collective_offer_subcategory_id
     LEFT JOIN {{ source('raw', 'applicative_database_collective_stock') }} AS collective_stock ON collective_stock.collective_offer_id = template.collective_offer_id

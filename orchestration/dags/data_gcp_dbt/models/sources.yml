@@ -103,6 +103,7 @@ sources:
       - name: gsheet_eac_webinar
       - name: macro_rayons
       - name: stdout
+      - name: rural_city_type_data
   - name: clean # this is the source_name
     schema: clean_{{ var('ENV_SHORT_NAME') }}
     tables:
@@ -130,7 +131,9 @@ sources:
       - name: firebase_events
       - name: firebase_pro_events
       - name: firebase_recommendation_events
+      - name: institution_locations
       - name: linked_offers
+      - name: number_of_students_per_eple
       - name: offer_types
       - name: region_department
       - name: siren_data_labels

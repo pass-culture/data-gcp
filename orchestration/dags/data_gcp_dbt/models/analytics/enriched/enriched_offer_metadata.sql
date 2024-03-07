@@ -114,11 +114,26 @@ offer_metadata_id AS (
         offer_extracted_data.genres,
         offer_extracted_data.author,
         offer_extracted_data.performer,
-        offer_extracted_data.titelive_gtl_id,
-        gtl.gtl_label_level_1,
-        gtl.gtl_label_level_2,
-        gtl.gtl_label_level_3,
-        gtl.gtl_label_level_4
+        case 
+            when enriched_items.category_id like "LIVRE" then offer_extracted_data.titelive_gtl_id 
+            else null 
+        end as titelive_gtl_id,
+        case 
+            when enriched_items.category_id like "LIVRE" then offer_extracted_data.gtl.gtl_label_level_1 
+            else null 
+        end as gtl.gtl_label_level_1,
+        case 
+            when enriched_items.category_id like "LIVRE" then offer_extracted_data.gtl.gtl_label_level_2 
+            else null 
+        end as gtl.gtl_label_level_2,
+        case 
+            when enriched_items.category_id like "LIVRE" then offer_extracted_data.gtl.gtl_label_level_3 
+            else null 
+        end as gtl.gtl_label_level_3,
+        case 
+            when enriched_items.category_id like "LIVRE" then offer_extracted_data.gtl.gtl_label_level_4 
+            else null 
+        end as gtl.gtl_label_level_4
 
     FROM enriched_items
     

@@ -114,26 +114,27 @@ offer_metadata_id AS (
         offer_extracted_data.genres,
         offer_extracted_data.author,
         offer_extracted_data.performer,
+        -- GTL of distinct objects (eg books and music) can collide
         case 
             when enriched_items.category_id like "LIVRE" then offer_extracted_data.titelive_gtl_id 
             else null 
         end as titelive_gtl_id,
         case 
-            when enriched_items.category_id like "LIVRE" then offer_extracted_data.gtl.gtl_label_level_1 
+            when enriched_items.category_id like "LIVRE" then gtl.gtl_label_level_1 
             else null 
-        end as gtl.gtl_label_level_1,
+        end as gtl_label_level_1,
         case 
-            when enriched_items.category_id like "LIVRE" then offer_extracted_data.gtl.gtl_label_level_2 
+            when enriched_items.category_id like "LIVRE" then gtl.gtl_label_level_2 
             else null 
-        end as gtl.gtl_label_level_2,
+        end as gtl_label_level_2,
         case 
-            when enriched_items.category_id like "LIVRE" then offer_extracted_data.gtl.gtl_label_level_3 
+            when enriched_items.category_id like "LIVRE" then gtl.gtl_label_level_3 
             else null 
-        end as gtl.gtl_label_level_3,
+        end as gtl_label_level_3,
         case 
-            when enriched_items.category_id like "LIVRE" then offer_extracted_data.gtl.gtl_label_level_4 
+            when enriched_items.category_id like "LIVRE" then gtl.gtl_label_level_4 
             else null 
-        end as gtl.gtl_label_level_4
+        end as gtl_label_level_4
 
     FROM enriched_items
     

@@ -4,7 +4,7 @@ TEST_DATASET = f"test_{uuid.uuid1().hex}"
 GCP_REGION = "europe-west1"
 GCP_PROJECT = "passculture-data-ehp"
 BIGQUERY_SCHEMAS = {
-    "booking": {
+    "applicative_database_booking": {
         "booking_is_active": "BOOLEAN",
         "booking_id": "STRING",
         "deposit_id": "STRING",
@@ -260,6 +260,7 @@ BIGQUERY_SCHEMAS = {
         "offer_product_humanized_id": "STRING",
         "item_id": "STRING",
         "offer_id_at_providers": "STRING",
+        "is_synchronised": "BOOLEAN",
         "offer_name": "STRING",
         "offer_description": "STRING",
         "URL": "STRING",
@@ -556,6 +557,7 @@ BIGQUERY_SCHEMAS = {
         "siren": "STRING",
         "activitePrincipaleUniteLegale": "STRING",
         "categorieJuridiqueUniteLegale": "STRING",
+        "update_date": "DATE",
     },
     "siren_data_labels": {
         "activitePrincipaleUniteLegale": "STRING",

@@ -10,7 +10,7 @@ WITH offer_humanized_id AS (
         offer_id,
         {{target_schema}}.humanize_id(offer_id) AS humanized_id,
     FROM
-        {{ source('raw', 'applicative_database_offer') }}
+        {{ ref('offer') }}
     WHERE
         offer_id is not NULL
 ),
@@ -31,7 +31,7 @@ offer_booking_information_view AS (
             END
         ) AS count_booking_confirm
     FROM
-        {{ source('raw', 'applicative_database_offer') }} AS offer
+        {{ ref('offer') }} AS offer
         LEFT JOIN {{ source('raw', 'applicative_database_stock') }} AS stock ON stock.offer_id = offer.offer_id
         LEFT JOIN {{ ref('booking') }} AS booking ON stock.stock_id = booking.stock_id
     GROUP BY
@@ -96,7 +96,7 @@ last_stock AS (
                         stock.stock_id DESC
                 ) AS rang_stock
             FROM
-                {{ source('raw', 'applicative_database_offer') }} AS offer
+                {{ ref('offer') }} AS offer
                 JOIN {{ ref('cleaned_stock') }} AS stock on stock.offer_id = offer.offer_id
         ) c
     WHERE
@@ -182,7 +182,7 @@ SELECT
     offer_humanized_id.humanized_id AS offer_humanized_id,
     CONCAT(
         'https://passculture.pro/offre/individuelle/',
-        offer_humanized_id.humanized_id,
+        offer.offer_id,
         '/informations'
     ) AS passculture_pro_url,
     CONCAT('https://passculture.app/offre/', offer.offer_id) AS webapp_url,
@@ -224,9 +224,9 @@ SELECT
         AND offer_extracted_data.musicsubType IS NOT NULL THEN offer_extracted_data.musicSubtype
     END AS subType
 FROM
-    {{ source('raw', 'applicative_database_offer') }} AS offer
+    {{ ref('offer') }} AS offer
     LEFT JOIN {{ source('clean', 'subcategories') }} subcategories ON offer.offer_subcategoryId = subcategories.id
-    LEFT JOIN {{ source('raw', 'applicative_database_venue') }} AS venue ON offer.venue_id = venue.venue_id
+    LEFT JOIN {{ ref('venue') }} AS venue ON offer.venue_id = venue.venue_id
     LEFT JOIN {{ source('raw', 'applicative_database_offerer') }} AS offerer ON venue.venue_managing_offerer_id = offerer.offerer_id
     LEFT JOIN {{ ref('offer_item_ids') }} AS offer_ids on offer.offer_id=offer_ids.offer_id
     LEFT JOIN offer_booking_information_view ON offer_booking_information_view.offer_id = offer.offer_id

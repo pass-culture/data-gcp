@@ -17,7 +17,7 @@ WITH bookings_per_stock AS (
         partition_date
 )
 SELECT
-    DISTINCT stock.partition_date, stock.offer_id
+    DISTINCT stock.partition_date, stock.offer_id, offer_item_ids.item_id, offer.offer_subcategoryId AS offer_subcategory_id, subcategories.category_id AS offer_category_id
 FROM
     {{ref('stock_history')}} AS stock
     JOIN {{ref('offer_history')}} AS offer ON stock.offer_id = offer.offer_id
@@ -26,6 +26,8 @@ FROM
     AND NOT stock.stock_is_soft_deleted
     LEFT JOIN bookings_per_stock ON stock.stock_id = bookings_per_stock.stock_id
     AND stock.partition_date = bookings_per_stock.partition_date
+    LEFT JOIN {{ref('offer_item_ids')}} offer_item_ids ON offer_item_ids.offer_id = stock.offer_id
+    LEFT JOIN {{ source('clean', 'subcategories') }} subcategories ON subcategories.id = offer.offer_subcategoryId
 WHERE
     (
         (

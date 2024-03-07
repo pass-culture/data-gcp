@@ -27,15 +27,10 @@ clean-targets:         # directories to be removed by `dbt clean`
 
 models:
   data_gcp_dbt:
-    raw:
-      +materialized: table
-      +schema: raw_dbt_{{ target.name }}
-      +docs:
-        node_color: "#0320fc"
-      applicative_raw:
-        # schema: applicative_raw
-        tags: "applicative"
     clean:
+      +config:
+        +meta:
+          owner: "@team-data-engineering"
       +materialized: table
       +schema: clean_dbt_{{ target.name }}
       +docs: 
@@ -63,6 +58,7 @@ models:
         node_color: "#d90000" 
       diversification:
         +tags: sandbox
+        +re_data_monitored: false
   elementary:
     +on_schema_change: "append_new_columns"
     +enabled: false

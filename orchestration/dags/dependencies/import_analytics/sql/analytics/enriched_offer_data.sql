@@ -28,7 +28,7 @@ offer_booking_information_view AS (
     FROM
         `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON stock.offer_id = offer.offer_id
-        LEFT JOIN `{{ bigquery_clean_dataset }}`.booking AS booking ON stock.stock_id = booking.stock_id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking ON stock.stock_id = booking.stock_id
     GROUP BY
         offer_id
 ),
@@ -65,7 +65,7 @@ count_first_booking_view AS (
                         booking.booking_id
                 ) AS booking_rank
             FROM
-                `{{ bigquery_clean_dataset }}`.booking AS booking
+                `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking
                 LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock on stock.stock_id = booking.stock_id
         ) c
     WHERE
@@ -123,6 +123,7 @@ SELECT
     offer.offer_product_id,
     humanize_id(offer.offer_product_id) as offer_product_humanized_id,
     offer.offer_id_at_providers,
+    CASE WHEN offer.offer_id_at_providers IS NOT NULL THEN TRUE ELSE FALSE END as is_synchronised,
     offer.offer_name,
     offer_description,
     offer.offer_subcategoryId,

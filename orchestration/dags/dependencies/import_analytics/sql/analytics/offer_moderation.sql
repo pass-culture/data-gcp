@@ -38,7 +38,7 @@ bookings_days AS (
         IF(booking_is_cancelled, COUNT(DISTINCT booking_id) OVER (PARTITION BY offer.offer_id, DATE(booking_creation_date)), NULL) AS cnt_bookings_cancelled,
         IF(NOT booking_is_cancelled, COUNT(DISTINCT booking_id) OVER (PARTITION BY offer.offer_id, DATE(booking_creation_date)), NULL) AS cnt_bookings_confirm,
     FROM
-        `{{ bigquery_clean_dataset }}`.booking booking
+        `{{ bigquery_clean_dataset }}`.applicative_database_booking booking
         JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock stock USING(stock_id)
         JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer offer ON offer.offer_id = stock.offer_id
 ),

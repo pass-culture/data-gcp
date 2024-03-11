@@ -358,6 +358,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "offer_product_id": "1",
         "offer_product_humanized_id": "AE",
         "offer_id_at_providers": "7",
+        "is_synchronised": True,
         "item_id": "product-154181",
         "offerer_id": "3",
         "offerer_name": "Test Offerer",
@@ -416,6 +417,7 @@ ENRICHED_OFFER_DATA_EXPECTED = [
         "offer_product_id": "2",
         "offer_product_humanized_id": "A9",
         "offer_id_at_providers": "8",
+        "is_synchronised": True,
         "item_id": "product-156157",
         "offerer_id": "4",
         "offerer_name": "Test Offerer",
@@ -1281,6 +1283,7 @@ ENRICHED_OFFERER_DATA_INPUT = {
             "siren": "123456789",
             "activitePrincipaleUniteLegale": "84.11Z",
             "categorieJuridiqueUniteLegale": "2232",
+            "update_date": "2024-01-01",
         }
     ],
     "siren_data_labels": [

@@ -128,7 +128,8 @@ SELECT
     COUNTIF(event_name="hasClickedAddImage") AS nb_clic_add_image,     
 
 -- count other CTA 
-    COUNTIF(event_name="hasClickedAddBankAccount") AS nb_clic_add_bank_account,   
+    COUNTIF(event_name IN ("hasClickedAddBankAccount","hasClickedContinueToDS","hasClickedBankDetailsRecordFollowUp")) AS nb_clic_add_bank_account,  
+    COUNTIF(event_name IN ("hasClickedAddVenueToBankAccount","hasClickedSaveVenueToBankAccount","hasClickedChangeVenueToBankAccount")) AS nb_clic_add_venue_to_bank_account,    
     COUNTIF(event_name="hasClickedInviteCollaborator") AS nb_clic_add_collaborator,  
     COUNTIF(event_name="hasSentInvitation") AS nb_clic_send_invitation,   
     COUNTIF(event_name = "page_view" AND page_name = "Profil - pass Culture Pro") AS nb_clic_modify_profil,  

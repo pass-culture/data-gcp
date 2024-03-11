@@ -117,15 +117,18 @@ sources:
       - name: item_embeddings_reduced_32
       - name: item_embeddings_reduced_16
       - name: item_embeddings_reduced_5
+      - name: item_topics
       - name: item_topics_labels
       - name: siren_data
       - name: subcategories
   - name: analytics # this is the source_name
     schema: analytics_{{ var('ENV_SHORT_NAME') }}
     tables:
+      - name: adage
       - name: bookable_venue_history
       - name: contentful_entries
       - name: contentful_relationships
+      - name: eple
       - name: firebase_events
       - name: firebase_pro_events
       - name: firebase_recommendation_events

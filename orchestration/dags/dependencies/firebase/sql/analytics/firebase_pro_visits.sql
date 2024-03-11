@@ -19,7 +19,7 @@ SELECT
 -- booking management (see pages about booking)
         ,SUM(CASE WHEN nb_view_individual_booking_page+nb_view_collective_booking_page>0 THEN 1 ELSE 0 END) AS nb_manage_booking
 -- finance management (consult finance pages and add bank account)
-        ,SUM(CASE WHEN nb_view_financial_receipt_page+nb_view_financial_details_page+nb_view_banking_info_page+nb_clic_add_bank_account>0 THEN 1 ELSE 0 END) AS nb_manage_finance
+        ,SUM(CASE WHEN nb_view_financial_receipt_page+nb_view_financial_details_page+nb_view_banking_info_page+nb_clic_add_bank_account+nb_clic_add_venue_to_bank_account>0 THEN 1 ELSE 0 END) AS nb_manage_finance
 
 -- venue management (create and modify venue)
         ,SUM(CASE WHEN nb_start_venue_creation+nb_confirmed_venue_creation+nb_start_venue_edition+nb_confirmed_venue_edition+nb_clic_add_image>0 THEN 1 ELSE 0 END) AS nb_manage_venue

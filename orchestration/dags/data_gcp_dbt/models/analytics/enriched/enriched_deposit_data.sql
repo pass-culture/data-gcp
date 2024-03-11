@@ -9,7 +9,7 @@ WITH ranked_deposit_asc AS (
                 id
         ) AS deposit_rank_asc
     FROM
-        {{ ref('deposit') }} AS deposit
+        {{ source('raw', 'applicative_database_deposit') }} AS deposit
 ),
 
 ranked_deposit_desc AS (
@@ -23,7 +23,7 @@ ranked_deposit_desc AS (
                 id DESC
         ) AS deposit_rank_desc
     FROM
-        {{ ref('deposit') }} AS deposit
+        {{ source('raw', 'applicative_database_deposit') }} AS deposit
 ),
 actual_amount_spent AS (
     SELECT
@@ -68,7 +68,7 @@ theoretical_amount_spent_in_digital_goods AS (
         ) AS deposit_theoretical_amount_spent_in_digital_goods
     FROM
         {{ ref('booking') }} AS booking
-        LEFT JOIN {{ ref('stock') }} AS stock ON booking.stock_id = stock.stock_id
+        LEFT JOIN {{ source('raw', 'applicative_database_stock') }}  AS stock ON booking.stock_id = stock.stock_id
         LEFT JOIN {{ ref('offer') }} AS offer ON stock.offer_id = offer.offer_id
         INNER JOIN {{ source('clean','subcategories') }} AS subcategories ON offer.offer_subcategoryId = subcategories.id
     WHERE
@@ -130,7 +130,7 @@ SELECT
     ) AS days_between_user_creation_and_deposit_creation,
     user.user_birth_date
 FROM
-    {{ ref('deposit') }} AS deposit
+    {{ source('raw', 'applicative_database_deposit') }} AS deposit
     JOIN {{ ref('user_beneficiary') }} AS user ON user.user_id = deposit.userId
     JOIN ranked_deposit_asc ON ranked_deposit_asc.deposit_id = deposit.id
     JOIN ranked_deposit_desc ON ranked_deposit_desc.deposit_id = deposit.id

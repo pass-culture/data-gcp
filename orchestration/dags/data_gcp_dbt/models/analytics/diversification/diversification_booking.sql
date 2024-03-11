@@ -27,7 +27,7 @@ SELECT
 FROM {{ ref('diversification_raw') }} as diversification_raw
 LEFT JOIN {{ ref('enriched_booking_data') }} as booking
 ON booking.booking_id = diversification_raw.booking_id
-LEFT JOIN {{ ref('enriched_offer_metadata') }} as offer_metadata
+LEFT JOIN {{ ref('offer_metadata') }} as offer_metadata
 ON booking.offer_id = offer_metadata.offer_id
 LEFT JOIN {{ ref('enriched_user_data') }} as user
 ON diversification_raw.user_id = user.user_id

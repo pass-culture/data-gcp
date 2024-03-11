@@ -26,8 +26,8 @@ u.user_phone_validation_status,
 u.user_has_validated_email,
 u.user_has_enabled_marketing_push,
 u.user_has_enabled_marketing_email
-from {{ ref('user_offerer')}} as uo
-left join  {{ ref('user') }} as u on uo.userid = u.user_id
+from {{ source('raw', 'applicative_database_user_offerer') }} as uo
+left join  {{ source('raw', 'applicative_database_user') }} as u on uo.userid = u.user_id
 where  uo.user_offerer_validation_status = 'VALIDATED'
 AND u.user_is_active
 order by uo.offererid, u.user_creation_date

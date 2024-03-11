@@ -23,7 +23,7 @@ SELECT
     , emb.semantic_content_embedding
     , emb32.semantic_content_embedding as semantic_content_embedding32
     , emb5.semantic_content_embedding as semantic_content_embedding5
-FROM {{ ref('enriched_offer_metadata') }} as  offer_meta
+FROM {{ ref('offer_metadata') }} as  offer_meta
 LEFT JOIN {{ ref('offer_item_ids') }} as offer_item
     ON  offer_meta.offer_id = offer_item.offer_id
 LEFT JOIN {{ ref('item_clusters_topics_labels') }} as ictl

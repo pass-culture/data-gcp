@@ -27,7 +27,7 @@ mediation AS (
                         dateModifiedAtLastProvider DESC
                 ) as rnk
             FROM
-                {{ ref('mediation') }}
+                {{ source('raw', 'applicative_database_mediation') }} 
             WHERE
                 isActive
         ) inn

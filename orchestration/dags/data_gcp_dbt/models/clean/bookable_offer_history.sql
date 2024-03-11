@@ -1,3 +1,11 @@
+{{
+    config(
+        materialized = 'incremental',
+        incremental_strategy = 'insert_overwrite',
+        partition_by = {'field': 'partition_date', 'data_type': 'date'},
+    )
+}}
+
 WITH bookings_per_stock AS (
     SELECT
         stock_id,
@@ -10,8 +18,9 @@ WITH bookings_per_stock AS (
         ) AS booking_stock_no_cancelled_cnt
     FROM
         {{ref('booking_history')}} AS booking
-    WHERE partition_date = PARSE_DATE('%Y-%m-%d','{{ ds() }}')
-
+    {% if is_incremental() %} 
+    WHERE partition_date = DATE_SUB('{{ ds() }}', INTERVAL 1 DAY)
+    {% endif %}
     GROUP BY
         stock_id,
         partition_date
@@ -50,6 +59,7 @@ WHERE
             ) > 0
         )
     )
-
-    AND stock.partition_date = DATE('{{ ds() }}')
+    {% if is_incremental() %} 
+    AND stock.partition_date = DATE_SUB('{{ ds() }}', INTERVAL 1 DAY)
+    {% endif %}
 

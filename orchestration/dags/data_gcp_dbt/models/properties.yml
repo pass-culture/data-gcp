@@ -325,3 +325,9 @@ models:
   - name: collective_offer_domain_name
     config:
       schema: clean_{{ target.name }}
+  - name: user_item_consultation
+    config:
+      schema: clean_{{ target.name }}
+  - name: user_item_discovery
+    config:
+      schema: clean_{{ target.name }}

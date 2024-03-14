@@ -107,7 +107,9 @@ import_firebase_beneficiary_tables = {
         "sql": f"{SQL_PATH}/raw/events.sql",
         "destination_dataset": "{{ bigquery_raw_dataset }}",
         "destination_table": "events",
-        "partition_prefix": "_",
+        "partition_prefix": "$",
+        "time_partitioning": {"field": "event_date"},
+        "clustering_fields": {"fields": ["event_name"]},
         "params": {
             "table_type": "beneficiary",
             "app_info_ids": ENV_SHORT_NAME_APP_INFO_ID_MAPPING,

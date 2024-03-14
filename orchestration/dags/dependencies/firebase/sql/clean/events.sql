@@ -1,11 +1,7 @@
 SELECT
     *
 FROM
-    {% if params.dag_type == 'intraday' %}
-    `{{ bigquery_raw_dataset }}.{{ params.table_name }}_{{ yyyymmdd(ds) }}`
-    {% else %}
-    `{{ bigquery_raw_dataset }}.{{ params.table_name }}_{{ yyyymmdd(add_days(ds, -1)) }}`
-    {% endif %}
+    `{{ bigquery_raw_dataset }}.{{ params.table_name }}`
 WHERE
     {% if params.table_type == 'pro' %}
         device.web_info.hostname IN (
@@ -16,5 +12,11 @@ WHERE
             "{{ params.app_info_ids | join('", "') }}"
         )
         OR app_info.id is NULL
+    {% endif %}
+AND 
+    {% if params.dag_type == 'intraday' %}
+        event_date = DATE("{{ ds }}")
+    {% else %}
+        event_date = DATE("{{ add_days(ds, -1) }}")
     {% endif %}
     

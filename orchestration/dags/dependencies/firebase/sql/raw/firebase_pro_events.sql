@@ -10,16 +10,9 @@ FROM
     `{{ input_table }}.events{{ params.prefix }}{{ yyyymmdd(add_days(ds, -1)) }}`
     {% endif %}
 WHERE
-    {% if params.table_type == 'pro' %}
-        device.web_info.hostname IN (
-            "{{ params.app_info_ids | join('", "') }}"
-        )
-    {% else %}
-        app_info.id IN (
-            "{{ params.app_info_ids | join('", "') }}"
-        )
-        OR app_info.id is NULL
-    {% endif %}
+    device.web_info.hostname IN (
+        "{{ params.app_info_ids | join('", "') }}"
+    )
     
 {% if not loop.last -%} UNION ALL {%- endif %}
 {% endfor %}

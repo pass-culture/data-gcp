@@ -34,7 +34,7 @@ SELECT
     platform,
     app_info.version as app_version,
     'pro' as origin
-FROM `{{ bigquery_clean_dataset }}.firebase_pro_events_{{ yyyymmdd(add_days(ds, params.days)) }}` firebase
+FROM `{{ bigquery_raw_dataset }}.firebase_pro_events` firebase
 LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_user_offerer` user ON firebase.user_id=user.user_id
 LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_offerer_data` offerer ON user.offerer_id=offerer.offerer_id
 LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_venue_data` venue
@@ -47,3 +47,4 @@ ON venue.venue_id = (
                 event_params.key = 'venueId'
         )
 WHERE (NOT REGEXP_CONTAINS(event_name, '^[a-z]+(_[a-z]+)*$') OR event_name = "page_view")
+AND event_date = DATE("{{ add_days(ds, params.days) }}")

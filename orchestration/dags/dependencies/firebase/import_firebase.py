@@ -49,29 +49,18 @@ GCP_PROJECT_PRO_ENV = {
 import_firebase_pro_tables = {
     # raw
     "raw_firebase_pro_events": {
-        "sql": f"{SQL_PATH}/raw/events.sql",
+        "sql": f"{SQL_PATH}/raw/firebase_pro_events.sql",
         "destination_dataset": "{{ bigquery_raw_dataset }}",
-        "destination_table": "events_pro",
-        "partition_prefix": "_",
+        "destination_table": "firebase_pro_events",
+        "partition_prefix": "$",
+        "time_partitioning": {"field": "event_date"},
+        "clustering_fields": {"fields": ["event_name"]},
         "params": {
-            "table_type": "pro",
             "app_info_ids": ENV_SHORT_NAME_APP_INFO_ID_MAPPING_PRO,
             "gcp_project_native_env": GCP_PROJECT_PRO_ENV,
         },
     },
     # clean
-    "clean_firebase_pro_events": {
-        "sql": f"{SQL_PATH}/clean/events.sql",
-        "destination_dataset": "{{ bigquery_clean_dataset }}",
-        "destination_table": "firebase_pro_events",
-        "partition_prefix": "_",
-        "depends": ["raw_firebase_pro_events"],
-        "params": {
-            "table_type": "pro",
-            "app_info_ids": ENV_SHORT_NAME_APP_INFO_ID_MAPPING_PRO,
-            "table_name": "events_pro",
-        },
-    },
     "clean_firebase_pro_visits": {
         "sql": f"{SQL_PATH}/clean/firebase_pro_visits.sql",
         "write_disposition": "WRITE_APPEND",
@@ -79,7 +68,7 @@ import_firebase_pro_tables = {
         "destination_table": "firebase_pro_visits",
         "partition_prefix": "$",
         "time_partitioning": {"field": "first_event_date"},
-        "depends": ["clean_firebase_pro_events"],
+        "depends": ["raw_firebase_pro_events"],
     },
     # analytics
     "analytics_firebase_pro_events": {
@@ -89,7 +78,7 @@ import_firebase_pro_tables = {
         "partition_prefix": "$",
         "time_partitioning": {"field": "event_date"},
         "clustering_fields": {"fields": ["event_name"]},
-        "depends": ["clean_firebase_pro_events"],
+        "depends": ["raw_firebase_pro_events"],
     },
     "analytics_firebase_pro_visits": {
         "sql": f"{SQL_PATH}/analytics/firebase_pro_visits.sql",
@@ -104,28 +93,15 @@ import_firebase_pro_tables = {
 
 import_firebase_beneficiary_tables = {
     "raw_firebase_events": {
-        "sql": f"{SQL_PATH}/raw/events.sql",
+        "sql": f"{SQL_PATH}/raw/firebase_events.sql",
         "destination_dataset": "{{ bigquery_raw_dataset }}",
-        "destination_table": "events",
+        "destination_table": "firebase_events",
         "partition_prefix": "$",
         "time_partitioning": {"field": "event_date"},
         "clustering_fields": {"fields": ["event_name"]},
         "params": {
-            "table_type": "beneficiary",
             "app_info_ids": ENV_SHORT_NAME_APP_INFO_ID_MAPPING,
             "gcp_project_native_env": GCP_PROJECT_NATIVE_ENV,
-        },
-    },
-    "clean_firebase_events": {
-        "sql": f"{SQL_PATH}/clean/events.sql",
-        "destination_dataset": "{{ bigquery_clean_dataset }}",
-        "destination_table": "firebase_events",
-        "partition_prefix": "_",
-        "depends": ["raw_firebase_events"],
-        "params": {
-            "table_type": "beneficiary",
-            "app_info_ids": ENV_SHORT_NAME_APP_INFO_ID_MAPPING,
-            "table_name": "events",
         },
     },
     "clean_firebase_app_experiments": {
@@ -135,10 +111,6 @@ import_firebase_beneficiary_tables = {
         "partition_prefix": "$",
         "time_partitioning": {"field": "event_date"},
         "depends": ["raw_firebase_events"],
-        "params": {
-            "table_type": "beneficiary",
-            "table_name": "events",
-        },
     },
     # analytics
     "analytics_firebase_events": {
@@ -148,7 +120,7 @@ import_firebase_beneficiary_tables = {
         "partition_prefix": "$",
         "time_partitioning": {"field": "event_date"},
         "clustering_fields": {"fields": ["event_name"]},
-        "depends": ["clean_firebase_events"],
+        "depends": ["raw_firebase_events"],
     },
     "analytics_firebase_aggregated_offers": {
         "sql": f"{SQL_PATH}/analytics/firebase_aggregated_offers.sql",

@@ -8,7 +8,7 @@ WITH temp_firebase_events AS (
         traffic_source.medium,
         traffic_source.source,
         app_info.version AS app_version,
-        PARSE_DATE("%Y%m%d", event_date) AS event_date,
+        event_date,
         TIMESTAMP_SECONDS(
             CAST(CAST(event_timestamp as INT64) / 1000000 as INT64)
         ) AS event_timestamp,

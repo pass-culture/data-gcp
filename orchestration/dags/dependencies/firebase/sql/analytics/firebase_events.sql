@@ -550,11 +550,6 @@ WHERE
     {% else %}
         event_date = DATE("{{ add_days(ds, -1) }}")
     {% endif %}
-AND
-        app_info.id IN (
-        "{{ params.app_info_ids | join('", "') }}"
-        )
-        OR app_info.id is NULL
 )
 SELECT
     *

@@ -239,11 +239,13 @@ WITH temp_firebase_events AS (
         device.operating_system_version as user_device_operating_system_version,
         device.web_info.browser as user_web_browser,
         device.web_info.browser_version as user_web_browser_version,
-  FROM
+    FROM
+        `{{ bigquery_raw_dataset }}.firebase_pro_events`
+    WHERE
         {% if params.dag_type == 'intraday' %}
-        `{{ bigquery_clean_dataset }}.firebase_pro_events_{{ yyyymmdd(ds) }}`
+        event_date = DATE('{{ ds }}')
         {% else %}
-        `{{ bigquery_clean_dataset }}.firebase_pro_events_{{ yyyymmdd(add_days(ds, -1)) }}`
+        event_date = DATE('{{ add_days(ds, -1) }}')
         {% endif %}
 ),
 

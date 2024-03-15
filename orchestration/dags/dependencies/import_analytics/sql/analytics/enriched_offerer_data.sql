@@ -25,7 +25,7 @@ individual_bookings_per_offerer AS (
         `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON venue.venue_id = offer.venue_id
         LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock ON stock.offer_id = offer.offer_id
-        LEFT JOIN `{{ bigquery_clean_dataset }}`.booking AS booking ON stock.stock_id = booking.stock_id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_booking AS booking ON stock.stock_id = booking.stock_id
     GROUP BY
         venue.venue_managing_offerer_id
 ),
@@ -321,4 +321,5 @@ LEFT JOIN first_dms_adage_accepted ON first_dms_adage_accepted.demandeur_entrepr
 LEFT JOIN siren_reference_adage ON offerer.offerer_siren = siren_reference_adage.siren                                
 WHERE
     offerer.offerer_validation_status='VALIDATED'
-    AND offerer.offerer_is_active;
+    AND offerer.offerer_is_active
+QUALIFY rank() over(partition by siren_data.siren order by update_date desc) = 1;

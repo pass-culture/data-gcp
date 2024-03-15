@@ -10,9 +10,9 @@ from airflow.models import Param
 from airflow.operators.python import BranchPythonOperator
 from common.alerts import task_fail_slack_alert
 from common.utils import get_airflow_schedule, waiting_operator
-from common.dbt.utils import rebuild_manifest, load_manifest
-
+from common.dbt.utils import load_manifest
 from common import macros
+
 from common.config import (
     GCP_PROJECT_ID,
     PATH_TO_DBT_PROJECT,
@@ -24,15 +24,16 @@ from common.config import (
 
 default_args = {
     "start_date": datetime(2020, 12, 23),
-    "retries": 1,
+    "retries": 2,
     "retry_delay": timedelta(minutes=2),
     "project_id": GCP_PROJECT_ID,
+    "on_failure_callback": task_fail_slack_alert,
 }
 
 dag = DAG(
     "dbt_run_dag",
     default_args=default_args,
-    dagrun_timeout=timedelta(minutes=60),
+    dagrun_timeout=timedelta(minutes=120),
     catchup=False,
     description="A dbt wrapper for airflow",
     schedule_interval=get_airflow_schedule("0 1 * * *"),
@@ -133,11 +134,11 @@ with TaskGroup(group_id="critical_tests", dag=dag) as crit_test_group:
         if model_node in models_with_crit_test_dependencies:
             test_op_dict[model_node] = BashOperator(
                 task_id=model_data["alias"] + "_tests",
-                bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_test.sh ",
+                bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_test_model.sh ",
                 env={
                     "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
                     "target": "{{ params.target }}",
-                    "model": f"""{model_data['alias']} --exclude "config.severity:warn""",
+                    "model": f"""{model_data['alias']}""",
                     "full_ref_str": full_ref_str,
                     "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
                 },
@@ -165,7 +166,7 @@ with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
                     env={
                         "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
                         "target": "{{ params.target }}",
-                        "model": f"{model_data['alias']}",
+                        "model": f"{model_data['name']}",
                         "full_ref_str": full_ref_str,
                         "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
                         "EXCLUSION": " --exclude "

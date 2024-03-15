@@ -13,57 +13,6 @@ from dependencies.import_analytics.import_raw import (
 CLEAN_SQL_PATH = f"dependencies/import_analytics/sql/clean"
 
 clean_tables = {
-    "offer": {
-        "sql": f"{CLEAN_SQL_PATH}/offer.sql",
-        "destination_dataset": "{{ bigquery_clean_dataset }}",
-        "destination_table": "applicative_database_offer",
-    },
-    "venue": {
-        "sql": f"{CLEAN_SQL_PATH}/venue.sql",
-        "destination_dataset": "{{ bigquery_clean_dataset }}",
-        "destination_table": "applicative_database_venue",
-    },
-    "educational_institution": {
-        "sql": f"{CLEAN_SQL_PATH}/educational_institution.sql",
-        "destination_dataset": "{{ bigquery_clean_dataset }}",
-        "destination_table": "applicative_database_educational_institution",
-    },
-    "user_beneficiary": {
-        "sql": f"{CLEAN_SQL_PATH}/user_beneficiary.sql",
-        "destination_dataset": "{{ bigquery_clean_dataset }}",
-        "destination_table": "user_beneficiary",
-    },
-    "user_suspension": {
-        "sql": f"{CLEAN_SQL_PATH}/user_suspension.sql",
-        "destination_dataset": "{{ bigquery_clean_dataset }}",
-        "destination_table": "user_suspension",
-    },
-    "bookable_offer": {
-        "sql": f"{CLEAN_SQL_PATH}/bookable_offer.sql",
-        "destination_dataset": "{{ bigquery_clean_dataset }}",
-        "destination_table": "bookable_offer",
-        "depends": ["offer", "available_stock_information"],
-    },
-    "bookable_collective_offer": {
-        "sql": f"{CLEAN_SQL_PATH}/bookable_collective_offer.sql",
-        "destination_dataset": "{{ bigquery_clean_dataset }}",
-        "destination_table": "bookable_collective_offer",
-    },
-    "available_stock_information": {
-        "sql": f"{CLEAN_SQL_PATH}/available_stock_information.sql",
-        "destination_dataset": "{{ bigquery_clean_dataset }}",
-        "destination_table": "available_stock_information",
-    },
-    "cleaned_stock": {
-        "sql": f"{CLEAN_SQL_PATH}/cleaned_stock.sql",
-        "destination_dataset": "{{ bigquery_clean_dataset }}",
-        "destination_table": "cleaned_stock",
-    },
-    "booking": {
-        "sql": f"{CLEAN_SQL_PATH}/booking.sql",
-        "destination_dataset": "{{ bigquery_clean_dataset }}",
-        "destination_table": "booking",
-    },
     "user_ip_iris": {
         "sql": f"{CLEAN_SQL_PATH}/user_ip_iris.sql",
         "destination_dataset": "{{ bigquery_clean_dataset }}",
@@ -80,11 +29,6 @@ clean_tables = {
         "sql": f"{CLEAN_SQL_PATH}/user_declared_iris.sql",
         "destination_dataset": "{{ bigquery_clean_dataset }}",
         "destination_table": "user_declared_iris",
-    },
-    "collective_offer_domain_name": {
-        "sql": f"{CLEAN_SQL_PATH}/collective_offer_domain_name.sql",
-        "destination_dataset": "{{ bigquery_clean_dataset }}",
-        "destination_table": "collective_offer_domain_name",
     },
 }
 

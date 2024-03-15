@@ -1,3 +1,15 @@
+{{
+  config(
+    materialized = "incremental",
+    partition_by={
+      "field": "first_event_date",
+      "data_type": "date",
+      "granularity": "day",
+      "time_ingestion_partitioning": false
+    },
+    incremental_strategy = 'insert_overwrite'
+  )
+}}
 
 SELECT DISTINCT
     user_pseudo_id
@@ -20,3 +32,6 @@ AND event_name NOT IN (
             'batch_notification_dismiss',
             'app_update'
         )
+{% if is_incremental() %}
+    AND event_date BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 1 DAY) and DATE('{{ ds() }}')
+{% endif %}

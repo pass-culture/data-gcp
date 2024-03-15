@@ -16,12 +16,12 @@ WITH all_bookings_reconciled AS (
     , search_id
     , f_events.user_location_type
   FROM
-      `{{ bigquery_clean_dataset }}.booking` booking
+      `{{ bigquery_clean_dataset }}.applicative_database_booking` booking
   LEFT JOIN `{{ bigquery_analytics_dataset }}.firebase_events` f_events
   ON f_events.booking_id = booking.booking_id
   AND event_name = 'BookingConfirmation'
   AND event_date = DATE('{{ add_days(ds, params.to) }}')
-  INNER JOIN `{{ bigquery_analytics_dataset }}.offer_item_ids` offer_item_ids
+  INNER JOIN `{{ bigquery_clean_dataset }}.offer_item_ids` offer_item_ids
   ON offer_item_ids.offer_id = booking.offer_id
   WHERE DATE(booking_creation_date) = DATE('{{ add_days(ds, params.to) }}')
 )
@@ -39,7 +39,7 @@ WITH all_bookings_reconciled AS (
     , module_name
     , entry_id
   FROM `{{ bigquery_analytics_dataset }}.firebase_events`
-  INNER JOIN `{{ bigquery_analytics_dataset }}.offer_item_ids` offer_item_ids USING(offer_id)
+  INNER JOIN `{{ bigquery_clean_dataset }}.offer_item_ids` offer_item_ids USING(offer_id)
   WHERE event_name = 'ConsultOffer'
   AND origin NOT IN ('offer', 'endedbookings','bookingimpossible', 'bookings')
   AND event_date BETWEEN DATE('{{ add_days(ds, params.from) }}') AND DATE('{{ add_days(ds, params.to) }}')  

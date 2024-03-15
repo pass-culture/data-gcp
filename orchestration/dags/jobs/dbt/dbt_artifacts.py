@@ -64,6 +64,7 @@ dbt_test = BashOperator(
         "target": "{{ params.target }}",
         "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
         "ENV_SHORT_NAME": ENV_SHORT_NAME,
+        "EXCLUSION": "audit",
     },
     append_env=True,
     cwd=PATH_TO_DBT_PROJECT,

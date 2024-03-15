@@ -24,8 +24,8 @@ individual_bookings_per_offerer AS (
         ,MIN(booking.booking_creation_date) AS first_individual_booking_date
         ,MAX(booking.booking_creation_date) AS last_individual_booking_date
     FROM
-        {{ source('raw', 'applicative_database_venue') }} AS venue
-        LEFT JOIN {{ source('raw', 'applicative_database_offer') }} AS offer ON venue.venue_id = offer.venue_id
+        {{ ref('venue') }} AS venue
+        LEFT JOIN {{ ref('offer') }} AS offer ON venue.venue_id = offer.venue_id
         LEFT JOIN {{ source('raw', 'applicative_database_stock') }} AS stock ON stock.offer_id = offer.offer_id
         LEFT JOIN {{ ref('booking') }} AS booking ON stock.stock_id = booking.stock_id
     GROUP BY
@@ -57,8 +57,8 @@ individual_offers_per_offerer AS (
         MAX(offer.offer_creation_date) AS last_individual_offer_creation_date,
         COUNT(offer.offer_id) AS individual_offers_created
     FROM
-        {{ source('raw', 'applicative_database_venue') }} AS venue
-        LEFT JOIN {{ source('raw', 'applicative_database_offer') }} AS offer ON venue.venue_id = offer.venue_id
+        {{ ref('venue') }} AS venue
+        LEFT JOIN {{ ref('offer') }} AS offer ON venue.venue_id = offer.venue_id
                                                                                     AND offer.offer_validation = 'APPROVED'
     GROUP BY
         venue.venue_managing_offerer_id
@@ -72,7 +72,7 @@ all_collective_offers AS (
         collective_offer_creation_date
     FROM
         {{ source('raw', 'applicative_database_collective_offer') }} AS collective_offer
-     JOIN {{ source('raw', 'applicative_database_venue') }} AS venue ON venue.venue_id = collective_offer.venue_id
+     JOIN {{ ref('venue') }} AS venue ON venue.venue_id = collective_offer.venue_id
                                                                              AND collective_offer.collective_offer_validation = 'APPROVED'
     UNION
     ALL
@@ -83,7 +83,7 @@ all_collective_offers AS (
         collective_offer_creation_date
     FROM
         {{ source('raw', 'applicative_database_collective_offer_template') }} AS collective_offer_template
-     JOIN {{ source('raw', 'applicative_database_venue') }} AS venue ON venue.venue_id = collective_offer_template.venue_id
+     JOIN {{ ref('venue') }} AS venue ON venue.venue_id = collective_offer_template.venue_id
                                                                             AND collective_offer_template.collective_offer_validation = 'APPROVED'
 
 ),
@@ -135,8 +135,8 @@ related_stocks AS (
         MIN(stock.stock_creation_date) AS first_stock_creation_date
     FROM
         {{ source('raw', 'applicative_database_offerer') }} AS offerer
-        LEFT JOIN {{ source('raw', 'applicative_database_venue') }} AS venue ON venue.venue_managing_offerer_id = offerer.offerer_id
-        LEFT JOIN {{ source('raw', 'applicative_database_offer') }} AS offer ON offer.venue_id = venue.venue_id
+        LEFT JOIN {{ ref('venue') }} AS venue ON venue.venue_managing_offerer_id = offerer.offerer_id
+        LEFT JOIN {{ ref('offer') }} AS offer ON offer.venue_id = venue.venue_id
         LEFT JOIN {{ source('raw', 'applicative_database_stock') }} AS stock ON stock.offer_id = offer.offer_id
     GROUP BY
         offerer_id
@@ -167,7 +167,7 @@ related_venues AS (
         ,COALESCE(COUNT(DISTINCT CASE WHEN venue_is_permanent THEN venue_id ELSE NULL END),0) AS permanent_venues_managed
     FROM
         {{ source('raw', 'applicative_database_offerer') }} AS offerer
-        LEFT JOIN {{ source('raw', 'applicative_database_venue') }} AS venue ON offerer.offerer_id = venue.venue_managing_offerer_id
+        LEFT JOIN {{ ref('venue') }} AS venue ON offerer.offerer_id = venue.venue_managing_offerer_id
     GROUP BY
         1
 ),
@@ -178,11 +178,62 @@ venues_with_offers AS (
         count(DISTINCT offer.venue_id) AS nb_venue_with_offers
     FROM
         {{ source('raw', 'applicative_database_offerer') }} AS offerer
-        LEFT JOIN {{ source('raw', 'applicative_database_venue') }} AS venue ON offerer.offerer_id = venue.venue_managing_offerer_id
-        LEFT JOIN {{ source('raw', 'applicative_database_offer') }} AS offer ON venue.venue_id = offer.venue_id
+        LEFT JOIN {{ ref('venue') }} AS venue ON offerer.offerer_id = venue.venue_managing_offerer_id
+        LEFT JOIN {{ ref('offer') }} AS offer ON venue.venue_id = offer.venue_id
     GROUP BY
         offerer_id
         )
+        
+, adage_agreg_synchro AS (
+SELECT 
+    left(siret, 9) AS siren,
+    siret
+FROM {{ source('analytics', 'adage')}}
+where synchroPass = "1.0"
+)
+
+, siret_reference_adage AS (
+SELECT 
+    venueid,
+    id,
+    siret,
+    left(siret, 9) AS siren,
+    CASE WHEN siret in (select siret from adage_agreg_synchro) THEN TRUE ELSE FALSE END AS siret_synchro_adage,
+    CASE WHEN left(siret, 9) in (select siren from adage_agreg_synchro) THEN TRUE ELSE FALSE END AS siren_synchro_adage,
+FROM {{ source('analytics', 'adage')}}
+)
+
+,siren_reference_adage AS (
+  SELECT 
+    siren,
+    max(siren_synchro_adage) AS siren_synchro_adage
+  FROM siret_reference_adage 
+  GROUP BY 1
+)
+
+,dms_adage AS (
+  
+SELECT * EXCEPT(demandeur_entreprise_siren),
+  CASE WHEN demandeur_entreprise_siren is null or demandeur_entreprise_siren = "nan" 
+  THEN left(demandeur_siret, 9) ELSE demandeur_entreprise_siren END AS demandeur_entreprise_siren
+  
+FROM {{ source('clean', 'dms_pro_cleaned')}}
+WHERE procedure_id IN ('57081', '57189','61589','65028','80264')
+)
+
+,first_dms_adage AS (
+SELECT * 
+FROM dms_adage
+QUALIFY row_number() OVER(PARTITION BY demandeur_entreprise_siren ORDER BY application_submitted_at ASC) = 1
+)
+
+, first_dms_adage_accepted AS (
+SELECT * 
+FROM dms_adage
+WHERE application_status = "accepte"
+QUALIFY row_number() OVER(PARTITION BY demandeur_entreprise_siren ORDER BY processed_at ASC) = 1
+)
+
 
 SELECT
     offerer.offerer_id,
@@ -245,6 +296,10 @@ SELECT
     permanent_venues_managed,
     COALESCE(venues_with_offers.nb_venue_with_offers,0) AS venue_with_offer,
     offerer_humanized_id.humanized_id AS offerer_humanized_id,
+    CASE WHEN first_dms_adage.application_status IS NULL THEN "dms_adage_non_depose" ELSE first_dms_adage.application_status END AS first_dms_adage_status,
+    first_dms_adage_accepted.processed_at AS dms_accepted_at,
+    CASE WHEN siren_reference_adage.siren is null THEN FALSE ELSE TRUE END AS is_reference_adage,
+    CASE WHEN siren_reference_adage.siren is null THEN FALSE ELSE siren_synchro_adage END AS is_synchro_adage 
 FROM
     {{ source('raw', 'applicative_database_offerer') }} AS offerer
     LEFT JOIN individual_bookings_per_offerer ON individual_bookings_per_offerer.offerer_id = offerer.offerer_id
@@ -263,6 +318,10 @@ FROM
 LEFT JOIN {{ source('clean', 'siren_data') }} AS siren_data ON siren_data.siren = offerer.offerer_siren
 LEFT JOIN {{ source('analytics', 'siren_data_labels') }} AS siren_data_labels ON siren_data_labels.activitePrincipaleUniteLegale = siren_data.activitePrincipaleUniteLegale
                                             AND CAST(siren_data_labels.categorieJuridiqueUniteLegale AS STRING) = CAST(siren_data.categorieJuridiqueUniteLegale AS STRING)
+LEFT JOIN first_dms_adage ON first_dms_adage.demandeur_entreprise_siren = offerer.offerer_siren
+LEFT JOIN first_dms_adage_accepted ON first_dms_adage_accepted.demandeur_entreprise_siren = offerer.offerer_siren                                               
+LEFT JOIN siren_reference_adage ON offerer.offerer_siren = siren_reference_adage.siren                                
 WHERE
     offerer.offerer_validation_status='VALIDATED'
     AND offerer.offerer_is_active
+QUALIFY row_number() over(partition by siren_data.siren order by update_date desc) = 1

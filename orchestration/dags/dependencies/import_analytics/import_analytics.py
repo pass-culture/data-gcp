@@ -42,10 +42,6 @@ def define_import_tables():
 
 
 analytics_tables = {
-    "available_stock_information": {
-        "sql": f"{ANALYTICS_SQL_PATH}/available_stock_information.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-    },
     "enriched_booking_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_booking_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
@@ -71,8 +67,6 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "depends": [
             "isbn_rayon_editor",
-            "offer_extracted_data",
-            "offer_item_ids",
         ],
     },
     "enriched_offer_metadata": {
@@ -82,7 +76,7 @@ analytics_tables = {
     "enriched_item_metadata": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_item_metadata.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "depends": ["enriched_offer_metadata", "offer_item_ids"],
+        "depends": ["enriched_offer_metadata"],
     },
     "enriched_offerer_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_offerer_data.sql",
@@ -96,7 +90,7 @@ analytics_tables = {
     "enriched_stock_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_stock_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "depends": ["stock_booking_information", "available_stock_information"],
+        "depends": ["stock_booking_information"],
     },
     "enriched_suivi_dms_adage": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_suivi_dms_adage.sql",
@@ -144,11 +138,6 @@ analytics_tables = {
     "isbn_rayon_editor": {
         "sql": f"{ANALYTICS_SQL_PATH}/isbn_rayon_editor.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "depends": ["offer_extracted_data"],
-    },
-    "offer_extracted_data": {
-        "sql": f"{ANALYTICS_SQL_PATH}/offer_extracted_data.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
     },
     "stock_booking_information": {
         "sql": f"{ANALYTICS_SQL_PATH}/stock_booking_information.sql",
@@ -159,18 +148,10 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         # see associated dependencies
     },
-    "offer_item_ids": {
-        "sql": f"{ANALYTICS_SQL_PATH}/offer_item_ids.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "offer_item_ids",
-    },
     "offer_moderation": {
         "sql": f"{ANALYTICS_SQL_PATH}/offer_moderation.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "offer_moderation",
-        "depends": [
-            "available_stock_information",
-        ],
     },
     "offer_with_mediation": {
         "sql": f"{ANALYTICS_SQL_PATH}/offer_with_mediation.sql",
@@ -223,7 +204,6 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "non_recommendable_items_data",
         "depends": [
-            "offer_item_ids",
             "enriched_booking_data",
         ],
     },
@@ -314,7 +294,6 @@ analytics_tables = {
         "destination_table": "firebase_booking_origin${{ yyyymmdd(add_days(ds, 0)) }}",
         "time_partitioning": {"field": "booking_date"},
         "dag_depends": ["import_intraday_firebase_data", "import_contentful"],
-        "depends": ["offer_item_ids"],
         "params": {"from": -8, "to": 0},
     },
     "analytics_firebase_booking_origin_catchup": {
@@ -322,7 +301,6 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "firebase_booking_origin${{ yyyymmdd(add_days(ds, -2)) }}",
         "time_partitioning": {"field": "booking_date"},
-        "depends": ["offer_item_ids"],
         "params": {"from": -10, "to": -2},
     },
     "analytics_firebase_similar_offer_events": {
@@ -331,7 +309,6 @@ analytics_tables = {
         "destination_table": "firebase_similar_offer_events",
         "time_partitioning": {"field": "event_date"},
         "dag_depends": ["import_intraday_firebase_data"],
-        "depends": ["offer_item_ids"],
     },
     "analytics_firebase_home_events_details": {
         "sql": f"{ANALYTICS_SQL_PATH}/firebase_home_events_details.sql",

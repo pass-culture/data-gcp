@@ -1,21 +1,18 @@
 SELECT 
-  date(r.event_date) as date, 
+  date(event_date) as date, 
   CASE 
-    WHEN r.media_source = "bytedanceglobal_int" THEN 'TikTok'
-    WHEN r.media_source = "snapchat_int" THEN 'Snapchat'
-    WHEN r.media_source = "QR_code" THEN 'Custom Url'
-    WHEN r.media_source = "Facebook Ads" THEN 'Facebook'
-    WHEN r.media_source = "restricted" THEN "Unknown"
-  ELSE r.media_source END AS media_source,
-  IF(r.campaign = 'nan', 'Unknown', r.campaign) as campaign,
-  r.ad,
-  r.adset,
-  r.ad_id,
-  r.event_name,
-  r.appsflyer_id,
-  u.firebase_id
+    WHEN media_source = "bytedanceglobal_int" THEN 'TikTok'
+    WHEN media_source = "snapchat_int" THEN 'Snapchat'
+    WHEN media_source = "QR_code" THEN 'Custom Url'
+    WHEN media_source = "Facebook Ads" THEN 'Facebook'
+    WHEN media_source = "restricted" THEN "Unknown"
+  ELSE media_source END AS media_source,
+  IF(campaign = 'nan', 'Unknown', campaign) as campaign,
+  ad,
+  adset,
+  ad_id,
+  event_name,
+  appsflyer_id,
 
-FROM `{{ bigquery_raw_dataset }}.appsflyer_activity_report` r
-LEFT JOIN `{{ bigquery_analytics_dataset }}.appsflyer_users` u on u.appsflyer_id = r.appsflyer_id
-
+FROM `{{ bigquery_raw_dataset }}.appsflyer_activity_report` 
 

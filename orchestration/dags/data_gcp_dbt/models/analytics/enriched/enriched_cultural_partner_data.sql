@@ -63,7 +63,13 @@ SELECT
 FROM {{ ref('enriched_venue_data') }} 
 JOIN {{ ref('enriched_venue_tags_data') }} ON enriched_venue_data.venue_id = enriched_venue_tags_data.venue_id
 AND enriched_venue_tags_data.criterion_category_label = "Comptage partenaire sectoriel"
-QUALIFY ROW_NUMBER() OVER(PARTITION BY venue_managing_offerer_id ORDER BY theoretic_revenue DESC, (COALESCE(enriched_venue_data.individual_offers_created,0) + COALESCE(enriched_venue_data.collective_offers_created,0)) DESC ) = 1
+QUALIFY ROW_NUMBER() OVER(
+    PARTITION BY venue_managing_offerer_id 
+    ORDER BY 
+        theoretic_revenue DESC
+        , (COALESCE(enriched_venue_data.individual_offers_created,0) + COALESCE(enriched_venue_data.collective_offers_created,0)) DESC 
+        , venue_name
+) = 1
 ),
 
 -- On récupère le label du lieu le + actif de chaque structure
@@ -76,7 +82,13 @@ SELECT
     AS partner_type_origin
 FROM {{ ref('enriched_venue_data') }}
 WHERE (total_offers_created > 0 OR venue_type_label != 'Offre numérique')
-QUALIFY ROW_NUMBER() OVER(PARTITION BY venue_managing_offerer_id ORDER BY theoretic_revenue DESC, (COALESCE(enriched_venue_data.individual_offers_created,0) + COALESCE(enriched_venue_data.collective_offers_created,0)) DESC ) = 1
+QUALIFY ROW_NUMBER() OVER(
+    PARTITION BY venue_managing_offerer_id 
+    ORDER BY 
+        theoretic_revenue DESC
+        , (COALESCE(enriched_venue_data.individual_offers_created,0) + COALESCE(enriched_venue_data.collective_offers_created,0)) DESC 
+        , venue_name ASC
+) = 1
 ),
 
 top_venue_per_offerer AS (

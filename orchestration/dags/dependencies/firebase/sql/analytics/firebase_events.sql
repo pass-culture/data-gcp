@@ -543,7 +543,7 @@ WITH temp_firebase_events AS (
                 event_params.key = 'appsFlyerUserId'
         ) as appsflyer_id
 FROM
-    `{{ bigquery_raw_dataset }}.{{ params.table_name }}`
+    `{{ bigquery_raw_dataset }}.firebase_events`
 WHERE
     {% if params.dag_type == 'intraday' %}
         event_date = DATE("{{ ds }}")

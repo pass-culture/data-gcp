@@ -319,6 +319,12 @@ models:
   # - name: user_reco_iris
   #   config:
   #     schema: clean_{{ target.name }}
+  - name: reimbursement_collective
+    config:
+      schema: clean_{{ target.name }}
+  - name: reimbursement_individual
+    config:
+      schema: clean_{{ target.name }}
   - name: user_beneficiary
     config:
       schema: clean_{{ target.name }}

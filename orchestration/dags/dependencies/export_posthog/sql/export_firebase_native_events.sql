@@ -21,7 +21,7 @@ SELECT
     platform,
     app_info.version as app_version,
     'native' as origin
-FROM `{{ bigquery_raw_dataset }}.events`
+FROM `{{ bigquery_raw_dataset }}.firebase_events`
 LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_user_data` USING(user_id)
 LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_offer_data` offer
 ON offer.offer_id = (

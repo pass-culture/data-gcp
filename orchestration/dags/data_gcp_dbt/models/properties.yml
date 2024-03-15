@@ -325,3 +325,9 @@ models:
   # - name: collective_offer_domain_name
   #   config:
   #     schema: clean_{{ target.name }}
+  - name: reimbursement_collective
+    config:
+      schema: clean_{{ target.name }}
+  - name: reimbursement_individual
+    config:
+      schema: clean_{{ target.name }}

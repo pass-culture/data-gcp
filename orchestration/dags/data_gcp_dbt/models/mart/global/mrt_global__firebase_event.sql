@@ -1,8 +1,9 @@
 {{
     config(
-        materialized = 'incremental',
-        incremental_strategy = 'insert_overwrite',
-        partition_by = {'field': 'event_date', 'data_type': 'date'},
+        materialized = "incremental",
+        incremental_strategy = "insert_overwrite",
+        partition_by = {"field": "event_date", "data_type": "date"},
+        on_schema_change = "sync_all_columns"
     )
 }}
 
@@ -25,39 +26,38 @@ SELECT
     u.user_last_deposit_amount,
     u.user_first_deposit_type,
     u.user_deposit_initial_amount
-FROM {{ ref('int_firebase__event') }} AS e
-LEFT JOIN {{ ref('enriched_user_data') }} AS u ON e.user_id = u.user_id
-LEFT JOIN {{ ref('enriched_offer_data') }} AS o ON e.offer_id = o.offer_id
-LEFT JOIN {{ ref('enriched_venue_data') }} AS v ON v.venue_id = COALESCE(e.venue_id,o.venue_id)
-LEFT JOIN {{ ref('int_contentful__entries') }} AS c ON c.id = e.module_id
+FROM {{ ref("int_firebase__event") }} AS e
+LEFT JOIN {{ ref("enriched_user_data") }} AS u ON e.user_id = u.user_id
+LEFT JOIN {{ ref("enriched_offer_data") }} AS o ON e.offer_id = o.offer_id
+LEFT JOIN {{ ref("enriched_venue_data") }} AS v ON v.venue_id = COALESCE(e.venue_id,o.venue_id)
+LEFT JOIN {{ ref("int_contentful__entries") }} AS c ON c.id = e.module_id
 WHERE (
-     event_name IN ('ConsultOffer',
-      'BookingConfirmation',
-      'StepperDisplayed',
-      'ModuleDisplayedOnHomePage',
-      'PlaylistHorinzontalScroll',
-      'ConsultVenue',
-      'VenuePlaylistDisplayedOnSearchResults',
-      'ClickBookOffer',
-      'BookingConfirmation',
-      'ContinueCGU',
-      'HasAddedOfferToFavorites',
-      'SelectAge',
-      'Share',
-      'CategoryBlockClicked',
-      'HighlightBlockClicked',
-      'ConsultVideo',
-      'HasSeenAllVideo',
-      'Screenshot',
-      'NoSearchResult',
-      'PerformSearch')
+     event_name IN ("ConsultOffer",
+      "BookingConfirmation",
+      "StepperDisplayed",
+      "ModuleDisplayedOnHomePage",
+      "PlaylistHorinzontalScroll",
+      "ConsultVenue",
+      "VenuePlaylistDisplayedOnSearchResults",
+      "ClickBookOffer",
+      "BookingConfirmation",
+      "ContinueCGU",
+      "HasAddedOfferToFavorites",
+      "SelectAge",
+      "Share",
+      "CategoryBlockClicked",
+      "HighlightBlockClicked",
+      "ConsultVideo",
+      "HasSeenAllVideo",
+      "Screenshot",
+      "NoSearchResult",
+      "PerformSearch")
     OR
     (
         e.event_name = "screen_view"
-        AND e.firebase_screen IN  ('SignupForm','ProfilSignUp', 'SignupConfirmationEmailSent', 'OnboardingWelcome','OnboardingGeolocation', 'FirstTutorial','BeneficiaryRequestSent','UnderageAccountCreated','BeneficiaryAccountCreated','FirstTutorial2','FirstTutorial3','FirstTutorial4','HasSkippedTutorial' )
+        AND e.firebase_screen IN  ("SignupForm","ProfilSignUp", "SignupConfirmationEmailSent", "OnboardingWelcome","OnboardingGeolocation", "FirstTutorial","BeneficiaryRequestSent","UnderageAccountCreated","BeneficiaryAccountCreated","FirstTutorial2","FirstTutorial3","FirstTutorial4","HasSkippedTutorial" )
     )
 )
-AND MOD(ABS(FARM_FINGERPRINT(user_pseudo_id)),10) = 0
 {% if is_incremental() %}
-AND event_date BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 3 DAY) and DATE('{{ ds() }}')
+AND event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 2 DAY) and DATE("{{ ds() }}")
 {% endif %}

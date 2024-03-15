@@ -1,8 +1,9 @@
 {{
     config(
-        materialized = 'incremental',
-        incremental_strategy = 'insert_overwrite',
-        partition_by = {'field': 'event_date', 'data_type': 'date'},
+        materialized = "incremental",
+        incremental_strategy = "insert_overwrite",
+        partition_by = {"field": "event_date", "data_type": "date"},
+        on_schema_change = "sync_all_columns"
     )
 }}
 
@@ -21,7 +22,7 @@ SELECT
     offerId AS offer_id,
     COALESCE(offerId,CAST(double_offer_id AS string)) AS offer_id_test,
     ga_session_id AS session_id,
-    CONCAT(user_pseudo_id, '-',ga_session_id) AS unique_session_id,
+    CONCAT(user_pseudo_id, "-",ga_session_id) AS unique_session_id,
     ga_session_number AS session_number,
     shouldUseAlgoliaRecommend AS is_algolia_recommend,
     searchIsAutocomplete AS search_is_autocomplete,
@@ -44,7 +45,7 @@ SELECT
     step AS booking_cancellation_step,
     filterTypes AS search_filter_types,
     searchId AS search_id,
-    CONCAT(user_pseudo_id, '-',ga_session_id,'-',searchId) AS unique_search_id,
+    CONCAT(user_pseudo_id, "-",ga_session_id,"-",searchId) AS unique_search_id,
     filter,
     searchLocationFilter AS search_location_filter,
     searchCategories AS search_categories_filter,
@@ -72,7 +73,6 @@ SELECT
     type AS share_type,
     duration,
     appsFlyerUserId AS appsflyer_id,
-
     CASE WHEN event_name = "ConsultOffer" THEN 1 ELSE 0 END AS is_consult_offer,
     CASE WHEN event_name = "BookingConfirmation" THEN 1 ELSE 0 END AS is_booking_confirmation,
     CASE WHEN event_name = "HasAddedOfferToFavorites" THEN 1 ELSE 0 END AS is_add_to_favorites,
@@ -93,6 +93,5 @@ SELECT
     CASE WHEN event_name = "login" THEN 1 ELSE 0 END AS is_login
 FROM {{ ref("int_firebase__event_flattened") }}
 {% if is_incremental() %}
-    WHERE event_date BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 3 DAY) and DATE('{{ ds() }}')
+WHERE event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 2 DAY) and DATE("{{ ds() }}")
 {% endif %}
-

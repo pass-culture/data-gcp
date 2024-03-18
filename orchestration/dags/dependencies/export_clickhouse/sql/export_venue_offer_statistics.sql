@@ -1,7 +1,7 @@
 SELECT  
     DATE('{{ ds }}') as update_date,
     offerer_siren as offerer_siren,
-    individual_collective as individual_collective,
+    COALESCE(individual_collective, "INDIVIDUAL") as individual_collective,
     venue_id as venue_id,
     venue_name as venue_name,
     venue_public_name as venue_public_name,
@@ -16,4 +16,7 @@ SELECT
     count_pending_bookings,
     real_amount_booked,
     pending_amount_booked
-FROM `{{ bigquery_analytics_prod }}.venue_siren_offers` 
+FROM `{{ bigquery_analytics_dataset }}.venue_siren_offers` 
+WHERE offerer_siren is not null 
+AND venue_id is not null
+AND offer_id is not null

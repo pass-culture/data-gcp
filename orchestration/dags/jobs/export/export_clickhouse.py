@@ -46,7 +46,7 @@ default_dag_args = {
 DATE = "{{ yyyymmdd(ds) }}"
 
 dag_config = {
-    "STORAGE_PATH": f"gs://{DATA_GCS_BUCKET_NAME}/clickhouse_export/{ENV_SHORT_NAME}/export/{DATE}",
+    "STORAGE_PATH": f"{DATA_GCS_BUCKET_NAME}/clickhouse_export/{ENV_SHORT_NAME}/export/{DATE}",
     "BASE_DIR": "data-gcp/jobs/etl_jobs/internal/export_clickhouse/",
 }
 
@@ -96,10 +96,6 @@ for dag_name, dag_params in dags.items():
                 default=gce_params["instance_name"],
                 type="string",
             ),
-            "days": Param(
-                default=0,
-                type="integer",
-            ),
         },
     ) as dag:
 
@@ -127,25 +123,24 @@ for dag_name, dag_params in dags.items():
             dag=dag,
         )
 
-        export_tasks = []
+        in_tasks, out_tasks = [], []
         for table_config in TABLES_CONFIGS:
             tmp_table_name = table_config["sql"]
             clickhouse_table_name = table_config["clickhouse_table_name"]
-            clickhouse_database_name = table_config["clickhouse_database_name"]
+            clickhouse_dataset_name = table_config["clickhouse_dataset_name"]
             mode = table_config["mode"]
             _ts = "{{ ts_nodash }}"
             _ds = "{{ ds }}"
             table_id = f"tmp_{_ts}_{tmp_table_name}"
-            storage_path = f"{dag_config['STORAGE_PATH']}/{clickhouse_table_name}/"
+            storage_path = f"{dag_config['STORAGE_PATH']}/{clickhouse_table_name}"
 
             export_task = BigQueryExecuteQueryOperator(
-                task_id=clickhouse_table_name,
+                task_id=f"bigquery_export_{clickhouse_table_name}",
                 sql=(SQL_BASE_PATH / f"{tmp_table_name}.sql").as_posix(),
                 write_disposition="WRITE_TRUNCATE",
                 use_legacy_sql=False,
                 destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{table_id}",
                 dag=dag,
-                query_params=table_config["params"],
             )
 
             export_bq = BigQueryInsertJobOperator(
@@ -158,7 +153,7 @@ for dag_name, dag_params in dags.items():
                             "tableId": table_id,
                         },
                         "compression": None,
-                        "destinationUris": f"{storage_path}/data-*.parquet",
+                        "destinationUris": f"gs://{storage_path}/data-*.parquet",
                         "destinationFormat": "PARQUET",
                     }
                 },
@@ -166,24 +161,20 @@ for dag_name, dag_params in dags.items():
             )
 
             events_export = SSHGCEOperator(
-                task_id=f"events_export",
+                task_id=f"{clickhouse_table_name}_events_export",
                 instance_name="{{ params.instance_name }}",
                 base_dir=dag_config["BASE_DIR"],
                 command="python main.py "
-                f"--source-gs-path {storage_path} --table-name {clickhouse_table_name} --database-name {clickhouse_database_name} --update-date {_ds} --mode {mode}",
+                f"--source-gs-path https://storage.googleapis.com/{storage_path}/data-*.parquet --table-name {clickhouse_table_name} --dataset-name {clickhouse_dataset_name} --update-date {_ds} --mode {mode}",
                 dag=dag,
             )
             export_task >> export_bq >> events_export
-            export_tasks.append(export_bq)
+            in_tasks.append(export_task)
+            out_tasks.append(events_export)
 
         gce_instance_stop = StopGCEOperator(
             task_id=f"gce_stop_task", instance_name="{{ params.instance_name }}"
         )
 
-        (
-            gce_instance_start
-            >> fetch_code
-            >> install_dependencies
-            >> export_tasks
-            >> gce_instance_stop
-        )
+        (gce_instance_start >> fetch_code >> install_dependencies >> in_tasks)
+        (out_tasks >> gce_instance_stop)

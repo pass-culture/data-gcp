@@ -74,7 +74,19 @@ agg_new_consultation_item as (
     GROUP BY 1, 2
 )
 
-SELECT *
+SELECT 
+    COALESCE(agg_new_consultation_item.user_id, agg_new_consultation_origin.user_id) as user_id
+    , COALESCE(agg_new_consultation_item.consultation_date, agg_new_consultation_origin.consultation_date) as consultation_date
+    , COALESCE(discovery_origin, 0) as discovery_origin
+    , {% for feature in discovery_vars("discovery_features") %} 
+        COALESCE(discovery_{{feature}}, 0) as discovery_{{feature}}
+        {% if not loop.last -%} , {%- endif %}
+    {% endfor %}
+    , {% for feature in discovery_vars("discovery_features") %} 
+        discovery_{{feature}}
+        {% if not loop.last -%} + {%- endif %}
+    {% endfor %} + COALESCE(discovery_origin, 0)
+    as discovery_delta
 FROM agg_new_consultation_item
 FULL OUTER JOIN agg_new_consultation_origin
 USING (user_id, consultation_date)

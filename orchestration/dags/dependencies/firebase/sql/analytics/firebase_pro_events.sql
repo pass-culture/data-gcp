@@ -6,7 +6,7 @@ WITH temp_firebase_events AS (
         user_pseudo_id,
         CASE WHEN REGEXP_CONTAINS(user_id, r"\D") THEN dehumanize_id(user_id) ELSE user_id END AS user_id,
         platform,
-        PARSE_DATE("%Y%m%d", event_date) AS event_date,
+        event_date,
         TIMESTAMP_SECONDS(
             CAST(CAST(event_timestamp as INT64) / 1000000 as INT64)
         ) AS event_timestamp,

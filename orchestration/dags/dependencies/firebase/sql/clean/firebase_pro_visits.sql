@@ -39,7 +39,7 @@ SELECT (
         TIMESTAMP_SECONDS(
             CAST(CAST(event_timestamp as INT64) / 1000000 as INT64)
         ) AS event_timestamp,
-        PARSE_DATE("%Y%m%d", event_date) AS event_date,
+        event_date,
         (
             select
                 event_params.value.string_value

@@ -39,7 +39,7 @@ SELECT (
         TIMESTAMP_SECONDS(
             CAST(CAST(event_timestamp as INT64) / 1000000 as INT64)
         ) AS event_timestamp,
-        PARSE_DATE("%Y%m%d", event_date) AS event_date,
+        event_date,
         (
             select
                 event_params.value.string_value
@@ -65,10 +65,12 @@ SELECT (
                 event_params.key = 'isEdition'
         ) as is_edition,
     FROM 
+        `{{ bigquery_raw_dataset }}.firebase_pro_events`
+    WHERE 
         {% if params.dag_type == 'intraday' %}
-         `{{ bigquery_clean_dataset }}.firebase_pro_events_{{ yyyymmdd(ds) }}`
+        event_date = DATE('{{ ds }}')
         {% else %}
-         `{{ bigquery_clean_dataset }}.firebase_pro_events_{{ yyyymmdd(add_days(ds, -1)) }}`
+        event_date = DATE('{{ add_days(ds, -1) }}')
         {% endif %}
 
 )
@@ -123,7 +125,7 @@ SELECT
     COUNTIF(event_name="hasClickedSaveVenue" AND is_edition!="true") AS nb_confirmed_venue_creation, 
 
 -- count venue edition
-    COUNTIF(event_name = "page_view" AND page_name = "Modifier un lieu - pass Culture Pro") AS nb_start_venue_edition, 
+    COUNTIF(event_name = "page_view" AND (page_name ="Modifier un lieu - pass Culture Pro" OR (page_name = "Modifier ma page partenaire - pass Culture Pro" AND origin LIKE "%lieux%"))) AS nb_start_venue_edition, 
     COUNTIF(event_name="hasClickedSaveVenue" AND is_edition="true") AS nb_confirmed_venue_edition,  
     COUNTIF(event_name="hasClickedAddImage") AS nb_clic_add_image,     
 

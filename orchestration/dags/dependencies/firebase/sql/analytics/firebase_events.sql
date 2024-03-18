@@ -8,7 +8,7 @@ WITH temp_firebase_events AS (
         traffic_source.medium,
         traffic_source.source,
         app_info.version AS app_version,
-        PARSE_DATE("%Y%m%d", event_date) AS event_date,
+        event_date,
         TIMESTAMP_SECONDS(
             CAST(CAST(event_timestamp as INT64) / 1000000 as INT64)
         ) AS event_timestamp,
@@ -543,12 +543,13 @@ WITH temp_firebase_events AS (
                 event_params.key = 'appsFlyerUserId'
         ) as appsflyer_id
 FROM
-
-        {% if params.dag_type == 'intraday' %}
-        `{{ bigquery_clean_dataset }}.firebase_events_{{ yyyymmdd(ds) }}`
-        {% else %}
-        `{{ bigquery_clean_dataset }}.firebase_events_{{ yyyymmdd(add_days(ds, -1)) }}`
-        {% endif %}
+    `{{ bigquery_raw_dataset }}.firebase_events`
+WHERE
+    {% if params.dag_type == 'intraday' %}
+        event_date = DATE("{{ ds }}")
+    {% else %}
+        event_date = DATE("{{ add_days(ds, -1) }}")
+    {% endif %}
 )
 SELECT
     *

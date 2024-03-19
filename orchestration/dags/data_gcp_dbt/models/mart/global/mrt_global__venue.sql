@@ -115,4 +115,3 @@ FROM
     LEFT JOIN {{ source('analytics', 'region_department') }} AS venue_region_departement ON v.venue_department_code = venue_region_departement.num_dep
 WHERE v.offerer_validation_status='VALIDATED'
     AND v.offerer_is_active
-    

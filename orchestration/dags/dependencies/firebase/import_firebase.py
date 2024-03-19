@@ -63,7 +63,7 @@ import_firebase_pro_tables = {
     # clean
     "clean_firebase_pro_visits": {
         "sql": f"{SQL_PATH}/clean/firebase_pro_visits.sql",
-        "write_disposition": "WRITE_APPEND",
+        "write_disposition": "WRITE_TRUNCATE",
         "destination_dataset": "{{ bigquery_clean_dataset }}",
         "destination_table": "firebase_pro_visits",
         "partition_prefix": "$",
@@ -82,7 +82,7 @@ import_firebase_pro_tables = {
     },
     "analytics_firebase_pro_visits": {
         "sql": f"{SQL_PATH}/analytics/firebase_pro_visits.sql",
-        "write_disposition": "WRITE_APPEND",
+        "write_disposition": "WRITE_TRUNCATE",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "firebase_pro_visits",
         "partition_prefix": "$",

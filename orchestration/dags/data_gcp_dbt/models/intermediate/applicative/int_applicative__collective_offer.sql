@@ -1,7 +1,6 @@
 WITH collective_stocks_grouped_by_collective_offers AS (
-
     SELECT collective_offer_id,
-    MAX(is_bookable) AS is_bookable, -- check si une des collective_offer est bookable
+    MAX(is_bookable) AS is_bookable, -- check si au moins une des collective_offer est bookable
     SUM(total_non_cancelled_collective_booking_stock) AS total_non_cancelled_collective_booking_stock,
     SUM(total_collective_bookings) AS total_collective_bookings,
     SUM(total_non_cancelled_collective_bookings) AS total_non_cancelled_collective_bookings,
@@ -12,11 +11,9 @@ WITH collective_stocks_grouped_by_collective_offers AS (
     SUM(CASE WHEN collective_booking_status IN ('USED','REIMBURSED')THEN collective_stock_price END) AS collective_real_revenue,
     FROM {{ ref('int_applicative__collective_stock') }}
     GROUP BY collective_offer_id
-
 )
 
 (
-
 SELECT
     co.collective_offer_audio_disability_compliant,
     co.collective_offer_mental_disability_compliant,
@@ -62,16 +59,11 @@ SELECT
     cs.collective_real_revenue,
     cs.first_collective_booking_date,
     cs.last_collective_booking_date,
-
     0 AS is_template
 FROM {{ source('raw','applicative_database_collective_offer') }} AS co
 LEFT JOIN collective_stocks_grouped_by_collective_offers AS cs ON cs.collective_offer_id = co.collective_offer_id
--- WHERE check si il y avait un filtre ici
 )
-
-
 UNION ALL
-
 (
 SELECT
     collective_offer_audio_disability_compliant,
@@ -110,7 +102,6 @@ SELECT
     collective_offer_template_beginning_date,
     collective_offer_template_ending_date,
     1 AS is_bookable,
-
     null as total_non_cancelled_collective_booking_stock,
     null as total_collective_bookings,
     null as total_non_cancelled_collective_bookings,

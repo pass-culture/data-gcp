@@ -353,3 +353,6 @@ models:
   - name: enriched_user_data
     config:
       schema: analytics_{{ target.name }}
+  - name: enriched_user_offerer
+    config:
+      schema: analytics_{{ target.name }}

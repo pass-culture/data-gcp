@@ -337,3 +337,6 @@ models:
   - name: user_item_discovery
     config:
       schema: clean_{{ target.name }}
+  - name: firebase_aggregated_daily_campaign_events
+    config:
+      schema: analytics_{{ target.name }}

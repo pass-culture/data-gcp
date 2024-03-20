@@ -7,7 +7,8 @@
       "granularity": "day",
       "time_ingestion_partitioning": false
     },
-    incremental_strategy = 'insert_overwrite'
+    incremental_strategy = "insert_overwrite",
+    on_schema_change = "sync_all_columns"
   )
 }}
 

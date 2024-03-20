@@ -1,4 +1,5 @@
-SELECT 
+SELECT
+    -- test
     diversification_raw.user_id
     , booking.offer_id
     , diversification_raw.booking_id

@@ -70,6 +70,42 @@ class ImportAppsFlyer:
             df[k] = df[k].astype(v)
         return df[list(DAILY_REPORT.values()) + ["app"]]
 
+    def get_partner_report(self):
+        dfs = []
+        for app, api in self.apis.items():
+            # Facebook
+
+            df = api.partners_by_date_report(
+                self._from, self._to, True, category="facebook"
+            )
+            _cols = list(df.columns)
+            df["app"] = app
+            if "Adset Id" in _cols:
+                df["Adset Id"] = df["Adset Id"].map(lambda x: "{:.0f}".format(x))
+            if "Adgroup Id" in _cols:
+                df["Adgroup Id"] = df["Adgroup Id"].map(lambda x: "{:.0f}".format(x))
+            if "Campaign Id" in _cols:
+                df["Campaign Id"] = df["Campaign Id"].map(lambda x: "{:.0f}".format(x))
+            dfs.append(df)
+            time.sleep(60)
+            # Else
+            df = api.partners_by_date_report(
+                self._from, self._to, True, category="standard"
+            )
+            df = df[df["Media Source (pid)"] != "Facebook Ads"]
+
+            df["app"] = app
+            dfs.append(df)
+            time.sleep(60)
+        df = pd.concat(dfs, ignore_index=True)
+        df = df.rename(columns=DAILY_REPORT)
+        df_columns = list(df.columns)
+        for k, v in DAILY_REPORT_MAPPING.items():
+            if k not in df_columns:
+                df[k] = None
+            df[k] = df[k].astype(v)
+        return df[list(DAILY_REPORT.values()) + ["app"]]
+
     def get_in_app_events_report(self):
         dfs = []
         for app, api in self.apis.items():
@@ -129,6 +165,16 @@ def run(
         save_to_bq(
             import_app.get_daily_report(),
             "appsflyer_daily_report",
+            start_date,
+            end_date,
+            DAILY_REPORT_MAPPING,
+            date_column="date",
+        )
+    if "partner_report" in table_names:
+        print("Run daily_report...")
+        save_to_bq(
+            import_app.get_partner_report(),
+            "appsflyer_partner_report",
             start_date,
             end_date,
             DAILY_REPORT_MAPPING,

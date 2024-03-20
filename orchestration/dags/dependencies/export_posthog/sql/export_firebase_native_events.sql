@@ -10,7 +10,8 @@ SELECT
         offer_category_id,
         offer_subcategoryId,
         venue.venue_name,
-        venue_type_label
+        venue_type_label,
+        content_type
     ) as extra_params,
     STRUCT(
         user_current_deposit_type,
@@ -33,20 +34,45 @@ ON offer.offer_id = (
                 event_params.key = 'offerId'
         )
 LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_venue_data` venue
-ON venue.venue_id = (
+ON venue.venue_id = COALESCE((
             select
                 event_params.value.string_value
             from
                 unnest(event_params) event_params
             where
                 event_params.key = 'venueId'
+        ), offer.venue_id)
+LEFT JOIN `{{ bigquery_analytics_dataset }}.contentful_entries` contentful
+ON contentful.id = (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'moduleId'
         )
-WHERE (
-    event_date = DATE('{{ add_days(ds, params.days) }}')
-AND
-    (
-        NOT REGEXP_CONTAINS(event_name, '^[a-z]+(_[a-z]+)*$') 
-    )
+WHERE event_date = DATE('{{ add_days(ds, params.days) }}')
+    AND (
+       event_name IN ('ConsultOffer',
+      'BookingConfirmation',
+      'StepperDisplayed',
+      'ModuleDisplayedOnHomePage',
+      'PlaylistHorinzontalScroll',
+      'ConsultVenue',
+      'VenuePlaylistDisplayedOnSearchResults',
+      'ClickBookOffer',
+      'BookingConfirmation',
+      'ContinueCGU',
+      'HasAddedOfferToFavorites',
+      'SelectAge',
+      'Share',
+      'CategoryBlockClicked',
+      'HighlightBlockClicked',
+      'ConsultVideo',
+      'HasSeenAllVideo',
+      'Screenshot',
+      'NoSearchResult',
+      'PerformSearch')
     OR
     (
         event_name = "screen_view" 

@@ -36,6 +36,7 @@ gce_params = {
         "prod": "n1-standard-8",
     },
 }
+preprocess_features = ["semantic_content"]
 schedule_dict = {"prod": "0 20 * * 5", "dev": "0 20 * * *", "stg": "0 20 * * 3"}
 
 
@@ -64,20 +65,11 @@ with DAG(
         "experiment_name": Param(default=gce_params["experiment_name"], type="string"),
         "run_name": Param(default=gce_params["run_name"], type="string"),
         "model_name": Param(default=gce_params["model_name"], type="string"),
-        "table_name": Param(default="training_ranking_data", type="string"),
-        "dataset_name": Param(default=BIGQUERY_TMP_DATASET, type="string"),
+        "training_table_name": Param(default="training_ranking_data", type="string"),
+        "training_dataset_name": Param(default=BIGQUERY_TMP_DATASET, type="string"),
     },
 ) as dag:
-    import_table = BigQueryExecuteQueryOperator(
-        task_id=f"create_train_ranking_table",
-        sql=(
-            IMPORT_TRAINING_SQL_PATH / f"ranking_endpoint_training_data.sql"
-        ).as_posix(),
-        write_disposition="WRITE_TRUNCATE",
-        use_legacy_sql=False,
-        destination_dataset_table="{{ params.dataset_name}}.{{ params.table_name }}",
-        dag=dag,
-    )
+
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
         instance_name="{{ params.instance_name }}",
@@ -103,6 +95,29 @@ with DAG(
         retries=2,
     )
 
+    preprocess_task = []
+    for feature in preprocess_features:
+        preprocess_embedding_feature = SSHGCEOperator(
+            task_id=f"preprocess_{feature}",
+            instance_name="{{ params.instance_name }}",
+            base_dir=BASE_DIR,
+            command="""python preprocess_emb_features.py """
+            f"--feature-name {feature} ",
+            dag=dag,
+            retries=2,
+        )
+    preprocess_task.append(preprocess_embedding_feature)
+    import_table = BigQueryExecuteQueryOperator(
+        task_id=f"create_train_ranking_table",
+        sql=(
+            IMPORT_TRAINING_SQL_PATH / f"ranking_endpoint_training_data.sql"
+        ).as_posix(),
+        write_disposition="WRITE_TRUNCATE",
+        use_legacy_sql=False,
+        destination_dataset_table="{{ params.training_dataset_name}}.{{ params.training_table_name }}",
+        dag=dag,
+    )
+
     deploy_model = SSHGCEOperator(
         task_id="containerize_model",
         instance_name="{{ params.instance_name }}",
@@ -111,8 +126,8 @@ with DAG(
         "--experiment-name {{ params.experiment_name }} "
         "--run-name {{ params.run_name }} "
         "--model-name {{ params.model_name }} "
-        "--dataset-name {{ params.dataset_name }} "
-        "--table-name {{ params.table_name }}",
+        "--dataset-name {{ params.training_dataset_name }} "
+        "--table-name {{ params.training_table_name }}",
         dag=dag,
     )
 
@@ -123,9 +138,10 @@ with DAG(
 
     (
         gce_instance_start
-        >> import_table
         >> fetch_code
         >> install_dependencies
+        >> preprocess_task
+        >> import_table
         >> deploy_model
         >> gce_instance_stop
     )

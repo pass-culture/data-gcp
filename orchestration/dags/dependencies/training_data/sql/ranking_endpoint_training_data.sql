@@ -14,6 +14,8 @@ events AS (
         poc.context,
         poc.reco_call_id,
         poc.event_date,
+        EXTRACT(DAYOFWEEK FROM poc.event_date) AS day_of_the_week,
+        EXTRACT(HOUR FROM poc.date) AS hour_of_the_day,
         poc.user_id,
         poc.user_bookings_count,
         poc.user_clicks_count,
@@ -35,8 +37,10 @@ events AS (
         poc.offer_subcategory_id,
         poc.item_rank,
         cast(poc.offer_item_rank as FLOAT64) as offer_item_score,
+        isem.semantic_content_emb_mean as semantic_emb_mean
     FROM
         `{{ bigquery_clean_dataset }}.past_offer_context` poc
+    LEFT JOIN `{{ bigquery_clean_dataset }}.semantic_content_emb_mean` isem on isem.item_id=poc.offer_item_id
     WHERE
         event_date >= DATE_SUB(CURRENT_DATE, INTERVAL 14 DAY)
         AND user_id != "-1" 
@@ -87,6 +91,8 @@ transactions AS (
 )
 SELECT
     context,
+    day_of_the_week,
+    hour_of_the_day,
     user_bookings_count,
     user_clicks_count,
     user_favorites_count,
@@ -103,6 +109,7 @@ SELECT
     offer_is_geolocated,
     -- similarity score
     offer_item_score as offer_item_score,
+    semantic_emb_mean,
     -- position of the display (= offer ranking)
     avg(item_rank) as offer_order,
     max(booking) as booking,
@@ -126,4 +133,7 @@ GROUP BY
     13,
     14,
     15,
-    16
+    16,
+    17,
+    18,
+    19

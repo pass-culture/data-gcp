@@ -229,7 +229,7 @@ def predict():
                     "size": size,
                 },
             )
-            return filter(
+            pred = filter(
                 selected_params,
                 size,
                 debug,
@@ -237,6 +237,15 @@ def predict():
                 prefilter=prefilter,
                 vector_column_name=vector_column_name,
             )
+            logger.info(
+                f"filter_debug",
+                extra={
+                    "uuid": call_id,
+                    "prediction": pred.predictions,
+                    "size": size,
+                },
+            )
+            return pred
 
     except Exception as e:
         logger.exception(e)

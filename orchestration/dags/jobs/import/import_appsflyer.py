@@ -88,6 +88,14 @@ with DAG(
         command="python main.py --n-days {{ params.n_days }} --table-name daily_report ",
     )
 
+    partner_report_op = SSHGCEOperator(
+        task_id="partner_report_op",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_PATH,
+        environment=dag_config,
+        command="python main.py --n-days {{ params.n_days }} --table-name partner_report ",
+    )
+
     in_app_event_report_op = SSHGCEOperator(
         task_id="in_app_event_report_op",
         instance_name=GCE_INSTANCE,
@@ -123,6 +131,7 @@ table_jobs = depends_loop(
     >> install_dependencies
     >> activity_report_op
     >> daily_report_op
+    >> partner_report_op
     >> in_app_event_report_op
     >> gce_instance_stop
     >> start

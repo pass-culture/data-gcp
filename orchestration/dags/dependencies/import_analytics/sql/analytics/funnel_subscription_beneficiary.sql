@@ -132,20 +132,6 @@ SELECT
   ,beneficiary_request_sent.beneficiary_request_sent_date
   ,u.user_deposit_creation_date as deposit_created_date
   ,u.first_booking_date as first_booking_date
-  ,CASE WHEN uat.appsflyer_id is null THEN 'unknown'
-        WHEN au.appsflyer_id  is not null THEN 'campaign' 
-        ELSE 'organic' END
-        AS acquisition_origin
-   ,au.media_source as paid_acquisition_media_source
-   ,au.campaign as paid_acquisition_campaign
-   ,au.campaign_id as paid_acquisition_campaign_id
-   ,au.adset AS paid_acquisition_adset
-   ,au.adset_id AS paid_acquisition_adset_id
-   ,au.install_time as appsflyer_install_time
-   ,au.adgroup as appsflyer_adgroup
-   ,au.cost_per_install as appsflyer_cost_per_install
-   ,au.total_campaign_costs as appsflyer_total_campaign_costs
-   ,au.total_campaign_installs as appsflyer_total_campaign_installs
 FROM first_open
 LEFT JOIN age_selected ON first_open.user_pseudo_id=age_selected.user_pseudo_id and rank_time_selected_age = 1
 LEFT JOIN onboarding_started ON first_open.user_pseudo_id=onboarding_started.user_pseudo_id
@@ -155,4 +141,3 @@ LEFT JOIN first_login ON first_open.user_pseudo_id=first_login.user_pseudo_id
 LEFT JOIN beneficiary_request_sent ON first_open.user_pseudo_id=beneficiary_request_sent.user_pseudo_id
 LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_user_data u ON first_login.user_id=u.user_id
 LEFT JOIN user_accepted_tracking uat ON first_open.user_pseudo_id = uat.user_pseudo_id
-LEFT JOIN `{{ bigquery_analytics_dataset }}`.appsflyer_users au ON uat.user_pseudo_id = au.firebase_id AND uat.appsflyer_id = au.appsflyer_id

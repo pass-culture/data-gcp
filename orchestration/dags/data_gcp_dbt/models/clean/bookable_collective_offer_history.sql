@@ -1,3 +1,12 @@
+{{
+    config(
+        materialized = 'incremental',
+        incremental_strategy = 'insert_overwrite',
+        partition_by = {'field': 'partition_date', 'data_type': 'date'},
+    )
+}}
+
+
 WITH bookings_per_stock AS (
     SELECT
         collective_stock_id,
@@ -10,7 +19,10 @@ WITH bookings_per_stock AS (
         ) AS collective_booking_stock_no_cancelled_cnt
     FROM
         {{ ref('collective_booking_history')}} AS collective_booking
-    WHERE partition_date = PARSE_DATE('%Y-%m-%d','{{ ds() }}')
+    {% if is_incremental() %} 
+    WHERE partition_date = DATE_SUB('{{ ds() }}', INTERVAL 1 DAY)
+    {% endif %}
+
     GROUP BY
         1,
         2
@@ -46,7 +58,9 @@ WHERE
             collective_booking_stock_no_cancelled_cnt IS NULL
         )
     )
-    AND collective_stock.partition_date = DATE('{{ ds() }}')
+    {% if is_incremental() %} 
+    AND collective_stock.partition_date = DATE_SUB('{{ ds() }}', INTERVAL 1 DAY)
+    {% endif %}
 
 UNION ALL
 SELECT
@@ -55,6 +69,7 @@ SELECT
     ,TRUE AS collective_offer_is_template
 FROM
         {{ ref('collective_offer_template_history')}} AS collective_offer_template
-
-    WHERE partition_date = PARSE_DATE('%Y-%m-%d','{{ ds() }}')
+    {% if is_incremental() %} 
+    WHERE partition_date = DATE_SUB('{{ ds() }}', INTERVAL 1 DAY)
+    {% endif %}
     AND collective_offer_validation = "APPROVED"

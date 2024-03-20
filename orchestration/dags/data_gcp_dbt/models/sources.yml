@@ -99,6 +99,8 @@ sources:
       - name: applicative_database_venue_provider
       - name: applicative_database_venue_registration
       - name: applicative_database_venue_reimbursement_point_link
+      - name: contentful_entries
+      - name: firebase_events
       - name: geoip_city_v4
       - name: gsheet_eac_webinar
       - name: macro_rayons
@@ -117,6 +119,7 @@ sources:
       - name: item_embeddings_reduced_32
       - name: item_embeddings_reduced_16
       - name: item_embeddings_reduced_5
+      - name: item_topics
       - name: item_topics_labels
       - name: siren_data
       - name: subcategories

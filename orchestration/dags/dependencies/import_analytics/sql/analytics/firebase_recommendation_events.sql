@@ -13,7 +13,7 @@ WITH firebase_recommendation_details AS (
         `{{ bigquery_analytics_dataset }}.firebase_events` fe
     WHERE
         
-        event_date >= DATE('{{ add_days(ds, -356) }}')
+        event_date >= DATE('{{ add_days(ds, -60) }}')
         AND reco_call_id is not null
         AND module_id is not null
         AND entry_id is not null 
@@ -34,7 +34,7 @@ past_recommended_offers AS (
     FROM
         `{{ bigquery_clean_dataset }}.past_recommended_offers` fe
     WHERE
-        event_date >= DATE('{{ add_days(ds, -356) }}')
+        event_date >= DATE('{{ add_days(ds, -60) }}')
         AND call_id is not null
     GROUP BY
         1,

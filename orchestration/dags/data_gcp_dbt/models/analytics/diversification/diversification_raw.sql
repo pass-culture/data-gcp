@@ -39,7 +39,7 @@ offer_metadata as (
     , category_id
     , offer_type_label
     , titelive_gtl_id
-  FROM {{ ref('enriched_offer_metadata') }}
+  FROM {{ ref('offer_metadata') }}
 ),
 base_diversification as (
 SELECT

@@ -135,22 +135,33 @@ def date_minus_n_days(current_date, n_days):
 
 def run(
     n_days: int = typer.Option(
-        ...,
+        None,
         help="Nombre de jours",
     ),
     table_name: str = typer.Option(
         ...,
         help="Nom de la table à importer",
     ),
+    end_date: str = typer.Option(
+        None,
+        help="Date de fin",
+    ),
+    start_date: str = typer.Option(
+        None,
+        help="Date de début",
+    ),
 ):
-    _default = default_date()
-    n_days = n_days
-    table_names = [table_name]
-    end_date = _default.strftime("%Y-%m-%d")
-    start_date = date_minus_n_days(_default, n_days).strftime("%Y-%m-%d")
+    if n_days is not None:
+        _default = default_date()
+        end_date = _default.strftime("%Y-%m-%d")
+        n_days = n_days
+
+        start_date = date_minus_n_days(_default, n_days).strftime("%Y-%m-%d")
+    elif start_date is None or end_date is None:
+        raise Exception("n_days or start_date | end_date should be not None")
 
     import_app = ImportAppsFlyer(start_date, end_date)
-    if "activity_report" in table_names:
+    if "activity_report" == table_name:
         print("Run activity_report...")
         save_to_bq(
             import_app.get_install_report(),
@@ -160,7 +171,7 @@ def run(
             INSTALLS_REPORT_MAPPING,
             date_column="event_time",
         )
-    if "daily_report" in table_names:
+    if "daily_report" == table_name:
         print("Run daily_report...")
         save_to_bq(
             import_app.get_daily_report(),
@@ -170,8 +181,8 @@ def run(
             DAILY_REPORT_MAPPING,
             date_column="date",
         )
-    if "partner_report" in table_names:
-        print("Run daily_report...")
+    if "partner_report" == table_name:
+        print("Run partner_report...")
         save_to_bq(
             import_app.get_partner_report(),
             "appsflyer_partner_report",
@@ -180,7 +191,7 @@ def run(
             DAILY_REPORT_MAPPING,
             date_column="date",
         )
-    if "in_app_event_report" in table_names:
+    if "in_app_event_report" == table_name:
         print("Run in_app_event_report...")
         save_to_bq(
             import_app.get_in_app_events_report(),

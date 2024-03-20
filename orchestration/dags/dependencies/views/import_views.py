@@ -7,9 +7,14 @@ import_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "backend_events",
     },
-    "api_logs": {
+    "clean_api_logs": {
         "sql": f"{SQL_PATH}/clean/api_logs.sql",
         "destination_dataset": "{{ bigquery_clean_dataset }}",
+        "destination_table": "api_logs",
+    },
+    "analytics_api_logs": {
+        "sql": f"{SQL_PATH}/analytics/api_logs.sql",
+        "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "api_logs",
     },
 }

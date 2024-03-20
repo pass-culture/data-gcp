@@ -23,6 +23,8 @@ user_traffic as (
     LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_user_data` user
     ON firebase.user_id = user.user_id
     WHERE traffic_campaign is not null
+    AND event_name in ('ConsultOffer', 'BookingConfirmation', 'HasAddedOfferToFavorites')
+    AND event_date >= DATE_SUB(DATE("{{ ds }}"),  INTERVAL 30 DAY)
     AND lower(traffic_medium) like "%email%"
     GROUP BY 1, 2
 )

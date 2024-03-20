@@ -23,11 +23,17 @@ numeric_features = [
     "offer_stock_price",
     "offer_creation_days",
     "offer_stock_beginning_days",
+    "TT_emb",
+    "sem_emb_mean",
+    "booking_release_trend",
+    "booking_creation_trend",
 ]
 
 categorical_features = [
     "context",
     "offer_subcategory_id",
+    "day_of_the_week",
+    "hour_of_the_day",
 ]
 
 default_categorical = "UNKNOWN"

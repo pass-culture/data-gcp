@@ -1,3 +1,11 @@
+{{
+    config(
+        materialized = "incremental",
+        unique_key = "booking_id",
+        on_schema_change = "sync_all_columns"
+    )
+}}
+
 SELECT
     booking_id,
     booking_creation_date,
@@ -17,6 +25,9 @@ SELECT
     venue_id,
     price_category_label,
     booking_reimbursement_date,
-    coalesce(b.booking_amount, 0) * coalesce(b.booking_quantity, 0) AS booking_intermediary_amount,
-    rank() OVER (PARTITION BY b.user_id ORDER BY b.booking_creation_date) AS booking_rank,
-FROM {{ source('raw','applicative_database_booking') }} AS b
+    coalesce(booking_amount, 0) * coalesce(booking_quantity, 0) AS booking_intermediary_amount,
+    rank() OVER (PARTITION BY user_id ORDER BY booking_creation_date) AS booking_rank,
+FROM {{ source('raw','applicative_database_booking') }}
+{% if is_incremental() %}
+WHERE booking_creation_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 1 DAY) and DATE("{{ ds() }}")
+{% endif %}

@@ -1,13 +1,22 @@
+{{
+    config(
+        materialized = "incremental",
+        unique_key = "offer_id",
+        on_schema_change = "sync_all_columns"
+    )
+}}
+
 WITH offer_ranked as (
     SELECT
         *
-        , ROW_NUMBER() OVER (PARTITION BY offer_id ORDER BY offer_date_updated DESC) as row_number
+        , ROW_NUMBER() OVER (PARTITION BY offer_id ORDER BY offer_date_updated DESC) as rown 
     FROM {{ source('raw', 'applicative_database_offer') }}
     WHERE offer_subcategoryid NOT IN ('ACTIVATION_THING', 'ACTIVATION_EVENT')
     AND (
         booking_email != 'jeux-concours@passculture.app'
         OR booking_email IS NULL
     )
+
 ), stocks_grouped_by_offers AS (
 
         SELECT offer_id,
@@ -33,6 +42,7 @@ SELECT
     o.offer_modified_at_last_provider_date,
     o.offer_id,
     o.offer_creation_date,
+    o.offer_date_updated,
     o.offer_product_id,
     o.venue_id,
     o.offer_last_provider_id,
@@ -71,4 +81,9 @@ SELECT
     so.last_individual_booking_date
 FROM offer_ranked AS o
 LEFT JOIN stocks_grouped_by_offers AS so ON so.offer_id = o.offer_id
-WHERE row_number=1
+WHERE rown=1
+{% if is_incremental() %}
+AND offer_date_updated BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 3 DAY) and DATE("{{ ds() }}")
+{% endif %}
+
+--AND offer_creation_date >= '2024-01-01'

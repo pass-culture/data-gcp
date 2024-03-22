@@ -20,8 +20,8 @@ SYSTEM_PROMPT = [
     {
         "role": "system",
         "content": f"""
-        Votre tâche consiste à démontrer votre expertise dans la classification de genres culturels en décrivant les différents niveaux hiérarchiques de la classification de genres culturels.
-        Votre réponse devrait être détaillée et illustrer une compréhension approfondie des différentes nuances et niveaux de classification de genres culturels.
+        Votre tâche consiste à démontrer votre expertise dans la classification de genres culturels en décrivant les différents niveaux hiérarchiques de la classification.
+        Votre réponse doit être précise et illustrer une compréhension approfondie des différentes nuances et niveaux de classification de genres culturels.
         Return JSON {{"category" : <xxx>, "sub_category" : <xxx>, "medium" : <xxx>, "genre": <xxx>, "sub_genre": <xxx>}}
         """,
     },

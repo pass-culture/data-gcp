@@ -9,7 +9,7 @@ import numpy as np
 import json
 import hashlib
 import base64
-
+import pandas as pd
 
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
@@ -42,9 +42,9 @@ def sha1_to_base64(input_string):
     return base64_encoded
 
 
-def load_config_file(config_file_name):
+def load_config_file(config_file_name, job_type):
     with open(
-        f"{CONFIGS_PATH}/{config_file_name}.json",
+        f"{CONFIGS_PATH}/{job_type}/{config_file_name}.json",
         mode="r",
         encoding="utf-8",
     ) as config_file:
@@ -81,6 +81,10 @@ def export_polars_to_bq(client, data, dataset, output_table):
             ),
         )
     job.result()
+
+
+def load_df(input_table, dataset_id=TMP_DATASET):
+    return pd.read_gbq(f"""SELECT * FROM `{dataset_id}.{input_table}`""")
 
 
 def call(messages, ttl=5, temperature=0.2, model="gpt-3.5-turbo-1106"):

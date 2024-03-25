@@ -2,46 +2,46 @@
     config(
         materialized = "incremental",
         unique_key = "offer_id",
+        partition_by = {"field": "offer_creation_date", "data_type": "date"},
+        incremental_strategy = "insert_overwrite",
         on_schema_change = "sync_all_columns"
     )
 }}
 
-WITH offer_ranked as (
+WITH offer_deduped as (
     SELECT
         *
-        , ROW_NUMBER() OVER (PARTITION BY offer_id ORDER BY offer_date_updated DESC) as rown 
+        , ROW_NUMBER() OVER (PARTITION BY offer_id ORDER BY offer_date_updated DESC) as rown
     FROM {{ source('raw', 'applicative_database_offer') }}
     WHERE offer_subcategoryid NOT IN ('ACTIVATION_THING', 'ACTIVATION_EVENT')
     AND (
         booking_email != 'jeux-concours@passculture.app'
         OR booking_email IS NULL
     )
+) ,
 
-), stocks_grouped_by_offers AS (
-
+stocks_grouped_by_offers AS (
         SELECT offer_id,
             SUM(available_stock) AS available_stock,
             MAX(is_bookable) AS is_bookable, -- check si un des stock est bookable
-            SUM(number_of_bookings) AS number_of_bookings,
+            SUM(total_bookings) AS total_bookings,
             SUM(total_individual_bookings) AS total_individual_bookings,
             SUM(total_non_cancelled_individual_bookings) AS total_non_cancelled_individual_bookings,
             SUM(total_used_individual_bookings) AS total_used_individual_bookings,
-            SUM(individual_theoretic_revenue) AS individual_theoretic_revenue,
-            SUM(individual_real_revenue) AS individual_real_revenue,
+            SUM(total_individual_theoretic_revenue) AS total_individual_theoretic_revenue,
+            SUM(total_individual_real_revenue) AS total_individual_real_revenue,
             MIN(first_individual_booking_date) AS first_individual_booking_date,
             MAX(last_individual_booking_date) AS last_individual_booking_date
         FROM {{ ref('int_applicative__stock') }}
-        GROUP BY offer_id,
-            stock_booking_limit_date,
-            stock_beginning_date,
-            stock_is_soft_deleted
+        GROUP BY offer_id
 )
 
 SELECT
+    o.offer_id,
     o.offer_id_at_providers,
     o.offer_modified_at_last_provider_date,
-    o.offer_id,
-    o.offer_creation_date,
+    DATE(o.offer_creation_date) AS offer_creation_date,
+    o.offer_creation_date AS offer_created_at,
     o.offer_date_updated,
     o.offer_product_id,
     o.venue_id,
@@ -71,19 +71,17 @@ SELECT
         AND o.offer_is_active
         AND o.offer_validation = 'APPROVED') THEN 1 ELSE 0 END AS is_bookable,
     so.available_stock,
-    so.number_of_bookings,
+    so.total_bookings,
     so.total_individual_bookings,
     so.total_non_cancelled_individual_bookings,
     so.total_used_individual_bookings,
-    so.individual_theoretic_revenue,
-    so.individual_real_revenue,
+    so.total_individual_theoretic_revenue,
+    so.total_individual_real_revenue,
     so.first_individual_booking_date,
     so.last_individual_booking_date
-FROM offer_ranked AS o
+FROM offer_deduped AS o
 LEFT JOIN stocks_grouped_by_offers AS so ON so.offer_id = o.offer_id
 WHERE rown=1
 {% if is_incremental() %}
 AND offer_date_updated BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 3 DAY) and DATE("{{ ds() }}")
 {% endif %}
-
---AND offer_creation_date >= '2024-01-01'

@@ -1,14 +1,14 @@
 WITH collective_stocks_grouped_by_collective_offers AS (
     SELECT collective_offer_id,
-    MAX(is_bookable) AS is_bookable, -- check si au moins une des collective_offer est bookable
+    MAX(is_bookable) AS is_bookable, -- bookable = si au moins une des collective_offer a is_bookable = 1
     SUM(total_non_cancelled_collective_booking_stock) AS total_non_cancelled_collective_booking_stock,
     SUM(total_collective_bookings) AS total_collective_bookings,
     SUM(total_non_cancelled_collective_bookings) AS total_non_cancelled_collective_bookings,
     SUM(total_used_collective_bookings) AS total_used_collective_bookings,
     MIN(first_collective_booking_date) AS first_collective_booking_date,
     MAX(last_collective_booking_date) AS last_collective_booking_date,
-    SUM(collective_theoretic_revenue) AS collective_theoretic_revenue,
-    SUM(collective_real_revenue) AS collective_real_revenue
+    SUM(total_collective_theoretic_revenue) AS total_collective_theoretic_revenue,
+    SUM(total_collective_real_revenue) AS total_collective_real_revenue
     FROM {{ ref('int_applicative__collective_stock') }}
     GROUP BY collective_offer_id
 )
@@ -55,8 +55,8 @@ SELECT
     cs.total_collective_bookings,
     cs.total_non_cancelled_collective_bookings,
     cs.total_used_collective_bookings,
-    cs.collective_theoretic_revenue,
-    cs.collective_real_revenue,
+    cs.total_collective_theoretic_revenue,
+    cs.total_collective_real_revenue,
     cs.first_collective_booking_date,
     cs.last_collective_booking_date,
     0 AS is_template
@@ -106,8 +106,8 @@ SELECT
     null as total_collective_bookings,
     null as total_non_cancelled_collective_bookings,
     null as total_used_collective_bookings,
-    null as collective_theoretic_revenue,
-    null as collective_real_revenue,
+    null as total_collective_theoretic_revenue,
+    null as total_collective_real_revenue,
     null as first_collective_booking_date,
     null as last_collective_booking_date,
     1 AS is_template

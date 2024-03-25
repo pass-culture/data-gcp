@@ -2,13 +2,16 @@
     config(
         materialized = "incremental",
         unique_key = "booking_id",
+        partition_by = {"field": "booking_creation_date", "data_type": "date"},
+        incremental_strategy = "insert_overwrite",
         on_schema_change = "sync_all_columns"
     )
 }}
 
 SELECT
     booking_id,
-    booking_creation_date,
+    DATE(booking_creation_date) AS booking_creation_date,
+    booking_creation_date AS booking_created_at,
     stock_id,
     booking_quantity,
     user_id,
@@ -31,3 +34,4 @@ FROM {{ source('raw','applicative_database_booking') }}
 {% if is_incremental() %}
 WHERE booking_creation_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 1 DAY) and DATE("{{ ds() }}")
 {% endif %}
+

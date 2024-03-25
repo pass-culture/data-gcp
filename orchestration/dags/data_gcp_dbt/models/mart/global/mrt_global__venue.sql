@@ -1,5 +1,4 @@
-{% set target_name = target.name %}
-{% set target_schema = generate_schema_name('analytics_dbt_' ~ target_name) %}
+
 
 WITH venue_id_combination AS (
 
@@ -15,8 +14,8 @@ venue_id_aggregated AS (
         SUM(co.total_collective_bookings) AS total_collective_bookings,
         SUM(o.total_non_cancelled_individual_bookings) AS total_non_cancelled_individual_bookings,
         SUM(o.total_used_individual_bookings) AS total_used_individual_bookings,
-        SUM(o.individual_theoretic_revenue) AS total_individual_theoretic_revenue,
-        SUM(o.individual_real_revenue) AS total_individual_real_revenue,
+        SUM(o.total_individual_theoretic_revenue) AS total_individual_theoretic_revenue,
+        SUM(o.total_individual_real_revenue) AS total_individual_real_revenue,
         MIN(o.first_individual_booking_date) AS first_individual_booking_date,
         MAX(o.last_individual_booking_date) AS last_individual_booking_date,
         MIN(CASE WHEN o.offer_validation = 'APPROVED' THEN o.offer_creation_date END) AS first_individual_offer_creation_date,
@@ -24,8 +23,8 @@ venue_id_aggregated AS (
         COUNT(CASE WHEN o.offer_validation = 'APPROVED' THEN o.offer_id END) AS total_individual_offers_created,
         SUM(co.total_non_cancelled_collective_bookings) AS total_non_cancelled_collective_bookings,
         SUM(co.total_used_collective_bookings) AS total_used_collective_bookings,
-        SUM(co.collective_theoretic_revenue) AS total_collective_theoretic_revenue,
-        SUM(co.collective_real_revenue) AS total_collective_real_revenue,
+        SUM(co.total_collective_theoretic_revenue) AS total_collective_theoretic_revenue,
+        SUM(co.total_collective_real_revenue) AS total_collective_real_revenue,
         MIN(co.first_collective_booking_date) AS first_collective_booking_date,
         MAX(co.last_collective_booking_date) AS last_collective_booking_date,
         COUNT(CASE WHEN co.collective_offer_validation = 'APPROVED' THEN co.collective_offer_id END) AS total_collective_offers_created,
@@ -87,28 +86,28 @@ SELECT
     COALESCE(via.total_used_individual_bookings,0) + COALESCE(via.total_used_collective_bookings,0) AS total_used_bookings,
     COALESCE(via.total_used_individual_bookings,0) AS total_used_individual_bookings,
     COALESCE(via.total_used_collective_bookings,0) AS total_used_collective_bookings,
-    COALESCE(via.individual_theoretic_revenue,0) AS total_individual_theoretic_revenue,
-    COALESCE(via.individual_real_revenue,0) AS total_individual_real_revenue,
-    COALESCE(via.collective_theoretic_revenue,0) AS total_collective_theoretic_revenue,
-    COALESCE(via.collective_real_revenue,0) AS total_collective_real_revenue,
-    COALESCE(via.individual_theoretic_revenue,0) + COALESCE(via.collective_theoretic_revenue,0) AS total_theoretic_revenue,
-    COALESCE(via.individual_real_revenue,0) + COALESCE(via.collective_real_revenue,0) AS total_real_revenue,
+    COALESCE(via.total_individual_theoretic_revenue,0) AS total_individual_theoretic_revenue,
+    COALESCE(via.total_individual_real_revenue,0) AS total_individual_real_revenue,
+    COALESCE(via.total_collective_theoretic_revenue,0) AS total_collective_theoretic_revenue,
+    COALESCE(via.total_collective_real_revenue,0) AS total_collective_real_revenue,
+    COALESCE(via.total_individual_theoretic_revenue,0) + COALESCE(via.total_collective_theoretic_revenue,0) AS total_theoretic_revenue,
+    COALESCE(via.total_individual_real_revenue,0) + COALESCE(via.total_collective_real_revenue,0) AS total_real_revenue,
     via.first_individual_offer_creation_date,
     via.last_individual_offer_creation_date,
-    COALESCE(via.individual_offers_created,0) AS total_individual_offers_created,
+    COALESCE(via.total_individual_offers_created,0) AS total_individual_offers_created,
     via.first_collective_offer_creation_date,
     via.last_collective_offer_creation_date,
-    COALESCE(via.collective_offers_created,0) AS total_collective_offers_created,
-    COALESCE(via.individual_offers_created,0) + COALESCE(via.collective_offers_created,0) AS total_created_offers,
+    COALESCE(via.total_collective_offers_created,0) AS total_collective_offers_created,
+    COALESCE(via.total_individual_offers_created,0) + COALESCE(via.total_collective_offers_created,0) AS total_created_offers,
     via.venue_first_bookable_offer_date,
     via.venue_last_bookable_offer_date,
     LEAST(via.first_collective_booking_date, via.first_individual_booking_date) AS first_booking_date,
     GREATEST(via.last_collective_booking_date, via.last_individual_booking_date) AS last_booking_date,
     LEAST(via.first_collective_offer_creation_date, via.first_individual_offer_creation_date) AS first_offer_creation_date,
     GREATEST(last_collective_offer_creation_date, via.last_individual_offer_creation_date) AS last_offer_creation_date,
-    COALESCE(via.venue_bookable_individual_offer_cnt,0) AS total_venue_bookable_individual_offers,
-    COALESCE(via.venue_bookable_collective_offer_cnt,0) AS total_venue_bookable_collective_offers,
-    COALESCE(via.venue_bookable_individual_offer_cnt,0) + COALESCE(via.venue_bookable_collective_offer_cnt,0) AS total_venue_bookable_offers
+    COALESCE(via.total_venue_bookable_individual_offers,0) AS total_venue_bookable_individual_offers,
+    COALESCE(via.total_venue_bookable_collective_offers,0) AS total_venue_bookable_collective_offers,
+    COALESCE(via.total_venue_bookable_individual_offers,0) + COALESCE(via.total_venue_bookable_collective_offers,0) AS total_venue_bookable_offers
 FROM {{ ref('int_applicative__venue') }} AS v
     LEFT JOIN venue_id_aggregated via ON via.venue_id = v.venue_id
     LEFT JOIN {{ source('analytics', 'region_department') }} AS venue_region_departement ON v.venue_department_code = venue_region_departement.num_dep

@@ -1,4 +1,5 @@
 {% set target_name = target.name %}
+{% set target_schema = generate_schema_name('analytics_dbt_' ~ target_name) %}
 
 {{ config(
     pre_hook="{{create_humanize_id_function()}}"
@@ -59,9 +60,9 @@ SELECT
         "https://passculture.pro/structures/",
         o.offerer_humanized_id,
         "/lieux/",
-        "humanize_id(venue_id)"
+        {{target_schema}}.humanize_id(v.venue_id)
     ) AS venue_pc_pro_link,
-    null as humanized_id, -- todo : check la macro
+    {{target_schema}}.humanize_id(v.venue_id) as venue_humanized_id,
     vr.venue_target AS venue_targeted_audience,
     vc.venue_contact_phone_number,
     vc.venue_contact_email,

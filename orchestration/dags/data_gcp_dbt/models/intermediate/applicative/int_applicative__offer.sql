@@ -2,25 +2,11 @@
     config(
         materialized = "incremental",
         unique_key = "offer_id",
-        partition_by = {"field": "offer_creation_date", "data_type": "date"},
-        incremental_strategy = "insert_overwrite",
         on_schema_change = "sync_all_columns"
     )
 }}
 
-WITH offer_deduped as (
-    SELECT
-        *
-        , ROW_NUMBER() OVER (PARTITION BY offer_id ORDER BY offer_date_updated DESC) as rown
-    FROM {{ source('raw', 'applicative_database_offer') }}
-    WHERE offer_subcategoryid NOT IN ('ACTIVATION_THING', 'ACTIVATION_EVENT')
-    AND (
-        booking_email != 'jeux-concours@passculture.app'
-        OR booking_email IS NULL
-    )
-) ,
-
-stocks_grouped_by_offers AS (
+WITH stocks_grouped_by_offers AS (
         SELECT offer_id,
             SUM(available_stock) AS available_stock,
             MAX(is_bookable) AS is_bookable, -- check si un des stock est bookable
@@ -79,9 +65,13 @@ SELECT
     so.total_individual_real_revenue,
     so.first_individual_booking_date,
     so.last_individual_booking_date
-FROM offer_deduped AS o
+FROM {{ source('raw', 'applicative_database_offer') }} AS o
 LEFT JOIN stocks_grouped_by_offers AS so ON so.offer_id = o.offer_id
-WHERE rown=1
+WHERE offer_subcategoryid NOT IN ('ACTIVATION_THING', 'ACTIVATION_EVENT')
+AND (
+    booking_email != 'jeux-concours@passculture.app'
+    OR booking_email IS NULL
+)
 {% if is_incremental() %}
 AND offer_date_updated BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 3 DAY) and DATE("{{ ds() }}")
 {% endif %}

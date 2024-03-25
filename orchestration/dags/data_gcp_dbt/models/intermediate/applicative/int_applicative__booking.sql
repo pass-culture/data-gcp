@@ -2,8 +2,6 @@
     config(
         materialized = "incremental",
         unique_key = "booking_id",
-        partition_by = {"field": "booking_creation_date", "data_type": "date"},
-        incremental_strategy = "insert_overwrite",
         on_schema_change = "sync_all_columns"
     )
 }}

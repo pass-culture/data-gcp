@@ -1,5 +1,3 @@
-
-
 WITH venue_id_combination AS (
 
     SELECT DISTINCT venue_id
@@ -63,8 +61,8 @@ SELECT
     v.offerer_name,
     v.offerer_validation_status,
     v.venue_type_code AS venue_type_label,
-    v.venue_label AS venue_label,
-    v.humanized_id AS venue_humanized_id,
+    v.venue_label,
+    v.venue_humanized_id,
     v.venue_backoffice_link,
     venue_region_departement.region_name AS venue_region_name,
     v.venue_pc_pro_link,

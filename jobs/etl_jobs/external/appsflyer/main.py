@@ -9,6 +9,8 @@ from mapping import (
     INSTALLS_REPORT,
     APP_REPORT,
     APP_REPORT_MAPPING,
+    PARTNER_REPORT_MAPPING,
+    PARTNER_REPORT,
 )
 import typer
 
@@ -98,13 +100,13 @@ class ImportAppsFlyer:
             dfs.append(df)
             time.sleep(60)
         df = pd.concat(dfs, ignore_index=True)
-        df = df.rename(columns=DAILY_REPORT)
+        df = df.rename(columns=PARTNER_REPORT)
         df_columns = list(df.columns)
-        for k, v in DAILY_REPORT_MAPPING.items():
+        for k, v in PARTNER_REPORT_MAPPING.items():
             if k not in df_columns:
                 df[k] = None
             df[k] = df[k].astype(v)
-        return df[list(DAILY_REPORT.values()) + ["app"]]
+        return df[list(PARTNER_REPORT.values()) + ["app"]]
 
     def get_in_app_events_report(self):
         dfs = []

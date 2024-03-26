@@ -22,6 +22,8 @@ user_traffic as (
     ON firebase.user_id = user.user_id
     WHERE traffic_campaign is not null
     AND lower(traffic_medium) like "%email%"
+    AND event_name in ('ConsultOffer', 'BookingConfirmation', 'HasAddedOfferToFavorites')
+    AND event_date >= DATE_SUB(DATE("{{ ds }}"),  INTERVAL 30 DAY)
     GROUP BY 1, 2
 )
 

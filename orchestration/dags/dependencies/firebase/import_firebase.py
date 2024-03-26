@@ -163,7 +163,6 @@ import_firebase_beneficiary_tables = {
         "partition_prefix": "$",
         "time_partitioning": {"field": "module_displayed_date"},
         "depends": ["analytics_firebase_events", "analytics_firebase_bookings"],
-        "dag_depends": ["import_contentful"],
     },
     "analytics_firebase_bookings": {
         "sql": f"{SQL_PATH}/analytics/firebase_bookings.sql",

@@ -30,12 +30,17 @@ venue_id_aggregated AS (
         MAX(CASE WHEN co.collective_offer_validation = 'APPROVED' THEN co.collective_offer_creation_date END) AS last_collective_offer_creation_date,
         COUNT(DISTINCT CASE WHEN o.is_bookable = 1 THEN o.offer_id END) AS total_venue_bookable_individual_offers,
         COUNT(DISTINCT CASE WHEN co.is_bookable = 1 THEN co.collective_offer_id END) AS total_venue_bookable_collective_offers,
-        MIN(bvh.partition_date) AS venue_first_bookable_offer_date,
-        MAX(bvh.partition_date) AS venue_last_bookable_offer_date
+        LEAST(
+            MIN(CASE WHEN o.is_bookable = 1 THEN o.offer_creation_date END),
+             MIN(CASE WHEN co.is_bookable = 1 THEN co.collective_offer_creation_date END)
+        ) AS venue_first_bookable_offer_date,
+        GREATEST(
+            MAX(CASE WHEN o.is_bookable = 1 THEN o.offer_creation_date END),
+             MAX(CASE WHEN co.is_bookable = 1 THEN co.collective_offer_creation_date END)
+        ) AS venue_last_bookable_offer_date
     FROM venue_id_combination vic
         LEFT JOIN {{ ref('int_applicative__offer') }} AS o ON o.venue_id = vic.venue_id
         LEFT JOIN {{ ref('int_applicative__collective_offer') }} co ON co.venue_id = vic.venue_id
-        LEFT JOIN {{ source('analytics', 'bookable_venue_history')}} bvh ON bvh.venue_id = vic.venue_id
     GROUP BY
         venue_id
 )

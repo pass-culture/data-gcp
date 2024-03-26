@@ -6,11 +6,11 @@ import pandas as pd
 import typer
 from loguru import logger
 from tools.utils import (
-    CONFIGS_PATH,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     convert_str_emb_to_float,
     convert_arr_emb_to_str,
+    load_config_file,
 )
 from tools.dimension_reduction import (
     umap_reduce_embedding_dimension,
@@ -108,15 +108,9 @@ def dimension_reduction(
     ),
 ) -> None:
     """ """
-    ###############
-    # Load config
-    with open(
-        f"{CONFIGS_PATH}/{config_file_name}.json",
-        mode="r",
-        encoding="utf-8",
-    ) as config_file:
-        config_json = json.load(config_file)["reduction_configs"][reduction_config]
-
+    config_json = load_config_file(config_file_name, job_type="reduction")[
+        "reduction_configs"
+    ][reduction_config]
     ###############
     # Load preprocessed data
     for params in config_json:

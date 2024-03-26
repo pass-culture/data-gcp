@@ -66,10 +66,15 @@ with DAG(
             default="n1-standard-2" if ENV_SHORT_NAME == "dev" else "n1-standard-64",
             type="string",
         ),
-        "config_file_name": Param(
+        "reduction_config_file_name": Param(
             default="default-config",
             type="string",
         ),
+        "cluster_config_file_name": Param(
+            default="default-config",
+            type="string",
+        ),
+        "cluster_prefix": Param(default="", type=["string", "null"]),
     },
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)
@@ -133,7 +138,7 @@ with DAG(
         command="PYTHONPATH=. python reduction/dimension_reduction.py "
         f"--gcp-project {GCP_PROJECT_ID} "
         f"--env-short-name {ENV_SHORT_NAME} "
-        "--config-file-name {{ params.config_file_name }} "
+        "--config-file-name {{ params.reduction_config_file_name }} "
         f"--source-gs-path {dag_config['STORAGE_PATH']} "
         f"--output-table-name item_embeddings "
         f"--reduction-config default ",
@@ -150,8 +155,9 @@ with DAG(
         base_dir=BASE_DIR,
         command="PYTHONPATH=. python cluster/preprocess.py "
         f"--input-table {DATE}_import_item_embeddings "
-        f"--output-table {DATE}_import_item_clusters_preprocesss "
-        "--config-file-name {{ params.config_file_name }} ",
+        f"--output-table {DATE}_import_item_clusters_preprocess "
+        "--config-file-name {{ params.cluster_config_file_name }} "
+        "--cluster-prefix {{ params.cluster_prefix }}",
     )
 
     generate_clustering = SSHGCEOperator(
@@ -159,9 +165,10 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command="PYTHONPATH=. python cluster/generate.py "
-        f"--input-table {DATE}_import_item_clusters_preprocesss "
+        f"--input-table {DATE}_import_item_clusters_preprocess "
         f"--output-table item_clusters "
-        "--config-file-name {{ params.config_file_name }} ",
+        "--config-file-name {{ params.cluster_config_file_name }} "
+        "--cluster-prefix {{ params.cluster_prefix }}",
     )
 
     bq_import_item_clusters_task = bigquery_job_task(
@@ -176,7 +183,8 @@ with DAG(
         f"--input-table {DATE}_import_item_clusters "
         f"--item-topics-labels-output-table {DATE}_item_topics_labels "
         f"--item-topics-output-table {DATE}_item_topics "
-        "--config-file-name {{ params.config_file_name }} ",
+        "--config-file-name {{ params.cluster_config_file_name }} "
+        "--cluster-prefix {{ params.cluster_prefix }}",
     )
 
     clean_topics = SSHGCEOperator(
@@ -188,7 +196,8 @@ with DAG(
         f"--item-topics-input-table {DATE}_item_topics "
         f"--item-topics-labels-output-table item_topics_labels "
         f"--item-topics-output-table item_topics "
-        "--config-file-name {{ params.config_file_name }} ",
+        "--config-file-name {{ params.cluster_config_file_name }} "
+        "--cluster-prefix {{ params.cluster_prefix }}",
     )
 
     gce_instance_stop = StopGCEOperator(

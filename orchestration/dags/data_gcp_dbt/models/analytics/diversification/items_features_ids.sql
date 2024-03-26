@@ -13,7 +13,9 @@ items as (
     item_metadata.topic_id,
     item_metadata.cluster_id,
     item_metadata.simple_topic_id,
-    item_metadata.simple_cluster_id
+    item_metadata.simple_cluster_id,
+    item_metadata.unconstrained_topic_id,
+    item_metadata.unconstrained_cluster_id
     FROM unique_offers as offer
     LEFT JOIN {{ ref('offer_item_ids') }} as matching 
         ON offer.offer_id = matching.offer_id

@@ -141,7 +141,7 @@ def main(
 ):
     params = load_config_file(config_file_name, job_type="cluster")
 
-    topic_items_df = load_df(f"{cluster_prefix}{input_table}")
+    topic_items_df = load_df(input_table)
     emb_size = params["pretrained_embedding_size"]
 
     topic_items_df["semantic_encoding"] = topic_items_df["semantic_encoding"].apply(

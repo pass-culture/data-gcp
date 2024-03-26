@@ -33,7 +33,9 @@ def create_clusters(
     embedding_cols = [f"t{x}" for x in range(params["pretrained_embedding_size"])]
     results = []
     for group in params["group_config"]:
-        results.append(generate_clustering(group, input_table, embedding_cols))
+        results.append(
+            generate_clustering(group, f"{cluster_prefix}{input_table}", embedding_cols)
+        )
 
     export_polars_to_bq(
         client, pl.concat(results), CLEAN_DATASET, f"{cluster_prefix}{output_table}"

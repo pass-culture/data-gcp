@@ -155,7 +155,7 @@ with DAG(
         base_dir=BASE_DIR,
         command="PYTHONPATH=. python cluster/preprocess.py "
         f"--input-table {DATE}_import_item_embeddings "
-        f"--output-table {DATE}_import_item_clusters_preprocesss "
+        f"--output-table {DATE}_import_item_clusters_preprocess "
         "--config-file-name {{ params.cluster_config_file_name }} "
         "--cluster-prefix {{ params.cluster_prefix }}",
     )
@@ -165,7 +165,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command="PYTHONPATH=. python cluster/generate.py "
-        f"--input-table {DATE}_import_item_clusters_preprocesss "
+        f"--input-table {DATE}_import_item_clusters_preprocess "
         f"--output-table item_clusters "
         "--config-file-name {{ params.cluster_config_file_name }} "
         "--cluster-prefix {{ params.cluster_prefix }}",

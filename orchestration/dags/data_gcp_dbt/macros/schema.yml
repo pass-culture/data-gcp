@@ -15,10 +15,15 @@ macros:
     description: " Overview
       It enables us to set up the destination dataset.
       If we develop in dev environment (target = dev), the destination schema dataset is the default (tmp_env) specified in profile.yml.
+      If the model is in int intermediate folder, schema name = int_{sub_folder_name}_{target_name}
       Else the destination schema dataset is specified in dbt_project.yml (analytics_env or clean_env) "
 
   - name: get_custom_alias
-    description: ""
+    description: " This macro generates table aliases 
+    - By using the segment after '__' for models in the intermediate folder. 
+    - By using the segment after '__' for models in the mart or intermediate folders. 
+    - Otherwise, it uses the model's name.
+    "
 
   - name: ml_variables
     description: ""

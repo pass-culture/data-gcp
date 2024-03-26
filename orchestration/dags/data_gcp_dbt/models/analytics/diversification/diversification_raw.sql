@@ -54,6 +54,8 @@ SELECT
     , offer_metadata.titelive_gtl_id as titelive_gtl_id
     , item_metadata.cluster_id
     , item_metadata.topic_id
+    , item_metadata.simple_cluster_id
+    , item_metadata.simple_topic_id
     -- prendre une venue unique pour les offres digitales
     , CASE
         WHEN bookings.digital_goods = True 
@@ -112,6 +114,14 @@ diversification_scores as (
   END as {{feature}}_diversification2
   {% if not loop.last -%} , {%- endif %}
   {% endfor %}
+  , {% for feature in diversification_vars("diversification_features3") %} 
+  CASE
+        WHEN booking_creation_date = min(booking_creation_date) over(partition by user_id, {{feature}}) AND booking_rank != 1
+        THEN 1
+        ELSE 0
+  END as {{feature}}_diversification3
+  {% if not loop.last -%} , {%- endif %}
+  {% endfor %}
 FROM base_diversification
 )
 
@@ -126,6 +136,10 @@ SELECT
     {% endfor %}
   , {% for feature in diversification_vars("diversification_features2") %}
     {{feature}}_diversification2
+    {% if not loop.last -%} , {%- endif %}
+    {% endfor %}
+  , {% for feature in diversification_vars("diversification_features3") %}
+    {{feature}}_diversification3
     {% if not loop.last -%} , {%- endif %}
     {% endfor %}
   , case
@@ -146,4 +160,13 @@ SELECT
           {% if not loop.last -%} + {%- endif %}
           {% endfor %}
       end as delta_diversification2
+  , case
+      when booking_rank = 1 
+        then 1 -- 1 point d'office pour le premier booking
+      else -- somme des points de diversification pr les suivants
+          {% for feature in diversification_vars("diversification_features3") %} 
+          {{feature}}_diversification3
+          {% if not loop.last -%} + {%- endif %}
+          {% endfor %}
+      end as delta_diversification3
 FROM diversification_scores

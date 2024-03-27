@@ -132,6 +132,22 @@ diversification_scores as (
   END as {{feature}}_diversification4
   {% if not loop.last -%} , {%- endif %}
   {% endfor %}
+  , {% for feature in diversification_vars("diversification_features5") %} 
+  CASE
+        WHEN booking_creation_date = min(booking_creation_date) over(partition by user_id, {{feature}}) AND booking_rank != 1
+        THEN 1
+        ELSE 0
+  END as {{feature}}_diversification5
+  {% if not loop.last -%} , {%- endif %}
+  {% endfor %}
+  , {% for feature in diversification_vars("diversification_features6") %} 
+  CASE
+        WHEN booking_creation_date = min(booking_creation_date) over(partition by user_id, {{feature}}) AND booking_rank != 1
+        THEN 1
+        ELSE 0
+  END as {{feature}}_diversification6
+  {% if not loop.last -%} , {%- endif %}
+  {% endfor %}
 FROM base_diversification
 )
 
@@ -192,4 +208,22 @@ SELECT
           {% if not loop.last -%} + {%- endif %}
           {% endfor %}
     end as delta_diversification4
+  , case
+      when booking_rank = 1 
+        then 1 -- 1 point d'office pour le premier booking
+      else -- somme des points de diversification pr les suivants
+          {% for feature in diversification_vars("diversification_features5") %} 
+          {{feature}}_diversification5
+          {% if not loop.last -%} + {%- endif %}
+          {% endfor %}
+    end as delta_diversification5
+  , case
+      when booking_rank = 1 
+        then 1 -- 1 point d'office pour le premier booking
+      else -- somme des points de diversification pr les suivants
+          {% for feature in diversification_vars("diversification_features6") %} 
+          {{feature}}_diversification6
+          {% if not loop.last -%} + {%- endif %}
+          {% endfor %}
+    end as delta_diversification6
 FROM diversification_scores

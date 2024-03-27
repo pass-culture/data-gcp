@@ -33,7 +33,7 @@ SELECT
     CASE WHEN s.stock_quantity IS NULL THEN NULL
         ELSE GREATEST( s.stock_quantity - COALESCE(bs.total_bookings, 0),0)
     END AS available_stock,
-    total_bookings, -- on retire les cancelled? Avoir un seul calcul pour ce KPI
+    total_bookings,
     bs.total_individual_bookings,
     bs.total_non_cancelled_individual_bookings,
     bs.total_used_individual_bookings,

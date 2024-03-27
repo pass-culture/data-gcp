@@ -1,8 +1,7 @@
 WITH collective_bookings_grouped_by_collective_stock AS (
-
     SELECT
         cb.collective_stock_id,
-        COUNT(DISTINCT CASE WHEN cb.collective_booking_status != 'CANCELLED' THEN cb.collective_booking_id END) AS total_non_cancelled_collective_bookings,
+        COUNT(CASE WHEN cb.collective_booking_status != 'CANCELLED' THEN cb.collective_booking_id END) AS total_non_cancelled_collective_bookings,
         COUNT(cb.collective_booking_id) AS total_collective_bookings,
         COUNT(CASE WHEN cb.collective_booking_status IN ('USED','REIMBURSED')THEN cb.collective_booking_id END) AS total_used_collective_bookings,
         MIN(cb.collective_booking_creation_date) AS first_collective_booking_date,

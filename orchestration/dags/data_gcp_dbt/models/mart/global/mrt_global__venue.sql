@@ -18,14 +18,14 @@ venue_id_aggregated AS (
         MAX(o.last_individual_booking_date) AS last_individual_booking_date,
         MIN(CASE WHEN o.offer_validation = 'APPROVED' THEN o.offer_creation_date END) AS first_individual_offer_creation_date,
         MAX(CASE WHEN o.offer_validation = 'APPROVED' THEN o.offer_creation_date END) AS last_individual_offer_creation_date,
-        COUNT(CASE WHEN o.offer_validation = 'APPROVED' THEN o.offer_id END) AS total_individual_offers_created,
+        COUNT(CASE WHEN o.offer_validation = 'APPROVED' THEN o.offer_id END) AS total_created_individual_offers,
         SUM(co.total_non_cancelled_collective_bookings) AS total_non_cancelled_collective_bookings,
         SUM(co.total_used_collective_bookings) AS total_used_collective_bookings,
         SUM(co.total_collective_theoretic_revenue) AS total_collective_theoretic_revenue,
         SUM(co.total_collective_real_revenue) AS total_collective_real_revenue,
         MIN(co.first_collective_booking_date) AS first_collective_booking_date,
         MAX(co.last_collective_booking_date) AS last_collective_booking_date,
-        COUNT(CASE WHEN co.collective_offer_validation = 'APPROVED' THEN co.collective_offer_id END) AS total_collective_offers_created,
+        COUNT(CASE WHEN co.collective_offer_validation = 'APPROVED' THEN co.collective_offer_id END) AS total_created_collective_offers,
         MIN(CASE WHEN co.collective_offer_validation = 'APPROVED' THEN co.collective_offer_creation_date END) AS first_collective_offer_creation_date,
         MAX(CASE WHEN co.collective_offer_validation = 'APPROVED' THEN co.collective_offer_creation_date END) AS last_collective_offer_creation_date,
         COUNT(DISTINCT CASE WHEN o.is_bookable = 1 THEN o.offer_id END) AS total_venue_bookable_individual_offers,
@@ -40,7 +40,7 @@ venue_id_aggregated AS (
         ) AS venue_last_bookable_offer_date
     FROM venue_id_combination vic
         LEFT JOIN {{ ref('int_applicative__offer') }} AS o ON o.venue_id = vic.venue_id
-        LEFT JOIN {{ ref('int_applicative__collective_offer') }} co ON co.venue_id = vic.venue_id
+        LEFT JOIN {{ ref('int_applicative__collective_offer') }} AS co ON co.venue_id = vic.venue_id
     GROUP BY
         venue_id
 )
@@ -78,6 +78,8 @@ SELECT
     v.venue_contact_phone_number,
     v.venue_contact_email,
     v.venue_contact_website,
+    via.total_individual_bookings AS total_individual_bookings,
+    via.total_collective_bookings AS total_collective_bookings,
     COALESCE(via.total_individual_bookings,0) + COALESCE(total_collective_bookings,0) AS total_bookings,
     COALESCE(via.total_non_cancelled_individual_bookings,0) AS total_non_cancelled_individual_bookings,
     COALESCE(via.total_non_cancelled_collective_bookings,0) AS total_non_cancelled_collective_bookings,
@@ -97,11 +99,11 @@ SELECT
     COALESCE(via.total_individual_real_revenue,0) + COALESCE(via.total_collective_real_revenue,0) AS total_real_revenue,
     via.first_individual_offer_creation_date,
     via.last_individual_offer_creation_date,
-    COALESCE(via.total_individual_offers_created,0) AS total_individual_offers_created,
+    COALESCE(via.total_created_individual_offers,0) AS total_created_individual_offers,
     via.first_collective_offer_creation_date,
     via.last_collective_offer_creation_date,
-    COALESCE(via.total_collective_offers_created,0) AS total_collective_offers_created,
-    COALESCE(via.total_individual_offers_created,0) + COALESCE(via.total_collective_offers_created,0) AS total_created_offers,
+    COALESCE(via.total_created_collective_offers,0) AS total_created_collective_offers,
+    COALESCE(via.total_created_individual_offers,0) + COALESCE(via.total_created_collective_offers,0) AS total_created_offers,
     via.venue_first_bookable_offer_date,
     via.venue_last_bookable_offer_date,
     LEAST(via.first_collective_booking_date, via.first_individual_booking_date) AS first_booking_date,
@@ -112,7 +114,7 @@ SELECT
     COALESCE(via.total_venue_bookable_collective_offers,0) AS total_venue_bookable_collective_offers,
     COALESCE(via.total_venue_bookable_individual_offers,0) + COALESCE(via.total_venue_bookable_collective_offers,0) AS total_venue_bookable_offers
 FROM {{ ref('int_applicative__venue') }} AS v
-    LEFT JOIN venue_id_aggregated via ON via.venue_id = v.venue_id
-    LEFT JOIN {{ source('analytics', 'region_department') }} AS venue_region_departement ON v.venue_department_code = venue_region_departement.num_dep
+LEFT JOIN venue_id_aggregated via ON via.venue_id = v.venue_id
+LEFT JOIN {{ source('analytics', 'region_department') }} AS venue_region_departement ON v.venue_department_code = venue_region_departement.num_dep
 WHERE v.offerer_validation_status='VALIDATED'
     AND v.offerer_is_active

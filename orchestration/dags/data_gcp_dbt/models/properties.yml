@@ -340,6 +340,12 @@ models:
   - name: firebase_aggregated_daily_campaign_events
     config:
       schema: analytics_{{ target.name }}
+  - name: mrt_global__adage_log
+    config:
+      schema: analytics_{{ target.name }}
+  - name: mrt_global__firebase_native_event
+    config:
+      schema: analytics_{{ target.name }}
   - name: mrt_global__venue
     config:
       schema: analytics_{{ target.name }}

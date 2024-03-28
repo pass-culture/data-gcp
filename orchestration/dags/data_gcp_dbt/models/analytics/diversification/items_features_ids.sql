@@ -39,6 +39,6 @@ SELECT
                 ) elem
         ) AS semantic_content_embedding,
 FROM items
-INNER JOIN {{ source('clean','item_embeddings') }} as emb
+INNER JOIN {{ source('clean','item_embeddings_reduced_32') }} as emb
     ON items.item_id = emb.item_id
 ORDER BY cluster_id

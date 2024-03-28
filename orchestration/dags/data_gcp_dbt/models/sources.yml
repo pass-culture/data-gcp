@@ -108,6 +108,13 @@ sources:
   - name: clean # this is the source_name
     schema: clean_{{ var('ENV_SHORT_NAME') }}
     tables:
+      - name: applicative_database_booking_history
+      - name: applicative_database_stock_history
+      - name: applicative_database_offer_history
+      - name: applicative_database_collective_booking_history
+      - name: applicative_database_collective_stock_history
+      - name: applicative_database_collective_offer_history
+      - name: applicative_database_collective_offer_template_history
       - name: adage_involved_student # this is the table_name
       - name: dms_jeunes_cleaned 
       - name: dms_pro_cleaned

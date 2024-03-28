@@ -18,7 +18,7 @@ WITH bookings_per_stock AS (
             END
         ) AS collective_booking_stock_no_cancelled_cnt
     FROM
-        {{ ref('collective_booking_history')}} AS collective_booking
+        {{ source('clean','applicative_database_collective_booking_history')}} AS collective_booking
     {% if is_incremental() %} 
     WHERE partition_date = DATE_SUB('{{ ds() }}', INTERVAL 1 DAY)
     {% endif %}
@@ -32,8 +32,8 @@ SELECT
     collective_stock.partition_date,
     FALSE AS collective_offer_is_template
 FROM
-    {{ ref('collective_stock_history')}} AS collective_stock
-    JOIN {{ ref('collective_offer_history')}} AS collective_offer ON collective_stock.collective_offer_id = collective_offer.collective_offer_id
+    {{ source('clean','applicative_database_collective_stock_history')}} AS collective_stock
+    JOIN {{ source('clean','applicative_database_collective_offer_history')}} AS collective_offer ON collective_stock.collective_offer_id = collective_offer.collective_offer_id
     AND collective_offer.collective_offer_is_active
     AND collective_offer.partition_date = collective_stock.partition_date
     AND collective_offer_validation = "APPROVED"
@@ -68,7 +68,7 @@ SELECT
     ,collective_offer_template.partition_date
     ,TRUE AS collective_offer_is_template
 FROM
-        {{ ref('collective_offer_template_history')}} AS collective_offer_template
+        {{ source('clean','applicative_database_collective_offer_template_history')}} AS collective_offer_template
     {% if is_incremental() %} 
     WHERE partition_date = DATE_SUB('{{ ds() }}', INTERVAL 1 DAY)
     {% endif %}

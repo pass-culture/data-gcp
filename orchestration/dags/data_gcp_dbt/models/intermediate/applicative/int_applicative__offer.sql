@@ -9,7 +9,7 @@
 WITH stocks_grouped_by_offers AS (
         SELECT offer_id,
             SUM(available_stock) AS available_stock,
-            MAX(is_bookable) AS is_bookable, -- check si un des stock est bookable
+            MAX(is_bookable) AS is_bookable,
             SUM(total_bookings) AS total_bookings,
             SUM(total_individual_bookings) AS total_individual_bookings,
             SUM(total_non_cancelled_individual_bookings) AS total_non_cancelled_individual_bookings,

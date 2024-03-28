@@ -1,6 +1,6 @@
 WITH collective_stocks_grouped_by_collective_offers AS (
     SELECT collective_offer_id,
-    MAX(is_bookable) AS is_bookable, -- bookable = if at least one collective_offer has is_bookable = 1
+    MAX(is_bookable) AS is_bookable, -- bookable = if at least one collective_stock has is_bookable = 1
     SUM(total_collective_bookings) AS total_collective_bookings,
     SUM(total_non_cancelled_collective_bookings) AS total_non_cancelled_collective_bookings,
     SUM(total_used_collective_bookings) AS total_used_collective_bookings,
@@ -23,11 +23,12 @@ SELECT
     co.collective_offer_id,
     co.offer_id,
     co.collective_offer_is_active,
-    COALESCE(co.collective_offer_venue_humanized_id,co.venue_id) AS venue_id,
+    co.venue_id,
     co.collective_offer_name,
     co.collective_offer_description,
     co.collective_offer_duration_minutes,
-    co.collective_offer_creation_date,
+    DATE(collective_offer_creation_date) AS collective_offer_creation_date,
+    collective_offer_creation_date AS collective_offer_created_at,
     co.collective_offer_subcategory_id,
     co.collective_offer_format,
     co.collective_offer_date_updated,
@@ -77,7 +78,8 @@ SELECT
     collective_offer_name,
     collective_offer_description,
     collective_offer_duration_minutes,
-    collective_offer_creation_date,
+    DATE(collective_offer_creation_date) AS collective_offer_creation_date,
+    collective_offer_creation_date AS collective_offer_created_at,
     collective_offer_subcategory_id,
     collective_offer_format,
     collective_offer_date_updated,

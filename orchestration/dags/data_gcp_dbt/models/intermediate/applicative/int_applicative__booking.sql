@@ -32,4 +32,3 @@ FROM {{ source('raw','applicative_database_booking') }}
 {% if is_incremental() %}
 WHERE booking_creation_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 1 DAY) and DATE("{{ ds() }}")
 {% endif %}
-

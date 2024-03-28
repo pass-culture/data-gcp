@@ -140,15 +140,22 @@ SELECT
     co.last_collective_offer_creation_date,
     COALESCE(co.total_created_collective_offers,0) AS total_created_collective_offers,
     COALESCE(o.total_created_individual_offers,0) + COALESCE(co.total_created_collective_offers,0) AS total_created_offers,
-    NULL AS venue_first_bookable_offer_date, -- we n
+    LEAST(
+        o.venue_first_bookable_individual_offer_date,
+        co.venue_first_bookable_collective_offer_date
+    ) AS venue_first_bookable_offer_date,
     GREATEST(
         o.venue_last_bookable_individual_offer_date,
         co.venue_last_bookable_collective_offer_date
     ) AS venue_last_bookable_offer_date,
-    LEAST(co.first_collective_booking_date, o.first_individual_booking_date) AS first_booking_date,
-    GREATEST(co.last_collective_booking_date, o.last_individual_booking_date) AS last_booking_date,
-    LEAST(co.first_collective_offer_creation_date, o.first_individual_offer_creation_date) AS first_offer_creation_date,
-    GREATEST(co.last_collective_offer_creation_date, o.last_individual_offer_creation_date) AS last_offer_creation_date,
+    CASE WHEN first_individual_booking_date IS NOT NULL AND first_collective_booking_date IS NOT NULL THEN LEAST(first_collective_booking_date, first_individual_booking_date)
+         ELSE COALESCE(first_individual_booking_date,first_collective_booking_date) END AS first_booking_date,
+    CASE WHEN last_individual_booking_date IS NOT NULL AND last_collective_booking_date IS NOT NULL THEN GREATEST(last_collective_booking_date, last_individual_booking_date)
+         ELSE COALESCE(last_individual_booking_date,last_collective_booking_date) END AS last_booking_date,
+    CASE WHEN first_individual_offer_creation_date IS NOT NULL AND first_collective_offer_creation_date IS NOT NULL THEN LEAST(first_collective_offer_creation_date, first_individual_offer_creation_date)
+         ELSE COALESCE(first_individual_offer_creation_date,first_collective_offer_creation_date) END AS first_offer_creation_date,
+    CASE WHEN last_individual_offer_creation_date IS NOT NULL AND last_collective_offer_creation_date IS NOT NULL THEN GREATEST(last_collective_offer_creation_date, last_individual_offer_creation_date)
+        ELSE COALESCE(last_individual_offer_creation_date,last_collective_offer_creation_date) END AS last_offer_creation_date,
     COALESCE(o.total_venue_bookable_individual_offers,0) AS total_venue_bookable_individual_offers,
     COALESCE(co.total_venue_bookable_collective_offers,0) AS total_venue_bookable_collective_offers,
     COALESCE(o.total_venue_bookable_individual_offers,0) + COALESCE(co.total_venue_bookable_collective_offers,0) AS total_venue_bookable_offers

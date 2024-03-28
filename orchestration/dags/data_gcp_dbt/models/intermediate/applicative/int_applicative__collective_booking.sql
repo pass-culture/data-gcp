@@ -1,6 +1,7 @@
 SELECT
     collective_booking_id,
-    collective_booking_creation_date,
+    DATE(collective_booking_creation_date) AS collective_booking_creation_date,
+    collective_booking_creation_date AS collective_booking_created_at,
     collective_booking_used_date,
     collective_stock_id,
     venue_id,

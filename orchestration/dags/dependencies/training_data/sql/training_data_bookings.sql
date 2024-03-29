@@ -15,7 +15,7 @@ SELECT
     enroffer.venue_id,
     enroffer.venue_name,
 from
-    `{{ bigquery_clean_dataset }}`.`booking` booking
+    `{{ bigquery_clean_dataset }}`.`applicative_database_booking` booking
     inner join `{{ bigquery_clean_dataset }}`.`applicative_database_stock` stock on booking.stock_id = stock.stock_id
     inner join `{{ bigquery_clean_dataset }}`.`applicative_database_offer` offer on stock.offer_id = offer.offer_id
     inner join `{{ bigquery_analytics_dataset }}`.`subcategories` subcategories on offer.offer_subcategoryId = subcategories.id

@@ -68,8 +68,8 @@ SELECT
     ,collective_offer_template.partition_date
     ,TRUE AS collective_offer_is_template
 FROM
-        {{ source('clean','applicative_database_collective_offer_template_history')}} AS collective_offer_template
-    {% if is_incremental() %} 
-    WHERE partition_date = DATE_SUB('{{ ds() }}', INTERVAL 1 DAY)
+    {{ source('clean','applicative_database_collective_offer_template_history')}} AS collective_offer_template
+    WHERE collective_offer_validation = "APPROVED"
+    {% if is_incremental() %}
+    AND partition_date = DATE_SUB('{{ ds() }}', INTERVAL 1 DAY)
     {% endif %}
-    AND collective_offer_validation = "APPROVED"

@@ -36,7 +36,8 @@ SELECT
                                     "offererId",
                                     "page_number",
                                     "offerId",
-                                    "categorieJuridiqueUniteLegale"
+                                    "categorieJuridiqueUniteLegale",
+                                    "venueId"
         ])}},
         {{ extract_params_string_value(["venue_id",
                                     "page_title",

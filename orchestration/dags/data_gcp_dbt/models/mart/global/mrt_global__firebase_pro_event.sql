@@ -7,7 +7,7 @@
     )
 }}
 
-    SELECT 
+SELECT 
         e.event_name,
         e.page_name,
         e.user_pseudo_id,
@@ -34,7 +34,7 @@
         e.page_number,
         e.is_edition,
         e.is_draft,
-        COALESCE(e.offerer_id,u.offerer_id) as offerer_id
+        e.offerer_id
         e.venue_id,
         e.offer_id,
         e.offer_type,
@@ -44,7 +44,6 @@
         e.filled,
         e.filled_with_errors,
         e.onboarding_selected_legal_category,
-        u.user_affiliation_rank,
         o.offerer_name,
         o.offerer_first_individual_offer_creation_date,
         o.offerer_first_collective_offer_creation_date,
@@ -54,10 +53,21 @@
         o.permanent_venues_managed,
         o.is_synchro_adage,
         o.dms_accepted_at,
-        o.first_dms_adage_status
+        o.first_dms_adage_status,
+        v.venue_name,
+        CASE WHEN v.venue_siret is not null THEN TRUE ELSE FALSE END as venue_has_siret,
+        v.venue_is_permanent,
+        v.venue_type_label,
+        p.partner_id,
+        p.partner_name,
+        p.partner_type,
+        p.cultural_sector as partner_cultural_sector,
+        p.individual_offers_created as partner_nb_individual_offers,
+        p.collective_offers_created as partner_nb_collective_offers
 FROM {{ ref("int_firebase__pro_event") }} AS e
-LEFT JOIN {{ ref("enriched_user_offerer") }} AS u ON e.user_id=u.user_id
-LEFT JOIN {{ ref("enriched_offerer_data") }} AS o ON u.offerer_id=o.offerer_id
+LEFT JOIN {{ ref("enriched_offerer_data") }} AS o ON e.offerer_id=o.offerer_id
+LEFT JOIN {{ ref("enriched_venue_data") }} AS v ON e.venue_id=v.venue_id
+LEFT JOIN {{ ref("enriched_cultural_partner_data") }} AS p ON v.partner_id=p.partner_id
 
 {% if is_incremental() %}
 AND event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 2 DAY) and DATE("{{ ds() }}")

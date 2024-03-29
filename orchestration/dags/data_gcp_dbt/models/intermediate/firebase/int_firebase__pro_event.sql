@@ -29,7 +29,7 @@ WITH first_clean as(
         browser as user_web_browser,
         browser_version as user_web_browser_version,
         COALESCE(CAST(offerer_id as STRING),CAST(offererId AS STRING)) as offerer_id,
-        venue_id,
+        COALESCE(venue_id,CAST(venueId as STRING)) as venue_id,
         page_location,
         page_title as page_name,
         REGEXP_EXTRACT(page_location, r"""passculture\.pro\/(.*)$""", 1) as url_first_path,

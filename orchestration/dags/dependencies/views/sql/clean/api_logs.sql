@@ -17,6 +17,6 @@ SELECT
 FROM
     `{{ bigquery_raw_dataset }}.stdout`
 WHERE
-timestamp >= DATE_SUB(TODAY(), INTERVAL 365 day)
+DATE(timestamp) >= DATE_SUB(CURRENT_DATE, INTERVAL 365 day)
 AND jsonPayload.extra.path IN ("/users/current", "/native/v1/me", "/native/v1/signin")
  

@@ -51,14 +51,6 @@ models_to_deploy = [
         "instance_type": standard_dict[ENV_SHORT_NAME],
         "min_nodes": min_nodes[ENV_SHORT_NAME],
     },
-    # fallback endpoint
-    {
-        "experiment_name": f"retrieval_recommendation_v1.1_{ENV_SHORT_NAME}",
-        "endpoint_name": f"recommendation_user_retrieval_version_b_{ENV_SHORT_NAME}",
-        "version_name": "v_{{ ts_nodash }}",
-        "instance_type": standard_dict[ENV_SHORT_NAME],
-        "min_nodes": min_nodes[ENV_SHORT_NAME],
-    },
     # ranking endpoint
     {
         "experiment_name": f"ranking_endpoint_v1.1_{ENV_SHORT_NAME}",

@@ -10,7 +10,7 @@ FROM
 WHERE
     stock_id is not NULL
 )
-       
+
 SELECT
     stock.stock_id,
     stock.offer_id,

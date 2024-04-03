@@ -1,3 +1,10 @@
+{% set target_name = target.name %}
+{% set target_schema = generate_schema_name('analytics_dbt_' ~ target_name) %}
+
+{{ config(
+    pre_hook="{{create_dehumanize_id_function()}}"
+) }}
+
 {{
     config(
         materialized = "incremental",
@@ -7,19 +14,20 @@
     )
 }}
 
-WITH first_clean as(
+
+WITH pro_event_raw_data as(
     SELECT 
         event_name,
         user_pseudo_id,
-        CASE WHEN REGEXP_CONTAINS(user_id, r"\D") THEN dehumanize_id(user_id) ELSE user_id END AS user_id,
+        CASE WHEN REGEXP_CONTAINS(user_id, r"\D") THEN {{target_schema}}.dehumanize_id(user_id) ELSE user_id END AS user_id,
         platform,
         event_date,
         event_timestamp,
         ga_session_number as session_number,
         ga_session_id as session_id,
         CONCAT(user_pseudo_id, '-',ga_session_id) as unique_session_id,
-        from as origin,
-        to as destination,
+        origin,
+        destination,
         traffic_campaign,
         traffic_medium,
         traffic_source,
@@ -41,7 +49,7 @@ WITH first_clean as(
         REGEXP_REPLACE(REGEXP_REPLACE(page_location , "[A-Z \\d]+[\\?\\/\\&]?", ""), "https://passculture.pro/", "") as url_path_agg,
         page_referrer,
         page_number,
-        COALESCE(double_offer_id,int_offer_id) AS offer_id,
+        COALESCE(double_offer_id,offerId) AS offer_id,
         offerType as offer_type,
         used,
         saved,
@@ -64,4 +72,4 @@ SELECT
         WHEN url_path_details is NOT NULL THEN CONCAT(url_path_type, "-", url_path_details)
         ELSE url_path_type 
     END as url_path_extract
-FROM first_clean 
+FROM pro_event_raw_data

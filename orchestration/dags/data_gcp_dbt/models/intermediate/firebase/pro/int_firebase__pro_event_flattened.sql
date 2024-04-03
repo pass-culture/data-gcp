@@ -44,8 +44,6 @@ SELECT
                                     "page_location",
                                     "page_referrer",
                                     "offerType",
-                                    "from",
-                                    "to",
                                     "used",
                                     "saved",
                                     "hasOnly6eAnd5eStudents",
@@ -56,10 +54,12 @@ SELECT
                                     "traffic_campaign",
                                     "traffic_medium",
                                     "traffic_source"
-        ])}}
+        ])}},
+    MAX(CASE WHEN params.key = "from" THEN params.value.string_value END) AS origin,
+    MAX(CASE WHEN params.key = "to" THEN params.value.string_value END) AS destination,
 FROM firebase_pro_last_two_days_events,
     UNNEST(event_params) AS params
-GROUP BY 1, 2, 3, 4, 5, 6
+GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
         
 
         

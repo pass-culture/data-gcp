@@ -9,5 +9,5 @@ pandas==1.1.4
 requests==2.20.1
 tqdm
 pandas-gbq
-gspread
+gspread==v6.0.0
 typer>=0.7.0

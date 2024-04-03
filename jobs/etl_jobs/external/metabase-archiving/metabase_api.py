@@ -14,15 +14,14 @@ class MetabaseAPI:
             headers={"Content-Type": "application/json"},
             data=json.dumps({"username": username, "password": password}),
         )
-        response.raise_for_status()  # raises exception when not a 2xx response
-        if response.status_code != 204:
-            token_json = response.json()
-            if "id" not in token_json:
-                raise Exception(f"Error login to {host}, error: {token_json}")
-            self.headers = {
-                "Content-Type": "application/json",
-                "X-Metabase-Session": token_json["id"],
-            }
+
+        token_json = response.json()
+        if "id" not in token_json:
+            raise Exception(f"Error login to {host}, error: {token_json}")
+        self.headers = {
+            "Content-Type": "application/json",
+            "X-Metabase-Session": token_json["id"],
+        }
 
     def get_users(self):
         response = requests.get(f"{self.host}/api/user/", headers=self.headers)
